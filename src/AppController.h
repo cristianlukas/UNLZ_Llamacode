@@ -1335,9 +1335,10 @@ public:
     // Prueba de micrófono: captura y muestra nivel sin STT/chat (ver voiceLevel).
     Q_INVOKABLE void startMicTest();
     Q_INVOKABLE void stopMicTest();
-    // ── STT gestionado (descarga + lanza whisper.cpp) ──
+    // ── STT gestionado (Whisper HTTP o Parakeet nativo) ──
     Q_INVOKABLE QVariantList voiceSttCatalog() const;
     Q_INVOKABLE bool voiceModelInstalled(const QString &engineId) const;
+    Q_INVOKABLE bool voiceSttBinaryAvailable(const QString &engineId) const;
     Q_INVOKABLE void installVoiceModel(const QString &engineId);
     Q_INVOKABLE void installVoicePrerequisites(const QString &engineId);
     Q_INVOKABLE void cancelVoiceModelInstall();
@@ -1891,7 +1892,7 @@ private:
     // Fuerza STT (whisper) y voz piper (TTS) al idioma de la app (m_language), así
     // Ingi Charla no mezcla idiomas por mala detección de whisper en auto.
     void applyAppLanguageToVoice(VoiceConfig &c) const;
-    bool startManagedStt(const VoiceConfig &c);  // lanza whisper-server del perfil activo
+    bool startManagedStt(const VoiceConfig &c);  // lanza el STT gestionado del perfil activo
     bool startManagedExternalVoice(const VoiceConfig &c, bool stt);
     void stopManagedExternalVoice();
     void continueVoicePrerequisitesInstall();

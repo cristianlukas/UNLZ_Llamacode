@@ -5,7 +5,7 @@
 
 // Config del modo "Charla" (voz-a-voz). STT batch y TTS van por endpoints
 // OpenAI-compatibles (/v1/audio/transcriptions y /v1/audio/speech); STT streaming
-// puede usar un sidecar persistente según sttMode. La única
+// o nativo batch puede usar un proceso administrado según sttMode. La única
 // diferencia entre 100% local y cloud es la baseUrl + si requiere API key:
 //   - local: baseUrl http://127.0.0.1:<puerto> de un server local
 //            (whisper.cpp server, openedai-speech, piper-http...). Sin key.
@@ -21,8 +21,8 @@ struct VoiceConfig {
     QString sttKeyRef;                               // "" salvo cloud
     QString sttLanguage = QStringLiteral("es");      // "auto" = no enviar param
     // Transporte STT: `http_batch` conserva el contrato OpenAI-compatible;
-    // `stream_process` usa un sidecar persistente con protocolo NDJSON v1.
-    // El segundo permite parciales rolling sin meter el runtime neuronal en Qt.
+    // `stream_process` usa un sidecar persistente con protocolo NDJSON v1;
+    // `process_batch` usa un CLI nativo administrado por la app (Parakeet).
     QString sttMode = QStringLiteral("http_batch");
     // Path del endpoint de transcripción. OpenAI/openedai-speech usan
     // "/v1/audio/transcriptions"; whisper.cpp server usa "/inference".

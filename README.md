@@ -951,12 +951,12 @@ incluidos).
   `/v1/audio/speech`). Una sola ruta de código: **local** (whisper.cpp server,
   openedai-speech, piper-http en localhost, sin key) o **cloud** (URL remota +
   keyRef). Configurable por separado para STT y TTS.
-- **STT streaming experimental**: además del transporte batch, Charla admite
-  sesiones `stream_process` persistentes con protocolo NDJSON v1. Envía bloques
-  PCM16 mientras hablás, acepta parciales revisables y descarta resultados tardíos
-  después de cancelar o interrumpir. El adapter de Parakeet TDT v3 vive en
-  [`docs/voice-streaming.md`](docs/voice-streaming.md) y
-  `tools/parakeet_stt_sidecar.py`; Whisper batch permanece como fallback.
+- **STT multimotor local**: Charla permite elegir Whisper base (`http_batch`) o
+  Parakeet TDT v3 (`process_batch`) desde el mismo selector. Parakeet descarga el
+  GGUF Q4_0 y usa el `parakeet-cli` nativo administrado por LlamaCode, sin NeMo ni
+  configuración manual. Además se conservan sesiones `stream_process` persistentes
+  con protocolo NDJSON v1 para sidecars externos, parciales revisables y cancelación;
+  el detalle está en [`docs/voice-streaming.md`](docs/voice-streaming.md).
 - **TTS multimotor**: cada perfil puede fijar HTTP/Kokoro, Pocket TTS, Piper o `qwen3-tts.cpp`, o
   dejarlo en `auto`. La selección automática considera RAM, VRAM total/libre y
   motores instalados: prioriza Qwen3-TTS 1.7B/0.6B cuando hay margen y conserva

@@ -1,9 +1,12 @@
 # STT streaming y Parakeet
 
-LlamaCode conserva dos transportes de STT:
+LlamaCode conserva tres transportes de STT:
 
 - `http_batch`: el contrato OpenAI-compatible existente. Es la ruta estable para
   whisper.cpp, servicios cloud y cualquier endpoint `/v1/audio/transcriptions`.
+- `process_batch`: un CLI nativo administrado por la app. Parakeet usa esta ruta:
+  LlamaCode crea un WAV temporal por turno, ejecuta `parakeet-cli` y extrae la
+  línea de transcripción sin pedir Python, NeMo ni configurar un sidecar.
 - `stream_process`: una sesión persistente administrada por la app. El audio se
   envía como PCM16 mono 16 kHz por stdin y el sidecar responde mensajes NDJSON
   por stdout.
@@ -43,34 +46,19 @@ Job Object de LlamaCode.
 
 ## Parakeet experimental
 
-El catálogo incluye `parakeet-tdt-0.6b-v3`. No se descarga automáticamente porque
-el modelo necesita un runtime neuronal externo y una conversión/instalación que
-depende del entorno. El adapter incluido en
-`tools/parakeet_stt_sidecar.py` usa NeMo sobre el audio acumulado para producir
-parciales rolling. Es una integración experimental de calidad y latencia; no es
-un decoder TDT stateful de streaming.
+El catálogo incluye `parakeet-tdt-0.6b-v3` como motor seleccionable y administrado.
+Desde Charla, el botón **Instalar Parakeet** descarga el modelo GGUF Q4_0 y, si
+falta, el paquete de binarios de `whisper.cpp`, que contiene `parakeet-cli`.
+Después alcanza con seleccionar Parakeet y pulsar **Iniciar Charla**; no requiere
+instalar NeMo ni escribir un comando sidecar.
 
-Instalación orientativa en un entorno Python separado:
+El modelo nativo se ejecuta por turno (`process_batch`), por lo que entrega el
+texto final al terminar el habla y no parciales mientras se habla. El transporte
+`stream_process` y `tools/parakeet_stt_sidecar.py` se conservan para experimentar
+con runtimes externos y parciales rolling, pero siguen siendo una ruta avanzada.
 
-```powershell
-python -m pip install numpy "nemo_toolkit[asr]"
-```
-
-Luego seleccionar en Charla el motor Parakeet y configurar:
-
-```text
-Comando: python
-Argumentos: ["tools/parakeet_stt_sidecar.py", "--model", "nvidia/parakeet-tdt-0.6b-v3"]
-```
-
-También se puede usar un `.nemo` local:
-
-```text
-["tools/parakeet_stt_sidecar.py", "--model-path", "C:/models/parakeet.nemo", "--device", "cuda"]
-```
-
-El modelo oficial Parakeet TDT v3 anuncia soporte multilingüe, incluido español.
-Antes de convertirlo en default hay que comparar WER/CER, p50/p90 y VRAM contra
+La variante oficial Parakeet TDT v3 anuncia soporte multilingüe, incluido español.
+Antes de convertirla en default hay que comparar WER/CER, p50/p90 y VRAM contra
 Whisper base con el mismo corpus y hardware.
 
 ## Diagnóstico

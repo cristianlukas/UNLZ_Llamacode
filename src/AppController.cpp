@@ -23790,6 +23790,15 @@ void AppController::toggleDictation()
     if (sttEngine.value(QStringLiteral("transport")).toString()
             == QLatin1String("stream_process"))
         c.sttMode = QStringLiteral("stream_process");
+    else if (sttEngine.value(QStringLiteral("transport")).toString()
+             == QLatin1String("process_batch"))
+        c.sttMode = QStringLiteral("process_batch");
+    if (c.sttMode == QLatin1String("process_batch")) {
+        // Un perfil creado con el Parakeet sidecar anterior puede conservar el
+        // comando externo; el motor nativo nuevo debe ser la única ruta activa.
+        c.sttManagedCommand.clear();
+        c.sttManagedArgs.clear();
+    }
     if ((c.sttMode == QLatin1String("stream_process")
          || sttEngine.value(QStringLiteral("requiresCommand")).toBool())
         && c.sttManagedCommand.trimmed().isEmpty()) {
@@ -23872,16 +23881,20 @@ void AppController::applyVoiceConfig()
         c.ttsFormat = QStringLiteral("wav");
         c.ttsStreamAudio = true;
     }
-    // STT gestionado: apuntar al server local que lanza la app (whisper.cpp).
+    // STT gestionado: Whisper usa un server HTTP; Parakeet usa su CLI nativo.
+    const QVariantMap sttEngine = VoiceServerManager::sttEngine(c.sttManagedEngine);
     if (!c.sttManagedEngine.isEmpty()) {
-        const QVariantMap eng = VoiceServerManager::sttEngine(c.sttManagedEngine);
-        if (eng.value(QStringLiteral("transport")).toString()
-                == QLatin1String("stream_process")) {
+        const QString transport = sttEngine.value(QStringLiteral("transport")).toString();
+        if (transport == QLatin1String("stream_process")) {
             c.sttMode = QStringLiteral("stream_process");
             c.sttProvider = QStringLiteral("local");
+        } else if (transport == QLatin1String("process_batch")) {
+            c.sttMode = QStringLiteral("process_batch");
+            c.sttProvider = QStringLiteral("local");
         }
-        const int port = eng.value("defaultPort", 8081).toInt();
-        if (c.sttMode != QLatin1String("stream_process")) {
+        const int port = sttEngine.value("defaultPort", 8081).toInt();
+        if (c.sttMode != QLatin1String("stream_process")
+            && c.sttMode != QLatin1String("process_batch")) {
             c.sttProvider = QStringLiteral("local");
             c.sttBaseUrl = QStringLiteral("http://127.0.0.1:%1").arg(port);
             c.sttEndpointPath = VoiceServerManager::endpointPath(c.sttManagedEngine);
@@ -23890,6 +23903,16 @@ void AppController::applyVoiceConfig()
     const QString sttKey = c.sttKeyRef.isEmpty() ? QString() : m_secrets.resolve(c.sttKeyRef);
     const QString ttsKey = c.ttsKeyRef.isEmpty() ? QString() : m_secrets.resolve(c.ttsKeyRef);
     m_voice->setConfig(c, sttKey, ttsKey);
+    m_voice->setNativeStt(QString(), QString());
+    if (sttEngine.value(QStringLiteral("transport")).toString()
+            == QLatin1String("process_batch")) {
+        QString program = VoiceServerManager::installedBinaryPath(
+            QStringLiteral("parakeet-cli"));
+        if (program.isEmpty())
+            program = QStandardPaths::findExecutable(QStringLiteral("parakeet-cli"));
+        m_voice->setNativeStt(program,
+                              VoiceServerManager::modelPath(c.sttManagedEngine));
+    }
     const QVariantMap gpuPlan = voiceGpuPlanForConfig(c);
     const QString voiceGpuMask = gpuPlan.value(QStringLiteral("enabled")).toBool()
         && gpuPlan.value(QStringLiteral("voicePlacementSafe")).toBool()
@@ -24255,9 +24278,16 @@ void AppController::startCharla()
         }
     }
     const QVariantMap sttEngine = VoiceServerManager::sttEngine(c.sttManagedEngine);
-    if (sttEngine.value(QStringLiteral("transport")).toString()
-            == QLatin1String("stream_process"))
+    const QString sttTransport = sttEngine.value(QStringLiteral("transport")).toString();
+    if (sttTransport == QLatin1String("stream_process"))
         c.sttMode = QStringLiteral("stream_process");
+    else if (sttTransport == QLatin1String("process_batch"))
+        c.sttMode = QStringLiteral("process_batch");
+    if (sttTransport == QLatin1String("process_batch")) {
+        // Migración transparente desde perfiles que usaban el sidecar NeMo.
+        c.sttManagedCommand.clear();
+        c.sttManagedArgs.clear();
+    }
     if ((c.sttMode == QLatin1String("stream_process")
          || sttEngine.value(QStringLiteral("requiresCommand")).toBool())
         && c.sttManagedCommand.trimmed().isEmpty()) {
@@ -24273,7 +24303,8 @@ void AppController::startCharla()
                              .arg(c.sttManagedEngine));
             return;     // no arrancar la escucha: el STT no funcionaría
         }
-        if (!voiceWhisperServerAvailable()) {
+        if (sttTransport != QLatin1String("process_batch")
+            && !voiceWhisperServerAvailable()) {
             emit serverError(QStringLiteral(
                 "whisper-server no está instalado. Instalalo desde Charla."));
             return;
@@ -24390,6 +24421,17 @@ void AppController::installVoiceModel(const QString &engineId)
     m_voiceServers.installModel(engineId);
 }
 
+bool AppController::voiceSttBinaryAvailable(const QString &engineId) const
+{
+    const QVariantMap engine = VoiceServerManager::sttEngine(engineId);
+    if (engine.value(QStringLiteral("transport")).toString()
+            != QLatin1String("process_batch"))
+        return false;
+    const QString binary = engine.value(QStringLiteral("engine")).toString();
+    return !VoiceServerManager::installedBinaryPath(binary).isEmpty()
+        || !QStandardPaths::findExecutable(binary).isEmpty();
+}
+
 void AppController::installVoicePrerequisites(const QString &engineId)
 {
     if (engineId.isEmpty()) return;
@@ -24401,11 +24443,15 @@ void AppController::continueVoicePrerequisitesInstall()
 {
     const QString engineId = m_pendingVoicePrerequisitesEngine;
     if (engineId.isEmpty()) return;
+    const QVariantMap engine = VoiceServerManager::sttEngine(engineId);
+    const bool nativeStt = engine.value(QStringLiteral("transport")).toString()
+        == QLatin1String("process_batch");
     if (!m_voiceServers.modelInstalled(engineId)) {
         m_voiceServers.installModel(engineId);
         return;
     }
-    if (!voiceWhisperServerAvailable()) {
+    if ((nativeStt && !voiceSttBinaryAvailable(engineId))
+        || (!nativeStt && !voiceWhisperServerAvailable())) {
         m_voiceServers.installBinary(QStringLiteral("whisper-server"));
         return;
     }
@@ -24762,6 +24808,20 @@ bool AppController::startManagedStt(const VoiceConfig &c)
 {
     stopManagedStt();
     const QVariantMap engine = VoiceServerManager::sttEngine(c.sttManagedEngine);
+    if (engine.value(QStringLiteral("transport")).toString()
+            == QLatin1String("process_batch")) {
+        if (!m_voiceServers.modelInstalled(c.sttManagedEngine)) {
+            emit serverError(QStringLiteral("Modelo STT no instalado: %1. Instalalo desde Charla.")
+                             .arg(c.sttManagedEngine));
+            return false;
+        }
+        if (!voiceSttBinaryAvailable(c.sttManagedEngine)) {
+            emit serverError(QStringLiteral(
+                "No se encontró parakeet-cli. Instalá el binario de voz desde Charla."));
+            return false;
+        }
+        return true;
+    }
     if (engine.value(QStringLiteral("transport")).toString()
             == QLatin1String("stream_process")) {
         emit serverError(QStringLiteral(

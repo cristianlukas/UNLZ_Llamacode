@@ -7,13 +7,42 @@
 #include <QUrl>
 #include <QDebug>
 #include <QProcess>
+#include <QTemporaryFile>
+#include <QDir>
+#include <QFile>
+
+namespace {
+
+void removeNativeWav(QString &path)
+{
+    if (!path.isEmpty()) QFile::remove(path);
+    path.clear();
+}
+
+}
 
 SttEngine::SttEngine(QObject *parent) : QObject(parent) {}
+
+SttEngine::~SttEngine()
+{
+    cancel();
+}
 
 void SttEngine::setConfig(const VoiceConfig &cfg, const QString &resolvedKey)
 {
     m_cfg = cfg;
     m_key = resolvedKey;
+}
+
+void SttEngine::setNativeStt(const QString &program, const QString &modelPath)
+{
+    m_nativeProgram = program.trimmed();
+    m_nativeModelPath = modelPath.trimmed();
+}
+
+bool SttEngine::busy() const
+{
+    return m_reply != nullptr || m_streamingActive || !m_nativeProcess.isNull();
 }
 
 QByteArray SttEngine::buildMultipart(const QByteArray &boundary, const QByteArray &wav,
@@ -95,6 +124,31 @@ QVariantMap SttEngine::parseStreamingMessage(const QByteArray &line)
     return result;
 }
 
+QStringList SttEngine::buildNativeParakeetArgs(const QString &modelPath,
+                                               const QString &wavPath,
+                                               int threads)
+{
+    QStringList args{QStringLiteral("-m"), modelPath,
+                     QStringLiteral("-f"), wavPath,
+                     QStringLiteral("-ng")};
+    if (threads > 0)
+        args << QStringLiteral("-t") << QString::number(threads);
+    return args;
+}
+
+QString SttEngine::parseNativeParakeetTranscript(const QByteArray &output)
+{
+    const QList<QByteArray> lines = output.split('\n');
+    for (const QByteArray &raw : lines) {
+        const QString line = QString::fromUtf8(raw).trimmed();
+        if (line.startsWith(QStringLiteral("Text,"), Qt::CaseInsensitive))
+            return line.mid(5).trimmed();
+        if (line.startsWith(QStringLiteral("Text:"), Qt::CaseInsensitive))
+            return line.mid(5).trimmed();
+    }
+    return {};
+}
+
 void SttEngine::attachStreamingProcess(QProcess *process)
 {
     if (m_streamProcess)
@@ -170,6 +224,55 @@ void SttEngine::finishStreaming()
     }
 }
 
+void SttEngine::transcribeNative(const QByteArray &pcm16, int sampleRate)
+{
+    QTemporaryFile wav(QDir::tempPath() + QStringLiteral("/llamacode-parakeet-XXXXXX.wav"));
+    const QByteArray wavData = AudioCodec::pcm16ToWav(pcm16, sampleRate);
+    if (!wav.open() || wav.write(wavData) != wavData.size() || !wav.flush()) {
+        emit failed(QStringLiteral("no se pudo preparar el WAV para Parakeet"));
+        return;
+    }
+    m_nativeWavPath = wav.fileName();
+    wav.setAutoRemove(false);
+    wav.close();
+
+    auto *process = new QProcess(this);
+    m_nativeProcess = process;
+    process->setProcessChannelMode(QProcess::MergedChannels);
+    const QStringList args = buildNativeParakeetArgs(m_nativeModelPath,
+                                                      m_nativeWavPath, 8);
+    connect(process, &QProcess::errorOccurred, this,
+            [this, process](QProcess::ProcessError error) {
+        if (error != QProcess::FailedToStart || m_nativeProcess != process) return;
+        const QString detail = process->errorString();
+        m_nativeProcess = nullptr;
+        removeNativeWav(m_nativeWavPath);
+        process->deleteLater();
+        emit failed(QStringLiteral("Parakeet no pudo iniciarse: ") + detail);
+    });
+    connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            this, [this, process](int exitCode, QProcess::ExitStatus status) {
+        if (m_nativeProcess != process) return;
+        const QByteArray output = process->readAll();
+        m_nativeProcess = nullptr;
+        removeNativeWav(m_nativeWavPath);
+        process->deleteLater();
+        if (status != QProcess::NormalExit || exitCode != 0) {
+            QString detail = QString::fromUtf8(output).trimmed();
+            if (detail.size() > 300) detail = detail.right(300);
+            emit failed(QStringLiteral("Parakeet terminó con error")
+                        + (detail.isEmpty() ? QString() : QStringLiteral(": ") + detail));
+            return;
+        }
+        const QString text = parseNativeParakeetTranscript(output);
+        if (text.isEmpty())
+            emit failed(QStringLiteral("Parakeet no devolvió una transcripción"));
+        else
+            emit transcribed(text);
+    });
+    process->start(m_nativeProgram, args);
+}
+
 void SttEngine::consumeStreamingOutput()
 {
     if (!m_streamProcess) return;
@@ -214,6 +317,11 @@ void SttEngine::handleStreamingMessage(const QVariantMap &message)
 void SttEngine::transcribe(const QByteArray &pcm16, int sampleRate)
 {
     if (m_reply || m_streamingActive) { emit failed(QStringLiteral("STT ocupado")); return; }
+    if (m_nativeProcess) { emit failed(QStringLiteral("STT ocupado")); return; }
+    if (!m_nativeProgram.isEmpty()) {
+        transcribeNative(pcm16, sampleRate);
+        return;
+    }
     const QByteArray wav = AudioCodec::pcm16ToWav(pcm16, sampleRate);
     const QByteArray boundary = "----LlamaCodeVoiceSTT";
     const QByteArray body = buildMultipart(boundary, wav, m_cfg.sttModel, m_cfg.sttLanguage);
@@ -258,6 +366,14 @@ void SttEngine::transcribe(const QByteArray &pcm16, int sampleRate)
 void SttEngine::cancel()
 {
     if (m_reply) { m_reply->abort(); }
+    if (m_nativeProcess) {
+        QProcess *process = m_nativeProcess;
+        m_nativeProcess = nullptr;
+        process->disconnect(this);
+        process->kill();
+        process->deleteLater();
+    }
+    removeNativeWav(m_nativeWavPath);
     if (m_streamingActive && m_streamProcess
         && m_streamProcess->state() == QProcess::Running) {
         m_streamProcess->write(buildStreamingCancel());

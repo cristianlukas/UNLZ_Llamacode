@@ -55,6 +55,11 @@ void VoiceController::setStreamingSttProcess(QProcess *process)
     m_stt.attachStreamingProcess(process);
 }
 
+void VoiceController::setNativeStt(const QString &program, const QString &modelPath)
+{
+    m_stt.setNativeStt(program, modelPath);
+}
+
 void VoiceController::setInputDevice(const QString &id)
 {
     m_deviceId = id;

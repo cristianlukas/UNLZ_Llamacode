@@ -13,9 +13,10 @@ class QFile;
 // proceso del server lo lanza AppController (Job Object + lifecycle), igual que
 // llama-server; acá solo vive lo descargable + las funciones puras (testeables).
 //
-// whisper.cpp se administra de forma nativa. Otros motores, como Parakeet, se
-// conectan como sidecars explícitos con el protocolo streaming NDJSON v1; así
-// el binario Qt no incorpora runtimes Python/NeMo/ONNX pesados.
+// whisper.cpp se administra de forma nativa. Parakeet se administra mediante
+// su CLI nativo incluido en el paquete de whisper.cpp; otros motores pueden
+// conectarse como sidecars explícitos con el protocolo streaming NDJSON v1.
+// Así el binario Qt no incorpora runtimes Python/NeMo/ONNX pesados.
 class VoiceServerManager : public QObject
 {
     Q_OBJECT

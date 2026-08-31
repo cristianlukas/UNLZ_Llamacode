@@ -53,6 +53,9 @@ public:
     // Conecta un sidecar STT persistente administrado por AppController. El
     // proceso mantiene su lifecycle existente; acá sólo se usa stdin/stdout.
     void setStreamingSttProcess(QProcess *process);
+    // Configura un motor STT nativo batch administrado por AppController
+    // (actualmente parakeet-cli). Se ejecuta por turno y no requiere Python.
+    void setNativeStt(const QString &program, const QString &modelPath);
     // Dispositivo de entrada por id (QAudioDevice::id() como string utf8). "" = default.
     void setInputDevice(const QString &id);
     // Lista de micrófonos: [{id,name,isDefault}].

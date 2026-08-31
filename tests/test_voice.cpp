@@ -36,6 +36,7 @@ private slots:
     void sttParseTranscript();
     void sttStreamingProtocol();
     void sttStreamingParser();
+    void sttNativeParakeet();
     void ttsSpeechBody();
     void ttsPiperJsonLine();
     void ttsPiperResidentArgs();
@@ -404,6 +405,25 @@ void TestVoice::sttStreamingProtocol()
              QByteArray("\1\2\3\4"));
     QCOMPARE(SttEngine::buildStreamingEnd(), QByteArray("{\"type\":\"end\"}\n"));
     QCOMPARE(SttEngine::buildStreamingCancel(), QByteArray("{\"type\":\"cancel\"}\n"));
+}
+
+void TestVoice::sttNativeParakeet()
+{
+    const QStringList args = SttEngine::buildNativeParakeetArgs(
+        "parakeet.bin", "audio.wav", 8);
+    QCOMPARE(args.at(0), QStringLiteral("-m"));
+    QCOMPARE(args.at(1), QStringLiteral("parakeet.bin"));
+    QCOMPARE(args.at(2), QStringLiteral("-f"));
+    QCOMPARE(args.at(3), QStringLiteral("audio.wav"));
+    QVERIFY(args.contains(QStringLiteral("-ng")));
+    QVERIFY(args.contains(QStringLiteral("-t")));
+    QVERIFY(args.contains(QStringLiteral("8")));
+
+    const QByteArray output =
+        "Loading Parakeet model\nText, abrir el navegador.\nparakeet_print_timings: total";
+    QCOMPARE(SttEngine::parseNativeParakeetTranscript(output),
+             QStringLiteral("abrir el navegador."));
+    QCOMPARE(SttEngine::parseNativeParakeetTranscript("sin texto"), QString());
 }
 
 void TestVoice::sttStreamingParser()
@@ -801,10 +821,12 @@ void TestVoice::sttServerCatalog()
 
     const QVariantMap parakeet = VoiceServerManager::sttEngine("parakeet-tdt-0.6b-v3");
     QVERIFY(!parakeet.isEmpty());
-    QCOMPARE(parakeet.value("transport").toString(), QString("stream_process"));
-    QVERIFY(parakeet.value("requiresCommand").toBool());
+    QCOMPARE(parakeet.value("transport").toString(), QString("process_batch"));
+    QVERIFY(!parakeet.value("requiresCommand").toBool());
+    QVERIFY(parakeet.value("installable").toBool());
     QVERIFY(!parakeet.value("docsUrl").toString().isEmpty());
-    QVERIFY(VoiceServerManager::modelPath("parakeet-tdt-0.6b-v3").isEmpty());
+    QVERIFY(VoiceServerManager::modelPath("parakeet-tdt-0.6b-v3")
+                .endsWith("ggml-parakeet-tdt-0.6b-v3-q4_0.bin"));
 
     // Args de whisper-server: modelo + host + port, y -l solo si lang != auto.
     QStringList a = VoiceServerManager::buildWhisperArgs("m.bin", "127.0.0.1", 8081, "auto");

@@ -5,17 +5,19 @@
 #include <QPointer>
 #include <QVariantMap>
 #include <QNetworkAccessManager>
+#include <QStringList>
 
 class QNetworkReply;
 class QProcess;
 
-// Cliente STT contra un endpoint OpenAI-compatible (/v1/audio/transcriptions).
-// Sirve igual para un server local (whisper.cpp) o cloud (key vía Bearer).
+// Cliente STT contra un endpoint OpenAI-compatible o un CLI nativo administrado.
+// Sirve igual para server local/cloud y para Parakeet nativo por turno.
 class SttEngine : public QObject
 {
     Q_OBJECT
 public:
     explicit SttEngine(QObject *parent = nullptr);
+    ~SttEngine() override;
 
     // resolvedKey: API key ya resuelta (vacía para local). cfg trae baseUrl/model/lang.
     void setConfig(const VoiceConfig &cfg, const QString &resolvedKey);
@@ -27,11 +29,15 @@ public:
     // AppController so it participates in the existing Job Object lifecycle;
     // this class only attaches to its stdout/stdin for the active session.
     void attachStreamingProcess(QProcess *process);
+    // Motor nativo batch administrado por la app (por ejemplo parakeet-cli).
+    // El proceso se crea por turno y el modelo se mantiene fuera del binario Qt.
+    // Pasar programa/modelo vacíos desactiva este transporte.
+    void setNativeStt(const QString &program, const QString &modelPath);
     bool startStreaming(int sampleRate);
     void pushStreamingAudio(const QByteArray &pcm16);
     void finishStreaming();
     bool streaming() const { return m_streamingActive; }
-    bool busy() const { return m_reply != nullptr || m_streamingActive; }
+    bool busy() const;
     void cancel();
 
     // ── Funciones puras (testeables sin red) ──
@@ -48,6 +54,12 @@ public:
     static QByteArray buildStreamingEnd();
     static QByteArray buildStreamingCancel();
     static QVariantMap parseStreamingMessage(const QByteArray &line);
+    // Args y parser del formato de salida de parakeet-cli, sin depender de
+    // procesos ni archivos reales en los tests.
+    static QStringList buildNativeParakeetArgs(const QString &modelPath,
+                                               const QString &wavPath,
+                                               int threads = 8);
+    static QString parseNativeParakeetTranscript(const QByteArray &output);
 
 signals:
     void transcribed(const QString &text);
@@ -56,6 +68,7 @@ signals:
     void streamingFinished(const QString &text);
 
 private:
+    void transcribeNative(const QByteArray &pcm16, int sampleRate);
     void consumeStreamingOutput();
     void handleStreamingMessage(const QVariantMap &message);
 
@@ -70,4 +83,8 @@ private:
     bool m_streamingActive = false;
     bool m_streamEndRequested = false;
     bool m_streamFinalSeen = false;
+    QPointer<QProcess> m_nativeProcess;
+    QString m_nativeProgram;
+    QString m_nativeModelPath;
+    QString m_nativeWavPath;
 };

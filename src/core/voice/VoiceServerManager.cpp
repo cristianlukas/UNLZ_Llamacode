@@ -33,8 +33,10 @@ const Engine kEngines[] = {
      "ggml-small.bin",
      "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin",
      488, "/inference", 8081, "http_batch", true, "https://github.com/ggerganov/whisper.cpp"},
-    {"parakeet-tdt-0.6b-v3", "Parakeet TDT v3 (sidecar rolling, experimental)", "parakeet-sidecar",
-     "", "", 600, "/stream", 0, "stream_process", false,
+    {"parakeet-tdt-0.6b-v3", "Parakeet TDT v3 (local nativo, experimental, ~356 MB)", "parakeet-cli",
+     "ggml-parakeet-tdt-0.6b-v3-q4_0.bin",
+     "https://huggingface.co/ggml-org/parakeet-GGUF/resolve/main/ggml-parakeet-tdt-0.6b-v3-q4_0.bin?download=true",
+     356, "", 0, "process_batch", true,
      "https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3"},
 };
 
@@ -416,15 +418,24 @@ QString VoiceServerManager::defaultBinaryUrl(const QString &kind)
 
 QString VoiceServerManager::installedBinaryPath(const QString &kind)
 {
-    const QString destDir = binDir() + QStringLiteral("/") + kind;
+    // El paquete oficial de whisper.cpp trae parakeet-cli junto con
+    // whisper-server. Aceptamos ambos lugares para que Parakeet quede
+    // administrado por la misma descarga y no dupliquemos ~100 MB de binarios.
+    const QStringList dirs = kind == QLatin1String("parakeet-cli")
+        ? QStringList{binDir() + QStringLiteral("/whisper-server"),
+                      binDir() + QStringLiteral("/parakeet-cli")}
+        : QStringList{binDir() + QStringLiteral("/") + kind};
     QStringList names;
     if (kind == QLatin1String("piper")) names << "piper.exe" << "piper";
+    else if (kind == QLatin1String("parakeet-cli")) names << "parakeet-cli.exe" << "parakeet-cli";
     else names << "whisper-server.exe" << "server.exe" << "whisper-server" << "server";
-    QDirIterator it(destDir, QDir::Files, QDirIterator::Subdirectories);
-    while (it.hasNext()) {
-        it.next();
-        if (names.contains(it.fileName(), Qt::CaseInsensitive))
-            return it.filePath();
+    for (const QString &dir : dirs) {
+        QDirIterator it(dir, QDir::Files, QDirIterator::Subdirectories);
+        while (it.hasNext()) {
+            it.next();
+            if (names.contains(it.fileName(), Qt::CaseInsensitive))
+                return it.filePath();
+        }
     }
     return {};
 }

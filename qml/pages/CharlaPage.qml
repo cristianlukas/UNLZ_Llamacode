@@ -14,7 +14,7 @@ Item {
     property var cfg: ({})
     property bool testing: false
     property int installPct: -1
-    property string installMsg: ""       // instalación de modelo STT (whisper)
+    property string installMsg: ""       // instalación de modelo/binario STT
     property int voiceInstallPct: -1
     property string voiceInstallMsg: ""  // instalación de voz piper (TTS)
     property string binMsgWhisper: ""
@@ -40,8 +40,12 @@ Item {
         return {}
     }
     function sttIsStreaming() {
-        return (page.cfg.sttMode || "http_batch") === "stream_process"
-               || sttEngineInfo(page.cfg.sttManagedEngine || "").transport === "stream_process"
+        var info = sttEngineInfo(page.cfg.sttManagedEngine || "")
+        return info.id ? info.transport === "stream_process"
+                       : (page.cfg.sttMode || "http_batch") === "stream_process"
+    }
+    function sttIsNative() {
+        return sttEngineInfo(page.cfg.sttManagedEngine || "").transport === "process_batch"
     }
     Connections {
         target: App
@@ -67,6 +71,8 @@ Item {
             var msg = ok ? "Binario instalado ✓" : ("Error binario: " + message)
             if (kind === "piper") page.binMsgPiper = msg
             else page.binMsgWhisper = msg
+            page.installMsg = msg
+            page.cfg = Object.assign({}, page.cfg)
         }
         function onHardwareSummaryChanged() { page.gpuPlan = App.voiceGpuPlan() }
     }
@@ -81,9 +87,11 @@ Item {
     function startOrPromptModelDownload() {
         const engineId = page.cfg.sttManagedEngine || ""
         const voiceId = page.cfg.ttsManagedVoice || "es_ES-davefx-medium"
+        const binaryMissing = page.sttIsNative()
+                ? !App.voiceSttBinaryAvailable(engineId) : !App.voiceWhisperServerAvailable()
         if (engineId.length > 0 && !page.sttIsStreaming()
                 && (!App.voiceModelInstalled(engineId)
-                    || !App.voiceWhisperServerAvailable()
+                    || binaryMissing
                     || !App.voiceTtsVoiceInstalled(voiceId)
                     || !App.voicePiperAvailable())) {
             missingSttModelDialog.engineId = engineId
@@ -384,6 +392,10 @@ Item {
                                 var selected = opts[currentIndex] || {}
                                 page.cfg.sttManagedEngine = selected.id || ""
                                 page.cfg.sttMode = selected.transport || "http_batch"
+                                if (selected.transport === "process_batch") {
+                                    page.cfg.sttManagedCommand = ""
+                                    page.cfg.sttManagedArgs = []
+                                }
                                 page.save()
                             }
                         }
@@ -398,17 +410,28 @@ Item {
                                 text: page.sttIsStreaming()
                                       ? ((page.cfg.sttManagedCommand || "").length > 0
                                          ? "Sidecar configurado ✓" : "Requiere comando sidecar")
+                                      : page.sttIsNative()
+                                      ? (page.installPct >= 0 ? page.installMsg
+                                         : (App.voiceModelInstalled(page.cfg.sttManagedEngine || "")
+                                            && App.voiceSttBinaryAvailable(page.cfg.sttManagedEngine || "")
+                                            ? "Instalado ✓"
+                                            : (page.installMsg.length ? page.installMsg : "No instalado")))
                                       : (page.installPct >= 0 ? page.installMsg
                                       : (App.voiceModelInstalled(page.cfg.sttManagedEngine || "") ? "Instalado ✓"
                                          : (page.installMsg.length ? page.installMsg : "No instalado")))
                             }
                             LcButton {
-                                text: page.installPct >= 0 ? "Cancelar" : "Instalar modelo"
+                                text: page.installPct >= 0 ? "Cancelar"
+                                      : (page.sttIsNative() ? "Instalar Parakeet" : "Instalar modelo")
                                 secondary: true
                                 visible: !page.sttIsStreaming()
-                                         && (page.installPct >= 0 || !App.voiceModelInstalled(page.cfg.sttManagedEngine || ""))
+                                         && (page.installPct >= 0
+                                             || !App.voiceModelInstalled(page.cfg.sttManagedEngine || "")
+                                             || (page.sttIsNative()
+                                                 && !App.voiceSttBinaryAvailable(page.cfg.sttManagedEngine || "")))
                                 onClicked: {
                                     if (page.installPct >= 0) App.cancelVoiceModelInstall()
+                                    else if (page.sttIsNative()) App.installVoicePrerequisites(page.cfg.sttManagedEngine)
                                     else App.installVoiceModel(page.cfg.sttManagedEngine)
                                 }
                             }
@@ -437,10 +460,19 @@ Item {
                             color: Theme.textMuted; font.pixelSize: 12; wrapMode: Text.WordWrap
                         }
 
-                        Text { text: "Binario whisper-server"; color: Theme.textSecondary; visible: (page.cfg.sttManagedEngine || "") !== "" && !page.sttIsStreaming() }
+                        Text { text: "Motor nativo Parakeet"; color: Theme.textSecondary; visible: page.sttIsNative() }
+                        Text {
+                            Layout.fillWidth: true
+                            visible: page.sttIsNative()
+                            text: App.voiceSttBinaryAvailable(page.cfg.sttManagedEngine || "")
+                                  ? "parakeet-cli administrado ✓ (incluido en el paquete de whisper.cpp)"
+                                  : "Falta el binario; usá Instalar modelo para descargarlo"
+                            color: Theme.textMuted; font.pixelSize: 12; wrapMode: Text.WordWrap
+                        }
+                        Text { text: "Binario whisper-server"; color: Theme.textSecondary; visible: (page.cfg.sttManagedEngine || "") !== "" && !page.sttIsStreaming() && !page.sttIsNative() }
                         RowLayout {
                             Layout.fillWidth: true; spacing: 6
-                            visible: (page.cfg.sttManagedEngine || "") !== "" && !page.sttIsStreaming()
+                            visible: (page.cfg.sttManagedEngine || "") !== "" && !page.sttIsStreaming() && !page.sttIsNative()
                             LcTextField {
                                 Layout.fillWidth: true
                                 placeholderText: "ruta a whisper-server (vacío = PATH)"
@@ -1115,7 +1147,9 @@ Item {
         contentItem: Text {
             width: missingSttModelDialog.availableWidth
             height: missingSttModelDialog.availableHeight
-            text: "Faltan componentes locales para conversar por voz.\n\n¿Desea descargar y configurar automáticamente STT, whisper-server, Piper y una voz en español?"
+            text: (missingSttModelDialog.engineId === "parakeet-tdt-0.6b-v3"
+                   ? "Faltan componentes locales para probar Parakeet.\n\n¿Desea descargar el modelo Parakeet, su binario nativo, Piper y una voz en español?"
+                   : "Faltan componentes locales para conversar por voz.\n\n¿Desea descargar y configurar automáticamente STT, whisper-server, Piper y una voz en español?")
             color: Theme.textPrimary
             font.pixelSize: 14
             wrapMode: Text.WordWrap
