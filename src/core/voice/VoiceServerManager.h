@@ -42,6 +42,18 @@ public:
     static QString ttsModelPath(const QString &voiceId); // ruta del .onnx de la voz piper
     bool ttsVoiceInstalled(const QString &voiceId) const;
 
+    // Pocket TTS: runtime aislado y script HTTP residente bajo la instalación
+    // administrada. El script se extrae desde los recursos de la aplicación.
+    static QString pocketRoot();
+    static QString pocketVenvDir();
+    static QString pocketManagedPythonPath();
+    static QString pocketCacheDir();
+    static QString pocketServerScriptPath();
+    static int pocketDefaultPort();
+    static bool pocketRuntimeInstalled();
+    static bool pocketServerScriptAvailable();
+    static bool ensurePocketServerScript(QString *error = nullptr);
+
     // Descarga del modelo STT / de la voz TTS (async). Emite installProgress/installFinished.
     void installModel(const QString &engineId);
     void installTtsVoice(const QString &voiceId);
@@ -71,6 +83,13 @@ public:
     // el modelo. Cada línea JSON lleva su propio output_file (ver
     // TtsEngine::buildPiperJsonLine).
     static QStringList buildPiperResidentArgs(const QString &modelPath, const QString &outDir);
+    // Args del sidecar residente Pocket TTS. Se pasan sin shell al intérprete
+    // Python administrado por la app.
+    static QStringList buildPocketServerArgs(const QString &scriptPath,
+                                             const QString &language,
+                                             const QString &voice,
+                                             const QString &modelConfig,
+                                             int port, bool quantize);
 
 signals:
     void installProgress(const QString &engineId, int pct, const QString &status);

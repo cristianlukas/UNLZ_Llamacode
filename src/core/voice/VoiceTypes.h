@@ -46,8 +46,8 @@ struct VoiceConfig {
     QString ttsKeyRef;
     QString ttsFormat   = QStringLiteral("wav");     // wav | mp3 | pcm
     // Modo TTS: auto elige según hardware/disponibilidad; http usa un endpoint
-    // OpenAI-compatible; piper, qwen3 e inflect son procesos locales.
-    QString ttsMode = QStringLiteral("auto");        // auto | http | kokoro | piper | qwen3 | inflect
+    // OpenAI-compatible; pocket, piper, qwen3 e inflect son procesos locales.
+    QString ttsMode = QStringLiteral("auto");        // auto | http | kokoro | pocket | piper | qwen3 | inflect
     // HTTP PCM incremental: reproduce cada bloque al llegar, sin esperar un WAV
     // completo. Kokoro y cualquier endpoint compatible pueden usar esta ruta.
     bool ttsStreamAudio = false;
@@ -59,6 +59,21 @@ struct VoiceConfig {
     // sesión. Los argumentos se pasan sin shell, como una lista separada.
     QString ttsManagedCommand;
     QStringList ttsManagedArgs;
+
+    // Pocket TTS (Kyutai): runtime Python administrado por INGI-CHARLA y
+    // servidor local residente. `pocketVoice` puede ser una voz incorporada
+    // (por ejemplo "lola") o `pocketVoicePath` puede apuntar a WAV/embedding.
+    QString pocketPythonPath = QStringLiteral("python");
+    QString pocketLanguage = QStringLiteral("spanish");
+    QString pocketVoice = QStringLiteral("lola");
+    QString pocketVoicePath;
+    QString pocketModelConfig;
+    int pocketPort = 8200;
+    bool pocketQuantize = false;
+    // Se mantiene false hasta que el benchmark local de voz confirme que el
+    // equipo puede sostener la latencia deseada; la selección manual siempre
+    // está disponible aunque esto permanezca apagado.
+    bool pocketAutoEnable = false;
     QString qwenBinaryPath;                          // qwen3-tts-cli[.exe]
     QString qwenModelDir;                            // carpeta con GGUFs del runtime
     QString qwenModelName = QStringLiteral("qwen-talker-0.6b-base-Q8_0.gguf");

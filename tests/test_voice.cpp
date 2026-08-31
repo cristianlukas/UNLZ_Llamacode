@@ -30,6 +30,7 @@ private slots:
     void cursorCommandIgnoresConversation();
     void wavHeaderAndExtract();
     void wavPcm16FormatParse();
+    void wavPcm16DataRangeParse();
     void rmsLevels();
     void sttMultipart();
     void sttParseTranscript();
@@ -40,6 +41,7 @@ private slots:
     void ttsPiperResidentArgs();
     void ttsPiperAvailability();
     void ttsQwenArgsAndPolicy();
+    void ttsPocketArgsAndPolicy();
     void voiceAgentCapabilityPolicy();
     void vadTurnEnded();
     void vadAdaptiveNoiseFloor();
@@ -89,6 +91,28 @@ void TestVoice::ttsQwenArgsAndPolicy()
     QVERIFY(inflect.contains("Hello from Ingi"));
     QVERIFY(inflect.contains("voice.wav"));
     QVERIFY(inflect.contains("directml"));
+}
+
+void TestVoice::ttsPocketArgsAndPolicy()
+{
+    const QStringList args = VoiceServerManager::buildPocketServerArgs(
+        "pocket_tts_server.py", "spanish", "C:/voices/ref.wav",
+        "C:/models/pocket.toml", 8320, true);
+    QVERIFY(args.contains("--language"));
+    QVERIFY(args.contains("spanish"));
+    QVERIFY(args.contains("--voice"));
+    QVERIFY(args.contains("C:/voices/ref.wav"));
+    QVERIFY(args.contains("--config"));
+    QVERIFY(args.contains("--quantize"));
+    QCOMPARE(args.at(0), QStringLiteral("pocket_tts_server.py"));
+
+    VoiceConfig cfg;
+    cfg.pocketAutoEnable = true;
+    QCOMPARE(TtsPolicy::recommend(cfg, 0.0, 8.0, 0.0, false, false, true)
+                 .value("mode").toString(), QStringLiteral("pocket"));
+    cfg.pocketAutoEnable = false;
+    QCOMPARE(TtsPolicy::recommend(cfg, 0.0, 8.0, 0.0, false, false, true)
+                 .value("mode").toString(), QStringLiteral("http"));
 }
 
 void TestVoice::voiceAgentCapabilityPolicy()
@@ -184,6 +208,14 @@ void TestVoice::configRoundTrip()
     c.ttsStreamAudio = true;
     c.ttsPcmSampleRate = 22050;
     c.ttsPcmChannels = 2;
+    c.pocketPythonPath = "C:/Python/python.exe";
+    c.pocketLanguage = "spanish";
+    c.pocketVoice = "lola";
+    c.pocketVoicePath = "C:/voices/profe.wav";
+    c.pocketModelConfig = "C:/models/pocket-24layer.toml";
+    c.pocketPort = 8320;
+    c.pocketQuantize = true;
+    c.pocketAutoEnable = true;
     c.inflectPythonPath = "C:/Python/python.exe";
     c.inflectModelDir = "C:/models/Inflect-Nano-v2-ONNX";
     c.inflectProvider = "directml";
@@ -213,6 +245,14 @@ void TestVoice::configRoundTrip()
     QCOMPARE(r.ttsStreamAudio, true);
     QCOMPARE(r.ttsPcmSampleRate, 22050);
     QCOMPARE(r.ttsPcmChannels, 2);
+    QCOMPARE(r.pocketPythonPath, QString("C:/Python/python.exe"));
+    QCOMPARE(r.pocketLanguage, QString("spanish"));
+    QCOMPARE(r.pocketVoice, QString("lola"));
+    QCOMPARE(r.pocketVoicePath, QString("C:/voices/profe.wav"));
+    QCOMPARE(r.pocketModelConfig, QString("C:/models/pocket-24layer.toml"));
+    QCOMPARE(r.pocketPort, 8320);
+    QCOMPARE(r.pocketQuantize, true);
+    QCOMPARE(r.pocketAutoEnable, true);
     QCOMPARE(r.inflectPythonPath, QString("C:/Python/python.exe"));
     QCOMPARE(r.inflectModelDir, QString("C:/models/Inflect-Nano-v2-ONNX"));
     QCOMPARE(r.inflectProvider, QString("directml"));
@@ -290,6 +330,24 @@ void TestVoice::wavPcm16FormatParse()
     QVERIFY(!AudioCodec::wavPcm16Format(f32, &rate, &ch));
     // Header truncado → false, sin crash.
     QVERIFY(!AudioCodec::wavPcm16Format(wav.left(16), &rate, &ch));
+}
+
+void TestVoice::wavPcm16DataRangeParse()
+{
+    QByteArray streamWav = AudioCodec::pcm16ToWav(QByteArray(100, '\1'), 24000, 1);
+    // Pocket's streaming header leaves both RIFF and data sizes unknown.
+    for (int i = 4; i < 8; ++i) streamWav[i] = char(0xff);
+    for (int i = 40; i < 44; ++i) streamWav[i] = char(0xff);
+    int rate = 0, channels = 0, offset = -1;
+    quint32 size = 0;
+    QVERIFY(AudioCodec::wavPcm16DataRange(streamWav, &rate, &channels,
+                                          &offset, &size));
+    QCOMPARE(rate, 24000);
+    QCOMPARE(channels, 1);
+    QCOMPARE(offset, 44);
+    QCOMPARE(size, quint32(0xffffffffu));
+    QVERIFY(!AudioCodec::wavPcm16DataRange(streamWav.left(20), &rate, &channels,
+                                           &offset, &size));
 }
 
 void TestVoice::rmsLevels()

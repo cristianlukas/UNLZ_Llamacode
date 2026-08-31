@@ -1,7 +1,8 @@
 #include "TtsPolicy.h"
 
 QVariantMap TtsPolicy::recommend(const VoiceConfig &cfg, double vramGb, double ramGb,
-                                 double vramFreeGb, bool qwenReady, bool piperReady)
+                                 double vramFreeGb, bool qwenReady, bool piperReady,
+                                 bool pocketReady)
 {
     QString mode = cfg.ttsMode;
     QString reason;
@@ -10,7 +11,12 @@ QVariantMap TtsPolicy::recommend(const VoiceConfig &cfg, double vramGb, double r
         reason = QStringLiteral("Selección manual del usuario");
     } else {
         const double usableVram = vramFreeGb > 0.0 ? vramFreeGb : vramGb;
-        if (qwenReady && usableVram >= 3.5 && ramGb >= 12.0) {
+        if (pocketReady && cfg.pocketAutoEnable
+            && (!qwenReady || usableVram < 3.5 || ramGb < 12.0)) {
+            mode = QStringLiteral("pocket");
+            reason = QStringLiteral(
+                "Pocket TTS local está instalado y fue habilitado para equipos con poca VRAM");
+        } else if (qwenReady && usableVram >= 3.5 && ramGb >= 12.0) {
             mode = QStringLiteral("qwen3");
             if (usableVram >= 7.0 && ramGb >= 20.0) {
                 model = QStringLiteral("qwen-talker-1.7b-base-Q8_0.gguf");

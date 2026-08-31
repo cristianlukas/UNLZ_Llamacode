@@ -1358,6 +1358,14 @@ public:
     // fija la ruta correspondiente. urlOverride vacío = URL por defecto del SO.
     Q_INVOKABLE void installVoiceBinary(const QString &kind, const QString &urlOverride = QString());
     Q_INVOKABLE QString voiceBinaryDefaultUrl(const QString &kind) const;
+    // ── Pocket TTS (Kyutai, CPU/offline, sidecar residente) ──
+    Q_INVOKABLE QVariantMap voicePocketStatus(const QString &profileId = QString()) const;
+    Q_INVOKABLE bool voicePocketAvailable() const;
+    Q_INVOKABLE QString voicePocketPythonPath() const;
+    Q_INVOKABLE void setVoicePocketPythonPath(const QString &path);
+    Q_INVOKABLE QString pickVoicePocketPython();
+    Q_INVOKABLE void installVoicePocket();
+    Q_INVOKABLE void cancelVoicePocketInstall();
 
     static QVariantMap scoreAgentBenchmarkAcceptanceForTest(const QString &workspace,
                                                             const QString &finalText,
@@ -1853,6 +1861,10 @@ private:
     QProcess *m_sttProc = nullptr;      // server STT gestionado (whisper.cpp)
     QProcess *m_externalSttProc = nullptr; // endpoint STT local configurado por el usuario
     QProcess *m_externalTtsProc = nullptr; // endpoint TTS local configurado por el usuario
+    QProcess *m_pocketInstallProc = nullptr; // venv + paquete + cache inicial
+    QString m_pocketInstallBasePython;
+    int m_pocketInstallStep = 0;
+    bool m_pocketInstallFinishing = false;
     QString m_pendingVoicePrerequisitesEngine;
     bool m_charlaActive = false;
     bool m_charlaTuneOnNextLaunch = false;  // startServer aplica overrides de voz
@@ -1883,6 +1895,8 @@ private:
     bool startManagedExternalVoice(const VoiceConfig &c, bool stt);
     void stopManagedExternalVoice();
     void continueVoicePrerequisitesInstall();
+    void runPocketInstallStep();
+    void finishPocketInstall(bool ok, const QString &message);
     void stopManagedStt();
     QString voiceConfigPath() const;
     // Chat session state

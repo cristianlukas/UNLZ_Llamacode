@@ -1,5 +1,6 @@
 #include "TtsEngine.h"
 #include "VoiceServerManager.h"
+#include "AudioCodec.h"
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QJsonDocument>
@@ -203,6 +204,104 @@ void TtsEngine::synthesizeInflect(const QString &text)
     m_inflect->start(m_cfg.inflectPythonPath, buildInflectArgs(m_cfg, text, m_inflectOut));
 }
 
+void TtsEngine::clearPocketStream()
+{
+    m_pocketBuffer.clear();
+    m_pocketDataOffset = -1;
+    m_pocketDataEmitted = 0;
+    m_pocketDataSize = 0;
+    m_pocketSampleRate = 0;
+    m_pocketChannels = 0;
+    m_pocketStreaming = false;
+}
+
+void TtsEngine::consumePocketWav()
+{
+    if (!m_reply) return;
+    m_pocketBuffer += m_reply->readAll();
+    if (m_pocketDataOffset < 0) {
+        int offset = -1;
+        quint32 size = 0;
+        int rate = 0;
+        int channels = 0;
+        if (!AudioCodec::wavPcm16DataRange(m_pocketBuffer, &rate, &channels,
+                                           &offset, &size))
+            return; // todavía no llegó el header completo
+        m_pocketDataOffset = offset;
+        m_pocketDataSize = size;
+        m_pocketSampleRate = rate;
+        m_pocketChannels = channels;
+    }
+    qint64 available = qMax<qint64>(0, m_pocketBuffer.size() - m_pocketDataOffset);
+    if (m_pocketDataSize != 0xffffffffu)
+        available = qMin(available, qint64(m_pocketDataSize));
+    if (available <= m_pocketDataEmitted) return;
+    const qint64 start = qint64(m_pocketDataOffset) + m_pocketDataEmitted;
+    const QByteArray pcm = m_pocketBuffer.mid(int(start),
+                                               int(available - m_pocketDataEmitted));
+    if (!pcm.isEmpty()) {
+        m_pocketDataEmitted += pcm.size();
+        emit audioChunk(pcm, m_pocketSampleRate, m_pocketChannels);
+    }
+}
+
+void TtsEngine::synthesizePocket(const QString &text)
+{
+    QString base = m_cfg.ttsBaseUrl;
+    if (base.trimmed().isEmpty())
+        base = QStringLiteral("http://127.0.0.1:%1").arg(VoiceServerManager::pocketDefaultPort());
+    while (base.endsWith('/')) base.chop(1);
+    QNetworkRequest req(QUrl(base + QStringLiteral("/v1/audio/speech")));
+    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    clearPocketStream();
+    m_pocketStreaming = true;
+    m_pocketCancelRequested = false;
+    m_reply = m_nam.post(req, buildSpeechBody(
+        QStringLiteral("pocket-tts"), m_cfg.pocketVoice, text, QStringLiteral("wav")));
+    connect(m_reply, &QNetworkReply::readyRead, this, [this]() { consumePocketWav(); });
+    connect(m_reply, &QNetworkReply::finished, this, [this, text]() {
+        QNetworkReply *r = m_reply;
+        if (!r) return;
+        // Consume the final bytes before releasing m_reply: consumePocketWav()
+        // deliberately reads directly from the response to support chunked HTTP.
+        const bool canceled = m_pocketCancelRequested;
+        if (!canceled) consumePocketWav();
+        m_reply = nullptr;
+        m_pocketCancelRequested = false;
+        const int status = r->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        const QByteArray tail = r->readAll();
+        const QString networkError = r->errorString();
+        const bool badStatus = status > 0 && (status < 200 || status >= 300);
+        const bool failedRequest = r->error() != QNetworkReply::NoError || badStatus;
+        r->deleteLater();
+        if (canceled) {
+            clearPocketStream();
+            return;
+        }
+        if (failedRequest) {
+            QString detail = networkError;
+            if (detail.isEmpty() && !tail.isEmpty()) detail = QString::fromUtf8(tail);
+            clearPocketStream();
+            fallbackFrom(QStringLiteral("pocket"), text,
+                         detail.isEmpty() ? QStringLiteral("Pocket TTS no respondió") : detail);
+            return;
+        }
+        if (m_pocketDataEmitted <= 0) {
+            QString detail = QStringLiteral("Pocket TTS devolvió un WAV vacío o inválido");
+            if (tail.startsWith('{')) {
+                const QJsonObject obj = QJsonDocument::fromJson(tail).object();
+                detail = obj.value(QStringLiteral("error")).toObject().value(
+                    QStringLiteral("message")).toString(detail);
+            }
+            clearPocketStream();
+            fallbackFrom(QStringLiteral("pocket"), text, detail);
+            return;
+        }
+        emit audioStreamFinished();
+        clearPocketStream();
+    });
+}
+
 QString TtsEngine::resolvePiperModel() const
 {
     QString modelPath = m_piperModel;
@@ -388,6 +487,7 @@ void TtsEngine::synthesize(const QString &text)
 {
     if (busy()) { emit failed(QStringLiteral("TTS ocupado")); return; }
     if (text.trimmed().isEmpty()) { emit failed(QStringLiteral("texto vacío")); return; }
+    if (m_cfg.ttsMode == QLatin1String("pocket")) { synthesizePocket(text); return; }
     if (m_cfg.ttsMode == QLatin1String("piper")) { synthesizePiper(text); return; }
     if (m_cfg.ttsMode == QLatin1String("qwen3")) { synthesizeQwen(text); return; }
     if (m_cfg.ttsMode == QLatin1String("inflect")) { synthesizeInflect(text); return; }
@@ -458,7 +558,11 @@ void TtsEngine::synthesize(const QString &text)
 
 void TtsEngine::cancel()
 {
-    if (m_reply) m_reply->abort();
+    if (m_reply) {
+        if (m_pocketStreaming) m_pocketCancelRequested = true;
+        m_reply->abort();
+    }
+    clearPocketStream();
     if (m_piper) {
         QProcess *p = m_piper; m_piper = nullptr;
         p->kill(); p->deleteLater();

@@ -17,6 +17,11 @@ QByteArray wavExtractPcm(const QByteArray &wav);
 // (lo que produce piper y lo que QAudioSink puede reproducir directo, sin pasar
 // por el pipeline de QMediaPlayer). sampleRate/channels salen por puntero.
 bool wavPcm16Format(const QByteArray &wav, int *sampleRate, int *channels);
+// Igual que wavPcm16Format, pero además devuelve el offset y el tamaño del
+// chunk `data`. Acepta un header WAV de streaming (dataSize=0xffffffff), por
+// lo que el consumidor puede empezar a reproducir antes del EOF.
+bool wavPcm16DataRange(const QByteArray &wav, int *sampleRate, int *channels,
+                       int *dataOffset, quint32 *dataSize);
 
 // RMS normalizado [0..1] de un bloque PCM16. 0 si está vacío.
 double rms(const int16_t *samples, int count);

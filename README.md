@@ -957,12 +957,20 @@ incluidos).
   después de cancelar o interrumpir. El adapter de Parakeet TDT v3 vive en
   [`docs/voice-streaming.md`](docs/voice-streaming.md) y
   `tools/parakeet_stt_sidecar.py`; Whisper batch permanece como fallback.
-- **TTS multimotor**: cada perfil puede fijar HTTP/Kokoro, Piper o `qwen3-tts.cpp`, o
+- **TTS multimotor**: cada perfil puede fijar HTTP/Kokoro, Pocket TTS, Piper o `qwen3-tts.cpp`, o
   dejarlo en `auto`. La selección automática considera RAM, VRAM total/libre y
   motores instalados: prioriza Qwen3-TTS 1.7B/0.6B cuando hay margen y conserva
   Piper para equipos chicos o cuando conviene reservar VRAM para el LLM. Qwen3
   admite GGUF, embedding de hablante, WAV+transcripción de referencia y una
   instrucción de estilo; si falla puede caer a Piper sin perder el turno.
+- **Pocket TTS local**: el modo `pocket` instala `pocket-tts` en un venv propio,
+  carga el modelo una sola vez en un sidecar local y transmite WAV PCM16 a Charla.
+  Funciona sobre CPU, no reserva VRAM, soporta español/inglés/francés/alemán/
+  portugués/italiano y permite usar una voz incorporada o una muestra WAV/MP3 o
+  embedding `.safetensors` local. La instalación precarga la caché y las sesiones
+  se ejecutan offline; `pocketAutoEnable` queda apagado por defecto hasta medir
+  latencia y calidad en el equipo. El procedimiento completo está en
+  [`docs/pocket-tts.md`](docs/pocket-tts.md).
 - **Charla multi-GPU**: con dos o más GPU NVIDIA, la app reserva automáticamente
   la de menor VRAM para STT, TTS local y auxiliares, y relanza el perfil normal con
   un `--tensor-split` proporcional a la VRAM libre que queda en esa GPU más la de
@@ -2109,7 +2117,7 @@ El diagnóstico de hardware conserva la topología de cada GPU (`gpus`), un
 `hardwareFingerprint` y una recomendación explicable de `split-mode` y KV cache.
 Para Ingi Charla también calcula una reserva de voz: la GPU más débil conserva
 2 GiB de margen para STT/TTS/auxiliares (4–5 GiB si el TTS local elegido es
-Qwen3 o Inflect CUDA) y `llama-server` recibe la capacidad restante de todas las
+ Qwen3 o Inflect CUDA). Pocket TTS corre en CPU y no agrega reserva; `llama-server` recibe la capacidad restante de todas las
 GPU. Esto permite mantener una conversación y usar el agente para operar la PC
 sin cargar el modelo de voz sobre la GPU que sostiene la mayor parte del LLM.
 En enlaces PCIe débiles prioriza `layer`; con enlaces rápidos habilita la prueba

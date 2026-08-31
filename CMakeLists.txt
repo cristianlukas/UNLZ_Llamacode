@@ -532,6 +532,7 @@ qt_add_resources(LlamaCode "llamacode_assets"
         assets/benchmarks/server_speed_v1.json
         assets/eval/reasoning_bias.json
         assets/eval/snake_retro_singlefile.json
+        tools/pocket_tts_server.py
         docs/benchmark-results.md
         docs/benchmark-results-history.md
         ${LLAMACODE_BUNDLED_CUSTOM_BENCHMARKS}

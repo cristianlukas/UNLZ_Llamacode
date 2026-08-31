@@ -155,6 +155,8 @@ double voiceReserveMbForConfig(const VoiceConfig &config)
     if (config.ttsMode == QLatin1String("inflect")
         && config.inflectProvider != QLatin1String("cpu"))
         return 4096.0;
+    if (config.ttsMode == QLatin1String("pocket"))
+        return 0.0; // Pocket TTS es CPU-only; no reserva de VRAM para la voz.
     return 2048.0;
 }
 
@@ -23619,14 +23621,29 @@ QVariantMap AppController::recommendedVoiceTts(const QString &profileId) const
         else
             freeVram = voiceVram;
     }
+    const bool pocketReady = voicePocketAvailable();
     return TtsPolicy::recommend(c, voiceVram,
                                 m_hardwareSummary.value(QStringLiteral("ramGb")).toDouble(),
-                                freeVram, qwenReady, piperReady);
+                                freeVram, qwenReady, piperReady, pocketReady);
 }
 
 QVariantMap AppController::voiceGpuPlanForLaunch(const QString &launchId,
                                                  const VoiceConfig &config) const
 {
+    if (config.ttsMode == QLatin1String("pocket")) {
+        return {{QStringLiteral("enabled"), false},
+                {QStringLiteral("mode"), QStringLiteral("cpu-only-voice")},
+                {QStringLiteral("voiceGpuIndex"), -1},
+                {QStringLiteral("voiceGpuMask"), QString()},
+                {QStringLiteral("modelGpuMask"), QString()},
+                {QStringLiteral("modelTensorSplit"), QString()},
+                {QStringLiteral("voiceReserveMb"), 0.0},
+                {QStringLiteral("voiceReserveAvailable"), true},
+                {QStringLiteral("voicePlacementSafe"), true},
+                {QStringLiteral("modelPlacementSafe"), true},
+                {QStringLiteral("reason"), QStringLiteral(
+                    "Pocket TTS usa CPU y no reserva VRAM para la voz.")}};
+    }
     auto modelRequiredForLaunch = [this](const QString &id) {
         if (id.isEmpty()) return 0.0;
         const LaunchProfile launch = m_profiles.resolveLaunch(id);
@@ -23715,6 +23732,20 @@ QVariantMap AppController::voiceGpuPlanForLaunch(const QString &launchId,
 
 QVariantMap AppController::voiceGpuPlanForConfig(const VoiceConfig &config) const
 {
+    if (config.ttsMode == QLatin1String("pocket")) {
+        return {{QStringLiteral("enabled"), false},
+                {QStringLiteral("mode"), QStringLiteral("cpu-only-voice")},
+                {QStringLiteral("voiceGpuIndex"), -1},
+                {QStringLiteral("voiceGpuMask"), QString()},
+                {QStringLiteral("modelGpuMask"), QString()},
+                {QStringLiteral("modelTensorSplit"), QString()},
+                {QStringLiteral("voiceReserveMb"), 0.0},
+                {QStringLiteral("voiceReserveAvailable"), true},
+                {QStringLiteral("voicePlacementSafe"), true},
+                {QStringLiteral("modelPlacementSafe"), true},
+                {QStringLiteral("reason"), QStringLiteral(
+                    "Pocket TTS usa CPU y no reserva VRAM para la voz.")}};
+    }
     return voiceGpuPlanForLaunch(m_activeLaunchId, config);
 }
 
@@ -23789,6 +23820,30 @@ void AppController::applyAppLanguageToVoice(VoiceConfig &c) const
         VoiceServerManager::ttsVoice(c.ttsManagedVoice).value(QStringLiteral("lang")).toString();
     if (voiceLang != lang)
         c.ttsManagedVoice = VoiceServerManager::defaultTtsVoiceForLang(lang);
+    const QHash<QString, QString> pocketLanguages{
+        {QStringLiteral("es"), QStringLiteral("spanish")},
+        {QStringLiteral("en"), QStringLiteral("english")},
+        {QStringLiteral("fr"), QStringLiteral("french")},
+        {QStringLiteral("de"), QStringLiteral("german")},
+        {QStringLiteral("pt"), QStringLiteral("portuguese")},
+        {QStringLiteral("it"), QStringLiteral("italian")}};
+    const QString baseLang = lang.left(2).toLower();
+    c.pocketLanguage = pocketLanguages.value(baseLang, QStringLiteral("spanish"));
+    if (c.pocketVoice.isEmpty()) c.pocketVoice = QStringLiteral("lola");
+    // Si quedó la voz incorporada por defecto, acompañar el idioma de la app
+    // con la voz incorporada equivalente. Una voz escrita explícitamente se
+    // respeta; y una muestra/embedding local siempre tiene prioridad.
+    if (c.pocketVoicePath.trimmed().isEmpty()) {
+        const QHash<QString, QString> pocketDefaultVoices{
+            {QStringLiteral("spanish"), QStringLiteral("lola")},
+            {QStringLiteral("english"), QStringLiteral("alba")},
+            {QStringLiteral("french"), QStringLiteral("estelle")},
+            {QStringLiteral("german"), QStringLiteral("juergen")},
+            {QStringLiteral("portuguese"), QStringLiteral("rafael")},
+            {QStringLiteral("italian"), QStringLiteral("giovanni")}};
+        if (pocketDefaultVoices.values().contains(c.pocketVoice))
+            c.pocketVoice = pocketDefaultVoices.value(c.pocketLanguage, QStringLiteral("lola"));
+    }
 }
 
 void AppController::applyVoiceConfig()
@@ -23807,6 +23862,15 @@ void AppController::applyVoiceConfig()
         c.qwenModelName = rec.value(QStringLiteral("qwenModelName"), c.qwenModelName).toString();
         qInfo().noquote() << QStringLiteral("[charla] TTS auto → %1 (%2)")
                                  .arg(c.ttsMode, rec.value(QStringLiteral("reason")).toString());
+    }
+    if (c.ttsMode == QLatin1String("pocket")) {
+        c.ttsProvider = QStringLiteral("local");
+        c.ttsBaseUrl = QStringLiteral("http://127.0.0.1:%1")
+            .arg(c.pocketPort > 0 ? c.pocketPort : VoiceServerManager::pocketDefaultPort());
+        c.ttsModel = QStringLiteral("pocket-tts");
+        c.ttsVoice = c.pocketVoice;
+        c.ttsFormat = QStringLiteral("wav");
+        c.ttsStreamAudio = true;
     }
     // STT gestionado: apuntar al server local que lanza la app (whisper.cpp).
     if (!c.sttManagedEngine.isEmpty()) {
@@ -24109,7 +24173,8 @@ void AppController::startCharla()
     const bool serverPlanMatches = !launchChangedByFallback
         && m_serverUsesVoiceGpuPlan
         && m_serverVoiceGpuPlanSignature == voiceGpuPlanSignature(gpuPlan);
-    if (autoGpuPlan && !serverPlanMatches) {
+    const bool needToDropStaleVoicePlan = !autoGpuPlan && m_serverUsesVoiceGpuPlan;
+    if ((autoGpuPlan && !serverPlanMatches) || needToDropStaleVoicePlan) {
         if (m_activeLaunchId.isEmpty()) {
             m_charlaGpuPlanActive = false;
             emit serverError(QStringLiteral(
@@ -24145,6 +24210,23 @@ void AppController::startCharla()
     // Si el perfil activo usa un STT gestionado, lanzar whisper-server primero.
     VoiceConfig c = plannedVoiceConfig;
     QString effectiveTtsMode = c.ttsMode;
+    if (effectiveTtsMode == QLatin1String("pocket")) {
+        QString scriptError;
+        if (!VoiceServerManager::ensurePocketServerScript(&scriptError)) {
+            emit serverError(scriptError);
+            return;
+        }
+        if (!voicePocketAvailable()) {
+            emit serverError(QStringLiteral(
+                "Pocket TTS no está instalado. Desde Charla elegí un Python e instalá Pocket TTS."));
+            return;
+        }
+        c.ttsManagedCommand = voicePocketPythonPath();
+        c.ttsManagedArgs = VoiceServerManager::buildPocketServerArgs(
+            VoiceServerManager::pocketServerScriptPath(), c.pocketLanguage,
+            c.pocketVoicePath.isEmpty() ? c.pocketVoice : c.pocketVoicePath,
+            c.pocketModelConfig, c.pocketPort, c.pocketQuantize);
+    }
     if (effectiveTtsMode == QLatin1String("piper")) {
         const QString voiceId = c.ttsManagedVoice.isEmpty()
             ? QStringLiteral("es_ES-davefx-medium") : c.ttsManagedVoice;
@@ -24200,7 +24282,8 @@ void AppController::startCharla()
     }
     if (!c.ttsManagedCommand.trimmed().isEmpty()
         && (effectiveTtsMode == QLatin1String("http")
-            || effectiveTtsMode == QLatin1String("auto"))) {
+            || effectiveTtsMode == QLatin1String("auto")
+            || effectiveTtsMode == QLatin1String("pocket"))) {
         if (!startManagedExternalVoice(c, false)) {
             stopManagedStt();
             stopManagedExternalVoice();
@@ -24400,6 +24483,240 @@ QString AppController::voicePiperPath() const
     return readSetting(QStringLiteral("voicePiperPath")).toString();
 }
 
+QVariantMap AppController::voicePocketStatus(const QString &profileId) const
+{
+    const QString id = profileId.isEmpty() ? m_activeLaunchId : profileId;
+    const VoiceConfig cfg = VoiceConfig::fromJson(QJsonObject::fromVariantMap(
+        m_profiles.getLaunchVoice(id)));
+    const QString python = voicePocketPythonPath();
+    const bool pythonAvailable = QFileInfo(python).isFile()
+        || !QStandardPaths::findExecutable(python).isEmpty();
+    const bool runtime = VoiceServerManager::pocketRuntimeInstalled();
+    const bool script = VoiceServerManager::pocketServerScriptAvailable();
+    const bool customVoice = !cfg.pocketVoicePath.trimmed().isEmpty();
+    const bool voiceAvailable = !customVoice || QFileInfo::exists(cfg.pocketVoicePath);
+    const bool ready = runtime && script && pythonAvailable && voiceAvailable;
+    QString detail;
+    if (!pythonAvailable) detail = QStringLiteral("Elegí un Python válido");
+    else if (!runtime) detail = QStringLiteral("Falta instalar Pocket TTS");
+    else if (!script) detail = QStringLiteral("Falta el helper local de Pocket TTS");
+    else if (!voiceAvailable) detail = QStringLiteral("No existe el archivo de voz indicado");
+    else detail = QStringLiteral("Pocket TTS listo en CPU · %1 · voz %2")
+        .arg(cfg.pocketLanguage, cfg.pocketVoicePath.isEmpty()
+            ? cfg.pocketVoice : QFileInfo(cfg.pocketVoicePath).fileName());
+    return {{QStringLiteral("ready"), ready},
+            {QStringLiteral("runtimeInstalled"), runtime},
+            {QStringLiteral("scriptAvailable"), script},
+            {QStringLiteral("pythonAvailable"), pythonAvailable},
+            {QStringLiteral("pythonPath"), python},
+            {QStringLiteral("root"), VoiceServerManager::pocketRoot()},
+            {QStringLiteral("cacheDir"), VoiceServerManager::pocketCacheDir()},
+            {QStringLiteral("voiceAvailable"), voiceAvailable},
+            {QStringLiteral("detail"), detail}};
+}
+
+bool AppController::voicePocketAvailable() const
+{
+    return voicePocketStatus().value(QStringLiteral("ready")).toBool();
+}
+
+QString AppController::voicePocketPythonPath() const
+{
+    const QString managed = VoiceServerManager::pocketManagedPythonPath();
+    if (VoiceServerManager::pocketRuntimeInstalled() && QFileInfo::exists(managed))
+        return managed;
+    const QString configured = readSetting(QStringLiteral("voicePocketPythonPath"))
+        .toString().trimmed();
+    return configured.isEmpty() ? QStringLiteral("python") : configured;
+}
+
+void AppController::setVoicePocketPythonPath(const QString &path)
+{
+    writeSetting(QStringLiteral("voicePocketPythonPath"), path.trimmed());
+}
+
+QString AppController::pickVoicePocketPython()
+{
+    const QString p = QFileDialog::getOpenFileName(
+        nullptr, QStringLiteral("Seleccionar Python para Pocket TTS"), QString(),
+#ifdef Q_OS_WIN
+        QStringLiteral("Python (python.exe);;Todos (*)"));
+#else
+        QStringLiteral("Python (python);;Todos (*)"));
+#endif
+    if (!p.isEmpty()) setVoicePocketPythonPath(p);
+    return p;
+}
+
+void AppController::installVoicePocket()
+{
+    if (m_pocketInstallProc || m_pocketInstallStep > 0) return;
+    QString scriptError;
+    if (!VoiceServerManager::ensurePocketServerScript(&scriptError)) {
+        emit voiceInstallFinished(QStringLiteral("pocket-tts"), false, scriptError);
+        return;
+    }
+    m_pocketInstallBasePython = readSetting(QStringLiteral("voicePocketPythonPath"))
+        .toString().trimmed();
+    if (m_pocketInstallBasePython.isEmpty()) m_pocketInstallBasePython = QStringLiteral("python");
+    const bool pythonAvailable = QFileInfo(m_pocketInstallBasePython).isFile()
+        || !QStandardPaths::findExecutable(m_pocketInstallBasePython).isEmpty();
+    if (!pythonAvailable) {
+        emit voiceInstallFinished(QStringLiteral("pocket-tts"), false,
+                                  QStringLiteral("No se encontró el Python configurado: %1")
+                                      .arg(m_pocketInstallBasePython));
+        return;
+    }
+    m_pocketInstallStep = 1;
+    m_pocketInstallFinishing = false;
+    emit voiceInstallProgress(QStringLiteral("pocket-tts"), 2,
+                              QStringLiteral("Creando entorno Python aislado…"));
+    runPocketInstallStep();
+}
+
+void AppController::runPocketInstallStep()
+{
+    if (m_pocketInstallStep <= 0 || m_pocketInstallProc) return;
+    const QString managedPython = VoiceServerManager::pocketManagedPythonPath();
+    const QString root = VoiceServerManager::pocketRoot();
+    QDir().mkpath(root);
+    QString program;
+    QStringList args;
+    int progress = 5;
+    QString status;
+    if (m_pocketInstallStep == 1) {
+        program = m_pocketInstallBasePython;
+        args = {QStringLiteral("-m"), QStringLiteral("venv"),
+                VoiceServerManager::pocketVenvDir()};
+        progress = 10;
+        status = QStringLiteral("Creando entorno virtual…");
+    } else if (m_pocketInstallStep == 2) {
+        program = managedPython;
+        args = {QStringLiteral("-m"), QStringLiteral("pip"),
+                QStringLiteral("install"), QStringLiteral("--upgrade"), QStringLiteral("pip")};
+        progress = 28;
+        status = QStringLiteral("Actualizando pip…");
+    } else if (m_pocketInstallStep == 3) {
+        program = managedPython;
+        args = {QStringLiteral("-m"), QStringLiteral("pip"),
+                QStringLiteral("install"), QStringLiteral("--upgrade"), QStringLiteral("pocket-tts")};
+#ifdef Q_OS_LINUX
+        args << QStringLiteral("--extra-index-url")
+             << QStringLiteral("https://download.pytorch.org/whl/cpu");
+#endif
+        progress = 55;
+        status = QStringLiteral("Instalando Pocket TTS y PyTorch CPU…");
+    } else {
+        const VoiceConfig cfg = VoiceConfig::fromJson(QJsonObject::fromVariantMap(
+            m_profiles.getLaunchVoice(m_activeLaunchId)));
+        program = managedPython;
+        args = VoiceServerManager::buildPocketServerArgs(
+            VoiceServerManager::pocketServerScriptPath(), cfg.pocketLanguage,
+            cfg.pocketVoicePath.isEmpty() ? cfg.pocketVoice : cfg.pocketVoicePath,
+            cfg.pocketModelConfig, cfg.pocketPort, cfg.pocketQuantize);
+        args << QStringLiteral("--cache-dir") << VoiceServerManager::pocketCacheDir()
+             << QStringLiteral("--prepare");
+        progress = 84;
+        status = QStringLiteral("Descargando y validando modelo/voz local…");
+    }
+    emit voiceInstallProgress(QStringLiteral("pocket-tts"), progress, status);
+    auto *process = new QProcess(this);
+    m_pocketInstallProc = process;
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.insert(QStringLiteral("HF_HOME"), VoiceServerManager::pocketCacheDir());
+    env.insert(QStringLiteral("HUGGINGFACE_HUB_CACHE"),
+               QDir(VoiceServerManager::pocketCacheDir()).filePath(QStringLiteral("hub")));
+    process->setProcessEnvironment(env);
+    process->setWorkingDirectory(root);
+    connect(process, &QProcess::readyReadStandardOutput, this, [this, process]() {
+        const QString line = QString::fromLocal8Bit(process->readAllStandardOutput()).trimmed();
+        if (!line.isEmpty())
+            emit voiceInstallProgress(QStringLiteral("pocket-tts"),
+                                      m_pocketInstallStep == 4 ? 90 : m_pocketInstallStep * 18, line);
+    });
+    connect(process, &QProcess::readyReadStandardError, this, [this, process]() {
+        const QString line = QString::fromLocal8Bit(process->readAllStandardError()).trimmed();
+        if (!line.isEmpty())
+            emit voiceInstallProgress(QStringLiteral("pocket-tts"),
+                                      m_pocketInstallStep == 4 ? 90 : m_pocketInstallStep * 18, line);
+    });
+    connect(process, &QProcess::errorOccurred, this, [this](QProcess::ProcessError) {
+        if (!m_pocketInstallFinishing)
+            finishPocketInstall(false, QStringLiteral("No se pudo ejecutar el instalador de Pocket TTS."));
+    });
+    connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this,
+            [this, process](int code, QProcess::ExitStatus status) {
+        if (m_pocketInstallFinishing) return;
+        m_pocketInstallProc = nullptr;
+        const QString detail = QString::fromLocal8Bit(process->readAllStandardError()).trimmed();
+        process->deleteLater();
+        if (status != QProcess::NormalExit || code != 0) {
+            finishPocketInstall(false, detail.isEmpty()
+                ? QStringLiteral("La instalación de Pocket TTS falló (código %1).").arg(code)
+                : detail);
+            return;
+        }
+        if (m_pocketInstallStep < 4) {
+            ++m_pocketInstallStep;
+            runPocketInstallStep();
+        } else {
+            finishPocketInstall(true, QString());
+        }
+    });
+    process->start(program, args);
+}
+
+void AppController::finishPocketInstall(bool ok, const QString &message)
+{
+    if (m_pocketInstallFinishing) return;
+    m_pocketInstallFinishing = true;
+    if (m_pocketInstallProc) {
+        QProcess *process = m_pocketInstallProc;
+        m_pocketInstallProc = nullptr;
+        process->disconnect(this);
+        if (process->state() != QProcess::NotRunning) process->kill();
+        process->deleteLater();
+    }
+    if (ok) {
+        QDir().mkpath(VoiceServerManager::pocketRoot());
+        QFile marker(QDir(VoiceServerManager::pocketRoot()).filePath(QStringLiteral("installed.ok")));
+        if (!marker.open(QIODevice::WriteOnly | QIODevice::Truncate)
+            || marker.write("LlamaCode Pocket TTS\n") <= 0) {
+            ok = false;
+        }
+    }
+    m_pocketInstallStep = 0;
+    m_pocketInstallBasePython.clear();
+    m_pocketInstallFinishing = false;
+    emit voiceInstallProgress(QStringLiteral("pocket-tts"), ok ? 100 : -1,
+                              ok ? QStringLiteral("Pocket TTS instalado ✓") : message);
+    emit voiceInstallFinished(QStringLiteral("pocket-tts"), ok,
+                              ok ? QString() : message);
+}
+
+void AppController::cancelVoicePocketInstall()
+{
+    if (!m_pocketInstallProc && m_pocketInstallStep <= 0) return;
+    m_pocketInstallFinishing = true;
+    if (m_pocketInstallProc) {
+        QProcess *process = m_pocketInstallProc;
+        m_pocketInstallProc = nullptr;
+        process->disconnect(this);
+        if (process->state() != QProcess::NotRunning) {
+            process->terminate();
+            if (!process->waitForFinished(1000)) process->kill();
+        }
+        process->deleteLater();
+    }
+    m_pocketInstallStep = 0;
+    m_pocketInstallBasePython.clear();
+    m_pocketInstallFinishing = false;
+    emit voiceInstallProgress(QStringLiteral("pocket-tts"), -1,
+                              QStringLiteral("Instalación cancelada"));
+    emit voiceInstallFinished(QStringLiteral("pocket-tts"), false,
+                              QStringLiteral("Instalación cancelada"));
+}
+
 bool AppController::voicePiperAvailable() const
 {
     const QString configured = voicePiperPath().trimmed();
@@ -24519,10 +24836,20 @@ bool AppController::startManagedExternalVoice(const VoiceConfig &c, bool stt)
     env.insert(QStringLiteral("LLAMACODE_APP_PID"),
                QString::number(QCoreApplication::applicationPid()));
     const QVariantMap plan = voiceGpuPlanForConfig(c);
-    if (plan.value(QStringLiteral("enabled")).toBool()
+    const bool pocketTts = !stt && c.ttsMode == QLatin1String("pocket");
+    if (!pocketTts && plan.value(QStringLiteral("enabled")).toBool()
         && plan.value(QStringLiteral("voicePlacementSafe")).toBool()) {
         env.insert(QStringLiteral("CUDA_VISIBLE_DEVICES"),
                    plan.value(QStringLiteral("voiceGpuMask")).toString());
+    }
+    if (pocketTts) {
+        QDir().mkpath(VoiceServerManager::pocketCacheDir());
+        env.insert(QStringLiteral("HF_HOME"), VoiceServerManager::pocketCacheDir());
+        env.insert(QStringLiteral("HUGGINGFACE_HUB_CACHE"),
+                   QDir(VoiceServerManager::pocketCacheDir()).filePath(QStringLiteral("hub")));
+        // El instalador precarga modelo y voz; una sesión no debe abrir una
+        // descarga inesperada en segundo plano ni abandonar el modo offline.
+        env.insert(QStringLiteral("HF_HUB_OFFLINE"), QStringLiteral("1"));
     }
     if (stt && c.sttMode == QLatin1String("stream_process")) {
         env.insert(QStringLiteral("LLAMACODE_STT_PROTOCOL"), QStringLiteral("ndjson-v1"));

@@ -2,8 +2,10 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QStandardPaths>
+#include <QCoreApplication>
 #include <QDir>
 #include <QFile>
+#include <QFileInfo>
 #include <QUrl>
 #include <QPair>
 #include <QProcess>
@@ -152,10 +154,114 @@ QStringList VoiceServerManager::buildPiperResidentArgs(const QString &modelPath,
             QStringLiteral("--output_dir"), outDir};
 }
 
+QStringList VoiceServerManager::buildPocketServerArgs(const QString &scriptPath,
+                                                       const QString &language,
+                                                       const QString &voice,
+                                                       const QString &modelConfig,
+                                                       int port, bool quantize)
+{
+    QStringList args{scriptPath,
+                     QStringLiteral("--host"), QStringLiteral("127.0.0.1"),
+                     QStringLiteral("--port"), QString::number(port),
+                     QStringLiteral("--language"), language.isEmpty()
+                         ? QStringLiteral("spanish") : language};
+    if (!voice.trimmed().isEmpty())
+        args << QStringLiteral("--voice") << voice.trimmed();
+    if (!modelConfig.trimmed().isEmpty())
+        args << QStringLiteral("--config") << modelConfig.trimmed();
+    if (quantize) args << QStringLiteral("--quantize");
+    return args;
+}
+
 QString VoiceServerManager::installRoot()
 {
     const QString base = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
     return base + QStringLiteral("/voice");
+}
+
+QString VoiceServerManager::pocketRoot()
+{
+    return installRoot() + QStringLiteral("/pocket-tts");
+}
+
+QString VoiceServerManager::pocketVenvDir()
+{
+    return pocketRoot() + QStringLiteral("/venv");
+}
+
+QString VoiceServerManager::pocketManagedPythonPath()
+{
+#ifdef Q_OS_WIN
+    return QDir(pocketVenvDir()).filePath(QStringLiteral("Scripts/python.exe"));
+#else
+    return QDir(pocketVenvDir()).filePath(QStringLiteral("bin/python"));
+#endif
+}
+
+QString VoiceServerManager::pocketCacheDir()
+{
+    return pocketRoot() + QStringLiteral("/cache");
+}
+
+QString VoiceServerManager::pocketServerScriptPath()
+{
+    return pocketRoot() + QStringLiteral("/pocket_tts_server.py");
+}
+
+int VoiceServerManager::pocketDefaultPort()
+{
+    return 8200;
+}
+
+bool VoiceServerManager::pocketRuntimeInstalled()
+{
+    return QFileInfo::exists(pocketManagedPythonPath())
+        && QFileInfo::exists(QDir(pocketRoot()).filePath(QStringLiteral("installed.ok")));
+}
+
+bool VoiceServerManager::pocketServerScriptAvailable()
+{
+    if (QFileInfo::exists(pocketServerScriptPath())
+        || QFile(QStringLiteral(":/tools/pocket_tts_server.py")).exists())
+        return true;
+    const QString appDir = QCoreApplication::applicationDirPath();
+    return QFileInfo::exists(QDir(appDir).filePath(QStringLiteral("../../tools/pocket_tts_server.py")))
+        || QFileInfo::exists(QDir(appDir).filePath(QStringLiteral("../tools/pocket_tts_server.py")))
+        || QFileInfo::exists(QDir::current().filePath(QStringLiteral("tools/pocket_tts_server.py")));
+}
+
+bool VoiceServerManager::ensurePocketServerScript(QString *error)
+{
+    const QString destination = pocketServerScriptPath();
+    if (QFileInfo::exists(destination)) return true;
+    if (!QDir().mkpath(pocketRoot())) {
+        if (error) *error = QStringLiteral("no se pudo crear la carpeta de Pocket TTS");
+        return false;
+    }
+
+    QFile resource(QStringLiteral(":/tools/pocket_tts_server.py"));
+    if (resource.exists() && resource.open(QIODevice::ReadOnly)) {
+        QFile output(destination);
+        if (output.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+            const QByteArray data = resource.readAll();
+            if (output.write(data) == data.size()) {
+                output.close();
+                return true;
+            }
+        }
+    }
+
+    const QString appDir = QCoreApplication::applicationDirPath();
+    const QStringList candidates = {
+        QDir(appDir).filePath(QStringLiteral("../../tools/pocket_tts_server.py")),
+        QDir(appDir).filePath(QStringLiteral("../tools/pocket_tts_server.py")),
+        QDir::current().filePath(QStringLiteral("tools/pocket_tts_server.py"))};
+    for (const QString &source : candidates) {
+        if (!QFileInfo::exists(source)) continue;
+        if (QFile::copy(source, destination)) return true;
+    }
+    if (error) *error = QStringLiteral("no se encontró el helper pocket_tts_server.py");
+    return false;
 }
 
 QString VoiceServerManager::modelPath(const QString &engineId)

@@ -64,6 +64,9 @@ private:
     QString resolvePiperProg() const;
     void synthesizeQwen(const QString &text);
     void synthesizeInflect(const QString &text);
+    void synthesizePocket(const QString &text);
+    void consumePocketWav();
+    void clearPocketStream();
     void fallbackFrom(const QString &failedMode, const QString &text, const QString &error);
     void applyGpuEnvironment(class QProcess *process) const;
 
@@ -89,4 +92,15 @@ private:
     QString m_piperPendingOut;           // wav esperado del turno actual
     QString m_piperPendingText;          // texto del turno (para fallback si muere)
     QByteArray m_piperStdoutBuf;         // acumulador de stdout (líneas)
+
+    // Pocket devuelve un WAV chunked con tamaños RIFF desconocidos. Se guarda
+    // el encabezado y se emiten sólo los bytes del chunk data como PCM16.
+    QByteArray m_pocketBuffer;
+    int m_pocketDataOffset = -1;
+    qint64 m_pocketDataEmitted = 0;
+    quint32 m_pocketDataSize = 0;
+    int m_pocketSampleRate = 0;
+    int m_pocketChannels = 0;
+    bool m_pocketStreaming = false;
+    bool m_pocketCancelRequested = false;
 };

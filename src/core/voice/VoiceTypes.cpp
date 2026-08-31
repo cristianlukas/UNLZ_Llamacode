@@ -30,6 +30,14 @@ QJsonObject VoiceConfig::toJson() const
     o["ttsFallbackMode"] = ttsFallbackMode;
     o["ttsManagedCommand"] = ttsManagedCommand;
     o["ttsManagedArgs"] = QJsonArray::fromStringList(ttsManagedArgs);
+    o["pocketPythonPath"] = pocketPythonPath;
+    o["pocketLanguage"] = pocketLanguage;
+    o["pocketVoice"] = pocketVoice;
+    o["pocketVoicePath"] = pocketVoicePath;
+    o["pocketModelConfig"] = pocketModelConfig;
+    o["pocketPort"] = pocketPort;
+    o["pocketQuantize"] = pocketQuantize;
+    o["pocketAutoEnable"] = pocketAutoEnable;
     o["qwenBinaryPath"] = qwenBinaryPath;
     o["qwenModelDir"] = qwenModelDir;
     o["qwenModelName"] = qwenModelName;
@@ -95,6 +103,23 @@ VoiceConfig VoiceConfig::fromJson(const QJsonObject &o)
         for (const QJsonValue &value : o.value("ttsManagedArgs").toArray())
             if (value.isString()) c.ttsManagedArgs.append(value.toString());
     }
+    c.pocketPythonPath = o.value("pocketPythonPath").toString(c.pocketPythonPath).trimmed();
+    if (c.pocketPythonPath.isEmpty()) c.pocketPythonPath = QStringLiteral("python");
+    c.pocketLanguage = o.value("pocketLanguage").toString(c.pocketLanguage).trimmed().toLower();
+    if (c.pocketLanguage != QLatin1String("english")
+        && c.pocketLanguage != QLatin1String("french")
+        && c.pocketLanguage != QLatin1String("german")
+        && c.pocketLanguage != QLatin1String("portuguese")
+        && c.pocketLanguage != QLatin1String("italian")
+        && c.pocketLanguage != QLatin1String("spanish"))
+        c.pocketLanguage = QStringLiteral("spanish");
+    c.pocketVoice = o.value("pocketVoice").toString(c.pocketVoice).trimmed();
+    if (c.pocketVoice.isEmpty()) c.pocketVoice = QStringLiteral("lola");
+    c.pocketVoicePath = o.value("pocketVoicePath").toString(c.pocketVoicePath).trimmed();
+    c.pocketModelConfig = o.value("pocketModelConfig").toString(c.pocketModelConfig).trimmed();
+    c.pocketPort = qBound(1024, o.value("pocketPort").toInt(c.pocketPort), 65535);
+    c.pocketQuantize = o.value("pocketQuantize").toBool(c.pocketQuantize);
+    c.pocketAutoEnable = o.value("pocketAutoEnable").toBool(c.pocketAutoEnable);
     c.qwenBinaryPath = o.value("qwenBinaryPath").toString();
     c.qwenModelDir = o.value("qwenModelDir").toString();
     c.qwenModelName = o.value("qwenModelName").toString(c.qwenModelName);

@@ -22,11 +22,14 @@ Item {
     property string whisperPath: App.voiceWhisperServerPath()
     property string piperPath: App.voicePiperPath()
     property var gpuPlan: App.voiceGpuPlan()
+    property string pocketPythonPath: App.voicePocketPythonPath()
+    property var pocketStatus: App.voicePocketStatus(pid)
 
     // Las descargas de STT (modelo whisper) y TTS (voz piper) comparten señales;
     // rutear el feedback a la sección correcta según el id (antes todo caía en
     // "Estado" del STT y parecía que el botón de piper instalaba whisper).
     function isTtsVoiceId(id) {
+        if (id === "pocket-tts") return true
         var o = App.voiceTtsCatalog()
         for (var i = 0; i < o.length; ++i) if (o[i].id === id) return true
         return false
@@ -56,6 +59,7 @@ Item {
             }
             sttEngineCombo.refresh()
             ttsVoiceCombo.refresh()
+            page.pocketStatus = App.voicePocketStatus(page.pid)
         }
         function onVoiceBinaryInstalled(kind, ok, message) {
             page.whisperPath = App.voiceWhisperServerPath()
@@ -68,6 +72,8 @@ Item {
     }
     function reload() {
         cfg = pid.length ? App.voiceConfig(pid) : ({})
+        pocketPythonPath = App.voicePocketPythonPath()
+        pocketStatus = App.voicePocketStatus(pid)
         // Voz por defecto si el perfil guardó vacío (el runtime usa la default del
         // idioma igual; sin esto la UI mostraba "No instalada" sin botón).
         if (!cfg.ttsManagedVoice) cfg.ttsManagedVoice = "es_ES-davefx-medium"
@@ -547,7 +553,7 @@ Item {
                         Text { text: "Modo"; color: Theme.textSecondary }
                         LcComboBox {
                             Layout.fillWidth: true
-                            model: ["auto", "piper", "kokoro", "qwen3", "inflect", "http"]
+                            model: ["auto", "pocket", "piper", "kokoro", "qwen3", "inflect", "http"]
                             currentIndex: Math.max(0, model.indexOf(page.cfg.ttsMode || "auto"))
                             onActivated: { page.cfg.ttsMode = model[currentIndex]; page.save() }
                         }
@@ -639,6 +645,121 @@ Item {
                         Text {
                             visible: page.binMsgPiper.length > 0
                             text: page.binMsgPiper; color: Theme.textMuted; font.pixelSize: 12
+                        }
+                    }
+
+                    Text {
+                        text: "Pocket TTS local (Kyutai · CPU · voz clonable)"
+                        color: Theme.textPrimary
+                        Layout.leftMargin: 24
+                        font { pixelSize: 15; bold: true }
+                        visible: page.cfg.ttsMode === "pocket"
+                    }
+                    Rectangle {
+                        Layout.leftMargin: 24; Layout.rightMargin: 24; Layout.fillWidth: true
+                        implicitHeight: pocketInfo.implicitHeight + 18
+                        radius: 6; color: Theme.inputBg; border.color: Theme.borderColor
+                        visible: page.cfg.ttsMode === "pocket"
+                        Text {
+                            id: pocketInfo
+                            anchors.fill: parent; anchors.margins: 9
+                            wrapMode: Text.WordWrap; color: Theme.textSecondary; font.pixelSize: 12
+                            text: "Pocket carga el modelo una sola vez en un proceso local y devuelve audio "
+                                  + "mientras genera. No usa GPU ni nube durante Charla. La instalación inicial "
+                                  + "sí necesita descargar el paquete y el modelo; después se fuerza caché offline."
+                        }
+                    }
+                    GridLayout {
+                        columns: 2; columnSpacing: 12; rowSpacing: 8
+                        Layout.leftMargin: 24; Layout.rightMargin: 24; Layout.fillWidth: true
+                        visible: page.cfg.ttsMode === "pocket"
+
+                        Text { text: "Estado Pocket"; color: Theme.textSecondary }
+                        RowLayout {
+                            Layout.fillWidth: true; spacing: 8
+                            Text {
+                                Layout.fillWidth: true; wrapMode: Text.WordWrap
+                                color: page.pocketStatus.ready ? Theme.accent : Theme.textMuted
+                                text: page.pocketStatus.detail || "Consultando runtime…"
+                            }
+                            LcButton {
+                                text: page.voiceInstallPct >= 0 ? "Instalando…" : "Instalar"
+                                secondary: page.voiceInstallPct < 0
+                                enabled: page.voiceInstallPct < 0
+                                onClicked: App.installVoicePocket()
+                            }
+                            LcButton {
+                                text: "Cancelar"; secondary: true
+                                visible: page.voiceInstallPct >= 0
+                                onClicked: App.cancelVoicePocketInstall()
+                            }
+                        }
+                        Text { text: "Python base"; color: Theme.textSecondary }
+                        RowLayout {
+                            Layout.fillWidth: true; spacing: 6
+                            LcTextField {
+                                Layout.fillWidth: true
+                                placeholderText: "python o ruta a python.exe"
+                                text: page.pocketPythonPath
+                                onEditingFinished: {
+                                    App.setVoicePocketPythonPath(text)
+                                    page.pocketPythonPath = text
+                                }
+                            }
+                            LcButton {
+                                text: "…"; secondary: true
+                                onClicked: {
+                                    var picked = App.pickVoicePocketPython()
+                                    if (picked.length) page.pocketPythonPath = picked
+                                }
+                            }
+                        }
+                        Text { text: "Idioma del modelo"; color: Theme.textSecondary }
+                        LcComboBox {
+                            Layout.fillWidth: true
+                            model: ["spanish", "english", "french", "german", "portuguese", "italian"]
+                            currentIndex: Math.max(0, model.indexOf(page.cfg.pocketLanguage || "spanish"))
+                            onActivated: { page.cfg.pocketLanguage = model[currentIndex]; page.save() }
+                        }
+                        Text { text: "Voz incorporada"; color: Theme.textSecondary }
+                        LcTextField {
+                            Layout.fillWidth: true
+                            placeholderText: "lola (o una voz disponible en Pocket)"
+                            text: page.cfg.pocketVoice || "lola"
+                            onEditingFinished: { page.cfg.pocketVoice = text; page.save() }
+                        }
+                        Text { text: "Muestra / embedding"; color: Theme.textSecondary }
+                        RowLayout {
+                            Layout.fillWidth: true; spacing: 6
+                            LcTextField {
+                                Layout.fillWidth: true
+                                placeholderText: "WAV/MP3 o .safetensors (opcional)"
+                                text: page.cfg.pocketVoicePath || ""
+                                onEditingFinished: { page.cfg.pocketVoicePath = text; page.save() }
+                            }
+                        }
+                        Text { text: "Config. de modelo"; color: Theme.textSecondary }
+                        LcTextField {
+                            Layout.fillWidth: true
+                            placeholderText: "opcional · config 24-layer local"
+                            text: page.cfg.pocketModelConfig || ""
+                            onEditingFinished: { page.cfg.pocketModelConfig = text; page.save() }
+                        }
+                        Text { text: "Cuantizar"; color: Theme.textSecondary }
+                        LcSwitch {
+                            checked: page.cfg.pocketQuantize === true
+                            onToggled: { page.cfg.pocketQuantize = checked; page.save() }
+                        }
+                        Text { text: "Permitir en automático"; color: Theme.textSecondary }
+                        LcSwitch {
+                            checked: page.cfg.pocketAutoEnable === true
+                            onToggled: { page.cfg.pocketAutoEnable = checked; page.save() }
+                        }
+                        Text {
+                            Layout.columnSpan: 2; Layout.fillWidth: true
+                            text: "Para clonar una voz, indicá una muestra limpia de pocos segundos o un "
+                                  + "embedding .safetensors. La ruta se lee localmente y no se sube."
+                            color: Theme.textMuted; font.pixelSize: 12; wrapMode: Text.WordWrap
                         }
                     }
 
