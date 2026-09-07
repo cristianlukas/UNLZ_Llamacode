@@ -29,6 +29,12 @@ Como control directo con el mismo prompt corto, `Qwen3.5-2B-Q4_K_M` obtuvo aprox
 
 Se conserva como perfil auxiliar para chat breve, clasificación, resúmenes, tareas livianas y subagentes de bajo costo. No se promueve a ASTRA, SOL, TERRA, LUNA ni METEOR, y no se recomienda como agente principal de coding: el resultado BCB de 1/8 queda muy por debajo de los perfiles principales.
 
+## DSpark
+
+También se verificó el drafter oficial `MiniCPM5-2B-DSpark`. El model card lo describe como un drafter de 5 capas y 7 tokens, con una aceptación agregada publicada de 4,05 tokens a temperatura 1,0, y muestra una integración específica con SGLang. El artefacto descargado es `model.safetensors`; al probarlo como `--model-draft` en nuestro `llama-server`, el loader rechazó el archivo porque este backend requiere GGUF para el draft. Por eso no se creó un perfil DSpark falso ni se instaló SGLang sólo para este experimento.
+
+Queda como línea pendiente si aparece un draft GGUF compatible o si LlamaCode incorpora un backend SGLang opt-in. No afecta al perfil MINI ni a los cinco perfiles principales.
+
 La configuración sigue la compatibilidad oficial de MiniCPM5-2B con GGUF y llama.cpp:
 
 - https://huggingface.co/openbmb/MiniCPM5-2B-GGUF
