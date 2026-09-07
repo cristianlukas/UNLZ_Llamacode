@@ -16,8 +16,9 @@ manteniendo una sola huella CUDA comparable por perfil temporal y probando
   se conserva como calidad del modelo; una carga fallida, timeout o reparación
   cancelada se marca como infraestructura/inconcluso.
 - Las copias temporales de LUNA y METEOR usaron el backend CUDA de TERRA para
-  medirlas en las dos RTX 3090. Los perfiles permanentes de LUNA y METEOR no
-  fueron modificados por esta campaña.
+  medirlas en las dos RTX 3090. Después de validar el resultado, LUNA fue
+  promovido permanentemente en Linux al backend CUDA y contexto 64K; METEOR
+  conserva su configuración anterior.
 
 ## Velocidad y estabilidad por contexto
 
@@ -66,8 +67,17 @@ ejecutar parte del BCB, pero la reparación se volvió demasiado lenta tanto a
   el servidor carga hasta 196K, el harness se vuelve demasiado lento y no hay
   BCB final comparable. No es buen perfil principal de agente.
 
-La campaña no promovió cambios permanentes ni alteró Windows. Las mediciones
-completas quedan auditables en:
+## Promoción aplicada
+
+Se promovió únicamente LUNA:
+
+`179_LUNA · ThinkingCap Qwen3.6 MTP4 · CUDA · 64K`
+
+La promoción es específica de Linux mediante `platformBackendIds.linux` y
+`platformArgs.linux`; Windows conserva su backend, argumentos y comportamiento.
+La configuración promovida fue verificada nuevamente con HE0 y obtuvo `1/1`.
+
+La campaña no alteró Windows. Las mediciones completas quedan auditables en:
 
 - `/home/cristian/.local/share/LlamaCode/LlamaCode/benchmark-runs/server_speed_20260907_131053`
 - `/home/cristian/.local/share/LlamaCode/LlamaCode/benchmark-runs/server_speed_20260907_131702`
