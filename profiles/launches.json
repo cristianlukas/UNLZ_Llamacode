@@ -14722,7 +14722,7 @@
     },
     {
         "agentProfileId": "agent-maximo",
-        "alias": "DEEPSEEK",
+        "alias": "GALACTA",
         "backendProfileId": "04d87344-57de-407d-aae8-1b9db23eda0b",
         "benchmark": true,
         "best": true,
@@ -14790,7 +14790,7 @@
         },
         "menuOrder": 1,
         "modelProfileId": "b8fe64a2-6713-4845-b8c2-aebbf61050b3",
-        "name": "184_DEEPSEEK · V4 Flash IQ3_S · experimental · 131K",
+        "name": "184_GALACTA · DeepSeek V4 Flash IQ3_S · experimental · 131K",
         "plannerProfileId": "",
         "platformArgs": {
             "linux": [
@@ -14850,7 +14850,7 @@
         "runtimePresetId": "608c04a7-bb00-4630-8ac0-559dc5a2bdd5",
         "systemBadge": false,
         "tags": [
-            "DEEPSEEK",
+            "GALACTA",
             "DeepSeek V4",
             "IQ3_S",
             "Linux",
