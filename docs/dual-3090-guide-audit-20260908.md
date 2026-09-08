@@ -1,5 +1,14 @@
 # Auditoría de la guía Dual 3090 — Ubuntu — 2026-09-08
 
+## Raíz de modelos
+
+La raíz canónica para nuevas descargas y perfiles Linux es
+`/media/cristian/7CFE1E0FFE1DC1F6/models`. Los artefactos vLLM usados en esta
+campaña quedaron bajo `models/club-3090`; la ruta antigua
+`/media/cristian/Disco local/Models/club-3090` se conserva únicamente como
+enlace de compatibilidad. La biblioteca histórica `llamacpp` supera la
+capacidad libre de la unidad destino y no se migró completa.
+
 Se contrastó la guía aportada con el equipo real (2× RTX 3090), el runtime CUDA
 que usa LlamaCode y los perfiles instalados. Las recomendaciones de vLLM no se
 trasladan automáticamente a `llama-server`: usan otro scheduler, kernels,
