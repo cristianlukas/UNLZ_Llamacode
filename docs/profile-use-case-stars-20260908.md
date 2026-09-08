@@ -23,9 +23,9 @@ nota universal del modelo.
 | **GALACTA** | DeepSeek V4 Flash UD-IQ3_S, KV Q4 | ★☆☆☆☆ · 9,65 tok/s | ★★★★★ · BCB 8/8 | ★★★★☆ · 131K | ☆☆☆☆☆ | ★★★☆☆ · experimental | ★★★★☆ | Máxima calidad cuando la latencia no importa |
 | **DEEPSEEK FUSION** | DeepSeek Fusion, IQ3/Q4, KV Q4 | ★☆☆☆☆ · 10,55 tok/s histórico | ★★★★★ · BCB histórico 8/8 | ★★★★☆ · 131K | ☆☆☆☆☆ | ★★☆☆☆ · histórico | ★★★★☆ | Alternativa de calidad; no es alias prioritario actual |
 | **ASTRA** | Qwen3.8 Flash-Next UD-Q4_K_XL, cache experto 188, KV Q8 | ★★☆☆☆ · 16,8 tok/s en smoke Q8 | ★★★☆☆ · BCB no válido | ★★★★★ · 196K | ☆☆☆☆☆ | ★★★☆☆ · ahora carga; harness pendiente | ★★☆☆☆ | Documentos y sesiones enormes, experimental |
-| **LUNA** | ThinkingCap Qwen3.6-27B Q4_K_M + MTP4, KV Q8 | ★★★★☆ · 56–58 tok/s | ★★★☆☆ · BCB 6/8 histórico | ★★★☆☆ · 64K operativo | ★★★★★ | ★★★★☆ · HE0 1/1 | ★★★★☆ | Visión, conversación y razonamiento interactivo |
+| **TERRA** | ThinkingCap Qwen3.6-27B Q4_K_M + MTP4, KV Q8 | ★★★★☆ · 56–58 tok/s | ★★★☆☆ · BCB 6/8 histórico | ★★★☆☆ · 64K operativo | ★★★★★ | ★★★★☆ · HE0 1/1 | ★★★★☆ | Visión, conversación y razonamiento interactivo |
 | **MINI** | MiniCPM5-2B Q4_K_M, KV Q8 | ★★★★★ · 248,90 tok/s | ★★☆☆☆ · BCB 1/8 | ★★★☆☆ · 131K | ☆☆☆☆☆ | ★★★★★ · HE0 1/1 | ★★★☆☆ | Subagentes, clasificación, resúmenes y tareas cortas |
-| **TERRA** | Ling 3.0 Tiny Q6_K + Bailing V3, KV Q8, thinking medium, presupuesto 2048 | ★★★★★ · 200,95 tok/s histórico | ★★★★☆ · smoke razonado + tool call estructurado; BCB pendiente | ★★★★☆ · 131K | ☆☆☆☆☆ | ★★★★☆ · carga estable | ★★★★☆ · función y argumentos JSON válidos en smoke | Perfil diario rápido |
+| **LUNA** | Ling 3.0 Tiny Q6_K + Bailing V3, KV Q8, thinking medium, presupuesto 2048 | ★★★★★ · 200,95 tok/s histórico | ★★★★☆ · smoke razonado + tool call estructurado; BCB pendiente | ★★★★☆ · 131K | ☆☆☆☆☆ | ★★★★☆ · carga estable | ★★★★☆ · función y argumentos JSON válidos en smoke | Perfil diario rápido |
 | **METEOR** | BigBang-v1 35B-A3B Q4_K_M + MTP5, KV Q8 | ★★★★★ · 211,18 tok/s histórico | ★★☆☆☆ · BCB 3/8 | ★★★☆☆ · 64K operativo | ★★★★☆ · mmproj cargado | ★★★★☆ · carga corregida | ★★★☆☆ | Throughput, lotes y visión; no agente principal |
 
 `★` = una estrella; `☆` = una estrella no obtenida. Las cifras históricas no
@@ -38,7 +38,7 @@ se presentan como una nueva medición cuando la configuración cambió.
   (`temp=1.0`). El servidor cargó a 196K y respondió por API. El smoke de 16
   tokens midió 16,80 tok/s de decode; la calidad BCB todavía debe repetirse
   porque el prefill de Flash-Next sigue siendo experimental.
-- **TERRA:** ahora usa Ling 3.0 Tiny sin duplicar Qwen 28B, B1024/U256, KV
+- **LUNA:** ahora usa Ling 3.0 Tiny sin duplicar Qwen 28B, B1024/U256, KV
   Q8/Q8, thinking `medium` y presupuesto 2048. El template Bailing V3
   bundleado produjo una llamada estructurada con `finish_reason=tool_calls`,
   nombre de función y argumentos JSON válidos; HE0/BCB debe repetirse para
@@ -51,18 +51,20 @@ se presentan como una nueva medición cuando la configuración cambió.
   se corrigió la serialización del mensaje de presupuesto: `ok now` se estaba
   separando en dos argumentos y provocaba `invalid argument: now`; el perfil
   Linux usa ahora `ok-now`.
+- **TERRA:** ThinkingCap ocupa el nivel intermedio por su mejor razonamiento,
+  estabilidad y visión; LUNA queda como el escalón de mayor velocidad.
 - **TERRA-LEGACY:** el Qwen 28B antiguo queda oculto/deprecated sólo como
   rollback; ya no compite con SOL ni duplica el modelo activo de TERRA.
 
 ## Orden recomendado
 
 1. **SOL** para el trabajo diario de coding y agentes.
-2. **LUNA** si hay imágenes o se necesita interacción multimodal.
+2. **TERRA** si hay imágenes o se necesita interacción multimodal.
 3. **MINI** para subagentes rápidos y tareas auxiliares.
 4. **GALACTA** para calidad máxima con mucha paciencia.
 5. **ASTRA** para contexto/MoE grande, sólo cuando se acepte el carácter
    experimental.
-6. **TERRA** para herramientas ligeras, búsqueda y razonamiento rápido; no
+6. **LUNA** para herramientas ligeras, búsqueda y razonamiento rápido; no
    sustituye a SOL hasta repetir la suite de calidad.
 7. **METEOR** para throughput/lotes, no para decisiones autónomas complejas.
 

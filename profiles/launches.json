@@ -13968,7 +13968,7 @@
     },
     {
         "agentProfileId": "agent-maximo",
-        "alias": "LUNA",
+        "alias": "TERRA",
         "backendProfileId": "1cd00b04-02bd-41bf-be45-49eb35b0c3cf",
         "benchmark": true,
         "best": true,
@@ -13990,9 +13990,9 @@
             "fallbacks": [
             ]
         },
-        "menuOrder": 5,
+        "menuOrder": 4,
         "modelProfileId": "423c82fd-50c6-4a2d-b7b4-5c2d168dbd1c",
-        "name": "179_LUNA · ThinkingCap Qwen3.6 MTP4 · CUDA · 64K",
+        "name": "179_TERRA · ThinkingCap Qwen3.6 MTP4 · CUDA · 64K",
         "plannerProfileId": "",
         "platformArgs": {
             "linux": [
@@ -14012,7 +14012,7 @@
         "runtimePresetId": "12b64031-d497-44ad-af3b-6fd2d451ce91",
         "systemBadge": false,
         "tags": [
-            "LUNA",
+            "TERRA",
             "ThinkingCap",
             "Ubuntu",
             "CUDA",
@@ -14520,7 +14520,7 @@
     },
     {
         "agentProfileId": "agent-chat",
-        "alias": "TERRA",
+        "alias": "LUNA",
         "backendProfileId": "359590a9-7cb6-4c34-a9e4-45e45e2a7712",
         "benchmark": false,
         "best": false,
@@ -14582,9 +14582,9 @@
             "fallbacks": [
             ]
         },
-        "menuOrder": 4,
+        "menuOrder": 5,
         "modelProfileId": "a11089de-d0f0-4e2b-af48-a60ce557abc6",
-        "name": "183_TERRA · Ling 3.0 Tiny · razonamiento · 131K",
+        "name": "183_LUNA · Ling 3.0 Tiny · razonamiento · 131K",
         "plannerProfileId": "",
         "platformArgs": {
             "linux": [
@@ -14648,7 +14648,7 @@
         "runtimePresetId": "",
         "systemBadge": false,
         "tags": [
-            "TERRA",
+            "LUNA",
             "Ling 3.0 Tiny",
             "Linux",
             "reasoning",
