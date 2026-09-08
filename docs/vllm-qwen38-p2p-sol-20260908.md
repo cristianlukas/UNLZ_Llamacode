@@ -36,6 +36,34 @@ usó 23.381 MiB en GPU0 y 22.181 MiB en GPU1.
 - Perfil de agente: `agent-maximo`, razonamiento `medium`, presupuesto 4.096.
 - Quantización: pesos INT4 y KV FP8 de 8 bits; cumple el límite máximo Q8.
 
+## Concurrencia y contexto realmente probado
+
+El servidor admite hasta ocho secuencias. En la prueba con prompts de 1K y
+512 tokens de salida, usando greedy sólo para hacer comparable la carga:
+
+| Secuencias | Throughput agregado | TPS por secuencia | TTFT mediano | Errores |
+| ---: | ---: | ---: | ---: | ---: |
+| 1 | 69,7 tok/s | 79,8 tok/s | 461 ms | 0 |
+| 4 | 197,3 tok/s | 69,5 tok/s | 1.828 ms | 0 |
+| 8 | 289,2 tok/s | 58,7 tok/s | 3.511 ms | 0 |
+
+La prueba de contexto recuperó correctamente los needles a 9,8K, 29,3K,
+160,8K y 240,7K tokens. El prefill fue 2.434, 2.131, 1.236 y 999 tok/s,
+respectivamente. Por lo tanto, 262K es el techo asignable del servidor, pero
+el uso recomendado para agentes es aproximadamente 200K: a 240K sólo quedaron
+191 MiB libres y el margen no alcanza para checkpoints y caché de una sesión
+larga. La prueba de 240K fue de addressability/recall, no una evaluación NIAH
+de calidad.
+
+## DFlash2: probado y rechazado
+
+Se descargó el drafter oficial `syvai/Qwen3.8-27B-DFlash2-W4A16` y se probó el
+slug `vllm/qwen38-27b-dual-superfast` con FP8 KV y P2P. En prompts cortos midió
+92,8 tok/s narrativos y aproximadamente 171 tok/s de código, pero al comenzar
+un prefill de 512 tokens produjo `CUDA device-side assert`, mató el EngineCore
+y devolvió HTTP 500. No se promovió ni se conectó a LlamaCode. El artefacto
+queda disponible para una futura versión de vLLM que corrija ese fallo.
+
 ## Lectura del A/B P2P
 
 En llama.cpp con reparto por capas, P2P sólo había cambiado 60,61 a 60,75 tok/s,
@@ -48,4 +76,7 @@ permite atribuir un porcentaje aislado de velocidad a P2P.
 
 SOL pasa de llama.cpp Q4/MTP3 131K (63,94 tok/s histórico) a este backend Linux:
 mejor decode narrativo, mucho mejor código, el doble de contexto, visión y BCB
-8/8. El backend anterior sigue intacto para Windows y como fallback manual.
+8/8. La tabla debe mostrar `262K techo / 200K recomendado` y, si se compara
+throughput, `289 tok/s agregado a 8 agentes`, no confundirlo con TPS de una
+sola sesión. El backend anterior sigue intacto para Windows y como fallback
+manual.
