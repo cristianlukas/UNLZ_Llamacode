@@ -70,6 +70,7 @@ private slots:
     void runtimeAndAgentMissingAreWarnings();
     void cloudSkipsBinaryAndModel();
     void cloudMissingUrlIsError();
+    void keylessLoopbackCloudIsHealthy();
     void hybridPlannerValidation();
 };
 
@@ -262,6 +263,21 @@ void ProfileHealthTests::cloudMissingUrlIsError()
     QCOMPARE(severityOf(v, "cloud-url-missing"), QStringLiteral("error"));
     QVERIFY(hasCode(v, "cloud-key-unset"));
     QVERIFY(hasCode(v, "cloud-model-unset"));
+}
+
+void ProfileHealthTests::keylessLoopbackCloudIsHealthy()
+{
+    ProfileHealthChecker::Refs r;
+    r.launch.id = "L1";
+    r.launch.backendProfileId = "B1";
+    r.backendFound = true;
+    r.backend.id = "B1";
+    r.backend.kind = "cloud";
+    r.backend.cloudBaseUrl = "http://127.0.0.1:8113";
+    r.backend.cloudModel = "local";
+    const auto v = ProfileHealthChecker::checkLaunch(r);
+    QVERIFY(!hasCode(v, "cloud-key-unset"));
+    QVERIFY(v.isEmpty());
 }
 
 void ProfileHealthTests::hybridPlannerValidation()

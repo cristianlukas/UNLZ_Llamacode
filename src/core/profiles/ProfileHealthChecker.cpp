@@ -4,6 +4,18 @@
 #include "../ModelCatalog.h"
 #include "MtpDetection.h"
 
+#include <QHostAddress>
+#include <QUrl>
+
+static bool isLoopbackEndpoint(const QString &baseUrl)
+{
+    const QString host = QUrl(baseUrl).host();
+    if (host.compare(QStringLiteral("localhost"), Qt::CaseInsensitive) == 0)
+        return true;
+    const QHostAddress address(host);
+    return !address.isNull() && address.isLoopback();
+}
+
 QVariantMap HealthIssue::toMap() const
 {
     QVariantMap m;
@@ -50,7 +62,8 @@ QList<HealthIssue> ProfileHealthChecker::checkLaunch(const Refs &r)
             out << mk("error", id, "cloud", "cloud-url-missing",
                       "Backend cloud sin URL base.",
                       "Setear la URL base del proveedor (sin /v1).");
-        if (r.backend.cloudKeyRef.isEmpty())
+        if (r.backend.cloudKeyRef.isEmpty()
+            && !isLoopbackEndpoint(r.backend.cloudBaseUrl))
             out << mk("warning", id, "cloud", "cloud-key-unset",
                       "Backend cloud sin referencia de secreto (API key).",
                       "Configurar la referencia de secreto en SecretStore.");
