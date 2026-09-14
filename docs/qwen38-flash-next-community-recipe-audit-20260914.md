@@ -114,3 +114,42 @@ No se ejecutó una prueba nueva porque el repositorio enlazado requiere AMD
 `gfx1201` y no puede correr en las RTX 3090. Tampoco se descargó otro modelo:
 el artefacto Q4 de Flash-Next ya había sido probado localmente y el espacio de
 modelos sigue siendo limitado. El resultado no cambia la tabla ni los defaults.
+
+## Revisión del caso M5 Max de 128 GB — 2026-09-14
+
+El nuevo reporte describe una sesión de OpenCode de más de tres horas con
+`UD-IQ4_XS` de 93,7 GB, 128 GB de memoria unificada, Metal, 128K de contexto,
+un solo slot y speculative decoding. El resultado publicado fue de 24–36
+tok/s de decode y aproximadamente 1.000 tok/s de prefill, con un proyecto
+Flutter/PostgreSQL/Playwright validado en varias iteraciones.
+
+Es una demostración valiosa de que Flash-Next puede sostener un flujo agentico
+largo cuando el modelo, la tabla n-gram y la caché comparten una memoria grande.
+No es, sin embargo, una medición superior a nuestros perfiles: el hardware,
+backend, cuantización, sistema de memoria y harness son distintos, y el reporte
+no publica BCB, HE0/HE20 ni una tasa de tool-call comparable.
+
+### Ideas reutilizables frente a nuestras pruebas
+
+| Idea del reporte | Resultado ya medido en LlamaCode | Decisión |
+|---|---|---|
+| 128K y un solo slot | ASTRA carga hasta 196K; su calidad agéntica sigue sin validarse | Mantener ASTRA experimental |
+| Descargar la tabla n-gram a SSD | `lazy on` dio TPS bruto alto pero salida corrupta; `on-direct` fue válido pero ~7,54 tok/s | No activar por defecto |
+| Speculative decoding | MTP/combos de ASTRA no quedaron estables con la caché de expertos | No activar |
+| Q4 agresivo | El IQ4_XS funciona en el entorno Metal del reporte; nuestro Q4/INT4 estable es SOL | Mantener SOL |
+| Una sola sesión larga | Nuestro control usa `parallel=1` y pruebas de contexto frío/caliente separadas | Ya incorporado |
+
+### Comparación operativa
+
+| Perfil | Decode local | Calidad/estabilidad | Contexto |
+|---|---:|---|---:|
+| Caso M5 Max publicado | 24–36 tok/s | Proyecto terminado, sin BCB comparable | 128K |
+| ASTRA local | ~16–41 tok/s según contexto | HE0/BCB no válidos; experimental | 196K |
+| SOL local | 74 narrativo / 102 código | BCB 8/8, tool-use OK | 262K validado |
+
+No se repitió otra descarga ni se modificó el runtime: la prueba local de
+`lazy-mode`, el SSD/PLE y la especulación ya cubre las modificaciones relevantes
+del reporte. No se cambia el default ni el dropdown. La única conclusión
+accionable es conservar la regla de separar velocidad de contexto, prefijo
+caliente, tool-use y calidad final; el resultado de M5 no demuestra que ASTRA
+pueda reemplazar SOL.
