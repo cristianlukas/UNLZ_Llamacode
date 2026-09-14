@@ -153,3 +153,41 @@ del reporte. No se cambia el default ni el dropdown. La única conclusión
 accionable es conservar la regla de separar velocidad de contexto, prefijo
 caliente, tool-use y calidad final; el resultado de M5 no demuestra que ASTRA
 pueda reemplazar SOL.
+
+## Revisión del quant de 85 GB con tabla n-gram en SSD — 2026-09-14
+
+El reporte describe un quant propio de Qwen3.8 Flash-Next ejecutado en un
+MacBook de 64 GB. La variante de demostración ocupa aproximadamente 45,8 GB de
+RAM y 39,1 GB de SSD; una versión posterior usa 54,5 GB de RAM y 38,4 GB de
+SSD. El resultado publicado es 517,9 tok/s de prefill y 36 tok/s de decode en
+Metal, con una tabla n-gram de unos 39 GB ubicada en un shard separado.
+
+La idea técnica es válida: la tabla PLE se consulta en direcciones deterministas
+y no hace falta mantenerla completa en memoria. Pero el resultado depende de
+tres condiciones que no tenemos resueltas en el backend CUDA actual: quant
+reempacado con la tabla separada, lecturas directas seguras de ese shard y
+compatibilidad completa con el runtime `qwen4exp`/Flash-Next.
+
+### Comparación contra nuestras pruebas
+
+| Variante | Resultado local o publicado | Lectura |
+|---|---|---|
+| Quant 85 GB del reporte | 517,9 prefill / 36 decode en Mac Metal | No comparable directamente con nuestras 3090/CUDA |
+| ASTRA `lazy off`, Q8 | 14,87 tok/s en la prueba comparable; salida válida | Control local reproducible |
+| ASTRA `lazy on`, Q8 | TPS bruto alto, pero salida `////` corrupta | Rechazado |
+| ASTRA `lazy on-direct`, Q8 | 7,54 tok/s; salida válida | Correcto, pero 49% más lento que el control |
+| SOL | 74 narrativo / 102 código; BCB 8/8; tool-use OK | Sigue siendo el default |
+
+El reporte tampoco aporta BCB, HE0/HE20 ni una tasa comparable de tool-use; sus
+porcentajes `top1` y KLD son métricas del quant, no una validación de agente.
+Además, el quant de 85 GB no está instalado en
+`/media/cristian/7CFE1E0FFE1DC1F6/models` y el espacio libre actual no permite
+descargarlo de forma prudente.
+
+### Decisión
+
+No se implementa ni se promueve el quant. La mejora potencial queda anotada
+como trabajo futuro: generar/obtener un shard PLE separado compatible con CUDA,
+integrarlo con `on-direct` y exigir salida correcta, HE0, BCB y tool-use antes de
+compararlo con ASTRA y SOL. Mientras tanto se conserva `mmap`/`lazy off` en la
+ruta experimental y SOL continúa como default.
