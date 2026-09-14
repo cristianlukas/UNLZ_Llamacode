@@ -50,6 +50,42 @@ limitado.
 No se descargaron pesos, no se modificó ningún perfil, no se cambió el default
 y no se dejó ningún servicio ejecutándose.
 
+## Revisión del anuncio de Reddit — 2026-09-14
+
+El anuncio sólo confirma la disponibilidad del modelo y enlaza el soporte de
+Unsloth; no aporta una medición reproducible en RTX 3090. La ficha oficial
+actual describe a GLM-5.3-Flash como un modelo multimodal de aproximadamente
+321B parámetros, con 18B activos, y documenta despliegue mediante SGLang,
+vLLM, TokenSpeed, Transformers, KTransformers y Unsloth. También indica que el
+control de razonamiento usa `reasoning_effort=low|high|max` y que el valor por
+defecto es `max`.
+
+La cuantización local más pequeña mencionada por el anuncio es NVFP4, de unos
+181 GB sólo para los pesos. En esta revisión el volumen de modelos de
+LlamaCode tenía aproximadamente 22 GB libres, por lo que descargarla habría
+dejado el sistema sin margen y, aun con el modelo descargado, los 48 GiB de
+VRAM más la RAM disponible no dejan una ruta prudente para pesos, caché y
+runtime en esta máquina.
+
+### Comparación actualizada
+
+| Candidato | Resultado local | Decisión |
+|---|---|---|
+| GLM-5.3-Flash NVFP4 | No descargable de forma responsable; 181 GB de pesos y sin backend local validado para nuestro SM86 | No agregar |
+| GLM-5.3-Flash BF16 | 585 GB declarados; fuera de memoria y almacenamiento | Descartado |
+| SOL | 74 tok/s narrativo, 102 tok/s código, BCB 8/8 y tool-use OK | Mantener default |
+| GALACTA | BCB 8/8, aproximadamente 9,65 tok/s | Mantener como calidad local validada |
+
+No hay una prueba adicional ejecutable que pueda demostrar superioridad de GLM
+frente a SOL sin introducir una descarga masiva y un backend nuevo. Por lo
+tanto, este anuncio no cambia el dropdown ni la tabla de perfiles. Queda como
+candidato para una máquina con más memoria o para un entorno remoto; si aparece
+un artefacto cuantizado realmente menor, el gate requerido será smoke de texto,
+visión, tool-use, HE0, HE20, BCB y medición de contexto con la misma huella que
+SOL.
+
+Referencia primaria actualizada: [ficha oficial de GLM-5.3-Flash](https://huggingface.co/zai-org/GLM-5.3-Flash).
+
 Referencias:
 
 - [Ficha oficial GLM-5.3-Flash](https://huggingface.co/zai-org/GLM-5.3-Flash)
