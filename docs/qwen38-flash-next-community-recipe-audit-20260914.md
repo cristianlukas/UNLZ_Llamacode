@@ -84,3 +84,33 @@ No se modificó el dropdown ni el default. SOL sigue siendo el perfil principal;
 ASTRA queda como experimental para contexto Flash-Next. No hay cambios de
 perfiles justificados por esta receta.
 
+## Revisión del post de 10 tok/s y del repositorio AI1 — 2026-09-14
+
+El nuevo post reporta aproximadamente 9,6 tok/s con `UD-Q4_K_XL`, sin MTP, en
+una máquina con cuatro GPUs heterogéneas (RTX 3090 + RTX 5060 + 2× RTX 3060),
+64 GB de VRAM agregada y 64 GB de RAM. Es una referencia de capacidad, no una
+comparación A/B válida contra nuestros dos RTX 3090, y además queda por debajo
+de las mediciones locales de ASTRA y muy por debajo de SOL.
+
+El enlace adicional apunta a [qwen38-flash-next-ai1](https://github.com/cat5edopeHA/qwen38-flash-next-ai1),
+un proyecto experimental para dos Radeon PRO R9700 (`gfx1201`) con una rama HIP
+específica de `llama.cpp`. El repositorio declara que el soporte `qwen4exp` no
+es el árbol estable, que tensor/row split y varias rutas de especulación tienen
+limitaciones, y que sus resultados no son transferibles a CUDA SM86. Sus cifras
+de IQ1 y ngram no constituyen una recomendación de calidad: el quant más chico
+es precisamente el que no debemos usar sin HE/BCB y tool-use comparables.
+
+### Cruce con las pruebas anteriores
+
+| Variante | Resultado comparable | Decisión |
+|---|---|---|
+| Post: Q4 sin MTP, cuatro GPUs mixtas | ~9,6 tok/s; hardware y runtime distintos | No supera ningún perfil |
+| AI1: IQ1 + ngram | ~50,9 tok/s en una build HIP experimental; sin equivalencia de BCB LlamaCode | No adoptar IQ1 ni ngram |
+| AI1: Q4 + ngram | ~30,8 tok/s en R9700; no CUDA/3090 | No transferible |
+| ASTRA local estable | ~16–41 tok/s según contexto; calidad agéntica no validada | Mantener experimental |
+| SOL local | 74 tok/s narrativo / 102 código; BCB 8/8 y tool-use OK | Mantener default |
+
+No se ejecutó una prueba nueva porque el repositorio enlazado requiere AMD
+`gfx1201` y no puede correr en las RTX 3090. Tampoco se descargó otro modelo:
+el artefacto Q4 de Flash-Next ya había sido probado localmente y el espacio de
+modelos sigue siendo limitado. El resultado no cambia la tabla ni los defaults.
