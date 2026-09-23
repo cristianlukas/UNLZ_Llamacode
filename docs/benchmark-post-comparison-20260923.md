@@ -51,43 +51,14 @@ python3 -m unittest tests/test_post_comparison.py
 python3 tools/post_comparison.py --plan
 ```
 
-Resultado: **8/8 PASS**. La suite Python completa del repositorio ejecutó
-**40/40 PASS** incluyendo esta campaña. El plan generado contiene los cuatro tracks y el
+Resultado: **7/7 PASS**. La suite Python completa del repositorio ejecutó
+**39/39 PASS** incluyendo esta campaña. El plan generado contiene los cuatro tracks y el
 analizador reproduce correctamente la secuencia de checkpoints publicada:
 
 ```text
 19023 → 21146 → 24664 → 26641
 avances=3, plateaus=0, regresiones=0
 ```
-
-### Corrida real Qwen3.8 IQ4_XS
-
-Se ejecutó `llama-server` en serie sobre la GPU 1 con el GGUF local, KV Q8,
-`parallel=1`, Flash Attention y sampling conservador. El recibo crudo está en
-[`artifacts/post-comparison-20260923/qwen38-iq4xs-results.json`](../artifacts/post-comparison-20260923/qwen38-iq4xs-results.json).
-
-| Variante | Contexto | Exactitud NIAH | PP | TG | Latencia | VRAM |
-|---|---:|---:|---:|---:|---:|---:|
-| Baseline sin MTP | 8K | 1/1 | 886,0 | 25,5 | 6,26 s | — |
-| MTP3 | 8K | 1/1 | 1.233,1 | 67,8 | 4,32 s | — |
-| Baseline sin MTP | 32K | 1/1 | 1.042,5 | 37,7 | 19,85 s | 19.265 MiB |
-| MTP3 | 32K | 1/1 | 1.181,7 | 70,0 | 17,65 s | 20.187 MiB |
-| MTP3 | 131K | 1/1 | 846,8 | 51,9 | 95,43 s | 23.403 MiB |
-
-En 32K, MTP3 mejora TG **+85,7%**, PP **+13,3%** y reduce latencia **−11,1%**;
-la VRAM sube **+4,8%**, por debajo del gate de +5%. El analizador clasifica
-esta comparación como **promote para el perfil MTP3 de 32K**, no como promoción
-automática del post completo.
-
-En 131K, la recuperación sigue siendo exacta y la receta carga, pero quedan
-sólo **724 MiB libres** antes de visión; por eso no se considera una configuración
-diaria segura.
-
-Visión a 131K con `mmproj` en GPU falló al reservar **887,99 MiB**. Repitiendo
-con `--no-mmproj-offload`, el servidor cargó con 648 MiB libres y reconoció una
-imagen rojo/azul correctamente, con 100% de aceptación MTP en ese request. Esto
-valida la idea de host-map/offload del proyector, pero no demuestra margen para
-video, múltiples imágenes ni concurrencia.
 
 ### Evidencia local reutilizable
 
@@ -109,8 +80,8 @@ harness](harness-quality-campaign-20260915.md).
 
 No se ejecutó NInfer/vLLM ni una comparación específica del flag propietario
 `rolling-tool`: esos runtimes no son necesarios para el smoke llama.cpp y no
-están activos en el checkout. La prueba de modelo sí usó el `llama-server` y
-GGUF reales disponibles localmente.
+están activos en el checkout. La corrida local de modelo fue retirada de esta
+campaña y no se presenta como resultado vigente.
 
 El CTest C++ preexistente no pudo ejecutarse desde este entorno Linux: los
 builds disponibles son multi-config Windows y sus registros apuntan a rutas
@@ -121,7 +92,7 @@ builds disponibles son multi-config Windows y sus registros apuntan a rutas
 Se repitieron los controles que no requieren levantar otro servidor:
 
 ```text
-python3 -m unittest tests/test_post_comparison.py       8/8 PASS
+python3 -m unittest tests/test_post_comparison.py       7/7 PASS
 python3 -m unittest tests/test_compaction_quality_matrix.py  2/2 PASS
 python3 tools/post_comparison.py --plan                OK; 4 tracks
 nvidia-smi topo -m                                     GPU0↔GPU1 = PHB
@@ -147,9 +118,8 @@ antes de reabrir esa variante.
 
 ## Conclusión
 
-La campaña sí encuentra una mejora concreta: **MTP3 en el Qwen3.8 IQ4_XS local
-es útil a 32K**, manteniendo NIAH 2/2 y dentro del presupuesto de VRAM. También
-confirma que 131K solo es viable con margen mínimo y que visión requiere
-proyector en host/RAM para no caer en OOM. No se promueve 131K+visión como
-default. `rolling-tool` sigue siendo la hipótesis abierta del harness y falta
-probarla con el runtime que implemente ese checkpointing.
+La campaña deja implementado el plan y conserva las evidencias previamente
+validadas de INGI-CHARLA, Computer Use, prefix cache, NInfer y SOL. No se
+promueve ninguna nueva receta de modelo desde esta campaña: `rolling-tool`
+sigue siendo la hipótesis abierta del harness y falta probarla con el runtime
+que implemente ese checkpointing.

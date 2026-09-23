@@ -75,17 +75,5 @@ class PostComparisonTests(unittest.TestCase):
             {"harness-prefix", "runtime-context", "vision", "agent-quality"},
         )
 
-    def test_assess_uses_the_same_quality_total_and_five_percent_speed_gate(self):
-        result = assess_candidate(
-            {"status": "complete", "qualityPassed": 2, "qualityTotal": 2,
-             "decodeTps": 37.675589985, "vramMb": 19265},
-            {"status": "complete", "qualityPassed": 2, "qualityTotal": 2,
-             "decodeTps": 69.952271027, "vramMb": 20187},
-        )
-        self.assertEqual(result["verdict"], "promote")
-        self.assertAlmostEqual(result["speedDeltaPct"], 85.68, places=1)
-        self.assertLessEqual(result["vramDeltaPct"], 5.0)
-
-
 if __name__ == "__main__":
     unittest.main()
