@@ -116,6 +116,35 @@ El CTest C++ preexistente no pudo ejecutarse desde este entorno Linux: los
 builds disponibles son multi-config Windows y sus registros apuntan a rutas
 `C:/Users/...`; no se modificó C++/QML/core en esta campaña.
 
+### Verificación adicional de esta revisión
+
+Se repitieron los controles que no requieren levantar otro servidor:
+
+```text
+python3 -m unittest tests/test_post_comparison.py       8/8 PASS
+python3 -m unittest tests/test_compaction_quality_matrix.py  2/2 PASS
+python3 tools/post_comparison.py --plan                OK; 4 tracks
+nvidia-smi topo -m                                     GPU0↔GPU1 = PHB
+```
+
+También se intentó `timeout 240 ./scripts/tests-linux.sh Release`. El script
+detectó correctamente el checkout NTFS y comenzó la configuración CMake en la
+caché nativa, pero quedó bloqueado en estado de I/O mientras había otra
+configuración sobre el mismo directorio de tests. Terminó por timeout, sin
+emitir un fallo de compilación ni llegar a CTest; por eso no se presenta como
+un resultado de calidad. Los tests Python focalizados son el resultado
+reproducible de esta revisión.
+
+La documentación upstream de llama.cpp mantiene la misma cautela: `tensor`
+usa NCCL automáticamente cuando está compilado y es experimental, mientras
+`layer` es el reparto por capas por defecto. La guía también advierte que el
+tensor split no está implementado para varias arquitecturas MoE/híbridas. Esto
+coincide con nuestra auditoría local: el A/B dual de 3090 no mostró una mejora
+reproducible con NCCL/P2P y tensor split no fue estable. Ver
+[`multi-gpu.md`](https://github.com/ggml-org/llama.cpp/blob/master/docs/multi-gpu.md)
+y el [issue de cuelgue con MTP + tensor split en contexto largo](https://github.com/ggml-org/llama.cpp/issues/28252)
+antes de reabrir esa variante.
+
 ## Conclusión
 
 La campaña sí encuentra una mejora concreta: **MTP3 en el Qwen3.8 IQ4_XS local
