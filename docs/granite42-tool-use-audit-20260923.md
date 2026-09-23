@@ -70,8 +70,8 @@ Después de `cmdshell("pwd")` se devolvió `/workspace/project`; después de
 
 | Modelo | Repeticiones | Secuencia válida | Resultado | Mediana aproximada |
 |---|---:|---:|---:|---:|
-| Granite 4.2 8B Q8, thinking OFF | 10 | 10/10 | correcto | 2.238 ms |
-| Qwen3.5-9B Q4, thinking OFF | 10 | 10/10 | correcto | 1.081 ms |
+| Granite 4.2 8B Q8, thinking OFF | 10 | 10/10 | correcto | ~2,24 s (2.238 ms) |
+| Qwen3.5-9B Q4, thinking OFF | 10 | 10/10 | correcto | ~1,08 s (1.081 ms) |
 
 Granite usó `listFiles` con la ruta absoluta recién obtenida; Qwen usó `.`.
 Ambos comportamientos son válidos. Granite no fue superior en el loop que usa
@@ -99,8 +99,8 @@ mismo schema.
 
 | Modelo | Repeticiones | Primera acción | Razonamiento observado | Tiempo por primer request |
 |---|---:|---|---:|---:|
-| Granite 4.2 8B Q8 | 3 | siempre `cmdshell(pwd)` | 1.069–2.207 caracteres | 3.699–7.329 ms |
-| Qwen3.5-9B Q4 | 3 | `cmdshell(pwd)` + `listFiles(.)` en el mismo response | 283–400 caracteres | 1.119–1.382 ms |
+| Granite 4.2 8B Q8 | 3 | siempre `cmdshell(pwd)` | 1.069–2.207 caracteres | 3,7–7,3 s (3.699–7.329 ms) |
+| Qwen3.5-9B Q4 | 3 | `cmdshell(pwd)` + `listFiles(.)` en el mismo response | 283–400 caracteres | 1,1–1,4 s (1.119–1.382 ms) |
 
 La diferencia confirma que el razonamiento puede gastar muchos tokens antes de
 la primera acción, pero en este caso Granite no obtiene una decisión mejor que
