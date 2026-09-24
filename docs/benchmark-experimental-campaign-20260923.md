@@ -27,7 +27,9 @@ python3 tools/benchmark_prefix_loop.py \
 ```
 
 `benchmark_reasoning_budget.py` barre 0/512/1024/2048/4096/8192 tokens y
-puntúa únicamente marcadores versionados. `benchmark_image_history.py` mide
+puntúa únicamente marcadores versionados. El corpus por defecto es
+`reasoning_budget_v2.json`; `reasoning_budget_v1.json` queda conservado para
+reproducir la corrida histórica. `benchmark_image_history.py` mide
 el costo de conservar 0/1/2 capturas recientes con historiales de 1/2/5/10
 imágenes. `benchmark_prefix_loop.py` compara el wire append-only actual
 (`rolling-tool`) con un esquema que cambia el orden de las claves del schema;
@@ -45,6 +47,29 @@ si el endpoint no informa tokens cacheados, lo declara explícitamente como
   si el servidor informa reutilización real del KV/prefijo y el ahorro se
   repite en al menos cinco pasadas. Sin esa métrica, el resultado es no
   concluyente.
+
+## Resultado real y decisión aplicada
+
+La corrida real se hizo con Qwen3.5-4B Q4_K_M + mmproj BF16, dos RTX 3090,
+contexto 16K, KV Q8 y una sola ranura:
+
+- `reasoning_budget=0`: 15/18 en tres pasadas; el único caso fallido por tarea
+  era el scorer de seguridad, que penalizaba mencionar “enviar” aunque la
+  respuesta recomendara no hacerlo.
+- `reasoning_budget=128/256/512`: 0/54; las respuestas visibles agotaron el
+  límite de 384 tokens y la latencia subió a aproximadamente 2,4 s.
+- Historial de imágenes: 100% de transporte; retener 0/1/2 imágenes no
+  produjo una mejora consistente de prompt o latencia. No se cambia el
+  comportamiento global de `keepLastImages`.
+- Prefix loop, cinco pasadas: `rolling-tool` 207,38 ms contra 206,03 ms para
+  la variante inestable; ambos reutilizaron 371,5 de 464,5 tokens. No se
+  implementa una política específica nueva de `rolling-tool`.
+
+La conclusión aplicada es mantener reasoning positivo como experimento
+explícito, conservar el trimming de imágenes existente sin promover una nueva
+política global y no agregar checkpointing `rolling-tool` específico. El corpus
+v2 puntúa la acción segura (`revisar`, `guardar`, `borrador`) y permite explicar
+por qué no se debe ejecutar la acción externa.
 
 El benchmark existente de compactación y el de orden de Computer Use completan
 esta campaña. Sus resultados del 2026-09-23 no promovieron cambios globales:

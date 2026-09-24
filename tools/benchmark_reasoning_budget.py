@@ -19,7 +19,7 @@ from urllib.request import Request, urlopen
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_CORPUS = ROOT / "assets" / "benchmarks" / "custom" / "reasoning_budget_v1.json"
+DEFAULT_CORPUS = ROOT / "assets" / "benchmarks" / "custom" / "reasoning_budget_v2.json"
 
 
 def load_corpus(path: Path) -> list[dict[str, Any]]:
