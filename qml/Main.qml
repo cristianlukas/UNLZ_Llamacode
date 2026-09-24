@@ -200,41 +200,6 @@ ApplicationWindow {
                     }
 
                     ToolButton {
-                        id: updateButton
-                        visible: Qt.platform.os === "windows" && App.updateAvailable
-                        enabled: visible
-                        onClicked: {
-                            if (!App.handleUpdateDecision("updateNow")) {
-                                errorToast.show("No se pudo iniciar la actualización. LlamaCode sigue abierta.")
-                                return
-                            }
-                            window.forceQuit = true
-                            Qt.quit()
-                        }
-                        contentItem: Text {
-                            text: "\uE896"
-                            color: "white"
-                            font.family: "Segoe MDL2 Assets"
-                            font.pixelSize: 15
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        background: Rectangle {
-                            radius: width / 2
-                            color: updateButton.pressed ? "#15803D"
-                                 : updateButton.hovered ? "#22A447" : "#16A34A"
-                        }
-                        Accessible.name: "Descargar e instalar la versión " + (App.updateInfo.version ?? "")
-                        ToolTip.visible: hovered
-                        ToolTip.delay: 350
-                        ToolTip.text: "Descargar e instalar la versión " + (App.updateInfo.version ?? "")
-                        Layout.preferredWidth: 32
-                        Layout.preferredHeight: 30
-                        Layout.alignment: Qt.AlignVCenter
-                        Layout.rightMargin: 7
-                    }
-
-                    ToolButton {
                         text: "\uE921"
                         flat: true
                         onClicked: window.showMinimized()
@@ -305,6 +270,14 @@ ApplicationWindow {
                     Layout.fillHeight: true
                     currentIndex: stack.currentIndex
                     onPageSelected: function(idx) { stack.currentIndex = idx }
+                    onUpdateRequested: {
+                        if (!App.handleUpdateDecision("updateNow")) {
+                            errorToast.show("No se pudo iniciar la actualización. LlamaCode sigue abierta.")
+                            return
+                        }
+                        window.forceQuit = true
+                        Qt.quit()
+                    }
                 }
 
                 // Si la página activa queda inhabilitada (se apagó server/agente),

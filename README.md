@@ -1527,8 +1527,9 @@ explícita de release mediante `bump-version.bat`, para no invalidar CMake, recu
 y unidades C++ en cada build local.
 
 En Windows, cuando una GitHub Release supera la versión instalada aparece un botón
-verde de descarga en la barra de título. Al pulsarlo, LlamaCode se cierra, el
-actualizador sincroniza y compila la instalación actual, y abre la versión nueva.
+verde de descarga junto a «Configuración» en la barra lateral. Al pulsarlo,
+LlamaCode se cierra, el actualizador sincroniza y compila la instalación actual,
+y abre la versión nueva.
 Si no hay una versión publicada más reciente, el botón permanece oculto.
 
 Salidas:

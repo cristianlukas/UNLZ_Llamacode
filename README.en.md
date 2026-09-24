@@ -554,10 +554,10 @@ Use Debug to accumulate and validate several candidate versions. Promote to
 Release explicitly only after that validation; `build.bat Both` remains available
 when both artifacts are needed.
 
-On Windows, a green download button appears in the title bar when a GitHub Release
-is newer than the installed version. Clicking it closes LlamaCode, synchronizes
-and builds the current installation, then launches the updated app. The button
-stays hidden when no newer published release is available.
+On Windows, a green download button appears next to Settings in the sidebar when
+a GitHub Release is newer than the installed version. Clicking it closes
+LlamaCode, synchronizes and builds the current installation, then launches the
+updated app. The button stays hidden when no newer published release is available.
 
 The Debug red icon is embedded in the `.exe` (taskbar/explorer) via `app_icon.rc` + `#ifdef LC_DEBUG_ICON` (CMake defines `/dLC_DEBUG_ICON` only in Debug config), and also in the `.lnk`.
 

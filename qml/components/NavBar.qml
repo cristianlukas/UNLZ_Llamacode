@@ -15,6 +15,7 @@ Rectangle {
 
     property int currentIndex: 0
     signal pageSelected(int index)
+    signal updateRequested()
 
     readonly property var pages: [
         { key: "nav.launch",   icon: "🚀",  serverOnly: false },
@@ -115,13 +116,41 @@ Rectangle {
                     color: Theme.accent
                 }
             }
-            contentItem: Row {
-                spacing: 12
-                anchors { left: parent.left; leftMargin: 16; verticalCenter: parent.verticalCenter }
+            contentItem: RowLayout {
+                anchors { fill: parent; leftMargin: 16; rightMargin: 8 }
+                spacing: 8
                 Text {
                     text: (App.langV, App.l("nav.settings"))
                     font.pixelSize: 14
                     color: root.currentIndex === root.settingsIndex ? Theme.textPrimary : Theme.textSecondary
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignVCenter
+                    elide: Text.ElideRight
+                }
+                ToolButton {
+                    id: updateButton
+                    visible: Qt.platform.os === "windows" && App.updateAvailable
+                    enabled: visible
+                    onClicked: root.updateRequested()
+                    contentItem: Text {
+                        text: "\uE896"
+                        color: "white"
+                        font.family: "Segoe MDL2 Assets"
+                        font.pixelSize: 15
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        radius: width / 2
+                        color: updateButton.pressed ? "#15803D"
+                             : updateButton.hovered ? "#22A447" : "#16A34A"
+                    }
+                    Accessible.name: "Descargar e instalar la versión " + (App.updateInfo.version ?? "")
+                    ToolTip.visible: hovered
+                    ToolTip.delay: 350
+                    ToolTip.text: "Descargar e instalar la versión " + (App.updateInfo.version ?? "")
+                    Layout.preferredWidth: 30
+                    Layout.preferredHeight: 30
                 }
             }
             onClicked: { root.currentIndex = root.settingsIndex; root.pageSelected(root.settingsIndex) }
