@@ -3377,6 +3377,20 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
                        .arg(QString::fromLocal8Bit(repoError).trimmed());
         }
 
+        const QString repositoryPath = QDir::cleanPath(
+            QDir::fromNativeSeparators(QString::fromLocal8Bit(repoRoot).trimmed()));
+        const QString requestedPath = QDir::cleanPath(base.canonicalPath());
+#if defined(Q_OS_WIN)
+        constexpr Qt::CaseSensitivity pathCaseSensitivity = Qt::CaseInsensitive;
+#else
+        constexpr Qt::CaseSensitivity pathCaseSensitivity = Qt::CaseSensitive;
+#endif
+        if (QString::compare(repositoryPath, requestedPath, pathCaseSensitivity) != 0) {
+            return QStringLiteral(
+                "[review_overengineering: no se pudo leer el diff git "
+                "(la carpeta indicada no es la raíz del repositorio)]");
+        }
+
         QByteArray diffBytes;
         QByteArray gitError;
         int gitExit = -1;
