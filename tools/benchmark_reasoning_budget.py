@@ -122,10 +122,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--corpus", type=Path, default=DEFAULT_CORPUS)
     parser.add_argument("--budgets", default="0,512,1024,2048,4096,8192")
     parser.add_argument("--passes", type=int, default=3)
+    parser.add_argument("--max-tokens", type=int, default=1024,
+                        help="techo de tokens visibles + reasoning por request")
     parser.add_argument("--timeout", type=float, default=300.0)
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args(argv)
-    if args.passes < 1:
+    if args.passes < 1 or args.max_tokens < 16:
         parser.error("--passes debe ser >= 1")
     try:
         budgets = [int(item.strip()) for item in args.budgets.split(",") if item.strip()]
@@ -148,7 +150,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                     "temperature": 0.0,
                     "top_p": 0.95,
                     "top_k": 20,
-                    "max_tokens": 4096,
+                    "max_tokens": args.max_tokens,
                     "stream": False,
                 }
                 if args.model:
