@@ -3,6 +3,7 @@ $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $ps  = [IO.File]::ReadAllText((Join-Path $root 'scripts\bootstrap.ps1'))
 $sh  = [IO.File]::ReadAllText((Join-Path $root 'scripts\bootstrap.sh'))
 $app = [IO.File]::ReadAllText((Join-Path $root 'src\AppController.cpp'))
+$qml = [IO.File]::ReadAllText((Join-Path $root 'qml\Main.qml'))
 $fails = 0
 
 function Check([bool]$condition, [string]$message) {
@@ -38,6 +39,11 @@ Check ($stopIdx -gt $configureIdx -and $stopIdx -lt $buildIdx) 'la app se cierra
 Check ($app.Contains('installRootForExePath(QCoreApplication::applicationFilePath())')) 'el app calcula la raiz de instalacion'
 Check ($app -match '\$env:LC_DIR=') 'el app le pasa LC_DIR al bootstrap'
 Check ($app.Contains('QStringLiteral("-NoExit")')) 'la consola del update queda abierta para ver el error'
+Check ($app.Contains('updateStarted = QProcess::startDetached')) 'confirma que el bootstrap arranco antes de cerrar la app'
+Check ($qml.Contains('visible: Qt.platform.os === "windows" && App.updateAvailable')) 'muestra el boton solo si Windows detecta una release nueva'
+Check ($qml.Contains('window.forceQuit = true')) 'el boton permite salir aunque cerrar normalmente minimice a la bandeja'
+Check ($qml.Contains('App.handleUpdateDecision("updateNow")')) 'el boton ejecuta el flujo de instalacion existente'
+Check ($qml.Contains('App.updateAvailable && Qt.platform.os !== "windows"')) 'mantiene el popup de releases para otras plataformas'
 
 if ($fails) { throw "$fails bootstrap regression(s) failed" }
 Write-Host 'All bootstrap regressions passed.'

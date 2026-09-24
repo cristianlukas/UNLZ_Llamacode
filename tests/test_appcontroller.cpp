@@ -129,6 +129,7 @@ private slots:
     void initTestCase();
     void exportUserDataToWritesBackup();
     void githubReleaseIsConvertedToUpdateFlag();
+    void updateNowRequiresAvailableRelease();
     void githubPrereleaseIsIgnored();
     void installRootIsDerivedFromExeLocation();
     void importUserDataFromRoundTrips();
@@ -258,6 +259,13 @@ void AppControllerTests::githubReleaseIsConvertedToUpdateFlag()
     QCOMPARE(flag.value(QStringLiteral("releaseUrl")).toString(),
              QStringLiteral("https://example.test/release"));
     QCOMPARE(flag.value(QStringLiteral("changelog")).toArray().size(), 3);
+}
+
+void AppControllerTests::updateNowRequiresAvailableRelease()
+{
+    AppController app;
+    QVERIFY(!app.updateAvailable());
+    QVERIFY(!app.handleUpdateDecision(QStringLiteral("updateNow")));
 }
 
 // "Actualizar ahora" le pasa esta ruta al bootstrap via LC_DIR. Si sale vacia,

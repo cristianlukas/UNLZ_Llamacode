@@ -426,7 +426,7 @@ Q4 tampoco es viable con 128 GB por tamaño.
 | Endpoint health check automático | ✅ (polling /health post-start) |
 | Pre-check colisión de puerto al iniciar server | ✅ |
 | Popup de primer inicio (binario + modelo + perfil automático) | ✅ |
-| Detector de nueva versión (última GitHub Release + popup con changelog) | ✅ |
+| Detector de nueva versión + botón verde de descarga en Windows (instala y reinicia) | ✅ |
 | Agente nativo (LlamaAgentBackend, ReAct + tools + MCP) | ✅ P5 |
 | Agentes persistentes versionados + feedback supervisado + triggers | ✅ |
 
@@ -1525,6 +1525,11 @@ bump-version.bat 0.1.2 --summary "Resumen corto" --changelog "Cambio A|Cambio B"
 Compilar ya no incrementa la versión automáticamente. El versionado es una acción
 explícita de release mediante `bump-version.bat`, para no invalidar CMake, recursos
 y unidades C++ en cada build local.
+
+En Windows, cuando una GitHub Release supera la versión instalada aparece un botón
+verde de descarga en la barra de título. Al pulsarlo, LlamaCode se cierra, el
+actualizador sincroniza y compila la instalación actual, y abre la versión nueva.
+Si no hay una versión publicada más reciente, el botón permanece oculto.
 
 Salidas:
 

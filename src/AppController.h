@@ -638,7 +638,7 @@ public:
     bool updateAvailable() const { return m_updateAvailable; }
     QVariantMap updateInfo() const { return m_updateInfo; }
     Q_INVOKABLE void checkForUpdates();
-    Q_INVOKABLE void handleUpdateDecision(const QString &decision);
+    Q_INVOKABLE bool handleUpdateDecision(const QString &decision);
     Q_INVOKABLE QString l(const QString &key) const;
     Q_INVOKABLE QString lf(const QString &key, const QString &arg1) const { return l(key).arg(arg1); }
     Q_INVOKABLE QVariant readSetting(const QString &key, const QVariant &defaultValue = QVariant()) const;

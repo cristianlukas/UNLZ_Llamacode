@@ -11481,46 +11481,62 @@ void AppController::applyUpdateFlag(const QJsonObject &flag)
     emit updateCheckChanged();
 }
 
-void AppController::handleUpdateDecision(const QString &decision)
+bool AppController::handleUpdateDecision(const QString &decision)
 {
     const QString versionToUpdate = m_updateInfo.value(QStringLiteral("version")).toString();
     if (decision == QLatin1String("skipVersion")) {
         writeSetting(QStringLiteral("updates/skipUntilVersion"), versionToUpdate);
+    } else if (decision == QLatin1String("nextStart")) {
+        // La deteccion vuelve a ejecutarse al proximo inicio.
     } else if (decision == QLatin1String("updateNow")) {
+        if (!m_updateAvailable || versionToUpdate.isEmpty())
+            return false;
+
         writeSetting(QStringLiteral("updates/skipUntilVersion"), QString());
         QString scriptUrl = m_updateInfo.value(QStringLiteral("updateUrl")).toString();
         if (scriptUrl.isEmpty())
             scriptUrl = QStringLiteral("https://raw.githubusercontent.com/cristianlukas/UNLZ_Llamacode/main/scripts/bootstrap.ps1");
+        bool updateStarted = false;
 #ifdef Q_OS_WIN
         // Sin LC_DIR el bootstrap clona en %USERPROFILE%\LlamaCode: mataba esta
         // app y actualizaba OTRA copia (o una nueva), por eso "se cierra y no
         // actualiza". Apuntarlo a la instalacion que esta corriendo.
         const QString installRoot =
             installRootForExePath(QCoreApplication::applicationFilePath());
-        QString command = QStringLiteral("irm '%1' | iex").arg(scriptUrl);
+        const QString config = QFileInfo(QCoreApplication::applicationFilePath())
+                .dir().dirName().compare(QStringLiteral("Release"), Qt::CaseInsensitive) == 0
+            ? QStringLiteral("Release") : QStringLiteral("Debug");
+        QString command = QStringLiteral("$env:LC_CONFIG='%1'; ").arg(config);
         if (!installRoot.isEmpty()) {
             QString escaped = installRoot;
             escaped.replace(QLatin1Char('\''), QLatin1String("''"));
-            command = QStringLiteral("$env:LC_DIR='%1'; ").arg(escaped) + command;
+            command += QStringLiteral("$env:LC_DIR='%1'; ").arg(escaped);
         }
+        command += QStringLiteral("irm '%1' | iex").arg(scriptUrl);
         // -NoExit: el update tarda minutos y si falla la consola se cerraba sola,
         // dejando al usuario sin app y sin el error.
-        QProcess::startDetached(QStringLiteral("powershell"),
-                                {QStringLiteral("-NoExit"),
-                                 QStringLiteral("-NoProfile"),
-                                 QStringLiteral("-ExecutionPolicy"), QStringLiteral("Bypass"),
-                                 QStringLiteral("-Command"), command});
+        const QString workingDirectory = installRoot.isEmpty() ? QDir::homePath() : installRoot;
+        updateStarted = QProcess::startDetached(
+            QStringLiteral("powershell"),
+            {QStringLiteral("-NoExit"), QStringLiteral("-NoProfile"),
+             QStringLiteral("-ExecutionPolicy"), QStringLiteral("Bypass"),
+             QStringLiteral("-Command"), command}, workingDirectory);
 #else
         const QString releaseUrl = m_updateInfo.value(QStringLiteral("releaseUrl")).toString();
-        QDesktopServices::openUrl(QUrl(releaseUrl.isEmpty()
+        updateStarted = QDesktopServices::openUrl(QUrl(releaseUrl.isEmpty()
             ? QStringLiteral("https://github.com/cristianlukas/UNLZ_Llamacode/releases/latest")
             : releaseUrl));
 #endif
+        if (!updateStarted)
+            return false;
+    } else {
+        return false;
     }
 
     m_updateAvailable = false;
     m_updateInfo.clear();
     emit updateCheckChanged();
+    return true;
 }
 
 QJsonObject AppController::exportFileSet(const QString &root, const QStringList &relativePaths) const
