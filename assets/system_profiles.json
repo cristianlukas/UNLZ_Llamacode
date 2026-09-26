@@ -4065,5 +4065,216 @@
     "contextPresets": [8192, 16384, 32768],
     "vision": true,
     "comment": "Candidato manual, aún no medido localmente. SUPERIOR en fidelidad KLD reportada frente a UD-Q3_K_XL del mismo tamaño en mixedweb público: 0,0250 vs 0,0270 (-7,6%; 5σ). INFERIOR en WikiText-2: 0,0359 vs 0,0337 (+6,5% de KLD). La ventaja de 0,0380 vs 0,0421 (-9,9%) en texto técnico usa un corpus interno no publicable y no cuenta como verificación reproducible. Tamaño reportado 12,24 GiB; queda cerca del ByteShape local de 12,18 GiB, pero no hay comparación directa AP-vs-ByteShape ni de tareas. MTP apagado para aislar el quant; la visión está habilitada con mmproj BF16. No promover como mejor perfil hasta correr el protocolo público y LC-H1. Sin efecto demostrado en Ingi-Charla/STT/TTS. Ver docs/qwen38-agention-ap-quant-audit-20260926.md."
-  }
+  },
+    {
+        "tier": "24GB-LFM25-VL3B",
+        "extra": true,
+        "manualOnly": true,
+        "benchmark": true,
+        "best": false,
+        "favorite": false,
+        "autoCompanion": false,
+        "minVramGb": 16,
+        "minRamGb": 32,
+        "cpuOk": false,
+        "folder": "LFM2.5-VL-3B-DSpark-bench",
+        "agentProfileId": "agent-intermedio",
+        "model": {
+            "repo": "LiquidAI/LFM2.5-VL-3B-GGUF",
+            "file": "LFM2.5-VL-3B-F16.gguf",
+            "mmprojFile": "mmproj-LFM2.5-VL-3B-F16.gguf",
+            "quant": "F16"
+        },
+        "runtime": {
+            "ctx": 8192,
+            "gpuLayers": 999,
+            "batch": 512,
+            "ubatch": 128,
+            "threads": 16,
+            "kv": "q8_0",
+            "flashAttn": true,
+            "mlock": false,
+            "mmap": true
+        },
+        "extraArgs": [
+            "--temp",
+            "0.0",
+            "--top-p",
+            "0.95",
+            "--top-k",
+            "20",
+            "--min-p",
+            "0.0",
+            "--repeat-penalty",
+            "1.0",
+            "--presence-penalty",
+            "0.0",
+            "--no-context-shift",
+            "--metrics",
+            "--no-warmup",
+            "--jinja",
+            "--parallel",
+            "1",
+            "--reasoning",
+            "off"
+        ],
+        "binaryKind": "official",
+        "minimumBinaryBuild": 10964,
+        "contextPresets": [
+            8192
+        ],
+        "vision": true,
+        "id": "sys-bench-lfm25-vl3b-f16-control-20260926",
+        "order": 422,
+        "displayName": "[bench] LFM2.5-VL-3B F16 · control visión",
+        "comment": "Control local reproducible LFM2.5-VL-3B F16 + mmproj F16, 8k, llama.cpp b10964. En lectura de estados acertó la fixture sintética; para Computer Use generó tool_calls válidas, pero centró el click en (0.5,0.5), lejos del switch (~0.88,0.296). Control para comparar DSpark; no promover como agente visual. Ver docs/lfm25-vl-dspark-audit-20260926.md."
+    },
+    {
+        "tier": "24GB-LFM25-VL3B",
+        "extra": true,
+        "manualOnly": true,
+        "benchmark": true,
+        "best": false,
+        "favorite": false,
+        "autoCompanion": false,
+        "minVramGb": 16,
+        "minRamGb": 32,
+        "cpuOk": false,
+        "folder": "LFM2.5-VL-3B-DSpark-bench",
+        "agentProfileId": "agent-intermedio",
+        "model": {
+            "repo": "LiquidAI/LFM2.5-VL-3B-GGUF",
+            "file": "LFM2.5-VL-3B-F16.gguf",
+            "mmprojFile": "mmproj-LFM2.5-VL-3B-F16.gguf",
+            "quant": "F16"
+        },
+        "runtime": {
+            "ctx": 8192,
+            "gpuLayers": 999,
+            "batch": 512,
+            "ubatch": 128,
+            "threads": 16,
+            "kv": "q8_0",
+            "flashAttn": true,
+            "mlock": false,
+            "mmap": true
+        },
+        "extraArgs": [
+            "--temp",
+            "0.0",
+            "--top-p",
+            "0.95",
+            "--top-k",
+            "20",
+            "--min-p",
+            "0.0",
+            "--repeat-penalty",
+            "1.0",
+            "--presence-penalty",
+            "0.0",
+            "--no-context-shift",
+            "--metrics",
+            "--no-warmup",
+            "--jinja",
+            "--parallel",
+            "1",
+            "--reasoning",
+            "off"
+        ],
+        "binaryKind": "official",
+        "minimumBinaryBuild": 10964,
+        "contextPresets": [
+            8192
+        ],
+        "vision": true,
+        "id": "sys-bench-lfm25-vl3b-dspark8-20260926",
+        "order": 423,
+        "displayName": "[bench SUPERIOR decode / INFERIOR CU] LFM2.5-VL-3B DSpark n=8",
+        "draftModel": {
+            "repo": "LiquidAI/LFM2.5-VL-3B-DSpark-GGUF",
+            "file": "LFM2.5-VL-3B-DSpark-F16.gguf",
+            "folder": "LFM2.5-VL-3B-DSpark-bench",
+            "quant": "F16"
+        },
+        "spec": {
+            "type": "draft-dspark",
+            "draftNMax": 8,
+            "draftNMin": 0
+        },
+        "comment": "SUPERIOR sólo en throughput de decodificación frente al control: +2.30x en descripción visual y +2.35x en lectura de estados en esta RTX 3090 F16. Como perfil de Computer Use es INFERIOR/no promover: con el schema real de LlamaCode devolvió tool_calls válidas pero el click fue (0.5,0.5), lejos del switch (~0.88,0.296); mediana de respuesta 987 ms vs 895 ms del control. No cambia la calidad visual medida; una descripción tuvo una diferencia léxica bajo temp=0. manualOnly evita descargas automáticas. Ver docs/lfm25-vl-dspark-audit-20260926.md."
+    },
+    {
+        "tier": "24GB-LFM25-VL3B",
+        "extra": true,
+        "manualOnly": true,
+        "benchmark": true,
+        "best": false,
+        "favorite": false,
+        "autoCompanion": false,
+        "minVramGb": 16,
+        "minRamGb": 32,
+        "cpuOk": false,
+        "folder": "LFM2.5-VL-3B-DSpark-bench",
+        "agentProfileId": "agent-intermedio",
+        "model": {
+            "repo": "LiquidAI/LFM2.5-VL-3B-GGUF",
+            "file": "LFM2.5-VL-3B-F16.gguf",
+            "mmprojFile": "mmproj-LFM2.5-VL-3B-F16.gguf",
+            "quant": "F16"
+        },
+        "runtime": {
+            "ctx": 8192,
+            "gpuLayers": 999,
+            "batch": 512,
+            "ubatch": 128,
+            "threads": 16,
+            "kv": "q8_0",
+            "flashAttn": true,
+            "mlock": false,
+            "mmap": true
+        },
+        "extraArgs": [
+            "--temp",
+            "0.0",
+            "--top-p",
+            "0.95",
+            "--top-k",
+            "20",
+            "--min-p",
+            "0.0",
+            "--repeat-penalty",
+            "1.0",
+            "--presence-penalty",
+            "0.0",
+            "--no-context-shift",
+            "--metrics",
+            "--no-warmup",
+            "--jinja",
+            "--parallel",
+            "1",
+            "--reasoning",
+            "off"
+        ],
+        "binaryKind": "official",
+        "minimumBinaryBuild": 10964,
+        "contextPresets": [
+            8192
+        ],
+        "vision": true,
+        "id": "sys-bench-lfm25-vl3b-dspark9-20260926",
+        "order": 424,
+        "displayName": "[bench SUPERIOR decode / INFERIOR CU] LFM2.5-VL-3B DSpark n=9",
+        "draftModel": {
+            "repo": "LiquidAI/LFM2.5-VL-3B-DSpark-GGUF",
+            "file": "LFM2.5-VL-3B-DSpark-F16.gguf",
+            "folder": "LFM2.5-VL-3B-DSpark-bench",
+            "quant": "F16"
+        },
+        "spec": {
+            "type": "draft-dspark",
+            "draftNMax": 9,
+            "draftNMin": 0
+        },
+        "comment": "SUPERIOR sólo en throughput de decodificación frente al control: +2.26x en lectura de estados y +3.33x en descripción visual de primera solicitud. Como perfil de Computer Use es INFERIOR/no promover: el schema real produjo tool_calls válidas pero con click (0.5,0.5), lejos del switch (~0.88,0.296); su mediana de respuesta fue 890 ms, esencialmente igual a 895 ms del control. No se midió mejora agentiva. manualOnly evita descargas automáticas. Ver docs/lfm25-vl-dspark-audit-20260926.md."
+    }
 ]

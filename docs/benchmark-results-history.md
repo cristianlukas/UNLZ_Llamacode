@@ -8,6 +8,16 @@ los perfiles no alcanzados. Este historial conserva además la narrativa y los
 eventos operativos; ambos documentos se complementan y no reemplazan resultados
 anteriores.
 
+## 2026-09-26 — Liquid LFM2.5-VL-3B-DSpark: ventaja sólo en decode
+
+Se contrastó el post de Liquid AI con `LFM2.5-VL-3B` F16 y su drafter DSpark F16 en una RTX 3090, usando llama.cpp oficial b10964 y una fixture de configuración de Windows. Se agregaron el control, DSpark n=8 y DSpark n=9 como perfiles manuales. En dos tareas visuales de lectura/descripción, la primera solicitud decodificó 2,30–2,35× más rápido con n=8 y 2,26–3,33× con n=9. Son tareas y mediciones pequeñas, no una estimación general del rendimiento ni de la calidad.
+
+La prueba Computer Use se repitió con el schema real de `desktop_click` de LlamaCode y sin ejecutar la acción. Los tres perfiles generaron una llamada JSON válida, pero todos propusieron el centro de la pantalla `(0.5, 0.5)` en vez del centro visible del control `(≈0.88, ≈0.296)`. La mediana end-to-end fue 895 ms control, 987 ms n=8 y 890 ms n=9; por lo tanto, DSpark no mejoró esta interacción. n=8 y n=9 aceptaron 17/64 (26,6%) y 18/63 (28,6%) tokens de draft en esa salida corta. Veredicto: **superior sólo en decodificación; inferior/no promovible para Computer Use** con la configuración evaluada. El fallo es de grounding del modelo; el harness parseó los tool-calls. No se justifica cambiar el parser general por una sola fixture.
+
+La lectura de estados sintética fue correcta con control y drafts. Una descripción con n=8 tuvo variación léxica a temperatura 0, aunque conservó los estados. No se corrieron tareas de ingeniería de software ni pruebas de Charla: el drafter es específico de este target VLM y no sustituye STT/TTS. Los perfiles se marcaron `manualOnly`, `best=false`, `favorite=false`; se mantienen para benchmark sin promoverlos al default.
+
+Artefactos: [`lfm25-vl-dspark-3090-20260926.json`](../artifacts/lfm25-vl-dspark-3090-20260926.json), [`lfm25-vl-dspark9-3090-20260926.json`](../artifacts/lfm25-vl-dspark9-3090-20260926.json), [`lfm25-vl-dspark-computer-use-contract-3090-20260926.json`](../artifacts/lfm25-vl-dspark-computer-use-contract-3090-20260926.json) y [`lfm25_vl_dspark_ui_settings_v1.png`](../assets/benchmarks/custom/lfm25_vl_dspark_ui_settings_v1.png). Procedimiento y fuentes: [auditoría LFM2.5-VL-3B-DSpark](lfm25-vl-dspark-audit-20260926.md).
+
 ## 2026-09-26 — Qwen3.8-Flash-Next W4A16-FP8PLE de albucino
 
 El post de LocalLLM propone el checkpoint

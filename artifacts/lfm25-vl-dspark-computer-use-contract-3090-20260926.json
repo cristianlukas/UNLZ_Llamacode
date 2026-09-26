@@ -1,0 +1,694 @@
+{
+  "title": "LlamaCode desktop_click contract probe for LFM2.5-VL-3B",
+  "date": "2026-09-26",
+  "hardware": "NVIDIA RTX 3090 CUDA1; llama.cpp b10964 commit b29c606e2; target and mmproj F16; DSpark F16 n=8/9",
+  "fixture": {
+    "path": "assets/benchmarks/custom/lfm25_vl_dspark_ui_settings_v1.png",
+    "sha256": "7dbf300035862eb581e422144394ff013342d7f859b4e7cfb84326dc73098174",
+    "size": "1280x800"
+  },
+  "method": "Single vision request per profile with LlamaCode desktop_click schema (normalized x/y in [0,1], target_id, scope_kind, optional snapshot_id/button), OpenAI tools auto, parallel_tool_calls=true, parse_tool_calls=false. Tool was never executed. Target switch center is x≈0.88,y≈0.296 based on fixture geometry. A second three-repeat control-vs-n=9 comparison disabled prompt KV reuse (cache_prompt=false) to reduce warm-prefix bias; these repetitions are stored separately. Three cache_prompt=false repetitions for n=8 are stored separately as timed_repeats_nocache.",
+  "system_prompt": "Sos el agente de escritorio de LlamaCode. El usuario pidió activar la opción \"Tema oscuro\" en la captura. Inspeccioná la imagen y usa desktop_click una única vez para pulsar el centro del interruptor Tema oscuro. El destino es toda la pantalla screen. x e y están normalizados de 0 a 1. Si no podés localizarlo con certeza, no actúes. Respondé mediante una llamada de herramienta, sin texto adicional.",
+  "user_prompt": "Activa Tema oscuro.",
+  "tool_schema": {
+    "type": "function",
+    "function": {
+      "name": "desktop_click",
+      "description": "Hace click en coordenadas NORMALIZADAS 0..1 dentro del alcance. NO acepta la grilla visual 0..1000: dividí ambas coordenadas por 1000. Acepta button left/right/middle y devuelve trace con pointer/target. Observá primero, no uses coordenadas como replay ciego y verificá el resultado después.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "scope_kind": {
+            "type": "string",
+            "enum": [
+              "screen",
+              "window"
+            ],
+            "description": "'screen' o 'window'."
+          },
+          "target_id": {
+            "type": "string",
+            "description": "Id de pantalla o ventana."
+          },
+          "snapshot_id": {
+            "type": "string",
+            "description": "Fingerprint opcional."
+          },
+          "x": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "y": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "button": {
+            "type": "string",
+            "enum": [
+              "left",
+              "right",
+              "middle"
+            ]
+          }
+        },
+        "required": [
+          "target_id",
+          "x",
+          "y"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "results": [
+    {
+      "engine": "control",
+      "wall_ms": 1208.33,
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "",
+              "tool_calls": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "desktop_click",
+                    "arguments": "{\"target_id\":\"screen\",\"x\":0.5,\"y\":0.5}"
+                  },
+                  "id": "ZwhkYcJTsWBjVbzk7kYpwjF4gAXv2z9M"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1790444894,
+        "model": "lfm25-vl-3b-f16-control",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 25,
+          "prompt_tokens": 2184,
+          "total_tokens": 2209,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "id": "chatcmpl-v3uRdxFXus55zJAyQDTYFrtoT63bqLuW",
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 2184,
+          "prompt_ms": 926.087,
+          "prompt_per_token_ms": 0.4240325091575092,
+          "prompt_per_second": 2358.3097484361624,
+          "predicted_n": 25,
+          "predicted_ms": 185.799,
+          "predicted_per_token_ms": 7.741625,
+          "predicted_per_second": 129.17184699594722
+        }
+      }
+    },
+    {
+      "engine": "dspark_n8",
+      "wall_ms": 983.55,
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "",
+              "tool_calls": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "desktop_click",
+                    "arguments": "{\"target_id\":\"screen\",\"x\":0.5,\"y\":0.5}"
+                  },
+                  "id": "Xc7PwqTuazxg0cnn5fAUZPMassQWVvaM"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1790444895,
+        "model": "lfm25-vl-3b-dspark-n8",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 25,
+          "prompt_tokens": 2184,
+          "total_tokens": 2209,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "id": "chatcmpl-OvaY8VYGKGeNUjJcZK28gVXq3HRayWeE",
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 2184,
+          "prompt_ms": 788.305,
+          "prompt_per_token_ms": 0.3609455128205128,
+          "prompt_per_second": 2770.501265373174,
+          "predicted_n": 25,
+          "predicted_ms": 153.198,
+          "predicted_per_token_ms": 6.38325,
+          "predicted_per_second": 156.66000861630044,
+          "draft_n": 64,
+          "draft_n_accepted": 17
+        }
+      }
+    },
+    {
+      "engine": "dspark_n9",
+      "wall_ms": 1296.47,
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "",
+              "tool_calls": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "desktop_click",
+                    "arguments": "{\"target_id\":\"screen\",\"x\":0.5,\"y\":0.5}"
+                  },
+                  "id": "g1pVAh29pxOgBZ9y4baMrLcuYe3qc8Nj"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1790444924,
+        "model": "lfm25-vl-3b-dspark-n9",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 25,
+          "prompt_tokens": 2184,
+          "total_tokens": 2209,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "id": "chatcmpl-yaQIA2DzUfxje5iCFWBfDNQtAQjufSJD",
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 2184,
+          "prompt_ms": 1086.089,
+          "prompt_per_token_ms": 0.49729349816849816,
+          "prompt_per_second": 2010.884927478319,
+          "predicted_n": 25,
+          "predicted_ms": 149.177,
+          "predicted_per_token_ms": 6.215708333333333,
+          "predicted_per_second": 160.88270980110877,
+          "draft_n": 63,
+          "draft_n_accepted": 18
+        }
+      }
+    }
+  ],
+  "timed_repeats_nocache": [
+    {
+      "repeat": 1,
+      "engine": "control",
+      "wall_ms": 1202.88,
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "",
+              "tool_calls": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "desktop_click",
+                    "arguments": "{\"target_id\":\"screen\",\"x\":0.5,\"y\":0.5}"
+                  },
+                  "id": "iWoG6qY1CieFFfTdkyEdu2BM3BhYi68w"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1790444951,
+        "model": "lfm25-vl-3b-f16-control",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 25,
+          "prompt_tokens": 2184,
+          "total_tokens": 2209,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "id": "chatcmpl-cqYxnHjyYVrAhNnJCZ4TJXzvQJdfsU1N",
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 2184,
+          "prompt_ms": 946.335,
+          "prompt_per_token_ms": 0.43330357142857145,
+          "prompt_per_second": 2307.850813929528,
+          "predicted_n": 25,
+          "predicted_ms": 188.282,
+          "predicted_per_token_ms": 7.845083333333334,
+          "predicted_per_second": 127.46837191021976
+        }
+      }
+    },
+    {
+      "repeat": 1,
+      "engine": "dspark_n9",
+      "wall_ms": 890.32,
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "",
+              "tool_calls": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "desktop_click",
+                    "arguments": "{\"target_id\":\"screen\",\"x\":0.5,\"y\":0.5}"
+                  },
+                  "id": "IuRLAXOZkAG9IQgBMxJJUVCMNpYekZBP"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1790444952,
+        "model": "lfm25-vl-3b-dspark-n9",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 25,
+          "prompt_tokens": 2184,
+          "total_tokens": 2209,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "id": "chatcmpl-2kDDn05k7sRuq48uX7voQNv05FVTDaeC",
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 2184,
+          "prompt_ms": 711.281,
+          "prompt_per_token_ms": 0.32567811355311355,
+          "prompt_per_second": 3070.5164344330865,
+          "predicted_n": 25,
+          "predicted_ms": 128.129,
+          "predicted_per_token_ms": 5.338708333333333,
+          "predicted_per_second": 187.31122540564587,
+          "draft_n": 63,
+          "draft_n_accepted": 18
+        }
+      }
+    },
+    {
+      "repeat": 2,
+      "engine": "control",
+      "wall_ms": 854.67,
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "",
+              "tool_calls": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "desktop_click",
+                    "arguments": "{\"target_id\":\"screen\",\"x\":0.5,\"y\":0.5}"
+                  },
+                  "id": "ioiEtddiQzNNtr9qEd2pxl8irq6BuUZS"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1790444953,
+        "model": "lfm25-vl-3b-f16-control",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 25,
+          "prompt_tokens": 2184,
+          "total_tokens": 2209,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "id": "chatcmpl-Uy3tMSuqihGONxfHEcYe1HJPZwXzSXuk",
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 2184,
+          "prompt_ms": 615.708,
+          "prompt_per_token_ms": 0.2819175824175824,
+          "prompt_per_second": 3547.135980042488,
+          "predicted_n": 25,
+          "predicted_ms": 185.095,
+          "predicted_per_token_ms": 7.712291666666666,
+          "predicted_per_second": 129.66314595207865
+        }
+      }
+    },
+    {
+      "repeat": 2,
+      "engine": "dspark_n9",
+      "wall_ms": 942.07,
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "",
+              "tool_calls": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "desktop_click",
+                    "arguments": "{\"target_id\":\"screen\",\"x\":0.5,\"y\":0.5}"
+                  },
+                  "id": "r15fnswWhKTHM0wgshEcHqPROiQcKOzM"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1790444954,
+        "model": "lfm25-vl-3b-dspark-n9",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 25,
+          "prompt_tokens": 2184,
+          "total_tokens": 2209,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "id": "chatcmpl-p2JdfHE3R6vovEUtQ6JJt32kgGKwcdO6",
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 2184,
+          "prompt_ms": 767.735,
+          "prompt_per_token_ms": 0.35152701465201464,
+          "prompt_per_second": 2844.7315805583953,
+          "predicted_n": 25,
+          "predicted_ms": 136.117,
+          "predicted_per_token_ms": 5.671541666666666,
+          "predicted_per_second": 176.31890212096948,
+          "draft_n": 63,
+          "draft_n_accepted": 18
+        }
+      }
+    },
+    {
+      "repeat": 3,
+      "engine": "control",
+      "wall_ms": 894.52,
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "",
+              "tool_calls": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "desktop_click",
+                    "arguments": "{\"target_id\":\"screen\",\"x\":0.5,\"y\":0.5}"
+                  },
+                  "id": "9sf7tRFcSGmmFCpRUiCBT8aV0SkZwIsQ"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1790444955,
+        "model": "lfm25-vl-3b-f16-control",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 25,
+          "prompt_tokens": 2184,
+          "total_tokens": 2209,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "id": "chatcmpl-LZlMDZtRtEAjV4uZXe0lMjLGBzEdeEJW",
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 2184,
+          "prompt_ms": 641.433,
+          "prompt_per_token_ms": 0.2936964285714286,
+          "prompt_per_second": 3404.8762692284304,
+          "predicted_n": 25,
+          "predicted_ms": 184.118,
+          "predicted_per_token_ms": 7.671583333333333,
+          "predicted_per_second": 130.35118782519908
+        }
+      }
+    },
+    {
+      "repeat": 3,
+      "engine": "dspark_n9",
+      "wall_ms": 861.7,
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "",
+              "tool_calls": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "desktop_click",
+                    "arguments": "{\"target_id\":\"screen\",\"x\":0.5,\"y\":0.5}"
+                  },
+                  "id": "cZH0MxsVX5otsVsebfOnvDmFb5s6xXp4"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1790444956,
+        "model": "lfm25-vl-3b-dspark-n9",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 25,
+          "prompt_tokens": 2184,
+          "total_tokens": 2209,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "id": "chatcmpl-w3p8VNljTSA0iC26DnkOmbVZq1OIJxBQ",
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 2184,
+          "prompt_ms": 694.2,
+          "prompt_per_token_ms": 0.3178571428571429,
+          "prompt_per_second": 3146.067415730337,
+          "predicted_n": 25,
+          "predicted_ms": 124.338,
+          "predicted_per_token_ms": 5.18075,
+          "predicted_per_second": 193.02224581383004,
+          "draft_n": 63,
+          "draft_n_accepted": 18
+        }
+      }
+    },
+    {
+      "repeat": 1,
+      "engine": "dspark_n8",
+      "wall_ms": 1296.6,
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "",
+              "tool_calls": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "desktop_click",
+                    "arguments": "{\"target_id\":\"screen\",\"x\":0.5,\"y\":0.5}"
+                  },
+                  "id": "04NTVd7mJfo2iZF2NGH0RoQnFRzO79mC"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1790444982,
+        "model": "lfm25-vl-3b-dspark-n8",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 25,
+          "prompt_tokens": 2184,
+          "total_tokens": 2209,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "id": "chatcmpl-rd45B8j5Snz0POo5gT2BXXYQ9XZq5cEX",
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 2184,
+          "prompt_ms": 1065.514,
+          "prompt_per_token_ms": 0.4878727106227106,
+          "prompt_per_second": 2049.7149732429607,
+          "predicted_n": 25,
+          "predicted_ms": 170.115,
+          "predicted_per_token_ms": 7.088125000000001,
+          "predicted_per_second": 141.08103341856977,
+          "draft_n": 64,
+          "draft_n_accepted": 17
+        }
+      }
+    },
+    {
+      "repeat": 2,
+      "engine": "dspark_n8",
+      "wall_ms": 982.27,
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "",
+              "tool_calls": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "desktop_click",
+                    "arguments": "{\"target_id\":\"screen\",\"x\":0.5,\"y\":0.5}"
+                  },
+                  "id": "LypnObdieCIhe8OCBv3ftS0DOU7KGz1e"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1790444983,
+        "model": "lfm25-vl-3b-dspark-n8",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 25,
+          "prompt_tokens": 2184,
+          "total_tokens": 2209,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "id": "chatcmpl-rT4nU0ASqXf4yNe08KWNutrsnCa9LaEs",
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 2184,
+          "prompt_ms": 790.31,
+          "prompt_per_token_ms": 0.3618635531135531,
+          "prompt_per_second": 2763.472561399957,
+          "predicted_n": 25,
+          "predicted_ms": 150.509,
+          "predicted_per_token_ms": 6.271208333333333,
+          "predicted_per_second": 159.45890278986639,
+          "draft_n": 64,
+          "draft_n_accepted": 17
+        }
+      }
+    },
+    {
+      "repeat": 3,
+      "engine": "dspark_n8",
+      "wall_ms": 986.76,
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "",
+              "tool_calls": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "desktop_click",
+                    "arguments": "{\"target_id\":\"screen\",\"x\":0.5,\"y\":0.5}"
+                  },
+                  "id": "1xAIi3hhn0MmOpdTo4fYkOEitwd5Fmau"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1790444984,
+        "model": "lfm25-vl-3b-dspark-n8",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 25,
+          "prompt_tokens": 2184,
+          "total_tokens": 2209,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "id": "chatcmpl-SqcYa1buSrcMuh62Pfy657Dxlo5t9FZj",
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 2184,
+          "prompt_ms": 778.662,
+          "prompt_per_token_ms": 0.3565302197802198,
+          "prompt_per_second": 2804.8113302048896,
+          "predicted_n": 25,
+          "predicted_ms": 149.422,
+          "predicted_per_token_ms": 6.2259166666666665,
+          "predicted_per_second": 160.61891823158572,
+          "draft_n": 64,
+          "draft_n_accepted": 17
+        }
+      }
+    }
+  ]
+}

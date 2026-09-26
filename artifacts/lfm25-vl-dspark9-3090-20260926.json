@@ -1,0 +1,1240 @@
+{
+  "title": "LFM2.5-VL-3B DSpark n=9 local A/B benchmark",
+  "date": "2026-09-26",
+  "hardware": "2x NVIDIA RTX 3090 24 GB; isolated test assigned CUDA1; control server and n=9 server running llama.cpp b10964 build 10964, commit b29c606e2",
+  "target": "LiquidAI/LFM2.5-VL-3B-GGUF F16",
+  "drafter": "LiquidAI/LFM2.5-VL-3B-DSpark-GGUF F16",
+  "runtime": {
+    "ctx": 8192,
+    "batch": 512,
+    "ubatch": 128,
+    "kv": "q8_0",
+    "flash_attn": true,
+    "temperature": 0,
+    "top_p": 0.95,
+    "top_k": 20,
+    "max_tokens": 180,
+    "n": 9
+  },
+  "fixture": {
+    "path": "assets/benchmarks/custom/lfm25_vl_dspark_ui_settings_v1.png",
+    "sha256": "7dbf300035862eb581e422144394ff013342d7f859b4e7cfb84326dc73098174",
+    "dimensions": "1280x800"
+  },
+  "method": "3 repetitions per task in fixed control-then-DSpark order. Repeated requests reuse server/prefix state, so report first request per task for cold/warm-start comparison; later repeats are warm and are retained as raw data, not pooled for speed claims.",
+  "tasks": [
+    "vision_state",
+    "computer_use_tool",
+    "vision_description"
+  ],
+  "results": [
+    {
+      "task": "vision_state",
+      "repeat": 1,
+      "engine": "control",
+      "wall_ms": 1025.57,
+      "finish_reason": "stop",
+      "content": "{\n  \"dark_mode\": false,\n  \"telemetry\": false,\n  \"diagnostic_data\": false\n}",
+      "tool_calls": null,
+      "usage": {
+        "completion_tokens": 26,
+        "prompt_tokens": 1850,
+        "total_tokens": 1876,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 1850,
+        "prompt_ms": 745.224,
+        "prompt_per_token_ms": 0.4028237837837838,
+        "prompt_per_second": 2482.4750678990476,
+        "predicted_n": 26,
+        "predicted_ms": 206.576,
+        "predicted_per_token_ms": 8.26304,
+        "predicted_per_second": 121.02083494694446
+      },
+      "raw_response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\n  \"dark_mode\": false,\n  \"telemetry\": false,\n  \"diagnostic_data\": false\n}"
+            }
+          }
+        ],
+        "created": 1790444716,
+        "model": "lfm25-vl-3b-f16-control",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 26,
+          "prompt_tokens": 1850,
+          "total_tokens": 1876,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "id": "chatcmpl-LdRXIQV7SypGNDm4MMO61INkDx18oEFX",
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 1850,
+          "prompt_ms": 745.224,
+          "prompt_per_token_ms": 0.4028237837837838,
+          "prompt_per_second": 2482.4750678990476,
+          "predicted_n": 26,
+          "predicted_ms": 206.576,
+          "predicted_per_token_ms": 8.26304,
+          "predicted_per_second": 121.02083494694446
+        }
+      },
+      "decode_tps": 121.02083494694446
+    },
+    {
+      "task": "vision_state",
+      "repeat": 1,
+      "engine": "dspark_n9",
+      "wall_ms": 901.47,
+      "finish_reason": "stop",
+      "content": "{\n  \"dark_mode\": false,\n  \"telemetry\": false,\n  \"diagnostic_data\": false\n}",
+      "tool_calls": null,
+      "usage": {
+        "completion_tokens": 26,
+        "prompt_tokens": 1850,
+        "total_tokens": 1876,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 1850,
+        "prompt_ms": 763.365,
+        "prompt_per_token_ms": 0.4126297297297297,
+        "prompt_per_second": 2423.4802486359736,
+        "predicted_n": 26,
+        "predicted_ms": 91.275,
+        "predicted_per_token_ms": 3.6510000000000002,
+        "predicted_per_second": 273.8975623116954,
+        "draft_n": 36,
+        "draft_n_accepted": 23
+      },
+      "raw_response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\n  \"dark_mode\": false,\n  \"telemetry\": false,\n  \"diagnostic_data\": false\n}"
+            }
+          }
+        ],
+        "created": 1790444716,
+        "model": "lfm25-vl-3b-dspark-n9",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 26,
+          "prompt_tokens": 1850,
+          "total_tokens": 1876,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "id": "chatcmpl-8nQVdGWI6KmytUIxUZQix26Ewls69ksx",
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 1850,
+          "prompt_ms": 763.365,
+          "prompt_per_token_ms": 0.4126297297297297,
+          "prompt_per_second": 2423.4802486359736,
+          "predicted_n": 26,
+          "predicted_ms": 91.275,
+          "predicted_per_token_ms": 3.6510000000000002,
+          "predicted_per_second": 273.8975623116954,
+          "draft_n": 36,
+          "draft_n_accepted": 23
+        }
+      },
+      "decode_tps": 273.8975623116954
+    },
+    {
+      "task": "vision_state",
+      "repeat": 2,
+      "engine": "control",
+      "wall_ms": 249.89,
+      "finish_reason": "stop",
+      "content": "{\n  \"dark_mode\": false,\n  \"telemetry\": false,\n  \"diagnostic_data\": false\n}",
+      "tool_calls": null,
+      "usage": {
+        "completion_tokens": 26,
+        "prompt_tokens": 1850,
+        "total_tokens": 1876,
+        "prompt_tokens_details": {
+          "cached_tokens": 1846
+        }
+      },
+      "timings": {
+        "cache_n": 1846,
+        "prompt_n": 4,
+        "prompt_ms": 10.776,
+        "prompt_per_token_ms": 2.694,
+        "prompt_per_second": 371.19524870081665,
+        "predicted_n": 26,
+        "predicted_ms": 207.638,
+        "predicted_per_token_ms": 8.30552,
+        "predicted_per_second": 120.40185322532484
+      },
+      "raw_response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\n  \"dark_mode\": false,\n  \"telemetry\": false,\n  \"diagnostic_data\": false\n}"
+            }
+          }
+        ],
+        "created": 1790444717,
+        "model": "lfm25-vl-3b-f16-control",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 26,
+          "prompt_tokens": 1850,
+          "total_tokens": 1876,
+          "prompt_tokens_details": {
+            "cached_tokens": 1846
+          }
+        },
+        "id": "chatcmpl-eZb6tC8tPkexz2oOboBlEzRr0Eyvmwmp",
+        "timings": {
+          "cache_n": 1846,
+          "prompt_n": 4,
+          "prompt_ms": 10.776,
+          "prompt_per_token_ms": 2.694,
+          "prompt_per_second": 371.19524870081665,
+          "predicted_n": 26,
+          "predicted_ms": 207.638,
+          "predicted_per_token_ms": 8.30552,
+          "predicted_per_second": 120.40185322532484
+        }
+      },
+      "decode_tps": 120.40185322532484
+    },
+    {
+      "task": "vision_state",
+      "repeat": 2,
+      "engine": "dspark_n9",
+      "wall_ms": 119.88,
+      "finish_reason": "stop",
+      "content": "{\n  \"dark_mode\": false,\n  \"telemetry\": false,\n  \"diagnostic_data\": false\n}",
+      "tool_calls": null,
+      "usage": {
+        "completion_tokens": 26,
+        "prompt_tokens": 1850,
+        "total_tokens": 1876,
+        "prompt_tokens_details": {
+          "cached_tokens": 1846
+        }
+      },
+      "timings": {
+        "cache_n": 1846,
+        "prompt_n": 4,
+        "prompt_ms": 18.856,
+        "prompt_per_token_ms": 4.714,
+        "prompt_per_second": 212.13406873143825,
+        "predicted_n": 26,
+        "predicted_ms": 66.73,
+        "predicted_per_token_ms": 2.6692,
+        "predicted_per_second": 374.6440881162895,
+        "draft_n": 36,
+        "draft_n_accepted": 23
+      },
+      "raw_response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\n  \"dark_mode\": false,\n  \"telemetry\": false,\n  \"diagnostic_data\": false\n}"
+            }
+          }
+        ],
+        "created": 1790444717,
+        "model": "lfm25-vl-3b-dspark-n9",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 26,
+          "prompt_tokens": 1850,
+          "total_tokens": 1876,
+          "prompt_tokens_details": {
+            "cached_tokens": 1846
+          }
+        },
+        "id": "chatcmpl-mjjO9ckYDhGXAjYp3SufTI7NlsGdIDAE",
+        "timings": {
+          "cache_n": 1846,
+          "prompt_n": 4,
+          "prompt_ms": 18.856,
+          "prompt_per_token_ms": 4.714,
+          "prompt_per_second": 212.13406873143825,
+          "predicted_n": 26,
+          "predicted_ms": 66.73,
+          "predicted_per_token_ms": 2.6692,
+          "predicted_per_second": 374.6440881162895,
+          "draft_n": 36,
+          "draft_n_accepted": 23
+        }
+      },
+      "decode_tps": 374.6440881162895
+    },
+    {
+      "task": "vision_state",
+      "repeat": 3,
+      "engine": "control",
+      "wall_ms": 280.15,
+      "finish_reason": "stop",
+      "content": "{\n  \"dark_mode\": false,\n  \"telemetry\": false,\n  \"diagnostic_data\": false\n}",
+      "tool_calls": null,
+      "usage": {
+        "completion_tokens": 26,
+        "prompt_tokens": 1850,
+        "total_tokens": 1876,
+        "prompt_tokens_details": {
+          "cached_tokens": 1846
+        }
+      },
+      "timings": {
+        "cache_n": 1846,
+        "prompt_n": 4,
+        "prompt_ms": 12.191,
+        "prompt_per_token_ms": 3.04775,
+        "prompt_per_second": 328.1109014847018,
+        "predicted_n": 26,
+        "predicted_ms": 211.101,
+        "predicted_per_token_ms": 8.44404,
+        "predicted_per_second": 118.42672464839106
+      },
+      "raw_response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\n  \"dark_mode\": false,\n  \"telemetry\": false,\n  \"diagnostic_data\": false\n}"
+            }
+          }
+        ],
+        "created": 1790444717,
+        "model": "lfm25-vl-3b-f16-control",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 26,
+          "prompt_tokens": 1850,
+          "total_tokens": 1876,
+          "prompt_tokens_details": {
+            "cached_tokens": 1846
+          }
+        },
+        "id": "chatcmpl-Hi5jGyqjC6zduymCbK9QC2aiaak0XugK",
+        "timings": {
+          "cache_n": 1846,
+          "prompt_n": 4,
+          "prompt_ms": 12.191,
+          "prompt_per_token_ms": 3.04775,
+          "prompt_per_second": 328.1109014847018,
+          "predicted_n": 26,
+          "predicted_ms": 211.101,
+          "predicted_per_token_ms": 8.44404,
+          "predicted_per_second": 118.42672464839106
+        }
+      },
+      "decode_tps": 118.42672464839106
+    },
+    {
+      "task": "vision_state",
+      "repeat": 3,
+      "engine": "dspark_n9",
+      "wall_ms": 125.32,
+      "finish_reason": "stop",
+      "content": "{\n  \"dark_mode\": false,\n  \"telemetry\": false,\n  \"diagnostic_data\": false\n}",
+      "tool_calls": null,
+      "usage": {
+        "completion_tokens": 26,
+        "prompt_tokens": 1850,
+        "total_tokens": 1876,
+        "prompt_tokens_details": {
+          "cached_tokens": 1846
+        }
+      },
+      "timings": {
+        "cache_n": 1846,
+        "prompt_n": 4,
+        "prompt_ms": 19.191,
+        "prompt_per_token_ms": 4.79775,
+        "prompt_per_second": 208.43103538116827,
+        "predicted_n": 26,
+        "predicted_ms": 68.451,
+        "predicted_per_token_ms": 2.73804,
+        "predicted_per_second": 365.22475931688365,
+        "draft_n": 36,
+        "draft_n_accepted": 23
+      },
+      "raw_response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\n  \"dark_mode\": false,\n  \"telemetry\": false,\n  \"diagnostic_data\": false\n}"
+            }
+          }
+        ],
+        "created": 1790444717,
+        "model": "lfm25-vl-3b-dspark-n9",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 26,
+          "prompt_tokens": 1850,
+          "total_tokens": 1876,
+          "prompt_tokens_details": {
+            "cached_tokens": 1846
+          }
+        },
+        "id": "chatcmpl-JHzEtYAaRiM9fhuEgVBIYVSJW0T2QHxX",
+        "timings": {
+          "cache_n": 1846,
+          "prompt_n": 4,
+          "prompt_ms": 19.191,
+          "prompt_per_token_ms": 4.79775,
+          "prompt_per_second": 208.43103538116827,
+          "predicted_n": 26,
+          "predicted_ms": 68.451,
+          "predicted_per_token_ms": 2.73804,
+          "predicted_per_second": 365.22475931688365,
+          "draft_n": 36,
+          "draft_n_accepted": 23
+        }
+      },
+      "decode_tps": 365.22475931688365
+    },
+    {
+      "task": "computer_use_tool",
+      "repeat": 1,
+      "engine": "control",
+      "wall_ms": 887.69,
+      "finish_reason": "stop",
+      "content": "[{\"image_id\": 0, \"name\": \"Pantalla\", \"value\": \"Pantalla\"}]",
+      "tool_calls": null,
+      "usage": {
+        "completion_tokens": 24,
+        "prompt_tokens": 1952,
+        "total_tokens": 1976,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 1952,
+        "prompt_ms": 628.728,
+        "prompt_per_token_ms": 0.3220942622950819,
+        "prompt_per_second": 3104.6811975926,
+        "predicted_n": 24,
+        "predicted_ms": 198.408,
+        "predicted_per_token_ms": 8.626434782608696,
+        "predicted_per_second": 115.9227450506028
+      },
+      "raw_response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "[{\"image_id\": 0, \"name\": \"Pantalla\", \"value\": \"Pantalla\"}]"
+            }
+          }
+        ],
+        "created": 1790444718,
+        "model": "lfm25-vl-3b-f16-control",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 24,
+          "prompt_tokens": 1952,
+          "total_tokens": 1976,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "id": "chatcmpl-HJDPIEt2Lx2478LR2moMjjPwM4q9luE6",
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 1952,
+          "prompt_ms": 628.728,
+          "prompt_per_token_ms": 0.3220942622950819,
+          "prompt_per_second": 3104.6811975926,
+          "predicted_n": 24,
+          "predicted_ms": 198.408,
+          "predicted_per_token_ms": 8.626434782608696,
+          "predicted_per_second": 115.9227450506028
+        }
+      },
+      "decode_tps": 115.9227450506028
+    },
+    {
+      "task": "computer_use_tool",
+      "repeat": 1,
+      "engine": "dspark_n9",
+      "wall_ms": 926.76,
+      "finish_reason": "stop",
+      "content": "[{\"image_id\": 0, \"name\": \"Pantalla\", \"value\": \"Pantalla\"}]",
+      "tool_calls": null,
+      "usage": {
+        "completion_tokens": 24,
+        "prompt_tokens": 1952,
+        "total_tokens": 1976,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 1952,
+        "prompt_ms": 743.077,
+        "prompt_per_token_ms": 0.38067469262295084,
+        "prompt_per_second": 2626.9148419342814,
+        "predicted_n": 24,
+        "predicted_ms": 133.119,
+        "predicted_per_token_ms": 5.787782608695652,
+        "predicted_per_second": 172.77774021739947,
+        "draft_n": 72,
+        "draft_n_accepted": 17
+      },
+      "raw_response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "[{\"image_id\": 0, \"name\": \"Pantalla\", \"value\": \"Pantalla\"}]"
+            }
+          }
+        ],
+        "created": 1790444719,
+        "model": "lfm25-vl-3b-dspark-n9",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 24,
+          "prompt_tokens": 1952,
+          "total_tokens": 1976,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "id": "chatcmpl-O1RZso8S5oTuvITbS1hyst3BR0Al9yWx",
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 1952,
+          "prompt_ms": 743.077,
+          "prompt_per_token_ms": 0.38067469262295084,
+          "prompt_per_second": 2626.9148419342814,
+          "predicted_n": 24,
+          "predicted_ms": 133.119,
+          "predicted_per_token_ms": 5.787782608695652,
+          "predicted_per_second": 172.77774021739947,
+          "draft_n": 72,
+          "draft_n_accepted": 17
+        }
+      },
+      "decode_tps": 172.77774021739947
+    },
+    {
+      "task": "computer_use_tool",
+      "repeat": 2,
+      "engine": "control",
+      "wall_ms": 257.76,
+      "finish_reason": "stop",
+      "content": "[{\"image_id\": 0, \"name\": \"Pantalla\", \"value\": \"Pantalla\"}]",
+      "tool_calls": null,
+      "usage": {
+        "completion_tokens": 24,
+        "prompt_tokens": 1952,
+        "total_tokens": 1976,
+        "prompt_tokens_details": {
+          "cached_tokens": 1948
+        }
+      },
+      "timings": {
+        "cache_n": 1948,
+        "prompt_n": 4,
+        "prompt_ms": 12.421,
+        "prompt_per_token_ms": 3.10525,
+        "prompt_per_second": 322.03526286128334,
+        "predicted_n": 24,
+        "predicted_ms": 195.09,
+        "predicted_per_token_ms": 8.482173913043479,
+        "predicted_per_second": 117.89430519247527
+      },
+      "raw_response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "[{\"image_id\": 0, \"name\": \"Pantalla\", \"value\": \"Pantalla\"}]"
+            }
+          }
+        ],
+        "created": 1790444719,
+        "model": "lfm25-vl-3b-f16-control",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 24,
+          "prompt_tokens": 1952,
+          "total_tokens": 1976,
+          "prompt_tokens_details": {
+            "cached_tokens": 1948
+          }
+        },
+        "id": "chatcmpl-97w1e3wf5rtvzrgEdbvGnYjebJm2LeTz",
+        "timings": {
+          "cache_n": 1948,
+          "prompt_n": 4,
+          "prompt_ms": 12.421,
+          "prompt_per_token_ms": 3.10525,
+          "prompt_per_second": 322.03526286128334,
+          "predicted_n": 24,
+          "predicted_ms": 195.09,
+          "predicted_per_token_ms": 8.482173913043479,
+          "predicted_per_second": 117.89430519247527
+        }
+      },
+      "decode_tps": 117.89430519247527
+    },
+    {
+      "task": "computer_use_tool",
+      "repeat": 2,
+      "engine": "dspark_n9",
+      "wall_ms": 184.6,
+      "finish_reason": "stop",
+      "content": "[{\"image_id\": 0, \"name\": \"Pantalla\", \"value\": \"Pantalla\"}]",
+      "tool_calls": null,
+      "usage": {
+        "completion_tokens": 24,
+        "prompt_tokens": 1952,
+        "total_tokens": 1976,
+        "prompt_tokens_details": {
+          "cached_tokens": 1948
+        }
+      },
+      "timings": {
+        "cache_n": 1948,
+        "prompt_n": 4,
+        "prompt_ms": 19.656,
+        "prompt_per_token_ms": 4.914,
+        "prompt_per_second": 203.50020350020353,
+        "predicted_n": 24,
+        "predicted_ms": 127.927,
+        "predicted_per_token_ms": 5.56204347826087,
+        "predicted_per_second": 179.79003650519437,
+        "draft_n": 72,
+        "draft_n_accepted": 17
+      },
+      "raw_response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "[{\"image_id\": 0, \"name\": \"Pantalla\", \"value\": \"Pantalla\"}]"
+            }
+          }
+        ],
+        "created": 1790444719,
+        "model": "lfm25-vl-3b-dspark-n9",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 24,
+          "prompt_tokens": 1952,
+          "total_tokens": 1976,
+          "prompt_tokens_details": {
+            "cached_tokens": 1948
+          }
+        },
+        "id": "chatcmpl-JRneE9VLMAunzBz1Xb0RHqcGuBuJOg3a",
+        "timings": {
+          "cache_n": 1948,
+          "prompt_n": 4,
+          "prompt_ms": 19.656,
+          "prompt_per_token_ms": 4.914,
+          "prompt_per_second": 203.50020350020353,
+          "predicted_n": 24,
+          "predicted_ms": 127.927,
+          "predicted_per_token_ms": 5.56204347826087,
+          "predicted_per_second": 179.79003650519437,
+          "draft_n": 72,
+          "draft_n_accepted": 17
+        }
+      },
+      "decode_tps": 179.79003650519437
+    },
+    {
+      "task": "computer_use_tool",
+      "repeat": 3,
+      "engine": "control",
+      "wall_ms": 239.12,
+      "finish_reason": "stop",
+      "content": "[{\"image_id\": 0, \"name\": \"Pantalla\", \"value\": \"Pantalla\"}]",
+      "tool_calls": null,
+      "usage": {
+        "completion_tokens": 24,
+        "prompt_tokens": 1952,
+        "total_tokens": 1976,
+        "prompt_tokens_details": {
+          "cached_tokens": 1948
+        }
+      },
+      "timings": {
+        "cache_n": 1948,
+        "prompt_n": 4,
+        "prompt_ms": 11.974,
+        "prompt_per_token_ms": 2.9935,
+        "prompt_per_second": 334.05712376816433,
+        "predicted_n": 24,
+        "predicted_ms": 189.623,
+        "predicted_per_token_ms": 8.244478260869565,
+        "predicted_per_second": 121.29330302758632
+      },
+      "raw_response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "[{\"image_id\": 0, \"name\": \"Pantalla\", \"value\": \"Pantalla\"}]"
+            }
+          }
+        ],
+        "created": 1790444720,
+        "model": "lfm25-vl-3b-f16-control",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 24,
+          "prompt_tokens": 1952,
+          "total_tokens": 1976,
+          "prompt_tokens_details": {
+            "cached_tokens": 1948
+          }
+        },
+        "id": "chatcmpl-yzIhWxQf0F29wElKUi4of4CTOrATsAJy",
+        "timings": {
+          "cache_n": 1948,
+          "prompt_n": 4,
+          "prompt_ms": 11.974,
+          "prompt_per_token_ms": 2.9935,
+          "prompt_per_second": 334.05712376816433,
+          "predicted_n": 24,
+          "predicted_ms": 189.623,
+          "predicted_per_token_ms": 8.244478260869565,
+          "predicted_per_second": 121.29330302758632
+        }
+      },
+      "decode_tps": 121.29330302758632
+    },
+    {
+      "task": "computer_use_tool",
+      "repeat": 3,
+      "engine": "dspark_n9",
+      "wall_ms": 180.37,
+      "finish_reason": "stop",
+      "content": "[{\"image_id\": 0, \"name\": \"Pantalla\", \"value\": \"Pantalla\"}]",
+      "tool_calls": null,
+      "usage": {
+        "completion_tokens": 24,
+        "prompt_tokens": 1952,
+        "total_tokens": 1976,
+        "prompt_tokens_details": {
+          "cached_tokens": 1948
+        }
+      },
+      "timings": {
+        "cache_n": 1948,
+        "prompt_n": 4,
+        "prompt_ms": 19.524,
+        "prompt_per_token_ms": 4.881,
+        "prompt_per_second": 204.87604998975618,
+        "predicted_n": 24,
+        "predicted_ms": 128.8,
+        "predicted_per_token_ms": 5.6000000000000005,
+        "predicted_per_second": 178.57142857142856,
+        "draft_n": 72,
+        "draft_n_accepted": 17
+      },
+      "raw_response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "[{\"image_id\": 0, \"name\": \"Pantalla\", \"value\": \"Pantalla\"}]"
+            }
+          }
+        ],
+        "created": 1790444720,
+        "model": "lfm25-vl-3b-dspark-n9",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 24,
+          "prompt_tokens": 1952,
+          "total_tokens": 1976,
+          "prompt_tokens_details": {
+            "cached_tokens": 1948
+          }
+        },
+        "id": "chatcmpl-Cafr471QhfSvUQ1dtZLbOKLayLsZSiJl",
+        "timings": {
+          "cache_n": 1948,
+          "prompt_n": 4,
+          "prompt_ms": 19.524,
+          "prompt_per_token_ms": 4.881,
+          "prompt_per_second": 204.87604998975618,
+          "predicted_n": 24,
+          "predicted_ms": 128.8,
+          "predicted_per_token_ms": 5.6000000000000005,
+          "predicted_per_second": 178.57142857142856,
+          "draft_n": 72,
+          "draft_n_accepted": 17
+        }
+      },
+      "decode_tps": 178.57142857142856
+    },
+    {
+      "task": "vision_description",
+      "repeat": 1,
+      "engine": "control",
+      "wall_ms": 1710.95,
+      "finish_reason": "stop",
+      "content": "Pantalla\nApariencia\nTema oscuro\nDesactivado\nUsa fondos oscuros en ventanas y menús.\nContraste alto\nDesactivado\nAumenta la diferencia entre texto y fondo.\nBrillo automático\nDesactivado\nAjusta el brillo según el ambiente.\nPrivacidad y diagnóstico\nTelemetría de uso\nDesactivado\nComparte estadísticas de uso con el proveedor.\nEnviar diagnósticos\nDesactivado\nIncluye datos técnicos de errores.\nUbicación aproximada\nDesactivado\nPermite usar la región del equipo.",
+      "tool_calls": null,
+      "usage": {
+        "completion_tokens": 129,
+        "prompt_tokens": 1835,
+        "total_tokens": 1964,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 1835,
+        "prompt_ms": 598.003,
+        "prompt_per_token_ms": 0.3258871934604905,
+        "prompt_per_second": 3068.546478863818,
+        "predicted_n": 129,
+        "predicted_ms": 1047.008,
+        "predicted_per_token_ms": 8.17975,
+        "predicted_per_second": 122.25312509551026
+      },
+      "raw_response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "Pantalla\nApariencia\nTema oscuro\nDesactivado\nUsa fondos oscuros en ventanas y menús.\nContraste alto\nDesactivado\nAumenta la diferencia entre texto y fondo.\nBrillo automático\nDesactivado\nAjusta el brillo según el ambiente.\nPrivacidad y diagnóstico\nTelemetría de uso\nDesactivado\nComparte estadísticas de uso con el proveedor.\nEnviar diagnósticos\nDesactivado\nIncluye datos técnicos de errores.\nUbicación aproximada\nDesactivado\nPermite usar la región del equipo."
+            }
+          }
+        ],
+        "created": 1790444722,
+        "model": "lfm25-vl-3b-f16-control",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 129,
+          "prompt_tokens": 1835,
+          "total_tokens": 1964,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "id": "chatcmpl-1uWkst23z2twZJuqLdYlUXtuWZV1hYnz",
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 1835,
+          "prompt_ms": 598.003,
+          "prompt_per_token_ms": 0.3258871934604905,
+          "prompt_per_second": 3068.546478863818,
+          "predicted_n": 129,
+          "predicted_ms": 1047.008,
+          "predicted_per_token_ms": 8.17975,
+          "predicted_per_second": 122.25312509551026
+        }
+      },
+      "decode_tps": 122.25312509551026
+    },
+    {
+      "task": "vision_description",
+      "repeat": 1,
+      "engine": "dspark_n9",
+      "wall_ms": 1061.06,
+      "finish_reason": "stop",
+      "content": "Pantalla\nApariencia\nTema oscuro\nDesactivado\nUsa fondos oscuros en ventanas y menús.\nContraste alto\nDesactivado\nAumenta la diferencia entre texto y fondo.\nBrillo automático\nDesactivado\nAjusta el brillo según el ambiente.\nPrivacidad y diagnóstico\nTelemetría de uso\nDesactivado\nComparte estadísticas de uso con el proveedor.\nEnviar diagnósticos\nDesactivado\nIncluye datos técnicos de errores.\nUbicación aproximada\nDesactivado\nPermite usar la región del equipo.",
+      "tool_calls": null,
+      "usage": {
+        "completion_tokens": 129,
+        "prompt_tokens": 1835,
+        "total_tokens": 1964,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 1835,
+        "prompt_ms": 699.044,
+        "prompt_per_token_ms": 0.38095040871934605,
+        "prompt_per_second": 2625.013589988613,
+        "predicted_n": 129,
+        "predicted_ms": 314.325,
+        "predicted_per_token_ms": 2.4556640625,
+        "predicted_per_second": 407.2218245446592,
+        "draft_n": 180,
+        "draft_n_accepted": 114
+      },
+      "raw_response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "Pantalla\nApariencia\nTema oscuro\nDesactivado\nUsa fondos oscuros en ventanas y menús.\nContraste alto\nDesactivado\nAumenta la diferencia entre texto y fondo.\nBrillo automático\nDesactivado\nAjusta el brillo según el ambiente.\nPrivacidad y diagnóstico\nTelemetría de uso\nDesactivado\nComparte estadísticas de uso con el proveedor.\nEnviar diagnósticos\nDesactivado\nIncluye datos técnicos de errores.\nUbicación aproximada\nDesactivado\nPermite usar la región del equipo."
+            }
+          }
+        ],
+        "created": 1790444723,
+        "model": "lfm25-vl-3b-dspark-n9",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 129,
+          "prompt_tokens": 1835,
+          "total_tokens": 1964,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "id": "chatcmpl-ozOqaBnLLLHwEMHbXS1BGpEw7EaRkxKF",
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 1835,
+          "prompt_ms": 699.044,
+          "prompt_per_token_ms": 0.38095040871934605,
+          "prompt_per_second": 2625.013589988613,
+          "predicted_n": 129,
+          "predicted_ms": 314.325,
+          "predicted_per_token_ms": 2.4556640625,
+          "predicted_per_second": 407.2218245446592,
+          "draft_n": 180,
+          "draft_n_accepted": 114
+        }
+      },
+      "decode_tps": 407.2218245446592
+    },
+    {
+      "task": "vision_description",
+      "repeat": 2,
+      "engine": "control",
+      "wall_ms": 1125.79,
+      "finish_reason": "stop",
+      "content": "Pantalla\nApariencia\nTema oscuro\nDesactivado\nUsa fondos oscuros en ventanas y menús.\nContraste alto\nDesactivado\nAumenta la diferencia entre texto y fondo.\nBrillo automático\nDesactivado\nAjusta el brillo según el ambiente.\nPrivacidad y diagnóstico\nTelemetría de uso\nDesactivado\nComparte estadísticas de uso con el proveedor.\nEnviar diagnósticos\nDesactivado\nIncluye datos técnicos de errores.\nUbicación aproximada\nDesactivado\nPermite usar la región del equipo.",
+      "tool_calls": null,
+      "usage": {
+        "completion_tokens": 129,
+        "prompt_tokens": 1835,
+        "total_tokens": 1964,
+        "prompt_tokens_details": {
+          "cached_tokens": 1831
+        }
+      },
+      "timings": {
+        "cache_n": 1831,
+        "prompt_n": 4,
+        "prompt_ms": 12.018,
+        "prompt_per_token_ms": 3.0045,
+        "prompt_per_second": 332.83408221001827,
+        "predicted_n": 129,
+        "predicted_ms": 1050.924,
+        "predicted_per_token_ms": 8.21034375,
+        "predicted_per_second": 121.7975800343317
+      },
+      "raw_response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "Pantalla\nApariencia\nTema oscuro\nDesactivado\nUsa fondos oscuros en ventanas y menús.\nContraste alto\nDesactivado\nAumenta la diferencia entre texto y fondo.\nBrillo automático\nDesactivado\nAjusta el brillo según el ambiente.\nPrivacidad y diagnóstico\nTelemetría de uso\nDesactivado\nComparte estadísticas de uso con el proveedor.\nEnviar diagnósticos\nDesactivado\nIncluye datos técnicos de errores.\nUbicación aproximada\nDesactivado\nPermite usar la región del equipo."
+            }
+          }
+        ],
+        "created": 1790444724,
+        "model": "lfm25-vl-3b-f16-control",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 129,
+          "prompt_tokens": 1835,
+          "total_tokens": 1964,
+          "prompt_tokens_details": {
+            "cached_tokens": 1831
+          }
+        },
+        "id": "chatcmpl-sf9QaaW9bJPhcqFFJQL2SnBHZ99y8sQ3",
+        "timings": {
+          "cache_n": 1831,
+          "prompt_n": 4,
+          "prompt_ms": 12.018,
+          "prompt_per_token_ms": 3.0045,
+          "prompt_per_second": 332.83408221001827,
+          "predicted_n": 129,
+          "predicted_ms": 1050.924,
+          "predicted_per_token_ms": 8.21034375,
+          "predicted_per_second": 121.7975800343317
+        }
+      },
+      "decode_tps": 121.7975800343317
+    },
+    {
+      "task": "vision_description",
+      "repeat": 2,
+      "engine": "dspark_n9",
+      "wall_ms": 374.66,
+      "finish_reason": "stop",
+      "content": "Pantalla\nApariencia\nTema oscuro\nDesactivado\nUsa fondos oscuros en ventanas y menús.\nContraste alto\nDesactivado\nAumenta la diferencia entre texto y fondo.\nBrillo automático\nDesactivado\nAjusta el brillo según el ambiente.\nPrivacidad y diagnóstico\nTelemetría de uso\nDesactivado\nComparte estadísticas de uso con el proveedor.\nEnviar diagnósticos\nDesactivado\nIncluye datos técnicos de errores.\nUbicación aproximada\nDesactivado\nPermite usar la región del equipo.",
+      "tool_calls": null,
+      "usage": {
+        "completion_tokens": 129,
+        "prompt_tokens": 1835,
+        "total_tokens": 1964,
+        "prompt_tokens_details": {
+          "cached_tokens": 1831
+        }
+      },
+      "timings": {
+        "cache_n": 1831,
+        "prompt_n": 4,
+        "prompt_ms": 18.887,
+        "prompt_per_token_ms": 4.72175,
+        "prompt_per_second": 211.78588447080003,
+        "predicted_n": 129,
+        "predicted_ms": 317.98,
+        "predicted_per_token_ms": 2.48421875,
+        "predicted_per_second": 402.54104031700103,
+        "draft_n": 180,
+        "draft_n_accepted": 114
+      },
+      "raw_response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "Pantalla\nApariencia\nTema oscuro\nDesactivado\nUsa fondos oscuros en ventanas y menús.\nContraste alto\nDesactivado\nAumenta la diferencia entre texto y fondo.\nBrillo automático\nDesactivado\nAjusta el brillo según el ambiente.\nPrivacidad y diagnóstico\nTelemetría de uso\nDesactivado\nComparte estadísticas de uso con el proveedor.\nEnviar diagnósticos\nDesactivado\nIncluye datos técnicos de errores.\nUbicación aproximada\nDesactivado\nPermite usar la región del equipo."
+            }
+          }
+        ],
+        "created": 1790444724,
+        "model": "lfm25-vl-3b-dspark-n9",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 129,
+          "prompt_tokens": 1835,
+          "total_tokens": 1964,
+          "prompt_tokens_details": {
+            "cached_tokens": 1831
+          }
+        },
+        "id": "chatcmpl-LU5KoiLLzqS5e7313OwpZl3gFtriq0VD",
+        "timings": {
+          "cache_n": 1831,
+          "prompt_n": 4,
+          "prompt_ms": 18.887,
+          "prompt_per_token_ms": 4.72175,
+          "prompt_per_second": 211.78588447080003,
+          "predicted_n": 129,
+          "predicted_ms": 317.98,
+          "predicted_per_token_ms": 2.48421875,
+          "predicted_per_second": 402.54104031700103,
+          "draft_n": 180,
+          "draft_n_accepted": 114
+        }
+      },
+      "decode_tps": 402.54104031700103
+    },
+    {
+      "task": "vision_description",
+      "repeat": 3,
+      "engine": "control",
+      "wall_ms": 1113.39,
+      "finish_reason": "stop",
+      "content": "Pantalla\nApariencia\nTema oscuro\nDesactivado\nUsa fondos oscuros en ventanas y menús.\nContraste alto\nDesactivado\nAumenta la diferencia entre texto y fondo.\nBrillo automático\nDesactivado\nAjusta el brillo según el ambiente.\nPrivacidad y diagnóstico\nTelemetría de uso\nDesactivado\nComparte estadísticas de uso con el proveedor.\nEnviar diagnósticos\nDesactivado\nIncluye datos técnicos de errores.\nUbicación aproximada\nDesactivado\nPermite usar la región del equipo.",
+      "tool_calls": null,
+      "usage": {
+        "completion_tokens": 129,
+        "prompt_tokens": 1835,
+        "total_tokens": 1964,
+        "prompt_tokens_details": {
+          "cached_tokens": 1831
+        }
+      },
+      "timings": {
+        "cache_n": 1831,
+        "prompt_n": 4,
+        "prompt_ms": 12.249,
+        "prompt_per_token_ms": 3.06225,
+        "prompt_per_second": 326.55726998122293,
+        "predicted_n": 129,
+        "predicted_ms": 1050.015,
+        "predicted_per_token_ms": 8.2032421875,
+        "predicted_per_second": 121.90302043304142
+      },
+      "raw_response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "Pantalla\nApariencia\nTema oscuro\nDesactivado\nUsa fondos oscuros en ventanas y menús.\nContraste alto\nDesactivado\nAumenta la diferencia entre texto y fondo.\nBrillo automático\nDesactivado\nAjusta el brillo según el ambiente.\nPrivacidad y diagnóstico\nTelemetría de uso\nDesactivado\nComparte estadísticas de uso con el proveedor.\nEnviar diagnósticos\nDesactivado\nIncluye datos técnicos de errores.\nUbicación aproximada\nDesactivado\nPermite usar la región del equipo."
+            }
+          }
+        ],
+        "created": 1790444725,
+        "model": "lfm25-vl-3b-f16-control",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 129,
+          "prompt_tokens": 1835,
+          "total_tokens": 1964,
+          "prompt_tokens_details": {
+            "cached_tokens": 1831
+          }
+        },
+        "id": "chatcmpl-TugT9fIkkcz1nmrC28bdwnBfAWNP04wn",
+        "timings": {
+          "cache_n": 1831,
+          "prompt_n": 4,
+          "prompt_ms": 12.249,
+          "prompt_per_token_ms": 3.06225,
+          "prompt_per_second": 326.55726998122293,
+          "predicted_n": 129,
+          "predicted_ms": 1050.015,
+          "predicted_per_token_ms": 8.2032421875,
+          "predicted_per_second": 121.90302043304142
+        }
+      },
+      "decode_tps": 121.90302043304142
+    },
+    {
+      "task": "vision_description",
+      "repeat": 3,
+      "engine": "dspark_n9",
+      "wall_ms": 371.58,
+      "finish_reason": "stop",
+      "content": "Pantalla\nApariencia\nTema oscuro\nDesactivado\nUsa fondos oscuros en ventanas y menús.\nContraste alto\nDesactivado\nAumenta la diferencia entre texto y fondo.\nBrillo automático\nDesactivado\nAjusta el brillo según el ambiente.\nPrivacidad y diagnóstico\nTelemetría de uso\nDesactivado\nComparte estadísticas de uso con el proveedor.\nEnviar diagnósticos\nDesactivado\nIncluye datos técnicos de errores.\nUbicación aproximada\nDesactivado\nPermite usar la región del equipo.",
+      "tool_calls": null,
+      "usage": {
+        "completion_tokens": 129,
+        "prompt_tokens": 1835,
+        "total_tokens": 1964,
+        "prompt_tokens_details": {
+          "cached_tokens": 1831
+        }
+      },
+      "timings": {
+        "cache_n": 1831,
+        "prompt_n": 4,
+        "prompt_ms": 18.995,
+        "prompt_per_token_ms": 4.74875,
+        "prompt_per_second": 210.58173203474598,
+        "predicted_n": 129,
+        "predicted_ms": 307.573,
+        "predicted_per_token_ms": 2.4029140625,
+        "predicted_per_second": 416.1613665698875,
+        "draft_n": 180,
+        "draft_n_accepted": 114
+      },
+      "raw_response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "Pantalla\nApariencia\nTema oscuro\nDesactivado\nUsa fondos oscuros en ventanas y menús.\nContraste alto\nDesactivado\nAumenta la diferencia entre texto y fondo.\nBrillo automático\nDesactivado\nAjusta el brillo según el ambiente.\nPrivacidad y diagnóstico\nTelemetría de uso\nDesactivado\nComparte estadísticas de uso con el proveedor.\nEnviar diagnósticos\nDesactivado\nIncluye datos técnicos de errores.\nUbicación aproximada\nDesactivado\nPermite usar la región del equipo."
+            }
+          }
+        ],
+        "created": 1790444726,
+        "model": "lfm25-vl-3b-dspark-n9",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 129,
+          "prompt_tokens": 1835,
+          "total_tokens": 1964,
+          "prompt_tokens_details": {
+            "cached_tokens": 1831
+          }
+        },
+        "id": "chatcmpl-zExOQOBnZ1tLQJAqgRjPAhSLsdMl12Ys",
+        "timings": {
+          "cache_n": 1831,
+          "prompt_n": 4,
+          "prompt_ms": 18.995,
+          "prompt_per_token_ms": 4.74875,
+          "prompt_per_second": 210.58173203474598,
+          "predicted_n": 129,
+          "predicted_ms": 307.573,
+          "predicted_per_token_ms": 2.4029140625,
+          "predicted_per_second": 416.1613665698875,
+          "draft_n": 180,
+          "draft_n_accepted": 114
+        }
+      },
+      "decode_tps": 416.1613665698875
+    }
+  ],
+  "note": "No GUI or desktop action was executed. Tool-call output is scored for API tool_calls envelope and coordinate grounding only.",
+  "computer_use_tool_case_note": "This initial probe used a simplified, non-production tool schema; exclude it from Computer Use classification. See artifacts/lfm25-vl-dspark-computer-use-contract-3090-20260926.json for the actual LlamaCode desktop_click contract."
+}

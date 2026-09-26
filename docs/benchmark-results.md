@@ -33,6 +33,16 @@ el servidor activo de otra aplicación. Los tres perfiles quedan manuales y
 fuera de selección/benchmark automático. No reemplazan SOL, que mantiene
 BCB8 8/8, tool-use estable y visión 4/4. Ver [auditoría y límites](qwen38-flash-next-albucino-w4a16-audit-20260926.md).
 
+## 2026-09-26 — LFM2.5-VL-3B F16 + Liquid DSpark local
+
+| Perfil | Configuración | Evidencia local | Clasificación |
+|---|---|---|---|
+| `sys-bench-lfm25-vl3b-f16-control-20260926` | F16 + mmproj F16 · 8k · b10964 · temp 0 | Lectura de estado correcta. `desktop_click` válido, pero apuntó al centro (0,5; 0,5) y no al interruptor. | Control; no promover como agente visual |
+| `sys-bench-lfm25-vl3b-dspark8-20260926` | Igual + DSpark n=8 F16 | Decode 2,30× en descripción y 2,35× en lectura de estado. Tool-call válida pero mismo click erróneo; mediana Computer Use 987 ms vs 895 ms control. | **Superior sólo en decode; inferior/no promover para Computer Use** |
+| `sys-bench-lfm25-vl3b-dspark9-20260926` | Igual + DSpark n=9 F16 | Decode 3,33× en descripción y 2,26× en lectura de estado. Tool-call válida pero mismo click erróneo; mediana Computer Use 890 ms vs 895 ms control. | **Superior sólo en decode; inferior/no promover para Computer Use** |
+
+Las velocidades de visión son del primer request de cada prompt y el end-to-end depende del prefill de imagen; el test real del schema de acción repitió tres veces sin reutilizar KV de prompt. Los perfiles quedan `manualOnly`, `best=false` y `favorite=false`. No se cambió el harness: el parser acepta el tool-call, el error observado está en las coordenadas que el modelo eligió. No hay evidencia sobre calidad de ingeniería de software ni mejora de Ingi-Charla/STT/TTS. Pesos instalados localmente en `D:\Models\llamacpp\LFM2.5-VL-3B-DSpark-bench`; detalle, protocolo, limitaciones y fuentes en [auditoría DSpark](lfm25-vl-dspark-audit-20260926.md).
+
 ## Variantes ngram para comparar
 
 Se agregaron copias declarativas para medir `ngram-mod` sin modificar los
