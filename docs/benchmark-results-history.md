@@ -637,3 +637,53 @@ usan tipos de quant distintos.
 
 Protocolo, comandos reproducibles y evaluación de aplicabilidad:
 [`qwen38-agention-ap-quant-audit-20260926.md`](qwen38-agention-ap-quant-audit-20260926.md).
+
+## 2026-09-26 — Mica v0.1 4B como selector de decisiones
+
+Se registraron dos perfiles de evaluación: `decision-mica-v0.1-4b-q5-systemone`
+y `decision-qwen3.5-4b-q4-systemone-control`. El primero fija el checkpoint
+Mica Q5_K_M y su contrato TypeSafe `/v1/systemone`; el segundo define un
+control Qwen3.5-4B pendiente para un A/B con el mismo readout y protocolo. Son
+perfiles de benchmark, no entradas de lanzamiento: Mica no usa la API
+OpenAI-compatible que espera el perfil generativo de LlamaCode.
+
+En el Tetris publicado por el autor, con tres semillas, Mica logró 223 líneas
+en el scaffold fácil y 25 en el base, frente a 17/4 de Laya y 55/18 de Kev.
+La proporción de mejor jugada fue 75%/47% para Mica, 27%/13% para Laya y
+49%/30% para Kev. En el scaffold fácil, Mica llegó al final en dos semillas;
+los tres runs de Laya y Kev terminaron en top-out. **SUPERIOR** a Laya y Kev
+en calidad dentro de este benchmark de elección de Tetris; **INFERIOR a Laya
+en latencia** (136–140 ms vs. 37 ms p50). El scaffold base termina en top-out
+para los tres jueces, por lo que el resultado no demuestra dominio general.
+
+La validación local reprodujo el motor contra 18 trazas publicadas
+(1.500/1.500 movimientos) y comprobó las 231 respuestas del artefacto público.
+Después se ejecutó la batería Tetris local completa con el servidor oficial:
+Q5_K_M, calibración `1.124473`, `llama.cpp` b11010 CUDA 12.4, contexto 8.192,
+8 secuencias, Flash Attention auto y ubatch 512. Mica coincidió exactamente
+con el resultado publicado y sus seis trazas coinciden en estado, opciones y
+decisión en **797/797 movimientos**. Es una reproducción local, no una
+comparación local contra Laya o Kev.
+
+Una corrida exploratoria previa con contexto 2.048/una secuencia y Flash
+Attention apagado dio 181 líneas fácil y 21 base; se excluyó por no respetar la
+configuración de referencia.
+
+En la misma batería, el baseline `greedy` logró 285 líneas y sobrevivió 250
+piezas en cada scaffold; Mica logró 223 líneas en fácil y 25 en base, con
+top-out en 1/3 y 3/3 semillas. `random` consiguió 13 y 2 líneas. Así, Mica
+queda por encima de random y de Laya/Kev en la tabla publicada, pero **por
+debajo del greedy del propio harness**. El p50 local de Mica fue 149 ms fácil
+y 153 ms base.
+
+La primera carga CUDA había dado OOM mientras otras corridas usaban la segunda
+RTX 3090; no se interrumpieron esos procesos. El reintento posterior funcionó
+cuando la GPU quedó disponible. El smoke CPU contestó una decisión sintética,
+pero no se usa como score. La comparación contra Qwen3.5-4B sigue pendiente.
+
+No es una mejora demostrada para generación de código, razonamiento largo,
+Ingi-Charla (ASR/TTS/diálogo), ni computer-use con grounding visual: el modelo
+recibe texto y opciones enumeradas. Puede evaluarse a futuro como selector
+advisory después de UIA/OCR, con las protecciones del host como autoridad.
+Protocolo, límites y hashes: [auditoría Mica](mica-decision-profile-audit-20260926.md);
+resultados estructurados: [artefacto JSON](../artifacts/mica-decision-profile-20260926.json).

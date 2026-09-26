@@ -906,3 +906,12 @@ El log de b10331 informa que `cache-reuse` no está soportado por el contexto MT
 (y también queda deshabilitado en la variante multimodal), por lo que la mejora
 de cache propuesta por el texto no quedó validada completamente. La corrección
 híbrida de PR #25592 debe repetirse con un binario que la incluya.
+
+## Mica v0.1 4B — selector de opciones (benchmark-only), 2026-09-26
+
+| Perfil | Modelo / contrato | Uso medido | Estado de comparación |
+|---|---|---|---|
+| `decision-mica-v0.1-4b-q5-systemone` | Mica v0.1 4B Q5_K_M; TypeSafe `/v1/systemone`; logits sobre opciones cerradas | Tetris fácil/base, 3 semillas, receta oficial de Mica; 797/797 decisiones reproducidas localmente | **SUPERIOR** a Laya/Kev en el Tetris publicado; **INFERIOR** a greedy local (223/25 vs. 285/285 líneas). p50 local 149/153 ms. Sin promoción general. |
+| `decision-qwen3.5-4b-q4-systemone-control` | Control Qwen3.5-4B Q4_K_M; DirectJudge pendiente | Comparación apareada propuesta | No ejecutado; no hay veredicto. |
+
+No son perfiles de lanzamiento ni backend de chat. No aportan generación para coding/Charla ni visión/grounding: el input es textual. El replay adicional de 18 trazas publicadas pasó 1.500/1.500 movimientos; el artefacto público tiene 231/231 filas válidas. Ver [historial](benchmark-results-history.md) y [registro reproducible](mica-decision-profile-audit-20260926.md).

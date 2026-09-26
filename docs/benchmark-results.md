@@ -10,6 +10,15 @@ por etapa— consultar el [registro detallado de perfiles](benchmark-profile-led
 
 Última actualización: 2026-09-26.
 
+## 2026-09-26 — Mica v0.1 4B, juez de opciones para benchmark
+
+| Perfil de evaluación | Alcance | Evidencia | Clasificación |
+|---|---|---|---|
+| `decision-mica-v0.1-4b-q5-systemone` | Mica Q5_K_M, TypeSafe `/v1/systemone`; selección entre opciones textuales | Réplica CUDA local: fácil 223 líneas, base 25; 797/797 decisiones coinciden con el upstream. Greedy: 285 líneas en ambos scaffolds. | **SUPERIOR** a Laya/Kev en el Tetris publicado; **INFERIOR** al baseline greedy local y más lento que Laya. Benchmark-only; sin promoción productiva. |
+| `decision-qwen3.5-4b-q4-systemone-control` | Control propuesto con el mismo protocolo de decisión | No ejecutado; no hay comparación local apareada. | Pendiente; no inferir calidad. |
+
+El artefacto público de 231 casos se validó estructuralmente (231/231 filas válidas, 192 correctas) y la batería local completa confirmó el resultado Tetris publicado; eso no mide coding ni otros dominios. Mica requiere su endpoint TypeSafe, no es un perfil `llama-server` seleccionable. No se cambia el harness de coding, Ingi-Charla, Computer Use ni los defaults hasta tener una integración advisory y un A/B apareado. Ver [auditoría Mica](mica-decision-profile-audit-20260926.md) y [evidencia JSON](../artifacts/mica-decision-profile-20260926.json).
+
 ## 2026-09-26 — Candidato externo Qwen3.8-Flash-Next W4A16-FP8PLE
 
 | Perfil | Contexto / runtime | Resultado | Clasificación |

@@ -247,3 +247,12 @@ Antes de ejecutar un perfil nuevo o reintentar uno de esta tabla, registrar en e
 8. Decisión: promover, mantener como control, repetir, bloquear por infraestructura, retirar o dejar pendiente.
 
 Un resultado nuevo no sobrescribe el histórico: agrega una huella y una fecha. La promoción sólo cambia cuando el resultado apareado supera el gate y la repetición no revela una regresión como las observadas en varios perfiles Dynamic y antirez.
+
+### Candidato de decisión Mica — 2026-09-26
+
+| Rol | Perfil / ID | Modelo, quant y binario | Configuración | Métrica principal | Decisión |
+|---|---|---|---|---|---|
+| Selector de opciones (benchmark-only) | `decision-mica-v0.1-4b-q5-systemone` | `sky7350/Mica-v0.1-4B` revisión `ca36594cc2067c7252704f9f304cc10ef11c7c5c`; Q5_K_M, SHA-256 `7fbd1be2293ba158157bbbdcdc4ea57569bd9ed53901ed1766f81264d9da8292`; llama.cpp b11010 CUDA 12.4 con TypeSafe `/v1/systemone` | Entrada textual con estado + pregunta + opciones cerradas; lectura directa de logits; calibración 1,124473; ctx8.192, 8 secuencias, FA auto, ubatch512. No equivale al backend chat OpenAI-compatible. | Réplica local: fácil 223 líneas (75%, p50 149 ms); base 25 (47%, p50 153 ms); 797/797 decisiones iguales a trazas upstream. | **SUPERIOR** a Laya/Kev en el Tetris publicado; **INFERIOR** a `greedy` local (223/25 vs. 285/285 líneas). No promover como perfil general. |
+| Control de selector | `decision-qwen3.5-4b-q4-systemone-control` | Qwen3.5-4B Q4_K_M; requiere mismo runtime DirectJudge y tokenizer/codebook | Misma suite y receta oficial; no se ejecutó. | Sin métrica local. | Pendiente; no atribuir resultado ni ordenar frente a Mica. |
+
+Reproducibilidad y limitaciones: [auditoría de perfil Mica](mica-decision-profile-audit-20260926.md) y [artifact JSON](../artifacts/mica-decision-profile-20260926.json). Las trazas replay y el public231 son validaciones de artefactos upstream, no una corrida local de inferencia.
