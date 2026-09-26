@@ -8,6 +8,34 @@ los perfiles no alcanzados. Este historial conserva además la narrativa y los
 eventos operativos; ambos documentos se complementan y no reemplazan resultados
 anteriores.
 
+## 2026-09-26 — Qwen3.8-Flash-Next W4A16-FP8PLE de albucino
+
+El post de LocalLLM propone el checkpoint
+`albucino/Qwen3.8-Flash-Next-W4A16-FP8PLE`, hot cache de 88 expertos y contexto
+220k en 2× RTX 3090. La evaluación del post atribuye ~80 tok/s y más de 2k
+tok/s al prefill. El mantenedor publicó el 25 de septiembre un runtime
+fast-256k más reciente para los mismos pesos objetivo: hot84/MTP3, con tres
+corridas de 131k a 2.693–2.757 tok/s de prefill y 94,2–104,5 tok/s de decode;
+en 260.096 tokens, 2.653–2.654 tok/s y 92,6–103,1 tok/s. Son cifras externas
+de servicio, no comparables con BCB ni con la calidad de SOL.
+
+La réplica local queda **bloqueada por hardware**: la sesión actual reporta
+61,7 GiB de RAM física y WSL sólo expone 30 GiB, mientras el runtime exige
+128 GiB y swap NVMe. Los pesos albucino no están descargados y ambas RTX 3090
+ya tenían un `llama-server` activo de otra aplicación. No se detuvo ese proceso
+ni se descargó el checkpoint.
+
+Veredicto: **candidato superior sólo en throughput publicado; no demostrado
+superior como agente, modelo de Charla ni perfil local**. La campaña previa del
+mismo checkpoint con el runtime anterior obtuvo 1/8 BCB directo, un fallo de
+JSON y un smoke visual sintético correcto sin MTP; MTP3+visión falló en
+warmup. El fast-256k actual aún requiere repetir HE0/HE20/BCB y Computer Use.
+Se agregaron perfiles manuales hot84/256k, hot88/220k y visión hot80/256k,
+fuera de la selección automática por el requisito de 128 GiB. Charla sólo
+podría usarlo como backend de texto; no sustituye STT/TTS.
+
+Detalle, fuentes y protocolo: [auditoría W4A16-FP8PLE de albucino](qwen38-flash-next-albucino-w4a16-audit-20260926.md).
+
 ## 2026-08-29 — Qwen3.8 adaptive KV streaming desde LocalLLM
 
 El reporte adjunto aportó una idea útil para el stack local: un fork de

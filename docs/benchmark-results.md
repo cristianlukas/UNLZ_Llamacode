@@ -8,7 +8,21 @@ Para el inventario completo por perfil —incluidos descartados, bloqueados,
 retirados, binarios, quantizaciones, configuración efectiva, huellas y métricas
 por etapa— consultar el [registro detallado de perfiles](benchmark-profile-ledger-2026-08.md).
 
-Última actualización: 2026-08-30.
+Última actualización: 2026-09-26.
+
+## 2026-09-26 — Candidato externo Qwen3.8-Flash-Next W4A16-FP8PLE
+
+| Perfil | Contexto / runtime | Resultado | Clasificación |
+|---|---|---|---|
+| `sys-bench-qwen38-flashnext-albucino-fast256k` | 256k · vLLM fast · hot84 · MTP3 · 2× RTX 3090 + 128 GiB RAM | Reporte externo: hasta 2.654 PP / 103,1 TG a 260k; no medido localmente | **Superior sólo en throughput publicado; calidad agente pendiente** |
+| `sys-bench-qwen38-flashnext-albucino-reddit-hot88-220k` | 220k · hot88 · réplica del post | No medido localmente; hot88 tiene menos margen de VRAM durante prefill | **Experimental; posible OOM** |
+| `sys-bench-qwen38-flashnext-albucino-vision-hot80-256k` | 256k · visión · hot80 · MTP3 · una imagen por request | Smoke sintético público; fast-256k y Computer Use LlamaCode no revalidados | **Experimental; visión no promovida** |
+
+La máquina observada para esta auditoría tiene 61,7 GiB de RAM y no puede
+ejecutar la receta de 128 GiB. El modelo no está descargado; no se interrumpió
+el servidor activo de otra aplicación. Los tres perfiles quedan manuales y
+fuera de selección/benchmark automático. No reemplazan SOL, que mantiene
+BCB8 8/8, tool-use estable y visión 4/4. Ver [auditoría y límites](qwen38-flash-next-albucino-w4a16-audit-20260926.md).
 
 ## Variantes ngram para comparar
 

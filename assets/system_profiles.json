@@ -3679,6 +3679,73 @@
     "comment": "Control autoregresivo para aislar la ganancia de DFlash2: mismo target, tensor parallel, contexto y KV que la receta n7, pero iniciar vLLM sin speculative-config. LlamaCode sólo conecta al endpoint en 127.0.0.1:8001; no inicia el proceso externo. No mezclar resultados si cambian el engine, los patches o el max-model-len."
   },
   {
+    "id": "sys-bench-qwen38-flashnext-albucino-fast256k",
+    "tier": "128GB-Qwen38-Flash-Next-vLLM", "order": 242, "extra": true,
+    "benchmark": false, "best": false, "favorite": false, "autoCompanion": false,
+    "manualOnly": true,
+    "displayName": "[bench 128GB] Flash-Next W4A16 · vLLM fast · 256k · hot84/MTP3",
+    "minVramGb": 48, "minRamGb": 128, "cpuOk": false,
+    "agentProfileId": "agent-maximo",
+    "backend": {
+      "kind": "cloud", "host": "127.0.0.1", "port": 8000,
+      "baseUrl": "http://127.0.0.1:8000",
+      "model": "Qwen3.8-Flash-Next", "ctx": 262144
+    },
+    "external": {
+      "provider": "vllm", "targetModel": "albucino/Qwen3.8-Flash-Next-W4A16-FP8PLE",
+      "speculativeMethod": "mtp", "numSpeculativeTokens": 3,
+      "tensorParallelSize": 2, "maxModelLen": 262144,
+      "kvCacheDtype": "bfloat16", "patchRepo": "DominikBucko/qwen38-flash-next-2x3090"
+    },
+    "tags": ["qwen3.8", "flash-next", "w4a16", "fp8-ple", "vllm", "external-endpoint", "256k", "mtp3", "2x-rtx-3090"],
+    "comment": "Candidato externo de throughput: checkpoint albucino revision ef554143369a706525336f6b42a09094835dc077; runtime del 2026-09-25, configs/fast-256k.env, hot84, MTP3 y KV BF16. LlamaCode sólo conecta al endpoint en 127.0.0.1:8000; no descarga el modelo ni inicia Docker/vLLM. Requiere Linux, 2x RTX 3090, 128 GiB RAM y swap NVMe; ejecutar una sola variante a la vez. Métricas públicas de servicio, no de calidad agentiva."
+  },
+  {
+    "id": "sys-bench-qwen38-flashnext-albucino-reddit-hot88-220k",
+    "tier": "128GB-Qwen38-Flash-Next-vLLM", "order": 243, "extra": true,
+    "benchmark": false, "best": false, "favorite": false, "autoCompanion": false,
+    "manualOnly": true,
+    "displayName": "[bench 128GB] Flash-Next W4A16 · hot88 · 220k · réplica Reddit",
+    "minVramGb": 48, "minRamGb": 128, "cpuOk": false,
+    "agentProfileId": "agent-maximo",
+    "backend": {
+      "kind": "cloud", "host": "127.0.0.1", "port": 8000,
+      "baseUrl": "http://127.0.0.1:8000",
+      "model": "Qwen3.8-Flash-Next", "ctx": 220000
+    },
+    "external": {
+      "provider": "vllm", "targetModel": "albucino/Qwen3.8-Flash-Next-W4A16-FP8PLE",
+      "speculativeMethod": "mtp", "numSpeculativeTokens": 3,
+      "tensorParallelSize": 2, "maxModelLen": 220000,
+      "kvCacheDtype": "bfloat16", "patchRepo": "DominikBucko/qwen38-flash-next-2x3090"
+    },
+    "tags": ["qwen3.8", "flash-next", "w4a16", "fp8-ple", "vllm", "external-endpoint", "220k", "hot88", "2x-rtx-3090"],
+    "comment": "Réplica del post de LocalLLM: hot cache de 88 expertos y contexto 220k. Es experimental y manual: el runtime actual publica hot84 como default porque hot88 tiene menos margen durante prefill y puede hacer OOM. Usar el mismo endpoint 127.0.0.1:8000 de forma secuencial, nunca junto con otra variante. No hay medición local ni comparación de calidad."
+  },
+  {
+    "id": "sys-bench-qwen38-flashnext-albucino-vision-hot80-256k",
+    "tier": "128GB-Qwen38-Flash-Next-vLLM", "order": 244, "extra": true,
+    "benchmark": false, "best": false, "favorite": false, "autoCompanion": false,
+    "manualOnly": true,
+    "displayName": "[bench 128GB] Flash-Next W4A16 · visión · hot80 · 256k",
+    "minVramGb": 48, "minRamGb": 128, "cpuOk": false,
+    "agentProfileId": "agent-maximo",
+    "backend": {
+      "kind": "cloud", "host": "127.0.0.1", "port": 8000,
+      "baseUrl": "http://127.0.0.1:8000",
+      "model": "Qwen3.8-Flash-Next", "ctx": 262144
+    },
+    "external": {
+      "provider": "vllm", "targetModel": "albucino/Qwen3.8-Flash-Next-W4A16-FP8PLE",
+      "speculativeMethod": "mtp", "numSpeculativeTokens": 3,
+      "tensorParallelSize": 2, "maxModelLen": 262144,
+      "kvCacheDtype": "bfloat16", "patchRepo": "DominikBucko/qwen38-flash-next-2x3090"
+    },
+    "tags": ["qwen3.8", "flash-next", "w4a16", "fp8-ple", "vllm", "external-endpoint", "vision", "computer-use", "256k", "hot80"],
+    "comment": "Candidato de visión para Computer Use: runtime profile configs/vision.env, ENABLE_VISION=1, hot80, máximo 1 imagen por petición y 1,048,576 píxeles; el encoder corre en ambas GPU. El upstream reporta smokes con imágenes sintéticas, pero este perfil no fue medido con la versión fast-256k ni con LlamaCode Computer Use. Requiere 128 GiB RAM y servicio externo en 127.0.0.1:8000.",
+    "vision": true
+  },
+  {
     "id": "sys-ling30-tiny-q6-131k",
     "tier": "12GB-Ling30-Tiny",
     "order": 250,
