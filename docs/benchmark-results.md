@@ -18,7 +18,9 @@ por etapa— consultar el [registro detallado de perfiles](benchmark-profile-led
 | NInfer-4090 Windows (post) | RTX 4090 `sm_89` only | — | — | — | **No aplicable** a RTX 3090; sin perfil |
 
 llama-bench en la 3090: pp512 1.234 / tg128 59,4 tok/s sin especulación (el
-fork rechaza MTP y no especula con ngram). No reemplaza SOL (BCB8 8/8). Ver
+fork rechaza MTP y no especula con ngram). No reemplaza SOL (BCB8 8/8). Modelo
+enviado a la papelera tras medir; NInfer-3090 v0.6.1 + artefacto oficial queda
+pendiente. Ver
 [auditoría](ninfer-4090-bonsai-reddit-audit-20260926.md).
 
 ## 2026-09-26 — NInfer Huihui Qwen3.8 · RTX 3090

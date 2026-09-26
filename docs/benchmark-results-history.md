@@ -28,6 +28,13 @@ Veredicto: **`[INFERIOR agente / SUPERIOR VRAM]`**. Inferior a todo Qwen3.8
 en una placa de 24 GB con la mitad libre). Perfil manual
 `sys-bench-bonsai2-27b-pq2-64k` y motor de catálogo `prism-ternary`.
 
+Aclaraciones: la máquina es 2× RTX 3090, pero ni NInfer-4090 ni NInfer-3090
+reparten entre placas; la ventaja dual sigue siendo de SOL. NInfer-3090 **no**
+se volvió a correr (referencias: BCB8 3/8 del 08/09 y el fallo del kernel con
+Huihui 0.6.1). Queda pendiente el 0.6.1 con el artefacto oficial y el prefill
+W4A8. El GGUF de Bonsai se envió a la papelera tras medir (7,3 GB); el perfil
+queda como registro histórico.
+
 Detalle: [auditoría NInfer-4090 + Bonsai](ninfer-4090-bonsai-reddit-audit-20260926.md).
 
 ## 2026-09-26 — Liquid LFM2.5-VL-3B-DSpark: ventaja sólo en decode

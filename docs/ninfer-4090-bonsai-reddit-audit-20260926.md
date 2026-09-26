@@ -116,6 +116,32 @@ Comparación: los perfiles Qwen3.8 UD-Q4 con MTP hacen BCB8 **8/8 en
   selección automática (`manualOnly`, `extra`).
 - NInfer-4090 del post: **no aplicable** a 2× RTX 3090. Sin perfil.
 
+## Alcance: dual RTX 3090 y NInfer-3090
+
+- La máquina tiene **2× RTX 3090** (SM 8.6), confirmado con `nvidia-smi`. No
+  cambia la conclusión: NInfer-4090 apunta a una sola 4090, y NInfer-3090
+  también corre una GPU por proceso, sin multi-GPU. Bonsai se midió en una sola
+  placa porque entra en 12 GB; repartirlo entre dos no aporta nada. La ventaja
+  de tener dos placas la aprovecha SOL (vLLM TP2), que sigue siendo el default
+  con BCB8 8/8.
+- **NInfer-3090 no se volvió a correr en esta auditoría.** Referencias: Qwen3.8
+  con el artefacto histórico, BCB8 3/8 ([evaluación 2026-09-08](ninfer-3090-linux-evaluation-20260908.md)),
+  y el artefacto Huihui con el runtime 0.6.1, que falló en un kernel durante el
+  warm-up ([auditoría Huihui](ninfer-huihui-qwen38-3090-audit-20260926.md)).
+- **Pendiente:** NInfer-3090 v0.6.1 con el artefacto oficial
+  `qwen3_8_27b.ninfer` (~17 GB) y el prefill W4A8 activado por defecto, en la
+  escalera HE0 → HE20 → BCB. Es la única pieza del post trasladable a SM86.
+  Expectativa previa: no supera a SOL.
+
+## Estado de los archivos
+
+El 2026-09-26, después de la medición, se envió a la papelera
+`D:\Models\llamacpp\Ternary-Bonsai-2-27B` (PQ2_0 + mmproj Q8_0, 7,3 GB) para
+liberar disco. El perfil queda como registro histórico y no está `ready` hasta
+que se vuelvan a descargar los dos GGUF de `prism-ml/Ternary-Bonsai-2-27B-gguf`.
+El runtime PrismML (`D:\Models\llamacpp\bench-runtime\prism-b10743`) se conserva
+(política append-only de binarios).
+
 ## Integración
 
 - `EngineCatalog`: entrada `prism-ternary` (repo PrismML, build CUDA desde
