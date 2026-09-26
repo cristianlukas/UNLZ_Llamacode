@@ -767,8 +767,7 @@ resulta **INFERIOR en compatibilidad operativa en el runtime SM86 probado**.
 No hay veredicto de calidad ni velocidad para Huihui. Ninguna cifra del post
 justifica cambiar defaults, harness, Computer Use o ruta de voz. No se incorpora
 la estrategia del post de redactar consultas para evadir guardrails de un
-proveedor cloud. Los perfiles se conservan como histórico, `best=false`, con
-descarga automática desactivada.
+proveedor cloud. La evidencia queda como registro histórico, sin promoción. A pedido del usuario, el 2026-09-26 se eliminó el archivo local de pesos de 18.210.531.328 bytes y se retiraron las tres entradas Huihui del catálogo; el ZIP del runtime se conservó.
 
 Artefacto y configuración exacta:
 [`ninfer-huihui-qwen38-3090-20260926.json`](../artifacts/ninfer-huihui-qwen38-3090-20260926.json).

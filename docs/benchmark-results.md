@@ -31,14 +31,11 @@ pendiente. Ver
 | `sys-bench-ninfer3090-huihui-groupwise-mtp3-vision-32k` | Pesos/proyector de visión 16,95 GiB y KV cargaron, pero falló el mismo kernel en warm-up; no se envió imagen. | **No usable en el runtime probado; Computer Use no evaluado.** |
 | `sys-bench-ninfer3090-huihui-groupwise-nospec-32k` | El control sin MTP cargó pesos/KV y falló con el mismo kernel inválido. | **INFERIOR en compatibilidad operativa también sin MTP**; no es un fallo causado sólo por MTP. |
 
-El OOM inicial coincidió con otro proceso de inferencia local en GPU 1 y no se
-cuenta como prueba de calidad. Los launchers upstream C1/visión se repitieron
-sin contención; ambos se detuvieron en el mismo kernel durante warm-up. Los
-175 tok/s/262K publicados son de RTX 5090 y no se trasladan a SM86. Los perfiles
-se conservan como históricos `best=false`, fuera de la cola activa y con
-descarga automática deshabilitada. No se modifica SOL, el harness ni Ingi
-Charla. Ver [auditoría Huihui/NInfer](ninfer-huihui-qwen38-3090-audit-20260926.md)
-y [artifact de los intentos](../artifacts/ninfer-huihui-qwen38-3090-20260926.json).
+El OOM inicial coincidió con otro proceso local en GPU 1; no lo cuento como evidencia de calidad. Sin contención, el launcher C1 y visión fallaron en el mismo kernel de warm-up. Las cifras 175 tok/s/262K publicadas son de RTX 5090 y no se trasladan a SM86.
+
+A pedido del usuario, el 2026-09-26 se eliminó el archivo de pesos de 18.210.531.328 bytes y se retiraron las tres entradas Huihui del catálogo. Se conserva la evidencia histórica y el ZIP del runtime; el modelo ya no está disponible desde Lanzar.
+
+No hay score de calidad/velocidad, y Computer Use e Ingi Charla no se evaluaron. No cambian SOL, el harness ni los defaults. Ver [auditoría Huihui/NInfer](ninfer-huihui-qwen38-3090-audit-20260926.md) y [artifact de los intentos](../artifacts/ninfer-huihui-qwen38-3090-20260926.json).
 
 ## 2026-09-26 — Mica v0.1 4B, juez de opciones para benchmark
 

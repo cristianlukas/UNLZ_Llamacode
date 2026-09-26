@@ -105,6 +105,8 @@ hashes están en
 **Inferior en compatibilidad operativa en la pila SM86 medida; no se pudo medir
 calidad ni velocidad.** El perfil Huihui no desplaza al NInfer Qwen3.8 histórico
 que sí ejecutaba requests, y falla también sin MTP y en la variante de visión.
-Se conserva para el historial, pero no se promueve ni queda en la cola activa.
+La evidencia de la prueba se conserva para el historial; no se promueve ni queda en la cola activa.
 No cambia el perfil recomendado, Ingi Charla, Computer Use ni el harness. Las
 cifras del post siguen siendo de NVFP4/RTX 5090 y no se asignan a esta variante.
+
+El 2026-09-26, a pedido del usuario, se eliminó el archivo local de pesos (18.210.531.328 bytes) y se retiraron del catálogo las tres entradas Huihui. Se conserva esta evidencia histórica; el paquete del runtime no se borró.
