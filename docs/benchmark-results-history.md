@@ -617,3 +617,23 @@ La marca `BEST` es deliberadamente de familia/caso de uso; no convierte una
 medición nativa con prompt corto en un nuevo score HE20/BCB. Todas las respuestas,
 timings y logs de esta campaña quedan conservados bajo
 `artifacts/deepseek-campaign-20260830/`.
+
+## 2026-09-26 — Agention Precision Qwen3.8-27B AP-Q3_K_XL
+
+Se revisó el quant comunitario y se registró
+`sys-bench-qwen38-agention-ap-q3kxl-32k` como candidato manual con visión,
+KV Q8 y MTP apagado para aislar la cuantización. La ficha del autor reporta
+**SUPERIOR en fidelidad sobre mixedweb público** frente a UD-Q3_K_XL de igual
+tamaño: KLD 0,0250 vs. 0,0270 (−7,6%, 5σ). Reporta **INFERIOR en WikiText-2**:
+0,0359 vs. 0,0337 (+6,5% de KLD). Su tercera columna técnica usa datos internos
+no publicables y queda fuera de cualquier conclusión reproducible.
+
+No hubo corrida local: el AP GGUF y la referencia BF16 no están instalados, y
+ya estaba en curso un benchmark de visión con LFM2.5-VL en las GPU. Por eso el
+perfil sigue `manualOnly` y `best=false`. No hay resultado de calidad de
+coding, tools, visión, Ingi-Charla, ni comparación directa con el ByteShape
+local. Tamaño AP reportado: 12,24 GiB; ByteShape instalado: 12,18 GiB, pero
+usan tipos de quant distintos.
+
+Protocolo, comandos reproducibles y evaluación de aplicabilidad:
+[`qwen38-agention-ap-quant-audit-20260926.md`](qwen38-agention-ap-quant-audit-20260926.md).
