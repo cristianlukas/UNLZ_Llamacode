@@ -1,5 +1,17 @@
 # Matriz de perfiles para benchmarks
 
+## Addendum — NInfer Huihui groupwise-int · 2026-09-26
+
+Se agregaron tres perfiles históricos 3090 a `assets/system_profiles.json`:
+texto MTP3 32K, MTP3 con visión 32K y control sin MTP. Con las GPU libres,
+pesos y KV cargaron, pero las tres recetas y el launcher C1/64K fallaron en
+warm-up con `cudaErrorInvalidValue` en `gqa_attention_prefill.cu:64`. Quedan
+**INFERIORES en compatibilidad operativa SM86**; calidad y velocidad no medidas,
+fuera de la cola activa. El post mide RTX 5090/NVFP4-groupwise, no esta ruta.
+Ver
+[auditoría](ninfer-huihui-qwen38-3090-audit-20260926.md) y
+[historial/artifact](benchmark-results-history.md).
+
 Snapshot de revisión: 2026-08-28; anexo de campaña DeepSeek nativa: 2026-08-30. Este archivo conserva la identidad y la configuración efectiva de los perfiles medidos, además de los candidatos derivados del catálogo. Los cambios de perfiles deben hacerse con LlamaCode cerrada; luego hay que volver a abrir la app headless y verificar que los argumentos efectivos coincidan con esta captura.
 
 El procedimiento reusable para agregar modelos, binarios, perfiles o harnesses está documentado en el [Manual de benchmarking](benchmark-manual.md). Esta matriz resume resultados; el manual define las condiciones de validez, el orden HE0 → HE20 → BCB y las reglas de promoción para FAST, BALANCED y QUALITY. HE0 es una compuerta dura: si falla, el perfil queda bloqueado para HE20 y BCB hasta investigar la causa raíz y repetir HE0 con resultado válido.
@@ -906,3 +918,12 @@ El log de b10331 informa que `cache-reuse` no está soportado por el contexto MT
 (y también queda deshabilitado en la variante multimodal), por lo que la mejora
 de cache propuesta por el texto no quedó validada completamente. La corrección
 híbrida de PR #25592 debe repetirse con un binario que la incluya.
+
+## Mica v0.1 4B — selector de opciones (benchmark-only), 2026-09-26
+
+| Perfil | Modelo / contrato | Uso medido | Estado de comparación |
+|---|---|---|---|
+| `decision-mica-v0.1-4b-q5-systemone` | Mica v0.1 4B Q5_K_M; TypeSafe `/v1/systemone`; logits sobre opciones cerradas | Tetris fácil/base, 3 semillas, receta oficial de Mica; 797/797 decisiones reproducidas localmente | **SUPERIOR** a Laya/Kev en el Tetris publicado; **INFERIOR** a greedy local (223/25 vs. 285/285 líneas). p50 local 149/153 ms. Sin promoción general. |
+| `decision-qwen3.5-4b-q4-systemone-control` | Control Qwen3.5-4B Q4_K_M; DirectJudge pendiente | Comparación apareada propuesta | No ejecutado; no hay veredicto. |
+
+No son perfiles de lanzamiento ni backend de chat. No aportan generación para coding/Charla ni visión/grounding: el input es textual. El replay adicional de 18 trazas publicadas pasó 1.500/1.500 movimientos; el artefacto público tiene 231/231 filas válidas. Ver [historial](benchmark-results-history.md) y [registro reproducible](mica-decision-profile-audit-20260926.md).

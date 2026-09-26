@@ -134,6 +134,76 @@
     "comment": "Candidato HE0 → HE20 → BCB. Requiere qwen3_8_27b.ninfer de neroued/Qwen3.8-27B-NInfer y ninfer-serve revision 5232055+ registrado como flavor ninfer-3090. El artefacto incorpora visión/MTP, pero la app arranca NInfer en text-only y el model card declara que no ejecuta tool calls generadas: validar BCB como transporte antes de interpretar un score. La publicación upstream documenta RTX 5090; sólo usarlo en 3090 si el binario local fue adaptado y pasa smoke-test."
   },
   {
+    "id": "sys-bench-ninfer3090-huihui-groupwise-mtp3-32k",
+    "tier": "24GB-NInfer-Huihui",
+    "order": 176,
+    "menuOrder": 10,
+    "extra": true,
+    "benchmark": false,
+    "manualOnly": true,
+    "best": false,
+    "favorite": false,
+    "autoCompanion": false,
+    "displayName": "[HISTÓRICO · INCOMPATIBLE SM86] Huihui groupwise-int · MTP3 · 32k",
+    "minVramGb": 24,
+    "minRamGb": 32,
+    "cpuOk": false,
+    "folder": "NInfer-Qwen3.8-27B-Huihui",
+    "agentProfileId": "agent-avanzado",
+    "model": {
+      "repo": "Barding-Defense/Qwen3.8-27B-huihui-abliterated-groupwise-int-NInfer",
+      "file": "qwen3_8_27b_huihui_abliterated.ninfer",
+      "quant": "groupwise-int"
+    },
+    "runtime": {
+      "ctx": 32768,
+      "batch": 2048,
+      "ubatch": 512,
+      "gpuLayers": 999,
+      "kv": "q8_0",
+      "flashAttn": false,
+      "mmap": true,
+      "parallelSlots": 1
+    },
+    "extraArgs": [
+      "--model-id", "qwen3.8-27b", "--device", "1",
+      "--spec", "mtp", "--draft-tokens", "3", "--lm-head-draft",
+      "--temperature", "0.60", "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0",
+      "--presence-penalty", "0.0"
+    ],
+    "binaryKind": "ninfer3090",
+    "hardwareAffinity": {
+      "gpuNamePatterns": ["RTX 3090"],
+      "requireGpuName": true,
+      "gpuScope": "single",
+      "label": "Nativa para RTX 3090 · 1 GPU"
+    },
+    "contextPresets": [8192, 16384, 32768],
+    "benchmarkVariants": [
+      {
+        "id": "sys-bench-ninfer3090-huihui-groupwise-mtp3-vision-32k",
+        "order": 177,
+        "benchmark": false,
+        "displayName": "[HISTÓRICO · INCOMPATIBLE SM86] Huihui groupwise-int · MTP3 · visión · 32k",
+        "extraArgAdds": ["--vision"],
+        "comment": "Perfil histórico manualOnly. Pesos/proyector y KV cargaron con el launcher de visión, pero el warm-up falló en gqa_attention_prefill.cu:64 con cudaErrorInvalidValue, antes de enviar una imagen. Computer Use no se evaluó; queda fuera de la cola."
+      },
+      {
+        "id": "sys-bench-ninfer3090-huihui-groupwise-nospec-32k",
+        "order": 178,
+        "benchmark": false,
+        "displayName": "[HISTÓRICO · INCOMPATIBLE SM86] Huihui groupwise-int · sin MTP · 32k",
+        "extraArgOverrides": {
+          "--spec": null,
+          "--draft-tokens": null,
+          "--lm-head-draft": null
+        },
+        "comment": "Perfil histórico manualOnly. El control sin MTP cargó pesos/KV pero falló con el mismo error gqa_attention_prefill.cu:64; no hubo request ni comparación de decode. La falla no es causada sólo por MTP."
+      }
+    ],
+    "comment": "Perfil histórico manualOnly, conservado para reproducibilidad; no se auto-descarga ni queda en la cola benchmark. El artefacto Huihui groupwise-int cargó pesos/KV con NInfer-3090 v0.6.1, pero el warm-up falla en RTX 3090 SM86 con cudaErrorInvalidValue en gqa_attention_prefill.cu:64; se repitió con MTP, sin MTP y visión. Se fijó --device 1 para no tocar el servidor ajeno de GPU0 durante la evaluación. **INFERIOR en compatibilidad operativa en el runtime probado** frente al perfil NInfer Qwen3.8 histórico que sí atendía requests. No se evaluó calidad ni velocidad. No hereda las cifras NVFP4/5090 del post."
+  },
+  {
     "id": "sys-ultraq-dsv4-0731-iq3s",
     "tier": "24GB-DeepSeek-V4-Ultra",
     "order": 90,
@@ -4007,6 +4077,276 @@
     "vision": false,
     "comment": "SUPERIOR en estabilidad de ejecución sintética a contexto largo con B256/U256: el fork sachin-detrax commit 11a01c8 completó 8k..131k con pool CUDA de 2048 MiB, K q8_0/V q4_0 y una RTX 3090 de 24 GiB, manteniendo ~4.7 GiB libres al final. INFERIOR en latencia de contexto largo: el prefill cayó de ~1226 tok/s (8k) a ~617 tok/s (131k) y el decode de ~36.0 a ~5.25 tok/s. No promover calidad: el probe NIAH de este GGUF no recuperó la passkey exactamente. Requiere registrar manualmente el binario con flavor kv-streaming; dense Qwen3, una GPU y un slot; no multi-GPU/vision/MoE."
   },
+  {
+    "id": "sys-bench-qwen38-agention-ap-q3kxl-32k",
+    "tier": "24GB-Qwen38-Agention-AP",
+    "order": 421,
+    "extra": true,
+    "manualOnly": true,
+    "benchmark": true,
+    "best": false,
+    "favorite": false,
+    "autoCompanion": false,
+    "displayName": "[bench · SUPERIOR web / INFERIOR Wiki] Agention AP Q3_K_XL · 32k · visión",
+    "minVramGb": 24,
+    "minRamGb": 32,
+    "cpuOk": false,
+    "folder": "Qwen3.8-27B-AP-GGUF",
+    "agentProfileId": "agent-maximo",
+    "chatTemplate": "qwen38-tools-fixed.jinja",
+    "model": {
+      "repo": "agentionai/Qwen3.8-27B-AP-GGUF",
+      "file": "Qwen3.8-27B-AP-Q3_K_XL.gguf",
+      "mmprojRepo": "agentionai/Qwen3.8-27B-AP-GGUF",
+      "mmprojFile": "mmproj-BF16.gguf",
+      "quant": "AP-Q3_K_XL"
+    },
+    "runtime": {
+      "ctx": 32768,
+      "gpuLayers": 999,
+      "batch": 512,
+      "ubatch": 128,
+      "threads": 8,
+      "kv": "q8_0",
+      "flashAttn": true,
+      "mlock": false,
+      "mmap": true
+    },
+    "extraArgs": [
+      "--cache-type-k", "q8_0",
+      "--cache-type-v", "q8_0",
+      "--temp", "0.60",
+      "--top-p", "0.95",
+      "--top-k", "20",
+      "--min-p", "0.0",
+      "--repeat-penalty", "1.0",
+      "--presence-penalty", "0.0",
+      "--no-context-shift",
+      "--metrics",
+      "--no-warmup",
+      "--jinja",
+      "--predict", "4096",
+      "--parallel", "1",
+      "--reasoning", "off"
+    ],
+    "mtp": { "enabled": false, "args": [] },
+    "binaryKind": "official",
+    "minimumBinaryBuild": 10658,
+    "contextPresets": [8192, 16384, 32768],
+    "vision": true,
+    "comment": "Candidato manual, aún no medido localmente. SUPERIOR en fidelidad KLD reportada frente a UD-Q3_K_XL del mismo tamaño en mixedweb público: 0,0250 vs 0,0270 (-7,6%; 5σ). INFERIOR en WikiText-2: 0,0359 vs 0,0337 (+6,5% de KLD). La ventaja de 0,0380 vs 0,0421 (-9,9%) en texto técnico usa un corpus interno no publicable y no cuenta como verificación reproducible. Tamaño reportado 12,24 GiB; queda cerca del ByteShape local de 12,18 GiB, pero no hay comparación directa AP-vs-ByteShape ni de tareas. MTP apagado para aislar el quant; la visión está habilitada con mmproj BF16. No promover como mejor perfil hasta correr el protocolo público y LC-H1. Sin efecto demostrado en Ingi-Charla/STT/TTS. Ver docs/qwen38-agention-ap-quant-audit-20260926.md."
+  },
+    {
+        "tier": "24GB-LFM25-VL3B",
+        "extra": true,
+        "manualOnly": true,
+        "benchmark": true,
+        "best": false,
+        "favorite": false,
+        "autoCompanion": false,
+        "minVramGb": 16,
+        "minRamGb": 32,
+        "cpuOk": false,
+        "folder": "LFM2.5-VL-3B-DSpark-bench",
+        "agentProfileId": "agent-intermedio",
+        "model": {
+            "repo": "LiquidAI/LFM2.5-VL-3B-GGUF",
+            "file": "LFM2.5-VL-3B-F16.gguf",
+            "mmprojFile": "mmproj-LFM2.5-VL-3B-F16.gguf",
+            "quant": "F16"
+        },
+        "runtime": {
+            "ctx": 8192,
+            "gpuLayers": 999,
+            "batch": 512,
+            "ubatch": 128,
+            "threads": 16,
+            "kv": "q8_0",
+            "flashAttn": true,
+            "mlock": false,
+            "mmap": true
+        },
+        "extraArgs": [
+            "--temp",
+            "0.0",
+            "--top-p",
+            "0.95",
+            "--top-k",
+            "20",
+            "--min-p",
+            "0.0",
+            "--repeat-penalty",
+            "1.0",
+            "--presence-penalty",
+            "0.0",
+            "--no-context-shift",
+            "--metrics",
+            "--no-warmup",
+            "--jinja",
+            "--parallel",
+            "1",
+            "--reasoning",
+            "off"
+        ],
+        "binaryKind": "official",
+        "minimumBinaryBuild": 10964,
+        "contextPresets": [
+            8192
+        ],
+        "vision": true,
+        "id": "sys-bench-lfm25-vl3b-f16-control-20260926",
+        "order": 422,
+        "displayName": "[bench] LFM2.5-VL-3B F16 · control visión",
+        "comment": "Control local reproducible LFM2.5-VL-3B F16 + mmproj F16, 8k, llama.cpp b10964. En lectura de estados acertó la fixture sintética; para Computer Use generó tool_calls válidas, pero centró el click en (0.5,0.5), lejos del switch (~0.88,0.296). Control para comparar DSpark; no promover como agente visual. Ver docs/lfm25-vl-dspark-audit-20260926.md."
+    },
+    {
+        "tier": "24GB-LFM25-VL3B",
+        "extra": true,
+        "manualOnly": true,
+        "benchmark": true,
+        "best": false,
+        "favorite": false,
+        "autoCompanion": false,
+        "minVramGb": 16,
+        "minRamGb": 32,
+        "cpuOk": false,
+        "folder": "LFM2.5-VL-3B-DSpark-bench",
+        "agentProfileId": "agent-intermedio",
+        "model": {
+            "repo": "LiquidAI/LFM2.5-VL-3B-GGUF",
+            "file": "LFM2.5-VL-3B-F16.gguf",
+            "mmprojFile": "mmproj-LFM2.5-VL-3B-F16.gguf",
+            "quant": "F16"
+        },
+        "runtime": {
+            "ctx": 8192,
+            "gpuLayers": 999,
+            "batch": 512,
+            "ubatch": 128,
+            "threads": 16,
+            "kv": "q8_0",
+            "flashAttn": true,
+            "mlock": false,
+            "mmap": true
+        },
+        "extraArgs": [
+            "--temp",
+            "0.0",
+            "--top-p",
+            "0.95",
+            "--top-k",
+            "20",
+            "--min-p",
+            "0.0",
+            "--repeat-penalty",
+            "1.0",
+            "--presence-penalty",
+            "0.0",
+            "--no-context-shift",
+            "--metrics",
+            "--no-warmup",
+            "--jinja",
+            "--parallel",
+            "1",
+            "--reasoning",
+            "off"
+        ],
+        "binaryKind": "official",
+        "minimumBinaryBuild": 10964,
+        "contextPresets": [
+            8192
+        ],
+        "vision": true,
+        "id": "sys-bench-lfm25-vl3b-dspark8-20260926",
+        "order": 423,
+        "displayName": "[bench SUPERIOR decode / INFERIOR CU] LFM2.5-VL-3B DSpark n=8",
+        "draftModel": {
+            "repo": "LiquidAI/LFM2.5-VL-3B-DSpark-GGUF",
+            "file": "LFM2.5-VL-3B-DSpark-F16.gguf",
+            "folder": "LFM2.5-VL-3B-DSpark-bench",
+            "quant": "F16"
+        },
+        "spec": {
+            "type": "draft-dspark",
+            "draftNMax": 8,
+            "draftNMin": 0
+        },
+        "comment": "SUPERIOR sólo en throughput de decodificación frente al control: +2.30x en descripción visual y +2.35x en lectura de estados en esta RTX 3090 F16. Como perfil de Computer Use es INFERIOR/no promover: con el schema real de LlamaCode devolvió tool_calls válidas pero el click fue (0.5,0.5), lejos del switch (~0.88,0.296); mediana de respuesta 987 ms vs 895 ms del control. No cambia la calidad visual medida; una descripción tuvo una diferencia léxica bajo temp=0. manualOnly evita descargas automáticas. Ver docs/lfm25-vl-dspark-audit-20260926.md."
+    },
+    {
+        "tier": "24GB-LFM25-VL3B",
+        "extra": true,
+        "manualOnly": true,
+        "benchmark": true,
+        "best": false,
+        "favorite": false,
+        "autoCompanion": false,
+        "minVramGb": 16,
+        "minRamGb": 32,
+        "cpuOk": false,
+        "folder": "LFM2.5-VL-3B-DSpark-bench",
+        "agentProfileId": "agent-intermedio",
+        "model": {
+            "repo": "LiquidAI/LFM2.5-VL-3B-GGUF",
+            "file": "LFM2.5-VL-3B-F16.gguf",
+            "mmprojFile": "mmproj-LFM2.5-VL-3B-F16.gguf",
+            "quant": "F16"
+        },
+        "runtime": {
+            "ctx": 8192,
+            "gpuLayers": 999,
+            "batch": 512,
+            "ubatch": 128,
+            "threads": 16,
+            "kv": "q8_0",
+            "flashAttn": true,
+            "mlock": false,
+            "mmap": true
+        },
+        "extraArgs": [
+            "--temp",
+            "0.0",
+            "--top-p",
+            "0.95",
+            "--top-k",
+            "20",
+            "--min-p",
+            "0.0",
+            "--repeat-penalty",
+            "1.0",
+            "--presence-penalty",
+            "0.0",
+            "--no-context-shift",
+            "--metrics",
+            "--no-warmup",
+            "--jinja",
+            "--parallel",
+            "1",
+            "--reasoning",
+            "off"
+        ],
+        "binaryKind": "official",
+        "minimumBinaryBuild": 10964,
+        "contextPresets": [
+            8192
+        ],
+        "vision": true,
+        "id": "sys-bench-lfm25-vl3b-dspark9-20260926",
+        "order": 424,
+        "displayName": "[bench SUPERIOR decode / INFERIOR CU] LFM2.5-VL-3B DSpark n=9",
+        "draftModel": {
+            "repo": "LiquidAI/LFM2.5-VL-3B-DSpark-GGUF",
+            "file": "LFM2.5-VL-3B-DSpark-F16.gguf",
+            "folder": "LFM2.5-VL-3B-DSpark-bench",
+            "quant": "F16"
+        },
+        "spec": {
+            "type": "draft-dspark",
+            "draftNMax": 9,
+            "draftNMin": 0
+        },
+        "comment": "SUPERIOR sólo en throughput de decodificación frente al control: +2.26x en lectura de estados y +3.33x en descripción visual de primera solicitud. Como perfil de Computer Use es INFERIOR/no promover: el schema real produjo tool_calls válidas pero con click (0.5,0.5), lejos del switch (~0.88,0.296); su mediana de respuesta fue 890 ms, esencialmente igual a 895 ms del control. No se midió mejora agentiva. manualOnly evita descargas automáticas. Ver docs/lfm25-vl-dspark-audit-20260926.md."
+    },
   {
     "id": "sys-bench-bonsai2-27b-pq2-64k",
     "tier": "12GB-Bonsai-Ternary",

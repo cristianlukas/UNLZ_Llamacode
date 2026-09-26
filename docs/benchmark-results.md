@@ -21,6 +21,32 @@ llama-bench en la 3090: pp512 1.234 / tg128 59,4 tok/s sin especulación (el
 fork rechaza MTP y no especula con ngram). No reemplaza SOL (BCB8 8/8). Ver
 [auditoría](ninfer-4090-bonsai-reddit-audit-20260926.md).
 
+## 2026-09-26 — NInfer Huihui Qwen3.8 · RTX 3090
+
+| Perfil | Evidencia local | Clasificación |
+|---|---|---|
+| `sys-bench-ninfer3090-huihui-groupwise-mtp3-32k` | Tras un OOM inicial con GPU en uso, pesos 16,67 GiB y KV 32K sí cargaron libres; falló warm-up en `gqa_attention_prefill.cu:64` con `cudaErrorInvalidValue`. Se repitió con el launcher C1 a 64K y prefill 1024. | **INFERIOR en compatibilidad operativa SM86** frente al perfil NInfer Qwen3.8 histórico que sí atiende requests; sin score de calidad/velocidad. |
+| `sys-bench-ninfer3090-huihui-groupwise-mtp3-vision-32k` | Pesos/proyector de visión 16,95 GiB y KV cargaron, pero falló el mismo kernel en warm-up; no se envió imagen. | **No usable en el runtime probado; Computer Use no evaluado.** |
+| `sys-bench-ninfer3090-huihui-groupwise-nospec-32k` | El control sin MTP cargó pesos/KV y falló con el mismo kernel inválido. | **INFERIOR en compatibilidad operativa también sin MTP**; no es un fallo causado sólo por MTP. |
+
+El OOM inicial coincidió con otro proceso de inferencia local en GPU 1 y no se
+cuenta como prueba de calidad. Los launchers upstream C1/visión se repitieron
+sin contención; ambos se detuvieron en el mismo kernel durante warm-up. Los
+175 tok/s/262K publicados son de RTX 5090 y no se trasladan a SM86. Los perfiles
+se conservan como históricos `best=false`, fuera de la cola activa y con
+descarga automática deshabilitada. No se modifica SOL, el harness ni Ingi
+Charla. Ver [auditoría Huihui/NInfer](ninfer-huihui-qwen38-3090-audit-20260926.md)
+y [artifact de los intentos](../artifacts/ninfer-huihui-qwen38-3090-20260926.json).
+
+## 2026-09-26 — Mica v0.1 4B, juez de opciones para benchmark
+
+| Perfil de evaluación | Alcance | Evidencia | Clasificación |
+|---|---|---|---|
+| `decision-mica-v0.1-4b-q5-systemone` | Mica Q5_K_M, TypeSafe `/v1/systemone`; selección entre opciones textuales | Réplica CUDA local: fácil 223 líneas, base 25; 797/797 decisiones coinciden con el upstream. Greedy: 285 líneas en ambos scaffolds. | **SUPERIOR** a Laya/Kev en el Tetris publicado; **INFERIOR** al baseline greedy local y más lento que Laya. Benchmark-only; sin promoción productiva. |
+| `decision-qwen3.5-4b-q4-systemone-control` | Control propuesto con el mismo protocolo de decisión | No ejecutado; no hay comparación local apareada. | Pendiente; no inferir calidad. |
+
+El artefacto público de 231 casos se validó estructuralmente (231/231 filas válidas, 192 correctas) y la batería local completa confirmó el resultado Tetris publicado; eso no mide coding ni otros dominios. Mica requiere su endpoint TypeSafe, no es un perfil `llama-server` seleccionable. No se cambia el harness de coding, Ingi-Charla, Computer Use ni los defaults hasta tener una integración advisory y un A/B apareado. Ver [auditoría Mica](mica-decision-profile-audit-20260926.md) y [evidencia JSON](../artifacts/mica-decision-profile-20260926.json).
+
 ## 2026-09-26 — Candidato externo Qwen3.8-Flash-Next W4A16-FP8PLE
 
 | Perfil | Contexto / runtime | Resultado | Clasificación |
@@ -34,6 +60,16 @@ ejecutar la receta de 128 GiB. El modelo no está descargado; no se interrumpió
 el servidor activo de otra aplicación. Los tres perfiles quedan manuales y
 fuera de selección/benchmark automático. No reemplazan SOL, que mantiene
 BCB8 8/8, tool-use estable y visión 4/4. Ver [auditoría y límites](qwen38-flash-next-albucino-w4a16-audit-20260926.md).
+
+## 2026-09-26 — LFM2.5-VL-3B F16 + Liquid DSpark local
+
+| Perfil | Configuración | Evidencia local | Clasificación |
+|---|---|---|---|
+| `sys-bench-lfm25-vl3b-f16-control-20260926` | F16 + mmproj F16 · 8k · b10964 · temp 0 | Lectura de estado correcta. `desktop_click` válido, pero apuntó al centro (0,5; 0,5) y no al interruptor. | Control; no promover como agente visual |
+| `sys-bench-lfm25-vl3b-dspark8-20260926` | Igual + DSpark n=8 F16 | Decode 2,30× en descripción y 2,35× en lectura de estado. Tool-call válida pero mismo click erróneo; mediana Computer Use 987 ms vs 895 ms control. | **Superior sólo en decode; inferior/no promover para Computer Use** |
+| `sys-bench-lfm25-vl3b-dspark9-20260926` | Igual + DSpark n=9 F16 | Decode 3,33× en descripción y 2,26× en lectura de estado. Tool-call válida pero mismo click erróneo; mediana Computer Use 890 ms vs 895 ms control. | **Superior sólo en decode; inferior/no promover para Computer Use** |
+
+Las velocidades de visión son del primer request de cada prompt y el end-to-end depende del prefill de imagen; el test real del schema de acción repitió tres veces sin reutilizar KV de prompt. Los perfiles quedan `manualOnly`, `best=false` y `favorite=false`. No se cambió el harness: el parser acepta el tool-call, el error observado está en las coordenadas que el modelo eligió. No hay evidencia sobre calidad de ingeniería de software ni mejora de Ingi-Charla/STT/TTS. Pesos instalados localmente en `D:\Models\llamacpp\LFM2.5-VL-3B-DSpark-bench`; detalle, protocolo, limitaciones y fuentes en [auditoría DSpark](lfm25-vl-dspark-audit-20260926.md).
 
 ## Variantes ngram para comparar
 

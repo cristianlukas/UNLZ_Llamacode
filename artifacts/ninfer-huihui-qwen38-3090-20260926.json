@@ -1,0 +1,123 @@
+{
+  "date": "2026-09-26",
+  "candidate": {
+    "profileId": "sys-bench-ninfer3090-huihui-groupwise-mtp3-32k",
+    "modelRepo": "Barding-Defense/Qwen3.8-27B-huihui-abliterated-groupwise-int-NInfer",
+    "modelFile": "qwen3_8_27b_huihui_abliterated.ninfer",
+    "modelBytes": 18210531328,
+    "modelSha256": "8c9f9d67a07ac97506978f6db6695d8074f78dec0fb80c4a85a8fb6fbedd7f03",
+    "quant": "groupwise-int",
+    "runtime": "NInfer-3090 0.6.1-rtx3090 Windows x64",
+    "runtimeArchiveSha256": "dfa5286d2f31f7f0dc072961688b5f4b897b51d0efe848e95537ae682fa086c0",
+    "hardware": {
+      "gpu": "2x NVIDIA GeForce RTX 3090 24GB, SM86",
+      "driver": "616.92",
+      "ramGiB": 64
+    },
+    "config": {
+      "device": 1,
+      "context": 32768,
+      "kv": "int8",
+      "spec": "mtp",
+      "draftTokens": 3,
+      "vision": false,
+      "temperature": 0.6,
+      "topP": 0.95,
+      "topK": 20,
+      "minP": 0.0,
+      "presencePenalty": 0.0,
+      "maxTokens": 512
+    }
+  },
+  "attempts": [
+    {
+      "id": "huihui-mtp3-32k-load-20260926-150718",
+      "stage": "server-load",
+      "startedLocal": "2026-09-26 15:07:18",
+      "status": "blocked",
+      "failureKind": "cuda-memory-allocation",
+      "error": "cudaMalloc failed: cudaErrorMemoryAllocation: out of memory",
+      "healthReady": false,
+      "qualityScored": false,
+      "notes": "The failure occurred during model load, before a request. An unrelated local Python/Mica process was concurrently using GPU 1; post-failure snapshot showed 7.2 GiB used / 17.1 GiB free on GPU 1. Do not classify as a model-quality failure or compare throughput. GPU 0 also had an unrelated llama-server, which was left running.",
+      "logs": {
+        "stderr": "D:/ninfer-3090-huihui-eval-20260926/logs/huihui-text-mtp3.stderr.log",
+        "requestLog": "D:/ninfer-3090-huihui-eval-20260926/logs/huihui-text-mtp3.jsonl"
+      }
+    },
+    {
+      "id": "huihui-mtp3-32k-warmup-20260926-151615",
+      "stage": "warmup",
+      "startedLocal": "2026-09-26 15:16:15",
+      "config": { "context": 32768, "kv": "int8", "prefillChunk": 512, "spec": "mtp", "draftTokens": 3, "vision": false },
+      "status": "blocked",
+      "failureKind": "cuda-kernel-invalid-argument",
+      "error": "gqa_attention_prefill.cu:64: cudaGetLastError failed: cudaErrorInvalidValue: invalid argument",
+      "weightsLoadedGiB": 16.67,
+      "kvCapacityTokens": 32768,
+      "freeAfterStartupGiB": 4.12,
+      "healthReady": false,
+      "qualityScored": false,
+      "notes": "Model weights and KV allocation completed. Failure occurred during warm-up before the server became ready or accepted a request.",
+      "logs": { "stderr": "D:/ninfer-3090-huihui-eval-20260926/logs/huihui-text-mtp3-retry2.stderr.log" }
+    },
+    {
+      "id": "huihui-c1-64k-mtp3-warmup-20260926-151803",
+      "stage": "warmup",
+      "startedLocal": "2026-09-26 15:18:03",
+      "config": { "context": 65536, "kv": "int8", "prefillChunk": 1024, "spec": "mtp", "draftTokens": 3, "vision": false },
+      "status": "blocked",
+      "failureKind": "cuda-kernel-invalid-argument",
+      "error": "gqa_attention_prefill.cu:64: cudaGetLastError failed: cudaErrorInvalidValue: invalid argument",
+      "weightsLoadedGiB": 16.67,
+      "kvCapacityTokens": 65536,
+      "freeAfterStartupGiB": 3.09,
+      "healthReady": false,
+      "qualityScored": false,
+      "notes": "Repeated with the published NInfer-3090 C1 settings: context64k, KV int8, MTP3, prefill 1024. Weights and KV fit; kernel warm-up still failed.",
+      "logs": { "stderr": "D:/ninfer-3090-huihui-eval-20260926/logs/huihui-c1-mtp3-retry3.stderr.log" }
+    },
+    {
+      "id": "huihui-nospec-32k-warmup-20260926-151901",
+      "stage": "warmup",
+      "startedLocal": "2026-09-26 15:19:01",
+      "config": { "context": 32768, "kv": "int8", "prefillChunk": 512, "spec": "none", "draftTokens": 0, "vision": false },
+      "status": "blocked",
+      "failureKind": "cuda-kernel-invalid-argument",
+      "error": "gqa_attention_prefill.cu:64: cudaGetLastError failed: cudaErrorInvalidValue: invalid argument",
+      "weightsLoadedGiB": 15.92,
+      "kvCapacityTokens": 32768,
+      "freeAfterStartupGiB": 5.16,
+      "healthReady": false,
+      "qualityScored": false,
+      "notes": "The no-MTP control fails identically after weights and KV load; this is not isolated to speculative decoding.",
+      "logs": { "stderr": "D:/ninfer-3090-huihui-eval-20260926/logs/huihui-nospec-32k-retry4.stderr.log" }
+    },
+    {
+      "id": "huihui-vision-mtp3-32k-warmup-20260926-152044",
+      "stage": "warmup",
+      "startedLocal": "2026-09-26 15:20:44",
+      "config": { "context": 32768, "kv": "int8", "prefillChunk": 512, "spec": "mtp", "draftTokens": 3, "vision": true },
+      "status": "blocked",
+      "failureKind": "cuda-kernel-invalid-argument",
+      "error": "gqa_attention_prefill.cu:64: cudaGetLastError failed: cudaErrorInvalidValue: invalid argument",
+      "weightsLoadedGiB": 16.95,
+      "kvCapacityTokens": 32768,
+      "freeAfterStartupGiB": 2.13,
+      "healthReady": false,
+      "qualityScored": false,
+      "notes": "Repeated with the published NInfer-3090 vision launcher settings. Multimodal weights and KV loaded, but warm-up failed before an image request could be submitted.",
+      "logs": { "stderr": "D:/ninfer-3090-huihui-eval-20260926/logs/huihui-vision-mtp3-32k-retry5.stderr.log" }
+    }
+  ],
+  "notRun": [
+    "HE0",
+    "HE20",
+    "BCB/8 LC-H1",
+    "MTP3 versus no-MTP decode A/B",
+    "actual image-grounding request (vision profile stopped in warm-up)",
+    "Computer Use desktop_* tool contract",
+    "Ingi Charla end-to-end voice"
+  ],
+  "decision": "incompatible-runtime; inferior operational compatibility on the tested RTX 3090/NInfer-3090 v0.6.1 stack; no quality or speed verdict"
+}

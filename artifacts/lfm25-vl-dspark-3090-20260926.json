@@ -1,0 +1,791 @@
+{
+  "metadata": {
+    "date": "2026-09-26",
+    "runtime": "llama.cpp b10964 CUDA 12.4",
+    "gpu": "RTX 3090 (selected CUDA1; other existing Qwen server remained on CUDA0)",
+    "weights": "LFM2.5-VL-3B target F16 + mmproj F16 + DSpark F16; target KV q8_0",
+    "context": 8192,
+    "temperature": 0,
+    "image": "assets\\benchmarks\\custom\\lfm25_vl_dspark_ui_settings_v1.png",
+    "image_sha256": "7dbf300035862eb581e422144394ff013342d7f859b4e7cfb84326dc73098174",
+    "repetitions": 3,
+    "note": "Tool calls were only generated and inspected; none were executed.",
+    "computer_use_tool_case_note": "This initial probe used a simplified, non-production tool schema; exclude it from Computer Use classification. See artifacts/lfm25-vl-dspark-computer-use-contract-3090-20260926.json for the actual LlamaCode desktop_click contract."
+  },
+  "runs": [
+    {
+      "profile": "control",
+      "case": "vision_state",
+      "repetition": 1,
+      "wall_ms": 1345.1036999904318,
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\n  \"Tema oscuro\": \"Desactivado\",\n  \"Telemetría de uso\": \"Desactivado\",\n  \"Enviar diagnósticos\": \"Desactivado\",\n  \"Ubicación aproximada\": \"Desactivado\"\n}"
+            }
+          }
+        ],
+        "created": 1790444509,
+        "model": "lfm25-vl-3b-f16-control",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 1839,
+          "total_tokens": 1892,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "id": "chatcmpl-HNpOhdRqnIM53J9RVwuLKe66JmN15lxK",
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 1839,
+          "prompt_ms": 882.791,
+          "prompt_per_token_ms": 0.48003860793909736,
+          "prompt_per_second": 2083.1657776302654,
+          "predicted_n": 53,
+          "predicted_ms": 394.656,
+          "predicted_per_token_ms": 7.589538461538462,
+          "predicted_per_second": 131.76031784642828
+        }
+      }
+    },
+    {
+      "profile": "dspark8",
+      "case": "vision_state",
+      "repetition": 1,
+      "wall_ms": 983.0577999964589,
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\n  \"Tema oscuro\": \"Desactivado\",\n  \"Telemetría de uso\": \"Desactivado\",\n  \"Enviar diagnósticos\": \"Desactivado\",\n  \"Ubicación aproximada\": \"Desactivado\"\n}"
+            }
+          }
+        ],
+        "created": 1790444510,
+        "model": "lfm25-vl-3b-dspark-n8",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 1839,
+          "total_tokens": 1892,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "id": "chatcmpl-h0Y91whsRP8h3sZGQiIZIKVjgGlbbsJ0",
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 1839,
+          "prompt_ms": 780.09,
+          "prompt_per_token_ms": 0.4241924959216966,
+          "prompt_per_second": 2357.4202976579622,
+          "predicted_n": 53,
+          "predicted_ms": 167.773,
+          "predicted_per_token_ms": 3.226403846153846,
+          "predicted_per_second": 309.94260101446594,
+          "draft_n": 56,
+          "draft_n_accepted": 47
+        }
+      }
+    },
+    {
+      "profile": "control",
+      "case": "computer_use_tool",
+      "repetition": 1,
+      "wall_ms": 850.8644999965327,
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "[{\"image_id\": 0, \"point_2d\": [68, 314], \"label\": \"Pantalla\"}]"
+            }
+          }
+        ],
+        "created": 1790444511,
+        "model": "lfm25-vl-3b-f16-control",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 28,
+          "prompt_tokens": 2078,
+          "total_tokens": 2106,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "id": "chatcmpl-wiwwX1kVtWMG1w6aGdvhB3zYq1KikjXc",
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 2078,
+          "prompt_ms": 602.934,
+          "prompt_per_token_ms": 0.2901511068334937,
+          "prompt_per_second": 3446.480045908839,
+          "predicted_n": 28,
+          "predicted_ms": 205.246,
+          "predicted_per_token_ms": 7.601703703703704,
+          "predicted_per_second": 131.54945772390204
+        }
+      }
+    },
+    {
+      "profile": "dspark8",
+      "case": "computer_use_tool",
+      "repetition": 1,
+      "wall_ms": 855.0044000003254,
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "[{\"image_id\": 0, \"point_2d\": [68, 314], \"label\": \"Pantalla\"}]"
+            }
+          }
+        ],
+        "created": 1790444512,
+        "model": "lfm25-vl-3b-dspark-n8",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 28,
+          "prompt_tokens": 2078,
+          "total_tokens": 2106,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "id": "chatcmpl-IzBSNbDCTeIPyoDMEEczLWO1htrHa0jZ",
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 2078,
+          "prompt_ms": 726.291,
+          "prompt_per_token_ms": 0.34951443695861406,
+          "prompt_per_second": 2861.112143755051,
+          "predicted_n": 28,
+          "predicted_ms": 80.368,
+          "predicted_per_token_ms": 2.9765925925925925,
+          "predicted_per_second": 335.9546087995222,
+          "draft_n": 40,
+          "draft_n_accepted": 24
+        }
+      }
+    },
+    {
+      "profile": "control",
+      "case": "vision_description",
+      "repetition": 1,
+      "wall_ms": 1516.1343999934616,
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "Aquí tienes la descripción solicitada:\n\n*   **Pantalla** (Activo)\n*   **Apariencia**\n    *   Tema oscuro: Desactivado\n    *   Contraste alto: Desactivado\n    *   Brillo automático: Desactivado\n*   **Privacidad y diagnóstico**\n    *   Telemetría de uso: Desactivado\n    *   Enviar diagnósticos: Desactivado\n    *   Ubicación aproximada: Desactivado"
+            }
+          }
+        ],
+        "created": 1790444513,
+        "model": "lfm25-vl-3b-f16-control",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 109,
+          "prompt_tokens": 1824,
+          "total_tokens": 1933,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "id": "chatcmpl-ue92E48OUuOKdhZgctVt0fDvtoir7Qgf",
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 1824,
+          "prompt_ms": 593.648,
+          "prompt_per_token_ms": 0.3254649122807018,
+          "prompt_per_second": 3072.5278279384415,
+          "predicted_n": 109,
+          "predicted_ms": 878.473,
+          "predicted_per_token_ms": 8.134009259259258,
+          "predicted_per_second": 122.94060261385383
+        }
+      }
+    },
+    {
+      "profile": "dspark8",
+      "case": "vision_description",
+      "repetition": 1,
+      "wall_ms": 1088.6797999992268,
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "Aquí tienes la descripción solicitada:\n\n*   **Pantalla** (Opción seleccionada)\n    *   Tema oscuro: Desactivado\n    *   Contraste alto: Desactivado\n    *   Brillo automático: Desactivado\n*   **Privacidad y diagnóstico**\n    *   Telemetría de uso: Desactivado\n    *   Enviar diagnósticos: Desactivado\n    *   Ubicación aproximada: Desactivado"
+            }
+          }
+        ],
+        "created": 1790444514,
+        "model": "lfm25-vl-3b-dspark-n8",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 104,
+          "prompt_tokens": 1824,
+          "total_tokens": 1928,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "id": "chatcmpl-hR3QO8hCdQdC7WDVRqUh9NU1hOWpUvFm",
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 1824,
+          "prompt_ms": 675.054,
+          "prompt_per_token_ms": 0.3700953947368421,
+          "prompt_per_second": 2702.0060617372833,
+          "predicted_n": 104,
+          "predicted_ms": 363.504,
+          "predicted_per_token_ms": 3.5291650485436894,
+          "predicted_per_second": 283.3531405431577,
+          "draft_n": 184,
+          "draft_n_accepted": 82
+        }
+      }
+    },
+    {
+      "profile": "dspark8",
+      "case": "vision_state",
+      "repetition": 2,
+      "wall_ms": 205.1152999920305,
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\n  \"Tema oscuro\": \"Desactivado\",\n  \"Telemetría de uso\": \"Desactivado\",\n  \"Enviar diagnósticos\": \"Desactivado\",\n  \"Ubicación aproximada\": \"Desactivado\"\n}"
+            }
+          }
+        ],
+        "created": 1790444514,
+        "model": "lfm25-vl-3b-dspark-n8",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 1839,
+          "total_tokens": 1892,
+          "prompt_tokens_details": {
+            "cached_tokens": 1835
+          }
+        },
+        "id": "chatcmpl-JK9m4n34RtNfFgGguItpPcTtPWHGamm9",
+        "timings": {
+          "cache_n": 1835,
+          "prompt_n": 4,
+          "prompt_ms": 18.335,
+          "prompt_per_token_ms": 4.58375,
+          "prompt_per_second": 218.16198527406598,
+          "predicted_n": 53,
+          "predicted_ms": 107.214,
+          "predicted_per_token_ms": 2.0618076923076925,
+          "predicted_per_second": 485.0112858395359,
+          "draft_n": 56,
+          "draft_n_accepted": 47
+        }
+      }
+    },
+    {
+      "profile": "control",
+      "case": "vision_state",
+      "repetition": 2,
+      "wall_ms": 513.123299999279,
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\n  \"Tema oscuro\": \"Desactivado\",\n  \"Telemetría de uso\": \"Desactivado\",\n  \"Enviar diagnósticos\": \"Desactivado\",\n  \"Ubicación aproximada\": \"Desactivado\"\n}"
+            }
+          }
+        ],
+        "created": 1790444515,
+        "model": "lfm25-vl-3b-f16-control",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 1839,
+          "total_tokens": 1892,
+          "prompt_tokens_details": {
+            "cached_tokens": 1835
+          }
+        },
+        "id": "chatcmpl-wgf1T1cNJg4hjkjHkbXuDVRx1WzJt33z",
+        "timings": {
+          "cache_n": 1835,
+          "prompt_n": 4,
+          "prompt_ms": 12.61,
+          "prompt_per_token_ms": 3.1525,
+          "prompt_per_second": 317.20856463124505,
+          "predicted_n": 53,
+          "predicted_ms": 431.331,
+          "predicted_per_token_ms": 8.294826923076924,
+          "predicted_per_second": 120.55706638289388
+        }
+      }
+    },
+    {
+      "profile": "dspark8",
+      "case": "computer_use_tool",
+      "repetition": 2,
+      "wall_ms": 160.1814000023296,
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "[{\"image_id\": 0, \"point_2d\": [68, 314], \"label\": \"Pantalla\"}]"
+            }
+          }
+        ],
+        "created": 1790444515,
+        "model": "lfm25-vl-3b-dspark-n8",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 28,
+          "prompt_tokens": 2078,
+          "total_tokens": 2106,
+          "prompt_tokens_details": {
+            "cached_tokens": 2074
+          }
+        },
+        "id": "chatcmpl-RjoxvajM2rJzMFNptXDHWbuvUKhHuouA",
+        "timings": {
+          "cache_n": 2074,
+          "prompt_n": 4,
+          "prompt_ms": 19.663,
+          "prompt_per_token_ms": 4.91575,
+          "prompt_per_second": 203.42775771754054,
+          "predicted_n": 28,
+          "predicted_ms": 85.001,
+          "predicted_per_token_ms": 3.148185185185185,
+          "predicted_per_second": 317.6433218432724,
+          "draft_n": 40,
+          "draft_n_accepted": 24
+        }
+      }
+    },
+    {
+      "profile": "control",
+      "case": "computer_use_tool",
+      "repetition": 2,
+      "wall_ms": 294.7530000092229,
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "[{\"image_id\": 0, \"point_2d\": [68, 314], \"label\": \"Pantalla\"}]"
+            }
+          }
+        ],
+        "created": 1790444515,
+        "model": "lfm25-vl-3b-f16-control",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 28,
+          "prompt_tokens": 2078,
+          "total_tokens": 2106,
+          "prompt_tokens_details": {
+            "cached_tokens": 2074
+          }
+        },
+        "id": "chatcmpl-vSaAqdf6MNEnAsAW86bXViErzxfJlqVf",
+        "timings": {
+          "cache_n": 2074,
+          "prompt_n": 4,
+          "prompt_ms": 11.717,
+          "prompt_per_token_ms": 2.92925,
+          "prompt_per_second": 341.38431339079966,
+          "predicted_n": 28,
+          "predicted_ms": 232.728,
+          "predicted_per_token_ms": 8.619555555555555,
+          "predicted_per_second": 116.01526245230482
+        }
+      }
+    },
+    {
+      "profile": "dspark8",
+      "case": "vision_description",
+      "repetition": 2,
+      "wall_ms": 437.97990000166465,
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "Aquí tienes la descripción solicitada:\n\n*   **Pantalla** (Opción seleccionada)\n    *   Tema oscuro: Desactivado\n    *   Contraste alto: Desactivado\n    *   Brillo automático: Desactivado\n*   **Privacidad y diagnóstico**\n    *   Telemetría de uso: Desactivado\n    *   Enviar diagnósticos: Desactivado\n    *   Ubicación aproximada: Desactivado"
+            }
+          }
+        ],
+        "created": 1790444516,
+        "model": "lfm25-vl-3b-dspark-n8",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 104,
+          "prompt_tokens": 1824,
+          "total_tokens": 1928,
+          "prompt_tokens_details": {
+            "cached_tokens": 1820
+          }
+        },
+        "id": "chatcmpl-kiaAyOP77kElQMvw5FyTaCYEJpJcjbor",
+        "timings": {
+          "cache_n": 1820,
+          "prompt_n": 4,
+          "prompt_ms": 19.897,
+          "prompt_per_token_ms": 4.97425,
+          "prompt_per_second": 201.0353319595919,
+          "predicted_n": 104,
+          "predicted_ms": 360.609,
+          "predicted_per_token_ms": 3.5010582524271845,
+          "predicted_per_second": 285.6279238732256,
+          "draft_n": 184,
+          "draft_n_accepted": 82
+        }
+      }
+    },
+    {
+      "profile": "control",
+      "case": "vision_description",
+      "repetition": 2,
+      "wall_ms": 911.2055000005057,
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "Aquí tienes la descripción solicitada:\n\n*   **Pantalla** (Activo)\n*   **Apariencia**\n    *   Tema oscuro: Desactivado\n    *   Contraste alto: Desactivado\n    *   Brillo automático: Desactivado\n*   **Privacidad y diagnóstico**\n    *   Telemetría de uso: Desactivado\n    *   Enviar diagnósticos: Desactivado\n    *   Ubicación aproximada: Desactivado"
+            }
+          }
+        ],
+        "created": 1790444517,
+        "model": "lfm25-vl-3b-f16-control",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 109,
+          "prompt_tokens": 1824,
+          "total_tokens": 1933,
+          "prompt_tokens_details": {
+            "cached_tokens": 1820
+          }
+        },
+        "id": "chatcmpl-BRe0B2oOub88Tt9OB6OxDuccE7fXAw2X",
+        "timings": {
+          "cache_n": 1820,
+          "prompt_n": 4,
+          "prompt_ms": 10.771,
+          "prompt_per_token_ms": 2.69275,
+          "prompt_per_second": 371.3675610435428,
+          "predicted_n": 109,
+          "predicted_ms": 843.111,
+          "predicted_per_token_ms": 7.806583333333333,
+          "predicted_per_second": 128.09701213719188
+        }
+      }
+    },
+    {
+      "profile": "control",
+      "case": "vision_state",
+      "repetition": 3,
+      "wall_ms": 453.4780999965733,
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\n  \"Tema oscuro\": \"Desactivado\",\n  \"Telemetría de uso\": \"Desactivado\",\n  \"Enviar diagnósticos\": \"Desactivado\",\n  \"Ubicación aproximada\": \"Desactivado\"\n}"
+            }
+          }
+        ],
+        "created": 1790444517,
+        "model": "lfm25-vl-3b-f16-control",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 1839,
+          "total_tokens": 1892,
+          "prompt_tokens_details": {
+            "cached_tokens": 1835
+          }
+        },
+        "id": "chatcmpl-z7BhKoxrGiLhggVQ3Y5dk1RlWrOzMx82",
+        "timings": {
+          "cache_n": 1835,
+          "prompt_n": 4,
+          "prompt_ms": 10.784,
+          "prompt_per_token_ms": 2.696,
+          "prompt_per_second": 370.91988130563794,
+          "predicted_n": 53,
+          "predicted_ms": 394.777,
+          "predicted_per_token_ms": 7.591865384615384,
+          "predicted_per_second": 131.71993302548023
+        }
+      }
+    },
+    {
+      "profile": "dspark8",
+      "case": "vision_state",
+      "repetition": 3,
+      "wall_ms": 179.1666999924928,
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\n  \"Tema oscuro\": \"Desactivado\",\n  \"Telemetría de uso\": \"Desactivado\",\n  \"Enviar diagnósticos\": \"Desactivado\",\n  \"Ubicación aproximada\": \"Desactivado\"\n}"
+            }
+          }
+        ],
+        "created": 1790444517,
+        "model": "lfm25-vl-3b-dspark-n8",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 1839,
+          "total_tokens": 1892,
+          "prompt_tokens_details": {
+            "cached_tokens": 1835
+          }
+        },
+        "id": "chatcmpl-ISrinORzandVinhUWj8KjFtlmuunsRbV",
+        "timings": {
+          "cache_n": 1835,
+          "prompt_n": 4,
+          "prompt_ms": 18.431,
+          "prompt_per_token_ms": 4.60775,
+          "prompt_per_second": 217.0256632846834,
+          "predicted_n": 53,
+          "predicted_ms": 104.564,
+          "predicted_per_token_ms": 2.0108461538461535,
+          "predicted_per_second": 497.3030871045484,
+          "draft_n": 56,
+          "draft_n_accepted": 47
+        }
+      }
+    },
+    {
+      "profile": "control",
+      "case": "computer_use_tool",
+      "repetition": 3,
+      "wall_ms": 271.1855999950785,
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "[{\"image_id\": 0, \"point_2d\": [68, 314], \"label\": \"Pantalla\"}]"
+            }
+          }
+        ],
+        "created": 1790444518,
+        "model": "lfm25-vl-3b-f16-control",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 28,
+          "prompt_tokens": 2078,
+          "total_tokens": 2106,
+          "prompt_tokens_details": {
+            "cached_tokens": 2074
+          }
+        },
+        "id": "chatcmpl-RaseOa8o1DDOh6scuzR80mcVoOhNb1p7",
+        "timings": {
+          "cache_n": 2074,
+          "prompt_n": 4,
+          "prompt_ms": 10.683,
+          "prompt_per_token_ms": 2.67075,
+          "prompt_per_second": 374.4266591781335,
+          "predicted_n": 28,
+          "predicted_ms": 210.104,
+          "predicted_per_token_ms": 7.78162962962963,
+          "predicted_per_second": 128.50778661995963
+        }
+      }
+    },
+    {
+      "profile": "dspark8",
+      "case": "computer_use_tool",
+      "repetition": 3,
+      "wall_ms": 162.32570000283886,
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "[{\"image_id\": 0, \"point_2d\": [68, 314], \"label\": \"Pantalla\"}]"
+            }
+          }
+        ],
+        "created": 1790444518,
+        "model": "lfm25-vl-3b-dspark-n8",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 28,
+          "prompt_tokens": 2078,
+          "total_tokens": 2106,
+          "prompt_tokens_details": {
+            "cached_tokens": 2074
+          }
+        },
+        "id": "chatcmpl-DAprytGlbLpjdaAwo2Xu9h98i1pQ9J4j",
+        "timings": {
+          "cache_n": 2074,
+          "prompt_n": 4,
+          "prompt_ms": 18.96,
+          "prompt_per_token_ms": 4.74,
+          "prompt_per_second": 210.97046413502107,
+          "predicted_n": 28,
+          "predicted_ms": 76.39,
+          "predicted_per_token_ms": 2.8292592592592594,
+          "predicted_per_second": 353.4494043723001,
+          "draft_n": 40,
+          "draft_n_accepted": 24
+        }
+      }
+    },
+    {
+      "profile": "control",
+      "case": "vision_description",
+      "repetition": 3,
+      "wall_ms": 913.5581000009552,
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "Aquí tienes la descripción solicitada:\n\n*   **Pantalla** (Activo)\n*   **Apariencia**\n    *   Tema oscuro: Desactivado\n    *   Contraste alto: Desactivado\n    *   Brillo automático: Desactivado\n*   **Privacidad y diagnóstico**\n    *   Telemetría de uso: Desactivado\n    *   Enviar diagnósticos: Desactivado\n    *   Ubicación aproximada: Desactivado"
+            }
+          }
+        ],
+        "created": 1790444519,
+        "model": "lfm25-vl-3b-f16-control",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 109,
+          "prompt_tokens": 1824,
+          "total_tokens": 1933,
+          "prompt_tokens_details": {
+            "cached_tokens": 1820
+          }
+        },
+        "id": "chatcmpl-H5ELYyDKpemsKNzxKQO8TFmnIBsP35Cb",
+        "timings": {
+          "cache_n": 1820,
+          "prompt_n": 4,
+          "prompt_ms": 10.612,
+          "prompt_per_token_ms": 2.653,
+          "prompt_per_second": 376.9317753486619,
+          "predicted_n": 109,
+          "predicted_ms": 855.1,
+          "predicted_per_token_ms": 7.917592592592593,
+          "predicted_per_second": 126.30101742486258
+        }
+      }
+    },
+    {
+      "profile": "dspark8",
+      "case": "vision_description",
+      "repetition": 3,
+      "wall_ms": 432.23250001028646,
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "Aquí tienes la descripción solicitada:\n\n*   **Pantalla** (Opción seleccionada)\n    *   Tema oscuro: Desactivado\n    *   Contraste alto: Desactivado\n    *   Brillo automático: Desactivado\n*   **Privacidad y diagnóstico**\n    *   Telemetría de uso: Desactivado\n    *   Enviar diagnósticos: Desactivado\n    *   Ubicación aproximada: Desactivado"
+            }
+          }
+        ],
+        "created": 1790444519,
+        "model": "lfm25-vl-3b-dspark-n8",
+        "system_fingerprint": "b10964-b29c606e2",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 104,
+          "prompt_tokens": 1824,
+          "total_tokens": 1928,
+          "prompt_tokens_details": {
+            "cached_tokens": 1820
+          }
+        },
+        "id": "chatcmpl-uPjChNO9RIeCLpjlcqCxzw4LtPSwIjLm",
+        "timings": {
+          "cache_n": 1820,
+          "prompt_n": 4,
+          "prompt_ms": 20.71,
+          "prompt_per_token_ms": 5.1775,
+          "prompt_per_second": 193.1434089811685,
+          "predicted_n": 104,
+          "predicted_ms": 353.149,
+          "predicted_per_token_ms": 3.428631067961165,
+          "predicted_per_second": 291.6615932651657,
+          "draft_n": 184,
+          "draft_n_accepted": 82
+        }
+      }
+    }
+  ]
+}

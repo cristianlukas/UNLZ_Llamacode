@@ -1,0 +1,101 @@
+{
+  "date": "2026-09-26",
+  "profileId": "decision-mica-v0.1-4b-q5-systemone",
+  "controlProfileId": "decision-qwen3.5-4b-q4-systemone-control",
+  "model": {
+    "repo": "sky7350/Mica-v0.1-4B",
+    "revision": "ca36594cc2067c7252704f9f304cc10ef11c7c5c",
+    "file": "mica-v0.1-4b-Q5_K_M.gguf",
+    "sizeBytes": 3512029568,
+    "sha256": "7fbd1be2293ba158157bbbdcdc4ea57569bd9ed53901ed1766f81264d9da8292",
+    "calibrationTemperature": 1.124473,
+    "contextLimitTokens": 8192
+  },
+  "runtime": {
+    "repo": "ggml-org/llama.cpp",
+    "tag": "b11010",
+    "commit": "4bc272fd729bd094c0422e4b8353da8d2fec91f8",
+    "cuda": "12.4",
+    "windowsReleaseAsset": "llama-b11010-bin-win-cuda-12.4-x64.zip",
+    "windowsReleaseAssetSha256": "f66167619958a9c94a3ff43f0f847a83399716f40d70c2c7c9ed097d0a11c280",
+    "protocol": "TypeSafe /v1/systemone"
+  },
+  "localTests": {
+    "publishedTetrisTraceReplay": {
+      "status": "pass",
+      "sourceRepoCommit": "24e8cea06113e6d553e538c0c0c76dfdb8b78e5e",
+      "files": 18,
+      "moves": 1500,
+      "checks": ["board", "piece stream", "candidate order", "candidate outcomes", "chosen move", "line totals"]
+    },
+    "publishedPublic231Artifact": {
+      "status": "pass",
+      "rows": 231,
+      "valid": 231,
+      "correct": 192,
+      "tiers": {
+        "easy": {"n": 48, "correct": 48},
+        "original": {"n": 72, "correct": 72},
+        "hard": {"n": 111, "correct": 72}
+      }
+    },
+    "localCpuSmoke": {
+      "status": "pass",
+      "inputTokens": 211,
+      "outputTokens": 0,
+      "choice": "r0c0",
+      "confidence": 0.9781376618637009,
+      "serverLatencyMs": 5293.1,
+      "wallLatencyMs": 5361
+    },
+    "localCudaLoad": {
+      "status": "pass_after_retry",
+      "gpu": "NVIDIA GeForce RTX 3090 24 GiB; selected as the only visible CUDA device",
+      "runtime": "llama.cpp b11010 CUDA 12.4",
+      "initialAttempt": "cudaMalloc out of memory while unrelated benchmark servers were active; no process was stopped"
+    },
+    "localTetrisRerun": {
+      "status": "pass",
+      "server": "official mica.typesafe_server /v1/systemone",
+      "modelSha256": "7fbd1be2293ba158157bbbdcdc4ea57569bd9ed53901ed1766f81264d9da8292",
+      "calibrationTemperature": 1.124473,
+      "contextTokens": 8192,
+      "sequences": 8,
+      "flashAttention": "auto (-1)",
+      "ubatch": 512,
+      "seeds": [7, 11, 23],
+      "pieceCap": 250,
+      "traceComparison": {"publishedMicaMoveRows": 797, "localMicaMoveRows": 797, "matchingStateOptionsAndChoice": 797, "mismatches": 0},
+      "scaffolds": {
+        "easy": {"micaLines": [33, 97, 93], "micaTotalLines": 223, "micaPieces": [121, 250, 250], "micaTopOuts": 1, "micaBestOptionPct": 75, "micaP50Ms": 149, "greedyLines": [98, 93, 94], "greedyTotalLines": 285, "greedyTopOuts": 0, "randomTotalLines": 13},
+        "base": {"micaLines": [5, 11, 9], "micaTotalLines": 25, "micaPieces": [51, 65, 60], "micaTopOuts": 3, "micaBestOptionPct": 47, "micaP50Ms": 153, "greedyLines": [98, 93, 94], "greedyTotalLines": 285, "greedyTopOuts": 0, "randomTotalLines": 2}
+      }
+    },
+    "localReducedConfigProbe": {
+      "status": "excluded_not_comparable",
+      "config": {"contextTokens": 2048, "sequences": 1, "flashAttention": "off", "calibration": "not loaded"},
+      "easyTotalLines": 181,
+      "baseTotalLines": 21,
+      "reason": "Did not follow official server configuration; replaced by the matched 8192-token/eight-sequence/calibrated run."
+    }
+  },
+  "publishedTetris": {
+    "easy": {
+      "mica": {"lines": [33, 97, 93], "total": 223, "bestOptionPct": 75, "p50Ms": 136},
+      "laya": {"lines": [4, 8, 5], "total": 17, "bestOptionPct": 27, "p50Ms": 37},
+      "kev": {"lines": [27, 17, 11], "total": 55, "bestOptionPct": 49, "p50MsRange": [124, 138]}
+    },
+    "base": {
+      "mica": {"lines": [5, 11, 9], "total": 25, "bestOptionPct": 47, "p50Ms": 140},
+      "laya": {"lines": [0, 1, 3], "total": 4, "bestOptionPct": 13, "p50Ms": 37},
+      "kev": {"lines": [6, 6, 6], "total": 18, "bestOptionPct": 30, "p50Ms": 138}
+    }
+  },
+  "classification": {
+    "domainVerdict": "SUPERIOR to Laya and Kev in published Tetris results; INFERIOR to local greedy baseline in both scaffolds",
+    "latencyVerdict": "INFERIOR to Laya by 3.7x-3.8x published p50 latency; local Mica p50 149ms easy and 153ms base",
+    "localPromotion": "benchmark-only; exact local replication of published Mica run; no local Qwen/Laya/Kev matched A/B, and greedy exceeds Mica",
+    "productFit": "benchmark-only; no native LlamaCode TypeSafe integration"
+  },
+  "report": "docs/mica-decision-profile-audit-20260926.md"
+}

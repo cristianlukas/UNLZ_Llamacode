@@ -30,6 +30,16 @@ en una placa de 24 GB con la mitad libre). Perfil manual
 
 Detalle: [auditoría NInfer-4090 + Bonsai](ninfer-4090-bonsai-reddit-audit-20260926.md).
 
+## 2026-09-26 — Liquid LFM2.5-VL-3B-DSpark: ventaja sólo en decode
+
+Se contrastó el post de Liquid AI con `LFM2.5-VL-3B` F16 y su drafter DSpark F16 en una RTX 3090, usando llama.cpp oficial b10964 y una fixture de configuración de Windows. Se agregaron el control, DSpark n=8 y DSpark n=9 como perfiles manuales. En dos tareas visuales de lectura/descripción, la primera solicitud decodificó 2,30–2,35× más rápido con n=8 y 2,26–3,33× con n=9. Son tareas y mediciones pequeñas, no una estimación general del rendimiento ni de la calidad.
+
+La prueba Computer Use se repitió con el schema real de `desktop_click` de LlamaCode y sin ejecutar la acción. Los tres perfiles generaron una llamada JSON válida, pero todos propusieron el centro de la pantalla `(0.5, 0.5)` en vez del centro visible del control `(≈0.88, ≈0.296)`. La mediana end-to-end fue 895 ms control, 987 ms n=8 y 890 ms n=9; por lo tanto, DSpark no mejoró esta interacción. n=8 y n=9 aceptaron 17/64 (26,6%) y 18/63 (28,6%) tokens de draft en esa salida corta. Veredicto: **superior sólo en decodificación; inferior/no promovible para Computer Use** con la configuración evaluada. El fallo es de grounding del modelo; el harness parseó los tool-calls. No se justifica cambiar el parser general por una sola fixture.
+
+La lectura de estados sintética fue correcta con control y drafts. Una descripción con n=8 tuvo variación léxica a temperatura 0, aunque conservó los estados. No se corrieron tareas de ingeniería de software ni pruebas de Charla: el drafter es específico de este target VLM y no sustituye STT/TTS. Los perfiles se marcaron `manualOnly`, `best=false`, `favorite=false`; se mantienen para benchmark sin promoverlos al default.
+
+Artefactos: [`lfm25-vl-dspark-3090-20260926.json`](../artifacts/lfm25-vl-dspark-3090-20260926.json), [`lfm25-vl-dspark9-3090-20260926.json`](../artifacts/lfm25-vl-dspark9-3090-20260926.json), [`lfm25-vl-dspark-computer-use-contract-3090-20260926.json`](../artifacts/lfm25-vl-dspark-computer-use-contract-3090-20260926.json) y [`lfm25_vl_dspark_ui_settings_v1.png`](../assets/benchmarks/custom/lfm25_vl_dspark_ui_settings_v1.png). Procedimiento y fuentes: [auditoría LFM2.5-VL-3B-DSpark](lfm25-vl-dspark-audit-20260926.md).
+
 ## 2026-09-26 — Qwen3.8-Flash-Next W4A16-FP8PLE de albucino
 
 El post de LocalLLM propone el checkpoint
@@ -639,3 +649,120 @@ La marca `BEST` es deliberadamente de familia/caso de uso; no convierte una
 medición nativa con prompt corto en un nuevo score HE20/BCB. Todas las respuestas,
 timings y logs de esta campaña quedan conservados bajo
 `artifacts/deepseek-campaign-20260830/`.
+
+## 2026-09-26 — Agention Precision Qwen3.8-27B AP-Q3_K_XL
+
+Se revisó el quant comunitario y se registró
+`sys-bench-qwen38-agention-ap-q3kxl-32k` como candidato manual con visión,
+KV Q8 y MTP apagado para aislar la cuantización. La ficha del autor reporta
+**SUPERIOR en fidelidad sobre mixedweb público** frente a UD-Q3_K_XL de igual
+tamaño: KLD 0,0250 vs. 0,0270 (−7,6%, 5σ). Reporta **INFERIOR en WikiText-2**:
+0,0359 vs. 0,0337 (+6,5% de KLD). Su tercera columna técnica usa datos internos
+no publicables y queda fuera de cualquier conclusión reproducible.
+
+No hubo corrida local: el AP GGUF y la referencia BF16 no están instalados, y
+ya estaba en curso un benchmark de visión con LFM2.5-VL en las GPU. Por eso el
+perfil sigue `manualOnly` y `best=false`. No hay resultado de calidad de
+coding, tools, visión, Ingi-Charla, ni comparación directa con el ByteShape
+local. Tamaño AP reportado: 12,24 GiB; ByteShape instalado: 12,18 GiB, pero
+usan tipos de quant distintos.
+
+Protocolo, comandos reproducibles y evaluación de aplicabilidad:
+[`qwen38-agention-ap-quant-audit-20260926.md`](qwen38-agention-ap-quant-audit-20260926.md).
+
+## 2026-09-26 — Mica v0.1 4B como selector de decisiones
+
+Se registraron dos perfiles de evaluación: `decision-mica-v0.1-4b-q5-systemone`
+y `decision-qwen3.5-4b-q4-systemone-control`. El primero fija el checkpoint
+Mica Q5_K_M y su contrato TypeSafe `/v1/systemone`; el segundo define un
+control Qwen3.5-4B pendiente para un A/B con el mismo readout y protocolo. Son
+perfiles de benchmark, no entradas de lanzamiento: Mica no usa la API
+OpenAI-compatible que espera el perfil generativo de LlamaCode.
+
+En el Tetris publicado por el autor, con tres semillas, Mica logró 223 líneas
+en el scaffold fácil y 25 en el base, frente a 17/4 de Laya y 55/18 de Kev.
+La proporción de mejor jugada fue 75%/47% para Mica, 27%/13% para Laya y
+49%/30% para Kev. En el scaffold fácil, Mica llegó al final en dos semillas;
+los tres runs de Laya y Kev terminaron en top-out. **SUPERIOR** a Laya y Kev
+en calidad dentro de este benchmark de elección de Tetris; **INFERIOR a Laya
+en latencia** (136–140 ms vs. 37 ms p50). El scaffold base termina en top-out
+para los tres jueces, por lo que el resultado no demuestra dominio general.
+
+La validación local reprodujo el motor contra 18 trazas publicadas
+(1.500/1.500 movimientos) y comprobó las 231 respuestas del artefacto público.
+Después se ejecutó la batería Tetris local completa con el servidor oficial:
+Q5_K_M, calibración `1.124473`, `llama.cpp` b11010 CUDA 12.4, contexto 8.192,
+8 secuencias, Flash Attention auto y ubatch 512. Mica coincidió exactamente
+con el resultado publicado y sus seis trazas coinciden en estado, opciones y
+decisión en **797/797 movimientos**. Es una reproducción local, no una
+comparación local contra Laya o Kev.
+
+Una corrida exploratoria previa con contexto 2.048/una secuencia y Flash
+Attention apagado dio 181 líneas fácil y 21 base; se excluyó por no respetar la
+configuración de referencia.
+
+En la misma batería, el baseline `greedy` logró 285 líneas y sobrevivió 250
+piezas en cada scaffold; Mica logró 223 líneas en fácil y 25 en base, con
+top-out en 1/3 y 3/3 semillas. `random` consiguió 13 y 2 líneas. Así, Mica
+queda por encima de random y de Laya/Kev en la tabla publicada, pero **por
+debajo del greedy del propio harness**. El p50 local de Mica fue 149 ms fácil
+y 153 ms base.
+
+La primera carga CUDA había dado OOM mientras otras corridas usaban la segunda
+RTX 3090; no se interrumpieron esos procesos. El reintento posterior funcionó
+cuando la GPU quedó disponible. El smoke CPU contestó una decisión sintética,
+pero no se usa como score. La comparación contra Qwen3.5-4B sigue pendiente.
+
+No es una mejora demostrada para generación de código, razonamiento largo,
+Ingi-Charla (ASR/TTS/diálogo), ni computer-use con grounding visual: el modelo
+recibe texto y opciones enumeradas. Puede evaluarse a futuro como selector
+advisory después de UIA/OCR, con las protecciones del host como autoridad.
+Protocolo, límites y hashes: [auditoría Mica](mica-decision-profile-audit-20260926.md);
+resultados estructurados: [artefacto JSON](../artifacts/mica-decision-profile-20260926.json).
+
+## 2026-09-26 — NInfer Huihui Qwen3.8 en 2× RTX 3090
+
+El post de Reddit informa ~175 tok/s y 262K en RTX 5090. El único prefill a
+contexto alto que aporta es 1.675 tok/s a 247.802 tokens, medido con
+groupwise-int/KV int8; su cifra de 2.500–3.000 tok/s a 150K es estimada. La
+variante NVFP4 del post es Blackwell/sm_120, por lo que esta evaluación local
+se preparó con el mismo checkpoint Huihui convertido a groupwise-int para el
+fork NInfer-3090 compatible con Ampere/sm_86.
+
+Se agregaron tres perfiles históricos: texto MTP3/32K, visión MTP3/32K y
+control sin MTP/32K. El archivo de pesos (18.210.531.328 bytes), el SHA-256 del
+modelo y el checksum de NInfer v0.6.1 se verificaron. Un primer arranque con
+GPU 1 en uso falló por `cudaMalloc` OOM antes de health; no se detuvieron el
+proceso local de Mica en GPU 1 ni el `llama-server` ajeno en GPU 0.
+
+Al repetir con ambas GPU libres, los pesos y KV cargaron en tres configuraciones
+(MTP3 32K, launcher C1 MTP3 64K y sin MTP 32K), pero el warm-up falló en todas
+con `cudaErrorInvalidValue` desde `gqa_attention_prefill.cu:64`. La variante de
+visión cargó pesos/proyector y KV, pero tuvo el mismo error antes de aceptar
+una imagen. Las cuatro repeticiones se hicieron antes de cualquier request; por
+eso son un **fallo de compatibilidad operativa del artefacto/runtime SM86**, no
+un score de calidad.
+
+| Dimensión | Resultado |
+|---|---|
+| Arranque del candidato MTP3 32K | OOM inicial bajo contención; después pesos/KV cargaron y warm-up falló en el kernel CUDA. |
+| Launcher C1 de texto 64K | Pesos/KV cargaron; mismo error de warm-up con MTP3 y prefill 1024. |
+| Control sin MTP 32K | Pesos/KV cargaron; mismo error. La incompatibilidad no se limita a MTP. |
+| Variante visión MTP3 32K | Pesos/proyector/KV cargaron; mismo error antes de imagen. |
+| HE0 → HE20 → BCB/8 LC-H1 | No ejecutado; servidor nunca alcanzó health. |
+| Decode/prefill, aceptación MTP | No medido; no hubo generación. |
+| Computer Use con imagen y schema `desktop_*` | No evaluado; el profile de visión no llegó a recibir imagen ni emitió tool-call. |
+| Ingi Charla | No ejecutado. El post no reporta STT/TTS ni latencia acústica. |
+
+La referencia histórica de NInfer Qwen3.8 normal es BCB 3/8 y ~73–75 tok/s a
+8K; SOL conserva BCB 8/8. Frente a ese perfil que sí atendió requests, Huihui
+resulta **INFERIOR en compatibilidad operativa en el runtime SM86 probado**.
+No hay veredicto de calidad ni velocidad para Huihui. Ninguna cifra del post
+justifica cambiar defaults, harness, Computer Use o ruta de voz. No se incorpora
+la estrategia del post de redactar consultas para evadir guardrails de un
+proveedor cloud. Los perfiles se conservan como histórico, `best=false`, con
+descarga automática desactivada.
+
+Artefacto y configuración exacta:
+[`ninfer-huihui-qwen38-3090-20260926.json`](../artifacts/ninfer-huihui-qwen38-3090-20260926.json).
+Detalle y fuentes: [auditoría Huihui/NInfer](ninfer-huihui-qwen38-3090-audit-20260926.md).

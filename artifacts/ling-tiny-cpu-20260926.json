@@ -1,0 +1,695 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-09-26T17:57:03.0026664Z",
+  "benchmark": "Ling 3.0 Tiny CPU summary retention smoke",
+  "hardware": {
+    "cpu": "AMD Ryzen 9 9950X3D 16-Core Processor          ",
+    "physicalCores": 16,
+    "logicalProcessors": 32,
+    "totalRamBytes": 66239950848,
+    "freeRamBeforeBytes": 35177627648,
+    "os": "Microsoft Windows 11 Pro",
+    "osVersion": "10.0.26200",
+    "freeRamAfterBytes": 32392609792
+  },
+  "runtime": {
+    "path": "D:\\Models\\llamacpp\\bench-runtime\\b10964\\unpacked\\llama-server.exe",
+    "version": "version: 0.4.1-dev (build 10964, commit b29c606e2)\r\nbuilt with Clang 20.1.8 for Windows x86_64",
+    "gpuLayers": 0,
+    "threads": 16,
+    "batchThreads": 16
+  },
+  "models": {
+    "Q4_K_M": {
+      "path": "D:\\Models\\llamacpp\\Ling30-cpu-benchmark\\Ling-3.0-tiny-Q4_K_M.gguf",
+      "sizeBytes": 4823895104,
+      "sha256": "a21f717779203d86b53996239c4903941858b938c50e85b03e6a981132b5621a"
+    },
+    "Q6_K": {
+      "path": "D:\\Models\\llamacpp\\Ling30-cpu-benchmark\\Ling-3.0-tiny-Q6_K.gguf",
+      "sizeBytes": 6499262528,
+      "sha256": "f9698dcc5801274ac7b33fd287081811525e9fac326700d08c2b40c761b92e63"
+    }
+  },
+  "method": {
+    "contexts": [
+      4096,
+      8192
+    ],
+    "promptTarget": "context minus maxTokens minus 320 tokens; actual prompt count measured with the server tokenizer",
+    "maxTokens": 2048,
+    "sampling": {
+      "temperature": 1.0,
+      "topP": 0.95,
+      "topK": 20,
+      "minP": 0.0,
+      "repeatPenalty": 1.0
+    },
+    "thinkingModes": [
+      "off",
+      "on"
+    ],
+    "scoring": "Required-fact recall from final answer; this is a smoke score, not a semantic grader.",
+    "documents": [
+      {
+        "id": "harbor-relay",
+        "requiredFacts": 6
+      },
+      {
+        "id": "north-clinic",
+        "requiredFacts": "27 válvulas"
+      }
+    ]
+  },
+  "trials": [
+    {
+      "quant": "Q4_K_M",
+      "modelSha256": "a21f717779203d86b53996239c4903941858b938c50e85b03e6a981132b5621a",
+      "context": 4096,
+      "thinking": "off",
+      "threads": 16,
+      "status": "completed",
+      "serverLog": "C:\\Users\\cristian\\Documents\\LlamaCode\\artifacts\\ling-tiny-cpu-20260926-logs\\Q4_K_M-4k-thinking-off.stderr.log",
+      "requests": [
+        {
+          "caseId": "harbor-relay",
+          "inputTokens": 1691,
+          "fillerRows": 25,
+          "wallSeconds": 9.751,
+          "promptTokens": 1712,
+          "promptSeconds": 4.93,
+          "prefillTokensPerSecond": 347.2460970816521,
+          "outputTokens": 239,
+          "outputSeconds": 4.807,
+          "decodeTokensPerSecond": 49.50938899797365,
+          "peakWorkingSetBytes": 4867960832,
+          "matchedFacts": 6,
+          "totalFacts": 6,
+          "factRecall": 1.0,
+          "matched": [
+            "project",
+            "owner",
+            "launch_date",
+            "budget",
+            "supplier",
+            "revised_delivery"
+          ],
+          "missing": [],
+          "answer": "• Proyecto Marea (Harbor Relay), responsable Mina Rao, fecha clave 18 de octubre, presupuesto US$ 4,6 millones, proveedor Atlas Logistics — riesgo: retraso de entrega confirmado al 11 de octubre.\n• Atlas Logistics responde por la ejecución logística con una cartera diversa de rutas (R-002 a R-026) en zonas Oeste, Norte, Sur, Centro y Este, acumulando 2.646 paquetes operados con ventanas de 27 a 107 minutos.\n• Los registros rutinarios muestran 0 incidentes críticos en 25 turnos consecutivos, indicando alta confiabilidad operativa pero manteniendo el riesgo del retraso en proveedor.\n• El proyecto continúa dependiendo del envío revisado para el 11 de octubre, sin aprobación financiera adicional ni modificación de alcance hasta nueva confirmación.",
+          "answerCharacters": 753,
+          "finishReason": "stop"
+        },
+        {
+          "caseId": "north-clinic",
+          "inputTokens": 1716,
+          "fillerRows": 25,
+          "wallSeconds": 7.634,
+          "promptTokens": 1729,
+          "promptSeconds": 4.409,
+          "prefillTokensPerSecond": 392.1408531841883,
+          "outputTokens": 159,
+          "outputSeconds": 3.197,
+          "decodeTokensPerSecond": 49.419044723609915,
+          "peakWorkingSetBytes": 5017829376,
+          "matchedFacts": 5,
+          "totalFacts": 6,
+          "factRecall": 0.8333,
+          "matched": [
+            "site",
+            "owner",
+            "deadline",
+            "amount",
+            "risk"
+          ],
+          "missing": [
+            "count"
+          ],
+          "answer": "• Clínica Norte, North Clinic: inspección prioritaria bajo liderazgo de Elena Park; revisión crítica para mantener el sitio abierto.\n• Definición de riesgo: el motor de la bomba presenta desgaste por encima del límite recomendado, con una causa principal identificada.\n• Fecha clave de decisión: reparación a completar antes del 14 de junio; monto aprobado de 82.000 libras.\n• Proveedor: sin reemplazo, el suministro de agua queda expuesto a interrupciones, lo que representa un riesgo operativo significativo.",
+          "answerCharacters": 510,
+          "finishReason": "stop"
+        }
+      ],
+      "error": null
+    },
+    {
+      "quant": "Q4_K_M",
+      "modelSha256": "a21f717779203d86b53996239c4903941858b938c50e85b03e6a981132b5621a",
+      "context": 4096,
+      "thinking": "on",
+      "threads": 16,
+      "status": "completed",
+      "serverLog": "C:\\Users\\cristian\\Documents\\LlamaCode\\artifacts\\ling-tiny-cpu-20260926-logs\\Q4_K_M-4k-thinking-on.stderr.log",
+      "requests": [
+        {
+          "caseId": "harbor-relay",
+          "inputTokens": 1691,
+          "fillerRows": 25,
+          "wallSeconds": 36.007,
+          "promptTokens": 1711,
+          "promptSeconds": 4.948,
+          "prefillTokensPerSecond": 345.8136838333214,
+          "outputTokens": 1495,
+          "outputSeconds": 31.046,
+          "decodeTokensPerSecond": 48.122879162870625,
+          "peakWorkingSetBytes": 5027364864,
+          "matchedFacts": 6,
+          "totalFacts": 6,
+          "factRecall": 1.0,
+          "matched": [
+            "project",
+            "owner",
+            "launch_date",
+            "budget",
+            "supplier",
+            "revised_delivery"
+          ],
+          "missing": [],
+          "answer": "• Proyecto Marea (también denominado Harbor Relay), a cargo de Mina Rao.\n• Fecha clave: 18 de octubre para la puesta en marcha.\n• Monto: US$ 4,6 millones (presupuesto fijo aprobado).\n• Riesgo/proveedor: Atlas Logistics retrasó la entrega hasta el 11 de octubre, manteniéndose el plan de ejecución dependiente de dicho envío.",
+          "answerCharacters": 324,
+          "finishReason": "stop"
+        },
+        {
+          "caseId": "north-clinic",
+          "inputTokens": 1716,
+          "fillerRows": 25,
+          "wallSeconds": 46.704,
+          "promptTokens": 1728,
+          "promptSeconds": 4.536,
+          "prefillTokensPerSecond": 380.93718041674265,
+          "outputTokens": 2048,
+          "outputSeconds": 42.134,
+          "decodeTokensPerSecond": 48.582701154989046,
+          "peakWorkingSetBytes": 5197721600,
+          "matchedFacts": 0,
+          "totalFacts": 6,
+          "factRecall": 0.0,
+          "matched": [],
+          "missing": [
+            "site",
+            "owner",
+            "count",
+            "deadline",
+            "amount",
+            "risk"
+          ],
+          "answer": "",
+          "answerCharacters": 0,
+          "finishReason": "length"
+        }
+      ],
+      "error": null
+    },
+    {
+      "quant": "Q4_K_M",
+      "modelSha256": "a21f717779203d86b53996239c4903941858b938c50e85b03e6a981132b5621a",
+      "context": 8192,
+      "thinking": "off",
+      "threads": 16,
+      "status": "completed",
+      "serverLog": "C:\\Users\\cristian\\Documents\\LlamaCode\\artifacts\\ling-tiny-cpu-20260926-logs\\Q4_K_M-8k-thinking-off.stderr.log",
+      "requests": [
+        {
+          "caseId": "harbor-relay",
+          "inputTokens": 5811,
+          "fillerRows": 96,
+          "wallSeconds": 18.002,
+          "promptTokens": 5832,
+          "promptSeconds": 13.618,
+          "prefillTokensPerSecond": 428.24181328980035,
+          "outputTokens": 186,
+          "outputSeconds": 4.368,
+          "decodeTokensPerSecond": 42.35654410896026,
+          "peakWorkingSetBytes": 4886306816,
+          "matchedFacts": 6,
+          "totalFacts": 6,
+          "factRecall": 1.0,
+          "matched": [
+            "project",
+            "owner",
+            "launch_date",
+            "budget",
+            "supplier",
+            "revised_delivery"
+          ],
+          "missing": [],
+          "answer": "- **Proyecto Marea (Harbor Relay)**: Responsable Mina Rao; fecha clave 18 de octubre; presupuesto US$ 4,6 millones; proveedor Atlas Logistics.\n- **Atlas Logistics**, el proveedor principal, presenta un riesgo crítico por el retraso en la entrega: la fecha revisada es el 11 de octubre.\n- **Decisiones**: Aprobación financiera confirmada y plan condicionado a dicho envío; no se detectaron incidentes críticos en los registros rutinarios.\n- **Hechos clave**: Los registros de 96 rutas mostraron operativamente transitar sin incidentes críticos, con cifras que oscilan entre 22 y 296 paquetes por ventana.",
+          "answerCharacters": 603,
+          "finishReason": "stop"
+        },
+        {
+          "caseId": "north-clinic",
+          "inputTokens": 5778,
+          "fillerRows": 95,
+          "wallSeconds": 16.911,
+          "promptTokens": 5791,
+          "promptSeconds": 12.85,
+          "prefillTokensPerSecond": 450.64425942946457,
+          "outputTokens": 174,
+          "outputSeconds": 4.023,
+          "decodeTokensPerSecond": 43.005118106223634,
+          "peakWorkingSetBytes": 5060685824,
+          "matchedFacts": 6,
+          "totalFacts": 6,
+          "factRecall": 1.0,
+          "matched": [
+            "site",
+            "owner",
+            "count",
+            "deadline",
+            "amount",
+            "risk"
+          ],
+          "missing": [],
+          "answer": "- El sitio de la Clínica Norte (North Clinic) está a cargo de Elena Park, con inspección prioritaria y revisión de mantenimiento crítico pendiente.\n- 27 válvulas con desgaste por encima del límite recomendado requieren reparación antes del 14 de junio; la causa principal es el motor de la bomba.\n- La cotización aprobada asciende a 82.000 libras; sin reparación, el suministro de agua queda expuesto a interrupciones, con riesgo operativo elevado.\n- El equipo técnico debe completar la reparación antes del 14 de junio para mantener la operación continua del sitio.",
+          "answerCharacters": 566,
+          "finishReason": "stop"
+        }
+      ],
+      "error": null
+    },
+    {
+      "quant": "Q4_K_M",
+      "modelSha256": "a21f717779203d86b53996239c4903941858b938c50e85b03e6a981132b5621a",
+      "context": 8192,
+      "thinking": "on",
+      "threads": 16,
+      "status": "completed",
+      "serverLog": "C:\\Users\\cristian\\Documents\\LlamaCode\\artifacts\\ling-tiny-cpu-20260926-logs\\Q4_K_M-8k-thinking-on.stderr.log",
+      "requests": [
+        {
+          "caseId": "harbor-relay",
+          "inputTokens": 5811,
+          "fillerRows": 96,
+          "wallSeconds": 72.701,
+          "promptTokens": 5831,
+          "promptSeconds": 13.362,
+          "prefillTokensPerSecond": 436.371060134716,
+          "outputTokens": 2048,
+          "outputSeconds": 59.323,
+          "decodeTokensPerSecond": 34.505822179007446,
+          "peakWorkingSetBytes": 5060317184,
+          "matchedFacts": 0,
+          "totalFacts": 6,
+          "factRecall": 0.0,
+          "matched": [],
+          "missing": [
+            "project",
+            "owner",
+            "launch_date",
+            "budget",
+            "supplier",
+            "revised_delivery"
+          ],
+          "answer": "",
+          "answerCharacters": 0,
+          "finishReason": "length"
+        },
+        {
+          "caseId": "north-clinic",
+          "inputTokens": 5778,
+          "fillerRows": 95,
+          "wallSeconds": 73.519,
+          "promptTokens": 5790,
+          "promptSeconds": 14.566,
+          "prefillTokensPerSecond": 397.50141185086954,
+          "outputTokens": 2048,
+          "outputSeconds": 58.909,
+          "decodeTokensPerSecond": 34.74865906163886,
+          "peakWorkingSetBytes": 5237280768,
+          "matchedFacts": 0,
+          "totalFacts": 6,
+          "factRecall": 0.0,
+          "matched": [],
+          "missing": [
+            "site",
+            "owner",
+            "count",
+            "deadline",
+            "amount",
+            "risk"
+          ],
+          "answer": "",
+          "answerCharacters": 0,
+          "finishReason": "length"
+        }
+      ],
+      "error": null
+    },
+    {
+      "quant": "Q6_K",
+      "modelSha256": "f9698dcc5801274ac7b33fd287081811525e9fac326700d08c2b40c761b92e63",
+      "context": 4096,
+      "thinking": "off",
+      "threads": 16,
+      "status": "completed",
+      "serverLog": "C:\\Users\\cristian\\Documents\\LlamaCode\\artifacts\\ling-tiny-cpu-20260926-logs\\Q6_K-4k-thinking-off.stderr.log",
+      "requests": [
+        {
+          "caseId": "harbor-relay",
+          "inputTokens": 1691,
+          "fillerRows": 25,
+          "wallSeconds": 11.603,
+          "promptTokens": 1712,
+          "promptSeconds": 7.056,
+          "prefillTokensPerSecond": 242.62801284964755,
+          "outputTokens": 163,
+          "outputSeconds": 4.535,
+          "decodeTokensPerSecond": 35.72490237398592,
+          "peakWorkingSetBytes": 6214365184,
+          "matchedFacts": 6,
+          "totalFacts": 6,
+          "factRecall": 1.0,
+          "matched": [
+            "project",
+            "owner",
+            "launch_date",
+            "budget",
+            "supplier",
+            "revised_delivery"
+          ],
+          "missing": [],
+          "answer": "- El Proyecto Marea (Harbor Relay) tiene como responsable a Mina Rao y su fecha clave de puesta en marcha es el 18 de octubre.\n- La aprobación financiera fija un presupuesto de US$ 4,6 millones y el proveedor principal es Atlas Logistics.\n- Atlas Logistics confirmó un retraso en la entrega, con fecha revisada al 11 de octubre, manteniendo el proyecto dependiente de ese envío.\n- El riesgo operativo principal es la dependencia del envío retrasado; las 31 rutas registradas reportaron cero incidentes críticos en sus ventanas de operación.",
+          "answerCharacters": 540,
+          "finishReason": "stop"
+        },
+        {
+          "caseId": "north-clinic",
+          "inputTokens": 1716,
+          "fillerRows": 25,
+          "wallSeconds": 9.756,
+          "promptTokens": 1729,
+          "promptSeconds": 6.204,
+          "prefillTokensPerSecond": 278.678005697023,
+          "outputTokens": 142,
+          "outputSeconds": 3.526,
+          "decodeTokensPerSecond": 39.994111505284756,
+          "peakWorkingSetBytes": 6409355264,
+          "matchedFacts": 2,
+          "totalFacts": 6,
+          "factRecall": 0.3333,
+          "matched": [
+            "site",
+            "owner"
+          ],
+          "missing": [
+            "count",
+            "deadline",
+            "amount",
+            "risk"
+          ],
+          "answer": "• **Clínica Norte** — Responsable: Elena Park; Inspección prioritaria para mantener abierto el sitio.\n• **Ruta R-002** — Zona Oeste, 55 paquetes; ventana de operación 31 minutos; sin incidentes críticos.\n• **Ruta R-014** — Zona Sur, 216 paquetes; ventana de operación 67 minutos; sin incidentes críticos.\n• **Ruta R-026** — Zona Este, 94 paquetes; ventana de operación 103 minutos; sin incidentes críticos.",
+          "answerCharacters": 406,
+          "finishReason": "stop"
+        }
+      ],
+      "error": null
+    },
+    {
+      "quant": "Q6_K",
+      "modelSha256": "f9698dcc5801274ac7b33fd287081811525e9fac326700d08c2b40c761b92e63",
+      "context": 4096,
+      "thinking": "on",
+      "threads": 16,
+      "status": "completed",
+      "serverLog": "C:\\Users\\cristian\\Documents\\LlamaCode\\artifacts\\ling-tiny-cpu-20260926-logs\\Q6_K-4k-thinking-on.stderr.log",
+      "requests": [
+        {
+          "caseId": "harbor-relay",
+          "inputTokens": 1691,
+          "fillerRows": 25,
+          "wallSeconds": 67.571,
+          "promptTokens": 1711,
+          "promptSeconds": 6.916,
+          "prefillTokensPerSecond": 247.4003085924831,
+          "outputTokens": 2048,
+          "outputSeconds": 60.64,
+          "decodeTokensPerSecond": 33.7566742403429,
+          "peakWorkingSetBytes": 6471954432,
+          "matchedFacts": 0,
+          "totalFacts": 6,
+          "factRecall": 0.0,
+          "matched": [],
+          "missing": [
+            "project",
+            "owner",
+            "launch_date",
+            "budget",
+            "supplier",
+            "revised_delivery"
+          ],
+          "answer": "",
+          "answerCharacters": 0,
+          "finishReason": "length"
+        },
+        {
+          "caseId": "north-clinic",
+          "inputTokens": 1716,
+          "fillerRows": 25,
+          "wallSeconds": 65.405,
+          "promptTokens": 1728,
+          "promptSeconds": 6.154,
+          "prefillTokensPerSecond": 280.811278082956,
+          "outputTokens": 2048,
+          "outputSeconds": 59.211,
+          "decodeTokensPerSecond": 34.571318688244936,
+          "peakWorkingSetBytes": 6713372672,
+          "matchedFacts": 0,
+          "totalFacts": 6,
+          "factRecall": 0.0,
+          "matched": [],
+          "missing": [
+            "site",
+            "owner",
+            "count",
+            "deadline",
+            "amount",
+            "risk"
+          ],
+          "answer": "",
+          "answerCharacters": 0,
+          "finishReason": "length"
+        }
+      ],
+      "error": null
+    },
+    {
+      "quant": "Q6_K",
+      "modelSha256": "f9698dcc5801274ac7b33fd287081811525e9fac326700d08c2b40c761b92e63",
+      "context": 8192,
+      "thinking": "off",
+      "threads": 16,
+      "status": "completed",
+      "serverLog": "C:\\Users\\cristian\\Documents\\LlamaCode\\artifacts\\ling-tiny-cpu-20260926-logs\\Q6_K-8k-thinking-off.stderr.log",
+      "requests": [
+        {
+          "caseId": "harbor-relay",
+          "inputTokens": 5811,
+          "fillerRows": 96,
+          "wallSeconds": 25.03,
+          "promptTokens": 5832,
+          "promptSeconds": 19.238,
+          "prefillTokensPerSecond": 303.1525368752417,
+          "outputTokens": 184,
+          "outputSeconds": 5.776,
+          "decodeTokensPerSecond": 31.68356601132471,
+          "peakWorkingSetBytes": 6277701632,
+          "matchedFacts": 6,
+          "totalFacts": 6,
+          "factRecall": 1.0,
+          "matched": [
+            "project",
+            "owner",
+            "launch_date",
+            "budget",
+            "supplier",
+            "revised_delivery"
+          ],
+          "missing": [],
+          "answer": "• El Proyecto Marea (Harbor Relay) tiene como responsable a Mina Rao; la fecha clave de puesta en marcha es el 18 de octubre.\n• La aprobación financiera fija un presupuesto de US$ 4,6 millones; el proveedor principal es Atlas Logistics.\n• Atlas Logistics retrasó la entrega: la fecha revisada es el 11 de octubre, lo que mantiene al plan en dependencia de dicho envío.\n• Los registros operativos (R-002 a R-097) reportan más de 2.000 paquetes trasladados con ventanas de operación de 15 a 107 minutos y sin incidentes críticos en las 96 rutas registradas.",
+          "answerCharacters": 555,
+          "finishReason": "stop"
+        },
+        {
+          "caseId": "north-clinic",
+          "inputTokens": 5778,
+          "fillerRows": 95,
+          "wallSeconds": 22.693,
+          "promptTokens": 5791,
+          "promptSeconds": 17.706,
+          "prefillTokensPerSecond": 327.06876074262175,
+          "outputTokens": 176,
+          "outputSeconds": 4.942,
+          "decodeTokensPerSecond": 35.412620774743154,
+          "peakWorkingSetBytes": 6471655424,
+          "matchedFacts": 5,
+          "totalFacts": 6,
+          "factRecall": 0.8333,
+          "matched": [
+            "site",
+            "count",
+            "deadline",
+            "amount",
+            "risk"
+          ],
+          "missing": [
+            "owner"
+          ],
+          "answer": "• La Clínica Norte (North Clinic) tiene pendiente mantenimiento crítico; el equipo técnico identificó 27 válvulas con desgaste por encima del límite recomendado.\n• La inspección es prioritaria para mantener abierto el sitio; la reparación debe completarse antes del 14 de junio.\n• El costo aprobado de la reparación asciende a 82.000 libras, y sin acción inmediata el suministro de agua queda expuesto a interrupciones.\n• El responsable es el proyecto de mantenimiento clínico; el riesgo principal es la continuidad operativa ante la falla del motor de la bomba.",
+          "answerCharacters": 562,
+          "finishReason": "stop"
+        }
+      ],
+      "error": null
+    },
+    {
+      "quant": "Q6_K",
+      "modelSha256": "f9698dcc5801274ac7b33fd287081811525e9fac326700d08c2b40c761b92e63",
+      "context": 8192,
+      "thinking": "on",
+      "threads": 16,
+      "status": "completed",
+      "serverLog": "C:\\Users\\cristian\\Documents\\LlamaCode\\artifacts\\ling-tiny-cpu-20260926-logs\\Q6_K-8k-thinking-on.stderr.log",
+      "requests": [
+        {
+          "caseId": "harbor-relay",
+          "inputTokens": 5811,
+          "fillerRows": 96,
+          "wallSeconds": 81.859,
+          "promptTokens": 5831,
+          "promptSeconds": 18.527,
+          "prefillTokensPerSecond": 314.7320451467493,
+          "outputTokens": 2048,
+          "outputSeconds": 63.315,
+          "decodeTokensPerSecond": 32.33054419871265,
+          "peakWorkingSetBytes": 6509015040,
+          "matchedFacts": 0,
+          "totalFacts": 6,
+          "factRecall": 0.0,
+          "matched": [],
+          "missing": [
+            "project",
+            "owner",
+            "launch_date",
+            "budget",
+            "supplier",
+            "revised_delivery"
+          ],
+          "answer": "",
+          "answerCharacters": 0,
+          "finishReason": "length"
+        },
+        {
+          "caseId": "north-clinic",
+          "inputTokens": 5778,
+          "fillerRows": 95,
+          "wallSeconds": 91.384,
+          "promptTokens": 5790,
+          "promptSeconds": 18.678,
+          "prefillTokensPerSecond": 309.9832598332151,
+          "outputTokens": 2048,
+          "outputSeconds": 72.663,
+          "decodeTokensPerSecond": 28.171034206833106,
+          "peakWorkingSetBytes": 6726643712,
+          "matchedFacts": 0,
+          "totalFacts": 6,
+          "factRecall": 0.0,
+          "matched": [],
+          "missing": [
+            "site",
+            "owner",
+            "count",
+            "deadline",
+            "amount",
+            "risk"
+          ],
+          "answer": "",
+          "answerCharacters": 0,
+          "finishReason": "length"
+        }
+      ],
+      "error": null
+    }
+  ],
+  "summaries": [
+    {
+      "quant": "Q4_K_M",
+      "context": 4096,
+      "thinking": "off",
+      "status": "completed",
+      "meanDecodeTokensPerSecond": 49.464,
+      "peakWorkingSetBytes": 5017829376,
+      "requiredFactsRecall": 0.9167,
+      "completedRequests": 2
+    },
+    {
+      "quant": "Q4_K_M",
+      "context": 4096,
+      "thinking": "on",
+      "status": "completed",
+      "meanDecodeTokensPerSecond": 48.353,
+      "peakWorkingSetBytes": 5197721600,
+      "requiredFactsRecall": 0.5,
+      "completedRequests": 2
+    },
+    {
+      "quant": "Q4_K_M",
+      "context": 8192,
+      "thinking": "off",
+      "status": "completed",
+      "meanDecodeTokensPerSecond": 42.681,
+      "peakWorkingSetBytes": 5060685824,
+      "requiredFactsRecall": 1.0,
+      "completedRequests": 2
+    },
+    {
+      "quant": "Q4_K_M",
+      "context": 8192,
+      "thinking": "on",
+      "status": "completed",
+      "meanDecodeTokensPerSecond": 34.627,
+      "peakWorkingSetBytes": 5237280768,
+      "requiredFactsRecall": 0.0,
+      "completedRequests": 2
+    },
+    {
+      "quant": "Q6_K",
+      "context": 4096,
+      "thinking": "off",
+      "status": "completed",
+      "meanDecodeTokensPerSecond": 37.86,
+      "peakWorkingSetBytes": 6409355264,
+      "requiredFactsRecall": 0.6667,
+      "completedRequests": 2
+    },
+    {
+      "quant": "Q6_K",
+      "context": 4096,
+      "thinking": "on",
+      "status": "completed",
+      "meanDecodeTokensPerSecond": 34.164,
+      "peakWorkingSetBytes": 6713372672,
+      "requiredFactsRecall": 0.0,
+      "completedRequests": 2
+    },
+    {
+      "quant": "Q6_K",
+      "context": 8192,
+      "thinking": "off",
+      "status": "completed",
+      "meanDecodeTokensPerSecond": 33.548,
+      "peakWorkingSetBytes": 6471655424,
+      "requiredFactsRecall": 0.9167,
+      "completedRequests": 2
+    },
+    {
+      "quant": "Q6_K",
+      "context": 8192,
+      "thinking": "on",
+      "status": "completed",
+      "meanDecodeTokensPerSecond": 30.251,
+      "peakWorkingSetBytes": 6726643712,
+      "requiredFactsRecall": 0.0,
+      "completedRequests": 2
+    }
+  ]
+}
