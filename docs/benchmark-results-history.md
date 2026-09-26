@@ -697,3 +697,50 @@ recibe texto y opciones enumeradas. Puede evaluarse a futuro como selector
 advisory después de UIA/OCR, con las protecciones del host como autoridad.
 Protocolo, límites y hashes: [auditoría Mica](mica-decision-profile-audit-20260926.md);
 resultados estructurados: [artefacto JSON](../artifacts/mica-decision-profile-20260926.json).
+
+## 2026-09-26 — NInfer Huihui Qwen3.8 en 2× RTX 3090
+
+El post de Reddit informa ~175 tok/s y 262K en RTX 5090. El único prefill a
+contexto alto que aporta es 1.675 tok/s a 247.802 tokens, medido con
+groupwise-int/KV int8; su cifra de 2.500–3.000 tok/s a 150K es estimada. La
+variante NVFP4 del post es Blackwell/sm_120, por lo que esta evaluación local
+se preparó con el mismo checkpoint Huihui convertido a groupwise-int para el
+fork NInfer-3090 compatible con Ampere/sm_86.
+
+Se agregaron tres perfiles históricos: texto MTP3/32K, visión MTP3/32K y
+control sin MTP/32K. El archivo de pesos (18.210.531.328 bytes), el SHA-256 del
+modelo y el checksum de NInfer v0.6.1 se verificaron. Un primer arranque con
+GPU 1 en uso falló por `cudaMalloc` OOM antes de health; no se detuvieron el
+proceso local de Mica en GPU 1 ni el `llama-server` ajeno en GPU 0.
+
+Al repetir con ambas GPU libres, los pesos y KV cargaron en tres configuraciones
+(MTP3 32K, launcher C1 MTP3 64K y sin MTP 32K), pero el warm-up falló en todas
+con `cudaErrorInvalidValue` desde `gqa_attention_prefill.cu:64`. La variante de
+visión cargó pesos/proyector y KV, pero tuvo el mismo error antes de aceptar
+una imagen. Las cuatro repeticiones se hicieron antes de cualquier request; por
+eso son un **fallo de compatibilidad operativa del artefacto/runtime SM86**, no
+un score de calidad.
+
+| Dimensión | Resultado |
+|---|---|
+| Arranque del candidato MTP3 32K | OOM inicial bajo contención; después pesos/KV cargaron y warm-up falló en el kernel CUDA. |
+| Launcher C1 de texto 64K | Pesos/KV cargaron; mismo error de warm-up con MTP3 y prefill 1024. |
+| Control sin MTP 32K | Pesos/KV cargaron; mismo error. La incompatibilidad no se limita a MTP. |
+| Variante visión MTP3 32K | Pesos/proyector/KV cargaron; mismo error antes de imagen. |
+| HE0 → HE20 → BCB/8 LC-H1 | No ejecutado; servidor nunca alcanzó health. |
+| Decode/prefill, aceptación MTP | No medido; no hubo generación. |
+| Computer Use con imagen y schema `desktop_*` | No evaluado; el profile de visión no llegó a recibir imagen ni emitió tool-call. |
+| Ingi Charla | No ejecutado. El post no reporta STT/TTS ni latencia acústica. |
+
+La referencia histórica de NInfer Qwen3.8 normal es BCB 3/8 y ~73–75 tok/s a
+8K; SOL conserva BCB 8/8. Frente a ese perfil que sí atendió requests, Huihui
+resulta **INFERIOR en compatibilidad operativa en el runtime SM86 probado**.
+No hay veredicto de calidad ni velocidad para Huihui. Ninguna cifra del post
+justifica cambiar defaults, harness, Computer Use o ruta de voz. No se incorpora
+la estrategia del post de redactar consultas para evadir guardrails de un
+proveedor cloud. Los perfiles se conservan como histórico, `best=false`, con
+descarga automática desactivada.
+
+Artefacto y configuración exacta:
+[`ninfer-huihui-qwen38-3090-20260926.json`](../artifacts/ninfer-huihui-qwen38-3090-20260926.json).
+Detalle y fuentes: [auditoría Huihui/NInfer](ninfer-huihui-qwen38-3090-audit-20260926.md).

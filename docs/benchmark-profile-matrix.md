@@ -1,5 +1,17 @@
 # Matriz de perfiles para benchmarks
 
+## Addendum — NInfer Huihui groupwise-int · 2026-09-26
+
+Se agregaron tres perfiles históricos 3090 a `assets/system_profiles.json`:
+texto MTP3 32K, MTP3 con visión 32K y control sin MTP. Con las GPU libres,
+pesos y KV cargaron, pero las tres recetas y el launcher C1/64K fallaron en
+warm-up con `cudaErrorInvalidValue` en `gqa_attention_prefill.cu:64`. Quedan
+**INFERIORES en compatibilidad operativa SM86**; calidad y velocidad no medidas,
+fuera de la cola activa. El post mide RTX 5090/NVFP4-groupwise, no esta ruta.
+Ver
+[auditoría](ninfer-huihui-qwen38-3090-audit-20260926.md) y
+[historial/artifact](benchmark-results-history.md).
+
 Snapshot de revisión: 2026-08-28; anexo de campaña DeepSeek nativa: 2026-08-30. Este archivo conserva la identidad y la configuración efectiva de los perfiles medidos, además de los candidatos derivados del catálogo. Los cambios de perfiles deben hacerse con LlamaCode cerrada; luego hay que volver a abrir la app headless y verificar que los argumentos efectivos coincidan con esta captura.
 
 El procedimiento reusable para agregar modelos, binarios, perfiles o harnesses está documentado en el [Manual de benchmarking](benchmark-manual.md). Esta matriz resume resultados; el manual define las condiciones de validez, el orden HE0 → HE20 → BCB y las reglas de promoción para FAST, BALANCED y QUALITY. HE0 es una compuerta dura: si falla, el perfil queda bloqueado para HE20 y BCB hasta investigar la causa raíz y repetir HE0 con resultado válido.

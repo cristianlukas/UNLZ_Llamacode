@@ -256,3 +256,23 @@ Un resultado nuevo no sobrescribe el histórico: agrega una huella y una fecha. 
 | Control de selector | `decision-qwen3.5-4b-q4-systemone-control` | Qwen3.5-4B Q4_K_M; requiere mismo runtime DirectJudge y tokenizer/codebook | Misma suite y receta oficial; no se ejecutó. | Sin métrica local. | Pendiente; no atribuir resultado ni ordenar frente a Mica. |
 
 Reproducibilidad y limitaciones: [auditoría de perfil Mica](mica-decision-profile-audit-20260926.md) y [artifact JSON](../artifacts/mica-decision-profile-20260926.json). Las trazas replay y el public231 son validaciones de artefactos upstream, no una corrida local de inferencia.
+
+### NInfer Huihui Qwen3.8 — 2026-09-26
+
+| Perfil / ID | Modelo / quant | Runtime y configuración | HE0 / HE20 / BCB | Estado y decisión |
+|---|---|---|---|---|
+| `sys-bench-ninfer3090-huihui-groupwise-mtp3-32k` | Huihui Abliterated Qwen3.8-27B, groupwise-int; SHA-256 `8c9f9d67a07ac97506978f6db6695d8074f78dec0fb80c4a85a8fb6fbedd7f03` | NInfer-3090 `0.6.1-rtx3090`; device 1; ctx 32768; KV int8; MTP3; prefill chunk 512; T0.60/P0.95/K20/min-p0/presence0. | HE0/HE20/BCB no ejecutados; warm-up no pasó. | OOM bajo primera contención GPU; repedido libre, pesos 16.67 GiB y KV cargaron, pero `gqa_attention_prefill.cu:64` falló con `cudaErrorInvalidValue`. **INFERIOR en compatibilidad operativa SM86 frente al NInfer Qwen3.8 histórico; sin score de calidad/velocidad.** |
+| `sys-bench-ninfer3090-huihui-groupwise-mtp3-vision-32k` | Mismo checkpoint, projector/visión incorporados | MTP3, KV int8, ctx 32K; settings del launcher de visión | No ejecutado; servidor falló antes de imagen | Pesos/visión (16.95 GiB) y KV cargaron; mismo `cudaErrorInvalidValue` en warm-up. Computer Use no evaluado. |
+| `sys-bench-ninfer3090-huihui-groupwise-nospec-32k` | Mismo checkpoint groupwise-int, sin MTP | Mismo ctx/KV/sampling; control pareado | No ejecutado | Pesos (15.92 GiB) y KV cargaron; mismo error en warm-up. La incompatibilidad no se limita a MTP. |
+
+Tamaño del `.ninfer`: 18.210.531.328 bytes. SHA-256 del ZIP NInfer:
+`dfa5286d2f31f7f0dc072961688b5f4b897b51d0efe848e95537ae682fa086c0`.
+GPU0 mantuvo el `llama-server` ajeno y GPU1 el proceso Mica durante el primer
+OOM; se preservaron ambos. Los reintentos de warm-up se hicieron con 23 GiB
+libres y volvieron a fallar con el mismo error. El launcher C1 de 64K también
+falló (MTP3, prefill 1024). Las cifras históricas del perfil Qwen3.8 normal
+(73–75 tok/s a 8K, 50.1/62.9 tok/s a 80K/120K y BCB 3/8) no son un A/B de
+calidad, pero muestran que el perfil Huihui probado es **operativamente
+inferior/incompatible en SM86**. Los perfiles Huihui quedan en archivo,
+`best=false`, fuera de la cola activa y con descarga automática deshabilitada.
+Artifact: [intentos de carga y warm-up](../artifacts/ninfer-huihui-qwen38-3090-20260926.json).
