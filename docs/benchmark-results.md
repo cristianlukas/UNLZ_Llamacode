@@ -10,6 +10,17 @@ por etapa— consultar el [registro detallado de perfiles](benchmark-profile-led
 
 Última actualización: 2026-09-26.
 
+## 2026-09-26 — Ternary Bonsai 2 27B (post NInfer-4090)
+
+| Perfil | Contexto / runtime | HE0 | HE20 | BCB8 | Clasificación |
+|---|---|---:|---:|---:|---|
+| `sys-bench-bonsai2-27b-pq2-64k` | 64k · PrismML b10743 · PQ2_0 · KV q8_0 · visión · 1× RTX 3090 · 12,3 GB | 1/1 · 50 s | 20/20 · 219 s · 42,6 tok/s | **2/8** · 1.361 s · 44,3 tok/s | **INFERIOR como agente; SUPERIOR en VRAM** (27B + visión en una placa; Computer Use hard 100%) |
+| NInfer-4090 Windows (post) | RTX 4090 `sm_89` only | — | — | — | **No aplicable** a RTX 3090; sin perfil |
+
+llama-bench en la 3090: pp512 1.234 / tg128 59,4 tok/s sin especulación (el
+fork rechaza MTP y no especula con ngram). No reemplaza SOL (BCB8 8/8). Ver
+[auditoría](ninfer-4090-bonsai-reddit-audit-20260926.md).
+
 ## 2026-09-26 — Candidato externo Qwen3.8-Flash-Next W4A16-FP8PLE
 
 | Perfil | Contexto / runtime | Resultado | Clasificación |

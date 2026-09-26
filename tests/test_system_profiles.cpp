@@ -87,6 +87,7 @@ private slots:
     void controller_launchMenuAnnotatesGpuAffinity();
     void bundle_48gbFamilyIsBenchmarkableAndDualGpu();
     void controller_duplicateBakesResolvedBinary();
+    void bundle_bonsaiTernaryUsesPrismBinaryAndVision();
 
 private:
     QTemporaryDir m_dir;
@@ -1994,6 +1995,64 @@ void SystemProfilesTests::controller_duplicateBakesResolvedBinary()
     QVERIFY(!dupModel.value("modelId").toString().isEmpty());
     // Sin catálogo escaneado en el test no hay religado, así que debe coincidir.
     QCOMPARE(dupModel.value("modelId").toString(), sysModel.value("modelId").toString());
+}
+
+// Ternary Bonsai (PQ2_0) sólo carga en el fork PrismML: el oficial lo rechaza o,
+// con Q2_0, genera basura sin avisar. El perfil debe resolver SIEMPRE al binario
+// con flavor prism-ternary aunque haya un oficial antes en la lista, y no puede
+// declarar MTP/ngram (el fork los acepta pero no especula con estos archivos).
+void SystemProfilesTests::bundle_bonsaiTernaryUsesPrismBinaryAndVision()
+{
+    const QString id = QStringLiteral("sys-bench-bonsai2-27b-pq2-64k");
+    QFile bundle(bundlePath());
+    QVERIFY(bundle.open(QIODevice::ReadOnly));
+    QJsonObject found;
+    for (const QJsonValue &value : QJsonDocument::fromJson(bundle.readAll()).array())
+        if (value.toObject().value(QStringLiteral("id")).toString() == id)
+            found = value.toObject();
+    QVERIFY(!found.isEmpty());
+    QVERIFY(found.value(QStringLiteral("extra")).toBool());
+    QVERIFY(found.value(QStringLiteral("manualOnly")).toBool());
+    QVERIFY(!found.value(QStringLiteral("autoCompanion")).toBool());
+    QVERIFY(found.value(QStringLiteral("vision")).toBool());
+    QCOMPARE(found.value(QStringLiteral("binaryKind")).toString(), QStringLiteral("prism-ternary"));
+    const QJsonObject model = found.value(QStringLiteral("model")).toObject();
+    QCOMPARE(model.value(QStringLiteral("quant")).toString(), QStringLiteral("PQ2_0"));
+    QCOMPARE(model.value(QStringLiteral("mmprojFile")).toString(),
+             QStringLiteral("Ternary-Bonsai-2-27B-mmproj-Q8_0.gguf"));
+    QVERIFY(!found.contains(QStringLiteral("mtp")));
+    QStringList args;
+    for (const QJsonValue &value : found.value(QStringLiteral("extraArgs")).toArray())
+        args << value.toString();
+    QVERIFY(!args.contains(QStringLiteral("--spec-type")));
+    QCOMPARE(args.value(args.indexOf(QStringLiteral("--cache-type-k")) + 1), QStringLiteral("q8_0"));
+    // KNOWN_ISSUES: el razonamiento consume el límite de salida; con menos de 16K
+    // las respuestas llegan vacías o truncadas.
+    QVERIFY(args.value(args.indexOf(QStringLiteral("--predict")) + 1).toInt() >= 16384);
+
+    const QString officialExe = m_dir.path() + QStringLiteral("/bonsai-official/llama-server.exe");
+    const QString prismExe = m_dir.path() + QStringLiteral("/prism-b10743/llama-server.exe");
+    for (const QString &p : {officialExe, prismExe}) {
+        QVERIFY(QDir().mkpath(QFileInfo(p).absolutePath()));
+        QFile f(p);
+        QVERIFY(f.open(QIODevice::WriteOnly));
+        f.write("stub");
+    }
+    AppController app;
+    const QString officialId = app.binaryRegistry()->add(
+        officialExe, QStringLiteral("b10964 CUDA"), QStringLiteral("official"),
+        QStringLiteral("cuda"), QStringLiteral("b10964"));
+    const QString prismId = app.binaryRegistry()->add(
+        prismExe, QStringLiteral("PrismML b10743"), QStringLiteral("prism-ternary"),
+        QStringLiteral("cuda"), QStringLiteral("b10743"));
+    QVERIFY(!officialId.isEmpty() && !prismId.isEmpty());
+
+    const QString dup = app.duplicateLaunchProfile(id);
+    QVERIFY(!dup.isEmpty());
+    ProfileManager *pm = app.profileManager();
+    const QVariantMap backend =
+        pm->getBackend(pm->getLaunchProfile(dup).value(QStringLiteral("backendProfileId")).toString());
+    QCOMPARE(backend.value(QStringLiteral("binaryId")).toString(), prismId);
 }
 
 void SystemProfilesTests::bundle_qwen38VariantsAreMtpVisionAndTemplated()

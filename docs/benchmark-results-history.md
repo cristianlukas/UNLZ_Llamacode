@@ -8,6 +8,28 @@ los perfiles no alcanzados. Este historial conserva además la narrativa y los
 eventos operativos; ambos documentos se complementan y no reemplazan resultados
 anteriores.
 
+## 2026-09-26 — NInfer-4090 Windows y Ternary Bonsai 2 27B (post LocalLLM)
+
+El post propone NInfer-4090 Windows (prefill int8, MTP + n-gram, KV E8) y
+Ternary Bonsai 2 27B. **El motor no corre en 2× RTX 3090**: exige compute
+capability 8.9 en CMake y en runtime, y usa FP8 `e4m3` de Ada. Sus ideas ya
+están cubiertas o en curso: MTP + n-gram existe como `draft-mtp,ngram-mod`
+(`sys-bench-qwen38-udq4-mtp3-ngram`, BCB8 8/8) y el prefill W4A8 llegó al
+upstream SM86 `ninfer-3090` el 22/09 (otra sesión evalúa el 0.6.1).
+
+Se probó localmente **Ternary Bonsai 2 27B PQ2_0** con el fork llama.cpp de
+PrismML (b10743, CUDA 12.4) en una RTX 3090: pp512 1.234 / tg128 59,4 tok/s,
+12,3 GB con visión a 64K. Computer Use v1 y hard: 100% exactitud y seguridad,
+mediana 318–445 ms. Escalera LC-H1: HE0 1/1, HE20 20/20 en 219 s, **BCB8 2/8
+en 1.361 s**.
+
+Veredicto: **`[INFERIOR agente / SUPERIOR VRAM]`**. Inferior a todo Qwen3.8
+(8/8) y a los FAST (3/8) en coding agentivo; superior en huella (27B + visión
+en una placa de 24 GB con la mitad libre). Perfil manual
+`sys-bench-bonsai2-27b-pq2-64k` y motor de catálogo `prism-ternary`.
+
+Detalle: [auditoría NInfer-4090 + Bonsai](ninfer-4090-bonsai-reddit-audit-20260926.md).
+
 ## 2026-09-26 — Qwen3.8-Flash-Next W4A16-FP8PLE de albucino
 
 El post de LocalLLM propone el checkpoint

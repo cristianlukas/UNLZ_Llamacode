@@ -60,6 +60,16 @@ Los recibos completos quedan en la estación de prueba bajo
 runner A/B fue ampliado para conservar `serverExe` por variante, y la matriz
 LID recibió `--startup-only`; ambas mejoras sí quedan versionadas en el repo.
 
+## Addendum fuera de la campaña serial — 2026-09-26 (Ternary Bonsai)
+
+| ID | Perfil | Quant / binario | HE0 | HE20 | BCB | FP | Estado |
+|---|---|---|---|---|---|---|---|
+| `sys-bench-bonsai2-27b-pq2-64k` | Ternary Bonsai 2 27B · visión · 64k · 1 GPU | PQ2_0 (2,13 bpw) + mmproj Q8_0 · KV q8_0 · PrismML `prism-b10743-adfffbe` CUDA 12.4 | 1/1 · 50 s · 24,3 | 20/20 (19) · 219 s · 42,6 | 2/8 (2) · 1.361 s · 44,3 · `quality` | `18c73c66dcdc` ×3 | complete · **inferior agente / superior VRAM** |
+
+VRAM observada por etapa: GPU0 ~10,7 GB (modelo) + GPU1 ~1,6–1,7 GB
+(escritorio/otros). El harness forzó `--reasoning off`, como en el resto de la
+campaña. Ver [auditoría](ninfer-4090-bonsai-reddit-audit-20260926.md).
+
 ## Inventario de modelos, quantizaciones y binarios
 
 | Familia | Archivo/piezas relevantes | Quant de pesos | Proyector/drafter | Build mínima declarada | Observación |
