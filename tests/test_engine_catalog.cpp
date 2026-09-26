@@ -56,6 +56,18 @@ void EngineCatalogTests::catalogIncludesSourceForks()
     QVERIFY(lid.sourceCMakeArgs.contains(QStringLiteral("-DLLAMA_USE_PREBUILT_UI=ON")));
     QVERIFY(EngineCatalog::sourceBuildDirName(lid).contains(QStringLiteral("lid-cuda")));
 
+    // Ternary Bonsai: el oficial no carga PQ2_0/PTQ1_0 -> flavor propio, nunca
+    // "official", y FA con KV cuantizado necesita FA_ALL_QUANTS.
+    const EngineCatalogEntry prism = EngineCatalog::entry(QStringLiteral("prism-ternary"));
+    QCOMPARE(prism.repo, QStringLiteral("PrismML-Eng/llama.cpp"));
+    QCOMPARE(prism.flavor, QStringLiteral("prism-ternary"));
+    QVERIFY(!prism.variants.isEmpty());
+    QVERIFY(prism.variants.first().buildFromSource);
+    QCOMPARE(prism.variants.first().gpuVendors, QStringList{QStringLiteral("nvidia")});
+    QVERIFY(prism.sourceCMakeArgs.contains(QStringLiteral("-DGGML_CUDA_FA_ALL_QUANTS=ON")));
+    QCOMPARE(prism.sourceBuildTarget, QStringLiteral("llama-server"));
+    QVERIFY(EngineCatalog::sourceBuildDirName(prism).contains(QStringLiteral("prism-ternary")));
+
     const EngineCatalogEntry official = EngineCatalog::entry(QStringLiteral("llama.cpp"));
     QVERIFY(official.variants.size() >= 3);
 
