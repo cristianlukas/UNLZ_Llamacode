@@ -194,6 +194,30 @@ de que `f16` siempre sea peor. Si un resultado histórico fue obtenido con KV
 `f16`, queda archivado como antecedente y debe repetirse con el perfil limitado a
 `q8_0` antes de usarlo para elegir un ganador.
 
+### Fidelidad de quant en corpus públicos
+
+Para comparar dos quants del mismo modelo base, se puede agregar una etapa
+aislada de perplexity sobre corpus de evaluación fijados por revisión y hash.
+El corpus público
+[agentionai/quant-fidelity-corpora](https://huggingface.co/datasets/agentionai/quant-fidelity-corpora)
+incluye mixedweb-v1, una muestra web de evaluación. Consérvala fuera de los
+datos de calibración; no se usa para crear imatrix, ajustar pesos ni elegir
+parámetros del candidato.
+
+El protocolo local puede usar mixedweb-v1 con los parámetros -c 2048,
+--chunks 60 y -b 2048, y wiki.test.raw con el protocolo WikiText existente.
+Corre candidato y control con el mismo llama.cpp, dispositivo, batch, contexto,
+caché y contenido; registra revisión del dataset, MD5/SHA-256, modelo y comando
+efectivo. Si los modelos no comparten tokenizador, no interpretes sus fragmentos
+como pares alineados.
+
+llama-perplexity sin una referencia BF16 mide PPL del propio modelo. No es KLD
+contra BF16 y no confirma ni refuta un KLD publicado. Reproducir KLD exige
+generar y conservar una base BF16 común que fije tokenización y límites de
+fragmentos. Reporta ambos resultados por separado: PPL/KLD es evidencia de
+predicción del siguiente token, no reemplaza HE0 → HE20 → BCB ni prueba coding,
+uso de tools, visión o audio. No uses un corpus privado como gate de promoción.
+
 Al crear o duplicar un perfil:
 
 1. Verificar el quant del GGUF principal, no sólo el nombre visible del perfil.

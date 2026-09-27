@@ -1,0 +1,123 @@
+{
+  "dataset": {
+    "name": "agentionai/quant-fidelity-corpora:mixedweb-v1.txt",
+    "revision": "e71c458859813276ba2881ace8e25f2b792abefe",
+    "license": "ODC-By-1.0; text derived from FineWeb/CommonCrawl",
+    "url": "https://huggingface.co/datasets/agentionai/quant-fidelity-corpora",
+    "path": "C:\\Users\\cristian\\Models\\llamacpp\\benchmark-data\\mixedweb-v1.txt",
+    "bytes": 805826,
+    "md5": "51e0045e8cabf37922aa82766a25b7b4",
+    "sha256": "efcdc8974f9e0ccd94eba18e754e266c70609c88298762ad4506cd06b2f6d87a"
+  },
+  "runtime": {
+    "build": "llama.cpp b29c606e2 (10964)",
+    "perplexity_binary": "D:\\Models\\llamacpp\\bench-runtime\\b10964\\unpacked\\llama-perplexity.exe",
+    "device": "CUDA1, one RTX 3090",
+    "parameters": {
+      "ctx": 2048,
+      "chunks": 60,
+      "batch": 2048,
+      "gpu_layers": 999,
+      "split_mode": "none",
+      "main_gpu": 0
+    }
+  },
+  "results": [
+    {
+      "name": "agention-ap-q3-k-xl",
+      "model": "D:\\Models\\llamacpp\\Qwen3.8-27B-AP-GGUF\\Qwen3.8-27B-AP-Q3_K_XL.gguf",
+      "model_bytes": 13146392480,
+      "model_sha256": "b5b35d550712f01fcaa0a982f281b7bcf47f6309c541450ca0e064c945c1c8fc",
+      "command": [
+        "D:\\Models\\llamacpp\\bench-runtime\\b10964\\unpacked\\llama-perplexity.exe",
+        "-m",
+        "D:\\Models\\llamacpp\\Qwen3.8-27B-AP-GGUF\\Qwen3.8-27B-AP-Q3_K_XL.gguf",
+        "-f",
+        "C:\\Users\\cristian\\Models\\llamacpp\\benchmark-data\\mixedweb-v1.txt",
+        "-c",
+        "2048",
+        "--chunks",
+        "60",
+        "-b",
+        "2048",
+        "-ngl",
+        "999",
+        "-dev",
+        "CUDA1",
+        "-sm",
+        "none",
+        "-mg",
+        "0"
+      ],
+      "log": "C:\\Users\\cristian\\Documents\\LlamaCode\\artifacts\\qwen38-agention-ap-local-benchmark-20260926\\ppl-mixedweb-agention-ap-q3-k-xl-cuda1.txt",
+      "exit_code": 0,
+      "elapsed_seconds": 120.234,
+      "ppl": 11.0283,
+      "ppl_error": 0.11911
+    },
+    {
+      "name": "unsloth-ud-q3-k-xl",
+      "model": "D:\\Models\\llamacpp\\Qwen3.8-27B-UD-Q3_K_XL-benchmark\\Qwen3.8-27B-UD-Q3_K_XL.gguf",
+      "model_bytes": 13146393504,
+      "model_sha256": "8c2a45ff85e7674ca185ec8eb6cdeab0e617ed9d8018caed0b64380eb2a67a5e",
+      "command": [
+        "D:\\Models\\llamacpp\\bench-runtime\\b10964\\unpacked\\llama-perplexity.exe",
+        "-m",
+        "D:\\Models\\llamacpp\\Qwen3.8-27B-UD-Q3_K_XL-benchmark\\Qwen3.8-27B-UD-Q3_K_XL.gguf",
+        "-f",
+        "C:\\Users\\cristian\\Models\\llamacpp\\benchmark-data\\mixedweb-v1.txt",
+        "-c",
+        "2048",
+        "--chunks",
+        "60",
+        "-b",
+        "2048",
+        "-ngl",
+        "999",
+        "-dev",
+        "CUDA1",
+        "-sm",
+        "none",
+        "-mg",
+        "0"
+      ],
+      "log": "C:\\Users\\cristian\\Documents\\LlamaCode\\artifacts\\qwen38-agention-ap-local-benchmark-20260926\\ppl-mixedweb-unsloth-ud-q3-k-xl-cuda1.txt",
+      "exit_code": 0,
+      "elapsed_seconds": 123.663,
+      "ppl": 11.0631,
+      "ppl_error": 0.1195
+    },
+    {
+      "name": "byteshape-iq4-xs",
+      "model": "C:\\models\\Qwen3.8-27B-ByteShape-IQ4_XS\\Qwen3.8-27B-IQ4_XS-3.84bpw.gguf",
+      "model_bytes": 13083052416,
+      "model_sha256": "89434f23dc89c5f990894e3fe9fdad19d88c370f0d3638a176f29933f218b78b",
+      "command": [
+        "D:\\Models\\llamacpp\\bench-runtime\\b10964\\unpacked\\llama-perplexity.exe",
+        "-m",
+        "C:\\models\\Qwen3.8-27B-ByteShape-IQ4_XS\\Qwen3.8-27B-IQ4_XS-3.84bpw.gguf",
+        "-f",
+        "C:\\Users\\cristian\\Models\\llamacpp\\benchmark-data\\mixedweb-v1.txt",
+        "-c",
+        "2048",
+        "--chunks",
+        "60",
+        "-b",
+        "2048",
+        "-ngl",
+        "999",
+        "-dev",
+        "CUDA1",
+        "-sm",
+        "none",
+        "-mg",
+        "0"
+      ],
+      "log": "C:\\Users\\cristian\\Documents\\LlamaCode\\artifacts\\qwen38-agention-ap-local-benchmark-20260926\\ppl-mixedweb-byteshape-iq4-xs-cuda1.txt",
+      "exit_code": 0,
+      "elapsed_seconds": 126.362,
+      "ppl": 11.102,
+      "ppl_error": 0.12025
+    }
+  ]
+}

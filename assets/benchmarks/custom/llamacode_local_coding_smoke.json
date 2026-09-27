@@ -25,7 +25,7 @@
       "prompt": "Un proceso escribe un archivo JSON usando write directo sobre el path final. Otra parte de la app lee ese mismo archivo cada vez que recibe un fileChanged. Explica el bug probable y propone una correccion concreta en no mas de 8 bullets.",
       "acceptance": {
         "expectSubstrings": [
-          "atom",
+          "atómica",
           "rename"
         ]
       }
@@ -39,7 +39,7 @@
       "acceptance": {
         "expectSubstrings": [
           "tests",
-          "validacion"
+          "validación"
         ]
       }
     }

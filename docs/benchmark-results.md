@@ -10,6 +10,17 @@ por etapa— consultar el [registro detallado de perfiles](benchmark-profile-led
 
 Última actualización: 2026-09-26.
 
+## Agention AP Q3_K_XL — estado del candidato · 2026-09-26
+
+| Perfil | Evidencia | Clasificación / decisión |
+|---|---|---|
+| sys-bench-qwen38-agention-ap-q3kxl-32k | PPL menor que UD-Q3_K_XL y ByteShape IQ4_XS en mixedweb-v1 y Wiki del proyecto; 3/3 fixture visual; Computer Use 48/48 y coding smoke 3/3, en paridad con ByteShape. Speed de AP/UD prácticamente empatada. | **SUPERIOR en PPL local**; **PARIDAD** en los smokes; sin promoción a BEST hasta HE20/BCB LC-H1. |
+
+La PPL no reproduce el KLD de la ficha, y las cifras de SOL no son una A/B con
+el mismo backend. AP es inferior en decode bruto a Qwen3.5-9B (37,16 vs 101,36
+tok/s), con una diferencia grande de tamaño. No hay mejora demostrada para
+Ingi-Charla/audio. Ver [informe local](qwen38-agention-ap-local-benchmark-20260926.md).
+
 ## 2026-09-26 — Ternary Bonsai 2 27B (post NInfer-4090)
 
 | Perfil | Contexto / runtime | HE0 | HE20 | BCB8 | Clasificación |

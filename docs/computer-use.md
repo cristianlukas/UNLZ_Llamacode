@@ -77,6 +77,24 @@ Los tests unitarios cubren hashes, stale guard, receipts, redacción y clasifica
 genérica. Los probes que interactúan con el escritorio siguen siendo opt-in para
 no mover el mouse ni cambiar el foco durante `ctest`.
 
+### Regresión visual de acción propuesta
+
+La fixture
+[computer_use_vision_settings_v1.json](../assets/benchmarks/custom/computer_use_vision_settings_v1.json)
+usa una captura sintética de ajustes y fija una llamada semántica esperada. El
+benchmark compara la comprensión de la imagen y la acción propuesta sin
+ejecutarla.
+
+Califica por separado cuatro resultados: lectura del estado visual, selección
+del target exacto, llamada estructurada y resolución/ejecución por el host. La
+suite visual no reemplaza las verificaciones UIA de snapshot fresco, política y
+receipt, ni demuestra grounding de coordenadas o generalización a otras
+aplicaciones. Añade tareas de inyección visual y layouts distintos antes de
+promover un modelo como agente visual general.
+
+El probe local reproducible y sus respuestas quedan en
+[qwen38-agention-ap-local-benchmark-20260926](../artifacts/qwen38-agention-ap-local-benchmark-20260926/).
+
 El diagnóstico y el uso de la superficie nativa se mantienen documentados en
 [`docs/harness.md`](harness.md) y
 [`docs/qa_foreground_automation.md`](qa_foreground_automation.md).

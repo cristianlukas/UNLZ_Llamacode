@@ -659,23 +659,46 @@ timings y logs de esta campaña quedan conservados bajo
 
 ## 2026-09-26 — Agention Precision Qwen3.8-27B AP-Q3_K_XL
 
-Se revisó el quant comunitario y se registró
-`sys-bench-qwen38-agention-ap-q3kxl-32k` como candidato manual con visión,
-KV Q8 y MTP apagado para aislar la cuantización. La ficha del autor reporta
-**SUPERIOR en fidelidad sobre mixedweb público** frente a UD-Q3_K_XL de igual
-tamaño: KLD 0,0250 vs. 0,0270 (−7,6%, 5σ). Reporta **INFERIOR en WikiText-2**:
-0,0359 vs. 0,0337 (+6,5% de KLD). Su tercera columna técnica usa datos internos
-no publicables y queda fuera de cualquier conclusión reproducible.
+Se descargaron y verificaron el AP-Q3_K_XL, su mmproj BF16 y el control
+UD-Q3_K_XL de Unsloth; ByteShape ya tenía su mmproj local. El corpus público
+mixedweb-v1 quedó fijado y verificado. Las corridas aisladas usaron
+llama.cpp b29c606e2 / build 10964 y CUDA1; el llama-server de PeritoSoft quedó
+intacto en CUDA0.
 
-No hubo corrida local: el AP GGUF y la referencia BF16 no están instalados, y
-ya estaba en curso un benchmark de visión con LFM2.5-VL en las GPU. Por eso el
-perfil sigue `manualOnly` y `best=false`. No hay resultado de calidad de
-coding, tools, visión, Ingi-Charla, ni comparación directa con el ByteShape
-local. Tamaño AP reportado: 12,24 GiB; ByteShape instalado: 12,18 GiB, pero
-usan tipos de quant distintos.
+| Dimensión | Resultado local | Clasificación |
+|---|---|---|
+| PPL mixedweb-v1 (60 × 2048) | AP 11,0283 ± 0,11911; UD 11,0631; ByteShape IQ4_XS 11,1020 | **SUPERIOR en PPL local** frente a ambos controles de tamaño parecido |
+| PPL Wiki del proyecto (40 × 512) | AP 6,0887 ± 0,14585; UD 6,1278; ByteShape 6,2170 | **SUPERIOR en PPL local** frente a ambos controles |
+| pp2048 / tg128, llama-bench ×3 | AP 1131,45 / 37,16; UD 1135,74 / 37,62; ByteShape 1108,86 / 36,20 tok/s | **Paridad de velocidad** con UD y ByteShape dentro de la variación |
+| Computer Use state-first + adversarial | AP y ByteShape 24/24 + 24/24; casos sensibles 8/8 + 21/21 por modelo | **Paridad** |
+| Fixture visual de ajustes | Acción semántica correcta 3/3 para AP y ByteShape | **Paridad**; no ejecuta la acción real del host |
+| Coding smoke | 3/3 para ambos después de corregir dos anclas españolas | **Paridad**; no ejecuta código ni equivale a HE20/BCB |
+| Ingi-Charla audio | Sin encoder de audio ni prueba ASR/TTS/WER | No aplica; no cambiar perfiles de voz |
+| HE0 → HE20 → BCB LC-H1 | Pendiente | Sin promoción agentiva |
 
-Protocolo, comandos reproducibles y evaluación de aplicabilidad:
-[`qwen38-agention-ap-quant-audit-20260926.md`](qwen38-agention-ap-quant-audit-20260926.md).
+PPL indica predicción del siguiente token. El análisis pareado de 60/40 bloques
+favorece AP, pero sus intervalos t son descriptivos porque los fragmentos
+consecutivos no son independientes. No se equipara PPL con KLD. La ficha del
+autor publica KLD contra BF16 y un resultado WikiText-2 desfavorable para AP;
+esta corrida no cargó la referencia BF16 y el wiki.test.raw del proyecto tiene
+otro hash, por lo que no confirma ni refuta esas cifras. El corpus técnico
+interno no se usa como gate.
+
+En throughput bruto AP es inferior a Qwen3.5-9B (37,16 vs 101,36 tok/s), pero
+el 9B pesa 5,28 GiB frente a 12,23 GiB y no es control de calidad equivalente.
+SOL tampoco se midió con el mismo backend/runtime. El perfil AP se marca
+**SUPERIOR sólo en PPL local** y **PARIDAD en los smokes agentivos**; permanece
+manualOnly, benchmark y best=false hasta HE20/BCB LC-H1.
+
+La campaña corrigió dos falsos negativos de llamacode_local_coding_smoke: las
+anclas atom y validacion no correspondían a las respuestas españolas con
+atómica y validación. Se actualizaron las anclas y se reevaluaron las respuestas
+guardadas; el score 3/3 posterior no requirió nuevas generaciones. También se
+agregó computer_use_vision_settings_v1.json para separar la propuesta visual de
+la validación del host (UIA, freshness, política y receipt).
+
+Detalle, comandos, archivos y límites: [informe de benchmark local](qwen38-agention-ap-local-benchmark-20260926.md).
+La evaluación inicial del quant queda en [auditoría Agention AP](qwen38-agention-ap-quant-audit-20260926.md).
 
 ## 2026-09-26 — Mica v0.1 4B como selector de decisiones
 

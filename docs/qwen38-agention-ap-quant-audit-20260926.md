@@ -1,5 +1,7 @@
 # Auditoría Agention Precision Qwen3.8-27B — 2026-09-26
 
+> **Actualización:** la prueba local ya se completó. AP queda superior en PPL local frente a UD-Q3_K_XL y ByteShape IQ4_XS, y empata con ByteShape en los smokes de coding y Computer Use. Ver el [informe de medición local](qwen38-agention-ap-local-benchmark-20260926.md); el estado inicial que sigue corresponde a antes de descargar los modelos.
+
 ## Decisión
 
 Se agrega el perfil manual
@@ -71,7 +73,7 @@ Registrar KLD medio y error estándar, `Same top p`, `Mean PPL(Q)`, build,
 revisión/hash de modelos y corpus. Repetir con WikiText-2 test. El corpus
 técnico no se agrega al gate hasta ser público con builder y hash.
 
-## Estado de la prueba local
+## Estado inicial antes de la prueba local
 
 No se ejecutó inferencia AP ni KLD en esta corrida: el AP GGUF y la referencia
 BF16 no están instalados, y ya estaba activo el servidor

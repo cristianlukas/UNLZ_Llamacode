@@ -4017,7 +4017,7 @@
     "best": false,
     "favorite": false,
     "autoCompanion": false,
-    "displayName": "[bench · SUPERIOR web / INFERIOR Wiki] Agention AP Q3_K_XL · 32k · visión",
+    "displayName": "[bench · SUPERIOR PPL local · PARIDAD en Computer Use] Agention AP Q3_K_XL · 32k · visión",
     "minVramGb": 24,
     "minRamGb": 32,
     "cpuOk": false,
@@ -4064,7 +4064,7 @@
     "minimumBinaryBuild": 10658,
     "contextPresets": [8192, 16384, 32768],
     "vision": true,
-    "comment": "Candidato manual, aún no medido localmente. SUPERIOR en fidelidad KLD reportada frente a UD-Q3_K_XL del mismo tamaño en mixedweb público: 0,0250 vs 0,0270 (-7,6%; 5σ). INFERIOR en WikiText-2: 0,0359 vs 0,0337 (+6,5% de KLD). La ventaja de 0,0380 vs 0,0421 (-9,9%) en texto técnico usa un corpus interno no publicable y no cuenta como verificación reproducible. Tamaño reportado 12,24 GiB; queda cerca del ByteShape local de 12,18 GiB, pero no hay comparación directa AP-vs-ByteShape ni de tareas. MTP apagado para aislar el quant; la visión está habilitada con mmproj BF16. No promover como mejor perfil hasta correr el protocolo público y LC-H1. Sin efecto demostrado en Ingi-Charla/STT/TTS. Ver docs/qwen38-agention-ap-quant-audit-20260926.md."
+    "comment": "SUPERIOR en PPL local frente a UD-Q3_K_XL y ByteShape IQ4_XS: mixedweb 11.0283 / Wiki del proyecto 6.0887, ambos menores que los controles. PARIDAD en velocidad frente a los quants 27B similares (PP/TG 1131.45/37.16 vs UD 1135.74/37.62), en coding smoke 3/3 y Computer Use 48/48 más fixture visual 3/3. INFERIOR en decode bruto frente a Qwen3.5-9B (37.16 vs 101.36 tok/s; distinta escala). HE20/BCB LC-H1 pendientes: conservar manualOnly y best=false. PPL no replica KLD BF16 ni evalúa Ingi-Charla/audio. Ver docs/qwen38-agention-ap-local-benchmark-20260926.md."
   },
     {
         "tier": "24GB-LFM25-VL3B",

@@ -1,0 +1,25 @@
+0.00.961.023 W model has unused tensor blk.64.attn_norm.weight (size = 20480 bytes) -- ignoring
+0.00.961.035 W model has unused tensor blk.64.post_attention_norm.weight (size = 20480 bytes) -- ignoring
+0.00.961.048 W model has unused tensor blk.64.attn_q.weight (size = 51609600 bytes) -- ignoring
+0.00.961.053 W model has unused tensor blk.64.attn_k.weight (size = 5570560 bytes) -- ignoring
+0.00.961.058 W model has unused tensor blk.64.attn_v.weight (size = 5570560 bytes) -- ignoring
+0.00.961.074 W model has unused tensor blk.64.attn_output.weight (size = 25804800 bytes) -- ignoring
+0.00.961.079 W model has unused tensor blk.64.attn_q_norm.weight (size = 1024 bytes) -- ignoring
+0.00.961.084 W model has unused tensor blk.64.attn_k_norm.weight (size = 1024 bytes) -- ignoring
+0.00.961.089 W model has unused tensor blk.64.ffn_gate.weight (size = 73113600 bytes) -- ignoring
+0.00.961.096 W model has unused tensor blk.64.ffn_down.weight (size = 73113600 bytes) -- ignoring
+0.00.961.101 W model has unused tensor blk.64.ffn_up.weight (size = 73113600 bytes) -- ignoring
+0.00.961.107 W model has unused tensor blk.64.nextn.eh_proj.weight (size = 43008000 bytes) -- ignoring
+0.00.961.113 W model has unused tensor blk.64.nextn.enorm.weight (size = 20480 bytes) -- ignoring
+0.00.961.118 W model has unused tensor blk.64.nextn.hnorm.weight (size = 20480 bytes) -- ignoring
+0.00.961.133 W model has unused tensor blk.64.nextn.shared_head_norm.weight (size = 20480 bytes) -- ignoring
+0.05.643.551 I cmn          init: llama threadpool init, n_threads = 16
+0.05.722.430 I 
+0.05.722.475 I system_info: n_threads = 16 (n_threads_batch = 16) / 32 | CUDA : ARCHS = 500,610,700,750,800,860,890,900 | USE_GRAPHS = 1 | FA_QUANTS = q4_0-q4_0,q8_0-q8_0,f16-f16,bf16-bf16 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | BMI2 = 1 | AVX512 = 1 | AVX512_VBMI = 1 | AVX512_VNNI = 1 | AVX512_BF16 = 1 | LLAMAFILE = 1 | OPENMP = 1 | REPACK = 1 | 
+0.05.722.484 I perplexity: tokenizing the input ..
+0.06.063.855 I perplexity: tokenization took 341.364 ms
+0.06.064.208 I perplexity: calculating perplexity over 40 chunks, n_ctx=512, batch_size=2048, n_seq=4
+0.33 minutes
+[1]4.5881,[2]6.4421,[3]6.2819,[4]6.1723,[5]6.1281,[6]6.3310,[7]6.4380,[8]7.0122,[9]7.3954,[10]7.7463,[11]7.6591,[12]7.7145,[13]8.0200,[14]7.5855,[15]7.5271,[16]7.5779,[17]7.1644,[18]7.2597,[19]7.2029,[20]7.1646,[21]6.9042,[22]6.8143,[23]6.5981,[24]6.2921,[25]6.1462,[26]5.9828,[27]5.8563,[28]5.7863,[29]5.8061,[30]5.7717,[31]5.7358,[32]5.7652,[33]5.7407,[34]5.7935,[35]5.8710,[36]6.0047,[37]6.0758,[38]6.0566,[39]6.0684,[40]6.1278,
+0.08.144.987 I perplexity: 2.08 seconds per pass - ETA 0.25.957.927 I Final estimate: PPL = 6.1278 +/- 0.14726
+
