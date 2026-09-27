@@ -1,0 +1,8 @@
+| qwen35 27B (guessed) all F32   |  12.17 GiB |    27.32 B | CUDA       | 999 |   q8_0 |   q8_0 |   1 |          pp2048 |       1755.40 ± 7.85 |
+| qwen35 27B (guessed) all F32   |  12.17 GiB |    27.32 B | CUDA       | 999 |   q8_0 |   q8_0 |   1 |           tg128 |         46.50 ± 0.01 |
+| qwen35 27B (guessed) all F32   |  12.17 GiB |    27.32 B | CUDA       | 999 |   q8_0 |   q8_0 | tensor |   1 |          pp2048 |       1524.17 ± 0.36 |
+| qwen35 27B (guessed) all F32   |  12.17 GiB |    27.32 B | CUDA       | 999 |   q8_0 |   q8_0 | tensor |   1 |           tg128 |         58.60 ± 0.28 |
+| qwen35 27B (guessed) all F32   |  12.17 GiB |    27.32 B | CUDA       | 999 |   q8_0 |   q8_0 |   1 | pp2048 @ d32768 |       1285.86 ± 3.92 |
+| qwen35 27B (guessed) all F32   |  12.17 GiB |    27.32 B | CUDA       | 999 |   q8_0 |   q8_0 |   1 |  tg128 @ d32768 |         38.03 ± 0.17 |
+| qwen35 27B (guessed) all F32   |  12.17 GiB |    27.32 B | CUDA       | 999 |   q8_0 |   q8_0 | tensor |   1 | pp2048 @ d32768 |       1246.52 ± 1.29 |
+| qwen35 27B (guessed) all F32   |  12.17 GiB |    27.32 B | CUDA       | 999 |   q8_0 |   q8_0 | tensor |   1 |  tg128 @ d32768 |         50.14 ± 0.49 |

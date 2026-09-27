@@ -1,0 +1,64 @@
+{
+ "tag": "iq4_tensor",
+ "passed": 1,
+ "total": 8,
+ "gen_s": 32.1,
+ "items": [
+  {
+   "id": "BigCodeBench/870",
+   "passed": true,
+   "elapsed_s": 3.1,
+   "completion_tokens": 303,
+   "detail": ""
+  },
+  {
+   "id": "BigCodeBench/509",
+   "passed": false,
+   "elapsed_s": 7.79,
+   "completion_tokens": 875,
+   "detail": "25'] != [\"1, ,('name', 'age')\", \"2,-,('Alice', '30[43 chars]5')\"]\n\nFirst differing element 0:\n'1, ,name,age'\n\"1, ,('name', 'age')\"\n\n- ['1, ,name,age', '2,-,Alice,30', '2,+,Alice,31', '3, ,Bob,25']\n+ [\"1, ,('name', 'age')\",\n+  \"2,-,('Alice', '30')\",\n+  \"3,+,('Alice', '31')\",\n+  \"4, ,('Bob', '25')\"]\n\n"
+  },
+  {
+   "id": "BigCodeBench/857",
+   "passed": false,
+   "elapsed_s": 2.22,
+   "completion_tokens": 236,
+   "detail": "    return func(*newargs, **newkeywargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\cristian\\AppData\\Local\\Temp\\tmprhq5kgwv\\t.py\", line 87, in test_exception_handling\n    self.assertTrue(any(\"Unable to move file\" in str(warn.message) for warn in w))\nAssertionError: False is not true\n\n"
+  },
+  {
+   "id": "BigCodeBench/310",
+   "passed": false,
+   "elapsed_s": 5.87,
+   "completion_tokens": 674,
+   "detail": "  File \"C:\\Users\\cristian\\AppData\\Local\\Temp\\tmpjal2x2k9\\t.py\", line 2\n    ```python\n    ^\nSyntaxError: invalid syntax\n"
+  },
+  {
+   "id": "BigCodeBench/800",
+   "passed": false,
+   "elapsed_s": 3.02,
+   "completion_tokens": 320,
+   "detail": "ts_z8i\\t.py\", line 102, in test_case_5\n    result = task_func(goals, penalties)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\cristian\\AppData\\Local\\Temp\\tmp_jts_z8i\\t.py\", line 41, in task_func\n    count['goals'] += goals\nTypeError: unsupported operand type(s) for +=: 'int' and 'dict'\n\n"
+  },
+  {
+   "id": "BigCodeBench/123",
+   "passed": false,
+   "elapsed_s": 2.76,
+   "completion_tokens": 262,
+   "detail": "df), 9)  # 3 rows per file\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 3 != 9\n | Traceback (most recent call last):\n  File \"C:\\Users\\cristian\\AppData\\Local\\Temp\\tmp5qx9ghs8\\t.py\", line 73, in test_list_modification\n    self.assertIn(12, my_list)\nAssertionError: 12 not found in [1, 2, 3, '12']\n\n"
+  },
+  {
+   "id": "BigCodeBench/952",
+   "passed": false,
+   "elapsed_s": 2.78,
+   "completion_tokens": 294,
+   "detail": "lected_tasks = random.sample(sanitized_tasks, n_tasks)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Python312\\Lib\\random.py\", line 430, in sample\n    raise ValueError(\"Sample larger than population or is negative\")\nValueError: Sample larger than population or is negative\n\n"
+  },
+  {
+   "id": "BigCodeBench/492",
+   "passed": false,
+   "elapsed_s": 4.58,
+   "completion_tokens": 478,
+   "detail": "^^^^^^^^^^^^^^^^\nAssertionError: ValueError not raised\n | Traceback (most recent call last):\n  File \"C:\\Users\\cristian\\AppData\\Local\\Temp\\tmpjn570u9j\\t.py\", line 123, in test_case_7\n    with self.assertRaises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: ValueError not raised\n\n"
+  }
+ ]
+}

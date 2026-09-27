@@ -1,0 +1,1 @@
+{"tag": "tensor_q8_65536", "code_tg": 119.84119985665961, "code_draft_acc": 0.8333333333333334, "narr_tg": 79.75583165744636, "narr_draft_acc": 0.4451219512195122, "tool_ok": true, "vision_answer": "GUARDAR 4821", "long_prompt_n": 26493, "long_pp": 1073.5360221318692, "long_answer": "TANGO-7731", "long_tg": 66.28112277090582, "after_long_ok": true}

@@ -1,0 +1,64 @@
+{
+ "tag": "q6_layer",
+ "passed": 1,
+ "total": 8,
+ "gen_s": 55.1,
+ "items": [
+  {
+   "id": "BigCodeBench/870",
+   "passed": true,
+   "elapsed_s": 4.79,
+   "completion_tokens": 312,
+   "detail": ""
+  },
+  {
+   "id": "BigCodeBench/509",
+   "passed": false,
+   "elapsed_s": 9.83,
+   "completion_tokens": 699,
+   "detail": "1, ,('name', 'age')\", \"2,-,('Alice', '30[43 chars]5')\"]\n\nFirst differing element 0:\n'1, ,name,age\\r'\n\"1, ,('name', 'age')\"\n\n- ['1, ,name,age\\r', '2,-,Alice,30\\r', '2,+,Alice,31\\r', '3, ,Bob,25\\r']\n+ [\"1, ,('name', 'age')\",\n+  \"2,-,('Alice', '30')\",\n+  \"3,+,('Alice', '31')\",\n+  \"4, ,('Bob', '25')\"]\n\n"
+  },
+  {
+   "id": "BigCodeBench/857",
+   "passed": false,
+   "elapsed_s": 4.26,
+   "completion_tokens": 288,
+   "detail": "    return func(*newargs, **newkeywargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\cristian\\AppData\\Local\\Temp\\tmpo9q1bs7v\\t.py\", line 95, in test_exception_handling\n    self.assertTrue(any(\"Unable to move file\" in str(warn.message) for warn in w))\nAssertionError: False is not true\n\n"
+  },
+  {
+   "id": "BigCodeBench/310",
+   "passed": false,
+   "elapsed_s": 9.88,
+   "completion_tokens": 686,
+   "detail": "e 82, in test_averages_calculation\n    self.assertEqual(actual_averages, expected_averages)\nAssertionError: Lists differ: [46.22, 171.61, 79.78] != [46.22, 171.613, 79.7818]\n\nFirst differing element 1:\n171.61\n171.613\n\n- [46.22, 171.61, 79.78]\n+ [46.22, 171.613, 79.7818]\n?               +       ++\n\n\n"
+  },
+  {
+   "id": "BigCodeBench/800",
+   "passed": false,
+   "elapsed_s": 4.6,
+   "completion_tokens": 312,
+   "detail": "zhhicy\\t.py\", line 101, in test_case_5\n    result = task_func(goals, penalties)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\cristian\\AppData\\Local\\Temp\\tmpsszhhicy\\t.py\", line 40, in task_func\n    count['goals'] += goals\nTypeError: unsupported operand type(s) for +=: 'int' and 'dict'\n\n"
+  },
+  {
+   "id": "BigCodeBench/123",
+   "passed": false,
+   "elapsed_s": 5.14,
+   "completion_tokens": 340,
+   "detail": "abv\\t.py\", line 107, in check\n    raise AssertionError(' | '.join(details))\nAssertionError: Traceback (most recent call last):\n  File \"C:\\Users\\cristian\\AppData\\Local\\Temp\\tmpykkluabv\\t.py\", line 86, in test_list_modification\n    self.assertIn(12, my_list)\nAssertionError: 12 not found in [1, 2, 3]\n\n"
+  },
+  {
+   "id": "BigCodeBench/952",
+   "passed": false,
+   "elapsed_s": 9.33,
+   "completion_tokens": 596,
+   "detail": "\n    selected_tasks = [random.choice(sanitized_tasks) for _ in range(n_tasks)]\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Python312\\Lib\\random.py\", line 347, in choice\n    raise IndexError('Cannot choose from an empty sequence')\nIndexError: Cannot choose from an empty sequence\n\n"
+  },
+  {
+   "id": "BigCodeBench/492",
+   "passed": false,
+   "elapsed_s": 7.28,
+   "completion_tokens": 484,
+   "detail": "ask_func(1631289600000, products=[\"a\", \"a\", \"b\", \"c\", \"d\"])\n  File \"C:\\Users\\cristian\\AppData\\Local\\Temp\\tmpf873owdu\\t.py\", line 39, in task_func\n    current = datetime(current.year, current.month + 1, 1)\n                       ^^^^^^^^^^^^\nAttributeError: 'NoneType' object has no attribute 'year'\n\n"
+  }
+ ]
+}

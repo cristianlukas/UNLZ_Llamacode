@@ -1,0 +1,1 @@
+{"tag": "tensor_f16_65k_nomtp", "code_tg": 51.90272231302095, "code_draft_acc": 0.0, "narr_tg": 51.56655875363527, "narr_draft_acc": 0.0, "tool_ok": true, "vision_answer": "GUARDAR 4821", "long_prompt_n": 26493, "long_pp": 1037.4719128161753, "long_answer": "TANGO-7731", "long_tg": 48.5422562811271, "after_long_ok": true}

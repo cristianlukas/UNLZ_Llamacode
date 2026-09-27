@@ -1,0 +1,1 @@
+{"tag": "layer_q8_32k", "code_tg": 77.88899187713842, "code_draft_acc": 0.8291571753986332, "narr_tg": 51.26320667107871, "narr_draft_acc": 0.4311377245508982, "long_prompt_n": 12180, "long_pp": 949.7197469035862, "long_answer": "TANGO-7731", "long_tg": 43.674559691317505, "tool_ok": true}

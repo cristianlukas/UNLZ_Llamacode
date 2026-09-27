@@ -69,6 +69,7 @@ private slots:
     void bundle_bigBangDisablesCrashyFlashAttention();
     void bundle_quantizationPolicyCapsKvAtQ8();
     void bundle_bestProfilesUseRequestedCategoryNames();
+    void bundle_tensorSplitProfilesAreDualGpuAndMemoryCapped();
 
     void controller_recommendsClosestTier();
     void controller_recommendedTierIncludesDisplayName();
@@ -2723,6 +2724,80 @@ void SystemProfilesTests::bundle_bestProfilesUseRequestedCategoryNames()
             launch.value(QStringLiteral("displayName")).toString();
         QVERIFY2(displayName.endsWith(it.value()), qPrintable(displayName));
     }
+}
+
+// `--split-mode tensor` reparte cada matmul entre las dos placas: con b10964 da
+// +31-43% de TG sobre `layer` en 2x3090, pero sólo es estable con KV q8/f16,
+// una build que soporte tensor+MTP y la caché de prompt en RAM acotada (en
+// Windows sin pagefile, WDDM cuenta la VRAM contra el commit y el default de 8 GB
+// de --cache-ram crashea al restaurar tras un prompt largo).
+void SystemProfilesTests::bundle_tensorSplitProfilesAreDualGpuAndMemoryCapped()
+{
+    QFile bundle(bundlePath());
+    QVERIFY(bundle.open(QIODevice::ReadOnly));
+    const QJsonArray profiles = QJsonDocument::fromJson(bundle.readAll()).array();
+
+    const auto argsOf = [](const QJsonObject &o) {
+        QStringList args;
+        for (const QJsonValue &a : o.value(QStringLiteral("extraArgs")).toArray())
+            args << a.toString();
+        return args;
+    };
+    const auto valueAfter = [](const QStringList &args, const QString &flag) {
+        const int i = args.indexOf(flag);
+        return i >= 0 && i + 1 < args.size() ? args.at(i + 1) : QString();
+    };
+
+    QHash<QString, QJsonObject> byId;
+    int tensorProfiles = 0;
+    for (const QJsonValue &v : profiles) {
+        const QJsonObject o = v.toObject();
+        const QString id = o.value(QStringLiteral("id")).toString();
+        byId.insert(id, o);
+        const QStringList args = argsOf(o);
+        if (valueAfter(args, QStringLiteral("--split-mode")) != QStringLiteral("tensor"))
+            continue;
+        ++tensorProfiles;
+        QVERIFY2(o.value(QStringLiteral("minVramGb")).toInt() >= 48, qPrintable(id));
+        QVERIFY2(o.value(QStringLiteral("extra")).toBool(), qPrintable(id));
+        QVERIFY2(o.value(QStringLiteral("minimumBinaryBuild")).toInt() >= 10964, qPrintable(id));
+        const QJsonObject runtime = o.value(QStringLiteral("runtime")).toObject();
+        QVERIFY2(runtime.value(QStringLiteral("flashAttn")).toBool(), qPrintable(id));
+        const QString kv = runtime.value(QStringLiteral("kv")).toString();
+        QVERIFY2(kv == QStringLiteral("q8_0") || kv == QStringLiteral("f16"), qPrintable(id));
+        QCOMPARE(valueAfter(args, QStringLiteral("--cache-type-k")), kv);
+        QCOMPARE(valueAfter(args, QStringLiteral("--cache-type-v")), kv);
+        bool ok = false;
+        const int cacheRam = valueAfter(args, QStringLiteral("--cache-ram")).toInt(&ok);
+        QVERIFY2(ok && cacheRam > 0 && cacheRam <= 2048, qPrintable(id));
+    }
+    QVERIFY(tensorProfiles >= 1);
+
+    // El candidato del A/B: mismo GGUF/MTP/visión que el ShapeLearn layer, marcado
+    // SUPERIOR pero sin BEST hasta que corra LC-H1.
+    const QJsonObject sup = byId.value(QStringLiteral("sys-bench-qwen38-byteshape-tensor-q8-mtp3-131k"));
+    QVERIFY(!sup.isEmpty());
+    QVERIFY(sup.value(QStringLiteral("benchmark")).toBool());
+    QVERIFY(!sup.value(QStringLiteral("best")).toBool());
+    QVERIFY(sup.value(QStringLiteral("vision")).toBool());
+    QVERIFY(sup.value(QStringLiteral("displayName")).toString().contains(QStringLiteral("SUPERIOR")));
+    QCOMPARE(sup.value(QStringLiteral("runtime")).toObject().value(QStringLiteral("ctx")).toInt(), 131072);
+    QCOMPARE(sup.value(QStringLiteral("model")).toObject().value(QStringLiteral("file")).toString(),
+             QStringLiteral("Qwen3.8-27B-IQ4_XS-3.84bpw.gguf"));
+    const QJsonObject mtp = sup.value(QStringLiteral("mtp")).toObject();
+    QVERIFY(mtp.value(QStringLiteral("enabled")).toBool());
+    QStringList mtpArgs;
+    for (const QJsonValue &a : mtp.value(QStringLiteral("args")).toArray()) mtpArgs << a.toString();
+    QCOMPARE(valueAfter(mtpArgs, QStringLiteral("--spec-type")), QStringLiteral("draft-mtp"));
+    QCOMPARE(valueAfter(mtpArgs, QStringLiteral("--spec-draft-n-max")), QStringLiteral("3"));
+
+    // La réplica "usá Q6" quedó más lenta y sin ganancia de BCB: historial, no cola.
+    const QJsonObject inf = byId.value(QStringLiteral("sys-bench-qwen38-27b-q6kxl-layer-mtp3-32k"));
+    QVERIFY(!inf.isEmpty());
+    QVERIFY(inf.value(QStringLiteral("manualOnly")).toBool());
+    QVERIFY(!inf.value(QStringLiteral("best")).toBool());
+    QVERIFY(inf.value(QStringLiteral("displayName")).toString().contains(QStringLiteral("INFERIOR")));
+    QCOMPARE(valueAfter(argsOf(inf), QStringLiteral("--split-mode")), QStringLiteral("layer"));
 }
 
 QTEST_MAIN(SystemProfilesTests)

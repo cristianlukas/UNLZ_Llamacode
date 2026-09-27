@@ -1,0 +1,14 @@
+ggml_cuda_init: found 2 CUDA devices (Total VRAM: 49151 MiB):
+  Device 0: NVIDIA GeForce RTX 3090, compute capability 8.6, VMM: yes, VRAM: 24575 MiB
+  Device 1: NVIDIA GeForce RTX 3090, compute capability 8.6, VMM: yes, VRAM: 24575 MiB
+load_backend: loaded CUDA backend from C:\Users\cristian\AppData\Roaming\LlamaCode\LlamaCode\tools\llama.cpp-install-20260729205117712\extract\ggml-cuda.dll
+load_backend: loaded RPC backend from C:\Users\cristian\AppData\Roaming\LlamaCode\LlamaCode\tools\llama.cpp-install-20260729205117712\extract\ggml-rpc.dll
+load_backend: loaded CPU backend from C:\Users\cristian\AppData\Roaming\LlamaCode\LlamaCode\tools\llama.cpp-install-20260729205117712\extract\ggml-cpu-zen4.dll
+| model                          |       size |     params | backend    | ngl |     sm |  fa |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | -----: | --: | --------------: | -------------------: |
+| qwen35 27B (guessed) all F32   |  12.17 GiB |    27.32 B | CUDA       | 999 |  layer |   1 |          pp2048 |      1638.31 ± 10.10 |
+| qwen35 27B (guessed) all F32   |  12.17 GiB |    27.32 B | CUDA       | 999 |  layer |   1 |           tg128 |         41.12 ± 0.14 |
+| qwen35 27B (guessed) all F32   |  12.17 GiB |    27.32 B | CUDA       | 999 | tensor |   1 |          pp2048 |      1281.09 ± 13.94 |
+| qwen35 27B (guessed) all F32   |  12.17 GiB |    27.32 B | CUDA       | 999 | tensor |   1 |           tg128 |         43.71 ± 1.65 |
+
+build: afeebe103 (10182)

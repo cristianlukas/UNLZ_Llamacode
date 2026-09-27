@@ -286,3 +286,12 @@ calidad, pero muestran que el perfil Huihui probado es **operativamente
 inferior/incompatible en SM86**. Los perfiles Huihui quedan en archivo,
 `best=false`, fuera de la cola activa y con descarga automática deshabilitada.
 Artifact: [intentos de carga y warm-up](../artifacts/ninfer-huihui-qwen38-3090-20260926.json).
+
+### Split tensor y Q6 (hilo "second 3090") — 2026-09-27
+
+| Perfil | Modelo | Configuración | Métricas | Decisión |
+|---|---|---|---|---|
+| `sys-bench-qwen38-byteshape-tensor-q8-mtp3-131k` | ByteShape Qwen3.8-27B IQ4_XS 3.84bpw + mmproj bf16 | b10964; `-sm tensor -ts 0.5,0.5`; KV q8; ctx 131072; B512/U128; MTP3; `--cache-ram 1024` | TG 119,8 código / 79,7 narrativa; PP 1.070 y TG 66,0 a 26K; BCB8 directo 1/8 · 27,3 s; CU 48/48; coding 3/3; visión 3/3 | **SUPERIOR** en TG/PP frente a layer (83,7/60,7; 858/46,8); paridad de calidad; LC-H1 pendiente |
+| `sys-bench-qwen38-27b-q6kxl-layer-mtp3-32k` | Unsloth Qwen3.8-27B UD-Q6_K_XL (25,3 GB, MTP embebido) | b10964; layer; KV q8; ctx 32768; MTP3; sin visión; `--cache-ram 1024` | TG 65,1/45,3; PP 980 y TG 46,6 a 12K; BCB8 directo 1/8 · 55,1 s. Tensor y visión a 65K: fallo de commit | **INFERIOR**; manualOnly |
+
+Artefactos: [`artifacts/reddit-dual3090-tensor-20260927`](../artifacts/reddit-dual3090-tensor-20260927/).

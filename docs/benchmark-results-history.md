@@ -8,6 +8,39 @@ los perfiles no alcanzados. Este historial conserva además la narrativa y los
 eventos operativos; ambos documentos se complementan y no reemplazan resultados
 anteriores.
 
+## 2026-09-27 — `-sm tensor` y Q6 del hilo "Just bought a second 3090"
+
+El hilo de LocalLLaMA recomienda, para dos 3090: dejar Q4 por Q6/Q8,
+`-sm tensor` en llama.cpp (densos más rápidos), vLLM TP2 con FP8 + DFlash2,
+Flash-Next con el repo de DominikBucko y un subagente dedicado en la segunda
+placa. Flash-Next/DominikBucko (128 GiB de RAM) y DFlash2 en vLLM (crash en SOL)
+ya estaban auditados. Esta vez se midió en Windows lo que faltaba.
+
+**Split tensor: SUPERIOR.** En Qwen3.8-27B ByteShape IQ4_XS con MTP3 y
+visión, b10964, tensor con KV q8 rindió 119,8/79,7 TG (código/narrativa)
+frente a 83,7/60,7 de layer, y 66,0 frente a 46,8 de decode tras 26K de
+prompt, con 1.070 frente a 858 de PP. `llama-bench` confirma +26–32% de TG y
+sólo −13% de PP en prompts cortos. El investigation doc del 2026-09-18 decía
+que tensor no admitía KV cuantizado. Con b10964 **KV q8 funciona y es la
+variante más rápida**, así que se respeta el tope Q8 de la política. La calidad
+queda en paridad: BCB8 directo 1/8 en el mismo ítem, Computer Use 48/48,
+seguridad 29/29, coding 3/3 y visión 3/3, con la latencia de visión-tool
+bajando de 0,63 a 0,51 s. Se agregó
+`sys-bench-qwen38-byteshape-tensor-q8-mtp3-131k` a la cola de benchmark.
+
+**Q6_K_XL: INFERIOR.** Con layer da 65,1/45,3 TG y el mismo 1/8 de BCB8
+directo, en 55 s. Con tensor o con visión no entra. El perfil
+`sys-bench-qwen38-27b-q6kxl-layer-mtp3-32k` queda como historial `manualOnly`.
+
+**Descubrimiento operativo.** Windows no tiene pagefile, y WDDM cuenta la VRAM
+contra el commit. Con 61,7 GiB de límite, el techo lo pone el commit y no los
+48 GB de VRAM. El default `--cache-ram` de 8 GB mata el servidor sin mensaje
+al restaurar la caché después de un prompt largo, y le pasa también al perfil
+layer 262K. `--cache-ram 1024` lo estabiliza. Además, los `taskkill` con PID de
+MSYS no matan el `llama-server` nativo: los servidores huérfanos contaminaron
+las primeras corridas, que se descartaron. Detalle y tablas:
+[`reddit-dual-3090-tensor-split-audit-20260927.md`](reddit-dual-3090-tensor-split-audit-20260927.md).
+
 ## 2026-09-26 — NInfer-4090 Windows y Ternary Bonsai 2 27B (post LocalLLM)
 
 El post propone NInfer-4090 Windows (prefill int8, MTP + n-gram, KV E8) y

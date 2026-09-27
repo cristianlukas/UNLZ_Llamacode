@@ -8,7 +8,16 @@ Para el inventario completo por perfil —incluidos descartados, bloqueados,
 retirados, binarios, quantizaciones, configuración efectiva, huellas y métricas
 por etapa— consultar el [registro detallado de perfiles](benchmark-profile-ledger-2026-08.md).
 
-Última actualización: 2026-09-26.
+Última actualización: 2026-09-27.
+
+## Split tensor en 2× RTX 3090 (hilo LocalLLaMA "second 3090") · 2026-09-27
+
+| Perfil | Evidencia (Windows, b10964, MTP3) | Clasificación / decisión |
+|---|---|---|
+| sys-bench-qwen38-byteshape-tensor-q8-mtp3-131k | Mismo GGUF ByteShape IQ4_XS + visión, `-sm tensor`, KV q8, 131K, `--cache-ram 1024`. Frente a layer q8: TG código 83,7→**119,8** (+43%), narrativa 60,7→**79,7** (+31%), decode tras 26K 46,8→**66,0** (+41%), PP a 26K 858→**1.070** (+25%). BCB8 directo 1/8 (mismo ítem), Computer Use 48/48, seguridad 29/29, coding 3/3, visión 3/3. Charla: TTFT +36 ms, respuesta total −14%. | **SUPERIOR en TG/PP con dos GPU**; **PARIDAD** de calidad. PP de prompts cortos sin caché −13%. En esta PC el techo estable es 131K por el commit de Windows sin pagefile. LC-H1 pendiente: best=false. |
+| sys-bench-qwen38-27b-q6kxl-layer-mtp3-32k | UD-Q6_K_XL, layer, KV q8, 32K, sin visión: TG 65,1/45,3; BCB8 directo 1/8 (mismo ítem) en 55 s. Con tensor o con visión a 65K no entra por commit. | **INFERIOR** en velocidad, **sin mejora de calidad medida**; manualOnly/historial. |
+
+Detalle en [`reddit-dual-3090-tensor-split-audit-20260927.md`](reddit-dual-3090-tensor-split-audit-20260927.md).
 
 ## Agention AP Q3_K_XL — estado del candidato · 2026-09-26
 

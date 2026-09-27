@@ -1,0 +1,64 @@
+{
+ "tag": "iq4_layer",
+ "passed": 1,
+ "total": 8,
+ "gen_s": 34.6,
+ "items": [
+  {
+   "id": "BigCodeBench/870",
+   "passed": true,
+   "elapsed_s": 4.43,
+   "completion_tokens": 306,
+   "detail": ""
+  },
+  {
+   "id": "BigCodeBench/509",
+   "passed": false,
+   "elapsed_s": 4.29,
+   "completion_tokens": 349,
+   "detail": "25'] != [\"1, ,('name', 'age')\", \"2,-,('Alice', '30[43 chars]5')\"]\n\nFirst differing element 0:\n'1, ,name,age'\n\"1, ,('name', 'age')\"\n\n- ['1, ,name,age', '2,-,Alice,30', '2,+,Alice,31', '3, ,Bob,25']\n+ [\"1, ,('name', 'age')\",\n+  \"2,-,('Alice', '30')\",\n+  \"3,+,('Alice', '31')\",\n+  \"4, ,('Bob', '25')\"]\n\n"
+  },
+  {
+   "id": "BigCodeBench/857",
+   "passed": false,
+   "elapsed_s": 2.75,
+   "completion_tokens": 229,
+   "detail": "    return func(*newargs, **newkeywargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\cristian\\AppData\\Local\\Temp\\tmpuljeo0mh\\t.py\", line 85, in test_exception_handling\n    self.assertTrue(any(\"Unable to move file\" in str(warn.message) for warn in w))\nAssertionError: False is not true\n\n"
+  },
+  {
+   "id": "BigCodeBench/310",
+   "passed": false,
+   "elapsed_s": 4.31,
+   "completion_tokens": 370,
+   "detail": "  File \"C:\\Users\\cristian\\AppData\\Local\\Temp\\tmpdyb3qfiw\\t.py\", line 2\n    ```python\n    ^\nSyntaxError: invalid syntax\n"
+  },
+  {
+   "id": "BigCodeBench/800",
+   "passed": false,
+   "elapsed_s": 3.7,
+   "completion_tokens": 312,
+   "detail": "h9_vns\\t.py\", line 101, in test_case_5\n    result = task_func(goals, penalties)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\cristian\\AppData\\Local\\Temp\\tmpfxh9_vns\\t.py\", line 40, in task_func\n    count['goals'] += goals\nTypeError: unsupported operand type(s) for +=: 'int' and 'dict'\n\n"
+  },
+  {
+   "id": "BigCodeBench/123",
+   "passed": false,
+   "elapsed_s": 4.08,
+   "completion_tokens": 326,
+   "detail": "py\", line 105, in check\n    raise AssertionError(' | '.join(details))\nAssertionError: Traceback (most recent call last):\n  File \"C:\\Users\\cristian\\AppData\\Local\\Temp\\tmpi4zm3d8q\\t.py\", line 84, in test_list_modification\n    self.assertIn(12, my_list)\nAssertionError: 12 not found in [1, 2, 3, '12']\n\n"
+  },
+  {
+   "id": "BigCodeBench/952",
+   "passed": false,
+   "elapsed_s": 6.59,
+   "completion_tokens": 514,
+   "detail": "a\\Local\\Temp\\tmpbg8k9p6u\\t.py\", line 135, in check\n    raise AssertionError(' | '.join(details))\nAssertionError: Traceback (most recent call last):\n  File \"C:\\Users\\cristian\\AppData\\Local\\Temp\\tmpbg8k9p6u\\t.py\", line 83, in test_case_3\n    self.assertEqual(len(df), n_tasks)\nAssertionError: 3 != 10\n\n"
+  },
+  {
+   "id": "BigCodeBench/492",
+   "passed": false,
+   "elapsed_s": 4.45,
+   "completion_tokens": 378,
+   "detail": "^^^^^^^^^^^^^^^^\nAssertionError: ValueError not raised\n | Traceback (most recent call last):\n  File \"C:\\Users\\cristian\\AppData\\Local\\Temp\\tmpj2gxtciu\\t.py\", line 108, in test_case_7\n    with self.assertRaises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: ValueError not raised\n\n"
+  }
+ ]
+}
