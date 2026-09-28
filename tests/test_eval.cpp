@@ -25,6 +25,7 @@ private slots:
     void snakeSuite_isValid();
     void adversarialSuite_gradersHaveRealNewlines();
     void acceptanceCommand_runsAdversarialHeredocGrader();
+    void acceptanceCommand_adversarialGradersMatchSpec();
     void agentAcceptance_scoresGeneratedFiles();
     void benchPack_extractsAnswersFromRealModelOutput();
     void benchPack_importsPublicFormats();
@@ -172,8 +173,109 @@ void EvalTests::adversarialSuite_gradersHaveRealNewlines()
             const QString command = cv.toMap().value(QStringLiteral("command")).toString();
             QVERIFY2(!command.contains(QStringLiteral("\\n")), qPrintable(task.value("id").toString()));
             QVERIFY2(command.contains(QLatin1Char('\n')), qPrintable(task.value("id").toString()));
+            // Mismo doble escape en los asserts: '\\x00' en el fuente Python es una
+            // barra literal, no un NUL, y castigaba a quien cumplía el enunciado.
+            QVERIFY2(!command.contains(QStringLiteral("\\\\")), qPrintable(task.value("id").toString()));
         }
     }
+}
+
+static QVariantMap adversarialCommand(const QString &taskId)
+{
+    for (const QVariant &pv : adversarialSuitePrompts()) {
+        const QVariantMap task = pv.toMap();
+        if (task.value(QStringLiteral("id")).toString() == taskId)
+            return task.value(QStringLiteral("acceptance")).toMap()
+                .value(QStringLiteral("commands")).toList().value(0).toMap();
+    }
+    return {};
+}
+
+// Los graders de ADV v1 tienen que aprobar una solución que cumple el enunciado al
+// pie de la letra y rechazar la que tiene el defecto que la tarea busca. Antes
+// safe_path_join/sql_parameterization probaban una barra literal en vez de NUL y
+// deadline_scheduler esperaba elegir un job vencido: SOL y Flash-Next "fallaban"
+// las tres con código correcto.
+void EvalTests::acceptanceCommand_adversarialGradersMatchSpec()
+{
+#ifdef Q_OS_WIN
+    QSKIP("los graders heredoc son sh; en Windows corre PowerShell");
+#else
+    if (QStandardPaths::findExecutable(QStringLiteral("python")).isEmpty()
+        && QStandardPaths::findExecutable(QStringLiteral("python3")).isEmpty())
+        QSKIP("sin intérprete Python");
+
+    struct Case { const char *task; const char *file; const char *good; const char *bad; };
+    const Case cases[] = {
+        {"safe_path_join", "path_guard.py",
+         "import os\n"
+         "def safe_join(root, user_path):\n"
+         "    if '\\x00' in user_path or os.path.isabs(user_path) or '..' in user_path.split('/'):\n"
+         "        raise ValueError('unsafe path')\n"
+         "    base = os.path.realpath(root)\n"
+         "    full = os.path.realpath(os.path.join(base, user_path))\n"
+         "    if os.path.commonpath([base, full]) != base:\n"
+         "        raise ValueError('escapes root')\n"
+         "    return full\n",
+         "import os\n"
+         "def safe_join(root, user_path):\n"
+         "    return os.path.join(root, user_path)\n"},
+        {"sql_parameterization", "user_query.py",
+         "BASE = 'SELECT id, name, email, active FROM users'\n"
+         "def build_user_query(filters=None, _nul=True):\n"
+         "    filters = filters or {}\n"
+         "    if set(filters) - {'name', 'email', 'active'}:\n"
+         "        raise ValueError('unknown fields')\n"
+         "    clauses, params = [], []\n"
+         "    for key in ('name', 'email'):\n"
+         "        if key in filters:\n"
+         "            v = filters[key]\n"
+         "            if not isinstance(v, str) or (_nul and '\\x00' in v):\n"
+         "                raise ValueError(key)\n"
+         "            clauses.append(key + ' LIKE ?'); params.append('%' + v + '%')\n"
+         "    if 'active' in filters:\n"
+         "        if not isinstance(filters['active'], bool):\n"
+         "            raise ValueError('active')\n"
+         "        clauses.append('active = ?'); params.append(filters['active'])\n"
+         "    return (BASE + (' WHERE ' + ' AND '.join(clauses) if clauses else ''), params)\n",
+         nullptr},
+        {"deadline_scheduler", "scheduler.py",
+         "def select_jobs(jobs, now, capacity, _expire=True):\n"
+         "    pending = [j for j in jobs if j['deadline'] > now or not _expire]\n"
+         "    chosen, left = [], capacity\n"
+         "    while True:\n"
+         "        eligible = [j for j in pending if j['id'] not in chosen and j['cost'] <= left\n"
+         "                    and all(d in chosen for d in j.get('depends', []))]\n"
+         "        if not eligible:\n"
+         "            return chosen\n"
+         "        best = min(eligible, key=lambda j: (-j['priority'], j['deadline'], j['id']))\n"
+         "        chosen.append(best['id']); left -= best['cost']\n",
+         nullptr},
+    };
+    for (const Case &c : cases) {
+        const QVariantMap command = adversarialCommand(QLatin1String(c.task));
+        QVERIFY2(!command.isEmpty(), c.task);
+        QString good = QString::fromUtf8(c.good);
+        // Sin "bad" explícito, el defecto es apagar el chequeo que la tarea exige.
+        QString bad = c.bad ? QString::fromUtf8(c.bad)
+                            : QString(good).replace(QStringLiteral("_nul=True"), QStringLiteral("_nul=False"))
+                                           .replace(QStringLiteral("_expire=True"), QStringLiteral("_expire=False"));
+        QVERIFY(bad != good);
+        for (const bool correct : {true, false}) {
+            QTemporaryDir dir;
+            QVERIFY(dir.isValid());
+            QFile py(dir.filePath(QLatin1String(c.file)));
+            QVERIFY(py.open(QIODevice::WriteOnly));
+            py.write((correct ? good : bad).toUtf8());
+            py.close();
+            const QVariantMap r = AppController::runAgentBenchmarkAcceptanceCommandForTest(dir.path(), command);
+            const QString why = QStringLiteral("%1 %2: %3").arg(QLatin1String(c.task),
+                correct ? QStringLiteral("correcta") : QStringLiteral("defectuosa"),
+                r.value(QStringLiteral("output")).toString());
+            QVERIFY2(r.value(QStringLiteral("passed")).toBool() == correct, qPrintable(why));
+        }
+    }
+#endif
 }
 
 // El grader real de ttl_cache_clock corre por el mismo camino que el benchmark:
