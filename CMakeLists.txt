@@ -641,7 +641,8 @@ if (BUILD_TESTS)
     # Ruta de la suite bundleada para validar el JSON real (no sólo el sample inline).
     target_compile_definitions(test_eval PRIVATE
         LC_REASONING_BIAS_JSON="${CMAKE_CURRENT_SOURCE_DIR}/assets/eval/reasoning_bias.json"
-        LC_SNAKE_SUITE_JSON="${CMAKE_CURRENT_SOURCE_DIR}/assets/eval/snake_retro_singlefile.json")
+        LC_SNAKE_SUITE_JSON="${CMAKE_CURRENT_SOURCE_DIR}/assets/eval/snake_retro_singlefile.json"
+        LC_ADV_SUITE_JSON="${CMAKE_CURRENT_SOURCE_DIR}/assets/benchmarks/custom/intelligence_adversarial_v1.json")
     add_lc_test(test_control_api        tests/test_control_api.cpp)
     add_lc_test(test_auxiliary_job_scheduler tests/test_auxiliary_job_scheduler.cpp)
     add_lc_test(test_model_role_registry tests/test_model_role_registry.cpp)

@@ -1,0 +1,180 @@
+{
+  "id": "intelligence_adversarial_v1",
+  "name": "ADV v1 - 10 tareas",
+  "description": "Suite fija de 10 tareas de implementación, razonamiento, seguridad y protocolo. Cada tarea tiene un grader oculto independiente.",
+  "source": "local-adversarial",
+  "protocolVersion": 1,
+  "recommendedPasses": 1,
+  "prompts": [
+    {
+      "id": "ttl_cache_clock",
+      "artifactFile": "ttl_cache.py",
+      "category": "stateful-coding",
+      "isSpeed": false,
+      "maxTokens": 4200,
+      "prompt": "Creá ttl_cache.py con una clase TTLCache(clock=None). Implementá set(key, value, ttl), get(key, default=None), delete(key) y __len__. clock es una función inyectable que devuelve segundos monotónicos; si no se pasa, usá time.monotonic. ttl debe ser estrictamente positivo y, si no lo es, lanzá ValueError. Una entrada expira cuando now >= expires_at; get debe eliminarla y devolver default. set reemplaza el valor y reinicia su vencimiento. __len__ no debe contar entradas vencidas y debe limpiarlas. Conservá exactamente esos nombres y verificá bordes con un reloj falso.",
+      "acceptance": {
+        "commands": [
+          {
+            "name": "hidden_ttl_cache_grader",
+            "timeoutMs": 30000,
+            "command": "python - <<'PY'\nfrom ttl_cache import TTLCache\nclass Clock:\n    def __init__(self): self.t = 10.0\n    def __call__(self): return self.t\ncx = Clock(); c = TTLCache(clock=cx)\nassert len(c) == 0\nc.set('a', 1, 2); assert c.get('a') == 1 and len(c) == 1\ncx.t = 12.0; assert c.get('a', 'missing') == 'missing' and len(c) == 0\nc.set('a', 2, 3); c.set('b', 4, 10); cx.t = 14.9; assert c.get('a') == 2 and len(c) == 2\ncx.t = 15.0; assert c.get('a', None) is None and len(c) == 1\nassert c.delete('b') is True and c.delete('b') is False\ntry: c.set('x', 1, 0)\nexcept ValueError: pass\nelse: raise AssertionError('ttl cero debe fallar')\nPY"
+          }
+        ]
+      }
+    },
+    {
+      "id": "rfc7396_merge_patch",
+      "artifactFile": "merge_patch.py",
+      "category": "semantics",
+      "isSpeed": false,
+      "maxTokens": 4200,
+      "prompt": "Creá merge_patch.py con apply_merge_patch(target, patch), siguiendo RFC 7396. Si patch no es un objeto JSON, reemplaza target por una copia profunda de patch. Si patch es un objeto, un target no-objeto se trata como {}, las claves con valor null se eliminan y las demás se aplican recursivamente; los arrays se reemplazan completos. Nunca mutés target ni patch y el resultado debe ser independiente de ambos. Mantené exactamente la firma indicada y probá objetos anidados, arrays, null y entradas primitivas.",
+      "acceptance": {
+        "commands": [
+          {
+            "name": "hidden_merge_patch_grader",
+            "timeoutMs": 30000,
+            "command": "python - <<'PY'\nfrom merge_patch import apply_merge_patch\nimport copy\ntarget = {'a': 1, 'nested': {'keep': 2, 'drop': 3}, 'arr': [1, 2]}\npatch = {'nested': {'drop': None, 'add': 4}, 'arr': [9], 'new': True}\norig_t, orig_p = copy.deepcopy(target), copy.deepcopy(patch)\nout = apply_merge_patch(target, patch)\nassert out == {'a': 1, 'nested': {'keep': 2, 'add': 4}, 'arr': [9], 'new': True}\nassert target == orig_t and patch == orig_p\nout['nested']['keep'] = 99; assert target['nested']['keep'] == 2\nassert apply_merge_patch({'a': 1}, None) is None\nassert apply_merge_patch({'a': 1}, [1, 2]) == [1, 2]\nx = {'a': 1}; y = apply_merge_patch(x, {'b': {'c': 2}}); y['b']['c'] = 7; assert 'b' not in x\nPY"
+          }
+        ]
+      }
+    },
+    {
+      "id": "stable_toposort",
+      "artifactFile": "stable_toposort.py",
+      "category": "graph-reasoning",
+      "isSpeed": false,
+      "maxTokens": 4200,
+      "prompt": "Creá stable_toposort.py con stable_toposort(nodes, edges). nodes es un iterable de nombres únicos y edges contiene pares (before, after). Devolvé un orden topológico válido y, entre los órdenes válidos, elegí siempre el lexicográficamente menor disponible en cada paso. Rechazá con ValueError los nodos repetidos, endpoints inexistentes y ciclos. No dependas del orden accidental de un set o dict. Conservá exactamente la firma y verificá un grafo con empate, un endpoint inválido y un ciclo.",
+      "acceptance": {
+        "commands": [
+          {
+            "name": "hidden_toposort_grader",
+            "timeoutMs": 30000,
+            "command": "python - <<'PY'\nfrom stable_toposort import stable_toposort\nassert stable_toposort(['d','b','a','c'], [('a','c'), ('b','c')]) == ['a','b','c','d']\nassert stable_toposort(['compile','test','package','lint'], [('compile','test'), ('test','package'), ('lint','package')]) == ['compile','lint','test','package']\nfor nodes, edges in [(['a'], [('a','x')]), (['a','b'], [('a','b'), ('b','a')]), (['a','a'], [])]:\n    try: stable_toposort(nodes, edges)\n    except ValueError: pass\n    else: raise AssertionError('caso inválido aceptado')\nPY"
+          }
+        ]
+      }
+    },
+    {
+      "id": "safe_path_join",
+      "artifactFile": "path_guard.py",
+      "category": "security",
+      "isSpeed": false,
+      "maxTokens": 4200,
+      "prompt": "Creá path_guard.py con safe_join(root, user_path). Devolvé la ruta real absoluta de user_path dentro de root, aceptando subdirectorios normales y el propio root. Rechazá ValueError para rutas absolutas, traversal con .., NUL y cualquier ruta cuyo realpath escape root; resolvé symlinks existentes antes de comprobar el límite. Usá os.path.commonpath, no una comparación textual por prefijo. Conservá exactamente la firma y no sigas enlaces que salgan del root.",
+      "acceptance": {
+        "commands": [
+          {
+            "name": "hidden_path_guard_grader",
+            "timeoutMs": 30000,
+            "command": "python - <<'PY'\nfrom path_guard import safe_join\nfrom pathlib import Path\nimport tempfile\nwith tempfile.TemporaryDirectory() as td:\n    root = Path(td) / 'root'; outside = Path(td) / 'outside'; root.mkdir(); outside.mkdir()\n    (root / 'ok.txt').write_text('ok'); (outside / 'secret.txt').write_text('no')\n    assert Path(safe_join(str(root), 'ok.txt')) == (root / 'ok.txt').resolve()\n    assert Path(safe_join(str(root), '.')) == root.resolve()\n    for bad in ('../outside/secret.txt', '/etc/passwd', 'a/../../x', 'bad\\\\x00name'):\n        try: safe_join(str(root), bad)\n        except ValueError: pass\n        else: raise AssertionError('escape aceptado: '+repr(bad))\n    link = root / 'link'\n    try: link.symlink_to(outside, target_is_directory=True)\n    except (OSError, NotImplementedError): pass\n    else:\n        try: safe_join(str(root), 'link/secret.txt')\n        except ValueError: pass\n        else: raise AssertionError('symlink fuera aceptado')\nPY"
+          }
+        ]
+      }
+    },
+    {
+      "id": "tool_call_contract",
+      "artifactFile": "tool_protocol.py",
+      "category": "tool-use-safety",
+      "isSpeed": false,
+      "maxTokens": 4200,
+      "prompt": "Creá tool_protocol.py con parse_tool_call(payload). Aceptá sólo un dict JSON con method='read_file' o method='write_file'. read_file requiere args.path; write_file requiere args.path y args.content string. Rechazá métodos desconocidos, args de tipo incorrecto, campos requeridos ausentes, rutas absolutas, traversal con .., NUL y cualquier campo extra dentro del request o args. Devolvé un nuevo dict normalizado con method y args, sin mutar payload. Lanzá ValueError con un mensaje útil para entradas inválidas.",
+      "acceptance": {
+        "commands": [
+          {
+            "name": "hidden_tool_protocol_grader",
+            "timeoutMs": 30000,
+            "command": "python - <<'PY'\nfrom tool_protocol import parse_tool_call\nimport copy\np = {'method':'write_file','args':{'path':'src/a.txt','content':'hola'}}; q = copy.deepcopy(p)\nassert parse_tool_call(p) == p and p == q\nr = parse_tool_call({'method':'read_file','args':{'path':'a/b.txt'}}); assert r == {'method':'read_file','args':{'path':'a/b.txt'}}\nfor bad in [{'method':'exec','args':{}}, {'method':'read_file','args':{}}, {'method':'read_file','args':{'path':'../x'}}, {'method':'read_file','args':{'path':'/tmp/x'}}, {'method':'write_file','args':{'path':'x','content':1}}, {'method':'read_file','args':{'path':'x','extra':1}}, {'method':'read_file','args':{'path':'x'},'extra':1}]:\n    try: parse_tool_call(bad)\n    except ValueError: pass\n    else: raise AssertionError('payload inválido aceptado: '+repr(bad))\nPY"
+          }
+        ]
+      }
+    },
+    {
+      "id": "deadline_scheduler",
+      "artifactFile": "scheduler.py",
+      "category": "constraint-reasoning",
+      "isSpeed": false,
+      "maxTokens": 4400,
+      "prompt": "Creá scheduler.py con select_jobs(jobs, now, capacity). Cada job es un dict con id string, priority entero, deadline número, cost entero positivo y optional depends lista de ids. Devolvé una lista de ids seleccionados. Excluí jobs vencidos (deadline <= now), con dependencias faltantes o no seleccionadas; respetá capacity total; entre candidatos elegibles elegí priority descendente, deadline ascendente e id ascendente; después de seleccionar un job, reevaluá dependencias y capacidad. No mutés la entrada. Jobs con dependencias cíclicas no deben bloquear los demás. Conservá exactamente la firma.",
+      "acceptance": {
+        "commands": [
+          {
+            "name": "hidden_scheduler_grader",
+            "timeoutMs": 30000,
+            "command": "python - <<'PY'\nfrom scheduler import select_jobs\njobs = [{'id':'a','priority':2,'deadline':20,'cost':2}, {'id':'b','priority':3,'deadline':30,'cost':3}, {'id':'c','priority':3,'deadline':10,'cost':1,'depends':['a']}, {'id':'d','priority':9,'deadline':5,'cost':1}, {'id':'e','priority':8,'deadline':40,'cost':1,'depends':['missing']}, {'id':'f','priority':7,'deadline':40,'cost':1,'depends':['g']}, {'id':'g','priority':7,'deadline':40,'cost':1,'depends':['f']}, {'id':'expired','priority':99,'deadline':10,'cost':1}]\nassert select_jobs(jobs, now=10, capacity=4) == ['d','a']\nassert select_jobs(jobs, now=0, capacity=7) == ['d','a','c','b']\nassert select_jobs(jobs, now=10, capacity=1) == ['d']\nPY"
+          }
+        ]
+      }
+    },
+    {
+      "id": "jsonl_audit",
+      "artifactFile": "jsonl_audit.py",
+      "category": "data-quality",
+      "isSpeed": false,
+      "maxTokens": 4200,
+      "prompt": "Creá jsonl_audit.py con summarize_jsonl(lines). Procesá un iterable de líneas JSONL: ignorá líneas vacías o de sólo espacios; cada línea no vacía debe ser un objeto con id, level y duration_ms. Devolvé {'count': cantidad válida, 'by_level': niveles ordenados alfabéticamente con cantidades, 'total_duration_ms': suma, 'p95_duration_ms': percentil 95 nearest-rank sobre duraciones válidas ordenadas, 'invalid_lines': cantidad de líneas no vacías inválidas}. Una línea con JSON válido pero tipos incorrectos es inválida completa y no suma. No mutés entradas y mantené números enteros cuando corresponda.",
+      "acceptance": {
+        "commands": [
+          {
+            "name": "hidden_jsonl_audit_grader",
+            "timeoutMs": 30000,
+            "command": "python - <<'PY'\nfrom jsonl_audit import summarize_jsonl\nimport json\nrows = [json.dumps({'id':1,'level':'WARN','duration_ms':10}), ' ', '{bad', json.dumps({'id':2,'level':'INFO','duration_ms':30}), json.dumps({'id':3,'level':'WARN','duration_ms':20}), json.dumps({'id':4,'level':'INFO','duration_ms':'40'}), json.dumps({'id':5,'level':'ERROR','duration_ms':40})]\nassert summarize_jsonl(rows) == {'count':4,'by_level':{'ERROR':1,'INFO':1,'WARN':2},'total_duration_ms':100,'p95_duration_ms':40,'invalid_lines':2}\nassert summarize_jsonl([]) == {'count':0,'by_level':{},'total_duration_ms':0,'p95_duration_ms':None,'invalid_lines':0}\nPY"
+          }
+        ]
+      }
+    },
+    {
+      "id": "config_env_resolution",
+      "artifactFile": "config_resolver.py",
+      "category": "configuration",
+      "isSpeed": false,
+      "maxTokens": 4200,
+      "prompt": "Creá config_resolver.py con resolve_config(config, env). Recibí un dict JSON-like y otro dict de variables. Devolvé una copia profunda donde cualquier string exactamente con forma $NAME se reemplace por env[NAME], y strings con interpolaciones $NAME dentro del texto reemplacen todas las variables. Resolvé recursivamente dicts y listas, preservá tipos de valores que no son strings, rechazá con KeyError la primera variable ausente y no mutés config ni env. No expandas '$' que no tenga nombre válido.",
+      "acceptance": {
+        "commands": [
+          {
+            "name": "hidden_config_resolver_grader",
+            "timeoutMs": 30000,
+            "command": "python - <<'PY'\nfrom config_resolver import resolve_config\nimport copy\ncfg = {'url':'https://$HOST/api','token':'$TOKEN','nested':[{'n':'$USER@$HOST','keep':3}], 'literal':'$9'}; env={'HOST':'example.test','TOKEN':'abc','USER':'ana'}; original=copy.deepcopy(cfg); out=resolve_config(cfg,env)\nassert out == {'url':'https://example.test/api','token':'abc','nested':[{'n':'ana@example.test','keep':3}], 'literal':'$9'}\nassert cfg == original\ntry: resolve_config({'x':'$MISSING'}, env)\nexcept KeyError as e: assert e.args[0] == 'MISSING'\nelse: raise AssertionError('missing env accepted')\nPY"
+          }
+        ]
+      }
+    },
+    {
+      "id": "deterministic_report",
+      "artifactFile": "incident_report.py",
+      "category": "multi-constraint",
+      "isSpeed": false,
+      "maxTokens": 4400,
+      "prompt": "Creá incident_report.py con build_report(events). Cada evento tiene service, severity ('critical','high','medium','low'), started_at ISO UTC con Z, resolved_at ISO UTC con Z o null, e id. Devolvé un dict con incidents ordenados por severity descendente, started_at ascendente e id ascendente; duration_minutes entero redondeado hacia arriba para resueltos y null para abiertos; open_count; critical_open_count; services como lista ordenada alfabéticamente. No mutés la entrada. Para timestamps inválidos lanzá ValueError. Usá sólo la biblioteca estándar y conservá exactamente la firma.",
+      "acceptance": {
+        "commands": [
+          {
+            "name": "hidden_incident_report_grader",
+            "timeoutMs": 30000,
+            "command": "python - <<'PY'\nfrom incident_report import build_report\nevents=[{'id':'b','service':'api','severity':'high','started_at':'2026-01-01T00:01:00Z','resolved_at':'2026-01-01T00:01:01Z'}, {'id':'a','service':'db','severity':'critical','started_at':'2026-01-01T00:00:00Z','resolved_at':None}, {'id':'c','service':'api','severity':'critical','started_at':'2026-01-01T00:00:00Z','resolved_at':'2026-01-01T00:02:01Z'}, {'id':'d','service':'web','severity':'low','started_at':'2026-01-01T00:00:00Z','resolved_at':'2026-01-01T00:00:01Z'}]\nout=build_report(events)\nassert [x['id'] for x in out['incidents']] == ['a','c','b','d']\nassert out['incidents'][1]['duration_minutes']==3 and out['incidents'][2]['duration_minutes']==1 and out['incidents'][0]['duration_minutes'] is None\nassert out['open_count']==1 and out['critical_open_count']==1 and out['services']==['api','db','web']\nPY"
+          }
+        ]
+      }
+    },
+    {
+      "id": "sql_parameterization",
+      "artifactFile": "user_query.py",
+      "category": "secure-coding",
+      "isSpeed": false,
+      "maxTokens": 4200,
+      "prompt": "Creá user_query.py con build_user_query(filters). filters es un dict opcional con name, email y active. Devolvé (sql, params), usando exactamente placeholders ? y params en el mismo orden que las cláusulas. name y email significan búsqueda contains y deben usar % + valor + %; active debe ser bool y usar igualdad. Cláusulas en orden name, email, active. La consulta base debe ser SELECT id, name, email, active FROM users; rechazá campos desconocidos, tipos incorrectos y strings con NUL con ValueError. Nunca interpolés valores en SQL ni cambies la consulta base.",
+      "acceptance": {
+        "commands": [
+          {
+            "name": "hidden_sql_grader",
+            "timeoutMs": 30000,
+            "command": "python - <<'PY'\nfrom user_query import build_user_query\nbase='SELECT id, name, email, active FROM users'\ns,p=build_user_query({'email':'a@b','name':'Ana','active':True}); assert s==base+' WHERE name LIKE ? AND email LIKE ? AND active = ?' and p==['%Ana%','%a@b%',True]\ns,p=build_user_query({}); assert s==base and p==[]\nfor bad in ({'role':'admin'},{'active':'yes'},{'name':'x\\\\x00y'}):\n try: build_user_query(bad)\n except ValueError: pass\n else: raise AssertionError('filtro inválido aceptado')\nassert 'Ana' not in build_user_query({'name':'Ana'})[0]\nPY"
+          }
+        ]
+      }
+    }
+  ]
+}

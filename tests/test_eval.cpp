@@ -2,6 +2,9 @@
 // únicas en orden, manejo de JSON inválido. Reusa el sample real del repo.
 
 #include <QtTest>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QElapsedTimer>
 #include <QStandardPaths>
 #include <QTemporaryDir>
@@ -20,6 +23,8 @@ private slots:
     void loadFromFile_roundTrip();
     void reasoningBiasSuite_isValid();
     void snakeSuite_isValid();
+    void adversarialSuite_gradersHaveRealNewlines();
+    void acceptanceCommand_runsAdversarialHeredocGrader();
     void agentAcceptance_scoresGeneratedFiles();
     void benchPack_extractsAnswersFromRealModelOutput();
     void benchPack_importsPublicFormats();
@@ -136,6 +141,97 @@ void EvalTests::snakeSuite_isValid()
         QVERIFY2(t.acceptance.contains(need), qPrintable("falta acceptance " + need));
 #else
     QSKIP("LC_SNAKE_SUITE_JSON no definido");
+#endif
+}
+
+static QVariantList adversarialSuitePrompts()
+{
+#ifdef LC_ADV_SUITE_JSON
+    QFile f(QStringLiteral(LC_ADV_SUITE_JSON));
+    if (!f.open(QIODevice::ReadOnly))
+        return {};
+    return QJsonDocument::fromJson(f.readAll()).object().value(QStringLiteral("prompts")).toArray().toVariantList();
+#else
+    return {};
+#endif
+}
+
+// Intelligence Adversarial v1: los graders son heredocs de Python. Con los saltos
+// de línea doble-escapados ("\\n" literal) sh los ve en una sola línea, falla con
+// syntax error y la suite puntúa 0/10 aunque el código del modelo sea correcto.
+void EvalTests::adversarialSuite_gradersHaveRealNewlines()
+{
+    const QVariantList prompts = adversarialSuitePrompts();
+    QCOMPARE(prompts.size(), 10);
+    for (const QVariant &pv : prompts) {
+        const QVariantMap task = pv.toMap();
+        const QVariantList commands = task.value(QStringLiteral("acceptance")).toMap()
+                                          .value(QStringLiteral("commands")).toList();
+        QVERIFY2(!commands.isEmpty(), qPrintable(task.value("id").toString()));
+        for (const QVariant &cv : commands) {
+            const QString command = cv.toMap().value(QStringLiteral("command")).toString();
+            QVERIFY2(!command.contains(QStringLiteral("\\n")), qPrintable(task.value("id").toString()));
+            QVERIFY2(command.contains(QLatin1Char('\n')), qPrintable(task.value("id").toString()));
+        }
+    }
+}
+
+// El grader real de ttl_cache_clock corre por el mismo camino que el benchmark:
+// una implementación correcta pasa y una que no expira falla. En Ubuntu no existe
+// `python`, sólo `python3`: el runner debe resolverlo solo.
+void EvalTests::acceptanceCommand_runsAdversarialHeredocGrader()
+{
+#ifdef Q_OS_WIN
+    QSKIP("los graders heredoc son sh; en Windows corre PowerShell");
+#else
+    if (QStandardPaths::findExecutable(QStringLiteral("python")).isEmpty()
+        && QStandardPaths::findExecutable(QStringLiteral("python3")).isEmpty())
+        QSKIP("sin intérprete Python");
+    QVariantMap ttlCommand;
+    for (const QVariant &pv : adversarialSuitePrompts()) {
+        const QVariantMap task = pv.toMap();
+        if (task.value(QStringLiteral("id")).toString() == QLatin1String("ttl_cache_clock"))
+            ttlCommand = task.value(QStringLiteral("acceptance")).toMap()
+                             .value(QStringLiteral("commands")).toList().value(0).toMap();
+    }
+    QVERIFY(!ttlCommand.isEmpty());
+
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    auto writeCache = [&](const QByteArray &getBody) {
+        QFile py(dir.filePath(QStringLiteral("ttl_cache.py")));
+        QVERIFY(py.open(QIODevice::WriteOnly | QIODevice::Truncate));
+        py.write("import time\n"
+                 "class TTLCache:\n"
+                 "    def __init__(self, clock=None):\n"
+                 "        self._clock = clock or time.monotonic\n"
+                 "        self._d = {}\n"
+                 "    def _purge(self):\n"
+                 "        now = self._clock()\n"
+                 "        for k in [k for k, (_, e) in self._d.items() if now >= e]:\n"
+                 "            del self._d[k]\n"
+                 "    def set(self, key, value, ttl):\n"
+                 "        if not ttl > 0:\n"
+                 "            raise ValueError('ttl')\n"
+                 "        self._d[key] = (value, self._clock() + ttl)\n"
+                 "    def get(self, key, default=None):\n" + getBody +
+                 "    def delete(self, key):\n"
+                 "        return self._d.pop(key, None) is not None\n"
+                 "    def __len__(self):\n"
+                 "        self._purge()\n"
+                 "        return len(self._d)\n");
+    };
+
+    writeCache("        self._purge()\n"
+               "        return self._d[key][0] if key in self._d else default\n");
+    const QVariantMap ok = AppController::runAgentBenchmarkAcceptanceCommandForTest(dir.path(), ttlCommand);
+    QVERIFY2(ok.value(QStringLiteral("passed")).toBool(), qPrintable(ok.value(QStringLiteral("output")).toString()));
+
+    writeCache("        return self._d[key][0] if key in self._d else default\n");  // nunca expira en get
+    const QVariantMap bad = AppController::runAgentBenchmarkAcceptanceCommandForTest(dir.path(), ttlCommand);
+    QVERIFY(!bad.value(QStringLiteral("passed")).toBool());
+    QVERIFY2(bad.value(QStringLiteral("output")).toString().contains(QStringLiteral("AssertionError")),
+             qPrintable(bad.value(QStringLiteral("output")).toString()));
 #endif
 }
 

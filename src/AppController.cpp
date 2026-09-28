@@ -107,6 +107,7 @@
 #include <QStandardPaths>
 #include <QTextStream>
 #include <QThread>
+#include <QTemporaryDir>
 #include <QTimer>
 #include <QVersionNumber>
 #include <algorithm>
@@ -126,6 +127,28 @@ bool hasOption(const QStringList &args, const QString &longName,
     }
     return false;
 }
+
+#ifndef Q_OS_WIN
+// Benchmark graders are written as `python - <<'PY' ...`, but Ubuntu only ships
+// `python3`. When `python` is missing, acceptance commands run with a private
+// PATH entry that maps `python` to `python3`. Without it every grader exits 127
+// and the task is scored as a model failure.
+QString acceptancePythonShimDir()
+{
+    static const QString dir = [] {
+        if (!QStandardPaths::findExecutable(QStringLiteral("python")).isEmpty())
+            return QString();
+        const QString python3 = QStandardPaths::findExecutable(QStringLiteral("python3"));
+        if (python3.isEmpty())
+            return QString();
+        static QTemporaryDir shim;
+        if (!shim.isValid() || !QFile::link(python3, shim.filePath(QStringLiteral("python"))))
+            return QString();
+        return shim.path();
+    }();
+    return dir;
+}
+#endif
 
 double estimateVoiceModelVramMb(const CatalogModel &model, const RuntimePreset &runtime)
 {
@@ -18600,6 +18623,59 @@ QVariantMap AppController::scoreBenchTextResponsesForTest(const QString &mode,
     return out;
 }
 
+QVariantMap AppController::runAgentBenchmarkAcceptanceCommandForTest(const QString &workspace,
+                                                                   const QVariantMap &cmd)
+{
+    QVariantMap out;
+    const QString name = cmd.value(QStringLiteral("name")).toString();
+    const QString command = cmd.value(QStringLiteral("command")).toString();
+    const int timeoutMs = qMax(1000, cmd.value(QStringLiteral("timeoutMs"), 30000).toInt());
+    const QString expectedStdout = cmd.value(QStringLiteral("expectedStdout")).toString();
+    out[QStringLiteral("name")] = name.isEmpty() ? command : name;
+    out[QStringLiteral("command")] = command;
+    out[QStringLiteral("timeoutMs")] = timeoutMs;
+
+    if (command.trimmed().isEmpty()) {
+        out[QStringLiteral("passed")] = false;
+        out[QStringLiteral("exitCode")] = -1;
+        out[QStringLiteral("output")] = QStringLiteral("Comando vacio.");
+        return out;
+    }
+
+    QProcess p;
+    p.setWorkingDirectory(workspace);
+#ifdef Q_OS_WIN
+    p.start(QStringLiteral("powershell"),
+            {QStringLiteral("-NoProfile"), QStringLiteral("-ExecutionPolicy"),
+             QStringLiteral("Bypass"), QStringLiteral("-Command"), command});
+#else
+    // Prefixed inside the script: `sh -l` sources the login profile, which may
+    // rewrite PATH after the process environment is applied.
+    const QString shimDir = acceptancePythonShimDir();
+    const QString script = shimDir.isEmpty()
+        ? command
+        : QStringLiteral("PATH='%1':\"$PATH\"; export PATH\n%2").arg(shimDir, command);
+    p.start(QStringLiteral("sh"), {QStringLiteral("-lc"), script});
+#endif
+    const bool finished = p.waitForFinished(timeoutMs);
+    if (!finished) {
+        p.kill();
+        p.waitForFinished(3000);
+    }
+    const QString stdoutText = QString::fromUtf8(p.readAllStandardOutput());
+    const QString stderrText = QString::fromUtf8(p.readAllStandardError());
+    const QString combined = (stdoutText + (stderrText.isEmpty() ? QString() : QStringLiteral("\n") + stderrText)).trimmed();
+    const bool exitOk = finished && p.exitStatus() == QProcess::NormalExit && p.exitCode() == 0;
+    const bool stdoutOk = expectedStdout.isEmpty() || combined.contains(expectedStdout);
+    out[QStringLiteral("passed")] = exitOk && stdoutOk;
+    out[QStringLiteral("exitCode")] = finished ? p.exitCode() : -1;
+    out[QStringLiteral("timedOut")] = !finished;
+    out[QStringLiteral("output")] = combined.left(12000);
+    if (!expectedStdout.isEmpty())
+        out[QStringLiteral("expectedStdout")] = expectedStdout;
+    return out;
+}
+
 QVariantMap AppController::scoreAgentBenchmarkAcceptanceForTest(const QString &workspace,
                                                                 const QString &finalText,
                                                                 const QVariantList &benchTasks,
@@ -19310,48 +19386,7 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         return n <= 0 ? 0 : (n + 3) / 4;
     };
     auto runAcceptanceCommand = [](const QString &workspace, const QVariantMap &cmd) {
-        QVariantMap out;
-        const QString name = cmd.value(QStringLiteral("name")).toString();
-        const QString command = cmd.value(QStringLiteral("command")).toString();
-        const int timeoutMs = qMax(1000, cmd.value(QStringLiteral("timeoutMs"), 30000).toInt());
-        const QString expectedStdout = cmd.value(QStringLiteral("expectedStdout")).toString();
-        out[QStringLiteral("name")] = name.isEmpty() ? command : name;
-        out[QStringLiteral("command")] = command;
-        out[QStringLiteral("timeoutMs")] = timeoutMs;
-
-        if (command.trimmed().isEmpty()) {
-            out[QStringLiteral("passed")] = false;
-            out[QStringLiteral("exitCode")] = -1;
-            out[QStringLiteral("output")] = QStringLiteral("Comando vacio.");
-            return out;
-        }
-
-        QProcess p;
-        p.setWorkingDirectory(workspace);
-#ifdef Q_OS_WIN
-        p.start(QStringLiteral("powershell"),
-                {QStringLiteral("-NoProfile"), QStringLiteral("-ExecutionPolicy"),
-                 QStringLiteral("Bypass"), QStringLiteral("-Command"), command});
-#else
-        p.start(QStringLiteral("sh"), {QStringLiteral("-lc"), command});
-#endif
-        const bool finished = p.waitForFinished(timeoutMs);
-        if (!finished) {
-            p.kill();
-            p.waitForFinished(3000);
-        }
-        const QString stdoutText = QString::fromUtf8(p.readAllStandardOutput());
-        const QString stderrText = QString::fromUtf8(p.readAllStandardError());
-        const QString combined = (stdoutText + (stderrText.isEmpty() ? QString() : QStringLiteral("\n") + stderrText)).trimmed();
-        const bool exitOk = finished && p.exitStatus() == QProcess::NormalExit && p.exitCode() == 0;
-        const bool stdoutOk = expectedStdout.isEmpty() || combined.contains(expectedStdout);
-        out[QStringLiteral("passed")] = exitOk && stdoutOk;
-        out[QStringLiteral("exitCode")] = finished ? p.exitCode() : -1;
-        out[QStringLiteral("timedOut")] = !finished;
-        out[QStringLiteral("output")] = combined.left(12000);
-        if (!expectedStdout.isEmpty())
-            out[QStringLiteral("expectedStdout")] = expectedStdout;
-        return out;
+        return runAgentBenchmarkAcceptanceCommandForTest(workspace, cmd);
     };
     QStringList prompts;
     QStringList taskIds;

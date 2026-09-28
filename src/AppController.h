@@ -1372,6 +1372,10 @@ public:
                                                             const QString &finalText,
                                                             const QVariantList &benchTasks,
                                                             const QStringList &files);
+    // Runs one acceptance `commands` entry in the workspace (sh on Unix,
+    // PowerShell on Windows) and returns {passed, exitCode, timedOut, output, ...}.
+    static QVariantMap runAgentBenchmarkAcceptanceCommandForTest(const QString &workspace,
+                                                                 const QVariantMap &cmd);
     static QString benchmarkTaskArtifactNameForTest(const QString &taskId);
     static int benchmarkStreamingDeltaForTest(QString *previous, const QString &current);
     static bool benchmarkTurnBusyForTest(const QString &message);
