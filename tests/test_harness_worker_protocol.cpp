@@ -4,6 +4,7 @@
 #include <QDir>
 #include <QSignalSpy>
 #include <QStandardPaths>
+#include <QProcess>
 
 #include "core/agent/HarnessWorkerProtocol.h"
 #include "core/agent/LlamaAgentBackend.h"
@@ -18,6 +19,7 @@ private slots:
     void sessionRejectsReuseAndStaleResults();
     void workerModuleRoundTripsAndClamps();
     void sandboxRejectsEmptyProgramAndKeepsLegacyNone();
+    void strongSandboxStartsWithWorkspaceUnderTmpfs();
     void factoryAdmitsOnlyRequestedCapabilities();
     void workerCallsAreClassifiedAsDestructive();
     void nodeWorkerDriverRoundTripsWhenAvailable();
@@ -111,6 +113,38 @@ void HarnessWorkerProtocolTests::sandboxRejectsEmptyProgramAndKeepsLegacyNone()
     QVERIFY(legacy.supported);
     QCOMPARE(legacy.backend, QStringLiteral("none"));
     QCOMPARE(legacy.program, QStringLiteral("node"));
+}
+
+void HarnessWorkerProtocolTests::strongSandboxStartsWithWorkspaceUnderTmpfs()
+{
+#ifdef Q_OS_WIN
+    QSKIP("bubblewrap strong sandbox is Unix-only");
+#else
+    HarnessSandboxPolicy policy;
+    policy.mode = QStringLiteral("strong");
+    const QString workspace = QDir::currentPath();
+    const HarnessSandboxPlan plan = HarnessSandbox::plan(
+        QStringLiteral("/bin/sh"), {QStringLiteral("-c"),
+                                    QStringLiteral("test -r README.md && test \"$PWD\" = /tmp/llamacode-workspace")},
+        workspace, policy);
+    if (!plan.supported) QSKIP(qPrintable(plan.error));
+
+    QVERIFY(plan.arguments.contains(QStringLiteral("--tmpfs")));
+    QVERIFY(plan.arguments.contains(QStringLiteral("--dir")));
+    QVERIFY(plan.arguments.contains(QStringLiteral("/tmp/llamacode-workspace")));
+
+    QProcess process;
+    process.setProgram(plan.program);
+    process.setArguments(plan.arguments);
+    process.start();
+    if (!process.waitForStarted(5000)) {
+        QSKIP(qPrintable(QStringLiteral("bubblewrap could not start: %1")
+                             .arg(process.errorString())));
+    }
+    QVERIFY2(process.waitForFinished(10000), "bubblewrap sandbox did not finish");
+    QCOMPARE(process.exitStatus(), QProcess::NormalExit);
+    QVERIFY2(process.exitCode() == 0, process.readAllStandardError().constData());
+#endif
 }
 
 void HarnessWorkerProtocolTests::factoryAdmitsOnlyRequestedCapabilities()

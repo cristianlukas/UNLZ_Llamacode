@@ -93,8 +93,10 @@ HarnessSandboxPlan HarnessSandbox::plan(const QString &program, const QStringLis
                          QStringLiteral("--proc"), QStringLiteral("/proc"),
                          QStringLiteral("--dev"), QStringLiteral("/dev"),
                          QStringLiteral("--tmpfs"), QStringLiteral("/tmp"),
-                         QStringLiteral("--bind"), workingDirectory, QStringLiteral("/workspace"),
-                         QStringLiteral("--chdir"), QStringLiteral("/workspace")};
+                         QStringLiteral("--dir"), QStringLiteral("/tmp/llamacode-workspace"),
+                         QStringLiteral("--bind"), workingDirectory,
+                         QStringLiteral("/tmp/llamacode-workspace"),
+                         QStringLiteral("--chdir"), QStringLiteral("/tmp/llamacode-workspace")};
         if (!policy.allowNetwork) out << QStringLiteral("--unshare-net");
         out << program << arguments;
         out.supported = true;
