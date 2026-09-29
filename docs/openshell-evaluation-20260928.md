@@ -73,6 +73,43 @@ atascó porque esa caché resuelve a NTFS, así que se repitió con
 `LC_TEST_BUILD_DIR=/tmp/llamacode-tests-linux`. También compiló el binario Debug
 Linux en `/tmp/llamacode-build-debug/LlamaCode`.
 
+## Pruebas de integración comparativas (2026-09-29)
+
+Se probó OpenShell `v0.1.2` localmente en Ubuntu 24.04 con Docker 29.1.3. Para
+no instalar paquetes ni registrar un servicio del sistema, se extrajo el `.deb`
+verificado a `/tmp`, se ejecutó un gateway efímero en loopback con mTLS y se
+desactivó telemetría. Se usaron imágenes Ubuntu 24.04 y una imagen temporal con
+curl. Las operaciones externas fueron GET de sólo lectura a `api.github.com`;
+la prueba POST fue detenida por la política antes de llegar al servicio.
+
+| Caso | LlamaCode / bubblewrap actual | OpenShell observado | Resultado |
+|---|---|---|---|
+| Egress predeterminado | `--unshare-net` bloqueó DNS/conexión; sin esa opción, el mismo GET devolvió HTTP 200 | GET a `api.github.com` denegado al inicio (`policy_dns_ineligible`) | OpenShell empieza en deny; LlamaCode sólo ofrece el interruptor global de red para este sandbox |
+| Egress acotado | No hay reglas por host, puerto, binario o método en el plan `strong` actual | Regla temporal para `/usr/bin/curl` a `api.github.com:443`; GET pasó y devolvió `Keep it logically awesome.` | Control granular comprobado |
+| Método HTTP | No hay enforcement HTTP L7 en `strong` | POST fue rechazado con HTTP 403 y log `HTTP:POST DENIED` bajo la regla de sólo lectura | El control de método evita escrituras aunque el host esté permitido |
+| Escritura de archivos | Root del host visible en RO; workspace montado RW | `/tmp` aceptó escritura; `/etc` rechazó escritura; canario en `/tmp/openshell-rt` del host no fue visible | El filesystem OpenShell probó aislamiento del host más fuerte en este caso; la auditoría anterior documenta la lectura RO del home con bubblewrap |
+| Límites de recursos | No hay límites de CPU/memoria demostrados en el plan actual | Sandbox solicitado con `--cpu 500m --memory 128Mi`; `docker inspect` confirmó `NanoCpus=500000000`, `Memory=134217728` | OpenShell aplicó ambos límites en el contenedor |
+| Secreto | Worker LlamaCode no tiene broker de credenciales de red | Una credencial deliberadamente falsa apareció dentro como `openshell:resolve:env:v…_LC_TEST_API_KEY`; el valor ficticio no se entregó al proceso | Marcador opaco verificado; no se hizo una llamada de red con credenciales |
+
+El gateway exigió autenticación mTLS de lanzamiento para crear sandboxes Docker;
+el intento inicial sin TLS fue rechazado. Es una condición operativa importante
+para un backend opcional: LlamaCode tendría que aprovisionar la identidad y el
+ciclo de vida del gateway de forma segura, además de traducir workspace,
+capacidades, cancelación y logs.
+
+No había un servidor de inferencia local activo en esta sesión (sin listener en
+los puertos habituales 8000, 8080 o 11434). Por eso esta campaña valida
+controles del runtime contra LlamaCode, pero no mide latencia ni calidad de un
+modelo servido por OpenShell. Tampoco se modificaron sampling, perfiles, Ingi
+Charla ni Computer Use: estos resultados no aportan evidencia sobre su calidad
+ni sobre el control semántico del desktop.
+
+Los sandboxes, el provider y el perfil temporal se eliminaron al terminar. El
+gateway, la imagen Docker de prueba y los directorios de configuración
+temporales también se limpiaron. No se cambió código de producto en esta
+campaña; la regresión de arranque bubblewrap y la compilación/test Linux quedan
+registrados arriba.
+
 ## Comparación práctica
 
 | Área | LlamaCode hoy | OpenShell (documentación consultada) | Aplicación recomendada |
