@@ -127,10 +127,10 @@ registrados arriba.
 1. Conservar los resultados de calidad de Computer Use y de modelos como
    evidencia separada de la seguridad del runtime.
 2. Corregir y probar el mountpoint de `strong` (incluido en este cambio).
-3. Antes de ampliar el uso de `strong`, cerrar y probar acceso a archivos del
-   host fuera del workspace y definir enforcement verificable para límites de
-   recursos. Si una garantía no está implementada, el perfil debe rechazarla en
-   vez de aceptarla silenciosamente.
+3. Los endurecimientos optativos añadidos el 2026-09-29 cubren el home y rutas
+   habituales de datos del usuario y aplican cgroups cuando el usuario manager
+   puede hacerlo. Mantenerlos apagados por defecto y seguir evaluando el acceso
+   a rutas del host fuera de ese conjunto antes de ofrecer un allowlist completo.
 4. Evaluar un backend OpenShell opcional para el harness de código en un host
    con Docker/Podman, sin activarlo por defecto. Comparar tareas equivalentes:
    lectura/escritura del workspace, lectura fuera del workspace, egress
@@ -139,6 +139,25 @@ registrados arriba.
    con fallo del runtime.
 5. Mantener Ingi Charla y Computer Use en el host, limitando sus tools según el
    perfil y la aprobación del usuario. No cambiar sampling ni perfiles de modelo.
+
+## Comparación de los controles optativos de LlamaCode (2026-09-29)
+
+Se comprobaron los controles nuevos sobre el runtime, y no sólo sus argumentos:
+
+| Control | LlamaCode `strong` | OpenShell probado anteriormente | Comparación |
+|---|---|---|---|
+| Archivos del usuario | Con `hideHostUserData`, un canario creado dentro de `$HOME` dejó de ser visible, mientras `README.md` del workspace siguió legible | El canario del host no era visible desde el sandbox; las escrituras en `/etc` se rechazaron | Comportamiento comprobado para estas rutas. OpenShell aplica un filesystem allowlist más completo |
+| Memoria | `systemd-run` scope activo informó `MemoryMax=134217728`; el archivo del kernel mostró `memory.max=134217728` | `docker inspect` del sandbox informó `Memory=134217728` con `--memory 128Mi` | Mismo límite efectivo: 128 MiB |
+| CPU | Scope activo informó `CPUQuotaPerSecUSec=500ms`; `cpu.max=50000 100000` | `docker inspect` informó `NanoCpus=500000000` con `--cpu 500m` | Mismo límite efectivo: medio CPU |
+| Procesos/tareas | `TasksMax=16`; `pids.max=16` | No se midió el límite de tareas en la prueba OpenShell | Verificado sólo en LlamaCode |
+| Red | Continúa siendo global: `--unshare-net` o conectividad general | GET permitido a `api.github.com` y POST rechazado con HTTP 403 mediante regla L7 | OpenShell conserva controles por host/binario/método que LlamaCode aún no ofrece |
+| Secretos | No hay proxy de credenciales del worker | El worker vio un placeholder opaco, no el valor ficticio de la clave | OpenShell conserva esta capacidad adicional |
+
+`test_harness_worker_protocol` pasó con las pruebas de ocultación de `$HOME` y
+arranque bajo cgroup; el gate Release completo pasó **77/77** y el ejecutable
+Debug Linux compiló. La campaña no forzó OOM ni saturó el cupo de tareas: los
+límites se verificaron en los archivos cgroup efectivos y se compararon con los
+valores efectivos observados en Docker/OpenShell.
 
 ## Fuentes primarias consultadas
 
