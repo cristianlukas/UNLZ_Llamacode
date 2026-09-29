@@ -298,6 +298,7 @@ public:
     // budget depende de si las tools viajan como payload nativo (reservan tokens)
     // o embebidas en texto (modo text-tools → no reservan). Ver test_agent_wire.
     void setCtxLimitForTest(int n) { m_ctxLimit = n; }
+    int ctxLimitForTest() const { return m_ctxLimit; }
     void setApiMessagesForTest(const QJsonArray &m) {
         m_apiMessages = m;
         m_transcriptMessages = m;

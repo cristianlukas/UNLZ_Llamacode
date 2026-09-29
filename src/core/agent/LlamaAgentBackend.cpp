@@ -629,7 +629,7 @@ void LlamaAgentBackend::applyHeaders(QNetworkRequest &req) const
 void LlamaAgentBackend::fetchContextLimit()
 {
     // Provider cloud: no expone /props → usar el ctx fijado en el perfil (o default).
-    if (!m_ctx.apiKey.isEmpty()) {
+    if (m_ctx.externalEndpoint || !m_ctx.apiKey.isEmpty()) {
         m_ctxLimit = m_ctx.ctxOverride > 0 ? m_ctx.ctxOverride : 32768;
         emit contextUsage(0, m_ctxLimit);
         return;

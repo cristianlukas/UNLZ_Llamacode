@@ -50,13 +50,25 @@ La campaña se corrió cuando la GPU 1 quedó libre. Strata usó una sola RTX 30
 | Tool calling OpenAI | correcto | Emitió `lookup_ticket({"ticket_id":"LC-42"})`; tras recibir una respuesta simulada, continuó el turno con estado y responsable correctos |
 | Streaming corto | TTFT 0,319 s; 180 tokens en 2,165 s | Streaming funciona; una sola medición |
 | Aguja en contexto | 3/3 | Recuperó el valor a 8,4K (12,1 s), 31,7K (23,7 s) y 109,9K (92,1 s) tokens. En esos casos el prefill medido fue 698,5, 1345,7 y 1194 tok/s |
-| BigCodeBench-Hard-8 local | 1/8 | Sólo pasó el ID 870. Los demás fallaron tests funcionales; no es un resultado apto para promover el modelo |
+| BigCodeBench-Hard-8 local, primera corrida | 1/8 | Sólo pasó el ID 870. Los demás fallaron tests funcionales; no es un resultado apto para promover el modelo |
+| BigCodeBench-Hard-8, receta conservadora completa | 1/8 | Repetición con `top_k=20`, `min_p=0`, penalizaciones neutras y `max_tokens=6144`; mismo puntaje |
+| BCB 509 con pensamiento habilitado | 0/1 | Usó 6144 tokens (88 s), todo como razonamiento, y no emitió código visible |
 
 El BCB usa los mismos ocho IDs locales que la comparación directa de UD-Q2_K_XL (20/20 HE, 8/8 BCB), pero aquí cambia la cuantización (GSQ-RCO Q2_0), el runtime y la máquina efectiva (una GPU). No es A/B controlado; la diferencia de 1/8 sí es una señal negativa que requiere resolver antes de proponer Strata para coding agentivo. El smoke corto y la prueba de aguja no compensan ese resultado.
+
+La receta del segundo BCB fijó `temperature=0.6`, `top_p=0.95`, `top_k=20`, `min_p=0`, `repetition_penalty=1`, `presence_penalty=0` y `max_tokens=6144`, con pensamiento desactivado, como el control directo previo. No cambió el puntaje. El probe con pensamiento usó los 6144 tokens antes de producir código, así que subir reasoning no mejora esta carga con esa configuración.
 
 Con el `max_tokens` corto y el pensamiento por defecto habilitado, las dos primeras peticiones del smoke terminaron en `reasoning_content` sin texto visible. Al enviar `chat_template_kwargs.enable_thinking=false`, las respuestas quedaron en `content` y el smoke pasó. El cliente debe fijar explícitamente el modo de razonamiento y un presupuesto suficiente; la compatibilidad de protocolo no garantiza resultados útiles con cualquier presupuesto.
 
 Los detalles reproducibles están en `artifacts/strata-evaluation-20260929/summary.json`, con resultados por tarea en `bcb8.json`, `coding-smoke.json` y `needle.json`.
+
+### Ruta de integración en LlamaCode
+
+LlamaCode ya puede consumir Strata como backend OpenAI-compatible de tipo `cloud`: URL base `http://127.0.0.1:8311` (sin `/v1`), modelo `qwen3.8-flash-next-q2_0` y `cloudCtx=131072`. Para un endpoint en loopback la API key es opcional. La ruta envía `tools`, `tool_choice`, streaming, `reasoning_budget` y `chat_template_kwargs`; la prueba manual confirmó tool-call y su ciclo de respuesta.
+
+La inspección encontró que, en un endpoint loopback sin key, `LlamaAgentBackend` intentaba consultar `/props` y no usaba el `cloudCtx` configurado cuando el proveedor no implementaba esa ruta. Se añadió `AgentContext.externalEndpoint` para que el backend use el límite configurado en endpoints externos incluso sin API key; una prueba de regresión verifica que no consulte `/props` y conserve 131072. La suite Linux Release quedó en 77/77.
+
+El agente de LlamaCode envía temperatura y los parámetros de razonamiento, pero no `top_k` ni `min_p` en cada request. Esos valores se deben fijar como defaults en la configuración del servidor Strata para igualar la receta de la segunda prueba. Además, como Strata serializa una solicitud por vez, el perfil LlamaCode debe declarar un solo slot para evitar paralelismo de subagentes contra un único slot del servidor.
 
 ## Evidencia local previa relacionada — no repetir
 
@@ -80,12 +92,12 @@ Referencias locales: `docs/qwen38-flash-next-gsq-rco-audit-20260915.md`,
   BF16 base; el Coder informa resultados SWE-bench/LiveCodeBench del autor, no
   BCB8 ni una corrida del harness LC-H1. Es evidencia útil para seleccionar
   candidatos, no validación de nuestra carga agentiva.
-- **Harness:** la API OpenAI-compatible completó tool-call, streaming y un ciclo
-  de herramienta de dos turnos en prueba manual. Falta la prueba del cliente y
-  las sesiones durables de LlamaCode, cancelación y preflight; sólo admite una
-  solicitud a la vez. Puede servir como candidato a proveedor externo de
-  laboratorio, no está validado para producción. La interfaz MCP de Strata no
-  reemplaza el motor de Computer Use de LlamaCode.
+- **Harness:** la ruta backend `cloud` de LlamaCode sirve para conectar con
+  Strata; se corrigió el uso de `cloudCtx` para endpoint loopback sin key. La
+  prueba cubrió el contrato OpenAI-compatible y la regresión de contexto, pero
+  todavía falta operar el agente completo contra Strata (sesiones durables,
+  cancelación y contexto largo). Sólo admite una solicitud a la vez. Puede
+  servir como candidato de laboratorio; su MCP no reemplaza Computer Use.
 - **Computer Use:** no se encontró una capacidad de desktop-control en el repo;
   sólo API, imágenes y herramientas de servidores MCP configurables. No aporta
   una mejora demostrada a `computer-usage` ni justifica cambios allí.
@@ -100,10 +112,10 @@ Referencias locales: `docs/qwen38-flash-next-gsq-rco-audit-20260915.md`,
 
 Si se quiere seguir con un backend externo, usar el checkout y los datos aislados
 ya preparados. No volver a correr el preflight ni los barridos previos del Q2.
-Primero repetir BCB8 con la receta, engine y runner exactos del control; luego
-probar la integración cliente real (cancelación, sesiones durables, error por
-límite de contexto). Sólo tras una calidad agentiva sin regresiones medir
-IQ2_XS o el modelo Coder IQ1_M. No editar perfiles para habilitarlo aún.
+El siguiente paso es probar el agente completo de LlamaCode contra Strata con
+un perfil opt-in de un solo slot y `cloudCtx=131072`, y correr el BCB8 del
+harness allí. Sólo si recupera calidad agentiva medir IQ2_XS o el modelo Coder
+IQ1_M. No editar ni activar el perfil predeterminado aún.
 
 La cuantización GSQ-RCO ya tiene resultados publicados en tareas de razonamiento
 y código, pero la evidencia local de Strata Q2_0 en coding agentivo fue débil.

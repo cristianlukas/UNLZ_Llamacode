@@ -19,6 +19,9 @@ struct AgentContext {
     // y se omite /props (el endpoint cloud no lo expone). ctxOverride fija n_ctx.
     QString apiKey;
     int     ctxOverride = 0;
+    // Endpoint externo OpenAI-compatible, incluso cuando es loopback y no usa key.
+    // Permite usar ctxOverride si el proveedor no ofrece /props.
+    bool    externalEndpoint = false;
     // Presupuesto de concurrencia del runtime local activo. El agente no intenta
     // crear más requests simultáneos que los slots realmente abiertos por server.
     int     parallelSlots = 1;

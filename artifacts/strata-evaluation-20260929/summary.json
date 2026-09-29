@@ -63,7 +63,41 @@
     "pack": "artifacts/bigcodebench-hard-ubuntu-8.json",
     "pack_sha256": "11279cde14113fc8527f141c53e14cb5ccf0dba65749081a4f914408e391c268",
     "same_task_ids_as_previous_UD_Q2_K_XL_comparison": true,
-    "caveat": "Different quantization (GSQ-RCO Q2_0 vs UD-Q2_K_XL) and runtime; same eight local task IDs, not a controlled A/B."
+    "caveat": "Different quantization (GSQ-RCO Q2_0 vs UD-Q2_K_XL) and runtime; same eight local task IDs, not a controlled A/B.",
+    "repeat_with_project_sampling": {
+      "score": "1/8",
+      "settings": {
+        "temperature": 0.6,
+        "top_p": 0.95,
+        "top_k": 20,
+        "min_p": 0.0,
+        "repetition_penalty": 1.0,
+        "presence_penalty": 0.0,
+        "max_tokens": 6144,
+        "thinking": false
+      },
+      "interpretation": "Same score as initial run; omitted sampling defaults did not explain the weak score."
+    }
   },
-  "result": "Do not promote or change the LlamaCode default/profile: the BCB8 score is weak despite API, short-smoke and context checks. See docs/strata-qwen38-audit-20260928.md."
+  "result": "Do not promote or change the LlamaCode default/profile: BCB8 remained 1/8 after aligning sampling and thinking consumed a full 6144-token budget without output. Strata is API-compatible, but its keyless loopback context handling needed a small fix.",
+  "thinking_probe": {
+    "task": "BigCodeBench/509",
+    "thinking": true,
+    "reasoning_budget": 2048,
+    "max_tokens": 6144,
+    "finish_reason": "length",
+    "completion_tokens": 6144,
+    "reasoning_chars": 25621,
+    "visible_code_chars": 0,
+    "passed": false,
+    "wall_seconds": 88.13
+  },
+  "llamacode_integration": {
+    "supported_route": "BackendProfile kind=cloud / OpenAI-compatible endpoint; local loopback can omit API key",
+    "base_url": "http://127.0.0.1:8311",
+    "model": "qwen3.8-flash-next-q2_0",
+    "cloud_ctx": 131072,
+    "fix": "AgentContext now flags external endpoints so LlamaAgentBackend uses configured cloudCtx without requiring /props when a keyless loopback endpoint does not implement /props.",
+    "validation": "Added regression test; Linux Release CTest 77/77 passed."
+  }
 }

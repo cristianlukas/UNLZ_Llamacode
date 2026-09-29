@@ -6430,6 +6430,7 @@ void AppController::startAgent(const QString &launchProfileId)
             c.modelId       = ctx.backend.cloudModel.trimmed();
             c.apiKey        = cloudKey;
             c.ctxOverride   = ctx.backend.cloudCtx;
+            c.externalEndpoint = true;
         } else {
             c.serverBaseUrl = serverBaseUrl();
             c.modelId       = routedModelId(ctx.catalogModel.id);

@@ -23,6 +23,7 @@ private slots:
     void cutsTextToolCallBurstAtSecondCall();
     void readsToolSupportFromPropsCaps();
     void fallsBackToTextToolsWhenServerRejectsNativeTools();
+    void loopbackExternalUsesConfiguredContextWithoutProps();
     void forceTextToolsSkipsNativeToolAttempt();
     void thirdIdenticalToolCallReplansWithoutExecuting();
     void stoppingDuringCompletionReleasesTurn();
@@ -481,6 +482,7 @@ void AgentWireTests::parsesNativeToolCallLeakFallback()
 class FakeToolRejectingServer : public QTcpServer
 {
 public:
+    int propsRequests = 0;
     int nativeRejects = 0;
     int textRequests = 0;
     int secondTextBodySize = 0;
@@ -508,6 +510,7 @@ protected:
             const QByteArray firstLine = headers.split('\n').value(0).trimmed();
             const QByteArray body = buf->mid(headerEnd + 4, contentLength);
             if (firstLine.startsWith("GET /props")) {
+                ++propsRequests;
                 writeJson(sock, QByteArrayLiteral("{\"n_ctx\":4096}"));
                 return;
             }
@@ -558,6 +561,27 @@ private:
         sock->disconnectFromHost();
     }
 };
+
+void AgentWireTests::loopbackExternalUsesConfiguredContextWithoutProps()
+{
+    FakeToolRejectingServer server;
+    QVERIFY(server.listen(QHostAddress::LocalHost, 0));
+
+    AgentContext ctx;
+    ctx.adapter = QStringLiteral("llamaagent");
+    ctx.serverBaseUrl = QStringLiteral("http://127.0.0.1:%1").arg(server.serverPort());
+    ctx.modelId = QStringLiteral("strata-q2_0");
+    ctx.ctxOverride = 131072;
+    ctx.externalEndpoint = true;
+
+    LlamaAgentBackend backend;
+    backend.setEphemeralSessions(true);
+    backend.start(ctx);
+
+    QCOMPARE(backend.ctxLimitForTest(), 131072);
+    QCOMPARE(server.propsRequests, 0);
+    backend.stop();
+}
 
 void AgentWireTests::fallsBackToTextToolsWhenServerRejectsNativeTools()
 {
