@@ -44,9 +44,10 @@ validado para agente; estas pruebas no señalan al enlace PCIe como cuello actua
 
 ## Comprobaciones nuevas de esta revisión
 
-Todas las comprobaciones fueron de lectura. No se escribieron registros PCIe,
-no se alteraron relojes/BIOS, no se inició una carga adicional y no se reinició
-ningún servicio.
+La inspección de topología y registros fue de lectura. En la corrida del
+2026-09-29 se inició explícitamente la transferencia CUDA descrita abajo. No se
+escribieron registros PCIe, no se alteraron relojes/BIOS ni se reinició ningún
+servicio.
 
 | Comprobación | Resultado |
 |---|---|
@@ -65,6 +66,27 @@ lecturas. La muestra fue breve y no se tomó durante una copia host↔GPU; por l
 tanto sirve sólo como control sin carga significativa. El diario empieza con
 este arranque; no hay evidencia para afirmar que nunca hubo errores históricos.
 
+### Transferencia simultánea host↔GPU — 2026-09-29
+
+Se completó la prueba que había quedado pendiente, sin servidor de inferencia
+activo. Un ejecutable CUDA temporal reservó 256 MiB de memoria host pinned y
+256 MiB por GPU. Las dos RTX 3090 transfirieron en paralelo 20 bloques por
+dirección (5,37 GB H2D y 5,37 GB D2H por GPU); se tomaron registros `LnkSta` de
+ambos root ports y endpoints cada ~0,11 s durante la corrida.
+
+| GPU | H2D simultáneo | D2H simultáneo | Enlace al inicio → estable |
+|---|---:|---:|---|
+| GPU0 | 12,09 GB/s | 12,28 GB/s | Gen4 x8 → Gen4 x8 |
+| GPU1 | 12,30 GB/s | 12,91 GB/s | Gen2 x8 → Gen4 x8 en las primeras ~0,23 s |
+
+La corrida terminó con `failures=0`. De los 15 muestreos, los dos primeros
+capturaron GPU1 en Gen2; los otros 13 mostraron Gen4 x8 en ambos extremos. En
+ninguno apareció el bit de entrenamiento. No aparecieron nuevos Xid/AER en el
+diario del kernel. La resolución temporal de ~0,11 s no descarta un evento más
+corto entre muestras; sí confirma que ambos enlaces sostuvieron transferencia
+concurrente a más de 12 GB/s sin falla visible. Es rendimiento de copia
+host↔GPU, no una medición de allreduce ni de tokens/s.
+
 El C++ de `HardwareDiagnostics` ya recoge generación/ancho publicados por
 `nvidia-smi`, topología y estado P2P; la política existente recomienda `layer`
 cuando el enlace es débil o desconocido. No falta una capacidad general que
@@ -74,20 +96,22 @@ justifique una modificación de código para este post.
 
 - **Ya cubierto:** `nvidia-smi topo -m`, P2P read/write, inspección de root
   ports, capacidad/ancho PCIe, A/B por capas con y sin P2P, intento de tensor
-  split y muestreo de `LnkSta` en reposo en ambos extremos (12 × 1 s).
+  split, muestreo de `LnkSta` en reposo (12 × 1 s) y una transferencia pinned
+  host↔GPU concurrente de 5,37 GB por dirección/placa con muestreo durante la
+  carga (15 muestras).
 - **No repetir sin un síntoma nuevo:** la matriz de P2P y el benchmark de
   `split-mode layer` anterior; no responden a una hipótesis distinta y ya están
   registrados en las auditorías enlazadas.
-- **No realizado aquí:** test de copia pinned-memory host↔GPU, stress simultáneo,
-  locks Gen3/Gen4, deshabilitar cambios autónomos, ni prueba de overnight. No
-  corresponden sin indicios de retraining y requieren actividad/cambios del
-  dispositivo. El artículo no aporta motivo para escribir esos registros en
-  esta máquina.
+- **No realizado aquí:** stress prolongado, locks Gen3/Gen4, deshabilitar
+  cambios autónomos ni prueba overnight. No corresponden sin indicios de
+  retraining y los locks requieren escribir registros del dispositivo. El
+  artículo no aporta motivo para hacerlo en esta máquina.
 - **Condición para reabrir:** un timeout/Xid/reset nuevo, una carga que se
   cuelgue al inicializar o evidencia de retraining bajo una carga normal. En ese
   caso se registra primero hora, BDF/root port y estado simultáneo de ambos
-  extremos durante la falla; luego se corre una copia host↔GPU controlada y se
-  compara throughput/log antes de probar un cambio reversible, uno a la vez.
+  extremos durante la falla; la copia host↔GPU de esta auditoría queda como
+  baseline y sólo se repite para comparar contra el síntoma. Antes de cualquier
+  cambio reversible se compara throughput/log, uno a la vez.
 
 ## Fuentes
 
