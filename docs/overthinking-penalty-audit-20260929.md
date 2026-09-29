@@ -72,6 +72,37 @@ este build de llama.cpp ignora. La corrida válida usa `reasoning_budget_tokens`
 y etiquetas `<think>`/`</think>` explícitas; una solicitud de control confirmó
 que el sampler aplicó el límite. No se usan las métricas del primer ensayo.
 
+## Repetición con modelo pesado Qwen3.8-27B — 2026-09-29
+
+Se repitió el mismo corpus y el mismo diseño factorial sobre el checkpoint local
+Qwen3.8-27B UD-Q6_K_XL, con `llama.cpp` en 2× RTX 3090 y split por capas.
+Config: contexto 8K, reasoning activo con tope de 256 tokens, `temp=0.6`,
+`top_p=0.95`, `top_k=20`; tres pasadas, semillas 11/42/77, requests
+intercalados. La corrida guardó 216 respuestas y todas terminaron normalmente.
+
+El archivo Q6 tiene SHA-256
+`701d8fa9ed214ab21bfc130cd2a7df19ca89bbef7713e2dfb19f3c63696aa917`.
+Runtime: build local `llama.cpp` commit `c28d538`. No se cargó mmproj ni MTP.
+El reporte completo está en
+[`artifacts/overthinking-penalty-qwen38-27b-q6-computer-use-20260929.json`](../artifacts/overthinking-penalty-qwen38-27b-q6-computer-use-20260929.json).
+
+| Variante | Correctas | Seguridad | Respuesta exacta | Mediana latencia | Mediana tokens generados | Mediana chars de thinking |
+|---|---:|---:|---:|---:|---:|---:|
+| Sin sesgo | 72/72 (100%) | 63/63 (100%) | 100% | 4.731 ms | 110 | 463,5 |
+| Penalización −0,5 | 72/72 (100%) | 63/63 (100%) | 100% | 4.708 ms | 110 | 463,5 |
+| Penalización −1,0 | 72/72 (100%) | 63/63 (100%) | 100% | 4.694 ms | 110 | 463,5 |
+
+El corpus quedó en techo en las tres condiciones: la penalización no rescató ni
+perjudicó decisiones y no acortó la generación. La diferencia de latencia fue
+menor al 1% y no constituye una mejora demostrada.
+
+Esta prueba es del modelo pesado, pero **no del runtime exacto de SOL**: el SOL
+guardado usa vLLM con MTP y no había servidor activo. La versión actual de vLLM
+rechaza requests con `logit_bias` cuando speculative decoding está habilitado;
+por eso no se puede aplicar el sesgo a SOL sin desactivar MTP o cambiar el
+runtime ([vLLM #50217](https://github.com/vllm-project/vllm/issues/50217)). La
+cuantización Q6 y `llama.cpp` sin MTP también difieren de la receta de SOL.
+
 ## Decisión
 
 - **No se cambia ningún perfil ni el sampling general.** El A/B válido no mostró
@@ -86,8 +117,12 @@ que el sampler aplicó el límite. No se usan las métricas del primer ensayo.
   otra arquitectura/runtime con speculative decoding y sólo hay análisis de
   trazas, no A/B de penalización en ejecución. La corrida local usa Qwen3.5-9B
   sin speculative decoding.
+- **Tampoco se cambia SOL.** El Qwen3.8-27B Q6 local quedó perfecto en el corpus
+  con y sin sesgo y no ahorró tokens. Además, vLLM/MTP rechaza el parámetro en
+  este momento; la prueba local no demuestra que valga la pena sacrificar MTP.
 
-La prueba queda registrada como no promotora. Para reabrir la decisión hace
-falta una A/B pareada sobre el perfil/runtime objetivo de Flash-Next y tareas
+Las dos pruebas quedan registradas como no promotoras. Para reabrir la decisión
+hace falta una A/B sobre una ruta compatible con el runtime objetivo y tareas
 agentivas reales con receipts, separando el thinking de las llamadas de tools;
-volver a correr MATH-500 con la lista de 50 palabras no respondería esa pregunta.
+volver a correr MATH-500 con la lista global de 50 palabras no respondería esa
+pregunta.
