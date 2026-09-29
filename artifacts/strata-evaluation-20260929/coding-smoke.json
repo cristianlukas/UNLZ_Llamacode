@@ -1,0 +1,47 @@
+[
+  {
+    "id": "python_parse_logs",
+    "seconds": 2.75,
+    "finish_reason": "stop",
+    "usage": {
+      "prompt_tokens": 99,
+      "completion_tokens": 214,
+      "total_tokens": 313
+    },
+    "checks": {
+      "def summarize_logs": true,
+      "return": true
+    },
+    "content": "```python\ndef summarize_logs(lines):\n    from collections import Counter\n    \n    level_counts = {\"INFO\": 0, \"WARN\": 0, \"ERROR\": 0}\n    word_counter = Counter()\n    \n    for line in lines:\n        parts = line.split()\n        if len(parts) < 3:\n            continue\n        \n        # Extract level (second token) and message (remaining tokens after level)\n        level = parts[1]\n        if level in level_counts:\n            level_counts[level] += 1\n        \n        # Message words: everything after the level token\n        message_words = parts[2:]\n        for word in message_words:\n            word_lower = word.lower()\n            if word_lower:\n                word_counter[word_lower] += 1\n    \n    top_words = [word for word, _ in word_counter.most_common(3)]\n    \n    return {\n        \"level_counts\": level_counts,\n        \"top_words\": top_words\n    }\n```"
+  },
+  {
+    "id": "debug_race_condition",
+    "seconds": 4.55,
+    "finish_reason": "stop",
+    "usage": {
+      "prompt_tokens": 62,
+      "completion_tokens": 279,
+      "total_tokens": 341
+    },
+    "checks": {
+      "atómica": true,
+      "rename": true
+    },
+    "content": "El bug probable es una **condición de carrera (race condition)**: el lector puede abrir el archivo mientras el escritor está en medio de la escritura, obteniendo un JSON incompleto o corrupto.\n\n*   **Problema:** `write` directo no es atómico; el lector ve un archivo parcial o vacío.\n*   **Corrección:** Escribir a un archivo temporal (`file.tmp`) en el mismo directorio.\n*   **Finalización:** Renombrar el archivo temporal al nombre final usando `rename` (operación atómica en sistemas de archivos).\n*   **Sincronización:** Asegurar que el `rename` ocurra solo después de cerrar el descriptor del archivo temporal.\n*   **Lógica del lector:** El evento `fileChanged` debe dispararse solo tras el `rename`, no durante la escritura.\n*   **Manejo de errores:** Si el `rename` falla, eliminar el archivo temporal y no notificar al lector.\n*   **Alternativa:** Usar un lock de archivo o una señal de \"listo\" (ej. un segundo archivo `.ready`) si el sistema de archivos no soporta renames atómicos.\n*   **Validación:** El lector debe verificar la integridad del JSON antes de procesarlo, como defensa adicional."
+  },
+  {
+    "id": "small_refactor_plan",
+    "seconds": 7.14,
+    "finish_reason": "length",
+    "usage": {
+      "prompt_tokens": 62,
+      "completion_tokens": 500,
+      "total_tokens": 562
+    },
+    "checks": {
+      "tests": true,
+      "validación": true
+    },
+    "content": "El problema principal de un método de 250 líneas que mezcla estas cuatro responsabilidades es la **alta acoplación** y la **imposibilidad de testear** de forma aislada. El refactor debe seguir el principio de *separación de responsabilidades* (SRP) y la *inversión de dependencias*.\n\nAquí tienes un plan de refactor incremental, directo y accionable:\n\n### 1. Estrategia de Refactor (Incremental)\n\n**Paso 1: Identificar y aislar la lógica de negocio (Parseo y Validación)**\n*   **Acción:** Extrae la lógica de parseo JSON y validación en una clase o función pura (`JsonParser` o `DataValidator`).\n*   **Por qué:** Esta lógica no depende de la UI ni de la IO. Es la más fácil de testear.\n*   **Test:** Unit tests con inputs JSON fijos (validos, inválidos, edge cases).\n\n**Paso 2: Separar la IO (Lectura/Escritura)**\n*   **Acción:** Crea una interfaz `DataRepository` o `FileIO` que encapsule la lectura del archivo o la recepción de datos.\n*   **Por qué:** Permite mockear la IO en los tests.\n*   **Test:** Tests de integración con mocks de la IO (ej. `std::stringstream` o un mock de `std::ifstream`).\n\n**Paso 3: Separar la UI (Actualización de interfaz)**\n*   **Acción:** Crea una clase `UIController` o `View` que reciba los datos ya validados y parseados.\n*   **Por qué:** La UI no debe conocer el formato JSON ni la lógica de validación. Solo recibe un modelo de datos limpio.\n*   **Test:** Tests de UI (si es posible) o tests de integración que verifiquen que la UI recibe el objeto correcto.\n\n**Paso 4: Orquestación (El método original)**\n*   **Acción:** El método original se reduce a una secuencia de llamadas:\n    ```cpp\n    void process() {\n        auto raw = io.read();\n        auto data = parser.parse(raw);\n        if (!validator.validate(data)) return;\n        ui.update(data);\n    }\n   "
+  }
+]

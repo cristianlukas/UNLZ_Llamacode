@@ -1,0 +1,69 @@
+{
+  "date": "2026-09-29",
+  "candidate": "Qwen3.8-Flash-Next-GSQ-RCO Q2_0 via Strata",
+  "strata_commit": "c1e903310f211e6630780c3bd2038778c071c68d",
+  "engine": "Strata engine 0.1.20, compiled for CUDA SM86",
+  "hardware": "single NVIDIA RTX 3090 24 GB (GPU 1); Ryzen 9 9950X3D, 124 GB RAM; CUDA 12.8; NVIDIA driver 610.57.04",
+  "config": {
+    "context_tokens": 131072,
+    "kv": "int8",
+    "kv_resident_tokens": 32768,
+    "speculative_tokens": 4,
+    "gpu": 1,
+    "vision": false,
+    "reasoning": "disabled for scored tasks",
+    "single_request_server": true
+  },
+  "storage": "model shards, expert pack and MTP files kept outside the LlamaCode repo in /media/cristian/Disco local/strata-data-eval-20260929",
+  "startup": {
+    "expert_pool_gib": 31.64,
+    "expert_cache_vram_gib": 17.1,
+    "mtp_vram_mib": 835,
+    "gpu_free_mib_after_load": 367,
+    "ready": true
+  },
+  "api_smoke": {
+    "openai_health": "pass",
+    "models": "pass",
+    "local_coding_smoke": "3/3 checks pass",
+    "tool_call": "pass: lookup_ticket(ticket_id=LC-42)",
+    "tool_round_trip": "pass: returned status in_progress and owner Ana",
+    "streaming": {
+      "ttft_seconds": 0.319,
+      "completion_tokens": 180,
+      "end_to_end_seconds": 2.165
+    }
+  },
+  "needle_context": {
+    "found": 3,
+    "total": 3,
+    "runs": [
+      {
+        "length": "8k",
+        "prompt_tokens": 8382,
+        "seconds": 12.1,
+        "found": true
+      },
+      {
+        "length": "32k",
+        "prompt_tokens": 31731,
+        "seconds": 23.7,
+        "found": true
+      },
+      {
+        "length": "110k",
+        "prompt_tokens": 109912,
+        "seconds": 92.1,
+        "found": true
+      }
+    ]
+  },
+  "bigcodebench_hard_8": {
+    "score": "1/8",
+    "pack": "artifacts/bigcodebench-hard-ubuntu-8.json",
+    "pack_sha256": "11279cde14113fc8527f141c53e14cb5ccf0dba65749081a4f914408e391c268",
+    "same_task_ids_as_previous_UD_Q2_K_XL_comparison": true,
+    "caveat": "Different quantization (GSQ-RCO Q2_0 vs UD-Q2_K_XL) and runtime; same eight local task IDs, not a controlled A/B."
+  },
+  "result": "Do not promote or change the LlamaCode default/profile: the BCB8 score is weak despite API, short-smoke and context checks. See docs/strata-qwen38-audit-20260928.md."
+}

@@ -1,11 +1,11 @@
 # Strata + Qwen3.8-Flash-Next — auditoría para LlamaCode
 
-Fecha: 2026-09-28  
+Fecha inicial: 2026-09-28; pruebas locales: 2026-09-29
 Fuente primaria: [Niko1221/Strata](https://github.com/Niko1221/Strata), checkout
 revisado `c1e903310f211e6630780c3bd2038778c071c68d`; artefactos y resultados del
 modelo: [ISTA-DASLab GSQ-RCO GGUF](https://huggingface.co/ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-GGUF).  
-Decisión: **no cambiar perfiles ni el harness predeterminado; mantener Strata
-como candidato para una prueba comparativa cuando haya una GPU libre**.
+Decisión: **no cambiar perfiles ni el harness predeterminado. La prueba local
+funcionó en el equipo, pero la calidad BCB8 de Strata Q2_0 quedó en 1/8**.
 
 ## Qué aporta
 
@@ -26,10 +26,9 @@ expertos, IQ1_M, que reduce el shard residente a 29,6 GB. Es una distribución
 distinta de nuestro Flash-Next UD-Q2_K_XL y no se deben intercambiar sus
 resultados.
 
-## Compatibilidad comprobada aquí
+## Equipo y prueba local de Strata — 2026-09-29
 
-Se clonó el repositorio en `/media/cristian/Disco local/strata-eval-20260928`,
-fuera del checkout de LlamaCode. `python3 setup.py --check` completó y detectó:
+Se clonó Strata en la caché ext4 de Ubuntu (`/home/cristian/.cache/strata-eval-20260929`); los GGUF, tabla PLE, packs y pesos MTP quedaron fuera de LlamaCode, en el volumen de modelos. `python3 setup.py --check` completó. El instalador compiló el engine para SM86, descargó Q2_0 (66,4 GB), generó el pack de expertos y el MTP. No se descargó `mmproj` y la visión quedó desactivada.
 
 | Recurso | Resultado |
 |---|---|
@@ -37,15 +36,27 @@ fuera del checkout de LlamaCode. `python3 setup.py --check` completó y detectó
 | Runtime Strata | Selecciona una GPU; permite elegir índice, no sumar las dos |
 | RAM / CPU | 124 GB; Ryzen 9 9950X3D con AVX-512 |
 | Driver | 610.57.04, suficiente para el runtime CUDA 13 requerido |
-| Almacenamiento | 527 GB libres en el volumen de modelos al revisar |
+| Almacenamiento | 474 GB libres al iniciar; modelo y datos experimentales quedaron en el volumen de modelos |
 | Preflight `setup.py --check` | Correcto; todos los tamaños que enumera caben en RAM |
 
-No se descargaron modelos ni se inició el servidor. A las 23:42 UTC ambas GPU
-tenían procesos `llama-server` activos, aproximadamente 10 GB ocupados cada una
-y actividad de cómputo alta. El benchmark de Strata reserva memoria y calibra la
-caché de expertos; ejecutarlo a la vez habría contaminado las medidas e
-interferido con los servidores que ya estaban corriendo. Este bloqueo es sólo
-para la prueba de rendimiento/calidad, no para la compatibilidad del equipo.
+La campaña se corrió cuando la GPU 1 quedó libre. Strata usó una sola RTX 3090; al cargar tenía el pool de expertos de 31,64 GiB en RAM bloqueada, caché de expertos de 17,10 GiB en VRAM y 367 MiB de VRAM libres. Configuración: contexto 131072, KV int8 con 32768 tokens residentes, MTP de 4 tokens y visión desactivada. El servidor OpenAI-compatible se aisló en `127.0.0.1:8311` y se detuvo al acabar.
+
+### Resultados
+
+| Prueba | Resultado | Lectura |
+|---|---:|---|
+| `/health`, `/v1/models` | correcto | API inicia y anuncia el modelo |
+| `llamacode_local_coding_smoke` | 3/3 checks | Acepta los checks básicos de función Python, escritura atómica y plan incremental; es sólo un smoke, no tests ejecutables de código generado |
+| Tool calling OpenAI | correcto | Emitió `lookup_ticket({"ticket_id":"LC-42"})`; tras recibir una respuesta simulada, continuó el turno con estado y responsable correctos |
+| Streaming corto | TTFT 0,319 s; 180 tokens en 2,165 s | Streaming funciona; una sola medición |
+| Aguja en contexto | 3/3 | Recuperó el valor a 8,4K (12,1 s), 31,7K (23,7 s) y 109,9K (92,1 s) tokens. En esos casos el prefill medido fue 698,5, 1345,7 y 1194 tok/s |
+| BigCodeBench-Hard-8 local | 1/8 | Sólo pasó el ID 870. Los demás fallaron tests funcionales; no es un resultado apto para promover el modelo |
+
+El BCB usa los mismos ocho IDs locales que la comparación directa de UD-Q2_K_XL (20/20 HE, 8/8 BCB), pero aquí cambia la cuantización (GSQ-RCO Q2_0), el runtime y la máquina efectiva (una GPU). No es A/B controlado; la diferencia de 1/8 sí es una señal negativa que requiere resolver antes de proponer Strata para coding agentivo. El smoke corto y la prueba de aguja no compensan ese resultado.
+
+Con el `max_tokens` corto y el pensamiento por defecto habilitado, las dos primeras peticiones del smoke terminaron en `reasoning_content` sin texto visible. Al enviar `chat_template_kwargs.enable_thinking=false`, las respuestas quedaron en `content` y el smoke pasó. El cliente debe fijar explícitamente el modo de razonamiento y un presupuesto suficiente; la compatibilidad de protocolo no garantiza resultados útiles con cualquier presupuesto.
+
+Los detalles reproducibles están en `artifacts/strata-evaluation-20260929/summary.json`, con resultados por tarea en `bcb8.json`, `coding-smoke.json` y `needle.json`.
 
 ## Evidencia local previa relacionada — no repetir
 
@@ -62,16 +73,19 @@ Referencias locales: `docs/qwen38-flash-next-gsq-rco-audit-20260915.md`,
 
 ## Lectura para LlamaCode
 
-- **Modelo:** no se puede reemplazar SOL con los números publicados. La fuente
+- **Modelo:** no se puede reemplazar SOL con los números publicados ni con esta
+  corrida: aunque el throughput y el contexto largo funcionaron, Strata Q2_0
+  pasó sólo 1/8 BCB-Hard. La fuente
   GSQ-RCO informa LiveCodeBench v6 81,14 para Q2_0, frente a 87,43 del modelo
   BF16 base; el Coder informa resultados SWE-bench/LiveCodeBench del autor, no
   BCB8 ni una corrida del harness LC-H1. Es evidencia útil para seleccionar
   candidatos, no validación de nuestra carga agentiva.
-- **Harness:** Strata puede funcionar como proveedor OpenAI-compatible de un
-  perfil externo si supera tool-call, streaming, cancelación y ciclos de tools
-  reales. Su única solicitud concurrente y su caché conversacional propia deben
-  medirse con las sesiones durables y el preflight de contexto de LlamaCode. La
-  interfaz MCP de Strata no reemplaza el motor de Computer Use de LlamaCode.
+- **Harness:** la API OpenAI-compatible completó tool-call, streaming y un ciclo
+  de herramienta de dos turnos en prueba manual. Falta la prueba del cliente y
+  las sesiones durables de LlamaCode, cancelación y preflight; sólo admite una
+  solicitud a la vez. Puede servir como candidato a proveedor externo de
+  laboratorio, no está validado para producción. La interfaz MCP de Strata no
+  reemplaza el motor de Computer Use de LlamaCode.
 - **Computer Use:** no se encontró una capacidad de desktop-control en el repo;
   sólo API, imágenes y herramientas de servidores MCP configurables. No aporta
   una mejora demostrada a `computer-usage` ni justifica cambios allí.
@@ -82,28 +96,17 @@ Referencias locales: `docs/qwen38-flash-next-gsq-rco-audit-20260915.md`,
   correspondería a un backend/API externo dedicado; Strata puede elegir una GPU,
   pero no dispone de la ejecución multi-GPU que usa SOL.
 
-## Próxima campaña si se libera una RTX 3090
+## Siguiente paso posible
 
-Usar checkout aislado ya preparado. Los modelos y datos deben quedar en el
-volumen de modelos, no en el repo. No volver a correr el preflight ni los
-barridos del Q2 local. Protocolo propuesto:
-
-1. Instalar Strata Q2_0 y `mmproj` off; contexto 32K, KV Q8. Fijar `--gpu 0` o
-   `--gpu 1` según cuál quede libre. Guardar versión del motor, argumentos,
-   hash del repo, uso de RAM/VRAM y logs.
-2. Medir en idénticos prompts y longitudes que el perfil SOL: generación corta,
-   HE0/HE20/BCB8 y prompt largo 8K/32K/128K. Comparar latencia TTFT, PP, TG,
-   calidad y uso de memoria; no comparar TPS de prompt corto con prefill de
-   contexto largo.
-3. Probar una conversación de varias vueltas, tool-call OpenAI-compatible,
-   streaming, cancelación, error por límite de contexto e imagen si `mmproj`
-   está habilitado. Verificar compatibilidad concreta con el cliente/harness,
-   no inferirla sólo de la etiqueta OpenAI-compatible.
-4. Sólo si Q2_0 completa la cadena de calidad sin regresiones, medir IQ2_XS o
-   Coder IQ1_M (elegir según si la prioridad es charla general o coding), y
-   entonces evaluar backend externo opt-in. Mantener SOL como control.
+Si se quiere seguir con un backend externo, usar el checkout y los datos aislados
+ya preparados. No volver a correr el preflight ni los barridos previos del Q2.
+Primero repetir BCB8 con la receta, engine y runner exactos del control; luego
+probar la integración cliente real (cancelación, sesiones durables, error por
+límite de contexto). Sólo tras una calidad agentiva sin regresiones medir
+IQ2_XS o el modelo Coder IQ1_M. No editar perfiles para habilitarlo aún.
 
 La cuantización GSQ-RCO ya tiene resultados publicados en tareas de razonamiento
-y código, pero la campaña local de Strata queda **pendiente por GPU ocupada**.
-No se editó `assets/system_profiles.json` ni se cambió el perfil activo: falta
-evidencia local de superioridad.
+y código, pero la evidencia local de Strata Q2_0 en coding agentivo fue débil.
+No se editó `assets/system_profiles.json` ni se cambió el perfil activo. Para
+Ingí-Charla no aporta STT/VAD/TTS; para Computer Use no aporta control de
+escritorio. No hay cambios de producto justificados por estos resultados.
