@@ -1,6 +1,6 @@
 # Swift-Qwen3.8 Genesis GGUF — evaluación local
 
-Fecha: 2026-09-29. Estado: **en evaluación; perfiles manuales agregados, no promover**.
+Fecha: 2026-09-29. Estado: **evaluación detenida; Genesis rechazado para este setup**.
 
 ## Pregunta y conclusión provisional
 
@@ -116,8 +116,10 @@ Los scripts de la corrida están en
   `tools/benchmark_computer_use_prompt_order.py` sobre los 24 estados fáciles y
   difíciles, con tres órdenes de prompt y cinco pasadas.
 
-Estas suites todavía no se ejecutaron en GPU porque el primer request crasheó
-y los servidores Qwen3.5 de otra sesión siguen ocupando VRAM. Al reanudar, no
+En la evaluación inicial, estas suites todavía no se habían ejecutado en GPU
+porque el primer request crasheó y los servidores Qwen3.5 de otra sesión
+ocupaban VRAM. Después se despejaron las GPU y la corrida real quedó registrada
+más abajo. Al reanudar, no
 repetir la configuración exacta `flash-attn off + KV V Q8`: el server la rechaza.
 Primero liberar VRAM o reducir explícitamente el número de capas GPU, y luego
 probar 262K con `flash-attn on` en la build compatible; registrar por separado
@@ -125,7 +127,7 @@ cualquier offload CPU. Si la inferencia full-context vuelve a fallar, probar
 una configuración menor para calidad y mantener aparte el fallo del claim de
 262K.
 
-## Decisión pendiente
+## Decisión provisional anterior a LC-H1
 
 **No promover Genesis a perfil, default de coding, harness ni Ingi Charla con
 los datos actuales.** La continuación requerida es ejecutar BCB, contrato de
@@ -135,3 +137,47 @@ comparación LC-H1 apareada contra el perfil SOL y Computer Use con su mismo
 corpus/semillas. Sólo considerar perfil si la calidad no baja y el coste de
 latencia/VRAM ofrece una ventaja concreta. No repetir el BCB histórico del Swift
 Q4_K_M salvo que se cambie el dataset o se necesite un control apareado nuevo.
+
+## Corrida real LC-H1 — 2026-09-29
+
+Se ejecutó el harness de agentes de LlamaCode con `agent-maximo`, sampling
+conservador, MTP4, contexto 65.536 y dos RTX 3090 despejadas. Las tareas y
+graders son los guardados en
+[`llamacode-harness-results/lch1-inputs/`](../artifacts/swift-genesis-evaluation-20260929/llamacode-harness-results/lch1-inputs/).
+Huella de perfil: `1959e22a888a4a2c8979bbacf92c43b0c11505b2f4ad00299572dd43d636c594`;
+huella del harness: `sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef`.
+
+| Etapa | Genesis | SOL (histórico) | ASTRA (histórico) |
+|---|---:|---:|---:|
+| HE0 | 1/1 · 27 s | 1/1 | 1/1 |
+| HE20 | **20/20 · 759 s** | 20/20 · 234 s | 20/20 · 912 s |
+| BCB8 | **2/8 · 417 s; gate fallido** | 8/8 · 865 s | 8/8 · 1.969 s |
+| ADV10 corregido | Cancelado por el usuario en prompt 3/10; sin puntuación | 10/10 · 842 s | 5/10 en la reevaluación corregida |
+
+Genesis empató a ASTRA en HE20 y fue 17% más rápido ahí, aunque fue 3,2 veces
+más lento que SOL. Su **2/8 en BCB8** es una regresión fuerte frente a ambos
+controles; por eso el candidato no justifica conservarse para coding, aunque
+ADV quedó incompleto. ASTRA: el recibo HE20/BCB8 original tiene otra huella de
+especificación (`sha256:8fb801e14e31252d4f4e037898f101ffa4ac49ee1302d17ef26b36d02f923915`),
+así que esas duraciones son referencia histórica del harness de LlamaCode, no
+un A/B idéntico a nivel de versión. La reevaluación corregida de ADV de ASTRA
+fue 5/10; no confundirla con el recibo inicial con graders incorrectos.
+
+La cadena automática se detuvo al no pasar BCB. ADV10 se inició aparte con los
+graders corregidos y se canceló a pedido del usuario; se guardó el estado parcial
+y no se contará como puntuación. Todos los recibos, workspaces, eventos del
+agente, logs y definiciones de entrada están en
+[`llamacode-harness-results/`](../artifacts/swift-genesis-evaluation-20260929/llamacode-harness-results/).
+
+Para permitir la corrida se usó un perfil temporal de usuario en el daemon de
+pruebas aislado: el perfil de sistema exige build mínimo 10964 y el instalador
+oficial no pudo completar en Linux. Se usó la build local del servidor adaptive
+`0.3.0-dev (build 1, c28d538)`, sin cambiar el número de build ni el perfil de
+sistema. Por esto, el resultado mide el harness de agentes de la app con el
+runtime experimental disponible, no valida el perfil Genesis de sistema ni el
+claim de contexto 262K.
+
+Los dos archivos locales de Genesis (GGUF NVFP4 de 15.764.903.360 bytes y mmproj
+de 927.606.976 bytes, **16.692.510.336 bytes en total**) se borraron después de
+guardar el historial. No repetir las etapas LC-H1 ni volver a descargar este
+artefacto salvo que cambien el modelo o la suite.

@@ -1,0 +1,41 @@
+{
+    "benchmarkName": "HumanEval (1 ítems)",
+    "comparisons": [
+    ],
+    "generatedAt": "2026-09-29T16:24:57",
+    "profileCount": 1,
+    "profiles": [
+        {
+            "agentVariant": "baseline",
+            "comparisonTimeMetric": "timeToFirstAttempt",
+            "failedRuns": 0,
+            "fullyAcceptedRuns": 1,
+            "honeyEnabled": false,
+            "medianAddedLines": 16,
+            "medianColdFirstAttemptSec": 26.774,
+            "medianElapsedSec": 27.074,
+            "medianFilesChanged": 1,
+            "medianFirstAttemptSec": 26.774,
+            "medianQualityPct": 100,
+            "medianRemovedLines": 0,
+            "medianRepairAttempts": 0,
+            "medianToolCalls": 1,
+            "medianToolF1Pct": 0,
+            "medianToolRedundantCalls": 0,
+            "medianToolSuccessRatePct": 100,
+            "medianWarmFirstAttemptSec": 0,
+            "outcomeSpread": false,
+            "profileId": "15425d95-f508-4991-84ca-c73ddc1b6395",
+            "profileName": "1_Genesis eval via LlamaCode harness",
+            "qualityRangePctPoints": 0,
+            "runs": 1,
+            "stabilityRatePct": 100,
+            "successRatePct": 100,
+            "successfulRuns": 1
+        }
+    ],
+    "runCount": 1,
+    "runLabel": "HumanEval (1 ítems)",
+    "schemaVersion": 1,
+    "target": "agent"
+}

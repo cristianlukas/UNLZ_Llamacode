@@ -1,0 +1,445 @@
+{
+    "acceptance": [
+        {
+            "passed": true,
+            "taskId": "HumanEval/0",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/1",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/2",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/3",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/4",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/5",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/6",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/7",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/8",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/9",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/10",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/11",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/12",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/13",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/14",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/15",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/16",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/17",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/18",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/19",
+            "type": "grader:code_tests"
+        }
+    ],
+    "agentFiles": [
+        "solution_HumanEval_0.py",
+        "solution_HumanEval_12.py",
+        "solution_HumanEval_18.py",
+        "solution_HumanEval_1.py",
+        "solution_HumanEval_15.py",
+        "solution_HumanEval_10.py",
+        "__pycache__/solution_HumanEval_6.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_13.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_5.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_7.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_15.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_12.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_10.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_2.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_11.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_3.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_0.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_9.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_4.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_16.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_8.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_17.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_1.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_14.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_18.cpython-312.pyc",
+        "solution_HumanEval_9.py",
+        "solution_HumanEval_4.py",
+        "solution_HumanEval_14.py",
+        "solution_HumanEval_3.py",
+        "solution_HumanEval_6.py",
+        "solution_HumanEval_2.py",
+        "solution_HumanEval_7.py",
+        "solution_HumanEval_19.py",
+        "solution_HumanEval_17.py",
+        "solution_HumanEval_5.py",
+        "solution_HumanEval_13.py",
+        "solution_HumanEval_11.py",
+        "solution_HumanEval_16.py",
+        "solution_HumanEval_8.py"
+    ],
+    "agentMetrics": [
+        {
+            "elapsedMs": 1356,
+            "tokens": 53,
+            "tps": 39.09079242199174,
+            "ttft_ms": 332
+        },
+        {
+            "elapsedMs": 1134,
+            "tokens": 55,
+            "tps": 48.52086353021924,
+            "ttft_ms": 395
+        },
+        {
+            "elapsedMs": 969,
+            "tokens": 50,
+            "tps": 51.63022433332473,
+            "ttft_ms": 356
+        },
+        {
+            "elapsedMs": 988,
+            "tokens": 50,
+            "tps": 50.6569702471351,
+            "ttft_ms": 414
+        },
+        {
+            "elapsedMs": 990,
+            "tokens": 52,
+            "tps": 52.56842235088006,
+            "ttft_ms": 378
+        },
+        {
+            "elapsedMs": 837,
+            "tokens": 47,
+            "tps": 56.17890231206065,
+            "ttft_ms": 443
+        },
+        {
+            "elapsedMs": 1009,
+            "tokens": 52,
+            "tps": 51.603478868375404,
+            "ttft_ms": 447
+        },
+        {
+            "elapsedMs": 951,
+            "tokens": 50,
+            "tps": 52.67083257838473,
+            "ttft_ms": 468
+        },
+        {
+            "elapsedMs": 827,
+            "tokens": 47,
+            "tps": 53.29885917760994,
+            "ttft_ms": 554
+        },
+        {
+            "elapsedMs": 858,
+            "tokens": 51,
+            "tps": 53.771603532478046,
+            "ttft_ms": 592
+        },
+        {
+            "elapsedMs": 1050,
+            "tokens": 56,
+            "tps": 53.37308357271797,
+            "ttft_ms": 508
+        },
+        {
+            "elapsedMs": 967,
+            "tokens": 51,
+            "tps": 52.789675581566264,
+            "ttft_ms": 517
+        },
+        {
+            "elapsedMs": 976,
+            "tokens": 49,
+            "tps": 50.28601453573693,
+            "ttft_ms": 579
+        },
+        {
+            "elapsedMs": 1169,
+            "tokens": 58,
+            "tps": 49.661360892534525,
+            "ttft_ms": 569
+        },
+        {
+            "elapsedMs": 939,
+            "tokens": 51,
+            "tps": 54.33173036973275,
+            "ttft_ms": 79013
+        },
+        {
+            "elapsedMs": 950,
+            "tokens": 50,
+            "tps": 52.65230732941179,
+            "ttft_ms": 487
+        },
+        {
+            "elapsedMs": 1027,
+            "tokens": 58,
+            "tps": 55.18427742848879,
+            "ttft_ms": 521
+        },
+        {
+            "elapsedMs": 1054,
+            "tokens": 49,
+            "tps": 46.518516268189686,
+            "ttft_ms": 715
+        },
+        {
+            "elapsedMs": 4527,
+            "tokens": 232,
+            "tps": 51.26575593345881,
+            "ttft_ms": 685
+        },
+        {
+            "elapsedMs": 1153,
+            "tokens": 58,
+            "tps": 50.35517764091202,
+            "ttft_ms": 517
+        },
+        {
+            "elapsedMs": 650,
+            "tokens": 0,
+            "tps": 0
+        },
+        {
+            "elapsedMs": 0,
+            "tokens": 8,
+            "tps": 0
+        }
+    ],
+    "agentProfileId": "agent-maximo",
+    "agentProfileName": "Máximo",
+    "agentSeed": 4242,
+    "agentTemperature": 0.1,
+    "agentVariant": "baseline",
+    "avgTps": 51.32044244526046,
+    "avgTtftMs": 4424.5,
+    "baselineId": "2290f684-c78e-4c7c-b27c-93d5fdbb14be",
+    "benchmarkEffectiveArgs": [
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8038",
+        "--model",
+        "/media/cristian/Disco local/Models/llamacpp/Swift-Qwen3.8-27B-Genesis-GGUF/Swift-Qwen3.8-27B-Genesis-NVFP4-v4.gguf",
+        "--mmproj",
+        "/media/cristian/Disco local/Models/llamacpp/Swift-Qwen3.8-27B-Genesis-GGUF/mmproj-Swift-Qwen3.8-27B-F16.gguf",
+        "--spec-type",
+        "draft-mtp",
+        "--spec-draft-n-max",
+        "4",
+        "--ctx-size",
+        "65536",
+        "--batch-size",
+        "512",
+        "--ubatch-size",
+        "64",
+        "--threads",
+        "8",
+        "--flash-attn",
+        "on",
+        "--cache-type-k",
+        "q8_0",
+        "--split-mode",
+        "layer",
+        "--cache-type-k",
+        "q8_0",
+        "--cache-type-v",
+        "q8_0",
+        "--temp",
+        "0.60",
+        "--top-p",
+        "0.95",
+        "--top-k",
+        "20",
+        "--min-p",
+        "0.0",
+        "--repeat-penalty",
+        "1.0",
+        "--presence-penalty",
+        "0.0",
+        "--no-context-shift",
+        "--metrics",
+        "--no-warmup",
+        "--jinja",
+        "--predict",
+        "4096",
+        "--parallel",
+        "1",
+        "--spec-type",
+        "draft-mtp",
+        "--spec-draft-n-max",
+        "4",
+        "--chat-template-file",
+        "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/assets/chat-templates/qwen38-tools-fixed.jinja",
+        "--reasoning",
+        "off",
+        "--fit",
+        "on",
+        "--fit-target",
+        "128"
+    ],
+    "benchmarkMemoryAdaptive": true,
+    "benchmarkMemoryAttempt": 0,
+    "benchmarkMemoryFitTargetMiB": 128,
+    "benchmarkMemoryPlanner": "llama.cpp-fit-expert-aware",
+    "benchmarkMemoryPolicy": "adaptive-max-vram",
+    "benchmarkName": "HumanEval (20 ítems)",
+    "complexityMetrics": {
+        "addedLines": 492,
+        "filesChanged": 39,
+        "filesCreated": 39,
+        "filesDeleted": 0,
+        "removedLines": 0
+    },
+    "elapsedSec": 758.772,
+    "failed": false,
+    "failureKind": "none",
+    "finalScore": 20,
+    "finalTotal": 20,
+    "firstAttemptScore": 20,
+    "firstAttemptTotal": 20,
+    "firstEvaluableSec": 26.755,
+    "firstToolCallSec": 26.27,
+    "firstWriteSec": 26.317,
+    "generationSec": 24.381,
+    "harnessEngineId": "legacy",
+    "harnessEngineVersion": 1,
+    "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+    "honeyEnabled": false,
+    "id": "2290f684-c78e-4c7c-b27c-93d5fdbb14be",
+    "isBaseline": true,
+    "measurementPhase": "cold",
+    "mode": "custom",
+    "nonGenerationSec": 734.3910000000001,
+    "pass": 1,
+    "passedAfterRepair": false,
+    "passesTotal": 1,
+    "profileConfigFingerprint": "1959e22a888a4a2c8979bbacf92c43b0c11505b2f4ad00299572dd43d636c594",
+    "profileId": "15425d95-f508-4991-84ca-c73ddc1b6395",
+    "profileName": "1_Genesis eval via LlamaCode harness",
+    "progressGovernor": {
+        "progressEvents": 41,
+        "replanEvents": 0,
+        "stagnationEvents": 0
+    },
+    "qualityScore": 20,
+    "qualityTotal": 20,
+    "ramFreeMb": 0,
+    "ramMb": 0,
+    "ramTotalMb": 0,
+    "repairAttempts": 0,
+    "response": "[turno cancelado por el usuario]",
+    "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/HumanEval_20_tems__20260929_162458",
+    "runLabel": "HumanEval (20 ítems)",
+    "setupSec": 0.3,
+    "target": "agent",
+    "thinkingEnabled": false,
+    "timeToFirstAttempt": 758.4720000000001,
+    "timedOut": false,
+    "timeoutSec": 1800,
+    "timestamp": 1790710663827,
+    "toolCallQuality": {
+        "expectedCalls": 0,
+        "f1Pct": -1,
+        "failedCalls": 0,
+        "incompleteCalls": 0,
+        "invalidCalls": 0,
+        "matchedExpectedCalls": 0,
+        "missingExpectedCalls": 0,
+        "precisionPct": -1,
+        "recallPct": -1,
+        "redundantCalls": 0,
+        "sequenceExact": false,
+        "successRatePct": 100,
+        "successfulCalls": 41,
+        "totalCalls": 41,
+        "unexpectedCalls": 0
+    },
+    "toolCalls": 41,
+    "totalTime": 758.772,
+    "transportAfterEvaluation": false,
+    "vramFreeMb": 27439,
+    "vramGpu0FreeMb": 13073,
+    "vramGpu0Mb": 11213,
+    "vramGpu0TotalMb": 24576,
+    "vramGpu0UsedPct": 45.62581380208333,
+    "vramGpu1FreeMb": 14366,
+    "vramGpu1Mb": 9758,
+    "vramGpu1TotalMb": 24576,
+    "vramGpu1UsedPct": 39.70540364583333,
+    "vramMb": 20971,
+    "vramNormalizedImbalancePct": 5.92041015625,
+    "vramObservedGpu0SharePct": 53.469076343522005,
+    "vramOptimalGpu0SharePct": 47.64386457232406,
+    "vramPlacementAssessment": "balanced",
+    "vramTelemetryScope": "device-total",
+    "workspace": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/HumanEval_20_tems__20260929_162458/1_Genesis_eval_via_LlamaCode_harness__ws"
+}
