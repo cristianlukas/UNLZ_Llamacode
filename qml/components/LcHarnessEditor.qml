@@ -339,6 +339,34 @@ Item {
                         checked: root.specValue("worker", "allowNetwork", false)
                         onToggled: root.specSet("worker", "allowNetwork", checked)
                     }
+                    Text { text: "Ocultar datos de usuario del host"; color: Theme.textSecondary; font.pixelSize: 12 }
+                    LcSwitch {
+                        objectName: "workerHideHostUserDataSwitch"
+                        enabled: !root.readOnly && root.specValue("worker", "sandbox", "none") === "strong"
+                        checked: root.specValue("worker", "hideHostUserData", false)
+                        onToggled: root.specSet("worker", "hideHostUserData", checked)
+                        ToolTip.visible: hovered
+                        ToolTip.text: "Linux: oculta home, /root, /media, /mnt y /run/user; el workspace se monta aparte. El runtime fuera de esas rutas debe seguir visible."
+                    }
+                    Text { text: "Límites cgroup de Linux"; color: Theme.textSecondary; font.pixelSize: 12 }
+                    LcSwitch {
+                        objectName: "workerResourceLimitsSwitch"
+                        enabled: !root.readOnly && root.specValue("worker", "sandbox", "none") === "strong"
+                        checked: root.specValue("worker", "enforceResourceLimits", false)
+                        onToggled: root.specSet("worker", "enforceResourceLimits", checked)
+                        ToolTip.visible: hovered
+                        ToolTip.text: "Linux: requiere systemd --user; aplica MemoryMax, TasksMax y cualquier cuota CPU configurada. Si el enforcement no está disponible, el worker no arranca."
+                    }
+                    Text { text: "Cuota CPU (%)"; color: Theme.textSecondary; font.pixelSize: 12 }
+                    LcTextField {
+                        objectName: "workerCpuQuotaField"
+                        Layout.fillWidth: true; placeholderText: "0 = sin tope; 50 = medio CPU"
+                        text: String(root.specValue("worker", "cpuQuotaPercent", 0))
+                        enabled: !root.readOnly && (root.specValue("worker", "sandbox", "none") === "strong"
+                            || (Qt.platform.os === "windows" && root.specValue("worker", "sandbox", "none") === "process"))
+                        onEditingFinished: root.specSet("worker", "cpuQuotaPercent",
+                            Math.max(0, Math.min(1000, parseInt(text) || 0)))
+                    }
                     Text { text: "Capabilities read-only"; color: Theme.textSecondary; font.pixelSize: 12 }
                     LcTextField {
                         objectName: "workerCapabilitiesField"
@@ -354,6 +382,22 @@ Item {
                         text: String(root.specValue("worker", "callTimeoutMs", 120000))
                         onEditingFinished: root.specSet("worker", "callTimeoutMs",
                             Math.max(100, parseInt(text) || 120000))
+                    }
+                    Text { text: "Memoria máxima (MiB; 0 = sin tope)"; color: Theme.textSecondary; font.pixelSize: 12 }
+                    LcTextField {
+                        objectName: "workerMemoryLimitField"
+                        Layout.fillWidth: true; placeholderText: "512"
+                        text: String(root.specValue("worker", "memoryLimitMb", 512))
+                        onEditingFinished: root.specSet("worker", "memoryLimitMb",
+                            Math.max(0, Math.min(1048576, parseInt(text) || 0)))
+                    }
+                    Text { text: "Procesos / tareas máximos"; color: Theme.textSecondary; font.pixelSize: 12 }
+                    LcTextField {
+                        objectName: "workerProcessLimitField"
+                        Layout.fillWidth: true; placeholderText: "32"
+                        text: String(root.specValue("worker", "processLimit", 32))
+                        onEditingFinished: root.specSet("worker", "processLimit",
+                            Math.max(1, Math.min(4096, parseInt(text) || 1)))
                     }
                 }
                 Text {

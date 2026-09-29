@@ -12,9 +12,12 @@
 struct HarnessSandboxPolicy {
     QString mode = QStringLiteral("none"); // none|process|strong
     bool allowNetwork = false;
+    bool hideHostUserData = false;
+    bool enforceResourceLimits = false;
     int memoryLimitMb = 512;
     int processLimit = 32;
     int cpuTimeLimitSec = 0; // 0 = host default
+    int cpuQuotaPercent = 0; // Linux cgroup CPUQuota; 0 = unlimited
 };
 
 struct HarnessSandboxPlan {

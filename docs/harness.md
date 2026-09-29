@@ -620,6 +620,27 @@ explícitamente: un Job Object contiene procesos pero no es un boundary de red.
 Si el backend solicitado no existe, el worker no arranca y el perfil no cae
 silenciosamente a `none`.
 
+El perfil puede activar dos endurecimientos adicionales, ambos opt-in y apagados
+por defecto. `hideHostUserData` enmascara el home, `/root`, `/media`, `/mnt` y
+`/run/user` dentro de bubblewrap; el workspace explícito sigue accesible en
+`/tmp/llamacode-workspace`. Esto puede ocultar un runtime instalado dentro del
+home, por lo que la ruta del intérprete debe permanecer visible. No convierte
+todo el root de sólo lectura en un allowlist de archivos.
+
+`enforceResourceLimits` aplica en Linux los valores `memoryLimitMb` y
+`processLimit` mediante un scope cgroup de `systemd-run --user`; `cpuQuotaPercent`
+opcional limita CPU como porcentaje de un core (por ejemplo, `50` = medio core;
+`0` = sin cuota). Windows conserva la aplicación existente de límites por Job
+Object y acepta cuota CPU de 1 a 100%; en Linux se admite hasta 1000%. Si faltan
+`bwrap`, `systemd-run` o el user manager para una capacidad solicitada, el worker
+falla al arrancar en vez de ejecutar sin esos límites. El flag de cgroup no
+activa una regla de egress por host: `allowNetwork` sigue siendo todo o nada, y
+LlamaCode todavía no media credenciales opacas para peticiones de red.
+
+Los dos ajustes aparecen en el editor del perfil junto con la cuota y límites de
+memoria/tareas. Los campos nuevos no cambian perfiles ya guardados, porque sus
+defaults son `false`/`0`.
+
 ### Integración con el loop del agente
 
 El módulo `worker` ya no es sólo una frontera de proceso: al arrancar

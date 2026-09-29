@@ -240,6 +240,8 @@ ApplicationWindow {
                         knowledge: { enabled: true, preflight: true, maxEdges: 6 },
                         worker: { lane: "node", entrypoint: "worker.mjs",
                                   sandbox: "process", allowNetwork: false,
+                                  hideHostUserData: true, enforceResourceLimits: true,
+                                  cpuQuotaPercent: 50, memoryLimitMb: 128, processLimit: 16,
                                   requestedCapabilities: ["fs.read"] } }
         var workerLane = findChild("workerLaneCombo")
         check(workerLane !== null && workerLane.currentValue === "node",
@@ -250,6 +252,21 @@ ApplicationWindow {
         var workerCaps = findChild("workerCapabilitiesField")
         check(workerCaps !== null && workerCaps.text === "fs.read",
               "las capabilities del worker se reflejan")
+        var hideHostData = findChild("workerHideHostUserDataSwitch")
+        check(hideHostData !== null && hideHostData.checked === true,
+              "el aislamiento del home del host se refleja")
+        var resourceLimits = findChild("workerResourceLimitsSwitch")
+        check(resourceLimits !== null && resourceLimits.checked === true,
+              "los límites cgroup opt-in se reflejan")
+        var cpuQuota = findChild("workerCpuQuotaField")
+        check(cpuQuota !== null && cpuQuota.text === "50",
+              "la cuota CPU se refleja")
+        var memoryLimit = findChild("workerMemoryLimitField")
+        check(memoryLimit !== null && memoryLimit.text === "128",
+              "el límite de memoria se refleja")
+        var processLimit = findChild("workerProcessLimitField")
+        check(processLimit !== null && processLimit.text === "16",
+              "el límite de tareas se refleja")
         editor.specSet("worker", "callTimeoutMs", 5000)
         check(editor.specValue("worker", "callTimeoutMs", 0) === 5000,
               "el timeout del worker queda en su módulo")

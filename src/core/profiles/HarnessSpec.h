@@ -30,6 +30,9 @@ struct HarnessWorkerModule {
     QString sandbox = QStringLiteral("none"); // none|process|strong
     QString workingDirectory;
     bool allowNetwork = false;
+    bool hideHostUserData = false;
+    bool enforceResourceLimits = false;
+    int cpuQuotaPercent = 0; // 0 = no cgroup CPU quota; 1..1000 = percent of one CPU
     int maxFrameBytes = 1024 * 1024;
     int startupTimeoutMs = 10000;
     int callTimeoutMs = 120000;

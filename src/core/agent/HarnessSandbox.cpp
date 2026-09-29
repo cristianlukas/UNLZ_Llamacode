@@ -46,8 +46,18 @@ HarnessSandboxPlan HarnessSandbox::plan(const QString &program, const QStringLis
         out.error = QStringLiteral("worker working directory does not exist");
         return out;
     }
-    if (policy.memoryLimitMb < 0 || policy.processLimit < 1 || policy.cpuTimeLimitSec < 0) {
+    if (policy.memoryLimitMb < 0 || policy.processLimit < 1 || policy.cpuTimeLimitSec < 0 ||
+        policy.cpuQuotaPercent < 0 || policy.cpuQuotaPercent > 1000) {
         out.error = QStringLiteral("invalid worker sandbox limits");
+        return out;
+    }
+    if (policy.hideHostUserData && mode != QLatin1String("strong")) {
+        out.error = QStringLiteral("host data isolation requires the strong worker sandbox");
+        return out;
+    }
+    if (mode == QLatin1String("none") &&
+        (policy.enforceResourceLimits || policy.cpuQuotaPercent > 0)) {
+        out.error = QStringLiteral("resource limits require an enforcing worker sandbox");
         return out;
     }
     if (mode == QLatin1String("none")) {
@@ -57,6 +67,10 @@ HarnessSandboxPlan HarnessSandbox::plan(const QString &program, const QStringLis
     }
 
 #ifdef Q_OS_WIN
+    if (policy.cpuQuotaPercent > 100) {
+        out.error = QStringLiteral("Windows Job Object CPU quota must be between 1 and 100 percent");
+        return out;
+    }
     if (mode == QLatin1String("strong")) {
         out.error = QStringLiteral(
             "strong worker sandbox is unavailable on Windows; use process or install an "
@@ -70,6 +84,13 @@ HarnessSandboxPlan HarnessSandbox::plan(const QString &program, const QStringLis
     out.backend = QStringLiteral("windows-job-object");
     return out;
 #else
+    if ((policy.enforceResourceLimits || policy.cpuQuotaPercent > 0) &&
+        mode != QLatin1String("strong")) {
+        // systemd user scopes are the available cgroup v2 enforcement path.
+        // Do not silently ignore limits on the process-only Unix mode.
+        out.error = QStringLiteral("Linux cgroup resource limits require the strong worker sandbox");
+        return out;
+    }
     if (mode == QLatin1String("strong")) {
         QString bwrap = QStandardPaths::findExecutable(QStringLiteral("bwrap"));
         if (bwrap.isEmpty()) bwrap = QStandardPaths::findExecutable(QStringLiteral("bubblewrap"));
@@ -95,12 +116,50 @@ HarnessSandboxPlan HarnessSandbox::plan(const QString &program, const QStringLis
                          QStringLiteral("--tmpfs"), QStringLiteral("/tmp"),
                          QStringLiteral("--dir"), QStringLiteral("/tmp/llamacode-workspace"),
                          QStringLiteral("--bind"), workingDirectory,
-                         QStringLiteral("/tmp/llamacode-workspace"),
-                         QStringLiteral("--chdir"), QStringLiteral("/tmp/llamacode-workspace")};
-        if (!policy.allowNetwork) out << QStringLiteral("--unshare-net");
-        out << program << arguments;
+                         QStringLiteral("/tmp/llamacode-workspace")};
+        if (policy.hideHostUserData) {
+            // Hide common host locations after the workspace bind. The worker
+            // keeps only its explicitly mounted project from these trees.
+            const QStringList hiddenPaths{QDir::homePath(), QStringLiteral("/home"),
+                                          QStringLiteral("/root"), QStringLiteral("/media"),
+                                          QStringLiteral("/mnt"), QStringLiteral("/run/user")};
+            for (const QString &path : hiddenPaths) {
+                if (QDir(path).exists()) out.arguments << QStringLiteral("--tmpfs") << path;
+            }
+        }
+        out.arguments << QStringLiteral("--chdir")
+                      << QStringLiteral("/tmp/llamacode-workspace");
+        if (!policy.allowNetwork) out.arguments << QStringLiteral("--unshare-net");
+        out.arguments << program << arguments;
+        if (policy.enforceResourceLimits || policy.cpuQuotaPercent > 0) {
+            const QString systemdRun = QStandardPaths::findExecutable(QStringLiteral("systemd-run"));
+            if (systemdRun.isEmpty()) {
+                out.error = QStringLiteral(
+                    "Linux worker resource limits require systemd-run; refusing to launch without enforcement");
+                return out;
+            }
+            QStringList scopedArgs{QStringLiteral("--user"), QStringLiteral("--scope"),
+                                   QStringLiteral("--quiet")};
+            if (policy.memoryLimitMb > 0) {
+                scopedArgs << QStringLiteral("--property=MemoryMax=%1M")
+                                  .arg(policy.memoryLimitMb);
+            }
+            if (policy.processLimit > 0) {
+                scopedArgs << QStringLiteral("--property=TasksMax=%1")
+                                  .arg(policy.processLimit);
+            }
+            if (policy.cpuQuotaPercent > 0) {
+                scopedArgs << QStringLiteral("--property=CPUQuota=%1%")
+                                  .arg(policy.cpuQuotaPercent);
+            }
+            scopedArgs << QStringLiteral("--") << out.program;
+            scopedArgs << out.arguments;
+            out.program = systemdRun;
+            out.arguments = scopedArgs;
+            out.backend = QStringLiteral("systemd-user-cgroup+bubblewrap");
+        }
         out.supported = true;
-        out.backend = QStringLiteral("bubblewrap");
+        if (out.backend.isEmpty()) out.backend = QStringLiteral("bubblewrap");
         return out;
     }
     const QString setsid = QStandardPaths::findExecutable(QStringLiteral("setsid"));
@@ -173,6 +232,19 @@ bool HarnessSandbox::attach(QProcess &process, const HarnessSandboxPolicy &polic
         if (error) *error = QStringLiteral("SetInformationJobObject failed (%1)").arg(GetLastError());
         CloseHandle(job);
         return false;
+    }
+    if (policy.cpuQuotaPercent > 0) {
+        JOBOBJECT_CPU_RATE_CONTROL_INFORMATION cpuRate = {};
+        cpuRate.ControlFlags = JOB_OBJECT_CPU_RATE_CONTROL_ENABLE |
+                               JOB_OBJECT_CPU_RATE_CONTROL_HARD_CAP;
+        cpuRate.CpuRate = static_cast<DWORD>(policy.cpuQuotaPercent * 100);
+        if (!SetInformationJobObject(job, JobObjectCpuRateControlInformation, &cpuRate,
+                                     sizeof(cpuRate))) {
+            if (error) *error = QStringLiteral("SetInformationJobObject CPU rate failed (%1)")
+                                    .arg(GetLastError());
+            CloseHandle(job);
+            return false;
+        }
     }
     HANDLE child = OpenProcess(PROCESS_SET_QUOTA | PROCESS_TERMINATE | PROCESS_QUERY_LIMITED_INFORMATION,
                                FALSE, static_cast<DWORD>(process.processId()));

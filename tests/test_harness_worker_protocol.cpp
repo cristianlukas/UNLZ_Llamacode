@@ -5,6 +5,7 @@
 #include <QSignalSpy>
 #include <QStandardPaths>
 #include <QProcess>
+#include <QTemporaryFile>
 
 #include "core/agent/HarnessWorkerProtocol.h"
 #include "core/agent/LlamaAgentBackend.h"
@@ -20,6 +21,8 @@ private slots:
     void workerModuleRoundTripsAndClamps();
     void sandboxRejectsEmptyProgramAndKeepsLegacyNone();
     void strongSandboxStartsWithWorkspaceUnderTmpfs();
+    void strongSandboxCanHideHostUserData();
+    void strongSandboxCanApplyOptionalCgroupLimits();
     void factoryAdmitsOnlyRequestedCapabilities();
     void workerCallsAreClassifiedAsDestructive();
     void nodeWorkerDriverRoundTripsWhenAvailable();
@@ -88,6 +91,8 @@ void HarnessWorkerProtocolTests::workerModuleRoundTripsAndClamps()
         {"arguments", QJsonArray{"--profile", "safe"}}, {"cpuTimeLimitSec", 7},
         {"maxFrameBytes", 1}, {"startupTimeoutMs", 1}, {"callTimeoutMs", 1},
         {"memoryLimitMb", -1}, {"processLimit", 0},
+        {"hideHostUserData", true}, {"enforceResourceLimits", true},
+        {"cpuQuotaPercent", 1500},
         {"requestedCapabilities", QJsonArray{"fs.read"}}});
     QCOMPARE(module.lane, QStringLiteral("python"));
     QCOMPARE(module.sandbox, QStringLiteral("process"));
@@ -97,11 +102,18 @@ void HarnessWorkerProtocolTests::workerModuleRoundTripsAndClamps()
     QCOMPARE(module.memoryLimitMb, 0);
     QCOMPARE(module.processLimit, 1);
     QCOMPARE(module.cpuTimeLimitSec, 7);
+    QVERIFY(module.hideHostUserData);
+    QVERIFY(module.enforceResourceLimits);
+    QCOMPARE(module.cpuQuotaPercent, 1000);
     QCOMPARE(module.arguments, QStringList({QStringLiteral("--profile"), QStringLiteral("safe")}));
     QCOMPARE(module.requestedCapabilities, QStringList{QStringLiteral("fs.read")});
     const HarnessSpec spec = HarnessSpec::fromJson({{"worker", module.toJson()}});
     QVERIFY(spec.worker.set);
     QCOMPARE(HarnessSpec::fromJson(spec.toJson()).worker.lane, QStringLiteral("python"));
+    const HarnessWorkerModule roundTrip = HarnessSpec::fromJson(spec.toJson()).worker;
+    QVERIFY(roundTrip.hideHostUserData);
+    QVERIFY(roundTrip.enforceResourceLimits);
+    QCOMPARE(roundTrip.cpuQuotaPercent, 1000);
 }
 
 void HarnessWorkerProtocolTests::sandboxRejectsEmptyProgramAndKeepsLegacyNone()
@@ -113,6 +125,13 @@ void HarnessWorkerProtocolTests::sandboxRejectsEmptyProgramAndKeepsLegacyNone()
     QVERIFY(legacy.supported);
     QCOMPARE(legacy.backend, QStringLiteral("none"));
     QCOMPARE(legacy.program, QStringLiteral("node"));
+
+    HarnessSandboxPolicy uncontainedLimits;
+    uncontainedLimits.enforceResourceLimits = true;
+    const HarnessSandboxPlan refused = HarnessSandbox::plan(
+        QStringLiteral("node"), {}, QString(), uncontainedLimits);
+    QVERIFY(!refused.supported);
+    QVERIFY(refused.error.contains(QStringLiteral("resource limits")));
 }
 
 void HarnessWorkerProtocolTests::strongSandboxStartsWithWorkspaceUnderTmpfs()
@@ -147,10 +166,84 @@ void HarnessWorkerProtocolTests::strongSandboxStartsWithWorkspaceUnderTmpfs()
 #endif
 }
 
+void HarnessWorkerProtocolTests::strongSandboxCanHideHostUserData()
+{
+#ifdef Q_OS_WIN
+    QSKIP("bubblewrap strong sandbox is Unix-only");
+#else
+    QTemporaryFile canary(QDir::home().filePath(QStringLiteral(".llamacode-canary-XXXXXX")));
+    QVERIFY(canary.open());
+    const QString canaryPath = canary.fileName();
+    canary.close();
+
+    HarnessSandboxPolicy policy;
+    policy.mode = QStringLiteral("strong");
+    policy.hideHostUserData = true;
+    const HarnessSandboxPlan plan = HarnessSandbox::plan(
+        QStringLiteral("/bin/sh"),
+        {QStringLiteral("-c"), QStringLiteral("test ! -e \"$1\" && test -r README.md"),
+         QStringLiteral("worker-test"), canaryPath},
+        QDir::currentPath(), policy);
+    if (!plan.supported) QSKIP(qPrintable(plan.error));
+    QVERIFY(plan.arguments.contains(QStringLiteral("--tmpfs")));
+    QVERIFY(plan.arguments.contains(QDir::homePath()));
+
+    QProcess process;
+    process.setProgram(plan.program);
+    process.setArguments(plan.arguments);
+    process.start();
+    if (!process.waitForStarted(5000))
+        QSKIP(qPrintable(QStringLiteral("bubblewrap could not start: %1")
+                             .arg(process.errorString())));
+    QVERIFY2(process.waitForFinished(10000), "isolated worker did not finish");
+    QCOMPARE(process.exitStatus(), QProcess::NormalExit);
+    QVERIFY2(process.exitCode() == 0, process.readAllStandardError().constData());
+#endif
+}
+
+void HarnessWorkerProtocolTests::strongSandboxCanApplyOptionalCgroupLimits()
+{
+#ifdef Q_OS_WIN
+    QSKIP("systemd user scopes are Linux-only");
+#else
+    if (QStandardPaths::findExecutable(QStringLiteral("systemd-run")).isEmpty())
+        QSKIP("systemd-run is not installed");
+    HarnessSandboxPolicy policy;
+    policy.mode = QStringLiteral("strong");
+    policy.enforceResourceLimits = true;
+    policy.memoryLimitMb = 128;
+    policy.processLimit = 16;
+    policy.cpuQuotaPercent = 50;
+    const HarnessSandboxPlan plan = HarnessSandbox::plan(
+        QStringLiteral("/bin/true"), {}, QDir::currentPath(), policy);
+    QVERIFY2(plan.supported, qPrintable(plan.error));
+    QCOMPARE(QFileInfo(plan.program).fileName(), QStringLiteral("systemd-run"));
+    QVERIFY(plan.arguments.contains(QStringLiteral("--property=MemoryMax=128M")));
+    QVERIFY(plan.arguments.contains(QStringLiteral("--property=TasksMax=16")));
+    QVERIFY(plan.arguments.contains(QStringLiteral("--property=CPUQuota=50%")));
+    QVERIFY(plan.arguments.contains(QStringLiteral("--")));
+
+    QProcess process;
+    process.setProgram(plan.program);
+    process.setArguments(plan.arguments);
+    process.start();
+    if (!process.waitForStarted(5000))
+        QSKIP(qPrintable(QStringLiteral("systemd-run could not start: %1")
+                             .arg(process.errorString())));
+    QVERIFY2(process.waitForFinished(15000), "resource-limited worker did not finish");
+    if (process.exitCode() != 0 && process.readAllStandardError().contains("Failed to connect"))
+        QSKIP("systemd user manager is not available in this session");
+    QCOMPARE(process.exitStatus(), QProcess::NormalExit);
+    QVERIFY2(process.exitCode() == 0, process.readAllStandardError().constData());
+#endif
+}
+
 void HarnessWorkerProtocolTests::factoryAdmitsOnlyRequestedCapabilities()
 {
     const HarnessWorkerModule module = HarnessWorkerModule::fromJson({
         {"lane", "node"}, {"entrypoint", "worker.mjs"},
+        {"sandbox", "strong"}, {"hideHostUserData", true},
+        {"enforceResourceLimits", true}, {"cpuQuotaPercent", 50},
         {"requestedCapabilities", QJsonArray{"fs.read", "network"}}});
     QString error;
     const HarnessWorkerLaunchSpec spec = HarnessWorkerFactory::build(
@@ -162,6 +255,9 @@ void HarnessWorkerProtocolTests::factoryAdmitsOnlyRequestedCapabilities()
     QVERIFY(!spec.policy.capabilities.canUse(QStringLiteral("network")));
     QCOMPARE(spec.program, QStringLiteral("node"));
     QCOMPARE(spec.arguments.first(), QStringLiteral("worker.mjs"));
+    QVERIFY(spec.policy.sandbox.hideHostUserData);
+    QVERIFY(spec.policy.sandbox.enforceResourceLimits);
+    QCOMPARE(spec.policy.sandbox.cpuQuotaPercent, 50);
 }
 
 void HarnessWorkerProtocolTests::workerCallsAreClassifiedAsDestructive()

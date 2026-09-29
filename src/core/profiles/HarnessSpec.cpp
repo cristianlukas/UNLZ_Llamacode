@@ -87,6 +87,9 @@ QJsonObject HarnessWorkerModule::toJson() const
                   {QStringLiteral("sandbox"), sandbox},
                   {QStringLiteral("workingDirectory"), workingDirectory},
                   {QStringLiteral("allowNetwork"), allowNetwork},
+                  {QStringLiteral("hideHostUserData"), hideHostUserData},
+                  {QStringLiteral("enforceResourceLimits"), enforceResourceLimits},
+                  {QStringLiteral("cpuQuotaPercent"), cpuQuotaPercent},
                   {QStringLiteral("maxFrameBytes"), maxFrameBytes},
                   {QStringLiteral("startupTimeoutMs"), startupTimeoutMs},
                   {QStringLiteral("callTimeoutMs"), callTimeoutMs},
@@ -111,6 +114,9 @@ HarnessWorkerModule HarnessWorkerModule::fromJson(const QJsonObject &o)
         ? rawSandbox : QStringLiteral("none");
     m.workingDirectory = o.value(QStringLiteral("workingDirectory")).toString().trimmed();
     m.allowNetwork = o.value(QStringLiteral("allowNetwork")).toBool(false);
+    m.hideHostUserData = o.value(QStringLiteral("hideHostUserData")).toBool(false);
+    m.enforceResourceLimits = o.value(QStringLiteral("enforceResourceLimits")).toBool(false);
+    m.cpuQuotaPercent = boundedInt(o, "cpuQuotaPercent", 0, 0, 1000);
     m.maxFrameBytes = boundedInt(o, "maxFrameBytes", 1024 * 1024, 1024, 64 * 1024 * 1024);
     m.startupTimeoutMs = boundedInt(o, "startupTimeoutMs", 10000, 100, 120000);
     m.callTimeoutMs = boundedInt(o, "callTimeoutMs", 120000, 100, 3600000);
@@ -554,6 +560,12 @@ QVariantList HarnessSpec::diff(const HarnessSpec &base) const
     addDiff(out, "worker", "workingDirectory", base.worker.workingDirectory,
             worker.workingDirectory);
     addDiff(out, "worker", "allowNetwork", base.worker.allowNetwork, worker.allowNetwork);
+    addDiff(out, "worker", "hideHostUserData", base.worker.hideHostUserData,
+            worker.hideHostUserData);
+    addDiff(out, "worker", "enforceResourceLimits", base.worker.enforceResourceLimits,
+            worker.enforceResourceLimits);
+    addDiff(out, "worker", "cpuQuotaPercent", base.worker.cpuQuotaPercent,
+            worker.cpuQuotaPercent);
     addDiff(out, "worker", "maxFrameBytes", base.worker.maxFrameBytes, worker.maxFrameBytes);
     addDiff(out, "worker", "startupTimeoutMs", base.worker.startupTimeoutMs,
             worker.startupTimeoutMs);

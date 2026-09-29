@@ -36,9 +36,12 @@ HarnessWorkerLaunchSpec HarnessWorkerFactory::build(
     spec.policy.allowNetwork = module.allowNetwork;
     spec.policy.sandbox.mode = module.sandbox;
     spec.policy.sandbox.allowNetwork = module.allowNetwork;
+    spec.policy.sandbox.hideHostUserData = module.hideHostUserData;
+    spec.policy.sandbox.enforceResourceLimits = module.enforceResourceLimits;
     spec.policy.sandbox.memoryLimitMb = module.memoryLimitMb;
     spec.policy.sandbox.processLimit = module.processLimit;
     spec.policy.sandbox.cpuTimeLimitSec = module.cpuTimeLimitSec;
+    spec.policy.sandbox.cpuQuotaPercent = module.cpuQuotaPercent;
     spec.policy.capabilities = HarnessCapabilitySnapshot::admit(
         activationId, engineId, profileId, generation, module.requestedCapabilities,
         allowedCapabilities);
