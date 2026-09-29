@@ -70,6 +70,7 @@ private slots:
     void bundle_quantizationPolicyCapsKvAtQ8();
     void bundle_bestProfilesUseRequestedCategoryNames();
     void bundle_tensorSplitProfilesAreDualGpuAndMemoryCapped();
+    void bundle_genesisProfilesAreOptIn64kAndMtp4();
 
     void controller_recommendsClosestTier();
     void controller_recommendedTierIncludesDisplayName();
@@ -2799,6 +2800,55 @@ void SystemProfilesTests::bundle_tensorSplitProfilesAreDualGpuAndMemoryCapped()
     QVERIFY(inf.value(QStringLiteral("displayName")).toString().contains(QStringLiteral("INFERIOR")));
     QCOMPARE(valueAfter(argsOf(inf), QStringLiteral("--split-mode")), QStringLiteral("layer"));
 }
+
+void SystemProfilesTests::bundle_genesisProfilesAreOptIn64kAndMtp4()
+{
+    QFile bundle(bundlePath());
+    QVERIFY(bundle.open(QIODevice::ReadOnly));
+    const QJsonArray profiles = QJsonDocument::fromJson(bundle.readAll()).array();
+    QHash<QString, QJsonObject> byId;
+    for (const QJsonValue &v : profiles) {
+        const QJsonObject profile = v.toObject();
+        byId.insert(profile.value(QStringLiteral("id")).toString(), profile);
+    }
+
+    const QStringList ids = {
+        QStringLiteral("sys-bench-qwen38-genesis-nvfp4-layer-mtp4-64k"),
+        QStringLiteral("sys-bench-qwen38-genesis-nvfp4-tensor-mtp4-64k")
+    };
+    for (int i = 0; i < ids.size(); ++i) {
+        const QJsonObject profile = byId.value(ids.at(i));
+        QVERIFY2(!profile.isEmpty(), qPrintable(ids.at(i)));
+        QVERIFY(profile.value(QStringLiteral("extra")).toBool());
+        QVERIFY(profile.value(QStringLiteral("manualOnly")).toBool());
+        QVERIFY(profile.value(QStringLiteral("benchmark")).toBool());
+        QVERIFY(!profile.value(QStringLiteral("best")).toBool());
+        QVERIFY(profile.value(QStringLiteral("vision")).toBool());
+        QCOMPARE(profile.value(QStringLiteral("minVramGb")).toInt(), 48);
+        QCOMPARE(profile.value(QStringLiteral("runtime")).toObject()
+                     .value(QStringLiteral("ctx")).toInt(), 65536);
+        QCOMPARE(profile.value(QStringLiteral("model")).toObject()
+                     .value(QStringLiteral("file")).toString(),
+                 QStringLiteral("Swift-Qwen3.8-27B-Genesis-NVFP4-v4.gguf"));
+        const QJsonObject mtp = profile.value(QStringLiteral("mtp")).toObject();
+        QVERIFY(mtp.value(QStringLiteral("enabled")).toBool());
+        QStringList mtpArgs;
+        for (const QJsonValue &arg : mtp.value(QStringLiteral("args")).toArray())
+            mtpArgs << arg.toString();
+        const int mtpIndex = mtpArgs.indexOf(QStringLiteral("--spec-draft-n-max"));
+        QVERIFY(mtpIndex >= 0 && mtpIndex + 1 < mtpArgs.size());
+        QCOMPARE(mtpArgs.at(mtpIndex + 1), QStringLiteral("4"));
+
+        QStringList args;
+        for (const QJsonValue &arg : profile.value(QStringLiteral("extraArgs")).toArray())
+            args << arg.toString();
+        const QString expectedSplit = i == 0 ? QStringLiteral("layer") : QStringLiteral("tensor");
+        const int splitIndex = args.indexOf(QStringLiteral("--split-mode"));
+        QVERIFY(splitIndex >= 0 && splitIndex + 1 < args.size());
+        QCOMPARE(args.at(splitIndex + 1), expectedSplit);
+    }
+}
+
 
 QTEST_MAIN(SystemProfilesTests)
 #include "test_system_profiles.moc"

@@ -1,0 +1,29 @@
+{
+  "model": "LuffyTheFox/Swift-Qwen3.8-27B-Genesis-GGUF@489bc45881179c25539b169734627b8c3c83eab1/Swift-Qwen3.8-27B-Genesis-NVFP4-v4.gguf",
+  "runtime": "llama.cpp 1 (67849b6)",
+  "serverArgs": [
+    "--ctx-size", "262144", "--n-gpu-layers", "99", "--split-mode", "layer",
+    "--tensor-split", "1,1", "--cache-type-k", "q8_0", "--cache-type-v", "q8_0",
+    "--batch-size", "512", "--ubatch-size", "64", "--flash-attn", "on",
+    "--no-mmproj-offload", "--spec-type", "draft-mtp", "--spec-draft-n-max", "4"
+  ],
+  "loadedHealthy": true,
+  "cuda0VramMiB": 21718,
+  "cuda1VramMiB": 22201,
+  "inference": {
+    "transportOk": false,
+    "request": "short decode smoke, temperature 0.6, top_p 0.95, top_k 20, reasoning budget 512, max_tokens 128",
+    "failure": "CUDA error: out of memory",
+    "location": "ggml_cuda_flash_attn_ext_mma_turbo_case, fattn-mma-turbo.cuh:84",
+    "operation": "cudaFuncSetAttribute(cudaFuncAttributeMaxDynamicSharedMemorySize, nbytes_shared_total)",
+    "serverExited": true
+  },
+  "retry": {
+    "flashAttention": "off",
+    "kvTypeK": "q8_0",
+    "kvTypeV": "q8_0",
+    "startupAccepted": false,
+    "failure": "quantized V cache requires flash_attn to be enabled"
+  },
+  "interpretation": "262K/MTP4 server allocation loaded, but no inference completed; GPU memory was also occupied by other resident servers. Do not count this as model quality or as proof that the same setup fails on idle GPUs."
+}

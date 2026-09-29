@@ -1,0 +1,39 @@
+{
+  "benchmark": "short_decode_5_repeats",
+  "model": "Swift-Qwen3.8-27B-Genesis-NVFP4-v4",
+  "allocatedContext": 262144,
+  "mtpDraftMax": 4,
+  "temperature": 0.6,
+  "topP": 0.95,
+  "topK": 20,
+  "reasoningBudget": 512,
+  "passes": 5,
+  "medianDecodeTps": null,
+  "rows": [
+    {
+      "pass": 1,
+      "transportOk": false,
+      "error": "RemoteDisconnected: Remote end closed connection without response"
+    },
+    {
+      "pass": 2,
+      "transportOk": false,
+      "error": "URLError: <urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "pass": 3,
+      "transportOk": false,
+      "error": "URLError: <urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "pass": 4,
+      "transportOk": false,
+      "error": "URLError: <urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "pass": 5,
+      "transportOk": false,
+      "error": "URLError: <urlopen error [Errno 111] Connection refused>"
+    }
+  ]
+}
