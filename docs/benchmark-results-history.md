@@ -8,6 +8,142 @@ los perfiles no alcanzados. Este historial conserva además la narrativa y los
 eventos operativos; ambos documentos se complementan y no reemplazan resultados
 anteriores.
 
+## 2026-09-28 — Corrección de ADV v1: 3 graders rotos
+
+Revisando por qué SOL y Flash-Next fallaban exactamente las mismas 3 tareas de
+ADV, resultó que los graders contradecían sus consignas:
+
+- **`safe_path_join` y `sql_parameterization`:** el mismo doble escape que
+  rompía los `\n` convirtió la prueba de NUL en `'bad\\x00name'`, una barra
+  literal. Los modelos rechazaban el NUL real y aceptaban ese nombre válido,
+  que es lo correcto.
+- **`deadline_scheduler`:** esperaba `['d','a']` con `now=10`, eligiendo un job
+  con deadline 5, aunque el enunciado excluye `deadline <= now`. Los valores
+  esperados ahora siguen la consigna: `['b']`, `['expired','d','b','a']` y `[]`.
+
+Re-puntuación de los artefactos guardados: **SOL 10/10** (corridas del 23/9 y
+del 27/9), **Flash-Next 10/10** y **ASTRA 5/10**. ASTRA falla de verdad en
+TTL, JSONL y config, y le faltan 2 tareas por timeout. Arreglo con test en la
+rama `session/adv-grader-fix` (`a1dd395`, gate 77/77): el test rechaza
+cualquier barra doble en los graders y valida los tres con una solución que
+sigue la consigna y otra defectuosa. La copia instalada en la app ya tiene los
+graders corregidos (backup `.bak-20260928-pre-grader-fix`). Donde este
+historial dice "ADV 7/10", el valor corregido es 10/10.
+
+## 2026-09-28 — Flash-Next W4A16-FP8PLE medido contra SOL, con cuarentena de VRAM
+
+La investigación de la falla de la ASUS
+(`C:\Users\cristian\gpu0-vram-diagnostico\INFORME_COMPLETO.md`) dejó una
+mitigación en Linux que desbloqueó la medición:
+
+- `fbscan hold`: cuarentena física de 64 KiB sobre las 1.636 direcciones malas.
+- `rmtrace.so` (LD_PRELOAD): reintenta a 64 KiB las reservas de 2 MiB que la
+  cuarentena fragmenta.
+
+Con las dos cosas, `vram_integrity_test.py` dio 0 palabras malas en 21 GiB de
+la ASUS, y Flash-Next cargó con las 48 capas verificadas en las dos placas.
+
+Ajustes necesarios en esta PC:
+
+1. **Hot cache por placa.** hot84 en las dos placas carga, pero la ASUS se
+   queda sin memoria en el primer request (el escritorio y la cuarentena le
+   restan ~0,9 GiB). hot80 tampoco alcanzó. Recortar las dos placas por igual
+   desperdiciaba la PNY, así que se agregó un parche local mínimo al runtime
+   (imagen `qwen38-flash-next-2x3090:v0.3.0-perrank`):
+   `VLLM_WNA16_STATIC_HOT_CACHE_SIZE_BY_RANK="76,84"`, un tamaño por dispositivo.
+   Sin la variable, el comportamiento no cambia. El log confirma 199 contra
+   208 MB por capa.
+2. `rmtrace.so` montado en los contenedores de Flash-Next y de SOL (override de
+   compose `vram-quarantine.override.yml`, sin tocar `mtp.yml`).
+3. 64 GiB de swap temporal para la carga (queda ~31 GiB en uso con el server
+   arriba y ~108 GiB de RAM ocupada).
+
+Resultado, con el mismo harness y la misma ventana que SOL (tabla completa en
+[`benchmark-results.md`](benchmark-results.md)):
+
+- **Calidad: paridad.** HE0 1/1, HE20 20/20, BCB8 8/8 (3/8 al primer intento
+  contra 4/8 de SOL) y ADV **10/10**, igual que SOL (medido 7/10 con las mismas 7
+  tareas; las otras 3 eran graders rotos, ver la corrección de abajo).
+- **SUPERIOR en prefill largo:** 1.984 PP a 131K (SOL 1.363) y 2.159 PP a
+  257K (SOL 910). A 257K llega 164 s antes al primer token, con decode igual o
+  mejor (52,4 contra 49,7).
+- **INFERIOR en todo lo demás:**
+  - Decode corto: 66/45 TG, contra 105/67 de SOL.
+  - Charla: TTFT de 3,0 s contra 0,62 s. El prefill de cada turno pasa por
+    los expertos en RAM.
+  - Computer Use: 46/48 y seguridad 27/29, repetido en dos cargas, contra
+    48/48 y 29/29.
+  - Tiempo agentivo: HE20 2,4× más lento y ADV 2,9× más lento.
+- Visión (hot80, ASUS=72/PNY=80): 3/3, igual que SOL.
+
+Veredicto: **perfil superior sólo para prompts ≥128K** (análisis de documentos o
+repos largos de una sola pasada). No reemplaza a SOL como default de agente,
+Charla ni Computer Use. El 80 tps del post no se reproduce en esta PC: da 66
+en código y 45 en narrativa, con 4,5 GiB menos de RAM, la ASUS recortada a 76
+y el escritorio en GPU0. La config exacta del post (hot88) no se probó: ya
+hot84 simétrico da OOM en la ASUS.
+
+Lanzador reproducible: `artifacts/flashnext-albucino-20260927/serve.sh` más
+`env/perrank-76-84-256k.env` y el runtime `/home/cristian/src/fn-runtime-q`
+(clon fijado en `b395412`, con `rmtrace` en `docker_serve.sh`). Resultados:
+`fnbench_fn_perrank_76_84.json`, `fnbench_fn_vision_72_80.json`,
+`fnbench_sol_quarantine.json` y las corridas `benchmark-runs/*_20260928_*`.
+
+## 2026-09-27 — Flash-Next W4A16-FP8PLE en Linux: no evaluable por VRAM defectuosa en GPU0
+
+> **Superado el 2026-09-28** (entrada de arriba): la cuarentena de VRAM
+> permitió medirlo.
+
+Se retomó el post de LocalLLM (albucino W4A16-FP8PLE, hot88/220k, "80 tps /
+2k+ prefill") en Ubuntu, que sí tiene los 123 GiB que la auditoría del
+2026-09-26 no tenía. Se bajó el checkpoint fijado (`ef55414…`, 120 GiB,
+SHA256SUMS OK) y se compiló localmente la imagen v0.3.0 del mantenedor sobre la
+misma base. El check de P2P/custom all-reduce pasó.
+
+**Resultado: no evaluable en esta PC.** Las tres variantes (hot84/256k del
+mantenedor, hot88/220k del post y hot80) cortan la carga con
+`tiered packed-byte mismatch`, siempre en el worker que corre sobre la RTX 3090
+**ASUS** (`01:00.0`). La otra placa termina las 48 capas. Descartes, uno por uno:
+
+| Hipótesis | Prueba | Resultado |
+|---|---|---|
+| Config del post | hot88, hot84, hot80 | Falla igual (capa 31–35 de TP0) |
+| Swap insuficiente | 28 GiB y después 64 GiB, como el mantenedor | Falla igual |
+| Pesos en NTFS (ntfs3) | Copia verificada en imagen ext4 por loop | Falla igual |
+| Presión de RAM / caché | `drop_caches` cada 10 s, pico de swap 11 GiB | Falla igual |
+| Rank del runtime | `CUDA_VISIBLE_DEVICES=1,0` | **El fallo sigue a la placa ASUS** |
+| VRAM de la ASUS | Test dentro de la GPU, sin PCIe, 6 patrones | **1.636 palabras con bits 25/27/29/31 clavados en 1 (`0xAA000000`); la PNY da 0** |
+
+La falla es determinística: mismas direcciones físicas entre procesos, un solo
+byte lane, y no cambia con ventiladores al 100 % y 250 W. Las GeForce no
+remapean filas. Cualquier carga que ocupe la zona alta de la VRAM de GPU0 puede
+corromperse sin aviso. El runtime de Flash-Next la detecta porque verifica cada
+copia de expertos; llama.cpp y vLLM estándar no verifican nada. Test
+reproducible: `tools/vram_integrity_test.py`. Informe y pasos para replicarlo en
+Windows: [gpu0-asus-3090-vram-fault-20260927.md](gpu0-asus-3090-vram-fault-20260927.md).
+
+**Línea de base SOL del mismo día**, con el harness de la app (`build_astra`),
+`agent-maximo` y timeout 1800 s: HE0 1/1, HE20 20/20, BCB8 8/8 (4/8 al primer
+intento, 2 reparaciones, 865 s) y ADV 7/10 (10/10 con los graders corregidos el
+2026-09-28). Es idéntica a la histórica. ADV
+se puntuó con los graders ocultos (`artifacts/flashnext-albucino-20260927/adv_grade.py`),
+que reproducen exactamente el 7/10 de SOL y el 3/10 de ASTRA del 23/9.
+
+Hallazgos colaterales:
+
+- **SOL no arrancaba en Linux**: el compose montaba un `models-cache` vacío en
+  `~/.cache`, y los pesos estaban en `D:\Models\llamacpp\club-3090`. Se
+  arregló con un `.env` (`MODEL_DIR`) en el directorio del compose.
+- **ADV v1 puntuaba 0/10 en la app en Linux**: los graders tenían `\n`
+  doble-escapado y no había `python`. El arreglo, con test, quedó en la rama
+  `session/adv-grader-fix` (`99e7dc7`), gate 77/77.
+
+Flash-Next queda **sin clasificar** (ni superior ni inferior) hasta repetir la
+campaña con la placa reparada. Los pesos siguen en
+`models/Qwen3.8-Flash-Next/albucino-w4a16-fp8ple` y la imagen
+`qwen38-flash-next-2x3090:v0.3.0-local` queda para ese reintento. Artefactos:
+`artifacts/flashnext-albucino-20260927/`.
+
 ## 2026-09-27 — `-sm tensor` y Q6 del hilo "Just bought a second 3090"
 
 El hilo de LocalLLaMA recomienda, para dos 3090: dejar Q4 por Q6/Q8,

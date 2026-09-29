@@ -1,0 +1,203 @@
+{
+ "tag": "byteshape_tensor_q8_mtp3_131k",
+ "model": "local",
+ "think": false,
+ "speed": {
+  "code_tg_runs": [
+   78.32,
+   78.94,
+   78.45
+  ],
+  "code_tg": 78.45,
+  "narr_tg_runs": [
+   52.11,
+   52.23,
+   52.61
+  ],
+  "narr_tg": 52.23,
+  "tool_ok": true,
+  "long_prompt_n": 26493,
+  "long_pp": 915.4,
+  "long_ttft_s": 28.941,
+  "long_answer": "TANGO-7731",
+  "long_ok": true,
+  "long_tg": 47.54,
+  "long_cached_ttft_s": 0.508,
+  "after_long_ok": true
+ },
+ "section_s": {
+  "speed": 90.5,
+  "vision": 5.0,
+  "coding": 43.7,
+  "cu": 39.0,
+  "bcb8": 45.8,
+  "charla": 13.8,
+  "long64k": 121.8
+ },
+ "vision": {
+  "runs": [
+   {
+    "elapsed_s": 2.836,
+    "calls": [
+     {
+      "name": "desktop_control_action",
+      "arguments": {
+       "action": "toggle",
+       "target": "Tema oscuro",
+       "value": true
+      }
+     }
+    ],
+    "correct": true
+   },
+   {
+    "elapsed_s": 0.716,
+    "calls": [
+     {
+      "name": "desktop_control_action",
+      "arguments": {
+       "action": "toggle",
+       "target": "Tema oscuro",
+       "value": true
+      }
+     }
+    ],
+    "correct": true
+   },
+   {
+    "elapsed_s": 0.699,
+    "calls": [
+     {
+      "name": "desktop_control_action",
+      "arguments": {
+       "action": "toggle",
+       "target": "Tema oscuro",
+       "value": true
+      }
+     }
+    ],
+    "correct": true
+   }
+  ],
+  "correct": 3,
+  "ocr_answer": "GUARDAR 481",
+  "ocr_ok": false
+ },
+ "coding": {
+  "passed": 3,
+  "total": 3,
+  "rows": [
+   {
+    "id": "python_parse_logs",
+    "elapsed_s": 12.85,
+    "passed": true
+   },
+   {
+    "id": "debug_race_condition",
+    "elapsed_s": 5.51,
+    "passed": true
+   },
+   {
+    "id": "small_refactor_plan",
+    "elapsed_s": 25.31,
+    "passed": true
+   }
+  ]
+ },
+ "cu": [
+  {
+   "suite": "computer_use_prompt_order_v1",
+   "correct": 24,
+   "security": 8,
+   "security_correct": 8,
+   "total": 24,
+   "median_s": 0.74
+  },
+  {
+   "suite": "computer_use_prompt_order_hard_v1",
+   "correct": 24,
+   "security": 21,
+   "security_correct": 21,
+   "total": 24,
+   "median_s": 0.837
+  }
+ ],
+ "bcb8": {
+  "passed": 1,
+  "total": 8,
+  "gen_s": 44.5,
+  "rows": [
+   {
+    "id": "BigCodeBench/870",
+    "passed": true,
+    "elapsed_s": 4.42,
+    "completion_tokens": 312,
+    "detail": ""
+   },
+   {
+    "id": "BigCodeBench/509",
+    "passed": false,
+    "elapsed_s": 7.61,
+    "completion_tokens": 582,
+    "detail": "1, ,('name', 'age')\", \"2,-,('Alice', '30[43 chars]5')\"]\n\nFirst differing element 0:\n'1, ,name,age\\r'\n\"1, ,('name', 'age')\"\n\n- ['1, ,name,age\\r', '2,-,Alice,30\\r', '4,+,Alice,31\\r', '6, ,Bob,25\\r']\n+ [\"1, ,('name', 'age')\",\n+  \"2,-,('Alice', '30')\",\n+  \"3,+,('Alice', '31')\",\n+  \"4, ,('Bob', '25')\"]\n\n"
+   },
+   {
+    "id": "BigCodeBench/857",
+    "passed": false,
+    "elapsed_s": 3.27,
+    "completion_tokens": 232,
+    "detail": "mock.py\", line 1390, in patched\n    return func(*newargs, **newkeywargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/tmpmkxd_u1e/t.py\", line 86, in test_exception_handling\n    self.assertTrue(any(\"Unable to move file\" in str(warn.message) for warn in w))\nAssertionError: False is not true\n\n"
+   },
+   {
+    "id": "BigCodeBench/310",
+    "passed": false,
+    "elapsed_s": 5.58,
+    "completion_tokens": 425,
+    "detail": "  File \"/tmp/tmp6jf1_550/t.py\", line 2\n    ```python\n    ^\nSyntaxError: invalid syntax\n"
+   },
+   {
+    "id": "BigCodeBench/800",
+    "passed": false,
+    "elapsed_s": 6.73,
+    "completion_tokens": 488,
+    "detail": "  File \"/tmp/tmpx7hytcq4/t.py\", line 2\n    ```python\n    ^\nSyntaxError: invalid syntax\n"
+   },
+   {
+    "id": "BigCodeBench/123",
+    "passed": false,
+    "elapsed_s": 4.84,
+    "completion_tokens": 348,
+    "detail": "unc)\n  File \"/tmp/tmpv_j9mgv_/t.py\", line 108, in check\n    raise AssertionError(' | '.join(details))\nAssertionError: Traceback (most recent call last):\n  File \"/tmp/tmpv_j9mgv_/t.py\", line 87, in test_list_modification\n    self.assertIn(12, my_list)\nAssertionError: 12 not found in [1, 2, 3, '12']\n\n"
+   },
+   {
+    "id": "BigCodeBench/952",
+    "passed": false,
+    "elapsed_s": 5.64,
+    "completion_tokens": 404,
+    "detail": "\"/tmp/tmpyuk93_kx/t.py\", line 66, in test_case_1\n    self.assertTrue(all(df[\"Due Date\"] == self.today_str))\nAssertionError: False is not true\n | Traceback (most recent call last):\n  File \"/tmp/tmpyuk93_kx/t.py\", line 82, in test_case_3\n    self.assertEqual(len(df), n_tasks)\nAssertionError: 3 != 10\n\n"
+   },
+   {
+    "id": "BigCodeBench/492",
+    "passed": false,
+    "elapsed_s": 6.41,
+    "completion_tokens": 457,
+    "detail": "tmp/tmpkxnw9wy5/t.py\", line 118, in test_case_6\n    with self.assertRaises(ValueError):\nAssertionError: ValueError not raised\n | Traceback (most recent call last):\n  File \"/tmp/tmpkxnw9wy5/t.py\", line 122, in test_case_7\n    with self.assertRaises(ValueError):\nAssertionError: ValueError not raised\n\n"
+   }
+  ]
+ },
+ "charla": {
+  "ttft_med_ms": 261,
+  "ttft_p90_ms": 267,
+  "total_med_s": 1.2
+ },
+ "long64k": {
+  "ttft_s": 76.587,
+  "prompt_tokens": 62848,
+  "completion_tokens": 2048,
+  "pp": 820.6,
+  "tg": 45.33,
+  "total_s": 121.74,
+  "text": "58-12-99\n\n### The Architecture of Arrival: A Study of Harbors\n\nA harbor is not merely a body of water; it is a complex, ",
+  "needle_ok": true
+ }
+}

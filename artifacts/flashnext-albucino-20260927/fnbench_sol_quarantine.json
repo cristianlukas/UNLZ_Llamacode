@@ -1,0 +1,225 @@
+{
+ "tag": "sol_quarantine",
+ "model": "local",
+ "think": false,
+ "speed": {
+  "code_tg_runs": [
+   107.05,
+   104.91,
+   102.64
+  ],
+  "code_tg": 104.91,
+  "narr_tg_runs": [
+   65.32,
+   66.71,
+   66.7
+  ],
+  "narr_tg": 66.7,
+  "tool_ok": true,
+  "long_prompt_n": 26493,
+  "long_pp": 1977.1,
+  "long_ttft_s": 13.4,
+  "long_answer": "TANGO-7731",
+  "long_ok": true,
+  "long_tg": 62.95,
+  "long_cached_ttft_s": 1.462,
+  "after_long_ok": true
+ },
+ "section_s": {
+  "speed": 61.3,
+  "long64k": 67.4,
+  "long131k": 132.0,
+  "long256k": 324.5,
+  "coding": 19.5,
+  "cu": 26.0,
+  "bcb8": 22.5,
+  "charla": 10.8,
+  "vision": 3.4
+ },
+ "long64k": {
+  "ttft_s": 34.603,
+  "prompt_tokens": 62848,
+  "completion_tokens": 2048,
+  "pp": 1816.3,
+  "tg": 62.47,
+  "total_s": 67.37,
+  "text": "58-12-99\n\n**The Architecture of Arrival: A Study of Harbors**\n\nA harbor is far more than a body of water sheltered from ",
+  "needle_ok": true
+ },
+ "long131k": {
+  "ttft_s": 95.433,
+  "prompt_tokens": 130085,
+  "completion_tokens": 2048,
+  "pp": 1363.1,
+  "tg": 56.04,
+  "total_s": 131.96,
+  "text": "58-12-99\n\n**The Architecture of Arrival: A Study of Harbors**\n\nA harbor is far more than a body of water sheltered from ",
+  "needle_ok": true
+ },
+ "long256k": {
+  "ttft_s": 283.189,
+  "prompt_tokens": 257588,
+  "completion_tokens": 2048,
+  "pp": 909.6,
+  "tg": 49.65,
+  "total_s": 324.41,
+  "text": "58-12-99\n\n**The Architecture of Arrival: A Study of Harbors**\n\nA harbor is, at its most fundamental level, a place of pa",
+  "needle_ok": true
+ },
+ "coding": {
+  "passed": 3,
+  "total": 3,
+  "rows": [
+   {
+    "id": "python_parse_logs",
+    "elapsed_s": 1.27,
+    "passed": true
+   },
+   {
+    "id": "debug_race_condition",
+    "elapsed_s": 5.65,
+    "passed": true
+   },
+   {
+    "id": "small_refactor_plan",
+    "elapsed_s": 12.62,
+    "passed": true
+   }
+  ]
+ },
+ "cu": [
+  {
+   "suite": "computer_use_prompt_order_v1",
+   "correct": 24,
+   "security": 8,
+   "security_correct": 8,
+   "total": 24,
+   "median_s": 0.52
+  },
+  {
+   "suite": "computer_use_prompt_order_hard_v1",
+   "correct": 24,
+   "security": 21,
+   "security_correct": 21,
+   "total": 24,
+   "median_s": 0.55
+  }
+ ],
+ "bcb8": {
+  "passed": 0,
+  "total": 8,
+  "gen_s": 21.8,
+  "rows": [
+   {
+    "id": "BigCodeBench/870",
+    "passed": false,
+    "elapsed_s": 2.5,
+    "completion_tokens": 324,
+    "detail": "  File \"/tmp/tmp1hxf72vx/t.py\", line 2\n    ```python\n    ^\nSyntaxError: invalid syntax\n"
+   },
+   {
+    "id": "BigCodeBench/509",
+    "passed": false,
+    "elapsed_s": 5.08,
+    "completion_tokens": 680,
+    "detail": "25'] != [\"1, ,('name', 'age')\", \"2,-,('Alice', '30[43 chars]5')\"]\n\nFirst differing element 0:\n'1, ,name,age'\n\"1, ,('name', 'age')\"\n\n- ['1, ,name,age', '2,-,Alice,30', '2,+,Alice,31', '3, ,Bob,25']\n+ [\"1, ,('name', 'age')\",\n+  \"2,-,('Alice', '30')\",\n+  \"3,+,('Alice', '31')\",\n+  \"4, ,('Bob', '25')\"]\n\n"
+   },
+   {
+    "id": "BigCodeBench/857",
+    "passed": false,
+    "elapsed_s": 1.84,
+    "completion_tokens": 236,
+    "detail": "mock.py\", line 1390, in patched\n    return func(*newargs, **newkeywargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/tmpfo_4hv0s/t.py\", line 88, in test_exception_handling\n    self.assertTrue(any(\"Unable to move file\" in str(warn.message) for warn in w))\nAssertionError: False is not true\n\n"
+   },
+   {
+    "id": "BigCodeBench/310",
+    "passed": false,
+    "elapsed_s": 2.95,
+    "completion_tokens": 374,
+    "detail": ", in test_averages_calculation\n    self.assertEqual(actual_averages, expected_averages)\nAssertionError: Lists differ: [53.52, 169.57, 82.94] != [53.52, 169.5657, 82.9403]\n\nFirst differing element 1:\n169.57\n169.5657\n\n- [53.52, 169.57, 82.94]\n+ [53.52, 169.5657, 82.9403]\n?              ++        ++\n\n\n"
+   },
+   {
+    "id": "BigCodeBench/800",
+    "passed": false,
+    "elapsed_s": 2.14,
+    "completion_tokens": 299,
+    "detail": "  File \"/tmp/tmp9bhlng8u/t.py\", line 2\n    ```python\n    ^\nSyntaxError: invalid syntax\n"
+   },
+   {
+    "id": "BigCodeBench/123",
+    "passed": false,
+    "elapsed_s": 2.68,
+    "completion_tokens": 312,
+    "detail": "  File \"/tmp/tmp4jodvo67/t.py\", line 2\n    ```python\n    ^\nSyntaxError: invalid syntax\n"
+   },
+   {
+    "id": "BigCodeBench/952",
+    "passed": false,
+    "elapsed_s": 1.76,
+    "completion_tokens": 242,
+    "detail": "tmp/tmp3bh_fh3e/t.py\", line 26, in task_func\n    task = random.choice(sanitized_tasks)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.12/random.py\", line 347, in choice\n    raise IndexError('Cannot choose from an empty sequence')\nIndexError: Cannot choose from an empty sequence\n\n"
+   },
+   {
+    "id": "BigCodeBench/492",
+    "passed": false,
+    "elapsed_s": 2.86,
+    "completion_tokens": 368,
+    "detail": "  File \"/tmp/tmp7zwfe93d/t.py\", line 2\n    ```python\n    ^\nSyntaxError: invalid syntax\n"
+   }
+  ]
+ },
+ "charla": {
+  "ttft_med_ms": 619,
+  "ttft_p90_ms": 620,
+  "total_med_s": 1.1
+ },
+ "vision": {
+  "runs": [
+   {
+    "elapsed_s": 1.117,
+    "calls": [
+     {
+      "name": "desktop_control_action",
+      "arguments": {
+       "action": "toggle",
+       "target": "Tema oscuro",
+       "value": true
+      }
+     }
+    ],
+    "correct": true
+   },
+   {
+    "elapsed_s": 0.975,
+    "calls": [
+     {
+      "name": "desktop_control_action",
+      "arguments": {
+       "action": "toggle",
+       "target": "Tema oscuro",
+       "value": true
+      }
+     }
+    ],
+    "correct": true
+   },
+   {
+    "elapsed_s": 0.974,
+    "calls": [
+     {
+      "name": "desktop_control_action",
+      "arguments": {
+       "action": "toggle",
+       "target": "Tema oscuro",
+       "value": true
+      }
+     }
+    ],
+    "correct": true
+   }
+  ],
+  "correct": 3,
+  "ocr_answer": "CURBAN 4821",
+  "ocr_ok": false
+ }
+}

@@ -1,0 +1,15 @@
+{
+ "tag": "fn_hot84_quarantine",
+ "model": "local",
+ "think": false,
+ "speed": {
+  "error": "HTTPError: HTTP Error 500: Internal Server Error"
+ },
+ "section_s": {
+  "speed": 62.0,
+  "long64k": 0.0
+ },
+ "long64k": {
+  "error": "HTTPError: HTTP Error 500: Internal Server Error"
+ }
+}

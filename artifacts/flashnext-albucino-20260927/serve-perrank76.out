@@ -1,0 +1,7 @@
+healthy after 485s; peak RAM+swap 130240 MiB
+               total       usado       libre  compartido   búf/caché  disponible
+Mem:          126472       96572        3337         117       27850       29899
+Inter:         65535       32752       32783
+memory.used [MiB]
+23175 MiB
+23298 MiB

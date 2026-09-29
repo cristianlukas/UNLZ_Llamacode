@@ -1,5 +1,17 @@
 # Qwen3.8-Flash-Next W4A16-FP8PLE de albucino — auditoría 2026-09-26
 
+> **Actualización 2026-09-27:** se reintentó en Ubuntu con 123 GiB, pesos
+> verificados y runtime v0.3.0. Sigue **no evaluable en esta PC**, ahora por
+> otra causa: la VRAM de la RTX 3090 ASUS (GPU0) tiene bits clavados y el
+> runtime corta al verificar las copias de expertos. El bloqueo ya no es la RAM.
+> Ver [informe de la falla](gpu0-asus-3090-vram-fault-20260927.md) y el
+> [historial](benchmark-results-history.md).
+>
+> **Actualización 2026-09-28:** con la cuarentena de VRAM se midió contra SOL.
+> Paridad de calidad (LC-H1 8/8, ADV 10/10 con graders corregidos), superior sólo en prefill ≥128K e
+> inferior en decode corto, Charla y Computer Use. Ver
+> [`benchmark-results.md`](benchmark-results.md).
+
 ## Veredicto
 
 **No promover como perfil superior de agente ni como reemplazo de SOL.** El

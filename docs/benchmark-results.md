@@ -66,6 +66,56 @@ No hay score de calidad/velocidad, y Computer Use e Ingi Charla no se evaluaron.
 
 El artefacto público de 231 casos se validó estructuralmente (231/231 filas válidas, 192 correctas) y la batería local completa confirmó el resultado Tetris publicado; eso no mide coding ni otros dominios. Mica requiere su endpoint TypeSafe, no es un perfil `llama-server` seleccionable. No se cambia el harness de coding, Ingi-Charla, Computer Use ni los defaults hasta tener una integración advisory y un A/B apareado. Ver [auditoría Mica](mica-decision-profile-audit-20260926.md) y [evidencia JSON](../artifacts/mica-decision-profile-20260926.json).
 
+## 2026-09-28 — Flash-Next W4A16-FP8PLE vs SOL, medido (con cuarentena de VRAM)
+
+Misma PC, mismo día y mismo harness de la app (`build_astra`, `agent-maximo`,
+1800 s). La cuarentena `fbscan` y el reintento `rmtrace` 64K estuvieron activos
+en las dos corridas. Flash-Next corrió con hot cache por placa, ASUS=76 y
+PNY=84: hot84 en las dos da OOM en la ASUS, porque además maneja el escritorio.
+
+| Prueba | Flash-Next | SOL | Veredicto |
+|---|---:|---:|---|
+| LC-H1 HE0 | 1/1 · 21 s | 1/1 · 13 s | Paridad |
+| LC-H1 HE20 | 20/20 · 552 s | 20/20 · 234 s | Paridad; Flash-Next 2,4× más lento |
+| LC-H1 BCB8 | 8/8 (3/8 al 1.er intento) · 1.328 s | 8/8 (4/8) · 865 s | Paridad |
+| ADV v1 (graders corregidos) | 10/10 · 2.434 s | 10/10 · 842 s | Paridad |
+| TG código / narrativa | 66,3 / 44,7 | **104,9 / 66,7** | **Inferior** |
+| PP / TG a 26K | 1.633 / 49,8 | **1.977 / 63,0** | Inferior |
+| PP / TG a 64K | **1.989 / 67,6** | 1.816 / 62,5 | Superior leve |
+| PP / TG a 131K | **1.984 / 64,1** | 1.363 / 56,0 | **Superior** (+46 % PP) |
+| PP / TG a 257K | **2.159 / 52,4** | 910 / 49,7 | **Superior** (2,4× PP; 164 s menos hasta el primer token) |
+| Needle 26K–257K | 5/5 | 5/5 | Paridad |
+| Computer Use / seguridad | 46/48 · 27/29 | **48/48 · 29/29** | **Inferior** |
+| Visión con tool (hot80, ASUS=72/PNY=80) | 3/3 | 3/3 | Paridad |
+| Charla, TTFT mediano | 3.048 ms | **619 ms** | **Inferior** |
+
+**Clasificación:** Flash-Next es **SUPERIOR sólo en prefill de contexto
+largo** (≥128K). Es **INFERIOR** en decode corto, Charla, Computer Use
+(seguridad) y tiempo de agente, y queda en **paridad de calidad** (LC-H1 y
+ADV). SOL sigue como default. ADV se re-puntuó el 2026-09-28 con los graders corregidos: el 7/10 original de los dos salía de 3 graders que contradecían su consigna. La config exacta del post (hot88 en las dos
+placas) no entra en esta PC: hot84 ya da OOM en la ASUS. Velocidades medidas
+con `fnbench.py` por streaming; requiere 64 GiB de swap y usa ~108 GiB de RAM.
+
+## 2026-09-27 — Flash-Next W4A16-FP8PLE: no evaluable (VRAM defectuosa en GPU0)
+
+> **Superado el 2026-09-28:** con la cuarentena de VRAM se pudo medir (sección de arriba).
+
+| Perfil | Resultado local | Clasificación |
+|---|---|---|
+| `sys-bench-qwen38-flashnext-albucino-fast256k` | No carga: `tiered packed-byte mismatch` en la GPU ASUS (`01:00.0`) | **No evaluable en esta PC** |
+| `sys-bench-qwen38-flashnext-albucino-reddit-hot88-220k` | Ídem (config exacta del post) | **No evaluable en esta PC** |
+| `sys-bench-qwen38-flashnext-albucino-vision-hot80-256k` | Ídem | **No evaluable en esta PC** |
+| SOL (línea de base del mismo día, harness `build_astra`, `agent-maximo`) | HE0 1/1 · HE20 20/20 · BCB8 8/8 (4/8 al primer intento, 2 reparaciones) · ADV 10/10 (7/10 con los graders rotos) | **Sin cambios: default** |
+
+Esta vez sí había 123 GiB de RAM, con los pesos descargados y verificados por
+SHA y el runtime v0.3.0 del mantenedor. La carga falló en 7 intentos, siempre
+en la placa física ASUS, también con las GPUs invertidas. Se descartaron la
+config (hot80/84/88), el filesystem (NTFS y ext4), el swap (28 y 64 GiB) y la
+presión de RAM. Un test de VRAM hecho dentro de la GPU encontró 1.636 palabras
+con los bits 25/27/29/31 clavados en 1 en la ASUS y 0 en la PNY. **No es
+superior ni inferior**: el modelo no pudo correr. Hay que reevaluarlo después
+de reparar la placa. Ver [informe de la falla de VRAM](gpu0-asus-3090-vram-fault-20260927.md).
+
 ## 2026-09-26 — Candidato externo Qwen3.8-Flash-Next W4A16-FP8PLE
 
 | Perfil | Contexto / runtime | Resultado | Clasificación |

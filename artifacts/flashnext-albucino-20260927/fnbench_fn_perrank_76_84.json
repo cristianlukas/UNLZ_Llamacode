@@ -1,0 +1,175 @@
+{
+ "tag": "fn_perrank_76_84",
+ "model": "local",
+ "think": false,
+ "speed": {
+  "code_tg_runs": [
+   60.74,
+   66.3,
+   66.57
+  ],
+  "code_tg": 66.3,
+  "narr_tg_runs": [
+   43.76,
+   44.69,
+   49.67
+  ],
+  "narr_tg": 44.69,
+  "tool_ok": true,
+  "long_prompt_n": 26493,
+  "long_pp": 1632.9,
+  "long_ttft_s": 16.225,
+  "long_answer": "TANGO-7731",
+  "long_ok": true,
+  "long_tg": 49.82,
+  "long_cached_ttft_s": 4.698,
+  "after_long_ok": true
+ },
+ "section_s": {
+  "speed": 98.8,
+  "long64k": 61.9,
+  "long131k": 97.5,
+  "long256k": 158.4,
+  "coding": 43.3,
+  "cu": 127.8,
+  "bcb8": 71.1,
+  "charla": 40.5
+ },
+ "long64k": {
+  "ttft_s": 31.592,
+  "prompt_tokens": 62848,
+  "completion_tokens": 2048,
+  "pp": 1989.3,
+  "tg": 67.56,
+  "total_s": 61.89,
+  "text": "58-12-99\n\n**The Architecture of Connection: An Essay on Harbors**\n\nHarbors are among the most profound intersections of ",
+  "needle_ok": true
+ },
+ "long131k": {
+  "ttft_s": 65.563,
+  "prompt_tokens": 130085,
+  "completion_tokens": 2048,
+  "pp": 1984.1,
+  "tg": 64.09,
+  "total_s": 97.5,
+  "text": "58-12-99\n\n**The Architecture of Arrival: An Essay on Harbors**\n\nHarbors are among the most profound intersections of hum",
+  "needle_ok": true
+ },
+ "long256k": {
+  "ttft_s": 119.328,
+  "prompt_tokens": 257588,
+  "completion_tokens": 2048,
+  "pp": 2158.7,
+  "tg": 52.39,
+  "total_s": 158.4,
+  "text": "The vault combination is 58-12-99.\n\n**The Architecture of Arrival: An Essay on Harbors**\n\nHarbors are among the most pro",
+  "needle_ok": true
+ },
+ "coding": {
+  "passed": 3,
+  "total": 3,
+  "rows": [
+   {
+    "id": "python_parse_logs",
+    "elapsed_s": 6.52,
+    "passed": true
+   },
+   {
+    "id": "debug_race_condition",
+    "elapsed_s": 6.78,
+    "passed": true
+   },
+   {
+    "id": "small_refactor_plan",
+    "elapsed_s": 30.05,
+    "passed": true
+   }
+  ]
+ },
+ "cu": [
+  {
+   "suite": "computer_use_prompt_order_v1",
+   "correct": 24,
+   "security": 8,
+   "security_correct": 8,
+   "total": 24,
+   "median_s": 2.409
+  },
+  {
+   "suite": "computer_use_prompt_order_hard_v1",
+   "correct": 22,
+   "security": 21,
+   "security_correct": 19,
+   "total": 24,
+   "median_s": 2.576
+  }
+ ],
+ "bcb8": {
+  "passed": 1,
+  "total": 8,
+  "gen_s": 69.2,
+  "rows": [
+   {
+    "id": "BigCodeBench/870",
+    "passed": true,
+    "elapsed_s": 6.36,
+    "completion_tokens": 318,
+    "detail": ""
+   },
+   {
+    "id": "BigCodeBench/509",
+    "passed": false,
+    "elapsed_s": 19.46,
+    "completion_tokens": 1078,
+    "detail": "!= [\"1, ,('name', 'age')\", \"2,-,('Alice', '30[43 chars]5')\"]\n\nFirst differing element 0:\n'1, , name,age'\n\"1, ,('name', 'age')\"\n\n- ['1, , name,age', '2,-, Alice,30', '2,+, Alice,31', '3, , Bob,25']\n+ [\"1, ,('name', 'age')\",\n+  \"2,-,('Alice', '30')\",\n+  \"3,+,('Alice', '31')\",\n+  \"4, ,('Bob', '25')\"]\n\n"
+   },
+   {
+    "id": "BigCodeBench/857",
+    "passed": false,
+    "elapsed_s": 8.02,
+    "completion_tokens": 431,
+    "detail": " 93, in test_successful_transfer\n    self.assertEqual(transferred_files, ['file1.txt', 'file2.csv'])\nAssertionError: Lists differ: ['file2.csv', 'file1.txt'] != ['file1.txt', 'file2.csv']\n\nFirst differing element 0:\n'file2.csv'\n'file1.txt'\n\n- ['file2.csv', 'file1.txt']\n+ ['file1.txt', 'file2.csv']\n\n"
+   },
+   {
+    "id": "BigCodeBench/310",
+    "passed": false,
+    "elapsed_s": 6.51,
+    "completion_tokens": 354,
+    "detail": "ation\n    self.assertEqual(actual_averages, expected_averages)\nAssertionError: Lists differ: [50.14, 174.43, 80.84] != [50.14, 174.4259, 80.8375]\n\nFirst differing element 1:\n174.43\n174.4259\n\n- [50.14, 174.43, 80.84]\n?              ^      ^\n\n+ [50.14, 174.4259, 80.8375]\n?              ^^^      ^^^\n\n\n"
+   },
+   {
+    "id": "BigCodeBench/800",
+    "passed": false,
+    "elapsed_s": 8.97,
+    "completion_tokens": 444,
+    "detail": "cent call last):\n  File \"/tmp/tmp5x_dmjpc/t.py\", line 116, in test_case_5\n    result = task_func(goals, penalties)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/tmp5x_dmjpc/t.py\", line 50, in task_func\n    total_goals += goals\nTypeError: unsupported operand type(s) for +=: 'int' and 'dict'\n\n"
+   },
+   {
+    "id": "BigCodeBench/123",
+    "passed": false,
+    "elapsed_s": 8.41,
+    "completion_tokens": 442,
+    "detail": "nc)\n  File \"/tmp/tmph_o8v4sx/t.py\", line 124, in check\n    raise AssertionError(' | '.join(details))\nAssertionError: Traceback (most recent call last):\n  File \"/tmp/tmph_o8v4sx/t.py\", line 103, in test_list_modification\n    self.assertIn(12, my_list)\nAssertionError: 12 not found in [1, 2, 3, '12']\n\n"
+   },
+   {
+    "id": "BigCodeBench/952",
+    "passed": false,
+    "elapsed_s": 4.99,
+    "completion_tokens": 246,
+    "detail": "tmp/tmpv8obuen2/t.py\", line 27, in task_func\n    task = random.choice(sanitized_tasks)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.12/random.py\", line 347, in choice\n    raise IndexError('Cannot choose from an empty sequence')\nIndexError: Cannot choose from an empty sequence\n\n"
+   },
+   {
+    "id": "BigCodeBench/492",
+    "passed": false,
+    "elapsed_s": 6.52,
+    "completion_tokens": 355,
+    "detail": "tmp/tmp8e9at_fe/t.py\", line 107, in test_case_6\n    with self.assertRaises(ValueError):\nAssertionError: ValueError not raised\n | Traceback (most recent call last):\n  File \"/tmp/tmp8e9at_fe/t.py\", line 111, in test_case_7\n    with self.assertRaises(ValueError):\nAssertionError: ValueError not raised\n\n"
+   }
+  ]
+ },
+ "charla": {
+  "ttft_med_ms": 3048,
+  "ttft_p90_ms": 3136,
+  "total_med_s": 4.28
+ }
+}

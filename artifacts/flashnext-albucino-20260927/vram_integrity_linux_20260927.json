@@ -1,0 +1,56 @@
+{
+ "host": "f3be67e1acf4",
+ "os": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+ "results": [
+  {
+   "gpu": 0,
+   "name": "NVIDIA GeForce RTX 3090",
+   "pci_bus_id": 1,
+   "tested_gib": 20.25,
+   "seconds": 1.8,
+   "bad_words_total": 8180,
+   "bad_words_per_pattern": {
+    "random_a": 1636,
+    "random_b": 1636,
+    "0x55AA55AA": 1636,
+    "0x2A55AA55": 1636,
+    "all_zeros": 1636
+   },
+   "blocks_hit": 11,
+   "stuck_bits_on_zeros": {
+    "25": 1636,
+    "27": 1636,
+    "29": 1636,
+    "31": 1636
+   },
+   "stuck_mask": "0xaa000000",
+   "common_strides_words": [
+    [
+     311296,
+     27
+    ],
+    [
+     278528,
+     25
+    ],
+    [
+     515840,
+     18
+    ]
+   ]
+  },
+  {
+   "gpu": 1,
+   "name": "NVIDIA GeForce RTX 3090",
+   "pci_bus_id": 3,
+   "tested_gib": 20.75,
+   "seconds": 1.4,
+   "bad_words_total": 0,
+   "bad_words_per_pattern": {},
+   "blocks_hit": 0,
+   "stuck_bits_on_zeros": {},
+   "stuck_mask": null,
+   "common_strides_words": []
+  }
+ ]
+}

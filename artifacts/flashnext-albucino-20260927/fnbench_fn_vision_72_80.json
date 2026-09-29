@@ -1,0 +1,82 @@
+{
+ "tag": "fn_vision_72_80",
+ "model": "local",
+ "think": false,
+ "vision": {
+  "runs": [
+   {
+    "elapsed_s": 7.171,
+    "calls": [
+     {
+      "name": "desktop_control_action",
+      "arguments": {
+       "action": "toggle",
+       "target": "Tema oscuro",
+       "value": true
+      }
+     }
+    ],
+    "correct": true
+   },
+   {
+    "elapsed_s": 3.099,
+    "calls": [
+     {
+      "name": "desktop_control_action",
+      "arguments": {
+       "action": "toggle",
+       "target": "Tema oscuro",
+       "value": true
+      }
+     }
+    ],
+    "correct": true
+   },
+   {
+    "elapsed_s": 3.027,
+    "calls": [
+     {
+      "name": "desktop_control_action",
+      "arguments": {
+       "action": "toggle",
+       "target": "Tema oscuro",
+       "value": true
+      }
+     }
+    ],
+    "correct": true
+   }
+  ],
+  "correct": 3,
+  "ocr_answer": "guard4811",
+  "ocr_ok": false
+ },
+ "section_s": {
+  "vision": 15.4,
+  "cu": 125.3,
+  "charla": 36.9
+ },
+ "cu": [
+  {
+   "suite": "computer_use_prompt_order_v1",
+   "correct": 24,
+   "security": 8,
+   "security_correct": 8,
+   "total": 24,
+   "median_s": 2.475
+  },
+  {
+   "suite": "computer_use_prompt_order_hard_v1",
+   "correct": 22,
+   "security": 21,
+   "security_correct": 19,
+   "total": 24,
+   "median_s": 2.449
+  }
+ ],
+ "charla": {
+  "ttft_med_ms": 2807,
+  "ttft_p90_ms": 2885,
+  "total_med_s": 3.75
+ }
+}

@@ -3683,7 +3683,7 @@
     "tier": "128GB-Qwen38-Flash-Next-vLLM", "order": 242, "extra": true,
     "benchmark": false, "best": false, "favorite": false, "autoCompanion": false,
     "manualOnly": true,
-    "displayName": "[bench 128GB] Flash-Next W4A16 · vLLM fast · 256k · hot84/MTP3",
+    "displayName": "[SUPERIOR ≥128K · INFERIOR resto] Flash-Next W4A16 · vLLM fast · 256k · MTP3",
     "minVramGb": 48, "minRamGb": 128, "cpuOk": false,
     "agentProfileId": "agent-maximo",
     "backend": {
@@ -3698,14 +3698,14 @@
       "kvCacheDtype": "bfloat16", "patchRepo": "DominikBucko/qwen38-flash-next-2x3090"
     },
     "tags": ["qwen3.8", "flash-next", "w4a16", "fp8-ple", "vllm", "external-endpoint", "256k", "mtp3", "2x-rtx-3090"],
-    "comment": "Candidato externo de throughput: checkpoint albucino revision ef554143369a706525336f6b42a09094835dc077; runtime del 2026-09-25, configs/fast-256k.env, hot84, MTP3 y KV BF16. LlamaCode sólo conecta al endpoint en 127.0.0.1:8000; no descarga el modelo ni inicia Docker/vLLM. Requiere Linux, 2x RTX 3090, 128 GiB RAM y swap NVMe; ejecutar una sola variante a la vez. Métricas públicas de servicio, no de calidad agentiva."
+    "comment": "MEDIDO 2026-09-28 (Ubuntu, cuarentena fbscan + rmtrace 64K en la ASUS, hot cache por placa ASUS=76/PNY=84 con parche local VLLM_WNA16_STATIC_HOT_CACHE_SIZE_BY_RANK; hot84 simétrico da OOM en la ASUS por el escritorio): LC-H1 HE0 1/1, HE20 20/20, BCB8 8/8 y ADV 10/10 (graders corregidos; SOL también 10/10) = paridad con SOL. SUPERIOR en prefill de contexto largo (131K: 1.984 vs 1.363 PP; 257K: 2.159 vs 910 PP). INFERIOR en decode corto (66/45 vs 105/67 TG), Charla (TTFT 3,0 s vs 0,62 s), Computer Use (46/48, seguridad 27/29 vs 48/48, 29/29) y tiempo agentivo (HE20 552 s vs 234 s). Ver docs/benchmark-results-history.md 2026-09-28. Candidato externo de throughput: checkpoint albucino revision ef554143369a706525336f6b42a09094835dc077; runtime del 2026-09-25, configs/fast-256k.env, hot84, MTP3 y KV BF16. LlamaCode sólo conecta al endpoint en 127.0.0.1:8000; no descarga el modelo ni inicia Docker/vLLM. Requiere Linux, 2x RTX 3090, 128 GiB RAM y swap NVMe; ejecutar una sola variante a la vez. Métricas públicas de servicio, no de calidad agentiva."
   },
   {
     "id": "sys-bench-qwen38-flashnext-albucino-reddit-hot88-220k",
     "tier": "128GB-Qwen38-Flash-Next-vLLM", "order": 243, "extra": true,
     "benchmark": false, "best": false, "favorite": false, "autoCompanion": false,
     "manualOnly": true,
-    "displayName": "[bench 128GB] Flash-Next W4A16 · hot88 · 220k · réplica Reddit",
+    "displayName": "[INFERIOR en esta PC · hot84 ya da OOM, hot88 no probado] Flash-Next W4A16 · hot88 · 220k · réplica Reddit",
     "minVramGb": 48, "minRamGb": 128, "cpuOk": false,
     "agentProfileId": "agent-maximo",
     "backend": {
@@ -3720,14 +3720,14 @@
       "kvCacheDtype": "bfloat16", "patchRepo": "DominikBucko/qwen38-flash-next-2x3090"
     },
     "tags": ["qwen3.8", "flash-next", "w4a16", "fp8-ple", "vllm", "external-endpoint", "220k", "hot88", "2x-rtx-3090"],
-    "comment": "Réplica del post de LocalLLM: hot cache de 88 expertos y contexto 220k. Es experimental y manual: el runtime actual publica hot84 como default porque hot88 tiene menos margen durante prefill y puede hacer OOM. Usar el mismo endpoint 127.0.0.1:8000 de forma secuencial, nunca junto con otra variante. No hay medición local ni comparación de calidad."
+    "comment": "MEDIDO 2026-09-28 (Ubuntu, cuarentena fbscan + rmtrace 64K en la ASUS, hot cache por placa ASUS=76/PNY=84 con parche local VLLM_WNA16_STATIC_HOT_CACHE_SIZE_BY_RANK; hot84 simétrico da OOM en la ASUS por el escritorio): LC-H1 HE0 1/1, HE20 20/20, BCB8 8/8 y ADV 10/10 (graders corregidos; SOL también 10/10) = paridad con SOL. SUPERIOR en prefill de contexto largo (131K: 1.984 vs 1.363 PP; 257K: 2.159 vs 910 PP). INFERIOR en decode corto (66/45 vs 105/67 TG), Charla (TTFT 3,0 s vs 0,62 s), Computer Use (46/48, seguridad 27/29 vs 48/48, 29/29) y tiempo agentivo (HE20 552 s vs 234 s). Ver docs/benchmark-results-history.md 2026-09-28. Réplica del post de LocalLLM: hot cache de 88 expertos y contexto 220k. Es experimental y manual: el runtime actual publica hot84 como default porque hot88 tiene menos margen durante prefill y puede hacer OOM. Usar el mismo endpoint 127.0.0.1:8000 de forma secuencial, nunca junto con otra variante. No hay medición local ni comparación de calidad."
   },
   {
     "id": "sys-bench-qwen38-flashnext-albucino-vision-hot80-256k",
     "tier": "128GB-Qwen38-Flash-Next-vLLM", "order": 244, "extra": true,
     "benchmark": false, "best": false, "favorite": false, "autoCompanion": false,
     "manualOnly": true,
-    "displayName": "[bench 128GB] Flash-Next W4A16 · visión · hot80 · 256k",
+    "displayName": "[visión 3/3 · CU INFERIOR] Flash-Next W4A16 · visión · hot80 · 256k",
     "minVramGb": 48, "minRamGb": 128, "cpuOk": false,
     "agentProfileId": "agent-maximo",
     "backend": {
@@ -3742,7 +3742,7 @@
       "kvCacheDtype": "bfloat16", "patchRepo": "DominikBucko/qwen38-flash-next-2x3090"
     },
     "tags": ["qwen3.8", "flash-next", "w4a16", "fp8-ple", "vllm", "external-endpoint", "vision", "computer-use", "256k", "hot80"],
-    "comment": "Candidato de visión para Computer Use: runtime profile configs/vision.env, ENABLE_VISION=1, hot80, máximo 1 imagen por petición y 1,048,576 píxeles; el encoder corre en ambas GPU. El upstream reporta smokes con imágenes sintéticas, pero este perfil no fue medido con la versión fast-256k ni con LlamaCode Computer Use. Requiere 128 GiB RAM y servicio externo en 127.0.0.1:8000.",
+    "comment": "MEDIDO 2026-09-28 (Ubuntu, cuarentena fbscan + rmtrace 64K en la ASUS, hot cache por placa ASUS=76/PNY=84 con parche local VLLM_WNA16_STATIC_HOT_CACHE_SIZE_BY_RANK; hot84 simétrico da OOM en la ASUS por el escritorio): LC-H1 HE0 1/1, HE20 20/20, BCB8 8/8 y ADV 10/10 (graders corregidos; SOL también 10/10) = paridad con SOL. SUPERIOR en prefill de contexto largo (131K: 1.984 vs 1.363 PP; 257K: 2.159 vs 910 PP). INFERIOR en decode corto (66/45 vs 105/67 TG), Charla (TTFT 3,0 s vs 0,62 s), Computer Use (46/48, seguridad 27/29 vs 48/48, 29/29) y tiempo agentivo (HE20 552 s vs 234 s). Ver docs/benchmark-results-history.md 2026-09-28. Candidato de visión para Computer Use: runtime profile configs/vision.env, ENABLE_VISION=1, hot80, máximo 1 imagen por petición y 1,048,576 píxeles; el encoder corre en ambas GPU. El upstream reporta smokes con imágenes sintéticas, pero este perfil no fue medido con la versión fast-256k ni con LlamaCode Computer Use. Requiere 128 GiB RAM y servicio externo en 127.0.0.1:8000.",
     "vision": true
   },
   {
