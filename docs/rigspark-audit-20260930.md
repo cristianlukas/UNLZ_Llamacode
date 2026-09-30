@@ -85,3 +85,71 @@ recomendaciones explicables que registren versión, fecha, requerimiento de RAM/
 VRAM/contexto, incertidumbre de la estimación y score local disponible; luego
 probar una novedad propuesta con el flujo de evaluación existente antes de
 promoverla.
+
+## Comparación ejecutada: Rigspark 2.1.0 vs. LlamaCode — 2026-09-30
+
+Se descargó a `/tmp` el archivo oficial Linux x86_64 de Rigspark v2.1.0 y se
+verificó su SHA-256 contra el digest de la API pública de GitHub:
+`c1ad24a36f2754b8e355e579b1f7949a809ad32436764cd5193808a474335c2f`. Se aisló
+`RIGSPARK_HOME` bajo `/tmp/rigspark-comparison-20260930/state`; no se instalaron
+modelos ni servidores y no se consultó ningún backend local.
+
+Hardware observado: **2× RTX 3090, 24 GiB cada una**. Rigspark doctor informó
+24,0 GiB de memoria utilizable para la recomendación general. En la salida de
+`plan` sí enumeró ambas GPU.
+
+Comandos de recomendación, en el mismo host y a 32K:
+
+```bash
+rigspark recommend --task code --context 32768 --backend llamacpp --json
+rigspark recommend --task tools --context 32768 --backend llamacpp --json
+rigspark can-run qwen3.6:35b --context 32768 --json
+rigspark plan qwen3.6:35b --context 32768 --json
+```
+
+| Prueba | Resultado observado |
+|---|---|
+| `recommend --task code` | Qwen3:30B-A3B, rango estimado 256,6–476,5 tok/s, quedó primero. Qwen3.6-35B-A3B apareció en `wontFit` como `vram-bound`. |
+| `recommend --task tools` | El mismo Qwen3:30B-A3B quedó primero con la misma estimación. |
+| `can-run qwen3.6:35b` a 8K, 32K y 64K | `no`, `vram-bound`; requiere 26.014.498.092 bytes frente a 25.769.803.776 utilizables. En las tres ventanas informó `contextFitKnown=false` y el mismo requerimiento, así que esta consulta no pudo separar el coste de KV/contexto del tamaño base. |
+| `plan qwen3.6:35b` a 32K | La ruta de una GPU no cabe; la ruta `multi-gpu` sí: 51.539.607.552 bytes utilizables, 2 GPU. Throughput y geometría KV quedaron `unknown`. |
+
+Esto reproduce en la versión más reciente el síntoma del post, pero aclara su
+causa: el catálogo ya incluye Qwen3.6 y la planificación individual encuentra
+una ruta para dos GPU; el ranking general sigue decidiendo con la VRAM de una
+sola tarjeta. El rango de throughput para Qwen3:30B-A3B es una estimación de
+Rigspark, no una medición; la propia guía dice que sus estimates no son
+benchmarks y que throughput desconocido debe seguir como `unknown`.
+
+### Contraste con evidencia de LlamaCode
+
+LlamaCode tiene el perfil local **QWEN35-A3B — Qwen3.6-35B-A3B AutoRound INT4,
+vLLM TP2/P2P**: 262K validado, visión 4/4 y resultados de Harness registrados
+(HE0 1/1, HE20 20/20 histórico; BCB 4/8 en la evidencia disponible). Las
+mediciones de velocidad documentadas son 123,98 tok/s durante BCB y 134,4 tok/s
+directos. No se usan como cifras equivalentes: el 123,98 viene del BCB y el
+134,4 del test directo. Esta evidencia local permite elegir la receta
+Qwen3.6 cuando se priorizan contexto, visión y una ruta TP2 ya medida; el
+resultado de Harness no permite promoverla por encima de SOL.
+
+La comparación también encontró dos superficies distintas dentro de
+LlamaCode: `launchMenu()` suma `vramTotalGb` para mostrar perfiles multi-GPU,
+mientras `rebuildModelRecommendations()` puntúa el catálogo usando
+`vramGb` (la tarjeta de mayor memoria) y RAM. Además, `rescanHardware()` sólo
+rellena `ramGb` en el bloque `Q_OS_WIN`; la ruta Linux deja ese valor en cero.
+En este checkout Linux, eso puede esconder modelos que requieren más que la
+VRAM de una sola tarjeta en la vista de recomendaciones, aunque la máquina
+tenga RAM y dos GPU. El test comparativo no cambió ese código: hace falta una
+corrección separada con prueba de regresión antes de afirmar que el catálogo
+genérico de LlamaCode estima bien el fit multi-GPU/Linux.
+
+### Decisión
+
+Para el equipo 2×3090, **LlamaCode queda por delante en evidencia operativa del
+perfil Qwen3.6 local**; Rigspark aporta una vista de planificación que explicita
+el camino multi-GPU y conserva throughput/KV como desconocidos cuando no puede
+estimarlos. Rigspark no es superior en la recomendación de este hardware: su
+orden principal omite el candidato que su propia ruta multi-GPU declara
+ejecutable. No repetir esta comparación con Qwen3:30B/Qwen3.6 en las mismas
+ventanas salvo que cambien el catálogo, Rigspark corrija el ranking multi-GPU o
+LlamaCode cambie su cálculo de hardware.
