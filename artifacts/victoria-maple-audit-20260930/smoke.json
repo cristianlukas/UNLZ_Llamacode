@@ -1,0 +1,37 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "7"
+      }
+    }
+  ],
+  "created": 1790791363,
+  "model": "Victoria",
+  "system_fingerprint": "b1-1d8de7c",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 2,
+    "prompt_tokens": 36,
+    "total_tokens": 38,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "id": "chatcmpl-i11Z8U26KlsmjfwRGFQEJeKUm57d3Fra",
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 36,
+    "prompt_ms": 593.066,
+    "prompt_per_token_ms": 16.474055555555555,
+    "prompt_per_second": 60.70150708352865,
+    "predicted_n": 2,
+    "predicted_ms": 45.436,
+    "predicted_per_token_ms": 45.436,
+    "predicted_per_second": 22.008979663702792
+  },
+  "smoke_wall_s": 0.652
+}
