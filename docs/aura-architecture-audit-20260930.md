@@ -59,6 +59,72 @@ A/B que pruebe una mejora transversal.
 
 ## Pruebas realizadas en esta auditoría
 
+### Microbenchmark de acciones y estado largo — Qwen3.5-9B
+
+Para probar la parte más concreta de la publicación, agregué un 2048 determinista
+aislado en [`artifacts/aura-architecture-evaluation-20260930/run_2048_ab.py`](../artifacts/aura-architecture-evaluation-20260930/run_2048_ab.py).
+El modelo local decide, pero el código calcula las transiciones del juego,
+valida cada movimiento y registra un checkpoint cada 16 movimientos. Las
+partidas inválidas terminan en la variante de abstención; las de fallback usan
+un evaluador simple de espacio libre, fusiones, esquinas y suavidad. No se
+ejecutaron acciones de escritorio.
+
+Runtime: Qwen3.5-9B Q4_K_M MTP3, una RTX 3090, llama.cpp local build
+`c28d538`, contexto 32K, KV Q4, temperatura 0, cuatro seeds (`17, 42, 91,
+2026`). GGUF SHA-256 `e8dd94817e95d6c0939102049d068418269978377b13616c4726235e232841fe`;
+servidor SHA-256 `7ca205bae2247f864136b35f3245f6eae2da3a8f28643d8e33925e696f67fb05`.
+El evaluador se reinició periódicamente con un recibo que incluía el
+objetivo y el tablero actual; por tanto prueba continuidad ante resets del
+contexto, no un soak de escritorio de 29 minutos.
+
+| Variante, 4 semillas | Movimientos medios | Ficha máxima por partida | Alcanzó 2048 | Propuestas ilegales |
+|---|---:|---|---:|---:|
+| Tablero actual; abstener ante ilegal | 43 | 32, 16, 32, 32 | 0/4 | 4 |
+| Tabla de transiciones; abstener ante ilegal | 61,5 | 128, 64, 16, 16 | 0/4 | 4 |
+| Tablero actual; tool `enum` dinámica | 32,5 | 32, 32, 32, 16 | 0/4 | 4 |
+| Tabla de transiciones; tool `enum` dinámica | 16 | 8, 32, 8, 8 | 0/4 | 4 |
+| Tablero actual; fallback heurístico si la propuesta es ilegal | 99,5 en el corte de 128; 109,8 al terminar en el corte de 512 | 32, 64, 128, 128 | 0/4 | 8 en 128; 9 al terminar |
+| Tabla de transiciones; fallback heurístico | 128 en el corte de 128; 197,5 al terminar en el corte de 512 | 128, 128, 128, 128 en 128; 256, 128, 256, 256 en 512 | 0/4 | 7 en 128; 11 al terminar |
+
+La tabla de transiciones dio una señal favorable **en este entorno acotado**:
+con fallback completó más movimientos y obtuvo fichas mayores que el control
+state-only. Ninguna partida llegó a 2048. El `enum` de tool no garantizó por sí
+solo una acción legal en este runtime/modelo: los ocho recorridos con enum
+terminaron con una dirección fuera de las permitidas. La validación del runner
+evitó ejecutar esos movimientos. El resultado favorece mantener validación y
+fallback en código cuando una tarea tenga reglas discretas verificables; no
+justifica generalizar una heurística de tablero al Computer Use arbitrario.
+
+JSON completos, incluidos pasos por movimiento y checkpoints:
+
+- `qwen35-9b-2048-ab.json` — primera comparación state-only/transiciones,
+  128 movimientos máximos, sin enum de tool ni fallback.
+- `qwen35-9b-2048-four-way.json` — state-only/transiciones × texto/tool enum,
+  hasta 128 movimientos.
+- `qwen35-9b-2048-fallback-ab.json` — comparación con fallback, corte de 128.
+- `qwen35-9b-2048-512turn-ab.json` — comparación extendida, cuatro seeds,
+  termina en partida cerrada o al llegar a 512 movimientos.
+
+### Abstención y memoria de otra tarea
+
+[`run_abstention_memory_probe.py`](../artifacts/aura-architecture-evaluation-20260930/run_abstention_memory_probe.py)
+compara contexto limpio contra el mismo prompt precedido por una instrucción
+vieja y deliberadamente peligrosa. En 10 estados nuevos × 3 pasadas: ambos
+grupos tuvieron **30/30 decisiones correctas y válidas**, cero decisiones
+inseguras y 12 selecciones explícitas `NO_ACTION`. Es una prueba de robustez del
+modelo al texto de memoria insertado; no simula recuperación desde `MemoryStore`.
+La separación real de scopes se verificó con los tests nativos
+`test_memory_graph` y `test_context_index`.
+
+Al reintentar el primer juego con contexto de 8K, la tabla de transiciones
+excedió el límite. La corrida registrada usa 32K y checkpoint cada 16; no
+repetir la configuración 8K sin compactación.
+
+Después de los benchmarks repetí los 11 tests dirigidos de profile/harness,
+memoria/grafo, reanudación, progreso, tools, safety, automatización y
+AppController: **11/11 aprobados**. El gate completo Linux Release de esta
+auditoría sigue registrado arriba: **77/77 aprobados**.
+
 El gate Linux obligatorio se ejecutó como build Release + CTest completo, con
 checkout NTFS espejado y una ruta de build explícitamente nativa:
 
@@ -104,4 +170,3 @@ perfil de modelo en esta auditoría.
 - No elevar modelo ni cambiar perfil/harness hasta que la variante gane en
   éxito y seguridad, preserve reanudación/abstención, y el costo de tiempo y
   contexto quede dentro del gate fijado antes de la prueba.
-

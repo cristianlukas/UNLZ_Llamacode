@@ -1,0 +1,2751 @@
+{
+  "benchmark": "aura_2048_paired_transition_ab_v1",
+  "status": "complete",
+  "protocol": {
+    "model": "Qwen3.5-9B-Q4_K_M",
+    "temperature": 0.0,
+    "seeds": [
+      17,
+      42,
+      91,
+      2026
+    ],
+    "maxTurns": 128,
+    "checkpointEvery": 16,
+    "invalidActionPolicy": "abstain_and_end",
+    "variants": [
+      "state-only",
+      "transition-model"
+    ]
+  },
+  "results": [
+    {
+      "seed": 17,
+      "variant": "state-only",
+      "turns": 36,
+      "score": 200,
+      "maxTile": 32,
+      "reached2048": false,
+      "endedNaturally": false,
+      "invalidActions": 1,
+      "checkpointRestarts": 2,
+      "wallMs": 5295.86,
+      "medianDecisionMs": 140.2,
+      "rows": [
+        {
+          "turn": 1,
+          "action": "UP",
+          "valid": true,
+          "score": 4,
+          "maxTile": 4,
+          "elapsedMs": 324.53
+        },
+        {
+          "turn": 2,
+          "action": "DOWN",
+          "valid": true,
+          "score": 4,
+          "maxTile": 4,
+          "elapsedMs": 140.49
+        },
+        {
+          "turn": 3,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 4,
+          "maxTile": 4,
+          "elapsedMs": 141.55
+        },
+        {
+          "turn": 4,
+          "action": "UP",
+          "valid": true,
+          "score": 4,
+          "maxTile": 4,
+          "elapsedMs": 140.58
+        },
+        {
+          "turn": 5,
+          "action": "LEFT",
+          "valid": true,
+          "score": 12,
+          "maxTile": 4,
+          "elapsedMs": 136.68
+        },
+        {
+          "turn": 6,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 20,
+          "maxTile": 8,
+          "elapsedMs": 138.56
+        },
+        {
+          "turn": 7,
+          "action": "DOWN",
+          "valid": true,
+          "score": 20,
+          "maxTile": 8,
+          "elapsedMs": 137.71
+        },
+        {
+          "turn": 8,
+          "action": "LEFT",
+          "valid": true,
+          "score": 24,
+          "maxTile": 8,
+          "elapsedMs": 134.08
+        },
+        {
+          "turn": 9,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 28,
+          "maxTile": 8,
+          "elapsedMs": 140.27
+        },
+        {
+          "turn": 10,
+          "action": "UP",
+          "valid": true,
+          "score": 36,
+          "maxTile": 8,
+          "elapsedMs": 138.98
+        },
+        {
+          "turn": 11,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 44,
+          "maxTile": 8,
+          "elapsedMs": 141.15
+        },
+        {
+          "turn": 12,
+          "action": "DOWN",
+          "valid": true,
+          "score": 60,
+          "maxTile": 16,
+          "elapsedMs": 138.59
+        },
+        {
+          "turn": 13,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 64,
+          "maxTile": 16,
+          "elapsedMs": 138.1
+        },
+        {
+          "turn": 14,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 64,
+          "maxTile": 16,
+          "elapsedMs": 142.97
+        },
+        {
+          "turn": 15,
+          "action": "LEFT",
+          "valid": true,
+          "score": 64,
+          "maxTile": 16,
+          "elapsedMs": 142.38
+        },
+        {
+          "turn": 16,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 64,
+          "maxTile": 16,
+          "elapsedMs": 142.6
+        },
+        {
+          "turn": 17,
+          "action": "LEFT",
+          "valid": true,
+          "score": 68,
+          "maxTile": 16,
+          "elapsedMs": 177.6
+        },
+        {
+          "turn": 18,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 68,
+          "maxTile": 16,
+          "elapsedMs": 133.35
+        },
+        {
+          "turn": 19,
+          "action": "LEFT",
+          "valid": true,
+          "score": 68,
+          "maxTile": 16,
+          "elapsedMs": 131.97
+        },
+        {
+          "turn": 20,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 68,
+          "maxTile": 16,
+          "elapsedMs": 134.17
+        },
+        {
+          "turn": 21,
+          "action": "UP",
+          "valid": true,
+          "score": 88,
+          "maxTile": 16,
+          "elapsedMs": 135.88
+        },
+        {
+          "turn": 22,
+          "action": "DOWN",
+          "valid": true,
+          "score": 88,
+          "maxTile": 16,
+          "elapsedMs": 135.84
+        },
+        {
+          "turn": 23,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 112,
+          "maxTile": 16,
+          "elapsedMs": 137.4
+        },
+        {
+          "turn": 24,
+          "action": "LEFT",
+          "valid": true,
+          "score": 148,
+          "maxTile": 32,
+          "elapsedMs": 144.02
+        },
+        {
+          "turn": 25,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 148,
+          "maxTile": 32,
+          "elapsedMs": 138.03
+        },
+        {
+          "turn": 26,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 152,
+          "maxTile": 32,
+          "elapsedMs": 144.72
+        },
+        {
+          "turn": 27,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 152,
+          "maxTile": 32,
+          "elapsedMs": 137.94
+        },
+        {
+          "turn": 28,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 152,
+          "maxTile": 32,
+          "elapsedMs": 140.14
+        },
+        {
+          "turn": 29,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 156,
+          "maxTile": 32,
+          "elapsedMs": 147.89
+        },
+        {
+          "turn": 30,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 164,
+          "maxTile": 32,
+          "elapsedMs": 139.41
+        },
+        {
+          "turn": 31,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 164,
+          "maxTile": 32,
+          "elapsedMs": 151.03
+        },
+        {
+          "turn": 32,
+          "action": "LEFT",
+          "valid": true,
+          "score": 164,
+          "maxTile": 32,
+          "elapsedMs": 148.06
+        },
+        {
+          "turn": 33,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 164,
+          "maxTile": 32,
+          "elapsedMs": 177.43
+        },
+        {
+          "turn": 34,
+          "action": "UP",
+          "valid": true,
+          "score": 180,
+          "maxTile": 32,
+          "elapsedMs": 142.89
+        },
+        {
+          "turn": 35,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 200,
+          "maxTile": 32,
+          "elapsedMs": 144.53
+        },
+        {
+          "turn": 36,
+          "raw": "RIGHT",
+          "action": "RIGHT",
+          "valid": false,
+          "score": 200,
+          "maxTile": 32,
+          "elapsedMs": 134.34
+        }
+      ]
+    },
+    {
+      "seed": 17,
+      "variant": "transition-model",
+      "turns": 57,
+      "score": 352,
+      "maxTile": 32,
+      "reached2048": false,
+      "endedNaturally": false,
+      "invalidActions": 1,
+      "checkpointRestarts": 3,
+      "wallMs": 11427.61,
+      "medianDecisionMs": 199.8,
+      "rows": [
+        {
+          "turn": 1,
+          "action": "UP",
+          "valid": true,
+          "score": 4,
+          "maxTile": 4,
+          "elapsedMs": 241.73
+        },
+        {
+          "turn": 2,
+          "action": "DOWN",
+          "valid": true,
+          "score": 4,
+          "maxTile": 4,
+          "elapsedMs": 184.66
+        },
+        {
+          "turn": 3,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 4,
+          "maxTile": 4,
+          "elapsedMs": 181.72
+        },
+        {
+          "turn": 4,
+          "action": "UP",
+          "valid": true,
+          "score": 4,
+          "maxTile": 4,
+          "elapsedMs": 188.77
+        },
+        {
+          "turn": 5,
+          "action": "LEFT",
+          "valid": true,
+          "score": 12,
+          "maxTile": 4,
+          "elapsedMs": 194.44
+        },
+        {
+          "turn": 6,
+          "action": "UP",
+          "valid": true,
+          "score": 20,
+          "maxTile": 8,
+          "elapsedMs": 181.98
+        },
+        {
+          "turn": 7,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 20,
+          "maxTile": 8,
+          "elapsedMs": 199.8
+        },
+        {
+          "turn": 8,
+          "action": "DOWN",
+          "valid": true,
+          "score": 24,
+          "maxTile": 8,
+          "elapsedMs": 198.63
+        },
+        {
+          "turn": 9,
+          "action": "UP",
+          "valid": true,
+          "score": 24,
+          "maxTile": 8,
+          "elapsedMs": 179.95
+        },
+        {
+          "turn": 10,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 32,
+          "maxTile": 8,
+          "elapsedMs": 207.7
+        },
+        {
+          "turn": 11,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 52,
+          "maxTile": 16,
+          "elapsedMs": 201.87
+        },
+        {
+          "turn": 12,
+          "action": "LEFT",
+          "valid": true,
+          "score": 52,
+          "maxTile": 16,
+          "elapsedMs": 193.07
+        },
+        {
+          "turn": 13,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 52,
+          "maxTile": 16,
+          "elapsedMs": 205.99
+        },
+        {
+          "turn": 14,
+          "action": "UP",
+          "valid": true,
+          "score": 56,
+          "maxTile": 16,
+          "elapsedMs": 192.18
+        },
+        {
+          "turn": 15,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 68,
+          "maxTile": 16,
+          "elapsedMs": 211.84
+        },
+        {
+          "turn": 16,
+          "action": "LEFT",
+          "valid": true,
+          "score": 68,
+          "maxTile": 16,
+          "elapsedMs": 184.51
+        },
+        {
+          "turn": 17,
+          "action": "LEFT",
+          "valid": true,
+          "score": 68,
+          "maxTile": 16,
+          "elapsedMs": 192.04
+        },
+        {
+          "turn": 18,
+          "action": "UP",
+          "valid": true,
+          "score": 72,
+          "maxTile": 16,
+          "elapsedMs": 193.12
+        },
+        {
+          "turn": 19,
+          "action": "LEFT",
+          "valid": true,
+          "score": 80,
+          "maxTile": 16,
+          "elapsedMs": 190.77
+        },
+        {
+          "turn": 20,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 80,
+          "maxTile": 16,
+          "elapsedMs": 193.1
+        },
+        {
+          "turn": 21,
+          "action": "LEFT",
+          "valid": true,
+          "score": 84,
+          "maxTile": 16,
+          "elapsedMs": 205.85
+        },
+        {
+          "turn": 22,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 92,
+          "maxTile": 16,
+          "elapsedMs": 195.84
+        },
+        {
+          "turn": 23,
+          "action": "LEFT",
+          "valid": true,
+          "score": 92,
+          "maxTile": 16,
+          "elapsedMs": 184.06
+        },
+        {
+          "turn": 24,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 92,
+          "maxTile": 16,
+          "elapsedMs": 209.16
+        },
+        {
+          "turn": 25,
+          "action": "LEFT",
+          "valid": true,
+          "score": 96,
+          "maxTile": 16,
+          "elapsedMs": 211.48
+        },
+        {
+          "turn": 26,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 104,
+          "maxTile": 16,
+          "elapsedMs": 211.46
+        },
+        {
+          "turn": 27,
+          "action": "LEFT",
+          "valid": true,
+          "score": 104,
+          "maxTile": 16,
+          "elapsedMs": 213.45
+        },
+        {
+          "turn": 28,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 104,
+          "maxTile": 16,
+          "elapsedMs": 190.44
+        },
+        {
+          "turn": 29,
+          "action": "LEFT",
+          "valid": true,
+          "score": 104,
+          "maxTile": 16,
+          "elapsedMs": 189.42
+        },
+        {
+          "turn": 30,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 104,
+          "maxTile": 16,
+          "elapsedMs": 195.02
+        },
+        {
+          "turn": 31,
+          "action": "LEFT",
+          "valid": true,
+          "score": 104,
+          "maxTile": 16,
+          "elapsedMs": 200.87
+        },
+        {
+          "turn": 32,
+          "action": "DOWN",
+          "valid": true,
+          "score": 132,
+          "maxTile": 16,
+          "elapsedMs": 184.08
+        },
+        {
+          "turn": 33,
+          "action": "LEFT",
+          "valid": true,
+          "score": 156,
+          "maxTile": 16,
+          "elapsedMs": 186.24
+        },
+        {
+          "turn": 34,
+          "action": "UP",
+          "valid": true,
+          "score": 196,
+          "maxTile": 32,
+          "elapsedMs": 195.93
+        },
+        {
+          "turn": 35,
+          "action": "DOWN",
+          "valid": true,
+          "score": 196,
+          "maxTile": 32,
+          "elapsedMs": 198.91
+        },
+        {
+          "turn": 36,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 200,
+          "maxTile": 32,
+          "elapsedMs": 200.96
+        },
+        {
+          "turn": 37,
+          "action": "UP",
+          "valid": true,
+          "score": 200,
+          "maxTile": 32,
+          "elapsedMs": 195.13
+        },
+        {
+          "turn": 38,
+          "action": "DOWN",
+          "valid": true,
+          "score": 200,
+          "maxTile": 32,
+          "elapsedMs": 210.34
+        },
+        {
+          "turn": 39,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 204,
+          "maxTile": 32,
+          "elapsedMs": 211.11
+        },
+        {
+          "turn": 40,
+          "action": "UP",
+          "valid": true,
+          "score": 212,
+          "maxTile": 32,
+          "elapsedMs": 212.64
+        },
+        {
+          "turn": 41,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 216,
+          "maxTile": 32,
+          "elapsedMs": 198.42
+        },
+        {
+          "turn": 42,
+          "action": "DOWN",
+          "valid": true,
+          "score": 236,
+          "maxTile": 32,
+          "elapsedMs": 201.05
+        },
+        {
+          "turn": 43,
+          "action": "UP",
+          "valid": true,
+          "score": 252,
+          "maxTile": 32,
+          "elapsedMs": 209.31
+        },
+        {
+          "turn": 44,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 268,
+          "maxTile": 32,
+          "elapsedMs": 202.09
+        },
+        {
+          "turn": 45,
+          "action": "DOWN",
+          "valid": true,
+          "score": 272,
+          "maxTile": 32,
+          "elapsedMs": 219.19
+        },
+        {
+          "turn": 46,
+          "action": "DOWN",
+          "valid": true,
+          "score": 280,
+          "maxTile": 32,
+          "elapsedMs": 220.61
+        },
+        {
+          "turn": 47,
+          "action": "DOWN",
+          "valid": true,
+          "score": 284,
+          "maxTile": 32,
+          "elapsedMs": 218.55
+        },
+        {
+          "turn": 48,
+          "action": "DOWN",
+          "valid": true,
+          "score": 284,
+          "maxTile": 32,
+          "elapsedMs": 219.91
+        },
+        {
+          "turn": 49,
+          "action": "UP",
+          "valid": true,
+          "score": 288,
+          "maxTile": 32,
+          "elapsedMs": 188.99
+        },
+        {
+          "turn": 50,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 328,
+          "maxTile": 32,
+          "elapsedMs": 201.31
+        },
+        {
+          "turn": 51,
+          "action": "UP",
+          "valid": true,
+          "score": 332,
+          "maxTile": 32,
+          "elapsedMs": 204.55
+        },
+        {
+          "turn": 52,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 340,
+          "maxTile": 32,
+          "elapsedMs": 188.83
+        },
+        {
+          "turn": 53,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 340,
+          "maxTile": 32,
+          "elapsedMs": 205.37
+        },
+        {
+          "turn": 54,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 340,
+          "maxTile": 32,
+          "elapsedMs": 210.05
+        },
+        {
+          "turn": 55,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 344,
+          "maxTile": 32,
+          "elapsedMs": 211.33
+        },
+        {
+          "turn": 56,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 352,
+          "maxTile": 32,
+          "elapsedMs": 208.83
+        },
+        {
+          "turn": 57,
+          "raw": "RIGHT",
+          "action": "RIGHT",
+          "valid": false,
+          "score": 352,
+          "maxTile": 32,
+          "elapsedMs": 198.96
+        }
+      ]
+    },
+    {
+      "seed": 42,
+      "variant": "state-only",
+      "turns": 59,
+      "score": 348,
+      "maxTile": 32,
+      "reached2048": false,
+      "endedNaturally": false,
+      "invalidActions": 1,
+      "checkpointRestarts": 3,
+      "wallMs": 8344.69,
+      "medianDecisionMs": 140.19,
+      "rows": [
+        {
+          "turn": 1,
+          "action": "UP",
+          "valid": true,
+          "score": 0,
+          "maxTile": 4,
+          "elapsedMs": 202.94
+        },
+        {
+          "turn": 2,
+          "action": "UP",
+          "valid": true,
+          "score": 0,
+          "maxTile": 4,
+          "elapsedMs": 131.45
+        },
+        {
+          "turn": 3,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 4,
+          "maxTile": 4,
+          "elapsedMs": 134.33
+        },
+        {
+          "turn": 4,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 12,
+          "maxTile": 8,
+          "elapsedMs": 131.22
+        },
+        {
+          "turn": 5,
+          "action": "UP",
+          "valid": true,
+          "score": 20,
+          "maxTile": 8,
+          "elapsedMs": 132.03
+        },
+        {
+          "turn": 6,
+          "action": "LEFT",
+          "valid": true,
+          "score": 20,
+          "maxTile": 8,
+          "elapsedMs": 132.59
+        },
+        {
+          "turn": 7,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 20,
+          "maxTile": 8,
+          "elapsedMs": 131.0
+        },
+        {
+          "turn": 8,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 24,
+          "maxTile": 8,
+          "elapsedMs": 135.17
+        },
+        {
+          "turn": 9,
+          "action": "UP",
+          "valid": true,
+          "score": 44,
+          "maxTile": 16,
+          "elapsedMs": 133.3
+        },
+        {
+          "turn": 10,
+          "action": "UP",
+          "valid": true,
+          "score": 44,
+          "maxTile": 16,
+          "elapsedMs": 138.74
+        },
+        {
+          "turn": 11,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 44,
+          "maxTile": 16,
+          "elapsedMs": 142.98
+        },
+        {
+          "turn": 12,
+          "action": "DOWN",
+          "valid": true,
+          "score": 44,
+          "maxTile": 16,
+          "elapsedMs": 140.0
+        },
+        {
+          "turn": 13,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 48,
+          "maxTile": 16,
+          "elapsedMs": 141.55
+        },
+        {
+          "turn": 14,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 56,
+          "maxTile": 16,
+          "elapsedMs": 140.28
+        },
+        {
+          "turn": 15,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 60,
+          "maxTile": 16,
+          "elapsedMs": 141.53
+        },
+        {
+          "turn": 16,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 64,
+          "maxTile": 16,
+          "elapsedMs": 140.49
+        },
+        {
+          "turn": 17,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 72,
+          "maxTile": 16,
+          "elapsedMs": 170.7
+        },
+        {
+          "turn": 18,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 72,
+          "maxTile": 16,
+          "elapsedMs": 131.12
+        },
+        {
+          "turn": 19,
+          "action": "UP",
+          "valid": true,
+          "score": 72,
+          "maxTile": 16,
+          "elapsedMs": 135.76
+        },
+        {
+          "turn": 20,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 104,
+          "maxTile": 16,
+          "elapsedMs": 137.78
+        },
+        {
+          "turn": 21,
+          "action": "LEFT",
+          "valid": true,
+          "score": 104,
+          "maxTile": 16,
+          "elapsedMs": 134.93
+        },
+        {
+          "turn": 22,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 104,
+          "maxTile": 16,
+          "elapsedMs": 134.7
+        },
+        {
+          "turn": 23,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 104,
+          "maxTile": 16,
+          "elapsedMs": 138.74
+        },
+        {
+          "turn": 24,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 104,
+          "maxTile": 16,
+          "elapsedMs": 141.94
+        },
+        {
+          "turn": 25,
+          "action": "LEFT",
+          "valid": true,
+          "score": 104,
+          "maxTile": 16,
+          "elapsedMs": 139.77
+        },
+        {
+          "turn": 26,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 104,
+          "maxTile": 16,
+          "elapsedMs": 143.16
+        },
+        {
+          "turn": 27,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 104,
+          "maxTile": 16,
+          "elapsedMs": 142.31
+        },
+        {
+          "turn": 28,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 108,
+          "maxTile": 16,
+          "elapsedMs": 144.23
+        },
+        {
+          "turn": 29,
+          "action": "LEFT",
+          "valid": true,
+          "score": 108,
+          "maxTile": 16,
+          "elapsedMs": 144.03
+        },
+        {
+          "turn": 30,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 108,
+          "maxTile": 16,
+          "elapsedMs": 144.39
+        },
+        {
+          "turn": 31,
+          "action": "DOWN",
+          "valid": true,
+          "score": 136,
+          "maxTile": 16,
+          "elapsedMs": 149.0
+        },
+        {
+          "turn": 32,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 136,
+          "maxTile": 16,
+          "elapsedMs": 145.69
+        },
+        {
+          "turn": 33,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 140,
+          "maxTile": 16,
+          "elapsedMs": 173.13
+        },
+        {
+          "turn": 34,
+          "action": "UP",
+          "valid": true,
+          "score": 172,
+          "maxTile": 16,
+          "elapsedMs": 134.94
+        },
+        {
+          "turn": 35,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 176,
+          "maxTile": 16,
+          "elapsedMs": 141.05
+        },
+        {
+          "turn": 36,
+          "action": "LEFT",
+          "valid": true,
+          "score": 176,
+          "maxTile": 16,
+          "elapsedMs": 135.41
+        },
+        {
+          "turn": 37,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 176,
+          "maxTile": 16,
+          "elapsedMs": 136.41
+        },
+        {
+          "turn": 38,
+          "action": "DOWN",
+          "valid": true,
+          "score": 228,
+          "maxTile": 32,
+          "elapsedMs": 137.48
+        },
+        {
+          "turn": 39,
+          "action": "LEFT",
+          "valid": true,
+          "score": 228,
+          "maxTile": 32,
+          "elapsedMs": 140.61
+        },
+        {
+          "turn": 40,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 228,
+          "maxTile": 32,
+          "elapsedMs": 135.45
+        },
+        {
+          "turn": 41,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 232,
+          "maxTile": 32,
+          "elapsedMs": 141.53
+        },
+        {
+          "turn": 42,
+          "action": "DOWN",
+          "valid": true,
+          "score": 272,
+          "maxTile": 32,
+          "elapsedMs": 140.33
+        },
+        {
+          "turn": 43,
+          "action": "LEFT",
+          "valid": true,
+          "score": 272,
+          "maxTile": 32,
+          "elapsedMs": 141.05
+        },
+        {
+          "turn": 44,
+          "action": "DOWN",
+          "valid": true,
+          "score": 280,
+          "maxTile": 32,
+          "elapsedMs": 138.5
+        },
+        {
+          "turn": 45,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 292,
+          "maxTile": 32,
+          "elapsedMs": 139.75
+        },
+        {
+          "turn": 46,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 292,
+          "maxTile": 32,
+          "elapsedMs": 141.77
+        },
+        {
+          "turn": 47,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 296,
+          "maxTile": 32,
+          "elapsedMs": 141.28
+        },
+        {
+          "turn": 48,
+          "action": "LEFT",
+          "valid": true,
+          "score": 296,
+          "maxTile": 32,
+          "elapsedMs": 141.56
+        },
+        {
+          "turn": 49,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 296,
+          "maxTile": 32,
+          "elapsedMs": 172.0
+        },
+        {
+          "turn": 50,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 296,
+          "maxTile": 32,
+          "elapsedMs": 129.89
+        },
+        {
+          "turn": 51,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 300,
+          "maxTile": 32,
+          "elapsedMs": 133.52
+        },
+        {
+          "turn": 52,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 308,
+          "maxTile": 32,
+          "elapsedMs": 134.77
+        },
+        {
+          "turn": 53,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 312,
+          "maxTile": 32,
+          "elapsedMs": 138.93
+        },
+        {
+          "turn": 54,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 316,
+          "maxTile": 32,
+          "elapsedMs": 137.3
+        },
+        {
+          "turn": 55,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 324,
+          "maxTile": 32,
+          "elapsedMs": 140.19
+        },
+        {
+          "turn": 56,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 344,
+          "maxTile": 32,
+          "elapsedMs": 142.39
+        },
+        {
+          "turn": 57,
+          "action": "LEFT",
+          "valid": true,
+          "score": 344,
+          "maxTile": 32,
+          "elapsedMs": 142.14
+        },
+        {
+          "turn": 58,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 348,
+          "maxTile": 32,
+          "elapsedMs": 141.94
+        },
+        {
+          "turn": 59,
+          "raw": "RIGHT",
+          "action": "RIGHT",
+          "valid": false,
+          "score": 348,
+          "maxTile": 32,
+          "elapsedMs": 143.55
+        }
+      ]
+    },
+    {
+      "seed": 42,
+      "variant": "transition-model",
+      "turns": 9,
+      "score": 16,
+      "maxTile": 8,
+      "reached2048": false,
+      "endedNaturally": false,
+      "invalidActions": 1,
+      "checkpointRestarts": 0,
+      "wallMs": 1731.25,
+      "medianDecisionMs": 188.12,
+      "rows": [
+        {
+          "turn": 1,
+          "action": "UP",
+          "valid": true,
+          "score": 0,
+          "maxTile": 4,
+          "elapsedMs": 236.35
+        },
+        {
+          "turn": 2,
+          "action": "LEFT",
+          "valid": true,
+          "score": 0,
+          "maxTile": 4,
+          "elapsedMs": 178.59
+        },
+        {
+          "turn": 3,
+          "action": "UP",
+          "valid": true,
+          "score": 4,
+          "maxTile": 4,
+          "elapsedMs": 179.62
+        },
+        {
+          "turn": 4,
+          "action": "LEFT",
+          "valid": true,
+          "score": 12,
+          "maxTile": 8,
+          "elapsedMs": 178.31
+        },
+        {
+          "turn": 5,
+          "action": "DOWN",
+          "valid": true,
+          "score": 12,
+          "maxTile": 8,
+          "elapsedMs": 188.12
+        },
+        {
+          "turn": 6,
+          "action": "DOWN",
+          "valid": true,
+          "score": 12,
+          "maxTile": 8,
+          "elapsedMs": 193.81
+        },
+        {
+          "turn": 7,
+          "action": "DOWN",
+          "valid": true,
+          "score": 12,
+          "maxTile": 8,
+          "elapsedMs": 197.09
+        },
+        {
+          "turn": 8,
+          "action": "DOWN",
+          "valid": true,
+          "score": 16,
+          "maxTile": 8,
+          "elapsedMs": 198.39
+        },
+        {
+          "turn": 9,
+          "raw": "DOWN",
+          "action": "DOWN",
+          "valid": false,
+          "score": 16,
+          "maxTile": 8,
+          "elapsedMs": 180.96
+        }
+      ]
+    },
+    {
+      "seed": 91,
+      "variant": "state-only",
+      "turns": 49,
+      "score": 248,
+      "maxTile": 32,
+      "reached2048": false,
+      "endedNaturally": false,
+      "invalidActions": 1,
+      "checkpointRestarts": 3,
+      "wallMs": 6940.83,
+      "medianDecisionMs": 139.88,
+      "rows": [
+        {
+          "turn": 1,
+          "action": "UP",
+          "valid": true,
+          "score": 0,
+          "maxTile": 2,
+          "elapsedMs": 200.05
+        },
+        {
+          "turn": 2,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 4,
+          "maxTile": 4,
+          "elapsedMs": 135.12
+        },
+        {
+          "turn": 3,
+          "action": "DOWN",
+          "valid": true,
+          "score": 8,
+          "maxTile": 4,
+          "elapsedMs": 131.92
+        },
+        {
+          "turn": 4,
+          "action": "UP",
+          "valid": true,
+          "score": 16,
+          "maxTile": 8,
+          "elapsedMs": 135.28
+        },
+        {
+          "turn": 5,
+          "action": "DOWN",
+          "valid": true,
+          "score": 16,
+          "maxTile": 8,
+          "elapsedMs": 134.23
+        },
+        {
+          "turn": 6,
+          "action": "UP",
+          "valid": true,
+          "score": 20,
+          "maxTile": 8,
+          "elapsedMs": 134.08
+        },
+        {
+          "turn": 7,
+          "action": "LEFT",
+          "valid": true,
+          "score": 20,
+          "maxTile": 8,
+          "elapsedMs": 132.43
+        },
+        {
+          "turn": 8,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 20,
+          "maxTile": 8,
+          "elapsedMs": 133.47
+        },
+        {
+          "turn": 9,
+          "action": "DOWN",
+          "valid": true,
+          "score": 24,
+          "maxTile": 8,
+          "elapsedMs": 139.88
+        },
+        {
+          "turn": 10,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 28,
+          "maxTile": 8,
+          "elapsedMs": 139.4
+        },
+        {
+          "turn": 11,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 32,
+          "maxTile": 8,
+          "elapsedMs": 140.59
+        },
+        {
+          "turn": 12,
+          "action": "DOWN",
+          "valid": true,
+          "score": 40,
+          "maxTile": 8,
+          "elapsedMs": 138.35
+        },
+        {
+          "turn": 13,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 56,
+          "maxTile": 16,
+          "elapsedMs": 145.01
+        },
+        {
+          "turn": 14,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 56,
+          "maxTile": 16,
+          "elapsedMs": 141.26
+        },
+        {
+          "turn": 15,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 60,
+          "maxTile": 16,
+          "elapsedMs": 141.67
+        },
+        {
+          "turn": 16,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 64,
+          "maxTile": 16,
+          "elapsedMs": 141.96
+        },
+        {
+          "turn": 17,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 72,
+          "maxTile": 16,
+          "elapsedMs": 168.5
+        },
+        {
+          "turn": 18,
+          "action": "UP",
+          "valid": true,
+          "score": 76,
+          "maxTile": 16,
+          "elapsedMs": 131.63
+        },
+        {
+          "turn": 19,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 76,
+          "maxTile": 16,
+          "elapsedMs": 134.29
+        },
+        {
+          "turn": 20,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 76,
+          "maxTile": 16,
+          "elapsedMs": 135.22
+        },
+        {
+          "turn": 21,
+          "action": "LEFT",
+          "valid": true,
+          "score": 76,
+          "maxTile": 16,
+          "elapsedMs": 133.68
+        },
+        {
+          "turn": 22,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 76,
+          "maxTile": 16,
+          "elapsedMs": 135.16
+        },
+        {
+          "turn": 23,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 80,
+          "maxTile": 16,
+          "elapsedMs": 134.3
+        },
+        {
+          "turn": 24,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 80,
+          "maxTile": 16,
+          "elapsedMs": 140.86
+        },
+        {
+          "turn": 25,
+          "action": "UP",
+          "valid": true,
+          "score": 92,
+          "maxTile": 16,
+          "elapsedMs": 137.09
+        },
+        {
+          "turn": 26,
+          "action": "LEFT",
+          "valid": true,
+          "score": 92,
+          "maxTile": 16,
+          "elapsedMs": 136.48
+        },
+        {
+          "turn": 27,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 92,
+          "maxTile": 16,
+          "elapsedMs": 142.27
+        },
+        {
+          "turn": 28,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 96,
+          "maxTile": 16,
+          "elapsedMs": 140.51
+        },
+        {
+          "turn": 29,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 104,
+          "maxTile": 16,
+          "elapsedMs": 140.04
+        },
+        {
+          "turn": 30,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 108,
+          "maxTile": 16,
+          "elapsedMs": 139.78
+        },
+        {
+          "turn": 31,
+          "action": "UP",
+          "valid": true,
+          "score": 124,
+          "maxTile": 16,
+          "elapsedMs": 144.41
+        },
+        {
+          "turn": 32,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 140,
+          "maxTile": 16,
+          "elapsedMs": 142.92
+        },
+        {
+          "turn": 33,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 140,
+          "maxTile": 16,
+          "elapsedMs": 172.65
+        },
+        {
+          "turn": 34,
+          "action": "UP",
+          "valid": true,
+          "score": 180,
+          "maxTile": 32,
+          "elapsedMs": 132.25
+        },
+        {
+          "turn": 35,
+          "action": "LEFT",
+          "valid": true,
+          "score": 184,
+          "maxTile": 32,
+          "elapsedMs": 134.09
+        },
+        {
+          "turn": 36,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 184,
+          "maxTile": 32,
+          "elapsedMs": 132.69
+        },
+        {
+          "turn": 37,
+          "action": "DOWN",
+          "valid": true,
+          "score": 204,
+          "maxTile": 32,
+          "elapsedMs": 135.24
+        },
+        {
+          "turn": 38,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 220,
+          "maxTile": 32,
+          "elapsedMs": 140.08
+        },
+        {
+          "turn": 39,
+          "action": "LEFT",
+          "valid": true,
+          "score": 228,
+          "maxTile": 32,
+          "elapsedMs": 136.75
+        },
+        {
+          "turn": 40,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 228,
+          "maxTile": 32,
+          "elapsedMs": 139.14
+        },
+        {
+          "turn": 41,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 236,
+          "maxTile": 32,
+          "elapsedMs": 141.23
+        },
+        {
+          "turn": 42,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 236,
+          "maxTile": 32,
+          "elapsedMs": 144.17
+        },
+        {
+          "turn": 43,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 236,
+          "maxTile": 32,
+          "elapsedMs": 142.66
+        },
+        {
+          "turn": 44,
+          "action": "LEFT",
+          "valid": true,
+          "score": 240,
+          "maxTile": 32,
+          "elapsedMs": 142.21
+        },
+        {
+          "turn": 45,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 240,
+          "maxTile": 32,
+          "elapsedMs": 145.98
+        },
+        {
+          "turn": 46,
+          "action": "LEFT",
+          "valid": true,
+          "score": 240,
+          "maxTile": 32,
+          "elapsedMs": 140.05
+        },
+        {
+          "turn": 47,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 244,
+          "maxTile": 32,
+          "elapsedMs": 142.93
+        },
+        {
+          "turn": 48,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 248,
+          "maxTile": 32,
+          "elapsedMs": 144.75
+        },
+        {
+          "turn": 49,
+          "raw": "RIGHT",
+          "action": "RIGHT",
+          "valid": false,
+          "score": 248,
+          "maxTile": 32,
+          "elapsedMs": 172.15
+        }
+      ]
+    },
+    {
+      "seed": 91,
+      "variant": "transition-model",
+      "turns": 33,
+      "score": 196,
+      "maxTile": 32,
+      "reached2048": false,
+      "endedNaturally": false,
+      "invalidActions": 1,
+      "checkpointRestarts": 2,
+      "wallMs": 6503.59,
+      "medianDecisionMs": 196.07,
+      "rows": [
+        {
+          "turn": 1,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 0,
+          "maxTile": 2,
+          "elapsedMs": 222.06
+        },
+        {
+          "turn": 2,
+          "action": "UP",
+          "valid": true,
+          "score": 4,
+          "maxTile": 4,
+          "elapsedMs": 166.15
+        },
+        {
+          "turn": 3,
+          "action": "LEFT",
+          "valid": true,
+          "score": 4,
+          "maxTile": 4,
+          "elapsedMs": 169.59
+        },
+        {
+          "turn": 4,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 4,
+          "maxTile": 4,
+          "elapsedMs": 179.11
+        },
+        {
+          "turn": 5,
+          "action": "LEFT",
+          "valid": true,
+          "score": 8,
+          "maxTile": 4,
+          "elapsedMs": 194.11
+        },
+        {
+          "turn": 6,
+          "action": "UP",
+          "valid": true,
+          "score": 20,
+          "maxTile": 8,
+          "elapsedMs": 186.9
+        },
+        {
+          "turn": 7,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 20,
+          "maxTile": 8,
+          "elapsedMs": 194.33
+        },
+        {
+          "turn": 8,
+          "action": "LEFT",
+          "valid": true,
+          "score": 20,
+          "maxTile": 8,
+          "elapsedMs": 197.43
+        },
+        {
+          "turn": 9,
+          "action": "UP",
+          "valid": true,
+          "score": 24,
+          "maxTile": 8,
+          "elapsedMs": 195.53
+        },
+        {
+          "turn": 10,
+          "action": "LEFT",
+          "valid": true,
+          "score": 36,
+          "maxTile": 8,
+          "elapsedMs": 200.16
+        },
+        {
+          "turn": 11,
+          "action": "UP",
+          "valid": true,
+          "score": 52,
+          "maxTile": 16,
+          "elapsedMs": 203.03
+        },
+        {
+          "turn": 12,
+          "action": "LEFT",
+          "valid": true,
+          "score": 52,
+          "maxTile": 16,
+          "elapsedMs": 201.23
+        },
+        {
+          "turn": 13,
+          "action": "LEFT",
+          "valid": true,
+          "score": 52,
+          "maxTile": 16,
+          "elapsedMs": 212.55
+        },
+        {
+          "turn": 14,
+          "action": "LEFT",
+          "valid": true,
+          "score": 56,
+          "maxTile": 16,
+          "elapsedMs": 209.22
+        },
+        {
+          "turn": 15,
+          "action": "LEFT",
+          "valid": true,
+          "score": 60,
+          "maxTile": 16,
+          "elapsedMs": 218.39
+        },
+        {
+          "turn": 16,
+          "action": "LEFT",
+          "valid": true,
+          "score": 60,
+          "maxTile": 16,
+          "elapsedMs": 220.18
+        },
+        {
+          "turn": 17,
+          "action": "LEFT",
+          "valid": true,
+          "score": 64,
+          "maxTile": 16,
+          "elapsedMs": 197.03
+        },
+        {
+          "turn": 18,
+          "action": "UP",
+          "valid": true,
+          "score": 80,
+          "maxTile": 16,
+          "elapsedMs": 189.17
+        },
+        {
+          "turn": 19,
+          "action": "LEFT",
+          "valid": true,
+          "score": 84,
+          "maxTile": 16,
+          "elapsedMs": 188.82
+        },
+        {
+          "turn": 20,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 84,
+          "maxTile": 16,
+          "elapsedMs": 178.67
+        },
+        {
+          "turn": 21,
+          "action": "UP",
+          "valid": true,
+          "score": 88,
+          "maxTile": 16,
+          "elapsedMs": 190.04
+        },
+        {
+          "turn": 22,
+          "action": "LEFT",
+          "valid": true,
+          "score": 96,
+          "maxTile": 16,
+          "elapsedMs": 192.93
+        },
+        {
+          "turn": 23,
+          "action": "UP",
+          "valid": true,
+          "score": 116,
+          "maxTile": 16,
+          "elapsedMs": 196.07
+        },
+        {
+          "turn": 24,
+          "action": "LEFT",
+          "valid": true,
+          "score": 156,
+          "maxTile": 32,
+          "elapsedMs": 195.08
+        },
+        {
+          "turn": 25,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 160,
+          "maxTile": 32,
+          "elapsedMs": 195.46
+        },
+        {
+          "turn": 26,
+          "action": "LEFT",
+          "valid": true,
+          "score": 160,
+          "maxTile": 32,
+          "elapsedMs": 197.2
+        },
+        {
+          "turn": 27,
+          "action": "UP",
+          "valid": true,
+          "score": 160,
+          "maxTile": 32,
+          "elapsedMs": 201.93
+        },
+        {
+          "turn": 28,
+          "action": "LEFT",
+          "valid": true,
+          "score": 160,
+          "maxTile": 32,
+          "elapsedMs": 205.76
+        },
+        {
+          "turn": 29,
+          "action": "UP",
+          "valid": true,
+          "score": 164,
+          "maxTile": 32,
+          "elapsedMs": 208.12
+        },
+        {
+          "turn": 30,
+          "action": "LEFT",
+          "valid": true,
+          "score": 172,
+          "maxTile": 32,
+          "elapsedMs": 206.31
+        },
+        {
+          "turn": 31,
+          "action": "UP",
+          "valid": true,
+          "score": 180,
+          "maxTile": 32,
+          "elapsedMs": 207.91
+        },
+        {
+          "turn": 32,
+          "action": "UP",
+          "valid": true,
+          "score": 196,
+          "maxTile": 32,
+          "elapsedMs": 194.15
+        },
+        {
+          "turn": 33,
+          "raw": "UP",
+          "action": "UP",
+          "valid": false,
+          "score": 196,
+          "maxTile": 32,
+          "elapsedMs": 188.96
+        }
+      ]
+    },
+    {
+      "seed": 2026,
+      "variant": "state-only",
+      "turns": 65,
+      "score": 444,
+      "maxTile": 64,
+      "reached2048": false,
+      "endedNaturally": false,
+      "invalidActions": 1,
+      "checkpointRestarts": 4,
+      "wallMs": 9149.49,
+      "medianDecisionMs": 138.45,
+      "rows": [
+        {
+          "turn": 1,
+          "action": "UP",
+          "valid": true,
+          "score": 0,
+          "maxTile": 2,
+          "elapsedMs": 177.54
+        },
+        {
+          "turn": 2,
+          "action": "LEFT",
+          "valid": true,
+          "score": 4,
+          "maxTile": 4,
+          "elapsedMs": 133.58
+        },
+        {
+          "turn": 3,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 4,
+          "maxTile": 4,
+          "elapsedMs": 134.4
+        },
+        {
+          "turn": 4,
+          "action": "DOWN",
+          "valid": true,
+          "score": 8,
+          "maxTile": 4,
+          "elapsedMs": 137.04
+        },
+        {
+          "turn": 5,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 16,
+          "maxTile": 8,
+          "elapsedMs": 133.39
+        },
+        {
+          "turn": 6,
+          "action": "LEFT",
+          "valid": true,
+          "score": 20,
+          "maxTile": 8,
+          "elapsedMs": 134.78
+        },
+        {
+          "turn": 7,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 20,
+          "maxTile": 8,
+          "elapsedMs": 133.73
+        },
+        {
+          "turn": 8,
+          "action": "UP",
+          "valid": true,
+          "score": 24,
+          "maxTile": 8,
+          "elapsedMs": 132.42
+        },
+        {
+          "turn": 9,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 24,
+          "maxTile": 8,
+          "elapsedMs": 136.74
+        },
+        {
+          "turn": 10,
+          "action": "LEFT",
+          "valid": true,
+          "score": 24,
+          "maxTile": 8,
+          "elapsedMs": 141.11
+        },
+        {
+          "turn": 11,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 32,
+          "maxTile": 8,
+          "elapsedMs": 138.42
+        },
+        {
+          "turn": 12,
+          "action": "DOWN",
+          "valid": true,
+          "score": 36,
+          "maxTile": 8,
+          "elapsedMs": 137.9
+        },
+        {
+          "turn": 13,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 52,
+          "maxTile": 16,
+          "elapsedMs": 138.45
+        },
+        {
+          "turn": 14,
+          "action": "LEFT",
+          "valid": true,
+          "score": 52,
+          "maxTile": 16,
+          "elapsedMs": 141.33
+        },
+        {
+          "turn": 15,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 52,
+          "maxTile": 16,
+          "elapsedMs": 141.43
+        },
+        {
+          "turn": 16,
+          "action": "DOWN",
+          "valid": true,
+          "score": 64,
+          "maxTile": 16,
+          "elapsedMs": 142.03
+        },
+        {
+          "turn": 17,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 72,
+          "maxTile": 16,
+          "elapsedMs": 175.26
+        },
+        {
+          "turn": 18,
+          "action": "UP",
+          "valid": true,
+          "score": 80,
+          "maxTile": 16,
+          "elapsedMs": 129.51
+        },
+        {
+          "turn": 19,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 96,
+          "maxTile": 16,
+          "elapsedMs": 133.17
+        },
+        {
+          "turn": 20,
+          "action": "LEFT",
+          "valid": true,
+          "score": 96,
+          "maxTile": 16,
+          "elapsedMs": 136.32
+        },
+        {
+          "turn": 21,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 96,
+          "maxTile": 16,
+          "elapsedMs": 134.41
+        },
+        {
+          "turn": 22,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 96,
+          "maxTile": 16,
+          "elapsedMs": 133.73
+        },
+        {
+          "turn": 23,
+          "action": "UP",
+          "valid": true,
+          "score": 104,
+          "maxTile": 16,
+          "elapsedMs": 137.53
+        },
+        {
+          "turn": 24,
+          "action": "DOWN",
+          "valid": true,
+          "score": 112,
+          "maxTile": 16,
+          "elapsedMs": 137.27
+        },
+        {
+          "turn": 25,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 148,
+          "maxTile": 32,
+          "elapsedMs": 139.59
+        },
+        {
+          "turn": 26,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 156,
+          "maxTile": 32,
+          "elapsedMs": 136.92
+        },
+        {
+          "turn": 27,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 172,
+          "maxTile": 32,
+          "elapsedMs": 137.66
+        },
+        {
+          "turn": 28,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 176,
+          "maxTile": 32,
+          "elapsedMs": 140.55
+        },
+        {
+          "turn": 29,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 176,
+          "maxTile": 32,
+          "elapsedMs": 139.22
+        },
+        {
+          "turn": 30,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 180,
+          "maxTile": 32,
+          "elapsedMs": 140.03
+        },
+        {
+          "turn": 31,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 180,
+          "maxTile": 32,
+          "elapsedMs": 142.21
+        },
+        {
+          "turn": 32,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 184,
+          "maxTile": 32,
+          "elapsedMs": 147.1
+        },
+        {
+          "turn": 33,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 192,
+          "maxTile": 32,
+          "elapsedMs": 168.39
+        },
+        {
+          "turn": 34,
+          "action": "UP",
+          "valid": true,
+          "score": 208,
+          "maxTile": 32,
+          "elapsedMs": 138.53
+        },
+        {
+          "turn": 35,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 232,
+          "maxTile": 32,
+          "elapsedMs": 136.65
+        },
+        {
+          "turn": 36,
+          "action": "LEFT",
+          "valid": true,
+          "score": 236,
+          "maxTile": 32,
+          "elapsedMs": 133.67
+        },
+        {
+          "turn": 37,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 236,
+          "maxTile": 32,
+          "elapsedMs": 138.24
+        },
+        {
+          "turn": 38,
+          "action": "LEFT",
+          "valid": true,
+          "score": 236,
+          "maxTile": 32,
+          "elapsedMs": 135.76
+        },
+        {
+          "turn": 39,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 236,
+          "maxTile": 32,
+          "elapsedMs": 138.56
+        },
+        {
+          "turn": 40,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 240,
+          "maxTile": 32,
+          "elapsedMs": 138.48
+        },
+        {
+          "turn": 41,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 240,
+          "maxTile": 32,
+          "elapsedMs": 138.05
+        },
+        {
+          "turn": 42,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 248,
+          "maxTile": 32,
+          "elapsedMs": 134.99
+        },
+        {
+          "turn": 43,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 264,
+          "maxTile": 32,
+          "elapsedMs": 140.08
+        },
+        {
+          "turn": 44,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 268,
+          "maxTile": 32,
+          "elapsedMs": 138.4
+        },
+        {
+          "turn": 45,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 276,
+          "maxTile": 32,
+          "elapsedMs": 138.14
+        },
+        {
+          "turn": 46,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 276,
+          "maxTile": 32,
+          "elapsedMs": 141.81
+        },
+        {
+          "turn": 47,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 276,
+          "maxTile": 32,
+          "elapsedMs": 142.2
+        },
+        {
+          "turn": 48,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 280,
+          "maxTile": 32,
+          "elapsedMs": 139.53
+        },
+        {
+          "turn": 49,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 284,
+          "maxTile": 32,
+          "elapsedMs": 170.93
+        },
+        {
+          "turn": 50,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 288,
+          "maxTile": 32,
+          "elapsedMs": 132.54
+        },
+        {
+          "turn": 51,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 288,
+          "maxTile": 32,
+          "elapsedMs": 135.4
+        },
+        {
+          "turn": 52,
+          "action": "DOWN",
+          "valid": true,
+          "score": 336,
+          "maxTile": 32,
+          "elapsedMs": 135.11
+        },
+        {
+          "turn": 53,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 400,
+          "maxTile": 64,
+          "elapsedMs": 136.72
+        },
+        {
+          "turn": 54,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 400,
+          "maxTile": 64,
+          "elapsedMs": 135.86
+        },
+        {
+          "turn": 55,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 400,
+          "maxTile": 64,
+          "elapsedMs": 139.61
+        },
+        {
+          "turn": 56,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 404,
+          "maxTile": 64,
+          "elapsedMs": 138.91
+        },
+        {
+          "turn": 57,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 412,
+          "maxTile": 64,
+          "elapsedMs": 143.94
+        },
+        {
+          "turn": 58,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 432,
+          "maxTile": 64,
+          "elapsedMs": 138.62
+        },
+        {
+          "turn": 59,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 440,
+          "maxTile": 64,
+          "elapsedMs": 139.97
+        },
+        {
+          "turn": 60,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 440,
+          "maxTile": 64,
+          "elapsedMs": 141.89
+        },
+        {
+          "turn": 61,
+          "action": "LEFT",
+          "valid": true,
+          "score": 440,
+          "maxTile": 64,
+          "elapsedMs": 142.09
+        },
+        {
+          "turn": 62,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 444,
+          "maxTile": 64,
+          "elapsedMs": 143.64
+        },
+        {
+          "turn": 63,
+          "action": "LEFT",
+          "valid": true,
+          "score": 444,
+          "maxTile": 64,
+          "elapsedMs": 143.41
+        },
+        {
+          "turn": 64,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 444,
+          "maxTile": 64,
+          "elapsedMs": 147.46
+        },
+        {
+          "turn": 65,
+          "raw": "RIGHT",
+          "action": "RIGHT",
+          "valid": false,
+          "score": 444,
+          "maxTile": 64,
+          "elapsedMs": 167.16
+        }
+      ]
+    },
+    {
+      "seed": 2026,
+      "variant": "transition-model",
+      "turns": 17,
+      "score": 40,
+      "maxTile": 8,
+      "reached2048": false,
+      "endedNaturally": false,
+      "invalidActions": 1,
+      "checkpointRestarts": 1,
+      "wallMs": 3345.27,
+      "medianDecisionMs": 199.68,
+      "rows": [
+        {
+          "turn": 1,
+          "action": "UP",
+          "valid": true,
+          "score": 0,
+          "maxTile": 2,
+          "elapsedMs": 220.05
+        },
+        {
+          "turn": 2,
+          "action": "LEFT",
+          "valid": true,
+          "score": 4,
+          "maxTile": 4,
+          "elapsedMs": 166.59
+        },
+        {
+          "turn": 3,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 4,
+          "maxTile": 4,
+          "elapsedMs": 175.7
+        },
+        {
+          "turn": 4,
+          "action": "UP",
+          "valid": true,
+          "score": 8,
+          "maxTile": 4,
+          "elapsedMs": 180.24
+        },
+        {
+          "turn": 5,
+          "action": "LEFT",
+          "valid": true,
+          "score": 16,
+          "maxTile": 8,
+          "elapsedMs": 180.1
+        },
+        {
+          "turn": 6,
+          "action": "UP",
+          "valid": true,
+          "score": 20,
+          "maxTile": 8,
+          "elapsedMs": 191.74
+        },
+        {
+          "turn": 7,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 20,
+          "maxTile": 8,
+          "elapsedMs": 193.85
+        },
+        {
+          "turn": 8,
+          "action": "LEFT",
+          "valid": true,
+          "score": 20,
+          "maxTile": 8,
+          "elapsedMs": 198.26
+        },
+        {
+          "turn": 9,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 20,
+          "maxTile": 8,
+          "elapsedMs": 202.43
+        },
+        {
+          "turn": 10,
+          "action": "LEFT",
+          "valid": true,
+          "score": 20,
+          "maxTile": 8,
+          "elapsedMs": 191.06
+        },
+        {
+          "turn": 11,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 28,
+          "maxTile": 8,
+          "elapsedMs": 203.87
+        },
+        {
+          "turn": 12,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 32,
+          "maxTile": 8,
+          "elapsedMs": 202.17
+        },
+        {
+          "turn": 13,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 36,
+          "maxTile": 8,
+          "elapsedMs": 201.77
+        },
+        {
+          "turn": 14,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 40,
+          "maxTile": 8,
+          "elapsedMs": 209.26
+        },
+        {
+          "turn": 15,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 40,
+          "maxTile": 8,
+          "elapsedMs": 211.36
+        },
+        {
+          "turn": 16,
+          "action": "RIGHT",
+          "valid": true,
+          "score": 40,
+          "maxTile": 8,
+          "elapsedMs": 217.13
+        },
+        {
+          "turn": 17,
+          "raw": "RIGHT",
+          "action": "RIGHT",
+          "valid": false,
+          "score": 40,
+          "maxTile": 8,
+          "elapsedMs": 199.68
+        }
+      ]
+    }
+  ]
+}
