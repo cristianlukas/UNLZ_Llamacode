@@ -8,7 +8,18 @@ Para el inventario completo por perfil —incluidos descartados, bloqueados,
 retirados, binarios, quantizaciones, configuración efectiva, huellas y métricas
 por etapa— consultar el [registro detallado de perfiles](benchmark-profile-ledger-2026-08.md).
 
-Última actualización: 2026-09-27.
+Última actualización: 2026-09-30.
+
+## 2026-09-30 — Ornith 1.5-9B + DFlash: no promovido
+
+En RTX 3090/SM86 y el mismo `llama-server`, Ornith Q4_K_M subió de 82,04 a
+132,70 tok/s con su draft DFlash Q4_K_M (`n=7`), +61,8%. El control Qwen3.5-9B
+MTP3 dio 137,31 tok/s, Computer Use 48/48 y seguridad 29/29; Ornith quedó en
+47/48 y 28/29, y el pack BCB-Hard de 8 tareas empató el 1/8 histórico de
+Qwen3.5-9B. DFlash mantuvo las 48 decisiones exactas del Ornith target-only.
+**No se cambia Ingi-Charla, Computer Use, el harness ni los perfiles.**
+Detalle, comandos, hashes, artefactos y límite de evaluación de voz/visión:
+[auditoría Ornith 1.5 9B + DFlash](ornith-1.5-9b-dflash-evaluation-20260930.md).
 
 ## Split tensor en 2× RTX 3090 (hilo LocalLLaMA "second 3090") · 2026-09-27
 

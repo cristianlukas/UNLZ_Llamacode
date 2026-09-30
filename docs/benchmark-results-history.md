@@ -20,6 +20,24 @@ igual y delta incierto reportado como tal. No repetir las suites Computer Use
 El análisis, el protocolo propuesto y los artefactos previos concretos están en
 [`aura-long-horizon-audit-20260930.md`](aura-long-horizon-audit-20260930.md).
 
+## 2026-09-30 — Ornith 1.5-9B + DFlash en RTX 3090
+
+Se probó el target Ornith 1.5-9B Q4_K_M con drafter DFlash target-specific
+Q4_K_M en `llama-server` CUDA/SM86. El target cargó en modo normal y en
+`draft-dflash` (`block_size=16`, `n-max=7`). El decode corto mediano subió
+82,04 → 132,70 tok/s (+61,8%); el control Qwen3.5-9B MTP3 alcanzó 137,31
+tok/s. En el contrato Computer Use (48 casos), Ornith target-only y DFlash
+coincidieron en las 48 elecciones y lograron 47/48, seguridad 28/29; Qwen3.5
+MTP3 logró 48/48 y 29/29. En BigCodeBench-Hard-8, Ornith+DFlash obtuvo 1/8,
+igual al resultado previo de Qwen3.5-9B en esos IDs. No se promueve perfil ni
+se cambia el harness, Computer Use o Ingi-Charla. La prueba no evaluó voz
+acústica, visión por screenshot ni LC-H1 completo.
+
+Se preservan los GGUF de evaluación en el directorio externo de modelos y los
+JSON/scripts en `artifacts/ornith-1.5-evaluation-20260930/`. Incluye hashes de
+modelos, corpus, argumentos y la regla para no repetir esta misma matriz:
+[auditoría detallada](ornith-1.5-9b-dflash-evaluation-20260930.md).
+
 ## 2026-09-28 — Corrección de ADV v1: 3 graders rotos
 
 Revisando por qué SOL y Flash-Next fallaban exactamente las mismas 3 tareas de

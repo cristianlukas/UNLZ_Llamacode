@@ -1,0 +1,150 @@
+{
+  "benchmark": "fixed_short_coding_decode",
+  "model": "qwen3.5-9b-q4km-mtp3",
+  "prompt": "Escribí una función Python llamada add(a, b) que devuelva a + b. Incluí una docstring breve y un ejemplo de uso.",
+  "temperature": 0.6,
+  "topP": 0.95,
+  "topK": 20,
+  "minP": 0.0,
+  "seed": 42,
+  "reasoning": "off",
+  "passes": 5,
+  "medianDecodeTps": 137.31123071248376,
+  "rows": [
+    {
+      "pass": 1,
+      "transportOk": true,
+      "wallMs": 574.59,
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 63,
+        "prompt_ms": 198.129,
+        "prompt_per_token_ms": 3.144904761904762,
+        "prompt_per_second": 317.9746528776706,
+        "predicted_n": 52,
+        "predicted_ms": 365.131,
+        "predicted_per_token_ms": 7.159431372549019,
+        "predicted_per_second": 139.67589714376487,
+        "draft_n": 42,
+        "draft_n_accepted": 37
+      },
+      "usage": {
+        "completion_tokens": 52,
+        "prompt_tokens": 63,
+        "total_tokens": 115,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "content": "```python\ndef add(a, b):\n    \"\"\"Suma dos números y devuelve el resultado.\n\n    Ejemplo:\n    >>> add(2, 3)\n    5\n    \"\"\"\n    return a + b\n```"
+    },
+    {
+      "pass": 2,
+      "transportOk": true,
+      "wallMs": 405.81,
+      "timings": {
+        "cache_n": 59,
+        "prompt_n": 4,
+        "prompt_ms": 36.788,
+        "prompt_per_token_ms": 9.197,
+        "prompt_per_second": 108.73110796999022,
+        "predicted_n": 52,
+        "predicted_ms": 367.417,
+        "predicted_per_token_ms": 7.204254901960784,
+        "predicted_per_second": 138.8068597805763,
+        "draft_n": 42,
+        "draft_n_accepted": 37
+      },
+      "usage": {
+        "completion_tokens": 52,
+        "prompt_tokens": 63,
+        "total_tokens": 115,
+        "prompt_tokens_details": {
+          "cached_tokens": 59
+        }
+      },
+      "content": "```python\ndef add(a, b):\n    \"\"\"Suma dos números y devuelve el resultado.\n\n    Ejemplo:\n    >>> add(2, 3)\n    5\n    \"\"\"\n    return a + b\n```"
+    },
+    {
+      "pass": 3,
+      "transportOk": true,
+      "wallMs": 425.01,
+      "timings": {
+        "cache_n": 59,
+        "prompt_n": 4,
+        "prompt_ms": 39.32,
+        "prompt_per_token_ms": 9.83,
+        "prompt_per_second": 101.7293997965412,
+        "predicted_n": 52,
+        "predicted_ms": 384.081,
+        "predicted_per_token_ms": 7.531000000000001,
+        "predicted_per_second": 132.7844907714779,
+        "draft_n": 42,
+        "draft_n_accepted": 37
+      },
+      "usage": {
+        "completion_tokens": 52,
+        "prompt_tokens": 63,
+        "total_tokens": 115,
+        "prompt_tokens_details": {
+          "cached_tokens": 59
+        }
+      },
+      "content": "```python\ndef add(a, b):\n    \"\"\"Suma dos números y devuelve el resultado.\n\n    Ejemplo:\n    >>> add(2, 3)\n    5\n    \"\"\"\n    return a + b\n```"
+    },
+    {
+      "pass": 4,
+      "transportOk": true,
+      "wallMs": 409.63,
+      "timings": {
+        "cache_n": 59,
+        "prompt_n": 4,
+        "prompt_ms": 36.588,
+        "prompt_per_token_ms": 9.147,
+        "prompt_per_second": 109.32546190007652,
+        "predicted_n": 52,
+        "predicted_ms": 371.419,
+        "predicted_per_token_ms": 7.2827254901960785,
+        "predicted_per_second": 137.31123071248376,
+        "draft_n": 42,
+        "draft_n_accepted": 37
+      },
+      "usage": {
+        "completion_tokens": 52,
+        "prompt_tokens": 63,
+        "total_tokens": 115,
+        "prompt_tokens_details": {
+          "cached_tokens": 59
+        }
+      },
+      "content": "```python\ndef add(a, b):\n    \"\"\"Suma dos números y devuelve el resultado.\n\n    Ejemplo:\n    >>> add(2, 3)\n    5\n    \"\"\"\n    return a + b\n```"
+    },
+    {
+      "pass": 5,
+      "transportOk": true,
+      "wallMs": 429.62,
+      "timings": {
+        "cache_n": 59,
+        "prompt_n": 4,
+        "prompt_ms": 36.526,
+        "prompt_per_token_ms": 9.1315,
+        "prompt_per_second": 109.51103323659858,
+        "predicted_n": 52,
+        "predicted_ms": 391.682,
+        "predicted_per_token_ms": 7.680039215686275,
+        "predicted_per_second": 130.20766846574517,
+        "draft_n": 42,
+        "draft_n_accepted": 37
+      },
+      "usage": {
+        "completion_tokens": 52,
+        "prompt_tokens": 63,
+        "total_tokens": 115,
+        "prompt_tokens_details": {
+          "cached_tokens": 59
+        }
+      },
+      "content": "```python\ndef add(a, b):\n    \"\"\"Suma dos números y devuelve el resultado.\n\n    Ejemplo:\n    >>> add(2, 3)\n    5\n    \"\"\"\n    return a + b\n```"
+    }
+  ]
+}
