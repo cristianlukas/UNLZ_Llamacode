@@ -3,7 +3,7 @@
 Fecha: 2026-09-30
 
 Candidato: [`ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-Coder-GGUF`](https://huggingface.co/ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-Coder-GGUF), quant `IQ1_M`
-Estado: **en evaluación; no agregar al catálogo ni reemplazar un perfil todavía**.
+Estado: **evaluación directa completada; no agregar al catálogo ni reemplazar un perfil**.
 
 ## Qué aporta
 
@@ -37,45 +37,75 @@ Fuentes locales: `artifacts/swift-genesis-evaluation-20260929/`;
 `docs/qwen38-gsq-rco-dflash2-q2-audit-20260918.md`;
 `docs/computer-use-sandwich.md`.
 
-## Compatibilidad y pruebas de esta revisión
+## Compatibilidad y resultados locales
 
-La notebook expone 2× RTX 3090 de 24 GB, 123 GiB de RAM y 8 GiB de swap. El
-working set informado de 29,6 GB cabe en la VRAM agregada, pero deja margen
-para KV, buffers y `mmproj`; hay que validar el reparto real y no asumir que
-la afirmación de “una GPU de 32 GB” garantiza la receta dual 3090. El runtime
-local inspeccionado es `llama.cpp` LlamaCode 0.3.0-dev, commit `9bd97fe`, con
-flags `--lazy-mode`, `--tensor-split`, KV Q8 y soporte multimodal. La carga del
-GGUF y la compatibilidad efectiva de esta variante siguen pendientes.
+La evaluación se ejecutó en 2× RTX 3090 (24 GB cada una), 123 GiB de RAM y
+runtime LlamaCode `llama.cpp` 0.3.0-dev, commit `9bd97fe`. Se fijó la revisión
+Hugging Face `5348543e0147355ac9cbcb031184a3546350988e`. Shards completos:
 
-El proyector BF16 de 907,5 MB y el README se descargaron en
-`/media/cristian/7CFE1E0FFE1DC1F6/models/Qwen3.8-Flash-Next-GSQ-RCO-Coder-GGUF/`.
-La carpeta ocupa 4,3 GB, incluidos 3,37 GiB parciales de los shards. La
-transferencia se pausó; la velocidad observada fue muy variable y todavía
-quedaban más de 55 GB por bajar. Se conservó la caché parcial de Hugging Face
-para reanudar la misma descarga, sin duplicar archivos. No se reporta ningún
-resultado local de inferencia del Coder.
+| Archivo | Bytes | SHA-256 |
+|---|---:|---|
+| `IQ1_M/Qwen3.8-Flash-Next-GSQ-RCO-IQ1_M-00001-of-00002.gguf` | 29.608.446.496 | `e11083ba855e7666b48ea3f2db6a9c3a20c18751a012cc24f948de91b7087fad` |
+| `IQ1_M/Qwen3.8-Flash-Next-GSQ-RCO-IQ1_M-00002-of-00002.gguf` | 28.800.138.432 | `316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113` |
+| `mmproj-Qwen3.8-Flash-Next-BF16.gguf` | 907.543.008 | — |
 
-Comando para continuar sobre esa misma carpeta:
+Ambos shards cargaron con lazy mmap, split dual GPU, KV Q8 y contexto asignado
+de 65.536; el uso observado fue ~15,6 GB por GPU, sin OOM. Esa carga confirma
+compatibilidad del runtime en esta receta. No activa MTP/DFlash: la corrida de
+decode fue sin speculative decoding. El campo `mtpDraftMax=4` en el JSON del
+microbenchmark es metadata heredada del runner, no un flag habilitado en el
+servidor; por eso la velocidad no es una comparación MTP equivalente.
 
-```bash
-hf download ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-Coder-GGUF \
-  --local-dir /media/cristian/7CFE1E0FFE1DC1F6/models/Qwen3.8-Flash-Next-GSQ-RCO-Coder-GGUF \
-  --include 'IQ1_M/*.gguf'
-```
+Resultados reproducibles guardados en
+[`artifacts/qwen38-gsq-rco-coder-eval-20260930/`](../artifacts/qwen38-gsq-rco-coder-eval-20260930/):
 
-Después de cargar sin OOM, el orden de evaluación previsto es:
+| Prueba | Resultado del candidato | Control comparable | Lectura |
+|---|---:|---:|---|
+| `harness_tool_contract_v1`, 5 pasadas | 5/5; transporte 5/5 | Genesis 5/5 | Paridad en contrato básico `read_file` → `write_file`. |
+| BigCodeBench-Hard-8 directo, 64K | 2/8; transporte 8/8 | Genesis 1/8; transporte 8/8 | +1 ítem, muestra pequeña y sin valor LC-H1; señal insuficiente para reemplazar perfil. |
+| Decode corto, 5 pasadas | mediana 62,39 tok/s | Genesis 56,35 tok/s | +10,7% observado; orientativo porque las recetas de speculative decoding no están igualadas. |
+| Computer Use, 48 estados × 5 pasadas × 3 órdenes | con thinking desactivado: state-first 100%, question-first 97,92%, sandwich 100%; validez/transporte 100% | Genesis: 100% en los tres órdenes | El gate global falla por latencia sandwich (604,98 ms vs 454,67 ms, +33%). No promover sandwich. |
+| Visión + consulta de acción, 3 pasadas | 3/3; reconoce “Tema oscuro” como activo; no ejecuta acción | No repetido | Smoke funcional de `mmproj`, no prueba general de grounding. |
 
-1. Smoke de texto y health/API con contexto 64K, KV K/V `q8_0`, lazy mmap y
-   medición de VRAM/RAM por GPU.
-2. Reproducir `harness_tool_contract_v1` (5 pasadas) y `BigCodeBench-Hard-8`
-   directo con el endpoint local, la misma semilla/sampling y el pack ya
-   existente `artifacts/bigcodebench-hard-ubuntu-8.json`.
-3. Ejecutar el fixture Computer Use existente (48 estados, control state-first
-   y mismo sampling) como prueba de paridad; ese corpus representa decisiones
-   sobre texto de UI, no automatización E2E de escritorio.
-4. Ejecutar un smoke real de visión con `mmproj` y una imagen local conocida.
-   Si los pasos previos pasan, ejecutar HE0 → HE20 → BCB LC-H1; no promover con
-   sólo resultados directos o benchmarks del publicador.
+En el primer Computer Use, con el thinking nativo habilitado y solo 8 tokens
+de salida, los 720 requests tuvieron transporte correcto pero 0% de respuestas
+válidas: el presupuesto se consumía en el canal de razonamiento. Se repitió el
+mismo fixture y orden de prompts con `chat_template_kwargs.enable_thinking=false`;
+state-first y sandwich recuperaron exactitud/seguridad del 100%. No se cambió
+el runner compartido ni su default. El script de envoltura reproducible está en
+el directorio de resultados.
+
+También se intentó LC-H1 real (HE0 → HE20 → BCB) con perfil y raíces temporales
+aislados. El catálogo localizó el modelo, pero `systemProfileReady` fue falso y
+`computeEffectiveProfile` devolvió `No binary selected.` en el registro de
+binarios de test. No se editó ese registro compartido para forzar la ejecución;
+por tanto no hay score LC-H1 válido aún.
+
+## Lectura por subsistema
+
+- **Coding/modelo:** el cambio 1/8 → 2/8 de BCB-Hard-8 es pequeño y una sola
+  muestra; HE0/HE20/BCB del Harness LlamaCode sigue siendo el dato faltante.
+- **Velocidad:** el candidato marca +10,7% en el microbenchmark sin MTP. No se
+  puede atribuir superioridad global mientras Genesis corre con MTP4 y faltan
+  comparaciones de velocidad en la misma receta.
+- **Computer Use:** thinking debe desactivarse para respuestas ultracortas de
+  clasificación. El candidato iguala el techo de exactitud state-first, pero
+  no supera el gate de latencia por la variante sandwich; no cambiar el orden
+  de prompts compartido.
+- **Harness y perfiles:** no modificar HarnessSpec, guardrails, orden global ni
+  catálogo por estos resultados. Mantener el IQ1_M como artefacto de evaluación
+  manual hasta tener LC-H1 y comparación de coding más amplia.
+- **Ingi Charla:** no aplica; no se evaluaron voz ni audio.
+
+## Decisión
+
+**No promover ni editar perfiles/harness.** Se confirma carga 64K, contrato
+básico de herramientas y smoke de visión. Hay señales prometedoras pero
+insuficientes en BCB y decode; Computer Use no supera su gate completo y LC-H1
+quedó bloqueado por la resolución del binario en el daemon de test. Los JSON
+anteriores conservan las corridas y permiten continuar sin repetirlas. Para
+cerrar la evaluación falta resolver el binario aislado y correr HE0 → HE20 →
+BCB LC-H1 contra Genesis con la misma receta de sampling.
 
 ## Lectura por subsistema
 

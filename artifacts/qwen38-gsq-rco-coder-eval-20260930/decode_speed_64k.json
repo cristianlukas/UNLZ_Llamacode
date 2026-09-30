@@ -1,0 +1,69 @@
+{
+  "benchmark": "short_decode_5_repeats",
+  "model": "qwen38-gsq-rco-coder-iq1m",
+  "allocatedContext": 65536,
+  "mtpDraftMax": 4,
+  "temperature": 0.6,
+  "topP": 0.95,
+  "topK": 20,
+  "reasoning": "off",
+  "passes": 5,
+  "medianDecodeTps": 62.385596867108745,
+  "rows": [
+    {
+      "pass": 1,
+      "transportOk": true,
+      "wallMs": 1073.38,
+      "promptTps": 255.93526056647002,
+      "decodeTps": 60.40205806285108,
+      "promptTokens": 63,
+      "generatedTokens": 45,
+      "content": "```python\ndef add(a, b):\n    \"\"\"Returns the sum of a and b.\"\"\"\n    return a + b\n\n# Example:\n# add(2, 3) -> 5\n```",
+      "reasoning": ""
+    },
+    {
+      "pass": 2,
+      "transportOk": true,
+      "wallMs": 797.56,
+      "promptTps": 47.65535646206633,
+      "decodeTps": 61.8055653102218,
+      "promptTokens": 4,
+      "generatedTokens": 45,
+      "content": "```python\ndef add(a, b):\n    \"\"\"Returns the sum of a and b.\"\"\"\n    return a + b\n\n# Example:\n# add(2, 3) -> 5\n```",
+      "reasoning": ""
+    },
+    {
+      "pass": 3,
+      "transportOk": true,
+      "wallMs": 784.4,
+      "promptTps": 48.97519406420648,
+      "decodeTps": 62.75467344036809,
+      "promptTokens": 4,
+      "generatedTokens": 45,
+      "content": "```python\ndef add(a, b):\n    \"\"\"Returns the sum of a and b.\"\"\"\n    return a + b\n\n# Example:\n# add(2, 3) -> 5\n```",
+      "reasoning": ""
+    },
+    {
+      "pass": 4,
+      "transportOk": true,
+      "wallMs": 788.34,
+      "promptTps": 49.042446237218314,
+      "decodeTps": 62.385596867108745,
+      "promptTokens": 4,
+      "generatedTokens": 45,
+      "content": "```python\ndef add(a, b):\n    \"\"\"Returns the sum of a and b.\"\"\"\n    return a + b\n\n# Example:\n# add(2, 3) -> 5\n```",
+      "reasoning": ""
+    },
+    {
+      "pass": 5,
+      "transportOk": true,
+      "wallMs": 782.15,
+      "promptTps": 48.15795810257645,
+      "decodeTps": 63.062365813318195,
+      "promptTokens": 4,
+      "generatedTokens": 45,
+      "content": "```python\ndef add(a, b):\n    \"\"\"Returns the sum of a and b.\"\"\"\n    return a + b\n\n# Example:\n# add(2, 3) -> 5\n```",
+      "reasoning": ""
+    }
+  ]
+}
