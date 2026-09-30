@@ -8,6 +8,18 @@ los perfiles no alcanzados. Este historial conserva además la narrativa y los
 eventos operativos; ambos documentos se complementan y no reemplazan resultados
 anteriores.
 
+## 2026-09-30 — Aura y agentes locales de horizonte largo
+
+Se comparó la demo de 2048 y el repositorio público Aura con las capacidades y
+pruebas existentes de LlamaCode. **No se cambian código, harness, perfiles ni
+sampling**: la demo es una corrida única sin ablación apareada, y la prueba no
+establece generalidad fuera del entorno 2048. Sí se registra como criterio
+futuro la ablación de capacidad con tareas resolubles por el control, presupuesto
+igual y delta incierto reportado como tal. No repetir las suites Computer Use
+48 estados/720 requests ni compactación de cinco resets para esta hipótesis.
+El análisis, el protocolo propuesto y los artefactos previos concretos están en
+[`aura-long-horizon-audit-20260930.md`](aura-long-horizon-audit-20260930.md).
+
 ## 2026-09-28 — Corrección de ADV v1: 3 graders rotos
 
 Revisando por qué SOL y Flash-Next fallaban exactamente las mismas 3 tareas de
