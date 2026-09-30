@@ -20,9 +20,9 @@ documentada en [la auditoría del 14/9](ornith-1.5-ninfer-audit-20260914.md).
   `886e98b1d7f6e7d7f277a261d692f1a38edd08e24d28c5f9bcf689169ed4b266`.
 - Drafter: `ornith1.5-9b-dflash-bf16-projection-Q4_K_M.gguf`, 766 MB, SHA-256
   `76ed0c5d3c401d9d518b2fd9b8468b0ccdd7f07c51f0108234e4a6eadbc511f2`.
-- Ambos quedan en
-  `/media/cristian/Disco local/Models/llamacpp/ornith-1.5-eval-20260930/`;
-  no se instalaron en Model Roots ni se registraron como perfiles productivos.
+- Ambos GGUF se borraron el 2026-09-30, al cerrar la evaluación; los hashes se
+  conservan aquí para identificar exactamente los archivos que se probaron.
+  No se instalaron en Model Roots ni se registraron como perfiles productivos.
 - GPU: una RTX 3090 (CUDA, SM86), aislada con `CUDA_VISIBLE_DEVICES=0`; contexto
   8K, un slot, batch 512, ubatch 128, Flash Attention; `llama-server` local
   `0.3.0-dev`, commit `c28d538`, build adaptive del 2026-09-15.
@@ -125,10 +125,11 @@ Hashes de corpus:
 - BigCodeBench-Hard-8:
   `11279cde14113fc8527f141c53e14cb5ccf0dba65749081a4f914408e391c268`
 
-No repetir esta misma matriz con los mismos hashes, quants, build, GPU, contexto,
-seed y argumentos. Reabrirla sólo si cambia el quant/drafter, la versión del
-runtime, el contexto de uso o se agrega una métrica distinta, como imagen real,
-LC-H1, HumanEval-20 o latencia acústica.
+Los GGUF fueron borrados después de la prueba por pedido del usuario. Los hashes,
+prompts, argumentos y resultados se conservan; no volver a descargar estos pesos
+para repetir la misma matriz. Reabrirla sólo si se justifica una métrica distinta,
+como imagen real, LC-H1, HumanEval-20 o latencia acústica, o si cambia el quant,
+drafter, runtime o contexto de uso.
 
 ### Comando del servidor y runners
 

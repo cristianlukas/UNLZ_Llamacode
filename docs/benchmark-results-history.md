@@ -33,9 +33,9 @@ igual al resultado previo de Qwen3.5-9B en esos IDs. No se promueve perfil ni
 se cambia el harness, Computer Use o Ingi-Charla. La prueba no evaluó voz
 acústica, visión por screenshot ni LC-H1 completo.
 
-Se preservan los GGUF de evaluación en el directorio externo de modelos y los
-JSON/scripts en `artifacts/ornith-1.5-evaluation-20260930/`. Incluye hashes de
-modelos, corpus, argumentos y la regla para no repetir esta misma matriz:
+Los dos GGUF de evaluación se borraron el 2026-09-30 por pedido del usuario; se
+conservan hashes, resultados y JSON/scripts en
+`artifacts/ornith-1.5-evaluation-20260930/` para no repetir la misma matriz:
 [auditoría detallada](ornith-1.5-9b-dflash-evaluation-20260930.md).
 
 ## 2026-09-28 — Corrección de ADV v1: 3 graders rotos
