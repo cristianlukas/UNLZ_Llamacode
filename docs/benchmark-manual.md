@@ -178,6 +178,27 @@ Antes de comparar una candidata con un perfil existente, registrar y conservar:
 No se deben comparar TPS, tiempo o calidad de suites distintas. Tampoco se
 deben comparar filas tomadas con un harness diferente sin marcar el cambio.
 
+### Comparación de fidelidad entre runtimes
+
+Cuando una candidata afirma más velocidad por cambios en el motor, pero conserva
+el mismo modelo y quant, se puede aislar el efecto del runtime con un replay
+teacher-forced: fijar los mismos tokens de entrada, sampling, contexto, KV y
+estado de sesión en la candidata y en el runtime de referencia. Registrar NLL
+shift, KL de top-k y acuerdo top-1 por token. Declarar los límites antes de
+ejecutar la campaña y correr repeticiones nulas en el runtime de referencia para
+estimar su variación natural; un delta dentro del ruido no debe tratarse como
+una regresión real.
+
+Esta prueba comprueba fidelidad de distribución para esa secuencia y esa
+configuración. No demuestra igualdad de calidad en tareas, tool-use, visión,
+audio ni otros prompts, y no reemplaza HE0 → HE20 → BCB. Tampoco se deben
+comparar directamente dos quants distintos con la misma puerta de fidelidad:
+en ese caso se evalúa el modelo completo mediante las suites de tarea y, si
+corresponde, una medida de perplexity/KLD con corpus alineado. El protocolo se
+inspira en el replay con límites preinscritos y null-runs de
+[QwFN-hybrid](https://github.com/thomaskleiven/QwFN-hybrid); esa publicación es
+una referencia metodológica, no una validación local de LlamaCode.
+
 ## Política de cuantización
 
 Para las candidatas de este catálogo rige una cota explícita:
