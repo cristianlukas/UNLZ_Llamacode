@@ -109,3 +109,34 @@ La publicación no aporta evidencia de voz ni de Computer Use con GUI real. No
 se cambia Ingi Charla, el orden de prompts/guardrails de Computer Use, el
 HarnessSpec ni los perfiles. La decisión actual es **mantener Genesis y los
 perfiles vigentes; no promover Coder IQ1_M ni importar Strata como runtime**.
+
+## Lectura del hilo de LocalLLaMA — 2026-10-01
+
+El post reporta Qwen3.8-Flash-Next ISTA-DASLab IQ3_XXS sobre Strata en una
+RTX 5070 Ti móvil, con 51 tok/s a 43K de contexto; los comentarios mezclan
+IQ2_XS, IQ3_XXS, Swift, MTP y distintos equipos. Son indicios de rendimiento,
+no comparaciones de calidad con Genesis ni una receta que se pueda trasladar a
+esta PC. El comentario de que dos pruebas Blender y un caso JavaScript dieron
+tokens idénticos no demuestra equivalencia general; la documentación de Strata
+advierte que su redondeo de caché puede alterar levemente la salida.
+
+La versión oficial **v0.1.21** posterior a la prueba local añade reparto
+experimental por capas entre varias NVIDIA y publica un aumento de prefill de
+18–20% al añadir una RTX 3090 a una RTX 5080, con decode similar. En modo de
+una sola GPU declara mismas respuestas byte a byte y misma velocidad frente a
+v0.1.20. Esto hace interesante un futuro A/B de prefill si se evalúa integrar
+Strata, pero no aporta una mejora de calidad ni justifica repetir las pruebas
+LC-H1 ya cerradas. Fuente: [release v0.1.21 de Strata](https://github.com/Niko1221/Strata/releases).
+
+El hilo también cita StrataGP, un fork distinto que atribuye ~15% más decode a
+`MADV_HUGEPAGE` en un equipo RTX 3060 + i5-12600K AVX2. Es una optimización
+dependiente de CPU, memoria y asignación; no se midió en los Ryzen 9 9950X3D +
+RTX 3090 de esta notebook. Se conserva como hipótesis de rendimiento, no se
+aplica al runtime compartido. Fuente: [StrataGP](https://github.com/gputier/StrataGP).
+
+No repetir IQ1_M, Q2_0, HumanEval, BCB, tools ni Computer Use para responder a
+este hilo. El único experimento aún abierto sería comparar Strata v0.1.21 y
+StrataGP contra el runtime LlamaCode con **el mismo modelo ya validado**, mismos
+prompts y parámetros, y medir prefill/decode por separado. No es gate pendiente
+para el perfil: el candidato IQ1_M perdió calidad/tiempo en LC-H1 y no se
+promueve.
