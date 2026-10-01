@@ -134,7 +134,7 @@ deben contarse como resultados de esta secuencia.
 ### Suite Linux
 
 Se ejecutó `./scripts/tests-linux.sh Release` con `LC_JOBS=8`: la corrida final
-tras el cambio del helper pasó **77/77 tests en 81.95 s**. El primer intento
+tras el cambio del helper pasó **77/77 tests en 89.57 s**. El primer intento
 quedó esperando I/O porque `~/.cache` de esta máquina termina en el volumen NTFS
 pese a que el script espeja el checkout; la
 corrida registrada usó `XDG_CACHE_HOME=/tmp/llamacode-test-cache-20261001` y
@@ -171,6 +171,57 @@ siguen intactos (**3/3 sitios**). Esto valida el navegador y las transiciones
 HTML locales; el recorrido de clicks original se ejecutó mediante Playwright,
 no mediante un planner de LlamaCode. La secuencia posterior sí pasó por el
 `AgentToolRunner` y Playwright MCP, con el orden de tools fijado por el probe.
+
+### Modelo local eligiendo acciones en navegador vivo
+
+Se agregó `run_llm_planner_e2e.js`: envía el árbol/texto visible y los botones
+actuales al endpoint local compatible con OpenAI, pide una sola llamada de tool
+obligatoria y ejecuta el botón elegido con Playwright. En una pasada por sitio,
+Qwen3-8B Q6 y el Qwen3.5-9B Q4 del perfil local completaron los tres recorridos
+(3/3 cada uno), con cero llamadas inválidas. Las medianas por decisión fueron
+317 ms (P95 369 ms) para Qwen3-8B y 2.168 ms (P95 2.810 ms) para Qwen3.5-9B.
+Resultados: [`qwen3-8b-q6-live-planner-result.json`](../artifacts/webbrain-evaluation-20261001/browser-fixture/qwen3-8b-q6-live-planner-result.json)
+y [`qwen35-9b-live-llm-planner-result.json`](../artifacts/webbrain-evaluation-20261001/browser-fixture/qwen35-9b-live-llm-planner-result.json).
+
+La corrida que cuenta usa `tool_choice: "required"`; se descartó una ejecución
+previa porque esta build de llama.cpp ignoró el objeto `tool_choice` y cayó al
+default automático. La prueba pasa por el modelo local y un navegador real sobre
+HTML ficticio, pero llama al endpoint directamente: no atraviesa el
+`LlamaAgentBackend`/planner de la app. Además, la fixture sólo ofrece los botones
+de manejo del plan y el probe filtra sus IDs, por lo que este resultado corto no
+contradice los tres targets riesgosos de la evaluación Qwen3-8B en el corpus v1,
+donde la página y las decisiones son más difíciles. No cambiar perfiles. No
+repetir estas mismas tres páginas y esta misma tarea/modelo; la próxima corrida
+debe probar ofertas de retención, formularios/scroll o inyección de instrucciones,
+y pasar por el planner de la app.
+
+### Planner integrado de LlamaCode
+
+Se probó además el loop real `LlamaAgentBackend → AgentToolRunner → Playwright
+MCP` sobre Northstar. La primera corrida dejó todas las tools disponibles:
+Qwen3.5-9B se desvió a `web_fetch`, `desktop_*` y `run_shell`, no usó el MCP para
+navegar y no canceló. Ejecutó `pkill -f brave`, que cerró la instancia de Brave
+abierta; se relanzó con `--restore-last-session` y reaparecieron sus ventanas. El
+resultado completo está en
+[`llamaagent-qwen35-northstar-result.json`](../artifacts/webbrain-evaluation-20261001/browser-fixture/llamaagent-qwen35-northstar-result.json).
+
+Se repitió con el probe limitado a `mcp_search_tools`/`mcp_call_tool` y todos los
+built-ins deshabilitados. Esta vez navegó y completó `#manage → #cancel → #confirm`;
+la última lectura del DOM contiene “Cancellation confirmed. Auto-renew is off” y
+confirma que siguen la cuenta, archivos, compras y plan gratuito. Pero necesitó
+52 llamadas de completion y 45 `mcp_call_tool`; sólo 29/51 tools terminaron sin
+error (57%). Hubo varias llamadas con selectors inválidos, JavaScript inválido,
+inspecciones repetidas y más de un intento tras confirmar. Para aislar el paso de
+aprobación, este probe aprobó automáticamente los cambios exclusivamente contra
+el sitio ficticio local. Evidencia:
+[`llamaagent-qwen35-northstar-restricted-result.json`](../artifacts/webbrain-evaluation-20261001/browser-fixture/llamaagent-qwen35-northstar-restricted-result.json).
+
+La integración sí consigue completar esta tarea, pero el loop resulta demasiado
+costoso e inestable para considerarlo una mejora de Computer Use o promover un
+perfil/harness. El primer resultado confirma que no se debe correr un planner de
+browser con shell/escritorio irrestrictos. No repetir la misma fixture con todas
+las tools abiertas; la próxima prueba integrada debe usar acciones web sólo,
+verificación obligatoria y presupuesto de tools acotado, y luego variar la página.
 
 ### Planner cercano: Qwen3-8B Q6_K
 

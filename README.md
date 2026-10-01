@@ -1301,6 +1301,10 @@ por ejemplo `browser_navigate '{"url":"http://127.0.0.1:8777/northstar"}'`.
 Para encadenar varias tools en el mismo `AgentToolRunner`, acepta también
 `qa_web_providers playwright-sequence '<array JSON>'`; el arreglo contiene objetos
 `{"tool":"browser_*","arguments":{...}}` y registra cada resultado.
+Para recorrer una página con el loop real de `LlamaAgentBackend`, usa
+`qa_web_providers playwright-agent <url>` con `LLAMACODE_QA_MODEL_BASE` y
+`LLAMACODE_QA_MODEL` apuntando al servidor local. El probe deshabilita tools built-in
+y autoaprueba MCP; úsalo sólo con fixtures locales controladas.
 
 ## Data Lab
 

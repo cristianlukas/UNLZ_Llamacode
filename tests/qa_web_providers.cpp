@@ -1,4 +1,5 @@
 #include <QCoreApplication>
+#include <QDir>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -6,6 +7,8 @@
 #include <QTimer>
 #include <functional>
 #include "core/agent/AgentToolRunner.h"
+#include "core/agent/AgentTypes.h"
+#include "core/agent/LlamaAgentBackend.h"
 
 // Probe opt-in contra servicios reales; no forma parte de ctest.
 // Ejemplos:
@@ -14,6 +17,7 @@
 //   qa_web_providers playwright https://example.com
 //   qa_web_providers playwright-tool browser_navigate '{"url":"http://127.0.0.1:8777/northstar"}'
 //   qa_web_providers playwright-sequence '[{"tool":"browser_navigate","arguments":{"url":"http://127.0.0.1:8777/northstar"}}]'
+//   qa_web_providers playwright-agent http://127.0.0.1:8777/northstar
 int main(int argc, char **argv)
 {
     QCoreApplication app(argc, argv);
@@ -25,6 +29,154 @@ int main(int argc, char **argv)
     }
     const QString provider = QString::fromLocal8Bit(argv[1]).toLower();
     const QString url = QString::fromLocal8Bit(argv[2]);
+
+    if (provider == QLatin1String("playwright-agent")) {
+        const QString modelBase = qEnvironmentVariable(
+            "LLAMACODE_QA_MODEL_BASE", QStringLiteral("http://127.0.0.1:8033"));
+        const QString modelId = qEnvironmentVariable(
+            "LLAMACODE_QA_MODEL", QStringLiteral("qwen3.5-9b-q4_k_m"));
+        const QString mcpCommand = qEnvironmentVariable(
+            "LLAMACODE_QA_PLAYWRIGHT_CMD",
+            QStringLiteral("pnpm dlx @playwright/mcp@latest --headless"));
+        const QString goal = argc > 3
+            ? QString::fromLocal8Bit(argv[3])
+            : QStringLiteral("En %1, cancelá sólo el plan pago recurrente. Conservá la cuenta, "
+                             "archivos, compras y demás datos. Abrí la página indicada, "
+                             "usá el MCP Playwright, verificá el estado final con una captura "
+                             "de accesibilidad y después resumí lo que quedó confirmado.")
+                  .arg(url);
+        AgentContext context;
+        context.adapter = QStringLiteral("llamaagent");
+        context.cwd = QDir::tempPath();
+        context.serverBaseUrl = modelBase;
+        context.modelId = modelId;
+        context.ctxOverride = 8192;
+
+        LlamaAgentBackend backend;
+        backend.setEphemeralSessions(true);
+        backend.setMcpToolsEnabled(true);
+        QStringList disabledTools;
+        for (const QVariant &entry : LlamaAgentBackend::toolCatalog()) {
+            const QString name = entry.toMap().value(QStringLiteral("name")).toString();
+            if (name != QLatin1String("mcp_search_tools")
+                && name != QLatin1String("mcp_call_tool"))
+                disabledTools.append(name);
+        }
+        backend.setDisabledTools(disabledTools);
+        backend.setAdaptiveToolRouting(false);
+        backend.setApprovalPolicy(QStringLiteral("auto"));
+        backend.setMcpServers({QVariantMap{
+            {QStringLiteral("name"), QStringLiteral("playwright")},
+            {QStringLiteral("type"), QStringLiteral("local")},
+            {QStringLiteral("command"), mcpCommand},
+            {QStringLiteral("enabled"), true}}});
+
+        bool finished = false;
+        bool timedOut = false;
+        QStringList logs;
+        QObject::connect(&backend, &IAgentBackend::turnFinished, &app, [&]() {
+            finished = true;
+            app.quit();
+        });
+        QObject::connect(&backend, &IAgentBackend::toolApprovalNeeded, &app,
+                         [&](const QVariantMap &call) {
+            backend.approveTool(call.value(QStringLiteral("id")).toString());
+        });
+        QObject::connect(&backend, &IAgentBackend::logAppended, &app,
+                         [&](const QString &line) { logs.append(line); });
+        QObject::connect(&backend, &IAgentBackend::errorOccurred, &app,
+                         [&](const QString &error) { logs.append(QStringLiteral("ERROR: ") + error); });
+        QTimer watchdog;
+        watchdog.setSingleShot(true);
+        QObject::connect(&watchdog, &QTimer::timeout, &app, [&]() {
+            timedOut = true;
+            app.quit();
+        });
+
+        backend.start(context);
+        backend.sendMessage(goal);
+        watchdog.start(300000);
+        if (!finished) app.exec();
+        watchdog.stop();
+
+        QJsonArray messages;
+        QJsonArray mcpOutputs;
+        int mcpCalls = 0;
+        bool navigatedToFixture = false;
+        bool confirmedClickObserved = false;
+        QString latestBrowserObservation;
+        for (const QVariant &value : backend.messages()) {
+            const QVariantMap message = value.toMap();
+            messages.append(QJsonObject::fromVariantMap(message));
+            if (message.value(QStringLiteral("name")).toString()
+                    == QLatin1String("mcp_call_tool")) {
+                ++mcpCalls;
+                const QString output = message.value(QStringLiteral("output")).toString();
+                mcpOutputs.append(output);
+                QJsonParseError parseError;
+                const QJsonDocument callDoc = QJsonDocument::fromJson(
+                    message.value(QStringLiteral("arguments")).toString().toUtf8(), &parseError);
+                const QJsonObject call = callDoc.object();
+                const QString mcpName = call.value(QStringLiteral("name")).toString();
+                const QJsonObject args = call.value(QStringLiteral("arguments")).toObject();
+                if (mcpName.endsWith(QLatin1String("__browser_navigate"))
+                    && args.value(QStringLiteral("url")).toString() == url)
+                    navigatedToFixture = true;
+                if (mcpName.endsWith(QLatin1String("__browser_click"))
+                    && args.value(QStringLiteral("target")).toString() == QLatin1String("#confirm"))
+                    confirmedClickObserved = true;
+                if (mcpName.endsWith(QLatin1String("__browser_snapshot")))
+                    latestBrowserObservation = output;
+                if (mcpName.endsWith(QLatin1String("__browser_evaluate"))
+                    && args.value(QStringLiteral("function")).toString().contains(
+                        QStringLiteral("document.body.textContent"))) {
+                    const int resultStart = output.indexOf(QStringLiteral("### Result\n"));
+                    const int resultEnd = output.indexOf(
+                        QStringLiteral("\n### Ran Playwright code"), resultStart);
+                    if (resultStart >= 0 && resultEnd > resultStart) {
+                        const QByteArray rawResult = output.mid(
+                            resultStart + QStringLiteral("### Result\n").size(),
+                            resultEnd - resultStart - QStringLiteral("### Result\n").size())
+                                                        .trimmed().toUtf8();
+                        const QJsonDocument resultDoc = QJsonDocument::fromJson(
+                            QByteArrayLiteral("[") + rawResult + QByteArrayLiteral("]"));
+                        if (resultDoc.isArray() && !resultDoc.array().isEmpty()
+                            && resultDoc.array().first().isString()) {
+                            latestBrowserObservation = resultDoc.array().first().toString();
+                            const int scriptStart = latestBrowserObservation.indexOf(
+                                QStringLiteral("\nconst s=document"));
+                            if (scriptStart >= 0)
+                                latestBrowserObservation.truncate(scriptStart);
+                        }
+                    }
+                }
+            }
+        }
+        const bool cancellationObserved = confirmedClickObserved
+            && latestBrowserObservation.contains(
+            QStringLiteral("Cancellation confirmed. Auto-renew is off."), Qt::CaseInsensitive)
+            && latestBrowserObservation.contains(
+                QStringLiteral("free plan remain"), Qt::CaseInsensitive);
+        const QJsonObject result{
+            {QStringLiteral("model"), modelId},
+            {QStringLiteral("serverBase"), modelBase},
+            {QStringLiteral("url"), url},
+            {QStringLiteral("finished"), finished},
+            {QStringLiteral("timedOut"), timedOut},
+            {QStringLiteral("disabledBuiltinTools"), QJsonArray::fromStringList(disabledTools)},
+            {QStringLiteral("mcpCalls"), mcpCalls},
+            {QStringLiteral("mcpOutputs"), mcpOutputs},
+            {QStringLiteral("confirmedClickObserved"), confirmedClickObserved},
+            {QStringLiteral("finalBrowserObservation"), latestBrowserObservation},
+            {QStringLiteral("cancellationObserved"), cancellationObserved},
+            {QStringLiteral("navigatedToFixture"), navigatedToFixture},
+            {QStringLiteral("messages"), messages},
+            {QStringLiteral("logs"), QJsonArray::fromStringList(logs)}};
+        QTextStream(stdout) << QJsonDocument(result).toJson(QJsonDocument::Indented) << '\n';
+        backend.stop();
+        return finished && cancellationObserved ? 0 : 1;
+    }
+
     AgentToolRunner runner;
 
     if (provider == QLatin1String("camofox")) {
