@@ -133,9 +133,10 @@ deben contarse como resultados de esta secuencia.
 
 ### Suite Linux
 
-Se ejecutó `./scripts/tests-linux.sh Release` con `LC_JOBS=8`: **77/77 tests
-pasaron**. El primer intento quedó esperando I/O porque `~/.cache` de esta
-máquina termina en el volumen NTFS pese a que el script espeja el checkout; la
+Se ejecutó `./scripts/tests-linux.sh Release` con `LC_JOBS=8`: la corrida final
+tras el cambio del helper pasó **77/77 tests en 81.95 s**. El primer intento
+quedó esperando I/O porque `~/.cache` de esta máquina termina en el volumen NTFS
+pese a que el script espeja el checkout; la
 corrida registrada usó `XDG_CACHE_HOME=/tmp/llamacode-test-cache-20261001` y
 `LC_TEST_BUILD_DIR=/tmp/llamacode-native-build-20261001`, ambos en ext4. Así se
 aisló también de procesos CTest antiguos que seguían apuntando al build compartido.
@@ -148,6 +149,17 @@ El probe también tenía una espera falsa de 60 s cuando MCP terminaba durante l
 inicialización, antes de entrar al event loop; se corrigió y el mismo probe ahora
 termina con código 0 en menos de un segundo tras recibir la respuesta.
 
+Se añadió `playwright-sequence <json-array>` para ejecutar tools MCP consecutivas
+en el mismo `AgentToolRunner`. Contra los tres sitios locales de cancelación,
+LlamaCode completó `browser_navigate`, dos clicks de cancelación y
+`browser_snapshot` en cada sitio (**15/15 llamadas MCP correctas**); los tres
+snapshots finales confirman renovación apagada y conservación de cuenta, archivos,
+compras y plan gratuito. El orden y los selectores de click fueron fijados en el
+script de QA: esto prueba el backend MCP y su estado de navegador, no un turno
+autónomo donde el modelo elige cada tool. La planificación de Qwen se evaluó por
+separado con el corpus v1. El resultado íntegro está en
+`artifacts/webbrain-evaluation-20261001/browser-fixture/llamacode-mcp-sequence-result.json`.
+
 ### Browser local de tres sitios
 
 Se agregó una fixture independiente en
@@ -156,9 +168,9 @@ servidor local, runner Playwright y resultado JSON. En Chrome visible, cada siti
 completó `Manage plan → Cancel renewal → Confirm cancellation`; el estado final
 apagó la renovación y confirmó que cuenta, archivos, compras y plan gratuito
 siguen intactos (**3/3 sitios**). Esto valida el navegador y las transiciones
-HTML locales; el recorrido de clicks se ejecutó mediante Playwright, no mediante
-un planner de LlamaCode. El MCP de LlamaCode sí navegó el sitio y obtuvo su
-observación, pero el helper no encadena tools en una sola conversación.
+HTML locales; el recorrido de clicks original se ejecutó mediante Playwright,
+no mediante un planner de LlamaCode. La secuencia posterior sí pasó por el
+`AgentToolRunner` y Playwright MCP, con el orden de tools fijado por el probe.
 
 ### Planner cercano: Qwen3-8B Q6_K
 
@@ -217,7 +229,7 @@ ni calcular score de release gate. El 450M corrió en WASM: la RTX 3090 expuso
 WebGPU pero el adapter no soportó `shader-f16`, requerido por el encoder FP16 del
 artefacto. No promover un perfil con esta evidencia.
 
-El probe MCP local se invoca como `qa_web_providers playwright-tool browser_navigate '{"url":"http://127.0.0.1:8777/northstar"}'`; el `web_fetch` que usa el modo anterior rechaza IPs privadas.
+El probe MCP local se invoca como `qa_web_providers playwright-tool browser_navigate '{"url":"http://127.0.0.1:8777/northstar"}'`; para una secuencia, `qa_web_providers playwright-sequence '<array JSON>'`. El `web_fetch` que usa el modo anterior rechaza IPs privadas.
 
 No cambia Ingi Charla: no hubo medición nueva de audio, diálogo, interrupción ni
 latencia de voz. Tampoco se cambian perfiles/harness de producción: el candidato

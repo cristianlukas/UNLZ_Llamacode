@@ -1298,6 +1298,9 @@ con `LLAMACODE_QA_PLAYWRIGHT_CMD` definido. Para probar una tool concreta del
 MCP de Playwright (incluida navegación a sitios locales de prueba, que `web_fetch`
 rechaza por seguridad), acepta `qa_web_providers playwright-tool <tool> <json>`;
 por ejemplo `browser_navigate '{"url":"http://127.0.0.1:8777/northstar"}'`.
+Para encadenar varias tools en el mismo `AgentToolRunner`, acepta también
+`qa_web_providers playwright-sequence '<array JSON>'`; el arreglo contiene objetos
+`{"tool":"browser_*","arguments":{...}}` y registra cada resultado.
 
 ## Data Lab
 
