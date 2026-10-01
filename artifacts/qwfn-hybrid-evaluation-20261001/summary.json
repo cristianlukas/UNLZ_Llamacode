@@ -1,0 +1,32 @@
+{
+  "date": "2026-10-01",
+  "candidate": {
+    "project": "QwFN-hybrid",
+    "commit": "6b26989f8a2bdefd6c541ba0d0586c80b9e3b011",
+    "model": "Qwen3.8-Flash-Next GSQ-RCO IQ3_XXS",
+    "mtp": "shared Q8_0",
+    "baseline": "clean llama.cpp ca1426903fabe9af26cd10c42034cb4bbd2e0e11"
+  },
+  "decision": "do_not_promote",
+  "reason": "No local decode/latency win; BCB 2/8; tool contract tied 5/5; Computer Use accuracy ties at 100% but latency fails its promotion gate; no audio input for Ingi Charla.",
+  "gates": {
+    "bigcodebench_hard_8": {"pass": 2, "total": 8},
+    "tool_contract": {"pass": 5, "total": 5},
+    "computer_use": {"pass": 72, "total": 72, "accuracy_pct": 100, "median_ms": {"state_first": 4910.65, "question_first": 4698.23, "sandwich": 6163.28}, "promotion_gate": "FAIL: latency"},
+    "vision_semantic_tool": {"pass": 3, "total": 3, "median_ms": 25265.33, "action_executed": false},
+    "voice": "not tested: server accepts chat/image, no audio input"
+  },
+  "artifacts": {
+    "bcb": "bcb_hard_8.json",
+    "tool_contract": "tool_contract_5.json",
+    "computer_use": "computer_use_1pass.json",
+    "vision": "computer_use_vision_3pass.json",
+    "throughput": "throughput/README.md",
+    "parity": "parity/README.md"
+  },
+  "local_hardware": {
+    "gpus": "2x RTX 3090 24GB; comparative throughput restricted to GPU 0",
+    "system_ram_gib": 123,
+    "containerd_volume_free_gib_at_end": 2.7
+  }
+}

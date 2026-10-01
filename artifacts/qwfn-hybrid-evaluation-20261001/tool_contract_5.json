@@ -1,0 +1,134 @@
+{
+  "benchmark": "harness_tool_contract_v1",
+  "model": "QwFN-IQ3-XXS",
+  "passes": 5,
+  "passed": 5,
+  "transportOk": 5,
+  "rows": [
+    {
+      "pass": 1,
+      "calls": [
+        {
+          "id": "call_0_61893",
+          "name": "read_file",
+          "arguments": {
+            "path": "README.md"
+          }
+        },
+        {
+          "id": "call_0_61897",
+          "name": "write_file",
+          "arguments": {
+            "path": "tool_contract.txt",
+            "content": "CONTRACT_OK\n"
+          }
+        }
+      ],
+      "transportOk": true,
+      "firstWallMs": 46832.44,
+      "secondWallMs": 4306.31,
+      "finalContent": null,
+      "passed": true
+    },
+    {
+      "pass": 2,
+      "calls": [
+        {
+          "id": "call_0_61907",
+          "name": "read_file",
+          "arguments": {
+            "path": "README.md"
+          }
+        },
+        {
+          "id": "call_0_61909",
+          "name": "write_file",
+          "arguments": {
+            "path": "tool_contract.txt",
+            "content": "CONTRACT_OK\n"
+          }
+        }
+      ],
+      "transportOk": true,
+      "firstWallMs": 10040.61,
+      "secondWallMs": 2503.72,
+      "finalContent": null,
+      "passed": true
+    },
+    {
+      "pass": 3,
+      "calls": [
+        {
+          "id": "call_0_61919",
+          "name": "read_file",
+          "arguments": {
+            "path": "README.md"
+          }
+        },
+        {
+          "id": "call_0_61921",
+          "name": "write_file",
+          "arguments": {
+            "path": "tool_contract.txt",
+            "content": "CONTRACT_OK\n"
+          }
+        }
+      ],
+      "transportOk": true,
+      "firstWallMs": 9696.34,
+      "secondWallMs": 2400.0,
+      "finalContent": null,
+      "passed": true
+    },
+    {
+      "pass": 4,
+      "calls": [
+        {
+          "id": "call_0_61931",
+          "name": "read_file",
+          "arguments": {
+            "path": "README.md"
+          }
+        },
+        {
+          "id": "call_0_61933",
+          "name": "write_file",
+          "arguments": {
+            "path": "tool_contract.txt",
+            "content": "CONTRACT_OK\n"
+          }
+        }
+      ],
+      "transportOk": true,
+      "firstWallMs": 9611.29,
+      "secondWallMs": 2349.52,
+      "finalContent": null,
+      "passed": true
+    },
+    {
+      "pass": 5,
+      "calls": [
+        {
+          "id": "call_0_61943",
+          "name": "read_file",
+          "arguments": {
+            "path": "README.md"
+          }
+        },
+        {
+          "id": "call_0_61945",
+          "name": "write_file",
+          "arguments": {
+            "path": "tool_contract.txt",
+            "content": "CONTRACT_OK\n"
+          }
+        }
+      ],
+      "transportOk": true,
+      "firstWallMs": 9660.15,
+      "secondWallMs": 2361.65,
+      "finalContent": null,
+      "passed": true
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "benchmark": "computer_use_vision_settings_v1",
+  "model": "QwFN-IQ3-XXS",
+  "fixture": "assets/benchmarks/custom/lfm25_vl_dspark_ui_settings_v1.png",
+  "actionExecuted": false,
+  "passes": 3,
+  "passed": 3,
+  "transportOk": 3,
+  "rows": [
+    {
+      "pass": 1,
+      "transportOk": true,
+      "passed": true,
+      "elapsedMs": 28691.63,
+      "toolCalls": [
+        {
+          "name": "desktop_control_action",
+          "arguments": {
+            "action": "toggle",
+            "target": "Tema oscuro",
+            "value": true
+          }
+        }
+      ],
+      "content": null,
+      "usage": {
+        "prompt_tokens": 1421,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens": 52,
+        "total_tokens": 1473
+      }
+    },
+    {
+      "pass": 2,
+      "transportOk": true,
+      "passed": true,
+      "elapsedMs": 24764.84,
+      "toolCalls": [
+        {
+          "name": "desktop_control_action",
+          "arguments": {
+            "action": "toggle",
+            "target": "Tema oscuro",
+            "value": true
+          }
+        }
+      ],
+      "content": null,
+      "usage": {
+        "prompt_tokens": 1421,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens": 52,
+        "total_tokens": 1473
+      }
+    },
+    {
+      "pass": 3,
+      "transportOk": true,
+      "passed": true,
+      "elapsedMs": 25265.33,
+      "toolCalls": [
+        {
+          "name": "desktop_control_action",
+          "arguments": {
+            "action": "toggle",
+            "target": "Tema oscuro",
+            "value": true
+          }
+        }
+      ],
+      "content": null,
+      "usage": {
+        "prompt_tokens": 1421,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens": 52,
+        "total_tokens": 1473
+      }
+    }
+  ]
+}
