@@ -1294,7 +1294,10 @@ El ejecutable de QA `qa_web_providers` permite probar servicios reales fuera de
 `ctest`, sin convertir dependencias externas en requisito del build:
 `qa_web_providers camofox https://example.com` (URL configurable con
 `LLAMACODE_QA_CAMOFOX_URL`) o `qa_web_providers playwright https://example.com`
-con `LLAMACODE_QA_PLAYWRIGHT_CMD` definido.
+con `LLAMACODE_QA_PLAYWRIGHT_CMD` definido. Para probar una tool concreta del
+MCP de Playwright (incluida navegación a sitios locales de prueba, que `web_fetch`
+rechaza por seguridad), acepta `qa_web_providers playwright-tool <tool> <json>`;
+por ejemplo `browser_navigate '{"url":"http://127.0.0.1:8777/northstar"}'`.
 
 ## Data Lab
 

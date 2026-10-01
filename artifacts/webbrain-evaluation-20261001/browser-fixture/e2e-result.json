@@ -1,0 +1,12 @@
+{
+  "date": "2026-10-01",
+  "browser": "Google Chrome, Playwright 1.62.1, headed X11",
+  "siteServer": "site_server.py on 127.0.0.1:8777",
+  "stepsPerSite": ["Manage plan", "Cancel renewal", "Confirm cancellation"],
+  "allPassed": true,
+  "results": [
+    {"site": "northstar", "terminalState": "Cancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.", "passed": true},
+    {"site": "cloudbox", "terminalState": "Cancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.", "passed": true},
+    {"site": "fittrail", "terminalState": "Cancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.", "passed": true}
+  ]
+}

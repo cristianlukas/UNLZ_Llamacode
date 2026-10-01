@@ -1,0 +1,16 @@
+{
+  "date": "2026-10-01",
+  "model": "webbrain-one/webbrain-vl-2-450M-onnx",
+  "modelRevision": "723658138f07c80ef5c0bc84aa90742e52950af5",
+  "runtime": "Transformers.js 4.3.0 in Chrome headed X11; ONNX Runtime Web WASM",
+  "webgpuAdapter": true,
+  "webgpuShaderF16": false,
+  "executionDevice": "wasm",
+  "dtype": {"embed_tokens": "fp16", "vision_encoder": "fp16", "decoder_model_merged": "q4"},
+  "screenshot": "browser-fixture/northstar-pre-cancel.png",
+  "screenshotSha256": "d593634ff2fc1cb45424d7a00de978fa9f0362618b4e6cc9d0db6acf796264cb",
+  "processorInputs": {"pixel_values": [1, 1024, 768], "pixel_attention_mask": [1, 1024], "spatial_shapes": [1, 2], "input_ids": [1, 347], "attention_mask": [1, 347]},
+  "prompt": "Describe the visible browser/app UI. Return concise fields: PAGE: current page or app; PURPOSE: what it is for; ELEMENTS: visible controls and their labels/locations; STATE: selected, enabled, or disabled states; EVIDENCE: exact visual evidence; UNCERTAINTY: anything unclear. Do not infer hidden content.",
+  "output": "PAGE: The current page appears to be a standard browser interface without any visible controls or buttons. PURPOSE: The current page appears to be a standard browser interface without any visible controls or buttons. ELEMENTS: None visible. STATE: The buttons are likely enabled or selected. EVIDENCE: None. UNCERTAINTY: There is no clear evidence of any unreadable or unclear content.",
+  "assessment": "The image tensor reached the model, but on this fixed browser screenshot the model missed the visible title and controls and speculated about button state. Exploratory smoke only; no production six-section rubric score."
+}

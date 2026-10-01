@@ -1,0 +1,51 @@
+{
+  "date": "2026-10-01",
+  "model": "LFM2.5-VL-3B-F16",
+  "runner": "llama.cpp adaptive build 1 c28d538; CUDA:1",
+  "source": "local browser screenshot of three-state fake subscription site, pre-cancellation",
+  "screenshotSha256": "d593634ff2fc1cb45424d7a00de978fa9f0362618b4e6cc9d0db6acf796264cb",
+  "prompt": "Describe the visible browser/app UI. Return concise fields: PAGE: current page or app; PURPOSE: what it is for; ELEMENTS: visible controls and their labels/locations; STATE: selected, enabled, or disabled states; EVIDENCE: exact visual evidence; UNCERTAINTY: anything unclear. Do not infer hidden content.",
+  "request": {
+    "model": "LFM2.5-VL-3B-F16",
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "max_tokens": 180,
+    "stream": false
+  },
+  "response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "{\n  \"PAGE\": \"Account settings page\",\n  \"PURPOSE\": \"Manage subscription renewal and plan details\",\n  \"ELEMENTS\": [\n    {\n      \"LABEL\": \"Title\",\n      \"LOCATION\": \"Top of the page\"\n    },\n    {\n      \"LABEL\": \"Status message\",\n      \"LOCATION\": \"Below the title\"\n    },\n    {\n      \"LABEL\": \"Button\",\n      \"LOCATION\": \"Bottom left\"\n    }\n  ],\n  \"STATE\": \"Normal\",\n  \"EVIDENCE\": \"Auto-renew is on. Your account, files, purchases and training data are separate.\",\n  \"UNCERTAINTY\": \"None\"\n}"
+        }
+      }
+    ],
+    "created": 1790880521,
+    "model": "LFM2.5-VL-3B-F16",
+    "system_fingerprint": "b1-c28d538",
+    "object": "chat.completion",
+    "usage": {
+      "completion_tokens": 152,
+      "prompt_tokens": 1874,
+      "total_tokens": 2026,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "id": "chatcmpl-8cdvkNamQlYynB3vaZtU6HOOUb6sqacc",
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1874,
+      "prompt_ms": 633.113,
+      "prompt_per_token_ms": 0.33784044823906084,
+      "prompt_per_second": 2959.977128885365,
+      "predicted_n": 152,
+      "predicted_ms": 1143.467,
+      "predicted_per_token_ms": 7.572629139072848,
+      "predicted_per_second": 132.05453240014796
+    }
+  }
+}

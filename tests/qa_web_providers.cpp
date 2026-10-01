@@ -10,12 +10,14 @@
 //   qa_web_providers camofox https://example.com
 //   set LLAMACODE_QA_PLAYWRIGHT_CMD=npx @playwright/mcp@latest --headless
 //   qa_web_providers playwright https://example.com
+//   qa_web_providers playwright-tool browser_navigate '{"url":"http://127.0.0.1:8777/northstar"}'
 int main(int argc, char **argv)
 {
     QCoreApplication app(argc, argv);
     QTextStream err(stderr);
     if (argc < 3) {
-        err << "uso: qa_web_providers <camofox|playwright> <url>\n";
+        err << "uso: qa_web_providers <camofox|playwright> <url> | "
+               "playwright-tool <tool> <json>\n";
         return 2;
     }
     const QString provider = QString::fromLocal8Bit(argv[1]).toLower();
@@ -30,7 +32,8 @@ int main(int argc, char **argv)
             {QStringLiteral("baseUrl"), base},
             {QStringLiteral("apiKey"), qEnvironmentVariable("CAMOFOX_API_KEY")},
             {QStringLiteral("enabled"), true}}});
-    } else if (provider == QLatin1String("playwright")) {
+    } else if (provider == QLatin1String("playwright")
+               || provider == QLatin1String("playwright-tool")) {
         const QString command = qEnvironmentVariable("LLAMACODE_QA_PLAYWRIGHT_CMD");
         if (command.isEmpty()) {
             err << "falta LLAMACODE_QA_PLAYWRIGHT_CMD\n";
@@ -47,23 +50,43 @@ int main(int argc, char **argv)
     }
 
     int exitCode = 1;
+    bool finished = false;
     QObject::connect(&runner, &AgentToolRunner::toolExecuted, &app,
                      [&](const QVariantMap &result) {
         QTextStream(stdout) << result.value(QStringLiteral("result")).toString() << '\n';
         exitCode = result.value(QStringLiteral("ok")).toBool() ? 0 : 1;
+        finished = true;
         app.quit();
     });
     QTimer::singleShot(60000, &app, [&]() {
         err << "timeout\n";
         app.quit();
     });
-    runner.executeTool(
-        QStringLiteral("qa"), QStringLiteral("web_fetch"),
-        QString::fromUtf8(QJsonDocument(QJsonObject{
-            {QStringLiteral("url"), url},
-            {QStringLiteral("provider"), provider}}).toJson(QJsonDocument::Compact)),
-        QCoreApplication::applicationDirPath());
-    app.exec();
+    QString toolName = QStringLiteral("web_fetch");
+    QString arguments = QString::fromUtf8(QJsonDocument(QJsonObject{
+        {QStringLiteral("url"), url},
+        {QStringLiteral("provider"), provider}}).toJson(QJsonDocument::Compact));
+    if (provider == QLatin1String("playwright-tool")) {
+        if (argc < 4) {
+            err << "playwright-tool requiere <tool> <json>\n";
+            return 2;
+        }
+        toolName = QString::fromLocal8Bit(argv[2]);
+        arguments = QString::fromLocal8Bit(argv[3]);
+        QJsonParseError parseError;
+        const QJsonDocument parsed = QJsonDocument::fromJson(arguments.toUtf8(), &parseError);
+        if (parseError.error != QJsonParseError::NoError || !parsed.isObject()) {
+            err << "<json> debe ser un objeto JSON\n";
+            return 2;
+        }
+        toolName = QStringLiteral("mcp__playwright__") + toolName;
+    }
+    runner.executeTool(QStringLiteral("qa"), toolName, arguments,
+                       QCoreApplication::applicationDirPath());
+    // MCP tools can complete synchronously while executeTool initializes the
+    // provider. Avoid entering the event loop after quit() has already fired.
+    if (!finished)
+        app.exec();
     runner.shutdown();
     return exitCode;
 }
