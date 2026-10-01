@@ -75,21 +75,37 @@ Para no duplicar decenas de GB ni ejecutar otra carga en las GPU, la preparació
 quedó sin descargar pesos y sin arrancar el server. La compilación tampoco debe
 contarse como validación del modelo.
 
-## Próxima prueba que aporta evidencia nueva
+## Cierre de la prueba pendiente — 2026-10-01
 
-Cuando el GGUF Coder IQ1_M termine de descargarse, ejecutar una sola campaña
-nueva (no repetir Q2_0):
+El plan anterior se completó con una comparación LC-H1 apareada de **Qwen3.8
+Coder IQ1_M contra Genesis**, usando el mismo daemon, binario, harness, semilla,
+sampling y receta. El resultado detallado y los recibos están en
+[`docs/qwen38-coder-lc-h1-paired-20261001.md`](qwen38-coder-lc-h1-paired-20261001.md)
+y `artifacts/qwen38-coder-lch1-paired-20261001/`.
 
-1. BigCodeBench-Hard-8 con los mismos ocho IDs de
-   `artifacts/bigcodebench-hard-ubuntu-8.json`, sampling conservador, thinking
-   apagado y el grader aislado de `artifacts/swift-genesis-evaluation-20260929/run_bcb.py`.
-2. Suite de contrato de tools con los mismos schemas/prompts de
-   `artifacts/swift-genesis-evaluation-20260929/run_tool_contract.py`.
-3. Registrar SHA-256 de ambos shards, commit/runtime, GPUs, context/KV, MTP,
-   sampling, IDs, precisión del grader, latencias y tokens/s. Si pasa esos gates,
-   recién entonces medir Computer Use o Charla; el score 1/8 previo no justifica
-   una campaña más grande.
+| Etapa | Genesis | Coder IQ1_M | Lectura |
+|---|---:|---:|---|
+| HumanEval | 1/1 + 20/20 | 1/1 + 20/20 | Empate en esta muestra. |
+| BigCodeBench-Hard-8, primera secuencia | **8/8** final | 5/8 final | Coder tardó 1492 s frente a 1098 s. |
+| BigCodeBench-Hard-8, repetición | Cancelada durante reparación; sin score | 4/8 final | Coder repitió 3/8 iniciales y falló casos recurrentes. |
 
-La decisión de producto sigue siendo **sin cambios** hasta contar con esos
-resultados: conservar perfiles actuales y no añadir Strata como preset de
-coding/harness por su velocidad sola.
+No repetir Q2_0, HumanEval, tool contract, Computer Use, visión ni la corrida
+LC-H1 completa de Coder para esta decisión. Genesis tuvo sólo una repetición
+completa de BCB; la segunda se canceló tras ~48 minutos y no cuenta como score.
+La síntesis metodológica y las razones para no promover el candidato están en
+el informe LC-H1 citado arriba.
+
+## Qué aporta la publicación y qué falta para adoptar su engine
+
+La publicación de Reddit presenta mediciones del fork `eddoursul/Strata`
+`custom` en otro equipo y otras cuantizaciones. No se reprodujeron esos números
+en esta máquina. La evaluación LC-H1 del Coder corrió sobre `llama.cpp` build1,
+no sobre ese fork; por ello mide el modelo GGUF en el harness de LlamaCode, no
+el efecto del parche de Strata. El fork optimizado queda como una hipótesis de
+rendimiento para Flash-Next y requiere un A/B engine-controlado antes de
+integrarlo o crear un perfil operativo.
+
+La publicación no aporta evidencia de voz ni de Computer Use con GUI real. No
+se cambia Ingi Charla, el orden de prompts/guardrails de Computer Use, el
+HarnessSpec ni los perfiles. La decisión actual es **mantener Genesis y los
+perfiles vigentes; no promover Coder IQ1_M ni importar Strata como runtime**.
