@@ -1,0 +1,20 @@
+[
+  {
+    "group": "coder",
+    "path": "/media/cristian/7CFE1E0FFE1DC1F6/models/Qwen3.8-Flash-Next-GSQ-RCO-Coder-GGUF/IQ1_M/Qwen3.8-Flash-Next-GSQ-RCO-IQ1_M-00001-of-00002.gguf",
+    "bytes": 29608446496,
+    "sha256": "e11083ba855e7666b48ea3f2db6a9c3a20c18751a012cc24f948de91b7087fad"
+  },
+  {
+    "group": "coder",
+    "path": "/media/cristian/7CFE1E0FFE1DC1F6/models/Qwen3.8-Flash-Next-GSQ-RCO-Coder-GGUF/IQ1_M/Qwen3.8-Flash-Next-GSQ-RCO-IQ1_M-00002-of-00002.gguf",
+    "bytes": 28800138432,
+    "sha256": "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113"
+  },
+  {
+    "group": "genesis",
+    "path": "/media/cristian/7CFE1E0FFE1DC1F6/models/Swift-Qwen3.8-27B-Genesis-GGUF/Swift-Qwen3.8-27B-Genesis-NVFP4-v4.gguf",
+    "bytes": 15764903360,
+    "sha256": "bc032e9f2148b990125b67c00f5900460be581a9ec2954eb98ab4fd8ab68afdc"
+  }
+]
