@@ -197,22 +197,25 @@ por su backend WASM en el navegador. El primer probe era inválido: el
 la imagen (`pixel_values` ausente); esa salida no se puntúa.
 
 El probe corregido fuerza `<image>` en la plantilla y pasa la captura por
-`AutoProcessor(image, prompt)`. La misma captura pre-cancelación de Northstar y
-el mismo prompt de seis campos se enviaron a WebBrain VL 450M y a
-LFM2.5-VL-3B F16 local. El detalle de la captura y la respuesta LFM están en
-[`lfm25-vl-3b-northstar-observation.json`](../artifacts/webbrain-evaluation-20261001/lfm25-vl-3b-northstar-observation.json);
-el resultado WebBrain quedó en
-[`webbrain-vl-450m-northstar-observation.json`](../artifacts/webbrain-evaluation-20261001/webbrain-vl-450m-northstar-observation.json).
-La entrada reportó `pixel_values` (1×1024×768), así que la captura sí llegó al
-modelo. En esta muestra el 450M no identificó el sitio, el título ni los botones;
-además especuló que botones invisibles estaban habilitados. LFM2.5-VL-3B F16 en
-la misma captura identificó que era una página de cuenta/suscripción y citó el
-texto real de renovación automática, aunque sólo llamó genérico al botón y no
-indicó su label. Es una observación cualitativa de un único screenshot/prompt,
-no un score comparativo ni la release gate de WebBrain. El resultado ONNX 450M
-quedó en WASM: la RTX 3090 expuso WebGPU pero el adapter no soportó `shader-f16`,
-requerido por el encoder FP16 del artefacto. Ver los dos JSON de salida enlazados
-en esta carpeta; no promover un perfil con esta evidencia.
+`AutoProcessor(image, prompt)`. Primero se comparó un screenshot de navegador
+local de Northstar Audio con el mismo prompt de seis campos. WebBrain no reconoció
+la página ni controles visibles y especuló sobre estados de botones; LFM2.5-VL-3B
+F16 reconoció el contexto de cuenta/suscripción y citó texto real, pero omitió el
+label del botón. Sus respuestas están en
+[`webbrain-vl-450m-northstar-observation.json`](../artifacts/webbrain-evaluation-20261001/webbrain-vl-450m-northstar-observation.json)
+y [`lfm25-vl-3b-northstar-observation.json`](../artifacts/webbrain-evaluation-20261001/lfm25-vl-3b-northstar-observation.json).
+
+También se hizo la comparación controlada sobre la fixture original de DSpark
+(SHA-256 `7dbf300035862eb581e422144394ff013342d7f859b4e7cfb84326dc73098174`)
+con un prompt idéntico de seis estados: LFM2.5-VL-3B devolvió 6/6 `Off`; el
+450M devolvió 5/6 valores correctos y omitió `Enviar diagnósticos`. Ver
+[`lfm25-vl-3b-windows-settings-reading.json`](../artifacts/webbrain-evaluation-20261001/lfm25-vl-3b-windows-settings-reading.json)
+y [`webbrain-vl-450m-windows-settings-reading.json`](../artifacts/webbrain-evaluation-20261001/webbrain-vl-450m-windows-settings-reading.json).
+Los tensores `pixel_values` están presentes en ambas corridas 450M; la entrada
+visual se procesó. Son dos probes cualitativos pequeños, sin comparar latencia
+ni calcular score de release gate. El 450M corrió en WASM: la RTX 3090 expuso
+WebGPU pero el adapter no soportó `shader-f16`, requerido por el encoder FP16 del
+artefacto. No promover un perfil con esta evidencia.
 
 El probe MCP local se invoca como `qa_web_providers playwright-tool browser_navigate '{"url":"http://127.0.0.1:8777/northstar"}'`; el `web_fetch` que usa el modo anterior rechaza IPs privadas.
 

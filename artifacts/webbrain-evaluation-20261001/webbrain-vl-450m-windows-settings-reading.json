@@ -1,0 +1,16 @@
+{
+  "date": "2026-10-01",
+  "model": "webbrain-one/webbrain-vl-2-450M-onnx",
+  "modelRevision": "723658138f07c80ef5c0bc84aa90742e52950af5",
+  "runtime": "Transformers.js 4.3.0 in Chrome headed X11; ONNX Runtime Web WASM",
+  "webgpuAdapter": true,
+  "webgpuShaderF16": false,
+  "executionDevice": "wasm",
+  "dtype": {"embed_tokens": "fp16", "vision_encoder": "fp16", "decoder_model_merged": "q4"},
+  "screenshot": "assets/benchmarks/custom/lfm25_vl_dspark_ui_settings_v1.png",
+  "screenshotSha256": "7dbf300035862eb581e422144394ff013342d7f859b4e7cfb84326dc73098174",
+  "processorInputs": {"pixel_values": [1, 1024, 768], "pixel_attention_mask": [1, 1024], "spatial_shapes": [1, 2], "input_ids": [1, 339], "attention_mask": [1, 339]},
+  "prompt": "Read the visible settings. Return JSON with exact labels as keys and one of On, Off, Unknown as values for Tema oscuro, Contraste alto, Brillo automático, Telemetría de uso, Enviar diagnósticos, and Ubicación aproximada. Use only what is visible; do not infer hidden states.",
+  "output": {"Tema oscuro": "Off", "Contraste alto": "Off", "Brillo automático": "Off", "Telemetría de uso": "Off", "Ubicación aproximada": "Off"},
+  "assessment": "Five of six requested settings were returned with correct values; Enviar diagnósticos was omitted. The LFM2.5-VL-3B F16 baseline returned all six values correctly under the same prompt. Qualitative single-image probe, not a rubric score."
+}
