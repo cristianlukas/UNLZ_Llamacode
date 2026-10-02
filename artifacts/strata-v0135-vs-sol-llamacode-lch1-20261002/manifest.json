@@ -1,0 +1,599 @@
+{
+  "createdAt": "2026-10-02",
+  "repoCommit": "d523d8859f69c793e73119189e2a48ad5207060c",
+  "llamacodeBinary": "/home/cristian/.cache/llamacode/build_linux/LlamaCode",
+  "llamacodeBinarySha256": "4589b607f3071bdc14866221523df62ef140761e916c628dabf99454a9654dc3",
+  "llamacodeHarness": "LlamaCode --agent-daemon + ControlApi + AppController.startCustomBenchmark(... target=agent)",
+  "harnessEngineId": "legacy",
+  "harnessEngineVersion": 1,
+  "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+  "agentProfileId": "agent-maximo",
+  "agentSeed": 4242,
+  "agentTemperature": 0.1,
+  "thinkingEnabled": true,
+  "timeoutSeconds": 1800,
+  "repairAttemptsAllowed": 2,
+  "candidate": {
+    "name": "Strata",
+    "version": "0.1.35",
+    "model": "qwen3.8-flash-next-iq3_s",
+    "quant": "IQ3_S",
+    "context": 131072,
+    "endpoint": "http://127.0.0.1:8350/v1"
+  },
+  "baseline": {
+    "name": "SOL",
+    "model": "qwen3.8-27b",
+    "servedModel": "qwen3.8-27b",
+    "endpoint": "http://127.0.0.1:8113/v1",
+    "backend": "vLLM AutoRound INT4 TP2 P2P MTP4"
+  },
+  "sameInputs": [
+    "HumanEval (1 ítems)",
+    "HumanEval (20 ítems)",
+    "BigCodeBench-Hard (8 ítems)"
+  ],
+  "suiteIds": [
+    "059b6f00-7b4b-48ff-a3a2-2a71f900c1c0",
+    "267bb33d-4510-417b-ae3c-6dbbfb2cb08d",
+    "05c28394-11d0-41fe-a55f-b3cb69db9c15"
+  ],
+  "gpuHardware": [
+    "0, NVIDIA GeForce RTX 3090, 24576 MiB",
+    "1, NVIDIA GeForce RTX 3090, 24576 MiB"
+  ],
+  "solDockerImageAndCommand": "vllm/vllm-openai:v0.27.1 [\"--model\",\"/root/.cache/huggingface/qwen3.8-27b-autoround-int4\",\"--served-model-name\",\"qwen3.8-27b\",\"local\",\"--quantization\",\"auto_round\",\"--dtype\",\"bfloat16\",\"--tensor-parallel-size\",\"2\",\"--max-model-len\",\"262144\",\"--gpu-memory-utilization\",\"0.90\",\"--max-num-seqs\",\"8\",\"--max-num-batched-tokens\",\"8192\",\"--long-prefill-token-threshold\",\"4096\",\"--kv-cache-dtype\",\"fp8_e4m3\",\"--trust-remote-code\",\"--enable-prefix-caching\",\"--enable-chunked-prefill\",\"--mamba-cache-mode\",\"align\",\"--prefix-match-unit\",\"16\",\"--reasoning-parser\",\"qwen3\",\"--enable-auto-tool-choice\",\"--tool-call-parser\",\"qwen3_coder\",\"--default-chat-template-kwargs\",\"{\\\"enable_thinking\\\": true, \\\"reasoning_effort\\\": \\\"low\\\"}\",\"--host\",\"0.0.0.0\",\"--port\",\"8000\"]",
+  "runs": {
+    "strata_he0": "HumanEval_1_tems__20261002_172129",
+    "strata_he20": "HumanEval_20_tems__20261002_172339",
+    "strata_bcb8": "BigCodeBench-Hard_8_tems__20261002_173533",
+    "sol_he0": "HumanEval_1_tems__20261002_174403",
+    "sol_he20": "HumanEval_20_tems__20261002_174624",
+    "sol_bcb8": "BigCodeBench-Hard_8_tems__20261002_175152"
+  },
+  "summary": {
+    "strata_he0": {
+      "benchmarkName": "HumanEval (1 ítems)",
+      "profileId": "86b52354-8c78-4138-8636-4aa1bf66a85f",
+      "profileName": "LC-H1 VALID Strata 0.1.35 IQ3_S 20261002",
+      "agentProfileId": "agent-maximo",
+      "agentProfileName": "Máximo",
+      "agentSeed": 4242,
+      "agentTemperature": 0.1,
+      "thinkingEnabled": false,
+      "firstAttemptScore": 0,
+      "firstAttemptTotal": 1,
+      "finalScore": 1,
+      "finalTotal": 1,
+      "repairAttempts": 1,
+      "elapsedSec": 19.09,
+      "timedOut": false,
+      "failed": false,
+      "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+      "profileConfigFingerprint": "2a78d3e735d420b858728e1c0a7f76153d40fbfc03aef9272f7dd37addece5ad",
+      "toolCalls": 1,
+      "toolCallQuality": {
+        "expectedCalls": 0,
+        "f1Pct": -1,
+        "failedCalls": 0,
+        "incompleteCalls": 1,
+        "invalidCalls": 0,
+        "matchedExpectedCalls": 0,
+        "missingExpectedCalls": 0,
+        "precisionPct": -1,
+        "recallPct": -1,
+        "redundantCalls": 0,
+        "sequenceExact": false,
+        "successRatePct": 0,
+        "successfulCalls": 0,
+        "totalCalls": 1,
+        "unexpectedCalls": 0
+      },
+      "acceptance": [
+        {
+          "passed": true,
+          "taskId": "HumanEval/0",
+          "type": "grader:code_tests"
+        }
+      ],
+      "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/HumanEval_1_tems__20261002_172129"
+    },
+    "strata_he20": {
+      "benchmarkName": "HumanEval (20 ítems)",
+      "profileId": "86b52354-8c78-4138-8636-4aa1bf66a85f",
+      "profileName": "LC-H1 VALID Strata 0.1.35 IQ3_S 20261002",
+      "agentProfileId": "agent-maximo",
+      "agentProfileName": "Máximo",
+      "agentSeed": 4242,
+      "agentTemperature": 0.1,
+      "thinkingEnabled": false,
+      "firstAttemptScore": 19,
+      "firstAttemptTotal": 20,
+      "finalScore": 20,
+      "finalTotal": 20,
+      "repairAttempts": 1,
+      "elapsedSec": 695.135,
+      "timedOut": false,
+      "failed": false,
+      "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+      "profileConfigFingerprint": "2a78d3e735d420b858728e1c0a7f76153d40fbfc03aef9272f7dd37addece5ad",
+      "toolCalls": 40,
+      "toolCallQuality": {
+        "expectedCalls": 0,
+        "f1Pct": -1,
+        "failedCalls": 0,
+        "incompleteCalls": 0,
+        "invalidCalls": 0,
+        "matchedExpectedCalls": 0,
+        "missingExpectedCalls": 0,
+        "precisionPct": -1,
+        "recallPct": -1,
+        "redundantCalls": 0,
+        "sequenceExact": false,
+        "successRatePct": 100,
+        "successfulCalls": 40,
+        "totalCalls": 40,
+        "unexpectedCalls": 0
+      },
+      "acceptance": [
+        {
+          "passed": true,
+          "taskId": "HumanEval/0",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/1",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/2",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/3",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/4",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/5",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/6",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/7",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/8",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/9",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/10",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/11",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/12",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/13",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/14",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/15",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/16",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/17",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/18",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/19",
+          "type": "grader:code_tests"
+        }
+      ],
+      "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/HumanEval_20_tems__20261002_172339"
+    },
+    "strata_bcb8": {
+      "benchmarkName": "BigCodeBench-Hard (8 ítems)",
+      "profileId": "86b52354-8c78-4138-8636-4aa1bf66a85f",
+      "profileName": "LC-H1 VALID Strata 0.1.35 IQ3_S 20261002",
+      "agentProfileId": "agent-maximo",
+      "agentProfileName": "Máximo",
+      "agentSeed": 4242,
+      "agentTemperature": 0.1,
+      "thinkingEnabled": false,
+      "firstAttemptScore": 3,
+      "firstAttemptTotal": 8,
+      "finalScore": 8,
+      "finalTotal": 8,
+      "repairAttempts": 1,
+      "elapsedSec": 480.139,
+      "timedOut": false,
+      "failed": false,
+      "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+      "profileConfigFingerprint": "2a78d3e735d420b858728e1c0a7f76153d40fbfc03aef9272f7dd37addece5ad",
+      "toolCalls": 52,
+      "toolCallQuality": {
+        "expectedCalls": 0,
+        "f1Pct": -1,
+        "failedCalls": 0,
+        "incompleteCalls": 0,
+        "invalidCalls": 0,
+        "matchedExpectedCalls": 0,
+        "missingExpectedCalls": 0,
+        "precisionPct": -1,
+        "recallPct": -1,
+        "redundantCalls": 10,
+        "sequenceExact": false,
+        "successRatePct": 100,
+        "successfulCalls": 52,
+        "totalCalls": 52,
+        "unexpectedCalls": 0
+      },
+      "acceptance": [
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/928",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/765",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/771",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/1019",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/906",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/583",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/139",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/360",
+          "type": "grader:code_tests"
+        }
+      ],
+      "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/BigCodeBench-Hard_8_tems__20261002_173533"
+    },
+    "sol_he0": {
+      "benchmarkName": "HumanEval (1 ítems)",
+      "profileId": "c8d4f1a7-2b69-4e80-95c3-7a1d6f8b2045",
+      "profileName": "177_SOL · Qwen3.8 27B · vLLM TP2 P2P MTP4 · 262K",
+      "agentProfileId": "agent-maximo",
+      "agentProfileName": "Máximo",
+      "agentSeed": 4242,
+      "agentTemperature": 0.1,
+      "thinkingEnabled": false,
+      "firstAttemptScore": 0,
+      "firstAttemptTotal": 1,
+      "finalScore": 1,
+      "finalTotal": 1,
+      "repairAttempts": 1,
+      "elapsedSec": 12.063,
+      "timedOut": false,
+      "failed": false,
+      "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+      "profileConfigFingerprint": "4956f6d1f9cd7160bfb82407deac67b82f5c138b646a1b3880386dc947553ed3",
+      "toolCalls": 1,
+      "toolCallQuality": {
+        "expectedCalls": 0,
+        "f1Pct": -1,
+        "failedCalls": 0,
+        "incompleteCalls": 0,
+        "invalidCalls": 0,
+        "matchedExpectedCalls": 0,
+        "missingExpectedCalls": 0,
+        "precisionPct": -1,
+        "recallPct": -1,
+        "redundantCalls": 0,
+        "sequenceExact": false,
+        "successRatePct": 100,
+        "successfulCalls": 1,
+        "totalCalls": 1,
+        "unexpectedCalls": 0
+      },
+      "acceptance": [
+        {
+          "passed": true,
+          "taskId": "HumanEval/0",
+          "type": "grader:code_tests"
+        }
+      ],
+      "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/HumanEval_1_tems__20261002_174403"
+    },
+    "sol_he20": {
+      "benchmarkName": "HumanEval (20 ítems)",
+      "profileId": "c8d4f1a7-2b69-4e80-95c3-7a1d6f8b2045",
+      "profileName": "177_SOL · Qwen3.8 27B · vLLM TP2 P2P MTP4 · 262K",
+      "agentProfileId": "agent-maximo",
+      "agentProfileName": "Máximo",
+      "agentSeed": 4242,
+      "agentTemperature": 0.1,
+      "thinkingEnabled": false,
+      "firstAttemptScore": 19,
+      "firstAttemptTotal": 20,
+      "finalScore": 20,
+      "finalTotal": 20,
+      "repairAttempts": 1,
+      "elapsedSec": 220.167,
+      "timedOut": false,
+      "failed": false,
+      "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+      "profileConfigFingerprint": "4956f6d1f9cd7160bfb82407deac67b82f5c138b646a1b3880386dc947553ed3",
+      "toolCalls": 40,
+      "toolCallQuality": {
+        "expectedCalls": 0,
+        "f1Pct": -1,
+        "failedCalls": 0,
+        "incompleteCalls": 0,
+        "invalidCalls": 0,
+        "matchedExpectedCalls": 0,
+        "missingExpectedCalls": 0,
+        "precisionPct": -1,
+        "recallPct": -1,
+        "redundantCalls": 0,
+        "sequenceExact": false,
+        "successRatePct": 100,
+        "successfulCalls": 40,
+        "totalCalls": 40,
+        "unexpectedCalls": 0
+      },
+      "acceptance": [
+        {
+          "passed": true,
+          "taskId": "HumanEval/0",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/1",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/2",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/3",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/4",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/5",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/6",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/7",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/8",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/9",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/10",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/11",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/12",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/13",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/14",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/15",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/16",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/17",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/18",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/19",
+          "type": "grader:code_tests"
+        }
+      ],
+      "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/HumanEval_20_tems__20261002_174624"
+    },
+    "sol_bcb8": {
+      "benchmarkName": "BigCodeBench-Hard (8 ítems)",
+      "profileId": "c8d4f1a7-2b69-4e80-95c3-7a1d6f8b2045",
+      "profileName": "177_SOL · Qwen3.8 27B · vLLM TP2 P2P MTP4 · 262K",
+      "agentProfileId": "agent-maximo",
+      "agentProfileName": "Máximo",
+      "agentSeed": 4242,
+      "agentTemperature": 0.1,
+      "thinkingEnabled": false,
+      "firstAttemptScore": 2,
+      "firstAttemptTotal": 8,
+      "finalScore": 8,
+      "finalTotal": 8,
+      "repairAttempts": 1,
+      "elapsedSec": 466.495,
+      "timedOut": false,
+      "failed": false,
+      "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+      "profileConfigFingerprint": "4956f6d1f9cd7160bfb82407deac67b82f5c138b646a1b3880386dc947553ed3",
+      "toolCalls": 56,
+      "toolCallQuality": {
+        "expectedCalls": 0,
+        "f1Pct": -1,
+        "failedCalls": 2,
+        "incompleteCalls": 0,
+        "invalidCalls": 0,
+        "matchedExpectedCalls": 0,
+        "missingExpectedCalls": 0,
+        "precisionPct": -1,
+        "recallPct": -1,
+        "redundantCalls": 12,
+        "sequenceExact": false,
+        "successRatePct": 96.42857142857143,
+        "successfulCalls": 54,
+        "totalCalls": 56,
+        "unexpectedCalls": 0
+      },
+      "acceptance": [
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/928",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/765",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/771",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/1019",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/906",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/583",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/139",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/360",
+          "type": "grader:code_tests"
+        }
+      ],
+      "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/BigCodeBench-Hard_8_tems__20261002_175152"
+    }
+  },
+  "caveats": [
+    "One pass per suite per model; useful paired comparison, not a multi-seed confidence interval.",
+    "Both passed all 29 tasks after one repair per suite. FirstAttemptScore is before automatic repair.",
+    "Strata was served at context 131072; SOL at context 262144. These are profile limits, not observed prompt lengths.",
+    "The earlier direct single-response BCB score was a different protocol; it is retained in the general audit but is not compared as an agent-harness score here."
+  ],
+  "evidenceScope": "Complete per-run metadata, aggregate comparisons, accepted-task results, exact suite definitions, and profile/backend snapshots. Agent workspace directories were left in the isolated local test data and omitted from the repository artifact because the generated BCB workspace includes mock private_key-named files."
+}

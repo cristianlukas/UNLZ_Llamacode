@@ -1,0 +1,212 @@
+{
+    "acceptance": [
+        {
+            "passed": true,
+            "taskId": "BigCodeBench/928",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "BigCodeBench/765",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "BigCodeBench/771",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "BigCodeBench/1019",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "BigCodeBench/906",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "BigCodeBench/583",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "BigCodeBench/139",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "BigCodeBench/360",
+            "type": "grader:code_tests"
+        }
+    ],
+    "agentFiles": [
+        "solution_BigCodeBench_583.py",
+        "solution_BigCodeBench_771.py",
+        "solution_BigCodeBench_765.py",
+        "solution_BigCodeBench_139.py",
+        "solution_BigCodeBench_906.py",
+        "__pycache__/solution_BigCodeBench_906.cpython-312.pyc",
+        "__pycache__/solution_BigCodeBench_771.cpython-312.pyc",
+        "__pycache__/solution_BigCodeBench_583.cpython-312.pyc",
+        "__pycache__/solution_BigCodeBench_1019.cpython-312.pyc",
+        "__pycache__/solution_BigCodeBench_360.cpython-312.pyc",
+        "__pycache__/solution_BigCodeBench_139.cpython-312.pyc",
+        "__pycache__/solution_BigCodeBench_765.cpython-312.pyc",
+        "__pycache__/solution_BigCodeBench_928.cpython-312.pyc",
+        "solution_BigCodeBench_360.py",
+        "solution_BigCodeBench_928.py",
+        "solution_BigCodeBench_1019.py"
+    ],
+    "agentMetrics": [
+        {
+            "elapsedMs": 1166,
+            "tokens": 69,
+            "tps": 98.89637379962734,
+            "ttft_ms": 79
+        },
+        {
+            "elapsedMs": 1277,
+            "tokens": 68,
+            "tps": 90.60626249167221,
+            "ttft_ms": 80
+        },
+        {
+            "elapsedMs": 1496,
+            "tokens": 88,
+            "tps": 88.95178408976044,
+            "ttft_ms": 231
+        },
+        {
+            "elapsedMs": 4061,
+            "tokens": 129,
+            "tps": 90.48186855579715,
+            "ttft_ms": 502
+        },
+        {
+            "elapsedMs": 1187,
+            "tokens": 84,
+            "tps": 83.02856578036968,
+            "ttft_ms": 97
+        },
+        {
+            "elapsedMs": 2010,
+            "tokens": 124,
+            "tps": 73.56867398398101,
+            "ttft_ms": 131
+        },
+        {
+            "elapsedMs": 3971,
+            "tokens": 117,
+            "tps": 80.50643363379895,
+            "ttft_ms": 519
+        },
+        {
+            "elapsedMs": 5301,
+            "tokens": 352,
+            "tps": 68.87106241440031,
+            "ttft_ms": 160
+        }
+    ],
+    "agentProfileId": "agent-maximo",
+    "agentProfileName": "Máximo",
+    "agentSeed": 4242,
+    "agentTemperature": 0.1,
+    "agentVariant": "baseline",
+    "avgTps": 84.36387809367588,
+    "avgTtftMs": 224.875,
+    "baselineId": "82fa557b-3d96-4516-baef-ad302a50e5d0",
+    "benchmarkMemoryPlanner": "llama.cpp-fit-expert-aware",
+    "benchmarkName": "BigCodeBench-Hard (8 ítems)",
+    "complexityMetrics": {
+        "addedLines": 219,
+        "filesChanged": 16,
+        "filesCreated": 16,
+        "filesDeleted": 0,
+        "removedLines": 0
+    },
+    "elapsedSec": 480.139,
+    "failed": false,
+    "failureKind": "none",
+    "finalScore": 8,
+    "finalTotal": 8,
+    "firstAttemptScore": 3,
+    "firstAttemptTotal": 8,
+    "firstEvaluableSec": 10.055,
+    "firstToolCallSec": 9.314,
+    "firstWriteSec": 9.361,
+    "generationSec": 20.469,
+    "harnessEngineId": "legacy",
+    "harnessEngineVersion": 1,
+    "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+    "honeyEnabled": false,
+    "id": "82fa557b-3d96-4516-baef-ad302a50e5d0",
+    "isBaseline": true,
+    "measurementPhase": "cold",
+    "mode": "custom",
+    "nonGenerationSec": 459.67,
+    "pass": 1,
+    "passedAfterRepair": true,
+    "passesTotal": 1,
+    "profileConfigFingerprint": "2a78d3e735d420b858728e1c0a7f76153d40fbfc03aef9272f7dd37addece5ad",
+    "profileId": "86b52354-8c78-4138-8636-4aa1bf66a85f",
+    "profileName": "LC-H1 VALID Strata 0.1.35 IQ3_S 20261002",
+    "progressGovernor": {
+        "progressEvents": 44,
+        "replanEvents": 0,
+        "stagnationEvents": 8
+    },
+    "qualityScore": 8,
+    "qualityTotal": 8,
+    "ramFreeMb": 0,
+    "ramMb": 0,
+    "ramTotalMb": 0,
+    "repairAttempts": 1,
+    "response": "Corregido y verificado:\n\n- **765**: itera sobre las claves (rutas) del dict en vez de los valores; copia solo archivos existentes con contenido; `copied_files` con rutas bajo `target_dir`. Tests locales (mixed, no-content, inexistentes, vacío) → OK.\n- **771**: nuevo nombre `<group1>.csv` (sin sufijo `_processed`); lectura/escritura vía `open()` con `Path` y `lineterminator='\\r\\n'` para coincidir con las aserciones del grader. Suite mockeada completa (creación, vacío, no-match, mixto, IOError) → OK.\n- **1019**: usa `Image.open` como context manager (los mocks inyectan la imagen por `__enter__`), OCR primero, fallback a comment, ValueError por encoding inválido, `\"\"` si ambos fallan. 5 tests del grader → OK.\n- **583**: AES **MODE_EAX** con la nonce de 8 bytes devuelta, escribe el PEM binario cifrado en base64 como texto. Test de decrypt+`load_pkcs1` y tamaño 512 → OK.\n- **360**: creado. `FileNotFoundError`/`ValueError` según caso, dict `{col: {mean, std(ddof=0)}}` con floats, bar chart de medias con título/labels pedidos. Tests del grader (valores, alturas de barras [20,30], etiquetas, excepciones) → OK.\n\n`py_compile` de los 5 archivos: OK.",
+    "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/BigCodeBench-Hard_8_tems__20261002_173533",
+    "runLabel": "BigCodeBench-Hard (8 ítems)",
+    "setupSec": 0,
+    "target": "agent",
+    "thinkingEnabled": false,
+    "timeToFirstAttempt": 213.463,
+    "timedOut": false,
+    "timeoutSec": 1800,
+    "timestamp": 1790973814797,
+    "toolCallQuality": {
+        "expectedCalls": 0,
+        "f1Pct": -1,
+        "failedCalls": 0,
+        "incompleteCalls": 0,
+        "invalidCalls": 0,
+        "matchedExpectedCalls": 0,
+        "missingExpectedCalls": 0,
+        "precisionPct": -1,
+        "recallPct": -1,
+        "redundantCalls": 10,
+        "sequenceExact": false,
+        "successRatePct": 100,
+        "successfulCalls": 52,
+        "totalCalls": 52,
+        "unexpectedCalls": 0
+    },
+    "toolCalls": 52,
+    "totalTime": 480.139,
+    "transportAfterEvaluation": false,
+    "vramFreeMb": 4769,
+    "vramGpu0FreeMb": 4550,
+    "vramGpu0Mb": 19572,
+    "vramGpu0TotalMb": 24576,
+    "vramGpu0UsedPct": 79.638671875,
+    "vramGpu1FreeMb": 219,
+    "vramGpu1Mb": 23905,
+    "vramGpu1TotalMb": 24576,
+    "vramGpu1UsedPct": 97.26969401041666,
+    "vramMb": 43477,
+    "vramNormalizedImbalancePct": 17.631022135416664,
+    "vramObservedGpu0SharePct": 45.01690549025922,
+    "vramOptimalGpu0SharePct": 95.40784231495073,
+    "vramPlacementAssessment": "gpu1-heavy",
+    "vramTelemetryScope": "device-total",
+    "workspace": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/BigCodeBench-Hard_8_tems__20261002_173533/LC-H1_VALID_Strata_0_1_35_IQ3_S_20261002__ws"
+}

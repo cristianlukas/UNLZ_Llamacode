@@ -1,0 +1,141 @@
+{
+  "benchmarkName": "HumanEval (20 ítems)",
+  "profileId": "c8d4f1a7-2b69-4e80-95c3-7a1d6f8b2045",
+  "profileName": "177_SOL · Qwen3.8 27B · vLLM TP2 P2P MTP4 · 262K",
+  "agentProfileId": "agent-maximo",
+  "agentProfileName": "Máximo",
+  "agentSeed": 4242,
+  "agentTemperature": 0.1,
+  "thinkingEnabled": false,
+  "firstAttemptScore": 19,
+  "firstAttemptTotal": 20,
+  "finalScore": 20,
+  "finalTotal": 20,
+  "repairAttempts": 1,
+  "elapsedSec": 220.167,
+  "timedOut": false,
+  "failed": false,
+  "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+  "profileConfigFingerprint": "4956f6d1f9cd7160bfb82407deac67b82f5c138b646a1b3880386dc947553ed3",
+  "toolCalls": 40,
+  "toolCallQuality": {
+    "expectedCalls": 0,
+    "f1Pct": -1,
+    "failedCalls": 0,
+    "incompleteCalls": 0,
+    "invalidCalls": 0,
+    "matchedExpectedCalls": 0,
+    "missingExpectedCalls": 0,
+    "precisionPct": -1,
+    "recallPct": -1,
+    "redundantCalls": 0,
+    "sequenceExact": false,
+    "successRatePct": 100,
+    "successfulCalls": 40,
+    "totalCalls": 40,
+    "unexpectedCalls": 0
+  },
+  "acceptance": [
+    {
+      "passed": true,
+      "taskId": "HumanEval/0",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/1",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/2",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/3",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/4",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/5",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/6",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/7",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/8",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/9",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/10",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/11",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/12",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/13",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/14",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/15",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/16",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/17",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/18",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/19",
+      "type": "grader:code_tests"
+    }
+  ],
+  "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/HumanEval_20_tems__20261002_174624"
+}

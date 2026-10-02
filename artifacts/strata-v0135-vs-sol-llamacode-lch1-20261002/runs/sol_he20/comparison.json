@@ -1,0 +1,41 @@
+{
+    "benchmarkName": "HumanEval (20 ítems)",
+    "comparisons": [
+    ],
+    "generatedAt": "2026-10-02T17:51:17",
+    "profileCount": 1,
+    "profiles": [
+        {
+            "agentVariant": "baseline",
+            "comparisonTimeMetric": "timeToFirstAttempt",
+            "failedRuns": 0,
+            "fullyAcceptedRuns": 1,
+            "honeyEnabled": false,
+            "medianAddedLines": 484,
+            "medianColdFirstAttemptSec": 177.446,
+            "medianElapsedSec": 220.167,
+            "medianFilesChanged": 39,
+            "medianFirstAttemptSec": 177.446,
+            "medianQualityPct": 100,
+            "medianRemovedLines": 0,
+            "medianRepairAttempts": 1,
+            "medianToolCalls": 40,
+            "medianToolF1Pct": 0,
+            "medianToolRedundantCalls": 0,
+            "medianToolSuccessRatePct": 100,
+            "medianWarmFirstAttemptSec": 0,
+            "outcomeSpread": false,
+            "profileId": "c8d4f1a7-2b69-4e80-95c3-7a1d6f8b2045",
+            "profileName": "177_SOL · Qwen3.8 27B · vLLM TP2 P2P MTP4 · 262K",
+            "qualityRangePctPoints": 0,
+            "runs": 1,
+            "stabilityRatePct": 100,
+            "successRatePct": 100,
+            "successfulRuns": 1
+        }
+    ],
+    "runCount": 1,
+    "runLabel": "HumanEval (20 ítems)",
+    "schemaVersion": 1,
+    "target": "agent"
+}

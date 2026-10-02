@@ -1,0 +1,81 @@
+{
+  "benchmarkName": "BigCodeBench-Hard (8 ítems)",
+  "profileId": "c8d4f1a7-2b69-4e80-95c3-7a1d6f8b2045",
+  "profileName": "177_SOL · Qwen3.8 27B · vLLM TP2 P2P MTP4 · 262K",
+  "agentProfileId": "agent-maximo",
+  "agentProfileName": "Máximo",
+  "agentSeed": 4242,
+  "agentTemperature": 0.1,
+  "thinkingEnabled": false,
+  "firstAttemptScore": 2,
+  "firstAttemptTotal": 8,
+  "finalScore": 8,
+  "finalTotal": 8,
+  "repairAttempts": 1,
+  "elapsedSec": 466.495,
+  "timedOut": false,
+  "failed": false,
+  "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+  "profileConfigFingerprint": "4956f6d1f9cd7160bfb82407deac67b82f5c138b646a1b3880386dc947553ed3",
+  "toolCalls": 56,
+  "toolCallQuality": {
+    "expectedCalls": 0,
+    "f1Pct": -1,
+    "failedCalls": 2,
+    "incompleteCalls": 0,
+    "invalidCalls": 0,
+    "matchedExpectedCalls": 0,
+    "missingExpectedCalls": 0,
+    "precisionPct": -1,
+    "recallPct": -1,
+    "redundantCalls": 12,
+    "sequenceExact": false,
+    "successRatePct": 96.42857142857143,
+    "successfulCalls": 54,
+    "totalCalls": 56,
+    "unexpectedCalls": 0
+  },
+  "acceptance": [
+    {
+      "passed": true,
+      "taskId": "BigCodeBench/928",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "BigCodeBench/765",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "BigCodeBench/771",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "BigCodeBench/1019",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "BigCodeBench/906",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "BigCodeBench/583",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "BigCodeBench/139",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "BigCodeBench/360",
+      "type": "grader:code_tests"
+    }
+  ],
+  "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/BigCodeBench-Hard_8_tems__20261002_175152"
+}

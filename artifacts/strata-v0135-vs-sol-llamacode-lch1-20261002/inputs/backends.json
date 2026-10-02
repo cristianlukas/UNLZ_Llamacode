@@ -1,0 +1,39 @@
+[
+  {
+    "baseArgs": [],
+    "binaryId": "",
+    "cloudBaseUrl": "http://127.0.0.1:8113",
+    "cloudCtx": 262144,
+    "cloudKeyRef": "",
+    "cloudModel": "qwen3.8-27b",
+    "envOverrides": {},
+    "host": "127.0.0.1",
+    "id": "2baf3292-033d-4a6c-9f84-ea13ae4aae3b",
+    "kind": "cloud",
+    "managedServer": {
+      "composeFiles": [
+        "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.8-27b/vllm/compose/dual/autoround-int4/mtp.yml",
+        "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.8-27b/vllm/compose/dual/autoround-int4/vram-quarantine.override.yml"
+      ],
+      "project": "autoround-int4",
+      "service": "vllm-qwen38-27b-dual-fast",
+      "type": "docker-compose"
+    },
+    "name": "Qwen3.8 vLLM TP2 P2P MTP4",
+    "port": 8113
+  },
+  {
+    "baseArgs": [],
+    "binaryId": "",
+    "cloudBaseUrl": "http://127.0.0.1:8350",
+    "cloudCtx": 131072,
+    "cloudKeyRef": "",
+    "cloudModel": "strata-iq3_s",
+    "envOverrides": {},
+    "host": "127.0.0.1",
+    "id": "strata-lch1-iq3s-20261002",
+    "kind": "cloud",
+    "name": "Strata 0.1.35 IQ3_S",
+    "port": 8350
+  }
+]

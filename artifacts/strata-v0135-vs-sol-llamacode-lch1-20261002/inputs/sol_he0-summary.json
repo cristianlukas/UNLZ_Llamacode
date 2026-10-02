@@ -1,0 +1,46 @@
+{
+  "benchmarkName": "HumanEval (1 ítems)",
+  "profileId": "c8d4f1a7-2b69-4e80-95c3-7a1d6f8b2045",
+  "profileName": "177_SOL · Qwen3.8 27B · vLLM TP2 P2P MTP4 · 262K",
+  "agentProfileId": "agent-maximo",
+  "agentProfileName": "Máximo",
+  "agentSeed": 4242,
+  "agentTemperature": 0.1,
+  "thinkingEnabled": false,
+  "firstAttemptScore": 0,
+  "firstAttemptTotal": 1,
+  "finalScore": 1,
+  "finalTotal": 1,
+  "repairAttempts": 1,
+  "elapsedSec": 12.063,
+  "timedOut": false,
+  "failed": false,
+  "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+  "profileConfigFingerprint": "4956f6d1f9cd7160bfb82407deac67b82f5c138b646a1b3880386dc947553ed3",
+  "toolCalls": 1,
+  "toolCallQuality": {
+    "expectedCalls": 0,
+    "f1Pct": -1,
+    "failedCalls": 0,
+    "incompleteCalls": 0,
+    "invalidCalls": 0,
+    "matchedExpectedCalls": 0,
+    "missingExpectedCalls": 0,
+    "precisionPct": -1,
+    "recallPct": -1,
+    "redundantCalls": 0,
+    "sequenceExact": false,
+    "successRatePct": 100,
+    "successfulCalls": 1,
+    "totalCalls": 1,
+    "unexpectedCalls": 0
+  },
+  "acceptance": [
+    {
+      "passed": true,
+      "taskId": "HumanEval/0",
+      "type": "grader:code_tests"
+    }
+  ],
+  "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/HumanEval_1_tems__20261002_174403"
+}

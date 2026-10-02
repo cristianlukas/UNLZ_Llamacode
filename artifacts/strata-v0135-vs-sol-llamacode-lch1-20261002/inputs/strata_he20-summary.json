@@ -1,0 +1,141 @@
+{
+  "benchmarkName": "HumanEval (20 ítems)",
+  "profileId": "86b52354-8c78-4138-8636-4aa1bf66a85f",
+  "profileName": "LC-H1 VALID Strata 0.1.35 IQ3_S 20261002",
+  "agentProfileId": "agent-maximo",
+  "agentProfileName": "Máximo",
+  "agentSeed": 4242,
+  "agentTemperature": 0.1,
+  "thinkingEnabled": false,
+  "firstAttemptScore": 19,
+  "firstAttemptTotal": 20,
+  "finalScore": 20,
+  "finalTotal": 20,
+  "repairAttempts": 1,
+  "elapsedSec": 695.135,
+  "timedOut": false,
+  "failed": false,
+  "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+  "profileConfigFingerprint": "2a78d3e735d420b858728e1c0a7f76153d40fbfc03aef9272f7dd37addece5ad",
+  "toolCalls": 40,
+  "toolCallQuality": {
+    "expectedCalls": 0,
+    "f1Pct": -1,
+    "failedCalls": 0,
+    "incompleteCalls": 0,
+    "invalidCalls": 0,
+    "matchedExpectedCalls": 0,
+    "missingExpectedCalls": 0,
+    "precisionPct": -1,
+    "recallPct": -1,
+    "redundantCalls": 0,
+    "sequenceExact": false,
+    "successRatePct": 100,
+    "successfulCalls": 40,
+    "totalCalls": 40,
+    "unexpectedCalls": 0
+  },
+  "acceptance": [
+    {
+      "passed": true,
+      "taskId": "HumanEval/0",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/1",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/2",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/3",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/4",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/5",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/6",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/7",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/8",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/9",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/10",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/11",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/12",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/13",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/14",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/15",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/16",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/17",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/18",
+      "type": "grader:code_tests"
+    },
+    {
+      "passed": true,
+      "taskId": "HumanEval/19",
+      "type": "grader:code_tests"
+    }
+  ],
+  "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/HumanEval_20_tems__20261002_172339"
+}
