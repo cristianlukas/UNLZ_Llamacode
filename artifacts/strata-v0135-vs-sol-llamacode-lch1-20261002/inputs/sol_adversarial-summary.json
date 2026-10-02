@@ -1,0 +1,92 @@
+{
+  "benchmarkName": "Intelligence Adversarial v1 - 10 tareas",
+  "profileId": "c8d4f1a7-2b69-4e80-95c3-7a1d6f8b2045",
+  "profileName": "177_SOL · Qwen3.8 27B · vLLM TP2 P2P MTP4 · 262K",
+  "agentProfileId": "agent-maximo",
+  "agentProfileName": "Máximo",
+  "agentSeed": 4242,
+  "agentTemperature": 0.1,
+  "thinkingEnabled": false,
+  "firstAttemptScore": 6,
+  "firstAttemptTotal": 10,
+  "finalScore": 8,
+  "finalTotal": 10,
+  "repairAttempts": 2,
+  "elapsedSec": 729.492,
+  "timedOut": false,
+  "failed": true,
+  "failureKind": "quality",
+  "failureStage": "acceptance",
+  "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+  "profileConfigFingerprint": "4956f6d1f9cd7160bfb82407deac67b82f5c138b646a1b3880386dc947553ed3",
+  "toolCalls": 104,
+  "toolCallQuality": {
+    "expectedCalls": 0,
+    "f1Pct": -1,
+    "failedCalls": 15,
+    "incompleteCalls": 0,
+    "invalidCalls": 0,
+    "matchedExpectedCalls": 0,
+    "missingExpectedCalls": 0,
+    "precisionPct": -1,
+    "recallPct": -1,
+    "redundantCalls": 73,
+    "sequenceExact": false,
+    "successRatePct": 85.57692307692308,
+    "successfulCalls": 89,
+    "totalCalls": 104,
+    "unexpectedCalls": 0
+  },
+  "acceptance": [
+    {
+      "taskId": "ttl_cache_clock",
+      "passed": true,
+      "type": "command"
+    },
+    {
+      "taskId": "rfc7396_merge_patch",
+      "passed": true,
+      "type": "command"
+    },
+    {
+      "taskId": "stable_toposort",
+      "passed": true,
+      "type": "command"
+    },
+    {
+      "taskId": "safe_path_join",
+      "passed": true,
+      "type": "command"
+    },
+    {
+      "taskId": "tool_call_contract",
+      "passed": true,
+      "type": "command"
+    },
+    {
+      "taskId": "deadline_scheduler",
+      "passed": false,
+      "type": "command"
+    },
+    {
+      "taskId": "jsonl_audit",
+      "passed": false,
+      "type": "command"
+    },
+    {
+      "taskId": "config_env_resolution",
+      "passed": true,
+      "type": "command"
+    },
+    {
+      "taskId": "deterministic_report",
+      "passed": true,
+      "type": "command"
+    },
+    {
+      "taskId": "sql_parameterization",
+      "passed": true,
+      "type": "command"
+    }
+  ]
+}

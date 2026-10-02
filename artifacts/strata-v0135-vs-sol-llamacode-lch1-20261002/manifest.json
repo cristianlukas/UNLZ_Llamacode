@@ -31,12 +31,14 @@
   "sameInputs": [
     "HumanEval (1 ítems)",
     "HumanEval (20 ítems)",
-    "BigCodeBench-Hard (8 ítems)"
+    "BigCodeBench-Hard (8 ítems)",
+    "Intelligence Adversarial v1 (10 tareas)"
   ],
   "suiteIds": [
     "059b6f00-7b4b-48ff-a3a2-2a71f900c1c0",
     "267bb33d-4510-417b-ae3c-6dbbfb2cb08d",
-    "05c28394-11d0-41fe-a55f-b3cb69db9c15"
+    "05c28394-11d0-41fe-a55f-b3cb69db9c15",
+    "intelligence_adversarial_v1"
   ],
   "gpuHardware": [
     "0, NVIDIA GeForce RTX 3090, 24576 MiB",
@@ -49,7 +51,9 @@
     "strata_bcb8": "BigCodeBench-Hard_8_tems__20261002_173533",
     "sol_he0": "HumanEval_1_tems__20261002_174403",
     "sol_he20": "HumanEval_20_tems__20261002_174624",
-    "sol_bcb8": "BigCodeBench-Hard_8_tems__20261002_175152"
+    "sol_bcb8": "BigCodeBench-Hard_8_tems__20261002_175152",
+    "strata_adversarial": "Intelligence_Adversarial_v1_-_10_tareas_20261002_192334",
+    "sol_adversarial": "Intelligence_Adversarial_v1_-_10_tareas_20261002_193348"
   },
   "summary": {
     "strata_he0": {
@@ -587,11 +591,196 @@
         }
       ],
       "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/BigCodeBench-Hard_8_tems__20261002_175152"
+    },
+    "strata_adversarial": {
+      "benchmarkName": "Intelligence Adversarial v1 - 10 tareas",
+      "profileId": "86b52354-8c78-4138-8636-4aa1bf66a85f",
+      "profileName": "LC-H1 VALID Strata 0.1.35 IQ3_S 20261002",
+      "agentProfileId": "agent-maximo",
+      "agentProfileName": "Máximo",
+      "agentSeed": 4242,
+      "agentTemperature": 0.1,
+      "thinkingEnabled": false,
+      "firstAttemptScore": 7,
+      "firstAttemptTotal": 10,
+      "finalScore": 10,
+      "finalTotal": 10,
+      "repairAttempts": 1,
+      "elapsedSec": 468.402,
+      "timedOut": false,
+      "failed": false,
+      "failureKind": "none",
+      "failureStage": null,
+      "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+      "profileConfigFingerprint": "2a78d3e735d420b858728e1c0a7f76153d40fbfc03aef9272f7dd37addece5ad",
+      "toolCalls": 32,
+      "toolCallQuality": {
+        "expectedCalls": 0,
+        "f1Pct": -1,
+        "failedCalls": 2,
+        "incompleteCalls": 0,
+        "invalidCalls": 0,
+        "matchedExpectedCalls": 0,
+        "missingExpectedCalls": 0,
+        "precisionPct": -1,
+        "recallPct": -1,
+        "redundantCalls": 1,
+        "sequenceExact": false,
+        "successRatePct": 93.75,
+        "successfulCalls": 30,
+        "totalCalls": 32,
+        "unexpectedCalls": 0
+      },
+      "acceptance": [
+        {
+          "taskId": "ttl_cache_clock",
+          "passed": true,
+          "type": "command"
+        },
+        {
+          "taskId": "rfc7396_merge_patch",
+          "passed": true,
+          "type": "command"
+        },
+        {
+          "taskId": "stable_toposort",
+          "passed": true,
+          "type": "command"
+        },
+        {
+          "taskId": "safe_path_join",
+          "passed": true,
+          "type": "command"
+        },
+        {
+          "taskId": "tool_call_contract",
+          "passed": true,
+          "type": "command"
+        },
+        {
+          "taskId": "deadline_scheduler",
+          "passed": true,
+          "type": "command"
+        },
+        {
+          "taskId": "jsonl_audit",
+          "passed": true,
+          "type": "command"
+        },
+        {
+          "taskId": "config_env_resolution",
+          "passed": true,
+          "type": "command"
+        },
+        {
+          "taskId": "deterministic_report",
+          "passed": true,
+          "type": "command"
+        },
+        {
+          "taskId": "sql_parameterization",
+          "passed": true,
+          "type": "command"
+        }
+      ]
+    },
+    "sol_adversarial": {
+      "benchmarkName": "Intelligence Adversarial v1 - 10 tareas",
+      "profileId": "c8d4f1a7-2b69-4e80-95c3-7a1d6f8b2045",
+      "profileName": "177_SOL · Qwen3.8 27B · vLLM TP2 P2P MTP4 · 262K",
+      "agentProfileId": "agent-maximo",
+      "agentProfileName": "Máximo",
+      "agentSeed": 4242,
+      "agentTemperature": 0.1,
+      "thinkingEnabled": false,
+      "firstAttemptScore": 6,
+      "firstAttemptTotal": 10,
+      "finalScore": 8,
+      "finalTotal": 10,
+      "repairAttempts": 2,
+      "elapsedSec": 729.492,
+      "timedOut": false,
+      "failed": true,
+      "failureKind": "quality",
+      "failureStage": "acceptance",
+      "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+      "profileConfigFingerprint": "4956f6d1f9cd7160bfb82407deac67b82f5c138b646a1b3880386dc947553ed3",
+      "toolCalls": 104,
+      "toolCallQuality": {
+        "expectedCalls": 0,
+        "f1Pct": -1,
+        "failedCalls": 15,
+        "incompleteCalls": 0,
+        "invalidCalls": 0,
+        "matchedExpectedCalls": 0,
+        "missingExpectedCalls": 0,
+        "precisionPct": -1,
+        "recallPct": -1,
+        "redundantCalls": 73,
+        "sequenceExact": false,
+        "successRatePct": 85.57692307692308,
+        "successfulCalls": 89,
+        "totalCalls": 104,
+        "unexpectedCalls": 0
+      },
+      "acceptance": [
+        {
+          "taskId": "ttl_cache_clock",
+          "passed": true,
+          "type": "command"
+        },
+        {
+          "taskId": "rfc7396_merge_patch",
+          "passed": true,
+          "type": "command"
+        },
+        {
+          "taskId": "stable_toposort",
+          "passed": true,
+          "type": "command"
+        },
+        {
+          "taskId": "safe_path_join",
+          "passed": true,
+          "type": "command"
+        },
+        {
+          "taskId": "tool_call_contract",
+          "passed": true,
+          "type": "command"
+        },
+        {
+          "taskId": "deadline_scheduler",
+          "passed": false,
+          "type": "command"
+        },
+        {
+          "taskId": "jsonl_audit",
+          "passed": false,
+          "type": "command"
+        },
+        {
+          "taskId": "config_env_resolution",
+          "passed": true,
+          "type": "command"
+        },
+        {
+          "taskId": "deterministic_report",
+          "passed": true,
+          "type": "command"
+        },
+        {
+          "taskId": "sql_parameterization",
+          "passed": true,
+          "type": "command"
+        }
+      ]
     }
   },
   "caveats": [
     "One pass per suite per model; useful paired comparison, not a multi-seed confidence interval.",
-    "Both passed all 29 tasks after one repair per suite. FirstAttemptScore is before automatic repair.",
+    "In the original three suites both passed all 29 tasks after one repair per suite. With Intelligence Adversarial v1 included, Strata passed 39/39 and SOL 37/39 after automatic repair. FirstAttemptScore is before repair.",
+    "Intelligence Adversarial v1 recorded thinkingEnabled=false for both models; per-run summaries are authoritative for benchmark-time settings.",
     "Strata was served at context 131072; SOL at context 262144. These are profile limits, not observed prompt lengths.",
     "The earlier direct single-response BCB score was a different protocol; it is retained in the general audit but is not compared as an agent-harness score here."
   ],

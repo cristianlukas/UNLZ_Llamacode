@@ -1,0 +1,41 @@
+{
+    "benchmarkName": "Intelligence Adversarial v1 - 10 tareas",
+    "comparisons": [
+    ],
+    "generatedAt": "2026-10-02T19:47:19",
+    "profileCount": 1,
+    "profiles": [
+        {
+            "agentVariant": "baseline",
+            "comparisonTimeMetric": "timeToFirstAttempt",
+            "failedRuns": 1,
+            "fullyAcceptedRuns": 0,
+            "honeyEnabled": false,
+            "medianAddedLines": 0,
+            "medianColdFirstAttemptSec": 0,
+            "medianElapsedSec": 0,
+            "medianFilesChanged": 0,
+            "medianFirstAttemptSec": 0,
+            "medianQualityPct": 0,
+            "medianRemovedLines": 0,
+            "medianRepairAttempts": 0,
+            "medianToolCalls": 0,
+            "medianToolF1Pct": 0,
+            "medianToolRedundantCalls": 0,
+            "medianToolSuccessRatePct": 0,
+            "medianWarmFirstAttemptSec": 0,
+            "outcomeSpread": false,
+            "profileId": "c8d4f1a7-2b69-4e80-95c3-7a1d6f8b2045",
+            "profileName": "177_SOL · Qwen3.8 27B · vLLM TP2 P2P MTP4 · 262K",
+            "qualityRangePctPoints": 0,
+            "runs": 1,
+            "stabilityRatePct": 100,
+            "successRatePct": 0,
+            "successfulRuns": 0
+        }
+    ],
+    "runCount": 1,
+    "runLabel": "Intelligence Adversarial v1 - 10 tareas",
+    "schemaVersion": 1,
+    "target": "agent"
+}

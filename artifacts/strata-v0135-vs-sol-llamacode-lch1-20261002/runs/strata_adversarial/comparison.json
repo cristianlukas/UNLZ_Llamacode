@@ -1,0 +1,41 @@
+{
+    "benchmarkName": "Intelligence Adversarial v1 - 10 tareas",
+    "comparisons": [
+    ],
+    "generatedAt": "2026-10-02T19:32:02",
+    "profileCount": 1,
+    "profiles": [
+        {
+            "agentVariant": "baseline",
+            "comparisonTimeMetric": "timeToFirstAttempt",
+            "failedRuns": 0,
+            "fullyAcceptedRuns": 1,
+            "honeyEnabled": false,
+            "medianAddedLines": 795,
+            "medianColdFirstAttemptSec": 400.596,
+            "medianElapsedSec": 468.402,
+            "medianFilesChanged": 20,
+            "medianFirstAttemptSec": 400.596,
+            "medianQualityPct": 100,
+            "medianRemovedLines": 0,
+            "medianRepairAttempts": 1,
+            "medianToolCalls": 32,
+            "medianToolF1Pct": 0,
+            "medianToolRedundantCalls": 1,
+            "medianToolSuccessRatePct": 93.75,
+            "medianWarmFirstAttemptSec": 0,
+            "outcomeSpread": false,
+            "profileId": "86b52354-8c78-4138-8636-4aa1bf66a85f",
+            "profileName": "LC-H1 VALID Strata 0.1.35 IQ3_S 20261002",
+            "qualityRangePctPoints": 0,
+            "runs": 1,
+            "stabilityRatePct": 100,
+            "successRatePct": 100,
+            "successfulRuns": 1
+        }
+    ],
+    "runCount": 1,
+    "runLabel": "Intelligence Adversarial v1 - 10 tareas",
+    "schemaVersion": 1,
+    "target": "agent"
+}
