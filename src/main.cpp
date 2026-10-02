@@ -286,7 +286,18 @@ int main(int argc, char *argv[])
         controller.setDevMode(false);
     ThemeProvider theme;
     MermaidRenderer mermaid;
-    TrayController tray(appIcon, &app);
+    QString trayIconResource = trayIconSource;
+    if (trayIconResource.startsWith(QStringLiteral("qrc:/")))
+        trayIconResource = QStringLiteral(":") + trayIconResource.mid(4);
+    QIcon trayIcon(trayIconResource);
+    if (trayIcon.isNull()) {
+        qWarning() << "No se pudo cargar el icono del tray:" << trayIconResource
+                   << "se usará el icono principal";
+        trayIcon = appIcon;
+    }
+    TrayController tray(trayIcon, &app);
+    qInfo() << "System tray:" << (tray.isAvailable() ? "available" : "unavailable")
+            << "iconNull=" << trayIcon.isNull();
 
     QObject::connect(&controller, &AppController::startupChanged, &app,
                      [&controller, &splash, splashStatus]() {

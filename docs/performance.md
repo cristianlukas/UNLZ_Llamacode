@@ -37,10 +37,11 @@ sincronización de visibilidad, idioma y estado de Teach, pero la apertura del
 menú y sus acciones ya no dependen de instanciar páginas QML ni de los menús de
 `Qt.labs.platform`.
 
-La opción **Minimizar a la bandeja** sólo oculta la ventana cuando
-`QSystemTrayIcon` detecta una bandeja disponible. Si no existe, el cierre normal
-termina la aplicación para que no quede ejecutándose sin un ícono accesible. El
-cierre normal también finaliza la app cuando esa opción está desactivada.
+Cuando `QSystemTrayIcon` detecta una bandeja disponible, el ícono permanece
+visible mientras LlamaCode está abierto. **Minimizar a la bandeja** controla sólo
+el cierre de la ventana: la oculta si está activado y termina la aplicación si no.
+El ícono usa el recurso de tray configurado para la plataforma/build, con fallback
+al ícono principal si no se puede cargar.
 
 ## Validación
 

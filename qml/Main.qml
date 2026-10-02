@@ -1167,8 +1167,9 @@ ApplicationWindow {
     // cargando una página pesada. Las acciones vuelven a este mismo objeto para
     // conservar el flujo de restauración y Teach.
     function syncTray() {
-        const teachActive = App.teachState === "recording" || App.teachState === "paused"
-        Tray.visible = Tray.available && (window.minimizeToTray || teachActive)
+        // Dejar siempre un punto de acceso visible para reabrir o salir.
+        // La preferencia sólo decide si cerrar oculta la ventana.
+        Tray.visible = Tray.available
         Tray.setTeachState(App.teachState)
         Tray.setMenuTexts(App.l("tray.open"), "Pausar Teach", "Continuar Teach",
                           "Finalizar Teach", "Cancelar Teach", App.l("tray.quit"))

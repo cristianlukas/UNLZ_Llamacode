@@ -30,6 +30,8 @@ TrayController::TrayController(const QIcon &icon, QObject *parent)
             emit openRequested();
     });
     rebuildMenu();
+    if (isAvailable())
+        m_tray->show();
 }
 
 TrayController::~TrayController()
