@@ -1397,6 +1397,11 @@ un modelo de visión (server lanzado con `--mmproj`) también acepta **imágenes
 - **Inicio con Windows**: toggle en Configuración que registra el autoarranque por
   usuario; si también está activo **Minimizar a la bandeja**, el inicio automático
   abre la app oculta en el área de notificación.
+- **Bandeja de notificación (Windows y Ubuntu)**: con **Minimizar a la bandeja**
+  activo y una bandeja disponible, el botón de cerrar oculta la ventana y mantiene
+  LlamaCode disponible desde el ícono; el menú permite reabrirla o salir. Si el
+  escritorio no ofrece una bandeja, o la opción está desactivada, cerrar la
+  ventana termina la app para evitar dejarla ejecutándose sin acceso.
 - **Export/Import/Wipe** de datos de usuario por categorías.
 
 ## Lanzamiento del servidor (`LaunchPage`)

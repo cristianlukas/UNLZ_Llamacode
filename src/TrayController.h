@@ -11,11 +11,13 @@ class TrayController final : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibleChanged)
+    Q_PROPERTY(bool available READ isAvailable CONSTANT)
 public:
     explicit TrayController(const QIcon &icon, QObject *parent = nullptr);
     ~TrayController() override;
 
     bool isVisible() const;
+    bool isAvailable() const;
     void setVisible(bool visible);
 
     Q_INVOKABLE void setTeachState(const QString &state);

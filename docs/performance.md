@@ -37,6 +37,11 @@ sincronización de visibilidad, idioma y estado de Teach, pero la apertura del
 menú y sus acciones ya no dependen de instanciar páginas QML ni de los menús de
 `Qt.labs.platform`.
 
+La opción **Minimizar a la bandeja** sólo oculta la ventana cuando
+`QSystemTrayIcon` detecta una bandeja disponible. Si no existe, el cierre normal
+termina la aplicación para que no quede ejecutándose sin un ícono accesible. El
+cierre normal también finaliza la app cuando esa opción está desactivada.
+
 ## Validación
 
 Después de cambios en QML o C++ de la interfaz:

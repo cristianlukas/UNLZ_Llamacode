@@ -43,8 +43,14 @@ bool TrayController::isVisible() const
     return m_tray->isVisible();
 }
 
+bool TrayController::isAvailable() const
+{
+    return QSystemTrayIcon::isSystemTrayAvailable();
+}
+
 void TrayController::setVisible(bool visible)
 {
+    visible = visible && isAvailable();
     if (visible == isVisible()) return;
     if (visible) m_tray->show();
     else m_tray->hide();

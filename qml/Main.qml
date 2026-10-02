@@ -1150,9 +1150,16 @@ ApplicationWindow {
 
     onClosing: function(close) {
         saveWindowState()
-        if (window.minimizeToTray && !window.forceQuit) {
-            close.accepted = false
-            window.hide()
+        if (!window.forceQuit) {
+            if (window.minimizeToTray && Tray.available) {
+                close.accepted = false
+                window.hide()
+            } else {
+                // main.cpp desactiva quitOnLastWindowClosed para poder mantener
+                // Teach vivo. Sin tray, el cierre debe finalizar el proceso.
+                window.forceQuit = true
+                Qt.quit()
+            }
         }
     }
 
@@ -1161,7 +1168,7 @@ ApplicationWindow {
     // conservar el flujo de restauración y Teach.
     function syncTray() {
         const teachActive = App.teachState === "recording" || App.teachState === "paused"
-        Tray.visible = window.minimizeToTray || teachActive
+        Tray.visible = Tray.available && (window.minimizeToTray || teachActive)
         Tray.setTeachState(App.teachState)
         Tray.setMenuTexts(App.l("tray.open"), "Pausar Teach", "Continuar Teach",
                           "Finalizar Teach", "Cancelar Teach", App.l("tray.quit"))
