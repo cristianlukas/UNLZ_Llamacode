@@ -1,0 +1,17 @@
+{
+  "model": "qwen3.8-flash-next-iq3_s",
+  "image": "artifacts/strata-v0135-vs-sol-astra-20261002/vision-ui-probe.png",
+  "prompt": "Read the session identifier shown in this screenshot. Reply only with the exact identifier.",
+  "answer": "SESSION 17",
+  "expected": "17",
+  "passed": true,
+  "elapsed_ms": 1304.09,
+  "usage": {
+    "prompt_tokens": 283,
+    "completion_tokens": 5,
+    "total_tokens": 288,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  }
+}

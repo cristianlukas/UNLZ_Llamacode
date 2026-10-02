@@ -1,0 +1,48 @@
+{
+  "model": "qwen3.8-flash-next-iq3_s",
+  "tool": "lookup_ticket",
+  "arguments": {
+    "ticket_id": "LC-42"
+  },
+  "simulated_tool_result": {
+    "ticket_id": "LC-42",
+    "status": "in_progress",
+    "owner": "Ana"
+  },
+  "first_call_ms": 1665.86,
+  "final_ms": 576.52,
+  "tool_call": {
+    "role": "assistant",
+    "content": null,
+    "tool_calls": [
+      {
+        "id": "call_6ded9c58fba64c8385bf838c",
+        "type": "function",
+        "function": {
+          "name": "lookup_ticket",
+          "arguments": "{\"ticket_id\":\"LC-42\"}"
+        }
+      }
+    ]
+  },
+  "final_message": {
+    "role": "assistant",
+    "content": "Ticket LC-42 is currently **in_progress**, and its owner is **Ana**."
+  },
+  "usage_first": {
+    "prompt_tokens": 297,
+    "completion_tokens": 31,
+    "total_tokens": 328,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "usage_final": {
+    "prompt_tokens": 368,
+    "completion_tokens": 19,
+    "total_tokens": 387,
+    "prompt_tokens_details": {
+      "cached_tokens": 330
+    }
+  }
+}

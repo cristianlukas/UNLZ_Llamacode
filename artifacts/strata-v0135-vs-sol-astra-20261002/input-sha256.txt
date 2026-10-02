@@ -1,0 +1,2 @@
+6b8db94a387674f72e72e356b1317f844a7809a42c000986ebc9b24f4f572e35  assets/benchmarks/custom/computer_use_prompt_order_hard_v1.json
+11279cde14113fc8527f141c53e14cb5ccf0dba65749081a4f914408e391c268  artifacts/bigcodebench-hard-ubuntu-8.json
