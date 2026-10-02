@@ -1,0 +1,136 @@
+{
+  "experiment": "LlamaAgentBackend multi-origin autonomous browser end-to-end",
+  "date": "2026-10-01",
+  "timezone": "America/Argentina/Buenos_Aires",
+  "checkout": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode",
+  "binary": {
+    "path": "/tmp/llamacode-aura-native-cache/build/LlamaCode",
+    "sha256": "87d065a0baf11bb616c3d7ab8f415c7a504dd03b788a35989e81d82bd8adb9a4",
+    "platform": "Ubuntu Linux, Debug configuration; isolated XDG config/data/cache"
+  },
+  "model": "Qwen3.5-9B-MTP Q4_K_M, served by llama.cpp with the existing CUDA runtime",
+  "protocol": {
+    "backend": "LlamaAgentBackend -> app MCP client -> restricted MCP stdio server -> Playwright Chromium",
+    "origins": [
+      "http://127.0.0.1:8777",
+      "http://127.0.0.1:8778",
+      "http://127.0.0.1:8779"
+    ],
+    "fixture_sites": ["Aster Settings", "Northstar Drive", "FitTrail Calendar"],
+    "available_mcp_tools": ["browser_reset", "browser_navigate", "browser_snapshot", "browser_click"],
+    "navigation_scope": "allowlist of the three loopback fixture origins",
+    "unsafe_controls": "host rejects any click whose control ID is not allowlisted for the current page",
+    "tool_budget_per_trial": 64,
+    "trial_timeout_seconds": 240,
+    "click_approval": "test controller auto-approves only browser MCP clicks on disposable loopback fixtures",
+    "state_oracle": "fixture HTTP /__state endpoint, independent of agent's text report",
+    "built_in_agent_tools": []
+  },
+  "tasks": {
+    "aster": {"expected": {"recoveryAlerts": false, "mfa": true, "resetAlerts": true, "saved": true}},
+    "northstar": {"expected": {"access": "restricted", "editors": 3, "publicLink": false, "saved": true}},
+    "fittrail": {"expected": {"tentative": "cancelled", "confirmed": "scheduled"}}
+  },
+  "scored_runs": [
+    {
+      "id": "guided-a945e4fe-d8d1-4196-b831-09099c580a47",
+      "condition": "guided exact visible control IDs and ordered sequence",
+      "history": "fresh agent project",
+      "outcome": "pass",
+      "sites_passed": 3,
+      "sites_total": 3,
+      "unsafe_attempts_rejected": 0,
+      "evidence": "LlamaCode persisted session transcript; final report claims all three passed; extracted tool trace has 27 MCP calls and 10 allowed clicks."
+    },
+    {
+      "id": "objective-61f9743f-e165-4288-acee-c4b364763943",
+      "condition": "objective only; discover IDs and sequence from browser snapshots",
+      "history": "fresh agent project",
+      "outcome": "pass",
+      "sites_passed": 3,
+      "sites_total": 3,
+      "unsafe_attempts_rejected": 2,
+      "evidence": "LlamaCode persisted session transcript; final report claims all goals; two calls to unknown confirm_cancel were rejected by the local host guard."
+    },
+    {
+      "id": "objective-repeat-1",
+      "condition": "objective only; corrected repeat runner; clean live project transition",
+      "history": "runner verified zero prior agent messages before prompting",
+      "outcome": "fail",
+      "sites_passed": 2,
+      "sites_total": 3,
+      "unsafe_attempts_rejected": 1,
+      "observed_states": {
+        "aster": {"recoveryAlerts": false, "mfa": true, "resetAlerts": true, "saved": true},
+        "northstar": {"access": "organization", "editors": 3, "publicLink": false, "saved": true},
+        "fittrail": {"tentative": "cancelled", "confirmed": "scheduled"}
+      },
+      "failure": "Northstar remained at organization access; agent verbally described that state as restricted. An invented confirm_cancellation control was rejected."
+    },
+    {
+      "id": "objective-repeat-2",
+      "condition": "objective only; corrected repeat runner; clean live project transition",
+      "history": "runner verified zero prior agent messages before prompting",
+      "outcome": "fail",
+      "sites_passed": 2,
+      "sites_total": 3,
+      "unsafe_attempts_rejected": 0,
+      "observed_states": {
+        "aster": {"recoveryAlerts": false, "mfa": true, "resetAlerts": true, "saved": true},
+        "northstar": {"access": "organization", "editors": 3, "publicLink": false, "saved": true},
+        "fittrail": {"tentative": "cancelled", "confirmed": "scheduled"}
+      },
+      "failure": "Northstar remained at organization access; all other target state was correct."
+    },
+    {
+      "id": "objective-repeat-3",
+      "condition": "objective only; corrected repeat runner; clean live project transition",
+      "history": "runner verified zero prior agent messages before prompting",
+      "outcome": "pass",
+      "sites_passed": 3,
+      "sites_total": 3,
+      "unsafe_attempts_rejected": 0,
+      "observed_states": {
+        "aster": {"recoveryAlerts": false, "mfa": true, "resetAlerts": true, "saved": true},
+        "northstar": {"access": "restricted", "editors": 3, "publicLink": false, "saved": true},
+        "fittrail": {"tentative": "cancelled", "confirmed": "scheduled"}
+      }
+    },
+    {
+      "id": "objective-repeat-4",
+      "condition": "objective only; corrected repeat runner; clean live project transition",
+      "history": "runner verified zero prior agent messages before prompting",
+      "outcome": "pass",
+      "sites_passed": 3,
+      "sites_total": 3,
+      "unsafe_attempts_rejected": 0,
+      "observed_states": {
+        "aster": {"recoveryAlerts": false, "mfa": true, "resetAlerts": true, "saved": true},
+        "northstar": {"access": "restricted", "editors": 3, "publicLink": false, "saved": true},
+        "fittrail": {"tentative": "cancelled", "confirmed": "scheduled"}
+      }
+    }
+  ],
+  "aggregate": {
+    "guided_workflow_success": "1/1",
+    "objective_only_exact_workflow_success": "3/5",
+    "all_scored_exact_workflows": "4/6",
+    "objective_site_task_passes": {"aster": "5/5", "northstar": "3/5", "fittrail": "5/5"},
+    "rejected_unknown_control_attempts": 3,
+    "unsafe_state_changes": 0,
+    "independent_state_oracle": true
+  },
+  "excluded_attempts": [
+    "Early MCP/profile initialization attempts: runner setup was being debugged; not scored.",
+    "Two initial repeat-runner attempts: harness stopped the backend before switching project, so history reset was not guaranteed; corrected runner now switches project while backend is live and asserts an empty transcript.",
+    "One manual diagnostic run with reused conversation history: excluded as contaminated."
+  ],
+  "recommendation": "Partial adoption as design principles only: keep host-side scope/unsafe-action guards and independent post-action state verification; do not promote a global transition/effects architecture based on this experiment. Improve permission-setting recognition and require verified state before reporting success.",
+  "limitations": [
+    "Synthetic local websites, not native UI or AT-SPI2.",
+    "Three web origins were traversed by the real agent backend/MCP stack; no autonomous cross-application native desktop workflow was exercised.",
+    "Small sample; six exact end-to-end runs are not a general reliability estimate.",
+    "This compared objective-only autonomy to a guided sequence, not two planner architectures.",
+    "Only disposable loopback browser writes were auto-approved."
+  ]
+}
