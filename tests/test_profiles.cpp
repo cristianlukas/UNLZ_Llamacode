@@ -10,6 +10,9 @@
 
 #include <QtTest>
 #include <QTemporaryDir>
+#include <QFile>
+#include <QJsonDocument>
+#include <QJsonArray>
 #include <algorithm>
 #include "core/profiles/ProfileTypes.h"
 #include "core/profiles/ProfileManager.h"
@@ -24,6 +27,7 @@ private slots:
     void modelProfile_jsonRoundTrip();
     void runtimePreset_jsonRoundTrip();
     void launchProfile_jsonRoundTrip();
+    void solLinuxProfileUsesVllmBackend();
     void agentProfile_thinkingLeakGuardRoundTripAndDefault();
     void masterConfig_jsonRoundTrip();
     void masterConfig_legacyMigration();
@@ -187,6 +191,25 @@ void ProfilesTests::launchProfile_jsonRoundTrip()
              QStringLiteral("inherit"));
     QCOMPARE(LaunchProfile::fromJson(QJsonObject{}).hybridMode,
              QStringLiteral("off"));
+}
+
+void ProfilesTests::solLinuxProfileUsesVllmBackend()
+{
+    QFile file(QStringLiteral("profiles/launches.json"));
+    QVERIFY2(file.open(QIODevice::ReadOnly), qPrintable(file.errorString()));
+    const QJsonArray profiles = QJsonDocument::fromJson(file.readAll()).array();
+    const QString solId = QStringLiteral("c8d4f1a7-2b69-4e80-95c3-7a1d6f8b2045");
+    const QString vllmBackendId = QStringLiteral("2baf3292-033d-4a6c-9f84-ea13ae4aae3b");
+    for (const QJsonValue &value : profiles) {
+        const QJsonObject profile = value.toObject();
+        if (profile.value(QStringLiteral("id")).toString() != solId)
+            continue;
+
+        QCOMPARE(profile.value(QStringLiteral("platformBackendIds")).toObject()
+                     .value(QStringLiteral("linux")).toString(), vllmBackendId);
+        return;
+    }
+    QFAIL("The SOL launch profile is missing from profiles/launches.json.");
 }
 
 void ProfilesTests::agentProfile_thinkingLeakGuardRoundTripAndDefault()
