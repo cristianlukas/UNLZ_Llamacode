@@ -1809,6 +1809,24 @@ lanzamientos manuales.
 
 Evaluaciones de modelos candidatas:
 
+### Evaluar ideas externas sin repetir pruebas
+
+Para cada post, comentario o repositorio nuevo, usa el [prompt reutilizable de
+investigación y evaluación](docs/prompts/evaluar-ideas-externas.md). Primero
+contrasta la afirmación con la evidencia local y elige el caso de uso: Ingi-Charla,
+Computer Use, harness de agente o modelo/runtime. Una comparación de endpoint no
+representa el harness; una suite textual de Computer Use no equivale a operar el
+escritorio; y una corrida de texto no valida la ruta de voz. El prompt exige
+congelar la configuración, buscar corridas duplicadas, medir contra el perfil
+vigente pertinente y dejar resultados reproducibles con una sección “No
+repetir”.
+
+La corrida [Strata 0.1.35 vs SOL con LC-H1](docs/strata-0.1.35-vs-sol-llamacode-lch1-20261002.md)
+es un ejemplo de comparación con el agente real: mostró una ventaja pequeña de
+calidad en una sola pasada, pero SOL fue más rápido en el total. Sirve como
+antecedente, no como prueba suficiente para declarar un ganador universal ni
+promover un default.
+
 El procedimiento completo y reutilizable para comparar un nuevo modelo, binario, perfil o harness está en el [Manual de benchmarking](docs/benchmark-manual.md). La matriz de perfiles y sus resultados históricos se mantiene en [docs/benchmark-profile-matrix.md](docs/benchmark-profile-matrix.md). El [ranking por caso de uso y catálogo de mejoras](docs/benchmark-ranking-and-use-cases.md) resume qué perfiles sirven para calidad, velocidad, visión, contexto, VRAM y warm-cache. Para validar contexto largo, aislamiento y KV cache contra un servidor real, usar el [probe de QA de KV cache](docs/kv-cache-qa.md).
 
 Para aislar el costo del harness existe la suite custom **Harness Context A/B v1**
