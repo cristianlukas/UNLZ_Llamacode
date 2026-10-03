@@ -1,0 +1,127 @@
+{
+  "evaluation": "reddit-small-models-20261003",
+  "date": "2026-10-03",
+  "hardware": {
+    "cpu": "AMD Ryzen 9 9950X3D",
+    "ramGiB": 123,
+    "gpus": [
+      "NVIDIA GeForce RTX 3090 SM86",
+      "NVIDIA GeForce RTX 3090 SM86"
+    ],
+    "os": "Ubuntu 24.04"
+  },
+  "runtime": {
+    "project": "ggml-org/llama.cpp",
+    "commit": "836d571",
+    "version": "0.5.0-dev",
+    "build": "CUDA 12.0, Release, CUDA architectures 86, build-cuda in ~/.cache/llamacode/llama.cpp-spark-native-20261003",
+    "modelDevice": "CUDA1 for text-only comparisons",
+    "textContext": 8192,
+    "parallelSlots": 1,
+    "textKv": "q8_0",
+    "sampling": {
+      "temperature": 0.6,
+      "topP": 0.95,
+      "topK": 20,
+      "minP": 0.0,
+      "repeatPenalty": 1.0,
+      "presencePenalty": 0.0,
+      "reasoning": "off"
+    }
+  },
+  "models": [
+    {
+      "id": "qwen35-4b-q4km",
+      "repository": "unsloth/Qwen3.5-4B-MTP-GGUF",
+      "file": "Qwen3.5-4B-Q4_K_M.gguf",
+      "sizeBytes": 2834975040,
+      "sha256": "not recomputed in this evaluation; use the local model file hash if the checkpoint is moved"
+    },
+    {
+      "id": "gemma4-e4b-official-qat-q4_0",
+      "repository": "google/gemma-4-E4B-it-qat-q4_0-gguf",
+      "file": "gemma-4-E4B_q4_0-it.gguf",
+      "sizeBytes": 5154941280,
+      "sha256": "676c35070db6dbe52f93e9c864ee0fba4eddea94b9c875d9cb10daff453fbaee",
+      "mmprojFile": "gemma-4-E4B-it-mmproj.gguf",
+      "mmprojSizeBytes": 991552256
+    },
+    {
+      "id": "spark-x25-4b-q4km",
+      "repository": "XHToken/Spark-X2.5-4B-GGUF",
+      "file": "Spark-X2.5-4B-Q4_K_M.gguf",
+      "sizeBytes": 2600224352,
+      "sha256": "adfcfa19a4ed6a5985da8bf565fe15f8e1a7e131d79bae2d19d48d1c40109428"
+    },
+    {
+      "id": "gemma4-e4b-nonqat-q4_0",
+      "repository": "local existing model",
+      "file": "gemma-4-E4B-it-Q4_0.gguf",
+      "sizeBytes": 4590807392,
+      "sha256": "not recomputed in this evaluation"
+    }
+  ],
+  "suites": {
+    "computerUse": {
+      "script": "tools/benchmark_computer_use_prompt_order.py",
+      "corpus": "assets/benchmarks/custom/computer_use_prompt_order_hard_v1.json",
+      "runsPerModel": 72,
+      "passes": 3,
+      "seedList": [11, 42],
+      "orderSeed": 4242,
+      "temperature": 0,
+      "topP": 1,
+      "topK": 20,
+      "actionExecuted": false
+    },
+    "toolContract": {
+      "script": "artifacts/swift-genesis-evaluation-20260929/run_tool_contract.py",
+      "passes": 5,
+      "expectedCalls": ["read_file README.md", "write_file tool_contract.txt"]
+    },
+    "visionTool": {
+      "script": "artifacts/swift-genesis-evaluation-20260929/run_vision_tool.py",
+      "fixture": "assets/benchmarks/custom/lfm25_vl_dspark_ui_settings_v1.png",
+      "passes": 3,
+      "actionExecuted": false,
+      "gpuOffload": "12 layers on CUDA1; mmproj on CPU because another Strata process occupied VRAM"
+    },
+    "bigCodeBenchHard8": {
+      "script": "artifacts/ornith-1.5-evaluation-20260930/run_bcb.py",
+      "pack": "artifacts/bigcodebench-hard-ubuntu-8.json",
+      "passes": 1,
+      "maxTokens": 3072,
+      "budget": 1024,
+      "repairs": 0,
+      "grader": "bubblewrap, network isolated"
+    }
+  },
+  "results": {
+    "computerUse": {
+      "qwen35-4b-q4km": "computer-use-qwen35-4b.json",
+      "gemma4-e4b-official-qat-q4_0": "computer-use-gemma4-e4b-qat.json",
+      "spark-x25-4b-q4km": "computer-use-spark-x25-4b.json",
+      "gemma4-e4b-nonqat-q4_0": "computer-use-gemma4-e4b-q4_0.json"
+    },
+    "toolContract": {
+      "qwen35-4b-q4km": "tool-contract-qwen35-4b.json",
+      "gemma4-e4b-official-qat-q4_0": "tool-contract-gemma4-e4b-qat.json",
+      "spark-x25-4b-q4km": "tool-contract-spark-x25-4b.json",
+      "gemma4-e4b-nonqat-q4_0": "tool-contract-gemma4-e4b-q4_0.json"
+    },
+    "visionTool": {
+      "qwen35-4b-q4km": "vision-tool-qwen35-4b.json",
+      "gemma4-e4b-official-qat-q4_0": "vision-tool-gemma4-e4b-qat.json"
+    },
+    "bigCodeBenchHard8": {
+      "qwen35-4b-q4km": "bcb8-qwen35-4b.json",
+      "gemma4-e4b-official-qat-q4_0": "bcb8-gemma4-e4b-qat.json",
+      "spark-x25-4b-q4km": "bcb8-spark-x25-4b.json"
+    }
+  },
+  "notes": [
+    "The first full-GPU Qwen vision-server launch failed because another task occupied VRAM; it was retried successfully with partial GPU offload and the projector on CPU. The other process was not stopped.",
+    "The BCB result is one pass over eight items and is only a screening signal, not an LC-H1 agentic score.",
+    "The existing SC117 Heretic QAT profile is a different checkpoint from the official Google QAT checkpoint used in this comparison."
+  ]
+}

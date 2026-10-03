@@ -8,6 +8,19 @@ los perfiles no alcanzados. Este historial conserva además la narrativa y los
 eventos operativos; ambos documentos se complementan y no reemplazan resultados
 anteriores.
 
+## 2026-10-03 — Gemma 4 E4B QAT y Spark-X2.5-4B · no promovidos
+
+Se compararon contra Qwen3.5-4B en Computer Use (24 estados × 3 pasadas),
+contrato de tools (5 pasadas), visión con tool (3 pasadas para los modelos con
+mmproj) y BCB-Hard-8 directo (una pasada). Spark quedó 2/8 frente a Qwen 1/8,
+pero empató el tool contract, perdió un estado en sandwich y no tiene visión;
+no hay evidencia LC-H1 para asignarle coding delegado. Gemma QAT dio 0/8 BCB,
+4/5 tools y paridad 3/3 visual. No cambian Ingi-Charla, Computer Use, el
+harness ni los perfiles. Los JSON por caso, hashes, runtime y condiciones de
+repetición están en
+[`reddit-small-models-evaluation-20261003.md`](reddit-small-models-evaluation-20261003.md)
+y [`artifacts/reddit-small-model-evaluation-20261003/`](../artifacts/reddit-small-model-evaluation-20261003/).
+
 ## 2026-09-30 — Aura y agentes locales de horizonte largo
 
 Se comparó la demo de 2048 y el repositorio público Aura con las capacidades y

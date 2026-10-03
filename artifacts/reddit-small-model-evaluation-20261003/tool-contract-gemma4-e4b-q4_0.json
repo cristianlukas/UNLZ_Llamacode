@@ -1,0 +1,133 @@
+{
+  "benchmark": "harness_tool_contract_v1",
+  "model": "gemma4-e4b-q4_0",
+  "passes": 5,
+  "passed": 4,
+  "transportOk": 5,
+  "rows": [
+    {
+      "pass": 1,
+      "calls": [
+        {
+          "id": "2q1lCAMVK7OF3s8gtfcC05CISIehmyNG",
+          "name": "read_file",
+          "arguments": {
+            "path": "README.md"
+          }
+        },
+        {
+          "id": "osCHqfQUSTYWzxaH2HRlaE3pvqRgSd1Z",
+          "name": "read_file",
+          "arguments": {
+            "path": "README.md"
+          }
+        }
+      ],
+      "transportOk": true,
+      "firstWallMs": 1108.64,
+      "secondWallMs": 193.13,
+      "finalContent": "",
+      "passed": false
+    },
+    {
+      "pass": 2,
+      "calls": [
+        {
+          "id": "1FOpFS2Dox1cJRxB7pvQxpgFp7WsbR8T",
+          "name": "read_file",
+          "arguments": {
+            "path": "README.md"
+          }
+        },
+        {
+          "id": "frm6PMkakrxtH2w0v3RXjCnd6qHWDqNd",
+          "name": "write_file",
+          "arguments": {
+            "content": "CONTRACT_OK",
+            "path": "tool_contract.txt"
+          }
+        }
+      ],
+      "transportOk": true,
+      "firstWallMs": 150.98,
+      "secondWallMs": 240.22,
+      "finalContent": "",
+      "passed": true
+    },
+    {
+      "pass": 3,
+      "calls": [
+        {
+          "id": "4mOL6VplPMQqqEyDRI0E4fLLD4ZwgIyZ",
+          "name": "read_file",
+          "arguments": {
+            "path": "README.md"
+          }
+        },
+        {
+          "id": "EBKDsRLNic78vldbCQiR791CRGJ1zg8j",
+          "name": "write_file",
+          "arguments": {
+            "content": "CONTRACT_OK",
+            "path": "tool_contract.txt"
+          }
+        }
+      ],
+      "transportOk": true,
+      "firstWallMs": 149.74,
+      "secondWallMs": 236.73,
+      "finalContent": "",
+      "passed": true
+    },
+    {
+      "pass": 4,
+      "calls": [
+        {
+          "id": "Oo3a9OkfSmrMPuwwfDOPNxv1naNMKStg",
+          "name": "read_file",
+          "arguments": {
+            "path": "README.md"
+          }
+        },
+        {
+          "id": "Rihadevg97WA5zuMEdMqwHXUZj7dISCC",
+          "name": "write_file",
+          "arguments": {
+            "content": "CONTRACT_OK",
+            "path": "tool_contract.txt"
+          }
+        }
+      ],
+      "transportOk": true,
+      "firstWallMs": 147.91,
+      "secondWallMs": 238.42,
+      "finalContent": "",
+      "passed": true
+    },
+    {
+      "pass": 5,
+      "calls": [
+        {
+          "id": "M5nUKg8TFZ3yVtUqwVUurUYXfpUx5eOC",
+          "name": "read_file",
+          "arguments": {
+            "path": "README.md"
+          }
+        },
+        {
+          "id": "mRC0c0ItX7s0CbHlluIl4AA7LA3CmHS6",
+          "name": "write_file",
+          "arguments": {
+            "content": "CONTRACT_OK",
+            "path": "tool_contract.txt"
+          }
+        }
+      ],
+      "transportOk": true,
+      "firstWallMs": 151.39,
+      "secondWallMs": 239.3,
+      "finalContent": "",
+      "passed": true
+    }
+  ]
+}

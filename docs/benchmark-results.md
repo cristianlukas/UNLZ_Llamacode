@@ -8,7 +8,18 @@ Para el inventario completo por perfil —incluidos descartados, bloqueados,
 retirados, binarios, quantizaciones, configuración efectiva, huellas y métricas
 por etapa— consultar el [registro detallado de perfiles](benchmark-profile-ledger-2026-08.md).
 
-Última actualización: 2026-09-30.
+Última actualización: 2026-10-03.
+
+## 2026-10-03 — Gemma 4 E4B QAT y Spark-X2.5-4B: no promovidos
+
+La comparación local contra Qwen3.5-4B no muestra un reemplazo integral.
+Spark obtuvo **2/8** frente a **1/8** BCB-Hard directo, pero fue una sola
+pasada; tool contract empatado 5/5, Computer Use sandwich 69/72 frente a 72/72
+y sin visión. Gemma QAT tuvo 0/8 BCB, 4/5 tool contract y 3/3 en el fixture
+visual. **No se cambia el perfil 4 GB, el harness, Computer Use ni Ingi-Charla.**
+No reutilizar esas mismas corridas como evaluación nueva. Detalle por caso,
+hashes y protocolo:
+[`auditoría de modelos pequeños`](reddit-small-models-evaluation-20261003.md).
 
 ## 2026-09-30 — Ornith 1.5-9B + DFlash: no promovido
 
