@@ -1,0 +1,324 @@
+{
+  "results": [
+    {
+      "candidate": "fork-0.1.38",
+      "category": "code",
+      "repeat": 1,
+      "elapsedSec": 3.719,
+      "usage": {
+        "prompt_tokens": 84,
+        "completion_tokens": 400,
+        "total_tokens": 484,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 84,
+        "prompt_ms": 353.0,
+        "prompt_per_token_ms": 4.202,
+        "prompt_per_second": 238.0,
+        "predicted_n": 400,
+        "predicted_ms": 3363.7,
+        "predicted_per_token_ms": 8.409,
+        "predicted_per_second": 118.9,
+        "draft_n": 382,
+        "draft_n_accepted": 264
+      },
+      "finishReason": "length",
+      "completionSha256": "fe9f18c64c7fdc02ec75ddc9fb2809b56dec310fd7de1a1d8610d1ef2a91923e",
+      "reasoningSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "completion": "```python\ndef merge_intervals(intervals):\n    \"\"\"\n    Merge overlapping or touching intervals.\n    \n    Args:\n        intervals: An iterable of [start, end] pairs (lists or tuples of two integers).\n        \n    Returns:\n        A list of merged intervals, each as a list [start, end], sorted by start.\n        \n    Raises:\n        ValueError: If any interval is malformed (not a pair of integers, or start > end).\n    \"\"\"\n    # Validate and collect intervals\n    valid_intervals = []\n    for interval in intervals:\n        # Check that interval is a sequence of exactly two elements\n        if not isinstance(interval, (list, tuple)):\n            raise ValueError(f\"Interval {interval} is not a list or tuple\")\n        if len(interval) != 2:\n            raise ValueError(f\"Interval {interval} does not have exactly two elements\")\n        start, end = interval\n        # Check that both elements are integers\n        if not isinstance(start, int) or not isinstance(end, int):\n            raise ValueError(f\"Interval {interval} contains non-integer values\")\n        # Check that start <= end\n        if start > end:\n            raise ValueError(f\"Interval {interval} has start > end\")\n        valid_intervals.append((start, end))\n    \n    if not valid_intervals:\n        return []\n    \n    # Sort by start, then by end\n    valid_intervals.sort(key=lambda x: (x[0], x[1]))\n    \n    merged = []\n    current_start, current_end = valid_intervals[0]\n    \n    for start, end in valid_intervals[1:]:\n        # If the next interval overlaps or touches the current one, merge them\n        if start <= current_end:\n            current_end = max(current_end, end)\n        else:\n            merged.append([current_start, current",
+      "reasoning": ""
+    },
+    {
+      "candidate": "fork-0.1.38",
+      "category": "prose",
+      "repeat": 1,
+      "elapsedSec": 5.38,
+      "usage": {
+        "prompt_tokens": 58,
+        "completion_tokens": 400,
+        "total_tokens": 458,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 58,
+        "prompt_ms": 301.7,
+        "prompt_per_token_ms": 5.202,
+        "prompt_per_second": 192.2,
+        "predicted_n": 400,
+        "predicted_ms": 5075.7,
+        "predicted_per_token_ms": 12.689,
+        "predicted_per_second": 78.8,
+        "draft_n": 361,
+        "draft_n_accepted": 189
+      },
+      "finishReason": "length",
+      "completionSha256": "4b59f641e5ebeacb4b711d0ba723294e0622465e018b27526f38c28d50b51c05",
+      "reasoningSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "completion": "The rhythm of the rails was a metronome counting down the hours until dawn. Inside the sleeper car, the air hung heavy with the scent of old wool, stale coffee, and the metallic tang of ozone that clung to the windows. Outside, the Andes were not mountains but shadows, jagged silhouettes carved against a sky so dark it seemed to swallow the stars whole.\n\nElias sat by the window, his forehead resting against the cold glass. The vibration traveled through his skull, a low hum that matched the beating of his heart. He watched the occasional flicker of a distant village light, a brief spark in the void, before it vanished into the blackness. The train climbed steadily, the engine groaning under the strain of the ascent. Each curve brought a new perspective, a fleeting glimpse of snow-capped peaks illuminated by the moon’s pale, indifferent gaze.\n\nHe thought of the letter in his pocket, the one he had not yet opened. It contained words he feared more than the altitude sickness that prickled at his temples. The train did not care for his fears. It moved with mechanical certainty, indifferent to the human cargo it carried. The conductor walked the aisle, his footsteps soft on the carpet, checking tickets with a bored efficiency. He paused at Elias’s compartment, nodding once, a silent acknowledgment of their shared isolation.\n\nAs the train crested the highest pass, the wind howled against the exterior, a mournful sound that seemed to come from the earth itself. The temperature dropped, and frost began to form intricate patterns on the inside of the window, delicate ferns of ice that obscured the view. Elias traced one with his finger, feeling the chill bite into his skin. For a moment, the world outside ceased to exist, replaced by the fragile beauty of the frozen glass.\n\nThen, the train began its descent. The shadows lifted slightly, revealing the valley below, a dark river winding through the terrain.",
+      "reasoning": ""
+    },
+    {
+      "candidate": "fork-0.1.38",
+      "category": "code",
+      "repeat": 2,
+      "elapsedSec": 3.559,
+      "usage": {
+        "prompt_tokens": 84,
+        "completion_tokens": 400,
+        "total_tokens": 484,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 84,
+        "prompt_ms": 405.4,
+        "prompt_per_token_ms": 4.826,
+        "prompt_per_second": 207.2,
+        "predicted_n": 400,
+        "predicted_ms": 3151.6,
+        "predicted_per_token_ms": 7.879,
+        "predicted_per_second": 126.9,
+        "draft_n": 373,
+        "draft_n_accepted": 264
+      },
+      "finishReason": "length",
+      "completionSha256": "fe9f18c64c7fdc02ec75ddc9fb2809b56dec310fd7de1a1d8610d1ef2a91923e",
+      "reasoningSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "completion": "```python\ndef merge_intervals(intervals):\n    \"\"\"\n    Merge overlapping or touching intervals.\n    \n    Args:\n        intervals: An iterable of [start, end] pairs (lists or tuples of two integers).\n        \n    Returns:\n        A list of merged intervals, each as a list [start, end], sorted by start.\n        \n    Raises:\n        ValueError: If any interval is malformed (not a pair of integers, or start > end).\n    \"\"\"\n    # Validate and collect intervals\n    valid_intervals = []\n    for interval in intervals:\n        # Check that interval is a sequence of exactly two elements\n        if not isinstance(interval, (list, tuple)):\n            raise ValueError(f\"Interval {interval} is not a list or tuple\")\n        if len(interval) != 2:\n            raise ValueError(f\"Interval {interval} does not have exactly two elements\")\n        start, end = interval\n        # Check that both elements are integers\n        if not isinstance(start, int) or not isinstance(end, int):\n            raise ValueError(f\"Interval {interval} contains non-integer values\")\n        # Check that start <= end\n        if start > end:\n            raise ValueError(f\"Interval {interval} has start > end\")\n        valid_intervals.append((start, end))\n    \n    if not valid_intervals:\n        return []\n    \n    # Sort by start, then by end\n    valid_intervals.sort(key=lambda x: (x[0], x[1]))\n    \n    merged = []\n    current_start, current_end = valid_intervals[0]\n    \n    for start, end in valid_intervals[1:]:\n        # If the next interval overlaps or touches the current one, merge them\n        if start <= current_end:\n            current_end = max(current_end, end)\n        else:\n            merged.append([current_start, current",
+      "reasoning": ""
+    },
+    {
+      "candidate": "fork-0.1.38",
+      "category": "prose",
+      "repeat": 2,
+      "elapsedSec": 4.95,
+      "usage": {
+        "prompt_tokens": 58,
+        "completion_tokens": 400,
+        "total_tokens": 458,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 58,
+        "prompt_ms": 240.9,
+        "prompt_per_token_ms": 4.153,
+        "prompt_per_second": 240.8,
+        "predicted_n": 400,
+        "predicted_ms": 4707.0,
+        "predicted_per_token_ms": 11.768,
+        "predicted_per_second": 85.0,
+        "draft_n": 357,
+        "draft_n_accepted": 192
+      },
+      "finishReason": "length",
+      "completionSha256": "ff69d09d053232be90e42d159a96f747ce711b6e19cd441e4b86022e296281b5",
+      "reasoningSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "completion": "The rhythm of the rails was a metronome counting down the hours until dawn. Inside the sleeper car, the air hung heavy with the scent of old wool, stale coffee, and the metallic tang of ozone that clung to the high-altitude air. Outside, the Andes were not mountains but shadows, jagged silhouettes carved against a sky so dark it seemed to swallow the stars whole.\n\nElias sat by the window, his forehead resting against the cold glass. The condensation had formed a thin veil, blurring the world into a smear of charcoal and indigo. He watched the occasional flicker of a distant village light, a solitary ember in the vast, freezing void. Each flash was a life, a family, a story he would never know, passing by in a heartbeat. The train groaned as it climbed, the engine straining against the steep gradient, a mechanical beast fighting gravity.\n\nInside, the compartment was silent save for the hum of the ventilation system and the soft rustle of a neighbor turning in their bunk. Elias pulled his coat tighter. The cold was a physical presence, seeping through the window frame, numbing his fingertips. He thought of the valley below, the green terraces of the Inca, now buried under snow and silence. He had left that world behind, trading the warmth of the lowlands for the stark clarity of the heights.\n\nA sudden jolt shook the carriage. The lights flickered, casting long, dancing shadows across the compartment walls. For a moment, the train seemed to hang suspended between earth and sky, a fragile vessel navigating the edge of the world. Then, the rhythm returned, steady and unyielding. The darkness outside pressed closer, intimate and absolute.\n\nAs the first hint of gray began to bleed into the eastern horizon, the mountains revealed themselves not as monsters, but as ancient, sleeping giants. The snow on their peaks caught the faint light, turning white to gold",
+      "reasoning": ""
+    },
+    {
+      "candidate": "fork-0.1.38",
+      "category": "code",
+      "repeat": 3,
+      "elapsedSec": 3.617,
+      "usage": {
+        "prompt_tokens": 84,
+        "completion_tokens": 400,
+        "total_tokens": 484,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 84,
+        "prompt_ms": 403.1,
+        "prompt_per_token_ms": 4.799,
+        "prompt_per_second": 208.4,
+        "predicted_n": 400,
+        "predicted_ms": 3212.0,
+        "predicted_per_token_ms": 8.03,
+        "predicted_per_second": 124.5,
+        "draft_n": 381,
+        "draft_n_accepted": 262
+      },
+      "finishReason": "length",
+      "completionSha256": "fe9f18c64c7fdc02ec75ddc9fb2809b56dec310fd7de1a1d8610d1ef2a91923e",
+      "reasoningSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "completion": "```python\ndef merge_intervals(intervals):\n    \"\"\"\n    Merge overlapping or touching intervals.\n    \n    Args:\n        intervals: An iterable of [start, end] pairs (lists or tuples of two integers).\n        \n    Returns:\n        A list of merged intervals, each as a list [start, end], sorted by start.\n        \n    Raises:\n        ValueError: If any interval is malformed (not a pair of integers, or start > end).\n    \"\"\"\n    # Validate and collect intervals\n    valid_intervals = []\n    for interval in intervals:\n        # Check that interval is a sequence of exactly two elements\n        if not isinstance(interval, (list, tuple)):\n            raise ValueError(f\"Interval {interval} is not a list or tuple\")\n        if len(interval) != 2:\n            raise ValueError(f\"Interval {interval} does not have exactly two elements\")\n        start, end = interval\n        # Check that both elements are integers\n        if not isinstance(start, int) or not isinstance(end, int):\n            raise ValueError(f\"Interval {interval} contains non-integer values\")\n        # Check that start <= end\n        if start > end:\n            raise ValueError(f\"Interval {interval} has start > end\")\n        valid_intervals.append((start, end))\n    \n    if not valid_intervals:\n        return []\n    \n    # Sort by start, then by end\n    valid_intervals.sort(key=lambda x: (x[0], x[1]))\n    \n    merged = []\n    current_start, current_end = valid_intervals[0]\n    \n    for start, end in valid_intervals[1:]:\n        # If the next interval overlaps or touches the current one, merge them\n        if start <= current_end:\n            current_end = max(current_end, end)\n        else:\n            merged.append([current_start, current",
+      "reasoning": ""
+    },
+    {
+      "candidate": "fork-0.1.38",
+      "category": "prose",
+      "repeat": 3,
+      "elapsedSec": 5.25,
+      "usage": {
+        "prompt_tokens": 58,
+        "completion_tokens": 400,
+        "total_tokens": 458,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 58,
+        "prompt_ms": 241.6,
+        "prompt_per_token_ms": 4.166,
+        "prompt_per_second": 240.1,
+        "predicted_n": 400,
+        "predicted_ms": 5006.6,
+        "predicted_per_token_ms": 12.517,
+        "predicted_per_second": 79.9,
+        "draft_n": 374,
+        "draft_n_accepted": 176
+      },
+      "finishReason": "length",
+      "completionSha256": "11dfdd82c5513d93510e6972d41cb9ac7ea08b60f232e12820982658d6cf8f2c",
+      "reasoningSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "completion": "The rhythm of the rails was a metronome counting down the hours until dawn. Inside the sleeper car, the air hung heavy with the scent of old wool, stale coffee, and the metallic tang of ozone that clung to the windows. Outside, the Andes were not mountains but shadows, jagged silhouettes carved against a sky so dark it seemed to swallow the stars whole.\n\nElias sat by the window, his forehead resting against the cold glass. The vibration traveled through his skull, a low hum that matched the beating of his heart. He watched the occasional flicker of a distant village light, a brief spark in the void, before it vanished into the blackness. The train climbed steadily, the engine’s roar growing louder as the gradient steepened. It was a mechanical beast fighting gravity, its breath pluming in the thin, freezing air outside.\n\nHe thought of the letter in his pocket, the one he had not yet opened. It contained words he feared more than the altitude sickness that prickled at his temples. The train lurched, a sudden jolt that sent his coffee cup sliding across the small table. He caught it just before it tipped, the brown liquid sloshing over the rim, staining the white linen. A small, irreversible mistake.\n\nThe conductor passed by, his uniform crisp despite the journey’s weariness. He nodded to Elias, a silent acknowledgment of their shared vigil. There was no need for words. The landscape spoke for them. The peaks rose higher, sharper, piercing the cloud layer. For a moment, the train emerged above the fog, and the moonlight hit the snow-capped summits, turning them into blinding white ghosts. The beauty was terrifying in its indifference.\n\nElias closed his eyes. The sound of the wheels changed pitch, a higher, faster clatter as they crested the pass. The descent began. The pressure in his ears popped, a sudden release. He opened his",
+      "reasoning": ""
+    },
+    {
+      "candidate": "fork-0.1.38",
+      "category": "code",
+      "repeat": 4,
+      "elapsedSec": 3.721,
+      "usage": {
+        "prompt_tokens": 84,
+        "completion_tokens": 400,
+        "total_tokens": 484,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 84,
+        "prompt_ms": 403.2,
+        "prompt_per_token_ms": 4.8,
+        "prompt_per_second": 208.3,
+        "predicted_n": 400,
+        "predicted_ms": 3315.5,
+        "predicted_per_token_ms": 8.289,
+        "predicted_per_second": 120.6,
+        "draft_n": 388,
+        "draft_n_accepted": 258
+      },
+      "finishReason": "length",
+      "completionSha256": "ca5e9c4e0a985695bb929df4d803f4d468b1fd344104d27ef37b0a2a75a4149c",
+      "reasoningSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "completion": "```python\ndef merge_intervals(intervals):\n    \"\"\"\n    Merge overlapping or touching intervals.\n    \n    Args:\n        intervals: An iterable of [start, end] pairs (lists or tuples of two integers).\n        \n    Returns:\n        A list of merged intervals, each as a list [start, end], sorted by start.\n        \n    Raises:\n        ValueError: If any interval is malformed (not a pair of integers, or start > end).\n    \"\"\"\n    # Validate and collect intervals\n    valid_intervals = []\n    for interval in intervals:\n        # Check that interval is a sequence of exactly two elements\n        if not isinstance(interval, (list, tuple)):\n            raise ValueError(f\"Interval {interval} is not a list or tuple\")\n        if len(interval) != 2:\n            raise ValueError(f\"Interval {interval} does not have exactly two elements\")\n        start, end = interval\n        # Check that both elements are integers\n        if not isinstance(start, int) or not isinstance(end, int):\n            raise ValueError(f\"Interval {interval} contains non-integer values\")\n        # Check that start <= end\n        if start > end:\n            raise ValueError(f\"Interval {interval} has start > end\")\n        valid_intervals.append((start, end))\n    \n    if not valid_intervals:\n        return []\n    \n    # Sort by start, then by end\n    valid_intervals.sort(key=lambda x: (x[0], x[1]))\n    \n    merged = []\n    current_start, current_end = valid_intervals[0]\n    \n    for start, end in valid_intervals[1:]:\n        # If the next interval overlaps or touches the current one\n        if start <= current_end:\n            # Extend the current interval if needed\n            current_end = max(current_end, end)\n        else:\n            #",
+      "reasoning": ""
+    },
+    {
+      "candidate": "fork-0.1.38",
+      "category": "prose",
+      "repeat": 4,
+      "elapsedSec": 5.053,
+      "usage": {
+        "prompt_tokens": 58,
+        "completion_tokens": 400,
+        "total_tokens": 458,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 58,
+        "prompt_ms": 240.8,
+        "prompt_per_token_ms": 4.152,
+        "prompt_per_second": 240.9,
+        "predicted_n": 400,
+        "predicted_ms": 4810.3,
+        "predicted_per_token_ms": 12.026,
+        "predicted_per_second": 83.2,
+        "draft_n": 357,
+        "draft_n_accepted": 189
+      },
+      "finishReason": "length",
+      "completionSha256": "9608bf8186e7facd7ca6159cf29ae06697f6628d88678f1e37b583a36d602cd4",
+      "reasoningSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "completion": "The rhythm of the rails was a metronome counting down the hours until dawn. Outside the window, the Andes were not mountains but shadows, jagged silhouettes carved against a sky so dark it seemed to swallow light whole. The air inside the carriage was stale, recycled through vents that hummed with a low, electric drone. It smelled of old wool, instant coffee, and the faint, metallic tang of ozone from the overhead wires.\n\nElias sat by the window, his forehead resting against the cold glass. The vibration traveled through his skull, a subtle tremor that matched the pulse in his temples. He watched his own reflection ghosting over the black landscape: a pale face, eyes hollowed by sleeplessness, lips pressed into a thin line. The train climbed steadily, the engine straining against the gradient. Occasionally, a distant light would flicker in a valley below, a solitary house or a mining outpost, vanishing as quickly as it appeared. These were the only witnesses to their passage, brief and indifferent.\n\nInside, the other passengers slept in uneasy postures. A woman across the aisle clutched a handbag to her chest, her knuckles white. A man in the corner seat snored softly, his head lolling against the headrest. The silence between the clatter of wheels was heavy, filled with the unspoken weight of destinations. Elias thought of the city waiting at the end of the line, a place of noise and heat, far removed from this frozen stillness. He felt a strange detachment, as if he were already arriving, already leaving.\n\nThe train slowed. The pitch of the engine dropped, a groan of metal yielding to gravity. Lights appeared ahead, not distant stars but the harsh, yellow glow of a station platform. The brakes squealed, a sharp, painful sound that cut through the drowsy atmosphere. The carriage shuddered to a halt. Steam hissed from the undercar",
+      "reasoning": ""
+    },
+    {
+      "candidate": "fork-0.1.38",
+      "category": "repo-context-32k",
+      "repeat": 1,
+      "elapsedSec": 13.664,
+      "usage": {
+        "prompt_tokens": 31997,
+        "completion_tokens": 128,
+        "total_tokens": 32125,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 31997,
+        "prompt_ms": 12114.4,
+        "prompt_per_token_ms": 0.379,
+        "prompt_per_second": 2641.2,
+        "predicted_n": 128,
+        "predicted_ms": 1472.2,
+        "predicted_per_token_ms": 11.502,
+        "predicted_per_second": 86.9,
+        "draft_n": 107,
+        "draft_n_accepted": 76
+      },
+      "finishReason": "length",
+      "completionSha256": "405ffbdbfe2b2c2c4fb9bc28f0198ef175ba1f26295ff8b3304d231b47ccfdee",
+      "reasoningSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "completion": "Based on the `README.md` provided, here is a summary of the important constraints and requirements for **UNLZ_Llamacode**:\n\n### 1. Core Architectural Constraints\n*   **Local-First & Privacy:** The application is designed to run entirely on local hardware. It does **not** embed `llama.cpp`; instead, it orchestrates external binaries (`llama-server.exe`, forks, etc.).\n*   **No Cloud Dependency (Default):** By default, all data (models, profiles, chat history, tasks) remains local. Cloud backends are optional and require explicit configuration.\n*  ",
+      "reasoning": ""
+    },
+    {
+      "candidate": "fork-0.1.38",
+      "category": "repo-context-32k",
+      "repeat": 2,
+      "elapsedSec": 12.257,
+      "usage": {
+        "prompt_tokens": 31997,
+        "completion_tokens": 128,
+        "total_tokens": 32125,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 31997,
+        "prompt_ms": 10838.6,
+        "prompt_per_token_ms": 0.339,
+        "prompt_per_second": 2952.1,
+        "predicted_n": 128,
+        "predicted_ms": 1340.4,
+        "predicted_per_token_ms": 10.472,
+        "predicted_per_second": 95.5,
+        "draft_n": 107,
+        "draft_n_accepted": 76
+      },
+      "finishReason": "length",
+      "completionSha256": "1404bdb39ac461f5f52b72dde4df805e269fb784d7b03525026d612746cbb29a",
+      "reasoningSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "completion": "Based on the `README.md` provided, here is a summary of the important constraints and operational rules for **UNLZ_Llamacode**:\n\n### 1. Installation & Environment Constraints\n*   **Qt Version:** Requires **Qt 6.8.3** (or ≥ 6.5). On Linux, it **must** use `aqtinstall` to fetch Qt, not the distribution’s package manager, because LTS distros (like Ubuntu 24.04) ship older Qt versions incompatible with the code.\n*   **Linux Dependencies:** Requires X11 session (not Wayland)",
+      "reasoning": ""
+    }
+  ]
+}

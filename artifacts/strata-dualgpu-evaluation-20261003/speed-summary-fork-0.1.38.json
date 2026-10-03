@@ -1,0 +1,48 @@
+{
+  "fork-0.1.38": {
+    "code": {
+      "completionTpsMedian": 122.5,
+      "promptTpsMedian": 208.4,
+      "promptTokens": [
+        84,
+        84,
+        84,
+        84
+      ],
+      "completionTokens": [
+        400,
+        400,
+        400,
+        400
+      ]
+    },
+    "prose": {
+      "completionTpsMedian": 81.6,
+      "promptTpsMedian": 240.4,
+      "promptTokens": [
+        58,
+        58,
+        58,
+        58
+      ],
+      "completionTokens": [
+        400,
+        400,
+        400,
+        400
+      ]
+    },
+    "repo-context-32k": {
+      "completionTpsMedian": 91.2,
+      "promptTpsMedian": 2796.6,
+      "promptTokens": [
+        31997,
+        31997
+      ],
+      "completionTokens": [
+        128,
+        128
+      ]
+    }
+  }
+}

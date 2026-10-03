@@ -1,0 +1,48 @@
+{
+  "baseline-0.1.35": {
+    "code": {
+      "completionTpsMedian": 85.7,
+      "promptTpsMedian": 152.7,
+      "promptTokens": [
+        84,
+        84,
+        84,
+        84
+      ],
+      "completionTokens": [
+        400,
+        400,
+        400,
+        400
+      ]
+    },
+    "prose": {
+      "completionTpsMedian": 66.4,
+      "promptTpsMedian": 101.2,
+      "promptTokens": [
+        58,
+        58,
+        58,
+        58
+      ],
+      "completionTokens": [
+        400,
+        400,
+        400,
+        400
+      ]
+    },
+    "repo-context-32k": {
+      "completionTpsMedian": 80.6,
+      "promptTpsMedian": 2584.4,
+      "promptTokens": [
+        31997,
+        31997
+      ],
+      "completionTokens": [
+        128,
+        128
+      ]
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "first_call_ms": 1439.18,
+  "final_ms": 714.01,
+  "tool_call": {
+    "role": "assistant",
+    "content": null,
+    "tool_calls": [
+      {
+        "id": "call_64ab942154e74910aafb51a7",
+        "type": "function",
+        "function": {
+          "name": "lookup_ticket",
+          "arguments": "{\"ticket_id\":\"LC-42\"}"
+        }
+      }
+    ]
+  },
+  "tool_arguments": {
+    "ticket_id": "LC-42"
+  },
+  "final_message": {
+    "role": "assistant",
+    "content": "Ticket LC-42 is currently **in progress** and is owned by **Ana**."
+  },
+  "usage_first": {
+    "prompt_tokens": 284,
+    "completion_tokens": 31,
+    "total_tokens": 315,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "usage_final": {
+    "prompt_tokens": 98,
+    "completion_tokens": 19,
+    "total_tokens": 117,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  }
+}
