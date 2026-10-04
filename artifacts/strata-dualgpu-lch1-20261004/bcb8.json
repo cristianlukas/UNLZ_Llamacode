@@ -1,0 +1,498 @@
+{
+  "suiteId": "05c28394-11d0-41fe-a55f-b3cb69db9c15",
+  "suiteName": "BigCodeBench-Hard (8 ítems)",
+  "profileId": "sys-astra-strata-iq3s",
+  "thinkingEnabled": true,
+  "completedAtUtc": "2026-10-04T08:40:19Z",
+  "results": [
+    {
+      "acceptance": [
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/928",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/765",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/771",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/1019",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/906",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/583",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/139",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/360",
+          "type": "grader:code_tests"
+        }
+      ],
+      "agentFiles": [
+        "solution_BigCodeBench_583.py",
+        "solution_BigCodeBench_771.py",
+        "solution_BigCodeBench_765.py",
+        "solution_BigCodeBench_139.py",
+        "solution_BigCodeBench_906.py",
+        "__pycache__/solution_BigCodeBench_906.cpython-312.pyc",
+        "__pycache__/solution_BigCodeBench_771.cpython-312.pyc",
+        "__pycache__/solution_BigCodeBench_583.cpython-312.pyc",
+        "__pycache__/solution_BigCodeBench_1019.cpython-312.pyc",
+        "__pycache__/solution_BigCodeBench_360.cpython-312.pyc",
+        "__pycache__/solution_BigCodeBench_139.cpython-312.pyc",
+        "__pycache__/solution_BigCodeBench_765.cpython-312.pyc",
+        "__pycache__/solution_BigCodeBench_928.cpython-312.pyc",
+        "solution_BigCodeBench_360.py",
+        "solution_BigCodeBench_928.py",
+        "solution_BigCodeBench_1019.py"
+      ],
+      "agentMetrics": [
+        {
+          "elapsedMs": 21206,
+          "tokens": 307,
+          "tps": 14.477034801471282,
+          "ttft_ms": 82
+        },
+        {
+          "elapsedMs": 0,
+          "tokens": 8,
+          "tps": 0
+        },
+        {
+          "elapsedMs": 10634,
+          "tokens": 332,
+          "tps": 31.220613127703594,
+          "ttft_ms": 66
+        },
+        {
+          "elapsedMs": 0,
+          "tokens": 8,
+          "tps": 0
+        },
+        {
+          "elapsedMs": 12171,
+          "tokens": 491,
+          "tps": 87.36033022560673,
+          "ttft_ms": 56
+        },
+        {
+          "elapsedMs": 11941,
+          "tokens": 233,
+          "tps": 84.09427220557983,
+          "ttft_ms": 89
+        },
+        {
+          "elapsedMs": 9357,
+          "tokens": 198,
+          "tps": 134.96932515337423,
+          "ttft_ms": 72
+        },
+        {
+          "elapsedMs": 9419,
+          "tokens": 108,
+          "tps": 86.76092544987146,
+          "ttft_ms": 81
+        },
+        {
+          "elapsedMs": 17830,
+          "tokens": 1033,
+          "tps": 105.21491138724791,
+          "ttft_ms": 61
+        },
+        {
+          "elapsedMs": 11828,
+          "tokens": 352,
+          "tps": 103.19251854240568,
+          "ttft_ms": 99
+        },
+        {
+          "elapsedMs": 13833,
+          "tokens": 503,
+          "tps": 97.74962105017684,
+          "ttft_ms": 677
+        },
+        {
+          "elapsedMs": 10480,
+          "tokens": 214,
+          "tps": 124.90515379676648,
+          "ttft_ms": 262
+        },
+        {
+          "elapsedMs": 27343,
+          "tokens": 1875,
+          "tps": 101.70043120982832,
+          "ttft_ms": 269
+        },
+        {
+          "elapsedMs": 14137,
+          "tokens": 538,
+          "tps": 106.73120796714743,
+          "ttft_ms": 101
+        },
+        {
+          "elapsedMs": 12410,
+          "tokens": 284,
+          "tps": 88.73059018339738,
+          "ttft_ms": 302
+        },
+        {
+          "elapsedMs": 12233,
+          "tokens": 365,
+          "tps": 116.06830540274113,
+          "ttft_ms": 74
+        },
+        {
+          "elapsedMs": 13556,
+          "tokens": 316,
+          "tps": 102.17939597749466,
+          "ttft_ms": 113
+        },
+        {
+          "elapsedMs": 12421,
+          "tokens": 152,
+          "tps": 80.57675996607294,
+          "ttft_ms": 140
+        },
+        {
+          "elapsedMs": 14855,
+          "tokens": 434,
+          "tps": 100.98894706224549,
+          "ttft_ms": 82
+        },
+        {
+          "elapsedMs": 13347,
+          "tokens": 290,
+          "tps": 110.31649421789409,
+          "ttft_ms": 110
+        },
+        {
+          "elapsedMs": 11996,
+          "tokens": 107,
+          "tps": 91.02509570395577,
+          "ttft_ms": 15186
+        },
+        {
+          "elapsedMs": 12167,
+          "tokens": 140,
+          "tps": 101.87004293094667,
+          "ttft_ms": 91
+        },
+        {
+          "elapsedMs": 11523,
+          "tokens": 76,
+          "tps": 107.98522307473715,
+          "ttft_ms": 111
+        },
+        {
+          "elapsedMs": 12166,
+          "tokens": 140,
+          "tps": 103.28292143120619,
+          "ttft_ms": 88
+        },
+        {
+          "elapsedMs": 11927,
+          "tokens": 125,
+          "tps": 115.1012891344383,
+          "ttft_ms": 113
+        },
+        {
+          "elapsedMs": 17660,
+          "tokens": 305,
+          "tps": 135.83930877833697,
+          "ttft_ms": 112
+        },
+        {
+          "elapsedMs": 13863,
+          "tokens": 227,
+          "tps": 76.74363568748097,
+          "ttft_ms": 833
+        },
+        {
+          "elapsedMs": 14507,
+          "tokens": 384,
+          "tps": 108.5972850678733,
+          "ttft_ms": 89
+        },
+        {
+          "elapsedMs": 13679,
+          "tokens": 154,
+          "tps": 100.13654984069184,
+          "ttft_ms": 119
+        },
+        {
+          "elapsedMs": 21794,
+          "tokens": 275,
+          "tps": 101.86694325085197,
+          "ttft_ms": 130
+        },
+        {
+          "elapsedMs": 15059,
+          "tokens": 188,
+          "tps": 78.8855320577375,
+          "ttft_ms": 557
+        },
+        {
+          "elapsedMs": 32948,
+          "tokens": 1415,
+          "tps": 84.33864199885562,
+          "ttft_ms": 116
+        },
+        {
+          "elapsedMs": 18788,
+          "tokens": 360,
+          "tps": 106.00082445085684,
+          "ttft_ms": 141
+        },
+        {
+          "elapsedMs": 28186,
+          "tokens": 1155,
+          "tps": 90.2350799615622,
+          "ttft_ms": 140
+        },
+        {
+          "elapsedMs": 35112,
+          "tokens": 1801,
+          "tps": 91.63016214621142,
+          "ttft_ms": 141
+        },
+        {
+          "elapsedMs": 5520,
+          "tokens": 708,
+          "tps": 107.22561298823246,
+          "ttft_ms": 16827
+        },
+        {
+          "elapsedMs": 20933,
+          "tokens": 589,
+          "tps": 112.04108807304546,
+          "ttft_ms": 164
+        },
+        {
+          "elapsedMs": 25435,
+          "tokens": 1172,
+          "tps": 121.54020056207158,
+          "ttft_ms": 159
+        },
+        {
+          "elapsedMs": 21500,
+          "tokens": 581,
+          "tps": 114.11623750319171,
+          "ttft_ms": 103
+        },
+        {
+          "elapsedMs": 22770,
+          "tokens": 756,
+          "tps": 130.6511820821236,
+          "ttft_ms": 153
+        },
+        {
+          "elapsedMs": 40104,
+          "tokens": 2134,
+          "tps": 93.52470691355319,
+          "ttft_ms": 153
+        },
+        {
+          "elapsedMs": 25171,
+          "tokens": 909,
+          "tps": 115.52245634547441,
+          "ttft_ms": 155
+        },
+        {
+          "elapsedMs": 23221,
+          "tokens": 691,
+          "tps": 118.35637086138088,
+          "ttft_ms": 156
+        },
+        {
+          "elapsedMs": 24097,
+          "tokens": 766,
+          "tps": 115.38577410899887,
+          "ttft_ms": 174
+        },
+        {
+          "elapsedMs": 23253,
+          "tokens": 553,
+          "tps": 97.22393150371843,
+          "ttft_ms": 164
+        },
+        {
+          "elapsedMs": 28015,
+          "tokens": 924,
+          "tps": 88.74887142939471,
+          "ttft_ms": 160
+        },
+        {
+          "elapsedMs": 18912,
+          "tokens": 136,
+          "tps": 106.39962447191363,
+          "ttft_ms": 2613
+        },
+        {
+          "elapsedMs": 21787,
+          "tokens": 413,
+          "tps": 107.77661795407099,
+          "ttft_ms": 759
+        },
+        {
+          "elapsedMs": 20732,
+          "tokens": 268,
+          "tps": 100.44601026948015,
+          "ttft_ms": 173
+        },
+        {
+          "elapsedMs": 21472,
+          "tokens": 318,
+          "tps": 93.05864450427251,
+          "ttft_ms": 159
+        },
+        {
+          "elapsedMs": 19698,
+          "tokens": 168,
+          "tps": 106.03382984094925,
+          "ttft_ms": 1909
+        },
+        {
+          "elapsedMs": 25083,
+          "tokens": 572,
+          "tps": 81.83118741058655,
+          "ttft_ms": 146
+        }
+      ],
+      "agentProfileId": "agent-maximo",
+      "agentProfileName": "Máximo",
+      "agentSeed": 4242,
+      "agentTemperature": 0.1,
+      "agentVariant": "baseline",
+      "avgTps": 99.61315440130458,
+      "avgTtftMs": 896.6,
+      "baselineId": "abb04a3c-35ea-4e44-96ae-701697237a0a",
+      "benchmarkEffectiveArgs": [
+        "/home/cristian/.cache/strata-dualgpu-eval-20261003/serve/server.py",
+        "--engine",
+        "strata",
+        "--config",
+        "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/strata-dualgpu-lch1-20261004/strata-dualgpu-iq3s.json",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8350"
+      ],
+      "benchmarkMemoryAdaptive": false,
+      "benchmarkMemoryAttempt": -1,
+      "benchmarkMemoryFitTargetMiB": 0,
+      "benchmarkMemoryPlanner": "llama.cpp-fit-expert-aware",
+      "benchmarkMemoryPolicy": "exact-profile",
+      "benchmarkName": "BigCodeBench-Hard (8 ítems)",
+      "complexityMetrics": {
+        "addedLines": 499,
+        "filesChanged": 16,
+        "filesCreated": 16,
+        "filesDeleted": 0,
+        "removedLines": 0
+      },
+      "elapsedSec": 967.232,
+      "failed": false,
+      "failureKind": "none",
+      "finalScore": 8,
+      "finalTotal": 8,
+      "firstAttemptScore": 2,
+      "firstAttemptTotal": 8,
+      "firstEvaluableSec": 45.121,
+      "firstToolCallSec": 44.503,
+      "firstWriteSec": 44.549,
+      "generationSec": 908.079,
+      "harnessEngineId": "legacy",
+      "harnessEngineVersion": 1,
+      "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+      "honeyEnabled": false,
+      "id": "abb04a3c-35ea-4e44-96ae-701697237a0a",
+      "isBaseline": true,
+      "measurementPhase": "cold",
+      "mode": "custom",
+      "nonGenerationSec": 59.15300000000002,
+      "pass": 1,
+      "passedAfterRepair": true,
+      "passesTotal": 1,
+      "profileConfigFingerprint": "96d34ceb688ca8de83efccd1f26e1b52d8fdc1ce20fb5dd2622b510ba9d41da0",
+      "profileId": "sys-astra-strata-iq3s",
+      "profileName": "ASTRA · Strata IQ3_S · Qwen3.8 Flash Next",
+      "progressGovernor": {
+        "progressEvents": 38,
+        "replanEvents": 0,
+        "stagnationEvents": 3
+      },
+      "qualityScore": 8,
+      "qualityTotal": 8,
+      "ramFreeMb": 0,
+      "ramMb": 0,
+      "ramTotalMb": 0,
+      "repairAttempts": 1,
+      "response": "<think>All 6 failing tasks now pass their local acceptance checks. Summarize.\n</think>\nCorregido/creado y verificado contra los checks de aceptación locales (todos OK):\n\n- `solution_BigCodeBench_928.py` (nuevo): dict de 676 combinaciones de 2 letras con conteos de bigramas del `word` vía `Counter` + `itertools.product`; `''` → todo 0.\n- `solution_BigCodeBench_765.py` (nuevo): copia a `target_dir` solo archivos existentes con contenido (valores `None` y archivos vacíos se saltan); devuelve rutas completas copiadas.\n- `solution_BigCodeBench_771.py` (reparado): nuevo nombre = `grupo1 + '.csv'` (antes usaba sufijo `_processed`); sin `isdir`/`try-except` para que `IOError` se propague; `open(path,'r')`/`open(path,'w')` con `Path` para matchear las aserciones de `mock_open`.\n- `solution_BigCodeBench_1019.py` (reparado): usa `with Image.open(...)` (los mocks parchean el context manager), fallback al comment vía `info.get(...)` sin exigir `dict`, decodifica comment bytes con `from_encoding`; `ValueError` en encoding inválido.\n- `solution_BigCodeBench_583.py` (reparado): `rsa.newkeys(512)` (el test exige `n.bit_length()==512`), PEM (`save_pkcs1(format=\"PEM\")`), AES **MODE_EAX** sin tag separado, archivo escrito en texto (`b64encode`).\n- `solution_BigCodeBench_360.py` (nuevo): `FileNotFoundError`/`ValueError` según caso, stats `{col: {mean, std}}` con `std(ddof=0)` (el test espera 10.0 para [10,30]), bar chart de medias con título/labels pedidos y `bars[:-1]` consistente con el extractor del test.\n\nCompilación: `python3 -m py_compile` OK sobre los 6 archivos. Tests: suites de aceptación locales corrieron verdes (`928 OK`, `765 OK`, `771 OK`, `1019 OK`, `583 OK`, `360 OK`); borré los archivos de check temporales. No toqué `139`, `906` (pasaban).",
+      "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/BigCodeBench-Hard_8_tems__20261004_052308",
+      "runLabel": "BigCodeBench-Hard (8 ítems)",
+      "setupSec": 0,
+      "target": "agent",
+      "thinkingEnabled": true,
+      "timeToFirstAttempt": 436.801,
+      "timedOut": false,
+      "timeoutSec": 1800,
+      "timestamp": 1791103215739,
+      "toolCallQuality": {
+        "expectedCalls": 0,
+        "f1Pct": -1,
+        "failedCalls": 1,
+        "incompleteCalls": 0,
+        "invalidCalls": 0,
+        "matchedExpectedCalls": 0,
+        "missingExpectedCalls": 0,
+        "precisionPct": -1,
+        "recallPct": -1,
+        "redundantCalls": 0,
+        "sequenceExact": false,
+        "successRatePct": 97.61904761904762,
+        "successfulCalls": 41,
+        "totalCalls": 42,
+        "unexpectedCalls": 0
+      },
+      "toolCalls": 42,
+      "totalTime": 967.232,
+      "transportAfterEvaluation": false,
+      "vramFreeMb": 4261,
+      "vramGpu0FreeMb": 3961,
+      "vramGpu0Mb": 20205,
+      "vramGpu0TotalMb": 24576,
+      "vramGpu0UsedPct": 82.21435546875,
+      "vramGpu1FreeMb": 300,
+      "vramGpu1Mb": 23824,
+      "vramGpu1TotalMb": 24576,
+      "vramGpu1UsedPct": 96.94010416666666,
+      "vramMb": 44029,
+      "vramNormalizedImbalancePct": 14.725748697916663,
+      "vramObservedGpu0SharePct": 45.89020872606691,
+      "vramOptimalGpu0SharePct": 92.95939920206524,
+      "vramPlacementAssessment": "gpu1-heavy",
+      "vramTelemetryScope": "device-total",
+      "workspace": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/BigCodeBench-Hard_8_tems__20261004_052308/ASTRA_Strata_IQ3_S_Qwen3_8_Flash_Next__ws"
+    }
+  ]
+}

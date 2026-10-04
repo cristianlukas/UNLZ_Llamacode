@@ -1,0 +1,648 @@
+{
+  "suiteId": "267bb33d-4510-417b-ae3c-6dbbfb2cb08d",
+  "suiteName": "HumanEval (20 ítems)",
+  "profileId": "sys-astra-strata-iq3s",
+  "thinkingEnabled": true,
+  "completedAtUtc": "2026-10-04T08:22:54Z",
+  "results": [
+    {
+      "acceptance": [
+        {
+          "passed": true,
+          "taskId": "HumanEval/0",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/1",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/2",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/3",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/4",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/5",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/6",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/7",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/8",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/9",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/10",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/11",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/12",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/13",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/14",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/15",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/16",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/17",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/18",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/19",
+          "type": "grader:code_tests"
+        }
+      ],
+      "agentFiles": [
+        "solution_HumanEval_0.py",
+        "solution_HumanEval_12.py",
+        "solution_HumanEval_18.py",
+        "solution_HumanEval_1.py",
+        "solution_HumanEval_15.py",
+        "solution_HumanEval_10.py",
+        "__pycache__/solution_HumanEval_6.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_13.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_5.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_7.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_15.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_12.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_10.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_2.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_11.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_3.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_0.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_9.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_4.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_16.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_8.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_17.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_1.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_14.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_18.cpython-312.pyc",
+        "solution_HumanEval_9.py",
+        "solution_HumanEval_4.py",
+        "solution_HumanEval_14.py",
+        "solution_HumanEval_3.py",
+        "solution_HumanEval_6.py",
+        "solution_HumanEval_2.py",
+        "solution_HumanEval_7.py",
+        "solution_HumanEval_19.py",
+        "solution_HumanEval_17.py",
+        "solution_HumanEval_5.py",
+        "solution_HumanEval_13.py",
+        "solution_HumanEval_11.py",
+        "solution_HumanEval_16.py",
+        "solution_HumanEval_8.py"
+      ],
+      "agentMetrics": [
+        {
+          "elapsedMs": 9274,
+          "tokens": 232,
+          "tps": 110.79803237976981,
+          "ttft_ms": 80
+        },
+        {
+          "elapsedMs": 8284,
+          "tokens": 194,
+          "tps": 118.400976502899,
+          "ttft_ms": 85
+        },
+        {
+          "elapsedMs": 8031,
+          "tokens": 194,
+          "tps": 138.0488151996015,
+          "ttft_ms": 47
+        },
+        {
+          "elapsedMs": 7768,
+          "tokens": 89,
+          "tps": 82.14879084364038,
+          "ttft_ms": 75
+        },
+        {
+          "elapsedMs": 8977,
+          "tokens": 299,
+          "tps": 122.50081940347427,
+          "ttft_ms": 54
+        },
+        {
+          "elapsedMs": 9004,
+          "tokens": 132,
+          "tps": 105.5493363185671,
+          "ttft_ms": 91
+        },
+        {
+          "elapsedMs": 8784,
+          "tokens": 87,
+          "tps": 90.76682316118936,
+          "ttft_ms": 77
+        },
+        {
+          "elapsedMs": 8928,
+          "tokens": 163,
+          "tps": 128.4475965327029,
+          "ttft_ms": 58
+        },
+        {
+          "elapsedMs": 9468,
+          "tokens": 146,
+          "tps": 119.74083490527352,
+          "ttft_ms": 92
+        },
+        {
+          "elapsedMs": 9087,
+          "tokens": 87,
+          "tps": 106.39598874892992,
+          "ttft_ms": 78
+        },
+        {
+          "elapsedMs": 9911,
+          "tokens": 212,
+          "tps": 127.81864222838539,
+          "ttft_ms": 60
+        },
+        {
+          "elapsedMs": 10536,
+          "tokens": 175,
+          "tps": 87.05168382828434,
+          "ttft_ms": 95
+        },
+        {
+          "elapsedMs": 9453,
+          "tokens": 78,
+          "tps": 86.5320612380741,
+          "ttft_ms": 82
+        },
+        {
+          "elapsedMs": 10134,
+          "tokens": 198,
+          "tps": 126.69567443050934,
+          "ttft_ms": 66
+        },
+        {
+          "elapsedMs": 10535,
+          "tokens": 165,
+          "tps": 107.03165542293722,
+          "ttft_ms": 99
+        },
+        {
+          "elapsedMs": 10034,
+          "tokens": 97,
+          "tps": 94.2479595802565,
+          "ttft_ms": 86
+        },
+        {
+          "elapsedMs": 10742,
+          "tokens": 200,
+          "tps": 117.73709307117207,
+          "ttft_ms": 68
+        },
+        {
+          "elapsedMs": 11438,
+          "tokens": 120,
+          "tps": 114.68985950492211,
+          "ttft_ms": 104
+        },
+        {
+          "elapsedMs": 11202,
+          "tokens": 95,
+          "tps": 120.07077856420626,
+          "ttft_ms": 93
+        },
+        {
+          "elapsedMs": 12467,
+          "tokens": 257,
+          "tps": 129.55588042546756,
+          "ttft_ms": 75
+        },
+        {
+          "elapsedMs": 11703,
+          "tokens": 131,
+          "tps": 125.15524983280787,
+          "ttft_ms": 107
+        },
+        {
+          "elapsedMs": 11778,
+          "tokens": 106,
+          "tps": 98.38500092816038,
+          "ttft_ms": 96
+        },
+        {
+          "elapsedMs": 11962,
+          "tokens": 164,
+          "tps": 131.9707089402108,
+          "ttft_ms": 75
+        },
+        {
+          "elapsedMs": 12291,
+          "tokens": 132,
+          "tps": 112.42653947704626,
+          "ttft_ms": 110
+        },
+        {
+          "elapsedMs": 12076,
+          "tokens": 81,
+          "tps": 88.6408404464872,
+          "ttft_ms": 100
+        },
+        {
+          "elapsedMs": 13034,
+          "tokens": 212,
+          "tps": 120.9700427960057,
+          "ttft_ms": 80
+        },
+        {
+          "elapsedMs": 13768,
+          "tokens": 128,
+          "tps": 117.0767401445166,
+          "ttft_ms": 115
+        },
+        {
+          "elapsedMs": 13733,
+          "tokens": 87,
+          "tps": 81.43779837124404,
+          "ttft_ms": 100
+        },
+        {
+          "elapsedMs": 15212,
+          "tokens": 262,
+          "tps": 103.99714206327154,
+          "ttft_ms": 83
+        },
+        {
+          "elapsedMs": 14341,
+          "tokens": 147,
+          "tps": 108.88082364269314,
+          "ttft_ms": 116
+        },
+        {
+          "elapsedMs": 14754,
+          "tokens": 141,
+          "tps": 75.647835184291,
+          "ttft_ms": 107
+        },
+        {
+          "elapsedMs": 15254,
+          "tokens": 270,
+          "tps": 116.12403767579889,
+          "ttft_ms": 91
+        },
+        {
+          "elapsedMs": 14982,
+          "tokens": 166,
+          "tps": 100.55121448906657,
+          "ttft_ms": 118
+        },
+        {
+          "elapsedMs": 14445,
+          "tokens": 114,
+          "tps": 104.38604523395294,
+          "ttft_ms": 108
+        },
+        {
+          "elapsedMs": 16079,
+          "tokens": 290,
+          "tps": 109.96094490577484,
+          "ttft_ms": 93
+        },
+        {
+          "elapsedMs": 16267,
+          "tokens": 142,
+          "tps": 109.49186521705604,
+          "ttft_ms": 126
+        },
+        {
+          "elapsedMs": 16271,
+          "tokens": 121,
+          "tps": 89.2462015046467,
+          "ttft_ms": 116
+        },
+        {
+          "elapsedMs": 17546,
+          "tokens": 272,
+          "tps": 104.06703141140912,
+          "ttft_ms": 95
+        },
+        {
+          "elapsedMs": 16185,
+          "tokens": 122,
+          "tps": 121.80511182108626,
+          "ttft_ms": 129
+        },
+        {
+          "elapsedMs": 16121,
+          "tokens": 84,
+          "tps": 86.61579707156115,
+          "ttft_ms": 119
+        },
+        {
+          "elapsedMs": 17027,
+          "tokens": 199,
+          "tps": 111.18560733042798,
+          "ttft_ms": 100
+        },
+        {
+          "elapsedMs": 16746,
+          "tokens": 123,
+          "tps": 117.63580719204286,
+          "ttft_ms": 134
+        },
+        {
+          "elapsedMs": 16398,
+          "tokens": 82,
+          "tps": 108.19369309935348,
+          "ttft_ms": 118
+        },
+        {
+          "elapsedMs": 17162,
+          "tokens": 161,
+          "tps": 113.34835257673895,
+          "ttft_ms": 103
+        },
+        {
+          "elapsedMs": 18059,
+          "tokens": 107,
+          "tps": 113.29944938585345,
+          "ttft_ms": 138
+        },
+        {
+          "elapsedMs": 17971,
+          "tokens": 87,
+          "tps": 105.85229346635845,
+          "ttft_ms": 125
+        },
+        {
+          "elapsedMs": 20790,
+          "tokens": 332,
+          "tps": 94.07764239161236,
+          "ttft_ms": 111
+        },
+        {
+          "elapsedMs": 18438,
+          "tokens": 110,
+          "tps": 112.54348270922857,
+          "ttft_ms": 140
+        },
+        {
+          "elapsedMs": 21991,
+          "tokens": 398,
+          "tps": 87.69030779738692,
+          "ttft_ms": 134
+        },
+        {
+          "elapsedMs": 7330,
+          "tokens": 53,
+          "tps": 77.9526400941315,
+          "ttft_ms": 41
+        },
+        {
+          "elapsedMs": 7927,
+          "tokens": 142,
+          "tps": 113.57274254178998,
+          "ttft_ms": 58
+        },
+        {
+          "elapsedMs": 8936,
+          "tokens": 107,
+          "tps": 96.7275357078286,
+          "ttft_ms": 93
+        },
+        {
+          "elapsedMs": 8743,
+          "tokens": 76,
+          "tps": 91.33517606056964,
+          "ttft_ms": 75
+        },
+        {
+          "elapsedMs": 10211,
+          "tokens": 266,
+          "tps": 134.4384918629334,
+          "ttft_ms": 61
+        },
+        {
+          "elapsedMs": 9874,
+          "tokens": 176,
+          "tps": 122.61390553155914,
+          "ttft_ms": 114
+        },
+        {
+          "elapsedMs": 9910,
+          "tokens": 175,
+          "tps": 119.59270142827856,
+          "ttft_ms": 123
+        },
+        {
+          "elapsedMs": 10114,
+          "tokens": 159,
+          "tps": 95.46109510086455,
+          "ttft_ms": 70
+        },
+        {
+          "elapsedMs": 10234,
+          "tokens": 215,
+          "tps": 124.36372049976863,
+          "ttft_ms": 65
+        },
+        {
+          "elapsedMs": 10207,
+          "tokens": 131,
+          "tps": 101.81874708534122,
+          "ttft_ms": 100
+        },
+        {
+          "elapsedMs": 9982,
+          "tokens": 104,
+          "tps": 100.16372917268613,
+          "ttft_ms": 81
+        },
+        {
+          "elapsedMs": 17767,
+          "tokens": 257,
+          "tps": 124.37088656600851,
+          "ttft_ms": 85
+        },
+        {
+          "elapsedMs": 1093,
+          "tokens": 0,
+          "tps": 0,
+          "ttft_ms": 105
+        },
+        {
+          "elapsedMs": 0,
+          "tokens": 8,
+          "tps": 0
+        }
+      ],
+      "agentProfileId": "agent-maximo",
+      "agentProfileName": "Máximo",
+      "agentSeed": 4242,
+      "agentTemperature": 0.1,
+      "agentVariant": "baseline",
+      "avgTps": 108.31646362373952,
+      "avgTtftMs": 93.91935483870968,
+      "baselineId": "68e79445-0033-49aa-90a9-5aa8a03d0582",
+      "benchmarkEffectiveArgs": [
+        "/home/cristian/.cache/strata-dualgpu-eval-20261003/serve/server.py",
+        "--engine",
+        "strata",
+        "--config",
+        "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/strata-dualgpu-lch1-20261004/strata-dualgpu-iq3s.json",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8350"
+      ],
+      "benchmarkMemoryAdaptive": false,
+      "benchmarkMemoryAttempt": -1,
+      "benchmarkMemoryFitTargetMiB": 0,
+      "benchmarkMemoryPlanner": "llama.cpp-fit-expert-aware",
+      "benchmarkMemoryPolicy": "exact-profile",
+      "benchmarkName": "HumanEval (20 ítems)",
+      "complexityMetrics": {
+        "addedLines": 507,
+        "filesChanged": 39,
+        "filesCreated": 39,
+        "filesDeleted": 0,
+        "removedLines": 0
+      },
+      "elapsedSec": 779.6,
+      "failed": false,
+      "failureKind": "none",
+      "finalScore": 20,
+      "finalTotal": 20,
+      "firstAttemptScore": 19,
+      "firstAttemptTotal": 20,
+      "firstEvaluableSec": 10.043,
+      "firstToolCallSec": 9.361,
+      "firstWriteSec": 9.408,
+      "generationSec": 768.769,
+      "harnessEngineId": "legacy",
+      "harnessEngineVersion": 1,
+      "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+      "honeyEnabled": false,
+      "id": "68e79445-0033-49aa-90a9-5aa8a03d0582",
+      "isBaseline": true,
+      "measurementPhase": "cold",
+      "mode": "custom",
+      "nonGenerationSec": 10.831000000000017,
+      "pass": 1,
+      "passedAfterRepair": true,
+      "passesTotal": 1,
+      "profileConfigFingerprint": "96d34ceb688ca8de83efccd1f26e1b52d8fdc1ce20fb5dd2622b510ba9d41da0",
+      "profileId": "sys-astra-strata-iq3s",
+      "profileName": "ASTRA · Strata IQ3_S · Qwen3.8 Flash Next",
+      "progressGovernor": {
+        "progressEvents": 41,
+        "replanEvents": 0,
+        "stagnationEvents": 0
+      },
+      "qualityScore": 20,
+      "qualityTotal": 20,
+      "ramFreeMb": 0,
+      "ramMb": 0,
+      "ramTotalMb": 0,
+      "repairAttempts": 1,
+      "response": "[turno cancelado por el usuario]",
+      "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/HumanEval_20_tems__20261004_050854",
+      "runLabel": "HumanEval (20 ítems)",
+      "setupSec": 0,
+      "target": "agent",
+      "thinkingEnabled": true,
+      "timeToFirstAttempt": 758.801,
+      "timedOut": false,
+      "timeoutSec": 1800,
+      "timestamp": 1791102159612,
+      "toolCallQuality": {
+        "expectedCalls": 0,
+        "f1Pct": -1,
+        "failedCalls": 1,
+        "incompleteCalls": 0,
+        "invalidCalls": 0,
+        "matchedExpectedCalls": 0,
+        "missingExpectedCalls": 0,
+        "precisionPct": -1,
+        "recallPct": -1,
+        "redundantCalls": 0,
+        "sequenceExact": false,
+        "successRatePct": 97.61904761904762,
+        "successfulCalls": 41,
+        "totalCalls": 42,
+        "unexpectedCalls": 0
+      },
+      "toolCalls": 42,
+      "totalTime": 779.6,
+      "transportAfterEvaluation": false,
+      "vramFreeMb": 4291,
+      "vramGpu0FreeMb": 3991,
+      "vramGpu0Mb": 20196,
+      "vramGpu0TotalMb": 24576,
+      "vramGpu0UsedPct": 82.177734375,
+      "vramGpu1FreeMb": 300,
+      "vramGpu1Mb": 23824,
+      "vramGpu1TotalMb": 24576,
+      "vramGpu1UsedPct": 96.94010416666666,
+      "vramMb": 44020,
+      "vramNormalizedImbalancePct": 14.762369791666663,
+      "vramObservedGpu0SharePct": 45.87914584279873,
+      "vramOptimalGpu0SharePct": 93.00862269867164,
+      "vramPlacementAssessment": "gpu1-heavy",
+      "vramTelemetryScope": "device-total",
+      "workspace": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/HumanEval_20_tems__20261004_050854/ASTRA_Strata_IQ3_S_Qwen3_8_Flash_Next__ws"
+    }
+  ]
+}

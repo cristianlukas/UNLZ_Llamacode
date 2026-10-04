@@ -1,0 +1,89 @@
+{
+  "date": "2026-10-04",
+  "candidate": {
+    "fork": "Hardin22/Strata-DualGPU",
+    "forkCommit": "73bbf3861b48e258cfd076ba7970c078373b8e1a",
+    "runtimeVersion": "Strata 0.1.38",
+    "binary": "/home/cristian/.cache/strata-dualgpu-eval-20261003/build-manual/strata",
+    "binarySha256": "64ab4075be5f54659e2e75c3293afbc263463987672fb010338332c14c112295"
+  },
+  "model": {
+    "name": "Qwen3.8-Flash-Next-GSQ-RCO IQ3_S",
+    "shards": [
+      "/media/cristian/7CFE1E0FFE1DC1F6/models/Strata-review-20261002/models/IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf",
+      "/media/cristian/7CFE1E0FFE1DC1F6/models/Strata-review-20261002/models/IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf"
+    ],
+    "pack": "/media/cristian/7CFE1E0FFE1DC1F6/models/Strata-review-20261002/data/packs/iq3_s",
+    "mtp": "/media/cristian/7CFE1E0FFE1DC1F6/models/Strata-review-20261002/data/mtp/rt",
+    "expertProfile": "/home/cristian/.cache/strata-review-20261002/Strata-0.1.35/data/expert-profile.bin"
+  },
+  "llamacode": {
+    "route": "ASTRA / Strata managed benchmark",
+    "launchProfileId": "sys-astra-strata-iq3s",
+    "agentProfileId": "agent-maximo",
+    "thinkingEnabled": true,
+    "context": 131072,
+    "kv": "int8",
+    "residentKvCells": 32768,
+    "mtpDrafts": 4,
+    "gpu": [0, 1],
+    "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+    "profileConfigFingerprint": "96d34ceb688ca8de83efccd1f26e1b52d8fdc1ce20fb5dd2622b510ba9d41da0",
+    "configPath": "artifacts/strata-dualgpu-lch1-20261004/strata-dualgpu-iq3s.json",
+    "configSha256": "422cd1fed1da615f68369c8a6182ee6b0f69216a7ce78e184372527ab8b43a7e"
+  },
+  "results": {
+    "he0": {
+      "id": "f63b9395-6118-47a3-aae5-49d25bda7dc1",
+      "final": "1/1",
+      "firstAttempt": "0/1",
+      "repairs": 1,
+      "elapsedSeconds": 16.067,
+      "avgTps": 118.62654404962724,
+      "timedOut": false,
+      "failed": false
+    },
+    "he20": {
+      "id": "68e79445-0033-49aa-90a9-5aa8a03d0582",
+      "final": "20/20",
+      "firstAttempt": "19/20",
+      "repairs": 1,
+      "elapsedSeconds": 779.6,
+      "avgTps": 108.31646362373952,
+      "timedOut": false,
+      "failed": false
+    },
+    "bcb8": {
+      "id": "abb04a3c-35ea-4e44-96ae-701697237a0a",
+      "final": "8/8",
+      "firstAttempt": "2/8",
+      "repairs": 1,
+      "elapsedSeconds": 967.232,
+      "avgTps": 99.61315440130458,
+      "timedOut": false,
+      "failed": false
+    },
+    "adversarial": {
+      "id": "8febe0e6-d604-4a85-8bc8-b4f11e8aadea",
+      "final": "10/10",
+      "firstAttempt": "7/10",
+      "repairs": 1,
+      "elapsedSeconds": 702.242,
+      "avgTps": 100.04527265250822,
+      "timedOut": false,
+      "failed": false
+    }
+  },
+  "baseline": {
+    "variant": "Strata 0.1.35 IQ3_S",
+    "files": [
+      "artifacts/strata-swift-vs-sol-lch1-20261003/sol_he20.json",
+      "artifacts/strata-swift-vs-sol-lch1-20261003/sol_bcb8.json",
+      "artifacts/strata-swift-vs-sol-lch1-20261003/sol_adversarial.json"
+    ],
+    "thinkingEnabled": true,
+    "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+    "profileConfigFingerprint": "2a78d3e735d420b858728e1c0a7f76153d40fbfc03aef9272f7dd37addece5ad"
+  },
+  "promotion": "not promoted: functional suites passed, but the single LCH1 run was slower than the Strata 0.1.35 reference in HE20 and adversarial and does not establish a repeated paired performance gain"
+}

@@ -116,3 +116,7 @@ Referencias externas: [README del fork](https://github.com/Hardin22/Strata-DualG
 - Para repetir sólo velocidad, comprobar primero la ocupación de las dos GPU y usar `benchmark.py`; consultar los resúmenes separados del baseline con y sin carga concurrente.
 - No repetir Computer Use textual hasta cambiar el modelo/quant, sampling, corpus o motor. La limitación pendiente es GUI real, no el corpus ya pasado.
 - No volver a usar los números del post como equivalentes a IQ3_S/RTX 3090 ni como prueba de calidad del harness.
+
+## Actualización LC-H1 del 2026-10-04
+
+La validación pendiente ya se ejecutó mediante LlamaCode con thinking activado y el fork 0.1.38. HE0, HE20, BCB8 y adversarial finalizaron con 1/1, 20/20, 8/8 y 10/10. El informe detallado, la comparación con Strata 0.1.35 y los artefactos están en [`docs/strata-dualgpu-lch1-20261004.md`](strata-dualgpu-lch1-20261004.md) y [`artifacts/strata-dualgpu-lch1-20261004/`](../artifacts/strata-dualgpu-lch1-20261004/). No se promueve: el fork tardó más en HE20 y adversarial en la corrida de LlamaCode, y falta repetir el A/B con fingerprints/protocolo controlados.
