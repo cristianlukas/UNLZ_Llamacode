@@ -153,3 +153,30 @@ crecimiento neto de swap. La telemetría llegó a 18.3 GiB en la GPU limitada y
 22.1 GiB en la completa; la carga terminó sin error CUDA ni timeout. No se
 promovió ni modificó ningún perfil productivo. Los recibos, configuración y
 log están en [`artifacts/strata-dualvram-q4-20261005/`](../artifacts/strata-dualvram-q4-20261005/).
+
+## 2026-10-05 — Iteraciones de `spec-min-p` en dual18
+
+Se usó el harness de LlamaCode, sin editar perfiles productivos, con Strata v0.1.39, el modelo UD-Q4_K_XL, split `18/30`, `--vram-reserve-mib 2048`, contexto 131072, MTP4/KV int8, `agent-maximo`, thinking activado y HarnessSpec `sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef`. La referencia dual18 anterior usó la misma cadena y configuración, con `--spec-min-p 0.5`.
+
+### Mejor candidato completo: `--spec-min-p 0.65`
+
+| Suite | Inicial → final | Reparaciones | Tiempo |
+|---|---:|---:|---:|
+| HE0 | 0/1 → **1/1** | 1 | 30,096 s |
+| HE20 | 19/20 → **20/20** | 1 | 1170,346 s |
+| BCB8 | 4/8 → **8/8** | 1 | 662,665 s |
+| Adversarial v1 | 7/10 → **10/10** | 1 | 827,933 s |
+
+Total: **39/39 final, 30/39 inicial en 2691,040 s**. Frente al dual18 con `spec-min-p 0.5` (2916,810 s), son 225,770 s menos (**−7,74%**), con los mismos scores finales. En Server Speed v1 (una pasada, un warmup) obtuvo 73,77 tok/s de media y 74,95 tok/s de mediana decode, frente a 72,50/72,9 del control; el TTFT mediano fue 1238,5 ms frente a 1242,5 ms. Es una medición screening con pocas muestras y un solo LC-H1 completo: evidencia favorable para una repetición apareada, no promoción del perfil.
+
+Comparado con SOL del 3 oct. con thinking activado, `spec-min-p 0.65` obtuvo 38/38 finales en HE20+BCB8+Adversarial, igual score que SOL, en 2660,944 s frente a 1534,2 s (**1,73× más lento**). El cambio mejora el anterior Strata dual18; no supera a SOL en latencia. No se modificó el perfil productivo ni la configuración por defecto.
+
+### Candidato `--spec-min-p 0.7` y otros descartes
+
+`spec-min-p 0.7` dio 74,08 tok/s de media (+2,18% en Server Speed v1), 1159,534 s en HE20 y aprobó HE0 1/1 y HE20 20/20. BCB8 obtuvo **7/8** tras dos reparaciones y falló el gate; el error fue calcular desviación poblacional 14,14 donde los tests pedían desviación muestral 10. La repetición posterior acabó en la guarda pre-herramientas antes de puntuar tareas, por lo que no cuenta como 0/8 ni como otra medida de calidad. ADV no se ejecutó porque BCB8 no pasó.
+
+Otros screenings Server Speed v1, siempre frente al dual18 de control: `layer_split=19/29`, 72,95 tok/s (+0,6%; no material); `22/26`, 72,89 tok/s sin mejora de mediana; `spec-min-p 0.3`, 66,20 tok/s (−8,7%); y reserva VRAM 1024 MiB, 75,27 tok/s (+3,8%) pero con `cudaMalloc(16.95 GiB)` fallido, fallback de caché a 12,71 GiB y solo 458 MiB libres en GPU1. Se descartaron los tres primeros por velocidad y la reserva 1024 MiB por margen de memoria insuficiente.
+
+### Evidencia y estado de ejecución
+
+Los recibos compactos del LC-H1 completo, el screening `.65`, su perfil/config y los recibos evaluables/no evaluables de `.7` están en [`artifacts/strata-dualvram-q4-20261005/spec065/`](../artifacts/strata-dualvram-q4-20261005/spec065/). El JSON Server Speed de `.65` conserva el id interno anterior `test-strata-unsloth-udq4-spec07`, porque se renombró el perfil aislado después de ese screening; `benchmarkEffectiveArgs` apunta al config `q4-v139-spec065.json` y el nombre mostrado durante la ejecución fue `.65`. Los otros screenings quedan en el directorio de recibos de LlamaCode y se resumen arriba. Cada suite de `.65` conservó el mismo hash de HarnessSpec y thinking activado. Al terminar se detuvo el servidor desde LlamaCode: `benchmarkRunning=false`, `serverState=stopped` y el puerto 8350 cerrado. La única recomendación es repetir `.65` contra dual18 y SOL en orden apareado antes de cambiar cualquier perfil de uso.

@@ -1,0 +1,27 @@
+{
+  "id": "test-strata-unsloth-udq4-spec065",
+  "tier": "ASTRA-Strata",
+  "order": 508,
+  "extra": true,
+  "benchmark": true,
+  "best": false,
+  "favorite": false,
+  "alias": "ASTRA UD-Q4 spec-min-p .65 test",
+  "displayName": "[prueba] ASTRA · Strata UD-Q4 · spec-min-p 0,65",
+  "minVramGb": 12,
+  "backend": {
+    "kind": "cloud",
+    "baseUrl": "http://127.0.0.1:8350",
+    "model": "astra-strata",
+    "ctx": 131072,
+    "port": 8350,
+    "managedServer": {
+      "type": "astra-strata",
+      "port": 8350
+    }
+  },
+  "agentProfileId": "agent-maximo",
+  "reasoningEffort": "medium",
+  "reasoningBudget": 8192,
+  "comment": "LC-H1 screening: igual a dual18, salvo --spec-min-p 0.65 en vez de 0.5. Perfil aislado de prueba."
+}

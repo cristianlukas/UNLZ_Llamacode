@@ -1,0 +1,212 @@
+{
+    "acceptance": [
+        {
+            "output": "Traceback (most recent call last):\n  File \"/tmp/LlamaCode-NcOOFi/candidate.py\", line 65, in <module>\n    check(task_func)\n  File \"/tmp/LlamaCode-NcOOFi/candidate.py\", line 63, in check\n    raise AssertionError(' | '.join(details))\nAssertionError: Traceback (most recent call last):\n  File \"/tmp/LlamaCode-NcOOFi/candidate.py\", line 21, in test_case_1\n    result = task_func('abcdef')\n             ^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/LlamaCode-NcOOFi/candidate.py\", line 10, in task_func\n    for key, value in kwargs.items():\n                      ^^^^^^^^^^^^\nAttributeError: 'str' object has no attribute 'items'\n | Traceback (most recent call last):\n  File \"/tmp/LlamaCode-NcOOFi/candidate.py\", line 29, in test_case_2\n    result = task_func('aabbcc')\n             ^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/LlamaCode-NcOOFi/candidate.py\", line 10, in task_func\n    for key, value in kwargs.items():\n                      ^^^^^^^^^^^^\nAttributeError: 'str' object has no attribute 'items'\n | Traceback (most recent call last):\n  File \"/tmp/LlamaCode-NcOOFi/candidate.py\", line 37, in test_case_3\n    result = task_func('fedcba')\n             ^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/LlamaCode-NcOOFi/candidate.py\", line 10, in task_func\n    for key, value in kwargs.items():\n                      ^^^^^^^^^^^^\nAttributeError: 'str' object has no attribute 'items'\n | Traceback (most recent call last):\n  File \"/tmp/LlamaCode-NcOOFi/candidate.py\", line 44, in test_case_4\n    result = task_func('cadbfe')\n             ^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/LlamaCode-NcOOFi/candidate.py\", line 10, in task_func\n    for key, value in kwargs.items():\n                      ^^^^^^^^^^^^\nAttributeError: 'str' object has no attribute 'items'\n | Traceback (most recent call last):\n  File \"/tmp/LlamaCode-NcOOFi/candidate.py\", line 51, in test_case_5\n    result = task_func('')\n             ^^^^^^^^^^^^^\n  File \"/tmp/LlamaCode-NcOOFi/candidate.py\", line 10, in task_func\n    for key, value in kwargs.items():\n                      ^^^^^^^^^^^^\nAttributeError: 'str' object has no attribute 'items'",
+            "passed": false,
+            "taskId": "BigCodeBench/928",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_BigCodeBench_765.py",
+            "passed": false,
+            "taskId": "BigCodeBench/765",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_BigCodeBench_771.py",
+            "passed": false,
+            "taskId": "BigCodeBench/771",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_BigCodeBench_1019.py",
+            "passed": false,
+            "taskId": "BigCodeBench/1019",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_BigCodeBench_906.py",
+            "passed": false,
+            "taskId": "BigCodeBench/906",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_BigCodeBench_583.py",
+            "passed": false,
+            "taskId": "BigCodeBench/583",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_BigCodeBench_139.py",
+            "passed": false,
+            "taskId": "BigCodeBench/139",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_BigCodeBench_360.py",
+            "passed": false,
+            "taskId": "BigCodeBench/360",
+            "type": "grader:code_tests"
+        }
+    ],
+    "agentFiles": [
+        "solution_BigCodeBench_928.py"
+    ],
+    "agentMetrics": [
+        {
+            "elapsedMs": 19529,
+            "tokens": 233,
+            "tps": 11.930974448256439,
+            "ttft_ms": 84
+        },
+        {
+            "elapsedMs": 0,
+            "tokens": 8,
+            "tps": 0
+        },
+        {
+            "elapsedMs": 0,
+            "tokens": 339,
+            "tps": 0,
+            "ttft_ms": 0
+        },
+        {
+            "elapsedMs": 8799,
+            "tokens": 237,
+            "tps": 26.93487896351858,
+            "ttft_ms": 55
+        },
+        {
+            "elapsedMs": 0,
+            "tokens": 8,
+            "tps": 0
+        },
+        {
+            "elapsedMs": 8805,
+            "tokens": 292,
+            "tps": 33.16297558205565,
+            "ttft_ms": 56
+        },
+        {
+            "elapsedMs": 0,
+            "tokens": 8,
+            "tps": 0
+        }
+    ],
+    "agentProfileId": "agent-maximo",
+    "agentProfileName": "Máximo",
+    "agentSeed": 4242,
+    "agentTemperature": 0.1,
+    "agentVariant": "baseline",
+    "avgTps": 0,
+    "avgTtftMs": 0,
+    "benchmarkEffectiveArgs": [
+        "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/Strata-0.1.35/serve/server.py",
+        "--engine",
+        "strata",
+        "--config",
+        "/home/cristian/.cache/strata-0.1.39-q001/eval-q139-spec07-20261005/q4-v139-spec07.json",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8350"
+    ],
+    "benchmarkMemoryAdaptive": false,
+    "benchmarkMemoryAttempt": -1,
+    "benchmarkMemoryFitTargetMiB": 0,
+    "benchmarkMemoryPlanner": "llama.cpp-fit-expert-aware",
+    "benchmarkMemoryPolicy": "exact-profile",
+    "benchmarkName": "BigCodeBench-Hard (8 ítems)",
+    "complexityMetrics": {
+        "addedLines": 9,
+        "filesChanged": 1,
+        "filesCreated": 1,
+        "filesDeleted": 0,
+        "removedLines": 0
+    },
+    "elapsedSec": 37.791,
+    "failed": true,
+    "failureDetail": "Se alcanzó el límite preventivo de salida previa a herramientas (64000 caracteres), incluso después de un reintento correctivo.",
+    "failureKind": "infrastructure",
+    "failureMessage": "El agente produjo demasiado texto antes de usar herramientas.",
+    "failureStage": "agent",
+    "finalScore": 0,
+    "finalTotal": 8,
+    "firstAttemptScore": 0,
+    "firstAttemptTotal": 8,
+    "firstEvaluableSec": -1,
+    "firstToolCallSec": -1,
+    "firstWriteSec": -1,
+    "generationSec": 37.133,
+    "harnessEngineId": "legacy",
+    "harnessEngineVersion": 1,
+    "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+    "honeyEnabled": false,
+    "id": "f2fa7e74-33bd-4c38-8bc4-3d8912595d70",
+    "measurementPhase": "cold",
+    "mode": "custom",
+    "nonGenerationSec": 0.6579999999999941,
+    "pass": 1,
+    "passedAfterRepair": false,
+    "passesTotal": 1,
+    "profileConfigFingerprint": "ca6b97c690b62b5ad95e1ef5d6f00d2482cc55d01f772f93eebf469ae23d29c4",
+    "profileId": "test-strata-unsloth-udq4-spec07",
+    "profileName": "[prueba] ASTRA · Strata UD-Q4 · spec-min-p 0,7",
+    "progressGovernor": {
+        "progressEvents": 0,
+        "replanEvents": 0,
+        "stagnationEvents": 0
+    },
+    "qualityScore": 0,
+    "qualityTotal": 8,
+    "ramFreeMb": 0,
+    "ramMb": 0,
+    "ramTotalMb": 0,
+    "repairAttempts": 0,
+    "response": "[turno cancelado por el usuario]",
+    "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/BigCodeBench-Hard_8_tems__20261005_043421",
+    "runLabel": "BigCodeBench-Hard (8 ítems)",
+    "setupSec": 0,
+    "target": "agent",
+    "thinkingEnabled": true,
+    "timeToFirstAttempt": 37.791,
+    "timedOut": false,
+    "timeoutSec": 1800,
+    "timestamp": 1791185745281,
+    "toolCallQuality": {
+        "expectedCalls": 0,
+        "f1Pct": -1,
+        "failedCalls": 0,
+        "incompleteCalls": 0,
+        "invalidCalls": 0,
+        "matchedExpectedCalls": 0,
+        "missingExpectedCalls": 0,
+        "precisionPct": -1,
+        "recallPct": -1,
+        "redundantCalls": 0,
+        "sequenceExact": false,
+        "successRatePct": -1,
+        "successfulCalls": 0,
+        "totalCalls": 0,
+        "unexpectedCalls": 0
+    },
+    "toolCalls": 0,
+    "totalTime": 37.791,
+    "transportAfterEvaluation": false,
+    "vramFreeMb": 7274,
+    "vramGpu0FreeMb": 5790,
+    "vramGpu0Mb": 18332,
+    "vramGpu0TotalMb": 24576,
+    "vramGpu0UsedPct": 74.59309895833334,
+    "vramGpu1FreeMb": 1484,
+    "vramGpu1Mb": 22640,
+    "vramGpu1TotalMb": 24576,
+    "vramGpu1UsedPct": 92.12239583333334,
+    "vramMb": 40972,
+    "vramNormalizedImbalancePct": 17.529296875,
+    "vramObservedGpu0SharePct": 44.742751147124864,
+    "vramOptimalGpu0SharePct": 79.59857025020621,
+    "vramPlacementAssessment": "gpu1-heavy",
+    "vramTelemetryScope": "device-total",
+    "workspace": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/BigCodeBench-Hard_8_tems__20261005_043421/_prueba_ASTRA_Strata_UD-Q4_spec-min-p_0_7__ws"
+}
