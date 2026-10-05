@@ -119,3 +119,37 @@ directorio de usuario aislado pasó **77/77 tests**. La evaluación anterior de
 Q4 a 38 GiB queda superada para decidir si el modelo puede pasar HE20: la corrida
 v0.1.39 a 70 GiB completó HE0, HE20, BCB8 y ADV. El candidato se conserva; la
 promoción operativa queda pendiente de repetición y comparación de latencia.
+
+## 2026-10-05 — Split dual con VRAM útil asimétrica
+
+Se repitió LC-H1 por LlamaCode con Strata v0.1.39 y el mismo HarnessSpec
+(`cca4645b…`), `agent-maximo`, thinking activado, seed 4242, temperatura 0.1 y
+hasta dos reparaciones. La GPU0 tiene 20–22 GiB útiles por un defecto de memoria;
+la GPU1 conserva 24 GiB. El split explícito `18/30` asignó las capas 0–17 a
+GPU0 y 18–47 a GPU1. Se añadió `--vram-reserve-mib 2048`, sin presupuesto
+residente de expertos, contexto 131072, KV int8/32768, MTP/spec 4 y caché/
+prefill automáticos.
+
+| Suite | Inicial → final | Reparaciones | Tiempo | Velocidad media |
+|---|---:|---:|---:|---:|
+| HE0 | 0/1 → **1/1** | 1 | 30.078 s | 49.30 tok/s |
+| HE20 | 19/20 → **20/20** | 1 | 1179.412 s | 62.02 tok/s |
+| BCB8 | 3/8 → **8/8** | 1 | 704.179 s | 64.64 tok/s |
+| Adversarial v1 | 7/10 → **10/10** | 1 | 1003.141 s | 66.63 tok/s |
+
+El total fue **39/39 final y 30/39 inicial** en 2916.810 s. Frente al mismo
+Strata v0.1.39 con presupuesto 70 GiB en una sola GPU (39/39 en 5365.807 s),
+este modo dual redujo el tiempo total **45.6%**. En la comparación publicada de
+SOL del 3 oct., HE20+BCB8+ADV sumaron 38/38 finales en 1534.2 s; este split
+dual también hizo 38/38 finales en esas tres suites, pero tardó 2886.732 s
+(**1.88× más**). Primera pasada: 29/38 para ambos. BCB8 fue algo más rápido que
+SOL (704.2 vs 726.9 s) y acabó 8/8 frente a 7/8; HE20 y ADV fueron más lentas.
+Es una mejora clara sobre el Q4 de una GPU y una pequeña ventaja de calidad
+final frente a esa corrida SOL, no una victoria global por velocidad ni base
+suficiente para cambiar el perfil productivo: falta una repetición apareada.
+
+Durante HE20/BCB8/ADV quedaron aproximadamente 38.9–40.1 GiB disponibles, sin
+crecimiento neto de swap. La telemetría llegó a 18.3 GiB en la GPU limitada y
+22.1 GiB en la completa; la carga terminó sin error CUDA ni timeout. No se
+promovió ni modificó ningún perfil productivo. Los recibos, configuración y
+log están en [`artifacts/strata-dualvram-q4-20261005/`](../artifacts/strata-dualvram-q4-20261005/).

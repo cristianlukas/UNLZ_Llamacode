@@ -1,0 +1,432 @@
+{
+  "suiteId": "05c28394-11d0-41fe-a55f-b3cb69db9c15",
+  "suiteName": "BigCodeBench-Hard (8 ítems)",
+  "profileId": "test-strata-unsloth-udq4-dual18",
+  "thinkingEnabled": true,
+  "completedAtUtc": "2026-10-05T04:15:15Z",
+  "results": [
+    {
+      "acceptance": [
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/928",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/765",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/771",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/1019",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/906",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/583",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/139",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/360",
+          "type": "grader:code_tests"
+        }
+      ],
+      "agentFiles": [
+        "solution_BigCodeBench_583.py",
+        "solution_BigCodeBench_771.py",
+        "solution_BigCodeBench_765.py",
+        "solution_BigCodeBench_139.py",
+        "solution_BigCodeBench_906.py",
+        "solution_BigCodeBench_360.py",
+        "solution_BigCodeBench_928.py",
+        "solution_BigCodeBench_1019.py"
+      ],
+      "agentMetrics": [
+        {
+          "elapsedMs": 18372,
+          "tokens": 294,
+          "tps": 60.03920927952949,
+          "ttft_ms": 82
+        },
+        {
+          "elapsedMs": 18158,
+          "tokens": 248,
+          "tps": 64.51612903225806,
+          "ttft_ms": 86
+        },
+        {
+          "elapsedMs": 4890,
+          "tokens": 205,
+          "tps": 68.88440860215054,
+          "ttft_ms": 60
+        },
+        {
+          "elapsedMs": 3822,
+          "tokens": 108,
+          "tps": 58.523897258047036,
+          "ttft_ms": 73
+        },
+        {
+          "elapsedMs": 19619,
+          "tokens": 322,
+          "tps": 61.67519010132353,
+          "ttft_ms": 59
+        },
+        {
+          "elapsedMs": 17487,
+          "tokens": 215,
+          "tps": 76.08734118979369,
+          "ttft_ms": 95
+        },
+        {
+          "elapsedMs": 3839,
+          "tokens": 116,
+          "tps": 56.43670331808893,
+          "ttft_ms": 81
+        },
+        {
+          "elapsedMs": 16175,
+          "tokens": 113,
+          "tps": 72.15836526181354,
+          "ttft_ms": 61
+        },
+        {
+          "elapsedMs": 18881,
+          "tokens": 310,
+          "tps": 77.62225505170645,
+          "ttft_ms": 69
+        },
+        {
+          "elapsedMs": 2724,
+          "tokens": 128,
+          "tps": 80.75200302820012,
+          "ttft_ms": 467
+        },
+        {
+          "elapsedMs": 4308,
+          "tokens": 261,
+          "tps": 81.09619686800895,
+          "ttft_ms": 964
+        },
+        {
+          "elapsedMs": 2882,
+          "tokens": 118,
+          "tps": 82.61569698242667,
+          "ttft_ms": 1981
+        },
+        {
+          "elapsedMs": 13823,
+          "tokens": 845,
+          "tps": 68.22824568627927,
+          "ttft_ms": 461
+        },
+        {
+          "elapsedMs": 8587,
+          "tokens": 372,
+          "tps": 62.85163971818136,
+          "ttft_ms": 98
+        },
+        {
+          "elapsedMs": 4931,
+          "tokens": 174,
+          "tps": 58.52870934104746,
+          "ttft_ms": 89
+        },
+        {
+          "elapsedMs": 21767,
+          "tokens": 279,
+          "tps": 12.817567877980428,
+          "ttft_ms": 68
+        },
+        {
+          "elapsedMs": 0,
+          "tokens": 276,
+          "tps": 0,
+          "ttft_ms": 0
+        },
+        {
+          "elapsedMs": 10907,
+          "tokens": 379,
+          "tps": 64.22422558123772,
+          "ttft_ms": 70
+        },
+        {
+          "elapsedMs": 23007,
+          "tokens": 304,
+          "tps": 68.62612307553388,
+          "ttft_ms": 116
+        },
+        {
+          "elapsedMs": 6088,
+          "tokens": 224,
+          "tps": 52.25586712079503,
+          "ttft_ms": 97
+        },
+        {
+          "elapsedMs": 26035,
+          "tokens": 489,
+          "tps": 66.87362389398685,
+          "ttft_ms": 77
+        },
+        {
+          "elapsedMs": 22596,
+          "tokens": 264,
+          "tps": 72.35057140508098,
+          "ttft_ms": 113
+        },
+        {
+          "elapsedMs": 4479,
+          "tokens": 158,
+          "tps": 58.48169670947922,
+          "ttft_ms": 13335
+        },
+        {
+          "elapsedMs": 27416,
+          "tokens": 366,
+          "tps": 62.911459855269264,
+          "ttft_ms": 81
+        },
+        {
+          "elapsedMs": 25734,
+          "tokens": 249,
+          "tps": 70.56223078666969,
+          "ttft_ms": 117
+        },
+        {
+          "elapsedMs": 9191,
+          "tokens": 277,
+          "tps": 67.48032838802408,
+          "ttft_ms": 14932
+        },
+        {
+          "elapsedMs": 5643,
+          "tokens": 183,
+          "tps": 51.75924878379907,
+          "ttft_ms": 428
+        },
+        {
+          "elapsedMs": 73228,
+          "tokens": 3085,
+          "tps": 71.86853532623888,
+          "ttft_ms": 111
+        },
+        {
+          "elapsedMs": 59200,
+          "tokens": 2193,
+          "tps": 66.54569288844114,
+          "ttft_ms": 182
+        },
+        {
+          "elapsedMs": 26048,
+          "tokens": 1517,
+          "tps": 71.78652381921343,
+          "ttft_ms": 237
+        },
+        {
+          "elapsedMs": 25617,
+          "tokens": 1478,
+          "tps": 70.37827130395033,
+          "ttft_ms": 101
+        },
+        {
+          "elapsedMs": 10088,
+          "tokens": 264,
+          "tps": 48.19101164616115,
+          "ttft_ms": 205
+        },
+        {
+          "elapsedMs": 27482,
+          "tokens": 1922,
+          "tps": 73.49370409033378,
+          "ttft_ms": 203
+        },
+        {
+          "elapsedMs": 11150,
+          "tokens": 285,
+          "tps": 44.44375136450114,
+          "ttft_ms": 244
+        },
+        {
+          "elapsedMs": 16694,
+          "tokens": 814,
+          "tps": 68.9713607863074,
+          "ttft_ms": 535
+        },
+        {
+          "elapsedMs": 8693,
+          "tokens": 369,
+          "tps": 63.677780078691235,
+          "ttft_ms": 168
+        },
+        {
+          "elapsedMs": 3106,
+          "tokens": 102,
+          "tps": 69.55335833617457,
+          "ttft_ms": 1962
+        },
+        {
+          "elapsedMs": 8183,
+          "tokens": 217,
+          "tps": 59.13773368943151,
+          "ttft_ms": 530
+        },
+        {
+          "elapsedMs": 13535,
+          "tokens": 834,
+          "tps": 72.52300040000696,
+          "ttft_ms": 1470
+        },
+        {
+          "elapsedMs": 4132,
+          "tokens": 137,
+          "tps": 56.74992750921669,
+          "ttft_ms": 329
+        },
+        {
+          "elapsedMs": 4271,
+          "tokens": 175,
+          "tps": 65.27415143603133,
+          "ttft_ms": 546
+        },
+        {
+          "elapsedMs": 9702,
+          "tokens": 548,
+          "tps": 69.23737807651489,
+          "ttft_ms": 156
+        }
+      ],
+      "agentProfileId": "agent-maximo",
+      "agentProfileName": "Máximo",
+      "agentSeed": 4242,
+      "agentTemperature": 0.1,
+      "agentVariant": "baseline",
+      "avgTps": 64.63880768165671,
+      "avgTtftMs": 979.5,
+      "baselineId": "49006d06-f68b-422b-b8ab-26aa5b1cfe69",
+      "benchmarkEffectiveArgs": [
+        "/home/cristian/.cache/strata-0.1.39-q001/eval-q139-dualvram-20261005/astra-root/serve/server.py",
+        "--engine",
+        "strata",
+        "--config",
+        "/home/cristian/.cache/strata-0.1.39-q001/eval-q139-dualvram-20261005/q4-v139-dual18.json",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8350"
+      ],
+      "benchmarkMemoryAdaptive": false,
+      "benchmarkMemoryAttempt": -1,
+      "benchmarkMemoryFitTargetMiB": 0,
+      "benchmarkMemoryPlanner": "llama.cpp-fit-expert-aware",
+      "benchmarkMemoryPolicy": "exact-profile",
+      "benchmarkName": "BigCodeBench-Hard (8 ítems)",
+      "complexityMetrics": {
+        "addedLines": 315,
+        "filesChanged": 8,
+        "filesCreated": 8,
+        "filesDeleted": 0,
+        "removedLines": 0
+      },
+      "elapsedSec": 704.179,
+      "failed": false,
+      "failureKind": "none",
+      "finalScore": 8,
+      "finalTotal": 8,
+      "firstAttemptScore": 3,
+      "firstAttemptTotal": 8,
+      "firstEvaluableSec": 19.089,
+      "firstToolCallSec": 18.461,
+      "firstWriteSec": 18.508,
+      "generationSec": 642.49,
+      "harnessEngineId": "legacy",
+      "harnessEngineVersion": 1,
+      "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+      "honeyEnabled": false,
+      "id": "49006d06-f68b-422b-b8ab-26aa5b1cfe69",
+      "isBaseline": true,
+      "measurementPhase": "cold",
+      "mode": "custom",
+      "nonGenerationSec": 61.688999999999965,
+      "pass": 1,
+      "passedAfterRepair": true,
+      "passesTotal": 1,
+      "profileConfigFingerprint": "c5f4c91febed021df721f145a31b4ee7de0d8560532dd3cb948a149bd09b492f",
+      "profileId": "test-strata-unsloth-udq4-dual18",
+      "profileName": "[prueba] ASTRA · Strata UD-Q4 · dual GPU split 18/30",
+      "progressGovernor": {
+        "progressEvents": 34,
+        "replanEvents": 1,
+        "stagnationEvents": 5
+      },
+      "qualityScore": 8,
+      "qualityTotal": 8,
+      "ramFreeMb": 0,
+      "ramMb": 0,
+      "ramTotalMb": 0,
+      "repairAttempts": 1,
+      "response": "<think>All done. Also, 139/906/928 were already passing (weren't on the failure list). Let me summarize.\n</think>\nCorregido y verificado con los checks de aceptación de cada tarea:\n\n- **765** (`solution_BigCodeBench_765.py`): la causa era iterar `kwargs.values()` (None → TypeError) en vez de `kwargs.keys()` (las claves son los paths), y devolver ruta absoluta. Ahora itera claves, copia con `shutil.copy` y devuelve la ruta devuelta (empieza con `target_dir`). Check local: 5/5 OK.\n- **771** (`solution_BigCodeBench_771.py`): el nombre nuevo es `<grupo1>.csv` (no `_processed.csv`), sin `Path.is_file()` (choca con `mock_open`), abre `(path, 'r')` y `(path, 'w')` exactos y propaga IOError. Check local: 5/5 OK.\n- **1019** (`solution_BigCodeBench_1019.py`, creado): OCR → `text.encode(from).decode(to)`; fallback a `image.info.get(\"comment\")` con decode `to_encoding`; `ValueError` ante LookupError/UnicodeDecodeError; `\"\"` si ambos fallan; usa `with Image.open(...)` (el mock usa `__enter__`). Check local: 5/5 OK.\n- **583** (`solution_BigCodeBench_583.py`): RSA 512 (no 2048), AES **EAX** (no GCM) sin tag appended, PEM guardado base64 en texto. Check local: 6/6 OK (incluye decrypt+load_pkcs1).\n- **360** (`solution_BigCodeBench_360.py`, creado): `FileNotFoundError` si no existe el archivo, `ValueError` por sheet inexistente, dict `{col: {'mean','std'}}` con floats y std **ddof=0** (poblacional → 10.0), bar chart de medias con título/labels pedidos. Check local: 6/6 OK (incluye extracción de alturas de barras [20,30]).\n\nArchivos 139, 906 y 928 intactos (pasaban). Tests temporales y artefactos de prueba eliminados; todos los `.py` compilan.",
+      "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/BigCodeBench-Hard_8_tems__20261005_010217",
+      "runLabel": "BigCodeBench-Hard (8 ítems)",
+      "setupSec": 0,
+      "target": "agent",
+      "thinkingEnabled": true,
+      "timeToFirstAttempt": 393.181,
+      "timedOut": false,
+      "timeoutSec": 1800,
+      "timestamp": 1791173705167,
+      "toolCallQuality": {
+        "expectedCalls": 0,
+        "f1Pct": -1,
+        "failedCalls": 6,
+        "incompleteCalls": 0,
+        "invalidCalls": 0,
+        "matchedExpectedCalls": 0,
+        "missingExpectedCalls": 0,
+        "precisionPct": -1,
+        "recallPct": -1,
+        "redundantCalls": 0,
+        "sequenceExact": false,
+        "successRatePct": 85,
+        "successfulCalls": 34,
+        "totalCalls": 40,
+        "unexpectedCalls": 0
+      },
+      "toolCalls": 40,
+      "totalTime": 704.179,
+      "transportAfterEvaluation": false,
+      "vramFreeMb": 7289,
+      "vramGpu0FreeMb": 5805,
+      "vramGpu0Mb": 18336,
+      "vramGpu0TotalMb": 24576,
+      "vramGpu0UsedPct": 74.609375,
+      "vramGpu1FreeMb": 1484,
+      "vramGpu1Mb": 22640,
+      "vramGpu1TotalMb": 24576,
+      "vramGpu1UsedPct": 92.12239583333334,
+      "vramMb": 40976,
+      "vramNormalizedImbalancePct": 17.513020833333336,
+      "vramObservedGpu0SharePct": 44.74814525575947,
+      "vramOptimalGpu0SharePct": 79.6405542598436,
+      "vramPlacementAssessment": "gpu1-heavy",
+      "vramTelemetryScope": "device-total",
+      "workspace": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/BigCodeBench-Hard_8_tems__20261005_010217/_prueba_ASTRA_Strata_UD-Q4_dual_GPU_split_18_30__ws"
+    }
+  ]
+}

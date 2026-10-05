@@ -1,0 +1,27 @@
+{
+  "id": "test-strata-unsloth-udq4-dual18",
+  "tier": "ASTRA-Strata",
+  "order": 502,
+  "extra": true,
+  "benchmark": true,
+  "best": false,
+  "favorite": false,
+  "alias": "ASTRA UD-Q4 dual18 test",
+  "displayName": "[prueba] ASTRA · Strata UD-Q4 · dual GPU split 18/30",
+  "minVramGb": 12,
+  "backend": {
+    "kind": "cloud",
+    "baseUrl": "http://127.0.0.1:8350",
+    "model": "astra-strata",
+    "ctx": 131072,
+    "port": 8350,
+    "managedServer": {
+      "type": "astra-strata",
+      "port": 8350
+    }
+  },
+  "agentProfileId": "agent-maximo",
+  "reasoningEffort": "medium",
+  "reasoningBudget": 8192,
+  "comment": "Prueba temporal LlamaCode LC-H1: GPU0 18 capas, GPU1 30, 2 GiB de reserva VRAM, sin resident-budget-gib; GPU0 tiene 20–22 GiB útiles. No perfil de producción."
+}

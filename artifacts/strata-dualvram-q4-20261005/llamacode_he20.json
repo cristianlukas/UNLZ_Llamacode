@@ -1,0 +1,672 @@
+{
+  "suiteId": "267bb33d-4510-417b-ae3c-6dbbfb2cb08d",
+  "suiteName": "HumanEval (20 ítems)",
+  "profileId": "test-strata-unsloth-udq4-dual18",
+  "thinkingEnabled": true,
+  "completedAtUtc": "2026-10-05T04:00:47Z",
+  "results": [
+    {
+      "acceptance": [
+        {
+          "passed": true,
+          "taskId": "HumanEval/0",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/1",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/2",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/3",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/4",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/5",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/6",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/7",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/8",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/9",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/10",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/11",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/12",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/13",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/14",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/15",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/16",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/17",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/18",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "HumanEval/19",
+          "type": "grader:code_tests"
+        }
+      ],
+      "agentFiles": [
+        "solution_HumanEval_0.py",
+        "solution_HumanEval_12.py",
+        "solution_HumanEval_18.py",
+        "solution_HumanEval_1.py",
+        "solution_HumanEval_15.py",
+        "solution_HumanEval_10.py",
+        "__pycache__/solution_HumanEval_6.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_13.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_5.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_7.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_15.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_12.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_10.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_2.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_11.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_3.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_0.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_9.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_4.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_16.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_8.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_17.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_1.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_14.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_18.cpython-312.pyc",
+        "solution_HumanEval_9.py",
+        "solution_HumanEval_4.py",
+        "solution_HumanEval_14.py",
+        "solution_HumanEval_3.py",
+        "solution_HumanEval_6.py",
+        "solution_HumanEval_2.py",
+        "solution_HumanEval_7.py",
+        "solution_HumanEval_19.py",
+        "solution_HumanEval_17.py",
+        "solution_HumanEval_5.py",
+        "solution_HumanEval_13.py",
+        "solution_HumanEval_11.py",
+        "solution_HumanEval_16.py",
+        "solution_HumanEval_8.py"
+      ],
+      "agentMetrics": [
+        {
+          "elapsedMs": 18925,
+          "tokens": 272,
+          "tps": 51.56202608431908,
+          "ttft_ms": 84
+        },
+        {
+          "elapsedMs": 16343,
+          "tokens": 206,
+          "tps": 67.79661016949153,
+          "ttft_ms": 99
+        },
+        {
+          "elapsedMs": 4085,
+          "tokens": 189,
+          "tps": 73.14524555903866,
+          "ttft_ms": 60
+        },
+        {
+          "elapsedMs": 5652,
+          "tokens": 258,
+          "tps": 66.80476437079234,
+          "ttft_ms": 158
+        },
+        {
+          "elapsedMs": 4776,
+          "tokens": 163,
+          "tps": 49.429888403687535,
+          "ttft_ms": 65
+        },
+        {
+          "elapsedMs": 19069,
+          "tokens": 275,
+          "tps": 57.14641951706081,
+          "ttft_ms": 57
+        },
+        {
+          "elapsedMs": 17221,
+          "tokens": 182,
+          "tps": 67.46987951807229,
+          "ttft_ms": 93
+        },
+        {
+          "elapsedMs": 3266,
+          "tokens": 85,
+          "tps": 52.63157894736842,
+          "ttft_ms": 76
+        },
+        {
+          "elapsedMs": 19380,
+          "tokens": 285,
+          "tps": 59.42080353605904,
+          "ttft_ms": 58
+        },
+        {
+          "elapsedMs": 17825,
+          "tokens": 218,
+          "tps": 72.66666666666667,
+          "ttft_ms": 104
+        },
+        {
+          "elapsedMs": 4335,
+          "tokens": 234,
+          "tps": 82.1917808219178,
+          "ttft_ms": 116
+        },
+        {
+          "elapsedMs": 4687,
+          "tokens": 207,
+          "tps": 61.50463513192299,
+          "ttft_ms": 62
+        },
+        {
+          "elapsedMs": 18880,
+          "tokens": 225,
+          "tps": 57.16899153898925,
+          "ttft_ms": 62
+        },
+        {
+          "elapsedMs": 17615,
+          "tokens": 144,
+          "tps": 61.911518122017284,
+          "ttft_ms": 96
+        },
+        {
+          "elapsedMs": 3350,
+          "tokens": 88,
+          "tps": 53.45969260676751,
+          "ttft_ms": 86
+        },
+        {
+          "elapsedMs": 22528,
+          "tokens": 241,
+          "tps": 56.656557820250605,
+          "ttft_ms": 67
+        },
+        {
+          "elapsedMs": 21408,
+          "tokens": 186,
+          "tps": 65.82439749442617,
+          "ttft_ms": 109
+        },
+        {
+          "elapsedMs": 2963,
+          "tokens": 94,
+          "tps": 63.60376209486433,
+          "ttft_ms": 99
+        },
+        {
+          "elapsedMs": 24188,
+          "tokens": 320,
+          "tps": 56.68532558633884,
+          "ttft_ms": 69
+        },
+        {
+          "elapsedMs": 21512,
+          "tokens": 177,
+          "tps": 63.94970734879688,
+          "ttft_ms": 116
+        },
+        {
+          "elapsedMs": 3206,
+          "tokens": 81,
+          "tps": 56.44992682416893,
+          "ttft_ms": 107
+        },
+        {
+          "elapsedMs": 23316,
+          "tokens": 290,
+          "tps": 63.72926052082189,
+          "ttft_ms": 74
+        },
+        {
+          "elapsedMs": 20709,
+          "tokens": 125,
+          "tps": 71.62092476938062,
+          "ttft_ms": 108
+        },
+        {
+          "elapsedMs": 3969,
+          "tokens": 115,
+          "tps": 51.34616243246864,
+          "ttft_ms": 93
+        },
+        {
+          "elapsedMs": 24747,
+          "tokens": 174,
+          "tps": 66.0868244141441,
+          "ttft_ms": 77
+        },
+        {
+          "elapsedMs": 24436,
+          "tokens": 146,
+          "tps": 65.48847223468198,
+          "ttft_ms": 116
+        },
+        {
+          "elapsedMs": 3284,
+          "tokens": 82,
+          "tps": 53.12601230968578,
+          "ttft_ms": 99
+        },
+        {
+          "elapsedMs": 25741,
+          "tokens": 211,
+          "tps": 61.41040193253587,
+          "ttft_ms": 82
+        },
+        {
+          "elapsedMs": 24573,
+          "tokens": 145,
+          "tps": 69.63119477525932,
+          "ttft_ms": 124
+        },
+        {
+          "elapsedMs": 3589,
+          "tokens": 107,
+          "tps": 58.4827284652383,
+          "ttft_ms": 108
+        },
+        {
+          "elapsedMs": 25909,
+          "tokens": 219,
+          "tps": 62.39494002678139,
+          "ttft_ms": 88
+        },
+        {
+          "elapsedMs": 24989,
+          "tokens": 176,
+          "tps": 71.98364008179959,
+          "ttft_ms": 117
+        },
+        {
+          "elapsedMs": 3637,
+          "tokens": 80,
+          "tps": 46.13344097802895,
+          "ttft_ms": 119
+        },
+        {
+          "elapsedMs": 29515,
+          "tokens": 246,
+          "tps": 61.40482252508612,
+          "ttft_ms": 89
+        },
+        {
+          "elapsedMs": 28388,
+          "tokens": 170,
+          "tps": 65.55354181930359,
+          "ttft_ms": 122
+        },
+        {
+          "elapsedMs": 4492,
+          "tokens": 151,
+          "tps": 53.08490068553348,
+          "ttft_ms": 233
+        },
+        {
+          "elapsedMs": 29051,
+          "tokens": 189,
+          "tps": 59.8252722208154,
+          "ttft_ms": 95
+        },
+        {
+          "elapsedMs": 28045,
+          "tokens": 156,
+          "tps": 73.64048338368579,
+          "ttft_ms": 248
+        },
+        {
+          "elapsedMs": 3807,
+          "tokens": 116,
+          "tps": 57.10347543566014,
+          "ttft_ms": 115
+        },
+        {
+          "elapsedMs": 29757,
+          "tokens": 235,
+          "tps": 63.746100637461005,
+          "ttft_ms": 97
+        },
+        {
+          "elapsedMs": 27951,
+          "tokens": 132,
+          "tps": 72.8476821192053,
+          "ttft_ms": 137
+        },
+        {
+          "elapsedMs": 4146,
+          "tokens": 125,
+          "tps": 51.1331097112002,
+          "ttft_ms": 122
+        },
+        {
+          "elapsedMs": 31619,
+          "tokens": 168,
+          "tps": 62.71698958449995,
+          "ttft_ms": 102
+        },
+        {
+          "elapsedMs": 31336,
+          "tokens": 145,
+          "tps": 73.49214394323366,
+          "ttft_ms": 136
+        },
+        {
+          "elapsedMs": 3804,
+          "tokens": 131,
+          "tps": 64.93184634448575,
+          "ttft_ms": 118
+        },
+        {
+          "elapsedMs": 31400,
+          "tokens": 127,
+          "tps": 63.10872589942357,
+          "ttft_ms": 105
+        },
+        {
+          "elapsedMs": 31152,
+          "tokens": 112,
+          "tps": 69.38851372281768,
+          "ttft_ms": 137
+        },
+        {
+          "elapsedMs": 3786,
+          "tokens": 106,
+          "tps": 50.27032154035853,
+          "ttft_ms": 125
+        },
+        {
+          "elapsedMs": 33016,
+          "tokens": 213,
+          "tps": 60.97735535770519,
+          "ttft_ms": 135
+        },
+        {
+          "elapsedMs": 31561,
+          "tokens": 126,
+          "tps": 71.35171867036638,
+          "ttft_ms": 148
+        },
+        {
+          "elapsedMs": 6581,
+          "tokens": 262,
+          "tps": 53.96831936061961,
+          "ttft_ms": 124
+        },
+        {
+          "elapsedMs": 3855,
+          "tokens": 119,
+          "tps": 73.72986369268897,
+          "ttft_ms": 143
+        },
+        {
+          "elapsedMs": 3849,
+          "tokens": 149,
+          "tps": 64.64769177368969,
+          "ttft_ms": 134
+        },
+        {
+          "elapsedMs": 35426,
+          "tokens": 134,
+          "tps": 54.35003041979314,
+          "ttft_ms": 113
+        },
+        {
+          "elapsedMs": 34858,
+          "tokens": 113,
+          "tps": 62.715062715062714,
+          "ttft_ms": 152
+        },
+        {
+          "elapsedMs": 3736,
+          "tokens": 109,
+          "tps": 57.83413805910755,
+          "ttft_ms": 128
+        },
+        {
+          "elapsedMs": 37796,
+          "tokens": 274,
+          "tps": 57.60174907500841,
+          "ttft_ms": 117
+        },
+        {
+          "elapsedMs": 36319,
+          "tokens": 184,
+          "tps": 57.99842395587076,
+          "ttft_ms": 150
+        },
+        {
+          "elapsedMs": 3701,
+          "tokens": 105,
+          "tps": 61.01458539136498,
+          "ttft_ms": 138
+        },
+        {
+          "elapsedMs": 36718,
+          "tokens": 208,
+          "tps": 61.08663729809104,
+          "ttft_ms": 124
+        },
+        {
+          "elapsedMs": 37857,
+          "tokens": 281,
+          "tps": 63.88977308899096,
+          "ttft_ms": 167
+        },
+        {
+          "elapsedMs": 4868,
+          "tokens": 144,
+          "tps": 61.42296536427231,
+          "ttft_ms": 155
+        },
+        {
+          "elapsedMs": 5634,
+          "tokens": 229,
+          "tps": 63.485902802805576,
+          "ttft_ms": 188
+        },
+        {
+          "elapsedMs": 4307,
+          "tokens": 163,
+          "tps": 64.36836077873869,
+          "ttft_ms": 125
+        },
+        {
+          "elapsedMs": 48247,
+          "tokens": 273,
+          "tps": 59.448630286137366,
+          "ttft_ms": 135
+        },
+        {
+          "elapsedMs": 342,
+          "tokens": 0,
+          "tps": 0,
+          "ttft_ms": 166
+        },
+        {
+          "elapsedMs": 0,
+          "tokens": 8,
+          "tps": 0
+        }
+      ],
+      "agentProfileId": "agent-maximo",
+      "agentProfileName": "Máximo",
+      "agentSeed": 4242,
+      "agentTemperature": 0.1,
+      "agentVariant": "baseline",
+      "avgTps": 62.016204904106566,
+      "avgTtftMs": 114.71212121212122,
+      "baselineId": "d872a1c8-bab6-4167-ab13-537746e505c1",
+      "benchmarkEffectiveArgs": [
+        "/home/cristian/.cache/strata-0.1.39-q001/eval-q139-dualvram-20261005/astra-root/serve/server.py",
+        "--engine",
+        "strata",
+        "--config",
+        "/home/cristian/.cache/strata-0.1.39-q001/eval-q139-dualvram-20261005/q4-v139-dual18.json",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8350"
+      ],
+      "benchmarkMemoryAdaptive": false,
+      "benchmarkMemoryAttempt": -1,
+      "benchmarkMemoryFitTargetMiB": 0,
+      "benchmarkMemoryPlanner": "llama.cpp-fit-expert-aware",
+      "benchmarkMemoryPolicy": "exact-profile",
+      "benchmarkName": "HumanEval (20 ítems)",
+      "complexityMetrics": {
+        "addedLines": 508,
+        "filesChanged": 39,
+        "filesCreated": 39,
+        "filesDeleted": 0,
+        "removedLines": 0
+      },
+      "elapsedSec": 1179.412,
+      "failed": false,
+      "failureKind": "none",
+      "finalScore": 20,
+      "finalTotal": 20,
+      "firstAttemptScore": 19,
+      "firstAttemptTotal": 20,
+      "firstEvaluableSec": 19.08,
+      "firstToolCallSec": 19.016,
+      "firstWriteSec": 19.063,
+      "generationSec": 1167.033,
+      "harnessEngineId": "legacy",
+      "harnessEngineVersion": 1,
+      "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+      "honeyEnabled": false,
+      "id": "d872a1c8-bab6-4167-ab13-537746e505c1",
+      "isBaseline": true,
+      "measurementPhase": "cold",
+      "mode": "custom",
+      "nonGenerationSec": 12.379000000000133,
+      "pass": 1,
+      "passedAfterRepair": true,
+      "passesTotal": 1,
+      "profileConfigFingerprint": "c5f4c91febed021df721f145a31b4ee7de0d8560532dd3cb948a149bd09b492f",
+      "profileId": "test-strata-unsloth-udq4-dual18",
+      "profileName": "[prueba] ASTRA · Strata UD-Q4 · dual GPU split 18/30",
+      "progressGovernor": {
+        "progressEvents": 45,
+        "replanEvents": 0,
+        "stagnationEvents": 1
+      },
+      "qualityScore": 20,
+      "qualityTotal": 20,
+      "ramFreeMb": 0,
+      "ramMb": 0,
+      "ramTotalMb": 0,
+      "repairAttempts": 1,
+      "response": "[turno cancelado por el usuario]",
+      "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/HumanEval_20_tems__20261005_003936",
+      "runLabel": "HumanEval (20 ítems)",
+      "setupSec": 0,
+      "target": "agent",
+      "thinkingEnabled": true,
+      "timeToFirstAttempt": 1128.79,
+      "timedOut": false,
+      "timeoutSec": 1800,
+      "timestamp": 1791172833914,
+      "toolCallQuality": {
+        "expectedCalls": 0,
+        "f1Pct": -1,
+        "failedCalls": 0,
+        "incompleteCalls": 0,
+        "invalidCalls": 0,
+        "matchedExpectedCalls": 0,
+        "missingExpectedCalls": 0,
+        "precisionPct": -1,
+        "recallPct": -1,
+        "redundantCalls": 0,
+        "sequenceExact": false,
+        "successRatePct": 100,
+        "successfulCalls": 46,
+        "totalCalls": 46,
+        "unexpectedCalls": 0
+      },
+      "toolCalls": 46,
+      "totalTime": 1179.412,
+      "transportAfterEvaluation": false,
+      "vramFreeMb": 7270,
+      "vramGpu0FreeMb": 5786,
+      "vramGpu0Mb": 18336,
+      "vramGpu0TotalMb": 24576,
+      "vramGpu0UsedPct": 74.609375,
+      "vramGpu1FreeMb": 1484,
+      "vramGpu1Mb": 22640,
+      "vramGpu1TotalMb": 24576,
+      "vramGpu1UsedPct": 92.12239583333334,
+      "vramMb": 40976,
+      "vramNormalizedImbalancePct": 17.513020833333336,
+      "vramObservedGpu0SharePct": 44.74814525575947,
+      "vramOptimalGpu0SharePct": 79.58734525447042,
+      "vramPlacementAssessment": "gpu1-heavy",
+      "vramTelemetryScope": "device-total",
+      "workspace": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/HumanEval_20_tems__20261005_003936/_prueba_ASTRA_Strata_UD-Q4_dual_GPU_split_18_30__ws"
+    }
+  ]
+}
