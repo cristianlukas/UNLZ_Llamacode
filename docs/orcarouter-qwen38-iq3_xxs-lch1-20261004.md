@@ -31,3 +31,38 @@ El entorno de herramientas tampoco tiene el comando `python` (`run_shell` devuel
 - Directorios de ejecución LlamaCode bajo `/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/`, incluidos `HumanEval_20_tems__20261004_041036` y `Intelligence_Adversarial_v1_-_10_tareas_20261004_044204`.
 
 Se detuvo el servidor al acabar. La RTX 3090 quedó sin procesos de cómputo del modelo. El perfil temporal y los ajustes ASTRA del daemon `.qttest` se retiraron/restauraron. No se modificó código de producción. Próxima acción: corregir el entorno del harness (`python`/`python3` y aislamiento de imports) y el límite de salida previa a herramientas; repetir HE20 con el mismo fingerprint, después BCB8 si HE20 pasa, y volver a correr ADV.
+
+## Suplemento: Strata v0.1.39 y prefill helper (2026-10-04)
+
+Se reusaron los dos shards completos verificados y el pack IQ3_XXS existente.
+Strata v0.1.39 se compiló para CUDA 12.0/sm_86 con ggml `3cf03257`. El método
+fue el harness administrado LlamaCode con `agent-maximo`, thinking activado,
+reasoning medium/4096, temperatura 0.1, seed 4242 y hasta dos reparaciones.
+Contexto 32K, KV int8, prefill 512, MTP/spec 4, `spec-min-p 0.5`, caché de
+expertos auto y split automático por capas en las dos RTX 3090. El HarnessSpec
+se mantuvo en `cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef`.
+
+| Variante | HE0 | HE20 | Lectura |
+|---|---|---|---|
+| Base, `STRATA_PREFILL_HELP=0` | 0/1 → **1/1**, 2 reparaciones, 46.088 s | 19/20 tareas aceptadas al corte de 1801.2 s; **score inválido** | No pasó el gate; BCB8 quedó bloqueado |
+| Prefill helper, `STRATA_PREFILL_HELP=1` | 0/1 → **1/1**, 2 reparaciones, 44.083 s | 19/20 tareas aceptadas al corte de 1801.03 s; **score inválido** | No rescató HE20; dentro del margen de la base |
+
+La única variable entre esas dos configuraciones fue `STRATA_PREFILL_HELP`; la
+documentación de v0.1.39 limita su efecto al camino de prefill en layer split.
+En esta batería no mejoró la duración ni permitió completar HE20, así que no hay
+un score HE20 válido para juzgar calidad y BCB8/Adversarial no se ejecutaron.
+El cambio no es transferible como arreglo probado. A diferencia del UD-Q4,
+Orca no falló por un presupuesto residente de RAM insuficiente: su carga ya usa
+split dual-GPU y alrededor de 49.8 GiB de expertos mapeados, mientras la
+variación evaluada atacó el camino de prefill.
+
+**Decisión:** conservar el checkpoint IQ3_XXS, pero mantener su evaluación
+inconclusa. El timeout no prueba que el modelo sea malo ni que sea irrecuperable;
+para retomarlo se necesita investigar el costo no generativo y la configuración
+de ejecución del harness, no adjudicarle un score de calidad ni borrarlo.
+
+Los recibos v0.1.39 están en
+`/home/cristian/.codex/visualizations/2026/10/02/01a0fdac-e702-72e3-94fd-585859906215/lch1-data-q139/results/`
+(`orca-v139-{baseline,prefill-help}-{he0,he20}.json`). Configs aisladas:
+`/home/cristian/.cache/strata-0.1.39-q001/eval-q139/orca-v139-{base,prefill-help}.json`;
+logs correspondientes en el directorio `logs/` del mismo árbol de evaluación.
