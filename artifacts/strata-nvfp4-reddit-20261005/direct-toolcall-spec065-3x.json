@@ -1,0 +1,102 @@
+{
+  "model": "orcarouter-qwen38-flash-next-modelopt-nvfp4-strata-dual3090-cache-spec065",
+  "spec_min_p": 0.65,
+  "requests": [
+    {
+      "iteration": 1,
+      "wall_s": 20.911,
+      "usage": {
+        "prompt_tokens": 334,
+        "completion_tokens": 76,
+        "total_tokens": 410,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 334,
+        "prompt_ms": 16048.3,
+        "prompt_per_token_ms": 48.049,
+        "prompt_per_second": 20.8,
+        "predicted_n": 76,
+        "predicted_ms": 4859.0,
+        "predicted_per_token_ms": 63.934,
+        "predicted_per_second": 15.6,
+        "draft_n": 70,
+        "draft_n_accepted": 52
+      },
+      "finish_reason": "tool_calls",
+      "delta_tool_call_chunks": 7,
+      "draft_acceptance": {
+        "accepted": 52,
+        "offered": 70,
+        "pct": 74.29
+      }
+    },
+    {
+      "iteration": 2,
+      "wall_s": 1.638,
+      "usage": {
+        "prompt_tokens": 334,
+        "completion_tokens": 76,
+        "total_tokens": 410,
+        "prompt_tokens_details": {
+          "cached_tokens": 329
+        }
+      },
+      "timings": {
+        "cache_n": 329,
+        "prompt_n": 5,
+        "prompt_ms": 76.9,
+        "prompt_per_token_ms": 15.38,
+        "prompt_per_second": 65.0,
+        "predicted_n": 76,
+        "predicted_ms": 1558.7,
+        "predicted_per_token_ms": 20.509,
+        "predicted_per_second": 48.8,
+        "draft_n": 74,
+        "draft_n_accepted": 52
+      },
+      "finish_reason": "tool_calls",
+      "delta_tool_call_chunks": 7,
+      "draft_acceptance": {
+        "accepted": 52,
+        "offered": 74,
+        "pct": 70.27
+      }
+    },
+    {
+      "iteration": 3,
+      "wall_s": 1.384,
+      "usage": {
+        "prompt_tokens": 334,
+        "completion_tokens": 76,
+        "total_tokens": 410,
+        "prompt_tokens_details": {
+          "cached_tokens": 329
+        }
+      },
+      "timings": {
+        "cache_n": 329,
+        "prompt_n": 5,
+        "prompt_ms": 68.9,
+        "prompt_per_token_ms": 13.78,
+        "prompt_per_second": 72.6,
+        "predicted_n": 76,
+        "predicted_ms": 1312.9,
+        "predicted_per_token_ms": 17.275,
+        "predicted_per_second": 57.9,
+        "draft_n": 59,
+        "draft_n_accepted": 56
+      },
+      "finish_reason": "tool_calls",
+      "delta_tool_call_chunks": 7,
+      "draft_acceptance": {
+        "accepted": 56,
+        "offered": 59,
+        "pct": 94.92
+      }
+    }
+  ]
+}

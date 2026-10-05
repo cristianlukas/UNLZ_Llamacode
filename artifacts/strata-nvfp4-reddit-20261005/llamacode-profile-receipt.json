@@ -1,0 +1,13 @@
+{
+  "launchId": "8e568e03-993a-4217-8225-1a83768d762c",
+  "backendId": "89d43d8d-3ce2-44f2-8ec8-bf05e616bfeb",
+  "modelId": "40ee3526-77fd-4fb5-ac28-9dae6790a41a",
+  "runtimeId": "6a29e23f-0697-4071-95b4-bf6d7f5a5ff0",
+  "agentProfileId": "agent-maximo",
+  "endpoint": "http://127.0.0.1:8043",
+  "model": "orcarouter-qwen38-flash-next-modelopt-nvfp4-strata-dual3090-cache-prefill-fixed2048",
+  "ctx": 131072,
+  "harness": "LC-H1 custom definitions: HumanEval 1+20, BigCodeBench-Hard 8, Intelligence Adversarial 10",
+  "testOnly": true,
+  "note": "Perfil duplicado bajo LLAMACODE_TEST_MODE=1 y LLAMACODE_PROFILES_DIR=/tmp/llamacode-nvfp4-test/profiles; no tocar producción. La última corrida HE0 con prefill fijo 2048 pasó 1/1 tras una reparación en 355.284 s; endpoint apagado al cierre."
+}

@@ -1,0 +1,51 @@
+{
+  "wall_s": 67.15325117111206,
+  "response": {
+    "id": "chatcmpl-f1c1ea75129147abb4779d58",
+    "object": "chat.completion",
+    "created": 1791206736,
+    "model": "orcarouter-qwen38-flash-next-modelopt-nvfp4-strata-dual3090-cache",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": null,
+          "reasoning_content": "We need to respond to user: \"Use the add function to calculate 2 + 3.\" Need call add with a=2 b=3. Then final answer likely 5.\n",
+          "tool_calls": [
+            {
+              "id": "call_bb3ab40a65ba44f8bbd73ec1",
+              "type": "function",
+              "function": {
+                "name": "add",
+                "arguments": "{\"a\":2,\"b\":3}"
+              }
+            }
+          ]
+        },
+        "finish_reason": "tool_calls"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 334,
+      "completion_tokens": 76,
+      "total_tokens": 410,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 334,
+      "prompt_ms": 15942.6,
+      "prompt_per_token_ms": 47.732,
+      "prompt_per_second": 21.0,
+      "predicted_n": 76,
+      "predicted_ms": 5340.9,
+      "predicted_per_token_ms": 70.275,
+      "predicted_per_second": 14.2,
+      "draft_n": 65,
+      "draft_n_accepted": 55
+    }
+  }
+}

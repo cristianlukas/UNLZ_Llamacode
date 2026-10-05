@@ -1,0 +1,27 @@
+{
+  "experiment": "LC-H1 HumanEval/0, Strata NVFP4 fixed 4096-token prefill chunk",
+  "dateLocal": "2026-10-05",
+  "outcome": "infrastructure stall; no model-quality score",
+  "profileId": "8e568e03-993a-4217-8225-1a83768d762c",
+  "agentProfileId": "agent-maximo",
+  "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+  "config": "server-dual-cache-prefill-fixed4096.json",
+  "endpoint": "http://127.0.0.1:8042",
+  "runMetadata": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/HumanEval_1_tems__20261005_104656/metadata.json",
+  "observed": {
+    "promptTokens": 12826,
+    "engineAt60s": {
+      "state": "reading",
+      "phase": "reading the prompt",
+      "generatedTokens": 0
+    },
+    "engineLog": "engine-dual-cache-prefill-fixed4096.log",
+    "stall": "no progress for 60 s during a request (reading the prompt (batched): layer 1 of the prompt chunk from token 0)",
+    "stallCode": "issue #29",
+    "ramAvailableMiBAtStall": 50376,
+    "residentMiBAtStall": 68347,
+    "action": "Cancelled the harness retry after observing the same engine stall; no score was produced for this cancellation."
+  },
+  "notAQualityFailure": true,
+  "productionProfileChanged": false
+}

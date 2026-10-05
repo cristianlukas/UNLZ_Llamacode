@@ -1,0 +1,58 @@
+{
+  "status": 200,
+  "wall_seconds": 2.645,
+  "request": {
+    "model": "orcarouter-qwen38-flash-next-modelopt-nvfp4-strata-dual3090-cache",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Write a Python function named clamp(value, low, high) that returns value limited to the inclusive range [low, high]. Return only the function and one short example."
+      }
+    ],
+    "max_tokens": 128,
+    "temperature": 0.1,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0,
+    "chat_template_kwargs": {
+      "enable_thinking": false
+    }
+  },
+  "response": {
+    "id": "chatcmpl-a238aaaf6f354c4ebedb3a5a",
+    "object": "chat.completion",
+    "created": 1791205805,
+    "model": "orcarouter-qwen38-flash-next-modelopt-nvfp4-strata-dual3090-cache",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "```python\ndef clamp(value, low, high):\n    return max(low, min(value, high))\n\n# Example: clamp(15, 0, 10) returns 10\n```"
+        },
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 46,
+      "completion_tokens": 45,
+      "total_tokens": 91,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 46,
+      "prompt_ms": 787.8,
+      "prompt_per_token_ms": 17.126,
+      "prompt_per_second": 58.4,
+      "predicted_n": 45,
+      "predicted_ms": 1845.7,
+      "predicted_per_token_ms": 41.016,
+      "predicted_per_second": 24.4,
+      "draft_n": 36,
+      "draft_n_accepted": 32
+    }
+  }
+}

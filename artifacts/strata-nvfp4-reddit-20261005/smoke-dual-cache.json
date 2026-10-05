@@ -1,0 +1,56 @@
+{
+  "status": 200,
+  "wall_seconds": 14.058,
+  "request": {
+    "model": "orcarouter-qwen38-flash-next-modelopt-nvfp4-strata-dual3090-cache",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Write a Python function named clamp(value, low, high) that returns value limited to the inclusive range [low, high]. Return only the function and one short example."
+      }
+    ],
+    "max_tokens": 128,
+    "temperature": 0.1,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0
+  },
+  "response": {
+    "id": "chatcmpl-bf36625e97c9499e93a7c95c",
+    "object": "chat.completion",
+    "created": 1791205752,
+    "model": "orcarouter-qwen38-flash-next-modelopt-nvfp4-strata-dual3090-cache",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "```python",
+          "reasoning_content": "We need answer user: \"Write a Python function named clamp(value, low, high) that returns value limited to the inclusive range [low, high]. Return only the function and one short example.\"\n\nNeed produce final only function and one short example. Likely code block? \"Return only the function and one short example.\" Could output:\ndef clamp(value, low, high):\n    return max(low, min(value, high))\n\nprint(clamp(10, 0, 5))\n\nNeed ensure only function and example, no explanation. Could include code block. Maybe no extra text.\n"
+        },
+        "finish_reason": "length"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 86,
+      "completion_tokens": 128,
+      "total_tokens": 214,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 86,
+      "prompt_ms": 4889.3,
+      "prompt_per_token_ms": 56.852,
+      "prompt_per_second": 17.6,
+      "predicted_n": 128,
+      "predicted_ms": 9152.5,
+      "predicted_per_token_ms": 71.504,
+      "predicted_per_second": 14.0,
+      "draft_n": 110,
+      "draft_n_accepted": 86
+    }
+  }
+}
