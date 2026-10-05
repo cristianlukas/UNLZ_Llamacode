@@ -29,6 +29,15 @@ criterio de promoción. Mantén constantes las variables que no estés evaluando
 Si una diferencia de arquitectura, quant, hardware o configuración impide un A/B
 justo, documentá el límite y no presentes la comparación como equivalente.
 
+Cuando la afirmación dependa de usar más recursos o concurrencia, tomá una línea
+base antes de cargar el candidato y registrá pico de RAM residente/pinned,
+`MemAvailable`, uso de swap antes/después, VRAM por GPU y slots simultáneos. Fijá
+un margen de RAM que debe quedar disponible y un umbral de aborto antes de iniciar;
+no interpretes “usa toda la RAM” como una mejora por sí sola. Para claims de
+“termina el trabajo más rápido”, medí el tiempo hasta un artefacto que pase
+validaciones, los errores y las intervenciones humanas, además de tok/s. Separá
+una corrida serial de otra con concurrencia/subagentes; no mezcles sus resultados.
+
 Elegí pruebas que respondan la hipótesis, no una puntuación genérica:
 - Coding/agente: usá el harness real de LlamaCode y seguí HE0 → HE20 → BCB;
   añadí adversarial o una suite pertinente. Conservá por separado primera

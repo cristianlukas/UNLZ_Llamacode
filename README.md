@@ -1821,6 +1821,12 @@ congelar la configuración, buscar corridas duplicadas, medir contra el perfil
 vigente pertinente y dejar resultados reproducibles con una sección “No
 repetir”.
 
+Para reportes de Strata que prometen más rapidez al usar RAM o ejecutar varios
+agentes, separá residencia de memoria, concurrencia y calidad end-to-end. El
+seguimiento del post de auto-clicker documenta qué recetas ya se agotaron y por
+qué la variante Q4 dual-GPU sin límite queda pendiente del mínimo de RAM
+[`registrado por el fork`](docs/strata-reddit-followup-20261004.md).
+
 La corrida [Strata 0.1.35 vs SOL con LC-H1](docs/strata-0.1.35-vs-sol-llamacode-lch1-20261002.md)
 es un ejemplo de comparación con el agente real: mostró una ventaja pequeña de
 calidad en una sola pasada, pero SOL fue más rápido en el total. Sirve como
