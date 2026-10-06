@@ -1,0 +1,65 @@
+{
+  "taskId": "Q-20261006-ASTRA-SOL-COMPLEX",
+  "files": [
+    {
+      "path": "astra-run-metadata-comparison.json",
+      "bytes": 1409,
+      "sha256": "2a29859d4c38fadf7fbe028d28f4e44e6c48ef4b71f9b7f7abcd98e41cecbef8"
+    },
+    {
+      "path": "astra-run-metadata-metadata.json",
+      "bytes": 8604,
+      "sha256": "a3fd225121033291a045e867ed6edef892e352f8f68df71753019e70f7910ef1"
+    },
+    {
+      "path": "astra_infra_1.json",
+      "bytes": 10101,
+      "sha256": "12244163a91529eae5ef6fa0383b55c8534a304f9d7354f3a20bd5f4d2d88958"
+    },
+    {
+      "path": "astra_infra_2.json",
+      "bytes": 11882,
+      "sha256": "641980b260b212786aef10f756c60f07e17424a7cd6fd5e75c7ac5315d4c194c"
+    },
+    {
+      "path": "astra_valid.json",
+      "bytes": 23504,
+      "sha256": "30c24f5d3d5beb964700cfcfccd2b30cd10b150da7036a9415000ecf4fae7532"
+    },
+    {
+      "path": "benchmark-suite.json",
+      "bytes": 7834,
+      "sha256": "f04febb440208d5bf74c01e84d78f5127e57c164fabece2acbfb346215dc0c17"
+    },
+    {
+      "path": "report.md",
+      "bytes": 4840,
+      "sha256": "68cebc4b1b35351dc46cf0ada95c02a4ea383f30e26ad995389d5ad8b07083cf"
+    },
+    {
+      "path": "results.json",
+      "bytes": 35519,
+      "sha256": "ff96f63a16f5ca0aba8bcc6b57caba7e351cada3f91ba10cbbaaf16af767b9fb"
+    },
+    {
+      "path": "sol-run-metadata-comparison.json",
+      "bytes": 1399,
+      "sha256": "2af28f0caa4e5792d2e1d8a6db9ff26447e0f6d5a19afb5f900f88e8a25821d4"
+    },
+    {
+      "path": "sol-run-metadata-metadata.json",
+      "bytes": 8594,
+      "sha256": "5a1dbeddda98a8da38b832108ff3c743b63ab90f651e538a9319e22974515ac8"
+    },
+    {
+      "path": "sol.json",
+      "bytes": 19968,
+      "sha256": "8a18e210da5477cbab32b024a2e8176a76c0c2bcce5988d7965ec37330c71638"
+    },
+    {
+      "path": "strata-iq3_s-calibrated-retest-20261006.json",
+      "bytes": 1980,
+      "sha256": "7d7a93c38a57048da257e0ab7a6f984691b2b4f87089e82050bbbcbb090e8471"
+    }
+  ]
+}

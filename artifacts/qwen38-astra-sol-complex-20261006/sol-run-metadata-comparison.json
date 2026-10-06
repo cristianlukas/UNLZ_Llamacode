@@ -1,0 +1,41 @@
+{
+    "benchmarkName": "Qwen3.8 ASTRA IQ3_S calibrado vs SOL · TaskFlow ULTRA E2E",
+    "comparisons": [
+    ],
+    "generatedAt": "2026-10-06T12:32:39",
+    "profileCount": 1,
+    "profiles": [
+        {
+            "agentVariant": "baseline",
+            "comparisonTimeMetric": "timeToFirstAttempt",
+            "failedRuns": 1,
+            "fullyAcceptedRuns": 0,
+            "honeyEnabled": false,
+            "medianAddedLines": 0,
+            "medianColdFirstAttemptSec": 0,
+            "medianElapsedSec": 0,
+            "medianFilesChanged": 0,
+            "medianFirstAttemptSec": 0,
+            "medianQualityPct": 0,
+            "medianRemovedLines": 0,
+            "medianRepairAttempts": 0,
+            "medianToolCalls": 0,
+            "medianToolF1Pct": 0,
+            "medianToolRedundantCalls": 0,
+            "medianToolSuccessRatePct": 0,
+            "medianWarmFirstAttemptSec": 0,
+            "outcomeSpread": false,
+            "profileId": "86b52354-8c78-4138-8636-4aa1bf66a85f",
+            "profileName": "SOL · Qwen3.8 27B · LC-H1 20261003",
+            "qualityRangePctPoints": 0,
+            "runs": 1,
+            "stabilityRatePct": 100,
+            "successRatePct": 0,
+            "successfulRuns": 0
+        }
+    ],
+    "runCount": 1,
+    "runLabel": "Qwen3.8 ASTRA IQ3_S calibrado vs SOL · TaskFlow ULTRA E2E",
+    "schemaVersion": 1,
+    "target": "agent"
+}

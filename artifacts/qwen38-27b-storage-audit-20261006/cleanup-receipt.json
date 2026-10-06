@@ -1,0 +1,65 @@
+{
+  "task_id": "Q-20261006-ASTRA-SOL-COMPLEX",
+  "lock_token": "5051370d-a299-4f33-983b-e43c5ef52685",
+  "created_local": "2026-10-06T12:15:54-0300",
+  "disk": "/media/cristian/Disco local/Models",
+  "free_bytes_before": 315533975552,
+  "free_bytes_after": 373541175296,
+  "observed_free_delta": 58007199744,
+  "removed": [
+    {
+      "kind": "invalid_same-size_copy",
+      "path": "/media/cristian/Disco local/Models/llamacpp/Qwen3.8-27B-AP-GGUF/Qwen3.8-27B-AP-Q3_K_XL.sha256-mismatch",
+      "size": 13146392480,
+      "sha256": "57e89eae5c9172ca289124883f7277a78f49855d49d08f5d23a754b87ef46eea",
+      "removed_bytes": 13146392480
+    },
+    {
+      "kind": "dominated_older_quant_with_partial_download",
+      "path": "/media/cristian/Disco local/Models/llamacpp/Qwen3.8-27B-UD-Q3_K_XL-benchmark",
+      "size": 13146393504,
+      "sha256": "8c2a45ff85e7674ca185ec8eb6cdeab0e617ed9d8018caed0b64380eb2a67a5e",
+      "removed_bytes": 18242472865
+    },
+    {
+      "kind": "slower_no_measured_quality_gain",
+      "path": "/media/cristian/Disco local/Models/llamacpp/Qwen3.8-27B-UD-Q6_K_XL",
+      "size": 25299061664,
+      "sha256": "701d8fa9ed214ab21bfc130cd2a7df19ca89bbef7713e2dfb19f3c63696aa917",
+      "removed_bytes": 26668652325
+    }
+  ],
+  "retained_uncertain": [
+    {
+      "path": "/media/cristian/Disco local/Models/llamacpp/Qwen3.8-27B-AP-GGUF/Qwen3.8-27B-AP-Q3_K_XL.gguf",
+      "size_bytes": 13146392480,
+      "sha256": "b5b35d550712f01fcaa0a982f281b7bcf47f6309c541450ca0e064c945c1c8fc",
+      "reason": "mejor PPL local que UD-Q3 en dos corpus; sin A/B agentiva directa frente a SOL"
+    },
+    {
+      "path": "/media/cristian/Disco local/Models/Strata-swift-20261003",
+      "reason": "único Flash-Next retenido en el inventario antes de re-descargar ASTRA; empató LC-H1 y ganó latencia CU textual, no se probó inferioridad global"
+    }
+  ],
+  "historical_evidence": {
+    "UD_Q3_vs_AP": "AP PPL mixedweb 11.0283 vs UD 11.0631; Wiki 6.0887 vs 6.1278; tg128 AP 37.16 vs UD 37.62 tok/s; no LC-H1 contra SOL.",
+    "UD_Q6": "65.1/45.3 tok/s en layer; BCB8 directo 1/8 como los controles Qwen de esa receta; no pudo correr split tensor ni visión 65K por límite de commit; SOL reporta 102 tok/s código y LC-H1 BCB8 8/8. Las recetas no son A/B exactamente idénticas.",
+    "quality_caveat": "No se afirma pérdida general de inteligencia a partir de PPL/throughput o de BCB directo; los archivos retirados eran redundantes o sin ventaja medida para el flujo diario SOL."
+  },
+  "current_inventory_after_astra_download": {
+    "astra_path": "/media/cristian/Disco local/Models/ASTRA-IQ3_S-calibrated-20261006",
+    "astra_tree_bytes": 93000847852,
+    "astra_files": 56,
+    "free_bytes_now": {
+      "C": 186341990400,
+      "D": 297292316672,
+      "HDD_extra": 352944111616
+    },
+    "free_gib_now": {
+      "C": 173.54450225830078,
+      "D": 276.8750457763672,
+      "HDD_extra": 328.70481872558594
+    },
+    "note": "Snapshot refreshed after downloading ASTRA for the explicitly requested SOL comparison; no additional removals were made."
+  }
+}

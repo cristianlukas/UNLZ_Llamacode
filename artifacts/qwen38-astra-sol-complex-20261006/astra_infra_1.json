@@ -1,0 +1,267 @@
+{
+    "acceptance": [
+        {
+            "name": "taskflow_ultra/__init__.py",
+            "output": "Archivo esperado no encontrado.",
+            "passed": false,
+            "taskId": "taskflow_ultra_advanced_project",
+            "type": "file"
+        },
+        {
+            "name": "taskflow_ultra/models.py",
+            "output": "Archivo esperado no encontrado.",
+            "passed": false,
+            "taskId": "taskflow_ultra_advanced_project",
+            "type": "file"
+        },
+        {
+            "name": "taskflow_ultra/storage.py",
+            "output": "Archivo esperado no encontrado.",
+            "passed": false,
+            "taskId": "taskflow_ultra_advanced_project",
+            "type": "file"
+        },
+        {
+            "name": "taskflow_ultra/service.py",
+            "output": "Archivo esperado no encontrado.",
+            "passed": false,
+            "taskId": "taskflow_ultra_advanced_project",
+            "type": "file"
+        },
+        {
+            "name": "taskflow_ultra/scheduler.py",
+            "output": "Archivo esperado no encontrado.",
+            "passed": false,
+            "taskId": "taskflow_ultra_advanced_project",
+            "type": "file"
+        },
+        {
+            "name": "taskflow_ultra/query.py",
+            "output": "Archivo esperado no encontrado.",
+            "passed": false,
+            "taskId": "taskflow_ultra_advanced_project",
+            "type": "file"
+        },
+        {
+            "name": "taskflow_ultra/reports.py",
+            "output": "Archivo esperado no encontrado.",
+            "passed": false,
+            "taskId": "taskflow_ultra_advanced_project",
+            "type": "file"
+        },
+        {
+            "name": "taskflow_ultra/cli.py",
+            "output": "Archivo esperado no encontrado.",
+            "passed": false,
+            "taskId": "taskflow_ultra_advanced_project",
+            "type": "file"
+        },
+        {
+            "name": "taskflow_ultra/main.py",
+            "output": "Archivo esperado no encontrado.",
+            "passed": false,
+            "taskId": "taskflow_ultra_advanced_project",
+            "type": "file"
+        },
+        {
+            "name": "tests/test_taskflow_ultra.py",
+            "output": "Archivo esperado no encontrado.",
+            "passed": false,
+            "taskId": "taskflow_ultra_advanced_project",
+            "type": "file"
+        },
+        {
+            "command": "python -m py_compile taskflow_ultra/__init__.py taskflow_ultra/models.py taskflow_ultra/storage.py taskflow_ultra/service.py taskflow_ultra/scheduler.py taskflow_ultra/query.py taskflow_ultra/reports.py taskflow_ultra/cli.py taskflow_ultra/main.py tests/test_taskflow_ultra.py",
+            "exitCode": 1,
+            "name": "compile_package",
+            "output": "[Errno 2] No such file or directory: 'taskflow_ultra/__init__.py'",
+            "passed": false,
+            "taskId": "taskflow_ultra_advanced_project",
+            "timedOut": false,
+            "timeoutMs": 30000,
+            "type": "command"
+        },
+        {
+            "command": "python -m unittest discover -s tests -p test_taskflow_ultra.py -v",
+            "exitCode": 1,
+            "name": "unit_tests",
+            "output": "Traceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/usr/lib/python3.12/unittest/__main__.py\", line 18, in <module>\n    main(module=None)\n  File \"/usr/lib/python3.12/unittest/main.py\", line 104, in __init__\n    self.parseArgs(argv)\n  File \"/usr/lib/python3.12/unittest/main.py\", line 130, in parseArgs\n    self._do_discovery(argv[2:])\n  File \"/usr/lib/python3.12/unittest/main.py\", line 253, in _do_discovery\n    self.createTests(from_discovery=True, Loader=Loader)\n  File \"/usr/lib/python3.12/unittest/main.py\", line 160, in createTests\n    self.test = loader.discover(self.start, self.pattern, self.top)\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.12/unittest/loader.py\", line 307, in discover\n    raise ImportError('Start directory is not importable: %r' % start_dir)\nImportError: Start directory is not importable: 'tests'",
+            "passed": false,
+            "taskId": "taskflow_ultra_advanced_project",
+            "timedOut": false,
+            "timeoutMs": 180000,
+            "type": "command"
+        },
+        {
+            "command": "python -m taskflow_ultra.main --self-test",
+            "exitCode": 1,
+            "name": "self_test",
+            "output": "/tmp/LlamaCode-tBOzqr/python: Error while finding module specification for 'taskflow_ultra.main' (ModuleNotFoundError: No module named 'taskflow_ultra')",
+            "passed": false,
+            "taskId": "taskflow_ultra_advanced_project",
+            "timedOut": false,
+            "timeoutMs": 60000,
+            "type": "command"
+        }
+    ],
+    "agentFiles": [
+        "solution_taskflow_ultra_advanced_project.py"
+    ],
+    "agentMetrics": [
+        {
+            "elapsedMs": 40788,
+            "tokens": 389,
+            "tps": 9.537118760419732,
+            "ttft_ms": 149
+        },
+        {
+            "elapsedMs": 0,
+            "tokens": 8,
+            "tps": 0
+        },
+        {
+            "elapsedMs": 12139,
+            "tokens": 406,
+            "tps": 33.445918115165995,
+            "ttft_ms": 52
+        },
+        {
+            "elapsedMs": 0,
+            "tokens": 8,
+            "tps": 0
+        },
+        {
+            "elapsedMs": 0,
+            "tokens": 402,
+            "tps": 0,
+            "ttft_ms": 0
+        },
+        {
+            "elapsedMs": 4547,
+            "tokens": 413,
+            "tps": 90.82911809984606,
+            "ttft_ms": 53
+        },
+        {
+            "elapsedMs": 0,
+            "tokens": 8,
+            "tps": 0
+        }
+    ],
+    "agentProfileId": "agent-maximo",
+    "agentProfileName": "Máximo",
+    "agentSeed": 4242,
+    "agentTemperature": 0.1,
+    "agentVariant": "baseline",
+    "avgTps": 0,
+    "avgTtftMs": 0,
+    "benchmarkEffectiveArgs": [
+        "/home/cristian/.cache/strata-review-20261002/Strata-0.1.35/serve/server.py",
+        "--engine",
+        "strata",
+        "--config",
+        "/home/cristian/.cache/strata-review-20261002/Strata-0.1.35/strata-iq3_s-calibrated-retest-20261006.json",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8350"
+    ],
+    "benchmarkMemoryAdaptive": false,
+    "benchmarkMemoryAttempt": -1,
+    "benchmarkMemoryFitTargetMiB": 0,
+    "benchmarkMemoryPlanner": "llama.cpp-fit-expert-aware",
+    "benchmarkMemoryPolicy": "exact-profile",
+    "benchmarkName": "Qwen3.8 ASTRA IQ3_S calibrado vs SOL · TaskFlow ULTRA E2E",
+    "complexityMetrics": {
+        "addedLines": 11,
+        "filesChanged": 1,
+        "filesCreated": 1,
+        "filesDeleted": 0,
+        "removedLines": 0
+    },
+    "elapsedSec": 62.931,
+    "failed": true,
+    "failureDetail": "Se alcanzó el límite preventivo de salida previa a herramientas (64000 caracteres), incluso después de un reintento correctivo.",
+    "failureKind": "infrastructure",
+    "failureMessage": "El agente produjo demasiado texto antes de usar herramientas.",
+    "failureStage": "agent",
+    "finalScore": 0,
+    "finalTotal": 13,
+    "firstAttemptScore": 0,
+    "firstAttemptTotal": 13,
+    "firstEvaluableSec": -1,
+    "firstToolCallSec": -1,
+    "firstWriteSec": -1,
+    "generationSec": 57.474,
+    "harnessEngineId": "legacy",
+    "harnessEngineVersion": 1,
+    "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+    "honeyEnabled": false,
+    "id": "6328fb92-d78f-41a5-b6e2-e3965784e98a",
+    "measurementPhase": "cold",
+    "mode": "custom",
+    "nonGenerationSec": 5.457000000000001,
+    "pass": 1,
+    "passedAfterRepair": false,
+    "passesTotal": 1,
+    "profileConfigFingerprint": "0e3871fab20b8eb2f5dc4cd310d099975604a3192d4e9d6bc2d9aaddc17a2beb",
+    "profileId": "astra-strata-iq3s-calibrated-lch1-20261003",
+    "profileName": "ASTRA IQ3_S calibrated PCIe/MTP · LC-H1",
+    "progressGovernor": {
+        "progressEvents": 0,
+        "replanEvents": 0,
+        "stagnationEvents": 0
+    },
+    "qualityScore": 0,
+    "qualityTotal": 13,
+    "ramFreeMb": 0,
+    "ramMb": 0,
+    "ramTotalMb": 0,
+    "repairAttempts": 2,
+    "response": "[turno cancelado por el usuario]",
+    "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Qwen3_8_ASTRA_IQ3_S_calibrado_vs_SOL_Tas_20261006_131406",
+    "runLabel": "Qwen3.8 ASTRA IQ3_S calibrado vs SOL · TaskFlow ULTRA E2E",
+    "setupSec": 0,
+    "target": "agent",
+    "thinkingEnabled": true,
+    "timeToFirstAttempt": 0.47,
+    "timedOut": false,
+    "timeoutSec": 1800,
+    "timestamp": 1791303374963,
+    "toolCallQuality": {
+        "expectedCalls": 0,
+        "f1Pct": -1,
+        "failedCalls": 0,
+        "incompleteCalls": 0,
+        "invalidCalls": 0,
+        "matchedExpectedCalls": 0,
+        "missingExpectedCalls": 0,
+        "precisionPct": -1,
+        "recallPct": -1,
+        "redundantCalls": 0,
+        "sequenceExact": false,
+        "successRatePct": -1,
+        "successfulCalls": 0,
+        "totalCalls": 0,
+        "unexpectedCalls": 0
+    },
+    "toolCalls": 0,
+    "totalTime": 62.931,
+    "transportAfterEvaluation": false,
+    "vramFreeMb": 4761,
+    "vramGpu0FreeMb": 4526,
+    "vramGpu0Mb": 19596,
+    "vramGpu0TotalMb": 24576,
+    "vramGpu0UsedPct": 79.736328125,
+    "vramGpu1FreeMb": 235,
+    "vramGpu1Mb": 23889,
+    "vramGpu1TotalMb": 24576,
+    "vramGpu1UsedPct": 97.20458984375,
+    "vramMb": 43485,
+    "vramNormalizedImbalancePct": 17.46826171875,
+    "vramObservedGpu0SharePct": 45.06381510865816,
+    "vramOptimalGpu0SharePct": 95.06406217181265,
+    "vramPlacementAssessment": "gpu1-heavy",
+    "vramTelemetryScope": "device-total",
+    "workspace": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Qwen3_8_ASTRA_IQ3_S_calibrado_vs_SOL_Tas_20261006_131406/ASTRA_IQ3_S_calibrated_PCIe_MTP_LC-H1__ws"
+}

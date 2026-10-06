@@ -1,0 +1,41 @@
+{
+    "benchmarkName": "Qwen3.8 ASTRA IQ3_S calibrado vs SOL · TaskFlow ULTRA E2E",
+    "comparisons": [
+    ],
+    "generatedAt": "2026-10-06T13:11:33",
+    "profileCount": 1,
+    "profiles": [
+        {
+            "agentVariant": "baseline",
+            "comparisonTimeMetric": "timeToFirstAttempt",
+            "failedRuns": 1,
+            "fullyAcceptedRuns": 0,
+            "honeyEnabled": false,
+            "medianAddedLines": 0,
+            "medianColdFirstAttemptSec": 0,
+            "medianElapsedSec": 0,
+            "medianFilesChanged": 0,
+            "medianFirstAttemptSec": 0,
+            "medianQualityPct": 0,
+            "medianRemovedLines": 0,
+            "medianRepairAttempts": 0,
+            "medianToolCalls": 0,
+            "medianToolF1Pct": 0,
+            "medianToolRedundantCalls": 0,
+            "medianToolSuccessRatePct": 0,
+            "medianWarmFirstAttemptSec": 0,
+            "outcomeSpread": false,
+            "profileId": "astra-strata-iq3s-calibrated-lch1-20261003",
+            "profileName": "ASTRA IQ3_S calibrated PCIe/MTP · LC-H1",
+            "qualityRangePctPoints": 0,
+            "runs": 1,
+            "stabilityRatePct": 100,
+            "successRatePct": 0,
+            "successfulRuns": 0
+        }
+    ],
+    "runCount": 1,
+    "runLabel": "Qwen3.8 ASTRA IQ3_S calibrado vs SOL · TaskFlow ULTRA E2E",
+    "schemaVersion": 1,
+    "target": "agent"
+}
