@@ -1,0 +1,174 @@
+{
+  "task": "Q-20261006-FLASHNEXT-RETST",
+  "created_at_utc": "2026-10-06T12:57:54.348816+00:00",
+  "host": "3090",
+  "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+  "gpu": "2x NVIDIA GeForce RTX 3090 24 GiB; tests sequential",
+  "runtime": "Strata 0.1.35 API-compatible server",
+  "endpoint": "http://127.0.0.1:8350/v1/chat/completions",
+  "benchmark": "computer_use_prompt_order_hard_v1",
+  "method": "3 passes, 24 tasks, 3 prompt orders, seeds 11/42/77, order seed 4242, temperature 0.6, top_p 0.95, top_k 20, reasoning off, max_tokens 8; direct decision classification only, no GUI actions or screenshots",
+  "models": {
+    "astra_iq3_s_calibrated": {
+      "model": "qwen3.8-flash-next-iq3_s",
+      "requests": 216,
+      "passes": 3,
+      "seeds": [
+        11,
+        42,
+        77
+      ],
+      "task_count": 24,
+      "summary": {
+        "state-first": {
+          "runs": 72,
+          "expectedRuns": 72,
+          "correct": 72,
+          "accuracyPct": 100.0,
+          "validResponses": 72,
+          "validResponsePct": 100.0,
+          "securityRuns": 63,
+          "securityCorrect": 63,
+          "securityAccuracyPct": 100.0,
+          "transportOk": 72,
+          "transportPct": 100.0,
+          "medianMs": 663.2,
+          "p95Ms": 715.29
+        },
+        "question-first": {
+          "runs": 72,
+          "expectedRuns": 72,
+          "correct": 72,
+          "accuracyPct": 100.0,
+          "validResponses": 72,
+          "validResponsePct": 100.0,
+          "securityRuns": 63,
+          "securityCorrect": 63,
+          "securityAccuracyPct": 100.0,
+          "transportOk": 72,
+          "transportPct": 100.0,
+          "medianMs": 650.03,
+          "p95Ms": 717.61
+        },
+        "sandwich": {
+          "runs": 72,
+          "expectedRuns": 72,
+          "correct": 72,
+          "accuracyPct": 100.0,
+          "validResponses": 72,
+          "validResponsePct": 100.0,
+          "securityRuns": 63,
+          "securityCorrect": 63,
+          "securityAccuracyPct": 100.0,
+          "transportOk": 72,
+          "transportPct": 100.0,
+          "medianMs": 809.5,
+          "p95Ms": 871.19
+        }
+      },
+      "promotion_gate": {
+        "eligible": false,
+        "checks": {
+          "accuracyNotWorse": true,
+          "validResponsesNotWorse": true,
+          "securityNotWorse": true,
+          "transportComplete": true,
+          "medianLatencyWithin5Pct": false
+        }
+      },
+      "transport_failures": 0,
+      "invalid_responses": 0
+    },
+    "swift_iq3_xxs": {
+      "model": "swift-1.5-iq3_xxs",
+      "requests": 216,
+      "passes": 3,
+      "seeds": [
+        11,
+        42,
+        77
+      ],
+      "task_count": 24,
+      "summary": {
+        "state-first": {
+          "runs": 72,
+          "expectedRuns": 72,
+          "correct": 72,
+          "accuracyPct": 100.0,
+          "validResponses": 72,
+          "validResponsePct": 100.0,
+          "securityRuns": 63,
+          "securityCorrect": 63,
+          "securityAccuracyPct": 100.0,
+          "transportOk": 72,
+          "transportPct": 100.0,
+          "medianMs": 508.85,
+          "p95Ms": 542.14
+        },
+        "question-first": {
+          "runs": 72,
+          "expectedRuns": 72,
+          "correct": 72,
+          "accuracyPct": 100.0,
+          "validResponses": 72,
+          "validResponsePct": 100.0,
+          "securityRuns": 63,
+          "securityCorrect": 63,
+          "securityAccuracyPct": 100.0,
+          "transportOk": 72,
+          "transportPct": 100.0,
+          "medianMs": 501.87,
+          "p95Ms": 532.63
+        },
+        "sandwich": {
+          "runs": 72,
+          "expectedRuns": 72,
+          "correct": 72,
+          "accuracyPct": 100.0,
+          "validResponses": 72,
+          "validResponsePct": 100.0,
+          "securityRuns": 63,
+          "securityCorrect": 63,
+          "securityAccuracyPct": 100.0,
+          "transportOk": 72,
+          "transportPct": 100.0,
+          "medianMs": 615.92,
+          "p95Ms": 641.92
+        }
+      },
+      "promotion_gate": {
+        "eligible": false,
+        "checks": {
+          "accuracyNotWorse": true,
+          "validResponsesNotWorse": true,
+          "securityNotWorse": true,
+          "transportComplete": true,
+          "medianLatencyWithin5Pct": false
+        }
+      },
+      "transport_failures": 0,
+      "invalid_responses": 0
+    }
+  },
+  "inputs_sha256": {
+    "corpus": "6b8db94a387674f72e72e356b1317f844a7809a42c000986ebc9b24f4f572e35",
+    "runner": "3f8453404adf3f24d456c7cd8a991859bdaf70b658d3f99c1abc880817bf9fba",
+    "astra_calibrated_config": "37352fdd332fbcee5724cf44bfab1a4d7310f2349005c6f5eb7c4d96d57abf65",
+    "swift_config": "af3ddc2e4bcfa1da1a01f8395fb388d37951be74a2a18aa2e0ec2fa1c78e4c43"
+  },
+  "results_sha256": {
+    "astra": "4927dc0f84dd70ff5a1dea3750f6493843a0485ffeaf509d9b7398cbeab5c14a",
+    "swift": "62b855aaf73c44ede558d2ca191efb500b865afb4ed9a867971417cdd497b0c4"
+  },
+  "config_paths": {
+    "astra_calibrated": "/home/cristian/.cache/strata-review-20261002/Strata-0.1.35/strata-iq3_s-calibrated-test.json",
+    "swift_iq3_xxs": "/home/cristian/.cache/strata-review-20261002/Strata-0.1.35/strata-swift-iq3_xxs.json"
+  },
+  "notes": [
+    "ASTRA calibrated profile: spec=4, spec-min-p=0.70, pcie-frac=0.00; same IQ3_S checkpoint as ASTRA base.",
+    "Swift profile: IQ3_XXS, spec=4, spec-min-p=0.50.",
+    "Each profile completed 216/216 HTTP requests with 0 transport failures and all 216 outputs valid.",
+    "No model or harness defaults changed. GPU services stopped after the runs.",
+    "Ingi-Charla was not tested: this model has no ASR/TTS; text-only decision tests cannot establish speech quality."
+  ]
+}
