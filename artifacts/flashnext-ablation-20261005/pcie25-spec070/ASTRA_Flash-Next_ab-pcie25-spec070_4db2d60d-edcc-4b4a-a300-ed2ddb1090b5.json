@@ -1,0 +1,212 @@
+{
+    "acceptance": [
+        {
+            "output": "Traceback (most recent call last):\n  File \"/tmp/LlamaCode-KaXKnp/candidate.py\", line 65, in <module>\n    check(task_func)\n  File \"/tmp/LlamaCode-KaXKnp/candidate.py\", line 63, in check\n    raise AssertionError(' | '.join(details))\nAssertionError: Traceback (most recent call last):\n  File \"/tmp/LlamaCode-KaXKnp/candidate.py\", line 21, in test_case_1\n    result = task_func('abcdef')\n             ^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/LlamaCode-KaXKnp/candidate.py\", line 9, in task_func\n    if not os.path.exists(target_dir):\n           ^^\nNameError: name 'os' is not defined. Did you forget to import 'os'\n | Traceback (most recent call last):\n  File \"/tmp/LlamaCode-KaXKnp/candidate.py\", line 29, in test_case_2\n    result = task_func('aabbcc')\n             ^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/LlamaCode-KaXKnp/candidate.py\", line 9, in task_func\n    if not os.path.exists(target_dir):\n           ^^\nNameError: name 'os' is not defined. Did you forget to import 'os'\n | Traceback (most recent call last):\n  File \"/tmp/LlamaCode-KaXKnp/candidate.py\", line 37, in test_case_3\n    result = task_func('fedcba')\n             ^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/LlamaCode-KaXKnp/candidate.py\", line 9, in task_func\n    if not os.path.exists(target_dir):\n           ^^\nNameError: name 'os' is not defined. Did you forget to import 'os'\n | Traceback (most recent call last):\n  File \"/tmp/LlamaCode-KaXKnp/candidate.py\", line 44, in test_case_4\n    result = task_func('cadbfe')\n             ^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/LlamaCode-KaXKnp/candidate.py\", line 9, in task_func\n    if not os.path.exists(target_dir):\n           ^^\nNameError: name 'os' is not defined. Did you forget to import 'os'\n | Traceback (most recent call last):\n  File \"/tmp/LlamaCode-KaXKnp/candidate.py\", line 51, in test_case_5\n    result = task_func('')\n             ^^^^^^^^^^^^^\n  File \"/tmp/LlamaCode-KaXKnp/candidate.py\", line 9, in task_func\n    if not os.path.exists(target_dir):\n           ^^\nNameError: name 'os' is not defined. Did you forget to import 'os'",
+            "passed": false,
+            "taskId": "BigCodeBench/928",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_BigCodeBench_765.py",
+            "passed": false,
+            "taskId": "BigCodeBench/765",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_BigCodeBench_771.py",
+            "passed": false,
+            "taskId": "BigCodeBench/771",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_BigCodeBench_1019.py",
+            "passed": false,
+            "taskId": "BigCodeBench/1019",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_BigCodeBench_906.py",
+            "passed": false,
+            "taskId": "BigCodeBench/906",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_BigCodeBench_583.py",
+            "passed": false,
+            "taskId": "BigCodeBench/583",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_BigCodeBench_139.py",
+            "passed": false,
+            "taskId": "BigCodeBench/139",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_BigCodeBench_360.py",
+            "passed": false,
+            "taskId": "BigCodeBench/360",
+            "type": "grader:code_tests"
+        }
+    ],
+    "agentFiles": [
+        "solution_BigCodeBench_928.py"
+    ],
+    "agentMetrics": [
+        {
+            "elapsedMs": 13098,
+            "tokens": 362,
+            "tps": 27.63780729882425,
+            "ttft_ms": 91
+        },
+        {
+            "elapsedMs": 0,
+            "tokens": 8,
+            "tps": 0
+        },
+        {
+            "elapsedMs": 5519,
+            "tokens": 417,
+            "tps": 75.55716615328863,
+            "ttft_ms": 54
+        },
+        {
+            "elapsedMs": 0,
+            "tokens": 8,
+            "tps": 0
+        },
+        {
+            "elapsedMs": 0,
+            "tokens": 414,
+            "tps": 0,
+            "ttft_ms": 0
+        },
+        {
+            "elapsedMs": 6300,
+            "tokens": 261,
+            "tps": 41.42857142857143,
+            "ttft_ms": 58
+        },
+        {
+            "elapsedMs": 0,
+            "tokens": 8,
+            "tps": 0
+        }
+    ],
+    "agentProfileId": "agent-maximo",
+    "agentProfileName": "Máximo",
+    "agentSeed": 4242,
+    "agentTemperature": 0.1,
+    "agentVariant": "baseline",
+    "avgTps": 0,
+    "avgTtftMs": 0,
+    "benchmarkEffectiveArgs": [
+        "/home/cristian/.cache/strata-review-20261002/Strata-0.1.35/serve/server.py",
+        "--engine",
+        "strata",
+        "--config",
+        "/home/cristian/.cache/strata-review-20261002/Strata-0.1.35/strata-iq3_s.json",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8350"
+    ],
+    "benchmarkMemoryAdaptive": false,
+    "benchmarkMemoryAttempt": -1,
+    "benchmarkMemoryFitTargetMiB": 0,
+    "benchmarkMemoryPlanner": "llama.cpp-fit-expert-aware",
+    "benchmarkMemoryPolicy": "exact-profile",
+    "benchmarkName": "BigCodeBench-Hard (8 ítems)",
+    "complexityMetrics": {
+        "addedLines": 9,
+        "filesChanged": 1,
+        "filesCreated": 1,
+        "filesDeleted": 0,
+        "removedLines": 0
+    },
+    "elapsedSec": 25.355,
+    "failed": true,
+    "failureDetail": "Se alcanzó el límite preventivo de salida previa a herramientas (64000 caracteres), incluso después de un reintento correctivo.",
+    "failureKind": "infrastructure",
+    "failureMessage": "El agente produjo demasiado texto antes de usar herramientas.",
+    "failureStage": "agent",
+    "finalScore": 0,
+    "finalTotal": 8,
+    "firstAttemptScore": 0,
+    "firstAttemptTotal": 8,
+    "firstEvaluableSec": -1,
+    "firstToolCallSec": -1,
+    "firstWriteSec": -1,
+    "generationSec": 24.917,
+    "harnessEngineId": "legacy",
+    "harnessEngineVersion": 1,
+    "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+    "honeyEnabled": false,
+    "id": "4db2d60d-edcc-4b4a-a300-ed2ddb1090b5",
+    "measurementPhase": "cold",
+    "mode": "custom",
+    "nonGenerationSec": 0.43799999999999883,
+    "pass": 1,
+    "passedAfterRepair": false,
+    "passesTotal": 1,
+    "profileConfigFingerprint": "31127718da9d84d333e2afd6c93372bf22ccc049ff7030d2c8b11706760c27c7",
+    "profileId": "astra-strata-iq3s-ab-pcie25-spec070",
+    "profileName": "ASTRA Flash-Next ab-pcie25-spec070",
+    "progressGovernor": {
+        "progressEvents": 0,
+        "replanEvents": 0,
+        "stagnationEvents": 0
+    },
+    "qualityScore": 0,
+    "qualityTotal": 8,
+    "ramFreeMb": 0,
+    "ramMb": 0,
+    "ramTotalMb": 0,
+    "repairAttempts": 0,
+    "response": "[turno cancelado por el usuario]",
+    "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/BigCodeBench-Hard_8_tems__20261005_215925",
+    "runLabel": "BigCodeBench-Hard (8 ítems)",
+    "setupSec": 0,
+    "target": "agent",
+    "thinkingEnabled": true,
+    "timeToFirstAttempt": 25.355,
+    "timedOut": false,
+    "timeoutSec": 1800,
+    "timestamp": 1791248436757,
+    "toolCallQuality": {
+        "expectedCalls": 0,
+        "f1Pct": -1,
+        "failedCalls": 0,
+        "incompleteCalls": 0,
+        "invalidCalls": 0,
+        "matchedExpectedCalls": 0,
+        "missingExpectedCalls": 0,
+        "precisionPct": -1,
+        "recallPct": -1,
+        "redundantCalls": 0,
+        "sequenceExact": false,
+        "successRatePct": -1,
+        "successfulCalls": 0,
+        "totalCalls": 0,
+        "unexpectedCalls": 0
+    },
+    "toolCalls": 0,
+    "totalTime": 25.355,
+    "transportAfterEvaluation": false,
+    "vramFreeMb": 4803,
+    "vramGpu0FreeMb": 4568,
+    "vramGpu0Mb": 19553,
+    "vramGpu0TotalMb": 24576,
+    "vramGpu0UsedPct": 79.56136067708334,
+    "vramGpu1FreeMb": 235,
+    "vramGpu1Mb": 23889,
+    "vramGpu1TotalMb": 24576,
+    "vramGpu1UsedPct": 97.20458984375,
+    "vramMb": 43442,
+    "vramNormalizedImbalancePct": 17.643229166666664,
+    "vramObservedGpu0SharePct": 45.009437871184566,
+    "vramOptimalGpu0SharePct": 95.10722465125963,
+    "vramPlacementAssessment": "gpu1-heavy",
+    "vramTelemetryScope": "device-total",
+    "workspace": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/BigCodeBench-Hard_8_tems__20261005_215925/ASTRA_Flash-Next_ab-pcie25-spec070__ws"
+}

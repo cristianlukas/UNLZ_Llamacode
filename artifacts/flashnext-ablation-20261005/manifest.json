@@ -1,0 +1,89 @@
+{
+  "title": "ASTRA Flash-Next Strata parameter isolation (LC-H1)",
+  "date_local": "2026-10-05",
+  "task_id": "Q-20261005-FLASHNEXT-ISOLATE",
+  "method": "same ASTRA IQ3_S weights/runtime/HarnessSpec; one ASTRA flag changed per isolated profile vs base .25/.50; one run each, serial",
+  "harness_spec_sha256": "cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+  "seed": 4242,
+  "agent_profile": "agent-maximo",
+  "temperature": 0.1,
+  "thinking": true,
+  "reasoning": "medium",
+  "variants": {
+    "base": "pcie-frac=.25, spec-min-p=.50; repeated baseline from flashnext-repeat-20261005/results.json",
+    "pcie00_spec050": "pcie-frac=.00, spec-min-p=.50; changes only pcie-frac vs base",
+    "pcie25_spec070": "pcie-frac=.25, spec-min-p=.70; changes only spec-min-p vs base",
+    "calibrated": "pcie-frac=.00, spec-min-p=.70; repeated combined recipe from flashnext-repeat-20261005/results.json"
+  },
+  "suite_ids": {
+    "HE0": "059b6f00-7b4b-48ff-a3a2-2a71f900c1c0",
+    "HE20": "267bb33d-4510-417b-ae3c-6dbbfb2cb08d",
+    "BCB8": "05c28394-11d0-41fe-a55f-b3cb69db9c15",
+    "ADV": "intelligence_adversarial_v1"
+  },
+  "test_build": "/home/cristian/.cache/llamacode/build_linux/LlamaCode (rebuilt current Debug source after stale cached binary rejected managedServer)",
+  "limitations": [
+    "one isolated run per variant; ablation outcomes are directional, not statistically stable",
+    "two pcie25/spec070 BCB8 attempts failed pre-tool due to excessive-output guard; excluded from score, retained as evidence",
+    "first pcie00/spec050 BCB8 attempt also failed that guard; a direct retry completed 8/8",
+    "no inference tests for Ingi-Charla or Computer Use E2E"
+  ],
+  "result_records": 11,
+  "protocol": {
+    "agentProfileId": "agent-maximo",
+    "seed": 4242,
+    "temperature": 0.1,
+    "thinking": true,
+    "reasoningEffort": "medium",
+    "passes": 1,
+    "autoRepairsMax": 2,
+    "suites": [
+      "HumanEval/1 prerequisite",
+      "HumanEval/20",
+      "BigCodeBench-Hard/8",
+      "Intelligence Adversarial v1/10"
+    ]
+  },
+  "configs": {
+    "pcie00_spec050": {
+      "file": "pcie00-spec050/strata-iq3_s.json",
+      "sha256": "495249d006f6f5bb29afb88f07aa426cb64d08880737c62aad8151e11ee16339",
+      "profileConfigFingerprint": "b6bc9d09c1abe13d17d7a9f0c178055c88433da38d72e4f6e676088e693991dd"
+    },
+    "pcie25_spec070": {
+      "file": "pcie25-spec070/strata-iq3_s.json",
+      "sha256": "936d3902dfbdd0b183405f88217385e19cd68d5eff45152c5406fd4a8bcd224a",
+      "profileConfigFingerprint": "31127718da9d84d333e2afd6c93372bf22ccc049ff7030d2c8b11706760c27c7"
+    },
+    "base_pcie25_spec050": "../flashnext-repeat-20261005/manifest.json#configs.ASTRA IQ3_S base",
+    "calibrated_pcie00_spec070": "../flashnext-repeat-20261005/manifest.json#configs.ASTRA IQ3_S calibrado (config de prueba)"
+  },
+  "environment": "LlamaCode test daemon (current Debug build), Strata 0.1.35, dual RTX 3090, one server/model at a time, isolated QSettings/.qttest and profile directory; control API 8897, inference API 8350.",
+  "invalid_infrastructure_runs": [
+    {
+      "id": "f9dc04a5-a2a4-4311-be03-093ee053272c",
+      "profile": "pcie00_spec050",
+      "reason": "stale cached binary rejected managedServer backend; 0.066s, not a model result"
+    },
+    {
+      "ids": [
+        "d2562b7e-c4c9-49d2-9d7a-94630d988a11"
+      ],
+      "profile": "pcie00_spec050",
+      "reason": "BCB pre-tool excessive-output guard; excluded; direct retry passed 8/8"
+    },
+    {
+      "ids": [
+        "4db2d60d-edcc-4b4a-a300-ed2ddb1090b5",
+        "9ba81d93-79d0-4bd6-a935-cf86473613f0"
+      ],
+      "profile": "pcie25_spec070",
+      "reason": "BCB pre-tool excessive-output guard reproduced twice; excluded"
+    }
+  ],
+  "test_binary_sha256": "40dd6ad923fd99377f82be78d4d898bab7b91ab80ae0fb549c52af774d855032",
+  "results_sha256": "63bd0f7ff31df97e3921d21f3616d3ee671d70400821bedc1245e8904c7cb62a",
+  "comparison_baseline_manifest": "../flashnext-repeat-20261005/manifest.json",
+  "raw_run_directories_copied": false,
+  "receipts_note": "Compact per-run result JSON plus benchmarkResults API snapshot are retained; large solution/workspace cache directories are deliberately omitted."
+}

@@ -1,0 +1,657 @@
+{
+    "acceptance": [
+        {
+            "passed": true,
+            "taskId": "HumanEval/0",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/1",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/2",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/3",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/4",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/5",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/6",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/7",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/8",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/9",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/10",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/11",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/12",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/13",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/14",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/15",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/16",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/17",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/18",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/19",
+            "type": "grader:code_tests"
+        }
+    ],
+    "agentFiles": [
+        "solution_HumanEval_0.py",
+        "solution_HumanEval_12.py",
+        "solution_HumanEval_18.py",
+        "solution_HumanEval_1.py",
+        "solution_HumanEval_15.py",
+        "solution_HumanEval_10.py",
+        "__pycache__/solution_HumanEval_6.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_13.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_5.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_7.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_15.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_12.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_10.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_2.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_11.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_3.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_0.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_9.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_4.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_16.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_8.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_17.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_1.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_14.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_18.cpython-312.pyc",
+        "solution_HumanEval_9.py",
+        "solution_HumanEval_4.py",
+        "solution_HumanEval_14.py",
+        "solution_HumanEval_3.py",
+        "solution_HumanEval_6.py",
+        "solution_HumanEval_2.py",
+        "solution_HumanEval_7.py",
+        "solution_HumanEval_19.py",
+        "solution_HumanEval_17.py",
+        "solution_HumanEval_5.py",
+        "solution_HumanEval_13.py",
+        "solution_HumanEval_11.py",
+        "solution_HumanEval_16.py",
+        "solution_HumanEval_8.py"
+    ],
+    "agentMetrics": [
+        {
+            "elapsedMs": 12158,
+            "tokens": 307,
+            "tps": 97.97663879491925,
+            "ttft_ms": 82
+        },
+        {
+            "elapsedMs": 10225,
+            "tokens": 192,
+            "tps": 108.54203177115721,
+            "ttft_ms": 87
+        },
+        {
+            "elapsedMs": 2333,
+            "tokens": 192,
+            "tps": 113.54228267297457,
+            "ttft_ms": 48
+        },
+        {
+            "elapsedMs": 1738,
+            "tokens": 80,
+            "tps": 76.42338555598013,
+            "ttft_ms": 74
+        },
+        {
+            "elapsedMs": 11250,
+            "tokens": 268,
+            "tps": 111.96991852935032,
+            "ttft_ms": 54
+        },
+        {
+            "elapsedMs": 10460,
+            "tokens": 135,
+            "tps": 95.67682494684621,
+            "ttft_ms": 90
+        },
+        {
+            "elapsedMs": 4104,
+            "tokens": 333,
+            "tps": 98.38681084914023,
+            "ttft_ms": 113
+        },
+        {
+            "elapsedMs": 2263,
+            "tokens": 130,
+            "tps": 81.74044265593561,
+            "ttft_ms": 63
+        },
+        {
+            "elapsedMs": 10570,
+            "tokens": 150,
+            "tps": 105.20409594613551,
+            "ttft_ms": 58
+        },
+        {
+            "elapsedMs": 11259,
+            "tokens": 198,
+            "tps": 108.39218262440467,
+            "ttft_ms": 119
+        },
+        {
+            "elapsedMs": 1521,
+            "tokens": 90,
+            "tps": 101.11223458038423,
+            "ttft_ms": 78
+        },
+        {
+            "elapsedMs": 11799,
+            "tokens": 216,
+            "tps": 109.05235522794972,
+            "ttft_ms": 64
+        },
+        {
+            "elapsedMs": 11643,
+            "tokens": 136,
+            "tps": 94.8065528058557,
+            "ttft_ms": 119
+        },
+        {
+            "elapsedMs": 1747,
+            "tokens": 85,
+            "tps": 85.12769153730596,
+            "ttft_ms": 84
+        },
+        {
+            "elapsedMs": 13365,
+            "tokens": 195,
+            "tps": 107.67531750414136,
+            "ttft_ms": 66
+        },
+        {
+            "elapsedMs": 13654,
+            "tokens": 199,
+            "tps": 106.82269579687583,
+            "ttft_ms": 99
+        },
+        {
+            "elapsedMs": 1484,
+            "tokens": 85,
+            "tps": 102.61982373536159,
+            "ttft_ms": 88
+        },
+        {
+            "elapsedMs": 13469,
+            "tokens": 201,
+            "tps": 108.49031143736168,
+            "ttft_ms": 75
+        },
+        {
+            "elapsedMs": 13183,
+            "tokens": 137,
+            "tps": 112.39642300434818,
+            "ttft_ms": 104
+        },
+        {
+            "elapsedMs": 1619,
+            "tokens": 92,
+            "tps": 106.75330703179392,
+            "ttft_ms": 91
+        },
+        {
+            "elapsedMs": 14326,
+            "tokens": 256,
+            "tps": 113.93475455071432,
+            "ttft_ms": 75
+        },
+        {
+            "elapsedMs": 13633,
+            "tokens": 131,
+            "tps": 103.1333648244371,
+            "ttft_ms": 187
+        },
+        {
+            "elapsedMs": 1643,
+            "tokens": 85,
+            "tps": 100.30682086381874,
+            "ttft_ms": 99
+        },
+        {
+            "elapsedMs": 15061,
+            "tokens": 159,
+            "tps": 106.49698593436035,
+            "ttft_ms": 77
+        },
+        {
+            "elapsedMs": 15349,
+            "tokens": 133,
+            "tps": 99.32043910088866,
+            "ttft_ms": 111
+        },
+        {
+            "elapsedMs": 1705,
+            "tokens": 83,
+            "tps": 90.44350005448403,
+            "ttft_ms": 96
+        },
+        {
+            "elapsedMs": 15726,
+            "tokens": 209,
+            "tps": 110.44176706827308,
+            "ttft_ms": 81
+        },
+        {
+            "elapsedMs": 15496,
+            "tokens": 145,
+            "tps": 106.4454558801938,
+            "ttft_ms": 114
+        },
+        {
+            "elapsedMs": 3868,
+            "tokens": 281,
+            "tps": 91.62943881044772,
+            "ttft_ms": 102
+        },
+        {
+            "elapsedMs": 1920,
+            "tokens": 105,
+            "tps": 92.76437847866418,
+            "ttft_ms": 81
+        },
+        {
+            "elapsedMs": 16610,
+            "tokens": 229,
+            "tps": 98.82190480300349,
+            "ttft_ms": 85
+        },
+        {
+            "elapsedMs": 16295,
+            "tokens": 181,
+            "tps": 104.40099209782545,
+            "ttft_ms": 117
+        },
+        {
+            "elapsedMs": 3610,
+            "tokens": 259,
+            "tps": 93.21911891736251,
+            "ttft_ms": 214
+        },
+        {
+            "elapsedMs": 18794,
+            "tokens": 261,
+            "tps": 93.13113291703836,
+            "ttft_ms": 92
+        },
+        {
+            "elapsedMs": 17726,
+            "tokens": 163,
+            "tps": 100.06753023512799,
+            "ttft_ms": 122
+        },
+        {
+            "elapsedMs": 2127,
+            "tokens": 130,
+            "tps": 96.42486278000297,
+            "ttft_ms": 105
+        },
+        {
+            "elapsedMs": 17796,
+            "tokens": 180,
+            "tps": 101.55148095909732,
+            "ttft_ms": 95
+        },
+        {
+            "elapsedMs": 18449,
+            "tokens": 201,
+            "tps": 95.3419979129115,
+            "ttft_ms": 126
+        },
+        {
+            "elapsedMs": 2328,
+            "tokens": 135,
+            "tps": 89.12655971479501,
+            "ttft_ms": 117
+        },
+        {
+            "elapsedMs": 18931,
+            "tokens": 257,
+            "tps": 98.78916009994234,
+            "ttft_ms": 97
+        },
+        {
+            "elapsedMs": 17883,
+            "tokens": 131,
+            "tps": 109.17576464705391,
+            "ttft_ms": 132
+        },
+        {
+            "elapsedMs": 1809,
+            "tokens": 81,
+            "tps": 81.203007518797,
+            "ttft_ms": 119
+        },
+        {
+            "elapsedMs": 19352,
+            "tokens": 163,
+            "tps": 103.77538677022983,
+            "ttft_ms": 101
+        },
+        {
+            "elapsedMs": 19533,
+            "tokens": 144,
+            "tps": 104.98687664041995,
+            "ttft_ms": 135
+        },
+        {
+            "elapsedMs": 2275,
+            "tokens": 149,
+            "tps": 95.30510425994626,
+            "ttft_ms": 224
+        },
+        {
+            "elapsedMs": 2116,
+            "tokens": 126,
+            "tps": 96.93053311793214,
+            "ttft_ms": 122
+        },
+        {
+            "elapsedMs": 19683,
+            "tokens": 146,
+            "tps": 104.57703602893775,
+            "ttft_ms": 106
+        },
+        {
+            "elapsedMs": 19991,
+            "tokens": 149,
+            "tps": 95.64770830658621,
+            "ttft_ms": 140
+        },
+        {
+            "elapsedMs": 4004,
+            "tokens": 310,
+            "tps": 96.86894569089432,
+            "ttft_ms": 127
+        },
+        {
+            "elapsedMs": 1858,
+            "tokens": 91,
+            "tps": 93.05654974946314,
+            "ttft_ms": 123
+        },
+        {
+            "elapsedMs": 20078,
+            "tokens": 150,
+            "tps": 105.07144858503783,
+            "ttft_ms": 109
+        },
+        {
+            "elapsedMs": 20701,
+            "tokens": 182,
+            "tps": 101.42666072224698,
+            "ttft_ms": 145
+        },
+        {
+            "elapsedMs": 2006,
+            "tokens": 112,
+            "tps": 98.96615710877441,
+            "ttft_ms": 134
+        },
+        {
+            "elapsedMs": 21342,
+            "tokens": 133,
+            "tps": 101.12530413625304,
+            "ttft_ms": 113
+        },
+        {
+            "elapsedMs": 22911,
+            "tokens": 187,
+            "tps": 76.6079475624744,
+            "ttft_ms": 145
+        },
+        {
+            "elapsedMs": 1970,
+            "tokens": 104,
+            "tps": 90.35621198957428,
+            "ttft_ms": 130
+        },
+        {
+            "elapsedMs": 24229,
+            "tokens": 398,
+            "tps": 105.33001640819352,
+            "ttft_ms": 121
+        },
+        {
+            "elapsedMs": 22877,
+            "tokens": 166,
+            "tps": 81.8257997732538,
+            "ttft_ms": 152
+        },
+        {
+            "elapsedMs": 2638,
+            "tokens": 182,
+            "tps": 102.09233185617322,
+            "ttft_ms": 151
+        },
+        {
+            "elapsedMs": 2302,
+            "tokens": 113,
+            "tps": 79.80225988700565,
+            "ttft_ms": 343
+        },
+        {
+            "elapsedMs": 23134,
+            "tokens": 225,
+            "tps": 102.32854284154993,
+            "ttft_ms": 121
+        },
+        {
+            "elapsedMs": 23312,
+            "tokens": 172,
+            "tps": 83.81249390897574,
+            "ttft_ms": 155
+        },
+        {
+            "elapsedMs": 2017,
+            "tokens": 110,
+            "tps": 92.2122558470953,
+            "ttft_ms": 336
+        },
+        {
+            "elapsedMs": 29486,
+            "tokens": 271,
+            "tps": 103.4074865493952,
+            "ttft_ms": 139
+        },
+        {
+            "elapsedMs": 358,
+            "tokens": 0,
+            "tps": 0,
+            "ttft_ms": 163
+        },
+        {
+            "elapsedMs": 0,
+            "tokens": 8,
+            "tps": 0
+        }
+    ],
+    "agentProfileId": "agent-maximo",
+    "agentProfileName": "Máximo",
+    "agentSeed": 4242,
+    "agentTemperature": 0.1,
+    "agentVariant": "baseline",
+    "avgTps": 98.81866879559183,
+    "avgTtftMs": 117.46153846153847,
+    "baselineId": "67192331-14f2-4cf7-8809-6a8e5a927b77",
+    "benchmarkEffectiveArgs": [
+        "/home/cristian/.cache/strata-review-20261002/Strata-0.1.35/serve/server.py",
+        "--engine",
+        "strata",
+        "--config",
+        "/home/cristian/.cache/strata-review-20261002/Strata-0.1.35/strata-iq3_s.json",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8350"
+    ],
+    "benchmarkMemoryAdaptive": false,
+    "benchmarkMemoryAttempt": -1,
+    "benchmarkMemoryFitTargetMiB": 0,
+    "benchmarkMemoryPlanner": "llama.cpp-fit-expert-aware",
+    "benchmarkMemoryPolicy": "exact-profile",
+    "benchmarkName": "HumanEval (20 ítems)",
+    "complexityMetrics": {
+        "addedLines": 495,
+        "filesChanged": 39,
+        "filesCreated": 39,
+        "filesDeleted": 0,
+        "removedLines": 0
+    },
+    "elapsedSec": 731.083,
+    "failed": false,
+    "failureKind": "none",
+    "finalScore": 20,
+    "finalTotal": 20,
+    "firstAttemptScore": 19,
+    "firstAttemptTotal": 20,
+    "firstEvaluableSec": 13.046,
+    "firstToolCallSec": 12.247,
+    "firstWriteSec": 12.295,
+    "generationSec": 719.102,
+    "harnessEngineId": "legacy",
+    "harnessEngineVersion": 1,
+    "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+    "honeyEnabled": false,
+    "id": "67192331-14f2-4cf7-8809-6a8e5a927b77",
+    "isBaseline": true,
+    "measurementPhase": "cold",
+    "mode": "custom",
+    "nonGenerationSec": 11.980999999999995,
+    "pass": 1,
+    "passedAfterRepair": true,
+    "passesTotal": 1,
+    "profileConfigFingerprint": "31127718da9d84d333e2afd6c93372bf22ccc049ff7030d2c8b11706760c27c7",
+    "profileId": "astra-strata-iq3s-ab-pcie25-spec070",
+    "profileName": "ASTRA Flash-Next ab-pcie25-spec070",
+    "progressGovernor": {
+        "progressEvents": 44,
+        "replanEvents": 0,
+        "stagnationEvents": 1
+    },
+    "qualityScore": 20,
+    "qualityTotal": 20,
+    "ramFreeMb": 0,
+    "ramMb": 0,
+    "ramTotalMb": 0,
+    "repairAttempts": 1,
+    "response": "[turno cancelado por el usuario]",
+    "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/HumanEval_20_tems__20261005_214344",
+    "runLabel": "HumanEval (20 ítems)",
+    "setupSec": 0,
+    "target": "agent",
+    "thinkingEnabled": true,
+    "timeToFirstAttempt": 699.187,
+    "timedOut": false,
+    "timeoutSec": 1800,
+    "timestamp": 1791248201487,
+    "toolCallQuality": {
+        "expectedCalls": 0,
+        "f1Pct": -1,
+        "failedCalls": 1,
+        "incompleteCalls": 0,
+        "invalidCalls": 0,
+        "matchedExpectedCalls": 0,
+        "missingExpectedCalls": 0,
+        "precisionPct": -1,
+        "recallPct": -1,
+        "redundantCalls": 0,
+        "sequenceExact": false,
+        "successRatePct": 97.77777777777777,
+        "successfulCalls": 44,
+        "totalCalls": 45,
+        "unexpectedCalls": 0
+    },
+    "toolCalls": 45,
+    "totalTime": 731.083,
+    "transportAfterEvaluation": false,
+    "vramFreeMb": 4863,
+    "vramGpu0FreeMb": 4642,
+    "vramGpu0Mb": 19524,
+    "vramGpu0TotalMb": 24576,
+    "vramGpu0UsedPct": 79.443359375,
+    "vramGpu1FreeMb": 221,
+    "vramGpu1Mb": 23903,
+    "vramGpu1TotalMb": 24576,
+    "vramGpu1UsedPct": 97.26155598958334,
+    "vramMb": 43427,
+    "vramNormalizedImbalancePct": 17.818196614583336,
+    "vramObservedGpu0SharePct": 44.958205724549245,
+    "vramOptimalGpu0SharePct": 95.45548015628214,
+    "vramPlacementAssessment": "gpu1-heavy",
+    "vramTelemetryScope": "device-total",
+    "workspace": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/HumanEval_20_tems__20261005_214344/ASTRA_Flash-Next_ab-pcie25-spec070__ws"
+}
