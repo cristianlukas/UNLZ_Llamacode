@@ -1,0 +1,68 @@
+{
+  "task_id": "Q-20261006-FLASHNEXT-KEEPONE",
+  "owner_token": "repo-flashnext-keepone-20261006-2cbd19b3",
+  "timestamp_local": "2026-10-06 America/Argentina/Buenos_Aires",
+  "phase": "pre-deletion inventory",
+  "selection": "Keep only Swift 1.5 IQ3_XXS; retire all other Flash-Next model weights and evaluation packs. Not an inference of global quality inferiority.",
+  "items": [
+    {
+      "volume": "C",
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/models/Strata-review-20261002",
+      "bytes_du_sb": 93000847852,
+      "reason": "ASTRA IQ3_S, base/calibrated weights and pack; removed for one-checkpoint/storage decision, not proven quality-inferior"
+    },
+    {
+      "volume": "C",
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/models/Orca-Qwen38-uncensored-IQ3_XXS",
+      "bytes_du_sb": 85202685829,
+      "reason": "Orca IQ3_XXS; incomplete HE20, no valid comparative quality score"
+    },
+    {
+      "volume": "HDD extra",
+      "path": "/media/cristian/HDD extra/Orca-Qwen38-uncensored-IQ3_XXS-shard2",
+      "bytes_du_sb": 22566,
+      "reason": "Partial .part download and metadata, no complete model"
+    },
+    {
+      "volume": "D",
+      "path": "/media/cristian/Disco local/Models/From-C/Qwen3.8-Flash-Next/albucino-w4a16-fp8ple",
+      "bytes_du_sb": 128986587138,
+      "reason": "Albucino W4A16+PLE FP8; retains long-context benefit, removed solely by single-variant/space choice"
+    },
+    {
+      "volume": "D",
+      "path": "/media/cristian/Disco local/strata-nvfp4-reddit-20261005/orca-modelopt-nvfp4",
+      "bytes_du_sb": 69496707212,
+      "reason": "Orca NVFP4 experts/dense pack, HE0-only"
+    },
+    {
+      "volume": "D",
+      "path": "/media/cristian/Disco local/strata-nvfp4-reddit-20261005/mtp",
+      "bytes_du_sb": 1712910528,
+      "reason": "MTP/runtime auxiliary for the removed Orca NVFP4 evaluation"
+    },
+    {
+      "volume": "HDD extra",
+      "path": "/media/cristian/HDD extra/OrcaRouter-Qwen3.8-Flash-Next-Uncensored-ModelOpt-NVFP4",
+      "bytes_du_sb": 135253767574,
+      "reason": "Orca NVFP4 source checkpoint; removed with conversion, retest requires redownload"
+    },
+    {
+      "volume": "HDD extra",
+      "path": "/media/cristian/HDD extra/strata-nvfp4-eval-20261004",
+      "bytes_du_sb": 126411558786,
+      "reason": "Orca NVFP4 conversion/intermediate; HE0-only"
+    },
+    {
+      "volume": "D",
+      "path": "/media/cristian/Disco local/Models/Strata-swift-20261003",
+      "bytes_du_sb": 77514088073,
+      "reason": "KEEP — selected unique local Flash-Next checkpoint"
+    }
+  ],
+  "references": [
+    "artifacts/flashnext-repeat-20261005/results.json",
+    "artifacts/flashnext-computer-use-20261006/report.md",
+    "docs/flashnext-single-checkpoint-decision-20261006.md"
+  ]
+}

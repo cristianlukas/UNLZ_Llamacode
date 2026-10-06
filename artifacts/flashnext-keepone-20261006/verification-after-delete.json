@@ -1,0 +1,91 @@
+{
+  "task_id": "Q-20261006-FLASHNEXT-KEEPONE",
+  "owner_token": "repo-flashnext-keepone-20261006-2cbd19b3",
+  "verified_at_local": "2026-10-06T11:41:27.782068-03:00",
+  "selection": "Swift 1.5 IQ3_XXS is the only retained Flash-Next checkpoint.",
+  "removed_roots": [
+    {
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/models/Strata-review-20261002",
+      "predelete_apparent_bytes": 93000847852,
+      "absent_after": true
+    },
+    {
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/models/Orca-Qwen38-uncensored-IQ3_XXS",
+      "predelete_apparent_bytes": 85202685829,
+      "absent_after": true
+    },
+    {
+      "path": "/media/cristian/HDD extra/Orca-Qwen38-uncensored-IQ3_XXS-shard2",
+      "predelete_apparent_bytes": 22566,
+      "absent_after": true
+    },
+    {
+      "path": "/media/cristian/Disco local/Models/From-C/Qwen3.8-Flash-Next/albucino-w4a16-fp8ple",
+      "predelete_apparent_bytes": 128986587138,
+      "absent_after": true
+    },
+    {
+      "path": "/media/cristian/Disco local/strata-nvfp4-reddit-20261005/orca-modelopt-nvfp4",
+      "predelete_apparent_bytes": 69496707212,
+      "absent_after": true
+    },
+    {
+      "path": "/media/cristian/Disco local/strata-nvfp4-reddit-20261005/mtp",
+      "predelete_apparent_bytes": 1712910528,
+      "absent_after": true
+    },
+    {
+      "path": "/media/cristian/HDD extra/OrcaRouter-Qwen3.8-Flash-Next-Uncensored-ModelOpt-NVFP4",
+      "predelete_apparent_bytes": 135253767574,
+      "absent_after": true
+    },
+    {
+      "path": "/media/cristian/HDD extra/strata-nvfp4-eval-20261004",
+      "predelete_apparent_bytes": 126411558786,
+      "absent_after": true
+    }
+  ],
+  "retained_checkpoint": {
+    "path": "/media/cristian/Disco local/Models/Strata-swift-20261003/models/swift-IQ3_XXS",
+    "shards": [
+      [
+        "Swift-Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+        39785790560
+      ],
+      [
+        "Swift-Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf",
+        36180282560
+      ]
+    ],
+    "shard_bytes": 75966073120
+  },
+  "space_before_available_bytes": {
+    "C": 8138588160,
+    "D": 132039208960,
+    "HDD extra": 91278032896
+  },
+  "space_after_available_bytes": {
+    "C": 186342199296,
+    "D": 332235694080,
+    "HDD extra": 352944111616
+  },
+  "observed_available_increase_bytes": {
+    "C": 178203611136,
+    "D": 200196485120,
+    "HDD extra": 261666078720
+  },
+  "expected_apparent_removed_bytes_by_volume": {
+    "C": 178203533681,
+    "D": 200196204878,
+    "HDD extra": 261665348926,
+    "total": 640065087485
+  },
+  "observations": "Paths moved to the system trash, confirmed individually absent, then trash emptied (it was empty before this task). NTFS needed sync before df reflected the reclaimed blocks. Windows $RECYCLE.BIN pre-existing contents were left untouched. No inference server was running.",
+  "evidence": {
+    "lc_h1_results_sha256": "2e094ee06d87b9dc76d75ee20ffb8b5eeebba0756edc05974226e2eb05b2d321",
+    "computer_use_report_sha256": "49ede8f5817fb2ca6592d2ee6bf5f47cababca224325d618462ffd3fa6cf08f7",
+    "decision_report": "docs/flashnext-single-checkpoint-decision-20261006.md",
+    "external_inventory_sha256": "61f08e56342e117e7f20a4d469469777721e39a1fb45eef62e02ae264e0b1a43",
+    "external_inventory_mirror_sha256": "61f08e56342e117e7f20a4d469469777721e39a1fb45eef62e02ae264e0b1a43"
+  }
+}
