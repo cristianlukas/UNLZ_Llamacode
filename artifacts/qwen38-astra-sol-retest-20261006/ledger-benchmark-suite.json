@@ -1,0 +1,73 @@
+{
+  "id": "qwen38_ledger_fixed_gold_retest_20261006",
+  "bundledVersion": 1,
+  "name": "Ledger fixed functional gold · SOL vs ASTRA IQ3_S",
+  "recommendedTimeoutSec": 1200,
+  "description": "Second task family: fixed ledger/API edge-case checks plus compilation. Identical contract and grader for both profiles; agent/infrastructure errors are separately labeled.",
+  "prompts": [
+    {
+      "id": "ledger_fixed",
+      "isSpeed": true,
+      "maxTokens": 6000,
+      "prompt": "Return the complete contents of `solution_ledger_fixed.py` as your entire response. The benchmark saves the final response as that file. Output only valid Python source: no thoughts, `<think>` tags, Markdown, explanations, or tool calls. Keep it concise.\n\nImplement a standard-library-only personal ledger. API: `Entry` dataclass with id, date, payee, amount, category, note; `Ledger` with `add(date,payee,amount,category,note=\"\")`, `entries()`, `balance()`, `undo()`, `filter_entries(category=None,start=None,end=None,query=None)`, `summary()`, `to_csv()`, `from_csv(text)`; module function `parse_amount(value)`.\n\nRules: parse Decimal amounts including `$` and thousands commas, round half-up to cents, reject malformed amounts. Validate real ISO dates, nonblank payee and category; trim payee and lowercase trimmed category. Preserve signed values (income positive, expense negative). IDs start at 1 and increase; CSV round-trip preserves entries and IDs so new entries continue above prior max. `entries()` and filters preserve insertion order. Balance is signed total. Summary has Decimal keys `income` (sum positive), `expenses` (absolute sum negative), `balance`, integer `count`, and Decimal `by_category` signed sums. Filters combine category (case-insensitive), inclusive ISO date bounds, and case-insensitive substring over payee/note. Undo reverses the latest add exactly and returns false when empty. CSV correctly quotes commas and quotes.\n\nThe harness runs 8 fixed external checks plus py_compile, the same for each profile. Do not author or inspect tests. Output one complete module only.",
+      "acceptance": {
+        "files": [],
+        "commands": [
+          {
+            "name": "compile_module",
+            "command": "python3 -m py_compile solution_ledger_fixed.py",
+            "timeoutMs": 30000
+          },
+          {
+            "name": "fixed_money",
+            "command": "python3 \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\" \"$PWD\" money",
+            "timeoutMs": 30000,
+            "expectedStdout": "PASS: money"
+          },
+          {
+            "name": "fixed_validation",
+            "command": "python3 \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\" \"$PWD\" validation",
+            "timeoutMs": 30000,
+            "expectedStdout": "PASS: validation"
+          },
+          {
+            "name": "fixed_balance_summary",
+            "command": "python3 \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\" \"$PWD\" balance_summary",
+            "timeoutMs": 30000,
+            "expectedStdout": "PASS: balance_summary"
+          },
+          {
+            "name": "fixed_filters",
+            "command": "python3 \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\" \"$PWD\" filters",
+            "timeoutMs": 30000,
+            "expectedStdout": "PASS: filters"
+          },
+          {
+            "name": "fixed_undo",
+            "command": "python3 \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\" \"$PWD\" undo",
+            "timeoutMs": 30000,
+            "expectedStdout": "PASS: undo"
+          },
+          {
+            "name": "fixed_csv",
+            "command": "python3 \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\" \"$PWD\" csv",
+            "timeoutMs": 30000,
+            "expectedStdout": "PASS: csv"
+          },
+          {
+            "name": "fixed_ids",
+            "command": "python3 \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\" \"$PWD\" ids",
+            "timeoutMs": 30000,
+            "expectedStdout": "PASS: ids"
+          },
+          {
+            "name": "fixed_stable_order",
+            "command": "python3 \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\" \"$PWD\" stable_order",
+            "timeoutMs": 30000,
+            "expectedStdout": "PASS: stable_order"
+          }
+        ]
+      }
+    }
+  ]
+}

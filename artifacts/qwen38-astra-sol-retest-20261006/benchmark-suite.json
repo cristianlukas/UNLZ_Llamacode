@@ -1,0 +1,103 @@
+{
+  "id": "qwen38_taskflow_fixed_gold_retest_20261006",
+  "bundledVersion": 1,
+  "name": "TaskFlow fixed external gold tests · SOL vs ASTRA IQ3_S",
+  "recommendedTimeoutSec": 1800,
+  "description": "Repeated comparison with 13 fixed functional acceptance checks plus syntax compilation; task scoring excludes infrastructure/protocol failures.",
+  "prompts": [
+    {
+      "id": "taskflow_fixed_gold",
+      "isSpeed": true,
+      "maxTokens": 12000,
+      "prompt": "Return the complete contents of `solution_taskflow_fixed_gold.py` as your entire response. The benchmark harness saves your final response as that artifact and then runs the acceptance suite. Do not call tools; do not output thoughts, `<think>` tags, Markdown fences, explanation, or a plan. Output only valid Python source, starting with imports or a module docstring. Keep implementation concise enough to fit the response limit.\n\nImplement a Python 3.10+ task manager using only the standard library. Public API: `Task` dataclass fields id, title, description, priority, status, tags, depends_on, recurrence, created_at, updated_at, due_date, completed_at; `TaskService` methods create_task, list_tasks, get_task, update_task, set_status, complete_task, reopen_task, cancel_task, delete_task, add_dependency, blocked_by, ready_tasks, history, undo, summary, export_markdown, export_csv; `JsonTaskStorage(path)` load/save; functions `next_occurrence(date_iso, recurrence)`, `parse_query(text)`, `apply_query(tasks, filters)`, `markdown_report(tasks, summary)`.\n\nContract: priorities low/medium/high/urgent; statuses todo/doing/blocked/done/cancelled; recurrence daily/weekly/monthly. Reject blank titles. Normalize/dedupe tags and dependency IDs. Preserve increasing IDs after persistence. Raise KeyError for missing tasks/dependencies; reject dependency cycles; block completion until dependencies are done. Completion sets completed_at and creates the next recurring occurrence. Monthly recurrence clamps to month end. `undo()` reverses the latest mutation including completion and a recurrence-created row, restoring every field. Ready/blocked and summary are accurate. Combined filters search title/description case-insensitively. Storage tolerates missing/corrupt JSON and skips malformed rows, writes atomically, and is thread-safe. 40 concurrent creates produce unique consecutive IDs. Markdown/CSV exports include task data.\n\nThe fixed suite has 13 external functional checks plus `py_compile`, identical for every profile. Implement the contract directly; do not attempt to write or inspect tests. No extra files.",
+      "acceptance": {
+        "files": [],
+        "commands": [
+          {
+            "name": "compile_package",
+            "command": "python3 -m py_compile solution_taskflow_fixed_gold.py",
+            "timeoutMs": 30000
+          },
+          {
+            "name": "fixed_model_validation",
+            "command": "python3 \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/fixed_grader.py\" \"$PWD\" model_validation",
+            "timeoutMs": 30000,
+            "expectedStdout": "PASS: model_validation"
+          },
+          {
+            "name": "fixed_serialization",
+            "command": "python3 \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/fixed_grader.py\" \"$PWD\" serialization",
+            "timeoutMs": 30000,
+            "expectedStdout": "PASS: serialization"
+          },
+          {
+            "name": "fixed_service_basics",
+            "command": "python3 \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/fixed_grader.py\" \"$PWD\" service_basics",
+            "timeoutMs": 30000,
+            "expectedStdout": "PASS: service_basics"
+          },
+          {
+            "name": "fixed_dependency_graph",
+            "command": "python3 \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/fixed_grader.py\" \"$PWD\" dependency_graph",
+            "timeoutMs": 30000,
+            "expectedStdout": "PASS: dependency_graph"
+          },
+          {
+            "name": "fixed_completion_gate",
+            "command": "python3 \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/fixed_grader.py\" \"$PWD\" completion_gate",
+            "timeoutMs": 30000,
+            "expectedStdout": "PASS: completion_gate"
+          },
+          {
+            "name": "fixed_recurrence",
+            "command": "python3 \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/fixed_grader.py\" \"$PWD\" recurrence",
+            "timeoutMs": 30000,
+            "expectedStdout": "PASS: recurrence"
+          },
+          {
+            "name": "fixed_undo_mutation",
+            "command": "python3 \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/fixed_grader.py\" \"$PWD\" undo_mutation",
+            "timeoutMs": 30000,
+            "expectedStdout": "PASS: undo_mutation"
+          },
+          {
+            "name": "fixed_undo_completion",
+            "command": "python3 \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/fixed_grader.py\" \"$PWD\" undo_completion",
+            "timeoutMs": 30000,
+            "expectedStdout": "PASS: undo_completion"
+          },
+          {
+            "name": "fixed_storage_roundtrip",
+            "command": "python3 \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/fixed_grader.py\" \"$PWD\" storage_roundtrip",
+            "timeoutMs": 30000,
+            "expectedStdout": "PASS: storage_roundtrip"
+          },
+          {
+            "name": "fixed_storage_tolerance",
+            "command": "python3 \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/fixed_grader.py\" \"$PWD\" storage_tolerance",
+            "timeoutMs": 30000,
+            "expectedStdout": "PASS: storage_tolerance"
+          },
+          {
+            "name": "fixed_concurrency",
+            "command": "python3 \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/fixed_grader.py\" \"$PWD\" concurrency",
+            "timeoutMs": 30000,
+            "expectedStdout": "PASS: concurrency"
+          },
+          {
+            "name": "fixed_query_filters",
+            "command": "python3 \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/fixed_grader.py\" \"$PWD\" query_filters",
+            "timeoutMs": 30000,
+            "expectedStdout": "PASS: query_filters"
+          },
+          {
+            "name": "fixed_exports",
+            "command": "python3 \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/fixed_grader.py\" \"$PWD\" exports",
+            "timeoutMs": 30000,
+            "expectedStdout": "PASS: exports"
+          }
+        ]
+      }
+    }
+  ]
+}

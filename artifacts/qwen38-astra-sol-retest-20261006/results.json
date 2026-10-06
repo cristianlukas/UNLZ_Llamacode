@@ -1,0 +1,834 @@
+{
+  "date": "2026-10-06",
+  "taskId": "Q-20261006-ASTRA-SOL-REPEAT",
+  "method": "LlamaCode custom benchmark; serial runs; agent profile Máximo for both models. Report final scores after up to two repair attempts; infrastructure/agent failures are not scored as code-quality failures.",
+  "gradingCaveat": "Acceptance command paths exposed the fixed grader path to the agent, so these are fixed checks but not blind tests. At least one earlier run had the grader path copied into a task workspace; interpret as reproducible task execution, not leakage-resistant generalization.",
+  "tests": {
+    "taskflow": {
+      "suiteId": "qwen38_taskflow_fixed_gold_retest_20261006",
+      "checks": 14,
+      "components": [
+        "py_compile",
+        "Task validation/normalization",
+        "serialization",
+        "service CRUD and filtering",
+        "dependency graph/cycles",
+        "completion gate",
+        "monthly/daily recurrence",
+        "undo mutation",
+        "undo completion plus recurrence row removal",
+        "JSON storage roundtrip/atomic behavior",
+        "corrupt and malformed storage tolerance",
+        "40 concurrent creates with unique consecutive IDs",
+        "combined query filters",
+        "Markdown/CSV exports"
+      ]
+    },
+    "ledger": {
+      "suiteId": "qwen38_ledger_fixed_gold_retest_20261006",
+      "checks": 9,
+      "components": [
+        "py_compile",
+        "currency parsing and half-up rounding",
+        "entry validation/normalization",
+        "signed balance and category summary",
+        "combined category/date/text filters",
+        "undo",
+        "CSV quoting and roundtrip",
+        "ID continuity after import",
+        "stable insertion order"
+      ]
+    }
+  },
+  "runs": {
+    "taskflow_astra_1": {
+      "runJson": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/TaskFlow_fixed_external_gold_tests_SOL_v_20261006_161237/ASTRA_IQ3_S_calibrated_PCIe_MTP_LC-H1_915ce682-c73a-4a33-b4c7-66a13099e925.json",
+      "sha256": "9a8ee8aa9d8bc6ee7a68279f8d8bb782fcdb16ad9c0cfb3142b2bd65291393a8",
+      "profileId": "astra-strata-iq3s-calibrated-lch1-20261003",
+      "profileName": "ASTRA IQ3_S calibrated PCIe/MTP · LC-H1",
+      "agentProfileId": "agent-maximo",
+      "agentProfileName": "Máximo",
+      "score": 0,
+      "total": 14,
+      "firstAttemptScore": 0,
+      "firstAttemptTotal": 14,
+      "repairAttempts": 2,
+      "passedAfterRepair": false,
+      "elapsedSec": 42.53,
+      "avgTps": 0,
+      "firstToolCallSec": -1,
+      "firstEvaluableSec": -1,
+      "failureKind": "infrastructure",
+      "failureStage": "agent",
+      "failureMessage": "El agente produjo demasiado texto antes de usar herramientas.",
+      "acceptance": [
+        {
+          "name": "compile_package",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "File \"solution_taskflow_fixed_gold.py\", line 23\n    Let me define parse_query to return dict with keys: text, status, priority, tag(s), recurrence, due_before/due_after maybe. Keep flexible: grader likely checks that parse_query(\"status:doing urgent bug\") returns filters and apply_query filters correctly. I'll support:\n                                                                                                                                                                                                                                                                    ^\nSyntaxError: unterminated string literal (detected at line 23)"
+        },
+        {
+          "name": "fixed_model_validation",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: model_validation: SyntaxError: unterminated string literal (detected at line 23) (solution_taskflow_fixed_gold.py, line 23)"
+        },
+        {
+          "name": "fixed_serialization",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: serialization: SyntaxError: unterminated string literal (detected at line 23) (solution_taskflow_fixed_gold.py, line 23)"
+        },
+        {
+          "name": "fixed_service_basics",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: service_basics: SyntaxError: unterminated string literal (detected at line 23) (solution_taskflow_fixed_gold.py, line 23)"
+        },
+        {
+          "name": "fixed_dependency_graph",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: dependency_graph: SyntaxError: unterminated string literal (detected at line 23) (solution_taskflow_fixed_gold.py, line 23)"
+        },
+        {
+          "name": "fixed_completion_gate",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: completion_gate: SyntaxError: unterminated string literal (detected at line 23) (solution_taskflow_fixed_gold.py, line 23)"
+        },
+        {
+          "name": "fixed_recurrence",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: recurrence: SyntaxError: unterminated string literal (detected at line 23) (solution_taskflow_fixed_gold.py, line 23)"
+        },
+        {
+          "name": "fixed_undo_mutation",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: undo_mutation: SyntaxError: unterminated string literal (detected at line 23) (solution_taskflow_fixed_gold.py, line 23)"
+        },
+        {
+          "name": "fixed_undo_completion",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: undo_completion: SyntaxError: unterminated string literal (detected at line 23) (solution_taskflow_fixed_gold.py, line 23)"
+        },
+        {
+          "name": "fixed_storage_roundtrip",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: storage_roundtrip: SyntaxError: unterminated string literal (detected at line 23) (solution_taskflow_fixed_gold.py, line 23)"
+        },
+        {
+          "name": "fixed_storage_tolerance",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: storage_tolerance: SyntaxError: unterminated string literal (detected at line 23) (solution_taskflow_fixed_gold.py, line 23)"
+        },
+        {
+          "name": "fixed_concurrency",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: concurrency: SyntaxError: unterminated string literal (detected at line 23) (solution_taskflow_fixed_gold.py, line 23)"
+        },
+        {
+          "name": "fixed_query_filters",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: query_filters: SyntaxError: unterminated string literal (detected at line 23) (solution_taskflow_fixed_gold.py, line 23)"
+        },
+        {
+          "name": "fixed_exports",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: exports: SyntaxError: unterminated string literal (detected at line 23) (solution_taskflow_fixed_gold.py, line 23)"
+        }
+      ]
+    },
+    "taskflow_astra_2": {
+      "runJson": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/TaskFlow_fixed_external_gold_tests_SOL_v_20261006_161544/ASTRA_IQ3_S_calibrated_PCIe_MTP_LC-H1_3dc9b892-0846-466f-b7fa-d9b902cc3903.json",
+      "sha256": "2e15df9812a0ea148c8fd153046fa13d42c5d00f8853851d362c7f3da506d81b",
+      "profileId": "astra-strata-iq3s-calibrated-lch1-20261003",
+      "profileName": "ASTRA IQ3_S calibrated PCIe/MTP · LC-H1",
+      "agentProfileId": "agent-maximo",
+      "agentProfileName": "Máximo",
+      "score": 0,
+      "total": 14,
+      "firstAttemptScore": 0,
+      "firstAttemptTotal": 14,
+      "repairAttempts": 2,
+      "passedAfterRepair": false,
+      "elapsedSec": 42.334,
+      "avgTps": 0,
+      "firstToolCallSec": -1,
+      "firstEvaluableSec": -1,
+      "failureKind": "infrastructure",
+      "failureStage": "agent",
+      "failureMessage": "El agente produjo demasiado texto antes de usar herramientas.",
+      "acceptance": [
+        {
+          "name": "compile_package",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "File \"solution_taskflow_fixed_gold.py\", line 1\n    <think>File doesn't exist. I need to create solution_taskflow_fixed_gold.py directly with write_file, complete implementation.\n                     ^\nSyntaxError: unterminated string literal (detected at line 1)"
+        },
+        {
+          "name": "fixed_model_validation",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: model_validation: SyntaxError: unterminated string literal (detected at line 1) (solution_taskflow_fixed_gold.py, line 1)"
+        },
+        {
+          "name": "fixed_serialization",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: serialization: SyntaxError: unterminated string literal (detected at line 1) (solution_taskflow_fixed_gold.py, line 1)"
+        },
+        {
+          "name": "fixed_service_basics",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: service_basics: SyntaxError: unterminated string literal (detected at line 1) (solution_taskflow_fixed_gold.py, line 1)"
+        },
+        {
+          "name": "fixed_dependency_graph",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: dependency_graph: SyntaxError: unterminated string literal (detected at line 1) (solution_taskflow_fixed_gold.py, line 1)"
+        },
+        {
+          "name": "fixed_completion_gate",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: completion_gate: SyntaxError: unterminated string literal (detected at line 1) (solution_taskflow_fixed_gold.py, line 1)"
+        },
+        {
+          "name": "fixed_recurrence",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: recurrence: SyntaxError: unterminated string literal (detected at line 1) (solution_taskflow_fixed_gold.py, line 1)"
+        },
+        {
+          "name": "fixed_undo_mutation",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: undo_mutation: SyntaxError: unterminated string literal (detected at line 1) (solution_taskflow_fixed_gold.py, line 1)"
+        },
+        {
+          "name": "fixed_undo_completion",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: undo_completion: SyntaxError: unterminated string literal (detected at line 1) (solution_taskflow_fixed_gold.py, line 1)"
+        },
+        {
+          "name": "fixed_storage_roundtrip",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: storage_roundtrip: SyntaxError: unterminated string literal (detected at line 1) (solution_taskflow_fixed_gold.py, line 1)"
+        },
+        {
+          "name": "fixed_storage_tolerance",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: storage_tolerance: SyntaxError: unterminated string literal (detected at line 1) (solution_taskflow_fixed_gold.py, line 1)"
+        },
+        {
+          "name": "fixed_concurrency",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: concurrency: SyntaxError: unterminated string literal (detected at line 1) (solution_taskflow_fixed_gold.py, line 1)"
+        },
+        {
+          "name": "fixed_query_filters",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: query_filters: SyntaxError: unterminated string literal (detected at line 1) (solution_taskflow_fixed_gold.py, line 1)"
+        },
+        {
+          "name": "fixed_exports",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: exports: SyntaxError: unterminated string literal (detected at line 1) (solution_taskflow_fixed_gold.py, line 1)"
+        }
+      ]
+    },
+    "taskflow_astra_3": {
+      "runJson": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/TaskFlow_fixed_external_gold_tests_SOL_v_20261006_161747/ASTRA_IQ3_S_calibrated_PCIe_MTP_LC-H1_00b3ec92-672d-4bdc-a0cc-f6cf2de056ff.json",
+      "sha256": "344bca4856a87035ca371dd0bb05bf6b61c37c98843b3e879c4b1ebc074c81cb",
+      "profileId": "astra-strata-iq3s-calibrated-lch1-20261003",
+      "profileName": "ASTRA IQ3_S calibrated PCIe/MTP · LC-H1",
+      "agentProfileId": "agent-maximo",
+      "agentProfileName": "Máximo",
+      "score": 0,
+      "total": 14,
+      "firstAttemptScore": 0,
+      "firstAttemptTotal": 14,
+      "repairAttempts": 2,
+      "passedAfterRepair": false,
+      "elapsedSec": 41.837,
+      "avgTps": 0,
+      "firstToolCallSec": -1,
+      "firstEvaluableSec": -1,
+      "failureKind": "infrastructure",
+      "failureStage": "agent",
+      "failureMessage": "El agente produjo demasiado texto antes de usar herramientas.",
+      "acceptance": [
+        {
+          "name": "compile_package",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "File \"solution_taskflow_fixed_gold.py\", line 28\n    For completion with recurrence: completion mutates the task (status done, completed_at) AND creates a new row. undo must revert both: restore the task's</think>\n                                                                                                                                                          ^\nSyntaxError: unterminated string literal (detected at line 28)"
+        },
+        {
+          "name": "fixed_model_validation",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: model_validation: SyntaxError: unterminated string literal (detected at line 28) (solution_taskflow_fixed_gold.py, line 28)"
+        },
+        {
+          "name": "fixed_serialization",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: serialization: SyntaxError: unterminated string literal (detected at line 28) (solution_taskflow_fixed_gold.py, line 28)"
+        },
+        {
+          "name": "fixed_service_basics",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: service_basics: SyntaxError: unterminated string literal (detected at line 28) (solution_taskflow_fixed_gold.py, line 28)"
+        },
+        {
+          "name": "fixed_dependency_graph",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: dependency_graph: SyntaxError: unterminated string literal (detected at line 28) (solution_taskflow_fixed_gold.py, line 28)"
+        },
+        {
+          "name": "fixed_completion_gate",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: completion_gate: SyntaxError: unterminated string literal (detected at line 28) (solution_taskflow_fixed_gold.py, line 28)"
+        },
+        {
+          "name": "fixed_recurrence",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: recurrence: SyntaxError: unterminated string literal (detected at line 28) (solution_taskflow_fixed_gold.py, line 28)"
+        },
+        {
+          "name": "fixed_undo_mutation",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: undo_mutation: SyntaxError: unterminated string literal (detected at line 28) (solution_taskflow_fixed_gold.py, line 28)"
+        },
+        {
+          "name": "fixed_undo_completion",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: undo_completion: SyntaxError: unterminated string literal (detected at line 28) (solution_taskflow_fixed_gold.py, line 28)"
+        },
+        {
+          "name": "fixed_storage_roundtrip",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: storage_roundtrip: SyntaxError: unterminated string literal (detected at line 28) (solution_taskflow_fixed_gold.py, line 28)"
+        },
+        {
+          "name": "fixed_storage_tolerance",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: storage_tolerance: SyntaxError: unterminated string literal (detected at line 28) (solution_taskflow_fixed_gold.py, line 28)"
+        },
+        {
+          "name": "fixed_concurrency",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: concurrency: SyntaxError: unterminated string literal (detected at line 28) (solution_taskflow_fixed_gold.py, line 28)"
+        },
+        {
+          "name": "fixed_query_filters",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: query_filters: SyntaxError: unterminated string literal (detected at line 28) (solution_taskflow_fixed_gold.py, line 28)"
+        },
+        {
+          "name": "fixed_exports",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "FAIL: exports: SyntaxError: unterminated string literal (detected at line 28) (solution_taskflow_fixed_gold.py, line 28)"
+        }
+      ]
+    },
+    "taskflow_sol": {
+      "runJson": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/TaskFlow_fixed_external_gold_tests_SOL_v_20261006_162141/SOL_Qwen3_8_27B_LC-H1_20261003_108b3413-7657-40a5-a874-0b9dee9cac50.json",
+      "sha256": "29aff615a1b11af49314593019ad0265cf2085843767ca2ed460e516ae27d23c",
+      "profileId": "86b52354-8c78-4138-8636-4aa1bf66a85f",
+      "profileName": "SOL · Qwen3.8 27B · LC-H1 20261003",
+      "agentProfileId": "agent-maximo",
+      "agentProfileName": "Máximo",
+      "score": 14,
+      "total": 14,
+      "firstAttemptScore": 0,
+      "firstAttemptTotal": 14,
+      "repairAttempts": 1,
+      "passedAfterRepair": true,
+      "elapsedSec": 442.526,
+      "avgTps": 115.99698504400688,
+      "firstToolCallSec": 105.914,
+      "firstEvaluableSec": -1,
+      "failureKind": "none",
+      "failureStage": null,
+      "failureMessage": null,
+      "acceptance": [
+        {
+          "name": "compile_package",
+          "passed": true,
+          "exitCode": 0,
+          "timedOut": false,
+          "output": ""
+        },
+        {
+          "name": "fixed_model_validation",
+          "passed": true,
+          "exitCode": 0,
+          "timedOut": false,
+          "output": "PASS: model_validation"
+        },
+        {
+          "name": "fixed_serialization",
+          "passed": true,
+          "exitCode": 0,
+          "timedOut": false,
+          "output": "PASS: serialization"
+        },
+        {
+          "name": "fixed_service_basics",
+          "passed": true,
+          "exitCode": 0,
+          "timedOut": false,
+          "output": "PASS: service_basics"
+        },
+        {
+          "name": "fixed_dependency_graph",
+          "passed": true,
+          "exitCode": 0,
+          "timedOut": false,
+          "output": "PASS: dependency_graph"
+        },
+        {
+          "name": "fixed_completion_gate",
+          "passed": true,
+          "exitCode": 0,
+          "timedOut": false,
+          "output": "PASS: completion_gate"
+        },
+        {
+          "name": "fixed_recurrence",
+          "passed": true,
+          "exitCode": 0,
+          "timedOut": false,
+          "output": "PASS: recurrence"
+        },
+        {
+          "name": "fixed_undo_mutation",
+          "passed": true,
+          "exitCode": 0,
+          "timedOut": false,
+          "output": "PASS: undo_mutation"
+        },
+        {
+          "name": "fixed_undo_completion",
+          "passed": true,
+          "exitCode": 0,
+          "timedOut": false,
+          "output": "PASS: undo_completion"
+        },
+        {
+          "name": "fixed_storage_roundtrip",
+          "passed": true,
+          "exitCode": 0,
+          "timedOut": false,
+          "output": "PASS: storage_roundtrip"
+        },
+        {
+          "name": "fixed_storage_tolerance",
+          "passed": true,
+          "exitCode": 0,
+          "timedOut": false,
+          "output": "PASS: storage_tolerance"
+        },
+        {
+          "name": "fixed_concurrency",
+          "passed": true,
+          "exitCode": 0,
+          "timedOut": false,
+          "output": "PASS: concurrency"
+        },
+        {
+          "name": "fixed_query_filters",
+          "passed": true,
+          "exitCode": 0,
+          "timedOut": false,
+          "output": "PASS: query_filters"
+        },
+        {
+          "name": "fixed_exports",
+          "passed": true,
+          "exitCode": 0,
+          "timedOut": false,
+          "output": "PASS: exports"
+        }
+      ]
+    },
+    "ledger_astra_1": {
+      "runJson": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Ledger_fixed_functional_gold_SOL_vs_ASTR_20261006_162956/ASTRA_IQ3_S_calibrated_PCIe_MTP_LC-H1_2932a00e-8abe-425b-bf0b-4879d24749b6.json",
+      "sha256": "f24966d45870e22e398e78af6ddfd9dee65191bc9ae2ec6447a8922285ffbed7",
+      "profileId": "astra-strata-iq3s-calibrated-lch1-20261003",
+      "profileName": "ASTRA IQ3_S calibrated PCIe/MTP · LC-H1",
+      "agentProfileId": "agent-maximo",
+      "agentProfileName": "Máximo",
+      "score": 0,
+      "total": 9,
+      "firstAttemptScore": 0,
+      "firstAttemptTotal": 9,
+      "repairAttempts": 2,
+      "passedAfterRepair": false,
+      "elapsedSec": 49.699,
+      "avgTps": 0,
+      "firstToolCallSec": -1,
+      "firstEvaluableSec": -1,
+      "failureKind": "infrastructure",
+      "failureStage": "agent",
+      "failureMessage": "El agente produjo demasiado texto antes de usar herramientas.",
+      "acceptance": [
+        {
+          "name": "compile_module",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "[Errno 2] No such file or directory: 'solution_ledger_fixed.py'"
+        },
+        {
+          "name": "fixed_money",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "Traceback (most recent call last):\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 58, in <module>\n    run(sys.argv[1],sys.argv[2])\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 11, in run\n    m=load(root)\n      ^^^^^^^^^^\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 8, in load\n    mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod); return mod\n                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<frozen importlib._bootstrap_external>\", line 991, in exec_module\n  File \"<frozen importlib._bootstrap_external>\", line 1128, in get_code\n  File \"<frozen importlib._bootstrap_external>\", line 1186, in get_data\nFileNotFoundError: [Errno 2] No such file or directory: '/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Ledger_fixed_functional_gold_SOL_vs_ASTR_20261006_162956/ASTRA_IQ3_S_calibrated_PCIe_MTP_LC-H1__ws/solution_ledger_fixed.py'"
+        },
+        {
+          "name": "fixed_validation",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "Traceback (most recent call last):\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 58, in <module>\n    run(sys.argv[1],sys.argv[2])\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 11, in run\n    m=load(root)\n      ^^^^^^^^^^\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 8, in load\n    mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod); return mod\n                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<frozen importlib._bootstrap_external>\", line 991, in exec_module\n  File \"<frozen importlib._bootstrap_external>\", line 1128, in get_code\n  File \"<frozen importlib._bootstrap_external>\", line 1186, in get_data\nFileNotFoundError: [Errno 2] No such file or directory: '/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Ledger_fixed_functional_gold_SOL_vs_ASTR_20261006_162956/ASTRA_IQ3_S_calibrated_PCIe_MTP_LC-H1__ws/solution_ledger_fixed.py'"
+        },
+        {
+          "name": "fixed_balance_summary",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "Traceback (most recent call last):\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 58, in <module>\n    run(sys.argv[1],sys.argv[2])\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 11, in run\n    m=load(root)\n      ^^^^^^^^^^\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 8, in load\n    mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod); return mod\n                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<frozen importlib._bootstrap_external>\", line 991, in exec_module\n  File \"<frozen importlib._bootstrap_external>\", line 1128, in get_code\n  File \"<frozen importlib._bootstrap_external>\", line 1186, in get_data\nFileNotFoundError: [Errno 2] No such file or directory: '/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Ledger_fixed_functional_gold_SOL_vs_ASTR_20261006_162956/ASTRA_IQ3_S_calibrated_PCIe_MTP_LC-H1__ws/solution_ledger_fixed.py'"
+        },
+        {
+          "name": "fixed_filters",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "Traceback (most recent call last):\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 58, in <module>\n    run(sys.argv[1],sys.argv[2])\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 11, in run\n    m=load(root)\n      ^^^^^^^^^^\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 8, in load\n    mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod); return mod\n                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<frozen importlib._bootstrap_external>\", line 991, in exec_module\n  File \"<frozen importlib._bootstrap_external>\", line 1128, in get_code\n  File \"<frozen importlib._bootstrap_external>\", line 1186, in get_data\nFileNotFoundError: [Errno 2] No such file or directory: '/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Ledger_fixed_functional_gold_SOL_vs_ASTR_20261006_162956/ASTRA_IQ3_S_calibrated_PCIe_MTP_LC-H1__ws/solution_ledger_fixed.py'"
+        },
+        {
+          "name": "fixed_undo",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "Traceback (most recent call last):\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 58, in <module>\n    run(sys.argv[1],sys.argv[2])\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 11, in run\n    m=load(root)\n      ^^^^^^^^^^\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 8, in load\n    mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod); return mod\n                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<frozen importlib._bootstrap_external>\", line 991, in exec_module\n  File \"<frozen importlib._bootstrap_external>\", line 1128, in get_code\n  File \"<frozen importlib._bootstrap_external>\", line 1186, in get_data\nFileNotFoundError: [Errno 2] No such file or directory: '/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Ledger_fixed_functional_gold_SOL_vs_ASTR_20261006_162956/ASTRA_IQ3_S_calibrated_PCIe_MTP_LC-H1__ws/solution_ledger_fixed.py'"
+        },
+        {
+          "name": "fixed_csv",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "Traceback (most recent call last):\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 58, in <module>\n    run(sys.argv[1],sys.argv[2])\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 11, in run\n    m=load(root)\n      ^^^^^^^^^^\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 8, in load\n    mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod); return mod\n                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<frozen importlib._bootstrap_external>\", line 991, in exec_module\n  File \"<frozen importlib._bootstrap_external>\", line 1128, in get_code\n  File \"<frozen importlib._bootstrap_external>\", line 1186, in get_data\nFileNotFoundError: [Errno 2] No such file or directory: '/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Ledger_fixed_functional_gold_SOL_vs_ASTR_20261006_162956/ASTRA_IQ3_S_calibrated_PCIe_MTP_LC-H1__ws/solution_ledger_fixed.py'"
+        },
+        {
+          "name": "fixed_ids",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "Traceback (most recent call last):\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 58, in <module>\n    run(sys.argv[1],sys.argv[2])\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 11, in run\n    m=load(root)\n      ^^^^^^^^^^\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 8, in load\n    mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod); return mod\n                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<frozen importlib._bootstrap_external>\", line 991, in exec_module\n  File \"<frozen importlib._bootstrap_external>\", line 1128, in get_code\n  File \"<frozen importlib._bootstrap_external>\", line 1186, in get_data\nFileNotFoundError: [Errno 2] No such file or directory: '/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Ledger_fixed_functional_gold_SOL_vs_ASTR_20261006_162956/ASTRA_IQ3_S_calibrated_PCIe_MTP_LC-H1__ws/solution_ledger_fixed.py'"
+        },
+        {
+          "name": "fixed_stable_order",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "Traceback (most recent call last):\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 58, in <module>\n    run(sys.argv[1],sys.argv[2])\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 11, in run\n    m=load(root)\n      ^^^^^^^^^^\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 8, in load\n    mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod); return mod\n                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<frozen importlib._bootstrap_external>\", line 991, in exec_module\n  File \"<frozen importlib._bootstrap_external>\", line 1128, in get_code\n  File \"<frozen importlib._bootstrap_external>\", line 1186, in get_data\nFileNotFoundError: [Errno 2] No such file or directory: '/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Ledger_fixed_functional_gold_SOL_vs_ASTR_20261006_162956/ASTRA_IQ3_S_calibrated_PCIe_MTP_LC-H1__ws/solution_ledger_fixed.py'"
+        }
+      ]
+    },
+    "ledger_sol": {
+      "runJson": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Ledger_fixed_functional_gold_SOL_vs_ASTR_20261006_163351/SOL_Qwen3_8_27B_LC-H1_20261003_d6e5a343-530c-4027-bb72-6263368ea53e.json",
+      "sha256": "342ee4a7c24cb6363e611e3dadf9734e320c3e72ba2838156864e795c5eda442",
+      "profileId": "86b52354-8c78-4138-8636-4aa1bf66a85f",
+      "profileName": "SOL · Qwen3.8 27B · LC-H1 20261003",
+      "agentProfileId": "agent-maximo",
+      "agentProfileName": "Máximo",
+      "score": 9,
+      "total": 9,
+      "firstAttemptScore": 0,
+      "firstAttemptTotal": 9,
+      "repairAttempts": 1,
+      "passedAfterRepair": true,
+      "elapsedSec": 113.912,
+      "avgTps": 121.36100710566653,
+      "firstToolCallSec": 86.2,
+      "firstEvaluableSec": -1,
+      "failureKind": "none",
+      "failureStage": null,
+      "failureMessage": null,
+      "acceptance": [
+        {
+          "name": "compile_module",
+          "passed": true,
+          "exitCode": 0,
+          "timedOut": false,
+          "output": ""
+        },
+        {
+          "name": "fixed_money",
+          "passed": true,
+          "exitCode": 0,
+          "timedOut": false,
+          "output": "PASS: money"
+        },
+        {
+          "name": "fixed_validation",
+          "passed": true,
+          "exitCode": 0,
+          "timedOut": false,
+          "output": "PASS: validation"
+        },
+        {
+          "name": "fixed_balance_summary",
+          "passed": true,
+          "exitCode": 0,
+          "timedOut": false,
+          "output": "PASS: balance_summary"
+        },
+        {
+          "name": "fixed_filters",
+          "passed": true,
+          "exitCode": 0,
+          "timedOut": false,
+          "output": "PASS: filters"
+        },
+        {
+          "name": "fixed_undo",
+          "passed": true,
+          "exitCode": 0,
+          "timedOut": false,
+          "output": "PASS: undo"
+        },
+        {
+          "name": "fixed_csv",
+          "passed": true,
+          "exitCode": 0,
+          "timedOut": false,
+          "output": "PASS: csv"
+        },
+        {
+          "name": "fixed_ids",
+          "passed": true,
+          "exitCode": 0,
+          "timedOut": false,
+          "output": "PASS: ids"
+        },
+        {
+          "name": "fixed_stable_order",
+          "passed": true,
+          "exitCode": 0,
+          "timedOut": false,
+          "output": "PASS: stable_order"
+        }
+      ]
+    },
+    "ledger_astra_server_conflict": {
+      "runJson": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Ledger_fixed_functional_gold_SOL_vs_ASTR_20261006_163649/ASTRA_IQ3_S_calibrated_PCIe_MTP_LC-H1_5eb733f6-eb7a-4d01-822a-79a46339d352_failed.json",
+      "sha256": "8fe87f261bf8f8826b63c448445e2592ccd289f3e178217791c5803b1fdb68ca",
+      "profileId": "astra-strata-iq3s-calibrated-lch1-20261003",
+      "profileName": "ASTRA IQ3_S calibrated PCIe/MTP · LC-H1",
+      "agentProfileId": "506d9acb-903f-41b0-9c66-b572c02d5bae",
+      "agentProfileName": "TMP Benchmark · Máximo sin thinking/leakguard",
+      "score": 0,
+      "total": 0,
+      "firstAttemptScore": 0,
+      "firstAttemptTotal": 0,
+      "repairAttempts": 0,
+      "passedAfterRepair": false,
+      "elapsedSec": 2.003,
+      "avgTps": 0,
+      "firstToolCallSec": -1,
+      "firstEvaluableSec": -1,
+      "failureKind": null,
+      "failureStage": "server-load",
+      "failureMessage": "No se pudo cargar o iniciar el servidor para esta pasada.",
+      "acceptance": []
+    },
+    "ledger_astra_2": {
+      "runJson": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Ledger_fixed_functional_gold_SOL_vs_ASTR_20261006_163751/ASTRA_IQ3_S_calibrated_PCIe_MTP_LC-H1_bdb926fb-a0ec-4ce7-b6e6-4f6389c83557.json",
+      "sha256": "1d77bdc74ea9bc01c6d0256358a527a1d48541f4eda791e40aeee82262f90827",
+      "profileId": "astra-strata-iq3s-calibrated-lch1-20261003",
+      "profileName": "ASTRA IQ3_S calibrated PCIe/MTP · LC-H1",
+      "agentProfileId": "506d9acb-903f-41b0-9c66-b572c02d5bae",
+      "agentProfileName": "TMP Benchmark · Máximo sin thinking/leakguard",
+      "score": 0,
+      "total": 9,
+      "firstAttemptScore": 0,
+      "firstAttemptTotal": 9,
+      "repairAttempts": 2,
+      "passedAfterRepair": false,
+      "elapsedSec": 43.581,
+      "avgTps": 0,
+      "firstToolCallSec": -1,
+      "firstEvaluableSec": -1,
+      "failureKind": "infrastructure",
+      "failureStage": "agent",
+      "failureMessage": "El agente produjo demasiado texto antes de usar herramientas.",
+      "acceptance": [
+        {
+          "name": "compile_module",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "File \"solution_ledger_fixed.py\", line 1\n    <think>I'm writing the module and then running the grader checks to validate it. The implementation needs an Entry dataclass with fields for id, date, payee, amount, category, and note, plus a parse_amount function that handles Decimal values while stripping currency symbols and commas, rounding to cents using half-up rounding, and rejecting invalid inputs.\n            ^\nSyntaxError: unterminated string literal (detected at line 1)"
+        },
+        {
+          "name": "fixed_money",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "Traceback (most recent call last):\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 58, in <module>\n    run(sys.argv[1],sys.argv[2])\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 11, in run\n    m=load(root)\n      ^^^^^^^^^^\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 8, in load\n    mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod); return mod\n                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<frozen importlib._bootstrap_external>\", line 991, in exec_module\n  File \"<frozen importlib._bootstrap_external>\", line 1129, in get_code\n  File \"<frozen importlib._bootstrap_external>\", line 1059, in source_to_code\n  File \"<frozen importlib._bootstrap>\", line 488, in _call_with_frames_removed\n  File \"/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Ledger_fixed_functional_gold_SOL_vs_ASTR_20261006_163751/ASTRA_IQ3_S_calibrated_PCIe_MTP_LC-H1__ws/solution_ledger_fixed.py\", line 1\n    <think>I'm writing the module and then running the grader checks to validate it. The implementation needs an Entry dataclass with fields for id, date, payee, amount, category, and note, plus a parse_amount function that handles Decimal values while stripping currency symbols and commas, rounding to cents using half-up rounding, and rejecting invalid inputs.\n            ^\nSyntaxError: unterminated string literal (detected at line 1)"
+        },
+        {
+          "name": "fixed_validation",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "Traceback (most recent call last):\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 58, in <module>\n    run(sys.argv[1],sys.argv[2])\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 11, in run\n    m=load(root)\n      ^^^^^^^^^^\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 8, in load\n    mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod); return mod\n                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<frozen importlib._bootstrap_external>\", line 991, in exec_module\n  File \"<frozen importlib._bootstrap_external>\", line 1129, in get_code\n  File \"<frozen importlib._bootstrap_external>\", line 1059, in source_to_code\n  File \"<frozen importlib._bootstrap>\", line 488, in _call_with_frames_removed\n  File \"/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Ledger_fixed_functional_gold_SOL_vs_ASTR_20261006_163751/ASTRA_IQ3_S_calibrated_PCIe_MTP_LC-H1__ws/solution_ledger_fixed.py\", line 1\n    <think>I'm writing the module and then running the grader checks to validate it. The implementation needs an Entry dataclass with fields for id, date, payee, amount, category, and note, plus a parse_amount function that handles Decimal values while stripping currency symbols and commas, rounding to cents using half-up rounding, and rejecting invalid inputs.\n            ^\nSyntaxError: unterminated string literal (detected at line 1)"
+        },
+        {
+          "name": "fixed_balance_summary",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "Traceback (most recent call last):\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 58, in <module>\n    run(sys.argv[1],sys.argv[2])\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 11, in run\n    m=load(root)\n      ^^^^^^^^^^\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 8, in load\n    mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod); return mod\n                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<frozen importlib._bootstrap_external>\", line 991, in exec_module\n  File \"<frozen importlib._bootstrap_external>\", line 1129, in get_code\n  File \"<frozen importlib._bootstrap_external>\", line 1059, in source_to_code\n  File \"<frozen importlib._bootstrap>\", line 488, in _call_with_frames_removed\n  File \"/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Ledger_fixed_functional_gold_SOL_vs_ASTR_20261006_163751/ASTRA_IQ3_S_calibrated_PCIe_MTP_LC-H1__ws/solution_ledger_fixed.py\", line 1\n    <think>I'm writing the module and then running the grader checks to validate it. The implementation needs an Entry dataclass with fields for id, date, payee, amount, category, and note, plus a parse_amount function that handles Decimal values while stripping currency symbols and commas, rounding to cents using half-up rounding, and rejecting invalid inputs.\n            ^\nSyntaxError: unterminated string literal (detected at line 1)"
+        },
+        {
+          "name": "fixed_filters",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "Traceback (most recent call last):\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 58, in <module>\n    run(sys.argv[1],sys.argv[2])\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 11, in run\n    m=load(root)\n      ^^^^^^^^^^\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 8, in load\n    mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod); return mod\n                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<frozen importlib._bootstrap_external>\", line 991, in exec_module\n  File \"<frozen importlib._bootstrap_external>\", line 1129, in get_code\n  File \"<frozen importlib._bootstrap_external>\", line 1059, in source_to_code\n  File \"<frozen importlib._bootstrap>\", line 488, in _call_with_frames_removed\n  File \"/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Ledger_fixed_functional_gold_SOL_vs_ASTR_20261006_163751/ASTRA_IQ3_S_calibrated_PCIe_MTP_LC-H1__ws/solution_ledger_fixed.py\", line 1\n    <think>I'm writing the module and then running the grader checks to validate it. The implementation needs an Entry dataclass with fields for id, date, payee, amount, category, and note, plus a parse_amount function that handles Decimal values while stripping currency symbols and commas, rounding to cents using half-up rounding, and rejecting invalid inputs.\n            ^\nSyntaxError: unterminated string literal (detected at line 1)"
+        },
+        {
+          "name": "fixed_undo",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "Traceback (most recent call last):\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 58, in <module>\n    run(sys.argv[1],sys.argv[2])\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 11, in run\n    m=load(root)\n      ^^^^^^^^^^\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 8, in load\n    mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod); return mod\n                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<frozen importlib._bootstrap_external>\", line 991, in exec_module\n  File \"<frozen importlib._bootstrap_external>\", line 1129, in get_code\n  File \"<frozen importlib._bootstrap_external>\", line 1059, in source_to_code\n  File \"<frozen importlib._bootstrap>\", line 488, in _call_with_frames_removed\n  File \"/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Ledger_fixed_functional_gold_SOL_vs_ASTR_20261006_163751/ASTRA_IQ3_S_calibrated_PCIe_MTP_LC-H1__ws/solution_ledger_fixed.py\", line 1\n    <think>I'm writing the module and then running the grader checks to validate it. The implementation needs an Entry dataclass with fields for id, date, payee, amount, category, and note, plus a parse_amount function that handles Decimal values while stripping currency symbols and commas, rounding to cents using half-up rounding, and rejecting invalid inputs.\n            ^\nSyntaxError: unterminated string literal (detected at line 1)"
+        },
+        {
+          "name": "fixed_csv",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "Traceback (most recent call last):\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 58, in <module>\n    run(sys.argv[1],sys.argv[2])\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 11, in run\n    m=load(root)\n      ^^^^^^^^^^\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 8, in load\n    mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod); return mod\n                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<frozen importlib._bootstrap_external>\", line 991, in exec_module\n  File \"<frozen importlib._bootstrap_external>\", line 1129, in get_code\n  File \"<frozen importlib._bootstrap_external>\", line 1059, in source_to_code\n  File \"<frozen importlib._bootstrap>\", line 488, in _call_with_frames_removed\n  File \"/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Ledger_fixed_functional_gold_SOL_vs_ASTR_20261006_163751/ASTRA_IQ3_S_calibrated_PCIe_MTP_LC-H1__ws/solution_ledger_fixed.py\", line 1\n    <think>I'm writing the module and then running the grader checks to validate it. The implementation needs an Entry dataclass with fields for id, date, payee, amount, category, and note, plus a parse_amount function that handles Decimal values while stripping currency symbols and commas, rounding to cents using half-up rounding, and rejecting invalid inputs.\n            ^\nSyntaxError: unterminated string literal (detected at line 1)"
+        },
+        {
+          "name": "fixed_ids",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "Traceback (most recent call last):\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 58, in <module>\n    run(sys.argv[1],sys.argv[2])\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 11, in run\n    m=load(root)\n      ^^^^^^^^^^\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 8, in load\n    mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod); return mod\n                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<frozen importlib._bootstrap_external>\", line 991, in exec_module\n  File \"<frozen importlib._bootstrap_external>\", line 1129, in get_code\n  File \"<frozen importlib._bootstrap_external>\", line 1059, in source_to_code\n  File \"<frozen importlib._bootstrap>\", line 488, in _call_with_frames_removed\n  File \"/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Ledger_fixed_functional_gold_SOL_vs_ASTR_20261006_163751/ASTRA_IQ3_S_calibrated_PCIe_MTP_LC-H1__ws/solution_ledger_fixed.py\", line 1\n    <think>I'm writing the module and then running the grader checks to validate it. The implementation needs an Entry dataclass with fields for id, date, payee, amount, category, and note, plus a parse_amount function that handles Decimal values while stripping currency symbols and commas, rounding to cents using half-up rounding, and rejecting invalid inputs.\n            ^\nSyntaxError: unterminated string literal (detected at line 1)"
+        },
+        {
+          "name": "fixed_stable_order",
+          "passed": false,
+          "exitCode": 1,
+          "timedOut": false,
+          "output": "Traceback (most recent call last):\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 58, in <module>\n    run(sys.argv[1],sys.argv[2])\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 11, in run\n    m=load(root)\n      ^^^^^^^^^^\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-astra-sol-retest-20261006/ledger_grader.py\", line 8, in load\n    mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod); return mod\n                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<frozen importlib._bootstrap_external>\", line 991, in exec_module\n  File \"<frozen importlib._bootstrap_external>\", line 1129, in get_code\n  File \"<frozen importlib._bootstrap_external>\", line 1059, in source_to_code\n  File \"<frozen importlib._bootstrap>\", line 488, in _call_with_frames_removed\n  File \"/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Ledger_fixed_functional_gold_SOL_vs_ASTR_20261006_163751/ASTRA_IQ3_S_calibrated_PCIe_MTP_LC-H1__ws/solution_ledger_fixed.py\", line 1\n    <think>I'm writing the module and then running the grader checks to validate it. The implementation needs an Entry dataclass with fields for id, date, payee, amount, category, and note, plus a parse_amount function that handles Decimal values while stripping currency symbols and commas, rounding to cents using half-up rounding, and rejecting invalid inputs.\n            ^\nSyntaxError: unterminated string literal (detected at line 1)"
+        }
+      ]
+    }
+  },
+  "baselineSuppliedByUser": {
+    "ASTRA IQ3_S calibrado": {
+      "score": "12/13",
+      "elapsedSec": 177.4,
+      "finding": "compile and 43 tests passed; same undo self-test failure as SOL"
+    },
+    "SOL AutoRound INT4": {
+      "score": "11/13",
+      "elapsedSec": 589.4,
+      "finding": "compile and 36/37 tests passed; same undo self-test failure as ASTRA"
+    }
+  },
+  "historicalAstroEvidence": [
+    {
+      "run": "BigCodeBench-Hard_8_tems__20261005_192818",
+      "score": "8/8",
+      "elapsedSec": 617.595
+    },
+    {
+      "run": "Intelligence_Adversarial_v1_-_10_tareas_20261005_194002",
+      "score": "10/10",
+      "elapsedSec": 547.199
+    }
+  ],
+  "interpretation": "SOL completed both new fixed suites after one repair each. ASTRA produced no scoreable artifact in the new TaskFlow and Ledger agent runs because chain-of-thought text appeared in / replaced the required source artifact before tests; one additional ASTRA attempt was a server-load failure while SOL still occupied VRAM and was excluded. This is a repeatable integration/protocol issue for these custom tasks, not proof of lower model reasoning. The prior 12/13 vs 11/13 pair still favors ASTRA on that single task, but does not establish a general winner."
+}
