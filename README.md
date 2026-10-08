@@ -1531,6 +1531,8 @@ por lo que el historial y los adjuntos conservan la captura completa.
 
 ## Lanzamiento del servidor (`LaunchPage`)
 
+- El selector pone primero los perfiles disponibles y deja debajo, en gris, los
+  que todavía requieren dependencias. El orden original de cada grupo se conserva.
 - **Vista previa del comando** con botón *Copiar*.
 - **Iniciar servidor + agente** — levanta `llama-server` y el harness de agente.
 - **Iniciar solo servidor** — solo `llama-server`, sin agente.

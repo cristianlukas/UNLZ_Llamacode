@@ -438,16 +438,27 @@ Item {
                     Layout.fillWidth: true
                     // Menú filtrado por hardware: oculta perfiles de sistema de más
                     // VRAM que el equipo; marca "ready" (modelo+binario presentes).
-                    property var launchMenu: App.launchMenu()
+                    function availableProfilesFirst(items) {
+                        const available = []
+                        const unavailable = []
+                        for (var i = 0; i < items.length; ++i) {
+                            if (items[i].ready === false)
+                                unavailable.push(items[i])
+                            else
+                                available.push(items[i])
+                        }
+                        return available.concat(unavailable)
+                    }
+                    property var launchMenu: availableProfilesFirst(App.launchMenu())
                     function refreshMenu() {
                         const sel = launchCombo.currentValue
-                        launchCombo.launchMenu = App.launchMenu()
+                        launchCombo.launchMenu = availableProfilesFirst(App.launchMenu())
                         const i = launchCombo.indexOfValue(sel)
                         if (i >= 0) launchCombo.currentIndex = i
                     }
                     function selectLaunchProfile(id) {
                         if (!id || id.length === 0) return
-                        launchCombo.launchMenu = App.launchMenu()
+                        launchCombo.launchMenu = availableProfilesFirst(App.launchMenu())
                         const i = launchCombo.indexOfValue(id)
                         if (i >= 0) {
                             launchCombo.currentIndex = i
