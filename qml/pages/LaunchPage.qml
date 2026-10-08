@@ -449,14 +449,32 @@ Item {
                         }
                         function mostRecentFirst(group) {
                             const ordered = []
+                            function neverUsedComesFirst(candidate, previous) {
+                                const badgeOrder = ["best", "systemBadge", "favorite", "benchmark"]
+                                for (var k = 0; k < badgeOrder.length; ++k) {
+                                    const key = badgeOrder[k]
+                                    const candidateHas = candidate[key] === true
+                                    const previousHas = previous[key] === true
+                                    if (candidateHas !== previousHas)
+                                        return candidateHas
+                                }
+                                const candidateVram = Number(candidate.minVram) || 0
+                                const previousVram = Number(previous.minVram) || 0
+                                return candidateVram > previousVram
+                            }
                             for (var j = 0; j < group.length; ++j) {
                                 const usedAt = Number(group[j].lastUsed) || 0
                                 var position = ordered.length
-                                // Insert only before strictly older entries: equal timestamps
-                                // retain the order already chosen by ProfileManager.
-                                while (position > 0
-                                       && usedAt > (Number(ordered[position - 1].lastUsed) || 0))
-                                    --position
+                                while (position > 0) {
+                                    const previous = ordered[position - 1]
+                                    const previousUsedAt = Number(previous.lastUsed) || 0
+                                    if (usedAt > previousUsedAt
+                                        || (usedAt === 0 && previousUsedAt === 0
+                                            && neverUsedComesFirst(group[j], previous)))
+                                        --position
+                                    else
+                                        break
+                                }
                                 ordered.splice(position, 0, group[j])
                             }
                             return ordered

@@ -1533,7 +1533,9 @@ por lo que el historial y los adjuntos conservan la captura completa.
 
 - El selector pone primero los perfiles disponibles y deja debajo, en gris, los
   que todavía requieren dependencias. Dentro de cada grupo, ordena por último uso;
-  los nunca usados quedan al final y los empates conservan el orden del catálogo.
+  los nunca usados quedan al final y se ordenan por distintivos (⚡, ⚙, ★, 🏆) y,
+  con los mismos distintivos, por requisito de VRAM descendente. Si ese requisito
+  no está declarado, se conserva el orden previo del catálogo.
 - **Vista previa del comando** con botón *Copiar*.
 - **Iniciar servidor + agente** — levanta `llama-server` y el harness de agente.
 - **Iniciar solo servidor** — solo `llama-server`, sin agente.
