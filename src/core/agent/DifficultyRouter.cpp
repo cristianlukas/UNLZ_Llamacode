@@ -1,5 +1,10 @@
 #include "DifficultyRouter.h"
 
+DifficultyRouter::DifficultyRouter()
+    : DifficultyRouter(Thresholds{})
+{
+}
+
 DifficultyRouter::DifficultyRouter(const Thresholds &thresholds)
     : m_thresholds(thresholds)
 {

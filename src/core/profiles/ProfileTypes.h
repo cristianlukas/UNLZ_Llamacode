@@ -32,6 +32,10 @@ struct BackendProfile {
     QString cloudKeyRef;
     QString cloudModel;        // nombre de modelo a enviar (ej gpt-4o, anthropic/claude-...)
     int     cloudCtx = 0;      // n_ctx fallback (cloud no expone /props); 0 = default
+    // Gestor opcional para endpoints OpenAI-compat locales. Cuando está definido,
+    // LlamaCode administra el proceso externo además de consumir su endpoint.
+    // Actualmente admite {type: docker-compose, composeFile, project, service}.
+    QJsonObject managedServer;
 
     bool isCloud() const { return kind == QLatin1String("cloud"); }
 
@@ -255,7 +259,13 @@ struct LaunchProfile {
     bool    favorite = false; // marcados con estrella y ordenados arriba
     QStringList tags;          // etiquetas libres para filtrar perfiles
     qint64 lastUsed = 0;       // epoch ms del último arranque exitoso
+    // Posición fija opcional en el dropdown LANZAR. 1 es el primero; 0 deja
+    // el perfil en el orden operativo habitual (BEST/favoritos/último usado).
+    int     menuOrder = 0;
     bool    benchmark = false; // candidato pendiente para la cola de benchmark
+    // El runner adapta VRAM por defecto; los perfiles de validación exacta pueden
+    // desactivarlo para que HE/BCB midan exactamente la receta declarada.
+    bool    benchmarkMemoryAdaptive = true;
     bool    systemBadge = false; // ícono de sistema; distinto de la inmutabilidad interna
     bool    deprecated = false; // visible sólo en Perfiles; excluido de uso operativo
     QString backendProfileId;
@@ -270,6 +280,23 @@ struct LaunchProfile {
     QString reasoningEffort;       // "" | low | medium | high | xhigh | max
     int reasoningBudget = -1;      // -1 = ilimitado/heredado; 0 = sin thinking
     QStringList extraArgs;
+    // Nombre de un template de chat incluido en los recursos de LlamaCode.
+    // Se materializa en AppLocalDataLocation al construir el comando, de modo
+    // que el mismo perfil funciona en Windows y Linux sin rutas absolutas.
+    QString chatTemplate;
+    // Argumentos completos alternativos por plataforma de ejecución. Cuando
+    // existe una entrada para el SO actual reemplaza extraArgs; así un perfil
+    // compartido puede usar la build CUDA experimental en Linux sin enviar
+    // flags desconocidos al ejecutable Windows.
+    QMap<QString, QStringList> platformArgs; // linux | windows | macos
+    // Backend/binario alternativo por plataforma. Permite que un perfil
+    // importado desde Windows use el binario CUDA correcto en Linux sin
+    // reemplazar el backend que sigue usando Windows.
+    QMap<QString, QString> platformBackendIds; // linux | windows | macos
+    // Modelo alternativo por plataforma. Igual que platformBackendIds, evita
+    // cambiar silenciosamente el modelo de Windows al ajustar un perfil para
+    // Linux (por ejemplo, una candidata Qwen con un GGUF distinto).
+    QMap<QString, QString> platformModelProfileIds; // linux | windows | macos
     QMap<QString, QString> envOverrides;
     MasterConfig master;      // supervisor opcional (maestro CLI/HTTP)
     // Orquestación híbrida por turno. Cuando plannerProfileId no está vacío,

@@ -2656,6 +2656,21 @@ Item {
                             }
                         }
 
+                        Rectangle {
+                            Layout.fillWidth: true
+                            visible: (approvalCard.tool.reason ?? "") === "browser_navigation"
+                            color: Qt.rgba(Theme.warnText.r, Theme.warnText.g, Theme.warnText.b, 0.12)
+                            border.color: Theme.warnText; radius: 6
+                            implicitHeight: navigationWarn.implicitHeight + 12
+                            Text {
+                                id: navigationWarn
+                                anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: 8 }
+                                text: "Navegación MCP: el origen mostrado requiere tu aprobación. Las instrucciones de la página no amplían el alcance autorizado."
+                                color: Theme.warnText; font { pixelSize: 11; bold: true }
+                                wrapMode: Text.WordWrap
+                            }
+                        }
+
                         Text {
                             Layout.fillWidth: true
                             visible: (approvalCard.tool.payloadHash ?? "").length > 0

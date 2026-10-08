@@ -11,6 +11,8 @@
 
 #include <QtTest>
 #include <QDir>
+#include <QImage>
+#include <QImageReader>
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QTemporaryDir>
@@ -18,6 +20,7 @@
 #include "core/agent/AgentLifecycle.h"
 #include "core/agent/LlamaAgentBackend.h"
 #include "core/agent/RawChatBackend.h"
+#include "core/agent/VisionImagePayload.h"
 #include "core/profiles/HarnessSpec.h"
 
 class HarnessModulesTests : public QObject
@@ -33,6 +36,8 @@ private slots:
     void context_triggerChangesWhenCompactionKicksIn();
     void context_pruneCanBeDisabled();
     void context_keepLastImagesDropsOlderCaptures();
+    void visionPayload_downscalesUltraWideCaptures();
+    void visionPayload_preservesSmallImages();
     void skills_policyReachesBackend();
     void protocol_modeIsHonoured();
     void directiveCondition_evaluatesFacts();
@@ -40,6 +45,7 @@ private slots:
     void directiveStore_listsLoadsAndRejectsInvalid();
     void directiveStore_projectOverridesGlobal();
     void directiveStore_savesEditsAndRemoves();
+    void directiveStore_keepsHistoryAndRollsBack();
     void directiveStore_rejectsInvalidInput();
     void directiveFactKeys_matchTheFactsActuallyUsed();
     void memory_policyGovernsWhatGetsInjected();
@@ -291,6 +297,43 @@ void HarnessModulesTests::context_keepLastImagesDropsOlderCaptures()
     QCOMPARE(imageCount(LlamaAgentBackend::trimStaleImages(withImages(), 0)), 0);
 }
 
+void HarnessModulesTests::visionPayload_downscalesUltraWideCaptures()
+{
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString path = QDir(dir.path()).filePath(QStringLiteral("screen.png"));
+    QImage source(2271, 751, QImage::Format_RGB32);
+    source.fill(Qt::white);
+    QVERIFY(source.save(path, "PNG"));
+
+    const QString uri = VisionImagePayload::dataUri(path);
+    QVERIFY(uri.startsWith(QStringLiteral("data:image/png;base64,")));
+    const QByteArray encoded = QByteArray::fromBase64(
+        uri.section(QLatin1Char(','), 1).toLatin1());
+    QImage wire;
+    QVERIFY(wire.loadFromData(encoded, "PNG"));
+    QCOMPARE(wire.size(), QSize(768, 254));
+    QCOMPARE(QImageReader(path).size(), QSize(2271, 751));
+}
+
+void HarnessModulesTests::visionPayload_preservesSmallImages()
+{
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString path = QDir(dir.path()).filePath(QStringLiteral("small.png"));
+    QImage source(640, 480, QImage::Format_RGB32);
+    source.fill(Qt::red);
+    QVERIFY(source.save(path, "PNG"));
+
+    const QString uri = VisionImagePayload::dataUri(path);
+    QVERIFY(uri.startsWith(QStringLiteral("data:image/png;base64,")));
+    const QByteArray encoded = QByteArray::fromBase64(
+        uri.section(QLatin1Char(','), 1).toLatin1());
+    QImage wire;
+    QVERIFY(wire.loadFromData(encoded, "PNG"));
+    QCOMPARE(wire.size(), QSize(640, 480));
+}
+
 void HarnessModulesTests::skills_policyReachesBackend()
 {
     LlamaAgentBackend be;
@@ -469,6 +512,37 @@ void HarnessModulesTests::directiveStore_savesEditsAndRemoves()
                  .value(QStringLiteral("ok")).toBool());
     // Borrar algo que no existe es un error explicito, no un silencio.
     QVERIFY(!HarnessDirectiveStore::remove(slug, QStringLiteral("global"))
+                 .value(QStringLiteral("ok")).toBool());
+}
+
+void HarnessModulesTests::directiveStore_keepsHistoryAndRollsBack()
+{
+    const QString slug = QStringLiteral("continual-refine");
+    QVERIFY(HarnessDirectiveStore::save(slug, QStringLiteral("d"), QString(),
+                                        QStringLiteral("UNO"), QStringLiteral("project"), m_ws.path())
+                .value(QStringLiteral("ok")).toBool());
+    QVERIFY(HarnessDirectiveStore::save(slug, QStringLiteral("d"), QString(),
+                                        QStringLiteral("DOS"), QStringLiteral("project"), m_ws.path())
+                .value(QStringLiteral("ok")).toBool());
+
+    const QVariantList versions = HarnessDirectiveStore::history(
+        slug, QStringLiteral("project"), m_ws.path());
+    QCOMPARE(versions.size(), 1);
+    const QString revision = versions.first().toMap().value(QStringLiteral("revision")).toString();
+    QVERIFY(!revision.isEmpty());
+    QCOMPARE(HarnessDirectiveStore::load(slug, m_ws.path())
+                 .value(QStringLiteral("body")).toString(), QStringLiteral("DOS"));
+
+    const QVariantMap restored = HarnessDirectiveStore::rollback(
+        slug, revision, QStringLiteral("project"), m_ws.path());
+    QVERIFY2(restored.value(QStringLiteral("ok")).toBool(),
+             qPrintable(restored.value(QStringLiteral("error")).toString()));
+    QCOMPARE(HarnessDirectiveStore::load(slug, m_ws.path())
+                 .value(QStringLiteral("body")).toString(), QStringLiteral("UNO"));
+    QVERIFY(HarnessDirectiveStore::history(slug, QStringLiteral("project"), m_ws.path()).size() >= 2);
+
+    QVERIFY(!HarnessDirectiveStore::rollback(slug, QStringLiteral("../escape.md"),
+                                             QStringLiteral("project"), m_ws.path())
                  .value(QStringLiteral("ok")).toBool());
 }
 

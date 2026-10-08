@@ -21,6 +21,12 @@ Check (-not $sh.Contains('guideahon')) 'bootstrap.sh no apunta al repo viejo'
 Check ($ps.Contains('cristianlukas/UNLZ_Llamacode')) 'bootstrap.ps1 clona el repo publicado'
 Check ($sh.Contains('cristianlukas/UNLZ_Llamacode')) 'bootstrap.sh clona el repo publicado'
 
+# El bootstrap debe instalar y verificar los componentes Qt declarados por CMake.
+Check ($ps.Contains("`$QtAqtModules = @('qtmultimedia', 'qtsvg')")) 'instala los add-ons Qt Multimedia y Svg'
+Check ($ps.Contains("'QuickControls2'")) 'verifica Qt Quick Controls 2 requerido por CMake'
+Check ($ps.Contains('windeployqt failed with exit code')) 'aborta si falla el deploy del runtime Qt'
+Check ($ps.Contains("`$env:LC_FORCE -ne '1'")) 'sólo permite el reset destructivo con LC_FORCE=1'
+
 # LC_DIR viene del app con la instalacion que corre; sin el guard, el
 # reset --hard se lleva puesto lo no commiteado de ese checkout.
 Check ($ps -match 'git -C \$Dir status --porcelain') 'chequea si el destino tiene cambios sin commitear'

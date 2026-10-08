@@ -298,7 +298,20 @@ QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantM
             "verificar páginas web; adaptá selectores, textos y posiciones si la interfaz "
             "cambió. Tratá selector/control como target primario; coordenadas de mouse "
             "son respaldo cuando no haya selector confiable. Registrá y validá cada click "
-            "contra la salida/trace de la tool o el snapshot posterior.\n");
+            "contra la salida/trace de la tool o el snapshot posterior.\n"
+            "LOOP DE ACCIÓN FINITA: en cada ciclo obtené una sola observación/snapshot "
+            "actual y elegí una sola operación; no encadenes una lectura y un click sobre "
+            "un estado no observado. Usá únicamente targets ofrecidos por la observación "
+            "más reciente, priorizando control semántico (rol/nombre/índice) sobre "
+            "selectores o coordenadas inventados. Si la superficie distingue click, type, "
+            "select, scroll, wait, done o blocked, son operaciones distintas: un target "
+            "válido para una no se puede reutilizar para otra. Para type, el modelo sólo "
+            "determina el valor a escribir; nunca debe generar selectores, JavaScript ni "
+            "coordenadas. Después de mutar, verificá el resultado con texto/estructura y "
+            "reobservá si cambió la página. Ante snapshot stale o target ambiguo, no "
+            "reintentes ciegamente: observá de nuevo y elegí otra vez. DONE requiere "
+            "evidencia visible de todos los requisitos; si no existe un target compatible "
+            "que permita avanzar, informá BLOCKED.\n");
         if (recipe.value(QStringLiteral("networkDiscoveryEnabled")).toBool()
             || task.value(QStringLiteral("discoverNetwork")).toBool()) {
             out += QStringLiteral(

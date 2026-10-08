@@ -16,12 +16,16 @@
 #include <algorithm>
 #include "core/profiles/ProfileTypes.h"
 #include "core/profiles/ProfileManager.h"
+#include "core/profiles/ManagedServerCapabilities.h"
 
 class ProfilesTests : public QObject
 {
     Q_OBJECT
 private slots:
     void initTestCase();
+
+    void strataVisionCapabilityRequiresConfiguredExistingAssets();
+    void strataUsesFixedConfigOutsideLlamaMemoryLadder();
 
     void backendProfile_jsonRoundTrip();
     void modelProfile_jsonRoundTrip();
@@ -37,11 +41,13 @@ private slots:
     void manager_setBackendCloud();
     void manager_addModelProfile();
     void manager_favoriteAndAlias();
+    void manager_menuOrderPrecedesRecentUsage();
     void manager_benchmarkQueue();
     void manager_profileSearchFiltersNameAliasAndId();
     void manager_tagsAndLastUsed();
     void manager_profileTemplatesRoundTrip();
     void manager_harnessArgsEnvRoundTrip();
+    void manager_reasoningControlsRoundTrip();
     void manager_deprecatedIsProfilesOnly();
     void manager_browserAutomationOverride();
     void manager_systemProfilesReloadIdempotent();
@@ -83,6 +89,10 @@ void ProfilesTests::backendProfile_jsonRoundTrip()
     c.id = "c1"; c.kind = "cloud";
     c.cloudBaseUrl = "https://api.openai.com";
     c.cloudKeyRef = "OPENAI_API_KEY"; c.cloudModel = "gpt-4o"; c.cloudCtx = 16384;
+    c.managedServer = QJsonObject{{"type", "docker-compose"},
+                                  {"composeFiles", QJsonArray{
+                                       "~/models/compose.yml", "~/models/override.yml"}},
+                                  {"project", "sol"}, {"service", "vllm"}};
     const QJsonObject cj = c.toJson();
     // El secreto NUNCA se serializa: sólo la referencia (nombre).
     QVERIFY(!cj.contains("cloudApiKey"));
@@ -93,6 +103,7 @@ void ProfilesTests::backendProfile_jsonRoundTrip()
     QCOMPARE(rc.cloudKeyRef, c.cloudKeyRef);
     QCOMPARE(rc.cloudModel, c.cloudModel);
     QCOMPARE(rc.cloudCtx, 16384);
+    QCOMPARE(rc.managedServer, c.managedServer);
 }
 
 void ProfilesTests::modelProfile_jsonRoundTrip()
@@ -155,6 +166,13 @@ void ProfilesTests::launchProfile_jsonRoundTrip()
     l.systemBadge = true; l.benchmark = true; l.deprecated = true;
     l.backendProfileId = "b1"; l.modelProfileId = "m1"; l.runtimePresetId = "r1";
     l.extraArgs = QStringList{"--verbose"};
+    l.chatTemplate = QStringLiteral("ling3-tools.jinja");
+    l.platformArgs.insert(QStringLiteral("linux"), QStringList{"--moe-expert-cache", "188"});
+    l.platformArgs.insert(QStringLiteral("windows"), QStringList{"--n-cpu-moe", "36"});
+    l.platformBackendIds.insert(QStringLiteral("linux"), QStringLiteral("cuda-linux"));
+    l.platformBackendIds.insert(QStringLiteral("windows"), QStringLiteral("windows-cuda"));
+    l.platformModelProfileIds.insert(QStringLiteral("linux"), QStringLiteral("model-linux"));
+    l.platformModelProfileIds.insert(QStringLiteral("windows"), QStringLiteral("model-windows"));
     MasterFallback mf; mf.type = "cli"; mf.cliName = "claude";
     l.master.fallbacks.append(mf);
     l.powerLimitW = 280;
@@ -175,6 +193,10 @@ void ProfilesTests::launchProfile_jsonRoundTrip()
     QCOMPARE(r.backendProfileId, l.backendProfileId);
     QCOMPARE(r.modelProfileId, l.modelProfileId);
     QCOMPARE(r.extraArgs, l.extraArgs);
+    QCOMPARE(r.chatTemplate, l.chatTemplate);
+    QCOMPARE(r.platformArgs, l.platformArgs);
+    QCOMPARE(r.platformBackendIds, l.platformBackendIds);
+    QCOMPARE(r.platformModelProfileIds, l.platformModelProfileIds);
     QCOMPARE(r.master.fallbacks.size(), 1);
     QCOMPARE(r.master.fallbacks.first().type, QStringLiteral("cli"));
     QCOMPARE(r.master.fallbacks.first().cliName, QStringLiteral("claude"));
@@ -183,6 +205,7 @@ void ProfilesTests::launchProfile_jsonRoundTrip()
     QCOMPARE(r.hybridMode, QStringLiteral("sequential"));
     QCOMPARE(r.tags, l.tags);
     QCOMPARE(r.lastUsed, l.lastUsed);
+    QCOMPARE(r.menuOrder, l.menuOrder);
     // Default (campo ausente) → 0 = sin override.
     LaunchProfile empty;
     QCOMPARE(LaunchProfile::fromJson(empty.toJson()).powerLimitW, 0);
@@ -191,6 +214,66 @@ void ProfilesTests::launchProfile_jsonRoundTrip()
              QStringLiteral("inherit"));
     QCOMPARE(LaunchProfile::fromJson(QJsonObject{}).hybridMode,
              QStringLiteral("off"));
+}
+
+void ProfilesTests::strataVisionCapabilityRequiresConfiguredExistingAssets()
+{
+    QTemporaryDir root;
+    QVERIFY(root.isValid());
+    QVERIFY(QDir().mkpath(root.filePath(QStringLiteral("engine"))));
+    QVERIFY(QDir().mkpath(root.filePath(QStringLiteral("models"))));
+
+    auto touch = [](const QString &path) {
+        QFile file(path);
+        return file.open(QIODevice::WriteOnly) && file.write("x") == 1;
+    };
+    QVERIFY(touch(root.filePath(QStringLiteral("engine/strata-vision"))));
+    QVERIFY(touch(root.filePath(QStringLiteral("models/mmproj.gguf"))));
+
+    const QString configPath = root.filePath(QStringLiteral("strata.json"));
+    auto writeConfig = [&](const QJsonObject &object) {
+        QFile file(configPath);
+        if (!file.open(QIODevice::WriteOnly)) return false;
+        return file.write(QJsonDocument(object).toJson()) > 0;
+    };
+
+    const QJsonObject vision{
+        {QStringLiteral("exe"), QStringLiteral("engine/strata-vision")},
+        {QStringLiteral("mmproj"), QStringLiteral("models/mmproj.gguf")}
+    };
+    QVERIFY(writeConfig(QJsonObject{
+        {QStringLiteral("args"), QJsonArray{QStringLiteral("--vision")}},
+        {QStringLiteral("vision"), vision}
+    }));
+    QVERIFY(ManagedServerCapabilities::strataVisionAvailable(configPath, root.path()));
+
+    QVERIFY(writeConfig(QJsonObject{
+        {QStringLiteral("args"), QJsonArray{}},
+        {QStringLiteral("vision"), vision}
+    }));
+    QVERIFY(!ManagedServerCapabilities::strataVisionAvailable(configPath, root.path()));
+
+    QVERIFY(writeConfig(QJsonObject{
+        {QStringLiteral("args"), QJsonArray{QStringLiteral("--vision")}},
+        {QStringLiteral("vision"), QJsonObject{
+            {QStringLiteral("exe"), QStringLiteral("engine/strata-vision")},
+            {QStringLiteral("mmproj"), QStringLiteral("models/missing.gguf")}
+        }}
+    }));
+    QVERIFY(!ManagedServerCapabilities::strataVisionAvailable(configPath, root.path()));
+}
+
+void ProfilesTests::strataUsesFixedConfigOutsideLlamaMemoryLadder()
+{
+    BackendProfile backend;
+    backend.managedServer.insert(QStringLiteral("type"), QStringLiteral("astra-strata"));
+    QVERIFY(!ManagedServerCapabilities::supportsAdaptiveLlamaMemoryPolicy(backend));
+
+    backend.managedServer.insert(QStringLiteral("type"), QStringLiteral("llama-cpp"));
+    QVERIFY(ManagedServerCapabilities::supportsAdaptiveLlamaMemoryPolicy(backend));
+
+    backend.managedServer = QJsonObject{};
+    QVERIFY(ManagedServerCapabilities::supportsAdaptiveLlamaMemoryPolicy(backend));
 }
 
 void ProfilesTests::solLinuxProfileUsesVllmBackend()
@@ -374,6 +457,28 @@ void ProfilesTests::manager_favoriteAndAlias()
              QStringLiteral("Alias - 1_L"));
 }
 
+void ProfilesTests::manager_menuOrderPrecedesRecentUsage()
+{
+    ProfileManager pm;
+    const QString first = pm.addLaunchProfile(QStringLiteral("First"), "b", "m", "r");
+    const QString second = pm.addLaunchProfile(QStringLiteral("Second"), "b", "m", "r");
+    QVERIFY(!first.isEmpty());
+    QVERIFY(!second.isEmpty());
+    pm.markLaunchUsed(second);
+    QVERIFY(pm.updateLaunchProfile(QVariantMap{{"id", first}, {"menuOrder", 1}}));
+    QVERIFY(pm.updateLaunchProfile(QVariantMap{{"id", second}, {"menuOrder", 2}}));
+
+    const QVariantList menu = pm.launchProfilesForMenu();
+    const auto pos = [&](const QString &id) {
+        for (int i = 0; i < menu.size(); ++i)
+            if (menu.at(i).toMap().value("id").toString() == id) return i;
+        return static_cast<int>(menu.size());
+    };
+    QVERIFY(pos(first) < pos(second));
+    QCOMPARE(pm.getLaunchProfile(first).value("menuOrder").toInt(), 1);
+    QCOMPARE(pm.getLaunchProfile(second).value("menuOrder").toInt(), 2);
+}
+
 void ProfilesTests::manager_benchmarkQueue()
 {
     ProfileManager pm;
@@ -474,6 +579,27 @@ void ProfilesTests::manager_harnessArgsEnvRoundTrip()
     const QVariantMap got = pm.getHarness(id);
     QCOMPARE(got.value(QStringLiteral("args")).toStringList(), QStringList{"--quiet"});
     QCOMPARE(got.value(QStringLiteral("env")).toMap().value(QStringLiteral("HARNESS_MODE")).toString(), QStringLiteral("test"));
+}
+
+void ProfilesTests::manager_reasoningControlsRoundTrip()
+{
+    ProfileManager pm;
+    const QString id = pm.addLaunchProfile(QStringLiteral("Reasoning controls"), {}, {}, {});
+    QVERIFY(!id.isEmpty());
+
+    QVERIFY(pm.updateLaunchProfile(QVariantMap{
+        {"id", id}, {"reasoningBudget", 0}, {"reasoningEffort", "low"}}));
+    const QVariantMap disabled = pm.getLaunchProfile(id);
+    QCOMPARE(disabled.value("reasoningBudget").toInt(), 0);
+    QCOMPARE(disabled.value("reasoningEffort").toString(), QStringLiteral("low"));
+
+    // -1 means inherit the app-level setting; negative values below -1 are
+    // clamped instead of producing an invalid launch profile.
+    QVERIFY(pm.updateLaunchProfile(QVariantMap{{"id", id}, {"reasoningBudget", -9},
+                                                {"reasoningEffort", ""}}));
+    const QVariantMap inherited = pm.getLaunchProfile(id);
+    QCOMPARE(inherited.value("reasoningBudget").toInt(), -1);
+    QVERIFY(inherited.value("reasoningEffort").toString().isEmpty());
 }
 
 void ProfilesTests::manager_browserAutomationOverride()

@@ -28,6 +28,7 @@ private slots:
     void initTestCase();
 
     void modules_defaultsMatchHistoricBehaviour();
+    void prompt_computerUseSandwichDefaultsOffAndRoundTrips();
     void context_indexPolicyRoundTripsAndBounds();
     void skills_roundTripAndInheritance();
     void resolve_absentModuleIsInherited();
@@ -46,6 +47,7 @@ private slots:
     void phases_canOverridePromptDirectives();
     void phases_canOverrideTemperatureAndExtra();
     void escalation_masterChainAndRouterThresholds();
+    void escalation_subagentPolicyRoundTrips();
     void diff_listsOnlyChangedFields();
     void memoryAndChat_defaultsAndInheritance();
     void knowledge_defaultsRoundTripAndBounds();
@@ -88,8 +90,32 @@ void HarnessSpecTests::modules_defaultsMatchHistoricBehaviour()
     QVERIFY(!s.permissions.mailAutoSend);
     QCOMPARE(s.protocol.toolProtocol, QStringLiteral("auto"));
     QCOMPARE(s.escalation.maxParallelSubagents, 5);
+    QVERIFY(s.escalation.subagentsEnabled);
+    QCOMPARE(s.escalation.subagentContextTokens, 0);
     QVERIFY(s.escalation.isolateSubagents);
     QVERIFY(s.isEmpty());
+}
+
+void HarnessSpecTests::prompt_computerUseSandwichDefaultsOffAndRoundTrips()
+{
+    const HarnessSpec defaults;
+    QVERIFY(!defaults.prompt.computerUseSandwich);
+
+    HarnessPromptModule prompt;
+    prompt.set = true;
+    prompt.computerUseSandwich = true;
+    const HarnessPromptModule roundTrip =
+        HarnessPromptModule::fromJson(prompt.toJson());
+    QVERIFY(roundTrip.set);
+    QVERIFY(roundTrip.computerUseSandwich);
+
+    HarnessSpec parent;
+    parent.prompt = prompt;
+    HarnessSpec child;
+    child.prompt.set = true;
+    child.prompt.computerUseSandwich = false;
+    const HarnessSpec resolved = HarnessSpec::resolve(parent, child);
+    QVERIFY(!resolved.prompt.computerUseSandwich);
 }
 
 void HarnessSpecTests::context_indexPolicyRoundTripsAndBounds()
@@ -509,6 +535,26 @@ void HarnessSpecTests::escalation_masterChainAndRouterThresholds()
     QCOMPARE(back.masterFallbacks.size(), 1);
     // Sin cadena declarada no se serializa la clave: el LaunchProfile sigue mandando.
     QVERIFY(!HarnessEscalationModule().toJson().contains(QStringLiteral("masterFallbacks")));
+}
+
+void HarnessSpecTests::escalation_subagentPolicyRoundTrips()
+{
+    HarnessEscalationModule policy;
+    policy.set = true;
+    policy.subagentsEnabled = false;
+    policy.subagentContextTokens = 65536;
+
+    const HarnessEscalationModule restored =
+        HarnessEscalationModule::fromJson(policy.toJson());
+    QVERIFY(!restored.subagentsEnabled);
+    QCOMPARE(restored.subagentContextTokens, 65536);
+
+    // El editor no puede guardar un presupuesto arbitrariamente grande y
+    // convertirlo en una reserva de memoria peligrosa.
+    const HarnessEscalationModule bounded =
+        HarnessEscalationModule::fromJson(QJsonObject{
+            {QStringLiteral("subagentContextTokens"), 99999999}});
+    QCOMPARE(bounded.subagentContextTokens, 1048576);
 }
 
 void HarnessSpecTests::diff_listsOnlyChangedFields()

@@ -859,6 +859,22 @@ Item {
                 ToolTip.text: "Techo propio; el cap real es el menor entre esto, el adaptativo por VRAM y 5."
             }
 
+            Text { text: "Sub-agentes habilitados"; color: Theme.textSecondary; font.pixelSize: 12 }
+            LcSwitch {
+                checked: root.specValue("escalation", "subagentsEnabled", true)
+                onToggled: root.specSet("escalation", "subagentsEnabled", checked)
+                ToolTip.visible: hovered
+                ToolTip.text: "Permite o bloquea la tool task para este perfil."
+            }
+            Text { text: "Contexto estimado / sub-agente"; color: Theme.textSecondary; font.pixelSize: 12 }
+            LcTextField {
+                Layout.fillWidth: true; placeholderText: "0 = automático"
+                text: String(root.specValue("escalation", "subagentContextTokens", 0))
+                onEditingFinished: root.specSet("escalation", "subagentContextTokens", Math.max(0, parseInt(text) || 0))
+                ToolTip.visible: hovered
+                ToolTip.text: "0 conserva el límite del perfil; 32768/65536 permite más paralelismo en contextos largos."
+            }
+
             Text { text: "Aislar sub-agentes"; color: Theme.textSecondary; font.pixelSize: 12 }
             LcSwitch {
                 checked: root.specValue("escalation", "isolateSubagents", true)
@@ -873,6 +889,18 @@ Item {
                 onEditingFinished: root.specSet("prompt", "maxChars", parseInt(text) || 24000)
                 ToolTip.visible: hovered
                 ToolTip.text: "Avisa por log si el system prompt compuesto lo supera. No trunca."
+            }
+            Text {
+                text: "Sandwich Computer Use (experimental)"
+                color: Theme.warnText
+                font.pixelSize: 12
+            }
+            LcSwitch {
+                objectName: "computerUseSandwichSwitch"
+                checked: root.specValue("prompt", "computerUseSandwich", false)
+                onToggled: root.specSet("prompt", "computerUseSandwich", checked)
+                ToolTip.visible: hovered
+                ToolTip.text: "Ordena objetivo → estado desktop_* → recordatorio. Sólo Computer Use; apagado por defecto."
             }
         }
 

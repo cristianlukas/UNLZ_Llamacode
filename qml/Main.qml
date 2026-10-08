@@ -34,6 +34,9 @@ ApplicationWindow {
     // Bandera para forzar salida real desde el menú del tray.
     property bool forceQuit: false
     property bool autoCreatingInitialProfile: false
+    // App.buildPlatform se fija en C++ con Q_OS_* durante la compilación.
+    // Así un mismo QML selecciona el glifo Windows o el dibujo portable Linux.
+    property bool windowsBuild: App.buildPlatform === "windows"
 
     Window {
         id: desktopAgentIndicator
@@ -200,16 +203,25 @@ ApplicationWindow {
                     }
 
                     ToolButton {
-                        text: "\uE921"
                         flat: true
                         onClicked: window.showMinimized()
-                        contentItem: Text {
-                            text: parent.text
-                            color: Theme.textPrimary
-                            font.family: "Segoe MDL2 Assets"
-                            font.pixelSize: 10
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
+                        contentItem: Item {
+                            Text {
+                                visible: window.windowsBuild
+                                anchors.centerIn: parent
+                                text: "\uE921"
+                                font.family: "Segoe MDL2 Assets"
+                                font.pixelSize: 12
+                                color: Theme.textPrimary
+                            }
+                            Rectangle {
+                                visible: !window.windowsBuild
+                                anchors.centerIn: parent
+                                anchors.verticalCenterOffset: 5
+                                width: 12
+                                height: 1
+                                color: Theme.textPrimary
+                            }
                         }
                         background: Rectangle { color: parent.hovered ? Theme.frameBorderInact : "transparent" }
                         Layout.preferredWidth: 46
@@ -217,16 +229,48 @@ ApplicationWindow {
                     }
 
                     ToolButton {
-                        text: window.visibility === Window.Maximized ? "\uE923" : "\uE922"
                         flat: true
                         onClicked: window.visibility === Window.Maximized ? window.showNormal() : window.showMaximized()
-                        contentItem: Text {
-                            text: parent.text
-                            color: Theme.textPrimary
-                            font.family: "Segoe MDL2 Assets"
-                            font.pixelSize: 11
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
+                        contentItem: Item {
+                            Text {
+                                visible: window.windowsBuild
+                                anchors.centerIn: parent
+                                text: window.visibility === Window.Maximized ? "\uE923" : "\uE922"
+                                font.family: "Segoe MDL2 Assets"
+                                font.pixelSize: 12
+                                color: Theme.textPrimary
+                            }
+                            Rectangle {
+                                visible: !window.windowsBuild && window.visibility !== Window.Maximized
+                                anchors.centerIn: parent
+                                width: 12
+                                height: 10
+                                color: "transparent"
+                                border.width: 1
+                                border.color: Theme.textPrimary
+                            }
+                            Rectangle {
+                                visible: !window.windowsBuild && window.visibility === Window.Maximized
+                                anchors.centerIn: parent
+                                anchors.horizontalCenterOffset: -1
+                                anchors.verticalCenterOffset: 1
+                                width: 9
+                                height: 8
+                                color: "transparent"
+                                border.width: 1
+                                border.color: Theme.textPrimary
+                            }
+                            Rectangle {
+                                visible: !window.windowsBuild && window.visibility === Window.Maximized
+                                anchors.centerIn: parent
+                                anchors.horizontalCenterOffset: 2
+                                anchors.verticalCenterOffset: -2
+                                width: 9
+                                height: 8
+                                color: Theme.titleBg
+                                border.width: 1
+                                border.color: Theme.textPrimary
+                            }
                         }
                         background: Rectangle { color: parent.hovered ? Theme.frameBorderInact : "transparent" }
                         Layout.preferredWidth: 46
@@ -234,16 +278,33 @@ ApplicationWindow {
                     }
 
                     ToolButton {
-                        text: "\uE8BB"
                         flat: true
                         onClicked: window.close()
-                        contentItem: Text {
-                            text: parent.text
-                            color: Theme.errorText
-                            font.family: "Segoe MDL2 Assets"
-                            font.pixelSize: 10
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
+                        contentItem: Item {
+                            Text {
+                                visible: window.windowsBuild
+                                anchors.centerIn: parent
+                                text: "\uE8BB"
+                                font.family: "Segoe MDL2 Assets"
+                                font.pixelSize: 12
+                                color: Theme.errorText
+                            }
+                            Rectangle {
+                                visible: !window.windowsBuild
+                                anchors.centerIn: parent
+                                width: 15
+                                height: 1
+                                rotation: 45
+                                color: Theme.errorText
+                            }
+                            Rectangle {
+                                visible: !window.windowsBuild
+                                anchors.centerIn: parent
+                                width: 15
+                                height: 1
+                                rotation: -45
+                                color: Theme.errorText
+                            }
                         }
                         background: Rectangle { color: parent.hovered ? Theme.closeHoverBg : "transparent" }
                         Layout.preferredWidth: 46
@@ -1177,7 +1238,6 @@ ApplicationWindow {
 
     Connections {
         target: Tray
-        function onOpenRequested() { window.showFromTray() }
         function onQuitRequested() { window.forceQuit = true; Qt.quit() }
         function onPauseTeachRequested(paused) { App.pauseTeach(paused) }
         function onFinishTeachRequested() { App.finishTeach() }
@@ -1219,8 +1279,6 @@ ApplicationWindow {
             if (App.updateAvailable && Qt.platform.os !== "windows")
                 updatePopup.open()
         }
-        // Otra instancia intentó abrirse → restaurar/enfocar esta ventana.
-        function onSecondInstanceLaunched() { showFromTray() }
         // Botón "Repetir asistente inicial".
         function onShowSetupRequested() { setupPopup.open() }
     }

@@ -44,6 +44,115 @@
     "comment": "Backend experimental NInfer-3090. Requiere ninfer-serve registrado como flavor ninfer-3090 y qwen3_6_27b.ninfer en el root NInfer-Qwen3.6-27B. Sólo texto; el artefacto incorpora tokenizer, template y MTP."
   },
   {
+    "id": "sys-qwen38-27b-byteshape-shapelearn-262k",
+    "tier": "48GB-Qwen38-ByteShape",
+    "order": 257,
+    "extra": true,
+    "benchmark": true,
+    "best": false,
+    "favorite": false,
+    "autoCompanion": false,
+    "displayName": "[experimental 48GB] Qwen3.8 ByteShape ShapeLearn IQ4_XS · 262k · MTP3 · visión",
+    "minVramGb": 48,
+    "minRamGb": 32,
+    "cpuOk": false,
+    "folder": "Qwen3.8-27B-ByteShape-IQ4_XS",
+    "agentProfileId": "agent-maximo",
+    "chatTemplate": "qwen38-tools-fixed.jinja",
+    "model": {
+      "repo": "byteshape/Qwen3.8-27B-GGUF",
+      "file": "Qwen3.8-27B-IQ4_XS-3.84bpw.gguf",
+      "mmprojRepo": "byteshape/Qwen3.8-27B-GGUF",
+      "mmprojFile": "mmproj-bf16.gguf",
+      "quant": "IQ4_XS-3.84bpw-ShapeLearn"
+    },
+    "runtime": {
+      "ctx": 262144,
+      "gpuLayers": 999,
+      "batch": 512,
+      "ubatch": 128,
+      "threads": 8,
+      "kv": "q8_0",
+      "flashAttn": true,
+      "mlock": false,
+      "mmap": true
+    },
+    "extraArgs": [
+      "--split-mode", "layer",
+      "--tensor-split", "0.5,0.5",
+      "--cache-type-k", "q8_0",
+      "--cache-type-v", "q8_0",
+      "--temp", "0.60",
+      "--top-p", "0.95",
+      "--top-k", "20",
+      "--min-p", "0.0",
+      "--repeat-penalty", "1.0",
+      "--presence-penalty", "0.0",
+      "--no-context-shift",
+      "--metrics",
+      "--no-warmup",
+      "--jinja",
+      "--predict", "4096",
+      "--parallel", "1",
+      "--reasoning", "off"
+    ],
+    "mtp": { "enabled": true, "selfContained": true, "args": ["--spec-type", "draft-mtp", "--spec-draft-n-max", "3"] },
+    "binaryKind": "official",
+    "minimumBinaryBuild": 10658,
+    "contextPresets": [32768, 65536, 131072, 196608, 262144],
+    "vision": true,
+    "comment": "ShapeLearn completo, sin la restricción ASCII del perfil P1M. Medido localmente en 2× RTX 3090 con KV q8: 41,8 TG a 262k sin MTP y 66,2 TG con MTP3, aceptación 63,4%; visión+MTP3 funcional a 32k (55,9 TG, 80% aceptación). LC-H1 oficial: HE0 1/1 y HE20 20/20 con el agente compacto Con fases; BCB quedó bloqueado por salida previa a tools y no tiene score comparable. El smoke directo sigue siendo válido pero no equivale a calidad agentiva. No reemplaza SOL. DFlash2 no está habilitado porque el drafter probado pertenece a otro target/quant."
+  },
+  {
+    "id": "sys-occamy-35b-q4km-262k",
+    "tier": "48GB-Occamy",
+    "order": 258,
+    "extra": true,
+    "benchmark": true,
+    "best": false,
+    "favorite": false,
+    "autoCompanion": false,
+    "displayName": "[experimental 48GB] Occamy-1.0 35B-A3B Q4_K_M · 262k · visión · tools",
+    "minVramGb": 48,
+    "minRamGb": 32,
+    "cpuOk": false,
+    "folder": "Occamy-1.0-Q4_K_M",
+    "agentProfileId": "agent-maximo",
+    "model": {
+      "repo": "Accio-Lab/occamy-1.0-GGUF",
+      "file": "occamy-1.0-Q4_K_M.gguf",
+      "mmprojRepo": "Accio-Lab/occamy-1.0-GGUF",
+      "mmprojFile": "mmproj-occamy-1.0-F16.gguf",
+      "quant": "Q4_K_M"
+    },
+    "runtime": {
+      "ctx": 262144,
+      "gpuLayers": 999,
+      "batch": 512,
+      "ubatch": 128,
+      "threads": 8,
+      "kv": "q8_0",
+      "flashAttn": true,
+      "mlock": false,
+      "mmap": true
+    },
+    "extraArgs": [
+      "--split-mode", "layer",
+      "--tensor-split", "0.5,0.5",
+      "--cache-type-k", "q8_0", "--cache-type-v", "q8_0",
+      "--temp", "0.60", "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0",
+      "--repeat-penalty", "1.0", "--presence-penalty", "0.0",
+      "--no-context-shift", "--metrics", "--no-warmup", "--jinja",
+      "--predict", "4096", "--parallel", "1", "--reasoning", "off"
+    ],
+    "mtp": { "enabled": false, "args": [] },
+    "binaryKind": "official",
+    "minimumBinaryBuild": 10658,
+    "contextPresets": [32768, 65536, 131072, 196608, 262144],
+    "vision": true,
+    "comment": "Occamy-1.0 GGUF medido localmente en 2× RTX 3090: 233,09 PP/164,07 TG a 8K; 131,90 PP/162,96 TG a 262K; visión correcta a 32K con 175,65 PP/162,68 TG; tool-call add válido. El GGUF no contiene MTP. LC-H1 oficial: HE0 1/1, HE20 20/20 y BCB8 3/8 tras dos reparaciones; BCB promedio 143,59 TG y TTFT medio 8.638 ms. Más rápido que QWEN35-A3B y CyberTiel en esta receta, pero no reemplaza SOL (8/8)."
+  },
+  {
     "id": "sys-ninfer3090-qwen35",
     "tier": "24GB-NInfer",
     "order": 171,
@@ -51,7 +160,7 @@
     "benchmark": false,
     "favorite": true,
     "autoCompanion": false,
-    "displayName": "[experimental 24GB] NInfer-3090 · Qwen3.6-35B-A3B · coding",
+    "displayName": "[experimental 24GB] NInfer-3090 · Qwen3.6-35B-A3B · coding/concurrente",
     "minVramGb": 24,
     "minRamGb": 32,
     "cpuOk": false,
@@ -63,17 +172,18 @@
       "quant": "groupwise-int"
     },
     "runtime": {
-      "ctx": 4096,
+      "ctx": 8192,
       "batch": 512,
-      "ubatch": 128,
+      "ubatch": 512,
       "gpuLayers": 999,
       "kv": "q8_0",
       "flashAttn": false,
-      "mmap": true
+      "mmap": true,
+      "parallelSlots": 2
     },
     "extraArgs": [
       "--model-id", "qwen3.6-35b-a3b",
-      "--mtp-draft-tokens", "2", "--lm-head-draft",
+      "--mtp-draft-tokens", "3", "--lm-head-draft",
       "--prompt-lookup-tokens", "15", "--prompt-lookup-min-match", "4", "--prompt-lookup-auto",
       "--prompt-lookup-min-context", "1000",
       "--temp", "0.60", "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0",
@@ -86,13 +196,25 @@
       "gpuScope": "single",
       "label": "Nativa para RTX 3090 · 1 GPU"
     },
-    "contextPresets": [4096, 8192, 16384],
-    "comment": "Backend experimental NInfer-3090 para coding. Requiere ninfer-serve registrado como flavor ninfer-3090 y qwen3_6_35b_a3b.ninfer en el root NInfer-Qwen3.6-35B-A3B. Usa MTP y prompt-lookup adaptativo; comparar HumanEval/0 y luego HumanEval/20 contra llama.cpp."
+    "contextPresets": [4096, 8192, 32768, 65536, 131072, 262144],
+    "benchmarkVariants": [
+      {
+        "id": "sys-bench-ninfer3090-qwen35-vision-131k",
+        "order": 173,
+        "benchmark": true,
+        "displayName": "[bench NInfer] Qwen3.6-35B-A3B · visión · 131k",
+        "runtime": { "ctx": 131072, "parallelSlots": 1 },
+        "extraArgAdds": ["--vision"],
+        "comment": "Visión validada en RTX 3090 hasta 131k con INT8 KV; 262k no entra con margen de runtime en la receta medida."
+      }
+    ],
+    "comment": "Backend experimental NInfer-3090 para coding, concurrencia y visión opt-in. Requiere ninfer-serve registrado como flavor ninfer-3090 y qwen3_6_35b_a3b.ninfer en el root NInfer-Qwen3.6-35B-A3B. MTP3 medido a 190,08 tok/s sostenidos y C2 validado; texto 262k funciona. La variante de visión queda separada porque 131k funciona y 262k falla la reserva de runtime. BCB del harness pendiente; no reemplaza SOL."
   },
   {
     "id": "sys-ninfer3090-qwen38",
     "tier": "24GB-NInfer",
     "order": 172,
+    "menuOrder": 9,
     "extra": true,
     "benchmark": false,
     "favorite": false,
@@ -131,7 +253,26 @@
       "label": "Nativa para RTX 3090 · 1 GPU"
     },
     "contextPresets": [4096, 8192, 16384],
-    "comment": "Candidato HE0 → HE20 → BCB. Requiere qwen3_8_27b.ninfer de neroued/Qwen3.8-27B-NInfer y ninfer-serve revision 5232055+ registrado como flavor ninfer-3090. El artefacto incorpora visión/MTP, pero la app arranca NInfer en text-only y el model card declara que no ejecuta tool calls generadas: validar BCB como transporte antes de interpretar un score. La publicación upstream documenta RTX 5090; sólo usarlo en 3090 si el binario local fue adaptado y pasa smoke-test."
+    "platformModelFiles": {
+      "linux": "qwen3_8_27b-historical-3526913.ninfer",
+      "windows": "qwen3_8_27b.ninfer"
+    },
+    "platformArgs": {
+      "linux": [
+        "--model-id", "qwen3.8-27b", "--device", "1",
+        "--spec", "mtp", "--draft-tokens", "3", "--lm-head-draft",
+        "--max-context", "131072", "--prefill-chunk", "1024", "--kv-dtype", "int8",
+        "--temp", "0.60", "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0",
+        "--repeat-penalty", "1.0", "--presence-penalty", "0.0", "--reasoning", "on"
+      ],
+      "windows": [
+        "--model-id", "qwen3.8-27b",
+        "--spec", "mtp", "--draft-tokens", "3", "--lm-head-draft",
+        "--temp", "0.60", "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0",
+        "--repeat-penalty", "1.0", "--presence-penalty", "0.0", "--reasoning", "on"
+      ]
+    },
+    "comment": "Candidato HE0 → HE20 → BCB con thinking. En Linux usa el artefacto histórico compatible del commit 3526913, GPU1 y contexto 131K; Windows conserva qwen3_8_27b.ninfer. El artefacto incorpora visión/MTP, pero el perfil Qwen3.8 sigue siendo experimental y no reemplaza SOL."
   },
   {
     "id": "sys-ultraq-dsv4-0731-iq3s",
@@ -2899,15 +3040,17 @@
     "order": 6,
     "showcaseGroup": "vram8",
     "showcaseLabel": "Agente",
-    "displayName": "[agente] 8GB · Qwen3.5 9B (agente, 32k ctx)",
+    "displayName": "[agente/visión] 8GB · Qwen3.5 9B MTP (32k ctx)",
     "minVramGb": 8,
     "minRamGb": 16,
     "cpuOk": false,
-    "folder": "Qwen3.5-9B",
+    "folder": "Qwen3.5-9B/MTP",
     "model": {
-      "repo": "unsloth/Qwen3.5-9B-GGUF",
+      "repo": "unsloth/Qwen3.5-9B-MTP-GGUF",
       "file": "Qwen3.5-9B-Q4_K_M.gguf",
-      "quant": "Q4_K_M"
+      "quant": "Q4_K_M",
+      "mmprojRepo": "unsloth/Qwen3.5-9B-MTP-GGUF",
+      "mmprojFile": "mmproj-BF16.gguf"
     },
     "runtime": {
       "ctx": 32768,
@@ -2935,18 +3078,25 @@
       "--reasoning",
       "off"
     ],
-    "comment": "Qwen3.5 9B dense (unsloth Q4_K_M, ~5.4GB) 100% en GPU; sin visión (sin mmproj) a cambio de ctx 32k para loops de agente largos (tool outputs). Sampling agente: temp 0.2 / top-p 0.9 / top-k 40, reasoning off, jinja (tool-calling fiable; ver r/LocalLLM Qwen3.5-9B 8GB). kv q4_0 para caber en 8GB con 32k. REQUIERE llama-server con soporte arch Qwen3.5 (build reciente).",
+    "comment": "Qwen3.5 9B MTP (unsloth Q4_K_M, ~5.5GB) con mmproj BF16 validado en Linux; 100% en GPU, visión funcional y MTP autocontenido. En la comparación local: 106,1 tok/s sin MTP frente a 166,1 tok/s con MTP; visión identificó correctamente texto en imagen. Mantiene ctx 32k, KV q4_0 y sampling agente conservador; requiere llama-server reciente con soporte Qwen3.5.",
     "mtp": {
-      "enabled": false,
-      "args": []
+      "enabled": true,
+      "args": [
+        "--spec-type",
+        "draft-mtp",
+        "--spec-draft-n-max",
+        "3"
+      ],
+      "selfContained": true
     },
-    "binaryKind": "official"
+    "binaryKind": "official",
+    "vision": true
   },
   {
     "id": "sys-vram-4",
     "tier": "4GB",
     "order": 6,
-    "displayName": "[general] 4GB · Qwen3.5-4B Q4",
+    "displayName": "[general/visión] 4GB · Qwen3.5-4B MTP Q4",
     "minVramGb": 4,
     "minRamGb": 8,
     "cpuOk": false,
@@ -2955,8 +3105,8 @@
       "repo": "unsloth/Qwen3.5-4B-MTP-GGUF",
       "file": "Qwen3.5-4B-Q4_K_M.gguf",
       "quant": "Q4_K_M",
-      "mmprojRepo": "",
-      "mmprojFile": ""
+      "mmprojRepo": "unsloth/Qwen3.5-4B-MTP-GGUF",
+      "mmprojFile": "mmproj-BF16.gguf"
     },
     "runtime": {
       "ctx": 8192,
@@ -2990,12 +3140,14 @@
       "enabled": true,
       "args": [
         "--spec-type",
-        "mtp",
+        "draft-mtp",
         "--spec-draft-n-max",
         "3"
       ]
     },
-    "binaryKind": "beellama"
+    "binaryKind": "beellama",
+    "vision": true,
+    "comment": "Qwen3.5-4B MTP Q4 con mmproj BF16. Validado localmente con MTP+visión: 1.445 PP, 206,6 TG y aceptación MTP 64/92 (69,6%) en una captura de 768 px. KV q4_0 para el tier de 4GB."
   },
   {
     "id": "sys-vram-4-gemma",
@@ -3050,7 +3202,7 @@
     "id": "sys-vram-2",
     "tier": "2GB",
     "order": 7,
-    "displayName": "[general] 2GB · Qwen3.5-2B Q4",
+    "displayName": "[general/visión] 2GB · Qwen3.5-2B MTP Q4",
     "minVramGb": 2,
     "minRamGb": 8,
     "cpuOk": false,
@@ -3059,8 +3211,8 @@
       "repo": "unsloth/Qwen3.5-2B-MTP-GGUF",
       "file": "Qwen3.5-2B-Q4_K_M.gguf",
       "quant": "Q4_K_M",
-      "mmprojRepo": "",
-      "mmprojFile": ""
+      "mmprojRepo": "unsloth/Qwen3.5-2B-MTP-GGUF",
+      "mmprojFile": "mmproj-BF16.gguf"
     },
     "runtime": {
       "ctx": 8192,
@@ -3094,12 +3246,14 @@
       "enabled": true,
       "args": [
         "--spec-type",
-        "mtp",
+        "draft-mtp",
         "--spec-draft-n-max",
         "3"
       ]
     },
-    "binaryKind": "beellama"
+    "binaryKind": "beellama",
+    "vision": true,
+    "comment": "Qwen3.5-2B MTP Q4 con mmproj BF16. Validado localmente con MTP+visión: 1.812,6 PP, 344,8 TG y aceptación MTP 66/83 (79,5%) en una captura de 768 px. KV q4_0 para el tier de 2GB."
   },
   {
     "id": "sys-vram-2-gemma",
@@ -3154,7 +3308,7 @@
     "id": "sys-vram-0",
     "tier": "0GB",
     "order": 8,
-    "displayName": "[general] 0GB CPU · Qwen3.5-4B Q4",
+    "displayName": "[general/visión] 0GB CPU · Qwen3.5-4B MTP Q4",
     "minVramGb": 0,
     "minRamGb": 16,
     "cpuOk": true,
@@ -3162,7 +3316,9 @@
     "model": {
       "repo": "unsloth/Qwen3.5-4B-MTP-GGUF",
       "file": "Qwen3.5-4B-Q4_K_M.gguf",
-      "quant": "Q4_K_M"
+      "quant": "Q4_K_M",
+      "mmprojRepo": "unsloth/Qwen3.5-4B-MTP-GGUF",
+      "mmprojFile": "mmproj-BF16.gguf"
     },
     "runtime": {
       "ctx": 8192,
@@ -3197,11 +3353,18 @@
       "CUDA_VISIBLE_DEVICES": "-1"
     },
     "mtp": {
-      "enabled": false,
-      "args": []
+      "enabled": true,
+      "args": [
+        "--spec-type",
+        "draft-mtp",
+        "--spec-draft-n-max",
+        "3"
+      ],
+      "selfContained": true
     },
     "binaryKind": "cpu",
-    "comment": "Fallback CPU para Automatizaciones: Qwen3.5 4B Q4 con ctx 8k y batch bajo. Evita el 35B/32k en CPU, que puede quedar minutos sin emitir la primera tool."
+    "vision": true,
+    "comment": "Fallback CPU para Automatizaciones: Qwen3.5 4B Q4 con MTP y mmproj BF16, ctx 8k y batch bajo. Validado en Ryzen 9 9950X3D: visión+MTP cargó y leyó la captura a 185,8 PP / 23,1 TG, con aceptación MTP 43/59 (72,9%)."
   },
   {
     "id": "sys-48-antirez-dsv4-q2q4-0731",
@@ -3390,6 +3553,355 @@
       { "id": "sys-bench-qwen38-udq4-48gb-196k-mtp2-kv8-mmproj-ram", "order": 260, "benchmark": true, "displayName": "[bench 48GB Qwen3.8] UD-Q4 · 196k · MTP2 · KV q8 · visión", "runtime": { "ctx": 196608, "batch": 512, "ubatch": 64, "kv": "q8_0" }, "mtp": { "enabled": true, "args": ["--spec-type", "draft-mtp", "--spec-draft-n-max", "2"] }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" }, "extraArgAdds": ["--no-mmproj-offload"], "comment": "Variante validada en 48GB: conserva visión, MTP2 real, 196k, KV q8, B512/U64 y mmproj en RAM. HE0 1/1, HE20 20/20 y BCB 8/8; queda como referencia de contexto largo con visión." }
     ],
     "comment": "Qwen3.8-27B oficial de Unsloth: visión nativa y MTP integrado. Reasoning queda off en este perfil base para el flujo agentico; las variantes reasoning-low, reasoning-medium y reasoning-xhigh permiten medir el efecto del thinking sin cambiar modelo, quant, contexto, batch, MTP, visión ni template. La app descarga el GGUF y mmproj-BF16 desde Hugging Face.", "vision": true
+  },
+  {
+    "id": "sys-48-qwen38-flash-next-q2kxl-8k",
+    "tier": "48GB-Qwen38-Flash-Next",
+    "order": 264,
+    "extra": true,
+    "benchmark": true,
+    "best": false,
+    "favorite": false,
+    "manualOnly": true,
+    "autoCompanion": false,
+    "displayName": "[bench 48GB] Qwen3.8-Flash-Next Q2_K_XL · 8k · layer · medido",
+    "minVramGb": 48,
+    "minRamGb": 96,
+    "cpuOk": false,
+    "folder": "Qwen3.8-Flash-Next-UD-Q2_K_XL",
+    "agentProfileId": "agent-maximo",
+    "model": {
+      "repo": "unsloth/Qwen3.8-Flash-Next-GGUF",
+      "file": "Qwen3.8-Flash-Next-UD-Q2_K_XL-00001-of-00003.gguf",
+      "files": [
+        "UD-Q2_K_XL/Qwen3.8-Flash-Next-UD-Q2_K_XL-00001-of-00003.gguf",
+        "UD-Q2_K_XL/Qwen3.8-Flash-Next-UD-Q2_K_XL-00002-of-00003.gguf",
+        "UD-Q2_K_XL/Qwen3.8-Flash-Next-UD-Q2_K_XL-00003-of-00003.gguf"
+      ],
+      "quant": "UD-Q2_K_XL"
+    },
+    "runtime": {
+      "ctx": 8192,
+      "gpuLayers": 999,
+      "batch": 512,
+      "ubatch": 512,
+      "threads": 16,
+      "kv": "q8_0",
+      "flashAttn": true,
+      "mmap": true,
+      "mlock": false
+    },
+    "extraArgs": [
+      "--split-mode", "layer", "--fit", "off", "--n-cpu-moe", "40",
+      "--cache-type-k", "q8_0", "--cache-type-v", "q8_0",
+      "--temp", "0.60", "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0",
+      "--repeat-penalty", "1.0", "--presence-penalty", "0.0",
+      "--reasoning", "off", "--metrics", "--no-warmup", "--jinja", "--parallel", "1"
+    ],
+    "binaryKind": "qwen38-next",
+    "contextPresets": [8192, 16384, 32768, 65536, 131072, 262144],
+    "benchmarkVariants": [
+      {
+        "id": "sys-bench-48-qwen38-flash-next-q2kxl-cache188-8k",
+        "order": 265,
+        "benchmark": true,
+        "displayName": "[bench Flash-Next] Q2_K_XL · cache188 · 8k",
+        "extraArgAdds": ["--moe-expert-cache", "188", "--moe-expert-cache-inserts", "2"]
+      },
+      {
+        "id": "sys-bench-48-qwen38-flash-next-q2kxl-gpu-16k",
+        "order": 266,
+        "benchmark": true,
+        "displayName": "[bench Flash-Next] Q2_K_XL · 16k · GPU agresiva",
+        "runtime": { "ctx": 16384 },
+        "extraArgOverrides": { "--n-cpu-moe": "4" },
+        "comment": "Medido: carga estable, aproximadamente 23.0/23.6 GiB usados y 56.19 tok/s de decode con prompt fijo de 157 tokens. No confundir con validación HE/BCB completa."
+      },
+      {
+        "id": "sys-bench-48-qwen38-flash-next-q2kxl-gpu-32k",
+        "order": 267,
+        "benchmark": true,
+        "displayName": "[bench Flash-Next] Q2_K_XL · 32k · GPU agresiva",
+        "runtime": { "ctx": 32768 },
+        "extraArgOverrides": { "--n-cpu-moe": "4" },
+        "comment": "Medido: carga estable, aproximadamente 23.2/23.8 GiB usados y 57.15 tok/s de decode con prompt fijo de 157 tokens; margen de VRAM inferior a 1 GiB en la GPU1."
+      },
+      {
+        "id": "sys-bench-48-qwen38-flash-next-q2kxl-balanced-32k-moe8",
+        "order": 271,
+        "benchmark": true,
+        "displayName": "[bench Flash-Next] Q2_K_XL · 32k · balanceado · MoE8",
+        "runtime": { "ctx": 32768 },
+        "extraArgOverrides": { "--n-cpu-moe": "8" },
+        "extraArgAdds": ["--tensor-split", "1.2,1"],
+        "comment": "Experimental medido: --tensor-split 1.2,1 balancea la carga en aproximadamente 21.5/21.9 GiB por GPU y logra 53.35 tok/s de decode, con 2.7/2.2 GiB libres. No usar como default hasta validar estabilidad prolongada."
+      },
+      {
+        "id": "sys-bench-48-qwen38-flash-next-q2kxl-long-64k",
+        "order": 268,
+        "benchmark": true,
+        "displayName": "[bench Flash-Next] Q2_K_XL · 64k · estable",
+        "runtime": { "ctx": 65536 },
+        "extraArgOverrides": { "--n-cpu-moe": "40" },
+        "comment": "Medido: carga estable, aproximadamente 4.3/10.7 GiB usados y 32.19 tok/s de decode con prompt fijo de 157 tokens."
+      },
+      {
+        "id": "sys-bench-48-qwen38-flash-next-q2kxl-long-128k",
+        "order": 269,
+        "benchmark": true,
+        "displayName": "[bench Flash-Next] Q2_K_XL · 128k · estable",
+        "runtime": { "ctx": 131072 },
+        "extraArgOverrides": { "--n-cpu-moe": "40" },
+        "comment": "Medido con ctx=131072: carga estable, aproximadamente 5.0/11.7 GiB usados y 31.77 tok/s de decode con prompt fijo de 157 tokens."
+      },
+      {
+        "id": "sys-bench-48-qwen38-flash-next-q2kxl-long-128k-balanced-moe8",
+        "order": 272,
+        "benchmark": true,
+        "displayName": "[bench Flash-Next] Q2_K_XL · 128k · balanceado · MoE8",
+        "runtime": { "ctx": 131072 },
+        "extraArgOverrides": { "--n-cpu-moe": "8" },
+        "extraArgAdds": ["--tensor-split", "1.22,1"],
+        "comment": "Candidato medido: 128k estable, aproximadamente 22.5/23.4 GiB usados, 1.7/0.8 GiB libres y 53.68 tok/s de decode. Es el menor n-cpu-moe probado que sostiene 128k; validar con campaña larga antes de promover."
+      },
+      {
+        "id": "sys-bench-48-qwen38-flash-next-q2kxl-long-256k",
+        "order": 270,
+        "benchmark": true,
+        "displayName": "[bench Flash-Next] Q2_K_XL · 256k · estable",
+        "runtime": { "ctx": 262144 },
+        "extraArgOverrides": { "--n-cpu-moe": "40" },
+        "comment": "Medido con ctx=262144: carga estable, aproximadamente 6.9/13.6 GiB usados y 30.96 tok/s de decode con prompt fijo de 157 tokens."
+      }
+      ,{
+        "id": "sys-bench-48-qwen38-flash-next-q2kxl-long-256k-balanced-moe12",
+        "order": 273,
+        "benchmark": true,
+        "benchmarkMemoryAdaptive": false,
+        "alias": "ASTRA",
+        "displayName": "[bench Flash-Next] Q2_K_XL · 256k · balanceado · MoE12",
+        "runtime": { "ctx": 262144 },
+        "extraArgOverrides": { "--n-cpu-moe": "12" },
+        "extraArgAdds": ["--tensor-split", "1.4,1"],
+      "comment": "Validado: 256k estable, aproximadamente 23.0/23.0 GiB usados, 1.1/1.1 GiB libres y 47.14 tok/s de decode. Es el menor n-cpu-moe estable encontrado para 256k. LC-H1 exacto: HE0 1/1, HE20 20/20, BCB 8/8; retrieval needle/passkey 4/4 al 25/50/75/95%."
+      },
+      {
+        "id": "sys-bench-48-qwen38-flash-next-q2kxl-long-256k-moe16",
+        "order": 274,
+        "benchmark": true,
+        "displayName": "[bench Flash-Next] Q2_K_XL · 256k · MoE16 · margen GPU0",
+        "runtime": { "ctx": 262144 },
+        "extraArgOverrides": { "--n-cpu-moe": "16" },
+        "extraArgAdds": ["--tensor-split", "1.8,1"],
+        "comment": "Medido estable: 43.89 tok/s, aproximadamente 22.7/19.7 GiB usados y 1.4/4.4 GiB libres. Más margen que MoE12, menor velocidad."
+      }
+    ],
+    "comment": "Q2 validado directamente en 2x RTX 3090 con qwen4exp c6a9e5c9: HE20 20/20 y BCB8 8/8, ~30.3 tok/s de decode y VRAM aproximada 3.5/9.9 GiB con --n-cpu-moe 40. La matriz de contexto valida 16k/32k con --n-cpu-moe 4, una variante experimental estable a 32k con --n-cpu-moe 8, 128k balanceado con --n-cpu-moe 8 + --tensor-split 1.22,1 y 64k/128k/256k conservadores con --n-cpu-moe 40. ASTRA exacto con --n-cpu-moe 12 + --tensor-split 1.4,1 pasó LC-H1 HE0 1/1, HE20 20/20, BCB 8/8 y needle/passkey 4/4 a 256k. Las variantes largas priorizan capacidad y RAM sobre velocidad. Los pesos restantes viven en RAM; no es un modelo íntegramente residente en VRAM. Recibos: artifacts/qwen38-q2-vs-sol-20260923.json, artifacts/qwen38-q2-context-matrix-20260923.json, artifacts/qwen38-q2-ncpu-moe-sweep-20260923.json y artifacts/astra-lc-h1-256k-retrieval-20260923.json.",
+    "vision": false
+  },
+  {
+    "id": "sys-48-qwen38-flash-next-q4kxl-8k",
+    "tier": "48GB-Qwen38-Flash-Next",
+    "order": 255,
+    "extra": true,
+    "benchmark": true,
+    "best": false,
+    "favorite": false,
+    "manualOnly": true,
+    "autoCompanion": false,
+    "displayName": "[bench 48GB] Qwen3.8-Flash-Next Q4_K_XL · 8k · layer · sin MTP",
+    "minVramGb": 48,
+    "minRamGb": 96,
+    "cpuOk": false,
+    "folder": "Qwen3.8-Flash-Next-UD-Q4_K_XL",
+    "agentProfileId": "agent-maximo",
+    "model": {
+      "repo": "unsloth/Qwen3.8-Flash-Next-GGUF",
+      "file": "Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf",
+      "quant": "UD-Q4_K_XL"
+    },
+    "runtime": {
+      "ctx": 8192,
+      "gpuLayers": 999,
+      "batch": 512,
+      "ubatch": 512,
+      "threads": 16,
+      "kv": "q8_0",
+      "flashAttn": true,
+      "mmap": true,
+      "mlock": false
+    },
+    "extraArgs": [
+      "--split-mode", "layer",
+      "--fit", "off",
+      "--n-cpu-moe", "40",
+      "--cache-type-k", "q8_0", "--cache-type-v", "q8_0",
+      "--temp", "0.60", "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0",
+      "--repeat-penalty", "1.0", "--presence-penalty", "0.0",
+      "--reasoning", "off", "--metrics", "--no-warmup", "--jinja", "--parallel", "1"
+    ],
+    "binaryKind": "qwen38-next",
+    "contextPresets": [8192, 32768, 65536, 131072, 262144],
+    "benchmarkVariants": [
+      {
+        "id": "sys-bench-48-qwen38-flash-next-q4kxl-cache188-8k",
+        "order": 261,
+        "benchmark": true,
+        "displayName": "[bench Flash-Next] Q4_K_XL · cache188 · 8k",
+        "extraArgAdds": ["--moe-expert-cache", "188", "--moe-expert-cache-inserts", "2"]
+      },
+      {
+        "id": "sys-bench-48-qwen38-flash-next-q4kxl-131k",
+        "order": 262,
+        "benchmark": true,
+        "displayName": "[bench Flash-Next] Q4_K_XL · 131k · sin MTP",
+        "runtime": { "ctx": 131072 },
+        "comment": "Sólo se habilita después de HE0 válido a 8k y recuperación real de contexto largo."
+      }
+    ],
+    "comment": "Candidato experimental para 2× RTX 3090 + 96GB RAM. La línea base usa split layer, CPU-MoE y KV q8; no usa row/tensor split, MTP, visión ni overrides de Ngram. Q4_K_XL requiere VRAM+RAM y no se presenta como modelo íntegramente residente en GPU. Validar HE0 → HE20 → BCB contra SOL antes de habilitar variantes largas o cache188."
+  },
+  {
+    "id": "sys-qwen38-27b-byteshape-ascii-262k",
+    "tier": "48GB-Qwen38-ByteShape",
+    "order": 256,
+    "extra": true,
+    "benchmark": true,
+    "best": false,
+    "favorite": false,
+    "autoCompanion": false,
+    "displayName": "[experimental 48GB] Qwen3.8 ByteShape IQ4_XS ASCII · 262k · MTP2 · visión",
+    "minVramGb": 48,
+    "minRamGb": 32,
+    "cpuOk": false,
+    "folder": "Qwen3.8-27B-ByteShape-IQ4_XS-ASCII-P1M",
+    "agentProfileId": "agent-maximo",
+    "chatTemplate": "qwen38-tools-fixed.jinja",
+    "model": {
+      "repo": "islamsidratul/Qwen3.8-27B-ByteShape-IQ4_XS-ASCII-GGUF",
+      "file": "Qwen3.8-27B-ByteShape-IQ4_XS-3.84bpw-ASCII-P1M.gguf",
+      "mmprojRepo": "unsloth/Qwen3.8-27B-GGUF",
+      "mmprojFile": "mmproj-BF16.gguf",
+      "quant": "IQ4_XS-ASCII-P1M"
+    },
+    "runtime": {
+      "ctx": 262144,
+      "gpuLayers": 999,
+      "batch": 512,
+      "ubatch": 64,
+      "threads": 8,
+      "kv": "q8_0",
+      "flashAttn": true,
+      "mlock": false,
+      "mmap": true
+    },
+    "extraArgs": [
+      "--split-mode", "layer",
+      "--tensor-split", "0.5,0.5",
+      "--cache-type-k", "q8_0",
+      "--cache-type-v", "q8_0",
+      "--temp", "0.60",
+      "--top-p", "0.95",
+      "--top-k", "20",
+      "--min-p", "0.0",
+      "--repeat-penalty", "1.0",
+      "--presence-penalty", "0.0",
+      "--no-context-shift",
+      "--metrics",
+      "--no-warmup",
+      "--jinja",
+      "--predict", "4096",
+      "--parallel", "1",
+      "--reasoning", "on"
+    ],
+    "mtp": { "enabled": true, "selfContained": true, "args": ["--spec-type", "draft-mtp", "--spec-draft-n-max", "2"] },
+    "binaryKind": "official",
+    "minimumBinaryBuild": 10331,
+    "contextPresets": [32768, 65536, 131072, 196608, 262144],
+    "vision": true,
+    "comment": "Perfil experimental medido en 2× RTX 3090 con el GGUF ByteShape IQ4_XS de vocabulario ASCII/P1M. Carga 262k con KV q8_0 y visión mediante mmproj Qwen3.8; MTP2 funciona. Resultado local: ~79–88 tok/s texto corto, ~67,6 tok/s con visión+MTP2, ~45 tok/s a 262k sin MTP y BCB8 directo 1/8. Sólo recomendable para inglés, código y ASCII: ñ/acentos, CJK, árabe, cirílico y otros scripts se degradan. No es default ni reemplaza SOL por calidad agentiva."
+  },
+  {
+    "id": "sys-qwen38-27b-beellama-kvarn5-131k",
+    "tier": "24GB-Qwen38-KVarN",
+    "order": 163,
+    "extra": true,
+    "best": false,
+    "benchmark": true,
+    "favorite": false,
+    "autoCompanion": false,
+    "displayName": "[experimental] Qwen3.8 UD-Q4 · BeeLlama KVarN5 · 131k",
+    "minVramGb": 24,
+    "minRamGb": 32,
+    "cpuOk": false,
+    "folder": "Qwen3.8-27B-GGUF",
+    "agentProfileId": "agent-maximo",
+    "chatTemplate": "qwen38-tools-fixed.jinja",
+    "model": {
+      "repo": "unsloth/Qwen3.8-27B-GGUF",
+      "file": "Qwen3.8-27B-UD-Q4_K_XL.gguf",
+      "quant": "UD-Q4_K_XL"
+    },
+    "runtime": {
+      "ctx": 131072,
+      "gpuLayers": 999,
+      "batch": 512,
+      "ubatch": 256,
+      "threads": 8,
+      "kv": "q8_0",
+      "flashAttn": true,
+      "mlock": false,
+      "mmap": true
+    },
+    "extraArgs": [
+      "--split-mode", "layer",
+      "--tensor-split", "1,1",
+      "--cache-type-k", "kvarn5",
+      "--cache-type-v", "kvarn5",
+      "--kv-tail-tokens", "0",
+      "--temp", "0.60",
+      "--top-p", "0.95",
+      "--top-k", "20",
+      "--min-p", "0.0",
+      "--repeat-penalty", "1.0",
+      "--presence-penalty", "0.0",
+      "--no-context-shift",
+      "--metrics",
+      "--no-warmup",
+      "--jinja",
+      "--parallel", "1",
+      "--reasoning", "off"
+    ],
+    "binaryKind": "beellama",
+    "minimumBinaryBuild": 0,
+    "contextPresets": [32768, 65536, 131072],
+    "vision": false,
+    "comment": "Perfil experimental medido en Ubuntu dual RTX 3090 con BeeLlama v0.4.7 preview: KVarN5/KVarN5, cola de precisión desactivada y por lo tanto sin KV superior a Q8. A 131k mantuvo ~36 tok/s de decode y ~512 tok/s de prefill en prompts cortos, contra ~36,6 y ~297 con KV q8_0. No usa mmproj: la visión con KVarN todavía no fue validada localmente. No reemplaza SOL; se recomienda para coding texto-only con historial largo y prefijos costosos.",
+    "benchmarkVariants": [
+      {
+        "id": "sys-bench-qwen38-beellama-kvarn6-kvarn5-131k",
+        "order": 263,
+        "benchmark": true,
+        "displayName": "[bench] Qwen3.8 UD-Q4 · BeeLlama KVarN6/KVarN5 · 131k",
+        "extraArgOverrides": {
+          "--cache-type-k": "kvarn6",
+          "--cache-type-v": "kvarn5"
+        },
+        "comment": "Variante conservadora: ~35,8 tok/s decode y ~504 tok/s prefill a 131k en la prueba local; algo más lenta que KVarN5/KVarN5, pero con mayor fidelidad de K."
+      },
+      {
+        "id": "sys-bench-qwen38-beellama-kvarn5-kvarn4-131k",
+        "order": 264,
+        "benchmark": true,
+        "displayName": "[bench] Qwen3.8 UD-Q4 · BeeLlama KVarN5/KVarN4 · 131k",
+        "extraArgOverrides": {
+          "--cache-type-k": "kvarn5",
+          "--cache-type-v": "kvarn4",
+          "--kv-tail-tokens": "0"
+        },
+        "comment": "Auditoría local 2026-09-14: estable y con tool-call válido, pero 36,22 tok/s decode y 436,66 tok/s prefill a 8K; a 131K, 36,58 y 443,86. Más lento en prefill que KVarN5/KVarN5. No es perfil prioritario."
+      }
+    ]
   },
   {
     "id": "sys-qwen38-27b-q4km-131k",
@@ -4008,6 +4520,74 @@
     "comment": "SUPERIOR en estabilidad de ejecución sintética a contexto largo con B256/U256: el fork sachin-detrax commit 11a01c8 completó 8k..131k con pool CUDA de 2048 MiB, K q8_0/V q4_0 y una RTX 3090 de 24 GiB, manteniendo ~4.7 GiB libres al final. INFERIOR en latencia de contexto largo: el prefill cayó de ~1226 tok/s (8k) a ~617 tok/s (131k) y el decode de ~36.0 a ~5.25 tok/s. No promover calidad: el probe NIAH de este GGUF no recuperó la passkey exactamente. Requiere registrar manualmente el binario con flavor kv-streaming; dense Qwen3, una GPU y un slot; no multi-GPU/vision/MoE."
   },
   {
+    "id": "sys-bench-qwen38-gsq-rco-iq3s-dflash2-q2-81k",
+    "tier": "24GB-Qwen38-GSQ-DFlash2",
+    "order": 420,
+    "extra": true,
+    "manualOnly": true,
+    "benchmark": true,
+    "best": false,
+    "favorite": false,
+    "autoCompanion": false,
+    "displayName": "[experimental] GSQ-RCO IQ3_S · DFlash2 Q2 · 81k · visión",
+    "minVramGb": 24,
+    "minRamGb": 32,
+    "cpuOk": false,
+    "requiresMtpBinary": true,
+    "folder": "Qwen3.8-27B-GSQ-RCO-IQ3_S",
+    "agentProfileId": "agent-maximo",
+    "chatTemplate": "qwen38-tools-fixed.jinja",
+    "model": {
+      "repo": "ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF",
+      "file": "Qwen3.8-27B-GSQ-RCO-IQ3_S-mtp.gguf",
+      "mmprojFile": "mmproj-Qwen3.8-27B-BF16.gguf",
+      "quant": "IQ3_S"
+    },
+    "draftModel": {
+      "repo": "HermiHg/Qwen3.8-27B-DFlash2-Q2_K_S-MIX-GGUF",
+      "file": "Qwen3.8-27B-DFlash2-Q2_K_S-MIX.gguf",
+      "folder": "Qwen3.8-27B-DFlash2-Q2_K_S-MIX"
+    },
+    "runtime": {
+      "ctx": 81920,
+      "gpuLayers": 999,
+      "batch": 2048,
+      "ubatch": 512,
+      "threads": 8,
+      "kv": "q8_0",
+      "flashAttn": true,
+      "mlock": false,
+      "mmap": true
+    },
+    "extraArgs": [
+      "--cache-type-k", "q8_0",
+      "--cache-type-v", "q4_0",
+      "--cache-type-k-draft", "q8_0",
+      "--cache-type-v-draft", "q4_0",
+      "--split-mode", "layer",
+      "--temp", "0.60",
+      "--top-p", "0.95",
+      "--top-k", "20",
+      "--min-p", "0.0",
+      "--repeat-penalty", "1.0",
+      "--presence-penalty", "0.0",
+      "--no-context-shift",
+      "--metrics",
+      "--no-warmup",
+      "--jinja",
+      "--predict", "4096",
+      "--parallel", "1",
+      "--reasoning", "off",
+      "--spec-type", "draft-dflash",
+      "--spec-draft-n-max", "3"
+    ],
+    "binaryKind": "beellama",
+    "minimumBinaryBuild": 10331,
+    "contextPresets": [32768, 65536, 81920],
+    "vision": true,
+    "comment": "Perfil experimental validado en Ubuntu con llamAmpere DFlash2: GSQ-RCO IQ3_S + drafter Q2_K_S-MIX, DFlash n=3, target KV K8/V4 y draft K8/V4. Dio 60–67 TG corto, tool-use y visión funcionales, 17,67 TG a 9,6K de contexto y HE0 LC-H1 1/1 a 29,09 TG. HE20 fue cancelado en prompt 5/20 por latencia operativa no competitiva a 81K; BCB no se inicia sin HE20 válido. manualOnly evita promoverlo o descargarlo automáticamente. No reemplaza SOL. Ver docs/qwen38-gsq-rco-dflash2-q2-audit-20260918.md."
+  },
+  {
     "id": "sys-bench-qwen38-agention-ap-q3kxl-32k",
     "tier": "24GB-Qwen38-Agention-AP",
     "order": 421,
@@ -4128,7 +4708,7 @@
         "order": 422,
         "displayName": "[bench] LFM2.5-VL-3B F16 · control visión",
         "comment": "Control local reproducible LFM2.5-VL-3B F16 + mmproj F16, 8k, llama.cpp b10964. En lectura de estados acertó la fixture sintética; para Computer Use generó tool_calls válidas, pero centró el click en (0.5,0.5), lejos del switch (~0.88,0.296). Control para comparar DSpark; no promover como agente visual. Ver docs/lfm25-vl-dspark-audit-20260926.md."
-    },
+    }, 
     {
         "tier": "24GB-LFM25-VL3B",
         "extra": true,
@@ -4202,7 +4782,7 @@
             "draftNMin": 0
         },
         "comment": "SUPERIOR sólo en throughput de decodificación frente al control: +2.30x en descripción visual y +2.35x en lectura de estados en esta RTX 3090 F16. Como perfil de Computer Use es INFERIOR/no promover: con el schema real de LlamaCode devolvió tool_calls válidas pero el click fue (0.5,0.5), lejos del switch (~0.88,0.296); mediana de respuesta 987 ms vs 895 ms del control. No cambia la calidad visual medida; una descripción tuvo una diferencia léxica bajo temp=0. manualOnly evita descargas automáticas. Ver docs/lfm25-vl-dspark-audit-20260926.md."
-    },
+    }, 
     {
         "tier": "24GB-LFM25-VL3B",
         "extra": true,
@@ -4277,88 +4857,6 @@
         },
         "comment": "SUPERIOR sólo en throughput de decodificación frente al control: +2.26x en lectura de estados y +3.33x en descripción visual de primera solicitud. Como perfil de Computer Use es INFERIOR/no promover: el schema real produjo tool_calls válidas pero con click (0.5,0.5), lejos del switch (~0.88,0.296); su mediana de respuesta fue 890 ms, esencialmente igual a 895 ms del control. No se midió mejora agentiva. manualOnly evita descargas automáticas. Ver docs/lfm25-vl-dspark-audit-20260926.md."
     },
-  {
-    "id": "sys-bench-bonsai2-27b-pq2-64k",
-    "tier": "12GB-Bonsai-Ternary",
-    "order": 280,
-    "extra": true,
-    "manualOnly": true,
-    "benchmark": true,
-    "best": false,
-    "favorite": false,
-    "autoCompanion": false,
-    "displayName": "[INFERIOR agente / SUPERIOR VRAM] Ternary Bonsai 2 27B PQ2_0 · PrismML · visión · 64k",
-    "minVramGb": 12,
-    "minRamGb": 16,
-    "cpuOk": false,
-    "folder": "Ternary-Bonsai-2-27B",
-    "agentProfileId": "agent-maximo",
-    "model": {
-      "repo": "prism-ml/Ternary-Bonsai-2-27B-gguf",
-      "file": "Ternary-Bonsai-2-27B-PQ2_0.gguf",
-      "quant": "PQ2_0",
-      "mmprojFile": "Ternary-Bonsai-2-27B-mmproj-Q8_0.gguf"
-    },
-    "runtime": {
-      "ctx": 65536,
-      "gpuLayers": 999,
-      "batch": 2048,
-      "ubatch": 512,
-      "threads": 8,
-      "kv": "q8_0",
-      "flashAttn": true,
-      "mlock": false,
-      "mmap": true,
-      "parallelSlots": 1
-    },
-    "extraArgs": [
-      "--cache-type-k",
-      "q8_0",
-      "--cache-type-v",
-      "q8_0",
-      "--split-mode",
-      "none",
-      "--temp",
-      "0.60",
-      "--top-p",
-      "0.95",
-      "--top-k",
-      "20",
-      "--min-p",
-      "0.0",
-      "--repeat-penalty",
-      "1.0",
-      "--presence-penalty",
-      "0.0",
-      "--no-context-shift",
-      "--metrics",
-      "--no-warmup",
-      "--jinja",
-      "--predict",
-      "16384",
-      "--parallel",
-      "1",
-      "--reasoning",
-      "auto"
-    ],
-    "binaryKind": "prism-ternary",
-    "contextPresets": [
-      32768,
-      65536,
-      131072
-    ],
-    "vision": true,
-    "comment": "INFERIOR como agente de código: BCB8 2/8 en 1361 s (Qwen3.8 UD-Q4 MTP3 hace 8/8 en ~500 s); HE0 1/1 y HE20 20/20 (19 al primer intento, 219 s, 42,6 tok/s agentivo). SUPERIOR en huella de VRAM: 12,3 GB totales con visión y KV q8_0 a 64k en UNA RTX 3090 (pesos 6,7 GiB), deja la otra placa libre. Medido 2026-09-26 con PrismML b10743 CUDA 12.4 en RTX 3090 (GPU1): llama-bench pp512 1234, pp2048 1233, tg128 59,4 tok/s (sin especulación: el fork rechaza MTP y ngram no especula con estos archivos). Computer Use (corpus v1 y hard, 3 pasadas, razonamiento off): 100% exactitud y seguridad en las 3 variantes, mediana 335-378 ms (Qwen3.5-9B productivo: 134 ms, 91,7% en question-first hard). Visión: leyó bien la captura de Ajustes. Tool call, JSON y aritmética OK. Uso sugerido: visión/Computer Use o Charla en la segunda placa mientras SOL ocupa la otra; no para coding agentivo. Requiere registrar el binario PrismML con flavor prism-ternary; el oficial no carga PQ2_0. KNOWN_ISSUES: --predict >=16384 (el razonamiento consume la salida), CUDA 13.3 crashea en Windows.",
-    "tags": [
-      "bonsai",
-      "ternary",
-      "pq2_0",
-      "prism",
-      "qwen3.8",
-      "vision",
-      "12gb"
-    ]
-  },
     {
         "id": "sys-bench-qwen38-byteshape-tensor-q8-mtp3-131k",
         "tier": "48GB-Qwen38-ByteShape",
@@ -4570,53 +5068,32 @@
             "mmap": true
         },
         "extraArgs": [
-            "--split-mode",
-            "layer",
-            "--tensor-split",
-            "0.5,0.5",
-            "--cache-type-k",
-            "q8_0",
-            "--cache-type-v",
-            "q8_0",
-            "--temp",
-            "0.60",
-            "--top-p",
-            "0.95",
-            "--top-k",
-            "20",
-            "--min-p",
-            "0.0",
-            "--repeat-penalty",
-            "1.0",
-            "--presence-penalty",
-            "0.0",
+            "--split-mode", "layer",
+            "--tensor-split", "0.5,0.5",
+            "--cache-type-k", "q8_0",
+            "--cache-type-v", "q8_0",
+            "--temp", "0.60",
+            "--top-p", "0.95",
+            "--top-k", "20",
+            "--min-p", "0.0",
+            "--repeat-penalty", "1.0",
+            "--presence-penalty", "0.0",
             "--no-context-shift",
             "--metrics",
             "--no-warmup",
             "--jinja",
-            "--predict",
-            "4096",
-            "--parallel",
-            "1",
-            "--reasoning",
-            "off"
+            "--predict", "4096",
+            "--parallel", "1",
+            "--reasoning", "off"
         ],
         "mtp": {
             "enabled": true,
             "selfContained": true,
-            "args": [
-                "--spec-type",
-                "draft-mtp",
-                "--spec-draft-n-max",
-                "4"
-            ]
+            "args": ["--spec-type", "draft-mtp", "--spec-draft-n-max", "4"]
         },
         "binaryKind": "official",
         "minimumBinaryBuild": 10964,
-        "contextPresets": [
-            32768,
-            65536
-        ],
+        "contextPresets": [32768, 65536],
         "vision": true,
         "comment": "Candidato Genesis NVFP4 descargado y fijado por SHA-256 en docs/swift-genesis-qwen38-evaluation-20260929.md. Perfil manual de evaluación: 64k inicial, MTP4 y mmproj; no es default. En 262k el primer request falló con CUDA OOM mientras había otros servidores usando ambas GPU; falta validar generación limpia, BCB/LC-H1, Computer Use y visión. No promover antes de comparar contra SOL."
     },
@@ -4656,56 +5133,61 @@
             "mmap": true
         },
         "extraArgs": [
-            "--split-mode",
-            "tensor",
-            "--tensor-split",
-            "0.5,0.5",
-            "--cache-type-k",
-            "q8_0",
-            "--cache-type-v",
-            "q8_0",
-            "--cache-ram",
-            "1024",
-            "--temp",
-            "0.60",
-            "--top-p",
-            "0.95",
-            "--top-k",
-            "20",
-            "--min-p",
-            "0.0",
-            "--repeat-penalty",
-            "1.0",
-            "--presence-penalty",
-            "0.0",
+            "--split-mode", "tensor",
+            "--tensor-split", "0.5,0.5",
+            "--cache-type-k", "q8_0",
+            "--cache-type-v", "q8_0",
+            "--cache-ram", "1024",
+            "--temp", "0.60",
+            "--top-p", "0.95",
+            "--top-k", "20",
+            "--min-p", "0.0",
+            "--repeat-penalty", "1.0",
+            "--presence-penalty", "0.0",
             "--no-context-shift",
             "--metrics",
             "--no-warmup",
             "--jinja",
-            "--predict",
-            "4096",
-            "--parallel",
-            "1",
-            "--reasoning",
-            "off"
+            "--predict", "4096",
+            "--parallel", "1",
+            "--reasoning", "off"
         ],
         "mtp": {
             "enabled": true,
             "selfContained": true,
-            "args": [
-                "--spec-type",
-                "draft-mtp",
-                "--spec-draft-n-max",
-                "4"
-            ]
+            "args": ["--spec-type", "draft-mtp", "--spec-draft-n-max", "4"]
         },
         "binaryKind": "official",
         "minimumBinaryBuild": 10964,
-        "contextPresets": [
-            32768,
-            65536
-        ],
+        "contextPresets": [32768, 65536],
         "vision": true,
         "comment": "A/B experimental sobre el mismo GGUF y contexto del perfil layer. Probar sólo después de validar el perfil layer: tensor split depende de la build/runtime y la configuración exacta de Genesis aún no está validada. La variante usa el límite de cache-ram ya validado en los perfiles tensor locales. No promover antes de comparar contra SOL."
+    },
+    {
+        "id": "sys-astra-strata-iq3s",
+        "tier": "ASTRA-Strata",
+        "order": 500,
+        "extra": true,
+        "benchmark": false,
+        "best": false,
+        "favorite": false,
+        "alias": "ASTRA Strata",
+        "displayName": "ASTRA · Strata IQ3_S · Qwen3.8 Flash Next",
+        "minVramGb": 12,
+        "backend": {
+            "kind": "cloud",
+            "baseUrl": "http://127.0.0.1:8350",
+            "model": "astra-strata",
+            "ctx": 131072,
+            "port": 8350,
+            "managedServer": {
+                "type": "astra-strata",
+                "port": 8350
+            }
+        },
+        "agentProfileId": "agent-maximo",
+        "reasoningEffort": "medium",
+        "reasoningBudget": 8192,
+        "comment": "LlamaCode inicia y detiene el servidor local de Strata como ASTRA. Requiere Strata instalado y configurar su carpeta y archivo de modelo en Ajustes → ASTRA."
     }
 ]

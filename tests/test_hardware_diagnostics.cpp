@@ -9,8 +9,10 @@ class HardwareDiagnosticsTests : public QObject
 private slots:
     void parsesGpuTopology();
     void parsesP2pTopologyMatrix();
+    void parsesP2pStatusMatrix();
     void parsesNvlinkStatus();
     void enrichmentFeedsRecommendation();
+    void enrichmentReadsPcieP2pStatus();
     void voicePlanReservesWeakGpuAndSplitsRemainingVram();
     void voicePlanFallsBackToSingleGpu();
     void voicePlanRejectsOccupiedVoiceGpu();
@@ -47,6 +49,19 @@ void HardwareDiagnosticsTests::parsesP2pTopologyMatrix()
     QCOMPARE(parsed.value(QStringLiteral("links")).toList().size(), 1);
 }
 
+void HardwareDiagnosticsTests::parsesP2pStatusMatrix()
+{
+    const QString status = QStringLiteral(
+        "        GPU0 GPU1\n"
+        "GPU0     X   OK\n"
+        "GPU1    OK   X\n");
+    QVERIFY(HardwareDiagnostics::parseP2pStatus(status));
+    QVERIFY(!HardwareDiagnostics::parseP2pStatus(
+        QStringLiteral("        GPU0 GPU1\nGPU0 X TNS\nGPU1 TNS X\n")));
+    QVERIFY(!HardwareDiagnostics::parseP2pStatus(
+        QStringLiteral("Legend: OK = Status Ok\n")));
+}
+
 void HardwareDiagnosticsTests::parsesNvlinkStatus()
 {
     QVERIFY(HardwareDiagnostics::parseNvlinkActive("Link 0: Active"));
@@ -64,6 +79,23 @@ void HardwareDiagnosticsTests::enrichmentFeedsRecommendation()
     QVERIFY(enriched.value(QStringLiteral("p2pAvailable")).toBool());
     QVERIFY(enriched.value(QStringLiteral("nvlinkAvailable")).toBool());
     QCOMPARE(HardwareDiagnostics::recommendedSplitMode(enriched), QStringLiteral("layer"));
+}
+
+void HardwareDiagnosticsTests::enrichmentReadsPcieP2pStatus()
+{
+    const QVariantMap base{{QStringLiteral("gpus"), QVariantList{
+        QVariantMap{{QStringLiteral("pcieGeneration"), 4.0},
+                    {QStringLiteral("pcieLanes"), 8.0}},
+        QVariantMap{{QStringLiteral("pcieGeneration"), 4.0},
+                    {QStringLiteral("pcieLanes"), 8.0}}}}};
+    const QVariantMap enriched = HardwareDiagnostics::enrichTopology(
+        base,
+        "GPU0 GPU1 CPU\nGPU0 X PHB 0-31\nGPU1 PHB X 0-31\n",
+        "Link 0: Inactive",
+        "GPU0 GPU1\nGPU0 X OK\nGPU1 OK X\n");
+    QVERIFY(enriched.value(QStringLiteral("p2pAvailable")).toBool());
+    QVERIFY(!enriched.value(QStringLiteral("nvlinkAvailable")).toBool());
+    QCOMPARE(HardwareDiagnostics::recommendedSplitMode(enriched), QStringLiteral("tensor"));
 }
 
 void HardwareDiagnosticsTests::voicePlanReservesWeakGpuAndSplitsRemainingVram()

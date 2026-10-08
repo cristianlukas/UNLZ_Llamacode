@@ -179,6 +179,10 @@ static QJsonArray childTargets(QObject *obj)
     const QMetaObject *mo = obj->metaObject();
     for (int i = mo->propertyOffset(); i < mo->propertyCount(); ++i) {
         const QMetaProperty pr = mo->property(i);
+        // AppController exposes several computed list/map properties. Avoid
+        // invoking those getters merely to discover QObject sub-targets.
+        if (!pr.typeName() || !QByteArray(pr.typeName()).endsWith('*'))
+            continue;
         const QVariant v = obj->property(pr.name());
         if (v.value<QObject *>())
             out.append(QString::fromUtf8(pr.name()));

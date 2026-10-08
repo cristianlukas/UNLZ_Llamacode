@@ -216,6 +216,16 @@ ApplicationWindow {
         check(editor.specValue("memory", "structuredFacts", 0) === 3, "el valor entra")
         check(editor.specValue("loop", "credits", 0) === 4, "editar memory no pisa loop")
 
+        // --- Computer Use sandwich: experimental y apagado por defecto -------
+        editor.spec = { loop: { credits: 4 } }
+        var sandwichSwitch = findChild("computerUseSandwichSwitch")
+        check(sandwichSwitch !== null, "el toggle del sandwich existe")
+        check(sandwichSwitch.checked === false, "el sandwich arranca apagado")
+        sandwichSwitch.toggle()
+        sandwichSwitch.toggled()
+        check(editor.specValue("prompt", "computerUseSandwich", false) === true,
+              "activar el toggle declara el sandwich en prompt")
+
         var projSwitch = findChild("projectMemorySwitch")
         check(projSwitch !== null && projSwitch.checked === true,
               "la memoria de proyecto arranca encendida")

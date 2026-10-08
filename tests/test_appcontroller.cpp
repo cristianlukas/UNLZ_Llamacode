@@ -44,6 +44,22 @@ static QString systemProfilesBundlePath()
     return candidates.first();
 }
 
+static QString bundledBenchmarkRoot()
+{
+    const QStringList candidates = {
+        QDir::current().absoluteFilePath(QStringLiteral("assets/benchmarks/custom")),
+        QDir::current().absoluteFilePath(QStringLiteral("../assets/benchmarks/custom")),
+        QDir(QCoreApplication::applicationDirPath())
+            .absoluteFilePath(QStringLiteral("../assets/benchmarks/custom")),
+        QDir(QCoreApplication::applicationDirPath())
+            .absoluteFilePath(QStringLiteral("../../assets/benchmarks/custom")),
+    };
+    for (const QString &candidate : candidates)
+        if (QFileInfo(candidate).isDir())
+            return candidate;
+    return candidates.first();
+}
+
 // Backend de agente fake para ejercitar el ciclo del bucle de Tasks sin un
 // llama-server real. Cada sendMessage responde un texto scripteado y, async,
 // emite messagesChanged + turnFinished (async para no recursar dentro de
@@ -137,6 +153,7 @@ class AppControllerTests : public QObject
     Q_OBJECT
 private slots:
     void initTestCase();
+    void buildPlatformIsCompileTimeQtPlatform();
     void exportUserDataToWritesBackup();
     void githubReleaseIsConvertedToUpdateFlag();
     void updateNowRequiresAvailableRelease();
@@ -160,19 +177,23 @@ private slots:
     void pendingAgentClearsStartingWhenAlreadyRunning();
     void benchmarkStopStepKillsWhenBudgetRunsOut();
     void benchmarkRestartErrorsAreInfrastructure();
+    void benchmarkDisablesEarlyAcceptanceForBigCodeBench();
     void benchmarkBusyTurnIsRetryableNotInfrastructure();
     void benchmarkRepairPrefillIsNotStagnation();
+    void benchmarkRepairInspectionLoopGuard();
     void benchmarkMemoryPressureIsRecognized();
     void benchmarkUsesMaxVramBeforeReducingPressure();
     void benchmarkPreservesScoreAfterTransportTail();
     void benchmarkGateRejectsBrokenOrStaleHe0();
     void benchmarkGateAcceptsValidHe20QualityResult();
     void benchmarkCoverageClassifiesStages();
+    void benchmarkFingerprintIncludesThinkingPolicy();
     void benchmarkCustomStageClassification();
     void benchmarkRankingAggregatesLatestStages();
     void benchmarkDocumentRowsParseScores();
     void benchmarkUsesOneArtifactPerTask();
-    void benchmarkStreamingCountsSnapshotsOnce();
+    void benchmarkCountsRawGenerationProgressOnce();
+    void serverHealthAcceptsRemoteNotFoundResponse();
     void concurrencyBenchmarkSettingsClampBounds();
     void benchmarkReusesServerAlreadyLoadedWithSameProfile();
     void benchmarkBest25ClassifiesExclusiveSpeedTiers();
@@ -226,6 +247,7 @@ private slots:
     void engineeringCatalogIsExposedHeadless();
     void engineeringPresetInstallsPersistsAndRestores();
     void harnessAdapterNormalizesToLlamaAgent();
+    void computerUseSandwichRemainsExperimentalAndOptIn();
     void systemProfileBinaryPinReadsBundle();
     void systemProfileMinimumBuildSelectsNewestCompatible();
     void cpuSystemProfileRequiresCpuBinary();
@@ -236,6 +258,7 @@ private slots:
     void charlaJarvisStopsOrQueuesWhileAgentWorks();
     void ocrStatusAlwaysExplainsItself();
     void agentLevels_contextBudgetLadder();
+    void privacyModeHidesAndBlocksNetworkTools();
     void doctorReportsStructureAndIssues();
     void importOllamaModelsIngestsStore();
     void bundledCustomBenchmarkUpgradePreservesPersonalFiles();
@@ -570,6 +593,23 @@ void AppControllerTests::initTestCase()
             QFile::encodeName(QDir(m_tmp.path()).filePath(QStringLiteral("run_history"))));
 }
 
+void AppControllerTests::buildPlatformIsCompileTimeQtPlatform()
+{
+    AppController app;
+#if defined(Q_OS_WIN)
+    QCOMPARE(app.buildPlatform(), QStringLiteral("windows"));
+#elif defined(Q_OS_LINUX)
+    QCOMPARE(app.buildPlatform(), QStringLiteral("linux"));
+#elif defined(Q_OS_MACOS)
+    QCOMPARE(app.buildPlatform(), QStringLiteral("macos"));
+#else
+    QCOMPARE(app.buildPlatform(), QStringLiteral("other"));
+#endif
+    const int propertyIndex = app.metaObject()->indexOfProperty("buildPlatform");
+    QVERIFY(propertyIndex >= 0);
+    QCOMPARE(app.metaObject()->property(propertyIndex).isConstant(), true);
+}
+
 void AppControllerTests::bundledCustomBenchmarkUpgradePreservesPersonalFiles()
 {
     const QJsonObject oldBundled{
@@ -594,8 +634,7 @@ void AppControllerTests::bundledCustomBenchmarkUpgradePreservesPersonalFiles()
 
 void AppControllerTests::bundledOneShottingBenchmarksAreSeparate()
 {
-    const QString root = QDir(QCoreApplication::applicationDirPath())
-        .filePath(QStringLiteral("../../assets/benchmarks/custom"));
+    const QString root = bundledBenchmarkRoot();
     const QStringList names = {
         QStringLiteral("one_shotting_bakery_ecommerce_v1.json"),
         QStringLiteral("one_shotting_space_shooter_v1.json")
@@ -615,8 +654,7 @@ void AppControllerTests::bundledOneShottingBenchmarksAreSeparate()
 
 void AppControllerTests::bundledHarnessContextAbBenchmarkIsValid()
 {
-    const QString root = QDir(QCoreApplication::applicationDirPath())
-        .filePath(QStringLiteral("../../assets/benchmarks/custom"));
+    const QString root = bundledBenchmarkRoot();
     QFile f(QDir(root).filePath(QStringLiteral("harness_context_tools_ab_v1.json")));
     QVERIFY(f.open(QIODevice::ReadOnly));
 
@@ -662,8 +700,7 @@ void AppControllerTests::bundledHarnessContextAbBenchmarkIsValid()
 
 void AppControllerTests::bundledArtifactLifecycleBenchmarkIsValid()
 {
-    const QString root = QDir(QCoreApplication::applicationDirPath())
-        .filePath(QStringLiteral("../../assets/benchmarks/custom"));
+    const QString root = bundledBenchmarkRoot();
     QFile f(QDir(root).filePath(QStringLiteral("artifact_lifecycle_v1.json")));
     QVERIFY(f.open(QIODevice::ReadOnly));
 
@@ -1276,9 +1313,13 @@ void AppControllerTests::remoteBackendEnablesServerDependentUi()
 
 void AppControllerTests::windowsStartupCommandQuotesExecutable()
 {
+#ifndef Q_OS_WIN
+    QSKIP("windowsStartupCommand is a Windows startup integration");
+#else
     QCOMPARE(AppController::windowsStartupCommand(
                  QStringLiteral("C:/Program Files/LlamaCode/LlamaCode.exe")),
              QStringLiteral("\"C:\\Program Files\\LlamaCode\\LlamaCode.exe\" --startup"));
+#endif
 }
 
 void AppControllerTests::startupHiddenRequiresBothFlags()
@@ -1907,6 +1948,30 @@ void AppControllerTests::benchmarkRestartErrorsAreInfrastructure()
         QStringLiteral("Fallaron criterios de aceptacion.")));
 }
 
+void AppControllerTests::benchmarkDisablesEarlyAcceptanceForBigCodeBench()
+{
+    const QVariantList bcb{
+        QVariantMap{{QStringLiteral("id"), QStringLiteral("BigCodeBench/870")},
+                    {QStringLiteral("artifactFile"),
+                     QStringLiteral("solution_BigCodeBench_870.py")}},
+        QVariantMap{{QStringLiteral("id"), QStringLiteral("BigCodeBench/509")},
+                    {QStringLiteral("artifactFile"),
+                     QStringLiteral("solution_BigCodeBench_509.py")}}};
+    QVERIFY(!AppController::benchmarkAllowsEarlyAcceptanceForTest(bcb));
+
+    const QVariantList bcbAlias{
+        QVariantMap{{QStringLiteral("id"), QStringLiteral("custom-task")},
+                    {QStringLiteral("artifactFile"),
+                     QStringLiteral("solution_BigCodeBenchmark_509.py")}}};
+    QVERIFY(!AppController::benchmarkAllowsEarlyAcceptanceForTest(bcbAlias));
+
+    const QVariantList humanEval{
+        QVariantMap{{QStringLiteral("id"), QStringLiteral("HumanEval/0")},
+                    {QStringLiteral("artifactFile"),
+                     QStringLiteral("solution_HumanEval_0.py")}}};
+    QVERIFY(AppController::benchmarkAllowsEarlyAcceptanceForTest(humanEval));
+}
+
 void AppControllerTests::benchmarkBusyTurnIsRetryableNotInfrastructure()
 {
     QVERIFY(AppController::benchmarkTurnBusyForTest(
@@ -1925,6 +1990,29 @@ void AppControllerTests::benchmarkRepairPrefillIsNotStagnation()
     QVERIFY(!AppController::benchmarkRepairStagnationCheckForTest(true, true));
     QVERIFY(!AppController::benchmarkRepairStagnationCheckForTest(false, true));
     QVERIFY(AppController::benchmarkRepairStagnationCheckForTest(false, false));
+}
+
+void AppControllerTests::benchmarkRepairInspectionLoopGuard()
+{
+    QVERIFY(AppController::benchmarkRepairToolMayMutateForTest(
+        QStringLiteral("write_file")));
+    QVERIFY(AppController::benchmarkRepairToolMayMutateForTest(
+        QStringLiteral("run_command")));
+    QVERIFY(!AppController::benchmarkRepairToolMayMutateForTest(
+        QStringLiteral("read_file")));
+    QVERIFY(!AppController::benchmarkRepairToolMayMutateForTest(
+        QStringLiteral("web_search")));
+
+    QVERIFY(!AppController::benchmarkRepairInspectionLoopForTest(
+        true, false, false, 20));
+    QVERIFY(!AppController::benchmarkRepairInspectionLoopForTest(
+        false, true, false, 20));
+    QVERIFY(!AppController::benchmarkRepairInspectionLoopForTest(
+        false, false, true, 20));
+    QVERIFY(!AppController::benchmarkRepairInspectionLoopForTest(
+        false, false, false, 7));
+    QVERIFY(AppController::benchmarkRepairInspectionLoopForTest(
+        false, false, false, 8));
 }
 
 void AppControllerTests::benchmarkMemoryPressureIsRecognized()
@@ -2030,6 +2118,11 @@ void AppControllerTests::benchmarkGateAcceptsValidHe20QualityResult()
     QVERIFY(AppController::benchmarkResultPassesGateForTest(
         partial, QStringLiteral("he20"), QStringLiteral("fp-current")));
 
+    QVariantMap importedName = partial;
+    importedName[QStringLiteral("benchmarkName")] = QStringLiteral("HumanEval · 20 ítems");
+    QVERIFY(AppController::benchmarkResultPassesGateForTest(
+        importedName, QStringLiteral("he20"), QStringLiteral("fp-current")));
+
     QVariantMap transport = partial;
     transport[QStringLiteral("failureKind")] = QStringLiteral("infrastructure");
     transport[QStringLiteral("transportAfterEvaluation")] = true;
@@ -2066,6 +2159,36 @@ void AppControllerTests::benchmarkCoverageClassifiesStages()
              QStringLiteral("pending"));
     QCOMPARE(AppController::benchmarkStageCoverageStateForTest(he0, "he0", "fp-old"),
              QStringLiteral("pending"));
+}
+
+void AppControllerTests::benchmarkFingerprintIncludesThinkingPolicy()
+{
+    AppController app;
+    const QVariantList before = app.benchmarkCoverage();
+    QVERIFY(!before.isEmpty());
+    const QVariantMap first = before.first().toMap();
+    const QString profileId = first.value(QStringLiteral("profileId")).toString();
+    const QString fingerprintBefore =
+        first.value(QStringLiteral("profileConfigFingerprint")).toString();
+    QVERIFY(!profileId.isEmpty());
+    QVERIFY(!fingerprintBefore.isEmpty());
+
+    const bool previousThinking = app.agentThinkingEnabled();
+    app.setAgentThinkingEnabled(!previousThinking);
+    const QVariantList after = app.benchmarkCoverage();
+    QString fingerprintAfter;
+    for (const QVariant &rowValue : after) {
+        const QVariantMap row = rowValue.toMap();
+        if (row.value(QStringLiteral("profileId")).toString() == profileId) {
+            fingerprintAfter = row.value(QStringLiteral("profileConfigFingerprint")).toString();
+            break;
+        }
+    }
+    app.setAgentThinkingEnabled(previousThinking);
+
+    QVERIFY(!fingerprintAfter.isEmpty());
+    QVERIFY2(fingerprintBefore != fingerprintAfter,
+             "Thinking policy must invalidate benchmark stage coverage.");
 }
 
 void AppControllerTests::benchmarkCustomStageClassification()
@@ -2251,14 +2374,32 @@ void AppControllerTests::benchmarkUsesOneArtifactPerTask()
     QCOMPARE(score.value(QStringLiteral("total")).toInt(), 1);
 }
 
-void AppControllerTests::benchmarkStreamingCountsSnapshotsOnce()
+void AppControllerTests::benchmarkCountsRawGenerationProgressOnce()
 {
-    QString previous;
-    QCOMPARE(AppController::benchmarkStreamingDeltaForTest(&previous, QStringLiteral("abc")), 3);
-    QCOMPARE(AppController::benchmarkStreamingDeltaForTest(&previous, QStringLiteral("abcdef")), 3);
-    QCOMPARE(AppController::benchmarkStreamingDeltaForTest(&previous, QStringLiteral("abcdef")), 0);
-    // Un backend que emite chunks, no snapshots, sigue sumando el chunk completo.
-    QCOMPARE(AppController::benchmarkStreamingDeltaForTest(&previous, QStringLiteral("ghi")), 3);
+    int previous = -1;
+    // El reasoning y la respuesta crecen en regiones distintas del snapshot
+    // visible. Contar el tamaño crudo combinado evita volver a sumar la respuesta
+    // cuando crece reasoning_content delante de ella.
+    QCOMPARE(AppController::benchmarkGeneratedCharsDeltaForTest(previous, 3), 3);
+    previous = 3;
+    QCOMPARE(AppController::benchmarkGeneratedCharsDeltaForTest(previous, 8), 5);
+    previous = 8;
+    QCOMPARE(AppController::benchmarkGeneratedCharsDeltaForTest(previous, 8), 0);
+    // También se reinicia de forma segura si el mismo bubble inicia otra generación.
+    QCOMPARE(AppController::benchmarkGeneratedCharsDeltaForTest(previous, 2), 2);
+    // Una métrica temporalmente vacía no resta ni agrega caracteres.
+    QCOMPARE(AppController::benchmarkGeneratedCharsDeltaForTest(2, 0), 0);
+}
+
+void AppControllerTests::serverHealthAcceptsRemoteNotFoundResponse()
+{
+    QVERIFY(AppController::serverHealthReplyAcceptedForTest(200, false, false));
+    QVERIFY(!AppController::serverHealthReplyAcceptedForTest(200, true, true));
+    // HTTP 404 is a valid reachability response for a remote OpenAI-compatible
+    // server that does not implement /health; Qt marks this as a network error.
+    QVERIFY(AppController::serverHealthReplyAcceptedForTest(404, true, true));
+    QVERIFY(!AppController::serverHealthReplyAcceptedForTest(404, false, false));
+    QVERIFY(!AppController::serverHealthReplyAcceptedForTest(0, true, true));
 }
 
 void AppControllerTests::benchmarkBest25ClassifiesExclusiveSpeedTiers()
@@ -2724,6 +2865,35 @@ void AppControllerTests::harnessAdapterNormalizesToLlamaAgent()
     QCOMPARE(AppController::normalizeHarnessAdapter(QStringLiteral("raw")), QStringLiteral("raw"));
 }
 
+void AppControllerTests::computerUseSandwichRemainsExperimentalAndOptIn()
+{
+    AppController app;
+
+    // Ningún preset productivo debe activar una variante que todavía no pasa
+    // el gate de latencia. Esto también protege contra un default accidental
+    // en applyAgentProfileCaps o en la resolución de HarnessSpec.
+    for (const AgentProfile &preset : AgentProfile::systemPresets()) {
+        LlamaAgentBackend backend;
+        app.applyAgentProfileCapsForTest(&backend, preset);
+        QVERIFY2(!backend.computerUseSandwichForTest(),
+                 qPrintable(QStringLiteral("preset inesperadamente opt-in: %1")
+                                .arg(preset.id)));
+    }
+
+    // El camino experimental sigue disponible, pero requiere una declaración
+    // explícita del módulo prompt del perfil; no se habilita por herencia
+    // implícita ni por el simple hecho de usar Computer Use.
+    AgentProfile experimental;
+    experimental.id = QStringLiteral("computer-use-sandwich-test");
+    experimental.hasSpec = true;
+    experimental.spec.prompt.set = true;
+    experimental.spec.prompt.computerUseSandwich = true;
+
+    LlamaAgentBackend backend;
+    app.applyAgentProfileCapsForTest(&backend, experimental);
+    QVERIFY(backend.computerUseSandwichForTest());
+}
+
 void AppControllerTests::benchmarkWorkspaceFingerprintIgnoresInternalAgentFiles()
 {
     QVERIFY(AppController::benchmarkWorkspacePathIsInternalForTest(QStringLiteral(".llamacode/agent_events.jsonl")));
@@ -2812,6 +2982,51 @@ void AppControllerTests::agentLevels_contextBudgetLadder()
              "Máximo arrastró antiBias por '*' (debe ser opt-in puro)");
     QVERIFY2(!maxSys.contains(QStringLiteral("FRUGALIDAD (Honey)")),
              "Máximo arrastró honey por '*' (debe ser opt-in puro)");
+}
+
+void AppControllerTests::privacyModeHidesAndBlocksNetworkTools()
+{
+    AppController app;
+    app.setPrivacyModeEnabled(true);
+    QVERIFY(app.privacyModeEnabled());
+    QCOMPARE(QSettings().value(QStringLiteral("privacy/modeEnabled")).toBool(), true);
+    app.setPrivacyModeEnabled(false);
+    QVERIFY(!app.privacyModeEnabled());
+
+    LlamaAgentBackend backend;
+    backend.setMcpToolsForTest({QVariantMap{
+        {QStringLiteral("server"), QStringLiteral("example")},
+        {QStringLiteral("name"), QStringLiteral("send_data")},
+        {QStringLiteral("description"), QStringLiteral("external call")},
+        {QStringLiteral("schema"), QStringLiteral("{\"type\":\"object\"}")}}});
+    backend.setPrivacyModeEnabled(true);
+    for (const AgentProfile &profile : AgentProfile::systemPresets()) {
+        if (profile.id == QLatin1String("agent-maximo")) {
+            app.applyAgentProfileCapsForTest(&backend, profile); // '*' no puede reabrir web/MCP
+            break;
+        }
+    }
+
+    QVERIFY(backend.privacyModeEnabledForTest());
+    const QString system = backend.systemPromptForTest();
+    QVERIFY(system.contains(QStringLiteral("MODO PRIVACIDAD ACTIVO")));
+    QVERIFY(system.contains(QStringLiteral("no es un firewall")));
+    const QJsonArray schemas = backend.toolSchemasForTest();
+    QSet<QString> visible;
+    for (const QJsonValue &value : schemas)
+        visible.insert(value.toObject().value(QStringLiteral("function"))
+                           .toObject().value(QStringLiteral("name")).toString());
+
+    for (const QString &blocked : {
+             QStringLiteral("web_search"), QStringLiteral("web_fetch"),
+             QStringLiteral("deep_research"), QStringLiteral("browser_skill_replay"),
+             QStringLiteral("email_send"), QStringLiteral("ask_teacher"),
+             QStringLiteral("semantic_search"), QStringLiteral("hybrid_search"),
+             QStringLiteral("task"), QStringLiteral("mcp_search_tools"),
+             QStringLiteral("mcp_call_tool")})
+        QVERIFY2(!visible.contains(blocked), qPrintable(blocked));
+    QVERIFY(visible.contains(QStringLiteral("read_file")));
+    QVERIFY(visible.contains(QStringLiteral("run_shell"))); // shell arbitrary queda fuera del límite
 }
 
 // binaryPin del bundle de perfiles de sistema: permite fijar UN perfil a un

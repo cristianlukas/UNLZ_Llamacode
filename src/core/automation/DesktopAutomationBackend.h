@@ -56,7 +56,7 @@ public:
     // arrastrar por la secuencia y soltar en el último. `points` = lista de {x,y}
     // NORMALIZADOS 0..1 dentro del alcance (mínimo 2). Interpola segmentos para que
     // la línea salga continua aunque los puntos vengan espaciados. `holdMs` = pausa
-    // por segmento (default ~8ms). Sólo Windows.
+    // por segmento (default ~8ms). Requiere una sesión interactiva.
     static bool stroke(const QString &kind, const QString &targetId,
                        const QVariantList &points, const QString &button = QStringLiteral("left"),
                        int holdMs = 8, QString *error = nullptr, QVariantMap *trace = nullptr);
@@ -81,13 +81,13 @@ public:
     // rol, geometría, habilitado e invocable. `windowTargetId` = id hex de la
     // ventana (ver windows()). `query` filtra por substring del nombre (vacío =
     // todos). `max` acota la cantidad. Devuelve filas {controlId,name,role,x,y,
-    // width,height,enabled,invokable}. controlId = RuntimeId serializado, estable
-    // dentro de la vida de la ventana → usalo con clickElement. Sólo Windows.
+    // width,height,enabled,invokable}. controlId = RuntimeId/UIA o referencia AT-SPI
+    // serializada, estable dentro de la vida de la ventana → usalo con clickElement.
     static QVariantList controls(const QString &windowTargetId, const QString &query,
                                  int max, QString *error = nullptr);
     // Click sobre un control por su controlId (de controls()): si expone el patrón
     // Invoke lo invoca (más robusto que pixel); si no, clickea el centro de su
-    // bounding rect. Sólo Windows.
+    // bounding rect. En Linux usa AT-SPI.
     //
     // Si el controlId no existe (el modelo pasó un NOMBRE en vez del RuntimeId, o
     // la ventana hizo reflow y el id quedó viejo), reintenta resolviéndolo como
@@ -152,7 +152,7 @@ public:
     // Control UIA bajo un punto absoluto de pantalla. Lo usa el grabador Teach para
     // anclar cada click/stroke a un control semántico (name/role/controlId + la
     // ventana dueña) en vez de sólo coordenadas → replay robusto ante reflow de UI.
-    // Devuelve {} si no hay elemento o UIA no está. Sólo Windows.
+    // Devuelve {} si no hay elemento o el proveedor de accesibilidad no está.
     static QVariantMap controlAtPoint(const QPoint &absolute);
 
     // Espera (poll) hasta que exista una condición o venza el timeout. Sincroniza
@@ -160,7 +160,7 @@ public:
     //  - windowTitle no vacío → espera una ventana cuyo título contenga el texto.
     //  - windowTargetId + (query|role) → espera un control (name contiene query,
     //    role coincide) dentro de esa ventana.
-    // Devuelve {found:bool, elapsedMs, ...datos del match}. Sólo Windows.
+    // Devuelve {found:bool, elapsedMs, ...datos del match}.
     static QVariantMap waitFor(const QString &windowTargetId, const QString &windowTitle,
                                const QString &query, const QString &role, int timeoutMs,
                                QString *error = nullptr);

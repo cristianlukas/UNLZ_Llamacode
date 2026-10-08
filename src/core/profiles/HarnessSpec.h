@@ -98,6 +98,10 @@ struct HarnessPromptModule {
     QStringList custom;                // slugs de directivas de usuario
     QString systemExtra;
     int maxChars = 24000;              // tope del prompt compuesto (aviso, no crash)
+    // Experimento de orden de contexto para Computer Use. Sólo tiene efecto
+    // cuando el backend acaba de ejecutar una tool desktop_*; nunca modifica
+    // RawChatBackend ni Ingi Charla sin agente. Default false por seguridad.
+    bool computerUseSandwich = false;
     bool set = false;
 
     QJsonObject toJson() const;
@@ -166,6 +170,11 @@ struct HarnessPermissionsModule {
 // Escalacion: sub-agentes + umbrales del DifficultyRouter + gatillo del maestro.
 struct HarnessEscalationModule {
     int maxParallelSubagents = 5;      // techo propio (el absoluto sigue mandando)
+    bool subagentsEnabled = true;      // false = task devuelve un rechazo claro
+    // Presupuesto contextual conservador por sub-agente. 0 = usar el contexto
+    // completo del perfil; un valor menor permite paralelismo en perfiles con
+    // contexto largo sin prometer que cada sub-agente consuma todo el KV.
+    int subagentContextTokens = 0;
     bool isolateSubagents = true;      // git worktree por sub-agente
     QString masterEscalation;          // "" = heredar del LaunchProfile
     int masterAutoAfterFails = 0;      // 0 = heredar

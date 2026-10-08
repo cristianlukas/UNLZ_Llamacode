@@ -27,7 +27,13 @@ Item {
         }
     }
 
-    function startProfile(launchId, withAgent) {
+    function startProfile(launchId, withAgent, shareOnLan) {
+        if (shareOnLan) {
+            // Opt-in exposure: serve through the authenticated LAN gateway,
+            // never through the raw model engine or the app control API.
+            App.gatewayLanEnabled = true
+            App.gatewayEnabled = true
+        }
         if (withAgent)
             App.startServerAndAgent(launchId)
         else
@@ -211,7 +217,7 @@ Item {
         }
     }
 
-    function startWithPortCheck(withAgent) {
+    function startWithPortCheck(withAgent, shareOnLan) {
         const launchId = launchCombo.currentValue ?? ""
         if (!launchId || launchId.length === 0)
             return
@@ -219,27 +225,29 @@ Item {
         if (vf.warning === true) {
             vramWarningDialog.launchId = launchId
             vramWarningDialog.withAgent = withAgent
+            vramWarningDialog.shareOnLan = shareOnLan === true
             vramWarningDialog.message = vf.message || ""
             vramWarningDialog.freeGb = vf.freeGb ?? 0
             vramWarningDialog.requiredGb = vf.requiredGb ?? 0
             vramWarningDialog.open()
             return
         }
-        startAfterVramCheck(launchId, withAgent)
+        startAfterVramCheck(launchId, withAgent, shareOnLan === true)
     }
 
-    function startAfterVramCheck(launchId, withAgent) {
+    function startAfterVramCheck(launchId, withAgent, shareOnLan) {
         const st = App.launchPortStatus(launchId)
         if (st.blocked === true && (st.suggestedPort ?? 0) > 0) {
             portConflictDialog.launchId = launchId
             portConflictDialog.withAgent = withAgent
+            portConflictDialog.shareOnLan = shareOnLan === true
             portConflictDialog.currentPort = st.port ?? 8080
             portConflictDialog.suggestedPort = st.suggestedPort
             portConflictDialog.host = st.host ?? "127.0.0.1"
             portConflictDialog.open()
             return
         }
-        startProfile(launchId, withAgent)
+        startProfile(launchId, withAgent, shareOnLan)
     }
 
     Dialog {
@@ -257,6 +265,7 @@ Item {
 
         property string launchId: ""
         property bool withAgent: true
+        property bool shareOnLan: false
         property string message: ""
         property real freeGb: 0
         property real requiredGb: 0
@@ -307,7 +316,9 @@ Item {
                     text: "Continuar igual"
                     onClicked: {
                         vramWarningDialog.close()
-                        root.startAfterVramCheck(vramWarningDialog.launchId, vramWarningDialog.withAgent)
+                        root.startAfterVramCheck(vramWarningDialog.launchId,
+                                                 vramWarningDialog.withAgent,
+                                                 vramWarningDialog.shareOnLan)
                     }
                 }
             }
@@ -325,6 +336,7 @@ Item {
 
         property string launchId: ""
         property bool withAgent: true
+        property bool shareOnLan: false
         property int currentPort: 8080
         property int suggestedPort: 8081
         property string host: "127.0.0.1"
@@ -373,7 +385,9 @@ Item {
                 onClicked: {
                     if (App.setLaunchBackendPort(portConflictDialog.launchId, portConflictDialog.suggestedPort)) {
                         portConflictDialog.close()
-                        root.startProfile(portConflictDialog.launchId, portConflictDialog.withAgent)
+                        root.startProfile(portConflictDialog.launchId,
+                                          portConflictDialog.withAgent,
+                                          portConflictDialog.shareOnLan)
                     }
                 }
             }
@@ -453,6 +467,7 @@ Item {
                         target: App
                         // tras descargar deps / escanear, recomputar ready.
                         function onSetupStateChanged() { launchCombo.refreshMenu() }
+                        function onAstraConfigurationChanged() { launchCombo.refreshMenu() }
                         // startServer también lo invocan benchmarks, Tasks y Charla.
                         // Reflejar el perfil realmente activo sin convertir ese swap
                         // interno en la preferencia persistida del usuario.
@@ -710,6 +725,15 @@ Item {
                     visible: !App.serverRunning && !App.serverStopping
                     enabled: launchCombo.count > 0 && launchCombo.currentValue !== undefined
                     onClicked: root.startWithPortCheck(false)
+                }
+
+                LcButton {
+                    text: "Iniciar servidor LAN"
+                    secondary: true
+                    Layout.fillWidth: true
+                    visible: !App.serverRunning && !App.serverStopping
+                    enabled: launchCombo.count > 0 && launchCombo.currentValue !== undefined
+                    onClicked: root.startWithPortCheck(false, true)
                 }
 
                 // --- Router mode (hot-swap entre varios modelos) ---------------

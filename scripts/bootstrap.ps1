@@ -29,8 +29,8 @@ $Config  = if ($env:LC_CONFIG) { $env:LC_CONFIG } else { 'Debug' }
 $QtVer   = '6.8.3'
 $QtArch  = 'win64_msvc2022_64'
 $QtDir   = "C:\Qt\$QtVer\msvc2022_64"
-$QtAqtModules = @('qtmultimedia')
-$QtRequiredComponents = @('Core', 'Quick', 'Sql', 'Concurrent', 'Network', 'Widgets', 'Multimedia', 'Svg')
+$QtAqtModules = @('qtmultimedia', 'qtsvg')
+$QtRequiredComponents = @('Core', 'Quick', 'QuickControls2', 'Sql', 'Concurrent', 'Network', 'Widgets', 'Multimedia', 'Svg')
 
 function Info($m)  { Write-Host "[*] $m"  -ForegroundColor Cyan }
 function Ok($m)    { Write-Host "[OK] $m" -ForegroundColor Green }
@@ -176,7 +176,7 @@ if (Test-Path (Join-Path $Dir '.git')) {
     # puede ser un checkout de trabajo: el reset --hard de abajo se llevaria
     # puesto todo lo no commiteado. Abortar salvo LC_FORCE=1.
     $Dirty = @(git -C $Dir status --porcelain | Where-Object { $_ })
-    if ($Dirty.Count -gt 0 -and -not $env:LC_FORCE) {
+    if ($Dirty.Count -gt 0 -and $env:LC_FORCE -ne '1') {
         Write-Host ""
         Write-Host "[ERROR] $Dir tiene $($Dirty.Count) archivo(s) sin commitear." -ForegroundColor Red
         $Dirty | Select-Object -First 10 | ForEach-Object { Write-Host "        $_" }
@@ -214,6 +214,7 @@ if (-not (Test-Path $ExePath)) { Die "Built exe missing at $ExePath" }
 $DeployFlag = if ($Config -ieq 'Debug') { '--debug' } else { '--release' }
 Info "Deploying Qt runtime..."
 & "$QtDir\bin\windeployqt.exe" $DeployFlag --qmldir (Join-Path $Dir 'qml') --no-translations --compiler-runtime $ExePath
+if ($LASTEXITCODE -ne 0) { Die "windeployqt failed with exit code $LASTEXITCODE." }
 # Qt.labs.settings is not always picked up by windeployqt.
 $LabsSrc = "$QtDir\qml\Qt\labs\settings"
 if (Test-Path $LabsSrc) {

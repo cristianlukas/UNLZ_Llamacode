@@ -11,10 +11,14 @@ class HardwareDiagnostics
 public:
     static QVariantList parseNvidiaSmiCsv(const QString &csv);
     static QVariantMap parseTopologyMatrix(const QString &text);
+    // `topo -m` describes the physical route; `topo -p2p r|w` reports
+    // whether CUDA peer transfers are actually available.
+    static bool parseP2pStatus(const QString &text);
     static bool parseNvlinkActive(const QString &text);
     static QVariantMap enrichTopology(const QVariantMap &hardware,
                                       const QString &topologyText,
-                                      const QString &nvlinkText);
+                                      const QString &nvlinkText,
+                                      const QString &p2pText = QString());
     // Plan opt-in para Ingi Charla: reserva la GPU con menos VRAM para STT/TTS
     // y auxiliares, y calcula el reparto de la VRAM restante para el LLM. Si
     // modelRequiredMb > 0, también evita prometer un perfil que no entre en

@@ -893,7 +893,7 @@ Item {
                         }
                         // BEST (⚡): distintivo curado; los perfiles BEST son de solo lectura.
                         LcButton {
-                            iconSource: "qrc:/qt/qml/LlamaCode/assets/best_bolt.svg"
+                            iconSource: "qrc:/LlamaCode/assets/best_bolt.svg"
                             text: ""
                             visible: root.launchBest
                             enabled: false

@@ -166,19 +166,46 @@ bool HardwareDiagnostics::parseNvlinkActive(const QString &text)
            && !lower.contains(QStringLiteral("disabled"));
 }
 
+bool HardwareDiagnostics::parseP2pStatus(const QString &text)
+{
+    // `nvidia-smi topo -p2p r|w` contains rows such as "GPU0 X OK".
+    // Only inspect GPU rows so the legend's explanatory "OK" cannot produce
+    // a false positive.
+    const QStringList lines = text.split(QRegularExpression(QStringLiteral("[\\r\\n]+")),
+                                         Qt::SkipEmptyParts);
+    for (const QString &raw : lines) {
+        const QStringList fields = raw.trimmed().split(QRegularExpression(QStringLiteral("\\s+")),
+                                                        Qt::SkipEmptyParts);
+        if (fields.size() < 2 || !fields.first().startsWith(QStringLiteral("GPU")))
+            continue;
+        for (int i = 1; i < fields.size(); ++i) {
+            if (fields.at(i).compare(QStringLiteral("OK"), Qt::CaseInsensitive) == 0)
+                return true;
+        }
+    }
+    return false;
+}
+
 QVariantMap HardwareDiagnostics::enrichTopology(const QVariantMap &hardware,
                                                 const QString &topologyText,
-                                                const QString &nvlinkText)
+                                                const QString &nvlinkText,
+                                                const QString &p2pText)
 {
     QVariantMap result = hardware;
     const QVariantMap topology = parseTopologyMatrix(topologyText);
     const bool topologyP2p = topology.value(QStringLiteral("p2pAvailable")).toBool();
+    const bool statusP2p = parseP2pStatus(p2pText);
     const bool nvlink = parseNvlinkActive(nvlinkText);
     result[QStringLiteral("topology")] = topology.value(QStringLiteral("links"));
-    result[QStringLiteral("p2pAvailable")] = topologyP2p || nvlink;
+    result[QStringLiteral("p2pAvailable")] = topologyP2p || statusP2p || nvlink;
     result[QStringLiteral("nvlinkAvailable")] = nvlink;
-    result[QStringLiteral("topologySource")] = !topologyText.trimmed().isEmpty()
-        ? QStringLiteral("nvidia-smi topo -m") : QStringLiteral("unavailable");
+    if (!topologyText.trimmed().isEmpty() && !p2pText.trimmed().isEmpty())
+        result[QStringLiteral("topologySource")] = QStringLiteral(
+            "nvidia-smi topo -m + topo -p2p r/w");
+    else if (!topologyText.trimmed().isEmpty())
+        result[QStringLiteral("topologySource")] = QStringLiteral("nvidia-smi topo -m");
+    else
+        result[QStringLiteral("topologySource")] = QStringLiteral("unavailable");
     return result;
 }
 

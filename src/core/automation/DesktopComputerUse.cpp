@@ -2,9 +2,12 @@
 
 #include <QCryptographicHash>
 #include <QDateTime>
+#include <QDir>
 #include <QJsonArray>
 #include <QJsonDocument>
+#include <QLockFile>
 #include <QRegularExpression>
+#include <QStandardPaths>
 #include <QStringList>
 #include <QUuid>
 
@@ -104,6 +107,44 @@ QVariantMap SessionLease::toVariantMap() const
             {QStringLiteral("maxActions"), maxActions},
             {QStringLiteral("actions"), actions},
             {QStringLiteral("active"), active}};
+}
+
+ProcessSessionGuard::~ProcessSessionGuard()
+{
+    release();
+}
+
+QString ProcessSessionGuard::lockPath()
+{
+    QString root = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
+    if (root.isEmpty()) root = QDir::tempPath() + QStringLiteral("/LlamaCode");
+    QDir().mkpath(root);
+    return QDir(root).filePath(QStringLiteral("desktop-computer-use.lock"));
+}
+
+bool ProcessSessionGuard::acquire(QString *error)
+{
+    if (isHeld()) return true;
+    release();
+    m_lock = std::make_unique<QLockFile>(lockPath());
+    m_lock->setStaleLockTime(30000);
+    if (m_lock->tryLock(0)) return true;
+    if (error) *error = QStringLiteral(
+        "otra instancia ya controla el escritorio; detené esa corrida o esperá a que libere la sesión");
+    m_lock.reset();
+    return false;
+}
+
+void ProcessSessionGuard::release()
+{
+    if (!m_lock) return;
+    if (m_lock->isLocked()) m_lock->unlock();
+    m_lock.reset();
+}
+
+bool ProcessSessionGuard::isHeld() const
+{
+    return m_lock && m_lock->isLocked();
 }
 
 QString stableHash(const QVariantMap &value)

@@ -134,7 +134,7 @@ class AppController : public QObject
     Q_PROPERTY(bool hasAnyModel  READ hasAnyModel  NOTIFY setupStateChanged)
     Q_PROPERTY(bool hasAnyLaunch READ hasAnyLaunch NOTIFY setupStateChanged)
     Q_PROPERTY(QString serverBaseUrl READ serverBaseUrl NOTIFY serverRunningChanged)
-    // Capacidades del modelo activo. Vision = el server se lanzó con --mmproj.
+    // Capacidades del modelo activo. Vision = el backend cargó encoder y mmproj.
     Q_PROPERTY(bool serverHasVision READ serverHasVision NOTIFY serverHasVisionChanged)
     // git instalado (requerido por subagents para aislar en worktrees).
     Q_PROPERTY(bool gitAvailable READ gitAvailable NOTIFY gitAvailableChanged)
@@ -171,6 +171,7 @@ class AppController : public QObject
     Q_PROPERTY(bool agentThinkingEnabled READ agentThinkingEnabled WRITE setAgentThinkingEnabled NOTIFY agentThinkingChanged)
     Q_PROPERTY(QString activeAgentProfileId READ activeAgentProfileId WRITE setActiveAgentProfileId NOTIFY activeAgentProfileChanged)
     Q_PROPERTY(bool browserAutomationEnabled READ browserAutomationEnabled WRITE setBrowserAutomationEnabled NOTIFY browserAutomationChanged)
+    Q_PROPERTY(bool privacyModeEnabled READ privacyModeEnabled WRITE setPrivacyModeEnabled NOTIFY privacyModeChanged)
     Q_PROPERTY(QString browserMcpCommand READ browserMcpCommand WRITE setBrowserMcpCommand NOTIFY browserAutomationChanged)
     Q_PROPERTY(QString teachState READ teachState NOTIFY teachChanged)
     Q_PROPERTY(QString teachError READ teachError NOTIFY teachChanged)
@@ -262,9 +263,15 @@ class AppController : public QObject
     Q_PROPERTY(QString dictationText READ dictationText NOTIFY dictationChanged)
     Q_PROPERTY(bool updateAvailable READ updateAvailable NOTIFY updateCheckChanged)
     Q_PROPERTY(QVariantMap updateInfo READ updateInfo NOTIFY updateCheckChanged)
+    // Identidad de plataforma fijada por los defines Q_OS_* del build de Qt.
+    // QML usa este valor para seleccionar recursos que no son portables entre
+    // Windows y Linux sin duplicar Main.qml.
+    Q_PROPERTY(QString buildPlatform READ buildPlatform CONSTANT)
 
 public:
     explicit AppController(QObject *parent = nullptr);
+
+    QString buildPlatform() const;
 
     BinaryRegistry    *binaryRegistry()  { return &m_binaries; }
     ModelRootRegistry *rootRegistry()    { return &m_roots; }
@@ -339,7 +346,7 @@ public:
             || host == QLatin1String("localhost")
             || host == QLatin1String("::1");
     }
-    bool   serverRunning()   const { return (m_proc && m_proc->state() != QProcess::NotRunning) || m_remoteServerActive; }
+    bool   serverRunning()   const { return (m_proc && m_proc->state() != QProcess::NotRunning) || (m_managedComposeProc && m_managedComposeProc->state() != QProcess::NotRunning) || m_remoteServerActive; }
     bool   serverStopping()  const { return m_serverStopping; }
     bool   serverReady()     const { return m_serverReady; }
     QString serverState()    const { return m_serverState; }
@@ -361,7 +368,7 @@ public:
         if (!m_activeLaunchId.isEmpty()) {
             const auto ctx = const_cast<AppController*>(this)->buildContext(m_activeLaunchId);
             if (ctx.backend.isCloud()) {
-                return ctx.backend.cloudBaseUrl.trimmed();
+                return backendBaseUrl(ctx.backend);
             }
             if (isRemoteHost(ctx.backend.host)) {
                 const int port = ctx.backend.port > 0 ? ctx.backend.port : 8080;
@@ -376,6 +383,15 @@ public:
             else if (args[i] == "--port") port = args[i + 1].toInt();
         }
         return QStringLiteral("http://%1:%2").arg(host).arg(port);
+    }
+    QString backendBaseUrl(const BackendProfile &backend) const {
+        if (backend.managedServer.value(QStringLiteral("type")).toString()
+                == QLatin1String("astra-strata")) {
+            int port = readSetting(QStringLiteral("astra/port"), 8350).toInt();
+            if (port < 1024 || port > 65535) port = 8350;
+            return QStringLiteral("http://127.0.0.1:%1").arg(port);
+        }
+        return backend.cloudBaseUrl.trimmed();
     }
     bool installingOfficialBinary() const { return m_installingOfficialBinary; }
     QString officialBinaryInstallStatus() const { return m_officialBinaryInstallStatus; }
@@ -443,6 +459,8 @@ public:
     // Automatización de browser vía MCP Playwright (toggle global; override por perfil).
     bool browserAutomationEnabled() const { return m_browserAutomationEnabled; }
     void setBrowserAutomationEnabled(bool enabled);
+    bool privacyModeEnabled() const { return m_privacyModeEnabled; }
+    void setPrivacyModeEnabled(bool enabled);
     QString browserMcpCommand() const { return m_browserMcpCommand; }
     void setBrowserMcpCommand(const QString &cmd);
     // ── Browser teach: grabar/listar/borrar skills reproducibles ──
@@ -592,7 +610,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.116"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.117"); }
     // Convierte la respuesta de /repos/.../releases/latest al formato interno
     // del popup. Público para poder validar el contrato sin hacer red en tests.
     static QJsonObject githubReleaseToUpdateFlag(const QJsonObject &release);
@@ -606,6 +624,10 @@ public:
     static QVariantList benchmarkBestModelosQualityForTest(const QVariantList &results,
                                                             const QVariantList &speedCandidates);
     static bool benchmarkErrorIsInfrastructureForTest(const QString &message);
+    // BigCodeBench encadena varias tareas sobre el mismo backend/servidor. No
+    // se debe cancelar el stream al ver los primeros archivos correctos: el
+    // cierre asincrónico del request puede contaminar el turno siguiente.
+    static bool benchmarkAllowsEarlyAcceptanceForTest(const QVariantList &benchTasks);
     static bool benchmarkTransportAfterEvaluationForTest(int evaluatedTaskCount,
                                                           int declaredTaskCount,
                                                           bool transportFailure);
@@ -955,6 +977,11 @@ public:
     Q_INVOKABLE QVariantMap removeHarnessDirective(const QString &name,
                                                    const QString &scope = QStringLiteral("global"));
     Q_INVOKABLE QVariantMap harnessDirective(const QString &name) const;
+    Q_INVOKABLE QVariantList harnessDirectiveHistory(const QString &name,
+                                                     const QString &scope = QStringLiteral("global")) const;
+    Q_INVOKABLE QVariantMap rollbackHarnessDirective(const QString &name,
+                                                     const QString &revision = QString(),
+                                                     const QString &scope = QStringLiteral("global"));
     // Hechos que entiende el gate `when` de una directiva. Salen del backend
     // (única fuente); la UI los enumera para que no haya que adivinarlos.
     Q_INVOKABLE QStringList harnessDirectiveFacts() const;
@@ -1041,7 +1068,7 @@ public:
     Q_INVOKABLE void stopGateway();
     Q_INVOKABLE QString gatewayBaseUrl() const;
     Q_INVOKABLE QString gatewayLanBaseUrl() const;
-    Q_INVOKABLE QString gatewayLanOpenCodeConfig(const QString &launchProfileId) const;
+    Q_INVOKABLE QString gatewayLanOpenCodeConfig(const QString &launchProfileId);
     QVariantList lanServers() const { return m_lanServers; }
     bool lanDiscoveryActive() const { return m_lanDiscoverySocket != nullptr; }
     Q_INVOKABLE void discoverLanServers();
@@ -1298,6 +1325,8 @@ public:
     // (a) oculta perfiles de sistema cuya VRAM mínima supera la del equipo, y
     // (b) agrega "ready" (modelo+binario presentes) y "minVram" a cada item.
     Q_INVOKABLE QVariantList launchMenu();
+    // Modelos realmente ejecutables que el Gateway anuncia a clientes LAN.
+    QJsonArray gatewayModelCatalog();
     // True si el perfil de sistema tiene modelo y binario listos para lanzar.
     Q_INVOKABLE bool systemProfileReady(const QString &launchId);
     // "Instalar ambos": baja binarios+modelos+mmproj+drafters de todos los extras
@@ -1395,10 +1424,17 @@ public:
     static QVariantMap runAgentBenchmarkAcceptanceCommandForTest(const QString &workspace,
                                                                  const QVariantMap &cmd);
     static QString benchmarkTaskArtifactNameForTest(const QString &taskId);
-    static int benchmarkStreamingDeltaForTest(QString *previous, const QString &current);
+    static int benchmarkGeneratedCharsDeltaForTest(int previous, int current);
+    static bool serverHealthReplyAcceptedForTest(int httpStatus, bool networkError,
+                                                  bool remoteServerActive);
     static bool benchmarkTurnBusyForTest(const QString &message);
     static bool benchmarkRepairStagnationCheckForTest(bool agentBusy,
                                                        bool workspaceChanged);
+    static bool benchmarkRepairToolMayMutateForTest(const QString &toolName);
+    static bool benchmarkRepairInspectionLoopForTest(bool agentBusy,
+                                                       bool workspaceChanged,
+                                                       bool mutationToolSeen,
+                                                       int readOnlyToolCalls);
     static bool benchmarkLogIndicatesOutOfMemoryForTest(const QString &message);
     static QStringList benchmarkMemoryPolicyArgsForTest(const QStringList &baseArgs,
                                                         int attempt);
@@ -1456,7 +1492,9 @@ signals:
     void gitRequiredForSubagents();
     void serverLogChanged();
     void activeLaunchIdChanged();
+    void astraConfigurationChanged();
     void browserAutomationChanged();
+    void privacyModeChanged();
     void browserSkillsChanged();
     void teachChanged();
     void effectiveProfileChanged();
@@ -1737,6 +1775,8 @@ private:
     void clearTaskAgentPermissions();
 
     QProcess *m_proc = nullptr;
+    QProcess *m_managedComposeProc = nullptr;
+    void runManagedCompose(const QString &launchProfileId, bool start);
     QProcess *m_installerProc = nullptr;
     // Fuente del instalador de binarios (parametriza installOfficialBinary):
     // repo GitHub + etiqueta (kind en el registro) + si exige CUDA (MTP build).
@@ -2007,6 +2047,7 @@ private:
     // Automatización de browser (MCP Playwright). Toggle global; cada LaunchProfile
     // puede forzar on/off con browserAutomation ("inherit"|"on"|"off").
     bool      m_browserAutomationEnabled = false;
+    bool      m_privacyModeEnabled = false;
     QString   m_browserMcpCommand = QStringLiteral("npx @playwright/mcp@latest");
     QProcess *m_browserRecordProc = nullptr;   // codegen en curso (modo teach)
     TeachSessionRecorder m_teachRecorder;
@@ -2080,7 +2121,7 @@ private:
     void        stopIdleWatchdog();
     void        wireGatewayHooks();
     void        gatewayEnsureModel(const QString &name);
-    QJsonArray  gatewayModelCatalog() const;
+    QVariantMap resolveAstraStrataSetup(bool persistDiscoveredPaths = true);
     int       m_agentContextUsed = 0;
     int       m_agentContextLimit = -1;
     int       m_agentContextTranscript = 0;
@@ -2160,6 +2201,7 @@ private:
     // aggressive placement and moves down the ladder only after a load OOM.
     // Manual launches keep their declared arguments unchanged.
     int          m_benchmarkMemoryAttempt = -1;
+    bool         m_benchmarkMemoryAdaptive = true;
     QStringList  m_benchmarkEffectiveArgs;
     static constexpr int kBenchmarkMaxMemoryAttempts = 7;
     // Auto-tuning

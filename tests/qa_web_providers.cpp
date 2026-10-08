@@ -1,5 +1,6 @@
 #include <QCoreApplication>
 #include <QDir>
+#include <QFileInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -45,6 +46,8 @@ int main(int argc, char **argv)
                              "usá el MCP Playwright, verificá el estado final con una captura "
                              "de accesibilidad y después resumí lo que quedó confirmado.")
                   .arg(url);
+        const int maxMcpCalls = qMax(0, qEnvironmentVariableIntValue(
+            "LLAMACODE_QA_MAX_MCP_CALLS"));
         AgentContext context;
         context.adapter = QStringLiteral("llamaagent");
         context.cwd = QDir::tempPath();
@@ -54,6 +57,8 @@ int main(int argc, char **argv)
 
         LlamaAgentBackend backend;
         backend.setEphemeralSessions(true);
+        backend.setVisionAvailable(qEnvironmentVariableIntValue(
+            "LLAMACODE_QA_VISION") == 1);
         backend.setMcpToolsEnabled(true);
         QStringList disabledTools;
         for (const QVariant &entry : LlamaAgentBackend::toolCatalog()) {
@@ -64,6 +69,9 @@ int main(int argc, char **argv)
         }
         backend.setDisabledTools(disabledTools);
         backend.setAdaptiveToolRouting(false);
+        // Exercita el mismo camino de observación posterior usado por las Tasks:
+        // el planner recibe el snapshot MCP y, si el server tiene visión, la captura.
+        backend.setLivePreviewEnabled(true);
         backend.setApprovalPolicy(QStringLiteral("auto"));
         backend.setMcpServers({QVariantMap{
             {QStringLiteral("name"), QStringLiteral("playwright")},
@@ -92,22 +100,60 @@ int main(int argc, char **argv)
             timedOut = true;
             app.quit();
         });
+        bool toolBudgetExceeded = false;
+        QTimer toolBudgetWatchdog;
+        if (maxMcpCalls > 0) {
+            toolBudgetWatchdog.setInterval(50);
+            QObject::connect(&toolBudgetWatchdog, &QTimer::timeout, &app, [&]() {
+                int completedMcpCalls = 0;
+                for (const QVariant &value : backend.messages()) {
+                    if (value.toMap().value(QStringLiteral("name")).toString()
+                        == QLatin1String("mcp_call_tool"))
+                        ++completedMcpCalls;
+                }
+                if (completedMcpCalls >= maxMcpCalls) {
+                    toolBudgetExceeded = true;
+                    backend.stop();
+                    app.quit();
+                }
+            });
+        }
 
         backend.start(context);
         backend.sendMessage(goal);
         watchdog.start(300000);
-        if (!finished) app.exec();
+        if (!finished) {
+            if (maxMcpCalls > 0) toolBudgetWatchdog.start();
+            app.exec();
+        }
         watchdog.stop();
+        toolBudgetWatchdog.stop();
 
         QJsonArray messages;
         QJsonArray mcpOutputs;
         int mcpCalls = 0;
+        int pairedBrowserObservations = 0;
+        QJsonArray browserObservations;
         bool navigatedToFixture = false;
         bool confirmedClickObserved = false;
         QString latestBrowserObservation;
         for (const QVariant &value : backend.messages()) {
             const QVariantMap message = value.toMap();
             messages.append(QJsonObject::fromVariantMap(message));
+            if (message.value(QStringLiteral("name")).toString()
+                    == QLatin1String("mcp_call_tool")) {
+                const QString imagePath = message.value(QStringLiteral("afterImagePath")).toString();
+                const QString snapshotPath = message.value(QStringLiteral("afterSnapshotPath")).toString();
+                const bool hasImage = !imagePath.isEmpty() && QFileInfo::exists(imagePath);
+                const bool hasSnapshot = !snapshotPath.isEmpty() && QFileInfo::exists(snapshotPath);
+                if (hasImage && hasSnapshot) ++pairedBrowserObservations;
+                if (hasImage || hasSnapshot) {
+                    browserObservations.append(QJsonObject{
+                        {QStringLiteral("tool"), message.value(QStringLiteral("arguments")).toString()},
+                        {QStringLiteral("hasImage"), hasImage},
+                        {QStringLiteral("hasAccessibilitySnapshot"), hasSnapshot}});
+                }
+            }
             if (message.value(QStringLiteral("name")).toString()
                     == QLatin1String("mcp_call_tool")) {
                 ++mcpCalls;
@@ -157,14 +203,22 @@ int main(int argc, char **argv)
             QStringLiteral("Cancellation confirmed. Auto-renew is off."), Qt::CaseInsensitive)
             && latestBrowserObservation.contains(
                 QStringLiteral("free plan remain"), Qt::CaseInsensitive);
+        const bool observationSuccess = navigatedToFixture && pairedBrowserObservations > 0;
         const QJsonObject result{
             {QStringLiteral("model"), modelId},
             {QStringLiteral("serverBase"), modelBase},
+            {QStringLiteral("visionEnabled"),
+             qEnvironmentVariableIntValue("LLAMACODE_QA_VISION") == 1},
             {QStringLiteral("url"), url},
             {QStringLiteral("finished"), finished},
             {QStringLiteral("timedOut"), timedOut},
             {QStringLiteral("disabledBuiltinTools"), QJsonArray::fromStringList(disabledTools)},
             {QStringLiteral("mcpCalls"), mcpCalls},
+            {QStringLiteral("maxMcpCalls"), maxMcpCalls},
+            {QStringLiteral("toolBudgetExceeded"), toolBudgetExceeded},
+            {QStringLiteral("pairedBrowserObservations"), pairedBrowserObservations},
+            {QStringLiteral("observationSuccess"), observationSuccess},
+            {QStringLiteral("browserObservations"), browserObservations},
             {QStringLiteral("mcpOutputs"), mcpOutputs},
             {QStringLiteral("confirmedClickObserved"), confirmedClickObserved},
             {QStringLiteral("finalBrowserObservation"), latestBrowserObservation},
@@ -174,11 +228,10 @@ int main(int argc, char **argv)
             {QStringLiteral("logs"), QJsonArray::fromStringList(logs)}};
         QTextStream(stdout) << QJsonDocument(result).toJson(QJsonDocument::Indented) << '\n';
         backend.stop();
-        return finished && cancellationObserved ? 0 : 1;
+        return finished && (cancellationObserved || observationSuccess) ? 0 : 1;
     }
 
     AgentToolRunner runner;
-
     if (provider == QLatin1String("camofox")) {
         const QString base = qEnvironmentVariable(
             "LLAMACODE_QA_CAMOFOX_URL", QStringLiteral("http://127.0.0.1:9377"));
@@ -200,6 +253,7 @@ int main(int argc, char **argv)
             {QStringLiteral("type"), QStringLiteral("local")},
             {QStringLiteral("command"), command},
             {QStringLiteral("enabled"), true}}}, QCoreApplication::applicationDirPath());
+        runner.setLivePreviewEnabled(true);
     } else {
         err << "provider invalido\n";
         return 2;
@@ -233,12 +287,19 @@ int main(int argc, char **argv)
     std::function<void()> dispatchSequenceStep;
     QObject::connect(&runner, &AgentToolRunner::toolExecuted, &app,
                      [&](const QVariantMap &result) {
-        const bool ok = result.value(QStringLiteral("ok")).toBool();
+            const bool ok = result.value(QStringLiteral("ok")).toBool();
         if (sequenceMode) {
             const QJsonObject step = sequence.at(sequenceIndex).toObject();
+            const QString imagePath = result.value(QStringLiteral("afterImagePath")).toString();
+            const QString snapshotPath = result.value(QStringLiteral("afterSnapshotPath")).toString();
             sequenceResults.append(QJsonObject{
                 {QStringLiteral("tool"), step.value(QStringLiteral("tool"))},
                 {QStringLiteral("ok"), ok},
+                {QStringLiteral("afterImagePath"), imagePath},
+                {QStringLiteral("afterSnapshotPath"), snapshotPath},
+                {QStringLiteral("hasImage"), !imagePath.isEmpty() && QFileInfo::exists(imagePath)},
+                {QStringLiteral("hasAccessibilitySnapshot"),
+                 !snapshotPath.isEmpty() && QFileInfo::exists(snapshotPath)},
                 {QStringLiteral("result"), result.value(QStringLiteral("result")).toString()}});
             ++sequenceIndex;
             if (ok && sequenceIndex < sequence.size()) {

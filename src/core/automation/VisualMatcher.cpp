@@ -80,6 +80,12 @@ QVariantMap VisualMatcher::Result::toVariantMap(const QSize &size) const
 }
 
 VisualMatcher::Result VisualMatcher::find(const QImage &haystackSource,
+                                          const QImage &needleSource)
+{
+    return find(haystackSource, needleSource, Options{});
+}
+
+VisualMatcher::Result VisualMatcher::find(const QImage &haystackSource,
                                           const QImage &needleSource,
                                           const Options &rawOptions)
 {

@@ -35,6 +35,7 @@ from tools.kv_cache_ab import (
 SCHEMA = "llamacode-long-context-matrix-v1"
 CONTEXT_FLAGS = {"--ctx-size", "--n-ctx", "-c", "--fit-ctx"}
 MAX_CONTEXT = 1_048_576
+MAX_TIMEOUT_MS = 14_400_000
 
 
 def parse_contexts(raw: str) -> List[int]:
@@ -217,7 +218,7 @@ def main() -> int:
         parse_depths(args.depths)
         if not 1 <= args.users <= 256 or not 1 <= args.n_predict <= 4096:
             raise ValueError("users/n-predict fuera de rango")
-        if not 1000 <= args.timeout_ms <= 3600000:
+        if not 1000 <= args.timeout_ms <= MAX_TIMEOUT_MS:
             raise ValueError("timeout-ms fuera de rango")
         if not 1024 <= args.port <= 65533:
             raise ValueError("port fuera de rango")

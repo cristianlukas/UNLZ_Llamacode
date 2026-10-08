@@ -95,3 +95,13 @@ tuner_selftest.exe
 /build_core_codex/
 /build_tests_autoprompt/
 __pycache__/
+/.playwright-cli
+
+# Local-only state (never versioned)
+/build_tests_*/
+/.claude/settings.local.json
+/*.stale-*.lock
+/tmp_*.json
+# Backups of the user profile store inside benchmark evidence (GB-sized
+# history + personal launch profiles).
+artifacts/**/profile-backup/

@@ -108,6 +108,27 @@ bool mcpToolAcceptsEmptyArguments(const McpClient::ToolDef &tool)
     return required.isEmpty();
 }
 
+QJsonObject mcpToolSchemaDefaults(const McpClient::ToolDef &tool, bool *available)
+{
+    if (available) *available = false;
+    const QJsonObject properties = tool.inputSchema.value(QStringLiteral("properties")).toObject();
+    const QJsonArray required = tool.inputSchema.value(QStringLiteral("required")).toArray();
+    QJsonObject arguments;
+    for (const QJsonValue &value : required) {
+        const QString name = value.toString();
+        const QJsonObject property = properties.value(name).toObject();
+        if (property.contains(QStringLiteral("default"))) {
+            arguments.insert(name, property.value(QStringLiteral("default")));
+            continue;
+        }
+        const QJsonArray choices = property.value(QStringLiteral("enum")).toArray();
+        if (choices.isEmpty()) return {};
+        arguments.insert(name, choices.first());
+    }
+    if (available) *available = true;
+    return arguments;
+}
+
 bool isBrowserMcpTool(const QString &name)
 {
     const QString lower = name.toLower();
@@ -1008,6 +1029,7 @@ QString AgentToolRunner::auxiliaryRerankModel() const
 void AgentToolRunner::setSessionId(const QString &sessionId)
 {
     m_sessionId = sessionId;
+    m_desktopProcessGuard.release();
     m_desktopLease = DesktopComputerUse::SessionLease{};
     m_desktopLease.leaseId = QUuid::createUuid().toString(QUuid::WithoutBraces);
     m_desktopLease.sessionId = sessionId;
@@ -1430,6 +1452,7 @@ void AgentToolRunner::shutdown()
     }
     for (McpClient *c : std::as_const(m_mcp)) { c->shutdown(); delete c; }
     m_mcp.clear();
+    m_desktopProcessGuard.release();
 }
 
 void AgentToolRunner::initServers(const QVariantList &cfg, const QString &cwd)
@@ -1513,13 +1536,14 @@ QVariantMap AgentToolRunner::captureMcpObservation(McpClient *client,
     // sin adivinar URLs, páginas o nombres de aplicaciones.
     for (const McpClient::ToolDef &tool : client->tools()) {
         const QString lower = tool.name.toLower();
-        if (!lower.contains(QStringLiteral("screenshot"))
-            || !mcpToolAcceptsEmptyArguments(tool))
-            continue;
+        if (!lower.contains(QStringLiteral("screenshot"))) continue;
+        bool defaultsAvailable = false;
+        const QJsonObject screenshotArgs = mcpToolSchemaDefaults(tool, &defaultsAvailable);
+        if (!defaultsAvailable) continue;
         if (!path.isEmpty() && !lowerCurrent.isEmpty()) break;
         bool ok = false;
         QJsonObject screenshotResult;
-        client->callTool(tool.name, {}, &ok, &screenshotResult,
+        client->callTool(tool.name, screenshotArgs, &ok, &screenshotResult,
                          QString(), m_correlationId);
         if (ok) {
             path = saveMcpImage(screenshotResult, QStringLiteral("browser"));
@@ -1853,6 +1877,9 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         name.startsWith(QLatin1String("desktop_")) ? &desktopMutex : nullptr);
     if (ok) *ok = false;
     if (DesktopComputerUse::isDesktopActionTool(name)) {
+        QString guardError;
+        if (!m_desktopProcessGuard.acquire(&guardError))
+            return QStringLiteral("[desktop: %1]").arg(guardError);
         const qint64 now = QDateTime::currentMSecsSinceEpoch();
         if (m_desktopLease.leaseId.isEmpty()) {
             m_desktopLease.leaseId = QUuid::createUuid().toString(QUuid::WithoutBraces);
@@ -2373,6 +2400,17 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
                               "no reintentes con \"..\" ni rutas absolutas de afuera]")
             .arg(abs, canonicalPolicyPath(base.absolutePath()));
     };
+    // La huella de concurrencia debe cubrir el archivo completo, aunque la
+    // vista que devolvemos al modelo esté limitada para no volcar archivos
+    // enormes en el contexto. Así expected_sha256 no se vuelve falso para
+    // archivos mayores que el límite de lectura de la tool.
+    auto sha256File = [](const QString &path) -> QString {
+        QFile f(path);
+        if (!f.open(QIODevice::ReadOnly)) return {};
+        QCryptographicHash hash(QCryptographicHash::Sha256);
+        if (!hash.addData(&f)) return {};
+        return QString::fromLatin1(hash.result().toHex());
+    };
 
     if (name == QLatin1String("read_file")) {
         const QString abs = resolve(normalizeToolPath(args.value(QStringLiteral("path")).toString()));
@@ -2381,6 +2419,10 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         if (!f.open(QIODevice::ReadOnly)) return QStringLiteral("[no se pudo abrir: %1]").arg(abs);
         const QByteArray raw = f.read(4 * 1024 * 1024);
         if (ok) *ok = true;
+        const QString sha256 = sha256File(abs);
+        if (sha256.isEmpty()) return QStringLiteral("[no se pudo calcular la huella: %1]").arg(abs);
+        out[QStringLiteral("sha256")] = sha256;
+        const QString hashHeader = QStringLiteral("[archivo sha256=%1]\n").arg(sha256);
 
         const int offset = args.value(QStringLiteral("offset")).toInt(0);
         const int limit  = args.value(QStringLiteral("limit")).toInt(0);
@@ -2391,7 +2433,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
             const int start = qBound(0, offset > 0 ? offset - 1 : 0, lines.size());
             const int count = (limit > 0) ? limit : (lines.size() - start);
             const QStringList slice = lines.mid(start, count);
-            return QStringLiteral("[líneas %1-%2 de %3]\n%4")
+            return hashHeader + QStringLiteral("[líneas %1-%2 de %3]\n%4")
                        .arg(start + 1).arg(start + slice.size()).arg(lines.size())
                        .arg(slice.join(QLatin1Char('\n')));
         }
@@ -2408,13 +2450,13 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
                 out[QStringLiteral("originalBytes")] = view.originalBytes;
                 out[QStringLiteral("compactBytes")] = view.compact.toUtf8().size();
                 out[QStringLiteral("reductionPct")] = view.reductionPct();
-                return QStringLiteral("[vista compacta segura · %1% menos · sólo lectura; "
+                return hashHeader + QStringLiteral("[vista compacta segura · %1% menos · sólo lectura; "
                                       "para editar releé el rango exacto sin compact]\n%2")
                     .arg(QString::number(view.reductionPct(), 'f', 1), view.compact);
             }
             out[QStringLiteral("structuredSourceFallback")] = view.error;
         }
-        return QString::fromUtf8(raw);
+        return hashHeader + QString::fromUtf8(raw);
     }
     if (name == QLatin1String("project_brain")) {
         QStringList changed;
@@ -3475,6 +3517,18 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         const bool existed = prev.exists();
         QByteArray oldContent;
         if (existed && prev.open(QIODevice::ReadOnly)) { oldContent = prev.read(4 * 1024 * 1024); prev.close(); }
+        const QString expectedHash = args.value(QStringLiteral("expected_sha256")).toString().trimmed().toLower();
+        if (!expectedHash.isEmpty()) {
+            if (!existed)
+                return QStringLiteral("[conflicto hash: %1 no existe; releé el archivo antes de escribir]").arg(rel);
+            const QString actualHash = sha256File(abs);
+            if (actualHash.isEmpty())
+                return QStringLiteral("[no se pudo calcular la huella actual de %1]").arg(rel);
+            if (expectedHash != actualHash)
+                return QStringLiteral("[conflicto hash: %1 cambió desde la lectura; esperado %2, actual %3; "
+                                      "releé el archivo y reintentá con expected_sha256 actualizado]")
+                           .arg(rel, expectedHash, actualHash);
+        }
 
         QDir().mkpath(QFileInfo(abs).absolutePath());
         QFile f(abs);
@@ -3515,6 +3569,17 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         const bool replaceAll = args.value(QStringLiteral("replace_all")).toBool();
         if (oldS.isEmpty())
             return QStringLiteral("[old_string vacío: especificá el texto exacto a reemplazar]");
+
+        const QString expectedHash = args.value(QStringLiteral("expected_sha256")).toString().trimmed().toLower();
+        if (!expectedHash.isEmpty()) {
+            const QString actualHash = sha256File(abs);
+            if (actualHash.isEmpty())
+                return QStringLiteral("[no se pudo calcular la huella actual de %1]").arg(rel);
+            if (expectedHash != actualHash)
+                return QStringLiteral("[conflicto hash: %1 cambió desde la lectura; esperado %2, actual %3; "
+                                      "releé el archivo y reintentá con expected_sha256 actualizado]")
+                           .arg(rel, expectedHash, actualHash);
+        }
 
         const int occurrences = oldText.count(oldS);
         if (occurrences == 0) {

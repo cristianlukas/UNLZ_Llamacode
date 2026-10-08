@@ -1,2 +1,6 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Shell scripts run under bash (Linux/WSL/git-bash): a CRLF checkout breaks
+# them ($'\r' syntax errors), so they are always LF.
+*.sh text eol=lf

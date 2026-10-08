@@ -1,7 +1,10 @@
 #include "EffectiveProfileBuilder.h"
 #include "MtpDetection.h"
 #include "../GGUFScanner.h"
+#include <QDir>
 #include <QFileInfo>
+#include <QFile>
+#include <QStandardPaths>
 #include <QRegularExpression>
 
 namespace {
@@ -89,6 +92,48 @@ static void removeFlagWithValue(QStringList &args, const QStringList &names)
     }
 }
 
+static QString materializeChatTemplate(const QString &name, QStringList &warnings)
+{
+    const QString cleanName = QFileInfo(name.trimmed()).fileName();
+    if (cleanName.isEmpty() || cleanName != name.trimmed()
+        || cleanName == QStringLiteral(".")
+        || cleanName == QStringLiteral("..")) {
+        warnings.append(QStringLiteral("Chat template inválido: %1").arg(name));
+        return {};
+    }
+
+    const QString dstDir = QStandardPaths::writableLocation(
+        QStandardPaths::AppLocalDataLocation) + QStringLiteral("/chat-templates");
+    if (!QDir().mkpath(dstDir)) {
+        warnings.append(QStringLiteral("No se pudo crear la carpeta de templates: %1")
+                            .arg(dstDir));
+        return {};
+    }
+
+    QFile src(QStringLiteral(":/assets/chat-templates/") + cleanName);
+    if (!src.open(QIODevice::ReadOnly)) {
+        warnings.append(QStringLiteral("No se encontró el template bundleado: %1")
+                            .arg(cleanName));
+        return {};
+    }
+    const QByteArray bundled = src.readAll();
+    const QString dst = dstDir + QLatin1Char('/') + cleanName;
+    QFile installed(dst);
+    const bool stale = !installed.exists()
+                    || !installed.open(QIODevice::ReadOnly)
+                    || installed.readAll() != bundled;
+    if (stale) {
+        QFile out(dst);
+        if (!out.open(QIODevice::WriteOnly | QIODevice::Truncate)
+            || out.write(bundled) != bundled.size()) {
+            warnings.append(QStringLiteral("No se pudo instalar el chat template: %1")
+                                .arg(dst));
+            return {};
+        }
+    }
+    return QFile::exists(dst) ? dst : QString();
+}
+
 static int llamaCppBuildNumber(const LlamaBinary &bin)
 {
     const QString haystack = (bin.versionHint + QLatin1Char(' ') + bin.name
@@ -104,6 +149,19 @@ static bool supportsGemma4AssistantDraft(const LlamaBinary &bin)
 {
     const int build = llamaCppBuildNumber(bin);
     return build == 0 || build >= 9763;
+}
+
+static QString currentPlatformKey()
+{
+#if defined(Q_OS_WIN)
+    return QStringLiteral("windows");
+#elif defined(Q_OS_LINUX)
+    return QStringLiteral("linux");
+#elif defined(Q_OS_MACOS)
+    return QStringLiteral("macos");
+#else
+    return {};
+#endif
 }
 
 void EffectiveProfileBuilder::applyAdaptiveSpeculation(const ModelProfile &mp,
@@ -170,9 +228,17 @@ EffectiveProfile EffectiveProfileBuilder::build(const Context &ctx)
 
         result.effectiveArgs = ctx.launch.extraArgs;
         result.effectiveEnv = env;
-        result.commandLine = QStringLiteral("<external> %1 model=%2")
-                             .arg(ctx.backend.cloudBaseUrl.trimmed(),
-                                  ctx.backend.cloudModel.trimmed());
+        if (ctx.backend.managedServer.value(QStringLiteral("type")).toString()
+                == QLatin1String("docker-compose")) {
+            result.commandLine = QStringLiteral("<managed docker-compose: %1/%2> %3 model=%4")
+                .arg(ctx.backend.managedServer.value(QStringLiteral("project")).toString(),
+                     ctx.backend.managedServer.value(QStringLiteral("service")).toString(),
+                     ctx.backend.cloudBaseUrl.trimmed(), ctx.backend.cloudModel.trimmed());
+        } else {
+            result.commandLine = QStringLiteral("<external> %1 model=%2")
+                                 .arg(ctx.backend.cloudBaseUrl.trimmed(),
+                                      ctx.backend.cloudModel.trimmed());
+        }
         return result;
     }
 
@@ -215,7 +281,11 @@ EffectiveProfile EffectiveProfileBuilder::build(const Context &ctx)
     // ctx-size completo (262k) → OOM de VRAM y crash 0xC0000409. `-np 1` es
     // necesario para limitar a un slot. Pasar todos los flags tal cual.
     QStringList extraTokens;
-    for (const QString &rawArg : ctx.launch.extraArgs) {
+    QStringList rawExtraArgs = ctx.launch.extraArgs;
+    const QString platform = currentPlatformKey();
+    if (!platform.isEmpty() && ctx.launch.platformArgs.contains(platform))
+        rawExtraArgs = ctx.launch.platformArgs.value(platform);
+    for (const QString &rawArg : rawExtraArgs) {
         const QStringList tokens = rawArg.trimmed().split(u' ', Qt::SkipEmptyParts);
         for (const QString &t : tokens)
             extraTokens.append(t);
@@ -268,6 +338,17 @@ EffectiveProfile EffectiveProfileBuilder::build(const Context &ctx)
             continue;
         }
         args.append(ctx.binary.resolveFlag(cur));
+    }
+
+    // Los perfiles pueden declarar un template bundleado sin fijar una ruta de
+    // Windows o Linux. Se instala en AppLocalDataLocation y se reutiliza en
+    // ambas plataformas; una ruta explícita del perfil conserva prioridad.
+    if (!ctx.launch.chatTemplate.trimmed().isEmpty()
+        && !hasAnyFlag(args, {QStringLiteral("--chat-template-file")})) {
+        const QString templatePath = materializeChatTemplate(ctx.launch.chatTemplate,
+                                                               result.warnings);
+        if (!templatePath.isEmpty())
+            args << QStringLiteral("--chat-template-file") << templatePath;
     }
 
     // NInfer ya incorpora el chat-template en el artefacto y no acepta --jinja.
@@ -519,7 +600,19 @@ void EffectiveProfileBuilder::applyRuntime(const RuntimePreset &rt,
         args << "--kv-dtype"
              << ((rt.cacheType == QStringLiteral("f16") || rt.cacheType == QStringLiteral("bf16"))
                      ? QStringLiteral("bf16") : QStringLiteral("int8"));
-        args << "--text-only";
+        // ninfer (CLI) and ninfer-serve intentionally have different
+        // concurrency flags.  Do not pass --parallel to the CLI: it is not
+        // a server slot count there.  The server exposes bounded cohorts via
+        // --max-concurrency and can therefore use the profile's sub-agent
+        // budget without hard-coding it in the backend.
+        const QString binaryIdentity = (bin.name + QLatin1Char(' ') + bin.path).toLower();
+        if (binaryIdentity.contains(QStringLiteral("ninfer-serve"))
+            && rt.parallelSlots > 1) {
+            args << "--max-concurrency" << QString::number(rt.parallelSlots);
+        }
+        // Vision is opt-in through the profile's raw extraArgs (e.g. a
+        // benchmark variant adds --vision).  The previous unconditional
+        // --text-only made the capability unreachable from LlamaCode.
         return;
     }
     args << "--ctx-size" << QString::number(rt.ctx);

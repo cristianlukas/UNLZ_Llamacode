@@ -8,6 +8,7 @@
 #include "AgentLifecycle.h"
 #include "AgentRunStore.h"
 #include "AgentDeliverableStore.h"
+#include "ToolExecutionSafety.h"
 #include "core/profiles/HarnessEngine.h"
 #include "core/profiles/HarnessSpec.h"
 #include "ToolSurfaceRouter.h"
@@ -20,6 +21,7 @@
 #include <QNetworkReply>
 #include <QRegularExpression>
 #include <QSharedPointer>
+#include <QElapsedTimer>
 
 struct AgentDurableRunState;
 
@@ -169,6 +171,10 @@ public:
     // Captura opt-in para el inspector de Tasks; no afecta el modo headless
     // normal ni la conversación de Chat.
     void setLivePreviewEnabled(bool enabled);
+    // Experimento de orden de contexto aislado a Computer Use. La bandera queda
+    // apagada por defecto y sólo se aplica después de una tool desktop_*.
+    void setComputerUseSandwich(bool enabled);
+    bool computerUseSandwichForTest() const { return m_computerUseSandwich; }
     // Pausa la planificación de nuevas tools sin matar la tool que ya está en
     // vuelo. stepExecution() permite liberar exactamente una acción.
     void setExecutionPaused(bool paused);
@@ -198,6 +204,10 @@ public:
     // payload de schemas MCP por request. Lo setea el perfil de agente (mcpEnabled):
     // las tools MCP no están en toolCatalog(), así que enabledTools no las apaga.
     void setMcpToolsEnabled(bool on) { m_mcpToolsEnabled = on; }
+    // Política global de privacidad: oculta/bloquea tools con salida de red.
+    // No reemplaza un firewall; run_shell puede lanzar procesos con su propia red.
+    void setPrivacyModeEnabled(bool enabled);
+    bool privacyModeEnabledForTest() const { return m_privacyModeEnabled; }
 
     // Cuentas de correo (con password resuelto) para las tools email_*. Se
     // reenvían al worker. mailAutoSend=true permite que email_send NO pida
@@ -238,6 +248,11 @@ public:
 
     enum RetryClass { RetryNone, RetryTransient, RetryContextOverflow };
     static RetryClass classifyCompletionError(int httpStatus, const QString &errorText);
+    // Extrae el límite que un servidor OpenAI-compatible devuelve en un 400 de
+    // overflow. Permite aprender el n_ctx real cuando el endpoint no expone
+    // /props (por ejemplo vLLM detrás de un perfil cloud).
+    static int contextLimitFromError(const QString &errorText);
+    static int outputTokenReservation(int contextLimit, int estimatedInputTokens);
 
     // Sección del system prompt sobre contexto del proyecto: entender el PORQUÉ
     // antes de tocar (no romper workarounds deliberados), revisar co-cambios por
@@ -325,6 +340,11 @@ public:
         applyCompaction(head, keepFrom, summary);
     }
     int compactStallForTest() const { return m_compactStall; }
+    QVariantMap contextCompactionSummaryForTest() const {
+        return {{QStringLiteral("compactions"), m_compactionCount},
+                {QStringLiteral("fallbacks"), m_compactionFallbacks},
+                {QStringLiteral("compactionMs"), static_cast<double>(m_compactionMs)}};
+    }
     static QString failureFingerprint(const QString &tool, const QString &result);
     // Firma semántica estable para anti-loop: normaliza JSON equivalente
     // (espacios y orden de claves) antes de comparar llamadas consecutivas.
@@ -346,6 +366,10 @@ public:
 
     // Schemas de las tools built-in (sin MCP). Público para reusar en sub-agentes.
     static QJsonArray toolSchemas();
+    // Algunos templates Ling emiten JSON válido pero incrustan el siguiente
+    // par <arg_key>/<arg_value> dentro del valor del argumento anterior.
+    // Normaliza sólo ese patrón acotado antes de entregar la llamada al executor.
+    static QJsonObject normalizeTaggedToolArguments(const QJsonObject &arguments);
     static QJsonObject textToolCallFromContent(const QString &content);
     // Offset donde arranca el SEGUNDO TOOL_CALL de una ráfaga (-1 si no hay).
     static int secondTextToolCallStart(const QString &content);
@@ -360,6 +384,13 @@ public:
     // verboso, y era la causa de los saludos "sin respuesta". PURA → unit-testeable.
     static QString visibleAnswer(const QString &content, bool thinkingEnabled,
                                  bool thinkingLeakGuard = false);
+    // Reanuda sólo una respuesta que el server cortó explícitamente por
+    // finish_reason=length. Es pura para probar la política sin un server.
+    static bool shouldAutoContinueAfterLength(const QString &finishReason,
+                                              const QString &content,
+                                              int continuations,
+                                              int maxContinuations = 2);
+    static QString lengthContinuationPrompt();
     static QJsonObject thinkingTemplateKwargs(bool thinkingEnabled,
                                               bool thinkingLeakGuard,
                                               const QString &reasoningEffort = QString());
@@ -373,7 +404,14 @@ public:
     // Arma el mensaje user multimodal con las capturas observadas por las tools
     // (data-URIs ya codificadas). Devuelve un QJsonObject role=user con content =
     // [text, image_url...]. Objeto vacío si no hay imágenes. PURA → unit-testeable.
-    static QJsonObject buildObservationMessage(const QStringList &imageDataUris);
+    static QJsonObject buildObservationMessage(const QStringList &imageDataUris,
+                                               const QStringList &textEvidence = {});
+    // Variante experimental: objetivo → estado visual → recordatorio. Se mantiene
+    // pura para poder probar que el flag no contamina la ruta histórica.
+    static QJsonObject buildComputerUseObservationMessage(
+        const QStringList &imageDataUris, const QString &goal, bool enabled);
+    static QString computerUseSandwichReminder();
+    static QString computerUseSandwichReminderMessage(const QString &goal);
 
     // Rol para notas inyectadas EN MEDIO de la conversación (hoy: el resumen de
     // compactación). "system" es el rol equivocado: varios chat-templates
@@ -387,10 +425,20 @@ public:
     // PURA → unit-testeable.
     static QString midConversationNoteRole(const QString &modelId);
 
+signals:
+    // Progreso crudo de la generación actual (razonamiento + respuesta), sin
+    // prefijos ni reensamblado visual. Los consumidores que imponen límites de
+    // salida no deben contar snapshots de `streamingText`: el bloque <think> se
+    // inserta delante de la respuesta y vuelve no monotónicos esos snapshots.
+    void generationProgress(int messageIndex, int generatedChars);
+
+public:
+
     // Cap adaptativo para sub-agentes: combina slots reales del perfil, contexto
     // por secuencia y VRAM. Público/puro para pruebas y UI futura.
     static int adaptiveSubagentLimit(int parallelSlots, int ctxTokens,
-                                     double vramTotalMb, double vramFreeMb = 0.0);
+                                     double vramTotalMb, double vramFreeMb = 0.0,
+                                     int subagentContextTokens = 0);
 
     // Catálogo de tools built-in con metadata para la UI de habilitar/deshabilitar:
     // lista de {name, group, description, approxTokens}. El orden define el de la UI.
@@ -472,7 +520,14 @@ public:
                                           const QString &modelId,
                                           double temperature,
                                           bool thinkingEnabled,
-                                          const QString &reasoningEffort = QString());
+                                          const QString &reasoningEffort = QString(),
+                                          int reasoningBudget = -1);
+
+    // Qwen/vLLM incluye las tools en el prefijo de prefix caching. MCP puede
+    // entregarlas con otro orden de tools o de claves JSON aunque el schema
+    // sea idéntico. Canonicalizamos objetos recursivamente y ordenamos sólo el
+    // array de tools; los demás arrays conservan su orden semántico.
+    static QJsonArray canonicalizeToolSchemasForWire(const QJsonArray &tools);
 
     // Consolidación de memoria (background): corre 1 completion sobre el transcript
     // actual y extrae hechos durables → MemoryStore (source="consolidation"). Async,
@@ -648,6 +703,10 @@ private:
                                                // (anti-loop: si no baja, dejar de compactar)
     int  m_contextPrunedMessages = 0;
     qint64 m_contextPrunedTokens = 0;
+    int  m_compactionCount = 0;
+    int  m_compactionFallbacks = 0;
+    qint64 m_compactionMs = 0;
+    QElapsedTimer m_compactionTimer;
     int  m_lastPromptTokens = 0;
     QNetworkReply *m_consolidateReply = nullptr;     // request de consolidación de memoria
     QHash<QString, int> m_consolidatedLen;     // sessionId → nº de msgs ya consolidados (dedupe)
@@ -671,6 +730,15 @@ private:
     // vuelcan como mensaje user multimodal cuando se resuelven TODAS las tools del
     // turno (no interleavear entre tool_results → rompería el contrato OpenAI).
     QStringList m_pendingObservations;
+    QStringList m_pendingObservationEvidence;
+    bool m_computerUseSandwich = false;
+    QString m_currentComputerUseGoal;
+    ToolExecutionSafety::McpVerificationGate m_externalVerificationGate;
+    int m_externalVerificationNudges = 0;
+    bool computerUseSandwichActive() const {
+        return m_computerUseSandwich
+            && m_lastDesktopTool.startsWith(QStringLiteral("desktop_"));
+    }
     QString m_cwd;
     QString m_harnessEngineId = QStringLiteral("legacy");
     int m_harnessEngineVersion = 1;
@@ -745,6 +813,7 @@ private:
     bool         m_hitlDestructive = true; // guardrail Zero-Autonomy (ver setHitlDestructive)
     QVariantList m_mcpTools;         // cache de tool-defs MCP del worker {server,name,description,schema}
     bool         m_mcpToolsEnabled = true; // false = no inyectar tools MCP (perfil mcpEnabled)
+    bool         m_privacyModeEnabled = false;
 
     // Worker thread para ejecución de tools (nativas + MCP).
     QThread *m_workerThread = nullptr;
@@ -807,6 +876,7 @@ private:
     QString    m_streamBase;        // contenido del bubble al iniciar el stream (se le concatena)
     QString    m_streamContent;     // delta.content acumulado
     QString    m_streamReason;      // delta.reasoning_content acumulado
+    QString    m_streamFinishReason; // choices[0].finish_reason del chunk final
     bool m_streamRepetitionDetected = false; // loop textual cortado durante generación
     bool m_streamToolCallCut = false;        // ráfaga de TOOL_CALL cortada en el segundo
     QHash<int, QJsonObject> m_streamToolCalls; // index → {id,name,arguments} mergeado
@@ -820,6 +890,7 @@ private:
 
     // Robustez (Etapa 7)
     int m_turnIters = 0;                 // completions consumidas en el turno actual
+    int m_lengthContinues = 0;            // continuaciones automáticas del turno actual
     int m_emptyTextRetries = 0;          // reintentos por turno text-tools vacío (nudge)
     QString m_lastCallSignature;         // firma de la última tool_call del turno
     int m_sameCallStreak = 0;            // repeticiones consecutivas de esa firma

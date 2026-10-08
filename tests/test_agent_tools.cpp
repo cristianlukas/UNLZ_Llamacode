@@ -14,6 +14,7 @@
 #include <QJsonDocument>
 #include <QDir>
 #include <QFile>
+#include <QCryptographicHash>
 #include <QProcess>
 #include <QTcpServer>
 #include <QTcpSocket>
@@ -64,6 +65,8 @@ private slots:
     void cleanup();
 
     void writeReadEditCycle();
+    void hashGuard_rejectsStaleEditAndAcceptsFreshHash();
+    void hashGuard_coversFullFileBeyondReadView();
     void writeFile_trimsModelPathWhitespace();
     void readAndList_trimsModelPathWhitespace();
     void readFile_compactViewAndSafeFallback();
@@ -189,6 +192,60 @@ void AgentToolsTests::writeReadEditCycle()
 
     QVariantMap r2 = call("read_file", {{"path", "sub/a.txt"}});
     QVERIFY(r2.value("result").toString().contains("hello qt"));
+}
+
+void AgentToolsTests::hashGuard_rejectsStaleEditAndAcceptsFreshHash()
+{
+    QVERIFY(call("write_file", {{"path", "shared.txt"}, {"content", "before\n"}})
+                .value("ok").toBool());
+    const QVariantMap read = call("read_file", {{"path", "shared.txt"}});
+    QVERIFY(read.value("ok").toBool());
+    const QString originalHash = read.value("sha256").toString();
+    QCOMPARE(originalHash.size(), 64);
+    QVERIFY(read.value("result").toString().startsWith(QStringLiteral("[archivo sha256=")));
+
+    QFile changed(m_dir.filePath("shared.txt"));
+    QVERIFY(changed.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    changed.write("other-session\n");
+    changed.close();
+
+    const QVariantMap stale = call("edit_file", {{"path", "shared.txt"},
+        {"old_string", "other-session"}, {"new_string", "edited"},
+        {"expected_sha256", originalHash}});
+    QVERIFY(!stale.value("ok").toBool());
+    QVERIFY(stale.value("result").toString().contains(QStringLiteral("conflicto hash")));
+    QFile staleFile(m_dir.filePath("shared.txt"));
+    QVERIFY(staleFile.open(QIODevice::ReadOnly));
+    QCOMPARE(QString::fromUtf8(staleFile.readAll()), QStringLiteral("other-session\n"));
+
+    const QVariantMap fresh = call("read_file", {{"path", "shared.txt"}});
+    QVERIFY(fresh.value("ok").toBool());
+    const QVariantMap accepted = call("edit_file", {{"path", "shared.txt"},
+        {"old_string", "other-session"}, {"new_string", "edited"},
+        {"expected_sha256", fresh.value("sha256").toString()}});
+    QVERIFY(accepted.value("ok").toBool());
+    QFile finalFile(m_dir.filePath("shared.txt"));
+    QVERIFY(finalFile.open(QIODevice::ReadOnly));
+    QCOMPARE(QString::fromUtf8(finalFile.readAll()), QStringLiteral("edited\n"));
+}
+
+void AgentToolsTests::hashGuard_coversFullFileBeyondReadView()
+{
+    const QByteArray content(4 * 1024 * 1024 + 123, 'x');
+    QVERIFY(call("write_file", {{"path", "large-shared.txt"},
+                                 {"content", QString::fromLatin1(content)}})
+                .value("ok").toBool());
+    const QVariantMap read = call("read_file", {{"path", "large-shared.txt"}});
+    QVERIFY(read.value("ok").toBool());
+    const QString expected = QString::fromLatin1(
+        QCryptographicHash::hash(content, QCryptographicHash::Sha256).toHex());
+    QCOMPARE(read.value("sha256").toString(), expected);
+
+    const QVariantMap edited = call("edit_file", {{"path", "large-shared.txt"},
+        {"old_string", "xxx"}, {"new_string", "yyy"},
+        {"replace_all", true},
+        {"expected_sha256", expected}});
+    QVERIFY(edited.value("ok").toBool());
 }
 
 void AgentToolsTests::writeFile_trimsModelPathWhitespace()

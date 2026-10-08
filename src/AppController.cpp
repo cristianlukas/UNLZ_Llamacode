@@ -1,6 +1,7 @@
 #include "AppController.h"
 #include "core/OllamaImporter.h"
 #include "core/profiles/ProfileHealthChecker.h"
+#include "core/profiles/ManagedServerCapabilities.h"
 #include "core/profiles/MtpDetection.h"
 #include "core/profiles/SystemProfileVariants.h"
 #include "core/agent/BrowserTeach.h"
@@ -27,6 +28,7 @@
 #include <QUdpSocket>
 #include <QNetworkDatagram>
 #include <QDateTime>
+#include <QCryptographicHash>
 #include <QClipboard>
 #include <QGuiApplication>
 #include <QApplication>
@@ -115,7 +117,286 @@
 #include <cmath>
 #include <utility>
 
+QString AppController::buildPlatform() const
+{
+#if defined(Q_OS_WIN)
+    return QStringLiteral("windows");
+#elif defined(Q_OS_LINUX)
+    return QStringLiteral("linux");
+#elif defined(Q_OS_MACOS)
+    return QStringLiteral("macos");
+#else
+    return QStringLiteral("other");
+#endif
+}
+
 namespace {
+
+// Cambiar este revision cuando se modifique el prompt operativo de
+// runAgentBenchmark. Asi las compuertas HE0/HE20/BCB no reutilizan resultados
+// generados con instrucciones distintas aunque el HarnessSpec persistido no
+// haya cambiado.
+constexpr char kBenchmarkAgentPromptRevision[] =
+    "2026-09-15-contract-syntax-v3";
+
+struct AstraStrataSetup {
+    QString root;
+    QString config;
+    QString python;
+    QString serverScript;
+    QString error;
+
+    bool ready() const
+    {
+        return !root.isEmpty() && !config.isEmpty() && !python.isEmpty()
+            && !serverScript.isEmpty();
+    }
+};
+
+static QString resolvedStrataPath(QString path, const QString &base)
+{
+    path = path.trimmed();
+    if (path.startsWith(QLatin1String("~/")))
+        path = QDir::home().filePath(path.mid(2));
+    if (!QDir::isAbsolutePath(path))
+        path = QDir(base).filePath(path);
+    return QDir::cleanPath(QFileInfo(path).absoluteFilePath());
+}
+
+static bool strataConfigInputsReady(const QString &root, const QString &configPath)
+{
+    QFile configFile(configPath);
+    if (!configFile.open(QIODevice::ReadOnly)) return false;
+    const QJsonObject config = QJsonDocument::fromJson(configFile.readAll()).object();
+    if (config.isEmpty()) return false;
+
+    const QString exeValue = config.value(QStringLiteral("exe")).toString().trimmed();
+    const QString cwdValue = config.value(QStringLiteral("cwd")).toString().trimmed();
+    const QString tokenizerValue = config.value(QStringLiteral("tokenizer")).toString().trimmed();
+    if (exeValue.isEmpty() || cwdValue.isEmpty() || tokenizerValue.isEmpty()) return false;
+    const QString exe = resolvedStrataPath(exeValue, root);
+    const QString cwd = resolvedStrataPath(cwdValue, root);
+    const QString tokenizer = resolvedStrataPath(tokenizerValue, root);
+    const QFileInfo exeInfo(exe);
+    if (!exeInfo.isFile() || !exeInfo.isExecutable() || !QFileInfo(cwd).isDir()
+        || !QFileInfo(tokenizer).isDir())
+        return false;
+
+    const QJsonArray args = config.value(QStringLiteral("args")).toArray();
+    const QSet<QString> pathFlags{
+        QStringLiteral("--pack"), QStringLiteral("--native"),
+        QStringLiteral("--ple-gguf"), QStringLiteral("--expert-profile"),
+        QStringLiteral("--mtp"), QStringLiteral("--model"),
+        QStringLiteral("--mmproj")
+    };
+    const QSet<QString> directoryFlags{QStringLiteral("--pack"), QStringLiteral("--mtp")};
+    bool visionRequested = false;
+    QSet<QString> foundPathFlags;
+    for (qsizetype i = 0; i < args.size(); ++i) {
+        const QString arg = args.at(i).toString();
+        if (arg == QLatin1String("--vision")) visionRequested = true;
+        if (!pathFlags.contains(arg)) continue;
+        if (i + 1 >= args.size()) return false;
+        const QString path = resolvedStrataPath(args.at(++i).toString(), root);
+        foundPathFlags.insert(arg);
+        if (directoryFlags.contains(arg) ? !QFileInfo(path).isDir()
+                                         : !QFileInfo(path).isFile())
+            return false;
+    }
+
+    // IQ3_S Strata necesita el pack, ambos shards/pesos, el perfil experto y
+    // los datos MTP. Un JSON que sólo exista pero apunte a una instalación
+    // parcial no debe anunciarse como modelo disponible en la LAN.
+    for (const QString &required : {QStringLiteral("--pack"), QStringLiteral("--native"),
+                                    QStringLiteral("--ple-gguf"),
+                                    QStringLiteral("--expert-profile"),
+                                    QStringLiteral("--mtp")}) {
+        if (!foundPathFlags.contains(required)) return false;
+    }
+
+    for (const QJsonValue &directory : config.value(QStringLiteral("lib_dirs")).toArray()) {
+        if (!QFileInfo(resolvedStrataPath(directory.toString(), root)).isDir())
+            return false;
+    }
+
+    if (visionRequested) {
+        const QJsonObject vision = config.value(QStringLiteral("vision")).toObject();
+        const QString visionExe = resolvedStrataPath(
+            vision.value(QStringLiteral("exe")).toString(), root);
+        if (!QFileInfo(visionExe).isFile() || !QFileInfo(visionExe).isExecutable()
+            || !QFileInfo(resolvedStrataPath(
+                   vision.value(QStringLiteral("mmproj")).toString(), root)).isFile()
+            || !QFileInfo(resolvedStrataPath(
+                   vision.value(QStringLiteral("model")).toString(), root)).isFile())
+            return false;
+    }
+    return true;
+}
+
+static bool strataRootHasServer(const QString &root)
+{
+#ifdef Q_OS_WIN
+    const QString python = QDir(root).filePath(QStringLiteral(".venv/Scripts/python.exe"));
+#else
+    const QString python = QDir(root).filePath(QStringLiteral(".venv/bin/python"));
+#endif
+    return QFileInfo(root).isDir() && QFileInfo(python).isFile()
+        && QFileInfo(python).isExecutable()
+        && QFileInfo(QDir(root).filePath(QStringLiteral("serve/server.py"))).isFile();
+}
+
+static QStringList strataConfigsForRoot(const QString &root)
+{
+    QStringList configs = QDir(root).entryList(
+        QStringList{QStringLiteral("strata-iq3_s*.json")}, QDir::Files, QDir::Name);
+    std::stable_sort(configs.begin(), configs.end(), [](const QString &left, const QString &right) {
+        auto rank = [](const QString &name) {
+            const QString lower = name.toLower();
+            if (lower.contains(QStringLiteral("calibrated-retest"))) return 0;
+            if (lower.contains(QStringLiteral("calibrated"))) return 1;
+            if (lower == QLatin1String("strata-iq3_s.json")) return 2;
+            return 3;
+        };
+        return rank(left) < rank(right);
+    });
+    for (QString &config : configs) config = QDir(root).filePath(config);
+    return configs;
+}
+
+static AstraStrataSetup findStrataSetup(const QString &path, int depth, int *visited,
+                                        QSet<QString> *seen,
+                                        const QString &preferredConfig)
+{
+    if (!visited || !seen || ++(*visited) > 1500) return {};
+    const QFileInfo info(path);
+    if (!info.isDir() || info.isSymLink()) return {};
+    const QString canonical = info.canonicalFilePath();
+    const QString key = canonical.isEmpty() ? QDir::cleanPath(info.absoluteFilePath()) : canonical;
+    if (seen->contains(key)) return {};
+    seen->insert(key);
+
+    if (strataRootHasServer(key)) {
+        QStringList configs;
+        if (!preferredConfig.isEmpty())
+            configs.append(resolvedStrataPath(preferredConfig, key));
+        for (const QString &config : strataConfigsForRoot(key))
+            if (!configs.contains(config)) configs.append(config);
+        for (const QString &config : configs) {
+            if (!strataConfigInputsReady(key, config)) continue;
+#ifdef Q_OS_WIN
+            const QString python = QDir(key).filePath(QStringLiteral(".venv/Scripts/python.exe"));
+#else
+            const QString python = QDir(key).filePath(QStringLiteral(".venv/bin/python"));
+#endif
+            return {key, config, python,
+                    QDir(key).filePath(QStringLiteral("serve/server.py")), {}};
+        }
+    }
+    if (depth <= 0) return {};
+
+    static const QSet<QString> skipped{
+        QStringLiteral(".git"), QStringLiteral(".venv"), QStringLiteral("venv"),
+        QStringLiteral("models"), QStringLiteral("model"), QStringLiteral("data"),
+        QStringLiteral("build"), QStringLiteral("build-vision"),
+        QStringLiteral("node_modules"), QStringLiteral("target"),
+        QStringLiteral("windows"), QStringLiteral("windowsapps"),
+        QStringLiteral("program files"), QStringLiteral("program files (x86)"),
+        QStringLiteral("programdata"), QStringLiteral("system volume information"),
+        QStringLiteral("$recycle.bin")
+    };
+    const QFileInfoList children = QDir(key).entryInfoList(
+        QDir::Dirs | QDir::NoDotAndDotDot | QDir::NoSymLinks | QDir::Readable,
+        QDir::Name);
+    for (const QFileInfo &child : children) {
+        if (skipped.contains(child.fileName().toLower())) continue;
+        // No pasear árboles genéricos de modelos/documentos: buscar sólo
+        // instalaciones en carpetas identificables. Root y JSON también se
+        // pueden indicar manualmente cuando están en otra ubicación.
+        const QString name = child.fileName().toLower();
+        if (!name.contains(QStringLiteral("strata"))
+            && !name.contains(QStringLiteral("astra"))
+            && !name.contains(QStringLiteral("llamacode"))
+            && name != QLatin1String(".cache"))
+            continue;
+        const AstraStrataSetup found = findStrataSetup(
+            child.absoluteFilePath(), depth - 1, visited, seen, preferredConfig);
+        if (found.ready()) return found;
+        if (*visited > 1500) break;
+    }
+    return {};
+}
+
+static QStringList strataSearchRoots()
+{
+    QStringList roots{
+        QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation),
+        QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)
+    };
+#ifdef Q_OS_WIN
+    for (const QFileInfo &drive : QDir::drives()) roots.append(drive.absoluteFilePath());
+#else
+    QDir media(QStringLiteral("/media"));
+    for (const QFileInfo &userMounts : media.entryInfoList(
+             QDir::Dirs | QDir::NoDotAndDotDot | QDir::NoSymLinks)) {
+        for (const QFileInfo &volume : QDir(userMounts.absoluteFilePath()).entryInfoList(
+                 QDir::Dirs | QDir::NoDotAndDotDot | QDir::NoSymLinks))
+            roots.append(volume.absoluteFilePath());
+    }
+#endif
+    roots.removeAll(QString());
+    roots.removeDuplicates();
+    return roots;
+}
+
+static AstraStrataSetup discoverAstraStrataSetup(const QString &configuredRoot,
+                                                 const QString &configuredConfig)
+{
+    const QString preferredRoot = configuredRoot.trimmed();
+    const QString preferredConfig = configuredConfig.trimmed();
+    auto setupForRoot = [&](const QString &root) -> AstraStrataSetup {
+        if (!strataRootHasServer(root)) return {};
+        QStringList configs;
+        if (!preferredConfig.isEmpty())
+            configs.append(resolvedStrataPath(preferredConfig, root));
+        for (const QString &config : strataConfigsForRoot(root))
+            if (!configs.contains(config)) configs.append(config);
+        for (const QString &config : configs) {
+            if (!strataConfigInputsReady(root, config)) continue;
+#ifdef Q_OS_WIN
+            const QString python = QDir(root).filePath(QStringLiteral(".venv/Scripts/python.exe"));
+#else
+            const QString python = QDir(root).filePath(QStringLiteral(".venv/bin/python"));
+#endif
+            return {root, config, python,
+                    QDir(root).filePath(QStringLiteral("serve/server.py")), {}};
+        }
+        return {};
+    };
+
+    if (!preferredRoot.isEmpty()) {
+        const QString root = resolvedStrataPath(preferredRoot, QDir::homePath());
+        const AstraStrataSetup configured = setupForRoot(root);
+        if (configured.ready()) return configured;
+    }
+
+    // Priorizar caché y Documentos; las búsquedas en volúmenes se limitan a
+    // pocos niveles y nodos para no bloquear el menú en discos grandes.
+    int visited = 0;
+    QSet<QString> seen;
+    const QString cacheRoot = QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation);
+    const QString documentsRoot = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+    for (const QString &searchRoot : strataSearchRoots()) {
+        const int depth = searchRoot == cacheRoot ? 4 : (searchRoot == documentsRoot ? 3 : 2);
+        const AstraStrataSetup found = findStrataSetup(
+            searchRoot, depth, &visited, &seen, preferredConfig);
+        if (found.ready()) return found;
+        if (visited > 1500) break;
+    }
+
+    return {{}, {}, {}, {}, QStringLiteral(
+        "No encontré una instalación Strata IQ3_S completa. Busqué en la caché de usuario, "
+        "Documentos y volúmenes montados; configurá la carpeta o el JSON en Ajustes → ASTRA.")};
+}
 
 bool hasOption(const QStringList &args, const QString &longName,
                const QString &shortName = QString())
@@ -389,7 +670,11 @@ using BenchmarkWorkspaceSnapshot = QMap<QString, qint64>;
 
 bool isBenchmarkInternalPath(const QString &relativePath)
 {
-    const QString portable = QDir::fromNativeSeparators(relativePath);
+    QString portable = relativePath;
+    // A recipe can have been recorded on the other supported OS. QDir only
+    // converts the host separator, so normalize both forms before comparing.
+    portable.replace(QLatin1Char('\\'), QLatin1Char('/'));
+    portable = QDir::fromNativeSeparators(portable);
     return portable == QLatin1String(".llamacode")
         || portable.startsWith(QStringLiteral(".llamacode/"));
 }
@@ -1268,6 +1553,9 @@ AppController::AppController(QObject *parent) : QObject(parent)
                 auto *sub = new SubAgentRunner(branchId, serverBaseUrl(),
                     routedModelId(active.catalogModel.id), cwd, prompt,
                     m_agentTemperature, false, this);
+                sub->setReasoningPolicy(active.launch.reasoningEffort,
+                                        active.launch.reasoningBudget);
+                sub->setMaxOutputTokens(32768);
                 sub->setReadOnly(branch.value(QStringLiteral("readOnly"),
                                                step.value(QStringLiteral("readOnly"))).toBool());
                 sub->setReadOnlyShell(branch.value(QStringLiteral("allowShell"), false).toBool());
@@ -1420,6 +1708,7 @@ AppController::AppController(QObject *parent) : QObject(parent)
                                       m_agentThinkingEnabled).toBool();
     m_mermaidEnabled = s.value(QStringLiteral("chat/mermaidEnabled"), true).toBool();
     m_browserAutomationEnabled = s.value(QStringLiteral("browser/automationEnabled"), false).toBool();
+    m_privacyModeEnabled = s.value(QStringLiteral("privacy/modeEnabled"), false).toBool();
     m_browserMcpCommand = s.value(QStringLiteral("browser/mcpCommand"),
                                   QStringLiteral("npx @playwright/mcp@latest")).toString();
     if (m_browserMcpCommand.trimmed().isEmpty())
@@ -2224,8 +2513,11 @@ void AppController::startServer(const QString &launchProfileId)
     const auto ctx = buildContext(launchProfileId);
     const bool isCloud = ctx.backend.isCloud();
     const bool isRemote = isRemoteHost(ctx.backend.host);
+    const bool isAstraStrata = isCloud &&
+        ctx.backend.managedServer.value(QStringLiteral("type")).toString()
+            == QLatin1String("astra-strata");
 
-    if (isCloud || isRemote) {
+    if ((isCloud && ctx.backend.managedServer.isEmpty()) || isRemote) {
         m_profiles.markLaunchUsed(launchProfileId);
         m_activeLaunchId = launchProfileId;
         writeSetting(QStringLiteral("lastLaunchId"), launchProfileId);
@@ -2242,10 +2534,78 @@ void AppController::startServer(const QString &launchProfileId)
         return;
     }
 
-    // Repoblar flags soportados del binario justo antes de armar el perfil.
-    // Si el registro quedó con flags stale/parciales, EffectiveProfileBuilder::addFlag
-    // dropea flags de runtime (--flash-attn/--mlock/--cache-type-k/...) → server roto.
-    {
+    if (isCloud && !ctx.backend.managedServer.isEmpty() && !isAstraStrata) {
+        m_profiles.markLaunchUsed(launchProfileId);
+        m_activeLaunchId = launchProfileId;
+        writeSetting(QStringLiteral("lastLaunchId"), launchProfileId);
+        m_serverReady = false;
+        m_serverStopping = false;
+        m_remoteServerActive = false;
+        setServerState(QStringLiteral("running"));
+        appendServerEvent(QStringLiteral("lifecycle"),
+                          QStringLiteral("Iniciando backend administrado por Compose para %1.").arg(launchProfileId));
+        runManagedCompose(launchProfileId, true);
+        emit activeLaunchIdChanged();
+        return;
+    }
+
+    if (isAstraStrata) {
+        const QVariantMap setup = resolveAstraStrataSetup(true);
+        if (!setup.value(QStringLiteral("ready")).toBool()) {
+            emit serverError(setup.value(QStringLiteral("error")).toString());
+            setServerState(QStringLiteral("failed"));
+            return;
+        }
+        const QString root = setup.value(QStringLiteral("root")).toString();
+        const QString pythonPath = setup.value(QStringLiteral("python")).toString();
+        const QString serverScript = setup.value(QStringLiteral("serverScript")).toString();
+        const QString configPath = setup.value(QStringLiteral("config")).toString();
+
+        int port = readSetting(QStringLiteral("astra/port"),
+                               ctx.backend.managedServer.value(QStringLiteral("port"))
+                                   .toInt(ctx.backend.port > 0 ? ctx.backend.port : 8350)).toInt();
+        if (port < 1024 || port > 65535) port = 8350;
+        if (!QFileInfo(root).isDir()) {
+            emit serverError(QStringLiteral(
+                "ASTRA no encuentra la carpeta de Strata. Configurala en Ajustes → ASTRA. "
+                "También podés definir ASTRA_STRATA_ROOT."));
+            setServerState(QStringLiteral("failed"));
+            return;
+        }
+        if (!QFileInfo(pythonPath).isFile() || !QFileInfo(pythonPath).isExecutable()
+            || !QFileInfo(serverScript).isFile() || !QFileInfo(configPath).isFile()) {
+            emit serverError(QStringLiteral(
+                "La instalación de ASTRA está incompleta. Se esperan %1, %2 y %3; "
+                "configurá la carpeta y el archivo de modelo en Ajustes → ASTRA.")
+                .arg(pythonPath, serverScript, configPath));
+            setServerState(QStringLiteral("failed"));
+            return;
+        }
+
+        const QStringList args{serverScript, QStringLiteral("--engine"), QStringLiteral("strata"),
+                               QStringLiteral("--config"), configPath,
+                               QStringLiteral("--host"), QStringLiteral("127.0.0.1"),
+                               QStringLiteral("--port"), QString::number(port)};
+        const bool strataVision = ManagedServerCapabilities::strataVisionAvailable(configPath, root);
+        m_effectiveProfile = {
+            {QStringLiteral("isValid"), true},
+            {QStringLiteral("binaryPath"), pythonPath},
+            {QStringLiteral("effectiveArgs"), args},
+            {QStringLiteral("effectiveEnv"), QVariantMap{{QStringLiteral("STRATA_ROOT"), root}}},
+            {QStringLiteral("serverHasVision"), strataVision},
+            {QStringLiteral("workingDirectory"), root},
+            {QStringLiteral("commandLine"), QDir::toNativeSeparators(pythonPath)
+                + QLatin1Char(' ') + args.join(QLatin1Char(' '))},
+            {QStringLiteral("warnings"), QStringList{}},
+            {QStringLiteral("blockingErrors"), QStringList{}}
+        };
+        appendServerEvent(QStringLiteral("lifecycle"),
+                          QStringLiteral("ASTRA: preparando Strata en %1 (puerto %2).")
+                              .arg(root).arg(port));
+    } else {
+        // Repoblar flags soportados del binario justo antes de armar el perfil.
+        // Si el registro quedó con flags stale/parciales, EffectiveProfileBuilder::addFlag
+        // dropea flags de runtime (--flash-attn/--mlock/--cache-type-k/...) → server roto.
         const auto launch  = m_profiles.resolveLaunch(launchProfileId);
         const auto backend = m_profiles.resolveBackend(launch.backendProfileId);
         if (!backend.binaryId.isEmpty()) {
@@ -2253,9 +2613,9 @@ void AppController::startServer(const QString &launchProfileId)
                 appendServerEvent(QStringLiteral("lifecycle"),
                                   QStringLiteral("Aviso: no se pudieron redetectar flags del binario; uso los guardados."));
         }
-    }
 
-    computeEffectiveProfile(launchProfileId);
+        computeEffectiveProfile(launchProfileId);
+    }
 
     if (!m_effectiveProfile.value("isValid", false).toBool()) {
         const QStringList errors = m_effectiveProfile.value("blockingErrors").toStringList();
@@ -2325,7 +2685,7 @@ void AppController::startServer(const QString &launchProfileId)
             m_effectiveProfile[QStringLiteral("effectiveArgs")] = args;  // serverBaseUrl etc.
         }
     }
-    if (m_benchmarkRunning && m_benchmarkMemoryAttempt >= 0)
+    if (m_benchmarkRunning)
         m_benchmarkEffectiveArgs = args;
 
     // El plan se aplica como un override sólo para el server que acompaña a
@@ -2394,11 +2754,13 @@ void AppController::startServer(const QString &launchProfileId)
             if (suggestedPort > 0) {
                 emit serverPortCollision(launchProfileId, host, port, suggestedPort, wantsAgent);
             }
+            const QString portSetting = isAstraStrata
+                ? QStringLiteral("Ajustes → ASTRA") : QStringLiteral("el perfil");
             const QString msg = suggestedPort > 0
-                ? QStringLiteral("El puerto %1 ya está en uso. Podés cambiar el perfil al puerto %2 y reintentar.")
-                      .arg(port).arg(suggestedPort)
-                : QStringLiteral("El puerto %1 ya está en uso. Cerrá el proceso que lo ocupa o cambiá el puerto del perfil.")
-                      .arg(port);
+                ? QStringLiteral("El puerto %1 ya está en uso. Cambiá el puerto en %2 (por ejemplo %3) y reintentá.")
+                      .arg(port).arg(portSetting).arg(suggestedPort)
+                : QStringLiteral("El puerto %1 ya está en uso. Cerrá el proceso que lo ocupa o cambiá el puerto en %2.")
+                      .arg(port).arg(portSetting);
             emit serverError(msg);
             return;
         }
@@ -2416,6 +2778,9 @@ void AppController::startServer(const QString &launchProfileId)
     env.insert(QStringLiteral("LLAMACODE_ROLE"),    QStringLiteral("server"));
     env.insert(QStringLiteral("LLAMACODE_APP_PID"), QString::number(QCoreApplication::applicationPid()));
     m_proc->setProcessEnvironment(env);
+    const QString workingDirectory = m_effectiveProfile.value(QStringLiteral("workingDirectory")).toString();
+    if (!workingDirectory.isEmpty())
+        m_proc->setWorkingDirectory(workingDirectory);
 
     connect(serverProcess, &QProcess::readyReadStandardOutput, this, [this, serverProcess]() {
         if (serverProcess)
@@ -2443,9 +2808,15 @@ void AppController::startServer(const QString &launchProfileId)
                               QStringLiteral("Crash detail: perfil=%1 args=%2")
                                   .arg(exitedLaunchId.isEmpty() ? QStringLiteral("(desconocido)") : exitedLaunchId,
                                        exitedArgs.isEmpty() ? QStringLiteral("(vacíos)") : exitedArgs));
-            emit serverError(QStringLiteral(
-                "llama-server crasheó (0xC0000409). Perfil: %1. Revisá el log del servidor.")
-                    .arg(exitedLaunchId.isEmpty() ? QStringLiteral("(desconocido)") : exitedLaunchId));
+            const auto exitedBackend = exitedLaunchId.isEmpty()
+                ? BackendProfile{} : buildContext(exitedLaunchId).backend;
+            const bool astra = exitedBackend.managedServer
+                                   .value(QStringLiteral("type")).toString()
+                               == QLatin1String("astra-strata");
+            emit serverError(astra
+                ? QStringLiteral("ASTRA/Strata crasheó (0xC0000409). Revisá el log del servidor.")
+                : QStringLiteral("llama-server crasheó (0xC0000409). Perfil: %1. Revisá el log del servidor.")
+                      .arg(exitedLaunchId.isEmpty() ? QStringLiteral("(desconocido)") : exitedLaunchId));
         }
         clearServiceState(QStringLiteral("server"));
         // ¿Salida iniciada por el usuario (stopServer) o crash inesperado?
@@ -2509,7 +2880,8 @@ void AppController::startServer(const QString &launchProfileId)
     });
 
     // Capacidad de visión del modelo activo: el server cargó un mmproj.
-    const bool vision = args.contains(QStringLiteral("--mmproj"));
+    const bool vision = args.contains(QStringLiteral("--mmproj"))
+        || m_effectiveProfile.value(QStringLiteral("serverHasVision")).toBool();
     if (vision != m_serverHasVision) { m_serverHasVision = vision; emit serverHasVisionChanged(); }
     // El backend agente inyecta capturas (desktop_observe) al contexto sólo si hay visión.
     if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
@@ -2562,7 +2934,8 @@ void AppController::startHealthPolling()
         auto *reply = m_nam->get(QNetworkRequest(QUrl(serverBaseUrl() + "/health")));
         connect(reply, &QNetworkReply::finished, this, [this, reply]() {
             const int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-            const bool ok = reply->error() == QNetworkReply::NoError && (status == 200 || (m_remoteServerActive && status == 404));
+            const bool ok = serverHealthReplyAcceptedForTest(
+                status, reply->error() != QNetworkReply::NoError, m_remoteServerActive);
             const QString errStr = reply->errorString();
             reply->deleteLater();
             if (!ok) {
@@ -2593,9 +2966,8 @@ void AppController::startServerAndAgent(const QString &launchProfileId)
                           && adapter != QLatin1String("none")
                           && adapter != QLatin1String("raw");
 
-    // Un perfil LAN/cloud no lanza un proceso local: conecta directamente el
-    // agente al gateway remoto configurado en el BackendProfile.
-    if (ctx.backend.isCloud()) {
+    // Un perfil cloud sin gestor conecta directamente el agente al endpoint.
+    if (ctx.backend.isCloud() && ctx.backend.managedServer.isEmpty()) {
         m_profiles.markLaunchUsed(launchProfileId);
         m_activeLaunchId = launchProfileId;
         emit activeLaunchIdChanged();
@@ -2629,7 +3001,7 @@ void AppController::startServerAndAgent(const QString &launchProfileId)
 
     startServer(launchProfileId);
 
-    if (!serverRunning()) {
+    if (!serverRunning() && !m_managedComposeProc) {
         m_pendingAutoAgentLaunchId.clear();
         if (m_agentStarting) {
             m_agentStarting = false;
@@ -2640,6 +3012,161 @@ void AppController::startServerAndAgent(const QString &launchProfileId)
 
     if (m_serverReady)
         maybeStartPendingAgentOnReady();
+}
+
+void AppController::runManagedCompose(const QString &launchProfileId, bool start)
+{
+    if (m_managedComposeProc) {
+        emit serverError(QStringLiteral("Ya hay una operación de Docker Compose en curso."));
+        return;
+    }
+
+    const BackendProfile backend = buildContext(launchProfileId).backend;
+    const QJsonObject spec = backend.managedServer;
+    if (spec.value(QStringLiteral("type")).toString() != QLatin1String("docker-compose")) {
+        emit serverError(QStringLiteral("Tipo de backend administrado no soportado."));
+        m_serverStopping = false;
+        setServerState(start ? QStringLiteral("failed") : QStringLiteral("running"));
+        emit serverRunningChanged();
+        return;
+    }
+
+    QStringList composePaths;
+    const QJsonArray configuredFiles = spec.value(QStringLiteral("composeFiles")).toArray();
+    if (!configuredFiles.isEmpty()) {
+        for (const QJsonValue &value : configuredFiles) {
+            const QString path = value.toString().trimmed();
+            if (!path.isEmpty()) composePaths.append(path);
+        }
+    } else {
+        const QString path = spec.value(QStringLiteral("composeFile")).toString().trimmed();
+        if (!path.isEmpty()) composePaths.append(path);
+    }
+    for (QString &path : composePaths) {
+        if (path.startsWith(QLatin1String("~/")))
+            path = QDir::home().filePath(path.mid(2));
+    }
+    const QString project = spec.value(QStringLiteral("project")).toString().trimmed();
+    const QString service = spec.value(QStringLiteral("service")).toString().trimmed();
+    const QString docker = QStandardPaths::findExecutable(QStringLiteral("docker"));
+    const bool composeFilesValid = !composePaths.isEmpty()
+        && std::all_of(composePaths.cbegin(), composePaths.cend(), [](const QString &path) {
+               return QFileInfo(path).isFile();
+           });
+    if (docker.isEmpty() || !composeFilesValid || project.isEmpty() || service.isEmpty()) {
+        const QString reason = docker.isEmpty()
+            ? QStringLiteral("No se encontró Docker en PATH.")
+            : QStringLiteral("La configuración Compose del perfil %1 es inválida (archivo/proyecto/servicio).").arg(launchProfileId);
+        appendServerEvent(QStringLiteral("lifecycle"), reason);
+        emit serverError(reason);
+        m_serverStopping = false;
+        setServerState(start ? QStringLiteral("failed") : QStringLiteral("running"));
+        if (start) {
+            m_remoteServerActive = false;
+            m_pendingAutoAgentLaunchId.clear();
+            if (m_agentStarting) { m_agentStarting = false; emit agentStartingChanged(); }
+            emit serverRunningChanged();
+        }
+        if (!start) {
+            startHealthPolling();
+            emit serverRunningChanged();
+        }
+        return;
+    }
+
+    QStringList args{QStringLiteral("compose"), QStringLiteral("--project-name"), project};
+    for (const QString &path : composePaths)
+        args << QStringLiteral("--file") << QFileInfo(path).absoluteFilePath();
+    args += start ? QStringList{QStringLiteral("up"), QStringLiteral("-d"), service}
+                  : QStringList{QStringLiteral("stop"), service};
+    auto *process = new QProcess(this);
+    m_managedComposeProc = process;
+    process->setWorkingDirectory(QFileInfo(composePaths.first()).absolutePath());
+    process->setProcessChannelMode(QProcess::SeparateChannels);
+    connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this,
+            [this, process, launchProfileId, start](int exitCode, QProcess::ExitStatus status) {
+        if (m_managedComposeProc != process) return;
+        const QString output = QString::fromLocal8Bit(process->readAllStandardOutput()).trimmed();
+        const QString errors = QString::fromLocal8Bit(process->readAllStandardError()).trimmed();
+        m_managedComposeProc = nullptr;
+        process->deleteLater();
+        if (status != QProcess::NormalExit || exitCode != 0) {
+            const QString detail = !errors.isEmpty() ? errors : output;
+            const QString message = QStringLiteral("Docker Compose %1 falló (código %2)%3")
+                .arg(start ? QStringLiteral("up") : QStringLiteral("stop"), QString::number(exitCode),
+                     detail.isEmpty() ? QString() : QStringLiteral(": ") + detail);
+            appendServerEvent(QStringLiteral("lifecycle"), message);
+            emit serverError(message);
+            m_serverStopping = false;
+            setServerState(start ? QStringLiteral("failed") : QStringLiteral("running"));
+            if (start) {
+                m_remoteServerActive = false;
+                m_serverReady = false;
+                m_pendingAutoAgentLaunchId.clear();
+                if (m_agentStarting) { m_agentStarting = false; emit agentStartingChanged(); }
+                emit serverRunningChanged();
+                emit serverReadyChanged();
+            } else {
+                startHealthPolling();
+            }
+            emit serverRunningChanged();
+            return;
+        }
+
+        if (start) {
+            m_remoteServerActive = true;
+            m_serverReady = false;
+            m_serverStopping = false;
+            setServerState(QStringLiteral("running"));
+            appendServerEvent(QStringLiteral("lifecycle"),
+                              QStringLiteral("Compose inició el servicio; esperando health en %1.").arg(serverBaseUrl()));
+            startHealthPolling();
+            emit serverRunningChanged();
+            emit serverReadyChanged();
+        } else {
+            stopHealthPolling();
+            stopVramPolling();
+            m_remoteServerActive = false;
+            m_serverReady = false;
+            m_serverStopping = false;
+            m_serverUsesVoiceGpuPlan = false;
+            m_serverVoiceGpuPlanSignature.clear();
+            setServerState(QStringLiteral("stopped"));
+            appendServerEvent(QStringLiteral("lifecycle"), QStringLiteral("Servicio Compose detenido."));
+            if (m_serverHasVision) { m_serverHasVision = false; emit serverHasVisionChanged(); }
+            if (m_chatThinkingSupported) { m_chatThinkingSupported = false; emit chatThinkingSupportedChanged(); }
+            emit serverReadyChanged();
+            emit serverRunningChanged();
+        }
+    });
+    connect(process, &QProcess::errorOccurred, this, [this, process, start](QProcess::ProcessError error) {
+        if (error != QProcess::FailedToStart || m_managedComposeProc != process) return;
+        QTimer::singleShot(0, this, [this, process, start]() {
+            if (m_managedComposeProc != process) return;
+            const QString message = QStringLiteral("No se pudo iniciar Docker Compose: %1").arg(process->errorString());
+            m_managedComposeProc = nullptr;
+            process->deleteLater();
+            appendServerEvent(QStringLiteral("lifecycle"), message);
+            emit serverError(message);
+            m_serverStopping = false;
+            setServerState(start ? QStringLiteral("failed") : QStringLiteral("running"));
+            if (start) {
+                m_remoteServerActive = false;
+                m_pendingAutoAgentLaunchId.clear();
+                if (m_agentStarting) { m_agentStarting = false; emit agentStartingChanged(); }
+                emit serverRunningChanged();
+                emit serverReadyChanged();
+            } else {
+                startHealthPolling();
+            }
+            emit serverRunningChanged();
+        });
+    });
+    appendServerEvent(QStringLiteral("lifecycle"),
+                      QStringLiteral("Ejecutando docker compose %1 para %2.")
+                          .arg(start ? QStringLiteral("up -d") : QStringLiteral("stop"), launchProfileId));
+    process->start(docker, args);
+    emit serverRunningChanged();
 }
 
 // Arranca el agente diferido al quedar listo el server. Si el agente ya está
@@ -3089,7 +3616,31 @@ void AppController::applyConfiguredPowerLimit(const LaunchProfile &launch)
 
 void AppController::stopServer()
 {
+    if (m_managedComposeProc && !m_remoteServerActive) {
+        appendServerEvent(QStringLiteral("lifecycle"),
+                          QStringLiteral("Esperando que termine la operación Docker Compose actual antes de detener el servidor."));
+        return;
+    }
     if (m_remoteServerActive) {
+        const auto active = buildContext(m_activeLaunchId);
+        if (!active.backend.managedServer.isEmpty()) {
+            if (m_serverStopping || m_managedComposeProc) return;
+            if (m_serverRestartTimer) m_serverRestartTimer->stop();
+            m_serverRestartCount = 0;
+            if (m_agentStarting || !m_pendingAutoAgentLaunchId.isEmpty()) {
+                m_agentStarting = false;
+                m_pendingAutoAgentLaunchId.clear();
+                emit agentStartingChanged();
+            }
+            stopHealthPolling();
+            m_serverStopping = true;
+            m_serverReady = false;
+            setServerState(QStringLiteral("restarting"));
+            emit serverReadyChanged();
+            appendServerEvent(QStringLiteral("lifecycle"), QStringLiteral("Deteniendo servicio administrado por Compose…"));
+            runManagedCompose(m_activeLaunchId, false);
+            return;
+        }
         if (m_serverRestartTimer) m_serverRestartTimer->stop();
         m_serverRestartCount = 0;
         if (m_agentStarting || !m_pendingAutoAgentLaunchId.isEmpty()) {
@@ -3131,7 +3682,12 @@ void AppController::stopServer()
     emit serverRunningChanged();
     appendServerEvent(QStringLiteral("lifecycle"), QStringLiteral("Stopping server..."));
     m_proc->terminate();
-    // Kill after 5s if process hasn't exited
+    const auto stoppingBackend = m_activeLaunchId.isEmpty()
+        ? BackendProfile{} : buildContext(m_activeLaunchId).backend;
+    const bool stoppingAstra = stoppingBackend.managedServer
+                                   .value(QStringLiteral("type")).toString()
+                               == QLatin1String("astra-strata");
+    // Strata must unload a large CPU/GPU-resident model and stop its engine child.
     m_stopKillTimer = new QTimer(this);
     m_stopKillTimer->setSingleShot(true);
     connect(m_stopKillTimer, &QTimer::timeout, this, [this]() {
@@ -3139,7 +3695,7 @@ void AppController::stopServer()
         m_stopKillTimer->deleteLater();
         m_stopKillTimer = nullptr;
     });
-    m_stopKillTimer->start(5000);
+    m_stopKillTimer->start(stoppingAstra ? 60000 : 5000);
 }
 
 void AppController::computeEffectiveProfile(const QString &launchProfileId)
@@ -4242,7 +4798,7 @@ QVariantList AppController::buildMasterChain(const MasterConfig &mc)
             const auto pctx = buildContext(f.profileId);
             QString url, model, key;
             if (pctx.backend.isCloud()) {
-                url   = pctx.backend.cloudBaseUrl.trimmed();
+                url   = backendBaseUrl(pctx.backend);
                 model = pctx.backend.cloudModel.trimmed();
                 key   = m_secrets.resolve(pctx.backend.cloudKeyRef.trimmed());
             } else {
@@ -4306,7 +4862,26 @@ EffectiveProfileBuilder::Context AppController::buildContext(const QString &laun
         }
     }
     ctx.backend = m_profiles.resolveBackend(ctx.launch.backendProfileId);
-    ctx.model = m_profiles.resolveModelProfile(ctx.launch.modelProfileId);
+    // Perfiles históricos importados desde Windows pueden conservar un id de
+    // backend que en Ubuntu apunta al CPU fallback. El override por plataforma
+    // selecciona el binario CUDA Linux sin modificar el backend de Windows.
+    QString platformBackendKey;
+#if defined(Q_OS_WIN)
+    platformBackendKey = QStringLiteral("windows");
+#elif defined(Q_OS_LINUX)
+    platformBackendKey = QStringLiteral("linux");
+#elif defined(Q_OS_MACOS)
+    platformBackendKey = QStringLiteral("macos");
+#endif
+    const QString platformBackendId =
+        ctx.launch.platformBackendIds.value(platformBackendKey).trimmed();
+    if (!platformBackendId.isEmpty())
+        ctx.backend = m_profiles.resolveBackend(platformBackendId);
+    const QString platformModelProfileId =
+        ctx.launch.platformModelProfileIds.value(platformBackendKey).trimmed();
+    ctx.model = m_profiles.resolveModelProfile(platformModelProfileId.isEmpty()
+                                                   ? ctx.launch.modelProfileId
+                                                   : platformModelProfileId);
     ctx.runtime = m_profiles.resolveRuntime(ctx.launch.runtimePresetId);
 
     // Durante Ingi Charla, separar la voz del LLM no requiere un perfil nuevo:
@@ -4508,7 +5083,15 @@ EffectiveProfileBuilder::Context AppController::buildContext(const QString &laun
         }
     }
 
+    // Un LaunchProfile puede declarar una política propia. Esto evita que el
+    // toggle global (por ejemplo, thinking apagado para un perfil rápido)
+    // anule el razonamiento necesario para ASTRA/TERRA. Los perfiles sin
+    // política explícita conservan el comportamiento histórico global.
     ctx.reasoningEnabled = m_launchThinkingEnabled;
+    if (ctx.launch.reasoningBudget >= 0)
+        ctx.reasoningEnabled = ctx.launch.reasoningBudget > 0;
+    else if (!ctx.launch.reasoningEffort.isEmpty())
+        ctx.reasoningEnabled = true;
 
     // Un perfil de usuario clonado desde KAT-Eval puede perder el template de
     // tools. Sin él llama-server cae en peg-native y el agente nunca recibe
@@ -4772,6 +5355,7 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter,
 
     if (auto *cb = qobject_cast<LlamaAgentBackend *>(b)) {
         cb->setThinkingEnabled(m_agentThinkingEnabled);
+        cb->setPrivacyModeEnabled(m_privacyModeEnabled);
 
         // Servers MCP: global + proyecto (el de proyecto pisa por nombre).
         const QString proj = currentAgentProjectDir();
@@ -5084,6 +5668,26 @@ void AppController::setBrowserAutomationEnabled(bool enabled)
     }
 }
 
+void AppController::setPrivacyModeEnabled(bool enabled)
+{
+    if (enabled == m_privacyModeEnabled) return;
+    m_privacyModeEnabled = enabled;
+    writeSetting(QStringLiteral("privacy/modeEnabled"), enabled);
+    if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend)) {
+        cb->setPrivacyModeEnabled(enabled);
+        const QString proj = currentAgentProjectDir();
+        QMap<QString, QVariant> merged;
+        for (const QVariant &v : listMcpServers(QStringLiteral("global"), QString()))
+            merged.insert(v.toMap().value(QStringLiteral("name")).toString(), v);
+        if (!proj.isEmpty())
+            for (const QVariant &v : listMcpServers(QStringLiteral("project"), proj))
+                merged.insert(v.toMap().value(QStringLiteral("name")).toString(), v);
+        injectBrowserMcp(merged, m_activeLaunchId);
+        cb->setMcpServers(merged.values());
+    }
+    emit privacyModeChanged();
+}
+
 void AppController::setBrowserMcpCommand(const QString &cmd)
 {
     const QString c = cmd.trimmed().isEmpty()
@@ -5169,6 +5773,7 @@ void AppController::injectBrowserMcp(QMap<QString, QVariant> &merged,
                                      const QString &launchId,
                                      bool foreground, bool taskNeedsBrowser) const
 {
+    if (m_privacyModeEnabled) return;
     QString override = QStringLiteral("inherit");
     if (!launchId.isEmpty()) {
         const LaunchProfile lp = m_profiles.resolveLaunch(launchId);
@@ -5807,6 +6412,9 @@ void AppController::applyAgentProfileCaps(LlamaAgentBackend *cb, const AgentProf
         disabled.removeAll(QStringLiteral("worker_call"));
     }
     cb->setDisabledTools(disabled);
+    // El sandwich es experimental y queda siempre apagado al cambiar de
+    // perfil; sólo un HarnessSpec explícito puede volver a activarlo.
+    cb->setComputerUseSandwich(false);
 
     cb->setDirectives(expandDirectiveSentinel(ap.directives));
     cb->setThinkingEnabled(m_agentThinkingEnabled);
@@ -5916,6 +6524,26 @@ QVariantMap AppController::harnessDirective(const QString &name) const
     return HarnessDirectiveStore::load(name, currentAgentProjectDir());
 }
 
+QVariantList AppController::harnessDirectiveHistory(const QString &name, const QString &scope) const
+{
+    return HarnessDirectiveStore::history(name, scope, currentAgentProjectDir());
+}
+
+QVariantMap AppController::rollbackHarnessDirective(const QString &name, const QString &revision,
+                                                    const QString &scope)
+{
+    const QVariantMap res = HarnessDirectiveStore::rollback(
+        name, revision, scope, currentAgentProjectDir());
+    if (!res.value(QStringLiteral("ok")).toBool()) {
+        appendAgentEvent(QStringLiteral("lifecycle"),
+                         QStringLiteral("Rollback de directiva rechazado: %1")
+                             .arg(res.value(QStringLiteral("error")).toString()));
+        return res;
+    }
+    applyActiveAgentProfile();
+    return res;
+}
+
 QStringList AppController::harnessDirectiveFacts() const
 {
     return LlamaAgentBackend::directiveFactKeys();
@@ -5998,6 +6626,7 @@ void AppController::applyHarnessSpec(LlamaAgentBackend *cb, const HarnessSpec &s
         cb->setPromptMaxChars(spec.prompt.maxChars);
         cb->setCustomDirectives(
             HarnessDirectiveStore::loadMany(spec.prompt.custom, currentAgentProjectDir()));
+        cb->setComputerUseSandwich(spec.prompt.computerUseSandwich);
     }
     if (spec.permissions.set) {
         cb->setPermissionRules(spec.permissions.rules.join(QLatin1Char('\n')));
@@ -6363,7 +6992,7 @@ void AppController::startAgent(const QString &launchProfileId)
         } else if (keylessLoopbackCloud) {
             appendAgentEvent(QStringLiteral("lifecycle"),
                              QStringLiteral("Cloud local: endpoint loopback sin API key (%1).")
-                                 .arg(ctx.backend.cloudBaseUrl.trimmed()));
+                                 .arg(backendBaseUrl(ctx.backend)));
         }
         // Necesita el llama-server corriendo (usa su API OpenAI). Sin server → refused.
         // Si está corriendo pero el modelo aún carga, igual arranca: la UI muestra
@@ -6442,7 +7071,7 @@ void AppController::startAgent(const QString &launchProfileId)
         c.harnessWorker = aspec.worker;
         c.cwd           = (!agentCwd.isEmpty() && QFileInfo(agentCwd).isDir()) ? agentCwd : QString();
         if (cloud) {
-            c.serverBaseUrl = ctx.backend.cloudBaseUrl.trimmed();
+            c.serverBaseUrl = backendBaseUrl(ctx.backend);
             c.modelId       = ctx.backend.cloudModel.trimmed();
             c.apiKey        = cloudKey;
             c.ctxOverride   = ctx.backend.cloudCtx;
@@ -6451,10 +7080,20 @@ void AppController::startAgent(const QString &launchProfileId)
             c.serverBaseUrl = serverBaseUrl();
             c.modelId       = routedModelId(ctx.catalogModel.id);
             c.ctxOverride   = ctx.runtime.ctx;
-            c.parallelSlots = qMax(1, ctx.runtime.parallelSlots);
-            c.vramTotalMb   = m_serverStats.value(QStringLiteral("totalMb")).toDouble();
+        }
+        // También aplica a endpoints cloud/locales (por ejemplo vLLM expuesto
+        // como OpenAI-compatible): el runtime declara cuántas secuencias puede
+        // admitir y el harness usa ese valor para los sub-agentes. El default 1
+        // mantiene el comportamiento histórico para endpoints que no declaran
+        // concurrencia. La telemetría de VRAM sólo se usa si está disponible.
+        c.parallelSlots = qMax(1, ctx.runtime.parallelSlots);
+        const bool localEndpoint = !cloud
+            || isLoopbackCloudUrl(ctx.backend.cloudBaseUrl);
+        if (localEndpoint) {
+            c.vramTotalMb = m_serverStats.value(QStringLiteral("totalMb")).toDouble();
             const double usedMb = m_serverStats.value(QStringLiteral("usedMb")).toDouble();
-            c.vramFreeMb    = c.vramTotalMb > 0.0 ? qMax(0.0, c.vramTotalMb - usedMb) : 0.0;
+            c.vramFreeMb = c.vramTotalMb > 0.0
+                ? qMax(0.0, c.vramTotalMb - usedMb) : 0.0;
         }
         m_agentCwdOverride.clear();
         m_activeAgentAdapter = adapter;
@@ -6740,7 +7379,7 @@ bool AppController::analyzePersonaStyleProfile(const QString &profileId,
     QString model;
     QString key;
     if (ctx.backend.isCloud()) {
-        base = ctx.backend.cloudBaseUrl.trimmed();
+        base = backendBaseUrl(ctx.backend);
         model = ctx.backend.cloudModel.trimmed();
         key = m_secrets.resolve(ctx.backend.cloudKeyRef.trimmed());
     } else {
@@ -6945,7 +7584,7 @@ void AppController::startSequentialHybrid(const QString &text, const LaunchProfi
 void AppController::requestHybridPlan()
 {
     const auto ctx = buildContext(m_hybridPlannerLaunchId);
-    QString base = ctx.backend.isCloud() ? ctx.backend.cloudBaseUrl.trimmed() : serverBaseUrl();
+    QString base = ctx.backend.isCloud() ? backendBaseUrl(ctx.backend) : serverBaseUrl();
     QString model = ctx.backend.isCloud() ? ctx.backend.cloudModel.trimmed() : ctx.catalogModel.id;
     const QString key = ctx.backend.isCloud() ? m_secrets.resolve(ctx.backend.cloudKeyRef.trimmed()) : QString();
     if (base.endsWith(QLatin1Char('/'))) base.chop(1);
@@ -9388,11 +10027,12 @@ void AppController::wireGatewayHooks()
     m_gateway->setApiKey(m_gatewayApiKey);
 }
 
-QJsonArray AppController::gatewayModelCatalog() const
+QJsonArray AppController::gatewayModelCatalog()
 {
     QJsonArray models;
-    for (const QVariant &value : m_profiles.launchProfilesForMenu()) {
+    for (const QVariant &value : launchMenu()) {
         const QVariantMap menu = value.toMap();
+        if (!menu.value(QStringLiteral("ready")).toBool()) continue;
         const QString id = menu.value(QStringLiteral("id")).toString();
         if (id.isEmpty()) continue;
         const LaunchProfile launch = m_profiles.resolveLaunch(id);
@@ -9417,7 +10057,7 @@ void AppController::gatewayEnsureModel(const QString &name)
     appendServerEvent(QStringLiteral("lifecycle"),
         QStringLiteral("Gateway: auto-load del modelo '%1'.").arg(name));
     if (!serverRunning()) {
-        startServerAndAgent(launchId);
+        startServer(launchId);
         return;
     }
     auto *conn = new QMetaObject::Connection;
@@ -9427,7 +10067,7 @@ void AppController::gatewayEnsureModel(const QString &name)
         disconnect(*conn);
         delete conn;
         QTimer::singleShot(0, this, [this, launchId]() {
-            startServerAndAgent(launchId);
+            startServer(launchId);
         });
     });
     stopServer();
@@ -9470,7 +10110,7 @@ QString AppController::gatewayLanBaseUrl() const
     return QStringLiteral("http://%1:%2").arg(address.toString()).arg(m_gatewayPort);
 }
 
-QString AppController::gatewayLanOpenCodeConfig(const QString &launchProfileId) const
+QString AppController::gatewayLanOpenCodeConfig(const QString &launchProfileId)
 {
     const QString baseUrl = gatewayLanBaseUrl();
     if (baseUrl.isEmpty())
@@ -11101,6 +11741,9 @@ void AppController::writeSetting(const QString &key, const QVariant &value)
 {
     QSettings s;
     s.setValue(key, value);
+    if (key == QLatin1String("astra/strataRoot")
+        || key == QLatin1String("astra/configFile"))
+        emit astraConfigurationChanged();
 }
 
 QVariantList AppController::automationScreens() const
@@ -13542,7 +14185,18 @@ void AppController::rescanHardware()
                     QString nvlinkText;
                     if (nvlink.waitForFinished(1200))
                         nvlinkText = QString::fromUtf8(nvlink.readAllStandardOutput());
-                    result = HardwareDiagnostics::enrichTopology(result, topoText, nvlinkText);
+
+                    QString p2pText;
+                    for (const QString &capability : {QStringLiteral("r"), QStringLiteral("w")}) {
+                        QProcess p2p;
+                        p2p.start(nvidiaSmi, {QStringLiteral("topo"), QStringLiteral("-p2p"),
+                                             capability});
+                        if (p2p.waitForFinished(1200))
+                            p2pText += QString::fromUtf8(p2p.readAllStandardOutput())
+                                       + QLatin1Char('\n');
+                    }
+                    result = HardwareDiagnostics::enrichTopology(result, topoText, nvlinkText,
+                                                                   p2pText);
                 }
             }
         }
@@ -14694,7 +15348,11 @@ QString AppController::resolveSystemBinaryId(const QString &kind) const
     if (kind == QLatin1String("ninfer3090"))
         return ninferId;
     if (kind == QLatin1String("beellama"))
-        return !beeId.isEmpty() ? beeId : firstId;
+        // Un runtime CUDA especializado (p.ej. Flash-Next) sigue siendo una
+        // opción válida para los perfiles pequeños cuando no quedó instalada
+        // la variante etiquetada beellama. Caer a firstId suele elegir el
+        // fallback CPU y hace que --n-gpu-layers sea un no-op.
+        return !beeId.isEmpty() ? beeId : (!officialId.isEmpty() ? officialId : firstId);
     if (kind == QLatin1String("gemma4"))                                  // gemma4-assistant
         return !gemmaId.isEmpty() ? gemmaId : (!officialId.isEmpty() ? officialId : firstId);
     if (!requestedFlavor.isEmpty())
@@ -14744,10 +15402,53 @@ QVariantMap AppController::recommendedSystemProfile() const
     };
 }
 
+QVariantMap AppController::resolveAstraStrataSetup(bool persistDiscoveredPaths)
+{
+    const QString storedRoot = readSetting(QStringLiteral("astra/strataRoot")).toString().trimmed();
+    const QString storedConfig = readSetting(QStringLiteral("astra/configFile")).toString().trimmed();
+    const QString envRoot = QString::fromLocal8Bit(qgetenv("ASTRA_STRATA_ROOT")).trimmed().isEmpty()
+        ? QString::fromLocal8Bit(qgetenv("STRATA_ROOT")).trimmed()
+        : QString::fromLocal8Bit(qgetenv("ASTRA_STRATA_ROOT")).trimmed();
+    const QString envConfig = QString::fromLocal8Bit(qgetenv("ASTRA_STRATA_CONFIG")).trimmed().isEmpty()
+        ? QString::fromLocal8Bit(qgetenv("STRATA_CONFIG")).trimmed()
+        : QString::fromLocal8Bit(qgetenv("ASTRA_STRATA_CONFIG")).trimmed();
+    const AstraStrataSetup setup = discoverAstraStrataSetup(
+        storedRoot.isEmpty() ? envRoot : storedRoot,
+        storedConfig.isEmpty() ? envConfig : storedConfig);
+    QVariantMap result{
+        {QStringLiteral("ready"), setup.ready()},
+        {QStringLiteral("root"), setup.root},
+        {QStringLiteral("config"), setup.config},
+        {QStringLiteral("python"), setup.python},
+        {QStringLiteral("serverScript"), setup.serverScript},
+        {QStringLiteral("error"), setup.error}
+    };
+    if (!setup.ready() || !persistDiscoveredPaths) return result;
+
+    // No pisar decisiones del usuario ni overrides de entorno. Si encontramos
+    // la instalación usada por los benchmarks, guardar el mismo root/config que
+    // se pasó explícitamente entonces para que UI, readiness y Gateway coincidan.
+    if (storedRoot.isEmpty() && envRoot.isEmpty())
+        writeSetting(QStringLiteral("astra/strataRoot"), setup.root);
+    if (storedConfig.isEmpty() && envConfig.isEmpty())
+        writeSetting(QStringLiteral("astra/configFile"), setup.config);
+    return result;
+}
+
 bool AppController::systemProfileReady(const QString &launchId)
 {
-    const EffectiveProfile ep = EffectiveProfileBuilder::build(buildContext(launchId));
-    return ep.isValid();   // sin blockingErrors = binario + modelo presentes
+    const EffectiveProfileBuilder::Context ctx = buildContext(launchId);
+    const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
+    if (!ep.isValid()) return false;
+
+    // ASTRA is represented as a managed OpenAI-compatible backend, so the
+    // generic cloud check only proves that its URL/model are configured. Its
+    // local engine and config live outside the model catalog; report it ready
+    // only when the Strata installation needed by startServer exists.
+    if (ctx.backend.managedServer.value(QStringLiteral("type")).toString()
+            == QLatin1String("astra-strata"))
+        return resolveAstraStrataSetup(true).value(QStringLiteral("ready")).toBool();
+    return true;
 }
 
 QVariantList AppController::launchMenu()
@@ -14783,7 +15484,9 @@ QVariantList AppController::launchMenu()
                 m[QStringLiteral("displayName")] =
                     QStringLiteral("🎯 ") + m.value(QStringLiteral("displayName")).toString();
         } else {
-            m[QStringLiteral("ready")] = true;
+            const QString id = m.value(QStringLiteral("id")).toString();
+            const EffectiveProfileBuilder::Context ctx = buildContext(id);
+            m[QStringLiteral("ready")] = EffectiveProfileBuilder::build(ctx).isValid();
         }
         out.append(m);
     }
@@ -16938,7 +17641,11 @@ void AppController::startServerSpeedBenchmark(const QStringList &profileIds, int
         const QVariantMap profile = m_profiles.getLaunchProfile(profileId);
         const QString profileName = profile.value(QStringLiteral("name")).toString().isEmpty()
             ? profileId : profile.value(QStringLiteral("name")).toString();
-        m_benchmarkMemoryAttempt = 0;
+        const LaunchProfile launch = m_profiles.resolveLaunch(profileId);
+        const BackendProfile backend = buildContext(profileId).backend;
+        m_benchmarkMemoryAdaptive = launch.benchmarkMemoryAdaptive
+            && ManagedServerCapabilities::supportsAdaptiveLlamaMemoryPolicy(backend);
+        m_benchmarkMemoryAttempt = m_benchmarkMemoryAdaptive ? 0 : -1;
         m_benchmarkEffectiveArgs.clear();
 
         auto samples = std::make_shared<QVariantList>();
@@ -17288,7 +17995,7 @@ void AppController::startServerSpeedBenchmark(const QStringList &profileIds, int
             startServer(profileId);
             if (!serverRunning()) {
                 const QString detail = benchmarkServerLogTail();
-                if (benchmarkLogIndicatesOutOfMemoryForTest(detail)
+                if (m_benchmarkMemoryAdaptive && benchmarkLogIndicatesOutOfMemoryForTest(detail)
                     && *startRetries < kBenchmarkMaxMemoryAttempts) {
                     ++(*startRetries);
                     ++m_benchmarkMemoryAttempt;
@@ -17305,7 +18012,7 @@ void AppController::startServerSpeedBenchmark(const QStringList &profileIds, int
                 [=](bool ready) {
                     if (!ready) {
                         const QString detail = benchmarkServerLogTail();
-                        if (benchmarkLogIndicatesOutOfMemoryForTest(detail)
+                        if (m_benchmarkMemoryAdaptive && benchmarkLogIndicatesOutOfMemoryForTest(detail)
                             && *startRetries < kBenchmarkMaxMemoryAttempts) {
                             ++(*startRetries);
                             ++m_benchmarkMemoryAttempt;
@@ -18069,7 +18776,11 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
         // Every profile starts at the highest-VRAM attempt. If the server
         // reports an OOM while loading, the ready callback advances this
         // ladder and retries the same profile with a slightly safer budget.
-        m_benchmarkMemoryAttempt = 0;
+        const LaunchProfile launch = m_profiles.resolveLaunch(profileId);
+        const BackendProfile backend = buildContext(profileId).backend;
+        m_benchmarkMemoryAdaptive = launch.benchmarkMemoryAdaptive
+            && ManagedServerCapabilities::supportsAdaptiveLlamaMemoryPolicy(backend);
+        m_benchmarkMemoryAttempt = m_benchmarkMemoryAdaptive ? 0 : -1;
         m_benchmarkEffectiveArgs.clear();
 
         auto startAttempts = std::make_shared<int>(0);
@@ -18132,7 +18843,7 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
             if (!serverRunning()) {
                 if (m_benchmarkCanceled) { (*processNext)(idx + 1); return; }
                 const QString startDetail = benchmarkServerLogTail();
-                if (benchmarkLogIndicatesOutOfMemoryForTest(startDetail)
+                if (m_benchmarkMemoryAdaptive && benchmarkLogIndicatesOutOfMemoryForTest(startDetail)
                     && m_benchmarkMemoryAttempt < kBenchmarkMaxMemoryAttempts) {
                     ++m_benchmarkMemoryAttempt;
                     m_benchmarkStatus =
@@ -18209,7 +18920,7 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                 if (!ready || m_benchmarkCanceled) {
                     if (!m_benchmarkCanceled) {
                         const QString detail = benchmarkServerLogTail();
-                        if (benchmarkLogIndicatesOutOfMemoryForTest(detail)
+                        if (m_benchmarkMemoryAdaptive && benchmarkLogIndicatesOutOfMemoryForTest(detail)
                             && m_benchmarkMemoryAttempt < kBenchmarkMaxMemoryAttempts) {
                             ++m_benchmarkMemoryAttempt;
                             m_benchmarkStatus =
@@ -18895,17 +19606,26 @@ QString AppController::benchmarkTaskArtifactNameForTest(const QString &taskId)
     return QStringLiteral("solution_%1.py").arg(safe);
 }
 
-int AppController::benchmarkStreamingDeltaForTest(QString *previous,
-                                                  const QString &current)
+int AppController::benchmarkGeneratedCharsDeltaForTest(int previous, int current)
 {
-    if (!previous) return current.size();
-    int delta = current.size();
-    if (current == *previous)
-        delta = 0;
-    else if (!previous->isEmpty() && current.startsWith(*previous))
-        delta = current.size() - previous->size();
-    *previous = current;
-    return qMax(0, delta);
+    if (current <= 0) return 0;
+    // Normal stream updates are monotonic. A lower value means the backend
+    // started a new generation in the same assistant bubble; count that new
+    // generation from zero rather than subtracting its length.
+    return previous < 0 || current < previous ? current
+                                                : current - previous;
+}
+
+bool AppController::serverHealthReplyAcceptedForTest(int httpStatus, bool networkError,
+                                                       bool remoteServerActive)
+{
+    // Some OpenAI-compatible remote endpoints (including Strata) do not expose
+    // /health. Qt reports an HTTP 404 as ContentNotFoundError even though the
+    // response proves the endpoint is reachable. Accept that response only for
+    // a backend we explicitly marked as remote; transport failures have no HTTP
+    // status and remain rejected.
+    return (httpStatus == 200 && !networkError)
+        || (httpStatus == 404 && remoteServerActive);
 }
 
 bool AppController::benchmarkTurnBusyForTest(const QString &message)
@@ -18921,6 +19641,37 @@ bool AppController::benchmarkRepairStagnationCheckForTest(bool agentBusy,
     // A busy backend may still be doing prompt prefill or tool work; lack of a
     // file mutation is not stagnation until the turn is idle.
     return !agentBusy && !workspaceChanged;
+}
+
+bool AppController::benchmarkRepairToolMayMutateForTest(const QString &toolName)
+{
+    const QString tool = toolName.trimmed().toLower();
+    if (tool.isEmpty()) return false;
+
+    // run_command/terminal are intentionally treated as potentially mutating:
+    // a repair may create or validate a file through a shell/Python command.
+    static const QSet<QString> mutators{
+        QStringLiteral("write_file"), QStringLiteral("edit_file"),
+        QStringLiteral("apply_patch"), QStringLiteral("create_file"),
+        QStringLiteral("write_text"), QStringLiteral("replace_in_file"),
+        QStringLiteral("move_file"), QStringLiteral("delete_file"),
+        QStringLiteral("run_command"), QStringLiteral("terminal"),
+        QStringLiteral("execute_command")};
+    return mutators.contains(tool);
+}
+
+bool AppController::benchmarkRepairInspectionLoopForTest(bool agentBusy,
+                                                           bool workspaceChanged,
+                                                           bool mutationToolSeen,
+                                                           int readOnlyToolCalls)
+{
+    // A busy backend may still be in prefill or inside a tool. A changed
+    // workspace or a mutation-capable tool also means the repair has a chance
+    // to make progress. The guard is therefore only decisive once the turn is
+    // idle and eight inspection-only calls have happened without an edit.
+    constexpr int kInspectionToolLimit = 8;
+    return !agentBusy && !workspaceChanged && !mutationToolSeen
+        && readOnlyToolCalls >= kInspectionToolLimit;
 }
 
 bool AppController::benchmarkLogIndicatesOutOfMemoryForTest(const QString &message)
@@ -19086,6 +19837,22 @@ bool AppController::benchmarkErrorIsInfrastructureForTest(const QString &message
         || lower.contains(QStringLiteral("transport"));
 }
 
+bool AppController::benchmarkAllowsEarlyAcceptanceForTest(const QVariantList &benchTasks)
+{
+    for (const QVariant &value : benchTasks) {
+        const QVariantMap task = value.toMap();
+        const QString id = task.value(QStringLiteral("id")).toString();
+        const QString artifact = task.value(QStringLiteral("artifactFile")).toString();
+        if (id.startsWith(QStringLiteral("BigCodeBench/"), Qt::CaseInsensitive)
+            || artifact.startsWith(QStringLiteral("solution_BigCodeBench_"),
+                                   Qt::CaseInsensitive)
+            || artifact.startsWith(QStringLiteral("solution_BigCodeBenchmark_"),
+                                   Qt::CaseInsensitive))
+            return false;
+    }
+    return true;
+}
+
 bool AppController::benchmarkTransportAfterEvaluationForTest(int evaluatedTaskCount,
                                                               int declaredTaskCount,
                                                               bool transportFailure)
@@ -19105,12 +19872,13 @@ bool AppController::benchmarkResultPassesGateForTest(const QVariantMap &result,
     const QString benchmark = result.value(QStringLiteral("benchmarkName")).toString();
     const int score = result.value(QStringLiteral("qualityScore")).toInt();
     const int total = result.value(QStringLiteral("qualityTotal")).toInt();
+    const QString detectedStage = customBenchmarkStage(benchmark, total);
     const QString failureKind = result.value(QStringLiteral("failureKind")).toString();
     const bool invalid = result.value(QStringLiteral("invalid")).toBool()
                       || result.value(QStringLiteral("timedOut")).toBool()
                       || result.value(QStringLiteral("transportAfterEvaluation")).toBool();
     if (stage == QLatin1String("he0")) {
-        return benchmark.startsWith(QStringLiteral("HumanEval (1"))
+        return detectedStage == QLatin1String("he0")
             && !invalid && !result.value(QStringLiteral("failed")).toBool()
             && failureKind == QLatin1String("none")
             && total > 0 && score >= total;
@@ -19118,15 +19886,14 @@ bool AppController::benchmarkResultPassesGateForTest(const QVariantMap &result,
     if (stage == QLatin1String("he20")) {
         // A partial but normally transported HE20 score is a valid quality
         // measurement. Infrastructure/timeout/transport failures are not.
-        return benchmark.startsWith(QStringLiteral("HumanEval (20"))
+        return detectedStage == QLatin1String("he20")
             && !invalid && failureKind != QLatin1String("infrastructure")
             && failureKind != QLatin1String("timeout") && total > 0;
     }
     if (stage == QLatin1String("bcb")) {
         // BCB is the terminal stage: a transported quality result (including
         // a partial score) closes coverage, while infra/timeout does not.
-        return (benchmark.contains(QStringLiteral("BigCodeBench"), Qt::CaseInsensitive)
-                || benchmark.startsWith(QStringLiteral("BCB")))
+        return detectedStage == QLatin1String("bcb")
             && !invalid && failureKind != QLatin1String("infrastructure")
             && failureKind != QLatin1String("timeout") && total > 0;
     }
@@ -19270,10 +20037,13 @@ QString AppController::benchmarkProfileConfigFingerprint(const QString &profileI
     // path, not llama-server in isolation.  Keep the effective harness spec in
     // the fingerprint so edits to its runtime also invalidate old gates.
     payload[QStringLiteral("agentProfileId")] = m_benchmarkAgentProfileId;
+    payload[QStringLiteral("agentThinkingEnabled")] = m_agentThinkingEnabled;
     const AgentProfile agent = m_profiles.resolveAgentProfile(m_benchmarkAgentProfileId);
     payload[QStringLiteral("agentProfileName")] = agent.name;
     payload[QStringLiteral("harnessSpecHash")] =
         HarnessEngine::fingerprint(m_profiles.resolveHarnessSpec(agent));
+    payload[QStringLiteral("benchmarkAgentPromptRevision")] =
+        QString::fromLatin1(kBenchmarkAgentPromptRevision);
     return QString::fromLatin1(QCryptographicHash::hash(
         QJsonDocument(payload).toJson(QJsonDocument::Compact),
         QCryptographicHash::Sha256).toHex());
@@ -19297,9 +20067,11 @@ QStringList AppController::benchmarkProfilesAllowedForStage(const QStringList &p
     for (const QVariant &value : std::as_const(m_benchmarkResults)) {
         const QVariantMap row = value.toMap();
         const QString benchmark = row.value(QStringLiteral("benchmarkName")).toString();
-        if (benchmark.startsWith(QStringLiteral("HumanEval (1")))
+        const int total = row.value(QStringLiteral("qualityTotal")).toInt();
+        const QString detectedStage = customBenchmarkStage(benchmark, total);
+        if (detectedStage == QLatin1String("he0"))
             keepLatest(&latestHe0, row);
-        else if (benchmark.startsWith(QStringLiteral("HumanEval (20")))
+        else if (detectedStage == QLatin1String("he20"))
             keepLatest(&latestHe20, row);
     }
 
@@ -19345,6 +20117,13 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
     // Conservamos algo de sampling pero acotado y fijamos seed por pasada.
     const double benchmarkTemp = temp < 0.0 ? 0.1 : qMin(temp, 0.1);
     const int benchmarkSeed = 4242;
+    // BCB es una secuencia multi-tarea. La aceptación temprana fue diseñada
+    // para una tarea aislada, pero aquí cancelaba el stream mientras el modelo
+    // todavía podía estar cerrando tools/HTTP/KV. El siguiente prompt podía
+    // llegar durante ese unwind y el backend CUDA terminaba con "illegal
+    // memory access". BCB debe avanzar sólo por turnFinished natural.
+    const bool allowEarlyAcceptance =
+        benchmarkAllowsEarlyAcceptanceForTest(benchTasks);
 
     auto sanitize = [](QString s) {
         s.replace(QRegularExpression(QStringLiteral("[^A-Za-z0-9_-]+")), QStringLiteral("_"));
@@ -19394,8 +20173,12 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             "- Trabaja en el directorio actual usando herramientas de archivo.\n"
             "- Tu primera accion debe ser una llamada de herramienta: no escribas un plan ni codigo en el chat antes de usar write_file.\n"
             "- Debes crear/modificar los archivos pedidos en disco; no alcanza con responder codigo en el chat.\n"
+            "- El archivo requerido es la fuente de verdad: escribe primero en ese path exacto. No uses list_dir, glob, grep, read_file ni rutas padre antes de crear el artefacto, y nunca salgas del workspace.\n"
             "- Si el prompt pide \"responder solamente con codigo\", interpretalo como: el archivo final debe contener solamente ese codigo.\n"
             "- En tareas de codigo, conserva exactamente los nombres y firmas del preambulo; no los renombres ni los abrevies.\n"
+            "- Antes de terminar una tarea de codigo, ejecuta una comprobacion minima de los bordes que describe el enunciado (por ejemplo: vacio, un elemento, limites y tipos invalidos) sobre el archivo creado; si falla, corrige el archivo antes de responder.\n"
+            "- La implementacion debe estar completa: no dejes stubs, `pass`, `TODO`, `NotImplemented`, valores fijos ni ramas sin resolver. Despues de escribirla, ejecuta una prueba minima real que cubra el camino principal y una entrada representativa; si falla, corrige la implementacion completa antes de responder.\n"
+            "- Si el artefacto es Python, despues de cada edicion relee el archivo exacto y ejecuta `python -m py_compile` sobre ese mismo path; no respondas hasta corregir cualquier error de sintaxis, indentacion o archivo equivocado.\n"
             "- Antes de reparar, verifica que `%2` contenga exactamente la funcion solicitada y corrige ese archivo.\n"
             "- Al terminar, responde breve indicando que archivos creaste y si compilaste/probaste.\n\n"
             "TAREA ORIGINAL:\n%1");
@@ -19448,6 +20231,13 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         // contener reparaciones posteriores dentro de la misma corrida.
         const BenchmarkWorkspaceSnapshot workspaceBefore =
             snapshotBenchmarkWorkspace(workspace);
+        if (!allowEarlyAcceptance) {
+            AgentEventLog::append(
+                workspace, QString(), QStringLiteral("benchmark_early_accept_disabled"),
+                QJsonObject{{QStringLiteral("reason"),
+                             QStringLiteral("BigCodeBench requires a natural turn boundary")},
+                            {QStringLiteral("taskCount"), benchTasks.size()}});
+        }
 
         auto *agent = new LlamaAgentBackend(this);
         const AgentProfile benchmarkAgentProfile =
@@ -19459,6 +20249,7 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         m_benchmarkAgent = agent;
         agent->setEphemeralSessions(true);
         agent->setThinkingEnabled(m_agentThinkingEnabled);
+        agent->setPrivacyModeEnabled(m_privacyModeEnabled);
         agent->setReasoningPolicy(ctx.launch.reasoningEffort,
                                   ctx.launch.reasoningBudget);
         agent->setApprovalPolicy(QStringLiteral("super"));   // auto-approve every tool (headless)
@@ -19499,8 +20290,22 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         c.harnessProfileId = benchmarkAgentProfile.id;
         c.harnessSpecHash = HarnessEngine::fingerprint(benchmarkHarnessSpec);
         c.cwd           = workspace;
-        c.serverBaseUrl = serverBaseUrl();
-        c.modelId       = routedModelId(ctx.catalogModel.id);
+        // Harness runs must use the same backend resolution as the interactive
+        // agent.  Cloud/OpenAI-compatible profiles (including a loopback vLLM
+        // endpoint) do not have a local catalog model to route, and sending the
+        // sentinel "local"/"benchmark" model makes the endpoint reject every
+        // request before the agent can emit a tool call.
+        if (ctx.backend.isCloud()) {
+            c.serverBaseUrl = backendBaseUrl(ctx.backend);
+            c.modelId       = ctx.backend.cloudModel.trimmed();
+            c.apiKey        = m_secrets.resolve(ctx.backend.cloudKeyRef.trimmed());
+            c.ctxOverride   = ctx.backend.cloudCtx;
+            c.externalEndpoint = true;
+        } else {
+            c.serverBaseUrl = serverBaseUrl();
+            c.modelId       = routedModelId(ctx.catalogModel.id);
+            c.ctxOverride   = ctx.runtime.ctx;
+        }
         agent->start(c);
         agent->newSessionInProject(workspace);
         agent->setMcpServers(mergedMcp.values());
@@ -19517,12 +20322,18 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         auto preToolCut = std::make_shared<bool>(false);
         auto preToolRecoveryAttempts = std::make_shared<int>(0);
         auto preToolRecoveryPending = std::make_shared<bool>(false);
-        auto lastStreamingText = std::make_shared<QString>();
+        auto lastProgressMessageIndex = std::make_shared<int>(-1);
+        auto lastGeneratedChars = std::make_shared<int>(-1);
         // Reasoning-capable Qwen variants can emit a long code draft before
         // switching to write_file. 16k was below that legitimate first draft,
         // so the recovery loop classified a healthy backend as infrastructure.
         // Keep a finite guard, but allow two recovery turns at 32k each.
-        constexpr int kBenchmarkPreToolOutputLimit = 32000;
+        // Qwen3.8/ShapeLearn can emit a long reasoning preamble before its
+        // first native tool call even with reasoning disabled in the server.
+        // Keep the guard finite, but give the recovery prompt enough room to
+        // reach the tool protocol instead of classifying that model-specific
+        // preamble as an infrastructure timeout at 32K chars.
+        constexpr int kBenchmarkPreToolOutputLimit = 64000;
         auto failureMessage = std::make_shared<QString>();
         auto failureDetail = std::make_shared<QString>();
         auto toolsReady = std::make_shared<bool>(mergedMcp.isEmpty());
@@ -19562,6 +20373,8 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         constexpr qint64 kBenchmarkRepairStagnationMs = 180000;
         auto repairBaselineFingerprint = std::make_shared<QString>();
         auto repairLastProgressMs = std::make_shared<qint64>(0);
+        auto repairReadOnlyToolCalls = std::make_shared<int>(0);
+        auto repairMutationToolSeen = std::make_shared<bool>(false);
         auto repairWatchdog = std::make_shared<QTimer *>(nullptr);
         auto workspaceFingerprint = [workspace]() {
             QStringList parts;
@@ -19571,14 +20384,41 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                 const QString rel = QDir(workspace).relativeFilePath(it.filePath());
                 if (isBenchmarkInternalPath(rel))
                     continue;
+                QFile file(it.filePath());
+                QByteArray contentHash;
+                if (file.open(QIODevice::ReadOnly))
+                    contentHash = QCryptographicHash::hash(file.readAll(),
+                                                           QCryptographicHash::Sha256)
+                                      .toHex();
+                // Do not use mtime here: a repair agent can rewrite the same
+                // bytes repeatedly, which is not progress and used to keep the
+                // benchmark stuck in an endless repair turn.
                 parts << QStringLiteral("%1:%2:%3")
                     .arg(rel)
                     .arg(it.fileInfo().size())
-                    .arg(it.fileInfo().lastModified().toMSecsSinceEpoch());
+                    .arg(QString::fromLatin1(contentHash));
             }
             parts.sort();
             return parts.join(QLatin1Char('|'));
         };
+        connect(agent, &IAgentBackend::agentLifecycleEvent, this,
+                [=](const QVariantMap &event) {
+                    if (*finished || *repairAttempts <= 0
+                            || event.value(QStringLiteral("event")).toString()
+                                   != QLatin1String("tool.request"))
+                        return;
+                    const QString tool = event.value(QStringLiteral("tool")).toString();
+                    if (benchmarkRepairToolMayMutateForTest(tool)) {
+                        *repairMutationToolSeen = true;
+                        return;
+                    }
+                    // ask_teacher es una coordinación, no una inspección;
+                    // no consume el presupuesto anti-loop de la reparación.
+                    if (!tool.trimmed().isEmpty()
+                            && tool.trimmed().compare(QStringLiteral("ask_teacher"),
+                                                      Qt::CaseInsensitive) != 0)
+                        ++(*repairReadOnlyToolCalls);
+                });
         auto peakRamMb = std::make_shared<double>(0.0);
         auto peakVramMb = std::make_shared<double>(0.0);
         auto peakVramGpu0Mb = std::make_shared<double>(0.0);
@@ -19902,10 +20742,16 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                     "La implementacion anterior fallo criterios de aceptacion. "
                     "No reinicies desde cero si no hace falta: inspecciona los archivos existentes, "
                     "corrige la causa concreta y vuelve a ejecutar/verificar los checks relevantes.\n\n"
+                    "PRIORIDAD DEL ARTEFACTO: para cada tarea fallida, el primer cambio debe ser sobre el "
+                    "`Archivo requerido` literal que aparece abajo. No uses list_dir, glob, grep, read_file "
+                    "ni rutas padre antes de escribirlo; trabaja solamente dentro del workspace y no crees "
+                    "nombres alternativos. Si el archivo falta, créalo directamente con write_file.\n\n"
                     "REGLA ANTI-BUCLE: tu primera accion debe ser una llamada de herramienta "
                     "write_file o edit_file sobre uno de los archivos fallidos. No respondas con "
                     "un plan, no repitas el analisis en el chat y no ejecutes mas de una inspeccion "
-                    "sin hacer una edicion verificable. Despues de editar, ejecuta el check local "
+                    "sin hacer una edicion verificable. No uses web_search, browser ni lecturas "
+                    "repetidas para una tarea cuyo workspace y checks ya estan incluidos abajo. "
+                    "Despues de editar, ejecuta el check local "
                     "correspondiente y conserva los archivos que ya pasan.\n\n"
                     "En tareas de codigo conserva exactamente la firma indicada en el preambulo y respeta el "
                     "archivo requerido para cada tarea. No sobrescribas soluciones anteriores ni crees archivos "
@@ -19933,6 +20779,8 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                 *lastActivityMs = *turnStartMs;
                 *repairBaselineFingerprint = workspaceFingerprint();
                 *repairLastProgressMs = *turnStartMs;
+                *repairReadOnlyToolCalls = 0;
+                *repairMutationToolSeen = false;
                 if (!*repairWatchdog) {
                     auto *watchdog = new QTimer(this);
                     watchdog->setInterval(5000);
@@ -19949,6 +20797,25 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                         // the safety limit for a genuinely stuck turn.
                         const bool workspaceChanged =
                             currentFingerprint != *repairBaselineFingerprint;
+                        if (benchmarkRepairInspectionLoopForTest(
+                                agent->isBusy(), workspaceChanged,
+                                *repairMutationToolSeen, *repairReadOnlyToolCalls)) {
+                            AgentEventLog::append(
+                                workspace, QString(), QStringLiteral("benchmark_repair_loop_guard"),
+                                QJsonObject{{QStringLiteral("readOnlyToolCalls"),
+                                             *repairReadOnlyToolCalls},
+                                            {QStringLiteral("reason"),
+                                             QStringLiteral("inspection-only tool loop without a file mutation")} });
+                            *passFailed = true;
+                            *failureMessage = QStringLiteral(
+                                "La reparación quedó en un ciclo de inspección sin editar archivos.");
+                            *failureDetail = QStringLiteral(
+                                "Se detuvo después de %1 llamadas de inspección sin una tool de escritura ni cambios en el workspace.")
+                                .arg(*repairReadOnlyToolCalls);
+                            agent->cancelGeneration();
+                            (*finalize)();
+                            return;
+                        }
                         if (!benchmarkRepairStagnationCheckForTest(
                                 agent->isBusy(), workspaceChanged)) {
                             if (workspaceChanged) {
@@ -19979,7 +20846,8 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                     });
                 }
                 (*repairWatchdog)->start();
-                lastStreamingText->clear();
+                *lastProgressMessageIndex = -1;
+                *lastGeneratedChars = -1;
                 // El log [turn] completed puede llegar antes de que el backend
                 // haya liberado todos sus flags internos (reply/tool/await).
                 // Enviar directamente aquí producía "Hay un turno en curso"
@@ -20203,7 +21071,7 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                                                   {QStringLiteral("total"), total},
                                                   {QStringLiteral("hardFailed"), hardFailed},
                                                   {QStringLiteral("fileCount"), files.size()}});
-                if (total > 0 && score == total && !hardFailed) {
+                if (allowEarlyAcceptance && total > 0 && score == total && !hardFailed) {
                     *earlyAccepted = true;
                     AgentEventLog::append(workspace, QString(),
                                           QStringLiteral("benchmark_early_accept"),
@@ -20259,7 +21127,8 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                 *firstPromptMs = *turnStartMs;
             *turnFirstMs = -1;
             *lastActivityMs = *turnStartMs;
-            lastStreamingText->clear();
+            *lastProgressMessageIndex = -1;
+            *lastGeneratedChars = -1;
             AgentEventLog::append(workspace, QString(),
                                   QStringLiteral("benchmark_prompt"),
                                   QJsonObject{{QStringLiteral("promptIndex"), currentPrompt},
@@ -20318,7 +21187,8 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                 *preToolCut = false;
                 *preToolChars = 0;
                 *toolSeen = false;
-                lastStreamingText->clear();
+                *lastProgressMessageIndex = -1;
+                *lastGeneratedChars = -1;
                 *turnStartMs = QDateTime::currentMSecsSinceEpoch();
                 *turnFirstMs = -1;
                 *turnCompletionHandled = false;
@@ -20337,8 +21207,17 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                 return;
             }
             if (m_benchmarkCanceled) { (*finalize)(); return; }
-            if (*promptIdx >= prompts.size()) (*finalize)();
-            else (*sendNext)();
+            if (*promptIdx >= prompts.size()) {
+                (*finalize)();
+            } else {
+                // turnFinished means que el backend ya liberó su reply y sus
+                // flags, pero el server puede todavía estar retirando el slot
+                // CUDA. Un cooldown corto evita encadenar la siguiente tarea
+                // en la misma ventana de destrucción del request.
+                QTimer::singleShot(250, this, [=]() {
+                    if (!*finished) (*sendNext)();
+                });
+            }
         };
 
         connect(agent, &IAgentBackend::streamingText, this, [=](int, const QString &content) {
@@ -20349,8 +21228,17 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             // protocol as pre-tool rambling while the XML call is streaming.
             if (content.contains(QStringLiteral("<tool_call"), Qt::CaseInsensitive))
                 *toolSeen = true;
+        });
+        connect(agent, &LlamaAgentBackend::generationProgress, this,
+                [=](int messageIndex, int generatedChars) {
             if (!*toolSeen && !*preToolCut) {
-                *preToolChars += benchmarkStreamingDeltaForTest(lastStreamingText.get(), content);
+                if (*lastProgressMessageIndex != messageIndex) {
+                    *lastProgressMessageIndex = messageIndex;
+                    *lastGeneratedChars = -1;
+                }
+                *preToolChars += benchmarkGeneratedCharsDeltaForTest(
+                    *lastGeneratedChars, generatedChars);
+                *lastGeneratedChars = generatedChars;
                 if (*preToolChars >= kBenchmarkPreToolOutputLimit) {
                     *preToolCut = true;
                     AgentEventLog::append(workspace, QString(),
@@ -20375,7 +21263,8 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                             *preToolCut = false;
                             *preToolChars = 0;
                             *toolSeen = false;
-                            lastStreamingText->clear();
+                            *lastProgressMessageIndex = -1;
+                            *lastGeneratedChars = -1;
                             *turnStartMs = QDateTime::currentMSecsSinceEpoch();
                             *turnFirstMs = -1;
                             AgentEventLog::append(workspace, QString(),
@@ -21175,7 +22064,7 @@ QString AppController::benchmarkServerLogTail(int maxBytes) const
 
 void AppController::decorateBenchmarkMemory(QVariantMap *result) const
 {
-    if (!result || m_benchmarkMemoryAttempt < 0 || m_benchmarkEffectiveArgs.isEmpty())
+    if (!result || m_benchmarkEffectiveArgs.isEmpty())
         return;
 
     int fitTarget = 0;
@@ -21186,12 +22075,13 @@ void AppController::decorateBenchmarkMemory(QVariantMap *result) const
         fitTarget = m_benchmarkEffectiveArgs.at(i + 1).toInt();
         break;
     }
-    (*result)[QStringLiteral("benchmarkMemoryAdaptive")] = true;
+    (*result)[QStringLiteral("benchmarkMemoryAdaptive")] = m_benchmarkMemoryAdaptive;
     (*result)[QStringLiteral("benchmarkMemoryAttempt")] = m_benchmarkMemoryAttempt;
     (*result)[QStringLiteral("benchmarkMemoryFitTargetMiB")] = fitTarget;
     (*result)[QStringLiteral("benchmarkEffectiveArgs")] = m_benchmarkEffectiveArgs;
-    (*result)[QStringLiteral("benchmarkMemoryPolicy")] =
-        QStringLiteral("adaptive-max-vram");
+    (*result)[QStringLiteral("benchmarkMemoryPolicy")] = m_benchmarkMemoryAdaptive
+        ? QStringLiteral("adaptive-max-vram")
+        : QStringLiteral("exact-profile");
 }
 
 void AppController::saveBenchmarkFailureResult(const QString &profileId, const QString &profileName,
@@ -22385,7 +23275,9 @@ QVector<TunableParam> buildTuneParams(bool hasDraft = false, bool cpuOnly = fals
         // que ahora exploramos 1024/2048: con flash-attn on suelen rendir más TPS sin
         // OOM. Los trials que igual no entren fallan/puntúan bajo y el TPE los descarta.
         {ParamSpec::categorical("ubatch", {"128", "256", "512", "1024", "2048"}), "-ub", false},
-        {ParamSpec::categorical("flash-attn", {"off", "on"}), "--flash-attn", true},
+        // Esta build acepta --flash-attn on|off|auto: no es un switch sin
+        // valor. Mantenerlo como parámetro de valor evita trials inválidos.
+        {ParamSpec::categorical("flash-attn", {"off", "on", "auto"}), "--flash-attn", false},
         {ParamSpec::categorical("cache-type-k", {"q8_0", "q4_0"}, true),
          "--cache-type-k", false},
         {ParamSpec::categorical("cache-type-v", {"q8_0", "q4_0"}, true),
@@ -22452,7 +23344,16 @@ QStringList stripFlags(const QStringList &args, const QSet<QString> &valueFlags,
     QStringList out;
     for (int i = 0; i < args.size(); ++i) {
         const QString &a = args[i];
-        if (switchFlags.contains(a)) continue;          // switch sin valor
+        if (switchFlags.contains(a)) {
+            // Los perfiles persistidos pueden venir del formato antiguo
+            // "--flash-attn on". Para un trial el flag se vuelve a emitir
+            // como switch; dejar "on" en baseArgs hace que llama-server lo
+            // interprete como argumento huérfano y aborta todos los trials.
+            if (i + 1 < args.size()
+                && TunerEngine::isBooleanSwitchValue(args.at(i + 1)))
+                ++i;
+            continue;
+        }
         if (valueFlags.contains(a)) { ++i; continue; }  // flag + valor → saltar ambos
         out << a;
     }
@@ -22561,14 +23462,13 @@ void AppController::startAutoTune(const QString &launchProfileId, int maxTrials,
         QStringLiteral("-ub"), QStringLiteral("--ubatch-size"),
         QStringLiteral("--cache-type-k"), QStringLiteral("-ctk"),
         QStringLiteral("--cache-type-v"), QStringLiteral("-ctv"),
+        QStringLiteral("--flash-attn"), QStringLiteral("-fa"),
         QStringLiteral("--spec-draft-n-max"),
         QStringLiteral("--spec-draft-conf-min"),
         QStringLiteral("--n-cpu-moe"),
         QStringLiteral("--split-mode"),
     };
-    const QSet<QString> switchFlags = {
-        QStringLiteral("--flash-attn"), QStringLiteral("-fa"),
-    };
+    const QSet<QString> switchFlags = {};
     const QStringList baseArgs = stripFlags(effArgs, valueFlags, switchFlags);
 
     TunerJob job;
@@ -22693,11 +23593,25 @@ void AppController::onAutoTuneFinished(bool ok, const QStringList &bestArgs,
         const LaunchProfile src = m_profiles.resolveLaunch(m_autoTuneLaunchId);
         const QString srcDisplay = src.alias.isEmpty() ? src.name : src.alias;
 
-        // addLaunchProfile ya quita el prefijo "N_" y asigna uno nuevo.
+        // Duplicar a través de AppController, y no con addLaunchProfile directo:
+        // los perfiles bundled de sistema resuelven binario/modelo dinámicamente.
+        // Si AutoTune crea una copia apuntando a los mismos IDs de sistema, la
+        // copia queda marcada como user y pierde esa resolución ("No binary
+        // selected" / "No model selected") justo al intentar validarla.
+        // duplicateLaunchProfile hornea los artefactos efectivamente resueltos
+        // y conserva la configuración reproducible de la variante optimizada.
         const QString newName = optimizedProfileName(src.name);
-        const QString newId = m_profiles.addLaunchProfile(
-            newName,
-            src.backendProfileId, src.modelProfileId, src.runtimePresetId);
+        const QString newId = duplicateLaunchProfile(m_autoTuneLaunchId);
+        if (newId.isEmpty()) {
+            m_autoTuneStatus = QStringLiteral(
+                "Auto-tune encontró una config, pero no pudo crear el perfil reproducible.");
+            m_autoTuneResult.clear();
+            m_autoTuneResult[QStringLiteral("ok")] = false;
+            m_autoTuneResult[QStringLiteral("sourceProfileId")] = m_autoTuneLaunchId;
+            emit autoTuneChanged();
+            emit autoTuneFinished(false, QString(), 0.0, 0.0, QString());
+            return;
+        }
         createdId = newId;
         createdName = newName;
 
@@ -22708,13 +23622,12 @@ void AppController::onAutoTuneFinished(bool ok, const QStringList &bestArgs,
             QStringLiteral("-ub"), QStringLiteral("--ubatch-size"),
             QStringLiteral("--cache-type-k"), QStringLiteral("-ctk"),
             QStringLiteral("--cache-type-v"), QStringLiteral("-ctv"),
+            QStringLiteral("--flash-attn"), QStringLiteral("-fa"),
             QStringLiteral("--spec-draft-n-max"),
             QStringLiteral("--spec-draft-conf-min"),
             QStringLiteral("--split-mode"),
         };
-        const QSet<QString> switchFlags = {
-            QStringLiteral("--flash-attn"), QStringLiteral("-fa"),
-        };
+        const QSet<QString> switchFlags = {};
         QStringList extra = stripFlags(src.extraArgs, valueFlags, switchFlags);
         extra += bestArgs;
 

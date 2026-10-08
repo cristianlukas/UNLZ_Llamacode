@@ -15,6 +15,22 @@ static QJsonObject mapToJson(const QMap<QString, QString> &m) {
         obj[it.key()] = it.value();
     return obj;
 }
+static QMap<QString, QStringList> platformArgsFromJson(const QJsonObject &obj) {
+    QMap<QString, QStringList> m;
+    for (auto it = obj.begin(); it != obj.end(); ++it) {
+        QStringList args;
+        for (const QJsonValue &value : it.value().toArray())
+            args.append(value.toString());
+        m.insert(it.key(), args);
+    }
+    return m;
+}
+static QJsonObject platformArgsToJson(const QMap<QString, QStringList> &m) {
+    QJsonObject obj;
+    for (auto it = m.begin(); it != m.end(); ++it)
+        obj[it.key()] = QJsonArray::fromStringList(it.value());
+    return obj;
+}
 static QString newId() { return QUuid::createUuid().toString(QUuid::WithoutBraces); }
 
 // ---- BackendProfile ----
@@ -29,6 +45,7 @@ QJsonObject BackendProfile::toJson() const {
     o["cloudKeyRef"] = cloudKeyRef;   // sólo el nombre de la ref, nunca el secreto
     o["cloudModel"] = cloudModel;
     o["cloudCtx"] = cloudCtx;
+    if (!managedServer.isEmpty()) o["managedServer"] = managedServer;
     return o;
 }
 BackendProfile BackendProfile::fromJson(const QJsonObject &o) {
@@ -45,6 +62,7 @@ BackendProfile BackendProfile::fromJson(const QJsonObject &o) {
     p.cloudKeyRef = o["cloudKeyRef"].toString();
     p.cloudModel = o["cloudModel"].toString();
     p.cloudCtx = o["cloudCtx"].toInt(0);
+    p.managedServer = o["managedServer"].toObject();
     return p;
 }
 QString BackendProfile::generateId() { return newId(); }
@@ -659,8 +677,10 @@ QJsonObject LaunchProfile::toJson() const {
     QJsonObject o;
     o["id"] = id; o["name"] = name;
     o["alias"] = alias; o["best"] = best; o["favorite"] = favorite; o["benchmark"] = benchmark;
+    o["benchmarkMemoryAdaptive"] = benchmarkMemoryAdaptive;
     o["tags"] = QJsonArray::fromStringList(tags);
     o["lastUsed"] = static_cast<double>(lastUsed);
+    o["menuOrder"] = menuOrder;
     o["systemBadge"] = systemBadge;
     o["deprecated"] = deprecated;
     o["backendProfileId"] = backendProfileId;
@@ -672,6 +692,10 @@ QJsonObject LaunchProfile::toJson() const {
     o["reasoningEffort"] = reasoningEffort;
     o["reasoningBudget"] = reasoningBudget;
     o["extraArgs"] = QJsonArray::fromStringList(extraArgs);
+    o["chatTemplate"] = chatTemplate;
+    o["platformArgs"] = platformArgsToJson(platformArgs);
+    o["platformBackendIds"] = mapToJson(platformBackendIds);
+    o["platformModelProfileIds"] = mapToJson(platformModelProfileIds);
     o["envOverrides"] = mapToJson(envOverrides);
     o["master"] = master.toJson();
     o["plannerProfileId"] = plannerProfileId;
@@ -690,7 +714,9 @@ LaunchProfile LaunchProfile::fromJson(const QJsonObject &o) {
     for (const QJsonValue &v : o["tags"].toArray())
         if (v.isString() && !v.toString().trimmed().isEmpty()) p.tags.append(v.toString().trimmed());
     p.lastUsed = static_cast<qint64>(o["lastUsed"].toDouble(0));
+    p.menuOrder = qMax(0, o["menuOrder"].toInt(0));
     p.benchmark = o["benchmark"].toBool(false);
+    p.benchmarkMemoryAdaptive = o["benchmarkMemoryAdaptive"].toBool(true);
     p.systemBadge = o["systemBadge"].toBool(false);
     p.deprecated = o["deprecated"].toBool(false);
     p.backendProfileId = o["backendProfileId"].toString();
@@ -713,6 +739,10 @@ LaunchProfile LaunchProfile::fromJson(const QJsonObject &o) {
         p.reasoningEffort.clear();
     p.reasoningBudget = qMax(-1, o["reasoningBudget"].toInt(-1));
     for (const auto &v : o["extraArgs"].toArray()) p.extraArgs.append(v.toString());
+    p.chatTemplate = o["chatTemplate"].toString().trimmed();
+    p.platformArgs = platformArgsFromJson(o["platformArgs"].toObject());
+    p.platformBackendIds = mapFromJson(o["platformBackendIds"].toObject());
+    p.platformModelProfileIds = mapFromJson(o["platformModelProfileIds"].toObject());
     p.envOverrides = mapFromJson(o["envOverrides"].toObject());
     p.master = MasterConfig::fromJson(o["master"].toObject());
     p.plannerProfileId = o["plannerProfileId"].toString();

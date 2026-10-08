@@ -176,6 +176,7 @@ private:
     bool m_skillPolicyDeclared = false;
     QHash<QString, QList<qint64>> m_webRequestTimes; // rate limit por host, ventana 60 s
     DesktopComputerUse::SessionLease m_desktopLease;
+    DesktopComputerUse::ProcessSessionGuard m_desktopProcessGuard;
     QString m_teacherUrl, m_teacherModel, m_teacherKey;   // ask_teacher (override de env)
     // Maestro CLI (claude-code / codex). m_masterKind: "none"|"http"|"cli".
     QString m_masterKind = QStringLiteral("none");

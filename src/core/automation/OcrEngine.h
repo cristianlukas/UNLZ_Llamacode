@@ -6,21 +6,19 @@
 #include <QList>
 #include <QString>
 
-// OCR local vía Windows.Media.Ocr (WinRT), el motor que ya trae Windows 10/11.
+// OCR local vía Windows.Media.Ocr (WinRT) en Windows o Tesseract en Linux.
 //
-// Por qué éste y no easyocr/tesseract: no agrega NINGUNA dependencia (ni torch,
-// ni modelos que descargar, ni un runtime Python), corre en CPU, y los paquetes
-// de idioma son los que el usuario ya tiene instalados en el sistema. Para leer
-// labels de UI —texto corto, nítido, renderizado— alcanza y sobra; no estamos
-// haciendo OCR de fotos.
+// En Windows no agrega dependencias: usa el motor y los idiomas del sistema. En
+// Linux Tesseract es una dependencia pequeña del sistema y también corre en CPU;
+// sólo se usa para labels de UI, no como OCR fotográfico.
 //
 // Es un ÚLTIMO RECURSO dentro de la automatización: UIA (desktop_controls) ve el
 // árbol real de controles y siempre es preferible. Esto es para donde UIA es
 // ciego.
 namespace OcrEngine {
 
-// ¿Hay un motor OCR utilizable? False si Windows no tiene ningún paquete de
-// idioma OCR instalado (o no es Windows). Barato: cachea el resultado.
+// ¿Hay un motor OCR utilizable? Depende de que Windows tenga un idioma instalado
+// o de que Linux tenga tesseract-ocr y spa/eng. Barato: cachea el resultado.
 bool available();
 
 // Idioma que se va a usar (BCP-47, ej "es-MX"), o "" si no hay motor. Para

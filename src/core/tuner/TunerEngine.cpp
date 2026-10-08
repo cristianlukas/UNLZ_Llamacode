@@ -42,6 +42,19 @@ QStringList TunerEngine::composeArgs(const QStringList &baseArgs,
     return args;
 }
 
+bool TunerEngine::isBooleanSwitchValue(const QString &value)
+{
+    const QString normalized = value.trimmed().toLower();
+    return normalized == QStringLiteral("on")
+        || normalized == QStringLiteral("off")
+        || normalized == QStringLiteral("true")
+        || normalized == QStringLiteral("false")
+        || normalized == QStringLiteral("yes")
+        || normalized == QStringLiteral("no")
+        || normalized == QStringLiteral("1")
+        || normalized == QStringLiteral("0");
+}
+
 QStringList TunerEngine::tunedArgs(const QVector<TunableParam> &params,
                                    const tuner::Config &config)
 {
@@ -270,8 +283,11 @@ QStringList TunerEngine::perplexityArgs(const TunerJob &job, const tuner::Config
                         {QStringLiteral("--cache-type-k"), QStringLiteral("-ctk")});
         appendIfPresent(args, tuned, QStringLiteral("-ctv"),
                         {QStringLiteral("--cache-type-v"), QStringLiteral("-ctv")});
-        if (tuned.contains(QStringLiteral("--flash-attn")) || tuned.contains(QStringLiteral("-fa")))
-            args << QStringLiteral("-fa");
+        const int flash = tuned.indexOf(QStringLiteral("--flash-attn"));
+        const int flashAlias = tuned.indexOf(QStringLiteral("-fa"));
+        const int flashIndex = flash >= 0 ? flash : flashAlias;
+        if (flashIndex >= 0 && flashIndex + 1 < tuned.size())
+            args << QStringLiteral("-fa") << tuned.at(flashIndex + 1);
     }
     return args;
 }

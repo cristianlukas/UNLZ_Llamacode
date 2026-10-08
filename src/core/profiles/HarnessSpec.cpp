@@ -176,6 +176,7 @@ QJsonObject HarnessPromptModule::toJson() const
     o[QStringLiteral("custom")] = fromStringList(custom);
     o[QStringLiteral("systemExtra")] = systemExtra;
     o[QStringLiteral("maxChars")] = maxChars;
+    o[QStringLiteral("computerUseSandwich")] = computerUseSandwich;
     return o;
 }
 
@@ -187,6 +188,7 @@ HarnessPromptModule HarnessPromptModule::fromJson(const QJsonObject &o)
     m.custom = toStringList(o.value(QStringLiteral("custom")));
     m.systemExtra = o.value(QStringLiteral("systemExtra")).toString();
     m.maxChars = boundedInt(o, "maxChars", 24000, 1000, 400000);
+    m.computerUseSandwich = o.value(QStringLiteral("computerUseSandwich")).toBool(false);
     return m;
 }
 
@@ -301,6 +303,8 @@ QJsonObject HarnessEscalationModule::toJson() const
 {
     QJsonObject o;
     o[QStringLiteral("maxParallelSubagents")] = maxParallelSubagents;
+    o[QStringLiteral("subagentsEnabled")] = subagentsEnabled;
+    o[QStringLiteral("subagentContextTokens")] = subagentContextTokens;
     o[QStringLiteral("isolateSubagents")] = isolateSubagents;
     o[QStringLiteral("masterEscalation")] = masterEscalation;
     o[QStringLiteral("masterAutoAfterFails")] = masterAutoAfterFails;
@@ -318,6 +322,8 @@ HarnessEscalationModule HarnessEscalationModule::fromJson(const QJsonObject &o)
     HarnessEscalationModule m;
     m.set = true;
     m.maxParallelSubagents = boundedInt(o, "maxParallelSubagents", 5, 1, 5);
+    m.subagentsEnabled = o.value(QStringLiteral("subagentsEnabled")).toBool(true);
+    m.subagentContextTokens = boundedInt(o, "subagentContextTokens", 0, 0, 1048576);
     m.isolateSubagents = o.value(QStringLiteral("isolateSubagents")).toBool(true);
     m.masterEscalation = o.value(QStringLiteral("masterEscalation")).toString();
     m.masterAutoAfterFails = boundedInt(o, "masterAutoAfterFails", 0, 0, 100);
@@ -589,6 +595,8 @@ QVariantList HarnessSpec::diff(const HarnessSpec &base) const
     addDiff(out, "prompt", "custom", base.prompt.custom, prompt.custom);
     addDiff(out, "prompt", "systemExtra", base.prompt.systemExtra, prompt.systemExtra);
     addDiff(out, "prompt", "maxChars", base.prompt.maxChars, prompt.maxChars);
+    addDiff(out, "prompt", "computerUseSandwich", base.prompt.computerUseSandwich,
+            prompt.computerUseSandwich);
 
     addDiff(out, "loop", "credits", base.loop.credits, loop.credits);
     addDiff(out, "loop", "maxCredits", base.loop.maxCredits, loop.maxCredits);
@@ -630,6 +638,10 @@ QVariantList HarnessSpec::diff(const HarnessSpec &base) const
 
     addDiff(out, "escalation", "maxParallelSubagents", base.escalation.maxParallelSubagents,
             escalation.maxParallelSubagents);
+    addDiff(out, "escalation", "subagentsEnabled", base.escalation.subagentsEnabled,
+            escalation.subagentsEnabled);
+    addDiff(out, "escalation", "subagentContextTokens", base.escalation.subagentContextTokens,
+            escalation.subagentContextTokens);
     addDiff(out, "escalation", "isolateSubagents", base.escalation.isolateSubagents,
             escalation.isolateSubagents);
     addDiff(out, "escalation", "masterEscalation", base.escalation.masterEscalation,

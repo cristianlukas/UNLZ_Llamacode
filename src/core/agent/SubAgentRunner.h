@@ -34,6 +34,17 @@ public:
     // para que difiera la acción al agente principal. ON por defecto; lo propaga el
     // agente principal desde su propio m_hitlDestructive. Sin efecto en modo super.
     void setHitlDestructive(bool on) { m_hitlDestructive = on; }
+    // Hereda la política del agente principal. Sin esto los sub-agentes quedaban
+    // a merced del default del servidor (habitualmente xhigh/unlimited).
+    void setReasoningPolicy(const QString &effort, int budget);
+    void setMaxOutputTokens(int tokens) { m_maxOutputTokens = qBound(256, tokens, 32768); }
+    static QJsonObject buildCompletionPayload(const QJsonArray &messages,
+                                               const QJsonArray &tools,
+                                               const QString &modelId,
+                                               double temperature,
+                                               const QString &reasoningEffort,
+                                               int reasoningBudget,
+                                               int maxOutputTokens = 32768);
     // Política de ramas de revisión/verificación. Una rama read-only sólo
     // recibe tools de lectura; allowShell agrega la excepción necesaria para
     // ejecutar tests, siempre dentro del cwd confinado.
@@ -71,6 +82,9 @@ private:
     QString m_taskPrompt;
     double  m_temperature = -1.0;
     bool    m_honey = false;
+    QString m_reasoningEffort;
+    int     m_reasoningBudget = -1;
+    int     m_maxOutputTokens = 32768;
     bool    m_hitlDestructive = true;   // guardrail: rechazar destructivas (headless)
     bool    m_readOnly = false;
     bool    m_readOnlyShell = false;

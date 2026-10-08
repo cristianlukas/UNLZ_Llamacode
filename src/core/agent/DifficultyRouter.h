@@ -34,7 +34,8 @@ public:
         double confidenceFloor = 0.3;  // confianza mínima antes de escalar
     };
 
-    explicit DifficultyRouter(const Thresholds &thresholds = Thresholds());
+    DifficultyRouter();
+    explicit DifficultyRouter(const Thresholds &thresholds);
 
     // Evalúa el estado actual del agente y devuelve el nivel de dificultad.
     // El QVariantMap debe contener:

@@ -46,6 +46,88 @@ bool isCuratedBestName(const LaunchProfile &profile)
         || (key.contains(QStringLiteral("141_"))
             && key.contains(QStringLiteral("fusion leloch")));
 }
+
+// The shared profile files are intentionally stored in Windows-canonical form
+// because Windows already uses this checkout as its source of truth.  Linux
+// translates only path-looking values while loading and translates them back
+// before saving, so a profile can be edited on either OS without rewriting the
+// other OS's paths into the shared JSON.
+bool sharedPortableConfigEnabled()
+{
+#ifndef Q_OS_WIN
+    return !qgetenv("LLAMACODE_SHARED_PORTABLE_CONFIG").isEmpty();
+#else
+    return false;
+#endif
+}
+
+QString sharedDriveRoot(char drive)
+{
+#ifndef Q_OS_WIN
+    const QByteArray name = QByteArray("LLAMACODE_WINDOWS_")
+                            + QByteArray(1, drive) + QByteArray("_ROOT");
+    return QString::fromLocal8Bit(qgetenv(name.constData())).trimmed();
+#else
+    Q_UNUSED(drive);
+    return {};
+#endif
+}
+
+QString replaceCaseInsensitive(QString value, const QString &from, const QString &to)
+{
+    if (from.isEmpty()) return value;
+    int pos = 0;
+    while ((pos = value.indexOf(from, pos, Qt::CaseInsensitive)) >= 0) {
+        value.replace(pos, from.size(), to);
+        pos += to.size();
+    }
+    return value;
+}
+
+QString portableString(QString value, bool toRuntime)
+{
+    if (!sharedPortableConfigEnabled()) return value;
+
+    const QString cRoot = sharedDriveRoot('C');
+    const QString dRoot = sharedDriveRoot('D');
+    if (cRoot.isEmpty() && dRoot.isEmpty()) return value;
+
+    if (toRuntime) {
+        const bool hasWindowsDrive = value.contains(QStringLiteral("C:/"), Qt::CaseInsensitive)
+                                  || value.contains(QStringLiteral("C:\\"), Qt::CaseInsensitive)
+                                  || value.contains(QStringLiteral("D:/"), Qt::CaseInsensitive)
+                                  || value.contains(QStringLiteral("D:\\"), Qt::CaseInsensitive);
+        if (!hasWindowsDrive) return value;
+        value.replace('\\', '/');
+        value = replaceCaseInsensitive(value, QStringLiteral("C:/Users/cristian"), cRoot);
+        value = replaceCaseInsensitive(value, QStringLiteral("D:/"), dRoot.isEmpty() ? QStringLiteral("D:/")
+                                                                                         : dRoot + QLatin1Char('/'));
+        return value;
+    }
+
+    value = replaceCaseInsensitive(value, cRoot, QStringLiteral("C:/Users/cristian"));
+    value = replaceCaseInsensitive(value, dRoot, QStringLiteral("D:/"));
+    return value;
+}
+
+QJsonValue portableJson(const QJsonValue &value, bool toRuntime)
+{
+    if (value.isString()) return portableString(value.toString(), toRuntime);
+    if (value.isArray()) {
+        QJsonArray out;
+        for (const QJsonValue &item : value.toArray())
+            out.append(portableJson(item, toRuntime));
+        return out;
+    }
+    if (value.isObject()) {
+        QJsonObject out;
+        const QJsonObject object = value.toObject();
+        for (auto it = object.begin(); it != object.end(); ++it)
+            out.insert(it.key(), portableJson(it.value(), toRuntime));
+        return out;
+    }
+    return value;
+}
 }
 
 ProfileManager::ProfileManager(QObject *parent) : QObject(parent)
@@ -187,7 +269,7 @@ QVariantMap ProfileManager::getBackend(const QString &id) const
             {"host", p.host}, {"port", p.port}, {"baseArgs", p.baseArgs},
             {"kind", p.kind}, {"cloudBaseUrl", p.cloudBaseUrl},
             {"cloudKeyRef", p.cloudKeyRef}, {"cloudModel", p.cloudModel},
-            {"cloudCtx", p.cloudCtx}};
+            {"cloudCtx", p.cloudCtx}, {"managedServer", p.managedServer.toVariantMap()}};
 }
 
 bool ProfileManager::setBackendCloud(const QString &id, const QString &kind,
@@ -463,11 +545,18 @@ bool ProfileManager::updateLaunchProfile(const QVariantMap &data)
                 p.tags.append(clean);
         }
     }
+    if (data.contains("menuOrder")) p.menuOrder = qMax(0, data.value("menuOrder").toInt());
     if (data.contains("best"))     p.best = data.value("best").toBool();
     if (data.contains("favorite")) p.favorite = data.value("favorite").toBool();
     if (data.contains("benchmark")) p.benchmark = data.value("benchmark").toBool();
+    if (data.contains("benchmarkMemoryAdaptive"))
+        p.benchmarkMemoryAdaptive = data.value("benchmarkMemoryAdaptive").toBool();
     if (data.contains("systemBadge")) p.systemBadge = data.value("systemBadge").toBool();
     if (data.contains("deprecated")) p.deprecated = data.value("deprecated").toBool();
+    if (data.contains("reasoningEffort"))
+        p.reasoningEffort = data.value("reasoningEffort").toString();
+    if (data.contains("reasoningBudget"))
+        p.reasoningBudget = qMax(-1, data.value("reasoningBudget").toInt());
     p.backendProfileId = data.value("backendProfileId", p.backendProfileId).toString();
     p.modelProfileId = data.value("modelProfileId", p.modelProfileId).toString();
     p.runtimePresetId = data.value("runtimePresetId", p.runtimePresetId).toString();
@@ -478,6 +567,24 @@ bool ProfileManager::updateLaunchProfile(const QVariantMap &data)
     p.hybridMode = data.value("hybridMode", p.hybridMode).toString();
     if (p.plannerProfileId.isEmpty()) p.hybridMode = QStringLiteral("off");
     p.extraArgs = data.value("extraArgs", p.extraArgs).toStringList();
+    if (data.contains("platformArgs")) {
+        p.platformArgs.clear();
+        const QVariantMap platforms = data.value("platformArgs").toMap();
+        for (auto it = platforms.cbegin(); it != platforms.cend(); ++it)
+            p.platformArgs.insert(it.key(), it.value().toStringList());
+    }
+    if (data.contains("platformBackendIds")) {
+        p.platformBackendIds.clear();
+        const QVariantMap backends = data.value("platformBackendIds").toMap();
+        for (auto it = backends.cbegin(); it != backends.cend(); ++it)
+            p.platformBackendIds.insert(it.key(), it.value().toString());
+    }
+    if (data.contains("platformModelProfileIds")) {
+        p.platformModelProfileIds.clear();
+        const QVariantMap models = data.value("platformModelProfileIds").toMap();
+        for (auto it = models.cbegin(); it != models.cend(); ++it)
+            p.platformModelProfileIds.insert(it.key(), it.value().toString());
+    }
     if (data.contains("envOverrides")) {
         p.envOverrides.clear();
         const QVariantMap env = data.value("envOverrides").toMap();
@@ -534,6 +641,14 @@ static QVariantMap masterToVariant(const MasterConfig &mc)
         {"autoAfterFails", mc.autoAfterFails}};
 }
 
+static QVariantMap platformArgsToVariant(const QMap<QString, QStringList> &platformArgs)
+{
+    QVariantMap out;
+    for (auto it = platformArgs.cbegin(); it != platformArgs.cend(); ++it)
+        out.insert(it.key(), it.value());
+    return out;
+}
+
 QVariantMap ProfileManager::getLaunchProfile(const QString &id) const
 {
     const auto p = m_launches.findById(id);
@@ -543,7 +658,9 @@ QVariantMap ProfileManager::getLaunchProfile(const QString &id) const
         : QStringLiteral("%1 - %2").arg(p.alias, p.name);
     return {{"id", p.id}, {"name", p.name},
             {"alias", p.alias}, {"best", p.best}, {"favorite", p.favorite}, {"benchmark", p.benchmark},
+            {"benchmarkMemoryAdaptive", p.benchmarkMemoryAdaptive},
             {"tags", p.tags}, {"lastUsed", p.lastUsed},
+            {"menuOrder", p.menuOrder},
             {"deprecated", p.deprecated}, {"systemBadge", p.systemBadge},
             {"system", p.system},
             {"displayName", displayName},
@@ -558,6 +675,9 @@ QVariantMap ProfileManager::getLaunchProfile(const QString &id) const
             {"plannerProfileId", p.plannerProfileId},
             {"hybridMode", p.hybridMode},
             {"extraArgs", p.extraArgs},
+            {"platformArgs", platformArgsToVariant(p.platformArgs)},
+            {"platformBackendIds", QVariant::fromValue(p.platformBackendIds)},
+            {"platformModelProfileIds", QVariant::fromValue(p.platformModelProfileIds)},
             // El env llega al server via EffectiveProfileBuilder, pero sin esto la UI
             // y el headless no pueden verlo: hay perfiles que dependen de una env var
             // para no crashear (GGML_CUDA_DISABLE_GRAPHS en el de 393k).
@@ -635,6 +755,11 @@ QVariantList ProfileManager::launchProfilesForMenu() const
     QList<LaunchProfile> items = m_launches.m_items;
     std::stable_sort(items.begin(), items.end(),
         [](const LaunchProfile &a, const LaunchProfile &b) {
+            if (a.menuOrder != b.menuOrder) {
+                if (a.menuOrder == 0) return false;
+                if (b.menuOrder == 0) return true;
+                return a.menuOrder < b.menuOrder;
+            }
             if (a.best != b.best) return a.best;                 // BEST arriba
             if (a.favorite != b.favorite) return a.favorite;     // favoritos arriba
             if (a.lastUsed != b.lastUsed) return a.lastUsed > b.lastUsed;
@@ -656,6 +781,7 @@ QVariantList ProfileManager::launchProfilesForMenu() const
             {"id", p.id}, {"name", p.name}, {"alias", p.alias},
             {"best", p.best}, {"favorite", p.favorite}, {"benchmark", p.benchmark},
             {"tags", p.tags}, {"lastUsed", p.lastUsed},
+            {"menuOrder", p.menuOrder},
             {"deprecated", p.deprecated}, {"systemBadge", p.systemBadge},
             {"system", p.system},
             // displayName lleva el marcador (⚙ sistema / ★ favorito) para verlo en
@@ -671,6 +797,11 @@ QVariantList ProfileManager::launchProfilesForProfilesPage(const QString &query)
     const QString needle = query.trimmed().toCaseFolded();
     std::stable_sort(items.begin(), items.end(),
         [](const LaunchProfile &a, const LaunchProfile &b) {
+            if (a.menuOrder != b.menuOrder) {
+                if (a.menuOrder == 0) return false;
+                if (b.menuOrder == 0) return true;
+                return a.menuOrder < b.menuOrder;
+            }
             if (a.best != b.best) return a.best;
             if (a.favorite != b.favorite) return a.favorite;
             if (a.lastUsed != b.lastUsed) return a.lastUsed > b.lastUsed;
@@ -698,6 +829,7 @@ QVariantList ProfileManager::launchProfilesForProfilesPage(const QString &query)
             {"id", p.id}, {"name", p.name}, {"alias", p.alias},
             {"best", p.best}, {"favorite", p.favorite}, {"benchmark", p.benchmark},
             {"tags", p.tags}, {"lastUsed", p.lastUsed},
+            {"menuOrder", p.menuOrder},
             {"deprecated", p.deprecated}, {"systemBadge", p.systemBadge},
             {"system", p.system},
             {"displayName", mark + base}});
@@ -1517,6 +1649,26 @@ void ProfileManager::loadSystemProfiles()
             sysModel.append(mp);
         }
 
+        // Un perfil bundled puede necesitar otro artefacto según la plataforma
+        // o la versión del backend. Mantener modelos alternativos evita cambiar
+        // silenciosamente el fichero de Windows al reparar una ruta Linux.
+        QMap<QString, QString> platformModelIds;
+        const QJsonObject platformModelFiles =
+            o.value(QStringLiteral("platformModelFiles")).toObject();
+        for (auto it = platformModelFiles.begin(); it != platformModelFiles.end(); ++it) {
+            const QString platform = it.key().trimmed();
+            const QString platformFile = it.value().toString().trimmed();
+            if (platform.isEmpty() || platformFile.isEmpty() || cloudBackend)
+                continue;
+            const QString platformPath = modelsDir + "/" + subdir + platformFile;
+            ModelProfile platformModel = mp;
+            platformModel.id = mp.id + QStringLiteral("-") + platform;
+            platformModel.name = mp.name + QStringLiteral(" · ") + platform;
+            platformModel.modelId = detId(platformPath);
+            sysModel.append(platformModel);
+            platformModelIds.insert(platform, platformModel.id);
+        }
+
         BackendProfile be;
         be.id = QStringLiteral("sysbe-") + id; be.system = true;
         be.name = o.value("displayName").toString() + QStringLiteral(" · backend");
@@ -1540,12 +1692,14 @@ void ProfileManager::loadSystemProfiles()
                                                 .toString()).trimmed();
             be.cloudCtx = backendConfig.value(QStringLiteral("ctx")).toInt(
                 ro.value(QStringLiteral("ctx")).toInt(0));
+            be.managedServer = backendConfig.value(QStringLiteral("managedServer")).toObject();
         }
         sysBe.append(be);
 
         LaunchProfile lp;
         lp.id = id; lp.system = true;
         lp.name = o.value("displayName").toString();
+        lp.menuOrder = qMax(0, o.value(QStringLiteral("menuOrder")).toInt(0));
         // Sólo los perfiles base para usuarios nuevos llevan el distintivo
         // visual de sistema. `system` sigue siendo la bandera interna de
         // inmutabilidad para todos los perfiles bundled.
@@ -1559,16 +1713,42 @@ void ProfileManager::loadSystemProfiles()
             QStringLiteral("sys-vram-2-gemma"), QStringLiteral("sys-vram-0")
         };
         lp.systemBadge = baseSystemIds.contains(id);
-        // Alias = solo la VRAM (ej "12GB"), sin sufijos MoE/Gemma/Qwen.
-        lp.alias = QString::number(o.value("minVramGb").toInt()) + QStringLiteral("GB");
+        // Alias operativo explícito (incluidas variantes de benchmark); si no
+        // existe, conservar el fallback histórico de VRAM (ej. "12GB").
+        lp.alias = o.value(QStringLiteral("alias")).toString().trimmed();
+        if (lp.alias.isEmpty())
+            lp.alias = QString::number(o.value("minVramGb").toInt()) + QStringLiteral("GB");
         // Las insignias pertenecen al catalogo: asi un perfil medido puede marcarse
         // sin recompilar esta clase ni propagar el estado a variantes hermanas.
         lp.favorite = o.value(QStringLiteral("favorite")).toBool(false);
         lp.best = o.value(QStringLiteral("best")).toBool(false);
         lp.benchmark = o.value(QStringLiteral("benchmark")).toBool(false);
+        lp.benchmarkMemoryAdaptive =
+            o.value(QStringLiteral("benchmarkMemoryAdaptive")).toBool(true);
         lp.backendProfileId = be.id;
         lp.modelProfileId = cloudBackend ? QString() : mp.id;
         lp.runtimePresetId = cloudBackend ? QString() : rt.id;
+        lp.platformModelProfileIds = platformModelIds;
+        const QJsonObject platformArgs =
+            o.value(QStringLiteral("platformArgs")).toObject();
+        for (auto it = platformArgs.begin(); it != platformArgs.end(); ++it) {
+            QStringList values;
+            if (it.value().isArray()) {
+                for (const QJsonValue &arg : it.value().toArray())
+                    values.append(arg.toString());
+            } else if (it.value().isString()) {
+                values = it.value().toString().split(u' ', Qt::SkipEmptyParts);
+            }
+            if (!values.isEmpty())
+                lp.platformArgs.insert(it.key(), values);
+        }
+        const QJsonObject platformBackendIds =
+            o.value(QStringLiteral("platformBackendIds")).toObject();
+        for (auto it = platformBackendIds.begin(); it != platformBackendIds.end(); ++it) {
+            const QString value = it.value().toString().trimmed();
+            if (!value.isEmpty())
+                lp.platformBackendIds.insert(it.key(), value);
+        }
         lp.agentProfileId = o.value(QStringLiteral("agentProfileId")).toString();
         lp.reasoningEffort = o.value(QStringLiteral("reasoningEffort"))
                                  .toString().trimmed().toLower();
@@ -1660,6 +1840,7 @@ QString ProfileManager::duplicateLaunchProfile(const QString &id)
         lp.systemBadge = false;
     lp.favorite = false;
     lp.best = false;
+    lp.menuOrder = 0;
     lp.deprecated = false;
     if (!src.backendProfileId.isEmpty()) lp.backendProfileId = be.id;
     if (!src.modelProfileId.isEmpty()) lp.modelProfileId = mp.id;
@@ -1694,8 +1875,10 @@ void ProfileManager::load()
         }
         const QJsonArray arr = QJsonDocument::fromJson(f.readAll()).array();
         QList<std::decay_t<decltype(model.m_items[0])>> items;
-        for (const auto &v : arr)
-            items.append(fromJsonFn(v.toObject()));
+        for (const auto &v : arr) {
+            const QJsonValue runtimeValue = portableJson(v, true);
+            items.append(fromJsonFn(runtimeValue.toObject()));
+        }
         model.setItems(items);
     };
 
@@ -1771,7 +1954,10 @@ void ProfileManager::save() const
         }
 
         QJsonArray arr;
-        for (const auto &item : items) arr.append(item.toJson());
+        for (const auto &item : items) {
+            const QJsonValue stored = portableJson(item.toJson(), false);
+            arr.append(stored);
+        }
         const QByteArray data = QJsonDocument(arr).toJson();
         QDir().mkpath(QFileInfo(path).absolutePath());
 
@@ -1851,7 +2037,7 @@ void ProfileManager::save() const
                 QJsonObject row{{QStringLiteral("timestamp"), now},
                                 {QStringLiteral("entity"), entity},
                                 {QStringLiteral("id"), item.id},
-                                {QStringLiteral("snapshot"), item.toJson()}};
+                                {QStringLiteral("snapshot"), portableJson(item.toJson(), false)}};
                 history.write(QJsonDocument(row).toJson(QJsonDocument::Compact));
                 history.write("\n");
             }
@@ -1886,7 +2072,7 @@ QString ProfileManager::exportProfilesBundle() const
     auto addUser = [&root](const QString &key, const auto &items) {
         QJsonArray out;
         for (const auto &item : items)
-            if (!item.system) out.append(item.toJson());
+            if (!item.system) out.append(portableJson(item.toJson(), false));
         root[key] = out;
     };
     addUser(QStringLiteral("backends"), m_backends.m_items);
@@ -2053,14 +2239,20 @@ bool ProfileManager::removeProfileTemplate(const QString &templateId)
 
 QString ProfileManager::storagePath(const QString &entity) const
 {
-    // Profiles live in the project root (Documents\LlamaCode\profiles) so they
-    // are easy to inspect and back up alongside the source. Overridable via the
-    // LLAMACODE_PROFILES_DIR env var; otherwise the fixed project path is used.
+    // The override is useful for tests/imports. Windows conserva la ubicación
+    // histórica junto al checkout; Linux usa AppLocalData para no convertir una
+    // ruta "C:/..." en una carpeta relativa y para mantener sus datos separados
+    // del checkout NTFS compartido.
     static const QString root = []() {
         const QByteArray env = qgetenv("LLAMACODE_PROFILES_DIR");
         if (!env.isEmpty())
             return QString::fromLocal8Bit(env);
+#ifdef Q_OS_WIN
         return QStringLiteral("C:/Users/cristian/Documents/LlamaCode/profiles");
+#else
+        return QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+               + QStringLiteral("/profiles");
+#endif
     }();
     return root + "/" + entity + ".json";
 }

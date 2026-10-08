@@ -16,6 +16,47 @@ Item {
 
     property var gpuRows: []
     property var selectedVramGpus: []
+    property string settingsSearchText: ""
+
+    function normalizedSearchText(value) {
+        return String(value ?? "").toLocaleLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    }
+
+    function collectSettingsText(item) {
+        if (!item) return ""
+        var result = ""
+        if (item.text !== undefined) result += " " + String(item.text)
+        if (item.placeholderText !== undefined) result += " " + String(item.placeholderText)
+        if (item.title !== undefined) result += " " + String(item.title)
+        if (item.children) {
+            for (var i = 0; i < item.children.length; ++i)
+                result += " " + collectSettingsText(item.children[i])
+        }
+        return result
+    }
+
+    function matchesSettingsSearch(item) {
+        var query = normalizedSearchText(settingsSearchText).trim()
+        if (!query) return true
+        var haystack = normalizedSearchText(collectSettingsText(item))
+        var terms = query.split(/\s+/)
+        for (var i = 0; i < terms.length; ++i) {
+            if (terms[i].length > 0 && haystack.indexOf(terms[i]) < 0) return false
+        }
+        return true
+    }
+
+    function matchingSectionCount() {
+        var sections = [appearanceSection, customSection, languageSection, gpuInferenceSection,
+                        astraSection,
+                        systemSection, performanceSection, gatewaySection, chatSection,
+                        gpuSection, intgSection, agentProfilesSection, teacherSection,
+                        auxiliarySection, mailSection, dataSection]
+        var count = 0
+        for (var i = 0; i < sections.length; ++i)
+            if (matchesSettingsSearch(sections[i])) ++count
+        return count
+    }
 
     function refreshGpuInventory() {
         const info = App.gpuInventory()
@@ -59,6 +100,30 @@ Item {
             title: (App.langV, App.l("settings.title"))
         }
 
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.leftMargin: 24
+            Layout.rightMargin: 24
+            Layout.topMargin: 10
+            Layout.bottomMargin: 10
+            spacing: 8
+
+            LcTextField {
+                id: settingsSearch
+                Layout.fillWidth: true
+                placeholderText: "Buscar configuraciones… (p. ej., GPU, privacidad, correo)"
+                horizontalAlignment: TextInput.AlignLeft
+                onTextChanged: root.settingsSearchText = text
+            }
+
+            LcButton {
+                text: "Limpiar"
+                secondary: true
+                visible: settingsSearch.text.length > 0
+                onClicked: settingsSearch.clear()
+            }
+        }
+
         ScrollView {
             id: scroll
             Layout.fillWidth: true
@@ -76,8 +141,19 @@ Item {
                     anchors.margins: 24
                     spacing: 28
 
+                    Text {
+                        Layout.fillWidth: true
+                        visible: root.settingsSearchText.trim().length > 0 && root.matchingSectionCount() === 0
+                        text: "No se encontraron configuraciones coincidentes."
+                        color: Theme.textMuted
+                        font.pixelSize: 13
+                        horizontalAlignment: Text.AlignHCenter
+                    }
+
                     // ── Appearance ───────────────────────────────────────────
                     ColumnLayout {
+                        id: appearanceSection
+                        visible: root.matchesSettingsSearch(appearanceSection)
                         Layout.fillWidth: true
                         spacing: 10
 
@@ -185,6 +261,7 @@ Item {
                     // ── Temas custom ─────────────────────────────────────────
                     ColumnLayout {
                         id: customSection
+                        visible: root.matchesSettingsSearch(customSection)
                         Layout.fillWidth: true
                         spacing: 10
 
@@ -319,6 +396,8 @@ Item {
 
                     // ── Language ─────────────────────────────────────────────
                     ColumnLayout {
+                        id: languageSection
+                        visible: root.matchesSettingsSearch(languageSection)
                         Layout.fillWidth: true
                         spacing: 10
 
@@ -398,8 +477,99 @@ Item {
                         }
                     }
 
+                    // ── ASTRA / Strata ──────────────────────────────────────
+                    ColumnLayout {
+                        id: astraSection
+                        visible: root.matchesSettingsSearch(astraSection)
+                        Layout.fillWidth: true
+                        spacing: 10
+
+                        Text {
+                            text: "ASTRA · MOTOR STRATA"
+                            color: Theme.accent
+                            font.pixelSize: 11
+                            font.bold: true
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            color: Theme.surfaceBg
+                            border.color: Theme.borderColor
+                            radius: 10
+                            implicitHeight: astraInner.implicitHeight + 32
+
+                            ColumnLayout {
+                                id: astraInner
+                                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 16 }
+                                spacing: 10
+
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: "ASTRA · Strata IQ3_S · Qwen3.8 Flash Next"
+                                    color: Theme.textPrimary
+                                    font.pixelSize: 14
+                                    font.bold: true
+                                }
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: "LlamaCode inicia, supervisa y detiene Strata junto con el resto de motores. Instalá Strata y elegí su carpeta; el archivo de configuración del modelo puede quedar vacío para usar strata-iq3_s.json dentro de esa carpeta."
+                                    color: Theme.textMuted
+                                    font.pixelSize: 11
+                                    wrapMode: Text.WordWrap
+                                }
+
+                                Text { text: "Carpeta de Strata"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                LcTextField {
+                                    id: astraStrataRoot
+                                    Layout.fillWidth: true
+                                    enabled: !App.serverRunning
+                                    placeholderText: "/ruta/a/Strata-0.1.35"
+                                    Component.onCompleted: text = App.readSetting("astra/strataRoot", "")
+                                    onEditingFinished: App.writeSetting("astra/strataRoot", text.trim())
+                                }
+
+                                Text { text: "Configuración del modelo (opcional)"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                LcTextField {
+                                    id: astraConfigFile
+                                    Layout.fillWidth: true
+                                    enabled: !App.serverRunning
+                                    placeholderText: "<carpeta de Strata>/strata-iq3_s.json"
+                                    Component.onCompleted: text = App.readSetting("astra/configFile", "")
+                                    onEditingFinished: App.writeSetting("astra/configFile", text.trim())
+                                }
+                                Text { text: "Puerto local"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                LcTextField {
+                                    id: astraPort
+                                    Layout.fillWidth: true
+                                    enabled: !App.serverRunning
+                                    inputMethodHints: Qt.ImhDigitsOnly
+                                    placeholderText: "8350"
+                                    Component.onCompleted: text = String(App.readSetting("astra/port", 8350))
+                                    onEditingFinished: {
+                                        const value = parseInt(text)
+                                        if (value >= 1024 && value <= 65535) {
+                                            App.writeSetting("astra/port", value)
+                                            text = String(value)
+                                        } else {
+                                            text = String(App.readSetting("astra/port", 8350))
+                                        }
+                                    }
+                                }
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: "Strata escucha sólo en 127.0.0.1. Para compartir el perfil, elegilo en Lanzar y usá Iniciar servidor LAN; LlamaCode lo publica por el Gateway autenticado. También acepta ASTRA_STRATA_ROOT y ASTRA_STRATA_CONFIG."
+                                    color: Theme.textMuted
+                                    font.pixelSize: 10
+                                    wrapMode: Text.WordWrap
+                                }
+                            }
+                        }
+                    }
+
                     // ── Sistema / bandeja ────────────────────────────────────
                     ColumnLayout {
+                        id: gpuInferenceSection
+                        visible: root.matchesSettingsSearch(gpuInferenceSection)
                         Layout.fillWidth: true
                         spacing: 10
 
@@ -463,6 +633,8 @@ Item {
 
                     // ── Sistema / bandeja ────────────────────────────────────
                     ColumnLayout {
+                        id: systemSection
+                        visible: root.matchesSettingsSearch(systemSection)
                         Layout.fillWidth: true
                         spacing: 10
 
@@ -618,6 +790,8 @@ Item {
 
                     // ── Rendimiento / diagnóstico ─────────────────────────
                     ColumnLayout {
+                        id: performanceSection
+                        visible: root.matchesSettingsSearch(performanceSection)
                         Layout.fillWidth: true
                         spacing: 10
 
@@ -716,6 +890,7 @@ Item {
                     // ── Gateway / API (OpenAI + Anthropic + auto-load) ───────
                     ColumnLayout {
                         id: gatewaySection
+                        visible: root.matchesSettingsSearch(gatewaySection)
                         Layout.fillWidth: true
                         spacing: 10
 
@@ -1020,6 +1195,8 @@ Item {
 
                     // ── Chat / Mermaid ───────────────────────────────────────
                     ColumnLayout {
+                        id: chatSection
+                        visible: root.matchesSettingsSearch(chatSection)
                         Layout.fillWidth: true
                         spacing: 10
 
@@ -1066,6 +1243,49 @@ Item {
                                     checked: App.mermaidEnabled
                                     enabled: Mermaid.available
                                     onToggled: App.mermaidEnabled = checked
+                                }
+                            }
+                        }
+
+                        // ── Privacidad de herramientas del agente ────────────
+                        Rectangle {
+                            Layout.fillWidth: true
+                            color: Theme.surfaceBg
+                            border.color: App.privacyModeEnabled ? Theme.accent : Theme.borderColor
+                            radius: 10
+                            implicitHeight: privacyInner.implicitHeight + 32
+
+                            ColumnLayout {
+                                id: privacyInner
+                                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 16 }
+                                spacing: 8
+
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 12
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 3
+                                        Text {
+                                            text: "Modo privacidad"
+                                            color: Theme.textPrimary
+                                            font.pixelSize: 14
+                                            font.bold: true
+                                        }
+                                        Text {
+                                            text: "Bloquea búsquedas web/semánticas, browser, correo, MCP, plugins externos y delegación " +
+                                                  "del agente; agrega una instrucción para no transmitir datos. No es un firewall: " +
+                                                  "un modelo remoto o comandos de shell pueden abrir conexiones por su cuenta."
+                                            color: Theme.textMuted
+                                            font.pixelSize: 11
+                                            wrapMode: Text.WordWrap
+                                            Layout.fillWidth: true
+                                        }
+                                    }
+                                    LcSwitch {
+                                        checked: App.privacyModeEnabled
+                                        onToggled: App.privacyModeEnabled = checked
+                                    }
                                 }
                             }
                         }
@@ -1126,6 +1346,7 @@ Item {
                     // ── GPU power limit (nvidia-smi) ─────────────────────────
                     ColumnLayout {
                         id: gpuSection
+                        visible: root.matchesSettingsSearch(gpuSection)
                         Layout.fillWidth: true
                         spacing: 10
 
@@ -1247,6 +1468,7 @@ Item {
                     // ── Integrations ─────────────────────────────────────────
                     ColumnLayout {
                         id: intgSection
+                        visible: root.matchesSettingsSearch(intgSection)
                         Layout.fillWidth: true
                         spacing: 10
 
@@ -1476,6 +1698,7 @@ Item {
                     // ── Perfiles de agente (capacidades + directivas) ────────
                     ColumnLayout {
                         id: agentProfilesSection
+                        visible: root.matchesSettingsSearch(agentProfilesSection)
                         Layout.fillWidth: true
                         spacing: 10
 
@@ -2178,6 +2401,7 @@ Item {
                     // ── Modelo maestro (ask_teacher) ─────────────────────────
                     ColumnLayout {
                         id: teacherSection
+                        visible: root.matchesSettingsSearch(teacherSection)
                         Layout.fillWidth: true
                         spacing: 10
 
@@ -2239,6 +2463,7 @@ Item {
                     // ── Sidecar auxiliar (embeddings/rerank) ──────────────
                     ColumnLayout {
                         id: auxiliarySection
+                        visible: root.matchesSettingsSearch(auxiliarySection)
                         Layout.fillWidth: true
                         spacing: 10
 
@@ -2316,6 +2541,7 @@ Item {
                     // ── Correo (email_send / email_list / email_read) ───────
                     ColumnLayout {
                         id: mailSection
+                        visible: root.matchesSettingsSearch(mailSection)
                         Layout.fillWidth: true
                         spacing: 10
 
@@ -2518,6 +2744,7 @@ Item {
                     // ── Data maintenance ───────────────────────────────────
                     ColumnLayout {
                         id: dataSection
+                        visible: root.matchesSettingsSearch(dataSection)
                         Layout.fillWidth: true
                         spacing: 10
 

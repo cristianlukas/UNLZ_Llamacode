@@ -51,6 +51,20 @@ QVariantMap save(const QString &name, const QString &description, const QString 
 QVariantMap remove(const QString &name, const QString &scope = QStringLiteral("global"),
                    const QString &workspace = QString());
 
+// Historial local de refinamientos: cada edición o baja conserva la directiva
+// anterior antes de reemplazarla. Devuelve {revision, path, bytes, createdAt}.
+// El historial no se inyecta en el prompt ni cambia permisos; sólo sirve para
+// auditar y restaurar una propuesta aplicada por el usuario.
+QVariantList history(const QString &name, const QString &scope = QStringLiteral("global"),
+                    const QString &workspace = QString());
+
+// Restaura una revisión exacta. Si revision está vacío, restaura la más
+// reciente. La versión actual también se archiva antes de restaurar, de modo
+// que el rollback sigue siendo reversible.
+QVariantMap rollback(const QString &name, const QString &revision = QString(),
+                     const QString &scope = QStringLiteral("global"),
+                     const QString &workspace = QString());
+
 // Directiva de ejemplo bundleada (assets/harness/directives). Se copia a la raíz
 // global la primera vez que se lista, si el usuario no tiene ninguna: sin esto
 // la sección arranca vacía y nadie sabe qué se espera ahí.

@@ -22,15 +22,19 @@ private slots:
     void tunedArgs_emitsSpecConfMin();
     void tunedArgs_emitsCpuMoe();
     void tunedArgs_emitsSplitMode();
+    void tunedArgs_emitsFlashAttnValue();
+    void booleanSwitchValue_isRecognized();
     void canTuneSplitMode_gatesUnsafeLayouts();
     void parsePerplexity_readsLastReportedValue();
     void parseThroughput_splitsPromptAndGen();
     void parseThroughput_derivesFromMsAndCount();
     void parseThroughput_invalidWhenNoTimings();
+    void parseThroughput_clampsDraftAcceptance();
     void blended_respectsWeightExtremes();
     void blended_fallsBackToMeasuredLeg();
     void promotionGate_requiresMeasuredImprovementAndQuality();
     void padPrompt_reachesTargetAndKeepsInstruction();
+    void composeArgs_preservesBaseAndAddsEndpoint();
 };
 
 void TunerTests::paramSpec_intRange()
@@ -148,6 +152,27 @@ void TunerTests::tunedArgs_emitsSplitMode()
     QCOMPARE(args.value(i + 1), QStringLiteral("tensor"));
 }
 
+void TunerTests::tunedArgs_emitsFlashAttnValue()
+{
+    QVector<TunableParam> params{
+        {ParamSpec::categorical("flash-attn", {"off", "on", "auto"}),
+         "--flash-attn", false},
+    };
+    Config cfg; cfg["flash-attn"] = 1;
+    const QStringList args = TunerEngine::tunedArgs(params, cfg);
+    QCOMPARE(args, QStringList({QStringLiteral("--flash-attn"), QStringLiteral("on")}));
+}
+
+void TunerTests::booleanSwitchValue_isRecognized()
+{
+    QVERIFY(TunerEngine::isBooleanSwitchValue(QStringLiteral("on")));
+    QVERIFY(TunerEngine::isBooleanSwitchValue(QStringLiteral("OFF")));
+    QVERIFY(TunerEngine::isBooleanSwitchValue(QStringLiteral(" true ")));
+    QVERIFY(TunerEngine::isBooleanSwitchValue(QStringLiteral("0")));
+    QVERIFY(!TunerEngine::isBooleanSwitchValue(QStringLiteral("q8_0")));
+    QVERIFY(!TunerEngine::isBooleanSwitchValue(QStringLiteral("draft-mtp")));
+}
+
 void TunerTests::canTuneSplitMode_gatesUnsafeLayouts()
 {
     const QStringList flags{QStringLiteral("--split-mode")};
@@ -202,6 +227,16 @@ void TunerTests::parseThroughput_invalidWhenNoTimings()
 {
     QVERIFY(!TunerEngine::parseThroughput("{}").valid());
     QVERIFY(!TunerEngine::parseThroughput("no json").valid());
+}
+
+void TunerTests::parseThroughput_clampsDraftAcceptance()
+{
+    const QByteArray body =
+        R"({"timings":{"predicted_per_second":20,"draft_n":4,"draft_n_accepted":99}})";
+    const ThroughputSample s = TunerEngine::parseThroughput(body);
+    QCOMPARE(s.draftTokens, 4);
+    QCOMPARE(s.draftAcceptedTokens, 4);
+    QCOMPARE(s.draftAcceptancePct(), 100.0);
 }
 
 void TunerTests::blended_respectsWeightExtremes()
@@ -270,6 +305,36 @@ void TunerTests::padPrompt_reachesTargetAndKeepsInstruction()
     QVERIFY(padded.endsWith(instruction));
     // Un prompt ya más largo que el objetivo no se toca.
     QCOMPARE(TunerEngine::padPromptToTokens(padded, 8), padded);
+}
+
+void TunerTests::composeArgs_preservesBaseAndAddsEndpoint()
+{
+    const QVector<TunableParam> params{
+        {ParamSpec::categorical("cache-type-k", {"q8_0", "q4_0"}, true),
+         "--cache-type-k", false},
+        {ParamSpec::categorical("cache-type-v", {"q8_0", "q4_0"}, true),
+         "--cache-type-v", false},
+    };
+    Config cfg;
+    cfg["cache-type-k"] = 1;
+    cfg["cache-type-v"] = 0;
+    const QStringList args = TunerEngine::composeArgs(
+        {QStringLiteral("--model"), QStringLiteral("model.gguf"),
+         QStringLiteral("--fraqtl-kv"),
+         QStringLiteral("--fraqtl-eigenbasis"), QStringLiteral("v.bin")},
+        params, cfg, QStringLiteral("127.0.0.1"), 18099);
+
+    QVERIFY(args.contains(QStringLiteral("--fraqtl-kv")));
+    const int sidecar = args.indexOf(QStringLiteral("--fraqtl-eigenbasis"));
+    QVERIFY(sidecar >= 0 && args.value(sidecar + 1) == QStringLiteral("v.bin"));
+    QCOMPARE(args.value(args.indexOf(QStringLiteral("--cache-type-k")) + 1),
+             QStringLiteral("q4_0"));
+    QCOMPARE(args.value(args.indexOf(QStringLiteral("--cache-type-v")) + 1),
+             QStringLiteral("q8_0"));
+    QCOMPARE(args.value(args.indexOf(QStringLiteral("--host")) + 1),
+             QStringLiteral("127.0.0.1"));
+    QCOMPARE(args.value(args.indexOf(QStringLiteral("--port")) + 1),
+             QStringLiteral("18099"));
 }
 
 QTEST_MAIN(TunerTests)

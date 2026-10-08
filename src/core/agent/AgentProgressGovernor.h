@@ -35,7 +35,8 @@ public:
         QString reason;
     };
 
-    explicit AgentProgressGovernor(const Policy &policy = {});
+    AgentProgressGovernor();
+    explicit AgentProgressGovernor(const Policy &policy);
     void setPolicy(const Policy &policy);
     void reset(const QString &objective = QString());
     Decision record(const QString &tool, const QString &arguments,

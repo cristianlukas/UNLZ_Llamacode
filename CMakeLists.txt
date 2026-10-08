@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(LlamaCode VERSION 0.1.116 LANGUAGES CXX)
+project(LlamaCode VERSION 0.1.117 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -29,8 +29,14 @@ endif()
 # main(). El candidato Debug de LlamaCode conserva sus propios símbolos,
 # asserts y optimización, pero usa las DLL release de Qt para tener un arranque
 # representativo del producto y evitar ese bloqueo del loader.
-set(CMAKE_MAP_IMPORTED_CONFIG_DEBUG Release CACHE STRING
-    "Use optimized imported dependencies for the Debug candidate" FORCE)
+# MSVC/Qt ships separate Debug and Release imported targets, so the optimized
+# Debug candidate must map dependencies to Release there. On Linux, system
+# imported targets such as OpenGL::GL/OpenGL::GLX are single-config targets;
+# forcing this mapping makes CMake look for a nonexistent Debug location.
+if (MSVC)
+    set(CMAKE_MAP_IMPORTED_CONFIG_DEBUG Release CACHE STRING
+        "Use optimized imported dependencies for the Debug candidate" FORCE)
+endif()
 
 # FetchContent still populates a missing dependency on first configure, but an
 # existing checkout must not contact its remote on every CMake regeneration.
@@ -104,6 +110,7 @@ set(CORE_SOURCES
     src/core/agent/OpencodeBackend.cpp
     src/core/agent/RawChatBackend.cpp
     src/core/agent/LlamaAgentBackend.cpp
+    src/core/agent/VisionImagePayload.cpp
     src/core/agent/McpClient.cpp
     src/core/agent/AgentToolRunner.cpp
     src/core/agent/SubAgentRunner.cpp
@@ -173,6 +180,7 @@ set(CORE_SOURCES
     src/core/tasks/WorkflowVisualModel.cpp
     src/core/tasks/EngineeringWorkflowCatalog.cpp
     src/core/automation/DesktopAutomationBackend.cpp
+    src/core/automation/LinuxDesktopBackend.cpp
     src/core/automation/DesktopComputerUse.cpp
     src/core/automation/DesktopRecoveryPolicy.cpp
     src/core/automation/VisualMatcher.cpp
@@ -285,6 +293,7 @@ set(HEADERS
     src/core/tasks/WorkflowVisualModel.h
     src/core/tasks/EngineeringWorkflowCatalog.h
     src/core/automation/DesktopAutomationBackend.h
+    src/core/automation/LinuxDesktopBackend.h
     src/core/automation/DesktopComputerUse.h
     src/core/automation/DesktopRecoveryPolicy.h
     src/core/automation/VisualMatcher.h
@@ -528,6 +537,7 @@ qt_add_resources(LlamaCode "llamacode_assets"
         assets/chat-templates/kat-coder-tools.jinja
         assets/chat-templates/poolside-Laguna-S-2.1.jinja
         assets/chat-templates/laguna-tools-v24.jinja
+        assets/chat-templates/ling3-tools.jinja
         assets/chat-templates/qwen38-tools-fixed.jinja
         assets/benchmarks/aa_intelligence.json
         assets/benchmarks/local_cookbook_priorities.json
@@ -582,6 +592,7 @@ if (BUILD_TESTS)
         target_include_directories(${name} PRIVATE src tests)
         target_link_libraries(${name} PRIVATE llamacode_core Qt6::Test)
         add_test(NAME ${name} COMMAND ${name})
+        set_tests_properties(${name} PROPERTIES WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
         # Todos los QtTests deben ser ejecutables sin escritorio. Los probes que
         # requieren foreground no se registran como tests del gate.
         set_tests_properties(${name} PROPERTIES
@@ -665,6 +676,7 @@ if (BUILD_TESTS)
     add_lc_test(test_engineering_workflows tests/test_engineering_workflows.cpp)
     add_lc_test(test_task_security_policy tests/test_task_security_policy.cpp)
     add_lc_test(test_automation         tests/test_automation.cpp)
+    add_lc_test(test_desktop_backend    tests/test_desktop_backend.cpp)
     add_lc_test(test_visual_matcher     tests/test_visual_matcher.cpp)
     add_lc_test(test_cron               tests/test_cron.cpp)
     add_lc_test(test_automation_store   tests/test_automation_store.cpp)

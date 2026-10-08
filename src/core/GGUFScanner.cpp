@@ -20,6 +20,11 @@ CatalogModel buildCatalogModel(const ModelRoot &root, const QString &filePath,
                                const QString &displayName)
 {
     const QFileInfo info(filePath);
+    qint64 totalModelBytes = 0;
+    for (const QString &shard : GGUFScanner::shardPaths(filePath))
+        totalModelBytes += QFileInfo(shard).size();
+    if (totalModelBytes <= 0)
+        totalModelBytes = info.size();
 
     CatalogModel m;
     // Id DETERMINISTA por ruta absoluta (UUIDv5). Antes era QUuid::createUuid()
@@ -31,7 +36,9 @@ CatalogModel buildCatalogModel(const ModelRoot &root, const QString &filePath,
     m.rootId = root.id;
     m.absolutePath = filePath;
     m.fileName = displayName;
-    m.sizeBytes = info.size();
+    // Flash-Next suele estar partido en varios GGUF: el tamaño operativo es
+    // la suma de shards, no el peso del primer archivo registrado.
+    m.sizeBytes = totalModelBytes;
     m.mtime = info.lastModified();
     m.familyHint = GGUFScanner::inferFamily(displayName);
     m.quantHint = GGUFScanner::inferQuant(displayName);
@@ -40,7 +47,7 @@ CatalogModel buildCatalogModel(const ModelRoot &root, const QString &filePath,
     // trae Q6_K/F16; unsloth "Q4_K_XL" es casi todo Q4_0). Clasificamos por el
     // contenido real y marcamos mismatch para avisar en UI.
     const GGUFScanner::Composition comp =
-        GGUFScanner::readComposition(filePath, info.size());
+        GGUFScanner::readCompositionAllShards(filePath);
     if (comp.valid) {
         m.quantReal = comp.dominantQuant;
         m.tensorBreakdown = comp.breakdown();
@@ -54,7 +61,7 @@ CatalogModel buildCatalogModel(const ModelRoot &root, const QString &filePath,
     }
 
     m.isVisionCandidate = GGUFScanner::isVisionCandidate(displayName);
-    m.isDraftCandidate = GGUFScanner::isDraftCandidate(displayName, info.size());
+    m.isDraftCandidate = GGUFScanner::isDraftCandidate(displayName, totalModelBytes);
     m.isAvailable = true;
     return m;
 }
@@ -78,8 +85,13 @@ QList<CatalogModel> GGUFScanner::scan(const ModelRoot &root,
     auto appendCachedOrBuild = [&](const QString &path, const QString &name) {
         const QFileInfo info(path);
         const auto it = cacheByPath.constFind(path);
+        qint64 totalModelBytes = 0;
+        for (const QString &shard : GGUFScanner::shardPaths(path))
+            totalModelBytes += QFileInfo(shard).size();
+        if (totalModelBytes <= 0)
+            totalModelBytes = info.size();
         if (it != cacheByPath.constEnd()
-            && it->sizeBytes == info.size()
+            && it->sizeBytes == totalModelBytes
             && it->mtime == info.lastModified()) {
             CatalogModel cachedModel = it.value();
             cachedModel.rootId = root.id;
@@ -382,8 +394,13 @@ GGUFScanner::Composition GGUFScanner::readCompositionAllShards(const QString &fi
         return readComposition(firstShardPath, QFileInfo(firstShardPath).size());
 
     Composition agg;
+    bool allValid = true;
+    qint64 totalBytes = 0;
     for (const QString &shard : shards) {
-        const Composition c = readComposition(shard, QFileInfo(shard).size());
+        const qint64 shardBytes = QFileInfo(shard).size();
+        totalBytes += shardBytes;
+        const Composition c = readComposition(shard, shardBytes);
+        allValid = allValid && c.valid;
         agg.totalElements += c.totalElements;
         agg.ngramElements += c.ngramElements;
         for (auto it = c.typeTensors.constBegin(); it != c.typeTensors.constEnd(); ++it)
@@ -404,6 +421,9 @@ GGUFScanner::Composition GGUFScanner::readCompositionAllShards(const QString &fi
         if (rawFloats.contains(it.key())) continue;
         if (it.value() > best) { best = it.value(); agg.dominantQuant = it.key(); }
     }
+    if (agg.totalElements > 0 && totalBytes > 0)
+        agg.bpw = double(totalBytes) * 8.0 / double(agg.totalElements);
+    agg.valid = allValid && agg.totalElements > 0;
     return agg;
 }
 
@@ -431,7 +451,7 @@ GGUFScanner::Composition GGUFScanner::readComposition(const QString &filePath,
 
     const quint64 tensorCount = r.u64();
     const quint64 kvCount = r.u64();
-    if (tensorCount == 0 || tensorCount > 100000) return c;
+    if (tensorCount > 100000) return c;
 
     // Leer los metadatos útiles y saltar el resto. Las claves de contexto son
     // específicas de arquitectura (llama.context_length, qwen*.context_length…).
@@ -471,7 +491,13 @@ GGUFScanner::Composition GGUFScanner::readComposition(const QString &filePath,
         if (isNgramLookupTensor(tensorName))
             c.ngramElements += elems;
     }
-    if (!r.ok || c.totalElements <= 0) return c;
+    if (!r.ok) return c;
+    // A metadata-only shard is valid and must contribute architecture/context
+    // metadata to the aggregate even though it has no tensor payload.
+    if (c.totalElements <= 0) {
+        c.valid = true;
+        return c;
+    }
 
     // Quant dominante: dtype cuantizado (no float crudo) con más elementos.
     static const QStringList rawFloats = {"f32", "f16", "bf16", "f64"};

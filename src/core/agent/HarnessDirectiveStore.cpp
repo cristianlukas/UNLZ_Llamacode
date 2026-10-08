@@ -3,9 +3,12 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QSaveFile>
+#include <QDateTime>
 #include <QRegularExpression>
 #include <QStandardPaths>
 #include <QStringList>
+#include <QUuid>
 
 namespace {
 
@@ -168,6 +171,44 @@ QString rootForScope(const QString &scope, const QString &workspace)
         return HarnessDirectiveStore::projectRoot(workspace);
     return HarnessDirectiveStore::globalRoot();
 }
+
+QString historyRoot(const QString &root, const QString &slug)
+{
+    return QDir(root).filePath(QStringLiteral(".history/%1").arg(slug));
+}
+
+bool archiveFile(const QString &path, const QString &root, const QString &slug,
+                 QString *error = nullptr)
+{
+    if (!QFileInfo::exists(path)) return true;
+    QFile source(path);
+    if (!source.open(QIODevice::ReadOnly)) {
+        if (error) *error = QStringLiteral("No se pudo leer la directiva anterior");
+        return false;
+    }
+    const QString dir = historyRoot(root, slug);
+    if (!QDir().mkpath(dir)) {
+        if (error) *error = QStringLiteral("No se pudo crear el historial de la directiva");
+        return false;
+    }
+    const QString revision = QDateTime::currentDateTimeUtc().toString(QStringLiteral("yyyyMMdd-HHmmss-zzz"))
+                             + QLatin1Char('-')
+                             + QUuid::createUuid().toString(QUuid::WithoutBraces)
+                             + QStringLiteral(".md");
+    QSaveFile target(QDir(dir).filePath(revision));
+    if (!target.open(QIODevice::WriteOnly | QIODevice::Truncate)
+        || target.write(source.readAll()) < 0 || !target.commit()) {
+        if (error) *error = QStringLiteral("No se pudo archivar la directiva anterior");
+        return false;
+    }
+    return true;
+}
+
+QString directPath(const QString &slug, const QString &scope, const QString &workspace)
+{
+    const QString root = rootForScope(scope, workspace);
+    return root.isEmpty() ? QString() : QDir(root).filePath(slug + QStringLiteral(".md"));
+}
 }  // namespace
 
 QVariantMap HarnessDirectiveStore::save(const QString &name, const QString &description,
@@ -210,6 +251,9 @@ QVariantMap HarnessDirectiveStore::save(const QString &name, const QString &desc
 
     QDir().mkpath(root);
     const QString path = QDir(root).filePath(slug + QStringLiteral(".md"));
+    QString archiveError;
+    if (!archiveFile(path, root, slug, &archiveError))
+        return {{QStringLiteral("ok"), false}, {QStringLiteral("error"), archiveError}};
     QFile f(path);
     if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate))
         return {{QStringLiteral("ok"), false},
@@ -235,10 +279,83 @@ QVariantMap HarnessDirectiveStore::remove(const QString &name, const QString &sc
     if (!QFileInfo::exists(path))
         return {{QStringLiteral("ok"), false},
                 {QStringLiteral("error"), QStringLiteral("No existe: %1").arg(slug)}};
+    QString archiveError;
+    if (!archiveFile(path, root, slug, &archiveError))
+        return {{QStringLiteral("ok"), false}, {QStringLiteral("error"), archiveError}};
     if (!QFile::remove(path))
         return {{QStringLiteral("ok"), false},
                 {QStringLiteral("error"), QStringLiteral("No se pudo borrar %1").arg(path)}};
     return {{QStringLiteral("ok"), true}};
+}
+
+QVariantList HarnessDirectiveStore::history(const QString &name, const QString &scope,
+                                            const QString &workspace)
+{
+    const QString slug = name.trimmed().toLower();
+    if (!validSlug(slug)) return {};
+    const QString root = rootForScope(scope, workspace);
+    if (root.isEmpty()) return {};
+    const QFileInfoList entries = QDir(historyRoot(root, slug)).entryInfoList(
+        QStringList{QStringLiteral("*.md")}, QDir::Files, QDir::Time | QDir::Reversed);
+    QVariantList out;
+    for (const QFileInfo &entry : entries) {
+        out.append(QVariantMap{{QStringLiteral("revision"), entry.fileName()},
+                               {QStringLiteral("path"), entry.absoluteFilePath()},
+                               {QStringLiteral("bytes"), static_cast<int>(entry.size())},
+                               {QStringLiteral("createdAt"), entry.lastModified().toUTC()}});
+    }
+    return out;
+}
+
+QVariantMap HarnessDirectiveStore::rollback(const QString &name, const QString &revision,
+                                            const QString &scope, const QString &workspace)
+{
+    const QString slug = name.trimmed().toLower();
+    if (!validSlug(slug))
+        return {{QStringLiteral("ok"), false},
+                {QStringLiteral("error"), QStringLiteral("Nombre de directiva inválido")}};
+    const QString root = rootForScope(scope, workspace);
+    if (root.isEmpty())
+        return {{QStringLiteral("ok"), false},
+                {QStringLiteral("error"), QStringLiteral("Scope 'project' sin workspace abierto")}};
+
+    const QVariantList entries = history(slug, scope, workspace);
+    if (entries.isEmpty())
+        return {{QStringLiteral("ok"), false},
+                {QStringLiteral("error"), QStringLiteral("No hay revisiones para %1").arg(slug)}};
+    const QString wanted = revision.trimmed().isEmpty()
+        ? entries.first().toMap().value(QStringLiteral("revision")).toString() : revision.trimmed();
+    if (wanted.contains(QLatin1Char('/')) || wanted.contains(QLatin1Char('\\'))
+        || wanted != QFileInfo(wanted).fileName())
+        return {{QStringLiteral("ok"), false},
+                {QStringLiteral("error"), QStringLiteral("Revisión inválida")}};
+    QString sourcePath;
+    for (const QVariant &value : entries) {
+        const QVariantMap item = value.toMap();
+        if (item.value(QStringLiteral("revision")).toString() == wanted) {
+            sourcePath = item.value(QStringLiteral("path")).toString();
+            break;
+        }
+    }
+    if (sourcePath.isEmpty())
+        return {{QStringLiteral("ok"), false},
+                {QStringLiteral("error"), QStringLiteral("Revisión no encontrada")}};
+
+    const QString path = directPath(slug, scope, workspace);
+    QString archiveError;
+    if (!archiveFile(path, root, slug, &archiveError))
+        return {{QStringLiteral("ok"), false}, {QStringLiteral("error"), archiveError}};
+    QFile source(sourcePath);
+    if (!source.open(QIODevice::ReadOnly))
+        return {{QStringLiteral("ok"), false},
+                {QStringLiteral("error"), QStringLiteral("No se pudo leer la revisión")}};
+    QSaveFile target(path);
+    if (!target.open(QIODevice::WriteOnly | QIODevice::Truncate)
+        || target.write(source.readAll()) < 0 || !target.commit())
+        return {{QStringLiteral("ok"), false},
+                {QStringLiteral("error"), QStringLiteral("No se pudo restaurar la revisión")}};
+    return {{QStringLiteral("ok"), true}, {QStringLiteral("revision"), wanted},
+            {QStringLiteral("path"), path}};
 }
 
 // Copia las directivas bundleadas a la raíz global la PRIMERA vez (si el usuario

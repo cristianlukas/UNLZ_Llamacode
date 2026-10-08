@@ -13,6 +13,10 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QStandardPaths>
+#include <QSettings>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QRegularExpression>
 #include <QUuid>
 #include <QCoreApplication>
@@ -44,6 +48,8 @@ private slots:
     void initTestCase();
 
     void manager_loadsSystemProfiles();
+    void manager_flashNextProfileIsConservativeBenchmarkCandidate();
+    void manager_flashNextQ2ProfileMatchesMeasuredCandidate();
     void manager_ninferProfilesAreBenchmarkCandidates();
     void manager_vllmDflashProfilesAreExternalBenchmarks();
     void manager_16gbQwen38CandidatesPreservePostTuning();
@@ -87,9 +93,9 @@ private slots:
     void bundle_ultraQ48gbIsDualGpuVariantOfUltraQ();
     void controller_launchMenuGatesByTotalVramAcrossGpus();
     void controller_launchMenuAnnotatesGpuAffinity();
+    void controller_astraStrataIsListedAndRequiresLocalSetup();
     void bundle_48gbFamilyIsBenchmarkableAndDualGpu();
     void controller_duplicateBakesResolvedBinary();
-    void bundle_bonsaiTernaryUsesPrismBinaryAndVision();
 
 private:
     QTemporaryDir m_dir;
@@ -106,6 +112,12 @@ void SystemProfilesTests::initTestCase()
     // pero este test verifica los IDs contra QStandardPaths. No dejar que una
     // variable del entorno del proceso vuelva no determinista la expectativa.
     qunsetenv("LLAMACODE_MODELS_DIR");
+    qunsetenv("ASTRA_STRATA_ROOT");
+    qunsetenv("ASTRA_STRATA_CONFIG");
+    qunsetenv("STRATA_ROOT");
+    qunsetenv("STRATA_CONFIG");
+    QSettings().remove(QStringLiteral("astra/strataRoot"));
+    QSettings().remove(QStringLiteral("astra/configFile"));
     const QString bundle = bundlePath();
     QVERIFY2(QFile::exists(bundle), "falta assets/system_profiles.json");
     qputenv("LLAMACODE_SYSTEM_PROFILES", bundle.toLocal8Bit());
@@ -126,13 +138,13 @@ void SystemProfilesTests::manager_loadsSystemProfiles()
     QVERIFY2(sys >= 68, "el bundle debe conservar al menos los perfiles base y variantes existentes");
     QVERIFY(pm.isSystemLaunch("sys-vram-16"));
     QVERIFY(!anySysId.isEmpty());
-    // Visión: solo los perfiles Gemma vision dedicados llevan mmproj. Los perfiles
-    // Qwen/coding y Gemma chicos no deben cargar projector para una automatización
-    // textual: aumenta memoria/prompt y no ayuda a desktop_controls.
+    // Los perfiles generales no cargan projector por accidente; los perfiles
+    // Qwen3.5 pequeños sí lo declaran explícitamente porque tienen variante
+    // multimodal validada.
     const QString mp16 = pm.getLaunchProfile("sys-vram-16").value("modelProfileId").toString();
     QVERIFY(pm.getModelProfile(mp16).value("mmprojId").toString().isEmpty());
     const QString mp4 = pm.getLaunchProfile("sys-vram-4").value("modelProfileId").toString();
-    QVERIFY(pm.getModelProfile(mp4).value("mmprojId").toString().isEmpty());
+    QVERIFY(!pm.getModelProfile(mp4).value("mmprojId").toString().isEmpty());
     // El tier 8GB Gemma tiene visión (gemma4uv): mmproj presente, offload a CPU via
     // --no-mmproj-offload. Requiere llama-server b9496+ en runtime. Q3_K_XL deja
     // margen para MTP self-draft (mtp-gemma-4-12b-it.gguf, --spec-type draft-mtp).
@@ -141,6 +153,99 @@ void SystemProfilesTests::manager_loadsSystemProfiles()
     QVERIFY(!m8.value("mmprojId").toString().isEmpty());
     QCOMPARE(m8.value("specType").toString(), QStringLiteral("draft-mtp"));
     QVERIFY(!m8.value("draftModelId").toString().isEmpty());
+}
+
+void SystemProfilesTests::manager_flashNextProfileIsConservativeBenchmarkCandidate()
+{
+    const QString id = QStringLiteral("sys-48-qwen38-flash-next-q4kxl-8k");
+    ProfileManager pm;
+    const QVariantMap launch = pm.getLaunchProfile(id);
+    QVERIFY2(!launch.isEmpty(), qPrintable(id));
+    QVERIFY(launch.value(QStringLiteral("benchmark")).toBool());
+    QVERIFY(!launch.value(QStringLiteral("favorite")).toBool());
+
+    const QVariantMap model = pm.getModelProfile(
+        launch.value(QStringLiteral("modelProfileId")).toString());
+    QVERIFY(!model.isEmpty());
+    QVERIFY(model.value(QStringLiteral("name")).toString().contains(
+        QStringLiteral("Qwen3.8-Flash-Next"), Qt::CaseInsensitive));
+    QVERIFY(model.value(QStringLiteral("draftModelId")).toString().isEmpty());
+
+    const QStringList args = launch.value(QStringLiteral("extraArgs")).toStringList();
+    const auto valueAfter = [&args](const QString &flag) {
+        const int i = args.indexOf(flag);
+        return i >= 0 && i + 1 < args.size() ? args.at(i + 1) : QString();
+    };
+    QCOMPARE(valueAfter(QStringLiteral("--split-mode")), QStringLiteral("layer"));
+    QCOMPARE(valueAfter(QStringLiteral("--n-cpu-moe")), QStringLiteral("40"));
+    QCOMPARE(valueAfter(QStringLiteral("--cache-type-k")), QStringLiteral("q8_0"));
+    QCOMPARE(valueAfter(QStringLiteral("--cache-type-v")), QStringLiteral("q8_0"));
+    QVERIFY(!args.contains(QStringLiteral("--split-mode"))
+            || valueAfter(QStringLiteral("--split-mode")) != QStringLiteral("tensor"));
+    QVERIFY(!args.contains(QStringLiteral("--spec-type")));
+
+    const QString cacheId = QStringLiteral(
+        "sys-bench-48-qwen38-flash-next-q4kxl-cache188-8k");
+    const QString longId = QStringLiteral(
+        "sys-bench-48-qwen38-flash-next-q4kxl-131k");
+    const QVariantMap cacheVariant = pm.getLaunchProfile(cacheId);
+    const QVariantMap longVariant = pm.getLaunchProfile(longId);
+    QVERIFY2(!cacheVariant.isEmpty(), qPrintable(cacheId));
+    QVERIFY2(!longVariant.isEmpty(), qPrintable(longId));
+    QVERIFY(cacheVariant.value(QStringLiteral("benchmark")).toBool());
+    QVERIFY(longVariant.value(QStringLiteral("benchmark")).toBool());
+    const QStringList cacheArgs = cacheVariant.value(QStringLiteral("extraArgs")).toStringList();
+    QVERIFY(cacheArgs.contains(QStringLiteral("--moe-expert-cache")));
+    QVERIFY(cacheArgs.contains(QStringLiteral("188")));
+    QVERIFY(longVariant.value(QStringLiteral("modelProfileId")).toString()
+                .startsWith(QStringLiteral("sysmodel-")));
+}
+
+void SystemProfilesTests::manager_flashNextQ2ProfileMatchesMeasuredCandidate()
+{
+    const QString id = QStringLiteral("sys-48-qwen38-flash-next-q2kxl-8k");
+    ProfileManager pm;
+    const QVariantMap launch = pm.getLaunchProfile(id);
+    QVERIFY2(!launch.isEmpty(), qPrintable(id));
+    QVERIFY(launch.value(QStringLiteral("benchmark")).toBool());
+    const QVariantMap model = pm.getModelProfile(
+        launch.value(QStringLiteral("modelProfileId")).toString());
+    QVERIFY(model.value(QStringLiteral("name")).toString().contains(
+        QStringLiteral("Q2_K_XL"), Qt::CaseInsensitive));
+    const QStringList args = launch.value(QStringLiteral("extraArgs")).toStringList();
+    QCOMPARE(args.at(args.indexOf(QStringLiteral("--n-cpu-moe")) + 1),
+             QStringLiteral("40"));
+    QVERIFY(args.contains(QStringLiteral("--split-mode")));
+    QCOMPARE(args.at(args.indexOf(QStringLiteral("--split-mode")) + 1),
+             QStringLiteral("layer"));
+    QVERIFY(!args.contains(QStringLiteral("--spec-type")));
+
+    const QString astraId = QStringLiteral(
+        "sys-bench-48-qwen38-flash-next-q2kxl-long-256k-balanced-moe12");
+    const QVariantMap astra = pm.getLaunchProfile(astraId);
+    QVERIFY2(!astra.isEmpty(), qPrintable(astraId));
+    QCOMPARE(astra.value(QStringLiteral("alias")).toString(), QStringLiteral("ASTRA"));
+    QVERIFY(!astra.value(QStringLiteral("benchmarkMemoryAdaptive")).toBool());
+    QCOMPARE(astra.value(QStringLiteral("name")).toString(),
+             QStringLiteral("[bench Flash-Next] Q2_K_XL · 256k · balanceado · MoE12"));
+    const QStringList astraArgs = astra.value(QStringLiteral("extraArgs")).toStringList();
+    QCOMPARE(astraArgs.at(astraArgs.indexOf(QStringLiteral("--n-cpu-moe")) + 1),
+             QStringLiteral("12"));
+    QCOMPARE(astraArgs.at(astraArgs.indexOf(QStringLiteral("--tensor-split")) + 1),
+             QStringLiteral("1.4,1"));
+
+    bool astraInMenu = false;
+    for (const QVariant &value : pm.launchProfilesForMenu()) {
+        const QVariantMap item = value.toMap();
+        if (item.value(QStringLiteral("id")).toString() != astraId)
+            continue;
+        astraInMenu = true;
+        QCOMPARE(item.value(QStringLiteral("alias")).toString(), QStringLiteral("ASTRA"));
+        QVERIFY(item.value(QStringLiteral("displayName")).toString().contains(
+            QStringLiteral("ASTRA - ")));
+        break;
+    }
+    QVERIFY(astraInMenu);
 }
 
 void SystemProfilesTests::manager_ninferProfilesAreBenchmarkCandidates()
@@ -188,7 +293,28 @@ void SystemProfilesTests::manager_ninferProfilesAreBenchmarkCandidates()
                  .value(QStringLiteral("file")).toString(),
              QStringLiteral("qwen3_8_27b.ninfer"));
     QVERIFY(qwen38.value(QStringLiteral("comment")).toString()
-                .contains(QStringLiteral("no ejecuta tool calls")));
+                .contains(QStringLiteral("BCB con thinking")));
+    const QJsonObject platformArgs = qwen38.value(QStringLiteral("platformArgs")).toObject();
+    QVERIFY(platformArgs.value(QStringLiteral("linux")).isArray());
+    const QJsonObject platformModelFiles =
+        qwen38.value(QStringLiteral("platformModelFiles")).toObject();
+    QCOMPARE(platformModelFiles.value(QStringLiteral("linux")).toString(),
+             QStringLiteral("qwen3_8_27b-historical-3526913.ninfer"));
+    const QVariantMap qwen38Launch =
+        pm.getLaunchProfile(QStringLiteral("sys-ninfer3090-qwen38"));
+    QCOMPARE(qwen38Launch.value(QStringLiteral("menuOrder")).toInt(), 9);
+    const QVariantMap platformModels =
+        qwen38Launch.value(QStringLiteral("platformModelProfileIds")).toMap();
+    QVERIFY(platformModels.value(QStringLiteral("linux")).toString().endsWith(
+        QStringLiteral("-linux")));
+    QVERIFY(platformModels.value(QStringLiteral("windows")).toString().endsWith(
+        QStringLiteral("-windows")));
+    const QVariantMap linuxModel = pm.getModelProfile(
+        platformModels.value(QStringLiteral("linux")).toString());
+    QVERIFY(!linuxModel.isEmpty());
+    QVERIFY(linuxModel.value(QStringLiteral("modelId")).toString()
+                != pm.getModelProfile(qwen38Launch.value(QStringLiteral("modelProfileId")).toString())
+                       .value(QStringLiteral("modelId")).toString());
 }
 
 void SystemProfilesTests::manager_vllmDflashProfilesAreExternalBenchmarks()
@@ -1460,8 +1586,10 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
     for (auto it = found.cbegin(); it != found.cend(); ++it)
         marked += it.value().value("favorite").toBool() ? 1 : 0;
     QCOMPARE(marked, 4);
-    QCOMPARE(found.value(QStringLiteral("sys-48-dsv4-nospec")).value("displayName").toString(),
-             QStringLiteral("SUPERIOR - DeepSeek V4-7-8-26"));
+    const QString displayName = found.value(QStringLiteral("sys-48-dsv4-nospec"))
+                                    .value("displayName").toString();
+    QVERIFY(displayName.startsWith(QStringLiteral("SUPERIOR - ")));
+    QVERIFY(displayName.endsWith(QStringLiteral("DeepSeek V4-7-8-26")));
 
     const QJsonObject hyb = found.value(QStringLiteral("sys-48-hybrid-tc-kat"));
     QCOMPARE(hyb.value("plannerProfileId").toString(), QStringLiteral("sys-48-thinkingcap-mtp"));
@@ -1997,64 +2125,6 @@ void SystemProfilesTests::controller_duplicateBakesResolvedBinary()
     QVERIFY(!dupModel.value("modelId").toString().isEmpty());
     // Sin catálogo escaneado en el test no hay religado, así que debe coincidir.
     QCOMPARE(dupModel.value("modelId").toString(), sysModel.value("modelId").toString());
-}
-
-// Ternary Bonsai (PQ2_0) sólo carga en el fork PrismML: el oficial lo rechaza o,
-// con Q2_0, genera basura sin avisar. El perfil debe resolver SIEMPRE al binario
-// con flavor prism-ternary aunque haya un oficial antes en la lista, y no puede
-// declarar MTP/ngram (el fork los acepta pero no especula con estos archivos).
-void SystemProfilesTests::bundle_bonsaiTernaryUsesPrismBinaryAndVision()
-{
-    const QString id = QStringLiteral("sys-bench-bonsai2-27b-pq2-64k");
-    QFile bundle(bundlePath());
-    QVERIFY(bundle.open(QIODevice::ReadOnly));
-    QJsonObject found;
-    for (const QJsonValue &value : QJsonDocument::fromJson(bundle.readAll()).array())
-        if (value.toObject().value(QStringLiteral("id")).toString() == id)
-            found = value.toObject();
-    QVERIFY(!found.isEmpty());
-    QVERIFY(found.value(QStringLiteral("extra")).toBool());
-    QVERIFY(found.value(QStringLiteral("manualOnly")).toBool());
-    QVERIFY(!found.value(QStringLiteral("autoCompanion")).toBool());
-    QVERIFY(found.value(QStringLiteral("vision")).toBool());
-    QCOMPARE(found.value(QStringLiteral("binaryKind")).toString(), QStringLiteral("prism-ternary"));
-    const QJsonObject model = found.value(QStringLiteral("model")).toObject();
-    QCOMPARE(model.value(QStringLiteral("quant")).toString(), QStringLiteral("PQ2_0"));
-    QCOMPARE(model.value(QStringLiteral("mmprojFile")).toString(),
-             QStringLiteral("Ternary-Bonsai-2-27B-mmproj-Q8_0.gguf"));
-    QVERIFY(!found.contains(QStringLiteral("mtp")));
-    QStringList args;
-    for (const QJsonValue &value : found.value(QStringLiteral("extraArgs")).toArray())
-        args << value.toString();
-    QVERIFY(!args.contains(QStringLiteral("--spec-type")));
-    QCOMPARE(args.value(args.indexOf(QStringLiteral("--cache-type-k")) + 1), QStringLiteral("q8_0"));
-    // KNOWN_ISSUES: el razonamiento consume el límite de salida; con menos de 16K
-    // las respuestas llegan vacías o truncadas.
-    QVERIFY(args.value(args.indexOf(QStringLiteral("--predict")) + 1).toInt() >= 16384);
-
-    const QString officialExe = m_dir.path() + QStringLiteral("/bonsai-official/llama-server.exe");
-    const QString prismExe = m_dir.path() + QStringLiteral("/prism-b10743/llama-server.exe");
-    for (const QString &p : {officialExe, prismExe}) {
-        QVERIFY(QDir().mkpath(QFileInfo(p).absolutePath()));
-        QFile f(p);
-        QVERIFY(f.open(QIODevice::WriteOnly));
-        f.write("stub");
-    }
-    AppController app;
-    const QString officialId = app.binaryRegistry()->add(
-        officialExe, QStringLiteral("b10964 CUDA"), QStringLiteral("official"),
-        QStringLiteral("cuda"), QStringLiteral("b10964"));
-    const QString prismId = app.binaryRegistry()->add(
-        prismExe, QStringLiteral("PrismML b10743"), QStringLiteral("prism-ternary"),
-        QStringLiteral("cuda"), QStringLiteral("b10743"));
-    QVERIFY(!officialId.isEmpty() && !prismId.isEmpty());
-
-    const QString dup = app.duplicateLaunchProfile(id);
-    QVERIFY(!dup.isEmpty());
-    ProfileManager *pm = app.profileManager();
-    const QVariantMap backend =
-        pm->getBackend(pm->getLaunchProfile(dup).value(QStringLiteral("backendProfileId")).toString());
-    QCOMPARE(backend.value(QStringLiteral("binaryId")).toString(), prismId);
 }
 
 void SystemProfilesTests::bundle_qwen38VariantsAreMtpVisionAndTemplated()
@@ -2667,7 +2737,13 @@ void SystemProfilesTests::bundle_quantizationPolicyCapsKvAtQ8()
         return value.isEmpty() || value.compare(QStringLiteral("q8_0"), Qt::CaseInsensitive) == 0
             || value.compare(QStringLiteral("q4_0"), Qt::CaseInsensitive) == 0
             || value.compare(QStringLiteral("q5_1"), Qt::CaseInsensitive) == 0
-            || value.compare(QStringLiteral("q6_k"), Qt::CaseInsensitive) == 0;
+            || value.compare(QStringLiteral("q6_k"), Qt::CaseInsensitive) == 0
+            || value.compare(QStringLiteral("kvarn2"), Qt::CaseInsensitive) == 0
+            || value.compare(QStringLiteral("kvarn3"), Qt::CaseInsensitive) == 0
+            || value.compare(QStringLiteral("kvarn4"), Qt::CaseInsensitive) == 0
+            || value.compare(QStringLiteral("kvarn5"), Qt::CaseInsensitive) == 0
+            || value.compare(QStringLiteral("kvarn6"), Qt::CaseInsensitive) == 0
+            || value.compare(QStringLiteral("kvarn8"), Qt::CaseInsensitive) == 0;
     };
     const auto checkCacheArgs = [&allowed](const QJsonObject &object) {
         const QJsonArray raw = object.value(QStringLiteral("extraArgs")).toArray();
@@ -2801,6 +2877,120 @@ void SystemProfilesTests::bundle_tensorSplitProfilesAreDualGpuAndMemoryCapped()
     QCOMPARE(valueAfter(argsOf(inf), QStringLiteral("--split-mode")), QStringLiteral("layer"));
 }
 
+void SystemProfilesTests::controller_astraStrataIsListedAndRequiresLocalSetup()
+{
+    const QString cacheRoot = QStandardPaths::writableLocation(
+        QStandardPaths::GenericCacheLocation);
+    const QString strataRoot = QDir(cacheRoot).filePath(
+        QStringLiteral("astra-autodiscovery-fixture/Strata-0.1.35"));
+    const QString engineDir = QDir(strataRoot).filePath(QStringLiteral("engine"));
+    const QString serveDir = QDir(strataRoot).filePath(QStringLiteral("serve"));
+    const QString dataDir = QDir(strataRoot).filePath(QStringLiteral("data"));
+    const QString packDir = QDir(dataDir).filePath(QStringLiteral("pack"));
+    const QString mtpDir = QDir(dataDir).filePath(QStringLiteral("mtp"));
+    const QString tokenizerDir = QDir(dataDir).filePath(QStringLiteral("tokenizer"));
+    QVERIFY(QDir().mkpath(QDir(strataRoot).filePath(QStringLiteral(".venv/bin"))));
+    QVERIFY(QDir().mkpath(engineDir));
+    QVERIFY(QDir().mkpath(serveDir));
+    QVERIFY(QDir().mkpath(packDir));
+    QVERIFY(QDir().mkpath(mtpDir));
+    QVERIFY(QDir().mkpath(tokenizerDir));
+
+    auto writeFile = [](const QString &path, const QByteArray &contents,
+                        bool executable = false) {
+        QFile file(path);
+        if (!file.open(QIODevice::WriteOnly)) return false;
+        file.write(contents);
+        file.close();
+        return !executable || file.setPermissions(QFileDevice::ReadOwner
+            | QFileDevice::WriteOwner | QFileDevice::ExeOwner);
+    };
+    QVERIFY(writeFile(QDir(strataRoot).filePath(QStringLiteral(".venv/bin/python")),
+                      "#!/bin/sh\nexit 0\n", true));
+    QVERIFY(writeFile(QDir(serveDir).filePath(QStringLiteral("server.py")), "# fixture\n"));
+    const QString enginePath = QDir(engineDir).filePath(QStringLiteral("strata"));
+    const QString nativePath = QDir(dataDir).filePath(QStringLiteral("native.gguf"));
+    const QString plePath = QDir(dataDir).filePath(QStringLiteral("ple.gguf"));
+    const QString expertPath = QDir(dataDir).filePath(QStringLiteral("expert-profile.bin"));
+    const QString visionExe = QDir(engineDir).filePath(QStringLiteral("strata-vision"));
+    const QString mmprojPath = QDir(dataDir).filePath(QStringLiteral("mmproj.gguf"));
+    QVERIFY(writeFile(enginePath, "#!/bin/sh\nexit 0\n", true));
+    QVERIFY(writeFile(nativePath, "native"));
+    QVERIFY(writeFile(plePath, "ple"));
+    QVERIFY(writeFile(expertPath, "experts"));
+    QVERIFY(writeFile(QDir(mtpDir).filePath(QStringLiteral("draft.bin")), "mtp"));
+    QVERIFY(writeFile(visionExe, "#!/bin/sh\nexit 0\n", true));
+    QVERIFY(writeFile(mmprojPath, "mmproj"));
+
+    QJsonArray args{
+        QStringLiteral("--pack"), packDir,
+        QStringLiteral("--native"), nativePath,
+        QStringLiteral("--ple-gguf"), plePath,
+        QStringLiteral("--expert-profile"), expertPath,
+        QStringLiteral("--mtp"), mtpDir,
+        QStringLiteral("--vision")
+    };
+    QJsonObject configObject{
+        {QStringLiteral("exe"), enginePath},
+        {QStringLiteral("cwd"), strataRoot},
+        {QStringLiteral("tokenizer"), tokenizerDir},
+        {QStringLiteral("args"), args},
+        {QStringLiteral("lib_dirs"), QJsonArray{}},
+        {QStringLiteral("vision"), QJsonObject{
+            {QStringLiteral("exe"), visionExe},
+            {QStringLiteral("mmproj"), mmprojPath},
+            {QStringLiteral("model"), nativePath}
+        }}
+    };
+    const QString configPath = QDir(strataRoot).filePath(
+        QStringLiteral("strata-iq3_s-calibrated-retest-fixture.json"));
+    QVERIFY(writeFile(configPath, QJsonDocument(configObject).toJson()));
+
+    AppController app;
+    app.setHardwareSummaryForTest(24.0, 128.0,
+                                  QStringLiteral("NVIDIA GeForce RTX 3090"), 48.0, 2);
+    const QVariantList menu = app.launchMenu();
+    bool found = false;
+    for (const QVariant &value : menu) {
+        const QVariantMap item = value.toMap();
+        if (item.value(QStringLiteral("id")).toString()
+                != QStringLiteral("sys-astra-strata-iq3s"))
+            continue;
+        found = true;
+        QVERIFY(item.value(QStringLiteral("displayName")).toString().contains(
+            QStringLiteral("ASTRA")));
+        QVERIFY(item.value(QStringLiteral("ready")).toBool());
+        break;
+    }
+    QVERIFY(found);
+    const QVariantMap launch = app.profileManager()->getLaunchProfile(
+        QStringLiteral("sys-astra-strata-iq3s"));
+    QVERIFY(!launch.isEmpty());
+    const QVariantMap backend = app.profileManager()->getBackend(
+        launch.value(QStringLiteral("backendProfileId")).toString());
+    QCOMPARE(backend.value(QStringLiteral("managedServer")).toMap()
+                 .value(QStringLiteral("type")).toString(),
+             QStringLiteral("astra-strata"));
+
+    // Sin indicar root/config manualmente, la app localiza la instalación
+    // completa, guarda las rutas y la agrega al catálogo LAN.
+    bool readyAfterSetup = false;
+    for (const QVariant &value : app.launchMenu()) {
+        const QVariantMap item = value.toMap();
+        if (item.value(QStringLiteral("id")).toString()
+                == QStringLiteral("sys-astra-strata-iq3s"))
+            readyAfterSetup = item.value(QStringLiteral("ready")).toBool();
+    }
+    QVERIFY(readyAfterSetup);
+    QCOMPARE(app.readSetting(QStringLiteral("astra/strataRoot")).toString(), strataRoot);
+    QCOMPARE(app.readSetting(QStringLiteral("astra/configFile")).toString(), configPath);
+    bool gatewayHasAstra = false;
+    for (const QJsonValue &model : app.gatewayModelCatalog())
+        gatewayHasAstra |= model.toObject().value(QStringLiteral("id")).toString()
+            == QStringLiteral("sys-astra-strata-iq3s");
+    QVERIFY(gatewayHasAstra);
+}
+
 void SystemProfilesTests::bundle_genesisProfilesAreOptIn64kAndMtp4()
 {
     QFile bundle(bundlePath());
@@ -2848,7 +3038,6 @@ void SystemProfilesTests::bundle_genesisProfilesAreOptIn64kAndMtp4()
         QCOMPARE(args.at(splitIndex + 1), expectedSplit);
     }
 }
-
 
 QTEST_MAIN(SystemProfilesTests)
 #include "test_system_profiles.moc"

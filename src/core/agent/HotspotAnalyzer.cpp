@@ -71,6 +71,12 @@ QString HotspotAnalyzer::stemOf(const QString &path)
 }
 
 QList<HotspotAnalyzer::Hotspot> HotspotAnalyzer::rank(const QList<Churn> &churn,
+                                                      const QSet<QString> &testedPaths)
+{
+    return rank(churn, testedPaths, Options{});
+}
+
+QList<HotspotAnalyzer::Hotspot> HotspotAnalyzer::rank(const QList<Churn> &churn,
                                                       const QSet<QString> &testedPaths,
                                                       const Options &opts)
 {

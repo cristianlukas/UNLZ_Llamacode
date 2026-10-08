@@ -28,6 +28,7 @@ namespace {
 using long_context_probe::RetrievalCase;
 
 constexpr int kMaxContextTokens = 1048576;
+constexpr int kMaxTimeoutMs = 14400000;
 
 struct ProbeResult {
     RetrievalCase fixture;
@@ -278,7 +279,7 @@ int main(int argc, char **argv)
     const int timeoutMs = parser.value(QStringLiteral("timeout-ms")).toInt(&timeoutOk);
     if (!usersOk || users < 1 || users > 256
         || !predictOk || nPredict < 1 || nPredict > 4096
-        || !timeoutOk || timeoutMs < 1000 || timeoutMs > 3600000) {
+        || !timeoutOk || timeoutMs < 1000 || timeoutMs > kMaxTimeoutMs) {
         QTextStream(stderr) << "users/n-predict/timeout-ms invalidos\n";
         return 2;
     }

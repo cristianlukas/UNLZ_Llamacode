@@ -1,6 +1,7 @@
 #include "SubAgentRunner.h"
 #include "AgentToolRunner.h"
 #include "LlamaAgentBackend.h"   // toolSchemas() (built-in)
+#include "ReasoningWire.h"
 
 #include <QJsonDocument>
 #include <QNetworkRequest>
@@ -83,6 +84,39 @@ SubAgentRunner::~SubAgentRunner()
     }
 }
 
+void SubAgentRunner::setReasoningPolicy(const QString &effort, int budget)
+{
+    m_reasoningEffort = ReasoningWire::normalizeEffort(effort);
+    m_reasoningBudget = qMax(-1, budget);
+}
+
+QJsonObject SubAgentRunner::buildCompletionPayload(const QJsonArray &messages,
+                                                   const QJsonArray &tools,
+                                                   const QString &modelId,
+                                                   double temperature,
+                                                   const QString &reasoningEffort,
+                                                   int reasoningBudget,
+                                                   int maxOutputTokens)
+{
+    const int budget = qMax(-1, reasoningBudget);
+    QJsonObject payload{
+        {QStringLiteral("model"), modelId.isEmpty() ? QStringLiteral("local") : modelId},
+        {QStringLiteral("messages"), messages},
+        {QStringLiteral("tools"), tools},
+        {QStringLiteral("tool_choice"), QStringLiteral("auto")},
+        {QStringLiteral("parallel_tool_calls"), false},
+        {QStringLiteral("parse_tool_calls"), false},
+        {QStringLiteral("max_tokens"), qBound(256, maxOutputTokens, 32768)},
+        {QStringLiteral("stream"), true},
+        {QStringLiteral("cache_prompt"), true},
+        {QStringLiteral("reasoning_budget"), budget},
+        {QStringLiteral("chat_template_kwargs"),
+         ReasoningWire::templateKwargs(budget != 0, false, reasoningEffort)}
+    };
+    if (temperature >= 0.0) payload.insert(QStringLiteral("temperature"), temperature);
+    return payload;
+}
+
 void SubAgentRunner::start()
 {
     // Worker propio (tools confinadas a la worktree).
@@ -136,18 +170,9 @@ void SubAgentRunner::runCompletion()
         }
         tools = filtered;
     }
-    QJsonObject payload{
-        {QStringLiteral("model"), m_modelId.isEmpty() ? QStringLiteral("local") : m_modelId},
-        {QStringLiteral("messages"), m_messages},
-        {QStringLiteral("tools"), tools},
-        {QStringLiteral("tool_choice"), QStringLiteral("auto")},
-        {QStringLiteral("parallel_tool_calls"), false},
-        {QStringLiteral("parse_tool_calls"), false},
-        {QStringLiteral("max_tokens"), 8192},
-        {QStringLiteral("stream"), true},
-        {QStringLiteral("cache_prompt"), true}
-    };
-    if (m_temperature >= 0.0) payload.insert(QStringLiteral("temperature"), m_temperature);
+    const QJsonObject payload = buildCompletionPayload(
+        m_messages, tools, m_modelId, m_temperature, m_reasoningEffort,
+        m_reasoningBudget, m_maxOutputTokens);
 
     QNetworkRequest req((QUrl(m_serverBaseUrl + QStringLiteral("/v1/chat/completions"))));
     req.setHeader(QNetworkRequest::ContentTypeHeader, QByteArrayLiteral("application/json"));

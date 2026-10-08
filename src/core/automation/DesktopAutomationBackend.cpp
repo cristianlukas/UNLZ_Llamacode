@@ -1,5 +1,6 @@
 #include "DesktopAutomationBackend.h"
 #include "DesktopComputerUse.h"
+#include "LinuxDesktopBackend.h"
 #include "VisualMatcher.h"
 
 #include "FuzzyMatch.h"
@@ -114,7 +115,7 @@ QRect targetBounds(const QString &kind, const QString &targetId)
     if (hwnd && IsWindow(hwnd) && GetWindowRect(hwnd, &r))
         return QRect(r.left, r.top, r.right - r.left, r.bottom - r.top);
 #else
-    Q_UNUSED(targetId)
+    if (kind == QLatin1String("window")) return LinuxDesktopBackend::targetBounds(kind, targetId);
 #endif
     return {};
 }
@@ -416,7 +417,7 @@ QVariantList DesktopAutomationBackend::windows()
     EnumWindows(collectWindow, reinterpret_cast<LPARAM>(&collector));
     return collector.rows;
 #else
-    return {};
+    return LinuxDesktopBackend::windows();
 #endif
 }
 
@@ -528,8 +529,17 @@ QImage DesktopAutomationBackend::capture(const QString &kind, const QString &tar
     // o sea del tamaño físico de `bounds` → readText() la mapea 1:1.
     const QRect sp = screenPhysicalGeometryOf(screen);
     const double dpr = screen->devicePixelRatio() > 0 ? screen->devicePixelRatio() : 1.0;
-    const QPixmap pix = screen->grabWindow(0,
-        qRound((bounds.x() - sp.x()) / dpr), qRound((bounds.y() - sp.y()) / dpr),
+#ifdef Q_OS_WIN
+    const int grabX = qRound((bounds.x() - sp.x()) / dpr);
+    const int grabY = qRound((bounds.y() - sp.y()) / dpr);
+#else
+    // X11's root-window grab uses the virtual-desktop coordinate space, even
+    // when the QScreen object represents a monitor whose geometry has a
+    // non-zero origin. Subtracting sp here captures the wrong monitor region.
+    const int grabX = qRound(bounds.x() / dpr);
+    const int grabY = qRound(bounds.y() / dpr);
+#endif
+    const QPixmap pix = screen->grabWindow(0, grabX, grabY,
         qRound(bounds.width() / dpr), qRound(bounds.height() / dpr));
     if (pix.isNull() && error) *error = QStringLiteral("No se pudo capturar el escritorio.");
     return pix.toImage();
@@ -570,7 +580,7 @@ bool DesktopAutomationBackend::interactiveSessionAvailable()
     CloseDesktop(desk);
     return available != FALSE;
 #else
-    return true;
+    return LinuxDesktopBackend::interactiveSessionAvailable();
 #endif
 }
 
@@ -593,12 +603,7 @@ bool DesktopAutomationBackend::launchApp(const QString &app, const QString &args
     if (!ok && error) *error = QStringLiteral("No se pudo lanzar: %1").arg(program);
     return ok;
 #else
-    QStringList argv;
-    const QString extra = args.trimmed();
-    if (!extra.isEmpty()) argv = extra.split(QLatin1Char(' '), Qt::SkipEmptyParts);
-    const bool ok = QProcess::startDetached(program, argv);
-    if (!ok && error) *error = QStringLiteral("No se pudo lanzar: %1").arg(program);
-    return ok;
+    return LinuxDesktopBackend::launchApp(program, args, error);
 #endif
 }
 
@@ -651,9 +656,7 @@ bool DesktopAutomationBackend::focusWindow(const QString &targetId, QString *err
     }
     return true;
 #else
-    Q_UNUSED(targetId)
-    if (error) *error = QStringLiteral("Control de ventanas disponible sólo en Windows.");
-    return false;
+    return LinuxDesktopBackend::focusWindow(targetId, error);
 #endif
 }
 
@@ -714,9 +717,7 @@ bool DesktopAutomationBackend::click(const QString &kind, const QString &targetI
     }
     return SendInput(2, inputs, sizeof(INPUT)) == 2;
 #else
-    Q_UNUSED(x) Q_UNUSED(y) Q_UNUSED(button) Q_UNUSED(trace)
-    if (error) *error = QStringLiteral("Control de escritorio disponible sólo en Windows.");
-    return false;
+    return LinuxDesktopBackend::click(kind, targetId, x, y, button, error, trace);
 #endif
 }
 
@@ -822,9 +823,7 @@ bool DesktopAutomationBackend::stroke(const QString &kind, const QString &target
     }
     return true;
 #else
-    Q_UNUSED(button) Q_UNUSED(holdMs) Q_UNUSED(trace)
-    if (error) *error = QStringLiteral("Control de escritorio disponible sólo en Windows.");
-    return false;
+    return LinuxDesktopBackend::stroke(kind, targetId, points, button, holdMs, error, trace);
 #endif
 }
 
@@ -848,9 +847,7 @@ bool DesktopAutomationBackend::typeText(const QString &text, QString *error)
     }
     return true;
 #else
-    Q_UNUSED(text)
-    if (error) *error = QStringLiteral("Control de escritorio disponible sólo en Windows.");
-    return false;
+    return LinuxDesktopBackend::typeText(text, error);
 #endif
 }
 
@@ -876,9 +873,7 @@ bool DesktopAutomationBackend::pressKey(const QString &key, const QStringList &m
     for (auto it = mods.crbegin(); it != mods.crend(); ++it) sendKey(*it, false);
     return true;
 #else
-    Q_UNUSED(key) Q_UNUSED(modifiers)
-    if (error) *error = QStringLiteral("Control de escritorio disponible sólo en Windows.");
-    return false;
+    return LinuxDesktopBackend::pressKey(key, modifiers, error);
 #endif
 }
 
@@ -893,9 +888,7 @@ bool DesktopAutomationBackend::scroll(int delta, QString *error)
     if (!ok && error) *error = QStringLiteral("No se pudo desplazar.");
     return ok;
 #else
-    Q_UNUSED(delta)
-    if (error) *error = QStringLiteral("Control de escritorio disponible sólo en Windows.");
-    return false;
+    return LinuxDesktopBackend::scroll(delta, error);
 #endif
 }
 
@@ -910,8 +903,7 @@ bool DesktopAutomationBackend::moveCursor(const QPoint &physical)
 #ifdef Q_OS_WIN
     return SetCursorPos(physical.x(), physical.y());
 #else
-    QCursor::setPos(physical);
-    return true;
+    return LinuxDesktopBackend::moveCursor(physical);
 #endif
 }
 
@@ -925,7 +917,11 @@ QPoint DesktopAutomationBackend::cursorPosPhysical()
     POINT p{};
     if (GetCursorPos(&p)) return QPoint(p.x, p.y);
 #endif
+#ifndef Q_OS_WIN
+    return LinuxDesktopBackend::cursorPos();
+#else
     return QCursor::pos();
+#endif
 }
 
 QVariantList DesktopAutomationBackend::controls(const QString &windowTargetId,
@@ -1000,9 +996,7 @@ QVariantList DesktopAutomationBackend::controls(const QString &windowTargetId,
     uia->Release();
     return out;
 #else
-    Q_UNUSED(windowTargetId) Q_UNUSED(query) Q_UNUSED(max)
-    if (error) *error = QStringLiteral("UI Automation disponible sólo en Windows.");
-    return {};
+    return LinuxDesktopBackend::controls(windowTargetId, query, max, error);
 #endif
 }
 
@@ -1186,9 +1180,7 @@ bool DesktopAutomationBackend::clickElementInternal(const QString &windowTargetI
                                                 "re-listá con desktop_controls).");
     return success;
 #else
-    Q_UNUSED(windowTargetId) Q_UNUSED(controlId) Q_UNUSED(allowFuzzy) Q_UNUSED(trace)
-    if (error) *error = QStringLiteral("UI Automation disponible sólo en Windows.");
-    return false;
+    return LinuxDesktopBackend::clickElement(windowTargetId, controlId, allowFuzzy, error, trace);
 #endif
 }
 
@@ -1385,10 +1377,7 @@ bool DesktopAutomationBackend::controlAction(const QString &windowTargetId,
         *error = QStringLiteral("No se encontró el control; generá un snapshot nuevo.");
     return found && success;
 #else
-    Q_UNUSED(windowTargetId) Q_UNUSED(controlId) Q_UNUSED(action) Q_UNUSED(value)
-    Q_UNUSED(trace)
-    if (error) *error = QStringLiteral("UI Automation disponible sólo en Windows.");
-    return false;
+    return LinuxDesktopBackend::controlAction(windowTargetId, controlId, action, value, error, trace);
 #endif
 }
 
@@ -1651,8 +1640,7 @@ QVariantMap DesktopAutomationBackend::controlAtPoint(const QPoint &absolute)
     }
     return info;
 #else
-    Q_UNUSED(absolute)
-    return {};
+    return LinuxDesktopBackend::controlAtPoint(absolute);
 #endif
 }
 
@@ -1672,9 +1660,7 @@ bool DesktopAutomationBackend::setWindowMaximized(const QString &targetId, bool 
     if (IsIconic(hwnd)) ShowWindow(hwnd, maximized ? SW_MAXIMIZE : SW_RESTORE);
     return focusWindow(targetId, error);
 #else
-    Q_UNUSED(targetId) Q_UNUSED(maximized)
-    if (error) *error = QStringLiteral("Control de ventanas disponible sólo en Windows.");
-    return false;
+    return LinuxDesktopBackend::setWindowMaximized(targetId, maximized, error);
 #endif
 }
 
@@ -1717,9 +1703,7 @@ bool DesktopAutomationBackend::setWindowSize(const QString &targetId, int width,
     }
     return focusWindow(targetId, error);
 #else
-    Q_UNUSED(targetId) Q_UNUSED(width) Q_UNUSED(height)
-    if (error) *error = QStringLiteral("Control de ventanas disponible sólo en Windows.");
-    return false;
+    return LinuxDesktopBackend::setWindowSize(targetId, width, height, error);
 #endif
 }
 
@@ -1777,10 +1761,44 @@ QVariantMap DesktopAutomationBackend::waitFor(const QString &windowTargetId,
     return QVariantMap{{QStringLiteral("found"), false},
                        {QStringLiteral("elapsedMs"), static_cast<int>(clock.elapsed())}};
 #else
-    Q_UNUSED(windowTargetId) Q_UNUSED(windowTitle) Q_UNUSED(query)
-    Q_UNUSED(role) Q_UNUSED(timeoutMs)
-    if (error) *error = QStringLiteral("Disponible sólo en Windows.");
-    return QVariantMap{{QStringLiteral("found"), false}};
+    const int budget = qBound(0, timeoutMs, 60000);
+    const QString title = windowTitle.trimmed().toLower();
+    const QString needle = query.trimmed().toLower();
+    const QString wantRole = role.trimmed().toLower();
+    QElapsedTimer clock;
+    clock.start();
+    do {
+        QString windowId = windowTargetId.trimmed();
+        QString foundTitle;
+        if (windowId.isEmpty() && !title.isEmpty()) {
+            for (const QVariant &w : windows()) {
+                const QVariantMap row = w.toMap();
+                if (row.value(QStringLiteral("label")).toString().toLower().contains(title)) {
+                    windowId = row.value(QStringLiteral("id")).toString();
+                    foundTitle = row.value(QStringLiteral("label")).toString();
+                    break;
+                }
+            }
+        }
+        if (!windowId.isEmpty()) {
+            if (needle.isEmpty() && wantRole.isEmpty())
+                return {{QStringLiteral("found"), true}, {QStringLiteral("elapsedMs"), int(clock.elapsed())},
+                        {QStringLiteral("windowId"), windowId}, {QStringLiteral("title"), foundTitle}};
+            for (const QVariant &c : controls(windowId, query, 400, nullptr)) {
+                const QVariantMap row = c.toMap();
+                if (!wantRole.isEmpty() && row.value(QStringLiteral("role")).toString().toLower() != wantRole) continue;
+                QVariantMap hit = row;
+                hit[QStringLiteral("found")] = true;
+                hit[QStringLiteral("elapsedMs")] = int(clock.elapsed());
+                hit[QStringLiteral("windowId")] = windowId;
+                return hit;
+            }
+        }
+        if (clock.elapsed() >= budget) break;
+        QThread::msleep(200);
+    } while (clock.elapsed() < budget);
+    if (error) *error = QStringLiteral("Timeout: la condición no se cumplió en %1 ms.").arg(budget);
+    return {{QStringLiteral("found"), false}, {QStringLiteral("elapsedMs"), int(clock.elapsed())}};
 #endif
 }
 
@@ -1845,9 +1863,44 @@ QVariantMap DesktopAutomationBackend::assertCondition(const QString &windowTarge
                        {QStringLiteral("detail"),
                         QStringLiteral("Texto \"%1\" NO encontrado.").arg(want.left(80))}};
 #else
-    Q_UNUSED(windowTargetId) Q_UNUSED(windowTitle) Q_UNUSED(query)
-    Q_UNUSED(role) Q_UNUSED(expectText) Q_UNUSED(timeoutMs)
-    if (error) *error = QStringLiteral("Disponible sólo en Windows.");
-    return QVariantMap{{QStringLiteral("pass"), false}};
+    const QString want = expectText.trimmed();
+    if (want.isEmpty()) {
+        QString err;
+        const QVariantMap r = waitFor(windowTargetId, windowTitle, query, role, timeoutMs, &err);
+        const bool pass = r.value(QStringLiteral("found")).toBool();
+        if (!pass && error) *error = err;
+        return {{QStringLiteral("pass"), pass}, {QStringLiteral("elapsedMs"), r.value(QStringLiteral("elapsedMs"))},
+                {QStringLiteral("detail"), pass ? QStringLiteral("Condición de existencia cumplida.")
+                                                   : QStringLiteral("No apareció la ventana/control esperado.")}};
+    }
+    const int budget = qBound(0, timeoutMs, 60000);
+    const QString needle = want.toLower();
+    QElapsedTimer clock;
+    clock.start();
+    do {
+        QStringList ids;
+        if (!windowTargetId.trimmed().isEmpty()) ids << windowTargetId.trimmed();
+        else if (!windowTitle.trimmed().isEmpty()) {
+            const QString title = windowTitle.trimmed().toLower();
+            for (const QVariant &w : windows())
+                if (w.toMap().value(QStringLiteral("label")).toString().toLower().contains(title))
+                    ids << w.toMap().value(QStringLiteral("id")).toString();
+        } else {
+            for (const QVariant &w : windows()) ids << w.toMap().value(QStringLiteral("id")).toString();
+        }
+        for (const QString &id : ids) {
+            for (const QVariant &c : controls(id, want, 400, nullptr)) {
+                if (c.toMap().value(QStringLiteral("name")).toString().toLower().contains(needle))
+                    return {{QStringLiteral("pass"), true}, {QStringLiteral("elapsedMs"), int(clock.elapsed())},
+                            {QStringLiteral("windowId"), id},
+                            {QStringLiteral("detail"), QStringLiteral("Texto \"%1\" presente.").arg(want.left(80))}};
+            }
+        }
+        if (clock.elapsed() >= budget) break;
+        QThread::msleep(200);
+    } while (clock.elapsed() < budget);
+    if (error) *error = QStringLiteral("El texto \"%1\" no apareció en %2 ms.").arg(want.left(80)).arg(budget);
+    return {{QStringLiteral("pass"), false}, {QStringLiteral("elapsedMs"), int(clock.elapsed())},
+            {QStringLiteral("detail"), QStringLiteral("Texto \"%1\" NO encontrado.").arg(want.left(80))}};
 #endif
 }

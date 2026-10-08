@@ -1,6 +1,7 @@
 #include "RawChatBackend.h"
 #include "AgentLifecycle.h"
 #include "ReasoningWire.h"
+#include "VisionImagePayload.h"
 #include "core/DocumentExtractor.h"
 #include <QDateTime>
 #include <QDir>
@@ -100,23 +101,6 @@ static QString stripThinkForOutput(const QString &s)
     out.remove(closeRe);
     out.remove(openRe);
     return out.trimmed();
-}
-
-// Devuelve un data URI base64 si el archivo es imagen soportada por mmproj; "" si no.
-static QString imageDataUri(const QString &path)
-{
-    const QString ext = QFileInfo(path).suffix().toLower();
-    QString mime;
-    if (ext == "png") mime = "image/png";
-    else if (ext == "jpg" || ext == "jpeg") mime = "image/jpeg";
-    else if (ext == "webp") mime = "image/webp";
-    else if (ext == "gif") mime = "image/gif";
-    else if (ext == "bmp") mime = "image/bmp";
-    else return {};
-    QFile f(path);
-    if (!f.open(QIODevice::ReadOnly)) return {};
-    const QByteArray b64 = f.readAll().toBase64();
-    return QStringLiteral("data:%1;base64,%2").arg(mime, QString::fromLatin1(b64));
 }
 
 // Lee un archivo de texto/código (UTF-8). Vacío si binario/imagen.
@@ -519,7 +503,7 @@ void RawChatBackend::sendMessage(const QString &text)
                 textPart += QStringLiteral("\n\n/no_think");
             QJsonArray images;
             for (const QString &path : atts) {
-                const QString uri = imageDataUri(path);
+                const QString uri = VisionImagePayload::dataUri(path);
                 if (!uri.isEmpty()) {
                     images.append(QJsonObject{
                         {QStringLiteral("type"), QStringLiteral("image_url")},

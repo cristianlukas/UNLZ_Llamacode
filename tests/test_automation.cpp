@@ -47,6 +47,7 @@ private slots:
     void keyBufferEmitsShortcutWithModifiers();
     void winTapDistinguishesLoneTapFromShortcut();
     void desktopComputerUseContractsAndReceipts();
+    void desktopProcessGuardIsExclusive();
     void desktopActionClassificationIsGeneric();
     void desktopRecoveryPolicyBuildsContracts();
 };
@@ -273,6 +274,13 @@ void AutomationTests::browserPromptUsesForegroundTeachEvidence()
     QVERIFY(prompt.contains(QStringLiteral("browser foreground de Playwright")));
     QVERIFY(!prompt.contains(QStringLiteral("captura: evidence/0002.jpg")));
     QVERIFY(prompt.contains(QStringLiteral("adaptá selectores")));
+    QVERIFY(prompt.contains(QStringLiteral("LOOP DE ACCIÓN FINITA")));
+    QVERIFY(prompt.contains(QStringLiteral("una sola operación")));
+    QVERIFY(prompt.contains(QStringLiteral("targets ofrecidos por la observación más reciente")));
+    QVERIFY(prompt.contains(QStringLiteral("un target válido para una no se puede reutilizar para otra")));
+    QVERIFY(prompt.contains(QStringLiteral("nunca debe generar selectores, JavaScript ni coordenadas")));
+    QVERIFY(prompt.contains(QStringLiteral("Ante snapshot stale o target ambiguo")));
+    QVERIFY(prompt.contains(QStringLiteral("DONE requiere evidencia visible")));
 }
 
 void AutomationTests::actionTraceSurvivesRecipeAndPrompt()
@@ -683,6 +691,21 @@ void AutomationTests::desktopComputerUseContractsAndReceipts()
     QVERIFY(serialized.value(QStringLiteral("receiptId")).toString().size() > 10);
     QVERIFY(!serialized.value(QStringLiteral("payloadHash")).toString().isEmpty());
     QVERIFY(serialized.value(QStringLiteral("detail")).toString().contains(QStringLiteral("[REDACTED]")));
+}
+
+void AutomationTests::desktopProcessGuardIsExclusive()
+{
+    DesktopComputerUse::ProcessSessionGuard first;
+    DesktopComputerUse::ProcessSessionGuard second;
+    QString error;
+    QVERIFY(first.acquire(&error));
+    QVERIFY(first.isHeld());
+    QVERIFY(!second.acquire(&error));
+    QVERIFY(error.contains(QStringLiteral("otra instancia")));
+    first.release();
+    QVERIFY(!first.isHeld());
+    QVERIFY(second.acquire(&error));
+    QVERIFY(second.isHeld());
 }
 
 void AutomationTests::desktopActionClassificationIsGeneric()

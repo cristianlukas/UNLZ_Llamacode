@@ -34,9 +34,8 @@ public:
         QMap<QString, qint64> typeElements; // nombre dtype -> nº de elementos
         qint64 totalElements = 0;
         // Elementos que viven en tablas de lookup Ngram/PLE (arquitectura Qwen4).
-        // No son compute: se pueden mandar al backend CPU y dejar que mmap los
-        // pagine desde el SSD, asi que NO cuentan como peso residente.
-        // OJO: es por archivo. En un GGUF en shards hay que sumar los shards.
+        // Es una señal diagnóstica: en CUDA/Flash-Next el override a CPU puede
+        // no reducir la VRAM efectiva. OJO: en shards hay que sumar los archivos.
         qint64 ngramElements = 0;
         QString dominantQuant;              // dtype cuantizado con más elementos
         double bpw = 0.0;                   // file_size*8 / totalElements

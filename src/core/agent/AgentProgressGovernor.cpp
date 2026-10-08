@@ -6,6 +6,11 @@
 #include <QJsonDocument>
 #include <QRegularExpression>
 
+AgentProgressGovernor::AgentProgressGovernor()
+    : AgentProgressGovernor(Policy{})
+{
+}
+
 AgentProgressGovernor::AgentProgressGovernor(const Policy &policy)
 {
     setPolicy(policy);

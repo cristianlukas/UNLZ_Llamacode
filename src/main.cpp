@@ -14,11 +14,13 @@
 #include <QFile>
 #include <QTextStream>
 #include <QDateTime>
+#include <QEvent>
 #include <QStandardPaths>
 #include <QDir>
 #include <QtMessageHandler>
 #include <QPixmap>
 #include <QPainter>
+#include <QPointer>
 #include <QWindow>
 #include <QWidget>
 #include <QLabel>
@@ -42,6 +44,37 @@
 
 static QFile s_logFile;
 static QTextStream s_logStream;
+
+class TrayWindowCloseFilter final : public QObject
+{
+public:
+    TrayWindowCloseFilter(const TrayController *tray, QObject *parent = nullptr)
+        : QObject(parent), m_tray(tray) {}
+
+    void setForceQuit(bool forceQuit) { m_forceQuit = forceQuit; }
+
+protected:
+    bool eventFilter(QObject *watched, QEvent *event) override
+    {
+        if (!m_forceQuit && event->type() == QEvent::Close) {
+            auto *window = qobject_cast<QWindow *>(watched);
+            if (window
+                && m_tray && m_tray->isAvailable()
+                && QSettings().value(QStringLiteral("window/minimizeToTray"), false).toBool()) {
+                // Ignorar el cierre antes de que QQuickWindow destruya su handle
+                // nativo. Así el tray puede volver a mapear la misma ventana.
+                event->ignore();
+                window->hide();
+                return true;
+            }
+        }
+        return QObject::eventFilter(watched, event);
+    }
+
+private:
+    const TrayController *m_tray = nullptr;
+    bool m_forceQuit = false;
+};
 
 static void messageHandler(QtMsgType type, const QMessageLogContext &ctx, const QString &msg)
 {
@@ -103,7 +136,7 @@ int main(int argc, char *argv[])
     app.setQuitOnLastWindowClosed(false);
     app.setApplicationName("LlamaCode");
     app.setOrganizationName("LlamaCode");
-    app.setApplicationVersion("0.1.116");
+    app.setApplicationVersion("0.1.117");
     const bool startedWithWindows = app.arguments().contains(QStringLiteral("--startup"));
     const bool handoffUi = app.arguments().contains(QStringLiteral("--handoff-ui"));
     const bool headlessAgent = app.arguments().contains(QStringLiteral("--headless"))
@@ -226,9 +259,17 @@ int main(int argc, char *argv[])
     const QString trayIconSource = appIconSource;
     const QIcon appIcon(QStringLiteral(":/assets/debug_icon.ico"));
 #else
+#ifdef Q_OS_WIN
     const QString appIconSource = QStringLiteral("qrc:/assets/app_icon.ico");
     const QString trayIconSource = QStringLiteral("qrc:/assets/tray_icon.png");
     const QIcon appIcon(QStringLiteral(":/assets/app_icon.ico"));
+#else
+    // Linux/GNOME consume mejor el PNG que el contenedor ICO. Ambos recursos
+    // siguen embebidos; Windows conserva el ICO para la identidad del .exe.
+    const QString appIconSource = QStringLiteral("qrc:/assets/app_icon.png");
+    const QString trayIconSource = QStringLiteral("qrc:/assets/tray_icon.png");
+    const QIcon appIcon(QStringLiteral(":/assets/app_icon.png"));
+#endif
 #endif
     app.setWindowIcon(appIcon);
     qDebug() << "QApplication ready elapsedMs=" << startupClock.elapsed();
@@ -339,37 +380,54 @@ int main(int argc, char *argv[])
     // handoff limpio a una instancia gráfica del mismo ejecutable.
     QLocalServer::removeServer(kInstanceKey);   // limpiar socket huérfano de un crash
     auto *instanceServer = new QLocalServer(&app);
-    if (instanceServer->listen(kInstanceKey)) {
-        QObject::connect(instanceServer, &QLocalServer::newConnection, &controller,
-                         [instanceServer, &controller, &app, headlessAgent, kInstanceKey]() {
-            if (QLocalSocket *c = instanceServer->nextPendingConnection()) {
-                QObject::connect(c, &QLocalSocket::readyRead, &controller,
-                                 [c, &controller, instanceServer, &app, headlessAgent, kInstanceKey]() {
-                    const QString command = QString::fromUtf8(c->readAll()).trimmed();
-                    if (command == QStringLiteral("show-ui") && headlessAgent) {
-                        // Liberar el nombre antes de iniciar la GUI; de lo
-                        // contrario la GUI recién lanzada se detectaría a sí
-                        // misma como segunda instancia y saldría otra vez.
-                        instanceServer->close();
-                        QLocalServer::removeServer(kInstanceKey);
-                        QStringList guiArgs = app.arguments();
-                        guiArgs.removeAll(QStringLiteral("--headless"));
-                        guiArgs.removeAll(QStringLiteral("--agent-daemon"));
-                        guiArgs.append(QStringLiteral("--handoff-ui"));
-                        QTimer::singleShot(0, &app, [guiArgs, &app]() {
-                            if (!QProcess::startDetached(QCoreApplication::applicationFilePath(), guiArgs))
-                                qWarning() << "No se pudo convertir la instancia headless a GUI";
-                            app.quit();
-                        });
-                    } else if (command.startsWith(QStringLiteral("automation:")))
-                        controller.runAutomation(command.mid(11));
-                    else
-                        controller.notifySecondInstance();
-                    c->disconnectFromServer();
-                    c->deleteLater();
+    const bool instanceListening = instanceServer->listen(kInstanceKey);
+    qInfo() << "Servidor de instancia local:" << (instanceListening ? "activo" : "falló")
+            << "key=" << kInstanceKey
+            << (instanceListening ? QString() : instanceServer->errorString());
+    if (instanceListening) {
+        const auto processConnection = [instanceServer, &controller, &app,
+                                        headlessAgent, kInstanceKey](QLocalSocket *c) {
+            if (!c) return;
+            // El cliente escribe y cierra muy rápido (en particular el lanzador
+            // de Ubuntu). Esperar aquí evita perder el payload antes de que
+            // readyRead sea despachado por el event loop.
+            if (c->bytesAvailable() <= 0)
+                c->waitForReadyRead(500);
+            const QString command = QString::fromUtf8(c->readAll()).trimmed();
+            if (command == QStringLiteral("show-ui") && headlessAgent) {
+                // Liberar el nombre antes de iniciar la GUI; de lo contrario la
+                // GUI recién lanzada se detectaría a sí misma como segunda.
+                instanceServer->close();
+                QLocalServer::removeServer(kInstanceKey);
+                QStringList guiArgs = app.arguments();
+                guiArgs.removeAll(QStringLiteral("--headless"));
+                guiArgs.removeAll(QStringLiteral("--agent-daemon"));
+                guiArgs.append(QStringLiteral("--handoff-ui"));
+                QTimer::singleShot(0, &app, [guiArgs, &app]() {
+                    if (!QProcess::startDetached(QCoreApplication::applicationFilePath(), guiArgs))
+                        qWarning() << "No se pudo convertir la instancia headless a GUI";
+                    app.quit();
                 });
+            } else if (command.startsWith(QStringLiteral("automation:"))) {
+                controller.runAutomation(command.mid(11));
+            } else if (command == QStringLiteral("show-ui")) {
+                controller.notifySecondInstance();
             }
-        });
+            c->disconnectFromServer();
+            c->deleteLater();
+        };
+        const auto acceptConnections = [instanceServer, processConnection]() {
+            while (instanceServer->hasPendingConnections())
+                processConnection(instanceServer->nextPendingConnection());
+        };
+        QObject::connect(instanceServer, &QLocalServer::newConnection, &app,
+                         acceptConnections);
+        // El polling cubre sesiones X11/Wayland en las que el backend entrega
+        // la conexión sin emitir newConnection en el mismo ciclo.
+        auto *instancePoller = new QTimer(instanceServer);
+        instancePoller->setInterval(50);
+        QObject::connect(instancePoller, &QTimer::timeout, &app, acceptConnections);
+        instancePoller->start();
     }
 
     qDebug() << "Controllers ready";
@@ -429,6 +487,35 @@ int main(int argc, char *argv[])
     // la ventana (transient parent → no se fuerza sobre otras apps) hasta terminar
     // el escaneo y el refresco de la UI.
     QWindow *win = qobject_cast<QWindow *>(engine.rootObjects().constFirst());
+    // La ventana puede quedar oculta por "minimizar a la bandeja". Restaurarla
+    // desde C++ evita depender de que QML procese una señal mientras la ventana
+    // está oculta y hace que funcionen igual el click del tray y una segunda
+    // apertura desde el lanzador de Ubuntu/Windows.
+    const QPointer<QWindow> windowGuard(win);
+    auto restoreWindow = [windowGuard]() {
+        QWindow *window = windowGuard.data();
+        if (!window) return;
+        // QWindow puede conservar isVisible=true después de que el WM procesa
+        // WM_DELETE_WINDOW y QML oculta la superficie. Forzar hide primero
+        // garantiza que la siguiente orden vuelva a mapearla en X11.
+        window->hide();
+        if (QSettings().value(QStringLiteral("window/maximized"), false).toBool())
+            window->showMaximized();
+        else
+            window->showNormal();
+        window->show();
+        window->raise();
+        window->requestActivate();
+    };
+    QObject::connect(&controller, &AppController::secondInstanceLaunched,
+                     &app, restoreWindow);
+    QObject::connect(&tray, &TrayController::openRequested, &app, restoreWindow);
+    auto *trayCloseFilter = new TrayWindowCloseFilter(&tray, &app);
+    QObject::connect(&tray, &TrayController::quitRequested, &app,
+                     [trayCloseFilter]() { trayCloseFilter->setForceQuit(true); });
+    if (win)
+        win->installEventFilter(trayCloseFilter);
+
     auto runDeferredStartup = [&controller, &splash, &startupClock,
                                win, appIcon, startHidden]() {
         static bool done = false;

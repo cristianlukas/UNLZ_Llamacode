@@ -350,10 +350,12 @@ void GatewayTests::lanActivationStartsRequestedProfile()
     const quint16 port = probe.serverPort();
     probe.close();
     QString activated;
+    const QString astraId = QStringLiteral("sys-astra-strata-iq3s");
     LlmGateway gateway;
     LlmGateway::Hooks hooks;
     hooks.models = [] {
-        return QJsonArray{QJsonObject{{"id","remote-qwen"}, {"name","Qwen LAN"}}};
+        return QJsonArray{QJsonObject{{"id","sys-astra-strata-iq3s"},
+                                      {"name","ASTRA · Strata IQ3_S"}}};
     };
     hooks.ensureModel = [&activated](const QString &id) { activated = id; };
     gateway.setHooks(hooks);
@@ -364,12 +366,13 @@ void GatewayTests::lanActivationStartsRequestedProfile()
     request.setHeader(QNetworkRequest::ContentTypeHeader, QByteArrayLiteral("application/json"));
     request.setRawHeader("Authorization", "Bearer secret");
     QNetworkAccessManager nam;
-    QNetworkReply *reply = nam.post(request, QByteArrayLiteral("{\"model\":\"remote-qwen\"}"));
+    QNetworkReply *reply = nam.post(request,
+        QJsonDocument(QJsonObject{{"model", astraId}}).toJson(QJsonDocument::Compact));
     QEventLoop loop;
     connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
     loop.exec();
     QCOMPARE(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt(), 200);
-    QCOMPARE(activated, QStringLiteral("remote-qwen"));
+    QCOMPARE(activated, astraId);
     reply->deleteLater();
 }
 

@@ -53,8 +53,10 @@ public:
     // set); estar SIN test eleva el piso de riesgo. Filtra por minCommits y corta
     // en topN. Orden: score desc, luego commits desc, luego path.
     static QList<Hotspot> rank(const QList<Churn> &churn,
+                               const QSet<QString> &testedPaths);
+    static QList<Hotspot> rank(const QList<Churn> &churn,
                                const QSet<QString> &testedPaths,
-                               const Options &opts = {});
+                               const Options &opts);
 
     // Heurística: ¿la ruta es un archivo de test? (carpeta tests/__tests__/spec,
     // o nombre con prefijo/sufijo test_/_test/.spec/.test). Usado para excluir los

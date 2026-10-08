@@ -25,6 +25,11 @@ inline QJsonArray expandSystemProfileVariants(const QJsonArray &source)
             derived[QStringLiteral("id")] = id;
             derived[QStringLiteral("displayName")] =
                 variant.value(QStringLiteral("displayName")).toString();
+            // Una variante puede tener un nombre operativo propio sin perder su
+            // ID técnico estable. Si no lo declara, ProfileManager conserva el
+            // alias heredado (o aplica el fallback de VRAM).
+            if (variant.contains(QStringLiteral("alias")))
+                derived[QStringLiteral("alias")] = variant.value(QStringLiteral("alias"));
             // Algunas comparaciones necesitan cambiar el template además de los
             // flags. Propagarlo permite que ProfileManager materialice el archivo
             // correcto desde el bundle, en vez de dejar el template del padre.
@@ -52,6 +57,9 @@ inline QJsonArray expandSystemProfileVariants(const QJsonArray &source)
             derived[QStringLiteral("best")] = variant.value(QStringLiteral("best")).toBool(false);
             derived[QStringLiteral("favorite")] = variant.value(QStringLiteral("favorite")).toBool(false);
             derived[QStringLiteral("benchmark")] = variant.value(QStringLiteral("benchmark")).toBool(false);
+            if (variant.contains(QStringLiteral("benchmarkMemoryAdaptive")))
+                derived[QStringLiteral("benchmarkMemoryAdaptive")] =
+                    variant.value(QStringLiteral("benchmarkMemoryAdaptive"));
             if (variant.contains(QStringLiteral("order")))
                 derived[QStringLiteral("order")] = variant.value(QStringLiteral("order"));
             // Las copias de benchmark son comparadores, no recomendaciones del

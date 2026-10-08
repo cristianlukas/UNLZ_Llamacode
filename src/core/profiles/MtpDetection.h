@@ -32,12 +32,19 @@ inline bool isSelfContained(const QString &fileName)
     static const QRegularExpression katCoderApexMtp(
         QStringLiteral(R"((^|[-_.])kat[-_.]?coder[-_.]?v2[._-]?5[-_.]?dev[-_.]?mtp[-_.]?apex($|[-_.]))"),
         QRegularExpression::CaseInsensitiveOption);
+    // Los artefactos MTP de Qwen3.5 publicados por Unsloth conservan el
+    // nombre de quant estándar y distinguen la variante por repositorio/
+    // carpeta. En los perfiles bundled el specType ya expresa esa intención.
+    static const QRegularExpression qwen35Mtp(
+        QStringLiteral(R"(^qwen3[._-]?5[-_.](?:2b|4b|9b)(?:[-_.].*)?$)"),
+        QRegularExpression::CaseInsensitiveOption);
     return marker.match(base).hasMatch()
         || thinkingCapQwen36.match(base).hasMatch()
         || deepSeekV4Flash0731.match(base).hasMatch()
         || bigBangV1.match(base).hasMatch()
         || qwen38.match(base).hasMatch()
-        || katCoderApexMtp.match(base).hasMatch();
+        || katCoderApexMtp.match(base).hasMatch()
+        || qwen35Mtp.match(base).hasMatch();
 }
 
 } // namespace MtpDetection

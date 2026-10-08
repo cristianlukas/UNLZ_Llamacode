@@ -1,10 +1,13 @@
 #pragma once
 
 #include <QJsonObject>
+#include <QLockFile>
 #include <QRect>
 #include <QString>
 #include <QVariantList>
 #include <QVariantMap>
+
+#include <memory>
 
 // Contratos compartidos por la percepción, la ejecución y la auditoría de
 // Computer Use. Se mantienen en un módulo pequeño para que AgentToolRunner,
@@ -74,6 +77,28 @@ struct SessionLease {
 
     bool consume();
     QVariantMap toVariantMap() const;
+};
+
+// Exclusión entre procesos para el escritorio interactivo. El mutex que
+// serializa tools dentro de AgentToolRunner no alcanza cuando conviven una
+// instancia GUI y un daemon/Task separado.
+class ProcessSessionGuard final
+{
+public:
+    ProcessSessionGuard() = default;
+    ~ProcessSessionGuard();
+
+    ProcessSessionGuard(const ProcessSessionGuard &) = delete;
+    ProcessSessionGuard &operator=(const ProcessSessionGuard &) = delete;
+
+    bool acquire(QString *error = nullptr);
+    void release();
+    bool isHeld() const;
+
+    static QString lockPath();
+
+private:
+    std::unique_ptr<QLockFile> m_lock;
 };
 
 QString stableHash(const QVariantMap &value);

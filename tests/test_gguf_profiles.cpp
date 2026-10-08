@@ -52,6 +52,7 @@ private slots:
 
     // ── EffectiveProfileBuilder ──
     void builder_emitsHostPort();
+    void builder_usesCurrentPlatformArgs();
     void builder_dropsUnsupportedFlag();
     void builder_missingModelIsBlocking();
     void builder_cloudProfileIsValidWithoutLocalModel();
@@ -76,6 +77,7 @@ private slots:
     void builder_emitsTensorOverrides();
     void builder_warnsOnMalformedTensorOverride();
     void builder_ninfer3090UsesNativeArtifactCli();
+    void builder_ninferServeMapsParallelSlotsAndKeepsVisionOptIn();
     void builder_preservesSpecializedKvRuntimeArgsAndEnv();
     void runtimePreset_roundtripsTensorOverrides();
 };
@@ -139,6 +141,8 @@ void CoreTests::draftCandidate()
         "KAT_Coder_V2_5_Dev_MTP_APEX_I_Quality_v2.gguf"));
     QVERIFY(MtpDetection::isSelfContained("Qwen3.8-27B-UD-Q4_K_XL.gguf"));
     QVERIFY(MtpDetection::isSelfContained("Qwen3_8-27B-Q5_K_M.gguf"));
+    QVERIFY(MtpDetection::isSelfContained("Qwen3.5-4B-Q4_K_M.gguf"));
+    QVERIFY(MtpDetection::isSelfContained("Qwen3.5-9B-Q4_K_M.gguf"));
     QVERIFY(!MtpDetection::isSelfContained("DeepSeek-V4-Flash-Preview-UD-IQ3_S.gguf"));
     QVERIFY(!MtpDetection::isSelfContained("ThinkingCap-Qwen3.5-27B-Q4_K_M.gguf"));
     QVERIFY(!MtpDetection::isSelfContained("Qwen3.6-27B-Q3_K_M.gguf"));
@@ -364,6 +368,7 @@ void CoreTests::readCompositionAllShards_aggregates()
 
     const GGUFScanner::Composition agg =
         GGUFScanner::readCompositionAllShards(shardPath(1));
+    QVERIFY(agg.valid);
     QCOMPARE(agg.totalElements, 6000ll);
     QCOMPARE(agg.ngramElements, 5000ll);
     QCOMPARE(agg.totalElements - agg.ngramElements, 1000ll);
@@ -481,6 +486,22 @@ void CoreTests::builder_emitsHostPort()
     QCOMPARE(ep.effectiveArgs[pi + 1], QStringLiteral("9099"));
 }
 
+void CoreTests::builder_usesCurrentPlatformArgs()
+{
+    auto ctx = makeCtx();
+    ctx.launch.extraArgs = {QStringLiteral("--portable-mode"), QStringLiteral("base")};
+    ctx.launch.platformArgs.insert(QStringLiteral("linux"),
+                                   {QStringLiteral("--linux-mode"), QStringLiteral("cuda")});
+    const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
+#if defined(Q_OS_LINUX)
+    QVERIFY(ep.effectiveArgs.contains(QStringLiteral("--linux-mode")));
+    QVERIFY(!ep.effectiveArgs.contains(QStringLiteral("--portable-mode")));
+#else
+    QVERIFY(ep.effectiveArgs.contains(QStringLiteral("--portable-mode")));
+    QVERIFY(!ep.effectiveArgs.contains(QStringLiteral("--linux-mode")));
+#endif
+}
+
 void CoreTests::builder_dropsUnsupportedFlag()
 {
     auto ctx = makeCtx();
@@ -518,6 +539,13 @@ void CoreTests::builder_cloudProfileIsValidWithoutLocalModel()
     QVERIFY(ep.commandLine.contains(QStringLiteral("127.0.0.1:8000")));
     QVERIFY(ep.commandLine.contains(QStringLiteral("lued/Qwen3.8-27B-INT8-W8A16-DFlash2")));
     QVERIFY(!ep.commandLine.contains(QStringLiteral("VLLM_KEY")));
+
+    ctx.backend.managedServer = QJsonObject{{"type", "docker-compose"},
+                                            {"project", "sol"},
+                                            {"service", "vllm"}};
+    const EffectiveProfile managed = EffectiveProfileBuilder::build(ctx);
+    QVERIFY(managed.isValid());
+    QVERIFY(managed.commandLine.contains(QStringLiteral("<managed docker-compose: sol/vllm>")));
 }
 
 void CoreTests::builder_cpuAuxiliaryRuntimeEmitsConservativeFlags()
@@ -964,8 +992,39 @@ void CoreTests::builder_ninfer3090UsesNativeArtifactCli()
     QVERIFY(a.contains(QStringLiteral("--max-context")));
     QVERIFY(a.contains(QStringLiteral("--kv-dtype")));
     QVERIFY(a.contains(QStringLiteral("int8")));
-    QVERIFY(a.contains(QStringLiteral("--text-only")));
+    QVERIFY(!a.contains(QStringLiteral("--text-only")));
     QVERIFY(!a.contains(QStringLiteral("--jinja")));
+}
+
+void CoreTests::builder_ninferServeMapsParallelSlotsAndKeepsVisionOptIn()
+{
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString serverPath = QDir(dir.path()).filePath(QStringLiteral("ninfer-serve"));
+    QFile server(serverPath);
+    QVERIFY(server.open(QIODevice::WriteOnly));
+    server.write("x");
+    server.close();
+
+    auto ctx = makeCtx();
+    ctx.binary.name = QStringLiteral("NInfer server");
+    ctx.binary.path = serverPath;
+    ctx.binary.flavor = QStringLiteral("ninfer-3090");
+    ctx.catalogModel.fileName = QStringLiteral("qwen3_6_35b_a3b.ninfer");
+    ctx.catalogModel.absolutePath = QStringLiteral("C:/models/qwen3_6_35b_a3b.ninfer");
+    ctx.runtime.ctx = 131072;
+    ctx.runtime.ubatch = 512;
+    ctx.runtime.parallelSlots = 2;
+    ctx.launch.extraArgs = {QStringLiteral("--vision")};
+
+    const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
+    const QStringList &a = ep.effectiveArgs;
+    QVERIFY2(ep.blockingErrors.isEmpty(), qPrintable(ep.blockingErrors.join("\n")));
+    QVERIFY(a.contains(QStringLiteral("--max-concurrency")));
+    QCOMPARE(a.value(a.indexOf(QStringLiteral("--max-concurrency")) + 1),
+             QStringLiteral("2"));
+    QVERIFY(a.contains(QStringLiteral("--vision")));
+    QVERIFY(!a.contains(QStringLiteral("--text-only")));
 }
 
 void CoreTests::builder_preservesSpecializedKvRuntimeArgsAndEnv()

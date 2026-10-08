@@ -139,6 +139,10 @@ public:
     static QStringList tunedArgs(const QVector<TunableParam> &params,
                                  const tuner::Config &config);
 
+    // Reconoce valores textuales de flags booleanos persistidos como
+    // "--flash-attn on" para que el autotuner no deje "on" suelto.
+    static bool isBooleanSwitchValue(const QString &value);
+
     // Rango seguro para el techo de speculative decoding. En modo adaptativo
     // se conserva el n-min del perfil y se explora hasta 9: cubre el sweet spot
     // observado sin empujar la búsqueda a drafts excesivamente largos.

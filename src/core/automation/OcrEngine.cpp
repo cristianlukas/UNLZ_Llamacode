@@ -196,14 +196,104 @@ QList<OcrLine> recognize(const QImage &image, QString *error)
 
 #else   // !Q_OS_WIN
 
+#include <QDir>
+#include <QFile>
+#include <QProcess>
+#include <QRegularExpression>
+#include <QStandardPaths>
+#include <QTemporaryFile>
+
 namespace OcrEngine {
-bool available() { return false; }
-QString languageTag() { return {}; }
-QString languageName() { return {}; }
-QList<OcrLine> recognize(const QImage &, QString *error)
+
+namespace {
+
+struct Probe {
+    bool ok = false;
+    QString tag;
+    QString name;
+};
+
+Probe probe()
 {
-    if (error) *error = QStringLiteral("OCR disponible sólo en Windows.");
-    return {};
+    Probe p;
+    const QString tesseract = QStandardPaths::findExecutable(QStringLiteral("tesseract"));
+    if (tesseract.isEmpty()) return p;
+    QProcess process;
+    process.start(tesseract, {QStringLiteral("--list-langs")});
+    if (!process.waitForFinished(2500) || process.exitCode() != 0) return p;
+    const QString langs = QString::fromLocal8Bit(process.readAllStandardOutput());
+    const QStringList available = langs.split(QRegularExpression(QStringLiteral("[\\r\\n]+")), Qt::SkipEmptyParts);
+    if (available.contains(QStringLiteral("spa"))) { p.tag = QStringLiteral("spa"); p.name = QStringLiteral("Español (Tesseract)"); }
+    else if (available.contains(QStringLiteral("eng"))) { p.tag = QStringLiteral("eng"); p.name = QStringLiteral("English (Tesseract)"); }
+    else if (available.size() > 1) { p.tag = available.at(1).trimmed(); p.name = p.tag; }
+    p.ok = !p.tag.isEmpty();
+    return p;
+}
+
+const Probe &currentProbe()
+{
+    static const Probe p = probe();
+    return p;
+}
+
+} // namespace
+
+bool available() { return currentProbe().ok; }
+QString languageTag() { return currentProbe().tag; }
+QString languageName() { return currentProbe().name; }
+
+QList<OcrLine> recognize(const QImage &image, QString *error)
+{
+    if (error) error->clear();
+    if (image.isNull()) { if (error) *error = QStringLiteral("Captura vacía."); return {}; }
+    if (!available()) {
+        if (error) *error = QStringLiteral("OCR Linux requiere tesseract-ocr y un idioma instalado (spa o eng).");
+        return {};
+    }
+    QTemporaryFile input(QDir::tempPath() + QStringLiteral("/llamacode-ocr-XXXXXX.png"));
+    input.setAutoRemove(true);
+    if (!input.open() || !image.save(input.fileName(), "PNG")) {
+        if (error) *error = QStringLiteral("No se pudo preparar la captura para OCR.");
+        return {};
+    }
+    input.close();
+    QProcess process;
+    process.start(QStandardPaths::findExecutable(QStringLiteral("tesseract")),
+                  {input.fileName(), QStringLiteral("stdout"), QStringLiteral("--psm"),
+                   QStringLiteral("6"), QStringLiteral("-l"), currentProbe().tag,
+                   QStringLiteral("tsv")});
+    if (!process.waitForFinished(15000) || process.exitCode() != 0) {
+        if (error) *error = QString::fromLocal8Bit(process.readAllStandardError()).trimmed();
+        if (error && error->isEmpty()) *error = QStringLiteral("Tesseract no pudo reconocer la captura.");
+        return {};
+    }
+
+    QList<OcrLine> out;
+    QHash<QString, int> lineIndexes;
+    const QString tsv = QString::fromLocal8Bit(process.readAllStandardOutput());
+    for (const QString &raw : tsv.split(QLatin1Char('\n'))) {
+        if (raw.startsWith(QStringLiteral("level\t"))) continue;
+        const QStringList fields = raw.split(QLatin1Char('\t'));
+        if (fields.size() < 12 || fields.at(0) != QLatin1String("5")) continue;
+        bool ok = false;
+        const int left = fields.at(6).toInt(&ok); if (!ok) continue;
+        const int top = fields.at(7).toInt(&ok); if (!ok) continue;
+        const int width = fields.at(8).toInt(&ok); if (!ok) continue;
+        const int height = fields.at(9).toInt(&ok); if (!ok) continue;
+        const QString word = fields.mid(11).join(QLatin1Char('\t')).trimmed();
+        if (word.isEmpty() || width <= 0 || height <= 0) continue;
+        const QString key = fields.mid(1, 4).join(QLatin1Char('/'));
+        int index = lineIndexes.value(key, -1);
+        if (index < 0) {
+            index = out.size();
+            lineIndexes.insert(key, index);
+            out.append(OcrLine{});
+        }
+        out[index].words.append({word, QRect(left, top, width, height)});
+        if (!out[index].text.isEmpty()) out[index].text += QLatin1Char(' ');
+        out[index].text += word;
+    }
+    return out;
 }
 }   // namespace OcrEngine
 

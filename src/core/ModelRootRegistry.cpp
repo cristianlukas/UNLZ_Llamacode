@@ -10,6 +10,45 @@
 #include <QSet>
 #include <QtConcurrent/QtConcurrentRun>
 
+namespace {
+bool sharedPortableConfigEnabled()
+{
+#ifndef Q_OS_WIN
+    return !qgetenv("LLAMACODE_SHARED_PORTABLE_CONFIG").isEmpty();
+#else
+    return false;
+#endif
+}
+
+QString replaceCaseInsensitive(QString value, const QString &from, const QString &to)
+{
+    if (from.isEmpty()) return value;
+    int pos = 0;
+    while ((pos = value.indexOf(from, pos, Qt::CaseInsensitive)) >= 0) {
+        value.replace(pos, from.size(), to);
+        pos += to.size();
+    }
+    return value;
+}
+
+QString portableRootPath(QString value, bool toRuntime)
+{
+    if (!sharedPortableConfigEnabled()) return value;
+    const QString cRoot = QString::fromLocal8Bit(qgetenv("LLAMACODE_WINDOWS_C_ROOT")).trimmed();
+    const QString dRoot = QString::fromLocal8Bit(qgetenv("LLAMACODE_WINDOWS_D_ROOT")).trimmed();
+    if (toRuntime) {
+        value.replace('\\', '/');
+        value = replaceCaseInsensitive(value, QStringLiteral("C:/Users/cristian"), cRoot);
+        value = replaceCaseInsensitive(value, QStringLiteral("D:/"), dRoot.isEmpty() ? QStringLiteral("D:/")
+                                                                                          : dRoot + QLatin1Char('/'));
+        return value;
+    }
+    value = replaceCaseInsensitive(value, cRoot, QStringLiteral("C:/Users/cristian"));
+    value = replaceCaseInsensitive(value, dRoot, QStringLiteral("D:/"));
+    return value;
+}
+}
+
 ModelRootRegistry::ModelRootRegistry(ModelCatalog *catalog, QObject *parent)
     : QAbstractListModel(parent)
     , m_catalog(catalog)
@@ -194,15 +233,22 @@ void ModelRootRegistry::load()
     QFile f(storagePath());
     if (!f.open(QIODevice::ReadOnly)) return;
     const QJsonArray arr = QJsonDocument::fromJson(f.readAll()).array();
-    for (const auto &v : arr)
-        m_items.append(ModelRoot::fromJson(v.toObject()));
+    for (const auto &v : arr) {
+        ModelRoot r = ModelRoot::fromJson(v.toObject());
+        r.path = portableRootPath(r.path, true);
+        r.isOnline = QFileInfo::exists(r.path);
+        m_items.append(r);
+    }
 }
 
 void ModelRootRegistry::save() const
 {
     QJsonArray arr;
-    for (const auto &r : m_items)
-        arr.append(r.toJson());
+    for (const auto &r : m_items) {
+        QJsonObject obj = r.toJson();
+        obj[QStringLiteral("path")] = portableRootPath(r.path, false);
+        arr.append(obj);
+    }
     QDir().mkpath(QFileInfo(storagePath()).absolutePath());
     QFile f(storagePath());
     if (f.open(QIODevice::WriteOnly))
@@ -211,6 +257,8 @@ void ModelRootRegistry::save() const
 
 QString ModelRootRegistry::storagePath() const
 {
+    const QByteArray shared = qgetenv("LLAMACODE_MODEL_ROOTS_FILE");
+    if (!shared.isEmpty()) return QString::fromLocal8Bit(shared);
     return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)
            + "/model_roots.json";
 }

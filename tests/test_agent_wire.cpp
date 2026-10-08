@@ -10,6 +10,7 @@
 #include <QTcpSocket>
 #include <QTemporaryDir>
 #include "core/agent/LlamaAgentBackend.h"
+#include "core/agent/SubAgentRunner.h"
 
 class AgentWireTests : public QObject
 {
@@ -36,11 +37,16 @@ private slots:
     void mergeToolCallDelta_assemblesAcrossChunks();
     void mergeToolCallDelta_parallelCallsByIndex();
     void visibleAnswer_stripsThinkButSalvagesWhenEmpty();
+    void lengthFinishContinuation_isBoundedAndContentAware();
     void thinkingLeakGuard_isOptInAndControlsTemplate();
     void buildWarmupPayload_prefillsWithoutGenerating();
+    void subagentPayload_inheritsReasoningAndOutputBudget();
+    void canonicalizeToolSchemas_stabilizesOrderAndKeys();
     void trimStaleImages_keepsOnlyLatestCapture();
     void buildObservationMessage_wrapsImagesAsUserMultimodal();
+    void buildObservationMessage_pairsAccessibilityEvidenceWithScreenshot();
     void buildObservationMessage_emptyWhenNoImages();
+    void computerUseSandwich_isOptInAndKeepsObjectiveStateReminderOrder();
     void developmentDisciplineSection_coversRegressionGuards();
     void testSafetyNetSection_coversRunnerDetectionAndQuality();
     void projectContextSection_coversIntentAndMemory();
@@ -49,9 +55,12 @@ private slots:
     void desktopConfirmKeyBlockedAfterTypeEquals();
     void parsesNativeToolCallLeakFallback();
     void parsesKatCoderXmlToolCallFallback();
+    void parsesJsonOnlyToolCallFallback();
+    void normalizesLingTaggedToolArguments();
     void textToolsModeDoesNotDoubleReserveToolBudget();
     void compactionStallCounterTracksProgress();
     void compactionPreservesImmutableTranscript();
+    void compactionMetricsSeparateFallbacksFromPruning();
     void deterministicPruningDeduplicatesOnlyWorkingContext();
     void failureSpiralDetectsEquivalentErrorsAndResetsOnProgress();
     void toolCallSignatureNormalizesEquivalentJson();
@@ -61,6 +70,8 @@ private slots:
     void adaptiveSubagentLimit_respectsProfileContextAndVram();
     void isDestructiveAction_gatesShellDesktopMemory();
     void completionErrorClassification_isSelective();
+    void contextLimitFromError_readsVllmMessage();
+    void outputTokenReservation_leavesContextHeadroom();
     void sessionTitle_isBriefAndPromptDerived();
     void firstPromptTitlesAndPersistsSession();
     void startupRepairsDefaultTitleFromFirstPrompt();
@@ -359,6 +370,42 @@ void AgentWireTests::parsesTextToolCallFallback()
     QCOMPARE(args.value(QStringLiteral("url")).toString(), QStringLiteral("https://dolarhoy.com/"));
 }
 
+void AgentWireTests::lengthFinishContinuation_isBoundedAndContentAware()
+{
+    QVERIFY(LlamaAgentBackend::shouldAutoContinueAfterLength(
+        QStringLiteral("length"), QStringLiteral("partial answer"), 0));
+    QVERIFY(LlamaAgentBackend::shouldAutoContinueAfterLength(
+        QStringLiteral("LENGTH"), QStringLiteral("partial answer"), 1));
+    QVERIFY(!LlamaAgentBackend::shouldAutoContinueAfterLength(
+        QStringLiteral("stop"), QStringLiteral("partial answer"), 0));
+    QVERIFY(!LlamaAgentBackend::shouldAutoContinueAfterLength(
+        QStringLiteral("length"), QString(), 0));
+    QVERIFY(!LlamaAgentBackend::shouldAutoContinueAfterLength(
+        QStringLiteral("length"), QStringLiteral("partial answer"), 2));
+    QVERIFY(LlamaAgentBackend::lengthContinuationPrompt().contains(
+        QStringLiteral("No repitas")));
+}
+
+void AgentWireTests::contextLimitFromError_readsVllmMessage()
+{
+    QCOMPARE(LlamaAgentBackend::contextLimitFromError(
+                 QStringLiteral("This model's maximum context length is 32768 tokens.")),
+             32768);
+    QCOMPARE(LlamaAgentBackend::contextLimitFromError(
+                 QStringLiteral("maximum context length of 131072")),
+             131072);
+    QCOMPARE(LlamaAgentBackend::contextLimitFromError(
+                 QStringLiteral("tool schema is invalid")), 0);
+}
+
+void AgentWireTests::outputTokenReservation_leavesContextHeadroom()
+{
+    QCOMPARE(LlamaAgentBackend::outputTokenReservation(32768, 0), 8192);
+    QCOMPARE(LlamaAgentBackend::outputTokenReservation(32768, 24577), 7935);
+    QCOMPARE(LlamaAgentBackend::outputTokenReservation(32768, 32600), 256);
+    QCOMPARE(LlamaAgentBackend::outputTokenReservation(0, 100000), 32768);
+}
+
 void AgentWireTests::parsesKatCoderXmlToolCallFallback()
 {
     const QString content = QStringLiteral(
@@ -390,6 +437,60 @@ void AgentWireTests::parsesKatCoderXmlToolCallFallback()
             .value(QStringLiteral("arguments")).toString().toUtf8()).object();
     QCOMPARE(streamedArgs.value(QStringLiteral("city")).toString(),
              QStringLiteral("Buenos Aires"));
+}
+
+void AgentWireTests::parsesJsonOnlyToolCallFallback()
+{
+    const QString content = QStringLiteral(
+        "```json\n"
+        "{\"name\":\"write_file\",\"arguments\":{"
+        "\"path\":\"solution.py\",\"content\":\"print(42)\"}}\n"
+        "```\n");
+
+    const QJsonObject call = LlamaAgentBackend::textToolCallFromContent(content);
+    QVERIFY(!call.isEmpty());
+    const QJsonObject fn = call.value(QStringLiteral("function")).toObject();
+    QCOMPARE(fn.value(QStringLiteral("name")).toString(), QStringLiteral("write_file"));
+    const QJsonObject args = QJsonDocument::fromJson(
+        fn.value(QStringLiteral("arguments")).toString().toUtf8()).object();
+    QCOMPARE(args.value(QStringLiteral("path")).toString(), QStringLiteral("solution.py"));
+    QCOMPARE(args.value(QStringLiteral("content")).toString(), QStringLiteral("print(42)"));
+
+    // Un objeto JSON que sólo parece una respuesta no se debe ejecutar.
+    QVERIFY(LlamaAgentBackend::textToolCallFromContent(
+        QStringLiteral("```json\n{\"name\":\"not_a_tool\",\"value\":1}\n```"))
+        .isEmpty());
+}
+
+void AgentWireTests::normalizesLingTaggedToolArguments()
+{
+    // Reproducción del stream real de Ling 3.0 Tiny: el segundo par XML quedó
+    // embebido en el valor de `path`, aunque el contenedor exterior era JSON
+    // válido. El parser debe recuperar ambos argumentos para que write_file
+    // cree la ruta esperada por el benchmark.
+    const QJsonObject malformed{
+        {QStringLiteral("path"), QStringLiteral(
+            "solution_HumanEval_0.py</arg_value><arg_key>content</arg_key>\n"
+            "<arg_value>def add(a, b):\n    return a + b")}
+    };
+    const QJsonObject normalized =
+        LlamaAgentBackend::normalizeTaggedToolArguments(malformed);
+    QCOMPARE(normalized.value(QStringLiteral("path")).toString(),
+             QStringLiteral("solution_HumanEval_0.py"));
+    QCOMPARE(normalized.value(QStringLiteral("content")).toString(),
+             QStringLiteral("def add(a, b):\n    return a + b"));
+
+    const QJsonObject closed{
+        {QStringLiteral("path"), QStringLiteral(
+            "solution.py</arg_value><arg_key>content</arg_key>"
+            "<arg_value>return 42</arg_value>")}
+    };
+    const QJsonObject closedNormalized =
+        LlamaAgentBackend::normalizeTaggedToolArguments(closed);
+    QCOMPARE(closedNormalized.value(QStringLiteral("path")).toString(),
+             QStringLiteral("solution.py"));
+    QCOMPARE(closedNormalized.value(QStringLiteral("content")).toString(),
+             QStringLiteral("return 42"));
 }
 
 // Ráfaga: el modelo escupe decenas de TOOL_CALL en UNA generación. Sólo el
@@ -1363,7 +1464,7 @@ void AgentWireTests::buildWarmupPayload_prefillsWithoutGenerating()
     const QJsonArray tools{QJsonObject{{QStringLiteral("type"), QStringLiteral("function")}}};
 
     const QJsonObject p = LlamaAgentBackend::buildWarmupPayload(
-        msgs, tools, QStringLiteral("local"), 0.7, true, QStringLiteral("medium"));
+        msgs, tools, QStringLiteral("local"), 0.7, true, QStringLiteral("medium"), 4096);
 
     // Prefijo idéntico al turno real: messages+tools+kwargs de template.
     QCOMPARE(p.value(QStringLiteral("messages")).toArray(), msgs);
@@ -1374,6 +1475,7 @@ void AgentWireTests::buildWarmupPayload_prefillsWithoutGenerating()
     QCOMPARE(p.value(QStringLiteral("chat_template_kwargs")).toObject()
                  .value(QStringLiteral("reasoning_effort")).toString(),
              QStringLiteral("medium"));
+    QCOMPARE(p.value(QStringLiteral("reasoning_budget")).toInt(), 4096);
     // Pero SIN generar: 1 token, sin stream, y con cache_prompt para el KV.
     QCOMPARE(p.value(QStringLiteral("max_tokens")).toInt(), 1);
     QCOMPARE(p.value(QStringLiteral("stream")).toBool(), false);
@@ -1384,6 +1486,79 @@ void AgentWireTests::buildWarmupPayload_prefillsWithoutGenerating()
         msgs, tools, QStringLiteral("local"), -1.0, false);
     QVERIFY(!p2.contains(QStringLiteral("temperature")));
     QCOMPARE(p2.value(QStringLiteral("reasoning_budget")).toInt(), 0);
+}
+
+void AgentWireTests::subagentPayload_inheritsReasoningAndOutputBudget()
+{
+    const QJsonObject payload = SubAgentRunner::buildCompletionPayload(
+        QJsonArray{msg(QStringLiteral("system"), QStringLiteral("sys"))},
+        QJsonArray{}, QStringLiteral("sol"), 0.6, QStringLiteral("medium"), 7500);
+    QCOMPARE(payload.value(QStringLiteral("max_tokens")).toInt(), 32768);
+    QCOMPARE(payload.value(QStringLiteral("reasoning_budget")).toInt(), 7500);
+    QCOMPARE(payload.value(QStringLiteral("chat_template_kwargs")).toObject()
+                 .value(QStringLiteral("enable_thinking")).toBool(), true);
+    QCOMPARE(payload.value(QStringLiteral("chat_template_kwargs")).toObject()
+                 .value(QStringLiteral("reasoning_effort")).toString(),
+             QStringLiteral("medium"));
+
+    const QJsonObject disabled = SubAgentRunner::buildCompletionPayload(
+        {}, {}, QString(), -1.0, QStringLiteral("xhigh"), 0, 99999);
+    QCOMPARE(disabled.value(QStringLiteral("max_tokens")).toInt(), 32768);
+    QCOMPARE(disabled.value(QStringLiteral("reasoning_budget")).toInt(), 0);
+    QCOMPARE(disabled.value(QStringLiteral("chat_template_kwargs")).toObject()
+                 .value(QStringLiteral("enable_thinking")).toBool(), false);
+    QVERIFY(!disabled.value(QStringLiteral("chat_template_kwargs")).toObject()
+                 .contains(QStringLiteral("reasoning_effort")));
+}
+
+void AgentWireTests::canonicalizeToolSchemas_stabilizesOrderAndKeys()
+{
+    QJsonObject propertyZ;
+    propertyZ.insert(QStringLiteral("type"), QStringLiteral("string"));
+    QJsonObject propertyA;
+    propertyA.insert(QStringLiteral("description"), QStringLiteral("x"));
+    propertyA.insert(QStringLiteral("type"), QStringLiteral("string"));
+    QJsonObject properties;
+    properties.insert(QStringLiteral("z"), propertyZ);
+    properties.insert(QStringLiteral("a"), propertyA);
+    QJsonObject parametersB;
+    parametersB.insert(QStringLiteral("properties"), properties);
+    QJsonObject functionB;
+    functionB.insert(QStringLiteral("parameters"), parametersB);
+    functionB.insert(QStringLiteral("name"), QStringLiteral("tool_b"));
+    functionB.insert(QStringLiteral("type"), QStringLiteral("function"));
+    QJsonObject toolB;
+    toolB.insert(QStringLiteral("type"), QStringLiteral("function"));
+    toolB.insert(QStringLiteral("function"), functionB);
+
+    QJsonObject parametersA;
+    parametersA.insert(QStringLiteral("type"), QStringLiteral("object"));
+    QJsonObject functionA;
+    functionA.insert(QStringLiteral("name"), QStringLiteral("tool_a"));
+    functionA.insert(QStringLiteral("description"), QStringLiteral("y"));
+    functionA.insert(QStringLiteral("parameters"), parametersA);
+    QJsonObject toolA;
+    toolA.insert(QStringLiteral("function"), functionA);
+    toolA.insert(QStringLiteral("type"), QStringLiteral("function"));
+
+    const QJsonArray canonical = LlamaAgentBackend::canonicalizeToolSchemasForWire(
+        QJsonArray{toolB, toolA});
+    QCOMPARE(canonical.size(), 2);
+    QCOMPARE(canonical.at(0).toObject().value(QStringLiteral("function"))
+                 .toObject().value(QStringLiteral("name")).toString(),
+             QStringLiteral("tool_a"));
+    QCOMPARE(canonical.at(1).toObject().value(QStringLiteral("function"))
+                 .toObject().value(QStringLiteral("name")).toString(),
+             QStringLiteral("tool_b"));
+
+    const QJsonObject bFunction = canonical.at(1).toObject()
+                                      .value(QStringLiteral("function")).toObject();
+    QCOMPARE(bFunction.keys(), QStringList({QStringLiteral("name"),
+                                             QStringLiteral("parameters"),
+                                             QStringLiteral("type")}));
+    const QJsonObject props = bFunction.value(QStringLiteral("parameters")).toObject()
+                                  .value(QStringLiteral("properties")).toObject();
+    QCOMPARE(props.keys(), QStringList({QStringLiteral("a"), QStringLiteral("z")}));
 }
 
 void AgentWireTests::trimStaleImages_keepsOnlyLatestCapture()
@@ -1462,6 +1637,63 @@ void AgentWireTests::buildObservationMessage_emptyWhenNoImages()
     // Sin imágenes válidas → objeto vacío (el loop no inyecta nada).
     QVERIFY(LlamaAgentBackend::buildObservationMessage({}).isEmpty());
     QVERIFY(LlamaAgentBackend::buildObservationMessage({QString(), QString()}).isEmpty());
+}
+
+void AgentWireTests::buildObservationMessage_pairsAccessibilityEvidenceWithScreenshot()
+{
+    const QString uri = QStringLiteral("data:image/png;base64,AAAA");
+    const QString tree = QStringLiteral(
+        "Árbol de accesibilidad posterior a mcp__playwright__browser_click:\n"
+        "- button \"Cancelar suscripción\" [enabled]");
+    const QJsonObject message = LlamaAgentBackend::buildObservationMessage({uri}, {tree});
+    const QJsonArray content = message.value(QStringLiteral("content")).toArray();
+    QCOMPARE(content.size(), 2);
+    const QString text = content.at(0).toObject().value(QStringLiteral("text")).toString();
+    QVERIFY(text.contains(QStringLiteral("Árbol de accesibilidad")));
+    QVERIFY(text.contains(QStringLiteral("Cancelar suscripción")));
+    QVERIFY(text.contains(QStringLiteral("conjuntamente")));
+    QCOMPARE(content.at(1).toObject().value(QStringLiteral("image_url")).toObject()
+                 .value(QStringLiteral("url")).toString(), uri);
+
+    const QJsonObject textOnly = LlamaAgentBackend::buildObservationMessage({}, {tree});
+    QCOMPARE(textOnly.value(QStringLiteral("role")).toString(), QStringLiteral("user"));
+    QCOMPARE(textOnly.value(QStringLiteral("content")).toArray().size(), 1);
+    QVERIFY(textOnly.value(QStringLiteral("content")).toArray().first().toObject()
+                .value(QStringLiteral("text")).toString().contains(
+                    QStringLiteral("Cancelar suscripción")));
+}
+
+void AgentWireTests::computerUseSandwich_isOptInAndKeepsObjectiveStateReminderOrder()
+{
+    const QString uri = QStringLiteral("data:image/png;base64,SCREEN");
+    const QString goal = QStringLiteral("Abrí el archivo report.pdf y no borres nada.");
+
+    const QJsonObject historical =
+        LlamaAgentBackend::buildComputerUseObservationMessage({uri}, goal, false);
+    QCOMPARE(historical.value(QStringLiteral("content")).toArray().size(), 2);
+    QVERIFY(!historical.value(QStringLiteral("content")).toArray().last()
+                 .toObject().value(QStringLiteral("text")).toString()
+                 .contains(QStringLiteral("Recordatorio de Computer Use")));
+
+    const QJsonObject sandwich =
+        LlamaAgentBackend::buildComputerUseObservationMessage({uri}, goal, true);
+    const QJsonArray content = sandwich.value(QStringLiteral("content")).toArray();
+    QCOMPARE(content.size(), 3);
+    QCOMPARE(content.at(0).toObject().value(QStringLiteral("type")).toString(),
+             QStringLiteral("text"));
+    QVERIFY(content.at(0).toObject().value(QStringLiteral("text")).toString()
+                .contains(goal));
+    QCOMPARE(content.at(1).toObject().value(QStringLiteral("type")).toString(),
+             QStringLiteral("image_url"));
+    QCOMPARE(content.at(2).toObject().value(QStringLiteral("type")).toString(),
+             QStringLiteral("text"));
+    QVERIFY(content.at(2).toObject().value(QStringLiteral("text")).toString()
+                .contains(QStringLiteral("Recordatorio de Computer Use")));
+    const QString reminder = content.at(2).toObject().value(QStringLiteral("text")).toString();
+    QVERIFY(reminder.contains(QStringLiteral("control remoto")));
+    QVERIFY(reminder.contains(QStringLiteral("mínima autoridad")));
+    QVERIFY(LlamaAgentBackend::computerUseSandwichReminderMessage(goal)
+                .startsWith(QStringLiteral("Objetivo actual del usuario:")));
 }
 
 void AgentWireTests::developmentDisciplineSection_coversRegressionGuards()
@@ -1691,6 +1923,29 @@ void AgentWireTests::compactionPreservesImmutableTranscript()
                 .contains(QStringLiteral("\"next_action\":\"n\"")));
 }
 
+void AgentWireTests::compactionMetricsSeparateFallbacksFromPruning()
+{
+    QJsonArray history{
+        QJsonObject{{"role", "system"}, {"content", "system"}},
+        QJsonObject{{"role", "user"}, {"content", "objective"}},
+        QJsonObject{{"role", "assistant"}, {"content", QString(900, 'a')}},
+        QJsonObject{{"role", "user"}, {"content", QString(900, 'b')}},
+        QJsonObject{{"role", "assistant"}, {"content", "tail"}}
+    };
+    LlamaAgentBackend be;
+    be.setCtxLimitForTest(8192);
+    be.setApiMessagesForTest(history);
+
+    be.applyCompactionForTest(2, 4, QStringLiteral("summary"));
+    be.setApiMessagesForTest(history);
+    be.applyCompactionForTest(2, 4, QString());
+
+    const QVariantMap metrics = be.contextCompactionSummaryForTest();
+    QCOMPARE(metrics.value(QStringLiteral("compactions")).toInt(), 2);
+    QCOMPARE(metrics.value(QStringLiteral("fallbacks")).toInt(), 1);
+    QCOMPARE(metrics.value(QStringLiteral("compactionMs")).toLongLong(), 0LL);
+}
+
 void AgentWireTests::deterministicPruningDeduplicatesOnlyWorkingContext()
 {
     auto assistantCall = [](const QString &id) {
@@ -1774,6 +2029,10 @@ void AgentWireTests::adaptiveSubagentLimit_respectsProfileContextAndVram()
     QCOMPARE(B::adaptiveSubagentLimit(4, 8192, 24576, 700), 2);
     // Sin telemetría no inventa una restricción: manda el perfil configurado.
     QCOMPARE(B::adaptiveSubagentLimit(3, 8192, 0), 3);
+    // Un perfil de contexto largo puede declarar un presupuesto menor para cada
+    // sub-agente y recuperar paralelismo sin cambiar el contexto del agente
+    // principal.
+    QCOMPARE(B::adaptiveSubagentLimit(4, 262144, 49152, 2000, 65536), 2);
 }
 
 void AgentWireTests::isDestructiveAction_gatesShellDesktopMemory()

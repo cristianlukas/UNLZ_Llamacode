@@ -30,6 +30,7 @@ public:
         QVariantMap toVariantMap(const QSize &haystackSize) const;
     };
 
+    static Result find(const QImage &haystack, const QImage &needle);
     static Result find(const QImage &haystack, const QImage &needle,
-                       const Options &options = {});
+                       const Options &options);
 };

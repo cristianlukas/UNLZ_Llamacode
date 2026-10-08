@@ -3,6 +3,7 @@ from __future__ import annotations
 import unittest
 
 from tools.long_context_matrix import (
+    MAX_TIMEOUT_MS,
     SCHEMA,
     parse_contexts,
     parse_depths,
@@ -12,6 +13,9 @@ from tools.long_context_matrix import (
 
 
 class LongContextMatrixTests(unittest.TestCase):
+    def test_long_context_timeout_budget_allows_two_hours(self):
+        self.assertEqual(MAX_TIMEOUT_MS, 14_400_000)
+
     def test_parse_contexts_rejects_duplicates_and_out_of_range_values(self):
         self.assertEqual(parse_contexts("131072, 262144"), [131072, 262144])
         with self.assertRaisesRegex(ValueError, "duplicado"):
