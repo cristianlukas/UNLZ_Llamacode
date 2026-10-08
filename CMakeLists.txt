@@ -165,6 +165,7 @@ set(CORE_SOURCES
     src/core/eval/BenchmarkPack.cpp
     src/core/ToolCallingSupport.cpp
     src/core/diag/LogTriage.cpp
+    src/core/diag/StartupDiagnostics.cpp
     src/core/downloads/DownloadHistoryStore.cpp
     src/core/tasks/TaskStore.cpp
     src/core/tasks/TaskSecurityPolicy.cpp
@@ -205,6 +206,7 @@ set(HEADERS
     src/core/CapabilityDetector.h
     src/core/EngineCatalog.h
     src/core/HardwareDiagnostics.h
+    src/core/diag/StartupDiagnostics.h
     src/core/PerformanceMatrix.h
     src/core/ServerBenchmarkMetrics.h
     src/core/ModelRoot.h

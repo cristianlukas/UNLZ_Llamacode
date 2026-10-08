@@ -220,6 +220,7 @@ private slots:
     void voiceGpuPlanIsExposedHeadless();
     void performanceMatrixIsHeadless();
     void devModeIsOptInAndRecordsPerformance();
+    void expandedLoggingPersistsAndRecordsStartupDiagnostics();
     void browserTeachSkillsLifecycle();
     void taskFailureTextDetected();
     void taskRequiresToolEvidenceForWebObjective();
@@ -3268,6 +3269,32 @@ void AppControllerTests::devModeIsOptInAndRecordsPerformance()
     QVERIFY(app.performanceSnapshot().isEmpty());
     app.clearPerformanceLog();
     settings.remove(QStringLiteral("app/devMode"));
+}
+
+void AppControllerTests::expandedLoggingPersistsAndRecordsStartupDiagnostics()
+{
+    QSettings settings;
+    settings.remove(QStringLiteral("logging/expanded"));
+    AppController app;
+
+    QVERIFY(!app.expandedLogging());
+    app.setExpandedLogging(true);
+    QVERIFY(app.expandedLogging());
+    QVERIFY(settings.value(QStringLiteral("logging/expanded")).toBool());
+    QVERIFY(!app.performanceSnapshot().isEmpty());
+    QVERIFY(QFile::exists(app.expandedLogPath()));
+
+    QFile log(app.expandedLogPath());
+    QVERIFY(log.open(QIODevice::ReadOnly | QIODevice::Text));
+    const QByteArray contents = log.readAll();
+    QVERIFY(contents.contains("expanded_logging_enabled"));
+    QVERIFY(contents.contains("process_sample"));
+    log.close();
+
+    app.setExpandedLogging(false);
+    QVERIFY(!app.expandedLogging());
+    QVERIFY(!settings.value(QStringLiteral("logging/expanded"), false).toBool());
+    settings.remove(QStringLiteral("logging/expanded"));
 }
 
 void AppControllerTests::importOllamaModelsIngestsStore()

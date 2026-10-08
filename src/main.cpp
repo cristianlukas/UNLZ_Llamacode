@@ -6,18 +6,18 @@
 #include "core/tasks/AutomationStore.h"
 #include "core/tasks/TaskScheduler.h"
 #include "core/tasks/SchedulerDaemonRegistration.h"
+#include "core/diag/StartupDiagnostics.h"
 #include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickStyle>
 #include <QIcon>
 #include <QFile>
-#include <QTextStream>
 #include <QDateTime>
 #include <QEvent>
+#include <QFileInfo>
 #include <QStandardPaths>
 #include <QDir>
-#include <QtMessageHandler>
 #include <QPixmap>
 #include <QPainter>
 #include <QPointer>
@@ -41,9 +41,6 @@
 #  include <windows.h>
 #  include <shobjidl.h>
 #endif
-
-static QFile s_logFile;
-static QTextStream s_logStream;
 
 class TrayWindowCloseFilter final : public QObject
 {
@@ -76,31 +73,6 @@ private:
     bool m_forceQuit = false;
 };
 
-static void messageHandler(QtMsgType type, const QMessageLogContext &ctx, const QString &msg)
-{
-    const char *level = "DEBUG";
-    if      (type == QtWarningMsg)  level = "WARN ";
-    else if (type == QtCriticalMsg) level = "ERROR";
-    else if (type == QtFatalMsg)    level = "FATAL";
-
-    QString line = QStringLiteral("[%1] [%2] %3")
-        .arg(QDateTime::currentDateTime().toString("hh:mm:ss.zzz"))
-        .arg(QLatin1String(level))
-        .arg(msg);
-
-    if (s_logFile.isOpen()) {
-        s_logStream << line << "\n";
-        s_logStream.flush();
-    }
-
-    // Also forward to default output (visible when run from cmd)
-    fprintf(type == QtWarningMsg || type == QtCriticalMsg || type == QtFatalMsg ? stderr : stdout,
-            "%s\n", qPrintable(line));
-
-    if (type == QtFatalMsg)
-        abort();
-}
-
 int main(int argc, char *argv[])
 {
     // Modo test: redirige AppData/AppLocalData a una ubicación de prueba. Es la
@@ -112,14 +84,16 @@ int main(int argc, char *argv[])
     if (qgetenv("LLAMACODE_TEST_MODE").trimmed() == "1")
         QStandardPaths::setTestModeEnabled(true);
 
-    // Log file: %APPDATA%\LlamaCode\llamacode.log
-    QString logDir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
-    QDir().mkpath(logDir);
-    s_logFile.setFileName(logDir + "/llamacode.log");
-    if (s_logFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text))
-        s_logStream.setDevice(&s_logFile);
-
-    qInstallMessageHandler(messageHandler);
+    bool forceExpandedLog = false;
+    for (int i = 1; i < argc; ++i) {
+        if (QString::fromLocal8Bit(argv[i]) == QStringLiteral("--expanded-log")) {
+            forceExpandedLog = true;
+            break;
+        }
+    }
+    QCoreApplication::setApplicationVersion(QStringLiteral("0.1.118"));
+    StartupDiagnostics::initializeEarly(
+        QFileInfo(QString::fromLocal8Bit(argv[0])).absoluteFilePath(), forceExpandedLog);
     QElapsedTimer startupClock;
     startupClock.start();
     qDebug() << "=== LlamaCode starting ===" << QDateTime::currentDateTime().toString()
@@ -130,9 +104,19 @@ int main(int argc, char *argv[])
     // header/footer con los que toda la UI está themeada → diálogos sin contenido ni
     // botones, checkbox sin pintar y warnings "current style does not support
     // customization". Debe setearse ANTES de cargar cualquier QML.
+    StartupDiagnostics::record(QStringLiteral("phase_begin"),
+                               {{QStringLiteral("phase"), QStringLiteral("QQuickStyle")}});
     QQuickStyle::setStyle(QStringLiteral("Basic"));
+    StartupDiagnostics::record(QStringLiteral("phase_complete"),
+                               {{QStringLiteral("phase"), QStringLiteral("QQuickStyle")},
+                                {QStringLiteral("elapsedMs"), startupClock.elapsed()}});
 
+    StartupDiagnostics::record(QStringLiteral("phase_begin"),
+                               {{QStringLiteral("phase"), QStringLiteral("QApplication")}});
     QApplication app(argc, argv);
+    StartupDiagnostics::record(QStringLiteral("phase_complete"),
+                               {{QStringLiteral("phase"), QStringLiteral("QApplication")},
+                                {QStringLiteral("elapsedMs"), startupClock.elapsed()}});
     app.setQuitOnLastWindowClosed(false);
     app.setApplicationName("LlamaCode");
     app.setOrganizationName("LlamaCode");
@@ -146,25 +130,36 @@ int main(int argc, char *argv[])
     const bool devModeAtLaunch = !forceNormalMode
         && (forceDevMode || QSettings().value(QStringLiteral("app/devMode"), false).toBool());
 
-    // Diagnóstico liviano del hilo GUI: si una operación síncrona impide
-    // despachar eventos, también puede impedir que Windows entregue a tiempo
-    // el menú contextual del tray. Se registra sólo una advertencia por pausa
-    // larga para no generar ruido ni trabajo adicional apreciable.
-    if (!headlessAgent && devModeAtLaunch) {
+    // Pulso del event loop GUI. El modo ampliado registra el último pulso y
+    // cualquier pausa >=250 ms, para diagnosticar bloqueos síncronos al volver.
+    QTimer *eventLoopProbe = nullptr;
+    auto lastTickStorage = std::make_shared<qint64>(0);
+    auto lastHeartbeatStorage = std::make_shared<qint64>(0);
+    if (!headlessAgent) {
         auto eventLoopClock = std::make_shared<QElapsedTimer>();
         eventLoopClock->start();
-        auto *eventLoopProbe = new QTimer(&app);
+        eventLoopProbe = new QTimer(&app);
         eventLoopProbe->setInterval(100);
-        auto lastTickStorage = std::make_shared<qint64>(eventLoopClock->elapsed());
+        *lastTickStorage = eventLoopClock->elapsed();
+        *lastHeartbeatStorage = *lastTickStorage;
         QObject::connect(eventLoopProbe, &QTimer::timeout, &app,
-                         [eventLoopClock, lastTickStorage]() {
+                         [eventLoopClock, lastTickStorage, lastHeartbeatStorage]() {
             const qint64 now = eventLoopClock->elapsed();
             const qint64 gap = now - *lastTickStorage;
             *lastTickStorage = now;
-            if (gap >= 250)
+            if (StartupDiagnostics::expandedEnabled() && gap >= 250) {
+                StartupDiagnostics::record(QStringLiteral("gui_event_loop_stall"),
+                    {{QStringLiteral("gapMs"), gap}});
                 qWarning() << "GUI event-loop pause ms=" << gap;
+            }
+            if (StartupDiagnostics::expandedEnabled() && now - *lastHeartbeatStorage >= 5000) {
+                *lastHeartbeatStorage = now;
+                StartupDiagnostics::record(QStringLiteral("gui_heartbeat"),
+                    {{QStringLiteral("sincePreviousTickMs"), gap}});
+            }
         });
-        eventLoopProbe->start();
+        if (devModeAtLaunch || StartupDiagnostics::expandedEnabled())
+            eventLoopProbe->start();
     }
 
     // Companion sin UI: evalúa el mismo AutomationStore/cron y despierta la app
@@ -321,6 +316,15 @@ int main(int argc, char *argv[])
         app.processEvents();
     }
     AppController controller;
+    if (eventLoopProbe) {
+        auto refreshProbeState = [eventLoopProbe, &controller]() {
+            const bool enabled = controller.devMode() || controller.expandedLogging();
+            if (enabled && !eventLoopProbe->isActive()) eventLoopProbe->start();
+            else if (!enabled && eventLoopProbe->isActive()) eventLoopProbe->stop();
+        };
+        QObject::connect(&controller, &AppController::devModeChanged, &app, refreshProbeState);
+        QObject::connect(&controller, &AppController::expandedLoggingChanged, &app, refreshProbeState);
+    }
     if (forceDevMode)
         controller.setDevMode(true);
     else if (forceNormalMode)
@@ -431,6 +435,9 @@ int main(int argc, char *argv[])
     }
 
     qDebug() << "Controllers ready";
+    StartupDiagnostics::record(QStringLiteral("phase_complete"),
+                               {{QStringLiteral("phase"), QStringLiteral("controllers_ready")},
+                                {QStringLiteral("elapsedMs"), startupClock.elapsed()}});
 
     // El daemon headless no necesita QML. Además de ahorrar carga y memoria,
     // esto evita que un error visual de una página pueda tumbar la ControlApi
@@ -466,13 +473,23 @@ int main(int argc, char *argv[])
     engine.addImportPath(QStringLiteral("qrc:/"));
 
     qDebug() << "Loading Main.qml elapsedMs=" << startupClock.elapsed();
+    StartupDiagnostics::record(QStringLiteral("phase_begin"),
+                               {{QStringLiteral("phase"), QStringLiteral("Main.qml")},
+                                {QStringLiteral("elapsedMs"), startupClock.elapsed()}});
     engine.loadFromModule("LlamaCode", "Main");
 
     if (engine.rootObjects().isEmpty()) {
+        StartupDiagnostics::record(QStringLiteral("phase_failed"),
+                                   {{QStringLiteral("phase"), QStringLiteral("Main.qml")},
+                                    {QStringLiteral("elapsedMs"), startupClock.elapsed()}});
         qCritical() << "No root objects — QML load failed";
         splash.close();
         return -1;
     }
+    StartupDiagnostics::record(QStringLiteral("phase_complete"),
+                               {{QStringLiteral("phase"), QStringLiteral("Main.qml")},
+                                {QStringLiteral("elapsedMs"), startupClock.elapsed()},
+                                {QStringLiteral("rootObjectCount"), engine.rootObjects().size()}});
     controller.recordPerformanceSample(QStringLiteral("qml_loaded"));
 
     const int runArg = app.arguments().indexOf(QStringLiteral("--run-automation"));

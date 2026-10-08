@@ -1784,6 +1784,22 @@ event loop y pausas detectadas en:
 También se puede iniciar explícitamente con `--dev-mode` o volver al modo normal
 con `--normal-mode`.
 
+Para investigar un bloqueo desde el inicio, activar **Log ampliado** en esa misma
+sección. La preferencia queda guardada y el siguiente proceso empieza a registrar
+antes de construir `QApplication`: mensajes de Qt con tiempo transcurrido y
+ubicación, etapas de carga de Qt/QML, muestras de CPU/RSS y pulsos del event loop.
+Si la GUI queda bloqueada, el siguiente pulso registra la duración de la pausa;
+si el proceso no llega a responder, queda el último pulso escrito. También empieza
+a registrar la sesión actual al activar el control. El archivo
+`llamacode-expanded.jsonl` conserva el proceso actual y una rotación anterior
+(`.1`) en la carpeta local de datos de LlamaCode. Puede contener rutas locales y
+detalles de errores; se guarda en la PC y se puede abrir desde Configuración con
+**Abrir carpeta de logs**. Desactivar el control detiene el registro ampliado.
+Si la ventana se congela antes de poder usar Configuración, iniciar una sola vez
+con `llamacode --expanded-log` (Windows: `LlamaCode.exe --expanded-log`) o
+definir `LLAMACODE_EXPANDED_LOG=1` antes de abrirla. Esa opción no cambia la
+preferencia persistente.
+
 ### Manual
 
 ```bat

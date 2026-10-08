@@ -891,6 +891,53 @@ Item {
 
                                 Rectangle { Layout.fillWidth: true; height: 1; color: Theme.borderColor }
 
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 12
+
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 3
+                                        Text {
+                                            text: "Log ampliado"
+                                            color: Theme.textPrimary
+                                            font.pixelSize: 14
+                                            font.bold: true
+                                        }
+                                        Text {
+                                            text: "Registra desde el arranque los tiempos de carga, mensajes de Qt, uso de CPU y memoria, y pausas de la interfaz. Al activarlo también empieza a registrar esta sesión."
+                                            color: Theme.textMuted
+                                            font.pixelSize: 11
+                                            wrapMode: Text.WordWrap
+                                            Layout.fillWidth: true
+                                        }
+                                    }
+
+                                    LcSwitch {
+                                        checked: App.expandedLogging
+                                        onToggled: App.expandedLogging = checked
+                                    }
+                                }
+
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: "JSONL: " + App.expandedLogPath() + " · local; puede incluir rutas y detalles de errores. Se conserva el archivo actual y una rotación anterior."
+                                    color: Theme.textMuted
+                                    font.pixelSize: 10
+                                    wrapMode: Text.WrapAnywhere
+                                }
+
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    LcButton {
+                                        text: "Abrir carpeta de logs"
+                                        secondary: true
+                                        onClicked: App.openRuntimeLogDir()
+                                    }
+                                }
+
+                                Rectangle { Layout.fillWidth: true; height: 1; color: Theme.borderColor }
+
                                 Text {
                                     visible: App.devMode
                                     Layout.fillWidth: true

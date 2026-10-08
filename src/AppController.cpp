@@ -73,6 +73,7 @@
 #include "core/tasks/TaskSecurityPolicy.h"
 #include "core/ToolCallingSupport.h"
 #include "core/diag/LogTriage.h"
+#include "core/diag/StartupDiagnostics.h"
 #include "core/integrations/OpenCodeIntegration.h"
 #include "core/integrations/ClaudeDesktopIntegration.h"
 #include <QtConcurrent>
@@ -889,6 +890,11 @@ QString AppController::performanceLogPath() const
         + QStringLiteral("/performance.jsonl");
 }
 
+QString AppController::expandedLogPath() const
+{
+    return StartupDiagnostics::expandedLogPath();
+}
+
 void AppController::clearPerformanceLog()
 {
     QFile::remove(performanceLogPath());
@@ -900,18 +906,48 @@ void AppController::setDevMode(bool enabled)
         return;
     m_devMode = enabled;
     writeSetting(QStringLiteral("app/devMode"), enabled);
-    if (m_devMode) {
+    const bool shouldSample = m_devMode || m_expandedLogging;
+    if (shouldSample && !m_performanceTimer.isActive()) {
         m_performanceClock.start();
         m_performanceLastWallMs = 0;
         m_performanceLastCpuMs = -1;
-        capturePerformanceSample(QStringLiteral("dev_mode_enabled"));
         m_performanceTimer.start();
-    } else {
+    }
+    if (shouldSample)
+        capturePerformanceSample(QStringLiteral("dev_mode_%1").arg(enabled ? "enabled" : "disabled"));
+    else {
         m_performanceTimer.stop();
         m_performanceSnapshot.clear();
         emit performanceChanged();
     }
     emit devModeChanged();
+}
+
+void AppController::setExpandedLogging(bool enabled)
+{
+    if (m_expandedLogging == enabled)
+        return;
+    StartupDiagnostics::initializeEarly(QCoreApplication::applicationFilePath());
+    m_expandedLogging = enabled;
+    StartupDiagnostics::setExpandedEnabled(enabled);
+    writeSetting(QStringLiteral("logging/expanded"), enabled);
+
+    const bool shouldSample = m_devMode || m_expandedLogging;
+    if (shouldSample && !m_performanceTimer.isActive()) {
+        m_performanceClock.start();
+        m_performanceLastWallMs = 0;
+        m_performanceLastCpuMs = -1;
+        m_performanceTimer.start();
+    }
+    if (shouldSample)
+        capturePerformanceSample(enabled ? QStringLiteral("expanded_logging_enabled")
+                                         : QStringLiteral("expanded_logging_disabled"));
+    else {
+        m_performanceTimer.stop();
+        m_performanceSnapshot.clear();
+        emit performanceChanged();
+    }
+    emit expandedLoggingChanged();
 }
 
 void AppController::recordPerformanceSample(const QString &label)
@@ -921,7 +957,7 @@ void AppController::recordPerformanceSample(const QString &label)
 
 void AppController::capturePerformanceSample(const QString &label)
 {
-    if (!m_devMode)
+    if (!m_devMode && !m_expandedLogging)
         return;
 
     if (!m_performanceClock.isValid())
@@ -948,13 +984,23 @@ void AppController::capturePerformanceSample(const QString &label)
     if (m_startupTimer.isValid())
         sample.insert(QStringLiteral("startupElapsedMs"), m_startupTimer.elapsed());
 
+    if (m_expandedLogging) {
+        QJsonObject expandedSample = QJsonObject::fromVariantMap(sample);
+        expandedSample.insert(QStringLiteral("sampleElapsedMs"),
+                              expandedSample.value(QStringLiteral("elapsedMs")));
+        expandedSample.remove(QStringLiteral("elapsedMs"));
+        StartupDiagnostics::record(QStringLiteral("process_sample"), expandedSample);
+    }
+
     m_performanceLastWallMs = wallMs;
     m_performanceLastCpuMs = cpuMs;
     m_performanceSnapshot = sample;
-    QDir().mkpath(QFileInfo(performanceLogPath()).absolutePath());
-    appendFileLog(performanceLogPath(),
-                  QString::fromUtf8(QJsonDocument(QJsonObject::fromVariantMap(sample))
-                                        .toJson(QJsonDocument::Compact)));
+    if (m_devMode) {
+        QDir().mkpath(QFileInfo(performanceLogPath()).absolutePath());
+        appendFileLog(performanceLogPath(),
+                      QString::fromUtf8(QJsonDocument(QJsonObject::fromVariantMap(sample))
+                                            .toJson(QJsonDocument::Compact)));
+    }
     emit performanceChanged();
 }
 
@@ -1437,10 +1483,12 @@ static QVariantMap taskTraceEventFromMessage(const QVariantMap &message, int num
 AppController::AppController(QObject *parent) : QObject(parent)
 {
     m_devMode = QSettings().value(QStringLiteral("app/devMode"), false).toBool();
+    m_expandedLogging = StartupDiagnostics::expandedEnabled()
+        || QSettings().value(QStringLiteral("logging/expanded"), false).toBool();
     m_performanceTimer.setInterval(1000);
     connect(&m_performanceTimer, &QTimer::timeout, this,
             [this]() { capturePerformanceSample(QStringLiteral("interval")); });
-    if (m_devMode) {
+    if (m_devMode || m_expandedLogging) {
         QTimer::singleShot(0, this, [this]() {
             m_performanceClock.start();
             capturePerformanceSample(QStringLiteral("app_controller_ready"));

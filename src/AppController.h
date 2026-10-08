@@ -245,6 +245,10 @@ class AppController : public QObject
     // El modo normal evita muestreo periódico y escrituras de telemetría. El
     // modo dev se activa explícitamente para investigar lentitud de la GUI.
     Q_PROPERTY(bool devMode READ devMode WRITE setDevMode NOTIFY devModeChanged)
+    // El log ampliado se configura desde la UI, pero se inicializa antes de Qt
+    // en el próximo arranque para capturar también la carga inicial.
+    Q_PROPERTY(bool expandedLogging READ expandedLogging WRITE setExpandedLogging
+               NOTIFY expandedLoggingChanged)
     Q_PROPERTY(QVariantMap performanceSnapshot READ performanceSnapshot NOTIFY performanceChanged)
     Q_PROPERTY(QVariantList engineCatalog READ engineCatalog NOTIFY hardwareSummaryChanged)
     Q_PROPERTY(QVariantList modelRecommendations READ modelRecommendations NOTIFY modelRecommendationsChanged)
@@ -517,8 +521,11 @@ public:
     QVariantMap startupTimings() const { return m_startupTimings; }
     bool devMode() const { return m_devMode; }
     void setDevMode(bool enabled);
+    bool expandedLogging() const { return m_expandedLogging; }
+    void setExpandedLogging(bool enabled);
     QVariantMap performanceSnapshot() const { return m_performanceSnapshot; }
     Q_INVOKABLE QString performanceLogPath() const;
+    Q_INVOKABLE QString expandedLogPath() const;
     Q_INVOKABLE void clearPerformanceLog();
     Q_INVOKABLE void recordPerformanceSample(const QString &label);
     QVariantList engineCatalog() const { return EngineCatalog::toVariantList(EngineCatalog::detectHardware()); }
@@ -1589,6 +1596,7 @@ signals:
     void modelRecommendationsChanged();
     void startupChanged();
     void devModeChanged();
+    void expandedLoggingChanged();
     void performanceChanged();
     void modelDownloadChanged();
     void downloadHistoryChanged();
@@ -2237,6 +2245,7 @@ private:
     bool m_hardwareScanInFlight = false;
     QFutureWatcher<QVariantMap> m_hardwareWatcher;
     bool m_devMode = false;
+    bool m_expandedLogging = false;
     QVariantMap m_performanceSnapshot;
     QTimer m_performanceTimer;
     QElapsedTimer m_performanceClock;
