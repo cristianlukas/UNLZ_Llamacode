@@ -172,6 +172,11 @@ ControlApi con `startCustomBenchmark(...)`; consultar `benchmarkRunning`,
 `benchmarkProgress` y `benchmarkResults` por polling. Honey sólo se considera
 mejor si no reduce calidad/éxito ni aumenta regresiones.
 
+Durante las reparaciones automáticas, el watchdog considera progreso sólo cuando
+cambia el contenido de un archivo del workspace. Reescribir los mismos bytes no
+reinicia el temporizador: evita bucles de reparación sin afectar el comportamiento
+del benchmark en Windows ni el puntaje de las tareas.
+
 Las sesiones de chat también exponen sampling reproducible sin GUI:
 `temperature`, `topP`, `topK`, `minP` y `repeatPenalty` se guardan en el JSON de
 la sesión y se envían al request `/v1/chat/completions` sólo cuando están
@@ -205,6 +210,12 @@ powershell -File tools\harness_ab.ps1 -LaunchProfileId <launch> `
 Los verbos del harness modular (`harnessPackCatalog`, `agentProfileSpec`,
 `setAgentProfileSpec`, `agentProfileDiff`, `harnessSpecSummary`,
 `harnessDirectiveCatalog`) viven en el target `profileManager`.
+
+Los `LaunchProfile` pueden declarar `platformArgs`, `platformBackendIds` y
+`platformModelProfileIds` por separado. Ubuntu selecciona únicamente la entrada
+`linux` y Windows únicamente la entrada `windows`; así un perfil compartido
+puede usar la build CUDA, los argumentos y hasta un GGUF alternativo de Ubuntu
+sin modificar el backend, el modelo ni los argumentos que usa Windows.
 
 ## Smoke real del daemon y una Loop vía ControlApi
 

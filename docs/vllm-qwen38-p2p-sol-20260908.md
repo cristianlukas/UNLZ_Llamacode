@@ -13,8 +13,17 @@ backend llama.cpp anterior; el cambio de SOL se aplica mediante
 - `temperature=0.6`, `top_p=0.95`, `top_k=20`, `min_p=0.0`.
 - Endpoint local compatible OpenAI en `127.0.0.1:8113`, alias `local`.
 
-El contenedor queda con política `unless-stopped`, por lo que LlamaCode puede
-conectarse al perfil SOL después de reiniciar Docker o el equipo.
+El Compose usa `restart=no`: LlamaCode controla explícitamente el ciclo de vida
+desde el perfil Linux de SOL. **Iniciar servidor** ejecuta `docker compose up -d`
+para el servicio vLLM, luego espera `/health` y recién entonces lanza el agente;
+**Detener servidor** ejecuta `docker compose stop` y conserva contenedor y
+volúmenes. La configuración Linux combina `mtp.yml` con
+`vram-quarantine.override.yml`; ambos archivos deben pasarse al mismo comando
+Compose para conservar el workaround de asignación de VRAM de esta máquina. El
+compose no se inicia automáticamente con Docker ni con el sistema.
+Los backends cloud sin gestor siguen conectándose como endpoints pasivos.
+La auditoría de prefix cache y schemas MCP está en
+[`docs/vllm-prefix-cache-mcp-audit-20260918.md`](vllm-prefix-cache-mcp-audit-20260918.md).
 
 ## Resultados locales
 
@@ -54,6 +63,17 @@ el uso recomendado para agentes es aproximadamente 200K: a 240K sólo quedaron
 191 MiB libres y el margen no alcanza para checkpoints y caché de una sesión
 larga. La prueba de 240K fue de addressability/recall, no una evaluación NIAH
 de calidad.
+
+## Prefix cache y prefill largo — actualización 2026-09-18
+
+La receta ya incluye prefix caching, `prefix-match-unit=16`, chunked prefill,
+mamba align y `max-num-batched-tokens=8192`. Se compararon los umbrales 2048 y
+4096 con un prefijo de 19.919 tokens: el segundo request cayó de 10,682 s en frío
+a 1,302 s caliente con 2048, y de 10,125 s a 1,238 s con 4096. Reordenar las
+tools invalidó el hit y volvió a 9,955 s. El harness ahora canonicaliza tools y
+claves JSON recursivamente, preservando arrays semánticos. Se mantiene 4096 por
+la evidencia previa de concurrencia; el cambio mejora TTFT y estabilidad de
+cache, no BCB ni calidad del modelo.
 
 ## DFlash2: probado y rechazado
 

@@ -12,6 +12,14 @@ Ver
 [auditoría](ninfer-huihui-qwen38-3090-audit-20260926.md) y
 [historial/artifact](benchmark-results-history.md).
 
+## Estado visible actual — 2026-09-08
+
+Por decisión operativa, **SOL queda como único perfil Qwen 28B prioritario visible
+en Lanzar**. TERRA se conserva marcado como obsoleto en `profiles/launches.json`
+para mantener compatibilidad con historiales y resultados de benchmark, pero ya no
+aparece en el dropdown de lanzamiento. No se modifica el comportamiento de los
+perfiles de Windows ni se borran sus resultados históricos.
+
 Snapshot de revisión: 2026-08-28; anexo de campaña DeepSeek nativa: 2026-08-30. Este archivo conserva la identidad y la configuración efectiva de los perfiles medidos, además de los candidatos derivados del catálogo. Los cambios de perfiles deben hacerse con LlamaCode cerrada; luego hay que volver a abrir la app headless y verificar que los argumentos efectivos coincidan con esta captura.
 
 El procedimiento reusable para agregar modelos, binarios, perfiles o harnesses está documentado en el [Manual de benchmarking](benchmark-manual.md). Esta matriz resume resultados; el manual define las condiciones de validez, el orden HE0 → HE20 → BCB y las reglas de promoción para FAST, BALANCED y QUALITY. HE0 es una compuerta dura: si falla, el perfil queda bloqueado para HE20 y BCB hasta investigar la causa raíz y repetir HE0 con resultado válido.
@@ -20,11 +28,81 @@ La tabla consolidada vigente de todos los perfiles activos, junto con las
 recomendaciones SOL/TERRA/LUNA/METEOR y los casos de uso, está en
 [Tabla final de benchmarks y recomendaciones](benchmark-final-table.md).
 
+## Candidato TERRA: Qwen3.6 IQ4_XS — 2026-09-07
+
+Se probaron dos copias temporales del perfil candidato, con el GGUF
+`Qwen3.6-27B-MTP-IQ4_XS.gguf`, `batch=512`, `ubatch=512`, KV `q4_0`,
+`n-gram-mod`, contexto de 32k y 64k, respectivamente. El catálogo Linux no
+tenía un draft MTP asociado para este GGUF; por eso la medición efectiva no
+fue MTP real. Las copias temporales se eliminaron después de la prueba y no
+alteraron SOL ni TERRA.
+
+| Contexto | HE0 | HE20 | BCB | TPS HE0 | Estado |
+|---:|---:|---:|---:|---:|---|
+| 32k | 1/1 | Timeout | Bloqueado por compuerta HE20 | 36,37 | No candidato TERRA |
+| 64k | 1/1 | Timeout | Bloqueado por compuerta HE20 | 30,61 | No candidato TERRA |
+
+En HE20, el candidato llegó a 18/20 prompts en 32k antes del timeout de 1800
+s y avanzó sólo hasta aproximadamente 10/20 en 64k antes del timeout
+diagnóstico de 600 s. El servidor CUDA permaneció estable, sin OOM; el límite
+fue el tiempo E2E del harness y el costo de prefill/contexto. Por regla del
+manual, no se ejecutó BCB después de un HE20 inválido. La conclusión es
+conservar TERRA como Qwen 28B Dynamic v3: IQ4_XS no superó a SOL y tampoco
+ofreció una ruta MTP disponible en este catálogo.
+
 El [registro detallado de perfiles](benchmark-profile-ledger-2026-08.md)
 contiene la tabla fila por fila de la campaña de 86 candidatos: descartes,
 motivos, binarios, quantizaciones, configuración efectiva, huellas y métricas
 por etapa. Esta matriz conserva el resumen comparativo y no reemplaza ese
 inventario.
+
+## A/B de P2P, split y NCCL en TERRA — 2026-09-07
+
+La topología de esta máquina es `PHB` entre las dos RTX 3090 (no NVLink), pero
+`nvidia-smi topo -p2p r` informa `OK` en ambas direcciones. El `llama-server`
+CUDA productivo ya estaba compilado con NCCL (`libnccl.so.2`). Se ejecutó el
+benchmark `LlamaCode Server Speed v1` con el mismo Qwen3.8-27B Q4_K_M, MTP3,
+KV K/V `q8_0`, contexto 131k, B512/U64 y `fit=on`; los números son generación
+(TG) y no sustituyen la compuerta de calidad HE0/HE20/BCB.
+
+| Variante | TG medio | TG P50 | PP | Estado |
+|---|---:|---:|---:|---|
+| layer, P2P/NCCL activo | 60,75 tok/s | 63,19 tok/s | 269,97 tok/s | estable |
+| layer, binario CUDA sin NCCL | 60,73 tok/s | 62,88 tok/s | 276,10 tok/s | estable; sin mejora |
+| layer, P2P real desactivado + sin NCCL | 60,61 tok/s | 62,84 tok/s | 280,70 tok/s | estable; −0,8% frente al control sin NCCL |
+| layer, `NCCL_P2P_DISABLE=1` | 60,61 tok/s | 62,74 tok/s | 272,21 tok/s | estable; sólo controla la ruta NCCL |
+| tensor split, P2P/NCCL activo | — | — | — | no inicia: `fit` no está implementado para `SPLIT_MODE_TENSOR` y luego falla `ncclAllReduce` |
+| tensor split, `NCCL_P2P_DISABLE=1` | — | — | — | no inicia por la misma incompatibilidad |
+
+El resultado no justifica promover `tensor split`, ni quitar NCCL. El perfil
+TERRA conserva el camino por capas, que es el único que mantuvo estabilidad
+con este modelo y el ajuste de memoria del harness. Se construyó además un
+binario CUDA aislado sin NCCL para separar la dependencia; no reemplaza el
+runtime productivo. Ninguna de estas pruebas modificó los argumentos de
+Windows.
+
+La comparación P2P se interpreta junto con la topología:
+en modo por capas sólo se transfiere la activación entre GPUs una vez por
+pasada, de modo que habilitar P2P no puede aportar una mejora grande cuando el
+límite dominante es el ancho de banda de VRAM. La prueba real desactivó las
+copias peer en una compilación aislada (`GGML_CUDA_NO_PEER_COPY=ON`); la
+variable `NCCL_P2P_DISABLE` por sí sola no desactiva las copias genéricas del
+backend. La prueba tensorial no es válida como comparación de rendimiento
+porque la variante no llega a cargar.
+
+## Promoción de variante LUNA CUDA 64K — 2026-09-07
+
+La matriz de contexto de TERRA, LUNA y METEOR confirmó que la variante LUNA
+ThinkingCap Qwen3.6 MTP4 cargaba correctamente con el backend CUDA de TERRA y
+obtenía `56,58 tok/s` P50 a 64K, `1/1` en HE0 y `20/20` en HE20 a su techo
+estable. Se promovió esa variante al perfil permanente Linux:
+
+`179_LUNA · ThinkingCap Qwen3.6 MTP4 · CUDA · 64K`
+
+El cambio usa `platformBackendIds.linux` y `platformArgs.linux`, por lo que no
+altera Windows. Se repitió HE0 sobre el perfil promovido y cerró `1/1` sin
+fallo de carga. TERRA no se cambió a 262K porque su BCB quedó en `6/8`; METEOR
+no se promovió porque su reparación BCB no cerró un resultado comparable.
 
 Política vigente: los pesos del modelo principal y el KV K/V deben ser `q8_0` o
 menor. Las variantes históricas con KV `f16` fueron reemplazadas por copias

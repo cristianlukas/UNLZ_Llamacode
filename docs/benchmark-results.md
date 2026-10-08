@@ -52,19 +52,6 @@ el mismo backend. AP es inferior en decode bruto a Qwen3.5-9B (37,16 vs 101,36
 tok/s), con una diferencia grande de tamaño. No hay mejora demostrada para
 Ingi-Charla/audio. Ver [informe local](qwen38-agention-ap-local-benchmark-20260926.md).
 
-## 2026-09-26 — Ternary Bonsai 2 27B (post NInfer-4090)
-
-| Perfil | Contexto / runtime | HE0 | HE20 | BCB8 | Clasificación |
-|---|---|---:|---:|---:|---|
-| `sys-bench-bonsai2-27b-pq2-64k` | 64k · PrismML b10743 · PQ2_0 · KV q8_0 · visión · 1× RTX 3090 · 12,3 GB | 1/1 · 50 s | 20/20 · 219 s · 42,6 tok/s | **2/8** · 1.361 s · 44,3 tok/s | **INFERIOR como agente; SUPERIOR en VRAM** (27B + visión en una placa; Computer Use hard 100%) |
-| NInfer-4090 Windows (post) | RTX 4090 `sm_89` only | — | — | — | **No aplicable** a RTX 3090; sin perfil |
-
-llama-bench en la 3090: pp512 1.234 / tg128 59,4 tok/s sin especulación (el
-fork rechaza MTP y no especula con ngram). No reemplaza SOL (BCB8 8/8). Modelo
-enviado a la papelera tras medir; NInfer-3090 v0.6.1 + artefacto oficial queda
-pendiente. Ver
-[auditoría](ninfer-4090-bonsai-reddit-audit-20260926.md).
-
 ## 2026-09-26 — NInfer Huihui Qwen3.8 · RTX 3090
 
 | Perfil | Evidencia local | Clasificación |
@@ -151,6 +138,246 @@ ejecutar la receta de 128 GiB. El modelo no está descargado; no se interrumpió
 el servidor activo de otra aplicación. Los tres perfiles quedan manuales y
 fuera de selección/benchmark automático. No reemplazan SOL, que mantiene
 BCB8 8/8, tool-use estable y visión 4/4. Ver [auditoría y límites](qwen38-flash-next-albucino-w4a16-audit-20260926.md).
+
+## MiMo-V2.6-Distill-Qwen-9B — descartado tras A/B local 2026-09-23
+
+El candidato temporal se comparó contra Qwen3.5-9B con el mismo runtime y
+configuración. MiMo alcanzó 102,9 tok/s frente a 99,8 tok/s de Qwen base, pero
+obtuvo 16/20 en HumanEval frente a 19/20. La ventaja de velocidad no compensa
+la pérdida de calidad ni supera al perfil Qwen con MTP. El detalle reproducible
+está en [`mimo-v2.6-distill-qwen9b-audit-20260923.md`](mimo-v2.6-distill-qwen9b-audit-20260923.md).
+
+Los pesos y el `mmproj` temporales fueron eliminados después de la prueba; no
+se agrega ningún perfil MiMo al inventario operativo.
+
+## Tabla productiva comparativa — corte 2026-09-18
+
+Esta es la tabla operativa de los perfiles más útiles para las dos RTX 3090.
+Las velocidades son mediciones locales, pero no todas provienen de la misma
+huella de contexto, backend o harness. Por eso se conservan por separado los
+BCB agentivos, los BCB directos y los smokes de velocidad/visión: no se debe
+convertir un resultado pendiente en cero ni comparar un BCB directo como si
+fuera LC-H1.
+
+| Perfil | Configuración / peso | PP/TG texto | PP/TG contexto largo | PP/TG visión | HE0 / HE20 | BCB8 | Tool-use | Contexto | Estado productivo |
+|---|---|---:|---:|---:|---|---|---|---:|---|
+| **SOL** | Qwen3.8-27B AutoRound INT4 · MTP4 · TP2/P2P · KV FP8 · ~19 GB | 74 narr. / **102 código** | 262K validado | 4/4 validada en vLLM/AutoRound | — | **8/8 agentivo** | **Estable** | **262K** | Default principal |
+| **GALACTA** | DeepSeek V4 Flash IQ3_S · KV Q4 · ~116 GB | **9,65 BCB** | — | No aplica | 1/1 / 20/20 histórico | **8/8** | No aplica | 131K | Máxima calidad; muy lento |
+| **OCCAMY** | Occamy-1.0 35B-A3B Q4_K_M · KV Q8 · TP2 layer · sin MTP · 21,17 GB + mmproj 0,90 GB | **233,09 PP / 164,07 TG @8K** | **131,90 PP / 162,96 TG @262K** | **175,65 PP / 162,68 TG @32K** | Pendiente / pendiente | **1/8 directo; LC-H1 pendiente** | **Válido** (`add`) | **262K estable**; visión probada a 32K | Experimental multimodal de alto throughput |
+| **QWEN38-SHAPELEARN** | Qwen3.8-27B ShapeLearn IQ4_XS completo · KV Q8 · MTP3 · TP2 layer · ~13,08 GB | **156,8 PP / 25,85 TG** sin MTP; **180,7 PP / 53,64 TG** con MTP3 @8K | **118,4 PP / 41,77 TG** sin MTP; **108,0 PP / 66,24 TG** con MTP3 @262K | **163,5 PP / 55,92 TG @32K** · aceptación 80% | **1/8 directo; LC-H1 pendiente** | — | Visión correcta; MTP3 funcional | **262K estable** | Experimental de contexto/fidelidad |
+| **QWEN35-A3B** | AutoRound INT4 · TP2/P2P · KV FP8 · ~21,5 GB | 123,98 BCB / 134,4 directo | 262K validado | **4/4** hasta 262K | 1/1 / 20/20 histórico; 9/20 actual | **4/8 histórico; 1/8 directo** | Funcional | 262K | Multimodal y concurrencia |
+| **CyberTiel** | 35B-A3B Q4 · MTP3 · KV Q8 · ~23,7 GB | **154,3 TG / 155,9 visión** | 184K probado / 262K carga | **155,9 TG** | 1/1 / no concluyente | **1/8 directo** | Funcional en smoke | 262K carga | Experimental; calidad pendiente |
+| **QWEN38-Q8** | Qwen3.8-27B UD-Q8_K_XL · MTP2 · KV Q8 · ~31,5 GB | 41,3 @8K | **22,1 @262K** | No validada con MTP2/KV Q8 | Smoke OK / pendiente LC-H1 | **8/8 directo** | Agente pendiente | **262K** | Fidelidad/contexto; experimental |
+| **TERRA** | ThinkingCap Qwen3.6-27B Q4 · MTP4 · KV Q8 | **56,84 BCB** | 64K | Smoke visual 2/2 | 1/1 / 20/20 | **6/8 histórico** | Funcional | 64K | Razonamiento y visión |
+| **METEOR** | BigBang Q4_K_M · MTP5 · KV Q8 | **207 texto / 195,3 visión** | 64K | **1/1 smoke** sin MTP | 1/1 / no concluyente | **3/8 histórico; 2/8 directo** | Funcional en smoke | 64K | Throughput/lotes; calidad parcial |
+| **Qwen3.5-9B** | Q4_K_M · MTP3 · KV Q8 · ~5,7 GB | **166,1 TG / 144,2 visión** | — | Funcional | 1/1 / 19/20 | **1/8 directo** | Auxiliar | 8K probado | Auxiliar multimodal |
+| **Qwen3.5-4B** | Q4_K_M · MTP3 · KV Q8 · ~2,8 GB | **200,0 TG / 206,6 visión** | — | Funcional | 1/1 / 20/20; reparación no convergente | **1/8 directo** | Auxiliar | 8K probado | Auxiliar equilibrado |
+| **Qwen3.5-2B** | Q4_K_M · MTP3 · KV Q8 · ~1,3 GB | **318,9 TG / 344,8 visión** | — | Funcional | 0/1 / no ejecutado | **0/8 directo** | No confiable como agente | 8K probado | Auxiliar rápido |
+
+### Lectura comparativa de Occamy
+
+## Auditoría de perfiles potencialmente superseded — 2026-09-19
+
+Se aplicó un criterio Pareto conservador: un perfil sólo se considera
+`superseded` si otro lo domina simultáneamente en calidad/estabilidad,
+velocidad útil, contexto/visión y función práctica. Una ventaja de tamaño,
+concurrencia, DFlash2 o throughput bruto mantiene al perfil como no dominado,
+aunque no sea recomendable como default.
+
+| Perfil en duda | Evidencia comparada | Veredicto |
+|---|---|---|
+| **QWEN35-A3B** | Occamy es más rápido (162–164 frente a 134,4 TG) y tiene BCB directo 3/8 frente a 1/8 actual de QWEN35-A3B. QWEN35-A3B conserva visión 4/4 hasta 262K, concurrencia vLLM y un histórico 4/8 no equivalente. | **No superseded**: Occamy domina el throughput simple, pero no la combinación de visión/concurrencia ni existe una comparación BCB LC-H1 idéntica. |
+| **QWEN38-SHAPELEARN** | Supera ampliamente a QWEN38-Q8 en velocidad a 262K (66,24 frente a 22,1 TG), pesa ~13 GB y mantiene visión+MTP3. No tiene BCB8 LC-H1 cerrado. | **No superseded**: es el perfil de contexto largo/fidelidad; no compite con METEOR por throughput corto ni con SOL por calidad agentiva. |
+| **METEOR** | Es el más rápido en throughput bruto (207/195,3 TG), pero sólo ofrece 64K y BCB 2/8 directo, 3/8 histórico. | **No superseded**: conserva un nicho claro de lotes/throughput. |
+| **Qwen3.6-35B-A3B GGUF MTP** | AutoRound/QWEN35-A3B tiene mejor evidencia agentiva y visión estable. El GGUF legacy conserva 207,8 TG con MTP, pero MTP+visión no es estable. | **Parcialmente superseded para producción**, no globalmente: conservar sólo si se necesita su throughput MTP de texto. |
+| **GSQ-RCO + DFlash2 Q2** | ShapeLearn pesa sólo ~1 GB más, ofrece 262K frente a 81,9K configurados, 66,24 TG a 262K frente a 25 TG a 8K y visión+MTP3. GSQ sólo tiene HE0 1/1; HE20 se canceló y BCB no se inició. | **Superseded para uso general**; conservar únicamente como laboratorio DFlash2. |
+| **Qwen3.5-9B** | Qwen3.5-4B es más rápido y pequeño, pero 9B conserva mayor capacidad en 5,9 GB y tiene HE20 19/20. Occamy ofrece más calidad/contexto, pero no reemplaza su rol liviano. | **No superseded globalmente**; parcialmente desplazado si sólo se busca velocidad auxiliar. |
+| **Qwen3.5-4B** | Es más lento que 2B, pero tiene mayor capacidad y HE20 20/20 frente a 0/1 de 2B. Occamy es mucho más capaz, pero 10× más pesado y no es sustituto auxiliar. | **No superseded**. |
+| **Qwen3.5-2B** | Es el más rápido y pequeño (318,9/344,8 TG; ~1,3 GB), aunque BCB 0/8 y HE0 0/1. Ningún modelo actual ofrece ese coste/latencia. | **No superseded**; sólo no recomendable como agente principal. |
+
+### Resultado operativo
+
+Entre los perfiles que todavía tienen pesos locales, el único que queda
+realmente superseded para uso general es **GSQ-RCO + DFlash2 Q2**. El GGUF
+legacy de Qwen3.6 está superseded sólo para producción multimodal, pero no por
+throughput de texto. Los demás son perfiles no dominados con trade-offs reales.
+
+Los perfiles ya retirados previamente —CyberTiel, Agnes, ASTRA IQ1_S, ASTRA
+IQ4_XS y Flash-Next EXL3— no se volvieron a ejecutar porque sus pesos están en
+la papelera; sus resultados históricos ya justificaban el retiro.
+
+Occamy es, con las mediciones locales disponibles, el modelo multimodal de
+35B-A3B con mayor decode sostenido entre los candidatos experimentales: supera
+los 134,4 TG directos de QWEN35-A3B y los 154,3/155,9 TG de CyberTiel en sus
+recetas publicadas. Queda por debajo del throughput bruto de METEOR (207 TG),
+pero conserva 262K estable, visión funcional y tool-use válido sin MTP.
+
+La ventaja de velocidad no equivale todavía a una ventaja de calidad: Occamy
+no tiene BCB8 LC-H1, HE20 ni una campaña agentiva comparable. SOL sigue siendo
+el default porque combina **BCB 8/8**, tool-use estable y contexto validado.
+Occamy queda como opción experimental para visión, concurrencia futura y
+throughput multimodal.
+
+Detalle reproducible: [`occamy-1.0-audit-20260918.md`](occamy-1.0-audit-20260918.md).
+
+### Lectura comparativa de ShapeLearn
+
+ShapeLearn completo es claramente más rápido que QWEN38-Q8 en las mediciones
+locales comparables: llega a **66,24 TG a 262K con MTP3**, frente a **22,1 TG
+a 262K** de QWEN38-Q8. Además, conserva vocabulario completo —a diferencia de
+ASTRA ASCII/P1M— y la combinación visión+MTP3 funcionó a 32K con 80% de
+aceptación. No tiene todavía BCB8 LC-H1, así que no se presenta como superior a
+SOL en calidad ni en tool-use agentivo.
+
+Detalle reproducible: [`qwen38-byteshape-shapelearn-audit-20260918.md`](qwen38-byteshape-shapelearn-audit-20260918.md).
+
+## Matriz de candidatos presentes en Disco C/D antes de limpieza — 2026-09-18
+
+Esta matriz se agrega antes de retirar artefactos grandes. Incluye variantes
+experimentales y perfiles que no deben confundirse con la tabla productiva:
+las cifras de velocidad son smokes locales y sólo los resultados marcados como
+BCB8 LC-H1 son comparables como calidad agentiva. Los candidatos con estado
+“retirar/mover” no se ofrecen como defaults.
+
+| Perfil / artefacto | Velocidad local | Calidad / estabilidad | Contexto | Visión | Evaluación para almacenamiento |
+|---|---:|---|---:|---|---|
+| **ASTRA IQ1_S** | 58,2 PP / 25,4 TG @8K; 58,0 PP / 25,6 TG @262K; MTP compartido 41,6–58,5 TG warm | Micro-suite 4/6; BCB8 LC-H1 pendiente; tool-call válido con MTP | **262K probado** | No hay `mmproj` compatible validado | Experimental de contexto largo; conservar sólo si se seguirá investigando |
+| **ASTRA Flash-Next IQ4_XS** | 16,5 TG control; 36,0 con caché 188; ~45,5 con caché 150 | Salida corrupta o repetitiva en las recetas rápidas; no BCB válido | 196K/262K configurado, no fiable como agente | No funcional de forma utilizable | **Mover o archivar; no justifica conservarlo en C** |
+| **Flash-Next EXL3 4.05bpw** | 35,4 TG texto; 34,7 TG visión; 63,5 TG a 103K con otra variante EXL3 | **BCB 1/8**; tool-call válido; MTP no disponible en este artefacto | **262K funcional**; 103K llenado; 512K sólo reservado | Funcional con `mmproj` | Experimental de laboratorio; mover a D, no necesario en C |
+| **Opti-27B** | 232,6 PP / 39,1 TG @16K; 215,2 / 39,1 @262K; ~86,4 TG agregado en 4 slots | BCB/HE pendientes; tool-call válido con reasoning off; reasoning on degenera | 262K carga; 123,9K de prefill probado | Funcional con reasoning off | Mover a D o archivar; no reemplaza SOL |
+| **Agnes-3.0-Flash** | 139,2 PP / 33,3 TG texto; 506,5 PP / 33,1 TG visión | **1/8 directo**; BCB8 LC-H1/HE20 pendientes; tool-call smoke válido | 262K carga; escalera completa pendiente | Funcional con `mmproj` | Mover a D; candidato multimodal, pero no productivo |
+| **NInfer Qwen3.6-35B-A3B** | MTP3: **190,1 TG** sostenidos; C2 concurrente validado | BCB LC-H1 pendiente; runtime experimental | 262K texto; visión falla al reservar 262K | 131K funcional; 262K no | Conservar mientras siga activo el perfil NInfer |
+| **QWEN35-A3B GGUF MTP** | 140,2 TG base; **207,8 TG con MTP** | BCB comparable pendiente; estabilidad de MTP+visión no demostrada | Menor que la ruta AutoRound validada | Visión sin MTP funcional; MTP+`mmproj` incompatible | Variante vieja; mover a D o retirar al usar sólo AutoRound |
+| **Ling 3.0 Tiny / LUNA** | ~1.260 PP / **204 TG** histórico | HE0 0/1; sin BCB agentivo vigente | 131K declarado | No | **Supersedido por Qwen3.5-2B/4B/9B; retirar** |
+| **ByteShape ASCII/P1M IQ4_XS** | 79–88 TG corto; ~45 TG @262K | BCB directo 1/8; limita idiomas no ASCII | 262K estable | Funcional con MTP2 | Supersedido por ShapeLearn completo; retirar si no se necesita inglés/código ASCII |
+| **GSQ-RCO + DFlash2 Q2** | 67,7 TG corto; 25,0 TG @8K; visión 52,1 TG; HE0 29,09 TG | HE0 LC-H1 1/1; HE20 cancelado en prompt 5/20 por latencia operativa; BCB bloqueado por compuerta | 81,9K configurado; 9,6K probado | Funcional | Experimental; conservar sólo como referencia DFlash2, no productivo |
+
+### Componentes sin benchmark propio
+
+`Qwen3.8-27B-DFlash2-W4A16` (1,28 GB) es un drafter, no un perfil
+independiente; se conserva hasta cerrar la comparación SOL+DFlash2. La copia de
+SOL que existe en C y D tiene los mismos ocho archivos de pesos
+`.safetensors` byte a byte; la copia de D sólo agrega metadatos y archivos de
+descarga, por lo que es redundante.
+
+## PCIe/bifurcación de las 2× RTX 3090 — 2026-09-18
+
+Se auditó la sugerencia de PCIe x8/x8. Ambas placas ya cuelgan de root ports de
+CPU, con `PHB` entre GPUs, y P2P lectura/escritura funciona. La campaña previa
+midió sólo ~0,2% de diferencia con P2P usando reparto por capas; no se cambia
+la placa madre ni los perfiles. Detalle:
+[`dual-3090-pcie-bifurcation-audit-20260918.md`](dual-3090-pcie-bifurcation-audit-20260918.md).
+
+## Laya / Jev — componente auxiliar de routing 2026-09-18
+
+Laya es un motor de decisión no autoregresivo, no un perfil generativo. La
+auditoría local está en [`laya-jev-audit-20260918.md`](laya-jev-audit-20260918.md).
+
+| Componente | Resultado local | Uso recomendado | Estado |
+|---|---:|---|---|
+| Laya 421M | **13–15 ms warm en RTX 3090**; 248–564 ms en CPU | Routing, guardrails y triage delante de SOL | Experimental; no aparece como modelo |
+
+Detectó correctamente coding, prompt injection, intención técnica y clases de
+operación de PC. Su señal genérica de “requiere confirmación” fue inconsistente,
+por lo que las reglas deterministas de seguridad de LlamaCode siguen siendo la
+autoridad.
+
+## Opti-27B — auditoría aislada 2026-09-18
+
+Se compiló el runtime parcheado requerido por Opti para SM86 y se probó el
+modelo localmente sin cambiar el backend estable de LlamaCode. El detalle,
+hashes y límites están en [`opti-27b-audit-20260918.md`](opti-27b-audit-20260918.md).
+
+| Perfil | Configuración | Velocidad local | Calidad / tool-use | Contexto | Visión | Estado |
+|---|---|---:|---|---:|---|---|
+| Opti-27B | 3,47 bpw · runtime parcheado · TP2 layer · KV q8 | **39,1 TG dual**; ~86,4 TG agregado en 4 slots | BCB LC-H1 pendiente; tool-call válido con reasoning off | **262K carga**; 123,9K prefill probado | **Funcional con reasoning off** | Experimental aislado; no supera SOL y no entra al dropdown |
+
+Opti reduce presión de VRAM y permite explorar concurrencia, pero queda por
+debajo de SOL en decode, no tiene validación agentiva y su reasoning activado
+produjo salida degenerada en esta build. No se asigna BCB/HE0/HE20 ni se
+promueve hasta integrar el runtime de forma reproducible.
+
+## Occamy-1.0 Q4_K_M — 2026-09-18
+
+La auditoría local está en [`occamy-1.0-audit-20260918.md`](occamy-1.0-audit-20260918.md).
+Occamy es el primer candidato de 35B-A3B que combina en nuestra máquina un
+decode de ~163 TG sin MTP, 262K estable, visión correcta y tool-use válido.
+La escalera LC-H1 ya cerró: HE0 1/1, HE20 20/20 y BCB8 3/8. Queda por debajo
+de SOL como decisión de calidad aunque sea más rápido que QWEN35-A3B y
+CyberTiel en esta receta.
+
+| Perfil | Configuración | Velocidad local | Calidad | Contexto | Visión | Estado |
+|---|---|---:|---:|---:|---|---|
+| `sys-occamy-35b-q4km-262k` | Occamy-1.0 35B-A3B Q4_K_M · KV Q8 · TP2 layer · sin MTP | **164,07 TG a 8K; 162,96 TG a 262K**; 162,68 TG visión; **143,59 TG BCB** | **HE0 1/1 · HE20 20/20 · BCB8 3/8**; tool-call válido | **262K estable** | **Funcional a 32K** | Experimental multimodal; no reemplaza SOL |
+
+## Qwen3.8 ByteShape ShapeLearn IQ4_XS — 2026-09-18
+
+La variante completa de vocabulario se descargó y probó después del quant
+ASCII/P1M. El detalle está en
+[`qwen38-byteshape-shapelearn-audit-20260918.md`](qwen38-byteshape-shapelearn-audit-20260918.md).
+MTP3 integrado funciona y permite 66,2 TG a 262K en 2× RTX 3090; visión+MTP3
+también es funcional. HE0 1/1 y HE20 20/20 quedaron validados con el perfil
+de agente compacto `Con fases`; el BCB sigue bloqueado por salida previa a
+tools, no por carga ni CUDA. No se promueve ni se compara como reemplazo de
+SOL.
+
+| Perfil | Configuración | Velocidad local | Calidad | Contexto | Visión | Estado |
+|---|---|---:|---:|---:|---|---|
+| `sys-qwen38-27b-byteshape-shapelearn-262k` | ByteShape ShapeLearn IQ4_XS · KV Q8 · MTP3 · TP2 layer | 53,6 TG a 8K; **66,2 TG a 262K**; 55,9 TG visión; **77,91 TG HE20** | **HE0 1/1 · HE20 20/20**; BCB8 bloqueado por protocolo de agente | **262K estable** | **Funcional con MTP3** | Experimental; no reemplaza SOL |
+
+## Qwen3.8 ByteShape ASCII/P1M — 2026-09-18
+
+La auditoría completa está en
+[`qwen38-byteshape-ascii-audit-20260918.md`](qwen38-byteshape-ascii-audit-20260918.md).
+El candidato reduce el peso a 12,25 GB, carga 262K con KV Q8 en las dos RTX
+3090 y permite visión+MTP2, pero restringe la entrada práctica a inglés/código
+ASCII y obtuvo sólo **1/8** en el BCB8 directo. Se conserva como candidato
+especializado, no como reemplazo de SOL.
+
+| Perfil | Configuración | Velocidad local | Calidad | Contexto | Visión | Estado |
+|---|---|---:|---:|---:|---|---|
+| `sys-qwen38-27b-byteshape-ascii-262k` | ByteShape IQ4_XS ASCII/P1M · KV Q8 · MTP2 · TP2 layer | 79–88 TG corto; 45 TG a 262K; 67,6 visión+MTP2 | BCB8 directo **1/8** | **262K estable** | **Funcional con MTP2** | Experimental; inglés/código ASCII |
+
+## Campaña Harness de calidad — 2026-09-15
+
+La comparación agentiva solicitada para QWEN35-A3B, CyberTiel, METEOR y los
+auxiliares Qwen3.5 está documentada en
+[`harness-quality-campaign-20260915.md`](harness-quality-campaign-20260915.md).
+La tabla separa HE0/HE20/BCB actuales de controles directos e históricos; no
+se asignan scores BCB cuando la compuerta HE20 no se completó.
+
+## Reejecución BCB8 directa — 2026-09-15
+
+Se completó una corrida directa de 8 tareas para los perfiles pequeños y
+experimentales solicitados. El detalle reproducible está en
+[`bcb8-rerun-direct-20260915.md`](bcb8-rerun-direct-20260915.md). Estos scores
+no reemplazan los BCB LC-H1 porque no incluyen herramientas, reparación ni
+reintentos de agente.
+
+| Perfil | BCB8 directo | Tiempo generación / 8 casos | Estado |
+|---|---:|---:|---|
+| QWEN35-A3B vLLM · TP2/P2P · KV FP8 | **1/8** | 156,849 s | Control vLLM 0.27.1, 32K |
+| METEOR / BigBang · MTP5 · KV Q8 | **2/8** | 13,187 s | Control GGUF funcional |
+| QWEN35-A3B GGUF · MTP3 · KV Q8 | **1/8** | 17,583 s | Experimental |
+| CyberTiel · MTP3 · KV Q8 | **1/8** | 15,288 s | Experimental |
+| Qwen3.5-9B · MTP3 · KV Q8 | **1/8** | 20,882 s | Auxiliar |
+| Qwen3.5-4B · MTP3 · KV Q8 | **1/8** | 12,445 s | Auxiliar |
+| Qwen3.5-2B · MTP3 · KV Q8 | **0/8** | 9,865 s | Sólo tareas rápidas |
+| Qwen3.5-4B CPU · sin MTP | **2/8** | 418,982 s | Control CPU; MTP no compatible en el runtime disponible |
+
+La evidencia oficial anterior se conserva: QWEN35-A3B vLLM permanece en 4/8
+agentivo y BigBang en 3/8 histórico. No se modificó el default SOL.
+
+## Cierre de validaciones Ubuntu — 2026-09-14
+
+La auditoría de perfiles está en
+[`profile-validation-audit-20260914.md`](profile-validation-audit-20260914.md).
+QWEN38-Q8 ya tiene un BCB directo reproducible de **8/8** a 262K con MTP2 y
+KV Q8, a 51,74 tok/s de media. Ese resultado no se mezcla con el BCB LC-H1:
+la ruta de agente completa sigue pendiente. La visión del mismo perfil sólo
+pasó en un control sin MTP con KV Q4; MTP2+KV Q8+visión falló con acceso ilegal
+CUDA. TERRA tiene además un smoke visual 1/1 a 64K sin MTP. Los perfiles
+texto-only se marcan como “No aplica” en visión, no como validación pendiente.
 
 ## 2026-09-26 — LFM2.5-VL-3B F16 + Liquid DSpark local
 
@@ -260,6 +487,7 @@ reportada; no es la VRAM libre ni la capacidad instalada.
 | ID | Perfil | Agente | HE0 | HE20 | BCB | Tiempo HE0 | Tiempo HE20 | Tiempo BCB | TPS HE0 | TPS HE20 | TPS BCB | VRAM GPU0 | VRAM GPU1 | VRAM total | Visión | Drafter | Quant | Parámetros | Contexto | Thinking | Harness | Estado |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---|---|---|---|---|---|---|---|
 | `sys-qwen38-27b-udq4-131k` | ⚡ Qwen3.8 UD-Q4 visión | chat | 1/1 | 20/20 | 5/8 | 11,288 s | 237,507 s | 1430,390 s | 39,22 | 60,50 | 65,21 | No medido | No medido | 24.569 MB | Sí | MTP3 | UD-Q4_K_XL | 27B | 131k | No | LC-H1 | BCB calidad |
+| `c7e4b1a2-6d93-4f0e-8a75-2b1c9d6e4f80` | QWEN38-Q8 · UD-Q8_K_XL · 262K | chat | Smoke OK | No ejecutado | **8/8 directo** | — | — | — | **51,74 tok/s BCB directo** | — | — | No medido | No medido | — | Control visual OK sin MTP/KV Q4; MTP2+KV Q8+visión falla | MTP2 | UD-Q8_K_XL | 27B | 262k | medium | LC-H1 directo | Texto validado; agente LC-H1 y visión prioritaria pendientes |
 | `sys-48-katcoder-262k` | KAT2-Coder-7-8-26 | chat | 1/1 | 20/20 | 3/8 | 15,817 s | 183,904 s | 401,169 s | 124,24 | 108,45 | 116,83 | No medido | No medido | 26.761 MB | No | — | Q4_K_M | 35B-A3B | 262k | No | LC-H1 | Reparado |
 | `sys-repair-48-bigbang-mtp-balance` | BigBang MTP BALANCE | chat | 1/1 | 20/20 | 3/8 | 11,266 s | 253,067 s | 406,496 s | — | 206,53 | 211,18 | No medido | No medido | 25.644 MB | Sí | MTP embebido | Q4_K_M | 35B-A3B | 65k | No | LC-H1 | Reparado |
 | `a03e65f5-2f2c-4d45-b67b-4b1270fa2a6c` | ThinkingCap Qwen3.6 MTP4 | chat | 1/1 | 20/20 | 3/8 | 11,288 s | 118,098 s | 169,431 s | 48,21 | 61,96 | 52,04 | No medido | No medido | 23.624 MB | Sí | MTP4 | Q4_K_M | 27B | 131k | No | LC-H1 | BCB calidad |
@@ -402,3 +630,105 @@ con 20/20. Los resultados y metadata de esta campaña permanecen en
 `%LOCALAPPDATA%\LlamaCode\LlamaCode\benchmark-runs`; no se elimina evidencia.
 La campaña oficial se canceló de manera intencional después de este gate y no
 se presenta como matriz completa.
+
+## 2026-09-18 — GSQ-RCO IQ3_S con drafter DFlash2 Q2
+
+Se descargó `HermiHg/Qwen3.8-27B-DFlash2-Q2_K_S-MIX-GGUF` (~536 MiB) y se
+probó contra el target local `ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF` con el
+binario CUDA DFlash2 de Ampere, 2× RTX 3090/P2P y contexto 81.920. El control
+autoregresivo obtuvo 221,77 PP / 42,48 TG; DFlash `n-max=3` obtuvo 183,61 PP /
+67,02 TG, con 85/123 tokens aceptados (69,1%). `n-max=5` no fue consistente
+(58,77–68,44 TG; aceptación 44,2–55,4%). Tool-use y visión funcionaron; a
+9.592 tokens la receta K8/V4 midió 102,18 PP / 17,67 TG y 19/33 aceptados.
+
+Se agrega el perfil manual experimental
+`sys-bench-qwen38-gsq-rco-iq3s-dflash2-q2-81k`. No se promueve ni reemplaza
+SOL: el target todavía no tiene HE20/BCB8 con el harness oficial y la ganancia
+de decode cae con el contexto. Detalle reproducible:
+`docs/qwen38-gsq-rco-dflash2-q2-audit-20260918.md`.
+
+## 2026-09-18 — SOL AutoRound INT4 + DFlash2 vLLM local
+
+Se descargó en el Disco D `syvai/Qwen3.8-27B-DFlash2-W4A16` (1,28 GB) y se
+aplicó el backport DFlash2 sobre vLLM 0.27.1. Con el mismo target AutoRound de
+SOL, TP2/P2P y n=7, BF16/Flash-Attention midió 109 tok/s narrativo y 144 tok/s
+de código en requests cortos; FP8 E4M3/FlashInfer arrancó con 262K configurado
+y midió 103–108 narrativo y 124–142 de código. Tool-call y visión textual
+funcionaron, pero JSON/xgrammar registró `Failed to advance FSM` durante la
+prueba estructurada. El smoke largo no produjo OOM ni cierre del runner.
+
+No se asigna BCB8 ni HE20: el resultado no pasó todavía por el harness oficial.
+El perfil queda como `SOL-DFlash2-FP8` experimental separado; SOL conserva el
+default por BCB8 8/8, tool-use estable y 262K validado. Auditoría completa:
+`docs/sol-dflash2-local-audit-20260918.md`.
+
+## 2026-09-18 — Revisión de pendientes: Occamy, ShapeLearn y Agnes
+
+Se cerró una campaña de control sobre los tres candidatos que todavía no tenían
+una comparación agentiva directa en esta instalación. Se usó el mismo pack
+determinista de ocho tareas `artifacts/bigcodebench-hard-ubuntu-8.json`,
+temperatura baja y ejecución directa contra `llama-server` CUDA en las 2× RTX
+3090. Esto es **BCB directo**, no el BCB8 LC-H1: mide la capacidad de producir
+el código correcto sin el ciclo completo de herramientas, reparaciones y
+compaction del Harness.
+
+| Perfil | Texto / herramienta | Visión | Contexto | BCB directo | Diagnóstico |
+|---|---:|---:|---:|---:|---|
+| **OCCAMY** | 164,07 TG en el smoke; 163,69 TG con tool-call válido | **725,5 PP / 162,6 TG**, descripción correcta | **262K cargado y estable** | **1/8**, media 161,7 TG por tarea | Rápido y multimodal; los fallos fueron de implementación (diff, transferencias, archivos, tipos y validación de excepciones), no de runtime |
+| **QWEN38-SHAPELEARN** | 53,64 TG de referencia con MTP3; 84,95 TG en tool-call de esta sesión | **548,7 PP / 59,0 TG**, descripción correcta | **262K cargado y estable** | **1/8**, media 80,0 TG por tarea | MTP3 y visión funcionan; perdió casos por formato/semántica de código y un caso truncado |
+| **AGNES** | 32,94 TG con tool-call válido | **505,6 PP / 32,2 TG**, descripción correcta | **262K cargado**; escalera completa aún pendiente | **1/8**, media 31,7 TG por tarea | Multimodal funcional, pero lento; no muestra ventaja agentiva y tuvo fallos de precisión/contrato |
+
+Los tres perfiles pasaron además una prueba de carga con `n_ctx_slot=262144`
+cuando correspondía, sin OOM ni cierre del servidor. La prueba de visión usó el
+`mmproj` real de cada modelo y `parallel=1`; por eso se registra como **visión
+funcional smoke**, no como una nueva validación 4/4. El tool-use se validó con
+una llamada `calculator` reproducible, no con el pack completo de herramientas.
+
+Los casos BCB fallidos no deben leerse todos como fallos del modelo: varios
+exponen el mismo patrón de tareas (formatos de diff, transferencias duplicadas,
+tipos `int`/`str`, excepciones, fechas y dependencias pandas/NumPy). Aun así,
+el 1/8 directo es la única cifra comparable que tenemos hoy para estos tres
+candidatos y no justifica subirlos sobre SOL. HE0/HE20 LC-H1 quedan pendientes
+porque el runner oficial no se pudo ejecutar en este checkout Linux; no se los
+convierte artificialmente en 0/20.
+
+### Decisiones resultantes
+
+- **SOL permanece default**: BCB8 agentivo 8/8, tool-use estable, visión 4/4 y
+  262K validado.
+- **Occamy** conserva el mejor throughput multimodal experimental, pero su
+  BCB directo 1/8 impide considerarlo reemplazo de SOL.
+- **ShapeLearn** conserva una ruta útil para contexto largo con MTP3 y visión,
+  pero su BCB directo 1/8 no demuestra calidad agentiva.
+- **Agnes** queda como candidato multimodal de laboratorio: carga 262K y visión
+  correcta, pero es claramente más lento y no mejora la calidad observada.
+- Opti, NInfer, ASTRA, EXL3 y GSQ-RCO+DFlash2 no se repitieron aquí porque sus
+  bloqueos y métricas pendientes ya están documentados con el runtime específico
+  de cada uno; repetir el mismo smoke no produciría evidencia nueva.
+
+## 2026-09-18 — Escalera oficial LC-H1: Occamy, ShapeLearn y GSQ-RCO
+
+Se corrigió el bloqueo de infraestructura que dejaba estos perfiles en
+`not-ready`: se compiló el daemon Linux Release, se registró el binario CUDA
+Ampere `b10658`, se escaneó el root real del Disco D y se ejecutó la escalera
+oficial HE0 → HE20 → BCB desde el Control API del mismo Harness.
+
+| Perfil | HE0 | HE20 | BCB8 | Velocidad Harness | Diagnóstico final |
+|---|---:|---:|---:|---:|---|
+| **OCCAMY** | **1/1 válido** | **20/20 válido** | **3/8**, calidad | 143,59 tok/s BCB; TTFT medio 8.638 ms | Runtime sano; 2 reparaciones; fallos de semántica/contrato |
+| **QWEN38-SHAPELEARN** | **1/1 válido** | **20/20 válido** con `Con fases` | BCB bloqueado por salida previa a tools | 77,91 tok/s HE20; TTFT medio 2.283 ms | HE20 estándar bloqueado por `too much text`; no CUDA |
+| **GSQ-RCO + DFLASH2 Q2** | **1/1 válido** | Cancelado en prompt 5/20 | Pendiente | 29,09 tok/s HE0 | DFlash2 carga y funciona; HE20 no es operacionalmente competitivo a 81K + drafter |
+
+ShapeLearn fue repetido con una política compacta después de que el HE20
+estándar fuera detenido por el guard de 32.000 caracteres previos a tools. Se
+rehizo HE0 antes de aceptar la nueva evidencia, por lo que los fingerprints no
+se mezclan. El BCB compacto volvió a activar el mismo guard y queda como
+`BCB bloqueado por protocolo de agente`, no como cero de calidad.
+
+Occamy deja de ser “BCB pendiente”: su número oficial es **3/8**, por debajo
+de SOL (8/8), aunque conserva el mejor throughput multimodal experimental de
+esta tanda. GSQ-RCO queda experimental: HE20 fue cancelado en prompt 5/20 por
+latencia operativa no competitiva, y BCB no se inicia sin HE20 válido.
+
+Evidencia persistente adicional:
+`artifacts/validation-20260918/lc-h1-occamy-shape-gsq.json`.

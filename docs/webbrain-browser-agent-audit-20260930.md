@@ -183,6 +183,61 @@ Qwen3-8B Q6 y el Qwen3.5-9B Q4 del perfil local completaron los tres recorridos
 Resultados: [`qwen3-8b-q6-live-planner-result.json`](../artifacts/webbrain-evaluation-20261001/browser-fixture/qwen3-8b-q6-live-planner-result.json)
 y [`qwen35-9b-live-llm-planner-result.json`](../artifacts/webbrain-evaluation-20261001/browser-fixture/qwen35-9b-live-llm-planner-result.json).
 
+### Observación browser combinada — 2026-10-01
+
+El auto-capturador del MCP omitía la captura de Playwright aunque encontrara el
+árbol: `browser_take_screenshot` declara `scale` requerido en su schema, pero
+acepta su opción normal `css`. Ahora LlamaCode deriva argumentos automáticos sólo
+para campos requeridos con `default` o `enum` y sólo para invocar la captura de
+pantalla; tools sin valores seguros se siguen omitiendo. Con preview activo,
+`browser_navigate` en la fixture generó una imagen PNG válida de 1280×720 y un
+snapshot posterior con título, heading, estado de renovación y botón `Manage plan`.
+El resultado verificable está en
+[`browser-observation-pair-test.json`](../artifacts/webbrain-evaluation-20261001/browser-fixture/browser-observation-pair-test.json).
+`test_agent_wire` también comprueba que el backend agrupa captura y árbol en el
+mismo mensaje posterior, y conserva el árbol si el modelo sólo acepta texto.
+Tras este ajuste se repitió `./scripts/tests-linux.sh Release`: **77/77 tests
+pasaron en 96.70 s**.
+
+En el primer intento, `mcp_call_tool` quedó bloqueada por no recibir
+`changed_paths`, y el servidor activo no tenía visión. Ese bloqueo se corrigió y
+se revalidó abajo con el planner y un endpoint multimodal separado.
+
+### Revalidación integrada — 2026-10-01
+
+La guardia confundía efectos externos del browser con escritura de archivos del
+workspace: Playwright no anota sus tools como `readOnlyHint`, así que navegación
+legítima exigía `changed_paths`. Se separó el requisito de paths del permiso
+externo. Las tools browser sin destino de archivo ya no piden paths; las tools
+desconocidas mantienen el comportamiento conservador y una salida local explícita
+(por ejemplo `filename`) sí debe declararse. La política de aprobación externa
+sigue intacta. Hay casos de regresión en `test_tool_execution_safety`.
+
+Con el guard corregido, el Qwen3.5-9B original navegó a Northstar sin
+`changed_paths`, devolvió el título y el runner verificó captura y snapshot
+posteriores (`pairedBrowserObservations=1`). Resultado:
+[`llamaagent-browser-observation-live-test.json`](../artifacts/webbrain-evaluation-20261001/browser-fixture/llamaagent-browser-observation-live-test.json).
+
+Para probar también el planner visual sin interferir con el servidor original,
+se levantó temporalmente el mismo Qwen3.5-9B Q4 con `mmproj-BF16` en
+`127.0.0.1:8035` (`modalities.vision=true`). Sobre `/vision-observation`, el loop
+real `LlamaAgentBackend → AgentToolRunner → Playwright MCP` generó imagen y árbol
+en dos observaciones y contestó `rgb(20, 96, 220)` / azul para el botón. Hubo
+varios intentos de tool y también una consulta del estilo mediante
+`browser_evaluate`; es un smoke del transporte multimodal, no un benchmark limpio
+de selección visual. Resultado:
+[`llamaagent-qwen35-vision-e2e-test.json`](../artifacts/webbrain-evaluation-20261001/browser-fixture/llamaagent-qwen35-vision-e2e-test.json).
+
+Control adicional: LFM2.5-VL-3B recibió una captura real y el snapshot accesible
+(que no incluye color) y contestó `Blue` en 926 tokens de entrada. Fue una llamada
+directa a `/v1/chat/completions`; LFM no produjo tool calls en LlamaAgentBackend.
+Resultado:
+[`vision-model-image-read-test.json`](../artifacts/webbrain-evaluation-20261001/browser-fixture/vision-model-image-read-test.json).
+
+Tras esta revalidación se ejecutó `./scripts/tests-linux.sh Release` con caché y
+build en `/tmp`: **77/77 tests pasaron en 96.68 s**, incluyendo
+`test_agent_wire` y `test_tool_execution_safety`.
+
 La corrida que cuenta usa `tool_choice: "required"`; se descartó una ejecución
 previa porque esta build de llama.cpp ignoró el objeto `tool_choice` y cayó al
 default automático. La prueba pasa por el modelo local y un navegador real sobre
@@ -286,3 +341,50 @@ No cambia Ingi Charla: no hubo medición nueva de audio, diálogo, interrupción
 latencia de voz. Tampoco se cambian perfiles/harness de producción: el candidato
 planner falló el criterio de seguridad en tres primeras decisiones y el ensayo
 VLM no prueba una mejora del runtime.
+
+### Revalidación de build y suite — 2026-10-01
+
+Se compiló la aplicación en Linux Debug desde el checkout actualizado con
+`./scripts/build-linux.sh Debug`, usando `LC_BUILD_DIR=/tmp/llamacode-native-debug-validation-20261001`.
+El ejecutable `LlamaCode` se generó correctamente; sólo aparecieron warnings de
+APIs Qt deprecadas y políticas QML ya existentes.
+
+Después se corrió `./scripts/tests-linux.sh Release` en un build limpio y aislado
+(`LC_TEST_BUILD_DIR=/tmp/llamacode-validation-tests-20261001`, caché temporal en
+`/tmp`): **77/77 tests pasaron**, 0 fallos, en 84.32 s. Esta corrida incluye
+`test_agent_wire`, `test_tool_execution_safety` y los tests completos de agente.
+No repetirla como una validación nueva sin cambiar código o configuración.
+
+No se compiló ni actualizó `build/Debug/LlamaCode.exe`, ni se ejecutó
+`tests.bat Debug`: este host es Ubuntu y no dispone del entorno Windows de la
+notebook. Esa sigue siendo la única gate de plataforma pendiente para validar el
+candidato que usa el usuario; el build Linux no la sustituye.
+
+### Planner browser de sólo lectura con presupuesto — 2026-10-01
+
+Se añadió al probe `qa_web_providers playwright-agent` la variable
+`LLAMACODE_QA_MAX_MCP_CALLS`, que detiene el backend al alcanzar el número de
+llamadas `mcp_call_tool` completadas. La fixture local ganó `/plans`, una página
+sin controles de mutación con planes mensuales, anuales y de pago único.
+
+Con Qwen3.5-9B Q4 en el servidor que ya estaba activo, límite 8 y tarea de sólo
+lectura, el agente navegó a `http://127.0.0.1:8777/plans`, obtuvo tres
+observaciones emparejadas de captura+snapshot y respondió los tres campos
+esperados: Studio Pro Annual, `$89.00` por año y renovación el 2 de noviembre de
+2026. Usó exactamente `browser_navigate` y `browser_snapshot`; el contador
+registró 3 llamadas `mcp_call_tool` totales, límite no excedido. Resultado:
+[`llamaagent-qwen35-plans-readonly.json`](../artifacts/webbrain-evaluation-20261001/browser-fixture/llamaagent-qwen35-plans-readonly.json).
+
+Se probó el corte con el mismo tipo de recorrido y límite 1: el probe registró
+una navegación y una observación, marcó `toolBudgetExceeded=true` e interrumpió
+el turno antes de ejecutar otra acción. Es un control del mecanismo de corte,
+no un fallo de exactitud del modelo. Resultado:
+[`llamaagent-qwen35-plans-readonly-budget-stop.json`](../artifacts/webbrain-evaluation-20261001/browser-fixture/llamaagent-qwen35-plans-readonly-budget-stop.json).
+
+Un primer intento de preparación no es puntuable: el MCP no encontró `node` en
+el `PATH` del subprocesso y el prompt de ese intento tampoco incluía la URL.
+Quedó separado en
+[`llamaagent-qwen35-plans-readonly-bootstrap-failed.json`](../artifacts/webbrain-evaluation-20261001/browser-fixture/llamaagent-qwen35-plans-readonly-bootstrap-failed.json);
+la corrida válida agregó el runtime Node del workspace al `PATH` y explicitó
+la URL. Esta lectura no compara calidad entre modelos ni cambia perfiles; la
+gate Windows indicada arriba sigue pendiente.

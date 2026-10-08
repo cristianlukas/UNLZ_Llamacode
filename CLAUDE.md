@@ -164,6 +164,25 @@ reproducible en headless/CI), así que sólo se cubre el path de error en
   por ambigüedad en vez de adivinar.
 
 ## Build
+
+### Separación Windows / Ubuntu
+
+Las instrucciones `.bat`, `.ps1`, `.lnk`, el registro de inicio, Job Object,
+UI Automation y Windows.Media.Ocr que aparecen abajo son específicas de Windows.
+En Ubuntu/Linux usar `scripts/build-linux.sh` y `scripts/tests-linux.sh` con
+Ninja; la automatización foreground usa X11 (`xdotool`/`wmctrl`), AT-SPI2 y
+Tesseract, mientras el scheduler usa `.config/autostart` y los workers usan
+grupos Unix/bubblewrap. El plan y la matriz de equivalencias están en
+`docs/ubuntu-port-plan.md`.
+
+- Windows: `build.bat Debug NOPAUSE`; `tests.bat Debug`.
+- Ubuntu: `./scripts/build-linux.sh Debug`; `./scripts/tests-linux.sh Release`.
+- Ambos: configurar con CMake, compilar el binario y ejecutar la suite QtTest;
+  por defecto los builds Linux viven en `~/.cache/llamacode/` para evitar
+  bloqueos de CMake/Ninja sobre repositorios alojados en NTFS montado; se
+  pueden personalizar con `LC_BUILD_DIR` y `LC_TEST_BUILD_DIR`. Los scripts
+  espejan automáticamente el checkout NTFS en esa caché nativa.
+
 - **Política actual (desde 2026-06-18): build Release + tests, sin Debug.**
   Compilar solo Release (no Debug) y correr `tests.bat` + el gate de ctest antes
   de commitear. La sección "Testing policy (OBLIGATORIA)" de arriba está vigente.

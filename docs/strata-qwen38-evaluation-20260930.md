@@ -46,6 +46,22 @@ No volver a ejecutar esta misma matriz para confirmar el resultado:
 | Herramientas | Smoke test OpenAI-compatible y un round-trip de tool `lookup_ticket` pasaron. No es una batería suficiente para Harness o Computer Use. |
 | Contexto | Needle exacto: 3/3 a 8k, 32k y 110k tokens de prompt efectivo. |
 
+## Comparación con evidencia existente de Computer Use
+
+El 2026-09-29, `Qwen3.8-27B-UD-Q6_K_XL` obtuvo 72/72 (100%) en el benchmark de
+decisiones Computer Use (`computer_use_prompt_order_hard_v1`, tres órdenes de
+contexto y 24 tareas) y 63/63 en las decisiones de seguridad; mediana 4,73 s.
+`Qwen3.5-9B-Q4_K_M` obtuvo 57/72 (79,17%) y 50/63 (79,37%) en seguridad. Los
+recibos están en `artifacts/overthinking-penalty-qwen38-27b-q6-computer-use-20260929.json`
+y `artifacts/overthinking-penalty-qwen35-9b-computer-use-20260929.json`.
+
+Ese corpus puntúa **decisiones sobre estado visible**, no operación real de una
+GUI; el propio runner pide una validación E2E separada. Strata Q2_0 no ejecutó
+este corpus. Por eso sus 90+ tok/s y un tool round-trip no son evidencia de que
+mejore Computer Use, y tampoco son comparables en exactitud con el Qwen 27B.
+Charla tampoco tiene en esta campaña una prueba de voz-a-voz: Strata sólo fue
+probado como endpoint de texto/API, no como reemplazo de STT/TTS.
+
 El modelo y el runtime de esa corrida ya no están en el directorio de datos de
 evaluación; los recibos JSON conservados son la fuente de los resultados:
 

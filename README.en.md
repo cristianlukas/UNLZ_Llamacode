@@ -149,7 +149,12 @@ profile and on the features enabled for each session.
 - **Cloud STT/TTS**: Talk mode can use local or remote endpoints. If a remote
   provider is configured, audio/text travels to that provider.
 - **Browser automation**: Playwright may navigate external sites by user request or
-  by a Task.
+  by a Task. MCP-driven navigation displays its origin and requires host approval,
+  even when the server marks it read-only; non-HTTP(S) schemes and URLs containing
+  credentials are blocked. After an external MCP effect, the agent must read current
+  state from the same server before reporting completion. The host holds the final
+  answer while it requests that observation; if none is available, it reports the
+  result as unverified.
 
 ### Security note
 
@@ -464,6 +469,16 @@ A global toggle + per-profile override (`browserAutomation` inherit/on/off) that
 injects the **Playwright MCP** into the agent's tool set. Browser Teach is managed
 from Automations and stores **replayable semantic recipes**
 that Tasks can re-run.
+
+The host also scopes MCP navigation: it displays the origin and waits for human
+approval before opening an HTTP(S) destination, even when the MCP tool is annotated
+read-only or the profile uses automatic approval. `file:`, `javascript:` and URLs
+with embedded credentials are rejected before the MCP server is called. After an
+MCP write, a successful read from the same server (or a server receipt with
+`status=verified`) is required before the turn can finish. Desktop actions that
+change application state similarly require a later UIA, snapshot or image
+observation. If verification remains unavailable after two attempts, the turn is
+marked failed and the model's success claim is not shown as the final answer.
 
 ## Attachments (documents + vision)
 

@@ -60,10 +60,29 @@ Pruebas nuevas con el servidor administrado por LlamaCode:
 | Server Speed LlamaCode | 206,13 tok/s decode medio |
 | Tool-calling directo | llamada válida en 3/3 temperaturas probadas |
 | Recuperación de contexto | marcador recuperado hasta 61K de entrada |
-| HE0 con agente Máximo | 0/1; falló el flujo de herramientas/verificación |
+| HE0 con agente Máximo | 0/1 histórico; falló el flujo de herramientas/verificación |
 
 El perfil queda como auxiliar para búsqueda web, scraping, resúmenes y tool use
 de baja latencia. No se lo promueve a ASTRA/SOL/TERRA/LUNA/METEOR ni se lo
 recomienda como agente principal de coding hasta obtener una campaña HE/BCB
-válida. La prueba HE0 se detuvo antes de repetir una reparación que quedó en
-bucle; TERRA fue restaurado como perfil activo.
+válida. La repetición de campaña quedó sin score —la configuración persistida
+no encontró el binario y la repetición con el catálogo del repo se atascó en el
+prompt 2/7—; TERRA fue restaurado como perfil activo.
+
+### Corrección del formato Ling — 2026-09-14
+
+La inspección del payload real encontró que Ling podía devolver JSON válido con
+el siguiente par `<arg_key>/<arg_value>` incrustado dentro del valor anterior.
+En el caso de `write_file`, eso contaminaba `path` y el harness no encontraba
+`solution_HumanEval_0.py`. LlamaCode ahora normaliza ese patrón de forma
+acotada antes de ejecutar la tool. La regresión `normalizesLingTaggedToolArguments`
+pasó junto con `test_agent_wire` completo: 50/50.
+
+El primer intento HE0 headless tomó la configuración persistida del daemon y no
+resolvió el binario (`No binary selected`); no se contabiliza como HE0 de
+calidad ni reemplaza el histórico 0/1. Al repetirlo con
+`LLAMACODE_PROFILES_DIR` apuntando al catálogo del repositorio, LUNA sí cargó el
+binario CUDA y el modelo. La campaña estándar quedó detenida en el prompt 2/7
+por falta de avance dentro del tiempo de observación y fue cancelada; tampoco
+es un HE0 válido. Falta repetir el caso específico después de separar ese
+atasco de campaña del parser de tool-calls.

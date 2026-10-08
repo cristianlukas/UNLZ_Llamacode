@@ -1,23 +1,27 @@
 # Strata 0.1.35 vs. SOL y ASTRA — auditoría local
 
 Fecha: 2026-10-02  
-Estado: evaluación directa terminada; no promover ni cambiar perfiles.
+Estado: integrado como perfil local experimental **ASTRA** tras la comparación
+agentiva LC-H1. SOL conserva su perfil y configuración.
 
 ## Decisión
 
-Strata IQ3_S **no reemplaza SOL ni justifica un cambio del harness**. En el pack
-agentivo de código obtuvo 1/8, frente al 8/8 histórico de SOL y al 8/8 del pack
-Qwen Next Q2_K_XL guardado como comparación directa. Para Computer Use, IQ3_S
+Strata IQ3_S **no reemplaza SOL ni cambia el harness predeterminado**. En la
+evaluación directa inicial obtuvo 1/8, frente al 8/8 histórico de SOL y al 8/8
+del pack Qwen Next Q2_K_XL guardado como comparación directa. Luego, en el mismo
+harness agentivo LC-H1, Strata obtuvo 10/10 en Intelligence Adversarial v1 y
+superó a SOL (8/10) después de las reparaciones permitidas. Para Computer Use, IQ3_S
 obtuvo 100% en el corpus de decisiones y seguridad con las tres variantes de
 prompt, pero no superó en exactitud el 100% histórico del Qwen3.8-27B Q6. La
 compuerta local de promoción también falla porque la variante `sandwich` supera
 en más de 5% la latencia de `state-first`. Ese benchmark no ejecuta la GUI real y
 no se hizo una pareja con el endpoint productivo de SOL.
 
-**No se modificaron perfiles, defaults, Ingi-Charla ni el harness.** Strata
-queda como candidato de laboratorio. La evidencia no acredita que el runtime
-mejore el trabajo cotidiano de LlamaCode: la calidad de coding cae mucho y la
-ventaja de Computer Use es sólo un empate sobre decisiones sintéticas.
+Se agregó a la configuración local de esta instalación como perfil opcional
+**ASTRA**. Es experimental; SOL no se reemplazó ni se cambiaron los defaults de
+coding, Ingi-Charla o el harness. Las evidencias evalúan protocolos distintos:
+el 1/8 directo no usa el loop agentivo ni las reparaciones, y no debe presentarse
+como resultado de LC-H1.
 
 ## Instalación evaluada
 
@@ -158,3 +162,21 @@ python3 artifacts/strata-v0135-vs-sol-astra-20261002/benchmark_computer_use_thin
 
 No se tocaron archivos de código, QML, perfiles ni configuración de voz. No
 corresponde correr los gates de build/tests del proyecto para esta auditoría.
+
+## Integración local solicitada
+
+El perfil activo ASTRA usa el backend OpenAI-compatible local de Strata:
+
+- URL base: `http://127.0.0.1:8350` (sin `/v1`)
+- Modelo: `qwen3.8-flash-next-iq3_s`
+- Contexto declarado: 131072 tokens; una solicitud residente en el servidor
+- Autenticación: no requiere API key en loopback
+- Runner: `scripts/run-astra-strata.sh`
+
+Para iniciarlo desde la raíz del repo, ejecutar `./scripts/run-astra-strata.sh`;
+mantener esa terminal abierta mientras se use ASTRA. El perfil de LlamaCode se
+conecta al endpoint y no gestiona el ciclo de vida del proceso Strata. El runner
+admite `STRATA_ROOT`, `STRATA_PYTHON`, `STRATA_CONFIG` y `ASTRA_STRATA_PORT` para
+instalaciones o puertos alternativos. La comparación LC-H1 completa y los
+resultados crudos están en
+[`strata-0.1.35-vs-sol-llamacode-lch1-20261002.md`](strata-0.1.35-vs-sol-llamacode-lch1-20261002.md).

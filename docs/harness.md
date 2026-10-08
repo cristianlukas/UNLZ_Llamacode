@@ -113,6 +113,13 @@ Directivas propias: se crean, editan y borran desde el editor
 (`assets/harness/directives/commit-conventions.md`) que se copia a la carpeta del
 usuario la primera vez: sirve de plantilla y de smoke del descubrimiento.
 
+Cada edición o eliminación archiva la versión previa dentro del historial del
+scope. `harnessDirectiveHistory` permite listar revisiones y
+`rollbackHarnessDirective` restaura una revisión exacta archivando primero el
+estado actual; el rollback, por lo tanto, también es reversible. Las revisiones
+se validan contra el scope y no aceptan traversal. Esta capacidad es manual y
+opt-in: no modifica perfiles ni permisos automáticamente.
+
 Presets de sistema: los cinco niveles históricos más **`agent-minimal`**
 (local-first duro: pocas tools, sin MCP, prompt ≤8000 chars, `sameCallLimit=2`,
 sin capturas), **`agent-rpa`** (packs `core`+`rpa`, watchdog de 30 s, dos
@@ -271,13 +278,21 @@ Mecanismos sobre la memoria de trabajo:
 | Saneo de wire | `sanitizeApiMessagesForWire(msgs, modelId)` | antes de cada request: elimina `tool` huérfanos, `assistant.tool_calls` colgantes, conserva el user de anclaje, degrada system no-inicial |
 | Rol de notas | `midConversationNoteRole(modelId)` | `latest_reminder` en deepseek-v4, `user` en el resto — **nunca** `system`, porque varios templates hoistean los system al tope y rompen posición + prompt-cache |
 | Imágenes | `trimStaleImages(msgs, keepLast)` | deja capturas sólo en los últimos N mensajes; el resto pasa a `[captura omitida]` (con mmproj cada screenshot son miles de tokens de prefill) |
-| Warmup | `buildWarmupPayload()` | mismo prefijo, `max_tokens=1`, `stream=false`, `cache_prompt=true` |
+| Warmup | `buildWarmupPayload()` | mismo prefijo, `max_tokens=1`, `stream=false`, `cache_prompt=true` y el mismo `reasoning_budget`/`reasoning_effort` del turno |
 | Read-dedup | `m_readFingerprints` | releer el mismo archivo sin cambios devuelve un stub en vez de re-inyectar el contenido |
 | Preflight | `ContextPreflight::build(root, request, maxFiles, tokenBudget, expandGraph)` | scout inicial con handles, recibo y vecinos relevantes |
 
 `contextUsage(used, limit)` y `contextManaged(working, transcript, pruned, events)`
 son lo que ve la UI (barra "ctx N/M" y las métricas de poda). El límite sale de
 `/props` (`n_ctx`) salvo `ctxOverride` de un provider cloud, que no expone `/props`.
+
+En benchmarks del agente, el guard de salida previa a la primera herramienta
+cuenta caracteres crudos generados por mensaje (`reasoning_content` + `content`).
+No debe derivarse de `streamingText`, que es un snapshot de presentación con
+`<think>` insertado delante de la respuesta; si ambas regiones crecen intercaladas,
+los snapshots dejan de ser prefijos y el delta puede contar el mismo texto varias
+veces. El backend publica `generationProgress` para que el guard mida el stream,
+no su representación visual.
 
 ### Thinking
 
@@ -397,6 +412,15 @@ nunca es el home.
   simple (`makeDiff`, prefijo/sufijo común + bloque +/-) que se muestra en la card
   de aprobación **antes** de aplicar.
 - `revertEdit(path)` restaura o borra desde el snapshot.
+- `read_file` devuelve la huella SHA-256 completa del archivo (`sha256`).
+  `edit_file` y `write_file` aceptan `expected_sha256` de esa lectura y rechazan
+  la escritura si otra sesión modificó el archivo desde entonces. Es una guardia
+  de concurrencia compatible con el flujo existente, inspirada en Hashline pero
+  sin cambiar todavía a tags por línea. La huella se calcula por streaming aunque
+  el contenido mostrado al modelo tenga límite de tamaño.
+- La guardia es optativa para mantener compatibilidad con llamadas históricas;
+  el agente nativo recibe la recomendación en el schema de las tools y debe releer
+  ante un conflicto antes de reintentar.
 - `pushCheckpoint()` por turno de usuario guarda longitudes de mensajes +
   qué archivos ya estaban editados; `rollbackToMessage(i)` rebobina la
   conversación y revierte sólo lo editado después.
@@ -436,6 +460,10 @@ nunca es el home.
   `adaptiveSubagentLimit(parallelSlots, ctxTokens, vramTotal, vramFree)`, con
   `kAbsoluteMaxParallelSubs`=5 como techo duro. Los que no entran esperan en
   `m_subQueue`; el loop principal no cierra el turno hasta que terminan todos.
+  Hereda la política de razonamiento del perfil principal y reserva hasta 32K
+  tokens de salida, en lugar de caer en un `max_tokens=8192` implícito. Esto evita
+  que una escritura o síntesis larga quede cortada y evita que el servidor aplique
+  silenciosamente su esfuerzo por defecto a los subagentes.
 - **`ask_teacher` → maestro**: un modelo más capaz, por HTTP OpenAI-compat o por
   CLI (`claude` / `codex`, detectados por `MasterCli`). `setMasterChain` define una
   cadena de fallbacks ordenada; `escalation` es `manual` | `auto` | `both`, y
@@ -505,6 +533,15 @@ tool calls, tool bytes. `summarize()`, `compare(baseline, candidate)` y
 `benchmarkComparison(runs)` (agrupa por perfil con estadísticos robustos; las
 filas fallidas cuentan para estabilidad pero no contaminan las medianas).
 
+El resumen del backend también separa la memoria de trabajo de la compactación:
+`compactions` cuenta reemplazos de contexto completados, `compactionFallbacks`
+cuenta los reemplazos cuyo resumen no estuvo disponible y `compactionMs` acumula
+el tiempo de las solicitudes de resumen. Se persisten junto a `prunedMessages`
+y `prunedTokens` en `contextStats`; estos últimos siguen incluyendo la poda
+determinista y no deben usarse como sustituto del número de resets. La auditoría
+reproducible está en `tools/compaction_quality_matrix.py` y su criterio de
+promoción en `docs/compaction-quality-audit-20260923.md`.
+
 El backend además guarda las métricas **reales** de generación del server
 (`timings.predicted_n` / `predicted_ms`) en vez de estimar chars/4 + wall clock,
 y expone `efficiencySummary()` y `progressSummary()` (`progressEvents`,
@@ -514,6 +551,16 @@ para benchmarks reproducibles.
 ---
 
 ## 12. Cobertura de tests
+
+### Continuación segura por límite de generación
+
+El backend captura `finish_reason` de la respuesta SSE. Si es exactamente
+`length`, la respuesta tiene contenido y todavía queda presupuesto, conserva el
+fragmento como mensaje `assistant`, agrega una instrucción breve para continuar
+sin repetir y reanuda el turno. El presupuesto es de dos continuaciones por
+turno; `stop`, errores HTTP, timeouts, respuestas vacías y errores de tools no
+activan este camino. Esto evita confundir un truncamiento normal del servidor
+con un retry infinito del agente.
 
 | Área del harness | Test |
 |---|---|

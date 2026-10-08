@@ -68,15 +68,20 @@ curl -fsSL https://raw.githubusercontent.com/cristianlukas/UNLZ_Llamacode/main/s
 
 Instala automáticamente:
 
-- **git, CMake, Ninja, Python** y el toolchain C++ — MSVC v143 (Build Tools
-  2022) en Windows / `g++` + `build-essential` en Linux.
+- **Herramientas de compilación**: Git, CMake y Python en ambas plataformas;
+  Windows instala MSVC v143 mediante Visual Studio Build Tools 2022 y Linux
+  instala Ninja + `g++`/`build-essential`.
 - **Qt 6.8.3** vía `aqtinstall` en ambas plataformas (Windows `msvc2022_64`,
-  Linux `gcc_64`), incluyendo módulos requeridos como `qtmultimedia` y `qtsvg`.
-  En Linux se usa aqt — **no** los paquetes Qt de la distro —
-  porque el código requiere Qt ≥ 6.5 (`QQmlApplicationEngine::loadFromModule`) y
-  varias LTS traen Qt viejo (Ubuntu 24.04 = 6.4.2). De la distro sólo salen el
-  toolchain y las libs de sistema contra las que Qt enlaza (GL, xcb, glib,
-  fontconfig…).
+  Linux `gcc_64`), con los add-ons Multimedia y Svg y verificación de los
+  componentes Qt que exige CMake. En Linux se usa aqt — **no** los paquetes Qt
+  de la distro — porque el código requiere Qt ≥ 6.5
+  (`QQmlApplicationEngine::loadFromModule`) y varias LTS traen Qt viejo
+  (Ubuntu 24.04 = 6.4.2).
+- **Dependencias adicionales Linux**: librerías de sistema de Qt (GL, xcb, glib,
+  fontconfig…), `rsync` y herramientas de escritorio/automatización: X11,
+  `xdotool`, `wmctrl`, AT-SPI2, Tesseract con datos de español y `bubblewrap`.
+  `rsync` permite compilar desde volúmenes NTFS; las acciones foreground de
+  escritorio requieren una sesión X11 desbloqueada.
 
 Clona en `%USERPROFILE%\LlamaCode` / `~/LlamaCode` y al terminar lanza la app
 (salvo `LC_NORUN=1`). En Windows también crea un acceso directo por usuario en
@@ -87,12 +92,13 @@ Variables opcionales (setear antes de correr):
 
 | Var | Default | Qué hace |
 |---|---|---|
-| `LC_DIR` | `~/LlamaCode` | carpeta de instalación aislada |
-| `LC_BRANCH` | `main` | rama a clonar |
+| `LC_DIR` | `%USERPROFILE%\LlamaCode` (Windows) / `~/LlamaCode` (Linux) | carpeta de instalación |
+| `LC_BRANCH` | `main` | rama a clonar o actualizar |
 | `LC_CONFIG` | `Debug` | `Debug` (release candidate) o `Release` (estable) |
 | `LC_QTVER` | `6.8.3` | versión de Qt (sólo Linux) |
 | `LC_QTROOT` | `~/Qt` | raíz de instalación de Qt (sólo Linux) |
 | `LC_NORUN` | (vacío) | `1` = no lanzar al terminar |
+| `LC_FORCE` | (vacío) | Windows: `1` fuerza `reset --hard` y descarta cambios locales rastreados |
 
 Ejemplo con overrides (Linux):
 
@@ -104,7 +110,8 @@ LC_DIR=/opt/llamacode LC_CONFIG=Debug LC_NORUN=1 \
 Requisitos mínimos previos: **Windows** necesita `winget` (App Installer de la
 Microsoft Store). **Linux** soporta apt / dnf / pacman / zypper y pide `sudo`
 para los paquetes de sistema. Validado en contenedor Ubuntu 24.04 limpio
-(toolchain + aqt Qt 6.8.3 + build).
+(toolchain + dependencias Linux + aqt Qt 6.8.3 + build); ese smoke test no valida
+automatización foreground, que requiere una sesión X11 interactiva.
 
 ---
 
@@ -147,11 +154,12 @@ para archivos tocados y relaciones decisión→bug, siempre como `unreviewed`.
 Ver
 [`docs/context-graph.md`](docs/context-graph.md).
 
-UNLZ_Llamacode es una app nativa (Qt/QML + C++) para orquestar múltiples backends `llama.cpp`, gestionar sesiones de chat, y ejecutar harnesses de agente IA (opencode, aider) sobre repos locales.
+UNLZ_Llamacode es una app nativa (Qt/QML + C++) para orquestar motores locales `llama.cpp` y ASTRA/Strata, gestionar sesiones de chat, y ejecutar harnesses de agente IA (opencode, aider) sobre repos locales.
 
 Principio central:
 - La GUI **no** embebe `llama.cpp`.
 - La GUI **orquesta binarios externos** (`llama-server.exe`, forks MTP, builds CUDA/Vulkan/CPU).
+- La GUI también gestiona ASTRA/Strata como servidor OpenAI-compatible local, con inicio, health-check, logs y parada integrados.
 - La GUI **compone perfiles** reutilizables sobre binarios, modelos y presets.
 - La GUI **integra harnesses de agente** (opencode) vía HTTP API nativa.
 
@@ -171,6 +179,24 @@ catálogo de modelos, el historial de chat/agente y los procesos `llama-server`
 corren en la máquina del usuario. El proyecto también soporta integraciones
 externas opcionales; por eso la privacidad depende del perfil y de las funciones
 que se activen en cada sesión.
+
+### Modo privacidad
+
+El toggle **Configuración → Modo privacidad** aplica una política global al agente
+nativo de LlamaCode: elimina del schema y bloquea también al ejecutarse las tools
+de web, browser, correo, MCP, plugins externos y delegación/escalado a otros agentes;
+también desactiva búsqueda semántica/híbrida si usa un endpoint auxiliar; no
+inicia/reinicia servidores MCP mientras el modo está activo. El harness recibe
+además una instrucción explícita de trabajar sólo con datos locales y no transmitir
+contenido ni buscar en Internet. La preferencia persiste entre reinicios y se aplica
+a perfiles que intenten volver a habilitar esas capacidades.
+
+**No es aislamiento de red ni garantiza cero conexiones salientes.** No controla
+firewall/sockets del sistema, comandos arbitrarios de `run_shell`, otros procesos o
+harnesses externos como OpenCode, ni convierte un backend cloud/remoto en local.
+Para datos confidenciales, usá un backend local, mantené las aprobaciones activas y
+no ejecutes comandos o integraciones externas que no hayas revisado. Las descargas
+iniciadas por el usuario siguen siendo una función separada.
 
 ### Qué permanece local
 
@@ -204,7 +230,12 @@ que se activen en cada sesión.
 - **STT local gestionado**: si al iniciar Charla falta el modelo de voz configurado,
   la app solicita confirmación para descargarlo o permite posponer la descarga.
 - **Browser automation**: Playwright puede navegar sitios externos por pedido del
-  usuario o de una Task.
+  usuario o de una Task. Las navegaciones disparadas por tools MCP muestran el
+  origen y requieren aprobación del host, incluso si el server las marca como
+  lectura; se bloquean protocolos distintos de HTTP(S) y URLs con credenciales.
+  Después de un efecto externo MCP, el agente debe leer el estado actual desde el
+  mismo server antes de informar que completó la tarea. El host retiene la respuesta
+  final y pide esa observación; si no logra obtenerla, informa que quedó sin verificar.
 - **Control del escritorio**: el agente prioriza controles semánticos de Windows
   (UI Automation), usa captura visual sólo cuando aporta información y verifica el
   resultado después de actuar. Los clics visuales aceptan únicamente coordenadas
@@ -339,6 +370,14 @@ mmproj en RAM, tensor split, cache warm y reasoning on. Es la traducción
 reproducible de la receta del post de Qwen_AI; no debe compararse directamente
 con sus 80–110 tok/s porque el post usa otra GPU/backend y no se descarga ni se
 promueve automáticamente.
+
+Para la arquitectura experimental **Qwen3.8-Flash-Next**, el catálogo agrega el
+perfil manual `sys-48-qwen38-flash-next-q4kxl-8k`: base 8k, split layer,
+`--n-cpu-moe 40`, KV q8 y sin MTP/visión. Sus variantes separan cache188 y 131k;
+la campaña `tools/run_qwen38_flash_next_campaign.ps1` guarda probes, logs y
+snapshots de GPU. No se asume que Q2/Q4 quepan íntegramente en 48 GB de VRAM ni
+se modifica SOL: sólo HE0 → HE20 → BCB con el mismo harness puede justificar una
+promoción.
 
 Para **2× RTX 3090 (48 GB agregados) + 64 GB RAM o más**, el perfil paralelo
 `[experimental 48GB] Laguna S 2.1 118B-A8B Q2 · 100k` reutiliza el mismo GGUF y
@@ -525,6 +564,21 @@ respeta los slots de `llama-server`, reduce el fan-out con contextos largos y ap
 límites conservadores según la VRAM detectada. Un perfil de un solo slot conserva
 la delegación, pero ejecuta los sub-agentes secuencialmente.
 
+Las directivas propias tienen historial reversible: cada edición o eliminación
+conserva la revisión anterior, y el editor/API puede listar revisiones y restaurar
+una versión sin reescribir la historia. El mecanismo es manual y no puede elevar
+permisos ni cambiar el perfil de modelo.
+
+La política se puede ajustar por perfil desde el editor de Harness: `subagentsEnabled`
+permite desactivar la tool `task`, `maxParallelSubagents` fija el techo local y
+`subagentContextTokens` declara un presupuesto estimado por sub-agente (`0` mantiene
+el contexto del perfil). El límite efectivo es el menor entre esos valores, los
+slots declarados por el runtime, el contexto y la VRAM disponible; así un perfil de
+262K puede reservar 32K/64K por sub-agente para habilitar concurrencia sin prometer
+que cada sub-agente consume todo el KV. En endpoints OpenAI-compatible locales,
+incluido vLLM, los slots del runtime también se propagan al harness; el default es
+un slot para conservar el comportamiento anterior.
+
 En modo Agente, la consigna se clasifica localmente antes del envío. Cuando otra
 configuración resulta materialmente más adecuada (código preciso, investigación,
 planificación, creatividad o tarea rápida), la UI ofrece crear y activar una copia
@@ -640,6 +694,9 @@ La página **Binarios** incluye un catálogo curado de motores y forks:
 
 - `llama.cpp` oficial y `beellama`/MTP mantienen instalación automática desde
   releases cuando hay prebuilt compatible.
+- `llama.cpp adaptive MTP` (`LaurentZuijdwijk/llama.cpp`) aparece como build
+  CUDA desde source en el catálogo; al terminar se registra como `mtp-fork` y
+  detecta automáticamente `--spec-draft-adaptive`.
 - Forks como `ik_llama.cpp` o `TurboQuant` se muestran con compatibilidad por
   plataforma/GPU y, cuando no publican prebuilts útiles, ofrecen build-from-source
   guiado para producir `llama-server` y registrarlo en `BinaryRegistry`.
@@ -922,15 +979,39 @@ contrato completo está en [`docs/managed-agent-runs.md`](docs/managed-agent-run
 
 Aunque el foco es 100% local, cada perfil puede apuntar a un **endpoint OpenAI-compat
 externo** (OpenAI, OpenRouter, Groq, DeepSeek, etc.) en vez de a un `llama-server`
-propio. `BackendProfile.kind = "cloud"` no lanza proceso ni binario: el chat/agente
-pegan directo al `cloudBaseUrl` con el modelo configurado.
+propio. Por defecto `BackendProfile.kind = "cloud"` sólo conecta chat/agente al
+`cloudBaseUrl`; si el backend declara un gestor `managedServer`, LlamaCode también
+administra el servicio externo configurado.
 
 Esto también permite registrar servidores locales externos como vLLM sin
-confundirlos con un GGUF administrado por LlamaCode. La familia benchmark
+confundirlos con un GGUF servido por `llama-server`. Los backends externos sin
+`managedServer` siguen siendo conexiones pasivas. Un backend local puede declarar
+`managedServer.type = "docker-compose"` junto con `composeFile`, `project` y
+`service`: **Iniciar servidor** ejecuta `docker compose up -d <service>`, espera
+`/health` antes de iniciar el agente y **Detener servidor** ejecuta
+`docker compose stop <service>` (no elimina contenedor ni volúmenes). El archivo
+Compose se ejecuta desde su directorio para conservar la resolución de `.env`.
+ASTRA declara `managedServer.type = "astra-strata"`: **Iniciar servidor** lanza el
+Python del entorno virtual de Strata con `serve/server.py`, espera `/health`,
+registra stdout/stderr y **Detener servidor** solicita un cierre ordenado; si no
+termina dentro del límite del supervisor, LlamaCode fuerza la detención. Configurá
+la carpeta de Strata y, si hace falta, su JSON
+del modelo en **Ajustes → ASTRA**. LlamaCode administra el ciclo del motor; la
+instalación de Strata y los pesos siguen en la ubicación elegida por el usuario.
+Si las rutas están vacías, la app detecta una instalación IQ3_S completa en la
+caché, Documentos o volúmenes montados y guarda el config calibrado encontrado.
+El Gateway sólo anuncia perfiles cuyos binarios, modelo y dependencias estén
+listos en el host.
+En Lanzar, **Iniciar servidor LAN** inicia el perfil seleccionado y activa el
+Gateway autenticado para otros LlamaCode; el motor ASTRA continúa ligado a
+loopback. Los clientes pueden elegir ASTRA o pedir otro ID de perfil del
+catálogo disponible del host, que hace swap del modelo sin arrancar un agente local.
+La receta Linux SOL usa Compose para gestionar su vLLM. La familia benchmark
 `sys-bench-qwen38-dflash2-vllm-*` deja declarados el target INT8 W8A16 de Qwen3.8,
 el drafter DFlash2, el contexto 262k, KV FP8 y TP=2; el servidor y sus parches se
 levantan fuera de la app. El procedimiento está en
 [`docs/benchmark-vllm-dflash2.md`](docs/benchmark-vllm-dflash2.md).
+Guía de conexión ASTRA/Strata: [`docs/astra-strata.md`](docs/astra-strata.md).
 
 - **SecretStore**: las API keys **nunca** se serializan en los JSON del repo. El
   perfil guarda una **referencia** (`cloudKeyRef`) y el valor se resuelve en runtime
@@ -971,6 +1052,16 @@ incluidos).
   se ejecutan offline; `pocketAutoEnable` queda apagado por defecto hasta medir
   latencia y calidad en el equipo. El procedimiento completo está en
   [`docs/pocket-tts.md`](docs/pocket-tts.md).
+
+- **audio.cpp experimental**: backend externo compatible con las mismas rutas
+  HTTP de Charla (`/v1/audio/speech` y `/v1/audio/transcriptions`). Se validó una
+  build CUDA `SM86` en las dos RTX 3090; queda como candidato separado de los
+  perfiles LLM, sin alterar el default SOL. La auditoría está en
+  [`docs/audio-cpp-audit-20260918.md`](docs/audio-cpp-audit-20260918.md).
+- **Procesos de voz residentes**: la arquitectura mantiene Piper/Pocket TTS y
+  endpoints HTTP administrados entre turnos; Vellium v1.1.0 fue revisado y no
+  agregó una ruta superior demostrable. La comparación queda en
+  [`docs/vellium-voice-audit-20260918.md`](docs/vellium-voice-audit-20260918.md).
 - **Charla multi-GPU**: con dos o más GPU NVIDIA, la app reserva automáticamente
   la de menor VRAM para STT, TTS local y auxiliares, y relanza el perfil normal con
   un `--tensor-split` proporcional a la VRAM libre que queda en esa GPU más la de
@@ -1069,6 +1160,9 @@ El agente nativo no solo lee archivos: mantiene memoria y conocimiento estructur
   aceptó, falló o se descartó.
 - **Tools**: `hybrid_search` (búsqueda híbrida léxica+semántica), `verify_claims`
   (chequeo de afirmaciones), memoria por capas. RAG sobre el material del proyecto.
+- **Sidecar auxiliar opt-in**: embeddings y rerank pueden ir a un endpoint CPU
+  separado desde Ajustes, sin ocupar los slots del agente. El cache se separa por
+  endpoint y modelo; ver [`docs/benchmark-auxiliary.md`](docs/benchmark-auxiliary.md).
 
 ### Asistente continuo
 
@@ -1118,7 +1212,7 @@ concretos sirven como pruebas de regresión; nunca como supuestos arquitectónic
 Una solución se considera generalizable si conserva su comportamiento al cambiar
 de aplicación, resolución, idioma, tema o ubicación de controles.
 
-- **Escritorio foreground (Windows):** el usuario elige una pantalla o ventana,
+- **Escritorio foreground (Windows/Ubuntu):** el usuario elige una pantalla o ventana,
   demuestra el flujo y agrega notas. Se guardan eventos, `pointer` (posición
   absoluta y normalizada, botón, cantidad de clicks), `target` (alcance/ventana o
   control cuando está disponible), capturas y verificaciones como una receta
@@ -1182,6 +1276,12 @@ estrategias de reparación por paso. Las recetas v2 existentes se leen sin
 conversión destructiva. La arquitectura detallada está en
 [`docs/computer-use.md`](docs/computer-use.md).
 
+Las sesiones de escritorio también tienen una exclusión entre procesos mediante
+`desktop-computer-use.lock`: una instancia GUI y un daemon no pueden intercalar
+acciones físicas o semánticas en la misma PC. Se adquiere sólo al ejecutar una
+acción y se libera al terminar o cambiar la sesión; los lectores y el navegador
+background no quedan bloqueados.
+
 Cada proceso tiene un **Tipo de proceso**: *Escritorio foreground*, *Navegador
 background* o **Auto**. En *Auto* el sistema decide la superficie al ejecutar de
 forma determinista: si la automatización tiene algún paso de escritorio corre como
@@ -1234,9 +1334,12 @@ importar sin modificarlos.
 Los artefactos se guardan versionados en
 `AppLocalData/LlamaCode/automations/<id>/` (`manifest.json`, `recipe.json`,
 `evidence/` y `browser.mjs` opcional). Las Tasks desktop requieren una sesión
-Windows interactiva y un artefacto enseñado; si la sesión está bloqueada, la
-ejecución queda esperando. UAC, pantalla de bloqueo y escritorio seguro nunca se
-controlan. Las notas y logs redactan patrones de password/token/API key.
+interactiva y un artefacto enseñado; en Windows usan UI Automation y en Ubuntu
+usan X11/AT-SPI2. En Ubuntu se necesita una sesión X11 desbloqueada y las
+aplicaciones deben exponer accesibilidad por AT-SPI2; Wayland puro no permite
+inyección foreground completa. Si la sesión está bloqueada, la ejecución queda
+esperando. UAC, pantalla de bloqueo y escritorio seguro nunca se controlan. Las
+notas y logs redactan patrones de password/token/API key.
 
 Cada Task define política de aprobación (`always`, `sensitive`, `autonomous`) y
 límites de tiempo, acciones y reintentos. El default es confirmar acciones
@@ -1248,6 +1351,25 @@ Toggle global + override por perfil (`browserAutomation` inherit/on/off) que iny
 el **MCP de Playwright** en el set de tools del agente. El Teach de browser se
 gestiona desde Automatizaciones y guarda **recetas reproducibles** que
 las Tasks pueden reejecutar.
+
+El host aplica un gate de alcance a la navegación MCP: antes de abrir un destino
+HTTP(S), muestra su origen y espera aprobación humana, aunque la tool esté anotada
+como sólo lectura o el perfil use aprobación automática. `file:`, `javascript:` y
+URLs con usuario/contraseña embebidos se rechazan antes de invocar el server MCP.
+Tras una escritura MCP se exige una lectura posterior exitosa del mismo server (o
+un recibo con `status=verified`) antes del cierre del turno. Las acciones que
+cambian el escritorio requieren una observación posterior mediante UIA, snapshot
+o imagen. Si la verificación no está disponible tras dos intentos, el turno se
+marca fallido y no muestra como resultado final la afirmación de éxito del modelo.
+
+Con la previsualización browser activa, después de cada acción el agente reúne la
+captura disponible y el snapshot de accesibilidad posterior en una sola observación
+para el siguiente paso del planner. La imagen aporta disposición y estado visual;
+el árbol aporta roles, nombres y estado de controles. El snapshot se limita a 64 KiB
+por observación y se omite si el server no lo entrega. La captura sólo se envía si
+el modelo cargado tiene visión; los datos de accesibilidad siguen disponibles para
+perfiles sólo de texto. El planner debe volver a observar después de actuar y
+contrastar ambas fuentes antes de elegir el siguiente target.
 
 Cuando una interfaz web no tiene documentación suficiente, la tool
 `browser_network_discover` resume los requests ya observados por el Playwright MCP
@@ -1322,6 +1444,10 @@ errores se mantienen en estado `needs_review`. El detalle del contrato está en
 `DocumentExtractor` convierte adjuntos **pdf/office → markdown** vía sidecar
 **markitdown** (con caché por md5), para inyectarlos al contexto del chat/agente. Con
 un modelo de visión (server lanzado con `--mmproj`) también acepta **imágenes**.
+Antes de construir el payload multimodal, el harness normaliza sólo la copia que
+viaja al endpoint: las capturas ultraanchas se reducen a un máximo de 768 px en su
+lado largo y las demás imágenes grandes a 1536 px. El archivo original no se toca,
+por lo que el historial y los adjuntos conservan la captura completa.
 
 ## Robustez del server (watchdog + VRAM)
 
@@ -1517,6 +1643,28 @@ del catálogo están documentados en [`docs/startup-performance.md`](docs/startu
 
 ## Build
 
+### Ubuntu/Linux
+
+Las instrucciones `.bat`, PowerShell, accesos `.lnk`, registro de Windows, Job
+Object, UI Automation y Windows.Media.Ocr son específicas de Windows. En Ubuntu,
+el equivalente es:
+
+```bash
+./scripts/build-linux.sh Debug
+./scripts/tests-linux.sh Release
+```
+
+El build Linux usa Ninja y, por defecto, la caché nativa
+`~/.cache/llamacode/` (se puede cambiar con `LC_BUILD_DIR` y
+`LC_TEST_BUILD_DIR`), automatización X11 mediante `xdotool`/`wmctrl`, controles
+semánticos mediante AT-SPI2 y OCR mediante Tesseract. Requiere una sesión X11
+desbloqueada para las funciones foreground; el resto de la aplicación también
+funciona en modo headless. Si el checkout está en un volumen NTFS, los scripts
+espejan el código en la caché nativa antes de invocar CMake/Ninja.
+
+Ver [`docs/ubuntu-port-plan.md`](docs/ubuntu-port-plan.md) para el plan completo
+y la tabla de equivalencias.
+
 ### Rápido (recomendado)
 
 `build.bat` conserva la caché y los tracking logs para que los builds siguientes
@@ -1711,10 +1859,11 @@ agente re-deriva las acciones con sus tools (browser MCP, shell, mail, etc.) y
   para no heredar historial previo ni disparar compactaciones por conversaciones
   ajenas a la automatización.
 - En modo **Escritorio foreground**, la corrida opera sobre la pantalla real con
-  las tools nativas `desktop_*` (ventanas, controles UIA, captura, mouse y
+  las tools nativas `desktop_*` (ventanas, controles semánticos, captura, mouse y
   teclado) y también mantiene Playwright disponible en foreground/headed para
-  flujos web que formen parte de la misma automatización. Playwright no reemplaza
-  `desktop_*` para aplicaciones nativas de Windows. Las Automatizaciones de
+  flujos web que formen parte de la misma automatización. En Windows el backend
+  nativo usa UI Automation y en Ubuntu usa X11/AT-SPI2; Playwright no reemplaza
+  `desktop_*` para aplicaciones nativas. Las Automatizaciones de
   escritorio puro recortan el catálogo al set necesario (`desktop_*`,
   `recent_actions`, `ask_teacher`) para caber en perfiles 8k y evitar fallback
   textual innecesario. Las tools de click devuelven `trace` con `pointer` y
@@ -1833,7 +1982,50 @@ calidad en una sola pasada, pero SOL fue más rápido en el total. Sirve como
 antecedente, no como prueba suficiente para declarar un ganador universal ni
 promover un default.
 
-El procedimiento completo y reutilizable para comparar un nuevo modelo, binario, perfil o harness está en el [Manual de benchmarking](docs/benchmark-manual.md). La matriz de perfiles y sus resultados históricos se mantiene en [docs/benchmark-profile-matrix.md](docs/benchmark-profile-matrix.md). El [ranking por caso de uso y catálogo de mejoras](docs/benchmark-ranking-and-use-cases.md) resume qué perfiles sirven para calidad, velocidad, visión, contexto, VRAM y warm-cache. Para validar contexto largo, aislamiento y KV cache contra un servidor real, usar el [probe de QA de KV cache](docs/kv-cache-qa.md).
+La [matriz iterativa de validación 2026-09-14](docs/profile-validation-matrix-20260914.md) es el corte más reciente de PP, TG, TTFT, ventanas de contexto, visión y fallos reproducibles. La [auditoría IQ1_S de Flash-Next en dual 3090](docs/qwen38-flash-next-iq1s-3090-audit-20260915.md) registra la prueba local hasta 262K, `lazy-mode`, el head MTP incompatible y la decisión de no promoverlo. La [auditoría de Flash-Next con caché de expertos y SSD](docs/qwen38-flash-next-12gb-ssd-audit-20260918.md) cruza el nuevo reporte de 12 GB con las pruebas locales y deja asentado que no justifica cambiar SOL.
+
+La [auditoría de prefix cache y schemas MCP de SOL](docs/vllm-prefix-cache-mcp-audit-20260918.md) documenta el A/B 2048/4096, el impacto medido del orden de tools y la canonicalización aplicada al harness.
+
+La [auditoría de `jungledesh/profile`](docs/profile-vllm-diagnostics-audit-20260918.md) registra la revisión de su diagnóstico de vLLM, la incompatibilidad actual con TP2 y por qué no cambia ningún perfil ni el default SOL.
+
+La [auditoría de NVFP4 y contexto 1M](docs/qwen38-nvfp4-1m-context-audit-20260918.md) explica qué parte del reporte de cuatro GPU es portable y por qué SOL no se eleva más allá de 262K.
+
+La [auditoría de expert-lookahead de Slotstream](docs/qwen38-flash-next-expert-lookahead-slotstream-audit-20260918.md) registra la técnica de prelectura de expertos, sus límites de compatibilidad y por qué no se activa en CUDA.
+
+La [auditoría de `oh-my-openagent`](docs/oh-my-openagent-audit-20260918.md)
+compara su orquestación con el harness nativo: confirma que LlamaCode ya cubre
+subagentes, worktrees, límites por VRAM/contexto, memoria, goals, skills y MCP;
+incorpora una guardia SHA-256 compatible con Hashline para rechazar ediciones
+obsoletas entre sesiones; LSP, AST-Grep y una vista Team Mode quedan como mejoras
+futuras del harness, no como perfiles de modelo ni cambios al default SOL.
+
+La [auditoría de `prime-agent`](docs/prime-agent-audit-20260918.md) revisa su
+REPL Python/RLM, subagentes recursivos y Continual Harness. Sus pruebas internas
+pasaron, pero no aporta una mejora de inferencia; refinamiento reversible y REPL
+aislado quedan como campañas futuras separadas de la tabla de modelos.
+
+La [auditoría de `little-coder`](docs/little-coder-audit-20260918.md) compara su
+steering dinámico, retry guiado por tests, guards, compresión y soporte LSP con
+el harness nativo. No cambia ningún modelo; deja como candidatos opt-in el
+retry de tests y el auto-continue sólo ante `finish_reason=length`.
+
+La [auditoría de `llama-optimize`](docs/llama-optimize-audit-20260918.md)
+evalúa su diseño Morris+Taguchi para explorar flags de `llama.cpp`, térmicas,
+fingerprints y frontera de Pareto. Es útil para campañas GGUF pendientes, pero
+no aplica al runtime vLLM de SOL ni cambia perfiles sin BCB/HE/visión del
+harness.
+
+El inventario físico vigente de modelos en C, D y HDD extra, con tamaños,
+duplicados y las últimas métricas locales, está en
+[`docs/model-inventory-20260918.md`](docs/model-inventory-20260918.md).
+
+La [auditoría GSQ-RCO + DFlash2 Q2](docs/qwen38-gsq-rco-dflash2-q2-audit-20260918.md) documenta el drafter externo Q2, el A/B de PP/TG, tool-use, visión, contexto largo y la decisión de mantenerlo experimental.
+
+La [auditoría de la receta Qwen3.8 27B a 100K en RX 7800 XT](docs/qwen38-rx7800-100k-guide-audit-20260930.md) cruza sus argumentos con las pruebas locales de KV/contexto, MTP/ngram, Computer Use, harness e Ingi Charla; no se promueve porque el hardware/runtime del post no coincide y las variantes equivalentes ya medidas no superan los perfiles validados.
+
+La [auditoría de Aura](docs/aura-architecture-audit-20260930.md) compara su reporte de autonomía en 2048 con las pruebas previas de LlamaCode. No cambia perfiles ni harness; deja registrada una propuesta de benchmark largo con ablaciones, reanudación, abstención y control de contaminación de memoria.
+
+ El procedimiento completo y reutilizable para comparar un nuevo modelo, binario, perfil o harness está en el [Manual de benchmarking](docs/benchmark-manual.md). La [tabla operativa consolidada de perfiles](docs/profile-use-case-stars-20260908.md) es la referencia canónica de SOL, GALACTA, DEEPSEEK FUSION, QWEN35-A3B, QWEN38-Q8, TERRA, ASTRA, NINFER-QWEN38, METEOR, LUNA y MINI, incluyendo contexto, visión, sub-agentes y estado. La [auditoría de validación](docs/profile-validation-audit-20260914.md) conserva la evidencia y las limitaciones por receta. La [auditoría de visión y BCB de ASTRA](docs/astra-vision-bcb-repair-audit-20260914.md) documenta la carga del `mmproj` oficial y los fallos actuales de `mtmd`/salida. El [audit del patrón agentivo de Flash-Next](docs/qwen-flash-next-agentic-app-workflow-audit-20260914.md) documenta la comparación con RAG, tools y aprobaciones. Las auditorías de [llamAmpere + ATX-IQ4_XS-M](docs/llamampere-qwen38-atx-audit-20260914.md), [Swift-Qwen3.8-27B](docs/swift-qwen38-audit-20260914.md), [K2 Horizon 7B](docs/k2-horizon-7b-audit-20260914.md), [ExLlamaV3/EXL3 Qwen3.8](docs/exllamav3-qwen38-exl3-audit-20260914.md), [R9V Qwen3.8 Flash-Next](docs/r9v-qwen38-flash-next-audit-20260914.md) y [REAP-320 Qwen3.8 Flash-Next](docs/reap320-qwen38-flash-next-audit-20260914.md) registran las pruebas de candidatos alternativos, visión, BCB y las decisiones de no promoción. La [auditoría ByteShape ASCII/P1M](docs/qwen38-byteshape-ascii-audit-20260918.md) documenta la variante experimental de bajo consumo, visión+MTP2 y sus límites lingüísticos. La matriz de perfiles y sus resultados históricos se mantiene en [docs/benchmark-profile-matrix.md](docs/benchmark-profile-matrix.md). El [ranking por caso de uso y catálogo de mejoras](docs/benchmark-ranking-and-use-cases.md) resume qué perfiles sirven para calidad, velocidad, visión, contexto, VRAM y warm-cache. Para validar contexto largo, aislamiento y KV cache contra un servidor real, usar el [probe de QA de KV cache](docs/kv-cache-qa.md).
 
 Para aislar el costo del harness existe la suite custom **Harness Context A/B v1**
 (`harness_context_tools_ab_v1`, [JSON bundleado](assets/benchmarks/custom/harness_context_tools_ab_v1.json)).
@@ -2129,6 +2321,7 @@ los siguientes guardan su referencia y deltas de tiempo y calidad.
 - Las importaciones de packs públicos muestran la cantidad y las tareas incluidas;
   copias exactas importadas varias veces se agrupan en la lista sin borrar sus archivos.
 - Exportar a CSV desde la UI.
+
 Además, Benchmark ofrece **Server Speed v1**, una medición nativa separada de
 la calidad E2E: corpus versionado por categoría, PP/TG, TTFT, ITL y sus
 distribuciones, fases cold/warm, barrido de prefill 2K–64K, concurrencia y
@@ -2136,6 +2329,17 @@ comparación A/B intercalada con control A/A. Cada corrida guarda sus condicione
 (hash del corpus, seed, perfil efectivo, hardware y parámetros) junto con
 `metadata.json` y `comparison.json`. Ver
 [`docs/server-speed-benchmark.md`](docs/server-speed-benchmark.md).
+
+Para comparar dos runtimes que requieren reiniciar `llama-server` (incluidos
+sidecars de KV), usar el runner A/B portable documentado en
+[`docs/kv-cache-qa.md`](docs/kv-cache-qa.md) y su configuración de ejemplo.
+
+Para aislar específicamente la decisión de compartir un servidor entre el
+modelo principal y workloads auxiliares, usar el probe opt-in
+`qa_auxiliary_concurrency`, documentado en
+[`docs/benchmark-auxiliary.md`](docs/benchmark-auxiliary.md). Compara niveles de
+concurrencia con la misma carga y conserva latencia, PP/TG, throughput agregado,
+timeouts y respuestas sin timings.
 
 ### Tabla de ejemplo
 
@@ -2197,6 +2401,13 @@ PPL baseline con tolerancia default del 3%.
   mínimo y 9. No se habilita por defecto ni se emite contra un binario que no
   anuncie `--spec-draft-adaptive`; así una build oficial sin el parche no queda
   marcada como compatible por accidente.
+- En **Binarios**, una build compatible se registra con variante `mtp-fork` y
+  **Detect capabilities** debe encontrar `--spec-draft-adaptive` y
+  `--spec-draft-n-min`. Los perfiles Qwen3.8 del sistema que todavía guardan
+  MTP en `extraArgs` se hidratan en el editor y se migran al guardar una copia.
+- Para una comparación real fija/adaptive, usar
+  `tools/benchmark_adaptive_speculation.ps1`; requiere pasar explícitamente el
+  `llama-server` parcheado y el modelo GGUF, y guarda métricas por tarea en JSON.
 - Al terminar **clona** el perfil en uno nuevo `-tuned` con la mejor config en `extraArgs`; el original queda intacto.
 - UI: `ProfilesPage` → **Auto-tune**, **Tune CPU** / **Cancelar tune** + estado en vivo.
 

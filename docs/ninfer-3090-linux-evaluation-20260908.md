@@ -1,15 +1,22 @@
 # Evaluación de NInfer-3090 en Ubuntu — 2026-09-08
 
-## Resultado
+## Resultado actualizado
 
 Se evaluó [NInfer-3090](https://github.com/Don-Chad/ninfer-3090) con dos RTX 3090
 (SM86) y el artefacto Qwen3.8-27B de su [model card oficial](https://huggingface.co/neroued/Qwen3.8-27B-NInfer).
-El backend compila y carga el artefacto histórico, pero no produjo texto válido
-ni con MTP3 ni sin MTP. Por ese motivo no se registró como perfil listo ni se
-promovió a ASTRA/SOL/TERRA/LUNA/METEOR.
+La primera ejecución parecía inválida porque el artefacto histórico producía
+texto corrupto en la GPU0. La repetición controlada mostró que la ruta estable
+es la GPU1: con el artefacto histórico, MTP3, KV INT8 y `--device 1` genera texto
+correcto, acepta tool calls y conserva el contexto largo.
 
-TERRA fue restaurado y quedó activo en LlamaCode al terminar la evaluación.
-Windows no fue modificado.
+El perfil deja de estar marcado como “salida corrupta/rechazado”, pero continúa
+siendo experimental: el BCB completo dio **3/8 con thinking de 2048 tokens**
+(1/8 sin thinking). No reemplaza SOL por calidad, aunque sí es un backend
+funcional para una RTX 3090 y una alternativa de contexto largo.
+
+La reparación queda limitada a Linux mediante `platformModelFiles` y
+`platformArgs`; Windows sigue apuntando al artefacto actual y conserva sus
+argumentos originales.
 
 ## Entorno y build
 
@@ -35,19 +42,22 @@ commit `3526913004b1cf552cb57b88d6a5c6f5e4a89a70`, y se verificó su SHA-256:
 eec39564993d6e9c7d5e383382a760f093465c9d163ec9a1bd6b80199514bf3e
 ```
 
-Ese artefacto cargó en la GPU0 en 8,61 s, con 16,67 GiB de pesos, contexto de
-8.192 tokens y 4,75 GiB libres después del arranque.
+Ese artefacto cargó en la GPU1, con 16,67 GiB de pesos. El artefacto actual
+`qwen3_8_27b.ninfer` no es intercambiable: el binario SM86 lo rechaza por el
+objeto DFlash2 `dflash2/feature_projection`, que todavía no consume.
 
 ## Pruebas de generación
 
 | Configuración | Resultado de runtime | Resultado de calidad |
 |---|---:|---|
-| MTP3 + thinking | 31,8 tok/s; aceptación MTP 17,0% | Falló: razonamiento repetitivo y texto corrupto/multilingüe sin relación con la consigna |
-| Sin MTP + sin thinking | 32,2 tok/s de decode; 171,8 tok/s de prefill | Falló: salida igualmente repetitiva/corrupta |
+| GPU0, MTP3 o sin MTP | 31,8–32,2 tok/s | Reproducía salida corrupta; no es la ruta reparada |
+| GPU1, MTP3, sin thinking, KV INT8, 8K | 73–75 tok/s; aceptación 76,7% | Texto coherente y smoke-test correcto |
+| GPU1, MTP3, thinking 2048, BCB | decode estable; coste depende del razonamiento | **3/8 BCB**; mejor que 1/8 sin thinking |
+| GPU1, MTP3, KV INT8, 80K | prefill 745,3 tok/s; decode 50,1 tok/s | `NINFER_LONG_OK` correcto |
+| GPU1, MTP3, KV INT8, 120K | prefill 660,7 tok/s; decode 62,9 tok/s | `NINFER_131K_LONG_OK` correcto; MTP 4,00/round |
 
-La diferencia de velocidad no compensa el fallo semántico. Por lo tanto no se
-ejecutó BCB: sus resultados serían inválidos si el servidor no supera primero
-el smoke test de generación coherente y el transporte de tool calls.
+El modo corregido supera el smoke test y el transporte de tool calls; el score
+BCB sigue siendo una limitación de calidad del modelo, no una falla del servidor.
 
 ## Comparación práctica
 
@@ -61,16 +71,16 @@ está abierta; esos números no sustituyen una validación local.
 En esta máquina, el resultado accionable es:
 
 - **TERRA/SOL:** siguen siendo las opciones estables y validadas para coding.
-- **NInfer Qwen3.8:** queda como candidato experimental, no disponible como
-  perfil prioritario.
-- **NInfer MTP3:** no se habilita porque la salida no es confiable.
+- **NInfer Qwen3.8:** queda como candidato experimental funcional, visible fuera
+  de la cola prioritaria y fijado a la GPU1 en Linux.
+- **NInfer MTP3:** se habilita en la variante reparada; la aceptación local es
+  útil, pero no compensa el BCB 3/8 para convertirlo en agente principal.
 - **NInfer DFlash2:** requiere una revisión del runtime que consuma el nuevo
   objeto del artefacto; no se incorporó una combinación parcialmente compatible.
 
-LlamaCode ya conserva los tres perfiles `sys-ninfer3090-*` como scaffolding
-experimental. No se cambió su visibilidad ni se presentó como listo: la prueba
-local confirma que todavía debe permanecer fuera de la cola de perfiles
-prioritarios.
+LlamaCode conserva los tres perfiles `sys-ninfer3090-*` como scaffolding
+experimental. `sys-ninfer3090-qwen38` ahora selecciona en Linux el artefacto
+histórico y una configuración de 131K/UBATCH1024/GPU1, sin alterar Windows.
 
 ## Archivos de prueba fuera del repositorio
 

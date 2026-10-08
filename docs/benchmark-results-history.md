@@ -220,44 +220,52 @@ MSYS no matan el `llama-server` nativo: los servidores huérfanos contaminaron
 las primeras corridas, que se descartaron. Detalle y tablas:
 [`reddit-dual-3090-tensor-split-audit-20260927.md`](reddit-dual-3090-tensor-split-audit-20260927.md).
 
-## 2026-09-26 — NInfer-4090 Windows y Ternary Bonsai 2 27B (post LocalLLM)
+## 2026-09-26 — NInfer Huihui Qwen3.8 en 2× RTX 3090
 
-El post propone NInfer-4090 Windows (prefill int8, MTP + n-gram, KV E8) y
-Ternary Bonsai 2 27B. **El motor no corre en 2× RTX 3090**: exige compute
-capability 8.9 en CMake y en runtime, y usa FP8 `e4m3` de Ada. Sus ideas ya
-están cubiertas o en curso: MTP + n-gram existe como `draft-mtp,ngram-mod`
-(`sys-bench-qwen38-udq4-mtp3-ngram`, BCB8 8/8) y el prefill W4A8 llegó al
-upstream SM86 `ninfer-3090` el 22/09 (otra sesión evalúa el 0.6.1).
+El post de Reddit informa ~175 tok/s y 262K en RTX 5090. El único prefill a
+contexto alto que aporta es 1.675 tok/s a 247.802 tokens, medido con
+groupwise-int/KV int8; su cifra de 2.500–3.000 tok/s a 150K es estimada. La
+variante NVFP4 del post es Blackwell/sm_120, por lo que esta evaluación local
+se preparó con el mismo checkpoint Huihui convertido a groupwise-int para el
+fork NInfer-3090 compatible con Ampere/sm_86.
 
-Se probó localmente **Ternary Bonsai 2 27B PQ2_0** con el fork llama.cpp de
-PrismML (b10743, CUDA 12.4) en una RTX 3090: pp512 1.234 / tg128 59,4 tok/s,
-12,3 GB con visión a 64K. Computer Use v1 y hard: 100% exactitud y seguridad,
-mediana 318–445 ms. Escalera LC-H1: HE0 1/1, HE20 20/20 en 219 s, **BCB8 2/8
-en 1.361 s**.
+Se agregaron tres perfiles históricos: texto MTP3/32K, visión MTP3/32K y
+control sin MTP/32K. El archivo de pesos (18.210.531.328 bytes), el SHA-256 del
+modelo y el checksum de NInfer v0.6.1 se verificaron. Un primer arranque con
+GPU 1 en uso falló por `cudaMalloc` OOM antes de health; no se detuvieron el
+proceso local de Mica en GPU 1 ni el `llama-server` ajeno en GPU 0.
 
-Veredicto: **`[INFERIOR agente / SUPERIOR VRAM]`**. Inferior a todo Qwen3.8
-(8/8) y a los FAST (3/8) en coding agentivo; superior en huella (27B + visión
-en una placa de 24 GB con la mitad libre). Perfil manual
-`sys-bench-bonsai2-27b-pq2-64k` y motor de catálogo `prism-ternary`.
+Al repetir con ambas GPU libres, los pesos y KV cargaron en tres configuraciones
+(MTP3 32K, launcher C1 MTP3 64K y sin MTP 32K), pero el warm-up falló en todas
+con `cudaErrorInvalidValue` desde `gqa_attention_prefill.cu:64`. La variante de
+visión cargó pesos/proyector y KV, pero tuvo el mismo error antes de aceptar
+una imagen. Las cuatro repeticiones se hicieron antes de cualquier request; por
+eso son un **fallo de compatibilidad operativa del artefacto/runtime SM86**, no
+un score de calidad.
 
-Aclaraciones: la máquina es 2× RTX 3090, pero ni NInfer-4090 ni NInfer-3090
-reparten entre placas; la ventaja dual sigue siendo de SOL. NInfer-3090 **no**
-se volvió a correr (referencias: BCB8 3/8 del 08/09 y el fallo del kernel con
-Huihui 0.6.1). Queda pendiente el 0.6.1 con el artefacto oficial y el prefill
-W4A8. El GGUF de Bonsai se envió a la papelera tras medir (7,3 GB); el perfil
-queda como registro histórico.
+| Dimensión | Resultado |
+|---|---|
+| Arranque del candidato MTP3 32K | OOM inicial bajo contención; después pesos/KV cargaron y warm-up falló en el kernel CUDA. |
+| Launcher C1 de texto 64K | Pesos/KV cargaron; mismo error de warm-up con MTP3 y prefill 1024. |
+| Control sin MTP 32K | Pesos/KV cargaron; mismo error. La incompatibilidad no se limita a MTP. |
+| Variante visión MTP3 32K | Pesos/proyector/KV cargaron; mismo error antes de imagen. |
+| HE0 → HE20 → BCB/8 LC-H1 | No ejecutado; servidor nunca alcanzó health. |
+| Decode/prefill, aceptación MTP | No medido; no hubo generación. |
+| Computer Use con imagen y schema `desktop_*` | No evaluado; el profile de visión no llegó a recibir imagen ni emitió tool-call. |
+| Ingi Charla | No ejecutado. El post no reporta STT/TTS ni latencia acústica. |
 
-Detalle: [auditoría NInfer-4090 + Bonsai](ninfer-4090-bonsai-reddit-audit-20260926.md).
+La referencia histórica de NInfer Qwen3.8 normal es BCB 3/8 y ~73–75 tok/s a
+8K; SOL conserva BCB 8/8. Frente a ese perfil que sí atendió requests, Huihui
+resulta **INFERIOR en compatibilidad operativa en el runtime SM86 probado**.
+No hay veredicto de calidad ni velocidad para Huihui. Ninguna cifra del post
+justifica cambiar defaults, harness, Computer Use o ruta de voz. No se incorpora
+la estrategia del post de redactar consultas para evadir guardrails de un
+proveedor cloud. La evidencia queda como registro histórico, sin promoción. A pedido del usuario, el 2026-09-26 se eliminó el archivo local de pesos de 18.210.531.328 bytes y se retiraron las tres entradas Huihui del catálogo; el ZIP del runtime se conservó.
 
-## 2026-09-26 — Liquid LFM2.5-VL-3B-DSpark: ventaja sólo en decode
+Artefacto y configuración exacta:
+[`ninfer-huihui-qwen38-3090-20260926.json`](../artifacts/ninfer-huihui-qwen38-3090-20260926.json).
 
-Se contrastó el post de Liquid AI con `LFM2.5-VL-3B` F16 y su drafter DSpark F16 en una RTX 3090, usando llama.cpp oficial b10964 y una fixture de configuración de Windows. Se agregaron el control, DSpark n=8 y DSpark n=9 como perfiles manuales. En dos tareas visuales de lectura/descripción, la primera solicitud decodificó 2,30–2,35× más rápido con n=8 y 2,26–3,33× con n=9. Son tareas y mediciones pequeñas, no una estimación general del rendimiento ni de la calidad.
-
-La prueba Computer Use se repitió con el schema real de `desktop_click` de LlamaCode y sin ejecutar la acción. Los tres perfiles generaron una llamada JSON válida, pero todos propusieron el centro de la pantalla `(0.5, 0.5)` en vez del centro visible del control `(≈0.88, ≈0.296)`. La mediana end-to-end fue 895 ms control, 987 ms n=8 y 890 ms n=9; por lo tanto, DSpark no mejoró esta interacción. n=8 y n=9 aceptaron 17/64 (26,6%) y 18/63 (28,6%) tokens de draft en esa salida corta. Veredicto: **superior sólo en decodificación; inferior/no promovible para Computer Use** con la configuración evaluada. El fallo es de grounding del modelo; el harness parseó los tool-calls. No se justifica cambiar el parser general por una sola fixture.
-
-La lectura de estados sintética fue correcta con control y drafts. Una descripción con n=8 tuvo variación léxica a temperatura 0, aunque conservó los estados. No se corrieron tareas de ingeniería de software ni pruebas de Charla: el drafter es específico de este target VLM y no sustituye STT/TTS. Los perfiles se marcaron `manualOnly`, `best=false`, `favorite=false`; se mantienen para benchmark sin promoverlos al default.
-
-Artefactos: [`lfm25-vl-dspark-3090-20260926.json`](../artifacts/lfm25-vl-dspark-3090-20260926.json), [`lfm25-vl-dspark9-3090-20260926.json`](../artifacts/lfm25-vl-dspark9-3090-20260926.json), [`lfm25-vl-dspark-computer-use-contract-3090-20260926.json`](../artifacts/lfm25-vl-dspark-computer-use-contract-3090-20260926.json) y [`lfm25_vl_dspark_ui_settings_v1.png`](../assets/benchmarks/custom/lfm25_vl_dspark_ui_settings_v1.png). Procedimiento y fuentes: [auditoría LFM2.5-VL-3B-DSpark](lfm25-vl-dspark-audit-20260926.md).
+Detalle y fuentes: [auditoría Huihui/NInfer](ninfer-huihui-qwen38-3090-audit-20260926.md).
 
 ## 2026-09-26 — Qwen3.8-Flash-Next W4A16-FP8PLE de albucino
 
@@ -286,6 +294,151 @@ fuera de la selección automática por el requisito de 128 GiB. Charla sólo
 podría usarlo como backend de texto; no sustituye STT/TTS.
 
 Detalle, fuentes y protocolo: [auditoría W4A16-FP8PLE de albucino](qwen38-flash-next-albucino-w4a16-audit-20260926.md).
+
+## 2026-09-26 — Liquid LFM2.5-VL-3B-DSpark: ventaja sólo en decode
+
+Se contrastó el post de Liquid AI con `LFM2.5-VL-3B` F16 y su drafter DSpark F16 en una RTX 3090, usando llama.cpp oficial b10964 y una fixture de configuración de Windows. Se agregaron el control, DSpark n=8 y DSpark n=9 como perfiles manuales. En dos tareas visuales de lectura/descripción, la primera solicitud decodificó 2,30–2,35× más rápido con n=8 y 2,26–3,33× con n=9. Son tareas y mediciones pequeñas, no una estimación general del rendimiento ni de la calidad.
+
+La prueba Computer Use se repitió con el schema real de `desktop_click` de LlamaCode y sin ejecutar la acción. Los tres perfiles generaron una llamada JSON válida, pero todos propusieron el centro de la pantalla `(0.5, 0.5)` en vez del centro visible del control `(≈0.88, ≈0.296)`. La mediana end-to-end fue 895 ms control, 987 ms n=8 y 890 ms n=9; por lo tanto, DSpark no mejoró esta interacción. n=8 y n=9 aceptaron 17/64 (26,6%) y 18/63 (28,6%) tokens de draft en esa salida corta. Veredicto: **superior sólo en decodificación; inferior/no promovible para Computer Use** con la configuración evaluada. El fallo es de grounding del modelo; el harness parseó los tool-calls. No se justifica cambiar el parser general por una sola fixture.
+
+La lectura de estados sintética fue correcta con control y drafts. Una descripción con n=8 tuvo variación léxica a temperatura 0, aunque conservó los estados. No se corrieron tareas de ingeniería de software ni pruebas de Charla: el drafter es específico de este target VLM y no sustituye STT/TTS. Los perfiles se marcaron `manualOnly`, `best=false`, `favorite=false`; se mantienen para benchmark sin promoverlos al default.
+
+Artefactos: [`lfm25-vl-dspark-3090-20260926.json`](../artifacts/lfm25-vl-dspark-3090-20260926.json), [`lfm25-vl-dspark9-3090-20260926.json`](../artifacts/lfm25-vl-dspark9-3090-20260926.json), [`lfm25-vl-dspark-computer-use-contract-3090-20260926.json`](../artifacts/lfm25-vl-dspark-computer-use-contract-3090-20260926.json) y [`lfm25_vl_dspark_ui_settings_v1.png`](../assets/benchmarks/custom/lfm25_vl_dspark_ui_settings_v1.png). Procedimiento y fuentes: [auditoría LFM2.5-VL-3B-DSpark](lfm25-vl-dspark-audit-20260926.md).
+
+## 2026-09-24 — Comparación de capacidad agentiva SOL vs ASTRA
+
+Se diseñó y ejecutó **ADV v1** —nombre completo histórico: suite
+`Intelligence Adversarial v1`— [`intelligence_adversarial_v1.json`](../assets/benchmarks/custom/intelligence_adversarial_v1.json)
+con 10 tareas deterministas de programación: TTL/cache, RFC 7396, ordenamiento
+topológico estable, seguridad de rutas, contrato de tools, scheduler con
+dependencias, JSONL, resolución de configuración, reporte de incidentes y SQL
+parametrizado. Ambos perfiles usaron `agent-maximo`, la misma batería y la
+primera pasada sin reparación automática. En Linux se corrigió únicamente el
+comando del grader de `python` a `python3`, porque `python` no existe en el
+PATH; el primer `0/0` automático se descartó como fallo del harness.
+
+| Perfil | Resultado | Lectura semántica |
+|---|---:|---|
+| **SOL — Qwen3.8 vLLM TP2/P2P/MTP4 validado** | **7/10** | Resolvió TTL/cache, RFC7396, toposort, tool contract, JSONL, configuración y reporte de incidentes; falló path safety, scheduler y SQL. |
+| **ASTRA — Flash-Next Q2_K_XL, 256K, MoE12** | **3/8 intentadas; 3/10 contabilizadas** | Resolvió RFC7396, toposort y tool contract; falló TTL/cache, path safety, scheduler, JSONL y configuración. No llegó a reporte de incidentes ni SQL por timeout duro. |
+
+La conclusión registrada es que **SOL fue superior y más confiable que ASTRA en
+esta evaluación de tareas agentivas de software**, aun ignorando la velocidad
+como objetivo. No se registra como una afirmación universal de que SOL sea
+“más inteligente” en todo dominio: la evidencia sólo cubre esta suite, este
+harness y estas recetas. El timeout de ASTRA es una limitación operativa
+adicional, pero no se cuenta como fallo semántico en las dos tareas que no
+llegaron a ejecutarse.
+
+Detalle reproducible, directorios de corrida y limitaciones en
+[`intelligence-adversarial-v1-results-20260924.md`](intelligence-adversarial-v1-results-20260924.md).
+Los pesos físicos de ASTRA Q2_K_XL se movieron posteriormente a la Papelera de
+D el 2026-09-24; este registro, la suite y los artefactos quedan preservados.
+Detalle de la operación en [`model-removal-20260915.md`](model-removal-20260915.md).
+
+## 2026-09-18 — Matriz de modelos antes de limpieza de Disco C/D
+
+Se consolidaron en [`benchmark-results.md`](benchmark-results.md) las métricas
+locales de los perfiles productivos y de los candidatos grandes presentes en
+Disco C y Disco D: ASTRA IQ1_S/IQ4_XS, Flash-Next EXL3, Opti, Agnes, NInfer
+Qwen3.6-35B-A3B, la variante GGUF de QWEN35-A3B, LUNA, ByteShape ASCII y
+GSQ-RCO+DFlash2. Se separaron BCB8 LC-H1, BCB directo/histórico, HE, smokes
+de tool-use y métricas de velocidad/contexto para no tratar un smoke rápido
+como evidencia de calidad agentiva.
+
+## 2026-09-18 — Auditoría `audio.cpp`
+
+Se auditó el motor externo `audio.cpp` para determinar si aporta una mejora a
+LlamaCode. La build CUDA con `SM86` compiló `audiocpp_cli` y
+`audiocpp_server` en 446/446 pasos, detectó las dos RTX 3090 y el Ryzen 9
+9950X3D, y confirmó las rutas OpenAI-compatibles de TTS/STT. No se descargaron
+pesos, por lo que no hay todavía RTF, WER/CER ni comparación de calidad. El
+motor queda como backend experimental de Charla; no modifica los perfiles LLM,
+la tabla BCB/HE ni el default SOL. Detalle en
+[`audio-cpp-audit-20260918.md`](audio-cpp-audit-20260918.md).
+
+## 2026-09-18 — Auditoría Vellium v1.1.0 / voz local
+
+Vellium confirma el valor de mantener STT/TTS residentes y transmitir audio por
+streaming, pero LlamaCode ya cubre esas rutas con Piper residente, Pocket TTS,
+endpoints HTTP administrados, STT NDJSON persistente, TTS por oraciones,
+barge-in y métricas. `test_voice` quedó en **41/41**. No se descargaron
+TeraTTSv2 ni Whisper Turbo porque no había WER/RTF ni comparación reproducible
+contra nuestros motores. No se cambió ningún perfil LLM ni el default de Charla.
+Detalle en [`vellium-voice-audit-20260918.md`](vellium-voice-audit-20260918.md).
+
+## 2026-09-18 — Auditoría Row-Bot v4.9.0 / Computer Use
+
+Row-Bot aportó ideas de UX y de seguridad para control de PC, pero no es un
+modelo ni un runtime de inferencia. LlamaCode ya tenía separación Browser/PC,
+UI Automation antes que coordenadas, snapshots con stale guard, receipts,
+Teach v3 y reparación acotada. Se implementó la diferencia relevante:
+`ProcessSessionGuard` usa `QLockFile` para impedir que dos instancias del
+programa controlen simultáneamente el escritorio. La regresión focalizada quedó
+en **38/38** y no se cambió ningún perfil LLM ni el default SOL. El overlay tipo
+Buddy queda como idea futura de UX, no como mejora de calidad. Detalle en
+[`row-bot-computer-use-audit-20260918.md`](row-bot-computer-use-audit-20260918.md).
+
+## 2026-09-18 — Auditoría `bigattichouse/llama-optimize`
+
+Se revisó y ejecutó el optimizador DOE externo para `llama.cpp`. El selftest
+pasó, el submódulo `robust` compiló y su suite C/CLI quedó verde; además se
+generó una matriz L125 sin usar GPU sobre un GGUF local de Qwen3.8. El plan
+detectó 125 combinaciones de MTP, KV, contexto, microbatch, offload, threads y
+especulación, pero no se ejecutó TG/PP porque el `llama-server` Linux local
+requería `libllama-common.so.0` ausente y los otros binarios disponibles eran
+Windows. No hay métricas nuevas de velocidad ni BCB atribuibles a este
+optimizador. No se cambió ningún perfil: SOL sigue default. La campaña GGUF
+queda pendiente y está detallada en
+[`llama-optimize-audit-20260918.md`](llama-optimize-audit-20260918.md).
+
+## 2026-09-18 — Auditoría `oh-my-openagent`
+
+Se comparó el plugin externo de orquestación con el harness nativo de LlamaCode.
+No es un modelo ni un runtime de inferencia, y no aportó una receta reproducible
+que mejore PP, TG, BCB, visión, contexto o VRAM. LlamaCode ya cubre subagentes
+paralelos, worktrees, límites adaptativos por contexto/VRAM, routing por rol,
+goals, memoria, skills portables y MCP. No se instaló el plugin ni su
+telemetría. Hashline, LSP, AST-Grep y una vista Team Mode quedaron anotados como
+posibles features futuras del harness, separadas de la tabla de modelos. Ver
+[`oh-my-openagent-audit-20260918.md`](oh-my-openagent-audit-20260918.md).
+
+## 2026-09-18 — Auditoría `prime-agent`
+
+Se revisó `Prime Agent`, su runtime RLM, REPL Python persistente, subagentes
+recursivos, daemon, schedules y Continual Harness. El checkout externo pasó
+52/52 pruebas del estado persistente y 104/104 pruebas del REPL usando `dill`
+en un directorio temporal. Eso valida su runtime, no la calidad de nuestros
+modelos. No aporta pesos, flags ni una receta que mejore PP, TG, BCB, visión o
+contexto; SOL permanece default y no se agrega una fila de modelo. El
+refinamiento reversible del harness y un REPL aislado quedan registrados como
+campañas futuras. Ver [`prime-agent-audit-20260918.md`](prime-agent-audit-20260918.md).
+
+## 2026-09-18 — Auditoría `little-coder`
+
+Se revisó el fork de `little-coder`, orientado a modelos locales pequeños y
+Qwen3.6-35B-A3B. Sus resultados históricos de Aider/Terminal-Bench no son
+comparables con BCB local: cambian máquina, harness, benchmark y protocolo.
+LlamaCode ya cubre steering de skills, subagentes, compaction, guards,
+worktrees, goals y routing por perfiles. No se instaló Node/npm ni se cambió
+ningún modelo. Quedan como candidatos opt-in el retry guiado por salida de tests
+y el auto-continue sólo ante `finish_reason=length`; perfil compacto y LSP
+quedan para una campaña posterior. Ver [`little-coder-audit-20260918.md`](little-coder-audit-20260918.md).
+
+## 2026-09-18 — Diagnóstico `jungledesh/profile` para vLLM dual
+
+Se revisó el repositorio `jungledesh/profile` y se contrastó con el host Ubuntu
+de 2× RTX 3090. La herramienta es útil como método para detectar presión real de
+KV, cola, evictions, bajo prefix reuse y prefill-bound en vLLM, pero su versión
+actual rechaza TP mayor que 1. No había endpoint vLLM ni módulo Python activo para
+ejecutar un diagnóstico vivo; la imagen Docker vLLM estaba disponible y el host
+estaba ocioso.
+
+No se modificó ningún modelo o perfil. SOL ya contiene las partes portables que
+la guía recomienda: KV FP8, prefix cache, canonicalización determinista de
+schemas MCP, `max-num-batched-tokens=8192` y `long-prefill-token-threshold=4096`.
+La auditoría completa, incluyendo el protocolo para una futura corrida con
+tráfico real, está en [`profile-vllm-diagnostics-audit-20260918.md`](profile-vllm-diagnostics-audit-20260918.md).
 
 ## 2026-08-29 — Qwen3.8 adaptive KV streaming desde LocalLLM
 
@@ -869,6 +1022,222 @@ medición nativa con prompt corto en un nuevo score HE20/BCB. Todas las respuest
 timings y logs de esta campaña quedan conservados bajo
 `artifacts/deepseek-campaign-20260830/`.
 
+## 2026-09-15 — Reejecución BCB8 directa de perfiles pequeños y experimentales
+
+Se corrieron las ocho tareas de `bigcodebench-hard-ubuntu-8.json` directamente
+contra QWEN35-A3B vLLM, BigBang, QWEN35-A3B GGUF, CyberTiel, Qwen3.5-9B,
+Qwen3.5-4B, Qwen3.5-2B y un control Qwen3.5-4B en CPU. Todos los servidores
+GPU cargaron y respondieron; el control CPU también fue funcional, pero sin
+MTP por incompatibilidad del runtime CPU con el layout de tensores actual.
+
+| Perfil | BCB8 directo | Tiempo total de generación |
+|---|---:|---:|
+| QWEN35-A3B vLLM | 1/8 | 156,849 s |
+| METEOR / BigBang MTP5 | 2/8 | 13,187 s |
+| QWEN35-A3B GGUF MTP3 | 1/8 | 17,583 s |
+| CyberTiel MTP3 | 1/8 | 15,288 s |
+| Qwen3.5-9B MTP3 | 1/8 | 20,882 s |
+| Qwen3.5-4B MTP3 | 1/8 | 12,445 s |
+| Qwen3.5-2B MTP3 | 0/8 | 9,865 s |
+| Qwen3.5-4B CPU sin MTP | 2/8 | 418,982 s |
+
+Es un control de modelo sin herramientas, reparación ni reintentos, no un BCB
+LC-H1. Por eso se conserva separado de QWEN35-A3B vLLM 4/8 agentivo y BigBang
+3/8 histórico. El detalle y los artefactos por tarea están en
+`docs/bcb8-rerun-direct-20260915.md` y `artifacts/bcb-rerun-20260915/`.
+## 2026-09-18 — Occamy-1.0 Q4_K_M
+
+Se descargó `Accio-Lab/occamy-1.0-GGUF` Q4_K_M y su proyector F16 en el
+directorio común de modelos. En 2× RTX 3090, con TP por capas, batch/ubatch
+512/128, Flash Attention, KV Q8 y sin MTP, obtuvo:
+
+| Prueba | PP | TG | Resultado |
+|---|---:|---:|---|
+| Texto, 8K | 233,09 | **164,07** | Código Python válido |
+| Texto, 262K | 131,90 | **162,96** | Carga estable; salida válida |
+| Visión, 32K | 175,65 | **162,68** | Imagen sintética leída correctamente |
+| Tool-use, 8K | 890,07 | **164,08** | `add(17,25)` emitido correctamente |
+
+La visión leyó correctamente una imagen sintética y el endpoint emitió un
+tool-call válido para una función `add`.
+
+En comparación con las referencias locales disponibles, sus 164,07 TG superan
+los 134,4 TG directos de QWEN35-A3B y los 154,3/155,9 TG de CyberTiel, aunque
+no alcanzan los 207 TG de METEOR. Es una comparación de throughput aislado y no
+de calidad: cambian modelo, quant, contexto y/o MTP entre las recetas.
+
+Occamy queda como `sys-occamy-35b-q4km-262k`, perfil experimental multimodal de
+alto throughput. BCB LC-H1, HE0 y HE20 permanecen pendientes; no se mezclan sus
+resultados locales con los puntajes externos del model card ni se reemplaza SOL
+hasta validar calidad agentiva con el mismo harness.
+
+Detalle: `docs/occamy-1.0-audit-20260918.md`.
+
+## 2026-09-18 — Qwen3.8 ByteShape ShapeLearn IQ4_XS completo
+
+Se descargó `byteshape/Qwen3.8-27B-GGUF` IQ4_XS de vocabulario completo en el
+directorio común de modelos. A diferencia de la variante ASCII/P1M, conserva la
+entrada multilingüe y su MTP integrado cargó con la build CUDA local.
+
+| Configuración | PP | TG | Aceptación | Resultado |
+|---|---:|---:|---:|---|
+| 8K, sin MTP | 156,8 | 25,85 | — | Funcional |
+| 8K, MTP3 | 180,7 | **53,64** | 87/118 = 73,7% | Python válido |
+| 32K, visión + MTP3 | 163,5 | **55,92** | 44/55 = 80,0% | Visión correcta |
+| 262K, sin MTP | 118,4 | 41,77 | — | Estable |
+| 262K, MTP3 | 108,0 | **66,24** | 83/131 = 63,4% | Estable |
+
+La carga de 262K fue estable en 2× RTX 3090 con KV Q8. No se ejecutó todavía
+la cadena LC-H1 HE0 → HE20 → BCB, por lo que no se asigna un score de calidad.
+
+Se agrega `sys-qwen38-27b-byteshape-shapelearn-262k` como perfil experimental de
+fidelidad/contexto largo. En la medición local supera a QWEN38-Q8 en TG a 262K
+(66,24 frente a 22,1 con sus respectivas recetas), pero no reemplaza SOL: no
+tiene aún BCB agentivo ni tool-use validado. DFlash2 no se combinó con este
+target porque el drafter local validado pertenece a GSQ-RCO IQ3_S y sería una
+mezcla no demostrada.
+
+Detalle: `docs/qwen38-byteshape-shapelearn-audit-20260918.md`.
+
+## 2026-09-18 — Qwen3.8 ByteShape IQ4_XS ASCII/P1M
+
+Se descargó y validó el GGUF ByteShape con vocabulario ASCII/P1M. La matriz
+probó una RTX 3090, dos RTX 3090, KV q8, MTP2, MTP5, MTP5+ngram, 131K/196K/
+262K y visión con `mmproj` Qwen3.8. MTP2 fue la mejor configuración local:
+79–88 tok/s en texto corto y 67,6 tok/s con visión; MTP5 y MTP5+ngram quedaron
+por debajo. El pack BCB8 directo pasó 1/8.
+
+Se agrega `sys-qwen38-27b-byteshape-ascii-262k` como perfil experimental para
+inglés/código ASCII, contexto largo y baja presión de VRAM. No reemplaza SOL:
+la restricción lingüística y el BCB directo 1/8 pesan más que la ventaja de
+memoria/velocidad. Detalle: `docs/qwen38-byteshape-ascii-audit-20260918.md`.
+
+## 2026-09-18 — DFlash2 Q2 sobre GSQ-RCO IQ3_S
+
+La prueba local de `HermiHg/Qwen3.8-27B-DFlash2-Q2_K_S-MIX-GGUF` contra
+`ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF` fue la primera combinación DFlash2 GGUF
+que cargó y generó de forma estable en esta instalación Linux. Con 2× RTX 3090,
+P2P, 81.920 de contexto, target KV Q8 y `n-max=3`, pasó de 42,48 TG
+autoregresivos a 67,02 TG y aceptó 85/123 tokens draft. La variante `n-max=5`
+no se promovió por variabilidad de aceptación y decode. El mismo perfil emitió
+un tool-call válido y procesó visión con el `mmproj` BF16; a 9.592 tokens quedó
+en 17,67 TG, por lo que no se presenta como mejora universal de contexto.
+
+El artefacto ocupa ~536 MiB en el directorio común de modelos. Se añadió el
+perfil manual `sys-bench-qwen38-gsq-rco-iq3s-dflash2-q2-81k`, con estado
+experimental y BCB8 pendiente. No se repiten aquí las pruebas previas de
+DFlash2 vLLM que terminaron en `CUDA device-side assert`, ni el DFlash2 de
+Flash-Next, que pertenece a otra arquitectura. La auditoría completa queda en
+`docs/qwen38-gsq-rco-dflash2-q2-audit-20260918.md`.
+
+## 2026-09-18 — Opti-27B con runtime parcheado
+
+Se descargó `kacaforyah/Opti-27B` y su `mmproj` en el directorio común de
+modelos. El GGUF agrega tensores `corr.*`, por lo que `llama.cpp` oficial lo
+rechaza; se compiló en un checkout aislado el parche del runtime Opti sobre el
+commit `6a1a922d2`, con CUDA arch 86 para las RTX 3090.
+
+La prueba dual obtuvo **232,56 PP / 39,14 TG** en texto corto a 16K y
+**215,18 PP / 39,10 TG** con techo de 262K. A 123.904 tokens de prefill la
+velocidad acumulada fue **570,91 tok/s**, sin OOM ni corrupción. Cuatro slots
+con 65K totales terminaron correctamente a **21,6 TG por slot (~86,4 TG
+agregado)**. La visión fue correcta a 16K con reasoning off (**484,1 PP / 38,5
+TG**) y el tool-call `calculator` también fue válido. Con reasoning on la
+salida visual se degeneró en barras `/`, por lo que esa combinación queda
+prohibida hasta corregir el runtime/template.
+
+Opti se documenta como candidato experimental aislado, no como perfil activo:
+no supera SOL (~102 TG de código), no tiene BCB LC-H1 ni HE0/HE20 y no se
+agrega al dropdown porque LlamaCode todavía no resuelve su runtime especial.
+La licencia de evaluación personal/no comercial y la advertencia de patente
+también impiden promoverlo sin revisar las condiciones de uso.
+
+Detalle: `docs/opti-27b-audit-20260918.md`.
+
+## 2026-09-18 — Laya / Jev como System 1 auxiliar
+
+Se descargó `convaiinnovations/laya` en el directorio común de modelos y se
+probó con PyTorch en una RTX 3090. Laya no genera texto: evalúa preguntas
+tipadas en una pasada y devuelve clases, scores y probabilidades calibradas.
+
+En la prueba local tardó **13–15 ms warm** por consulta en GPU. Clasificó
+correctamente tareas de coding, triage técnico, prompt injection y cuatro
+clases de operaciones de PC (lectura, reversible, destructiva y externa). La
+pregunta genérica “¿requiere confirmación?” no fue consistente, incluso frente
+a acciones destructivas, por lo que no se la habilita como autoridad de
+permisos.
+
+La decisión es conservar Laya como componente experimental delante del
+harness: puede filtrar prompt injection, enrutar solicitudes a SOL/MINI y
+señalar dificultad o dominio antes de iniciar un modelo grande. No se agrega
+como perfil generativo, no altera la tabla de modelos y no modifica todavía el
+código del harness hasta definir contrato, umbrales y regresiones de seguridad.
+
+Detalle: `docs/laya-jev-audit-20260918.md`.
+
+## 2026-09-18 — Auditoría PCIe/bifurcación de las RTX 3090
+
+Se revisó si una bifurcación física x16→x8/x8 podía mejorar LlamaCode. La
+topología local muestra ambas RTX 3090 conectadas a root ports de la CPU y
+`nvidia-smi topo -m` reporta `PHB` entre ellas. P2P lectura/escritura ya había
+pasado; con reparto por capas la diferencia histórica fue 60,75 frente a 60,61
+tok/s (~0,2%), mientras que tensor split no arrancó.
+
+La medición en reposo reportó GPU0 Gen4 x8 y GPU1 Gen2 x8, con máximo Gen4 x16
+en ambas; la reducción de generación es dinámica por energía y no evidencia
+una conexión al chipset. No se cambia la placa madre, no se compra adaptador
+de bifurcación y no se alteran los perfiles. La bifurcación sólo sería una
+hipótesis razonable si una futura configuración dejara una GPU en x1/x4,
+chipset o sin P2P.
+
+Detalle: `docs/dual-3090-pcie-bifurcation-audit-20260918.md`.
+
+## 2026-09-18 — Revalidación A/B DFlash2 Q2 contra su control
+
+Se repitió la prueba con el mismo target GSQ-RCO IQ3_S, semilla 42, 2× RTX
+3090, `split-mode layer`, Flash Attention, KV target Q8/KV draft K8/V4 y
+`n-max=3`. El control sin drafter midió **191,67 PP / 40,75 TG** en prompt
+corto; DFlash2 midió **21,36 PP / 67,65 TG** en su primer prompt cold. En un
+prompt de **7.957 tokens**, el control dio **133,91 PP / 14,19 TG** y DFlash2
+dio **128,12 PP / 24,99 TG**. La ruta tool-use devolvió `add({"a":2,"b":3})`
+y midió **77,50 TG** con DFlash2 frente a **39,58 TG** sin drafter. La visión
+con `mmproj` BF16 describió correctamente la imagen y midió **151,86 PP /
+52,10 TG**, con 31/57 tokens aceptados.
+
+El primer PP corto DFlash2 es una medición cold y no reemplaza la referencia
+previa de 183,61 PP; la conclusión reproducible es mejora de decode corto y de
+tool-use, pero no una mejora de contexto largo ni una validación de calidad.
+BCB8/HE20 siguen pendientes y el perfil permanece manual/experimental.
+
+## 2026-09-18 — Revisión BCB directa de pendientes multimodales
+
+Se ejecutó el mismo pack determinista de ocho tareas
+`artifacts/bigcodebench-hard-ubuntu-8.json` sobre Occamy, Qwen3.8
+ShapeLearn IQ4_XS y Agnes-3.0-Flash con el servidor CUDA local y las 2× RTX
+3090. Los resultados fueron: Occamy **1/8**, media **161,7 TG**; ShapeLearn
+**1/8**, media **80,0 TG**; Agnes **1/8**, media **31,7 TG**. Los tres
+mantuvieron tool-use smoke válido, visión funcional con su `mmproj` y carga a
+262K cuando correspondía. Se conserva la distinción: estos son BCB directos,
+no BCB8 LC-H1; HE0/HE20 oficiales siguen pendientes y no se convierten en
+ceros artificiales. Detalle en la sección homónima de
+`docs/benchmark-results.md`.
+
+## 2026-09-18 — LC-H1 oficial y corrección de estados pendientes
+
+Se reparó el registro del runtime: daemon Linux Release, binario CUDA Ampere
+`b10658` y root de modelos del Disco D. La escalera oficial ya no queda
+bloqueada por falta de binario/modelo.
+
+| Perfil | HE0 | HE20 | BCB8 | Estado |
+|---|---:|---:|---:|---|
+| Occamy 1.0 | 1/1 | 20/20 | 3/8 | Completo; fallo de calidad, no infraestructura |
+| Qwen3.8 ShapeLearn | 1/1 | 20/20 con agente `Con fases` | bloqueado | HE20 estándar bloqueado por salida previa a tools; BCB no comparable |
+| GSQ-RCO + DFlash2 Q2 | 1/1 | cancelado en prompt 5/20 | pendiente | Runtime funcional; latencia operativa no competitiva |
+
+Occamy midió 143,59 tok/s promedio en BCB y TTFT medio 8.638 ms. ShapeLearn
+midió 77,91 tok/s y TTFT medio 2.283 ms en HE20 compacto. Los fingerprints se
+mantienen separados para no mezclar una política de agente con otra.
+
 ## 2026-09-26 — Agention Precision Qwen3.8-27B AP-Q3_K_XL
 
 Se descargaron y verificaron el AP-Q3_K_XL, su mmproj BF16 y el control
@@ -962,48 +1331,16 @@ advisory después de UIA/OCR, con las protecciones del host como autoridad.
 Protocolo, límites y hashes: [auditoría Mica](mica-decision-profile-audit-20260926.md);
 resultados estructurados: [artefacto JSON](../artifacts/mica-decision-profile-20260926.json).
 
-## 2026-09-26 — NInfer Huihui Qwen3.8 en 2× RTX 3090
+## 2026-09-30 — Qwen3.8 27B Q4 a 100K en RX 7800 XT
 
-El post de Reddit informa ~175 tok/s y 262K en RTX 5090. El único prefill a
-contexto alto que aporta es 1.675 tok/s a 247.802 tokens, medido con
-groupwise-int/KV int8; su cifra de 2.500–3.000 tok/s a 150K es estimada. La
-variante NVFP4 del post es Blackwell/sm_120, por lo que esta evaluación local
-se preparó con el mismo checkpoint Huihui convertido a groupwise-int para el
-fork NInfer-3090 compatible con Ampere/sm_86.
+La guía de LocalLLaMA propone Qwen3.8 `UD-IQ4_XS`, contexto 100K, KV K8/V5 y
+Vulkan en RX 7800 XT, con ~30 tok/s reportados por el autor. No se cambia perfil:
+el equipo disponible es 2× RTX 3090/CUDA, no está instalado el GGUF exacto y
+la cifra depende de la plataforma. LlamaCode ya registra variantes 16GB de
+Qwen3.8 con ngram/MTP como experimentales; la campaña local de ngram dio
+ganancias pequeñas de decode, pero no supera SOL en calidad y velocidad
+validables. DRY queda como hipótesis anecdótica, sin prueba controlada.
 
-Se agregaron tres perfiles históricos: texto MTP3/32K, visión MTP3/32K y
-control sin MTP/32K. El archivo de pesos (18.210.531.328 bytes), el SHA-256 del
-modelo y el checksum de NInfer v0.6.1 se verificaron. Un primer arranque con
-GPU 1 en uso falló por `cudaMalloc` OOM antes de health; no se detuvieron el
-proceso local de Mica en GPU 1 ni el `llama-server` ajeno en GPU 0.
-
-Al repetir con ambas GPU libres, los pesos y KV cargaron en tres configuraciones
-(MTP3 32K, launcher C1 MTP3 64K y sin MTP 32K), pero el warm-up falló en todas
-con `cudaErrorInvalidValue` desde `gqa_attention_prefill.cu:64`. La variante de
-visión cargó pesos/proyector y KV, pero tuvo el mismo error antes de aceptar
-una imagen. Las cuatro repeticiones se hicieron antes de cualquier request; por
-eso son un **fallo de compatibilidad operativa del artefacto/runtime SM86**, no
-un score de calidad.
-
-| Dimensión | Resultado |
-|---|---|
-| Arranque del candidato MTP3 32K | OOM inicial bajo contención; después pesos/KV cargaron y warm-up falló en el kernel CUDA. |
-| Launcher C1 de texto 64K | Pesos/KV cargaron; mismo error de warm-up con MTP3 y prefill 1024. |
-| Control sin MTP 32K | Pesos/KV cargaron; mismo error. La incompatibilidad no se limita a MTP. |
-| Variante visión MTP3 32K | Pesos/proyector/KV cargaron; mismo error antes de imagen. |
-| HE0 → HE20 → BCB/8 LC-H1 | No ejecutado; servidor nunca alcanzó health. |
-| Decode/prefill, aceptación MTP | No medido; no hubo generación. |
-| Computer Use con imagen y schema `desktop_*` | No evaluado; el profile de visión no llegó a recibir imagen ni emitió tool-call. |
-| Ingi Charla | No ejecutado. El post no reporta STT/TTS ni latencia acústica. |
-
-La referencia histórica de NInfer Qwen3.8 normal es BCB 3/8 y ~73–75 tok/s a
-8K; SOL conserva BCB 8/8. Frente a ese perfil que sí atendió requests, Huihui
-resulta **INFERIOR en compatibilidad operativa en el runtime SM86 probado**.
-No hay veredicto de calidad ni velocidad para Huihui. Ninguna cifra del post
-justifica cambiar defaults, harness, Computer Use o ruta de voz. No se incorpora
-la estrategia del post de redactar consultas para evadir guardrails de un
-proveedor cloud. La evidencia queda como registro histórico, sin promoción. A pedido del usuario, el 2026-09-26 se eliminó el archivo local de pesos de 18.210.531.328 bytes y se retiraron las tres entradas Huihui del catálogo; el ZIP del runtime se conservó.
-
-Artefacto y configuración exacta:
-[`ninfer-huihui-qwen38-3090-20260926.json`](../artifacts/ninfer-huihui-qwen38-3090-20260926.json).
-Detalle y fuentes: [auditoría Huihui/NInfer](ninfer-huihui-qwen38-3090-audit-20260926.md).
+No se repitieron las corridas ya documentadas ni se descargó un quant para una
+GPU distinta. La evaluación por subsistema y el protocolo para reabrir la prueba
+están en [auditoría RX 7800 XT / 100K](qwen38-rx7800-100k-guide-audit-20260930.md).

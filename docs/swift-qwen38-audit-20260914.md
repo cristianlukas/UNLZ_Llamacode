@@ -1,78 +1,97 @@
-# Auditoría local de Swift-Qwen3.8-27B
+# Swift-Qwen3.8-27B — auditoría local
 
 Fecha: 2026-09-14  
-Equipo: Ubuntu, 2× RTX 3090 de 24 GiB, driver con P2P, 123 GiB de RAM  
-Objetivo: comprobar si el fine-tune Swift mejora el uso de Qwen3.8 en LlamaCode sin superar Q8 en pesos ni KV.
+Decisión: **no reemplaza SOL ni se agrega como default**. Queda como candidato
+experimental multimodal, rápido y con razonamiento más corto.
 
-## Candidato
+## Qué propone
 
-Se descargó el tier `Q4_K_M` y el proyector de visión oficial en:
+[Swift-Qwen3.8-27B](https://huggingface.co/ukisai/Swift-Qwen3.8-27b) es un
+fine-tune de Qwen3.8 que intenta reducir razonamiento redundante, no recortar
+el presupuesto de pensamiento por fuerza. El repositorio afirma reducciones de
+tokens de pensamiento y mantiene variantes GGUF hasta Q8, MTP y un proyector de
+visión. La propia tarjeta aclara que sus tablas principales son comparaciones
+BF16/adaptador y que la suite completa todavía no fue re-evaluada sobre los GGUF.
 
-- `/media/cristian/7CFE1E0FFE1DC1F6/models/Swift-Qwen3.8-27B-GGUF/Swift-Qwen3.8-27B-Q4_K_M.gguf`
-- `/media/cristian/7CFE1E0FFE1DC1F6/models/Swift-Qwen3.8-27B-GGUF/mmproj-Swift-Qwen3.8-27B-F16.gguf`
+La licencia es `Swift Open License 1.0`: uso personal, de investigación,
+educativo, de evaluación y organizaciones con ARR de hasta US$1M; por encima de
+ese umbral requiere licencia empresarial.
 
-El modelo ocupa aproximadamente 18,0 GB y el proyector 0,93 GB. Se respetó `KV Q8` (`q8_0` para K y V).
+## Artefactos descargados
 
-La tarjeta del modelo afirma que Swift conserva una calidad similar al Qwen3.8 original reduciendo el razonamiento medio. Esas cifras publicadas corresponden principalmente a BF16/W4A16 y no sustituyen una validación BCB local del GGUF.
+Todos quedaron en el directorio requerido:
+
+`/media/cristian/7CFE1E0FFE1DC1F6/models/Swift-Qwen3.8-27B-GGUF/`
+
+| Archivo | Tamaño |
+|---|---:|
+| `Swift-Qwen3.8-27B-Q4_K_M.gguf` | 18.024.380.576 bytes |
+| `mmproj-Swift-Qwen3.8-27B-F16.gguf` | 927.606.976 bytes |
+
+Se respetó el límite de quant del proyecto: pesos Q4_K_M y KV Q8; no se usó
+ningún KV superior a Q8.
 
 ## Pruebas locales
 
-| Prueba | Resultado |
-| --- | --- |
-| Carga con runtime experimental Flash-Next, MTP y P2P | Falla con acceso ilegal CUDA en RMSNorm durante la inicialización |
-| Carga con el mismo runtime y `GGML_CUDA_PDL=0` | Falla de igual forma; PDL no era la causa |
-| Carga CPU, contexto 2K | Funciona; smoke correcto, 17,7 tok/s de prefill y 2,4 tok/s de decode |
-| Carga GPU dual con MMQ, contexto 8K, sin MTP | Funciona; 33,2 tok/s en smoke |
-| Carga GPU dual con MMQ, contexto 8K, MTP3 | Funciona y estable |
-| MTP3, coding corto | 80,85 tok/s; aceptación 80/84 (95,2%) |
-| MTP3, JSON corto | 76,90 tok/s; aceptación 12/12 (100%) |
-| MTP3, smoke corto | 42,29 tok/s; aceptación 6/6 (100%) |
-| Contexto 131K reservado con MTP3 y KV Q8 | Carga y permanece saludable |
-| Prefill largo | 67.243 tokens procesados a 1.129,9 tok/s |
-| Decode después del prefill largo | 50,7 tok/s; aceptación 11/11 |
-| Contexto 262K con MTP3 | Falla con acceso ilegal CUDA al crear el contexto |
-| Contexto 262K sin MTP | Falla con el mismo tipo de acceso ilegal |
-| Visión con `mmproj` oficial, 32K | Funciona; descripción correcta, 570,5 tok/s de prefill y 35,7 tok/s de decode |
-| Servidor después de visión | `{"status":"ok"}` |
+Hardware: 2× RTX 3090, reparto por capas, driver 595.71.05, CUDA 12.0.140,
+MTP3 cuando correspondía, KV K/V `q8_0/q8_0`. El smoke, BCB y visión se
+ejecutaron con el backend CUDA local compilado para SM86.
 
-El build que funciona requiere `GGML_CUDA_FORCE_MMQ=1`; no se cambió el build permanente de LlamaCode. La falla a 262K parece pertenecer a la combinación de este GGUF/runtime con la reserva grande de contexto, no al proyector de visión ni a MTP exclusivamente.
+| Prueba | Resultado | Estado |
+|---|---:|---|
+| Carga + HE0, thinking apagado | Responde correctamente | **Pasa** |
+| Decode corto, MTP3, thinking apagado | 71,79 tok/s; aceptación 135/165 | Funcional |
+| Contexto profundo, 55.032 tokens | Prefill 948,62 tok/s; decode 78,41 tok/s; marcador correcto | **Pasa** |
+| Tool-use `read_file` | `finish_reason=tool_calls`, JSON válido | **Pasa** |
+| Visión con `mmproj` | Describe correctamente una captura de discos y red | **Pasa** |
+| BCB/8 | **1/8** | Calidad agentiva insuficiente |
 
-## Comparación práctica
+La prueba con thinking habilitado y presupuesto 512 llegó a truncar la respuesta
+antes del código porque el razonamiento consumió el límite; no es un fallo del
+servidor, pero demuestra que el presupuesto debe parametrizarse por perfil.
 
-| Dimensión | Swift local | SOL actual |
-| --- | ---: | ---: |
-| Decode corto con MTP | 76,9–80,9 tok/s | 74 narrativo / 102 código, benchmark histórico |
-| Prefill largo medido | 1.129,9 tok/s a 67K | No comparable en esta corrida |
-| Contexto operativo reproducible | 131K | 262K validado |
-| KV | Q8 | FP8 en el backend de SOL; dentro del límite funcional del proyecto |
-| Visión | Sí, validada en smoke | No validada |
-| BCB | Pendiente | 8/8 |
-| Tool-use | No validado con BCB; JSON smoke correcto | Validado |
-| Estabilidad | Buena a 131K con MMQ; 262K falla | Principal y estable |
+## Comparación con la tabla actual
 
-## Decisión
+| Perfil | Velocidad | Calidad / agentes | Contexto | Visión | Decisión |
+|---|---:|---:|---:|---|---|
+| SOL | 74 narrativo / 102 código | BCB 8/8; tool-use validado | 262K validado | No validada | Default |
+| Swift Q4_K_M | 71,79 tok/s sin thinking; 78,41 a 55K | BCB 1/8; tool-use puntual OK | 55K probado; 262K declarado | **Sí, validada localmente** | Experimental |
+| TERRA | 56–58 tok/s | BCB histórico 6/8 | 64K | Sí | Sigue siendo más confiable como agente |
 
-Swift es útil como candidato experimental para coding con razonamiento más eficiente y como alternativa multimodal de Qwen3.8. No es demostrablemente superior a SOL: no tiene BCB local, no alcanza 262K en este setup y sus cifras cortas no son comparables directamente con el benchmark de SOL.
+Swift aporta una combinación útil de visión, contexto largo y reducción de
+razonamiento, pero no es globalmente superior: queda por debajo de SOL en
+calidad agentiva y no ofrece una mejora clara de decode frente a sus 102 tok/s
+de coding. Tampoco se debe trasladar directamente el `x1.95` del post: esa
+cifra depende de la reducción de tokens generados y de benchmarks BF16/W4A16,
+no de tok/s brutos reproducidos en nuestro entorno.
 
-Por eso no reemplaza ni cambia el default SOL. Tampoco se agregó al listado prioritario todavía. Para promoverlo haría falta repetir BCB/HE20 con el mismo harness de LlamaCode y, si se quiere un perfil permanente, resolver la inestabilidad de 262K o fijar explícitamente 131K como techo operativo.
+## Resultado operativo
 
-## Configuración reproducible validada
+- No se modificó SOL ni el orden del dropdown.
+- No se agregó Swift como perfil activo.
+- Se conserva el modelo y el `mmproj` para futuras pruebas multimodales.
+- Si se necesitara un perfil de visión alternativo, Swift es candidato a una
+  entrada experimental separada; no debe presentarse como reemplazo de SOL sin
+  repetir HE0, HE20 y BCB con thinking y tool-use del harness real.
 
-```text
-GGML_CUDA_FORCE_MMQ=1
-CUDA_VISIBLE_DEVICES=0,1
---ctx-size 131072
---n-gpu-layers 999
---split-mode layer
---tensor-split 1,1
---flash-attn on
---load-mode mmap
---cache-type-k q8_0
---cache-type-v q8_0
---spec-type draft-mtp
---spec-draft-n-max 3
---batch-size 1024
---ubatch-size 256
---temp 0.6 --top-p 0.95 --top-k 20 --min-p 0.0
-```
+## Actualización de la nueva referencia comunitaria — 2026-09-18
 
+La publicación reciente del autor no cambia esta decisión. El model card ahora
+publica comparaciones BF16/adaptador y cuantizadas a 4 bits con menos tokens de
+razonamiento, además de soporte declarado para visión, MTP y tool-calling. Son
+resultados útiles para justificar una segunda ronda, pero no sustituyen los
+resultados locales: fueron obtenidos con vLLM 0.27.1, BF16/W4A16 y cinco semillas,
+mientras que nuestro dato reproducido en 2× RTX 3090 es Q4_K_M + KV Q8 con
+BCB 1/8.
+
+La afirmación de `x1,95` se refiere principalmente a la reducción de tokens de
+thinking y no a una multiplicación garantizada de tok/s brutos en LlamaCode.
+Además, las tablas del autor comparan Swift contra su propio Qwen3.8 base y no
+contra SOL con el mismo harness. El anuncio de Swift1.5 y Swift Flash-Next se
+deja como vigilancia futura: no se descarga ni se agrega una variante que aún
+no tiene artefacto y benchmark local reproducible.
+
+No se repitió BCB ni se volvió a descargar el GGUF porque ya existen pruebas
+locales de Swift con la misma familia de runtime y el resultado fue claramente
+inferior a SOL en calidad agentiva. La referencia comunitaria se incorpora al
+registro, no al catálogo activo.

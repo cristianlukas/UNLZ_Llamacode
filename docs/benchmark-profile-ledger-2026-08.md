@@ -60,16 +60,6 @@ Los recibos completos quedan en la estación de prueba bajo
 runner A/B fue ampliado para conservar `serverExe` por variante, y la matriz
 LID recibió `--startup-only`; ambas mejoras sí quedan versionadas en el repo.
 
-## Addendum fuera de la campaña serial — 2026-09-26 (Ternary Bonsai)
-
-| ID | Perfil | Quant / binario | HE0 | HE20 | BCB | FP | Estado |
-|---|---|---|---|---|---|---|---|
-| `sys-bench-bonsai2-27b-pq2-64k` | Ternary Bonsai 2 27B · visión · 64k · 1 GPU | PQ2_0 (2,13 bpw) + mmproj Q8_0 · KV q8_0 · PrismML `prism-b10743-adfffbe` CUDA 12.4 | 1/1 · 50 s · 24,3 | 20/20 (19) · 219 s · 42,6 | 2/8 (2) · 1.361 s · 44,3 · `quality` | `18c73c66dcdc` ×3 | complete · **inferior agente / superior VRAM** |
-
-VRAM observada por etapa: GPU0 ~10,7 GB (modelo) + GPU1 ~1,6–1,7 GB
-(escritorio/otros). El harness forzó `--reasoning off`, como en el resto de la
-campaña. Ver [auditoría](ninfer-4090-bonsai-reddit-audit-20260926.md).
-
 ## Inventario de modelos, quantizaciones y binarios
 
 | Familia | Archivo/piezas relevantes | Quant de pesos | Proyector/drafter | Build mínima declarada | Observación |
@@ -107,6 +97,29 @@ El resto de los resultados históricos puede localizarse por `profileId`,
 el ledger mantiene el índice y el repositorio conserva la configuración y la
 decisión, mientras que `%LOCALAPPDATA%` conserva la evidencia pesada de cada
 ejecución.
+
+## Addendum fuera de la campaña serial — Opti-27B (2026-09-18)
+
+`kacaforyah/Opti-27B` no es un GGUF ejecutable por `llama.cpp` oficial:
+incluye tensores `corr.*` y requiere el runtime parcheado de
+`AutomationOptimization/opti-runtime`, compilado aquí en un checkout aislado
+del commit `6a1a922d2` para CUDA SM86. Los artefactos están en
+`/media/cristian/7CFE1E0FFE1DC1F6/models/Opti-27B/` y la auditoría completa
+está en [`opti-27b-audit-20260918.md`](opti-27b-audit-20260918.md).
+
+| Eje | Resultado local | Decisión |
+|---|---|---|
+| Texto dual | 232,56 PP / 39,14 TG a 16K; 215,18 PP / 39,10 TG con techo 262K | Funcional, pero por debajo de SOL |
+| Prefill largo | 570,91 tok/s acumulados a 123.904 tokens | 262K es un techo funcional; no promete velocidad plana |
+| Concurrencia | 4 slots, 21,6 TG por slot, ~86,4 TG agregado | Útil como experimento de bajo peso; no reproduce la promesa externa de 17GB |
+| Visión | Correcta con reasoning off; 484,1 PP / 38,5 TG | Funcional sólo con reasoning off |
+| Tool-use | Tool-call `calculator` válido con reasoning off | Smoke válido, BCB/HE pendientes |
+| Reasoning on | Salida visual degenerada en `/` | No usar hasta corregir runtime/template |
+
+No se incorpora al dropdown ni a la cola LC-H1: no supera SOL, no tiene HE0,
+HE20 ni BCB comparable y LlamaCode aún no resuelve su runtime especial. Se
+conserva sólo como evidencia experimental; además, su runtime declara licencia
+de evaluación personal/no comercial y una advertencia de patente.
 
 ## Criterio de decisión
 
@@ -229,6 +242,13 @@ Esta tabla separa el mejor resultado histórico de la decisión de promoción ac
 | BEST calidad DeepSeek, referencia | `sys-48-dsv4-nospec` / ULTRA-Q 48GB · `sys-ultraq-dsv4-0731-iq3s-48gb` | DeepSeek V4 Flash UD-IQ3_S en 4 shards; official mínimo b10228. | ctx131k; B4096/U1024; KV q4; expertos CPU/CUDA; sin DSpark. | Histórico BCB 8/8, 9,645 tok/s, 2830,574 s; HE0 actual `server-load`; smoke nativo 5,764–6,171 tok/s. | **BEST dentro de la familia por calidad** frente a Fusion (2–4/8); no ganador universal de velocidad y no sustituye la evidencia HE0 pendiente. |
 | Mejor Laguna | Laguna S 2.1 100k · `8d0dd2e0-c6c6-41ef-81d6-893c20d2f621` | Laguna Q2_K_XL; official/b10228+; 48GB. | ctx100k; B512/U64; KV q4; fit on; template v24. | BCB 8/8, 32,417 tok/s, 1253,510 s. | Referencia Laguna completa; coste demasiado alto frente a Qwen/Dynamic. |
 | Velocidad extrema, no calidad | BigBang MTP · `cbff7c85-2116-4b42-b1b9-485dd33384cc` | BigBang Q4_K_M, mmproj BF16, MTP5; ficha b10262+. | ctx64k; B256/U64; KV q8; temp.70/top-p.08. | HE20 20/20 en 227,398 s; BCB 4/8; 33,727 tok/s. | Útil para throughput y comparación de speculative decoding; no promover como calidad. |
+
+### Candidato agregado el 2026-09-18
+
+| Perfil / ID | Modelo, quant y binario | Configuración | Métrica principal | Decisión |
+|---|---|---|---|---|
+| ByteShape ShapeLearn completo · `sys-qwen38-27b-byteshape-shapelearn-262k` | Qwen3.8-27B IQ4_XS 3,84 bpw, vocabulario completo; `llama-server` `1 (67849b6)` CUDA | ctx262k; B512/U128; KV q8; TP layer 0,5/0,5; MTP3 integrado; mmproj BF16 | 41,77 TG sin MTP; 66,24 TG con MTP3 y aceptación 63,4%; visión 55,92 TG y aceptación 80% a 32k | Experimental de contexto/fidelidad. BCB LC-H1 pendiente; no sustituye SOL. DFlash2 no probado sobre este target. |
+| Occamy-1.0 · `sys-occamy-35b-q4km-262k` | 35B-A3B Q4_K_M; `llama-server` `1 (67849b6)` CUDA | ctx262k; B512/U128; KV q8; TP layer 0,5/0,5; sin MTP; mmproj F16 | 164,07 TG a 8K; 162,96 TG a 262K; visión 162,68 TG a 32K; tool-call válido | Experimental multimodal de alto throughput. BCB LC-H1 pendiente; más rápido que QWEN35-A3B/CyberTiel localmente, no sustituye SOL hasta validar calidad. |
 
 ## Descartes, bloqueos y aprendizajes acumulados
 
