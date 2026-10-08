@@ -94,6 +94,7 @@ Variables opcionales (setear antes de correr):
 |---|---|---|
 | `LC_DIR` | `%USERPROFILE%\LlamaCode` (Windows) / `~/LlamaCode` (Linux) | carpeta de instalación |
 | `LC_BRANCH` | `main` | rama a clonar o actualizar |
+| `LC_REF` | (vacío) | tag inmutable de release a instalar, por ejemplo `v0.1.118-debug` |
 | `LC_CONFIG` | `Debug` | `Debug` (release candidate) o `Release` (estable) |
 | `LC_QTVER` | `6.8.3` | versión de Qt (sólo Linux) |
 | `LC_QTROOT` | `~/Qt` | raíz de instalación de Qt (sólo Linux) |
@@ -112,6 +113,30 @@ Microsoft Store). **Linux** soporta apt / dnf / pacman / zypper y pide `sudo`
 para los paquetes de sistema. Validado en contenedor Ubuntu 24.04 limpio
 (toolchain + dependencias Linux + aqt Qt 6.8.3 + build); ese smoke test no valida
 automatización foreground, que requiere una sesión X11 interactiva.
+
+### Canales de actualización Prod y Debug
+
+En **Configuración → Sistema → Canal de actualizaciones**, cada instalación
+puede elegir **Prod · estable** o **Debug · pruebas**. Prod consulta el último
+release estable; Debug busca el tag `vX.Y.Z-debug` más reciente aunque GitHub
+lo marque como prerelease. La elección queda guardada por usuario y el diálogo
+indica el canal detectado. Al pulsar **Actualizar ahora**, Windows y Linux
+obtienen el tag exacto anunciado y compilan la configuración correspondiente
+(`Release` para Prod y `Debug` para Debug); no se actualiza silenciosamente
+desde `main`. Los releases publican el código fuente y la actualización lo
+compila en el equipo, por lo que cada PC necesita el toolchain/Qt descrito arriba.
+
+Para preparar ambos canales desde el mismo commit, publicar Prod y luego Debug:
+
+```powershell
+powershell -File tools\release.ps1 -Channel Prod -Publish
+powershell -File tools\release.ps1 -Channel Debug -Publish
+```
+
+Los tags son `vX.Y.Z` (estable) y `vX.Y.Z-debug` (prerelease). `LC_REF` permite
+instalar un tag específico durante bootstrap. Linux usa
+`scripts/update-linux.sh`; si el checkout tiene cambios locales, el actualizador
+se detiene sin sobrescribirlos.
 
 ---
 

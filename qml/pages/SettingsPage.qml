@@ -650,6 +650,51 @@ Item {
                             color: Theme.surfaceBg
                             border.color: Theme.borderColor
                             radius: 10
+                            implicitHeight: updateChannelRow.implicitHeight + 32
+
+                            RowLayout {
+                                id: updateChannelRow
+                                anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: 16 }
+                                spacing: 16
+
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 3
+                                    Text {
+                                        text: "Canal de actualizaciones"
+                                        color: Theme.textPrimary
+                                        font.pixelSize: 14
+                                        font.bold: true
+                                    }
+                                    Text {
+                                        text: "Prod ofrece versiones estables. Debug avisa de candidatos de prueba y al actualizar instala la configuración Debug. Build actual: "
+                                              + (App.buildChannel === "debug" ? "Debug" : "Prod") + "."
+                                        color: Theme.textMuted
+                                        font.pixelSize: 11
+                                        wrapMode: Text.WordWrap
+                                        Layout.fillWidth: true
+                                    }
+                                }
+
+                                LcComboBox {
+                                    Layout.preferredWidth: 210
+                                    model: [
+                                        { id: "prod", name: "Prod · estable" },
+                                        { id: "debug", name: "Debug · pruebas" }
+                                    ]
+                                    textRole: "name"
+                                    valueRole: "id"
+                                    currentIndex: App.updateChannel === "debug" ? 1 : 0
+                                    onActivated: App.updateChannel = currentValue
+                                }
+                            }
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            color: Theme.surfaceBg
+                            border.color: Theme.borderColor
+                            radius: 10
                             implicitHeight: trayInner.implicitHeight + 32
 
                             ColumnLayout {

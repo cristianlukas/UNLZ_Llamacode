@@ -156,6 +156,8 @@ private slots:
     void buildPlatformIsCompileTimeQtPlatform();
     void exportUserDataToWritesBackup();
     void githubReleaseIsConvertedToUpdateFlag();
+    void githubDebugReleaseIsChannelScoped();
+    void githubReleaseListChoosesNewestDebug();
     void updateNowRequiresAvailableRelease();
     void githubPrereleaseIsIgnored();
     void installRootIsDerivedFromExeLocation();
@@ -295,6 +297,39 @@ void AppControllerTests::githubReleaseIsConvertedToUpdateFlag()
     QCOMPARE(flag.value(QStringLiteral("releaseUrl")).toString(),
              QStringLiteral("https://example.test/release"));
     QCOMPARE(flag.value(QStringLiteral("changelog")).toArray().size(), 3);
+    QCOMPARE(flag.value(QStringLiteral("channel")).toString(), QStringLiteral("prod"));
+    QCOMPARE(flag.value(QStringLiteral("sourceRef")).toString(), QStringLiteral("v0.2.0"));
+}
+
+void AppControllerTests::githubDebugReleaseIsChannelScoped()
+{
+    const QJsonObject release{
+        {QStringLiteral("tag_name"), QStringLiteral("v0.2.1-debug")},
+        {QStringLiteral("name"), QStringLiteral("LlamaCode 0.2.1 Debug")},
+        {QStringLiteral("draft"), false},
+        {QStringLiteral("prerelease"), true},
+    };
+    QVERIFY(AppController::githubReleaseToUpdateFlag(release, QStringLiteral("prod")).isEmpty());
+    const QJsonObject flag = AppController::githubReleaseToUpdateFlag(release, QStringLiteral("debug"));
+    QCOMPARE(flag.value(QStringLiteral("version")).toString(), QStringLiteral("0.2.1"));
+    QCOMPARE(flag.value(QStringLiteral("channel")).toString(), QStringLiteral("debug"));
+    QCOMPARE(flag.value(QStringLiteral("sourceRef")).toString(), QStringLiteral("v0.2.1-debug"));
+}
+
+void AppControllerTests::githubReleaseListChoosesNewestDebug()
+{
+    const QJsonArray releases{
+        QJsonObject{{QStringLiteral("tag_name"), QStringLiteral("v0.2.0-debug")},
+                    {QStringLiteral("prerelease"), true}},
+        QJsonObject{{QStringLiteral("tag_name"), QStringLiteral("v0.2.2")},
+                    {QStringLiteral("prerelease"), false}},
+        QJsonObject{{QStringLiteral("tag_name"), QStringLiteral("v0.2.1-debug")},
+                    {QStringLiteral("prerelease"), true}},
+    };
+    const QJsonObject flag = AppController::githubReleasesToUpdateFlag(
+        releases, QStringLiteral("debug"));
+    QCOMPARE(flag.value(QStringLiteral("version")).toString(), QStringLiteral("0.2.1"));
+    QCOMPARE(flag.value(QStringLiteral("sourceRef")).toString(), QStringLiteral("v0.2.1-debug"));
 }
 
 void AppControllerTests::updateNowRequiresAvailableRelease()
@@ -321,6 +356,7 @@ void AppControllerTests::installRootIsDerivedFromExeLocation()
     };
     QVERIFY(touch(root.filePath(QStringLiteral("CMakeLists.txt"))));
     QVERIFY(touch(root.filePath(QStringLiteral("scripts/bootstrap.ps1"))));
+    QVERIFY(touch(root.filePath(QStringLiteral("scripts/bootstrap.sh"))));
 
     const QString exe = root.filePath(QStringLiteral("build/Release/LlamaCode.exe"));
     QCOMPARE(AppController::installRootForExePath(exe),

@@ -29,18 +29,24 @@ $cmake = (Get-Content (Join-Path $root 'CMakeLists.txt') -TotalCount 5) -join "`
 $version = [regex]::Match($cmake, 'project\(LlamaCode VERSION ([0-9]+\.[0-9]+\.[0-9]+)').Groups[1].Value
 Check ($out -match [regex]::Escape("release v$version")) "usa la version del proyecto (v$version)"
 
+$debugOut = & powershell -NoProfile -ExecutionPolicy Bypass -File $script -Channel Debug 2>&1 | Out-String
+Check ($LASTEXITCODE -eq 0) 'Debug dry run sale 0'
+Check ($debugOut -match [regex]::Escape("release v$version-debug")) 'Debug usa un tag prerelease separado'
+
 # 3) Rechaza versiones mal formadas antes de tocar git.
 & powershell -NoProfile -ExecutionPolicy Bypass -File $script -Version '0.1' 2>&1 | Out-Null
 Check ($LASTEXITCODE -eq 1) 'rechaza una version que no es x.y.z'
 
 # 4) El tag tiene que parsear como version en el app: AppController saca la 'v'
 #    inicial y pide QVersionNumber::fromString no nulo.
-Check ($out -match 'release v[0-9]+\.[0-9]+\.[0-9]+') 'el tag es vX.Y.Z (lo que el detector sabe parsear)'
+Check ($out -match 'release v[0-9]+\.[0-9]+\.[0-9]+ \(Prod\)') 'Prod usa el tag estable vX.Y.Z'
+Check ($debugOut -match 'release v[0-9]+\.[0-9]+\.[0-9]+-debug \(Debug\)') 'Debug usa vX.Y.Z-debug'
 
 # 5) Publicar es explicito: sin -Publish no hay llamada a gh.
 $body = [IO.File]::ReadAllText($script)
 Check ($body -match 'if \(-not \$Publish\)') 'publicar requiere -Publish'
 Check ($body -match 'gh release create') 'publica con gh release create'
+Check ($body -match '--prerelease') 'Debug se publica marcado como prerelease'
 
 if ($fails) { throw "$fails release-script regression(s) failed" }
 Write-Host 'All release-script regressions passed.'

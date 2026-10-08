@@ -14,6 +14,7 @@
     Override defaults via env vars before running:
       $env:LC_DIR     = "C:\path\to\install"   # default: %USERPROFILE%\LlamaCode
       $env:LC_BRANCH  = "main"
+      $env:LC_REF     = "v0.1.118-debug"         # optional immutable release tag
       $env:LC_CONFIG  = "Debug"                 # Debug (default) | Release
       $env:LC_NORUN   = "1"                      # skip launching at the end
 #>
@@ -25,6 +26,7 @@ Set-StrictMode -Version Latest
 $Repo    = 'https://github.com/cristianlukas/UNLZ_Llamacode.git'
 $Dir     = if ($env:LC_DIR)    { $env:LC_DIR }    else { Join-Path $env:USERPROFILE 'LlamaCode' }
 $Branch  = if ($env:LC_BRANCH) { $env:LC_BRANCH } else { 'main' }
+$Ref     = if ($env:LC_REF)    { $env:LC_REF }    else { '' }
 $Config  = if ($env:LC_CONFIG) { $env:LC_CONFIG } else { 'Debug' }
 $QtVer   = '6.8.3'
 $QtArch  = 'win64_msvc2022_64'
@@ -95,7 +97,11 @@ function Stop-LlamaCodeProcesses {
 
 Write-Host ""
 Write-Host "=== LlamaCode bootstrap (Windows) ===" -ForegroundColor Magenta
-Write-Host "Target: $Dir  branch=$Branch  config=$Config"
+if ($Ref -and $Ref -notmatch '^v?[0-9]+\.[0-9]+\.[0-9]+(-debug)?$') {
+    Die "Invalid release ref: $Ref"
+}
+if ($Config -notin @('Debug', 'Release')) { Die "Invalid build config: $Config" }
+Write-Host "Target: $Dir  source=$(if ($Ref) { $Ref } else { $Branch })  config=$Config"
 Write-Host ""
 
 # ── winget (required, cannot self-install) ──────────────────────────────────
@@ -183,13 +189,23 @@ if (Test-Path (Join-Path $Dir '.git')) {
         Write-Host "        Commitealos (o corre con LC_FORCE=1 para descartarlos)." -ForegroundColor Red
         exit 1
     }
-    Info "Repo exists -- pulling latest..."
-    git -C $Dir fetch --depth 1 origin $Branch
-    git -C $Dir checkout $Branch
-    git -C $Dir reset --hard "origin/$Branch"
+    if ($Ref) {
+        Info "Repo exists -- fetching release $Ref..."
+        git -C $Dir fetch --depth 1 origin "refs/tags/${Ref}:refs/tags/${Ref}"
+        if ($LASTEXITCODE -ne 0) { Die "Could not fetch release tag $Ref." }
+        git -C $Dir checkout --detach $Ref
+        if ($LASTEXITCODE -ne 0) { Die "Could not checkout release tag $Ref." }
+        git -C $Dir reset --hard $Ref
+    } else {
+        Info "Repo exists -- pulling branch $Branch..."
+        git -C $Dir fetch --depth 1 origin $Branch
+        git -C $Dir checkout $Branch
+        git -C $Dir reset --hard "origin/$Branch"
+    }
 } else {
     Info "Cloning into $Dir ..."
-    git clone --depth 1 --branch $Branch $Repo $Dir
+    $CloneRef = if ($Ref) { $Ref } else { $Branch }
+    git clone --depth 1 --branch $CloneRef $Repo $Dir
 }
 Ok "source ready"
 

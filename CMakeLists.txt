@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(LlamaCode VERSION 0.1.117 LANGUAGES CXX)
+project(LlamaCode VERSION 0.1.118 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -320,7 +320,9 @@ qt_add_resources(llamacode_core "llamacode_core_assets"
 )
 target_include_directories(llamacode_core PUBLIC src)
 target_compile_definitions(llamacode_core PRIVATE
-    LC_BUNDLED_SKILLS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets/skills")
+    LC_BUNDLED_SKILLS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets/skills"
+    "$<$<CONFIG:Debug>:LC_BUILD_CHANNEL=\"debug\">"
+    "$<$<NOT:$<CONFIG:Debug>>:LC_BUILD_CHANNEL=\"prod\">")
 target_link_libraries(llamacode_core PUBLIC
     Qt6::Core
     Qt6::Quick
@@ -401,7 +403,9 @@ qt_add_executable(LlamaCode
 )
 target_link_libraries(LlamaCode PRIVATE llamacode_core)
 target_compile_definitions(LlamaCode PRIVATE
-    "$<$<CONFIG:Debug>:LC_DEBUG_ICON>")
+    "$<$<CONFIG:Debug>:LC_DEBUG_ICON>"
+    "$<$<CONFIG:Debug>:LC_BUILD_CHANNEL=\"debug\">"
+    "$<$<NOT:$<CONFIG:Debug>>:LC_BUILD_CHANNEL=\"prod\">")
 
 # Debug es el release candidate que se usa a diario. Mantener los símbolos y
 # asserts de Debug, pero optimizar el código nativo: las opciones MSVC por

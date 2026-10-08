@@ -1038,7 +1038,8 @@ ApplicationWindow {
 
                 Text {
                     Layout.fillWidth: true
-                    text: "Version " + (App.updateInfo.version ?? "")
+                    text: "Version " + (App.updateInfo.version ?? "") + " · "
+                          + (App.updateInfo.channelName ?? "Prod")
                     color: Theme.accent
                     font.pixelSize: 13
                     font.bold: true

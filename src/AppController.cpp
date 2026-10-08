@@ -1758,6 +1758,13 @@ AppController::AppController(QObject *parent) : QObject(parent)
     m_gatewayKeepN   = s.value(QStringLiteral("gateway/keepN"), 4).toInt();
     m_gatewayAutoSwap = s.value(QStringLiteral("gateway/autoSwap"), true).toBool();
     m_gatewayLanEnabled = s.value(QStringLiteral("gateway/lanEnabled"), false).toBool();
+    m_updateChannel = s.value(QStringLiteral("updates/channel"),
+                              QStringLiteral("prod")).toString().trimmed().toLower();
+    if (m_updateChannel != QLatin1String("debug")
+        && m_updateChannel != QLatin1String("prod")) {
+        m_updateChannel = QStringLiteral("prod");
+        s.setValue(QStringLiteral("updates/channel"), m_updateChannel);
+    }
     m_idleAutoStopMin = s.value(QStringLiteral("server/idleAutoStopMin"), 0).toInt();
     m_gitAvailable      = !QStandardPaths::findExecutable(QStringLiteral("git")).isEmpty();
 
@@ -12043,8 +12050,10 @@ void AppController::checkForUpdates()
     if (m_updateReply)
         return;
 
-    const QUrl url(QStringLiteral(
-        "https://api.github.com/repos/cristianlukas/UNLZ_Llamacode/releases/latest"));
+    const QString requestedChannel = m_updateChannel;
+    const QUrl url(requestedChannel == QLatin1String("debug")
+        ? QStringLiteral("https://api.github.com/repos/cristianlukas/UNLZ_Llamacode/releases?per_page=50")
+        : QStringLiteral("https://api.github.com/repos/cristianlukas/UNLZ_Llamacode/releases/latest"));
     QNetworkRequest req(url);
     req.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
     req.setRawHeader("Accept", "application/vnd.github+json");
@@ -12053,21 +12062,51 @@ void AppController::checkForUpdates()
     if (!m_nam)
         m_nam = new QNetworkAccessManager(this);
     m_updateReply = m_nam->get(req);
-    connect(m_updateReply, &QNetworkReply::finished, this, [this]() {
+    connect(m_updateReply, &QNetworkReply::finished, this, [this, requestedChannel]() {
         QPointer<QNetworkReply> reply = m_updateReply;
         m_updateReply = nullptr;
 
         QJsonObject flag;
         if (reply && reply->error() == QNetworkReply::NoError) {
-            const QJsonObject release = QJsonDocument::fromJson(reply->readAll()).object();
-            flag = githubReleaseToUpdateFlag(release);
+            const QJsonDocument document = QJsonDocument::fromJson(reply->readAll());
+            if (requestedChannel == QLatin1String("debug"))
+                flag = githubReleasesToUpdateFlag(document.array(), requestedChannel);
+            else
+                flag = githubReleaseToUpdateFlag(document.object(), requestedChannel);
         }
         if (reply)
             reply->deleteLater();
-        if (flag.isEmpty())
+        if (requestedChannel != m_updateChannel) {
+            checkForUpdates();
+            return;
+        }
+        if (flag.isEmpty() && requestedChannel == QLatin1String("prod"))
             flag = readBundledUpdateFlag();
         applyUpdateFlag(flag);
     });
+}
+
+void AppController::setUpdateChannel(const QString &channel)
+{
+    const QString normalized = channel.trimmed().toLower();
+    if ((normalized != QLatin1String("prod") && normalized != QLatin1String("debug"))
+        || normalized == m_updateChannel)
+        return;
+    m_updateChannel = normalized;
+    QSettings().setValue(QStringLiteral("updates/channel"), m_updateChannel);
+    m_updateAvailable = false;
+    m_updateInfo.clear();
+    emit updateCheckChanged();
+    checkForUpdates();
+}
+
+QString AppController::buildChannel() const
+{
+#ifdef LC_BUILD_CHANNEL
+    return QStringLiteral(LC_BUILD_CHANNEL);
+#else
+    return QStringLiteral("prod");
+#endif
 }
 
 // Raiz de la instalacion (el checkout) a partir del exe: build/<Config>/LlamaCode.exe
@@ -12078,7 +12117,8 @@ QString AppController::installRootForExePath(const QString &exePath)
     QDir dir(QFileInfo(exePath).absolutePath());
     for (int up = 0; up < 4; ++up) {
         if (QFile::exists(dir.filePath(QStringLiteral("CMakeLists.txt")))
-            && QFile::exists(dir.filePath(QStringLiteral("scripts/bootstrap.ps1")))) {
+            && (QFile::exists(dir.filePath(QStringLiteral("scripts/bootstrap.ps1")))
+                || QFile::exists(dir.filePath(QStringLiteral("scripts/bootstrap.sh"))))) {
             return QDir::toNativeSeparators(dir.absolutePath());
         }
         if (!dir.cdUp())
@@ -12087,18 +12127,26 @@ QString AppController::installRootForExePath(const QString &exePath)
     return QString();
 }
 
-QJsonObject AppController::githubReleaseToUpdateFlag(const QJsonObject &release)
+QJsonObject AppController::githubReleaseToUpdateFlag(const QJsonObject &release,
+                                                      const QString &channel)
 {
-    if (release.value(QStringLiteral("draft")).toBool()
-        || release.value(QStringLiteral("prerelease")).toBool()) {
+    const QString normalizedChannel = channel.trimmed().toLower();
+    const bool debugChannel = normalizedChannel == QLatin1String("debug");
+    if ((normalizedChannel != QLatin1String("prod") && !debugChannel)
+        || release.value(QStringLiteral("draft")).toBool()
+        || release.value(QStringLiteral("prerelease")).toBool() != debugChannel) {
         return {};
     }
 
-    QString releaseVersion = release.value(QStringLiteral("tag_name")).toString().trimmed();
-    if (releaseVersion.startsWith(QLatin1Char('v'), Qt::CaseInsensitive))
-        releaseVersion.remove(0, 1);
-    if (QVersionNumber::fromString(releaseVersion).isNull())
+    const QString tag = release.value(QStringLiteral("tag_name")).toString().trimmed();
+    const QRegularExpression tagPattern(debugChannel
+        ? QStringLiteral("^v?(\\d+\\.\\d+\\.\\d+)-debug$")
+        : QStringLiteral("^v?(\\d+\\.\\d+\\.\\d+)$"),
+        QRegularExpression::CaseInsensitiveOption);
+    const QRegularExpressionMatch tagMatch = tagPattern.match(tag);
+    if (!tagMatch.hasMatch())
         return {};
+    const QString releaseVersion = tagMatch.captured(1);
 
     const QString body = release.value(QStringLiteral("body")).toString().trimmed();
     QVariantList changelog;
@@ -12122,6 +12170,8 @@ QJsonObject AppController::githubReleaseToUpdateFlag(const QJsonObject &release)
     return QJsonObject{
         {QStringLiteral("newVersion"), true},
         {QStringLiteral("version"), releaseVersion},
+        {QStringLiteral("channel"), normalizedChannel},
+        {QStringLiteral("sourceRef"), tag},
         {QStringLiteral("title"),
          release.value(QStringLiteral("name")).toString(
              QStringLiteral("Nueva version disponible"))},
@@ -12130,9 +12180,34 @@ QJsonObject AppController::githubReleaseToUpdateFlag(const QJsonObject &release)
         {QStringLiteral("releaseUrl"),
          release.value(QStringLiteral("html_url")).toString()},
         {QStringLiteral("updateUrl"),
+#ifdef Q_OS_WIN
          QStringLiteral("https://raw.githubusercontent.com/cristianlukas/"
-                        "UNLZ_Llamacode/main/scripts/bootstrap.ps1")}
+                        "UNLZ_Llamacode/main/scripts/bootstrap.ps1")
+#else
+         QStringLiteral("https://raw.githubusercontent.com/cristianlukas/"
+                        "UNLZ_Llamacode/main/scripts/update-linux.sh")
+#endif
+        }
     };
+}
+
+QJsonObject AppController::githubReleasesToUpdateFlag(const QJsonArray &releases,
+                                                      const QString &channel)
+{
+    QJsonObject newest;
+    QVersionNumber newestVersion;
+    for (const QJsonValue &value : releases) {
+        const QJsonObject candidate = githubReleaseToUpdateFlag(value.toObject(), channel);
+        if (candidate.isEmpty())
+            continue;
+        const QVersionNumber candidateVersion =
+            QVersionNumber::fromString(candidate.value(QStringLiteral("version")).toString());
+        if (newest.isEmpty() || QVersionNumber::compare(candidateVersion, newestVersion) > 0) {
+            newest = candidate;
+            newestVersion = candidateVersion;
+        }
+    }
+    return newest;
 }
 
 void AppController::applyUpdateFlag(const QJsonObject &flag)
@@ -12142,11 +12217,14 @@ void AppController::applyUpdateFlag(const QJsonObject &flag)
     const bool flagged = flag.value(QStringLiteral("newVersion")).toBool(false);
     const QVersionNumber currentV = QVersionNumber::fromString(version());
     const QVersionNumber latestV = QVersionNumber::fromString(latest);
+    const QString channel = flag.value(QStringLiteral("channel")).toString(m_updateChannel);
     const bool newer = flagged && !latest.isEmpty()
-        && QVersionNumber::compare(latestV, currentV) > 0;
+        && (QVersionNumber::compare(latestV, currentV) > 0
+            || (QVersionNumber::compare(latestV, currentV) == 0
+                && channel != buildChannel()));
 
     QSettings s;
-    const QString skipUntil = s.value(QStringLiteral("updates/skipUntilVersion")).toString();
+    const QString skipUntil = s.value(QStringLiteral("updates/skipUntil/") + channel).toString();
     if (!newer || skipUntil == latest) {
         if (m_updateAvailable || !m_updateInfo.isEmpty()) {
             m_updateAvailable = false;
@@ -12157,6 +12235,10 @@ void AppController::applyUpdateFlag(const QJsonObject &flag)
     }
 
     info[QStringLiteral("version")] = latest;
+    info[QStringLiteral("channel")] = channel;
+    info[QStringLiteral("channelName")] = channel == QLatin1String("debug")
+        ? QStringLiteral("Debug") : QStringLiteral("Prod");
+    info[QStringLiteral("sourceRef")] = flag.value(QStringLiteral("sourceRef")).toString();
     info[QStringLiteral("title")] = flag.value(QStringLiteral("title")).toString(QStringLiteral("Nueva version disponible"));
     info[QStringLiteral("summary")] = flag.value(QStringLiteral("summary")).toString();
     info[QStringLiteral("updateUrl")] = flag.value(QStringLiteral("updateUrl")).toString();
@@ -12179,7 +12261,8 @@ bool AppController::handleUpdateDecision(const QString &decision)
 {
     const QString versionToUpdate = m_updateInfo.value(QStringLiteral("version")).toString();
     if (decision == QLatin1String("skipVersion")) {
-        writeSetting(QStringLiteral("updates/skipUntilVersion"), versionToUpdate);
+        const QString channel = m_updateInfo.value(QStringLiteral("channel"), m_updateChannel).toString();
+        writeSetting(QStringLiteral("updates/skipUntil/") + channel, versionToUpdate);
     } else if (decision == QLatin1String("nextStart")) {
         // La deteccion vuelve a ejecutarse al proximo inicio.
     } else if (decision == QLatin1String("updateNow")) {
@@ -12188,6 +12271,12 @@ bool AppController::handleUpdateDecision(const QString &decision)
 
         writeSetting(QStringLiteral("updates/skipUntilVersion"), QString());
         QString scriptUrl = m_updateInfo.value(QStringLiteral("updateUrl")).toString();
+        const QString sourceRef = m_updateInfo.value(QStringLiteral("sourceRef")).toString();
+        const QString channel = m_updateInfo.value(QStringLiteral("channel"), m_updateChannel).toString();
+        if (sourceRef.isEmpty()
+            || !QRegularExpression(QStringLiteral("^v?\\d+\\.\\d+\\.\\d+(?:-debug)?$"),
+                                   QRegularExpression::CaseInsensitiveOption).match(sourceRef).hasMatch())
+            return false;
         if (scriptUrl.isEmpty())
             scriptUrl = QStringLiteral("https://raw.githubusercontent.com/cristianlukas/UNLZ_Llamacode/main/scripts/bootstrap.ps1");
         bool updateStarted = false;
@@ -12197,10 +12286,10 @@ bool AppController::handleUpdateDecision(const QString &decision)
         // actualiza". Apuntarlo a la instalacion que esta corriendo.
         const QString installRoot =
             installRootForExePath(QCoreApplication::applicationFilePath());
-        const QString config = QFileInfo(QCoreApplication::applicationFilePath())
-                .dir().dirName().compare(QStringLiteral("Release"), Qt::CaseInsensitive) == 0
-            ? QStringLiteral("Release") : QStringLiteral("Debug");
+        const QString config = channel == QLatin1String("debug")
+            ? QStringLiteral("Debug") : QStringLiteral("Release");
         QString command = QStringLiteral("$env:LC_CONFIG='%1'; ").arg(config);
+        command += QStringLiteral("$env:LC_REF='%1'; ").arg(sourceRef);
         if (!installRoot.isEmpty()) {
             QString escaped = installRoot;
             escaped.replace(QLatin1Char('\''), QLatin1String("''"));
@@ -12216,10 +12305,21 @@ bool AppController::handleUpdateDecision(const QString &decision)
              QStringLiteral("-ExecutionPolicy"), QStringLiteral("Bypass"),
              QStringLiteral("-Command"), command}, workingDirectory);
 #else
-        const QString releaseUrl = m_updateInfo.value(QStringLiteral("releaseUrl")).toString();
-        updateStarted = QDesktopServices::openUrl(QUrl(releaseUrl.isEmpty()
-            ? QStringLiteral("https://github.com/cristianlukas/UNLZ_Llamacode/releases/latest")
-            : releaseUrl));
+        auto shellQuote = [](QString value) {
+            value.replace(QLatin1Char('\''), QStringLiteral("'\"'\"'"));
+            return QLatin1Char('\'') + value + QLatin1Char('\'');
+        };
+        const QString installRoot = installRootForExePath(QCoreApplication::applicationFilePath());
+        const QString config = channel == QLatin1String("debug")
+            ? QStringLiteral("Debug") : QStringLiteral("Release");
+        const QString workingDirectory = installRoot.isEmpty() ? QDir::homePath() : installRoot;
+        const QString command = QStringLiteral(
+            "set -o pipefail; curl -fsSL %1 | LC_DIR=%2 LC_REF=%3 LC_CONFIG=%4 bash")
+            .arg(shellQuote(scriptUrl), shellQuote(installRoot), shellQuote(sourceRef), shellQuote(config));
+        updateStarted = QProcess::startDetached(QStringLiteral("bash"),
+            {QStringLiteral("-lc"), command}, workingDirectory);
+        if (updateStarted)
+            QCoreApplication::quit();
 #endif
         if (!updateStarted)
             return false;

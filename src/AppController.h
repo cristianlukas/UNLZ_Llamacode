@@ -41,6 +41,7 @@
 #include <QElapsedTimer>
 #include <QFutureWatcher>
 #include <QVariantMap>
+#include <QJsonArray>
 #include <QJsonObject>
 #include <QHash>
 #include <QList>
@@ -263,6 +264,8 @@ class AppController : public QObject
     Q_PROPERTY(QString dictationText READ dictationText NOTIFY dictationChanged)
     Q_PROPERTY(bool updateAvailable READ updateAvailable NOTIFY updateCheckChanged)
     Q_PROPERTY(QVariantMap updateInfo READ updateInfo NOTIFY updateCheckChanged)
+    Q_PROPERTY(QString updateChannel READ updateChannel WRITE setUpdateChannel NOTIFY updateCheckChanged)
+    Q_PROPERTY(QString buildChannel READ buildChannel CONSTANT)
     // Identidad de plataforma fijada por los defines Q_OS_* del build de Qt.
     // QML usa este valor para seleccionar recursos que no son portables entre
     // Windows y Linux sin duplicar Main.qml.
@@ -610,10 +613,16 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.117"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.118"); }
+    QString updateChannel() const { return m_updateChannel; }
+    void setUpdateChannel(const QString &channel);
+    QString buildChannel() const;
     // Convierte la respuesta de /repos/.../releases/latest al formato interno
     // del popup. Público para poder validar el contrato sin hacer red en tests.
-    static QJsonObject githubReleaseToUpdateFlag(const QJsonObject &release);
+    static QJsonObject githubReleaseToUpdateFlag(const QJsonObject &release,
+                                                 const QString &channel = QStringLiteral("prod"));
+    static QJsonObject githubReleasesToUpdateFlag(const QJsonArray &releases,
+                                                 const QString &channel);
     static bool shouldReplaceBundledBenchmarkForTest(const QJsonObject &source,
                                                      const QJsonObject &destination);
     static QVariantList benchmarkBest25ForTest(const QVariantList &results);
@@ -2409,5 +2418,6 @@ private:
     bool m_updateAvailable = false;
     QVariantMap m_updateInfo;
     QNetworkReply *m_updateReply = nullptr;
+    QString m_updateChannel = QStringLiteral("prod");
     void applyUpdateFlag(const QJsonObject &flag);
 };

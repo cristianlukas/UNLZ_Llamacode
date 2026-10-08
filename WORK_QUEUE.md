@@ -49,6 +49,9 @@ El token identifica al trabajador lógico; un PID de un comando breve no sirve c
 
 ## Cola
 
+| Q-20261008-UPDATE-CHANNEL-SELECTION | Activa | Crear canales Prod/Debug y selector de origen de actualización en Configuración; publicar release Debug | Codex current conversation | 2026-10-08T20:00:00Z | Token `a3c9d901-ea15-49c0-af96-f431c7db7744`; C++/QML, workflows y publicación GitHub; sin GPU | En curso.
+
+
 | Q-20261008-LAN-SERVER-NO-PROFILE | Completa | Permitir iniciar Gateway LAN sin elegir/cargar un perfil local y dejar que el cliente seleccione un perfil anunciado | Codex current conversation | 2026-10-08T19:45:00Z | Token `6b532992-c8e7-4dcb-b3c5-f55c9413f2ce`; QML/C++ tests y build Linux; sin GPU, benchmark ni carga de inferencia | Lanzar ofrece `Iniciar LAN sin cargar perfil`, que activa sólo Gateway LAN autenticado y deja que el catálogo publique modelos `ready`; el primer request remoto puede auto-cargar el ID solicitado. El botón anterior ahora dice `Iniciar LAN con este perfil` y conserva inicio inmediato. Regresión `discoveryListsProfilesBeforeFirstModelLoad`; README y `docs/astra-strata.md` actualizados. `./scripts/build-linux.sh Debug` OK: `/home/cristian/.cache/llamacode/build_linux/LlamaCode` (115209408 bytes). `test_gateway` y `test_system_profiles`: 2/2 OK; gate completo se interrumpió porque `test_agent_tools` quedó bloqueado >3 min en espera Qt (los otros 76/77 pasaron). `git diff --check` OK. Archivos: `qml/pages/LaunchPage.qml`, `tests/test_gateway.cpp`, `README.md`, `docs/astra-strata.md`.
 
 

@@ -1,18 +1,15 @@
-# release.ps1 - publica un release de GitHub con la version actual del repo.
-#
-# El detector de updates del app (AppController::checkForUpdates) pide
-# /releases/latest a la API de GitHub y comparra tag_name contra su propia
-# version. Sin releases publicados ese endpoint da 404 y el app cae al
-# latest.json bundleado, que trae newVersion=false: nunca avisa nada.
+# release.ps1 - publica un release Prod estable o Debug prerelease.
 #
 # Uso:
 #   powershell -File tools\release.ps1                 # dry run: muestra el plan
 #   powershell -File tools\release.ps1 -Publish        # taggea, pushea y publica
+#   powershell -File tools\release.ps1 -Channel Debug -Publish
 #   powershell -File tools\release.ps1 -Version 0.2.0 -Publish
 #
 # ASCII puro a proposito (ver "los scripts de infra PS son ASCII puro" en CLAUDE.md).
 param(
     [string]$Version = "",
+    [ValidateSet('Prod', 'Debug')][string]$Channel = 'Prod',
     [switch]$Publish,
     [switch]$Force
 )
@@ -35,14 +32,15 @@ if (-not $Version) {
 if ($Version -notmatch '^[0-9]+\.[0-9]+\.[0-9]+$') {
     Fail "Version invalida: '$Version' (se espera x.y.z)"
 }
-$tag = "v$Version"
+$tag = if ($Channel -eq 'Debug') { "v$Version-debug" } else { "v$Version" }
 
 # ---- Estado del repo --------------------------------------------------------
 Push-Location $root
 try {
     $dirty = @(git status --porcelain | Where-Object { $_ })
     $existing = @(git tag --list $tag)
-    $prevTag = (git tag --list 'v*' --sort=-v:refname | Select-Object -First 1)
+    $tagPattern = if ($Channel -eq 'Debug') { '^v[0-9]+\.[0-9]+\.[0-9]+-debug$' } else { '^v[0-9]+\.[0-9]+\.[0-9]+$' }
+    $prevTag = git tag --list 'v*' --sort=-v:refname | Where-Object { $_ -match $tagPattern } | Select-Object -First 1
 
     if ($existing -and -not $Force) {
         Fail "El tag $tag ya existe. Bumpear la version o usar -Force."
@@ -54,10 +52,10 @@ try {
     if ($log.Count -gt 40) { $log = $log[0..39] + '- ...' }
     if (-not $log) { $log = @('- Sin cambios registrados.') }
 
-    $notesPath = Join-Path ([IO.Path]::GetTempPath()) "llamacode-release-$Version.md"
+    $notesPath = Join-Path ([IO.Path]::GetTempPath()) "llamacode-release-$Channel-$Version.md"
     ($log -join "`n") | Set-Content -Path $notesPath -Encoding UTF8
 
-    Write-Host "== release $tag =="
+    Write-Host "== release $tag ($Channel) =="
     Write-Host "  repo    : $root"
     Write-Host "  desde   : $(if ($prevTag) { $prevTag } else { '(primer release)' })"
     Write-Host "  commits : $($log.Count)"
@@ -79,18 +77,19 @@ try {
     }
 
     if (-not $existing) {
-        git tag -a $tag -m "LlamaCode $Version"
+        git tag -a $tag -m "LlamaCode $Version $Channel"
         if ($LASTEXITCODE -ne 0) { Fail 'git tag fallo' }
     }
     git push origin $tag
     if ($LASTEXITCODE -ne 0) { Fail 'git push del tag fallo' }
 
-    gh release create $tag --title "LlamaCode $Version" --notes-file $notesPath
+    $releaseArgs = @('release', 'create', $tag, '--title', "LlamaCode $Version $Channel", '--notes-file', $notesPath)
+    if ($Channel -eq 'Debug') { $releaseArgs += '--prerelease' }
+    gh @releaseArgs
     if ($LASTEXITCODE -ne 0) { Fail 'gh release create fallo' }
 
-    Write-Host "[OK] Release $tag publicado."
-    Write-Host '[INFO] El app avisa solo a instalaciones con version MENOR a la del tag.'
-    Write-Host '[INFO] Tu build local se auto-bumpea en cada compilada, asi que ahi no vas a ver el aviso.'
+    Write-Host "[OK] Release $tag ($Channel) publicado."
+    Write-Host '[INFO] The app filters releases by the configured update channel and builds the matching configuration.'
 }
 finally {
     Pop-Location
