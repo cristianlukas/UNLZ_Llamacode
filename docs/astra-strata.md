@@ -42,12 +42,15 @@ termina en 60 segundos, el supervisor fuerza su detención.
 
 ### Servir ASTRA a otro LlamaCode por LAN
 
-En Lanzar, con ASTRA seleccionado y el servidor detenido, usá **Iniciar servidor
-LAN**. La app habilita el Gateway autenticado en la LAN y luego inicia ASTRA en
-modo servidor, sin iniciar un agente local. El gateway es el único endpoint
-expuesto a la red; Strata sigue escuchando en loopback. En **Ajustes → Gateway**
-vas a ver la URL IPv4 y la API key generada. Permití el puerto del gateway sólo
-en la red privada de confianza y compartí la key sólo con ese cliente.
+En Lanzar podés usar **Iniciar LAN sin cargar perfil** aunque no haya un perfil
+seleccionado. La app inicia sólo el Gateway autenticado; publica los perfiles
+locales que estén listos, sin cargar un modelo. El cliente elige uno y el primer
+request lo inicia bajo demanda. Si preferís iniciar ASTRA inmediatamente,
+seleccionalo y usá **Iniciar LAN con este perfil**. Ningún flujo inicia un agente
+local; el gateway es el único endpoint expuesto a la red y Strata sigue
+escuchando en loopback. En **Ajustes → Gateway** vas a ver la URL IPv4 y la API
+key generada. Permití el puerto del gateway sólo en la red privada de confianza
+y compartí la key sólo con ese cliente.
 
 En la otra instancia, elegí **Lanzar → Usar un servidor LAN**, buscá este host y
 seleccioná **ASTRA · Strata IQ3_S · Qwen3.8 Flash Next**. El cliente crea un

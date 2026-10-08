@@ -1594,6 +1594,14 @@ agente local. Una vez aceptada la conexión, Chat, Agente, Investigación, Tasks
 Charla se habilitan también en el cliente LAN: su disponibilidad depende del
 backend remoto activo y no de que exista un proceso `llama-server` local.
 
+En la PC anfitriona también se puede usar **Lanzar → Iniciar LAN sin cargar
+perfil**. Esto levanta únicamente el Gateway autenticado y anuncia los perfiles
+locales listos; no requiere elegir un perfil ni inicia un motor. El cliente puede
+seleccionar cualquiera de los IDs publicados. Cuando su primer request incluye
+el ID elegido, el anfitrión inicia ese perfil y lo carga bajo demanda. El botón
+**Iniciar LAN con este perfil** conserva el flujo de inicio inmediato del perfil
+seleccionado.
+
 El botón **Abrir OpenCode GUI en mi GPU** permite elegir perfil y proyecto. LlamaCode
 inyecta una configuración runtime mediante `OPENCODE_CONFIG_CONTENT`, selecciona
 `llamacode/<launch-profile-id>` y pasa la API key por una variable de entorno. No

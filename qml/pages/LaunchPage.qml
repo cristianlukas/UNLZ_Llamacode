@@ -40,6 +40,13 @@ Item {
             App.startServer(launchId)
     }
 
+    function startLanGatewayOnly() {
+        // Publica el catálogo listo sin cargar un motor local. El primer
+        // request remoto indica el id y gatewayEnsureModel hace el auto-load.
+        App.gatewayLanEnabled = true
+        App.gatewayEnabled = true
+    }
+
     function syncToActiveLaunch() {
         const id = App.activeLaunchId
         if (!id || id.length === 0) return
@@ -771,12 +778,30 @@ Item {
                 }
 
                 LcButton {
-                    text: "Iniciar servidor LAN"
+                    text: "Iniciar LAN con este perfil"
                     secondary: true
                     Layout.fillWidth: true
                     visible: !App.serverRunning && !App.serverStopping
                     enabled: launchCombo.count > 0 && launchCombo.currentValue !== undefined
                     onClicked: root.startWithPortCheck(false, true)
+                }
+
+                LcButton {
+                    text: "Iniciar LAN sin cargar perfil"
+                    secondary: true
+                    Layout.fillWidth: true
+                    visible: !App.serverRunning && !App.serverStopping
+                    enabled: !App.serverStopping
+                    onClicked: root.startLanGatewayOnly()
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    visible: !App.serverRunning
+                    text: "Inicia sólo el Gateway: el cliente elige un perfil disponible y se carga cuando lo solicita."
+                    color: Theme.textMuted
+                    font.pixelSize: 11
+                    wrapMode: Text.WordWrap
                 }
 
                 // --- Router mode (hot-swap entre varios modelos) ---------------

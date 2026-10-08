@@ -25,6 +25,7 @@ private slots:
     void resolveModelMatches();
     void stableModelCatalog();
     void discoveryNeverContainsCredentials();
+    void discoveryListsProfilesBeforeFirstModelLoad();
     void lanHealthRequiresAuthentication();
     void claudeDesktopConfigUsesStableAliases();
     void openCodeConfigUsesEnvironmentSecret();
@@ -194,6 +195,25 @@ void GatewayTests::discoveryNeverContainsCredentials()
                  .contains("secret"));
     QCOMPARE(response.value(QStringLiteral("protocol")).toString(),
              QStringLiteral("llamacode-lan-v1"));
+}
+
+void GatewayTests::discoveryListsProfilesBeforeFirstModelLoad()
+{
+    const QJsonArray profiles{
+        QJsonObject{{"id", "sys-astra-strata-iq3s"}, {"name", "ASTRA IQ3_S"}},
+        QJsonObject{{"id", "launch-sol"}, {"name", "SOL"}}
+    };
+    const QJsonObject response = LlmGateway::discoveryResponse(
+        QStringLiteral("server-pc"), 8088, false, QString(), profiles);
+
+    QVERIFY(!response.value(QStringLiteral("ready")).toBool());
+    QVERIFY(response.value(QStringLiteral("currentModel")).toString().isEmpty());
+    const QJsonArray published = response.value(QStringLiteral("profiles")).toArray();
+    QCOMPARE(published.size(), 2);
+    QCOMPARE(published.at(0).toObject().value(QStringLiteral("id")).toString(),
+             QStringLiteral("sys-astra-strata-iq3s"));
+    QCOMPARE(published.at(1).toObject().value(QStringLiteral("id")).toString(),
+             QStringLiteral("launch-sol"));
 }
 
 void GatewayTests::lanHealthRequiresAuthentication()
