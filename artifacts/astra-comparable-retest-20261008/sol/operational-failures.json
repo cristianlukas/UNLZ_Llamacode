@@ -1,0 +1,42 @@
+{
+  "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+  "profileId": "sol-autoround-int4-r8192-test-20261008",
+  "profileConfigFingerprint": "76486fdf073763e5c901c01eb217cc07527adb623a48c6927745320a44ff954c",
+  "attempts": [
+    {
+      "receipt": "SOL_AutoRound_INT4_reasoning_8192_comparable_retest_3a3221e2-fce5-4501-a0cb-19c8bd4de0b9.json",
+      "score": "invalid for quality",
+      "toolCalls": 0,
+      "elapsedSec": 4.691,
+      "failure": "vLLM HTTP 500 / MTP CUDA device-side assert; engine exited 137, OOMKilled=false"
+    },
+    {
+      "receipt": "SOL_AutoRound_INT4_reasoning_8192_comparable_retest_355ace8e-b62d-4995-be74-b8e3d3ad4a91.json",
+      "score": "invalid for quality",
+      "toolCalls": 0,
+      "elapsedSec": 6.84,
+      "failure": "backend Connection closed following MTP engine failure"
+    },
+    {
+      "receipt": "SOL_AutoRound_INT4_reasoning_8192_comparable_retest_3b8eefb5-708f-4a93-a320-dd3879ee76a2.json",
+      "score": "invalid for quality",
+      "toolCalls": 0,
+      "elapsedSec": 5.442,
+      "failure": "benchmark started before backend health; server completed loading after the benchmark had already ended"
+    },
+    {
+      "receipt": "SOL_AutoRound_INT4_reasoning_8192_comparable_retest_31ad8d1b-881d-4333-a081-d0eb8757f399.json",
+      "score": "invalid for quality",
+      "toolCalls": 0,
+      "elapsedSec": 5.085,
+      "failure": "MTP CUDA device-side assert persisted with --no-async-scheduling; 0 generated files"
+    }
+  ],
+  "diagnosis": {
+    "vllmVersion": "0.27.1",
+    "runtime": "Qwen3.8 AutoRound INT4 TP2, built-in MTP n=4",
+    "trace": "EngineCore.sample_tokens -> worker device-side assert; HTTP 500 POST /v1/chat/completions; container exit 137; OOMKilled=false",
+    "mitigationTried": "ASYNC_SCHED=off (translated to --no-async-scheduling), MTP retained; did not resolve the CUDA assert",
+    "classification": "Operational failures, excluded from model quality denominator"
+  }
+}

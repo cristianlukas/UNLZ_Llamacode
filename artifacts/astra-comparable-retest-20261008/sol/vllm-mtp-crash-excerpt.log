@@ -1,0 +1,20 @@
+1075:(EngineCore pid=148) ERROR 10-08 15:52:50 [core.py:1351] RuntimeError: Worker failed with error 'CUDA error: device-side assert triggered
+1125:(Worker_TP0 pid=159) torch.AcceleratorError: CUDA error: device-side assert triggered
+1132:  what():  CUDA error: device-side assert triggered
+1193:(APIServer pid=1) INFO:     172.18.0.1:49606 - "POST /v1/chat/completions HTTP/1.1" 500 Internal Server Error
+1195:(APIServer pid=1) INFO:     172.18.0.1:49606 - "POST /v1/chat/completions HTTP/1.1" 500 Internal Server Error
+2258:(Worker_TP0 pid=103) ERROR 10-08 15:55:46 [multiproc_executor.py:1018]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu_worker.py", line 1015, in sample_tokens
+2259:(Worker_TP0 pid=103) ERROR 10-08 15:55:46 [multiproc_executor.py:1018]     return self.model_runner.sample_tokens(grammar_output)
+2264:(Worker_TP0 pid=103) ERROR 10-08 15:55:46 [multiproc_executor.py:1018]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu_model_runner.py", line 4736, in sample_tokens
+2272:(Worker_TP0 pid=103) ERROR 10-08 15:55:46 [multiproc_executor.py:1018] torch.AcceleratorError: CUDA error: device-side assert triggered
+2284:(Worker_TP0 pid=103) ERROR 10-08 15:55:46 [multiproc_executor.py:1018]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu_worker.py", line 1015, in sample_tokens
+2285:(Worker_TP0 pid=103) ERROR 10-08 15:55:46 [multiproc_executor.py:1018]     return self.model_runner.sample_tokens(grammar_output)
+2290:(Worker_TP0 pid=103) ERROR 10-08 15:55:46 [multiproc_executor.py:1018]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu_model_runner.py", line 4736, in sample_tokens
+2298:(Worker_TP0 pid=103) ERROR 10-08 15:55:46 [multiproc_executor.py:1018] torch.AcceleratorError: CUDA error: device-side assert triggered
+2307:(EngineCore pid=92) ERROR 10-08 15:55:46 [core.py:1351] EngineCore encountered a fatal error.
+2319:(EngineCore pid=92) ERROR 10-08 15:55:46 [core.py:1351]     model_output = self.model_executor.sample_tokens(grammar_output)
+2321:(EngineCore pid=92) ERROR 10-08 15:55:46 [core.py:1351]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/executor/multiproc_executor.py", line 336, in sample_tokens
+2340:(EngineCore pid=92) ERROR 10-08 15:55:46 [core.py:1351] RuntimeError: Worker failed with error 'CUDA error: device-side assert triggered
+2375:(Worker_TP0 pid=103) torch.AcceleratorError: CUDA error: device-side assert triggered
+2397:  what():  CUDA error: device-side assert triggered
+2458:(APIServer pid=1) INFO:     172.18.0.1:58562 - "POST /v1/chat/completions HTTP/1.1" 500 Internal Server Error

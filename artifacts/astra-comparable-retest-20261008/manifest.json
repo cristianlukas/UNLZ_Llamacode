@@ -145,5 +145,30 @@
     "modelProfileId": "f1a6c4d8-9e2b-4a73-b5c1-0d8f6e2a7419"
   },
   "isolatedLaunchesSha256": "674526faaa0b78ac9752c7743a06ccc7d4589ddf4f1688cf89877fcb1e488c3e",
-  "archivePolicy": "Full local profile snapshots omitted; RESULTS.md and receipts preserve exact relevant settings and fingerprints without committing unrelated personal profiles."
+  "archivePolicy": "Full local profile snapshots omitted; RESULTS.md and receipts preserve exact relevant settings and fingerprints without committing unrelated personal profiles.",
+  "solAlignedComparison": {
+    "date": "2026-10-08",
+    "suiteId": "qwen38_taskflow_ultra_ast_vs_sol_20261006",
+    "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+    "solProfileId": "sol-autoround-int4-r8192-test-20261008",
+    "solProfileConfigFingerprint": "76486fdf073763e5c901c01eb217cc07527adb623a48c6927745320a44ff954c",
+    "solValidRuns": 1,
+    "solValidScore": "7/13",
+    "solValidElapsedSec": 138.365,
+    "solInvalidOperationalAttempts": 4,
+    "astraValidRuns": 2,
+    "astraScores": [
+      "13/13",
+      "13/13"
+    ],
+    "astraElapsedSec": [
+      287.296,
+      333.456
+    ],
+    "classification": "single coding benchmark; ASTRA stronger quality completion, SOL faster valid sample; no global intelligence claim",
+    "receipts": [
+      "sol/sol_r8192_three_repairs_ultra.json",
+      "sol/operational-failures.json"
+    ]
+  }
 }
