@@ -6,4 +6,5 @@ LcButton 1.0 LcButton.qml
 LcTextField 1.0 LcTextField.qml
 LcComboBox 1.0 LcComboBox.qml
 LcSwitch 1.0 LcSwitch.qml
+LcScrollBar 1.0 LcScrollBar.qml
 PageHeader 1.0 PageHeader.qml

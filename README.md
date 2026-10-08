@@ -1773,9 +1773,9 @@ agrupe la ventana abierta con el icono pineado.
 
 La aplicación inicia por defecto en **Normal**: no activa muestreo periódico de
 memoria/CPU ni escritura de telemetría de diagnóstico. El splash nativo cubre la
-carga de QML y el escaneo inicial; después del primer arranque las páginas se
-precalientan gradualmente en memoria para que cambiar de sección no tenga que
-crear el árbol QML por primera vez.
+carga de QML y el escaneo inicial. Las secciones se cargan al visitarlas y
+permanecen listas durante el resto de la sesión, así que la apertura no
+precarga páginas que quizá no se usen.
 
 En Configuración → Rendimiento y diagnóstico se puede activar **Dev**. Ese modo
 registra fases de arranque, RSS/memoria privada, CPU del proceso, intervalo del

@@ -133,10 +133,11 @@ int main(int argc, char *argv[])
     // Pulso del event loop GUI. El modo ampliado registra el último pulso y
     // cualquier pausa >=250 ms, para diagnosticar bloqueos síncronos al volver.
     QTimer *eventLoopProbe = nullptr;
+    auto eventLoopClock = std::make_shared<QElapsedTimer>();
+    auto eventLoopStartedStorage = std::make_shared<bool>(false);
     auto lastTickStorage = std::make_shared<qint64>(0);
     auto lastHeartbeatStorage = std::make_shared<qint64>(0);
     if (!headlessAgent) {
-        auto eventLoopClock = std::make_shared<QElapsedTimer>();
         eventLoopClock->start();
         eventLoopProbe = new QTimer(&app);
         eventLoopProbe->setInterval(100);
@@ -158,8 +159,6 @@ int main(int argc, char *argv[])
                     {{QStringLiteral("sincePreviousTickMs"), gap}});
             }
         });
-        if (devModeAtLaunch || StartupDiagnostics::expandedEnabled())
-            eventLoopProbe->start();
     }
 
     // Companion sin UI: evalúa el mismo AutomationStore/cron y despierta la app
@@ -317,9 +316,21 @@ int main(int argc, char *argv[])
     }
     AppController controller;
     if (eventLoopProbe) {
-        auto refreshProbeState = [eventLoopProbe, &controller]() {
+        auto refreshProbeState = [eventLoopProbe, eventLoopClock, lastTickStorage,
+                                  lastHeartbeatStorage, eventLoopStartedStorage,
+                                  &controller]() {
+            if (!*eventLoopStartedStorage)
+                return;
             const bool enabled = controller.devMode() || controller.expandedLogging();
-            if (enabled && !eventLoopProbe->isActive()) eventLoopProbe->start();
+            if (enabled && !eventLoopProbe->isActive()) {
+                // El monitor puede activarse mucho después del inicio (por ejemplo,
+                // al habilitar log ampliado desde Configuración). No contar ese
+                // tiempo dormido como una pausa real de la interfaz.
+                const qint64 now = eventLoopClock->elapsed();
+                *lastTickStorage = now;
+                *lastHeartbeatStorage = now;
+                eventLoopProbe->start();
+            }
             else if (!enabled && eventLoopProbe->isActive()) eventLoopProbe->stop();
         };
         QObject::connect(&controller, &AppController::devModeChanged, &app, refreshProbeState);
@@ -569,6 +580,15 @@ int main(int argc, char *argv[])
         });
 
     qDebug() << "QML loaded OK — entering event loop elapsedMs=" << startupClock.elapsed();
+    if (eventLoopProbe) {
+        *eventLoopStartedStorage = true;
+        if (devModeAtLaunch || StartupDiagnostics::expandedEnabled()) {
+            const qint64 now = eventLoopClock->elapsed();
+            *lastTickStorage = now;
+            *lastHeartbeatStorage = now;
+            eventLoopProbe->start();
+        }
+    }
     int ret = app.exec();
     qDebug() << "Event loop exited with code" << ret;
     return ret;

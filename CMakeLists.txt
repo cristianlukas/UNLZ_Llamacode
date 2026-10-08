@@ -716,10 +716,13 @@ if (BUILD_TESTS)
         tests/qml/LcTextField.qml
         tests/qml/tst_color_picker.qml
         tests/qml/tst_navigation_policy.qml
+        tests/qml/tst_lazy_page_loader.qml
+        tests/qml/tst_ranking_startup.qml
         tests/qml/tst_benchmark_score.qml
         tests/qml/tst_datalab.qml
         tests/qml/LcComboBox.qml
         tests/qml/LcSwitch.qml
+        qml/components/LcScrollBar.qml
         tests/qml/tst_harness_editor.qml
         qml/components/LcHarnessEditor.qml
         qml/components/NavigationPolicy.js
@@ -754,6 +757,7 @@ if (BUILD_TESTS)
         tests/qml/LcTextField.qml
         tests/qml/LcComboBox.qml
         tests/qml/LcSwitch.qml
+        qml/components/LcScrollBar.qml
         tests/qml/PageHeader.qml
     )
     add_custom_command(
@@ -777,6 +781,21 @@ if (BUILD_TESTS)
 
     add_custom_target(qml_harness ALL DEPENDS ${_lc_qml_harness_copies})
 
+    set(LC_QML_RANKING_PAGE "${LC_QML_HARNESS_DIR}/pages/RankingPage.qml")
+    set(LC_QML_RANKING_SCORE "${LC_QML_HARNESS_DIR}/components/BenchmarkScore.js")
+    add_custom_command(
+        OUTPUT "${LC_QML_RANKING_PAGE}" "${LC_QML_RANKING_SCORE}"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${LC_QML_HARNESS_DIR}/pages"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${LC_QML_HARNESS_DIR}/components"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${CMAKE_CURRENT_SOURCE_DIR}/qml/pages/RankingPage.qml" "${LC_QML_RANKING_PAGE}"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${CMAKE_CURRENT_SOURCE_DIR}/qml/components/BenchmarkScore.js" "${LC_QML_RANKING_SCORE}"
+        DEPENDS qml/pages/RankingPage.qml qml/components/BenchmarkScore.js
+        COMMENT "Staging RankingPage for its startup binding regression")
+    add_custom_target(qml_ranking_harness ALL
+                     DEPENDS "${LC_QML_RANKING_PAGE}" "${LC_QML_RANKING_SCORE}")
+
     add_test(NAME qml_color_picker
              COMMAND "${_lc_qt_bin}/qml" -I "${LC_QML_HARNESS_DIR}"
                      "${LC_QML_HARNESS_DIR}/tst_color_picker.qml")
@@ -790,6 +809,20 @@ if (BUILD_TESTS)
     set_tests_properties(qml_navigation_policy PROPERTIES
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1"
         FAIL_REGULAR_EXPRESSION "FAIL |ReferenceError|Unable to assign")
+
+    add_test(NAME qml_lazy_page_loader
+             COMMAND "${_lc_qt_bin}/qml" -I "${LC_QML_HARNESS_DIR}"
+                     "${LC_QML_HARNESS_DIR}/tst_lazy_page_loader.qml")
+    set_tests_properties(qml_lazy_page_loader PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1"
+        FAIL_REGULAR_EXPRESSION "FAIL |ReferenceError|Unable to assign|Binding loop detected")
+
+    add_test(NAME qml_ranking_startup
+             COMMAND "${_lc_qt_bin}/qml" -I "${LC_QML_HARNESS_DIR}"
+                     "${LC_QML_HARNESS_DIR}/tst_ranking_startup.qml")
+    set_tests_properties(qml_ranking_startup PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1"
+        FAIL_REGULAR_EXPRESSION "FAIL |ReferenceError|Unable to assign|Binding loop detected")
 
     add_test(NAME qml_benchmark_score
              COMMAND "${_lc_qt_bin}/qml" -I "${LC_QML_HARNESS_DIR}"

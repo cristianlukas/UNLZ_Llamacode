@@ -27,6 +27,8 @@ QtObject {
     // aunque todos los asserts pasen.
     property string borderColor: "#313244"
     property string warnText: "#f9e2af"
+    property string successText: "#a6e3a1"
+    property string errorText: "#f38ba8"
 
     function normalizeHex(s) {
         var t = String(s).trim()

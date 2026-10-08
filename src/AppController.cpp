@@ -22,6 +22,7 @@
 #  include <signal.h>
 #endif
 #include <QProcess>
+#include <QElapsedTimer>
 #include <QTcpServer>
 #include <QHostAddress>
 #include <QNetworkInterface>
@@ -2060,8 +2061,12 @@ void AppController::runStartupScan()
     capturePerformanceSample(QStringLiteral("startup_begin"));
     emit startupChanged();
 
+    QElapsedTimer phaseTimer;
+    phaseTimer.start();
     m_binaries.refresh();
     m_roots.refresh();
+    m_startupTimings.insert(QStringLiteral("registriesRefreshMs"), phaseTimer.elapsed());
+    qInfo() << "Startup phase registries_refresh elapsedMs=" << phaseTimer.elapsed();
 
     // Cada bloque corre en un turno distinto del event loop. La ventana ya está
     // visible y puede pintar/procesar input entre fases; no se cambia la
@@ -2070,12 +2075,18 @@ void AppController::runStartupScan()
         m_startupStatus = QStringLiteral("Detectando hardware…");
         capturePerformanceSample(QStringLiteral("startup_hardware_begin"));
         emit startupChanged();
+        QElapsedTimer hardwareTimer;
+        hardwareTimer.start();
         rescanHardware();
+        m_startupTimings.insert(QStringLiteral("hardwareDispatchMs"), hardwareTimer.elapsed());
+        qInfo() << "Startup phase hardware_dispatch elapsedMs=" << hardwareTimer.elapsed();
 
         const QString dbp = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)
                             + QStringLiteral("/model_catalog.db");
         int dbRows = -1; QString dbErr; bool opened = false;
         const QString cn = QStringLiteral("diagcat_%1").arg(QCoreApplication::applicationPid());
+        QElapsedTimer catalogDiagnosticTimer;
+        catalogDiagnosticTimer.start();
         {
             QSqlDatabase d = QSqlDatabase::addDatabase(QStringLiteral("QSQLITE"), cn);
             d.setDatabaseName(dbp);
@@ -2089,6 +2100,8 @@ void AppController::runStartupScan()
             }
         }
         QSqlDatabase::removeDatabase(cn);
+        m_startupTimings.insert(QStringLiteral("catalogDiagnosticMs"), catalogDiagnosticTimer.elapsed());
+        qInfo() << "Startup phase catalog_diagnostic elapsedMs=" << catalogDiagnosticTimer.elapsed();
         capturePerformanceSample(QStringLiteral("startup_catalog_diagnostic"));
         appendServerEvent(QStringLiteral("lifecycle"),
             QStringLiteral("catalog diag: inMemory=%1 dbRows=%2 dbOpen=%3 path=%4 err=%5 driversAvail=%6")
@@ -2101,6 +2114,8 @@ void AppController::runStartupScan()
             m_startupStatus = QStringLiteral("Actualizando catálogo de modelos…");
             capturePerformanceSample(QStringLiteral("startup_catalog_begin"));
             emit startupChanged();
+            QElapsedTimer catalogScanDispatchTimer;
+            catalogScanDispatchTimer.start();
             bool scanned = false;
             if (m_roots.count() > 0 && m_catalog.count() == 0) {
                 m_roots.scanAll();
@@ -2118,6 +2133,8 @@ void AppController::runStartupScan()
             }
             if (!scanned)
                 m_roots.scanStartupRoots();
+            m_startupTimings.insert(QStringLiteral("catalogScanDispatchMs"), catalogScanDispatchTimer.elapsed());
+            qInfo() << "Startup phase catalog_scan_dispatch elapsedMs=" << catalogScanDispatchTimer.elapsed();
 
             QTimer::singleShot(0, this, [this]() {
                 m_startupStatus = QStringLiteral("Preparando historial y recomendaciones…");
@@ -2126,12 +2143,28 @@ void AppController::runStartupScan()
                 // Cada carga tiene su propio turno. Así una colección grande
                 // de benchmarks o reportes no bloquea consecutivamente el
                 // tray, el repintado y la navegación inicial.
+                QElapsedTimer benchmarkTimer;
+                benchmarkTimer.start();
                 loadBenchmarkResults();
+                m_startupTimings.insert(QStringLiteral("benchmarkLoadMs"), benchmarkTimer.elapsed());
+                qInfo() << "Startup phase benchmark_load elapsedMs=" << benchmarkTimer.elapsed();
+                QElapsedTimer bundledDocsTimer;
+                bundledDocsTimer.start();
                 importBundledBenchmarkDocuments();
+                m_startupTimings.insert(QStringLiteral("bundledBenchmarkImportMs"), bundledDocsTimer.elapsed());
+                qInfo() << "Startup phase bundled_benchmark_import elapsedMs=" << bundledDocsTimer.elapsed();
                 QTimer::singleShot(0, this, [this]() {
+                    QElapsedTimer customBenchmarksTimer;
+                    customBenchmarksTimer.start();
                     loadCustomBenchmarks();
+                    m_startupTimings.insert(QStringLiteral("customBenchmarkLoadMs"), customBenchmarksTimer.elapsed());
+                    qInfo() << "Startup phase custom_benchmark_load elapsedMs=" << customBenchmarksTimer.elapsed();
                     QTimer::singleShot(0, this, [this]() {
+                        QElapsedTimer researchTimer;
+                        researchTimer.start();
                         refreshResearchReports();
+                        m_startupTimings.insert(QStringLiteral("researchRefreshMs"), researchTimer.elapsed());
+                        qInfo() << "Startup phase research_refresh elapsedMs=" << researchTimer.elapsed();
                         QTimer::singleShot(0, this, [this]() {
                             if (m_autoStartAgentOnLaunch && !serverRunning() && !agentRunning()) {
                                 const QString launchId = preferredAgentLaunchId();
@@ -2147,6 +2180,8 @@ void AppController::runStartupScan()
                             m_startupTimings[QStringLiteral("startupTotalMs")] = m_startupTimer.elapsed();
                             m_startupStatus = QStringLiteral("Aplicación lista · servidor detenido");
                             m_startupBusy = false;
+                            qInfo() << "Startup complete elapsedMs=" << m_startupTimer.elapsed()
+                                    << "phaseTimings=" << m_startupTimings;
                             capturePerformanceSample(QStringLiteral("startup_complete"));
                             emit startupChanged();
                         });
@@ -14470,8 +14505,12 @@ void AppController::applyHardwareSummary(const QVariantMap &hardware)
 {
     if (hardware.isEmpty()) return;
     m_hardwareSummary = hardware;
-    m_startupTimings[QStringLiteral("hardwareReadyMs")] = m_startupTimer.isValid()
-        ? m_startupTimer.elapsed() : 0;
+    if (!m_startupTimings.contains(QStringLiteral("hardwareReadyMs"))) {
+        m_startupTimings[QStringLiteral("hardwareReadyMs")] = m_startupTimer.isValid()
+            ? m_startupTimer.elapsed() : 0;
+        qInfo() << "Startup phase hardware_ready elapsedMs="
+                << m_startupTimings.value(QStringLiteral("hardwareReadyMs"));
+    }
     emit hardwareSummaryChanged();
     rebuildModelRecommendations();
     emit startupChanged();

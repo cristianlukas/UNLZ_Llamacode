@@ -38,8 +38,6 @@ Item {
         try { return JSON.parse(App.readSetting("rankingColumnWidths", "{}")) || ({}) }
         catch (e) { return ({}) }
     }
-    property var specsCache: ({})
-    property var profileConfigCache: ({})
     property var allRankingRows: []
     property var displayedRows: []
     readonly property string emptyFilterToken: "__LLAMACODE_NO_VALUES__"
@@ -168,19 +166,13 @@ Item {
     function profileConfig(profileId) {
         const key = String(profileId || "")
         if (!key) return ({})
-        if (profileConfigCache[key] !== undefined) return profileConfigCache[key]
         const lp = App.profileManager.getLaunchProfile(key)
-        const config = {
+        return {
             launch: lp || ({}),
             model: lp && lp.modelProfileId ? App.profileManager.getModelProfile(lp.modelProfileId) : ({}),
             runtime: lp && lp.runtimePresetId ? App.profileManager.getRuntimePreset(lp.runtimePresetId) : ({}),
             backend: lp && lp.backendProfileId ? App.profileManager.getBackend(lp.backendProfileId) : ({})
         }
-        const copy = {}
-        for (const k in profileConfigCache) copy[k] = profileConfigCache[k]
-        copy[key] = config
-        profileConfigCache = copy
-        return config
     }
     function numberText(value, suffix) {
         const n = Number(value)
@@ -204,11 +196,9 @@ Item {
         })
     }
     function specsText(row) {
-        const cacheKey = String(row.profileId || "")
-        if (cacheKey && specsCache[cacheKey] !== undefined) return specsCache[cacheKey]
         const result = latestStage(row)
         const parts = []
-        const config = profileConfig(cacheKey)
+        const config = profileConfig(String(row.profileId || ""))
         const lp = config.launch || ({})
         const mp = config.model || ({})
         const rt = config.runtime || ({})
@@ -230,14 +220,7 @@ Item {
         if (fingerprint.length) parts.push("Config: " + fingerprint.replace(/^sha256:/, "").slice(0, 12))
         if (hash.length) parts.push("Harness: " + hash.replace(/^sha256:/, "").slice(0, 12))
         if (result.agentVariant) parts.push("Variant: " + result.agentVariant)
-        const value = parts.length ? parts.join("\n") : "—"
-        if (cacheKey) {
-            const copy = {}
-            for (const k in specsCache) copy[k] = specsCache[k]
-            copy[cacheKey] = value
-            specsCache = copy
-        }
-        return value
+        return parts.length ? parts.join("\n") : "—"
     }
 
     function sortValue(row, key) {

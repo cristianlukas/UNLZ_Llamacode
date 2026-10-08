@@ -23,10 +23,20 @@ QtObject {
     property string serverBaseUrl: ""
     property string activeLaunchId: ""
     property bool agentRunning: false
+    property var benchmarkRanking: []
+    property QtObject profileManager: QtObject {
+        function getLaunchProfile(id) { return { modelProfileId: "model", runtimePresetId: "runtime", backendProfileId: "backend" } }
+        function getModelProfile(id) { return { name: "Test model", specType: "none" } }
+        function getRuntimePreset(id) { return { name: "Test runtime", ctx: 32768, cacheType: "q8_0" } }
+        function getBackend(id) { return { name: "Test backend" } }
+    }
     property var engineeringWorkflows: [
         { id: "qa", name: "QA", description: "pruebas" },
         { id: "review", name: "Review", description: "revisión" }
     ]
     function l(k) { return k }
+    function readSetting(key, fallback) { return fallback }
+    function writeSetting(key, value) {}
+    signal benchmarkResultsChanged()
     function installEngineeringWorkflow(id) { return id === "qa" ? "qa-task" : "" }
 }
