@@ -20,6 +20,7 @@
 #include "core/automation/DesktopComputerUse.h"
 #include "core/automation/AutomationArtifactStore.h"
 
+#include <QLocale>
 #include <QJsonArray>
 
 #include <QCryptographicHash>
@@ -1876,12 +1877,17 @@ QString LlamaAgentBackend::buildSystemPrompt() const
               "CONFINADAS a él: no podés leer/escribir fuera del proyecto. Si el "
               "usuario pide una ruta absoluta fuera del cwd, trabajá dentro del "
               "proyecto y avisale.");
+    const QString identity = m_voiceMode
+        ? QStringLiteral("Sos Ingi, el asistente personal por voz de esta PC: el "
+                         "usuario te habla y vos operás la computadora por él.")
+        : QStringLiteral("Sos un agente de coding.");
     QString base = QStringLiteral(
-        "Sos un agente de coding. Sistema operativo: %1. Directorio de trabajo "
+        "%5 Sistema operativo: %1. Directorio de trabajo "
         "(cwd): %2. Tenés herramientas para leer/escribir archivos, listar, buscar y "
         "ejecutar comandos de shell. Usá las tools cuando necesites información real; "
         "no inventes contenido de archivos. %3 %4 Respondé en el idioma del usuario.\n\n")
-        .arg(os, QDir::toNativeSeparators(m_cwd), scope, shell);
+        .arg(os, QDir::toNativeSeparators(m_cwd), scope, shell, identity);
+    if (m_voiceMode) base += voiceModeSection(QDate::currentDate());
 
     // Directiva activa: sin setear (m_directivesSet=false) = TODAS, para no
     // regresionar; con perfil aplicado, solo las elegidas.
@@ -1920,7 +1926,9 @@ QString LlamaAgentBackend::buildSystemPrompt() const
     if (!m_disabledTools.contains(QStringLiteral("desktop_launch")))
         base += desktopPlaybookSection(m_visionReady);
     if (dirOn("projectContext")) base += projectContextSection();
-    if (dirOn("style"))          base += styleSection();
+    // "Estilo conciso" pide listas y comandos: en voz eso se lee como ruido. El
+    // modo voz ya trae su propio estilo (frases cortas habladas).
+    if (dirOn("style") && !m_voiceMode) base += styleSection();
     // Honey es opt-in puro: NO entra en el default "todas on" (m_directivesSet
     // false) porque es agresivo y en modelos chicos locales puede recortar el
     // razonamiento. Sólo si el perfil la elige explícitamente.
@@ -2015,6 +2023,53 @@ void LlamaAgentBackend::setAgentTuning(const QString &systemExtra, double temper
     m_systemExtra = systemExtra;
     m_temperature = temperature;
     // Si ya hay sesión activa, refrescar el system prompt (índice 0).
+    if (!m_apiMessages.isEmpty()) {
+        QJsonObject sys = m_apiMessages.first().toObject();
+        if (sys.value(QStringLiteral("role")).toString() == QLatin1String("system")) {
+            sys[QStringLiteral("content")] = buildSystemPrompt();
+            replaceSystemMessage(sys);
+        }
+    }
+}
+
+QString LlamaAgentBackend::voiceModeSection(const QDate &today)
+{
+    QString date;
+    if (today.isValid())
+        date = QStringLiteral("Hoy es %1 (%2). Usalo para \"hoy\", \"mañana\", "
+                              "\"esta semana\" y para buscar datos actuales.\n")
+                   .arg(QLocale(QLocale::Spanish).toString(today, QStringLiteral("dddd d 'de' MMMM 'de' yyyy")),
+                        today.toString(Qt::ISODate));
+    return date + QStringLiteral(
+        "MODO VOZ (Ingi Charla): todo lo que escribas se convierte en audio con "
+        "TTS en tiempo real, oración por oración.\n"
+        "- Respondé como en una conversación hablada: 1 a 3 frases cortas, "
+        "naturales y directas. Nada de markdown, listas, tablas, emojis, bloques "
+        "de código ni URLs largas: no se pueden escuchar. Si hay mucho detalle, "
+        "decí lo esencial y ofrecé ampliar.\n"
+        "- Si el pedido necesita herramientas, PRIMERO escribí una frase muy "
+        "corta que anuncie lo que vas a hacer (\"Dale, lo busco.\", \"Abro el "
+        "navegador.\") y recién después llamá a la tool: esa frase suena "
+        "mientras trabajás. Al terminar, contá el resultado en una o dos frases.\n"
+        "- Usá TODAS las herramientas disponibles para resolver de verdad: "
+        "web_search/web_fetch para investigar o datos actuales, desktop_* para "
+        "operar apps y ver la pantalla, browser_* para el navegador, run_shell "
+        "para comandos del sistema, memory para recordar preferencias del "
+        "usuario. No digas que no podés hacer algo sin intentarlo con las tools.\n"
+        "- Si es charla o una pregunta que sabés responder, contestá directo sin "
+        "tools: la latencia importa.\n"
+        "- El texto del usuario viene de reconocimiento de voz y puede tener "
+        "errores; interpretá la intención más probable. Si falta un dato "
+        "imprescindible o el pedido es ambiguo y riesgoso, hacé UNA pregunta "
+        "corta.\n"
+        "- Las acciones irreversibles (borrar, enviar, pagar, publicar) se "
+        "confirman por voz: ejecutá la tool y el sistema le pregunta al usuario.\n\n");
+}
+
+void LlamaAgentBackend::setVoiceMode(bool enabled)
+{
+    if (m_voiceMode == enabled) return;
+    m_voiceMode = enabled;
     if (!m_apiMessages.isEmpty()) {
         QJsonObject sys = m_apiMessages.first().toObject();
         if (sys.value(QStringLiteral("role")).toString() == QLatin1String("system")) {

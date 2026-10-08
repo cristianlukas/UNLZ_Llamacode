@@ -93,6 +93,13 @@ public:
         m_temperature = temperature;
         m_tuningCalls++;
     }
+    void approveTool(const QString &id, bool always = false) override
+    { Q_UNUSED(always) m_approved << id; }
+    void rejectTool(const QString &id) override { m_rejected << id; }
+    void cancelGeneration() override { ++m_cancels; }
+    int cancels() const { return m_cancels; }
+    QStringList approved() const { return m_approved; }
+    QStringList rejected() const { return m_rejected; }
     QStringList approvalModes() const { return m_approvalModes; }
     QString approvalAtBodyRun(int run) const { return m_approvalAtBodyRun.value(run); }
     QString permissionRules() const { return m_permRules; }
@@ -115,6 +122,9 @@ private:
     int m_replyDelayMs = 0;
     QVariantList m_msgs;
     QStringList m_approvalModes;
+    QStringList m_approved;
+    QStringList m_rejected;
+    int m_cancels = 0;
     QHash<int, QString> m_approvalAtBodyRun;
     QString m_permRules;
     QString m_systemExtra;
@@ -221,6 +231,9 @@ private slots:
     void cpuSystemProfileRequiresCpuBinary();
     void charlaTranscriptRoutesToAgentWhenRunning();
     void charlaCursorOcrIsOptInAndDoesNotHijackChat();
+    void charlaJarvisApprovesByVoiceAndCuesSlowTools();
+    void charlaJarvisQueuesTurnWhileAgentStarts();
+    void charlaJarvisStopsOrQueuesWhileAgentWorks();
     void ocrStatusAlwaysExplainsItself();
     void agentLevels_contextBudgetLadder();
     void doctorReportsStructureAndIssues();
@@ -1486,6 +1499,9 @@ void AppControllerTests::charlaCursorOcrIsOptInAndDoesNotHijackChat()
     QVERIFY(!app.tryVoiceCursorCommand(QStringLiteral("clic en Guardar")));
     QVERIFY(app.dispatchCharlaTranscript(QStringLiteral("clic en Guardar")));
     QCOMPARE(fake->bodyRuns(), 1);   // fue al agente, como cualquier frase
+    // Dejar cerrar el turno: una frase dicha con el agente trabajando ahora
+    // espera su turno (ver charlaJarvisStopsOrQueuesWhileAgentWorks).
+    QCoreApplication::processEvents();
 
     // Encendido: una frase que NO es orden de cursor sigue yendo al LLM. Charla es
     // una conversación; mencionar un clic no puede secuestrar el turno.
@@ -1496,6 +1512,150 @@ void AppControllerTests::charlaCursorOcrIsOptInAndDoesNotHijackChat()
     QCOMPARE(fake->bodyRuns(), 2);
     // La ejecución real de una orden (OCR + clic) es QA manual: necesita pantalla
     // viva y paquete de idioma OCR. Ver CLAUDE.md.
+}
+
+// Modo JARVIS: con el agente usando la PC, una aprobación no puede depender de
+// un clic (el usuario está hablando) y una tool lenta no puede ser silencio.
+void AppControllerTests::charlaJarvisApprovesByVoiceAndCuesSlowTools()
+{
+    AppController app;
+    auto *fake = new FakeAgentBackend(&app);
+    fake->start(AgentContext{});
+    app.setTestAgentBackend(fake);
+    app.setCharlaActiveForTest(true);
+
+    QVERIFY(app.dispatchCharlaTranscript(QStringLiteral("buscá el clima y borrá build")));
+    QCOMPARE(fake->bodyRuns(), 1);
+    QCoreApplication::processEvents();   // el fake cierra el turno (turnFinished)
+
+    // Tool rápida: sin aviso. Tool lenta: aviso hablado, una sola vez por turno.
+    emit fake->agentLifecycleEvent({{QStringLiteral("event"), QStringLiteral("tool.start")},
+                                    {QStringLiteral("tool"), QStringLiteral("read_file")}});
+    QVERIFY(app.charlaLastPromptForTest().isEmpty());
+    emit fake->agentLifecycleEvent({{QStringLiteral("event"), QStringLiteral("tool.start")},
+                                    {QStringLiteral("tool"), QStringLiteral("web_search")}});
+    const QString cue = app.charlaLastPromptForTest();
+    QVERIFY(!cue.isEmpty());
+    emit fake->agentLifecycleEvent({{QStringLiteral("event"), QStringLiteral("tool.start")},
+                                    {QStringLiteral("tool"), QStringLiteral("desktop_click")}});
+    QCOMPARE(app.charlaLastPromptForTest(), cue);
+
+    // Aprobación: se pregunta hablando y el "sí" NO llega al modelo como turno.
+    emit fake->toolApprovalNeeded({{QStringLiteral("id"), QStringLiteral("call-1")},
+                                   {QStringLiteral("tool"), QStringLiteral("run_shell")},
+                                   {QStringLiteral("detail"), QStringLiteral("rm -rf build")},
+                                   {QStringLiteral("reason"), QStringLiteral("destructive")}});
+    QVERIFY(app.charlaAwaitingApprovalForTest());
+    QVERIFY(app.charlaLastPromptForTest().contains(QStringLiteral("rm -rf build")));
+    QVERIFY(app.dispatchCharlaTranscript(QStringLiteral("eh")));    // no se entiende: repregunta
+    QVERIFY(fake->approved().isEmpty());
+    QVERIFY(fake->rejected().isEmpty());
+    QVERIFY(app.dispatchCharlaTranscript(QStringLiteral("sí, dale")));
+    QCOMPARE(fake->approved(), QStringList{QStringLiteral("call-1")});
+    QVERIFY(!app.charlaAwaitingApprovalForTest());
+    QCOMPARE(fake->bodyRuns(), 1);
+
+    emit fake->toolApprovalNeeded({{QStringLiteral("id"), QStringLiteral("call-2")},
+                                   {QStringLiteral("tool"), QStringLiteral("email_send")}});
+    QVERIFY(app.dispatchCharlaTranscript(QStringLiteral("no, mejor no")));
+    QCOMPARE(fake->rejected(), QStringList{QStringLiteral("call-2")});
+
+    // Dos respuestas que no son sí/no: lo seguro es NO ejecutar, y la segunda
+    // frase (otra orden) sigue como turno normal hacia el agente.
+    emit fake->toolApprovalNeeded({{QStringLiteral("id"), QStringLiteral("call-3")},
+                                   {QStringLiteral("tool"), QStringLiteral("run_shell")}});
+    QVERIFY(app.dispatchCharlaTranscript(QStringLiteral("eh")));
+    QVERIFY(app.dispatchCharlaTranscript(QStringLiteral("abrí la calculadora")));
+    QCOMPARE(fake->rejected().last(), QStringLiteral("call-3"));
+    QCOMPARE(fake->bodyRuns(), 2);
+    QVERIFY(!fake->approved().contains(QStringLiteral("call-3")));
+
+    // Aprobar desde la UI cierra la pregunta hablada: un "sí" posterior no puede
+    // aprobar otra cosa.
+    emit fake->toolApprovalNeeded({{QStringLiteral("id"), QStringLiteral("call-4")},
+                                   {QStringLiteral("tool"), QStringLiteral("run_shell")}});
+    app.approveAgentTool(QStringLiteral("call-4"));
+    QVERIFY(!app.charlaAwaitingApprovalForTest());
+
+    // Fuera de Charla la aprobación es la tarjeta de siempre.
+    app.setCharlaActiveForTest(false);
+    emit fake->toolApprovalNeeded({{QStringLiteral("id"), QStringLiteral("call-5")},
+                                   {QStringLiteral("tool"), QStringLiteral("run_shell")}});
+    QVERIFY(!app.charlaAwaitingApprovalForTest());
+}
+
+// Antes, hablar con el agente todavía arrancando degradaba el turno a chat sin
+// herramientas ("buscá X" → "no puedo navegar"). Ahora espera al agente.
+void AppControllerTests::charlaJarvisQueuesTurnWhileAgentStarts()
+{
+    AppController app;
+    auto *fake = new FakeAgentBackend(&app);
+    app.setTestAgentBackend(fake);
+    app.setCharlaAgentMode(true);
+    app.setCharlaActiveForTest(true);
+    app.setAgentStartingForTest(true);
+
+    QVERIFY(app.dispatchCharlaTranscript(QStringLiteral("qué clima hace mañana")));
+    QCOMPARE(fake->bodyRuns(), 0);
+    QCOMPARE(app.charlaPendingTranscriptForTest(), QStringLiteral("qué clima hace mañana"));
+    QVERIFY(!app.charlaLastPromptForTest().isEmpty());   // "un segundo..."
+
+    fake->start(AgentContext{});
+    QTRY_COMPARE(fake->bodyRuns(), 1);
+    QCOMPARE(fake->lastBodyPrompt(), QStringLiteral("qué clima hace mañana"));
+    QVERIFY(app.charlaPendingTranscriptForTest().isEmpty());
+
+    // (Con el modo apagado el turno cae al chat backend, que necesita un server
+    // real: QA manual, igual que el fallback de charlaRoutes...)
+    app.setCharlaActiveForTest(false);
+}
+
+// Hablar mientras el agente trabaja: el backend rechaza un segundo mensaje
+// ("Hay un turno en curso") y la charla lo tomaba como turno fallido. Ahora
+// "pará" frena el trabajo y cualquier otro pedido espera su turno.
+void AppControllerTests::charlaJarvisStopsOrQueuesWhileAgentWorks()
+{
+    {
+        AppController app;
+        auto *fake = new FakeAgentBackend(&app);
+        fake->setReplyDelayMs(60000);        // el turno sigue "trabajando"
+        fake->start(AgentContext{});
+        app.setTestAgentBackend(fake);
+        app.setCharlaActiveForTest(true);
+
+        QVERIFY(app.dispatchCharlaTranscript(QStringLiteral("buscá vuelos a Madrid")));
+        QCOMPARE(fake->bodyRuns(), 1);
+        QVERIFY(app.dispatchCharlaTranscript(QStringLiteral("y también hoteles")));
+        QCOMPARE(fake->bodyRuns(), 1);                       // no se mandó encima
+        QCOMPARE(app.charlaQueuedTurnsForTest(), QStringList{QStringLiteral("y también hoteles")});
+
+        QVERIFY(app.dispatchCharlaTranscript(QStringLiteral("pará")));
+        QCOMPARE(fake->cancels(), 1);
+        QVERIFY(app.charlaQueuedTurnsForTest().isEmpty());   // frenar descarta la cola
+        QVERIFY(!app.charlaLastPromptForTest().isEmpty());
+
+        // Frenado: el próximo pedido va directo, no queda encolado para siempre.
+        QVERIFY(app.dispatchCharlaTranscript(QStringLiteral("buscá trenes")));
+        QCOMPARE(fake->bodyRuns(), 2);
+        app.setCharlaActiveForTest(false);
+    }
+    {
+        AppController app;
+        auto *fake = new FakeAgentBackend(&app);
+        fake->setReplyDelayMs(30);
+        fake->start(AgentContext{});
+        app.setTestAgentBackend(fake);
+        app.setCharlaActiveForTest(true);
+        QVERIFY(app.dispatchCharlaTranscript(QStringLiteral("abrí el navegador")));
+        QVERIFY(app.dispatchCharlaTranscript(QStringLiteral("y poné música")));
+        QCOMPARE(fake->bodyRuns(), 1);
+        // Al cerrar el turno, lo encolado se manda solo y en orden.
+        QTRY_COMPARE(fake->bodyRuns(), 2);
+        QCOMPARE(fake->lastBodyPrompt(), QStringLiteral("y poné música"));
+        QVERIFY(app.charlaQueuedTurnsForTest().isEmpty());
+        QCOMPARE(fake->cancels(), 0);
+        app.setCharlaActiveForTest(false);
+    }
 }
 
 void AppControllerTests::ocrStatusAlwaysExplainsItself()

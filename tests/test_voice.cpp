@@ -14,6 +14,7 @@
 #include "core/voice/TurnDetector.h"
 #include "core/voice/CharlaTuning.h"
 #include "core/voice/VoiceCursorCommand.h"
+#include "core/voice/VoiceAssistant.h"
 #include "core/profiles/ProfileTypes.h"
 #include "core/voice/VoiceServerManager.h"
 #include "core/voice/VoiceLatencyTracker.h"
@@ -52,6 +53,12 @@ private slots:
     void turnDetectorClassify();
     void turnDetectorSilence();
     void turnFailedIdleIsNoop();
+    void drainMidTurnKeepsThinking();
+    void assistantConfirmationParse();
+    void assistantStopCommand();
+    void workBargeInNeedsSustainedVoice();
+    void assistantToolCues();
+    void assistantApprovalQuestion();
     void charlaTuningRecommendations();
     void ttsSentenceSplit();
     void ttsStreamingSentences();
@@ -880,6 +887,163 @@ void TestVoice::ttsVoiceForLang()
     QCOMPARE(VoiceServerManager::defaultTtsVoiceForLang("en"), QString("en_US-amy-medium"));
     QCOMPARE(VoiceServerManager::defaultTtsVoiceForLang("zh"), QString("es_ES-davefx-medium"));
     QCOMPARE(VoiceServerManager::defaultTtsVoiceForLang(QString()), QString("es_ES-davefx-medium"));
+}
+
+// Bug que hacía que el agente "no contestara": decía "Dale, lo busco.", se
+// vaciaba la cola de TTS y la voz abría el micrófono con el agente todavía
+// usando tools; la respuesta final llegaba en Listening y speakStreaming la
+// descartaba. Con el turno abierto, drenar el audio vuelve a Thinking.
+void TestVoice::drainMidTurnKeepsThinking()
+{
+    VoiceController vc;
+    VoiceConfig cfg;
+    cfg.autoListen = false;              // sin micrófono real en el test
+    cfg.bargeIn = false;                 // ni monitor de barge-in (abriría el mic)
+    vc.setConfig(cfg, QString(), QString());
+    vc.setStateForTest(VoiceController::Ready);
+    vc.notifyThinking();
+    QVERIFY(vc.turnOpen());
+    QCOMPARE(vc.state(), VoiceController::Thinking);
+
+    vc.setStateForTest(VoiceController::Speaking);   // sonó el aviso
+    vc.playbackDrainedForTest();
+    QCOMPARE(vc.state(), VoiceController::Thinking); // NO Listening/Idle
+    QVERIFY(vc.turnOpen());
+
+    // speakFlush cierra el turno: ahora sí, drenar termina la conversación.
+    vc.setStateForTest(VoiceController::Speaking);
+    vc.speakFlush(-1, QString());
+    QVERIFY(!vc.turnOpen());
+    vc.setStateForTest(VoiceController::Speaking);
+    vc.playbackDrainedForTest();
+    QCOMPARE(vc.state(), VoiceController::Idle);
+
+    // Un aviso fuera de charla (Idle) no hace nada; en un turno, no lo cierra.
+    vc.speakCue(QStringLiteral("Lo busco."));
+    QCOMPARE(vc.state(), VoiceController::Idle);
+    vc.setStateForTest(VoiceController::Ready);
+    vc.notifyThinking();
+    vc.speakCue(QStringLiteral("Lo busco."));
+    QCOMPARE(vc.state(), VoiceController::Speaking);
+    QVERIFY(vc.turnOpen());
+    // Una pregunta (aprobación) sí cierra el turno: después hay que escuchar.
+    vc.ask(QStringLiteral("¿Lo hago?"));
+    QVERIFY(!vc.turnOpen());
+    vc.stop();
+}
+
+void TestVoice::assistantConfirmationParse()
+{
+    using VoiceAssistant::Confirmation;
+    using VoiceAssistant::parseConfirmation;
+    for (const char *yes : {"sí", "Si.", "dale", "Dale, hacelo", "ok", "hazlo por favor",
+                            "adelante", "sí, no hay problema", "yes", "go ahead", "De una."})
+        QVERIFY2(parseConfirmation(QString::fromUtf8(yes)) == Confirmation::Yes, yes);
+    for (const char *no : {"no", "No.", "nop", "cancelá", "mejor no", "ni loco",
+                           "sí, pero no lo borres", "stop", "don't", "frená"})
+        QVERIFY2(parseConfirmation(QString::fromUtf8(no)) == Confirmation::No, no);
+    // Duda o una orden nueva: ni ejecutar ni descartar, volver a preguntar.
+    for (const char *unk : {"", "no sé", "no estoy seguro", "eh",
+                            "abrí el navegador y buscá el clima de mañana en Buenos Aires por favor dale"})
+        QVERIFY2(parseConfirmation(QString::fromUtf8(unk)) == Confirmation::Unknown, unk);
+    // "para" es preposición: no debe leerse como "pará".
+    QVERIFY(parseConfirmation(QStringLiteral("dale, hacelo para mañana")) == Confirmation::Yes);
+}
+
+void TestVoice::assistantStopCommand()
+{
+    using VoiceAssistant::isStopCommand;
+    for (const char *stop : {"pará", "Pará.", "pará ya", "basta", "cancelá", "frená ya", "olvidalo",
+                             "stop", "never mind", "dejalo así"})
+        QVERIFY2(isStopCommand(QString::fromUtf8(stop)), stop);
+    for (const char *req : {"", "y también buscá hoteles", "para mañana",
+                            "pará de buscar vuelos y buscá hoteles", "abrí el navegador"})
+        QVERIFY2(!isStopCommand(QString::fromUtf8(req)), req);
+}
+
+// Con el agente trabajando el micrófono queda en monitor: un ruido corto no
+// corta nada; voz sostenida toma el turno SIN perder el puntero del streaming
+// (al retomar no se repite lo que ya se habló).
+void TestVoice::workBargeInNeedsSustainedVoice()
+{
+    VoiceController vc;
+    VoiceConfig cfg;
+    cfg.autoListen = false;
+    cfg.bargeIn = false;                 // el monitor real abriría el mic; se simula
+    vc.setConfig(cfg, QString(), QString());
+    vc.setStateForTest(VoiceController::Ready);
+    vc.notifyThinking();
+    // Ya se habló "Dale, lo busco." de la burbuja 7 (sin TTS real en el test).
+    vc.setStreamForTest(7, 15);
+    const int consumed = vc.streamConsumedForTest();
+    vc.setStateForTest(VoiceController::Speaking);
+    vc.playbackDrainedForTest();
+    QCOMPARE(vc.state(), VoiceController::Thinking);
+
+    // Eco del propio aviso (sin cancelación de eco): mientras suena audio no
+    // cuenta como voz del usuario, por más largo que sea.
+    vc.setPlayingForTest(true);
+    QCOMPARE(vc.feedMonitorForTest(true, 1500), VoiceController::Thinking);
+    vc.setPlayingForTest(false);
+
+    // Tos / golpe: picos cortos separados por silencio no alcanzan.
+    QCOMPARE(vc.feedMonitorForTest(true, 200), VoiceController::Thinking);
+    QCOMPARE(vc.feedMonitorForTest(false, 300), VoiceController::Thinking);
+    QCOMPARE(vc.feedMonitorForTest(true, 300), VoiceController::Thinking);
+    QCOMPARE(vc.feedMonitorForTest(false, 600), VoiceController::Thinking);
+    // Voz sostenida: escucha, turno cerrado, streaming intacto.
+    vc.feedMonitorForTest(true, 250);
+    QCOMPARE(vc.feedMonitorForTest(true, 200), VoiceController::Listening);
+    QVERIFY(!vc.turnOpen());
+    QCOMPARE(vc.streamConsumedForTest(), consumed);
+
+    // notifyThinking mientras suena algo no corta el audio.
+    vc.setStateForTest(VoiceController::Speaking);
+    vc.notifyThinking();
+    QCOMPARE(vc.state(), VoiceController::Speaking);
+    QVERIFY(vc.turnOpen());
+    // ask() tampoco pierde el puntero.
+    vc.ask(QStringLiteral("¿Lo hago?"));
+    QCOMPARE(vc.streamConsumedForTest(), consumed);
+    vc.stop();
+}
+
+void TestVoice::assistantToolCues()
+{
+    using VoiceAssistant::toolCue;
+    QCOMPARE(toolCue(QStringLiteral("web_search"), QStringLiteral("es")), QStringLiteral("Lo busco."));
+    QCOMPARE(toolCue(QStringLiteral("web_search"), QStringLiteral("en")), QStringLiteral("Searching."));
+    QVERIFY(!toolCue(QStringLiteral("desktop_click"), QStringLiteral("es")).isEmpty());
+    QVERIFY(!toolCue(QStringLiteral("browser_skill_replay"), QStringLiteral("es")).isEmpty());
+    QVERIFY(!toolCue(QStringLiteral("mcp__github__search"), QStringLiteral("es")).isEmpty());
+    // Tools de milisegundos: un aviso hablado agregaría latencia en vez de tapar silencio.
+    for (const char *fast : {"read_file", "grep", "memory", "list_dir", "edit_file"})
+        QVERIFY2(toolCue(QString::fromLatin1(fast), QStringLiteral("es")).isEmpty(), fast);
+}
+
+void TestVoice::assistantApprovalQuestion()
+{
+    using VoiceAssistant::approvalQuestion;
+    const QString q = approvalQuestion(
+        {{QStringLiteral("tool"), QStringLiteral("run_shell")},
+         {QStringLiteral("detail"), QStringLiteral("rm -rf build")},
+         {QStringLiteral("reason"), QStringLiteral("destructive")}},
+        QStringLiteral("es"));
+    QVERIFY(q.contains(QStringLiteral("rm -rf build")));
+    QVERIFY(q.contains(QStringLiteral("No se puede deshacer")));
+    QVERIFY(q.endsWith(QStringLiteral("¿Lo hago?")));
+    // El detalle se habla: uno larguísimo se recorta.
+    const QString longQ = approvalQuestion(
+        {{QStringLiteral("tool"), QStringLiteral("run_shell")},
+         {QStringLiteral("detail"), QString(400, QLatin1Char('x'))}},
+        QStringLiteral("es"));
+    QVERIFY(longQ.size() < 200);
+    const QString en = approvalQuestion(
+        {{QStringLiteral("tool"), QStringLiteral("email_send")},
+         {QStringLiteral("reason"), QStringLiteral("email")}},
+        QStringLiteral("en"));
+    QVERIFY(en.contains(QStringLiteral("send an email")));
+    QVERIFY(en.endsWith(QStringLiteral("Should I do it?")));
 }
 
 QTEST_MAIN(TestVoice)

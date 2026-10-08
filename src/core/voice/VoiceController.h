@@ -74,6 +74,25 @@ public:
 
     State state() const { return m_state; }
 
+    bool turnOpen() const { return m_turnOpen; }
+    // Hooks de test: forzar el estado (sin abrir audio) y simular que terminó
+    // de sonar el último clip con la cola vacía.
+    void setStateForTest(State s) { setState(s); }
+    void playbackDrainedForTest()
+    {
+        m_ttsQueue.clear();
+        m_audioQueue.clear();
+        onClipFinished();
+    }
+    // Simula frames del monitor (sin micrófono): `speech` decide si el VAD los
+    // ve como voz. Devuelve el estado resultante.
+    State feedMonitorForTest(bool speech, int ms);
+    bool monitorOnlyForTest() const { return m_monitorOnly; }
+    int streamConsumedForTest() const { return m_streamConsumed; }
+    void setPlayingForTest(bool on) { m_playing = on; }
+    void setStreamForTest(int bubble, int consumed)
+    { m_streamBubble = bubble; m_streamConsumed = consumed; }
+
     // ── Función pura de VAD (testeable) ──
     // Decide si el turno terminó: hubo voz (peak>=activation) y luego silencio
     // continuo >= silenceMs. silenceAccumMs es el silencio acumulado hasta ahora.
@@ -127,7 +146,14 @@ public slots:
     // Cierre del turno: encola el fragmento final que quedó sin terminador y
     // resetea el estado de streaming. Si no quedaba nada, retoma escucha.
     void speakFlush(int bubbleId, const QString &fullText);
-    void notifyThinking();             // el LLM empezó a generar
+    void notifyThinking();             // el LLM empezó a generar (abre el turno)
+    // Aviso corto en medio de un turno ("Lo busco."): se encola detrás de lo que
+    // ya suena y NO cierra el turno, así que al terminar de hablarlo la voz vuelve
+    // a "pensando" en vez de abrir el micrófono con el agente todavía trabajando.
+    void speakCue(const QString &text);
+    // Pregunta que espera respuesta hablada (aprobación de una tool): cierra el
+    // turno y, al terminar de hablarla, abre el micrófono.
+    void ask(const QString &text);
     // El turno del backend falló (server LLM caído, error de red...). Sin esto la
     // charla quedaba clavada en "pensando" para siempre. Muestra el error y, si
     // autoListen, retoma la escucha para poder reintentar hablando.
@@ -207,6 +233,17 @@ private:
     bool   m_streamingTurn = false;  // sesión STT sidecar activa para este turno
     QString m_endpointReason;        // métrica: vad/ptt/manual
     bool  m_monitorOnly = false;     // true durante Speaking (barge-in): no acumula
+    // Barge-in con el agente trabajando (turno abierto): no se cancela el
+    // trabajo por un ruido. Hace falta voz sostenida, y el audio previo al
+    // disparo (ring) se conserva para no perder la primera palabra ("pará").
+    bool  m_monitorStarting = false; // beginCapture sin abrir sesión STT streaming
+    int   m_monitorSpeechMs = 0;
+    double m_monitorPeak = 0.0;
+    QByteArray m_monitorRing;
+    static constexpr int kWorkBargeInMs = 400;
+    void armWorkMonitor();           // micrófono en monitor mientras el agente trabaja
+    void promoteMonitorToListening();
+    void startListeningKeepStream(); // escuchar sin perder el puntero del streaming
     bool  m_testMode = false;        // micTest: captura para nivel, no VAD/STT
     bool  m_pttHeld = false;         // botón PTT actualmente presionado
     bool  m_forceVad = false;        // override transitorio usado por dictado
@@ -232,6 +269,10 @@ private:
     // Estado del streaming incremental (modo agente): burbuja en curso y cuántos
     // chars de su texto ya se encolaron como oraciones completas.
     int m_streamBubble = -1;
+    // Hay un turno del backend en curso (desde notifyThinking hasta speakFlush /
+    // notifyTurnFailed). Mientras está abierto, vaciar la cola de TTS no es "fin
+    // del turno": el agente puede seguir con tools y hablar después.
+    bool m_turnOpen = false;
     int m_streamConsumed = 0;
 
     // Timers de diagnóstico (logs [charla]): duración de cada estado, del request

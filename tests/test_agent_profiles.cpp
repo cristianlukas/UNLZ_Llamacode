@@ -33,6 +33,8 @@ private slots:
 
     void agentProfile_jsonRoundTrip();
     void systemPresets_shape();
+    void systemPresets_jarvisCoversThePc();
+    void voiceMode_rewritesIdentityAndDropsListStyle();
     void presets_levelsRestrictCapabilities();
     void directiveCatalog_hasAllKeys();
     void setDirectives_gatesSystemPrompt();
@@ -244,7 +246,7 @@ void AgentProfilesTests::manager_rejectsInvalidImportAndClampsLimits()
 void AgentProfilesTests::systemPresets_shape()
 {
     const QList<AgentProfile> ps = AgentProfile::systemPresets();
-    QCOMPARE(ps.size(), 11);
+    QCOMPARE(ps.size(), 12);
 
     // Orden: la escalera histórica primero, luego la variante comparable del
     // harness Next y finalmente los perfiles de propósito/artefactos.
@@ -259,6 +261,7 @@ void AgentProfilesTests::systemPresets_shape()
     QCOMPARE(ps[8].id, QStringLiteral("agent-browser"));
     QCOMPARE(ps[9].id, QStringLiteral("agent-artifact-local"));
     QCOMPARE(ps[10].id, QStringLiteral("agent-artifact-publisher"));
+    QCOMPARE(ps[11].id, QStringLiteral("agent-jarvis"));
     QCOMPARE(AgentProfile::defaultPresetId(), QStringLiteral("agent-intermedio"));
 
     for (const AgentProfile &p : ps) QVERIFY(p.system);
@@ -670,6 +673,68 @@ void AgentProfilesTests::manager_recommendsAndClonesTaskProfile()
         QStringLiteral("Research con fuentes"), id).isEmpty());
     // Una charla sin señal suficiente no dispara sugerencias intrusivas.
     QVERIFY(pm.recommendAgentProfile(QStringLiteral("Hola"), id).isEmpty());
+}
+
+// Ingi Charla en modo JARVIS: el preset que aplica la charla tiene que poder
+// operar TODA la PC (escritorio, web, browser, shell) sin frenar la voz con
+// aprobaciones de rutina, pero sin perder el guardrail de lo irreversible.
+void AgentProfilesTests::systemPresets_jarvisCoversThePc()
+{
+    AgentProfile jarvis;
+    for (const AgentProfile &p : AgentProfile::systemPresets())
+        if (p.id == QLatin1String("agent-jarvis")) jarvis = p;
+    QVERIFY(jarvis.system);
+    const QStringList &tools = jarvis.enabledTools;
+    for (const char *t : {"desktop_observe", "desktop_click", "desktop_type",
+                          "desktop_launch", "web_search", "web_fetch", "run_shell",
+                          "browser_skill_replay", "memory", "skill_load", "read_file"})
+        QVERIFY2(tools.contains(QString::fromLatin1(t)), t);
+    // email_send es efecto externo: no va en el set, aunque se pueda leer correo.
+    QVERIFY(tools.contains(QStringLiteral("email_read")));
+    QVERIFY(!tools.contains(QStringLiteral("email_send")));
+    QVERIFY(jarvis.mcpEnabled);
+
+    const HarnessSpec spec = jarvis.toSpec();
+    QCOMPARE(spec.permissions.approvalMode, QStringLiteral("auto"));
+    QVERIFY(spec.permissions.hitlDestructive);
+    QVERIFY(!spec.permissions.mailAutoSend);
+    // Latencia: sin thinking, warmup del prompt-cache y set de tools estable.
+    QVERIFY(!jarvis.thinking);
+    QVERIFY(!spec.protocol.thinking);
+    QVERIFY(spec.context.warmup);
+    QVERIFY(!spec.context.preflight);
+    QVERIFY(!spec.tools.adaptiveRouting);
+    // Las directivas de coding no tienen sentido en voz.
+    QVERIFY(!jarvis.directives.contains(QStringLiteral("testNet")));
+    QVERIFY(!jarvis.directives.contains(QStringLiteral("discipline")));
+}
+
+void AgentProfilesTests::voiceMode_rewritesIdentityAndDropsListStyle()
+{
+    LlamaAgentBackend b;
+    b.setDirectives({QStringLiteral("style")});
+    const QString coding = b.systemPromptForTest();
+    QVERIFY(coding.startsWith(QStringLiteral("Sos un agente de coding.")));
+    QVERIFY(coding.contains(LlamaAgentBackend::styleSection()));
+    QVERIFY(!coding.contains(QStringLiteral("MODO VOZ")));
+
+    b.setVoiceMode(true);
+    QVERIFY(b.voiceMode());
+    const QString voice = b.systemPromptForTest();
+    QVERIFY(voice.startsWith(QStringLiteral("Sos Ingi")));
+    QVERIFY(voice.contains(LlamaAgentBackend::voiceModeSection(QDate::currentDate())));
+    // La fecha va con precisión de día (ISO), nunca la hora: el prompt-cache
+    // que precalienta Charla tiene que sobrevivir entre turnos.
+    QVERIFY(voice.contains(QDate::currentDate().toString(Qt::ISODate)));
+    const QString fixed = LlamaAgentBackend::voiceModeSection(QDate(2026, 10, 8));
+    QVERIFY(fixed.contains(QStringLiteral("2026-10-08")));
+    QVERIFY(fixed.contains(QStringLiteral("jueves")));
+    QVERIFY(!LlamaAgentBackend::voiceModeSection().contains(QStringLiteral("Hoy es")));
+    // Listas y comandos del estilo conciso se leerían en voz alta: fuera.
+    QVERIFY(!voice.contains(LlamaAgentBackend::styleSection()));
+
+    b.setVoiceMode(false);
+    QCOMPARE(b.systemPromptForTest(), coding);
 }
 
 QTEST_MAIN(AgentProfilesTests)

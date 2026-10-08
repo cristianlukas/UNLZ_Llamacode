@@ -750,6 +750,24 @@ public:
     // consulta cuando la UI lo necesita, no en cada repintado.
     Q_INVOKABLE QVariantMap ocrStatus() const;
     bool charlaUseAgentForTest() const { return m_charlaUseAgent; }
+    // Ingi Charla modo JARVIS (agente + voz + computer use). Con el modo activo
+    // (default), Charla aplica el perfil de agente de voz, arranca el agente si
+    // no corre y le manda cada turno; las aprobaciones se resuelven hablando.
+    Q_INVOKABLE bool charlaAgentMode() const;
+    Q_INVOKABLE void setCharlaAgentMode(bool on);
+    Q_INVOKABLE QString charlaAgentProfileId() const;   // "" = el perfil activo
+    Q_INVOKABLE void setCharlaAgentProfileId(const QString &id);
+    // Reacciones de Charla a eventos del agente. Públicas para tests: el wiring
+    // real (ensureAgentBackend) y el de test (setTestAgentBackend) las llaman.
+    void onCharlaToolApprovalNeeded(const QVariantMap &toolCall);
+    void onCharlaAgentLifecycle(const QVariantMap &event);
+    void onCharlaAgentRunningChanged(bool running);
+    void setCharlaActiveForTest(bool on) { m_charlaActive = on; }
+    QString charlaLastPromptForTest() const { return m_charlaLastPrompt; }
+    QString charlaPendingTranscriptForTest() const { return m_charlaPendingTranscript; }
+    bool charlaAwaitingApprovalForTest() const { return !m_charlaPendingApproval.isEmpty(); }
+    void setAgentStartingForTest(bool on) { m_agentStarting = on; }
+    QStringList charlaQueuedTurnsForTest() const { return m_charlaQueuedTurns; }
     // Regresión "Iniciando agente" trabado tras swap/restart de server: arma el
     // estado previo (pending + starting) y dispara el ready-branch. Con un agente
     // ya corriendo debe bajar el flag sin relanzar.
@@ -1887,6 +1905,33 @@ private:
     // Burbuja del agente que se está hablando en vivo (streaming incremental de TTS
     // en Charla). -1 = ninguna. Se pasa a VoiceController::speakFlush al cerrar.
     int m_charlaStreamBubble = -1;
+    // Modo JARVIS (ver charlaAgentMode). Perfil de agente que había antes de
+    // entrar a Charla, para restaurarlo al salir (el de voz es temporal).
+    QString m_charlaPrevAgentProfileId;
+    bool m_charlaProfileSwapped = false;
+    // Turno dicho mientras el agente todavía arrancaba: se manda al quedar listo.
+    QString m_charlaPendingTranscript;
+    // Aprobación de tool esperando un "sí"/"no" hablado (payload de
+    // toolApprovalNeeded). Vacío = no hay pregunta abierta.
+    QVariantMap m_charlaPendingApproval;
+    int m_charlaApprovalRetries = 0;
+    // Último aviso hablado ("Lo busco.") del turno; inválido = todavía ninguno.
+    // En tareas largas se vuelve a avisar cada kCharlaCueEveryMs para que el
+    // silencio no parezca un cuelgue.
+    QElapsedTimer m_charlaCueTimer;
+    static constexpr qint64 kCharlaCueEveryMs = 20000;
+    // Turno de Charla en curso en el agente (sendToAgent → turnFinished/error).
+    // El backend rechaza un segundo mensaje con "Hay un turno en curso", así que
+    // lo dicho mientras trabaja se encola acá o, si es "pará", lo frena.
+    bool m_charlaAgentTurnActive = false;
+    QStringList m_charlaQueuedTurns;
+    bool m_charlaCancelled = false;      // el turno se cortó por voz: no hablar su cola
+    QString m_charlaLastPrompt;          // última frase de sistema hablada (aviso/pregunta)
+    void charlaSpeakCue(const QString &text);
+    void charlaAsk(const QString &text);
+    void applyCharlaVoiceModeToAgent(bool on);
+    bool handleCharlaApprovalAnswer(const QString &text);
+    void finishCharlaAgentTurn();        // cierra el turno y despacha la cola
     bool m_chatWasGenerating = false;
     QString m_voicePartial;
     bool m_dictationActive = false;

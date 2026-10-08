@@ -179,6 +179,7 @@ void VoiceController::stop()
     m_pttHeld = false;
     m_forceVad = false;
     m_streamingTurn = false;
+    m_turnOpen = false;
     setState(Idle);
 }
 
@@ -188,6 +189,7 @@ void VoiceController::startListening()
     // pushToTalkStart() marca el botón como presionado; así una sesión en espera
     // no escucha conversaciones ajenas ni depende de que el VAD adivine la
     // intención del usuario.
+    m_turnOpen = false;            // escuchar = el turno anterior terminó (o se cortó)
     if (pushToTalkMode() && !m_pttHeld) {
         endCapture();
         teardownPlayback();
@@ -222,6 +224,13 @@ void VoiceController::pushToTalkStart()
     // Un PTT nuevo puede interrumpir una respuesta hablada. Mientras el modelo
     // todavía transcribe o piensa, esperamos a que el turno actual termine para
     // no mezclar dos capturas ni dejar un request STT en un estado ambiguo.
+    // Con el agente trabajando (turno abierto) el botón toma el turno sin
+    // cancelar el trabajo; AppController decide si es "pará" o un pedido más.
+    if (m_turnOpen && (m_state == Thinking || m_state == Speaking)) {
+        m_pttHeld = true;
+        startListeningKeepStream();
+        return;
+    }
     if (m_state != Ready && m_state != Speaking) return;
     const State previous = m_state;
     if (previous == Speaking && !m_cfg.bargeIn) return;
@@ -265,10 +274,14 @@ void VoiceController::beginCapture()
     m_silenceMs = 0;
     m_peak = 0.0;
     m_monitorOnly = false;
+    m_monitorSpeechMs = 0;
+    m_monitorPeak = 0.0;
+    m_monitorRing.clear();
     m_vad.setTuning(vadTuningFor(m_cfg));
     m_vad.reset();   // el piso de ruido se re-mide por captura (mic/entorno pueden cambiar)
 
-    if (m_cfg.sttMode == QLatin1String("stream_process") && !m_testMode) {
+    if (m_cfg.sttMode == QLatin1String("stream_process") && !m_testMode
+        && !m_monitorStarting) {
         if (!m_stt.startStreaming(m_sampleRate)) {
             fail(QStringLiteral("no se pudo iniciar la sesión STT streaming: sidecar no disponible"));
             return;
@@ -355,6 +368,28 @@ void VoiceController::onAudioReady()
     if (m_testMode) return;
 
     // Modo monitor (durante Speaking): solo detectar barge-in, no acumular.
+    if (m_monitorOnly && m_turnOpen) {
+        // El agente sigue trabajando (o suena un aviso): la voz del usuario no
+        // cancela nada, sólo toma el turno. Exigir voz sostenida evita que una
+        // tos o un golpe a la mesa corten la escucha del resultado.
+        m_monitorRing.append(chunk);
+        const int maxRing = m_sampleRate * 2 * 3 / 2;   // 1,5 s de PCM16 mono
+        if (m_monitorRing.size() > maxRing) m_monitorRing.remove(0, m_monitorRing.size() - maxRing);
+        // Mientras suena un aviso propio, el micrófono oye el parlante: sin
+        // cancelación de eco, 400 ms de TTS alcanzarían para "tomar el turno"
+        // solo. Con el turno abierto el aviso es corto; se escucha al terminar.
+        if (m_playing) {
+            m_monitorSpeechMs = 0;
+            m_monitorRing.clear();
+        } else if (speech) {
+            m_monitorSpeechMs += chunkMs;
+            m_monitorPeak = qMax(m_monitorPeak, lvl);
+        } else {
+            m_monitorSpeechMs = qMax(0, m_monitorSpeechMs - chunkMs);
+        }
+        if (m_cfg.bargeIn && m_monitorSpeechMs >= kWorkBargeInMs) promoteMonitorToListening();
+        return;
+    }
     if (m_monitorOnly) {
         const bool interrupt = m_cfg.vadAdaptive ? vf.onset
                                                  : (lvl >= m_cfg.vadActivationLevel * 1.6);
@@ -545,8 +580,89 @@ void VoiceController::onSttStreamFinished(const QString &text)
 
 void VoiceController::notifyThinking()
 {
-    if (m_state != Idle && m_state != Error)
-        setState(Thinking);
+    if (m_state == Idle || m_state == Error) return;
+    m_turnOpen = true;
+    // Algo está sonando (aviso, respuesta de un turno anterior): no cortarlo. Al
+    // terminar de hablar, onClipFinished ve el turno abierto y pasa a Thinking.
+    if (m_state == Speaking) return;
+    setState(Thinking);
+    armWorkMonitor();
+}
+
+void VoiceController::armWorkMonitor()
+{
+    if (!m_cfg.bargeIn || pushToTalkMode() || m_testMode) return;
+    if (m_state != Thinking && m_state != Speaking) return;
+    if (m_source) {                 // ya hay captura (monitor de Speaking): reusar
+        m_monitorOnly = true;
+        return;
+    }
+    m_monitorStarting = true;
+    beginCapture();
+    m_monitorStarting = false;
+    m_monitorOnly = true;
+}
+
+void VoiceController::promoteMonitorToListening()
+{
+    // Se conserva la captura (m_source) y el VAD, que ya vio la voz: reiniciarlos
+    // perdería el arranque de la frase y, si el usuario dijo sólo "pará", el
+    // turno nunca cerraría por silencio (el VAD nuevo no habría visto voz).
+    qInfo().noquote() << QStringLiteral("[charla] barge-in con el agente trabajando: escuchando (%1 ms)")
+                             .arg(m_monitorSpeechMs);
+    m_monitorOnly = false;
+    m_turnOpen = false;
+    teardownPlayback();
+    m_ttsQueue.clear();
+    m_audioQueue.clear();
+    m_playing = false;
+    m_tts.cancel();
+    // m_streamBubble/m_streamConsumed NO se tocan: el agente sigue con el mismo
+    // turno y, al retomarlo, no hay que repetir lo que ya se habló.
+    const QByteArray seed = m_monitorRing;
+    m_monitorRing.clear();
+    m_partial.clear();
+    m_segQueue.clear();
+    m_silenceMs = 0;
+    m_segSilenceMs = 0;
+    m_peak = m_monitorPeak;
+    m_segPeak = m_monitorPeak;
+    m_segVoice = true;
+    m_segment.clear();
+    if (m_cfg.sttMode == QLatin1String("stream_process")) {
+        if (!m_stt.startStreaming(m_sampleRate)) {
+            fail(QStringLiteral("no se pudo iniciar la sesión STT streaming: sidecar no disponible"));
+            return;
+        }
+        m_streamingTurn = true;
+        if (!seed.isEmpty()) m_stt.pushStreamingAudio(seed);
+    } else {
+        m_segment = seed;
+    }
+    setState(Listening);
+}
+
+void VoiceController::startListeningKeepStream()
+{
+    const int bubble = m_streamBubble;
+    const int consumed = m_streamConsumed;
+    startListening();
+    m_streamBubble = bubble;
+    m_streamConsumed = consumed;
+}
+
+VoiceController::State VoiceController::feedMonitorForTest(bool speech, int ms)
+{
+    m_monitorOnly = true;
+    // Mismo cálculo que onAudioReady con el turno abierto, sin audio real.
+    if (m_turnOpen) {
+        m_monitorRing.append(QByteArray(ms * m_sampleRate / 1000 * 2, '\0'));
+        if (m_playing) { m_monitorSpeechMs = 0; m_monitorRing.clear(); }
+        else if (speech) { m_monitorSpeechMs += ms; m_monitorPeak = qMax(m_monitorPeak, 0.2); }
+        else m_monitorSpeechMs = qMax(0, m_monitorSpeechMs - ms);
+        if (m_monitorSpeechMs >= kWorkBargeInMs) promoteMonitorToListening();
+    }
+    return m_state;
 }
 
 void VoiceController::notifyTurnFailed(const QString &err)
@@ -556,6 +672,7 @@ void VoiceController::notifyTurnFailed(const QString &err)
                                 .arg(stateStr(), err);
     m_lastError = err;
     emit errorChanged();
+    m_turnOpen = false;
     teardownPlayback();
     m_ttsQueue.clear();
     m_audioQueue.clear();
@@ -612,6 +729,7 @@ QStringList VoiceController::splitCompleteSentences(const QString &text, int min
 void VoiceController::speak(const QString &text)
 {
     if (m_state == Idle || m_state == Error) return;  // charla no activa
+    m_turnOpen = false;            // texto final: al terminar de hablarlo, escuchar
     if (text.trimmed().isEmpty()) {
         if (m_cfg.autoListen) startListening();
         return;
@@ -686,6 +804,7 @@ void VoiceController::speakFlush(int bubbleId, const QString &rawText)
 {
     if (m_state == Idle || m_state == Error) return;
     if (m_state == Listening || m_state == Transcribing) return;  // user hablando
+    m_turnOpen = false;            // el backend cerró el turno
     const QString fullText = sanitizeForSpeech(rawText);
     // Encolar el fragmento final que quedó sin terminador (la última oración de la
     // respuesta del agente suele no cerrar con punto antes de finalizar el turno).
@@ -811,9 +930,40 @@ void VoiceController::onClipFinished()
     if (!m_ttsQueue.isEmpty() || m_tts.busy()) return;
     teardownPlayback();
     if (m_state == Speaking) {
-        if (m_cfg.autoListen) startListening();
+        // Se habló todo lo que había, pero el backend sigue en el turno (tools en
+        // curso tras un "Dale, lo busco."). Abrir el micrófono acá hacía que
+        // speakStreaming descartara la respuesta final: el usuario oía el aviso
+        // y nunca el resultado.
+        if (m_turnOpen) { setState(Thinking); armWorkMonitor(); }
+        else if (m_cfg.autoListen) startListening();
         else setState(Idle);
     }
+}
+
+void VoiceController::speakCue(const QString &text)
+{
+    if (m_state == Idle || m_state == Error) return;
+    if (m_state == Listening || m_state == Transcribing) return;  // user hablando
+    const QString t = text.trimmed();
+    if (t.isEmpty()) return;
+    m_latency.markFirstLlmText();
+    if (m_state != Speaking) setState(Speaking);
+    m_ttsQueue << t;
+    pumpTts();
+}
+
+void VoiceController::ask(const QString &text)
+{
+    if (m_state == Idle || m_state == Error) return;
+    // speak() cierra el turno y reemplaza la cola: la pregunta es lo próximo que
+    // se oye y, al terminar, se abre el micrófono para la respuesta.
+    // El puntero del streaming se conserva: tras el "sí" el agente sigue en la
+    // misma burbuja y no hay que repetir lo que ya dijo antes de preguntar.
+    const int bubble = m_streamBubble;
+    const int consumed = m_streamConsumed;
+    speak(text);
+    m_streamBubble = bubble;
+    m_streamConsumed = consumed;
 }
 
 void VoiceController::playPcm(const QByteArray &pcm, int sampleRate, int channels)

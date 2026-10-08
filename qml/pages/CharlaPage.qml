@@ -1004,6 +1004,34 @@ Item {
                         }
                     }
 
+                    Text { text: "Modo JARVIS (agente + PC)"; color: Theme.textPrimary; Layout.leftMargin: 24; font { pixelSize: 15; bold: true } }
+                    ColumnLayout {
+                        Layout.leftMargin: 24; Layout.rightMargin: 24; Layout.fillWidth: true
+                        spacing: 8
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 12
+                            Text { text: "Charla usa el agente con todas las herramientas"; color: Theme.textSecondary }
+                            Item { Layout.fillWidth: true }
+                            LcSwitch {
+                                // Setting global de la app (no del perfil de voz):
+                                // decide si Charla es asistente o chat simple.
+                                checked: App.charlaAgentMode()
+                                onToggled: App.setCharlaAgentMode(checked)
+                            }
+                        }
+                        Text {
+                            Layout.fillWidth: true
+                            wrapMode: Text.WordWrap
+                            color: Theme.textSecondary
+                            font.pixelSize: 12
+                            text: "Al iniciar Charla se arranca el agente con el perfil \"Ingi Charla · JARVIS\": " +
+                                  "busca en la web, opera apps y el navegador, corre comandos. Avisa en voz " +
+                                  "antes de las tareas lentas y las acciones irreversibles se confirman " +
+                                  "diciendo \"sí\" o \"no\". Apagado: charla rápida sin herramientas."
+                        }
+                    }
+
                     Text { text: "Cursor por voz (accesibilidad)"; color: Theme.textPrimary; Layout.leftMargin: 24; font { pixelSize: 15; bold: true } }
                     ColumnLayout {
                         id: cursorOcrSection

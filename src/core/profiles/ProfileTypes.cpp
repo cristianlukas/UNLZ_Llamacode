@@ -539,7 +539,55 @@ QList<AgentProfile> AgentProfile::systemPresets() {
     next.spec.runtime.fallbackEngine = QStringLiteral("legacy");
     next.spec.runtime.experimental = true;
 
-    presets << next << minimal << rpa << browser << artifactLocal << artifactPublisher;
+    // Ingi Charla · JARVIS: agente + voz + computer use. Es el perfil que Charla
+    // aplica mientras está activa (ver AppController::startCharla). Todas las
+    // superficies de la PC (archivos/shell, web, escritorio, browser, skills,
+    // memoria, MCP) y nada de lo que solo sirve para codear (preflight de repo,
+    // test-net). Sin thinking: cada token de razonamiento es silencio en voz.
+    // Auto-aprobación con guardrail destructivo: lo irreversible se confirma
+    // hablando ("¿lo hago?" → "sí"), el resto no frena la conversación.
+    AgentProfile jarvis = mk("agent-jarvis", "Ingi Charla · JARVIS (voz + PC)", {},
+                             {"efficiency"}, "auto", false, /*mcp=*/true);
+    jarvis.progressCredits = 10;
+    jarvis.progressMaxCredits = 24;
+    jarvis.progressReplanAfter = 4;
+    jarvis.progressStopAfter = 6;
+    jarvis.quickToolTimeoutSec = 30;
+    jarvis.spec = jarvis.toSpec();
+    jarvis.hasSpec = true;
+    jarvis.spec.tools.set = true;
+    jarvis.spec.tools.packs = QStringList{"core", "web", "rpa", "browser", "skills"};
+    jarvis.spec.tools.include = QStringList{"memory", "recent_actions", "email_list",
+                                            "email_read"};
+    jarvis.spec.tools.exclude.clear();
+    jarvis.spec.tools.mcpToolsEnabled = true;
+    // Mismo set de tools en cada turno: recortarlo cambia el prefijo del prompt
+    // y tira el prompt-cache que el warmup de Charla precalienta mientras el
+    // usuario habla. En voz pesa más la latencia que unos KB de schema.
+    jarvis.spec.tools.adaptiveRouting = false;
+    jarvis.spec.permissions.set = true;
+    jarvis.spec.permissions.approvalMode = QStringLiteral("auto");
+    jarvis.spec.permissions.hitlDestructive = true;
+    jarvis.spec.permissions.mailAutoSend = false;
+    jarvis.spec.loop.set = true;
+    jarvis.spec.loop.credits = jarvis.progressCredits;
+    jarvis.spec.loop.maxCredits = jarvis.progressMaxCredits;
+    jarvis.spec.loop.replanAfter = jarvis.progressReplanAfter;
+    jarvis.spec.loop.stopAfter = jarvis.progressStopAfter;
+    jarvis.spec.loop.quickToolTimeoutSec = jarvis.quickToolTimeoutSec;
+    jarvis.spec.loop.webToolTimeoutSec = 120;
+    jarvis.spec.loop.sameCallLimit = 2;
+    jarvis.spec.context.set = true;
+    jarvis.spec.context.warmup = true;
+    jarvis.spec.context.preflight = false;
+    jarvis.spec.context.keepLastImages = 1;   // ver la pantalla actual, no el historial
+    jarvis.spec.context.compactionTrigger = 0.85;
+    jarvis.spec.protocol.set = true;
+    jarvis.spec.protocol.thinking = false;
+    jarvis.enabledTools = HarnessTools::resolve(jarvis.spec.tools);
+
+    presets << next << minimal << rpa << browser << artifactLocal << artifactPublisher
+            << jarvis;
     return presets;
 }
 

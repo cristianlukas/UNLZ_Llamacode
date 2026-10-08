@@ -51,6 +51,7 @@
 #include "core/voice/CharlaTuning.h"
 #include "core/voice/TtsPolicy.h"
 #include "core/voice/VoiceAgentPolicy.h"
+#include "core/voice/VoiceAssistant.h"
 #include "core/voice/VoiceCursorCommand.h"
 #include "core/agent/LlamaAgentBackend.h"
 #include "core/agent/HarnessDirectiveStore.h"
@@ -4856,7 +4857,10 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter,
         appendAgentEvent(QStringLiteral("backend"), chunk);
     });
     connect(b, &IAgentBackend::agentLifecycleEvent, this,
-            [this](const QVariantMap &event) { emit agentLifecycleEvent(event); });
+            [this](const QVariantMap &event) {
+        emit agentLifecycleEvent(event);
+        onCharlaAgentLifecycle(event);
+    });
     connect(b, &IAgentBackend::turnFinished, this, [this, b]() {
         if (m_agentBackend == b && !m_activeAssistantMessageId.isEmpty()) {
             const QString id = m_activeAssistantMessageId;
@@ -4899,6 +4903,7 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter,
             emit agentContextChanged();
         }
         emit agentRunningChanged();
+        onCharlaAgentRunningChanged(b->running());
     });
     connect(b, &IAgentBackend::errorOccurred, this, [this, b](const QString &m) {
         if (m_agentBackend == b && !m_activeAssistantMessageId.isEmpty()) {
@@ -4909,18 +4914,23 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter,
         if (m_agentStarting) {
             m_agentStarting = false;
             emit agentStartingChanged();
+            onCharlaAgentRunningChanged(b->running());   // turno en espera → chat
         }
         appendAgentEvent(QStringLiteral("error"), m);
         if (!m_runningTaskId.isEmpty())
             finishRunningTask(QStringLiteral("error"), m);
         emit serverError(m);
-        // Ingi Charla con agente: cortar el "pensando" y retomar escucha.
-        if (m_voice && m_charlaActive && m_charlaUseAgent && m_runningTaskId.isEmpty())
+        // Ingi Charla con agente: cortar el "pensando" y retomar escucha. Un
+        // turno frenado por voz ("pará") ya respondió "Listo, lo dejo".
+        if (m_voice && m_charlaActive && m_charlaUseAgent && m_runningTaskId.isEmpty()
+            && !m_charlaCancelled)
             m_voice->notifyTurnFailed(m);
+        if (m_charlaUseAgent) finishCharlaAgentTurn();
     });
     connect(b, &IAgentBackend::toolApprovalNeeded, this, [this](const QVariantMap &toolCall) {
         m_agentPendingTool = toolCall;
         emit agentPendingToolChanged();
+        onCharlaToolApprovalNeeded(toolCall);
     });
     connect(b, &IAgentBackend::desktopActivityChanged, this,
             [this](bool active, const QString &tool, const QString &detail) {
@@ -6141,6 +6151,10 @@ void AppController::applyActiveAgentProfile()
 
 void AppController::approveAgentTool(const QString &id, bool always)
 {
+    // Resuelta desde la UI con una pregunta hablada abierta: cerrarla para que
+    // el próximo "sí" no apruebe otra cosa.
+    if (m_charlaPendingApproval.value(QStringLiteral("id")).toString() == id)
+        m_charlaPendingApproval.clear();
     if (m_agentBackend) m_agentBackend->approveTool(id, always);
     if (m_agentPendingTool.value(QStringLiteral("id")).toString() == id) {
         m_agentPendingTool.clear();
@@ -6150,6 +6164,8 @@ void AppController::approveAgentTool(const QString &id, bool always)
 
 void AppController::rejectAgentTool(const QString &id)
 {
+    if (m_charlaPendingApproval.value(QStringLiteral("id")).toString() == id)
+        m_charlaPendingApproval.clear();
     if (m_agentBackend) m_agentBackend->rejectTool(id);
     if (m_agentPendingTool.value(QStringLiteral("id")).toString() == id) {
         m_agentPendingTool.clear();
@@ -8537,6 +8553,15 @@ void AppController::setTestAgentBackend(IAgentBackend *b)
         if (!m_runningTaskId.isEmpty())
             finishRunningTask(QStringLiteral("error"), m);
     });
+    // Reacciones de Charla: mismas funciones que el wiring real.
+    connect(b, &IAgentBackend::toolApprovalNeeded, this,
+            [this](const QVariantMap &call) { onCharlaToolApprovalNeeded(call); });
+    connect(b, &IAgentBackend::agentLifecycleEvent, this,
+            [this](const QVariantMap &event) { onCharlaAgentLifecycle(event); });
+    connect(b, &IAgentBackend::runningChanged, this, [this, b]() {
+        if (b->running()) m_agentStarting = false;
+        onCharlaAgentRunningChanged(b->running());
+    });
 }
 
 void AppController::runTaskBodyForTest(const QString &id)
@@ -8871,11 +8896,13 @@ void AppController::onAgentTurnFinished()
     // hablando en vivo (speakStreaming durante streamingText); acá solo se encola
     // el fragmento final que quedó sin terminador. Si por algún motivo no hubo
     // streaming (idx -1), speakFlush habla el texto completo igual.
-    if (m_voice && m_charlaActive && m_charlaUseAgent && m_runningTaskId.isEmpty()) {
+    if (m_voice && m_charlaActive && m_charlaUseAgent && m_runningTaskId.isEmpty()
+        && !m_charlaCancelled) {
         const QString reply = latestAgentAssistantText().trimmed();
         if (!reply.isEmpty()) m_voice->speakFlush(m_charlaStreamBubble, reply);
         m_charlaStreamBubble = -1;
     }
+    finishCharlaAgentTurn();
     if (m_restartThinkingAfterResponse)
         restartActiveLaunchForThinking(m_restartThinkingWithAgent, false);
 }
@@ -24084,8 +24111,25 @@ bool AppController::tryVoiceCursorCommand(const QString &text)
 
 bool AppController::dispatchCharlaTranscript(const QString &text)
 {
+    // Pregunta de aprobación abierta: este turno es la respuesta ("sí"/"no").
+    if (!m_charlaPendingApproval.isEmpty() && handleCharlaApprovalAnswer(text))
+        return true;
+
     // Comando de cursor por voz (opt-in): se resuelve local y NO va al LLM.
     if (tryVoiceCursorCommand(text)) return false;
+
+    // Modo JARVIS con el agente todavía arrancando: no degradar el turno a chat
+    // sin herramientas. Se guarda y se manda apenas el agente queda listo.
+    if (charlaAgentMode() && m_agentStarting && !(m_agentBackend && m_agentBackend->running())) {
+        m_charlaPendingTranscript = text;
+        m_charlaUseAgent = true;
+        if (m_voice) m_voice->notifyThinking();
+        charlaSpeakCue(m_language.startsWith(QLatin1String("en"))
+                           ? QStringLiteral("One second, getting my tools ready.")
+                           : QStringLiteral("Un segundo, preparo las herramientas."));
+        qInfo().noquote() << QStringLiteral("[charla] turno en espera: el agente está arrancando");
+        return true;
+    }
 
     // Ingi Charla: si hay un agente corriendo (con computer-use/visión de las
     // pantallas), el turno va al agente para que opere la PC (clic, teclado,
@@ -24096,6 +24140,39 @@ bool AppController::dispatchCharlaTranscript(const QString &text)
         // segundos de tokens que no se hablan). Se restaura en stopCharla.
         if (auto *lb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
             lb->setThinkingEnabled(false);
+        applyCharlaVoiceModeToAgent(true);
+        if (m_charlaAgentTurnActive || agentBackendBusy()) {
+            // Barge-in con el agente trabajando. "Pará" frena; cualquier otra
+            // cosa es un pedido más y espera su turno (mandarlo ahora haría que
+            // el backend lo rechace y la charla lo tome como turno fallido).
+            if (VoiceAssistant::isStopCommand(text)) {
+                qInfo().noquote() << QStringLiteral("[charla] frenar por voz: cancelando el turno del agente");
+                m_charlaQueuedTurns.clear();
+                m_charlaCancelled = true;
+                cancelAgentGeneration();
+                // cancelGeneration desconecta el reply antes de abortarlo: no
+                // llega turnFinished, así que el turno se cierra acá. El flag
+                // de cancelado queda hasta el próximo turno por si algún
+                // backend sí emite el cierre (no hablar su cola).
+                m_charlaAgentTurnActive = false;
+                const QString done = m_language.startsWith(QLatin1String("en"))
+                    ? QStringLiteral("Okay, stopped.") : QStringLiteral("Listo, lo dejo.");
+                m_charlaLastPrompt = done;
+                if (m_voice) m_voice->speak(done);
+                return true;
+            }
+            m_charlaQueuedTurns << text;
+            qInfo().noquote() << QStringLiteral("[charla] pedido en cola (agente ocupado, %1 en cola)")
+                                     .arg(m_charlaQueuedTurns.size());
+            if (m_voice) m_voice->notifyThinking();
+            charlaSpeakCue(m_language.startsWith(QLatin1String("en"))
+                               ? QStringLiteral("Noted, right after this.")
+                               : QStringLiteral("Anotado, sigo con eso después."));
+            return true;
+        }
+        m_charlaCueTimer.invalidate();
+        m_charlaCancelled = false;
+        m_charlaAgentTurnActive = true;
         qInfo().noquote() << QStringLiteral("[charla] turno → AGENTE (%1 chars)").arg(text.size());
         if (m_voice) m_voice->notifyThinking();
         sendToAgent(text);
@@ -24108,6 +24185,151 @@ bool AppController::dispatchCharlaTranscript(const QString &text)
                              .arg(text.size()).arg(serverBaseUrl());
     sendChatMessage(text);
     return false;
+}
+
+bool AppController::charlaAgentMode() const
+{
+    return readSetting(QStringLiteral("charla/agentMode"), true).toBool();
+}
+
+void AppController::setCharlaAgentMode(bool on)
+{
+    writeSetting(QStringLiteral("charla/agentMode"), on);
+}
+
+QString AppController::charlaAgentProfileId() const
+{
+    return readSetting(QStringLiteral("charla/agentProfileId"),
+                       QStringLiteral("agent-jarvis")).toString();
+}
+
+void AppController::setCharlaAgentProfileId(const QString &id)
+{
+    writeSetting(QStringLiteral("charla/agentProfileId"), id.trimmed());
+}
+
+void AppController::charlaSpeakCue(const QString &text)
+{
+    m_charlaLastPrompt = text;
+    if (m_voice) m_voice->speakCue(text);
+}
+
+void AppController::charlaAsk(const QString &text)
+{
+    m_charlaLastPrompt = text;
+    if (m_voice) m_voice->ask(text);
+}
+
+void AppController::applyCharlaVoiceModeToAgent(bool on)
+{
+    auto *lb = qobject_cast<LlamaAgentBackend *>(m_agentBackend);
+    if (!lb) return;
+    lb->setVoiceMode(on);
+    // Charla es conversación hablada: sin razonamiento <think> (genera segundos
+    // de tokens que no se hablan). Al salir vuelve el thinking configurado.
+    lb->setThinkingEnabled(on ? false : m_agentThinkingEnabled);
+}
+
+void AppController::onCharlaToolApprovalNeeded(const QVariantMap &toolCall)
+{
+    if (!m_charlaActive || !m_charlaUseAgent) return;
+    // Sin esto la charla quedaba muda en "pensando" esperando un clic que el
+    // usuario, que está hablando, no sabe que tiene que dar.
+    m_charlaPendingApproval = toolCall;
+    m_charlaApprovalRetries = 0;
+    charlaAsk(VoiceAssistant::approvalQuestion(toolCall, m_language));
+}
+
+bool AppController::handleCharlaApprovalAnswer(const QString &text)
+{
+    const QString id = m_charlaPendingApproval.value(QStringLiteral("id")).toString();
+    const bool en = m_language.startsWith(QLatin1String("en"));
+    switch (VoiceAssistant::parseConfirmation(text)) {
+    case VoiceAssistant::Confirmation::Yes:
+        qInfo().noquote() << QStringLiteral("[charla] aprobación por voz: SÍ (%1)").arg(id);
+        m_charlaPendingApproval.clear();
+        if (m_voice) m_voice->notifyThinking();
+        approveAgentTool(id);
+        return true;
+    case VoiceAssistant::Confirmation::No:
+        qInfo().noquote() << QStringLiteral("[charla] aprobación por voz: NO (%1)").arg(id);
+        m_charlaPendingApproval.clear();
+        // El agente sigue el turno con la tool rechazada y contesta: se habla eso.
+        if (m_voice) m_voice->notifyThinking();
+        rejectAgentTool(id);
+        return true;
+    case VoiceAssistant::Confirmation::Unknown:
+        break;
+    }
+    // Una sola repregunta. Si tampoco se entiende, lo seguro es NO ejecutar: la
+    // frase probablemente era otra orden, y se rutea como turno normal.
+    if (m_charlaApprovalRetries++ < 1) {
+        charlaAsk(en ? QStringLiteral("Sorry, yes or no?")
+                     : QStringLiteral("Perdón, ¿sí o no?"));
+        return true;
+    }
+    qInfo().noquote() << QStringLiteral("[charla] aprobación por voz: sin respuesta clara, rechazo (%1)").arg(id);
+    m_charlaPendingApproval.clear();
+    rejectAgentTool(id);
+    return false;
+}
+
+void AppController::onCharlaAgentLifecycle(const QVariantMap &event)
+{
+    if (!m_charlaActive || !m_charlaUseAgent) return;
+    if (event.value(QStringLiteral("event")).toString() != QLatin1String("tool.start")) return;
+    // Un aviso por turno, y otro sólo si pasó un buen rato en silencio (tarea
+    // larga): más seguido sería ruido que tapa la respuesta.
+    if (m_charlaCueTimer.isValid() && m_charlaCueTimer.elapsed() < kCharlaCueEveryMs) return;
+    // Si el modelo ya anunció lo que hace ("Dale, lo busco."), eso está sonando:
+    // un segundo aviso sería redundante. Sólo se tapa el silencio.
+    if (m_voice && m_voice->state() != VoiceController::Thinking) {
+        m_charlaCueTimer.start();
+        return;
+    }
+    const QString cue = VoiceAssistant::toolCue(
+        event.value(QStringLiteral("tool")).toString(), m_language);
+    if (cue.isEmpty()) return;          // tool rápida: esperar a una lenta
+    m_charlaCueTimer.start();
+    charlaSpeakCue(cue);
+}
+
+void AppController::finishCharlaAgentTurn()
+{
+    if (!m_charlaAgentTurnActive) return;
+    m_charlaAgentTurnActive = false;
+    m_charlaCancelled = false;
+    if (!m_charlaActive || m_charlaQueuedTurns.isEmpty()) return;
+    // Lo que el usuario pidió mientras el agente trabajaba, en orden.
+    const QString next = m_charlaQueuedTurns.takeFirst();
+    QTimer::singleShot(0, this, [this, next]() {
+        if (m_charlaActive) dispatchCharlaTranscript(next);
+    });
+}
+
+void AppController::onCharlaAgentRunningChanged(bool running)
+{
+    if (!m_charlaActive) return;
+    if (running) {
+        applyCharlaVoiceModeToAgent(true);
+        if (!m_charlaPendingTranscript.isEmpty()) {
+            const QString text = m_charlaPendingTranscript;
+            m_charlaPendingTranscript.clear();
+            QTimer::singleShot(0, this, [this, text]() {
+                if (m_charlaActive) dispatchCharlaTranscript(text);
+            });
+        }
+        return;
+    }
+    // El agente no llegó a arrancar (o se cayó) con un turno en espera: no
+    // perderlo. Sin agente, dispatch lo manda al chat (voz-a-voz sin tools).
+    if (!m_agentStarting && !m_charlaPendingTranscript.isEmpty()) {
+        const QString text = m_charlaPendingTranscript;
+        m_charlaPendingTranscript.clear();
+        QTimer::singleShot(0, this, [this, text]() {
+            if (m_charlaActive) dispatchCharlaTranscript(text);
+        });
+    }
 }
 
 void AppController::startMicTest()
@@ -24395,6 +24617,29 @@ void AppController::startCharla()
     m_charlaGpuRebalanceCandidate.clear();
     m_charlaGpuRebalanceSamples = 0;
     m_charlaGpuRebalanceWarned = false;
+    m_charlaPendingTranscript.clear();
+    m_charlaPendingApproval.clear();
+    // Modo JARVIS: Charla ES el agente con voz. Perfil de agente de voz (todas
+    // las tools de la PC) mientras dure, y el agente arrancado si no corría: sin
+    // esto la charla caía a chat plano sin herramientas cuando el usuario no
+    // había abierto antes la pestaña Agente.
+    if (charlaAgentMode()) {
+        const QString voiceProfile = charlaAgentProfileId();
+        if (!voiceProfile.isEmpty()
+            && !m_profiles.resolveAgentProfile(voiceProfile).id.isEmpty()
+            && resolveAgentProfileId() != voiceProfile) {
+            m_charlaPrevAgentProfileId = m_activeAgentProfileId;
+            m_charlaProfileSwapped = true;
+            setActiveAgentProfileId(voiceProfile);
+        }
+        if (!agentRunning() && !m_agentStarting && !m_activeLaunchId.isEmpty()) {
+            qInfo().noquote() << QStringLiteral("[charla] modo agente: arrancando agente (%1)")
+                                     .arg(resolveAgentProfileId());
+            if (serverRunning() || !localLaunch) startAgent(m_activeLaunchId);
+            else startServerAndAgent(m_activeLaunchId);
+        }
+    }
+    applyCharlaVoiceModeToAgent(true);
     m_voice->start();
 }
 
@@ -24456,9 +24701,22 @@ void AppController::stopCharla()
     m_charlaGpuRebalanceCandidate.clear();
     m_charlaGpuRebalanceSamples = 0;
     m_charlaGpuRebalanceWarned = false;
-    // Restaurar el thinking configurado (la charla lo fuerza a off por turno).
-    if (auto *lb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
-        lb->setThinkingEnabled(m_agentThinkingEnabled);
+    // Restaurar el thinking configurado (la charla lo fuerza a off por turno) y
+    // la identidad de agente de coding.
+    applyCharlaVoiceModeToAgent(false);
+    m_charlaPendingTranscript.clear();
+    m_charlaQueuedTurns.clear();
+    m_charlaAgentTurnActive = false;
+    m_charlaCancelled = false;
+    if (!m_charlaPendingApproval.isEmpty()) {
+        // Nadie va a contestar la pregunta hablada: queda la tarjeta de la UI.
+        m_charlaPendingApproval.clear();
+    }
+    if (m_charlaProfileSwapped) {
+        m_charlaProfileSwapped = false;
+        setActiveAgentProfileId(m_charlaPrevAgentProfileId);
+        m_charlaPrevAgentProfileId.clear();
+    }
     if (auto *raw = qobject_cast<RawChatBackend *>(m_chatBackend))
         raw->setThinkingEnabled(m_chatThinkingEnabled);
 }

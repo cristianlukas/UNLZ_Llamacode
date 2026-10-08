@@ -57,6 +57,8 @@ Reglas:
 | FuzzyMatch (matching difuso de nombres de control) | `tests/test_fuzzy_match.cpp` |
 | OcrTextLocator (ubicar texto OCR en pantalla) | `tests/test_ocr_locator.cpp` |
 | VoiceCursorCommand (parseo de órdenes de cursor por voz) | `tests/test_voice.cpp` |
+| VoiceAssistant (Charla JARVIS: sí/no hablado, avisos de tool, pregunta de aprobación) + turno abierto de VoiceController | `tests/test_voice.cpp` |
+| Charla modo JARVIS en AppController (aprobación por voz, aviso de tool lenta, turno en espera al arrancar el agente, "pará"/cola con el agente trabajando) | `tests/test_appcontroller.cpp` |
 | ThemeProvider (temas custom, normalización de hex) | `tests/test_theme.cpp` |
 | LcColorRow + LcColorPicker (editor de tema, lado QML) | `tests/qml/tst_color_picker.qml` |
 
@@ -145,6 +147,17 @@ reproducible en headless/CI), así que sólo se cubre el path de error en
   **Correrlo con una app con menús abierta en un monitor ESCALADO (125/150%)**: a
   100% lógico y físico coinciden y taparían cualquier error de espacio de coords.
   Así se cazó el bug de `targetBounds` (acuerdo 10% en el monitor al 150%, hoy 97%).
+- **Charla modo JARVIS** (default on; Charla → "Modo JARVIS"): sin abrir antes
+  la pestaña Agente, iniciar Charla → el log muestra `[charla] modo agente:
+  arrancando agente (agent-jarvis)`. Decir "buscá el clima de mañana" → se oye
+  un aviso ("Lo busco.") y DESPUÉS la respuesta (antes el aviso abría el
+  micrófono y la respuesta final se perdía). Pedir algo destructivo ("borrá la
+  carpeta X") → pregunta "¿Lo hago?"; "no" lo cancela y el agente lo dice. Al
+  salir de Charla vuelve el perfil de agente anterior. Con el agente trabajando:
+  decir "pará" lo frena ("Listo, lo dejo."); decir otro pedido responde
+  "Anotado" y lo hace al terminar; toser o golpear la mesa NO corta nada (el
+  monitor exige ~400 ms de voz sostenida). Probar con parlantes, no auriculares:
+  el eco del TTS no debería disparar el barge-in.
 - **Cursor por voz** (`cursorOcr` en Charla, off por defecto): activarlo en
   Charla → decir "clic en Guardar" mueve/clickea; decir "no sé si hacer clic en
   Guardar" NO actúa y va al LLM. Con dos textos iguales en pantalla debe negarse

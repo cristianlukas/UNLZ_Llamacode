@@ -1,4 +1,5 @@
 #pragma once
+#include <QDate>
 #include "IAgentBackend.h"
 #include "AgentProgressGovernor.h"
 #include "HarnessEventLog.h"
@@ -139,6 +140,12 @@ public:
     void setReasoningPolicy(const QString &effort, int budget);
     void setThinkingLeakGuard(bool enabled) { m_thinkingLeakGuard = enabled; }
     void setStablePhasePrefix(bool enabled) { m_stablePhasePrefix = enabled; }
+    // Ingi Charla en modo asistente: el agente es la voz de la PC. Cambia la
+    // identidad del system prompt (asistente hablado en vez de agente de coding),
+    // pide respuestas cortas para TTS y anunciar antes de usar tools. Lo prende
+    // AppController mientras la charla está activa y lo apaga al salir.
+    void setVoiceMode(bool enabled);
+    bool voiceMode() const { return m_voiceMode; }
     bool stablePhasePrefixForTest() const { return m_stablePhasePrefix; }
     QVariantMap efficiencySummary() const;
     QVariantMap progressSummary() const {
@@ -243,6 +250,10 @@ public:
     // habilitarlas/deshabilitarlas por directiva. Puras y testeables.
     static QString efficiencySection();
     static QString styleSection();
+    // Reglas del modo voz (ver setVoiceMode). Pura y testeable. `today` entra
+    // al prompt con precisión de DÍA: "buscá el clima de mañana" necesita saber
+    // qué día es, y la hora invalidaría el prompt-cache en cada turno.
+    static QString voiceModeSection(const QDate &today = QDate());
 
     // Playbook de AUTOMATIZACIÓN DE ESCRITORIO: guía concreta para operar apps
     // nativas de Windows con las tools desktop_* sin flailar. Camino rápido por
@@ -688,6 +699,7 @@ private:
     QString m_systemExtra;          // instrucciones extra del usuario (perfil de agente)
     double  m_temperature = -1.0;   // <0 = no enviar (default del server)
     bool    m_thinkingEnabled = false;
+    bool    m_voiceMode = false;
     QString m_reasoningEffort;
     int     m_reasoningBudget = -1;
     bool    m_thinkingLeakGuard = false;
