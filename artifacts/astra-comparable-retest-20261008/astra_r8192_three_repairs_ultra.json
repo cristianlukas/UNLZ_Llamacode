@@ -1,0 +1,140 @@
+{
+  "id": "4df9ec15-f386-478b-8a31-94a61fac7483",
+  "profileId": "astra-strata-iq3s-calibrated-r8192-test-20261008",
+  "profileName": "ASTRA IQ3_S calibrated · reasoning 8192 test",
+  "profileConfigFingerprint": "0b766f83c9f065b75b81f3652952ffbac497888791907c5effa5d8150ae488a2",
+  "benchmarkName": "Qwen3.8 ASTRA IQ3_S calibrado vs SOL · TaskFlow ULTRA E2E",
+  "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+  "finalScore": 13,
+  "finalTotal": 13,
+  "firstAttemptScore": 0,
+  "firstAttemptTotal": 13,
+  "elapsedSec": 287.296,
+  "avgTps": 100.34111258626706,
+  "repairAttempts": 3,
+  "failed": false,
+  "failureKind": "none",
+  "failureStage": null,
+  "failureMessage": null,
+  "passedAfterRepair": true,
+  "acceptance": [
+    {
+      "name": "taskflow_ultra/__init__.py",
+      "output": "Archivo encontrado.",
+      "passed": true,
+      "taskId": "taskflow_ultra_advanced_project",
+      "type": "file"
+    },
+    {
+      "name": "taskflow_ultra/models.py",
+      "output": "Archivo encontrado.",
+      "passed": true,
+      "taskId": "taskflow_ultra_advanced_project",
+      "type": "file"
+    },
+    {
+      "name": "taskflow_ultra/storage.py",
+      "output": "Archivo encontrado.",
+      "passed": true,
+      "taskId": "taskflow_ultra_advanced_project",
+      "type": "file"
+    },
+    {
+      "name": "taskflow_ultra/service.py",
+      "output": "Archivo encontrado.",
+      "passed": true,
+      "taskId": "taskflow_ultra_advanced_project",
+      "type": "file"
+    },
+    {
+      "name": "taskflow_ultra/scheduler.py",
+      "output": "Archivo encontrado.",
+      "passed": true,
+      "taskId": "taskflow_ultra_advanced_project",
+      "type": "file"
+    },
+    {
+      "name": "taskflow_ultra/query.py",
+      "output": "Archivo encontrado.",
+      "passed": true,
+      "taskId": "taskflow_ultra_advanced_project",
+      "type": "file"
+    },
+    {
+      "name": "taskflow_ultra/reports.py",
+      "output": "Archivo encontrado.",
+      "passed": true,
+      "taskId": "taskflow_ultra_advanced_project",
+      "type": "file"
+    },
+    {
+      "name": "taskflow_ultra/cli.py",
+      "output": "Archivo encontrado.",
+      "passed": true,
+      "taskId": "taskflow_ultra_advanced_project",
+      "type": "file"
+    },
+    {
+      "name": "taskflow_ultra/main.py",
+      "output": "Archivo encontrado.",
+      "passed": true,
+      "taskId": "taskflow_ultra_advanced_project",
+      "type": "file"
+    },
+    {
+      "name": "tests/test_taskflow_ultra.py",
+      "output": "Archivo encontrado.",
+      "passed": true,
+      "taskId": "taskflow_ultra_advanced_project",
+      "type": "file"
+    },
+    {
+      "command": "python -m py_compile taskflow_ultra/__init__.py taskflow_ultra/models.py taskflow_ultra/storage.py taskflow_ultra/service.py taskflow_ultra/scheduler.py taskflow_ultra/query.py taskflow_ultra/reports.py taskflow_ultra/cli.py taskflow_ultra/main.py tests/test_taskflow_ultra.py",
+      "exitCode": 0,
+      "name": "compile_package",
+      "output": "",
+      "passed": true,
+      "taskId": "taskflow_ultra_advanced_project",
+      "timedOut": false,
+      "timeoutMs": 30000,
+      "type": "command"
+    },
+    {
+      "command": "python -m unittest discover -s tests -p test_taskflow_ultra.py -v",
+      "exitCode": 0,
+      "name": "unit_tests",
+      "output": "test_concurrent_create_no_duplicate_ids (test_taskflow_ultra.TestConcurrency.test_concurrent_create_no_duplicate_ids) ... ok\ntest_concurrent_status_changes_are_safe (test_taskflow_ultra.TestConcurrency.test_concurrent_status_changes_are_safe) ... ok\ntest_create_task_defaults (test_taskflow_ultra.TestCreationAndValidation.test_create_task_defaults) ... ok\ntest_empty_title_raises_value_error (test_taskflow_ultra.TestCreationAndValidation.test_empty_title_raises_value_error) ... ok\ntest_get_task_missing_raises_key_error (test_taskflow_ultra.TestCreationAndValidation.test_get_task_missing_raises_key_error) ... ok\ntest_ids_are_increasing_and_unique (test_taskflow_ultra.TestCreationAndValidation.test_ids_are_increasing_and_unique) ... ok\ntest_invalid_date_raises (test_taskflow_ultra.TestCreationAndValidation.test_invalid_date_raises) ... ok\ntest_invalid_priority_status_recurrence_raise (test_taskflow_ultra.TestCreationAndValidation.test_invalid_priority_status_recurrence_raise) ... ok\ntest_tags_normalized_case_insensitive_dedupe (test_taskflow_ultra.TestCreationAndValidation.test_tags_normalized_case_insensitive_dedupe) ... ok\ntest_task_roundtrip_symmetric (test_taskflow_ultra.TestCreationAndValidation.test_task_roundtrip_symmetric) ... ok\ntest_add_dependency_and_blocked_by (test_taskflow_ultra.TestDependencies.test_add_dependency_and_blocked_by) ... ok\ntest_complete_blocked_by_dependencies (test_taskflow_ultra.TestDependencies.test_complete_blocked_by_dependencies) ... ok\ntest_cycle_detection_direct_and_indirect (test_taskflow_ultra.TestDependencies.test_cycle_detection_direct_and_indirect) ... ok\ntest_delete_task_removes_dangling_deps (test_taskflow_ultra.TestDependencies.test_delete_task_removes_dangling_deps) ... ok\ntest_dependency_on_missing_id_raises_key_error (test_taskflow_ultra.TestDependencies.test_dependency_on_missing_id_raises_key_error) ... ok\ntest_ready_tasks_only_todo_with_done_deps (test_taskflow_ultra.TestDependencies.test_ready_tasks_only_todo_with_done_deps) ... ok\ntest_reopen_and_cancel (test_taskflow_ultra.TestDependencies.test_reopen_and_cancel) ... ok\ntest_combined_filters_and_search (test_taskflow_ultra.TestFiltersAndSummary.test_combined_filters_and_search) ... ok\ntest_summary_counts_overdue_blocked_ready (test_taskflow_ultra.TestFiltersAndSummary.test_summary_counts_overdue_blocked_ready) ... ok\ntest_history_records_each_mutation (test_taskflow_ultra.TestHistoryAndUndo.test_history_records_each_mutation) ... ok\ntest_undo_multi_level_and_empty (test_taskflow_ultra.TestHistoryAndUndo.test_undo_multi_level_and_empty) ... ok\ntest_undo_restores_deleted_task (test_taskflow_ultra.TestHistoryAndUndo.test_undo_restores_deleted_task) ... ok\ntest_undo_reverts_last_mutation (test_taskflow_ultra.TestHistoryAndUndo.test_undo_reverts_last_mutation) ... ok\ntest_apply_query_combines_filters (test_taskflow_ultra.TestQuery.test_apply_query_combines_filters) ... ok\ntest_parse_query_ignores_unknown_keys (test_taskflow_ultra.TestQuery.test_parse_query_ignores_unknown_keys) ... ok\ntest_parse_query_tokens (test_taskflow_ultra.TestQuery.test_parse_query_tokens) ... ok\ntest_complete_creates_next_occurrence (test_taskflow_ultra.TestRecurrence.test_complete_creates_next_occurrence) ... ok\ntest_invalid_recurrence_raises (test_taskflow_ultra.TestRecurrence.test_invalid_recurrence_raises) ... ok\ntest_next_occurrence_daily_weekly (test_taskflow_ultra.TestRecurrence.test_next_occurrence_daily_weekly) ... ok\ntest_next_occurrence_monthly_clamps_end_of_month (test_taskflow_ultra.TestRecurrence.test_next_occurrence_monthly_clamps_end_of_month) ... ok\ntest_non_recurring_complete_creates_nothing (test_taskflow_ultra.TestRecurrence.test_non_recurring_complete_creates_nothing) ... ok\ntest_export_csv_structure (test_taskflow_ultra.TestReportsAndExports.test_export_csv_structure) ... ok\ntest_markdown_report_sections (test_taskflow_ultra.TestReportsAndExports.test_markdown_report_sections) ... ok\ntest_concurrent_saves_do_not_corrupt (test_taskflow_ultra.TestStorage.test_concurrent_saves_do_not_corrupt) ... ok\ntest_corrupt_json_returns_empty (test_taskflow_ultra.TestStorage.test_corrupt_json_returns_empty) ... ok\ntest_ids_preserved_and_increasing_after_reload (test_taskflow_ultra.TestStorage.test_ids_preserved_and_increasing_after_reload) ... ok\ntest_load_missing_file_returns_empty (test_taskflow_ultra.TestStorage.test_load_missing_file_returns_empty) ... ok\ntest_malformed_entries_skipped (test_taskflow_ultra.TestStorage.test_malformed_entries_skipped) ... ok\ntest_save_is_atomic_no_temp_leftovers (test_taskflow_ultra.TestStorage.test_save_is_atomic_no_temp_leftovers) ... ok\ntest_state_survives_reload (test_taskflow_ultra.TestStorage.test_state_survives_reload) ... ok\n\n----------------------------------------------------------------------\nRan 40 tests in 0.323s\n\nOK",
+      "passed": true,
+      "taskId": "taskflow_ultra_advanced_project",
+      "timedOut": false,
+      "timeoutMs": 180000,
+      "type": "command"
+    },
+    {
+      "command": "python -m taskflow_ultra.main --self-test",
+      "exitCode": 0,
+      "name": "self_test",
+      "output": "SELF_TEST_OK",
+      "passed": true,
+      "taskId": "taskflow_ultra_advanced_project",
+      "timedOut": false,
+      "timeoutMs": 60000,
+      "type": "command"
+    }
+  ],
+  "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Qwen3_8_ASTRA_IQ3_S_calibrado_vs_SOL_Tas_20261008_121046",
+  "agentTemperature": 0.1,
+  "agentSeed": 4242,
+  "thinkingEnabled": true,
+  "benchmarkEffectiveArgs": [
+    "/home/cristian/.cache/strata-review-20261002/Strata-0.1.35/serve/server.py",
+    "--engine",
+    "strata",
+    "--config",
+    "/home/cristian/.cache/strata-review-20261002/Strata-0.1.35/strata-iq3_s-calibrated-retest-20261006.json",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "8350"
+  ]
+}

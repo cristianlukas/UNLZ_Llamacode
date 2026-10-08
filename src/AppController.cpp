@@ -19510,7 +19510,11 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         auto firstAttemptScore = std::make_shared<int>(-1);
         auto firstAttemptTotal = std::make_shared<int>(0);
         auto timeToFirstAttempt = std::make_shared<double>(0.0);
-        const int maxRepairAttempts = 2;
+        // A hard acceptance failure receives a bounded third repair turn. In
+        // the ASTRA TaskFlow ULTRA retest, two turns repeatedly left two checks
+        // failing; three turns closed the full suite in two independent runs.
+        // This path is entered only for failed hard criteria, not partial scores.
+        const int maxRepairAttempts = 3;
         // No inferir que el modelo está inactivo sólo porque no hubo un token
         // visible durante un intervalo fijo. En perfiles grandes el servidor
         // puede estar evaluando prompt, ejecutando una tool/MCP o esperando el

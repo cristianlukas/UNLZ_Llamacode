@@ -571,6 +571,18 @@ defecto y la comparación sería una mentira.
 
 Regla de lectura: un harness sólo es mejor si **no** baja calidad ni tasa de éxito.
 
+### Reparación acotada de fallos de aceptación
+
+El benchmark de agente permite hasta **tres** turnos de reparación cuando
+fallan criterios duros de aceptación (por ejemplo, comandos/tests o archivos
+requeridos). Cada turno recibe los checks fallidos y debe editarlos y volver a
+verificarlos. Un score parcial de calidad, por sí solo, no dispara reparaciones.
+El tope es finito: evita convertir la reparación en un loop ilimitado. Se subió
+de dos a tres tras dos repeticiones independientes de ASTRA IQ3_S en TaskFlow
+ULTRA: el límite 2 terminó 11/13; el límite 3 cerró 13/13 en ambas, con
+287–333 s totales. El coste adicional aparece sólo cuando el intento anterior
+sigue incumpliendo aceptación. Recibos y huellas: `artifacts/astra-comparable-retest-20261008/`.
+
 Para comparar harnesses que viven fuera de LlamaCode existe además
 `tools/harness_matrix.py`. Usa el contrato JSONL `llamacode-harness-v1`, ejecuta
 el mismo producto adapter × tarea con orden intercalado y semilla reproducible,
