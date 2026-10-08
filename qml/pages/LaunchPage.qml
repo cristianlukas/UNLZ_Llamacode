@@ -447,7 +447,21 @@ Item {
                             else
                                 available.push(items[i])
                         }
-                        return available.concat(unavailable)
+                        function mostRecentFirst(group) {
+                            const ordered = []
+                            for (var j = 0; j < group.length; ++j) {
+                                const usedAt = Number(group[j].lastUsed) || 0
+                                var position = ordered.length
+                                // Insert only before strictly older entries: equal timestamps
+                                // retain the order already chosen by ProfileManager.
+                                while (position > 0
+                                       && usedAt > (Number(ordered[position - 1].lastUsed) || 0))
+                                    --position
+                                ordered.splice(position, 0, group[j])
+                            }
+                            return ordered
+                        }
+                        return mostRecentFirst(available).concat(mostRecentFirst(unavailable))
                     }
                     property var launchMenu: availableProfilesFirst(App.launchMenu())
                     function refreshMenu() {
