@@ -168,22 +168,35 @@ Item {
                             Layout.leftMargin: 16
                             Layout.rightMargin: 16
                             enabled: !App.autoTuneRunning
-                            property var launchMenu: App.launchMenu()
+                            property var launchMenu: App.launchMenuQuick()
                             function refreshMenu() {
                                 const sel = profileCombo.currentValue
-                                profileCombo.launchMenu = App.launchMenu()
+                                profileCombo.launchMenu = App.launchMenuQuick()
                                 const i = profileCombo.indexOfValue(sel)
                                 if (i >= 0) profileCombo.currentIndex = i
+                                App.refreshLaunchMenuReadiness()
                             }
                             Connections {
                                 target: App.profileManager
                                 function onLaunchesChanged() { profileCombo.refreshMenu() }
                             }
+                            Connections {
+                                target: App
+                                function onLaunchMenuReadinessChanged() {
+                                    const sel = profileCombo.currentValue
+                                    profileCombo.launchMenu = App.launchMenuQuick()
+                                    const i = profileCombo.indexOfValue(sel)
+                                    if (i >= 0) profileCombo.currentIndex = i
+                                }
+                            }
                             model: launchMenu
                             textRole: "displayName"
                             valueRole: "id"
                             onCurrentValueChanged: root.selectedLaunchId = currentValue || ""
-                            Component.onCompleted: root.selectedLaunchId = currentValue || ""
+                            Component.onCompleted: {
+                                root.selectedLaunchId = currentValue || ""
+                                App.refreshLaunchMenuReadiness()
+                            }
                             background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
                             contentItem: Text {
                                 text: profileCombo.displayText

@@ -76,8 +76,9 @@ Rectangle {
                 // (App.agentStarting) → la página muestra su popup "Iniciando agente"
                 // con los botones deshabilitados, igual que Agente. Solo queda
                 // grisada si el agente no fue iniciado en absoluto.
-                enabled: NavigationPolicy.pageEnabled(modelData, App.backendAvailable,
-                                                       App.agentRunning, App.agentStarting)
+                enabled: modelData ? NavigationPolicy.pageEnabled(modelData, App.backendAvailable,
+                                                                   App.agentRunning, App.agentStarting)
+                                   : true
                 opacity: enabled ? 1.0 : 0.35
                 background: Rectangle {
                     color: parent.highlighted ? Theme.highlight : (parent.hovered && parent.enabled ? Theme.hoverBg : "transparent")

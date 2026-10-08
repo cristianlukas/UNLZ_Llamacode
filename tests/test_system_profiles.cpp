@@ -18,6 +18,8 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QRegularExpression>
+#include <QElapsedTimer>
+#include <QSignalSpy>
 #include <QUuid>
 #include <QCoreApplication>
 #include <algorithm>
@@ -93,6 +95,7 @@ private slots:
     void bundle_ultraQ48gbIsDualGpuVariantOfUltraQ();
     void controller_launchMenuGatesByTotalVramAcrossGpus();
     void controller_launchMenuAnnotatesGpuAffinity();
+    void controller_launchMenuQuickDefersReadinessWork();
     void controller_astraStrataIsListedAndRequiresLocalSetup();
     void bundle_48gbFamilyIsBenchmarkableAndDualGpu();
     void controller_duplicateBakesResolvedBinary();
@@ -1716,6 +1719,29 @@ void SystemProfilesTests::controller_launchMenuAnnotatesGpuAffinity()
     }
     QVERIFY(dualMarked);
     QVERIFY(ninferMarked);
+}
+
+void SystemProfilesTests::controller_launchMenuQuickDefersReadinessWork()
+{
+    AppController app;
+    app.setHardwareSummaryForTest(24.0, 128.0,
+                                 QStringLiteral("NVIDIA GeForce RTX 3090"), 48.0, 2);
+    QElapsedTimer timer;
+    timer.start();
+    const QVariantList menu = app.launchMenuQuick();
+    const qint64 elapsedMs = timer.elapsed();
+    QVERIFY2(elapsedMs < 500, qPrintable(QStringLiteral("quick menu took %1 ms").arg(elapsedMs)));
+    QVERIFY(!menu.isEmpty());
+    for (const QVariant &value : menu)
+        QVERIFY(!value.toMap().value(QStringLiteral("readyKnown")).toBool());
+
+    QSignalSpy readinessSpy(&app, &AppController::launchMenuReadinessChanged);
+    app.refreshLaunchMenuReadiness();
+    QTRY_VERIFY_WITH_TIMEOUT(readinessSpy.count() > 0, 30000);
+    const QVariantList resolved = app.launchMenuQuick();
+    QVERIFY(std::any_of(resolved.cbegin(), resolved.cend(), [](const QVariant &value) {
+        return value.toMap().value(QStringLiteral("readyKnown")).toBool();
+    }));
 }
 
 void SystemProfilesTests::bundle_ultraQAndHybridAreWiredAndOptIn()

@@ -488,16 +488,23 @@ Item {
                         }
                         return mostRecentFirst(available).concat(mostRecentFirst(unavailable))
                     }
-                    property var launchMenu: availableProfilesFirst(App.launchMenu())
+                    property var launchMenu: availableProfilesFirst(App.launchMenuQuick())
                     function refreshMenu() {
                         const sel = launchCombo.currentValue
-                        launchCombo.launchMenu = availableProfilesFirst(App.launchMenu())
+                        launchCombo.launchMenu = availableProfilesFirst(App.launchMenuQuick())
+                        const i = launchCombo.indexOfValue(sel)
+                        if (i >= 0) launchCombo.currentIndex = i
+                        App.refreshLaunchMenuReadiness()
+                    }
+                    function updateReadinessMenu() {
+                        const sel = launchCombo.currentValue
+                        launchCombo.launchMenu = availableProfilesFirst(App.launchMenuQuick())
                         const i = launchCombo.indexOfValue(sel)
                         if (i >= 0) launchCombo.currentIndex = i
                     }
                     function selectLaunchProfile(id) {
                         if (!id || id.length === 0) return
-                        launchCombo.launchMenu = availableProfilesFirst(App.launchMenu())
+                        launchCombo.launchMenu = availableProfilesFirst(App.launchMenuQuick())
                         const i = launchCombo.indexOfValue(id)
                         if (i >= 0) {
                             launchCombo.currentIndex = i
@@ -518,6 +525,8 @@ Item {
                         // tras descargar deps / escanear, recomputar ready.
                         function onSetupStateChanged() { launchCombo.refreshMenu() }
                         function onAstraConfigurationChanged() { launchCombo.refreshMenu() }
+                        function onHardwareSummaryChanged() { launchCombo.refreshMenu() }
+                        function onLaunchMenuReadinessChanged() { launchCombo.updateReadinessMenu() }
                         // startServer también lo invocan benchmarks, Tasks y Charla.
                         // Reflejar el perfil realmente activo sin convertir ese swap
                         // interno en la preferencia persistida del usuario.
@@ -578,6 +587,7 @@ Item {
                             if (i >= 0) launchCombo.currentIndex = i
                         }
                         root._restored = true
+                        App.refreshLaunchMenuReadiness()
                         if (App.serverRunning && App.activeLaunchId.length > 0)
                             root.syncToActiveLaunch()
                         else if (launchCombo.currentValue)

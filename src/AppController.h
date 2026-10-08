@@ -1341,6 +1341,10 @@ public:
     // (a) oculta perfiles de sistema cuya VRAM mínima supera la del equipo, y
     // (b) agrega "ready" (modelo+binario presentes) y "minVram" a cada item.
     Q_INVOKABLE QVariantList launchMenu();
+    // Variante inmediata para dibujar la UI; la disponibilidad se completa por
+    // tandas después del primer frame para no validar cientos de rutas a la vez.
+    Q_INVOKABLE QVariantList launchMenuQuick();
+    Q_INVOKABLE void refreshLaunchMenuReadiness();
     // Modelos realmente ejecutables que el Gateway anuncia a clientes LAN.
     QJsonArray gatewayModelCatalog();
     // True si el perfil de sistema tiene modelo y binario listos para lanzar.
@@ -1514,6 +1518,7 @@ signals:
     void browserSkillsChanged();
     void teachChanged();
     void effectiveProfileChanged();
+    void launchMenuReadinessChanged();
     void routerStateChanged();
     void setupStateChanged();
     void installingOfficialBinaryChanged();
@@ -2248,6 +2253,13 @@ private:
     bool m_expandedLogging = false;
     QVariantMap m_performanceSnapshot;
     QTimer m_performanceTimer;
+    QHash<QString, bool> m_launchMenuReadiness;
+    QStringList m_launchMenuReadinessQueue;
+    int m_launchMenuReadinessIndex = 0;
+    bool m_launchMenuReadinessRunning = false;
+    bool m_launchMenuReadinessRefreshPending = false;
+    QElapsedTimer m_launchMenuReadinessClock;
+    void processNextLaunchMenuReadiness();
     QElapsedTimer m_performanceClock;
     qint64 m_performanceLastWallMs = 0;
     qint64 m_performanceLastCpuMs = -1;

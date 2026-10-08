@@ -5,6 +5,14 @@ seleccionan. Una página permanece activa después de su primera apertura. Así 
 arranque no compite con la construcción en segundo plano de secciones que el
 usuario quizá no vaya a visitar.
 
+Los tipos de páginas se resuelven mediante `Loader` con URL y carga asíncrona;
+las páginas siguen retenidas una vez cargadas. En particular, Lanzar muestra
+primero su lista liviana de perfiles. La comprobación de disponibilidad de cada
+perfil se hace después, en pasos individuales del event loop. Los elementos sin
+resultado todavía no se marcan como ausentes; al terminar, la lista se
+reconstruye con los estados reales y conserva la selección del usuario. Esto
+evita que un catálogo grande bloquee la primera pintura o la interacción.
+
 ## Fases
 
 1. Se crea y muestra la ventana.
@@ -27,6 +35,8 @@ La UI expone `App.startupBusy`, `App.startupStatus` y
 hasta `QApplication ready`, carga de `Main.qml`, primera ventana visible y
 entrada al event loop. Esto permite comparar `LlamaCode` y
 `LlamaCode-debug` sin inferir el origen de una demora.
+La finalización de la comprobación incremental del menú informa
+`Launch menu readiness complete` con duración y cantidad de perfiles.
 
 El monitor del event loop se puede activar después de iniciar la app. Al
 reactivarse, reinicia su marca temporal para no reportar como bloqueo el tiempo

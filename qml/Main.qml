@@ -376,39 +376,27 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
 
-                    Component { id: launchPageComponent; LaunchPage {} }
-                    Component { id: profilesPageComponent; ProfilesPage {} }
-                    Component { id: modelRootsPageComponent; ModelRootsPage {} }
-                    Component { id: binariesPageComponent; BinariesPage {} }
-                    Component { id: chatPageComponent; ChatPage {} }
-                    Component { id: agentPageComponent; AgentPage {} }
-                    Component { id: researchPageComponent; ResearchPage {} }
-                    Component { id: dataLabPageComponent; DataLabPage {} }
-                    Component { id: tasksPageComponent; TasksPage {} }
-                    Component { id: charlaPageComponent; CharlaPage {} }
-                    Component { id: benchmarkPageComponent; BenchmarkPage {} }
-                    Component { id: rankingPageComponent; RankingPage {} }
-                    Component { id: tunerPageComponent; TunerPage {} }
-                    Component { id: downloadsPageComponent; DownloadsPage {} }
-                    Component { id: agentsPageComponent; AgentsPage {} }
-                    Component { id: settingsPageComponent; SettingsPage {} }
-
-                    Loader { id: launchLoader; anchors.fill: parent; active: stack.currentIndex === 0; visible: stack.currentIndex === 0; sourceComponent: launchPageComponent; onLoaded: active = true }
-                    Loader { id: profilesLoader; anchors.fill: parent; active: stack.currentIndex === 1; visible: stack.currentIndex === 1; sourceComponent: profilesPageComponent; onLoaded: active = true }
-                    Loader { id: modelRootsLoader; property bool pendingOpen: false; anchors.fill: parent; active: stack.currentIndex === 2; visible: stack.currentIndex === 2; sourceComponent: modelRootsPageComponent; onLoaded: { active = true; if (pendingOpen && item) { pendingOpen = false; item.openAddDialog() } } }
-                    Loader { id: binariesLoader; property bool pendingOpen: false; anchors.fill: parent; active: stack.currentIndex === 3; visible: stack.currentIndex === 3; sourceComponent: binariesPageComponent; onLoaded: { active = true; if (pendingOpen && item) { pendingOpen = false; item.openAddDialog() } } }
-                    Loader { id: chatLoader; anchors.fill: parent; active: stack.currentIndex === 4; visible: stack.currentIndex === 4; sourceComponent: chatPageComponent; onLoaded: active = true }
-                    Loader { id: agentLoader; anchors.fill: parent; active: stack.currentIndex === 5; visible: stack.currentIndex === 5; sourceComponent: agentPageComponent; onLoaded: active = true }
-                    Loader { id: researchLoader; anchors.fill: parent; active: stack.currentIndex === 6; visible: stack.currentIndex === 6; sourceComponent: researchPageComponent; onLoaded: active = true }
-                    Loader { id: dataLabLoader; anchors.fill: parent; active: stack.currentIndex === 7; visible: stack.currentIndex === 7; sourceComponent: dataLabPageComponent; onLoaded: active = true }
-                    Loader { id: tasksLoader; anchors.fill: parent; active: stack.currentIndex === 8; visible: stack.currentIndex === 8; sourceComponent: tasksPageComponent; onLoaded: active = true }
-                    Loader { id: charlaLoader; anchors.fill: parent; active: stack.currentIndex === 9; visible: stack.currentIndex === 9; sourceComponent: charlaPageComponent; onLoaded: active = true }
-                    Loader { id: benchmarkLoader; anchors.fill: parent; active: stack.currentIndex === 10; visible: stack.currentIndex === 10; sourceComponent: benchmarkPageComponent; onLoaded: active = true }
-                    Loader { id: rankingLoader; anchors.fill: parent; active: stack.currentIndex === 11; visible: stack.currentIndex === 11; sourceComponent: rankingPageComponent; onLoaded: active = true }
-                    Loader { id: tunerLoader; anchors.fill: parent; active: stack.currentIndex === 12; visible: stack.currentIndex === 12; sourceComponent: tunerPageComponent; onLoaded: active = true }
-                    Loader { id: downloadsLoader; anchors.fill: parent; active: stack.currentIndex === 13; visible: stack.currentIndex === 13; sourceComponent: downloadsPageComponent; onLoaded: active = true }
-                    Loader { id: agentsLoader; anchors.fill: parent; active: stack.currentIndex === 14; visible: stack.currentIndex === 14; sourceComponent: agentsPageComponent; onLoaded: active = true }
-                    Loader { id: settingsLoader; anchors.fill: parent; active: stack.currentIndex === 15; visible: stack.currentIndex === 15; sourceComponent: settingsPageComponent; onLoaded: active = true }
+                    // Load pages by URL so the root QML type does not resolve
+                    // every page type during startup. Asynchronous creation lets
+                    // Qt compile/instantiate a newly selected page without
+                    // blocking the visible shell; once loaded, each page remains
+                    // active to preserve its form and navigation state.
+                    Loader { id: launchLoader; anchors.fill: parent; active: stack.currentIndex === 0; visible: stack.currentIndex === 0; asynchronous: true; source: "pages/LaunchPage.qml"; onLoaded: { App.recordPerformanceSample("qml_page_loaded:launch"); active = true } }
+                    Loader { id: profilesLoader; anchors.fill: parent; active: stack.currentIndex === 1; visible: stack.currentIndex === 1; asynchronous: true; source: "pages/ProfilesPage.qml"; onLoaded: { App.recordPerformanceSample("qml_page_loaded:profiles"); active = true } }
+                    Loader { id: modelRootsLoader; property bool pendingOpen: false; anchors.fill: parent; active: stack.currentIndex === 2; visible: stack.currentIndex === 2; asynchronous: true; source: "pages/ModelRootsPage.qml"; onLoaded: { App.recordPerformanceSample("qml_page_loaded:models"); active = true; if (pendingOpen && item) { pendingOpen = false; item.openAddDialog() } } }
+                    Loader { id: binariesLoader; property bool pendingOpen: false; anchors.fill: parent; active: stack.currentIndex === 3; visible: stack.currentIndex === 3; asynchronous: true; source: "pages/BinariesPage.qml"; onLoaded: { App.recordPerformanceSample("qml_page_loaded:binaries"); active = true; if (pendingOpen && item) { pendingOpen = false; item.openAddDialog() } } }
+                    Loader { id: chatLoader; anchors.fill: parent; active: stack.currentIndex === 4; visible: stack.currentIndex === 4; asynchronous: true; source: "pages/ChatPage.qml"; onLoaded: { App.recordPerformanceSample("qml_page_loaded:chat"); active = true } }
+                    Loader { id: agentLoader; anchors.fill: parent; active: stack.currentIndex === 5; visible: stack.currentIndex === 5; asynchronous: true; source: "pages/AgentPage.qml"; onLoaded: { App.recordPerformanceSample("qml_page_loaded:agent"); active = true } }
+                    Loader { id: researchLoader; anchors.fill: parent; active: stack.currentIndex === 6; visible: stack.currentIndex === 6; asynchronous: true; source: "pages/ResearchPage.qml"; onLoaded: { App.recordPerformanceSample("qml_page_loaded:research"); active = true } }
+                    Loader { id: dataLabLoader; anchors.fill: parent; active: stack.currentIndex === 7; visible: stack.currentIndex === 7; asynchronous: true; source: "pages/DataLabPage.qml"; onLoaded: { App.recordPerformanceSample("qml_page_loaded:data_lab"); active = true } }
+                    Loader { id: tasksLoader; anchors.fill: parent; active: stack.currentIndex === 8; visible: stack.currentIndex === 8; asynchronous: true; source: "pages/TasksPage.qml"; onLoaded: { App.recordPerformanceSample("qml_page_loaded:tasks"); active = true } }
+                    Loader { id: charlaLoader; anchors.fill: parent; active: stack.currentIndex === 9; visible: stack.currentIndex === 9; asynchronous: true; source: "pages/CharlaPage.qml"; onLoaded: { App.recordPerformanceSample("qml_page_loaded:charla"); active = true } }
+                    Loader { id: benchmarkLoader; anchors.fill: parent; active: stack.currentIndex === 10; visible: stack.currentIndex === 10; asynchronous: true; source: "pages/BenchmarkPage.qml"; onLoaded: { App.recordPerformanceSample("qml_page_loaded:benchmark"); active = true } }
+                    Loader { id: rankingLoader; anchors.fill: parent; active: stack.currentIndex === 11; visible: stack.currentIndex === 11; asynchronous: true; source: "pages/RankingPage.qml"; onLoaded: { App.recordPerformanceSample("qml_page_loaded:ranking"); active = true } }
+                    Loader { id: tunerLoader; anchors.fill: parent; active: stack.currentIndex === 12; visible: stack.currentIndex === 12; asynchronous: true; source: "pages/TunerPage.qml"; onLoaded: { App.recordPerformanceSample("qml_page_loaded:tuner"); active = true } }
+                    Loader { id: downloadsLoader; anchors.fill: parent; active: stack.currentIndex === 13; visible: stack.currentIndex === 13; asynchronous: true; source: "pages/DownloadsPage.qml"; onLoaded: { App.recordPerformanceSample("qml_page_loaded:downloads"); active = true } }
+                    Loader { id: agentsLoader; anchors.fill: parent; active: stack.currentIndex === 14; visible: stack.currentIndex === 14; asynchronous: true; source: "pages/AgentsPage.qml"; onLoaded: { App.recordPerformanceSample("qml_page_loaded:agents"); active = true } }
+                    Loader { id: settingsLoader; anchors.fill: parent; active: stack.currentIndex === 15; visible: stack.currentIndex === 15; asynchronous: true; source: "pages/SettingsPage.qml"; onLoaded: { App.recordPerformanceSample("qml_page_loaded:settings"); active = true } }
 
                 }
             }

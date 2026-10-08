@@ -717,6 +717,7 @@ if (BUILD_TESTS)
         tests/qml/tst_color_picker.qml
         tests/qml/tst_navigation_policy.qml
         tests/qml/tst_lazy_page_loader.qml
+        tests/qml/LazyProbePage.qml
         tests/qml/tst_ranking_startup.qml
         tests/qml/tst_benchmark_score.qml
         tests/qml/tst_datalab.qml

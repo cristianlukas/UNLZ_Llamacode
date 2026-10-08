@@ -15640,28 +15640,49 @@ bool AppController::systemProfileReady(const QString &launchId)
 
 QVariantList AppController::launchMenu()
 {
+    QElapsedTimer menuTimer;
+    menuTimer.start();
+    QElapsedTimer bundleTimer;
+    bundleTimer.start();
     // Techo de VRAM = la suma de las placas: llama.cpp reparte por capas, así que
     // un perfil de 48 GB es elegible en 2x24 aunque ninguna placa sola lo aguante.
     const double vram = qMax(m_hardwareSummary.value(QStringLiteral("vramTotalGb")).toDouble(),
                              m_hardwareSummary.value(QStringLiteral("vramGb")).toDouble());
     QHash<QString, double> minV;
     QHash<QString, QVariantMap> profileMetadata;
-    for (const QJsonValue &v : readSystemProfilesBundle()) {
+    const QJsonArray systemProfiles = readSystemProfilesBundle();
+    const qint64 bundleMs = bundleTimer.elapsed();
+    for (const QJsonValue &v : systemProfiles) {
         const QJsonObject e = v.toObject();
         const QString id = e.value(QStringLiteral("id")).toString();
         minV.insert(id, e.value(QStringLiteral("minVramGb")).toDouble());
         profileMetadata.insert(id, e.toVariantMap());
     }
+    QElapsedTimer profilesTimer;
+    profilesTimer.start();
+    const QVariantList profiles = m_profiles.launchProfilesForMenu();
+    const qint64 profileListMs = profilesTimer.elapsed();
+    qint64 readinessMs = 0;
+    qint64 affinityMs = 0;
+    qint64 slowestEntryMs = 0;
+    QString slowestEntry;
     QVariantList out;
-    for (const QVariant &it : m_profiles.launchProfilesForMenu()) {
+    for (const QVariant &it : profiles) {
         QVariantMap m = it.toMap();
+        QElapsedTimer entryTimer;
+        entryTimer.start();
         if (m.value(QStringLiteral("system")).toBool()) {
             const double mv = minV.value(m.value(QStringLiteral("id")).toString(), 0.0);
             if (vram > 0.0 && mv > vram + 0.01) continue;   // ocultar los de más VRAM
             m[QStringLiteral("minVram")] = mv;
+            QElapsedTimer phaseTimer;
+            phaseTimer.start();
             m[QStringLiteral("ready")] = systemProfileReady(m.value(QStringLiteral("id")).toString());
+            readinessMs += phaseTimer.elapsed();
+            phaseTimer.restart();
             const QVariantMap affinity = HardwareDiagnostics::profileHardwareAffinity(
                 m_hardwareSummary, profileMetadata.value(m.value(QStringLiteral("id")).toString()));
+            affinityMs += phaseTimer.elapsed();
             m[QStringLiteral("gpuAffinityScore")] = affinity.value(QStringLiteral("score"));
             m[QStringLiteral("gpuAffinityMatched")] = affinity.value(QStringLiteral("matched"));
             m[QStringLiteral("gpuAffinityKind")] = affinity.value(QStringLiteral("kind"));
@@ -15675,9 +15696,118 @@ QVariantList AppController::launchMenu()
             const EffectiveProfileBuilder::Context ctx = buildContext(id);
             m[QStringLiteral("ready")] = EffectiveProfileBuilder::build(ctx).isValid();
         }
+        if (entryTimer.elapsed() > slowestEntryMs) {
+            slowestEntryMs = entryTimer.elapsed();
+            slowestEntry = m.value(QStringLiteral("displayName")).toString();
+        }
+        out.append(m);
+    }
+    if (menuTimer.elapsed() >= 50) {
+        qInfo() << "Launch menu slow elapsedMs=" << menuTimer.elapsed()
+                << "systemProfiles=" << systemProfiles.size()
+                << "entries=" << profiles.size()
+                << "visible=" << out.size()
+                << "bundleMs=" << bundleMs
+                << "profileListMs=" << profileListMs
+                << "readinessMs=" << readinessMs
+                << "affinityMs=" << affinityMs
+                << "slowestEntryMs=" << slowestEntryMs
+                << "slowestEntry=" << slowestEntry;
+    }
+    return out;
+}
+
+QVariantList AppController::launchMenuQuick()
+{
+    // Mantener el primer render barato: resolver la disponibilidad completa de
+    // 271 perfiles puede consultar cientos de rutas/modelos y tardar segundos.
+    // Los valores conocidos se reutilizan; los pendientes se marcan explícitos
+    // y se completan en processNextLaunchMenuReadiness().
+    const double vram = qMax(m_hardwareSummary.value(QStringLiteral("vramTotalGb")).toDouble(),
+                             m_hardwareSummary.value(QStringLiteral("vramGb")).toDouble());
+    QHash<QString, double> minV;
+    QHash<QString, QVariantMap> profileMetadata;
+    const QJsonArray systemProfiles = readSystemProfilesBundle();
+    for (const QJsonValue &v : systemProfiles) {
+        const QJsonObject e = v.toObject();
+        const QString id = e.value(QStringLiteral("id")).toString();
+        minV.insert(id, e.value(QStringLiteral("minVramGb")).toDouble());
+        profileMetadata.insert(id, e.toVariantMap());
+    }
+
+    QVariantList out;
+    const QVariantList profiles = m_profiles.launchProfilesForMenu();
+    out.reserve(profiles.size());
+    for (const QVariant &it : profiles) {
+        QVariantMap m = it.toMap();
+        const QString id = m.value(QStringLiteral("id")).toString();
+        const bool isSystem = m.value(QStringLiteral("system")).toBool();
+        if (isSystem) {
+            const double minimumVram = minV.value(id, 0.0);
+            if (vram > 0.0 && minimumVram > vram + 0.01) continue;
+            m[QStringLiteral("minVram")] = minimumVram;
+            const QVariantMap affinity = HardwareDiagnostics::profileHardwareAffinity(
+                m_hardwareSummary, profileMetadata.value(id));
+            m[QStringLiteral("gpuAffinityScore")] = affinity.value(QStringLiteral("score"));
+            m[QStringLiteral("gpuAffinityMatched")] = affinity.value(QStringLiteral("matched"));
+            m[QStringLiteral("gpuAffinityKind")] = affinity.value(QStringLiteral("kind"));
+            m[QStringLiteral("gpuAffinityLabel")] = affinity.value(QStringLiteral("label"));
+            m[QStringLiteral("gpuAffinityReason")] = affinity.value(QStringLiteral("reason"));
+            if (affinity.value(QStringLiteral("matched")).toBool())
+                m[QStringLiteral("displayName")] = QStringLiteral("🎯 ")
+                    + m.value(QStringLiteral("displayName")).toString();
+        }
+        const auto ready = m_launchMenuReadiness.constFind(id);
+        m[QStringLiteral("readyKnown")] = ready != m_launchMenuReadiness.cend();
+        if (ready != m_launchMenuReadiness.cend())
+            m[QStringLiteral("ready")] = ready.value();
         out.append(m);
     }
     return out;
+}
+
+void AppController::refreshLaunchMenuReadiness()
+{
+    if (m_launchMenuReadinessRunning) {
+        m_launchMenuReadinessRefreshPending = true;
+        return;
+    }
+
+    m_launchMenuReadiness.clear();
+    m_launchMenuReadinessQueue.clear();
+    for (const QVariant &value : launchMenuQuick()) {
+        const QString id = value.toMap().value(QStringLiteral("id")).toString();
+        if (!id.isEmpty()) m_launchMenuReadinessQueue.append(id);
+    }
+    m_launchMenuReadinessIndex = 0;
+    m_launchMenuReadinessRunning = true;
+    m_launchMenuReadinessClock.start();
+    QTimer::singleShot(0, this, &AppController::processNextLaunchMenuReadiness);
+}
+
+void AppController::processNextLaunchMenuReadiness()
+{
+    if (m_launchMenuReadinessIndex >= m_launchMenuReadinessQueue.size()) {
+        m_launchMenuReadinessQueue.clear();
+        m_launchMenuReadinessRunning = false;
+        if (m_launchMenuReadinessRefreshPending) {
+            m_launchMenuReadinessRefreshPending = false;
+            refreshLaunchMenuReadiness();
+            return;
+        }
+        if (m_launchMenuReadinessClock.elapsed() >= 500)
+            qInfo() << "Launch menu readiness complete elapsedMs="
+                    << m_launchMenuReadinessClock.elapsed()
+                    << "profiles=" << m_launchMenuReadiness.size();
+        emit launchMenuReadinessChanged();
+        return;
+    }
+
+    const QString id = m_launchMenuReadinessQueue.at(m_launchMenuReadinessIndex++);
+    m_launchMenuReadiness.insert(id, systemProfileReady(id));
+    // Yield to paint/input between validations. One slow path check may cost
+    // tens of milliseconds, but a large menu can no longer monopolize startup.
+    QTimer::singleShot(1, this, &AppController::processNextLaunchMenuReadiness);
 }
 
 QVariantList AppController::recommendedShowcase() const

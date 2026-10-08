@@ -1,13 +1,13 @@
 .pragma library
 
 function backendRequirementSatisfied(page, backendAvailable, agentStarting) {
-    return !page.serverOnly || backendAvailable
-            || (page.keepDuringAgentTransition && agentStarting)
+    return Boolean(!page.serverOnly || backendAvailable
+            || (Boolean(page.keepDuringAgentTransition) && Boolean(agentStarting)))
 }
 
 function pageEnabled(page, backendAvailable, agentRunning, agentStarting) {
-    return backendRequirementSatisfied(page, backendAvailable, agentStarting)
-            && (!page.agentOnly || agentRunning || agentStarting)
+    return Boolean(backendRequirementSatisfied(page, backendAvailable, agentStarting)
+            && (!page.agentOnly || agentRunning || agentStarting))
 }
 
 function shouldNavigateToLaunch(page, backendAvailable, agentRunning,
