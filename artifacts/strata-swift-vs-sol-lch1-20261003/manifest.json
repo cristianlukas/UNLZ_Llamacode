@@ -1,0 +1,444 @@
+{
+  "createdAt": "2026-10-03",
+  "repoCommit": "b47cde1e2734df7e8142ae27302d674708d05f0e",
+  "llamacodeBinary": "/home/cristian/.cache/llamacode/build_linux/LlamaCode",
+  "llamacodeBinarySha256": "ea0431885426d22b641e4c6a410c70e78156dadf2ae9fd268e384542fc87f6f7",
+  "llamacodeHarness": "LlamaCode --agent-daemon + ControlApi + AppController.startCustomBenchmark(target=agent)",
+  "harnessEngineId": "legacy",
+  "harnessEngineVersion": 1,
+  "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+  "agentProfileId": "agent-maximo",
+  "agentSeed": 4242,
+  "agentTemperature": 0.1,
+  "reasoningEffort": "medium",
+  "thinkingEnabled": true,
+  "timeoutSecondsPerSuite": 1800,
+  "maxRepairsPerSuite": 2,
+  "suiteIds": {
+    "HumanEval20": "267bb33d-4510-417b-ae3c-6dbbfb2cb08d",
+    "BigCodeBenchHard8": "05c28394-11d0-41fe-a55f-b3cb69db9c15",
+    "IntelligenceAdversarialV1": "intelligence_adversarial_v1"
+  },
+  "inputsSha256": {
+    "05c28394-11d0-41fe-a55f-b3cb69db9c15.json": "42771136b447b7b5619e04a1ea211f663222cd6752ca38d995083b5a4d207574",
+    "267bb33d-4510-417b-ae3c-6dbbfb2cb08d.json": "ed91a742cc8dca01bfe893933de5ed66fc4e4c2b529e53943a2bf1d939ffc3d7",
+    "intelligence_adversarial_v1.json": "2f0f30c863606fd443a161ac6946658129b31d874229a61ffd719f75df36ee87"
+  },
+  "candidate": {
+    "name": "Swift 1.5",
+    "repository": "ukisai/Swift-1.5-Qwen3.8-Flash-Next-GSQ-RCO-GGUF",
+    "runtime": "Strata 0.1.35",
+    "quant": "IQ3_XXS",
+    "context": 131072,
+    "kv": "int8",
+    "kvResidentTokens": 32768,
+    "spec": 4,
+    "specMinP": 0.5,
+    "prefill": "auto",
+    "expertCache": "auto",
+    "gpus": [
+      0,
+      1
+    ],
+    "layerSplit": "auto",
+    "vision": false,
+    "mtpPath": "/media/cristian/7CFE1E0FFE1DC1F6/models/Strata-review-20261002/data/mtp/rt",
+    "configOutsideRepo": "/home/cristian/.cache/strata-review-20261002/Strata-0.1.35/strata-swift-iq3_xxs.json",
+    "modelShardSha256": [
+      "3bddaa667c750f63baca766df9433e1afd35a139f401c5ca5e7ff560ceff3d23",
+      "b0b15f782af71eb471909d2f3313b2927c324962f86c084325c247cd411a0160"
+    ],
+    "configSha256": "af3ddc2e4bcfa1da1a01f8395fb388d37951be74a2a18aa2e0ec2fa1c78e4c43",
+    "engineSha256": "4b441e05de2a49fc0f8b17fcce01814ee17a6b6766f88e4ce6d4f93ca7ab09b8",
+    "packIndexSha256": "7f2473da921e7adf981728bdee238d9ff0283e405ee102ea92e5abbee436004a",
+    "endpoint": "http://127.0.0.1:8350/v1",
+    "setupCommand": "./.venv/bin/python setup.py --family swift --model IQ3_XXS --context 131072 --vision no --gpus 0,1 --yes --no-start --data-dir '/media/cristian/Disco local/Models/Strata-swift-20261003/data' --models-dir '/media/cristian/Disco local/Models/Strata-swift-20261003/models'",
+    "serverCommand": ".venv/bin/python serve/server.py --engine strata --config strata-swift-iq3_xxs.json --host 127.0.0.1 --port 8350",
+    "downloadStartedAt": "2026-10-03 10:46 local",
+    "downloadCompletedAt": "2026-10-03 11:04 local",
+    "sha256AtDownload": "Swift hashes retained in candidate.modelShardSha256"
+  },
+  "baseline": {
+    "name": "SOL",
+    "model": "Qwen3.8-27B AutoRound INT4",
+    "servedModel": "qwen3.8-27b",
+    "backend": "vLLM v0.27.1, tensor-parallel 2, P2P, MTP4, fp8_e4m3 KV, max context 262144, max num seqs 8",
+    "endpoint": "http://127.0.0.1:8113/v1",
+    "container": "vllm-qwen38-27b-dual-fast",
+    "reasoning": "thinking enabled; server default reasoning_effort low, LlamaCode profile reasoningEffort medium",
+    "startCommand": "docker start vllm-qwen38-27b-dual-fast",
+    "stopCommand": "docker stop vllm-qwen38-27b-dual-fast"
+  },
+  "machine": {
+    "cpu": "AMD Ryzen 9 9950X3D 16-Core Processor",
+    "ramGiB": 124,
+    "gpus": [
+      "NVIDIA GeForce RTX 3090 24576 MiB",
+      "NVIDIA GeForce RTX 3090 24576 MiB"
+    ],
+    "driver": "610.57.04",
+    "cuda": "12.8",
+    "gpuCount": 2
+  },
+  "testMethod": "One pass per main suite and model. Same suite JSON, agent, seed, temperature, reasoning toggle, HarnessSpec and repair budget. SOL ran first with its container stopped before Swift occupied the GPUs. Swift HE0 was run only because the current-profile benchmark gate requires it before HE20; it is recorded separately and excluded from the A/B totals. ASTRA IQ3_S fue añadido con las mismas entradas y harness, ejecutado al final con sus assets de visión; pasó HE0 por la compuerta. Su config quedó con política exact-profile (sin la escalera llama.cpp). Una sola pasada por suite; no estima variación entre semillas.",
+  "historicalReferences": {
+    "priorSameHarnessAudit": "docs/strata-0.1.35-vs-sol-llamacode-lch1-20261002.md",
+    "priorComputerUseAudit": "docs/strata-v0135-vs-sol-astra-audit-20261002.md"
+  },
+  "runs": {
+    "he20": {
+      "sol": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/HumanEval_20_tems__20261003_105124",
+      "swift": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/HumanEval_20_tems__20261003_112311"
+    },
+    "bcb8": {
+      "sol": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/BigCodeBench-Hard_8_tems__20261003_105639",
+      "swift": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/BigCodeBench-Hard_8_tems__20261003_113425"
+    },
+    "adversarial": {
+      "sol": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Intelligence_Adversarial_v1_-_10_tareas_20261003_110917",
+      "swift": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Intelligence_Adversarial_v1_-_10_tareas_20261003_114249"
+    },
+    "swiftHe0Prerequisite": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/HumanEval_1_tems__20261003_112217",
+    "astraIq3s": {
+      "he0Prerequisite": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/HumanEval_1_tems__20261003_122855",
+      "he20": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/HumanEval_20_tems__20261003_123334",
+      "bcb8": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/BigCodeBench-Hard_8_tems__20261003_124555",
+      "adversarial": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Intelligence_Adversarial_v1_-_10_tareas_20261003_125550"
+    }
+  },
+  "summary": {
+    "HumanEval20": {
+      "suite": "HumanEval (20 ítems)",
+      "sol": {
+        "qualityScore": 20,
+        "qualityTotal": 20,
+        "firstAttemptScore": 19,
+        "firstAttemptTotal": 20,
+        "repairAttempts": 1,
+        "elapsedSec": 272.396,
+        "avgTps": 128.20323888244306,
+        "toolCalls": 42,
+        "toolCallQuality": {
+          "expectedCalls": 0,
+          "f1Pct": -1,
+          "failedCalls": 0,
+          "incompleteCalls": 0,
+          "invalidCalls": 0,
+          "matchedExpectedCalls": 0,
+          "missingExpectedCalls": 0,
+          "precisionPct": -1,
+          "recallPct": -1,
+          "redundantCalls": 0,
+          "sequenceExact": false,
+          "successRatePct": 100,
+          "successfulCalls": 42,
+          "totalCalls": 42,
+          "unexpectedCalls": 0
+        },
+        "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/HumanEval_20_tems__20261003_105124"
+      },
+      "swift": {
+        "qualityScore": 20,
+        "qualityTotal": 20,
+        "firstAttemptScore": 19,
+        "firstAttemptTotal": 20,
+        "repairAttempts": 1,
+        "elapsedSec": 656.556,
+        "avgTps": 109.19334192594827,
+        "toolCalls": 40,
+        "toolCallQuality": {
+          "expectedCalls": 0,
+          "f1Pct": -1,
+          "failedCalls": 0,
+          "incompleteCalls": 0,
+          "invalidCalls": 0,
+          "matchedExpectedCalls": 0,
+          "missingExpectedCalls": 0,
+          "precisionPct": -1,
+          "recallPct": -1,
+          "redundantCalls": 0,
+          "sequenceExact": false,
+          "successRatePct": 100,
+          "successfulCalls": 40,
+          "totalCalls": 40,
+          "unexpectedCalls": 0
+        },
+        "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/HumanEval_20_tems__20261003_112311"
+      },
+      "astraIq3s": {
+        "qualityScore": 20,
+        "qualityTotal": 20,
+        "firstAttemptScore": 18,
+        "firstAttemptTotal": 20,
+        "repairAttempts": 1,
+        "elapsedSec": 709.502,
+        "toolCalls": 40,
+        "toolCallQuality": {
+          "expectedCalls": 0,
+          "f1Pct": -1,
+          "failedCalls": 0,
+          "incompleteCalls": 0,
+          "invalidCalls": 0,
+          "matchedExpectedCalls": 0,
+          "missingExpectedCalls": 0,
+          "precisionPct": -1,
+          "recallPct": -1,
+          "redundantCalls": 0,
+          "sequenceExact": false,
+          "successRatePct": 100,
+          "successfulCalls": 40,
+          "totalCalls": 40,
+          "unexpectedCalls": 0
+        },
+        "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/HumanEval_20_tems__20261003_123334"
+      }
+    },
+    "BigCodeBenchHard8": {
+      "suite": "BigCodeBench-Hard (8 ítems)",
+      "sol": {
+        "qualityScore": 7,
+        "qualityTotal": 8,
+        "firstAttemptScore": 3,
+        "firstAttemptTotal": 8,
+        "repairAttempts": 2,
+        "elapsedSec": 726.862,
+        "toolCalls": 40,
+        "toolCallQuality": {
+          "expectedCalls": 0,
+          "f1Pct": -1,
+          "failedCalls": 2,
+          "incompleteCalls": 0,
+          "invalidCalls": 0,
+          "matchedExpectedCalls": 0,
+          "missingExpectedCalls": 0,
+          "precisionPct": -1,
+          "recallPct": -1,
+          "redundantCalls": 2,
+          "sequenceExact": false,
+          "successRatePct": 95,
+          "successfulCalls": 38,
+          "totalCalls": 40,
+          "unexpectedCalls": 0
+        },
+        "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/BigCodeBench-Hard_8_tems__20261003_105639"
+      },
+      "swift": {
+        "qualityScore": 8,
+        "qualityTotal": 8,
+        "firstAttemptScore": 3,
+        "firstAttemptTotal": 8,
+        "repairAttempts": 1,
+        "elapsedSec": 477.431,
+        "toolCalls": 38,
+        "toolCallQuality": {
+          "expectedCalls": 0,
+          "f1Pct": -1,
+          "failedCalls": 2,
+          "incompleteCalls": 0,
+          "invalidCalls": 0,
+          "matchedExpectedCalls": 0,
+          "missingExpectedCalls": 0,
+          "precisionPct": -1,
+          "recallPct": -1,
+          "redundantCalls": 0,
+          "sequenceExact": false,
+          "successRatePct": 94.73684210526316,
+          "successfulCalls": 36,
+          "totalCalls": 38,
+          "unexpectedCalls": 0
+        },
+        "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/BigCodeBench-Hard_8_tems__20261003_113425"
+      },
+      "astraIq3s": {
+        "qualityScore": 8,
+        "qualityTotal": 8,
+        "firstAttemptScore": 2,
+        "firstAttemptTotal": 8,
+        "repairAttempts": 1,
+        "elapsedSec": 570.53,
+        "toolCalls": 45,
+        "toolCallQuality": {
+          "expectedCalls": 0,
+          "f1Pct": -1,
+          "failedCalls": 1,
+          "incompleteCalls": 0,
+          "invalidCalls": 0,
+          "matchedExpectedCalls": 0,
+          "missingExpectedCalls": 0,
+          "precisionPct": -1,
+          "recallPct": -1,
+          "redundantCalls": 0,
+          "sequenceExact": false,
+          "successRatePct": 97.77777777777777,
+          "successfulCalls": 44,
+          "totalCalls": 45,
+          "unexpectedCalls": 0
+        },
+        "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/BigCodeBench-Hard_8_tems__20261003_124555"
+      }
+    },
+    "IntelligenceAdversarialV1": {
+      "suite": "Intelligence Adversarial v1 - 10 tareas",
+      "sol": {
+        "qualityScore": 10,
+        "qualityTotal": 10,
+        "firstAttemptScore": 7,
+        "firstAttemptTotal": 10,
+        "repairAttempts": 1,
+        "elapsedSec": 534.942,
+        "avgTps": 106.12968341946245,
+        "toolCalls": 52,
+        "toolCallQuality": {
+          "expectedCalls": 0,
+          "f1Pct": -1,
+          "failedCalls": 1,
+          "incompleteCalls": 0,
+          "invalidCalls": 0,
+          "matchedExpectedCalls": 0,
+          "missingExpectedCalls": 0,
+          "precisionPct": -1,
+          "recallPct": -1,
+          "redundantCalls": 2,
+          "sequenceExact": false,
+          "successRatePct": 98.07692307692308,
+          "successfulCalls": 51,
+          "totalCalls": 52,
+          "unexpectedCalls": 0
+        },
+        "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Intelligence_Adversarial_v1_-_10_tareas_20261003_110917"
+      },
+      "swift": {
+        "qualityScore": 10,
+        "qualityTotal": 10,
+        "firstAttemptScore": 7,
+        "firstAttemptTotal": 10,
+        "repairAttempts": 1,
+        "elapsedSec": 1061.811,
+        "avgTps": 107.84997178161797,
+        "toolCalls": 73,
+        "toolCallQuality": {
+          "expectedCalls": 0,
+          "f1Pct": -1,
+          "failedCalls": 2,
+          "incompleteCalls": 0,
+          "invalidCalls": 0,
+          "matchedExpectedCalls": 0,
+          "missingExpectedCalls": 0,
+          "precisionPct": -1,
+          "recallPct": -1,
+          "redundantCalls": 0,
+          "sequenceExact": false,
+          "successRatePct": 97.26027397260275,
+          "successfulCalls": 71,
+          "totalCalls": 73,
+          "unexpectedCalls": 0
+        },
+        "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Intelligence_Adversarial_v1_-_10_tareas_20261003_114249"
+      },
+      "astraIq3s": {
+        "qualityScore": 10,
+        "qualityTotal": 10,
+        "firstAttemptScore": 7,
+        "firstAttemptTotal": 10,
+        "repairAttempts": 1,
+        "elapsedSec": 560.786,
+        "toolCalls": 32,
+        "toolCallQuality": {
+          "expectedCalls": 0,
+          "f1Pct": -1,
+          "failedCalls": 1,
+          "incompleteCalls": 0,
+          "invalidCalls": 0,
+          "matchedExpectedCalls": 0,
+          "missingExpectedCalls": 0,
+          "precisionPct": -1,
+          "recallPct": -1,
+          "redundantCalls": 0,
+          "sequenceExact": false,
+          "successRatePct": 96.875,
+          "successfulCalls": 31,
+          "totalCalls": 32,
+          "unexpectedCalls": 0
+        },
+        "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Intelligence_Adversarial_v1_-_10_tareas_20261003_125550"
+      }
+    }
+  },
+  "aggregateMainSuites": {
+    "SOL": {
+      "firstAttemptScore": 29,
+      "firstAttemptTotal": 38,
+      "finalScore": 37,
+      "finalTotal": 38,
+      "elapsedSec": 1534.2,
+      "toolCalls": 134,
+      "failedToolCalls": 3,
+      "repairs": 4
+    },
+    "Swift 1.5 IQ3_XXS": {
+      "firstAttemptScore": 29,
+      "firstAttemptTotal": 38,
+      "finalScore": 38,
+      "finalTotal": 38,
+      "elapsedSec": 2195.798,
+      "toolCalls": 151,
+      "failedToolCalls": 4,
+      "repairs": 3
+    },
+    "ASTRA Strata IQ3_S": {
+      "firstAttemptScore": 27,
+      "firstAttemptTotal": 38,
+      "finalScore": 38,
+      "finalTotal": 38,
+      "elapsedSec": 1840.818,
+      "toolCalls": 117,
+      "failedToolCalls": 2,
+      "repairs": 3
+    },
+    "note": "38 tasks total across HE20, BCB8, and Adversarial; one seed, one pass/model."
+  },
+  "priorComputerUseEvidence": {
+    "model": "Strata 0.1.35 Qwen3.8 Flash Next IQ3_S",
+    "promptOrderDecisionAccuracy": "72/72",
+    "safety": "63/63",
+    "limitation": "Text decision test; not real desktop execution. Full report: docs/strata-v0135-vs-sol-astra-audit-20261002.md"
+  },
+  "llamacodeDaemon": {
+    "command": "llamacode-test-wrapper --agent-daemon --handoff-ui",
+    "controlPort": 8897,
+    "profilesDir": "/home/cristian/.cache/strata-swift-lch1-profiles",
+    "testMode": true
+  },
+  "comparisonOrder": [
+    "SOL",
+    "Swift 1.5 / Strata IQ3_XXS"
+  ],
+  "astraCandidate": {
+    "name": "ASTRA / Qwen3.8-Flash-Next Strata IQ3_S",
+    "runtime": "Strata 0.1.35",
+    "quant": "IQ3_S",
+    "context": 131072,
+    "thinkingEnabled": true,
+    "vision": true,
+    "configOutsideRepo": "/home/cristian/.cache/strata-review-20261002/Strata-0.1.35/strata-iq3_s.json",
+    "configSha256": "593bf7efd351e2f8f9b30691a86933f9b28c71f47aaebedfec74ab6f84c7b8bb",
+    "engineSha256": "4b441e05de2a49fc0f8b17fcce01814ee17a6b6766f88e4ce6d4f93ca7ab09b8",
+    "modelShardSha256": [
+      "4c1eb2ceb4915e1192f4f386021897bde56a97f40a0bb78bb86465e0f7d2aca3",
+      "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113"
+    ],
+    "endpoint": "http://127.0.0.1:8350/v1",
+    "memoryPolicy": "exact-profile; adaptive llama.cpp --fit ladder disabled",
+    "configArgs": "vision enabled, encoder + mmproj configured; parallel slots 1",
+    "serverCommand": "python serve/server.py --engine strata --config strata-iq3_s.json --host 127.0.0.1 --port 8350 (started/stopped by LlamaCode ASTRA manager)"
+  },
+  "excludedInfrastructureAttempts": [
+    {
+      "candidate": "ASTRA Strata IQ3_S",
+      "suite": "HumanEval/0 prerequisite",
+      "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/HumanEval_1_tems__20261003_121936",
+      "failureStage": "server-load",
+      "reason": "Initial run occurred before adaptive-memory gate fix; LlamaCode appended llama.cpp-only --fit/--fit-target arguments rejected by Strata. Excluded from scores; successful HE0 rerun is recorded in runs.astraIq3s.he0Prerequisite."
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "schema": "verify-stress-curve/1",
+  "kind": "ceiling-addressability-check",
+  "label": "ceiling/addressability check (salted uniform haystack) \u2014 not a recall benchmark (#1017)",
+  "generated_at": "2026-09-08T18:32:04.122776+00:00",
+  "model": "qwen3.6-35b-a3b-autoround",
+  "url": "http://localhost:8051",
+  "engine": "vllm",
+  "container": "none",
+  "prefix_cache_guard": {
+    "metric": "vllm:prefix_cache_hits_total",
+    "contaminated_rungs": []
+  },
+  "rungs": [
+    {
+      "probe": "longctx",
+      "rung": "scale-150",
+      "target_tokens": null,
+      "http_code": 200,
+      "outcome": "recalled",
+      "recall_ok": true,
+      "depth_tokens": 9846,
+      "prefill_tps": 7315.1,
+      "prefill_ms": 1346.0,
+      "cache_hit_delta": 0,
+      "cache_clean": true
+    },
+    {
+      "probe": "longctx",
+      "rung": "scale-450",
+      "target_tokens": null,
+      "http_code": 200,
+      "outcome": "recalled",
+      "recall_ok": true,
+      "depth_tokens": 29346,
+      "prefill_tps": 6322.7,
+      "prefill_ms": 4641.0,
+      "cache_hit_delta": 0,
+      "cache_clean": true
+    },
+    {
+      "probe": "ceiling_ladder",
+      "rung": "1",
+      "target_tokens": 95000,
+      "http_code": 200,
+      "outcome": "recalled",
+      "recall_ok": true,
+      "depth_tokens": 94865,
+      "prefill_tps": 4076.3,
+      "prefill_ms": 23272.0,
+      "cache_hit_delta": 0,
+      "cache_clean": true
+    },
+    {
+      "probe": "ceiling_ladder",
+      "rung": "2",
+      "target_tokens": 241172,
+      "http_code": 200,
+      "outcome": "recalled",
+      "recall_ok": true,
+      "depth_tokens": 240660,
+      "prefill_tps": 2340.0,
+      "prefill_ms": 102845.0,
+      "cache_hit_delta": 0,
+      "cache_clean": true
+    }
+  ]
+}

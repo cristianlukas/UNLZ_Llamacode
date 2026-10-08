@@ -37,8 +37,8 @@ def main():
           {"role":"system","content":"Solve the programming task. Return only a complete Python implementation; do not explain."},
           {"role":"user","content":item["prompt"]}],
           "temperature":0.6,"top_p":0.95,"top_k":20,"min_p":0.0,
-          "max_tokens":a.max_tokens,"reasoning_budget":a.budget,
-          "chat_template_kwargs":{"enable_thinking":True},"stream":False}
+          "max_tokens":a.max_tokens,
+          "chat_template_kwargs":{"enable_thinking":False},"stream":False}
         start=time.perf_counter()
         try:
             result, wall=req(a.url,payload,900)
@@ -69,7 +69,7 @@ def main():
                          "passed":False,"error":f"{type(e).__name__}: {e}"})
         print(f"{i}/{len(corpus['items'])} {item['id']} passed={rows[-1]['passed']} wallMs={rows[-1]['wallMs']}",flush=True)
     out={"benchmark":"BigCodeBench-Hard-8","pack":str(PACK.relative_to(ROOT)),"model":a.model,"url":a.url,
-         "reasoningBudget":a.budget,"temperature":0.6,"topP":0.95,"topK":20,"maxTokens":a.max_tokens,
+         "reasoning":"off","temperature":0.6,"topP":0.95,"topK":20,"maxTokens":a.max_tokens,
          "runs":len(rows),"transportOk":sum(r["transportOk"] for r in rows),"passed":sum(r["passed"] for r in rows),"rows":rows}
     a.out.parent.mkdir(parents=True,exist_ok=True); a.out.write_text(json.dumps(out,ensure_ascii=False,indent=2)+"\n")
     print(f"score={out['passed']}/{out['runs']} transport={out['transportOk']}/{out['runs']} out={a.out}")

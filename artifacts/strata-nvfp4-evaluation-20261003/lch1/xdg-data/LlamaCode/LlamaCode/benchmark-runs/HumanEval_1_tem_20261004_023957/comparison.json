@@ -1,0 +1,41 @@
+{
+    "benchmarkName": "HumanEval · 1 ítem",
+    "comparisons": [
+    ],
+    "generatedAt": "2026-10-04T02:45:17",
+    "profileCount": 1,
+    "profiles": [
+        {
+            "agentVariant": "baseline",
+            "comparisonTimeMetric": "timeToFirstAttempt",
+            "failedRuns": 1,
+            "fullyAcceptedRuns": 0,
+            "honeyEnabled": false,
+            "medianAddedLines": 0,
+            "medianColdFirstAttemptSec": 0,
+            "medianElapsedSec": 0,
+            "medianFilesChanged": 0,
+            "medianFirstAttemptSec": 0,
+            "medianQualityPct": 0,
+            "medianRemovedLines": 0,
+            "medianRepairAttempts": 0,
+            "medianToolCalls": 0,
+            "medianToolF1Pct": 0,
+            "medianToolRedundantCalls": 0,
+            "medianToolSuccessRatePct": 0,
+            "medianWarmFirstAttemptSec": 0,
+            "outcomeSpread": false,
+            "profileId": "test-strata-nvidia-nvfp4-sm86",
+            "profileName": "[prueba] Strata · NVIDIA Qwen3.8 Flash Next NVFP4 · RTX 3090",
+            "qualityRangePctPoints": 0,
+            "runs": 1,
+            "stabilityRatePct": 100,
+            "successRatePct": 0,
+            "successfulRuns": 0
+        }
+    ],
+    "runCount": 1,
+    "runLabel": "HumanEval · 1 ítem",
+    "schemaVersion": 1,
+    "target": "agent"
+}

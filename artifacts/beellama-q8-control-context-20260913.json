@@ -1,0 +1,15 @@
+{
+  "schema": "llamacode-context-tps-v1",
+  "serverExe": "/home/cristian/.cache/llamacode/beellama-bin-v047-20260913/beellama-preview-v0.4.7/llama-server",
+  "modelPath": "/media/cristian/Disco local/Models/llamacpp/Qwen3.8-27B-GGUF/Qwen3.8-27B-UD-Q4_K_XL.gguf",
+  "launcher": {"kind": "native"},
+  "commonArgs": [
+    "--split-mode", "layer", "--tensor-split", "1,1", "--n-gpu-layers", "999",
+    "--flash-attn", "on", "--fit", "off", "--batch-size", "512", "--ubatch-size", "256",
+    "--parallel", "1", "--jinja", "--reasoning", "on", "--reasoning-preserve",
+    "--temp", "0.6", "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0",
+    "--repeat-penalty", "1.0", "--presence-penalty", "0.0"
+  ],
+  "variant": {"id": "beellama-q8-q8-control", "args": ["--cache-type-k", "q8_0", "--cache-type-v", "q8_0"], "env": {}},
+  "contexts": [8192, 32768, 65536, 131072]
+}

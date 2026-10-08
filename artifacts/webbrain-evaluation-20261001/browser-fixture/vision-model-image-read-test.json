@@ -1,0 +1,15 @@
+{
+  "model": "lfm2.5-vl-3b-e2e",
+  "vision": true,
+  "image": "/home/cristian/.local/share/qa_web_providers/automations/runtime-observations/browser-1790888126381.png",
+  "snapshot": "/home/cristian/.local/share/qa_web_providers/automations/runtime-observations/browser-1790888126386.json",
+  "answer": "Blue",
+  "usage": {
+    "completion_tokens": 2,
+    "prompt_tokens": 924,
+    "total_tokens": 926,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  }
+}

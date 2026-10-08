@@ -1,0 +1,842 @@
+{
+  "schema": "llamacode-compaction-quality-v1",
+  "generatedAt": "2026-09-23T13:49:25Z",
+  "url": "http://127.0.0.1:8134",
+  "rounds": 5,
+  "fillerChars": 2500,
+  "repeats": 3,
+  "summary": {
+    "runs": 6,
+    "compactionRuns": 3,
+    "rawRuns": 3,
+    "compactionActionRatePct": 100.0,
+    "rawActionRatePct": 100.0,
+    "compactionFinalRatePct": 66.66666666666666,
+    "rawFinalRatePct": 100.0,
+    "compactionActionWallMsP50": 234.34578299929854,
+    "rawActionWallMsP50": 211.70195000013337,
+    "compactionFinalWallMsP50": 451.6127699998833,
+    "rawFinalWallMsP50": 474.8294929995609
+  },
+  "runs": [
+    {
+      "mode": "raw",
+      "rounds": 5,
+      "fillerChars": 2500,
+      "compactions": [],
+      "actions": [
+        {
+          "round": 1,
+          "ok": true,
+          "markers": [],
+          "content": "ACTION-1: verify the requested diff",
+          "timing": {
+            "promptTokens": 652,
+            "promptMs": 168.584,
+            "generatedTokens": 9,
+            "generatedMs": 51.378,
+            "cachedTokens": 40,
+            "wallMs": 310.87843099976453
+          }
+        },
+        {
+          "round": 2,
+          "ok": true,
+          "markers": [],
+          "content": "ACTION-2: verify the requested diff",
+          "timing": {
+            "promptTokens": 1249,
+            "promptMs": 154.776,
+            "generatedTokens": 9,
+            "generatedMs": 50.639,
+            "cachedTokens": 648,
+            "wallMs": 208.92080800058466
+          }
+        },
+        {
+          "round": 3,
+          "ok": true,
+          "markers": [],
+          "content": "ACTION-3: verify the requested diff",
+          "timing": {
+            "promptTokens": 1842,
+            "promptMs": 152.28,
+            "generatedTokens": 9,
+            "generatedMs": 49.953,
+            "cachedTokens": 1245,
+            "wallMs": 206.6164679999929
+          }
+        },
+        {
+          "round": 4,
+          "ok": true,
+          "markers": [],
+          "content": "ACTION-4: verify the requested diff",
+          "timing": {
+            "promptTokens": 2435,
+            "promptMs": 156.77,
+            "generatedTokens": 9,
+            "generatedMs": 49.257,
+            "cachedTokens": 1838,
+            "wallMs": 211.70195000013337
+          }
+        },
+        {
+          "round": 5,
+          "ok": true,
+          "markers": [],
+          "content": "ACTION-5: verify the requested diff",
+          "timing": {
+            "promptTokens": 3026,
+            "promptMs": 153.127,
+            "generatedTokens": 9,
+            "generatedMs": 51.539,
+            "cachedTokens": 2431,
+            "wallMs": 211.63853100006236
+          }
+        }
+      ],
+      "final": {
+        "ok": true,
+        "markers": [
+          "KEEP-01: no editar config/production.env",
+          "KEEP-02: conservar la firma de API calc_total",
+          "KEEP-03: ejecutar tests/test_alpha.py",
+          "KEEP-04: no borrar migraciones",
+          "KEEP-05: entregar src/report.md"
+        ],
+        "content": "KEEP-01: no editar config/production.env\nKEEP-02: conservar la firma de API calc_total\nKEEP-03: ejecutar tests/test_alpha.py\nKEEP-04: no borrar migraciones\nKEEP-05: entregar src/report.md\n\nACTION-FINAL: inspect the diff",
+        "timing": {
+          "promptTokens": 3071,
+          "promptMs": 70.804,
+          "generatedTokens": 65,
+          "generatedMs": 401.936,
+          "cachedTokens": 3022,
+          "wallMs": 479.8966400003337
+        }
+      }
+    },
+    {
+      "mode": "compaction",
+      "rounds": 5,
+      "fillerChars": 2500,
+      "compactions": [
+        {
+          "round": 1,
+          "summaryChars": 751,
+          "summaryMarkers": [
+            "KEEP-01: no editar config/production.env"
+          ],
+          "timing": {
+            "promptTokens": 669,
+            "promptMs": 30.609,
+            "generatedTokens": 179,
+            "generatedMs": 1060.855,
+            "cachedTokens": 665,
+            "wallMs": 1113.050205000036
+          }
+        },
+        {
+          "round": 2,
+          "summaryChars": 959,
+          "summaryMarkers": [
+            "KEEP-01: no editar config/production.env",
+            "KEEP-02: conservar la firma de API calc_total"
+          ],
+          "timing": {
+            "promptTokens": 911,
+            "promptMs": 198.173,
+            "generatedTokens": 226,
+            "generatedMs": 1337.145,
+            "cachedTokens": 0,
+            "wallMs": 1588.4463279999181
+          }
+        },
+        {
+          "round": 3,
+          "summaryChars": 1121,
+          "summaryMarkers": [
+            "KEEP-01: no editar config/production.env",
+            "KEEP-02: conservar la firma de API calc_total",
+            "KEEP-03: ejecutar tests/test_alpha.py"
+          ],
+          "timing": {
+            "promptTokens": 954,
+            "promptMs": 205.508,
+            "generatedTokens": 271,
+            "generatedMs": 1603.104,
+            "cachedTokens": 0,
+            "wallMs": 1860.3219209999224
+          }
+        },
+        {
+          "round": 4,
+          "summaryChars": 1362,
+          "summaryMarkers": [
+            "KEEP-01: no editar config/production.env",
+            "KEEP-02: conservar la firma de API calc_total",
+            "KEEP-03: ejecutar tests/test_alpha.py",
+            "KEEP-04: no borrar migraciones"
+          ],
+          "timing": {
+            "promptTokens": 999,
+            "promptMs": 210.94,
+            "generatedTokens": 329,
+            "generatedMs": 1954.723,
+            "cachedTokens": 0,
+            "wallMs": 2217.7636790001998
+          }
+        },
+        {
+          "round": 5,
+          "summaryChars": 1661,
+          "summaryMarkers": [
+            "KEEP-01: no editar config/production.env",
+            "KEEP-02: conservar la firma de API calc_total",
+            "KEEP-03: ejecutar tests/test_alpha.py",
+            "KEEP-04: no borrar migraciones",
+            "KEEP-05: entregar src/report.md"
+          ],
+          "timing": {
+            "promptTokens": 1055,
+            "promptMs": 219.873,
+            "generatedTokens": 421,
+            "generatedMs": 2482.926,
+            "cachedTokens": 0,
+            "wallMs": 2754.975555000783
+          }
+        }
+      ],
+      "actions": [
+        {
+          "round": 1,
+          "ok": true,
+          "markers": [],
+          "content": "ACTION-1: verify the requested diff",
+          "timing": {
+            "promptTokens": 303,
+            "promptMs": 113.039,
+            "generatedTokens": 9,
+            "generatedMs": 49.46,
+            "cachedTokens": 0,
+            "wallMs": 199.90998200046306
+          }
+        },
+        {
+          "round": 2,
+          "ok": true,
+          "markers": [],
+          "content": "ACTION-2: verify the requested diff",
+          "timing": {
+            "promptTokens": 350,
+            "promptMs": 127.057,
+            "generatedTokens": 9,
+            "generatedMs": 51.238,
+            "cachedTokens": 0,
+            "wallMs": 223.1374479997612
+          }
+        },
+        {
+          "round": 3,
+          "ok": true,
+          "markers": [],
+          "content": "ACTION-3: verify the requested diff",
+          "timing": {
+            "promptTokens": 395,
+            "promptMs": 130.926,
+            "generatedTokens": 9,
+            "generatedMs": 50.551,
+            "cachedTokens": 0,
+            "wallMs": 227.92768700037414
+          }
+        },
+        {
+          "round": 4,
+          "ok": true,
+          "markers": [],
+          "content": "ACTION-4: verify the requested diff",
+          "timing": {
+            "promptTokens": 453,
+            "promptMs": 138.731,
+            "generatedTokens": 9,
+            "generatedMs": 50.627,
+            "cachedTokens": 0,
+            "wallMs": 245.03770800038183
+          }
+        },
+        {
+          "round": 5,
+          "ok": true,
+          "markers": [],
+          "content": "ACTION-5: verify the requested diff",
+          "timing": {
+            "promptTokens": 545,
+            "promptMs": 159.979,
+            "generatedTokens": 9,
+            "generatedMs": 52.936,
+            "cachedTokens": 0,
+            "wallMs": 259.6602879993952
+          }
+        }
+      ],
+      "final": {
+        "ok": true,
+        "markers": [
+          "KEEP-01: no editar config/production.env",
+          "KEEP-02: conservar la firma de API calc_total",
+          "KEEP-03: ejecutar tests/test_alpha.py",
+          "KEEP-04: no borrar migraciones",
+          "KEEP-05: entregar src/report.md"
+        ],
+        "content": "KEEP-01: no editar config/production.env\nKEEP-02: conservar la firma de API calc_total\nKEEP-03: ejecutar tests/test_alpha.py\nKEEP-04: no borrar migraciones\nKEEP-05: entregar src/report.md\n\nACTION-FINAL: inspect the diff",
+        "timing": {
+          "promptTokens": 590,
+          "promptMs": 69.836,
+          "generatedTokens": 65,
+          "generatedMs": 378.762,
+          "cachedTokens": 541,
+          "wallMs": 451.6127699998833
+        }
+      }
+    },
+    {
+      "mode": "raw",
+      "rounds": 5,
+      "fillerChars": 2500,
+      "compactions": [],
+      "actions": [
+        {
+          "round": 1,
+          "ok": true,
+          "markers": [],
+          "content": "ACTION-1: verify the requested diff",
+          "timing": {
+            "promptTokens": 652,
+            "promptMs": 161.348,
+            "generatedTokens": 9,
+            "generatedMs": 49.335,
+            "cachedTokens": 29,
+            "wallMs": 265.5142670000714
+          }
+        },
+        {
+          "round": 2,
+          "ok": true,
+          "markers": [],
+          "content": "ACTION-2: verify the requested diff",
+          "timing": {
+            "promptTokens": 1249,
+            "promptMs": 154.753,
+            "generatedTokens": 9,
+            "generatedMs": 49.698,
+            "cachedTokens": 648,
+            "wallMs": 207.98020099937276
+          }
+        },
+        {
+          "round": 3,
+          "ok": true,
+          "markers": [],
+          "content": "ACTION-3: verify the requested diff",
+          "timing": {
+            "promptTokens": 1842,
+            "promptMs": 155.824,
+            "generatedTokens": 9,
+            "generatedMs": 48.727,
+            "cachedTokens": 1245,
+            "wallMs": 209.12483200027054
+          }
+        },
+        {
+          "round": 4,
+          "ok": true,
+          "markers": [],
+          "content": "ACTION-4: verify the requested diff",
+          "timing": {
+            "promptTokens": 2435,
+            "promptMs": 157.778,
+            "generatedTokens": 9,
+            "generatedMs": 51.297,
+            "cachedTokens": 1838,
+            "wallMs": 215.25931700034562
+          }
+        },
+        {
+          "round": 5,
+          "ok": true,
+          "markers": [],
+          "content": "ACTION-5: verify the requested diff",
+          "timing": {
+            "promptTokens": 3026,
+            "promptMs": 157.731,
+            "generatedTokens": 9,
+            "generatedMs": 50.888,
+            "cachedTokens": 2431,
+            "wallMs": 215.47087199996895
+          }
+        }
+      ],
+      "final": {
+        "ok": true,
+        "markers": [
+          "KEEP-01: no editar config/production.env",
+          "KEEP-02: conservar la firma de API calc_total",
+          "KEEP-03: ejecutar tests/test_alpha.py",
+          "KEEP-04: no borrar migraciones",
+          "KEEP-05: entregar src/report.md"
+        ],
+        "content": "KEEP-01: no editar config/production.env\nKEEP-02: conservar la firma de API calc_total\nKEEP-03: ejecutar tests/test_alpha.py\nKEEP-04: no borrar migraciones\nKEEP-05: entregar src/report.md\n\nACTION-FINAL: inspect the diff",
+        "timing": {
+          "promptTokens": 3071,
+          "promptMs": 72.448,
+          "generatedTokens": 65,
+          "generatedMs": 395.157,
+          "cachedTokens": 3022,
+          "wallMs": 474.8294929995609
+        }
+      }
+    },
+    {
+      "mode": "compaction",
+      "rounds": 5,
+      "fillerChars": 2500,
+      "compactions": [
+        {
+          "round": 1,
+          "summaryChars": 814,
+          "summaryMarkers": [],
+          "timing": {
+            "promptTokens": 669,
+            "promptMs": 30.78,
+            "generatedTokens": 213,
+            "generatedMs": 1259.766,
+            "cachedTokens": 665,
+            "wallMs": 1310.180057999787
+          }
+        },
+        {
+          "round": 2,
+          "summaryChars": 1289,
+          "summaryMarkers": [],
+          "timing": {
+            "promptTokens": 945,
+            "promptMs": 204.57,
+            "generatedTokens": 320,
+            "generatedMs": 1888.817,
+            "cachedTokens": 0,
+            "wallMs": 2145.0531780001256
+          }
+        },
+        {
+          "round": 3,
+          "summaryChars": 1564,
+          "summaryMarkers": [],
+          "timing": {
+            "promptTokens": 1048,
+            "promptMs": 217.554,
+            "generatedTokens": 398,
+            "generatedMs": 2359.28,
+            "cachedTokens": 0,
+            "wallMs": 2629.3300109991833
+          }
+        },
+        {
+          "round": 4,
+          "summaryChars": 1938,
+          "summaryMarkers": [
+            "KEEP-04: no borrar migraciones"
+          ],
+          "timing": {
+            "promptTokens": 1134,
+            "promptMs": 233.372,
+            "generatedTokens": 502,
+            "generatedMs": 2977.479,
+            "cachedTokens": 0,
+            "wallMs": 3264.0928549999444
+          }
+        },
+        {
+          "round": 5,
+          "summaryChars": 2177,
+          "summaryMarkers": [
+            "KEEP-04: no borrar migraciones",
+            "KEEP-05: entregar src/report.md"
+          ],
+          "timing": {
+            "promptTokens": 1228,
+            "promptMs": 244.408,
+            "generatedTokens": 570,
+            "generatedMs": 3393.403,
+            "cachedTokens": 0,
+            "wallMs": 3693.1506640003136
+          }
+        }
+      ],
+      "actions": [
+        {
+          "round": 1,
+          "ok": true,
+          "markers": [],
+          "content": "ACTION-1: verify the requested diff",
+          "timing": {
+            "promptTokens": 337,
+            "promptMs": 104.408,
+            "generatedTokens": 9,
+            "generatedMs": 50.873,
+            "cachedTokens": 63,
+            "wallMs": 204.13567899959162
+          }
+        },
+        {
+          "round": 2,
+          "ok": true,
+          "markers": [],
+          "content": "ACTION-2: verify the requested diff",
+          "timing": {
+            "promptTokens": 444,
+            "promptMs": 121.965,
+            "generatedTokens": 9,
+            "generatedMs": 50.288,
+            "cachedTokens": 63,
+            "wallMs": 234.34578299929854
+          }
+        },
+        {
+          "round": 3,
+          "ok": true,
+          "markers": [],
+          "content": "ACTION-3: verify the requested diff, and do not invent completed tests.",
+          "timing": {
+            "promptTokens": 522,
+            "promptMs": 185.651,
+            "generatedTokens": 17,
+            "generatedMs": 99.532,
+            "cachedTokens": 0,
+            "wallMs": 336.0184349994597
+          }
+        },
+        {
+          "round": 4,
+          "ok": true,
+          "markers": [],
+          "content": "ACTION-4: verify the requested diff",
+          "timing": {
+            "promptTokens": 626,
+            "promptMs": 170.683,
+            "generatedTokens": 9,
+            "generatedMs": 48.789,
+            "cachedTokens": 0,
+            "wallMs": 270.5073380002432
+          }
+        },
+        {
+          "round": 5,
+          "ok": true,
+          "markers": [],
+          "content": "ACTION-5: verify the requested diff",
+          "timing": {
+            "promptTokens": 694,
+            "promptMs": 187.664,
+            "generatedTokens": 9,
+            "generatedMs": 50.676,
+            "cachedTokens": 0,
+            "wallMs": 287.96835400044074
+          }
+        }
+      ],
+      "final": {
+        "ok": false,
+        "markers": [],
+        "content": "KEEP-03, KEEP-04, KEEP-05\n\nACTION-FINAL: inspect the diff",
+        "timing": {
+          "promptTokens": 739,
+          "promptMs": 66.915,
+          "generatedTokens": 23,
+          "generatedMs": 131.782,
+          "cachedTokens": 690,
+          "wallMs": 201.12238499950763
+        }
+      }
+    },
+    {
+      "mode": "raw",
+      "rounds": 5,
+      "fillerChars": 2500,
+      "compactions": [],
+      "actions": [
+        {
+          "round": 1,
+          "ok": true,
+          "markers": [],
+          "content": "ACTION-1: verify the requested diff",
+          "timing": {
+            "promptTokens": 652,
+            "promptMs": 159.358,
+            "generatedTokens": 9,
+            "generatedMs": 49.689,
+            "cachedTokens": 40,
+            "wallMs": 265.5548109996744
+          }
+        },
+        {
+          "round": 2,
+          "ok": true,
+          "markers": [],
+          "content": "ACTION-2: verify the requested diff",
+          "timing": {
+            "promptTokens": 1249,
+            "promptMs": 151.595,
+            "generatedTokens": 9,
+            "generatedMs": 49.917,
+            "cachedTokens": 648,
+            "wallMs": 205.1108050000039
+          }
+        },
+        {
+          "round": 3,
+          "ok": true,
+          "markers": [],
+          "content": "ACTION-3: verify the requested diff",
+          "timing": {
+            "promptTokens": 1842,
+            "promptMs": 157.795,
+            "generatedTokens": 9,
+            "generatedMs": 49.526,
+            "cachedTokens": 1245,
+            "wallMs": 212.0644810001977
+          }
+        },
+        {
+          "round": 4,
+          "ok": true,
+          "markers": [],
+          "content": "ACTION-4: verify the requested diff",
+          "timing": {
+            "promptTokens": 2435,
+            "promptMs": 152.746,
+            "generatedTokens": 9,
+            "generatedMs": 49.844,
+            "cachedTokens": 1838,
+            "wallMs": 208.31337500021618
+          }
+        },
+        {
+          "round": 5,
+          "ok": true,
+          "markers": [],
+          "content": "ACTION-5: verify the requested diff",
+          "timing": {
+            "promptTokens": 3026,
+            "promptMs": 155.725,
+            "generatedTokens": 9,
+            "generatedMs": 51.942,
+            "cachedTokens": 2431,
+            "wallMs": 214.4882439997673
+          }
+        }
+      ],
+      "final": {
+        "ok": true,
+        "markers": [
+          "KEEP-01: no editar config/production.env",
+          "KEEP-02: conservar la firma de API calc_total",
+          "KEEP-03: ejecutar tests/test_alpha.py",
+          "KEEP-04: no borrar migraciones",
+          "KEEP-05: entregar src/report.md"
+        ],
+        "content": "KEEP-01: no editar config/production.env\nKEEP-02: conservar la firma de API calc_total\nKEEP-03: ejecutar tests/test_alpha.py\nKEEP-04: no borrar migraciones\nKEEP-05: entregar src/report.md\n\nACTION-FINAL: inspect the diff",
+        "timing": {
+          "promptTokens": 3071,
+          "promptMs": 69.793,
+          "generatedTokens": 65,
+          "generatedMs": 388.521,
+          "cachedTokens": 3022,
+          "wallMs": 466.5134679999028
+        }
+      }
+    },
+    {
+      "mode": "compaction",
+      "rounds": 5,
+      "fillerChars": 2500,
+      "compactions": [
+        {
+          "round": 1,
+          "summaryChars": 804,
+          "summaryMarkers": [
+            "KEEP-01: no editar config/production.env"
+          ],
+          "timing": {
+            "promptTokens": 669,
+            "promptMs": 30.544,
+            "generatedTokens": 199,
+            "generatedMs": 1181.541,
+            "cachedTokens": 665,
+            "wallMs": 1231.9792500002222
+          }
+        },
+        {
+          "round": 2,
+          "summaryChars": 1055,
+          "summaryMarkers": [
+            "KEEP-01: no editar config/production.env",
+            "KEEP-02: conservar la firma de API calc_total"
+          ],
+          "timing": {
+            "promptTokens": 931,
+            "promptMs": 202.131,
+            "generatedTokens": 260,
+            "generatedMs": 1533.418,
+            "cachedTokens": 0,
+            "wallMs": 1787.3910649996105
+          }
+        },
+        {
+          "round": 3,
+          "summaryChars": 1264,
+          "summaryMarkers": [
+            "KEEP-01: no editar config/production.env",
+            "KEEP-02: conservar la firma de API calc_total",
+            "KEEP-03: ejecutar tests/test_alpha.py"
+          ],
+          "timing": {
+            "promptTokens": 988,
+            "promptMs": 212.009,
+            "generatedTokens": 316,
+            "generatedMs": 1880.096,
+            "cachedTokens": 0,
+            "wallMs": 2146.5355420004926
+          }
+        },
+        {
+          "round": 4,
+          "summaryChars": 1497,
+          "summaryMarkers": [
+            "KEEP-01: no editar config/production.env",
+            "KEEP-02: conservar la firma de API calc_total",
+            "KEEP-03: ejecutar tests/test_alpha.py",
+            "KEEP-04: no borrar migraciones"
+          ],
+          "timing": {
+            "promptTokens": 1044,
+            "promptMs": 222.315,
+            "generatedTokens": 375,
+            "generatedMs": 2221.39,
+            "cachedTokens": 0,
+            "wallMs": 2498.0355549996602
+          }
+        },
+        {
+          "round": 5,
+          "summaryChars": 1826,
+          "summaryMarkers": [
+            "KEEP-01: no editar config/production.env",
+            "KEEP-02: conservar la firma de API calc_total",
+            "KEEP-03: ejecutar tests/test_alpha.py",
+            "KEEP-04: no borrar migraciones",
+            "KEEP-05: entregar src/report.md"
+          ],
+          "timing": {
+            "promptTokens": 1101,
+            "promptMs": 230.248,
+            "generatedTokens": 469,
+            "generatedMs": 2781.147,
+            "cachedTokens": 0,
+            "wallMs": 3064.2087810001613
+          }
+        }
+      ],
+      "actions": [
+        {
+          "round": 1,
+          "ok": true,
+          "markers": [],
+          "content": "ACTION-1: verify the requested diff",
+          "timing": {
+            "promptTokens": 323,
+            "promptMs": 99.194,
+            "generatedTokens": 9,
+            "generatedMs": 49.988,
+            "cachedTokens": 63,
+            "wallMs": 197.69004299996595
+          }
+        },
+        {
+          "round": 2,
+          "ok": true,
+          "markers": [],
+          "content": "ACTION-2: verify the requested diff",
+          "timing": {
+            "promptTokens": 384,
+            "promptMs": 109.85,
+            "generatedTokens": 9,
+            "generatedMs": 50.731,
+            "cachedTokens": 63,
+            "wallMs": 215.96565500021825
+          }
+        },
+        {
+          "round": 3,
+          "ok": true,
+          "markers": [],
+          "content": "ACTION-3: verify the requested diff",
+          "timing": {
+            "promptTokens": 440,
+            "promptMs": 136.288,
+            "generatedTokens": 9,
+            "generatedMs": 49.649,
+            "cachedTokens": 0,
+            "wallMs": 231.85174700029165
+          }
+        },
+        {
+          "round": 4,
+          "ok": true,
+          "markers": [],
+          "content": "ACTION-4: verify the requested diff",
+          "timing": {
+            "promptTokens": 499,
+            "promptMs": 150.403,
+            "generatedTokens": 9,
+            "generatedMs": 48.287,
+            "cachedTokens": 0,
+            "wallMs": 247.1085219995075
+          }
+        },
+        {
+          "round": 5,
+          "ok": true,
+          "markers": [],
+          "content": "ACTION-5: verify the requested diff",
+          "timing": {
+            "promptTokens": 593,
+            "promptMs": 178.149,
+            "generatedTokens": 9,
+            "generatedMs": 50.527,
+            "cachedTokens": 0,
+            "wallMs": 280.13510100026906
+          }
+        }
+      ],
+      "final": {
+        "ok": true,
+        "markers": [
+          "KEEP-01: no editar config/production.env",
+          "KEEP-02: conservar la firma de API calc_total",
+          "KEEP-03: ejecutar tests/test_alpha.py",
+          "KEEP-04: no borrar migraciones",
+          "KEEP-05: entregar src/report.md"
+        ],
+        "content": "KEEP-01: No editar config/production.env\nKEEP-02: conservar la firma de API calc_total\nKEEP-03: ejecutar tests/test_alpha.py\nKEEP-04: no borrar migraciones\nKEEP-05: entregar src/report.md\nIgnore informational tool outputs as noise\nDo not claim verification without evidence\n\nACTION-FINAL: inspect the diff",
+        "timing": {
+          "promptTokens": 638,
+          "promptMs": 70.959,
+          "generatedTokens": 79,
+          "generatedMs": 474.795,
+          "cachedTokens": 589,
+          "wallMs": 548.6435470002107
+        }
+      }
+    }
+  ]
+}

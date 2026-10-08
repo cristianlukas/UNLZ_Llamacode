@@ -1,0 +1,707 @@
+{
+  "suiteId": "intelligence_adversarial_v1",
+  "suiteName": "ADV v1 - 10 tareas",
+  "profileId": "test-strata-unsloth-udq4-38ram",
+  "thinkingEnabled": true,
+  "completedAtUtc": "2026-10-04T05:09:11Z",
+  "results": [
+    {
+      "acceptance": [
+        {
+          "command": "python - <<'PY'\nfrom ttl_cache import TTLCache\nclass Clock:\n    def __init__(self): self.t = 10.0\n    def __call__(self): return self.t\ncx = Clock(); c = TTLCache(clock=cx)\nassert len(c) == 0\nc.set('a', 1, 2); assert c.get('a') == 1 and len(c) == 1\ncx.t = 12.0; assert c.get('a', 'missing') == 'missing' and len(c) == 0\nc.set('a', 2, 3); c.set('b', 4, 10); cx.t = 14.9; assert c.get('a') == 2 and len(c) == 2\ncx.t = 15.0; assert c.get('a', None) is None and len(c) == 1\nassert c.delete('b') is True and c.delete('b') is False\ntry: c.set('x', 1, 0)\nexcept ValueError: pass\nelse: raise AssertionError('ttl cero debe fallar')\nPY",
+          "exitCode": 0,
+          "name": "hidden_ttl_cache_grader",
+          "output": "",
+          "passed": true,
+          "taskId": "ttl_cache_clock",
+          "timedOut": false,
+          "timeoutMs": 30000,
+          "type": "command"
+        },
+        {
+          "command": "python - <<'PY'\nfrom merge_patch import apply_merge_patch\nimport copy\ntarget = {'a': 1, 'nested': {'keep': 2, 'drop': 3}, 'arr': [1, 2]}\npatch = {'nested': {'drop': None, 'add': 4}, 'arr': [9], 'new': True}\norig_t, orig_p = copy.deepcopy(target), copy.deepcopy(patch)\nout = apply_merge_patch(target, patch)\nassert out == {'a': 1, 'nested': {'keep': 2, 'add': 4}, 'arr': [9], 'new': True}\nassert target == orig_t and patch == orig_p\nout['nested']['keep'] = 99; assert target['nested']['keep'] == 2\nassert apply_merge_patch({'a': 1}, None) is None\nassert apply_merge_patch({'a': 1}, [1, 2]) == [1, 2]\nx = {'a': 1}; y = apply_merge_patch(x, {'b': {'c': 2}}); y['b']['c'] = 7; assert 'b' not in x\nPY",
+          "exitCode": 0,
+          "name": "hidden_merge_patch_grader",
+          "output": "",
+          "passed": true,
+          "taskId": "rfc7396_merge_patch",
+          "timedOut": false,
+          "timeoutMs": 30000,
+          "type": "command"
+        },
+        {
+          "command": "python - <<'PY'\nfrom stable_toposort import stable_toposort\nassert stable_toposort(['d','b','a','c'], [('a','c'), ('b','c')]) == ['a','b','c','d']\nassert stable_toposort(['compile','test','package','lint'], [('compile','test'), ('test','package'), ('lint','package')]) == ['compile','lint','test','package']\nfor nodes, edges in [(['a'], [('a','x')]), (['a','b'], [('a','b'), ('b','a')]), (['a','a'], [])]:\n    try: stable_toposort(nodes, edges)\n    except ValueError: pass\n    else: raise AssertionError('caso inválido aceptado')\nPY",
+          "exitCode": 0,
+          "name": "hidden_toposort_grader",
+          "output": "",
+          "passed": true,
+          "taskId": "stable_toposort",
+          "timedOut": false,
+          "timeoutMs": 30000,
+          "type": "command"
+        },
+        {
+          "command": "python - <<'PY'\nfrom path_guard import safe_join\nfrom pathlib import Path\nimport tempfile\nwith tempfile.TemporaryDirectory() as td:\n    root = Path(td) / 'root'; outside = Path(td) / 'outside'; root.mkdir(); outside.mkdir()\n    (root / 'ok.txt').write_text('ok'); (outside / 'secret.txt').write_text('no')\n    assert Path(safe_join(str(root), 'ok.txt')) == (root / 'ok.txt').resolve()\n    assert Path(safe_join(str(root), '.')) == root.resolve()\n    for bad in ('../outside/secret.txt', '/etc/passwd', 'a/../../x', 'bad\\x00name'):\n        try: safe_join(str(root), bad)\n        except ValueError: pass\n        else: raise AssertionError('escape aceptado: '+repr(bad))\n    link = root / 'link'\n    try: link.symlink_to(outside, target_is_directory=True)\n    except (OSError, NotImplementedError): pass\n    else:\n        try: safe_join(str(root), 'link/secret.txt')\n        except ValueError: pass\n        else: raise AssertionError('symlink fuera aceptado')\nPY",
+          "exitCode": 0,
+          "name": "hidden_path_guard_grader",
+          "output": "",
+          "passed": true,
+          "taskId": "safe_path_join",
+          "timedOut": false,
+          "timeoutMs": 30000,
+          "type": "command"
+        },
+        {
+          "command": "python - <<'PY'\nfrom tool_protocol import parse_tool_call\nimport copy\np = {'method':'write_file','args':{'path':'src/a.txt','content':'hola'}}; q = copy.deepcopy(p)\nassert parse_tool_call(p) == p and p == q\nr = parse_tool_call({'method':'read_file','args':{'path':'a/b.txt'}}); assert r == {'method':'read_file','args':{'path':'a/b.txt'}}\nfor bad in [{'method':'exec','args':{}}, {'method':'read_file','args':{}}, {'method':'read_file','args':{'path':'../x'}}, {'method':'read_file','args':{'path':'/tmp/x'}}, {'method':'write_file','args':{'path':'x','content':1}}, {'method':'read_file','args':{'path':'x','extra':1}}, {'method':'read_file','args':{'path':'x'},'extra':1}]:\n    try: parse_tool_call(bad)\n    except ValueError: pass\n    else: raise AssertionError('payload inválido aceptado: '+repr(bad))\nPY",
+          "exitCode": 0,
+          "name": "hidden_tool_protocol_grader",
+          "output": "",
+          "passed": true,
+          "taskId": "tool_call_contract",
+          "timedOut": false,
+          "timeoutMs": 30000,
+          "type": "command"
+        },
+        {
+          "command": "python - <<'PY'\nfrom scheduler import select_jobs\njobs = [{'id':'a','priority':2,'deadline':20,'cost':2}, {'id':'b','priority':3,'deadline':30,'cost':3}, {'id':'c','priority':3,'deadline':10,'cost':1,'depends':['a']}, {'id':'d','priority':9,'deadline':5,'cost':1}, {'id':'e','priority':8,'deadline':40,'cost':1,'depends':['missing']}, {'id':'f','priority':7,'deadline':40,'cost':1,'depends':['g']}, {'id':'g','priority':7,'deadline':40,'cost':1,'depends':['f']}, {'id':'expired','priority':99,'deadline':10,'cost':1}]\nassert select_jobs(jobs, now=10, capacity=4) == ['b']\nassert select_jobs(jobs, now=0, capacity=7) == ['expired','d','b','a']\nassert select_jobs(jobs, now=10, capacity=1) == []\nPY",
+          "exitCode": 0,
+          "name": "hidden_scheduler_grader",
+          "output": "",
+          "passed": true,
+          "taskId": "deadline_scheduler",
+          "timedOut": false,
+          "timeoutMs": 30000,
+          "type": "command"
+        },
+        {
+          "command": "python - <<'PY'\nfrom jsonl_audit import summarize_jsonl\nimport json\nrows = [json.dumps({'id':1,'level':'WARN','duration_ms':10}), ' ', '{bad', json.dumps({'id':2,'level':'INFO','duration_ms':30}), json.dumps({'id':3,'level':'WARN','duration_ms':20}), json.dumps({'id':4,'level':'INFO','duration_ms':'40'}), json.dumps({'id':5,'level':'ERROR','duration_ms':40})]\nassert summarize_jsonl(rows) == {'count':4,'by_level':{'ERROR':1,'INFO':1,'WARN':2},'total_duration_ms':100,'p95_duration_ms':40,'invalid_lines':2}\nassert summarize_jsonl([]) == {'count':0,'by_level':{},'total_duration_ms':0,'p95_duration_ms':None,'invalid_lines':0}\nPY",
+          "exitCode": 0,
+          "name": "hidden_jsonl_audit_grader",
+          "output": "",
+          "passed": true,
+          "taskId": "jsonl_audit",
+          "timedOut": false,
+          "timeoutMs": 30000,
+          "type": "command"
+        },
+        {
+          "command": "python - <<'PY'\nfrom config_resolver import resolve_config\nimport copy\ncfg = {'url':'https://$HOST/api','token':'$TOKEN','nested':[{'n':'$USER@$HOST','keep':3}], 'literal':'$9'}; env={'HOST':'example.test','TOKEN':'abc','USER':'ana'}; original=copy.deepcopy(cfg); out=resolve_config(cfg,env)\nassert out == {'url':'https://example.test/api','token':'abc','nested':[{'n':'ana@example.test','keep':3}], 'literal':'$9'}\nassert cfg == original\ntry: resolve_config({'x':'$MISSING'}, env)\nexcept KeyError as e: assert e.args[0] == 'MISSING'\nelse: raise AssertionError('missing env accepted')\nPY",
+          "exitCode": 0,
+          "name": "hidden_config_resolver_grader",
+          "output": "",
+          "passed": true,
+          "taskId": "config_env_resolution",
+          "timedOut": false,
+          "timeoutMs": 30000,
+          "type": "command"
+        },
+        {
+          "command": "python - <<'PY'\nfrom incident_report import build_report\nevents=[{'id':'b','service':'api','severity':'high','started_at':'2026-01-01T00:01:00Z','resolved_at':'2026-01-01T00:01:01Z'}, {'id':'a','service':'db','severity':'critical','started_at':'2026-01-01T00:00:00Z','resolved_at':None}, {'id':'c','service':'api','severity':'critical','started_at':'2026-01-01T00:00:00Z','resolved_at':'2026-01-01T00:02:01Z'}, {'id':'d','service':'web','severity':'low','started_at':'2026-01-01T00:00:00Z','resolved_at':'2026-01-01T00:00:01Z'}]\nout=build_report(events)\nassert [x['id'] for x in out['incidents']] == ['a','c','b','d']\nassert out['incidents'][1]['duration_minutes']==3 and out['incidents'][2]['duration_minutes']==1 and out['incidents'][0]['duration_minutes'] is None\nassert out['open_count']==1 and out['critical_open_count']==1 and out['services']==['api','db','web']\nPY",
+          "exitCode": 0,
+          "name": "hidden_incident_report_grader",
+          "output": "",
+          "passed": true,
+          "taskId": "deterministic_report",
+          "timedOut": false,
+          "timeoutMs": 30000,
+          "type": "command"
+        },
+        {
+          "command": "python - <<'PY'\nfrom user_query import build_user_query\nbase='SELECT id, name, email, active FROM users'\ns,p=build_user_query({'email':'a@b','name':'Ana','active':True}); assert s==base+' WHERE name LIKE ? AND email LIKE ? AND active = ?' and p==['%Ana%','%a@b%',True]\ns,p=build_user_query({}); assert s==base and p==[]\nfor bad in ({'role':'admin'},{'active':'yes'},{'name':'x\\x00y'}):\n try: build_user_query(bad)\n except ValueError: pass\n else: raise AssertionError('filtro inválido aceptado')\nassert 'Ana' not in build_user_query({'name':'Ana'})[0]\nPY",
+          "exitCode": 0,
+          "name": "hidden_sql_grader",
+          "output": "",
+          "passed": true,
+          "taskId": "sql_parameterization",
+          "timedOut": false,
+          "timeoutMs": 30000,
+          "type": "command"
+        }
+      ],
+      "agentFiles": [
+        "ttl_cache.py",
+        "config_resolver.py",
+        "solution_ttl_cache_clock.py",
+        "solution_deterministic_report.py",
+        "stable_toposort.py",
+        "tool_protocol.py",
+        "scheduler.py",
+        "merge_patch.py",
+        "__pycache__/solution_rfc7396_merge_patch.cpython-312.pyc",
+        "__pycache__/solution_config_env_resolution.cpython-312.pyc",
+        "__pycache__/tool_protocol.cpython-312.pyc",
+        "__pycache__/ttl_cache.cpython-312.pyc",
+        "__pycache__/scheduler.cpython-312.pyc",
+        "__pycache__/solution_safe_path_join.cpython-312.pyc",
+        "__pycache__/user_query.cpython-312.pyc",
+        "__pycache__/solution_deterministic_report.cpython-312.pyc",
+        "__pycache__/solution_deadline_scheduler.cpython-312.pyc",
+        "__pycache__/config_resolver.cpython-312.pyc",
+        "__pycache__/solution_ttl_cache_clock.cpython-312.pyc",
+        "__pycache__/jsonl_audit.cpython-312.pyc",
+        "__pycache__/path_guard.cpython-312.pyc",
+        "__pycache__/solution_tool_call_contract.cpython-312.pyc",
+        "__pycache__/solution_jsonl_audit.cpython-312.pyc",
+        "__pycache__/incident_report.cpython-312.pyc",
+        "__pycache__/merge_patch.cpython-312.pyc",
+        "__pycache__/stable_toposort.cpython-312.pyc",
+        "__pycache__/solution_sql_parameterization.cpython-312.pyc",
+        "__pycache__/solution_stable_toposort.cpython-312.pyc",
+        "solution_rfc7396_merge_patch.py",
+        "solution_tool_call_contract.py",
+        "solution_sql_parameterization.py",
+        "path_guard.py",
+        "solution_config_env_resolution.py",
+        "solution_stable_toposort.py",
+        "incident_report.py",
+        "user_query.py",
+        "solution_jsonl_audit.py",
+        "jsonl_audit.py",
+        "solution_deadline_scheduler.py",
+        "solution_safe_path_join.py"
+      ],
+      "agentMetrics": [
+        {
+          "elapsedMs": 38434,
+          "tokens": 318,
+          "tps": 8.273924129676848,
+          "ttft_ms": 107
+        },
+        {
+          "elapsedMs": 0,
+          "tokens": 8,
+          "tps": 0
+        },
+        {
+          "elapsedMs": 22931,
+          "tokens": 343,
+          "tps": 42.101387013624645,
+          "ttft_ms": 62
+        },
+        {
+          "elapsedMs": 27763,
+          "tokens": 292,
+          "tps": 43.789271628451026,
+          "ttft_ms": 96
+        },
+        {
+          "elapsedMs": 9806,
+          "tokens": 275,
+          "tps": 42.0431439098595,
+          "ttft_ms": 48
+        },
+        {
+          "elapsedMs": 18863,
+          "tokens": 486,
+          "tps": 31.7676127227328,
+          "ttft_ms": 77
+        },
+        {
+          "elapsedMs": 11046,
+          "tokens": 200,
+          "tps": 29.189410082022242,
+          "ttft_ms": 89
+        },
+        {
+          "elapsedMs": 27458,
+          "tokens": 236,
+          "tps": 36.17911729085864,
+          "ttft_ms": 60
+        },
+        {
+          "elapsedMs": 26665,
+          "tokens": 220,
+          "tps": 38.953220723113425,
+          "ttft_ms": 94
+        },
+        {
+          "elapsedMs": 14964,
+          "tokens": 497,
+          "tps": 43.28778100040937,
+          "ttft_ms": 92
+        },
+        {
+          "elapsedMs": 9408,
+          "tokens": 173,
+          "tps": 29.776760357321127,
+          "ttft_ms": 80
+        },
+        {
+          "elapsedMs": 36074,
+          "tokens": 567,
+          "tps": 39.08835208471211,
+          "ttft_ms": 64
+        },
+        {
+          "elapsedMs": 35452,
+          "tokens": 557,
+          "tps": 41.38279456451481,
+          "ttft_ms": 114
+        },
+        {
+          "elapsedMs": 18662,
+          "tokens": 510,
+          "tps": 36.03781851071949,
+          "ttft_ms": 98
+        },
+        {
+          "elapsedMs": 16848,
+          "tokens": 471,
+          "tps": 36.233835170668286,
+          "ttft_ms": 168
+        },
+        {
+          "elapsedMs": 11970,
+          "tokens": 222,
+          "tps": 27.904872039821004,
+          "ttft_ms": 70
+        },
+        {
+          "elapsedMs": 40904,
+          "tokens": 471,
+          "tps": 36.27401902268089,
+          "ttft_ms": 70
+        },
+        {
+          "elapsedMs": 38857,
+          "tokens": 428,
+          "tps": 41.127350649101054,
+          "ttft_ms": 103
+        },
+        {
+          "elapsedMs": 18844,
+          "tokens": 555,
+          "tps": 37.82612251574385,
+          "ttft_ms": 117
+        },
+        {
+          "elapsedMs": 25950,
+          "tokens": 731,
+          "tps": 34.14005361529624,
+          "ttft_ms": 146
+        },
+        {
+          "elapsedMs": 29589,
+          "tokens": 875,
+          "tps": 34.417111794645876,
+          "ttft_ms": 120
+        },
+        {
+          "elapsedMs": 17047,
+          "tokens": 425,
+          "tps": 33.62208773387129,
+          "ttft_ms": 109
+        },
+        {
+          "elapsedMs": 20306,
+          "tokens": 528,
+          "tps": 33.3371216426109,
+          "ttft_ms": 109
+        },
+        {
+          "elapsedMs": 19064,
+          "tokens": 559,
+          "tps": 38.291080712666194,
+          "ttft_ms": 129
+        },
+        {
+          "elapsedMs": 15881,
+          "tokens": 315,
+          "tps": 27.92974118439836,
+          "ttft_ms": 120
+        },
+        {
+          "elapsedMs": 10553,
+          "tokens": 237,
+          "tps": 33.88958002659688,
+          "ttft_ms": 113
+        },
+        {
+          "elapsedMs": 18124,
+          "tokens": 505,
+          "tps": 35.07382867302857,
+          "ttft_ms": 111
+        },
+        {
+          "elapsedMs": 13986,
+          "tokens": 277,
+          "tps": 28.603291960099956,
+          "ttft_ms": 99
+        },
+        {
+          "elapsedMs": 50972,
+          "tokens": 628,
+          "tps": 40.91098603293725,
+          "ttft_ms": 83
+        },
+        {
+          "elapsedMs": 51008,
+          "tokens": 633,
+          "tps": 41.061767796676136,
+          "ttft_ms": 119
+        },
+        {
+          "elapsedMs": 19403,
+          "tokens": 674,
+          "tps": 45.658079244541696,
+          "ttft_ms": 134
+        },
+        {
+          "elapsedMs": 11435,
+          "tokens": 251,
+          "tps": 32.93401388214609,
+          "ttft_ms": 103
+        },
+        {
+          "elapsedMs": 68648,
+          "tokens": 1257,
+          "tps": 38.59735314889305,
+          "ttft_ms": 94
+        },
+        {
+          "elapsedMs": 78491,
+          "tokens": 1609,
+          "tps": 38.278718555067584,
+          "ttft_ms": 136
+        },
+        {
+          "elapsedMs": 33223,
+          "tokens": 1032,
+          "tps": 36.67377398720682,
+          "ttft_ms": 128
+        },
+        {
+          "elapsedMs": 26944,
+          "tokens": 873,
+          "tps": 40.49766199064796,
+          "ttft_ms": 145
+        },
+        {
+          "elapsedMs": 17644,
+          "tokens": 376,
+          "tps": 28.652203400163074,
+          "ttft_ms": 116
+        },
+        {
+          "elapsedMs": 64493,
+          "tokens": 845,
+          "tps": 38.78655460641975,
+          "ttft_ms": 107
+        },
+        {
+          "elapsedMs": 59316,
+          "tokens": 657,
+          "tps": 40.82241318247059,
+          "ttft_ms": 140
+        },
+        {
+          "elapsedMs": 25457,
+          "tokens": 832,
+          "tps": 40.43310071341096,
+          "ttft_ms": 147
+        },
+        {
+          "elapsedMs": 14241,
+          "tokens": 306,
+          "tps": 31.723980633857572,
+          "ttft_ms": 130
+        },
+        {
+          "elapsedMs": 66938,
+          "tokens": 635,
+          "tps": 36.718786140537546,
+          "ttft_ms": 111
+        },
+        {
+          "elapsedMs": 65150,
+          "tokens": 573,
+          "tps": 38.178874356189574,
+          "ttft_ms": 143
+        },
+        {
+          "elapsedMs": 8345,
+          "tokens": 107,
+          "tps": 28.798277486206434,
+          "ttft_ms": 145
+        },
+        {
+          "elapsedMs": 16678,
+          "tokens": 570,
+          "tps": 41.41869945283718,
+          "ttft_ms": 161
+        },
+        {
+          "elapsedMs": 11930,
+          "tokens": 242,
+          "tps": 30.93363329583802,
+          "ttft_ms": 137
+        },
+        {
+          "elapsedMs": 13258,
+          "tokens": 349,
+          "tps": 33.55866034597152,
+          "ttft_ms": 116
+        },
+        {
+          "elapsedMs": 74985,
+          "tokens": 962,
+          "tps": 38.804404824331414,
+          "ttft_ms": 122
+        },
+        {
+          "elapsedMs": 74720,
+          "tokens": 907,
+          "tps": 38.57670256384083,
+          "ttft_ms": 162
+        },
+        {
+          "elapsedMs": 17639,
+          "tokens": 416,
+          "tps": 34.37789237075235,
+          "ttft_ms": 173
+        },
+        {
+          "elapsedMs": 13871,
+          "tokens": 356,
+          "tps": 36.97203211166385,
+          "ttft_ms": 180
+        },
+        {
+          "elapsedMs": 29962,
+          "tokens": 1046,
+          "tps": 41.11586734433163,
+          "ttft_ms": 166
+        },
+        {
+          "elapsedMs": 39785,
+          "tokens": 1198,
+          "tps": 35.546429927838965,
+          "ttft_ms": 184
+        },
+        {
+          "elapsedMs": 17711,
+          "tokens": 304,
+          "tps": 26.565066936977875,
+          "ttft_ms": 133
+        },
+        {
+          "elapsedMs": 70646,
+          "tokens": 483,
+          "tps": 36.858130537304554,
+          "ttft_ms": 138
+        },
+        {
+          "elapsedMs": 70770,
+          "tokens": 486,
+          "tps": 39.365614216980674,
+          "ttft_ms": 167
+        },
+        {
+          "elapsedMs": 19219,
+          "tokens": 496,
+          "tps": 33.77343202075432,
+          "ttft_ms": 185
+        },
+        {
+          "elapsedMs": 26663,
+          "tokens": 842,
+          "tps": 37.196563072913214,
+          "ttft_ms": 192
+        },
+        {
+          "elapsedMs": 16460,
+          "tokens": 456,
+          "tps": 33.574589337122745,
+          "ttft_ms": 137
+        },
+        {
+          "elapsedMs": 12571,
+          "tokens": 252,
+          "tps": 30.34389750505732,
+          "ttft_ms": 139
+        },
+        {
+          "elapsedMs": 77521,
+          "tokens": 402,
+          "tps": 32.86381138461287,
+          "ttft_ms": 157
+        },
+        {
+          "elapsedMs": 68824,
+          "tokens": 103,
+          "tps": 33.22366298948455,
+          "ttft_ms": 183
+        },
+        {
+          "elapsedMs": 8584,
+          "tokens": 213,
+          "tps": 34.07400297547631,
+          "ttft_ms": 193
+        },
+        {
+          "elapsedMs": 9644,
+          "tokens": 233,
+          "tps": 35.70607616274615,
+          "ttft_ms": 191
+        },
+        {
+          "elapsedMs": 6653,
+          "tokens": 138,
+          "tps": 35.17357394096957,
+          "ttft_ms": 185
+        },
+        {
+          "elapsedMs": 10343,
+          "tokens": 246,
+          "tps": 31.326804793255825,
+          "ttft_ms": 201
+        },
+        {
+          "elapsedMs": 6687,
+          "tokens": 120,
+          "tps": 33.22351117140563,
+          "ttft_ms": 186
+        },
+        {
+          "elapsedMs": 5055,
+          "tokens": 87,
+          "tps": 36.11157230615972,
+          "ttft_ms": 182
+        },
+        {
+          "elapsedMs": 22599,
+          "tokens": 660,
+          "tps": 32.56718214923664,
+          "ttft_ms": 197
+        },
+        {
+          "elapsedMs": 21407,
+          "tokens": 591,
+          "tps": 35.152416356877325,
+          "ttft_ms": 179
+        },
+        {
+          "elapsedMs": 14944,
+          "tokens": 286,
+          "tps": 28.33506712240551,
+          "ttft_ms": 161
+        }
+      ],
+      "agentProfileId": "agent-maximo",
+      "agentProfileName": "Máximo",
+      "agentSeed": 4242,
+      "agentTemperature": 0.1,
+      "agentVariant": "baseline",
+      "avgTps": 35.37152190191092,
+      "avgTtftMs": 130.75714285714287,
+      "baselineId": "16bd9cd5-3916-43d7-a2a5-3fcdffaf3e44",
+      "benchmarkEffectiveArgs": [
+        "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/Strata-0.1.35/serve/server.py",
+        "--engine",
+        "strata",
+        "--config",
+        "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/Strata-0.1.35/strata-unsloth-ud-q4_k_xl-38gib-review.json",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8350"
+      ],
+      "benchmarkMemoryAdaptive": false,
+      "benchmarkMemoryAttempt": -1,
+      "benchmarkMemoryFitTargetMiB": 0,
+      "benchmarkMemoryPlanner": "llama.cpp-fit-expert-aware",
+      "benchmarkMemoryPolicy": "exact-profile",
+      "benchmarkName": "ADV v1 - 10 tareas",
+      "complexityMetrics": {
+        "addedLines": 1626,
+        "filesChanged": 40,
+        "filesCreated": 40,
+        "filesDeleted": 0,
+        "removedLines": 0
+      },
+      "elapsedSec": 2051.772,
+      "failed": false,
+      "failureKind": "none",
+      "finalScore": 10,
+      "finalTotal": 10,
+      "firstAttemptScore": 8,
+      "firstAttemptTotal": 10,
+      "firstEvaluableSec": -1,
+      "firstToolCallSec": 63.057,
+      "firstWriteSec": 63.112,
+      "generationSec": 2036.286,
+      "harnessEngineId": "legacy",
+      "harnessEngineVersion": 1,
+      "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+      "honeyEnabled": false,
+      "id": "16bd9cd5-3916-43d7-a2a5-3fcdffaf3e44",
+      "isBaseline": true,
+      "measurementPhase": "cold",
+      "mode": "custom",
+      "nonGenerationSec": 15.485999999999876,
+      "pass": 1,
+      "passedAfterRepair": true,
+      "passesTotal": 1,
+      "profileConfigFingerprint": "d723685d34e713f030ba9669e518ec6406fabda97b76c8d753825702db7d5ece",
+      "profileId": "test-strata-unsloth-udq4-38ram",
+      "profileName": "[prueba] ASTRA · Strata UD-Q4_K_XL · caché RAM 38 GiB",
+      "progressGovernor": {
+        "progressEvents": 44,
+        "replanEvents": 0,
+        "stagnationEvents": 14
+      },
+      "qualityScore": 10,
+      "qualityTotal": 10,
+      "ramFreeMb": 0,
+      "ramMb": 0,
+      "ramTotalMb": 0,
+      "repairAttempts": 2,
+      "response": "<think>Both the grader command and the solution file passed. Note: the grader imports ttl_cache/jsonl_audit, but the required artifact files are solution_*.py — both updated identically. Done.\n</think>\nCorregido.\n\n**Causas y fixes:**\n- `ttl_cache_clock`: el grader exige `delete()` retorne `True`/`False` (existía o no). Cambiado en `solution_ttl_cache_clock.py` y `ttl_cache.py` a `return self._data.pop(key, _MISSING) is not _MISSING` (sentinela para no colisionar con valores `None`).\n- `jsonl_audit`: el grader usa `id` entero como válido y espera `p95_duration_ms: None` (no `0`) sin datos. Aceptado `id` str o int (no bool) y `p95 = None` en vacío, en `solution_jsonl_audit.py` y `jsonl_audit.py`.\n\n**Pruebas:** `py_compile` OK en los 4 archivos + los 2 comandos del grader oculto ejecutados literalmente → pasan; re-corridos contra los `solution_*.py` y humos previos (p95 con datos, no-str inválidos) → OK. Archivos que ya pasaban: intactos.",
+      "runDir": "/home/cristian/.codex/visualizations/2026/10/02/01a0fdac-e702-72e3-94fd-585859906215/bench-data-q4-38/LlamaCode/LlamaCode/benchmark-runs/ADV_v1_-_10_tareas_20261004_013411",
+      "runLabel": "ADV v1 - 10 tareas",
+      "setupSec": 0.3,
+      "target": "agent",
+      "thinkingEnabled": true,
+      "timeToFirstAttempt": 1795.258,
+      "timedOut": false,
+      "timeoutSec": 1800,
+      "timestamp": 1791090544782,
+      "toolCallQuality": {
+        "expectedCalls": 0,
+        "f1Pct": -1,
+        "failedCalls": 0,
+        "incompleteCalls": 0,
+        "invalidCalls": 0,
+        "matchedExpectedCalls": 0,
+        "missingExpectedCalls": 0,
+        "precisionPct": -1,
+        "recallPct": -1,
+        "redundantCalls": 0,
+        "sequenceExact": false,
+        "successRatePct": 100,
+        "successfulCalls": 58,
+        "totalCalls": 58,
+        "unexpectedCalls": 0
+      },
+      "toolCalls": 58,
+      "totalTime": 2051.772,
+      "transportAfterEvaluation": false,
+      "vramFreeMb": 23600,
+      "vramGpu0FreeMb": 23390,
+      "vramGpu0Mb": 918,
+      "vramGpu0TotalMb": 24576,
+      "vramGpu0UsedPct": 3.7353515625,
+      "vramGpu1FreeMb": 210,
+      "vramGpu1Mb": 23914,
+      "vramGpu1TotalMb": 24576,
+      "vramGpu1UsedPct": 97.30631510416666,
+      "vramMb": 24832,
+      "vramNormalizedImbalancePct": 93.57096354166666,
+      "vramObservedGpu0SharePct": 3.6968427835051547,
+      "vramOptimalGpu0SharePct": 99.11016949152543,
+      "vramPlacementAssessment": "gpu1-heavy",
+      "vramTelemetryScope": "device-total",
+      "workspace": "/home/cristian/.codex/visualizations/2026/10/02/01a0fdac-e702-72e3-94fd-585859906215/bench-data-q4-38/LlamaCode/LlamaCode/benchmark-runs/ADV_v1_-_10_tareas_20261004_013411/_prueba_ASTRA_Strata_UD-Q4_K_XL_cach_RAM_38_GiB__ws"
+    }
+  ]
+}

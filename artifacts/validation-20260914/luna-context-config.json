@@ -1,0 +1,16 @@
+{
+  "schema": "llamacode-context-tps-matrix-v1",
+  "serverExe": "/media/cristian/Disco local/LlamaCode-cache/llama.cpp-phase-prefill-e06/build/bin/llama-server",
+  "modelPath": "/media/cristian/Disco local/Models/llamacpp/ling-3.0-tiny-test/model/Ling-3.0-tiny-Q6_K.direct.gguf",
+  "commonArgs": [
+    "--n-gpu-layers", "999", "--split-mode", "layer", "--load-mode", "mmap",
+    "--flash-attn", "on", "--jinja", "--metrics", "--no-warmup", "--parallel", "1",
+    "--batch-size", "1024", "--ubatch-size", "256", "--cache-type-k", "q8_0",
+    "--cache-type-v", "q8_0", "--reasoning", "off", "--temp", "0.6", "--top-p", "0.95",
+    "--top-k", "20", "--min-p", "0.0", "--repeat-last-n", "512", "--repeat-penalty", "1.05",
+    "--presence-penalty", "0.0", "--no-context-shift"
+  ],
+  "launcher": {"kind": "native"},
+  "variant": {"id": "LUNA-20260914-context-sweep", "args": [], "env": {}},
+  "contexts": [8192, 32768, 65536, 131072]
+}

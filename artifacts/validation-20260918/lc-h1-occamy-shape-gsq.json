@@ -1,0 +1,36 @@
+{
+  "date": "2026-09-18",
+  "runner": {
+    "mode": "native-linux-release-control-api",
+    "binary": "/media/cristian/Disco local/LlamaCode-cache/llamAmpere-build/bin/llama-server",
+    "binaryHint": "b10658",
+    "hardware": "2x RTX 3090, Ryzen 9 9950X3D",
+    "method": "LC-H1 HE0 -> HE20 -> BCB"
+  },
+  "profiles": [
+    {
+      "id": "sys-occamy-35b-q4km-262k",
+      "name": "Occamy-1.0 35B-A3B Q4_K_M 262K vision tools",
+      "he0": {"score": 1, "total": 1, "valid": true},
+      "he20": {"score": 20, "total": 20, "valid": true, "avgTps": 142.97153287638974, "avgTtftMs": 2334.463768115942},
+      "bcb": {"score": 3, "total": 8, "valid": true, "failureKind": "quality", "repairAttempts": 2, "avgTps": 143.5897913671888, "avgTtftMs": 8638.371428571429},
+      "coverage": "complete"
+    },
+    {
+      "id": "sys-qwen38-27b-byteshape-shapelearn-262k",
+      "name": "Qwen3.8 ByteShape ShapeLearn IQ4_XS 262K MTP3 vision",
+      "he0": {"score": 1, "total": 1, "valid": true},
+      "he20": {"score": 20, "total": 20, "valid": true, "agentProfile": "Con fases", "avgTps": 77.90991639289324, "avgTtftMs": 2282.8765432098767},
+      "bcb": {"valid": false, "status": "infra-timeout", "reason": "El agente produjo demasiado texto antes de usar herramientas; no se obtuvo score de calidad."},
+      "coverage": "incomplete-bcb-protocol"
+    },
+    {
+      "id": "sys-bench-qwen38-gsq-rco-iq3s-dflash2-q2-81k",
+      "name": "GSQ-RCO IQ3_S DFlash2 Q2 81K vision",
+      "he0": {"score": 1, "total": 1, "valid": true, "avgTps": 29.093145539820124},
+      "he20": {"status": "cancelled-at-prompt", "prompt": 5, "total": 20, "reason": "latencia operativa no competitiva a 81K con DFlash2"},
+      "bcb": {"status": "pending"},
+      "coverage": "incomplete-he20"
+    }
+  ]
+}

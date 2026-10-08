@@ -1,0 +1,52 @@
+{
+  "createdAtUtc": "2026-10-04T05:35:51.729626+00:00",
+  "queueTaskId": "Q-20261004-001",
+  "queueToken": "repo-nvfp4-08279a20-178b-443e-9c46-27741d5a263b",
+  "testModeRoot": "/home/cristian/.qttest/share/LlamaCode/LlamaCode",
+  "backendProfileId": "strata-nvfp4-local-20261003",
+  "launchProfileId": "strata-nvfp4-lch1-20261003",
+  "modelProfileId": "f1a6c4d8-9e2b-4a73-b5c1-0d8f6e2a7419",
+  "agentProfileId": "agent-maximo",
+  "endpoint": "http://127.0.0.1:8038",
+  "port": 8038,
+  "profileName": "Qwen3.8 NVIDIA NVFP4 · LC-H1 SM86 single GPU test",
+  "reasoningEffort": "medium",
+  "reasoningBudget": 4096,
+  "benchmarkSuites": {
+    "he0": {
+      "path": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmarks/custom/059b6f00-7b4b-48ff-a3a2-2a71f900c1c0.json",
+      "id": "059b6f00-7b4b-48ff-a3a2-2a71f900c1c0",
+      "name": "HumanEval (1 ítems)",
+      "count": 1,
+      "sha256": "7883f319c341fa82eb40fa4d1b665bbbf8c4b67b980fc93a28ad25d7eae64330",
+      "equivalentToCandidateCopy": true
+    },
+    "he20": {
+      "path": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmarks/custom/267bb33d-4510-417b-ae3c-6dbbfb2cb08d.json",
+      "id": "267bb33d-4510-417b-ae3c-6dbbfb2cb08d",
+      "name": "HumanEval (20 ítems)",
+      "count": 20,
+      "sha256": "ed91a742cc8dca01bfe893933de5ed66fc4e4c2b529e53943a2bf1d939ffc3d7"
+    },
+    "bcb8": {
+      "path": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmarks/custom/05c28394-11d0-41fe-a55f-b3cb69db9c15.json",
+      "id": "05c28394-11d0-41fe-a55f-b3cb69db9c15",
+      "name": "BigCodeBench-Hard (8 ítems)",
+      "count": 8,
+      "sha256": "42771136b447b7b5619e04a1ea211f663222cd6752ca38d995083b5a4d207574"
+    },
+    "adversarial": {
+      "path": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmarks/custom/intelligence_adversarial_v1.json",
+      "id": "intelligence_adversarial_v1",
+      "name": "Intelligence Adversarial v1 - 10 tareas",
+      "count": 10,
+      "sha256": "2f0f30c863606fd443a161ac6946658129b31d874229a61ffd719f75df36ee87"
+    }
+  },
+  "backupFiles": {
+    "backends.json": "349a2130f3bd45122091369700465ccb8a6e230c4150f23e6e8eca54a5b0e212",
+    "models.json": "17a89c26f8fcc1e93bd979199133f31dfae4bf40348bcd2f8853c8fc33e4c864",
+    "launches.json": "2c9c52974341877820b701a4fb6b569d7c8ba9fa7d75d43bdc8a70eb161fbc37"
+  },
+  "cloudModel": "nvidia-qwen3.8-flash-next-nvfp4-strata-sm86-review"
+}

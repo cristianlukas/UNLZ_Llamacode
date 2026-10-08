@@ -1,0 +1,26 @@
+{
+  "createdAt": "2026-10-03 13:21:31",
+  "settings": {
+    "--pcie-frac": "0.00",
+    "--spec-min-p": "0.70"
+  },
+  "measurement": "3 calibration prompts, greedy 128-token decode; 2 warmups then 3 rate rounds per mode",
+  "modes": {
+    "direct": {
+      "runsTokS": [
+        96.984391574481,
+        97.34580576469692,
+        97.2644376899696
+      ],
+      "medianTokS": 97.2644376899696
+    },
+    "ram": {
+      "runsTokS": [
+        101.44238389602155,
+        90.61946902654867,
+        96.88895617288624
+      ],
+      "medianTokS": 96.88895617288624
+    }
+  }
+}

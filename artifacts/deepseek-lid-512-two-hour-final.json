@@ -1,0 +1,140 @@
+{
+  "schema": "llamacode-long-context-matrix-v1",
+  "generatedAt": "2026-08-29T10:17:22Z",
+  "elapsedSec": 7599.022962093353,
+  "configPath": "C:\\Users\\cristian\\Documents\\LlamaCode\\tmp_lid_matrix_512_two_hour.json",
+  "probe": "C:\\Users\\cristian\\Documents\\LlamaCode\\build\\Debug\\qa_kv_cache.exe",
+  "launcher": {
+    "kind": "native"
+  },
+  "variant": "deepseek-lid-cuda-ultraq-ot-512-two-hour-final",
+  "serverExe": "D:/temp/llama.cpp-deepseek-lid-cuda-20260826/build/bin/llama-server.exe",
+  "modelPath": "D:/Models/llamacpp/DeepSeek-V4-Flash-0731-UD-IQ3_S/DeepSeek-V4-Flash-0731-UD-IQ3_S-00001-of-00004.gguf",
+  "host": "127.0.0.1",
+  "port": 18080,
+  "contexts": [
+    524288
+  ],
+  "depths": "0.50",
+  "users": 1,
+  "nPredict": 32,
+  "timeoutMs": 7200000,
+  "startupTimeoutSec": 900.0,
+  "rows": [
+    {
+      "contextTokens": 524288,
+      "variant": "deepseek-lid-cuda-ultraq-ot-512-two-hour-final",
+      "command": [
+        "D:\\temp\\llama.cpp-deepseek-lid-cuda-20260826\\build\\bin\\llama-server.exe",
+        "--n-gpu-layers",
+        "999",
+        "--batch-size",
+        "1024",
+        "--ubatch-size",
+        "512",
+        "--flash-attn",
+        "on",
+        "--fit",
+        "off",
+        "--split-mode",
+        "layer",
+        "--tensor-split",
+        "1,0",
+        "-ot",
+        "blk\\.(29|30|31|32|33|34|35|36)\\.ffn_(gate|up|down)_exps\\.weight=CUDA1,blk\\.[0-9]+\\.ffn_(gate|up|down)_exps\\.weight=CPU",
+        "--cache-type-k",
+        "f16",
+        "--cache-type-v",
+        "f16",
+        "--temp",
+        "0.60",
+        "--top-p",
+        "0.95",
+        "--top-k",
+        "20",
+        "--min-p",
+        "0.0",
+        "--repeat-penalty",
+        "1.0",
+        "--presence-penalty",
+        "0.0",
+        "--no-context-shift",
+        "--metrics",
+        "--no-warmup",
+        "--jinja",
+        "--threads-batch",
+        "0",
+        "--predict",
+        "16384",
+        "--parallel",
+        "1",
+        "--reasoning",
+        "off",
+        "--ctx-size",
+        "524288",
+        "--model",
+        "D:\\Models\\llamacpp\\DeepSeek-V4-Flash-0731-UD-IQ3_S\\DeepSeek-V4-Flash-0731-UD-IQ3_S-00001-of-00004.gguf",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "18080"
+      ],
+      "envKeys": [
+        "GGML_CUDA_NO_PINNED"
+      ],
+      "logPath": "C:\\Users\\cristian\\Documents\\LlamaCode\\artifacts\\deepseek-lid-512-two-hour-final-logs\\context-524288.log",
+      "passed": false,
+      "probeExitCode": 1,
+      "probeStderr": "",
+      "receipt": {
+        "baseUrl": "http://127.0.0.1:18080",
+        "contexts": [
+          524288
+        ],
+        "depths": [
+          0.5
+        ],
+        "nPredict": 32,
+        "results": [
+          {
+            "containsPasskey": false,
+            "contextTokens": 524288,
+            "depth": 0.5,
+            "error": "timeout",
+            "exactPasskey": false,
+            "failed": true,
+            "finished": true,
+            "genTps": -1,
+            "httpStatus": 0,
+            "id": "user-000-000",
+            "latencyMs": -1,
+            "passkey": "LC-NIAH-user-000-000",
+            "promptTps": -1,
+            "stream": "user-000"
+          }
+        ],
+        "schema": "llamacode-kv-cache-qa-v1",
+        "summary": {
+          "aggregateGenTps": 0,
+          "aggregatePromptTps": 0,
+          "allPassed": false,
+          "failed": 1,
+          "passedExactRetrieval": 0,
+          "totalRequests": 1
+        },
+        "timeoutMs": 7200000,
+        "timestamp": "2026-08-29T10:17:13Z",
+        "users": 1
+      },
+      "error": "el probe no pasó la recuperación exacta",
+      "serverExitCode": 1
+    }
+  ],
+  "summary": {
+    "allPassed": false,
+    "verifiedContexts": [],
+    "unverifiedContexts": [
+      524288
+    ]
+  }
+}

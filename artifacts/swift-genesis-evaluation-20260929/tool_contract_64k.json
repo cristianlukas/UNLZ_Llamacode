@@ -1,0 +1,134 @@
+{
+  "benchmark": "harness_tool_contract_v1",
+  "model": "Swift-Qwen3.8-27B-Genesis-NVFP4-v4",
+  "passes": 5,
+  "passed": 5,
+  "transportOk": 5,
+  "rows": [
+    {
+      "pass": 1,
+      "calls": [
+        {
+          "id": "iOl5CmBA1ZgiCw4nrCvteNtQd3EA6K1p",
+          "name": "read_file",
+          "arguments": {
+            "path": "README.md"
+          }
+        },
+        {
+          "id": "2tQ9gKgqbPx1zW8QbJQh78NkdUrfZoX4",
+          "name": "write_file",
+          "arguments": {
+            "path": "tool_contract.txt",
+            "content": "CONTRACT_OK\n"
+          }
+        }
+      ],
+      "transportOk": true,
+      "firstWallMs": 4423.36,
+      "secondWallMs": 1621.67,
+      "finalContent": "",
+      "passed": true
+    },
+    {
+      "pass": 2,
+      "calls": [
+        {
+          "id": "MbM841TAliBQum5f0sCV8mxH1yAN1JuU",
+          "name": "read_file",
+          "arguments": {
+            "path": "README.md"
+          }
+        },
+        {
+          "id": "UyNoiCgGR0JTPqriJaH6t0pm0JNLvpgx",
+          "name": "write_file",
+          "arguments": {
+            "path": "tool_contract.txt",
+            "content": "CONTRACT_OK\n"
+          }
+        }
+      ],
+      "transportOk": true,
+      "firstWallMs": 1928.12,
+      "secondWallMs": 812.33,
+      "finalContent": "",
+      "passed": true
+    },
+    {
+      "pass": 3,
+      "calls": [
+        {
+          "id": "T7gOgOhhazBLdQBsMwDdrmvhKVrZtUrK",
+          "name": "read_file",
+          "arguments": {
+            "path": "README.md"
+          }
+        },
+        {
+          "id": "1vA7XH6oXSRRfW2wvNNV59vJ8UArs49h",
+          "name": "write_file",
+          "arguments": {
+            "path": "tool_contract.txt",
+            "content": "CONTRACT_OK\n"
+          }
+        }
+      ],
+      "transportOk": true,
+      "firstWallMs": 584.08,
+      "secondWallMs": 813.8,
+      "finalContent": "",
+      "passed": true
+    },
+    {
+      "pass": 4,
+      "calls": [
+        {
+          "id": "jVwGtc6tAOojVlja0JY8hg9aEkUSGEsb",
+          "name": "read_file",
+          "arguments": {
+            "path": "README.md"
+          }
+        },
+        {
+          "id": "G4cP0hXO7HvzPq9eRh2QFfam1OneIJF1",
+          "name": "write_file",
+          "arguments": {
+            "path": "tool_contract.txt",
+            "content": "CONTRACT_OK\n"
+          }
+        }
+      ],
+      "transportOk": true,
+      "firstWallMs": 583.22,
+      "secondWallMs": 815.14,
+      "finalContent": "",
+      "passed": true
+    },
+    {
+      "pass": 5,
+      "calls": [
+        {
+          "id": "kwmZ6SFvczYCFIlalLwxOgK5NhJzpwlr",
+          "name": "read_file",
+          "arguments": {
+            "path": "README.md"
+          }
+        },
+        {
+          "id": "lk3bbXzsaPuil7rUts30xjCPn2vNnIlH",
+          "name": "write_file",
+          "arguments": {
+            "path": "tool_contract.txt",
+            "content": "CONTRACT_OK\n"
+          }
+        }
+      ],
+      "transportOk": true,
+      "firstWallMs": 581.53,
+      "secondWallMs": 815.64,
+      "finalContent": "",
+      "passed": true
+    }
+  ]
+}

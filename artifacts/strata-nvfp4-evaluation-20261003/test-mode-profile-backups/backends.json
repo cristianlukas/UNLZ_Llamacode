@@ -1,0 +1,155 @@
+[
+    {
+        "baseArgs": [
+        ],
+        "binaryId": "56b53da1-2b35-4bfd-a306-75ad84cb7964",
+        "cloudBaseUrl": "",
+        "cloudCtx": 0,
+        "cloudKeyRef": "",
+        "cloudModel": "",
+        "envOverrides": {
+        },
+        "host": "127.0.0.1",
+        "id": "db9abe27-7fe8-4020-a6d6-3d72cd89305a",
+        "kind": "local",
+        "name": "phi3:mini · Backend",
+        "port": 8080
+    },
+    {
+        "baseArgs": [
+        ],
+        "binaryId": "bf009993-5813-4960-b67a-3fb9c4f5f67f",
+        "cloudBaseUrl": "",
+        "cloudCtx": 0,
+        "cloudKeyRef": "",
+        "cloudModel": "",
+        "envOverrides": {
+        },
+        "host": "127.0.0.1",
+        "id": "e1573503-1349-4040-9013-91e2a7b43ad0",
+        "kind": "local",
+        "name": "Local Qwen server",
+        "port": 8091
+    },
+    {
+        "baseArgs": [
+        ],
+        "binaryId": "9c5c57f7-f20b-4092-ae80-51b7301988d8",
+        "cloudBaseUrl": "",
+        "cloudCtx": 0,
+        "cloudKeyRef": "",
+        "cloudModel": "",
+        "envOverrides": {
+        },
+        "host": "127.0.0.1",
+        "id": "ae180ff0-2c36-48e9-ac97-6a0ee4492439",
+        "kind": "local",
+        "name": "Genesis smoke binary",
+        "port": 8023
+    },
+    {
+        "baseArgs": [
+        ],
+        "binaryId": "9c5c57f7-f20b-4092-ae80-51b7301988d8",
+        "cloudBaseUrl": "",
+        "cloudCtx": 0,
+        "cloudKeyRef": "",
+        "cloudModel": "",
+        "envOverrides": {
+        },
+        "host": "127.0.0.1",
+        "id": "173676a6-cdbc-4d06-b1c3-16fd197dd88e",
+        "kind": "local",
+        "name": "LC-H1 paired Genesis",
+        "port": 8023
+    },
+    {
+        "baseArgs": [
+        ],
+        "binaryId": "9c5c57f7-f20b-4092-ae80-51b7301988d8",
+        "cloudBaseUrl": "",
+        "cloudCtx": 0,
+        "cloudKeyRef": "",
+        "cloudModel": "",
+        "envOverrides": {
+        },
+        "host": "127.0.0.1",
+        "id": "2a3a405c-e178-49ba-b715-ae82a5af3969",
+        "kind": "local",
+        "name": "LC-H1 paired Genesis",
+        "port": 8021
+    },
+    {
+        "baseArgs": [
+        ],
+        "binaryId": "9c5c57f7-f20b-4092-ae80-51b7301988d8",
+        "cloudBaseUrl": "",
+        "cloudCtx": 0,
+        "cloudKeyRef": "",
+        "cloudModel": "",
+        "envOverrides": {
+        },
+        "host": "127.0.0.1",
+        "id": "bee0a9cb-a313-4178-bc8e-14d87548bfb1",
+        "kind": "local",
+        "name": "Genesis smoke binary",
+        "port": 8023
+    },
+    {
+        "baseArgs": [
+        ],
+        "binaryId": "9c5c57f7-f20b-4092-ae80-51b7301988d8",
+        "cloudBaseUrl": "",
+        "cloudCtx": 0,
+        "cloudKeyRef": "",
+        "cloudModel": "",
+        "envOverrides": {
+        },
+        "host": "127.0.0.1",
+        "id": "46ce8e61-c7d7-4458-aefb-e587efe564c3",
+        "kind": "local",
+        "name": "LC-H1 paired Qwen38 Coder IQ1_M",
+        "port": 8022
+    },
+    {
+        "baseArgs": [
+        ],
+        "binaryId": "",
+        "cloudBaseUrl": "http://127.0.0.1:8113",
+        "cloudCtx": 262144,
+        "cloudKeyRef": "",
+        "cloudModel": "qwen3.8-27b",
+        "envOverrides": {
+        },
+        "host": "127.0.0.1",
+        "id": "2baf3292-033d-4a6c-9f84-ea13ae4aae3b",
+        "kind": "cloud",
+        "managedServer": {
+            "composeFiles": [
+                "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.8-27b/vllm/compose/dual/autoround-int4/mtp.yml",
+                "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.8-27b/vllm/compose/dual/autoround-int4/vram-quarantine.override.yml"
+            ],
+            "project": "autoround-int4",
+            "service": "vllm-qwen38-27b-dual-fast",
+            "type": "docker-compose"
+        },
+        "name": "Qwen3.8 vLLM TP2 P2P MTP4",
+        "port": 8113
+    },
+    {
+        "baseArgs": [
+        ],
+        "binaryId": "",
+        "cloudBaseUrl": "http://127.0.0.1:8350/v1",
+        "cloudCtx": 131072,
+        "cloudKeyRef": "",
+        "cloudModel": "strata-iq3_s",
+        "envOverrides": {
+        },
+        "host": "127.0.0.1",
+        "id": "strata-lc-harness-20261002",
+        "kind": "cloud",
+        "name": "Strata 0.1.35 IQ3_S",
+        "port": 8350
+    }
+]

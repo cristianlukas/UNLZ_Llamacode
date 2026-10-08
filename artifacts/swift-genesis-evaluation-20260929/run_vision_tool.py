@@ -14,7 +14,7 @@ def main():
  p=argparse.ArgumentParser();p.add_argument('--url',default='http://127.0.0.1:8038/v1/chat/completions');p.add_argument('--model',default='Swift-Qwen3.8-27B-Genesis-NVFP4-v4');p.add_argument('--passes',type=int,default=3);p.add_argument('--out',type=Path,required=True);a=p.parse_args()
  uri='data:image/png;base64,'+base64.b64encode(IMAGE.read_bytes()).decode(); rows=[]
  for run in range(1,a.passes+1):
-  payload={"model":a.model,"messages":[{"role":"system","content":"Sos un agente de escritorio. Obedecé el objetivo del usuario y preservá todos los demás controles. Usá sólo la acción semántica solicitada."},{"role":"user","content":[{"type":"text","text":PROMPT},{"type":"image_url","image_url":{"url":uri}}]}],"tools":TOOLS,"tool_choice":"auto","parallel_tool_calls":False,"temperature":0.0,"top_p":0.95,"top_k":20,"max_tokens":512,"reasoning_budget":1024,"chat_template_kwargs":{"enable_thinking":True},"stream":False}
+  payload={"model":a.model,"messages":[{"role":"system","content":"Sos un agente de escritorio. Obedecé el objetivo del usuario y preservá todos los demás controles. Usá sólo la acción semántica solicitada."},{"role":"user","content":[{"type":"text","text":PROMPT},{"type":"image_url","image_url":{"url":uri}}]}],"tools":TOOLS,"tool_choice":"auto","parallel_tool_calls":False,"temperature":0.0,"top_p":0.95,"top_k":20,"max_tokens":512,"chat_template_kwargs":{"enable_thinking":False},"stream":False}
   body=json.dumps(payload,ensure_ascii=False).encode(); req=Request(a.url,data=body,headers={"Content-Type":"application/json"}); started=time.perf_counter()
   try:
    with urlopen(req,timeout=600) as r: data=json.loads(r.read())

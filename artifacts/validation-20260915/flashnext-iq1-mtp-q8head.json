@@ -1,0 +1,73 @@
+{
+  "schema": "llamacode-flashnext-mtp-repair-v1",
+  "generatedAt": "2026-09-15T14:17:00Z",
+  "hardware": "Ubuntu · 2x RTX 3090 · P2P · Ryzen 9 9950X3D · ~123 GiB RAM",
+  "runner": "/media/cristian/Disco local/LlamaCode-cache/llama.cpp-phase-prefill-e06/build/bin/llama-server",
+  "targetModel": "/media/cristian/7CFE1E0FFE1DC1F6/models/Qwen3.8-Flash-Next-IQ1_S/UD-IQ1_S/Qwen3.8-Flash-Next-UD-IQ1_S-00001-of-00003.gguf",
+  "incompatibleDraft": "/media/cristian/7CFE1E0FFE1DC1F6/models/Qwen3.8-Flash-Next-IQ1_S/MTP/Qwen3.8-Flash-Next-MTP-Q4_K_M.gguf",
+  "compatibleDraft": "/media/cristian/7CFE1E0FFE1DC1F6/models/Qwen3.8-Flash-Next-IQ1_S/MTP/mtp-Qwen3.8-Flash-Next-shared-Q8_0.gguf",
+  "compatibleDraftSha256": "5ff54097406a905cf3a724c709124ceb0e3e10235ee862298969e91c96fa96e6",
+  "runtime": {
+    "splitMode": "layer",
+    "p2p": true,
+    "lazyMode": "on",
+    "moeExpertCache": 188,
+    "kvK": "q8_0",
+    "kvV": "q8_0",
+    "parallel": 1,
+    "nMax": 2
+  },
+  "results": {
+    "loadWithQ4Draft": {
+      "passed": false,
+      "error": "missing blk.48.nextn.hc_head_norm.weight"
+    },
+    "shortWarmRunsWithQ8Draft": {
+      "runs": [
+        { "promptTps": 26.9473, "genTps": 41.6346, "draftAccepted": 16, "draftGenerated": 16 },
+        { "promptTps": 31.2351, "genTps": 47.1391, "draftAccepted": 16, "draftGenerated": 16 },
+        { "promptTps": 39.0042, "genTps": 58.4911, "draftAccepted": 16, "draftGenerated": 16 }
+      ],
+      "meanGenTps": 49.0882,
+      "acceptance": "48/48"
+    },
+    "noMtpControlShortRuns": {
+      "runs": [
+        { "promptTps": 35.7185, "genTps": 26.4660 },
+        { "promptTps": 34.4092, "genTps": 39.9794 },
+        { "promptTps": 45.9638, "genTps": 50.1114 }
+      ],
+      "meanGenTps": 38.8523,
+      "warmMeanGenTps": 45.0454
+    },
+    "longContextWithQ8Draft": {
+      "configuredContext": 131072,
+      "promptTokens": 24031,
+      "promptTps": 244.06,
+      "genTps": 28.12,
+      "draftAccepted": 17,
+      "draftGenerated": 18,
+      "markerCheck": "LONG_MTP_OK"
+    },
+    "toolUseSmokeWithQ8Draft": {
+      "passed": true,
+      "calls": [
+        { "tool": "read_file", "arguments": { "path": "README.md" }, "valid": true }
+      ],
+      "promptTps": 81.9627,
+      "genTps": 29.6826,
+      "draftAccepted": 18,
+      "draftGenerated": 18
+    },
+    "bcbPartialWithQ8Draft": {
+      "task": "BigCodeBench/870",
+      "passed": true,
+      "promptTps": 104.4407,
+      "genTps": 50.4151,
+      "draftAccepted": 282,
+      "draftGenerated": 287,
+      "coverage": "1/1 parcial; no equivale a BCB 8/8"
+    }
+  },
+  "decision": "Q8 shared head is the corrected IQ1_S MTP recipe; keep experimental and do not replace SOL."
+}

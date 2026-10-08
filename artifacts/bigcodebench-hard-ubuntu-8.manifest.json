@@ -1,0 +1,200 @@
+{
+  "source": "/tmp/bigcodebench-v0.1.4.parquet",
+  "seed": "llamacode-ubuntu-qwen-20260906",
+  "selection": "seeded hash; unsafe/missing dependencies excluded; canonical tests pass locally",
+  "tasks": [
+    {
+      "task_id": "BigCodeBench/870",
+      "libs": [
+        "pandas",
+        "numpy",
+        "itertools"
+      ]
+    },
+    {
+      "task_id": "BigCodeBench/509",
+      "libs": [
+        "difflib",
+        "pandas",
+        "csv"
+      ]
+    },
+    {
+      "task_id": "BigCodeBench/857",
+      "libs": [
+        "glob",
+        "warnings",
+        "time",
+        "shutil",
+        "os"
+      ]
+    },
+    {
+      "task_id": "BigCodeBench/310",
+      "libs": [
+        "statistics",
+        "csv",
+        "random",
+        "os"
+      ]
+    },
+    {
+      "task_id": "BigCodeBench/800",
+      "libs": [
+        "csv",
+        "collections",
+        "os"
+      ]
+    },
+    {
+      "task_id": "BigCodeBench/123",
+      "libs": [
+        "glob",
+        "pandas",
+        "os"
+      ]
+    },
+    {
+      "task_id": "BigCodeBench/952",
+      "libs": [
+        "pandas",
+        "datetime",
+        "random"
+      ]
+    },
+    {
+      "task_id": "BigCodeBench/492",
+      "libs": [
+        "pandas",
+        "datetime",
+        "random"
+      ]
+    }
+  ],
+  "rejected_before_selection_completed": [
+    {
+      "task_id": "BigCodeBench/826",
+      "reason": "ModuleNotFoundError: No module named 'faker'"
+    },
+    {
+      "task_id": "BigCodeBench/162",
+      "reason": "missing libs: matplotlib"
+    },
+    {
+      "task_id": "BigCodeBench/129",
+      "reason": "unsafe/network/process libs: requests"
+    },
+    {
+      "task_id": "BigCodeBench/34",
+      "reason": "missing libs: matplotlib, wordcloud"
+    },
+    {
+      "task_id": "BigCodeBench/443",
+      "reason": "missing libs: matplotlib, sklearn"
+    },
+    {
+      "task_id": "BigCodeBench/955",
+      "reason": "missing libs: matplotlib"
+    },
+    {
+      "task_id": "BigCodeBench/574",
+      "reason": "missing libs: matplotlib, scipy"
+    },
+    {
+      "task_id": "BigCodeBench/313",
+      "reason": "ModuleNotFoundError: No module named 'faker'"
+    },
+    {
+      "task_id": "BigCodeBench/477",
+      "reason": "missing libs: matplotlib"
+    },
+    {
+      "task_id": "BigCodeBench/897",
+      "reason": "missing libs: matplotlib"
+    },
+    {
+      "task_id": "BigCodeBench/227",
+      "reason": "missing libs: librosa, matplotlib, soundfile"
+    },
+    {
+      "task_id": "BigCodeBench/187",
+      "reason": "missing libs: geopandas, shapely"
+    },
+    {
+      "task_id": "BigCodeBench/915",
+      "reason": "missing libs: matplotlib, scipy"
+    },
+    {
+      "task_id": "BigCodeBench/184",
+      "reason": "missing libs: sklearn"
+    },
+    {
+      "task_id": "BigCodeBench/618",
+      "reason": "missing libs: matplotlib, seaborn"
+    },
+    {
+      "task_id": "BigCodeBench/360",
+      "reason": "missing libs: matplotlib"
+    },
+    {
+      "task_id": "BigCodeBench/503",
+      "reason": "AttributeError: 'DataFrame' object has no attribute 'applymap'"
+    },
+    {
+      "task_id": "BigCodeBench/964",
+      "reason": "missing libs: docx"
+    },
+    {
+      "task_id": "BigCodeBench/99",
+      "reason": "missing libs: matplotlib, seaborn, sklearn"
+    },
+    {
+      "task_id": "BigCodeBench/374",
+      "reason": "missing libs: openpyxl, regex"
+    },
+    {
+      "task_id": "BigCodeBench/865",
+      "reason": "missing libs: scipy, sklearn"
+    },
+    {
+      "task_id": "BigCodeBench/417",
+      "reason": "missing libs: keras, matplotlib, sklearn"
+    },
+    {
+      "task_id": "BigCodeBench/530",
+      "reason": "missing libs: matplotlib, seaborn"
+    },
+    {
+      "task_id": "BigCodeBench/108",
+      "reason": "missing libs: matplotlib, statsmodels"
+    },
+    {
+      "task_id": "BigCodeBench/567",
+      "reason": "missing libs: matplotlib"
+    },
+    {
+      "task_id": "BigCodeBench/587",
+      "reason": "missing libs: cryptography, rsa"
+    },
+    {
+      "task_id": "BigCodeBench/1042",
+      "reason": "unsafe/network/process libs: getpass, smtplib"
+    },
+    {
+      "task_id": "BigCodeBench/752",
+      "reason": "missing libs: sklearn"
+    },
+    {
+      "task_id": "BigCodeBench/1020",
+      "reason": "unsafe/network/process libs: requests"
+    },
+    {
+      "task_id": "BigCodeBench/914",
+      "reason": "missing libs: matplotlib, sklearn"
+    },
+    {
+      "task_id": "BigCodeBench/326",
+      "reason": "unsafe/network/process libs: subprocess"
+    }
+  ]
+}

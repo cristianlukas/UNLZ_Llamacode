@@ -1,0 +1,527 @@
+[
+  {
+    "acceptance": [
+      {
+        "passed": true,
+        "taskId": "HumanEval/0",
+        "type": "grader:code_tests"
+      }
+    ],
+    "agentFiles": [
+      "solution_HumanEval_0.py"
+    ],
+    "agentMetrics": [
+      {
+        "elapsedMs": 770,
+        "tokens": 0,
+        "tps": 0,
+        "ttft_ms": 88
+      },
+      {
+        "elapsedMs": 0,
+        "tokens": 8,
+        "tps": 0
+      },
+      {
+        "elapsedMs": 43777,
+        "tokens": 8,
+        "tps": 0.18317953884551094,
+        "ttft_ms": 104
+      }
+    ],
+    "agentProfileId": "agent-maximo",
+    "agentProfileName": "Máximo",
+    "agentSeed": 4242,
+    "agentTemperature": 0.1,
+    "agentVariant": "baseline",
+    "avgTps": 0.18317953884551094,
+    "avgTtftMs": 96,
+    "baselineId": "bc802f7c-127f-46b4-a6bd-744dd2c0bc2a",
+    "benchmarkMemoryPlanner": "llama.cpp-fit-expert-aware",
+    "benchmarkName": "HumanEval · 1 ítem",
+    "complexityMetrics": {
+      "addedLines": 2,
+      "filesChanged": 1,
+      "filesCreated": 1,
+      "filesDeleted": 0,
+      "removedLines": 0
+    },
+    "elapsedSec": 44.09,
+    "failed": false,
+    "failureKind": "none",
+    "finalScore": 1,
+    "finalTotal": 1,
+    "firstAttemptScore": 1,
+    "firstAttemptTotal": 1,
+    "firstEvaluableSec": 43.769,
+    "firstToolCallSec": 42.912,
+    "firstWriteSec": 42.962,
+    "generationSec": 44.547,
+    "harnessEngineId": "legacy",
+    "harnessEngineVersion": 1,
+    "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+    "honeyEnabled": false,
+    "id": "bc802f7c-127f-46b4-a6bd-744dd2c0bc2a",
+    "isBaseline": true,
+    "measurementPhase": "cold",
+    "mode": "custom",
+    "nonGenerationSec": 0,
+    "pass": 1,
+    "passedAfterRepair": false,
+    "passesTotal": 1,
+    "profileConfigFingerprint": "a5f7eae9038f3c91f09410573d616e1d1e6324ffcb984a02e438c8f7eedb54d9",
+    "profileId": "test-strata-unsloth-udq4",
+    "profileName": "[prueba] ASTRA · Strata UD-Q4_K_XL · Qwen3.8 Flash Next",
+    "progressGovernor": {
+      "progressEvents": 1,
+      "replanEvents": 0,
+      "stagnationEvents": 0
+    },
+    "qualityScore": 1,
+    "qualityTotal": 1,
+    "ramFreeMb": 0,
+    "ramMb": 0,
+    "ramTotalMb": 0,
+    "repairAttempts": 0,
+    "response": "[turno cancelado por el usuario]",
+    "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/HumanEval_1_tem_20261003_224146",
+    "runLabel": "HumanEval · 1 ítem",
+    "setupSec": 0.301,
+    "target": "agent",
+    "thinkingEnabled": false,
+    "timeToFirstAttempt": 43.789,
+    "timedOut": false,
+    "timeoutSec": 1800,
+    "timestamp": 1791078150444,
+    "toolCallQuality": {
+      "expectedCalls": 0,
+      "f1Pct": -1,
+      "failedCalls": 0,
+      "incompleteCalls": 0,
+      "invalidCalls": 0,
+      "matchedExpectedCalls": 0,
+      "missingExpectedCalls": 0,
+      "precisionPct": -1,
+      "recallPct": -1,
+      "redundantCalls": 0,
+      "sequenceExact": false,
+      "successRatePct": 100,
+      "successfulCalls": 1,
+      "totalCalls": 1,
+      "unexpectedCalls": 0
+    },
+    "toolCalls": 1,
+    "totalTime": 44.09,
+    "transportAfterEvaluation": false,
+    "vramFreeMb": 23555,
+    "vramGpu0FreeMb": 23271,
+    "vramGpu0Mb": 886,
+    "vramGpu0TotalMb": 24576,
+    "vramGpu0UsedPct": 3.6051432291666665,
+    "vramGpu1FreeMb": 284,
+    "vramGpu1Mb": 23840,
+    "vramGpu1TotalMb": 24576,
+    "vramGpu1UsedPct": 97.00520833333334,
+    "vramMb": 24691,
+    "vramNormalizedImbalancePct": 93.40006510416667,
+    "vramObservedGpu0SharePct": 3.58327266844617,
+    "vramOptimalGpu0SharePct": 98.7943111865846,
+    "vramPlacementAssessment": "gpu1-heavy",
+    "vramTelemetryScope": "device-total",
+    "workspace": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/HumanEval_1_tem_20261003_224146/_prueba_ASTRA_Strata_UD-Q4_K_XL_Qwen3_8_Flash_Next__ws"
+  },
+  {
+    "acceptance": [
+      {
+        "passed": true,
+        "taskId": "HumanEval/0",
+        "type": "grader:code_tests"
+      },
+      {
+        "passed": true,
+        "taskId": "HumanEval/1",
+        "type": "grader:code_tests"
+      },
+      {
+        "passed": true,
+        "taskId": "HumanEval/2",
+        "type": "grader:code_tests"
+      },
+      {
+        "passed": true,
+        "taskId": "HumanEval/3",
+        "type": "grader:code_tests"
+      },
+      {
+        "passed": true,
+        "taskId": "HumanEval/4",
+        "type": "grader:code_tests"
+      },
+      {
+        "passed": true,
+        "taskId": "HumanEval/5",
+        "type": "grader:code_tests"
+      },
+      {
+        "passed": true,
+        "taskId": "HumanEval/6",
+        "type": "grader:code_tests"
+      },
+      {
+        "passed": true,
+        "taskId": "HumanEval/7",
+        "type": "grader:code_tests"
+      },
+      {
+        "passed": true,
+        "taskId": "HumanEval/8",
+        "type": "grader:code_tests"
+      },
+      {
+        "passed": true,
+        "taskId": "HumanEval/9",
+        "type": "grader:code_tests"
+      },
+      {
+        "passed": true,
+        "taskId": "HumanEval/10",
+        "type": "grader:code_tests"
+      },
+      {
+        "passed": true,
+        "taskId": "HumanEval/11",
+        "type": "grader:code_tests"
+      },
+      {
+        "passed": true,
+        "taskId": "HumanEval/12",
+        "type": "grader:code_tests"
+      },
+      {
+        "passed": true,
+        "taskId": "HumanEval/13",
+        "type": "grader:code_tests"
+      },
+      {
+        "passed": true,
+        "taskId": "HumanEval/14",
+        "type": "grader:code_tests"
+      },
+      {
+        "passed": true,
+        "taskId": "HumanEval/15",
+        "type": "grader:code_tests"
+      },
+      {
+        "passed": true,
+        "taskId": "HumanEval/16",
+        "type": "grader:code_tests"
+      },
+      {
+        "passed": true,
+        "taskId": "HumanEval/17",
+        "type": "grader:code_tests"
+      },
+      {
+        "passed": true,
+        "taskId": "HumanEval/18",
+        "type": "grader:code_tests"
+      },
+      {
+        "output": "Archivo esperado no encontrado: solution_HumanEval_19.py",
+        "passed": false,
+        "taskId": "HumanEval/19",
+        "type": "grader:code_tests"
+      }
+    ],
+    "agentFiles": [
+      "solution_HumanEval_0.py",
+      "solution_HumanEval_12.py",
+      "solution_HumanEval_18.py",
+      "solution_HumanEval_1.py",
+      "solution_HumanEval_15.py",
+      "solution_HumanEval_10.py",
+      "__pycache__/solution_HumanEval_6.cpython-312.pyc",
+      "__pycache__/solution_HumanEval_13.cpython-312.pyc",
+      "__pycache__/solution_HumanEval_5.cpython-312.pyc",
+      "__pycache__/solution_HumanEval_7.cpython-312.pyc",
+      "__pycache__/solution_HumanEval_15.cpython-312.pyc",
+      "__pycache__/solution_HumanEval_12.cpython-312.pyc",
+      "__pycache__/solution_HumanEval_10.cpython-312.pyc",
+      "__pycache__/solution_HumanEval_2.cpython-312.pyc",
+      "__pycache__/solution_HumanEval_11.cpython-312.pyc",
+      "__pycache__/solution_HumanEval_3.cpython-312.pyc",
+      "__pycache__/solution_HumanEval_0.cpython-312.pyc",
+      "__pycache__/solution_HumanEval_9.cpython-312.pyc",
+      "__pycache__/solution_HumanEval_4.cpython-312.pyc",
+      "__pycache__/solution_HumanEval_16.cpython-312.pyc",
+      "__pycache__/solution_HumanEval_8.cpython-312.pyc",
+      "__pycache__/solution_HumanEval_17.cpython-312.pyc",
+      "__pycache__/solution_HumanEval_1.cpython-312.pyc",
+      "__pycache__/solution_HumanEval_14.cpython-312.pyc",
+      "solution_HumanEval_9.py",
+      "solution_HumanEval_4.py",
+      "solution_HumanEval_14.py",
+      "solution_HumanEval_3.py",
+      "solution_HumanEval_6.py",
+      "solution_HumanEval_2.py",
+      "solution_HumanEval_7.py",
+      "solution_HumanEval_17.py",
+      "solution_HumanEval_5.py",
+      "solution_HumanEval_13.py",
+      "solution_HumanEval_11.py",
+      "solution_HumanEval_16.py",
+      "solution_HumanEval_8.py"
+    ],
+    "agentMetrics": [
+      {
+        "elapsedMs": 3183,
+        "tokens": 57,
+        "tps": 21.06430155210643,
+        "ttft_ms": 78
+      },
+      {
+        "elapsedMs": 5184,
+        "tokens": 48,
+        "tps": 21.33143720558173,
+        "ttft_ms": 80
+      },
+      {
+        "elapsedMs": 2508,
+        "tokens": 46,
+        "tps": 23.446658851113714,
+        "ttft_ms": 77
+      },
+      {
+        "elapsedMs": 4013,
+        "tokens": 47,
+        "tps": 24.488094617829418,
+        "ttft_ms": 82
+      },
+      {
+        "elapsedMs": 2472,
+        "tokens": 43,
+        "tps": 22.48013383521539,
+        "ttft_ms": 98
+      },
+      {
+        "elapsedMs": 4476,
+        "tokens": 37,
+        "tps": 20.841547907395935,
+        "ttft_ms": 89
+      },
+      {
+        "elapsedMs": 4648,
+        "tokens": 48,
+        "tps": 20.2020202020202,
+        "ttft_ms": 103
+      },
+      {
+        "elapsedMs": 4176,
+        "tokens": 43,
+        "tps": 21.732538158293742,
+        "ttft_ms": 98
+      },
+      {
+        "elapsedMs": 6983,
+        "tokens": 134,
+        "tps": 28.431393350448747,
+        "ttft_ms": 163
+      },
+      {
+        "elapsedMs": 8233,
+        "tokens": 135,
+        "tps": 21.214073573549978,
+        "ttft_ms": 87
+      },
+      {
+        "elapsedMs": 3174,
+        "tokens": 23,
+        "tps": 28.30420871277381,
+        "ttft_ms": 81
+      },
+      {
+        "elapsedMs": 3885,
+        "tokens": 42,
+        "tps": 23.894862604540023,
+        "ttft_ms": 108
+      },
+      {
+        "elapsedMs": 4967,
+        "tokens": 69,
+        "tps": 23.576846853003484,
+        "ttft_ms": 105
+      },
+      {
+        "elapsedMs": 3987,
+        "tokens": 45,
+        "tps": 23.20903605136933,
+        "ttft_ms": 270
+      },
+      {
+        "elapsedMs": 3951,
+        "tokens": 46,
+        "tps": 23.50656650825285,
+        "ttft_ms": 114
+      },
+      {
+        "elapsedMs": 4145,
+        "tokens": 52,
+        "tps": 24.43494196701283,
+        "ttft_ms": 116
+      },
+      {
+        "elapsedMs": 3730,
+        "tokens": 43,
+        "tps": 24.38609425508989,
+        "ttft_ms": 126
+      },
+      {
+        "elapsedMs": 3767,
+        "tokens": 39,
+        "tps": 23.646395440489904,
+        "ttft_ms": 122
+      },
+      {
+        "elapsedMs": 3410,
+        "tokens": 44,
+        "tps": 25.236593059936908,
+        "ttft_ms": 434
+      },
+      {
+        "elapsedMs": 4026,
+        "tokens": 41,
+        "tps": 22.3433242506812,
+        "ttft_ms": 134
+      },
+      {
+        "elapsedMs": 48852,
+        "tokens": 0,
+        "tps": 0,
+        "ttft_ms": 291
+      },
+      {
+        "elapsedMs": 0,
+        "tokens": 8,
+        "tps": 0
+      }
+    ],
+    "agentProfileId": "agent-maximo",
+    "agentProfileName": "Máximo",
+    "agentSeed": 4242,
+    "agentTemperature": 0.1,
+    "agentVariant": "baseline",
+    "avgTps": 0,
+    "avgTtftMs": 0,
+    "benchmarkEffectiveArgs": [
+      "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/Strata-0.1.35/serve/server.py",
+      "--engine",
+      "strata",
+      "--config",
+      "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/Strata-0.1.35/strata-unsloth-ud-q4_k_xl.json",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "8350"
+    ],
+    "benchmarkMemoryAdaptive": false,
+    "benchmarkMemoryAttempt": -1,
+    "benchmarkMemoryFitTargetMiB": 0,
+    "benchmarkMemoryPlanner": "llama.cpp-fit-expert-aware",
+    "benchmarkMemoryPolicy": "exact-profile",
+    "benchmarkName": "HumanEval (20 ítems)",
+    "complexityMetrics": {
+      "addedLines": 468,
+      "filesChanged": 37,
+      "filesCreated": 37,
+      "filesDeleted": 0,
+      "removedLines": 0
+    },
+    "elapsedSec": 1801.197,
+    "failed": true,
+    "failureDetail": "t] [strata] reading the prompt: 39,977 of 39,984 tokens, 44 s so far\n[2026-10-03 22:59:41.113][server/stdout] [strata] writing a tool call: write_file: 10 of max 32768 tokens, 27.9 tok/s, 45 s\n[2026-10-03 22:59:42.244][server/stdout] [strata] writing a tool call: write_file: 39 of max 32768 tokens, 26.2 tok/s, 47 s\n[2026-10-03 22:59:43.394][server/stdout] [strata] writing a tool call: write_file: 67 of max 32768 tokens, 25.4 tok/s, 48 s\n[2026-10-03 22:59:44.396][server/stdout] [strata] writing a tool call: write_file: 96 of max 32768 tokens, 26.4 tok/s, 49 s\n[2026-10-03 22:59:45.525][server/stdout] [strata] writing a tool call: write_file: 131 of max 32768 tokens, 27.5 tok/s, 50 s\n[2026-10-03 22:59:46.191][server/stdout] [strata] done: 151 tokens in 51 s (27.8 tok/s) (stop, cancel=False), expert cache 67.7% hit\n[2026-10-03 22:59:53.675][server/stdout] [strata] reading the prompt: 8,192 of 42,105 tokens, 7 s so far\n[2026-10-03 23:00:00.747][server/stdout] [strata] reading the prompt: 14,077 of 42,105 tokens, 14 s so far\n[2026-10-03 23:00:08.613][server/stdout] [strata] reading the prompt: 22,269 of 42,105 tokens, 22 s so far\n[2026-10-03 23:00:16.421][server/stdout] [strata] reading the prompt: 30,461 of 42,105 tokens, 30 s so far\n[2026-10-03 23:00:24.246][server/stdout] [strata] reading the prompt: 38,653 of 42,105 tokens, 38 s so far\n[2026-10-03 23:00:31.091][server/stdout] [strata] reading the prompt: 42,098 of 42,105 tokens, 45 s so far\n[2026-10-03 23:00:32.129][server/stdout] [strata] writing a tool call: run_shell: 10 of max 32768 tokens, 34.1 tok/s, 46 s\n[2026-10-03 23:00:33.246][server/stdout] [strata] writing a tool call: run_shell: 46 of max 32768 tokens, 32.6 tok/s, 47 s\n[2026-10-03 23:00:34.297][server/stdout] [strata] writing a tool call: run_shell: 91 of max 32768 tokens, 37.0 tok/s, 48 s\n[2026-10-03 23:00:35.072][server/stdout] [strata] done: 120 tokens in 49 s (37.1 tok/s) (stop, cancel=False), expert cache 76.7% hit\n[2026-10-03 23:00:37.206][server/stdout] [strata] reading the prompt: 42,281 of 42,288 tokens, 2 s so far\n[2026-10-03 23:00:38.300][server/stdout] [strata] answering: 22 of max 32768 tokens, 25.0 tok/s, 3 s\n[2026-10-03 23:00:39.330][server/stdout] [strata] done: 45 tokens in 4 s (23.6 tok/s) (stop, cancel=False), expert cache 61.4% hit\n[2026-10-03 23:00:47.117][server/stdout] [strata] reading the prompt: 8,192 of 42,604 tokens, 7 s so far\n[2026-10-03 23:00:53.785][server/stdout] [strata] reading the prompt: 12,183 of 42,604 tokens, 14 s so far\n[2026-10-03 23:01:01.552][server/stdout] [strata] reading the prompt: 20,375 of 42,604 tokens, 22 s so far\n[2026-10-03 23:01:09.421][server/stdout] [strata] reading the prompt: 28,567 of 42,604 tokens, 30 s so far\n[2026-10-03 23:01:17.211][server/stdout] [strata] reading the prompt: 36,759 of 42,604 tokens, 38 s so far\n[2026-10-03 23:01:24.437][server/stdout] [strata] reading the prompt: 42,597 of 42,604 tokens, 45 s so far\n[2026-10-03 23:01:25.449][server/stdout] [strata] writing a tool call: write_file: 10 of max 32768 tokens, 34.4 tok/s, 46 s\n[2026-10-03 23:01:26.553][server/stdout] [strata] writing a tool call: write_file: 38 of max 32768 tokens, 27.2 tok/s, 47 s\n[2026-10-03 23:01:27.576][server/stdout] [strata] writing a tool call: write_file: 64 of max 32768 tokens, 26.5 tok/s, 48 s\n[2026-10-03 23:01:28.628][server/stdout] [strata] writing a tool call: write_file: 96 of max 32768 tokens, 27.7 tok/s, 49 s\n[2026-10-03 23:01:29.686][server/stdout] [strata] writing a tool call: write_file: 128 of max 32768 tokens, 28.3 tok/s, 50 s\n[2026-10-03 23:01:30.734][server/stdout] [strata] writing a tool call: write_file: 160 of max 32768 tokens, 28.7 tok/s, 51 s\n[2026-10-03 23:01:31.743][server/stdout] [strata] writing a tool call: write_file: 184 of max 32768 tokens, 27.9 tok/s, 52 s\n[2026-10-03 23:01:31.962][server/stdout] [strata] done: 194 tokens in 52 s (28.5 tok/s) (stop, cancel=False), expert cache 66.8% hit\n[2026-10-03 23:01:39.526][server/stdout] [strata] reading the prompt: 8,192 of 44,768 tokens, 7 s so far\n[2026-10-03 23:01:46.637][server/stdout] [strata] reading the prompt: 14,077 of 44,768 tokens, 15 s so far\n[2026-10-03 23:01:54.349][server/stdout] [strata] reading the prompt: 22,269 of 44,768 tokens, 22 s so far\n[2026-10-03 23:02:02.112][server/stdout] [strata] reading the prompt: 30,461 of 44,768 tokens, 30 s so far\n[2026-10-03 23:02:09.911][server/stdout] [strata] reading the prompt: 38,653 of 44,768 tokens, 38 s so far\n[2026-10-03 23:02:17.196][server/stdout] [strata] reading the prompt: 44,761 of 44,768 tokens, 45 s so far\n[2026-10-03 23:02:18.249][server/stdout] [strata] writing a tool call: run_shell: 8 of max 32768 tokens, 27.7 tok/s, 46 s\n[2026-10-03 23:02:19.321][server/stdout] [strata] writing a tool call: run_shell: 42 of max 32768 tokens, 30.9 tok/s, 47 s\n[2026-10-03 23:02:20.365][server/stdout] [strata] writing a tool call: run_shell: 86 of max 32768 tokens, 35.8 tok/s, 48 s\n[2026-10-03 23:02:20.957][server/stdout] [strata] done: 105 tokens in 49 s (35.0 tok/s) (stop, cancel=False), expert cache 75.9% hit\n[2026-10-03 23:02:22.883][server/stdout] [strata] reading the prompt: 44,929 of 44,936 tokens, 2 s so far\n[2026-10-03 23:02:23.974][server/stdout] [strata] answering: 22 of max 32768 tokens, 25.0 tok/s, 3 s\n[2026-10-03 23:02:24.984][server/stdout] [strata] answering: 43 of max 32768 tokens, 22.8 tok/s, 4 s\n[2026-10-03 23:02:25.022][server/stdout] [strata] done: 46 tokens in 4 s (23.9 tok/s) (stop, cancel=False), expert cache 60.0% hit\n[2026-10-03 23:02:32.804][server/stdout] [strata] reading the prompt: 8,192 of 45,221 tokens, 7 s so far\n[2026-10-03 23:02:39.324][server/stdout] [strata] reading the prompt: 12,183 of 45,221 tokens, 14 s so far\n[2026-10-03 23:02:47.128][server/stdout] [strata] reading the prompt: 20,375 of 45,221 tokens, 22 s so far\n[2026-10-03 23:02:54.913][server/stdout] [strata] reading the prompt: 28,567 of 45,221 tokens, 30 s so far\n[2026-10-03 23:03:02.700][server/stdout] [strata] reading the prompt: 36,759 of 45,221 tokens, 37 s so far\n[2026-10-03 23:03:10.637][server/stdout] [strata] reading the prompt: 44,951 of 45,221 tokens, 45 s so far\n[2026-10-03 23:03:15.579][server/stdout] [strata] reading the prompt: 45,214 of 45,221 tokens, 50 s so far\n[2026-10-03 23:03:16.616][server/stdout] [strata] writing a tool call: write_file: 10 of max 32768 tokens, 32.0 tok/s, 51 s\n[2026-10-03 23:03:17.732][server/stdout] [strata] writing a tool call: write_file: 41 of max 32768 tokens, 28.7 tok/s, 52 s\n[2026-10-03 23:03:18.775][server/stdout] [strata] writing a tool call: write_file: 68 of max 32768 tokens, 27.5 tok/s, 53 s\n[2026-10-03 23:03:19.893][server/stdout] [strata] writing a tool call: write_file: 102 of max 32768 tokens, 28.4 tok/s, 55 s\n[2026-10-03 23:03:20.948][server/stdout] [strata] writing a tool call: write_file: 133 of max 32768 tokens, 28.6 tok/s, 56 s\n[2026-10-03 23:03:21.287][server/stdout] [strata] done: 145 tokens in 56 s (29.1 tok/s) (stop, cancel=False), expert cache 67.6% hit\n[2026-10-03 23:03:28.825][server/stdout] [strata] reading the prompt: 8,192 of 47,336 tokens, 7 s so far\n[2026-10-03 23:03:35.911][server/stdout] [strata] reading the prompt: 14,077 of 47,336 tokens, 14 s so far\n[2026-10-03 23:03:43.613][server/stdout] [strata] reading the prompt: 22,269 of 47,336 tokens, 22 s so far\n[2026-10-03 23:03:51.419][server/stdout] [strata] reading the prompt: 30,461 of 47,336 tokens, 30 s so far\n[2026-10-03 23:03:59.187][server/stdout] [strata] reading the prompt: 38,653 of 47,336 tokens, 38 s so far\n[2026-10-03 23:04:07.041][server/stdout] [strata] reading the prompt: 46,845 of 47,336 tokens, 46 s so far\n[2026-10-03 23:04:12.513][server/stdout] [strata] reading the prompt: 47,329 of 47,336 tokens, 51 s so far\n[2026-10-03 23:04:13.566][server/stdout] [strata] writing a tool call: run_shell: 10 of max 32768 tokens, 30.6 tok/s, 52 s\n[2026-10-03 23:04:14.675][server/stdout] [strata] writing a tool call: run_shell: 46 of max 32768 tokens, 32.1 tok/s, 53 s\n[2026-10-03 23:04:15.721][server/stdout] [strata] writing a tool call: run_shell: 81 of max 32768 tokens, 32.6 tok/s, 54 s\n[2026-10-03 23:04:16.526][server/stdout] [strata] done: 114 tokens in 55 s (34.7 tok/s) (stop, cancel=False), expert cache 74.7% hit\n[2026-10-03 23:04:18.497][server/stdout] [strata] reading the prompt: 47,506 of 47,513 tokens, 2 s so far\n[2026-10-03 23:04:19.500][server/stdout] [strata] answering: 22 of max 32768 tokens, 27.0 tok/s, 3 s\n[2026-10-03 23:04:20.532][server/stdout] [strata] answering: 46 of max 32768 tokens, 24.9 tok/s, 4 s\n[2026-10-03 23:04:20.788][server/stdout] [strata] done: 52 tokens in 4 s (24.7 tok/s) (stop, cancel=False), expert cache 63.0% hit\n[2026-10-03 23:04:28.422][server/stdout] [strata] reading the prompt: 8,192 of 47,838 tokens, 7 s so far\n[2026-10-03 23:04:35.061][server/stdout] [strata] reading the prompt: 12,183 of 47,838 tokens, 14 s so far\n[2026-10-03 23:04:42.686][server/stdout] [strata] reading the prompt: 20,375 of 47,838 tokens, 22 s so far\n[2026-10-03 23:04:50.598][server/stdout] [strata] reading the prompt: 28,567 of 47,838 tokens, 29 s so far\n[2026-10-03 23:04:58.461][server/stdout] [strata] reading the prompt: 36,759 of 47,838 tokens, 37 s so far\n[2026-10-03 23:05:06.366][server/stdout] [strata] reading the prompt: 44,951 of 47,838 tokens, 45 s so far\n[2026-10-03 23:05:13.014][server/stdout] [strata] reading the prompt: 47,831 of 47,838 tokens, 52 s so far\n[2026-10-03 23:05:14.026][server/stdout] [strata] writing a tool call: write_file: 10 of max 32768 tokens, 32.3 tok/s, 53 s\n[2026-10-03 23:05:15.173][server/stdout] [strata] writing a tool call: write_file: 39 of max 32768 tokens, 26.8 tok/s, 54 s\n[2026-10-03 23:05:16.177][server/stdout] [strata] writing a tool call: write_file: 67 of max 32768 tokens, 27.2 tok/s, 55 s\n[2026-10-03 23:05:17.193][server/stdout] [strata] writing a tool call: write_file: 100 of max 32768 tokens, 28.8 tok/s, 56 s\n[2026-10-03 23:05:18.031][server/stdout] [strata] done: 122 tokens in 57 s (28.3 tok/s) (stop, cancel=False), expert cache 66.6% hit\n[2026-10-03 23:05:25.486][server/stdout] [strata] reading the prompt: 8,192 of 49,930 tokens, 7 s so far\n[2026-10-03 23:05:32.351][server/stdout] [strata] reading the prompt: 14,077 of 49,930 tokens, 14 s so far\n[2026-10-03 23:05:40.121][server/stdout] [strata] reading the prompt: 22,269 of 49,930 tokens, 22 s so far\n[2026-10-03 23:05:47.925][server/stdout] [strata] reading the prompt: 30,461 of 49,930 tokens, 30 s so far\n[2026-10-03 23:05:55.827][server/stdout] [strata] reading the prompt: 38,653 of 49,930 tokens, 38 s so far\n[2026-10-03 23:06:03.728][server/stdout] [strata] reading the prompt: 46,845 of 49,930 tokens, 46 s so far\n[2026-10-03 23:06:10.510][server/stdout] [strata] reading the prompt: 49,923 of 49,930 tokens, 52 s so far\n[2026-10-03 23:06:11.535][server/stdout] [strata] writing a tool call: run_shell: 10 of max 32768 tokens, 32.8 tok/s, 53 s\n[2026-10-03 23:06:12.610][server/stdout] [strata] writing a tool call: run_shell: 46 of max 32768 tokens, 33.3 tok/s, 54 s\n[2026-10-03 23:06:13.671][server/stdout] [strata] writing a tool call: run_shell: 84 of max 32768 tokens, 34.4 tok/s, 56 s\n[2026-10-03 23:06:13.859][server/stdout] [strata] done: 94 tokens in 56 s (35.8 tok/s) (stop, cancel=False), expert cache 75.0% hit\n[2026-10-03 23:06:15.798][server/stdout] [strata] reading the prompt: 50,080 of 50,087 tokens, 2 s so far\n[2026-10-03 23:06:16.808][server/stdout] [strata] answering: 21 of max 32768 tokens, 25.2 tok/s, 3 s\n[2026-10-03 23:06:17.715][server/stdout] [strata] done: 43 tokens in 4 s (24.7 tok/s) (stop, cancel=False), expert cache 64.2% hit\n[2026-10-03 23:06:25.442][server/stdout] [strata] reading the prompt: 8,192 of 50,410 tokens, 7 s so far\n[2026-10-03 23:06:32.094][server/stdout] [strata] reading the prompt: 12,183 of 50,410 tokens, 14 s so far\n[2026-10-03 23:06:39.675][server/stdout] [strata] reading the prompt: 20,375 of 50,410 tokens, 22 s so far\n[2026-10-03 23:06:47.503][server/stdout] [strata] reading the prompt: 28,567 of 50,410 tokens, 29 s so far\n[2026-10-03 23:06:55.323][server/stdout] [strata] reading the prompt: 36,759 of 50,410 tokens, 37 s so far\n[2026-10-03 23:07:03.113][server/stdout] [strata] reading the prompt: 44,951 of 50,410 tokens, 45 s so far\n[2026-10-03 23:07:10.229][server/stdout] [strata] reading the prompt: 50,403 of 50,410 tokens, 52 s so far\n[2026-10-03 23:07:11.236][server/stdout] [strata] writing a tool call: write_file: 10 of max 32768 tokens, 32.6 tok/s, 53 s\n[2026-10-03 23:07:12.334][server/stdout] [strata] writing a tool call: write_file: 42 of max 32768 tokens, 29.9 tok/s, 54 s\n[2026-10-03 23:07:13.421][server/stdout] [strata] writing a tool call: write_file: 74 of max 32768 tokens, 29.7 tok/s, 55 s\n[2026-10-03 23:07:14.501][server/stdout] [strata] writing a tool call: write_file: 108 of max 32768 tokens, 30.2 tok/s, 56 s\n[2026-10-03 23:07:15.273][server/stdout] [strata] done: 130 tokens in 57 s (29.9 tok/s) (stop, cancel=False), expert cache 69.6% hit\n[2026-10-03 23:07:22.820][server/stdout] [strata] reading the prompt: 8,192 of 52,510 tokens, 7 s so far\n[2026-10-03 23:07:29.712][server/stdout] [strata] reading the prompt: 14,077 of 52,510 tokens, 14 s so far\n[2026-10-03 23:07:37.269][server/stdout] [strata] reading the prompt: 22,269 of 52,510 tokens, 22 s so far\n[2026-10-03 23:07:45.079][server/stdout] [strata] reading the prompt: 30,461 of 52,510 tokens, 30 s so far\n[2026-10-03 23:07:52.836][server/stdout] [strata] reading the prompt: 38,653 of 52,510 tokens, 37 s so far\n[2026-10-03 23:08:00.795][server/stdout] [strata] reading the prompt: 46,845 of 52,510 tokens, 45 s so far\n[2026-10-03 23:08:08.001][server/stdout] [strata] reading the prompt: 52,503 of 52,510 tokens, 53 s so far\n[2026-10-03 23:08:09.108][server/stdout] [strata] writing a tool call: run_shell: 14 of max 32768 tokens, 37.2 tok/s, 54 s\n[2026-10-03 23:08:10.181][server/stdout] [strata] writing a tool call: run_shell: 50 of max 32768 tokens, 34.5 tok/s, 55 s\n[2026-10-03 23:08:11.192][server/stdout] [strata] writing a tool call: run_shell: 86 of max 32768 tokens, 35.0 tok/s, 56 s\n[2026-10-03 23:08:11.590][server/stdout] [strata] done: 101 tokens in 56 s (35.3 tok/s) (stop, cancel=False), expert cache 75.2% hit\n[2026-10-03 23:08:13.671][server/stdout] [strata] reading the prompt: 52,667 of 52,674 tokens, 2 s so far\n[2026-10-03 23:08:14.697][server/stdout] [strata] answering: 21 of max 32768 tokens, 25.0 tok/s, 3 s\n[2026-10-03 23:08:15.480][server/stdout] [strata] done: 39 tokens in 4 s (24.0 tok/s) (stop, cancel=False), expert cache 63.0% hit\n[2026-10-03 23:08:23.043][server/stdout] [strata] reading the prompt: 8,192 of 53,051 tokens, 7 s so far\n[2026-10-03 23:08:29.645][server/stdout] [strata] reading the prompt: 12,183 of 53,051 tokens, 14 s so far\n[2026-10-03 23:08:37.180][server/stdout] [strata] reading the prompt: 20,375 of 53,051 tokens, 21 s so far\n[2026-10-03 23:08:44.950][server/stdout] [strata] reading the prompt: 28,567 of 53,051 tokens, 29 s so far\n[2026-10-03 23:08:52.848][server/stdout] [strata] reading the prompt: 36,759 of 53,051 tokens, 37 s so far\n[2026-10-03 23:09:00.752][server/stdout] [strata] reading the prompt: 44,951 of 53,051 tokens, 45 s so far\n[2026-10-03 23:09:08.638][server/stdout] [strata] reading the prompt: 53,044 of 53,051 tokens, 53 s so far\n[2026-10-03 23:09:09.669][server/stdout] [strata] writing a tool call: write_file: 10 of max 32768 tokens, 31.5 tok/s, 54 s\n[2026-10-03 23:09:10.716][server/stdout] [strata] writing a tool call: write_file: 37 of max 32768 tokens, 27.1 tok/s, 55 s\n[2026-10-03 23:09:11.791][server/stdout] [strata] writing a tool call: write_file: 64 of max 32768 tokens, 26.2 tok/s, 56 s\n[2026-10-03 23:09:12.829][server/stdout] [strata] writing a tool call: write_file: 96 of max 32768 tokens, 27.6 tok/s, 57 s\n[2026-10-03 23:09:13.687][server/stdout] [strata] done: 119 tokens in 58 s (27.4 tok/s) (stop, cancel=False), expert cache 67.6% hit\n[2026-10-03 23:09:21.120][server/stdout] [strata] reading the prompt: 8,192 of 55,140 tokens, 7 s so far\n[2026-10-03 23:09:28.002][server/stdout] [strata] reading the prompt: 14,077 of 55,140 tokens, 14 s so far\n[2026-10-03 23:09:35.577][server/stdout] [strata] reading the prompt: 22,269 of 55,140 tokens, 22 s so far\n[2026-10-03 23:09:43.444][server/stdout] [strata] reading the prompt: 30,461 of 55,140 tokens, 30 s so far\n[2026-10-03 23:09:51.331][server/stdout] [strata] reading the prompt: 38,653 of 55,140 tokens, 37 s so far\n[2026-10-03 23:09:59.243][server/stdout] [strata] reading the prompt: 46,845 of 55,140 tokens, 45 s so far\n[2026-10-03 23:10:07.029][server/stdout] [strata] reading the prompt: 55,037 of 55,140 tokens, 53 s so far\n[2026-10-03 23:10:09.811][server/stdout] [strata] reading the prompt: 55,133 of 55,140 tokens, 56 s so far\n[2026-10-03 23:10:10.907][server/stdout] [strata] writing a tool call: run_shell: 14 of max 32768 tokens, 36.3 tok/s, 57 s\n[2026-10-03 23:10:11.960][server/stdout] [strata] writing a tool call: run_shell: 50 of max 32768 tokens, 34.8 tok/s, 58 s\n[2026-10-03 23:10:13.047][server/stdout] [strata] writing a tool call: run_shell: 73 of max 32768 tokens, 28.9 tok/s, 59 s\n[2026-10-03 23:10:13.708][server/stdout] [strata] done: 95 tokens in 60 s (29.8 tok/s) (stop, cancel=False), expert cache 75.1% hit\n[2026-10-03 23:10:15.651][server/stdout] [strata] reading the prompt: 55,291 of 55,298 tokens, 2 s so far\n[2026-10-03 23:10:16.767][server/stdout] [strata] answering: 24 of max 32768 tokens, 25.7 tok/s, 3 s\n[2026-10-03 23:10:17.552][server/stdout] [strata] done: 44 tokens in 4 s (25.6 tok/s) (stop, cancel=False), expert cache 64.0% hit\n[2026-10-03 23:10:25.333][server/stdout] [strata] reading the prompt: 8,192 of 55,781 tokens, 7 s so far\n[2026-10-03 23:10:31.981][server/stdout] [strata] reading the prompt: 12,183 of 55,781 tokens, 14 s so far\n[2026-10-03 23:10:39.544][server/stdout] [strata] reading the prompt: 20,375 of 55,781 tokens, 22 s so far\n[2026-10-03 23:10:47.274][server/stdout] [strata] reading the prompt: 28,567 of 55,781 tokens, 29 s so far\n[2026-10-03 23:10:55.045][server/stdout] [strata] reading the prompt: 36,759 of 55,781 tokens, 37 s so far\n[2026-10-03 23:11:02.907][server/stdout] [strata] reading the prompt: 44,951 of 55,781 tokens, 45 s so far\n[2026-10-03 23:11:10.715][server/stdout] [strata] reading the prompt: 53,143 of 55,781 tokens, 53 s so far\n[2026-10-03 23:11:17.402][server/stdout] [strata] reading the prompt: 55,774 of 55,781 tokens, 59 s so far\n[2026-10-03 23:11:18.480][server/stdout] [strata] writing a tool call: write_file: 11 of max 32768 tokens, 30.9 tok/s, 61 s\n[2026-10-03 23:11:19.542][server/stdout] [strata] writing a tool call: write_file: 40 of max 32768 tokens, 28.2 tok/s, 62 s\n[2026-10-03 23:11:20.664][server/stdout] [strata] writing a tool call: write_file: 64 of max 32768 tokens, 25.2 tok/s, 63 s\n[2026-10-03 23:11:21.753][server/stdout] [strata] writing a tool call: write_file: 91 of max 32768 tokens, 25.1 tok/s, 64 s\n[2026-10-03 23:11:22.890][server/stdout] [strata] writing a tool call: write_file: 117 of max 32768 tokens, 24.5 tok/s, 65 s\n[2026-10-03 23:11:23.892][server/stdout] [strata] writing a tool call: write_file: 146 of max 32768 tokens, 25.3 tok/s, 66 s\n[2026-10-03 23:11:25.000][server/stdout] [strata] writing a tool call: write_file: 175 of max 32768 tokens, 25.5 tok/s, 67 s\n[2026-10-03 23:11:26.100][server/stdout] [strata] writing a tool call: write_file: 209 of max 32768 tokens, 26.2 tok/s, 68 s\n[2026-10-03 23:11:27.103][server/stdout] [strata] writing a tool call: write_file: 237 of max 32768 tokens, 26.4 tok/s, 69 s\n[2026-10-03 23:11:27.673][server/stdout] [strata] done: 254 tokens in 70 s (26.6 tok/s) (stop, cancel=False), expert cache 64.2% hit\n[2026-10-03 23:11:35.226][server/stdout] [strata] reading the prompt: 8,192 of 58,005 tokens, 7 s so far\n[2026-10-03 23:11:42.111][server/stdout] [strata] reading the prompt: 14,077 of 58,005 tokens, 14 s so far\n[2026-10-03 23:11:49.546][server/stdout] [strata] reading the prompt: 22,269 of 58,005 tokens, 22 s so far\n[2026-10-03 23:11:57.351][server/stdout] [strata] reading the prompt: 30,461 of 58,005 tokens, 30 s so far\n[2026-10-03 23:12:05.141][server/stdout] [strata] reading the prompt: 38,653 of 58,005 tokens, 37 s so far\n[2026-10-03 23:12:13.061][server/stdout] [strata] reading the prompt: 46,845 of 58,005 tokens, 45 s so far\n[2026-10-03 23:12:20.917][server/stdout] [strata] reading the prompt: 55,037 of 58,005 tokens, 53 s so far\n[2026-10-03 23:12:27.681][server/stdout] [strata] reading the prompt: 57,998 of 58,005 tokens, 60 s so far\n[2026-10-03 23:12:28.723][server/stdout] [strata] reading the prompt: 6 of max 32768 tokens, 22.9 tok/s, 61 s\n[2026-10-03 23:12:29.738][server/stdout] [strata] writing a tool call: run_shell: 38 of max 32768 tokens, 29.8 tok/s, 62 s\n[2026-10-03 23:12:30.808][server/stdout] [strata] writing a tool call: run_shell: 78 of max 32768 tokens, 33.2 tok/s, 63 s\n[2026-10-03 23:12:31.902][server/stdout] [strata] writing a tool call: run_shell: 117 of max 32768 tokens, 34.0 tok/s, 64 s\n[2026-10-03 23:12:32.184][server/stdout] [strata] done: 127 tokens in 64 s (34.1 tok/s) (stop, cancel=False), expert cache 74.8% hit\n[2026-10-03 23:12:34.324][server/stdout] [strata] reading the prompt: 58,188 of 58,195 tokens, 2 s so far\n[2026-10-03 23:12:35.325][server/stdout] [strata] answering: 18 of max 32768 tokens, 22.9 tok/s, 3 s\n[2026-10-03 23:12:36.344][server/stdout] [strata] done: 41 tokens in 4 s (22.7 tok/s) (stop, cancel=False), expert cache 59.9% hit\n[2026-10-03 23:12:44.035][server/stdout] [strata] reading the prompt: 8,192 of 58,636 tokens, 7 s so far\n[2026-10-03 23:12:50.630][server/stdout] [strata] reading the prompt: 12,183 of 58,636 tokens, 14 s so far\n[2026-10-03 23:12:58.058][server/stdout] [strata] reading the prompt: 20,375 of 58,636 tokens, 21 s so far\n[2026-10-03 23:13:05.663][server/stdout] [strata] reading the prompt: 28,567 of 58,636 tokens, 29 s so far\n[2026-10-03 23:13:13.497][server/stdout] [strata] reading the prompt: 36,759 of 58,636 tokens, 37 s so far\n[2026-10-03 23:13:21.439][server/stdout] [strata] reading the prompt: 44,951 of 58,636 tokens, 45 s so far\n[2026-10-03 23:13:29.391][server/stdout] [strata] reading the prompt: 53,143 of 58,636 tokens, 53 s so far\n[2026-10-03 23:13:36.645][server/stdout] [strata] reading the prompt: 58,629 of 58,636 tokens, 60 s so far\n[2026-10-03 23:13:37.703][server/stdout] [strata] writing a tool call: write_file: 10 of max 32768 tokens, 31.7 tok/s, 61 s\n[2026-10-03 23:13:38.844][server/stdout] [strata] writing a tool call: write_file: 41 of max 32768 tokens, 28.2 tok/s, 62 s\n[2026-10-03 23:13:39.870][server/stdout] [strata] writing a tool call: write_file: 69 of max 32768 tokens, 27.8 tok/s, 63 s\n[2026-10-03 23:13:40.904][server/stdout] [strata] writing a tool call: write_file: 101 of max 32768 tokens, 28.7 tok/s, 64 s\n[2026-10-03 23:13:42.027][server/stdout] [strata] writing a tool call: write_file: 140 of max 32768 tokens, 30.2 tok/s, 65 s\n[2026-10-03 23:13:43.163][server/stdout] [strata] writing a tool call: write_file: 176 of max 32768 tokens, 30.5 tok/s, 66 s\n[2026-10-03 23:13:43.854][server/stdout] [strata] done: 196 tokens in 67 s (30.3 tok/s) (stop, cancel=False), expert cache 68.5% hit\n[2026-10-03 23:13:51.366][server/stdout] [strata] reading the prompt: 8,192 of 60,802 tokens, 7 s so far\n[2026-10-03 23:13:58.289][server/stdout] [strata] reading the prompt: 14,077 of 60,802 tokens, 14 s so far\n[2026-10-03 23:14:05.779][server/stdout] [strata] reading the prompt: 22,269 of 60,802 tokens, 22 s so far\n[2026-10-03 23:14:13.362][server/stdout] [strata] reading the prompt: 30,461 of 60,802 tokens, 29 s so far\n[2026-10-03 23:14:21.173][server/stdout] [strata] reading the prompt: 38,653 of 60,802 tokens, 37 s so far\n[2026-10-03 23:14:29.072][server/stdout] [strata] reading the prompt: 46,845 of 60,802 tokens, 45 s so far",
+    "failureKind": "timeout",
+    "failureMessage": "Error de timeout",
+    "failureStage": "hard-timeout",
+    "finalScore": 0,
+    "finalTotal": 0,
+    "firstAttemptScore": 0,
+    "firstAttemptTotal": 0,
+    "firstEvaluableSec": 32.767,
+    "firstToolCallSec": 31.883,
+    "firstWriteSec": 31.939,
+    "generationSec": 133.77,
+    "harnessEngineId": "legacy",
+    "harnessEngineVersion": 1,
+    "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+    "honeyEnabled": false,
+    "id": "4099e0af-26c9-4cd4-aab1-1d7463c2fbab",
+    "invalid": true,
+    "measurementPhase": "cold",
+    "mode": "custom",
+    "nonGenerationSec": 1667.427,
+    "pass": 1,
+    "passedAfterRepair": false,
+    "passesTotal": 1,
+    "profileConfigFingerprint": "a5f7eae9038f3c91f09410573d616e1d1e6324ffcb984a02e438c8f7eedb54d9",
+    "profileId": "test-strata-unsloth-udq4",
+    "profileName": "[prueba] ASTRA · Strata UD-Q4_K_XL · Qwen3.8 Flash Next",
+    "progressGovernor": {
+      "progressEvents": 40,
+      "replanEvents": 0,
+      "stagnationEvents": 0
+    },
+    "qualityScore": 0,
+    "qualityTotal": 0,
+    "ramFreeMb": 0,
+    "ramMb": 0,
+    "ramTotalMb": 0,
+    "repairAttempts": 0,
+    "response": "[timeout] corrida cortada por exceder el tiempo máximo.",
+    "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/HumanEval_20_tems__20261003_224418",
+    "runLabel": "HumanEval (20 ítems)",
+    "setupSec": 0.301,
+    "target": "agent",
+    "thinkingEnabled": false,
+    "timeToFirstAttempt": 1800.896,
+    "timedOut": true,
+    "timeoutSec": 1800,
+    "timestamp": 1791080073289,
+    "toolCallQuality": {
+      "expectedCalls": 0,
+      "f1Pct": -1,
+      "failedCalls": 0,
+      "incompleteCalls": 0,
+      "invalidCalls": 0,
+      "matchedExpectedCalls": 0,
+      "missingExpectedCalls": 0,
+      "precisionPct": -1,
+      "recallPct": -1,
+      "redundantCalls": 0,
+      "sequenceExact": false,
+      "successRatePct": 100,
+      "successfulCalls": 40,
+      "totalCalls": 40,
+      "unexpectedCalls": 0
+    },
+    "toolCalls": 40,
+    "totalTime": 1801.197,
+    "transportAfterEvaluation": false,
+    "vramFreeMb": 23542,
+    "vramGpu0FreeMb": 23296,
+    "vramGpu0Mb": 883,
+    "vramGpu0TotalMb": 24576,
+    "vramGpu0UsedPct": 3.5929361979166665,
+    "vramGpu1FreeMb": 246,
+    "vramGpu1Mb": 23878,
+    "vramGpu1TotalMb": 24576,
+    "vramGpu1UsedPct": 97.15983072916666,
+    "vramMb": 24761,
+    "vramNormalizedImbalancePct": 93.56689453125,
+    "vramObservedGpu0SharePct": 3.566091837971003,
+    "vramOptimalGpu0SharePct": 98.95505904341178,
+    "vramPlacementAssessment": "gpu1-heavy",
+    "vramTelemetryScope": "device-total",
+    "workspace": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/HumanEval_20_tems__20261003_224418/_prueba_ASTRA_Strata_UD-Q4_K_XL_Qwen3_8_Flash_Next__ws"
+  }
+]

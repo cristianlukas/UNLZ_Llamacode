@@ -1,0 +1,42 @@
+[
+  {
+    "variant": "q8_0_q8_0",
+    "content": "def merge_intervals(intervals):\n    \"\"\"Merge overlapping inclusive integer intervals, sort first, return list of lists.\"\"\"\n    if not intervals:\n        return []\n    intervals.sort(key=lambda x: x[0])\n    merged = [intervals[0]]\n    for start, end in intervals[1:]:\n        if start <= merged[-1][1] + 1:\n            merged[-1][1] = max(merged[-1][1], end)\n        else:\n            merged.append([start, end])\n    return merged",
+    "timings": {
+      "cache_n": 0,
+      "cache_lcp_n": 0,
+      "cache_planned_n": 0,
+      "cache_reprocessed_n": 46,
+      "cache_source": "none",
+      "cache_reason": "no_common_prefix",
+      "prompt_n": 46,
+      "prompt_ms": 152.806,
+      "prompt_per_token_ms": 3.3218695652173915,
+      "prompt_per_second": 301.035299661008,
+      "predicted_n": 119,
+      "predicted_ms": 3221.443,
+      "predicted_per_token_ms": 27.300364406779664,
+      "predicted_per_second": 36.6295476902742
+    }
+  },
+  {
+    "variant": "kvarn5_kvarn5",
+    "content": "def merge_intervals(intervals):\n    \"\"\"Merge overlapping inclusive integer intervals, sort first, return list of lists.\"\"\"\n    if not intervals:\n        return []\n    intervals.sort(key=lambda x: x[0])\n    merged = [intervals[0]]\n    for start, end in intervals[1:]:\n        if start <= merged[-1][1] + 1:\n            merged[-1][1] = max(merged[-1][1], end)\n        else:\n            merged.append([start, end])\n    return merged",
+    "timings": {
+      "cache_n": 0,
+      "cache_lcp_n": 0,
+      "cache_planned_n": 0,
+      "cache_reprocessed_n": 46,
+      "cache_source": "none",
+      "cache_reason": "no_common_prefix",
+      "prompt_n": 46,
+      "prompt_ms": 80.749,
+      "prompt_per_token_ms": 1.7554130434782607,
+      "prompt_per_second": 569.6664974179247,
+      "predicted_n": 119,
+      "predicted_ms": 3287.183,
+      "predicted_per_token_ms": 27.857483050847456,
+      "predicted_per_second": 35.89699752036926
+    }
+  }
+]

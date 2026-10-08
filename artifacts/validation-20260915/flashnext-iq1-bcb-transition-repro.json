@@ -1,0 +1,37 @@
+{
+  "schema": "llamacode-flashnext-iq1-bcb-transition-repro-v1",
+  "generatedAt": "2026-09-15",
+  "hardware": "Ubuntu · 2x RTX 3090 · P2P · Ryzen 9 9950X3D",
+  "model": "Qwen3.8-Flash-Next-UD-IQ1_S",
+  "tasks": ["BigCodeBench/870", "BigCodeBench/509"],
+  "runtime": {
+    "ctx": 32768,
+    "batch": 512,
+    "ubatch": 512,
+    "kv": "q8_0/q8_0",
+    "expertCache": 188,
+    "splitMode": "layer",
+    "p2p": true,
+    "parallel": 1,
+    "toolMode": "raw OpenAI-compatible request"
+  },
+  "noMtp": {
+    "serverStayedAlive": true,
+    "870": {"promptTps": 133.17, "decodeTps": 41.10, "completionTokens": 450},
+    "509": {"promptTps": 129.16, "decodeTps": 44.76, "completionTokens": 739}
+  },
+  "mtpQ8SharedHead": {
+    "serverStayedAlive": true,
+    "draftHead": "mtp-Qwen3.8-Flash-Next-shared-Q8_0.gguf",
+    "870": {"promptTps": 98.81, "decodeTps": 49.72, "acceptance": "294/334"},
+    "509": {"promptTps": 105.43, "decodeTps": 63.52, "acceptance": "531/574"}
+  },
+  "crashDiagnosis": {
+    "historicalSignature": "CUDA illegal memory access",
+    "reproducedInDirectPair": false,
+    "exactKernelOrCudaCode": null,
+    "mostLikelyBoundary": "agent/runner turn transition and asynchronous request teardown",
+    "qualityFailure": false
+  },
+  "conclusion": "The two-task transport is stable when requests are sent directly. LlamaCode now disables early acceptance for BigCodeBench and waits 250 ms after turnFinished before dispatching the next task. The BCB score remains pending until the full headless agent pack is rerun."
+}

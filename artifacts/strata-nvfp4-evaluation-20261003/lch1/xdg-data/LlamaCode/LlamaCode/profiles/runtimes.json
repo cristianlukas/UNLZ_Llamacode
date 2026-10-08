@@ -1,0 +1,17 @@
+[
+    {
+        "batch": 512,
+        "cacheType": "q8_0",
+        "contBatching": true,
+        "ctx": 4096,
+        "flashAttention": false,
+        "gpuLayers": -1,
+        "id": "ab59f7ce-87d0-4648-8c2c-a3ea35f11d63",
+        "mlock": false,
+        "mmap": true,
+        "name": "Default",
+        "parallelSlots": 1,
+        "threads": -1,
+        "ubatch": 512
+    }
+]

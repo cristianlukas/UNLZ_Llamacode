@@ -1,0 +1,103 @@
+{
+  "generated_at": "2026-09-23",
+  "model": "Qwen3.8-Flash-Next-UD-Q2_K_XL",
+  "runtime": "llama-server qwen4exp c6a9e5c9",
+  "hardware": "2x NVIDIA GeForce RTX 3090 24GB",
+  "common_args": {
+    "split_mode": "layer",
+    "gpu_layers": 999,
+    "fit": "off",
+    "batch": 512,
+    "ubatch": 512,
+    "kv": "q8_0",
+    "flash_attn": true,
+    "parallel": 1,
+    "reasoning": "off",
+    "threads": 16
+  },
+  "method": {
+    "capacity": "Cada servidor se cargó con el ctx-size indicado y se verificó /health más una respuesta determinista.",
+    "decode_speed": "Prompt fijo de 157 tokens; respuesta objetivo de 128 tokens; se informan 117 tokens efectivamente generados y la métrica tg del log del servidor.",
+    "caveat": "La velocidad de decode no equivale al prefill de un prompt que ya ocupa todo el contexto. El prefill largo se debe medir aparte porque depende mucho de la cantidad real de tokens y del offload CPU."
+  },
+  "results": [
+    {
+      "context_tokens": 16384,
+      "n_cpu_moe": 4,
+      "gpu_used_mib": [23000, 23622],
+      "gpu_free_mib": [1124, 505],
+      "prompt_eval_tps": 314.60,
+      "decode_tps": 56.19,
+      "health": "ok"
+    },
+    {
+      "context_tokens": 32768,
+      "n_cpu_moe": 4,
+      "gpu_used_mib": [23150, 23840],
+      "gpu_free_mib": [974, 287],
+      "prompt_eval_tps": 352.97,
+      "decode_tps": 57.15,
+      "health": "ok"
+    },
+    {
+      "context_tokens": 65536,
+      "n_cpu_moe": 40,
+      "gpu_used_mib": [4332, 10672],
+      "gpu_free_mib": [19792, 13455],
+      "prompt_eval_tps": 105.89,
+      "decode_tps": 32.19,
+      "health": "ok"
+    },
+    {
+      "context_tokens": 131072,
+      "n_cpu_moe": 40,
+      "gpu_used_mib": [4990, 11650],
+      "gpu_free_mib": [19134, 12477],
+      "prompt_eval_tps": 106.81,
+      "decode_tps": 31.77,
+      "health": "ok"
+    },
+    {
+      "context_tokens": 262144,
+      "n_cpu_moe": 40,
+      "gpu_used_mib": [6884, 13604],
+      "gpu_free_mib": [17240, 10523],
+      "prompt_eval_tps": 102.74,
+      "decode_tps": 30.96,
+      "health": "ok"
+    }
+  ],
+  "negative_results": [
+    {
+      "context_tokens": 65536,
+      "n_cpu_moe": 4,
+      "status": "failed",
+      "reason": "No pudo reservar 542.07 MiB adicionales en CUDA1."
+    },
+    {
+      "context_tokens": 65536,
+      "n_cpu_moe": 8,
+      "status": "failed",
+      "reason": "No pudo reservar 542.07 MiB adicionales en CUDA1."
+    },
+    {
+      "context_tokens": 65536,
+      "n_cpu_moe": 16,
+      "status": "failed",
+      "reason": "No pudo reservar 542.07 MiB adicionales en CUDA1."
+    },
+    {
+      "context_tokens": 8192,
+      "n_cpu_moe": 0,
+      "status": "failed",
+      "reason": "No pudo reservar 24557.78 MiB en CUDA0."
+    },
+    {
+      "context_tokens": 8192,
+      "n_cpu_moe": 2,
+      "status": "failed",
+      "reason": "El modelo cargó, pero no pudo reservar 601.54 MiB de buffers de cómputo en CUDA0."
+    }
+  ],
+  "conclusion": "16k y 32k son los perfiles rápidos con n-cpu-moe=4. 64k, 128k y 256k son perfiles largos estables con n-cpu-moe=40. No existe una configuración medida que mantenga n-cpu-moe=4 y 64k en estas condiciones de batch/KV."
+}

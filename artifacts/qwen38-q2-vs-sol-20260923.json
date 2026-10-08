@@ -1,0 +1,63 @@
+{
+  "generated_at": "2026-09-23",
+  "candidate": {
+    "name": "Qwen3.8-Flash-Next-UD-Q2_K_XL",
+    "profile_target": "manual Q2 validation; the bundled profile remains the Q4 candidate",
+    "quant": "UD-Q2_K_XL",
+    "model_path": "/media/cristian/Disco local/.llamacode-staging/Qwen3.8-Flash-Next-UD-Q2_K_XL/UD_Q2_K_XL/Qwen3.8-Flash-Next-UD-Q2_K_XL-00001-of-00003.gguf",
+    "runtime": "llama-server qwen4exp c6a9e5c9",
+    "hardware": "2x NVIDIA GeForce RTX 3090 24GB",
+    "args": [
+      "--ctx-size", "8192",
+      "--n-gpu-layers", "999",
+      "--split-mode", "layer",
+      "--fit", "off",
+      "--n-cpu-moe", "40",
+      "--cache-type-k", "q8_0",
+      "--cache-type-v", "q8_0",
+      "--batch-size", "512",
+      "--ubatch-size", "512",
+      "--flash-attn", "on",
+      "--parallel", "1",
+      "--reasoning", "off"
+    ]
+  },
+  "results": {
+    "he20": {
+      "passed": 20,
+      "total": 20,
+      "elapsed_seconds": 73.4,
+      "decode_tps_observed": "23.45-30.55"
+    },
+    "bcb8": {
+      "passed": 8,
+      "total": 8,
+      "elapsed_seconds": 129.7,
+      "decode_tps_observed": "30.02-30.54",
+      "decode_tps_mean_approx": 30.3,
+      "tasks": ["870", "509", "857", "310", "800", "123", "952", "492"]
+    },
+    "gpu_memory_mib_after_load": {
+      "gpu0": 3464,
+      "gpu1": 9880
+    },
+    "notes": [
+      "Los pesos no quedaron íntegramente en VRAM; --n-cpu-moe 40 deja una parte importante en RAM.",
+      "La evaluación usó los packs canónicos locales por HTTP chat y ejecución de tests Python.",
+      "No se ejecutó todavía el harness agentivo completo de LlamaCode ni contexto largo."
+    ]
+  },
+  "comparison": {
+    "sol_reference": {
+      "he20": "20/20",
+      "bcb8": "8/8",
+      "decode_tps": "74 narrativo / 102 código en la auditoría histórica",
+      "tool_use": "estable",
+      "context": "262K validado"
+    },
+    "quality_read": "Q2 empata con SOL en HE20 y BCB8 en esta corrida directa.",
+    "speed_read": "Q2 ronda 30.3 tok/s sin MTP; no es comparable 1:1 con SOL, cuyo dato usa vLLM/TP2/MTP4.",
+    "promotion": "No promover todavía: falta repetir con el harness agentivo exacto, tool-use, contexto largo y A/B de velocidad con SOL activo."
+  },
+  "status": "preliminary_direct_pack_comparison"
+}

@@ -1,0 +1,36 @@
+{
+  "schema": "llamacode-long-context-matrix-v1",
+  "serverExe": "/home/cristian/.local/share/LlamaCode/LlamaCode/linux-runtime/cuda-flashnext-2x3090/llama-server",
+  "modelPath": "/media/cristian/Disco local/.llamacode-staging/Qwen3.8-Flash-Next-UD-Q2_K_XL/UD_Q2_K_XL/Qwen3.8-Flash-Next-UD-Q2_K_XL-00001-of-00003.gguf",
+  "commonArgs": [
+    "--ctx-size", "262144",
+    "--batch-size", "512",
+    "--ubatch-size", "512",
+    "--threads", "16",
+    "--n-gpu-layers", "999",
+    "--flash-attn", "on",
+    "--cont-batching",
+    "--cache-type-k", "q8_0",
+    "--cache-type-v", "q8_0",
+    "--split-mode", "layer",
+    "--fit", "off",
+    "--n-cpu-moe", "12",
+    "--tensor-split", "1.4,1",
+    "--parallel", "1",
+    "--jinja",
+    "--metrics",
+    "--no-warmup",
+    "--reasoning", "off"
+  ],
+  "launcher": {
+    "kind": "native"
+  },
+  "variant": {
+    "id": "ASTRA-exact-ncpu12-ts1.4-256k",
+    "args": [],
+    "env": {
+      "LD_LIBRARY_PATH": "/home/cristian/.local/share/LlamaCode/LlamaCode/linux-runtime/cuda-flashnext-2x3090"
+    }
+  },
+  "contexts": [262144]
+}

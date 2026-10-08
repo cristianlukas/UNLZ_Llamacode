@@ -1,0 +1,15 @@
+{
+  "schema": "llamacode-context-tps-matrix-v1",
+  "serverExe": "/media/cristian/Disco local/LlamaCode-cache/llama.cpp-phase-prefill-e06/build/bin/llama-server",
+  "modelPath": "/media/cristian/Disco local/Models/llamacpp/MiniCPM5-2B-GGUF/MiniCPM5-2B-Q4_K_M.gguf",
+  "commonArgs": [
+    "--n-gpu-layers", "999", "--split-mode", "layer", "--load-mode", "mmap",
+    "--flash-attn", "on", "--jinja", "--metrics", "--no-warmup", "--parallel", "1",
+    "--batch-size", "512", "--ubatch-size", "512", "--cache-type-k", "q8_0",
+    "--cache-type-v", "q8_0", "--reasoning", "off", "--temp", "0.6", "--top-p", "0.95",
+    "--top-k", "20", "--min-p", "0.0", "--repeat-penalty", "1.0", "--presence-penalty", "0.0"
+  ],
+  "launcher": {"kind": "native"},
+  "variant": {"id": "MINI-20260914-context-sweep", "args": [], "env": {}},
+  "contexts": [8192, 32768, 65536, 131072]
+}

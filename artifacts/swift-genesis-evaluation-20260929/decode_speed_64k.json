@@ -1,0 +1,69 @@
+{
+  "benchmark": "short_decode_5_repeats",
+  "model": "Swift-Qwen3.8-27B-Genesis-NVFP4-v4",
+  "allocatedContext": 65536,
+  "mtpDraftMax": 4,
+  "temperature": 0.6,
+  "topP": 0.95,
+  "topK": 20,
+  "reasoning": "off",
+  "passes": 5,
+  "medianDecodeTps": 56.346974423596066,
+  "rows": [
+    {
+      "pass": 1,
+      "transportOk": true,
+      "wallMs": 1423.12,
+      "promptTps": 204.1490871619388,
+      "decodeTps": 55.453610534169506,
+      "promptTokens": 63,
+      "generatedTokens": 56,
+      "content": "```python\ndef add(a, b):\n    \"\"\"\n    Devuelve la suma de dos números.\n    \n    Ejemplo de uso:\n    >>> add(2, 3)\n    5\n    \"\"\"\n    return a + b\n```",
+      "reasoning": ""
+    },
+    {
+      "pass": 2,
+      "transportOk": true,
+      "wallMs": 1094.82,
+      "promptTps": 34.19037199124726,
+      "decodeTps": 56.346974423596066,
+      "promptTokens": 4,
+      "generatedTokens": 56,
+      "content": "```python\ndef add(a, b):\n    \"\"\"\n    Devuelve la suma de dos números.\n    \n    Ejemplo de uso:\n    >>> add(2, 3)\n    5\n    \"\"\"\n    return a + b\n```",
+      "reasoning": ""
+    },
+    {
+      "pass": 3,
+      "transportOk": true,
+      "wallMs": 1062.16,
+      "promptTps": 34.335942864991075,
+      "decodeTps": 58.267341155282466,
+      "promptTokens": 4,
+      "generatedTokens": 56,
+      "content": "```python\ndef add(a, b):\n    \"\"\"\n    Devuelve la suma de dos números.\n    \n    Ejemplo de uso:\n    >>> add(2, 3)\n    5\n    \"\"\"\n    return a + b\n```",
+      "reasoning": ""
+    },
+    {
+      "pass": 4,
+      "transportOk": true,
+      "wallMs": 1097.32,
+      "promptTps": 33.44509569478006,
+      "decodeTps": 56.347667155354614,
+      "promptTokens": 4,
+      "generatedTokens": 56,
+      "content": "```python\ndef add(a, b):\n    \"\"\"\n    Devuelve la suma de dos números.\n    \n    Ejemplo de uso:\n    >>> add(2, 3)\n    5\n    \"\"\"\n    return a + b\n```",
+      "reasoning": ""
+    },
+    {
+      "pass": 5,
+      "transportOk": true,
+      "wallMs": 1396.65,
+      "promptTps": 32.83829602081948,
+      "decodeTps": 43.19705317557246,
+      "promptTokens": 4,
+      "generatedTokens": 56,
+      "content": "```python\ndef add(a, b):\n    \"\"\"\n    Devuelve la suma de dos números.\n    \n    Ejemplo de uso:\n    >>> add(2, 3)\n    5\n    \"\"\"\n    return a + b\n```",
+      "reasoning": ""
+    }
+  ]
+}

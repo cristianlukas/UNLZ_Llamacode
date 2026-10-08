@@ -1,0 +1,98 @@
+{
+  "variant": "q8_0/q8_0",
+  "context": 131072,
+  "results": [
+    {
+      "id": "code",
+      "content": "",
+      "toolCalls": null,
+      "timings": {
+        "cache_n": 0,
+        "cache_lcp_n": 0,
+        "cache_planned_n": 0,
+        "cache_reprocessed_n": 82,
+        "cache_source": "none",
+        "cache_reason": "disabled",
+        "prompt_n": 82,
+        "prompt_ms": 248.979,
+        "prompt_per_token_ms": 3.036329268292683,
+        "prompt_per_second": 329.34504516445156,
+        "predicted_n": 512,
+        "predicted_ms": 13821.674,
+        "predicted_per_token_ms": 27.048285714285715,
+        "predicted_per_second": 36.970919730851705
+      },
+      "elapsed": 14.072714805603027,
+      "error": null
+    },
+    {
+      "id": "json",
+      "content": "{\"language\":\"Python\",\"safe\":true}",
+      "toolCalls": null,
+      "timings": {
+        "cache_n": 0,
+        "cache_lcp_n": 0,
+        "cache_planned_n": 0,
+        "cache_reprocessed_n": 78,
+        "cache_source": "none",
+        "cache_reason": "disabled",
+        "prompt_n": 78,
+        "prompt_ms": 244.487,
+        "prompt_per_token_ms": 3.1344487179487177,
+        "prompt_per_second": 319.03536793367334,
+        "predicted_n": 75,
+        "predicted_ms": 2004.342,
+        "predicted_per_token_ms": 27.085702702702704,
+        "predicted_per_second": 36.91984701213665
+      },
+      "elapsed": 2.250782012939453,
+      "error": null
+    },
+    {
+      "id": "reasoning",
+      "content": "The minimum time is 6 seconds, since ⌈7/3⌉ × 2 = 3 × 2 = 6.",
+      "toolCalls": null,
+      "timings": {
+        "cache_n": 0,
+        "cache_lcp_n": 0,
+        "cache_planned_n": 0,
+        "cache_reprocessed_n": 88,
+        "cache_source": "none",
+        "cache_reason": "disabled",
+        "prompt_n": 88,
+        "prompt_ms": 255.23,
+        "prompt_per_token_ms": 2.900340909090909,
+        "prompt_per_second": 344.78705481330564,
+        "predicted_n": 163,
+        "predicted_ms": 4390.946,
+        "predicted_per_token_ms": 27.104604938271603,
+        "predicted_per_second": 36.894099813570925
+      },
+      "elapsed": 4.6481711864471436,
+      "error": null
+    },
+    {
+      "id": "needle",
+      "content": "KVARNSURVIVES",
+      "toolCalls": null,
+      "timings": {
+        "cache_n": 0,
+        "cache_lcp_n": 0,
+        "cache_planned_n": 0,
+        "cache_reprocessed_n": 77860,
+        "cache_source": "none",
+        "cache_reason": "disabled",
+        "prompt_n": 77860,
+        "prompt_ms": 77893.483,
+        "prompt_per_token_ms": 1.0004300410994091,
+        "prompt_per_second": 999.5701437564423,
+        "predicted_n": 101,
+        "predicted_ms": 3896.367,
+        "predicted_per_token_ms": 38.96367,
+        "predicted_per_second": 25.664933513706483
+      },
+      "elapsed": 81.9015052318573,
+      "error": null
+    }
+  ]
+}

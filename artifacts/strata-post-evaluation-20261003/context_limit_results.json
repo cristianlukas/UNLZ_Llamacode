@@ -1,0 +1,76 @@
+{
+  "inputTokens": 261694,
+  "needle": "STRATA_LIMIT_NEEDLE_20261003",
+  "runs": [
+    {
+      "context": 262136,
+      "inputTokensByStrataTokenizer": 261694,
+      "config": "/home/cristian/.cache/strata-review-20261002/Strata-0.1.35/strata-iq3_s-context-262136-test.json",
+      "log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/strata-post-evaluation-20261003/strata-context-262136.log",
+      "startCommand": [
+        "/home/cristian/.cache/strata-review-20261002/Strata-0.1.35/.venv/bin/python",
+        "/home/cristian/.cache/strata-review-20261002/Strata-0.1.35/serve/server.py",
+        "--engine",
+        "strata",
+        "--config",
+        "/home/cristian/.cache/strata-review-20261002/Strata-0.1.35/strata-iq3_s-context-262136-test.json",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8361"
+      ],
+      "readySeconds": 30.0,
+      "requestSeconds": 96.0,
+      "response": {
+        "role": "assistant",
+        "content": "STRATA_LIMIT_NEEDLE_20261003",
+        "reasoning_content": "We need answer user's request: \"Find the unique marker in this long log and return only its exact identifier.\" They provided huge log with repeated records and a line: MARKER: STRATA_LIMIT_NEEDLE_20261003. Need return only exact identifier. Need likely output STRATA_LIMIT_NEEDLE_20261003. Need ensure only identifier, no extra. Final only that.\n"
+      },
+      "usage": {
+        "prompt_tokens": 261733,
+        "completion_tokens": 106,
+        "total_tokens": 261839,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "ok": true,
+      "serverExit": 0
+    },
+    {
+      "context": 262144,
+      "inputTokensByStrataTokenizer": 261694,
+      "config": "/home/cristian/.cache/strata-review-20261002/Strata-0.1.35/strata-iq3_s-context-262144-test.json",
+      "log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/strata-post-evaluation-20261003/strata-context-262144.log",
+      "startCommand": [
+        "/home/cristian/.cache/strata-review-20261002/Strata-0.1.35/.venv/bin/python",
+        "/home/cristian/.cache/strata-review-20261002/Strata-0.1.35/serve/server.py",
+        "--engine",
+        "strata",
+        "--config",
+        "/home/cristian/.cache/strata-review-20261002/Strata-0.1.35/strata-iq3_s-context-262144-test.json",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8362"
+      ],
+      "readySeconds": 81.0,
+      "requestSeconds": 96.2,
+      "response": {
+        "role": "assistant",
+        "content": "STRATA_LIMIT_NEEDLE_20261003",
+        "reasoning_content": "We need answer user's request: \"Find the unique marker in this long log and return only its exact identifier.\" They provided huge log with repeated records and a line: MARKER: STRATA_LIMIT_NEEDLE_20261003. Need return only exact identifier. Need likely output STRATA_LIMIT_NEEDLE_20261003. Need ensure only identifier, no extra. Final only that.\n"
+      },
+      "usage": {
+        "prompt_tokens": 261733,
+        "completion_tokens": 106,
+        "total_tokens": 261839,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "ok": true,
+      "serverExit": 0
+    }
+  ]
+}

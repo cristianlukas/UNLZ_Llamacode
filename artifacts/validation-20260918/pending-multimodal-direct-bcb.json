@@ -1,0 +1,37 @@
+{
+  "date": "2026-09-18",
+  "suite": "BigCodeBench-Hard-ubuntu-8",
+  "suite_file": "artifacts/bigcodebench-hard-ubuntu-8.json",
+  "backend": "llama-server CUDA, split-mode layer, 2x RTX 3090",
+  "quality_scope": "direct model control; not LC-H1",
+  "results": [
+    {
+      "profile": "OCCAMY",
+      "score": "1/8",
+      "average_decode_tps": 161.7379,
+      "range_decode_tps": [160.8907, 162.2038],
+      "vision_smoke": "pass",
+      "tool_smoke": "pass",
+      "context_load": "262K pass"
+    },
+    {
+      "profile": "QWEN38-SHAPELEARN",
+      "score": "1/8",
+      "average_decode_tps": 79.9945,
+      "range_decode_tps": [68.3520, 87.3274],
+      "vision_smoke": "pass",
+      "tool_smoke": "pass",
+      "context_load": "262K pass"
+    },
+    {
+      "profile": "AGNES",
+      "score": "1/8",
+      "average_decode_tps": 31.6610,
+      "range_decode_tps": [31.2879, 31.7990],
+      "vision_smoke": "pass",
+      "tool_smoke": "pass",
+      "context_load": "262K load pass; full fill pending"
+    }
+  ],
+  "interpretation": "The direct BCB result cannot be promoted as LC-H1 HE0/HE20/BCB8. No server crash or OOM occurred. Failures are recorded in the transient per-profile JSON outputs under /tmp/llamacode-direct-bcb-pending-20260918/ and are summarized in docs/benchmark-results.md."
+}

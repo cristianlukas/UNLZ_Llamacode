@@ -1,0 +1,12 @@
+[
+    {
+        "afterImagePath": "/home/cristian/.local/share/qa_web_providers/automations/runtime-observations/browser-1790888126381.png",
+        "afterSnapshotPath": "/home/cristian/.local/share/qa_web_providers/automations/runtime-observations/browser-1790888126386.json",
+        "hasAccessibilitySnapshot": true,
+        "hasImage": true,
+        "ok": true,
+        "result": "### Ran Playwright code\n```js\nawait page.goto('http://127.0.0.1:8777/vision-observation');\n```\n### Page\n- Page URL: http://127.0.0.1:8777/vision-observation\n- Page Title: Visual Check\n- Console: 1 errors, 0 warnings\n### Snapshot\n- [Snapshot](.playwright-mcp/page-2026-10-01T20-55-26-356Z.yml)\n### Events\n- New console entries: .playwright-mcp/console-2026-10-01T20-55-26-337Z.log#L1",
+        "tool": "browser_navigate"
+    }
+]
+

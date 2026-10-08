@@ -1,0 +1,30 @@
+{
+  "toolCalls": [
+    {
+      "type": "function",
+      "function": {
+        "name": "read_file",
+        "arguments": "{\"path\":\"/tmp/example.py\"}"
+      },
+      "id": "bfoQAXCh1ZfafNJ8qqKXssX5GEb8X4xw"
+    }
+  ],
+  "content": "",
+  "finishReason": "tool_calls",
+  "timings": {
+    "cache_n": 0,
+    "cache_lcp_n": 0,
+    "cache_planned_n": 0,
+    "cache_reprocessed_n": 284,
+    "cache_source": "none",
+    "cache_reason": "no_common_prefix",
+    "prompt_n": 284,
+    "prompt_ms": 399.389,
+    "prompt_per_token_ms": 1.4062992957746479,
+    "prompt_per_second": 711.0861841462835,
+    "predicted_n": 27,
+    "predicted_ms": 763.794,
+    "predicted_per_token_ms": 29.376692307692306,
+    "predicted_per_second": 34.04059209682192
+  }
+}

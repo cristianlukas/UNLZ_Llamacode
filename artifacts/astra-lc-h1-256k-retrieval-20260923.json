@@ -1,0 +1,178 @@
+{
+  "schema": "llamacode-long-context-matrix-v1",
+  "generatedAt": "2026-09-23T21:43:08Z",
+  "elapsedSec": 1520.728229045868,
+  "configPath": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/astra-lc-h1-256k-retrieval-config-20260923.json",
+  "probe": "/media/cristian/Disco local/LlamaCode-cache/build_tests_linux/qa_kv_cache",
+  "launcher": {
+    "kind": "native"
+  },
+  "variant": "ASTRA-exact-ncpu12-ts1.4-256k",
+  "serverExe": "/home/cristian/.local/share/LlamaCode/LlamaCode/linux-runtime/cuda-flashnext-2x3090/llama-server",
+  "modelPath": "/media/cristian/Disco local/.llamacode-staging/Qwen3.8-Flash-Next-UD-Q2_K_XL/UD_Q2_K_XL/Qwen3.8-Flash-Next-UD-Q2_K_XL-00001-of-00003.gguf",
+  "host": "127.0.0.1",
+  "port": 18080,
+  "contexts": [
+    262144
+  ],
+  "depths": "0.25,0.50,0.75,0.95",
+  "users": 1,
+  "nPredict": 16,
+  "timeoutMs": 900000,
+  "startupOnly": false,
+  "startupTimeoutSec": 300.0,
+  "rows": [
+    {
+      "contextTokens": 262144,
+      "variant": "ASTRA-exact-ncpu12-ts1.4-256k",
+      "command": [
+        "/home/cristian/.local/share/LlamaCode/LlamaCode/linux-runtime/cuda-flashnext-2x3090/llama-server",
+        "--ctx-size",
+        "262144",
+        "--batch-size",
+        "512",
+        "--ubatch-size",
+        "512",
+        "--threads",
+        "16",
+        "--n-gpu-layers",
+        "999",
+        "--flash-attn",
+        "on",
+        "--cont-batching",
+        "--cache-type-k",
+        "q8_0",
+        "--cache-type-v",
+        "q8_0",
+        "--split-mode",
+        "layer",
+        "--fit",
+        "off",
+        "--n-cpu-moe",
+        "12",
+        "--tensor-split",
+        "1.4,1",
+        "--parallel",
+        "1",
+        "--jinja",
+        "--metrics",
+        "--no-warmup",
+        "--reasoning",
+        "off",
+        "--model",
+        "/media/cristian/Disco local/.llamacode-staging/Qwen3.8-Flash-Next-UD-Q2_K_XL/UD_Q2_K_XL/Qwen3.8-Flash-Next-UD-Q2_K_XL-00001-of-00003.gguf",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "18080"
+      ],
+      "envKeys": [
+        "LD_LIBRARY_PATH"
+      ],
+      "logPath": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/astra-lc-h1-256k-retrieval-logs/context-262144.log",
+      "passed": true,
+      "startupOnly": false,
+      "probeExitCode": 0,
+      "probeStderr": "",
+      "receipt": {
+        "baseUrl": "http://127.0.0.1:18080",
+        "contexts": [
+          262144
+        ],
+        "depths": [
+          0.25,
+          0.5,
+          0.75,
+          0.95
+        ],
+        "nPredict": 16,
+        "results": [
+          {
+            "containsPasskey": true,
+            "contextTokens": 262144,
+            "depth": 0.25,
+            "error": "",
+            "exactPasskey": true,
+            "failed": false,
+            "finished": true,
+            "genTps": 16.54005045987702,
+            "httpStatus": 200,
+            "id": "user-000-000",
+            "latencyMs": 379084,
+            "passkey": "LC-NIAH-user-000-000",
+            "promptTps": 425.78169729178455,
+            "stream": "user-000"
+          },
+          {
+            "containsPasskey": true,
+            "contextTokens": 262144,
+            "depth": 0.5,
+            "error": "",
+            "exactPasskey": true,
+            "failed": false,
+            "finished": true,
+            "genTps": 16.895162914857476,
+            "httpStatus": 200,
+            "id": "user-000-000",
+            "latencyMs": 369915,
+            "passkey": "LC-NIAH-user-000-000",
+            "promptTps": 437.41037409761185,
+            "stream": "user-000"
+          },
+          {
+            "containsPasskey": true,
+            "contextTokens": 262144,
+            "depth": 0.75,
+            "error": "",
+            "exactPasskey": true,
+            "failed": false,
+            "finished": true,
+            "genTps": 17.01557317612689,
+            "httpStatus": 200,
+            "id": "user-000-000",
+            "latencyMs": 378395,
+            "passkey": "LC-NIAH-user-000-000",
+            "promptTps": 427.3925636905958,
+            "stream": "user-000"
+          },
+          {
+            "containsPasskey": true,
+            "contextTokens": 262144,
+            "depth": 0.95,
+            "error": "",
+            "exactPasskey": true,
+            "failed": false,
+            "finished": true,
+            "genTps": 17.025980336302403,
+            "httpStatus": 200,
+            "id": "user-000-000",
+            "latencyMs": 377387,
+            "passkey": "LC-NIAH-user-000-000",
+            "promptTps": 427.7195405968614,
+            "stream": "user-000"
+          }
+        ],
+        "schema": "llamacode-kv-cache-qa-v1",
+        "summary": {
+          "aggregateGenTps": 67.47676688716379,
+          "aggregatePromptTps": 1718.3041756768537,
+          "allPassed": true,
+          "failed": 0,
+          "passedExactRetrieval": 4,
+          "totalRequests": 4
+        },
+        "timeoutMs": 900000,
+        "timestamp": "2026-09-23T21:43:08Z",
+        "users": 1
+      },
+      "serverExitCode": 0
+    }
+  ],
+  "summary": {
+    "allPassed": true,
+    "verifiedContexts": [
+      262144
+    ],
+    "unverifiedContexts": []
+  }
+}

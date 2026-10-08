@@ -1,0 +1,25 @@
+[
+  {
+    "id": "test-strata-nvidia-nvfp4-sm86",
+    "tier": "ASTRA-Strata",
+    "order": 503,
+    "extra": true,
+    "benchmark": true,
+    "best": false,
+    "favorite": false,
+    "alias": "NVIDIA Qwen3.8 NVFP4 SM86 review",
+    "displayName": "[prueba] Strata · NVIDIA Qwen3.8 Flash Next NVFP4 · RTX 3090",
+    "minVramGb": 12,
+    "backend": {
+      "kind": "cloud",
+      "baseUrl": "http://127.0.0.1:8038",
+      "model": "nvidia-qwen3.8-flash-next-nvfp4-strata-sm86-review",
+      "ctx": 131072,
+      "port": 8038
+    },
+    "agentProfileId": "agent-maximo",
+    "reasoningEffort": "medium",
+    "reasoningBudget": 8192,
+    "comment": "Evaluación aislada Qwen3.8 Flash Next NVFP4 NVIDIA en Strata SM86; one-GPU mode; no producción."
+  }
+]

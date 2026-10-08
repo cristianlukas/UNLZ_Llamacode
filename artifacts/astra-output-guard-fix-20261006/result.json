@@ -1,0 +1,132 @@
+{
+  "id": "d849e1a0-1578-45f0-bd62-82ce5a8b5e7b",
+  "profileId": "sys-astra-strata-iq3s",
+  "profileName": "ASTRA · Strata IQ3_S · Qwen3.8 Flash Next",
+  "profileConfigFingerprint": "96d34ceb688ca8de83efccd1f26e1b52d8fdc1ce20fb5dd2622b510ba9d41da0",
+  "agentProfileId": "agent-maximo",
+  "agentTemperature": 0.1,
+  "agentSeed": 4242,
+  "thinkingEnabled": true,
+  "benchmarkName": "TaskFlow fixed external gold tests · SOL vs ASTRA IQ3_S",
+  "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+  "failed": true,
+  "failureKind": "quality",
+  "failureStage": "acceptance",
+  "failureMessage": "Fallaron criterios de aceptacion.",
+  "finalScore": 4,
+  "finalTotal": 14,
+  "firstAttemptScore": 0,
+  "firstAttemptTotal": 14,
+  "passedAfterRepair": false,
+  "repairAttempts": 2,
+  "timeToFirstAttempt": 0.669,
+  "firstToolCallSec": 81.519,
+  "firstWriteSec": 81.569,
+  "totalTime": 117.493,
+  "generationSec": 114.02,
+  "avgTps": 92.56600396845892,
+  "toolCalls": 3,
+  "hardwareFingerprint": "hw-8349f8efd63845fb",
+  "hardwareGpuCount": 2,
+  "vramMb": 43423,
+  "vramGpu0Mb": 19532,
+  "vramGpu1Mb": 23891,
+  "vramGpu0FreeMb": 4590,
+  "vramGpu1FreeMb": 233,
+  "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/TaskFlow_fixed_external_gold_tests_SOL_v_20261006_173708",
+  "benchmarkEffectiveArgs": [
+    "/home/cristian/.cache/strata-review-20261002/Strata-0.1.35/serve/server.py",
+    "--engine",
+    "strata",
+    "--config",
+    "/home/cristian/.cache/strata-review-20261002/Strata-0.1.35/strata-iq3_s-calibrated-retest-20261006.json",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "8350"
+  ],
+  "acceptance": [
+    {
+      "name": "compile_package",
+      "passed": true,
+      "output": ""
+    },
+    {
+      "name": "fixed_model_validation",
+      "passed": false,
+      "output": "FAIL: model_validation: AssertionError: tags normalization: ['Backend', 'backend', ' UI ']"
+    },
+    {
+      "name": "fixed_serialization",
+      "passed": false,
+      "output": "FAIL: serialization: AssertionError: to_dict/from_dict are not symmetric"
+    },
+    {
+      "name": "fixed_service_basics",
+      "passed": false,
+      "output": "FAIL: service_basics: TypeError: TaskService.list_tasks() got an unexpected keyword argument 'priority'"
+    },
+    {
+      "name": "fixed_dependency_graph",
+      "passed": false,
+      "output": "FAIL: dependency_graph: AssertionError: blocked_by did not report open dependency"
+    },
+    {
+      "name": "fixed_completion_gate",
+      "passed": true,
+      "output": "PASS: completion_gate"
+    },
+    {
+      "name": "fixed_recurrence",
+      "passed": true,
+      "output": "PASS: recurrence"
+    },
+    {
+      "name": "fixed_undo_mutation",
+      "passed": false,
+      "output": "FAIL: undo_mutation: AssertionError: undo did not revert final update"
+    },
+    {
+      "name": "fixed_undo_completion",
+      "passed": false,
+      "output": "FAIL: undo_completion: AssertionError: undo returned false after complete_task"
+    },
+    {
+      "name": "fixed_storage_roundtrip",
+      "passed": false,
+      "output": "FAIL: storage_roundtrip: TypeError: JsonTaskStorage.save() missing 1 required positional argument: 'next_id'"
+    },
+    {
+      "name": "fixed_storage_tolerance",
+      "passed": false,
+      "output": "FAIL: storage_tolerance: AssertionError: missing file must load as empty"
+    },
+    {
+      "name": "fixed_concurrency",
+      "passed": true,
+      "output": "PASS: concurrency"
+    },
+    {
+      "name": "fixed_query_filters",
+      "passed": false,
+      "output": "FAIL: query_filters: AssertionError: combined query result mismatch: []"
+    },
+    {
+      "name": "fixed_exports",
+      "passed": false,
+      "output": "FAIL: exports: AttributeError: 'str' object has no attribute 'id'"
+    }
+  ],
+  "excludedSetupAttempt": {
+    "reason": "Isolated test-mode profile lacked ASTRA root/config; failed before model load and was deleted from benchmark history. Not scored as quality.",
+    "resultId": "299c960e-173f-422e-a3d3-d0d31695f666"
+  },
+  "historicalComparableLimit": {
+    "profile": "ASTRA IQ3_S calibrated",
+    "suite": "TaskFlow ULTRA E2E",
+    "score": "12/13",
+    "seconds": 177.39,
+    "comparable": false,
+    "reason": "Different task contract and profile fingerprint."
+  }
+}

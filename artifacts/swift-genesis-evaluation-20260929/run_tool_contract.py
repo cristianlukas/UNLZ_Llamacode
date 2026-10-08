@@ -34,7 +34,7 @@ def main():
   msgs=[{"role":"system","content":"Sos un agente que usa herramientas. Seguí literalmente el orden y la cantidad pedidos. No afirmes haber completado una escritura hasta llamar la herramienta."},{"role":"user","content":PROMPT}]
   row={"pass":run,"calls":[],"transportOk":False}
   try:
-   payload={"model":a.model,"messages":msgs,"tools":TOOLS,"tool_choice":"auto","parallel_tool_calls":False,"temperature":0.0,"top_p":0.95,"top_k":20,"max_tokens":512,"reasoning_budget":512,"chat_template_kwargs":{"enable_thinking":True},"stream":False}
+   payload={"model":a.model,"messages":msgs,"tools":TOOLS,"tool_choice":"auto","parallel_tool_calls":False,"temperature":0.0,"top_p":0.95,"top_k":20,"max_tokens":512,"chat_template_kwargs":{"enable_thinking":False},"stream":False}
    first,t1=request(a.url,payload); c1=calls(first); row["transportOk"]=True; row["firstWallMs"]=round(t1,2); row["calls"].extend(c1)
    if len(c1)==1:
     assistant=(first.get("choices") or [{}])[0].get("message",{})

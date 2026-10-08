@@ -1,0 +1,24 @@
+{
+  "schema": "llamacode-long-context-matrix-v1",
+  "serverExe": "/home/cristian/.local/share/LlamaCode/LlamaCode/linux-runtime/cuda-flashnext-2x3090/llama-server",
+  "modelPath": "/media/cristian/Disco local/Models/llamacpp/Qwen3.8-Flash-Next-UD-Q4_K_XL/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf",
+  "commonArgs": [],
+  "launcher": { "kind": "native" },
+  "variant": {
+    "id": "SOL-qwen-next-cache188-linux",
+    "args": [
+      "--n-gpu-layers", "999", "--cont-batching", "--load-mode", "mmap",
+      "--flash-attn", "on", "--jinja", "--metrics", "--no-warmup",
+      "--parallel", "1", "--batch-size", "512", "--ubatch-size", "512",
+      "--threads", "16", "--threads-batch", "44", "--cache-type-k", "f16",
+      "--cache-type-v", "f16",
+      "--override-tensor", "ffn_(gate|up|down)_exps.weight=CUDA_Host,per_layer_token_embd.weight=CPU",
+      "--moe-expert-cache", "188", "--moe-expert-cache-inserts", "2",
+      "--numa", "distribute", "--alias", "qwen38-flash-next-q4kxl",
+      "--temp", "0.6", "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0",
+      "--repeat-penalty", "1.0", "--presence-penalty", "0.0", "--reasoning", "off"
+    ],
+    "env": { "LD_LIBRARY_PATH": "/home/cristian/.local/share/LlamaCode/LlamaCode/linux-runtime/cuda-flashnext-2x3090" }
+  },
+  "contexts": [32768, 65536, 131072, 196608, 262144]
+}

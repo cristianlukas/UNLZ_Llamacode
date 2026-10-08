@@ -1,0 +1,133 @@
+[
+  {
+    "acceptance": [
+      {
+        "passed": true,
+        "taskId": "HumanEval/0",
+        "type": "grader:code_tests"
+      }
+    ],
+    "agentFiles": [
+      "solution_HumanEval_0.py"
+    ],
+    "agentMetrics": [
+      {
+        "elapsedMs": 770,
+        "tokens": 0,
+        "tps": 0,
+        "ttft_ms": 88
+      },
+      {
+        "elapsedMs": 0,
+        "tokens": 8,
+        "tps": 0
+      },
+      {
+        "elapsedMs": 43777,
+        "tokens": 8,
+        "tps": 0.18317953884551094,
+        "ttft_ms": 104
+      }
+    ],
+    "agentProfileId": "agent-maximo",
+    "agentProfileName": "Máximo",
+    "agentSeed": 4242,
+    "agentTemperature": 0.1,
+    "agentVariant": "baseline",
+    "avgTps": 0.18317953884551094,
+    "avgTtftMs": 96,
+    "baselineId": "bc802f7c-127f-46b4-a6bd-744dd2c0bc2a",
+    "benchmarkMemoryPlanner": "llama.cpp-fit-expert-aware",
+    "benchmarkName": "HumanEval · 1 ítem",
+    "complexityMetrics": {
+      "addedLines": 2,
+      "filesChanged": 1,
+      "filesCreated": 1,
+      "filesDeleted": 0,
+      "removedLines": 0
+    },
+    "elapsedSec": 44.09,
+    "failed": false,
+    "failureKind": "none",
+    "finalScore": 1,
+    "finalTotal": 1,
+    "firstAttemptScore": 1,
+    "firstAttemptTotal": 1,
+    "firstEvaluableSec": 43.769,
+    "firstToolCallSec": 42.912,
+    "firstWriteSec": 42.962,
+    "generationSec": 44.547,
+    "harnessEngineId": "legacy",
+    "harnessEngineVersion": 1,
+    "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+    "honeyEnabled": false,
+    "id": "bc802f7c-127f-46b4-a6bd-744dd2c0bc2a",
+    "isBaseline": true,
+    "measurementPhase": "cold",
+    "mode": "custom",
+    "nonGenerationSec": 0,
+    "pass": 1,
+    "passedAfterRepair": false,
+    "passesTotal": 1,
+    "profileConfigFingerprint": "a5f7eae9038f3c91f09410573d616e1d1e6324ffcb984a02e438c8f7eedb54d9",
+    "profileId": "test-strata-unsloth-udq4",
+    "profileName": "[prueba] ASTRA · Strata UD-Q4_K_XL · Qwen3.8 Flash Next",
+    "progressGovernor": {
+      "progressEvents": 1,
+      "replanEvents": 0,
+      "stagnationEvents": 0
+    },
+    "qualityScore": 1,
+    "qualityTotal": 1,
+    "ramFreeMb": 0,
+    "ramMb": 0,
+    "ramTotalMb": 0,
+    "repairAttempts": 0,
+    "response": "[turno cancelado por el usuario]",
+    "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/HumanEval_1_tem_20261003_224146",
+    "runLabel": "HumanEval · 1 ítem",
+    "setupSec": 0.301,
+    "target": "agent",
+    "thinkingEnabled": false,
+    "timeToFirstAttempt": 43.789,
+    "timedOut": false,
+    "timeoutSec": 1800,
+    "timestamp": 1791078150444,
+    "toolCallQuality": {
+      "expectedCalls": 0,
+      "f1Pct": -1,
+      "failedCalls": 0,
+      "incompleteCalls": 0,
+      "invalidCalls": 0,
+      "matchedExpectedCalls": 0,
+      "missingExpectedCalls": 0,
+      "precisionPct": -1,
+      "recallPct": -1,
+      "redundantCalls": 0,
+      "sequenceExact": false,
+      "successRatePct": 100,
+      "successfulCalls": 1,
+      "totalCalls": 1,
+      "unexpectedCalls": 0
+    },
+    "toolCalls": 1,
+    "totalTime": 44.09,
+    "transportAfterEvaluation": false,
+    "vramFreeMb": 23555,
+    "vramGpu0FreeMb": 23271,
+    "vramGpu0Mb": 886,
+    "vramGpu0TotalMb": 24576,
+    "vramGpu0UsedPct": 3.6051432291666665,
+    "vramGpu1FreeMb": 284,
+    "vramGpu1Mb": 23840,
+    "vramGpu1TotalMb": 24576,
+    "vramGpu1UsedPct": 97.00520833333334,
+    "vramMb": 24691,
+    "vramNormalizedImbalancePct": 93.40006510416667,
+    "vramObservedGpu0SharePct": 3.58327266844617,
+    "vramOptimalGpu0SharePct": 98.7943111865846,
+    "vramPlacementAssessment": "gpu1-heavy",
+    "vramTelemetryScope": "device-total",
+    "workspace": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/HumanEval_1_tem_20261003_224146/_prueba_ASTRA_Strata_UD-Q4_K_XL_Qwen3_8_Flash_Next__ws"
+  }
+]

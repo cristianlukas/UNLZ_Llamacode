@@ -1,0 +1,18 @@
+{
+  "schema": "llamacode-context-tps-matrix-v1",
+  "serverExe": "/media/cristian/Disco local/LlamaCode-cache/llama.cpp-phase-prefill-e06/build/bin/llama-server",
+  "modelPath": "/media/cristian/Disco local/Models/llamacpp/Qwen3.8-Flash-Next-UD-Q4_K_XL/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf",
+  "commonArgs": [
+    "--n-gpu-layers", "999", "--split-mode", "layer", "--load-mode", "mmap",
+    "--flash-attn", "on", "--jinja", "--metrics", "--no-warmup", "--parallel", "1",
+    "--batch-size", "512", "--ubatch-size", "512", "--cache-type-k", "q8_0",
+    "--cache-type-v", "q8_0", "--moe-expert-cache", "188", "--moe-expert-cache-inserts", "2",
+    "--override-tensor", "ffn_(gate|up|down)_exps.weight=CUDA_Host,per_layer_token_embd.weight=CPU",
+    "--numa", "distribute", "--reasoning", "off", "--temp", "0.6", "--top-p", "0.95",
+    "--top-k", "20", "--min-p", "0.0", "--repeat-penalty", "1.0", "--presence-penalty", "0.0",
+    "--no-context-shift"
+  ],
+  "launcher": {"kind": "native"},
+  "variant": {"id": "ASTRA-Q4-20260915-baseline-no-mtp", "args": [], "env": {}},
+  "contexts": [8192, 32768]
+}

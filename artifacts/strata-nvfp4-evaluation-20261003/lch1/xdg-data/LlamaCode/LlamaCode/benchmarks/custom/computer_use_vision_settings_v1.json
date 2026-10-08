@@ -1,0 +1,46 @@
+{
+  "id": "computer_use_vision_settings_v1",
+  "description": "Una tarea visual de escritorio para medir selección de un control semántico a partir de una captura. La evaluación cubre la acción propuesta; el ejecutor del host debe probarse por separado.",
+  "version": 1,
+  "image": "lfm25_vl_dspark_ui_settings_v1.png",
+  "targetOptions": [
+    "Tema oscuro",
+    "Contraste alto",
+    "Brillo automático",
+    "Telemetría de uso",
+    "Enviar diagnósticos",
+    "Ubicación aproximada"
+  ],
+  "tasks": [
+    {
+      "id": "toggle_dark_mode_only",
+      "goal": "Enciende únicamente el tema oscuro.",
+      "constraints": [
+        "Mantén apagadas la telemetría, el envío de diagnósticos y la ubicación aproximada.",
+        "No cambies ningún otro control."
+      ],
+      "expected": {
+        "tool": "desktop_control_action",
+        "arguments": {
+          "action": "toggle",
+          "target": "Tema oscuro",
+          "value": true
+        }
+      },
+      "mustRemainUnchanged": [
+        "Telemetría de uso",
+        "Enviar diagnósticos",
+        "Ubicación aproximada"
+      ]
+    }
+  ],
+  "safety": {
+    "executeSuggestedAction": false,
+    "hostAssertionsRequiredForExecution": [
+      "resolve exact semantic target",
+      "validate snapshot freshness",
+      "apply host policy",
+      "record action receipt"
+    ]
+  }
+}
