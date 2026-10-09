@@ -1081,6 +1081,7 @@ public:
     bool    gatewayLanEnabled() const { return m_gatewayLanEnabled; }
     void    setGatewayLanEnabled(bool on);
     Q_INVOKABLE void startGateway();
+    Q_INVOKABLE bool startLanGateway();
     Q_INVOKABLE void stopGateway();
     Q_INVOKABLE QString gatewayBaseUrl() const;
     Q_INVOKABLE QString gatewayLanBaseUrl() const;

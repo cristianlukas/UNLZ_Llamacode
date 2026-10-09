@@ -13,6 +13,9 @@ Item {
     property string logLevel: "all"
     property string diagnosticLevel: ""
     property string diagnosticMessage: ""
+    property string lanStatusMessage: ""
+    property bool lanStatusError: false
+    property bool lanStartPending: false
     property string pendingPortLaunchId: ""
     property string pendingPortHost: ""
     property int pendingPortCurrent: 0
@@ -25,14 +28,43 @@ Item {
             root.diagnosticLevel = level
             root.diagnosticMessage = message
         }
+        function onServerError(message) {
+            if (!root.lanStartPending) return
+            root.lanStartPending = false
+            root.lanStatusMessage = message
+            root.lanStatusError = true
+        }
+        function onServerReadyChanged() {
+            if (!root.lanStartPending || !App.serverReady) return
+            root.lanStartPending = false
+            const url = App.gatewayLanBaseUrl()
+            root.lanStatusMessage = url.length > 0
+                ? "Perfil listo y disponible en LAN: " + url
+                : "Perfil iniciado, pero no hay una dirección IPv4 de LAN disponible."
+            root.lanStatusError = url.length === 0
+        }
+        function onServerStateChanged() {
+            if (!root.lanStartPending || App.serverState !== "failed") return
+            root.lanStartPending = false
+            if (root.lanStatusMessage.indexOf("No se pudo") !== 0)
+                root.lanStatusMessage = "Falló el inicio del perfil. Revisá el diagnóstico del servidor."
+            root.lanStatusError = true
+        }
     }
 
     function startProfile(launchId, withAgent, shareOnLan) {
         if (shareOnLan) {
-            // Opt-in exposure: serve through the authenticated LAN gateway,
-            // never through the raw model engine or the app control API.
-            App.gatewayLanEnabled = true
-            App.gatewayEnabled = true
+            root.lanStartPending = true
+            root.lanStatusError = false
+            root.lanStatusMessage = "Activando el Gateway LAN…"
+            if (!App.startLanGateway()) {
+                root.lanStartPending = false
+                if (root.lanStatusMessage === "Activando el Gateway LAN…")
+                    root.lanStatusMessage = "No se pudo iniciar el Gateway LAN. Revisá el puerto y los logs."
+                root.lanStatusError = true
+                return
+            }
+            root.lanStatusMessage = "Gateway LAN activo; iniciando el perfil seleccionado…"
         }
         if (withAgent)
             App.startServerAndAgent(launchId)
@@ -43,8 +75,23 @@ Item {
     function startLanGatewayOnly() {
         // Publica el catálogo listo sin cargar un motor local. El primer
         // request remoto indica el id y gatewayEnsureModel hace el auto-load.
-        App.gatewayLanEnabled = true
-        App.gatewayEnabled = true
+        root.lanStartPending = true
+        root.lanStatusError = false
+        root.lanStatusMessage = "Activando el servidor LAN sin cargar un perfil…"
+        if (!App.startLanGateway()) {
+            root.lanStartPending = false
+            if (root.lanStatusMessage === "Activando el servidor LAN sin cargar un perfil…")
+                root.lanStatusMessage = "No se pudo iniciar el Gateway LAN. Revisá el puerto y los logs."
+            root.lanStatusError = true
+            return false
+        }
+        root.lanStartPending = false
+        const url = App.gatewayLanBaseUrl()
+        root.lanStatusMessage = url.length > 0
+            ? "Servidor LAN activo en " + url + " · el cliente puede elegir un perfil."
+            : "Gateway activo, pero no encontré una dirección IPv4 de la red local."
+        root.lanStatusError = url.length === 0
+        return url.length > 0
     }
 
     function syncToActiveLaunch() {
@@ -410,6 +457,12 @@ Item {
             title: (App.langV, App.l("launch.title"))
             subtitle: {
                 const _lang = App.langV
+                if (root.lanStartPending && root.lanStatusMessage.length > 0)
+                    return root.lanStatusMessage
+                if (App.gatewayRunning && App.gatewayLanEnabled)
+                    return root.lanStatusMessage.length > 0
+                        ? root.lanStatusMessage
+                        : "Servidor LAN activo en " + App.gatewayLanBaseUrl()
                 return App.serverRunning ? App.l("launch.running") : App.l("launch.stopped")
             }
             // Re-abrir el asistente inicial (si se canceló por error el setup).
@@ -803,6 +856,18 @@ Item {
                     visible: !App.serverRunning && !App.serverStopping
                     enabled: !App.serverStopping
                     onClicked: root.startLanGatewayOnly()
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    visible: root.lanStatusMessage.length > 0
+                             || (App.gatewayRunning && App.gatewayLanEnabled)
+                    text: root.lanStatusMessage.length > 0 ? root.lanStatusMessage
+                          : "Servidor LAN activo en " + App.gatewayLanBaseUrl()
+                    color: root.lanStatusError ? Theme.errorText
+                           : (App.gatewayRunning ? Theme.successText : Theme.textSecondary)
+                    font.pixelSize: 11
+                    wrapMode: Text.WordWrap
                 }
 
                 Text {

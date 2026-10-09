@@ -10185,6 +10185,18 @@ void AppController::startGateway()
     emit gatewayChanged();
 }
 
+bool AppController::startLanGateway()
+{
+    // Apply bind mode before enabling the listener. Calling startGateway()
+    // explicitly also retries if the settings were already true but the prior
+    // bind failed (the property setters intentionally return on no-op values).
+    setGatewayLanEnabled(true);
+    setGatewayEnabled(true);
+    if (!gatewayRunning())
+        startGateway();
+    return gatewayRunning();
+}
+
 void AppController::stopGateway()
 {
     if (m_gateway) m_gateway->stop();

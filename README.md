@@ -1625,7 +1625,9 @@ locales listos; no requiere elegir un perfil ni inicia un motor. El cliente pued
 seleccionar cualquiera de los IDs publicados. Cuando su primer request incluye
 el ID elegido, el anfitrión inicia ese perfil y lo carga bajo demanda. El botón
 **Iniciar LAN con este perfil** conserva el flujo de inicio inmediato del perfil
-seleccionado.
+seleccionado. Ambos botones muestran debajo el estado del gateway, su dirección
+LAN o el error concreto. Si un primer intento no pudo abrir el puerto, volver a
+presionar reintenta el bind aunque la configuración ya figure activada.
 
 El botón **Abrir OpenCode GUI en mi GPU** permite elegir perfil y proyecto. LlamaCode
 inyecta una configuración runtime mediante `OPENCODE_CONFIG_CONTENT`, selecciona

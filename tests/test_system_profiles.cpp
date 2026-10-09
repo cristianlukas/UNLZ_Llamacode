@@ -20,6 +20,7 @@
 #include <QRegularExpression>
 #include <QElapsedTimer>
 #include <QSignalSpy>
+#include <QTcpServer>
 #include <QUuid>
 #include <QCoreApplication>
 #include <algorithm>
@@ -96,6 +97,7 @@ private slots:
     void controller_launchMenuGatesByTotalVramAcrossGpus();
     void controller_launchMenuAnnotatesGpuAffinity();
     void controller_launchMenuQuickDefersReadinessWork();
+    void controller_startLanGatewayRetriesWhenSettingsAlreadyEnabled();
     void controller_astraStrataIsListedAndRequiresLocalSetup();
     void bundle_48gbFamilyIsBenchmarkableAndDualGpu();
     void controller_duplicateBakesResolvedBinary();
@@ -121,6 +123,8 @@ void SystemProfilesTests::initTestCase()
     qunsetenv("STRATA_CONFIG");
     QSettings().remove(QStringLiteral("astra/strataRoot"));
     QSettings().remove(QStringLiteral("astra/configFile"));
+    QSettings().remove(QStringLiteral("gateway/enabled"));
+    QSettings().remove(QStringLiteral("gateway/lanEnabled"));
     const QString bundle = bundlePath();
     QVERIFY2(QFile::exists(bundle), "falta assets/system_profiles.json");
     qputenv("LLAMACODE_SYSTEM_PROFILES", bundle.toLocal8Bit());
@@ -1756,6 +1760,23 @@ void SystemProfilesTests::controller_launchMenuQuickDefersReadinessWork()
     QVERIFY2(readyGatewayMs < 500,
              qPrintable(QStringLiteral("ready gateway catalog took %1 ms").arg(readyGatewayMs)));
     QVERIFY(!readyGatewayCatalog.isEmpty());
+}
+
+void SystemProfilesTests::controller_startLanGatewayRetriesWhenSettingsAlreadyEnabled()
+{
+    QTcpServer occupiedPort;
+    QVERIFY(occupiedPort.listen(QHostAddress::AnyIPv4, 0));
+
+    AppController app;
+    app.setGatewayPort(occupiedPort.serverPort());
+    app.setGatewayLanEnabled(true);
+    app.setGatewayEnabled(true); // first bind fails while the port is occupied
+    QVERIFY(!app.gatewayRunning());
+
+    occupiedPort.close();
+    QVERIFY(app.startLanGateway()); // unchanged true settings must still retry the bind
+    QVERIFY(app.gatewayRunning());
+    app.stopGateway();
 }
 
 void SystemProfilesTests::bundle_ultraQAndHybridAreWiredAndOptIn()
