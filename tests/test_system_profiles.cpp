@@ -21,6 +21,7 @@
 #include <QElapsedTimer>
 #include <QSignalSpy>
 #include <QTcpServer>
+#include <QTcpSocket>
 #include <QUuid>
 #include <QCoreApplication>
 #include <algorithm>
@@ -98,6 +99,7 @@ private slots:
     void controller_launchMenuAnnotatesGpuAffinity();
     void controller_launchMenuQuickDefersReadinessWork();
     void controller_startLanGatewayRetriesWhenSettingsAlreadyEnabled();
+    void controller_lanActivationRetryUsesSuppliedApiKey();
     void controller_astraStrataIsListedAndRequiresLocalSetup();
     void bundle_48gbFamilyIsBenchmarkableAndDualGpu();
     void controller_duplicateBakesResolvedBinary();
@@ -1777,6 +1779,54 @@ void SystemProfilesTests::controller_startLanGatewayRetriesWhenSettingsAlreadyEn
     QVERIFY(app.startLanGateway()); // unchanged true settings must still retry the bind
     QVERIFY(app.gatewayRunning());
     app.stopGateway();
+}
+
+void SystemProfilesTests::controller_lanActivationRetryUsesSuppliedApiKey()
+{
+    QTcpServer mockHost;
+    QVERIFY(mockHost.listen(QHostAddress::LocalHost, 0));
+    QList<QByteArray> requests;
+    connect(&mockHost, &QTcpServer::newConnection, &mockHost, [&]() {
+        while (mockHost.hasPendingConnections()) {
+            QTcpSocket *socket = mockHost.nextPendingConnection();
+            connect(socket, &QTcpSocket::readyRead, socket, [&, socket]() {
+                const QByteArray request = socket->readAll();
+                if (socket->property("authResponseSent").toBool()
+                    || !request.contains("\r\n\r\n"))
+                    return;
+                socket->setProperty("authResponseSent", true);
+                requests.append(request);
+                socket->write("HTTP/1.1 401 Unauthorized\r\n"
+                              "Connection: close\r\n"
+                              "Content-Length: 0\r\n\r\n");
+                socket->disconnectFromHost();
+            });
+        }
+    });
+
+    AppController app;
+    QSignalSpy resultSpy(&app, &AppController::lanProfileReady);
+    QVERIFY(resultSpy.isValid());
+    const QString endpoint = QStringLiteral("http://127.0.0.1:%1")
+                                 .arg(mockHost.serverPort());
+    const QString profileId = QStringLiteral("remote-profile-auth-retry-test");
+    app.useLanServer(endpoint, {}, profileId, QStringLiteral("Mock host"), 4096);
+    QTRY_COMPARE_WITH_TIMEOUT(resultSpy.count(), 1, 5000);
+    QVERIFY(resultSpy.takeFirst().at(1).toString().contains(QStringLiteral("HTTP 401")));
+
+    app.useLanServer(endpoint, QStringLiteral("trusted-test-key"), profileId,
+                     QStringLiteral("Mock host"), 4096);
+    QTRY_COMPARE_WITH_TIMEOUT(resultSpy.count(), 1, 5000);
+    QVERIFY(resultSpy.takeFirst().at(1).toString().contains(QStringLiteral("HTTP 401")));
+    app.useLanServer(endpoint, {}, profileId, QStringLiteral("Mock host"), 4096);
+    QTRY_COMPARE_WITH_TIMEOUT(resultSpy.count(), 1, 5000);
+    QVERIFY(resultSpy.takeFirst().at(1).toString().contains(QStringLiteral("HTTP 401")));
+    QCOMPARE(requests.size(), 3);
+    QVERIFY(!requests.at(0).contains("Authorization: Bearer"));
+    QVERIFY(requests.at(1).toLower().contains(
+        "authorization: bearer trusted-test-key"));
+    QVERIFY(requests.at(2).toLower().contains(
+        "authorization: bearer trusted-test-key"));
 }
 
 void SystemProfilesTests::bundle_ultraQAndHybridAreWiredAndOptIn()

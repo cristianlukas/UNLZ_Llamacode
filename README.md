@@ -1618,6 +1618,10 @@ servidor que cargue —o vuelva a iniciar— el perfil elegido antes de conectar
 agente local. Una vez aceptada la conexión, Chat, Agente, Investigación, Tasks y
 Charla se habilitan también en el cliente LAN: su disponibilidad depende del
 backend remoto activo y no de que exista un proceso `llama-server` local.
+El discovery UDP nunca transmite la API key. Si el host pide autenticación, el
+cliente la solicita en el diálogo; copiala en la PC anfitriona desde
+**Configuración → Gateway → Copiar API key**. La clave queda en el almacén seguro
+del cliente y se reutiliza al volver a conectar ese perfil.
 
 En la PC anfitriona también se puede usar **Lanzar → Iniciar LAN sin cargar
 perfil**. Esto levanta únicamente el Gateway autenticado y anuncia los perfiles

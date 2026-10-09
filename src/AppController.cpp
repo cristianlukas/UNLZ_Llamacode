@@ -10365,22 +10365,29 @@ void AppController::useLanServer(const QString &baseUrl, const QString &apiKey,
         return;
     }
     QString launchId;
+    QString keyRef;
     for (const QVariant &item : m_profiles.launchProfilesForMenu()) {
         const LaunchProfile lp = m_profiles.resolveLaunch(item.toMap().value("id").toString());
         const BackendProfile bp = m_profiles.resolveBackend(lp.backendProfileId);
         if (bp.isCloud() && bp.cloudBaseUrl == baseUrl && bp.cloudModel == profileId) {
-            launchId = lp.id; break;
+            launchId = lp.id;
+            keyRef = bp.cloudKeyRef.trimmed();
+            break;
         }
     }
     const QString name = profileName.isEmpty() ? profileId : profileName;
+    if (keyRef.isEmpty())
+        keyRef = QStringLiteral("lan/%1/%2").arg(QUrl(baseUrl).host(), profileId);
+    const QString providedKey = apiKey.trimmed();
+    if (!providedKey.isEmpty())
+        m_secrets.set(keyRef, providedKey);
+    const QString effectiveApiKey = providedKey.isEmpty()
+        ? m_secrets.resolve(keyRef).trimmed() : providedKey;
     if (launchId.isEmpty()) {
         const QString backendId = m_profiles.addBackend(
             QStringLiteral("LAN · %1").arg(name), {}, "127.0.0.1", 8080);
-        const QString keyRef = QStringLiteral("lan/%1/%2")
-            .arg(QUrl(baseUrl).host(), profileId);
         m_profiles.setBackendCloud(backendId, "cloud", baseUrl, keyRef,
                                    profileId, qMax(1024, context));
-        m_secrets.set(keyRef, apiKey);
         const QString modelId = m_profiles.addModelProfile(
             QStringLiteral("LAN · %1").arg(name), {}, {}, {});
         const QString runtimeId = m_profiles.addRuntimePreset(
@@ -10388,6 +10395,12 @@ void AppController::useLanServer(const QString &baseUrl, const QString &apiKey,
             512, 0, false, true);
         launchId = m_profiles.addLaunchProfile(
             QStringLiteral("LAN · %1").arg(name), backendId, modelId, runtimeId);
+    } else {
+        const LaunchProfile launch = m_profiles.resolveLaunch(launchId);
+        const BackendProfile backend = m_profiles.resolveBackend(launch.backendProfileId);
+        if (backend.cloudKeyRef.trimmed().isEmpty())
+            m_profiles.setBackendCloud(backend.id, "cloud", baseUrl, keyRef,
+                                       profileId, qMax(1024, context));
     }
     if (launchId.isEmpty()) {
         emit lanProfileReady({}, QStringLiteral("No se pudo crear el perfil LAN."));
@@ -10396,15 +10409,25 @@ void AppController::useLanServer(const QString &baseUrl, const QString &apiKey,
     if (!m_nam) m_nam = new QNetworkAccessManager(this);
     QNetworkRequest request(QUrl(baseUrl + QStringLiteral("/llamacode/v1/activate")));
     request.setHeader(QNetworkRequest::ContentTypeHeader, QByteArrayLiteral("application/json"));
-    request.setRawHeader("Authorization", QByteArrayLiteral("Bearer ") + apiKey.toUtf8());
+    if (!effectiveApiKey.isEmpty())
+        request.setRawHeader(QByteArrayLiteral("Authorization"),
+                             QByteArrayLiteral("Bearer ") + effectiveApiKey.toUtf8());
     auto *reply = m_nam->post(request, QJsonDocument(QJsonObject{
         {"model", profileId}
     }).toJson(QJsonDocument::Compact));
-    connect(reply, &QNetworkReply::finished, this, [this, reply, launchId]() {
+    connect(reply, &QNetworkReply::finished, this,
+            [this, reply, launchId]() {
         const int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-        const QString error = reply->error() == QNetworkReply::NoError && status == 200
-            ? QString() : QStringLiteral("El servidor LAN rechazó la conexión: %1")
-                              .arg(reply->errorString());
+        QString error;
+        if (reply->error() == QNetworkReply::NoError && status == 200) {
+            error.clear();
+        } else if (status == 401) {
+            error = QStringLiteral(
+                "El servidor requiere autenticación (HTTP 401). Copiá la API key en la PC anfitriona: Configuración → Gateway → Copiar API key.");
+        } else {
+            error = QStringLiteral("El servidor LAN rechazó la conexión (HTTP %1): %2")
+                        .arg(status).arg(reply->errorString());
+        }
         reply->deleteLater();
         if (!error.isEmpty()) {
             emit lanProfileReady({}, error);

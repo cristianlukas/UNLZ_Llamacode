@@ -119,6 +119,10 @@ Item {
         }
         function onLanProfileReady(launchProfileId, error) {
             lanDialog.busy = false
+            if (error.length > 0 && error.indexOf("HTTP 401") >= 0) {
+                lanDialog.authRequired = true
+                serverApiKeyField.forceActiveFocus()
+            }
             lanDialog.message = error.length > 0
                 ? error
                 : "Servidor remoto iniciado y agente conectado."
@@ -131,7 +135,7 @@ Item {
         id: lanDialog
         modal: true
         width: 560
-        height: 330
+        height: 390
         x: Math.round((root.width - width) / 2)
         y: Math.round((root.height - height) / 2)
         title: "Usar un servidor LAN"
@@ -139,6 +143,7 @@ Item {
         footer: null
         property bool busy: false
         property string message: ""
+        property bool authRequired: false
         property var selectedServer: (serverCombo.currentIndex >= 0
                                       && serverCombo.currentIndex < App.lanServers.length)
                                      ? App.lanServers[serverCombo.currentIndex] : null
@@ -167,7 +172,11 @@ Item {
                     Layout.fillWidth: true
                     model: App.lanServers
                     textRole: "name"
-                    onCurrentIndexChanged: profileCombo.currentIndex = 0
+                    onCurrentIndexChanged: {
+                        profileCombo.currentIndex = 0
+                        lanDialog.authRequired = false
+                        serverApiKeyField.text = ""
+                    }
                 }
                 LcButton {
                     text: App.lanDiscoveryActive ? "Buscando…" : "Buscar otra vez"
@@ -186,6 +195,30 @@ Item {
                     textRole: "name"
                     valueRole: "id"
                 }
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                visible: lanDialog.authRequired
+                Text { text: "API key"; color: Theme.textMuted; Layout.preferredWidth: 70 }
+                LcTextField {
+                    id: serverApiKeyField
+                    Layout.fillWidth: true
+                    placeholderText: "Copiala desde Configuración → Gateway en el servidor"
+                    echoMode: TextInput.Password
+                    enabled: !lanDialog.busy
+                    onAccepted: {
+                        if (lanDialog.authRequired && serverApiKeyField.text.trim().length > 0)
+                            connectRemoteProfile()
+                    }
+                }
+            }
+            Text {
+                Layout.fillWidth: true
+                visible: lanDialog.authRequired
+                text: "La clave no se envía por descubrimiento; se guarda en el almacén seguro de este equipo."
+                color: Theme.textMuted
+                wrapMode: Text.WordWrap
+                font.pixelSize: 10
             }
             Text {
                 Layout.fillWidth: true
@@ -213,20 +246,27 @@ Item {
                     onClicked: lanDialog.close()
                 }
                 LcButton {
-                    text: lanDialog.busy ? "Iniciando servidor remoto…" : "Usar perfil remoto"
+                    text: lanDialog.busy ? "Conectando…"
+                          : (lanDialog.authRequired ? "Conectar con API key" : "Usar perfil remoto")
                     enabled: !lanDialog.busy && lanDialog.selectedServer
                              && profileCombo.currentIndex >= 0
+                             && (!lanDialog.authRequired
+                                 || serverApiKeyField.text.trim().length > 0)
                     onClicked: {
-                        const profile = lanDialog.remoteProfiles[profileCombo.currentIndex]
-                        if (!profile) return
-                        lanDialog.busy = true
-                        lanDialog.message = ""
-                        App.useLanServer(lanDialog.selectedServer.url,
-                                         lanDialog.selectedServer.apiKey || "",
-                                         profile.id || "", profile.name || profile.id,
-                                         profile.context || 4096)
+                        connectRemoteProfile()
                     }
                 }
+            }
+
+            function connectRemoteProfile() {
+                const profile = lanDialog.remoteProfiles[profileCombo.currentIndex]
+                if (!profile || !lanDialog.selectedServer) return
+                lanDialog.busy = true
+                lanDialog.message = ""
+                App.useLanServer(lanDialog.selectedServer.url,
+                                 serverApiKeyField.text.trim(),
+                                 profile.id || "", profile.name || profile.id,
+                                 profile.context || 4096)
             }
         }
     }
