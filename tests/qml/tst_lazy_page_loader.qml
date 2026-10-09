@@ -6,6 +6,7 @@ Item {
     property int loadedCount: 0
     property int fails: 0
     property bool returnedToFirstPage: false
+    property bool pageVisited: false
 
     function check(condition, message) {
         console.log((condition ? "  PASS " : "  FAIL ") + message)
@@ -14,14 +15,14 @@ Item {
 
     Loader {
         id: firstPage
-        active: root.selectedPage === 0
+        active: root.selectedPage === 0 || root.pageVisited
         asynchronous: true
         source: Qt.resolvedUrl("LazyProbePage.qml")
         onLoaded: {
             root.loadedCount++
             // Match Main.qml: pin a page once it has been visited, while keeping
             // the activation binding independent from Loader's loaded state.
-            active = true
+            root.pageVisited = true
         }
     }
 

@@ -37,6 +37,16 @@ entrada al event loop. Esto permite comparar `LlamaCode` y
 `LlamaCode-debug` sin inferir el origen de una demora.
 La finalización de la comprobación incremental del menú informa
 `Launch menu readiness complete` con duración y cantidad de perfiles.
+El catálogo que usa Gateway para responder `/v1/models` y las consultas UDP de
+descubrimiento consume esos estados ya calculados. Esos callbacks corren en el
+hilo de la interfaz, por lo que no deben revalidar el catálogo completo al
+responder cada paquete de red.
+
+La respuesta UDP usa el mismo camino de catálogo rápido: el descubrimiento se
+envía por cada interfaz activa y el servidor puede recibir varias consultas en
+una sola búsqueda. La operación debe ser barata y sólo anunciar perfiles cuya
+disponibilidad ya se verificó; mientras el escaneo sigue activo, devuelve el
+subconjunto confirmado hasta el siguiente descubrimiento.
 
 El monitor del event loop se puede activar después de iniciar la app. Al
 reactivarse, reinicia su marca temporal para no reportar como bloqueo el tiempo

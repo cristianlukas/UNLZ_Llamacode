@@ -1735,6 +1735,13 @@ void SystemProfilesTests::controller_launchMenuQuickDefersReadinessWork()
     for (const QVariant &value : menu)
         QVERIFY(!value.toMap().value(QStringLiteral("readyKnown")).toBool());
 
+    timer.restart();
+    const QJsonArray earlyGatewayCatalog = app.gatewayModelCatalog();
+    const qint64 earlyGatewayMs = timer.elapsed();
+    QVERIFY2(earlyGatewayMs < 500,
+             qPrintable(QStringLiteral("early gateway catalog took %1 ms").arg(earlyGatewayMs)));
+    QVERIFY(earlyGatewayCatalog.isEmpty());
+
     QSignalSpy readinessSpy(&app, &AppController::launchMenuReadinessChanged);
     app.refreshLaunchMenuReadiness();
     QTRY_VERIFY_WITH_TIMEOUT(readinessSpy.count() > 0, 30000);
@@ -1742,6 +1749,13 @@ void SystemProfilesTests::controller_launchMenuQuickDefersReadinessWork()
     QVERIFY(std::any_of(resolved.cbegin(), resolved.cend(), [](const QVariant &value) {
         return value.toMap().value(QStringLiteral("readyKnown")).toBool();
     }));
+
+    timer.restart();
+    const QJsonArray readyGatewayCatalog = app.gatewayModelCatalog();
+    const qint64 readyGatewayMs = timer.elapsed();
+    QVERIFY2(readyGatewayMs < 500,
+             qPrintable(QStringLiteral("ready gateway catalog took %1 ms").arg(readyGatewayMs)));
+    QVERIFY(!readyGatewayCatalog.isEmpty());
 }
 
 void SystemProfilesTests::bundle_ultraQAndHybridAreWiredAndOptIn()
@@ -3010,6 +3024,9 @@ void SystemProfilesTests::controller_astraStrataIsListedAndRequiresLocalSetup()
     QVERIFY(readyAfterSetup);
     QCOMPARE(app.readSetting(QStringLiteral("astra/strataRoot")).toString(), strataRoot);
     QCOMPARE(app.readSetting(QStringLiteral("astra/configFile")).toString(), configPath);
+    QSignalSpy readinessSpy(&app, &AppController::launchMenuReadinessChanged);
+    app.refreshLaunchMenuReadiness();
+    QTRY_VERIFY_WITH_TIMEOUT(readinessSpy.count() > 0, 30000);
     bool gatewayHasAstra = false;
     for (const QJsonValue &model : app.gatewayModelCatalog())
         gatewayHasAstra |= model.toObject().value(QStringLiteral("id")).toString()

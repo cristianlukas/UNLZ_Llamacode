@@ -10120,8 +10120,13 @@ void AppController::wireGatewayHooks()
 QJsonArray AppController::gatewayModelCatalog()
 {
     QJsonArray models;
-    for (const QVariant &value : launchMenu()) {
+    // The gateway hooks run on the GUI thread, including UDP discovery replies.
+    // Never synchronously revalidate hundreds of profiles here: launchMenu()
+    // can take several seconds and a broadcast may invoke this once per NIC.
+    // Use readiness already computed by the incremental startup scan instead.
+    for (const QVariant &value : launchMenuQuick()) {
         const QVariantMap menu = value.toMap();
+        if (!menu.value(QStringLiteral("readyKnown")).toBool()) continue;
         if (!menu.value(QStringLiteral("ready")).toBool()) continue;
         const QString id = menu.value(QStringLiteral("id")).toString();
         if (id.isEmpty()) continue;
