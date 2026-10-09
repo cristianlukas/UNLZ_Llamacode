@@ -1,0 +1,9 @@
+Extracto reducido de docker logs --timestamps para el control SOL. Se conservan sólo campos diagnósticos relevantes.
+
+2026-10-09T21:20:20.880577919Z (Worker_TP0 pid=103) synchronize_input_prep -> num_accepted_tokens_event.synchronize()
+2026-10-09T21:20:20.880578581Z torch.AcceleratorError: CUDA error: device-side assert triggered
+2026-10-09T21:20:20.884224832Z (EngineCore pid=92) SchedulerOutput: prompt_token_ids_len=15740; SamplingParams(temperature=0.1, top_p=0.95, top_k=20, seed=4242, max_tokens=32768); MTP num_spec_tokens=4; num_scheduled_tokens=3232
+2026-10-09T21:20:20.884978622Z RuntimeError: Worker failed with error 'CUDA error: device-side assert triggered'
+2026-10-09T21:20:20.885645199Z vllm.v1.engine.exceptions.EngineDeadError: EngineCore encountered an issue
+2026-10-09T21:20:20.885943627Z Error in chat completion stream generator
+2026-10-09T21:20:20.889122133Z terminate called after throwing an instance of 'c10::AcceleratorError'

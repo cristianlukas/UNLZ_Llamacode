@@ -1,0 +1,41 @@
+{
+  "task": "Q-20261009-LOCAL-AGENT-EVAL",
+  "created_utc": "2026-10-09",
+  "files": [
+    {
+      "path": "candidate-run-metadata.json",
+      "bytes": 8600,
+      "sha256": "8a95e55e52fdfcec45522c2e6a70b1f4ef96d445beead0af98366cbe60191053"
+    },
+    {
+      "path": "candidate-taskflow-result.json",
+      "bytes": 20753,
+      "sha256": "244f0e95d718ac1c674c246d5f5d58a2de7b8ada10615ae36116906a80576fb4"
+    },
+    {
+      "path": "context-probe.json",
+      "bytes": 700,
+      "sha256": "387d94276afa09fa2d38a2e7dd500d59d1f7bb20f8856e20353527c581c2aa1a"
+    },
+    {
+      "path": "runtime-config.json",
+      "bytes": 1979,
+      "sha256": "c6096286b5b3457cde17f612751a64bad41d857c59fbbcb58c07041f4ce0caa6"
+    },
+    {
+      "path": "sol-control-attempt-1.json",
+      "bytes": 13706,
+      "sha256": "85f6179da9f0d4f9315619fc6d9615871936d197b8296c9aefb912467968b8e6"
+    },
+    {
+      "path": "sol-control-attempt-2.json",
+      "bytes": 13698,
+      "sha256": "4334fccd2866a8cf0a9a0fe2c60c0b65f1e292cda364f51f995fa16cab41a478"
+    },
+    {
+      "path": "sol-vllm-failure-excerpt.txt",
+      "bytes": 957,
+      "sha256": "3cf3e3f869cadac33c8f98c7550550ce2c702b584a11f0ded263e6386e6c7d81"
+    }
+  ]
+}

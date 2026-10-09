@@ -1,0 +1,19 @@
+{
+  "probe": "194K three-needle retrieval; repetitive synthetic filler; exploratory, not an official NIAH suite",
+  "tokenized_content_tokens": 194287,
+  "server_prompt_tokens": 194338,
+  "completion_tokens": 119,
+  "total_tokens": 194457,
+  "server_prompt_eval_seconds": 354.81613,
+  "server_total_seconds": 357.6761,
+  "prompt_tokens_per_second": 547.71,
+  "decode_tokens_per_second": 41.26,
+  "mtp_accepted_tokens": 92,
+  "mtp_proposed_tokens": 116,
+  "mtp_acceptance_fraction": 0.7931,
+  "mtp_mean_accepted_tokens_per_draft": 4.17,
+  "expected_answer": "OLIVE-7392 COBALT-1846 AMBER-5503",
+  "actual_answer": "OLIVE-7392 COBALT-1846 AMBER-5503",
+  "finish_reason": "stop",
+  "truncated": false
+}

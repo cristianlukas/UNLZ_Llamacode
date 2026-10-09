@@ -22,6 +22,14 @@ perfiles de Windows ni se borran sus resultados históricos.
 
 Snapshot de revisión: 2026-08-28; anexo de campaña DeepSeek nativa: 2026-08-30. Este archivo conserva la identidad y la configuración efectiva de los perfiles medidos, además de los candidatos derivados del catálogo. Los cambios de perfiles deben hacerse con LlamaCode cerrada; luego hay que volver a abrir la app headless y verificar que los argumentos efectivos coincidan con esta captura.
 
+## Candidato sin promoción: Qwen3.8 Unsloth UD-IQ4_XS · 196K — 2026-10-09
+
+| Configuración temporal | Suite / HarnessSpec | Resultado | Decisión |
+|---|---|---:|---|
+| llama.cpp b11115, una RTX 3090, MTP4, KV K/V `q8_0`, 196K; `agent-maximo`, temp 0,1, seed 4242 | TaskFlow ULTRA E2E; `sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef` | 12/13 tras 3 reparaciones; `py_compile` y 33 tests pasan; self-test falla; 315,419 s y 72,47 TPS | No promover: una sola corrida, 0/13 al primer intento, fallo final del self-test y ASTRA existente en 13/13 |
+
+El probe separado de contexto procesó 194.338 tokens de prompt y recuperó 3/3 códigos en orden; el prefill fue 354,816 s a 547,71 tokens/s. El control pareado SOL quedó inválido por `CUDA device-side assert` en vLLM/MTP y no cuenta como score. Sin cambios en perfiles productivos ni HarnessSpec. Informe, recibos y regla de no repetición: [evaluación completa](qwen38-unsloth-iq4xs-196k-eval-20261009.md).
+
 El procedimiento reusable para agregar modelos, binarios, perfiles o harnesses está documentado en el [Manual de benchmarking](benchmark-manual.md). Esta matriz resume resultados; el manual define las condiciones de validez, el orden HE0 → HE20 → BCB y las reglas de promoción para FAST, BALANCED y QUALITY. HE0 es una compuerta dura: si falla, el perfil queda bloqueado para HE20 y BCB hasta investigar la causa raíz y repetir HE0 con resultado válido.
 
 La tabla consolidada vigente de todos los perfiles activos, junto con las
