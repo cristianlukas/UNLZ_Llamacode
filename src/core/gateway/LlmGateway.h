@@ -43,7 +43,8 @@ public:
     void setHooks(const Hooks &h) { m_hooks = h; }
     void setKeepN(int n) { m_keepN = qMax(1, n); }
     void setAutoSwap(bool on) { m_autoSwap = on; }
-    void setApiKey(const QString &k) { m_apiKey = k; }   // vacío = sin auth
+    void setApiKey(const QString &k) { m_apiKey = k; }
+    void setLanAuthEnabled(bool on) { m_lanAuthEnabled = on; }
 
     bool start(quint16 port, const QHostAddress &addr = QHostAddress::LocalHost);
     void stop();
@@ -94,6 +95,7 @@ private:
     int     m_keepN = 4;
     bool    m_autoSwap = true;
     bool    m_lanMode = false;
+    bool    m_lanAuthEnabled = true;
     QString m_apiKey;
     quint16 m_port = 0;
     QStringList m_lru;   // orden de uso (frente = más reciente)

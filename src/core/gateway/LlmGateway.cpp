@@ -483,9 +483,11 @@ void LlmGateway::handle(QTcpSocket *sock, const QByteArray &method, const QStrin
         return;
     }
 
-    // Auth obligatoria para LAN; local sigue permitiendo gateway sin clave para
-    // conservar el flujo histórico de OpenCode/Claude Desktop.
-    if (m_lanMode || !m_apiKey.isEmpty()) {
+    // Auth obligatoria para LAN salvo que el anfitrión haya permitido
+    // explícitamente el acceso sin contraseña. En loopback, una clave no vacía
+    // sigue protegiendo el gateway como antes.
+    const bool authRequired = m_lanMode ? m_lanAuthEnabled : !m_apiKey.isEmpty();
+    if (authRequired) {
         const QString tok = authHeader.startsWith(QLatin1String("Bearer "))
             ? authHeader.mid(7).trimmed() : authHeader.trimmed();
         if (m_apiKey.isEmpty() || tok != m_apiKey) {

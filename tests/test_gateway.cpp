@@ -27,6 +27,7 @@ private slots:
     void discoveryNeverContainsCredentials();
     void discoveryListsProfilesBeforeFirstModelLoad();
     void lanHealthRequiresAuthentication();
+    void lanHealthCanBeExplicitlyUnauthenticated();
     void claudeDesktopConfigUsesStableAliases();
     void openCodeConfigUsesEnvironmentSecret();
     void openCodeDesktopCandidates();
@@ -224,7 +225,6 @@ void GatewayTests::lanHealthRequiresAuthentication()
     probe.close();
 
     LlmGateway gateway;
-    gateway.setApiKey(QStringLiteral("secret"));
     QVERIFY(gateway.start(port, QHostAddress::AnyIPv4));
 
     QNetworkAccessManager nam;
@@ -237,6 +237,7 @@ void GatewayTests::lanHealthRequiresAuthentication()
     QCOMPARE(unauthorized->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt(), 401);
     unauthorized->deleteLater();
 
+    gateway.setApiKey(QStringLiteral("secret"));
     QNetworkRequest authorizedRequest(
         QUrl(QStringLiteral("http://127.0.0.1:%1/health").arg(port)));
     authorizedRequest.setRawHeader("Authorization", QByteArrayLiteral("Bearer secret"));
@@ -247,6 +248,38 @@ void GatewayTests::lanHealthRequiresAuthentication()
     authorizedLoop.exec();
     QCOMPARE(authorized->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt(), 200);
     authorized->deleteLater();
+}
+
+void GatewayTests::lanHealthCanBeExplicitlyUnauthenticated()
+{
+    QTcpServer probe;
+    QVERIFY(probe.listen(QHostAddress::AnyIPv4, 0));
+    const quint16 port = probe.serverPort();
+    probe.close();
+
+    LlmGateway gateway;
+    QVERIFY(gateway.start(port, QHostAddress::AnyIPv4));
+
+    QNetworkAccessManager nam;
+    QNetworkReply *locked = nam.get(QNetworkRequest(
+        QUrl(QStringLiteral("http://127.0.0.1:%1/health").arg(port))));
+    QEventLoop lockedLoop;
+    connect(locked, &QNetworkReply::finished, &lockedLoop, &QEventLoop::quit);
+    lockedLoop.exec();
+    QCOMPARE(locked->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt(), 401);
+    locked->deleteLater();
+
+    // Even a previously saved key must not silently re-enable auth when the
+    // host explicitly opts into password-free LAN mode.
+    gateway.setApiKey(QStringLiteral("previously-saved-key"));
+    gateway.setLanAuthEnabled(false);
+    QNetworkReply *open = nam.get(QNetworkRequest(
+        QUrl(QStringLiteral("http://127.0.0.1:%1/health").arg(port))));
+    QEventLoop openLoop;
+    connect(open, &QNetworkReply::finished, &openLoop, &QEventLoop::quit);
+    openLoop.exec();
+    QCOMPARE(open->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt(), 200);
+    open->deleteLater();
 }
 
 void GatewayTests::claudeDesktopConfigUsesStableAliases()

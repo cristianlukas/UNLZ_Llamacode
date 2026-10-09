@@ -1807,6 +1807,7 @@ AppController::AppController(QObject *parent) : QObject(parent)
     m_gatewayKeepN   = s.value(QStringLiteral("gateway/keepN"), 4).toInt();
     m_gatewayAutoSwap = s.value(QStringLiteral("gateway/autoSwap"), true).toBool();
     m_gatewayLanEnabled = s.value(QStringLiteral("gateway/lanEnabled"), false).toBool();
+    m_gatewayLanAuthEnabled = s.value(QStringLiteral("gateway/lanAuthEnabled"), true).toBool();
     m_updateChannel = s.value(QStringLiteral("updates/channel"),
                               QStringLiteral("prod")).toString().trimmed().toLower();
     if (m_updateChannel != QLatin1String("debug")
@@ -10172,6 +10173,8 @@ void AppController::startGateway()
 {
     if (!m_gateway) { m_gateway = new LlmGateway(this); wireGatewayHooks(); }
     if (m_gateway->listening()) return;
+    m_gateway->setApiKey(m_gatewayApiKey);
+    m_gateway->setLanAuthEnabled(m_gatewayLanAuthEnabled);
     const QHostAddress bindAddress = m_gatewayLanEnabled
         ? QHostAddress::AnyIPv4 : QHostAddress::LocalHost;
     if (m_gateway->start(static_cast<quint16>(m_gatewayPort), bindAddress)) {
@@ -10263,6 +10266,25 @@ void AppController::setGatewayApiKey(const QString &k)
     emit gatewayChanged();
 }
 
+void AppController::setGatewayLanAuthEnabled(bool on)
+{
+    if (m_gatewayLanAuthEnabled == on) return;
+    m_gatewayLanAuthEnabled = on;
+    QSettings settings;
+    settings.setValue(QStringLiteral("gateway/lanAuthEnabled"), on);
+    if (on && m_gatewayApiKey.trimmed().isEmpty()) {
+        m_gatewayApiKey = QUuid::createUuid().toString(QUuid::WithoutBraces)
+            .remove(QLatin1Char('-'));
+        m_secrets.set(QStringLiteral("gateway/apiKey"), m_gatewayApiKey);
+        settings.remove(QStringLiteral("gateway/apiKey"));
+    }
+    if (m_gateway) {
+        m_gateway->setApiKey(m_gatewayApiKey);
+        m_gateway->setLanAuthEnabled(on);
+    }
+    emit gatewayChanged();
+}
+
 void AppController::setGatewayKeepN(int n)
 {
     n = qMax(1, n);
@@ -10288,7 +10310,7 @@ void AppController::setGatewayLanEnabled(bool on)
     m_gatewayLanEnabled = on;
     QSettings settings;
     settings.setValue(QStringLiteral("gateway/lanEnabled"), on);
-    if (on && m_gatewayApiKey.trimmed().isEmpty()) {
+    if (on && m_gatewayLanAuthEnabled && m_gatewayApiKey.trimmed().isEmpty()) {
         m_gatewayApiKey = QUuid::createUuid().toString(QUuid::WithoutBraces)
             .remove(QLatin1Char('-'));
         m_secrets.set(QStringLiteral("gateway/apiKey"), m_gatewayApiKey);

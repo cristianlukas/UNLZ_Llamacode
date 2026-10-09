@@ -43,14 +43,19 @@ termina en 60 segundos, el supervisor fuerza su detención.
 ### Servir ASTRA a otro LlamaCode por LAN
 
 En Lanzar podés usar **Iniciar LAN sin cargar perfil** aunque no haya un perfil
-seleccionado. La app inicia sólo el Gateway autenticado; publica los perfiles
+seleccionado. La app inicia sólo el Gateway; publica los perfiles
 locales que estén listos, sin cargar un modelo. El cliente elige uno y el primer
 request lo inicia bajo demanda. Si preferís iniciar ASTRA inmediatamente,
 seleccionalo y usá **Iniciar LAN con este perfil**. Ningún flujo inicia un agente
 local; el gateway es el único endpoint expuesto a la red y Strata sigue
-escuchando en loopback. En **Ajustes → Gateway** vas a ver la URL IPv4 y la API
-key generada. Permití el puerto del gateway sólo en la red privada de confianza
-y compartí la key sólo con ese cliente.
+escuchando en loopback. Antes de iniciar, el panel **Seguridad del servidor LAN**
+permite dejar autenticación habilitada (predeterminado) o marcar **Iniciar sin
+contraseña**. Con autenticación habilitada, podés escribir una contraseña/API
+key en el mismo panel; si el campo queda vacío se conserva la key actual o se
+genera una al activar LAN. Sin contraseña, cualquier dispositivo que alcance
+esa red podrá consultar los perfiles y usar el Gateway. Limitá esa opción a una
+red privada y confiable. En **Ajustes → Gateway** está disponible **Copiar API
+key** para compartirla con el cliente autorizado.
 
 En la otra instancia, elegí **Lanzar → Usar un servidor LAN**, buscá este host y
 seleccioná **ASTRA · Strata IQ3_S · Qwen3.8 Flash Next**. El cliente crea un

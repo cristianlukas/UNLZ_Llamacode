@@ -16,6 +16,7 @@ Item {
     property string lanStatusMessage: ""
     property bool lanStatusError: false
     property bool lanStartPending: false
+    property bool lanNoPasswordChoice: !App.gatewayLanAuthEnabled
     property string pendingPortLaunchId: ""
     property string pendingPortHost: ""
     property int pendingPortCurrent: 0
@@ -43,6 +44,9 @@ Item {
                 : "Perfil iniciado, pero no hay una dirección IPv4 de LAN disponible."
             root.lanStatusError = url.length === 0
         }
+        function onGatewayChanged() {
+            root.lanNoPasswordChoice = !App.gatewayLanAuthEnabled
+        }
         function onServerStateChanged() {
             if (!root.lanStartPending || App.serverState !== "failed") return
             root.lanStartPending = false
@@ -54,6 +58,7 @@ Item {
 
     function startProfile(launchId, withAgent, shareOnLan) {
         if (shareOnLan) {
+            root.applyLanSecurityOptions()
             root.lanStartPending = true
             root.lanStatusError = false
             root.lanStatusMessage = "Activando el Gateway LAN…"
@@ -78,6 +83,7 @@ Item {
         root.lanStartPending = true
         root.lanStatusError = false
         root.lanStatusMessage = "Activando el servidor LAN sin cargar un perfil…"
+        root.applyLanSecurityOptions()
         if (!App.startLanGateway()) {
             root.lanStartPending = false
             if (root.lanStatusMessage === "Activando el servidor LAN sin cargar un perfil…")
@@ -92,6 +98,13 @@ Item {
             : "Gateway activo, pero no encontré una dirección IPv4 de la red local."
         root.lanStatusError = url.length === 0
         return url.length > 0
+    }
+
+    function applyLanSecurityOptions() {
+        const key = lanPasswordField.text.trim()
+        if (!lanNoPasswordCheck.checked && key.length > 0)
+            App.gatewayApiKey = key
+        App.gatewayLanAuthEnabled = !lanNoPasswordCheck.checked
     }
 
     function syncToActiveLaunch() {
@@ -878,6 +891,52 @@ Item {
                     visible: !App.serverRunning && !App.serverStopping
                     enabled: launchCombo.count > 0 && launchCombo.currentValue !== undefined
                     onClicked: root.startWithPortCheck(false)
+                }
+
+                Text {
+                    text: "Seguridad del servidor LAN"
+                    color: Theme.textPrimary
+                    font.pixelSize: 12
+                    font.bold: true
+                    Layout.topMargin: 6
+                    Layout.fillWidth: true
+                    visible: !App.serverRunning && !App.serverStopping
+                }
+                LcCheckBox {
+                    id: lanNoPasswordCheck
+                    text: "Iniciar sin contraseña"
+                    checked: root.lanNoPasswordChoice
+                    Layout.fillWidth: true
+                    visible: !App.serverRunning && !App.serverStopping
+                    onToggled: {
+                        root.lanNoPasswordChoice = checked
+                        App.gatewayLanAuthEnabled = !checked
+                    }
+                }
+                Text {
+                    text: "Cualquier equipo con acceso a esta red podrá usar el Gateway."
+                    color: Theme.textSecondary
+                    font.pixelSize: 10
+                    wrapMode: Text.WordWrap
+                    Layout.fillWidth: true
+                    visible: lanNoPasswordCheck.visible && lanNoPasswordCheck.checked
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    visible: lanNoPasswordCheck.visible && !lanNoPasswordCheck.checked
+                    Text {
+                        text: "Contraseña / API key"
+                        color: Theme.textMuted
+                        font.pixelSize: 11
+                        Layout.preferredWidth: 125
+                    }
+                    LcTextField {
+                        id: lanPasswordField
+                        Layout.fillWidth: true
+                        placeholderText: "Vacío: conservar la actual o generar al iniciar"
+                        echoMode: TextInput.Password
+                        enabled: !root.lanStartPending
+                    }
                 }
 
                 LcButton {

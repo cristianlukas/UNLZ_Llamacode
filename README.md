@@ -1027,9 +1027,13 @@ Si las rutas están vacías, la app detecta una instalación IQ3_S completa en l
 caché, Documentos o volúmenes montados y guarda el config calibrado encontrado.
 El Gateway sólo anuncia perfiles cuyos binarios, modelo y dependencias estén
 listos en el host.
-En Lanzar, **Iniciar servidor LAN** inicia el perfil seleccionado y activa el
-Gateway autenticado para otros LlamaCode; el motor ASTRA continúa ligado a
-loopback. Los clientes pueden elegir ASTRA o pedir otro ID de perfil del
+En **Lanzar**, antes de **Iniciar LAN con este perfil** o
+**Iniciar LAN sin cargar perfil**, se puede elegir **Iniciar sin contraseña**
+o escribir una contraseña/API key propia en ese mismo panel. La autenticación
+queda activada por defecto; si la contraseña se deja vacía, se conserva la actual
+o se genera una al iniciar. Sin contraseña, cualquier equipo que alcance la red
+puede usar los perfiles publicados. El motor ASTRA continúa ligado a loopback.
+Los clientes pueden elegir ASTRA o pedir otro ID de perfil del
 catálogo disponible del host, que hace swap del modelo sin arrancar un agente local.
 La receta Linux SOL usa Compose para gestionar su vLLM. La familia benchmark
 `sys-bench-qwen38-dflash2-vllm-*` deja declarados el target INT8 W8A16 de Qwen3.8,
@@ -1624,7 +1628,7 @@ cliente la solicita en el diálogo; copiala en la PC anfitriona desde
 del cliente y se reutiliza al volver a conectar ese perfil.
 
 En la PC anfitriona también se puede usar **Lanzar → Iniciar LAN sin cargar
-perfil**. Esto levanta únicamente el Gateway autenticado y anuncia los perfiles
+perfil**. Esto levanta únicamente el Gateway y anuncia los perfiles
 locales listos; no requiere elegir un perfil ni inicia un motor. El cliente puede
 seleccionar cualquiera de los IDs publicados. Cuando su primer request incluye
 el ID elegido, el anfitrión inicia ese perfil y lo carga bajo demanda. El botón
