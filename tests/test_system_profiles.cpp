@@ -1778,6 +1778,9 @@ void SystemProfilesTests::controller_startLanGatewayRetriesWhenSettingsAlreadyEn
     occupiedPort.close();
     QVERIFY(app.startLanGateway()); // unchanged true settings must still retry the bind
     QVERIFY(app.gatewayRunning());
+    app.setGatewayLanEnabled(false);
+    QVERIFY(!app.gatewayLanEnabled());
+    QVERIFY(app.gatewayRunning()); // LAN closes; local Gateway remains available
     app.stopGateway();
 }
 

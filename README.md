@@ -1027,9 +1027,9 @@ Si las rutas están vacías, la app detecta una instalación IQ3_S completa en l
 caché, Documentos o volúmenes montados y guarda el config calibrado encontrado.
 El Gateway sólo anuncia perfiles cuyos binarios, modelo y dependencias estén
 listos en el host.
-En **Lanzar**, antes de **Iniciar LAN con este perfil** o
-**Iniciar LAN sin cargar perfil**, se puede elegir **Iniciar sin contraseña**
-o escribir una contraseña/API key propia en ese mismo panel. La autenticación
+En **Lanzar**, antes de iniciar un perfil, se puede activar **Compartir en LAN
+al iniciar** y elegir **Iniciar sin contraseña** o escribir una contraseña/API
+key propia en ese mismo panel. La autenticación
 queda activada por defecto; si la contraseña se deja vacía, se conserva la actual
 o se genera una al iniciar. Sin contraseña, cualquier equipo que alcance la red
 puede usar los perfiles publicados. El motor ASTRA continúa ligado a loopback.
@@ -1631,11 +1631,15 @@ En la PC anfitriona también se puede usar **Lanzar → Iniciar LAN sin cargar
 perfil**. Esto levanta únicamente el Gateway y anuncia los perfiles
 locales listos; no requiere elegir un perfil ni inicia un motor. El cliente puede
 seleccionar cualquiera de los IDs publicados. Cuando su primer request incluye
-el ID elegido, el anfitrión inicia ese perfil y lo carga bajo demanda. El botón
-**Iniciar LAN con este perfil** conserva el flujo de inicio inmediato del perfil
-seleccionado. Ambos botones muestran debajo el estado del gateway, su dirección
-LAN o el error concreto. Si un primer intento no pudo abrir el puerto, volver a
-presionar reintenta el bind aunque la configuración ya figure activada.
+el ID elegido, el anfitrión inicia ese perfil y lo carga bajo demanda. Para
+compartir el perfil seleccionado al iniciarlo, activá **Compartir en LAN al
+iniciar** y usá **Iniciar servidor** o **Iniciar servidor + agente**; se conserva
+el modo de inicio elegido. Cuando el Gateway escucha en LAN, el control cambia a
+**Detener servidor LAN**. Esto cierra el acceso remoto y deja el Gateway
+disponible sólo en loopback; el motor y el agente locales siguen activos.
+Los botones muestran el estado, la dirección LAN o el error concreto. Si un
+primer intento no pudo abrir el puerto, volver a presionar reintenta el bind
+aunque la configuración ya figure activada.
 
 El botón **Abrir OpenCode GUI en mi GPU** permite elegir perfil y proyecto. LlamaCode
 inyecta una configuración runtime mediante `OPENCODE_CONFIG_CONTENT`, selecciona

@@ -45,17 +45,20 @@ termina en 60 segundos, el supervisor fuerza su detención.
 En Lanzar podés usar **Iniciar LAN sin cargar perfil** aunque no haya un perfil
 seleccionado. La app inicia sólo el Gateway; publica los perfiles
 locales que estén listos, sin cargar un modelo. El cliente elige uno y el primer
-request lo inicia bajo demanda. Si preferís iniciar ASTRA inmediatamente,
-seleccionalo y usá **Iniciar LAN con este perfil**. Ningún flujo inicia un agente
-local; el gateway es el único endpoint expuesto a la red y Strata sigue
-escuchando en loopback. Antes de iniciar, el panel **Seguridad del servidor LAN**
-permite dejar autenticación habilitada (predeterminado) o marcar **Iniciar sin
-contraseña**. Con autenticación habilitada, podés escribir una contraseña/API
+request lo inicia bajo demanda. Para iniciar ASTRA y compartirlo inmediatamente,
+seleccionalo, activá **Compartir en LAN al iniciar** y usá **Iniciar servidor**
+o **Iniciar servidor + agente** según necesites. Strata sigue escuchando en
+loopback; sólo el Gateway se expone a la red. Antes de iniciar, el panel **Acceso
+LAN** permite activar esa opción, dejar la autenticación habilitada (predeterminado)
+o marcar **Iniciar sin contraseña**. Con autenticación habilitada, podés escribir una contraseña/API
 key en el mismo panel; si el campo queda vacío se conserva la key actual o se
 genera una al activar LAN. Sin contraseña, cualquier dispositivo que alcance
 esa red podrá consultar los perfiles y usar el Gateway. Limitá esa opción a una
 red privada y confiable. En **Ajustes → Gateway** está disponible **Copiar API
-key** para compartirla con el cliente autorizado.
+key** para compartirla con el cliente autorizado. Mientras el Gateway LAN está
+activo, el botón de inicio LAN se convierte en **Detener servidor LAN**: cierra
+el acceso remoto y deja el Gateway en loopback; no detiene el motor ni el agente
+local. El botón habitual **Detener servidor** sigue controlando el motor local.
 
 En la otra instancia, elegí **Lanzar → Usar un servidor LAN**, buscá este host y
 seleccioná **ASTRA · Strata IQ3_S · Qwen3.8 Flash Next**. El cliente crea un

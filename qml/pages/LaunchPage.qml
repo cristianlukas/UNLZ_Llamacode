@@ -17,6 +17,7 @@ Item {
     property bool lanStatusError: false
     property bool lanStartPending: false
     property bool lanNoPasswordChoice: !App.gatewayLanAuthEnabled
+    property bool lanShareOnStart: false
     property string pendingPortLaunchId: ""
     property string pendingPortHost: ""
     property int pendingPortCurrent: 0
@@ -762,7 +763,7 @@ Item {
                         enabled: !App.serverStopping && launchCombo.count > 0 && (launchCombo.currentValue !== undefined || App.serverRunning)
                         onClicked: {
                             if (App.serverRunning) App.stopServer()
-                            else root.startWithPortCheck(true)
+                            else root.startWithPortCheck(true, root.lanShareOnStart)
                         }
                     }
 
@@ -890,17 +891,26 @@ Item {
                     Layout.fillWidth: true
                     visible: !App.serverRunning && !App.serverStopping
                     enabled: launchCombo.count > 0 && launchCombo.currentValue !== undefined
-                    onClicked: root.startWithPortCheck(false)
+                    onClicked: root.startWithPortCheck(false, root.lanShareOnStart)
                 }
 
                 Text {
-                    text: "Seguridad del servidor LAN"
+                    text: "Acceso LAN"
                     color: Theme.textPrimary
                     font.pixelSize: 12
                     font.bold: true
                     Layout.topMargin: 6
                     Layout.fillWidth: true
                     visible: !App.serverRunning && !App.serverStopping
+                             && !(App.gatewayRunning && App.gatewayLanEnabled)
+                }
+                LcCheckBox {
+                    text: "Compartir en LAN al iniciar"
+                    checked: root.lanShareOnStart
+                    Layout.fillWidth: true
+                    visible: !App.serverRunning && !App.serverStopping
+                             && !(App.gatewayRunning && App.gatewayLanEnabled)
+                    onToggled: root.lanShareOnStart = checked
                 }
                 LcCheckBox {
                     id: lanNoPasswordCheck
@@ -908,6 +918,7 @@ Item {
                     checked: root.lanNoPasswordChoice
                     Layout.fillWidth: true
                     visible: !App.serverRunning && !App.serverStopping
+                             && !(App.gatewayRunning && App.gatewayLanEnabled)
                     onToggled: {
                         root.lanNoPasswordChoice = checked
                         App.gatewayLanAuthEnabled = !checked
@@ -940,21 +951,27 @@ Item {
                 }
 
                 LcButton {
-                    text: "Iniciar LAN con este perfil"
-                    secondary: true
-                    Layout.fillWidth: true
-                    visible: !App.serverRunning && !App.serverStopping
-                    enabled: launchCombo.count > 0 && launchCombo.currentValue !== undefined
-                    onClicked: root.startWithPortCheck(false, true)
-                }
-
-                LcButton {
                     text: "Iniciar LAN sin cargar perfil"
                     secondary: true
                     Layout.fillWidth: true
                     visible: !App.serverRunning && !App.serverStopping
+                             && !(App.gatewayRunning && App.gatewayLanEnabled)
                     enabled: !App.serverStopping
                     onClicked: root.startLanGatewayOnly()
+                }
+
+                LcButton {
+                    text: "Detener servidor LAN"
+                    secondary: true
+                    Layout.fillWidth: true
+                    visible: App.gatewayRunning && App.gatewayLanEnabled
+                    enabled: !root.lanStartPending
+                    onClicked: {
+                        App.gatewayLanEnabled = false
+                        root.lanStartPending = false
+                        root.lanStatusError = false
+                        root.lanStatusMessage = "Acceso LAN detenido; el servidor y el agente locales siguen activos."
+                    }
                 }
 
                 Text {
