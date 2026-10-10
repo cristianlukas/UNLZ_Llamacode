@@ -36,7 +36,10 @@ $QtRequiredComponents = @('Core', 'Quick', 'QuickControls2', 'Sql', 'Concurrent'
 
 function Info($m)  { Write-Host "[*] $m"  -ForegroundColor Cyan }
 function Ok($m)    { Write-Host "[OK] $m" -ForegroundColor Green }
-function Die($m)   { Write-Host "[ERROR] $m" -ForegroundColor Red; exit 1 }
+# Die lanza en vez de 'exit': con 'irm ... | iex' el script corre dentro de la
+# sesion del usuario y un exit cierra la terminal antes de que se lea el error.
+# El try/catch de abajo decide si sale (corrido como archivo) o no (iex).
+function Die($m)   { throw [System.Exception]::new("LCBOOT: $m") }
 
 function Have($cmd) { [bool](Get-Command $cmd -ErrorAction SilentlyContinue) }
 
@@ -44,6 +47,44 @@ function Refresh-Path {
     $machine = [Environment]::GetEnvironmentVariable('Path','Machine')
     $user    = [Environment]::GetEnvironmentVariable('Path','User')
     $env:Path = "$machine;$user"
+}
+
+# En un Windows limpio 'python' es el alias de la Microsoft Store
+# (WindowsApps\python.exe): Get-Command lo encuentra pero no es Python. Y el
+# instalador que baja winget no siempre lo agrega al PATH. Se prueba cada
+# candidato ejecutandolo de verdad.
+function Test-PythonExe($exe) {
+    if (-not $exe -or $exe -like '*\WindowsApps\*') { return $false }
+    $prev = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        $out = & $exe -c "import sys; print(sys.version_info[0])" 2>$null
+        return ($LASTEXITCODE -eq 0 -and "$out".Trim() -eq '3')
+    } catch { return $false }
+    finally { $ErrorActionPreference = $prev }
+}
+
+function Find-Python {
+    $candidates = @()
+    $cmd = Get-Command python -All -ErrorAction SilentlyContinue
+    if ($cmd) { $candidates += @($cmd | ForEach-Object { $_.Source }) }
+    if (Have py) {
+        $prev = $ErrorActionPreference
+        $ErrorActionPreference = 'Continue'
+        try { $candidates += @(& py -3 -c "import sys; print(sys.executable)" 2>$null) } catch {}
+        finally { $ErrorActionPreference = $prev }
+    }
+    foreach ($root in @("$env:LOCALAPPDATA\Programs\Python", "$env:ProgramFiles\Python312", "$env:ProgramFiles")) {
+        if (Test-Path $root) {
+            $candidates += @(Get-ChildItem -Path $root -Filter python.exe -Recurse -Depth 2 -ErrorAction SilentlyContinue |
+                Where-Object { $_.Directory.Name -like 'Python3*' } |
+                Sort-Object FullName -Descending | ForEach-Object { $_.FullName })
+        }
+    }
+    foreach ($c in $candidates) {
+        if ($c -and (Test-PythonExe "$c".Trim())) { return "$c".Trim() }
+    }
+    return $null
 }
 
 function Get-MissingQtComponents {
@@ -95,170 +136,204 @@ function Stop-LlamaCodeProcesses {
     Start-Sleep -Milliseconds 800
 }
 
-Write-Host ""
-Write-Host "=== LlamaCode bootstrap (Windows) ===" -ForegroundColor Magenta
-if ($Ref -and $Ref -notmatch '^v?[0-9]+\.[0-9]+\.[0-9]+(-debug)?$') {
-    Die "Invalid release ref: $Ref"
-}
-if ($Config -notin @('Debug', 'Release')) { Die "Invalid build config: $Config" }
-Write-Host "Target: $Dir  source=$(if ($Ref) { $Ref } else { $Branch })  config=$Config"
-Write-Host ""
-
-# ── winget (required, cannot self-install) ──────────────────────────────────
-if (-not (Have winget)) {
-    Die "winget not found. Install 'App Installer' from the Microsoft Store, then re-run."
-}
-
-# ── git ─────────────────────────────────────────────────────────────────────
-if (-not (Have git)) {
-    Info "Installing Git..."
-    winget install --id Git.Git --exact --source winget --accept-source-agreements --accept-package-agreements
-    Refresh-Path
-}
-if (-not (Have git)) { Die "Git not on PATH after install. Open a new terminal and re-run." }
-Ok "git"
-
-# ── Python ──────────────────────────────────────────────────────────────────
-if (-not (Have python)) {
-    Info "Installing Python..."
-    winget install --id Python.Python.3.12 --exact --source winget --accept-source-agreements --accept-package-agreements
-    Refresh-Path
-}
-if (-not (Have python)) { Die "Python not on PATH after install. Open a new terminal and re-run." }
-Ok "python"
-
-# ── CMake ───────────────────────────────────────────────────────────────────
-$CMake = "$env:ProgramFiles\CMake\bin\cmake.exe"
-if (-not (Test-Path $CMake)) {
-    if (Have cmake) { $CMake = (Get-Command cmake).Source }
-    else {
-        Info "Installing CMake..."
-        winget install --id Kitware.CMake --exact --source winget --accept-source-agreements --accept-package-agreements
-        Refresh-Path
-        if (-not (Test-Path $CMake)) { if (Have cmake) { $CMake = (Get-Command cmake).Source } }
+# Todo corre dentro de try/catch: con 'irm | iex' un error no puede cerrar la
+# terminal (antes Die hacia 'exit' y el usuario veia la ventana desaparecer sin
+# saber por que). Corrido como archivo (-File, "Actualizar ahora") si sale con 1.
+$LogPath = Join-Path $env:TEMP 'llamacode-bootstrap.log'
+$RunAsFile = [bool]$PSCommandPath
+$Transcribing = $false
+try { Start-Transcript -Path $LogPath -Force | Out-Null; $Transcribing = $true } catch {}
+$BootstrapFailed = $false
+try {
+    Write-Host ""
+    Write-Host "=== LlamaCode bootstrap (Windows) ===" -ForegroundColor Magenta
+    if ($Ref -and $Ref -notmatch '^v?[0-9]+\.[0-9]+\.[0-9]+(-debug)?$') {
+        Die "Invalid release ref: $Ref"
     }
-}
-if (-not (Test-Path $CMake)) { Die "CMake not found after install." }
-Ok "cmake: $CMake"
+    if ($Config -notin @('Debug', 'Release')) { Die "Invalid build config: $Config" }
+    Write-Host "Target: $Dir  source=$(if ($Ref) { $Ref } else { $Branch })  config=$Config"
+    Write-Host ""
 
-# ── Visual Studio Build Tools 2022 (v143) ───────────────────────────────────
-$HasVs = (Test-Path "C:\BuildTools2022\MSBuild\Current\Bin\MSBuild.exe") -or `
-         (Test-Path "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\MSBuild.exe")
-if (-not $HasVs) {
-    Info "Installing Visual Studio Build Tools 2022 (v143) -- this is large, be patient..."
-    winget install --id Microsoft.VisualStudio.2022.BuildTools --exact `
-        --override "--quiet --wait --norestart --nocache --installPath C:\BuildTools2022 --add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.VC.v143.x86.x64 --add Microsoft.VisualStudio.Component.Windows11SDK.22621" `
-        --accept-source-agreements --accept-package-agreements
-}
-$Generator = if (Test-Path "C:\BuildTools2022\MSBuild\Current\Bin\MSBuild.exe") { "Visual Studio 17 2022" }
-             elseif (Test-Path "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\MSBuild.exe") { "Visual Studio 17 2022" }
-             else { Die "VS Build Tools 2022 not found after install." }
-Ok "VS Build Tools 2022 ($Generator)"
+    # ── winget (required, cannot self-install) ──────────────────────────────────
+    if (-not (Have winget)) {
+        Die "winget not found. Install 'App Installer' from the Microsoft Store, then re-run."
+    }
 
-# ── Qt 6.8.3 (msvc2022_64) via aqtinstall ───────────────────────────────────
-$QtBaseConfig = "$QtDir\lib\cmake\Qt6\Qt6Config.cmake"
-if (-not (Test-Path $QtBaseConfig)) {
-    Info "Installing Qt $QtVer ($QtArch) via aqtinstall..."
-    python -m pip install --user --upgrade aqtinstall
-    python -m aqt install-qt windows desktop $QtVer $QtArch -O C:\Qt --modules $QtAqtModules
-} else {
+    # ── git ─────────────────────────────────────────────────────────────────────
+    if (-not (Have git)) {
+        Info "Installing Git..."
+        winget install --id Git.Git --exact --source winget --accept-source-agreements --accept-package-agreements
+        Refresh-Path
+    }
+    if (-not (Have git)) { Die "Git not on PATH after install. Open a new terminal and re-run." }
+    Ok "git"
+
+    # ── Python ──────────────────────────────────────────────────────────────────
+    $Py = Find-Python
+    if (-not $Py) {
+        Info "Installing Python..."
+        winget install --id Python.Python.3.12 --exact --source winget --scope user --accept-source-agreements --accept-package-agreements --override "/quiet InstallAllUsers=0 PrependPath=1 Include_launcher=1"
+        Refresh-Path
+        $Py = Find-Python
+    }
+    if (-not $Py) { Die "Python 3 not found after install (the 'python' Microsoft Store alias does not count). Install Python 3.12 from python.org and re-run." }
+    Ok "python: $Py"
+
+    # ── CMake ───────────────────────────────────────────────────────────────────
+    $CMake = "$env:ProgramFiles\CMake\bin\cmake.exe"
+    if (-not (Test-Path $CMake)) {
+        if (Have cmake) { $CMake = (Get-Command cmake).Source }
+        else {
+            Info "Installing CMake..."
+            winget install --id Kitware.CMake --exact --source winget --accept-source-agreements --accept-package-agreements
+            Refresh-Path
+            if (-not (Test-Path $CMake)) { if (Have cmake) { $CMake = (Get-Command cmake).Source } }
+        }
+    }
+    if (-not (Test-Path $CMake)) { Die "CMake not found after install." }
+    Ok "cmake: $CMake"
+
+    # ── Visual Studio Build Tools 2022 (v143) ───────────────────────────────────
+    $HasVs = (Test-Path "C:\BuildTools2022\MSBuild\Current\Bin\MSBuild.exe") -or `
+             (Test-Path "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\MSBuild.exe")
+    if (-not $HasVs) {
+        Info "Installing Visual Studio Build Tools 2022 (v143) -- this is large, be patient..."
+        winget install --id Microsoft.VisualStudio.2022.BuildTools --exact `
+            --override "--quiet --wait --norestart --nocache --installPath C:\BuildTools2022 --add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.VC.v143.x86.x64 --add Microsoft.VisualStudio.Component.Windows11SDK.22621" `
+            --accept-source-agreements --accept-package-agreements
+    }
+    $Generator = if (Test-Path "C:\BuildTools2022\MSBuild\Current\Bin\MSBuild.exe") { "Visual Studio 17 2022" }
+                 elseif (Test-Path "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\MSBuild.exe") { "Visual Studio 17 2022" }
+                 else { Die "VS Build Tools 2022 not found after install." }
+    Ok "VS Build Tools 2022 ($Generator)"
+
+    # ── Qt 6.8.3 (msvc2022_64) via aqtinstall ───────────────────────────────────
+    function Install-Qt {
+        & $Py -m pip install --user --upgrade aqtinstall
+        if ($LASTEXITCODE -ne 0) { Die "pip install aqtinstall failed (exit $LASTEXITCODE)." }
+        & $Py -m aqt install-qt windows desktop $QtVer $QtArch -O C:\Qt --modules $QtAqtModules
+        if ($LASTEXITCODE -ne 0) { Die "aqt install-qt failed (exit $LASTEXITCODE). Check your connection and re-run." }
+    }
+    $QtBaseConfig = "$QtDir\lib\cmake\Qt6\Qt6Config.cmake"
+    if (-not (Test-Path $QtBaseConfig)) {
+        Info "Installing Qt $QtVer ($QtArch) via aqtinstall..."
+        Install-Qt
+    } else {
+        $MissingQtComponents = @(Get-MissingQtComponents)
+        if ($MissingQtComponents.Count -gt 0) {
+            Info "Qt exists but is missing required components: $($MissingQtComponents -join ', '). Installing add-on modules..."
+            Install-Qt
+        }
+    }
+    if (-not (Test-Path $QtBaseConfig)) { Die "Qt6 not found at $QtDir after install." }
     $MissingQtComponents = @(Get-MissingQtComponents)
     if ($MissingQtComponents.Count -gt 0) {
-        Info "Qt exists but is missing required components: $($MissingQtComponents -join ', '). Installing add-on modules..."
-        python -m pip install --user --upgrade aqtinstall
-        python -m aqt install-qt windows desktop $QtVer $QtArch -O C:\Qt --modules $QtAqtModules
+        Die "Qt6 at $QtDir is incomplete. Missing components: $($MissingQtComponents -join ', ')."
     }
-}
-if (-not (Test-Path $QtBaseConfig)) { Die "Qt6 not found at $QtDir after install." }
-$MissingQtComponents = @(Get-MissingQtComponents)
-if ($MissingQtComponents.Count -gt 0) {
-    Die "Qt6 at $QtDir is incomplete. Missing components: $($MissingQtComponents -join ', ')."
-}
-Ok "Qt6: $QtDir"
+    Ok "Qt6: $QtDir"
 
-# ── Clone / update ──────────────────────────────────────────────────────────
-if (Test-Path (Join-Path $Dir '.git')) {
-    # 'Actualizar ahora' pasa LC_DIR con la instalacion que esta corriendo, que
-    # puede ser un checkout de trabajo: el reset --hard de abajo se llevaria
-    # puesto todo lo no commiteado. Abortar salvo LC_FORCE=1.
-    $Dirty = @(git -C $Dir status --porcelain | Where-Object { $_ })
-    if ($Dirty.Count -gt 0 -and $env:LC_FORCE -ne '1') {
-        Write-Host ""
-        Write-Host "[ERROR] $Dir tiene $($Dirty.Count) archivo(s) sin commitear." -ForegroundColor Red
-        $Dirty | Select-Object -First 10 | ForEach-Object { Write-Host "        $_" }
-        Write-Host "        Commitealos (o corre con LC_FORCE=1 para descartarlos)." -ForegroundColor Red
-        exit 1
-    }
-    if ($Ref) {
-        Info "Repo exists -- fetching release $Ref..."
-        git -C $Dir fetch --depth 1 origin "refs/tags/${Ref}:refs/tags/${Ref}"
-        if ($LASTEXITCODE -ne 0) { Die "Could not fetch release tag $Ref." }
-        git -C $Dir checkout --detach $Ref
-        if ($LASTEXITCODE -ne 0) { Die "Could not checkout release tag $Ref." }
-        git -C $Dir reset --hard $Ref
+    # ── Clone / update ──────────────────────────────────────────────────────────
+    if (Test-Path (Join-Path $Dir '.git')) {
+        # 'Actualizar ahora' pasa LC_DIR con la instalacion que esta corriendo, que
+        # puede ser un checkout de trabajo: el reset --hard de abajo se llevaria
+        # puesto todo lo no commiteado. Abortar salvo LC_FORCE=1.
+        $Dirty = @(git -C $Dir status --porcelain | Where-Object { $_ })
+        if ($Dirty.Count -gt 0 -and $env:LC_FORCE -ne '1') {
+            Write-Host ""
+            Write-Host "[ERROR] $Dir tiene $($Dirty.Count) archivo(s) sin commitear." -ForegroundColor Red
+            $Dirty | Select-Object -First 10 | ForEach-Object { Write-Host "        $_" }
+            Write-Host "        Commitealos (o corre con LC_FORCE=1 para descartarlos)." -ForegroundColor Red
+            Die "$Dir tiene cambios sin commitear."
+        }
+        if ($Ref) {
+            Info "Repo exists -- fetching release $Ref..."
+            git -C $Dir fetch --depth 1 origin "refs/tags/${Ref}:refs/tags/${Ref}"
+            if ($LASTEXITCODE -ne 0) { Die "Could not fetch release tag $Ref." }
+            git -C $Dir checkout --detach $Ref
+            if ($LASTEXITCODE -ne 0) { Die "Could not checkout release tag $Ref." }
+            git -C $Dir reset --hard $Ref
+        } else {
+            Info "Repo exists -- pulling branch $Branch..."
+            git -C $Dir fetch --depth 1 origin $Branch
+            git -C $Dir checkout $Branch
+            git -C $Dir reset --hard "origin/$Branch"
+        }
     } else {
-        Info "Repo exists -- pulling branch $Branch..."
-        git -C $Dir fetch --depth 1 origin $Branch
-        git -C $Dir checkout $Branch
-        git -C $Dir reset --hard "origin/$Branch"
+        Info "Cloning into $Dir ..."
+        $CloneRef = if ($Ref) { $Ref } else { $Branch }
+        if ((Test-Path $Dir) -and @(Get-ChildItem -Force $Dir).Count -gt 0) {
+            Die "$Dir exists, is not empty and is not a git checkout. Move or delete it (or set LC_DIR) and re-run."
+        }
+        git clone --depth 1 --branch $CloneRef $Repo $Dir
+        if ($LASTEXITCODE -ne 0) { Die "git clone failed (exit $LASTEXITCODE)." }
     }
-} else {
-    Info "Cloning into $Dir ..."
-    $CloneRef = if ($Ref) { $Ref } else { $Branch }
-    git clone --depth 1 --branch $CloneRef $Repo $Dir
+    Ok "source ready"
+
+    # ── Build ───────────────────────────────────────────────────────────────────
+    $BuildDir = Join-Path $Dir 'build'
+    Info "Configuring..."
+    & $CMake -S $Dir -B $BuildDir -G $Generator -A x64 -DCMAKE_PREFIX_PATH="$QtDir"
+    if ($LASTEXITCODE -ne 0) { Die "CMake configure failed." }
+
+    # Recien aca se cierra la app: el link necesita el exe libre, pero si algo de
+    # arriba falla el usuario se queda con su version vieja andando.
+    Stop-LlamaCodeProcesses
+    Info "Building ($Config)..."
+    & $CMake --build $BuildDir --config $Config -- /maxcpucount
+    if ($LASTEXITCODE -ne 0) { Die "Build failed." }
+
+    # ── Deploy Qt runtime ───────────────────────────────────────────────────────
+    $ExeDir  = Join-Path $BuildDir $Config
+    $ExePath = Join-Path $ExeDir 'LlamaCode.exe'
+    if (-not (Test-Path $ExePath)) { Die "Built exe missing at $ExePath" }
+
+    $DeployFlag = if ($Config -ieq 'Debug') { '--debug' } else { '--release' }
+    Info "Deploying Qt runtime..."
+    & "$QtDir\bin\windeployqt.exe" $DeployFlag --qmldir (Join-Path $Dir 'qml') --no-translations --compiler-runtime $ExePath
+    if ($LASTEXITCODE -ne 0) { Die "windeployqt failed with exit code $LASTEXITCODE." }
+    # Qt.labs.settings is not always picked up by windeployqt.
+    $LabsSrc = "$QtDir\qml\Qt\labs\settings"
+    if (Test-Path $LabsSrc) {
+        Copy-Item -Recurse -Force $LabsSrc (Join-Path $ExeDir 'qml\Qt\labs\settings')
+    }
+
+    # Make the app discoverable from Windows Start search. The project-root shortcut
+    # is convenient for manual inspection; the Start Menu shortcut is what Windows
+    # indexes as an installed app for the current user.
+    $ShortcutName = if ($Config -ieq 'Debug') { 'LlamaCode-Debug' } else { 'LlamaCode' }
+    $IconRel = if ($Config -ieq 'Debug') { 'assets\debug_icon.ico' } else { 'assets\app_icon.ico' }
+    $IconPath = Join-Path $Dir $IconRel
+    $ProjectShortcut = Join-Path $Dir "$ShortcutName.lnk"
+    $StartMenuDir = [Environment]::GetFolderPath('Programs')
+    if ([string]::IsNullOrWhiteSpace($StartMenuDir)) {
+        $StartMenuDir = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs'
+    }
+    $StartMenuShortcut = Join-Path $StartMenuDir "$ShortcutName.lnk"
+    Info "Creating shortcuts..."
+    New-LlamaCodeShortcut -ShortcutPath $ProjectShortcut -TargetPath $ExePath -WorkingDirectory $ExeDir -IconPath $IconPath
+    New-LlamaCodeShortcut -ShortcutPath $StartMenuShortcut -TargetPath $ExePath -WorkingDirectory $ExeDir -IconPath $IconPath
+
+    Write-Host ""
+    Ok "Done. Binary: $ExePath"
+    Ok "Start Menu shortcut: $StartMenuShortcut"
+    Write-Host ""
+
+    if (-not $env:LC_NORUN) {
+        Info "Launching LlamaCode..."
+        Start-Process -FilePath $ExePath -WorkingDirectory $ExeDir
+    }
+
+} catch {
+    $BootstrapFailed = $true
+    $msg = $_.Exception.Message -replace '^LCBOOT: ', ''
+    Write-Host ""
+    Write-Host "[ERROR] $msg" -ForegroundColor Red
+    if ($_.Exception.Message -notlike 'LCBOOT: *') {
+        Write-Host "        at: $($_.InvocationInfo.PositionMessage)" -ForegroundColor DarkGray
+    }
+    Write-Host "        Log: $LogPath" -ForegroundColor Yellow
+    Write-Host "        Fix the issue above and re-run the same command; finished steps are skipped." -ForegroundColor Yellow
+} finally {
+    if ($Transcribing) { try { Stop-Transcript | Out-Null } catch {} }
 }
-Ok "source ready"
-
-# ── Build ───────────────────────────────────────────────────────────────────
-$BuildDir = Join-Path $Dir 'build'
-Info "Configuring..."
-& $CMake -S $Dir -B $BuildDir -G $Generator -A x64 -DCMAKE_PREFIX_PATH="$QtDir"
-if ($LASTEXITCODE -ne 0) { Die "CMake configure failed." }
-
-# Recien aca se cierra la app: el link necesita el exe libre, pero si algo de
-# arriba falla el usuario se queda con su version vieja andando.
-Stop-LlamaCodeProcesses
-Info "Building ($Config)..."
-& $CMake --build $BuildDir --config $Config -- /maxcpucount
-if ($LASTEXITCODE -ne 0) { Die "Build failed." }
-
-# ── Deploy Qt runtime ───────────────────────────────────────────────────────
-$ExeDir  = Join-Path $BuildDir $Config
-$ExePath = Join-Path $ExeDir 'LlamaCode.exe'
-if (-not (Test-Path $ExePath)) { Die "Built exe missing at $ExePath" }
-
-$DeployFlag = if ($Config -ieq 'Debug') { '--debug' } else { '--release' }
-Info "Deploying Qt runtime..."
-& "$QtDir\bin\windeployqt.exe" $DeployFlag --qmldir (Join-Path $Dir 'qml') --no-translations --compiler-runtime $ExePath
-if ($LASTEXITCODE -ne 0) { Die "windeployqt failed with exit code $LASTEXITCODE." }
-# Qt.labs.settings is not always picked up by windeployqt.
-$LabsSrc = "$QtDir\qml\Qt\labs\settings"
-if (Test-Path $LabsSrc) {
-    Copy-Item -Recurse -Force $LabsSrc (Join-Path $ExeDir 'qml\Qt\labs\settings')
-}
-
-# Make the app discoverable from Windows Start search. The project-root shortcut
-# is convenient for manual inspection; the Start Menu shortcut is what Windows
-# indexes as an installed app for the current user.
-$ShortcutName = if ($Config -ieq 'Debug') { 'LlamaCode-Debug' } else { 'LlamaCode' }
-$IconRel = if ($Config -ieq 'Debug') { 'assets\debug_icon.ico' } else { 'assets\app_icon.ico' }
-$IconPath = Join-Path $Dir $IconRel
-$ProjectShortcut = Join-Path $Dir "$ShortcutName.lnk"
-$StartMenuDir = [Environment]::GetFolderPath('Programs')
-if ([string]::IsNullOrWhiteSpace($StartMenuDir)) {
-    $StartMenuDir = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs'
-}
-$StartMenuShortcut = Join-Path $StartMenuDir "$ShortcutName.lnk"
-Info "Creating shortcuts..."
-New-LlamaCodeShortcut -ShortcutPath $ProjectShortcut -TargetPath $ExePath -WorkingDirectory $ExeDir -IconPath $IconPath
-New-LlamaCodeShortcut -ShortcutPath $StartMenuShortcut -TargetPath $ExePath -WorkingDirectory $ExeDir -IconPath $IconPath
-
-Write-Host ""
-Ok "Done. Binary: $ExePath"
-Ok "Start Menu shortcut: $StartMenuShortcut"
-Write-Host ""
-
-if (-not $env:LC_NORUN) {
-    Info "Launching LlamaCode..."
-    Start-Process -FilePath $ExePath -WorkingDirectory $ExeDir
-}
+if ($BootstrapFailed -and $RunAsFile) { exit 1 }

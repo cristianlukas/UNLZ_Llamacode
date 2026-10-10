@@ -42,6 +42,27 @@ $buildIdx     = $ps.IndexOf('Info "Building ($Config)..."')
 Check ($configureIdx -gt 0 -and $buildIdx -gt $configureIdx) 'configure y build en orden'
 Check ($stopIdx -gt $configureIdx -and $stopIdx -lt $buildIdx) 'la app se cierra recien antes del build'
 
+# Con 'irm | iex' el script corre en la sesion del usuario: un 'exit' cierra la
+# terminal y el error se pierde (le paso a un usuario: "instalo cosas y se cerro").
+$body = $ps.Substring($ps.IndexOf('$LogPath = '))
+$bodyNoFinal = $body.Substring(0, $body.LastIndexOf('if ($BootstrapFailed -and $RunAsFile) { exit 1 }'))
+Check (-not ($bodyNoFinal -match '(?m)^\s*[^#\r\n]*\bexit\s+\d')) 'ningun exit dentro del cuerpo (solo el final, y solo corrido como archivo)'
+Check ($ps -match 'function Die\(\$m\)\s*\{\s*throw') 'Die lanza en vez de salir'
+Check ($ps.Contains('$RunAsFile = [bool]$PSCommandPath')) 'distingue iex de -File'
+# El alias de la Microsoft Store pasa Get-Command pero no es Python.
+Check ($ps.Contains("-like '*\WindowsApps\*'")) 'descarta el alias python de la Microsoft Store'
+Check (-not ($ps -match '(?m)^\s*python -m')) 'usa el Python verificado ($Py), no el del PATH'
+Check ($ps.Contains('aqt install-qt failed')) 'aborta con mensaje si falla aqt'
+
+# El bootstrap hace 'git clone' en Windows: un solo path trackeado invalido en
+# NTFS (salto de linea, < > : " | ? *, punto/espacio final) hace fallar el
+# checkout y nadie puede instalar. Paso con receipts de benchmark cuyo nombre
+# arrastraba '\n</prod>'.
+$tracked = (& git -C $root ls-files -z) -split "`0" | Where-Object { $_ }
+$badPaths = @($tracked | Where-Object { $_ -match '[\x00-\x1f<>:"|?*]|[ .]$|[ .]/' })
+Check ($badPaths.Count -eq 0) "todos los paths trackeados son validos en Windows ($($badPaths.Count) invalidos)"
+$badPaths | Select-Object -First 5 | ForEach-Object { Write-Host "        $_" -ForegroundColor Red }
+
 # Lado del app.
 Check ($app.Contains('installRootForExePath(QCoreApplication::applicationFilePath())')) 'el app calcula la raiz de instalacion'
 Check ($app -match '\$env:LC_DIR=') 'el app le pasa LC_DIR al bootstrap'
