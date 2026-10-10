@@ -1,13 +1,17 @@
-# Alcance del manifiesto SHA-256
+# Alcance de los hashes SHA-256
 
-`SHA256SUMS.txt` usa el formato estándar de `sha256sum` e incluye la evidencia
-de esta evaluación, incluidos los workspaces crudos copiados bajo `receipts/`.
-No se incluye a sí mismo ni los directorios `__pycache__`, que son bytecode
-regenerable e ignorado por Git.
+Esta carpeta reúne la evaluación inicial del post r/Qwen_AI de IQ3_XXS en una
+laptop y la solicitud posterior del post r/LocalLLM de Q4/4×P100/262K. Ambos
+materiales quedaron bajo el mismo ID de campaña activa; el segundo no convierte
+los resultados IQ3_XXS en una réplica del caso P100.
 
-Estos archivos ya estaban en el directorio del mismo ID con contenido de otra
-solicitud y se preservaron sin modificación: `RESULTS.md`, `source-reddit.txt`,
-`manifest.json`, `context/PLAN.md`, `context/guard-abort.json`,
-`context/probe_262k.py`, `receipts/campaign-report.md` y
-`receipts/configs/iq3_xxs-context262k.json`. No son fuente ni plan de esta
-evaluación r/Qwen_AI y se excluyen del manifiesto.
+`SHA256SUMS.txt` usa el formato estándar de `sha256sum` y lista los archivos de
+evidencia de esta carpeta. Se excluye a sí mismo, `manifest.json` y los archivos
+`.pyc` bajo `__pycache__`, que son bytecode regenerable e ignorado por Git.
+`manifest.json` enumera y verifica los demás archivos, incluido `SHA256SUMS.txt`,
+pero se excluye a sí mismo y a esos mismos `.pyc`.
+
+El paquete conserva recibos crudos, definiciones de suites, workspaces y event
+logs generados por los agentes, ambos textos fuente, los planes por cada post y
+el registro del bloqueo de recursos. No incluye pesos de modelos ni perfiles o
+settings productivos.

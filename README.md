@@ -2028,6 +2028,8 @@ Evaluaciones de modelos candidatas:
 
 ### Evaluar ideas externas sin repetir pruebas
 
+El registro acumulativo de candidaturas, decisiones, pendientes y huellas para no repetir es el [Programa continuo de evaluación de modelos y harness](docs/evaluacion-modelos-llamacode.md).
+
 Para cada post, comentario o repositorio nuevo, usa el [prompt reutilizable de
 investigación y evaluación](docs/prompts/evaluar-ideas-externas.md). Primero
 contrasta la afirmación con la evidencia local y elige el caso de uso: Ingi-Charla,

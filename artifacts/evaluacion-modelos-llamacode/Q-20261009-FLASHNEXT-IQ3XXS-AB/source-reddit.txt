@@ -1,0 +1,2045 @@
+# Programa continuo de evaluación de modelos y harness de LlamaCode
+
+Leé el material incluido entre comillas y evaluá si sirve para nuestros modelos, perfiles o harness de LlamaCode: coding/agentes, Computer Usage, Ingi-Charla, visión, contexto y rendimiento.
+
+## Pedido de esta ejecución
+
+OBJETIVO O PREGUNTA ESPECÍFICA:
+Leé el material incluido entre comillas y evaluá si sirve para nuestros modelos, perfiles o harness de LlamaCode: coding/agentes, Computer Usage, Ingi-Charla, visión, contexto y rendimiento.
+
+MATERIAL A INVESTIGAR — copiar literalmente entre estas comillas:
+"""
+
+Ir a LocalLLM
+r/LocalLLM
+•
+hace 6 d
+u/loudifier
+
+Strata takes the promise of "MoE models just need a total amount of VRAM+RAM" and makes it a reality
+Discussion
+r/LocalLLM - Strata takes the promise of "MoE models just need a total amount of VRAM+RAM" and makes it a reality
+Flash-Next Q4, q8 kv, 262k context
+
+4x P100 on PCIe3 x8 slots (4x16GB=64GB total)
+
+128GB DDR4 at 2133MHz
+
+E5-2683 v4 (16c/32t at 2.6GHz boost)
+
+On average it's about twice as fast as 27B and five times faster than Flash-Next using a customized llama.cpp just to get it to load at all.
+
+
+Upvote
+154
+
+Downvote
+
+141
+Ir a los comentarios
+
+2
+Republicar
+
+Compartir
+Únete a la conversación
+
+Ordenar por:
+
+Mejores
+
+Buscar comentarios
+Expandir la búsqueda de comentarios
+Sección de comentarios
+kenjiow
+•
+hace 6 d
+This astroturfing is getting tiresome
+
+
+Upvote
+29
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Cautious_Chicken_604
+Cautious_Chicken_604
+•
+hace 6 d
+On the flipside... I've been hearing a lot about Strata lately (as have we all), and previously under my setup on Qwen3.8-Flash-Next using llama.cpp I was only able to get 21 t/s, and I just installed Strata last night and am trying it out now and getting like 60 t/s. So... the hype is also real?
+
+
+Upvote
+33
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/lchabod89
+lchabod89
+•
+hace 6 d
+Honestly, the negativity is exhausting. What's happening is these sweatlords hear about it fairly quickly, and then want to gatekeep it. 
+
+
+Upvote
+8
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/leonbollerup
+leonbollerup
+•
+hace 6 d
+The hype is very real on this one.. same with ninfer
+
+
+Upvote
+12
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/A_Moist_Towe1
+A_Moist_Towe1
+•
+hace 6 d
+Have you tried to run it? No? Just complaining? Why are you here?
+
+
+Upvote
+7
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+mechkbfan
+•
+hace 6 d
+Insignia del logro Top 1% en comentar para el perfil Top 1% en comentar
+No, I think it's just hype.
+
+If you've gone 500% increase, wouldn't you be stupidly pumped? 
+
+I'm the same on R9700 with vllm radiance. I want to tell everyone how great it is compared to what life was like before it
+
+
+Upvote
+7
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Not_a_question-
+Not_a_question-
+•
+hace 5 d
+I have a R9700, what are you using vllm radiance for? I'm asking since you said you wanted to tell everyone how great it was =D
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/unvivid
+unvivid
+•
+hace 5 d
+Not op, but essentially it's ninfer for R9700, definitely worth checking out if you have one or more R9700s. I doubled my Qwen 3.8 27b numbers on a single card. I think we're going to see more performance optimization stuff like vLLM radiance, ninfer, and strata. So much performance is being left in the table chasing the supporting the absolute latest frontier open models vs tuning for specific hardware.
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+mechkbfan
+•
+hace 5 d
+Insignia del logro Top 1% en comentar para el perfil Top 1% en comentar
+IMO, makes R9700 actually usable. I struggled to get speeds or context I was happy with before that I stuck with Claude Code.
+
+Now there's many forked projects from radiance-vllm where you'll find 125t/s+ decode, 2500t/s+ prefill, 200k+ context, decent concurrency up to 4, all running at MXFP4, which hits my minimum threshold.
+
+I've seen nothing else remotely compete with that for the price point.
+
+For example
+
+https://github.com/Eliovp-BV/paiton-vllm-plugin
+
+https://github.com/slybase/vllm-sly-radiance/pkgs/container/vllm-sly-radiance
+
+You could trade off MXFP4 for INT5 Paro for higher quality but it'll obviously be slower + less KV.
+
+As well, you can experiment with ThinkingCap or Swift variations to reduce Qwens overthinking problem without affecting quality too much.
+
+Interesting enough the original author has started a new project just called radiance
+
+https://codeberg.org/StillDeadcode/radiance
+
+I'm getting a separate PC with 2x9070XT working with it first
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Not_a_question-
+Not_a_question-
+•
+hace 5 d
+Thanks. I've two r9700s I'll see if I can run a bigger quant at higher speeds with thia!
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+mechkbfan
+•
+hace 5 d
+Insignia del logro Top 1% en comentar para el perfil Top 1% en comentar
+Two?? The world's your oyster!
+
+For Qwen 3.8 27B, I'd run something like Swift Paro int5
+
+https://huggingface.co/hugypufy
+
+Or if you have 64GB RAM, and want to run QFN, go StillDeadcodes's radiance. You'll be getting like 170t/s pending hardware
+
+Things are moving pretty fast. Have you joined Launch80 Discord before?
+
+https://discord.gg/launch80
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Not_a_question-
+Not_a_question-
+•
+hace 5 d
+Yes, I'm already in launch80. I have one of the cards dedicated to my business running software. So I can only use one (except for the weekends, that's when I get 2 and will try the in5 quant!)
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+mechkbfan
+•
+hace 4 d
+Insignia del logro Top 1% en comentar para el perfil Top 1% en comentar
+Fair. Its addictive. I kind of want to buy a third now lol
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/HushHushShush
+HushHushShush
+•
+hace 5 d
+What are you doing? Like honestly? This shit works and lives up to the hype and you're spreading stupid lies because....????
+
+Why are you on this sub?
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/loudifier
+loudifier
+OP
+•
+hace 6 d
+I get that it's the next hyped thing right after Jev was so hyped, but it's basically just a llama.cpp fork with a smart tuning routine. What is there to astroturf? Big llama out to get your GitHub stars?
+
+Avatar de u/leonbollerup
+leonbollerup
+•
+hace 6 d
+•
+Editado hace 6 d
+Lol.. it’s NOT a llama ccp fork dude
+
+Edit: it does.. well.. parts of it anyway
+
+Avatar de u/loudifier
+loudifier
+OP
+•
+hace 6 d
+Then maybe a bunch of scripts wrapped around a llama.cpp fork? It at the very least includes large chunks of llama under the hood.
+
+Honestly llama.cpp's auto fit and tuning parameters are pretty broken, so it was only a matter of time before someone came along and fixed it. Wouldn't be surprised to see a more integrated and native cpp implementation get merged into mainline llama.cpp soon.
+
+
+Upvote
+7
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/leonbollerup
+leonbollerup
+•
+hace 6 d
+I stand corrected! - Had an AI analyze it:
+---
+
+Here's the full picture — Strata uses llama.cpp in five distinct ways, all from the same pinned commit (3cf03257):
+
+1. CPU dequant kernels (ggml-cpu) — "native experts"
+
+• Its MoE expert kernels for the low-bit i-quant formats (IQ2_XS, IQ3_XXS, etc.) call ggml-cpu's own dot products (ggml_get_type_traits_cpu), so "an IQ weight means exactly what it means in llama.cpp" — bit-exact compatibility with GGUF i-quants
+
+• Built as a static lib from the llama.cpp checkout, with AVX-512/AVX2/F16C flags; Strata links ggml-cpu + ggml-base directly
+
+• src/kernels/cpu/native_expert.cpp, iq_avx512.cpp, iq_avx2.cpp
+
+2. GPU prompt-path kernels (ggml-cuda MMQ)
+
+• The CUDA prompt path uses llama.cpp's MMQ (matrix-matrix quantized) kernels for MoE experts — it compiles only the mmq.cuh instances it needs for its quant types (q2_0, iq2_xxs … q8_0) plus a handful of host symbols from ggml-cuda.cu
+
+• So the hot GPU expert math on the prompt path is literally llama.cpp's kernel code
+
+3. GGUF tooling (gguf-py)
+
+• Its Python tools (model packers, MTP packer, tokenizer, fixtures) use llama.cpp's gguf-py to read/write GGUF files — tools/_paths.py resolves it from third_party/llama.cpp/gguf-py
+
+• That's how it ingests the GGUF checkpoints (ISTA-DASLab, Swift, Unsloth) and repacks them
+
+4. Vision (mtmd + llama libs)
+
+• The image/vision encoder is llama.cpp's mtmd library — strata-vision links mtmd llama at the same pinned commit, so image input support comes from llama.cpp's multimodal stack
+
+5. Test oracle (independent llama.cpp build)
+
+• A second full llama.cpp build is wired in as a numerical parity oracle: native_expert_parity.cpp, qsa_parity.cpp, s2_gemv_parity.cpp run Strata's kernels and llama.cpp's on the same inputs and compare results — it's how they prove their custom kernels match reference behavior
+
+In short: Strata is a custom engine (its own scheduler, attention, MoE routing), but it borrows llama.cpp's quantized-math layer — ggml CPU dequant, CUDA MMQ kernels, GGUF I/O, and the mtmd vision stack — and uses a vanilla llama.cpp build as the ground-truth reference in its tests. It's "a fast lane built around llama.cpp's kernel foundations," not a fork of llama.cpp itself.
+
+
+Upvote
+0
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+
+1 respuesta más
+Avatar de u/fallingdowndizzyvr
+fallingdowndizzyvr
+•
+hace 6 d
+Insignia del logro Top 1% en comentar para el perfil Top 1% en comentar
+Have you used it? The first thing it does when you run setup is download llama.cpp.
+
+
+Upvote
+4
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/BlackBeardAI
+BlackBeardAI
+•
+hace 6 d
+3090 Maximalist
+J-v was totally useless tho. At least this solves something real. That said I haven’t tried any of these specialized backends (Strata, ninfer or whatever) even though I have the hardware for all of them. I am still happy with llama.cpp&vllm for now
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Fortyseven
+Fortyseven
+•
+hace 5 d
+Qwen38/Gemma4/LlamaCPP
+J-v
+
+Really?
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+doudawak
+•
+hace 6 d
+Same here sir. Just FYI I actually tested it yesterday myself to confirm if it was fuzz or not on my hardware ( 96Gb DDR4 / R9700 ) and got around 65tok/s on it. Honestly impressed and I might even replace it from Qwen 27b q4.
+
+But again I fell you, AI fatigué is real
+
+
+Upvote
+3
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/OutsideCycle8331
+OutsideCycle8331
+•
+hace 4 d
+AI Fatigue all the same for me got two R9700 running now and an RTX 4500 Pro... kinda think of selling everything again
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/kiwibonga
+kiwibonga
+•
+hace 6 d
+There's a v100 fork and it's really impressive; 1200+ t/s PP and 70+ t/s TG with iq3_xxs on 4x V100 16GB + 128 GB DDR3. I couldn't get over 20 t/s with llamacpp.
+
+
+Upvote
+38
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/loudifier
+loudifier
+OP
+•
+hace 6 d
+Seems like the older your hardware the more speedup you get
+
+
+Upvote
+12
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Existing_Style8558
+Existing_Style8558
+•
+hace 6 d
+My 6900xt and 128gb of ddr4 say hello in 500t prefill 60t/s decode
+
+
+Upvote
+7
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Buzz_Killington_III
+Buzz_Killington_III
+•
+hace 6 d
+Which quant are you using? I believe that's significantly more than my dual 7900xtx's.
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Existing_Style8558
+Existing_Style8558
+•
+hace 4 d
+That was iq3. Now running ud_q4_xl at 30t/s generation
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Few-Golf-618
+•
+hace 6 d
+so strata already support RDNA 2 ? i taught it wasn't
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Existing_Style8558
+Existing_Style8558
+•
+hace 4 d
+Couple days ago via ROCm I beleive
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+lukistellar
+•
+hace 6 d
+It says RX6900 and RX6800 in the repo, but I will try it with the RX6700 XT soon.
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Material-Database-24
+Material-Database-24
+•
+hace 6 d
+Hmm..
+
+I just saw local 2nd old leasing PC shop selling an HP workstation with 2x xeons, 192gb DDR4, RTX6000 (older 24gb version). I wonder should I go buy it, get another RTX6000 as they have (slow 100GB/s) NVlink.. granted, it was still about 3k so something like 128gb StrixHalo might make more sense.
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/TinySeason367
+TinySeason367
+•
+hace 6 d
+Can you share the link to that fork?
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/kiwibonga
+kiwibonga
+•
+hace 5 d
+https://github.com/jmnargi/Strata-V100
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+davl3232
+•
+hace 5 d
+DDR3!?
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Redditiskindasilly
+•
+hace 6 d
+Bots bots bots wahhh…
+
+No. I have a 5070 and a strix halo. I just the largest quant with highs in the 50s never falling below 35 tok/sec for 515 minutes.
+
+It’s absurdly consistent. I’m about to audit the .json for the session, but initial results look VERY promising.
+
+
+Upvote
+10
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Secret_Conclusion_93
+Secret_Conclusion_93
+•
+hace 6 d
+I noticed that the one that complaints have a really good GPU that doesn't need workaround like Strata in the first place.
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Redditiskindasilly
+•
+hace 6 d
+•
+Editado hace 6 d
+5070 is good but limited by 12 gigs of vram. My strix has 128 unified and can run Qwen 3.8 flash but the speeds are so so. The added 5070 makes a large enough difference for my use case.
+
+Edit: misread your comment. Yeah the complains are kind of odd. I think it’s good that we’re making improvements for less optimized hardware stacks. I still want a 5090 tho 😭🙏
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/mireisinterested
+mireisinterested
+•
+hace 6 d
+here to say i am running flash next coder iq1_m on 12gb 4070 + 32gb ddr4 at 35 t/s, this is pretty goated
+
+
+Upvote
+11
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Acceptable_Ad_6382
+•
+hace 5 d
+Is it still capable at iq1_m? I also have a 4070 w/ 32GB ddr4 and wasn't sure if it was worth running
+
+
+Upvote
+3
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Automatic_Two4291
+•
+hace 5 d
+It will feel like talking to a minion
+
+
+Upvote
+3
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Acceptable_Ad_6382
+•
+hace 5 d
+So not worth it lol
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+
+4 respuestas más
+CrispyToken52
+•
+hace 4 d
+From the model page:
+
+Averaged over the transformer, this corresponds to 1.89 bits per parameter of the original model. The figure is an effective rate: it amortises the removed experts over the original parameter count, and so expresses the combined effect of pruning and quantization. No individual weight is stored at 1.89 bits. The retained weights are stored at 3.5 bpw, unchanged by pruning, and the halved expert count accounts for the remainder of the reduction. Following the convention of the accompanying releases, the figure is reported over the transformer and excludes the fixed-precision n-gram shard.
+
+It's not actually IQ1_M.
+More like IQ3_M.
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+MrGunny94
+•
+hace 6 d
+How's the overall performance and hallucination compared to running the models in vLLM or Llama.cpp?
+
+
+Upvote
+4
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Mil0Mammon
+Mil0Mammon
+•
+hace 6 d
+There usually are no lossy optimizations, so those should be identical.
+
+I've worked on tuning it further with claude, for my v100, so I know a little about that part: it's mostly just finding optimal math / gpu features to do the math /tricks to use the buffers better etc.
+
+Strata is partly so fast because of things like that, partly because of smart/efficient hot experts placement
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+swallowtail23
+•
+hace 5 d
+I was running Qwen 3.8 35B A3B under llama (5800X3D, 64GB DDR4 3600, 3080ti) as that was the best I could get with decent performance. As a model it was frustrating - I usually ended up running it in tandem with codex to manage where it would get stuck, loop, or just end up iterating - Qwen working, codex critiquing, back to qwen. Performance was OK. (python, scripting, php, general coding stuff). Mostly through Zoo Code in VS Code.
+
+Strata with iq3_xss, I'm consistently getting 56tok/s and after 2 days solid work the quality of the outcome is significantly better. Far less codex input and correction, no looping at all. Really impressed with what it is achieving without burning my never-big-enough Plus subscription allowance
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+
+1 respuesta más
+Avatar de u/abmateen
+abmateen
+•
+hace 6 d
+Tested v100 port of Strata on a single V100 32GB 64GB DDR4, Xeon E52686v4, getting 60tok/s and 1400Tok/s on prefill vs 20tok/s and 300tok/s on llama.cpp. so it provided me a real bump.
+
+Avatar de u/NefariousnessOnly752
+NefariousnessOnly752
+•
+hace 4 d
+Which quant did you run? I'm on the fence about picking up a V100 or just another 5060TI 16GB
+
+Avatar de u/abmateen
+abmateen
+•
+hace 4 d
+IQ3 RCO GSQ
+
+Avatar de u/GrumpyCat79
+GrumpyCat79
+•
+hace 5 d
+Have you tested it compared to strata itself since it support V100 with STRATA_EXPERIMENTAL_SM60=1?
+
+https://github.com/Niko1221/Strata/blob/main/docs/OLDER_GPUS.md https://github.com/Niko1221/Strata/blob/main/docs/NVIDIA_V100.md
+
+Avatar de u/abmateen
+abmateen
+•
+hace 5 d
+No I used some other port I can give it a try though
+
+Avatar de u/GrumpyCat79
+GrumpyCat79
+•
+hace 5 d
+It'd be nice if you have time! I prefer to use the upstream version when possible, some forks do well maintaining their patches/modification, but it's pretty hit or miss. Since Strata's dev are pretty active (they sometimes release multiple version a day) it'd be intense to keep a fork updated!
+
+Avatar de u/abmateen
+abmateen
+•
+hace 4 d
+I tested it using the vanilla Strata repo, and compiled it with CUDA 12.8 for V100 SM_70 Compatibility, the results are pretty same.
+
+
+1 respuesta más
+Avatar de u/KowMangler
+KowMangler
+•
+hace 6 d
+I have an mi210 that this does not support out of the box. After several patches to wave size, shufl stride, loop unwrapping routines and other tunings i had to adjust for mi210 i can get 1000 tps prefil and 55-70 t/s decode on full ctx. The other thing I'll be adjusting is the forced 8bit kv. The mi210 doesnt have native mat_mul for it so it is slower than bf16. Llama.cpp on bf16 and offloaded engram fits with 58GB of vram used on the iq3_xxs. I should see a speedup with bf16 so that will be my next patch. There are a number of other software tunings and hip adjustments i need to make but for context on tuned tile size adjustment on llama.cpp i get 30tps decode and 700tps prefill. Default llama cpp 20/500. So tile size tuning is significantly important for the mi210.
+
+
+Upvote
+3
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/silenceimpaired
+silenceimpaired
+•
+hace 6 d
+If they did this with GLM 5.3 flash I'd be interested. Really annoyed at Qwen Flash Next licensing. Still happy for all here who don't care and love the model.
+
+
+Upvote
+3
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+-SirJohnFranklin-
+•
+hace 6 d
+What's the problem?
+
+
+Upvote
+4
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/silenceimpaired
+silenceimpaired
+•
+hace 5 d
+I understand if others don’t share my view, after all the problem isn’t big yet…
+
+Which is often the case with annoyances. As far as non standard licenses (Apache 2, MIT) go, it’s one of the most permissive… and for companies like Black Forest labs who rarely use Apache I hope others adopt the language. So at the moment just annoying, but also an understandable license.
+
+I still had to go read it since it wasn’t standard. Also the next license could be more restrictive. They just made it more restrictive than Apache so next time they could do it again… seeing how it’s version 1.0 that supports change. Which means I’ll likely have to read the next license as well.
+
+Until these models with non standard license seriously outperform standard license models I’ll avoid them in protest and raise my concerns… in the hope it keeps the problem small with less adoption. Qwen is a leader, and other companies might follow if there is no consequence to the license change.
+
+Again, I understand if others don’t share my view.
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/idkfawin32
+idkfawin32
+•
+hace 6 d
+rtx5090 and 128gb ddr4 and intel i12900k, I’m getting 110 tok/s running qwen 3.8 flash
+
+
+Upvote
+4
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+putrasherni
+•
+hace 6 d
+32 decode and 379 prefill
+I pass
+
+
+Upvote
+3
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/philmarcracken
+philmarcracken
+•
+hace 6 d
+379 prefill
+
+yikes. i wonder how much they paid for the bot army
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Serious_Bite_7613
+Serious_Bite_7613
+•
+hace 6 d
+It's insane how many god-awful strata posts are popping up. I guess the Jev guys pivoted.
+
+
+Upvote
+5
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Cautious_Chicken_604
+Cautious_Chicken_604
+•
+hace 6 d
+Qwen3.8-Flash-Next has gone from something I could run as a cool tech-demo to something I can actually daily drive. That's a pretty big difference to me personally. You could shill it with bots, but when you do that for enough people, you also don't need to.
+
+
+Upvote
+10
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/loudifier
+loudifier
+OP
+•
+hace 6 d
+There isn't a product to shill here. I think what you are seeing is a wave of people with E-waste tier hardware finally getting usable models to run at usable speeds. I'm not posting speed records, just reporting that I tested it and am seeing a real speedup that seems consistent with the hype.
+
+It may not compete with ninfer, but if you have ancient hardware that doesn't even have a ninfer fork then you might see a significant speedup.
+
+
+Upvote
+12
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Serious_Bite_7613
+Serious_Bite_7613
+•
+hace 5 d
+The only people I can see using this are the 8-12GB VRAM + 64-128GB DDR5 RAM crew, which I guess are a pretty small bunch. Qwen3.8 27B will fit on 16GB VRAM without hogging the rest of the system and give equal/better results.
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+
+1 respuesta más
+Avatar de u/exaknight21
+exaknight21
+•
+hace 6 d
+I tried it on a single Mi50 32GB + 64 GB DDR3 Dual Xeons T5610 workstation and 256 SATA SSD. Both llama.cpp (lazy flag) and strata.
+
+Here the prefill is super slow on both (less than 200 tps) and it took it 6 hours to review my code base, with failure - timeout.
+
+Decode is 15 tps on strata, and max 9 tps on llama.cpp.
+
+Sadly, same on my q5 KXL 27b - all with q8 kv and 131k context.
+
+Both tests with DeepSeek Harness (Windows Desktop) connected to my headless Ubuntu Workstation (LAN).
+
+I can’t try strata with Qwen3.6-35B-A3B because architecture and ngram are hardcoded into strata so that’s major reworking to add to strata to get qwe3_5 moe architecture in - i hope someone puts it in and merges into main soon; that being said i am back on mixas fork and qwen3.6-35B-a3b q5KXL 131k context. That test is currently running but my point being, for me at least, this is great innovation and I am stoked for the future.
+
+I truly hope the Qwen Team releases 35B-A3B variants and mainstream labs release sub-50B model because the knowledge and abilites of 27B dense and 35B MOE are truly formidable.
+
+
+Upvote
+4
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/loudifier
+loudifier
+OP
+•
+hace 6 d
+Exactly. This isn't necessarily unlocking anything that couldn't be done before, but it significantly lowers the effort, uncertainty, and all of the trial and error to maximize llama.cpp performance. I have already seen people using Strata for DeepSeek, so I'm sure we will see 35B work popping up. The pace of development is crazy. Hopefully when Qwen 4 drops we will also see competitors catching up from the 3.8 shock, especially in the medium 30B-100B gap where budget hardware shines.
+
+
+Upvote
+3
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Time-Culture2549
+•
+hace 5 d
+Also on 2133 ddr4 ecc and a2000 with a dual gold xeon 6142, putting down like 70 t/s on swift iq3 running in strata
+
+
+Upvote
+3
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/EbbNorth7735
+EbbNorth7735
+•
+hace 6 d
+Alright damn't I'll bite and try it. Anyone tested it on an RTX 6000 Pro or in 96GB of VRAM?
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+mxmumtuna
+•
+hace 6 d
+But, why?
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Sexyvette07
+Sexyvette07
+•
+hace 6 d
+Im curious what the performance is gonna be like on a RTX Pro 6000. If you do that, let me know. I think once my 5090 is out of warranty, I might look into having the VRAM mod done and getting up to 96gb. For my 5090 + 64GB system RAM, Strata is an absolute beast. Im very happy with it and im only running IQ3_S.
+
+OlgerdOutlander
+•
+hace 5 d
+Insignia del logro Top 1% en posts para el perfil Top 1% en posts
+Wait, I thought Strata doesn't support p100?
+
+Avatar de u/loudifier
+loudifier
+OP
+•
+hace 5 d
+It doesn't officially, but you can set an environment variable to enable sm60 and it will just go. I also needed to edit one other line to get it to compile.
+
+Avatar de u/GrumpyCat79
+GrumpyCat79
+•
+hace 5 d
+Experimental support was added a few days ago. Devs push multiple new release per days so it changes quite quickly
+
+Shrimpin4Lyfe
+•
+hace 6 d
+Is it worth running strata on 4x 3090s vs vllm tp=4?
+
+Avatar de u/Useful_Disaster_7606
+Useful_Disaster_7606
+•
+hace 6 d
+you're probably not the target user since you can comfortably run Qwen 3.8 Flash Next purely on VRAM
+
+Avatar de u/Sexyvette07
+Sexyvette07
+•
+hace 6 d
+Us normies see the biggest gains, but im willing to bet that Strata will still be a lot faster than llama.cpp with all experts in VRAM
+
+Avatar de u/Ok_Replacement2229
+Ok_Replacement2229
+•
+hace 6 d
+I dont have more than 4xgen3 pcie so for me its running much better.
+
+Imagen del comentario
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/GoodGuyLafarge
+GoodGuyLafarge
+•
+hace 5 d
+Where did you get the gui?
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/loudifier
+loudifier
+OP
+•
+hace 5 d
+That's the built in Strata gui
+
+
+Upvote
+3
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/GoodGuyLafarge
+GoodGuyLafarge
+•
+hace 4 d
+Sorry for being stupid, where do I reach it? Under /metrics I just get a json array back
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+doneddat
+•
+hace 6 d
+no. you are giving up running multiple requests at once, which is huge win running multiple sub-agents or working on multiple issues at once almost for free.
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/jmager
+jmager
+•
+hace 5 d
+They added support for simultaneous requests 9 hour ago. https://github.com/Niko1221/Strata/releases#release-v0.1.39
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+doneddat
+•
+hace 5 d
+excellent use of tokens.
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/catinterpreter
+catinterpreter
+•
+hace 6 d
+Not really interested unless it's a decent quant.
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+doneddat
+•
+hace 6 d
+•
+Editado hace 6 d
+try vllm.
+
+Strata is sacrificing A LOT. With 128GB of RAM and at 64GB VRAM you might be better off without these sacrifices.
+
+Adding milliseconds to single token calculation accumulates very rapidly, when doing it tens of times per second.
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Pablo_the_brave
+Pablo_the_brave
+•
+hace 5 d
+It's clearly not for 64GB VRAM and 128GB RAM.
+
+
+Upvote
+3
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+
+1 respuesta más
+NoBuilding4495
+•
+hace 6 d
+I tried this using a 3060 and 32gb ram and the results were miserable. After about 30 minutes I removed it
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+alphapussycat
+•
+hace 3 d
+3060 12gb 64gb, all severely undervolted and underclocked (CPU + GPU combo < 100w), had 20tok/s+ gen and 400 tok/s prefill, for up to 32k context of which 22k context prefill (as that was all I could fit).
+
+32gb is not enough to run it, pretty much every step in setup tells you that the minimum amount of ram is 64gb.
+
+
+1 respuesta más
+Avatar de u/hopbel
+hopbel
+•
+hace 5 d
+64GB + 128GB is not a "normal amount" lol
+
+
+1 respuesta más
+Ok-Addendum3545
+•
+hace 5 d
+Whao, you did 4 GPUs. Excellent !
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/loudifier
+loudifier
+OP
+•
+hace 5 d
+This is my setup https://www.reddit.com/r/LocalLLM/s/F6RevnTr4R
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/painchonha
+painchonha
+•
+hace 6 d
+i only have one 3090 and 3ch ddr4( due to 1 slot not working issue) and getting avg 60or more tok/s with strata and very happy with it
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+MinerFortyNine
+•
+hace 4 d
+Would it work across a pair of 3090 with nvlink (using as a single GPU with vram)? Gen3 pcie x16 = Gen4 pcie x8, so your gen3 x8 is like gen4 x4.
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+
+1 respuesta más
+Avatar de u/LeftHandHaku
+LeftHandHaku
+•
+hace 5 d
+Wow those results look impressive. 
+
+Does Strats support any other MoE models besides Qwen flash next? What about DeepSeek 4.1 flash, or GLM 5.3 flash? If yes, what are your results?
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+
+4 respuestas más
+paul_tu
+•
+hace 5 d
+Halogen will be faster for Strix halo still?
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/loudifier
+loudifier
+OP
+•
+hace 5 d
+No idea. I'm running $500 of weird old GPUs with an ancient workstation machine literally pulled out of an E-waste bin. Strix halo is so far outside my budget it's silly
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+paul_tu
+•
+hace 4 d
+Guess you know how to run properly Cmp170hx
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+FizzyDuncDizzel
+•
+hace 5 d
+Well I have 4 p100s. Now I need more ram.
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/loudifier
+loudifier
+OP
+•
+hace 5 d
+Definitely just try it out. I just tried it on a machine with 2x GTX 1070 and 48GB DDR3 and the coder model is only using 26GB, so it seems to be pretty smart about making the most of your particular hardware
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+
+2 respuestas más
+Avatar de u/loudifier
+loudifier
+OP
+•
+hace 5 d
+I loaded up the Q1 "coder" model and it needed about 30GB of RAM, and it might split some pieces out to disk or configure itself for less RAM if you are up against a 32GB limit.
+
+
+Upvote
+3
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+
+3 respuestas más
+zyxciss
+•
+hace 6 d
+We get it strata bots this isn't some new tech. Its just centered around the idea of a hot cache for experts which was rejected by mainline llama cpp.
+
+
+Upvote
+-1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Secret_Conclusion_93
+Secret_Conclusion_93
+•
+hace 6 d
+Why it was rejected?
+
+
+Upvote
+5
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+
+4 respuestas más
+Avatar de u/jmager
+jmager
+•
+hace 5 d
+It is far more than that. You really ought to read through their documentation. It runs far better for me than any model has in years of playing with llama.cpp by exploiting the unique architecture of this model.
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+
+2 respuestas más
+Avatar de u/hurrdurrmeh
+hurrdurrmeh
+•
+hace 6 d
+this post and glowing replies are all just bots. it is very obvious to spot. I hate strata now and associate them with scam and spam and nothing else, certainly nothing good.
+
+no good product would ever need this manipulation. no good company would ever act so unethically. fuck strata.
+
+
+Upvote
+-4
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Content-Customer-679
+Content-Customer-679
+•
+hace 6 d
+My god, si much nonsense in one post... It's not a company, it's open source project... And it actually works very well...
+
+
+Upvote
+12
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+
+2 respuestas más
+Avatar de u/jmager
+jmager
+•
+hace 5 d
+Posting results is manipulation? How did you determine everyone posting is a bot? You didn't, you are just assuming. We are all trying to improve our local LLM experience, take your negativity elsewhere.
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+chrisoutwright
+•
+hace 3 d
+tested myself, been using daily driver cppllama, first try now with strata was good q4 xss model with >130 toc/sec and >2k prefill on 94gb ram and 5090 and 256k ctx as upper limit, need to test code quality but seems better than 27b qwen3.8.
+
+Love the speedup! But need to read thru the docs, it is alot of reading.
+
+Stop ranting and test yourself instead. Power to the people!
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+
+"""
+
+Investigá las afirmaciones relevantes y contrastalas con fuentes primarias cuando existan. Revisá las pruebas, perfiles, recibos e informes que ya tenemos. Diseñá y ejecutá las pruebas necesarias para comprobar si el material aporta una mejora frente a nuestros perfiles actuales. No declares superioridad por una afirmación publicada, una sola corrida o una comparación incompatible.
+
+Este pedido forma parte de un programa de evaluaciones que puede continuar en varios chats. El documento persistente indicado abajo es la fuente de verdad entre chats: no dependas de la memoria de esta conversación.
+
+## Documento acumulativo obligatorio
+
+Mantené actualizado este documento canónico del repositorio:
+
+`docs/evaluacion-modelos-llamacode.md`
+
+Guardá recibos, configuraciones y resultados crudos en:
+
+`artifacts/evaluacion-modelos-llamacode/<ID-DE-TAREA>/`
+
+Al comienzo de cada ejecución:
+
+1. Leé el documento canónico completo y revisá sus decisiones, pruebas pendientes e índice de huellas ya ejecutadas.
+2. Revisá los informes y recibos vinculados que sean pertinentes para este pedido.
+3. Asigná un ID de tarea nuevo usando el protocolo de `WORK_QUEUE.md`. Si esta ejecución reanuda una prueba existente, conservá su ID y continuá desde los artefactos.
+4. Registrá el objetivo, los candidatos, los controles y las pruebas previstas antes de ejecutarlas.
+
+Al terminar cada ejecución, actualizá el documento canónico, incluso si el resultado es inconcluso o no se pudo ejecutar la prueba. No dejes la única respuesta o conclusión en el chat.
+
+El documento debe conservar estas secciones:
+
+- **Resumen y decisiones vigentes:** qué perfil recomendamos para cada uso, qué cambios se promovieron y qué decisiones siguen pendientes.
+- **Inventario de candidatos y controles:** perfil/modelo, estado y enlace a su evidencia principal.
+- **Registro de tareas:** una entrada por cada pedido o campaña, con ID, fecha, objetivo, estado, resultados, límites y enlaces a artefactos.
+- **Registro de decisiones:** decisión, uso al que aplica, evidencia que la respalda, confianza, limitaciones y fecha.
+- **Próximas pruebas:** qué falta medir, por qué importa y qué condición permitiría cerrar la decisión.
+- **Índice para no repetir:** hashes/fingerprints de perfiles, harness y suites ya probados.
+
+No borres resultados históricos. Si una prueba posterior corrige o supera una anterior, marcá la anterior como reemplazada o supersedida y enlazá ambas; explicá qué cambió. Distinguí siempre entre **confirmado**, **provisional**, **inconcluso**, **bloqueado por infraestructura**, **no evaluado** y **retirado**.
+
+En la respuesta final de cada chat, enlazá el documento y resumí qué decisión nueva se tomó o qué quedó pendiente. Así, al terminar varias tareas, el documento permitirá revisar el historial y entender qué decidimos y por qué.
+
+## Reglas de trabajo y seguridad
+
+- Antes de editar, compilar, descargar modelos, hacer benchmarks o usar GPU, leé `AGENTS.md`, `README.md`, `WORK_QUEUE.md` y `WORK_QUEUE.lock` del repositorio. Respetá el turno exclusivo y el protocolo de lock. No elimines, reemplaces ni liberes un lock ajeno.
+- Si hay otra tarea activa, no la interrumpas ni uses recursos exclusivos. Si corresponde, encolá esta tarea siguiendo las reglas del repositorio.
+- No detengas procesos o servidores de otra persona para liberar recursos. Si GPU, RAM, puertos o discos están ocupados, anotá el bloqueo y esperá o limitá el trabajo a lo que pueda hacerse sin interferir.
+- Antes de descargar, verificá espacio disponible y origen. Fijá versiones y hashes; comprobá la integridad antes de cargar.
+- No borres modelos, perfiles ni datos existentes como parte de esta evaluación.
+- Aislá perfiles, configuraciones, datos y servidores de prueba. Hacé backup verificable de cualquier configuración temporal que debas cambiar y restaurala al terminar.
+- No cambies perfiles productivos, HarnessSpec ni defaults hasta tener evidencia suficiente. No alteres pesos originales.
+- No inventes pruebas, resultados ni verificaciones. Conservá los fallos y distinguí calidad de infraestructura.
+- Seguí las instrucciones de `AGENTS.md` para pruebas, documentación, builds, Git y cambios ajenos. No incluyas cambios preexistentes de otras personas en tus cambios.
+
+## Preparación de cada comparación
+
+Antes de ejecutar, definí qué uso se busca mejorar y elegí los perfiles actuales que servirán como controles. Registrá para cada perfil:
+
+- Modelo, origen, archivos y SHA-256.
+- Perfil y fingerprint efectivo de configuración.
+- Runtime, versión/commit, binario y argumentos efectivos.
+- GPU, VRAM, RAM, offload, contexto, KV, MTP, concurrencia y estado de carga.
+- Plantilla de chat, agente, variante, herramientas, permisos, thinking, sampling y seed.
+- Suite y versión/hash, HarnessSpec, timeout y presupuesto de reparaciones.
+
+En cada A/B fijá de antemano prompt, tareas, datos, herramientas, permisos, sampling, thinking, timeout y reparaciones. Usá las mismas tareas y seeds para candidato y control. Ejecutalos secuencialmente si comparten recursos.
+
+Si difieren runtime, plantilla, hardware, contexto u otros parámetros relevantes, indicá que comparás perfiles completos; no atribuyas el resultado sólo al modelo.
+
+Hacé una corrida inicial de screening. Para afirmar una mejora estable, obtené al menos tres corridas válidas por perfil, emparejadas por tarea y seed. Reportá todas las corridas y su variación; no elijas sólo el mejor resultado. Si no se pueden completar tres, clasificá la conclusión como provisional.
+
+## Escalera de coding/agente: HE0 → HE20 → BCB8
+
+Usá las suites oficiales existentes de LlamaCode y conservá los recibos crudos:
+
+1. **HE0 — HumanEval, 1 tarea:** prueba de humo. Para pasar el gate requiere 1/1, transporte válido y ausencia de timeout o fallo de infraestructura. Si falla por calidad, no fuerces el gate ni presentes cobertura posterior como aprobada. Si falla por infraestructura, conservá el intento, resolvé la causa y repetí sólo la etapa afectada.
+2. **HE20 — HumanEval, 20 tareas:** reportá aciertos, fallos, tareas omitidas y tiempo. Un resultado parcial es una medición de calidad válida si las 20 tareas terminaron normalmente. Timeout, caída, truncamiento o error de transporte invalida el score.
+3. **BCB8 — BigCodeBench-Hard, 8 tareas:** ejecutalo sólo después de un HE20 válido y con la misma huella efectiva. Un score parcial es válido si terminaron las ocho tareas. Timeout, fallo de infraestructura o transporte roto no es un score de calidad.
+4. **ADV — Adversarial v1, 10 tareas:** suite complementaria, no sustituto de HE20/BCB8. Informá primera pasada, resultado final tras reparaciones, fallos funcionales, uso de herramientas y tiempo.
+
+Clasificá cada corrida como **válida de calidad**, **inválida por infraestructura** o **incompleta**. OOM, timeout, caída, error CUDA, dependencia ausente o transporte roto no son ceros de calidad. Un fallo funcional con transporte normal sí cuenta y no debe reclasificarse como infraestructura.
+
+## TaskFlow ULTRA — 13 criterios para coding
+
+Ejecutá esta suite adicional cuando la decisión incluya coding con agente. No la cuentes como una etapa de HE0/HE20/BCB8.
+
+- Conservá exactamente el prompt, la tarea, el HarnessSpec, la suite y sus fingerprints.
+- Los 13 criterios actuales son diez comprobaciones de existencia de archivos y tres comandos: `py_compile`, `unittest` generado dentro del workspace y `--self-test`. Reportá ese desglose. La existencia de archivos no valida su contenido; los tests escritos por el propio modelo no son verificadores independientes.
+- Registrá el score inicial y el resultado tras cada reparación. Se permiten como máximo **tres oportunidades de reparación**, sólo ante fallos de aceptación y con el mismo límite para todos los perfiles. No uses reparaciones para ocultar fallos de infraestructura.
+- Reportá resultado final, criterios fallidos, causa, reparaciones, tiempo, tool calls, archivos producidos y recibos. Un 13/13 después de reparaciones no debe ocultar un primer intento débil.
+- Hacé al menos tres corridas válidas por perfil antes de afirmar una mejora estable.
+
+Antecedente histórico, no garantía: ASTRA con 4096 tokens obtuvo 11/13 en una repetición exacta frente a un 12/13 original; 8192 tokens por sí solos también dio 11/13. Con 8192 y hasta tres reparaciones, ASTRA logró 13/13 en dos corridas de 287,3 y 333,5 segundos. Al comparar otros perfiles, repetí el mismo procedimiento y separá primera pasada de resultado reparado.
+
+## Otras pruebas de calidad según el uso
+
+- **Coding/agentes:** preferí tareas con verificadores independientes, pruebas ocultas o repositorios aislados. Separá compilación, tests escritos por el agente, tests independientes, self-test y comportamiento final. Los tests propios sólo miden autoconsistencia. Un resultado de una tarea es exploratorio; no lo llames ranking. No presentes una suite interna como réplica de un benchmark externo si no usaste sus tareas, entorno, verifier y protocolo.
+- **Computer Usage:** evaluá tareas de extremo a extremo en aplicaciones reales con estado final verificable. Cubrí más de una app y variaciones razonables de idioma, resolución, tema y distribución de controles. Guardá acciones, capturas, errores, recuperaciones, tiempo y éxito por tarea. Medí operación real de la interfaz, no sólo respuestas textuales o tool calls simuladas. Usá apps concretas como regresión, sin basar mejoras generales en nombres, colores, coordenadas o layouts particulares.
+- **Ingi-Charla:** usá el mismo corpus de audio para los perfiles. Medí ASR con WER/CER por muestra, comprensión con criterios fijados antes y TTS con latencia inicial, duración/RTF y errores. Conservá recibos de entrada/salida y distinguí evaluación automática de escucha humana. No infieras calidad de audio desde benchmarks de texto.
+- **Visión y tool-use:** probá comprensión de imágenes y ejecución de herramientas por separado. Verificá esquema, argumentos, orden, resultado y efectos observables. Una descripción textual de una acción no cuenta como acción ejecutada.
+- **Contexto largo:** separá capacidad y calidad. Medí carga estable, contexto efectivo, truncamiento, VRAM/RAM y tiempos. Probá recuperación con datos variados y posiciones registradas. Un prompt largo repetitivo con pocos valores sembrados sólo es un probe exploratorio.
+- **Velocidad:** separá velocidad de calidad. Medí TTFT, prefill, decode, latencia total, aceptación MTP, memoria y estabilidad bajo cargas definidas. Reportá mediana y dispersión. No compares como A/B directo resultados con distintas GPU, contexto, KV, runtime, MTP, concurrencia o carga.
+
+## Regla para declarar una mejora y cambiar producción
+
+Antes de correr, definí qué resultado contaría como mejora para el uso objetivo. Promové sólo cambios que se repitan y mejoren esa métrica sin una regresión importante en calidad, estabilidad, memoria, latencia u otra función necesaria.
+
+- Una caída de infraestructura en el control no demuestra que el candidato lo supere. Resolvé el problema y repetí el A/B, o dejá la comparación inconclusa.
+- Si un perfil gana en velocidad pero pierde calidad, o gana en contexto a costa de otra métrica, describí el trade-off y recomendalo sólo para el uso que lo justifique.
+- No declares un ganador global a partir de un solo benchmark o de métricas incompatibles.
+- Si se confirma una mejora, hacé productivo el cambio mínimo necesario —perfil, harness o configuración—, documentá la razón y dejá una forma de revertirlo.
+- Si no se confirma, conservá el estado productivo y registrá qué evidencia falta para decidir.
+
+## Registro acumulativo y prevención de repeticiones
+
+Al terminar esta ejecución:
+
+1. Guardá informe legible, recibos crudos, configuraciones efectivas, hashes, resultados por tarea, fallos y backups/restauración en `artifacts/evaluacion-modelos-llamacode/<ID-DE-TAREA>/`.
+2. Añadí al documento canónico una entrada nueva con ID y fecha, objetivo, perfiles, pruebas, condiciones, resultados, límites y decisión.
+3. Actualizá el resumen vigente y el registro de decisiones. Si una decisión previa cambia, conservá su entrada y marcala como supersedida con enlace a la nueva evidencia.
+4. Actualizá la matriz/ledger de benchmarks existente cuando corresponda; enlazá el documento canónico y los recibos en vez de duplicar resultados incompatibles.
+5. Actualizá el índice de no repetición con la huella:
+   **modelo/hash + fingerprint efectivo + HarnessSpec + suite/versión + seed**.
+6. Si repetís esa huella para medir variabilidad, vinculá la corrida nueva con la anterior y anotá el motivo. No vuelvas a correrla sólo para producir otra copia del mismo resultado.
+7. Cerrá la tarea según `WORK_QUEUE.md`, liberando únicamente el lock propio.
+
+Al responder en este chat, indicá qué se probó, qué decisión nueva se tomó o qué queda pendiente y enlazá `docs/evaluacion-modelos-llamacode.md`. El documento debe permitir que alguien que sólo tenga acceso a otro chat reconstruya el historial, entienda las decisiones y sepa qué pruebas no debe repetir.

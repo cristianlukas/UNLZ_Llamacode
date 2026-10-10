@@ -8,6 +8,29 @@ los perfiles no alcanzados. Este historial conserva además la narrativa y los
 eventos operativos; ambos documentos se complementan y no reemplazan resultados
 anteriores.
 
+## 2026-10-09/10 — Flash-Next IQ3_XXS/Strata y post 4×P100 · no promovido
+
+En dos RTX 3090, Strata v0.1.41 y contexto configurado 131K, IQ3_XXS cerró
+HE20+BCB8 en 24/28 frente a 28/28 de ASTRA IQ3_S calibrado. ADV v1, suite
+complementaria, terminó 10/10 en ambos tras dos reparaciones (primera pasada
+7/10 vs 8/10); TaskFlow ULTRA terminó 11/13 vs 13/13. La suma descriptiva
+HE20+BCB8+ADV+TaskFlow fue 45/51 vs 51/51, una corrida por perfil. Server Speed n=2 dio
+126,59 vs 122,09 tok/s con rangos solapados; TTFT IQ3_XXS fue menor en ambas
+pasadas. IQ3_XXS no se promueve.
+
+La solicitud agregó un post distinto con Flash-Next Q4, KV q8, 4×P100 y 262K,
+que atribuye aproximadamente 2× frente a Qwen 27B y 5× frente a un llama.cpp
+modificado. No hay recibos/configuración para reproducir esas comparaciones. El
+smoke local 262K con IQ3_XXS/2×3090 quedó bloqueado antes de cargar por swap
+3,253 GiB >2 GiB; no constituye fallo del modelo ni refuta el post. La sonda
+separada de 115K se cortó por transporte a 65.536/115.015 tokens. Computer
+Usage E2E, audio y visión no se midieron.
+
+Véanse [programa canónico](evaluacion-modelos-llamacode.md),
+[informe A/B](qwen38-flashnext-iq3xxs-strata-20261009.md),
+[post P100](https://www.reddit.com/r/LocalLLM/comments/1wx3g89/strata_takes_the_promise_of_moe_models_just_need/) y
+[recibos](../artifacts/evaluacion-modelos-llamacode/Q-20261009-FLASHNEXT-IQ3XXS-AB/).
+
 ## 2026-10-03 — Gemma 4 E4B QAT y Spark-X2.5-4B · no promovidos
 
 Se compararon contra Qwen3.5-4B en Computer Use (24 estados × 3 pasadas),

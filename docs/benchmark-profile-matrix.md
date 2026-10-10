@@ -1,5 +1,24 @@
 # Matriz de perfiles para benchmarks
 
+## Candidato sin promoción: Flash-Next IQ3_XXS / Strata · 2026-10-09
+
+En dos RTX 3090, Strata v0.1.41 y contexto 131K, HE20+BCB8 terminó 24/28
+para IQ3_XXS y 28/28 para ASTRA IQ3_S calibrado. ADV v1 es complementaria:
+ambos cerraron 10/10 tras dos reparaciones (primera pasada 7/10 y 8/10).
+TaskFlow ULTRA terminó 11/13 y 13/13. La suma descriptiva de HE20+BCB8+ADV+
+TaskFlow fue 45/51 y 51/51; una sola corrida válida por perfil, sin base para
+mejora estable. Server Speed n=2 dio 126,59 vs 122,09 tok/s con rangos
+superpuestos; TTFT IQ3_XXS fue menor en ambas pasadas. No se promueve ni
+reemplaza SOL/ASTRA. El retrieval sintético de 115K se cortó por transporte; el
+smoke de 262K del post separado de Q4/4×P100 se bloqueó antes de cargar por
+swap usado >2 GiB. Ninguno es un fallo de calidad. Computer Usage, audio y
+visión no se evaluaron.
+
+Véanse [registro canónico](evaluacion-modelos-llamacode.md),
+[informe de campaña](qwen38-flashnext-iq3xxs-strata-20261009.md),
+[post Q4/4×P100](https://www.reddit.com/r/LocalLLM/comments/1wx3g89/strata_takes_the_promise_of_moe_models_just_need/) y
+[recibos](../artifacts/evaluacion-modelos-llamacode/Q-20261009-FLASHNEXT-IQ3XXS-AB/).
+
 ## Addendum — NInfer Huihui groupwise-int · 2026-09-26
 
 Se agregaron tres perfiles históricos 3090 a `assets/system_profiles.json`:

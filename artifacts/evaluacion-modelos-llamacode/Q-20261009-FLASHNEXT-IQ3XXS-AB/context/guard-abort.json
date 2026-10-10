@@ -1,0 +1,39 @@
+{
+  "taskId": "Q-20261009-FLASHNEXT-IQ3XXS-AB",
+  "probe": "synthetic context smoke at max-context 262144",
+  "status": "blocked_precondition_before_model_load",
+  "preregisteredGuards": {
+    "memAvailableMinGiB": 32,
+    "swapUsedMaxGiBExclusive": 2
+  },
+  "blockedAttemptObserved": {
+    "memAvailableGiB": 110.564,
+    "swapTotalGiB": 8.0,
+    "swapFreeGiB": 4.747,
+    "swapUsedGiB": 3.253,
+    "timestampUtc": "not retained; observed after ADV completion and before any 262K request"
+  },
+  "closeSnapshotUtc": "2026-10-10T00:45:35Z",
+  "closeSnapshotRawKiB": {
+    "MemAvailable": 116177716,
+    "SwapTotal": 8388604,
+    "SwapFree": 5032028,
+    "SwapUsed": 3356576
+  },
+  "closeSnapshotGiB": {
+    "memAvailable": 110.796,
+    "swapTotal": 8.0,
+    "swapFree": 4.799,
+    "swapUsed": 3.201
+  },
+  "closeSnapshotStillFailsGuard": false,
+  "engineLoaded": false,
+  "promptGeneratedOrSent": false,
+  "httpRequestMade": false,
+  "score": null,
+  "interpretation": "infrastructure/resource precondition; not a model quality failure",
+  "configPath": "receipts/configs/iq3_xxs-context262k.json",
+  "configSha256": "654e9345320843bee40321e79b8430b535184ae1165026909fc2090ed7a3e7dc",
+  "planPath": "context/PLAN.md",
+  "scriptPreparedNotRun": "context/probe_262k.py"
+}
