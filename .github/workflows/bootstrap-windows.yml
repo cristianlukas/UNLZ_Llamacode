@@ -3,6 +3,10 @@
 # La VM no tiene Qt ni VS Build Tools en las rutas que mira el bootstrap, asi
 # que ejercita aqtinstall, la instalacion de Build Tools por winget, el clone
 # (paths largos / invalidos en NTFS), el build, windeployqt y el arranque.
+#
+# bare=true ademas desinstala git, Python y CMake antes de empezar: la VM de
+# GitHub los trae, la maquina de un usuario no. Asi se prueban los winget
+# install y la deteccion de Python (Find-Python) como en una PC vacia.
 name: bootstrap-windows
 
 on:
@@ -15,21 +19,56 @@ on:
 
 jobs:
   install:
+    name: install (bare=${{ matrix.bare }})
     runs-on: windows-2025
     timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        bare: [false, true]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           sparse-checkout: scripts/bootstrap.ps1
           sparse-checkout-cone-mode: false
 
+      - name: Remove git, Python and CMake
+        if: matrix.bare
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Continue'
+          # Desinstalar de verdad (no solo sacar del PATH): winget ve el
+          # registro de "Programas instalados" y diria "ya instalado".
+          $git = 'C:\Program Files\Git\unins000.exe'
+          if (Test-Path $git) { Start-Process $git -ArgumentList '/VERYSILENT','/NORESTART','/SUPPRESSMSGBOXES' -Wait }
+          Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*','HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*' -ErrorAction SilentlyContinue |
+            Where-Object { $_.DisplayName -match '^(CMake|Python 3|Python Launcher)' -and $_.PSChildName -match '^\{' } |
+            ForEach-Object { "uninstall $($_.DisplayName)"; Start-Process msiexec.exe -ArgumentList '/x', $_.PSChildName, '/qn', '/norestart' -Wait }
+          foreach ($d in 'C:\Program Files\Git','C:\Program Files\CMake','C:\hostedtoolcache\windows\Python') {
+            if (Test-Path $d) { Remove-Item -Recurse -Force $d -ErrorAction SilentlyContinue }
+          }
+          Remove-Item -Force 'C:\Windows\py.exe','C:\Windows\pyw.exe' -ErrorAction SilentlyContinue
+          foreach ($scope in 'Machine','User') {
+            $p = [Environment]::GetEnvironmentVariable('Path', $scope)
+            if ($p) {
+              $kept = ($p -split ';' | Where-Object { $_ -and $_ -notmatch '(?i)\\(git|cmake|python[^\\]*)(\\|$)|hostedtoolcache\\windows\\python' }) -join ';'
+              [Environment]::SetEnvironmentVariable('Path', $kept, $scope)
+            }
+          }
+
       - name: Environment
         shell: powershell
         run: |
+          # Como una terminal nueva del usuario: PATH desde el registro.
+          $env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')
           $PSVersionTable.PSVersion
           winget --version
+          foreach ($c in 'git','python','py','cmake') { "${c}: " + ((Get-Command $c -ErrorAction SilentlyContinue).Source) }
           'Qt present: ' + (Test-Path 'C:\Qt\6.8.3\msvc2022_64')
           'BuildTools present: ' + ((Test-Path 'C:\BuildTools2022') -or (Test-Path 'C:\Program Files\Microsoft Visual Studio\2022\BuildTools'))
+          if ('${{ matrix.bare }}' -eq 'true') {
+            foreach ($c in 'git','cmake') { if (Get-Command $c -ErrorAction SilentlyContinue) { Write-Host "::error::$c still on PATH"; exit 1 } }
+          }
 
       # Mismo camino que el usuario: el contenido del script por iex dentro de
       # Windows PowerShell 5.1. Bajo iex el bootstrap no sale con codigo de
@@ -41,6 +80,7 @@ jobs:
           LC_BRANCH: ${{ github.ref_name }}
           LC_NORUN: '1'
         run: |
+          $env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')
           Get-Content scripts\bootstrap.ps1 -Raw | iex
           if ($BootstrapFailed -or -not (Test-Path "$env:LC_DIR\build\Debug\LlamaCode.exe")) {
             Write-Host '::error::bootstrap failed'
@@ -63,8 +103,8 @@ jobs:
 
       - name: Upload bootstrap log
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: bootstrap-log
+          name: bootstrap-log-bare-${{ matrix.bare }}
           path: C:\Users\runneradmin\AppData\Local\Temp\llamacode-bootstrap.log
           if-no-files-found: ignore
