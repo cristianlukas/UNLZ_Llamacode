@@ -22,7 +22,10 @@ Check ($ps.Contains('cristianlukas/UNLZ_Llamacode')) 'bootstrap.ps1 clona el rep
 Check ($sh.Contains('cristianlukas/UNLZ_Llamacode')) 'bootstrap.sh clona el repo publicado'
 
 # El bootstrap debe instalar y verificar los componentes Qt declarados por CMake.
-Check ($ps.Contains("`$QtAqtModules = @('qtmultimedia', 'qtsvg')")) 'instala los add-ons Qt Multimedia y Svg'
+Check ($ps.Contains("`$QtAqtModules = @('qtmultimedia')")) 'instala el add-on Qt Multimedia'
+# qtsvg NO es add-on en Qt 6 (viene en la base): pedirlo rompe aqt en una maquina limpia.
+Check (-not ($ps -match "QtAqtModules = @\([^)]*'qtsvg'")) 'no pide qtsvg como modulo aqt'
+Check ($ps.Contains("'Svg'")) 'igual verifica que Svg quede instalado'
 Check ($ps.Contains("'QuickControls2'")) 'verifica Qt Quick Controls 2 requerido por CMake'
 Check ($ps.Contains('windeployqt failed with exit code')) 'aborta si falla el deploy del runtime Qt'
 Check ($ps.Contains("`$env:LC_FORCE -ne '1'")) 'sólo permite el reset destructivo con LC_FORCE=1'

@@ -31,7 +31,10 @@ $Config  = if ($env:LC_CONFIG) { $env:LC_CONFIG } else { 'Debug' }
 $QtVer   = '6.8.3'
 $QtArch  = 'win64_msvc2022_64'
 $QtDir   = "C:\Qt\$QtVer\msvc2022_64"
-$QtAqtModules = @('qtmultimedia', 'qtsvg')
+# Svg ya viene en la instalacion base de Qt 6: pedir 'qtsvg' como modulo hace
+# fallar aqt ("packages ['qtsvg'] were not found") en toda maquina sin Qt.
+# Get-MissingQtComponents igual verifica que Svg quede instalado.
+$QtAqtModules = @('qtmultimedia')
 $QtRequiredComponents = @('Core', 'Quick', 'QuickControls2', 'Sql', 'Concurrent', 'Network', 'Widgets', 'Multimedia', 'Svg')
 
 function Info($m)  { Write-Host "[*] $m"  -ForegroundColor Cyan }
