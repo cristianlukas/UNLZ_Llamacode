@@ -3003,7 +3003,17 @@ void SystemProfilesTests::controller_astraStrataIsListedAndRequiresLocalSetup()
     const QString packDir = QDir(dataDir).filePath(QStringLiteral("pack"));
     const QString mtpDir = QDir(dataDir).filePath(QStringLiteral("mtp"));
     const QString tokenizerDir = QDir(dataDir).filePath(QStringLiteral("tokenizer"));
-    QVERIFY(QDir().mkpath(QDir(strataRoot).filePath(QStringLiteral(".venv/bin"))));
+    // strataRootHasServer busca el python del venv donde lo deja cada SO y
+    // QFileInfo::isExecutable en Windows mira la extension: con nombres de
+    // Linux la fixture nunca queda "ready" en Windows.
+#ifdef Q_OS_WIN
+    const QString venvPython = QStringLiteral(".venv/Scripts/python.exe");
+    const QString exeSuffix = QStringLiteral(".exe");
+#else
+    const QString venvPython = QStringLiteral(".venv/bin/python");
+    const QString exeSuffix;
+#endif
+    QVERIFY(QDir().mkpath(QFileInfo(QDir(strataRoot).filePath(venvPython)).absolutePath()));
     QVERIFY(QDir().mkpath(engineDir));
     QVERIFY(QDir().mkpath(serveDir));
     QVERIFY(QDir().mkpath(packDir));
@@ -3019,14 +3029,14 @@ void SystemProfilesTests::controller_astraStrataIsListedAndRequiresLocalSetup()
         return !executable || file.setPermissions(QFileDevice::ReadOwner
             | QFileDevice::WriteOwner | QFileDevice::ExeOwner);
     };
-    QVERIFY(writeFile(QDir(strataRoot).filePath(QStringLiteral(".venv/bin/python")),
+    QVERIFY(writeFile(QDir(strataRoot).filePath(venvPython),
                       "#!/bin/sh\nexit 0\n", true));
     QVERIFY(writeFile(QDir(serveDir).filePath(QStringLiteral("server.py")), "# fixture\n"));
-    const QString enginePath = QDir(engineDir).filePath(QStringLiteral("strata"));
+    const QString enginePath = QDir(engineDir).filePath(QStringLiteral("strata") + exeSuffix);
     const QString nativePath = QDir(dataDir).filePath(QStringLiteral("native.gguf"));
     const QString plePath = QDir(dataDir).filePath(QStringLiteral("ple.gguf"));
     const QString expertPath = QDir(dataDir).filePath(QStringLiteral("expert-profile.bin"));
-    const QString visionExe = QDir(engineDir).filePath(QStringLiteral("strata-vision"));
+    const QString visionExe = QDir(engineDir).filePath(QStringLiteral("strata-vision") + exeSuffix);
     const QString mmprojPath = QDir(dataDir).filePath(QStringLiteral("mmproj.gguf"));
     QVERIFY(writeFile(enginePath, "#!/bin/sh\nexit 0\n", true));
     QVERIFY(writeFile(nativePath, "native"));
