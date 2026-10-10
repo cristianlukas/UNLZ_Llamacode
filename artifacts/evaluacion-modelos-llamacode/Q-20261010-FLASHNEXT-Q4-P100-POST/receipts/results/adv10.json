@@ -1,0 +1,900 @@
+{
+  "acceptance": [
+    {
+      "command": "python - <<'PY'\nfrom ttl_cache import TTLCache\nclass Clock:\n    def __init__(self): self.t = 10.0\n    def __call__(self): return self.t\ncx = Clock(); c = TTLCache(clock=cx)\nassert len(c) == 0\nc.set('a', 1, 2); assert c.get('a') == 1 and len(c) == 1\ncx.t = 12.0; assert c.get('a', 'missing') == 'missing' and len(c) == 0\nc.set('a', 2, 3); c.set('b', 4, 10); cx.t = 14.9; assert c.get('a') == 2 and len(c) == 2\ncx.t = 15.0; assert c.get('a', None) is None and len(c) == 1\nassert c.delete('b') is True and c.delete('b') is False\ntry: c.set('x', 1, 0)\nexcept ValueError: pass\nelse: raise AssertionError('ttl cero debe fallar')\nPY",
+      "exitCode": 0,
+      "name": "hidden_ttl_cache_grader",
+      "output": "",
+      "passed": true,
+      "taskId": "ttl_cache_clock",
+      "timedOut": false,
+      "timeoutMs": 30000,
+      "type": "command"
+    },
+    {
+      "command": "python - <<'PY'\nfrom merge_patch import apply_merge_patch\nimport copy\ntarget = {'a': 1, 'nested': {'keep': 2, 'drop': 3}, 'arr': [1, 2]}\npatch = {'nested': {'drop': None, 'add': 4}, 'arr': [9], 'new': True}\norig_t, orig_p = copy.deepcopy(target), copy.deepcopy(patch)\nout = apply_merge_patch(target, patch)\nassert out == {'a': 1, 'nested': {'keep': 2, 'add': 4}, 'arr': [9], 'new': True}\nassert target == orig_t and patch == orig_p\nout['nested']['keep'] = 99; assert target['nested']['keep'] == 2\nassert apply_merge_patch({'a': 1}, None) is None\nassert apply_merge_patch({'a': 1}, [1, 2]) == [1, 2]\nx = {'a': 1}; y = apply_merge_patch(x, {'b': {'c': 2}}); y['b']['c'] = 7; assert 'b' not in x\nPY",
+      "exitCode": 0,
+      "name": "hidden_merge_patch_grader",
+      "output": "",
+      "passed": true,
+      "taskId": "rfc7396_merge_patch",
+      "timedOut": false,
+      "timeoutMs": 30000,
+      "type": "command"
+    },
+    {
+      "command": "python - <<'PY'\nfrom stable_toposort import stable_toposort\nassert stable_toposort(['d','b','a','c'], [('a','c'), ('b','c')]) == ['a','b','c','d']\nassert stable_toposort(['compile','test','package','lint'], [('compile','test'), ('test','package'), ('lint','package')]) == ['compile','lint','test','package']\nfor nodes, edges in [(['a'], [('a','x')]), (['a','b'], [('a','b'), ('b','a')]), (['a','a'], [])]:\n    try: stable_toposort(nodes, edges)\n    except ValueError: pass\n    else: raise AssertionError('caso inválido aceptado')\nPY",
+      "exitCode": 0,
+      "name": "hidden_toposort_grader",
+      "output": "",
+      "passed": true,
+      "taskId": "stable_toposort",
+      "timedOut": false,
+      "timeoutMs": 30000,
+      "type": "command"
+    },
+    {
+      "command": "python - <<'PY'\nfrom path_guard import safe_join\nfrom pathlib import Path\nimport tempfile\nwith tempfile.TemporaryDirectory() as td:\n    root = Path(td) / 'root'; outside = Path(td) / 'outside'; root.mkdir(); outside.mkdir()\n    (root / 'ok.txt').write_text('ok'); (outside / 'secret.txt').write_text('no')\n    assert Path(safe_join(str(root), 'ok.txt')) == (root / 'ok.txt').resolve()\n    assert Path(safe_join(str(root), '.')) == root.resolve()\n    for bad in ('../outside/secret.txt', '/etc/passwd', 'a/../../x', 'bad\\x00name'):\n        try: safe_join(str(root), bad)\n        except ValueError: pass\n        else: raise AssertionError('escape aceptado: '+repr(bad))\n    link = root / 'link'\n    try: link.symlink_to(outside, target_is_directory=True)\n    except (OSError, NotImplementedError): pass\n    else:\n        try: safe_join(str(root), 'link/secret.txt')\n        except ValueError: pass\n        else: raise AssertionError('symlink fuera aceptado')\nPY",
+      "exitCode": 0,
+      "name": "hidden_path_guard_grader",
+      "output": "",
+      "passed": true,
+      "taskId": "safe_path_join",
+      "timedOut": false,
+      "timeoutMs": 30000,
+      "type": "command"
+    },
+    {
+      "command": "python - <<'PY'\nfrom tool_protocol import parse_tool_call\nimport copy\np = {'method':'write_file','args':{'path':'src/a.txt','content':'hola'}}; q = copy.deepcopy(p)\nassert parse_tool_call(p) == p and p == q\nr = parse_tool_call({'method':'read_file','args':{'path':'a/b.txt'}}); assert r == {'method':'read_file','args':{'path':'a/b.txt'}}\nfor bad in [{'method':'exec','args':{}}, {'method':'read_file','args':{}}, {'method':'read_file','args':{'path':'../x'}}, {'method':'read_file','args':{'path':'/tmp/x'}}, {'method':'write_file','args':{'path':'x','content':1}}, {'method':'read_file','args':{'path':'x','extra':1}}, {'method':'read_file','args':{'path':'x'},'extra':1}]:\n    try: parse_tool_call(bad)\n    except ValueError: pass\n    else: raise AssertionError('payload inválido aceptado: '+repr(bad))\nPY",
+      "exitCode": 0,
+      "name": "hidden_tool_protocol_grader",
+      "output": "",
+      "passed": true,
+      "taskId": "tool_call_contract",
+      "timedOut": false,
+      "timeoutMs": 30000,
+      "type": "command"
+    },
+    {
+      "command": "python - <<'PY'\nfrom scheduler import select_jobs\njobs = [{'id':'a','priority':2,'deadline':20,'cost':2}, {'id':'b','priority':3,'deadline':30,'cost':3}, {'id':'c','priority':3,'deadline':10,'cost':1,'depends':['a']}, {'id':'d','priority':9,'deadline':5,'cost':1}, {'id':'e','priority':8,'deadline':40,'cost':1,'depends':['missing']}, {'id':'f','priority':7,'deadline':40,'cost':1,'depends':['g']}, {'id':'g','priority':7,'deadline':40,'cost':1,'depends':['f']}, {'id':'expired','priority':99,'deadline':10,'cost':1}]\nassert select_jobs(jobs, now=10, capacity=4) == ['b']\nassert select_jobs(jobs, now=0, capacity=7) == ['expired','d','b','a']\nassert select_jobs(jobs, now=10, capacity=1) == []\nPY",
+      "exitCode": 0,
+      "name": "hidden_scheduler_grader",
+      "output": "",
+      "passed": true,
+      "taskId": "deadline_scheduler",
+      "timedOut": false,
+      "timeoutMs": 30000,
+      "type": "command"
+    },
+    {
+      "command": "python - <<'PY'\nfrom jsonl_audit import summarize_jsonl\nimport json\nrows = [json.dumps({'id':1,'level':'WARN','duration_ms':10}), ' ', '{bad', json.dumps({'id':2,'level':'INFO','duration_ms':30}), json.dumps({'id':3,'level':'WARN','duration_ms':20}), json.dumps({'id':4,'level':'INFO','duration_ms':'40'}), json.dumps({'id':5,'level':'ERROR','duration_ms':40})]\nassert summarize_jsonl(rows) == {'count':4,'by_level':{'ERROR':1,'INFO':1,'WARN':2},'total_duration_ms':100,'p95_duration_ms':40,'invalid_lines':2}\nassert summarize_jsonl([]) == {'count':0,'by_level':{},'total_duration_ms':0,'p95_duration_ms':None,'invalid_lines':0}\nPY",
+      "exitCode": 0,
+      "name": "hidden_jsonl_audit_grader",
+      "output": "",
+      "passed": true,
+      "taskId": "jsonl_audit",
+      "timedOut": false,
+      "timeoutMs": 30000,
+      "type": "command"
+    },
+    {
+      "command": "python - <<'PY'\nfrom config_resolver import resolve_config\nimport copy\ncfg = {'url':'https://$HOST/api','token':'$TOKEN','nested':[{'n':'$USER@$HOST','keep':3}], 'literal':'$9'}; env={'HOST':'example.test','TOKEN':'abc','USER':'ana'}; original=copy.deepcopy(cfg); out=resolve_config(cfg,env)\nassert out == {'url':'https://example.test/api','token':'abc','nested':[{'n':'ana@example.test','keep':3}], 'literal':'$9'}\nassert cfg == original\ntry: resolve_config({'x':'$MISSING'}, env)\nexcept KeyError as e: assert e.args[0] == 'MISSING'\nelse: raise AssertionError('missing env accepted')\nPY",
+      "exitCode": 0,
+      "name": "hidden_config_resolver_grader",
+      "output": "",
+      "passed": true,
+      "taskId": "config_env_resolution",
+      "timedOut": false,
+      "timeoutMs": 30000,
+      "type": "command"
+    },
+    {
+      "command": "python - <<'PY'\nfrom incident_report import build_report\nevents=[{'id':'b','service':'api','severity':'high','started_at':'2026-01-01T00:01:00Z','resolved_at':'2026-01-01T00:01:01Z'}, {'id':'a','service':'db','severity':'critical','started_at':'2026-01-01T00:00:00Z','resolved_at':None}, {'id':'c','service':'api','severity':'critical','started_at':'2026-01-01T00:00:00Z','resolved_at':'2026-01-01T00:02:01Z'}, {'id':'d','service':'web','severity':'low','started_at':'2026-01-01T00:00:00Z','resolved_at':'2026-01-01T00:00:01Z'}]\nout=build_report(events)\nassert [x['id'] for x in out['incidents']] == ['a','c','b','d']\nassert out['incidents'][1]['duration_minutes']==3 and out['incidents'][2]['duration_minutes']==1 and out['incidents'][0]['duration_minutes'] is None\nassert out['open_count']==1 and out['critical_open_count']==1 and out['services']==['api','db','web']\nPY",
+      "exitCode": 0,
+      "name": "hidden_incident_report_grader",
+      "output": "",
+      "passed": true,
+      "taskId": "deterministic_report",
+      "timedOut": false,
+      "timeoutMs": 30000,
+      "type": "command"
+    },
+    {
+      "command": "python - <<'PY'\nfrom user_query import build_user_query\nbase='SELECT id, name, email, active FROM users'\ns,p=build_user_query({'email':'a@b','name':'Ana','active':True}); assert s==base+' WHERE name LIKE ? AND email LIKE ? AND active = ?' and p==['%Ana%','%a@b%',True]\ns,p=build_user_query({}); assert s==base and p==[]\nfor bad in ({'role':'admin'},{'active':'yes'},{'name':'x\\x00y'}):\n try: build_user_query(bad)\n except ValueError: pass\n else: raise AssertionError('filtro inválido aceptado')\nassert 'Ana' not in build_user_query({'name':'Ana'})[0]\nPY",
+      "exitCode": 0,
+      "name": "hidden_sql_grader",
+      "output": "",
+      "passed": true,
+      "taskId": "sql_parameterization",
+      "timedOut": false,
+      "timeoutMs": 30000,
+      "type": "command"
+    }
+  ],
+  "agentFiles": [
+    "config_resolver.py",
+    "incident_report.py",
+    "jsonl_audit.py",
+    "merge_patch.py",
+    "path_guard.py",
+    "scheduler.py",
+    "solution_config_env_resolution.py",
+    "solution_jsonl_audit.py",
+    "solution_ttl_cache_clock.py",
+    "stable_toposort.py",
+    "test_config_resolver.py",
+    "test_incident_report.py",
+    "test_scheduler.py",
+    "test_user_query.py",
+    "tool_protocol.py",
+    "ttl_cache.py",
+    "user_query.py",
+    "__pycache__/config_resolver.cpython-312.pyc",
+    "__pycache__/incident_report.cpython-312.pyc",
+    "__pycache__/jsonl_audit.cpython-312.pyc",
+    "__pycache__/merge_patch.cpython-312.pyc",
+    "__pycache__/path_guard.cpython-312.pyc",
+    "__pycache__/scheduler.cpython-312.pyc",
+    "__pycache__/solution_config_env_resolution.cpython-312.pyc",
+    "__pycache__/solution_jsonl_audit.cpython-312.pyc",
+    "__pycache__/solution_ttl_cache_clock.cpython-312.pyc",
+    "__pycache__/stable_toposort.cpython-312.pyc",
+    "__pycache__/test_config_resolver.cpython-312.pyc",
+    "__pycache__/test_incident_report.cpython-312.pyc",
+    "__pycache__/test_scheduler.cpython-312.pyc",
+    "__pycache__/test_user_query.cpython-312.pyc",
+    "__pycache__/tool_protocol.cpython-312.pyc",
+    "__pycache__/ttl_cache.cpython-312.pyc",
+    "__pycache__/user_query.cpython-312.pyc"
+  ],
+  "agentMetrics": [
+    {
+      "elapsedMs": 22209,
+      "tokens": 536,
+      "tps": 61.76182520020741,
+      "ttft_ms": 51
+    },
+    {
+      "elapsedMs": 23292,
+      "tokens": 540,
+      "tps": 65.13793560994439,
+      "ttft_ms": 50
+    },
+    {
+      "elapsedMs": 8926,
+      "tokens": 469,
+      "tps": 70.51889274813178,
+      "ttft_ms": 20
+    },
+    {
+      "elapsedMs": 8360,
+      "tokens": 285,
+      "tps": 49.04913518630066,
+      "ttft_ms": 42
+    },
+    {
+      "elapsedMs": 22167,
+      "tokens": 432,
+      "tps": 60.39255158530448,
+      "ttft_ms": 27
+    },
+    {
+      "elapsedMs": 26333,
+      "tokens": 811,
+      "tps": 74.15467329883144,
+      "ttft_ms": 52
+    },
+    {
+      "elapsedMs": 15272,
+      "tokens": 836,
+      "tps": 67.84227482613387,
+      "ttft_ms": 82
+    },
+    {
+      "elapsedMs": 7386,
+      "tokens": 189,
+      "tps": 47.28901343608477,
+      "ttft_ms": 27
+    },
+    {
+      "elapsedMs": 26049,
+      "tokens": 586,
+      "tps": 60.429814791898686,
+      "ttft_ms": 29
+    },
+    {
+      "elapsedMs": 29715,
+      "tokens": 810,
+      "tps": 65.73234761862254,
+      "ttft_ms": 72
+    },
+    {
+      "elapsedMs": 5996,
+      "tokens": 186,
+      "tps": 55.29625115200523,
+      "ttft_ms": 46
+    },
+    {
+      "elapsedMs": 34668,
+      "tokens": 986,
+      "tps": 65.60125613764288,
+      "ttft_ms": 30
+    },
+    {
+      "elapsedMs": 32250,
+      "tokens": 839,
+      "tps": 68.57600575417258,
+      "ttft_ms": 54
+    },
+    {
+      "elapsedMs": 8140,
+      "tokens": 288,
+      "tps": 56.342436810392044,
+      "ttft_ms": 85
+    },
+    {
+      "elapsedMs": 14314,
+      "tokens": 804,
+      "tps": 65.65087452844054,
+      "ttft_ms": 55
+    },
+    {
+      "elapsedMs": 9128,
+      "tokens": 307,
+      "tps": 52.07361546942583,
+      "ttft_ms": 49
+    },
+    {
+      "elapsedMs": 35373,
+      "tokens": 1027,
+      "tps": 67.6927133111426,
+      "ttft_ms": 32
+    },
+    {
+      "elapsedMs": 36048,
+      "tokens": 1182,
+      "tps": 76.9150680652802,
+      "ttft_ms": 56
+    },
+    {
+      "elapsedMs": 7890,
+      "tokens": 168,
+      "tps": 48.99244699775451,
+      "ttft_ms": 87
+    },
+    {
+      "elapsedMs": 4778,
+      "tokens": 175,
+      "tps": 56.306306306306304,
+      "ttft_ms": 58
+    },
+    {
+      "elapsedMs": 17785,
+      "tokens": 1141,
+      "tps": 71.19991513419406,
+      "ttft_ms": 57
+    },
+    {
+      "elapsedMs": 9115,
+      "tokens": 220,
+      "tps": 47.742019487424315,
+      "ttft_ms": 63
+    },
+    {
+      "elapsedMs": 47005,
+      "tokens": 1473,
+      "tps": 63.61861654343169,
+      "ttft_ms": 34
+    },
+    {
+      "elapsedMs": 52800,
+      "tokens": 2029,
+      "tps": 70.87442058676615,
+      "ttft_ms": 58
+    },
+    {
+      "elapsedMs": 14420,
+      "tokens": 633,
+      "tps": 66.2841106620034,
+      "ttft_ms": 88
+    },
+    {
+      "elapsedMs": 4330,
+      "tokens": 162,
+      "tps": 60.75607560756075,
+      "ttft_ms": 61
+    },
+    {
+      "elapsedMs": 28104,
+      "tokens": 1772,
+      "tps": 66.68071527485098,
+      "ttft_ms": 63
+    },
+    {
+      "elapsedMs": 33586,
+      "tokens": 1805,
+      "tps": 62.42629028743762,
+      "ttft_ms": 92
+    },
+    {
+      "elapsedMs": 34801,
+      "tokens": 2024,
+      "tps": 67.2119334389331,
+      "ttft_ms": 76
+    },
+    {
+      "elapsedMs": 31158,
+      "tokens": 1859,
+      "tps": 70.43507583421425,
+      "ttft_ms": 24
+    },
+    {
+      "elapsedMs": 20478,
+      "tokens": 941,
+      "tps": 59.65664147689811,
+      "ttft_ms": 98
+    },
+    {
+      "elapsedMs": 30252,
+      "tokens": 1866,
+      "tps": 67.05307829686619,
+      "ttft_ms": 52
+    },
+    {
+      "elapsedMs": 35788,
+      "tokens": 1992,
+      "tps": 64.21456432739112,
+      "ttft_ms": 110
+    },
+    {
+      "elapsedMs": 22897,
+      "tokens": 1040,
+      "tps": 57.27534571729109,
+      "ttft_ms": 94
+    },
+    {
+      "elapsedMs": 31595,
+      "tokens": 2019,
+      "tps": 68.62468517278533,
+      "ttft_ms": 56
+    },
+    {
+      "elapsedMs": 12234,
+      "tokens": 371,
+      "tps": 49.41593297547851,
+      "ttft_ms": 141
+    },
+    {
+      "elapsedMs": 27532,
+      "tokens": 1830,
+      "tps": 72.0676727261271,
+      "ttft_ms": 58
+    },
+    {
+      "elapsedMs": 11903,
+      "tokens": 433,
+      "tps": 60.84964656614062,
+      "ttft_ms": 119
+    },
+    {
+      "elapsedMs": 28596,
+      "tokens": 1549,
+      "tps": 59.84160710836392,
+      "ttft_ms": 66
+    },
+    {
+      "elapsedMs": 7589,
+      "tokens": 123,
+      "tps": 41.07942021241066,
+      "ttft_ms": 65
+    },
+    {
+      "elapsedMs": 9137,
+      "tokens": 372,
+      "tps": 47.437483262984735,
+      "ttft_ms": 73
+    },
+    {
+      "elapsedMs": 59476,
+      "tokens": 1545,
+      "tps": 64.47251467845116,
+      "ttft_ms": 85
+    },
+    {
+      "elapsedMs": 54276,
+      "tokens": 1208,
+      "tps": 64.31621428799608,
+      "ttft_ms": 65
+    },
+    {
+      "elapsedMs": 31249,
+      "tokens": 1850,
+      "tps": 69.12967606207471,
+      "ttft_ms": 66
+    },
+    {
+      "elapsedMs": 12845,
+      "tokens": 453,
+      "tps": 55.39929069340834,
+      "ttft_ms": 78
+    },
+    {
+      "elapsedMs": 56066,
+      "tokens": 1111,
+      "tps": 65.99660215513657,
+      "ttft_ms": 45
+    },
+    {
+      "elapsedMs": 43829,
+      "tokens": 225,
+      "tps": 50.63120232228449,
+      "ttft_ms": 67
+    },
+    {
+      "elapsedMs": 19482,
+      "tokens": 1239,
+      "tps": 69.70032796845203,
+      "ttft_ms": 98
+    },
+    {
+      "elapsedMs": 25544,
+      "tokens": 1378,
+      "tps": 65.82561466697877,
+      "ttft_ms": 115
+    },
+    {
+      "elapsedMs": 24153,
+      "tokens": 1368,
+      "tps": 70.78766804309355,
+      "ttft_ms": 123
+    },
+    {
+      "elapsedMs": 24885,
+      "tokens": 1189,
+      "tps": 58.67200915855752,
+      "ttft_ms": 77
+    },
+    {
+      "elapsedMs": 7335,
+      "tokens": 132,
+      "tps": 47.09072098747815,
+      "ttft_ms": 110
+    },
+    {
+      "elapsedMs": 8977,
+      "tokens": 431,
+      "tps": 57.87954072382999,
+      "ttft_ms": 88
+    },
+    {
+      "elapsedMs": 74694,
+      "tokens": 2001,
+      "tps": 63.39581036383683,
+      "ttft_ms": 49
+    },
+    {
+      "elapsedMs": 51188,
+      "tokens": 444,
+      "tps": 57.96798704859389,
+      "ttft_ms": 72
+    },
+    {
+      "elapsedMs": 5400,
+      "tokens": 144,
+      "tps": 52.03064026593439,
+      "ttft_ms": 90
+    },
+    {
+      "elapsedMs": 3255,
+      "tokens": 94,
+      "tps": 63.65113759479957,
+      "ttft_ms": 73
+    },
+    {
+      "elapsedMs": 37441,
+      "tokens": 2584,
+      "tps": 71.90581006736996,
+      "ttft_ms": 70
+    },
+    {
+      "elapsedMs": 31787,
+      "tokens": 1816,
+      "tps": 67.83257009241068,
+      "ttft_ms": 82
+    },
+    {
+      "elapsedMs": 8926,
+      "tokens": 161,
+      "tps": 38.604483874835154,
+      "ttft_ms": 73
+    },
+    {
+      "elapsedMs": 11401,
+      "tokens": 515,
+      "tps": 52.66548723245421,
+      "ttft_ms": 101
+    },
+    {
+      "elapsedMs": 62481,
+      "tokens": 976,
+      "tps": 63.9032023623233,
+      "ttft_ms": 53
+    },
+    {
+      "elapsedMs": 66139,
+      "tokens": 1274,
+      "tps": 68.20639662501473,
+      "ttft_ms": 73
+    },
+    {
+      "elapsedMs": 21230,
+      "tokens": 1138,
+      "tps": 68.53852732507016,
+      "ttft_ms": 126
+    },
+    {
+      "elapsedMs": 12697,
+      "tokens": 487,
+      "tps": 59.843448555524155,
+      "ttft_ms": 108
+    },
+    {
+      "elapsedMs": 18313,
+      "tokens": 1148,
+      "tps": 68.99245770606088,
+      "ttft_ms": 65
+    },
+    {
+      "elapsedMs": 24005,
+      "tokens": 1218,
+      "tps": 62.71561711549354,
+      "ttft_ms": 69
+    },
+    {
+      "elapsedMs": 7459,
+      "tokens": 125,
+      "tps": 43.090075493812265,
+      "ttft_ms": 96
+    },
+    {
+      "elapsedMs": 10552,
+      "tokens": 431,
+      "tps": 48.669218695303584,
+      "ttft_ms": 111
+    },
+    {
+      "elapsedMs": 78477,
+      "tokens": 1036,
+      "tps": 60.79384080933267,
+      "ttft_ms": 66
+    },
+    {
+      "elapsedMs": 61452,
+      "tokens": 658,
+      "tps": 60.66584918359256,
+      "ttft_ms": 146
+    },
+    {
+      "elapsedMs": 5254,
+      "tokens": 264,
+      "tps": 58.66145231534975,
+      "ttft_ms": 80
+    },
+    {
+      "elapsedMs": 2909,
+      "tokens": 132,
+      "tps": 60.13393467268006,
+      "ttft_ms": 78
+    },
+    {
+      "elapsedMs": 2194,
+      "tokens": 100,
+      "tps": 63.767376610126256,
+      "ttft_ms": 78
+    },
+    {
+      "elapsedMs": 1839,
+      "tokens": 91,
+      "tps": 70.30284301606922,
+      "ttft_ms": 97
+    },
+    {
+      "elapsedMs": 14649,
+      "tokens": 798,
+      "tps": 61.04044120459257,
+      "ttft_ms": 50
+    },
+    {
+      "elapsedMs": 10463,
+      "tokens": 631,
+      "tps": 65.54890717194382,
+      "ttft_ms": 79
+    },
+    {
+      "elapsedMs": 2150,
+      "tokens": 60,
+      "tps": 45.46143355053796,
+      "ttft_ms": 77
+    },
+    {
+      "elapsedMs": 14205,
+      "tokens": 683,
+      "tps": 61.725605733341766,
+      "ttft_ms": 45
+    },
+    {
+      "elapsedMs": 12590,
+      "tokens": 692,
+      "tps": 58.916682275614285,
+      "ttft_ms": 79
+    },
+    {
+      "elapsedMs": 18136,
+      "tokens": 916,
+      "tps": 53.054085048710135,
+      "ttft_ms": 78
+    },
+    {
+      "elapsedMs": 11385,
+      "tokens": 608,
+      "tps": 58.29226668712009,
+      "ttft_ms": 80
+    },
+    {
+      "elapsedMs": 17139,
+      "tokens": 855,
+      "tps": 52.804832105337915,
+      "ttft_ms": 78
+    },
+    {
+      "elapsedMs": 22076,
+      "tokens": 1142,
+      "tps": 53.95853414223885,
+      "ttft_ms": 98
+    },
+    {
+      "elapsedMs": 11145,
+      "tokens": 605,
+      "tps": 59.26317748586989,
+      "ttft_ms": 78
+    },
+    {
+      "elapsedMs": 15705,
+      "tokens": 777,
+      "tps": 52.63550085016156,
+      "ttft_ms": 79
+    },
+    {
+      "elapsedMs": 11868,
+      "tokens": 627,
+      "tps": 57.22003705157104,
+      "ttft_ms": 84
+    },
+    {
+      "elapsedMs": 11944,
+      "tokens": 629,
+      "tps": 57.1594740237907,
+      "ttft_ms": 79
+    },
+    {
+      "elapsedMs": 18593,
+      "tokens": 941,
+      "tps": 53.33469362307505,
+      "ttft_ms": 122
+    },
+    {
+      "elapsedMs": 17739,
+      "tokens": 921,
+      "tps": 54.84656658111158,
+      "ttft_ms": 79
+    },
+    {
+      "elapsedMs": 17991,
+      "tokens": 927,
+      "tps": 54.3369948769651,
+      "ttft_ms": 78
+    },
+    {
+      "elapsedMs": 9502,
+      "tokens": 438,
+      "tps": 51.235261089275696,
+      "ttft_ms": 78
+    },
+    {
+      "elapsedMs": 17819,
+      "tokens": 922,
+      "tps": 54.31484939705805,
+      "ttft_ms": 79
+    },
+    {
+      "elapsedMs": 22232,
+      "tokens": 1204,
+      "tps": 56.537500704370856,
+      "ttft_ms": 120
+    },
+    {
+      "elapsedMs": 24192,
+      "tokens": 1336,
+      "tps": 57.51060028841394,
+      "ttft_ms": 78
+    },
+    {
+      "elapsedMs": 14452,
+      "tokens": 770,
+      "tps": 57.49014454664914,
+      "ttft_ms": 79
+    },
+    {
+      "elapsedMs": 18333,
+      "tokens": 952,
+      "tps": 54.85798581298728,
+      "ttft_ms": 78
+    },
+    {
+      "elapsedMs": 21329,
+      "tokens": 1124,
+      "tps": 55.275245148662876,
+      "ttft_ms": 79
+    },
+    {
+      "elapsedMs": 10727,
+      "tokens": 608,
+      "tps": 62.548866301798284,
+      "ttft_ms": 79
+    },
+    {
+      "elapsedMs": 16693,
+      "tokens": 852,
+      "tps": 54.16573953399663,
+      "ttft_ms": 79
+    },
+    {
+      "elapsedMs": 19911,
+      "tokens": 1052,
+      "tps": 55.472651244707166,
+      "ttft_ms": 78
+    },
+    {
+      "elapsedMs": 14884,
+      "tokens": 567,
+      "tps": 51.944958499001416,
+      "ttft_ms": 161
+    },
+    {
+      "elapsedMs": 15694,
+      "tokens": 886,
+      "tps": 59.44752715732124,
+      "ttft_ms": 80
+    },
+    {
+      "elapsedMs": 9731,
+      "tokens": 384,
+      "tps": 46.46266652147083,
+      "ttft_ms": 159
+    },
+    {
+      "elapsedMs": 4802,
+      "tokens": 234,
+      "tps": 57.96239875157911,
+      "ttft_ms": 80
+    },
+    {
+      "elapsedMs": 4285,
+      "tokens": 206,
+      "tps": 57.91071629371416,
+      "ttft_ms": 86
+    },
+    {
+      "elapsedMs": 13339,
+      "tokens": 773,
+      "tps": 61.121697807367816,
+      "ttft_ms": 79
+    },
+    {
+      "elapsedMs": 11589,
+      "tokens": 594,
+      "tps": 54.473923131241804,
+      "ttft_ms": 92
+    }
+  ],
+  "agentProfileId": "agent-maximo",
+  "agentProfileName": "Máximo",
+  "agentSeed": 4242,
+  "agentTemperature": 0.1,
+  "agentVariant": "baseline",
+  "avgTps": 59.6765944717491,
+  "avgTtftMs": 76.4074074074074,
+  "baselineId": "4bceda95-b296-40a5-96a5-28d67a89f3fe",
+  "benchmarkMemoryPlanner": "llama.cpp-fit-expert-aware",
+  "benchmarkName": "ADV v1 - 10 tareas",
+  "complexityMetrics": {
+    "addedLines": 1827,
+    "filesChanged": 34,
+    "filesCreated": 34,
+    "filesDeleted": 0,
+    "removedLines": 0
+  },
+  "elapsedSec": 2347.067,
+  "failed": false,
+  "failureKind": "none",
+  "finalScore": 10,
+  "finalTotal": 10,
+  "firstAttemptScore": 7,
+  "firstAttemptTotal": 10,
+  "firstEvaluableSec": -1,
+  "firstToolCallSec": 22.266,
+  "firstWriteSec": 22.305,
+  "generationSec": 2333.901,
+  "harnessEngineId": "legacy",
+  "harnessEngineVersion": 1,
+  "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+  "honeyEnabled": false,
+  "id": "4bceda95-b296-40a5-96a5-28d67a89f3fe",
+  "isBaseline": true,
+  "measurementPhase": "cold",
+  "mode": "custom",
+  "nonGenerationSec": 13.166000000000167,
+  "pass": 1,
+  "passedAfterRepair": true,
+  "passesTotal": 1,
+  "profileConfigFingerprint": "09d45e63b1f548df63775d947a051a70ca66561bb5a04bcf292050eb8bcb2958",
+  "profileId": "q4-udq4kxl-lch1-20261010",
+  "profileName": "EVAL · Unsloth UD-Q4_K_XL · lch1 · R4096",
+  "progressGovernor": {
+    "progressEvents": 73,
+    "replanEvents": 1,
+    "stagnationEvents": 23
+  },
+  "qualityScore": 10,
+  "qualityTotal": 10,
+  "ramFreeMb": 0,
+  "ramMb": 0,
+  "ramTotalMb": 0,
+  "repairAttempts": 2,
+  "response": "<think>All three failed checks now pass locally, plus my own suites. Also created the required `solution_*.py` bridge files. Done — report briefly.\n\nNote: I should mention what I changed and possible impact: `delete()` now returns bool (contract change), `p95_duration_ms` returns None for empty input, KeyError args[0] is now the bare variable name.\n</think>\nReparación completa (3/3 checks fallidos corregidos y verificados).\n\n**Causas concretas y correcciones:**\n\n1. `ttl_cache.py` — `delete()` devolvía `None`; el grader exige `True`/`False`. Ahora `return self._data.pop(key, _MISSING) is not _MISSING` (centinela `_MISSING`, no `None`, para no confundir valores almacenados).\n2. `jsonl_audit.py` — con cero datos válidos devolvía `p95_duration_ms: 0`; el grader espera `None`. `_p95_nearest_rank` ahora devuelve `None` si `n == 0` (se mantiene el valor observado para datos no vacíos, preservando int/float).\n3. `config_resolver.py` — el `KeyError` llevaba mensaje (`'variable de entorno ausente: MISSING'`) y el grader valida `e.args[0] == 'MISSING'`. Ahora `raise KeyError(name) from None` (arg = nombre de variable puro).\n\n**Bridges del artefacto requerido** (re-exportan la implementación, sin duplicarla ni renombrar firmas): `solution_ttl_cache_clock.py`, `solution_jsonl_audit.py`, `solution_config_env_resolution.py`.\n\n**Pruebas corridas** (`python3`):\n- Los 3 comandos del grader oculto, tal cual: `TTL OK`, `JSONL OK`, `CONFIG OK`.\n- Suites propias: `test_config_resolver`, `test_scheduler`, `test_incident_report`, `test_user_query` → todas OK.\n- Bridges importados y ejercitados: `SOLUTION BRIDGES OK`.\n- `py_compile` sobre los archivos tocados.\n\n**Impacto / contratos cambiados** (deliberado, exigido por los checks):\n- `TTLCache.delete()` cambió de `None` → `bool`. Mis tests previos no asertaban el retorno, así que no hubo regresión en el suite; cualquier llamador que dependiera de `None` debería actualizarse.\n- `summarize_jsonl([])` ahora `p95_duration_ms: None` (antes `0`).\n- `resolve_config` lanza `KeyError` con `args[0]` = nombre de variable (el detalle descriptivo se perdió a propósito).",
+  "runDir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261010-FLASHNEXT-Q4-P100-POST/runtime/xdg-data/LlamaCode/LlamaCode/benchmark-runs/ADV_v1_-_10_tareas_20261010_134055",
+  "runLabel": "ADV v1 - 10 tareas",
+  "setupSec": 0.3,
+  "target": "agent",
+  "thinkingEnabled": true,
+  "timeToFirstAttempt": 1712.0140000000001,
+  "timedOut": false,
+  "timeoutSec": 1800,
+  "timestamp": 1791652804430,
+  "toolCallQuality": {
+    "expectedCalls": 0,
+    "f1Pct": -1,
+    "failedCalls": 2,
+    "incompleteCalls": 0,
+    "invalidCalls": 0,
+    "matchedExpectedCalls": 0,
+    "missingExpectedCalls": 0,
+    "precisionPct": -1,
+    "recallPct": -1,
+    "redundantCalls": 16,
+    "sequenceExact": false,
+    "successRatePct": 97.9381443298969,
+    "successfulCalls": 95,
+    "totalCalls": 97,
+    "unexpectedCalls": 0
+  },
+  "toolCalls": 97,
+  "totalTime": 2347.067,
+  "transportAfterEvaluation": false,
+  "vramFreeMb": 3011,
+  "vramGpu0FreeMb": 1607,
+  "vramGpu0Mb": 22666,
+  "vramGpu0TotalMb": 24576,
+  "vramGpu0UsedPct": 92.22819010416666,
+  "vramGpu1FreeMb": 1404,
+  "vramGpu1Mb": 22720,
+  "vramGpu1TotalMb": 24576,
+  "vramGpu1UsedPct": 92.44791666666666,
+  "vramMb": 45386,
+  "vramNormalizedImbalancePct": 0.2197265625,
+  "vramObservedGpu0SharePct": 49.94051028951659,
+  "vramOptimalGpu0SharePct": 53.37097309863832,
+  "vramPlacementAssessment": "balanced",
+  "vramTelemetryScope": "device-total",
+  "workspace": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261010-FLASHNEXT-Q4-P100-POST/runtime/xdg-data/LlamaCode/LlamaCode/benchmark-runs/ADV_v1_-_10_tareas_20261010_134055/EVAL_Unsloth_UD-Q4_K_XL_lch1_R4096__ws"
+}

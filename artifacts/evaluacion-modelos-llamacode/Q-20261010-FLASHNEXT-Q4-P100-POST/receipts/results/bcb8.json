@@ -1,0 +1,413 @@
+{
+  "suiteId": "05c28394-11d0-41fe-a55f-b3cb69db9c15",
+  "suiteName": "BigCodeBench-Hard (8 ítems)",
+  "profileId": "q4-udq4kxl-lch1-20261010",
+  "thinkingEnabled": true,
+  "completedAtUtc": "2026-10-10T16:40:41Z",
+  "results": [
+    {
+      "acceptance": [
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/928",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/765",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/771",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/1019",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/906",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/583",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/139",
+          "type": "grader:code_tests"
+        },
+        {
+          "passed": true,
+          "taskId": "BigCodeBench/360",
+          "type": "grader:code_tests"
+        }
+      ],
+      "agentFiles": [
+        "solution_BigCodeBench_1019.py",
+        "solution_BigCodeBench_139.py",
+        "solution_BigCodeBench_360.py",
+        "solution_BigCodeBench_583.py",
+        "solution_BigCodeBench_765.py",
+        "solution_BigCodeBench_771.py",
+        "solution_BigCodeBench_906.py",
+        "solution_BigCodeBench_928.py",
+        "__pycache__/solution_BigCodeBench_1019.cpython-312.pyc",
+        "__pycache__/solution_BigCodeBench_139.cpython-312.pyc",
+        "__pycache__/solution_BigCodeBench_360.cpython-312.pyc",
+        "__pycache__/solution_BigCodeBench_583.cpython-312.pyc",
+        "__pycache__/solution_BigCodeBench_765.cpython-312.pyc",
+        "__pycache__/solution_BigCodeBench_771.cpython-312.pyc",
+        "__pycache__/solution_BigCodeBench_906.cpython-312.pyc",
+        "__pycache__/solution_BigCodeBench_928.cpython-312.pyc"
+      ],
+      "agentMetrics": [
+        {
+          "elapsedMs": 20100,
+          "tokens": 378,
+          "tps": 57.7319587628866,
+          "ttft_ms": 53
+        },
+        {
+          "elapsedMs": 18334,
+          "tokens": 211,
+          "tps": 65.92307932639736,
+          "ttft_ms": 51
+        },
+        {
+          "elapsedMs": 5414,
+          "tokens": 224,
+          "tps": 63.17511351778211,
+          "ttft_ms": 18
+        },
+        {
+          "elapsedMs": 3916,
+          "tokens": 104,
+          "tps": 51.54894671623296,
+          "ttft_ms": 42
+        },
+        {
+          "elapsedMs": 22356,
+          "tokens": 417,
+          "tps": 56.80811933791976,
+          "ttft_ms": 27
+        },
+        {
+          "elapsedMs": 24830,
+          "tokens": 600,
+          "tps": 63.73621704306444,
+          "ttft_ms": 51
+        },
+        {
+          "elapsedMs": 4431,
+          "tokens": 135,
+          "tps": 58.59120697886377,
+          "ttft_ms": 80
+        },
+        {
+          "elapsedMs": 5980,
+          "tokens": 287,
+          "tps": 69.26009942564795,
+          "ttft_ms": 122
+        },
+        {
+          "elapsedMs": 5601,
+          "tokens": 165,
+          "tps": 48.5065851364064,
+          "ttft_ms": 117
+        },
+        {
+          "elapsedMs": 23311,
+          "tokens": 483,
+          "tps": 63.03178994623375,
+          "ttft_ms": 29
+        },
+        {
+          "elapsedMs": 20282,
+          "tokens": 258,
+          "tps": 60.77452181287101,
+          "ttft_ms": 72
+        },
+        {
+          "elapsedMs": 5449,
+          "tokens": 238,
+          "tps": 69.60285430192431,
+          "ttft_ms": 52
+        },
+        {
+          "elapsedMs": 8602,
+          "tokens": 357,
+          "tps": 55.91667319288903,
+          "ttft_ms": 93
+        },
+        {
+          "elapsedMs": 5637,
+          "tokens": 188,
+          "tps": 54.11161960682727,
+          "ttft_ms": 84
+        },
+        {
+          "elapsedMs": 6565,
+          "tokens": 311,
+          "tps": 64.67040964857559,
+          "ttft_ms": 53
+        },
+        {
+          "elapsedMs": 7215,
+          "tokens": 256,
+          "tps": 52.71068832746516,
+          "ttft_ms": 51
+        },
+        {
+          "elapsedMs": 30548,
+          "tokens": 694,
+          "tps": 62.866304928754545,
+          "ttft_ms": 31
+        },
+        {
+          "elapsedMs": 25109,
+          "tokens": 329,
+          "tps": 63.317936874518864,
+          "ttft_ms": 59
+        },
+        {
+          "elapsedMs": 9027,
+          "tokens": 223,
+          "tps": 52.97667125956194,
+          "ttft_ms": 668
+        },
+        {
+          "elapsedMs": 26470,
+          "tokens": 400,
+          "tps": 62.55962714462222,
+          "ttft_ms": 31
+        },
+        {
+          "elapsedMs": 24338,
+          "tokens": 203,
+          "tps": 51.285938052650195,
+          "ttft_ms": 56
+        },
+        {
+          "elapsedMs": 7837,
+          "tokens": 400,
+          "tps": 63.58491765753163,
+          "ttft_ms": 55
+        },
+        {
+          "elapsedMs": 4970,
+          "tokens": 145,
+          "tps": 51.48050841440034,
+          "ttft_ms": 52
+        },
+        {
+          "elapsedMs": 31268,
+          "tokens": 455,
+          "tps": 58.807563557405224,
+          "ttft_ms": 34
+        },
+        {
+          "elapsedMs": 28985,
+          "tokens": 340,
+          "tps": 66.78976937885514,
+          "ttft_ms": 57
+        },
+        {
+          "elapsedMs": 5090,
+          "tokens": 121,
+          "tps": 52.44906805374946,
+          "ttft_ms": 17374
+        },
+        {
+          "elapsedMs": 6019,
+          "tokens": 259,
+          "tps": 57.85511649205888,
+          "ttft_ms": 38
+        },
+        {
+          "elapsedMs": 18381,
+          "tokens": 345,
+          "tps": 68.47547783974753,
+          "ttft_ms": 58
+        },
+        {
+          "elapsedMs": 10320,
+          "tokens": 189,
+          "tps": 46.7625009278274,
+          "ttft_ms": 766
+        },
+        {
+          "elapsedMs": 30446,
+          "tokens": 377,
+          "tps": 56.60490675955677,
+          "ttft_ms": 35
+        },
+        {
+          "elapsedMs": 28913,
+          "tokens": 309,
+          "tps": 64.80432867748836,
+          "ttft_ms": 58
+        },
+        {
+          "elapsedMs": 15972,
+          "tokens": 136,
+          "tps": 49.73305053755577,
+          "ttft_ms": 827
+        },
+        {
+          "elapsedMs": 37122,
+          "tokens": 665,
+          "tps": 60.97560975609756,
+          "ttft_ms": 37
+        },
+        {
+          "elapsedMs": 34396,
+          "tokens": 433,
+          "tps": 59.295574057844,
+          "ttft_ms": 61
+        },
+        {
+          "elapsedMs": 6067,
+          "tokens": 172,
+          "tps": 48.75283446712018,
+          "ttft_ms": 21813
+        },
+        {
+          "elapsedMs": 75252,
+          "tokens": 2494,
+          "tps": 65.42154136718955,
+          "ttft_ms": 47
+        },
+        {
+          "elapsedMs": 53568,
+          "tokens": 1105,
+          "tps": 58.793483234546095,
+          "ttft_ms": 104
+        },
+        {
+          "elapsedMs": 33435,
+          "tokens": 1965,
+          "tps": 67.0598112087147,
+          "ttft_ms": 103
+        },
+        {
+          "elapsedMs": 30533,
+          "tokens": 1841,
+          "tps": 71.36959058433126,
+          "ttft_ms": 98
+        },
+        {
+          "elapsedMs": 16316,
+          "tokens": 550,
+          "tps": 47.730625705111514,
+          "ttft_ms": 525
+        }
+      ],
+      "agentProfileId": "agent-maximo",
+      "agentProfileName": "Máximo",
+      "agentSeed": 4242,
+      "agentTemperature": 0.1,
+      "agentVariant": "baseline",
+      "avgTps": 59.14631600048067,
+      "avgTtftMs": 1099.55,
+      "baselineId": "162541c2-0b21-4784-83f6-e1c75cba1d20",
+      "benchmarkMemoryPlanner": "llama.cpp-fit-expert-aware",
+      "benchmarkName": "BigCodeBench-Hard (8 ítems)",
+      "complexityMetrics": {
+        "addedLines": 506,
+        "filesChanged": 16,
+        "filesCreated": 16,
+        "filesDeleted": 0,
+        "removedLines": 0
+      },
+      "elapsedSec": 848.933,
+      "failed": false,
+      "failureKind": "none",
+      "finalScore": 8,
+      "finalTotal": 8,
+      "firstAttemptScore": 4,
+      "firstAttemptTotal": 8,
+      "firstEvaluableSec": 20.769,
+      "firstToolCallSec": 20.16,
+      "firstWriteSec": 20.2,
+      "generationSec": 778.405,
+      "harnessEngineId": "legacy",
+      "harnessEngineVersion": 1,
+      "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+      "honeyEnabled": false,
+      "id": "162541c2-0b21-4784-83f6-e1c75cba1d20",
+      "isBaseline": true,
+      "measurementPhase": "cold",
+      "mode": "custom",
+      "nonGenerationSec": 70.52800000000002,
+      "pass": 1,
+      "passedAfterRepair": true,
+      "passesTotal": 1,
+      "profileConfigFingerprint": "09d45e63b1f548df63775d947a051a70ca66561bb5a04bcf292050eb8bcb2958",
+      "profileId": "q4-udq4kxl-lch1-20261010",
+      "profileName": "EVAL · Unsloth UD-Q4_K_XL · lch1 · R4096",
+      "progressGovernor": {
+        "progressEvents": 31,
+        "replanEvents": 0,
+        "stagnationEvents": 2
+      },
+      "qualityScore": 8,
+      "qualityTotal": 8,
+      "ramFreeMb": 0,
+      "ramMb": 0,
+      "ramTotalMb": 0,
+      "repairAttempts": 2,
+      "response": "<think>All four passed. Note: 771 — the grader's mock_open read_data with csv.reader: mock_open supports iteration in Python 3.8+? It worked here (OK). Also, the actual behavior with real files: csv.writer writes \\r\\n — no problem.\n\nOne concern: 771 with real files — previously tested with real files; the new version reads with csv.reader and writes with csv.writer (line terminator \\r\\n). Content is preserved as CSV rows. No problem.\n\nDone. Summarizing.\n</think>\nCorregí los 4 archivos fallidos y pasé los checks del grader replicados localmente:\n\n- **765**: la causa era iterar `kwargs.values()`; el grader pasa `{ruta: contenido}` (claves = rutas). Ahora itera ítems: copia si la clave es archivo existente, `getsize > 0` y el valor no es `None`; devuelve rutas de `shutil.copy` (relativas, `startswith(target_dir)`).\n- **771**: el grader testea con `mock_open`/`patch('os.listdir')` sobre `/mnt/data/test_data` (inexistente). Quité la validación `isdir` y el `is_file()`; ahora usa `open(src,'r')` + `csv.reader` + `csv.writer` (escribe `row + '\\r\\n'`, matching `assert_any_call(path, 'r'/'w')`) y propaga `IOError`.\n- **583**: claves de 512 bits (no 2048) y cifrado AES **EAX** (no GCM); el archivo guarda sólo `b64(ciphertext)` para que el test haga `AES.new(pw, MODE_EAX, nonce).decrypt()` y `load_pkcs1` del PEM.\n- **360**: formato del dict por columna `{col: {'mean':..., 'std':...}}` con std **poblacional** (`ddof=0`, esperado 10.0) y un único `ax.bar` de medias (para que `extract_means_from_fig` dé `[20,30]`).\n\nVerificación: `py_compile` sobre los 4 + suite unittest que replica exactamente los checks de aceptación → `765: OK, 771: OK, 583: OK, 360: OK`. Los demás archivos (928, 1019, 906, 139) no se tocaron.",
+      "runDir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261010-FLASHNEXT-Q4-P100-POST/runtime/xdg-data/LlamaCode/LlamaCode/benchmark-runs/BigCodeBench-Hard_8_tems__20261010_132629",
+      "runLabel": "BigCodeBench-Hard (8 ítems)",
+      "setupSec": 0.301,
+      "target": "agent",
+      "thinkingEnabled": true,
+      "timeToFirstAttempt": 624.404,
+      "timedOut": false,
+      "timeoutSec": 1800,
+      "timestamp": 1791650440086,
+      "toolCallQuality": {
+        "expectedCalls": 0,
+        "f1Pct": -1,
+        "failedCalls": 0,
+        "incompleteCalls": 0,
+        "invalidCalls": 0,
+        "matchedExpectedCalls": 0,
+        "missingExpectedCalls": 0,
+        "precisionPct": -1,
+        "recallPct": -1,
+        "redundantCalls": 2,
+        "sequenceExact": false,
+        "successRatePct": 100,
+        "successfulCalls": 33,
+        "totalCalls": 33,
+        "unexpectedCalls": 0
+      },
+      "toolCalls": 33,
+      "totalTime": 848.933,
+      "transportAfterEvaluation": false,
+      "vramFreeMb": 3008,
+      "vramGpu0FreeMb": 1604,
+      "vramGpu0Mb": 22686,
+      "vramGpu0TotalMb": 24576,
+      "vramGpu0UsedPct": 92.3095703125,
+      "vramGpu1FreeMb": 1404,
+      "vramGpu1Mb": 22720,
+      "vramGpu1TotalMb": 24576,
+      "vramGpu1UsedPct": 92.44791666666666,
+      "vramMb": 45406,
+      "vramNormalizedImbalancePct": 0.13834635416666297,
+      "vramObservedGpu0SharePct": 49.962560014095054,
+      "vramOptimalGpu0SharePct": 53.32446808510638,
+      "vramPlacementAssessment": "balanced",
+      "vramTelemetryScope": "device-total",
+      "workspace": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261010-FLASHNEXT-Q4-P100-POST/runtime/xdg-data/LlamaCode/LlamaCode/benchmark-runs/BigCodeBench-Hard_8_tems__20261010_132629/EVAL_Unsloth_UD-Q4_K_XL_lch1_R4096__ws"
+    }
+  ]
+}

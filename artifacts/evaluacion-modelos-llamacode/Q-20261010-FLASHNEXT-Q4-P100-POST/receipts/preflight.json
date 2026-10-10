@@ -1,0 +1,29 @@
+{
+  "timeUtc": "2026-10-10T15:46:03Z",
+  "lockToken": "6be4e333-caa3-4c31-ab4f-8f4a1df19fcb",
+  "lockOwner": "Q-20261010-FLASHNEXT-Q4-P100-POST",
+  "serverPorts8350and8898Free": true,
+  "gpuMemoryUsedMiB": [
+    828,
+    108
+  ],
+  "gpuUtilPercent": [
+    8,
+    17
+  ],
+  "gpuTemperatureC": [
+    40,
+    23
+  ],
+  "ramTotalBytes": 132615835648,
+  "ramAvailable": "113 GiB",
+  "swapTotal": "8 GiB",
+  "swapUsed": "460 MiB",
+  "q4StorageFree": "197 GiB",
+  "q4ModelHashesVerified": true,
+  "gpuSelection": [
+    1
+  ],
+  "otherLLMServersFound": false,
+  "note": "GPU0 has desktop/display activity; left untouched. Other queue tasks remain Pending."
+}

@@ -1,0 +1,55 @@
+{
+  "status": 200,
+  "elapsedSeconds": 6.046866945005604,
+  "request": {
+    "model": "qwen3.8-flash-next-unsloth-ud-q4_k_xl",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Escribí una función Python llamada es_par(n) que devuelva True si n es par y False en caso contrario. Devolvé solo el código."
+      }
+    ],
+    "temperature": 0.1,
+    "max_tokens": 128,
+    "stream": false
+  },
+  "response": {
+    "id": "chatcmpl-94799809c4ca4b7b825cb61b",
+    "object": "chat.completion",
+    "created": 1791648175,
+    "model": "qwen3.8-flash-next-unsloth-ud-q4_k_xl",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "def es_par(n):\n    return n % 2 == 0",
+          "reasoning_content": "We need answer user's request in Spanish likely. User: \"Escribí una función Python llamada es_par(n) que devuelva True si n es par y False en caso contrario. Devolvé solo el código.\" Need output only code. Need final only code. Could be:\ndef es_par(n):\n    return n % 2 == 0\nNeed no explanation. Ensure only code.\n"
+        },
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 84,
+      "completion_tokens": 102,
+      "total_tokens": 186,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 84,
+      "prompt_ms": 3907.2,
+      "prompt_per_token_ms": 46.514,
+      "prompt_per_second": 21.5,
+      "predicted_n": 102,
+      "predicted_ms": 2127.5,
+      "predicted_per_token_ms": 20.858,
+      "predicted_per_second": 47.9,
+      "draft_n": 78,
+      "draft_n_accepted": 68
+    }
+  },
+  "gpuConfig": "dual RTX 3090, layer_split=18, resident-experts"
+}

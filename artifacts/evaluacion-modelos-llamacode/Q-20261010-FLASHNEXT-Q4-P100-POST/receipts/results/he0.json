@@ -1,0 +1,140 @@
+{
+  "suiteId": "059b6f00-7b4b-48ff-a3a2-2a71f900c1c0",
+  "suiteName": "HumanEval (1 ítems)",
+  "profileId": "q4-udq4kxl-lch1-20261010",
+  "thinkingEnabled": true,
+  "completedAtUtc": "2026-10-10T16:04:07Z",
+  "results": [
+    {
+      "acceptance": [
+        {
+          "passed": true,
+          "taskId": "HumanEval/0",
+          "type": "grader:code_tests"
+        }
+      ],
+      "agentFiles": [
+        "solution_HumanEval_0.py"
+      ],
+      "agentMetrics": [
+        {
+          "elapsedMs": 21725,
+          "tokens": 287,
+          "tps": 54.9892703862661,
+          "ttft_ms": 63
+        },
+        {
+          "elapsedMs": 907,
+          "tokens": 0,
+          "tps": 0,
+          "ttft_ms": 53
+        },
+        {
+          "elapsedMs": 0,
+          "tokens": 8,
+          "tps": 0
+        }
+      ],
+      "agentProfileId": "agent-maximo",
+      "agentProfileName": "Máximo",
+      "agentSeed": 4242,
+      "agentTemperature": 0.1,
+      "agentVariant": "baseline",
+      "avgTps": 54.9892703862661,
+      "avgTtftMs": 58,
+      "baselineId": "04e060e2-eed8-4c5f-8378-4402e81adddc",
+      "benchmarkMemoryPlanner": "llama.cpp-fit-expert-aware",
+      "benchmarkName": "HumanEval (1 ítems)",
+      "complexityMetrics": {
+        "addedLines": 16,
+        "filesChanged": 1,
+        "filesCreated": 1,
+        "filesDeleted": 0,
+        "removedLines": 0
+      },
+      "elapsedSec": 23.072,
+      "failed": false,
+      "failureKind": "none",
+      "finalScore": 1,
+      "finalTotal": 1,
+      "firstAttemptScore": 1,
+      "firstAttemptTotal": 1,
+      "firstEvaluableSec": 22.754,
+      "firstToolCallSec": 21.794,
+      "firstWriteSec": 21.835,
+      "generationSec": 22.632,
+      "harnessEngineId": "legacy",
+      "harnessEngineVersion": 1,
+      "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+      "honeyEnabled": false,
+      "id": "04e060e2-eed8-4c5f-8378-4402e81adddc",
+      "isBaseline": true,
+      "measurementPhase": "cold",
+      "mode": "custom",
+      "nonGenerationSec": 0.4399999999999977,
+      "pass": 1,
+      "passedAfterRepair": false,
+      "passesTotal": 1,
+      "profileConfigFingerprint": "09d45e63b1f548df63775d947a051a70ca66561bb5a04bcf292050eb8bcb2958",
+      "profileId": "q4-udq4kxl-lch1-20261010",
+      "profileName": "EVAL · Unsloth UD-Q4_K_XL · lch1 · R4096",
+      "progressGovernor": {
+        "progressEvents": 1,
+        "replanEvents": 0,
+        "stagnationEvents": 0
+      },
+      "qualityScore": 1,
+      "qualityTotal": 1,
+      "ramFreeMb": 0,
+      "ramMb": 0,
+      "ramTotalMb": 0,
+      "repairAttempts": 0,
+      "response": "[turno cancelado por el usuario]",
+      "runDir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261010-FLASHNEXT-Q4-P100-POST/runtime/xdg-data/LlamaCode/LlamaCode/benchmark-runs/HumanEval_1_tems__20261010_130337",
+      "runLabel": "HumanEval (1 ítems)",
+      "setupSec": 0.301,
+      "target": "agent",
+      "thinkingEnabled": true,
+      "timeToFirstAttempt": 22.771,
+      "timedOut": false,
+      "timeoutSec": 1800,
+      "timestamp": 1791648240569,
+      "toolCallQuality": {
+        "expectedCalls": 0,
+        "f1Pct": -1,
+        "failedCalls": 0,
+        "incompleteCalls": 0,
+        "invalidCalls": 0,
+        "matchedExpectedCalls": 0,
+        "missingExpectedCalls": 0,
+        "precisionPct": -1,
+        "recallPct": -1,
+        "redundantCalls": 0,
+        "sequenceExact": false,
+        "successRatePct": 100,
+        "successfulCalls": 1,
+        "totalCalls": 1,
+        "unexpectedCalls": 0
+      },
+      "toolCalls": 1,
+      "totalTime": 23.072,
+      "transportAfterEvaluation": false,
+      "vramFreeMb": 3033,
+      "vramGpu0FreeMb": 1629,
+      "vramGpu0Mb": 22493,
+      "vramGpu0TotalMb": 24576,
+      "vramGpu0UsedPct": 91.52425130208334,
+      "vramGpu1FreeMb": 1404,
+      "vramGpu1Mb": 22720,
+      "vramGpu1TotalMb": 24576,
+      "vramGpu1UsedPct": 92.44791666666666,
+      "vramMb": 45213,
+      "vramNormalizedImbalancePct": 0.9236653645833259,
+      "vramObservedGpu0SharePct": 49.74896600535244,
+      "vramOptimalGpu0SharePct": 53.70919881305638,
+      "vramPlacementAssessment": "balanced",
+      "vramTelemetryScope": "device-total",
+      "workspace": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261010-FLASHNEXT-Q4-P100-POST/runtime/xdg-data/LlamaCode/LlamaCode/benchmark-runs/HumanEval_1_tems__20261010_130337/EVAL_Unsloth_UD-Q4_K_XL_lch1_R4096__ws"
+    }
+  ]
+}

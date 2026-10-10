@@ -1,0 +1,162 @@
+{
+  "taskId": "Q-20261010-FLASHNEXT-Q4-P100-POST",
+  "updatedAtUtc": "2026-10-10T17:23:33Z",
+  "status": "completed",
+  "candidate": {
+    "repo": "unsloth/Qwen3.8-Flash-Next-GGUF",
+    "revision": "38bb39ee97821de2c9009abb7e93950eec396e66",
+    "quant": "UD-Q4_K_XL",
+    "files": [
+      {
+        "name": "Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf",
+        "bytes": 10946624,
+        "sha256": "4448186216b3af4cc558bbce2c3213f01608f8f8b2e5267a9767971dd3ec8082",
+        "hashVerified": true
+      },
+      {
+        "name": "Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+        "bytes": 49859583136,
+        "sha256": "3f342f1c1580473f1ee94ddd5b28206e8c07a70fa1a366f59d1d6c922919a6c9",
+        "hashVerified": true
+      },
+      {
+        "name": "Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+        "bytes": 49376141504,
+        "sha256": "56758f40269cad5cd9b0d3d6fbae0f40f6d5be6de49e4ab392dbe83157d9cbd3",
+        "hashVerified": true
+      },
+      {
+        "name": "Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf",
+        "bytes": 12087983520,
+        "sha256": "753bda48b98ba4f1636134a90a967de1b2d3908a236c026e464777342e53510a",
+        "hashVerified": true
+      }
+    ],
+    "bytesTotal": 111334654784,
+    "pack": "Strata pack with compat-bf16",
+    "packPath": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/packs/unsloth-ud-q4_k_xl"
+  },
+  "runtime": {
+    "repo": "Niko1221/Strata",
+    "tag": "v0.1.41",
+    "commit": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
+    "engineBuild": {
+      "source": "local",
+      "version": "0.1.41",
+      "archs": [
+        86
+      ],
+      "vision": "none",
+      "cuda_dirs": [
+        "/usr/local/cuda-12.8/bin",
+        "/usr/local/cuda-12.8/lib64"
+      ],
+      "src": "62eb4907c92a8cb7",
+      "vision_src": null
+    },
+    "server": "serve/server.py"
+  },
+  "hardware": {
+    "gpus": [
+      "NVIDIA GeForce RTX 3090 24 GiB (0)",
+      "NVIDIA GeForce RTX 3090 24 GiB (1)"
+    ],
+    "ramBytes": 132615835648,
+    "availableBeforeLoad": "113 GiB",
+    "swapUsedBeforeLoad": "460 MiB",
+    "diskFreeBytes": 211527139328,
+    "selectedGpu": [
+      0,
+      1
+    ]
+  },
+  "config": {
+    "maxContext": 131072,
+    "kv": "int8",
+    "kvResident": 32768,
+    "expertCache": "auto",
+    "prefill": "auto",
+    "spec": 4,
+    "specMinP": 0.7,
+    "mtp": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/mtp/rt",
+    "sampling": {
+      "temperature": 0.6,
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repeat_penalty": 1.0,
+      "presence_penalty": 0.0
+    },
+    "residentExperts": true,
+    "layerSplit": 18,
+    "vramReserveMiB": 2048,
+    "gpu": [
+      0,
+      1
+    ]
+  },
+  "reasonForSingleGpu": null,
+  "comparison": {
+    "method": "LlamaCode LC-H1 HE0 -> HE20 -> BCB8",
+    "agent": "agent-maximo",
+    "thinking": true,
+    "seed": 4242,
+    "reasoningBudget": 4096,
+    "repairLimit": 3,
+    "harnessSpecHash": "cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+    "control": "Reuse ASTRA IQ3_S Strata 0.1.41 baseline from Q-20261009-FLASHNEXT-IQ3XXS-AB; local control used both GPUs, so decode speed is not directly paired."
+  },
+  "configSha256": "a35a4d5edf1e7f012737e952ca170c5459fc0dc6cc68a00ec20442429dd71dd7",
+  "dualGpuPrecedent": {
+    "taskId": "Q-20261005-DUALVRAM",
+    "runtime": "Strata 0.1.39",
+    "sameCheckpoint": "UD-Q4_K_XL; exact same four shard SHA-256 values",
+    "result": "LC-H1 39/39 final on split 18/30; reused as historical feasibility evidence, not current 0.1.41 result"
+  },
+  "selectionRationale": "Use both RTX 3090s as explicitly requested; split 18/30, --resident-experts, 2048 MiB reserve. The same Q4 checkpoint previously completed LC-H1 39/39 in a dual-GPU Strata 0.1.39 run; that is historical feasibility evidence only.",
+  "completedAtUtc": "2026-10-10T17:23:33Z",
+  "evaluation": {
+    "profile": "EVAL · Unsloth UD-Q4_K_XL · lch1 · R4096",
+    "profileConfigFingerprint": "09d45e63b1f548df63775d947a051a70ca66561bb5a04bcf292050eb8bcb2958",
+    "harnessSpecHash": "cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+    "coreLcH1": {
+      "firstAttempt": "25/29",
+      "final": "29/29",
+      "suites": {
+        "HE0": "1/1",
+        "HE20": "20/20",
+        "BCB8": "4/8 -> 8/8"
+      },
+      "elapsedSec": 2155.249
+    },
+    "advV1": {
+      "firstAttempt": "7/10",
+      "final": "10/10",
+      "elapsedSec": 2347.067
+    },
+    "combined": {
+      "firstAttempt": "32/39",
+      "final": "39/39",
+      "elapsedSec": 4502.316
+    },
+    "throughputTpsBySuite": {
+      "HE0": 54.9892703862661,
+      "HE20": 56.85198882434866,
+      "BCB8": 59.14631600048067,
+      "ADV10": 59.6765944717491
+    },
+    "dualGpu": true,
+    "gpu": [
+      "NVIDIA GeForce RTX 3090 (0)",
+      "NVIDIA GeForce RTX 3090 (1)"
+    ],
+    "gpuLayerSplit": "18/30",
+    "maxContext": 131072,
+    "limitations": [
+      "No TaskFlow ULTRA",
+      "No independent Server Speed v1",
+      "No retrieval 262K",
+      "No Computer Usage GUI E2E, vision, or acoustic Ingi-Charla evaluation"
+    ]
+  }
+}
