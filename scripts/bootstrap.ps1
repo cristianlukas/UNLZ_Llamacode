@@ -234,6 +234,9 @@ try {
 
     # ── Clone / update ──────────────────────────────────────────────────────────
     if (Test-Path (Join-Path $Dir '.git')) {
+        # artifacts/ tiene rutas de ~240 chars: bajo %USERPROFILE% pasan los 260 de
+        # MAX_PATH y el checkout falla ("Filename too long") sin longpaths.
+        git -C $Dir config core.longpaths true
         # 'Actualizar ahora' pasa LC_DIR con la instalacion que esta corriendo, que
         # puede ser un checkout de trabajo: el reset --hard de abajo se llevaria
         # puesto todo lo no commiteado. Abortar salvo LC_FORCE=1.
@@ -264,8 +267,14 @@ try {
         if ((Test-Path $Dir) -and @(Get-ChildItem -Force $Dir).Count -gt 0) {
             Die "$Dir exists, is not empty and is not a git checkout. Move or delete it (or set LC_DIR) and re-run."
         }
-        git clone --depth 1 --branch $CloneRef $Repo $Dir
-        if ($LASTEXITCODE -ne 0) { Die "git clone failed (exit $LASTEXITCODE)." }
+        git -c core.longpaths=true clone --depth 1 --branch $CloneRef $Repo $Dir
+        if ($LASTEXITCODE -ne 0) {
+            # Un clone a medias (checkout fallido) deja .git y la proxima corrida lo
+            # veria "sucio": borrarlo para que re-correr el comando funcione.
+            if (Test-Path $Dir) { Remove-Item -Recurse -Force $Dir -ErrorAction SilentlyContinue }
+            Die "git clone failed (exit $LASTEXITCODE)."
+        }
+        git -C $Dir config core.longpaths true
     }
     Ok "source ready"
 

@@ -63,6 +63,10 @@ $badPaths = @($tracked | Where-Object { $_ -match '[\x00-\x1f<>:"|?*]|[ .]$|[ .]
 Check ($badPaths.Count -eq 0) "todos los paths trackeados son validos en Windows ($($badPaths.Count) invalidos)"
 $badPaths | Select-Object -First 5 | ForEach-Object { Write-Host "        $_" -ForegroundColor Red }
 
+# artifacts/ tiene rutas de ~240 chars; bajo %USERPROFILE% superan MAX_PATH.
+Check ($ps.Contains('git -c core.longpaths=true clone')) 'clona con core.longpaths (rutas > 260)'
+Check ($ps.Contains('git -C $Dir config core.longpaths true')) 'deja core.longpaths en el checkout para updates'
+
 # Lado del app.
 Check ($app.Contains('installRootForExePath(QCoreApplication::applicationFilePath())')) 'el app calcula la raiz de instalacion'
 Check ($app -match '\$env:LC_DIR=') 'el app le pasa LC_DIR al bootstrap'
