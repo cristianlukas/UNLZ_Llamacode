@@ -1,0 +1,2301 @@
+[strata] layer split: card order 1,0 (the faster card last; "gpu_order": "as_given" keeps 0,1, #1352)
+[strata] layer split: card order 1,0 (the faster card last; "gpu_order": "as_given" keeps 0,1, #1352)
+[strata] sampling defaults from the config: temperature=0.6, top_p=0.95, top_k=20, min_p=0.0, repetition_penalty=1.0, presence_penalty=0.0
+loading the model (the first start takes a minute or two) ...
+[strata] layer split across GPUs [0, 1] (auto)
+[strata] starting the engine: reading the model's weights ...
+[strata] loading the experts into RAM (about 47 GB) and locking part of them for the GPU.
+         YOUR PC CAN BE SLOW OR STOP RESPONDING FOR 1-3 MINUTES NOW - this is normal.
+         Please wait and don't close this window; the browser opens when it is ready.
+[strata] still starting (23 s) - please wait ...
+[strata] still starting (43 s) - please wait ...
+[strata] experts loaded: 39.97 GiB at 2.50 GiB/s (46 s so far)
+[strata] filling the GPU's expert cache (12840 experts, 18.62 GiB of VRAM) ...
+[strata] almost ready ...
+ready: http://127.0.0.1:8350/v1  (OpenAI: /v1/chat/completions, Anthropic: /v1/messages, context 131072 tokens)
+       open http://127.0.0.1:8350/ in a browser to chat; close this window to stop the model
+[strata] thinking: 49 of max 1200 tokens, 149.6 tok/s, 1 s
+[strata] thinking: 151 of max 1200 tokens, 112.5 tok/s, 2 s
+[strata] thinking: 255 of max 1200 tokens, 108.7 tok/s, 3 s
+[strata] thinking: 358 of max 1200 tokens, 106.6 tok/s, 4 s
+[strata] thinking: 477 of max 1200 tokens, 109.4 tok/s, 5 s
+[strata] thinking: 586 of max 1200 tokens, 109.1 tok/s, 6 s
+[strata] thinking: 702 of max 1200 tokens, 110.1 tok/s, 7 s
+[strata] thinking: 800 of max 1200 tokens, 108.3 tok/s, 8 s
+[strata] thinking: 930 of max 1200 tokens, 110.7 tok/s, 9 s
+[strata] answering: 1041 of max 1200 tokens, 110.7 tok/s, 10 s
+[strata] done: 1093 tokens in 10 s (112.4 tok/s) (stop, cancel=False), expert cache 98.8% hit
+[strata] thinking: 110 of max 1200 tokens, 113.7 tok/s, 1 s
+[strata] thinking: 227 of max 1200 tokens, 115.2 tok/s, 2 s
+[strata] thinking: 327 of max 1200 tokens, 109.8 tok/s, 3 s
+[strata] thinking: 444 of max 1200 tokens, 111.6 tok/s, 4 s
+[strata] thinking: 551 of max 1200 tokens, 110.5 tok/s, 5 s
+[strata] thinking: 657 of max 1200 tokens, 109.6 tok/s, 6 s
+[strata] thinking: 757 of max 1200 tokens, 108.1 tok/s, 7 s
+[strata] thinking: 853 of max 1200 tokens, 106.4 tok/s, 8 s
+[strata] thinking: 983 of max 1200 tokens, 108.8 tok/s, 9 s
+[strata] done: 1087 tokens in 10 s (110.9 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] thinking: 112 of max 1200 tokens, 115.9 tok/s, 1 s
+[strata] thinking: 218 of max 1200 tokens, 110.4 tok/s, 2 s
+[strata] thinking: 344 of max 1200 tokens, 115.3 tok/s, 3 s
+[strata] answering: 447 of max 1200 tokens, 111.8 tok/s, 4 s
+[strata] done: 506 tokens in 4 s (117.1 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] thinking: 117 of max 1200 tokens, 121.4 tok/s, 1 s
+[strata] thinking: 245 of max 1200 tokens, 124.1 tok/s, 2 s
+[strata] thinking: 363 of max 1200 tokens, 121.7 tok/s, 3 s
+[strata] thinking: 453 of max 1200 tokens, 113.6 tok/s, 4 s
+[strata] thinking: 559 of max 1200 tokens, 111.9 tok/s, 5 s
+[strata] thinking: 663 of max 1200 tokens, 110.2 tok/s, 6 s
+[strata] thinking: 791 of max 1200 tokens, 112.8 tok/s, 7 s
+[strata] answering: 961 of max 1200 tokens, 119.7 tok/s, 8 s
+[strata] done: 965 tokens in 8 s (119.9 tok/s) (stop, cancel=False), expert cache 99.5% hit
+[strata] done: 8 tokens in 0 s (130.1 tok/s) (length, cancel=False), expert cache 99.7% hit
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[strata] thinking: 86 of max 128 tokens, 136.4 tok/s, 1 s
+[strata] done: 128 tokens in 1 s (119.9 tok/s) (length, cancel=False), expert cache 98.9% hit
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[strata] thinking: 85 of max 128 tokens, 127.6 tok/s, 1 s
+[strata] done: 128 tokens in 1 s (117.5 tok/s) (length, cancel=False), expert cache 99.4% hit
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[strata] thinking: 79 of max 192 tokens, 122.9 tok/s, 1 s
+[strata] done: 192 tokens in 2 s (120.1 tok/s) (length, cancel=False), expert cache 99.2% hit
+[strata] thinking: 85 of max 192 tokens, 129.8 tok/s, 1 s
+[strata] done: 192 tokens in 2 s (126.4 tok/s) (length, cancel=False), expert cache 99.5% hit
+[strata] thinking: 90 of max 160 tokens, 147.6 tok/s, 1 s
+[strata] done: 160 tokens in 2 s (136.1 tok/s) (length, cancel=False), expert cache 99.1% hit
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[strata] thinking: 96 of max 160 tokens, 151.2 tok/s, 1 s
+[strata] done: 160 tokens in 2 s (137.5 tok/s) (length, cancel=False), expert cache 99.6% hit
+[strata] thinking: 99 of max 128 tokens, 156.1 tok/s, 1 s
+[strata] done: 128 tokens in 1 s (151.8 tok/s) (length, cancel=False), expert cache 98.9% hit
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[strata] thinking: 100 of max 128 tokens, 151.2 tok/s, 1 s
+[strata] done: 128 tokens in 1 s (144.0 tok/s) (length, cancel=False), expert cache 99.5% hit
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[strata] thinking: 83 of max 192 tokens, 132.8 tok/s, 1 s
+[strata] done: 192 tokens in 2 s (128.4 tok/s) (length, cancel=False), expert cache 99.4% hit
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[strata] thinking: 92 of max 192 tokens, 139.2 tok/s, 1 s
+[strata] done: 145 tokens in 1 s (138.2 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] thinking: 93 of max 128 tokens, 147.0 tok/s, 1 s
+[strata] done: 125 tokens in 1 s (151.3 tok/s) (stop, cancel=False), expert cache 99.3% hit
+[strata] answering: 101 of max 128 tokens, 154.0 tok/s, 1 s
+[strata] done: 104 tokens in 1 s (158.5 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] thinking: 97 of max 160 tokens, 155.9 tok/s, 1 s
+[strata] done: 160 tokens in 2 s (132.3 tok/s) (length, cancel=False), expert cache 99.5% hit
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[strata] thinking: 91 of max 160 tokens, 140.0 tok/s, 1 s
+[strata] done: 160 tokens in 2 s (135.6 tok/s) (length, cancel=False), expert cache 99.6% hit
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[strata] thinking: 99 of max 192 tokens, 155.6 tok/s, 1 s
+[strata] done: 192 tokens in 2 s (132.6 tok/s) (length, cancel=False), expert cache 99.6% hit
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[strata] thinking: 95 of max 192 tokens, 145.2 tok/s, 1 s
+[strata] done: 192 tokens in 2 s (121.7 tok/s) (length, cancel=False), expert cache 99.8% hit
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[strata] thinking: 93 of max 128 tokens, 144.4 tok/s, 1 s
+[strata] done: 128 tokens in 1 s (122.7 tok/s) (length, cancel=False), expert cache 99.8% hit
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[strata] thinking: 83 of max 128 tokens, 123.3 tok/s, 1 s
+[strata] done: 128 tokens in 1 s (115.0 tok/s) (length, cancel=False), expert cache 99.8% hit
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[strata] thinking: 83 of max 192 tokens, 128.8 tok/s, 1 s
+[strata] done: 192 tokens in 2 s (123.1 tok/s) (length, cancel=False), expert cache 99.8% hit
+[strata] thinking: 92 of max 192 tokens, 138.9 tok/s, 1 s
+[strata] done: 192 tokens in 2 s (124.1 tok/s) (length, cancel=False), expert cache 99.8% hit
+[strata] thinking: 96 of max 160 tokens, 154.3 tok/s, 1 s
+[strata] done: 160 tokens in 2 s (139.5 tok/s) (length, cancel=False), expert cache 99.8% hit
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[strata] thinking: 99 of max 160 tokens, 155.7 tok/s, 1 s
+[strata] done: 160 tokens in 2 s (140.9 tok/s) (length, cancel=False), expert cache 99.8% hit
+[strata] thinking: 104 of max 128 tokens, 161.9 tok/s, 1 s
+[strata] done: 128 tokens in 1 s (159.2 tok/s) (length, cancel=False), expert cache 99.5% hit
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[strata] thinking: 100 of max 128 tokens, 149.9 tok/s, 1 s
+[strata] done: 128 tokens in 1 s (143.8 tok/s) (length, cancel=False), expert cache 99.7% hit
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[strata] thinking: 84 of max 192 tokens, 133.2 tok/s, 1 s
+[strata] done: 121 tokens in 1 s (140.4 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] thinking: 89 of max 192 tokens, 136.2 tok/s, 1 s
+[strata] done: 149 tokens in 1 s (131.2 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] thinking: 84 of max 128 tokens, 129.8 tok/s, 1 s
+[strata] done: 127 tokens in 1 s (136.3 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] done: 97 tokens in 1 s (152.5 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] thinking: 86 of max 160 tokens, 136.8 tok/s, 1 s
+[strata] done: 160 tokens in 2 s (128.7 tok/s) (length, cancel=False), expert cache 99.8% hit
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[strata] thinking: 91 of max 160 tokens, 139.9 tok/s, 1 s
+[strata] done: 160 tokens in 2 s (133.7 tok/s) (length, cancel=False), expert cache 99.8% hit
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[strata] thinking: 104 of max 192 tokens, 162.1 tok/s, 1 s
+[strata] done: 192 tokens in 2 s (136.7 tok/s) (length, cancel=False), expert cache 99.8% hit
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[strata] thinking: 93 of max 192 tokens, 144.3 tok/s, 1 s
+[strata] done: 192 tokens in 2 s (133.4 tok/s) (length, cancel=False), expert cache 99.6% hit
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[strata] reading the prompt: 1,288 of 1,289 tokens, 1 s so far
+[strata] done: 8 tokens in 1 s (142.8 tok/s) (length, cancel=False), expert cache 99.9% hit
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[strata] reading the prompt: 4,915 of 4,920 tokens, 2 s so far
+[strata] done: 8 tokens in 3 s (111.0 tok/s) (length, cancel=False), expert cache 99.9% hit
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[strata] reading the prompt: 8,192 of 9,760 tokens, 4 s so far
+[strata] reading the prompt: 9,759 of 9,760 tokens, 5 s so far
+[strata] done: 8 tokens in 5 s (135.2 tok/s) (length, cancel=False), expert cache 99.9% hit
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[strata] reading the prompt: 8,192 of 19,442 tokens, 4 s so far
+[strata] reading the prompt: 16,384 of 19,442 tokens, 6 s so far
+[strata] reading the prompt: 19,437 of 19,442 tokens, 7 s so far
+[strata] done: 8 tokens in 7 s (131.0 tok/s) (length, cancel=False), expert cache 100.0% hit
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[strata] reading the prompt: 8,192 of 38,804 tokens, 4 s so far
+[strata] reading the prompt: 16,384 of 38,804 tokens, 6 s so far
+[strata] reading the prompt: 24,576 of 38,804 tokens, 8 s so far
+[strata] reading the prompt: 32,768 of 38,804 tokens, 10 s so far
+[strata] reading the prompt: 38,799 of 38,804 tokens, 12 s so far
+[strata] done: 8 tokens in 12 s (131.5 tok/s) (length, cancel=False), expert cache 99.9% hit
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[strata] reading the prompt: 8,192 of 12,962 tokens, 4 s so far
+[strata] reading the prompt: 12,191 of 12,962 tokens, 6 s so far
+[strata] reading the prompt: 12,961 of 12,962 tokens, 7 s so far
+[strata] writing a tool call: write_file: 124 of max 32768 tokens, 123.6 tok/s, 8 s
+[strata] tool call complete: 301 of max 32768 tokens, 148.4 tok/s, 9 s
+[strata] done: 302 tokens in 9 s (148.9 tok/s) (stop, cancel=False), expert cache 99.0% hit
+[strata] done: 0 tokens in 4 s (0.0 tok/s) (cancel, cancel=True)
+[strata] reading the prompt: 8,192 of 12,963 tokens, 4 s so far
+[strata] reading the prompt: 12,192 of 12,963 tokens, 5 s so far
+[strata] reading the prompt: 12,962 of 12,963 tokens, 6 s so far
+[strata] writing a tool call: write_file: 164 of max 32768 tokens, 164.1 tok/s, 7 s
+[strata] done: 236 tokens in 8 s (169.2 tok/s) (stop, cancel=False), expert cache 99.4% hit
+[strata] reading the prompt: 8,192 of 15,101 tokens, 4 s so far
+[strata] reading the prompt: 14,086 of 15,101 tokens, 5 s so far
+[strata] reading the prompt: 15,096 of 15,101 tokens, 7 s so far
+[strata] writing a tool call: run_shell: 65 of max 32768 tokens, 135.0 tok/s, 8 s
+[strata] done: 209 tokens in 8 s (153.3 tok/s) (stop, cancel=False), expert cache 99.3% hit
+[strata] writing a tool call: run_shell: 71 of max 32768 tokens, 142.1 tok/s, 1 s
+[strata] done: 208 tokens in 2 s (165.5 tok/s) (stop, cancel=False), expert cache 99.1% hit
+[strata] thinking: 53 of max 32768 tokens, 114.0 tok/s, 1 s
+[strata] done: 138 tokens in 2 s (118.9 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] thinking: 78 of max 32768 tokens, 127.8 tok/s, 1 s
+[strata] writing a tool call: run_shell: 227 of max 32768 tokens, 140.4 tok/s, 2 s
+[strata] done: 283 tokens in 2 s (144.5 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] answering: 61 of max 32768 tokens, 115.6 tok/s, 1 s
+[strata] done: 124 tokens in 2 s (115.7 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 8,192 of 15,172 tokens, 4 s so far
+[strata] reading the prompt: 12,192 of 15,172 tokens, 5 s so far
+[strata] reading the prompt: 15,167 of 15,172 tokens, 7 s so far
+[strata] writing a tool call: write_file: 80 of max 32768 tokens, 161.1 tok/s, 8 s
+[strata] writing a tool call: write_file: 236 of max 32768 tokens, 157.4 tok/s, 9 s
+[strata] done: 298 tokens in 9 s (157.4 tok/s) (stop, cancel=False), expert cache 99.3% hit
+[strata] reading the prompt: 8,192 of 17,419 tokens, 4 s so far
+[strata] reading the prompt: 14,086 of 17,419 tokens, 5 s so far
+[strata] reading the prompt: 17,414 of 17,419 tokens, 8 s so far
+[strata] thinking: 53 of max 32768 tokens, 104.9 tok/s, 9 s
+[strata] done: 166 tokens in 9 s (128.6 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] thinking: 54 of max 32768 tokens, 104.4 tok/s, 1 s
+[strata] writing a tool call: run_shell: 186 of max 32768 tokens, 120.9 tok/s, 2 s
+[strata] done: 189 tokens in 2 s (122.9 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] answering: 62 of max 32768 tokens, 120.5 tok/s, 1 s
+[strata] done: 126 tokens in 2 s (115.8 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 8,192 of 17,383 tokens, 4 s so far
+[strata] reading the prompt: 12,192 of 17,383 tokens, 5 s so far
+[strata] reading the prompt: 17,378 of 17,383 tokens, 8 s so far
+[strata] writing a tool call: write_file: 66 of max 32768 tokens, 129.9 tok/s, 9 s
+[strata] done: 160 tokens in 9 s (156.7 tok/s) (stop, cancel=False), expert cache 99.5% hit
+[strata] reading the prompt: 8,192 of 19,446 tokens, 4 s so far
+[strata] reading the prompt: 14,086 of 19,446 tokens, 5 s so far
+[strata] reading the prompt: 19,441 of 19,446 tokens, 8 s so far
+[strata] writing a tool call: run_shell: 54 of max 32768 tokens, 108.6 tok/s, 9 s
+[strata] done: 172 tokens in 10 s (141.9 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] answering: 75 of max 32768 tokens, 133.2 tok/s, 1 s
+[strata] done: 93 tokens in 1 s (139.2 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 8,192 of 19,551 tokens, 4 s so far
+[strata] reading the prompt: 12,192 of 19,551 tokens, 5 s so far
+[strata] reading the prompt: 19,546 of 19,551 tokens, 9 s so far
+[strata] thinking: 55 of max 32768 tokens, 105.8 tok/s, 10 s
+[strata] writing a tool call: write_file: 179 of max 32768 tokens, 117.4 tok/s, 11 s
+[strata] done: 346 tokens in 12 s (139.7 tok/s) (stop, cancel=False), expert cache 99.4% hit
+[strata] reading the prompt: 8,192 of 21,714 tokens, 4 s so far
+[strata] reading the prompt: 14,086 of 21,714 tokens, 5 s so far
+[strata] reading the prompt: 21,709 of 21,714 tokens, 9 s so far
+[strata] writing a tool call: run_shell: 66 of max 32768 tokens, 132.6 tok/s, 10 s
+[strata] done: 132 tokens in 11 s (133.1 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] answering: 62 of max 32768 tokens, 116.5 tok/s, 1 s
+[strata] done: 86 tokens in 1 s (122.4 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 8,192 of 22,182 tokens, 4 s so far
+[strata] reading the prompt: 12,192 of 22,182 tokens, 5 s so far
+[strata] reading the prompt: 20,384 of 22,182 tokens, 9 s so far
+[strata] reading the prompt: 22,181 of 22,182 tokens, 10 s so far
+[strata] writing a tool call: write_file: 131 of max 32768 tokens, 131.0 tok/s, 11 s
+[strata] done: 250 tokens in 12 s (148.4 tok/s) (stop, cancel=False), expert cache 99.3% hit
+[strata] reading the prompt: 8,192 of 24,298 tokens, 4 s so far
+[strata] reading the prompt: 14,086 of 24,298 tokens, 5 s so far
+[strata] reading the prompt: 22,278 of 24,298 tokens, 10 s so far
+[strata] reading the prompt: 24,297 of 24,298 tokens, 11 s so far
+[strata] writing a tool call: run_shell: 118 of max 32768 tokens, 117.6 tok/s, 12 s
+[strata] done: 177 tokens in 12 s (127.2 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] answering: 65 of max 32768 tokens, 118.0 tok/s, 1 s
+[strata] done: 96 tokens in 1 s (125.9 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] reading the prompt: 8,192 of 24,673 tokens, 4 s so far
+[strata] reading the prompt: 12,192 of 24,673 tokens, 5 s so far
+[strata] reading the prompt: 20,384 of 24,673 tokens, 9 s so far
+[strata] reading the prompt: 24,668 of 24,673 tokens, 10 s so far
+[strata] writing a tool call: write_file: 56 of max 32768 tokens, 118.6 tok/s, 11 s
+[strata] done: 221 tokens in 12 s (153.6 tok/s) (stop, cancel=False), expert cache 99.5% hit
+[strata] reading the prompt: 8,192 of 26,830 tokens, 4 s so far
+[strata] reading the prompt: 14,086 of 26,830 tokens, 6 s so far
+[strata] reading the prompt: 22,278 of 26,830 tokens, 10 s so far
+[strata] reading the prompt: 26,825 of 26,830 tokens, 11 s so far
+[strata] writing a tool call: run_shell: 64 of max 32768 tokens, 132.8 tok/s, 12 s
+[strata] done: 120 tokens in 12 s (145.7 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] answering: 66 of max 32768 tokens, 127.7 tok/s, 1 s
+[strata] done: 75 tokens in 1 s (124.5 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 8,192 of 27,271 tokens, 4 s so far
+[strata] reading the prompt: 12,192 of 27,271 tokens, 5 s so far
+[strata] reading the prompt: 20,384 of 27,271 tokens, 9 s so far
+[strata] reading the prompt: 27,266 of 27,271 tokens, 11 s so far
+[strata] writing a tool call: write_file: 63 of max 32768 tokens, 133.9 tok/s, 12 s
+[strata] writing a tool call: write_file: 234 of max 32768 tokens, 158.9 tok/s, 13 s
+[strata] done: 277 tokens in 13 s (160.8 tok/s) (stop, cancel=False), expert cache 99.4% hit
+[strata] reading the prompt: 8,192 of 29,492 tokens, 4 s so far
+[strata] reading the prompt: 14,086 of 29,492 tokens, 6 s so far
+[strata] reading the prompt: 22,278 of 29,492 tokens, 10 s so far
+[strata] reading the prompt: 29,487 of 29,492 tokens, 11 s so far
+[strata] writing a tool call: run_shell: 64 of max 32768 tokens, 135.2 tok/s, 12 s
+[strata] done: 132 tokens in 13 s (140.2 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] answering: 62 of max 32768 tokens, 126.8 tok/s, 1 s
+[strata] done: 82 tokens in 1 s (125.2 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] reading the prompt: 8,192 of 29,652 tokens, 4 s so far
+[strata] reading the prompt: 12,192 of 29,652 tokens, 5 s so far
+[strata] reading the prompt: 20,384 of 29,652 tokens, 9 s so far
+[strata] reading the prompt: 28,576 of 29,652 tokens, 11 s so far
+[strata] reading the prompt: 29,651 of 29,652 tokens, 13 s so far
+[strata] writing a tool call: write_file: 126 of max 32768 tokens, 127.2 tok/s, 14 s
+[strata] done: 187 tokens in 14 s (136.9 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] reading the prompt: 8,192 of 31,770 tokens, 4 s so far
+[strata] reading the prompt: 14,086 of 31,770 tokens, 6 s so far
+[strata] reading the prompt: 22,278 of 31,770 tokens, 10 s so far
+[strata] reading the prompt: 30,470 of 31,770 tokens, 12 s so far
+[strata] reading the prompt: 31,769 of 31,770 tokens, 13 s so far
+[strata] writing a tool call: edit_file: 98 of max 32768 tokens, 98.0 tok/s, 14 s
+[strata] writing a tool call: edit_file: 226 of max 32768 tokens, 112.0 tok/s, 15 s
+[strata] the reply repeated one token (' c') 256 times in a row: ended as "length" (repeat_stop_tokens in strata-<model>.json; 0 turns this off). If a new request with a short prompt does the same, restart the server and report it (#606)
+[strata] done: 300 tokens in 16 s (122.6 tok/s) (length, cancel=False), expert cache 99.5% hit
+[strata] writing a tool call: edit_file: 74 of max 32768 tokens, 119.1 tok/s, 1 s
+[strata] done: 113 tokens in 1 s (134.8 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] thinking: 56 of max 32768 tokens, 109.6 tok/s, 1 s
+[strata] writing a tool call: edit_file: 203 of max 32768 tokens, 132.1 tok/s, 2 s
+[strata] done: 222 tokens in 2 s (135.6 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] thinking: 54 of max 32768 tokens, 112.9 tok/s, 1 s
+[strata] done: 171 tokens in 2 s (138.8 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] done: 52 tokens in 1 s (139.0 tok/s) (stop, cancel=False), expert cache 99.5% hit
+[strata] writing a tool call: write_file: 62 of max 32768 tokens, 156.8 tok/s, 1 s
+[strata] done: 165 tokens in 2 s (168.0 tok/s) (stop, cancel=False), expert cache 99.5% hit
+[strata] thinking: 53 of max 32768 tokens, 120.7 tok/s, 1 s
+[strata] writing a tool call: run_shell: 181 of max 32768 tokens, 125.0 tok/s, 2 s
+[strata] done: 216 tokens in 2 s (124.2 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] thinking: 57 of max 32768 tokens, 112.0 tok/s, 1 s
+[strata] thinking: 178 of max 32768 tokens, 117.0 tok/s, 2 s
+[strata] writing a tool call: edit_file: 316 of max 32768 tokens, 124.8 tok/s, 3 s
+[strata] done: 350 tokens in 3 s (128.6 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] thinking: 50 of max 32768 tokens, 100.9 tok/s, 1 s
+[strata] writing a tool call: edit_file: 160 of max 32768 tokens, 106.8 tok/s, 2 s
+[strata] writing a tool call: edit_file: 278 of max 32768 tokens, 111.1 tok/s, 3 s
+[strata] done: 291 tokens in 3 s (113.6 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] thinking: 30 of max 32768 tokens, 102.8 tok/s, 1 s
+[strata] done: 56 tokens in 1 s (121.3 tok/s) (stop, cancel=False), expert cache 99.5% hit
+[strata] reading the prompt: 22,278 of 33,755 tokens, 4 s so far
+[strata] reading the prompt: 30,470 of 33,755 tokens, 6 s so far
+[strata] reading the prompt: 33,750 of 33,755 tokens, 7 s so far
+[strata] thinking: 40 of max 32768 tokens, 84.5 tok/s, 8 s
+[strata] done: 157 tokens in 9 s (111.8 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] reading the prompt: 8,192 of 34,078 tokens, 4 s so far
+[strata] reading the prompt: 12,192 of 34,078 tokens, 5 s so far
+[strata] reading the prompt: 20,384 of 34,078 tokens, 9 s so far
+[strata] reading the prompt: 28,576 of 34,078 tokens, 11 s so far
+[strata] reading the prompt: 34,073 of 34,078 tokens, 13 s so far
+[strata] writing a tool call: write_file: 73 of max 32768 tokens, 148.2 tok/s, 14 s
+[strata] done: 218 tokens in 15 s (159.5 tok/s) (stop, cancel=False), expert cache 99.5% hit
+[strata] reading the prompt: 8,192 of 36,247 tokens, 4 s so far
+[strata] reading the prompt: 14,086 of 36,247 tokens, 5 s so far
+[strata] reading the prompt: 22,278 of 36,247 tokens, 10 s so far
+[strata] reading the prompt: 30,470 of 36,247 tokens, 12 s so far
+[strata] reading the prompt: 36,242 of 36,247 tokens, 13 s so far
+[strata] writing a tool call: run_shell: 70 of max 32768 tokens, 146.2 tok/s, 14 s
+[strata] done: 137 tokens in 15 s (139.7 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] answering: 51 of max 32768 tokens, 115.3 tok/s, 1 s
+[strata] done: 112 tokens in 1 s (126.9 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 8,192 of 36,744 tokens, 4 s so far
+[strata] reading the prompt: 12,192 of 36,744 tokens, 5 s so far
+[strata] reading the prompt: 20,384 of 36,744 tokens, 9 s so far
+[strata] reading the prompt: 28,576 of 36,744 tokens, 11 s so far
+[strata] reading the prompt: 36,739 of 36,744 tokens, 13 s so far
+[strata] writing a tool call: write_file: 60 of max 32768 tokens, 127.2 tok/s, 14 s
+[strata] writing a tool call: write_file: 220 of max 32768 tokens, 148.4 tok/s, 15 s
+[strata] done: 229 tokens in 16 s (149.3 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] reading the prompt: 8,192 of 38,907 tokens, 4 s so far
+[strata] reading the prompt: 14,086 of 38,907 tokens, 5 s so far
+[strata] reading the prompt: 22,278 of 38,907 tokens, 9 s so far
+[strata] reading the prompt: 30,470 of 38,907 tokens, 12 s so far
+[strata] reading the prompt: 38,662 of 38,907 tokens, 14 s so far
+[strata] thinking: 9 of max 32768 tokens, 89.0 tok/s, 15 s
+[strata] writing a tool call: run_shell: 141 of max 32768 tokens, 126.7 tok/s, 16 s
+[strata] done: 228 tokens in 16 s (129.8 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] writing a tool call: run_shell: 60 of max 32768 tokens, 134.7 tok/s, 1 s
+[strata] done: 129 tokens in 1 s (141.9 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] writing a tool call: run_shell: 69 of max 32768 tokens, 139.4 tok/s, 1 s
+[strata] done: 159 tokens in 2 s (156.5 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] done: 33 tokens in 1 s (112.9 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] reading the prompt: 8,192 of 39,525 tokens, 4 s so far
+[strata] reading the prompt: 12,192 of 39,525 tokens, 5 s so far
+[strata] reading the prompt: 20,384 of 39,525 tokens, 9 s so far
+[strata] reading the prompt: 28,576 of 39,525 tokens, 11 s so far
+[strata] reading the prompt: 36,768 of 39,525 tokens, 13 s so far
+[strata] reading the prompt: 39,520 of 39,525 tokens, 14 s so far
+[strata] writing a tool call: write_file: 54 of max 32768 tokens, 109.1 tok/s, 15 s
+[strata] writing a tool call: write_file: 226 of max 32768 tokens, 150.1 tok/s, 16 s
+[strata] done: 274 tokens in 17 s (150.2 tok/s) (stop, cancel=False), expert cache 99.5% hit
+[strata] reading the prompt: 8,192 of 41,743 tokens, 4 s so far
+[strata] reading the prompt: 14,086 of 41,743 tokens, 5 s so far
+[strata] reading the prompt: 22,278 of 41,743 tokens, 9 s so far
+[strata] reading the prompt: 30,470 of 41,743 tokens, 11 s so far
+[strata] reading the prompt: 38,662 of 41,743 tokens, 14 s so far
+[strata] reading the prompt: 41,738 of 41,743 tokens, 15 s so far
+[strata] writing a tool call: run_shell: 66 of max 32768 tokens, 134.2 tok/s, 16 s
+[strata] done: 156 tokens in 16 s (139.2 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] thinking: 52 of max 32768 tokens, 108.6 tok/s, 1 s
+[strata] answering: 163 of max 32768 tokens, 109.8 tok/s, 2 s
+[strata] done: 207 tokens in 2 s (109.2 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] reading the prompt: 8,192 of 42,314 tokens, 4 s so far
+[strata] reading the prompt: 12,192 of 42,314 tokens, 5 s so far
+[strata] reading the prompt: 20,384 of 42,314 tokens, 9 s so far
+[strata] reading the prompt: 28,576 of 42,314 tokens, 11 s so far
+[strata] reading the prompt: 36,768 of 42,314 tokens, 13 s so far
+[strata] reading the prompt: 42,309 of 42,314 tokens, 15 s so far
+[strata] writing a tool call: write_file: 66 of max 32768 tokens, 138.9 tok/s, 16 s
+[strata] done: 178 tokens in 17 s (153.0 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] reading the prompt: 8,192 of 44,451 tokens, 4 s so far
+[strata] reading the prompt: 14,086 of 44,451 tokens, 5 s so far
+[strata] reading the prompt: 22,278 of 44,451 tokens, 9 s so far
+[strata] reading the prompt: 30,470 of 44,451 tokens, 11 s so far
+[strata] reading the prompt: 38,662 of 44,451 tokens, 14 s so far
+[strata] reading the prompt: 44,446 of 44,451 tokens, 15 s so far
+[strata] writing a tool call: run_shell: 62 of max 32768 tokens, 129.7 tok/s, 16 s
+[strata] done: 164 tokens in 17 s (138.6 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] answering: 59 of max 32768 tokens, 125.0 tok/s, 1 s
+[strata] done: 85 tokens in 1 s (123.6 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] reading the prompt: 8,192 of 45,036 tokens, 4 s so far
+[strata] reading the prompt: 12,192 of 45,036 tokens, 5 s so far
+[strata] reading the prompt: 20,384 of 45,036 tokens, 9 s so far
+[strata] reading the prompt: 28,576 of 45,036 tokens, 11 s so far
+[strata] reading the prompt: 36,768 of 45,036 tokens, 13 s so far
+[strata] reading the prompt: 44,960 of 45,036 tokens, 15 s so far
+[strata] writing a tool call: write_file: 30 of max 32768 tokens, 105.6 tok/s, 16 s
+[strata] writing a tool call: write_file: 200 of max 32768 tokens, 154.2 tok/s, 17 s
+[strata] done: 210 tokens in 17 s (155.9 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] reading the prompt: 8,192 of 47,196 tokens, 4 s so far
+[strata] reading the prompt: 14,086 of 47,196 tokens, 5 s so far
+[strata] reading the prompt: 22,278 of 47,196 tokens, 9 s so far
+[strata] reading the prompt: 30,470 of 47,196 tokens, 11 s so far
+[strata] reading the prompt: 38,662 of 47,196 tokens, 14 s so far
+[strata] reading the prompt: 46,854 of 47,196 tokens, 16 s so far
+[strata] thinking: 7 of max 32768 tokens, 82.4 tok/s, 17 s
+[strata] done: 127 tokens in 18 s (139.8 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] done: 55 tokens in 1 s (120.8 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] reading the prompt: 8,192 of 47,670 tokens, 4 s so far
+[strata] reading the prompt: 12,192 of 47,670 tokens, 5 s so far
+[strata] reading the prompt: 20,384 of 47,670 tokens, 9 s so far
+[strata] reading the prompt: 28,576 of 47,670 tokens, 11 s so far
+[strata] reading the prompt: 36,768 of 47,670 tokens, 13 s so far
+[strata] reading the prompt: 44,960 of 47,670 tokens, 15 s so far
+[strata] reading the prompt: 47,665 of 47,670 tokens, 16 s so far
+[strata] writing a tool call: write_file: 55 of max 32768 tokens, 113.2 tok/s, 17 s
+[strata] done: 185 tokens in 18 s (141.6 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] reading the prompt: 8,192 of 49,751 tokens, 4 s so far
+[strata] reading the prompt: 14,086 of 49,751 tokens, 5 s so far
+[strata] reading the prompt: 22,278 of 49,751 tokens, 9 s so far
+[strata] reading the prompt: 30,470 of 49,751 tokens, 11 s so far
+[strata] reading the prompt: 38,662 of 49,751 tokens, 13 s so far
+[strata] reading the prompt: 46,854 of 49,751 tokens, 16 s so far
+[strata] reading the prompt: 49,746 of 49,751 tokens, 17 s so far
+[strata] thinking: 51 of max 32768 tokens, 107.1 tok/s, 18 s
+[strata] done: 101 tokens in 18 s (114.1 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] thinking: 62 of max 32768 tokens, 108.5 tok/s, 1 s
+[strata] done: 135 tokens in 2 s (114.9 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] thinking: 8 of max 32768 tokens, 114.5 tok/s, 1 s
+[strata] done: 91 tokens in 2 s (137.3 tok/s) (stop, cancel=False), expert cache 99.5% hit
+[strata] writing a tool call: run_shell: 65 of max 32768 tokens, 115.8 tok/s, 1 s
+[strata] done: 86 tokens in 1 s (121.0 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] writing a tool call: run_shell: 77 of max 32768 tokens, 136.3 tok/s, 1 s
+[strata] done: 113 tokens in 1 s (148.8 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] writing a tool call: run_shell: 68 of max 32768 tokens, 121.0 tok/s, 1 s
+[strata] done: 121 tokens in 1 s (136.1 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] thinking: 57 of max 32768 tokens, 106.3 tok/s, 1 s
+[strata] done: 118 tokens in 2 s (112.6 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] writing a tool call: write_file: 88 of max 32768 tokens, 140.1 tok/s, 1 s
+[strata] done: 164 tokens in 1 s (157.5 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] writing a tool call: run_shell: 57 of max 32768 tokens, 131.8 tok/s, 1 s
+[strata] done: 125 tokens in 1 s (143.4 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] writing a tool call: run_shell: 66 of max 32768 tokens, 145.1 tok/s, 1 s
+[strata] done: 145 tokens in 1 s (152.9 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] done: 9 tokens in 1 s (85.0 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] reading the prompt: 8,192 of 51,982 tokens, 4 s so far
+[strata] reading the prompt: 12,192 of 51,982 tokens, 5 s so far
+[strata] reading the prompt: 20,384 of 51,982 tokens, 9 s so far
+[strata] reading the prompt: 28,576 of 51,982 tokens, 11 s so far
+[strata] reading the prompt: 36,768 of 51,982 tokens, 13 s so far
+[strata] reading the prompt: 44,960 of 51,982 tokens, 15 s so far
+[strata] reading the prompt: 51,977 of 51,982 tokens, 17 s so far
+[strata] thinking: 43 of max 32768 tokens, 90.3 tok/s, 18 s
+[strata] writing a tool call: write_file: 190 of max 32768 tokens, 126.8 tok/s, 19 s
+[strata] done: 275 tokens in 20 s (136.0 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 8,192 of 54,070 tokens, 4 s so far
+[strata] reading the prompt: 14,086 of 54,070 tokens, 5 s so far
+[strata] reading the prompt: 22,278 of 54,070 tokens, 9 s so far
+[strata] reading the prompt: 30,470 of 54,070 tokens, 11 s so far
+[strata] reading the prompt: 38,662 of 54,070 tokens, 13 s so far
+[strata] reading the prompt: 46,854 of 54,070 tokens, 16 s so far
+[strata] reading the prompt: 54,065 of 54,070 tokens, 18 s so far
+[strata] writing a tool call: run_shell: 68 of max 32768 tokens, 137.3 tok/s, 19 s
+[strata] done: 110 tokens in 19 s (132.3 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] answering: 59 of max 32768 tokens, 117.7 tok/s, 1 s
+[strata] done: 73 tokens in 1 s (127.0 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] reading the prompt: 8,192 of 54,579 tokens, 4 s so far
+[strata] reading the prompt: 12,192 of 54,579 tokens, 5 s so far
+[strata] reading the prompt: 20,384 of 54,579 tokens, 8 s so far
+[strata] reading the prompt: 28,576 of 54,579 tokens, 11 s so far
+[strata] reading the prompt: 36,768 of 54,579 tokens, 13 s so far
+[strata] reading the prompt: 44,960 of 54,579 tokens, 15 s so far
+[strata] reading the prompt: 53,152 of 54,579 tokens, 17 s so far
+[strata] reading the prompt: 54,578 of 54,579 tokens, 19 s so far
+[strata] writing a tool call: write_file: 108 of max 32768 tokens, 108.7 tok/s, 20 s
+[strata] done: 210 tokens in 20 s (132.3 tok/s) (stop, cancel=False), expert cache 99.5% hit
+[strata] reading the prompt: 8,192 of 56,680 tokens, 4 s so far
+[strata] reading the prompt: 14,086 of 56,680 tokens, 5 s so far
+[strata] reading the prompt: 22,278 of 56,680 tokens, 9 s so far
+[strata] reading the prompt: 30,470 of 56,680 tokens, 11 s so far
+[strata] reading the prompt: 38,662 of 56,680 tokens, 13 s so far
+[strata] reading the prompt: 46,854 of 56,680 tokens, 15 s so far
+[strata] reading the prompt: 55,046 of 56,680 tokens, 18 s so far
+[strata] reading the prompt: 56,679 of 56,680 tokens, 19 s so far
+[strata] writing a tool call: run_shell: 121 of max 32768 tokens, 122.6 tok/s, 20 s
+[strata] done: 137 tokens in 20 s (125.2 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] done: 51 tokens in 1 s (123.4 tok/s) (stop, cancel=False), expert cache 99.9% hit
+[strata] reading the prompt: 8,192 of 56,921 tokens, 4 s so far
+[strata] reading the prompt: 12,192 of 56,921 tokens, 5 s so far
+[strata] reading the prompt: 20,384 of 56,921 tokens, 8 s so far
+[strata] reading the prompt: 28,576 of 56,921 tokens, 11 s so far
+[strata] reading the prompt: 36,768 of 56,921 tokens, 13 s so far
+[strata] reading the prompt: 44,960 of 56,921 tokens, 15 s so far
+[strata] reading the prompt: 53,152 of 56,921 tokens, 17 s so far
+[strata] reading the prompt: 56,916 of 56,921 tokens, 19 s so far
+[strata] writing a tool call: write_file: 55 of max 32768 tokens, 116.9 tok/s, 20 s
+[strata] done: 149 tokens in 20 s (147.0 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 8,192 of 59,010 tokens, 4 s so far
+[strata] reading the prompt: 14,086 of 59,010 tokens, 5 s so far
+[strata] reading the prompt: 22,278 of 59,010 tokens, 9 s so far
+[strata] reading the prompt: 30,470 of 59,010 tokens, 11 s so far
+[strata] reading the prompt: 38,662 of 59,010 tokens, 13 s so far
+[strata] reading the prompt: 46,854 of 59,010 tokens, 15 s so far
+[strata] reading the prompt: 55,046 of 59,010 tokens, 18 s so far
+[strata] reading the prompt: 59,005 of 59,010 tokens, 19 s so far
+[strata] writing a tool call: run_shell: 70 of max 32768 tokens, 146.1 tok/s, 20 s
+[strata] done: 111 tokens in 20 s (132.1 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] thinking: 52 of max 32768 tokens, 109.3 tok/s, 1 s
+[strata] done: 60 tokens in 1 s (110.0 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 8,192 of 59,637 tokens, 4 s so far
+[strata] reading the prompt: 12,192 of 59,637 tokens, 5 s so far
+[strata] reading the prompt: 20,384 of 59,637 tokens, 8 s so far
+[strata] reading the prompt: 28,576 of 59,637 tokens, 10 s so far
+[strata] reading the prompt: 36,768 of 59,637 tokens, 13 s so far
+[strata] reading the prompt: 44,960 of 59,637 tokens, 15 s so far
+[strata] reading the prompt: 53,152 of 59,637 tokens, 17 s so far
+[strata] reading the prompt: 59,632 of 59,637 tokens, 19 s so far
+[strata] thinking: 47 of max 32768 tokens, 96.6 tok/s, 20 s
+[strata] thinking: 175 of max 32768 tokens, 115.9 tok/s, 21 s
+[strata] writing a tool call: write_file: 297 of max 32768 tokens, 117.4 tok/s, 22 s
+[strata] writing a tool call: write_file: 473 of max 32768 tokens, 133.7 tok/s, 23 s
+[strata] done: 524 tokens in 23 s (136.0 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 8,192 of 61,866 tokens, 4 s so far
+[strata] reading the prompt: 14,086 of 61,866 tokens, 5 s so far
+[strata] reading the prompt: 22,278 of 61,866 tokens, 9 s so far
+[strata] reading the prompt: 30,470 of 61,866 tokens, 11 s so far
+[strata] reading the prompt: 38,662 of 61,866 tokens, 13 s so far
+[strata] reading the prompt: 46,854 of 61,866 tokens, 15 s so far
+[strata] reading the prompt: 55,046 of 61,866 tokens, 18 s so far
+[strata] reading the prompt: 61,861 of 61,866 tokens, 19 s so far
+[strata] thinking: 54 of max 32768 tokens, 111.5 tok/s, 20 s
+[strata] done: 184 tokens in 21 s (136.5 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] done: 59 tokens in 1 s (133.4 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] reading the prompt: 8,192 of 62,183 tokens, 4 s so far
+[strata] reading the prompt: 12,192 of 62,183 tokens, 5 s so far
+[strata] reading the prompt: 20,384 of 62,183 tokens, 8 s so far
+[strata] reading the prompt: 28,576 of 62,183 tokens, 10 s so far
+[strata] reading the prompt: 36,768 of 62,183 tokens, 13 s so far
+[strata] reading the prompt: 44,960 of 62,183 tokens, 15 s so far
+[strata] reading the prompt: 53,152 of 62,183 tokens, 17 s so far
+[strata] reading the prompt: 61,344 of 62,183 tokens, 19 s so far
+[strata] reading the prompt: 62,182 of 62,183 tokens, 21 s so far
+[strata] writing a tool call: write_file: 156 of max 32768 tokens, 154.7 tok/s, 22 s
+[strata] done: 187 tokens in 22 s (156.3 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] reading the prompt: 8,192 of 64,332 tokens, 4 s so far
+[strata] reading the prompt: 14,086 of 64,332 tokens, 5 s so far
+[strata] reading the prompt: 22,278 of 64,332 tokens, 9 s so far
+[strata] reading the prompt: 30,470 of 64,332 tokens, 11 s so far
+[strata] reading the prompt: 38,662 of 64,332 tokens, 13 s so far
+[strata] reading the prompt: 46,854 of 64,332 tokens, 15 s so far
+[strata] reading the prompt: 55,046 of 64,332 tokens, 17 s so far
+[strata] reading the prompt: 63,238 of 64,332 tokens, 20 s so far
+[strata] reading the prompt: 64,331 of 64,332 tokens, 21 s so far
+[strata] writing a tool call: run_shell: 123 of max 32768 tokens, 123.8 tok/s, 22 s
+[strata] done: 159 tokens in 22 s (122.5 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] answering: 50 of max 32768 tokens, 108.3 tok/s, 1 s
+[strata] done: 57 tokens in 1 s (113.1 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] reading the prompt: 8,192 of 64,652 tokens, 4 s so far
+[strata] reading the prompt: 12,192 of 64,652 tokens, 5 s so far
+[strata] reading the prompt: 20,384 of 64,652 tokens, 8 s so far
+[strata] reading the prompt: 28,576 of 64,652 tokens, 10 s so far
+[strata] reading the prompt: 36,768 of 64,652 tokens, 12 s so far
+[strata] reading the prompt: 44,960 of 64,652 tokens, 15 s so far
+[strata] reading the prompt: 53,152 of 64,652 tokens, 17 s so far
+[strata] reading the prompt: 61,344 of 64,652 tokens, 19 s so far
+[strata] reading the prompt: 64,647 of 64,652 tokens, 20 s so far
+[strata] writing a tool call: write_file: 63 of max 32768 tokens, 126.9 tok/s, 21 s
+[strata] writing a tool call: write_file: 230 of max 32768 tokens, 152.1 tok/s, 22 s
+[strata] done: 280 tokens in 23 s (153.8 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] done: 0 tokens in 4 s (0.0 tok/s) (cancel, cancel=True)
+[strata] reading the prompt: 8,192 of 13,051 tokens, 4 s so far
+[strata] reading the prompt: 12,195 of 13,051 tokens, 5 s so far
+[strata] reading the prompt: 13,050 of 13,051 tokens, 7 s so far
+[strata] thinking: 114 of max 32768 tokens, 113.0 tok/s, 8 s
+[strata] thinking: 244 of max 32768 tokens, 121.3 tok/s, 9 s
+[strata] thinking: 363 of max 32768 tokens, 120.4 tok/s, 10 s
+[strata] thinking: 494 of max 32768 tokens, 122.6 tok/s, 11 s
+[strata] writing a tool call: write_file: 624 of max 32768 tokens, 124.0 tok/s, 12 s
+[strata] done: 714 tokens in 12 s (128.0 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 8,192 of 15,170 tokens, 4 s so far
+[strata] reading the prompt: 14,089 of 15,170 tokens, 6 s so far
+[strata] reading the prompt: 15,165 of 15,170 tokens, 7 s so far
+[strata] writing a tool call: run_shell: 66 of max 32768 tokens, 139.1 tok/s, 8 s
+[strata] done: 152 tokens in 9 s (131.6 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] writing a tool call: run_shell: 76 of max 32768 tokens, 147.0 tok/s, 1 s
+[strata] done: 155 tokens in 2 s (145.4 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] answering: 61 of max 32768 tokens, 121.5 tok/s, 1 s
+[strata] done: 102 tokens in 1 s (122.6 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] reading the prompt: 8,192 of 14,943 tokens, 4 s so far
+[strata] reading the prompt: 12,195 of 14,943 tokens, 5 s so far
+[strata] reading the prompt: 14,938 of 14,943 tokens, 7 s so far
+[strata] writing a tool call: write_file: 67 of max 32768 tokens, 139.0 tok/s, 8 s
+[strata] done: 186 tokens in 9 s (137.9 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] reading the prompt: 8,192 of 17,092 tokens, 4 s so far
+[strata] reading the prompt: 14,089 of 17,092 tokens, 6 s so far
+[strata] reading the prompt: 17,087 of 17,092 tokens, 8 s so far
+[strata] thinking: 54 of max 32768 tokens, 108.2 tok/s, 9 s
+[strata] writing a tool call: run_shell: 206 of max 32768 tokens, 136.7 tok/s, 10 s
+[strata] writing a tool call: run_shell: 364 of max 32768 tokens, 144.5 tok/s, 11 s
+[strata] done: 387 tokens in 11 s (144.9 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] answering: 52 of max 32768 tokens, 120.8 tok/s, 1 s
+[strata] done: 93 tokens in 1 s (116.1 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] reading the prompt: 8,192 of 17,091 tokens, 4 s so far
+[strata] reading the prompt: 12,195 of 17,091 tokens, 5 s so far
+[strata] reading the prompt: 17,086 of 17,091 tokens, 8 s so far
+[strata] thinking: 62 of max 32768 tokens, 125.2 tok/s, 9 s
+[strata] thinking: 192 of max 32768 tokens, 128.0 tok/s, 10 s
+[strata] thinking: 320 of max 32768 tokens, 128.0 tok/s, 11 s
+[strata] writing a tool call: write_file: 461 of max 32768 tokens, 131.2 tok/s, 12 s
+[strata] done: 594 tokens in 13 s (135.2 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 8,192 of 19,293 tokens, 4 s so far
+[strata] reading the prompt: 14,089 of 19,293 tokens, 6 s so far
+[strata] reading the prompt: 19,288 of 19,293 tokens, 8 s so far
+[strata] writing a tool call: write_file: 72 of max 32768 tokens, 139.9 tok/s, 9 s
+[strata] writing a tool call: write_file: 249 of max 32768 tokens, 163.6 tok/s, 10 s
+[strata] done: 251 tokens in 10 s (164.9 tok/s) (stop, cancel=False), expert cache 99.5% hit
+[strata] writing a tool call: run_shell: 51 of max 32768 tokens, 138.2 tok/s, 1 s
+[strata] done: 190 tokens in 2 s (143.1 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] thinking: 47 of max 32768 tokens, 106.2 tok/s, 1 s
+[strata] thinking: 155 of max 32768 tokens, 106.8 tok/s, 2 s
+[strata] writing a tool call: run_shell: 297 of max 32768 tokens, 121.1 tok/s, 3 s
+[strata] done: 348 tokens in 3 s (127.2 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] writing a tool call: run_shell: 65 of max 32768 tokens, 150.3 tok/s, 1 s
+[strata] done: 198 tokens in 2 s (150.6 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] thinking: 45 of max 32768 tokens, 101.7 tok/s, 1 s
+[strata] done: 140 tokens in 2 s (119.1 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] reading the prompt: 8,192 of 20,508 tokens, 4 s so far
+[strata] reading the prompt: 12,195 of 20,508 tokens, 5 s so far
+[strata] reading the prompt: 20,387 of 20,508 tokens, 9 s so far
+[strata] thinking: 24 of max 32768 tokens, 89.4 tok/s, 10 s
+[strata] thinking: 118 of max 32768 tokens, 92.8 tok/s, 11 s
+[strata] thinking: 226 of max 32768 tokens, 99.1 tok/s, 12 s
+[strata] writing a tool call: write_file: 405 of max 32768 tokens, 122.6 tok/s, 13 s
+[strata] writing a tool call: write_file: 540 of max 32768 tokens, 125.1 tok/s, 14 s
+[strata] writing a tool call: write_file: 689 of max 32768 tokens, 129.1 tok/s, 15 s
+[strata] done: 760 tokens in 16 s (131.6 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 8,192 of 22,812 tokens, 4 s so far
+[strata] reading the prompt: 14,089 of 22,812 tokens, 6 s so far
+[strata] reading the prompt: 22,281 of 22,812 tokens, 10 s so far
+[strata] thinking: 4 of max 32768 tokens, 96.9 tok/s, 11 s
+[strata] thinking: 118 of max 32768 tokens, 111.2 tok/s, 12 s
+[strata] thinking: 260 of max 32768 tokens, 125.4 tok/s, 13 s
+[strata] thinking: 359 of max 32768 tokens, 116.6 tok/s, 14 s
+[strata] writing a tool call: write_file: 488 of max 32768 tokens, 119.5 tok/s, 15 s
+[strata] writing a tool call: write_file: 639 of max 32768 tokens, 125.7 tok/s, 16 s
+[strata] done: 795 tokens in 17 s (131.6 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] thinking: 35 of max 32768 tokens, 110.5 tok/s, 1 s
+[strata] thinking: 158 of max 32768 tokens, 118.1 tok/s, 2 s
+[strata] thinking: 276 of max 32768 tokens, 117.7 tok/s, 3 s
+[strata] thinking: 380 of max 32768 tokens, 112.9 tok/s, 4 s
+[strata] writing a tool call: write_file: 532 of max 32768 tokens, 121.7 tok/s, 5 s
+[strata] writing a tool call: write_file: 708 of max 32768 tokens, 131.6 tok/s, 6 s
+[strata] done: 757 tokens in 6 s (134.3 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] thinking: 31 of max 32768 tokens, 106.2 tok/s, 1 s
+[strata] thinking: 156 of max 32768 tokens, 120.4 tok/s, 2 s
+[strata] thinking: 262 of max 32768 tokens, 113.5 tok/s, 3 s
+[strata] thinking: 405 of max 32768 tokens, 122.3 tok/s, 4 s
+[strata] thinking: 517 of max 32768 tokens, 119.5 tok/s, 5 s
+[strata] thinking: 610 of max 32768 tokens, 114.2 tok/s, 6 s
+[strata] done: 697 tokens in 7 s (115.8 tok/s) (stop, cancel=False), expert cache 99.9% hit
+[strata] reading the prompt: 25,573 of 25,578 tokens, 1 s so far
+[strata] thinking: 98 of max 32768 tokens, 116.8 tok/s, 2 s
+[strata] done: 99 tokens in 2 s (117.6 tok/s) (disconnect, cancel=True), expert cache 99.7% hit
+[strata] reading the prompt: 8,192 of 25,953 tokens, 4 s so far
+[strata] reading the prompt: 12,195 of 25,953 tokens, 5 s so far
+[strata] reading the prompt: 20,387 of 25,953 tokens, 9 s so far
+[strata] reading the prompt: 25,948 of 25,953 tokens, 11 s so far
+[strata] thinking: 46 of max 32768 tokens, 97.2 tok/s, 12 s
+[strata] writing a tool call: write_file: 184 of max 32768 tokens, 124.0 tok/s, 13 s
+[strata] done: 248 tokens in 13 s (131.0 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 8,192 of 28,076 tokens, 4 s so far
+[strata] reading the prompt: 14,089 of 28,076 tokens, 6 s so far
+[strata] reading the prompt: 22,281 of 28,076 tokens, 10 s so far
+[strata] reading the prompt: 28,071 of 28,076 tokens, 11 s so far
+[strata] writing a tool call: run_shell: 64 of max 32768 tokens, 130.0 tok/s, 12 s
+[strata] writing a tool call: run_shell: 209 of max 32768 tokens, 138.4 tok/s, 13 s
+[strata] done: 259 tokens in 14 s (139.3 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] answering: 48 of max 32768 tokens, 111.8 tok/s, 1 s
+[strata] done: 112 tokens in 2 s (106.0 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] reading the prompt: 8,192 of 29,794 tokens, 4 s so far
+[strata] reading the prompt: 13,038 of 29,794 tokens, 5 s so far
+[strata] reading the prompt: 21,230 of 29,794 tokens, 9 s so far
+[strata] reading the prompt: 29,422 of 29,794 tokens, 12 s so far
+[strata] thinking: 2 of max 32768 tokens, 107.3 tok/s, 13 s
+[strata] thinking: 116 of max 32768 tokens, 112.0 tok/s, 14 s
+[strata] writing a tool call: write_file: 255 of max 32768 tokens, 125.2 tok/s, 15 s
+[strata] writing a tool call: write_file: 380 of max 32768 tokens, 125.0 tok/s, 16 s
+[strata] done: 468 tokens in 16 s (129.7 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 8,192 of 31,229 tokens, 4 s so far
+[strata] reading the prompt: 14,089 of 31,229 tokens, 6 s so far
+[strata] reading the prompt: 22,281 of 31,229 tokens, 10 s so far
+[strata] reading the prompt: 30,473 of 31,229 tokens, 12 s so far
+[strata] reading the prompt: 31,228 of 31,229 tokens, 13 s so far
+[strata] writing a tool call: write_file: 150 of max 32768 tokens, 147.9 tok/s, 14 s
+[strata] done: 298 tokens in 15 s (165.4 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] writing a tool call: run_shell: 49 of max 32768 tokens, 126.3 tok/s, 1 s
+[strata] writing a tool call: run_shell: 196 of max 32768 tokens, 140.4 tok/s, 2 s
+[strata] done: 269 tokens in 3 s (137.2 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] thinking: 11 of max 32768 tokens, 101.4 tok/s, 1 s
+[strata] done: 110 tokens in 2 s (143.6 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] writing a tool call: run_shell: 90 of max 32768 tokens, 169.1 tok/s, 1 s
+[strata] done: 245 tokens in 2 s (173.8 tok/s) (stop, cancel=False), expert cache 99.5% hit
+[strata] thinking: 41 of max 32768 tokens, 103.8 tok/s, 1 s
+[strata] thinking: 153 of max 32768 tokens, 109.6 tok/s, 2 s
+[strata] thinking: 255 of max 32768 tokens, 105.7 tok/s, 3 s
+[strata] thinking: 400 of max 32768 tokens, 117.0 tok/s, 4 s
+[strata] thinking: 511 of max 32768 tokens, 115.6 tok/s, 5 s
+[strata] thinking: 611 of max 32768 tokens, 112.4 tok/s, 6 s
+[strata] done: 693 tokens in 7 s (113.6 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] thinking: 67 of max 32768 tokens, 112.3 tok/s, 1 s
+[strata] thinking: 184 of max 32768 tokens, 114.9 tok/s, 2 s
+[strata] thinking: 300 of max 32768 tokens, 115.2 tok/s, 3 s
+[strata] done: 367 tokens in 4 s (116.1 tok/s) (stop, cancel=False), expert cache 99.9% hit
+[strata] thinking: 77 of max 32768 tokens, 125.3 tok/s, 1 s
+[strata] thinking: 176 of max 32768 tokens, 108.5 tok/s, 2 s
+[strata] thinking: 293 of max 32768 tokens, 111.1 tok/s, 3 s
+[strata] done: 394 tokens in 4 s (117.1 tok/s) (disconnect, cancel=True), expert cache 99.8% hit
+[strata] reading the prompt: 8,192 of 33,258 tokens, 4 s so far
+[strata] reading the prompt: 12,195 of 33,258 tokens, 5 s so far
+[strata] reading the prompt: 20,387 of 33,258 tokens, 9 s so far
+[strata] reading the prompt: 28,579 of 33,258 tokens, 11 s so far
+[strata] reading the prompt: 33,253 of 33,258 tokens, 13 s so far
+[strata] writing a tool call: write_file: 60 of max 32768 tokens, 124.9 tok/s, 14 s
+[strata] writing a tool call: write_file: 201 of max 32768 tokens, 135.2 tok/s, 15 s
+[strata] done: 264 tokens in 15 s (134.5 tok/s) (stop, cancel=False), expert cache 99.5% hit
+[strata] reading the prompt: 8,192 of 35,412 tokens, 4 s so far
+[strata] reading the prompt: 14,089 of 35,412 tokens, 5 s so far
+[strata] reading the prompt: 22,281 of 35,412 tokens, 10 s so far
+[strata] reading the prompt: 30,473 of 35,412 tokens, 12 s so far
+[strata] reading the prompt: 35,407 of 35,412 tokens, 13 s so far
+[strata] writing a tool call: write_file: 71 of max 32768 tokens, 141.8 tok/s, 14 s
+[strata] done: 227 tokens in 15 s (163.4 tok/s) (stop, cancel=False), expert cache 99.4% hit
+[strata] writing a tool call: run_shell: 68 of max 32768 tokens, 155.6 tok/s, 1 s
+[strata] writing a tool call: run_shell: 205 of max 32768 tokens, 142.1 tok/s, 2 s
+[strata] done: 226 tokens in 2 s (141.2 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] reading the prompt: 37,722 of 37,727 tokens, 2 s so far
+[strata] answering: 93 of max 32768 tokens, 113.0 tok/s, 3 s
+[strata] done: 135 tokens in 3 s (111.5 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] reading the prompt: 8,192 of 38,343 tokens, 4 s so far
+[strata] reading the prompt: 12,195 of 38,343 tokens, 5 s so far
+[strata] reading the prompt: 20,387 of 38,343 tokens, 9 s so far
+[strata] reading the prompt: 28,579 of 38,343 tokens, 11 s so far
+[strata] reading the prompt: 36,771 of 38,343 tokens, 13 s so far
+[strata] reading the prompt: 38,342 of 38,343 tokens, 15 s so far
+[strata] writing a tool call: write_file: 125 of max 32768 tokens, 126.4 tok/s, 16 s
+[strata] writing a tool call: write_file: 265 of max 32768 tokens, 133.1 tok/s, 17 s
+[strata] writing a tool call: write_file: 410 of max 32768 tokens, 136.9 tok/s, 18 s
+[strata] done: 516 tokens in 19 s (138.4 tok/s) (stop, cancel=False), expert cache 99.5% hit
+[strata] reading the prompt: 8,192 of 40,732 tokens, 4 s so far
+[strata] reading the prompt: 14,089 of 40,732 tokens, 5 s so far
+[strata] reading the prompt: 22,281 of 40,732 tokens, 9 s so far
+[strata] reading the prompt: 30,473 of 40,732 tokens, 12 s so far
+[strata] reading the prompt: 38,665 of 40,732 tokens, 14 s so far
+[strata] reading the prompt: 40,731 of 40,732 tokens, 15 s so far
+[strata] writing a tool call: write_file: 141 of max 32768 tokens, 140.7 tok/s, 16 s
+[strata] writing a tool call: write_file: 310 of max 32768 tokens, 153.6 tok/s, 17 s
+[strata] done: 446 tokens in 18 s (154.7 tok/s) (stop, cancel=False), expert cache 99.3% hit
+[strata] writing a tool call: run_shell: 33 of max 32768 tokens, 128.8 tok/s, 1 s
+[strata] writing a tool call: run_shell: 184 of max 32768 tokens, 145.5 tok/s, 2 s
+[strata] writing a tool call: run_shell: 310 of max 32768 tokens, 136.7 tok/s, 3 s
+[strata] done: 350 tokens in 3 s (137.4 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] answering: 30 of max 32768 tokens, 107.8 tok/s, 1 s
+[strata] done: 115 tokens in 2 s (128.0 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] done: 0 tokens in 4 s (0.0 tok/s) (cancel, cancel=True)
+[strata] reading the prompt: 8,192 of 55,736 tokens, 4 s so far
+[strata] reading the prompt: 13,038 of 55,736 tokens, 5 s so far
+[strata] reading the prompt: 21,230 of 55,736 tokens, 9 s so far
+[strata] reading the prompt: 29,422 of 55,736 tokens, 11 s so far
+[strata] reading the prompt: 37,614 of 55,736 tokens, 13 s so far
+[strata] reading the prompt: 45,806 of 55,736 tokens, 15 s so far
+[strata] reading the prompt: 53,998 of 55,736 tokens, 17 s so far
+[strata] reading the prompt: 55,735 of 55,736 tokens, 19 s so far
+[strata] thinking: 107 of max 32768 tokens, 107.9 tok/s, 20 s
+[strata] thinking: 211 of max 32768 tokens, 105.9 tok/s, 21 s
+[strata] thinking: 315 of max 32768 tokens, 104.6 tok/s, 22 s
+[strata] thinking: 421 of max 32768 tokens, 104.9 tok/s, 23 s
+[strata] thinking: 523 of max 32768 tokens, 104.3 tok/s, 24 s
+[strata] thinking: 630 of max 32768 tokens, 104.7 tok/s, 25 s
+[strata] thinking: 755 of max 32768 tokens, 107.5 tok/s, 26 s
+[strata] the reply repeated one token ('_hold') 256 times in a row: ended as "length" (repeat_stop_tokens in strata-<model>.json; 0 turns this off). If a new request with a short prompt does the same, restart the server and report it (#606)
+[strata] done: 919 tokens in 27 s (114.6 tok/s) (length, cancel=False), expert cache 99.8% hit
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[strata] reading the prompt: 8,192 of 15,266 tokens, 4 s so far
+[strata] reading the prompt: 13,046 of 15,266 tokens, 5 s so far
+[strata] reading the prompt: 15,261 of 15,266 tokens, 7 s so far
+[strata] thinking: 57 of max 32768 tokens, 117.4 tok/s, 8 s
+[strata] thinking: 175 of max 32768 tokens, 117.3 tok/s, 9 s
+[strata] thinking: 279 of max 32768 tokens, 111.7 tok/s, 10 s
+[strata] thinking: 384 of max 32768 tokens, 109.5 tok/s, 11 s
+[strata] thinking: 496 of max 32768 tokens, 109.9 tok/s, 12 s
+[strata] thinking: 619 of max 32768 tokens, 112.2 tok/s, 13 s
+[strata] thinking: 742 of max 32768 tokens, 113.6 tok/s, 14 s
+[strata] thinking: 852 of max 32768 tokens, 113.0 tok/s, 15 s
+[strata] thinking: 950 of max 32768 tokens, 111.1 tok/s, 16 s
+[strata] thinking: 1057 of max 32768 tokens, 110.5 tok/s, 17 s
+[strata] thinking: 1165 of max 32768 tokens, 110.2 tok/s, 18 s
+[strata] thinking: 1267 of max 32768 tokens, 109.3 tok/s, 19 s
+[strata] thinking: 1390 of max 32768 tokens, 110.3 tok/s, 20 s
+[strata] thinking: 1516 of max 32768 tokens, 111.4 tok/s, 21 s
+[strata] thinking: 1633 of max 32768 tokens, 111.7 tok/s, 22 s
+[strata] thinking: 1747 of max 32768 tokens, 111.8 tok/s, 23 s
+[strata] thinking: 1864 of max 32768 tokens, 112.0 tok/s, 24 s
+[strata] thinking: 1971 of max 32768 tokens, 111.7 tok/s, 25 s
+[strata] thinking: 2078 of max 32768 tokens, 111.4 tok/s, 26 s
+[strata] thinking: 2188 of max 32768 tokens, 111.3 tok/s, 27 s
+[strata] thinking: 2303 of max 32768 tokens, 111.4 tok/s, 28 s
+[strata] thinking: 2414 of max 32768 tokens, 111.3 tok/s, 29 s
+[strata] writing a tool call: write_file: 2549 of max 32768 tokens, 112.3 tok/s, 30 s
+[strata] done: 2642 tokens in 31 s (113.4 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] reading the prompt: 8,192 of 16,577 tokens, 4 s so far
+[strata] reading the prompt: 14,097 of 16,577 tokens, 6 s so far
+[strata] reading the prompt: 16,572 of 16,577 tokens, 7 s so far
+[strata] writing a tool call: write_file: 73 of max 32768 tokens, 146.1 tok/s, 8 s
+[strata] writing a tool call: write_file: 212 of max 32768 tokens, 140.2 tok/s, 9 s
+[strata] writing a tool call: write_file: 365 of max 32768 tokens, 145.3 tok/s, 10 s
+[strata] writing a tool call: write_file: 520 of max 32768 tokens, 147.5 tok/s, 11 s
+[strata] writing a tool call: write_file: 684 of max 32768 tokens, 151.1 tok/s, 12 s
+[strata] writing a tool call: write_file: 841 of max 32768 tokens, 151.8 tok/s, 13 s
+[strata] writing a tool call: write_file: 998 of max 32768 tokens, 152.4 tok/s, 14 s
+[strata] writing a tool call: write_file: 1148 of max 32768 tokens, 151.8 tok/s, 15 s
+[strata] done: 1242 tokens in 16 s (152.7 tok/s) (stop, cancel=False), expert cache 99.5% hit
+[strata] reading the prompt: 17,832 of 17,837 tokens, 1 s so far
+[strata] writing a tool call: write_file: 97 of max 32768 tokens, 113.1 tok/s, 2 s
+[strata] writing a tool call: write_file: 249 of max 32768 tokens, 132.9 tok/s, 3 s
+[strata] writing a tool call: write_file: 412 of max 32768 tokens, 142.9 tok/s, 4 s
+[strata] writing a tool call: write_file: 551 of max 32768 tokens, 141.8 tok/s, 5 s
+[strata] done: 652 tokens in 6 s (143.0 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] thinking: 16 of max 32768 tokens, 103.9 tok/s, 1 s
+[strata] writing a tool call: write_file: 186 of max 32768 tokens, 157.5 tok/s, 2 s
+[strata] writing a tool call: write_file: 375 of max 32768 tokens, 171.6 tok/s, 3 s
+[strata] done: 542 tokens in 4 s (172.6 tok/s) (stop, cancel=False), expert cache 99.3% hit
+[strata] writing a tool call: write_file: 26 of max 32768 tokens, 134.7 tok/s, 1 s
+[strata] writing a tool call: write_file: 174 of max 32768 tokens, 143.5 tok/s, 2 s
+[strata] writing a tool call: write_file: 319 of max 32768 tokens, 143.5 tok/s, 3 s
+[strata] done: 478 tokens in 4 s (150.3 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] thinking: 28 of max 32768 tokens, 99.2 tok/s, 1 s
+[strata] thinking: 143 of max 32768 tokens, 110.5 tok/s, 2 s
+[strata] thinking: 255 of max 32768 tokens, 110.5 tok/s, 3 s
+[strata] thinking: 356 of max 32768 tokens, 107.3 tok/s, 4 s
+[strata] writing a tool call: write_file: 478 of max 32768 tokens, 110.4 tok/s, 5 s
+[strata] writing a tool call: write_file: 631 of max 32768 tokens, 117.9 tok/s, 6 s
+[strata] writing a tool call: write_file: 791 of max 32768 tokens, 124.2 tok/s, 7 s
+[strata] writing a tool call: write_file: 936 of max 32768 tokens, 127.0 tok/s, 8 s
+[strata] writing a tool call: write_file: 1095 of max 32768 tokens, 130.5 tok/s, 9 s
+[strata] writing a tool call: write_file: 1246 of max 32768 tokens, 132.7 tok/s, 10 s
+[strata] writing a tool call: write_file: 1400 of max 32768 tokens, 134.6 tok/s, 11 s
+[strata] writing a tool call: write_file: 1551 of max 32768 tokens, 136.0 tok/s, 12 s
+[strata] writing a tool call: write_file: 1705 of max 32768 tokens, 137.3 tok/s, 13 s
+[strata] writing a tool call: write_file: 1862 of max 32768 tokens, 138.7 tok/s, 14 s
+[strata] writing a tool call: write_file: 2017 of max 32768 tokens, 139.6 tok/s, 15 s
+[strata] writing a tool call: write_file: 2180 of max 32768 tokens, 141.1 tok/s, 16 s
+[strata] writing a tool call: write_file: 2334 of max 32768 tokens, 141.7 tok/s, 17 s
+[strata] writing a tool call: write_file: 2491 of max 32768 tokens, 142.4 tok/s, 18 s
+[strata] writing a tool call: write_file: 2642 of max 32768 tokens, 142.7 tok/s, 19 s
+[strata] writing a tool call: write_file: 2796 of max 32768 tokens, 143.2 tok/s, 20 s
+[strata] writing a tool call: write_file: 2948 of max 32768 tokens, 143.6 tok/s, 21 s
+[strata] writing a tool call: write_file: 3096 of max 32768 tokens, 143.7 tok/s, 22 s
+[strata] writing a tool call: write_file: 3258 of max 32768 tokens, 144.3 tok/s, 23 s
+[strata] writing a tool call: write_file: 3417 of max 32768 tokens, 144.9 tok/s, 24 s
+[strata] writing a tool call: write_file: 3570 of max 32768 tokens, 145.1 tok/s, 25 s
+[strata] writing a tool call: write_file: 3725 of max 32768 tokens, 145.5 tok/s, 26 s
+[strata] writing a tool call: write_file: 3888 of max 32768 tokens, 146.1 tok/s, 27 s
+[strata] writing a tool call: write_file: 4043 of max 32768 tokens, 146.4 tok/s, 28 s
+[strata] writing a tool call: write_file: 4203 of max 32768 tokens, 146.8 tok/s, 29 s
+[strata] writing a tool call: write_file: 4366 of max 32768 tokens, 147.2 tok/s, 30 s
+[strata] done: 4400 tokens in 31 s (147.3 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 23,520 of 23,525 tokens, 2 s so far
+[strata] thinking: 81 of max 32768 tokens, 109.6 tok/s, 3 s
+[strata] writing a tool call: edit_file: 233 of max 32768 tokens, 132.5 tok/s, 4 s
+[strata] done: 269 tokens in 5 s (134.9 tok/s) (stop, cancel=False), expert cache 99.4% hit
+[strata] thinking: 61 of max 32768 tokens, 114.2 tok/s, 1 s
+[strata] done: 185 tokens in 2 s (143.3 tok/s) (stop, cancel=False), expert cache 99.5% hit
+[strata] thinking: 62 of max 32768 tokens, 118.7 tok/s, 1 s
+[strata] done: 139 tokens in 1 s (140.5 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] writing a tool call: edit_file: 73 of max 32768 tokens, 126.9 tok/s, 1 s
+[strata] done: 150 tokens in 1 s (140.4 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] thinking: 65 of max 32768 tokens, 120.7 tok/s, 1 s
+[strata] writing a tool call: write_file: 209 of max 32768 tokens, 134.5 tok/s, 2 s
+[strata] writing a tool call: write_file: 362 of max 32768 tokens, 141.1 tok/s, 3 s
+[strata] writing a tool call: write_file: 520 of max 32768 tokens, 145.2 tok/s, 4 s
+[strata] done: 569 tokens in 4 s (146.6 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] thinking: 18 of max 32768 tokens, 86.9 tok/s, 1 s
+[strata] writing a tool call: write_file: 160 of max 32768 tokens, 130.2 tok/s, 2 s
+[strata] writing a tool call: write_file: 295 of max 32768 tokens, 131.6 tok/s, 3 s
+[strata] writing a tool call: write_file: 442 of max 32768 tokens, 135.4 tok/s, 4 s
+[strata] writing a tool call: write_file: 585 of max 32768 tokens, 136.6 tok/s, 5 s
+[strata] writing a tool call: write_file: 718 of max 32768 tokens, 135.6 tok/s, 6 s
+[strata] done: 780 tokens in 7 s (136.8 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] thinking: 3 of max 32768 tokens, 98.0 tok/s, 1 s
+[strata] writing a tool call: edit_file: 155 of max 32768 tokens, 147.9 tok/s, 2 s
+[strata] done: 231 tokens in 2 s (151.9 tok/s) (stop, cancel=False), expert cache 99.4% hit
+[strata] thinking: 46 of max 32768 tokens, 103.1 tok/s, 1 s
+[strata] writing a tool call: write_file: 188 of max 32768 tokens, 129.3 tok/s, 2 s
+[strata] writing a tool call: write_file: 332 of max 32768 tokens, 134.9 tok/s, 3 s
+[strata] writing a tool call: write_file: 485 of max 32768 tokens, 139.6 tok/s, 4 s
+[strata] writing a tool call: write_file: 621 of max 32768 tokens, 138.3 tok/s, 5 s
+[strata] the reply repeated one token (' hold') 256 times in a row: ended as "length" (repeat_stop_tokens in strata-<model>.json; 0 turns this off). If a new request with a short prompt does the same, restart the server and report it (#606)
+[strata] done: 755 tokens in 6 s (143.7 tok/s) (length, cancel=False), expert cache 99.8% hit
+[strata] writing a tool call: write_file: 86 of max 32768 tokens, 140.5 tok/s, 1 s
+[strata] writing a tool call: write_file: 236 of max 32768 tokens, 144.8 tok/s, 2 s
+[strata] writing a tool call: write_file: 380 of max 32768 tokens, 143.4 tok/s, 3 s
+[strata] writing a tool call: write_file: 528 of max 32768 tokens, 144.3 tok/s, 4 s
+[strata] writing a tool call: write_file: 660 of max 32768 tokens, 141.2 tok/s, 5 s
+[strata] writing a tool call: write_file: 808 of max 32768 tokens, 142.0 tok/s, 6 s
+[strata] writing a tool call: write_file: 966 of max 32768 tokens, 144.2 tok/s, 7 s
+[strata] writing a tool call: write_file: 1129 of max 32768 tokens, 146.2 tok/s, 8 s
+[strata] writing a tool call: write_file: 1278 of max 32768 tokens, 146.2 tok/s, 9 s
+[strata] writing a tool call: write_file: 1432 of max 32768 tokens, 146.9 tok/s, 10 s
+[strata] done: 1436 tokens in 10 s (147.0 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 27,185 of 27,190 tokens, 1 s so far
+[strata] writing a tool call: write_file: 118 of max 32768 tokens, 137.4 tok/s, 2 s
+[strata] writing a tool call: write_file: 298 of max 32768 tokens, 159.0 tok/s, 3 s
+[strata] writing a tool call: write_file: 481 of max 32768 tokens, 166.0 tok/s, 4 s
+[strata] writing a tool call: write_file: 652 of max 32768 tokens, 166.4 tok/s, 5 s
+[strata] writing a tool call: write_file: 827 of max 32768 tokens, 167.9 tok/s, 6 s
+[strata] writing a tool call: write_file: 999 of max 32768 tokens, 168.1 tok/s, 7 s
+[strata] writing a tool call: write_file: 1160 of max 32768 tokens, 167.0 tok/s, 8 s
+[strata] writing a tool call: write_file: 1329 of max 32768 tokens, 167.1 tok/s, 9 s
+[strata] writing a tool call: write_file: 1494 of max 32768 tokens, 166.6 tok/s, 10 s
+[strata] done: 1643 tokens in 11 s (164.9 tok/s) (stop, cancel=False), expert cache 99.4% hit
+[strata] reading the prompt: 28,837 of 28,842 tokens, 1 s so far
+[strata] thinking: 86 of max 32768 tokens, 100.9 tok/s, 2 s
+[strata] writing a tool call: write_file: 230 of max 32768 tokens, 123.8 tok/s, 3 s
+[strata] writing a tool call: write_file: 358 of max 32768 tokens, 124.8 tok/s, 4 s
+[strata] writing a tool call: write_file: 498 of max 32768 tokens, 128.4 tok/s, 5 s
+[strata] writing a tool call: write_file: 639 of max 32768 tokens, 130.7 tok/s, 6 s
+[strata] writing a tool call: write_file: 773 of max 32768 tokens, 130.9 tok/s, 7 s
+[strata] writing a tool call: write_file: 918 of max 32768 tokens, 132.6 tok/s, 8 s
+[strata] writing a tool call: write_file: 1062 of max 32768 tokens, 133.8 tok/s, 9 s
+[strata] done: 1097 tokens in 10 s (134.1 tok/s) (stop, cancel=False), expert cache 99.5% hit
+[strata] reading the prompt: 29,862 of 29,867 tokens, 1 s so far
+[strata] writing a tool call: edit_file: 94 of max 32768 tokens, 108.3 tok/s, 2 s
+[strata] done: 213 tokens in 3 s (128.2 tok/s) (stop, cancel=False), expert cache 99.3% hit
+[strata] thinking: 44 of max 32768 tokens, 87.2 tok/s, 1 s
+[strata] writing a tool call: write_file: 189 of max 32768 tokens, 124.4 tok/s, 2 s
+[strata] writing a tool call: write_file: 323 of max 32768 tokens, 127.8 tok/s, 3 s
+[strata] writing a tool call: write_file: 459 of max 32768 tokens, 129.7 tok/s, 4 s
+[strata] writing a tool call: write_file: 596 of max 32768 tokens, 131.3 tok/s, 5 s
+[strata] writing a tool call: write_file: 732 of max 32768 tokens, 131.7 tok/s, 6 s
+[strata] writing a tool call: write_file: 877 of max 32768 tokens, 133.3 tok/s, 7 s
+[strata] writing a tool call: write_file: 1014 of max 32768 tokens, 133.6 tok/s, 8 s
+[strata] writing a tool call: write_file: 1168 of max 32768 tokens, 135.8 tok/s, 9 s
+[strata] writing a tool call: write_file: 1320 of max 32768 tokens, 137.3 tok/s, 10 s
+[strata] writing a tool call: write_file: 1470 of max 32768 tokens, 138.4 tok/s, 11 s
+[strata] writing a tool call: write_file: 1615 of max 32768 tokens, 138.7 tok/s, 12 s
+[strata] writing a tool call: write_file: 1759 of max 32768 tokens, 138.9 tok/s, 13 s
+[strata] writing a tool call: write_file: 1899 of max 32768 tokens, 138.8 tok/s, 14 s
+[strata] writing a tool call: write_file: 2049 of max 32768 tokens, 139.4 tok/s, 15 s
+[strata] writing a tool call: write_file: 2185 of max 32768 tokens, 139.1 tok/s, 16 s
+[strata] writing a tool call: write_file: 2333 of max 32768 tokens, 139.5 tok/s, 17 s
+[strata] writing a tool call: write_file: 2462 of max 32768 tokens, 138.9 tok/s, 18 s
+[strata] done: 2537 tokens in 19 s (139.1 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 32,545 of 32,550 tokens, 2 s so far
+[strata] writing a tool call: write_file: 107 of max 32768 tokens, 129.4 tok/s, 3 s
+[strata] writing a tool call: write_file: 262 of max 32768 tokens, 141.0 tok/s, 4 s
+[strata] writing a tool call: write_file: 429 of max 32768 tokens, 149.6 tok/s, 5 s
+[strata] writing a tool call: write_file: 575 of max 32768 tokens, 147.9 tok/s, 6 s
+[strata] writing a tool call: write_file: 737 of max 32768 tokens, 150.4 tok/s, 7 s
+[strata] writing a tool call: write_file: 889 of max 32768 tokens, 150.3 tok/s, 8 s
+[strata] writing a tool call: write_file: 1051 of max 32768 tokens, 151.5 tok/s, 9 s
+[strata] done: 1078 tokens in 9 s (151.2 tok/s) (stop, cancel=False), expert cache 99.3% hit
+[strata] reading the prompt: 33,620 of 33,625 tokens, 1 s so far
+[strata] writing a tool call: write_file: 123 of max 32768 tokens, 142.4 tok/s, 2 s
+[strata] writing a tool call: write_file: 283 of max 32768 tokens, 151.5 tok/s, 3 s
+[strata] writing a tool call: write_file: 448 of max 32768 tokens, 155.4 tok/s, 4 s
+[strata] writing a tool call: write_file: 600 of max 32768 tokens, 153.8 tok/s, 5 s
+[strata] writing a tool call: write_file: 764 of max 32768 tokens, 155.5 tok/s, 6 s
+[strata] writing a tool call: write_file: 915 of max 32768 tokens, 154.7 tok/s, 7 s
+[strata] writing a tool call: write_file: 1087 of max 32768 tokens, 156.9 tok/s, 8 s
+[strata] done: 1222 tokens in 9 s (157.5 tok/s) (stop, cancel=False), expert cache 99.5% hit
+[strata] done: 0 tokens in 1 s (0.0 tok/s) (cancel, cancel=True)
+[strata] done: 0 tokens in 4 s (0.0 tok/s) (cancel, cancel=True)
+[strata] reading the prompt: 8,192 of 42,769 tokens, 4 s so far
+[strata] reading the prompt: 13,046 of 42,769 tokens, 5 s so far
+[strata] reading the prompt: 21,238 of 42,769 tokens, 9 s so far
+[strata] reading the prompt: 29,430 of 42,769 tokens, 11 s so far
+[strata] reading the prompt: 37,622 of 42,769 tokens, 14 s so far
+[strata] reading the prompt: 42,764 of 42,769 tokens, 15 s so far
+[strata] thinking: 51 of max 32768 tokens, 104.9 tok/s, 16 s
+[strata] writing a tool call: write_file: 186 of max 32768 tokens, 123.4 tok/s, 17 s
+[strata] writing a tool call: write_file: 357 of max 32768 tokens, 140.8 tok/s, 18 s
+[strata] writing a tool call: write_file: 531 of max 32768 tokens, 149.2 tok/s, 19 s
+[strata] writing a tool call: write_file: 685 of max 32768 tokens, 150.2 tok/s, 20 s
+[strata] writing a tool call: write_file: 853 of max 32768 tokens, 152.8 tok/s, 21 s
+[strata] writing a tool call: write_file: 1009 of max 32768 tokens, 153.1 tok/s, 22 s
+[strata] writing a tool call: write_file: 1174 of max 32768 tokens, 154.6 tok/s, 23 s
+[strata] writing a tool call: write_file: 1345 of max 32768 tokens, 156.2 tok/s, 24 s
+[strata] writing a tool call: write_file: 1513 of max 32768 tokens, 157.3 tok/s, 25 s
+[strata] writing a tool call: write_file: 1666 of max 32768 tokens, 156.8 tok/s, 26 s
+[strata] writing a tool call: write_file: 1833 of max 32768 tokens, 157.6 tok/s, 27 s
+[strata] writing a tool call: write_file: 1993 of max 32768 tokens, 157.6 tok/s, 28 s
+[strata] writing a tool call: write_file: 2129 of max 32768 tokens, 155.8 tok/s, 29 s
+[strata] writing a tool call: write_file: 2280 of max 32768 tokens, 155.3 tok/s, 31 s
+[strata] writing a tool call: write_file: 2443 of max 32768 tokens, 155.8 tok/s, 32 s
+[strata] writing a tool call: write_file: 2595 of max 32768 tokens, 155.4 tok/s, 33 s
+[strata] writing a tool call: write_file: 2734 of max 32768 tokens, 154.4 tok/s, 34 s
+[strata] writing a tool call: write_file: 2869 of max 32768 tokens, 153.2 tok/s, 35 s
+[strata] writing a tool call: write_file: 3001 of max 32768 tokens, 151.9 tok/s, 36 s
+[strata] writing a tool call: write_file: 3135 of max 32768 tokens, 150.9 tok/s, 37 s
+[strata] writing a tool call: write_file: 3277 of max 32768 tokens, 150.5 tok/s, 38 s
+[strata] writing a tool call: write_file: 3421 of max 32768 tokens, 150.2 tok/s, 39 s
+[strata] done: 3467 tokens in 39 s (150.2 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] reading the prompt: 8,192 of 47,220 tokens, 4 s so far
+[strata] reading the prompt: 14,097 of 47,220 tokens, 5 s so far
+[strata] reading the prompt: 22,289 of 47,220 tokens, 9 s so far
+[strata] reading the prompt: 30,481 of 47,220 tokens, 11 s so far
+[strata] reading the prompt: 38,673 of 47,220 tokens, 14 s so far
+[strata] reading the prompt: 46,865 of 47,220 tokens, 16 s so far
+[strata] thinking: 6 of max 32768 tokens, 77.3 tok/s, 17 s
+[strata] thinking: 130 of max 32768 tokens, 120.2 tok/s, 18 s
+[strata] done: 236 tokens in 19 s (126.9 tok/s) (stop, cancel=False), expert cache 99.2% hit
+[strata] writing a tool call: edit_file: 70 of max 32768 tokens, 125.7 tok/s, 1 s
+[strata] writing a tool call: edit_file: 256 of max 32768 tokens, 162.5 tok/s, 2 s
+[strata] writing a tool call: edit_file: 442 of max 32768 tokens, 169.6 tok/s, 3 s
+[strata] writing a tool call: edit_file: 622 of max 32768 tokens, 172.1 tok/s, 4 s
+[strata] writing a tool call: edit_file: 808 of max 32768 tokens, 174.1 tok/s, 5 s
+[strata] writing a tool call: edit_file: 994 of max 32768 tokens, 175.2 tok/s, 6 s
+[strata] writing a tool call: edit_file: 1178 of max 32768 tokens, 176.5 tok/s, 7 s
+[strata] writing a tool call: edit_file: 1354 of max 32768 tokens, 176.3 tok/s, 8 s
+[strata] writing a tool call: edit_file: 1540 of max 32768 tokens, 176.8 tok/s, 9 s
+[strata] writing a tool call: edit_file: 1726 of max 32768 tokens, 177.2 tok/s, 10 s
+[strata] writing a tool call: edit_file: 1906 of max 32768 tokens, 177.4 tok/s, 11 s
+[strata] writing a tool call: edit_file: 2086 of max 32768 tokens, 177.5 tok/s, 12 s
+[strata] writing a tool call: edit_file: 2272 of max 32768 tokens, 177.8 tok/s, 13 s
+[strata] writing a tool call: edit_file: 2458 of max 32768 tokens, 178.0 tok/s, 14 s
+[strata] writing a tool call: edit_file: 2644 of max 32768 tokens, 178.2 tok/s, 15 s
+[strata] writing a tool call: edit_file: 2824 of max 32768 tokens, 178.2 tok/s, 16 s
+[strata] writing a tool call: edit_file: 3010 of max 32768 tokens, 178.4 tok/s, 17 s
+[strata] writing a tool call: edit_file: 3190 of max 32768 tokens, 178.5 tok/s, 18 s
+[strata] writing a tool call: edit_file: 3376 of max 32768 tokens, 178.5 tok/s, 19 s
+[strata] writing a tool call: edit_file: 3556 of max 32768 tokens, 178.6 tok/s, 20 s
+[strata] writing a tool call: edit_file: 3742 of max 32768 tokens, 178.7 tok/s, 21 s
+[strata] writing a tool call: edit_file: 3928 of max 32768 tokens, 178.8 tok/s, 22 s
+[strata] writing a tool call: edit_file: 4108 of max 32768 tokens, 178.8 tok/s, 23 s
+[strata] writing a tool call: edit_file: 4288 of max 32768 tokens, 178.7 tok/s, 24 s
+[strata] writing a tool call: edit_file: 4474 of max 32768 tokens, 178.9 tok/s, 25 s
+[strata] writing a tool call: edit_file: 4654 of max 32768 tokens, 178.9 tok/s, 26 s
+[strata] writing a tool call: edit_file: 4840 of max 32768 tokens, 179.0 tok/s, 28 s
+[strata] writing a tool call: edit_file: 5020 of max 32768 tokens, 178.9 tok/s, 29 s
+[strata] writing a tool call: edit_file: 5206 of max 32768 tokens, 179.0 tok/s, 30 s
+[strata] writing a tool call: edit_file: 5392 of max 32768 tokens, 179.1 tok/s, 31 s
+[strata] writing a tool call: edit_file: 5572 of max 32768 tokens, 179.1 tok/s, 32 s
+[strata] writing a tool call: edit_file: 5752 of max 32768 tokens, 179.1 tok/s, 33 s
+[strata] writing a tool call: edit_file: 5938 of max 32768 tokens, 179.2 tok/s, 34 s
+[strata] writing a tool call: edit_file: 6118 of max 32768 tokens, 179.2 tok/s, 35 s
+[strata] writing a tool call: edit_file: 6298 of max 32768 tokens, 179.2 tok/s, 36 s
+[strata] writing a tool call: edit_file: 6478 of max 32768 tokens, 179.2 tok/s, 37 s
+[strata] writing a tool call: edit_file: 6664 of max 32768 tokens, 179.3 tok/s, 38 s
+[strata] writing a tool call: edit_file: 6850 of max 32768 tokens, 179.3 tok/s, 39 s
+[strata] writing a tool call: edit_file: 7030 of max 32768 tokens, 179.3 tok/s, 40 s
+[strata] writing a tool call: edit_file: 7210 of max 32768 tokens, 179.3 tok/s, 41 s
+[strata] writing a tool call: edit_file: 7396 of max 32768 tokens, 179.3 tok/s, 42 s
+[strata] writing a tool call: edit_file: 7582 of max 32768 tokens, 179.3 tok/s, 43 s
+[strata] writing a tool call: edit_file: 7768 of max 32768 tokens, 179.4 tok/s, 44 s
+[strata] writing a tool call: edit_file: 7948 of max 32768 tokens, 179.3 tok/s, 45 s
+[strata] writing a tool call: edit_file: 8134 of max 32768 tokens, 179.4 tok/s, 46 s
+[strata] writing a tool call: edit_file: 8320 of max 32768 tokens, 179.4 tok/s, 47 s
+[strata] writing a tool call: edit_file: 8500 of max 32768 tokens, 179.4 tok/s, 48 s
+[strata] writing a tool call: edit_file: 8680 of max 32768 tokens, 179.4 tok/s, 49 s
+[strata] writing a tool call: edit_file: 8866 of max 32768 tokens, 179.4 tok/s, 50 s
+[strata] writing a tool call: edit_file: 9052 of max 32768 tokens, 179.4 tok/s, 51 s
+[strata] writing a tool call: edit_file: 9238 of max 32768 tokens, 179.4 tok/s, 52 s
+[strata] writing a tool call: edit_file: 9418 of max 32768 tokens, 179.4 tok/s, 53 s
+[strata] writing a tool call: edit_file: 9604 of max 32768 tokens, 179.4 tok/s, 54 s
+[strata] writing a tool call: edit_file: 9790 of max 32768 tokens, 179.5 tok/s, 55 s
+[strata] writing a tool call: edit_file: 9970 of max 32768 tokens, 179.4 tok/s, 56 s
+[strata] writing a tool call: edit_file: 10150 of max 32768 tokens, 179.4 tok/s, 57 s
+[strata] writing a tool call: edit_file: 10330 of max 32768 tokens, 179.4 tok/s, 58 s
+[strata] writing a tool call: edit_file: 10510 of max 32768 tokens, 179.4 tok/s, 59 s
+[strata] writing a tool call: edit_file: 10690 of max 32768 tokens, 179.4 tok/s, 60 s
+[strata] writing a tool call: edit_file: 10870 of max 32768 tokens, 179.4 tok/s, 61 s
+[strata] writing a tool call: edit_file: 11050 of max 32768 tokens, 179.3 tok/s, 62 s
+[strata] writing a tool call: edit_file: 11232 of max 32768 tokens, 179.4 tok/s, 63 s
+[strata] writing a tool call: edit_file: 11410 of max 32768 tokens, 179.3 tok/s, 64 s
+[strata] writing a tool call: edit_file: 11590 of max 32768 tokens, 179.3 tok/s, 65 s
+[strata] writing a tool call: edit_file: 11770 of max 32768 tokens, 179.3 tok/s, 66 s
+[strata] writing a tool call: edit_file: 11956 of max 32768 tokens, 179.3 tok/s, 67 s
+[strata] writing a tool call: edit_file: 12136 of max 32768 tokens, 179.3 tok/s, 68 s
+[strata] writing a tool call: edit_file: 12316 of max 32768 tokens, 179.3 tok/s, 69 s
+[strata] writing a tool call: edit_file: 12496 of max 32768 tokens, 179.2 tok/s, 70 s
+[strata] writing a tool call: edit_file: 12680 of max 32768 tokens, 179.3 tok/s, 71 s
+[strata] writing a tool call: edit_file: 12856 of max 32768 tokens, 179.2 tok/s, 72 s
+[strata] writing a tool call: edit_file: 13036 of max 32768 tokens, 179.2 tok/s, 73 s
+[strata] writing a tool call: edit_file: 13216 of max 32768 tokens, 179.2 tok/s, 74 s
+[strata] writing a tool call: edit_file: 13402 of max 32768 tokens, 179.2 tok/s, 75 s
+[strata] writing a tool call: edit_file: 13582 of max 32768 tokens, 179.2 tok/s, 76 s
+[strata] writing a tool call: edit_file: 13762 of max 32768 tokens, 179.2 tok/s, 77 s
+[strata] writing a tool call: edit_file: 13942 of max 32768 tokens, 179.2 tok/s, 78 s
+[strata] writing a tool call: edit_file: 14122 of max 32768 tokens, 179.2 tok/s, 79 s
+[strata] writing a tool call: edit_file: 14302 of max 32768 tokens, 179.2 tok/s, 80 s
+[strata] writing a tool call: edit_file: 14488 of max 32768 tokens, 179.2 tok/s, 81 s
+[strata] writing a tool call: edit_file: 14668 of max 32768 tokens, 179.2 tok/s, 82 s
+[strata] writing a tool call: edit_file: 14854 of max 32768 tokens, 179.2 tok/s, 83 s
+[strata] writing a tool call: edit_file: 15034 of max 32768 tokens, 179.2 tok/s, 84 s
+[strata] writing a tool call: edit_file: 15214 of max 32768 tokens, 179.1 tok/s, 85 s
+[strata] writing a tool call: edit_file: 15394 of max 32768 tokens, 179.1 tok/s, 86 s
+[strata] writing a tool call: edit_file: 15574 of max 32768 tokens, 179.1 tok/s, 87 s
+[strata] writing a tool call: edit_file: 15754 of max 32768 tokens, 179.1 tok/s, 88 s
+[strata] writing a tool call: edit_file: 15940 of max 32768 tokens, 179.1 tok/s, 89 s
+[strata] writing a tool call: edit_file: 16126 of max 32768 tokens, 179.1 tok/s, 90 s
+[strata] writing a tool call: edit_file: 16306 of max 32768 tokens, 179.1 tok/s, 91 s
+[strata] writing a tool call: edit_file: 16486 of max 32768 tokens, 179.1 tok/s, 93 s
+[strata] writing a tool call: edit_file: 16666 of max 32768 tokens, 179.1 tok/s, 94 s
+[strata] writing a tool call: edit_file: 16852 of max 32768 tokens, 179.1 tok/s, 95 s
+[strata] writing a tool call: edit_file: 17032 of max 32768 tokens, 179.1 tok/s, 96 s
+[strata] writing a tool call: edit_file: 17212 of max 32768 tokens, 179.1 tok/s, 97 s
+[strata] writing a tool call: edit_file: 17392 of max 32768 tokens, 179.1 tok/s, 98 s
+[strata] writing a tool call: edit_file: 17572 of max 32768 tokens, 179.1 tok/s, 99 s
+[strata] writing a tool call: edit_file: 17758 of max 32768 tokens, 179.1 tok/s, 100 s
+[strata] writing a tool call: edit_file: 17938 of max 32768 tokens, 179.1 tok/s, 101 s
+[strata] writing a tool call: edit_file: 18118 of max 32768 tokens, 179.1 tok/s, 102 s
+[strata] writing a tool call: edit_file: 18298 of max 32768 tokens, 179.1 tok/s, 103 s
+[strata] writing a tool call: edit_file: 18478 of max 32768 tokens, 179.1 tok/s, 104 s
+[strata] writing a tool call: edit_file: 18658 of max 32768 tokens, 179.0 tok/s, 105 s
+[strata] writing a tool call: edit_file: 18838 of max 32768 tokens, 179.0 tok/s, 106 s
+[strata] writing a tool call: edit_file: 19012 of max 32768 tokens, 179.0 tok/s, 107 s
+[strata] writing a tool call: edit_file: 19186 of max 32768 tokens, 178.9 tok/s, 108 s
+[strata] writing a tool call: edit_file: 19366 of max 32768 tokens, 178.9 tok/s, 109 s
+[strata] writing a tool call: edit_file: 19552 of max 32768 tokens, 178.9 tok/s, 110 s
+[strata] writing a tool call: edit_file: 19732 of max 32768 tokens, 178.9 tok/s, 111 s
+[strata] writing a tool call: edit_file: 19912 of max 32768 tokens, 178.9 tok/s, 112 s
+[strata] writing a tool call: edit_file: 20092 of max 32768 tokens, 178.9 tok/s, 113 s
+[strata] writing a tool call: edit_file: 20272 of max 32768 tokens, 178.9 tok/s, 114 s
+[strata] writing a tool call: edit_file: 20452 of max 32768 tokens, 178.9 tok/s, 115 s
+[strata] writing a tool call: edit_file: 20632 of max 32768 tokens, 178.9 tok/s, 116 s
+[strata] writing a tool call: edit_file: 20818 of max 32768 tokens, 178.9 tok/s, 117 s
+[strata] writing a tool call: edit_file: 20998 of max 32768 tokens, 178.9 tok/s, 118 s
+[strata] writing a tool call: edit_file: 21178 of max 32768 tokens, 178.9 tok/s, 119 s
+[strata] writing a tool call: edit_file: 21358 of max 32768 tokens, 178.9 tok/s, 120 s
+[strata] writing a tool call: edit_file: 21538 of max 32768 tokens, 178.9 tok/s, 121 s
+[strata] writing a tool call: edit_file: 21718 of max 32768 tokens, 178.9 tok/s, 122 s
+[strata] writing a tool call: edit_file: 21898 of max 32768 tokens, 178.9 tok/s, 123 s
+[strata] writing a tool call: edit_file: 22078 of max 32768 tokens, 178.8 tok/s, 124 s
+[strata] writing a tool call: edit_file: 22258 of max 32768 tokens, 178.8 tok/s, 125 s
+[strata] writing a tool call: edit_file: 22444 of max 32768 tokens, 178.9 tok/s, 126 s
+[strata] writing a tool call: edit_file: 22624 of max 32768 tokens, 178.8 tok/s, 127 s
+[strata] writing a tool call: edit_file: 22804 of max 32768 tokens, 178.8 tok/s, 128 s
+[strata] writing a tool call: edit_file: 22984 of max 32768 tokens, 178.8 tok/s, 129 s
+[strata] writing a tool call: edit_file: 23164 of max 32768 tokens, 178.8 tok/s, 130 s
+[strata] writing a tool call: edit_file: 23344 of max 32768 tokens, 178.8 tok/s, 131 s
+[strata] writing a tool call: edit_file: 23524 of max 32768 tokens, 178.8 tok/s, 132 s
+[strata] writing a tool call: edit_file: 23710 of max 32768 tokens, 178.8 tok/s, 133 s
+[strata] writing a tool call: edit_file: 23896 of max 32768 tokens, 178.8 tok/s, 134 s
+[strata] writing a tool call: edit_file: 24076 of max 32768 tokens, 178.8 tok/s, 135 s
+[strata] writing a tool call: edit_file: 24250 of max 32768 tokens, 178.7 tok/s, 136 s
+[strata] writing a tool call: edit_file: 24430 of max 32768 tokens, 178.7 tok/s, 137 s
+[strata] writing a tool call: edit_file: 24610 of max 32768 tokens, 178.7 tok/s, 138 s
+[strata] writing a tool call: edit_file: 24790 of max 32768 tokens, 178.7 tok/s, 139 s
+[strata] writing a tool call: edit_file: 24970 of max 32768 tokens, 178.7 tok/s, 140 s
+[strata] writing a tool call: edit_file: 25150 of max 32768 tokens, 178.7 tok/s, 141 s
+[strata] writing a tool call: edit_file: 25330 of max 32768 tokens, 178.7 tok/s, 142 s
+[strata] writing a tool call: edit_file: 25510 of max 32768 tokens, 178.7 tok/s, 143 s
+[strata] writing a tool call: edit_file: 25690 of max 32768 tokens, 178.6 tok/s, 144 s
+[strata] writing a tool call: edit_file: 25870 of max 32768 tokens, 178.6 tok/s, 145 s
+[strata] writing a tool call: edit_file: 26050 of max 32768 tokens, 178.6 tok/s, 146 s
+[strata] writing a tool call: edit_file: 26230 of max 32768 tokens, 178.6 tok/s, 147 s
+[strata] writing a tool call: edit_file: 26410 of max 32768 tokens, 178.6 tok/s, 148 s
+[strata] writing a tool call: edit_file: 26590 of max 32768 tokens, 178.6 tok/s, 149 s
+[strata] writing a tool call: edit_file: 26770 of max 32768 tokens, 178.6 tok/s, 150 s
+[strata] writing a tool call: edit_file: 26950 of max 32768 tokens, 178.6 tok/s, 151 s
+[strata] writing a tool call: edit_file: 27130 of max 32768 tokens, 178.6 tok/s, 152 s
+[strata] writing a tool call: edit_file: 27310 of max 32768 tokens, 178.6 tok/s, 153 s
+[strata] writing a tool call: edit_file: 27490 of max 32768 tokens, 178.6 tok/s, 154 s
+[strata] writing a tool call: edit_file: 27664 of max 32768 tokens, 178.5 tok/s, 155 s
+[strata] writing a tool call: edit_file: 27844 of max 32768 tokens, 178.5 tok/s, 156 s
+[strata] writing a tool call: edit_file: 28024 of max 32768 tokens, 178.5 tok/s, 157 s
+[strata] writing a tool call: edit_file: 28198 of max 32768 tokens, 178.5 tok/s, 158 s
+[strata] writing a tool call: edit_file: 28378 of max 32768 tokens, 178.5 tok/s, 159 s
+[strata] writing a tool call: edit_file: 28557 of max 32768 tokens, 178.5 tok/s, 160 s
+[strata] writing a tool call: edit_file: 28732 of max 32768 tokens, 178.4 tok/s, 161 s
+[strata] writing a tool call: edit_file: 28918 of max 32768 tokens, 178.4 tok/s, 163 s
+[strata] writing a tool call: edit_file: 29098 of max 32768 tokens, 178.4 tok/s, 164 s
+[strata] writing a tool call: edit_file: 29272 of max 32768 tokens, 178.4 tok/s, 165 s
+[strata] writing a tool call: edit_file: 29452 of max 32768 tokens, 178.4 tok/s, 166 s
+[strata] writing a tool call: edit_file: 29632 of max 32768 tokens, 178.4 tok/s, 167 s
+[strata] writing a tool call: edit_file: 29812 of max 32768 tokens, 178.4 tok/s, 168 s
+[strata] writing a tool call: edit_file: 29986 of max 32768 tokens, 178.4 tok/s, 169 s
+[strata] writing a tool call: edit_file: 30166 of max 32768 tokens, 178.4 tok/s, 170 s
+[strata] writing a tool call: edit_file: 30346 of max 32768 tokens, 178.4 tok/s, 171 s
+[strata] writing a tool call: edit_file: 30526 of max 32768 tokens, 178.4 tok/s, 172 s
+[strata] writing a tool call: edit_file: 30700 of max 32768 tokens, 178.3 tok/s, 173 s
+[strata] writing a tool call: edit_file: 30880 of max 32768 tokens, 178.3 tok/s, 174 s
+[strata] writing a tool call: edit_file: 31060 of max 32768 tokens, 178.3 tok/s, 175 s
+[strata] writing a tool call: edit_file: 31240 of max 32768 tokens, 178.3 tok/s, 176 s
+[strata] writing a tool call: edit_file: 31414 of max 32768 tokens, 178.3 tok/s, 177 s
+[strata] writing a tool call: edit_file: 31594 of max 32768 tokens, 178.3 tok/s, 178 s
+[strata] writing a tool call: edit_file: 31774 of max 32768 tokens, 178.3 tok/s, 179 s
+[strata] writing a tool call: edit_file: 31954 of max 32768 tokens, 178.3 tok/s, 180 s
+[strata] writing a tool call: edit_file: 32134 of max 32768 tokens, 178.3 tok/s, 181 s
+[strata] writing a tool call: edit_file: 32314 of max 32768 tokens, 178.3 tok/s, 182 s
+[strata] writing a tool call: edit_file: 32494 of max 32768 tokens, 178.3 tok/s, 183 s
+[strata] writing a tool call: edit_file: 32668 of max 32768 tokens, 178.3 tok/s, 184 s
+[strata] done: 32768 tokens in 184 s (178.3 tok/s) (length, cancel=False), expert cache 99.9% hit
+[strata] thinking: 77 of max 32768 tokens, 131.6 tok/s, 1 s
+[strata] thinking: 193 of max 32768 tokens, 121.5 tok/s, 2 s
+[strata] thinking: 293 of max 32768 tokens, 112.9 tok/s, 3 s
+[strata] writing a tool call: edit_file: 416 of max 32768 tokens, 115.5 tok/s, 4 s
+[strata] writing a tool call: edit_file: 605 of max 32768 tokens, 130.7 tok/s, 5 s
+[strata] writing a tool call: edit_file: 791 of max 32768 tokens, 140.3 tok/s, 6 s
+[strata] writing a tool call: edit_file: 977 of max 32768 tokens, 146.6 tok/s, 7 s
+[strata] writing a tool call: edit_file: 1157 of max 32768 tokens, 150.8 tok/s, 8 s
+[strata] writing a tool call: edit_file: 1343 of max 32768 tokens, 154.4 tok/s, 9 s
+[strata] writing a tool call: edit_file: 1529 of max 32768 tokens, 157.2 tok/s, 10 s
+[strata] writing a tool call: edit_file: 1709 of max 32768 tokens, 159.2 tok/s, 11 s
+[strata] writing a tool call: edit_file: 1889 of max 32768 tokens, 160.9 tok/s, 12 s
+[strata] writing a tool call: edit_file: 2075 of max 32768 tokens, 162.6 tok/s, 13 s
+[strata] writing a tool call: edit_file: 2261 of max 32768 tokens, 163.9 tok/s, 14 s
+[strata] writing a tool call: edit_file: 2441 of max 32768 tokens, 164.9 tok/s, 15 s
+[strata] writing a tool call: edit_file: 2621 of max 32768 tokens, 165.8 tok/s, 16 s
+[strata] writing a tool call: edit_file: 2807 of max 32768 tokens, 166.8 tok/s, 17 s
+[strata] writing a tool call: edit_file: 2993 of max 32768 tokens, 167.6 tok/s, 18 s
+[strata] writing a tool call: edit_file: 3173 of max 32768 tokens, 168.1 tok/s, 19 s
+[strata] writing a tool call: edit_file: 3353 of max 32768 tokens, 168.7 tok/s, 20 s
+[strata] writing a tool call: edit_file: 3539 of max 32768 tokens, 169.4 tok/s, 21 s
+[strata] writing a tool call: edit_file: 3725 of max 32768 tokens, 169.8 tok/s, 22 s
+[strata] writing a tool call: edit_file: 3905 of max 32768 tokens, 170.2 tok/s, 23 s
+[strata] writing a tool call: edit_file: 4085 of max 32768 tokens, 170.5 tok/s, 24 s
+[strata] writing a tool call: edit_file: 4265 of max 32768 tokens, 170.9 tok/s, 25 s
+[strata] writing a tool call: edit_file: 4445 of max 32768 tokens, 171.2 tok/s, 26 s
+[strata] writing a tool call: edit_file: 4625 of max 32768 tokens, 171.4 tok/s, 27 s
+[strata] writing a tool call: edit_file: 4805 of max 32768 tokens, 171.7 tok/s, 28 s
+[strata] writing a tool call: edit_file: 4985 of max 32768 tokens, 171.9 tok/s, 29 s
+[strata] writing a tool call: edit_file: 5171 of max 32768 tokens, 172.2 tok/s, 30 s
+[strata] writing a tool call: edit_file: 5352 of max 32768 tokens, 172.5 tok/s, 31 s
+[strata] writing a tool call: edit_file: 5531 of max 32768 tokens, 172.7 tok/s, 32 s
+[strata] writing a tool call: edit_file: 5711 of max 32768 tokens, 172.7 tok/s, 34 s
+[strata] writing a tool call: edit_file: 5891 of max 32768 tokens, 172.9 tok/s, 35 s
+[strata] writing a tool call: edit_file: 6071 of max 32768 tokens, 173.1 tok/s, 36 s
+[strata] writing a tool call: edit_file: 6251 of max 32768 tokens, 173.3 tok/s, 37 s
+[strata] writing a tool call: edit_file: 6431 of max 32768 tokens, 173.4 tok/s, 38 s
+[strata] writing a tool call: edit_file: 6611 of max 32768 tokens, 173.5 tok/s, 39 s
+[strata] writing a tool call: edit_file: 6791 of max 32768 tokens, 173.7 tok/s, 40 s
+[strata] writing a tool call: edit_file: 6971 of max 32768 tokens, 173.8 tok/s, 41 s
+[strata] writing a tool call: edit_file: 7151 of max 32768 tokens, 173.9 tok/s, 42 s
+[strata] writing a tool call: edit_file: 7331 of max 32768 tokens, 174.0 tok/s, 43 s
+[strata] writing a tool call: edit_file: 7517 of max 32768 tokens, 174.1 tok/s, 44 s
+[strata] writing a tool call: edit_file: 7697 of max 32768 tokens, 174.2 tok/s, 45 s
+[strata] writing a tool call: edit_file: 7877 of max 32768 tokens, 174.3 tok/s, 46 s
+[strata] writing a tool call: edit_file: 8063 of max 32768 tokens, 174.4 tok/s, 47 s
+[strata] writing a tool call: edit_file: 8244 of max 32768 tokens, 174.6 tok/s, 48 s
+[strata] writing a tool call: edit_file: 8423 of max 32768 tokens, 174.6 tok/s, 49 s
+[strata] writing a tool call: edit_file: 8603 of max 32768 tokens, 174.6 tok/s, 50 s
+[strata] writing a tool call: edit_file: 8789 of max 32768 tokens, 174.7 tok/s, 51 s
+[strata] writing a tool call: edit_file: 8969 of max 32768 tokens, 174.8 tok/s, 52 s
+[strata] writing a tool call: edit_file: 9149 of max 32768 tokens, 174.9 tok/s, 53 s
+[strata] writing a tool call: edit_file: 9329 of max 32768 tokens, 174.9 tok/s, 54 s
+[strata] writing a tool call: edit_file: 9515 of max 32768 tokens, 175.0 tok/s, 55 s
+[strata] writing a tool call: edit_file: 9695 of max 32768 tokens, 175.1 tok/s, 56 s
+[strata] writing a tool call: edit_file: 9875 of max 32768 tokens, 175.1 tok/s, 57 s
+[strata] writing a tool call: edit_file: 10055 of max 32768 tokens, 175.2 tok/s, 58 s
+[strata] writing a tool call: edit_file: 10241 of max 32768 tokens, 175.3 tok/s, 59 s
+[strata] writing a tool call: edit_file: 10427 of max 32768 tokens, 175.4 tok/s, 60 s
+[strata] writing a tool call: edit_file: 10607 of max 32768 tokens, 175.4 tok/s, 61 s
+[strata] writing a tool call: edit_file: 10787 of max 32768 tokens, 175.4 tok/s, 62 s
+[strata] writing a tool call: edit_file: 10973 of max 32768 tokens, 175.5 tok/s, 63 s
+[strata] writing a tool call: edit_file: 11159 of max 32768 tokens, 175.6 tok/s, 64 s
+[strata] writing a tool call: edit_file: 11339 of max 32768 tokens, 175.5 tok/s, 65 s
+[strata] writing a tool call: edit_file: 11519 of max 32768 tokens, 175.6 tok/s, 66 s
+[strata] writing a tool call: edit_file: 11705 of max 32768 tokens, 175.7 tok/s, 67 s
+[strata] writing a tool call: edit_file: 11885 of max 32768 tokens, 175.7 tok/s, 68 s
+[strata] writing a tool call: edit_file: 12059 of max 32768 tokens, 175.7 tok/s, 69 s
+[strata] writing a tool call: edit_file: 12239 of max 32768 tokens, 175.8 tok/s, 70 s
+[strata] writing a tool call: edit_file: 12420 of max 32768 tokens, 175.8 tok/s, 71 s
+[strata] writing a tool call: edit_file: 12605 of max 32768 tokens, 175.9 tok/s, 72 s
+[strata] writing a tool call: edit_file: 12785 of max 32768 tokens, 175.9 tok/s, 73 s
+[strata] writing a tool call: edit_file: 12971 of max 32768 tokens, 175.9 tok/s, 74 s
+[strata] writing a tool call: edit_file: 13151 of max 32768 tokens, 176.0 tok/s, 75 s
+[strata] writing a tool call: edit_file: 13331 of max 32768 tokens, 176.0 tok/s, 76 s
+[strata] writing a tool call: edit_file: 13505 of max 32768 tokens, 176.0 tok/s, 77 s
+[strata] writing a tool call: edit_file: 13691 of max 32768 tokens, 176.0 tok/s, 78 s
+[strata] writing a tool call: edit_file: 13871 of max 32768 tokens, 176.1 tok/s, 79 s
+[strata] writing a tool call: edit_file: 14051 of max 32768 tokens, 176.1 tok/s, 80 s
+[strata] writing a tool call: edit_file: 14231 of max 32768 tokens, 176.1 tok/s, 81 s
+[strata] writing a tool call: edit_file: 14405 of max 32768 tokens, 176.1 tok/s, 82 s
+[strata] writing a tool call: edit_file: 14585 of max 32768 tokens, 176.1 tok/s, 83 s
+[strata] writing a tool call: edit_file: 14765 of max 32768 tokens, 176.1 tok/s, 84 s
+[strata] writing a tool call: edit_file: 14945 of max 32768 tokens, 176.2 tok/s, 85 s
+[strata] writing a tool call: edit_file: 15125 of max 32768 tokens, 176.1 tok/s, 86 s
+[strata] writing a tool call: edit_file: 15305 of max 32768 tokens, 176.2 tok/s, 87 s
+[strata] writing a tool call: edit_file: 15485 of max 32768 tokens, 176.2 tok/s, 88 s
+[strata] writing a tool call: edit_file: 15671 of max 32768 tokens, 176.3 tok/s, 89 s
+[strata] writing a tool call: edit_file: 15845 of max 32768 tokens, 176.2 tok/s, 90 s
+[strata] writing a tool call: edit_file: 16025 of max 32768 tokens, 176.2 tok/s, 91 s
+[strata] writing a tool call: edit_file: 16205 of max 32768 tokens, 176.3 tok/s, 92 s
+[strata] writing a tool call: edit_file: 16385 of max 32768 tokens, 176.3 tok/s, 93 s
+[strata] writing a tool call: edit_file: 16559 of max 32768 tokens, 176.3 tok/s, 94 s
+[strata] writing a tool call: edit_file: 16745 of max 32768 tokens, 176.3 tok/s, 95 s
+[strata] writing a tool call: edit_file: 16931 of max 32768 tokens, 176.4 tok/s, 96 s
+[strata] writing a tool call: edit_file: 17117 of max 32768 tokens, 176.4 tok/s, 97 s
+[strata] writing a tool call: edit_file: 17291 of max 32768 tokens, 176.4 tok/s, 98 s
+[strata] writing a tool call: edit_file: 17471 of max 32768 tokens, 176.4 tok/s, 100 s
+[strata] writing a tool call: edit_file: 17651 of max 32768 tokens, 176.3 tok/s, 101 s
+[strata] writing a tool call: edit_file: 17831 of max 32768 tokens, 176.4 tok/s, 102 s
+[strata] writing a tool call: edit_file: 18005 of max 32768 tokens, 176.3 tok/s, 103 s
+[strata] writing a tool call: edit_file: 18191 of max 32768 tokens, 176.4 tok/s, 104 s
+[strata] writing a tool call: edit_file: 18371 of max 32768 tokens, 176.4 tok/s, 105 s
+[strata] writing a tool call: edit_file: 18551 of max 32768 tokens, 176.4 tok/s, 106 s
+[strata] writing a tool call: edit_file: 18725 of max 32768 tokens, 176.4 tok/s, 107 s
+[strata] writing a tool call: edit_file: 18905 of max 32768 tokens, 176.4 tok/s, 108 s
+[strata] writing a tool call: edit_file: 19085 of max 32768 tokens, 176.4 tok/s, 109 s
+[strata] writing a tool call: edit_file: 19265 of max 32768 tokens, 176.5 tok/s, 110 s
+[strata] writing a tool call: edit_file: 19439 of max 32768 tokens, 176.4 tok/s, 111 s
+[strata] writing a tool call: edit_file: 19625 of max 32768 tokens, 176.5 tok/s, 112 s
+[strata] writing a tool call: edit_file: 19811 of max 32768 tokens, 176.5 tok/s, 113 s
+[strata] writing a tool call: edit_file: 19991 of max 32768 tokens, 176.5 tok/s, 114 s
+[strata] writing a tool call: edit_file: 20165 of max 32768 tokens, 176.5 tok/s, 115 s
+[strata] writing a tool call: edit_file: 20351 of max 32768 tokens, 176.5 tok/s, 116 s
+[strata] writing a tool call: edit_file: 20531 of max 32768 tokens, 176.6 tok/s, 117 s
+[strata] writing a tool call: edit_file: 20711 of max 32768 tokens, 176.6 tok/s, 118 s
+[strata] writing a tool call: edit_file: 20885 of max 32768 tokens, 176.6 tok/s, 119 s
+[strata] writing a tool call: edit_file: 21065 of max 32768 tokens, 176.6 tok/s, 120 s
+[strata] writing a tool call: edit_file: 21245 of max 32768 tokens, 176.6 tok/s, 121 s
+[strata] writing a tool call: edit_file: 21425 of max 32768 tokens, 176.6 tok/s, 122 s
+[strata] writing a tool call: edit_file: 21605 of max 32768 tokens, 176.6 tok/s, 123 s
+[strata] writing a tool call: edit_file: 21790 of max 32768 tokens, 176.7 tok/s, 124 s
+[strata] writing a tool call: edit_file: 21965 of max 32768 tokens, 176.7 tok/s, 125 s
+[strata] writing a tool call: edit_file: 22145 of max 32768 tokens, 176.7 tok/s, 126 s
+[strata] writing a tool call: edit_file: 22319 of max 32768 tokens, 176.6 tok/s, 127 s
+[strata] writing a tool call: edit_file: 22499 of max 32768 tokens, 176.6 tok/s, 128 s
+[strata] writing a tool call: edit_file: 22679 of max 32768 tokens, 176.7 tok/s, 129 s
+[strata] writing a tool call: edit_file: 22859 of max 32768 tokens, 176.7 tok/s, 130 s
+[strata] writing a tool call: edit_file: 23039 of max 32768 tokens, 176.7 tok/s, 131 s
+[strata] writing a tool call: edit_file: 23219 of max 32768 tokens, 176.7 tok/s, 132 s
+[strata] writing a tool call: edit_file: 23399 of max 32768 tokens, 176.7 tok/s, 133 s
+[strata] writing a tool call: edit_file: 23579 of max 32768 tokens, 176.7 tok/s, 134 s
+[strata] writing a tool call: edit_file: 23759 of max 32768 tokens, 176.7 tok/s, 135 s
+[strata] writing a tool call: edit_file: 23945 of max 32768 tokens, 176.7 tok/s, 136 s
+[strata] writing a tool call: edit_file: 24125 of max 32768 tokens, 176.7 tok/s, 137 s
+[strata] writing a tool call: edit_file: 24305 of max 32768 tokens, 176.7 tok/s, 138 s
+[strata] writing a tool call: edit_file: 24479 of max 32768 tokens, 176.7 tok/s, 139 s
+[strata] writing a tool call: edit_file: 24659 of max 32768 tokens, 176.7 tok/s, 140 s
+[strata] writing a tool call: edit_file: 24839 of max 32768 tokens, 176.7 tok/s, 141 s
+[strata] writing a tool call: edit_file: 25019 of max 32768 tokens, 176.7 tok/s, 142 s
+[strata] writing a tool call: edit_file: 25193 of max 32768 tokens, 176.7 tok/s, 143 s
+[strata] writing a tool call: edit_file: 25379 of max 32768 tokens, 176.7 tok/s, 144 s
+[strata] writing a tool call: edit_file: 25565 of max 32768 tokens, 176.7 tok/s, 145 s
+[strata] writing a tool call: edit_file: 25745 of max 32768 tokens, 176.7 tok/s, 146 s
+[strata] writing a tool call: edit_file: 25919 of max 32768 tokens, 176.7 tok/s, 147 s
+[strata] writing a tool call: edit_file: 26099 of max 32768 tokens, 176.7 tok/s, 148 s
+[strata] writing a tool call: edit_file: 26279 of max 32768 tokens, 176.8 tok/s, 149 s
+[strata] writing a tool call: edit_file: 26459 of max 32768 tokens, 176.7 tok/s, 150 s
+[strata] writing a tool call: edit_file: 26639 of max 32768 tokens, 176.7 tok/s, 151 s
+[strata] writing a tool call: edit_file: 26819 of max 32768 tokens, 176.7 tok/s, 152 s
+[strata] writing a tool call: edit_file: 26999 of max 32768 tokens, 176.8 tok/s, 153 s
+[strata] writing a tool call: edit_file: 27179 of max 32768 tokens, 176.7 tok/s, 154 s
+[strata] writing a tool call: edit_file: 27359 of max 32768 tokens, 176.7 tok/s, 155 s
+[strata] writing a tool call: edit_file: 27539 of max 32768 tokens, 176.7 tok/s, 156 s
+[strata] writing a tool call: edit_file: 27713 of max 32768 tokens, 176.7 tok/s, 157 s
+[strata] writing a tool call: edit_file: 27893 of max 32768 tokens, 176.7 tok/s, 158 s
+[strata] writing a tool call: edit_file: 28076 of max 32768 tokens, 176.8 tok/s, 159 s
+[strata] writing a tool call: edit_file: 28253 of max 32768 tokens, 176.7 tok/s, 160 s
+[strata] writing a tool call: edit_file: 28433 of max 32768 tokens, 176.7 tok/s, 161 s
+[strata] writing a tool call: edit_file: 28613 of max 32768 tokens, 176.7 tok/s, 162 s
+[strata] writing a tool call: edit_file: 28793 of max 32768 tokens, 176.7 tok/s, 163 s
+[strata] writing a tool call: edit_file: 28973 of max 32768 tokens, 176.7 tok/s, 164 s
+[strata] writing a tool call: edit_file: 29153 of max 32768 tokens, 176.7 tok/s, 165 s
+[strata] writing a tool call: edit_file: 29333 of max 32768 tokens, 176.7 tok/s, 166 s
+[strata] writing a tool call: edit_file: 29513 of max 32768 tokens, 176.8 tok/s, 167 s
+[strata] writing a tool call: edit_file: 29693 of max 32768 tokens, 176.7 tok/s, 168 s
+[strata] writing a tool call: edit_file: 29873 of max 32768 tokens, 176.7 tok/s, 169 s
+[strata] writing a tool call: edit_file: 30053 of max 32768 tokens, 176.7 tok/s, 170 s
+[strata] writing a tool call: edit_file: 30236 of max 32768 tokens, 176.8 tok/s, 171 s
+[strata] writing a tool call: edit_file: 30407 of max 32768 tokens, 176.7 tok/s, 172 s
+[strata] writing a tool call: edit_file: 30587 of max 32768 tokens, 176.7 tok/s, 174 s
+[strata] writing a tool call: edit_file: 30767 of max 32768 tokens, 176.7 tok/s, 175 s
+[strata] writing a tool call: edit_file: 30947 of max 32768 tokens, 176.8 tok/s, 176 s
+[strata] writing a tool call: edit_file: 31121 of max 32768 tokens, 176.7 tok/s, 177 s
+[strata] writing a tool call: edit_file: 31301 of max 32768 tokens, 176.7 tok/s, 178 s
+[strata] writing a tool call: edit_file: 31481 of max 32768 tokens, 176.8 tok/s, 179 s
+[strata] writing a tool call: edit_file: 31661 of max 32768 tokens, 176.8 tok/s, 180 s
+[strata] writing a tool call: edit_file: 31835 of max 32768 tokens, 176.7 tok/s, 181 s
+[strata] writing a tool call: edit_file: 32015 of max 32768 tokens, 176.7 tok/s, 182 s
+[strata] writing a tool call: edit_file: 32195 of max 32768 tokens, 176.8 tok/s, 183 s
+[strata] writing a tool call: edit_file: 32375 of max 32768 tokens, 176.8 tok/s, 184 s
+[strata] writing a tool call: edit_file: 32549 of max 32768 tokens, 176.7 tok/s, 185 s
+[strata] writing a tool call: edit_file: 32729 of max 32768 tokens, 176.7 tok/s, 186 s
+[strata] done: 32768 tokens in 186 s (176.8 tok/s) (length, cancel=False), expert cache 99.9% hit
+[strata] thinking: 75 of max 32768 tokens, 133.5 tok/s, 1 s
+[strata] writing a tool call: edit_file: 190 of max 32768 tokens, 119.8 tok/s, 2 s
+[strata] done: 266 tokens in 3 s (125.5 tok/s) (stop, cancel=False), expert cache 99.1% hit
+[strata] writing a tool call: edit_file: 64 of max 32768 tokens, 118.8 tok/s, 1 s
+[strata] done: 116 tokens in 1 s (139.1 tok/s) (stop, cancel=False), expert cache 99.3% hit
+[strata] writing a tool call: write_file: 67 of max 32768 tokens, 123.1 tok/s, 1 s
+[strata] writing a tool call: write_file: 226 of max 32768 tokens, 143.3 tok/s, 2 s
+[strata] done: 311 tokens in 3 s (141.2 tok/s) (stop, cancel=False), expert cache 98.7% hit
+[strata] thinking: 30 of max 32768 tokens, 95.4 tok/s, 1 s
+[strata] thinking: 192 of max 32768 tokens, 142.8 tok/s, 2 s
+[strata] done: 272 tokens in 3 s (142.3 tok/s) (stop, cancel=False), expert cache 99.4% hit
+[strata] tool calls inside the thinking: 1 read as calls, 0 kept as reasoning (quoted, or the turn did not end on a stop)
+[strata] thinking: 30 of max 32768 tokens, 85.0 tok/s, 1 s
+[strata] writing a tool call: write_file: 188 of max 32768 tokens, 136.1 tok/s, 2 s
+[strata] done: 316 tokens in 3 s (142.9 tok/s) (stop, cancel=False), expert cache 99.5% hit
+[strata] thinking: 31 of max 32768 tokens, 95.3 tok/s, 1 s
+[strata] writing a tool call: write_file: 186 of max 32768 tokens, 140.3 tok/s, 2 s
+[strata] done: 309 tokens in 3 s (148.9 tok/s) (stop, cancel=False), expert cache 99.5% hit
+[strata] thinking: 31 of max 32768 tokens, 95.2 tok/s, 1 s
+[strata] done: 157 tokens in 2 s (127.1 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] thinking: 46 of max 32768 tokens, 96.2 tok/s, 1 s
+[strata] done: 188 tokens in 2 s (127.9 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] thinking: 52 of max 32768 tokens, 109.5 tok/s, 1 s
+[strata] writing a tool call: write_file: 176 of max 32768 tokens, 118.6 tok/s, 2 s
+[strata] done: 304 tokens in 3 s (132.2 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] thinking: 42 of max 32768 tokens, 107.0 tok/s, 1 s
+[strata] writing a tool call: edit_file: 169 of max 32768 tokens, 120.4 tok/s, 2 s
+[strata] done: 231 tokens in 2 s (126.0 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] thinking: 52 of max 32768 tokens, 106.7 tok/s, 1 s
+[strata] writing a tool call: write_file: 216 of max 32768 tokens, 145.0 tok/s, 2 s
+[strata] done: 315 tokens in 3 s (147.0 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] thinking: 31 of max 32768 tokens, 93.3 tok/s, 1 s
+[strata] writing a tool call: write_file: 196 of max 32768 tokens, 145.8 tok/s, 2 s
+[strata] done: 293 tokens in 3 s (144.0 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] thinking: 27 of max 32768 tokens, 83.2 tok/s, 1 s
+[strata] writing a tool call: write_file: 193 of max 32768 tokens, 142.4 tok/s, 2 s
+[strata] done: 304 tokens in 3 s (145.3 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] thinking: 30 of max 32768 tokens, 100.4 tok/s, 1 s
+[strata] writing a tool call: write_file: 195 of max 32768 tokens, 149.5 tok/s, 2 s
+[strata] done: 270 tokens in 3 s (147.0 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] thinking: 34 of max 32768 tokens, 102.6 tok/s, 1 s
+[strata] writing a tool call: write_file: 177 of max 32768 tokens, 132.2 tok/s, 2 s
+[strata] done: 254 tokens in 3 s (138.0 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] thinking: 37 of max 32768 tokens, 96.7 tok/s, 1 s
+[strata] writing a tool call: write_file: 194 of max 32768 tokens, 137.5 tok/s, 2 s
+[strata] done: 267 tokens in 2 s (143.3 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] thinking: 34 of max 32768 tokens, 87.7 tok/s, 1 s
+[strata] done: 150 tokens in 2 s (126.1 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] thinking: 43 of max 32768 tokens, 87.0 tok/s, 1 s
+[strata] done: 78 tokens in 1 s (110.9 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] thinking: 32 of max 32768 tokens, 98.7 tok/s, 1 s
+[strata] done: 155 tokens in 2 s (131.9 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] writing a tool call: read_file: 49 of max 32768 tokens, 97.5 tok/s, 1 s
+[strata] done: 67 tokens in 1 s (111.2 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] thinking: 16 of max 32768 tokens, 92.3 tok/s, 1 s
+[strata] writing a tool call: write_file: 168 of max 32768 tokens, 139.6 tok/s, 2 s
+[strata] done: 310 tokens in 3 s (144.4 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] thinking: 30 of max 32768 tokens, 93.0 tok/s, 1 s
+[strata] writing a tool call: edit_file: 182 of max 32768 tokens, 136.4 tok/s, 2 s
+[strata] done: 234 tokens in 2 s (143.4 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] thinking: 39 of max 32768 tokens, 92.2 tok/s, 1 s
+[strata] writing a tool call: write_file: 172 of max 32768 tokens, 120.6 tok/s, 2 s
+[strata] done: 290 tokens in 3 s (132.3 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] thinking: 35 of max 32768 tokens, 88.4 tok/s, 1 s
+[strata] writing a tool call: run_shell: 191 of max 32768 tokens, 135.2 tok/s, 2 s
+[strata] writing a tool call: run_shell: 348 of max 32768 tokens, 144.0 tok/s, 3 s
+[strata] done: 360 tokens in 3 s (144.4 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] thinking: 33 of max 32768 tokens, 111.7 tok/s, 1 s
+[strata] writing a tool call: run_shell: 131 of max 32768 tokens, 99.7 tok/s, 2 s
+[strata] writing a tool call: run_shell: 299 of max 32768 tokens, 127.8 tok/s, 3 s
+[strata] done: 432 tokens in 4 s (136.2 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] thinking: 24 of max 32768 tokens, 92.4 tok/s, 1 s
+[strata] thinking: 119 of max 32768 tokens, 94.4 tok/s, 2 s
+[strata] done: 237 tokens in 3 s (108.7 tok/s) (disconnect, cancel=True), expert cache 99.8% hit
+
+[strata] stopping (Ctrl+C again to end the engine at once) ...
+[strata] stopped
+[strata] layer split: card order 1,0 (the faster card last; "gpu_order": "as_given" keeps 0,1, #1352)
+[strata] layer split: card order 1,0 (the faster card last; "gpu_order": "as_given" keeps 0,1, #1352)
+[strata] sampling defaults from the config: temperature=0.6, top_p=0.95, top_k=20, min_p=0.0, repetition_penalty=1.0, presence_penalty=0.0
+loading the model (the first start takes a minute or two) ...
+[strata] layer split across GPUs [0, 1] (auto)
+[strata] starting the engine: reading the model's weights ...
+[strata] loading the experts into RAM (about 47 GB) and locking part of them for the GPU.
+         YOUR PC CAN BE SLOW OR STOP RESPONDING FOR 1-3 MINUTES NOW - this is normal.
+         Please wait and don't close this window; the browser opens when it is ready.
+[strata] still starting (25 s) - please wait ...
+[strata] experts loaded: 39.97 GiB at 1.85 GiB/s (30 s so far)
+[strata] filling the GPU's expert cache (12840 experts, 18.62 GiB of VRAM) ...
+[strata] almost ready ...
+ready: http://127.0.0.1:8350/v1  (OpenAI: /v1/chat/completions, Anthropic: /v1/messages, context 131072 tokens)
+       open http://127.0.0.1:8350/ in a browser to chat; close this window to stop the model
+[strata] reading the prompt: 8,192 of 12,954 tokens, 5 s so far
+[strata] reading the prompt: 12,193 of 12,954 tokens, 6 s so far
+[strata] reading the prompt: 12,953 of 12,954 tokens, 8 s so far
+[strata] writing a tool call: write_file: 133 of max 32768 tokens, 134.1 tok/s, 9 s
+[strata] writing a tool call: write_file: 288 of max 32768 tokens, 144.3 tok/s, 10 s
+[strata] done: 351 tokens in 10 s (148.3 tok/s) (stop, cancel=False), expert cache 98.2% hit
+[strata] reading the prompt: 8,192 of 15,212 tokens, 4 s so far
+[strata] reading the prompt: 14,087 of 15,212 tokens, 6 s so far
+[strata] reading the prompt: 15,207 of 15,212 tokens, 7 s so far
+[strata] writing a tool call: edit_file: 60 of max 32768 tokens, 125.5 tok/s, 8 s
+[strata] done: 94 tokens in 8 s (134.9 tok/s) (stop, cancel=False), expert cache 98.6% hit
+[strata] done: 85 tokens in 1 s (156.1 tok/s) (stop, cancel=False), expert cache 98.9% hit
+[strata] writing a tool call: edit_file: 81 of max 32768 tokens, 135.5 tok/s, 1 s
+[strata] done: 88 tokens in 1 s (141.6 tok/s) (stop, cancel=False), expert cache 99.2% hit
+[strata] writing a tool call: edit_file: 81 of max 32768 tokens, 136.1 tok/s, 1 s
+[strata] done: 101 tokens in 1 s (141.8 tok/s) (stop, cancel=False), expert cache 99.2% hit
+[strata] writing a tool call: edit_file: 85 of max 32768 tokens, 142.7 tok/s, 1 s
+[strata] done: 88 tokens in 1 s (147.7 tok/s) (stop, cancel=False), expert cache 99.3% hit
+[strata] writing a tool call: edit_file: 70 of max 32768 tokens, 116.0 tok/s, 1 s
+[strata] done: 127 tokens in 1 s (135.5 tok/s) (stop, cancel=False), expert cache 99.4% hit
+[strata] writing a tool call: run_shell: 73 of max 32768 tokens, 141.3 tok/s, 1 s
+[strata] writing a tool call: run_shell: 230 of max 32768 tokens, 150.5 tok/s, 2 s
+[strata] writing a tool call: run_shell: 383 of max 32768 tokens, 150.5 tok/s, 3 s
+[strata] done: 496 tokens in 4 s (148.6 tok/s) (stop, cancel=False), expert cache 99.4% hit
+[strata] writing a tool call: run_shell: 40 of max 32768 tokens, 129.8 tok/s, 1 s
+[strata] writing a tool call: run_shell: 208 of max 32768 tokens, 158.7 tok/s, 2 s
+[strata] writing a tool call: run_shell: 371 of max 32768 tokens, 159.5 tok/s, 3 s
+[strata] done: 456 tokens in 4 s (160.1 tok/s) (stop, cancel=False), expert cache 98.9% hit
+[strata] thinking: 31 of max 32768 tokens, 100.0 tok/s, 1 s
+[strata] answering: 180 of max 32768 tokens, 135.9 tok/s, 2 s
+[strata] done: 230 tokens in 3 s (126.3 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] reading the prompt: 8,192 of 16,281 tokens, 4 s so far
+[strata] reading the prompt: 12,193 of 16,281 tokens, 5 s so far
+[strata] reading the prompt: 16,276 of 16,281 tokens, 7 s so far
+[strata] writing a tool call: write_file: 58 of max 32768 tokens, 120.7 tok/s, 8 s
+[strata] writing a tool call: write_file: 202 of max 32768 tokens, 135.5 tok/s, 9 s
+[strata] done: 205 tokens in 9 s (137.5 tok/s) (stop, cancel=False), expert cache 99.4% hit
+[strata] reading the prompt: 8,192 of 18,398 tokens, 4 s so far
+[strata] reading the prompt: 14,087 of 18,398 tokens, 5 s so far
+[strata] reading the prompt: 18,393 of 18,398 tokens, 8 s so far
+[strata] writing a tool call: run_shell: 72 of max 32768 tokens, 142.2 tok/s, 9 s
+[strata] writing a tool call: run_shell: 216 of max 32768 tokens, 143.2 tok/s, 10 s
+[strata] writing a tool call: run_shell: 362 of max 32768 tokens, 143.3 tok/s, 11 s
+[strata] writing a tool call: run_shell: 523 of max 32768 tokens, 147.8 tok/s, 12 s
+[strata] writing a tool call: run_shell: 695 of max 32768 tokens, 152.6 tok/s, 13 s
+[strata] writing a tool call: run_shell: 867 of max 32768 tokens, 155.5 tok/s, 14 s
+[strata] writing a tool call: run_shell: 1040 of max 32768 tokens, 158.0 tok/s, 15 s
+[strata] writing a tool call: run_shell: 1212 of max 32768 tokens, 159.8 tok/s, 16 s
+[strata] writing a tool call: run_shell: 1381 of max 32768 tokens, 160.7 tok/s, 17 s
+[strata] writing a tool call: run_shell: 1553 of max 32768 tokens, 161.5 tok/s, 18 s
+[strata] writing a tool call: run_shell: 1721 of max 32768 tokens, 162.1 tok/s, 19 s
+[strata] writing a tool call: run_shell: 1889 of max 32768 tokens, 162.6 tok/s, 20 s
+[strata] writing a tool call: run_shell: 2057 of max 32768 tokens, 163.0 tok/s, 21 s
+[strata] writing a tool call: run_shell: 2225 of max 32768 tokens, 163.4 tok/s, 22 s
+[strata] writing a tool call: run_shell: 2395 of max 32768 tokens, 163.8 tok/s, 23 s
+[strata] writing a tool call: run_shell: 2567 of max 32768 tokens, 164.1 tok/s, 24 s
+[strata] writing a tool call: run_shell: 2735 of max 32768 tokens, 164.3 tok/s, 25 s
+[strata] writing a tool call: run_shell: 2904 of max 32768 tokens, 164.5 tok/s, 26 s
+[strata] writing a tool call: run_shell: 3076 of max 32768 tokens, 164.8 tok/s, 27 s
+[strata] writing a tool call: run_shell: 3248 of max 32768 tokens, 165.2 tok/s, 28 s
+[strata] writing a tool call: run_shell: 3420 of max 32768 tokens, 165.5 tok/s, 29 s
+[strata] writing a tool call: run_shell: 3594 of max 32768 tokens, 165.8 tok/s, 30 s
+[strata] writing a tool call: run_shell: 3763 of max 32768 tokens, 165.8 tok/s, 31 s
+[strata] writing a tool call: run_shell: 3931 of max 32768 tokens, 165.9 tok/s, 32 s
+[strata] writing a tool call: run_shell: 4099 of max 32768 tokens, 166.0 tok/s, 33 s
+[strata] writing a tool call: run_shell: 4267 of max 32768 tokens, 166.0 tok/s, 34 s
+[strata] writing a tool call: run_shell: 4439 of max 32768 tokens, 166.1 tok/s, 35 s
+[strata] writing a tool call: run_shell: 4611 of max 32768 tokens, 166.2 tok/s, 36 s
+[strata] writing a tool call: run_shell: 4783 of max 32768 tokens, 166.3 tok/s, 37 s
+[strata] writing a tool call: run_shell: 4969 of max 32768 tokens, 167.0 tok/s, 38 s
+[strata] writing a tool call: run_shell: 5161 of max 32768 tokens, 167.6 tok/s, 39 s
+[strata] writing a tool call: run_shell: 5347 of max 32768 tokens, 168.2 tok/s, 40 s
+[strata] writing a tool call: run_shell: 5539 of max 32768 tokens, 168.8 tok/s, 41 s
+[strata] writing a tool call: run_shell: 5725 of max 32768 tokens, 169.3 tok/s, 42 s
+[strata] writing a tool call: run_shell: 5911 of max 32768 tokens, 169.7 tok/s, 43 s
+[strata] writing a tool call: run_shell: 6097 of max 32768 tokens, 170.1 tok/s, 44 s
+[strata] writing a tool call: run_shell: 6289 of max 32768 tokens, 170.6 tok/s, 45 s
+[strata] writing a tool call: run_shell: 6481 of max 32768 tokens, 171.0 tok/s, 46 s
+[strata] writing a tool call: run_shell: 6667 of max 32768 tokens, 171.4 tok/s, 47 s
+[strata] writing a tool call: run_shell: 6859 of max 32768 tokens, 171.8 tok/s, 48 s
+[strata] writing a tool call: run_shell: 7045 of max 32768 tokens, 172.1 tok/s, 49 s
+[strata] writing a tool call: run_shell: 7237 of max 32768 tokens, 172.5 tok/s, 50 s
+[strata] writing a tool call: run_shell: 7423 of max 32768 tokens, 172.8 tok/s, 51 s
+[strata] writing a tool call: run_shell: 7615 of max 32768 tokens, 173.1 tok/s, 52 s
+[strata] writing a tool call: run_shell: 7801 of max 32768 tokens, 173.3 tok/s, 53 s
+[strata] writing a tool call: run_shell: 7987 of max 32768 tokens, 173.5 tok/s, 54 s
+[strata] writing a tool call: run_shell: 8173 of max 32768 tokens, 173.7 tok/s, 55 s
+[strata] writing a tool call: run_shell: 8359 of max 32768 tokens, 173.9 tok/s, 57 s
+[strata] writing a tool call: run_shell: 8545 of max 32768 tokens, 174.2 tok/s, 58 s
+[strata] writing a tool call: run_shell: 8731 of max 32768 tokens, 174.3 tok/s, 59 s
+[strata] writing a tool call: run_shell: 8917 of max 32768 tokens, 174.5 tok/s, 60 s
+[strata] writing a tool call: run_shell: 9103 of max 32768 tokens, 174.7 tok/s, 61 s
+[strata] writing a tool call: run_shell: 9289 of max 32768 tokens, 174.8 tok/s, 62 s
+[strata] writing a tool call: run_shell: 9475 of max 32768 tokens, 175.0 tok/s, 63 s
+[strata] writing a tool call: run_shell: 9661 of max 32768 tokens, 175.2 tok/s, 64 s
+[strata] writing a tool call: run_shell: 9847 of max 32768 tokens, 175.3 tok/s, 65 s
+[strata] writing a tool call: run_shell: 10033 of max 32768 tokens, 175.4 tok/s, 66 s
+[strata] writing a tool call: run_shell: 10219 of max 32768 tokens, 175.6 tok/s, 67 s
+[strata] writing a tool call: run_shell: 10405 of max 32768 tokens, 175.7 tok/s, 68 s
+[strata] writing a tool call: run_shell: 10591 of max 32768 tokens, 175.8 tok/s, 69 s
+[strata] writing a tool call: run_shell: 10777 of max 32768 tokens, 175.9 tok/s, 70 s
+[strata] writing a tool call: run_shell: 10963 of max 32768 tokens, 176.0 tok/s, 71 s
+[strata] writing a tool call: run_shell: 11149 of max 32768 tokens, 176.1 tok/s, 72 s
+[strata] writing a tool call: run_shell: 11335 of max 32768 tokens, 176.3 tok/s, 73 s
+[strata] writing a tool call: run_shell: 11521 of max 32768 tokens, 176.4 tok/s, 74 s
+[strata] writing a tool call: run_shell: 11707 of max 32768 tokens, 176.4 tok/s, 75 s
+[strata] writing a tool call: run_shell: 11893 of max 32768 tokens, 176.5 tok/s, 76 s
+[strata] writing a tool call: run_shell: 12079 of max 32768 tokens, 176.6 tok/s, 77 s
+[strata] writing a tool call: run_shell: 12265 of max 32768 tokens, 176.7 tok/s, 78 s
+[strata] writing a tool call: run_shell: 12451 of max 32768 tokens, 176.8 tok/s, 79 s
+[strata] writing a tool call: run_shell: 12637 of max 32768 tokens, 176.8 tok/s, 80 s
+[strata] writing a tool call: run_shell: 12823 of max 32768 tokens, 176.9 tok/s, 81 s
+[strata] writing a tool call: run_shell: 13009 of max 32768 tokens, 177.0 tok/s, 82 s
+[strata] writing a tool call: run_shell: 13195 of max 32768 tokens, 177.0 tok/s, 83 s
+[strata] writing a tool call: run_shell: 13381 of max 32768 tokens, 177.1 tok/s, 84 s
+[strata] writing a tool call: run_shell: 13567 of max 32768 tokens, 177.1 tok/s, 85 s
+[strata] writing a tool call: run_shell: 13753 of max 32768 tokens, 177.2 tok/s, 86 s
+[strata] writing a tool call: run_shell: 13939 of max 32768 tokens, 177.3 tok/s, 87 s
+[strata] writing a tool call: run_shell: 14125 of max 32768 tokens, 177.3 tok/s, 88 s
+[strata] writing a tool call: run_shell: 14311 of max 32768 tokens, 177.3 tok/s, 89 s
+[strata] writing a tool call: run_shell: 14497 of max 32768 tokens, 177.4 tok/s, 90 s
+[strata] writing a tool call: run_shell: 14683 of max 32768 tokens, 177.4 tok/s, 91 s
+[strata] writing a tool call: run_shell: 14863 of max 32768 tokens, 177.4 tok/s, 92 s
+[strata] writing a tool call: run_shell: 15049 of max 32768 tokens, 177.5 tok/s, 93 s
+[strata] writing a tool call: run_shell: 15229 of max 32768 tokens, 177.5 tok/s, 94 s
+[strata] writing a tool call: run_shell: 15415 of max 32768 tokens, 177.5 tok/s, 95 s
+[strata] writing a tool call: run_shell: 15595 of max 32768 tokens, 177.6 tok/s, 96 s
+[strata] writing a tool call: run_shell: 15781 of max 32768 tokens, 177.6 tok/s, 97 s
+[strata] writing a tool call: run_shell: 15961 of max 32768 tokens, 177.6 tok/s, 98 s
+[strata] writing a tool call: run_shell: 16147 of max 32768 tokens, 177.6 tok/s, 99 s
+[strata] writing a tool call: run_shell: 16333 of max 32768 tokens, 177.7 tok/s, 100 s
+[strata] writing a tool call: run_shell: 16513 of max 32768 tokens, 177.7 tok/s, 101 s
+[strata] writing a tool call: run_shell: 16699 of max 32768 tokens, 177.7 tok/s, 102 s
+[strata] writing a tool call: run_shell: 16879 of max 32768 tokens, 177.7 tok/s, 103 s
+[strata] writing a tool call: run_shell: 17065 of max 32768 tokens, 177.8 tok/s, 104 s
+[strata] writing a tool call: run_shell: 17245 of max 32768 tokens, 177.8 tok/s, 105 s
+[strata] writing a tool call: run_shell: 17431 of max 32768 tokens, 177.8 tok/s, 106 s
+[strata] writing a tool call: run_shell: 17617 of max 32768 tokens, 177.8 tok/s, 108 s
+[strata] writing a tool call: run_shell: 17803 of max 32768 tokens, 177.9 tok/s, 109 s
+[strata] writing a tool call: run_shell: 17983 of max 32768 tokens, 177.9 tok/s, 110 s
+[strata] writing a tool call: run_shell: 18169 of max 32768 tokens, 177.9 tok/s, 111 s
+[strata] writing a tool call: run_shell: 18349 of max 32768 tokens, 177.9 tok/s, 112 s
+[strata] writing a tool call: run_shell: 18535 of max 32768 tokens, 177.9 tok/s, 113 s
+[strata] writing a tool call: run_shell: 18715 of max 32768 tokens, 178.0 tok/s, 114 s
+[strata] writing a tool call: run_shell: 18901 of max 32768 tokens, 178.0 tok/s, 115 s
+[strata] writing a tool call: run_shell: 19081 of max 32768 tokens, 178.0 tok/s, 116 s
+[strata] writing a tool call: run_shell: 19265 of max 32768 tokens, 178.1 tok/s, 117 s
+[strata] writing a tool call: run_shell: 19441 of max 32768 tokens, 178.0 tok/s, 118 s
+[strata] writing a tool call: run_shell: 19621 of max 32768 tokens, 178.1 tok/s, 119 s
+[strata] writing a tool call: run_shell: 19801 of max 32768 tokens, 178.1 tok/s, 120 s
+[strata] writing a tool call: run_shell: 19984 of max 32768 tokens, 178.1 tok/s, 121 s
+[strata] writing a tool call: run_shell: 20167 of max 32768 tokens, 178.1 tok/s, 122 s
+[strata] writing a tool call: run_shell: 20347 of max 32768 tokens, 178.1 tok/s, 123 s
+[strata] writing a tool call: run_shell: 20527 of max 32768 tokens, 178.1 tok/s, 124 s
+[strata] writing a tool call: run_shell: 20707 of max 32768 tokens, 178.1 tok/s, 125 s
+[strata] writing a tool call: run_shell: 20887 of max 32768 tokens, 178.2 tok/s, 126 s
+[strata] writing a tool call: run_shell: 21067 of max 32768 tokens, 178.2 tok/s, 127 s
+[strata] writing a tool call: run_shell: 21253 of max 32768 tokens, 178.2 tok/s, 128 s
+[strata] writing a tool call: run_shell: 21433 of max 32768 tokens, 178.2 tok/s, 129 s
+[strata] writing a tool call: run_shell: 21619 of max 32768 tokens, 178.2 tok/s, 130 s
+[strata] writing a tool call: run_shell: 21802 of max 32768 tokens, 178.3 tok/s, 131 s
+[strata] writing a tool call: run_shell: 21985 of max 32768 tokens, 178.3 tok/s, 132 s
+[strata] writing a tool call: run_shell: 22171 of max 32768 tokens, 178.3 tok/s, 133 s
+[strata] writing a tool call: run_shell: 22351 of max 32768 tokens, 178.3 tok/s, 134 s
+[strata] writing a tool call: run_shell: 22537 of max 32768 tokens, 178.3 tok/s, 135 s
+[strata] writing a tool call: run_shell: 22723 of max 32768 tokens, 178.3 tok/s, 136 s
+[strata] writing a tool call: run_shell: 22909 of max 32768 tokens, 178.3 tok/s, 137 s
+[strata] writing a tool call: run_shell: 23089 of max 32768 tokens, 178.3 tok/s, 138 s
+[strata] writing a tool call: run_shell: 23275 of max 32768 tokens, 178.3 tok/s, 139 s
+[strata] writing a tool call: run_shell: 23455 of max 32768 tokens, 178.4 tok/s, 140 s
+[strata] writing a tool call: run_shell: 23635 of max 32768 tokens, 178.4 tok/s, 141 s
+[strata] writing a tool call: run_shell: 23821 of max 32768 tokens, 178.4 tok/s, 142 s
+[strata] writing a tool call: run_shell: 24007 of max 32768 tokens, 178.4 tok/s, 143 s
+[strata] writing a tool call: run_shell: 24187 of max 32768 tokens, 178.4 tok/s, 144 s
+[strata] writing a tool call: run_shell: 24373 of max 32768 tokens, 178.4 tok/s, 145 s
+[strata] writing a tool call: run_shell: 24559 of max 32768 tokens, 178.4 tok/s, 146 s
+[strata] writing a tool call: run_shell: 24745 of max 32768 tokens, 178.4 tok/s, 147 s
+[strata] writing a tool call: run_shell: 24931 of max 32768 tokens, 178.5 tok/s, 148 s
+[strata] writing a tool call: run_shell: 25111 of max 32768 tokens, 178.5 tok/s, 149 s
+[strata] writing a tool call: run_shell: 25291 of max 32768 tokens, 178.5 tok/s, 150 s
+[strata] writing a tool call: run_shell: 25477 of max 32768 tokens, 178.5 tok/s, 151 s
+[strata] writing a tool call: run_shell: 25657 of max 32768 tokens, 178.5 tok/s, 152 s
+[strata] writing a tool call: run_shell: 25837 of max 32768 tokens, 178.5 tok/s, 153 s
+[strata] writing a tool call: run_shell: 26023 of max 32768 tokens, 178.5 tok/s, 154 s
+[strata] writing a tool call: run_shell: 26204 of max 32768 tokens, 178.5 tok/s, 155 s
+[strata] writing a tool call: run_shell: 26383 of max 32768 tokens, 178.5 tok/s, 156 s
+[strata] writing a tool call: run_shell: 26569 of max 32768 tokens, 178.6 tok/s, 157 s
+[strata] writing a tool call: run_shell: 26749 of max 32768 tokens, 178.6 tok/s, 158 s
+[strata] writing a tool call: run_shell: 26929 of max 32768 tokens, 178.6 tok/s, 159 s
+[strata] writing a tool call: run_shell: 27111 of max 32768 tokens, 178.6 tok/s, 160 s
+[strata] writing a tool call: run_shell: 27295 of max 32768 tokens, 178.6 tok/s, 161 s
+[strata] writing a tool call: run_shell: 27481 of max 32768 tokens, 178.6 tok/s, 162 s
+[strata] writing a tool call: run_shell: 27667 of max 32768 tokens, 178.6 tok/s, 163 s
+[strata] writing a tool call: run_shell: 27847 of max 32768 tokens, 178.6 tok/s, 164 s
+[strata] writing a tool call: run_shell: 28033 of max 32768 tokens, 178.6 tok/s, 165 s
+[strata] writing a tool call: run_shell: 28213 of max 32768 tokens, 178.6 tok/s, 166 s
+[strata] writing a tool call: run_shell: 28395 of max 32768 tokens, 178.7 tok/s, 167 s
+[strata] writing a tool call: run_shell: 28579 of max 32768 tokens, 178.7 tok/s, 168 s
+[strata] writing a tool call: run_shell: 28759 of max 32768 tokens, 178.7 tok/s, 169 s
+[strata] writing a tool call: run_shell: 28945 of max 32768 tokens, 178.7 tok/s, 170 s
+[strata] writing a tool call: run_shell: 29125 of max 32768 tokens, 178.7 tok/s, 171 s
+[strata] writing a tool call: run_shell: 29311 of max 32768 tokens, 178.7 tok/s, 172 s
+[strata] writing a tool call: run_shell: 29495 of max 32768 tokens, 178.7 tok/s, 173 s
+[strata] writing a tool call: run_shell: 29671 of max 32768 tokens, 178.7 tok/s, 174 s
+[strata] writing a tool call: run_shell: 29856 of max 32768 tokens, 178.7 tok/s, 175 s
+[strata] writing a tool call: run_shell: 30031 of max 32768 tokens, 178.7 tok/s, 176 s
+[strata] writing a tool call: run_shell: 30217 of max 32768 tokens, 178.7 tok/s, 178 s
+[strata] writing a tool call: run_shell: 30397 of max 32768 tokens, 178.7 tok/s, 179 s
+[strata] writing a tool call: run_shell: 30577 of max 32768 tokens, 178.7 tok/s, 180 s
+[strata] writing a tool call: run_shell: 30757 of max 32768 tokens, 178.7 tok/s, 181 s
+[strata] writing a tool call: run_shell: 30940 of max 32768 tokens, 178.8 tok/s, 182 s
+[strata] writing a tool call: run_shell: 31119 of max 32768 tokens, 178.8 tok/s, 183 s
+[strata] writing a tool call: run_shell: 31297 of max 32768 tokens, 178.8 tok/s, 184 s
+[strata] writing a tool call: run_shell: 31483 of max 32768 tokens, 178.8 tok/s, 185 s
+[strata] writing a tool call: run_shell: 31663 of max 32768 tokens, 178.8 tok/s, 186 s
+[strata] writing a tool call: run_shell: 31845 of max 32768 tokens, 178.8 tok/s, 187 s
+[strata] writing a tool call: run_shell: 32029 of max 32768 tokens, 178.8 tok/s, 188 s
+[strata] writing a tool call: run_shell: 32215 of max 32768 tokens, 178.8 tok/s, 189 s
+[strata] writing a tool call: run_shell: 32401 of max 32768 tokens, 178.8 tok/s, 190 s
+[strata] writing a tool call: run_shell: 32581 of max 32768 tokens, 178.8 tok/s, 191 s
+[strata] writing a tool call: run_shell: 32761 of max 32768 tokens, 178.8 tok/s, 192 s
+[strata] done: 32768 tokens in 192 s (178.8 tok/s) (length, cancel=False), expert cache 99.8% hit
+[strata] writing a tool call: write_file: 69 of max 32768 tokens, 114.5 tok/s, 1 s
+[strata] writing a tool call: write_file: 193 of max 32768 tokens, 120.2 tok/s, 2 s
+[strata] writing a tool call: write_file: 338 of max 32768 tokens, 129.1 tok/s, 3 s
+[strata] writing a tool call: write_file: 477 of max 32768 tokens, 131.3 tok/s, 4 s
+[strata] writing a tool call: write_file: 604 of max 32768 tokens, 129.8 tok/s, 5 s
+[strata] writing a tool call: write_file: 749 of max 32768 tokens, 132.3 tok/s, 6 s
+[strata] done: 807 tokens in 6 s (134.0 tok/s) (stop, cancel=False), expert cache 98.9% hit
+[strata] thinking: 5 of max 32768 tokens, 107.2 tok/s, 1 s
+[strata] writing a tool call: edit_file: 149 of max 32768 tokens, 140.9 tok/s, 2 s
+[strata] done: 321 tokens in 3 s (157.4 tok/s) (stop, cancel=False), expert cache 98.9% hit
+[strata] reading the prompt: 19,630 of 19,635 tokens, 2 s so far
+[strata] done: 78 tokens in 2 s (114550.3 tok/s) (stop, cancel=False), expert cache 98.5% hit
+[strata] thinking: 17 of max 32768 tokens, 95.5 tok/s, 1 s
+[strata] thinking: 129 of max 32768 tokens, 107.5 tok/s, 2 s
+[strata] thinking: 241 of max 32768 tokens, 109.5 tok/s, 3 s
+[strata] thinking: 359 of max 32768 tokens, 111.9 tok/s, 4 s
+[strata] done: 484 tokens in 5 s (117.6 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] thinking: 60 of max 32768 tokens, 101.8 tok/s, 1 s
+[strata] thinking: 174 of max 32768 tokens, 108.8 tok/s, 2 s
+[strata] writing a tool call: write_file: 297 of max 32768 tokens, 113.8 tok/s, 3 s
+[strata] writing a tool call: write_file: 459 of max 32768 tokens, 126.9 tok/s, 4 s
+[strata] writing a tool call: write_file: 616 of max 32768 tokens, 133.4 tok/s, 5 s
+[strata] writing a tool call: write_file: 778 of max 32768 tokens, 138.1 tok/s, 6 s
+[strata] writing a tool call: write_file: 950 of max 32768 tokens, 142.9 tok/s, 7 s
+[strata] done: 1031 tokens in 8 s (144.5 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] thinking: 2 of max 32768 tokens, 121.7 tok/s, 1 s
+[strata] done: 107 tokens in 2 s (138.0 tok/s) (stop, cancel=False), expert cache 99.5% hit
+[strata] answering: 75 of max 32768 tokens, 120.4 tok/s, 1 s
+[strata] answering: 194 of max 32768 tokens, 118.3 tok/s, 2 s
+[strata] done: 251 tokens in 2 s (122.2 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] reading the prompt: 8,192 of 20,923 tokens, 4 s so far
+[strata] reading the prompt: 12,193 of 20,923 tokens, 5 s so far
+[strata] reading the prompt: 20,385 of 20,923 tokens, 9 s so far
+[strata] reading the prompt: 20,922 of 20,923 tokens, 10 s so far
+[strata] writing a tool call: write_file: 117 of max 32768 tokens, 118.2 tok/s, 11 s
+[strata] writing a tool call: write_file: 245 of max 32768 tokens, 121.8 tok/s, 12 s
+[strata] writing a tool call: write_file: 393 of max 32768 tokens, 130.1 tok/s, 13 s
+[strata] writing a tool call: write_file: 534 of max 32768 tokens, 132.7 tok/s, 14 s
+[strata] done: 544 tokens in 14 s (133.6 tok/s) (stop, cancel=False), expert cache 99.5% hit
+[strata] reading the prompt: 8,192 of 23,334 tokens, 4 s so far
+[strata] reading the prompt: 14,087 of 23,334 tokens, 6 s so far
+[strata] reading the prompt: 22,279 of 23,334 tokens, 10 s so far
+[strata] reading the prompt: 23,333 of 23,334 tokens, 11 s so far
+[strata] thinking: 95 of max 32768 tokens, 94.7 tok/s, 12 s
+[strata] done: 162 tokens in 12 s (115.5 tok/s) (disconnect, cancel=True), expert cache 99.7% hit
+[strata] reading the prompt: 8,192 of 22,910 tokens, 4 s so far
+[strata] reading the prompt: 12,193 of 22,910 tokens, 5 s so far
+[strata] reading the prompt: 20,385 of 22,910 tokens, 9 s so far
+[strata] reading the prompt: 22,909 of 22,910 tokens, 11 s so far
+[strata] thinking: 91 of max 32768 tokens, 91.0 tok/s, 12 s
+[strata] thinking: 203 of max 32768 tokens, 101.3 tok/s, 13 s
+[strata] thinking: 298 of max 32768 tokens, 98.9 tok/s, 14 s
+[strata] thinking: 397 of max 32768 tokens, 98.4 tok/s, 15 s
+[strata] writing a tool call: write_file: 515 of max 32768 tokens, 101.9 tok/s, 16 s
+[strata] writing a tool call: write_file: 649 of max 32768 tokens, 106.8 tok/s, 17 s
+[strata] writing a tool call: write_file: 781 of max 32768 tokens, 110.1 tok/s, 18 s
+[strata] done: 844 tokens in 18 s (112.0 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 8,192 of 25,283 tokens, 4 s so far
+[strata] reading the prompt: 14,087 of 25,283 tokens, 6 s so far
+[strata] reading the prompt: 22,279 of 25,283 tokens, 10 s so far
+[strata] reading the prompt: 25,278 of 25,283 tokens, 11 s so far
+[strata] thinking: 51 of max 32768 tokens, 104.7 tok/s, 12 s
+[strata] thinking: 153 of max 32768 tokens, 101.8 tok/s, 13 s
+[strata] writing a tool call: edit_file: 286 of max 32768 tokens, 113.9 tok/s, 14 s
+[strata] done: 339 tokens in 14 s (120.1 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] thinking: 55 of max 32768 tokens, 110.5 tok/s, 1 s
+[strata] thinking: 151 of max 32768 tokens, 100.2 tok/s, 2 s
+[strata] writing a tool call: edit_file: 265 of max 32768 tokens, 104.9 tok/s, 3 s
+[strata] done: 296 tokens in 3 s (109.8 tok/s) (stop, cancel=False), expert cache 99.9% hit
+[strata] writing a tool call: write_file: 80 of max 32768 tokens, 132.3 tok/s, 1 s
+[strata] writing a tool call: write_file: 225 of max 32768 tokens, 138.8 tok/s, 2 s
+[strata] writing a tool call: write_file: 367 of max 32768 tokens, 139.2 tok/s, 3 s
+[strata] writing a tool call: write_file: 508 of max 32768 tokens, 139.1 tok/s, 4 s
+[strata] writing a tool call: write_file: 639 of max 32768 tokens, 136.9 tok/s, 5 s
+[strata] writing a tool call: write_file: 761 of max 32768 tokens, 134.1 tok/s, 6 s
+[strata] writing a tool call: write_file: 890 of max 32768 tokens, 133.0 tok/s, 7 s
+[strata] done: 901 tokens in 7 s (133.7 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 26,511 of 26,512 tokens, 1 s so far
+[strata] writing a tool call: run_shell: 123 of max 32768 tokens, 124.1 tok/s, 2 s
+[strata] done: 135 tokens in 2 s (127.0 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] thinking: 56 of max 32768 tokens, 93.9 tok/s, 1 s
+[strata] writing a tool call: run_shell: 186 of max 32768 tokens, 116.3 tok/s, 2 s
+[strata] writing a tool call: run_shell: 312 of max 32768 tokens, 119.5 tok/s, 3 s
+[strata] done: 413 tokens in 4 s (126.3 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] answering: 38 of max 32768 tokens, 111.1 tok/s, 1 s
+[strata] answering: 153 of max 32768 tokens, 113.0 tok/s, 2 s
+[strata] answering: 277 of max 32768 tokens, 116.7 tok/s, 3 s
+[strata] done: 313 tokens in 3 s (119.3 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] reading the prompt: 8,192 of 27,559 tokens, 4 s so far
+[strata] reading the prompt: 12,193 of 27,559 tokens, 5 s so far
+[strata] reading the prompt: 20,385 of 27,559 tokens, 9 s so far
+[strata] reading the prompt: 27,554 of 27,559 tokens, 11 s so far
+[strata] thinking: 50 of max 32768 tokens, 106.1 tok/s, 12 s
+[strata] thinking: 149 of max 32768 tokens, 100.0 tok/s, 13 s
+[strata] writing a tool call: write_file: 284 of max 32768 tokens, 113.8 tok/s, 14 s
+[strata] writing a tool call: write_file: 421 of max 32768 tokens, 120.0 tok/s, 15 s
+[strata] writing a tool call: write_file: 555 of max 32768 tokens, 122.5 tok/s, 16 s
+[strata] writing a tool call: write_file: 694 of max 32768 tokens, 125.1 tok/s, 17 s
+[strata] writing a tool call: write_file: 843 of max 32768 tokens, 128.7 tok/s, 18 s
+[strata] done: 992 tokens in 19 s (132.1 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 8,192 of 30,315 tokens, 4 s so far
+[strata] reading the prompt: 14,087 of 30,315 tokens, 6 s so far
+[strata] reading the prompt: 22,279 of 30,315 tokens, 10 s so far
+[strata] reading the prompt: 30,310 of 30,315 tokens, 12 s so far
+[strata] thinking: 52 of max 32768 tokens, 108.8 tok/s, 13 s
+[strata] writing a tool call: edit_file: 196 of max 32768 tokens, 131.2 tok/s, 14 s
+[strata] done: 223 tokens in 14 s (134.5 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] writing a tool call: edit_file: 68 of max 32768 tokens, 132.4 tok/s, 1 s
+[strata] done: 97 tokens in 1 s (142.1 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] writing a tool call: write_file: 63 of max 32768 tokens, 110.9 tok/s, 1 s
+[strata] writing a tool call: write_file: 211 of max 32768 tokens, 134.2 tok/s, 2 s
+[strata] writing a tool call: write_file: 351 of max 32768 tokens, 136.4 tok/s, 3 s
+[strata] writing a tool call: write_file: 488 of max 32768 tokens, 136.5 tok/s, 4 s
+[strata] writing a tool call: write_file: 637 of max 32768 tokens, 139.0 tok/s, 5 s
+[strata] writing a tool call: write_file: 787 of max 32768 tokens, 140.7 tok/s, 6 s
+[strata] writing a tool call: write_file: 945 of max 32768 tokens, 143.0 tok/s, 7 s
+[strata] writing a tool call: write_file: 1090 of max 32768 tokens, 142.9 tok/s, 8 s
+[strata] done: 1147 tokens in 8 s (142.2 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] reading the prompt: 31,731 of 31,736 tokens, 1 s so far
+[strata] writing a tool call: run_shell: 118 of max 32768 tokens, 138.0 tok/s, 2 s
+[strata] done: 126 tokens in 2 s (139.1 tok/s) (stop, cancel=False), expert cache 99.5% hit
+[strata] answering: 77 of max 32768 tokens, 134.1 tok/s, 1 s
+[strata] answering: 198 of max 32768 tokens, 124.7 tok/s, 2 s
+[strata] done: 303 tokens in 3 s (119.4 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 8,192 of 31,827 tokens, 4 s so far
+[strata] reading the prompt: 12,193 of 31,827 tokens, 5 s so far
+[strata] reading the prompt: 20,385 of 31,827 tokens, 9 s so far
+[strata] reading the prompt: 28,577 of 31,827 tokens, 11 s so far
+[strata] reading the prompt: 31,822 of 31,827 tokens, 12 s so far
+[strata] thinking: 50 of max 32768 tokens, 104.0 tok/s, 13 s
+[strata] thinking: 157 of max 32768 tokens, 105.1 tok/s, 14 s
+[strata] thinking: 251 of max 32768 tokens, 100.6 tok/s, 16 s
+[strata] writing a tool call: write_file: 355 of max 32768 tokens, 100.8 tok/s, 17 s
+[strata] writing a tool call: write_file: 467 of max 32768 tokens, 102.8 tok/s, 18 s
+[strata] writing a tool call: write_file: 610 of max 32768 tokens, 109.9 tok/s, 19 s
+[strata] writing a tool call: write_file: 743 of max 32768 tokens, 113.2 tok/s, 20 s
+[strata] writing a tool call: write_file: 892 of max 32768 tokens, 117.8 tok/s, 21 s
+[strata] writing a tool call: write_file: 1030 of max 32768 tokens, 120.0 tok/s, 22 s
+[strata] done: 1163 tokens in 22 s (123.0 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 8,192 of 34,633 tokens, 4 s so far
+[strata] reading the prompt: 14,087 of 34,633 tokens, 5 s so far
+[strata] reading the prompt: 22,279 of 34,633 tokens, 10 s so far
+[strata] reading the prompt: 30,471 of 34,633 tokens, 12 s so far
+[strata] reading the prompt: 34,628 of 34,633 tokens, 13 s so far
+[strata] thinking: 43 of max 32768 tokens, 88.9 tok/s, 14 s
+[strata] writing a tool call: write_file: 161 of max 32768 tokens, 108.2 tok/s, 15 s
+[strata] writing a tool call: write_file: 305 of max 32768 tokens, 121.8 tok/s, 16 s
+[strata] writing a tool call: write_file: 444 of max 32768 tokens, 126.2 tok/s, 17 s
+[strata] writing a tool call: write_file: 581 of max 32768 tokens, 128.1 tok/s, 18 s
+[strata] writing a tool call: write_file: 729 of max 32768 tokens, 131.5 tok/s, 19 s
+[strata] writing a tool call: write_file: 862 of max 32768 tokens, 131.6 tok/s, 20 s
+[strata] writing a tool call: write_file: 1012 of max 32768 tokens, 133.9 tok/s, 21 s
+[strata] writing a tool call: write_file: 1167 of max 32768 tokens, 136.1 tok/s, 22 s
+[strata] writing a tool call: write_file: 1321 of max 32768 tokens, 137.9 tok/s, 23 s
+[strata] writing a tool call: write_file: 1459 of max 32768 tokens, 137.8 tok/s, 24 s
+[strata] writing a tool call: write_file: 1596 of max 32768 tokens, 137.7 tok/s, 25 s
+[strata] writing a tool call: write_file: 1738 of max 32768 tokens, 137.8 tok/s, 26 s
+[strata] writing a tool call: write_file: 1884 of max 32768 tokens, 138.3 tok/s, 27 s
+[strata] done: 1961 tokens in 28 s (138.7 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 36,528 of 36,533 tokens, 1 s so far
+[strata] thinking: 87 of max 32768 tokens, 102.5 tok/s, 2 s
+[strata] writing a tool call: edit_file: 234 of max 32768 tokens, 125.7 tok/s, 3 s
+[strata] writing a tool call: edit_file: 403 of max 32768 tokens, 140.6 tok/s, 4 s
+[strata] done: 453 tokens in 5 s (141.9 tok/s) (stop, cancel=False), expert cache 99.4% hit
+[strata] thinking: 44 of max 32768 tokens, 122.8 tok/s, 1 s
+[strata] thinking: 156 of max 32768 tokens, 114.4 tok/s, 2 s
+[strata] thinking: 264 of max 32768 tokens, 111.6 tok/s, 3 s
+[strata] writing a tool call: edit_file: 389 of max 32768 tokens, 114.9 tok/s, 4 s
+[strata] writing a tool call: edit_file: 553 of max 32768 tokens, 125.8 tok/s, 5 s
+[strata] done: 631 tokens in 6 s (129.3 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] thinking: 40 of max 32768 tokens, 109.1 tok/s, 1 s
+[strata] done: 152 tokens in 2 s (130.5 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] writing a tool call: run_shell: 76 of max 32768 tokens, 131.8 tok/s, 1 s
+[strata] done: 128 tokens in 1 s (136.8 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] thinking: 32 of max 32768 tokens, 125.3 tok/s, 1 s
+[strata] done: 114 tokens in 2 s (132.4 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] done: 84 tokens in 1 s (158.7 tok/s) (stop, cancel=False), expert cache 99.4% hit
+[strata] writing a tool call: run_shell: 83 of max 32768 tokens, 141.3 tok/s, 1 s
+[strata] done: 85 tokens in 1 s (144.7 tok/s) (stop, cancel=False), expert cache 99.5% hit
+[strata] thinking: 54 of max 32768 tokens, 92.0 tok/s, 1 s
+[strata] answering: 168 of max 32768 tokens, 104.9 tok/s, 2 s
+[strata] answering: 290 of max 32768 tokens, 111.3 tok/s, 3 s
+[strata] answering: 401 of max 32768 tokens, 110.6 tok/s, 4 s
+[strata] done: 404 tokens in 4 s (110.3 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 8,192 of 38,760 tokens, 4 s so far
+[strata] reading the prompt: 12,193 of 38,760 tokens, 5 s so far
+[strata] reading the prompt: 20,385 of 38,760 tokens, 9 s so far
+[strata] reading the prompt: 28,577 of 38,760 tokens, 11 s so far
+[strata] reading the prompt: 36,769 of 38,760 tokens, 13 s so far
+[strata] reading the prompt: 38,759 of 38,760 tokens, 15 s so far
+[strata] thinking: 126 of max 32768 tokens, 126.6 tok/s, 16 s
+[strata] writing a tool call: write_file: 241 of max 32768 tokens, 120.5 tok/s, 17 s
+[strata] writing a tool call: write_file: 357 of max 32768 tokens, 118.9 tok/s, 18 s
+[strata] writing a tool call: write_file: 503 of max 32768 tokens, 125.5 tok/s, 19 s
+[strata] writing a tool call: write_file: 659 of max 32768 tokens, 131.1 tok/s, 20 s
+[strata] writing a tool call: write_file: 819 of max 32768 tokens, 135.4 tok/s, 21 s
+[strata] done: 901 tokens in 21 s (136.6 tok/s) (stop, cancel=False), expert cache 99.5% hit
+[strata] reading the prompt: 8,192 of 41,390 tokens, 4 s so far
+[strata] reading the prompt: 14,087 of 41,390 tokens, 5 s so far
+[strata] reading the prompt: 22,279 of 41,390 tokens, 9 s so far
+[strata] reading the prompt: 30,471 of 41,390 tokens, 11 s so far
+[strata] reading the prompt: 38,663 of 41,390 tokens, 14 s so far
+[strata] reading the prompt: 41,385 of 41,390 tokens, 15 s so far
+[strata] thinking: 56 of max 32768 tokens, 116.2 tok/s, 16 s
+[strata] writing a tool call: write_file: 188 of max 32768 tokens, 126.8 tok/s, 17 s
+[strata] writing a tool call: write_file: 328 of max 32768 tokens, 131.5 tok/s, 18 s
+[strata] writing a tool call: write_file: 471 of max 32768 tokens, 134.1 tok/s, 19 s
+[strata] writing a tool call: write_file: 620 of max 32768 tokens, 137.1 tok/s, 20 s
+[strata] writing a tool call: write_file: 756 of max 32768 tokens, 136.8 tok/s, 21 s
+[strata] writing a tool call: write_file: 905 of max 32768 tokens, 138.2 tok/s, 22 s
+[strata] writing a tool call: write_file: 1053 of max 32768 tokens, 139.4 tok/s, 23 s
+[strata] writing a tool call: write_file: 1204 of max 32768 tokens, 140.6 tok/s, 24 s
+[strata] writing a tool call: write_file: 1347 of max 32768 tokens, 140.8 tok/s, 25 s
+[strata] writing a tool call: write_file: 1470 of max 32768 tokens, 138.8 tok/s, 26 s
+[strata] done: 1515 tokens in 26 s (139.5 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 42,843 of 42,848 tokens, 1 s so far
+[strata] done: 112 tokens in 2 s (130.0 tok/s) (stop, cancel=False), expert cache 99.4% hit
+[strata] thinking: 48 of max 32768 tokens, 115.0 tok/s, 1 s
+[strata] writing a tool call: run_shell: 180 of max 32768 tokens, 126.8 tok/s, 2 s
+[strata] done: 265 tokens in 3 s (135.1 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] writing a tool call: edit_file: 63 of max 32768 tokens, 142.2 tok/s, 1 s
+[strata] done: 181 tokens in 2 s (154.0 tok/s) (stop, cancel=False), expert cache 99.5% hit
+[strata] writing a tool call: edit_file: 61 of max 32768 tokens, 126.0 tok/s, 1 s
+[strata] done: 205 tokens in 2 s (149.3 tok/s) (stop, cancel=False), expert cache 99.5% hit
+[strata] thinking: 52 of max 32768 tokens, 117.7 tok/s, 1 s
+[strata] done: 150 tokens in 2 s (141.2 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] writing a tool call: edit_file: 75 of max 32768 tokens, 149.5 tok/s, 1 s
+[strata] done: 138 tokens in 1 s (150.0 tok/s) (stop, cancel=False), expert cache 99.3% hit
+[strata] writing a tool call: run_shell: 64 of max 32768 tokens, 123.4 tok/s, 1 s
+[strata] done: 113 tokens in 1 s (145.8 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] answering: 62 of max 32768 tokens, 110.8 tok/s, 1 s
+[strata] answering: 183 of max 32768 tokens, 115.9 tok/s, 2 s
+[strata] answering: 303 of max 32768 tokens, 117.0 tok/s, 3 s
+[strata] done: 386 tokens in 4 s (118.1 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 8,192 of 44,268 tokens, 4 s so far
+[strata] reading the prompt: 12,193 of 44,268 tokens, 5 s so far
+[strata] reading the prompt: 20,385 of 44,268 tokens, 9 s so far
+[strata] reading the prompt: 28,577 of 44,268 tokens, 11 s so far
+[strata] reading the prompt: 36,769 of 44,268 tokens, 13 s so far
+[strata] reading the prompt: 44,263 of 44,268 tokens, 15 s so far
+[strata] thinking: 50 of max 32768 tokens, 105.1 tok/s, 16 s
+[strata] thinking: 167 of max 32768 tokens, 112.3 tok/s, 17 s
+[strata] thinking: 271 of max 32768 tokens, 108.5 tok/s, 18 s
+[strata] thinking: 372 of max 32768 tokens, 105.9 tok/s, 19 s
+[strata] thinking: 464 of max 32768 tokens, 102.6 tok/s, 20 s
+[strata] writing a tool call: write_file: 573 of max 32768 tokens, 103.7 tok/s, 21 s
+[strata] writing a tool call: write_file: 692 of max 32768 tokens, 105.7 tok/s, 22 s
+[strata] writing a tool call: write_file: 827 of max 32768 tokens, 109.3 tok/s, 23 s
+[strata] writing a tool call: write_file: 972 of max 32768 tokens, 113.4 tok/s, 24 s
+[strata] done: 1050 tokens in 25 s (115.4 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 8,192 of 46,737 tokens, 4 s so far
+[strata] reading the prompt: 14,087 of 46,737 tokens, 5 s so far
+[strata] reading the prompt: 22,279 of 46,737 tokens, 9 s so far
+[strata] reading the prompt: 30,471 of 46,737 tokens, 11 s so far
+[strata] reading the prompt: 38,663 of 46,737 tokens, 14 s so far
+[strata] reading the prompt: 46,732 of 46,737 tokens, 16 s so far
+[strata] thinking: 43 of max 32768 tokens, 89.7 tok/s, 17 s
+[strata] thinking: 143 of max 32768 tokens, 95.9 tok/s, 18 s
+[strata] writing a tool call: write_file: 270 of max 32768 tokens, 107.8 tok/s, 19 s
+[strata] writing a tool call: write_file: 405 of max 32768 tokens, 115.6 tok/s, 20 s
+[strata] writing a tool call: write_file: 529 of max 32768 tokens, 117.3 tok/s, 21 s
+[strata] writing a tool call: write_file: 668 of max 32768 tokens, 121.1 tok/s, 22 s
+[strata] writing a tool call: write_file: 807 of max 32768 tokens, 123.6 tok/s, 23 s
+[strata] writing a tool call: write_file: 933 of max 32768 tokens, 123.9 tok/s, 24 s
+[strata] writing a tool call: write_file: 1062 of max 32768 tokens, 124.2 tok/s, 25 s
+[strata] writing a tool call: write_file: 1199 of max 32768 tokens, 125.5 tok/s, 26 s
+[strata] done: 1223 tokens in 26 s (126.0 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] reading the prompt: 47,818 of 47,823 tokens, 1 s so far
+[strata] writing a tool call: edit_file: 107 of max 32768 tokens, 124.1 tok/s, 2 s
+[strata] done: 155 tokens in 2 s (130.1 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] thinking: 61 of max 32768 tokens, 120.0 tok/s, 1 s
+[strata] thinking: 174 of max 32768 tokens, 114.6 tok/s, 2 s
+[strata] done: 306 tokens in 3 s (123.9 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] thinking: 61 of max 32768 tokens, 112.6 tok/s, 1 s
+[strata] done: 147 tokens in 2 s (123.0 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] writing a tool call: edit_file: 45 of max 32768 tokens, 126.4 tok/s, 1 s
+[strata] done: 161 tokens in 2 s (146.1 tok/s) (stop, cancel=False), expert cache 99.5% hit
+[strata] thinking: 44 of max 32768 tokens, 89.7 tok/s, 1 s
+[strata] writing a tool call: run_shell: 160 of max 32768 tokens, 105.9 tok/s, 2 s
+[strata] done: 185 tokens in 2 s (112.0 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] thinking: 57 of max 32768 tokens, 98.4 tok/s, 1 s
+[strata] answering: 176 of max 32768 tokens, 111.3 tok/s, 2 s
+[strata] answering: 291 of max 32768 tokens, 112.7 tok/s, 3 s
+[strata] done: 389 tokens in 4 s (112.8 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] reading the prompt: 8,192 of 49,183 tokens, 4 s so far
+[strata] reading the prompt: 12,193 of 49,183 tokens, 5 s so far
+[strata] reading the prompt: 20,385 of 49,183 tokens, 9 s so far
+[strata] reading the prompt: 28,577 of 49,183 tokens, 11 s so far
+[strata] reading the prompt: 36,769 of 49,183 tokens, 13 s so far
+[strata] reading the prompt: 44,961 of 49,183 tokens, 15 s so far
+[strata] reading the prompt: 49,178 of 49,183 tokens, 17 s so far
+[strata] thinking: 53 of max 32768 tokens, 113.1 tok/s, 18 s
+[strata] thinking: 172 of max 32768 tokens, 115.5 tok/s, 19 s
+[strata] thinking: 268 of max 32768 tokens, 107.4 tok/s, 20 s
+[strata] writing a tool call: write_file: 394 of max 32768 tokens, 112.6 tok/s, 21 s
+[strata] writing a tool call: write_file: 518 of max 32768 tokens, 114.9 tok/s, 22 s
+[strata] writing a tool call: write_file: 664 of max 32768 tokens, 120.3 tok/s, 23 s
+[strata] writing a tool call: write_file: 802 of max 32768 tokens, 122.9 tok/s, 24 s
+[strata] writing a tool call: write_file: 945 of max 32768 tokens, 125.4 tok/s, 25 s
+[strata] writing a tool call: write_file: 1093 of max 32768 tokens, 127.9 tok/s, 26 s
+[strata] writing a tool call: write_file: 1245 of max 32768 tokens, 130.2 tok/s, 27 s
+[strata] writing a tool call: write_file: 1393 of max 32768 tokens, 131.6 tok/s, 28 s
+[strata] done: 1481 tokens in 28 s (132.7 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] reading the prompt: 8,192 of 52,316 tokens, 4 s so far
+[strata] reading the prompt: 14,087 of 52,316 tokens, 5 s so far
+[strata] reading the prompt: 22,279 of 52,316 tokens, 9 s so far
+[strata] reading the prompt: 30,471 of 52,316 tokens, 11 s so far
+[strata] reading the prompt: 38,663 of 52,316 tokens, 13 s so far
+[strata] reading the prompt: 46,855 of 52,316 tokens, 16 s so far
+[strata] reading the prompt: 52,311 of 52,316 tokens, 17 s so far
+[strata] writing a tool call: edit_file: 56 of max 32768 tokens, 118.7 tok/s, 18 s
+[strata] done: 107 tokens in 19 s (122.8 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] writing a tool call: edit_file: 71 of max 32768 tokens, 126.1 tok/s, 1 s
+[strata] done: 93 tokens in 1 s (129.0 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] writing a tool call: read_file: 60 of max 32768 tokens, 109.8 tok/s, 1 s
+[strata] done: 97 tokens in 1 s (120.7 tok/s) (stop, cancel=False), expert cache 99.2% hit
+[strata] thinking: 23 of max 32768 tokens, 90.7 tok/s, 1 s
+[strata] writing a tool call: write_file: 178 of max 32768 tokens, 138.9 tok/s, 2 s
+[strata] writing a tool call: write_file: 356 of max 32768 tokens, 153.8 tok/s, 3 s
+[strata] writing a tool call: write_file: 503 of max 32768 tokens, 151.6 tok/s, 4 s
+[strata] writing a tool call: write_file: 658 of max 32768 tokens, 151.5 tok/s, 5 s
+[strata] writing a tool call: write_file: 815 of max 32768 tokens, 152.0 tok/s, 6 s
+[strata] writing a tool call: write_file: 987 of max 32768 tokens, 154.6 tok/s, 7 s
+[strata] writing a tool call: write_file: 1140 of max 32768 tokens, 154.3 tok/s, 8 s
+[strata] done: 1209 tokens in 9 s (155.3 tok/s) (stop, cancel=False), expert cache 99.4% hit
+[strata] reading the prompt: 54,143 of 54,148 tokens, 1 s so far
+[strata] thinking: 90 of max 32768 tokens, 103.5 tok/s, 2 s
+[strata] writing a tool call: edit_file: 196 of max 32768 tokens, 104.3 tok/s, 3 s
+[strata] done: 252 tokens in 4 s (111.4 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] writing a tool call: edit_file: 71 of max 32768 tokens, 126.3 tok/s, 1 s
+[strata] done: 99 tokens in 1 s (136.0 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] thinking: 50 of max 32768 tokens, 90.2 tok/s, 1 s
+[strata] done: 108 tokens in 1 s (114.7 tok/s) (stop, cancel=False), expert cache 99.5% hit
+[strata] thinking: 33 of max 32768 tokens, 86.1 tok/s, 1 s
+[strata] writing a tool call: write_file: 134 of max 32768 tokens, 96.1 tok/s, 2 s
+[strata] writing a tool call: write_file: 248 of max 32768 tokens, 102.6 tok/s, 3 s
+[strata] writing a tool call: write_file: 404 of max 32768 tokens, 118.1 tok/s, 4 s
+[strata] writing a tool call: write_file: 552 of max 32768 tokens, 124.4 tok/s, 5 s
+[strata] writing a tool call: write_file: 710 of max 32768 tokens, 130.3 tok/s, 6 s
+[strata] writing a tool call: write_file: 870 of max 32768 tokens, 134.4 tok/s, 7 s
+[strata] writing a tool call: write_file: 1035 of max 32768 tokens, 137.9 tok/s, 8 s
+[strata] writing a tool call: write_file: 1205 of max 32768 tokens, 141.5 tok/s, 9 s
+[strata] done: 1220 tokens in 9 s (141.6 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] reading the prompt: 55,746 of 55,751 tokens, 1 s so far
+[strata] writing a tool call: write_file: 120 of max 32768 tokens, 139.2 tok/s, 2 s
+[strata] writing a tool call: write_file: 279 of max 32768 tokens, 148.7 tok/s, 3 s
+[strata] done: 377 tokens in 4 s (150.9 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] thinking: 30 of max 32768 tokens, 108.0 tok/s, 1 s
+[strata] thinking: 123 of max 32768 tokens, 95.5 tok/s, 2 s
+[strata] writing a tool call: edit_file: 257 of max 32768 tokens, 111.8 tok/s, 3 s
+[strata] writing a tool call: edit_file: 402 of max 32768 tokens, 121.4 tok/s, 4 s
+[strata] writing a tool call: edit_file: 560 of max 32768 tokens, 129.2 tok/s, 5 s
+[strata] writing a tool call: edit_file: 721 of max 32768 tokens, 134.7 tok/s, 6 s
+[strata] done: 866 tokens in 7 s (137.8 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 56,900 of 56,901 tokens, 1 s so far
+[strata] writing a tool call: write_file: 123 of max 32768 tokens, 122.1 tok/s, 2 s
+[strata] writing a tool call: write_file: 291 of max 32768 tokens, 145.0 tok/s, 3 s
+[strata] writing a tool call: write_file: 439 of max 32768 tokens, 144.8 tok/s, 4 s
+[strata] writing a tool call: write_file: 599 of max 32768 tokens, 147.7 tok/s, 5 s
+[strata] writing a tool call: write_file: 759 of max 32768 tokens, 149.6 tok/s, 6 s
+[strata] writing a tool call: write_file: 928 of max 32768 tokens, 152.1 tok/s, 7 s
+[strata] done: 1071 tokens in 8 s (154.3 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] reading the prompt: 57,944 of 57,949 tokens, 1 s so far
+[strata] writing a tool call: write_file: 96 of max 32768 tokens, 109.4 tok/s, 2 s
+[strata] writing a tool call: write_file: 253 of max 32768 tokens, 134.1 tok/s, 3 s
+[strata] writing a tool call: write_file: 398 of max 32768 tokens, 137.2 tok/s, 4 s
+[strata] writing a tool call: write_file: 539 of max 32768 tokens, 137.7 tok/s, 5 s
+[strata] writing a tool call: write_file: 683 of max 32768 tokens, 138.9 tok/s, 6 s
+[strata] writing a tool call: write_file: 835 of max 32768 tokens, 140.6 tok/s, 7 s
+[strata] writing a tool call: write_file: 990 of max 32768 tokens, 142.2 tok/s, 8 s
+[strata] done: 1042 tokens in 9 s (142.8 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 58,950 of 58,955 tokens, 1 s so far
+[strata] writing a tool call: write_file: 91 of max 32768 tokens, 103.2 tok/s, 2 s
+[strata] writing a tool call: write_file: 236 of max 32768 tokens, 124.3 tok/s, 3 s
+[strata] writing a tool call: write_file: 380 of max 32768 tokens, 130.9 tok/s, 4 s
+[strata] writing a tool call: write_file: 531 of max 32768 tokens, 135.3 tok/s, 5 s
+[strata] writing a tool call: write_file: 683 of max 32768 tokens, 138.2 tok/s, 6 s
+[strata] writing a tool call: write_file: 839 of max 32768 tokens, 141.0 tok/s, 7 s
+[strata] writing a tool call: write_file: 975 of max 32768 tokens, 140.1 tok/s, 8 s
+[strata] writing a tool call: write_file: 1114 of max 32768 tokens, 139.7 tok/s, 9 s
+[strata] writing a tool call: write_file: 1264 of max 32768 tokens, 140.7 tok/s, 10 s
+[strata] writing a tool call: write_file: 1421 of max 32768 tokens, 142.2 tok/s, 11 s
+[strata] writing a tool call: write_file: 1571 of max 32768 tokens, 142.9 tok/s, 12 s
+[strata] writing a tool call: write_file: 1725 of max 32768 tokens, 143.6 tok/s, 13 s
+[strata] writing a tool call: write_file: 1857 of max 32768 tokens, 142.5 tok/s, 14 s
+[strata] writing a tool call: write_file: 2007 of max 32768 tokens, 142.9 tok/s, 15 s
+[strata] writing a tool call: write_file: 2160 of max 32768 tokens, 143.5 tok/s, 16 s
+[strata] done: 2289 tokens in 17 s (143.6 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] reading the prompt: 61,198 of 61,203 tokens, 2 s so far
+[strata] thinking: 112 of max 32768 tokens, 133.3 tok/s, 3 s
+[strata] done: 208 tokens in 3 s (138.3 tok/s) (stop, cancel=False), expert cache 99.4% hit
+[strata] thinking: 53 of max 32768 tokens, 95.4 tok/s, 1 s
+[strata] answering: 156 of max 32768 tokens, 99.3 tok/s, 2 s
+[strata] answering: 275 of max 32768 tokens, 106.8 tok/s, 3 s
+[strata] answering: 381 of max 32768 tokens, 106.2 tok/s, 4 s
+[strata] done: 461 tokens in 5 s (109.5 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] reading the prompt: 8,192 of 62,214 tokens, 4 s so far
+[strata] reading the prompt: 12,765 of 62,214 tokens, 5 s so far
+[strata] reading the prompt: 20,957 of 62,214 tokens, 9 s so far
+[strata] reading the prompt: 29,149 of 62,214 tokens, 11 s so far
+[strata] reading the prompt: 37,341 of 62,214 tokens, 13 s so far
+[strata] reading the prompt: 45,533 of 62,214 tokens, 15 s so far
+[strata] reading the prompt: 53,725 of 62,214 tokens, 17 s so far
+[strata] reading the prompt: 61,917 of 62,214 tokens, 20 s so far
+[strata] thinking: 7 of max 32768 tokens, 97.4 tok/s, 21 s
+[strata] thinking: 109 of max 32768 tokens, 101.1 tok/s, 22 s
+[strata] thinking: 197 of max 32768 tokens, 94.4 tok/s, 23 s
+[strata] writing a tool call: write_file: 308 of max 32768 tokens, 99.4 tok/s, 24 s
+[strata] writing a tool call: write_file: 441 of max 32768 tokens, 107.1 tok/s, 25 s
+[strata] writing a tool call: write_file: 579 of max 32768 tokens, 113.1 tok/s, 26 s
+[strata] writing a tool call: write_file: 725 of max 32768 tokens, 118.4 tok/s, 27 s
+[strata] done: 766 tokens in 27 s (120.3 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 8,192 of 64,106 tokens, 4 s so far
+[strata] reading the prompt: 14,087 of 64,106 tokens, 5 s so far
+[strata] reading the prompt: 22,279 of 64,106 tokens, 9 s so far
+[strata] reading the prompt: 30,471 of 64,106 tokens, 11 s so far
+[strata] reading the prompt: 38,663 of 64,106 tokens, 13 s so far
+[strata] reading the prompt: 46,855 of 64,106 tokens, 15 s so far
+[strata] reading the prompt: 55,047 of 64,106 tokens, 18 s so far
+[strata] reading the prompt: 63,239 of 64,106 tokens, 20 s so far
+[strata] reading the prompt: 64,105 of 64,106 tokens, 21 s so far
+[strata] writing a tool call: write_file: 99 of max 32768 tokens, 99.5 tok/s, 22 s
+[strata] writing a tool call: write_file: 216 of max 32768 tokens, 108.2 tok/s, 23 s
+[strata] writing a tool call: write_file: 354 of max 32768 tokens, 117.6 tok/s, 24 s
+[strata] writing a tool call: write_file: 482 of max 32768 tokens, 119.8 tok/s, 25 s
+[strata] writing a tool call: write_file: 621 of max 32768 tokens, 123.6 tok/s, 26 s
+[strata] writing a tool call: write_file: 742 of max 32768 tokens, 122.8 tok/s, 27 s
+[strata] writing a tool call: write_file: 890 of max 32768 tokens, 126.1 tok/s, 28 s
+[strata] writing a tool call: write_file: 1028 of max 32768 tokens, 127.3 tok/s, 29 s
+[strata] done: 1089 tokens in 29 s (127.9 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 65,141 of 65,146 tokens, 1 s so far
+[strata] done: 120 tokens in 2 s (148.0 tok/s) (stop, cancel=False), expert cache 99.3% hit
+[strata] thinking: 53 of max 32768 tokens, 109.4 tok/s, 1 s
+[strata] done: 127 tokens in 2 s (126.6 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] writing a tool call: run_shell: 65 of max 32768 tokens, 120.2 tok/s, 1 s
+[strata] writing a tool call: run_shell: 207 of max 32768 tokens, 132.9 tok/s, 2 s
+[strata] done: 278 tokens in 3 s (135.8 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] thinking: 31 of max 32768 tokens, 102.3 tok/s, 1 s
+[strata] thinking: 139 of max 32768 tokens, 105.7 tok/s, 2 s
+[strata] answering: 267 of max 32768 tokens, 115.0 tok/s, 3 s
+[strata] answering: 404 of max 32768 tokens, 120.9 tok/s, 4 s
+[strata] answering: 521 of max 32768 tokens, 119.6 tok/s, 5 s
+[strata] done: 537 tokens in 5 s (118.1 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] done: 0 tokens in 4 s (0.0 tok/s) (cancel, cancel=True)
+[strata] reading the prompt: 8,192 of 73,753 tokens, 4 s so far
+[strata] reading the prompt: 13,036 of 73,753 tokens, 5 s so far
+[strata] reading the prompt: 21,228 of 73,753 tokens, 9 s so far
+[strata] reading the prompt: 29,420 of 73,753 tokens, 11 s so far
+[strata] reading the prompt: 37,612 of 73,753 tokens, 13 s so far
+[strata] reading the prompt: 45,804 of 73,753 tokens, 15 s so far
+[strata] reading the prompt: 53,996 of 73,753 tokens, 17 s so far
+[strata] reading the prompt: 62,188 of 73,753 tokens, 19 s so far
+[strata] reading the prompt: 70,380 of 73,753 tokens, 21 s so far
+[strata] reading the prompt: 73,748 of 73,753 tokens, 23 s so far
+[strata] thinking: 50 of max 32768 tokens, 104.0 tok/s, 24 s
+[strata] thinking: 147 of max 32768 tokens, 97.9 tok/s, 25 s
+[strata] thinking: 249 of max 32768 tokens, 99.4 tok/s, 26 s
+[strata] done: 379 tokens in 27 s (107.7 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 8,192 of 74,952 tokens, 4 s so far
+[strata] reading the prompt: 14,087 of 74,952 tokens, 5 s so far
+[strata] reading the prompt: 22,279 of 74,952 tokens, 9 s so far
+[strata] reading the prompt: 30,471 of 74,952 tokens, 11 s so far
+[strata] reading the prompt: 38,663 of 74,952 tokens, 13 s so far
+[strata] reading the prompt: 46,855 of 74,952 tokens, 15 s so far
+[strata] reading the prompt: 55,047 of 74,952 tokens, 17 s so far
+[strata] reading the prompt: 63,239 of 74,952 tokens, 19 s so far
+[strata] reading the prompt: 71,431 of 74,952 tokens, 22 s so far
+[strata] reading the prompt: 74,947 of 74,952 tokens, 23 s so far
+[strata] thinking: 49 of max 32768 tokens, 104.7 tok/s, 24 s
+[strata] thinking: 163 of max 32768 tokens, 109.6 tok/s, 25 s
+[strata] thinking: 280 of max 32768 tokens, 112.1 tok/s, 26 s
+[strata] thinking: 372 of max 32768 tokens, 106.3 tok/s, 27 s
+[strata] thinking: 481 of max 32768 tokens, 106.4 tok/s, 28 s
+[strata] done: 610 tokens in 29 s (111.4 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] thinking: 52 of max 32768 tokens, 108.8 tok/s, 1 s
+[strata] thinking: 168 of max 32768 tokens, 112.8 tok/s, 2 s
+[strata] thinking: 276 of max 32768 tokens, 110.3 tok/s, 3 s
+[strata] thinking: 387 of max 32768 tokens, 110.1 tok/s, 4 s
+[strata] writing a tool call: edit_file: 526 of max 32768 tokens, 116.3 tok/s, 5 s
+[strata] writing a tool call: edit_file: 674 of max 32768 tokens, 122.0 tok/s, 6 s
+[strata] writing a tool call: edit_file: 825 of max 32768 tokens, 126.4 tok/s, 7 s
+[strata] done: 867 tokens in 7 s (127.7 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] thinking: 13 of max 32768 tokens, 88.9 tok/s, 1 s
+[strata] thinking: 113 of max 32768 tokens, 97.9 tok/s, 2 s
+[strata] writing a tool call: write_file: 243 of max 32768 tokens, 111.7 tok/s, 3 s
+[strata] writing a tool call: write_file: 406 of max 32768 tokens, 126.7 tok/s, 4 s
+[strata] writing a tool call: write_file: 545 of max 32768 tokens, 129.0 tok/s, 5 s
+[strata] writing a tool call: write_file: 695 of max 32768 tokens, 132.9 tok/s, 6 s
+[strata] writing a tool call: write_file: 830 of max 32768 tokens, 133.1 tok/s, 7 s
+[strata] writing a tool call: write_file: 985 of max 32768 tokens, 136.1 tok/s, 8 s
+[strata] done: 1001 tokens in 8 s (136.7 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] reading the prompt: 76,510 of 76,511 tokens, 1 s so far
+[strata] writing a tool call: write_file: 144 of max 32768 tokens, 142.8 tok/s, 2 s
+[strata] writing a tool call: write_file: 305 of max 32768 tokens, 151.7 tok/s, 3 s
+[strata] done: 385 tokens in 4 s (147.4 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] thinking: 24 of max 32768 tokens, 98.8 tok/s, 1 s
+[strata] writing a tool call: write_file: 152 of max 32768 tokens, 122.1 tok/s, 2 s
+[strata] writing a tool call: write_file: 321 of max 32768 tokens, 142.4 tok/s, 3 s
+[strata] writing a tool call: write_file: 482 of max 32768 tokens, 147.1 tok/s, 4 s
+[strata] writing a tool call: write_file: 641 of max 32768 tokens, 149.5 tok/s, 5 s
+[strata] writing a tool call: write_file: 796 of max 32768 tokens, 150.3 tok/s, 6 s
+[strata] done: 935 tokens in 7 s (152.9 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] reading the prompt: 77,766 of 77,767 tokens, 1 s so far
+[strata] writing a tool call: write_file: 150 of max 32768 tokens, 149.4 tok/s, 2 s
+[strata] writing a tool call: write_file: 309 of max 32768 tokens, 153.2 tok/s, 3 s
+[strata] writing a tool call: write_file: 473 of max 32768 tokens, 156.0 tok/s, 4 s
+[strata] writing a tool call: write_file: 618 of max 32768 tokens, 153.3 tok/s, 5 s
+[strata] writing a tool call: write_file: 769 of max 32768 tokens, 152.6 tok/s, 6 s
+[strata] done: 819 tokens in 6 s (152.8 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] reading the prompt: 78,597 of 78,598 tokens, 1 s so far
+[strata] writing a tool call: edit_file: 138 of max 32768 tokens, 139.2 tok/s, 2 s
+[strata] done: 141 tokens in 2 s (142.2 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] writing a tool call: read_file: 61 of max 32768 tokens, 128.5 tok/s, 1 s
+[strata] done: 81 tokens in 1 s (137.5 tok/s) (stop, cancel=False), expert cache 98.4% hit
+[strata] thinking: 23 of max 32768 tokens, 92.6 tok/s, 1 s
+[strata] thinking: 120 of max 32768 tokens, 95.7 tok/s, 2 s
+[strata] thinking: 232 of max 32768 tokens, 101.9 tok/s, 3 s
+[strata] writing a tool call: write_file: 384 of max 32768 tokens, 117.1 tok/s, 4 s
+[strata] writing a tool call: write_file: 554 of max 32768 tokens, 129.1 tok/s, 5 s
+[strata] writing a tool call: write_file: 725 of max 32768 tokens, 136.8 tok/s, 6 s
+[strata] done: 786 tokens in 6 s (138.1 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] thinking: 11 of max 32768 tokens, 93.2 tok/s, 1 s
+[strata] writing a tool call: write_file: 166 of max 32768 tokens, 145.7 tok/s, 2 s
+[strata] writing a tool call: write_file: 339 of max 32768 tokens, 157.9 tok/s, 3 s
+[strata] writing a tool call: write_file: 513 of max 32768 tokens, 161.8 tok/s, 4 s
+[strata] writing a tool call: write_file: 676 of max 32768 tokens, 161.1 tok/s, 5 s
+[strata] done: 821 tokens in 6 s (161.5 tok/s) (stop, cancel=False), expert cache 99.5% hit
+[strata] reading the prompt: 80,445 of 80,446 tokens, 1 s so far
+[strata] done: 123 tokens in 2 s (126.9 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] thinking: 49 of max 32768 tokens, 93.7 tok/s, 1 s
+[strata] thinking: 161 of max 32768 tokens, 104.8 tok/s, 2 s
+[strata] thinking: 304 of max 32768 tokens, 119.3 tok/s, 3 s
+[strata] thinking: 428 of max 32768 tokens, 120.4 tok/s, 4 s
+[strata] done: 561 tokens in 5 s (124.8 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] writing a tool call: edit_file: 59 of max 32768 tokens, 127.4 tok/s, 1 s
+[strata] done: 98 tokens in 1 s (140.0 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] thinking: 57 of max 32768 tokens, 109.9 tok/s, 1 s
+[strata] thinking: 176 of max 32768 tokens, 114.0 tok/s, 2 s
+[strata] thinking: 305 of max 32768 tokens, 119.7 tok/s, 3 s
+[strata] writing a tool call: run_shell: 429 of max 32768 tokens, 120.4 tok/s, 4 s
+[strata] writing a tool call: run_shell: 588 of max 32768 tokens, 128.5 tok/s, 5 s
+[strata] writing a tool call: run_shell: 731 of max 32768 tokens, 131.0 tok/s, 6 s
+[strata] writing a tool call: run_shell: 882 of max 32768 tokens, 134.0 tok/s, 7 s
+[strata] writing a tool call: run_shell: 1028 of max 32768 tokens, 135.6 tok/s, 8 s
+[strata] done: 1062 tokens in 8 s (135.5 tok/s) (stop, cancel=False), expert cache 99.5% hit
+[strata] thinking: 1 of max 32768 tokens, 699050.7 tok/s, 1 s
+[strata] thinking: 101 of max 32768 tokens, 100.5 tok/s, 2 s
+[strata] thinking: 198 of max 32768 tokens, 98.7 tok/s, 3 s
+[strata] thinking: 307 of max 32768 tokens, 101.7 tok/s, 4 s
+[strata] writing a tool call: edit_file: 435 of max 32768 tokens, 108.2 tok/s, 5 s
+[strata] done: 508 tokens in 5 s (113.5 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] thinking: 46 of max 32768 tokens, 112.8 tok/s, 1 s
+[strata] thinking: 139 of max 32768 tokens, 98.6 tok/s, 2 s
+[strata] thinking: 232 of max 32768 tokens, 96.0 tok/s, 3 s
+[strata] writing a tool call: edit_file: 347 of max 32768 tokens, 100.9 tok/s, 4 s
+[strata] done: 402 tokens in 4 s (105.7 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] thinking: 51 of max 32768 tokens, 102.3 tok/s, 1 s
+[strata] thinking: 160 of max 32768 tokens, 106.1 tok/s, 2 s
+[strata] done: 224 tokens in 2 s (114.4 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] writing a tool call: edit_file: 47 of max 32768 tokens, 135.5 tok/s, 1 s
+[strata] done: 132 tokens in 2 s (140.4 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] thinking: 55 of max 32768 tokens, 116.4 tok/s, 1 s
+[strata] thinking: 160 of max 32768 tokens, 108.3 tok/s, 2 s
+[strata] thinking: 268 of max 32768 tokens, 108.1 tok/s, 3 s
+[strata] done: 373 tokens in 4 s (116.1 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] thinking: 48 of max 32768 tokens, 100.0 tok/s, 1 s
+[strata] thinking: 158 of max 32768 tokens, 106.5 tok/s, 2 s
+[strata] writing a tool call: edit_file: 293 of max 32768 tokens, 116.7 tok/s, 3 s
+[strata] done: 341 tokens in 3 s (121.4 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] thinking: 48 of max 32768 tokens, 121.9 tok/s, 1 s
+[strata] writing a tool call: run_shell: 168 of max 32768 tokens, 119.7 tok/s, 2 s
+[strata] done: 233 tokens in 3 s (123.0 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] thinking: 52 of max 32768 tokens, 111.1 tok/s, 1 s
+[strata] writing a tool call: run_shell: 172 of max 32768 tokens, 117.0 tok/s, 2 s
+[strata] done: 174 tokens in 2 s (118.4 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] thinking: 36 of max 32768 tokens, 122.0 tok/s, 1 s
+[strata] thinking: 138 of max 32768 tokens, 106.3 tok/s, 2 s
+[strata] writing a tool call: edit_file: 267 of max 32768 tokens, 115.7 tok/s, 3 s
+[strata] done: 310 tokens in 3 s (120.4 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] thinking: 48 of max 32768 tokens, 112.2 tok/s, 1 s
+[strata] thinking: 172 of max 32768 tokens, 119.6 tok/s, 2 s
+[strata] done: 303 tokens in 3 s (127.7 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] writing a tool call: read_file: 53 of max 32768 tokens, 114.9 tok/s, 1 s
+[strata] done: 90 tokens in 1 s (125.4 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] thinking: 33 of max 32768 tokens, 98.9 tok/s, 1 s
+[strata] thinking: 138 of max 32768 tokens, 102.8 tok/s, 2 s
+[strata] writing a tool call: write_file: 288 of max 32768 tokens, 122.9 tok/s, 3 s
+[strata] writing a tool call: write_file: 453 of max 32768 tokens, 134.6 tok/s, 4 s
+[strata] done: 490 tokens in 4 s (135.5 tok/s) (stop, cancel=False), expert cache 99.5% hit
+[strata] thinking: 31 of max 32768 tokens, 135.7 tok/s, 1 s
+[strata] thinking: 149 of max 32768 tokens, 118.9 tok/s, 2 s
+[strata] writing a tool call: run_shell: 302 of max 32768 tokens, 133.6 tok/s, 3 s
+[strata] writing a tool call: run_shell: 458 of max 32768 tokens, 140.3 tok/s, 4 s
+[strata] done: 511 tokens in 4 s (139.9 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] thinking: 21 of max 32768 tokens, 83.2 tok/s, 1 s
+[strata] thinking: 128 of max 32768 tokens, 101.1 tok/s, 2 s
+[strata] thinking: 236 of max 32768 tokens, 103.7 tok/s, 3 s
+[strata] thinking: 338 of max 32768 tokens, 102.8 tok/s, 4 s
+[strata] done: 438 tokens in 5 s (108.1 tok/s) (stop, cancel=False), expert cache 99.7% hit
+[strata] thinking: 52 of max 32768 tokens, 101.0 tok/s, 1 s
+[strata] writing a tool call: memory: 157 of max 32768 tokens, 102.4 tok/s, 2 s
+[strata] done: 242 tokens in 3 s (112.1 tok/s) (stop, cancel=False), expert cache 99.5% hit
+[strata] thinking: 37 of max 32768 tokens, 94.8 tok/s, 1 s
+[strata] writing a tool call: memory: 164 of max 32768 tokens, 117.4 tok/s, 2 s
+[strata] done: 246 tokens in 3 s (130.0 tok/s) (stop, cancel=False), expert cache 99.6% hit
+[strata] answering: 39 of max 32768 tokens, 105.3 tok/s, 1 s
+[strata] answering: 151 of max 32768 tokens, 109.5 tok/s, 2 s
+[strata] answering: 249 of max 32768 tokens, 103.9 tok/s, 3 s
+[strata] answering: 372 of max 32768 tokens, 108.8 tok/s, 4 s
+[strata] done: 476 tokens in 5 s (110.7 tok/s) (stop, cancel=False), expert cache 99.8% hit
+[strata] model unloaded; the next request loads it again
+
+[strata] stopping (Ctrl+C again to end the engine at once) ...
+[strata] stopped

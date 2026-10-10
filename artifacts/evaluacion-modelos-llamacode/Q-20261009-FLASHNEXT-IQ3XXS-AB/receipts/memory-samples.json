@@ -1,0 +1,41 @@
+{
+  "units": "KiB for process memory; MiB for GPU memory; GiB converted by 1024*1024 KiB",
+  "applicationReceiptRamTelemetry": "0 MiB in the native receipts; process data below is supplemental /proc sampling",
+  "iq3xxs": {
+    "stage": "Server Speed main-repeat2, loaded and running",
+    "engineVmRssKiB": 47818136,
+    "engineVmHwmKiB": 47818136,
+    "engineVmSwapKiB": 0,
+    "gpuMiBByRun": {
+      "main": [
+        23855,
+        23754
+      ],
+      "mainRepeat2": [
+        23962,
+        23760
+      ]
+    },
+    "source": "session sample captured before shutdown; exact /proc values recorded in task notes"
+  },
+  "iq3s": {
+    "stage": "TaskFlow ULTRA, loaded and running",
+    "engineVmRssKiB": 55091492,
+    "engineVmHwmKiB": 55547060,
+    "engineVmSwapKiB": 0,
+    "gpuMiBObserved": [
+      23899,
+      23774
+    ],
+    "systemAvailableRamBytes": 59137798144,
+    "source": "/proc/484197/status and nvidia-smi on 2026-10-09"
+  },
+  "iq3xxsGiB": {
+    "vmRss": 45.602928161621094,
+    "vmHwm": 45.602928161621094
+  },
+  "iq3sGiB": {
+    "vmRss": 52.53934097290039,
+    "vmHwm": 52.97380447387695
+  }
+}

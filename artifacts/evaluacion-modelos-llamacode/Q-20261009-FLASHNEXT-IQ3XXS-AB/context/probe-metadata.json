@@ -1,0 +1,62 @@
+{
+  "suite": "context-retrieval-v1",
+  "generatorSeed": 4242,
+  "targetTokens": 115000,
+  "tokenizerTextOnlyTokens": 115003,
+  "factPositionsTextOnly": [
+    {
+      "caseId": "case-5172",
+      "tokenOffset": 5758,
+      "fraction": 0.0501
+    },
+    {
+      "caseId": "case-6803",
+      "tokenOffset": 17238,
+      "fraction": 0.1499
+    },
+    {
+      "caseId": "case-1048",
+      "tokenOffset": 28729,
+      "fraction": 0.2498
+    },
+    {
+      "caseId": "case-9351",
+      "tokenOffset": 40204,
+      "fraction": 0.3496
+    },
+    {
+      "caseId": "case-2264",
+      "tokenOffset": 51667,
+      "fraction": 0.4493
+    },
+    {
+      "caseId": "case-7490",
+      "tokenOffset": 63127,
+      "fraction": 0.5489
+    },
+    {
+      "caseId": "case-3815",
+      "tokenOffset": 74602,
+      "fraction": 0.6487
+    },
+    {
+      "caseId": "case-8627",
+      "tokenOffset": 86101,
+      "fraction": 0.7487
+    },
+    {
+      "caseId": "case-2906",
+      "tokenOffset": 97567,
+      "fraction": 0.8484
+    },
+    {
+      "caseId": "case-4439",
+      "tokenOffset": 109050,
+      "fraction": 0.9482
+    }
+  ],
+  "promptSha256": "ea4cd4a48080b0191273c4dfe4df54d69535a131d1e0117a31a3c75377d8ec84",
+  "promptFileSha256": "ea4cd4a48080b0191273c4dfe4df54d69535a131d1e0117a31a3c75377d8ec84",
+  "promptBytes": 308055,
+  "expectedSha256": "89cd8df5fcf636c53436db4f4fdc9e8e2166a98e1c9c5d284428da4d23362d25"
+}

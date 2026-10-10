@@ -1,0 +1,41 @@
+{
+    "benchmarkName": "ADV v1 - 10 tareas",
+    "comparisons": [
+    ],
+    "generatedAt": "2026-10-09T21:17:40",
+    "profileCount": 1,
+    "profiles": [
+        {
+            "agentVariant": "baseline",
+            "comparisonTimeMetric": "timeToFirstAttempt",
+            "failedRuns": 0,
+            "fullyAcceptedRuns": 1,
+            "honeyEnabled": false,
+            "medianAddedLines": 635,
+            "medianColdFirstAttemptSec": 679.61,
+            "medianElapsedSec": 773.404,
+            "medianFilesChanged": 20,
+            "medianFirstAttemptSec": 679.61,
+            "medianQualityPct": 100,
+            "medianRemovedLines": 0,
+            "medianRepairAttempts": 2,
+            "medianToolCalls": 63,
+            "medianToolF1Pct": 0,
+            "medianToolRedundantCalls": 1,
+            "medianToolSuccessRatePct": 90.47619047619048,
+            "medianWarmFirstAttemptSec": 0,
+            "outcomeSpread": false,
+            "profileId": "iq3s-lch1-20261009",
+            "profileName": "EVAL · ASTRA calibrado IQ3_S · lch1 · R4096",
+            "qualityRangePctPoints": 0,
+            "runs": 1,
+            "stabilityRatePct": 100,
+            "successRatePct": 100,
+            "successfulRuns": 1
+        }
+    ],
+    "runCount": 1,
+    "runLabel": "ADV v1 - 10 tareas",
+    "schemaVersion": 1,
+    "target": "agent"
+}

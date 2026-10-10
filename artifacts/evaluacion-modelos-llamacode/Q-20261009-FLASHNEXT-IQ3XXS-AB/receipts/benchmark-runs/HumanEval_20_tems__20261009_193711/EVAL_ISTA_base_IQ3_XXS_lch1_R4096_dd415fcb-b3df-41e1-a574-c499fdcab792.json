@@ -1,0 +1,750 @@
+{
+    "acceptance": [
+        {
+            "passed": true,
+            "taskId": "HumanEval/0",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/1",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/2",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/3",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/4",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/5",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/6",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/7",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/8",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/9",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/10",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/11",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/12",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/13",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/14",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/15",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/16",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/17",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/18",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/19",
+            "type": "grader:code_tests"
+        }
+    ],
+    "agentFiles": [
+        "solution_HumanEval_0.py",
+        "solution_HumanEval_1.py",
+        "solution_HumanEval_10.py",
+        "solution_HumanEval_11.py",
+        "solution_HumanEval_12.py",
+        "solution_HumanEval_13.py",
+        "solution_HumanEval_14.py",
+        "solution_HumanEval_15.py",
+        "solution_HumanEval_16.py",
+        "solution_HumanEval_17.py",
+        "solution_HumanEval_18.py",
+        "solution_HumanEval_19.py",
+        "solution_HumanEval_2.py",
+        "solution_HumanEval_3.py",
+        "solution_HumanEval_4.py",
+        "solution_HumanEval_5.py",
+        "solution_HumanEval_6.py",
+        "solution_HumanEval_7.py",
+        "solution_HumanEval_8.py",
+        "solution_HumanEval_9.py",
+        "__pycache__/solution_HumanEval_0.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_1.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_10.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_11.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_12.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_13.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_14.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_15.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_16.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_17.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_18.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_2.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_3.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_4.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_5.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_6.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_7.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_8.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_9.cpython-312.pyc"
+    ],
+    "agentMetrics": [
+        {
+            "elapsedMs": 7864,
+            "tokens": 236,
+            "tps": 167.78046352907722,
+            "ttft_ms": 51
+        },
+        {
+            "elapsedMs": 8412,
+            "tokens": 209,
+            "tps": 151.97789412449097,
+            "ttft_ms": 61
+        },
+        {
+            "elapsedMs": 1764,
+            "tokens": 208,
+            "tps": 164.02491917041243,
+            "ttft_ms": 36
+        },
+        {
+            "elapsedMs": 1698,
+            "tokens": 138,
+            "tps": 117.68719085792257,
+            "ttft_ms": 139
+        },
+        {
+            "elapsedMs": 2354,
+            "tokens": 283,
+            "tps": 143.64023956958684,
+            "ttft_ms": 25
+        },
+        {
+            "elapsedMs": 1564,
+            "tokens": 124,
+            "tps": 114.38059219629187,
+            "ttft_ms": 31
+        },
+        {
+            "elapsedMs": 9400,
+            "tokens": 298,
+            "tps": 156.45508479025568,
+            "ttft_ms": 27
+        },
+        {
+            "elapsedMs": 9329,
+            "tokens": 166,
+            "tps": 127.35921436243669,
+            "ttft_ms": 52
+        },
+        {
+            "elapsedMs": 2028,
+            "tokens": 189,
+            "tps": 121.9276175730598,
+            "ttft_ms": 53
+        },
+        {
+            "elapsedMs": 1583,
+            "tokens": 126,
+            "tps": 114.57670273711011,
+            "ttft_ms": 44
+        },
+        {
+            "elapsedMs": 9388,
+            "tokens": 160,
+            "tps": 154.8137397194001,
+            "ttft_ms": 29
+        },
+        {
+            "elapsedMs": 10043,
+            "tokens": 172,
+            "tps": 140.51139612776734,
+            "ttft_ms": 67
+        },
+        {
+            "elapsedMs": 1116,
+            "tokens": 93,
+            "tps": 136.7244927962364,
+            "ttft_ms": 39
+        },
+        {
+            "elapsedMs": 11733,
+            "tokens": 346,
+            "tps": 138.97256697594088,
+            "ttft_ms": 47
+        },
+        {
+            "elapsedMs": 10739,
+            "tokens": 132,
+            "tps": 131.4871999203108,
+            "ttft_ms": 53
+        },
+        {
+            "elapsedMs": 1199,
+            "tokens": 86,
+            "tps": 120.31337437045327,
+            "ttft_ms": 44
+        },
+        {
+            "elapsedMs": 12118,
+            "tokens": 250,
+            "tps": 147.39696951830672,
+            "ttft_ms": 30
+        },
+        {
+            "elapsedMs": 12296,
+            "tokens": 177,
+            "tps": 126.1132882080513,
+            "ttft_ms": 52
+        },
+        {
+            "elapsedMs": 1220,
+            "tokens": 96,
+            "tps": 123.9829523440527,
+            "ttft_ms": 48
+        },
+        {
+            "elapsedMs": 12365,
+            "tokens": 221,
+            "tps": 152.2877618522602,
+            "ttft_ms": 30
+        },
+        {
+            "elapsedMs": 12241,
+            "tokens": 120,
+            "tps": 143.54066985645932,
+            "ttft_ms": 54
+        },
+        {
+            "elapsedMs": 1104,
+            "tokens": 75,
+            "tps": 122.20954863940035,
+            "ttft_ms": 45
+        },
+        {
+            "elapsedMs": 13216,
+            "tokens": 277,
+            "tps": 159.61737927855248,
+            "ttft_ms": 31
+        },
+        {
+            "elapsedMs": 12967,
+            "tokens": 132,
+            "tps": 138.27781269641736,
+            "ttft_ms": 135
+        },
+        {
+            "elapsedMs": 1167,
+            "tokens": 82,
+            "tps": 122.88326090214298,
+            "ttft_ms": 126
+        },
+        {
+            "elapsedMs": 13988,
+            "tokens": 187,
+            "tps": 135.68422580177042,
+            "ttft_ms": 49
+        },
+        {
+            "elapsedMs": 15508,
+            "tokens": 300,
+            "tps": 121.91157347204161,
+            "ttft_ms": 73
+        },
+        {
+            "elapsedMs": 1226,
+            "tokens": 113,
+            "tps": 132.97246410920218,
+            "ttft_ms": 17
+        },
+        {
+            "elapsedMs": 2143,
+            "tokens": 222,
+            "tps": 134.61072034926025,
+            "ttft_ms": 54
+        },
+        {
+            "elapsedMs": 1760,
+            "tokens": 171,
+            "tps": 137.48191027496384,
+            "ttft_ms": 55
+        },
+        {
+            "elapsedMs": 933,
+            "tokens": 52,
+            "tps": 134.81980814104227,
+            "ttft_ms": 26
+        },
+        {
+            "elapsedMs": 1606,
+            "tokens": 165,
+            "tps": 165.97927773865808,
+            "ttft_ms": 21
+        },
+        {
+            "elapsedMs": 2314,
+            "tokens": 216,
+            "tps": 123.32990750256937,
+            "ttft_ms": 55
+        },
+        {
+            "elapsedMs": 3240,
+            "tokens": 350,
+            "tps": 127.99414883891022,
+            "ttft_ms": 47
+        },
+        {
+            "elapsedMs": 3075,
+            "tokens": 291,
+            "tps": 113.09315611519179,
+            "ttft_ms": 26
+        },
+        {
+            "elapsedMs": 1178,
+            "tokens": 56,
+            "tps": 118.24324324324324,
+            "ttft_ms": 28
+        },
+        {
+            "elapsedMs": 9282,
+            "tokens": 157,
+            "tps": 110.85222057473699,
+            "ttft_ms": 24
+        },
+        {
+            "elapsedMs": 14825,
+            "tokens": 218,
+            "tps": 158.05118538389038,
+            "ttft_ms": 35
+        },
+        {
+            "elapsedMs": 14862,
+            "tokens": 137,
+            "tps": 137.92409141246353,
+            "ttft_ms": 63
+        },
+        {
+            "elapsedMs": 1447,
+            "tokens": 112,
+            "tps": 125.22361359570662,
+            "ttft_ms": 49
+        },
+        {
+            "elapsedMs": 15511,
+            "tokens": 229,
+            "tps": 148.09545366358404,
+            "ttft_ms": 34
+        },
+        {
+            "elapsedMs": 16484,
+            "tokens": 228,
+            "tps": 128.8645226925903,
+            "ttft_ms": 76
+        },
+        {
+            "elapsedMs": 1469,
+            "tokens": 129,
+            "tps": 140.01953760989906,
+            "ttft_ms": 84
+        },
+        {
+            "elapsedMs": 1540,
+            "tokens": 159,
+            "tps": 154.7144108202783,
+            "ttft_ms": 72
+        },
+        {
+            "elapsedMs": 831,
+            "tokens": 33,
+            "tps": 108.51693521867806,
+            "ttft_ms": 35
+        },
+        {
+            "elapsedMs": 16736,
+            "tokens": 274,
+            "tps": 149.23747276688454,
+            "ttft_ms": 34
+        },
+        {
+            "elapsedMs": 16436,
+            "tokens": 156,
+            "tps": 137.72402224772665,
+            "ttft_ms": 59
+        },
+        {
+            "elapsedMs": 2426,
+            "tokens": 207,
+            "tps": 108.50762698537505,
+            "ttft_ms": 47
+        },
+        {
+            "elapsedMs": 16586,
+            "tokens": 178,
+            "tps": 151.32194168154382,
+            "ttft_ms": 37
+        },
+        {
+            "elapsedMs": 17020,
+            "tokens": 164,
+            "tps": 137.11228158180757,
+            "ttft_ms": 59
+        },
+        {
+            "elapsedMs": 1226,
+            "tokens": 85,
+            "tps": 121.55012155012156,
+            "ttft_ms": 51
+        },
+        {
+            "elapsedMs": 17452,
+            "tokens": 210,
+            "tps": 154.4912822776429,
+            "ttft_ms": 55
+        },
+        {
+            "elapsedMs": 17619,
+            "tokens": 127,
+            "tps": 137.87862338508305,
+            "ttft_ms": 60
+        },
+        {
+            "elapsedMs": 974,
+            "tokens": 55,
+            "tps": 117.77301927194861,
+            "ttft_ms": 196
+        },
+        {
+            "elapsedMs": 18135,
+            "tokens": 185,
+            "tps": 140.18337500947183,
+            "ttft_ms": 38
+        },
+        {
+            "elapsedMs": 18149,
+            "tokens": 101,
+            "tps": 112.50974713155843,
+            "ttft_ms": 61
+        },
+        {
+            "elapsedMs": 1608,
+            "tokens": 135,
+            "tps": 113.71293800539082,
+            "ttft_ms": 29
+        },
+        {
+            "elapsedMs": 1600,
+            "tokens": 91,
+            "tps": 134.93475682087782,
+            "ttft_ms": 29
+        },
+        {
+            "elapsedMs": 1155,
+            "tokens": 86,
+            "tps": 118.94882434301522,
+            "ttft_ms": 50
+        },
+        {
+            "elapsedMs": 1197,
+            "tokens": 113,
+            "tps": 146.46791963707065,
+            "ttft_ms": 27
+        },
+        {
+            "elapsedMs": 1348,
+            "tokens": 121,
+            "tps": 134.38471790315415,
+            "ttft_ms": 47
+        },
+        {
+            "elapsedMs": 1514,
+            "tokens": 118,
+            "tps": 111.33125766581752,
+            "ttft_ms": 71
+        },
+        {
+            "elapsedMs": 1440,
+            "tokens": 164,
+            "tps": 155.77507598784194,
+            "ttft_ms": 30
+        },
+        {
+            "elapsedMs": 1462,
+            "tokens": 125,
+            "tps": 141.41871252404118,
+            "ttft_ms": 60
+        },
+        {
+            "elapsedMs": 1495,
+            "tokens": 145,
+            "tps": 150.93161236598314,
+            "ttft_ms": 29
+        },
+        {
+            "elapsedMs": 648,
+            "tokens": 9,
+            "tps": 76.27118644067797,
+            "ttft_ms": 49
+        },
+        {
+            "elapsedMs": 19687,
+            "tokens": 275,
+            "tps": 135.11521643001032,
+            "ttft_ms": 40
+        },
+        {
+            "elapsedMs": 18920,
+            "tokens": 110,
+            "tps": 130.3780964797914,
+            "ttft_ms": 63
+        },
+        {
+            "elapsedMs": 1094,
+            "tokens": 73,
+            "tps": 124.33997615397718,
+            "ttft_ms": 55
+        },
+        {
+            "elapsedMs": 20278,
+            "tokens": 210,
+            "tps": 131.25820363772735,
+            "ttft_ms": 40
+        },
+        {
+            "elapsedMs": 20150,
+            "tokens": 137,
+            "tps": 123.76908483151142,
+            "ttft_ms": 63
+        },
+        {
+            "elapsedMs": 1006,
+            "tokens": 51,
+            "tps": 120,
+            "ttft_ms": 51
+        },
+        {
+            "elapsedMs": 20057,
+            "tokens": 149,
+            "tps": 145.2383273223511,
+            "ttft_ms": 41
+        },
+        {
+            "elapsedMs": 20292,
+            "tokens": 111,
+            "tps": 130.19000703729768,
+            "ttft_ms": 66
+        },
+        {
+            "elapsedMs": 1074,
+            "tokens": 60,
+            "tps": 107.58472296933834,
+            "ttft_ms": 51
+        },
+        {
+            "elapsedMs": 23455,
+            "tokens": 524,
+            "tps": 135.5686639759909,
+            "ttft_ms": 41
+        },
+        {
+            "elapsedMs": 21357,
+            "tokens": 184,
+            "tps": 135.1947097722263,
+            "ttft_ms": 64
+        },
+        {
+            "elapsedMs": 993,
+            "tokens": 59,
+            "tps": 129.84154929577466,
+            "ttft_ms": 57
+        },
+        {
+            "elapsedMs": 21861,
+            "tokens": 187,
+            "tps": 154.69887491727334,
+            "ttft_ms": 44
+        },
+        {
+            "elapsedMs": 22363,
+            "tokens": 159,
+            "tps": 121.34625658246203,
+            "ttft_ms": 69
+        },
+        {
+            "elapsedMs": 1046,
+            "tokens": 57,
+            "tps": 110.52937754508434,
+            "ttft_ms": 52
+        },
+        {
+            "elapsedMs": 22762,
+            "tokens": 280,
+            "tps": 152.6884065874141,
+            "ttft_ms": 69
+        },
+        {
+            "elapsedMs": 733,
+            "tokens": 0,
+            "tps": 0,
+            "ttft_ms": 66
+        },
+        {
+            "elapsedMs": 0,
+            "tokens": 8,
+            "tps": 0
+        }
+    ],
+    "agentProfileId": "agent-maximo",
+    "agentProfileName": "Máximo",
+    "agentSeed": 4242,
+    "agentTemperature": 0.1,
+    "agentVariant": "baseline",
+    "avgTps": 133.384545460931,
+    "avgTtftMs": 52.0722891566265,
+    "baselineId": "dd415fcb-b3df-41e1-a574-c499fdcab792",
+    "benchmarkMemoryPlanner": "llama.cpp-fit-expert-aware",
+    "benchmarkName": "HumanEval (20 ítems)",
+    "complexityMetrics": {
+        "addedLines": 522,
+        "filesChanged": 39,
+        "filesCreated": 39,
+        "filesDeleted": 0,
+        "removedLines": 0
+    },
+    "elapsedSec": 695.244,
+    "failed": false,
+    "failureKind": "none",
+    "finalScore": 20,
+    "finalTotal": 20,
+    "firstAttemptScore": 20,
+    "firstAttemptTotal": 20,
+    "firstEvaluableSec": 8.743,
+    "firstToolCallSec": 7.921,
+    "firstWriteSec": 7.972,
+    "generationSec": 685.484,
+    "harnessEngineId": "legacy",
+    "harnessEngineVersion": 1,
+    "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+    "honeyEnabled": false,
+    "id": "dd415fcb-b3df-41e1-a574-c499fdcab792",
+    "isBaseline": true,
+    "measurementPhase": "cold",
+    "mode": "custom",
+    "nonGenerationSec": 9.759999999999991,
+    "pass": 1,
+    "passedAfterRepair": false,
+    "passesTotal": 1,
+    "profileConfigFingerprint": "446cce937a86a65e99674718c58690435bfaf07a9f74558e469b4e7f33345c26",
+    "profileId": "iq3xxs-lch1-20261009",
+    "profileName": "EVAL · ISTA base IQ3_XXS · lch1 · R4096",
+    "progressGovernor": {
+        "progressEvents": 57,
+        "replanEvents": 0,
+        "stagnationEvents": 5
+    },
+    "qualityScore": 20,
+    "qualityTotal": 20,
+    "ramFreeMb": 0,
+    "ramMb": 0,
+    "ramTotalMb": 0,
+    "repairAttempts": 0,
+    "response": "[turno cancelado por el usuario]",
+    "runDir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-flashnext-iq3xxs-strata-20261009/runtime/xdg-data/LlamaCode/LlamaCode/benchmark-runs/HumanEval_20_tems__20261009_193711",
+    "runLabel": "HumanEval (20 ítems)",
+    "setupSec": 0.301,
+    "target": "agent",
+    "thinkingEnabled": true,
+    "timeToFirstAttempt": 694.943,
+    "timedOut": false,
+    "timeoutSec": 1800,
+    "timestamp": 1791586128327,
+    "toolCallQuality": {
+        "expectedCalls": 0,
+        "f1Pct": -1,
+        "failedCalls": 4,
+        "incompleteCalls": 0,
+        "invalidCalls": 0,
+        "matchedExpectedCalls": 0,
+        "missingExpectedCalls": 0,
+        "precisionPct": -1,
+        "recallPct": -1,
+        "redundantCalls": 1,
+        "sequenceExact": false,
+        "successRatePct": 93.65079365079364,
+        "successfulCalls": 59,
+        "totalCalls": 63,
+        "unexpectedCalls": 0
+    },
+    "toolCalls": 63,
+    "totalTime": 695.244,
+    "transportAfterEvaluation": false,
+    "vramFreeMb": 638,
+    "vramGpu0FreeMb": 268,
+    "vramGpu0Mb": 23858,
+    "vramGpu0TotalMb": 24576,
+    "vramGpu0UsedPct": 97.07845052083334,
+    "vramGpu1FreeMb": 370,
+    "vramGpu1Mb": 23754,
+    "vramGpu1TotalMb": 24576,
+    "vramGpu1UsedPct": 96.6552734375,
+    "vramMb": 47612,
+    "vramNormalizedImbalancePct": 0.42317708333333703,
+    "vramObservedGpu0SharePct": 50.10921616399227,
+    "vramOptimalGpu0SharePct": 42.00626959247649,
+    "vramPlacementAssessment": "balanced",
+    "vramTelemetryScope": "device-total",
+    "workspace": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-flashnext-iq3xxs-strata-20261009/runtime/xdg-data/LlamaCode/LlamaCode/benchmark-runs/HumanEval_20_tems__20261009_193711/EVAL_ISTA_base_IQ3_XXS_lch1_R4096__ws"
+}

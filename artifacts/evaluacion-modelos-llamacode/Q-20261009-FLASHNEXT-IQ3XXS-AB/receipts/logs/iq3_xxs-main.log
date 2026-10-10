@@ -1,0 +1,1485 @@
+[strata] 2026-10-09 19:26:17 engine started: /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata --serve --pack /media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/packs/iq3_xxs --native /media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/models/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf --ple-gguf /media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/models/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf --expert-profile /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/data/expert-profile.bin --expert-cache auto --prefill auto --spec 4 --spec-min-p 0.70 --mtp /media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/mtp/rt --max-context 131072 --kv int8 --kv-resident 32768 --pcie-frac 0.00 --layer-split auto
+strata generate: layer split across 2 GPUs: CUDA0, then CUDA1 (split auto)
+strata generate: native pack: /media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/packs/iq3_xxs experts (largest blob 2.33 MB), token embedding IQ3_S in mapped host memory (260 MiB, 0.2 s)
+strata generate: 1466 MiB of weights loaded from /media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/packs/iq3_xxs in 0.2 s (302 canonical tensors skipped: served natively)
+strata generate: 300 native projection matrices, 1781.11 MiB of weights, in 0.3 s
+strata generate: the SSD is kept awake while rows are read: one page of the table after 100 ms without a read, until 60 s after the last request (STRATA_SSD_KEEPALIVE=0 turns it off)
+strata generate: layer split: CUDA1 holds its weights; 19.06 GiB free (its session follows the split search)
+strata generate: profile /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/data/expert-profile.bin: 24576 ranked pairs, built for 24576 slots
+strata generate: layer split auto: CUDA0 82 SMs at 1.70 GHz -> 0.52 ms per layer, 19.10 GiB free before its session carve
+strata generate: layer split auto: CUDA1 82 SMs at 1.74 GHz -> 0.51 ms per layer, 17.31 GiB free before its session carve
+strata generate: layer split auto: CUDA0 link 13.4 GB/s -> miss cost x1.50
+strata generate: layer split auto: CUDA1 link 13.4 GB/s -> miss cost x1.50
+strata generate: layer split auto: K=26 - predicted 25.6 ms per decode window; the caches hold 22121 of 24576 profiled pairs (~99.7% of the routed mass), best of 46 placements
+strata generate: KV streaming: 32768 of 131072 cells per QSA layer in VRAM, the K/V in 0.77 GiB of pinned RAM
+strata generate: PLE on, table 320001536 rows of /media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/models/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf
+strata generate: layer split: CUDA1 holds its weights, session [26, 48) and the head; 18.27 GiB free
+strata mtp: draft layer loaded, 835 MiB of VRAM (experts 675, dense 111), files read in 0.27 s (2874 MiB/s)
+strata generate: GPU 0: NVIDIA GeForce RTX 3090, compute capability 8.6
+strata generate: expert arena read through the file cache (buffered (not Windows))
+strata generate: expert arena: cudaHostRegister PORTABLE ok; MAP_HUGETLB unavailable (needed 20464 2 MiB pages, vm.nr_hugepages=0); transparent huge pages requested (MADV_HUGEPAGE)
+strata generate: loaded 39.97 GiB at 2.50 GiB/s
+strata generate: CPU pool tasks/phase: 48 (automatic), participating threads: 16
+strata generate: 15 pool workers on logical processors 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15, the host thread on 0 (draining too) (--host-core first)
+strata generate: expert cache auto: 19.30 GiB free, 700 MiB reserved (+0 MiB for the draft head) -> 8582 slots
+strata generate: expert cache 12840 slots, 18.62 GiB of VRAM; policy is
+strata generate: the GPU computes the experts in the cache; it rounds differently from the CPU,
+                 so a reply can differ slightly from a run without the cache (same quality:
+                 bench/results/2026-09-27-cache-parity).
+                 PROFILE, ranked by routing frequency, no eviction.
+strata generate: pre-filled 12840 of 12840 slots from the profile in 1.7 s (12059 MB/s); slot 0 verified
+strata generate: layer split, CUDA1: 17.37 GiB free of 23.56, room for experts 16.60 GiB
+strata generate: layer split: CUDA1 runs layers 26-47, expert cache 9041 slots (16.59 GiB), 9041 of its 11264 profiled pairs; slot 0 verified
+strata generate: layer split: CUDA0 runs layers 0-25
+strata generate: layer split auto: L2 probe: the split is startable on the live free figures
+strata generate: R4 hit path ON - resident experts are computed on the GPU
+strata generate: 15 expert-pool workers + the host thread
+strata generate: session is up (engine 0.1.41)
+strata generate: token graph hit path: 21881 resident experts, decided on the device
+strata serve: layer split: 89% of the experts resident, the prompt path's streamed ring 96 slots
+strata serve: prompt chunk auto: 8192 tokens, a 96-slot ring
+strata serve: the prompt path borrows 2426 CUDA0 cache slots (3.50 GiB)
+strata serve:   CUDA1 prompt path borrows 1901 of its 9041 slots (3.50 GiB)
+strata hc: CUDA1: the hyper-connection read runs as staged (the norm per token and stream, the down projection's activations staged ahead by cp.async); checked bit for bit against the plain read on this card (STRATA_HC_SPLIT=1 or 0 for the earlier ones)
+strata verify: window up to 6 tokens, 70.0 MiB of device buffers
+strata serve: layer split: layers 0-25 (CUDA0), 26-47 (CUDA1), one hand-off per window
+strata hc: CUDA0: the hyper-connection read runs as staged (the norm per token and stream, the down projection's activations staged ahead by cp.async); checked bit for bit against the plain read on this card (STRATA_HC_SPLIT=1 or 0 for the earlier ones)
+strata verify: window up to 6 tokens, 70.0 MiB of device buffers
+strata mtp: draft head over 106299 tokens (178.4 MiB)
+strata serve: 459 MiB of VRAM free with everything loaded
+strata verify: capturing the 4-token window (413 MiB of VRAM free)
+strata verify: captured the 4-token window (upload no error, sync no error)
+strata verify: capturing the 4-token window (325 MiB of VRAM free)
+strata verify: captured the 4-token window (upload no error, sync no error)
+strata verify: capturing the 1-token window (403 MiB of VRAM free)
+strata verify: captured the 1-token window (upload no error, sync no error)
+strata verify: capturing the 1-token window (317 MiB of VRAM free)
+strata verify: captured the 1-token window (upload no error, sync no error)
+strata verify: capturing the 3-token window (393 MiB of VRAM free)
+strata verify: captured the 3-token window (upload no error, sync no error)
+strata verify: capturing the 3-token window (307 MiB of VRAM free)
+strata verify: captured the 3-token window (upload no error, sync no error)
+strata verify: capturing the 6-token window (385 MiB of VRAM free)
+strata verify: captured the 6-token window (upload no error, sync no error)
+strata verify: capturing the 6-token window (299 MiB of VRAM free)
+strata verify: captured the 6-token window (upload no error, sync no error)
+strata verify: capturing the 2-token window (377 MiB of VRAM free)
+strata verify: captured the 2-token window (upload no error, sync no error)
+strata verify: capturing the 2-token window (291 MiB of VRAM free)
+strata verify: captured the 2-token window (upload no error, sync no error)
+strata serve: prompt 198 tokens = 0 reused + 198 read in 662 ms (299.3 tok/s), 1093 generated in 9740 ms (112.2 tok/s), drafts accepted 479 of 613, 1 checkpoints
+strata serve: decode expert cache hit rate: 98.8% (582826 hits / 589920 lookups)
+strata serve: KV streaming: 99.86% of 1372494 block reads hit VRAM, 7.8 MiB read from RAM
+strata serve: suffix drafts: 45 windows, 99 of 125 drafts accepted
+strata serve: prompt 198 tokens = 193 reused + 5 read in 29 ms (173.1 tok/s), 1087 generated in 9811 ms (110.8 tok/s), drafts accepted 451 of 599, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (590929 hits / 593280 lookups)
+strata serve: KV streaming: 99.93% of 2750238 block reads hit VRAM, 7.8 MiB read from RAM
+strata serve: suffix drafts: 24 windows, 45 of 70 drafts accepted
+strata serve: prompt 198 tokens = 193 reused + 5 read in 29 ms (171.9 tok/s), 506 generated in 4331 ms (116.8 tok/s), drafts accepted 235 of 300, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (274731 hits / 275520 lookups)
+strata serve: KV streaming: 99.94% of 3139818 block reads hit VRAM, 7.8 MiB read from RAM
+strata serve: suffix drafts: 12 windows, 36 of 37 drafts accepted
+strata serve: prompt 198 tokens = 193 reused + 5 read in 28 ms (176.8 tok/s), 965 generated in 8061 ms (119.7 tok/s), drafts accepted 468 of 579, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (515326 hits / 517920 lookups)
+strata serve: KV streaming: 99.95% of 4238220 block reads hit VRAM, 7.8 MiB read from RAM
+strata serve: suffix drafts: 29 windows, 62 of 83 drafts accepted
+strata serve: prompt 83 tokens = 0 reused + 83 read in 361 ms (230.0 tok/s), 8 generated in 73 ms (109.4 tok/s), drafts accepted 5 of 9, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (6224 hits / 6240 lookups)
+strata serve: KV streaming: 93.78% of 2220 block reads hit VRAM, 0.6 MiB read from RAM
+strata serve: prompt 100 tokens = 0 reused + 100 read in 362 ms (275.9 tok/s), 128 generated in 1079 ms (118.7 tok/s), drafts accepted 65 of 90, 1 checkpoints
+strata serve: decode expert cache hit rate: 98.9% (73599 hits / 74400 lookups)
+strata serve: KV streaming: 99.12% of 39360 block reads hit VRAM, 1.4 MiB read from RAM
+strata serve: suffix drafts: 3 windows, 8 of 8 drafts accepted
+strata serve: prompt 83 tokens = 0 reused + 83 read in 325 ms (255.2 tok/s), 128 generated in 1101 ms (116.3 tok/s), drafts accepted 59 of 87, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.4% (74423 hits / 74880 lookups)
+strata serve: KV streaming: 99.09% of 34962 block reads hit VRAM, 1.3 MiB read from RAM
+strata serve: suffix drafts: 4 windows, 12 of 12 drafts accepted
+strata serve: prompt 109 tokens = 0 reused + 109 read in 360 ms (302.8 tok/s), 192 generated in 1609 ms (119.3 tok/s), drafts accepted 90 of 115, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.2% (103326 hits / 104160 lookups)
+strata serve: KV streaming: 99.34% of 67842 block reads hit VRAM, 1.8 MiB read from RAM
+strata serve: suffix drafts: 10 windows, 28 of 30 drafts accepted
+strata serve: prompt 92 tokens = 0 reused + 92 read in 337 ms (273.1 tok/s), 192 generated in 1530 ms (125.5 tok/s), drafts accepted 99 of 124, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (103642 hits / 104160 lookups)
+strata serve: KV streaming: 99.32% of 62232 block reads hit VRAM, 1.7 MiB read from RAM
+strata serve: suffix drafts: 8 windows, 22 of 24 drafts accepted
+strata serve: prompt 126 tokens = 0 reused + 126 read in 390 ms (323.3 tok/s), 160 generated in 1187 ms (134.8 tok/s), drafts accepted 92 of 106, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.1% (83230 hits / 84000 lookups)
+strata serve: KV streaming: 99.22% of 55644 block reads hit VRAM, 1.7 MiB read from RAM
+strata serve: suffix drafts: 12 windows, 38 of 38 drafts accepted
+strata serve: prompt 109 tokens = 0 reused + 109 read in 358 ms (304.1 tok/s), 160 generated in 1175 ms (136.2 tok/s), drafts accepted 91 of 104, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (83168 hits / 83520 lookups)
+strata serve: KV streaming: 99.20% of 51024 block reads hit VRAM, 1.6 MiB read from RAM
+strata serve: suffix drafts: 12 windows, 36 of 36 drafts accepted
+strata serve: prompt 99 tokens = 0 reused + 99 read in 361 ms (274.5 tok/s), 128 generated in 854 ms (149.9 tok/s), drafts accepted 87 of 103, 1 checkpoints
+strata serve: decode expert cache hit rate: 98.9% (69287 hits / 70080 lookups)
+strata serve: KV streaming: 99.08% of 37146 block reads hit VRAM, 1.4 MiB read from RAM
+strata serve: suffix drafts: 9 windows, 30 of 31 drafts accepted
+strata serve: prompt 82 tokens = 0 reused + 82 read in 331 ms (247.6 tok/s), 128 generated in 900 ms (142.2 tok/s), drafts accepted 79 of 96, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (69223 hits / 69600 lookups)
+strata serve: KV streaming: 99.02% of 32490 block reads hit VRAM, 1.3 MiB read from RAM
+strata serve: suffix drafts: 3 windows, 15 of 15 drafts accepted
+strata serve: prompt 112 tokens = 0 reused + 112 read in 364 ms (307.8 tok/s), 192 generated in 1507 ms (127.4 tok/s), drafts accepted 103 of 125, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.4% (102568 hits / 103200 lookups)
+strata serve: KV streaming: 99.33% of 68430 block reads hit VRAM, 1.8 MiB read from RAM
+strata serve: suffix drafts: 9 windows, 32 of 41 drafts accepted
+strata serve: prompt 95 tokens = 0 reused + 95 read in 339 ms (280.6 tok/s), 145 generated in 1060 ms (136.7 tok/s), drafts accepted 81 of 87, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (72303 hits / 72480 lookups)
+strata serve: KV streaming: 99.07% of 38616 block reads hit VRAM, 1.5 MiB read from RAM
+strata serve: suffix drafts: 6 windows, 28 of 30 drafts accepted
+strata serve: prompt 110 tokens = 0 reused + 110 read in 360 ms (305.2 tok/s), 125 generated in 837 ms (149.4 tok/s), drafts accepted 80 of 92, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.3% (65313 hits / 65760 lookups)
+strata serve: KV streaming: 99.02% of 36126 block reads hit VRAM, 1.4 MiB read from RAM
+strata serve: suffix drafts: 7 windows, 30 of 35 drafts accepted
+strata serve: prompt 93 tokens = 0 reused + 93 read in 341 ms (273.1 tok/s), 104 generated in 668 ms (155.8 tok/s), drafts accepted 70 of 80, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (54546 hits / 54720 lookups)
+strata serve: KV streaming: 98.84% of 25374 block reads hit VRAM, 1.2 MiB read from RAM
+strata serve: suffix drafts: 6 windows, 29 of 30 drafts accepted
+strata serve: prompt 119 tokens = 0 reused + 119 read in 372 ms (320.1 tok/s), 160 generated in 1220 ms (131.1 tok/s), drafts accepted 90 of 114, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (88370 hits / 88800 lookups)
+strata serve: KV streaming: 99.26% of 56802 block reads hit VRAM, 1.7 MiB read from RAM
+strata serve: suffix drafts: 11 windows, 48 of 55 drafts accepted
+strata serve: prompt 102 tokens = 0 reused + 102 read in 348 ms (293.3 tok/s), 160 generated in 1192 ms (134.3 tok/s), drafts accepted 91 of 112, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (86559 hits / 86880 lookups)
+strata serve: KV streaming: 99.22% of 50826 block reads hit VRAM, 1.6 MiB read from RAM
+strata serve: suffix drafts: 9 windows, 36 of 45 drafts accepted
+strata serve: prompt 116 tokens = 0 reused + 116 read in 360 ms (322.2 tok/s), 192 generated in 1460 ms (131.5 tok/s), drafts accepted 107 of 129, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (102290 hits / 102720 lookups)
+strata serve: KV streaming: 99.33% of 69276 block reads hit VRAM, 1.9 MiB read from RAM
+strata serve: suffix drafts: 9 windows, 38 of 41 drafts accepted
+strata serve: prompt 99 tokens = 0 reused + 99 read in 337 ms (294.1 tok/s), 192 generated in 1589 ms (120.9 tok/s), drafts accepted 90 of 105, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (99135 hits / 99360 lookups)
+strata serve: KV streaming: 99.28% of 61242 block reads hit VRAM, 1.8 MiB read from RAM
+strata serve: suffix drafts: 6 windows, 30 of 30 drafts accepted
+strata serve: prompt 100 tokens = 0 reused + 100 read in 346 ms (289.3 tok/s), 128 generated in 1054 ms (121.4 tok/s), drafts accepted 64 of 84, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (70921 hits / 71040 lookups)
+strata serve: KV streaming: 99.10% of 37884 block reads hit VRAM, 1.4 MiB read from RAM
+strata serve: suffix drafts: 5 windows, 25 of 25 drafts accepted
+strata serve: prompt 83 tokens = 0 reused + 83 read in 322 ms (258.1 tok/s), 128 generated in 1124 ms (113.9 tok/s), drafts accepted 56 of 77, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (71400 hits / 71520 lookups)
+strata serve: KV streaming: 99.04% of 33216 block reads hit VRAM, 1.3 MiB read from RAM
+strata serve: suffix drafts: 3 windows, 15 of 15 drafts accepted
+strata serve: prompt 109 tokens = 0 reused + 109 read in 349 ms (311.9 tok/s), 192 generated in 1570 ms (122.3 tok/s), drafts accepted 98 of 131, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (108298 hits / 108480 lookups)
+strata serve: KV streaming: 99.36% of 70728 block reads hit VRAM, 1.8 MiB read from RAM
+strata serve: suffix drafts: 8 windows, 32 of 40 drafts accepted
+strata serve: prompt 92 tokens = 0 reused + 92 read in 337 ms (273.1 tok/s), 192 generated in 1558 ms (123.3 tok/s), drafts accepted 99 of 131, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (107798 hits / 108000 lookups)
+strata serve: KV streaming: 99.33% of 64914 block reads hit VRAM, 1.7 MiB read from RAM
+strata serve: suffix drafts: 6 windows, 26 of 30 drafts accepted
+strata serve: prompt 126 tokens = 0 reused + 126 read in 378 ms (333.0 tok/s), 160 generated in 1158 ms (138.2 tok/s), drafts accepted 94 of 106, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (82886 hits / 83040 lookups)
+strata serve: KV streaming: 99.21% of 54804 block reads hit VRAM, 1.7 MiB read from RAM
+strata serve: suffix drafts: 8 windows, 40 of 40 drafts accepted
+strata serve: prompt 109 tokens = 0 reused + 109 read in 355 ms (306.8 tok/s), 160 generated in 1147 ms (139.5 tok/s), drafts accepted 96 of 111, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (84334 hits / 84480 lookups)
+strata serve: KV streaming: 99.21% of 51600 block reads hit VRAM, 1.6 MiB read from RAM
+strata serve: suffix drafts: 8 windows, 40 of 40 drafts accepted
+strata serve: prompt 99 tokens = 0 reused + 99 read in 350 ms (282.7 tok/s), 128 generated in 815 ms (157.0 tok/s), drafts accepted 86 of 95, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (65455 hits / 65760 lookups)
+strata serve: KV streaming: 99.01% of 34704 block reads hit VRAM, 1.4 MiB read from RAM
+strata serve: suffix drafts: 6 windows, 30 of 30 drafts accepted
+strata serve: prompt 82 tokens = 0 reused + 82 read in 331 ms (247.8 tok/s), 128 generated in 901 ms (142.1 tok/s), drafts accepted 81 of 98, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (70316 hits / 70560 lookups)
+strata serve: KV streaming: 99.04% of 33036 block reads hit VRAM, 1.3 MiB read from RAM
+strata serve: suffix drafts: 4 windows, 16 of 16 drafts accepted
+strata serve: prompt 112 tokens = 0 reused + 112 read in 359 ms (312.0 tok/s), 121 generated in 873 ms (138.6 tok/s), drafts accepted 72 of 87, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (65147 hits / 65280 lookups)
+strata serve: KV streaming: 99.03% of 35808 block reads hit VRAM, 1.4 MiB read from RAM
+strata serve: suffix drafts: 6 windows, 28 of 30 drafts accepted
+strata serve: prompt 95 tokens = 0 reused + 95 read in 336 ms (282.7 tok/s), 149 generated in 1147 ms (129.9 tok/s), drafts accepted 80 of 96, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (79072 hits / 79200 lookups)
+strata serve: KV streaming: 99.16% of 43410 block reads hit VRAM, 1.5 MiB read from RAM
+strata serve: suffix drafts: 6 windows, 28 of 30 drafts accepted
+strata serve: prompt 110 tokens = 0 reused + 110 read in 359 ms (306.5 tok/s), 127 generated in 943 ms (134.7 tok/s), drafts accepted 80 of 101, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (72247 hits / 72480 lookups)
+strata serve: KV streaming: 99.11% of 40320 block reads hit VRAM, 1.5 MiB read from RAM
+strata serve: suffix drafts: 8 windows, 32 of 40 drafts accepted
+strata serve: prompt 93 tokens = 0 reused + 93 read in 344 ms (270.2 tok/s), 97 generated in 647 ms (149.9 tok/s), drafts accepted 64 of 79, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (53636 hits / 53760 lookups)
+strata serve: KV streaming: 98.82% of 24450 block reads hit VRAM, 1.2 MiB read from RAM
+strata serve: suffix drafts: 6 windows, 29 of 30 drafts accepted
+strata serve: prompt 119 tokens = 0 reused + 119 read in 367 ms (324.1 tok/s), 160 generated in 1255 ms (127.5 tok/s), drafts accepted 88 of 116, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (90015 hits / 90240 lookups)
+strata serve: KV streaming: 99.28% of 58224 block reads hit VRAM, 1.7 MiB read from RAM
+strata serve: suffix drafts: 9 windows, 36 of 45 drafts accepted
+strata serve: prompt 102 tokens = 0 reused + 102 read in 345 ms (295.3 tok/s), 160 generated in 1208 ms (132.5 tok/s), drafts accepted 91 of 114, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (87669 hits / 87840 lookups)
+strata serve: KV streaming: 99.23% of 51486 block reads hit VRAM, 1.6 MiB read from RAM
+strata serve: suffix drafts: 9 windows, 36 of 45 drafts accepted
+strata serve: prompt 116 tokens = 0 reused + 116 read in 363 ms (319.3 tok/s), 192 generated in 1416 ms (135.6 tok/s), drafts accepted 107 of 117, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (96766 hits / 96960 lookups)
+strata serve: KV streaming: 99.29% of 65388 block reads hit VRAM, 1.9 MiB read from RAM
+strata serve: suffix drafts: 10 windows, 45 of 46 drafts accepted
+strata serve: prompt 99 tokens = 0 reused + 99 read in 352 ms (281.4 tok/s), 192 generated in 1451 ms (132.4 tok/s), drafts accepted 109 of 123, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (99405 hits / 99840 lookups)
+strata serve: KV streaming: 99.29% of 61650 block reads hit VRAM, 1.8 MiB read from RAM
+strata serve: suffix drafts: 6 windows, 30 of 30 drafts accepted
+strata serve: prompt 1289 tokens = 0 reused + 1289 read in 1114 ms (1157.1 tok/s), 8 generated in 68 ms (118.0 tok/s), drafts accepted 4 of 6, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.9% (4795 hits / 4800 lookups)
+strata serve: KV streaming: 92.84% of 27138 block reads hit VRAM, 7.8 MiB read from RAM
+strata serve: prompt 4920 tokens = 0 reused + 4920 read in 2822 ms (1743.2 tok/s), 8 generated in 85 ms (94.3 tok/s), drafts accepted 3 of 5, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.9% (4795 hits / 4800 lookups)
+strata serve: KV streaming: 88.23% of 43128 block reads hit VRAM, 20.5 MiB read from RAM
+strata serve: prompt 9760 tokens = 0 reused + 9760 read in 5103 ms (1912.7 tok/s), 8 generated in 71 ms (112.5 tok/s), drafts accepted 4 of 6, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.9% (4797 hits / 4800 lookups)
+strata serve: KV streaming: 85.03% of 43128 block reads hit VRAM, 26.0 MiB read from RAM
+strata serve: prompt 19442 tokens = 0 reused + 19442 read in 7423 ms (2619.2 tok/s), 8 generated in 74 ms (108.5 tok/s), drafts accepted 4 of 6, 2 checkpoints
+strata serve: decode expert cache hit rate: 100.0% (4798 hits / 4800 lookups)
+strata serve: KV streaming: 79.82% of 43140 block reads hit VRAM, 35.1 MiB read from RAM
+strata serve: prompt 38804 tokens = 0 reused + 38804 read in 12116 ms (3202.8 tok/s), 8 generated in 74 ms (108.7 tok/s), drafts accepted 4 of 6, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.9% (4797 hits / 4800 lookups)
+strata serve: KV streaming: 75.85% of 43128 block reads hit VRAM, 42.0 MiB read from RAM
+strata serve: prompt 12962 tokens = 0 reused + 12962 read in 6995 ms (1853.0 tok/s), 302 generated in 2040 ms (148.0 tok/s), drafts accepted 210 of 239, 2 checkpoints
+strata serve: decode expert cache hit rate: 99.0% (157213 hits / 158880 lookups)
+strata serve: KV streaming: 98.44% of 1032138 block reads hit VRAM, 64.9 MiB read from RAM
+strata serve: suffix drafts: 19 windows, 91 of 95 drafts accepted
+strata serve: prompt 15099 tokens = 0 reused + 8192 of 15099 read in 4297 ms (1906.6 tok/s), 0 generated in 0 ms (0.0 tok/s), drafts accepted 0 of 0, 0 checkpoints (cancelled)
+strata serve: KV streaming: 100.00% of 0 block reads hit VRAM, 0.0 MiB read from RAM
+strata serve: prompt 12963 tokens = 0 reused + 12963 read in 6455 ms (2008.3 tok/s), 236 generated in 1407 ms (167.8 tok/s), drafts accepted 178 of 184, 2 checkpoints
+strata serve: decode expert cache hit rate: 99.4% (115496 hits / 116160 lookups)
+strata serve: KV streaming: 97.94% of 757920 block reads hit VRAM, 62.9 MiB read from RAM
+strata serve: suffix drafts: 17 windows, 85 of 85 drafts accepted
+strata serve: prompt 15101 tokens = 0 reused + 15101 read in 7035 ms (2146.6 tok/s), 209 generated in 1375 ms (152.0 tok/s), drafts accepted 146 of 159, 2 checkpoints
+strata serve: decode expert cache hit rate: 99.3% (106324 hits / 107040 lookups)
+strata serve: KV streaming: 97.62% of 699390 block reads hit VRAM, 67.0 MiB read from RAM
+strata serve: prompt 15330 tokens = 15096 reused + 234 read in 493 ms (474.8 tok/s), 208 generated in 1268 ms (164.0 tok/s), drafts accepted 163 of 177, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.1% (107032 hits / 108000 lookups)
+strata serve: KV streaming: 98.70% of 1404942 block reads hit VRAM, 73.8 MiB read from RAM
+strata serve: suffix drafts: 22 windows, 103 of 110 drafts accepted
+strata serve: prompt 15573 tokens = 15325 reused + 248 read in 522 ms (474.7 tok/s), 138 generated in 1173 ms (117.7 tok/s), drafts accepted 82 of 114, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (83204 hits / 83520 lookups)
+strata serve: KV streaming: 99.02% of 1953354 block reads hit VRAM, 77.4 MiB read from RAM
+strata serve: suffix drafts: 5 windows, 16 of 25 drafts accepted
+strata serve: prompt 15691 tokens = 15568 reused + 123 read in 382 ms (322.4 tok/s), 283 generated in 1970 ms (143.6 tok/s), drafts accepted 197 of 233, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (153012 hits / 153600 lookups)
+strata serve: KV streaming: 99.32% of 2951592 block reads hit VRAM, 80.7 MiB read from RAM
+strata serve: suffix drafts: 24 windows, 106 of 120 drafts accepted
+strata serve: prompt 15892 tokens = 15686 reused + 206 read in 477 ms (431.6 tok/s), 124 generated in 1084 ms (114.4 tok/s), drafts accepted 61 of 77, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (66970 hits / 67200 lookups)
+strata serve: KV streaming: 99.40% of 3395262 block reads hit VRAM, 81.8 MiB read from RAM
+strata serve: suffix drafts: 1 windows, 2 of 2 drafts accepted
+strata serve: prompt 15172 tokens = 0 reused + 15172 read in 7493 ms (2024.8 tok/s), 298 generated in 1905 ms (156.5 tok/s), drafts accepted 224 of 253, 2 checkpoints
+strata serve: decode expert cache hit rate: 99.3% (157800 hits / 158880 lookups)
+strata serve: KV streaming: 98.29% of 1032150 block reads hit VRAM, 71.2 MiB read from RAM
+strata serve: suffix drafts: 23 windows, 109 of 115 drafts accepted
+strata serve: prompt 17419 tokens = 0 reused + 17419 read in 8023 ms (2171.1 tok/s), 166 generated in 1303 ms (127.4 tok/s), drafts accepted 107 of 126, 2 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (90836 hits / 91200 lookups)
+strata serve: KV streaming: 97.04% of 597708 block reads hit VRAM, 71.2 MiB read from RAM
+strata serve: suffix drafts: 8 windows, 32 of 40 drafts accepted
+strata serve: prompt 17602 tokens = 17414 reused + 188 read in 476 ms (394.9 tok/s), 189 generated in 1550 ms (121.9 tok/s), drafts accepted 109 of 137, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (104863 hits / 105120 lookups)
+strata serve: KV streaming: 98.48% of 1284780 block reads hit VRAM, 78.5 MiB read from RAM
+strata serve: suffix drafts: 5 windows, 15 of 25 drafts accepted
+strata serve: prompt 17799 tokens = 17597 reused + 202 read in 480 ms (421.1 tok/s), 126 generated in 1100 ms (114.6 tok/s), drafts accepted 67 of 85, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (69903 hits / 70080 lookups)
+strata serve: KV streaming: 98.83% of 1746930 block reads hit VRAM, 82.5 MiB read from RAM
+strata serve: suffix drafts: 1 windows, 1 of 5 drafts accepted
+strata serve: prompt 17383 tokens = 0 reused + 17383 read in 8351 ms (2081.4 tok/s), 160 generated in 1034 ms (154.8 tok/s), drafts accepted 118 of 125, 2 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (80722 hits / 81120 lookups)
+strata serve: KV streaming: 97.03% of 533004 block reads hit VRAM, 63.8 MiB read from RAM
+strata serve: suffix drafts: 14 windows, 67 of 70 drafts accepted
+strata serve: prompt 19446 tokens = 0 reused + 19446 read in 8816 ms (2205.7 tok/s), 172 generated in 1224 ms (140.5 tok/s), drafts accepted 113 of 130, 2 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (90531 hits / 90720 lookups)
+strata serve: KV streaming: 97.33% of 594630 block reads hit VRAM, 63.9 MiB read from RAM
+strata serve: suffix drafts: 6 windows, 21 of 27 drafts accepted
+strata serve: prompt 19602 tokens = 19441 reused + 161 read in 433 ms (371.9 tok/s), 93 generated in 680 ms (136.7 tok/s), drafts accepted 62 of 70, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (49297 hits / 49440 lookups)
+strata serve: KV streaming: 98.13% of 924288 block reads hit VRAM, 69.6 MiB read from RAM
+strata serve: suffix drafts: 2 windows, 5 of 10 drafts accepted
+strata serve: prompt 19551 tokens = 0 reused + 19551 read in 9241 ms (2115.7 tok/s), 346 generated in 2490 ms (139.0 tok/s), drafts accepted 232 of 257, 2 checkpoints
+strata serve: decode expert cache hit rate: 99.4% (177966 hits / 179040 lookups)
+strata serve: KV streaming: 98.18% of 1161540 block reads hit VRAM, 85.0 MiB read from RAM
+strata serve: suffix drafts: 24 windows, 109 of 115 drafts accepted
+strata serve: prompt 21714 tokens = 0 reused + 21714 read in 9733 ms (2231.0 tok/s), 132 generated in 1004 ms (131.5 tok/s), drafts accepted 88 of 110, 2 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (74625 hits / 74880 lookups)
+strata serve: KV streaming: 96.66% of 492960 block reads hit VRAM, 66.4 MiB read from RAM
+strata serve: suffix drafts: 5 windows, 19 of 25 drafts accepted
+strata serve: prompt 21895 tokens = 21709 reused + 186 read in 480 ms (387.3 tok/s), 86 generated in 715 ms (120.3 tok/s), drafts accepted 54 of 75, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (52163 hits / 52320 lookups)
+strata serve: KV streaming: 97.70% of 841122 block reads hit VRAM, 78.1 MiB read from RAM
+strata serve: suffix drafts: 5 windows, 17 of 23 drafts accepted
+strata serve: prompt 22182 tokens = 0 reused + 22182 read in 10418 ms (2129.1 tok/s), 250 generated in 1696 ms (147.4 tok/s), drafts accepted 180 of 210, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.3% (133447 hits / 134400 lookups)
+strata serve: KV streaming: 97.50% of 875004 block reads hit VRAM, 88.0 MiB read from RAM
+strata serve: suffix drafts: 22 windows, 108 of 110 drafts accepted
+strata serve: prompt 24298 tokens = 0 reused + 24298 read in 10889 ms (2231.5 tok/s), 177 generated in 1403 ms (126.1 tok/s), drafts accepted 104 of 120, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (92437 hits / 92640 lookups)
+strata serve: KV streaming: 96.78% of 606960 block reads hit VRAM, 78.8 MiB read from RAM
+strata serve: suffix drafts: 7 windows, 32 of 35 drafts accepted
+strata serve: prompt 24436 tokens = 24293 reused + 143 read in 441 ms (324.3 tok/s), 96 generated in 774 ms (124.0 tok/s), drafts accepted 61 of 80, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (56025 hits / 56160 lookups)
+strata serve: KV streaming: 97.81% of 979752 block reads hit VRAM, 86.6 MiB read from RAM
+strata serve: suffix drafts: 3 windows, 9 of 15 drafts accepted
+strata serve: prompt 24673 tokens = 0 reused + 24673 read in 10911 ms (2261.4 tok/s), 221 generated in 1451 ms (152.3 tok/s), drafts accepted 160 of 174, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (112210 hits / 112800 lookups)
+strata serve: KV streaming: 97.05% of 736362 block reads hit VRAM, 87.6 MiB read from RAM
+strata serve: suffix drafts: 18 windows, 90 of 90 drafts accepted
+strata serve: prompt 26830 tokens = 0 reused + 26830 read in 11401 ms (2353.3 tok/s), 120 generated in 836 ms (143.5 tok/s), drafts accepted 87 of 101, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (65033 hits / 65280 lookups)
+strata serve: KV streaming: 95.35% of 431346 block reads hit VRAM, 80.8 MiB read from RAM
+strata serve: suffix drafts: 6 windows, 26 of 30 drafts accepted
+strata serve: prompt 26999 tokens = 26825 reused + 174 read in 486 ms (358.1 tok/s), 75 generated in 614 ms (122.2 tok/s), drafts accepted 50 of 72, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (47375 hits / 47520 lookups)
+strata serve: KV streaming: 97.03% of 748686 block reads hit VRAM, 89.6 MiB read from RAM
+strata serve: suffix drafts: 2 windows, 2 of 10 drafts accepted
+strata serve: prompt 27271 tokens = 0 reused + 27271 read in 11478 ms (2376.0 tok/s), 277 generated in 1735 ms (159.6 tok/s), drafts accepted 211 of 224, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.4% (139355 hits / 140160 lookups)
+strata serve: KV streaming: 97.41% of 911976 block reads hit VRAM, 95.2 MiB read from RAM
+strata serve: suffix drafts: 20 windows, 100 of 100 drafts accepted
+strata serve: prompt 29492 tokens = 0 reused + 29492 read in 12008 ms (2456.0 tok/s), 132 generated in 955 ms (138.3 tok/s), drafts accepted 92 of 109, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (71812 hits / 72000 lookups)
+strata serve: KV streaming: 95.53% of 474474 block reads hit VRAM, 85.5 MiB read from RAM
+strata serve: suffix drafts: 5 windows, 21 of 25 drafts accepted
+strata serve: prompt 29672 tokens = 29487 reused + 185 read in 495 ms (373.6 tok/s), 82 generated in 667 ms (122.9 tok/s), drafts accepted 53 of 69, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (47890 hits / 48000 lookups)
+strata serve: KV streaming: 96.93% of 794904 block reads hit VRAM, 98.4 MiB read from RAM
+strata serve: suffix drafts: 2 windows, 3 of 10 drafts accepted
+strata serve: prompt 29652 tokens = 0 reused + 29652 read in 12605 ms (2352.3 tok/s), 187 generated in 1378 ms (135.7 tok/s), drafts accepted 128 of 148, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (99911 hits / 100320 lookups)
+strata serve: KV streaming: 96.35% of 656238 block reads hit VRAM, 96.5 MiB read from RAM
+strata serve: suffix drafts: 15 windows, 66 of 73 drafts accepted
+strata serve: prompt 31770 tokens = 0 reused + 31770 read in 13043 ms (2435.8 tok/s), 301 generated in 2461 ms (122.3 tok/s), drafts accepted 180 of 225, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (165289 hits / 166080 lookups)
+strata serve: KV streaming: 97.57% of 1078356 block reads hit VRAM, 105.5 MiB read from RAM
+strata serve: suffix drafts: 52 windows, 57 of 64 drafts accepted
+strata serve: prompt 31849 tokens = 31765 reused + 84 read in 372 ms (226.1 tok/s), 113 generated in 850 ms (133.0 tok/s), drafts accepted 83 of 116, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (70767 hits / 71040 lookups)
+strata serve: KV streaming: 98.04% of 1546674 block reads hit VRAM, 122.0 MiB read from RAM
+strata serve: suffix drafts: 12 windows, 37 of 60 drafts accepted
+strata serve: prompt 32023 tokens = 31844 reused + 179 read in 489 ms (365.8 tok/s), 222 generated in 1649 ms (134.6 tok/s), drafts accepted 158 of 199, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (127802 hits / 128160 lookups)
+strata serve: KV streaming: 98.65% of 2381604 block reads hit VRAM, 129.1 MiB read from RAM
+strata serve: suffix drafts: 25 windows, 105 of 125 drafts accepted
+strata serve: prompt 32222 tokens = 32018 reused + 204 read in 512 ms (398.3 tok/s), 171 generated in 1244 ms (137.5 tok/s), drafts accepted 124 of 151, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (96640 hits / 96960 lookups)
+strata serve: KV streaming: 98.91% of 3016284 block reads hit VRAM, 132.7 MiB read from RAM
+strata serve: suffix drafts: 22 windows, 89 of 107 drafts accepted
+strata serve: prompt 32438 tokens = 32217 reused + 221 read in 543 ms (406.9 tok/s), 52 generated in 386 ms (134.8 tok/s), drafts accepted 34 of 37, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (26753 hits / 26880 lookups)
+strata serve: KV streaming: 98.94% of 3201144 block reads hit VRAM, 136.5 MiB read from RAM
+strata serve: suffix drafts: 3 windows, 15 of 15 drafts accepted
+strata serve: prompt 32701 tokens = 32433 reused + 268 read in 608 ms (441.1 tok/s), 165 generated in 994 ms (166.0 tok/s), drafts accepted 134 of 138, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (82635 hits / 83040 lookups)
+strata serve: KV streaming: 99.07% of 3746484 block reads hit VRAM, 141.1 MiB read from RAM
+strata serve: suffix drafts: 23 windows, 111 of 115 drafts accepted
+strata serve: prompt 32924 tokens = 32696 reused + 228 read in 558 ms (408.6 tok/s), 216 generated in 1751 ms (123.3 tok/s), drafts accepted 133 of 171, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (122175 hits / 122400 lookups)
+strata serve: KV streaming: 99.20% of 4544478 block reads hit VRAM, 146.0 MiB read from RAM
+strata serve: suffix drafts: 8 windows, 23 of 37 drafts accepted
+strata serve: prompt 33106 tokens = 32919 reused + 187 read in 500 ms (373.7 tok/s), 350 generated in 2734 ms (128.0 tok/s), drafts accepted 227 of 288, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (197821 hits / 198240 lookups)
+strata serve: KV streaming: 99.36% of 5829276 block reads hit VRAM, 151.2 MiB read from RAM
+strata serve: suffix drafts: 27 windows, 99 of 135 drafts accepted
+strata serve: prompt 33296 tokens = 33101 reused + 195 read in 497 ms (392.1 tok/s), 291 generated in 2573 ms (113.1 tok/s), drafts accepted 147 of 162, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (147321 hits / 147840 lookups)
+strata serve: KV streaming: 99.43% of 6790542 block reads hit VRAM, 156.9 MiB read from RAM
+strata serve: suffix drafts: 12 windows, 52 of 57 drafts accepted
+strata serve: prompt 33694 tokens = 33291 reused + 403 read in 701 ms (575.2 tok/s), 56 generated in 474 ms (118.2 tok/s), drafts accepted 33 of 36, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (29123 hits / 29280 lookups)
+strata serve: KV streaming: 99.44% of 6990810 block reads hit VRAM, 158.8 MiB read from RAM
+strata serve: prompt 33755 tokens = 14086 reused + 19669 read in 7861 ms (2502.0 tok/s), 157 generated in 1416 ms (110.9 tok/s), drafts accepted 85 of 115, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (90527 hits / 90720 lookups)
+strata serve: KV streaming: 99.47% of 7585452 block reads hit VRAM, 161.3 MiB read from RAM
+strata serve: suffix drafts: 3 windows, 7 of 15 drafts accepted
+strata serve: prompt 34078 tokens = 0 reused + 34078 read in 13442 ms (2535.2 tok/s), 218 generated in 1379 ms (158.0 tok/s), drafts accepted 168 of 176, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (109318 hits / 109920 lookups)
+strata serve: KV streaming: 96.51% of 717870 block reads hit VRAM, 100.8 MiB read from RAM
+strata serve: suffix drafts: 20 windows, 94 of 98 drafts accepted
+strata serve: prompt 36247 tokens = 0 reused + 36247 read in 13864 ms (2614.4 tok/s), 137 generated in 993 ms (137.9 tok/s), drafts accepted 98 of 117, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (76020 hits / 76320 lookups)
+strata serve: KV streaming: 95.31% of 502194 block reads hit VRAM, 94.9 MiB read from RAM
+strata serve: suffix drafts: 1 windows, 3 of 5 drafts accepted
+strata serve: prompt 36430 tokens = 36242 reused + 188 read in 549 ms (342.7 tok/s), 112 generated in 894 ms (125.2 tok/s), drafts accepted 66 of 76, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (58411 hits / 58560 lookups)
+strata serve: KV streaming: 96.89% of 890406 block reads hit VRAM, 111.4 MiB read from RAM
+strata serve: suffix drafts: 1 windows, 4 of 5 drafts accepted
+strata serve: prompt 36744 tokens = 0 reused + 36744 read in 13951 ms (2633.9 tok/s), 229 generated in 1546 ms (148.1 tok/s), drafts accepted 167 of 181, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (117159 hits / 117600 lookups)
+strata serve: KV streaming: 96.43% of 767178 block reads hit VRAM, 110.4 MiB read from RAM
+strata serve: suffix drafts: 15 windows, 67 of 75 drafts accepted
+strata serve: prompt 38907 tokens = 0 reused + 38907 read in 14709 ms (2645.2 tok/s), 228 generated in 1769 ms (128.9 tok/s), drafts accepted 144 of 168, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (120702 hits / 120960 lookups)
+strata serve: KV streaming: 96.59% of 788736 block reads hit VRAM, 108.2 MiB read from RAM
+strata serve: suffix drafts: 3 windows, 6 of 12 drafts accepted
+strata serve: prompt 39126 tokens = 38902 reused + 224 read in 543 ms (412.8 tok/s), 129 generated in 921 ms (140.0 tok/s), drafts accepted 86 of 93, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (65138 hits / 65280 lookups)
+strata serve: KV streaming: 97.63% of 1220064 block reads hit VRAM, 116.3 MiB read from RAM
+strata serve: suffix drafts: 1 windows, 5 of 5 drafts accepted
+strata serve: prompt 39321 tokens = 39121 reused + 200 read in 508 ms (393.9 tok/s), 159 generated in 1028 ms (154.7 tok/s), drafts accepted 117 of 125, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (79920 hits / 80160 lookups)
+strata serve: KV streaming: 98.26% of 1746918 block reads hit VRAM, 122.6 MiB read from RAM
+strata serve: suffix drafts: 10 windows, 50 of 50 drafts accepted
+strata serve: prompt 39517 tokens = 39316 reused + 201 read in 522 ms (385.2 tok/s), 33 generated in 304 ms (108.5 tok/s), drafts accepted 15 of 17, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (16766 hits / 16800 lookups)
+strata serve: KV streaming: 98.32% of 1867080 block reads hit VRAM, 126.0 MiB read from RAM
+strata serve: prompt 39525 tokens = 0 reused + 39525 read in 14895 ms (2653.5 tok/s), 274 generated in 1836 ms (149.2 tok/s), drafts accepted 204 of 224, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (141895 hits / 142560 lookups)
+strata serve: KV streaming: 96.89% of 927384 block reads hit VRAM, 116.3 MiB read from RAM
+strata serve: suffix drafts: 25 windows, 116 of 125 drafts accepted
+strata serve: prompt 41743 tokens = 0 reused + 41743 read in 15298 ms (2728.7 tok/s), 156 generated in 1133 ms (137.7 tok/s), drafts accepted 108 of 123, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (82870 hits / 83040 lookups)
+strata serve: KV streaming: 95.32% of 545340 block reads hit VRAM, 102.7 MiB read from RAM
+strata serve: suffix drafts: 2 windows, 8 of 10 drafts accepted
+strata serve: prompt 41945 tokens = 41738 reused + 207 read in 513 ms (403.3 tok/s), 207 generated in 1908 ms (108.5 tok/s), drafts accepted 106 of 141, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (116901 hits / 117120 lookups)
+strata serve: KV streaming: 97.59% of 1309452 block reads hit VRAM, 126.9 MiB read from RAM
+strata serve: suffix drafts: 2 windows, 4 of 10 drafts accepted
+strata serve: prompt 42314 tokens = 0 reused + 42314 read in 15404 ms (2746.9 tok/s), 178 generated in 1176 ms (151.3 tok/s), drafts accepted 133 of 146, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (91817 hits / 92160 lookups)
+strata serve: KV streaming: 95.61% of 603882 block reads hit VRAM, 106.9 MiB read from RAM
+strata serve: suffix drafts: 15 windows, 66 of 75 drafts accepted
+strata serve: prompt 44451 tokens = 0 reused + 44451 read in 15818 ms (2810.2 tok/s), 164 generated in 1196 ms (137.1 tok/s), drafts accepted 112 of 130, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (87688 hits / 87840 lookups)
+strata serve: KV streaming: 95.25% of 576144 block reads hit VRAM, 110.3 MiB read from RAM
+strata serve: suffix drafts: 1 windows, 4 of 5 drafts accepted
+strata serve: prompt 44653 tokens = 44446 reused + 207 read in 521 ms (397.4 tok/s), 85 generated in 699 ms (121.6 tok/s), drafts accepted 53 of 65, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (47422 hits / 47520 lookups)
+strata serve: KV streaming: 96.55% of 893496 block reads hit VRAM, 124.2 MiB read from RAM
+strata serve: suffix drafts: 1 windows, 2 of 3 drafts accepted
+strata serve: prompt 45036 tokens = 0 reused + 45036 read in 16086 ms (2799.6 tok/s), 210 generated in 1359 ms (154.5 tok/s), drafts accepted 157 of 162, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (103256 hits / 103680 lookups)
+strata serve: KV streaming: 95.67% of 677832 block reads hit VRAM, 118.2 MiB read from RAM
+strata serve: suffix drafts: 14 windows, 70 of 70 drafts accepted
+strata serve: prompt 47196 tokens = 0 reused + 47196 read in 16693 ms (2827.3 tok/s), 127 generated in 921 ms (137.9 tok/s), drafts accepted 89 of 101, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (67553 hits / 67680 lookups)
+strata serve: KV streaming: 94.23% of 446748 block reads hit VRAM, 103.8 MiB read from RAM
+strata serve: suffix drafts: 2 windows, 5 of 10 drafts accepted
+strata serve: prompt 47376 tokens = 47191 reused + 185 read in 502 ms (368.5 tok/s), 55 generated in 467 ms (117.8 tok/s), drafts accepted 30 of 35, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (28743 hits / 28800 lookups)
+strata serve: KV streaming: 95.34% of 643938 block reads hit VRAM, 120.9 MiB read from RAM
+strata serve: prompt 47670 tokens = 0 reused + 47670 read in 16810 ms (2835.8 tok/s), 185 generated in 1320 ms (140.2 tok/s), drafts accepted 131 of 144, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (96136 hits / 96480 lookups)
+strata serve: KV streaming: 95.37% of 631620 block reads hit VRAM, 117.9 MiB read from RAM
+strata serve: suffix drafts: 8 windows, 40 of 40 drafts accepted
+strata serve: prompt 49751 tokens = 0 reused + 49751 read in 17245 ms (2885.0 tok/s), 101 generated in 898 ms (112.5 tok/s), drafts accepted 59 of 74, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (56910 hits / 57120 lookups)
+strata serve: KV streaming: 93.48% of 378966 block reads hit VRAM, 99.6 MiB read from RAM
+strata serve: suffix drafts: 3 windows, 9 of 15 drafts accepted
+strata serve: prompt 49843 tokens = 49746 reused + 97 read in 416 ms (233.4 tok/s), 135 generated in 1187 ms (113.7 tok/s), drafts accepted 76 of 91, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (73144 hits / 73440 lookups)
+strata serve: KV streaming: 96.59% of 862656 block reads hit VRAM, 118.4 MiB read from RAM
+strata serve: suffix drafts: 1 windows, 5 of 5 drafts accepted
+strata serve: prompt 50555 tokens = 49838 reused + 717 read in 920 ms (779.2 tok/s), 91 generated in 674 ms (134.9 tok/s), drafts accepted 64 of 72, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (48736 hits / 48960 lookups)
+strata serve: KV streaming: 97.31% of 1189242 block reads hit VRAM, 128.9 MiB read from RAM
+strata serve: suffix drafts: 2 windows, 10 of 10 drafts accepted
+strata serve: prompt 50666 tokens = 50550 reused + 116 read in 426 ms (272.1 tok/s), 86 generated in 723 ms (118.9 tok/s), drafts accepted 50 of 54, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (44457 hits / 44640 lookups)
+strata serve: KV streaming: 97.71% of 1488114 block reads hit VRAM, 137.2 MiB read from RAM
+strata serve: prompt 50747 tokens = 50661 reused + 86 read in 418 ms (205.9 tok/s), 113 generated in 772 ms (146.5 tok/s), drafts accepted 79 of 82, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (55979 hits / 56160 lookups)
+strata serve: KV streaming: 98.10% of 1860918 block reads hit VRAM, 142.3 MiB read from RAM
+strata serve: suffix drafts: 4 windows, 20 of 20 drafts accepted
+strata serve: prompt 50854 tokens = 50742 reused + 112 read in 441 ms (253.7 tok/s), 121 generated in 900 ms (134.4 tok/s), drafts accepted 83 of 97, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (65583 hits / 65760 lookups)
+strata serve: KV streaming: 98.40% of 2295342 block reads hit VRAM, 147.8 MiB read from RAM
+strata serve: suffix drafts: 4 windows, 15 of 20 drafts accepted
+strata serve: prompt 50979 tokens = 50849 reused + 130 read in 448 ms (290.1 tok/s), 118 generated in 1060 ms (111.3 tok/s), drafts accepted 65 of 88, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (68022 hits / 68160 lookups)
+strata serve: KV streaming: 98.62% of 2745162 block reads hit VRAM, 152.6 MiB read from RAM
+strata serve: suffix drafts: 3 windows, 8 of 15 drafts accepted
+strata serve: prompt 51046 tokens = 50974 reused + 72 read in 381 ms (189.0 tok/s), 164 generated in 1053 ms (155.8 tok/s), drafts accepted 126 of 135, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (83155 hits / 83520 lookups)
+strata serve: KV streaming: 98.65% of 3293592 block reads hit VRAM, 179.6 MiB read from RAM
+strata serve: suffix drafts: 20 windows, 96 of 100 drafts accepted
+strata serve: prompt 51267 tokens = 51041 reused + 226 read in 572 ms (395.1 tok/s), 125 generated in 884 ms (141.4 tok/s), drafts accepted 88 of 94, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (64169 hits / 64320 lookups)
+strata serve: KV streaming: 98.76% of 3718776 block reads hit VRAM, 185.8 MiB read from RAM
+strata serve: suffix drafts: 1 windows, 4 of 5 drafts accepted
+strata serve: prompt 51453 tokens = 51262 reused + 191 read in 528 ms (361.9 tok/s), 145 generated in 961 ms (150.9 tok/s), drafts accepted 106 of 114, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (73775 hits / 73920 lookups)
+strata serve: KV streaming: 98.88% of 4205574 block reads hit VRAM, 190.2 MiB read from RAM
+strata serve: suffix drafts: 5 windows, 19 of 23 drafts accepted
+strata serve: prompt 51640 tokens = 51448 reused + 192 read in 524 ms (366.6 tok/s), 9 generated in 118 ms (76.3 tok/s), drafts accepted 1 of 2, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (4790 hits / 4800 lookups)
+strata serve: KV streaming: 98.88% of 4248708 block reads hit VRAM, 191.0 MiB read from RAM
+strata serve: prompt 51982 tokens = 0 reused + 51982 read in 17646 ms (2945.9 tok/s), 275 generated in 2035 ms (135.1 tok/s), drafts accepted 184 of 208, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (143611 hits / 144000 lookups)
+strata serve: KV streaming: 96.69% of 936624 block reads hit VRAM, 125.0 MiB read from RAM
+strata serve: suffix drafts: 10 windows, 46 of 50 drafts accepted
+strata serve: prompt 54070 tokens = 0 reused + 54070 read in 18070 ms (2992.2 tok/s), 110 generated in 844 ms (130.4 tok/s), drafts accepted 78 of 98, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (63694 hits / 63840 lookups)
+strata serve: KV streaming: 93.21% of 422100 block reads hit VRAM, 115.4 MiB read from RAM
+strata serve: suffix drafts: 3 windows, 10 of 15 drafts accepted
+strata serve: prompt 54224 tokens = 54065 reused + 159 read in 501 ms (317.2 tok/s), 73 generated in 587 ms (124.3 tok/s), drafts accepted 43 of 47, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (36898 hits / 36960 lookups)
+strata serve: KV streaming: 95.11% of 671658 block reads hit VRAM, 132.3 MiB read from RAM
+strata serve: prompt 54579 tokens = 0 reused + 54579 read in 18672 ms (2923.0 tok/s), 210 generated in 1600 ms (131.3 tok/s), drafts accepted 142 of 172, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (115049 hits / 115680 lookups)
+strata serve: KV streaming: 95.50% of 754854 block reads hit VRAM, 136.9 MiB read from RAM
+strata serve: suffix drafts: 12 windows, 60 of 60 drafts accepted
+strata serve: prompt 56680 tokens = 0 reused + 56680 read in 19036 ms (2977.5 tok/s), 137 generated in 1107 ms (123.8 tok/s), drafts accepted 88 of 106, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (75672 hits / 75840 lookups)
+strata serve: KV streaming: 94.35% of 499122 block reads hit VRAM, 113.7 MiB read from RAM
+strata serve: suffix drafts: 6 windows, 28 of 30 drafts accepted
+strata serve: prompt 56847 tokens = 56675 reused + 172 read in 512 ms (336.1 tok/s), 51 generated in 425 ms (120.0 tok/s), drafts accepted 29 of 34, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.9% (26850 hits / 26880 lookups)
+strata serve: KV streaming: 95.43% of 683976 block reads hit VRAM, 126.0 MiB read from RAM
+strata serve: prompt 56921 tokens = 0 reused + 56921 read in 19025 ms (2992.0 tok/s), 149 generated in 1026 ms (145.2 tok/s), drafts accepted 107 of 110, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (73218 hits / 73440 lookups)
+strata serve: KV streaming: 93.32% of 483720 block reads hit VRAM, 130.2 MiB read from RAM
+strata serve: suffix drafts: 11 windows, 54 of 55 drafts accepted
+strata serve: prompt 59010 tokens = 0 reused + 59010 read in 19433 ms (3036.6 tok/s), 111 generated in 853 ms (130.2 tok/s), drafts accepted 81 of 98, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (63675 hits / 63840 lookups)
+strata serve: KV streaming: 93.09% of 422094 block reads hit VRAM, 117.5 MiB read from RAM
+strata serve: suffix drafts: 3 windows, 14 of 15 drafts accepted
+strata serve: prompt 59167 tokens = 59005 reused + 162 read in 509 ms (318.1 tok/s), 60 generated in 558 ms (107.6 tok/s), drafts accepted 31 of 43, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (34473 hits / 34560 lookups)
+strata serve: KV streaming: 94.82% of 656250 block reads hit VRAM, 136.9 MiB read from RAM
+strata serve: prompt 59637 tokens = 0 reused + 59637 read in 19582 ms (3045.4 tok/s), 524 generated in 3865 ms (135.6 tok/s), drafts accepted 350 of 379, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (265027 hits / 265920 lookups)
+strata serve: KV streaming: 97.58% of 1719186 block reads hit VRAM, 167.7 MiB read from RAM
+strata serve: suffix drafts: 29 windows, 137 of 141 drafts accepted
+strata serve: prompt 61866 tokens = 0 reused + 61866 read in 19989 ms (3095.1 tok/s), 184 generated in 1361 ms (135.2 tok/s), drafts accepted 125 of 139, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (95298 hits / 95520 lookups)
+strata serve: KV streaming: 94.39% of 625458 block reads hit VRAM, 141.3 MiB read from RAM
+strata serve: suffix drafts: 1 windows, 4 of 5 drafts accepted
+strata serve: prompt 62053 tokens = 61861 reused + 192 read in 532 ms (360.7 tok/s), 59 generated in 454 ms (129.8 tok/s), drafts accepted 38 of 45, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (31610 hits / 31680 lookups)
+strata serve: KV streaming: 95.43% of 841128 block reads hit VRAM, 154.9 MiB read from RAM
+strata serve: prompt 62183 tokens = 0 reused + 62183 read in 20643 ms (3012.2 tok/s), 187 generated in 1209 ms (154.7 tok/s), drafts accepted 141 of 149, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (93228 hits / 93600 lookups)
+strata serve: KV streaming: 95.01% of 613116 block reads hit VRAM, 123.3 MiB read from RAM
+strata serve: suffix drafts: 11 windows, 53 of 55 drafts accepted
+strata serve: prompt 64332 tokens = 0 reused + 64332 read in 21045 ms (3056.9 tok/s), 159 generated in 1310 ms (121.3 tok/s), drafts accepted 103 of 124, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (88647 hits / 88800 lookups)
+strata serve: KV streaming: 94.29% of 582294 block reads hit VRAM, 133.9 MiB read from RAM
+strata serve: suffix drafts: 4 windows, 15 of 20 drafts accepted
+strata serve: prompt 64506 tokens = 64327 reused + 179 read in 523 ms (342.0 tok/s), 57 generated in 516 ms (110.5 tok/s), drafts accepted 29 of 35, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (30182 hits / 30240 lookups)
+strata serve: KV streaming: 95.41% of 788730 block reads hit VRAM, 145.8 MiB read from RAM
+strata serve: prompt 64652 tokens = 0 reused + 64652 read in 20921 ms (3090.3 tok/s), 280 generated in 1834 ms (152.7 tok/s), drafts accepted 207 of 215, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (137742 hits / 138240 lookups)
+strata serve: KV streaming: 96.06% of 899652 block reads hit VRAM, 142.9 MiB read from RAM
+strata serve: suffix drafts: 15 windows, 72 of 75 drafts accepted
+strata serve: prompt 66885 tokens = 0 reused + 8192 of 66885 read in 4079 ms (2008.5 tok/s), 0 generated in 0 ms (0.0 tok/s), drafts accepted 0 of 0, 0 checkpoints (cancelled)
+strata serve: KV streaming: 100.00% of 0 block reads hit VRAM, 0.0 MiB read from RAM
+strata serve: prompt 13051 tokens = 0 reused + 13051 read in 6615 ms (1973.1 tok/s), 714 generated in 5591 ms (127.7 tok/s), drafts accepted 419 of 493, 2 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (378181 hits / 379200 lookups)
+strata serve: KV streaming: 99.28% of 2446320 block reads hit VRAM, 71.0 MiB read from RAM
+strata serve: suffix drafts: 8 windows, 26 of 30 drafts accepted
+strata serve: prompt 15170 tokens = 0 reused + 15170 read in 7340 ms (2066.6 tok/s), 152 generated in 1168 ms (130.2 tok/s), drafts accepted 97 of 127, 2 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (87696 hits / 87840 lookups)
+strata serve: KV streaming: 97.33% of 576150 block reads hit VRAM, 62.0 MiB read from RAM
+strata serve: suffix drafts: 1 windows, 3 of 3 drafts accepted
+strata serve: prompt 15375 tokens = 15165 reused + 210 read in 480 ms (437.6 tok/s), 155 generated in 1079 ms (143.7 tok/s), drafts accepted 108 of 126, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (84220 hits / 84480 lookups)
+strata serve: KV streaming: 98.48% of 1130724 block reads hit VRAM, 69.2 MiB read from RAM
+strata serve: suffix drafts: 17 windows, 54 of 59 drafts accepted
+strata serve: prompt 15592 tokens = 15370 reused + 222 read in 487 ms (456.0 tok/s), 102 generated in 844 ms (120.9 tok/s), drafts accepted 60 of 80, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (59375 hits / 59520 lookups)
+strata serve: KV streaming: 98.83% of 1525104 block reads hit VRAM, 71.9 MiB read from RAM
+strata serve: suffix drafts: 1 windows, 1 of 5 drafts accepted
+strata serve: prompt 14943 tokens = 0 reused + 14943 read in 7471 ms (2000.0 tok/s), 186 generated in 1361 ms (136.7 tok/s), drafts accepted 129 of 161, 2 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (106108 hits / 106560 lookups)
+strata serve: KV streaming: 97.70% of 696306 block reads hit VRAM, 64.4 MiB read from RAM
+strata serve: suffix drafts: 9 windows, 28 of 40 drafts accepted
+strata serve: prompt 17092 tokens = 0 reused + 17092 read in 7999 ms (2136.8 tok/s), 387 generated in 2682 ms (144.3 tok/s), drafts accepted 261 of 287, 2 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (198289 hits / 198720 lookups)
+strata serve: KV streaming: 98.59% of 1287858 block reads hit VRAM, 73.2 MiB read from RAM
+strata serve: suffix drafts: 13 windows, 54 of 65 drafts accepted
+strata serve: prompt 17374 tokens = 17087 reused + 287 read in 560 ms (512.4 tok/s), 93 generated in 813 ms (114.4 tok/s), drafts accepted 48 of 64, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (52226 hits / 52320 lookups)
+strata serve: KV streaming: 98.86% of 1636008 block reads hit VRAM, 75.0 MiB read from RAM
+strata serve: suffix drafts: 1 windows, 1 of 5 drafts accepted
+strata serve: prompt 17091 tokens = 0 reused + 17091 read in 8350 ms (2046.8 tok/s), 594 generated in 4406 ms (134.8 tok/s), drafts accepted 380 of 439, 2 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (313558 hits / 314400 lookups)
+strata serve: KV streaming: 98.99% of 2030370 block reads hit VRAM, 83.0 MiB read from RAM
+strata serve: suffix drafts: 9 windows, 28 of 45 drafts accepted
+strata serve: prompt 19293 tokens = 0 reused + 19293 read in 8891 ms (2170.0 tok/s), 251 generated in 1535 ms (163.6 tok/s), drafts accepted 198 of 213, 2 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (128494 hits / 129120 lookups)
+strata serve: KV streaming: 97.71% of 841110 block reads hit VRAM, 77.7 MiB read from RAM
+strata serve: suffix drafts: 33 windows, 163 of 165 drafts accepted
+strata serve: prompt 19599 tokens = 19288 reused + 311 read in 618 ms (503.3 tok/s), 190 generated in 1340 ms (141.8 tok/s), drafts accepted 128 of 148, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (100897 hits / 101280 lookups)
+strata serve: KV streaming: 98.62% of 1503522 block reads hit VRAM, 83.9 MiB read from RAM
+strata serve: suffix drafts: 6 windows, 20 of 25 drafts accepted
+strata serve: prompt 19872 tokens = 19594 reused + 278 read in 560 ms (496.0 tok/s), 348 generated in 2747 ms (126.7 tok/s), drafts accepted 204 of 234, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (181097 hits / 181440 lookups)
+strata serve: KV streaming: 99.16% of 2680470 block reads hit VRAM, 90.7 MiB read from RAM
+strata serve: suffix drafts: 17 windows, 75 of 83 drafts accepted
+strata serve: prompt 20130 tokens = 19867 reused + 263 read in 562 ms (467.7 tok/s), 198 generated in 1326 ms (149.3 tok/s), drafts accepted 145 of 161, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (104781 hits / 105120 lookups)
+strata serve: KV streaming: 99.31% of 3367536 block reads hit VRAM, 93.3 MiB read from RAM
+strata serve: suffix drafts: 8 windows, 36 of 40 drafts accepted
+strata serve: prompt 20389 tokens = 20125 reused + 264 read in 561 ms (470.6 tok/s), 140 generated in 1187 ms (117.9 tok/s), drafts accepted 82 of 105, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (79553 hits / 79680 lookups)
+strata serve: KV streaming: 99.39% of 3891312 block reads hit VRAM, 96.2 MiB read from RAM
+strata serve: suffix drafts: 1 windows, 3 of 5 drafts accepted
+strata serve: prompt 20508 tokens = 0 reused + 20508 read in 9905 ms (2070.5 tok/s), 760 generated in 5789 ms (131.3 tok/s), drafts accepted 477 of 554, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (401851 hits / 403200 lookups)
+strata serve: KV streaming: 99.04% of 2600358 block reads hit VRAM, 100.7 MiB read from RAM
+strata serve: suffix drafts: 52 windows, 223 of 248 drafts accepted
+strata serve: prompt 22812 tokens = 0 reused + 22812 read in 10567 ms (2158.8 tok/s), 795 generated in 6051 ms (131.4 tok/s), drafts accepted 502 of 586, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (421744 hits / 422880 lookups)
+strata serve: KV streaming: 99.04% of 2726700 block reads hit VRAM, 105.2 MiB read from RAM
+strata serve: suffix drafts: 40 windows, 174 of 198 drafts accepted
+strata serve: prompt 23204 tokens = 22807 reused + 397 read in 677 ms (586.3 tok/s), 757 generated in 5649 ms (134.0 tok/s), drafts accepted 486 of 557, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (397313 hits / 398400 lookups)
+strata serve: KV streaming: 99.47% of 5296278 block reads hit VRAM, 112.4 MiB read from RAM
+strata serve: suffix drafts: 49 windows, 226 of 241 drafts accepted
+strata serve: prompt 23613 tokens = 23199 reused + 414 read in 695 ms (595.5 tok/s), 697 generated in 6033 ms (115.5 tok/s), drafts accepted 368 of 461, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.9% (379735 hits / 380160 lookups)
+strata serve: KV streaming: 99.62% of 7748760 block reads hit VRAM, 118.5 MiB read from RAM
+strata serve: suffix drafts: 18 windows, 50 of 71 drafts accepted
+strata serve: prompt 25578 tokens = 23608 reused + 1970 read in 1603 ms (1229.2 tok/s), 101 generated in 854 ms (118.3 tok/s), drafts accepted 52 of 58, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (51202 hits / 51360 lookups)
+strata serve: KV streaming: 99.61% of 8090754 block reads hit VRAM, 126.2 MiB read from RAM
+strata serve: suffix drafts: 4 windows, 4 of 4 drafts accepted
+strata serve: prompt 25953 tokens = 0 reused + 25953 read in 11308 ms (2295.0 tok/s), 248 generated in 1907 ms (130.1 tok/s), drafts accepted 162 of 200, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (138322 hits / 138720 lookups)
+strata serve: KV streaming: 97.42% of 902742 block reads hit VRAM, 93.7 MiB read from RAM
+strata serve: suffix drafts: 5 windows, 16 of 23 drafts accepted
+strata serve: prompt 28076 tokens = 0 reused + 28076 read in 11779 ms (2383.6 tok/s), 259 generated in 1871 ms (138.4 tok/s), drafts accepted 176 of 210, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (140384 hits / 140640 lookups)
+strata serve: KV streaming: 97.46% of 915066 block reads hit VRAM, 93.6 MiB read from RAM
+strata serve: suffix drafts: 6 windows, 19 of 23 drafts accepted
+strata serve: prompt 28371 tokens = 28071 reused + 300 read in 574 ms (522.8 tok/s), 112 generated in 1068 ms (104.8 tok/s), drafts accepted 56 of 82, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (67065 hits / 67200 lookups)
+strata serve: KV streaming: 98.12% of 1358718 block reads hit VRAM, 102.8 MiB read from RAM
+strata serve: prompt 29794 tokens = 0 reused + 29794 read in 12548 ms (2374.4 tok/s), 468 generated in 3622 ms (129.2 tok/s), drafts accepted 299 of 360, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (254553 hits / 255360 lookups)
+strata serve: KV streaming: 98.31% of 1651428 block reads hit VRAM, 112.8 MiB read from RAM
+strata serve: suffix drafts: 12 windows, 34 of 49 drafts accepted
+strata serve: prompt 31229 tokens = 0 reused + 31229 read in 12907 ms (2419.6 tok/s), 298 generated in 1813 ms (164.4 tok/s), drafts accepted 232 of 240, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (146713 hits / 147360 lookups)
+strata serve: KV streaming: 97.27% of 958182 block reads hit VRAM, 105.5 MiB read from RAM
+strata serve: suffix drafts: 36 windows, 178 of 180 drafts accepted
+strata serve: prompt 31542 tokens = 31224 reused + 318 read in 612 ms (519.3 tok/s), 269 generated in 1973 ms (136.4 tok/s), drafts accepted 175 of 201, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (141308 hits / 141600 lookups)
+strata serve: KV streaming: 98.42% of 1879416 block reads hit VRAM, 119.6 MiB read from RAM
+strata serve: suffix drafts: 6 windows, 21 of 26 drafts accepted
+strata serve: prompt 32196 tokens = 31537 reused + 659 read in 881 ms (747.9 tok/s), 110 generated in 778 ms (141.4 tok/s), drafts accepted 80 of 88, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (57866 hits / 58080 lookups)
+strata serve: KV streaming: 98.59% of 2264544 block reads hit VRAM, 128.5 MiB read from RAM
+strata serve: suffix drafts: 3 windows, 12 of 15 drafts accepted
+strata serve: prompt 32328 tokens = 32191 reused + 137 read in 463 ms (296.2 tok/s), 245 generated in 1422 ms (172.3 tok/s), drafts accepted 198 of 200, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (119363 hits / 120000 lookups)
+strata serve: KV streaming: 98.92% of 3047118 block reads hit VRAM, 132.3 MiB read from RAM
+strata serve: suffix drafts: 33 windows, 165 of 165 drafts accepted
+strata serve: prompt 32600 tokens = 32323 reused + 277 read in 595 ms (465.3 tok/s), 693 generated in 6115 ms (113.3 tok/s), drafts accepted 368 of 463, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (378543 hits / 379200 lookups)
+strata serve: KV streaming: 99.33% of 5493420 block reads hit VRAM, 148.4 MiB read from RAM
+strata serve: suffix drafts: 13 windows, 30 of 46 drafts accepted
+strata serve: prompt 32700 tokens = 32595 reused + 105 read in 404 ms (259.8 tok/s), 367 generated in 3174 ms (115.6 tok/s), drafts accepted 202 of 260, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.9% (204706 hits / 204960 lookups)
+strata serve: KV streaming: 99.46% of 6821358 block reads hit VRAM, 149.7 MiB read from RAM
+strata serve: suffix drafts: 7 windows, 13 of 24 drafts accepted
+strata serve: prompt 32796 tokens = 32695 reused + 101 read in 397 ms (254.7 tok/s), 396 generated in 3375 ms (117.3 tok/s), drafts accepted 217 of 263, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (211835 hits / 212160 lookups)
+strata serve: KV streaming: 99.54% of 8195466 block reads hit VRAM, 151.7 MiB read from RAM
+strata serve: suffix drafts: 11 windows, 31 of 39 drafts accepted
+strata serve: prompt 33258 tokens = 0 reused + 33258 read in 13319 ms (2497.0 tok/s), 264 generated in 1975 ms (133.7 tok/s), drafts accepted 174 of 201, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (139494 hits / 140160 lookups)
+strata serve: KV streaming: 96.90% of 911982 block reads hit VRAM, 113.9 MiB read from RAM
+strata serve: suffix drafts: 3 windows, 5 of 12 drafts accepted
+strata serve: prompt 35412 tokens = 0 reused + 35412 read in 13723 ms (2580.6 tok/s), 227 generated in 1401 ms (162.0 tok/s), drafts accepted 178 of 190, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.4% (114028 hits / 114720 lookups)
+strata serve: KV streaming: 96.05% of 748674 block reads hit VRAM, 119.1 MiB read from RAM
+strata serve: suffix drafts: 33 windows, 162 of 165 drafts accepted
+strata serve: prompt 35665 tokens = 35407 reused + 258 read in 570 ms (452.7 tok/s), 226 generated in 1612 ms (140.2 tok/s), drafts accepted 155 of 176, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (119273 hits / 119520 lookups)
+strata serve: KV streaming: 97.87% of 1528170 block reads hit VRAM, 131.3 MiB read from RAM
+strata serve: suffix drafts: 2 windows, 10 of 10 drafts accepted
+strata serve: prompt 37727 tokens = 35660 reused + 2067 read in 1681 ms (1229.7 tok/s), 135 generated in 1223 ms (110.4 tok/s), drafts accepted 71 of 98, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (77479 hits / 77760 lookups)
+strata serve: KV streaming: 98.21% of 2039604 block reads hit VRAM, 147.5 MiB read from RAM
+strata serve: prompt 38343 tokens = 0 reused + 38343 read in 14757 ms (2598.3 tok/s), 516 generated in 3740 ms (138.0 tok/s), drafts accepted 348 of 402, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (272277 hits / 273600 lookups)
+strata serve: KV streaming: 98.14% of 1768476 block reads hit VRAM, 132.2 MiB read from RAM
+strata serve: suffix drafts: 6 windows, 20 of 28 drafts accepted
+strata serve: prompt 40732 tokens = 0 reused + 40732 read in 15174 ms (2684.4 tok/s), 446 generated in 2896 ms (154.0 tok/s), drafts accepted 339 of 360, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.3% (224504 hits / 226080 lookups)
+strata serve: KV streaming: 97.64% of 1463490 block reads hit VRAM, 139.0 MiB read from RAM
+strata serve: suffix drafts: 44 windows, 209 of 216 drafts accepted
+strata serve: prompt 41191 tokens = 40727 reused + 464 read in 752 ms (617.0 tok/s), 350 generated in 2559 ms (136.8 tok/s), drafts accepted 235 of 274, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (186703 hits / 187200 lookups)
+strata serve: KV streaming: 98.43% of 2677392 block reads hit VRAM, 169.5 MiB read from RAM
+strata serve: suffix drafts: 2 windows, 10 of 10 drafts accepted
+strata serve: prompt 41664 tokens = 41186 reused + 478 read in 722 ms (662.5 tok/s), 115 generated in 911 ms (126.3 tok/s), drafts accepted 68 of 74, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (57932 hits / 58080 lookups)
+strata serve: KV streaming: 98.59% of 3062520 block reads hit VRAM, 173.9 MiB read from RAM
+strata serve: prompt 48227 tokens = 0 reused + 8192 of 48227 read in 4070 ms (2012.5 tok/s), 0 generated in 0 ms (0.0 tok/s), drafts accepted 0 of 0, 0 checkpoints (cancelled)
+strata serve: KV streaming: 100.00% of 0 block reads hit VRAM, 0.0 MiB read from RAM
+strata serve: prompt 55736 tokens = 0 reused + 55736 read in 18805 ms (2963.9 tok/s), 922 generated in 8032 ms (114.8 tok/s), drafts accepted 494 of 593, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (488962 hits / 490080 lookups)
+strata serve: KV streaming: 98.17% of 3158016 block reads hit VRAM, 232.7 MiB read from RAM
+strata serve: suffix drafts: 9 windows, 8 of 10 drafts accepted
+strata serve: prompt 15266 tokens = 0 reused + 15266 read in 7582 ms (2013.5 tok/s), 2642 generated in 23306 ms (113.4 tok/s), drafts accepted 1291 of 1606, 2 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (1416463 hits / 1419360 lookups)
+strata serve: KV streaming: 99.73% of 9122832 block reads hit VRAM, 100.8 MiB read from RAM
+strata serve: suffix drafts: 20 windows, 35 of 56 drafts accepted
+strata serve: prompt 16577 tokens = 0 reused + 16577 read in 7733 ms (2143.7 tok/s), 1242 generated in 8148 ms (152.4 tok/s), drafts accepted 873 of 948, 2 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (629580 hits / 632640 lookups)
+strata serve: KV streaming: 99.45% of 4073088 block reads hit VRAM, 90.4 MiB read from RAM
+strata serve: suffix drafts: 2 windows, 5 of 5 drafts accepted
+strata serve: prompt 17837 tokens = 16572 reused + 1265 read in 1231 ms (1027.2 tok/s), 652 generated in 4573 ms (142.6 tok/s), drafts accepted 434 of 497, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (341963 hits / 343200 lookups)
+strata serve: KV streaming: 99.60% of 6288330 block reads hit VRAM, 101.7 MiB read from RAM
+strata serve: suffix drafts: 4 windows, 8 of 16 drafts accepted
+strata serve: prompt 18485 tokens = 17832 reused + 653 read in 835 ms (782.5 tok/s), 542 generated in 3152 ms (172.0 tok/s), drafts accepted 427 of 442, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.3% (265527 hits / 267360 lookups)
+strata serve: KV streaming: 99.67% of 8016780 block reads hit VRAM, 107.1 MiB read from RAM
+strata serve: suffix drafts: 74 windows, 363 of 370 drafts accepted
+strata serve: prompt 19031 tokens = 18480 reused + 551 read in 793 ms (694.7 tok/s), 478 generated in 3193 ms (149.7 tok/s), drafts accepted 331 of 365, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (244876 hits / 245760 lookups)
+strata serve: KV streaming: 99.71% of 9606576 block reads hit VRAM, 110.8 MiB read from RAM
+strata serve: suffix drafts: 10 windows, 39 of 46 drafts accepted
+strata serve: prompt 19536 tokens = 19026 reused + 510 read in 725 ms (703.4 tok/s), 4400 generated in 29880 ms (147.3 tok/s), drafts accepted 3053 of 3412, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (2276905 hits / 2284320 lookups)
+strata serve: KV streaming: 99.86% of 24281376 block reads hit VRAM, 139.3 MiB read from RAM
+strata serve: suffix drafts: 27 windows, 61 of 100 drafts accepted
+strata serve: prompt 23525 tokens = 19531 reused + 3994 read in 2592 ms (1541.2 tok/s), 269 generated in 2006 ms (134.1 tok/s), drafts accepted 174 of 202, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.4% (142246 hits / 143040 lookups)
+strata serve: KV streaming: 99.86% of 25211814 block reads hit VRAM, 139.5 MiB read from RAM
+strata serve: suffix drafts: 6 windows, 23 of 28 drafts accepted
+strata serve: prompt 23686 tokens = 23520 reused + 166 read in 457 ms (362.9 tok/s), 185 generated in 1302 ms (142.0 tok/s), drafts accepted 130 of 146, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (96945 hits / 97440 lookups)
+strata serve: KV streaming: 99.87% of 25849572 block reads hit VRAM, 139.7 MiB read from RAM
+strata serve: suffix drafts: 15 windows, 73 of 75 drafts accepted
+strata serve: prompt 23836 tokens = 23681 reused + 155 read in 466 ms (332.4 tok/s), 139 generated in 1001 ms (138.9 tok/s), drafts accepted 88 of 91, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (67986 hits / 68160 lookups)
+strata serve: KV streaming: 99.87% of 26299398 block reads hit VRAM, 140.0 MiB read from RAM
+strata serve: suffix drafts: 1 windows, 5 of 5 drafts accepted
+strata serve: prompt 23944 tokens = 23831 reused + 113 read in 416 ms (271.9 tok/s), 150 generated in 1081 ms (138.8 tok/s), drafts accepted 100 of 112, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (77495 hits / 77760 lookups)
+strata serve: KV streaming: 99.87% of 26810838 block reads hit VRAM, 140.7 MiB read from RAM
+strata serve: suffix drafts: 6 windows, 19 of 26 drafts accepted
+strata serve: prompt 24091 tokens = 23939 reused + 152 read in 455 ms (333.7 tok/s), 569 generated in 3894 ms (146.1 tok/s), drafts accepted 391 of 422, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (288156 hits / 288960 lookups)
+strata serve: KV streaming: 99.87% of 28677906 block reads hit VRAM, 144.6 MiB read from RAM
+strata serve: suffix drafts: 2 windows, 4 of 5 drafts accepted
+strata serve: prompt 24626 tokens = 24086 reused + 540 read in 785 ms (687.7 tok/s), 780 generated in 5714 ms (136.5 tok/s), drafts accepted 523 of 636, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (427803 hits / 429120 lookups)
+strata serve: KV streaming: 99.88% of 31444614 block reads hit VRAM, 149.4 MiB read from RAM
+strata serve: suffix drafts: 6 windows, 14 of 20 drafts accepted
+strata serve: prompt 25412 tokens = 24621 reused + 791 read in 961 ms (823.5 tok/s), 231 generated in 1533 ms (150.7 tok/s), drafts accepted 171 of 187, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.4% (119258 hits / 120000 lookups)
+strata serve: KV streaming: 99.88% of 32227176 block reads hit VRAM, 151.0 MiB read from RAM
+strata serve: suffix drafts: 14 windows, 57 of 68 drafts accepted
+strata serve: prompt 25664 tokens = 25407 reused + 257 read in 546 ms (470.9 tok/s), 756 generated in 5267 ms (143.5 tok/s), drafts accepted 500 of 538, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (380251 hits / 381120 lookups)
+strata serve: KV streaming: 99.89% of 34685802 block reads hit VRAM, 155.9 MiB read from RAM
+strata serve: suffix drafts: 4 windows, 4 of 4 drafts accepted
+strata serve: prompt 25743 tokens = 25659 reused + 84 read in 382 ms (219.9 tok/s), 1436 generated in 9783 ms (146.8 tok/s), drafts accepted 1008 of 1125, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (744506 hits / 746880 lookups)
+strata serve: KV streaming: 99.90% of 39492150 block reads hit VRAM, 160.8 MiB read from RAM
+strata serve: suffix drafts: 7 windows, 12 of 26 drafts accepted
+strata serve: prompt 27190 tokens = 25738 reused + 1452 read in 1357 ms (1070.2 tok/s), 1643 generated in 9977 ms (164.7 tok/s), drafts accepted 1280 of 1326, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.4% (807186 hits / 812160 lookups)
+strata serve: KV streaming: 99.91% of 44717502 block reads hit VRAM, 171.1 MiB read from RAM
+strata serve: suffix drafts: 162 windows, 799 of 808 drafts accepted
+strata serve: prompt 28842 tokens = 27185 reused + 1657 read in 1454 ms (1139.6 tok/s), 1097 generated in 8193 ms (133.9 tok/s), drafts accepted 717 of 853, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (588989 hits / 591840 lookups)
+strata serve: KV streaming: 99.91% of 48528726 block reads hit VRAM, 177.9 MiB read from RAM
+strata serve: suffix drafts: 2 windows, 2 of 8 drafts accepted
+strata serve: prompt 29867 tokens = 28837 reused + 1030 read in 1185 ms (869.4 tok/s), 213 generated in 1673 ms (127.3 tok/s), drafts accepted 136 of 156, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.3% (113020 hits / 113760 lookups)
+strata serve: KV streaming: 99.91% of 49271250 block reads hit VRAM, 178.8 MiB read from RAM
+strata serve: suffix drafts: 5 windows, 23 of 25 drafts accepted
+strata serve: prompt 30034 tokens = 29862 reused + 172 read in 493 ms (349.1 tok/s), 2537 generated in 18248 ms (139.0 tok/s), drafts accepted 1731 of 2020, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (1352632 hits / 1356960 lookups)
+strata serve: KV streaming: 99.92% of 57993564 block reads hit VRAM, 193.9 MiB read from RAM
+strata serve: suffix drafts: 16 windows, 28 of 58 drafts accepted
+strata serve: prompt 32550 tokens = 30029 reused + 2521 read in 1914 ms (1317.0 tok/s), 1078 generated in 7140 ms (151.0 tok/s), drafts accepted 808 of 890, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.3% (554344 hits / 558240 lookups)
+strata serve: KV streaming: 99.92% of 61589100 block reads hit VRAM, 202.0 MiB read from RAM
+strata serve: suffix drafts: 89 windows, 424 of 439 drafts accepted
+strata serve: prompt 33625 tokens = 32545 reused + 1080 read in 1207 ms (894.4 tok/s), 1222 generated in 7773 ms (157.2 tok/s), drafts accepted 928 of 992, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (615151 hits / 618240 lookups)
+strata serve: KV streaming: 99.92% of 65569740 block reads hit VRAM, 216.5 MiB read from RAM
+strata serve: suffix drafts: 109 windows, 531 of 543 drafts accepted
+strata serve: prompt 34847 tokens = 33620 reused + 1222 of 1227 read in 1236 ms (988.9 tok/s), 0 generated in 0 ms (0.0 tok/s), drafts accepted 0 of 0, 6 checkpoints (cancelled)
+strata serve: KV streaming: 99.92% of 65569740 block reads hit VRAM, 216.5 MiB read from RAM
+strata serve: prompt 38202 tokens = 0 reused + 8192 of 38202 read in 4207 ms (1947.3 tok/s), 0 generated in 0 ms (0.0 tok/s), drafts accepted 0 of 0, 0 checkpoints (cancelled)
+strata serve: KV streaming: 100.00% of 0 block reads hit VRAM, 0.0 MiB read from RAM
+strata serve: prompt 42769 tokens = 0 reused + 42769 read in 15807 ms (2705.6 tok/s), 3467 generated in 23100 ms (150.1 tok/s), drafts accepted 2562 of 2805, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (1775348 hits / 1783200 lookups)
+strata serve: KV streaming: 99.21% of 11458236 block reads hit VRAM, 362.4 MiB read from RAM
+strata serve: suffix drafts: 226 windows, 1085 of 1115 drafts accepted
+strata serve: prompt 47220 tokens = 0 reused + 47220 read in 16829 ms (2805.9 tok/s), 236 generated in 1872 ms (126.1 tok/s), drafts accepted 154 of 174, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.2% (124296 hits / 125280 lookups)
+strata serve: KV streaming: 95.63% of 816450 block reads hit VRAM, 143.6 MiB read from RAM
+strata serve: suffix drafts: 1 windows, 5 of 5 drafts accepted
+strata serve: prompt 47341 tokens = 47215 reused + 126 read in 442 ms (284.8 tok/s), 32768 generated in 183831 ms (178.3 tok/s), drafts accepted 27294 of 27305, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.9% (15713377 hits / 15734400 lookups)
+strata serve: KV streaming: 99.90% of 101823960 block reads hit VRAM, 425.9 MiB read from RAM
+strata serve: suffix drafts: 5453 windows, 27257 of 27261 drafts accepted
+strata serve: prompt 47423 tokens = 47336 reused + 87 read in 420 ms (207.2 tok/s), 32768 generated in 185386 ms (176.8 tok/s), drafts accepted 27193 of 27242, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.9% (15737647 hits / 15753120 lookups)
+strata serve: KV streaming: 99.89% of 202951638 block reads hit VRAM, 862.3 MiB read from RAM
+strata serve: suffix drafts: 5396 windows, 26962 of 26967 drafts accepted
+strata serve: prompt 47505 tokens = 47418 reused + 87 read in 432 ms (201.3 tok/s), 266 generated in 2131 ms (124.8 tok/s), drafts accepted 172 of 204, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.1% (143208 hits / 144480 lookups)
+strata serve: KV streaming: 99.88% of 203891328 block reads hit VRAM, 1000.0 MiB read from RAM
+strata serve: suffix drafts: 6 windows, 26 of 28 drafts accepted
+strata serve: prompt 47625 tokens = 47500 reused + 125 read in 457 ms (273.7 tok/s), 116 generated in 847 ms (137.0 tok/s), drafts accepted 78 of 84, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.3% (58624 hits / 59040 lookups)
+strata serve: KV streaming: 99.88% of 204282618 block reads hit VRAM, 1008.8 MiB read from RAM
+strata serve: suffix drafts: 6 windows, 27 of 28 drafts accepted
+strata serve: prompt 47744 tokens = 47620 reused + 124 read in 455 ms (272.7 tok/s), 311 generated in 2215 ms (140.4 tok/s), drafts accepted 227 of 251, 6 checkpoints
+strata serve: decode expert cache hit rate: 98.7% (161133 hits / 163200 lookups)
+strata serve: KV streaming: 99.87% of 205342506 block reads hit VRAM, 1048.1 MiB read from RAM
+strata serve: suffix drafts: 21 windows, 100 of 103 drafts accepted
+strata serve: prompt 48047 tokens = 47739 reused + 308 read in 672 ms (458.3 tok/s), 272 generated in 1923 ms (141.5 tok/s), drafts accepted 196 of 212, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.4% (139764 hits / 140640 lookups)
+strata serve: KV streaming: 99.87% of 206257560 block reads hit VRAM, 1057.9 MiB read from RAM
+strata serve: suffix drafts: 28 windows, 136 of 140 drafts accepted
+strata serve: prompt 48319 tokens = 48042 reused + 277 read in 639 ms (433.8 tok/s), 316 generated in 2224 ms (142.1 tok/s), drafts accepted 227 of 243, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (160043 hits / 160800 lookups)
+strata serve: KV streaming: 99.87% of 207302028 block reads hit VRAM, 1066.4 MiB read from RAM
+strata serve: suffix drafts: 30 windows, 140 of 143 drafts accepted
+strata serve: prompt 48631 tokens = 48314 reused + 317 read in 665 ms (476.8 tok/s), 309 generated in 2088 ms (148.0 tok/s), drafts accepted 231 of 239, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (153297 hits / 154080 lookups)
+strata serve: KV streaming: 99.87% of 208303344 block reads hit VRAM, 1073.3 MiB read from RAM
+strata serve: suffix drafts: 38 windows, 186 of 190 drafts accepted
+strata serve: prompt 48934 tokens = 48626 reused + 308 read in 663 ms (464.7 tok/s), 157 generated in 1247 ms (125.9 tok/s), drafts accepted 101 of 113, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (82708 hits / 83040 lookups)
+strata serve: KV streaming: 99.87% of 208848678 block reads hit VRAM, 1079.7 MiB read from RAM
+strata serve: suffix drafts: 5 windows, 13 of 22 drafts accepted
+strata serve: prompt 49087 tokens = 48929 reused + 158 read in 516 ms (306.4 tok/s), 188 generated in 1482 ms (126.8 tok/s), drafts accepted 124 of 139, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (98946 hits / 99360 lookups)
+strata serve: KV streaming: 99.87% of 209498760 block reads hit VRAM, 1086.8 MiB read from RAM
+strata serve: suffix drafts: 11 windows, 43 of 52 drafts accepted
+strata serve: prompt 49256 tokens = 49082 reused + 174 read in 514 ms (338.6 tok/s), 304 generated in 2311 ms (131.5 tok/s), drafts accepted 207 of 224, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (155847 hits / 156480 lookups)
+strata serve: KV streaming: 99.87% of 210515466 block reads hit VRAM, 1099.1 MiB read from RAM
+strata serve: suffix drafts: 27 windows, 123 of 128 drafts accepted
+strata serve: prompt 49503 tokens = 49251 reused + 252 read in 601 ms (419.5 tok/s), 231 generated in 1845 ms (125.2 tok/s), drafts accepted 143 of 168, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (123451 hits / 123840 lookups)
+strata serve: KV streaming: 99.87% of 211322682 block reads hit VRAM, 1109.5 MiB read from RAM
+strata serve: suffix drafts: 6 windows, 27 of 28 drafts accepted
+strata serve: prompt 49677 tokens = 49498 reused + 179 read in 520 ms (344.0 tok/s), 315 generated in 2155 ms (146.2 tok/s), drafts accepted 232 of 241, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (157438 hits / 157920 lookups)
+strata serve: KV streaming: 99.87% of 212348652 block reads hit VRAM, 1118.2 MiB read from RAM
+strata serve: suffix drafts: 28 windows, 136 of 140 drafts accepted
+strata serve: prompt 49980 tokens = 49672 reused + 308 read in 661 ms (466.0 tok/s), 293 generated in 2047 ms (143.1 tok/s), drafts accepted 215 of 229, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (149245 hits / 149760 lookups)
+strata serve: KV streaming: 99.87% of 213322248 block reads hit VRAM, 1124.0 MiB read from RAM
+strata serve: suffix drafts: 30 windows, 144 of 148 drafts accepted
+strata serve: prompt 50275 tokens = 49975 reused + 300 read in 662 ms (453.3 tok/s), 304 generated in 2104 ms (144.5 tok/s), drafts accepted 222 of 241, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (156475 hits / 156960 lookups)
+strata serve: KV streaming: 99.87% of 214342068 block reads hit VRAM, 1129.8 MiB read from RAM
+strata serve: suffix drafts: 29 windows, 141 of 145 drafts accepted
+strata serve: prompt 50578 tokens = 50270 reused + 308 read in 686 ms (449.2 tok/s), 270 generated in 1850 ms (146.0 tok/s), drafts accepted 204 of 228, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (142558 hits / 143040 lookups)
+strata serve: KV streaming: 99.87% of 215272536 block reads hit VRAM, 1133.8 MiB read from RAM
+strata serve: suffix drafts: 33 windows, 155 of 165 drafts accepted
+strata serve: prompt 50851 tokens = 50573 reused + 278 read in 664 ms (418.5 tok/s), 254 generated in 1854 ms (137.0 tok/s), drafts accepted 183 of 202, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (133069 hits / 133440 lookups)
+strata serve: KV streaming: 99.87% of 216141372 block reads hit VRAM, 1139.5 MiB read from RAM
+strata serve: suffix drafts: 28 windows, 129 of 134 drafts accepted
+strata serve: prompt 51078 tokens = 50846 reused + 232 read in 603 ms (385.0 tok/s), 267 generated in 1875 ms (142.4 tok/s), drafts accepted 190 of 206, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (136417 hits / 136800 lookups)
+strata serve: KV streaming: 99.87% of 217031772 block reads hit VRAM, 1144.2 MiB read from RAM
+strata serve: suffix drafts: 29 windows, 138 of 145 drafts accepted
+strata serve: prompt 51325 tokens = 51073 reused + 252 read in 600 ms (419.8 tok/s), 150 generated in 1203 ms (124.6 tok/s), drafts accepted 99 of 117, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (81905 hits / 82080 lookups)
+strata serve: KV streaming: 99.87% of 217570956 block reads hit VRAM, 1147.0 MiB read from RAM
+strata serve: suffix drafts: 8 windows, 32 of 40 drafts accepted
+strata serve: prompt 51475 tokens = 51320 reused + 155 read in 491 ms (315.5 tok/s), 78 generated in 715 ms (109.1 tok/s), drafts accepted 41 of 49, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (42088 hits / 42240 lookups)
+strata serve: KV streaming: 99.87% of 217854408 block reads hit VRAM, 1151.6 MiB read from RAM
+strata serve: suffix drafts: 2 windows, 9 of 10 drafts accepted
+strata serve: prompt 51761 tokens = 51470 reused + 291 read in 660 ms (441.2 tok/s), 155 generated in 1188 ms (130.5 tok/s), drafts accepted 105 of 115, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (80926 hits / 81120 lookups)
+strata serve: KV streaming: 99.87% of 218387418 block reads hit VRAM, 1156.4 MiB read from RAM
+strata serve: suffix drafts: 14 windows, 69 of 70 drafts accepted
+strata serve: prompt 51902 tokens = 51756 reused + 146 read in 505 ms (289.1 tok/s), 67 generated in 614 ms (109.1 tok/s), drafts accepted 38 of 43, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (36390 hits / 36480 lookups)
+strata serve: KV streaming: 99.87% of 218633904 block reads hit VRAM, 1158.0 MiB read from RAM
+strata serve: suffix drafts: 4 windows, 19 of 20 drafts accepted
+strata serve: prompt 51987 tokens = 51470 reused + 517 read in 813 ms (636.1 tok/s), 310 generated in 2158 ms (143.6 tok/s), drafts accepted 224 of 241, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (157475 hits / 157920 lookups)
+strata serve: KV streaming: 99.87% of 219659868 block reads hit VRAM, 1176.1 MiB read from RAM
+strata serve: suffix drafts: 36 windows, 169 of 180 drafts accepted
+strata serve: prompt 52290 tokens = 51982 reused + 308 read in 661 ms (466.1 tok/s), 234 generated in 1643 ms (142.4 tok/s), drafts accepted 165 of 177, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (118727 hits / 119040 lookups)
+strata serve: KV streaming: 99.87% of 220436268 block reads hit VRAM, 1188.3 MiB read from RAM
+strata serve: suffix drafts: 21 windows, 99 of 105 drafts accepted
+strata serve: prompt 52507 tokens = 52285 reused + 222 read in 563 ms (394.5 tok/s), 290 generated in 2204 ms (131.6 tok/s), drafts accepted 191 of 204, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (146029 hits / 146400 lookups)
+strata serve: KV streaming: 99.86% of 221388294 block reads hit VRAM, 1206.1 MiB read from RAM
+strata serve: suffix drafts: 22 windows, 105 of 107 drafts accepted
+strata serve: prompt 52754 tokens = 52502 reused + 252 read in 600 ms (419.9 tok/s), 360 generated in 2505 ms (143.7 tok/s), drafts accepted 261 of 280, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (182691 hits / 183360 lookups)
+strata serve: KV streaming: 99.86% of 222577554 block reads hit VRAM, 1235.7 MiB read from RAM
+strata serve: suffix drafts: 34 windows, 164 of 170 drafts accepted
+strata serve: prompt 53101 tokens = 52749 reused + 352 read in 691 ms (509.5 tok/s), 432 generated in 3184 ms (135.7 tok/s), drafts accepted 294 of 319, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (219627 hits / 220320 lookups)
+strata serve: KV streaming: 99.86% of 224004030 block reads hit VRAM, 1302.1 MiB read from RAM
+strata serve: suffix drafts: 44 windows, 216 of 220 drafts accepted
+strata serve: prompt 53485 tokens = 53096 reused + 389 read in 723 ms (537.8 tok/s), 239 generated in 2193 ms (109.0 tok/s), drafts accepted 115 of 136, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (124502 hits / 124800 lookups)
+strata serve: KV streaming: 99.85% of 224817390 block reads hit VRAM, 1331.3 MiB read from RAM
+strata serve: suffix drafts: 6 windows, 6 of 6 drafts accepted
+[strata] 2026-10-09 21:18:23 engine started: /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata --serve --pack /media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/packs/iq3_xxs --native /media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/models/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf --ple-gguf /media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/models/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf --expert-profile /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/data/expert-profile.bin --expert-cache auto --prefill auto --spec 4 --spec-min-p 0.70 --mtp /media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/mtp/rt --max-context 131072 --kv int8 --kv-resident 32768 --pcie-frac 0.00 --layer-split auto
+strata generate: layer split across 2 GPUs: CUDA0, then CUDA1 (split auto)
+strata generate: native pack: /media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/packs/iq3_xxs experts (largest blob 2.33 MB), token embedding IQ3_S in mapped host memory (260 MiB, 0.3 s)
+strata generate: 1466 MiB of weights loaded from /media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/packs/iq3_xxs in 0.9 s (302 canonical tensors skipped: served natively)
+strata generate: 300 native projection matrices, 1781.11 MiB of weights, in 1.0 s
+strata generate: the SSD is kept awake while rows are read: one page of the table after 100 ms without a read, until 60 s after the last request (STRATA_SSD_KEEPALIVE=0 turns it off)
+strata generate: layer split: CUDA1 holds its weights; 18.99 GiB free (its session follows the split search)
+strata generate: profile /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/data/expert-profile.bin: 24576 ranked pairs, built for 24576 slots
+strata generate: layer split auto: CUDA0 82 SMs at 1.70 GHz -> 0.52 ms per layer, 19.10 GiB free before its session carve
+strata generate: layer split auto: CUDA1 82 SMs at 1.74 GHz -> 0.51 ms per layer, 17.24 GiB free before its session carve
+strata generate: layer split auto: CUDA0 link 13.3 GB/s -> miss cost x1.50
+strata generate: layer split auto: CUDA1 link 13.3 GB/s -> miss cost x1.50
+strata generate: layer split auto: K=26 - predicted 25.6 ms per decode window; the caches hold 22085 of 24576 profiled pairs (~99.7% of the routed mass), best of 46 placements
+strata generate: KV streaming: 32768 of 131072 cells per QSA layer in VRAM, the K/V in 0.77 GiB of pinned RAM
+strata generate: PLE on, table 320001536 rows of /media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/models/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf
+strata generate: layer split: CUDA1 holds its weights, session [26, 48) and the head; 18.21 GiB free
+strata mtp: draft layer loaded, 835 MiB of VRAM (experts 675, dense 111), files read in 0.48 s (1640 MiB/s)
+strata generate: GPU 0: NVIDIA GeForce RTX 3090, compute capability 8.6
+strata generate: expert arena read through the file cache (buffered (not Windows))
+strata generate: expert arena: cudaHostRegister PORTABLE ok; MAP_HUGETLB unavailable (needed 20464 2 MiB pages, vm.nr_hugepages=0); transparent huge pages requested (MADV_HUGEPAGE)
+strata generate: loaded 39.97 GiB at 1.85 GiB/s
+strata generate: CPU pool tasks/phase: 48 (automatic), participating threads: 16
+strata generate: 15 pool workers on logical processors 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15, the host thread on 0 (draining too) (--host-core first)
+strata generate: expert cache auto: 19.30 GiB free, 700 MiB reserved (+0 MiB for the draft head) -> 8582 slots
+strata generate: expert cache 12840 slots, 18.62 GiB of VRAM; policy is
+strata generate: the GPU computes the experts in the cache; it rounds differently from the CPU,
+                 so a reply can differ slightly from a run without the cache (same quality:
+                 bench/results/2026-09-27-cache-parity).
+                 PROFILE, ranked by routing frequency, no eviction.
+strata generate: pre-filled 12840 of 12840 slots from the profile in 1.7 s (11988 MB/s); slot 0 verified
+strata generate: layer split, CUDA1: 17.30 GiB free of 23.56, room for experts 16.53 GiB
+strata generate: layer split: CUDA1 runs layers 26-47, expert cache 9004 slots (16.53 GiB), 9004 of its 11264 profiled pairs; slot 0 verified
+strata generate: layer split: CUDA0 runs layers 0-25
+strata generate: layer split auto: L2 probe: the split is startable on the live free figures
+strata generate: R4 hit path ON - resident experts are computed on the GPU
+strata generate: 15 expert-pool workers + the host thread
+strata generate: session is up (engine 0.1.41)
+strata generate: token graph hit path: 21844 resident experts, decided on the device
+strata serve: layer split: 89% of the experts resident, the prompt path's streamed ring 96 slots
+strata serve: prompt chunk auto: 8192 tokens, a 96-slot ring
+strata serve: the prompt path borrows 2426 CUDA0 cache slots (3.50 GiB)
+strata serve:   CUDA1 prompt path borrows 1909 of its 9004 slots (3.50 GiB)
+strata hc: CUDA1: the hyper-connection read runs as staged (the norm per token and stream, the down projection's activations staged ahead by cp.async); checked bit for bit against the plain read on this card (STRATA_HC_SPLIT=1 or 0 for the earlier ones)
+strata verify: window up to 6 tokens, 70.0 MiB of device buffers
+strata serve: layer split: layers 0-25 (CUDA0), 26-47 (CUDA1), one hand-off per window
+strata hc: CUDA0: the hyper-connection read runs as staged (the norm per token and stream, the down projection's activations staged ahead by cp.async); checked bit for bit against the plain read on this card (STRATA_HC_SPLIT=1 or 0 for the earlier ones)
+strata verify: window up to 6 tokens, 70.0 MiB of device buffers
+strata mtp: draft head over 106299 tokens (178.4 MiB)
+strata serve: 461 MiB of VRAM free with everything loaded
+strata verify: capturing the 4-token window (419 MiB of VRAM free)
+strata verify: captured the 4-token window (upload no error, sync no error)
+strata verify: capturing the 4-token window (318 MiB of VRAM free)
+strata verify: captured the 4-token window (upload no error, sync no error)
+strata verify: capturing the 1-token window (409 MiB of VRAM free)
+strata verify: captured the 1-token window (upload no error, sync no error)
+strata verify: capturing the 1-token window (310 MiB of VRAM free)
+strata verify: captured the 1-token window (upload no error, sync no error)
+strata verify: capturing the 3-token window (399 MiB of VRAM free)
+strata verify: captured the 3-token window (upload no error, sync no error)
+strata verify: capturing the 3-token window (300 MiB of VRAM free)
+strata verify: captured the 3-token window (upload no error, sync no error)
+strata verify: capturing the 2-token window (391 MiB of VRAM free)
+strata verify: captured the 2-token window (upload no error, sync no error)
+strata verify: capturing the 2-token window (292 MiB of VRAM free)
+strata verify: captured the 2-token window (upload no error, sync no error)
+strata serve: prompt 12954 tokens = 0 reused + 12954 read in 7728 ms (1676.2 tok/s), 351 generated in 2390 ms (146.9 tok/s), drafts accepted 245 of 270, 2 checkpoints
+strata serve: decode expert cache hit rate: 98.2% (178106 hits / 181440 lookups)
+strata serve: KV streaming: 98.54% of 1176954 block reads hit VRAM, 69.4 MiB read from RAM
+strata serve: suffix drafts: 3 windows, 6 of 9 drafts accepted
+strata verify: capturing the 6-token window (383 MiB of VRAM free)
+strata verify: captured the 6-token window (upload no error, sync no error)
+strata verify: capturing the 6-token window (284 MiB of VRAM free)
+strata verify: captured the 6-token window (upload no error, sync no error)
+strata serve: prompt 15212 tokens = 0 reused + 15212 read in 7402 ms (2055.1 tok/s), 94 generated in 709 ms (132.7 tok/s), drafts accepted 64 of 74, 2 checkpoints
+strata serve: decode expert cache hit rate: 98.6% (50665 hits / 51360 lookups)
+strata serve: KV streaming: 95.79% of 341982 block reads hit VRAM, 57.9 MiB read from RAM
+strata serve: suffix drafts: 5 windows, 18 of 21 drafts accepted
+strata serve: prompt 15319 tokens = 15207 reused + 112 read in 393 ms (284.8 tok/s), 85 generated in 557 ms (152.7 tok/s), drafts accepted 60 of 68, 3 checkpoints
+strata serve: decode expert cache hit rate: 98.9% (44168 hits / 44640 lookups)
+strata serve: KV streaming: 97.45% of 640836 block reads hit VRAM, 65.8 MiB read from RAM
+strata serve: suffix drafts: 14 windows, 44 of 44 drafts accepted
+strata serve: prompt 15426 tokens = 15314 reused + 112 read in 392 ms (286.0 tok/s), 88 generated in 634 ms (138.7 tok/s), drafts accepted 58 of 73, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.2% (49027 hits / 49440 lookups)
+strata serve: KV streaming: 98.24% of 970500 block reads hit VRAM, 69.0 MiB read from RAM
+strata serve: suffix drafts: 5 windows, 13 of 15 drafts accepted
+strata serve: prompt 15533 tokens = 15421 reused + 112 read in 396 ms (283.0 tok/s), 101 generated in 724 ms (139.4 tok/s), drafts accepted 67 of 84, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.2% (56196 hits / 56640 lookups)
+strata serve: KV streaming: 98.68% of 1346388 block reads hit VRAM, 71.7 MiB read from RAM
+strata serve: suffix drafts: 9 windows, 23 of 27 drafts accepted
+strata serve: prompt 15653 tokens = 15528 reused + 125 read in 411 ms (304.3 tok/s), 88 generated in 608 ms (144.8 tok/s), drafts accepted 59 of 68, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.3% (46226 hits / 46560 lookups)
+strata serve: KV streaming: 98.90% of 1657572 block reads hit VRAM, 73.2 MiB read from RAM
+strata serve: suffix drafts: 10 windows, 30 of 30 drafts accepted
+strata serve: prompt 15760 tokens = 15648 reused + 112 read in 399 ms (280.9 tok/s), 127 generated in 950 ms (133.7 tok/s), drafts accepted 76 of 82, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.4% (63462 hits / 63840 lookups)
+strata serve: KV streaming: 99.10% of 2079678 block reads hit VRAM, 75.7 MiB read from RAM
+strata serve: suffix drafts: 8 windows, 24 of 24 drafts accepted
+strata serve: prompt 15927 tokens = 15755 reused + 172 read in 482 ms (356.6 tok/s), 496 generated in 3349 ms (148.1 tok/s), drafts accepted 341 of 380, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.4% (256175 hits / 257760 lookups)
+strata serve: KV streaming: 99.42% of 3746508 block reads hit VRAM, 87.4 MiB read from RAM
+strata serve: suffix drafts: 6 windows, 9 of 20 drafts accepted
+strata serve: prompt 16439 tokens = 15922 reused + 517 read in 699 ms (740.1 tok/s), 456 generated in 2859 ms (159.5 tok/s), drafts accepted 331 of 344, 6 checkpoints
+strata serve: decode expert cache hit rate: 98.9% (223676 hits / 226080 lookups)
+strata serve: KV streaming: 99.56% of 5209980 block reads hit VRAM, 91.6 MiB read from RAM
+strata serve: suffix drafts: 40 windows, 120 of 120 drafts accepted
+strata serve: prompt 16902 tokens = 16434 reused + 468 read in 696 ms (672.3 tok/s), 230 generated in 1832 ms (125.5 tok/s), drafts accepted 137 of 178, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (129586 hits / 130080 lookups)
+strata serve: KV streaming: 99.62% of 6057252 block reads hit VRAM, 93.9 MiB read from RAM
+strata serve: suffix drafts: 2 windows, 2 of 6 drafts accepted
+strata serve: prompt 16281 tokens = 0 reused + 16281 read in 7993 ms (2037.0 tok/s), 205 generated in 1503 ms (136.4 tok/s), drafts accepted 134 of 167, 2 checkpoints
+strata serve: decode expert cache hit rate: 99.4% (113547 hits / 114240 lookups)
+strata serve: KV streaming: 97.67% of 745602 block reads hit VRAM, 70.0 MiB read from RAM
+strata serve: suffix drafts: 2 windows, 2 of 6 drafts accepted
+strata serve: prompt 18398 tokens = 0 reused + 18398 read in 8436 ms (2181.0 tok/s), 32768 generated in 183252 ms (178.8 tok/s), drafts accepted 26881 of 26947, 2 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (15731761 hits / 15762240 lookups)
+strata serve: KV streaming: 99.91% of 101186208 block reads hit VRAM, 352.1 MiB read from RAM
+strata serve: suffix drafts: 5761 windows, 26620 of 26633 drafts accepted
+strata serve: prompt 18476 tokens = 18393 reused + 83 read in 395 ms (210.3 tok/s), 807 generated in 6033 ms (133.8 tok/s), drafts accepted 531 of 658, 3 checkpoints
+strata serve: decode expert cache hit rate: 98.9% (444606 hits / 449760 lookups)
+strata serve: KV streaming: 99.90% of 104085462 block reads hit VRAM, 412.5 MiB read from RAM
+strata serve: suffix drafts: 8 windows, 12 of 24 drafts accepted
+strata serve: prompt 19292 tokens = 18471 reused + 821 read in 947 ms (867.4 tok/s), 321 generated in 2050 ms (156.6 tok/s), drafts accepted 238 of 252, 4 checkpoints
+strata serve: decode expert cache hit rate: 98.9% (160051 hits / 161760 lookups)
+strata serve: KV streaming: 99.90% of 105136080 block reads hit VRAM, 417.7 MiB read from RAM
+strata serve: suffix drafts: 30 windows, 137 of 144 drafts accepted
+strata serve: prompt 19635 tokens = 19287 reused + 348 read in 652 ms (534.0 tok/s), 78 generated in 627 ms (124.4 tok/s), drafts accepted 51 of 54, 5 checkpoints
+strata serve: decode expert cache hit rate: 98.5% (40643 hits / 41280 lookups)
+strata serve: KV streaming: 99.90% of 105413370 block reads hit VRAM, 422.6 MiB read from RAM
+strata serve: suffix drafts: 3 windows, 15 of 15 drafts accepted
+strata serve: prompt 20190 tokens = 19630 reused + 560 read in 810 ms (691.2 tok/s), 484 generated in 4127 ms (117.3 tok/s), drafts accepted 281 of 411, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (294497 hits / 295680 lookups)
+strata serve: KV streaming: 99.90% of 107323596 block reads hit VRAM, 429.9 MiB read from RAM
+strata serve: suffix drafts: 30 windows, 54 of 94 drafts accepted
+strata serve: prompt 20313 tokens = 20185 reused + 128 read in 415 ms (308.6 tok/s), 1031 generated in 7146 ms (144.3 tok/s), drafts accepted 717 of 822, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (543810 hits / 546240 lookups)
+strata serve: KV streaming: 99.90% of 110842074 block reads hit VRAM, 434.4 MiB read from RAM
+strata serve: suffix drafts: 71 windows, 306 of 335 drafts accepted
+strata serve: prompt 21110 tokens = 20308 reused + 802 read in 982 ms (816.6 tok/s), 107 generated in 787 ms (136.0 tok/s), drafts accepted 71 of 79, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (56336 hits / 56640 lookups)
+strata serve: KV streaming: 99.90% of 111217968 block reads hit VRAM, 435.2 MiB read from RAM
+strata serve: prompt 21201 tokens = 21105 reused + 96 read in 380 ms (252.7 tok/s), 251 generated in 2066 ms (121.5 tok/s), drafts accepted 146 of 186, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (140008 hits / 140640 lookups)
+strata serve: KV streaming: 99.90% of 112133016 block reads hit VRAM, 436.6 MiB read from RAM
+strata serve: suffix drafts: 1 windows, 2 of 3 drafts accepted
+strata serve: prompt 20923 tokens = 0 reused + 20923 read in 10193 ms (2052.7 tok/s), 544 generated in 4084 ms (133.2 tok/s), drafts accepted 347 of 414, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (292287 hits / 293760 lookups)
+strata serve: KV streaming: 98.70% of 1897854 block reads hit VRAM, 99.5 MiB read from RAM
+strata serve: suffix drafts: 2 windows, 3 of 6 drafts accepted
+strata serve: prompt 23334 tokens = 0 reused + 23334 read in 10942 ms (2132.5 tok/s), 164 generated in 1415 ms (115.9 tok/s), drafts accepted 91 of 127, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (95690 hits / 96000 lookups)
+strata serve: KV streaming: 97.15% of 628518 block reads hit VRAM, 72.2 MiB read from RAM
+strata serve: suffix drafts: 24 windows, 72 of 72 drafts accepted
+strata serve: prompt 22910 tokens = 0 reused + 22910 read in 10679 ms (2145.3 tok/s), 844 generated in 7550 ms (111.8 tok/s), drafts accepted 434 of 586, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (476649 hits / 478080 lookups)
+strata serve: KV streaming: 99.09% of 3080976 block reads hit VRAM, 113.4 MiB read from RAM
+strata serve: suffix drafts: 15 windows, 17 of 44 drafts accepted
+strata serve: prompt 25283 tokens = 0 reused + 25283 read in 11188 ms (2259.9 tok/s), 339 generated in 2834 ms (119.6 tok/s), drafts accepted 194 of 247, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (187549 hits / 188160 lookups)
+strata serve: KV streaming: 97.82% of 1220082 block reads hit VRAM, 107.2 MiB read from RAM
+strata serve: suffix drafts: 6 windows, 19 of 23 drafts accepted
+strata serve: prompt 25499 tokens = 25278 reused + 221 read in 503 ms (438.9 tok/s), 296 generated in 2708 ms (109.3 tok/s), drafts accepted 141 of 172, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.9% (156727 hits / 156960 lookups)
+strata serve: KV streaming: 98.70% of 2239890 block reads hit VRAM, 117.7 MiB read from RAM
+strata serve: prompt 25591 tokens = 25494 reused + 97 read in 393 ms (246.8 tok/s), 901 generated in 6754 ms (133.4 tok/s), drafts accepted 592 of 734, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (499149 hits / 500640 lookups)
+strata serve: KV streaming: 99.40% of 5465670 block reads hit VRAM, 131.7 MiB read from RAM
+strata serve: suffix drafts: 10 windows, 20 of 36 drafts accepted
+strata serve: prompt 26512 tokens = 25586 reused + 926 read in 1029 ms (900.1 tok/s), 135 generated in 1076 ms (125.5 tok/s), drafts accepted 85 of 101, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (73612 hits / 73920 lookups)
+strata serve: KV streaming: 99.44% of 5952462 block reads hit VRAM, 135.0 MiB read from RAM
+strata serve: prompt 26603 tokens = 26507 reused + 96 read in 397 ms (241.8 tok/s), 413 generated in 3282 ms (125.8 tok/s), drafts accepted 252 of 312, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (228011 hits / 228480 lookups)
+strata serve: KV streaming: 99.53% of 7431342 block reads hit VRAM, 141.1 MiB read from RAM
+strata serve: suffix drafts: 2 windows, 3 of 4 drafts accepted
+strata serve: prompt 26993 tokens = 26598 reused + 395 read in 648 ms (609.7 tok/s), 313 generated in 2636 ms (118.7 tok/s), drafts accepted 182 of 249, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (182450 hits / 182880 lookups)
+strata serve: KV streaming: 99.59% of 8617542 block reads hit VRAM, 143.8 MiB read from RAM
+strata serve: suffix drafts: 5 windows, 6 of 15 drafts accepted
+strata serve: prompt 27559 tokens = 0 reused + 27559 read in 11660 ms (2363.6 tok/s), 992 generated in 7525 ms (131.8 tok/s), drafts accepted 634 of 759, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (534613 hits / 536160 lookups)
+strata serve: KV streaming: 99.08% of 3453774 block reads hit VRAM, 127.5 MiB read from RAM
+strata serve: suffix drafts: 9 windows, 11 of 30 drafts accepted
+strata serve: prompt 30315 tokens = 0 reused + 30315 read in 12275 ms (2469.7 tok/s), 223 generated in 1671 ms (133.4 tok/s), drafts accepted 144 of 161, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (114684 hits / 115200 lookups)
+strata serve: KV streaming: 96.68% of 751776 block reads hit VRAM, 100.7 MiB read from RAM
+strata serve: suffix drafts: 9 windows, 36 of 41 drafts accepted
+strata serve: prompt 30498 tokens = 30310 reused + 188 read in 493 ms (381.4 tok/s), 97 generated in 694 ms (139.7 tok/s), drafts accepted 65 of 74, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (50674 hits / 50880 lookups)
+strata serve: KV streaming: 97.58% of 1090686 block reads hit VRAM, 106.4 MiB read from RAM
+strata serve: suffix drafts: 1 windows, 1 of 3 drafts accepted
+strata serve: prompt 30605 tokens = 30493 reused + 112 read in 419 ms (267.1 tok/s), 1147 generated in 8075 ms (142.0 tok/s), drafts accepted 786 of 897, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (602376 hits / 603840 lookups)
+strata serve: KV streaming: 99.28% of 4978908 block reads hit VRAM, 143.6 MiB read from RAM
+strata serve: suffix drafts: 3 windows, 5 of 8 drafts accepted
+strata serve: prompt 31736 tokens = 30600 reused + 1136 read in 1211 ms (937.8 tok/s), 126 generated in 918 ms (137.3 tok/s), drafts accepted 86 of 95, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (65461 hits / 65760 lookups)
+strata serve: KV streaming: 99.33% of 5413332 block reads hit VRAM, 147.2 MiB read from RAM
+strata serve: prompt 31834 tokens = 31731 reused + 103 read in 417 ms (247.2 tok/s), 303 generated in 2549 ms (118.9 tok/s), drafts accepted 181 of 240, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (174193 hits / 174720 lookups)
+strata serve: KV streaming: 99.42% of 6547134 block reads hit VRAM, 152.9 MiB read from RAM
+strata serve: suffix drafts: 3 windows, 3 of 7 drafts accepted
+strata serve: prompt 31827 tokens = 0 reused + 31827 read in 12989 ms (2450.3 tok/s), 1163 generated in 9470 ms (122.8 tok/s), drafts accepted 694 of 862, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (636707 hits / 638880 lookups)
+strata serve: KV streaming: 99.15% of 4113126 block reads hit VRAM, 140.3 MiB read from RAM
+strata serve: suffix drafts: 5 windows, 8 of 12 drafts accepted
+strata serve: prompt 34633 tokens = 0 reused + 34633 read in 13571 ms (2552.0 tok/s), 1961 generated in 14154 ms (138.6 tok/s), drafts accepted 1336 of 1546, 3 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (1038530 hits / 1042080 lookups)
+strata serve: KV streaming: 99.44% of 6701148 block reads hit VRAM, 150.0 MiB read from RAM
+strata serve: suffix drafts: 37 windows, 102 of 140 drafts accepted
+strata serve: prompt 36533 tokens = 34628 reused + 1905 read in 1570 ms (1213.7 tok/s), 453 generated in 3205 ms (141.4 tok/s), drafts accepted 312 of 346, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.4% (232300 hits / 233760 lookups)
+strata serve: KV streaming: 99.50% of 8213934 block reads hit VRAM, 164.0 MiB read from RAM
+strata serve: suffix drafts: 21 windows, 96 of 103 drafts accepted
+strata serve: prompt 36851 tokens = 36528 reused + 323 read in 641 ms (503.6 tok/s), 631 generated in 4893 ms (129.0 tok/s), drafts accepted 406 of 503, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (348258 hits / 349440 lookups)
+strata serve: KV streaming: 99.60% of 10469226 block reads hit VRAM, 169.9 MiB read from RAM
+strata serve: suffix drafts: 21 windows, 95 of 101 drafts accepted
+strata serve: prompt 37158 tokens = 36846 reused + 312 read in 617 ms (505.5 tok/s), 152 generated in 1177 ms (129.1 tok/s), drafts accepted 95 of 110, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (79980 hits / 80160 lookups)
+strata serve: KV streaming: 99.61% of 10996068 block reads hit VRAM, 170.8 MiB read from RAM
+strata serve: prompt 37259 tokens = 37153 reused + 106 read in 419 ms (253.0 tok/s), 128 generated in 947 ms (135.2 tok/s), drafts accepted 85 of 92, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (65478 hits / 65760 lookups)
+strata serve: KV streaming: 99.62% of 11430486 block reads hit VRAM, 173.7 MiB read from RAM
+strata serve: prompt 37691 tokens = 37254 reused + 437 read in 740 ms (590.3 tok/s), 114 generated in 873 ms (130.6 tok/s), drafts accepted 74 of 79, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (58326 hits / 58560 lookups)
+strata serve: KV streaming: 99.63% of 11818674 block reads hit VRAM, 177.2 MiB read from RAM
+strata serve: prompt 37811 tokens = 37686 reused + 125 read in 440 ms (284.1 tok/s), 84 generated in 541 ms (155.3 tok/s), drafts accepted 61 of 62, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.4% (40570 hits / 40800 lookups)
+strata serve: KV streaming: 99.63% of 12092880 block reads hit VRAM, 179.5 MiB read from RAM
+strata serve: suffix drafts: 6 windows, 29 of 30 drafts accepted
+strata serve: prompt 37913 tokens = 37806 reused + 107 read in 424 ms (252.5 tok/s), 85 generated in 599 ms (141.9 tok/s), drafts accepted 64 of 73, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (46335 hits / 46560 lookups)
+strata serve: KV streaming: 99.64% of 12404058 block reads hit VRAM, 180.6 MiB read from RAM
+strata serve: suffix drafts: 6 windows, 30 of 30 drafts accepted
+strata serve: prompt 37999 tokens = 37908 reused + 91 read in 403 ms (225.9 tok/s), 404 generated in 3675 ms (109.9 tok/s), drafts accepted 221 of 317, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (240815 hits / 241440 lookups)
+strata serve: KV streaming: 99.67% of 13966128 block reads hit VRAM, 187.2 MiB read from RAM
+strata serve: suffix drafts: 2 windows, 2 of 5 drafts accepted
+strata serve: prompt 38760 tokens = 0 reused + 38760 read in 14786 ms (2621.4 tok/s), 901 generated in 6608 ms (136.4 tok/s), drafts accepted 604 of 703, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (477787 hits / 480000 lookups)
+strata serve: KV streaming: 98.70% of 3093312 block reads hit VRAM, 162.4 MiB read from RAM
+strata serve: suffix drafts: 3 windows, 3 of 7 drafts accepted
+strata serve: prompt 41390 tokens = 0 reused + 41390 read in 15234 ms (2716.9 tok/s), 1515 generated in 10874 ms (139.3 tok/s), drafts accepted 1034 of 1194, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (801803 hits / 804000 lookups)
+strata serve: KV streaming: 99.13% of 5172972 block reads hit VRAM, 182.2 MiB read from RAM
+strata serve: suffix drafts: 14 windows, 37 of 54 drafts accepted
+strata serve: prompt 42848 tokens = 41385 reused + 1463 read in 1363 ms (1073.7 tok/s), 112 generated in 874 ms (128.1 tok/s), drafts accepted 70 of 74, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.4% (56318 hits / 56640 lookups)
+strata serve: KV streaming: 99.14% of 5548854 block reads hit VRAM, 192.0 MiB read from RAM
+strata serve: prompt 43095 tokens = 42843 reused + 252 read in 581 ms (434.1 tok/s), 265 generated in 1974 ms (134.2 tok/s), drafts accepted 175 of 192, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (136321 hits / 136800 lookups)
+strata serve: KV streaming: 99.22% of 6439260 block reads hit VRAM, 202.5 MiB read from RAM
+strata serve: suffix drafts: 2 windows, 6 of 7 drafts accepted
+strata serve: prompt 43304 tokens = 43090 reused + 214 read in 542 ms (394.6 tok/s), 181 generated in 1188 ms (152.4 tok/s), drafts accepted 133 of 142, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (90746 hits / 91200 lookups)
+strata serve: KV streaming: 99.26% of 7036974 block reads hit VRAM, 210.4 MiB read from RAM
+strata serve: suffix drafts: 9 windows, 38 of 45 drafts accepted
+strata serve: prompt 43493 tokens = 43299 reused + 194 read in 520 ms (372.7 tok/s), 205 generated in 1384 ms (148.1 tok/s), drafts accepted 149 of 160, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (104090 hits / 104640 lookups)
+strata serve: KV streaming: 99.30% of 7720968 block reads hit VRAM, 217.4 MiB read from RAM
+strata serve: suffix drafts: 11 windows, 47 of 53 drafts accepted
+strata serve: prompt 43692 tokens = 43488 reused + 204 read in 542 ms (376.3 tok/s), 150 generated in 1074 ms (139.6 tok/s), drafts accepted 101 of 108, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (75608 hits / 75840 lookups)
+strata serve: KV streaming: 99.34% of 8220096 block reads hit VRAM, 219.8 MiB read from RAM
+strata serve: suffix drafts: 7 windows, 30 of 32 drafts accepted
+strata serve: prompt 43844 tokens = 43687 reused + 157 read in 504 ms (311.7 tok/s), 138 generated in 932 ms (148.1 tok/s), drafts accepted 100 of 112, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.3% (71527 hits / 72000 lookups)
+strata serve: KV streaming: 99.36% of 8694582 block reads hit VRAM, 224.0 MiB read from RAM
+strata serve: suffix drafts: 4 windows, 10 of 18 drafts accepted
+strata serve: prompt 43996 tokens = 43839 reused + 157 read in 489 ms (321.3 tok/s), 113 generated in 788 ms (143.5 tok/s), drafts accepted 80 of 82, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (55908 hits / 56160 lookups)
+strata serve: KV streaming: 99.38% of 9067386 block reads hit VRAM, 226.1 MiB read from RAM
+strata serve: suffix drafts: 8 windows, 40 of 40 drafts accepted
+strata serve: prompt 44092 tokens = 43991 reused + 101 read in 430 ms (235.0 tok/s), 386 generated in 3281 ms (117.6 tok/s), drafts accepted 228 of 305, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (222612 hits / 223200 lookups)
+strata serve: KV streaming: 99.42% of 10512414 block reads hit VRAM, 243.6 MiB read from RAM
+strata serve: prompt 44268 tokens = 0 reused + 44268 read in 15775 ms (2806.2 tok/s), 1050 generated in 9112 ms (115.2 tok/s), drafts accepted 585 of 750, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (581635 hits / 583200 lookups)
+strata serve: KV streaming: 98.88% of 3755766 block reads hit VRAM, 170.0 MiB read from RAM
+strata serve: suffix drafts: 2 windows, 1 of 5 drafts accepted
+strata serve: prompt 46737 tokens = 0 reused + 46737 read in 16260 ms (2874.4 tok/s), 1223 generated in 9715 ms (125.9 tok/s), drafts accepted 765 of 956, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (677121 hits / 678720 lookups)
+strata serve: KV streaming: 98.92% of 4368822 block reads hit VRAM, 190.3 MiB read from RAM
+strata serve: suffix drafts: 6 windows, 16 of 19 drafts accepted
+strata serve: prompt 47823 tokens = 46732 reused + 1091 read in 1218 ms (895.4 tok/s), 155 generated in 1204 ms (128.7 tok/s), drafts accepted 97 of 111, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (80821 hits / 81120 lookups)
+strata serve: KV streaming: 98.97% of 4901844 block reads hit VRAM, 202.6 MiB read from RAM
+strata serve: suffix drafts: 3 windows, 2 of 9 drafts accepted
+strata serve: prompt 47960 tokens = 47818 reused + 142 read in 474 ms (299.7 tok/s), 306 generated in 2482 ms (123.3 tok/s), drafts accepted 184 of 222, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (164810 hits / 165120 lookups)
+strata serve: KV streaming: 99.12% of 5974008 block reads hit VRAM, 211.9 MiB read from RAM
+strata serve: prompt 48079 tokens = 47955 reused + 124 read in 447 ms (277.4 tok/s), 147 generated in 1208 ms (121.7 tok/s), drafts accepted 91 of 107, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (79453 hits / 79680 lookups)
+strata serve: KV streaming: 99.16% of 6497766 block reads hit VRAM, 219.8 MiB read from RAM
+strata serve: suffix drafts: 1 windows, 0 of 2 drafts accepted
+strata serve: prompt 48372 tokens = 48074 reused + 298 read in 642 ms (463.9 tok/s), 161 generated in 1114 ms (144.5 tok/s), drafts accepted 112 of 122, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (81642 hits / 82080 lookups)
+strata serve: KV streaming: 99.21% of 7036932 block reads hit VRAM, 225.3 MiB read from RAM
+strata serve: suffix drafts: 2 windows, 7 of 10 drafts accepted
+strata serve: prompt 48535 tokens = 48367 reused + 168 read in 498 ms (337.6 tok/s), 185 generated in 1664 ms (111.2 tok/s), drafts accepted 99 of 120, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (100075 hits / 100320 lookups)
+strata serve: KV streaming: 99.26% of 7693194 block reads hit VRAM, 230.5 MiB read from RAM
+strata serve: suffix drafts: 7 windows, 31 of 32 drafts accepted
+strata serve: prompt 48626 tokens = 48530 reused + 96 read in 420 ms (228.5 tok/s), 389 generated in 3461 ms (112.4 tok/s), drafts accepted 217 of 297, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (225696 hits / 226080 lookups)
+strata serve: KV streaming: 99.33% of 9156678 block reads hit VRAM, 247.5 MiB read from RAM
+strata serve: suffix drafts: 1 windows, 1 of 3 drafts accepted
+strata serve: prompt 49183 tokens = 0 reused + 49183 read in 17111 ms (2874.3 tok/s), 1481 generated in 11173 ms (132.6 tok/s), drafts accepted 974 of 1140, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (788757 hits / 792000 lookups)
+strata serve: KV streaming: 99.01% of 5095998 block reads hit VRAM, 202.6 MiB read from RAM
+strata serve: suffix drafts: 8 windows, 14 of 24 drafts accepted
+strata serve: prompt 52316 tokens = 0 reused + 52316 read in 17691 ms (2957.2 tok/s), 107 generated in 885 ms (120.9 tok/s), drafts accepted 70 of 89, 4 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (61679 hits / 61920 lookups)
+strata serve: KV streaming: 93.36% of 409776 block reads hit VRAM, 109.6 MiB read from RAM
+strata serve: suffix drafts: 1 windows, 2 of 3 drafts accepted
+strata serve: prompt 52426 tokens = 52311 reused + 115 read in 433 ms (265.6 tok/s), 93 generated in 734 ms (126.8 tok/s), drafts accepted 66 of 81, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (54018 hits / 54240 lookups)
+strata serve: KV streaming: 96.00% of 770256 block reads hit VRAM, 124.0 MiB read from RAM
+strata serve: suffix drafts: 1 windows, 5 of 5 drafts accepted
+strata serve: prompt 52548 tokens = 52421 reused + 127 read in 451 ms (281.6 tok/s), 97 generated in 816 ms (118.9 tok/s), drafts accepted 60 of 69, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.2% (51926 hits / 52320 lookups)
+strata serve: KV streaming: 96.74% of 1118406 block reads hit VRAM, 146.9 MiB read from RAM
+strata serve: suffix drafts: 1 windows, 2 of 3 drafts accepted
+strata serve: prompt 52959 tokens = 52543 reused + 416 read in 743 ms (559.7 tok/s), 1209 generated in 7799 ms (155.0 tok/s), drafts accepted 917 of 986, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.4% (610319 hits / 613920 lookups)
+strata serve: KV streaming: 98.76% of 5071338 block reads hit VRAM, 252.9 MiB read from RAM
+strata serve: suffix drafts: 117 windows, 546 of 568 drafts accepted
+strata serve: prompt 54148 tokens = 52954 reused + 1194 read in 1274 ms (937.3 tok/s), 252 generated in 2274 ms (110.8 tok/s), drafts accepted 137 of 183, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (143568 hits / 144000 lookups)
+strata serve: KV streaming: 98.81% of 6007944 block reads hit VRAM, 288.1 MiB read from RAM
+strata serve: suffix drafts: 3 windows, 4 of 9 drafts accepted
+strata serve: prompt 54257 tokens = 54143 reused + 114 read in 434 ms (262.8 tok/s), 99 generated in 740 ms (133.7 tok/s), drafts accepted 66 of 73, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (51678 hits / 51840 lookups)
+strata serve: KV streaming: 98.86% of 6353016 block reads hit VRAM, 291.4 MiB read from RAM
+strata serve: suffix drafts: 4 windows, 20 of 20 drafts accepted
+strata serve: prompt 54367 tokens = 54252 reused + 115 read in 442 ms (259.9 tok/s), 108 generated in 953 ms (113.3 tok/s), drafts accepted 59 of 67, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (56829 hits / 57120 lookups)
+strata serve: KV streaming: 98.88% of 6731976 block reads hit VRAM, 302.8 MiB read from RAM
+strata serve: suffix drafts: 1 windows, 1 of 3 drafts accepted
+strata serve: prompt 54616 tokens = 54362 reused + 254 read in 601 ms (422.5 tok/s), 1220 generated in 8627 ms (141.4 tok/s), drafts accepted 870 of 1001, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (647232 hits / 649920 lookups)
+strata serve: KV streaming: 99.12% of 10915992 block reads hit VRAM, 388.5 MiB read from RAM
+strata serve: suffix drafts: 99 windows, 447 of 469 drafts accepted
+strata serve: prompt 55751 tokens = 54611 reused + 1140 read in 1267 ms (900.1 tok/s), 377 generated in 2511 ms (150.1 tok/s), drafts accepted 280 of 298, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (190278 hits / 191040 lookups)
+strata serve: KV streaming: 99.14% of 12154554 block reads hit VRAM, 419.4 MiB read from RAM
+strata serve: suffix drafts: 36 windows, 161 of 174 drafts accepted
+strata serve: prompt 56130 tokens = 55746 reused + 384 read in 724 ms (530.3 tok/s), 866 generated in 6294 ms (137.6 tok/s), drafts accepted 597 of 680, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (455447 hits / 456960 lookups)
+strata serve: KV streaming: 99.22% of 15100026 block reads hit VRAM, 472.2 MiB read from RAM
+strata serve: suffix drafts: 38 windows, 158 of 175 drafts accepted
+strata serve: prompt 56901 tokens = 56125 reused + 776 read in 1020 ms (760.7 tok/s), 1071 generated in 6953 ms (154.0 tok/s), drafts accepted 813 of 881, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (545298 hits / 547680 lookups)
+strata serve: KV streaming: 99.28% of 18627762 block reads hit VRAM, 542.9 MiB read from RAM
+strata serve: suffix drafts: 105 windows, 493 of 513 drafts accepted
+strata serve: prompt 57949 tokens = 56896 reused + 1053 read in 1234 ms (853.3 tok/s), 1042 generated in 7307 ms (142.6 tok/s), drafts accepted 735 of 808, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (534427 hits / 536160 lookups)
+strata serve: KV streaming: 99.29% of 22081536 block reads hit VRAM, 630.2 MiB read from RAM
+strata serve: suffix drafts: 25 windows, 104 of 117 drafts accepted
+strata serve: prompt 58955 tokens = 57944 reused + 1011 read in 1146 ms (882.0 tok/s), 2289 generated in 15952 ms (143.5 tok/s), drafts accepted 1619 of 1824, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (1192588 hits / 1197600 lookups)
+strata serve: KV streaming: 99.35% of 29780916 block reads hit VRAM, 780.2 MiB read from RAM
+strata serve: suffix drafts: 58 windows, 225 of 273 drafts accepted
+strata serve: prompt 61203 tokens = 58950 reused + 2253 read in 1795 ms (1255.1 tok/s), 208 generated in 1515 ms (137.3 tok/s), drafts accepted 140 of 144, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.4% (102559 hits / 103200 lookups)
+strata serve: KV streaming: 99.33% of 30455658 block reads hit VRAM, 825.8 MiB read from RAM
+strata serve: suffix drafts: 1 windows, 3 of 3 drafts accepted
+strata serve: prompt 61297 tokens = 61198 reused + 99 read in 439 ms (225.4 tok/s), 461 generated in 4222 ms (109.2 tok/s), drafts accepted 251 of 345, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (266816 hits / 267840 lookups)
+strata serve: KV streaming: 99.29% of 32187168 block reads hit VRAM, 919.8 MiB read from RAM
+strata serve: suffix drafts: 2 windows, 5 of 7 drafts accepted
+strata serve: prompt 62214 tokens = 0 reused + 62214 read in 20453 ms (3041.9 tok/s), 766 generated in 6382 ms (120.0 tok/s), drafts accepted 461 of 586, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (426331 hits / 427680 lookups)
+strata serve: KV streaming: 98.02% of 2757492 block reads hit VRAM, 220.5 MiB read from RAM
+strata serve: suffix drafts: 2 windows, 2 of 5 drafts accepted
+strata serve: prompt 64106 tokens = 0 reused + 64106 read in 20916 ms (3064.9 tok/s), 1089 generated in 8525 ms (127.7 tok/s), drafts accepted 711 of 886, 5 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (606588 hits / 608160 lookups)
+strata serve: KV streaming: 98.32% of 3915894 block reads hit VRAM, 264.8 MiB read from RAM
+strata serve: suffix drafts: 11 windows, 26 of 39 drafts accepted
+strata serve: prompt 65146 tokens = 64101 reused + 1045 read in 1234 ms (846.6 tok/s), 120 generated in 823 ms (145.8 tok/s), drafts accepted 88 of 92, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.3% (60549 hits / 60960 lookups)
+strata serve: KV streaming: 98.27% of 4319508 block reads hit VRAM, 301.3 MiB read from RAM
+strata serve: suffix drafts: 1 windows, 4 of 5 drafts accepted
+strata serve: prompt 65277 tokens = 65141 reused + 136 read in 502 ms (271.0 tok/s), 127 generated in 1015 ms (125.1 tok/s), drafts accepted 82 of 99, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (69825 hits / 70080 lookups)
+strata serve: KV streaming: 98.31% of 4781652 block reads hit VRAM, 325.4 MiB read from RAM
+strata serve: suffix drafts: 1 windows, 1 of 3 drafts accepted
+strata serve: prompt 65368 tokens = 65272 reused + 96 read in 442 ms (217.0 tok/s), 278 generated in 2060 ms (135.0 tok/s), drafts accepted 191 of 217, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (147295 hits / 147840 lookups)
+strata serve: KV streaming: 98.35% of 5742942 block reads hit VRAM, 380.9 MiB read from RAM
+strata serve: suffix drafts: 1 windows, 4 of 5 drafts accepted
+strata serve: prompt 65707 tokens = 65363 reused + 344 read in 684 ms (503.0 tok/s), 537 generated in 4561 ms (117.7 tok/s), drafts accepted 317 of 400, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (297950 hits / 298560 lookups)
+strata serve: KV streaming: 98.54% of 7671654 block reads hit VRAM, 451.5 MiB read from RAM
+strata serve: suffix drafts: 5 windows, 8 of 16 drafts accepted
+strata serve: prompt 69399 tokens = 0 reused + 8192 of 69399 read in 4093 ms (2001.4 tok/s), 0 generated in 0 ms (0.0 tok/s), drafts accepted 0 of 0, 0 checkpoints (cancelled)
+strata serve: KV streaming: 100.00% of 0 block reads hit VRAM, 0.0 MiB read from RAM
+strata serve: prompt 73753 tokens = 0 reused + 73753 read in 23160 ms (3184.4 tok/s), 379 generated in 3532 ms (107.3 tok/s), drafts accepted 208 of 291, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (222555 hits / 223200 lookups)
+strata serve: KV streaming: 95.76% of 1444974 block reads hit VRAM, 246.6 MiB read from RAM
+strata serve: suffix drafts: 1 windows, 1 of 1 drafts accepted
+strata serve: prompt 74952 tokens = 0 reused + 74952 read in 23444 ms (3197.1 tok/s), 610 generated in 5489 ms (111.1 tok/s), drafts accepted 332 of 426, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (337186 hits / 337920 lookups)
+strata serve: KV streaming: 96.76% of 2181294 block reads hit VRAM, 285.0 MiB read from RAM
+strata serve: suffix drafts: 4 windows, 5 of 15 drafts accepted
+strata serve: prompt 75094 tokens = 74947 reused + 147 read in 507 ms (289.8 tok/s), 867 generated in 6803 ms (127.4 tok/s), drafts accepted 561 of 676, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (469662 hits / 471360 lookups)
+strata serve: KV streaming: 97.75% of 5219214 block reads hit VRAM, 472.7 MiB read from RAM
+strata serve: suffix drafts: 32 windows, 132 of 149 drafts accepted
+strata serve: prompt 75629 tokens = 75089 reused + 540 read in 845 ms (639.4 tok/s), 1001 generated in 7335 ms (136.5 tok/s), drafts accepted 702 of 837, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (542875 hits / 545280 lookups)
+strata serve: KV streaming: 98.02% of 8731518 block reads hit VRAM, 695.6 MiB read from RAM
+strata serve: suffix drafts: 66 windows, 286 of 314 drafts accepted
+strata serve: prompt 76511 tokens = 75624 reused + 887 read in 1109 ms (799.5 tok/s), 385 generated in 2624 ms (146.7 tok/s), drafts accepted 288 of 315, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (199015 hits / 199680 lookups)
+strata serve: KV streaming: 98.00% of 10025532 block reads hit VRAM, 808.1 MiB read from RAM
+strata serve: suffix drafts: 38 windows, 167 of 179 drafts accepted
+strata serve: prompt 76902 tokens = 76506 reused + 396 read in 750 ms (527.8 tok/s), 935 generated in 6125 ms (152.6 tok/s), drafts accepted 710 of 760, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (472225 hits / 474240 lookups)
+strata serve: KV streaming: 98.15% of 13081884 block reads hit VRAM, 976.4 MiB read from RAM
+strata serve: suffix drafts: 100 windows, 473 of 493 drafts accepted
+strata serve: prompt 77767 tokens = 76897 reused + 870 read in 1115 ms (780.2 tok/s), 819 generated in 5372 ms (152.5 tok/s), drafts accepted 616 of 659, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (412832 hits / 414240 lookups)
+strata serve: KV streaming: 98.21% of 15753114 block reads hit VRAM, 1136.6 MiB read from RAM
+strata serve: suffix drafts: 58 windows, 277 of 290 drafts accepted
+strata serve: prompt 78598 tokens = 77762 reused + 836 read in 1090 ms (766.7 tok/s), 141 generated in 1004 ms (140.4 tok/s), drafts accepted 97 of 103, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (70285 hits / 70560 lookups)
+strata serve: KV streaming: 98.20% of 16218354 block reads hit VRAM, 1177.8 MiB read from RAM
+strata serve: suffix drafts: 2 windows, 5 of 6 drafts accepted
+strata serve: prompt 78732 tokens = 78593 reused + 139 read in 513 ms (271.0 tok/s), 81 generated in 601 ms (134.7 tok/s), drafts accepted 53 of 56, 6 checkpoints
+strata serve: decode expert cache hit rate: 98.4% (39685 hits / 40320 lookups)
+strata serve: KV streaming: 98.20% of 16489482 block reads hit VRAM, 1198.2 MiB read from RAM
+strata serve: suffix drafts: 2 windows, 6 of 8 drafts accepted
+strata serve: prompt 79105 tokens = 78727 reused + 378 read in 741 ms (509.8 tok/s), 786 generated in 5705 ms (137.8 tok/s), drafts accepted 546 of 598, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (400575 hits / 402240 lookups)
+strata serve: KV streaming: 98.15% of 19083696 block reads hit VRAM, 1421.0 MiB read from RAM
+strata serve: suffix drafts: 60 windows, 300 of 300 drafts accepted
+strata serve: prompt 79626 tokens = 79100 reused + 526 read in 875 ms (601.4 tok/s), 821 generated in 5095 ms (161.1 tok/s), drafts accepted 641 of 660, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (401340 hits / 403200 lookups)
+strata serve: KV streaming: 98.17% of 21684054 block reads hit VRAM, 1598.5 MiB read from RAM
+strata serve: suffix drafts: 91 windows, 448 of 453 drafts accepted
+strata serve: prompt 80446 tokens = 79621 reused + 825 read in 1089 ms (757.3 tok/s), 123 generated in 983 ms (125.2 tok/s), drafts accepted 78 of 87, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (64041 hits / 64320 lookups)
+strata serve: KV streaming: 98.14% of 22109226 block reads hit VRAM, 1654.6 MiB read from RAM
+strata serve: suffix drafts: 2 windows, 4 of 6 drafts accepted
+strata serve: prompt 80544 tokens = 80441 reused + 103 read in 459 ms (224.5 tok/s), 561 generated in 4506 ms (124.5 tok/s), drafts accepted 347 of 399, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (293157 hits / 294240 lookups)
+strata serve: KV streaming: 98.10% of 24010230 block reads hit VRAM, 1838.9 MiB read from RAM
+strata serve: prompt 80708 tokens = 80539 reused + 169 read in 530 ms (318.7 tok/s), 98 generated in 712 ms (137.6 tok/s), drafts accepted 66 of 72, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (49749 hits / 49920 lookups)
+strata serve: KV streaming: 98.10% of 24342978 block reads hit VRAM, 1861.9 MiB read from RAM
+strata serve: prompt 80810 tokens = 80703 reused + 107 read in 468 ms (228.5 tok/s), 1062 generated in 7850 ms (135.3 tok/s), drafts accepted 730 of 825, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (554220 hits / 556800 lookups)
+strata serve: KV streaming: 98.05% of 27929208 block reads hit VRAM, 2198.6 MiB read from RAM
+strata serve: suffix drafts: 31 windows, 137 of 148 drafts accepted
+strata serve: prompt 81546 tokens = 80805 reused + 741 read in 980 ms (756.1 tok/s), 508 generated in 4488 ms (113.2 tok/s), drafts accepted 283 of 351, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (275660 hits / 276480 lookups)
+strata serve: KV streaming: 98.02% of 29716164 block reads hit VRAM, 2370.7 MiB read from RAM
+strata serve: suffix drafts: 6 windows, 26 of 28 drafts accepted
+strata serve: prompt 81744 tokens = 81541 reused + 203 read in 574 ms (353.7 tok/s), 402 generated in 3816 ms (105.3 tok/s), drafts accepted 200 of 260, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (221325 hits / 221760 lookups)
+strata serve: KV streaming: 97.99% of 31151916 block reads hit VRAM, 2523.1 MiB read from RAM
+strata serve: suffix drafts: 4 windows, 6 of 11 drafts accepted
+strata serve: prompt 81854 tokens = 81739 reused + 115 read in 481 ms (239.3 tok/s), 224 generated in 1971 ms (113.6 tok/s), drafts accepted 129 of 152, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (120753 hits / 120960 lookups)
+strata serve: KV streaming: 97.98% of 31940646 block reads hit VRAM, 2600.6 MiB read from RAM
+strata serve: suffix drafts: 3 windows, 7 of 9 drafts accepted
+strata serve: prompt 82135 tokens = 81849 reused + 286 read in 647 ms (441.9 tok/s), 132 generated in 953 ms (138.6 tok/s), drafts accepted 92 of 103, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (68375 hits / 68640 lookups)
+strata serve: KV streaming: 97.98% of 32393550 block reads hit VRAM, 2640.2 MiB read from RAM
+strata serve: suffix drafts: 3 windows, 10 of 15 drafts accepted
+strata serve: prompt 82271 tokens = 82130 reused + 141 read in 518 ms (272.2 tok/s), 373 generated in 3225 ms (115.6 tok/s), drafts accepted 210 of 245, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (195503 hits / 195840 lookups)
+strata serve: KV streaming: 97.96% of 33662916 block reads hit VRAM, 2767.4 MiB read from RAM
+strata serve: suffix drafts: 1 windows, 2 of 3 drafts accepted
+strata serve: prompt 82402 tokens = 82266 reused + 136 read in 515 ms (264.3 tok/s), 341 generated in 2820 ms (120.9 tok/s), drafts accepted 209 of 250, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (182965 hits / 183360 lookups)
+strata serve: KV streaming: 97.93% of 34852158 block reads hit VRAM, 2900.6 MiB read from RAM
+strata serve: suffix drafts: 12 windows, 48 of 58 drafts accepted
+strata serve: prompt 82604 tokens = 82397 reused + 207 read in 588 ms (351.9 tok/s), 233 generated in 1907 ms (122.2 tok/s), drafts accepted 145 of 171, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (124923 hits / 125280 lookups)
+strata serve: KV streaming: 97.93% of 35668632 block reads hit VRAM, 2980.0 MiB read from RAM
+strata serve: suffix drafts: 5 windows, 15 of 18 drafts accepted
+strata serve: prompt 82779 tokens = 82599 reused + 180 read in 534 ms (337.4 tok/s), 174 generated in 1483 ms (117.4 tok/s), drafts accepted 100 of 116, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (91507 hits / 91680 lookups)
+strata serve: KV streaming: 97.93% of 36269424 block reads hit VRAM, 3021.5 MiB read from RAM
+strata serve: suffix drafts: 2 windows, 2 of 4 drafts accepted
+strata serve: prompt 83079 tokens = 82774 reused + 305 read in 684 ms (446.2 tok/s), 310 generated in 2587 ms (119.8 tok/s), drafts accepted 192 of 229, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (167381 hits / 168000 lookups)
+strata serve: KV streaming: 97.92% of 37360092 block reads hit VRAM, 3130.7 MiB read from RAM
+strata serve: suffix drafts: 7 windows, 29 of 35 drafts accepted
+strata serve: prompt 83258 tokens = 83074 reused + 184 read in 552 ms (333.3 tok/s), 303 generated in 2386 ms (127.0 tok/s), drafts accepted 205 of 243, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (165647 hits / 166080 lookups)
+strata serve: KV streaming: 97.90% of 38438448 block reads hit VRAM, 3247.5 MiB read from RAM
+strata serve: suffix drafts: 9 windows, 38 of 45 drafts accepted
+strata serve: prompt 83409 tokens = 83253 reused + 156 read in 527 ms (296.3 tok/s), 90 generated in 731 ms (123.1 tok/s), drafts accepted 58 of 69, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (49218 hits / 49440 lookups)
+strata serve: KV streaming: 97.90% of 38768118 block reads hit VRAM, 3274.3 MiB read from RAM
+strata serve: suffix drafts: 4 windows, 9 of 17 drafts accepted
+strata serve: prompt 83662 tokens = 83404 reused + 258 read in 648 ms (398.4 tok/s), 490 generated in 3628 ms (135.0 tok/s), drafts accepted 342 of 389, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (258737 hits / 260160 lookups)
+strata serve: KV streaming: 97.88% of 40450326 block reads hit VRAM, 3449.1 MiB read from RAM
+strata serve: suffix drafts: 25 windows, 118 of 120 drafts accepted
+strata serve: prompt 84051 tokens = 83657 reused + 394 read in 767 ms (513.7 tok/s), 511 generated in 3666 ms (139.4 tok/s), drafts accepted 363 of 401, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (263347 hits / 264480 lookups)
+strata serve: KV streaming: 97.88% of 42160266 block reads hit VRAM, 3601.2 MiB read from RAM
+strata serve: suffix drafts: 35 windows, 159 of 175 drafts accepted
+strata serve: prompt 84427 tokens = 84046 reused + 381 read in 737 ms (517.3 tok/s), 438 generated in 4064 ms (107.8 tok/s), drafts accepted 233 of 307, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.7% (246565 hits / 247200 lookups)
+strata serve: KV streaming: 97.90% of 43759272 block reads hit VRAM, 3698.2 MiB read from RAM
+strata serve: prompt 84541 tokens = 84422 reused + 119 read in 473 ms (251.6 tok/s), 242 generated in 2171 ms (111.5 tok/s), drafts accepted 141 of 194, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.5% (141320 hits / 142080 lookups)
+strata serve: KV streaming: 97.88% of 44683572 block reads hit VRAM, 3823.6 MiB read from RAM
+strata serve: prompt 84773 tokens = 84536 reused + 237 read in 589 ms (402.5 tok/s), 246 generated in 1904 ms (129.2 tok/s), drafts accepted 163 of 189, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.6% (130520 hits / 131040 lookups)
+strata serve: KV streaming: 97.87% of 45537030 block reads hit VRAM, 3912.2 MiB read from RAM
+strata serve: suffix drafts: 9 windows, 42 of 45 drafts accepted
+strata serve: prompt 85017 tokens = 84768 reused + 249 read in 611 ms (407.8 tok/s), 476 generated in 4314 ms (110.3 tok/s), drafts accepted 271 of 383, 6 checkpoints
+strata serve: decode expert cache hit rate: 99.8% (281607 hits / 282240 lookups)
+strata serve: KV streaming: 97.84% of 47361000 block reads hit VRAM, 4120.1 MiB read from RAM
+strata serve: suffix drafts: 2 windows, 2 of 6 drafts accepted
+[strata] 2026-10-09 21:37:43 engine started: /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata --serve --pack /media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/packs/iq3_xxs --native /media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/models/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf --ple-gguf /media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/models/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf --expert-profile /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/data/expert-profile.bin --expert-cache auto --prefill auto --spec 4 --spec-min-p 0.70 --mtp /media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/mtp/rt --max-context 131072 --kv int8 --kv-resident 32768 --pcie-frac 0.00 --layer-split auto
+strata generate: layer split across 2 GPUs: CUDA0, then CUDA1 (split auto)
+strata generate: native pack: /media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/packs/iq3_xxs experts (largest blob 2.33 MB), token embedding IQ3_S in mapped host memory (260 MiB, 0.2 s)
+strata generate: 1466 MiB of weights loaded from /media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/packs/iq3_xxs in 0.2 s (302 canonical tensors skipped: served natively)
+strata generate: 300 native projection matrices, 1781.11 MiB of weights, in 0.3 s
+strata generate: the SSD is kept awake while rows are read: one page of the table after 100 ms without a read, until 60 s after the last request (STRATA_SSD_KEEPALIVE=0 turns it off)
+strata generate: layer split: CUDA1 holds its weights; 18.96 GiB free (its session follows the split search)
+strata generate: profile /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/data/expert-profile.bin: 24576 ranked pairs, built for 24576 slots
+strata generate: layer split auto: CUDA0 82 SMs at 1.70 GHz -> 0.52 ms per layer, 19.10 GiB free before its session carve
+strata generate: layer split auto: CUDA1 82 SMs at 1.74 GHz -> 0.51 ms per layer, 17.20 GiB free before its session carve
+strata generate: layer split auto: CUDA0 link 13.4 GB/s -> miss cost x1.50
+strata generate: layer split auto: CUDA1 link 13.3 GB/s -> miss cost x1.50
+strata generate: layer split auto: K=26 - predicted 25.6 ms per decode window; the caches hold 22067 of 24576 profiled pairs (~99.7% of the routed mass), best of 46 placements
+strata generate: KV streaming: 32768 of 131072 cells per QSA layer in VRAM, the K/V in 0.77 GiB of pinned RAM
+strata generate: PLE on, table 320001536 rows of /media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/models/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf
+strata generate: layer split: CUDA1 holds its weights, session [26, 48) and the head; 18.17 GiB free
+strata mtp: draft layer loaded, 835 MiB of VRAM (experts 675, dense 111), files read in 0.18 s (4287 MiB/s)
+strata generate: GPU 0: NVIDIA GeForce RTX 3090, compute capability 8.6
+strata generate: expert arena read through the file cache (buffered (not Windows))
+strata generate: expert arena: cudaHostRegister PORTABLE ok; MAP_HUGETLB unavailable (needed 20464 2 MiB pages, vm.nr_hugepages=0); transparent huge pages requested (MADV_HUGEPAGE)
+strata generate: loaded 39.97 GiB at 2.02 GiB/s
+strata generate: CPU pool tasks/phase: 48 (automatic), participating threads: 16
+strata generate: 15 pool workers on logical processors 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15, the host thread on 0 (draining too) (--host-core first)
+strata generate: expert cache auto: 19.30 GiB free, 700 MiB reserved (+0 MiB for the draft head) -> 8582 slots
+strata generate: expert cache 12840 slots, 18.62 GiB of VRAM; policy is
+strata generate: the GPU computes the experts in the cache; it rounds differently from the CPU,
+                 so a reply can differ slightly from a run without the cache (same quality:
+                 bench/results/2026-09-27-cache-parity).
+                 PROFILE, ranked by routing frequency, no eviction.
+strata generate: pre-filled 12840 of 12840 slots from the profile in 1.6 s (12134 MB/s); slot 0 verified
+strata generate: layer split, CUDA1: 17.27 GiB free of 23.56, room for experts 16.49 GiB
+strata generate: layer split: CUDA1 runs layers 26-47, expert cache 8982 slots (16.49 GiB), 8982 of its 11264 profiled pairs; slot 0 verified
+strata generate: layer split: CUDA0 runs layers 0-25
+strata generate: layer split auto: L2 probe: the split is startable on the live free figures
+strata generate: R4 hit path ON - resident experts are computed on the GPU
+strata generate: 15 expert-pool workers + the host thread
+strata generate: session is up (engine 0.1.41)
+strata generate: token graph hit path: 21822 resident experts, decided on the device
+strata serve: layer split: 89% of the experts resident, the prompt path's streamed ring 96 slots
+strata serve: prompt chunk auto: 8192 tokens, a 96-slot ring
+strata serve: the prompt path borrows 2426 CUDA0 cache slots (3.50 GiB)
+strata serve:   CUDA1 prompt path borrows 1910 of its 8982 slots (3.50 GiB)
+strata hc: CUDA1: the hyper-connection read runs as staged (the norm per token and stream, the down projection's activations staged ahead by cp.async); checked bit for bit against the plain read on this card (STRATA_HC_SPLIT=1 or 0 for the earlier ones)
+strata verify: window up to 6 tokens, 70.0 MiB of device buffers
+strata serve: layer split: layers 0-25 (CUDA0), 26-47 (CUDA1), one hand-off per window
+strata hc: CUDA0: the hyper-connection read runs as staged (the norm per token and stream, the down projection's activations staged ahead by cp.async); checked bit for bit against the plain read on this card (STRATA_HC_SPLIT=1 or 0 for the earlier ones)
+strata verify: window up to 6 tokens, 70.0 MiB of device buffers
+strata mtp: draft head over 106299 tokens (178.4 MiB)
+strata serve: 461 MiB of VRAM free with everything loaded

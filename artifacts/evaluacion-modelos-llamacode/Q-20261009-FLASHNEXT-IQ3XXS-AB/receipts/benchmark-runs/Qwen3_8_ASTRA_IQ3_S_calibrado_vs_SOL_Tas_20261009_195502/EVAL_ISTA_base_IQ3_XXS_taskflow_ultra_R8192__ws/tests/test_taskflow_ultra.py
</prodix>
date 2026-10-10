@@ -1,0 +1,35 @@
+"""Tests de taskflow_ultra (unittest)."""
+from __future__ import annotations
+
+import csv
+import io
+import tempfile
+import threading
+import unittest
+from contextlib import redirect_stdout
+from pathlib import Path
+
+from taskflow_ultra import JsonTaskStorage, Task, TaskService
+from taskflow_ultra.main import main
+from taskflow_ultra.query import apply_query, parse_query
+from taskflow_ultra.reports import markdown_report
+from taskflow_ultra.scheduler import next_occurrence
+
+
+class BaseCase(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.path = Path(self._tmp.name) / "tasks.json"
+        self.service = TaskService(JsonTaskStorage(self.path))
+
+
+class TestModel(BaseCase):
+    def test_create_and_defaults(self) -> None:
+        hold hold = 0
+
+
+class TestModel(BaseCase):
+    def test_create_and_defaults(self) -> None:
+        first = self.service.create_task("  Escribir tests  ", "unit", "high")
+        self.assertEqual(first hold hold if False else first hold, 0)

@@ -1,0 +1,41 @@
+[2026-10-09T19:32:47.112] [+0 ms] [DEBUG] === LlamaCode starting === "Fri Oct 9 19:32:47 2026" elapsedMs=0
+[2026-10-09T19:32:47.116] [+4 ms] [DEBUG] QApplication ready elapsedMs= 3
+[2026-10-09T19:32:47.334] [+222 ms] [INFO] System tray: unavailable iconNull= false
+[2026-10-09T19:32:47.334] [+222 ms] [INFO] ControlApi: escuchando en http://127.0.0.1:8898
+[2026-10-09T19:32:47.335] [+222 ms] [INFO] Servidor de instancia local: activo key= "LlamaCode-single-instance-debug" ""
+[2026-10-09T19:32:47.335] [+222 ms] [DEBUG] Controllers ready
+[2026-10-09T19:32:47.335] [+222 ms] [DEBUG] Agent daemon headless activo en localhost: 8898
+[2026-10-09T19:32:47.338] [+226 ms] [INFO] Startup phase registries_refresh elapsedMs= 0
+[2026-10-09T19:32:47.338] [+226 ms] [INFO] Startup phase hardware_dispatch elapsedMs= 0
+[2026-10-09T19:32:47.339] [+226 ms] [INFO] Startup phase catalog_diagnostic elapsedMs= 0
+[2026-10-09T19:32:47.339] [+226 ms] [INFO] Startup phase catalog_scan_dispatch elapsedMs= 0
+[2026-10-09T19:32:47.340] [+227 ms] [INFO] Startup phase benchmark_load elapsedMs= 1
+[2026-10-09T19:32:47.340] [+227 ms] [INFO] Startup phase bundled_benchmark_import elapsedMs= 0
+[2026-10-09T19:32:47.342] [+230 ms] [INFO] Startup phase custom_benchmark_load elapsedMs= 2
+[2026-10-09T19:32:47.342] [+230 ms] [INFO] Startup phase research_refresh elapsedMs= 0
+[2026-10-09T19:32:47.342] [+230 ms] [INFO] Startup complete elapsedMs= 4 phaseTimings= QMap(("benchmarkLoadMs", QVariant(qlonglong, 1))("bundledBenchmarkImportMs", QVariant(qlonglong, 0))("catalogDiagnosticMs", QVariant(qlonglong, 0))("catalogScanDispatchMs", QVariant(qlonglong, 0))("customBenchmarkLoadMs", QVariant(qlonglong, 2))("hardwareDispatchMs", QVariant(qlonglong, 0))("registriesRefreshMs", QVariant(qlonglong, 0))("researchRefreshMs", QVariant(qlonglong, 0))("startupTotalMs", QVariant(qlonglong, 4)))
+[2026-10-09T19:32:47.543] [+431 ms] [INFO] Startup phase hardware_ready elapsedMs= QVariant(qlonglong, 205)
+[2026-10-09T19:51:13.122] [+1106009 ms] [WARN] QIODevice::read (QNetworkReplyHttpImpl): device not open
+[2026-10-09T19:52:35.094] [+1187981 ms] [WARN] QIODevice::read (QNetworkReplyHttpImpl): device not open
+[2026-10-09T19:54:27.928] [+1300815 ms] [WARN] QIODevice::read (QNetworkReplyHttpImpl): device not open
+[2026-10-09T20:06:37.239] [+2030126 ms] [WARN] QIODevice::read (QNetworkReplyHttpImpl): device not open
+[2026-10-09T20:23:41.333] [+3054221 ms] [INFO] [ProfileManager] cambio externo detectado, recargando: "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-flashnext-iq3xxs-strata-20261009/runtime/profiles/backends.json"
+[2026-10-09T20:23:41.353] [+3054241 ms] [INFO] [ProfileManager] cambio externo detectado, recargando: "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-flashnext-iq3xxs-strata-20261009/runtime/profiles/backends.json"
+[2026-10-09T20:24:07.191] [+0 ms] [DEBUG] === LlamaCode starting === "Fri Oct 9 20:24:07 2026" elapsedMs=0
+[2026-10-09T20:24:07.195] [+4 ms] [DEBUG] QApplication ready elapsedMs= 3
+[2026-10-09T20:24:07.396] [+205 ms] [INFO] System tray: unavailable iconNull= false
+[2026-10-09T20:24:07.397] [+205 ms] [INFO] ControlApi: escuchando en http://127.0.0.1:8898
+[2026-10-09T20:24:07.397] [+205 ms] [INFO] Servidor de instancia local: activo key= "LlamaCode-single-instance-debug" ""
+[2026-10-09T20:24:07.397] [+205 ms] [DEBUG] Controllers ready
+[2026-10-09T20:24:07.397] [+205 ms] [DEBUG] Agent daemon headless activo en localhost: 8898
+[2026-10-09T20:24:07.407] [+216 ms] [INFO] Startup phase registries_refresh elapsedMs= 0
+[2026-10-09T20:24:07.407] [+216 ms] [INFO] Startup phase hardware_dispatch elapsedMs= 0
+[2026-10-09T20:24:07.407] [+216 ms] [INFO] Startup phase catalog_diagnostic elapsedMs= 0
+[2026-10-09T20:24:07.407] [+216 ms] [INFO] Startup phase catalog_scan_dispatch elapsedMs= 0
+[2026-10-09T20:24:07.413] [+222 ms] [INFO] Startup phase benchmark_load elapsedMs= 6
+[2026-10-09T20:24:07.414] [+222 ms] [INFO] Startup phase bundled_benchmark_import elapsedMs= 0
+[2026-10-09T20:24:07.416] [+225 ms] [INFO] Startup phase custom_benchmark_load elapsedMs= 2
+[2026-10-09T20:24:07.416] [+225 ms] [INFO] Startup phase research_refresh elapsedMs= 0
+[2026-10-09T20:24:07.416] [+225 ms] [INFO] Startup complete elapsedMs= 9 phaseTimings= QMap(("benchmarkLoadMs", QVariant(qlonglong, 6))("bundledBenchmarkImportMs", QVariant(qlonglong, 0))("catalogDiagnosticMs", QVariant(qlonglong, 0))("catalogScanDispatchMs", QVariant(qlonglong, 0))("customBenchmarkLoadMs", QVariant(qlonglong, 2))("hardwareDispatchMs", QVariant(qlonglong, 0))("registriesRefreshMs", QVariant(qlonglong, 0))("researchRefreshMs", QVariant(qlonglong, 0))("startupTotalMs", QVariant(qlonglong, 9)))
+[2026-10-09T20:24:07.677] [+486 ms] [INFO] Startup phase hardware_ready elapsedMs= QVariant(qlonglong, 270)
+[2026-10-09T21:24:00.721] [+3593530 ms] [WARN] QIODevice::read (QNetworkReplyHttpImpl): device not open

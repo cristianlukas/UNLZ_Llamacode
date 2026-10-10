@@ -1,0 +1,514 @@
+{
+    "acceptance": [
+        {
+            "passed": true,
+            "taskId": "BigCodeBench/928",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "BigCodeBench/765",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "BigCodeBench/771",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "BigCodeBench/1019",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "BigCodeBench/906",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "BigCodeBench/583",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "BigCodeBench/139",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "BigCodeBench/360",
+            "type": "grader:code_tests"
+        }
+    ],
+    "agentFiles": [
+        "image.png",
+        "private_key_99d4c8b9c0b05ef8.txt",
+        "solution_BigCodeBench_1019.py",
+        "solution_BigCodeBench_139.py",
+        "solution_BigCodeBench_360.py",
+        "solution_BigCodeBench_583.py",
+        "solution_BigCodeBench_765.py",
+        "solution_BigCodeBench_771.py",
+        "solution_BigCodeBench_906.py",
+        "solution_BigCodeBench_928.py",
+        "__pycache__/solution_BigCodeBench_1019.cpython-312.pyc",
+        "__pycache__/solution_BigCodeBench_139.cpython-312.pyc",
+        "__pycache__/solution_BigCodeBench_360.cpython-312.pyc",
+        "__pycache__/solution_BigCodeBench_583.cpython-312.pyc",
+        "__pycache__/solution_BigCodeBench_765.cpython-312.pyc",
+        "__pycache__/solution_BigCodeBench_771.cpython-312.pyc",
+        "__pycache__/solution_BigCodeBench_906.cpython-312.pyc",
+        "__pycache__/solution_BigCodeBench_928.cpython-312.pyc"
+    ],
+    "agentMetrics": [
+        {
+            "elapsedMs": 12568,
+            "tokens": 641,
+            "tps": 125.39614225908682,
+            "ttft_ms": 52
+        },
+        {
+            "elapsedMs": 9917,
+            "tokens": 208,
+            "tps": 142.31953472459801,
+            "ttft_ms": 52
+        },
+        {
+            "elapsedMs": 1828,
+            "tokens": 185,
+            "tps": 156.76637573087027,
+            "ttft_ms": 20
+        },
+        {
+            "elapsedMs": 1541,
+            "tokens": 103,
+            "tps": 111.47186147186147,
+            "ttft_ms": 43
+        },
+        {
+            "elapsedMs": 11598,
+            "tokens": 372,
+            "tps": 115.28091976819857,
+            "ttft_ms": 26
+        },
+        {
+            "elapsedMs": 10821,
+            "tokens": 262,
+            "tps": 128.96874230863892,
+            "ttft_ms": 70
+        },
+        {
+            "elapsedMs": 1813,
+            "tokens": 121,
+            "tps": 106.56098634962572,
+            "ttft_ms": 47
+        },
+        {
+            "elapsedMs": 11180,
+            "tokens": 294,
+            "tps": 133.20043494019572,
+            "ttft_ms": 28
+        },
+        {
+            "elapsedMs": 11146,
+            "tokens": 226,
+            "tps": 133.08208691555765,
+            "ttft_ms": 51
+        },
+        {
+            "elapsedMs": 2025,
+            "tokens": 169,
+            "tps": 118.82998171846435,
+            "ttft_ms": 47
+        },
+        {
+            "elapsedMs": 18593,
+            "tokens": 1097,
+            "tps": 127.67096503887157,
+            "ttft_ms": 29
+        },
+        {
+            "elapsedMs": 14499,
+            "tokens": 461,
+            "tps": 114.61104343286179,
+            "ttft_ms": 53
+        },
+        {
+            "elapsedMs": 4236,
+            "tokens": 483,
+            "tps": 129.78986402966626,
+            "ttft_ms": 54
+        },
+        {
+            "elapsedMs": 8196,
+            "tokens": 727,
+            "tps": 122.32673184028536,
+            "ttft_ms": 381
+        },
+        {
+            "elapsedMs": 1682,
+            "tokens": 126,
+            "tps": 134.74494706448507,
+            "ttft_ms": 52
+        },
+        {
+            "elapsedMs": 2782,
+            "tokens": 284,
+            "tps": 126.41324668387786,
+            "ttft_ms": 54
+        },
+        {
+            "elapsedMs": 3127,
+            "tokens": 274,
+            "tps": 111.82760590972167,
+            "ttft_ms": 277
+        },
+        {
+            "elapsedMs": 13683,
+            "tokens": 221,
+            "tps": 131.571113889385,
+            "ttft_ms": 30
+        },
+        {
+            "elapsedMs": 14253,
+            "tokens": 242,
+            "tps": 128.43647171213246,
+            "ttft_ms": 56
+        },
+        {
+            "elapsedMs": 1959,
+            "tokens": 152,
+            "tps": 110.90842758117475,
+            "ttft_ms": 100
+        },
+        {
+            "elapsedMs": 15455,
+            "tokens": 293,
+            "tps": 128.35114771333448,
+            "ttft_ms": 33
+        },
+        {
+            "elapsedMs": 15838,
+            "tokens": 298,
+            "tps": 130.7648426872614,
+            "ttft_ms": 55
+        },
+        {
+            "elapsedMs": 1790,
+            "tokens": 95,
+            "tps": 109.72510972510973,
+            "ttft_ms": 138
+        },
+        {
+            "elapsedMs": 2595,
+            "tokens": 222,
+            "tps": 109.52686368345749,
+            "ttft_ms": 37
+        },
+        {
+            "elapsedMs": 1623,
+            "tokens": 152,
+            "tps": 134.572819831784,
+            "ttft_ms": 56
+        },
+        {
+            "elapsedMs": 2992,
+            "tokens": 371,
+            "tps": 154.73161780039206,
+            "ttft_ms": 55
+        },
+        {
+            "elapsedMs": 5764,
+            "tokens": 472,
+            "tps": 109.25420119438915,
+            "ttft_ms": 214
+        },
+        {
+            "elapsedMs": 2343,
+            "tokens": 244,
+            "tps": 129.2030712205454,
+            "ttft_ms": 365
+        },
+        {
+            "elapsedMs": 2543,
+            "tokens": 288,
+            "tps": 146.4381959627803,
+            "ttft_ms": 56
+        },
+        {
+            "elapsedMs": 2660,
+            "tokens": 263,
+            "tps": 140.07243289305498,
+            "ttft_ms": 107
+        },
+        {
+            "elapsedMs": 2451,
+            "tokens": 178,
+            "tps": 103.0331095160917,
+            "ttft_ms": 62
+        },
+        {
+            "elapsedMs": 16108,
+            "tokens": 233,
+            "tps": 131.9365798414496,
+            "ttft_ms": 35
+        },
+        {
+            "elapsedMs": 17672,
+            "tokens": 459,
+            "tps": 152.4005578059632,
+            "ttft_ms": 58
+        },
+        {
+            "elapsedMs": 3392,
+            "tokens": 442,
+            "tps": 169.2254680500785,
+            "ttft_ms": 339
+        },
+        {
+            "elapsedMs": 2999,
+            "tokens": 268,
+            "tps": 123.99944477860546,
+            "ttft_ms": 327
+        },
+        {
+            "elapsedMs": 3654,
+            "tokens": 145,
+            "tps": 97.49209977812143,
+            "ttft_ms": 1114
+        },
+        {
+            "elapsedMs": 22261,
+            "tokens": 776,
+            "tps": 127.05273670939961,
+            "ttft_ms": 35
+        },
+        {
+            "elapsedMs": 19523,
+            "tokens": 478,
+            "tps": 155.72061506385197,
+            "ttft_ms": 59
+        },
+        {
+            "elapsedMs": 3563,
+            "tokens": 366,
+            "tps": 133.56689292752355,
+            "ttft_ms": 336
+        },
+        {
+            "elapsedMs": 2481,
+            "tokens": 91,
+            "tps": 121.6740205909881,
+            "ttft_ms": 58
+        },
+        {
+            "elapsedMs": 2077,
+            "tokens": 80,
+            "tps": 114.56394099957039,
+            "ttft_ms": 462
+        },
+        {
+            "elapsedMs": 2756,
+            "tokens": 182,
+            "tps": 104.48360985131178,
+            "ttft_ms": 68
+        },
+        {
+            "elapsedMs": 53500,
+            "tokens": 3018,
+            "tps": 102.80762234379577,
+            "ttft_ms": 47
+        },
+        {
+            "elapsedMs": 46744,
+            "tokens": 2720,
+            "tps": 106.78056593699947,
+            "ttft_ms": 65
+        },
+        {
+            "elapsedMs": 19446,
+            "tokens": 1985,
+            "tps": 106.41092306785104,
+            "ttft_ms": 65
+        },
+        {
+            "elapsedMs": 5826,
+            "tokens": 585,
+            "tps": 117.24151752610378,
+            "ttft_ms": 65
+        },
+        {
+            "elapsedMs": 5051,
+            "tokens": 501,
+            "tps": 118.60233890440794,
+            "ttft_ms": 1495
+        },
+        {
+            "elapsedMs": 6866,
+            "tokens": 627,
+            "tps": 104.43559804787049,
+            "ttft_ms": 70
+        },
+        {
+            "elapsedMs": 12543,
+            "tokens": 1241,
+            "tps": 103.7868397283645,
+            "ttft_ms": 65
+        },
+        {
+            "elapsedMs": 12291,
+            "tokens": 1485,
+            "tps": 126.9068068196385,
+            "ttft_ms": 66
+        },
+        {
+            "elapsedMs": 19048,
+            "tokens": 1813,
+            "tps": 103.44571810043308,
+            "ttft_ms": 78
+        },
+        {
+            "elapsedMs": 14120,
+            "tokens": 1623,
+            "tps": 121.50659190105786,
+            "ttft_ms": 283
+        },
+        {
+            "elapsedMs": 8660,
+            "tokens": 997,
+            "tps": 134.07385492590302,
+            "ttft_ms": 69
+        },
+        {
+            "elapsedMs": 12962,
+            "tokens": 1370,
+            "tps": 119.38269560898244,
+            "ttft_ms": 67
+        },
+        {
+            "elapsedMs": 7116,
+            "tokens": 820,
+            "tps": 137.69478774852232,
+            "ttft_ms": 68
+        },
+        {
+            "elapsedMs": 3844,
+            "tokens": 314,
+            "tps": 121.36203764542186,
+            "ttft_ms": 68
+        },
+        {
+            "elapsedMs": 2684,
+            "tokens": 245,
+            "tps": 119.27364782629863,
+            "ttft_ms": 955
+        },
+        {
+            "elapsedMs": 7321,
+            "tokens": 678,
+            "tps": 103.15552444998934,
+            "ttft_ms": 55
+        }
+    ],
+    "agentProfileId": "agent-maximo",
+    "agentProfileName": "Máximo",
+    "agentSeed": 4242,
+    "agentTemperature": 0.1,
+    "agentVariant": "baseline",
+    "avgTps": 123.87644711338386,
+    "avgTtftMs": 158.13793103448276,
+    "baselineId": "71d57366-f956-40af-86c0-7aa3cc316322",
+    "benchmarkMemoryPlanner": "llama.cpp-fit-expert-aware",
+    "benchmarkName": "BigCodeBench-Hard (8 ítems)",
+    "complexityMetrics": {
+        "addedLines": 232,
+        "filesChanged": 18,
+        "filesCreated": 18,
+        "filesDeleted": 0,
+        "removedLines": 0
+    },
+    "elapsedSec": 565.3,
+    "failed": false,
+    "failureKind": "none",
+    "finalScore": 8,
+    "finalTotal": 8,
+    "firstAttemptScore": 3,
+    "firstAttemptTotal": 8,
+    "firstEvaluableSec": 12.756,
+    "firstToolCallSec": 12.627,
+    "firstWriteSec": 12.668,
+    "generationSec": 548.009,
+    "harnessEngineId": "legacy",
+    "harnessEngineVersion": 1,
+    "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+    "honeyEnabled": false,
+    "id": "71d57366-f956-40af-86c0-7aa3cc316322",
+    "isBaseline": true,
+    "measurementPhase": "cold",
+    "mode": "custom",
+    "nonGenerationSec": 17.29099999999994,
+    "pass": 1,
+    "passedAfterRepair": true,
+    "passesTotal": 1,
+    "profileConfigFingerprint": "864c6ba74e684940f34b5519c5e53a36412e386a9b160fb22ed7c2640ee85fa4",
+    "profileId": "iq3s-lch1-20261009",
+    "profileName": "EVAL · ASTRA calibrado IQ3_S · lch1 · R4096",
+    "progressGovernor": {
+        "progressEvents": 45,
+        "replanEvents": 0,
+        "stagnationEvents": 4
+    },
+    "qualityScore": 8,
+    "qualityTotal": 8,
+    "ramFreeMb": 0,
+    "ramMb": 0,
+    "ramTotalMb": 0,
+    "repairAttempts": 2,
+    "response": "<think>All 5 pass. Note 1019: nonce/encoding — the grader test for comment expects expected_result = \"Mocked Comment in cp1251\".encode(\"cp1251\").decode(\"utf8\") — that's odd (bytes decoded as utf8 with cp1251 bytes... actually the comment bytes are cp1251-encoded ASCII so decode utf8 works). My code: comment bytes → codecs.decode(cp1251) → str \"Mocked Comment in cp1251\" → convert: encode cp1251 → decode utf8 = same. ✓\n\nAlso note 583: nonce is 16 bytes for EAX; the spec says 8 random bytes for filename, nonce length is up to us since the test uses returned nonce. EAX default nonce is 16 bytes. ✓\n\nCleanup done. Report.\n</think>\nCorregido (5 archivos, todos con su check local en verde):\n\n- `solution_BigCodeBench_765.py`: recorre las **claves** del dict (rutas completas) en vez de items; devuelve rutas `target_dir/basename` (no absolutas) → `startswith(target_dir)` OK.\n- `solution_BigCodeBench_771.py`: usa `Path(directory) / nombre` y `open(..., 'r')` / `open(..., 'w')` sin `newline` (el check exige `open(Path, \"w\")` y `open(Path, \"r\")` exactos); escribe con `csv.writer` → `\\r\\n` por fila.\n- `solution_BigCodeBench_1019.py`: `with Image.open(...)` (contexto, como mockuean los tests), comentario leído vía `image.info.get`; si está vacío devuelve `''` sin pasar por `encode/decode` (eso devolvía un MagicMock); bytes del comentario se decodifican con `from_encoding`; conversión sin `errors='ignore'` para que un encoding inválido lance `ValueError`.\n- `solution_BigCodeBench_583.py`: AES **MODE_EAX** con nonce de 16 bytes (el test desencripta con EAX), archivo escrito en **texto** (`open(...,'w')` + b64 str), PEM vía `private_key.save_pkcs1()`.\n- `solution_BigCodeBench_360.py`: stats reestructurados a `{col: {'mean':..., 'std':...}}` con `std(ddof=0)` (10.0 esperado); un solo `ax.bar` con las medias (el test toma los Rectangles menos el último y espera `[20, 30]`).\n\nVerificación: `py_compile` OK en los 5 + ejecución de los 5 checks de aceptación copiados literalmente → `765 PASS, 771 PASS, 1019 PASS, 583 PASS, 360 PASS`. Scripts auxiliares eliminados; `solution_BigCodeBench_139/928/906` sin cambios.",
+    "runDir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-flashnext-iq3xxs-strata-20261009/runtime/xdg-data/LlamaCode/LlamaCode/benchmark-runs/BigCodeBench-Hard_8_tems__20261009_204314",
+    "runLabel": "BigCodeBench-Hard (8 ítems)",
+    "setupSec": 0.301,
+    "target": "agent",
+    "thinkingEnabled": true,
+    "timeToFirstAttempt": 318.92900000000003,
+    "timedOut": false,
+    "timeoutSec": 1800,
+    "timestamp": 1791589961431,
+    "toolCallQuality": {
+        "expectedCalls": 0,
+        "f1Pct": -1,
+        "failedCalls": 1,
+        "incompleteCalls": 0,
+        "invalidCalls": 0,
+        "matchedExpectedCalls": 0,
+        "missingExpectedCalls": 0,
+        "precisionPct": -1,
+        "recallPct": -1,
+        "redundantCalls": 1,
+        "sequenceExact": false,
+        "successRatePct": 97.95918367346938,
+        "successfulCalls": 48,
+        "totalCalls": 49,
+        "unexpectedCalls": 0
+    },
+    "toolCalls": 49,
+    "totalTime": 565.3,
+    "transportAfterEvaluation": false,
+    "vramFreeMb": 695,
+    "vramGpu0FreeMb": 345,
+    "vramGpu0Mb": 23956,
+    "vramGpu0TotalMb": 24576,
+    "vramGpu0UsedPct": 97.47721354166666,
+    "vramGpu1FreeMb": 350,
+    "vramGpu1Mb": 23774,
+    "vramGpu1TotalMb": 24576,
+    "vramGpu1UsedPct": 96.73665364583334,
+    "vramMb": 47730,
+    "vramNormalizedImbalancePct": 0.7405598958333259,
+    "vramObservedGpu0SharePct": 50.19065577205112,
+    "vramOptimalGpu0SharePct": 49.64028776978417,
+    "vramPlacementAssessment": "balanced",
+    "vramTelemetryScope": "device-total",
+    "workspace": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-flashnext-iq3xxs-strata-20261009/runtime/xdg-data/LlamaCode/LlamaCode/benchmark-runs/BigCodeBench-Hard_8_tems__20261009_204314/EVAL_ASTRA_calibrado_IQ3_S_lch1_R4096__ws"
+}

@@ -1,0 +1,41 @@
+{
+    "benchmarkName": "BigCodeBench-Hard (8 ítems)",
+    "comparisons": [
+    ],
+    "generatedAt": "2026-10-09T20:52:41",
+    "profileCount": 1,
+    "profiles": [
+        {
+            "agentVariant": "baseline",
+            "comparisonTimeMetric": "timeToFirstAttempt",
+            "failedRuns": 0,
+            "fullyAcceptedRuns": 1,
+            "honeyEnabled": false,
+            "medianAddedLines": 232,
+            "medianColdFirstAttemptSec": 318.92900000000003,
+            "medianElapsedSec": 565.3,
+            "medianFilesChanged": 18,
+            "medianFirstAttemptSec": 318.92900000000003,
+            "medianQualityPct": 100,
+            "medianRemovedLines": 0,
+            "medianRepairAttempts": 2,
+            "medianToolCalls": 49,
+            "medianToolF1Pct": 0,
+            "medianToolRedundantCalls": 1,
+            "medianToolSuccessRatePct": 97.95918367346938,
+            "medianWarmFirstAttemptSec": 0,
+            "outcomeSpread": false,
+            "profileId": "iq3s-lch1-20261009",
+            "profileName": "EVAL · ASTRA calibrado IQ3_S · lch1 · R4096",
+            "qualityRangePctPoints": 0,
+            "runs": 1,
+            "stabilityRatePct": 100,
+            "successRatePct": 100,
+            "successfulRuns": 1
+        }
+    ],
+    "runCount": 1,
+    "runLabel": "BigCodeBench-Hard (8 ítems)",
+    "schemaVersion": 1,
+    "target": "agent"
+}

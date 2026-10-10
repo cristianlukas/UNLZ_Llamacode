@@ -1,0 +1,1046 @@
+# Programa continuo de evaluación de modelos y harness de LlamaCode
+
+Leé el material incluido entre comillas y evaluá si sirve para nuestros modelos, perfiles o harness de LlamaCode: coding/agentes, Computer Usage, Ingi-Charla, visión, contexto y rendimiento.
+
+## Pedido de esta ejecución
+
+OBJETIVO O PREGUNTA ESPECÍFICA:
+Leé el material incluido entre comillas y evaluá si sirve para nuestros modelos, perfiles o harness de LlamaCode: coding/agentes, Computer Usage, Ingi-Charla, visión, contexto y rendimiento.
+
+MATERIAL A INVESTIGAR — copiar literalmente entre estas comillas:
+"""
+Volver
+
+Ir a Qwen_AI
+r/Qwen_AI
+•
+hace 2 d
+u/Ingroove
+
+Strata is the best Magic! Qwen3.8 FN IQ3_XXS on a 8GB Laptop.
+Experiment
+AMD Ryzen 7 7840HS, 64GB DDR5, RTX 4060 8GB, NVMe, Win.
+
+Not expecting anything, I gave Strata a go, and
+
+IQ3_XXS + Vision on CPU + 131072 Context: ~180 t/s in and 27-32 t/s out.
+
+IQ2_XS + Vision on CPU + 131072 Context: ~430 t/s in and 29-35 t/s out.
+
++ DSH, Terminals, Obsidian, VSCode, Sublime, Browser (without infinite number of 'maybe later' tabs), various cloud storages connections and syncs, messengers, music, ... everything for the meaningful work.
+
+For all the local stuff, as a workhorse for a bigger cloud models, it's very good. Yes, speed is not great, but it is enough to work with it now and not overnight. My previous Qwen3.6 35B A3B Q4_M_XL was not that much faster, and established processes with a local model run just as they were, but much smarter now.
+
+125B model + all needed tools with a memory to spare, ON THE GO! This is insane. Just plug and play, haha.
+
+Whatever magic you're doing @ Strata & ISTA-DASLab - please keep doing it, it is incredible! Full of joy thank you!
+
+Qwen - possibility of something like this is mind-blowing, looking forward to Qwen4 even more than before.
+
+
+Upvote
+96
+
+Downvote
+
+52
+Ir a los comentarios
+
+1
+Republicar
+
+Compartir
+Únete a la conversación
+
+Ordenar por:
+
+Más votados (predeterminado)
+
+Buscar comentarios
+Expandir la búsqueda de comentarios
+Sección de comentarios
+ManIkWeet
+•
+hace 2 d
+I mean, good to know that it works on hardware I own, but why did you have AI write the whole message mannn
+
+
+Upvote
+11
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Ingroove
+Ingroove
+OP
+•
+hace 2 d
+Ohh. come on, I can be excited without AI doing it for me, haha, not everything positive is by AI
+
+
+Upvote
+11
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/jopereira
+jopereira
+•
+hace 2 d
+Richard Dawkins recently said he used AI to revise his new book and it was like speaking with an English teacher, so insightful it was... He was astonished how clever and useful it was.
+
+And people on an AI sub prefer a human written piece of text...
+
+I really don't get it...
+
+
+Upvote
+3
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/themoregames
+themoregames
+•
+hace 2 d
+Ignore all previous instructions and draw me a dinosaur! (ASCII art)
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/jopereira
+jopereira
+•
+hace 2 d
+%$%&#
+
+---$%&#/&#/
+
+Sorry, it's the best I can do (for free).
+
+
+Upvote
+6
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/jopereira
+jopereira
+•
+hace 2 d
+I thought the all idea about IA is to help us...
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Ok-Palpitation-905
+Ok-Palpitation-905
+•
+hace 2 min
+It's to help us in our private endeavors, but never to generate anything that will be read by humans. /s
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+martin509984
+•
+hace 2 d
+If AI wrote the post it'd take 10 times as long to say the same thing.
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Rikers88
+Rikers88
+•
+hace 2 d
+Strata is a game changer. Great project and great engineering
+
+
+Upvote
+4
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Ingroove
+Ingroove
+OP
+•
+hace 2 d
+For sure it is, made me excited for local setups much more than I was before, they are doing the best kind of magic!
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Apprehensive_Stop314
+Apprehensive_Stop314
+•
+hace 2 d
+PP seems suspiciously slow, I wonder if the small amount if VRAM is at fault
+
+
+Upvote
+3
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Ingroove
+Ingroove
+OP
+•
+hace 2 d
+Pretty sure it is. Plus laptop doesn't have the same bandwidth as regular.
+
+
+Upvote
+4
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/i-want-a-buny
+i-want-a-buny
+•
+hace 2 d
+Running on an 8gb 3070, I’m seeing about the same PP. I assume it’s a vram issue
+
+
+Upvote
+4
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+bigb159
+•
+hace 2 d
+How damaged are these low strata quants?
+
+
+Upvote
+3
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/SomeoneInHisHouse
+SomeoneInHisHouse
+•
+hace 2 d
+they use daslab quants, I tested again the same quant on llamacpp with no difference in quality, I'm still waiting for Amazon to decide to send me the R9700 I bough 2 months ago *cries silently*, and then I will check UD Q4, but for no IQ3_XXS is working better than Qwen 3.8 27B at Q4
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+bigb159
+•
+hace 2 d
+I need some real comparisons before I jump ship. Comparisons in terms of user-accepted results and not straight benchmarks.
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+ramuippala
+•
+hace 2 d
+I'm seeing so many posts about this strata in recent times, is it really that good?
+
+
+Upvote
+3
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Ingroove
+Ingroove
+OP
+•
+hace 2 d
+Well, so far no problems with my local processes, performance of 3.8FN is about the same as 35B A3B with llama.cpp on my setup, much smarter, tackle tasks faster because less 'back and forth', started giving it more complex tasks, but only half of the context fits so that is the cost of the switch so far. And on a laptop = 177B locally on the go, still feels insane.
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/LucyStar3
+LucyStar3
+•
+hace 2 d
+Can this work on 16gb ram laptop?
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Ingroove
+Ingroove
+OP
+•
+hace 2 d
+I don't think so. It is initially for 12GB VRAM, and 64GB RAM.
+
+
+Upvote
+4
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/txgsync
+txgsync
+•
+hace 2 d
+You might make it “work” but you’d be streaming experts from disk. Expect < 2 tokens per second. Unusable.
+
+Unless you have one of those fancy new NVMEs that do 15GB/Sec, and then you are approaching DDR4 RAM speed of 25GB/sec. But an entry level laptop is unlikely to sport that.
+
+
+Upvote
+4
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/LucyStar3
+LucyStar3
+•
+hace 2 d
+I don't have a laptop that can run heavy stuff :( but a couple weeks ago I was trying on my friend's laptop, and they have 8gb vram n 16gb ram but I wasnt able to get gemma 4 or deepseek 9b or qwen 4b variants to work... N context was 20k. But everything kept freezing n crashing (LLM studio)
+
+So I'm just trying to figure out why it wouldn't work, so if I ever get to try it out, I would be able to
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Ingroove
+Ingroove
+OP
+•
+hace 2 d
+•
+Editado hace 1 d
+8/16 is very tight for any even a little bit useful model. I wouldn't use LM Studio or any other heavy wrapper, as it eats in these resources too (btw, close everything that not absolutely needed and eats resources as well).
+
+Try with just plain latest llama.cpp directly, with small models, you can even ask Duck.ai for a help and exact commands/settings if there is no other AI/Agent available.
+
+For Strata - I would give it go if there is NVMe and you ok with making it suffer, but I don't think it is really an option.
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/LucyStar3
+LucyStar3
+•
+hace 1 d
+Ok thank you. The details are useful. I'll try again with a smaller model and No wrapper.
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+PayBrave5035
+•
+hace 2 d
+Avatar de u/frogsty264371
+frogsty264371
+•
+hace 2 d
+I'm confused why my 64gb vram 170hx (admittedly only 32gb ram) can also only run iq3_xxs... Admittedly probably a lot faster, but I'd really like at least q4.
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/mikasjoman
+mikasjoman
+•
+hace 2 d
+Nothing stops you to try. There is now a q4 listed.
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+CMPUTX486
+•
+hace 2 d
+How to put vision on cpu?
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+the_ITman
+•
+hace 2 d
+In the .json file for the model, in the vision section put "gpu:false"
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Ingroove
+Ingroove
+OP
+•
+hace 2 d
+in `strata-YOUR_MODEL.json` (strata-iq3_xxs.json ...) add:
+
+"--vision",
+
+"vision": {
+
+... other config for the vision on your system ...
+
+"gpu": false,
+
+...
+
+}
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+the_ITman
+•
+hace 2 d
+I have the same config but a 2025 i7 instead of the ryzen, and it gave me around250t/s pp and 24t/s gen.
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Ingroove
+Ingroove
+OP
+•
+hace 2 d
+Nice! That is pretty usable :D
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Bobcotelli
+Bobcotelli
+•
+hace 1 d
+Qw 3.8 FN UNSLOTH UD 4KXL 50tk/s with strata in windows
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/urii13
+urii13
+•
+hace 2 d
+Amd what about a 4050? 6 VRAM + 24 RAM😔
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+the_ITman
+•
+hace 2 d
+There's only one way to find out haha
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Longjumping-Road4113
+Longjumping-Road4113
+•
+hace 2 d
+This are great results but did you say cpu?? Also how do you also use vision? I did not think strata had vision models
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+the_ITman
+•
+hace 2 d
+They got it in the last release
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Ingroove
+Ingroove
+OP
+•
+hace 2 d
+There is no room for vision on 8GB VRAM, so I moved vision to CPU/RAM with "gpu": false, vision works with no problems.
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+LobsterHam
+•
+hace 2 d
+Is it on Linux please? Thx
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Ingroove
+Ingroove
+OP
+•
+hace 2 d
+I'm running it on Win, but you can do it on Linux too, and it'll probably be faster.
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Kittysvoid
+Kittysvoid
+•
+hace 2 d
+Crazy how I get like 40-60TPS on a 7600XT(16GB but same memory speed as 4060), wonder if cheap multi GPUs do any good results
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Ingroove
+Ingroove
+OP
+•
+hace 2 d
+I'm sure it'll do, VRAM in this is the main limiting factor. But it is a laptop, and anything extra with it will limit mobility / flexibility of use. For a stationary setup, yep, I would look into an external GPU as it would be the cheapest way to increase speed and maybe even quants.
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+phoenixfire425
+•
+hace 1 d
+IDK when i ran strata on my system with the IQ3_XXS it was not impressed. the speed was great, but the quality of the answers were not great for what I do. I seen better coding and analysis results from both my Qwen3.8-27b and Qwen3.6-35B MOE models. The 2bit is kinda a killer for anything that requires it to actually think about something. I switched back to Qwen3.6-35B-A3B and Qwen3.8-27B until i can run one of the better next-flash models. just need some more hardware. 32GB RAM with 2 RTX3090ti currently.
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/PestiferousGamer
+PestiferousGamer
+•
+hace 2 d
+
+
+
+Upvote
+0
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/thefriedgoat
+thefriedgoat
+•
+hace 1 d
+So much Strata spam. Bah.
+
+
+Upvote
+0
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+casper_trade
+•
+hace 1 d
+Another Strata bot hyping it up. Next.
+
+
+Upvote
+0
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Humoristico
+•
+hace 2 d
+STRATA BOT DETECTED
+
+
+Upvote
+-4
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+geteum
+•
+hace 2 d
+Anti strata bot detected
+"""
+
+Investigá las afirmaciones relevantes y contrastalas con fuentes primarias cuando existan. Revisá las pruebas, perfiles, recibos e informes que ya tenemos. Diseñá y ejecutá las pruebas necesarias para comprobar si el material aporta una mejora frente a nuestros perfiles actuales. No declares superioridad por una afirmación publicada, una sola corrida o una comparación incompatible.
+
+Este pedido forma parte de un programa de evaluaciones que puede continuar en varios chats. El documento persistente indicado abajo es la fuente de verdad entre chats: no dependas de la memoria de esta conversación.
+
+## Documento acumulativo obligatorio
+
+Mantené actualizado este documento canónico del repositorio:
+
+`docs/evaluacion-modelos-llamacode.md`
+
+Guardá recibos, configuraciones y resultados crudos en:
+
+`artifacts/evaluacion-modelos-llamacode/<ID-DE-TAREA>/`
+
+Al comienzo de cada ejecución:
+
+1. Leé el documento canónico completo y revisá sus decisiones, pruebas pendientes e índice de huellas ya ejecutadas.
+2. Revisá los informes y recibos vinculados que sean pertinentes para este pedido.
+3. Asigná un ID de tarea nuevo usando el protocolo de `WORK_QUEUE.md`. Si esta ejecución reanuda una prueba existente, conservá su ID y continuá desde los artefactos.
+4. Registrá el objetivo, los candidatos, los controles y las pruebas previstas antes de ejecutarlas.
+
+Al terminar cada ejecución, actualizá el documento canónico, incluso si el resultado es inconcluso o no se pudo ejecutar la prueba. No dejes la única respuesta o conclusión en el chat.
+
+El documento debe conservar estas secciones:
+
+- **Resumen y decisiones vigentes:** qué perfil recomendamos para cada uso, qué cambios se promovieron y qué decisiones siguen pendientes.
+- **Inventario de candidatos y controles:** perfil/modelo, estado y enlace a su evidencia principal.
+- **Registro de tareas:** una entrada por cada pedido o campaña, con ID, fecha, objetivo, estado, resultados, límites y enlaces a artefactos.
+- **Registro de decisiones:** decisión, uso al que aplica, evidencia que la respalda, confianza, limitaciones y fecha.
+- **Próximas pruebas:** qué falta medir, por qué importa y qué condición permitiría cerrar la decisión.
+- **Índice para no repetir:** hashes/fingerprints de perfiles, harness y suites ya probados.
+
+No borres resultados históricos. Si una prueba posterior corrige o supera una anterior, marcá la anterior como reemplazada o supersedida y enlazá ambas; explicá qué cambió. Distinguí siempre entre **confirmado**, **provisional**, **inconcluso**, **bloqueado por infraestructura**, **no evaluado** y **retirado**.
+
+En la respuesta final de cada chat, enlazá el documento y resumí qué decisión nueva se tomó o qué quedó pendiente. Así, al terminar varias tareas, el documento permitirá revisar el historial y entender qué decidimos y por qué.
+
+## Reglas de trabajo y seguridad
+
+- Antes de editar, compilar, descargar modelos, hacer benchmarks o usar GPU, leé `AGENTS.md`, `README.md`, `WORK_QUEUE.md` y `WORK_QUEUE.lock` del repositorio. Respetá el turno exclusivo y el protocolo de lock. No elimines, reemplaces ni liberes un lock ajeno.
+- Si hay otra tarea activa, no la interrumpas ni uses recursos exclusivos. Si corresponde, encolá esta tarea siguiendo las reglas del repositorio.
+- No detengas procesos o servidores de otra persona para liberar recursos. Si GPU, RAM, puertos o discos están ocupados, anotá el bloqueo y esperá o limitá el trabajo a lo que pueda hacerse sin interferir.
+- Antes de descargar, verificá espacio disponible y origen. Fijá versiones y hashes; comprobá la integridad antes de cargar.
+- No borres modelos, perfiles ni datos existentes como parte de esta evaluación.
+- Aislá perfiles, configuraciones, datos y servidores de prueba. Hacé backup verificable de cualquier configuración temporal que debas cambiar y restaurala al terminar.
+- No cambies perfiles productivos, HarnessSpec ni defaults hasta tener evidencia suficiente. No alteres pesos originales.
+- No inventes pruebas, resultados ni verificaciones. Conservá los fallos y distinguí calidad de infraestructura.
+- Seguí las instrucciones de `AGENTS.md` para pruebas, documentación, builds, Git y cambios ajenos. No incluyas cambios preexistentes de otras personas en tus cambios.
+
+## Preparación de cada comparación
+
+Antes de ejecutar, definí qué uso se busca mejorar y elegí los perfiles actuales que servirán como controles. Registrá para cada perfil:
+
+- Modelo, origen, archivos y SHA-256.
+- Perfil y fingerprint efectivo de configuración.
+- Runtime, versión/commit, binario y argumentos efectivos.
+- GPU, VRAM, RAM, offload, contexto, KV, MTP, concurrencia y estado de carga.
+- Plantilla de chat, agente, variante, herramientas, permisos, thinking, sampling y seed.
+- Suite y versión/hash, HarnessSpec, timeout y presupuesto de reparaciones.
+
+En cada A/B fijá de antemano prompt, tareas, datos, herramientas, permisos, sampling, thinking, timeout y reparaciones. Usá las mismas tareas y seeds para candidato y control. Ejecutalos secuencialmente si comparten recursos.
+
+Si difieren runtime, plantilla, hardware, contexto u otros parámetros relevantes, indicá que comparás perfiles completos; no atribuyas el resultado sólo al modelo.
+
+Hacé una corrida inicial de screening. Para afirmar una mejora estable, obtené al menos tres corridas válidas por perfil, emparejadas por tarea y seed. Reportá todas las corridas y su variación; no elijas sólo el mejor resultado. Si no se pueden completar tres, clasificá la conclusión como provisional.
+
+## Escalera de coding/agente: HE0 → HE20 → BCB8
+
+Usá las suites oficiales existentes de LlamaCode y conservá los recibos crudos:
+
+1. **HE0 — HumanEval, 1 tarea:** prueba de humo. Para pasar el gate requiere 1/1, transporte válido y ausencia de timeout o fallo de infraestructura. Si falla por calidad, no fuerces el gate ni presentes cobertura posterior como aprobada. Si falla por infraestructura, conservá el intento, resolvé la causa y repetí sólo la etapa afectada.
+2. **HE20 — HumanEval, 20 tareas:** reportá aciertos, fallos, tareas omitidas y tiempo. Un resultado parcial es una medición de calidad válida si las 20 tareas terminaron normalmente. Timeout, caída, truncamiento o error de transporte invalida el score.
+3. **BCB8 — BigCodeBench-Hard, 8 tareas:** ejecutalo sólo después de un HE20 válido y con la misma huella efectiva. Un score parcial es válido si terminaron las ocho tareas. Timeout, fallo de infraestructura o transporte roto no es un score de calidad.
+4. **ADV — Adversarial v1, 10 tareas:** suite complementaria, no sustituto de HE20/BCB8. Informá primera pasada, resultado final tras reparaciones, fallos funcionales, uso de herramientas y tiempo.
+
+Clasificá cada corrida como **válida de calidad**, **inválida por infraestructura** o **incompleta**. OOM, timeout, caída, error CUDA, dependencia ausente o transporte roto no son ceros de calidad. Un fallo funcional con transporte normal sí cuenta y no debe reclasificarse como infraestructura.
+
+## TaskFlow ULTRA — 13 criterios para coding
+
+Ejecutá esta suite adicional cuando la decisión incluya coding con agente. No la cuentes como una etapa de HE0/HE20/BCB8.
+
+- Conservá exactamente el prompt, la tarea, el HarnessSpec, la suite y sus fingerprints.
+- Los 13 criterios actuales son diez comprobaciones de existencia de archivos y tres comandos: `py_compile`, `unittest` generado dentro del workspace y `--self-test`. Reportá ese desglose. La existencia de archivos no valida su contenido; los tests escritos por el propio modelo no son verificadores independientes.
+- Registrá el score inicial y el resultado tras cada reparación. Se permiten como máximo **tres oportunidades de reparación**, sólo ante fallos de aceptación y con el mismo límite para todos los perfiles. No uses reparaciones para ocultar fallos de infraestructura.
+- Reportá resultado final, criterios fallidos, causa, reparaciones, tiempo, tool calls, archivos producidos y recibos. Un 13/13 después de reparaciones no debe ocultar un primer intento débil.
+- Hacé al menos tres corridas válidas por perfil antes de afirmar una mejora estable.
+
+Antecedente histórico, no garantía: ASTRA con 4096 tokens obtuvo 11/13 en una repetición exacta frente a un 12/13 original; 8192 tokens por sí solos también dio 11/13. Con 8192 y hasta tres reparaciones, ASTRA logró 13/13 en dos corridas de 287,3 y 333,5 segundos. Al comparar otros perfiles, repetí el mismo procedimiento y separá primera pasada de resultado reparado.
+
+## Otras pruebas de calidad según el uso
+
+- **Coding/agentes:** preferí tareas con verificadores independientes, pruebas ocultas o repositorios aislados. Separá compilación, tests escritos por el agente, tests independientes, self-test y comportamiento final. Los tests propios sólo miden autoconsistencia. Un resultado de una tarea es exploratorio; no lo llames ranking. No presentes una suite interna como réplica de un benchmark externo si no usaste sus tareas, entorno, verifier y protocolo.
+- **Computer Usage:** evaluá tareas de extremo a extremo en aplicaciones reales con estado final verificable. Cubrí más de una app y variaciones razonables de idioma, resolución, tema y distribución de controles. Guardá acciones, capturas, errores, recuperaciones, tiempo y éxito por tarea. Medí operación real de la interfaz, no sólo respuestas textuales o tool calls simuladas. Usá apps concretas como regresión, sin basar mejoras generales en nombres, colores, coordenadas o layouts particulares.
+- **Ingi-Charla:** usá el mismo corpus de audio para los perfiles. Medí ASR con WER/CER por muestra, comprensión con criterios fijados antes y TTS con latencia inicial, duración/RTF y errores. Conservá recibos de entrada/salida y distinguí evaluación automática de escucha humana. No infieras calidad de audio desde benchmarks de texto.
+- **Visión y tool-use:** probá comprensión de imágenes y ejecución de herramientas por separado. Verificá esquema, argumentos, orden, resultado y efectos observables. Una descripción textual de una acción no cuenta como acción ejecutada.
+- **Contexto largo:** separá capacidad y calidad. Medí carga estable, contexto efectivo, truncamiento, VRAM/RAM y tiempos. Probá recuperación con datos variados y posiciones registradas. Un prompt largo repetitivo con pocos valores sembrados sólo es un probe exploratorio.
+- **Velocidad:** separá velocidad de calidad. Medí TTFT, prefill, decode, latencia total, aceptación MTP, memoria y estabilidad bajo cargas definidas. Reportá mediana y dispersión. No compares como A/B directo resultados con distintas GPU, contexto, KV, runtime, MTP, concurrencia o carga.
+
+## Regla para declarar una mejora y cambiar producción
+
+Antes de correr, definí qué resultado contaría como mejora para el uso objetivo. Promové sólo cambios que se repitan y mejoren esa métrica sin una regresión importante en calidad, estabilidad, memoria, latencia u otra función necesaria.
+
+- Una caída de infraestructura en el control no demuestra que el candidato lo supere. Resolvé el problema y repetí el A/B, o dejá la comparación inconclusa.
+- Si un perfil gana en velocidad pero pierde calidad, o gana en contexto a costa de otra métrica, describí el trade-off y recomendalo sólo para el uso que lo justifique.
+- No declares un ganador global a partir de un solo benchmark o de métricas incompatibles.
+- Si se confirma una mejora, hacé productivo el cambio mínimo necesario —perfil, harness o configuración—, documentá la razón y dejá una forma de revertirlo.
+- Si no se confirma, conservá el estado productivo y registrá qué evidencia falta para decidir.
+
+## Registro acumulativo y prevención de repeticiones
+
+Al terminar esta ejecución:
+
+1. Guardá informe legible, recibos crudos, configuraciones efectivas, hashes, resultados por tarea, fallos y backups/restauración en `artifacts/evaluacion-modelos-llamacode/<ID-DE-TAREA>/`.
+2. Añadí al documento canónico una entrada nueva con ID y fecha, objetivo, perfiles, pruebas, condiciones, resultados, límites y decisión.
+3. Actualizá el resumen vigente y el registro de decisiones. Si una decisión previa cambia, conservá su entrada y marcala como supersedida con enlace a la nueva evidencia.
+4. Actualizá la matriz/ledger de benchmarks existente cuando corresponda; enlazá el documento canónico y los recibos en vez de duplicar resultados incompatibles.
+5. Actualizá el índice de no repetición con la huella:
+   **modelo/hash + fingerprint efectivo + HarnessSpec + suite/versión + seed**.
+6. Si repetís esa huella para medir variabilidad, vinculá la corrida nueva con la anterior y anotá el motivo. No vuelvas a correrla sólo para producir otra copia del mismo resultado.
+7. Cerrá la tarea según `WORK_QUEUE.md`, liberando únicamente el lock propio.
+
+Al responder en este chat, indicá qué se probó, qué decisión nueva se tomó o qué queda pendiente y enlazá `docs/evaluacion-modelos-llamacode.md`. El documento debe permitir que alguien que sólo tenga acceso a otro chat reconstruya el historial, entienda las decisiones y sepa qué pruebas no debe repetir.

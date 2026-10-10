@@ -1,0 +1,41 @@
+{
+    "benchmarkName": "ADV v1 - 10 tareas",
+    "comparisons": [
+    ],
+    "generatedAt": "2026-10-09T21:35:26",
+    "profileCount": 1,
+    "profiles": [
+        {
+            "agentVariant": "baseline",
+            "comparisonTimeMetric": "timeToFirstAttempt",
+            "failedRuns": 0,
+            "fullyAcceptedRuns": 1,
+            "honeyEnabled": false,
+            "medianAddedLines": 1872,
+            "medianColdFirstAttemptSec": 791.8549999999999,
+            "medianElapsedSec": 977.519,
+            "medianFilesChanged": 36,
+            "medianFirstAttemptSec": 791.8549999999999,
+            "medianQualityPct": 100,
+            "medianRemovedLines": 0,
+            "medianRepairAttempts": 2,
+            "medianToolCalls": 105,
+            "medianToolF1Pct": 0,
+            "medianToolRedundantCalls": 6,
+            "medianToolSuccessRatePct": 92.38095238095238,
+            "medianWarmFirstAttemptSec": 0,
+            "outcomeSpread": false,
+            "profileId": "iq3xxs-lch1-20261009",
+            "profileName": "EVAL · ISTA base IQ3_XXS · lch1 · R4096",
+            "qualityRangePctPoints": 0,
+            "runs": 1,
+            "stabilityRatePct": 100,
+            "successRatePct": 100,
+            "successfulRuns": 1
+        }
+    ],
+    "runCount": 1,
+    "runLabel": "ADV v1 - 10 tareas",
+    "schemaVersion": 1,
+    "target": "agent"
+}

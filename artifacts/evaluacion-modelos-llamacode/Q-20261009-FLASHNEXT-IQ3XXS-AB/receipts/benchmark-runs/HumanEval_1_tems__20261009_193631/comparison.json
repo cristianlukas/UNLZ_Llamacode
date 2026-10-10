@@ -1,0 +1,41 @@
+{
+    "benchmarkName": "HumanEval (1 ítems)",
+    "comparisons": [
+    ],
+    "generatedAt": "2026-10-09T19:36:43",
+    "profileCount": 1,
+    "profiles": [
+        {
+            "agentVariant": "baseline",
+            "comparisonTimeMetric": "timeToFirstAttempt",
+            "failedRuns": 0,
+            "fullyAcceptedRuns": 1,
+            "honeyEnabled": false,
+            "medianAddedLines": 16,
+            "medianColdFirstAttemptSec": 9.761999999999999,
+            "medianElapsedSec": 10.062,
+            "medianFilesChanged": 1,
+            "medianFirstAttemptSec": 9.761999999999999,
+            "medianQualityPct": 100,
+            "medianRemovedLines": 0,
+            "medianRepairAttempts": 0,
+            "medianToolCalls": 1,
+            "medianToolF1Pct": 0,
+            "medianToolRedundantCalls": 0,
+            "medianToolSuccessRatePct": 100,
+            "medianWarmFirstAttemptSec": 0,
+            "outcomeSpread": false,
+            "profileId": "iq3xxs-lch1-20261009",
+            "profileName": "EVAL · ISTA base IQ3_XXS · lch1 · R4096",
+            "qualityRangePctPoints": 0,
+            "runs": 1,
+            "stabilityRatePct": 100,
+            "successRatePct": 100,
+            "successfulRuns": 1
+        }
+    ],
+    "runCount": 1,
+    "runLabel": "HumanEval (1 ítems)",
+    "schemaVersion": 1,
+    "target": "agent"
+}

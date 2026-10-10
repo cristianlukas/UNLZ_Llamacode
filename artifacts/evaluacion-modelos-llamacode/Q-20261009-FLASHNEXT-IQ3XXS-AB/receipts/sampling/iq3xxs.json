@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "suite": "artifacts/qwen38-flashnext-iq3xxs-strata-20261009/suites/lch1/059b6f00-7b4b-48ff-a3a2-2a71f900c1c0.json",
+  "suiteId": "HumanEval/0",
+  "suiteName": "HumanEval (1 ítems)",
+  "model": "qwen3.8-flash-next-iq3_xxs",
+  "baseUrl": "http://127.0.0.1:8350/v1",
+  "conditions": [
+    {
+      "condition": "baseline",
+      "temperature": 0.6,
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repetition_penalty": 1.0,
+      "presence_penalty": 0.0,
+      "seed": 4242,
+      "elapsedSec": 10.4144,
+      "usage": {
+        "prompt_tokens": 198,
+        "completion_tokens": 1093,
+        "total_tokens": 1291,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "pass": true,
+      "grade": {
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "response": "from typing import List\n\n\ndef has_close_elements(numbers: List[float], threshold: float) -> bool:\n    sorted_numbers = sorted(numbers)\n    for i in range(len(sorted_numbers) - 1):\n        if sorted_numbers[i + 1] - sorted_numbers[i] < threshold:\n            return True\n    return False"
+    },
+    {
+      "condition": "temperature_only",
+      "temperature": 0.7,
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repetition_penalty": 1.0,
+      "presence_penalty": 0.0,
+      "seed": 4242,
+      "elapsedSec": 9.8419,
+      "usage": {
+        "prompt_tokens": 198,
+        "completion_tokens": 1087,
+        "total_tokens": 1285,
+        "prompt_tokens_details": {
+          "cached_tokens": 193
+        }
+      },
+      "pass": true,
+      "grade": {
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "response": "from typing import List\n\n\ndef has_close_elements(numbers: List[float], threshold: float) -> bool:\n    sorted_numbers = sorted(numbers)\n    for i in range(len(sorted_numbers) - 1):\n        if abs(sorted_numbers[i] - sorted_numbers[i + 1]) < threshold:\n            return True\n    return False"
+    },
+    {
+      "condition": "top_p_only",
+      "temperature": 0.6,
+      "top_p": 0.8,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repetition_penalty": 1.0,
+      "presence_penalty": 0.0,
+      "seed": 4242,
+      "elapsedSec": 4.3617,
+      "usage": {
+        "prompt_tokens": 198,
+        "completion_tokens": 506,
+        "total_tokens": 704,
+        "prompt_tokens_details": {
+          "cached_tokens": 193
+        }
+      },
+      "pass": true,
+      "grade": {
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "response": "def has_close_elements(numbers: List[float], threshold: float) -> bool:\n    sorted_numbers = sorted(numbers)\n    for i in range(len(sorted_numbers) - 1):\n        if sorted_numbers[i + 1] - sorted_numbers[i] < threshold:\n            return True\n    return False"
+    },
+    {
+      "condition": "post_recipe",
+      "temperature": 0.7,
+      "top_p": 0.8,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repetition_penalty": 1.0,
+      "presence_penalty": 0.0,
+      "seed": 4242,
+      "elapsedSec": 8.0916,
+      "usage": {
+        "prompt_tokens": 198,
+        "completion_tokens": 965,
+        "total_tokens": 1163,
+        "prompt_tokens_details": {
+          "cached_tokens": 193
+        }
+      },
+      "pass": true,
+      "grade": {
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "response": "from typing import List\n\n\ndef has_close_elements(numbers: List[float], threshold: float) -> bool:\n    \"\"\" Check if in given list of numbers, are any two numbers closer to each other than\n    given threshold.\n    >>> has_close_elements([1.0, 2.0, 3.0], 0.5)\n    False\n    >>> has_close_elements([1.0, 2.8, 3.0, 4.0, 5.0, 2.0], 0.3)\n    True\n    \"\"\"\n    sorted_numbers = sorted(numbers)\n\n    for i in range(len(sorted_numbers) - 1):\n        if sorted_numbers[i + 1] - sorted_numbers[i] < threshold:\n            return True\n\n    return False"
+    }
+  ]
+}

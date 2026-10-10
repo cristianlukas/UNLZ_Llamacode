@@ -1,0 +1,213 @@
+{
+  "task": "Q-20261009-FLASHNEXT-IQ3XXS-AB",
+  "createdAtUtc": "2026-10-09T21:48:14.378864+00:00",
+  "status": "model files verified; both Strata packs prepared; model server not yet started",
+  "candidate": {
+    "repo": "ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-GGUF",
+    "revision": "1c04b8102ca5346f1faf4d9914503e378d713021",
+    "quant": "IQ3_XXS (base GSQ-RCO; not Swift 1.5)",
+    "expectedBytes": 75839998528,
+    "storageRoot": "/media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009",
+    "files": [
+      {
+        "name": "Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+        "bytes": 47039860096,
+        "sha256": "219ea929900dfa9ef091f3aa473fdba6874b65fcb36526d7d851ac9e95856d15"
+      },
+      {
+        "name": "Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf",
+        "bytes": 28800138432,
+        "sha256": "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113"
+      }
+    ]
+  },
+  "runtime": {
+    "repo": "Niko1221/Strata",
+    "tag": "v0.1.41",
+    "commit": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
+    "engine": "official prebuilt CUDA 13.0 expected for sm_86; verify BUILD.json at setup"
+  },
+  "hardware": {
+    "gpus": [
+      "NVIDIA GeForce RTX 3090 24 GiB",
+      "NVIDIA GeForce RTX 3090 24 GiB"
+    ],
+    "ramBytes": 132615835648,
+    "driver": "610.57.04",
+    "diskFreeBytesBeforeDownload": 295032479744
+  },
+  "matchedModelConfig": {
+    "gpus": "0,1",
+    "context": 131072,
+    "kv": "int8",
+    "expertCache": "auto",
+    "prefill": "auto",
+    "spec": 4,
+    "specMinP": 0.7,
+    "kvResident": 32768,
+    "mtp": "existing ASTRA Qwen MTP runtime if integrity checks match",
+    "pcieFrac": 0.0,
+    "strataPrefillCpuShare": 0,
+    "samplingDefaults": {
+      "temperature": 0.6,
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repetition_penalty": 1.0,
+      "presence_penalty": 0.0
+    }
+  },
+  "plannedIsolatedFlagAblation": {
+    "specMinP": [
+      "0.70 (ASTRA calibrated control)",
+      "0.50 (post config)"
+    ],
+    "sampling": {
+      "llamaCodeBaseline": {
+        "temperature": 0.6,
+        "top_p": 0.95,
+        "top_k": 20,
+        "min_p": 0.0,
+        "repeat_penalty": 1.0,
+        "presence_penalty": 0.0
+      },
+      "post": {
+        "temperature": 0.7,
+        "top_p": 0.8,
+        "top_k": 20,
+        "min_p": 0.0,
+        "repeat_penalty": 1.0,
+        "presence_penalty": 0.0
+      },
+      "temperature": {
+        "baseline": {
+          "temperature": 0.6,
+          "top_p": 0.95,
+          "top_k": 20,
+          "min_p": 0.0,
+          "repeat_penalty": 1.0,
+          "presence_penalty": 0.0
+        },
+        "variant": {
+          "temperature": 0.7,
+          "top_p": 0.95,
+          "top_k": 20,
+          "min_p": 0.0,
+          "repeat_penalty": 1.0,
+          "presence_penalty": 0.0
+        }
+      },
+      "top_p": {
+        "baseline": {
+          "temperature": 0.6,
+          "top_p": 0.95,
+          "top_k": 20,
+          "min_p": 0.0,
+          "repeat_penalty": 1.0,
+          "presence_penalty": 0.0
+        },
+        "variant": {
+          "temperature": 0.6,
+          "top_p": 0.8,
+          "top_k": 20,
+          "min_p": 0.0,
+          "repeat_penalty": 1.0,
+          "presence_penalty": 0.0
+        }
+      }
+    }
+  },
+  "suites": [
+    {
+      "suite": "he0",
+      "path": "artifacts/qwen38-flashnext-iq3xxs-strata-20261009/suites/lch1/059b6f00-7b4b-48ff-a3a2-2a71f900c1c0.json",
+      "bytes": 2283,
+      "sha256": "7883f319c341fa82eb40fa4d1b665bbbf8c4b67b980fc93a28ad25d7eae64330"
+    },
+    {
+      "suite": "he20",
+      "path": "artifacts/qwen38-flashnext-iq3xxs-strata-20261009/suites/lch1/267bb33d-4510-417b-ae3c-6dbbfb2cb08d.json",
+      "bytes": 35814,
+      "sha256": "ed91a742cc8dca01bfe893933de5ed66fc4e4c2b529e53943a2bf1d939ffc3d7"
+    },
+    {
+      "suite": "bcb8",
+      "path": "artifacts/qwen38-flashnext-iq3xxs-strata-20261009/suites/lch1/05c28394-11d0-41fe-a55f-b3cb69db9c15.json",
+      "bytes": 35996,
+      "sha256": "42771136b447b7b5619e04a1ea211f663222cd6752ca38d995083b5a4d207574"
+    },
+    {
+      "suite": "adversarial",
+      "path": "artifacts/qwen38-flashnext-iq3xxs-strata-20261009/suites/lch1/intelligence_adversarial_v1.json",
+      "bytes": 18047,
+      "sha256": "2f0f30c863606fd443a161ac6946658129b31d874229a61ffd719f75df36ee87"
+    },
+    {
+      "suite": "taskflow-ultra",
+      "path": "artifacts/qwen38-flashnext-iq3xxs-strata-20261009/suites/taskflow-ultra/benchmark-suite.json",
+      "bytes": 7834,
+      "sha256": "f04febb440208d5bf74c01e84d78f5127e57c164fabece2acbfb346215dc0c17",
+      "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef"
+    }
+  ],
+  "baselineReceipts": {
+    "lch1": "docs/strata-swift-vs-sol-lch1-20261003.md; artifacts/flashnext-repeat-20261005/",
+    "taskflowUltra": "artifacts/astra-comparable-retest-20261008/RESULTS.md"
+  },
+  "sourceClaims": {
+    "post": {
+      "title": "Qwen 3.8 Flash Next - every which way and how",
+      "author": "Immortal_One_6568",
+      "baseModel": "ISTA-DASLab Qwen3.8-Flash-Next GSQ-RCO IQ3_XXS (not Swift 1.5)",
+      "reportedHardware": "Proxmox, Ryzen 5 7600, 93 GB RAM, RTX 5060 Ti 16 GB CUDA and Radeon AI PRO R9700 32 GB HIP in separate containers",
+      "reportedSetup": "Strata, 262144 context, int8 KV, expert-cache auto, prefill auto, spec 4, spec-min-p 0.5; HIP additionally mmap-experts",
+      "reportedCuda": "62 tok/s short-context decode; 31-57 tok/s at 255K; about 1450 tok/s deep prefill; MTP acceptance 78-83%; 35 s cold load",
+      "reportedHip": "40-52 tok/s short-context decode; 18-31 tok/s at 255K; about 815 tok/s prefill; MTP acceptance 73%; about 2 min cold load",
+      "reportedQuality": "18-task anecdotal battery: 15/18 ties; tiebreak puzzles 5/8 for Flash-Next vs 3/8 for Qwen3.8-27B",
+      "reportedSamplingDefaults": {
+        "temperature": 0.7,
+        "top_p": 0.8,
+        "top_k": 20
+      },
+      "limitations": "Self-reported, no raw receipts or matched LlamaCode harness; different GPUs, backends, RAM, quantization and context from this evaluation. Do not use the claimed speed or quality as a local baseline."
+    },
+    "runtimeCaveat": {
+      "source": "https://github.com/Niko1221/Strata/issues/1616",
+      "finding": "A four-GPU sm_86 setup with a 12 GB card owning one layer had prompt chunk clamped and slower prefill on v0.1.41 than v0.1.38; the reported two-card 3090/5060 Ti and revised layer split avoided the one-layer stage.",
+      "evaluationAction": "Record detected layer split and auto prompt chunk for our two 24 GB RTX 3090s; keep Strata v0.1.41 identical for IQ3_XXS and IQ3_S."
+    }
+  },
+  "safety": {
+    "productionProfilesTouched": false,
+    "preExistingDirtyFile": "profiles/launches.json (preserved)",
+    "swiftModelLocation": "D:/ .Trash-1000/files/Strata-swift-20261003/ (not restored or modified)"
+  },
+  "setup": {
+    "setupScript": "Strata setup.sh v0.1.41",
+    "directPythonAttempt": {
+      "result": "failed before model preparation",
+      "reason": "PEP 668 externally-managed-environment because setup.py was called with system python"
+    },
+    "recovery": {
+      "result": "success",
+      "reason": "reran through setup.sh, which created source-local .venv and installed pinned dependencies"
+    },
+    "engine": {
+      "source": "local build",
+      "reason": "v0.1.41 release asset returned HTTP 404; setup built for detected GPU",
+      "cudaToolkit": "12.8.93",
+      "archs": [
+        86
+      ],
+      "buildManifest": "artifacts/qwen38-flashnext-iq3xxs-strata-20261009/engine-BUILD.json",
+      "sourceCommit": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf"
+    },
+    "packs": {
+      "iq3_xxs": "prepared",
+      "iq3_s": "prepared",
+      "mtp": "shared D copy verified with tools/mtp_fetch.py verify"
+    },
+    "modelServersStarted": 0,
+    "initialFreeBytes": 295032479744
+  }
+}
