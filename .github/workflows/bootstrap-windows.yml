@@ -1,0 +1,70 @@
+# Instalacion completa en una VM Windows nueva, tal como la corre un usuario:
+#   irm .../scripts/bootstrap.ps1 | iex
+# La VM no tiene Qt ni VS Build Tools en las rutas que mira el bootstrap, asi
+# que ejercita aqtinstall, la instalacion de Build Tools por winget, el clone
+# (paths largos / invalidos en NTFS), el build, windeployqt y el arranque.
+name: bootstrap-windows
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - scripts/bootstrap.ps1
+      - .github/workflows/bootstrap-windows.yml
+
+jobs:
+  install:
+    runs-on: windows-2025
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts/bootstrap.ps1
+          sparse-checkout-cone-mode: false
+
+      - name: Environment
+        shell: powershell
+        run: |
+          $PSVersionTable.PSVersion
+          winget --version
+          'Qt present: ' + (Test-Path 'C:\Qt\6.8.3\msvc2022_64')
+          'BuildTools present: ' + ((Test-Path 'C:\BuildTools2022') -or (Test-Path 'C:\Program Files\Microsoft Visual Studio\2022\BuildTools'))
+
+      # Mismo camino que el usuario: el contenido del script por iex dentro de
+      # Windows PowerShell 5.1. Bajo iex el bootstrap no sale con codigo de
+      # error (a proposito, para no cerrar la terminal): se lee $BootstrapFailed.
+      - name: Bootstrap (irm | iex)
+        shell: powershell
+        env:
+          LC_DIR: C:\Users\runneradmin\LlamaCode
+          LC_BRANCH: ${{ github.ref_name }}
+          LC_NORUN: '1'
+        run: |
+          Get-Content scripts\bootstrap.ps1 -Raw | iex
+          if ($BootstrapFailed -or -not (Test-Path "$env:LC_DIR\build\Debug\LlamaCode.exe")) {
+            Write-Host '::error::bootstrap failed'
+            exit 1
+          }
+
+      # El exe tiene que arrancar y seguir vivo: un deploy con las DLL
+      # equivocadas muere enseguida con 0xC0000135 (STATUS_DLL_NOT_FOUND).
+      - name: Launch smoke test
+        shell: powershell
+        run: |
+          $exe = 'C:\Users\runneradmin\LlamaCode\build\Debug\LlamaCode.exe'
+          $p = Start-Process $exe -WorkingDirectory (Split-Path $exe) -PassThru
+          if ($p.WaitForExit(45000)) {
+            Write-Host ("::error::LlamaCode exited early with code 0x{0:X8}" -f $p.ExitCode)
+            exit 1
+          }
+          "LlamaCode still running after 45s (pid $($p.Id))"
+          Stop-Process -Id $p.Id -Force
+
+      - name: Upload bootstrap log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bootstrap-log
+          path: C:\Users\runneradmin\AppData\Local\Temp\llamacode-bootstrap.log
+          if-no-files-found: ignore
