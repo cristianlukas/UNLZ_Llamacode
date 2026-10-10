@@ -67,6 +67,10 @@ $badPaths | Select-Object -First 5 | ForEach-Object { Write-Host "        $_" -F
 Check ($ps.Contains('git -c core.longpaths=true clone')) 'clona con core.longpaths (rutas > 260)'
 Check ($ps.Contains('git -C $Dir config core.longpaths true')) 'deja core.longpaths en el checkout para updates'
 
+# Debug enlaza Qt release en MSVC: windeployqt --debug deja el exe sin DLLs.
+Check (-not $ps.Contains("'--debug'")) 'no fuerza windeployqt --debug (Debug usa Qt release)'
+Check ($ps.Contains('windeployqt.exe" @DeployFlag')) 'en Debug deja que windeployqt detecte las DLL del exe'
+
 # Lado del app.
 Check ($app.Contains('installRootForExePath(QCoreApplication::applicationFilePath())')) 'el app calcula la raiz de instalacion'
 Check ($app -match '\$env:LC_DIR=') 'el app le pasa LC_DIR al bootstrap'

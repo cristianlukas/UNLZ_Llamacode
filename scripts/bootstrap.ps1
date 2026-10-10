@@ -296,9 +296,13 @@ try {
     $ExePath = Join-Path $ExeDir 'LlamaCode.exe'
     if (-not (Test-Path $ExePath)) { Die "Built exe missing at $ExePath" }
 
-    $DeployFlag = if ($Config -ieq 'Debug') { '--debug' } else { '--release' }
+    # En MSVC el Debug enlaza las DLL *release* de Qt (CMAKE_MAP_IMPORTED_CONFIG_DEBUG
+    # en CMakeLists.txt). Forzar --debug desplegaba Qt6*d.dll y el exe moria con
+    # STATUS_DLL_NOT_FOUND (0xC0000135) + ventanas de error de Qt. Igual que
+    # build.bat: en Debug sin flag, windeployqt detecta las DLL que importa el exe.
+    $DeployFlag = @(if ($Config -ieq 'Release') { '--release' })
     Info "Deploying Qt runtime..."
-    & "$QtDir\bin\windeployqt.exe" $DeployFlag --qmldir (Join-Path $Dir 'qml') --no-translations --compiler-runtime $ExePath
+    & "$QtDir\bin\windeployqt.exe" @DeployFlag --qmldir (Join-Path $Dir 'qml') --no-translations --compiler-runtime $ExePath
     if ($LASTEXITCODE -ne 0) { Die "windeployqt failed with exit code $LASTEXITCODE." }
     # Qt.labs.settings is not always picked up by windeployqt.
     $LabsSrc = "$QtDir\qml\Qt\labs\settings"
