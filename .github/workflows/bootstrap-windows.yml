@@ -83,7 +83,7 @@ jobs:
         run: |
           $env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')
           Get-Content scripts\bootstrap.ps1 -Raw | iex
-          if ($BootstrapFailed -or -not (Test-Path "$env:LC_DIR\build\Debug\LlamaCode.exe")) {
+          if ($BootstrapFailed -or -not (Test-Path "$env:LC_DIR\build\Release\LlamaCode.exe")) {
             Write-Host '::error::bootstrap failed'
             exit 1
           }
@@ -93,7 +93,7 @@ jobs:
       - name: Launch smoke test
         shell: powershell
         run: |
-          $exe = 'C:\Users\runneradmin\LlamaCode\build\Debug\LlamaCode.exe'
+          $exe = 'C:\Users\runneradmin\LlamaCode\build\Release\LlamaCode.exe'
           $p = Start-Process $exe -WorkingDirectory (Split-Path $exe) -PassThru
           if ($p.WaitForExit(45000)) {
             Write-Host ("::error::LlamaCode exited early with code 0x{0:X8}" -f $p.ExitCode)

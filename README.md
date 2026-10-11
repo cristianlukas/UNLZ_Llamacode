@@ -95,7 +95,7 @@ Variables opcionales (setear antes de correr):
 | `LC_DIR` | `%USERPROFILE%\LlamaCode` (Windows) / `~/LlamaCode` (Linux) | carpeta de instalación |
 | `LC_BRANCH` | `main` | rama a clonar o actualizar |
 | `LC_REF` | (vacío) | tag inmutable de release a instalar, por ejemplo `v0.1.118-debug` |
-| `LC_CONFIG` | `Debug` | `Debug` (release candidate) o `Release` (estable) |
+| `LC_CONFIG` | `Release` | `Release` (canal Prod, estable) o `Debug` (canal de prerelease) |
 | `LC_QTVER` | `6.8.3` | versión de Qt (sólo Linux) |
 | `LC_QTROOT` | `~/Qt` | raíz de instalación de Qt (sólo Linux) |
 | `LC_NORUN` | (vacío) | `1` = no lanzar al terminar |

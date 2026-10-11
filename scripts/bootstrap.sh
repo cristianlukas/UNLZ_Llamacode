@@ -14,7 +14,7 @@
 # Override defaults via env vars:
 #   LC_DIR=/path/to/install   (default: $HOME/LlamaCode)
 #   LC_BRANCH=main
-#   LC_CONFIG=Debug           (Debug default; Release is the stable channel)
+#   LC_CONFIG=Release         (Release default = canal Prod estable; Debug = prerelease)
 #   LC_QTVER=6.8.3
 #   LC_QTROOT=$HOME/Qt
 #   LC_NORUN=1                (skip launching)
@@ -24,7 +24,8 @@ set -euo pipefail
 REPO="https://github.com/cristianlukas/UNLZ_Llamacode.git"
 DIR="${LC_DIR:-$HOME/LlamaCode}"
 BRANCH="${LC_BRANCH:-main}"
-CONFIG="${LC_CONFIG:-Debug}"
+CONFIG="${LC_CONFIG:-Release}"
+[[ "$CONFIG" == Debug || "$CONFIG" == Release ]] || c_die "LC_CONFIG must be Debug or Release."
 QTVER="${LC_QTVER:-6.8.3}"
 QTROOT="${LC_QTROOT:-$HOME/Qt}"
 

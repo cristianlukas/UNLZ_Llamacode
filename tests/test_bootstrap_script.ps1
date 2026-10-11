@@ -86,6 +86,10 @@ Check ($sh -match 'dbus libpulse libsecret') 'pacman instala libpulse'
 # La app no hereda la terminal: si no, su log ensucia el prompt y muere al cerrarla.
 Check ($sh.Contains('setsid nohup "$EXE" ) >"$APP_LOG" 2>&1 </dev/null &')) 'bootstrap.sh lanza la app desacoplada de la terminal (redireccion sobre todo el bloque)'
 
+# El instalador por defecto instala Prod (Release); Debug es opt-in (LC_CONFIG=Debug).
+Check ($ps.Contains("`$Config  = if (`$env:LC_CONFIG) { `$env:LC_CONFIG } else { 'Release' }")) 'bootstrap.ps1 instala Release (Prod) por defecto'
+Check ($sh.Contains('CONFIG="${LC_CONFIG:-Release}"')) 'bootstrap.sh instala Release (Prod) por defecto'
+
 # Lado del app.
 Check ($app.Contains('installRootForExePath(QCoreApplication::applicationFilePath())')) 'el app calcula la raiz de instalacion'
 Check ($app -match '\$env:LC_DIR=') 'el app le pasa LC_DIR al bootstrap'

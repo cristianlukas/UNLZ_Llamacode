@@ -87,7 +87,7 @@ Optional variables (set before running):
 |---|---|---|
 | `LC_DIR` | `~/LlamaCode` | isolated install folder |
 | `LC_BRANCH` | `main` | branch to clone |
-| `LC_CONFIG` | `Debug` | `Debug` (release candidate) or `Release` (stable) |
+| `LC_CONFIG` | `Release` | `Release` (Prod channel, stable) or `Debug` (prerelease channel) |
 | `LC_QTVER` | `6.8.3` | Qt version (Linux only) |
 | `LC_QTROOT` | `~/Qt` | Qt install root (Linux only) |
 | `LC_NORUN` | (empty) | `1` = don't launch when done |

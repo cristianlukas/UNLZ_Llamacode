@@ -15,7 +15,7 @@
       $env:LC_DIR     = "C:\path\to\install"   # default: %USERPROFILE%\LlamaCode
       $env:LC_BRANCH  = "main"
       $env:LC_REF     = "v0.1.118-debug"         # optional immutable release tag
-      $env:LC_CONFIG  = "Debug"                 # Debug (default) | Release
+      $env:LC_CONFIG  = "Release"               # Release (default, canal Prod) | Debug
       $env:LC_NORUN   = "1"                      # skip launching at the end
 #>
 
@@ -27,7 +27,9 @@ $Repo    = 'https://github.com/cristianlukas/UNLZ_Llamacode.git'
 $Dir     = if ($env:LC_DIR)    { $env:LC_DIR }    else { Join-Path $env:USERPROFILE 'LlamaCode' }
 $Branch  = if ($env:LC_BRANCH) { $env:LC_BRANCH } else { 'main' }
 $Ref     = if ($env:LC_REF)    { $env:LC_REF }    else { '' }
-$Config  = if ($env:LC_CONFIG) { $env:LC_CONFIG } else { 'Debug' }
+# Por defecto se instala Prod (Release): es el canal estable. Debug es el canal
+# de prerelease y se pide explicitamente con LC_CONFIG=Debug.
+$Config  = if ($env:LC_CONFIG) { $env:LC_CONFIG } else { 'Release' }
 $QtVer   = '6.8.3'
 $QtArch  = 'win64_msvc2022_64'
 $QtDir   = "C:\Qt\$QtVer\msvc2022_64"
