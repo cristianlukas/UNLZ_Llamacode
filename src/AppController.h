@@ -2153,7 +2153,8 @@ private:
     void        stopIdleWatchdog();
     void        wireGatewayHooks();
     void        gatewayEnsureModel(const QString &name);
-    QVariantMap resolveAstraStrataSetup(bool persistDiscoveredPaths = true);
+    QVariantMap resolveAstraStrataSetup(const QString &launchProfileId,
+                                        bool persistDiscoveredPaths = true);
     int       m_agentContextUsed = 0;
     int       m_agentContextLimit = -1;
     int       m_agentContextTranscript = 0;

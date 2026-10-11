@@ -5164,11 +5164,71 @@
         "comment": "A/B experimental sobre el mismo GGUF y contexto del perfil layer. Probar sólo después de validar el perfil layer: tensor split depende de la build/runtime y la configuración exacta de Genesis aún no está validada. La variante usa el límite de cache-ram ya validado en los perfiles tensor locales. No promover antes de comparar contra SOL."
     },
     {
+        "id": "sys-astra-iq3s-calibrated-hardmode",
+        "tier": "ASTRA-Strata",
+        "order": 498,
+        "extra": true,
+        "benchmark": true,
+        "best": false,
+        "favorite": false,
+        "alias": "ASTRA IQ3_S calibrado",
+        "displayName": "[A/B Hard Mode] ASTRA IQ3_S calibrado · Strata · 131K",
+        "minVramGb": 12,
+        "backend": {
+            "kind": "cloud",
+            "baseUrl": "http://127.0.0.1:8350",
+            "model": "qwen3.8-flash-next-astra-iq3_s-calibrated",
+            "ctx": 131072,
+            "port": 8350,
+            "managedServer": {
+                "type": "astra-strata",
+                "port": 8350,
+                "configSetting": "astra/configFile/sys-astra-iq3s-calibrated-hardmode",
+                "expectedModelName": "qwen3.8-flash-next-astra-iq3_s-calibrated",
+                "allowLegacyConfigFallback": false
+            }
+        },
+        "agentProfileId": "agent-maximo",
+        "reasoningEffort": "medium",
+        "reasoningBudget": 8192,
+        "comment": "Perfil exacto IQ3_S calibrado de la comparación Hard Mode v2.8.0: 28 tareas × 3 semillas; media observada 71,43/100. Strata 0.1.41, contexto 131072, KV int8/resident 32768, spec 4, spec-min-p 0.70, GPUs 0/1, split auto y sampling temp 0.6/top-p 0.95/top-k 20/min-p 0/repeat 1/presence 0. TPS observado en esa carga: 133,1 de media (133,7 mediana), 13 min 09 s de las corridas. La suite usa herramientas simuladas; no es una recomendación global. Requiere Strata instalado y un JSON IQ3_S que coincida con el model_name esperado; root y JSON se configuran en Ajustes → ASTRA."
+    },
+    {
+        "id": "sys-flashnext-q4-strata-hardmode",
+        "tier": "Qwen3.8-Flash-Next",
+        "order": 499,
+        "extra": true,
+        "benchmark": true,
+        "best": false,
+        "favorite": false,
+        "alias": "Flash-Next Q4",
+        "displayName": "[A/B Hard Mode] Flash-Next Q4 · Strata · 131K",
+        "minVramGb": 12,
+        "backend": {
+            "kind": "cloud",
+            "baseUrl": "http://127.0.0.1:8350",
+            "model": "qwen3.8-flash-next-unsloth-ud-q4_k_xl",
+            "ctx": 131072,
+            "port": 8350,
+            "managedServer": {
+                "type": "astra-strata",
+                "port": 8350,
+                "configSetting": "astra/configFile/sys-flashnext-q4-strata-hardmode",
+                "expectedModelName": "qwen3.8-flash-next-unsloth-ud-q4_k_xl",
+                "allowLegacyConfigFallback": false
+            }
+        },
+        "agentProfileId": "agent-maximo",
+        "reasoningEffort": "medium",
+        "reasoningBudget": 8192,
+        "comment": "Perfil de comparación del Hard Mode v2.8.0: 28 tareas × 3 semillas; media observada 77,38/100. Strata 0.1.41, Qwen3.8 Flash-Next UD-Q4_K_XL, contexto 131072, KV int8/resident 32768, spec 4, spec-min-p 0.70, GPUs 0/1, split 18 y sampling temp 0.6/top-p 0.95/top-k 20/min-p 0/repeat 1/presence 0. TPS observado en esa carga: 65,3 de media (64,9 mediana), 27 min 28 s de las corridas. La suite usa herramientas simuladas; no es una recomendación global. Seleccioná el JSON Q4 exacto en Ajustes → ASTRA para que este perfil no reutilice el JSON de IQ3_S."
+    },
+    {
         "id": "sys-astra-strata-iq3s",
         "tier": "ASTRA-Strata",
         "order": 500,
         "extra": true,
-        "benchmark": false,
+        "benchmark": true,
         "best": false,
         "favorite": false,
         "alias": "ASTRA Strata",

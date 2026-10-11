@@ -30,6 +30,33 @@ descarga esos archivos.
 También se pueden configurar `ASTRA_STRATA_ROOT` y `ASTRA_STRATA_CONFIG` antes
 de iniciar LlamaCode; los valores de Ajustes tienen prioridad.
 
+## Perfiles de la comparación Hard Mode
+
+LlamaCode incluye dos perfiles Strata separados para reproducir el A/B: **[A/B
+Hard Mode] ASTRA IQ3_S calibrado · Strata · 131K** y **[A/B Hard Mode]
+Flash-Next Q4 · Strata · 131K**. El perfil ASTRA estándar anterior sigue
+separado. Cada perfil A/B valida el `model_name` del JSON antes de declararse
+listo y tiene su propia clave de configuración. Configurá ambos JSON en Ajustes;
+podés usar los archivos `astra-iq3s-strata.json` y `q4-udq4kxl-main.json`
+guardados junto a los resultados de la evaluación.
+
+El control **SOL** ya está disponible como `177_SOL · Qwen3.8 27B · vLLM TP2 P2P
+MTP4 · 262K`, con su backend Linux vLLM y Compose. Los resultados observados en
+Hard Mode v2.8.0 fueron:
+
+| Perfil | Media (28 tareas × 3 semillas) | TPS observados | Tiempo de las corridas |
+|---|---:|---:|---:|
+| Flash-Next Q4 · Strata | 77,38/100 | 65,3 media; 64,9 mediana | 27 min 28 s |
+| ASTRA IQ3_S calibrado · Strata | 71,43/100 | 133,1 media; 133,7 mediana | 13 min 09 s |
+| SOL · vLLM | 66,07/100 | 70,2 media; 77,6 mediana | 18 min 40 s |
+
+Son resultados de una suite de uso de herramientas simuladas, no un ranking
+general. SOL corre con vLLM y los otros dos con Strata, así que los TPS describen
+esas cargas completas y no aíslan el rendimiento de los pesos. Los tiempos son
+de ejecución de las tres corridas, sin incluir el arranque del servidor. El
+[informe y la evidencia por escenario](../artifacts/evaluacion-modelos-llamacode/Q-20261010-FRONTIER-MULTITASK-AB/RESULTS.md)
+conservan el detalle y las limitaciones.
+
 ## Iniciar y detener
 
 Elegí **ASTRA · Strata IQ3_S · Qwen3.8 Flash Next** en Lanzar. El perfil queda

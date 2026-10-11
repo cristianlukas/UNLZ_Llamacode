@@ -125,6 +125,10 @@ void SystemProfilesTests::initTestCase()
     qunsetenv("STRATA_CONFIG");
     QSettings().remove(QStringLiteral("astra/strataRoot"));
     QSettings().remove(QStringLiteral("astra/configFile"));
+    QSettings().remove(QStringLiteral(
+        "astra/configFile/sys-astra-iq3s-calibrated-hardmode"));
+    QSettings().remove(QStringLiteral(
+        "astra/configFile/sys-flashnext-q4-strata-hardmode"));
     QSettings().remove(QStringLiteral("gateway/enabled"));
     QSettings().remove(QStringLiteral("gateway/lanEnabled"));
     const QString bundle = bundlePath();
@@ -3055,6 +3059,8 @@ void SystemProfilesTests::controller_astraStrataIsListedAndRequiresLocalSetup()
         QStringLiteral("--vision")
     };
     QJsonObject configObject{
+        {QStringLiteral("model_name"),
+         QStringLiteral("qwen3.8-flash-next-astra-iq3_s-calibrated")},
         {QStringLiteral("exe"), enginePath},
         {QStringLiteral("cwd"), strataRoot},
         {QStringLiteral("tokenizer"), tokenizerDir},
@@ -3070,13 +3076,35 @@ void SystemProfilesTests::controller_astraStrataIsListedAndRequiresLocalSetup()
         QStringLiteral("strata-iq3_s-calibrated-retest-fixture.json"));
     QVERIFY(writeFile(configPath, QJsonDocument(configObject).toJson()));
 
+    QJsonObject q4ConfigObject = configObject;
+    q4ConfigObject.insert(QStringLiteral("model_name"),
+                          QStringLiteral("qwen3.8-flash-next-unsloth-ud-q4_k_xl"));
+    QJsonArray q4Args{
+        QStringLiteral("--pack"), packDir,
+        QStringLiteral("--native"), nativePath,
+        QStringLiteral("--expert-profile"), expertPath,
+        QStringLiteral("--mtp"), mtpDir
+    };
+    q4ConfigObject.insert(QStringLiteral("args"), q4Args);
+    const QString q4ConfigPath = QDir(strataRoot).filePath(
+        QStringLiteral("q4-udq4kxl-main-fixture.json"));
+    QVERIFY(writeFile(q4ConfigPath, QJsonDocument(q4ConfigObject).toJson()));
+
     AppController app;
     app.setHardwareSummaryForTest(24.0, 128.0,
                                   QStringLiteral("NVIDIA GeForce RTX 3090"), 48.0, 2);
     const QVariantList menu = app.launchMenu();
     bool found = false;
+    bool foundAstraBenchNotReady = false;
+    bool foundQ4NotReady = false;
     for (const QVariant &value : menu) {
         const QVariantMap item = value.toMap();
+        if (item.value(QStringLiteral("id")).toString()
+                == QStringLiteral("sys-astra-iq3s-calibrated-hardmode"))
+            foundAstraBenchNotReady = !item.value(QStringLiteral("ready")).toBool();
+        if (item.value(QStringLiteral("id")).toString()
+                == QStringLiteral("sys-flashnext-q4-strata-hardmode"))
+            foundQ4NotReady = !item.value(QStringLiteral("ready")).toBool();
         if (item.value(QStringLiteral("id")).toString()
                 != QStringLiteral("sys-astra-strata-iq3s"))
             continue;
@@ -3087,6 +3115,8 @@ void SystemProfilesTests::controller_astraStrataIsListedAndRequiresLocalSetup()
         break;
     }
     QVERIFY(found);
+    QVERIFY(foundAstraBenchNotReady);
+    QVERIFY(foundQ4NotReady);
     const QVariantMap launch = app.profileManager()->getLaunchProfile(
         QStringLiteral("sys-astra-strata-iq3s"));
     QVERIFY(!launch.isEmpty());
@@ -3095,6 +3125,29 @@ void SystemProfilesTests::controller_astraStrataIsListedAndRequiresLocalSetup()
     QCOMPARE(backend.value(QStringLiteral("managedServer")).toMap()
                  .value(QStringLiteral("type")).toString(),
              QStringLiteral("astra-strata"));
+    const QString astraBenchId = QStringLiteral("sys-astra-iq3s-calibrated-hardmode");
+    const QVariantMap astraBenchLaunch = app.profileManager()->getLaunchProfile(astraBenchId);
+    QVERIFY(!astraBenchLaunch.isEmpty());
+    QVERIFY(astraBenchLaunch.value(QStringLiteral("benchmark")).toBool());
+    QVERIFY(!astraBenchLaunch.value(QStringLiteral("best")).toBool());
+    const QVariantMap astraBenchBackend = app.profileManager()->getBackend(
+        astraBenchLaunch.value(QStringLiteral("backendProfileId")).toString());
+    const QVariantMap astraBenchManaged =
+        astraBenchBackend.value(QStringLiteral("managedServer")).toMap();
+    QCOMPARE(astraBenchManaged.value(QStringLiteral("expectedModelName")).toString(),
+             QStringLiteral("qwen3.8-flash-next-astra-iq3_s-calibrated"));
+    const QString q4Id = QStringLiteral("sys-flashnext-q4-strata-hardmode");
+    const QVariantMap q4Launch = app.profileManager()->getLaunchProfile(q4Id);
+    QVERIFY(!q4Launch.isEmpty());
+    QVERIFY(q4Launch.value(QStringLiteral("benchmark")).toBool());
+    QVERIFY(!q4Launch.value(QStringLiteral("best")).toBool());
+    const QVariantMap q4Backend = app.profileManager()->getBackend(
+        q4Launch.value(QStringLiteral("backendProfileId")).toString());
+    const QVariantMap q4Managed = q4Backend.value(QStringLiteral("managedServer")).toMap();
+    QCOMPARE(q4Managed.value(QStringLiteral("configSetting")).toString(),
+             QStringLiteral("astra/configFile/sys-flashnext-q4-strata-hardmode"));
+    QCOMPARE(q4Managed.value(QStringLiteral("expectedModelName")).toString(),
+             QStringLiteral("qwen3.8-flash-next-unsloth-ud-q4_k_xl"));
 
     // Sin indicar root/config manualmente, la app localiza la instalación
     // completa, guarda las rutas y la agrega al catálogo LAN.
@@ -3108,6 +3161,26 @@ void SystemProfilesTests::controller_astraStrataIsListedAndRequiresLocalSetup()
     QVERIFY(readyAfterSetup);
     QCOMPARE(app.readSetting(QStringLiteral("astra/strataRoot")).toString(), strataRoot);
     QCOMPARE(app.readSetting(QStringLiteral("astra/configFile")).toString(), configPath);
+
+    // El perfil Q4 recibe un JSON distinto y comprueba el model_name; no toma
+    // el JSON IQ3_S heredado. También confirma que --ple-gguf es opcional.
+    QSettings().setValue(
+        QStringLiteral("astra/configFile/sys-astra-iq3s-calibrated-hardmode"), configPath);
+    QSettings().setValue(
+        QStringLiteral("astra/configFile/sys-flashnext-q4-strata-hardmode"), q4ConfigPath);
+    bool astraBenchReady = false;
+    bool q4Ready = false;
+    for (const QVariant &value : app.launchMenu()) {
+        const QVariantMap item = value.toMap();
+        if (item.value(QStringLiteral("id")).toString()
+                == QStringLiteral("sys-astra-iq3s-calibrated-hardmode"))
+            astraBenchReady = item.value(QStringLiteral("ready")).toBool();
+        if (item.value(QStringLiteral("id")).toString()
+                == QStringLiteral("sys-flashnext-q4-strata-hardmode"))
+            q4Ready = item.value(QStringLiteral("ready")).toBool();
+    }
+    QVERIFY(astraBenchReady);
+    QVERIFY(q4Ready);
     QSignalSpy readinessSpy(&app, &AppController::launchMenuReadinessChanged);
     app.refreshLaunchMenuReadiness();
     QTRY_VERIFY_WITH_TIMEOUT(readinessSpy.count() > 0, 30000);

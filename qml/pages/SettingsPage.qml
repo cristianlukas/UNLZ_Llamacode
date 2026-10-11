@@ -512,7 +512,7 @@ Item {
                                 }
                                 Text {
                                     Layout.fillWidth: true
-                                    text: "LlamaCode inicia, supervisa y detiene Strata junto con el resto de motores. Instalá Strata y elegí su carpeta; el archivo de configuración del modelo puede quedar vacío para usar strata-iq3_s.json dentro de esa carpeta."
+                                    text: "LlamaCode inicia, supervisa y detiene Strata. La carpeta del motor es común; cada perfil tiene su propio JSON para evitar mezclar IQ3_S calibrado con Flash-Next Q4."
                                     color: Theme.textMuted
                                     font.pixelSize: 11
                                     wrapMode: Text.WordWrap
@@ -528,7 +528,7 @@ Item {
                                     onEditingFinished: App.writeSetting("astra/strataRoot", text.trim())
                                 }
 
-                                Text { text: "Configuración del modelo (opcional)"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                Text { text: "JSON · Perfil ASTRA IQ3_S estándar"; color: Theme.textSecondary; font.pixelSize: 12 }
                                 LcTextField {
                                     id: astraConfigFile
                                     Layout.fillWidth: true
@@ -536,6 +536,35 @@ Item {
                                     placeholderText: "<carpeta de Strata>/strata-iq3_s.json"
                                     Component.onCompleted: text = App.readSetting("astra/configFile", "")
                                     onEditingFinished: App.writeSetting("astra/configFile", text.trim())
+                                }
+                                Text { text: "JSON exacto · A/B ASTRA IQ3_S calibrado"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                LcTextField {
+                                    id: astraCalibratedConfigFile
+                                    Layout.fillWidth: true
+                                    enabled: !App.serverRunning
+                                    placeholderText: "<ruta local>/astra-iq3s-strata.json"
+                                    Component.onCompleted: text = App.readSetting(
+                                        "astra/configFile/sys-astra-iq3s-calibrated-hardmode", "")
+                                    onEditingFinished: App.writeSetting(
+                                        "astra/configFile/sys-astra-iq3s-calibrated-hardmode", text.trim())
+                                }
+                                Text { text: "JSON exacto · Flash-Next Q4"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                LcTextField {
+                                    id: flashNextQ4ConfigFile
+                                    Layout.fillWidth: true
+                                    enabled: !App.serverRunning
+                                    placeholderText: "<ruta local>/q4-udq4kxl-main.json"
+                                    Component.onCompleted: text = App.readSetting(
+                                        "astra/configFile/sys-flashnext-q4-strata-hardmode", "")
+                                    onEditingFinished: App.writeSetting(
+                                        "astra/configFile/sys-flashnext-q4-strata-hardmode", text.trim())
+                                }
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: "Los dos perfiles A/B verifican el model_name del JSON antes de arrancar y no heredan la ruta del perfil estándar ni la del otro modelo."
+                                    color: Theme.textMuted
+                                    font.pixelSize: 10
+                                    wrapMode: Text.WordWrap
                                 }
                                 Text { text: "Puerto local"; color: Theme.textSecondary; font.pixelSize: 12 }
                                 LcTextField {
@@ -557,7 +586,7 @@ Item {
                                 }
                                 Text {
                                     Layout.fillWidth: true
-                                    text: "Strata escucha sólo en 127.0.0.1. Para compartir el perfil, elegilo en Lanzar y usá Iniciar servidor LAN; LlamaCode lo publica por el Gateway autenticado. También acepta ASTRA_STRATA_ROOT y ASTRA_STRATA_CONFIG."
+                                    text: "Strata escucha sólo en 127.0.0.1. Para compartir el perfil, elegilo en Lanzar y usá Iniciar servidor LAN; LlamaCode lo publica por el Gateway autenticado. ASTRA_STRATA_ROOT configura el motor; ASTRA_STRATA_CONFIG queda como fallback para IQ3_S."
                                     color: Theme.textMuted
                                     font.pixelSize: 10
                                     wrapMode: Text.WordWrap

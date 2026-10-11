@@ -165,12 +165,17 @@ static QString resolvedStrataPath(QString path, const QString &base)
     return QDir::cleanPath(QFileInfo(path).absoluteFilePath());
 }
 
-static bool strataConfigInputsReady(const QString &root, const QString &configPath)
+static bool strataConfigInputsReady(const QString &root, const QString &configPath,
+                                    const QString &expectedModelName = {})
 {
     QFile configFile(configPath);
     if (!configFile.open(QIODevice::ReadOnly)) return false;
     const QJsonObject config = QJsonDocument::fromJson(configFile.readAll()).object();
     if (config.isEmpty()) return false;
+    if (!expectedModelName.isEmpty()
+        && config.value(QStringLiteral("model_name")).toString().trimmed()
+               != expectedModelName)
+        return false;
 
     const QString exeValue = config.value(QStringLiteral("exe")).toString().trimmed();
     const QString cwdValue = config.value(QStringLiteral("cwd")).toString().trimmed();
@@ -206,11 +211,9 @@ static bool strataConfigInputsReady(const QString &root, const QString &configPa
             return false;
     }
 
-    // IQ3_S Strata necesita el pack, ambos shards/pesos, el perfil experto y
-    // los datos MTP. Un JSON que sólo exista pero apunte a una instalación
-    // parcial no debe anunciarse como modelo disponible en la LAN.
+    // Todos los perfiles Strata necesitan pack, pesos nativos, perfil experto
+    // y MTP. PLE es opcional: IQ3_S lo usa como segundo shard y Q4 no.
     for (const QString &required : {QStringLiteral("--pack"), QStringLiteral("--native"),
-                                    QStringLiteral("--ple-gguf"),
                                     QStringLiteral("--expert-profile"),
                                     QStringLiteral("--mtp")}) {
         if (!foundPathFlags.contains(required)) return false;
@@ -267,7 +270,8 @@ static QStringList strataConfigsForRoot(const QString &root)
 
 static AstraStrataSetup findStrataSetup(const QString &path, int depth, int *visited,
                                         QSet<QString> *seen,
-                                        const QString &preferredConfig)
+                                        const QString &preferredConfig,
+                                        const QString &expectedModelName)
 {
     if (!visited || !seen || ++(*visited) > 1500) return {};
     const QFileInfo info(path);
@@ -284,7 +288,7 @@ static AstraStrataSetup findStrataSetup(const QString &path, int depth, int *vis
         for (const QString &config : strataConfigsForRoot(key))
             if (!configs.contains(config)) configs.append(config);
         for (const QString &config : configs) {
-            if (!strataConfigInputsReady(key, config)) continue;
+            if (!strataConfigInputsReady(key, config, expectedModelName)) continue;
 #ifdef Q_OS_WIN
             const QString python = QDir(key).filePath(QStringLiteral(".venv/Scripts/python.exe"));
 #else
@@ -321,7 +325,8 @@ static AstraStrataSetup findStrataSetup(const QString &path, int depth, int *vis
             && name != QLatin1String(".cache"))
             continue;
         const AstraStrataSetup found = findStrataSetup(
-            child.absoluteFilePath(), depth - 1, visited, seen, preferredConfig);
+            child.absoluteFilePath(), depth - 1, visited, seen, preferredConfig,
+            expectedModelName);
         if (found.ready()) return found;
         if (*visited > 1500) break;
     }
@@ -351,7 +356,8 @@ static QStringList strataSearchRoots()
 }
 
 static AstraStrataSetup discoverAstraStrataSetup(const QString &configuredRoot,
-                                                 const QString &configuredConfig)
+                                                 const QString &configuredConfig,
+                                                 const QString &expectedModelName)
 {
     const QString preferredRoot = configuredRoot.trimmed();
     const QString preferredConfig = configuredConfig.trimmed();
@@ -363,7 +369,7 @@ static AstraStrataSetup discoverAstraStrataSetup(const QString &configuredRoot,
         for (const QString &config : strataConfigsForRoot(root))
             if (!configs.contains(config)) configs.append(config);
         for (const QString &config : configs) {
-            if (!strataConfigInputsReady(root, config)) continue;
+            if (!strataConfigInputsReady(root, config, expectedModelName)) continue;
 #ifdef Q_OS_WIN
             const QString python = QDir(root).filePath(QStringLiteral(".venv/Scripts/python.exe"));
 #else
@@ -390,14 +396,15 @@ static AstraStrataSetup discoverAstraStrataSetup(const QString &configuredRoot,
     for (const QString &searchRoot : strataSearchRoots()) {
         const int depth = searchRoot == cacheRoot ? 4 : (searchRoot == documentsRoot ? 3 : 2);
         const AstraStrataSetup found = findStrataSetup(
-            searchRoot, depth, &visited, &seen, preferredConfig);
+            searchRoot, depth, &visited, &seen, preferredConfig, expectedModelName);
         if (found.ready()) return found;
         if (visited > 1500) break;
     }
 
     return {{}, {}, {}, {}, QStringLiteral(
-        "No encontré una instalación Strata IQ3_S completa. Busqué en la caché de usuario, "
-        "Documentos y volúmenes montados; configurá la carpeta o el JSON en Ajustes → ASTRA.")};
+        "No encontré una instalación Strata completa con el modelo/configuración esperados. "
+        "Busqué en la caché de usuario, Documentos y volúmenes montados; configurá la "
+        "carpeta de Strata y el JSON de este perfil en Ajustes → ASTRA.")};
 }
 
 bool hasOption(const QStringList &args, const QString &longName,
@@ -2642,7 +2649,7 @@ void AppController::startServer(const QString &launchProfileId)
     }
 
     if (isAstraStrata) {
-        const QVariantMap setup = resolveAstraStrataSetup(true);
+        const QVariantMap setup = resolveAstraStrataSetup(launchProfileId, true);
         if (!setup.value(QStringLiteral("ready")).toBool()) {
             emit serverError(setup.value(QStringLiteral("error")).toString());
             setServerState(QStringLiteral("failed"));
@@ -11895,7 +11902,8 @@ void AppController::writeSetting(const QString &key, const QVariant &value)
     QSettings s;
     s.setValue(key, value);
     if (key == QLatin1String("astra/strataRoot")
-        || key == QLatin1String("astra/configFile"))
+        || key == QLatin1String("astra/configFile")
+        || key.startsWith(QLatin1String("astra/configFile/")))
         emit astraConfigurationChanged();
 }
 
@@ -15668,19 +15676,46 @@ QVariantMap AppController::recommendedSystemProfile() const
     };
 }
 
-QVariantMap AppController::resolveAstraStrataSetup(bool persistDiscoveredPaths)
+QVariantMap AppController::resolveAstraStrataSetup(const QString &launchProfileId,
+                                                  bool persistDiscoveredPaths)
 {
     const QString storedRoot = readSetting(QStringLiteral("astra/strataRoot")).toString().trimmed();
-    const QString storedConfig = readSetting(QStringLiteral("astra/configFile")).toString().trimmed();
+    const BackendProfile backend = buildContext(launchProfileId).backend;
+    const QJsonObject managed = backend.managedServer;
+    QString configSetting = managed.value(QStringLiteral("configSetting")).toString().trimmed();
+    if (configSetting.isEmpty())
+        configSetting = QStringLiteral("astra/configFile");
+    QString storedConfig = readSetting(configSetting).toString().trimmed();
+    if (storedConfig.isEmpty())
+        storedConfig = managed.value(QStringLiteral("configFile")).toString().trimmed();
+    const QString expectedModelName = managed.value(QStringLiteral("expectedModelName"))
+                                         .toString().trimmed();
     const QString envRoot = QString::fromLocal8Bit(qgetenv("ASTRA_STRATA_ROOT")).trimmed().isEmpty()
         ? QString::fromLocal8Bit(qgetenv("STRATA_ROOT")).trimmed()
         : QString::fromLocal8Bit(qgetenv("ASTRA_STRATA_ROOT")).trimmed();
     const QString envConfig = QString::fromLocal8Bit(qgetenv("ASTRA_STRATA_CONFIG")).trimmed().isEmpty()
         ? QString::fromLocal8Bit(qgetenv("STRATA_CONFIG")).trimmed()
         : QString::fromLocal8Bit(qgetenv("ASTRA_STRATA_CONFIG")).trimmed();
+    const bool allowLegacyConfigFallback = managed.value(
+        QStringLiteral("allowLegacyConfigFallback")).toBool(true);
+    if (!expectedModelName.isEmpty() && !allowLegacyConfigFallback
+        && storedConfig.isEmpty()) {
+        return {
+            {QStringLiteral("ready"), false},
+            {QStringLiteral("root"), storedRoot},
+            {QStringLiteral("config"), QString()},
+            {QStringLiteral("python"), QString()},
+            {QStringLiteral("serverScript"), QString()},
+            {QStringLiteral("error"), QStringLiteral(
+                "Este perfil necesita su JSON exacto. Configuralo en Ajustes → ASTRA; "
+                "no reutiliza el JSON de otro modelo.")}
+        };
+    }
+    const QString configuredConfig = !storedConfig.isEmpty() ? storedConfig
+        : (allowLegacyConfigFallback ? envConfig : QString());
     const AstraStrataSetup setup = discoverAstraStrataSetup(
         storedRoot.isEmpty() ? envRoot : storedRoot,
-        storedConfig.isEmpty() ? envConfig : storedConfig);
+        configuredConfig, expectedModelName);
     QVariantMap result{
         {QStringLiteral("ready"), setup.ready()},
         {QStringLiteral("root"), setup.root},
@@ -15696,8 +15731,8 @@ QVariantMap AppController::resolveAstraStrataSetup(bool persistDiscoveredPaths)
     // se pasó explícitamente entonces para que UI, readiness y Gateway coincidan.
     if (storedRoot.isEmpty() && envRoot.isEmpty())
         writeSetting(QStringLiteral("astra/strataRoot"), setup.root);
-    if (storedConfig.isEmpty() && envConfig.isEmpty())
-        writeSetting(QStringLiteral("astra/configFile"), setup.config);
+    if (storedConfig.isEmpty() && configuredConfig.isEmpty())
+        writeSetting(configSetting, setup.config);
     return result;
 }
 
@@ -15713,7 +15748,8 @@ bool AppController::systemProfileReady(const QString &launchId)
     // only when the Strata installation needed by startServer exists.
     if (ctx.backend.managedServer.value(QStringLiteral("type")).toString()
             == QLatin1String("astra-strata"))
-        return resolveAstraStrataSetup(true).value(QStringLiteral("ready")).toBool();
+        return resolveAstraStrataSetup(launchId, true)
+            .value(QStringLiteral("ready")).toBool();
     return true;
 }
 
