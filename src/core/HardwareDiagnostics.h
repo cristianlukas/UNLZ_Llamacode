@@ -10,6 +10,9 @@ class HardwareDiagnostics
 {
 public:
     static QVariantList parseNvidiaSmiCsv(const QString &csv);
+    // /proc/meminfo -> GB de RAM total (0 si no hay MemTotal). Linux no tenia
+    // probe de RAM: el resumen de hardware mostraba "? GB RAM".
+    static double parseMemTotalGb(const QString &meminfo);
     static QVariantMap parseTopologyMatrix(const QString &text);
     // `topo -m` describes the physical route; `topo -p2p r|w` reports
     // whether CUDA peer transfers are actually available.

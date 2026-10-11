@@ -71,6 +71,16 @@ QStringList stringListValue(const QVariantMap &map, const QString &key)
 
 }  // namespace
 
+double HardwareDiagnostics::parseMemTotalGb(const QString &meminfo)
+{
+    static const QRegularExpression re(
+        QStringLiteral("^MemTotal:\\s+(\\d+)\\s*kB"),
+        QRegularExpression::MultilineOption);
+    const QRegularExpressionMatch m = re.match(meminfo);
+    if (!m.hasMatch()) return 0.0;
+    return m.captured(1).toDouble() / 1024.0 / 1024.0;
+}
+
 QVariantList HardwareDiagnostics::parseNvidiaSmiCsv(const QString &csv)
 {
     QVariantList out;

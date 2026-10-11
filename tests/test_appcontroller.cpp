@@ -156,6 +156,7 @@ private slots:
     void buildPlatformIsCompileTimeQtPlatform();
     void exportUserDataToWritesBackup();
     void githubReleaseIsConvertedToUpdateFlag();
+    void updateChannelDefaultsToBuildChannel();
     void githubDebugReleaseIsChannelScoped();
     void githubReleaseListChoosesNewestDebug();
     void updateNowRequiresAvailableRelease();
@@ -280,6 +281,26 @@ private:
     // Perfil de agente con override por FASE, activo en `app`. Devuelve su id.
     QString makePhasedAgentProfile(AppController &app, const QJsonObject &phases);
 };
+
+void AppControllerTests::updateChannelDefaultsToBuildChannel()
+{
+    // Sin eleccion guardada, el canal sigue al build: una instalacion Debug
+    // nueva no debe ofrecer "actualizar" a la misma version en Prod.
+    QCOMPARE(AppController::resolveUpdateChannel(QString(), QStringLiteral("debug")),
+             QStringLiteral("debug"));
+    QCOMPARE(AppController::resolveUpdateChannel(QString(), QStringLiteral("prod")),
+             QStringLiteral("prod"));
+    // Una eleccion explicita se respeta aunque difiera del build.
+    QCOMPARE(AppController::resolveUpdateChannel(QStringLiteral(" Prod "), QStringLiteral("debug")),
+             QStringLiteral("prod"));
+    QCOMPARE(AppController::resolveUpdateChannel(QStringLiteral("debug"), QStringLiteral("prod")),
+             QStringLiteral("debug"));
+    // Basura guardada cae al canal del build.
+    QCOMPARE(AppController::resolveUpdateChannel(QStringLiteral("beta"), QStringLiteral("debug")),
+             QStringLiteral("debug"));
+    QCOMPARE(AppController::resolveUpdateChannel(QStringLiteral("beta"), QString()),
+             QStringLiteral("prod"));
+}
 
 void AppControllerTests::githubReleaseIsConvertedToUpdateFlag()
 {

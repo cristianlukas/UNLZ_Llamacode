@@ -8,6 +8,7 @@ class HardwareDiagnosticsTests : public QObject
     Q_OBJECT
 private slots:
     void parsesGpuTopology();
+    void parsesMemTotalFromProcMeminfo();
     void parsesP2pTopologyMatrix();
     void parsesP2pStatusMatrix();
     void parsesNvlinkStatus();
@@ -35,6 +36,19 @@ void HardwareDiagnosticsTests::parsesGpuTopology()
     QCOMPARE(gpus.size(), 2);
     QCOMPARE(gpus.at(1).toMap().value(QStringLiteral("pcieGeneration")).toDouble(), 3.0);
     QCOMPARE(gpus.at(1).toMap().value(QStringLiteral("pcieLanes")).toDouble(), 4.0);
+}
+
+void HardwareDiagnosticsTests::parsesMemTotalFromProcMeminfo()
+{
+    // Formato de /proc/meminfo (WSL2, 16 GB). El parser no depende del orden
+    // de las lineas.
+    const QString meminfo = QStringLiteral(
+        "MemFree:         9123456 kB\n"
+        "MemTotal:       16303104 kB\n"
+        "MemAvailable:   12000000 kB\n");
+    QVERIFY(qAbs(HardwareDiagnostics::parseMemTotalGb(meminfo) - 15.548) < 0.01);
+    QCOMPARE(HardwareDiagnostics::parseMemTotalGb(QString()), 0.0);
+    QCOMPARE(HardwareDiagnostics::parseMemTotalGb(QStringLiteral("MemFree: 1 kB\n")), 0.0);
 }
 
 void HardwareDiagnosticsTests::parsesP2pTopologyMatrix()

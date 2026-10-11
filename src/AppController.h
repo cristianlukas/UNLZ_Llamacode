@@ -625,6 +625,11 @@ public:
     QString updateChannel() const { return m_updateChannel; }
     void setUpdateChannel(const QString &channel);
     QString buildChannel() const;
+    // Canal de updates efectivo: el guardado si es valido; si no (nunca se eligio),
+    // el del propio build. Antes el default era "prod" y una instalacion Debug
+    // recien hecha (default del bootstrap) ofrecia "actualizar" a la MISMA
+    // version en Prod apenas abria.
+    static QString resolveUpdateChannel(const QString &stored, const QString &buildChannel);
     // Convierte la respuesta de /repos/.../releases/latest al formato interno
     // del popup. Público para poder validar el contrato sin hacer red en tests.
     static QJsonObject githubReleaseToUpdateFlag(const QJsonObject &release,

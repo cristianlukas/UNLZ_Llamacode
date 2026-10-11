@@ -1808,12 +1808,13 @@ AppController::AppController(QObject *parent) : QObject(parent)
     m_gatewayAutoSwap = s.value(QStringLiteral("gateway/autoSwap"), true).toBool();
     m_gatewayLanEnabled = s.value(QStringLiteral("gateway/lanEnabled"), false).toBool();
     m_gatewayLanAuthEnabled = s.value(QStringLiteral("gateway/lanAuthEnabled"), true).toBool();
-    m_updateChannel = s.value(QStringLiteral("updates/channel"),
-                              QStringLiteral("prod")).toString().trimmed().toLower();
-    if (m_updateChannel != QLatin1String("debug")
-        && m_updateChannel != QLatin1String("prod")) {
-        m_updateChannel = QStringLiteral("prod");
-        s.setValue(QStringLiteral("updates/channel"), m_updateChannel);
+    {
+        const QString stored = s.value(QStringLiteral("updates/channel")).toString();
+        m_updateChannel = resolveUpdateChannel(stored, buildChannel());
+        // Sólo se persiste si había basura guardada: sin elección explícita el
+        // canal sigue al build (Debug instala Debug, Release instala Prod).
+        if (!stored.isEmpty() && stored.trimmed().toLower() != m_updateChannel)
+            s.setValue(QStringLiteral("updates/channel"), m_updateChannel);
     }
     m_idleAutoStopMin = s.value(QStringLiteral("server/idleAutoStopMin"), 0).toInt();
     m_gitAvailable      = !QStandardPaths::findExecutable(QStringLiteral("git")).isEmpty();
@@ -12245,6 +12246,16 @@ void AppController::setUpdateChannel(const QString &channel)
     checkForUpdates();
 }
 
+QString AppController::resolveUpdateChannel(const QString &stored,
+                                           const QString &buildChannel)
+{
+    const QString normalized = stored.trimmed().toLower();
+    if (normalized == QLatin1String("debug") || normalized == QLatin1String("prod"))
+        return normalized;
+    return buildChannel.trimmed().toLower() == QLatin1String("debug")
+        ? QStringLiteral("debug") : QStringLiteral("prod");
+}
+
 QString AppController::buildChannel() const
 {
 #ifdef LC_BUILD_CHANNEL
@@ -14363,6 +14374,12 @@ void AppController::rescanHardware()
             if (GlobalMemoryStatusEx(&st))
                 ramGb = st.ullTotalPhys / 1024.0 / 1024.0 / 1024.0;
         }
+    }
+#elif defined(Q_OS_LINUX)
+    {
+        QFile meminfo(QStringLiteral("/proc/meminfo"));
+        if (meminfo.open(QIODevice::ReadOnly | QIODevice::Text))
+            ramGb = HardwareDiagnostics::parseMemTotalGb(QString::fromLatin1(meminfo.readAll()));
     }
 #endif
     hw[QStringLiteral("ramGb")] = ramGb;
