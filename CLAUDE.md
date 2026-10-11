@@ -61,6 +61,7 @@ Reglas:
 | Charla modo JARVIS en AppController (aprobación por voz, aviso de tool lenta, turno en espera al arrancar el agente, "pará"/cola con el agente trabajando) | `tests/test_appcontroller.cpp` |
 | ThemeProvider (temas custom, normalización de hex) | `tests/test_theme.cpp` |
 | LcColorRow + LcColorPicker (editor de tema, lado QML) | `tests/qml/tst_color_picker.qml` |
+| SetupWizardPolicy.js (asistente inicial: una sola recomendación, paso 3 real) | `tests/qml/tst_setup_wizard_policy.qml` |
 
 Los componentes QML sin C++ se testean con el runtime `qml` en offscreen
 (`add_test(qml_color_picker ...)`): los archivos reales se copian a

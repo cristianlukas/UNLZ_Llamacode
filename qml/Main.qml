@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import LlamaCode 1.0
 import "components/NavigationPolicy.js" as NavigationPolicy
+import "components/SetupWizardPolicy.js" as SetupWizardPolicy
 
 ApplicationWindow {
     id: window
@@ -593,8 +594,9 @@ ApplicationWindow {
                 id: recCard
                 Layout.fillWidth: true
                 Layout.preferredHeight: scCol.implicitHeight + 24
-                visible: !setupCol.fastStartDismissed
-                         && (setupCol.showcase.length > 0 || (setupCol.sysPick.launchId ?? "").length > 0)
+                visible: SetupWizardPolicy.quickStartVisible(setupCol.fastStartDismissed,
+                                                             setupCol.showcase.length,
+                                                             setupCol.sysPick.launchId)
                 radius: 8
                 color: Theme.surfaceBg
                 border.color: Theme.accent
@@ -612,6 +614,16 @@ ApplicationWindow {
                               : "★ Perfil recomendado para tu computadora"
                         color: Theme.textPrimary
                         font { pixelSize: 14; bold: true }
+                    }
+                    // Con que hardware se eligio (antes solo estaba en la card de
+                    // modelo suelto, que ahora se oculta mientras se ve esta).
+                    Text {
+                        Layout.fillWidth: true
+                        text: App.hardwareSummary.summary ?? ""
+                        visible: text.length > 0
+                        color: Theme.textMuted
+                        font.pixelSize: 11
+                        elide: Text.ElideRight
                     }
                     // Showcase 24GB: lista de ambos perfiles.
                     Repeater {
@@ -794,7 +806,11 @@ ApplicationWindow {
                 id: setupReco
                 Layout.fillWidth: true
                 Layout.preferredHeight: 154
-                visible: !App.hasAnyModel && App.modelRecommendations.length > 0
+                // Camino manual: solo sin inicio rapido, para no mostrar dos
+                // recomendaciones distintas a la vez.
+                visible: SetupWizardPolicy.showManualModelPick(App.hasAnyModel,
+                                                               App.modelRecommendations.length,
+                                                               recCard.visible)
                 radius: 8
                 color: Theme.surfaceBg
                 border.color: Theme.borderColor
@@ -901,9 +917,13 @@ ApplicationWindow {
             }
 
             // Step 3: launch profile
+            // hasAnyLaunch es true desde el primer arranque (perfiles de sistema):
+            // el paso solo esta hecho con binario + modelo + perfil.
+            readonly property bool launchStepDone:
+                SetupWizardPolicy.launchStepDone(App.hasAnyBinary, App.hasAnyModel, App.hasAnyLaunch)
             Text {
-                text: (App.hasAnyLaunch ? "✓ " : "3. ") + "Perfil de lanzamiento"
-                color: App.hasAnyLaunch ? Theme.accent : Theme.textPrimary
+                text: (setupCol.launchStepDone ? "✓ " : "3. ") + "Perfil de lanzamiento"
+                color: setupCol.launchStepDone ? Theme.accent : Theme.textPrimary
                 font.pixelSize: 13
                 font.bold: true
             }
@@ -911,7 +931,7 @@ ApplicationWindow {
                 Layout.fillWidth: true
                 spacing: 10
                 enabled: App.hasAnyBinary && App.hasAnyModel && !App.hasAnyLaunch
-                opacity: App.hasAnyLaunch ? 0.5 : 1.0
+                opacity: setupCol.launchStepDone ? 0.5 : 1.0
                 BusyIndicator {
                     running: App.hasAnyBinary && App.hasAnyModel && !App.hasAnyLaunch
                     visible: running
@@ -920,11 +940,8 @@ ApplicationWindow {
                 }
                 Text {
                     Layout.fillWidth: true
-                    text: App.hasAnyLaunch
-                          ? "Listo para lanzar."
-                          : (App.hasAnyBinary && App.hasAnyModel
-                             ? "Creando automáticamente Backend, Model, Runtime y perfil de lanzamiento."
-                             : "Primero completá binario y modelo.")
+                    text: SetupWizardPolicy.launchStepText(App.hasAnyBinary, App.hasAnyModel,
+                                                           App.hasAnyLaunch)
                     color: Theme.textMuted
                     font.pixelSize: 12
                     wrapMode: Text.WordWrap
