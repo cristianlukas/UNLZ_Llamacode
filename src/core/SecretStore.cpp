@@ -190,9 +190,13 @@ void SecretStore::save() const
             o.insert(it.key(), enc);
     }
     QFile f(path);
-    if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) return;
+    // Restringir ANTES de escribir: con setPermissions despues del write, el
+    // secreto quedaba un instante con los permisos del umask (ej. 0644). En
+    // Linux sin keyring este archivo guarda el valor sin cifrar ("plain:").
+    const auto ownerOnly = QFileDevice::ReadOwner | QFileDevice::WriteOwner;
+    if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate, ownerOnly)) return;
+    f.setPermissions(ownerOnly);   // archivo preexistente: open() no cambia sus permisos
     f.write(QJsonDocument(o).toJson(QJsonDocument::Compact));
-    f.setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner);
 }
 
 QString SecretStore::resolve(const QString &ref) const
