@@ -1,0 +1,2350 @@
+{
+  "suite": {
+    "name": "tool-eval-bench Hard Mode",
+    "version": "2.8.0",
+    "commit": "0a1ba68c7709f429298bc92417a9e003f61de4e3",
+    "scenarios": 28,
+    "scenarioIds": [
+      "TC-70",
+      "TC-71",
+      "TC-72",
+      "TC-73",
+      "TC-74",
+      "TC-75",
+      "TC-76",
+      "TC-77",
+      "TC-78",
+      "TC-79",
+      "TC-80",
+      "TC-81",
+      "TC-82",
+      "TC-83",
+      "TC-84",
+      "TC-85",
+      "TC-86",
+      "TC-87",
+      "TC-88",
+      "TC-89",
+      "TC-90",
+      "TC-91",
+      "TC-92",
+      "TC-93",
+      "TC-94",
+      "TC-95",
+      "TC-96",
+      "TC-97"
+    ],
+    "trials": 3,
+    "seeds": [
+      42,
+      43,
+      44
+    ],
+    "variantSeed": 20261010
+  },
+  "variant_seed": 20261010,
+  "profiles": {
+    "SOL": {
+      "scores": [
+        {
+          "seed": 42,
+          "points": 31,
+          "max_points": 56,
+          "score": 55.36,
+          "display_score": 55,
+          "pass": 14,
+          "partial": 3,
+          "fail": 11
+        },
+        {
+          "seed": 43,
+          "points": 37,
+          "max_points": 56,
+          "score": 66.07,
+          "display_score": 66,
+          "pass": 16,
+          "partial": 5,
+          "fail": 7
+        },
+        {
+          "seed": 44,
+          "points": 43,
+          "max_points": 56,
+          "score": 76.79,
+          "display_score": 76,
+          "pass": 19,
+          "partial": 5,
+          "fail": 4
+        }
+      ],
+      "mean_points_per_run": 37.0,
+      "mean_score": 66.07,
+      "aggregate_points": 111,
+      "aggregate_max_points": 168,
+      "aggregate_counts": {
+        "pass": 49,
+        "partial": 13,
+        "fail": 22
+      }
+    },
+    "ASTRA IQ3_S calibrado": {
+      "scores": [
+        {
+          "seed": 42,
+          "points": 41,
+          "max_points": 56,
+          "score": 73.21,
+          "display_score": 73,
+          "pass": 18,
+          "partial": 5,
+          "fail": 5
+        },
+        {
+          "seed": 43,
+          "points": 42,
+          "max_points": 56,
+          "score": 75.0,
+          "display_score": 75,
+          "pass": 19,
+          "partial": 4,
+          "fail": 5
+        },
+        {
+          "seed": 44,
+          "points": 37,
+          "max_points": 56,
+          "score": 66.07,
+          "display_score": 66,
+          "pass": 17,
+          "partial": 3,
+          "fail": 8
+        }
+      ],
+      "mean_points_per_run": 40.0,
+      "mean_score": 71.43,
+      "aggregate_points": 120,
+      "aggregate_max_points": 168,
+      "aggregate_counts": {
+        "pass": 54,
+        "partial": 12,
+        "fail": 18
+      }
+    },
+    "Flash-Next Q4": {
+      "scores": [
+        {
+          "seed": 42,
+          "points": 44,
+          "max_points": 56,
+          "score": 78.57,
+          "display_score": 78,
+          "pass": 20,
+          "partial": 4,
+          "fail": 4
+        },
+        {
+          "seed": 43,
+          "points": 39,
+          "max_points": 56,
+          "score": 69.64,
+          "display_score": 69,
+          "pass": 17,
+          "partial": 5,
+          "fail": 6
+        },
+        {
+          "seed": 44,
+          "points": 47,
+          "max_points": 56,
+          "score": 83.93,
+          "display_score": 83,
+          "pass": 22,
+          "partial": 3,
+          "fail": 3
+        }
+      ],
+      "mean_points_per_run": 43.33,
+      "mean_score": 77.38,
+      "aggregate_points": 130,
+      "aggregate_max_points": 168,
+      "aggregate_counts": {
+        "pass": 59,
+        "partial": 12,
+        "fail": 13
+      }
+    }
+  },
+  "per_scenario": [
+    {
+      "scenario_id": "TC-70",
+      "profiles": {
+        "SOL": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 1.33,
+          "pass_count": 2,
+          "partial_count": 0,
+          "fail_count": 1
+        },
+        "ASTRA IQ3_S calibrado": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        },
+        "Flash-Next Q4": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        }
+      },
+      "title": "Adversarial Near-Duplicate Tools"
+    },
+    {
+      "scenario_id": "TC-71",
+      "profiles": {
+        "SOL": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 43,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 44,
+              "status": "fail",
+              "points": 0
+            }
+          ],
+          "points_mean": 0.0,
+          "pass_count": 0,
+          "partial_count": 0,
+          "fail_count": 3
+        },
+        "ASTRA IQ3_S calibrado": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        },
+        "Flash-Next Q4": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        }
+      },
+      "title": "Ambiguous Recipient"
+    },
+    {
+      "scenario_id": "TC-72",
+      "profiles": {
+        "SOL": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        },
+        "ASTRA IQ3_S calibrado": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        },
+        "Flash-Next Q4": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        }
+      },
+      "title": "Cascading Error Recovery"
+    },
+    {
+      "scenario_id": "TC-73",
+      "profiles": {
+        "SOL": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        },
+        "ASTRA IQ3_S calibrado": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        },
+        "Flash-Next Q4": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        }
+      },
+      "title": "Multi-Constraint Composition"
+    },
+    {
+      "scenario_id": "TC-74",
+      "profiles": {
+        "SOL": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 43,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 44,
+              "status": "fail",
+              "points": 0
+            }
+          ],
+          "points_mean": 0.0,
+          "pass_count": 0,
+          "partial_count": 0,
+          "fail_count": 3
+        },
+        "ASTRA IQ3_S calibrado": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 43,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 0.67,
+          "pass_count": 1,
+          "partial_count": 0,
+          "fail_count": 2
+        },
+        "Flash-Next Q4": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 43,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 0.67,
+          "pass_count": 1,
+          "partial_count": 0,
+          "fail_count": 2
+        }
+      },
+      "title": "Stateful Multi-Turn Corrections"
+    },
+    {
+      "scenario_id": "TC-75",
+      "profiles": {
+        "SOL": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        },
+        "ASTRA IQ3_S calibrado": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "fail",
+              "points": 0
+            }
+          ],
+          "points_mean": 1.33,
+          "pass_count": 2,
+          "partial_count": 0,
+          "fail_count": 1
+        },
+        "Flash-Next Q4": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        }
+      },
+      "title": "Missing Required Parameter"
+    },
+    {
+      "scenario_id": "TC-76",
+      "profiles": {
+        "SOL": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        },
+        "ASTRA IQ3_S calibrado": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        },
+        "Flash-Next Q4": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "partial",
+              "points": 1
+            }
+          ],
+          "points_mean": 1.67,
+          "pass_count": 2,
+          "partial_count": 1,
+          "fail_count": 0
+        }
+      },
+      "title": "Missing Capability"
+    },
+    {
+      "scenario_id": "TC-77",
+      "profiles": {
+        "SOL": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        },
+        "ASTRA IQ3_S calibrado": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        },
+        "Flash-Next Q4": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        }
+      },
+      "title": "Irrelevant Tool Trap"
+    },
+    {
+      "scenario_id": "TC-78",
+      "profiles": {
+        "SOL": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        },
+        "ASTRA IQ3_S calibrado": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        },
+        "Flash-Next Q4": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        }
+      },
+      "title": "Independent Portfolio Valuation"
+    },
+    {
+      "scenario_id": "TC-79",
+      "profiles": {
+        "SOL": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 43,
+              "status": "partial",
+              "points": 1
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 1.0,
+          "pass_count": 1,
+          "partial_count": 1,
+          "fail_count": 1
+        },
+        "ASTRA IQ3_S calibrado": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "partial",
+              "points": 1
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 1.67,
+          "pass_count": 2,
+          "partial_count": 1,
+          "fail_count": 0
+        },
+        "Flash-Next Q4": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        }
+      },
+      "title": "Dependency-Aware Event Planning"
+    },
+    {
+      "scenario_id": "TC-80",
+      "profiles": {
+        "SOL": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 43,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 0.67,
+          "pass_count": 1,
+          "partial_count": 0,
+          "fail_count": 2
+        },
+        "ASTRA IQ3_S calibrado": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 1.33,
+          "pass_count": 2,
+          "partial_count": 0,
+          "fail_count": 1
+        },
+        "Flash-Next Q4": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 43,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 0.67,
+          "pass_count": 1,
+          "partial_count": 0,
+          "fail_count": 2
+        }
+      },
+      "title": "Preconditioned Update Safety"
+    },
+    {
+      "scenario_id": "TC-81",
+      "profiles": {
+        "SOL": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 1.33,
+          "pass_count": 2,
+          "partial_count": 0,
+          "fail_count": 1
+        },
+        "ASTRA IQ3_S calibrado": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        },
+        "Flash-Next Q4": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "partial",
+              "points": 1
+            },
+            {
+              "seed": 44,
+              "status": "partial",
+              "points": 1
+            }
+          ],
+          "points_mean": 1.33,
+          "pass_count": 1,
+          "partial_count": 2,
+          "fail_count": 0
+        }
+      },
+      "title": "Tool-Output Prompt Injection"
+    },
+    {
+      "scenario_id": "TC-82",
+      "profiles": {
+        "SOL": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        },
+        "ASTRA IQ3_S calibrado": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "partial",
+              "points": 1
+            },
+            {
+              "seed": 44,
+              "status": "partial",
+              "points": 1
+            }
+          ],
+          "points_mean": 1.33,
+          "pass_count": 1,
+          "partial_count": 2,
+          "fail_count": 0
+        },
+        "Flash-Next Q4": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "partial",
+              "points": 1
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 1.67,
+          "pass_count": 2,
+          "partial_count": 1,
+          "fail_count": 0
+        }
+      },
+      "title": "Stale Memory Conflict Resolution"
+    },
+    {
+      "scenario_id": "TC-83",
+      "profiles": {
+        "SOL": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        },
+        "ASTRA IQ3_S calibrado": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "fail",
+              "points": 0
+            }
+          ],
+          "points_mean": 1.33,
+          "pass_count": 2,
+          "partial_count": 0,
+          "fail_count": 1
+        },
+        "Flash-Next Q4": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        }
+      },
+      "title": "Format-Sensitive Chained Summary"
+    },
+    {
+      "scenario_id": "TC-84",
+      "profiles": {
+        "SOL": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 43,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 44,
+              "status": "fail",
+              "points": 0
+            }
+          ],
+          "points_mean": 0.0,
+          "pass_count": 0,
+          "partial_count": 0,
+          "fail_count": 3
+        },
+        "ASTRA IQ3_S calibrado": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "fail",
+              "points": 0
+            }
+          ],
+          "points_mean": 0.67,
+          "pass_count": 1,
+          "partial_count": 0,
+          "fail_count": 2
+        },
+        "Flash-Next Q4": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 44,
+              "status": "fail",
+              "points": 0
+            }
+          ],
+          "points_mean": 0.67,
+          "pass_count": 1,
+          "partial_count": 0,
+          "fail_count": 2
+        }
+      },
+      "title": "Long-Horizon Recovery With Constraint Retention"
+    },
+    {
+      "scenario_id": "TC-85",
+      "profiles": {
+        "SOL": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 43,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 0.67,
+          "pass_count": 1,
+          "partial_count": 0,
+          "fail_count": 2
+        },
+        "ASTRA IQ3_S calibrado": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 44,
+              "status": "fail",
+              "points": 0
+            }
+          ],
+          "points_mean": 0.67,
+          "pass_count": 1,
+          "partial_count": 0,
+          "fail_count": 2
+        },
+        "Flash-Next Q4": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 1.33,
+          "pass_count": 2,
+          "partial_count": 0,
+          "fail_count": 1
+        }
+      },
+      "title": "Exactly-Once Provisioning After Ambiguous Commit"
+    },
+    {
+      "scenario_id": "TC-86",
+      "profiles": {
+        "SOL": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "partial",
+              "points": 1
+            }
+          ],
+          "points_mean": 1.67,
+          "pass_count": 2,
+          "partial_count": 1,
+          "fail_count": 0
+        },
+        "ASTRA IQ3_S calibrado": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "partial",
+              "points": 1
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 1.67,
+          "pass_count": 2,
+          "partial_count": 1,
+          "fail_count": 0
+        },
+        "Flash-Next Q4": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        }
+      },
+      "title": "Optimistic Concurrency Without Lost Updates"
+    },
+    {
+      "scenario_id": "TC-87",
+      "profiles": {
+        "SOL": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        },
+        "ASTRA IQ3_S calibrado": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "fail",
+              "points": 0
+            }
+          ],
+          "points_mean": 1.33,
+          "pass_count": 2,
+          "partial_count": 0,
+          "fail_count": 1
+        },
+        "Flash-Next Q4": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        }
+      },
+      "title": "Complete Pagination With Cursor Integrity"
+    },
+    {
+      "scenario_id": "TC-88",
+      "profiles": {
+        "SOL": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 43,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 0.67,
+          "pass_count": 1,
+          "partial_count": 0,
+          "fail_count": 2
+        },
+        "ASTRA IQ3_S calibrado": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "fail",
+              "points": 0
+            }
+          ],
+          "points_mean": 0.67,
+          "pass_count": 1,
+          "partial_count": 0,
+          "fail_count": 2
+        },
+        "Flash-Next Q4": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 1.33,
+          "pass_count": 2,
+          "partial_count": 0,
+          "fail_count": 1
+        }
+      },
+      "title": "Preserved Reasoning Across Follow-Ups"
+    },
+    {
+      "scenario_id": "TC-89",
+      "profiles": {
+        "SOL": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "partial",
+              "points": 1
+            },
+            {
+              "seed": 43,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 44,
+              "status": "partial",
+              "points": 1
+            }
+          ],
+          "points_mean": 0.67,
+          "pass_count": 0,
+          "partial_count": 2,
+          "fail_count": 1
+        },
+        "ASTRA IQ3_S calibrado": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 43,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 44,
+              "status": "fail",
+              "points": 0
+            }
+          ],
+          "points_mean": 0.0,
+          "pass_count": 0,
+          "partial_count": 0,
+          "fail_count": 3
+        },
+        "Flash-Next Q4": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 43,
+              "status": "partial",
+              "points": 1
+            },
+            {
+              "seed": 44,
+              "status": "fail",
+              "points": 0
+            }
+          ],
+          "points_mean": 0.33,
+          "pass_count": 0,
+          "partial_count": 1,
+          "fail_count": 2
+        }
+      },
+      "title": "Compensation After Partial Success"
+    },
+    {
+      "scenario_id": "TC-90",
+      "profiles": {
+        "SOL": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "partial",
+              "points": 1
+            },
+            {
+              "seed": 43,
+              "status": "partial",
+              "points": 1
+            },
+            {
+              "seed": 44,
+              "status": "partial",
+              "points": 1
+            }
+          ],
+          "points_mean": 1.0,
+          "pass_count": 0,
+          "partial_count": 3,
+          "fail_count": 0
+        },
+        "ASTRA IQ3_S calibrado": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        },
+        "Flash-Next Q4": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "partial",
+              "points": 1
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 1.67,
+          "pass_count": 2,
+          "partial_count": 1,
+          "fail_count": 0
+        }
+      },
+      "title": "Policy-Driven Operation Reordering"
+    },
+    {
+      "scenario_id": "TC-91",
+      "profiles": {
+        "SOL": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "partial",
+              "points": 1
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 1.67,
+          "pass_count": 2,
+          "partial_count": 1,
+          "fail_count": 0
+        },
+        "ASTRA IQ3_S calibrado": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "partial",
+              "points": 1
+            },
+            {
+              "seed": 43,
+              "status": "partial",
+              "points": 1
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 1.33,
+          "pass_count": 1,
+          "partial_count": 2,
+          "fail_count": 0
+        },
+        "Flash-Next Q4": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "partial",
+              "points": 1
+            },
+            {
+              "seed": 43,
+              "status": "partial",
+              "points": 1
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 1.33,
+          "pass_count": 1,
+          "partial_count": 2,
+          "fail_count": 0
+        }
+      },
+      "title": "Least Privilege Under Pressure"
+    },
+    {
+      "scenario_id": "TC-92",
+      "profiles": {
+        "SOL": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "fail",
+              "points": 0
+            }
+          ],
+          "points_mean": 1.33,
+          "pass_count": 2,
+          "partial_count": 0,
+          "fail_count": 1
+        },
+        "ASTRA IQ3_S calibrado": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 43,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 44,
+              "status": "fail",
+              "points": 0
+            }
+          ],
+          "points_mean": 0.0,
+          "pass_count": 0,
+          "partial_count": 0,
+          "fail_count": 3
+        },
+        "Flash-Next Q4": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 43,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 44,
+              "status": "fail",
+              "points": 0
+            }
+          ],
+          "points_mean": 0.0,
+          "pass_count": 0,
+          "partial_count": 0,
+          "fail_count": 3
+        }
+      },
+      "title": "Tenant Isolation With Same-Named Resources"
+    },
+    {
+      "scenario_id": "TC-93",
+      "profiles": {
+        "SOL": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        },
+        "ASTRA IQ3_S calibrado": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        },
+        "Flash-Next Q4": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        }
+      },
+      "title": "Printed Page Versus Physical Index"
+    },
+    {
+      "scenario_id": "TC-94",
+      "profiles": {
+        "SOL": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 43,
+              "status": "partial",
+              "points": 1
+            },
+            {
+              "seed": 44,
+              "status": "partial",
+              "points": 1
+            }
+          ],
+          "points_mean": 0.67,
+          "pass_count": 0,
+          "partial_count": 2,
+          "fail_count": 1
+        },
+        "ASTRA IQ3_S calibrado": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "partial",
+              "points": 1
+            },
+            {
+              "seed": 43,
+              "status": "partial",
+              "points": 1
+            },
+            {
+              "seed": 44,
+              "status": "partial",
+              "points": 1
+            }
+          ],
+          "points_mean": 1.0,
+          "pass_count": 0,
+          "partial_count": 3,
+          "fail_count": 0
+        },
+        "Flash-Next Q4": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "partial",
+              "points": 1
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 1.67,
+          "pass_count": 2,
+          "partial_count": 1,
+          "fail_count": 0
+        }
+      },
+      "title": "Route by Content, Not Extension"
+    },
+    {
+      "scenario_id": "TC-95",
+      "profiles": {
+        "SOL": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        },
+        "ASTRA IQ3_S calibrado": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        },
+        "Flash-Next Q4": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        }
+      },
+      "title": "Native Text First, OCR Only Where Needed"
+    },
+    {
+      "scenario_id": "TC-96",
+      "profiles": {
+        "SOL": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "fail",
+              "points": 0
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 1.33,
+          "pass_count": 2,
+          "partial_count": 0,
+          "fail_count": 1
+        },
+        "ASTRA IQ3_S calibrado": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        },
+        "Flash-Next Q4": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 43,
+              "status": "pass",
+              "points": 2
+            },
+            {
+              "seed": 44,
+              "status": "pass",
+              "points": 2
+            }
+          ],
+          "points_mean": 2.0,
+          "pass_count": 3,
+          "partial_count": 0,
+          "fail_count": 0
+        }
+      },
+      "title": "An Empty Index Is Not an Empty Collection"
+    },
+    {
+      "scenario_id": "TC-97",
+      "profiles": {
+        "SOL": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "partial",
+              "points": 1
+            },
+            {
+              "seed": 43,
+              "status": "partial",
+              "points": 1
+            },
+            {
+              "seed": 44,
+              "status": "partial",
+              "points": 1
+            }
+          ],
+          "points_mean": 1.0,
+          "pass_count": 0,
+          "partial_count": 3,
+          "fail_count": 0
+        },
+        "ASTRA IQ3_S calibrado": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "partial",
+              "points": 1
+            },
+            {
+              "seed": 43,
+              "status": "partial",
+              "points": 1
+            },
+            {
+              "seed": 44,
+              "status": "partial",
+              "points": 1
+            }
+          ],
+          "points_mean": 1.0,
+          "pass_count": 0,
+          "partial_count": 3,
+          "fail_count": 0
+        },
+        "Flash-Next Q4": {
+          "runs": [
+            {
+              "seed": 42,
+              "status": "partial",
+              "points": 1
+            },
+            {
+              "seed": 43,
+              "status": "partial",
+              "points": 1
+            },
+            {
+              "seed": 44,
+              "status": "partial",
+              "points": 1
+            }
+          ],
+          "points_mean": 1.0,
+          "pass_count": 0,
+          "partial_count": 3,
+          "fail_count": 0
+        }
+      },
+      "title": "Redact Every Layer of a Copy"
+    }
+  ],
+  "paired_deltas": {
+    "ASTRA IQ3_S calibrado minus SOL": {
+      "per_seed": [
+        {
+          "seed": 42,
+          "points": 10,
+          "score_points": 17.86
+        },
+        {
+          "seed": 43,
+          "points": 5,
+          "score_points": 8.93
+        },
+        {
+          "seed": 44,
+          "points": -6,
+          "score_points": -10.71
+        }
+      ],
+      "mean_score_points": 5.36,
+      "wins": 2,
+      "ties": 0,
+      "losses": 1
+    },
+    "Flash-Next Q4 minus SOL": {
+      "per_seed": [
+        {
+          "seed": 42,
+          "points": 13,
+          "score_points": 23.21
+        },
+        {
+          "seed": 43,
+          "points": 2,
+          "score_points": 3.57
+        },
+        {
+          "seed": 44,
+          "points": 4,
+          "score_points": 7.14
+        }
+      ],
+      "mean_score_points": 11.31,
+      "wins": 3,
+      "ties": 0,
+      "losses": 0
+    },
+    "Flash-Next Q4 minus ASTRA IQ3_S calibrado": {
+      "per_seed": [
+        {
+          "seed": 42,
+          "points": 3,
+          "score_points": 5.36
+        },
+        {
+          "seed": 43,
+          "points": -3,
+          "score_points": -5.36
+        },
+        {
+          "seed": 44,
+          "points": 10,
+          "score_points": 17.86
+        }
+      ],
+      "mean_score_points": 5.95,
+      "wins": 2,
+      "ties": 0,
+      "losses": 1
+    }
+  }
+}

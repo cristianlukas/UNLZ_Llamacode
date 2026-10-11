@@ -1,0 +1,40 @@
+{
+  "profile": "Flash-Next Q4",
+  "suite": "tool-eval-bench Hard Mode v2.8.0",
+  "variant_seed": 20261010,
+  "scores": [
+    {
+      "seed": 42,
+      "points": 44,
+      "max_points": 56,
+      "score": 78.57,
+      "display_score": 78,
+      "pass": 20,
+      "partial": 4,
+      "fail": 4
+    },
+    {
+      "seed": 43,
+      "points": 39,
+      "max_points": 56,
+      "score": 69.64,
+      "display_score": 69,
+      "pass": 17,
+      "partial": 5,
+      "fail": 6
+    },
+    {
+      "seed": 44,
+      "points": 47,
+      "max_points": 56,
+      "score": 83.93,
+      "display_score": 83,
+      "pass": 22,
+      "partial": 3,
+      "fail": 3
+    }
+  ],
+  "mean_score": 77.38,
+  "mean_points": 43.33,
+  "note": "Scores and mean computed from exact earned points across 28 scenarios per run; display values are truncated by the CLI."
+}

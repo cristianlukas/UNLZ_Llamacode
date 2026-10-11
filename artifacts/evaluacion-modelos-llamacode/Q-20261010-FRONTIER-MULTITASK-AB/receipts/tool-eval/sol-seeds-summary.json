@@ -1,0 +1,40 @@
+{
+  "profile": "SOL",
+  "suite": "tool-eval-bench Hard Mode v2.8.0",
+  "variant_seed": 20261010,
+  "scores": [
+    {
+      "seed": 42,
+      "points": 31,
+      "max_points": 56,
+      "score": 55.36,
+      "display_score": 55,
+      "pass": 14,
+      "partial": 3,
+      "fail": 11
+    },
+    {
+      "seed": 43,
+      "points": 37,
+      "max_points": 56,
+      "score": 66.07,
+      "display_score": 66,
+      "pass": 16,
+      "partial": 5,
+      "fail": 7
+    },
+    {
+      "seed": 44,
+      "points": 43,
+      "max_points": 56,
+      "score": 76.79,
+      "display_score": 76,
+      "pass": 19,
+      "partial": 5,
+      "fail": 4
+    }
+  ],
+  "mean_score": 66.07,
+  "mean_points": 37.0,
+  "note": "Scores and mean computed from exact earned points across 28 scenarios per run; display values are truncated by the CLI."
+}

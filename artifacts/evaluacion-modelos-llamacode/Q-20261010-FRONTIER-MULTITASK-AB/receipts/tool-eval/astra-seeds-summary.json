@@ -1,0 +1,40 @@
+{
+  "profile": "ASTRA IQ3_S calibrado",
+  "suite": "tool-eval-bench Hard Mode v2.8.0",
+  "variant_seed": 20261010,
+  "scores": [
+    {
+      "seed": 42,
+      "points": 41,
+      "max_points": 56,
+      "score": 73.21,
+      "display_score": 73,
+      "pass": 18,
+      "partial": 5,
+      "fail": 5
+    },
+    {
+      "seed": 43,
+      "points": 42,
+      "max_points": 56,
+      "score": 75.0,
+      "display_score": 75,
+      "pass": 19,
+      "partial": 4,
+      "fail": 5
+    },
+    {
+      "seed": 44,
+      "points": 37,
+      "max_points": 56,
+      "score": 66.07,
+      "display_score": 66,
+      "pass": 17,
+      "partial": 3,
+      "fail": 8
+    }
+  ],
+  "mean_score": 71.43,
+  "mean_points": 40.0,
+  "note": "Seed 42 combines the 5-case smoke and 23 remaining cases. Seeds 43 and 44 are full 28-scenario runs. Means are computed from exact points, not rounded display scores."
+}

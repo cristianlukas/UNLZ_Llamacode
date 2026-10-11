@@ -1,0 +1,27 @@
+{
+  "alias": "SOL",
+  "model": "Qwen3.8-27B AutoRound INT4",
+  "runtime": "vLLM v0.27.1, TP2, P2P, MTP4, FP8 KV",
+  "compose_files": [
+    "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.8-27b/vllm/compose/dual/autoround-int4/mtp.yml",
+    "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.8-27b/vllm/compose/dual/autoround-int4/vram-quarantine.override.yml"
+  ],
+  "service": "vllm-qwen38-27b-dual-fast",
+  "bind_host": "127.0.0.1",
+  "host_port": 8113,
+  "gpus": [
+    0,
+    1
+  ],
+  "sampling": {
+    "temperature": 0.6,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0,
+    "repetition_penalty": 1.0,
+    "presence_penalty": 0.0
+  },
+  "reasoning_effort": "medium",
+  "context_limit": 262144,
+  "note": "Loopback-only endpoint; compose tool parser qwen3_coder, auto tool choice enabled."
+}

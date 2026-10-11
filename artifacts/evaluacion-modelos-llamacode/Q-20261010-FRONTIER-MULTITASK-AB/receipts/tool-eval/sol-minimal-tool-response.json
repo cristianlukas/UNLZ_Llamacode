@@ -1,0 +1,53 @@
+{
+  "status": 200,
+  "elapsedSeconds": 0.816,
+  "response": {
+    "id": "chatcmpl-b1e41716d5218022",
+    "object": "chat.completion",
+    "created": 1791662119,
+    "model": "qwen3.8-27b",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": null,
+          "refusal": null,
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": [
+            {
+              "id": "chatcmpl-tool-a25935d62a23432e",
+              "type": "function",
+              "function": {
+                "name": "get_weather_global",
+                "arguments": "{\"city\": \"Tokyo\"}"
+              }
+            }
+          ],
+          "reasoning": "The user is asking about the current weather in Tokyo. I have a tool available called \"get_weather_global\" that can get current weather for any city worldwide. Let me call it with \"Tokyo\" as the city parameter.\n"
+        },
+        "logprobs": null,
+        "finish_reason": "tool_calls",
+        "stop_reason": null,
+        "token_ids": null,
+        "routed_experts": null
+      }
+    ],
+    "service_tier": null,
+    "system_fingerprint": "vllm-0.27.1-tp2-2510322a",
+    "usage": {
+      "prompt_tokens": 285,
+      "total_tokens": 362,
+      "completion_tokens": 77,
+      "prompt_tokens_details": null
+    },
+    "prompt_logprobs": null,
+    "prompt_token_ids": null,
+    "prompt_text": null,
+    "kv_transfer_params": null,
+    "ec_transfer_params": null,
+    "metrics": null
+  }
+}

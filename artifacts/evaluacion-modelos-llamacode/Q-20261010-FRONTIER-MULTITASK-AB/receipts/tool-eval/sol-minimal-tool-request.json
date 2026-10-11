@@ -1,0 +1,43 @@
+{
+  "model": "qwen3.8-27b",
+  "messages": [
+    {
+      "role": "user",
+      "content": "What's the weather like in Tokyo right now?"
+    }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "get_weather_global",
+        "description": "Get current weather for any city worldwide.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "city": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "city"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "tool_choice": "auto",
+  "temperature": 0.6,
+  "top_p": 0.95,
+  "top_k": 20,
+  "min_p": 0.0,
+  "repetition_penalty": 1.0,
+  "presence_penalty": 0.0,
+  "seed": 42,
+  "max_tokens": 512,
+  "chat_template_kwargs": {
+    "enable_thinking": true,
+    "reasoning_effort": "medium"
+  }
+}
