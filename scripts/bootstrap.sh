@@ -49,6 +49,8 @@ fi
 # We install the C++ toolchain, system libraries that the aqt-built Qt links
 # against, and dependencies for Linux desktop automation/sandboxing -- NOT
 # distro Qt itself.
+# libpulse: libQt6Multimedia.so (aqt) tiene NEEDED libpulse.so.0; sin ella el
+# link de LlamaCode falla con "undefined reference to pa_*@PULSE_0".
 # libsecret (-dev) is needed by QtKeychain (Secret Service backend) to encrypt the
 # cloud API keys at rest. Without it the QtKeychain FetchContent build fails; you can
 # also skip it by configuring CMake with -DLC_USE_QTKEYCHAIN=OFF (file fallback).
@@ -62,7 +64,7 @@ install_deps() {
             libglib2.0-0 libgl1-mesa-dev libegl1 libxkbcommon0 libxkbcommon-x11-0 \
             libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
             libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 \
-            libfontconfig1 libfreetype6 libdbus-1-3 \
+            libfontconfig1 libfreetype6 libdbus-1-3 libpulse0 \
             libsecret-1-dev \
             x11-utils xdotool wmctrl at-spi2-core tesseract-ocr tesseract-ocr-spa \
             bubblewrap
@@ -72,20 +74,20 @@ install_deps() {
             git curl rsync cmake ninja-build gcc-c++ make pkgconf-pkg-config \
             python3 python3-pip \
             glib2 mesa-libGL-devel mesa-libEGL libxkbcommon libxkbcommon-x11 \
-            xcb-util-cursor fontconfig freetype dbus-libs libsecret-devel \
+            xcb-util-cursor fontconfig freetype dbus-libs pulseaudio-libs libsecret-devel \
             xorg-x11-utils xdotool wmctrl at-spi2-core tesseract bubblewrap
     elif command -v pacman >/dev/null 2>&1; then
         c_info "Installing toolchain + Qt runtime libs via pacman..."
         $SUDO pacman -Sy --needed --noconfirm \
             git curl rsync cmake ninja base-devel python python-pip \
-            glib2 mesa libxkbcommon libxkbcommon-x11 xcb-util-cursor fontconfig freetype2 dbus libsecret \
+            glib2 mesa libxkbcommon libxkbcommon-x11 xcb-util-cursor fontconfig freetype2 dbus libpulse libsecret \
             xorg-xprop xorg-xwininfo xdotool wmctrl at-spi2-core tesseract tesseract-data-spa bubblewrap
     elif command -v zypper >/dev/null 2>&1; then
         c_info "Installing toolchain + Qt runtime libs via zypper..."
         $SUDO zypper install -y \
             git curl rsync cmake ninja gcc-c++ pkg-config python3 python3-pip \
             libglib-2_0-0 Mesa-libGL-devel libxkbcommon0 libxkbcommon-x11-0 \
-            xcb-util-cursor0 fontconfig freetype2 libdbus-1-3 libsecret-devel \
+            xcb-util-cursor0 fontconfig freetype2 libdbus-1-3 libpulse0 libsecret-devel \
             xorg-x11 xdotool wmctrl at-spi2-core tesseract-ocr bubblewrap
     else
         c_die "Unsupported distro: install git, cmake, ninja, g++, python3 and Qt6 runtime libs manually."
@@ -99,22 +101,35 @@ command -v ninja  >/dev/null 2>&1 || c_die "ninja not found after install."
 c_ok "toolchain"
 
 # ── Qt 6.8.3 via aqtinstall ──────────────────────────────────────────────────
+# Multimedia es add-on en aqt (Svg ya viene en la base): sin pedirlo, el
+# find_package(Qt6 ... Multimedia) de CMakeLists.txt falla en una maquina limpia.
 QTDIR="$QTROOT/$QTVER/gcc_64"
-if [ ! -f "$QTDIR/lib/cmake/Qt6/Qt6Config.cmake" ]; then
+QT_AQT_MODULES=(qtmultimedia)
+QT_REQUIRED_COMPONENTS=(Core Quick QuickControls2 Sql Concurrent Network Widgets Multimedia Svg)
+missing_qt_components() {
+    local c
+    for c in "${QT_REQUIRED_COMPONENTS[@]}"; do
+        [ -f "$QTDIR/lib/cmake/Qt6$c/Qt6${c}Config.cmake" ] || printf '%s ' "$c"
+    done
+}
+install_qt() {
     c_info "Installing Qt $QTVER (linux gcc_64) via aqtinstall..."
-    AQT="aqt"
-    if ! command -v aqt >/dev/null 2>&1; then
-        # Isolated venv so we never fight system pip / PEP 668.
-        python3 -m venv "$HOME/.lc-aqt-venv"
-        # shellcheck disable=SC1091
-        . "$HOME/.lc-aqt-venv/bin/activate"
-        pip install --upgrade pip >/dev/null
-        pip install aqtinstall >/dev/null
-        AQT="$HOME/.lc-aqt-venv/bin/aqt"
+    # Isolated venv so we never fight system pip / PEP 668.
+    if [ ! -x "$HOME/.lc-aqt-venv/bin/aqt" ]; then
+        python3 -m venv "$HOME/.lc-aqt-venv" || c_die "python3 -m venv failed (install python3-venv)."
+        "$HOME/.lc-aqt-venv/bin/pip" install --upgrade pip >/dev/null
+        "$HOME/.lc-aqt-venv/bin/pip" install aqtinstall >/dev/null || c_die "pip install aqtinstall failed."
     fi
-    "$AQT" install-qt linux desktop "$QTVER" linux_gcc_64 -O "$QTROOT"
+    "$HOME/.lc-aqt-venv/bin/aqt" install-qt linux desktop "$QTVER" linux_gcc_64         -O "$QTROOT" --modules "${QT_AQT_MODULES[@]}"         || c_die "aqt install-qt failed. Check your connection and re-run."
+}
+if [ ! -f "$QTDIR/lib/cmake/Qt6/Qt6Config.cmake" ]; then
+    install_qt
+elif [ -n "$(missing_qt_components)" ]; then
+    c_info "Qt exists but is missing: $(missing_qt_components)-- installing add-on modules..."
+    install_qt
 fi
 [ -f "$QTDIR/lib/cmake/Qt6/Qt6Config.cmake" ] || c_die "Qt6 not found at $QTDIR after install."
+[ -z "$(missing_qt_components)" ] || c_die "Qt6 at $QTDIR is incomplete. Missing: $(missing_qt_components)"
 c_ok "Qt6: $QTDIR"
 
 # ── Clone / update ───────────────────────────────────────────────────────────
@@ -151,8 +166,14 @@ echo ""
 
 if [ -z "${LC_NORUN:-}" ]; then
     if [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]; then
-        c_info "Launching LlamaCode..."
-        ( cd "$BUILD_DIR" && LD_LIBRARY_PATH="$QTDIR/lib:${LD_LIBRARY_PATH:-}" "$EXE" & )
+        # Desacoplada de la terminal: con '( ... & )' heredaba stdout/stderr, su log
+        # se volcaba sobre el prompt del usuario y moria al cerrar la terminal.
+        APP_LOG="$BUILD_DIR/llamacode-launch.log"
+        c_info "Launching LlamaCode... (log: $APP_LOG)"
+        # La redireccion va sobre TODO el bloque en background: el bash que lo
+        # corre espera a la app, y si conserva el stdout de la terminal la deja
+        # colgada (curl | bash nunca termina).
+        ( cd "$BUILD_DIR" && LD_LIBRARY_PATH="$QTDIR/lib:${LD_LIBRARY_PATH:-}"             setsid nohup "$EXE" ) >"$APP_LOG" 2>&1 </dev/null &
     else
         c_info "No display detected. Run later with:"
         echo "  LD_LIBRARY_PATH=$QTDIR/lib $EXE"

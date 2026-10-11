@@ -74,6 +74,18 @@ Check ($ps.Contains('git -C $Dir config core.longpaths true')) 'deja core.longpa
 Check (-not $ps.Contains("'--debug'")) 'no fuerza windeployqt --debug (Debug usa Qt release)'
 Check ($ps.Contains('windeployqt.exe" @DeployFlag')) 'en Debug deja que windeployqt detecte las DLL del exe'
 
+# Linux: probado en WSL (Ubuntu 24.04 limpio).
+# Multimedia es add-on de aqt; sin pedirlo CMake no encuentra Qt6Multimedia.
+Check ($sh.Contains('QT_AQT_MODULES=(qtmultimedia)')) 'bootstrap.sh instala el add-on Qt Multimedia'
+Check ($sh.Contains('--modules "${QT_AQT_MODULES[@]}"')) 'bootstrap.sh le pasa los modulos a aqt'
+Check ($sh.Contains('QT_REQUIRED_COMPONENTS=(Core Quick QuickControls2 Sql Concurrent Network Widgets Multimedia Svg)')) 'bootstrap.sh verifica los componentes Qt que pide CMake'
+# libQt6Multimedia.so tiene NEEDED libpulse.so.0: sin ella falla el link (pa_*@PULSE_0).
+Check ($sh -match 'libdbus-1-3 libpulse0') 'apt instala libpulse0'
+Check ($sh.Contains('pulseaudio-libs')) 'dnf instala pulseaudio-libs'
+Check ($sh -match 'dbus libpulse libsecret') 'pacman instala libpulse'
+# La app no hereda la terminal: si no, su log ensucia el prompt y muere al cerrarla.
+Check ($sh.Contains('setsid nohup "$EXE" ) >"$APP_LOG" 2>&1 </dev/null &')) 'bootstrap.sh lanza la app desacoplada de la terminal (redireccion sobre todo el bloque)'
+
 # Lado del app.
 Check ($app.Contains('installRootForExePath(QCoreApplication::applicationFilePath())')) 'el app calcula la raiz de instalacion'
 Check ($app -match '\$env:LC_DIR=') 'el app le pasa LC_DIR al bootstrap'

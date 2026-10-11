@@ -1,0 +1,48 @@
+# Instalacion completa en un Ubuntu 24.04 pelado (contenedor, sin git/cmake/
+# compilador/Qt), tal como la corre un usuario:
+#   curl -fsSL .../scripts/bootstrap.sh | bash
+# Despues arranca la app bajo Xvfb y falla si muere enseguida (libs o plugins
+# Qt faltantes). El camino con sudo (usuario no-root) se probo en WSL.
+name: bootstrap-linux
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - scripts/bootstrap.sh
+      - .github/workflows/bootstrap-linux.yml
+
+jobs:
+  install:
+    runs-on: ubuntu-24.04
+    container: ubuntu:24.04
+    timeout-minutes: 120
+    env:
+      DEBIAN_FRONTEND: noninteractive
+      LC_DIR: /root/LlamaCode
+      LC_NORUN: '1'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: scripts/bootstrap.sh
+          sparse-checkout-cone-mode: false
+
+      - name: Bootstrap (curl | bash)
+        shell: bash
+        env:
+          LC_BRANCH: ${{ github.ref_name }}
+        run: cat scripts/bootstrap.sh | bash
+
+      - name: Launch smoke test (Xvfb)
+        shell: bash
+        run: |
+          apt-get install -y --no-install-recommends xvfb xauth >/dev/null
+          cd "$LC_DIR/build"
+          set +e
+          LD_LIBRARY_PATH="$HOME/Qt/6.8.3/gcc_64/lib" timeout 45 xvfb-run -a ./LlamaCode > app.log 2>&1
+          rc=$?
+          set -e
+          tail -40 app.log
+          if [ "$rc" -ne 124 ]; then echo "::error::LlamaCode exited early (rc=$rc)"; exit 1; fi
+          echo "LlamaCode still running after 45s"
