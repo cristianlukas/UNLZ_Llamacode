@@ -2,6 +2,8 @@
 #include <QProcess>
 #include <QStandardPaths>
 #include <QFileInfo>
+#include <QFutureWatcher>
+#include <QtConcurrent>
 
 QString MasterCli::label(const QString &name)
 {
@@ -28,7 +30,46 @@ QVariantMap MasterCli::status(const QString &name, bool force)
 {
     if (!force && m_cache.contains(name))
         return m_cache.value(name);
+    const QVariantMap out = probe(name);
+    m_cache.insert(name, out);
+    return out;
+}
 
+QVariantMap MasterCli::requestStatus(const QString &name, bool force)
+{
+    if (!force && m_cache.contains(name))
+        return m_cache.value(name);
+
+    QVariantMap placeholder = m_cache.value(name);
+    if (placeholder.isEmpty()) {
+        placeholder[QStringLiteral("name")]           = name;
+        placeholder[QStringLiteral("label")]          = label(name);
+        placeholder[QStringLiteral("installCommand")] = installCommand(name);
+        placeholder[QStringLiteral("installed")]      = false;
+        placeholder[QStringLiteral("version")]        = QString();
+        placeholder[QStringLiteral("path")]           = QString();
+        placeholder[QStringLiteral("probeOk")]        = false;
+        placeholder[QStringLiteral("capabilities")]   = QStringList();
+    }
+    placeholder[QStringLiteral("probing")] = true;
+
+    if (m_probing.contains(name))
+        return placeholder;
+    m_probing.insert(name);
+
+    auto *watcher = new QFutureWatcher<QVariantMap>(this);
+    connect(watcher, &QFutureWatcher<QVariantMap>::finished, this, [this, watcher, name]() {
+        m_cache.insert(name, watcher->result());
+        m_probing.remove(name);
+        watcher->deleteLater();
+        emit statusChanged(name);
+    });
+    watcher->setFuture(QtConcurrent::run([name]() { return MasterCli::probe(name); }));
+    return placeholder;
+}
+
+QVariantMap MasterCli::probe(const QString &name)
+{
     QVariantMap out;
     out[QStringLiteral("name")]           = name;
     out[QStringLiteral("label")]          = label(name);
@@ -41,10 +82,8 @@ QVariantMap MasterCli::status(const QString &name, bool force)
 
     // Resolver binario en PATH (Windows agrega .cmd/.exe automáticamente).
     QString exe = QStandardPaths::findExecutable(name);
-    if (exe.isEmpty()) {
-        m_cache.insert(name, out);
+    if (exe.isEmpty())
         return out;
-    }
 
     // Probar `--version` con timeout corto; capturar primera línea no vacía.
     QProcess p;
@@ -85,7 +124,5 @@ QVariantMap MasterCli::status(const QString &name, bool force)
         }
     }
     out[QStringLiteral("capabilities")] = capabilities;
-
-    m_cache.insert(name, out);
     return out;
 }

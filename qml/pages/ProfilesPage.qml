@@ -73,10 +73,15 @@ Item {
     property int healthErrors: 0
     property int healthWarnings: 0
     function refreshHealth() {
-        healthIssues = App.profileHealth()
-        const s = App.profileHealthSummary()
-        healthErrors = s.errors ?? 0
-        healthWarnings = s.warnings ?? 0
+        // Una sola pasada: cada chequeo resuelve TODOS los launches contra el
+        // catálogo; pedir además profileHealthSummary() la repetía entera.
+        const issues = App.profileHealth()
+        let errors = 0
+        for (let i = 0; i < issues.length; ++i)
+            if (issues[i].severity === "error") ++errors
+        healthIssues = issues
+        healthErrors = errors
+        healthWarnings = issues.length - errors
     }
     function launchName(id) {
         const lp = App.profileManager.getLaunchProfile(id)
@@ -93,6 +98,12 @@ Item {
         for (let i = 0; i < names.length; ++i)
             m[names[i]] = App.masterCliStatus(names[i], force === true)
         masterCliStatusCache = m
+    }
+    // El probe de cada CLI corre en segundo plano (ejecuta `--version`/`--help`):
+    // al terminar, releer la cache para pintar el resultado.
+    Connections {
+        target: App
+        function onMasterCliStatusChanged(name) { root.refreshMasterCliStatus(false) }
     }
     // Modelo de la cadena (ordenado primero→último). Cada item:
     // {type,label,profileId,httpUrl,httpModel,httpKeyRef,httpKeyValue,cliName,applyEdits,timeoutSec}
@@ -733,8 +744,10 @@ Item {
                 Component.onCompleted: root.refreshHealth()
                 Connections {
                     target: App.profileManager
-                    function onLaunchesChanged() { root.refreshHealth() }
-                    function onProfilesReloaded() { root.refreshHealth() }
+                    // callLater agrupa ráfagas (guardar toca varias entidades)
+                    // en un solo recálculo por vuelta del event loop.
+                    function onLaunchesChanged() { Qt.callLater(root.refreshHealth) }
+                    function onProfilesReloaded() { Qt.callLater(root.refreshHealth) }
                 }
 
                 // ── Banner de salud de perfiles ──
@@ -1800,7 +1813,9 @@ Item {
                                         Text {
                                             Layout.fillWidth: true; font.pixelSize: 11; wrapMode: Text.WrapAnywhere
                                             property var st: masterCliStatusCache[cliName] ?? ({})
-                                            text: (st.installed === true)
+                                            text: (st.probing === true && st.installed !== true)
+                                                ? ((st.label ?? cliName) + " — detectando…")
+                                                : (st.installed === true)
                                                 ? ((st.label ?? cliName) + " — " + (st.version ?? "instalado"))
                                                 : ((st.label ?? cliName) + " no detectado · " + App.masterCliInstallCommand(cliName))
                                             color: (st.installed === true) ? Theme.successText : Theme.textMuted

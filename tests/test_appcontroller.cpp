@@ -253,6 +253,7 @@ private slots:
     void harnessAdapterNormalizesToLlamaAgent();
     void computerUseSandwichRemainsExperimentalAndOptIn();
     void systemProfileBinaryPinReadsBundle();
+    void systemProfilesBundleCacheSeesRewrites();
     void systemProfileMinimumBuildSelectsNewestCompatible();
     void cpuSystemProfileRequiresCpuBinary();
     void charlaTranscriptRoutesToAgentWhenRunning();
@@ -3107,6 +3108,29 @@ void AppControllerTests::systemProfileBinaryPinReadsBundle()
     QCOMPARE(app.systemProfileBinaryPin(QStringLiteral("pinned")), QStringLiteral("b9842"));
     QVERIFY(app.systemProfileBinaryPin(QStringLiteral("nopin")).isEmpty());
     QVERIFY(app.systemProfileBinaryPin(QStringLiteral("unknown")).isEmpty());
+
+    qunsetenv("LLAMACODE_SYSTEM_PROFILES");
+}
+
+// El bundle se cachea (buildContext lo consultaba varias veces por perfil y el
+// chequeo de salud congelaba la UI ~12 s). Reescribir el override con otro
+// contenido —incluso del mismo tamaño— debe verse en la siguiente consulta.
+void AppControllerTests::systemProfilesBundleCacheSeesRewrites()
+{
+    const QString bundle = m_tmp.filePath(QStringLiteral("sysprof_cache.json"));
+    auto writeBundle = [&](const QByteArray &pin) {
+        QFile f(bundle);
+        QVERIFY(f.open(QIODevice::WriteOnly | QIODevice::Truncate));
+        f.write(R"([{"id":"cached","binaryKind":"official","binaryPin":")" + pin + R"("}])");
+    };
+    writeBundle("b1111");
+    qputenv("LLAMACODE_SYSTEM_PROFILES", bundle.toLocal8Bit());
+
+    AppController app;
+    QCOMPARE(app.systemProfileBinaryPin(QStringLiteral("cached")), QStringLiteral("b1111"));
+    QCOMPARE(app.systemProfileBinaryPin(QStringLiteral("cached")), QStringLiteral("b1111"));
+    writeBundle("b2222");   // mismo tamaño, contenido distinto
+    QCOMPARE(app.systemProfileBinaryPin(QStringLiteral("cached")), QStringLiteral("b2222"));
 
     qunsetenv("LLAMACODE_SYSTEM_PROFILES");
 }

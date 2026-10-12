@@ -58,6 +58,10 @@ public:
     static QVariantList toVariantList(const HardwareSignals &hw);
     static QVariantMap toVariantMap(const EngineCatalogEntry &entry, const HardwareSignals &hw);
     static HardwareSignals detectHardware();
+    // Mismas señales a partir del resumen de hardware que AppController ya arma
+    // en un worker (su lista "gpus" sale de nvidia-smi). Sin procesos: apto para
+    // getters de QML. Devuelve hasGpu=false mientras "gpus" no llegó.
+    static HardwareSignals hardwareFromSummary(const QVariantMap &summary);
     static QString recommendedEngineId(const HardwareSignals &hw);
 
     static int parseBuildTag(const QString &tag);

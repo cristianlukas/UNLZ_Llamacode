@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Window
 import LlamaCode 1.0
 import "NavigationPolicy.js" as NavigationPolicy
 
@@ -54,15 +55,42 @@ Rectangle {
         anchors { fill: parent; margins: 0 }
         spacing: 0
 
+        // Hace de barra de título (la ventana no tiene una aparte): arrastrar
+        // mueve la ventana y doble clic maximiza/restaura.
         Rectangle {
             Layout.fillWidth: true
             height: 56
             color: Theme.titleBg
-            Text {
+            Column {
                 anchors.centerIn: parent
-                text: "UNLZ_Llamacode"
-                font { pixelSize: 16; bold: true }
-                color: Theme.textPrimary
+                width: parent.width - 16
+                spacing: 2
+                Text {
+                    width: parent.width
+                    horizontalAlignment: Text.AlignHCenter
+                    text: "UNLZ_Llamacode"
+                    font { pixelSize: 16; bold: true }
+                    color: Theme.textPrimary
+                }
+                Text {
+                    width: parent.width
+                    horizontalAlignment: Text.AlignHCenter
+                    visible: App.startupBusy || (App.startupStatus || "").length > 0
+                    text: App.startupStatus || ""
+                    font.pixelSize: 10
+                    color: Theme.textSecondary
+                    elide: Text.ElideRight
+                }
+            }
+            TapHandler {
+                onDoubleTapped: {
+                    const w = root.Window.window
+                    if (w) w.visibility === Window.Maximized ? w.showNormal() : w.showMaximized()
+                }
+            }
+            DragHandler {
+                target: null
+                onActiveChanged: if (active && root.Window.window) root.Window.window.startSystemMove()
             }
         }
 

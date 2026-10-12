@@ -29,6 +29,7 @@
 #include <QUdpSocket>
 #include <QNetworkDatagram>
 #include <QDateTime>
+#include <QMutex>
 #include <QCryptographicHash>
 #include <QClipboard>
 #include <QGuiApplication>
@@ -1513,6 +1514,7 @@ AppController::AppController(QObject *parent) : QObject(parent)
     });
     m_taskLivePreviewEnabled = QSettings().value(
         QStringLiteral("tasks/livePreviewEnabled"), false).toBool();
+    connect(&m_masterCli, &MasterCli::statusChanged, this, &AppController::masterCliStatusChanged);
     connect(&m_hardwareWatcher, &QFutureWatcher<QVariantMap>::finished, this,
             [this]() {
         m_hardwareScanInFlight = false;
@@ -3981,7 +3983,11 @@ void AppController::installCatalogEngine(const QString &engineId)
         return;
     }
 
-    const HardwareSignals hw = EngineCatalog::detectHardware();
+    // Acción explícita del usuario: si el worker de hardware aún no respondió,
+    // vale la pena la consulta directa antes que elegir variante a ciegas.
+    const HardwareSignals hw = m_hardwareSummary.contains(QStringLiteral("gpus"))
+        ? EngineCatalog::hardwareFromSummary(m_hardwareSummary)
+        : EngineCatalog::detectHardware();
     for (const EngineVariant &v : e.variants) {
         QString reason;
         if (v.buildFromSource && EngineCatalog::isVariantCompatible(v, hw, &reason)) {
@@ -6188,7 +6194,9 @@ QStringList AppController::masterCliList() const
 
 QVariantMap AppController::masterCliStatus(const QString &name, bool force)
 {
-    return m_masterCli.status(name, force);
+    // No bloqueante: el probe ejecuta los CLIs (Node tarda segundos) y esto se
+    // llama al abrir Perfiles. El resultado llega por masterCliStatusChanged.
+    return m_masterCli.requestStatus(name, force);
 }
 
 QString AppController::masterCliInstallCommand(const QString &name) const
@@ -15317,18 +15325,48 @@ void AppController::cleanupDuplicateInitialLaunchProfiles()
 }
 
 // Lee el bundle de perfiles de sistema (env override para tests, si no el qrc).
+//
+// Cacheado: son ~250 KB de JSON más la expansión de variantes, y buildContext()
+// lo consulta varias veces POR PERFIL (kind, pin, build mínimo, religado por
+// nombre). El chequeo de salud recorre todos los perfiles, así que sin cache
+// eran ~1500 parseos y la UI se congelaba ~12 s al abrir Perfiles. El recurso
+// qrc es inmutable; un override (tests) se relee y se compara por contenido,
+// así reescribir el archivo invalida la cache aunque conserve tamaño y fecha.
 static QJsonArray readSystemProfilesBundle()
 {
+    static QMutex mutex;
+    static QString cachedSrc;
+    static QByteArray cachedBytes;
+    static QJsonArray cachedArray;
+    static bool cachedValid = false;
+
     const QByteArray env = qgetenv("LLAMACODE_SYSTEM_PROFILES");
     const QString src = !env.isEmpty() ? QString::fromLocal8Bit(env)
                                        : QStringLiteral(":/assets/system_profiles.json");
+    const bool immutable = src.startsWith(QLatin1Char(':'));
+
+    QMutexLocker lock(&mutex);
+    if (cachedValid && immutable && cachedSrc == src)
+        return cachedArray;
+
     QFile f(src);
-    if (!f.open(QIODevice::ReadOnly)) return {};
+    if (!f.open(QIODevice::ReadOnly)) {
+        cachedValid = false;
+        return {};
+    }
+    const QByteArray bytes = f.readAll();
+    if (cachedValid && cachedSrc == src && cachedBytes == bytes)
+        return cachedArray;
+
     // buildContext() usa este bundle para religar por nombre los modelos que el
     // usuario guarda fuera de la carpeta administrada (por ejemplo D:\Models).
     // ProfileManager expande las variantes de benchmark al cargarlas; esta vista
     // debe hacer lo mismo o sólo el perfil base puede encontrar su GGUF.
-    return expandSystemProfileVariants(QJsonDocument::fromJson(f.readAll()).array());
+    cachedArray = expandSystemProfileVariants(QJsonDocument::fromJson(bytes).array());
+    cachedSrc = src;
+    cachedBytes = immutable ? QByteArray() : bytes;
+    cachedValid = true;
+    return cachedArray;
 }
 
 void AppController::ensureSystemBinary(const QString &kind)

@@ -12,6 +12,7 @@ private slots:
     void repoNormalizationAndBuildDirAreStable();
     void pullRequestRefIsParsedAsBranch();
     void qwen38NextEntryBuildsFromPullRequest();
+    void hardwareFromSummaryUsesDetectedGpus();
 };
 
 void EngineCatalogTests::catalogIncludesSourceForks()
@@ -141,6 +142,27 @@ void EngineCatalogTests::qwen38NextEntryBuildsFromPullRequest()
     QVERIFY(EngineCatalog::sourceBuildDirName(e)
             != EngineCatalog::sourceBuildDirName(official));
     QCOMPARE(EngineCatalog::sourceBuildDirName(e), QStringLiteral("llama.cpp-qwen38-next"));
+}
+
+// engineCatalog() lo lee QML en un binding: debe salir del resumen ya detectado
+// (lista "gpus" de nvidia-smi en el worker) sin lanzar procesos.
+void EngineCatalogTests::hardwareFromSummaryUsesDetectedGpus()
+{
+    const HardwareSignals nv = EngineCatalog::hardwareFromSummary(QVariantMap{
+        {QStringLiteral("gpus"), QVariantList{QVariantMap{{QStringLiteral("name"), QStringLiteral("RTX")}}}}});
+    QCOMPARE(nv.gpuVendor, QStringLiteral("nvidia"));
+    QVERIFY(nv.hasGpu);
+    QVERIFY(!nv.platform.isEmpty());
+
+    const HardwareSignals none = EngineCatalog::hardwareFromSummary(QVariantMap{
+        {QStringLiteral("gpus"), QVariantList{}}});
+#ifndef Q_OS_MACOS
+    QVERIFY(!none.hasGpu);
+    QCOMPARE(none.gpuVendor, QStringLiteral("unknown"));
+#endif
+    // Antes de que llegue el worker ("gpus" ausente) tampoco hay GPU declarada.
+    const HardwareSignals pending = EngineCatalog::hardwareFromSummary(QVariantMap{});
+    QCOMPARE(pending.platform, none.platform);
 }
 
 QTEST_MAIN(EngineCatalogTests)

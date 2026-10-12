@@ -529,7 +529,8 @@ public:
     Q_INVOKABLE QString expandedLogPath() const;
     Q_INVOKABLE void clearPerformanceLog();
     Q_INVOKABLE void recordPerformanceSample(const QString &label);
-    QVariantList engineCatalog() const { return EngineCatalog::toVariantList(EngineCatalog::detectHardware()); }
+    // Sin nvidia-smi en el hilo de UI: lo lee BinariesPage en cada binding.
+    QVariantList engineCatalog() const { return EngineCatalog::toVariantList(EngineCatalog::hardwareFromSummary(m_hardwareSummary)); }
     QVariantList modelRecommendations() const { return m_modelRecommendations; }
     bool modelDownloadRunning() const { return m_modelDownloadReply != nullptr; }
     int modelDownloadProgress() const { return m_modelDownloadProgress; }
@@ -1527,6 +1528,9 @@ signals:
     void browserSkillsChanged();
     void teachChanged();
     void effectiveProfileChanged();
+    // Terminó el probe en segundo plano de un CLI maestro (masterCliStatus ya
+    // devuelve el resultado desde cache).
+    void masterCliStatusChanged(const QString &name);
     void launchMenuReadinessChanged();
     void routerStateChanged();
     void setupStateChanged();

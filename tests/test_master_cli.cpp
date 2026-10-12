@@ -14,6 +14,7 @@ private slots:
     void installCommand_known();
     void status_hasExpectedKeys();
     void status_cachedUntilInvalidate();
+    void requestStatus_doesNotBlockAndNotifies();
 };
 
 void MasterCliTests::supported_listsClaudeAndCodex()
@@ -60,6 +61,31 @@ void MasterCliTests::status_cachedUntilInvalidate()
     cli.invalidate();  // no debe crashear; re-detecta
     const QVariantMap c = cli.status("codex", /*force=*/true);
     QCOMPARE(c.value("name").toString(), QStringLiteral("codex"));
+}
+
+// Perfiles llama a esto al abrir: el probe (procesos externos) no puede correr
+// en el hilo de UI. Sin cache devuelve un placeholder probing=true al instante,
+// y statusChanged avisa cuando status() ya sale de cache.
+void MasterCliTests::requestStatus_doesNotBlockAndNotifies()
+{
+    MasterCli cli;
+    QSignalSpy spy(&cli, &MasterCli::statusChanged);
+    const QString name = QStringLiteral("definitely_not_a_real_cli_xyz");
+    const QVariantMap first = cli.requestStatus(name);
+    QCOMPARE(first.value("probing").toBool(), true);
+    QCOMPARE(first.value("installed").toBool(), false);
+    QCOMPARE(first.value("name").toString(), name);
+    QVERIFY(cli.isProbing(name));
+    // Un segundo pedido mientras corre no lanza otro probe.
+    QCOMPARE(cli.requestStatus(name).value("probing").toBool(), true);
+
+    QVERIFY(spy.wait(5000));
+    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.at(0).at(0).toString(), name);
+    QVERIFY(!cli.isProbing(name));
+    const QVariantMap cached = cli.requestStatus(name);
+    QVERIFY(!cached.contains("probing"));
+    QCOMPARE(cached.value("installed").toBool(), false);
 }
 
 QTEST_MAIN(MasterCliTests)
