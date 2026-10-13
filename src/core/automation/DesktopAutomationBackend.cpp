@@ -376,8 +376,10 @@ QImage captureWindowOffscreen(HWND hwnd)
     const BOOL printed = PrintWindow(hwnd, memory, PW_RENDERFULLCONTENT);
     QImage result;
     if (printed && bits)
+        // RGB32, no ARGB32: GDI deja el alfa en 0 y como ARGB la captura era
+        // "transparente" (negra para el OCR). Ver OcrEngine::opaqueForOcr.
         result = QImage(static_cast<uchar *>(bits), width, height, width * 4,
-                        QImage::Format_ARGB32).copy();
+                        QImage::Format_RGB32).copy();
     SelectObject(memory, old);
     DeleteObject(bitmap);
     DeleteDC(memory);

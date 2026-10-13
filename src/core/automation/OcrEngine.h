@@ -38,4 +38,11 @@ QString languageName();
 // hilo STA de la GUI deadlockea.
 QList<OcrLine> recognize(const QImage &image, QString *error = nullptr);
 
+// Copia OPACA (alfa 255) con los mismos colores. Las capturas de ventana por
+// GDI/PrintWindow traen el canal alfa en 0: como ARGB eran "transparentes" y el
+// OCR (BGRA premultiplicado) las veía negras → desktop_read_text y
+// desktop_click_text sobre una ventana no leían nada. Pura; independiente del
+// motor (también la usa Linux).
+QImage opaqueForOcr(const QImage &image);
+
 }   // namespace OcrEngine

@@ -560,8 +560,31 @@ void TestVoice::charlaTuningRecommendations()
     // Perfil ya óptimo para voz: nada que recomendar (no molesta con popup).
     const QStringList good{
         "--ctx-size", "32768", "--batch-size", "2048", "--ubatch-size", "512",
-        "--cache-reuse", "512", "--predict", "1024"};
+        "--cache-reuse", "512", "--predict", "1024", "--parallel", "1"};
     QVERIFY(CharlaTuning::recommend(good, 24.0).isEmpty());
+
+    // Contexto mínimo: con 4096 (default de muchos perfiles, medido) el agente
+    // de voz compacta cada turno y pierde la consigna → subir a 16k con 8 GB.
+    const QStringList small{"--ctx-size", "4096", "--cache-reuse", "512", "--predict", "1024"};
+    QString ctxRec, parRec;
+    for (const auto &c : CharlaTuning::recommend(small, 8.0)) {
+        if (c.flag == QLatin1String("--ctx-size")) ctxRec = c.recommended;
+        if (c.flag == QLatin1String("--parallel")) parRec = c.recommended;
+    }
+    QCOMPARE(ctxRec, QString("16384"));
+    QVERIFY(parRec.isEmpty());   // sin --parallel: auto + KV unificado, no achica
+    // Con poca VRAM, un mínimo más chico.
+    for (const auto &c : CharlaTuning::recommend(small, 4.0))
+        if (c.flag == QLatin1String("--ctx-size")) QCOMPARE(c.recommended, QString("8192"));
+    // Slots explícitos sin KV unificado sí dividen el contexto → 1 slot.
+    const QStringList shortAlias{"--ctx-size", "16384", "-np", "4"};
+    const QStringList fixed = CharlaTuning::apply(shortAlias, CharlaTuning::recommend(shortAlias, 8.0));
+    QVERIFY(!fixed.contains("-np"));
+    QCOMPARE(CharlaTuning::argValue(fixed, "--parallel"), QString("1"));
+    // ...salvo con --kv-unified (comparten el pool).
+    const QStringList unified{"--ctx-size", "16384", "--parallel", "4", "--kv-unified",
+                              "--cache-reuse", "512", "--predict", "1024"};
+    QVERIFY(CharlaTuning::recommend(unified, 8.0).isEmpty());
 }
 
 void TestVoice::vadTurnEnded()

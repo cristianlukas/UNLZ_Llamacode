@@ -2044,10 +2044,12 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         const QString snapshotId = snap.value(QStringLiteral("snapshotId")).toString();
         if (ok) *ok = true;
         if (lines.isEmpty())
-            return QStringLiteral("[desktop_controls: 0 controles con nombre%1]\nsnapshot_id=%2")
+            return QStringLiteral("[desktop_controls: 0 controles con nombre%1]\nsnapshot_id=%2\n"
+                                  "Esta app no expone controles UIA: leé lo que muestra con "
+                                  "desktop_read_text (OCR) sobre la misma ventana (target_id=%3).")
                 .arg(query.trimmed().isEmpty() ? QString()
                                                : QStringLiteral(" para \"%1\"").arg(query))
-                .arg(snapshotId);
+                .arg(snapshotId, target);
         return QStringLiteral("[desktop_controls: %1 control(es)]\n"
                               "snapshot_id=%2\nUsá el controlId con desktop_click_element "
                               "(mismo target_id).\n%3")
@@ -2310,7 +2312,10 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         const bool good = DesktopAutomationBackend::typeText(
             args.value(QStringLiteral("text")).toString(), &error);
         if (ok) *ok = good;
-        return good ? QStringLiteral("[desktop_type: ok]")
+        // Modelos chicos no verifican solos: sugerir el paso de lectura concreto.
+        return good ? QStringLiteral("[desktop_type: ok] Para ver el resultado en pantalla: "
+                                     "desktop_read_text scope_kind=window target_id=%1")
+                          .arg(m_agentFocusedWindow)
                     : QStringLiteral("[desktop_type: %1]").arg(error);
     }
     if (name == QLatin1String("desktop_key")) {
@@ -2458,7 +2463,8 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
                                      "desktop_wait ~800ms y UNA desktop_windows para el id. "
                                      "Después, si la app se maneja con teclado (calc, notepad), "
                                      "desktop_focus <id> + desktop_type; NO repitas desktop_windows "
-                                     "ni observes en loop.]")
+                                     "ni observes en loop. Para LEER lo que muestra (resultados, "
+                                     "mensajes): desktop_read_text sobre esa ventana.]")
                     : QStringLiteral("[desktop_launch: %1]").arg(error);
     }
     if (name == QLatin1String("desktop_focus")) {

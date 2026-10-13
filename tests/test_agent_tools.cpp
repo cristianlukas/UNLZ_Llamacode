@@ -99,6 +99,7 @@ private slots:
     void desktopWindows_returnsStructuredInventory();
     void desktopNewTools_validateBeforeTouchingTheDesktop();
     void desktopClipboard_roundTripRestoresUserClipboard();
+    void desktopControls_emptyPointsToReadText();
     void desktopControls_invalidWindowErrorsCleanly();
     void desktopLaunch_emptyAppErrorsCleanly();
     void honeyHandoff_densifiesMasterAndSubPrompts();
@@ -813,6 +814,23 @@ void AgentToolsTests::desktopNewTools_validateBeforeTouchingTheDesktop()
     QVariantMap bad = call("desktop_clipboard", {{"op", "borrar"}});
     QVERIFY(!bad.value("ok").toBool());
     QVERIFY(bad.value("result").toString().contains(QStringLiteral("op inválida")));
+}
+
+// Si una app no expone controles UIA (Calculadora de Win11 desde un agente, por
+// ejemplo), el resultado sugiere leerla por OCR: los modelos chicos concluían
+// "no puedo leerlo" en vez de usar desktop_read_text. Sólo lectura de UIA.
+void AgentToolsTests::desktopControls_emptyPointsToReadText()
+{
+    const QVariantList wins = DesktopAutomationBackend::windows();
+    if (wins.isEmpty()) QSKIP("sin ventanas visibles en esta sesión");
+    const QString id = wins.first().toMap().value(QStringLiteral("id")).toString();
+    QVariantMap c = call("desktop_controls",
+                         {{"target_id", id}, {"query", "zzqqxx-ningun-control-se-llama-asi"}});
+    QVERIFY(c.value("ok").toBool());
+    const QString out = c.value("result").toString();
+    QVERIFY(out.contains(QStringLiteral("0 controles")));
+    QVERIFY(out.contains(QStringLiteral("desktop_read_text")));
+    QVERIFY(out.contains(id));
 }
 
 // get/set del portapapeles real; se restaura lo que el usuario tenía copiado.

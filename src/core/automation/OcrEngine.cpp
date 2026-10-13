@@ -3,6 +3,7 @@
 #ifdef Q_OS_WIN
 
 #include <QElapsedTimer>
+#include <QGuiApplication>
 #include <QMutex>
 #include <QThread>
 
@@ -58,7 +59,8 @@ SoftwareBitmap toSoftwareBitmap(const QImage &src)
 {
     // Windows.Media.Ocr quiere BGRA8. QImage::Format_ARGB32 tiene ese mismo orden
     // de bytes en little-endian, así que la conversión es un memcpy del buffer.
-    const QImage img = src.convertToFormat(QImage::Format_ARGB32);
+    // Opaca primero: con alfa 0 el motor veía la imagen negra.
+    const QImage img = OcrEngine::opaqueForOcr(src).convertToFormat(QImage::Format_ARGB32);
     const uint8_t *bytes = img.constBits();
     const int len = int(img.sizeInBytes());
     auto buf = winrt::Windows::Security::Cryptography::CryptographicBuffer::CreateFromByteArray(
@@ -130,7 +132,16 @@ EngineProbe currentProbe()
 
 namespace OcrEngine {
 
-bool available() { return currentProbe().ok; }
+// Con QT_QPA_PLATFORM=offscreen (ctest, o la app lanzada sin pantalla) el
+// reconocimiento WinRT crashea el proceso (access violation en el hilo MTA, aun
+// con una imagen en blanco; con la plataforma normal no pasa). Sin escritorio
+// tampoco hay nada que OCRear: se reporta como no disponible.
+static bool headlessPlatform()
+{
+    return QGuiApplication::platformName() == QLatin1String("offscreen");
+}
+
+bool available() { return !headlessPlatform() && currentProbe().ok; }
 QString languageTag() { return currentProbe().tag; }
 QString languageName() { return currentProbe().name; }
 
@@ -140,6 +151,10 @@ QList<OcrLine> recognize(const QImage &image, QString *error)
     QList<OcrLine> out;
     if (image.isNull()) {
         if (error) *error = QStringLiteral("Captura vacía.");
+        return out;
+    }
+    if (headlessPlatform()) {
+        if (error) *error = QStringLiteral("OCR no disponible sin escritorio (plataforma offscreen).");
         return out;
     }
     if (!available()) {
@@ -252,7 +267,7 @@ QList<OcrLine> recognize(const QImage &image, QString *error)
     }
     QTemporaryFile input(QDir::tempPath() + QStringLiteral("/llamacode-ocr-XXXXXX.png"));
     input.setAutoRemove(true);
-    if (!input.open() || !image.save(input.fileName(), "PNG")) {
+    if (!input.open() || !opaqueForOcr(image).save(input.fileName(), "PNG")) {
         if (error) *error = QStringLiteral("No se pudo preparar la captura para OCR.");
         return {};
     }
@@ -298,3 +313,14 @@ QList<OcrLine> recognize(const QImage &image, QString *error)
 }   // namespace OcrEngine
 
 #endif
+
+namespace OcrEngine {
+
+QImage opaqueForOcr(const QImage &image)
+{
+    if (image.isNull()) return image;
+    // RGB32 descarta el alfa (lo fija en 0xFF) sin tocar los canales de color.
+    return image.convertToFormat(QImage::Format_RGB32);
+}
+
+}   // namespace OcrEngine

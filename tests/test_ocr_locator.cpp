@@ -7,6 +7,10 @@
 
 #include <QtTest>
 #include "core/automation/OcrTextLocator.h"
+#include "core/automation/OcrEngine.h"
+#include <QImage>
+#include <QPainter>
+#include <QFont>
 
 namespace {
 
@@ -40,6 +44,9 @@ private slots:
     void find_doesNotSpanAcrossLines();
     void findAll_reportsAmbiguityWhenTextRepeats();
     void find_emptyInputs();
+    void opaqueForOcr_fixesZeroAlphaCaptures();
+    void ocr_readsZeroAlphaWindowCapture();
+    void ocr_blankImageDoesNotCrash();
 };
 
 void OcrLocatorTests::find_singleWordReturnsItsBox()
@@ -147,6 +154,54 @@ void OcrLocatorTests::find_emptyInputs()
     QVERIFY(!OcrTextLocator::find(lines, QString()).ok());
     QVERIFY(!OcrTextLocator::find(lines, QStringLiteral("   ")).ok());
     QVERIFY(!OcrTextLocator::find({}, QStringLiteral("Guardar")).ok());
+}
+
+// Las capturas de ventana por GDI/PrintWindow traen alfa 0: como ARGB eran
+// "transparentes" y el OCR las veía negras (desktop_read_text de una ventana
+// devolvía "no se leyó texto"). opaqueForOcr fija el alfa sin tocar colores.
+void OcrLocatorTests::opaqueForOcr_fixesZeroAlphaCaptures()
+{
+    QImage img(4, 2, QImage::Format_ARGB32);
+    img.fill(qRgba(200, 100, 50, 0));
+    const QImage out = OcrEngine::opaqueForOcr(img);
+    QCOMPARE(qAlpha(out.pixel(1, 1)), 255);
+    QCOMPARE(qRed(out.pixel(1, 1)), 200);
+    QCOMPARE(qGreen(out.pixel(1, 1)), 100);
+    QCOMPARE(qBlue(out.pixel(1, 1)), 50);
+    QVERIFY(OcrEngine::opaqueForOcr(QImage()).isNull());
+}
+
+// Punta a punta con el motor real (si hay idioma OCR instalado): texto negro
+// sobre fondo blanco con alfa 0, como sale de PrintWindow.
+void OcrLocatorTests::ocr_readsZeroAlphaWindowCapture()
+{
+    if (!OcrEngine::available()) QSKIP("sin motor OCR en esta máquina");
+    QImage img(640, 160, QImage::Format_ARGB32);
+    img.fill(qRgba(255, 255, 255, 0));
+    {
+        QPainter p(&img);
+        p.setCompositionMode(QPainter::CompositionMode_Source);
+        QFont f(QStringLiteral("Segoe UI"));
+        f.setPixelSize(56);
+        p.setFont(f);
+        p.setPen(QColor(0, 0, 0, 0));          // alfa 0 también en el texto (GDI)
+        p.drawText(img.rect(), Qt::AlignCenter, QStringLiteral("Guardar"));
+    }
+    QString err;
+    const QList<OcrLine> lines = OcrEngine::recognize(img, &err);
+    QVERIFY2(!lines.isEmpty(), qPrintable(err));
+    QVERIFY(lines.first().text.contains(QStringLiteral("Guardar"), Qt::CaseInsensitive));
+}
+
+// Una ventana capturada en blanco (o sin texto) no puede tumbar la app.
+void OcrLocatorTests::ocr_blankImageDoesNotCrash()
+{
+    if (!OcrEngine::available()) QSKIP("sin motor OCR en esta máquina");
+    QImage img(640, 160, QImage::Format_ARGB32);
+    img.fill(qRgba(255, 255, 255, 0));
+    QString err;
+    const QList<OcrLine> lines = OcrEngine::recognize(img, &err);
+    QVERIFY(lines.isEmpty());
 }
 
 QTEST_MAIN(OcrLocatorTests)
