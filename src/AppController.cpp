@@ -2789,6 +2789,20 @@ void AppController::startServer(const QString &launchProfileId)
             m_effectiveProfile[QStringLiteral("effectiveArgs")] = args;  // serverBaseUrl etc.
         }
     }
+    // El arranque anterior murió cargando el borrador (MTP/speculative): éste
+    // va sin él. Sólo para este launch; el perfil no se toca.
+    m_serverDraftLoadFailed = false;
+    if (!m_serverSkipDraftLaunchId.isEmpty()) {
+        const bool sameLaunch = m_serverSkipDraftLaunchId == launchProfileId;
+        m_serverSkipDraftLaunchId.clear();
+        const QStringList noDraft = MtpDetection::withoutSpeculativeDraft(args);
+        if (sameLaunch && noDraft != args) {
+            args = noDraft;
+            m_effectiveProfile[QStringLiteral("effectiveArgs")] = args;
+            appendServerEvent(QStringLiteral("lifecycle"),
+                              QStringLiteral("Arranque sin borrador MTP/speculative (falló al cargarlo)."));
+        }
+    }
     if (m_benchmarkRunning)
         m_benchmarkEffectiveArgs = args;
 
@@ -2891,8 +2905,11 @@ void AppController::startServer(const QString &launchProfileId)
             appendServerEvent(QStringLiteral("stdout"), QString::fromUtf8(serverProcess->readAllStandardOutput()));
     });
     connect(serverProcess, &QProcess::readyReadStandardError, this, [this, serverProcess]() {
-        if (serverProcess)
-            appendServerEvent(QStringLiteral("stderr"), QString::fromUtf8(serverProcess->readAllStandardError()));
+        if (!serverProcess) return;
+        const QString text = QString::fromUtf8(serverProcess->readAllStandardError());
+        if (m_proc == serverProcess && MtpDetection::draftLoadFailed(text))
+            m_serverDraftLoadFailed = true;
+        appendServerEvent(QStringLiteral("stderr"), text);
     });
     connect(serverProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             this, [this, serverProcess](int code, QProcess::ExitStatus status) {
@@ -2928,7 +2945,23 @@ void AppController::startServer(const QString &launchProfileId)
         const bool crashed = !userStop &&
                              (status == QProcess::CrashExit || code != 0);
         const QString crashLaunchId = m_activeLaunchId;
-        if (!m_pendingAutoAgentLaunchId.isEmpty()) {
+        const bool benchmarkOwnsLifecycle = m_benchmarkRunning || m_benchmarkCanceled;
+        // Murió cargando el borrador: reintentar igual da el mismo error. El
+        // próximo arranque (watchdog) va sin borrador y el agente pendiente
+        // sigue esperando a ese server.
+        const bool draftFallback = crashed && m_serverDraftLoadFailed
+            && !crashLaunchId.isEmpty() && !benchmarkOwnsLifecycle
+            && m_serverRestartCount < kMaxServerRestarts;
+        m_serverDraftLoadFailed = false;
+        if (draftFallback) {
+            m_serverSkipDraftLaunchId = crashLaunchId;
+            appendServerEvent(QStringLiteral("lifecycle"),
+                              QStringLiteral("El borrador MTP/speculative no cargó: reintento sin él."));
+            emit serverError(QStringLiteral(
+                "Aviso: el borrador MTP del perfil %1 no cargó. Arranco el modelo sin MTP "
+                "(funciona igual, genera algo más lento).").arg(crashLaunchId));
+        }
+        if (!m_pendingAutoAgentLaunchId.isEmpty() && !draftFallback) {
             m_pendingAutoAgentLaunchId.clear();
             m_agentStarting = false;
             emit agentStartingChanged();
@@ -2949,7 +2982,6 @@ void AppController::startServer(const QString &launchProfileId)
         // not launch a second model behind the benchmark state machine: it can
         // otherwise turn one native CUDA crash into a mixed/ambiguous pass.
         // Manual launches retain the watchdog recovery behaviour.
-        const bool benchmarkOwnsLifecycle = m_benchmarkRunning || m_benchmarkCanceled;
         // Watchdog: auto-restart en crash, con backoff y tope de intentos.
         if (crashed && !crashLaunchId.isEmpty() && !benchmarkOwnsLifecycle) {
             if (m_serverRestartCount < kMaxServerRestarts) {

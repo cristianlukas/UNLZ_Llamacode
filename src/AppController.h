@@ -1900,6 +1900,10 @@ private:
     int       m_serverRestartCount = 0;
     QTimer   *m_serverRestartTimer = nullptr;
     static constexpr int kMaxServerRestarts = 3;
+    // El borrador MTP/speculative no cargó en este arranque: el watchdog
+    // relanza una vez SIN borrador en vez de repetir los mismos args.
+    bool      m_serverDraftLoadFailed = false;
+    QString   m_serverSkipDraftLaunchId;   // sólo aplica a ESE perfil
     void setServerState(const QString &s);
     // Live VRAM/stats meter (nvidia-smi async poll while server runs)
     QTimer   *m_vramPollTimer = nullptr;
