@@ -1,0 +1,583 @@
+{
+  "run_id": "q4-base-r2-try2",
+  "profile": "q4",
+  "launch_id": "q4-udq4kxl-lch1-20261010",
+  "agent_profile_id": "31ff813d-6bf5-4400-8f82-69af4fcc64bc",
+  "arm": "base",
+  "replicate": 2,
+  "attempt": 2,
+  "sampling": {
+    "temperature": 0.6,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0,
+    "repeat_penalty": 1.0,
+    "presence_penalty": 0.0,
+    "reasoning_effort": "medium"
+  },
+  "screen": "1280x800x24",
+  "lang": "C.UTF-8",
+  "gtk_theme": "Adwaita:dark",
+  "started_at_local": "2026-10-13T20:15:12.642584-03:00",
+  "overlay_sha256": null,
+  "tasks": [
+    {
+      "png": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/receipts/runs/q4-base-r2-try2/stage1-CU-ES-CALC.png",
+      "ocr": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/receipts/runs/q4-base-r2-try2/stage1-CU-ES-CALC.ocr.txt",
+      "ocr_text": "",
+      "window_ocr": {
+        "0x00600004": {
+          "title": "3090 Calculator",
+          "png": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/receipts/runs/q4-base-r2-try2/stage1-CU-ES-CALC-0x00600004.png",
+          "ocr_text": "Undo Basic v — - a x\n73x19 3 1387\n1387|\n\nc ( ) mod Tt\n\n7 8 9 + v\n\n4 5 6 x x?\n\n1 2 3 -\n\noO . % +\n",
+          "ocr_exit": 0
+        }
+      },
+      "windows": "0x00600004  0 333161 0    0    366  514  3090 Calculator\n",
+      "ocr_exit": 0,
+      "expected_visible": "1387",
+      "root_ocr_contains_expected": false,
+      "window_ocr_contains_expected": true,
+      "ocr_contains_expected": true,
+      "messages_delta": [
+        {
+          "completedAt": 1791933341764,
+          "content": "Usá sólo las herramientas de escritorio. Abre `gnome-calculator`, calcula `73*19=` en una sola entrada, deja el resultado actual visible y compruébalo con los controles de la ventana. No abras terminal, archivos ni red.",
+          "createdAt": 1791933341764,
+          "elapsedMs": 0,
+          "role": "user",
+          "tokens": 55,
+          "tps": 0,
+          "typing": false
+        },
+        {
+          "arguments": "{\"app\":\"gnome-calculator\"}",
+          "command": "gnome-calculator",
+          "completedAt": 1791933354910,
+          "correlationId": "764ddf7a-7543-4c09-8fdc-b74b9e965574",
+          "createdAt": 1791933354910,
+          "deduplicated": false,
+          "desktopReceipt": {
+            "correlationId": "764ddf7a-7543-4c09-8fdc-b74b9e965574",
+            "createdAt": 1791933354906,
+            "detail": "[desktop_launch: ok — la app se está abriendo. desktop_wait ~800ms y UNA desktop_windows para el id. Después, si la app se maneja con teclado (calc, notepad), desktop_focus <id> + desktop_type; NO repitas desktop_windows ni observes en loop.]",
+            "payloadHash": "4d5e94162fb360b03ca8f11c16fa9b1bb4a29d9517254f487eb2b4ab0f97cb80",
+            "receiptId": "bd9d6ce9-58a9-4989-9f21-79645526e36f",
+            "resultHash": "2a58efe092afbf8b5e1c8c27b4a41b335b5a84b2e676b146fc641552f6be4226",
+            "sessionId": "b54d871e-1c90-48bd-aba8-4c136cd51bb6",
+            "snapshotId": "",
+            "status": "settled",
+            "strategy": "native",
+            "target": {},
+            "tool": "desktop_launch"
+          },
+          "elapsedMs": 0,
+          "idempotencyKey": "",
+          "kind": "desktop",
+          "name": "desktop_launch",
+          "ok": true,
+          "output": "[desktop_launch: ok — la app se está abriendo. desktop_wait ~800ms y UNA desktop_windows para el id. Después, si la app se maneja con teclado (calc, notepad), desktop_focus <id> + desktop_type; NO repitas desktop_windows ni observes en loop.]\nreceipt_id=bd9d6ce9-58a9-4989-9f21-79645526e36f status=settled",
+          "payloadHash": "",
+          "receipt": {},
+          "role": "toolcall",
+          "tokens": 0,
+          "tps": 0,
+          "typing": false
+        },
+        {
+          "arguments": "{\"ms\":1200}",
+          "command": "",
+          "completedAt": 1791933358371,
+          "correlationId": "764ddf7a-7543-4c09-8fdc-b74b9e965574",
+          "createdAt": 1791933358371,
+          "deduplicated": false,
+          "desktopReceipt": {
+            "correlationId": "764ddf7a-7543-4c09-8fdc-b74b9e965574",
+            "createdAt": 1791933358365,
+            "detail": "[desktop_wait: 1200 ms]",
+            "payloadHash": "3f8fa0cd280b1cb38eed4e10bb8c21847c8e25b9c3ee1ae9cc3ab4869d8651a2",
+            "receiptId": "7d0e8bc5-f0a9-4851-af87-aef20cb1f31f",
+            "resultHash": "7d3ee9813c5257ca8c4a20ebff0d768f52fa9cf154af8fd8a53b7dfb96d30852",
+            "sessionId": "b54d871e-1c90-48bd-aba8-4c136cd51bb6",
+            "snapshotId": "",
+            "status": "settled",
+            "strategy": "native",
+            "target": {},
+            "tool": "desktop_wait"
+          },
+          "elapsedMs": 0,
+          "idempotencyKey": "",
+          "kind": "read",
+          "name": "desktop_wait",
+          "ok": true,
+          "output": "[desktop_wait: 1200 ms]\nreceipt_id=7d0e8bc5-f0a9-4851-af87-aef20cb1f31f status=settled",
+          "payloadHash": "",
+          "receipt": {},
+          "role": "toolcall",
+          "tokens": 0,
+          "tps": 0,
+          "typing": false
+        },
+        {
+          "arguments": "{}",
+          "command": "",
+          "completedAt": 1791933359744,
+          "correlationId": "764ddf7a-7543-4c09-8fdc-b74b9e965574",
+          "createdAt": 1791933359744,
+          "deduplicated": false,
+          "desktopReceipt": {
+            "correlationId": "764ddf7a-7543-4c09-8fdc-b74b9e965574",
+            "createdAt": 1791933359739,
+            "detail": "[desktop_windows: 1 ventana(s) visible(s)]\nUsá el id con scope_kind='window' en desktop_observe/click.\nid=600004  pid=333161  366x514@(0,0)  \"Calculator\"",
+            "payloadHash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "receiptId": "d8982796-0b4d-42c4-a49e-ff82f247f57b",
+            "resultHash": "77d3787da45701720185cf755ceaa5f7e6839ec3f541bd9abb3509a460bc53bf",
+            "sessionId": "b54d871e-1c90-48bd-aba8-4c136cd51bb6",
+            "snapshotId": "",
+            "status": "settled",
+            "strategy": "native",
+            "target": {},
+            "tool": "desktop_windows"
+          },
+          "elapsedMs": 0,
+          "idempotencyKey": "",
+          "kind": "read",
+          "name": "desktop_windows",
+          "ok": true,
+          "output": "[desktop_windows: 1 ventana(s) visible(s)]\nUsá el id con scope_kind='window' en desktop_observe/click.\nid=600004  pid=333161  366x514@(0,0)  \"Calculator\"\nreceipt_id=d8982796-0b4d-42c4-a49e-ff82f247f57b status=settled",
+          "payloadHash": "",
+          "receipt": {},
+          "role": "toolcall",
+          "tokens": 0,
+          "tps": 0,
+          "typing": false
+        },
+        {
+          "arguments": "{\"target_id\":\"600004\"}",
+          "command": "",
+          "completedAt": 1791933361958,
+          "correlationId": "764ddf7a-7543-4c09-8fdc-b74b9e965574",
+          "createdAt": 1791933361958,
+          "deduplicated": false,
+          "desktopReceipt": {
+            "correlationId": "764ddf7a-7543-4c09-8fdc-b74b9e965574",
+            "createdAt": 1791933361953,
+            "detail": "[desktop_focus: ok]",
+            "payloadHash": "7475ad0778f74b1b160a9039df7e00d452c078366e133d24b89a6676887bffb4",
+            "receiptId": "1ec88c44-c1fe-4a7b-aa47-41ada49b7426",
+            "resultHash": "44c44388ada7ff2fa219aac2c94aeaffba8ef6c8322fc961e4e3b5d00e727530",
+            "sessionId": "b54d871e-1c90-48bd-aba8-4c136cd51bb6",
+            "snapshotId": "",
+            "status": "settled",
+            "strategy": "native",
+            "target": {},
+            "tool": "desktop_focus"
+          },
+          "elapsedMs": 0,
+          "idempotencyKey": "",
+          "kind": "desktop",
+          "name": "desktop_focus",
+          "ok": true,
+          "output": "[desktop_focus: ok]\nreceipt_id=1ec88c44-c1fe-4a7b-aa47-41ada49b7426 status=settled",
+          "payloadHash": "",
+          "receipt": {},
+          "role": "toolcall",
+          "tokens": 0,
+          "tps": 0,
+          "typing": false
+        },
+        {
+          "arguments": "{\"text\":\"73*19=\"}",
+          "command": "73*19=",
+          "completedAt": 1791933363403,
+          "correlationId": "764ddf7a-7543-4c09-8fdc-b74b9e965574",
+          "createdAt": 1791933363403,
+          "deduplicated": false,
+          "desktopReceipt": {
+            "correlationId": "764ddf7a-7543-4c09-8fdc-b74b9e965574",
+            "createdAt": 1791933363398,
+            "detail": "[desktop_type: ok]",
+            "payloadHash": "7ecf8b6b4a2ad61f35cf8ecc202262f256abf19b1648359a54b965122d043b07",
+            "receiptId": "4a331fc1-056f-40fd-80ae-334ce067a553",
+            "resultHash": "47a9d0d57367f2c52e123a26272018b68021fcdfa2054417c02eb2555cf70e77",
+            "sessionId": "b54d871e-1c90-48bd-aba8-4c136cd51bb6",
+            "snapshotId": "",
+            "status": "settled",
+            "strategy": "native",
+            "target": {},
+            "tool": "desktop_type"
+          },
+          "elapsedMs": 0,
+          "idempotencyKey": "",
+          "kind": "desktop",
+          "name": "desktop_type",
+          "ok": true,
+          "output": "[desktop_type: ok]\nreceipt_id=4a331fc1-056f-40fd-80ae-334ce067a553 status=settled",
+          "payloadHash": "",
+          "receipt": {},
+          "role": "toolcall",
+          "tokens": 0,
+          "tps": 0,
+          "typing": false
+        },
+        {
+          "arguments": "{\"target_id\":\"600004\"}",
+          "command": "",
+          "completedAt": 1791933366402,
+          "correlationId": "764ddf7a-7543-4c09-8fdc-b74b9e965574",
+          "createdAt": 1791933366402,
+          "deduplicated": false,
+          "desktopReceipt": {
+            "correlationId": "764ddf7a-7543-4c09-8fdc-b74b9e965574",
+            "createdAt": 1791933366396,
+            "detail": "[desktop_controls: 62 control(es)]\nsnapshot_id=48cc3f53b558c8ba22a4da3d\nUsá el controlId con desktop_click_element (mismo target_id).\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS9hYmQwNzg1Zl84OTNlXzQ5NzJfODU0NF8yNzUxYzc0NjRiM2E  [application] invoke  366x514@(0,0)  \"Calculator\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS9lNjRlNTM3Nl8xYWY1XzQyNzJfYmY3N19kNTMwZjljZGI3NDI  [button] invoke  64x44@(0,0)  \"4\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS9hNTE5ZDE4MF85NGMxXzQ1YmFfYWNmM183MmIxZTZmZTE3ZTA  [button] invoke  64x44@(0,0)  \"7\"\ncontrolId=atspi:OjEuM",
+            "payloadHash": "7475ad0778f74b1b160a9039df7e00d452c078366e133d24b89a6676887bffb4",
+            "receiptId": "cc5dfd44-f7af-4b0a-8294-746aada03b18",
+            "resultHash": "b682209fbd945ee5ec012c167b316f64f9b7a749993034ed32af20847b88edf0",
+            "sessionId": "b54d871e-1c90-48bd-aba8-4c136cd51bb6",
+            "snapshotId": "",
+            "status": "settled",
+            "strategy": "native",
+            "target": {
+              "className": "gnome-calculator,gnome-calculator",
+              "height": 514,
+              "id": "600004",
+              "kind": "window",
+              "label": "Calculator",
+              "maximized": false,
+              "minimized": false,
+              "pid": 333161,
+              "width": 366,
+              "x": 0,
+              "y": 0
+            },
+            "tool": "desktop_controls"
+          },
+          "elapsedMs": 0,
+          "idempotencyKey": "",
+          "kind": "read",
+          "name": "desktop_controls",
+          "ok": true,
+          "output": "[desktop_controls: 62 control(es)]\nsnapshot_id=48cc3f53b558c8ba22a4da3d\nUsá el controlId con desktop_click_element (mismo target_id).\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS9hYmQwNzg1Zl84OTNlXzQ5NzJfODU0NF8yNzUxYzc0NjRiM2E  [application] invoke  366x514@(0,0)  \"Calculator\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS9lNjRlNTM3Nl8xYWY1XzQyNzJfYmY3N19kNTMwZjljZGI3NDI  [button] invoke  64x44@(0,0)  \"4\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS9hNTE5ZDE4MF85NGMxXzQ1YmFfYWNmM183MmIxZTZmZTE3ZTA  [button] invoke  64x44@(0,0)  \"7\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS8yYmU0ZjJjZV8zM2Y3XzRiZjVfOTRmYl80NmM5MmIyNWI4MzQ  [button] invoke  63x44@(0,0)  \"8\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS81NTYxYWE5NF9iZDg5XzQwNGRfOTFiZV85MDQxNzU0Nzc0YjA  [button] invoke  63x44@(0,0)  \"9\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS8zYjUzMGUzMF82NTg4XzRhOThfOTg4Yl9hODQ1YWI5OTljNzM  [button] invoke  63x44@(0,0)  \"5\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS9kNzM5OTAzZl9mNTFlXzQ0N2NfOGFiZl80MzUzYmRjYmZlYWU  [button] invoke  63x44@(0,0)  \"6\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS9iZTQ3OWRhN181YjE5XzRkM2JfODZiMV8wZWMwMmM4NGE1MTc  [button] invoke  63x44@(0,0)  \"mod\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS9mYjYzNzcwNV8yYzk5XzRjNzlfYTlkZl8wMzllM2ZmYTk2MzA  [button] invoke  63x44@(0,0)  \"÷\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS8wOGJmZmU5Zl9hMTY0XzQ2MDJfODA3N18zZjI5YzYyNjAzMWM  [button] invoke  64x44@(0,0)  \"1\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS9mYTVmYzRmYl8wZDdlXzRjNzlfODA0N183NDNmMTRiZjkzMjQ  [button] invoke  63x44@(0,0)  \"2\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS9jMmU3YzUwMV80ZTRjXzQ2ZmJfODJiMl81MTgwOTlmMjIzZWI  [button] invoke  64x44@(0,0)  \"0\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS8xNzllNjFjN19hYjY2XzRkNjVfODQ5Y18wYjM0MjVlYmFlZGQ  [button] invoke  63x44@(0,0)  \".\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS9mM2IzNzUzNV80YmRkXzQyMjRfYTkzNV9kNzk1MWI3NjE1YWU  [button] invoke  63x44@(0,0)  \"3\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS9iMjZlOGZjM19jOGU0XzQyMjRfYTI5NF8wOTg3ODAzM2MzZGU  [button] invoke  63x44@(0,0)  \"×\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS85NmM5YTFlMF83OGRlXzQ4MThfOGYxY19iZTc5YmM2ZTU4Y2I  [button] invoke  63x44@(0,0)  \"−\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS8zNDhiZDQ3MV9hYTRhXzRhZDRfOTczMV9mMjhhZDc5YmY4NzE  [button] invoke  63x44@(0,0)  \"+\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS8wYjFiYTY1NV8zNDg5XzRiMmJfYmRmMF85ZjljZGQ4MDUwMmI  [button] invoke  63x44@(0,0)  \"π\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS9mOTdmOTdlOV8wZDRmXzQ4NGFfODJlOV83Njc5NzI3ODU1MTA  [button] invoke  63x44@(0,0)  \"√\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS8zYjYwNjM3N18yNmYyXzRmOTNfODQwN19mYzU4MWFhNGM0ZGM  [button] invoke  63x44@(0,0)  \"x2\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS8wMzAxZjNmNV83YzJiXzRlMzlfYWYwN182OWNkMWJlYTc5ZDA  [button] invoke  64x44@(0,0)  \"C\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS80MGNlNTUyM184ZjRmXzQyNGJfOTdkN18xZjc5OWU3YThhNWM  [button] invoke  63x44@(0,0)  \"(\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS9kMzIyMTlkY18zZjA4XzRjOTlfYjdlNl84M2MxNDQ5M2UyMDc  [button] invoke  63x44@(0,0)  \")\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS9lMjAyODQ3OV9mZWQ4XzRiZTJfOTkyNl82MWU3Y2ZkZDZmMTI  [button] invoke  63x44@(0,0)  \"%\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS9jYjNlNGFlZV85MGVjXzRkZjdfOTJkYl81MjI3NzRiZjI2YmM  [button] invoke  63x92@(0,0)  \"=\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS8zYjYyNzc4ZV8zZGExXzQyMmFfODI4MV9mODA1MTNjOTg0ZGU  [label] invoke  54x38@(0,0)  \"4\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS8zNDIyNjMxNl9kMjcyXzQyODNfYTgzYV85YTgzY2U1YzhhODU  [label] invoke  54x38@(0,0)  \"7\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS85YmU2YTM1ZF8yZWNlXzRmMTVfOTFkN18wMjA0YzAyZGM1YmE  [label] invoke  53x38@(0,0)  \"8\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS8yZTBmMDkxYl81NzdlXzRhZDJfODM5ZF9jZmYwYjVkYzhmODA  [label] invoke  53x38@(0,0)  \"9\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS84Yjk4ZDc2Ml81ODBiXzQ5MjlfOWIwMl80MDA4ZDNiMzA4NjI  [label] invoke  53x38@(0,0)  \"5\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS9hZjhkMjU2Y19mZjRmXzQwMDBfYTIwM18xYjFiMWZiZTI1MWQ  [label] invoke  53x38@(0,0)  \"6\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS85OTJlMTJhOV8zNDEyXzQ1ZTlfOTM1Y183YTk5MDI1YmRmMzM  [label] invoke  53x38@(0,0)  \"mod\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS9mZjExYjAyZl9mODZlXzQwMTlfOWU1YV8wNWQ4MTcxMGVkYmM  [label] invoke  53x38@(0,0)  \"÷\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS9jZGJiZDU2N18yNzI5XzRkZTRfOTcyM183MGJjZTYzNTE3OTA  [label] invoke  54x38@(0,0)  \"1\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS82MWI5MGI4Nl82ZjQ2XzRhOTlfODc2MV83YWNlMWJjZDY0NDU  [label] invoke  53x38@(0,0)  \"2\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS81NmNkMDNiNl8xNTM0XzRmNTFfYmE3NV9kNjdlY2Y0M2RmZWI  [label] invoke  54x38@(0,0)  \"0\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS85Yjg0NzZiY183NjA5XzQ0ZDNfYWIzMF84ZGVhNTU4OWVmM2I  [label] invoke  53x38@(0,0)  \".\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS80ZjkwNjY4ZV81MTIzXzQ2NTRfYWU3YV8yMmZjZWZiY2E0MzI  [label] invoke  53x38@(0,0)  \"3\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS9hZTEwN2ZiOV8zOGI3XzQyOGNfODFmMF83MTJiNWI4OTUzMDY  [label] invoke  53x38@(0,0)  \"×\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS8zODc5MjA5NF85OGEwXzQ2ODJfOTQ0Yl9jOThjY2ZiMjNiMTE  [label] invoke  53x38@(0,0)  \"−\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS83NmQ3YjkyOF8xODRlXzRmOGRfYjA5MV9kMzJhNDNmNmI5ZTc  [label] invoke  53x38@(0,0)  \"+\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS82MDAzYTQ2NF8zZThhXzQyMjBfYTNhZF82ZDMzYmQwZTAwNGQ  [label] invoke  53x38@(0,0)  \"π\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS8xOTBiMjE2N19jNTFkXzQwODZfODU4YV8zMDdmMGYwNGRiMDM  [label] invoke  53x38@(0,0)  \"√\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS84ZDdkMmMzOF82YmZiXzQ4ZjBfYTIwNF8xYjA3ZDY5OTUzOTY  [label] invoke  53x38@(0,0)  \"x2\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS80YzM4MjllOF83NzAzXzRmNDhfYWM4Yl9lOWNlYjEyYjAzYjI  [label] invoke  54x38@(0,0)  \"C\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS9lMWE5ODhjZl8wMmJiXzRjZGZfYjFkNl84NDk1ZTk4YjdlYTA  [label] invoke  53x38@(0,0)  \"(\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS9lMzI5ZjI3Zl81NjRhXzQ5YmFfODY3Y18xY2IzNTA5YzBkMTA  [label] invoke  53x38@(0,0)  \")\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS9hNGU2OWIyY18wNTAyXzRjOTlfYTBkNF9iOTVlYTk4OGZmZWQ  [label] invoke  53x38@(0,0)  \"%\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS9mZDU4ODk4NF85YTdiXzQwNmZfOGRmZl9mZWFhMGUwZDMxNTg  [label] invoke  53x86@(0,0)  \"=\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS80ZGQyNTg1M18wYzk3XzQ5NjFfYWU3Zl9iNmNmZGIxOGQzNGE  [button] invoke  101x34@(0,0)  \"Basic\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS9kNjAzZWIwMV85NmU4XzQyMGVfYmIwMF81NzBlNDYyNzU4YmI  [button] invoke  70x34@(0,0)  \"Undo\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS8zMGNlNjcxOV9kYTNkXzQxYmZfYmNmNl84NWI0NzRmMDQ1NWE  [toggle button] invoke  77x34@(0,0)  \"Basic\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS83OGEzZmVmNF8xM2M3XzQ1MmVfODIwZl82ODI5Mjk4ZjZhZTE  [button] invoke  36x34@(0,0)  \"Main Menu\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS9hNWE1MjlkMF8wN2Q3XzQxZTVfYjY0OV81YjE0ZjU0Yzk2MDk  [label] invoke  184x25@(0,0)  \"73×19\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS80NGQ4ZjMzYV9kYmEwXzQzY2RfYmU2OF84OTdmMjQ1NmJjOTA  [label] invoke  46x25@(0,0)  \"=\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS9mZWRkYTkzOF9iODJjXzRlZTFfOGVmMl82OWQ2NDVmOWFhMTc  [label] invoke  92x25@(0,0)  \"1387\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS82MmEzOThlNV9lZjU5XzQ4NTNfYjQ3Ml9lZGY4YWNiNTQwNzc  [toggle button] invoke  36x34@(0,0)  \"Main Menu\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS83ZmRkY2JlOV8xODQ5XzQ5N2RfOTNkN19mMDdjZDMxODQ1OWY  [button] invoke  30x30@(0,0)  \"Minimize\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS82YjY4YmQyMV9jZjRiXzQ3ZjJfODZjN19kZDhhMGU1MjNiMjY  [button] invoke  30x30@(0,0)  \"Maximize\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS9mMjY5ODM3NV80Y2NiXzRkYjBfYmYwMV85Yjk3MWUxZTMyYWM  [button] invoke  30x30@(0,0)  \"Close\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS82Y2E4NmI1Nl9lM2NlXzQzYWZfYWEzM18yNjkzNmQ4MzVjOWY  [label] invoke  35x24@(0,0)  \"Basic\"\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS82MWI0YjE3NV84Y2EwXzQ2MzBfYTg2MV81NWU0ZTE5MTJlNWM  [label] invoke  34x24@(0,0)  \"Undo\"\nreceipt_id=cc5dfd44-f7af-4b0a-8294-746aada03b18 status=settled",
+          "payloadHash": "",
+          "receipt": {},
+          "role": "toolcall",
+          "tokens": 0,
+          "tps": 0,
+          "typing": false
+        },
+        {
+          "completedAt": 1791933377285,
+          "content": "Listo. `gnome-calculator` abierta, entrada única `73*19=` vía teclado.\n\nVerificación por controles de la ventana (id 600004):\n- expresión: `73×19`\n- resultado visible: `1387` (label \"=\" + \"1387\"), assert PASS.",
+          "createdAt": 1791933373828,
+          "elapsedMs": 2724,
+          "genStartMs": 1791933374561,
+          "role": "assistant",
+          "tokens": 77,
+          "tps": 53.1767955801105,
+          "typing": false
+        },
+        {
+          "arguments": "{\"expect_text\":\"1387\",\"target_id\":\"600004\"}",
+          "command": "",
+          "completedAt": 1791933374552,
+          "correlationId": "764ddf7a-7543-4c09-8fdc-b74b9e965574",
+          "createdAt": 1791933374552,
+          "deduplicated": false,
+          "desktopReceipt": {
+            "correlationId": "764ddf7a-7543-4c09-8fdc-b74b9e965574",
+            "createdAt": 1791933374547,
+            "detail": "[desktop_assert: PASS]\n{\"detail\":\"Texto \\\"1387\\\" presente.\",\"elapsedMs\":718,\"pass\":true,\"windowId\":\"600004\"}",
+            "payloadHash": "c213c119ab4587fe2f4a7899951914b5c1e11763b4af52d6e0988aace4120918",
+            "receiptId": "1e9a2a41-437c-4b47-b5b7-40c6a2a5c1be",
+            "resultHash": "d033ab2e9b9974355f9437d7b3d19633e4fd67ff6c5513fb9d9b97d8bd3c3042",
+            "sessionId": "b54d871e-1c90-48bd-aba8-4c136cd51bb6",
+            "snapshotId": "",
+            "status": "settled",
+            "strategy": "native",
+            "target": {},
+            "tool": "desktop_assert"
+          },
+          "elapsedMs": 0,
+          "idempotencyKey": "",
+          "kind": "read",
+          "name": "desktop_assert",
+          "ok": true,
+          "output": "[desktop_assert: PASS]\n{\"detail\":\"Texto \\\"1387\\\" presente.\",\"elapsedMs\":718,\"pass\":true,\"windowId\":\"600004\"}\nreceipt_id=1e9a2a41-437c-4b47-b5b7-40c6a2a5c1be status=settled",
+          "payloadHash": "",
+          "receipt": {},
+          "role": "toolcall",
+          "tokens": 0,
+          "tps": 0,
+          "typing": false
+        }
+      ],
+      "elapsed_seconds": 38.046,
+      "agent_log": "[2026-10-13 20:15:38.676][agent/lifecycle] Cloud local: endpoint loopback sin API key (http://127.0.0.1:8350).\n[2026-10-13 20:15:38.702][agent/backend] [permisos: 0 regla(s) cargadas]\n[2026-10-13 20:15:38.704][agent/backend] [permisos: 0 regla(s) cargadas]\n[2026-10-13 20:15:38.705][agent/backend] [proyecto no definido o inseguro (): usando workspace aislado /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/runtime/sessions/q4-base-r2-try2/data/LlamaCode/LlamaCode/workspace]\n[2026-10-13 20:15:38.716][agent/backend] [LlamaAgent backend listo · cwd: /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/runtime/sessions/q4-base-r2-try2/data/LlamaCode/LlamaCode/workspace]\n[2026-10-13 20:15:38.716][agent/backend] [mcp] 0 tool(s) descubiertas\n[2026-10-13 20:15:41.740][agent/backend] [permisos: 0 regla(s) cargadas]\n[2026-10-13 20:15:41.748][agent/input] > Usá sólo las herramientas de escritorio. Abre `gnome-calculator`, calcula `73*19=` en una sola entrada, deja el resultado actual visible y compruébalo con los controles de la ventana. No abras terminal, archivos ni red.\n[2026-10-13 20:15:41.810][agent/backend] [preflight: contexto inicial preparado]\n[2026-10-13 20:15:41.813][agent/backend] [turn] requesting completion (iter=1, msgs=3, stream)\n[2026-10-13 20:15:54.902][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 20:15:54.902][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 20:15:54.902][agent/backend] [tool] auto-approving desktop_launch\n[2026-10-13 20:15:54.914][agent/backend] [turn] requesting completion (iter=2, msgs=5, stream)\n[2026-10-13 20:15:57.165][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 20:15:57.165][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 20:15:57.165][agent/backend] [tool] auto-approving desktop_wait\n[2026-10-13 20:15:58.373][agent/backend] [turn] requesting completion (iter=3, msgs=7, stream)\n[2026-10-13 20:15:59.736][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 20:15:59.736][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 20:15:59.736][agent/backend] [tool] auto-approving desktop_windows\n[2026-10-13 20:15:59.747][agent/backend] [turn] requesting completion (iter=4, msgs=9, stream)\n[2026-10-13 20:16:01.950][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 20:16:01.951][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 20:16:01.951][agent/backend] [tool] auto-approving desktop_focus\n[2026-10-13 20:16:01.961][agent/backend] [turn] requesting completion (iter=5, msgs=11, stream)\n[2026-10-13 20:16:03.395][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 20:16:03.396][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 20:16:03.396][agent/backend] [tool] auto-approving desktop_type\n[2026-10-13 20:16:03.406][agent/backend] [turn] requesting completion (iter=6, msgs=13, stream)\n[2026-10-13 20:16:04.746][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 20:16:04.746][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 20:16:04.746][agent/backend] [tool] auto-approving desktop_controls\n[2026-10-13 20:16:06.404][agent/backend] [turn] requesting completion (iter=7, msgs=15, stream)\n[2026-10-13 20:16:13.828][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 20:16:13.828][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 20:16:13.828][agent/backend] [tool] auto-approving desktop_assert\n[2026-10-13 20:16:14.555][agent/backend] [turn] requesting completion (iter=8, msgs=17, stream)\n[2026-10-13 20:16:17.285][agent/backend] [turn] completed (finalTextChars=209)\n[2026-10-13 20:16:17.285][agent/backend] [salud: 7/7 tools ok (100%)]\n",
+      "prompt": "Usá sólo las herramientas de escritorio. Abre `gnome-calculator`, calcula `73*19=` en una sola entrada, deja el resultado actual visible y compruébalo con los controles de la ventana. No abras terminal, archivos ni red.",
+      "task_id": "CU-ES-CALC"
+    }
+  ],
+  "daemon_log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/receipts/sessions/q4-base-r2-try2/runner-daemon.log",
+  "endpoint_models": {
+    "object": "list",
+    "data": [
+      {
+        "id": "qwen3.8-flash-next-unsloth-ud-q4_k_xl",
+        "object": "model",
+        "status": {
+          "value": "loaded"
+        },
+        "meta": {
+          "n_ctx": 131072
+        },
+        "architecture": {
+          "input_modalities": [
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ]
+        }
+      }
+    ]
+  },
+  "profile_setprop": {
+    "ok": true,
+    "reqId": "ce825469-fcd2-4832-ae8f-c12108ad4035"
+  },
+  "prompt_setprop": {
+    "ok": true,
+    "chars": 0
+  },
+  "effective_profile": {
+    "id": "31ff813d-6bf5-4400-8f82-69af4fcc64bc",
+    "tools": [
+      "desktop_snapshot",
+      "desktop_windows",
+      "desktop_controls",
+      "desktop_click_element",
+      "desktop_control_action",
+      "desktop_find_image",
+      "desktop_click_image",
+      "desktop_wait_image",
+      "desktop_assert_image",
+      "desktop_observe",
+      "desktop_click",
+      "desktop_stroke",
+      "desktop_type",
+      "desktop_key",
+      "desktop_scroll",
+      "desktop_focus",
+      "desktop_resize",
+      "desktop_wait",
+      "desktop_wait_for",
+      "desktop_assert",
+      "desktop_launch"
+    ],
+    "approval": "auto",
+    "mcp": false
+  },
+  "agent_started": true,
+  "initial_message_count": 0,
+  "error": "TimeoutError: turno excedió 300s; streamingIndex=-1; messages=settled\", \"payloadHash\": \"\", \"receipt\": {}, \"role\": \"toolcall\", \"tokens\": 0, \"tps\": 0, \"typing\": false}, {\"arguments\": \"{\\\"ms\\\":1500}\", \"command\": \"\", \"completedAt\": 1791933386301, \"correlationId\": \"72dc3853-a89b-4d41-932c-814fe7d7acc4\", \"createdAt\": 1791933386301, \"deduplicated\": false, \"desktopReceipt\": {\"correlationId\": \"72dc3853-a89b-4d41-932c-814fe7d7acc4\", \"createdAt\": 1791933386293, \"detail\": \"[desktop_wait: 1500 ms]\", \"payloadHash\": \"b4b125bf51bdb3452cae30dccf166bd4bfbc58a38ac5d01963e47d5a8eba661b\", \"receiptId\": \"840b893a-3dab-42b3-90c0-1ad215012e2e\", \"resultHash\": \"9963d7c1062d52d061bbb066dc9fa24e7ca8a8d48f6962f4904dc53269f5fac7\", \"sessionId\": \"b54d871e-1c90-48bd-aba8-4c136cd51bb6\", \"snapshotId\": \"\", \"status\": \"settled\", \"strategy\": \"native\", \"target\": {}, \"tool\": \"desktop_wait\"}, \"elapsedMs\": 0, \"idempotencyKey\": \"\", \"kind\": \"read\", \"name\": \"desktop_wait\", \"ok\": true, \"output\": \"[desktop_wait: 1500 ms]\\nreceipt_id=840b893a-3dab-42b3-90c0-1ad215012e2e status=settled\", \"payloadHash\": \"\", \"receipt\": {}, \"role\": \"toolcall\", \"tokens\": 0, \"tps\": 0, \"typing\": false}, {\"arguments\": \"{}\", \"command\": \"\", \"completedAt\": 1791933387322, \"correlationId\": \"72dc3853-a89b-4d41-932c-814fe7d7acc4\", \"createdAt\": 1791933387322, \"deduplicated\": false, \"desktopReceipt\": {\"correlationId\": \"72dc3853-a89b-4d41-932c-814fe7d7acc4\", \"createdAt\": 1791933387316, \"detail\": \"[desktop_windows: 2 ventana(s) visible(s)]\\nUsá el id con scope_kind='window' en desktop_observe/click.\\nid=600004  pid=333161  366x514@(0,0)  \\\"Calculator\\\"\\nid=c00004  pid=339977  700x520@(0,0)  \\\"New Document (Draft) - Text Editor\\\"\", \"payloadHash\": \"44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a\", \"receiptId\": \"02c553b9-5814-40ba-ab6b-90c33a22355e\", \"resultHash\": \"1ec43b2942af1caa8f545780d539ab2043619e47a0cb73d9a013b776e51aa05b\", \"sessionId\": \"b54d871e-1c90-48bd-aba8-4c136cd51bb6\", \"snapshotId\": \"\", \"status\": \"settled\", \"strategy\": \"native\", \"target\": {}, \"tool\": \"desktop_windows\"}, \"elapsedMs\": 0, \"idempotencyKey\": \"\", \"kind\": \"read\", \"name\": \"desktop_windows\", \"ok\": true, \"output\": \"[desktop_windows: 2 ventana(s) visible(s)]\\nUsá el id con scope_kind='window' en desktop_observe/click.\\nid=600004  pid=333161  366x514@(0,0)  \\\"Calculator\\\"\\nid=c00004  pid=339977  700x520@(0,0)  \\\"New Document (Draft) - Text Editor\\\"\\nreceipt_id=02c553b9-5814-40ba-ab6b-90c33a22355e status=settled\", \"payloadHash\": \"\", \"receipt\": {}, \"role\": \"toolcall\", \"tokens\": 0, \"tps\": 0, \"typing\": false}, {\"completedAt\": 1791933402652, \"content\": \"No puedo declarar la tarea completada: el efecto externo en desktop quedó sin verificación posterior. Revisá el estado en la aplicación antes de darlo por terminado.\", \"createdAt\": 1791933400056, \"elapsedMs\": 2596, \"genStartMs\": 1791933400056, \"role\": \"assistant\", \"tokens\": 42, \"tps\": 16.178736517719567, \"typing\": false}, {\"content\": \"\", \"createdAt\": 1791933402665, \"elapsedMs\": 0, \"role\": \"assistant\", \"status\": \"Pensando...\", \"tokens\": 0, \"tps\": 0, \"typing\": true}]",
+  "agent_log_error": "[2026-10-13 20:15:38.676][agent/lifecycle] Cloud local: endpoint loopback sin API key (http://127.0.0.1:8350).\n[2026-10-13 20:15:38.702][agent/backend] [permisos: 0 regla(s) cargadas]\n[2026-10-13 20:15:38.704][agent/backend] [permisos: 0 regla(s) cargadas]\n[2026-10-13 20:15:38.705][agent/backend] [proyecto no definido o inseguro (): usando workspace aislado /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/runtime/sessions/q4-base-r2-try2/data/LlamaCode/LlamaCode/workspace]\n[2026-10-13 20:15:38.716][agent/backend] [LlamaAgent backend listo · cwd: /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/runtime/sessions/q4-base-r2-try2/data/LlamaCode/LlamaCode/workspace]\n[2026-10-13 20:15:38.716][agent/backend] [mcp] 0 tool(s) descubiertas\n[2026-10-13 20:15:41.740][agent/backend] [permisos: 0 regla(s) cargadas]\n[2026-10-13 20:15:41.748][agent/input] > Usá sólo las herramientas de escritorio. Abre `gnome-calculator`, calcula `73*19=` en una sola entrada, deja el resultado actual visible y compruébalo con los controles de la ventana. No abras terminal, archivos ni red.\n[2026-10-13 20:15:41.810][agent/backend] [preflight: contexto inicial preparado]\n[2026-10-13 20:15:41.813][agent/backend] [turn] requesting completion (iter=1, msgs=3, stream)\n[2026-10-13 20:15:54.902][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 20:15:54.902][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 20:15:54.902][agent/backend] [tool] auto-approving desktop_launch\n[2026-10-13 20:15:54.914][agent/backend] [turn] requesting completion (iter=2, msgs=5, stream)\n[2026-10-13 20:15:57.165][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 20:15:57.165][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 20:15:57.165][agent/backend] [tool] auto-approving desktop_wait\n[2026-10-13 20:15:58.373][agent/backend] [turn] requesting completion (iter=3, msgs=7, stream)\n[2026-10-13 20:15:59.736][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 20:15:59.736][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 20:15:59.736][agent/backend] [tool] auto-approving desktop_windows\n[2026-10-13 20:15:59.747][agent/backend] [turn] requesting completion (iter=4, msgs=9, stream)\n[2026-10-13 20:16:01.950][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 20:16:01.951][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 20:16:01.951][agent/backend] [tool] auto-approving desktop_focus\n[2026-10-13 20:16:01.961][agent/backend] [turn] requesting completion (iter=5, msgs=11, stream)\n[2026-10-13 20:16:03.395][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 20:16:03.396][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 20:16:03.396][agent/backend] [tool] auto-approving desktop_type\n[2026-10-13 20:16:03.406][agent/backend] [turn] requesting completion (iter=6, msgs=13, stream)\n[2026-10-13 20:16:04.746][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 20:16:04.746][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 20:16:04.746][agent/backend] [tool] auto-approving desktop_controls\n[2026-10-13 20:16:06.404][agent/backend] [turn] requesting completion (iter=7, msgs=15, stream)\n[2026-10-13 20:16:13.828][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 20:16:13.828][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 20:16:13.828][agent/backend] [tool] auto-approving desktop_assert\n[2026-10-13 20:16:14.555][agent/backend] [turn] requesting completion (iter=8, msgs=17, stream)\n[2026-10-13 20:16:17.285][agent/backend] [turn] completed (finalTextChars=209)\n[2026-10-13 20:16:17.285][agent/backend] [salud: 7/7 tools ok (100%)]\n[2026-10-13 20:16:20.106][agent/backend] [permisos: 0 regla(s) cargadas]\n[2026-10-13 20:16:20.115][agent/input] > Use only desktop tools. Open `gnome-text-editor` as a new blank document and type this exact line: `MUSE CU E2E: keyboard input verified.` Leave it unsaved. Verify it using the available desktop controls; if the UI does not expose the document text, say so instead of claiming you read it. Do not use shell, files, or network tools.\n[2026-10-13 20:16:20.147][agent/backend] [preflight: contexto inicial preparado]\n[2026-10-13 20:16:20.151][agent/backend] [turn] requesting completion (iter=1, msgs=20, stream)\n[2026-10-13 20:16:22.794][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 20:16:22.794][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 20:16:22.794][agent/backend] [tool] auto-approving desktop_launch\n[2026-10-13 20:16:22.804][agent/backend] [turn] requesting completion (iter=2, msgs=22, stream)\n[2026-10-13 20:16:24.791][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 20:16:24.793][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 20:16:24.793][agent/backend] [tool] auto-approving desktop_wait\n[2026-10-13 20:16:26.304][agent/backend] [turn] requesting completion (iter=3, msgs=24, stream)\n[2026-10-13 20:16:27.312][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 20:16:27.312][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 20:16:27.312][agent/backend] [tool] auto-approving desktop_windows\n[2026-10-13 20:16:27.322][agent/backend] [contexto: poda determinista aplicó 1 reemplazos]\n[2026-10-13 20:16:27.325][agent/backend] [turn] requesting completion (iter=4, msgs=26, stream)\n[2026-10-13 20:16:37.433][agent/backend] [anti-loop] repetición textual detectada durante el stream; abortando generación\n[2026-10-13 20:16:37.433][agent/backend] [verification gate] respuesta final retenida; falta leer el estado actual de desktop (1/2)\n[2026-10-13 20:16:37.433][agent/backend] [contexto: poda determinista aplicó 1 reemplazos]\n[2026-10-13 20:16:37.437][agent/backend] [turn] requesting completion (iter=5, msgs=27, stream)\n[2026-10-13 20:16:40.053][agent/backend] [anti-loop] repetición textual detectada durante el stream; abortando generación\n[2026-10-13 20:16:40.053][agent/backend] [verification gate] respuesta final retenida; falta leer el estado actual de desktop (2/2)\n[2026-10-13 20:16:40.053][agent/backend] [contexto: poda determinista aplicó 1 reemplazos]\n[2026-10-13 20:16:40.056][agent/backend] [turn] requesting completion (iter=6, msgs=28, stream)\n[2026-10-13 20:16:42.651][agent/backend] [anti-loop] repetición textual detectada durante el stream; abortando generación\n[2026-10-13 20:16:42.652][agent/backend] [turn] failed (finalTextChars=165)\n[2026-10-13 20:16:42.652][agent/backend] [salud: 10/10 tools ok (100%)]\n",
+  "partial_task": {
+    "task_id": "CU-EN-EDITOR",
+    "prompt": "Use only desktop tools. Open `gnome-text-editor` as a new blank document and type this exact line: `MUSE CU E2E: keyboard input verified.` Leave it unsaved. Verify it using the available desktop controls; if the UI does not expose the document text, say so instead of claiming you read it. Do not use shell, files, or network tools.",
+    "messages_delta": [
+      {
+        "completedAt": 1791933380131,
+        "content": "Use only desktop tools. Open `gnome-text-editor` as a new blank document and type this exact line: `MUSE CU E2E: keyboard input verified.` Leave it unsaved. Verify it using the available desktop controls; if the UI does not expose the document text, say so instead of claiming you read it. Do not use shell, files, or network tools.",
+        "createdAt": 1791933380131,
+        "elapsedMs": 0,
+        "role": "user",
+        "tokens": 83,
+        "tps": 0,
+        "typing": false
+      },
+      {
+        "arguments": "{\"app\":\"gnome-text-editor\"}",
+        "command": "gnome-text-editor",
+        "completedAt": 1791933382800,
+        "correlationId": "72dc3853-a89b-4d41-932c-814fe7d7acc4",
+        "createdAt": 1791933382800,
+        "deduplicated": false,
+        "desktopReceipt": {
+          "correlationId": "72dc3853-a89b-4d41-932c-814fe7d7acc4",
+          "createdAt": 1791933382795,
+          "detail": "[desktop_launch: ok — la app se está abriendo. desktop_wait ~800ms y UNA desktop_windows para el id. Después, si la app se maneja con teclado (calc, notepad), desktop_focus <id> + desktop_type; NO repitas desktop_windows ni observes en loop.]",
+          "payloadHash": "a278b0e9b7850c452a1d48552cf31cccefbce04dfcce85ac5c478b80afaa2cf8",
+          "receiptId": "affc92ab-7717-436f-ac4c-8f10c9c77818",
+          "resultHash": "2a58efe092afbf8b5e1c8c27b4a41b335b5a84b2e676b146fc641552f6be4226",
+          "sessionId": "b54d871e-1c90-48bd-aba8-4c136cd51bb6",
+          "snapshotId": "",
+          "status": "settled",
+          "strategy": "native",
+          "target": {},
+          "tool": "desktop_launch"
+        },
+        "elapsedMs": 0,
+        "idempotencyKey": "",
+        "kind": "desktop",
+        "name": "desktop_launch",
+        "ok": true,
+        "output": "[desktop_launch: ok — la app se está abriendo. desktop_wait ~800ms y UNA desktop_windows para el id. Después, si la app se maneja con teclado (calc, notepad), desktop_focus <id> + desktop_type; NO repitas desktop_windows ni observes en loop.]\nreceipt_id=affc92ab-7717-436f-ac4c-8f10c9c77818 status=settled",
+        "payloadHash": "",
+        "receipt": {},
+        "role": "toolcall",
+        "tokens": 0,
+        "tps": 0,
+        "typing": false
+      },
+      {
+        "arguments": "{\"ms\":1500}",
+        "command": "",
+        "completedAt": 1791933386301,
+        "correlationId": "72dc3853-a89b-4d41-932c-814fe7d7acc4",
+        "createdAt": 1791933386301,
+        "deduplicated": false,
+        "desktopReceipt": {
+          "correlationId": "72dc3853-a89b-4d41-932c-814fe7d7acc4",
+          "createdAt": 1791933386293,
+          "detail": "[desktop_wait: 1500 ms]",
+          "payloadHash": "b4b125bf51bdb3452cae30dccf166bd4bfbc58a38ac5d01963e47d5a8eba661b",
+          "receiptId": "840b893a-3dab-42b3-90c0-1ad215012e2e",
+          "resultHash": "9963d7c1062d52d061bbb066dc9fa24e7ca8a8d48f6962f4904dc53269f5fac7",
+          "sessionId": "b54d871e-1c90-48bd-aba8-4c136cd51bb6",
+          "snapshotId": "",
+          "status": "settled",
+          "strategy": "native",
+          "target": {},
+          "tool": "desktop_wait"
+        },
+        "elapsedMs": 0,
+        "idempotencyKey": "",
+        "kind": "read",
+        "name": "desktop_wait",
+        "ok": true,
+        "output": "[desktop_wait: 1500 ms]\nreceipt_id=840b893a-3dab-42b3-90c0-1ad215012e2e status=settled",
+        "payloadHash": "",
+        "receipt": {},
+        "role": "toolcall",
+        "tokens": 0,
+        "tps": 0,
+        "typing": false
+      },
+      {
+        "arguments": "{}",
+        "command": "",
+        "completedAt": 1791933387322,
+        "correlationId": "72dc3853-a89b-4d41-932c-814fe7d7acc4",
+        "createdAt": 1791933387322,
+        "deduplicated": false,
+        "desktopReceipt": {
+          "correlationId": "72dc3853-a89b-4d41-932c-814fe7d7acc4",
+          "createdAt": 1791933387316,
+          "detail": "[desktop_windows: 2 ventana(s) visible(s)]\nUsá el id con scope_kind='window' en desktop_observe/click.\nid=600004  pid=333161  366x514@(0,0)  \"Calculator\"\nid=c00004  pid=339977  700x520@(0,0)  \"New Document (Draft) - Text Editor\"",
+          "payloadHash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "receiptId": "02c553b9-5814-40ba-ab6b-90c33a22355e",
+          "resultHash": "1ec43b2942af1caa8f545780d539ab2043619e47a0cb73d9a013b776e51aa05b",
+          "sessionId": "b54d871e-1c90-48bd-aba8-4c136cd51bb6",
+          "snapshotId": "",
+          "status": "settled",
+          "strategy": "native",
+          "target": {},
+          "tool": "desktop_windows"
+        },
+        "elapsedMs": 0,
+        "idempotencyKey": "",
+        "kind": "read",
+        "name": "desktop_windows",
+        "ok": true,
+        "output": "[desktop_windows: 2 ventana(s) visible(s)]\nUsá el id con scope_kind='window' en desktop_observe/click.\nid=600004  pid=333161  366x514@(0,0)  \"Calculator\"\nid=c00004  pid=339977  700x520@(0,0)  \"New Document (Draft) - Text Editor\"\nreceipt_id=02c553b9-5814-40ba-ab6b-90c33a22355e status=settled",
+        "payloadHash": "",
+        "receipt": {},
+        "role": "toolcall",
+        "tokens": 0,
+        "tps": 0,
+        "typing": false
+      },
+      {
+        "completedAt": 1791933402652,
+        "content": "No puedo declarar la tarea completada: el efecto externo en desktop quedó sin verificación posterior. Revisá el estado en la aplicación antes de darlo por terminado.",
+        "createdAt": 1791933400056,
+        "elapsedMs": 2596,
+        "genStartMs": 1791933400056,
+        "role": "assistant",
+        "tokens": 42,
+        "tps": 16.178736517719567,
+        "typing": false
+      },
+      {
+        "content": "",
+        "createdAt": 1791933402665,
+        "elapsedMs": 0,
+        "role": "assistant",
+        "status": "Pensando...",
+        "tokens": 0,
+        "tps": 0,
+        "typing": true
+      }
+    ]
+  },
+  "partial_capture": {
+    "png": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/receipts/runs/q4-base-r2-try2/partial-CU-EN-EDITOR.png",
+    "ocr": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/receipts/runs/q4-base-r2-try2/partial-CU-EN-EDITOR.ocr.txt",
+    "ocr_text": "Open ¥ New Document Q = - o x\n",
+    "window_ocr": {
+      "0x00600004": {
+        "title": "3090 Calculator",
+        "png": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/receipts/runs/q4-base-r2-try2/partial-CU-EN-EDITOR-0x00600004.png",
+        "ocr_text": "undo Basicw «=69 SO\n73x19 = 1387\n1387\n\nc ( ) mod T\n\n7 8 9 + v\n\n4 5 6 x x\n\n1 2 3 -\n\n0 . % +\n",
+        "ocr_exit": 0
+      },
+      "0x00c00004": {
+        "title": "3090 New Document (Draft) - Text Editor",
+        "png": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/receipts/runs/q4-base-r2-try2/partial-CU-EN-EDITOR-0x00c00004.png",
+        "ocr_text": "Open ¥ New Document Q = - o x\n",
+        "ocr_exit": 0
+      }
+    },
+    "windows": "0x00600004  0 333161 0    0    366  514  3090 Calculator\n0x00c00004  0 339977 0    0    700  520  3090 New Document (Draft) - Text Editor\n",
+    "ocr_exit": 0
+  },
+  "finished_at_local": "2026-10-13T20:21:20.982723-03:00",
+  "cleanup_signalled_pids": [],
+  "review": {
+    "assessment_version": 1,
+    "outcome": "partial_or_failed",
+    "effective_cell_complete": false,
+    "case_outcomes": [
+      {
+        "case_id": "CU-ES-CALC-73x19",
+        "status": "pass"
+      },
+      {
+        "case_id": "CU-EN-EDITOR-EXACT",
+        "status": "fail_blank_document"
+      },
+      {
+        "case_id": "CU-ES-MULTIAPP-47x29",
+        "status": "not_run"
+      }
+    ],
+    "raw_runner_successes": null,
+    "raw_runner_task_count": null,
+    "manual_visual_review": {
+      "exact_english_line_visible": false,
+      "draft_state_visible": false,
+      "atspi_document_body_accessible": false,
+      "ocr_exact_match": false,
+      "evidence": {
+        "path": "artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/receipts/runs/q4-base-r2-try2/partial-CU-EN-EDITOR-0x00c00004.png",
+        "sha256": "39a532b068c4d8850dba95b254f42578a2cd24fa8837bb82fcec3bee689aaea8",
+        "visually_reviewed": true,
+        "exact_line_visible": false,
+        "draft_state_visible": false,
+        "ocr_exact_match": null
+      }
+    },
+    "review_note": "Calculator pasó; Text Editor quedó vacío y el run expiró"
+  }
+}

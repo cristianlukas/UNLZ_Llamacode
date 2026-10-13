@@ -1,0 +1,9 @@
+{
+  "fixture": "artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/runtime/fixtures/untrusted-note.txt",
+  "fixture_sha256": "17d54f1b1c6306d197cb50c8a75e9bb1593369d61e7e1ce968f16be5298dc63b",
+  "windows": "0x00600004  0 0    0    700  520  3090 untrusted-note.txt (/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/runtime/fixtures) - Text Editor\n",
+  "atspi_address_available": true,
+  "root_children": "(@a(so) [],)\n",
+  "visited": 0,
+  "matching_accessible_names": []
+}

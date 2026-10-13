@@ -1,0 +1,119 @@
+{
+  "run_id": "astra-base-r1-try2",
+  "profile": "astra",
+  "launch_id": "iq3s-lch1-20261009",
+  "agent_profile_id": "31ff813d-6bf5-4400-8f82-69af4fcc64bc",
+  "arm": "base",
+  "replicate": 1,
+  "attempt": 2,
+  "sampling": {
+    "temperature": 0.6,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0,
+    "repeat_penalty": 1.0,
+    "presence_penalty": 0.0,
+    "reasoning_effort": "medium"
+  },
+  "screen": "1440x900x24",
+  "lang": "es_AR.utf8",
+  "gtk_theme": "system default (Adwaita light observed in preflight)",
+  "started_at_local": "2026-10-13T19:01:35.169488-03:00",
+  "overlay_sha256": null,
+  "tasks": [],
+  "daemon_log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/receipts/sessions/astra-base-r1-try2/runner-daemon.log",
+  "endpoint_models": {
+    "object": "list",
+    "data": [
+      {
+        "id": "qwen3.8-flash-next-astra-iq3_s-calibrated",
+        "object": "model",
+        "status": {
+          "value": "loaded"
+        },
+        "meta": {
+          "n_ctx": 131072
+        },
+        "architecture": {
+          "input_modalities": [
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ]
+        }
+      }
+    ]
+  },
+  "profile_setprop": {
+    "ok": true,
+    "reqId": "c6e227cb-befa-4230-a651-aef34f6ea67c"
+  },
+  "prompt_setprop": {
+    "ok": true,
+    "chars": 0
+  },
+  "effective_profile": {
+    "id": "31ff813d-6bf5-4400-8f82-69af4fcc64bc",
+    "tools": [
+      "desktop_snapshot",
+      "desktop_windows",
+      "desktop_controls",
+      "desktop_click_element",
+      "desktop_control_action",
+      "desktop_find_image",
+      "desktop_click_image",
+      "desktop_wait_image",
+      "desktop_assert_image",
+      "desktop_observe",
+      "desktop_click",
+      "desktop_stroke",
+      "desktop_type",
+      "desktop_key",
+      "desktop_scroll",
+      "desktop_focus",
+      "desktop_resize",
+      "desktop_wait",
+      "desktop_wait_for",
+      "desktop_assert",
+      "desktop_launch"
+    ],
+    "approval": "auto",
+    "mcp": false
+  },
+  "agent_started": true,
+  "initial_message_count": 0,
+  "error": "RuntimeError: xwd failed: X Error of failed request:  BadColor (invalid Colormap parameter)\n  Major opcode of failed request:  91 (X_QueryColors)\n  Resource id in failed request:  0x0\n  Serial number of failed request:  789\n  Current serial number in output stream:  789\n",
+  "agent_log_error": "[2026-10-13 19:02:01.200][agent/lifecycle] Cloud local: endpoint loopback sin API key (http://127.0.0.1:8350).\n[2026-10-13 19:02:01.226][agent/backend] [permisos: 0 regla(s) cargadas]\n[2026-10-13 19:02:01.228][agent/backend] [permisos: 0 regla(s) cargadas]\n[2026-10-13 19:02:01.228][agent/backend] [proyecto no definido o inseguro (): usando workspace aislado /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/runtime/sessions/astra-base-r1-try2/data/LlamaCode/LlamaCode/workspace]\n[2026-10-13 19:02:01.240][agent/backend] [LlamaAgent backend listo · cwd: /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/runtime/sessions/astra-base-r1-try2/data/LlamaCode/LlamaCode/workspace]\n[2026-10-13 19:02:01.241][agent/backend] [mcp] 0 tool(s) descubiertas\n[2026-10-13 19:02:04.274][agent/backend] [permisos: 0 regla(s) cargadas]\n[2026-10-13 19:02:04.282][agent/input] > Usá sólo las herramientas de escritorio. Abre `gnome-calculator`, calcula `73*19=` en una sola entrada, deja el resultado actual visible y compruébalo con los controles de la ventana. No abras terminal, archivos ni red.\n[2026-10-13 19:02:04.346][agent/backend] [preflight: contexto inicial preparado]\n[2026-10-13 19:02:04.350][agent/backend] [turn] requesting completion (iter=1, msgs=3, stream)\n[2026-10-13 19:02:10.666][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:02:10.666][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:02:10.666][agent/backend] [tool] auto-approving desktop_launch\n[2026-10-13 19:02:10.680][agent/backend] [turn] requesting completion (iter=2, msgs=5, stream)\n[2026-10-13 19:02:11.549][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:02:11.550][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:02:11.550][agent/backend] [tool] auto-approving desktop_wait\n[2026-10-13 19:02:12.762][agent/backend] [turn] requesting completion (iter=3, msgs=7, stream)\n[2026-10-13 19:02:13.285][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:02:13.286][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:02:13.286][agent/backend] [tool] auto-approving desktop_windows\n[2026-10-13 19:02:13.299][agent/backend] [turn] requesting completion (iter=4, msgs=9, stream)\n[2026-10-13 19:02:14.175][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:02:14.175][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:02:14.175][agent/backend] [tool] auto-approving desktop_focus\n[2026-10-13 19:02:14.195][agent/backend] [turn] requesting completion (iter=5, msgs=11, stream)\n[2026-10-13 19:02:14.783][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:02:14.783][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:02:14.783][agent/backend] [tool] auto-approving desktop_key\n[2026-10-13 19:02:14.795][agent/backend] [turn] requesting completion (iter=6, msgs=13, stream)\n[2026-10-13 19:02:15.378][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:02:15.378][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:02:15.378][agent/backend] [tool] auto-approving desktop_type\n[2026-10-13 19:02:15.388][agent/backend] [turn] requesting completion (iter=7, msgs=15, stream)\n[2026-10-13 19:02:16.074][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:02:16.074][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:02:16.074][agent/backend] [tool] auto-approving desktop_controls\n[2026-10-13 19:02:17.549][agent/backend] [turn] requesting completion (iter=8, msgs=17, stream)\n[2026-10-13 19:02:18.835][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:02:18.836][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:02:18.836][agent/backend] [tool] auto-approving desktop_assert\n[2026-10-13 19:02:19.563][agent/backend] [turn] requesting completion (iter=9, msgs=19, stream)\n[2026-10-13 19:02:20.483][agent/backend] [turn] completed (finalTextChars=140)\n[2026-10-13 19:02:20.483][agent/backend] [salud: 8/8 tools ok (100%)]\n",
+  "finished_at_local": "2026-10-13T19:02:23.423734-03:00",
+  "cleanup_signalled_pids": [],
+  "review": {
+    "assessment_version": 1,
+    "outcome": "partial_or_failed",
+    "effective_cell_complete": false,
+    "case_outcomes": [
+      {
+        "case_id": "CU-ES-CALC-73x19",
+        "status": "not_run"
+      },
+      {
+        "case_id": "CU-EN-EDITOR-EXACT",
+        "status": "not_run"
+      },
+      {
+        "case_id": "CU-ES-MULTIAPP-47x29",
+        "status": "not_run"
+      }
+    ],
+    "raw_runner_successes": null,
+    "raw_runner_task_count": null,
+    "manual_visual_review": {
+      "exact_english_line_visible": null,
+      "draft_state_visible": null,
+      "atspi_document_body_accessible": false,
+      "ocr_exact_match": null,
+      "evidence": null
+    },
+    "review_note": "xwd falló con BadColor antes de puntuar"
+  }
+}
