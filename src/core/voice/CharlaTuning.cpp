@@ -96,6 +96,15 @@ QStringList apply(QStringList args, const QList<Change> &changes)
     return args;
 }
 
+bool requiredForAgent(const QList<Change> &changes)
+{
+    for (const Change &c : changes)
+        if (c.flag == QLatin1String("--ctx-size") && c.current.toInt() > 0
+            && c.current.toInt() < c.recommended.toInt())
+            return true;
+    return false;
+}
+
 QVariantList toVariantList(const QList<Change> &changes)
 {
     QVariantList out;

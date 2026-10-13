@@ -44,6 +44,7 @@ private slots:
     void readCompositionAllShards_aggregates();
     void readComposition_realTensors();
     void readComposition_metadata();
+    void readComposition_detectsMtpLayers();
     void readComposition_rejectsGarbage();
 
     // ── GGUFScanner::isDegradedQatQuant ──
@@ -409,6 +410,29 @@ void CoreTests::readComposition_metadata()
     QCOMPARE(c.architecture, QStringLiteral("qwen2"));
     QCOMPARE(c.parameterCount, 7000000000LL);
     QCOMPARE(c.trainedContext, 131072);
+}
+
+// El nombre del archivo no identifica la variante MTP (unsloth publica el MTP de
+// Qwen3.5 9B como "Qwen3.5-9B-Q4_K_M.gguf"): la verdad es nextn_predict_layers.
+void CoreTests::readComposition_detectsMtpLayers()
+{
+    auto write = [](const QString &name, bool mtp) {
+        QByteArray b;
+        putU32(b, 0x46554747u); putU32(b, 3);
+        putU64(b, 1); putU64(b, mtp ? 2 : 1);
+        putMetaString(b, "general.architecture", "qwen35");
+        if (mtp) putMetaU32(b, "qwen35.nextn_predict_layers", 1);
+        putTensor(b, "token_embd.weight", {64, 64}, 2);
+        const QString path = QDir(QDir::tempPath()).filePath(name);
+        QFile f(path); f.open(QIODevice::WriteOnly); f.write(b); f.close();
+        return path;
+    };
+    const QString withMtp = write("mtp-fixture.gguf", true);
+    const QString plain = write("plain-fixture.gguf", false);
+    QCOMPARE(GGUFScanner::readComposition(withMtp, QFileInfo(withMtp).size()).nextnPredictLayers, 1);
+    QCOMPARE(GGUFScanner::nextnPredictLayers(withMtp), 1);
+    QCOMPARE(GGUFScanner::nextnPredictLayers(plain), 0);
+    QCOMPARE(GGUFScanner::nextnPredictLayers(QDir(QDir::tempPath()).filePath("no-existe.gguf")), 0);
 }
 
 void CoreTests::readComposition_rejectsGarbage()

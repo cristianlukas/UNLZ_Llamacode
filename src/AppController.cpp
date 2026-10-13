@@ -71,6 +71,7 @@
 #include "core/eval/EvalSuite.h"
 #include "core/eval/BenchmarkPack.h"
 #include "core/ServerBenchmarkMetrics.h"
+#include "core/GGUFScanner.h"
 #include "core/tasks/WorkflowVisualModel.h"
 #include "core/tasks/SchedulerDaemonRegistration.h"
 #include "core/tasks/TaskSecurityPolicy.h"
@@ -5122,7 +5123,19 @@ EffectiveProfileBuilder::Context AppController::buildContext(const QString &laun
             const QJsonObject mo = e.value(QStringLiteral("model")).toObject();
             const QString hint = e.value(QStringLiteral("folder")).toString();
             // Modelo: preferir la copia cuya carpeta coincide con el folder del bundle.
-            const QList<CatalogModel> mc = matches(mo.value(QStringLiteral("file")).toString());
+            QList<CatalogModel> mc = matches(mo.value(QStringLiteral("file")).toString());
+            // MTP autocontenido: el nombre no identifica la variante (el MTP de
+            // unsloth de Qwen3.5 9B se llama igual que el común). Aceptar sólo
+            // archivos que de verdad traen capas MTP; si no, el server arrancaba
+            // con --spec-type draft-mtp sobre un GGUF sin ellas y moría.
+            const QJsonObject mtp = e.value(QStringLiteral("mtp")).toObject();
+            if (mtp.value(QStringLiteral("enabled")).toBool()
+                && mtp.value(QStringLiteral("selfContained")).toBool()) {
+                QList<CatalogModel> withMtp;
+                for (const CatalogModel &c : std::as_const(mc))
+                    if (GGUFScanner::nextnPredictLayers(c.absolutePath) > 0) withMtp << c;
+                mc = withMtp;
+            }
             CatalogModel cm;
             for (const CatalogModel &c : mc)
                 if (!hint.isEmpty() && c.absolutePath.contains(hint)) { cm = c; break; }
@@ -25732,6 +25745,15 @@ void AppController::onCharlaAgentRunningChanged(bool running)
     if (!m_charlaActive) return;
     if (running) {
         applyCharlaVoiceModeToAgent(true);
+        // El warmup normal se dispara al pasar a "escuchando"; si el agente
+        // terminó de arrancar DESPUÉS (relanzamiento por el ajuste de Charla),
+        // ese warmup fue al chat y el primer turno prefil-eaba todo el prompt del
+        // agente en frío (~4 s medidos). Precalentar ahora, mientras se escucha.
+        if (m_charlaPendingTranscript.isEmpty() && m_voice
+            && (m_voice->state() == VoiceController::Listening
+                || m_voice->state() == VoiceController::Ready)
+            && m_agentBackend && m_agentBackend->running())
+            m_agentBackend->prefillWarmup();
         if (!m_charlaPendingTranscript.isEmpty()) {
             const QString text = m_charlaPendingTranscript;
             m_charlaPendingTranscript.clear();
@@ -25882,10 +25904,28 @@ void AppController::startCharla()
     // tiene recomendaciones pendientes, relanzar con overrides y volver acá.
     // El plan multi-GPU ya quedó activo arriba, por lo que ambos overrides viajan
     // en el mismo arranque.
-    if (charlaAutoTune() && !m_charlaStartAfterRelaunch
-        && !charlaTuneRecommendations().isEmpty()) {
-        applyCharlaTuneAndStartCharla();
-        return;
+    if (!m_charlaStartAfterRelaunch) {
+        const QVariantList pending = charlaTuneRecommendations();
+        bool agentNeedsIt = false;
+        if (charlaAgentMode() && !pending.isEmpty()) {
+            QList<CharlaTuning::Change> changes;
+            for (const QVariant &v : pending) {
+                const QVariantMap m = v.toMap();
+                changes.append({m.value(QStringLiteral("flag")).toString(),
+                                m.value(QStringLiteral("current")).toString(),
+                                m.value(QStringLiteral("recommended")).toString(),
+                                m.value(QStringLiteral("reason")).toString()});
+            }
+            agentNeedsIt = CharlaTuning::requiredForAgent(changes);
+        }
+        if ((charlaAutoTune() || agentNeedsIt) && !pending.isEmpty()) {
+            if (agentNeedsIt && !charlaAutoTune())
+                appendServerEvent(QStringLiteral("lifecycle"), QStringLiteral(
+                    "Charla (modo agente): el contexto del perfil no alcanza para el agente "
+                    "de voz; relanzo con el ajuste de Charla (sólo esta sesión)."));
+            applyCharlaTuneAndStartCharla();
+            return;
+        }
     }
 
     // Si el servidor ya estaba cargado con el perfil normal, se relanza una sola
@@ -26626,7 +26666,9 @@ bool AppController::startManagedStt(const VoiceConfig &c)
     }
     const QStringList args = VoiceServerManager::buildWhisperArgs(
         VoiceServerManager::modelPath(c.sttManagedEngine),
-        QStringLiteral("127.0.0.1"), port, c.sttLanguage);
+        QStringLiteral("127.0.0.1"), port, c.sttLanguage,
+        VoiceServerManager::whisperThreads(QThread::idealThreadCount()),
+        VoiceServerManager::kWhisperAudioCtx);
 
     m_sttProc = new QProcess(this);
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();

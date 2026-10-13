@@ -7,6 +7,7 @@
 #include "core/automation/DesktopAutomationBackend.h"
 #include "core/automation/DesktopComputerUse.h"
 #include "core/automation/DesktopRecoveryPolicy.h"
+#include "core/automation/LinuxDesktopBackend.h"
 #include "core/automation/TeachKeyBuffer.h"
 
 class AutomationTests : public QObject
@@ -24,6 +25,7 @@ private slots:
     void desktopPromptPrefersNativeTools();
     void desktopToolPolicyKeepsGuiToolsAvailable();
     void readTextFormatsNormalizedCentersAndFilters();
+    void linuxPointerArgsSupportModifiersAndHorizontalScroll();
     void calculatorMismatchRejectsHistoryFalsePositive();
     void desktopWarmStartUsesTeachWithoutHardcodedApps();
     void browserPromptUsesForegroundTeachEvidence();
@@ -237,6 +239,30 @@ void AutomationTests::readTextFormatsNormalizedCentersAndFilters()
     QVERIFY(tools.contains(QStringLiteral("desktop_read_text")));
     QVERIFY(DesktopComputerUse::isDesktopReadTool(QStringLiteral("desktop_read_text")));
     QVERIFY(DesktopComputerUse::isDesktopActionTool(QStringLiteral("desktop_hover")));
+}
+
+// Linux (xdotool): modificadores sostenidos alrededor del clic, en UNA sola
+// invocación (si un paso falla no queda un CTRL apretado), y rueda horizontal
+// con los botones 6/7 de X11.
+void AutomationTests::linuxPointerArgsSupportModifiersAndHorizontalScroll()
+{
+    const QStringList dbl = LinuxDesktopBackend::buildClickArgs(QPoint(10, 20), "left", 2,
+                                                                {"CTRL", "shift"});
+    QCOMPARE(dbl, QStringList({"mousemove", "10", "20", "keydown", "ctrl", "keydown", "shift",
+                               "click", "--repeat", "2", "--delay", "80", "1",
+                               "keyup", "shift", "keyup", "ctrl"}));
+    const QStringList right = LinuxDesktopBackend::buildClickArgs(QPoint(1, 2), "right", 9, {});
+    QCOMPARE(right.mid(3), QStringList({"click", "--repeat", "3", "--delay", "80", "3"}));
+    QString err;
+    QVERIFY(LinuxDesktopBackend::buildClickArgs(QPoint(), "left", 1, {"HYPER"}, &err).isEmpty());
+    QVERIFY(err.contains(QStringLiteral("HYPER")));
+
+    QCOMPARE(LinuxDesktopBackend::buildScrollArgs(-240, false),
+             QStringList({"click", "--repeat", "2", "5"}));            // abajo
+    QCOMPARE(LinuxDesktopBackend::buildScrollArgs(120, false).last(), QString("4"));   // arriba
+    QCOMPARE(LinuxDesktopBackend::buildScrollArgs(120, true).last(), QString("7"));    // derecha
+    QCOMPARE(LinuxDesktopBackend::buildScrollArgs(-360, true),
+             QStringList({"click", "--repeat", "3", "6"}));            // izquierda
 }
 
 void AutomationTests::calculatorMismatchRejectsHistoryFalsePositive()

@@ -137,6 +137,10 @@ public:
     // Silencio final que se deja al cerrar un segmento (el resto era sólo la
     // espera del endpointing, 600-1200 ms que Whisper procesaba de más).
     static constexpr int kSttTailKeepMs = 250;
+    // Largo máximo de un segmento para STT: whisper procesa sólo
+    // VoiceServerManager::whisperAudioCtxMs() (~12,8 s); hablando de corrido más
+    // que eso, el resto se perdería. Se corta y transcribe por partes.
+    static constexpr int kSttMaxSegmentMs = 12000;
     static QByteArray trimLeadingForStt(const QByteArray &pcm, int sampleRate, int keepMs);
     static QByteArray trimTrailingSilence(const QByteArray &pcm, int sampleRate,
                                           int silenceMs, int keepMs);

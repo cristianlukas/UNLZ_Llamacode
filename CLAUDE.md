@@ -120,8 +120,12 @@ ASCII: por un pipe de Git Bash el texto con tildes llega roto y Piper pronuncia
 basura (Whisper después "transcribe" cosas como "símbolo de copyright").
 Ojo: el TTS suena por el parlante y una frase que pida acciones de PC las ejecuta.
 
-Medido (RTX 3070 Laptop 8 GB, Qwen3.5 9B, whisper-base, piper es_ES): 1,3–2,3 s
-por turno. El primer turno tras relanzar el server sale ~3,5 s (cache fría).
+Medido (RTX 3070 Laptop 8 GB, Qwen3.5 9B, piper es_ES): 1,45–2,15 s por turno con
+**whisper-small** (whisper-base es ~0,4 s más rápido pero erra 3 de 5 frases en
+español: "doce por treinta y siete" → "c por 37"). whisper-server corre con
+`-ac 640` y la mitad de los hilos (ver `VoiceServerManager::kWhisperAudioCtx` /
+`whisperThreads`): con el default (30 s de audio, 4 hilos) small tardaba ~2,5 s, y
+con 12 hilos le robaba CPU a piper (TTS de 0,6 → 2,3 s).
 
 ### QA manual pendiente (sin test automatizado)
 Necesitan una sesión de escritorio interactiva con ventanas vivas (no

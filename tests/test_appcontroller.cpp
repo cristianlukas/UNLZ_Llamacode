@@ -76,6 +76,8 @@ public:
     bool running() const override { return m_running; }
     bool provisionalAnswerPending() const override { return m_provisional; }
     bool m_provisional = false;
+    void prefillWarmup() override { ++m_warmups; }
+    int m_warmups = 0;
     void start(const AgentContext &) override { m_running = true; emit runningChanged(); }
     void stop() override { m_running = false; emit runningChanged(); }
     void newSession() override { m_msgs.clear(); }   // sesión limpia por iteración
@@ -266,6 +268,7 @@ private slots:
     void charlaJarvisQueuesTurnWhileAgentStarts();
     void charlaJarvisStopsOrQueuesWhileAgentWorks();
     void charlaDoesNotSpeakProvisionalAnswers();
+    void charlaWarmsUpAgentThatStartsWhileListening();
     void ocrStatusAlwaysExplainsItself();
     void agentLevels_contextBudgetLadder();
     void privacyModeHidesAndBlocksNetworkTools();
@@ -1624,6 +1627,21 @@ void AppControllerTests::charlaCursorOcrIsOptInAndDoesNotHijackChat()
 // Tras una acción de escritorio sin verificar, la respuesta en curso puede ser
 // retenida por la compuerta de verificación y reemplazada. Hablarla en vivo
 // hacía que en voz se escucharan 2-3 respuestas por turno ("looping").
+// Tras el relanzamiento por el ajuste de Charla, la escucha arranca antes que el
+// agente: el warmup de "escuchando" no lo alcanzaba y el primer turno procesaba
+// todo el prompt en frío. Al quedar corriendo, el agente se precalienta.
+void AppControllerTests::charlaWarmsUpAgentThatStartsWhileListening()
+{
+    AppController app;
+    auto *fake = new FakeAgentBackend(&app);
+    app.setTestAgentBackend(fake);
+    app.setCharlaActiveForTest(true);
+    app.voiceForTest()->setStateForTest(VoiceController::Listening);
+    QCOMPARE(fake->m_warmups, 0);
+    fake->start(AgentContext{});              // emite runningChanged(true)
+    QCOMPARE(fake->m_warmups, 1);
+}
+
 void AppControllerTests::charlaDoesNotSpeakProvisionalAnswers()
 {
     AppController app;

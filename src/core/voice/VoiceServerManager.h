@@ -94,8 +94,18 @@ public:
 
     // ── Funciones puras (testeables) ──
     // Args de whisper-server: -m <model> --host <h> --port <p> [-l <lang>].
+    // Contexto de audio del encoder de whisper (frames de 20 ms; 1500 = 30 s).
+    // El default procesa SIEMPRE 30 s aunque la frase dure 3: con 640 (~12,8 s)
+    // whisper-small codifica en ~0,5 s en vez de ~1,7 s, con el mismo texto
+    // (medido). VoiceController corta los segmentos antes de este largo.
+    static constexpr int kWhisperAudioCtx = 640;
+    static int whisperAudioCtxMs() { return kWhisperAudioCtx * 20; }
+    // Hilos para whisper en CPU: el default de whisper.cpp es 4; más ayuda, pero
+    // sin acaparar la CPU que necesitan piper y el server en el mismo turno.
+    static int whisperThreads(int idealThreadCount);
     static QStringList buildWhisperArgs(const QString &modelPath, const QString &host,
-                                        int port, const QString &language);
+                                        int port, const QString &language,
+                                        int threads = 0, int audioCtx = 0);
     // endpointPath del motor (ej "/inference" para whisper.cpp).
     static QString endpointPath(const QString &engineId);
     // Args de piper (process-mode): -m <model> -f <outWav> (texto por stdin).

@@ -456,6 +456,9 @@ void VoiceController::processCapturedChunk(const QByteArray &chunk)
         // Hasta que aparezca voz en este segmento, guardar sólo el pre-roll.
         if (!speech && !m_segVoice)
             m_segment = trimLeadingForStt(m_segment, m_sampleRate, kSttPreRollMs);
+        // Habla de corrido sin micro-pausas: cortar antes del límite de whisper.
+        else if (m_segment.size() / 2 * 1000 / m_sampleRate >= kSttMaxSegmentMs)
+            flushSegment(false);
     }
     if (speech) {
         if (lvl > m_peak) m_peak = lvl;

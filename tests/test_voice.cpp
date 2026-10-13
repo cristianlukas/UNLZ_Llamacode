@@ -576,6 +576,14 @@ void TestVoice::charlaTuningRecommendations()
     // Con poca VRAM, un mínimo más chico.
     for (const auto &c : CharlaTuning::recommend(small, 4.0))
         if (c.flag == QLatin1String("--ctx-size")) QCOMPARE(c.recommended, QString("8192"));
+    // El modo agente exige el ajuste de contexto aunque no esté tildado "siempre
+    // aplicar": sin él no funciona. Los demás cambios siguen siendo opcionales.
+    QVERIFY(CharlaTuning::requiredForAgent(CharlaTuning::recommend(small, 8.0)));
+    QVERIFY(CharlaTuning::requiredForAgent(CharlaTuning::recommend(tiny, 2.0)));   // 3072 → 8192
+    const QStringList onlyOptional{"--ctx-size", "32768", "--batch-size", "512",
+                                   "--ubatch-size", "128", "--parallel", "1"};
+    QVERIFY(!CharlaTuning::requiredForAgent(CharlaTuning::recommend(onlyOptional, 24.0)));
+
     // Slots explícitos sin KV unificado sí dividen el contexto → 1 slot.
     const QStringList shortAlias{"--ctx-size", "16384", "-np", "4"};
     const QStringList fixed = CharlaTuning::apply(shortAlias, CharlaTuning::recommend(shortAlias, 8.0));
@@ -875,6 +883,18 @@ void TestVoice::sttServerCatalog()
     QVERIFY(!a.contains("-l"));
     QStringList b = VoiceServerManager::buildWhisperArgs("m.bin", "127.0.0.1", 8081, "es");
     QVERIFY(b.contains("-l")); QVERIFY(b.contains("es"));
+    QVERIFY(!b.contains("-t"));   // sin hilos/ctx explícitos: defaults del motor
+    QVERIFY(!b.contains("-ac"));
+    // Charla los fija: más hilos y contexto de audio acotado (~3x más rápido
+    // con whisper-small, medido) — y el corte de segmentos queda por debajo.
+    const QStringList c = VoiceServerManager::buildWhisperArgs(
+        "m.bin", "127.0.0.1", 8081, "es", VoiceServerManager::whisperThreads(16),
+        VoiceServerManager::kWhisperAudioCtx);
+    QCOMPARE(c.at(c.indexOf("-t") + 1), QString("8"));
+    QCOMPARE(c.at(c.indexOf("-ac") + 1), QString::number(VoiceServerManager::kWhisperAudioCtx));
+    QCOMPARE(VoiceServerManager::whisperThreads(4), 4);
+    QCOMPARE(VoiceServerManager::whisperThreads(64), 8);
+    QVERIFY(VoiceController::kSttMaxSegmentMs < VoiceServerManager::whisperAudioCtxMs());
 }
 
 void TestVoice::voiceBinaryUrls()

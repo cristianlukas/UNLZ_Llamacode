@@ -33,6 +33,12 @@ QList<Change> recommend(const QStringList &args, double vramGb);
 // agrega el par al final si falta. No toca nada más.
 QStringList apply(QStringList args, const QList<Change> &changes);
 
+// ¿Hay un cambio que el modo AGENTE de Charla no puede tolerar? Hoy: subir un
+// --ctx-size por debajo del mínimo (con 4096 el agente de voz compacta en cada
+// turno y pierde la consigna). Esto se aplica aunque el usuario no haya tildado
+// "siempre aplicar mejoras": sin ello el modo agente no funciona.
+bool requiredForAgent(const QList<Change> &changes);
+
 // Para QML: [{flag, current, recommended, reason}].
 QVariantList toVariantList(const QList<Change> &changes);
 

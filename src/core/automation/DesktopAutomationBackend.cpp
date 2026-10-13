@@ -765,12 +765,14 @@ bool DesktopAutomationBackend::clickEx(const QString &kind, const QString &targe
     sendMods(true);
     if (!ok) return false;
 #else
-    if (!modifiers.isEmpty()) {
-        if (error) *error = QStringLiteral("Clic con modificadores no soportado en Linux todavía.");
+    if (!isNormalizedPoint(x, y)) {
+        if (error) *error = QStringLiteral(
+            "Coordenadas inválidas: x/y deben estar normalizadas entre 0 y 1; "
+            "no se ejecutó ningún clic.");
         return false;
     }
-    for (int i = 0; i < times; ++i)
-        if (!click(kind, targetId, x, y, button, error, trace)) return false;
+    if (!LinuxDesktopBackend::clickEx(kind, targetId, x, y, button, times, modifiers, error, trace))
+        return false;
 #endif
     if (trace) {
         QVariantMap p = trace->value(QStringLiteral("pointer")).toMap();
@@ -834,11 +836,8 @@ bool DesktopAutomationBackend::scrollAt(const QString &kind, const QString &targ
     if (!ok && error) *error = QStringLiteral("No se pudo desplazar.");
     return ok;
 #else
-    if (horizontal) {
-        if (error) *error = QStringLiteral("Scroll horizontal no soportado en Linux todavía.");
-        return false;
-    }
-    return LinuxDesktopBackend::scroll(delta, error);
+    return horizontal ? LinuxDesktopBackend::scrollHorizontal(delta, error)
+                      : LinuxDesktopBackend::scroll(delta, error);
 #endif
 }
 

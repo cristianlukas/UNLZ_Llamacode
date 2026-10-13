@@ -291,14 +291,25 @@ QString VoiceServerManager::endpointPath(const QString &engineId)
     return e.value("endpointPath", QStringLiteral("/inference")).toString();
 }
 
+int VoiceServerManager::whisperThreads(int idealThreadCount)
+{
+    // Mitad de los lógicos, tope 8: con 12 hilos whisper le sacaba CPU a piper y
+    // al server y el TTS pasaba de ~0,6 s a ~2,3 s por oración (medido). Con 8
+    // la codificación cuesta ~0,1 s más y el resto del turno no se traba.
+    return qBound(4, idealThreadCount / 2, 8);
+}
+
 QStringList VoiceServerManager::buildWhisperArgs(const QString &modelPath, const QString &host,
-                                                 int port, const QString &language)
+                                                 int port, const QString &language,
+                                                 int threads, int audioCtx)
 {
     QStringList a{QStringLiteral("-m"), modelPath,
                   QStringLiteral("--host"), host,
                   QStringLiteral("--port"), QString::number(port)};
     if (!language.isEmpty() && language != QLatin1String("auto"))
         a << QStringLiteral("-l") << language;
+    if (threads > 0) a << QStringLiteral("-t") << QString::number(threads);
+    if (audioCtx > 0) a << QStringLiteral("-ac") << QString::number(audioCtx);
     return a;
 }
 
