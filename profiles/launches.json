@@ -14016,7 +14016,7 @@
     },
     {
         "agentProfileId": "agent-maximo",
-        "alias": "ASTRA",
+        "alias": "ASTRA legacy · Q4",
         "backendProfileId": "8b3d1930-d2fc-4c42-ba78-8700e91e9fe2",
         "benchmark": true,
         "benchmarkMemoryAdaptive": true,

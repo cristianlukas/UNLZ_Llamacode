@@ -1,6 +1,6 @@
 # Evaluación continua de modelos y harness de LlamaCode
 
-Registro acumulativo. Actualizado: 2026-10-10. La evidencia se conserva en los
+Registro acumulativo. Actualizado: 2026-10-13. La evidencia se conserva en los
 informes por campaña y en `artifacts/evaluacion-modelos-llamacode/<TASK-ID>/`.
 Los resultados históricos no se reemplazan; una recomendación nueva debe
 referir su evidencia y sus límites.
@@ -9,24 +9,33 @@ referir su evidencia y sus límites.
 
 | Uso | Recomendación vigente | Estado y evidencia |
 |---|---|---|
-| Coding y agentes | **SOL**, Qwen3.8-27B AutoRound INT4, vLLM TP2/P2P, MTP4/KV FP8. | Confirmado como perfil principal en la matriz local: BCB 8/8 y contexto 262K; la presente campaña no cambia el perfil. Ver [matriz por caso de uso](profile-use-case-stars-20260908.md). |
+| Coding y agentes | **SOL**, Qwen3.8-27B AutoRound INT4, vLLM TP2/P2P, MTP4/KV FP8, para tareas con permisos y datos sensibles. | ASTRA quedó configurado por pedido explícito como perfil seleccionado por defecto: ISTA IQ2_XS/Strata obtuvo 77,98/100 en Hard Mode 28×3, con 154,19 tok/s de media y 11:05 total. No es recomendación segura general: TC-92 filtró datos entre tenants en las tres semillas y TC-74 falló 3/3. El perfil conserva `best=false`; no usar para tareas con datos sensibles o aislamiento multi-tenant. Ver [resultados IQ2_XS](../artifacts/evaluacion-modelos-llamacode/Q-20261009-STRATA-QWEN38-27B-AB/RESULTS.md), [cambio de perfil](../artifacts/evaluacion-modelos-llamacode/Q-20261013-ASTRA-ISTA-DEFAULT/RESULTS.md) y [matriz por caso de uso](profile-use-case-stars-20260908.md). |
 | Computer Usage | ASTRA como perfil general; Swift IQ3_XXS como alternativa de menor latencia en decisiones textuales cortas. | Provisional: 216 prompts con exactitud/validez/seguridad 100% en ambos, pero sin acciones GUI reales, capturas ni verificación E2E. La IQ3_XXS ISTA de esta campaña no fue probada en escritorio. Ver [auditoría de Computer Use](flashnext-computer-use-20261006.md). |
 | Ingi-Charla | Qwen3.5-9B con el pipeline local de STT/TTS ya integrado. | Provisional para calidad acústica: los tests de código validan integración, no WER ni escucha humana. Flash-Next no aporta ASR/TTS y no se deriva calidad de voz desde texto. Ver [auditoría de voz local](ingicharla-local-voice-audit-20260918.md). |
 | Visión | SOL con vLLM TP2/P2P para el uso multimodal validado; Qwen3.5-A3B/TERRA según el caso. | Confirmado para las recetas documentadas (SOL 4/4); **Flash-Next/Strata CPU vision no evaluado localmente** en esta campaña. Strata documenta `--vision cpu`; eso acredita una ruta de ejecución, no calidad visual del perfil. |
-| Contexto largo | ASTRA Qwen3.8-Flash-Next UD-Q2_K_XL en su receta de 256K. | Provisional/exploratorio: matriz local registra 256K y needle/passkey 4/4 en posiciones 25/50/75/95. La IQ3_XXS tenía `max-context=131072`, pero la sonda de 115.015 tokens se cortó por transporte al procesar 65.536; no hay retrieval válido. El smoke separado de 262K para el post 4×P100 se bloqueó antes de cargar por swap 3,253 GiB >2 GiB. |
+| Contexto largo | Flash-Next Q2_K_XL en su receta de 256K (perfil aparte; no es ASTRA DEFAULT). | Provisional/exploratorio: matriz local registra 256K y needle/passkey 4/4 en posiciones 25/50/75/95. La IQ2_XS/Strata predeterminada evaluó contexto a 131K, sin retrieval largo. La caché de compactación sigue apagada por un fallo de recuperación en 1/3. El smoke separado de 262K para el post 4×P100 se bloqueó antes de cargar por swap; no es fallo del modelo. |
 | Rendimiento | No hay ganador global nuevo. | IQ3_XXS tuvo TTFT menor en dos pasadas, pero decode se solapa con ASTRA y n=2. En ADV v1 empató 10/10 tras reparaciones, con menor primera pasada y más tiempo/llamadas. No justifica promoción. |
 
-**Cambios promovidos por esta evaluación: ninguno.** Mantener los defaults y
-perfiles productivos. La comparación ISTA IQ3_XXS vs ASTRA IQ3_S es una
-comparación de perfiles completos con el mismo backend Strata, no una
-comparación universal entre cuantizaciones.
+**Cambio de perfil solicitado por el usuario (2026-10-13):** ASTRA DEFAULT
+selecciona ahora ISTA IQ2_XS con Strata 0.1.41; el perfil anterior IQ3_S se
+conserva como alternativa. La selección de inicio se aplica al `lastLaunchId`
+local y el alias de IQ2_XS es `ASTRA`; `best=false` se mantiene para no
+presentarlo como recomendación segura general. El usuario priorizó su velocidad
+y calidad pese a que TC-92 falló 3/3: no asignarle tareas con datos sensibles ni
+aislamiento entre tenants. SOL sigue recomendado para ese uso.
+
+Esta promoción de selección predeterminada no convierte el screening en una
+mejora estable ni borra la decisión de seguridad previa. La comparación ISTA
+IQ3_XXS vs ASTRA IQ3_S sigue siendo una comparación de perfiles completos, no
+una comparación universal entre cuantizaciones.
 
 ## Inventario de candidatos y controles
 
 | Perfil/modelo | Estado | Uso / evidencia principal |
 |---|---|---|
 | SOL — Qwen3.8-27B AutoRound INT4, vLLM TP2/P2P | Principal | Coding/agentes y visión en la matriz local; [perfil por uso](profile-use-case-stars-20260908.md). |
-| ASTRA — Qwen3.8-Flash-Next UD-Q2_K_XL, 256K | Experimental validado para su receta | Contexto largo; no confundir con el control IQ3_S calibrado de la campaña actual. [Matriz](profile-use-case-stars-20260908.md). |
+| ASTRA DEFAULT — ISTA-DASLab Flash-Next IQ2_XS / Strata 0.1.41 | Selección predeterminada a pedido del usuario; uso restringido | Hard Mode 28×3: 77,98/100, 154,19 tok/s media, 153,05 mediana, 11:05 total. TC-92 y TC-74 fallaron 3/3; `best=false`. No usar con datos sensibles ni aislamiento multi-tenant. [Cambio](../artifacts/evaluacion-modelos-llamacode/Q-20261013-ASTRA-ISTA-DEFAULT/RESULTS.md), [benchmark](../artifacts/evaluacion-modelos-llamacode/Q-20261009-STRATA-QWEN38-27B-AB/RESULTS.md). |
+| Flash-Next Q2_K_XL balanceado, 256K | Perfil benchmark de contexto largo; no es el ASTRA DEFAULT actual | Contexto largo; no confundir con ISTA IQ2_XS/Strata ni con el control IQ3_S calibrado. [Matriz](profile-use-case-stars-20260908.md). |
 | ASTRA calibrado IQ3_S / Strata v0.1.41 | Control válido, una corrida por suite en esta campaña | Control para el candidato ISTA IQ3_XXS; [informe de esta evaluación](qwen38-flashnext-iq3xxs-strata-20261009.md). |
 | ISTA-DASLab IQ3_XXS / Strata v0.1.41 | Evaluación provisional; no promovido | Coding/agentes inferior en BCB8 y TaskFlow, empate final en ADV después de reparaciones; sin evidencia GUI, audio ni visión. [Informe de esta evaluación](qwen38-flashnext-iq3xxs-strata-20261009.md). |
 | Swift 1.5 IQ3_XXS | Alternativa provisional para decisiones cortas de Computer Use | Sólo comparación textual; no confundir con ISTA IQ3_XXS. [Informe de Computer Use](flashnext-computer-use-20261006.md). |
@@ -75,6 +84,7 @@ harness de LlamaCode.
 
 | ID / fecha | Objetivo y candidatos | Estado | Resultado y límites | Artefactos |
 |---|---|---|---|---|
+| Q-20261013-ASTRA-ISTA-DEFAULT · 2026-10-13 | Configurar ISTA IQ2_XS/Strata como ASTRA DEFAULT y preservar rollback. | Configurado por pedido explícito; selección predeterminada, no aval de seguridad general. | Reutilizada evidencia Hard Mode 28×3: 77,98/100, 154,19 tok/s media y 11:05 acumulados. Pesos/pack/MTP/runtime locales presentes; sin GPU, inferencia o descarga. Perfil `sys-astra-iq2xs-default`, alias `ASTRA`, `best=false`; `lastLaunchId` local actualizado. TC-92 filtró otro tenant y TC-74 falló 3/3. Build Linux Debug exitoso desde mirror nativo sin `artifacts/`; no se ejecutaron tests. | [Resultados, recibos y rollback](../artifacts/evaluacion-modelos-llamacode/Q-20261013-ASTRA-ISTA-DEFAULT/RESULTS.md). |
 | `Q-20261009-FLASHNEXT-IQ3XXS-AB` · 2026-10-09/10 | Evaluar la publicación inicial de IQ3_XXS/Strata y la solicitud añadida sobre Q4/4×P100/262K para coding/agentes, CU, voz, visión, contexto y velocidad; comparar ISTA IQ3_XXS con ASTRA IQ3_S. | Completa como screening; IQ3_XXS no promovido. Afirmación P100 inconclusa localmente. | HE0 prerequisito 1/1 ambos. HE20+BCB8: IQ3_XXS 24/28 y ASTRA 28/28 finales. ADV v1 complementaria: ambos 10/10 tras dos reparaciones; primera pasada 7/10 y 8/10. TaskFlow ULTRA: 11/13 vs 13/13. Suma descriptiva HE20+BCB8+ADV+TaskFlow: 45/51 vs 51/51; una corrida válida por perfil. Server Speed (n=2): decode 126,59 vs 122,09 tok/s (rangos solapados); TTFT 370,63 vs 451,00 ms. La sonda 115K se cortó por transporte a 65.536/115.015 tokens; sin resultado válido. El smoke 262K del post P100 se bloqueó antes de cargar por swap 3,253 GiB >2 GiB; no es fallo del modelo. Sin GUI E2E, acústica ni evaluación real de imágenes. | [Plan y recibos de esta tarea](../artifacts/evaluacion-modelos-llamacode/Q-20261009-FLASHNEXT-IQ3XXS-AB/); [informe](qwen38-flashnext-iq3xxs-strata-20261009.md); [post P100](https://www.reddit.com/r/LocalLLM/comments/1wx3g89/strata_takes_the_promise_of_moe_models_just_need/). |
 | `flashnext-computer-use-20261006` · 2026-10-06 | ASTRA IQ3_S frente a Swift 1.5 IQ3_XXS para Computer Use. | Provisional; reemplaza sólo la decisión previa de latencia textual corta cuando exista prueba GUI E2E. | 216 prompts, ambos 100% exactitud/validez/seguridad; Swift 22,8–23,9% menos mediana de latencia. No hubo escritorio real, OCR/UIA ni recuperación E2E. | [Informe](flashnext-computer-use-20261006.md), [recibos](../artifacts/flashnext-computer-use-20261006/). |
 | `ingicharla-local-voice-audit-20260918` · 2026-09-18 | Auditar arquitectura de voz y modelo conversacional local. | Recomendación provisional vigente. | Mantener Qwen3.5-9B y STT/TTS integrados; tests de integración no sustituyen corpus acústico/medición WER. | [Auditoría](ingicharla-local-voice-audit-20260918.md). |
@@ -118,6 +128,7 @@ tiempo/llamadas del candidato; no demuestra mejora estable.
 
 | Fecha | Decisión | Uso | Evidencia y confianza | Límites / supersesión |
 |---|---|---|---|---|
+| 2026-10-13 | Seleccionar ISTA IQ2_XS/Strata como ASTRA DEFAULT sólo por pedido explícito; mantener `best=false` y la alerta TC-92. | Coding/agente con herramientas simuladas, 131K. | Hard Mode 28×3: 77,98/100, 154,19 tok/s media, 11:05; dentro del corte de 30 min para tres seeds. | TC-92 filtró datos y TC-74 falló 3/3. No usar con datos sensibles o aislamiento entre tenants; SOL sigue recomendado para ese caso. Config y rollback documentados. [Informe](../artifacts/evaluacion-modelos-llamacode/Q-20261013-ASTRA-ISTA-DEFAULT/RESULTS.md). |
 | 2026-10-10 | No promover ISTA IQ3_XXS/Strata a perfil productivo; mantener ASTRA como candidato provisional Flash-Next y SOL como perfil global vigente. | Coding/agentes y general. | Una corrida válida por perfil: HE20+BCB8 24/28 vs 28/28; ADV complementaria 10/10 ambos; TaskFlow 11/13 vs 13/13. Server Speed n=2 señala TTFT menor para IQ3_XXS, pero decode con rangos solapados. | Una sola pareja de calidad; faltan repeticiones para una mejora estable. La sonda 115K quedó inválida por transporte y el smoke 262K se bloqueó por guarda de swap; ninguno decide contexto ni refuta el post P100. No se toca SOL ni HarnessSpec. |
 | 2026-10-06 | Swift IQ3_XXS puede usarse como alternativa rápida sólo para decisiones cortas textuales de CU. | Computer Usage. | Provisional; 216 solicitudes por perfil. | No prueba GUI E2E; no generalizar a escritorio, OCR o apps. No reemplaza perfiles de coding. |
 | 2026-09-18 | Mantener Qwen3.5-9B y el pipeline de voz integrado para Ingi-Charla. | Voz. | Provisional; integración local validada. | Falta medir WER/CER, latencia end-to-end y escuchar muestras con el mismo corpus. |
