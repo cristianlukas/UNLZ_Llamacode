@@ -89,6 +89,10 @@ public:
     // disponible si hay varias con el mismo ancla.
     CatalogModel findByStableId(qint64 stableId) const;
     QList<CatalogModel> allForRoot(const QString &rootId) const;
+    // Filas disponibles con ese nombre de archivo, sobre TODO el catálogo (no la
+    // vista filtrada de la UI) y sin armar QVariantMap por fila: buildContext lo
+    // usa por cada perfil al religar modelos y el chequeo de salud recorre todos.
+    QList<CatalogModel> availableByFileName(const QString &fileName) const;
 
 signals:
     void countChanged();

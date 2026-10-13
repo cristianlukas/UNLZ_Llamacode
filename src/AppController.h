@@ -2411,6 +2411,12 @@ private:
     QString pinnedSystemBinaryId(const QString &launchId) const;
     QString minimumSystemBinaryId(const QString &launchId) const;
     QList<HealthIssue> resolvedProfileHealth();
+    // ¿Existe el binario en disco? Dentro de una pasada por lotes (chequeo de
+    // salud: buildContext por CADA perfil) cada ruta se consulta una sola vez;
+    // fuera del lote siempre va al disco (el usuario puede borrar un binario).
+    bool binaryFileExists(const QString &path) const;
+    mutable QHash<QString, bool> m_binaryExistsCache;
+    mutable int m_binaryExistsBatch = 0;
     // Instala el binario del tipo pedido si falta (cpu/official→installOfficialBinary,
     // beellama→installMtpBinary). beellama es CUDA-only: sin NVIDIA cae a official.
     void ensureSystemBinary(const QString &kind);

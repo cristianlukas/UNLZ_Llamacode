@@ -10,10 +10,12 @@ class BinaryRegistry;
 class ModelCatalog;
 
 // Un problema detectado en un LaunchProfile (o en una entidad que referencia).
-// severity: "error" (el perfil no puede lanzar) | "warning" (lanza, pero degradado).
+// severity: "error" (el perfil no puede lanzar) | "warning" (lanza, pero degradado)
+//         | "info" (perfil de SISTEMA aún no instalado: le faltan binario y/o
+//           archivos a descargar; no está roto, no cuenta como error).
 // code: identificador estable máquina (ej "binary-missing") para UI/headless.
 struct HealthIssue {
-    QString severity;   // "error" | "warning"
+    QString severity;   // "error" | "warning" | "info"
     QString launchId;   // launch afectado
     QString entity;     // "backend" | "binary" | "model" | "mmproj" | "draft" | "runtime" | "agent" | "cloud"
     QString code;       // slug estable

@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Window
 import QtQuick.Controls
 import QtQuick.Dialogs
 import QtQuick.Layouts
@@ -6,6 +7,12 @@ import LlamaCode 1.0
 
 Item {
     id: root
+    // Los botones de ventana flotan arriba a la derecha (Main.qml, sin barra de
+    // título): esta página no usa PageHeader, así que les reserva el ancho ella.
+    readonly property int windowControlsReserve: {
+        const w = root.Window.window
+        return (w && w.windowControlsWidth !== undefined) ? w.windowControlsWidth : 0
+    }
 
     property string selectedLaunchId: ""
     property string resolvedAdapter: ""
@@ -577,7 +584,7 @@ Item {
                     right: parent.right; rightMargin: 14
                     verticalCenter: parent.verticalCenter
                 }
-                CheckBox {
+                LcCheckBox {
                     id: nativeOverwriteCheck
                     text: "Permitir reemplazar destino"
                     checked: nativeRunDetailDialog.allowOverwrite
@@ -668,7 +675,7 @@ Item {
             }
             RowLayout {
                 Layout.fillWidth: true
-                CheckBox {
+                LcCheckBox {
                     id: managedEditsCheck
                     text: "Permitir ediciones"
                     checked: managedRunsDialog.applyEdits
@@ -1126,7 +1133,7 @@ Item {
             color: Theme.baseBg
 
             RowLayout {
-                anchors { fill: parent; leftMargin: 16; rightMargin: 12 }
+                anchors { fill: parent; leftMargin: 16; rightMargin: 12 + root.windowControlsReserve }
                 spacing: 10
 
                 Text {
@@ -1360,7 +1367,7 @@ Item {
                         verticalAlignment: Text.AlignVCenter; elide: Text.ElideRight
                     }
                 }
-                CheckBox {
+                LcCheckBox {
                     id: agentThinkingCheck
                     visible: resolvedAdapter === "llamaagent"
                     text: "Pensar"

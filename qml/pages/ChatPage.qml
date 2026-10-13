@@ -1,10 +1,17 @@
 import QtQuick
+import QtQuick.Window
 import QtQuick.Controls
 import QtQuick.Layouts
 import LlamaCode 1.0
 
 Item {
     id: root
+    // Los botones de ventana flotan arriba a la derecha (Main.qml, sin barra de
+    // título): esta página no usa PageHeader, así que les reserva el ancho ella.
+    readonly property int windowControlsReserve: {
+        const w = root.Window.window
+        return (w && w.windowControlsWidth !== undefined) ? w.windowControlsWidth : 0
+    }
 
     property bool newProjectDialogOpen: false
     property var thinkExpanded: ({})
@@ -926,7 +933,7 @@ Item {
                 color: Theme.baseBg
 
                 RowLayout {
-                    anchors { fill: parent; leftMargin: 16; rightMargin: 12 }
+                    anchors { fill: parent; leftMargin: 16; rightMargin: 12 + root.windowControlsReserve }
                     spacing: 10
                     Text { text: "Chat"; color: Theme.textPrimary; font.pixelSize: 15; font.bold: true }
                     Rectangle {
@@ -955,7 +962,7 @@ Item {
                         elide: Text.ElideRight
                         Layout.fillWidth: true
                     }
-                    CheckBox {
+                    LcCheckBox {
                         id: chatThinkingCheck
                         visible: App.serverRunning && App.serverReady
                         text: "Pensar"
@@ -974,7 +981,7 @@ Item {
                         }
                     }
                     // Salida estructurada: fuerza JSON válido (GBNF) en la respuesta.
-                    CheckBox {
+                    LcCheckBox {
                         id: jsonModeCheck
                         visible: App.serverRunning && App.serverReady
                         text: "JSON"
@@ -1000,7 +1007,7 @@ Item {
                     }
                     // Persona Diseño: sesga al modelo a emitir artifacts visuales
                     // (bloques mermaid/svg) que se rinden inline.
-                    CheckBox {
+                    LcCheckBox {
                         id: personaDesignerCheck
                         visible: App.serverRunning && App.serverReady
                         text: "Diseño"

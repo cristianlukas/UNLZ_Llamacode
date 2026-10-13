@@ -162,7 +162,7 @@ Dialog {
                                 RowLayout {
                                     anchors { fill: parent; leftMargin: 12; rightMargin: 10 }
                                     spacing: 10
-                                    CheckBox {
+                                    LcCheckBox {
                                         checked: modelData.enabled
                                         onToggled: App.toggleMcpServer(dlg.scope, dlg.projectDir, modelData.name, checked)
                                     }
@@ -225,7 +225,7 @@ Dialog {
                                 background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
                                 contentItem: Text { text: mcpType.displayText; color: Theme.textPrimary; font.pixelSize: 12; leftPadding: 8; verticalAlignment: Text.AlignVCenter }
                             }
-                            CheckBox { id: mcpEnabled; text: "enabled"; checked: true }
+                            LcCheckBox { id: mcpEnabled; text: "enabled"; checked: true }
                         }
                         RowLayout {
                             Layout.fillWidth: true; spacing: 8

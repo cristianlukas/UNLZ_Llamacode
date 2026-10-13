@@ -640,7 +640,7 @@ Item {
                                 }
                                 Repeater {
                                     model: root.gpuRows
-                                    delegate: CheckBox {
+                                    delegate: LcCheckBox {
                                         text: "GPU " + modelData.index + " · " + modelData.name + " · " + Math.round(modelData.totalMb / 1024) + " GB"
                                         checked: root.isVramGpuSelected(modelData.index)
                                         onToggled: root.setVramGpuSelected(modelData.index, checked)

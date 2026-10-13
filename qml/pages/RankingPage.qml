@@ -424,7 +424,7 @@ Item {
                     verticalAlignment: Text.AlignVCenter
                 }
             }
-            CheckBox {
+            LcCheckBox {
                 id: completeCheck
                 text: "Sólo las 3 etapas"
                 checked: root.onlyComplete
@@ -523,7 +523,7 @@ Item {
                                 required property var modelData
                                 Layout.fillWidth: true
                                 spacing: 3
-                                CheckBox {
+                                LcCheckBox {
                                     id: columnCheck
                                     checked: root.visibleColumnKeys.indexOf(modelData.key) >= 0
                                     text: modelData.title
@@ -673,7 +673,7 @@ Item {
                     }
                 }
                 Rectangle { Layout.fillWidth: true; height: 1; color: Theme.divider }
-                CheckBox {
+                LcCheckBox {
                     id: filterSelectAll
                     text: "Seleccionar todo"
                     Layout.fillWidth: true
@@ -698,7 +698,7 @@ Item {
                         spacing: 1
                         Repeater {
                             model: filterPanel.values
-                            delegate: CheckBox {
+                            delegate: LcCheckBox {
                                 id: filterValueCheck
                                 required property string modelData
                                 Layout.fillWidth: true

@@ -1126,7 +1126,7 @@ Item {
                     color: Theme.textSecondary; font.pixelSize: 12; wrapMode: Text.WordWrap
                 }
             }
-            CheckBox {
+            LcCheckBox {
                 id: tuneAlwaysCb
                 text: "Siempre que se entre a ingi-charla, recargar el perfil con las mejoras para charla"
                 checked: false

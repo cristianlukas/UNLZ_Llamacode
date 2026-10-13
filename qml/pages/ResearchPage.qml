@@ -198,7 +198,7 @@ Item {
                         }
                     }
 
-                    CheckBox {
+                    LcCheckBox {
                         id: researchThinkingCheck
                         text: "Thinking"
                         checked: App.thinkingEnabled

@@ -69,19 +69,32 @@ Item {
     // ── Salud de perfiles (health-check) ──────────────────────────
     // Lista de issues {severity,launchId,entity,code,message,fix} de todos los
     // launches. Se refresca al entrar y ante cambios de la lista de launches.
+    // healthIssues: errores y avisos reales. healthNotInstalled: perfiles de
+    // SISTEMA aún no instalados (severity "info"), que no son problemas y van
+    // aparte. healthChecked: hasta la primera pasada no se afirma "sanos".
     property var healthIssues: []
+    property var healthNotInstalled: []
     property int healthErrors: 0
     property int healthWarnings: 0
+    property bool healthChecked: false
+    property bool showNotInstalled: false
     function refreshHealth() {
         // Una sola pasada: cada chequeo resuelve TODOS los launches contra el
         // catálogo; pedir además profileHealthSummary() la repetía entera.
         const issues = App.profileHealth()
+        const real = [], info = []
         let errors = 0
-        for (let i = 0; i < issues.length; ++i)
-            if (issues[i].severity === "error") ++errors
-        healthIssues = issues
+        for (let i = 0; i < issues.length; ++i) {
+            const sev = issues[i].severity
+            if (sev === "info") { info.push(issues[i]); continue }
+            if (sev === "error") ++errors
+            real.push(issues[i])
+        }
+        healthIssues = real
+        healthNotInstalled = info
         healthErrors = errors
-        healthWarnings = issues.length - errors
+        healthWarnings = real.length - errors
+        healthChecked = true
     }
     function launchName(id) {
         const lp = App.profileManager.getLaunchProfile(id)
@@ -262,11 +275,24 @@ Item {
         return out
     }
 
+    // Cambiar launchCombo.currentIndex dispara onCurrentValueChanged → loadLaunch.
+    // Quien cambia el índice Y carga explícitamente (selectProfile, borrar) lo
+    // hace con la carga automática suspendida: antes abrir Perfiles cargaba el
+    // perfil 3-4 veces (índice 0 al asignar el modelo, el cambio de índice y la
+    // llamada explícita), cada una con su computeEffectiveProfile.
+    property bool _autoLoadReady: false
+    property bool _autoLoadSuspended: false
+    function setLaunchIndexQuietly(i) {
+        _autoLoadSuspended = true
+        launchCombo.currentIndex = i
+        _autoLoadSuspended = false
+    }
+
     function selectProfile(id) {
         if (!id || id.length === 0) return false
         const i = launchCombo.indexOfValue(id)
         if (i < 0) return false
-        launchCombo.currentIndex = i
+        setLaunchIndexQuietly(i)
         selectedLaunchId = id
         loadLaunch()
         return true
@@ -693,11 +719,12 @@ Item {
         const lastId = App.readSetting("lastLaunchId", "")
         if (lastId === "" || !selectProfile(lastId)) {
             if (launchCombo.count > 0) {
-                launchCombo.currentIndex = 0
+                setLaunchIndexQuietly(0)
                 selectedLaunchId = launchCombo.currentValue ?? ""
                 loadLaunch()
             }
         }
+        _autoLoadReady = true
     }
 
     ColumnLayout {
@@ -755,11 +782,11 @@ Item {
                     id: healthBanner
                     Layout.fillWidth: true
                     radius: 8
-                    readonly property bool healthy: root.healthIssues.length === 0
-                    color: healthy ? Theme.surfaceBg
+                    readonly property bool healthy: root.healthChecked && root.healthIssues.length === 0
+                    color: (healthy || !root.healthChecked) ? Theme.surfaceBg
                          : (root.healthErrors > 0 ? Qt.rgba(Theme.errorText.r, Theme.errorText.g, Theme.errorText.b, 0.08)
                                                   : Qt.rgba(Theme.warnText.r, Theme.warnText.g, Theme.warnText.b, 0.08))
-                    border.color: healthy ? Theme.borderColor
+                    border.color: (healthy || !root.healthChecked) ? Theme.borderColor
                          : (root.healthErrors > 0 ? Theme.errorText : Theme.warnText)
                     implicitHeight: healthCol.implicitHeight + 20
 
@@ -773,18 +800,32 @@ Item {
                             Layout.fillWidth: true
                             spacing: 10
                             Text {
-                                text: healthBanner.healthy ? "✓" : (root.healthErrors > 0 ? "✕" : "!")
-                                color: healthBanner.healthy ? Theme.successText
+                                text: !root.healthChecked ? "…"
+                                    : healthBanner.healthy ? "✓" : (root.healthErrors > 0 ? "✕" : "!")
+                                color: !root.healthChecked ? Theme.textSecondary
+                                     : healthBanner.healthy ? Theme.successText
                                      : (root.healthErrors > 0 ? Theme.errorText : Theme.warnText)
                                 font.pixelSize: 16; font.bold: true
                             }
                             Text {
-                                text: healthBanner.healthy
-                                    ? "Todos los perfiles están sanos"
+                                text: !root.healthChecked ? "Revisando perfiles…"
+                                    : healthBanner.healthy
+                                    ? "Todos los perfiles instalados están sanos"
                                     : (root.healthErrors + " error(es), " + root.healthWarnings + " aviso(s)")
                                 color: Theme.textPrimary; font.pixelSize: 14; font.bold: true
                             }
+                            Text {
+                                visible: root.healthChecked && root.healthNotInstalled.length > 0
+                                text: "· " + root.healthNotInstalled.length + " de sistema sin instalar"
+                                color: Theme.textSecondary; font.pixelSize: 13
+                            }
                             Item { Layout.fillWidth: true }
+                            LcButton {
+                                visible: root.healthChecked && root.healthNotInstalled.length > 0
+                                secondary: true
+                                text: root.showNotInstalled ? "Ocultar sin instalar" : "Ver sin instalar"
+                                onClicked: root.showNotInstalled = !root.showNotInstalled
+                            }
                             LcButton {
                                 text: "Revisar salud"
                                 onClicked: root.refreshHealth()
@@ -792,7 +833,9 @@ Item {
                         }
 
                         Repeater {
-                            model: root.healthIssues
+                            model: root.showNotInstalled
+                                ? root.healthIssues.concat(root.healthNotInstalled)
+                                : root.healthIssues
                             delegate: RowLayout {
                                 required property var modelData
                                 Layout.fillWidth: true
@@ -801,7 +844,8 @@ Item {
                                     Layout.alignment: Qt.AlignTop
                                     width: 8; height: 8; radius: 4
                                     y: 5
-                                    color: modelData.severity === "error" ? Theme.errorText : Theme.warnText
+                                    color: modelData.severity === "error" ? Theme.errorText
+                                         : modelData.severity === "info" ? Theme.textSecondary : Theme.warnText
                                 }
                                 ColumnLayout {
                                     Layout.fillWidth: true
@@ -870,7 +914,10 @@ Item {
                             model: launchMenu
                             textRole: "displayName"
                             valueRole: "id"
-                            onCurrentValueChanged: { selectedLaunchId = currentValue ?? ""; loadLaunch() }
+                            onCurrentValueChanged: {
+                                selectedLaunchId = currentValue ?? ""
+                                if (root._autoLoadReady && !root._autoLoadSuspended) loadLaunch()
+                            }
                             background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
                             contentItem: Text {
                                 text: launchCombo.displayText.length > 0 ? launchCombo.displayText : (App.langV, App.l("common.selectPlaceholder"))
@@ -1051,7 +1098,7 @@ Item {
                         App.profileManager.removeLaunchProfile(idToDelete)
                         selectedLaunchId = ""
                         if (launchCombo.count > 0) {
-                            launchCombo.currentIndex = 0
+                            root.setLaunchIndexQuietly(0)
                             selectedLaunchId = launchCombo.currentValue ?? ""
                             loadLaunch()
                         }
@@ -1335,7 +1382,7 @@ Item {
                                 font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
                         }
 
-                        CheckBox { id: mmprojCheck; checked: mmprojEnabled; onCheckedChanged: mmprojEnabled = checked; padding: 0 }
+                        LcCheckBox { id: mmprojCheck; checked: mmprojEnabled; onCheckedChanged: mmprojEnabled = checked; padding: 0 }
                         Text { text: "mmproj"; color: mmprojEnabled ? Theme.textSecondary : Theme.textMuted; font.pixelSize: 12 }
                         LcComboBox {
                             id: modelMmproj
@@ -1349,7 +1396,7 @@ Item {
                             contentItem: Text { text: modelMmproj.displayText; color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
                         }
 
-                        CheckBox { id: draftCheck; checked: draftEnabled; onCheckedChanged: draftEnabled = checked; padding: 0 }
+                        LcCheckBox { id: draftCheck; checked: draftEnabled; onCheckedChanged: draftEnabled = checked; padding: 0 }
                         Text { text: "Draft model"; color: draftEnabled ? Theme.textSecondary : Theme.textMuted; font.pixelSize: 12 }
                         LcComboBox {
                             id: modelDraft
@@ -1365,7 +1412,7 @@ Item {
                         Item { Layout.fillWidth: true; implicitHeight: 1 }
 
                         // ── Speculative decoding / MTP / DSpark ──
-                        CheckBox { id: mtpCheck; checked: mtpEnabled; onCheckedChanged: mtpEnabled = checked; padding: 0 }
+                        LcCheckBox { id: mtpCheck; checked: mtpEnabled; onCheckedChanged: mtpEnabled = checked; padding: 0 }
                         Text { text: draftEnabled
                                     ? (specTypeCurrent === "draft-dspark" ? "DSpark" : "MTP (draft-mtp)")
                                     : "MTP autocontenido";
@@ -1394,7 +1441,7 @@ Item {
                         Item { Layout.fillWidth: true; implicitHeight: 1 }
 
                         Item { implicitWidth: 20 }
-                        CheckBox {
+                        LcCheckBox {
                             id: specAdaptiveCheck
                             text: "adaptive"
                             checked: false
@@ -1490,10 +1537,10 @@ Item {
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 16
-                    CheckBox { id: flashAttnCheck; text: "flash-attn"; contentItem: Text { text: parent.text; color: Theme.textSecondary; leftPadding: parent.indicator.width + 6 } }
-                    CheckBox { id: mmapCheck; text: "mmap"; contentItem: Text { text: parent.text; color: Theme.textSecondary; leftPadding: parent.indicator.width + 6 } }
-                    CheckBox { id: mlockCheck; text: "mlock"; contentItem: Text { text: parent.text; color: Theme.textSecondary; leftPadding: parent.indicator.width + 6 } }
-                    CheckBox { id: contBatchCheck; text: "cont-batching"; contentItem: Text { text: parent.text; color: Theme.textSecondary; leftPadding: parent.indicator.width + 6 } }
+                    LcCheckBox { id: flashAttnCheck; text: "flash-attn"; contentItem: Text { text: parent.text; color: Theme.textSecondary; leftPadding: parent.indicator.width + 6 } }
+                    LcCheckBox { id: mmapCheck; text: "mmap"; contentItem: Text { text: parent.text; color: Theme.textSecondary; leftPadding: parent.indicator.width + 6 } }
+                    LcCheckBox { id: mlockCheck; text: "mlock"; contentItem: Text { text: parent.text; color: Theme.textSecondary; leftPadding: parent.indicator.width + 6 } }
+                    LcCheckBox { id: contBatchCheck; text: "cont-batching"; contentItem: Text { text: parent.text; color: Theme.textSecondary; leftPadding: parent.indicator.width + 6 } }
                 }
 
                 Rectangle {
@@ -1553,9 +1600,9 @@ Item {
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 16
-                    CheckBox { id: contextShiftCheck;   text: "context-shift";    checked: true; contentItem: Text { text: parent.text; color: Theme.textSecondary; leftPadding: parent.indicator.width + 6 } }
-                    CheckBox { id: metricsCheck; text: "metrics"; contentItem: Text { text: parent.text; color: Theme.textSecondary; leftPadding: parent.indicator.width + 6 } }
-                    CheckBox { id: noWarmupCheck; text: "no-warmup"; contentItem: Text { text: parent.text; color: Theme.textSecondary; leftPadding: parent.indicator.width + 6 } }
+                    LcCheckBox { id: contextShiftCheck;   text: "context-shift";    checked: true; contentItem: Text { text: parent.text; color: Theme.textSecondary; leftPadding: parent.indicator.width + 6 } }
+                    LcCheckBox { id: metricsCheck; text: "metrics"; contentItem: Text { text: parent.text; color: Theme.textSecondary; leftPadding: parent.indicator.width + 6 } }
+                    LcCheckBox { id: noWarmupCheck; text: "no-warmup"; contentItem: Text { text: parent.text; color: Theme.textSecondary; leftPadding: parent.indicator.width + 6 } }
                 }
 
                 // ── Agente ───────────────────────────────────────────────────
@@ -1820,7 +1867,7 @@ Item {
                                                 : ((st.label ?? cliName) + " no detectado · " + App.masterCliInstallCommand(cliName))
                                             color: (st.installed === true) ? Theme.successText : Theme.textMuted
                                         }
-                                        CheckBox {
+                                        LcCheckBox {
                                             text: "Edita archivos directo (sino, sólo plan)"
                                             checked: applyEdits !== false
                                             onToggled: masterChainModel.setProperty(index, "applyEdits", checked)

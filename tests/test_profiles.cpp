@@ -13,6 +13,9 @@
 #include <QFile>
 #include <QJsonDocument>
 #include <QJsonArray>
+#include <QJsonObject>
+#include <QFileInfo>
+#include <QDateTime>
 #include <algorithm>
 #include "core/profiles/ProfileTypes.h"
 #include "core/profiles/ProfileManager.h"
@@ -54,6 +57,7 @@ private slots:
     void manager_persistsAcrossInstances();
     void manager_exportImportBundle();
     void manager_profileChangeHistory();
+    void manager_saveSkipsUnchangedAndLogsOnlyChanges();
 
 private:
     QTemporaryDir m_dir;
@@ -710,6 +714,43 @@ void ProfilesTests::manager_profileChangeHistory()
     QCOMPARE(history.first().toMap().value(QStringLiteral("id")).toString(), id);
     QVERIFY(history.first().toMap().value(QStringLiteral("snapshot")).toMap()
                 .value(QStringLiteral("name")).toString().contains(QStringLiteral("history-a")));
+}
+
+// save() se llama mucho (arranque, auto-sanado, cada setter). Sin cambios no
+// debe tocar disco: ni reescribir launches.json ni apilar snapshots en el
+// historial (antes sumaba uno por CADA perfil en cada save → 13 MB).
+void ProfilesTests::manager_saveSkipsUnchangedAndLogsOnlyChanges()
+{
+    ProfileManager pm;
+    const QString a = pm.addBackend(QStringLiteral("skip-a"), QStringLiteral("bin"),
+                                    QStringLiteral("127.0.0.1"), 9921);
+    const QString b = pm.addBackend(QStringLiteral("skip-b"), QStringLiteral("bin"),
+                                    QStringLiteral("127.0.0.1"), 9922);
+    QVERIFY(!a.isEmpty() && !b.isEmpty());
+
+    const QString backends = m_dir.filePath(QStringLiteral("backends.json"));
+    const QString historyPath = m_dir.filePath(QStringLiteral("profile_history.jsonl"));
+    auto historyLines = [&]() {
+        QFile f(historyPath);
+        if (!f.open(QIODevice::ReadOnly)) return QList<QByteArray>{};
+        QList<QByteArray> lines = f.readAll().split('\n');
+        lines.removeAll(QByteArray());
+        return lines;
+    };
+    const QDateTime mtimeBefore = QFileInfo(backends).lastModified();
+    const qsizetype linesBefore = historyLines().size();
+
+    QTest::qWait(30);   // que un rewrite se note en el mtime
+    pm.saveProfiles();
+    QCOMPARE(QFileInfo(backends).lastModified(), mtimeBefore);
+    QCOMPARE(historyLines().size(), linesBefore);
+
+    QVERIFY(pm.updateBackendPort(a, 9931));
+    const QList<QByteArray> after = historyLines();
+    QCOMPARE(after.size(), linesBefore + 1);
+    const QJsonObject row = QJsonDocument::fromJson(after.last()).object();
+    QCOMPARE(row.value(QStringLiteral("id")).toString(), a);
+    QCOMPARE(row.value(QStringLiteral("entity")).toString(), QStringLiteral("backend"));
 }
 
 QTEST_MAIN(ProfilesTests)

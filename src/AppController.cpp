@@ -5081,13 +5081,8 @@ EffectiveProfileBuilder::Context AppController::buildContext(const QString &laun
     // teniendo el gguf en disco. Sólo actúa cuando el perfil ya estaba roto.
     auto relinkStaleRow = [this](CatalogModel &m) {
         if (m.id.isEmpty() || m.isAvailable || m.fileName.isEmpty()) return;
-        for (int i = 0; i < m_catalog.rowCount(); ++i) {
-            const QVariantMap row = m_catalog.getAt(i);
-            if (row.value(QStringLiteral("fileName")).toString() != m.fileName) continue;
-            if (!row.value(QStringLiteral("isAvailable"), true).toBool()) continue;
-            m = m_catalog.findById(row.value(QStringLiteral("id")).toString());
-            return;
-        }
+        const QList<CatalogModel> same = m_catalog.availableByFileName(m.fileName);
+        if (!same.isEmpty()) m = same.first();
     };
     relinkStaleRow(ctx.catalogModel);
     relinkStaleRow(ctx.mmprojModel);
@@ -5102,15 +5097,7 @@ EffectiveProfileBuilder::Context AppController::buildContext(const QString &laun
     if (ctx.launch.system && ctx.catalogModel.id.isEmpty()) {
         // Todos los catalogados disponibles con ese nombre de archivo.
         auto matches = [this](const QString &fn) -> QList<CatalogModel> {
-            QList<CatalogModel> r;
-            if (fn.isEmpty()) return r;
-            for (int i = 0; i < m_catalog.rowCount(); ++i) {
-                const QVariantMap m = m_catalog.getAt(i);
-                if (m.value(QStringLiteral("fileName")).toString() == fn
-                    && m.value(QStringLiteral("isAvailable"), true).toBool())
-                    r << m_catalog.findById(m.value(QStringLiteral("id")).toString());
-            }
-            return r;
+            return m_catalog.availableByFileName(fn);
         };
         for (const QJsonValue &v : readSystemProfilesBundle()) {
             const QJsonObject e = v.toObject();
@@ -15594,7 +15581,7 @@ QString AppController::pinnedSystemBinaryId(const QString &launchId) const
         const QString bid = m_binaries.data(m_binaries.index(r, 0), BinaryRegistry::IdRole).toString();
         if (bid.isEmpty()) continue;
         const LlamaBinary b = m_binaries.findById(bid);
-        if (b.path.isEmpty() || !QFileInfo::exists(b.path)) continue;
+        if (b.path.isEmpty() || !binaryFileExists(b.path)) continue;
         if ((b.name + QLatin1Char(' ') + b.path).toLower().contains(pin)) return bid;
     }
     return {};   // pin sin binario válido → caller cae al kind
@@ -15609,7 +15596,7 @@ QString AppController::minimumSystemBinaryId(const QString &launchId) const
     for (int r = 0; r < m_binaries.rowCount(); ++r) {
         const QString bid = m_binaries.data(m_binaries.index(r, 0), BinaryRegistry::IdRole).toString();
         const LlamaBinary b = m_binaries.findById(bid);
-        if (b.path.isEmpty() || !QFileInfo::exists(b.path) || b.backend == QLatin1String("cpu"))
+        if (b.path.isEmpty() || !binaryFileExists(b.path) || b.backend == QLatin1String("cpu"))
             continue;
         const int build = llamaCppBuildNumber(b.versionHint + QLatin1Char(' ') + b.name
                                                + QLatin1Char(' ') + b.path);
@@ -15630,7 +15617,7 @@ QString AppController::resolveSystemBinaryId(const QString &kind) const
         const QString bid = m_binaries.data(m_binaries.index(r, 0), BinaryRegistry::IdRole).toString();
         if (bid.isEmpty()) continue;
         const LlamaBinary b = m_binaries.findById(bid);
-        if (b.path.isEmpty() || !QFileInfo::exists(b.path)) continue;     // solo válidos
+        if (b.path.isEmpty() || !binaryFileExists(b.path)) continue;     // solo válidos
         if (firstId.isEmpty()) firstId = bid;
         if (!requestedFlavor.isEmpty()
             && b.flavor.compare(requestedFlavor, Qt::CaseInsensitive) == 0) {
@@ -20405,8 +20392,10 @@ QVariantList AppController::benchmarkCoverage() const
         if (!messages.contains(issue.message)) messages.append(issue.message);
         health[QStringLiteral("codes")] = codes;
         health[QStringLiteral("messages")] = messages;
+        // Un perfil de sistema sin instalar tampoco puede correr el benchmark.
         health[QStringLiteral("error")] = health.value(QStringLiteral("error")).toBool()
-            || issue.severity == QLatin1String("error");
+            || issue.severity == QLatin1String("error")
+            || issue.code == QLatin1String("system-not-installed");
     }
 
     const QStringList stages{QStringLiteral("he0"), QStringLiteral("he20"), QStringLiteral("bcb")};
@@ -26697,7 +26686,7 @@ QVariantMap AppController::profileHealthSummary()
     int errors = 0, warnings = 0;
     for (const HealthIssue &i : resolvedProfileHealth()) {
         if (i.severity == QLatin1String("error")) ++errors;
-        else ++warnings;
+        else if (i.severity == QLatin1String("warning")) ++warnings;
     }
     QVariantMap m;
     m["errors"] = errors;
@@ -26705,8 +26694,27 @@ QVariantMap AppController::profileHealthSummary()
     return m;
 }
 
+bool AppController::binaryFileExists(const QString &path) const
+{
+    if (m_binaryExistsBatch <= 0)
+        return QFileInfo::exists(path);
+    const auto it = m_binaryExistsCache.constFind(path);
+    if (it != m_binaryExistsCache.cend())
+        return it.value();
+    const bool exists = QFileInfo::exists(path);
+    m_binaryExistsCache.insert(path, exists);
+    return exists;
+}
+
 QList<HealthIssue> AppController::resolvedProfileHealth()
 {
+    // Lote: ~260 perfiles x varios binarios = miles de stat() sobre las mismas
+    // rutas. La cache vive sólo durante esta pasada.
+    struct ExistsBatch {
+        const AppController *c;
+        explicit ExistsBatch(const AppController *ctl) : c(ctl) { ++c->m_binaryExistsBatch; }
+        ~ExistsBatch() { if (--c->m_binaryExistsBatch == 0) c->m_binaryExistsCache.clear(); }
+    } batch(this);
     QList<HealthIssue> issues;
     for (const QVariant &value : m_profiles.launchProfilesForMenu()) {
         const QString launchId = value.toMap().value(QStringLiteral("id")).toString();

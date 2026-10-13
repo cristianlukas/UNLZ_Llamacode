@@ -702,9 +702,12 @@ Item {
                     }
                 }
 
+                // Dentro de un ColumnLayout `height:` se ignora (el layout usa el
+                // implicitHeight, 0 en un Rectangle): el recuadro colapsaba y
+                // "Binario:" se pisaba con "Vista previa del comando".
                 Rectangle {
                     Layout.fillWidth: true
-                    height: summaryCol.implicitHeight + 16
+                    Layout.preferredHeight: summaryCol.implicitHeight + 24
                     color: Theme.inputBg
                     radius: 8
                     border.color: Theme.borderColor
@@ -712,7 +715,7 @@ Item {
 
                     Column {
                         id: summaryCol
-                        anchors { fill: parent; margins: 12 }
+                        anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
                         spacing: 6
 
                         Repeater {
@@ -738,8 +741,9 @@ Item {
                 Text { text: (App.langV, App.l("launch.cmdPreview")); color: Theme.textMuted; font.pixelSize: 12 }
 
                 CommandPreview {
+                    id: launchCmdPreview
                     Layout.fillWidth: true
-                    height: 120
+                    Layout.preferredHeight: Math.max(120, launchCmdPreview.implicitHeight)
                     commandLine: App.effectiveProfile.commandLine ?? ""
                     warnings: App.effectiveProfile.warnings ?? []
                     errors: App.effectiveProfile.blockingErrors ?? []
