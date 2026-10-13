@@ -1,0 +1,21 @@
+{
+  "qsettings_path": "/home/cristian/.config/LlamaCode/LlamaCode.conf",
+  "backup_path": "artifacts/evaluacion-modelos-llamacode/Q-20261013-ASTRA-ISTA-DEFAULT/receipts/backup/LlamaCode.conf.before",
+  "backup_sha256": "a2227581644020cade9661a8ef46377568d29277ee703cc0358654371cfde939",
+  "new_config_path": "/home/cristian/.config/LlamaCode/astra-iq2xs-strata.json",
+  "new_config_sha256": "b4b83171c136d8cb4b1944de532c096276844da5a2cd987d1d1517dd0a73b484",
+  "previous_lastLaunchId": "sys-astra-strata-iq3s",
+  "new_lastLaunchId": "sys-astra-iq2xs-default",
+  "previous_strataRoot": "/home/cristian/.cache/strata-review-20261002/Strata-0.1.35",
+  "new_strataRoot": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source",
+  "new_profile_config_setting": "astra/configFile/sys-astra-iq2xs-default",
+  "effective_model_path": "/media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012",
+  "model_revision": "ed59f92082b1e93c0e96d60a8b11aab089b52f09",
+  "shard_sha256": [
+    "92cee27ae5bbadcd732416a0f7a7f0acc092399dbbe8f5a5efa707c2ec0a49d7",
+    "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113"
+  ],
+  "strata_runtime": "0.1.41",
+  "mtp_path": "/media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/mtp/rt",
+  "note": "No model weights or runtime binaries modified."
+}
