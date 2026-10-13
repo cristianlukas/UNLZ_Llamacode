@@ -18,6 +18,10 @@ public:
     };
 
     static Decision decide(const QString &prompt, const QVariantList &catalog);
+    // ¿El pedido es de computer use (abrir/usar una app del escritorio, clickear,
+    // escribir en una ventana)? Distingue "abrí la calculadora" de "abrí el
+    // archivo main.cpp" (eso es de archivos, no de escritorio).
+    static bool wantsDesktop(const QString &prompt);
     static QString canonicalGroup(const QString &label);
     static bool groupAllowed(const QString &group, const Decision &decision);
 };

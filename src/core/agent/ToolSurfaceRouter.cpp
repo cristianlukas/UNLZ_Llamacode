@@ -54,6 +54,46 @@ QString ToolSurfaceRouter::canonicalGroup(const QString &label)
     return {};
 }
 
+bool ToolSurfaceRouter::wantsDesktop(const QString &prompt)
+{
+    const QString text = QLatin1Char(' ') + normalized(prompt) + QLatin1Char(' ');
+    if (text.trimmed().isEmpty()) return false;
+    // Señales inequívocas de escritorio.
+    static const QStringList direct{
+        QStringLiteral(" escritorio "), QStringLiteral(" ventana"), QStringLiteral(" mouse "),
+        QStringLiteral(" raton "), QStringLiteral(" puntero "), QStringLiteral(" hace clic"),
+        QStringLiteral(" hacer clic"), QStringLiteral(" clic en "), QStringLiteral(" click en "),
+        QStringLiteral(" clickea"), QStringLiteral(" clicka"), QStringLiteral(" doble clic"),
+        QStringLiteral(" captura de pantalla"), QStringLiteral(" en la pantalla"),
+        QStringLiteral(" que hay en pantalla"), QStringLiteral(" minimiza"), QStringLiteral(" maximiza"),
+        QStringLiteral(" computer use"), QStringLiteral(" click on "), QStringLiteral(" desktop "),
+        QStringLiteral(" screen "), QStringLiteral(" window ")};
+    for (const QString &d : direct)
+        if (text.contains(d)) return true;
+    // Verbo de abrir/usar + una app de escritorio. "abrí el archivo X" NO cuenta.
+    static const QStringList openVerbs{
+        QStringLiteral(" abri "), QStringLiteral(" abrir "), QStringLiteral(" abre "),
+        QStringLiteral(" abras "), QStringLiteral(" abra "), QStringLiteral(" abris "),
+        QStringLiteral(" abrinos "), QStringLiteral(" abrirla "), QStringLiteral(" abrirlo "),
+        QStringLiteral(" abrime "), QStringLiteral(" abrila "), QStringLiteral(" abrilo "),
+        QStringLiteral(" usa "), QStringLiteral(" usar "), QStringLiteral(" lanza"),
+        QStringLiteral(" ejecuta la app"), QStringLiteral(" open "), QStringLiteral(" launch "),
+        QStringLiteral(" cerra "), QStringLiteral(" cerrar "), QStringLiteral(" cierra ")};
+    static const QStringList apps{
+        QStringLiteral("calculadora"), QStringLiteral("calculator"), QStringLiteral(" calc "),
+        QStringLiteral("bloc de notas"), QStringLiteral("notepad"), QStringLiteral(" paint"),
+        QStringLiteral("explorador"), QStringLiteral("explorer"), QStringLiteral("configuracion de windows"),
+        QStringLiteral("panel de control"), QStringLiteral(" word "), QStringLiteral(" excel "),
+        QStringLiteral("powerpoint"), QStringLiteral(" outlook"), QStringLiteral(" chrome"),
+        QStringLiteral(" edge "), QStringLiteral("firefox"), QStringLiteral("spotify"),
+        QStringLiteral("whatsapp"), QStringLiteral("teams"), QStringLiteral(" la app"),
+        QStringLiteral(" una app"), QStringLiteral(" aplicacion"), QStringLiteral(" programa ")};
+    bool verb = false, app = false;
+    for (const QString &v : openVerbs) if (text.contains(v)) { verb = true; break; }
+    for (const QString &a : apps) if (text.contains(a)) { app = true; break; }
+    return verb && app;
+}
+
 ToolSurfaceRouter::Decision ToolSurfaceRouter::decide(const QString &prompt,
                                                        const QVariantList &catalog)
 {

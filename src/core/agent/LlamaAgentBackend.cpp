@@ -2550,6 +2550,7 @@ void LlamaAgentBackend::sendMessageImpl(const QString &text, const QString &visi
     m_externalVerificationGate.clear();
     m_externalVerificationNudges = 0;
     ensureSession();
+    escalateDesktopToolsIfRequested(visibleTrimmed);
     if (m_adaptiveToolRouting)
         m_toolSurfaceDecision = ToolSurfaceRouter::decide(visibleTrimmed, toolCatalog());
     else
@@ -7570,8 +7571,31 @@ QVariantList LlamaAgentBackend::toolCatalog()
     };
 }
 
+bool LlamaAgentBackend::escalateDesktopToolsIfRequested(const QString &prompt)
+{
+    if (m_desktopEscalated || m_privacyModeEnabled) return false;
+    if (!ToolSurfaceRouter::wantsDesktop(prompt)) return false;
+    QStringList desktop;
+    for (const QVariant &v : toolCatalog()) {
+        const QVariantMap t = v.toMap();
+        if (ToolSurfaceRouter::canonicalGroup(t.value(QStringLiteral("group")).toString())
+            == QLatin1String("desktop"))
+            desktop << t.value(QStringLiteral("name")).toString();
+    }
+    // Si el perfil ya expone alguna tool de escritorio, su selección manda.
+    for (const QString &n : std::as_const(desktop))
+        if (!m_disabledTools.contains(n)) return false;
+    for (const QString &n : std::as_const(desktop)) m_disabledTools.remove(n);
+    m_desktopEscalated = true;
+    emit logAppended(QStringLiteral(
+        "[tools] pedido de escritorio con un perfil sin tools de escritorio: habilito %1 "
+        "tools de computer use para esta sesión\n").arg(desktop.size()));
+    return true;
+}
+
 void LlamaAgentBackend::setDisabledTools(const QStringList &names)
 {
+    m_desktopEscalated = false;   // perfil nuevo: su selección vuelve a mandar
     m_disabledTools = QSet<QString>(names.cbegin(), names.cend());
 }
 

@@ -450,6 +450,12 @@ public:
     // Tools deshabilitadas por el usuario (nombres built-in y/o mcp__server__tool).
     // Se excluyen de buildToolSchemas() → no se ofrecen al modelo (ahorra contexto).
     void setDisabledTools(const QStringList &names);
+    // Si el perfil activo no trae tools de escritorio (p.ej. "Intermedio", de
+    // código) y el pedido es de computer use, las suma para el resto de la
+    // sesión. Sin esto el agente respondía "no puedo abrir aplicaciones". No
+    // actúa en modo privacidad. Devuelve true si habilitó algo.
+    bool escalateDesktopToolsIfRequested(const QString &prompt);
+    bool desktopToolsEscalated() const { return m_desktopEscalated; }
     // Recorte adaptativo de la superficie inicial. No modifica permisos: sólo
     // decide qué schemas se anuncian en el primer request.
     void setAdaptiveToolRouting(bool enabled);
@@ -800,6 +806,7 @@ private:
 
     QSet<QString> m_disabledTools;   // tools off por el usuario (built-in y MCP)
     bool m_adaptiveToolRouting = false;
+    bool m_desktopEscalated = false;
     ToolSurfaceRouter::Decision m_toolSurfaceDecision;
     QString m_teacherUrl, m_teacherModel, m_teacherKey;  // ask_teacher (config UI)
     QString m_auxiliaryUrl, m_auxiliaryEmbeddingModel, m_auxiliaryRerankModel,

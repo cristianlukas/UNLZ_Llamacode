@@ -36,6 +36,7 @@ private slots:
     void midConversationNoteRole_neverSystem();
     void mergeToolCallDelta_assemblesAcrossChunks();
     void nativeToolSchemasOverflowPicksTextProtocol();
+    void desktopRequestEscalatesToolsOnCodingProfile();
     void mergeToolCallDelta_parallelCallsByIndex();
     void visibleAnswer_stripsThinkButSalvagesWhenEmpty();
     void lengthFinishContinuation_isBoundedAndContentAware();
@@ -2151,6 +2152,47 @@ void AgentWireTests::nativeToolSchemasOverflowPicksTextProtocol()
     // Contexto desconocido o sin tools: no decidir nada.
     QVERIFY(!LlamaAgentBackend::nativeToolSchemasOverflow(0, 600, 9400));
     QVERIFY(!LlamaAgentBackend::nativeToolSchemasOverflow(4096, 600, 0));
+}
+
+// Perfil de código (sin tools de escritorio) + pedido de computer use: se suman
+// las tools de escritorio para la sesión. Pedidos de código no tocan nada, y un
+// perfil nuevo vuelve a mandar.
+void AgentWireTests::desktopRequestEscalatesToolsOnCodingProfile()
+{
+    QStringList desktop, notCoding;
+    for (const QVariant &v : LlamaAgentBackend::toolCatalog()) {
+        const QVariantMap t = v.toMap();
+        const QString n = t.value(QStringLiteral("name")).toString();
+        if (n.startsWith(QStringLiteral("desktop_"))) desktop << n;
+        if (n != QLatin1String("read_file") && n != QLatin1String("write_file")) notCoding << n;
+    }
+    QVERIFY(!desktop.isEmpty());
+    auto names = [](const QJsonArray &schemas) {
+        QStringList out;
+        for (const QJsonValue &v : schemas)
+            out << v.toObject().value(QStringLiteral("function")).toObject()
+                       .value(QStringLiteral("name")).toString();
+        return out;
+    };
+
+    LlamaAgentBackend be;
+    be.setDisabledTools(notCoding);                       // perfil "de código"
+    QVERIFY(!names(be.toolSchemasForTest()).contains(QStringLiteral("desktop_launch")));
+
+    QVERIFY(!be.escalateDesktopToolsIfRequested(QStringLiteral("abrí el archivo main.cpp")));
+    QVERIFY(!names(be.toolSchemasForTest()).contains(QStringLiteral("desktop_launch")));
+
+    QVERIFY(be.escalateDesktopToolsIfRequested(QStringLiteral("abrí la calculadora y hacé 12*12")));
+    QVERIFY(be.desktopToolsEscalated());
+    const QStringList now = names(be.toolSchemasForTest());
+    QVERIFY(now.contains(QStringLiteral("desktop_launch")));
+    QVERIFY(now.contains(QStringLiteral("desktop_read_text")));
+    QVERIFY(!now.contains(QStringLiteral("web_search")));  // sólo escritorio
+    QVERIFY(!be.escalateDesktopToolsIfRequested(QStringLiteral("abrí el paint")));  // una vez
+
+    be.setDisabledTools(notCoding);                       // se reaplica el perfil
+    QVERIFY(!be.desktopToolsEscalated());
+    QVERIFY(!names(be.toolSchemasForTest()).contains(QStringLiteral("desktop_launch")));
 }
 
 QTEST_MAIN(AgentWireTests)
