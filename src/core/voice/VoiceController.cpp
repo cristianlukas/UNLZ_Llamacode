@@ -14,6 +14,7 @@
 #include <QAudioSink>
 #include <QBuffer>
 #include <QUrl>
+#include <QTimer>
 
 VoiceController::VoiceController(QObject *parent) : QObject(parent)
 {
@@ -145,6 +146,7 @@ void VoiceController::start()
 {
     m_lastError.clear();
     m_pttHeld = false;
+    m_tts.prewarm();     // la voz carga su modelo mientras el usuario habla
     startListening();
 }
 
@@ -294,6 +296,18 @@ void VoiceController::beginCapture()
     fmt.setChannelCount(1);
     fmt.setSampleFormat(QAudioFormat::Int16);
 
+    if (m_syntheticInput) {
+        if (!m_syntheticTimer) {
+            m_syntheticTimer = new QTimer(this);
+            m_syntheticTimer->setTimerType(Qt::PreciseTimer);
+            m_syntheticTimer->setInterval(20);
+            connect(m_syntheticTimer, &QTimer::timeout, this, &VoiceController::feedSyntheticFrame);
+        }
+        qInfo().noquote() << QStringLiteral("[charla] captura: entrada SINTÉTICA 16kHz mono (sin micrófono)");
+        m_syntheticTimer->start();
+        return;
+    }
+
     QAudioDevice dev = QMediaDevices::defaultAudioInput();
     if (!m_deviceId.isEmpty()) {
         const auto devs = QMediaDevices::audioInputs();
@@ -316,6 +330,7 @@ void VoiceController::beginCapture()
 
 void VoiceController::stopSource()
 {
+    if (m_syntheticTimer) m_syntheticTimer->stop();
     if (m_input) { disconnect(m_input, nullptr, this, nullptr); m_input = nullptr; }
     if (m_source) {
         m_source->stop();
@@ -348,7 +363,40 @@ void VoiceController::onAudioReady()
     if (!m_input) return;
     const QByteArray chunk = m_input->readAll();
     if (chunk.isEmpty()) return;
+    processCapturedChunk(chunk);
+}
 
+void VoiceController::setSyntheticInput(bool on)
+{
+    if (m_syntheticInput == on) return;
+    m_syntheticInput = on;
+    if (!on) {
+        m_syntheticQueue.clear();
+        if (m_syntheticTimer) m_syntheticTimer->stop();
+    }
+}
+
+void VoiceController::queueSyntheticAudio(const QByteArray &pcm16kMono)
+{
+    m_syntheticQueue += pcm16kMono;
+}
+
+void VoiceController::feedSyntheticFrame()
+{
+    // 20 ms a 16 kHz mono PCM16 = 640 bytes. Ritmo real: el endpointing y el
+    // STT por segmentos dependen del tiempo transcurrido, no sólo del contenido.
+    const int frameBytes = m_sampleRate / 50 * 2;
+    QByteArray frame;
+    if (!m_syntheticQueue.isEmpty()) {
+        frame = m_syntheticQueue.left(frameBytes);
+        m_syntheticQueue.remove(0, frame.size());
+    }
+    if (frame.size() < frameBytes) frame.append(QByteArray(frameBytes - frame.size(), '\0'));
+    processCapturedChunk(frame);
+}
+
+void VoiceController::processCapturedChunk(const QByteArray &chunk)
+{
     const double lvl = AudioCodec::rmsBytes(chunk);
     m_level = lvl;
     emit levelChanged();
@@ -403,7 +451,12 @@ void VoiceController::onAudioReady()
     }
 
     if (m_streamingTurn) m_stt.pushStreamingAudio(chunk);
-    else m_segment += chunk;
+    else {
+        m_segment += chunk;
+        // Hasta que aparezca voz en este segmento, guardar sólo el pre-roll.
+        if (!speech && !m_segVoice)
+            m_segment = trimLeadingForStt(m_segment, m_sampleRate, kSttPreRollMs);
+    }
     if (speech) {
         if (lvl > m_peak) m_peak = lvl;
         if (lvl > m_segPeak) m_segPeak = lvl;
@@ -453,6 +506,8 @@ bool VoiceController::segmentHadVoice() const
 void VoiceController::flushSegment(bool finalSeg)
 {
     if (finalSeg) m_latency.beginTurn(m_endpointReason);
+    // El silencio de cola ya cumplió su función (decidir el corte): no se transcribe.
+    m_segment = trimTrailingSilence(m_segment, m_sampleRate, m_segSilenceMs, kSttTailKeepMs);
     // Encolar el segmento solo si tuvo voz y dura algo (>200ms) — evita fragmentos.
     const int segMs = int((m_segment.size() / 2) * 1000.0 / m_sampleRate);
     if (segmentHadVoice() && segMs >= 200) {
@@ -476,6 +531,23 @@ void VoiceController::flushSegment(bool finalSeg)
         if (m_state != Error) setState(Transcribing);
     }
     pumpSegments();
+}
+
+QByteArray VoiceController::trimLeadingForStt(const QByteArray &pcm, int sampleRate, int keepMs)
+{
+    const qsizetype keepBytes = qsizetype(sampleRate) * keepMs / 1000 * 2;
+    if (keepBytes <= 0 || pcm.size() <= keepBytes) return pcm;
+    return pcm.right(keepBytes);
+}
+
+QByteArray VoiceController::trimTrailingSilence(const QByteArray &pcm, int sampleRate,
+                                                int silenceMs, int keepMs)
+{
+    const int cutMs = silenceMs - keepMs;
+    if (cutMs <= 0) return pcm;
+    const qsizetype cutBytes = qsizetype(sampleRate) * cutMs / 1000 * 2;
+    if (cutBytes <= 0 || cutBytes >= pcm.size()) return pcm;
+    return pcm.left(pcm.size() - cutBytes);
 }
 
 void VoiceController::finishStreamingTurn()
@@ -789,7 +861,14 @@ void VoiceController::speakStreaming(int bubbleId, const QString &rawText)
     // o "Dale."); las siguientes usan 40 para no spawnear TTS por fragmentos.
     const int minLen = (m_streamConsumed == 0) ? 12 : 40;
     int consumed = 0;
-    const QStringList sents = splitCompleteSentences(pending, minLen, &consumed);
+    QStringList sents = splitCompleteSentences(pending, minLen, &consumed);
+    if (sents.isEmpty() && m_streamConsumed == 0) {
+        const int cut = firstClauseCut(pending);
+        if (cut > 0) {
+            sents << pending.left(cut).trimmed();
+            consumed = cut;
+        }
+    }
     if (sents.isEmpty()) return;          // todavía no cerró ninguna oración nueva
     m_latency.markFirstUsefulLlmText();
     m_streamConsumed += consumed;
@@ -798,6 +877,21 @@ void VoiceController::speakStreaming(int bubbleId, const QString &rawText)
     if (m_state != Speaking) setState(Speaking);
     m_ttsQueue += sents;
     pumpTts();                            // onTtsAudio arranca la reproducción
+}
+
+int VoiceController::firstClauseCut(const QString &text, int minLen)
+{
+    for (int i = minLen; i + 1 < text.size(); ++i) {
+        const QChar c = text.at(i);
+        if ((c == QLatin1Char(',') || c == QLatin1Char(';') || c == QLatin1Char(':'))
+            && text.at(i + 1).isSpace()) {
+            // No cortar números ("3, 4") ni dejar un resto vacío.
+            if (i > 0 && text.at(i - 1).isDigit()) continue;
+            if (text.mid(i + 1).trimmed().isEmpty()) return -1;
+            return i + 1;
+        }
+    }
+    return -1;
 }
 
 void VoiceController::speakFlush(int bubbleId, const QString &rawText)

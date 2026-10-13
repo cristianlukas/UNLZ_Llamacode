@@ -3175,6 +3175,9 @@ void LlamaAgentBackend::prefillWarmup()
         || !m_awaitId.isEmpty())
         return;
     ensureSession();
+    // Mismo protocolo que va a usar el turno real; si no, el warmup rebota 400
+    // (no entra en el slot) y el primer turno arranca con la cache fría.
+    preferTextToolsIfSchemasOverflow();
     // Misma poda que runCompletion: el prefijo cacheado debe coincidir byte a byte.
     m_apiMessages = trimStaleImages(m_apiMessages, m_contextPolicy.keepLastImages);
     const QJsonArray wire = sanitizeApiMessagesForWire(m_apiMessages, m_ctx.modelId);
@@ -3214,10 +3217,34 @@ void LlamaAgentBackend::prefillWarmup()
     });
 }
 
+bool LlamaAgentBackend::nativeToolSchemasOverflow(int ctxLimit, int historyTokens,
+                                                  int schemaTokens)
+{
+    if (ctxLimit <= 0 || schemaTokens <= 0) return false;
+    constexpr int kMinOutputReserve = 1024;
+    return historyTokens + schemaTokens + kMinOutputReserve > ctxLimit;
+}
+
+bool LlamaAgentBackend::preferTextToolsIfSchemasOverflow()
+{
+    if (usingTextTools() || m_toolProtocol == QLatin1String("native")) return false;
+    const int schema = toolSchemaTokensOf(buildToolSchemas());
+    if (!nativeToolSchemasOverflow(m_ctxLimit, estimateApiTokens(), schema)) return false;
+    m_textToolFallback = true;
+    emit logAppended(QStringLiteral(
+        "[turn] schemas de tools nativos (~%1 tok) no entran en n_ctx=%2: "
+        "uso protocolo textual desde el inicio\n").arg(schema).arg(m_ctxLimit));
+    return true;
+}
+
 void LlamaAgentBackend::runCompletion()
 {
     if (!m_running) return;
     if (m_compacting) return;                    // esperando el resumen; se reanuda al terminar
+
+    // Antes de planear compactaciones: si lo que no entra son los schemas de
+    // tools (no el historial), compactar no gana nada y entraba en racha.
+    preferTextToolsIfSchemasOverflow();
 
     // Auto-compactación vía modelo ANTES de contar la iteración. En Tasks
     // autónomas cortas (desktop/browser) la compactación intermedia degrada el

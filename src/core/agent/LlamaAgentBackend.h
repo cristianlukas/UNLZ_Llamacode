@@ -186,6 +186,9 @@ public:
     // tool-calling del modelo activo es "unsupported" (chat-template del GGUF sin
     // tools, ej. Gemma): así el modelo igual puede operar tools vía texto.
     void setForceTextTools(bool v) { m_forceTextTools = v; }
+    // Pura: ¿historial + schemas nativos + una reserva mínima de salida exceden
+    // el contexto? ctxLimit <= 0 (desconocido) → false.
+    static bool nativeToolSchemasOverflow(int ctxLimit, int historyTokens, int schemaTokens);
 
     // Protocolo declarado por el perfil (módulo `protocol` del HarnessSpec):
     //   "auto"   → como siempre: nativo, con fallback a texto si el server da 400
@@ -726,6 +729,12 @@ private:
     // Verdadero si el turno debe usar el protocolo textual de tools (por 400 del
     // server o por gating proactivo de AppController para modelos "unsupported").
     bool usingTextTools() const { return m_textToolFallback || m_forceTextTools; }
+    // Si los schemas nativos de tools no entran en el contexto del slot, pasar
+    // al protocolo textual ANTES de mandar nada. Sin esto, con perfiles de 4k por
+    // slot (n_parallel=auto) y el set de JARVIS (~10k tokens de schemas), cada
+    // turno rebotaba dos veces con 400 y además disparaba compactaciones sin
+    // progreso (~12 s de "pensando" en voz). Devuelve true si cambió el protocolo.
+    bool preferTextToolsIfSchemasOverflow();
     // Capturas devueltas por tools en el turno de tools en curso (data-URIs). Se
     // vuelcan como mensaje user multimodal cuando se resuelven TODAS las tools del
     // turno (no interleavear entre tool_results → rompería el contrato OpenAI).

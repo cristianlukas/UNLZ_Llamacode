@@ -35,6 +35,7 @@ private slots:
     void nativeSessionForkPersistsTreeMetadata();
     void midConversationNoteRole_neverSystem();
     void mergeToolCallDelta_assemblesAcrossChunks();
+    void nativeToolSchemasOverflowPicksTextProtocol();
     void mergeToolCallDelta_parallelCallsByIndex();
     void visibleAnswer_stripsThinkButSalvagesWhenEmpty();
     void lengthFinishContinuation_isBoundedAndContentAware();
@@ -2135,6 +2136,21 @@ void AgentWireTests::isDestructiveAction_gatesShellDesktopMemory()
     // ── Tools no cubiertas → false ────────────────────────────────────────
     QVERIFY(!B::isDestructiveAction("read_file", QJsonObject{{QStringLiteral("path"), QStringLiteral("x")}}));
     QVERIFY(!B::isDestructiveAction("write_file", QJsonObject{{QStringLiteral("path"), QStringLiteral("x")}}));
+}
+
+// Charla/JARVIS en un perfil con 4k por slot (n_parallel=auto): ~10k tokens de
+// schemas nativos no entran, y cada turno rebotaba dos veces con 400. La decisión
+// de usar el protocolo textual se toma antes del primer request.
+void AgentWireTests::nativeToolSchemasOverflowPicksTextProtocol()
+{
+    QVERIFY(LlamaAgentBackend::nativeToolSchemasOverflow(4096, 600, 9400));
+    QVERIFY(!LlamaAgentBackend::nativeToolSchemasOverflow(32768, 600, 9400));
+    // Justo en el borde: historial + schemas + 1024 de reserva de salida.
+    QVERIFY(!LlamaAgentBackend::nativeToolSchemasOverflow(4096, 1000, 2072));
+    QVERIFY(LlamaAgentBackend::nativeToolSchemasOverflow(4096, 1000, 2073));
+    // Contexto desconocido o sin tools: no decidir nada.
+    QVERIFY(!LlamaAgentBackend::nativeToolSchemasOverflow(0, 600, 9400));
+    QVERIFY(!LlamaAgentBackend::nativeToolSchemasOverflow(4096, 600, 0));
 }
 
 QTEST_MAIN(AgentWireTests)

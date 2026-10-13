@@ -1,5 +1,7 @@
 #include <QtTest>
+#include <QJsonArray>
 #include <QDir>
+#include <QTemporaryDir>
 #include <QTemporaryFile>
 #include <QJsonObject>
 #include <QJsonDocument>
@@ -67,6 +69,14 @@ private slots:
     void voiceInLaunchProfile();
     void sttServerCatalog();
     void voiceBinaryUrls();
+    void whisperReleaseAssetPicking();
+    void resampleToMono16k();
+    void managedPortAvoidsLlmAndBusyPorts();
+    void piperWithoutResidentModeIsNotRetried();
+    void piperResidentTurnDeliversAudio();
+    void sttTrimsLeadingAndTrailingSilence();
+    void firstClauseCutStartsSpeechEarly();
+    void syntheticInputFeedsCaptureWithoutMic();
     void managedBinaryLookup();
     void ttsVoiceCatalog();
     void ttsVoiceForLang();
@@ -847,14 +857,182 @@ void TestVoice::sttServerCatalog()
 void TestVoice::voiceBinaryUrls()
 {
 #ifdef Q_OS_WIN
+    // Respaldo fijo: releases/latest dejó de traer binarios (404). El build más
+    // nuevo se resuelve por API (whisperReleaseAssetPicking).
     const QString whisperUrl = VoiceServerManager::defaultBinaryUrl("whisper-server");
-    QVERIFY(whisperUrl.startsWith("https://github.com/ggml-org/whisper.cpp/"));
-    QVERIFY(whisperUrl.contains("/releases/latest/download/"));
+    QVERIFY(whisperUrl.startsWith("https://github.com/ggml-org/whisper.cpp/releases/download/b"));
+    QVERIFY(!whisperUrl.contains("/latest/"));
     QVERIFY(whisperUrl.endsWith("/whisper-bin-x64.zip"));
     const QString piperUrl = VoiceServerManager::defaultBinaryUrl("piper");
     QVERIFY(piperUrl.startsWith("https://github.com/rhasspy/piper/releases/download/"));
     QVERIFY(piperUrl.endsWith("/piper_windows_amd64.zip"));
 #endif
+}
+
+// whisper.cpp publica los binarios en releases por build (bNNNN) y deja los
+// vX.Y.Z sin assets: hay que saltar releases vacíos y drafts, y respetar el
+// orden de preferencia de nombres.
+void TestVoice::whisperReleaseAssetPicking()
+{
+    auto asset = [](const char *name) {
+        return QJsonObject{{"name", QString::fromUtf8(name)},
+                           {"browser_download_url", QStringLiteral("https://dl/") + QString::fromUtf8(name)}};
+    };
+    const QJsonArray releases{
+        QJsonObject{{"tag_name", "v9.9.9"}, {"assets", QJsonArray{}}},
+        QJsonObject{{"tag_name", "b9999"}, {"draft", true},
+                    {"assets", QJsonArray{asset("whisper-bin-x64.zip")}}},
+        QJsonObject{{"tag_name", "b9998"},
+                    {"assets", QJsonArray{asset("whisper-bin-Win32.zip"), asset("whisper-blas-bin-x64.zip")}}},
+        QJsonObject{{"tag_name", "b9997"},
+                    {"assets", QJsonArray{asset("whisper-bin-x64.zip")}}},
+    };
+    QCOMPARE(VoiceServerManager::pickReleaseAssetUrl(releases, {"whisper-bin-x64.zip"}),
+             QStringLiteral("https://dl/whisper-bin-x64.zip"));
+    QCOMPARE(VoiceServerManager::pickReleaseAssetUrl(
+                 releases, {"whisper-blas-bin-x64.zip", "whisper-bin-x64.zip"}),
+             QStringLiteral("https://dl/whisper-blas-bin-x64.zip"));
+    QVERIFY(VoiceServerManager::pickReleaseAssetUrl(releases, {"nope.zip"}).isEmpty());
+    QVERIFY(!VoiceServerManager::whisperServerAssetNames().isEmpty()
+            || !(QSysInfo::productType() == QLatin1String("windows")));
+}
+
+// El benchmark sintético de Charla alimenta al STT con WAVs de piper (22050 Hz)
+// u otras fuentes: hay que bajar a mono y remuestrear a 16 kHz sin romper la
+// duración ni la amplitud.
+void TestVoice::resampleToMono16k()
+{
+    // 1 s estéreo a 22050 Hz: L = 1000, R = 3000 → mono 2000.
+    QByteArray stereo;
+    for (int i = 0; i < 22050; ++i) {
+        const int16_t lr[2] = {1000, 3000};
+        stereo.append(reinterpret_cast<const char *>(lr), 4);
+    }
+    const QByteArray mono = AudioCodec::toMonoResampled(stereo, 22050, 2, 16000);
+    QCOMPARE(mono.size(), 16000 * 2);
+    const int16_t *m = reinterpret_cast<const int16_t *>(mono.constData());
+    QCOMPARE(int(m[0]), 2000);
+    QCOMPARE(int(m[8000]), 2000);
+
+    // Misma tasa y mono: passthrough exacto.
+    QByteArray same(320, '\x01');
+    QCOMPARE(AudioCodec::toMonoResampled(same, 16000, 1, 16000), same);
+    // Entradas inválidas.
+    QVERIFY(AudioCodec::toMonoResampled(QByteArray(), 16000, 1, 16000).isEmpty());
+    QVERIFY(AudioCodec::toMonoResampled(same, 0, 1, 16000).isEmpty());
+}
+
+// Con entrada sintética la captura no abre el micrófono (en CI no hay) y el
+// audio encolado recorre el mismo camino que el del mic: llega al medidor.
+void TestVoice::syntheticInputFeedsCaptureWithoutMic()
+{
+    VoiceController vc;
+    vc.setConfig(VoiceConfig(), QString(), QString());
+    vc.setSyntheticInput(true);
+    vc.start();
+    QCOMPARE(vc.state(), VoiceController::Listening);
+    QVERIFY(vc.lastError().isEmpty());
+
+    QByteArray tone;
+    for (int i = 0; i < 16000 / 2; ++i) {           // 500 ms de onda cuadrada fuerte
+        const int16_t v = (i / 20) % 2 ? 12000 : -12000;
+        tone.append(reinterpret_cast<const char *>(&v), 2);
+    }
+    vc.queueSyntheticAudio(tone);
+    QCOMPARE(vc.syntheticQueuedMs(), 500);
+    QTRY_VERIFY_WITH_TIMEOUT(vc.level() > 0.2, 2000);
+    QTRY_VERIFY_WITH_TIMEOUT(vc.syntheticQueuedMs() == 0, 3000);
+    vc.stop();
+    QCOMPARE(vc.state(), VoiceController::Idle);
+}
+
+// whisper usa 8081 por default, el mismo puerto que levantan varios perfiles de
+// LLM: el STT no puede quedar apuntando al server del modelo.
+void TestVoice::managedPortAvoidsLlmAndBusyPorts()
+{
+    auto allFree = [](int) { return true; };
+    QCOMPARE(VoiceServerManager::pickManagedPort(8081, {}, allFree), 8081);
+    QCOMPARE(VoiceServerManager::pickManagedPort(8081, {8081}, allFree), 8082);
+    auto busy = [](int p) { return p != 8082 && p != 8083; };
+    QCOMPARE(VoiceServerManager::pickManagedPort(8081, {8081}, busy), 8084);
+    QCOMPARE(VoiceServerManager::pickManagedPort(8081, {}, [](int) { return false; }, 4), -1);
+    QCOMPARE(VoiceServerManager::pickManagedPort(0, {}, allFree), -1);
+}
+
+// Un `piper` sin --json-input (el de pip) moría al instante en modo residente y
+// se volvía a lanzar en CADA oración (+1,7 s c/u). Tras la primera muerte sin
+// haber servido nada, ese ejecutable queda marcado y se usa per-call directo.
+// "Piper falso": este mismo ejecutable de tests, que rechaza los argumentos.
+void TestVoice::piperWithoutResidentModeIsNotRetried()
+{
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString model = dir.filePath(QStringLiteral("voz.onnx"));
+    { QFile f(model); QVERIFY(f.open(QIODevice::WriteOnly)); f.write("x"); }
+    const QString fakePiper = QCoreApplication::applicationFilePath();
+
+    VoiceConfig cfg;
+    cfg.ttsMode = QStringLiteral("piper");
+    cfg.ttsFallbackMode = QStringLiteral("none");
+    TtsEngine tts;
+    tts.setConfig(cfg, QString());
+    tts.setPiper(fakePiper, model);
+    QSignalSpy failed(&tts, &TtsEngine::failed);
+    tts.synthesize(QStringLiteral("hola"));
+    QVERIFY(failed.wait(20000));
+    QCOMPARE(tts.piperResidentBrokenProg(), fakePiper);
+}
+
+// Regresión: finalizePiperTurn recibía m_piperPendingOut por referencia y lo
+// limpiaba antes de abrir el archivo → "piper no generó audio" en CADA oración
+// y caída silenciosa al modo per-call (~3,5 s por oración).
+void TestVoice::piperResidentTurnDeliversAudio()
+{
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString wavPath = dir.filePath(QStringLiteral("out.wav"));
+    const QByteArray wav = AudioCodec::pcm16ToWav(QByteArray(3200, '\x10'), 16000);
+    { QFile f(wavPath); QVERIFY(f.open(QIODevice::WriteOnly)); f.write(wav); }
+
+    TtsEngine tts;
+    QSignalSpy ready(&tts, &TtsEngine::audioReady);
+    QSignalSpy failed(&tts, &TtsEngine::failed);
+    tts.piperResidentLineForTest(wavPath);
+    QCOMPARE(failed.count(), 0);
+    QCOMPARE(ready.count(), 1);
+    QCOMPARE(ready.first().at(0).toByteArray(), wav);
+    QVERIFY(!QFile::exists(wavPath));     // el temporal se borra tras leerlo
+    QVERIFY(!tts.busy());
+}
+
+// Lo que va a Whisper: 300 ms de pre-roll antes de la voz y 250 ms de cola.
+void TestVoice::sttTrimsLeadingAndTrailingSilence()
+{
+    const int rate = 16000;
+    const QByteArray twoSec(rate * 2 * 2, '\0');
+    QCOMPARE(VoiceController::trimLeadingForStt(twoSec, rate, 300).size(), rate * 2 * 300 / 1000);
+    const QByteArray shortPcm(rate * 2 / 10, '\0');                 // 100 ms < pre-roll
+    QCOMPARE(VoiceController::trimLeadingForStt(shortPcm, rate, 300), shortPcm);
+
+    // 2 s con 900 ms de silencio de cola → quedan 2000 - (900 - 250) = 1350 ms.
+    QCOMPARE(VoiceController::trimTrailingSilence(twoSec, rate, 900, 250).size(),
+             rate * 2 * 1350 / 1000);
+    QCOMPARE(VoiceController::trimTrailingSilence(twoSec, rate, 200, 250), twoSec);
+    QCOMPARE(VoiceController::trimTrailingSilence(shortPcm, rate, 5000, 250), shortPcm);
+}
+
+void TestVoice::firstClauseCutStartsSpeechEarly()
+{
+    const QString t = QStringLiteral("Un agujero negro es una región del espacio, donde la gravedad es tan fuerte");
+    const int cut = VoiceController::firstClauseCut(t);
+    QVERIFY(cut > 40);
+    QCOMPARE(t.left(cut), QStringLiteral("Un agujero negro es una región del espacio,"));
+    // Coma antes de minLen: no corta.
+    QCOMPARE(VoiceController::firstClauseCut(QStringLiteral("Sí, claro que puedo ayudarte con eso"), 40), -1);
+    // Sin espacio después (aún llegando) o resto vacío: no corta.
+    QCOMPARE(VoiceController::firstClauseCut(QStringLiteral("Una frase que todavía no tiene la pausa,"), 10), -1);
+    // Números con coma decimal/listas: no corta ahí.
+    QCOMPARE(VoiceController::firstClauseCut(QStringLiteral("La temperatura promedio fue de 23, 5 grados hoy"), 10), -1);
 }
 
 void TestVoice::managedBinaryLookup()

@@ -1,4 +1,9 @@
 #include "VoiceServerManager.h"
+#include <QTcpServer>
+#include <QHostAddress>
+#include <QJsonArray>
+#include <QJsonObject>
+#include <QJsonDocument>
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QStandardPaths>
@@ -406,13 +411,68 @@ QString VoiceServerManager::defaultBinaryUrl(const QString &kind)
 #if defined(Q_OS_WIN)
     if (kind == QLatin1String("piper"))
         return QStringLiteral("https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_windows_amd64.zip");
+    // Respaldo fijo y verificado: installBinary primero busca un build más nuevo
+    // en la API de releases (ver whisperServerAssetNames).
     if (kind == QLatin1String("whisper-server"))
-        return QStringLiteral("https://github.com/ggml-org/whisper.cpp/releases/latest/download/whisper-bin-x64.zip");
+        return QStringLiteral("https://github.com/ggml-org/whisper.cpp/releases/download/b5454/whisper-bin-x64.zip");
 #elif defined(Q_OS_LINUX)
     if (kind == QLatin1String("piper"))
         return QStringLiteral("https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_linux_x86_64.tar.gz");
-    // whisper.cpp no publica binario Linux prearmado → vacío (se compila).
+    if (kind == QLatin1String("whisper-server"))
+        return QStringLiteral("https://github.com/ggml-org/whisper.cpp/releases/download/b5454/whisper-bin-ubuntu-x64.tar.gz");
 #endif
+    return {};
+}
+
+int VoiceServerManager::pickManagedPort(int preferred, const QList<int> &avoid,
+                                        const std::function<bool(int)> &isFree, int span)
+{
+    if (preferred <= 0) return -1;
+    for (int p = preferred; p < preferred + span && p <= 65535; ++p) {
+        if (avoid.contains(p)) continue;
+        if (!isFree || isFree(p)) return p;
+    }
+    return -1;
+}
+
+bool VoiceServerManager::localPortFree(int port)
+{
+    QTcpServer probe;
+    const bool ok = probe.listen(QHostAddress::LocalHost, quint16(port));
+    probe.close();
+    return ok;
+}
+
+QStringList VoiceServerManager::whisperServerAssetNames()
+{
+#if defined(Q_OS_WIN)
+    return {QStringLiteral("whisper-bin-x64.zip")};
+#elif defined(Q_OS_LINUX)
+    return {QStringLiteral("whisper-bin-ubuntu-x64.tar.gz")};
+#else
+    return {};
+#endif
+}
+
+QString VoiceServerManager::pickReleaseAssetUrl(const QJsonArray &releases,
+                                                const QStringList &assetNames)
+{
+    // La API devuelve los releases del más nuevo al más viejo; los drafts no
+    // tienen URL pública y los prerelease de whisper.cpp son builds válidos.
+    for (const QJsonValue &rv : releases) {
+        const QJsonObject rel = rv.toObject();
+        if (rel.value(QStringLiteral("draft")).toBool()) continue;
+        const QJsonArray assets = rel.value(QStringLiteral("assets")).toArray();
+        for (const QString &want : assetNames) {
+            for (const QJsonValue &av : assets) {
+                const QJsonObject a = av.toObject();
+                if (a.value(QStringLiteral("name")).toString() == want) {
+                    const QString url = a.value(QStringLiteral("browser_download_url")).toString();
+                    if (!url.isEmpty()) return url;
+                }
+            }
+        }
+    }
     return {};
 }
 
@@ -445,12 +505,35 @@ void VoiceServerManager::installBinary(const QString &kind, const QString &urlOv
     if (m_reply || m_extractProc) {
         emit binaryInstalled(kind, false, QString(), QStringLiteral("instalación en curso")); return;
     }
-    const QString url = urlOverride.isEmpty() ? defaultBinaryUrl(kind) : urlOverride;
-    if (url.isEmpty()) {
+    const QString fallbackUrl = urlOverride.isEmpty() ? defaultBinaryUrl(kind) : urlOverride;
+    if (fallbackUrl.isEmpty()) {
         emit binaryInstalled(kind, false, QString(),
             QStringLiteral("sin binario prearmado para esta plataforma; configurá la ruta a mano"));
         return;
     }
+    if (kind == QLatin1String("whisper-server") && urlOverride.isEmpty()) {
+        emit installProgress(kind, 0, QStringLiteral("Buscando el último build de whisper.cpp…"));
+        QNetworkRequest req(QUrl(QStringLiteral(
+            "https://api.github.com/repos/ggml-org/whisper.cpp/releases?per_page=15")));
+        req.setRawHeader("Accept", "application/vnd.github+json");
+        req.setTransferTimeout(15000);
+        m_reply = m_nam.get(req);
+        connect(m_reply, &QNetworkReply::finished, this, [this, kind, fallbackUrl]() {
+            QNetworkReply *r = m_reply; m_reply = nullptr;
+            QString url;
+            if (r->error() == QNetworkReply::NoError)
+                url = pickReleaseAssetUrl(QJsonDocument::fromJson(r->readAll()).array(),
+                                          whisperServerAssetNames());
+            r->deleteLater();
+            startBinaryDownload(kind, url.isEmpty() ? fallbackUrl : url);
+        });
+        return;
+    }
+    startBinaryDownload(kind, fallbackUrl);
+}
+
+void VoiceServerManager::startBinaryDownload(const QString &kind, const QString &url)
+{
     const QString destDir = binDir() + QStringLiteral("/") + kind;
     QDir(destDir).removeRecursively();
     QDir().mkpath(destDir);
@@ -477,11 +560,15 @@ void VoiceServerManager::installBinary(const QString &kind, const QString &urlOv
     });
     connect(m_reply, &QNetworkReply::finished, this, [this, kind, archive, destDir]() {
         QNetworkReply *r = m_reply; m_reply = nullptr;
-        const bool ok = (r->error() == QNetworkReply::NoError);
-        const QString err = r->errorString();
+        const int http = r->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        // Un 404 de GitHub llega como cuerpo "Not Found": sin este chequeo quedaba
+        // guardado como si fuera el zip y la extracción fallaba sin explicar por qué.
+        const bool ok = (r->error() == QNetworkReply::NoError) && (http == 0 || http < 400);
+        const QString err = r->error() != QNetworkReply::NoError
+            ? r->errorString() : QStringLiteral("HTTP %1 al descargar %2").arg(http).arg(r->url().toString());
         if (m_file) { m_file->write(r->readAll()); m_file->close(); delete m_file; m_file = nullptr; }
         r->deleteLater();
-        if (!ok) { emit binaryInstalled(kind, false, QString(), err); return; }
+        if (!ok) { QFile::remove(archive); emit binaryInstalled(kind, false, QString(), err); return; }
         emit installProgress(kind, 92, QStringLiteral("Extrayendo…"));
         extractAndLocate(kind, archive, destDir);
     });

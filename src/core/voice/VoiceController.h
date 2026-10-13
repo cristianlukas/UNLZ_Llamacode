@@ -22,6 +22,7 @@ class QAudioOutput;
 class QAudioSink;
 class QBuffer;
 class QProcess;
+class QTimer;
 
 // Orquestador del modo "Charla" (voz-a-voz):
 //   Listening → (VAD detecta fin de habla) → Transcribing (STT) →
@@ -74,6 +75,18 @@ public:
 
     State state() const { return m_state; }
 
+    // ── Entrada sintética (benchmark de latencia reproducible, sin micrófono) ──
+    // Con esto activo, la captura NO abre el micrófono: un timer alimenta frames
+    // de 20 ms en tiempo real por el MISMO camino que el audio del mic (VAD,
+    // segmentos, STT, endpointing), tomando el PCM encolado y, cuando se agota,
+    // silencio digital. Así se mide el hot path completo de Charla en cualquier
+    // máquina y sin depender de la acústica del cuarto.
+    void setSyntheticInput(bool on);
+    bool syntheticInput() const { return m_syntheticInput; }
+    // PCM16 mono a 16 kHz; se reproduce detrás de lo que ya esté encolado.
+    void queueSyntheticAudio(const QByteArray &pcm16kMono);
+    int syntheticQueuedMs() const { return int(m_syntheticQueue.size() / 32); }
+
     bool turnOpen() const { return m_turnOpen; }
     // Hooks de test: forzar el estado (sin abrir audio) y simular que terminó
     // de sonar el último clip con la cola vacía.
@@ -113,6 +126,21 @@ public:
     // para no spawnear piper por fragmentos minúsculos. Devuelve >=1 chunk.
     static QStringList splitSentences(const QString &text, int minLen = 40);
 
+    // ── Recorte de silencio para STT (puras, testeables) ──
+    // Antes de la primera voz del segmento sólo se conserva un pre-roll corto
+    // (para no comer la primera sílaba). Sin esto todo lo capturado desde que
+    // empezó la escucha —segundos de silencio o ruido de ambiente— iba a
+    // Whisper: más audio = más latencia, y Whisper alucina sobre silencio largo
+    // ("símbolo de copyright", "subtítulos de Amara"...), y el agente contestaba
+    // esa frase inventada.
+    static constexpr int kSttPreRollMs = 300;
+    // Silencio final que se deja al cerrar un segmento (el resto era sólo la
+    // espera del endpointing, 600-1200 ms que Whisper procesaba de más).
+    static constexpr int kSttTailKeepMs = 250;
+    static QByteArray trimLeadingForStt(const QByteArray &pcm, int sampleRate, int keepMs);
+    static QByteArray trimTrailingSilence(const QByteArray &pcm, int sampleRate,
+                                          int silenceMs, int keepMs);
+
     // ── Función pura (testeable) — variante para streaming incremental ──
     // Devuelve solo las oraciones YA cerradas (terminador .!?…\n que superó
     // minLen); deja el fragmento final incompleto sin emitir. *consumed = cantidad
@@ -125,6 +153,13 @@ public:
     // (cerrados y el abierto-sin-cerrar, razonamiento en vuelo) y el indicador
     // transitorio "⏳ preparando tool…". Devuelve solo lo hablable. Pura.
     static QString sanitizeForSpeech(const QString &s);
+
+    // ── Pura (testeable) ── Corte anticipado de la PRIMERA porción hablada: si
+    // todavía no cerró ninguna oración pero ya hay una pausa de cláusula
+    // (", " "; " ": ") después de minLen caracteres, devuelve cuántos caracteres
+    // hablar ya (incluye el signo). -1 si no hay corte. Una primera oración
+    // larga (127 chars medidos) retrasaba todo el audio hasta su punto final.
+    static int firstClauseCut(const QString &text, int minLen = 40);
 
 public slots:
     void start();          // arranca Charla (Listening o Ready si usa PTT)
@@ -184,6 +219,13 @@ private slots:
     void onTtsFailed(const QString &err);
 
 private:
+    // Procesa un bloque PCM16 mono capturado (mic real o entrada sintética).
+    void processCapturedChunk(const QByteArray &chunk);
+    void feedSyntheticFrame();
+    bool m_syntheticInput = false;
+    QByteArray m_syntheticQueue;
+    QTimer *m_syntheticTimer = nullptr;
+
     void setState(State s);
     void fail(const QString &err);
     bool segmentHadVoice() const;   // ¿el segmento en curso tuvo voz? (adaptativo o legacy)

@@ -1398,6 +1398,13 @@ public:
     Q_INVOKABLE QVariantMap charlaAgentCapability() const;
     Q_INVOKABLE void startCharla();   // arranca la sesión de voz (usa el backend de chat)
     Q_INVOKABLE void stopCharla();
+    // Benchmark de latencia de Charla sin micrófono (ControlApi/tests): con la
+    // entrada sintética activa, la próxima sesión no abre el mic y
+    // charlaSimulateUtterance(wav) "habla" ese audio por el camino real (VAD →
+    // STT → LLM → TTS). Devuelve la duración encolada en ms, o -1 si el WAV no
+    // es PCM16 legible. Las mediciones quedan en voiceLatencyStats/latency.jsonl.
+    Q_INVOKABLE void setCharlaSyntheticInput(bool on);
+    Q_INVOKABLE int charlaSimulateUtterance(const QString &wavPath);
     Q_INVOKABLE void toggleDictation();
     bool dictationActive() const { return m_dictationActive; }
     QString dictationText() const { return m_dictationText; }
@@ -1967,6 +1974,10 @@ private:
     class VoiceController *m_voice = nullptr;
     VoiceServerManager m_voiceServers;  // catálogo + descarga de modelos STT
     QProcess *m_sttProc = nullptr;      // server STT gestionado (whisper.cpp)
+    int m_sttManagedPort = -1;          // puerto elegido para m_sttProc (ver managedSttPort)
+    // Puerto del whisper gestionado: estable mientras el proceso vive; si no,
+    // el default del motor salvo que choque con el LLM activo u otro proceso.
+    int managedSttPort(const VoiceConfig &c);
     QProcess *m_externalSttProc = nullptr; // endpoint STT local configurado por el usuario
     QProcess *m_externalTtsProc = nullptr; // endpoint TTS local configurado por el usuario
     QProcess *m_pocketInstallProc = nullptr; // venv + paquete + cache inicial

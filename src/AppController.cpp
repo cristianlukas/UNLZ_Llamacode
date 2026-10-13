@@ -49,6 +49,7 @@
 #include "core/agent/OpencodeBackend.h"
 #include "core/agent/RawChatBackend.h"
 #include "core/voice/VoiceController.h"
+#include "core/voice/AudioCodec.h"
 #include "core/voice/VoiceLatencyTracker.h"
 #include "core/voice/VoiceTypes.h"
 #include "core/voice/VoiceServerManager.h"
@@ -25378,7 +25379,7 @@ void AppController::applyVoiceConfig()
             c.sttMode = QStringLiteral("process_batch");
             c.sttProvider = QStringLiteral("local");
         }
-        const int port = sttEngine.value("defaultPort", 8081).toInt();
+        const int port = managedSttPort(c);
         if (c.sttMode != QLatin1String("stream_process")
             && c.sttMode != QLatin1String("process_batch")) {
             c.sttProvider = QStringLiteral("local");
@@ -26089,6 +26090,28 @@ void AppController::applyCharlaTuneAndStartCharla()
     stopServer();
 }
 
+void AppController::setCharlaSyntheticInput(bool on)
+{
+    ensureVoice();
+    m_voice->setSyntheticInput(on);
+}
+
+int AppController::charlaSimulateUtterance(const QString &wavPath)
+{
+    QFile f(wavPath);
+    if (!f.open(QIODevice::ReadOnly)) return -1;
+    const QByteArray wav = f.readAll();
+    int rate = 0, channels = 0;
+    if (!AudioCodec::wavPcm16Format(wav, &rate, &channels)) return -1;
+    const QByteArray pcm = AudioCodec::toMonoResampled(
+        AudioCodec::wavExtractPcm(wav), rate, channels, 16000);
+    if (pcm.isEmpty()) return -1;
+    ensureVoice();
+    m_voice->setSyntheticInput(true);
+    m_voice->queueSyntheticAudio(pcm);
+    return int(pcm.size() / 32);
+}
+
 void AppController::stopCharla()
 {
     m_charlaActive = false;
@@ -26177,7 +26200,11 @@ void AppController::continueVoicePrerequisitesInstall()
         m_voiceServers.installTtsVoice(voiceId);
         return;
     }
-    if (!voicePiperAvailable()) {
+    // No alcanza con un `piper` en el PATH: el de pip (piper-tts) no tiene modo
+    // residente y cada oración recargaba el modelo (~3,5 s hasta el primer
+    // audio, medido). Sin ruta configurada a mano, se instala el binario oficial.
+    if (voicePiperPath().trimmed().isEmpty()
+        && VoiceServerManager::installedBinaryPath(QStringLiteral("piper")).isEmpty()) {
         m_voiceServers.installBinary(QStringLiteral("piper"));
         return;
     }
@@ -26185,6 +26212,9 @@ void AppController::continueVoicePrerequisitesInstall()
     QVariantMap cfg = voiceConfig(m_activeLaunchId);
     cfg[QStringLiteral("ttsMode")] = QStringLiteral("piper");
     cfg[QStringLiteral("ttsManagedVoice")] = voiceId;
+    // Sin esto el motor quedaba instalado pero no elegido: Charla seguía con el
+    // STT por defecto (http://127.0.0.1:8081, a veces el propio LLM).
+    cfg[QStringLiteral("sttManagedEngine")] = engineId;
     setVoiceConfig(m_activeLaunchId, cfg);
     emit voiceInstallFinished(engineId, true, QString());
 }
@@ -26521,6 +26551,24 @@ QString AppController::voiceBinaryDefaultUrl(const QString &kind) const
     return VoiceServerManager::defaultBinaryUrl(kind);
 }
 
+int AppController::managedSttPort(const VoiceConfig &c)
+{
+    if (m_sttManagedPort > 0 && m_sttProc && m_sttProc->state() != QProcess::NotRunning)
+        return m_sttManagedPort;
+    const int preferred = VoiceServerManager::sttEngine(c.sttManagedEngine)
+                              .value(QStringLiteral("defaultPort"), 8081).toInt();
+    QList<int> avoid;
+    const int llmPort = QUrl(serverBaseUrl()).port();
+    if (llmPort > 0) avoid << llmPort;
+    const int port = VoiceServerManager::pickManagedPort(preferred, avoid,
+                                                         &VoiceServerManager::localPortFree);
+    if (port != preferred && port > 0)
+        qInfo().noquote() << QStringLiteral("[charla] whisper-server: puerto %1 ocupado (LLM en %2); uso %3")
+                                 .arg(preferred).arg(llmPort).arg(port);
+    m_sttManagedPort = port;
+    return port;
+}
+
 bool AppController::startManagedStt(const VoiceConfig &c)
 {
     stopManagedStt();
@@ -26555,8 +26603,11 @@ bool AppController::startManagedStt(const VoiceConfig &c)
     if (prog.isEmpty() || !QFileInfo(prog).isFile())
         prog = VoiceServerManager::installedBinaryPath(QStringLiteral("whisper-server"));
     if (prog.isEmpty()) prog = QStringLiteral("whisper-server");
-    const QVariantMap eng = VoiceServerManager::sttEngine(c.sttManagedEngine);
-    const int port = eng.value("defaultPort", 8081).toInt();
+    const int port = managedSttPort(c);
+    if (port <= 0) {
+        emit serverError(QStringLiteral("No hay un puerto libre para whisper-server."));
+        return false;
+    }
     const QStringList args = VoiceServerManager::buildWhisperArgs(
         VoiceServerManager::modelPath(c.sttManagedEngine),
         QStringLiteral("127.0.0.1"), port, c.sttLanguage);

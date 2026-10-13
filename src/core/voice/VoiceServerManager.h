@@ -1,5 +1,7 @@
 #pragma once
 #include <QObject>
+#include <functional>
+#include <QJsonArray>
 #include <QString>
 #include <QStringList>
 #include <QVariantList>
@@ -64,12 +66,31 @@ public:
     // ── Binarios (whisper-server / piper): descarga del release + extracción ──
     // kind: "whisper-server" | "piper". URL por defecto por SO (overridable).
     static QString defaultBinaryUrl(const QString &kind);
+    // whisper.cpp dejó de adjuntar binarios a los releases vX.Y.Z (quedan con 0
+    // assets) y los publica en releases por build (bNNNN): el viejo
+    // releases/latest/download/whisper-bin-x64.zip daba 404 y Charla no se podía
+    // instalar en Windows. Se resuelve contra la API de releases buscando el
+    // primer release que traiga alguno de estos assets (orden de preferencia).
+    static QStringList whisperServerAssetNames();
+    // Puerto para un server de voz gestionado: el preferido si está libre y no
+    // es uno a evitar (p.ej. el del LLM activo, que en varios perfiles también
+    // es 8081 = el default de whisper), si no el siguiente libre. -1 si no hay.
+    // isFree se inyecta para testear sin abrir sockets.
+    static int pickManagedPort(int preferred, const QList<int> &avoid,
+                               const std::function<bool(int)> &isFree, int span = 64);
+    static bool localPortFree(int port);
+    // Pura: URL del primer asset (por preferencia) del release más reciente que
+    // lo tenga. "" si ninguno lo trae.
+    static QString pickReleaseAssetUrl(const QJsonArray &releases, const QStringList &assetNames);
     static QString binDir();
     // Localiza un binario ya extraído dentro del directorio administrado.
     static QString installedBinaryPath(const QString &kind);
     // Descarga el archivo (zip/tar.gz), lo extrae y localiza el ejecutable.
     // urlOverride vacío = usar defaultBinaryUrl. Emite binaryInstalled(kind,ok,path,msg).
     void installBinary(const QString &kind, const QString &urlOverride = QString());
+private:
+    void startBinaryDownload(const QString &kind, const QString &url);
+public:
 
     // ── Funciones puras (testeables) ──
     // Args de whisper-server: -m <model> --host <h> --port <p> [-l <lang>].
