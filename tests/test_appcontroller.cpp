@@ -254,6 +254,7 @@ private slots:
     void computerUseSandwichRemainsExperimentalAndOptIn();
     void systemProfileBinaryPinReadsBundle();
     void systemProfilesBundleCacheSeesRewrites();
+    void gpuQueriesRunAsyncAndNotify();
     void systemProfileMinimumBuildSelectsNewestCompatible();
     void cpuSystemProfileRequiresCpuBinary();
     void charlaTranscriptRoutesToAgentWhenRunning();
@@ -3133,6 +3134,28 @@ void AppControllerTests::systemProfilesBundleCacheSeesRewrites()
     QCOMPARE(app.systemProfileBinaryPin(QStringLiteral("cached")), QStringLiteral("b2222"));
 
     qunsetenv("LLAMACODE_SYSTEM_PROFILES");
+}
+
+// Ajustes pide inventario y power limit al abrirse: la consulta (nvidia-smi)
+// va a un worker y llega por señal, con la misma forma que la versión síncrona
+// (haya o no GPU NVIDIA en la máquina que corre el test).
+void AppControllerTests::gpuQueriesRunAsyncAndNotify()
+{
+    AppController app;
+    QSignalSpy inventory(&app, &AppController::gpuInventoryReady);
+    QSignalSpy power(&app, &AppController::gpuPowerInfoReady);
+    app.requestGpuInventory();
+    app.requestGpuPowerInfo();
+    QVERIFY(inventory.count() > 0 || inventory.wait(15000));
+    QVERIFY(power.count() > 0 || power.wait(15000));
+    const QVariantMap inv = inventory.first().first().toMap();
+    QVERIFY(inv.contains(QStringLiteral("available")));
+    QVERIFY(inv.contains(QStringLiteral("gpus")));
+    const QVariantMap pw = power.first().first().toMap();
+    QVERIFY(pw.contains(QStringLiteral("available")));
+    QVERIFY(pw.contains(QStringLiteral("gpus")));
+    QCOMPARE(inv.value(QStringLiteral("available")).toBool(),
+             !inv.value(QStringLiteral("gpus")).toList().isEmpty());
 }
 
 void AppControllerTests::systemProfileMinimumBuildSelectsNewestCompatible()

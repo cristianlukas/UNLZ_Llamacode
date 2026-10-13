@@ -3628,6 +3628,21 @@ QStringList AppController::researchReportGuardrailIssues(const QString &report)
 
 QVariantMap AppController::gpuPowerInfo() const
 {
+    return queryGpuPowerInfo();
+}
+
+void AppController::requestGpuPowerInfo()
+{
+    auto *watcher = new QFutureWatcher<QVariantMap>(this);
+    connect(watcher, &QFutureWatcher<QVariantMap>::finished, this, [this, watcher]() {
+        emit gpuPowerInfoReady(watcher->result());
+        watcher->deleteLater();
+    });
+    watcher->setFuture(QtConcurrent::run(&AppController::queryGpuPowerInfo));
+}
+
+QVariantMap AppController::queryGpuPowerInfo()
+{
     QVariantMap result;
     const QString nvidiaSmi = QStandardPaths::findExecutable(QStringLiteral("nvidia-smi"));
     if (nvidiaSmi.isEmpty()) {
@@ -17005,6 +17020,21 @@ QVariantList AppController::parseGpuInventoryCsv(const QString &csv)
 }
 
 QVariantMap AppController::gpuInventory() const
+{
+    return queryGpuInventory();
+}
+
+void AppController::requestGpuInventory()
+{
+    auto *watcher = new QFutureWatcher<QVariantMap>(this);
+    connect(watcher, &QFutureWatcher<QVariantMap>::finished, this, [this, watcher]() {
+        emit gpuInventoryReady(watcher->result());
+        watcher->deleteLater();
+    });
+    watcher->setFuture(QtConcurrent::run(&AppController::queryGpuInventory));
+}
+
+QVariantMap AppController::queryGpuInventory()
 {
     QVariantMap result;
     const QString nvidiaSmi = QStandardPaths::findExecutable(QStringLiteral("nvidia-smi"));

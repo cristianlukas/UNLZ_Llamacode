@@ -17,13 +17,26 @@ SOURCE_ROOT="$ROOT_DIR"
  # underlying NTFS mount. Use the last entry so the native-build decision is
  # based on the real filesystem.
 SOURCE_FS="$(findmnt -T "$ROOT_DIR" -no FSTYPE 2>/dev/null | tail -n 1 || true)"
-if [[ "$SOURCE_FS" == ntfs* || "$SOURCE_FS" == fuseblk ]]; then
+# WSL monta los discos de Windows (/mnt/c) como 9p/drvfs: mismo problema que
+# NTFS, y ahí CMake llegó a colgarse >10 min leyendo el checkout directo.
+if [[ "$SOURCE_FS" == ntfs* || "$SOURCE_FS" == fuseblk || "$SOURCE_FS" == 9p       || "$SOURCE_FS" == drvfs || "$SOURCE_FS" == v9fs ]]; then
     command -v rsync >/dev/null || { echo "Falta rsync para espejar el repo NTFS en la caché Linux." >&2; exit 2; }
     SOURCE_ROOT="$LC_CACHE_ROOT/source"
     mkdir -p "$SOURCE_ROOT"
     rsync -a --exclude='.git/' --exclude='.claude/' --exclude='build*/' \
         --exclude='work/' "$ROOT_DIR/" "$SOURCE_ROOT/"
     echo "Checkout NTFS detectado; usando copia nativa: $SOURCE_ROOT" >&2
+fi
+
+# Un build dir configurado antes con OTRA ruta de fuente (p.ej. el checkout
+# directo, antes de usar la copia nativa) hace abortar a CMake: "does not match
+# the source used to generate cache". Se descarta sólo la cache de configuración.
+if [ -f "$BUILD_DIR/CMakeCache.txt" ]; then
+    CACHED_SRC="$(sed -n 's/^CMAKE_HOME_DIRECTORY:INTERNAL=//p' "$BUILD_DIR/CMakeCache.txt")"
+    if [ -n "$CACHED_SRC" ] && [ "$(cd "$CACHED_SRC" 2>/dev/null && pwd -P)" != "$(cd "$SOURCE_ROOT" && pwd -P)" ]; then
+        echo "Build dir configurado con otra fuente ($CACHED_SRC); reconfigurando." >&2
+        rm -rf "$BUILD_DIR/CMakeCache.txt" "$BUILD_DIR/CMakeFiles"
+    fi
 fi
 
 if [ ! -f "$QTDIR/lib/cmake/Qt6/Qt6Config.cmake" ]; then

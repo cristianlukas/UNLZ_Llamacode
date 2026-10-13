@@ -1280,11 +1280,19 @@ public:
     Q_INVOKABLE void rescanModelRoots();
     // ── GPU power limit (nvidia-smi) ──
     // Estado actual por GPU: {available:bool, gpus:[{index,name,currentW,defaultW,
-    // minW,maxW,drawW}]}. Lectura síncrona (rápida, usada on-demand desde Ajustes).
+    // minW,maxW,drawW}]}. Síncrona: ejecuta nvidia-smi (hasta 4 s en frío).
     Q_INVOKABLE QVariantMap gpuPowerInfo() const;
     // GPUs NVIDIA visibles para llama.cpp: {available:bool, gpus:[{index,name,
-    // totalMb,driver}]}. Se obtiene bajo demanda para no bloquear el arranque.
+    // totalMb,driver}]}. Síncrona, igual que gpuPowerInfo.
     Q_INVOKABLE QVariantMap gpuInventory() const;
+    // Variantes para QML: corren la consulta en un worker y entregan el
+    // resultado por gpuPowerInfoReady / gpuInventoryReady. Ajustes las llamaba
+    // síncronas al crearse y la página quedaba congelada mientras nvidia-smi
+    // inicializaba el driver.
+    Q_INVOKABLE void requestGpuPowerInfo();
+    Q_INVOKABLE void requestGpuInventory();
+    static QVariantMap queryGpuPowerInfo();
+    static QVariantMap queryGpuInventory();
     // Recomendación explicable basada en la topología GPU/PCIe detectada.
     Q_INVOKABLE QVariantMap performanceRecommendation(const QString &target = {}) const;
     Q_INVOKABLE QVariantList performanceMatrixCandidates(const QString &target = {},
@@ -1531,6 +1539,8 @@ signals:
     // Terminó el probe en segundo plano de un CLI maestro (masterCliStatus ya
     // devuelve el resultado desde cache).
     void masterCliStatusChanged(const QString &name);
+    void gpuPowerInfoReady(const QVariantMap &info);
+    void gpuInventoryReady(const QVariantMap &info);
     void launchMenuReadinessChanged();
     void routerStateChanged();
     void setupStateChanged();

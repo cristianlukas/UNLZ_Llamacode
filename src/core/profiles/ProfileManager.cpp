@@ -2121,9 +2121,16 @@ QVariantList ProfileManager::profileChangeHistory(const QString &entity,
     QFile f(path);
     if (!f.open(QIODevice::ReadOnly)) return out;
     QList<QVariantMap> matches;
+    // El historial crece sin límite (MB): descartar por texto las filas de otros
+    // perfiles antes de parsear JSON. Las filas son compactas y el id no lleva
+    // caracteres que JSON escape, así que el id aparece literal entre comillas.
+    const bool canPrefilter = !id.contains(QLatin1Char('"')) && !id.contains(QLatin1Char('\\'));
+    const QByteArray idNeedle = '"' + id.toUtf8() + '"';
     while (!f.atEnd()) {
+        const QByteArray line = f.readLine();
+        if (canPrefilter && !line.contains(idNeedle)) continue;
         QJsonParseError error;
-        const QJsonDocument doc = QJsonDocument::fromJson(f.readLine(), &error);
+        const QJsonDocument doc = QJsonDocument::fromJson(line, &error);
         if (error.error != QJsonParseError::NoError || !doc.isObject()) continue;
         const QJsonObject row = doc.object();
         if (row.value(QStringLiteral("entity")).toString() != entity
