@@ -66,7 +66,7 @@ static void kcDelete(const QString &key)
 }
 #endif
 
-// ───────────────────────── Fallback: archivo cifrado ──────────────────────────
+// ─────────────────────────── Fallback a archivo ───────────────────────────────
 #ifdef Q_OS_WIN
 // Entropía secundaria fija: liga el blob a esta app además de al usuario del SO.
 static QByteArray appEntropy() { return QByteArrayLiteral("llamacode.secretstore.v1"); }
@@ -103,7 +103,8 @@ static QByteArray dpapiUnprotect(const QByteArray &blob)
 }
 #endif
 
-// Cifra un secreto para persistir en el archivo de fallback.
+// Codifica un secreto para el archivo de fallback: DPAPI en Windows, texto
+// plano marcado en otros sistemas.
 static QString encodeSecret(const QString &plain)
 {
 #ifdef Q_OS_WIN
@@ -143,7 +144,7 @@ QString SecretStore::filePath()
 SecretStore::SecretStore(QObject *parent) : QObject(parent)
 {
     // Elegir backend una vez: probar el keyring del SO; si responde, usarlo. Si no
-    // (Linux headless sin Secret Service, etc.), caer al archivo cifrado.
+    // (Linux headless sin Secret Service, etc.), usar el archivo local de fallback.
 #ifdef HAVE_QTKEYCHAIN
     const QString probe = QStringLiteral("__lc_probe__");
     if (kcWrite(probe, QStringLiteral("1"))) {

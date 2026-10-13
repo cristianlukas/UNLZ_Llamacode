@@ -30,6 +30,26 @@ Las páginas se crean bajo demanda y quedan en memoria después de abrirse por
 primera vez. En particular, Ranking no se construye automáticamente al iniciar:
 su tabla y sus especificaciones sólo se calculan cuando se visita esa sección.
 
+Se eliminó la barra superior QML separada. La ventana sigue sin barra de título
+nativa y conserva el marco propio, con los botones de ventana arriba a la derecha
+sobre el encabezado de página. El encabezado de página y el de navegación permiten
+arrastrar y hacer doble clic para mover y maximizar/restaurar. Al cambiar de página,
+los `Loader` asíncronos evitan construir la página destino dentro del evento de
+navegación y la mantienen cargada después de la primera visita.
+
+La lista de GPU de **Ajustes** también es asíncrona: QML llama a
+`requestGpuInventory()`, `nvidia-smi` se ejecuta en un worker con espera limitada
+a cuatro segundos y el resultado llega por `gpuInventoryReady`. La página muestra
+las filas cuando recibe esa señal. No volver a invocar `gpuInventory()` desde un
+binding o constructor QML: ese método consulta `nvidia-smi` de forma síncrona.
+
+La página **Perfiles** pide una sola pasada de salud por actualización. El bundle
+inmutable de perfiles de sistema se conserva en caché; un bundle externo para
+tests se vuelve a comparar por contenido para reconocer cambios. La detección de
+CLIs maestros también corre en workers y entrega el resultado mediante
+`masterCliStatusChanged`; la UI puede mostrar `probing` mientras llega. No agregues
+una segunda pasada de `profileHealthSummary()` al mismo refresco.
+
 La UI expone `App.startupBusy`, `App.startupStatus` y
 `App.startupTimings`. El log de la aplicación registra también los tiempos
 hasta `QApplication ready`, carga de `Main.qml`, primera ventana visible y

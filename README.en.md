@@ -22,8 +22,8 @@
 > that, on your own hardware and with no dependency on the cloud, covers
 > **integrated chat** with persistent history, a **coding agent harness** over
 > local repositories, **server launch** for `llama.cpp` models (multi-binary /
-> multi-GGUF roots / composable profiles), **cloud backends with encrypted
-> secrets**, **Talk mode** (voice-to-voice STT/TTS), **memory/RAG and claim
+> multi-GGUF roots / composable profiles), **cloud backends with local secret
+> management**, **Talk mode** (voice-to-voice STT/TTS), **memory/RAG and claim
 > verification**, **master/supervisor escalation**, **mail accounts**, **browser
 > automation (Playwright)**, **attachments/documents + vision**, **Tasks**
 > (semantic macros + cron scheduler), and a **watchdog + live VRAM meter**.
@@ -41,7 +41,7 @@
 - [Multi-llama.cpp design](#multi-llamacpp-design) · [Multi-GGUF roots](#multi-gguf-roots-design) · [Composable profiles](#composable-multi-profile-design)
 - [Model cookbook (hardware-fit)](#model-cookbook-hardware-fit-recommendations)
 - [Integrated chat](#integrated-chat) · [Agent harness](#agent-harness-opencode) · [Server launch](#server-launch-launchpage)
-- [Cloud backends + secrets](#cloud-backends--encrypted-secrets) · [Talk mode (voice)](#talk-mode-voice-to-voice) · [Memory/RAG](#memory-rag-and-verification) · [Master/supervisor](#master--supervisor-escalation)
+- [Cloud backends + SecretStore](#cloud-backends--secretstore) · [Talk mode (voice)](#talk-mode-voice-to-voice) · [Memory/RAG](#memory-rag-and-verification) · [Master/supervisor](#master--supervisor-escalation)
 - [Mail](#mail-accounts) · [Browser (Playwright)](#browser-automation-playwright) · [Attachments/vision](#attachments-documents--vision) · [Watchdog + VRAM](#server-robustness-watchdog--vram) · [Other capabilities](#other-capabilities)
 - [Process lifecycle](#process-lifecycle) · [Tech stack](#tech-stack) · [Build](#build) · [Repo layout](#repo-layout)
 - [Phases](#phases) · [Tasks (macros + scheduler)](#tasks-configurable-macros--cron-scheduler) · [Benchmarking](#benchmarking) · [Auto-tuning](#parameter-auto-tuning) · [Operational security](#operational-security)
@@ -69,11 +69,12 @@ It automatically installs:
 - **git, CMake, Ninja, Python** and the C++ toolchain — MSVC v143 (Build Tools
   2022) on Windows / `g++` + `build-essential` on Linux.
 - **Qt 6.8.3** via `aqtinstall` on both platforms (Windows `msvc2022_64`, Linux
-  `gcc_64`), including required modules such as `qtmultimedia` and `qtsvg`.
+  `gcc_64`), with the `qtmultimedia` add-on; Svg is included in the base Qt
+  install and is checked with the other components CMake requires.
   On Linux aqt is used — **not** distro Qt packages — because the code
   needs Qt ≥ 6.5 (`QQmlApplicationEngine::loadFromModule`) and several LTS
   distros ship an older Qt (Ubuntu 24.04 = 6.4.2). From the distro we only pull
-  the toolchain and the system libs Qt links against (GL, xcb, glib,
+  the toolchain and the system libs Qt links against (GL, xcb, glib, PulseAudio,
   fontconfig…).
 
 Clones into `%USERPROFILE%\LlamaCode` / `~/LlamaCode` and launches the app when
@@ -87,10 +88,12 @@ Optional variables (set before running):
 |---|---|---|
 | `LC_DIR` | `~/LlamaCode` | isolated install folder |
 | `LC_BRANCH` | `main` | branch to clone |
+| `LC_REF` | (empty) | immutable release tag to install, e.g. `v0.1.118-debug` |
 | `LC_CONFIG` | `Release` | `Release` (Prod channel, stable) or `Debug` (prerelease channel) |
 | `LC_QTVER` | `6.8.3` | Qt version (Linux only) |
 | `LC_QTROOT` | `~/Qt` | Qt install root (Linux only) |
 | `LC_NORUN` | (empty) | `1` = don't launch when done |
+| `LC_FORCE` | (empty) | Windows: `1` runs `reset --hard` and discards tracked local changes |
 
 Example with overrides (Linux):
 
@@ -103,6 +106,16 @@ Minimum prerequisites: **Windows** needs `winget` (App Installer from the Micros
 Store). **Linux** supports apt / dnf / pacman / zypper and asks for `sudo` for
 system packages. Validated in a clean Ubuntu 24.04 container (toolchain + aqt Qt
 6.8.3 + build).
+
+### Prod and Debug update channels
+
+In **Settings → System → Update channel**, choose **Prod · stable** or
+**Debug · testing**. Prod checks the latest stable release; Debug selects the
+newest `vX.Y.Z-debug` tag even when GitHub marks it as a prerelease. The selection
+is saved per user. A fresh install follows its build channel: the installer
+defaults to `Release`/Prod, while a Debug build defaults to Debug. **Update now**
+downloads the exact announced tag and builds the matching configuration locally
+on Windows or Linux; releases contain source rather than prebuilt binaries.
 
 ---
 
@@ -128,12 +141,12 @@ profile and on the features enabled for each session.
 | Data / process | Location or scope | Leaves the machine by default |
 |---|---|---|
 | GGUF models | Folders registered in Model Roots | No |
-| Profiles and presets | `AppLocalData/LlamaCode/profiles/` | No |
+| Profiles and presets | Windows: `C:\Users\cristian\Documents\LlamaCode\profiles\`; Linux: `AppLocalData/LlamaCode/profiles/`. Override: `LLAMACODE_PROFILES_DIR`. | No |
 | Chat history | `AppLocalData/LlamaCode/chat/` | No |
 | Scheduled Tasks | `AppLocalData/LlamaCode/tasks/` | No |
 | Benchmark results | `AppLocalData/LlamaCode/benchmarks/` | No |
 | Process state | `AppLocalData/LlamaCode/services.json` | No |
-| Secrets | OS SecretStore or env-var references | Not stored in repo JSON |
+| Secrets | OS keyring, DPAPI on Windows, or a user-only local file when no keyring is available; env vars are also supported | Not stored in repo JSON |
 
 ### When external traffic happens
 
@@ -193,7 +206,8 @@ at the cost of speed. On notebooks or low-memory machines, start with 8k context
 | `BinaryRegistry` + `CapabilityDetector` | ✅ |
 | `ModelRootRegistry` + `GGUFScanner` | ✅ |
 | `ModelCatalog` (SQLite) | ✅ |
-| `ProfileManager` (6 entities) | ✅ |
+| `ProfileManager` (8 entities) | ✅ |
+| Profile health (errors, warnings, and uninstalled system profiles) | ✅ |
 | `EffectiveProfileBuilder` | ✅ |
 | Profile importer from CLI args | ✅ |
 | Start/Stop server (QProcess + Job Object, async stop) | ✅ |
@@ -206,8 +220,15 @@ at the cost of speed. On notebooks or low-memory machines, start with 8k context
 | Dedicated `LlamaProcessManager` | ⏳ P1 refactor |
 | Automatic health-check endpoint | ✅ (polling /health post-start) |
 | Port-collision pre-check on server start | ✅ |
-| First-run setup popup (binary + model + automatic profile) | ✅ |
+| First-run assistant with one hardware-based recommendation and accurate readiness state | ✅ |
+| Prod/Debug updates on Windows and Linux from exact tags, built locally | ✅ |
 | Native agent (LlamaAgentBackend, ReAct + tools + MCP) | ✅ P5 |
+
+The first-run assistant shows a quick-start recommendation for the detected
+hardware. Manual model selection appears only if there is no quick-start option
+or the user dismisses it. The launch step is ready only when a binary, model and
+launch profile exist; bundled system profiles alone do not count as a completed
+setup.
 
 ## Goal
 
@@ -245,7 +266,7 @@ LlamaCode
 ├── Backend Manager
 │   ├── BinaryRegistry
 │   ├── CapabilityDetector
-│   ├── ProfileManager            ← 6x ProfileListModel<T> + JSON
+│   ├── ProfileManager            ← 8x ProfileListModel<T> + JSON
 │   └── EffectiveProfileBuilder
 ├── Model Manager
 │   ├── ModelRootRegistry
@@ -371,7 +392,7 @@ Paste a terminal command (e.g. `llama-server --model ... --ctx-size 8192 --n-gpu
 - **Automatic resume**: resumes the last session when the agent restarts
 - **Auto-generated titles**: real-time update via `session.updated` SSE
 
-## Cloud backends + encrypted secrets
+## Cloud backends + SecretStore
 
 Although the focus is 100% local, each profile can point to an **external
 OpenAI-compatible endpoint** (OpenAI, OpenRouter, Groq, DeepSeek, etc.) instead of a
@@ -379,9 +400,12 @@ local `llama-server`. `BackendProfile.kind = "cloud"` spawns no process or binar
 chat/agent hit the `cloudBaseUrl` directly with the configured model.
 
 - **SecretStore**: API keys are **never** serialized into the repo's JSON. The
-  profile stores a **reference** (`cloudKeyRef`) and the value is resolved at runtime
-  from an environment variable or an on-disk encrypted store — **QtKeychain** (Secret
-  Service / WinCred / macOS Keychain) with a **DPAPI** fallback on Windows.
+  profile stores a **reference** (`cloudKeyRef`); resolution checks an environment
+  variable first, then the OS keyring through **QtKeychain** when available. If no
+  keyring is available, Windows uses **DPAPI**. On Linux and other systems, the
+  fallback is `secrets.json` with owner-only read/write permissions, but it is
+  **not encrypted**. For sensitive environments, configure the keyring or use an
+  environment variable.
 - Applies equally to HTTP masters, mail accounts and voice providers.
 
 ## Ingi Talk mode (voice-to-voice + agent)
@@ -501,6 +525,15 @@ With a vision model (server launched with `--mmproj`) it also accepts **images**
   an `.ini` preset; chat/agent switch by the request's `model` field.
 - **GPU power limit**: set the per-GPU power limit (W) via `nvidia-smi` (relaunched
   elevated on Windows), globally or per profile.
+- **Profile health**: the Profiles page separates launch-blocking errors,
+  degraded-configuration warnings and information about uninstalled system
+  profiles. It waits for the first check before reporting a healthy state; **Check
+  health** runs the diagnostic again.
+- **GPU settings**: NVIDIA inventory is queried in the background, so a slow
+  `nvidia-smi` call does not freeze Settings.
+- **Hard Mode comparisons**: separate Strata system profiles for calibrated
+  ASTRA IQ3_S and Flash-Next Q4 validate the configured model before reporting
+  ready. See the [ASTRA/Strata guide](docs/astra-strata.md) (Spanish).
 - **Deep Research**: multi-page research with persisted reports.
 - **Integrations**: unified registry of **MCP Tool Servers** + **API services**
   (endpoint + key), with connection testing.
@@ -540,13 +573,29 @@ mode.
 
 - **Qt 6.8.3** (`msvc2022_64`)
 - **Qt modules**: Core, Quick, Sql, Concurrent, Network, Widgets, Multimedia, Svg
-- **Secrets**: QtKeychain (Secret Service / WinCred / Keychain) with a DPAPI fallback
+- **Secrets**: QtKeychain when a keyring is available; DPAPI on Windows; a local
+  owner-only but unencrypted file fallback on Linux without Secret Service
 - **Compiler**: MSVC 2022 (VS BuildTools)
 - **CMake 3.21+**, generator: Visual Studio 17 2022 (multi-config)
 - **QML theme**: Catppuccin Mocha
 - **Persistence**: JSON (registries/profiles/chat) + SQLite (catalog) + QSettings
 
 ## Build
+
+### Ubuntu/Linux
+
+```bash
+./scripts/build-linux.sh Debug
+./scripts/tests-linux.sh Release
+```
+
+Builds use Ninja and the native cache at `~/.cache/llamacode/` by default; set
+`LC_BUILD_DIR` or `LC_TEST_BUILD_DIR` to change it. When the checkout is on NTFS
+or a Windows-mounted WSL filesystem (`9p`, `drvfs` or `v9fs`), the scripts mirror
+the source into the Linux cache before invoking CMake/Ninja. They also reset only
+the CMake configuration cache if it was generated from a different source path.
+Foreground desktop automation needs an unlocked X11 session; other app features
+can run headless.
 
 ### Fast (recommended)
 
@@ -569,10 +618,11 @@ Use Debug to accumulate and validate several candidate versions. Promote to
 Release explicitly only after that validation; `build.bat Both` remains available
 when both artifacts are needed.
 
-On Windows, a green download button appears next to Settings in the sidebar when
-a GitHub Release is newer than the installed version. Clicking it closes
-LlamaCode, synchronizes and builds the current installation, then launches the
-updated app. The button stays hidden when no newer published release is available.
+On Windows and Linux, the green update action appears next to Settings when the
+selected channel has a newer release. It downloads the exact announced tag,
+builds the matching `Release` or `Debug` configuration locally, and restarts the
+app. It stays hidden when that channel has no newer release; it does not update
+from `main`.
 
 The Debug red icon is embedded in the `.exe` (taskbar/explorer) via `app_icon.rc` + `#ifdef LC_DEBUG_ICON` (CMake defines `/dLC_DEBUG_ICON` only in Debug config), and also in the `.lnk`.
 
@@ -622,7 +672,7 @@ LlamaCode/
 5. **P4** ✅ Integrated streaming chat + persistent history + projects
 6. **P5** ✅ Built-in native coding agent (`LlamaAgentBackend`): ReAct loop against `llama-server`, tools (read/write/edit/grep/glob/list_dir/run_shell/web_fetch/task), MCP stdio, approvals, plan mode, checkpoint/rollback, parallel subagents in git worktrees, per-pattern permissions, @-mentions, images (vision)
 7. **P6** ✅ Tasks (configurable semantic macros) + in-app cron scheduler, with automatic agent lifecycle
-8. **P7** ✅ Cloud backends + encrypted secrets, Talk mode (voice-to-voice), mail, browser (Playwright/teach), memory/RAG, master/supervisor, watchdog + VRAM, router hot-swap, headless ControlApi
+8. **P7** ✅ Cloud backends + secret management, Talk mode (voice-to-voice), mail, browser (Playwright/teach), memory/RAG, master/supervisor, watchdog + VRAM, router hot-swap, headless ControlApi
 
 ## Tasks (configurable macros + cron scheduler)
 

@@ -52,9 +52,10 @@ fi
 # distro Qt itself.
 # libpulse: libQt6Multimedia.so (aqt) tiene NEEDED libpulse.so.0; sin ella el
 # link de LlamaCode falla con "undefined reference to pa_*@PULSE_0".
-# libsecret (-dev) is needed by QtKeychain (Secret Service backend) to encrypt the
-# cloud API keys at rest. Without it the QtKeychain FetchContent build fails; you can
-# also skip it by configuring CMake with -DLC_USE_QTKEYCHAIN=OFF (file fallback).
+# libsecret (-dev) builds QtKeychain's Secret Service backend for storing cloud
+# API keys in the OS keyring. Without it that build fails; with
+# -DLC_USE_QTKEYCHAIN=OFF, or without an available keyring at runtime, the file
+# fallback is used and is not encrypted (it is restricted to the current user).
 install_deps() {
     if command -v apt-get >/dev/null 2>&1; then
         c_info "Installing toolchain + Qt runtime libs via apt..."

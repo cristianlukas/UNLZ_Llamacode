@@ -42,8 +42,10 @@ voz, SDK y persistencia) no dependen de rutas Windows.
 - `scripts/build-linux.sh` y `scripts/tests-linux.sh` agregan el flujo Ubuntu
   reproducible con caché nativa en `~/.cache/llamacode/`; aceptan
   `LC_BUILD_DIR` y `LC_TEST_BUILD_DIR` para una ubicación explícita. Si el
-  checkout está en NTFS, espejan automáticamente el código en esa caché antes
-  de ejecutar CMake/Ninja, sin tocar el checkout original.
+  checkout está en NTFS o en un montaje Windows de WSL (`9p`, `drvfs` o `v9fs`),
+  espejan automáticamente el código en esa caché antes de ejecutar CMake/Ninja,
+  sin tocar el checkout original. Si `CMakeCache.txt` apunta a otra ruta de fuente,
+  los scripts descartan sólo `CMakeCache.txt` y `CMakeFiles` para reconfigurar.
 - `CLAUDE.md`, `AGENTS.md` y `README.md` separan los comandos Windows de sus
   equivalentes Ubuntu y documentan las limitaciones reales por sesión gráfica.
 - Los perfiles de usuario y las raíces de modelos se comparten con Windows:
@@ -82,9 +84,12 @@ voz, SDK y persistencia) no dependen de rutas Windows.
 
 ## Dependencias Linux
 
-`git rsync cmake ninja-build build-essential python3 python3-pip python3-venv`, Qt 6.8.3
-`gcc_64`, las bibliotecas XCB/GL/DBus/libsecret, `x11-utils`, `xdotool`, `wmctrl`,
-`at-spi2-core`, `tesseract-ocr`, `tesseract-ocr-spa` y `bubblewrap`. El backend
+`git rsync cmake ninja-build build-essential python3 python3-pip python3-venv`,
+Qt 6.8.3 `gcc_64`, las bibliotecas XCB/GL/DBus/libsecret/PulseAudio
+(`libpulse0` en apt), `x11-utils`, `xdotool`, `wmctrl`, `at-spi2-core`,
+`tesseract-ocr`, `tesseract-ocr-spa` y `bubblewrap`. `libsecret` habilita el
+keyring Secret Service a través de QtKeychain; sin keyring, el fallback local es
+texto plano con permisos sólo para el usuario. El backend
 de escritorio requiere X11 y una sesión desbloqueada; en Wayland puro las
 políticas del compositor pueden impedir inyección global, por lo que LlamaCode
 lo informa en vez de simular éxito.

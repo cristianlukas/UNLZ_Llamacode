@@ -39,8 +39,11 @@ Instrucciones para agentes que trabajen en este repo.
   `./scripts/tests-linux.sh Release`. Por defecto los builds viven en la
   caché nativa de Ubuntu (`~/.cache/llamacode/`), para no bloquearse si el repo
   está en un volumen NTFS montado; se puede usar `LC_BUILD_DIR` o
-  `LC_TEST_BUILD_DIR` para elegir otra ubicación. Si el checkout está en NTFS,
-  los scripts espejan el código en esa caché antes de invocar CMake/Ninja.
+  `LC_TEST_BUILD_DIR` para elegir otra ubicación. Si el checkout está en NTFS o
+  en un montaje Windows de WSL (`9p`, `drvfs`, `v9fs`), los scripts espejan el
+  código en esa caché antes de invocar CMake/Ninja. Si la caché de CMake apunta a
+  otra ruta de fuente, los scripts eliminan sólo `CMakeCache.txt` y `CMakeFiles`
+  para reconfigurarla.
 - En Ubuntu, una sesión Wayland pura puede bloquear la inyección global del
   escritorio. Para automatización foreground usar una sesión X11 y verificar
   que `DISPLAY`, `xdotool`, `wmctrl` y AT-SPI estén disponibles.

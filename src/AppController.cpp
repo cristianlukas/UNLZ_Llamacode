@@ -1803,7 +1803,8 @@ AppController::AppController(QObject *parent) : QObject(parent)
     m_gatewayEnabled = s.value(QStringLiteral("gateway/enabled"), false).toBool();
     m_gatewayPort    = s.value(QStringLiteral("gateway/port"), 8088).toInt();
     // Las claves del gateway no viven en QSettings: se migran una sola vez al
-    // SecretStore cifrado y sólo se conserva la referencia en configuración.
+    // SecretStore y sólo se conserva la referencia en configuración. El nivel
+    // de protección depende del backend activo (keyring, DPAPI o archivo local).
     m_gatewayApiKey = m_secrets.resolve(QStringLiteral("gateway/apiKey"));
     if (m_gatewayApiKey.isEmpty()) {
         const QString legacyKey = s.value(QStringLiteral("gateway/apiKey")).toString();

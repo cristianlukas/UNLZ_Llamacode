@@ -4,7 +4,8 @@ This document is operational context for AI agents modifying this repository for
 
 ## Project Basics
 
-- Repository: `C:\Users\cristian\Documents\LlamaCode`
+- Repository checkout: `C:\Users\Cristian\Documents\GitHub\LlamaCode`
+- Separate Windows runtime data/profile directory: `C:\Users\cristian\Documents\LlamaCode`
 - Main app type: C++ / Qt / QML desktop app.
 - Main controller: `src/AppController.cpp`, `src/AppController.h`
 - UI pages: `qml/pages/*.qml`
@@ -26,12 +27,14 @@ cmake --build build --config Debug --parallel
 
 Qt uses different writable locations for different registries in this app. On Cristian's machine, the important paths are:
 
-- **Profiles (launches/backends/models/runtimes/harnesses/workspaces):**
-  `C:\Users\cristian\Documents\LlamaCode\profiles` (project root, since 2026-06-08).
-  Set in `ProfileManager::storagePath()`; override with env `LLAMACODE_PROFILES_DIR`.
-  Rolling backups + atomic writes under `profiles\.backups\`. The app rewrites
-  these files from memory on profile changes / on exit, so edit JSON ONLY while
-  the app is closed (no save-on-exit hook in `main.cpp` — reverted on user request).
+- **Profiles (launches/backends/models/runtimes/harnesses/workspaces/agents/styles):**
+  Windows' historical default is `C:\Users\cristian\Documents\LlamaCode\profiles`;
+  Linux uses `AppLocalData/LlamaCode/profiles/`. `ProfileManager::storagePath()`
+  honors `LLAMACODE_PROFILES_DIR` on either platform. Changed files get rolling
+  backups under `profiles\.backups\` and atomic replacement. A no-op save does not
+  rewrite files, create backups or append profile-history snapshots. The app watches
+  the profile directory and reloads external edits; still make manual JSON changes
+  with the app closed to avoid racing an in-progress profile edit.
 - Binary registry, model roots, model catalog (still in Roaming):
   `C:\Users\cristian\AppData\Roaming\LlamaCode\LlamaCode`
 - Benchmark results, benchmark runs, logs, chat/session data:
@@ -47,6 +50,10 @@ Important files/directories:
 - `C:\Users\cristian\Documents\LlamaCode\profiles\harnesses.json`
 - `C:\Users\cristian\Documents\LlamaCode\profiles\workspaces.json`
 - `C:\Users\cristian\Documents\LlamaCode\profiles\launches.json`
+- `C:\Users\cristian\Documents\LlamaCode\profiles\agent_profiles.json`
+- `C:\Users\cristian\Documents\LlamaCode\profiles\persona_styles.json`
+- `C:\Users\cristian\Documents\LlamaCode\profiles\profile_history.jsonl`
+- `C:\Users\cristian\Documents\LlamaCode\profiles\.backups\`
 - `C:\Users\cristian\AppData\Roaming\LlamaCode\LlamaCode\model_catalog.db` (NOTA: el catálogo real vive en **Roaming**, no Local. Tabla SQLite `catalog_models`.)
 - `C:\Users\cristian\AppData\Local\LlamaCode\LlamaCode\benchmarks\index.json`
 - `C:\Users\cristian\AppData\Local\LlamaCode\LlamaCode\benchmarks\custom`
@@ -58,7 +65,9 @@ Always make a timestamped backup before manually changing JSON registries.
 
 ## Profile Model
 
-Profiles are split into six independent lists and connected by IDs. A usable launch profile references one item from each relevant list.
+Profiles are split into eight JSON-backed lists and connected by IDs. They cover
+backends, models, runtimes, harnesses, workspaces, launches, agent profiles and
+personality/style profiles. A launch profile references the relevant subset.
 
 Code:
 
@@ -295,20 +304,28 @@ The safest approach is to clone an existing working launch and reuse its backend
 
 ### MANDATORY anti-data-loss procedure (read before touching ANY profile JSON)
 
-Profiles live in six linked files under
-`C:\Users\cristian\AppData\Roaming\LlamaCode\LlamaCode\profiles\` :
-`backends.json`, `models.json`, `runtimes.json`, `harnesses.json`, `workspaces.json`, `launches.json`.
-The running app holds them in memory and **rewrites all of them from memory on exit / on any profile change**. This is how profiles get lost: editing a file while the app is alive, or replacing instead of appending.
+Profiles live in eight linked files under the Windows default
+`C:\Users\cristian\Documents\LlamaCode\profiles\`:
+`backends.json`, `models.json`, `runtimes.json`, `harnesses.json`,
+`workspaces.json`, `launches.json`, `agent_profiles.json` and
+`persona_styles.json`. `ProfileManager::save()` compares each serialized list and
+writes only files whose content changed; an identical save creates no backup or
+history entries. A non-empty on-disk list is protected from replacement by an
+empty in-memory list. Real writes retain rolling backups and use a temporary file
+plus rename; `profile_history.jsonl` receives snapshots only for profiles that
+changed. `ProfileManager` also watches the directory and reloads external changes.
+Close the app before manual edits so a concurrent UI edit cannot race the file
+change; do not assume the app rewrites every registry on exit.
 
 Hard rules (never skip):
 
-1. **App MUST be closed** before editing any profile JSON. Verify: `Get-Process LlamaCode`. If alive, `Stop-Process -Force`, wait 1s. If you edit while it runs, the app overwrites your change on exit.
+1. **Close the app gracefully** before editing profile JSON. If it is running, exit it from the app/tray and confirm it has closed before continuing. The directory watcher reloads external changes, but closing avoids racing an in-progress UI mutation.
 2. **NEVER replace the array. Always load → append/union-by-id → write.** Load the existing file, add your entries, write the union back. Do not regenerate the file from a subset.
 3. **Never delete entries you did not create**, unless the user explicitly named them. Deletion is by id, one at a time, after confirming.
 4. **Count must not drop.** Before write, assert `new.Count >= old.Count` (minus any you were explicitly asked to remove). A drop = bug, abort.
 5. **Timestamped backup before every write**: `Copy-Item launches.json launches.json.bak.<ts>`.
 6. The app itself now (since 2026-06-07) keeps **rolling backups** in `profiles\.backups\<entity>.<timestamp>.json` (last 15 per entity) and writes atomically (`.tmp` + rename). Recovery source if anything is lost: newest file in `profiles\.backups\`, or the dated `beellama031_*backup*` dirs, or `*.bak.<ts>` siblings. See `ProfileManager::save()`.
-7. **Restoring lost profiles**: their `backendProfileId`/`modelProfileId` may point at an OLD id generation. Restore by **union-merging the whole graph** (backends+models+runtimes+harnesses+launches) from the same backup dir — restoring launches alone leaves broken refs.
+7. **Restoring lost profiles**: their references may point at other profile IDs. Restore by union-merging the needed graph (backends, models, runtimes, harnesses, workspaces, launches, agent profiles and style profiles) from the same backup set; restoring launches alone can leave broken references.
 
 Steps for a normal add:
 
