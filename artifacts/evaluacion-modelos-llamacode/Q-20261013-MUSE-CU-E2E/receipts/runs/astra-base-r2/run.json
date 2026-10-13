@@ -1,0 +1,466 @@
+{
+  "run_id": "astra-base-r2",
+  "profile": "astra",
+  "launch_id": "iq3s-lch1-20261009",
+  "agent_profile_id": "31ff813d-6bf5-4400-8f82-69af4fcc64bc",
+  "arm": "base",
+  "replicate": 2,
+  "attempt": 1,
+  "sampling": {
+    "temperature": 0.6,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0,
+    "repeat_penalty": 1.0,
+    "presence_penalty": 0.0,
+    "reasoning_effort": "medium"
+  },
+  "screen": "1280x800x24",
+  "lang": "C.UTF-8",
+  "gtk_theme": "Adwaita:dark",
+  "started_at_local": "2026-10-13T19:06:48.742457-03:00",
+  "overlay_sha256": null,
+  "tasks": [
+    {
+      "png": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/receipts/runs/astra-base-r2/stage1-CU-ES-CALC.png",
+      "ocr": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/receipts/runs/astra-base-r2/stage1-CU-ES-CALC.ocr.txt",
+      "ocr_text": "",
+      "window_ocr": {
+        "0x00600004": {
+          "title": "3090 Calculator",
+          "png": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/receipts/runs/astra-base-r2/stage1-CU-ES-CALC-0x00600004.png",
+          "ocr_text": "Undo Basic v — - a x\n73x19 3 1387\n1387|\n\nc ( ) mod Tt\n\n7 8 9 + v\n\n4 5 6 x x?\n\n1 2 3 -\n\noO . % +\n",
+          "ocr_exit": 0
+        }
+      },
+      "windows": "0x00600004  0 3340669 0    0    366  514  3090 Calculator\n",
+      "ocr_exit": 0,
+      "expected_visible": "1387",
+      "root_ocr_contains_expected": false,
+      "window_ocr_contains_expected": true,
+      "ocr_contains_expected": true,
+      "messages_delta": [
+        {
+          "completedAt": 1791929236862,
+          "content": "Usá sólo las herramientas de escritorio. Abre `gnome-calculator`, calcula `73*19=` en una sola entrada, deja el resultado actual visible y compruébalo con los controles de la ventana. No abras terminal, archivos ni red.",
+          "createdAt": 1791929236862,
+          "elapsedMs": 0,
+          "role": "user",
+          "tokens": 55,
+          "tps": 0,
+          "typing": false
+        },
+        {
+          "arguments": "{\"app\":\"gnome-calculator\"}",
+          "command": "gnome-calculator",
+          "completedAt": 1791929242121,
+          "correlationId": "7596d318-1c91-400e-a1f2-c44346f1d7b6",
+          "createdAt": 1791929242121,
+          "deduplicated": false,
+          "desktopReceipt": {
+            "correlationId": "7596d318-1c91-400e-a1f2-c44346f1d7b6",
+            "createdAt": 1791929242116,
+            "detail": "[desktop_launch: ok — la app se está abriendo. desktop_wait ~800ms y UNA desktop_windows para el id. Después, si la app se maneja con teclado (calc, notepad), desktop_focus <id> + desktop_type; NO repitas desktop_windows ni observes en loop.]",
+            "payloadHash": "4d5e94162fb360b03ca8f11c16fa9b1bb4a29d9517254f487eb2b4ab0f97cb80",
+            "receiptId": "5d9b3932-bf90-4714-b0d7-6afa6b866cf9",
+            "resultHash": "2a58efe092afbf8b5e1c8c27b4a41b335b5a84b2e676b146fc641552f6be4226",
+            "sessionId": "e26b8fb2-1b1d-4b5e-b8b8-7490b0a393ff",
+            "snapshotId": "",
+            "status": "settled",
+            "strategy": "native",
+            "target": {},
+            "tool": "desktop_launch"
+          },
+          "elapsedMs": 0,
+          "idempotencyKey": "",
+          "kind": "desktop",
+          "name": "desktop_launch",
+          "ok": true,
+          "output": "[desktop_launch: ok — la app se está abriendo. desktop_wait ~800ms y UNA desktop_windows para el id. Después, si la app se maneja con teclado (calc, notepad), desktop_focus <id> + desktop_type; NO repitas desktop_windows ni observes en loop.]\nreceipt_id=5d9b3932-bf90-4714-b0d7-6afa6b866cf9 status=settled",
+          "payloadHash": "",
+          "receipt": {},
+          "role": "toolcall",
+          "tokens": 0,
+          "tps": 0,
+          "typing": false
+        },
+        {
+          "arguments": "{\"ms\":1000}",
+          "command": "",
+          "completedAt": 1791929243895,
+          "correlationId": "7596d318-1c91-400e-a1f2-c44346f1d7b6",
+          "createdAt": 1791929243895,
+          "deduplicated": false,
+          "desktopReceipt": {
+            "correlationId": "7596d318-1c91-400e-a1f2-c44346f1d7b6",
+            "createdAt": 1791929243888,
+            "detail": "[desktop_wait: 1000 ms]",
+            "payloadHash": "f4545e9e90428dab354f3a6c20271c46088f872bb85e13de3cd28831837861b0",
+            "receiptId": "e904b268-051c-41d6-9db5-9ed6286f10af",
+            "resultHash": "80d8c8b9fbd35f2150001df233f87eae93280cdb7e8ee89af62a75954d852d3b",
+            "sessionId": "e26b8fb2-1b1d-4b5e-b8b8-7490b0a393ff",
+            "snapshotId": "",
+            "status": "settled",
+            "strategy": "native",
+            "target": {},
+            "tool": "desktop_wait"
+          },
+          "elapsedMs": 0,
+          "idempotencyKey": "",
+          "kind": "read",
+          "name": "desktop_wait",
+          "ok": true,
+          "output": "[desktop_wait: 1000 ms]\nreceipt_id=e904b268-051c-41d6-9db5-9ed6286f10af status=settled",
+          "payloadHash": "",
+          "receipt": {},
+          "role": "toolcall",
+          "tokens": 0,
+          "tps": 0,
+          "typing": false
+        },
+        {
+          "arguments": "{}",
+          "command": "",
+          "completedAt": 1791929244398,
+          "correlationId": "7596d318-1c91-400e-a1f2-c44346f1d7b6",
+          "createdAt": 1791929244398,
+          "deduplicated": false,
+          "desktopReceipt": {
+            "correlationId": "7596d318-1c91-400e-a1f2-c44346f1d7b6",
+            "createdAt": 1791929244392,
+            "detail": "[desktop_windows: 1 ventana(s) visible(s)]\nUsá el id con scope_kind='window' en desktop_observe/click.\nid=600004  pid=3340669  366x514@(0,0)  \"Calculator\"",
+            "payloadHash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "receiptId": "097bc900-38d8-40d0-a5ba-afbcd49d2c03",
+            "resultHash": "2903c496c1878ff7d194b394cf0b075676d1d553d2cc237db670caf8d342bcfb",
+            "sessionId": "e26b8fb2-1b1d-4b5e-b8b8-7490b0a393ff",
+            "snapshotId": "",
+            "status": "settled",
+            "strategy": "native",
+            "target": {},
+            "tool": "desktop_windows"
+          },
+          "elapsedMs": 0,
+          "idempotencyKey": "",
+          "kind": "read",
+          "name": "desktop_windows",
+          "ok": true,
+          "output": "[desktop_windows: 1 ventana(s) visible(s)]\nUsá el id con scope_kind='window' en desktop_observe/click.\nid=600004  pid=3340669  366x514@(0,0)  \"Calculator\"\nreceipt_id=097bc900-38d8-40d0-a5ba-afbcd49d2c03 status=settled",
+          "payloadHash": "",
+          "receipt": {},
+          "role": "toolcall",
+          "tokens": 0,
+          "tps": 0,
+          "typing": false
+        },
+        {
+          "arguments": "{\"target_id\":\"600004\"}",
+          "command": "",
+          "completedAt": 1791929245103,
+          "correlationId": "7596d318-1c91-400e-a1f2-c44346f1d7b6",
+          "createdAt": 1791929245103,
+          "deduplicated": false,
+          "desktopReceipt": {
+            "correlationId": "7596d318-1c91-400e-a1f2-c44346f1d7b6",
+            "createdAt": 1791929245098,
+            "detail": "[desktop_focus: ok]",
+            "payloadHash": "7475ad0778f74b1b160a9039df7e00d452c078366e133d24b89a6676887bffb4",
+            "receiptId": "dccccb9c-a242-4566-a5d3-68e53ea85d17",
+            "resultHash": "44c44388ada7ff2fa219aac2c94aeaffba8ef6c8322fc961e4e3b5d00e727530",
+            "sessionId": "e26b8fb2-1b1d-4b5e-b8b8-7490b0a393ff",
+            "snapshotId": "",
+            "status": "settled",
+            "strategy": "native",
+            "target": {},
+            "tool": "desktop_focus"
+          },
+          "elapsedMs": 0,
+          "idempotencyKey": "",
+          "kind": "desktop",
+          "name": "desktop_focus",
+          "ok": true,
+          "output": "[desktop_focus: ok]\nreceipt_id=dccccb9c-a242-4566-a5d3-68e53ea85d17 status=settled",
+          "payloadHash": "",
+          "receipt": {},
+          "role": "toolcall",
+          "tokens": 0,
+          "tps": 0,
+          "typing": false
+        },
+        {
+          "arguments": "{\"key\":\"ESC\"}",
+          "command": "ESC",
+          "completedAt": 1791929245672,
+          "correlationId": "7596d318-1c91-400e-a1f2-c44346f1d7b6",
+          "createdAt": 1791929245672,
+          "deduplicated": false,
+          "desktopReceipt": {
+            "correlationId": "7596d318-1c91-400e-a1f2-c44346f1d7b6",
+            "createdAt": 1791929245667,
+            "detail": "[desktop_key: ok]",
+            "payloadHash": "9eedb407719a094cd650be8700b136ea1562b2ddfb9390bdf4b992b2b49d0cc4",
+            "receiptId": "6afa1ee7-664c-4cbe-8ae2-9e4d0b714fbe",
+            "resultHash": "4e500549e9257ced00a0a3a7eb5226651580752769714d72e681ed8f5411ae2d",
+            "sessionId": "e26b8fb2-1b1d-4b5e-b8b8-7490b0a393ff",
+            "snapshotId": "",
+            "status": "settled",
+            "strategy": "native",
+            "target": {},
+            "tool": "desktop_key"
+          },
+          "elapsedMs": 0,
+          "idempotencyKey": "",
+          "kind": "desktop",
+          "name": "desktop_key",
+          "ok": true,
+          "output": "[desktop_key: ok]\nreceipt_id=6afa1ee7-664c-4cbe-8ae2-9e4d0b714fbe status=settled",
+          "payloadHash": "",
+          "receipt": {},
+          "role": "toolcall",
+          "tokens": 0,
+          "tps": 0,
+          "typing": false
+        },
+        {
+          "arguments": "{\"text\":\"73*19=\"}",
+          "command": "73*19=",
+          "completedAt": 1791929246260,
+          "correlationId": "7596d318-1c91-400e-a1f2-c44346f1d7b6",
+          "createdAt": 1791929246260,
+          "deduplicated": false,
+          "desktopReceipt": {
+            "correlationId": "7596d318-1c91-400e-a1f2-c44346f1d7b6",
+            "createdAt": 1791929246255,
+            "detail": "[desktop_type: ok]",
+            "payloadHash": "7ecf8b6b4a2ad61f35cf8ecc202262f256abf19b1648359a54b965122d043b07",
+            "receiptId": "532d2c00-35ed-4161-945e-9d82e6895b9c",
+            "resultHash": "47a9d0d57367f2c52e123a26272018b68021fcdfa2054417c02eb2555cf70e77",
+            "sessionId": "e26b8fb2-1b1d-4b5e-b8b8-7490b0a393ff",
+            "snapshotId": "",
+            "status": "settled",
+            "strategy": "native",
+            "target": {},
+            "tool": "desktop_type"
+          },
+          "elapsedMs": 0,
+          "idempotencyKey": "",
+          "kind": "desktop",
+          "name": "desktop_type",
+          "ok": true,
+          "output": "[desktop_type: ok]\nreceipt_id=532d2c00-35ed-4161-945e-9d82e6895b9c status=settled",
+          "payloadHash": "",
+          "receipt": {},
+          "role": "toolcall",
+          "tokens": 0,
+          "tps": 0,
+          "typing": false
+        },
+        {
+          "arguments": "{\"query\":\"1387\",\"target_id\":\"600004\"}",
+          "command": "",
+          "completedAt": 1791929248456,
+          "correlationId": "7596d318-1c91-400e-a1f2-c44346f1d7b6",
+          "createdAt": 1791929248456,
+          "deduplicated": false,
+          "desktopReceipt": {
+            "correlationId": "7596d318-1c91-400e-a1f2-c44346f1d7b6",
+            "createdAt": 1791929248451,
+            "detail": "[desktop_controls: 1 control(es)]\nsnapshot_id=5cfd31d5191755e62e4e82a3\nUsá el controlId con desktop_click_element (mismo target_id).\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS8xY2IyMzFmMl9mNmYzXzQwMjVfYjBmZl80YmM1Y2VkNjkxNjk  [label] invoke  92x25@(0,0)  \"1387\"",
+            "payloadHash": "bf0e3bdbba76f120e488585ebb2ba4377230f5619303ea89ed2ff207de6f4824",
+            "receiptId": "f639149e-2cec-48a3-bf4f-e1744bdd1f63",
+            "resultHash": "77431460e12a8a2503068c2610bc6fec292d77016e139dda47978393661e923e",
+            "sessionId": "e26b8fb2-1b1d-4b5e-b8b8-7490b0a393ff",
+            "snapshotId": "",
+            "status": "settled",
+            "strategy": "native",
+            "target": {
+              "className": "gnome-calculator,gnome-calculator",
+              "height": 514,
+              "id": "600004",
+              "kind": "window",
+              "label": "Calculator",
+              "maximized": false,
+              "minimized": false,
+              "pid": 3340669,
+              "width": 366,
+              "x": 0,
+              "y": 0
+            },
+            "tool": "desktop_controls"
+          },
+          "elapsedMs": 0,
+          "idempotencyKey": "",
+          "kind": "read",
+          "name": "desktop_controls",
+          "ok": true,
+          "output": "[desktop_controls: 1 control(es)]\nsnapshot_id=5cfd31d5191755e62e4e82a3\nUsá el controlId con desktop_click_element (mismo target_id).\ncontrolId=atspi:OjEuMgovb3JnL2dub21lL0NhbGN1bGF0b3IvYTExeS8xY2IyMzFmMl9mNmYzXzQwMjVfYjBmZl80YmM1Y2VkNjkxNjk  [label] invoke  92x25@(0,0)  \"1387\"\nreceipt_id=f639149e-2cec-48a3-bf4f-e1744bdd1f63 status=settled",
+          "payloadHash": "",
+          "receipt": {},
+          "role": "toolcall",
+          "tokens": 0,
+          "tps": 0,
+          "typing": false
+        },
+        {
+          "completedAt": 1791929251443,
+          "content": "Listo.\n\n- Abierta `gnome-calculator` (ventana \"Calculator\", id 600004).\n- Entrada única: `73*19=` (con ESC previo para limpiar).\n- Verificado por UIA: el visor muestra **1387** (control label \"1387\"), y `desktop_assert` → PASS.\n\n73 × 19 = 1387, resultado visible en pantalla.",
+          "createdAt": 1791929249364,
+          "elapsedMs": 1342,
+          "genStartMs": 1791929250101,
+          "role": "assistant",
+          "tokens": 102,
+          "tps": 110.19878997407088,
+          "typing": false
+        },
+        {
+          "arguments": "{\"expect_text\":\"1387\",\"target_id\":\"600004\"}",
+          "command": "",
+          "completedAt": 1791929250093,
+          "correlationId": "7596d318-1c91-400e-a1f2-c44346f1d7b6",
+          "createdAt": 1791929250093,
+          "deduplicated": false,
+          "desktopReceipt": {
+            "correlationId": "7596d318-1c91-400e-a1f2-c44346f1d7b6",
+            "createdAt": 1791929250088,
+            "detail": "[desktop_assert: PASS]\n{\"detail\":\"Texto \\\"1387\\\" presente.\",\"elapsedMs\":724,\"pass\":true,\"windowId\":\"600004\"}",
+            "payloadHash": "c213c119ab4587fe2f4a7899951914b5c1e11763b4af52d6e0988aace4120918",
+            "receiptId": "77e0a003-d306-4a35-82ad-bfc37679bdf6",
+            "resultHash": "0f37479604c4566b13772b096e83bec0cea15b68fd34a3692a9471724d3d624d",
+            "sessionId": "e26b8fb2-1b1d-4b5e-b8b8-7490b0a393ff",
+            "snapshotId": "",
+            "status": "settled",
+            "strategy": "native",
+            "target": {},
+            "tool": "desktop_assert"
+          },
+          "elapsedMs": 0,
+          "idempotencyKey": "",
+          "kind": "read",
+          "name": "desktop_assert",
+          "ok": true,
+          "output": "[desktop_assert: PASS]\n{\"detail\":\"Texto \\\"1387\\\" presente.\",\"elapsedMs\":724,\"pass\":true,\"windowId\":\"600004\"}\nreceipt_id=77e0a003-d306-4a35-82ad-bfc37679bdf6 status=settled",
+          "payloadHash": "",
+          "receipt": {},
+          "role": "toolcall",
+          "tokens": 0,
+          "tps": 0,
+          "typing": false
+        }
+      ],
+      "elapsed_seconds": 17.017,
+      "agent_log": "[2026-10-13 19:07:14.776][agent/lifecycle] Cloud local: endpoint loopback sin API key (http://127.0.0.1:8350).\n[2026-10-13 19:07:14.802][agent/backend] [permisos: 0 regla(s) cargadas]\n[2026-10-13 19:07:14.803][agent/backend] [permisos: 0 regla(s) cargadas]\n[2026-10-13 19:07:14.804][agent/backend] [proyecto no definido o inseguro (): usando workspace aislado /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/runtime/sessions/astra-base-r2/data/LlamaCode/LlamaCode/workspace]\n[2026-10-13 19:07:14.815][agent/backend] [LlamaAgent backend listo · cwd: /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/runtime/sessions/astra-base-r2/data/LlamaCode/LlamaCode/workspace]\n[2026-10-13 19:07:14.815][agent/backend] [mcp] 0 tool(s) descubiertas\n[2026-10-13 19:07:16.838][agent/backend] [permisos: 0 regla(s) cargadas]\n[2026-10-13 19:07:16.846][agent/input] > Usá sólo las herramientas de escritorio. Abre `gnome-calculator`, calcula `73*19=` en una sola entrada, deja el resultado actual visible y compruébalo con los controles de la ventana. No abras terminal, archivos ni red.\n[2026-10-13 19:07:16.909][agent/backend] [preflight: contexto inicial preparado]\n[2026-10-13 19:07:16.911][agent/backend] [turn] requesting completion (iter=1, msgs=3, stream)\n[2026-10-13 19:07:22.112][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:07:22.112][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:07:22.112][agent/backend] [tool] auto-approving desktop_launch\n[2026-10-13 19:07:22.125][agent/backend] [turn] requesting completion (iter=2, msgs=5, stream)\n[2026-10-13 19:07:22.888][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:07:22.888][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:07:22.888][agent/backend] [tool] auto-approving desktop_wait\n[2026-10-13 19:07:23.898][agent/backend] [turn] requesting completion (iter=3, msgs=7, stream)\n[2026-10-13 19:07:24.389][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:07:24.389][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:07:24.389][agent/backend] [tool] auto-approving desktop_windows\n[2026-10-13 19:07:24.401][agent/backend] [turn] requesting completion (iter=4, msgs=9, stream)\n[2026-10-13 19:07:25.096][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:07:25.096][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:07:25.096][agent/backend] [tool] auto-approving desktop_focus\n[2026-10-13 19:07:25.106][agent/backend] [turn] requesting completion (iter=5, msgs=11, stream)\n[2026-10-13 19:07:25.665][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:07:25.665][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:07:25.665][agent/backend] [tool] auto-approving desktop_key\n[2026-10-13 19:07:25.676][agent/backend] [turn] requesting completion (iter=6, msgs=13, stream)\n[2026-10-13 19:07:26.253][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:07:26.253][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:07:26.253][agent/backend] [tool] auto-approving desktop_type\n[2026-10-13 19:07:26.263][agent/backend] [turn] requesting completion (iter=7, msgs=15, stream)\n[2026-10-13 19:07:26.975][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:07:26.975][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:07:26.975][agent/backend] [tool] auto-approving desktop_controls\n[2026-10-13 19:07:28.459][agent/backend] [turn] requesting completion (iter=8, msgs=17, stream)\n[2026-10-13 19:07:29.364][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:07:29.364][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:07:29.364][agent/backend] [tool] auto-approving desktop_assert\n[2026-10-13 19:07:30.096][agent/backend] [turn] requesting completion (iter=9, msgs=19, stream)\n[2026-10-13 19:07:31.443][agent/backend] [turn] completed (finalTextChars=275)\n[2026-10-13 19:07:31.443][agent/backend] [salud: 8/8 tools ok (100%)]\n",
+      "prompt": "Usá sólo las herramientas de escritorio. Abre `gnome-calculator`, calcula `73*19=` en una sola entrada, deja el resultado actual visible y compruébalo con los controles de la ventana. No abras terminal, archivos ni red.",
+      "task_id": "CU-ES-CALC"
+    }
+  ],
+  "daemon_log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/receipts/sessions/astra-base-r2/runner-daemon.log",
+  "endpoint_models": {
+    "object": "list",
+    "data": [
+      {
+        "id": "qwen3.8-flash-next-astra-iq3_s-calibrated",
+        "object": "model",
+        "status": {
+          "value": "loaded"
+        },
+        "meta": {
+          "n_ctx": 131072
+        },
+        "architecture": {
+          "input_modalities": [
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ]
+        }
+      }
+    ]
+  },
+  "profile_setprop": {
+    "ok": true,
+    "reqId": "315fc832-6c98-45b7-9de4-8bc76ce1c0c3"
+  },
+  "prompt_setprop": {
+    "ok": true,
+    "chars": 0
+  },
+  "effective_profile": {
+    "id": "31ff813d-6bf5-4400-8f82-69af4fcc64bc",
+    "tools": [
+      "desktop_snapshot",
+      "desktop_windows",
+      "desktop_controls",
+      "desktop_click_element",
+      "desktop_control_action",
+      "desktop_find_image",
+      "desktop_click_image",
+      "desktop_wait_image",
+      "desktop_assert_image",
+      "desktop_observe",
+      "desktop_click",
+      "desktop_stroke",
+      "desktop_type",
+      "desktop_key",
+      "desktop_scroll",
+      "desktop_focus",
+      "desktop_resize",
+      "desktop_wait",
+      "desktop_wait_for",
+      "desktop_assert",
+      "desktop_launch"
+    ],
+    "approval": "auto",
+    "mcp": false
+  },
+  "agent_started": true,
+  "initial_message_count": 0,
+  "error": "TimeoutError: turno excedió 300s; streamingIndex=60; messages=l\\\":\\\"MUSE CU E2E keyboard input (Draft) - Text Editor\\\",\\\"maximized\\\":false,\\\"minimized\\\":false,\\\"pid\\\":3346555,\\\"width\\\":700,\\\"x\\\":0,\\\"y\\\":0}]}\\nreceipt_id=a78efcb8-4cc4-4c6f-b99b-a5914536359e status=settled\", \"payloadHash\": \"\", \"receipt\": {}, \"role\": \"toolcall\", \"tokens\": 0, \"tps\": 0, \"typing\": false}, {\"content\": \"\", \"createdAt\": 1791929545226, \"elapsedMs\": 0, \"role\": \"assistant\", \"status\": \"Revisando resultados...\", \"tokens\": 0, \"tps\": 0, \"typing\": true}, {\"arguments\": \"{\\\"max\\\":120,\\\"query\\\":\\\"MUSE CU E2E\\\",\\\"target_id\\\":\\\"c00004\\\"}\", \"command\": \"\", \"completedAt\": 1791929547566, \"correlationId\": \"75d4815c-5c1a-425a-94b9-dee8dac5161f\", \"createdAt\": 1791929547566, \"deduplicated\": false, \"desktopReceipt\": {\"correlationId\": \"75d4815c-5c1a-425a-94b9-dee8dac5161f\", \"createdAt\": 1791929547560, \"detail\": \"[desktop_controls: 3 control(es)]\\nsnapshot_id=ca54da5f1f0ef8b4ce4910ed\\nUsá el controlId con desktop_click_element (mismo target_id).\\ncontrolId=atspi:OjEuMTI2OQovb3JnL2dub21lL1RleHRFZGl0b3IvYTExeS8xNDg4OGEwZV9hZTc0XzRiZDlfOTcxMF80YTk4NjhkMGQyZGQ  [application] invoke  700x520@(0,0)  \\\"MUSE CU E2E keyboard input (Draft) - Text Editor\\\"\\ncontrolId=atspi:OjEuMTI2OQovb3JnL2dub21lL1RleHRFZGl0b3IvYTExeS9kMmZhODZkYV9mMmIzXzQ3OGFfOTdlZV85NDU0YzFjMTEzOWU  [tab panel]  690x464@(0,0)  \\\"MUSE CU E2E keyboard input\\\"\\ncontrolId=atspi:OjEuMTI2OQovb3JnL2dub21lL1RleHRFZGl0b3IvYTExeS82ZDBlNjYxNF9hNzQ2XzRjNGNfYjAxOF9h\", \"payloadHash\": \"b070948647c9536d9f06ecbc51b75529ae498a7fd7cc4786a43031c2ffd977b3\", \"receiptId\": \"c25b3d02-a4e3-4277-8389-062a0a55b188\", \"resultHash\": \"028e936cadd1a9376d615690037e90b1253b3bed7432b1a474ff5adc6d6de6fc\", \"sessionId\": \"e26b8fb2-1b1d-4b5e-b8b8-7490b0a393ff\", \"snapshotId\": \"\", \"status\": \"settled\", \"strategy\": \"native\", \"target\": {\"className\": \"gnome-text-editor,gnome-text-editor\", \"height\": 520, \"id\": \"c00004\", \"kind\": \"window\", \"label\": \"MUSE CU E2E keyboard input (Draft) - Text Editor\", \"maximized\": false, \"minimized\": false, \"pid\": 3346555, \"width\": 700, \"x\": 0, \"y\": 0}, \"tool\": \"desktop_controls\"}, \"elapsedMs\": 0, \"idempotencyKey\": \"\", \"kind\": \"read\", \"name\": \"desktop_controls\", \"ok\": true, \"output\": \"[desktop_controls: 3 control(es)]\\nsnapshot_id=ca54da5f1f0ef8b4ce4910ed\\nUsá el controlId con desktop_click_element (mismo target_id).\\ncontrolId=atspi:OjEuMTI2OQovb3JnL2dub21lL1RleHRFZGl0b3IvYTExeS8xNDg4OGEwZV9hZTc0XzRiZDlfOTcxMF80YTk4NjhkMGQyZGQ  [application] invoke  700x520@(0,0)  \\\"MUSE CU E2E keyboard input (Draft) - Text Editor\\\"\\ncontrolId=atspi:OjEuMTI2OQovb3JnL2dub21lL1RleHRFZGl0b3IvYTExeS9kMmZhODZkYV9mMmIzXzQ3OGFfOTdlZV85NDU0YzFjMTEzOWU  [tab panel]  690x464@(0,0)  \\\"MUSE CU E2E keyboard input\\\"\\ncontrolId=atspi:OjEuMTI2OQovb3JnL2dub21lL1RleHRFZGl0b3IvYTExeS82ZDBlNjYxNF9hNzQ2XzRjNGNfYjAxOF9hN2E3MzdlZjk0Y2Q  [label] invoke  187x19@(0,0)  \\\"MUSE CU E2E keyboard input\\\"\\nreceipt_id=c25b3d02-a4e3-4277-8389-062a0a55b188 status=settled\", \"payloadHash\": \"\", \"receipt\": {}, \"role\": \"toolcall\", \"tokens\": 0, \"tps\": 0, \"typing\": false}]",
+  "agent_log_error": "[2026-10-13 19:07:14.776][agent/lifecycle] Cloud local: endpoint loopback sin API key (http://127.0.0.1:8350).\n[2026-10-13 19:07:14.802][agent/backend] [permisos: 0 regla(s) cargadas]\n[2026-10-13 19:07:14.803][agent/backend] [permisos: 0 regla(s) cargadas]\n[2026-10-13 19:07:14.804][agent/backend] [proyecto no definido o inseguro (): usando workspace aislado /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/runtime/sessions/astra-base-r2/data/LlamaCode/LlamaCode/workspace]\n[2026-10-13 19:07:14.815][agent/backend] [LlamaAgent backend listo · cwd: /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/runtime/sessions/astra-base-r2/data/LlamaCode/LlamaCode/workspace]\n[2026-10-13 19:07:14.815][agent/backend] [mcp] 0 tool(s) descubiertas\n[2026-10-13 19:07:16.838][agent/backend] [permisos: 0 regla(s) cargadas]\n[2026-10-13 19:07:16.846][agent/input] > Usá sólo las herramientas de escritorio. Abre `gnome-calculator`, calcula `73*19=` en una sola entrada, deja el resultado actual visible y compruébalo con los controles de la ventana. No abras terminal, archivos ni red.\n[2026-10-13 19:07:16.909][agent/backend] [preflight: contexto inicial preparado]\n[2026-10-13 19:07:16.911][agent/backend] [turn] requesting completion (iter=1, msgs=3, stream)\n[2026-10-13 19:07:22.112][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:07:22.112][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:07:22.112][agent/backend] [tool] auto-approving desktop_launch\n[2026-10-13 19:07:22.125][agent/backend] [turn] requesting completion (iter=2, msgs=5, stream)\n[2026-10-13 19:07:22.888][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:07:22.888][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:07:22.888][agent/backend] [tool] auto-approving desktop_wait\n[2026-10-13 19:07:23.898][agent/backend] [turn] requesting completion (iter=3, msgs=7, stream)\n[2026-10-13 19:07:24.389][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:07:24.389][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:07:24.389][agent/backend] [tool] auto-approving desktop_windows\n[2026-10-13 19:07:24.401][agent/backend] [turn] requesting completion (iter=4, msgs=9, stream)\n[2026-10-13 19:07:25.096][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:07:25.096][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:07:25.096][agent/backend] [tool] auto-approving desktop_focus\n[2026-10-13 19:07:25.106][agent/backend] [turn] requesting completion (iter=5, msgs=11, stream)\n[2026-10-13 19:07:25.665][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:07:25.665][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:07:25.665][agent/backend] [tool] auto-approving desktop_key\n[2026-10-13 19:07:25.676][agent/backend] [turn] requesting completion (iter=6, msgs=13, stream)\n[2026-10-13 19:07:26.253][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:07:26.253][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:07:26.253][agent/backend] [tool] auto-approving desktop_type\n[2026-10-13 19:07:26.263][agent/backend] [turn] requesting completion (iter=7, msgs=15, stream)\n[2026-10-13 19:07:26.975][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:07:26.975][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:07:26.975][agent/backend] [tool] auto-approving desktop_controls\n[2026-10-13 19:07:28.459][agent/backend] [turn] requesting completion (iter=8, msgs=17, stream)\n[2026-10-13 19:07:29.364][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:07:29.364][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:07:29.364][agent/backend] [tool] auto-approving desktop_assert\n[2026-10-13 19:07:30.096][agent/backend] [turn] requesting completion (iter=9, msgs=19, stream)\n[2026-10-13 19:07:31.443][agent/backend] [turn] completed (finalTextChars=275)\n[2026-10-13 19:07:31.443][agent/backend] [salud: 8/8 tools ok (100%)]\n[2026-10-13 19:07:34.176][agent/backend] [permisos: 0 regla(s) cargadas]\n[2026-10-13 19:07:34.185][agent/input] > Use only desktop tools. Open `gnome-text-editor` as a new blank document and type this exact line: `MUSE CU E2E: keyboard input verified.` Leave it unsaved. Verify it using the available desktop controls; if the UI does not expose the document text, say so instead of claiming you read it. Do not use shell, files, or network tools.\n[2026-10-13 19:07:34.218][agent/backend] [preflight: contexto inicial preparado]\n[2026-10-13 19:07:34.221][agent/backend] [turn] requesting completion (iter=1, msgs=22, stream)\n[2026-10-13 19:07:35.185][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:07:35.185][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:07:35.185][agent/backend] [tool] auto-approving desktop_launch\n[2026-10-13 19:07:35.195][agent/backend] [turn] requesting completion (iter=2, msgs=24, stream)\n[2026-10-13 19:07:35.963][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:07:35.963][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:07:35.963][agent/backend] [tool] auto-approving desktop_wait\n[2026-10-13 19:07:37.171][agent/backend] [turn] requesting completion (iter=3, msgs=26, stream)\n[2026-10-13 19:07:37.689][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:07:37.690][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:07:37.690][agent/backend] [tool] auto-approving desktop_windows\n[2026-10-13 19:07:37.702][agent/backend] [contexto: poda determinista aplicó 1 reemplazos]\n[2026-10-13 19:07:37.704][agent/backend] [turn] requesting completion (iter=4, msgs=28, stream)\n[2026-10-13 19:07:40.094][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:07:40.094][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:07:40.094][agent/backend] [tool] auto-approving desktop_focus\n[2026-10-13 19:07:40.101][agent/backend] [contexto: poda determinista aplicó 1 reemplazos]\n[2026-10-13 19:07:40.104][agent/backend] [turn] requesting completion (iter=5, msgs=30, stream)\n[2026-10-13 19:07:40.717][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:07:40.717][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:07:40.717][agent/backend] [tool] auto-approving desktop_type\n[2026-10-13 19:07:40.726][agent/backend] [contexto: poda determinista aplicó 1 reemplazos]\n[2026-10-13 19:07:40.729][agent/backend] [turn] requesting completion (iter=6, msgs=32, stream)\n[2026-10-13 19:07:41.303][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:07:41.303][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:07:41.303][agent/backend] [tool] auto-approving desktop_controls\n[2026-10-13 19:07:43.945][agent/backend] [contexto: poda determinista aplicó 1 reemplazos]\n[2026-10-13 19:07:43.947][agent/backend] [turn] requesting completion (iter=7, msgs=34, stream)\n[2026-10-13 19:07:49.730][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:07:49.730][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:07:49.730][agent/backend] [tool] auto-approving desktop_assert\n[2026-10-13 19:07:53.864][agent/backend] [contexto: poda determinista aplicó 1 reemplazos]\n[2026-10-13 19:07:53.866][agent/backend] [turn] requesting completion (iter=8, msgs=36, stream)\n[2026-10-13 19:07:54.812][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:07:54.812][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:07:54.812][agent/backend] [tool] auto-approving desktop_snapshot\n[2026-10-13 19:07:56.059][agent/backend] [contexto: poda determinista aplicó 1 reemplazos]\n[2026-10-13 19:07:56.062][agent/backend] [turn] requesting completion (iter=9, msgs=38, stream)\n[2026-10-13 19:07:58.868][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:07:58.869][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:07:58.869][agent/backend] [tool] auto-approving desktop_control_action\n[2026-10-13 19:08:00.186][agent/backend] [contexto: poda determinista aplicó 1 reemplazos]\n[2026-10-13 19:08:00.188][agent/backend] [turn] requesting completion (iter=10, msgs=40, stream)\n[2026-10-13 19:08:01.217][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:08:01.218][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:08:01.219][agent/backend] [tool] auto-approving desktop_snapshot\n[2026-10-13 19:08:02.401][agent/backend] [contexto: poda determinista aplicó 1 reemplazos]\n[2026-10-13 19:08:02.403][agent/backend] [turn] requesting completion (iter=11, msgs=42, stream)\n[2026-10-13 19:08:03.970][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:08:03.970][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:08:03.970][agent/backend] [tool] auto-approving desktop_controls\n[2026-10-13 19:08:06.362][agent/backend] [contexto: poda determinista aplicó 1 reemplazos]\n[2026-10-13 19:08:06.364][agent/backend] [turn] requesting completion (iter=12, msgs=44, stream)\n[2026-10-13 19:08:07.786][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:08:07.786][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:08:07.786][agent/backend] [tool] auto-approving desktop_snapshot\n[2026-10-13 19:08:08.981][agent/backend] [contexto: poda determinista aplicó 1 reemplazos]\n[2026-10-13 19:08:08.984][agent/backend] [turn] requesting completion (iter=13, msgs=46, stream)\n[2026-10-13 19:08:11.889][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:08:11.889][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:08:11.889][agent/backend] [tool] auto-approving desktop_control_action\n[2026-10-13 19:08:13.264][agent/backend] [contexto: poda determinista aplicó 2 reemplazos]\n[2026-10-13 19:08:13.267][agent/backend] [turn] requesting completion (iter=14, msgs=48, stream)\n[2026-10-13 19:08:15.906][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:08:15.906][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:08:15.906][agent/backend] [tool] auto-approving desktop_windows\n[2026-10-13 19:08:15.916][agent/backend] [contexto: poda determinista aplicó 3 reemplazos]\n[2026-10-13 19:08:15.919][agent/backend] [turn] requesting completion (iter=15, msgs=50, stream)\n[2026-10-13 19:08:23.345][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:08:23.346][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:08:23.346][agent/backend] [tool] auto-approving desktop_snapshot\n[2026-10-13 19:08:24.661][agent/backend] [contexto: poda determinista aplicó 3 reemplazos]\n[2026-10-13 19:08:24.664][agent/backend] [turn] requesting completion (iter=16, msgs=52, stream)\n[2026-10-13 19:08:33.052][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:08:33.052][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:08:33.052][agent/backend] [tool] auto-approving desktop_control_action\n[2026-10-13 19:08:34.421][agent/backend] [contexto: poda determinista aplicó 3 reemplazos]\n[2026-10-13 19:08:34.424][agent/backend] [turn] requesting completion (iter=17, msgs=54, stream)\n[2026-10-13 19:08:35.362][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:08:35.362][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:08:35.362][agent/backend] [tool] auto-approving desktop_controls\n[2026-10-13 19:08:37.715][agent/backend] [contexto: poda determinista aplicó 3 reemplazos]\n[2026-10-13 19:08:37.718][agent/backend] [turn] requesting completion (iter=18, msgs=56, stream)\n[2026-10-13 19:08:39.798][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:08:39.799][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:08:39.799][agent/backend] [tool] auto-approving desktop_control_action\n[2026-10-13 19:08:41.101][agent/backend] [contexto: poda determinista aplicó 3 reemplazos]\n[2026-10-13 19:08:41.103][agent/backend] [turn] requesting completion (iter=19, msgs=58, stream)\n[2026-10-13 19:08:42.036][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:08:42.036][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:08:42.036][agent/backend] [tool] auto-approving desktop_controls\n[2026-10-13 19:08:44.355][agent/backend] [contexto: poda determinista aplicó 3 reemplazos]\n[2026-10-13 19:08:44.358][agent/backend] [turn] requesting completion (iter=20, msgs=60, stream)\n[2026-10-13 19:08:46.554][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:08:46.554][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:08:46.554][agent/backend] [tool] auto-approving desktop_control_action\n[2026-10-13 19:08:47.846][agent/backend] [contexto: poda determinista aplicó 4 reemplazos]\n[2026-10-13 19:08:47.849][agent/backend] [turn] requesting completion (iter=21, msgs=62, stream)\n[2026-10-13 19:09:00.208][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:09:00.208][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:09:00.208][agent/backend] [tool] auto-approving desktop_controls\n[2026-10-13 19:09:02.539][agent/backend] [contexto: poda determinista aplicó 4 reemplazos]\n[2026-10-13 19:09:02.542][agent/backend] [turn] requesting completion (iter=22, msgs=64, stream)\n[2026-10-13 19:09:03.463][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:09:03.463][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:09:03.463][agent/backend] [tool] auto-approving desktop_controls\n[2026-10-13 19:09:05.816][agent/backend] [contexto: poda determinista aplicó 4 reemplazos]\n[2026-10-13 19:09:05.819][agent/backend] [turn] requesting completion (iter=23, msgs=66, stream)\n[2026-10-13 19:09:06.810][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:09:06.810][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:09:06.810][agent/backend] [tool] auto-approving desktop_controls\n[2026-10-13 19:09:09.143][agent/backend] [contexto: poda determinista aplicó 4 reemplazos]\n[2026-10-13 19:09:09.146][agent/backend] [turn] requesting completion (iter=24, msgs=68, stream)\n[2026-10-13 19:09:10.038][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:09:10.038][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:09:10.038][agent/backend] [tool] auto-approving desktop_controls\n[2026-10-13 19:09:12.370][agent/backend] [contexto: poda determinista aplicó 4 reemplazos]\n[2026-10-13 19:09:12.373][agent/backend] [turn] requesting completion (iter=25, msgs=70, stream)\n[2026-10-13 19:09:14.405][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:09:14.406][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:09:14.406][agent/backend] [tool] auto-approving desktop_control_action\n[2026-10-13 19:09:15.712][agent/backend] [contexto: poda determinista aplicó 4 reemplazos]\n[2026-10-13 19:09:15.715][agent/backend] [turn] requesting completion (iter=26, msgs=72, stream)\n[2026-10-13 19:09:16.661][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:09:16.662][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:09:16.662][agent/backend] [tool] auto-approving desktop_controls\n[2026-10-13 19:09:18.991][agent/backend] [contexto: poda determinista aplicó 4 reemplazos]\n[2026-10-13 19:09:18.994][agent/backend] [turn] requesting completion (iter=27, msgs=74, stream)\n[2026-10-13 19:09:19.880][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:09:19.880][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:09:19.880][agent/backend] [tool] auto-approving desktop_controls\n[2026-10-13 19:09:22.214][agent/backend] [contexto: poda determinista aplicó 5 reemplazos]\n[2026-10-13 19:09:22.216][agent/backend] [turn] requesting completion (iter=28, msgs=76, stream)\n[2026-10-13 19:09:24.972][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:09:24.972][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:09:24.972][agent/backend] [tool] auto-approving desktop_control_action\n[2026-10-13 19:09:26.283][agent/backend] [contexto: poda determinista aplicó 6 reemplazos]\n[2026-10-13 19:09:26.286][agent/backend] [turn] requesting completion (iter=29, msgs=78, stream)\n[2026-10-13 19:09:28.701][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:09:28.701][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:09:28.701][agent/backend] [tool] auto-approving desktop_controls\n[2026-10-13 19:09:31.035][agent/backend] [contexto: poda determinista aplicó 6 reemplazos]\n[2026-10-13 19:09:31.037][agent/backend] [turn] requesting completion (iter=30, msgs=80, stream)\n[2026-10-13 19:09:31.908][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:09:31.908][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:09:31.908][agent/backend] [tool] auto-approving desktop_controls\n[2026-10-13 19:09:34.227][agent/backend] [contexto: poda determinista aplicó 7 reemplazos]\n[2026-10-13 19:09:34.230][agent/backend] [turn] requesting completion (iter=31, msgs=82, stream)\n[2026-10-13 19:09:37.530][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:09:37.531][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:09:37.531][agent/backend] [tool] auto-approving desktop_control_action\n[2026-10-13 19:09:38.850][agent/backend] [contexto: poda determinista aplicó 8 reemplazos]\n[2026-10-13 19:09:38.853][agent/backend] [turn] requesting completion (iter=32, msgs=84, stream)\n[2026-10-13 19:09:41.360][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:09:41.361][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:09:41.361][agent/backend] [tool] auto-approving desktop_controls\n[2026-10-13 19:09:43.704][agent/backend] [contexto: poda determinista aplicó 9 reemplazos]\n[2026-10-13 19:09:43.707][agent/backend] [turn] requesting completion (iter=33, msgs=86, stream)\n[2026-10-13 19:09:47.089][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:09:47.089][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:09:47.089][agent/backend] [tool] auto-approving desktop_control_action\n[2026-10-13 19:09:48.398][agent/backend] [contexto: poda determinista aplicó 10 reemplazos]\n[2026-10-13 19:09:48.401][agent/backend] [turn] requesting completion (iter=34, msgs=88, stream)\n[2026-10-13 19:10:01.226][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:10:01.227][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:10:01.227][agent/backend] [tool] auto-approving desktop_snapshot\n[2026-10-13 19:10:02.411][agent/backend] [contexto: poda determinista aplicó 10 reemplazos]\n[2026-10-13 19:10:02.415][agent/backend] [turn] requesting completion (iter=35, msgs=90, stream)\n[2026-10-13 19:10:04.881][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:10:04.881][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:10:04.881][agent/backend] [tool] auto-approving desktop_control_action\n[2026-10-13 19:10:06.191][agent/backend] [contexto: poda determinista aplicó 11 reemplazos]\n[2026-10-13 19:10:06.193][agent/backend] [turn] requesting completion (iter=36, msgs=92, stream)\n[2026-10-13 19:10:13.879][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:10:13.879][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:10:13.879][agent/backend] [tool] auto-approving desktop_controls\n[2026-10-13 19:10:16.217][agent/backend] [contexto: poda determinista aplicó 12 reemplazos]\n[2026-10-13 19:10:16.220][agent/backend] [turn] requesting completion (iter=37, msgs=94, stream)\n[2026-10-13 19:10:24.783][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:10:24.784][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:10:24.784][agent/backend] [tool] auto-approving desktop_control_action\n[2026-10-13 19:10:26.087][agent/backend] [contexto: poda determinista aplicó 13 reemplazos]\n[2026-10-13 19:10:26.090][agent/backend] [turn] requesting completion (iter=38, msgs=96, stream)\n[2026-10-13 19:10:33.946][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:10:33.946][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:10:33.946][agent/backend] [tool] auto-approving desktop_controls\n[2026-10-13 19:10:36.277][agent/backend] [contexto: poda determinista aplicó 13 reemplazos]\n[2026-10-13 19:10:36.280][agent/backend] [turn] requesting completion (iter=39, msgs=98, stream)\n[2026-10-13 19:10:38.467][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:10:38.467][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:10:38.467][agent/backend] [tool] auto-approving desktop_control_action\n[2026-10-13 19:10:39.754][agent/backend] [contexto: poda determinista aplicó 14 reemplazos]\n[2026-10-13 19:10:39.757][agent/backend] [turn] requesting completion (iter=40, msgs=100, stream)\n[2026-10-13 19:10:47.712][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:10:47.712][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:10:47.712][agent/backend] [tool] auto-approving desktop_controls\n[2026-10-13 19:10:50.043][agent/backend] [contexto: poda determinista aplicó 15 reemplazos]\n[2026-10-13 19:10:50.046][agent/backend] [turn] requesting completion (iter=41, msgs=102, stream)\n[2026-10-13 19:10:58.871][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:10:58.871][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:10:58.871][agent/backend] [tool] auto-approving desktop_control_action\n[2026-10-13 19:11:00.177][agent/backend] [contexto: poda determinista aplicó 16 reemplazos]\n[2026-10-13 19:11:00.180][agent/backend] [turn] requesting completion (iter=42, msgs=104, stream)\n[2026-10-13 19:11:08.212][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:11:08.212][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:11:08.212][agent/backend] [tool] auto-approving desktop_controls\n[2026-10-13 19:11:10.554][agent/backend] [contexto: poda determinista aplicó 17 reemplazos]\n[2026-10-13 19:11:10.557][agent/backend] [turn] requesting completion (iter=43, msgs=106, stream)\n[2026-10-13 19:11:19.498][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:11:19.498][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:11:19.498][agent/backend] [tool] auto-approving desktop_control_action\n[2026-10-13 19:11:20.807][agent/backend] [contexto: poda determinista aplicó 18 reemplazos]\n[2026-10-13 19:11:20.810][agent/backend] [turn] requesting completion (iter=44, msgs=108, stream)\n[2026-10-13 19:11:28.911][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:11:28.911][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:11:28.911][agent/backend] [tool] auto-approving desktop_controls\n[2026-10-13 19:11:31.252][agent/backend] [contexto: poda determinista aplicó 19 reemplazos]\n[2026-10-13 19:11:31.255][agent/backend] [turn] requesting completion (iter=45, msgs=110, stream)\n[2026-10-13 19:11:40.215][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:11:40.216][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:11:40.216][agent/backend] [tool] auto-approving desktop_control_action\n[2026-10-13 19:11:41.540][agent/backend] [contexto: poda determinista aplicó 20 reemplazos]\n[2026-10-13 19:11:41.543][agent/backend] [turn] requesting completion (iter=46, msgs=112, stream)\n[2026-10-13 19:11:50.103][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:11:50.103][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:11:50.103][agent/backend] [tool] auto-approving desktop_snapshot\n[2026-10-13 19:11:51.276][agent/backend] [contexto: poda determinista aplicó 21 reemplazos]\n[2026-10-13 19:11:51.279][agent/backend] [turn] requesting completion (iter=47, msgs=114, stream)\n[2026-10-13 19:12:00.804][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:12:00.804][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:12:00.804][agent/backend] [tool] auto-approving desktop_control_action\n[2026-10-13 19:12:02.096][agent/backend] [contexto: poda determinista aplicó 22 reemplazos]\n[2026-10-13 19:12:02.099][agent/backend] [turn] requesting completion (iter=48, msgs=116, stream)\n[2026-10-13 19:12:11.031][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:12:11.031][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:12:11.031][agent/backend] [tool] auto-approving desktop_controls\n[2026-10-13 19:12:13.354][agent/backend] [contexto: poda determinista aplicó 23 reemplazos]\n[2026-10-13 19:12:13.357][agent/backend] [turn] requesting completion (iter=49, msgs=118, stream)\n[2026-10-13 19:12:22.474][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:12:22.474][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 19:12:22.474][agent/backend] [tool] auto-approving desktop_snapshot\n[2026-10-13 19:12:23.648][agent/backend] [contexto: poda determinista aplicó 23 reemplazos]\n[2026-10-13 19:12:23.652][agent/backend] [turn] requesting completion (iter=50, msgs=120, stream)\n[2026-10-13 19:12:25.226][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 19:12:25.226][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 19:12:25.226][agent/backend] [tool] auto-approving desktop_controls\n[2026-10-13 19:12:27.566][agent/backend] [contexto: poda determinista aplicó 24 reemplazos]\n[2026-10-13 19:12:27.569][agent/backend] [turn] requesting completion (iter=51, msgs=122, stream)\n",
+  "finished_at_local": "2026-10-13T19:12:35.069369-03:00",
+  "cleanup_signalled_pids": [],
+  "partial_task": {
+    "task_id": "CU-EN-EDITOR",
+    "action_observed": "Exact requested line is present in the unsaved Text Editor window.",
+    "assistant_turn": "Timed out at the 300 s limit after repeated stale AT-SPI snapshot actions.",
+    "stale_snapshot_failures_observed": 16,
+    "task3_attempted": false,
+    "capture": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/receipts/runs/astra-base-r2/diagnostic-editor.png",
+    "visual_review": "Exact text visually confirmed; AT-SPI exposes only the document title/tab, not body text."
+  },
+  "review": {
+    "assessment_version": 1,
+    "outcome": "partial_or_failed",
+    "effective_cell_complete": false,
+    "case_outcomes": [
+      {
+        "case_id": "CU-ES-CALC-73x19",
+        "status": "pass"
+      },
+      {
+        "case_id": "CU-EN-EDITOR-EXACT",
+        "status": "pass_visual_partial"
+      },
+      {
+        "case_id": "CU-ES-MULTIAPP-47x29",
+        "status": "not_run"
+      }
+    ],
+    "raw_runner_successes": null,
+    "raw_runner_task_count": null,
+    "manual_visual_review": {
+      "exact_english_line_visible": true,
+      "draft_state_visible": true,
+      "atspi_document_body_accessible": false,
+      "ocr_exact_match": false,
+      "evidence": {
+        "path": "artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/receipts/runs/astra-base-r2/diagnostic-editor.png",
+        "sha256": "28281cbe20a40cd8baf7a8d423aacc2d95b973b27c3ba10ac3183bdbd416b590",
+        "visually_reviewed": true,
+        "exact_line_visible": true,
+        "draft_state_visible": true,
+        "ocr_exact_match": false
+      }
+    },
+    "review_note": "Timeout 300 s tras stale snapshots AT-SPI; tarea 3 no comenzó"
+  }
+}

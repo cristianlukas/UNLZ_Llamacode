@@ -1,0 +1,68 @@
+{
+  "task_id": "Q-20261013-MUSE-CU-E2E",
+  "captured_at_utc": "2026-10-13T21:29:24+00:00",
+  "classification": "blocked_before_test",
+  "authorization": "user explicitly requested remaining tests",
+  "queue_lock": {
+    "token": "9c0b9b2c-9b75-402f-a0f7-2c9dc134e00f",
+    "owner_verified": true
+  },
+  "session": {
+    "display": ":0",
+    "x11_tools": {
+      "xdotool": true,
+      "wmctrl": true,
+      "xrandr": true
+    },
+    "x11_visible_geometry": "4480x2520",
+    "at_spi_bus_available": true,
+    "top_level_user_windows_present": true,
+    "window_titles_saved": false,
+    "private_x_servers_available": {
+      "Xvfb": true,
+      "Xephyr": true
+    },
+    "isolated_test_session_started": false
+  },
+  "gpu_snapshot": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "utilization_pct_snapshot": 53,
+      "memory_used_mib": 1599,
+      "memory_total_mib": 24576,
+      "active_foreign_compute_gui_process": "ArtCraft",
+      "reserved_for_test": false
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "utilization_pct_snapshot": 36,
+      "memory_used_mib": 108,
+      "memory_total_mib": 24576,
+      "graphics_process": "Xorg",
+      "compute_process_list_empty": true,
+      "sm_utilization_samples_pct": [
+        38,
+        67,
+        32
+      ],
+      "reserved_for_test": false
+    }
+  ],
+  "model_runtime": {
+    "strata_or_vllm_process_found": false,
+    "checked_local_ports": [
+      8000,
+      8080,
+      8350,
+      8351,
+      8352,
+      8397
+    ],
+    "listening_endpoint_found": false
+  },
+  "decision": "do_not_load a model or inject GUI actions; the shared desktop is active and both GPUs participate in the user session",
+  "tests_started": 0,
+  "screenshots_or_user_data_captured": false
+}

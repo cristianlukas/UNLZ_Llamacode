@@ -1,0 +1,58 @@
+{
+  "run_id": "astra-base-r1",
+  "profile": "astra",
+  "launch_id": "iq3s-lch1-20261009",
+  "agent_profile_id": "31ff813d-6bf5-4400-8f82-69af4fcc64bc",
+  "arm": "base",
+  "replicate": 1,
+  "sampling": {
+    "temperature": 0.6,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0,
+    "repeat_penalty": 1.0,
+    "presence_penalty": 0.0,
+    "reasoning_effort": "medium"
+  },
+  "screen": "1440x900x24",
+  "lang": "es_AR.utf8",
+  "gtk_theme": "system default (Adwaita light observed in preflight)",
+  "started_at_local": "2026-10-13T18:53:12.134763-03:00",
+  "overlay_sha256": null,
+  "tasks": [],
+  "daemon_log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/receipts/sessions/astra-base-r1/runner-daemon.log",
+  "cleanup_signalled_pids": [],
+  "attempt": 1,
+  "finished_at_local": "2026-10-13T18:59:59.160501-03:00",
+  "infrastructure_error": "Strata did not report READY within 900 s. The engine reached expert cache fill at the timeout, but exposed no HTTP endpoint; zero model requests and zero GUI tasks were scored.",
+  "server_log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/receipts/logs/astra-strata-e2e.engine.log",
+  "review": {
+    "assessment_version": 1,
+    "outcome": "partial_or_failed",
+    "effective_cell_complete": false,
+    "case_outcomes": [
+      {
+        "case_id": "CU-ES-CALC-73x19",
+        "status": "not_run"
+      },
+      {
+        "case_id": "CU-EN-EDITOR-EXACT",
+        "status": "not_run"
+      },
+      {
+        "case_id": "CU-ES-MULTIAPP-47x29",
+        "status": "not_run"
+      }
+    ],
+    "raw_runner_successes": null,
+    "raw_runner_task_count": null,
+    "manual_visual_review": {
+      "exact_english_line_visible": null,
+      "draft_state_visible": null,
+      "atspi_document_body_accessible": false,
+      "ocr_exact_match": null,
+      "evidence": null
+    },
+    "review_note": "Strata no informó READY en 900 s; cero requests"
+  }
+}

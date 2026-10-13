@@ -1,0 +1,440 @@
+{
+  "task_id": "Q-20261013-MUSE-CU-E2E",
+  "date": "2026-10-13",
+  "status": "complete_screening_provisional",
+  "question": "Does the Muse safe-transfer overlay transfer to real desktop task completion relative to the Computer Usage base prompt?",
+  "environment": {
+    "display": "private Xvfb :97; user display :0 was not controlled",
+    "desktop_profile_id": "31ff813d-6bf5-4400-8f82-69af4fcc64bc",
+    "apps": [
+      "GNOME Calculator",
+      "GNOME Text Editor"
+    ],
+    "execution_tools": "desktop_* only",
+    "gpu_or_runtime_cleanup": "ASTRA and Q4 Strata servers stopped; no test processes, Xvfb :97, or listeners on 8350/8898 remained",
+    "model_input_modalities": {
+      "ASTRA": [
+        "text"
+      ],
+      "Q4": [
+        "text"
+      ]
+    },
+    "screenshots_sent_as_model_input": false
+  },
+  "models": [
+    {
+      "name": "ASTRA Flash-Next IQ3_S calibrado",
+      "api_model_id": "qwen3.8-flash-next-astra-iq3_s-calibrated",
+      "profile_fingerprint": "864c6ba74e684940f34b5519c5e53a36412e386a9b160fb22ed7c2640ee85fa4",
+      "runtime": "Strata 0.1.41, commit fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
+      "model_shards_sha256": [
+        "4c1eb2ceb4915e1192f4f386021897bde56a97f40a0bb78bb86465e0f7d2aca3",
+        "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113"
+      ]
+    },
+    {
+      "name": "Flash-Next Q4 UD-Q4_K_XL",
+      "api_model_id": "qwen3.8-flash-next-unsloth-ud-q4_k_xl",
+      "profile_fingerprint": "09d45e63b1f548df63775d947a051a70ca66561bb5a04bcf292050eb8bcb2958",
+      "runtime": "Strata 0.1.41, commit fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
+      "model_shards_sha256": [
+        "4448186216b3af4cc558bbce2c3213f01608f8f8b2e5267a9767971dd3ec8082",
+        "3f342f1c1580473f1ee94ddd5b28206e8c07a70fa1a366f59d1d6c922919a6c9",
+        "56758f40269cad5cd9b0d3d6fbae0f40f6d5be6de49e4ab392dbe83157d9cbd3",
+        "753bda48b98ba4f1636134a90a967de1b2d3908a236c026e464777342e53510a"
+      ]
+    }
+  ],
+  "protocol": {
+    "planned_cells": 12,
+    "planned_replicates_per_model_arm": 3,
+    "arms": [
+      "base computer-use prompt",
+      "base plus muse-safe-transfer-v1 overlay"
+    ],
+    "overlay_sha256": "9fb742d295a4fbc155b18ad2216d21d5349184ef80b8eec8a092416ce0cfda97",
+    "sampling": {
+      "temperature": 0.6,
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repeat_penalty": 1.0,
+      "presence_penalty": 0.0,
+      "reasoning": "medium",
+      "configured_context": 131072
+    },
+    "cases": [
+      {
+        "id": "CU-ES-CALC-73x19",
+        "success_condition": "Calculator shows 1387 for 73×19."
+      },
+      {
+        "id": "CU-EN-EDITOR-EXACT",
+        "success_condition": "Exact English line visible in unsaved Text Editor Draft."
+      },
+      {
+        "id": "CU-ES-MULTIAPP-47x29",
+        "success_condition": "Calculator shows 1363 for 47×29 and editor contains Resultado verificado: 1363."
+      }
+    ],
+    "presentation_variants": [
+      "1440x900, es_AR, Adwaita light",
+      "1280x800, C.UTF-8, Adwaita dark",
+      "1024x768, es_AR, Adwaita light"
+    ],
+    "runner_sha256": "0304605231a8a71bb88ace17ab88234b5a71579b48519a239105f2b50bed5db2",
+    "config_sha256": {
+      "astra-strata-e2e.json": "c6e04a7edb7bd14cd36767d5c0cd361d66d82ca31ee192026795cf716d12109a",
+      "astra-strata-e2e-retry.json": "aeec01aad1af21c383ee974bb5bb5039ef0a72d76f98a30c675184e151e24aba",
+      "q4-strata-e2e.json": "dc2d5f807d26993e2243d18d92f65bc6884ba3a7be408a72c0f7f15c59cf7535",
+      "q4-strata-e2e-retry.json": "59a6d4e13ce18b33612eb19b42e5f8bd8fa77f6f413d053d1a4c1d742c31d093"
+    }
+  },
+  "effective_results": {
+    "complete_cells": 10,
+    "planned_cells": 12,
+    "by_model_and_arm": {
+      "ASTRA_base": {
+        "complete": 2,
+        "planned": 3
+      },
+      "ASTRA_overlay": {
+        "complete": 3,
+        "planned": 3
+      },
+      "Q4_base": {
+        "complete": 2,
+        "planned": 3
+      },
+      "Q4_overlay": {
+        "complete": 3,
+        "planned": 3
+      }
+    },
+    "cases_in_10_complete_cells": {
+      "calculator_1387": 10,
+      "english_exact_line_manual_visual": 10,
+      "calculator_1363_and_spanish_line": 10
+    },
+    "runner_ocr_success_counter": "2/3 in each fully executed session because OCR did not match the editor body; exact content was confirmed visually.",
+    "incomplete_cells": [
+      {
+        "model": "ASTRA",
+        "arm": "base",
+        "replicate": 2,
+        "reason": "original run timed out at editor after stale AT-SPI snapshots; retry missed Calculator and did not verify case 3"
+      },
+      {
+        "model": "Q4",
+        "arm": "base",
+        "replicate": 2,
+        "reason": "original run timed out at editor; retry left a blank New Document and timed out"
+      }
+    ]
+  },
+  "attempt_count": 17,
+  "attempts": [
+    {
+      "run_id": "astra-base-r1",
+      "arm": "base",
+      "replicate": 1,
+      "attempt": 1,
+      "outcome": "partial_or_failed",
+      "effective_cell_complete": false,
+      "editor_exact_line_visible": null,
+      "editor_evidence": null
+    },
+    {
+      "run_id": "astra-base-r1-try2",
+      "arm": "base",
+      "replicate": 1,
+      "attempt": 2,
+      "outcome": "partial_or_failed",
+      "effective_cell_complete": false,
+      "editor_exact_line_visible": null,
+      "editor_evidence": null
+    },
+    {
+      "run_id": "astra-base-r1-try3",
+      "arm": "base",
+      "replicate": 1,
+      "attempt": 3,
+      "outcome": "complete_pass",
+      "effective_cell_complete": true,
+      "editor_exact_line_visible": true,
+      "editor_evidence": {
+        "path": "artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/receipts/runs/astra-base-r1-try3/stage2-CU-EN-EDITOR-0x00c00004.png",
+        "sha256": "896329f628a2e1b1a3566a92211800fea1ac68b9ae1ea36ad1f9b8e69cefe4ec",
+        "visually_reviewed": true,
+        "exact_line_visible": true,
+        "draft_state_visible": true,
+        "ocr_exact_match": false
+      }
+    },
+    {
+      "run_id": "astra-base-r2",
+      "arm": "base",
+      "replicate": 2,
+      "attempt": 1,
+      "outcome": "partial_or_failed",
+      "effective_cell_complete": false,
+      "editor_exact_line_visible": true,
+      "editor_evidence": {
+        "path": "artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/receipts/runs/astra-base-r2/diagnostic-editor.png",
+        "sha256": "28281cbe20a40cd8baf7a8d423aacc2d95b973b27c3ba10ac3183bdbd416b590",
+        "visually_reviewed": true,
+        "exact_line_visible": true,
+        "draft_state_visible": true,
+        "ocr_exact_match": false
+      }
+    },
+    {
+      "run_id": "astra-base-r2-try2",
+      "arm": "base",
+      "replicate": 2,
+      "attempt": 2,
+      "outcome": "partial_or_failed",
+      "effective_cell_complete": false,
+      "editor_exact_line_visible": true,
+      "editor_evidence": {
+        "path": "artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/receipts/runs/astra-base-r2-try2/stage2-CU-EN-EDITOR-0x00600004.png",
+        "sha256": "28281cbe20a40cd8baf7a8d423aacc2d95b973b27c3ba10ac3183bdbd416b590",
+        "visually_reviewed": true,
+        "exact_line_visible": true,
+        "draft_state_visible": true,
+        "ocr_exact_match": false
+      }
+    },
+    {
+      "run_id": "astra-base-r3",
+      "arm": "base",
+      "replicate": 3,
+      "attempt": 1,
+      "outcome": "complete_pass",
+      "effective_cell_complete": true,
+      "editor_exact_line_visible": true,
+      "editor_evidence": {
+        "path": "artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/receipts/runs/astra-base-r3/stage2-CU-EN-EDITOR-0x00c00004.png",
+        "sha256": "896329f628a2e1b1a3566a92211800fea1ac68b9ae1ea36ad1f9b8e69cefe4ec",
+        "visually_reviewed": true,
+        "exact_line_visible": true,
+        "draft_state_visible": true,
+        "ocr_exact_match": false
+      }
+    },
+    {
+      "run_id": "astra-muse_overlay-r1",
+      "arm": "muse_overlay",
+      "replicate": 1,
+      "attempt": 1,
+      "outcome": "partial_or_failed",
+      "effective_cell_complete": false,
+      "editor_exact_line_visible": true,
+      "editor_evidence": {
+        "path": "artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/receipts/runs/astra-muse_overlay-r1/partial-CU-EN-EDITOR-0x00c00004.png",
+        "sha256": "896329f628a2e1b1a3566a92211800fea1ac68b9ae1ea36ad1f9b8e69cefe4ec",
+        "visually_reviewed": true,
+        "exact_line_visible": true,
+        "draft_state_visible": true,
+        "ocr_exact_match": false
+      }
+    },
+    {
+      "run_id": "astra-muse_overlay-r1-try2",
+      "arm": "muse_overlay",
+      "replicate": 1,
+      "attempt": 2,
+      "outcome": "complete_pass",
+      "effective_cell_complete": true,
+      "editor_exact_line_visible": true,
+      "editor_evidence": {
+        "path": "artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/receipts/runs/astra-muse_overlay-r1-try2/stage2-CU-EN-EDITOR-0x00c00004.png",
+        "sha256": "896329f628a2e1b1a3566a92211800fea1ac68b9ae1ea36ad1f9b8e69cefe4ec",
+        "visually_reviewed": true,
+        "exact_line_visible": true,
+        "draft_state_visible": true,
+        "ocr_exact_match": false
+      }
+    },
+    {
+      "run_id": "astra-muse_overlay-r2",
+      "arm": "muse_overlay",
+      "replicate": 2,
+      "attempt": 1,
+      "outcome": "complete_pass",
+      "effective_cell_complete": true,
+      "editor_exact_line_visible": true,
+      "editor_evidence": {
+        "path": "artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/receipts/runs/astra-muse_overlay-r2/stage2-CU-EN-EDITOR-0x00c00004.png",
+        "sha256": "28281cbe20a40cd8baf7a8d423aacc2d95b973b27c3ba10ac3183bdbd416b590",
+        "visually_reviewed": true,
+        "exact_line_visible": true,
+        "draft_state_visible": true,
+        "ocr_exact_match": false
+      }
+    },
+    {
+      "run_id": "astra-muse_overlay-r3",
+      "arm": "muse_overlay",
+      "replicate": 3,
+      "attempt": 1,
+      "outcome": "complete_pass",
+      "effective_cell_complete": true,
+      "editor_exact_line_visible": true,
+      "editor_evidence": {
+        "path": "artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/receipts/runs/astra-muse_overlay-r3/stage2-CU-EN-EDITOR-0x00c00004.png",
+        "sha256": "896329f628a2e1b1a3566a92211800fea1ac68b9ae1ea36ad1f9b8e69cefe4ec",
+        "visually_reviewed": true,
+        "exact_line_visible": true,
+        "draft_state_visible": true,
+        "ocr_exact_match": false
+      }
+    },
+    {
+      "run_id": "q4-base-r1",
+      "arm": "base",
+      "replicate": 1,
+      "attempt": 1,
+      "outcome": "complete_pass",
+      "effective_cell_complete": true,
+      "editor_exact_line_visible": true,
+      "editor_evidence": {
+        "path": "artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/receipts/runs/q4-base-r1/stage2-CU-EN-EDITOR-0x00c00004.png",
+        "sha256": "896329f628a2e1b1a3566a92211800fea1ac68b9ae1ea36ad1f9b8e69cefe4ec",
+        "visually_reviewed": true,
+        "exact_line_visible": true,
+        "draft_state_visible": true,
+        "ocr_exact_match": false
+      }
+    },
+    {
+      "run_id": "q4-base-r2",
+      "arm": "base",
+      "replicate": 2,
+      "attempt": 1,
+      "outcome": "partial_or_failed",
+      "effective_cell_complete": false,
+      "editor_exact_line_visible": true,
+      "editor_evidence": {
+        "path": "artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/receipts/runs/q4-base-r2/partial-CU-EN-EDITOR-0x00c00004.png",
+        "sha256": "28281cbe20a40cd8baf7a8d423aacc2d95b973b27c3ba10ac3183bdbd416b590",
+        "visually_reviewed": true,
+        "exact_line_visible": true,
+        "draft_state_visible": true,
+        "ocr_exact_match": false
+      }
+    },
+    {
+      "run_id": "q4-base-r2-try2",
+      "arm": "base",
+      "replicate": 2,
+      "attempt": 2,
+      "outcome": "partial_or_failed",
+      "effective_cell_complete": false,
+      "editor_exact_line_visible": false,
+      "editor_evidence": {
+        "path": "artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/receipts/runs/q4-base-r2-try2/partial-CU-EN-EDITOR-0x00c00004.png",
+        "sha256": "39a532b068c4d8850dba95b254f42578a2cd24fa8837bb82fcec3bee689aaea8",
+        "visually_reviewed": true,
+        "exact_line_visible": false,
+        "draft_state_visible": false,
+        "ocr_exact_match": null
+      }
+    },
+    {
+      "run_id": "q4-base-r3",
+      "arm": "base",
+      "replicate": 3,
+      "attempt": 1,
+      "outcome": "complete_pass",
+      "effective_cell_complete": true,
+      "editor_exact_line_visible": true,
+      "editor_evidence": {
+        "path": "artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/receipts/runs/q4-base-r3/stage2-CU-EN-EDITOR-0x00c00004.png",
+        "sha256": "896329f628a2e1b1a3566a92211800fea1ac68b9ae1ea36ad1f9b8e69cefe4ec",
+        "visually_reviewed": true,
+        "exact_line_visible": true,
+        "draft_state_visible": true,
+        "ocr_exact_match": false
+      }
+    },
+    {
+      "run_id": "q4-muse_overlay-r1",
+      "arm": "muse_overlay",
+      "replicate": 1,
+      "attempt": 1,
+      "outcome": "complete_pass",
+      "effective_cell_complete": true,
+      "editor_exact_line_visible": true,
+      "editor_evidence": {
+        "path": "artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/receipts/runs/q4-muse_overlay-r1/stage2-CU-EN-EDITOR-0x00c00004.png",
+        "sha256": "896329f628a2e1b1a3566a92211800fea1ac68b9ae1ea36ad1f9b8e69cefe4ec",
+        "visually_reviewed": true,
+        "exact_line_visible": true,
+        "draft_state_visible": true,
+        "ocr_exact_match": false
+      }
+    },
+    {
+      "run_id": "q4-muse_overlay-r2",
+      "arm": "muse_overlay",
+      "replicate": 2,
+      "attempt": 1,
+      "outcome": "complete_pass",
+      "effective_cell_complete": true,
+      "editor_exact_line_visible": true,
+      "editor_evidence": {
+        "path": "artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/receipts/runs/q4-muse_overlay-r2/stage2-CU-EN-EDITOR-0x00c00004.png",
+        "sha256": "28281cbe20a40cd8baf7a8d423aacc2d95b973b27c3ba10ac3183bdbd416b590",
+        "visually_reviewed": true,
+        "exact_line_visible": true,
+        "draft_state_visible": true,
+        "ocr_exact_match": false
+      }
+    },
+    {
+      "run_id": "q4-muse_overlay-r3",
+      "arm": "muse_overlay",
+      "replicate": 3,
+      "attempt": 1,
+      "outcome": "complete_pass",
+      "effective_cell_complete": true,
+      "editor_exact_line_visible": true,
+      "editor_evidence": {
+        "path": "artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/receipts/runs/q4-muse_overlay-r3/stage2-CU-EN-EDITOR-0x00c00004.png",
+        "sha256": "896329f628a2e1b1a3566a92211800fea1ac68b9ae1ea36ad1f9b8e69cefe4ec",
+        "visually_reviewed": true,
+        "exact_line_visible": true,
+        "draft_state_visible": true,
+        "ocr_exact_match": false
+      }
+    }
+  ],
+  "category_coverage": {
+    "computer_usage_gui": "tested in real desktop apps, 10/12 effective cells complete",
+    "vision": "not tested; served models are text-only and screenshots were not model input",
+    "coding_and_agents": "not tested; outside prompt-only Computer Usage scope",
+    "audio_ingi_charla": "not tested",
+    "long_context": "not tested; short fixtures only, despite configured max context",
+    "independent_speed": "not tested; existing textual A/B median latency deltas remain +6.83% ASTRA and +9.87% Q4, above +5% gate"
+  },
+  "decision": {
+    "promote_overlay": false,
+    "change_product_profiles_prompts_harness": false,
+    "reason": "Base arm is missing replicate 2 for both models, so the 6/6 overlay vs 4/6 base contrast is unbalanced. Prior text-only A/B showed latency increases above the +5% gate. No independent vision evidence."
+  },
+  "repository_tests": {
+    "build_run": false,
+    "tests_run": false,
+    "reason": "No C++, QML, core, or production harness files changed; this work executed the isolated GUI evaluation itself."
+  },
+  "limitations": [
+    "Text Editor body was not accessible via AT-SPI; screenshots were manually inspected.",
+    "OCR exact-line match failed on Editor screenshots, so raw 2/3 runner counter is not a complete measure of GUI success.",
+    "No dedicated hostile prompt-injection suite, external-action confirmation test, audio, long-context retrieval, coding/agent evaluation, or independent speed benchmark.",
+    "Do not claim that the overlay improves Computer Usage or that the text-only models passed vision."
+  ],
+  "report": "artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/RESULTS.md",
+  "plan": "artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/PLAN.md"
+}
