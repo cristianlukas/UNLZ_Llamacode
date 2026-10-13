@@ -808,6 +808,7 @@ public:
     void onCharlaAgentLifecycle(const QVariantMap &event);
     void onCharlaAgentRunningChanged(bool running);
     void setCharlaActiveForTest(bool on) { m_charlaActive = on; }
+    class VoiceController *voiceForTest() { ensureVoice(); return m_voice; }
     QString charlaLastPromptForTest() const { return m_charlaLastPrompt; }
     QString charlaPendingTranscriptForTest() const { return m_charlaPendingTranscript; }
     bool charlaAwaitingApprovalForTest() const { return !m_charlaPendingApproval.isEmpty(); }
@@ -1978,6 +1979,9 @@ private:
     // Puerto del whisper gestionado: estable mientras el proceso vive; si no,
     // el default del motor salvo que choque con el LLM activo u otro proceso.
     int managedSttPort(const VoiceConfig &c);
+    // Habla en vivo el texto del agente durante Charla (salvo respuestas
+    // provisionales; ver IAgentBackend::provisionalAnswerPending).
+    void routeAgentStreamToCharla(class IAgentBackend *b, int idx, const QString &content);
     QProcess *m_externalSttProc = nullptr; // endpoint STT local configurado por el usuario
     QProcess *m_externalTtsProc = nullptr; // endpoint TTS local configurado por el usuario
     QProcess *m_pocketInstallProc = nullptr; // venv + paquete + cache inicial

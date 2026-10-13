@@ -7,6 +7,7 @@
 //   - run_shell async (echo trivial).
 
 #include <QtTest>
+#include "core/automation/DesktopAutomationBackend.h"
 #include <QTemporaryDir>
 #include <QSignalSpy>
 #include <QJsonObject>
@@ -96,6 +97,8 @@ private slots:
     void graphPacketAndDoctor_areExposedByTool();
     void recentActions_tailsEventLogForSession();
     void desktopWindows_returnsStructuredInventory();
+    void desktopNewTools_validateBeforeTouchingTheDesktop();
+    void desktopClipboard_roundTripRestoresUserClipboard();
     void desktopControls_invalidWindowErrorsCleanly();
     void desktopLaunch_emptyAppErrorsCleanly();
     void honeyHandoff_densifiesMasterAndSubPrompts();
@@ -770,6 +773,62 @@ void AgentToolsTests::recentActions_tailsEventLogForSession()
     QVariantMap empty = call("recent_actions", {});
     QVERIFY(empty.value("ok").toBool());
     QVERIFY(empty.value("result").toString().contains(QStringLiteral("sin eventos")));
+}
+
+// Las tools nuevas de computer use validan alcance, coordenadas y modificadores
+// ANTES de mandar input: estos casos no deben mover el mouse ni hacer clics.
+void AgentToolsTests::desktopNewTools_validateBeforeTouchingTheDesktop()
+{
+    QVariantMap r = call("desktop_read_text",
+                         {{"scope_kind", "window"}, {"target_id", "zzznothex"}});
+    QVERIFY(!r.value("ok").toBool());
+    QVERIFY(r.value("result").toString().startsWith(QStringLiteral("[desktop_read_text:")));
+
+    QVariantMap h = call("desktop_hover",
+                         {{"scope_kind", "screen"}, {"target_id", "0"}, {"x", 1.7}, {"y", 0.5}});
+    QVERIFY(!h.value("ok").toBool());
+    QVERIFY(h.value("result").toString().contains(QStringLiteral("normalizadas")));
+
+    QVariantMap c = call("desktop_click",
+                         {{"scope_kind", "window"}, {"target_id", "zzznothex"},
+                          {"x", 0.5}, {"y", 0.5}, {"modifiers", QJsonArray{"HYPER"}}});
+    QVERIFY(!c.value("ok").toBool());
+    QVERIFY(c.value("result").toString().startsWith(QStringLiteral("[desktop_click:")));
+
+    QVariantMap s = call("desktop_scroll",
+                         {{"scope_kind", "window"}, {"target_id", "zzznothex"},
+                          {"x", 0.5}, {"y", 0.5}, {"delta", -120}});
+    QVERIFY(!s.value("ok").toBool());   // no hay alcance → ni hover ni rueda
+    QVERIFY(s.value("result").toString().startsWith(QStringLiteral("[desktop_scroll:")));
+
+    // Sin target_id y sin ninguna ventana elegida por el agente, NO se teclea
+    // (antes escribía en la app que el usuario tuviera adelante).
+    QVariantMap t = call("desktop_type", {{"text", "no debería escribirse"}});
+    QVERIFY(!t.value("ok").toBool());
+    QVERIFY(t.value("result").toString().contains(QStringLiteral("NO tecleé")));
+    QVariantMap k = call("desktop_key", {{"key", "ENTER"}});
+    QVERIFY(!k.value("ok").toBool());
+    QVERIFY(k.value("result").toString().contains(QStringLiteral("NO tecleé")));
+
+    QVariantMap bad = call("desktop_clipboard", {{"op", "borrar"}});
+    QVERIFY(!bad.value("ok").toBool());
+    QVERIFY(bad.value("result").toString().contains(QStringLiteral("op inválida")));
+}
+
+// get/set del portapapeles real; se restaura lo que el usuario tenía copiado.
+void AgentToolsTests::desktopClipboard_roundTripRestoresUserClipboard()
+{
+    QString before;
+    QString err;
+    if (!DesktopAutomationBackend::clipboardText(&before, &err))
+        QSKIP(qPrintable(QStringLiteral("portapapeles no disponible: ") + err));
+    const QString probe = QStringLiteral("LlamaCode ✓ portapapeles 123");
+    QVariantMap set = call("desktop_clipboard", {{"op", "set"}, {"text", probe}});
+    QVariantMap get = call("desktop_clipboard", {{"op", "get"}});
+    DesktopAutomationBackend::setClipboardText(before, &err);   // restaurar siempre
+    QVERIFY(set.value("ok").toBool());
+    QVERIFY(get.value("ok").toBool());
+    QVERIFY(get.value("result").toString().contains(probe));
 }
 
 void AgentToolsTests::desktopWindows_returnsStructuredInventory()

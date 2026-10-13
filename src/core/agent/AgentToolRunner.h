@@ -168,6 +168,9 @@ private:
     QString m_auxiliaryBearer;
     bool m_livePreviewEnabled = false;
     QString m_sessionId;           // sesión activa (filtro de recent_actions)
+    // Última ventana que el AGENTE eligió (desktop_focus, o un clic/hover con
+    // scope_kind=window). desktop_type/desktop_key sólo teclean ahí.
+    QString m_agentFocusedWindow;
     QString m_correlationId;
     QVariantList m_mailAccounts;   // cuentas de correo con password resuelto
     QVariantList m_webProviders;   // proveedores REST opt-in (p.ej. Camofox)

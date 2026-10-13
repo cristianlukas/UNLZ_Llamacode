@@ -16,6 +16,9 @@ public:
     static QVariantList screens();
     static QVariantList windows();
     static QVariantMap targetInfo(const QString &kind, const QString &targetId);
+    // Rectángulo del alcance en el MISMO espacio que usan click/readText: para
+    // normalizar coordenadas que después vuelvan a click() sin desfasaje DPI.
+    static QRect scopeBounds(const QString &kind, const QString &targetId);
     // Snapshot compacto y determinista de un alcance. El snapshotId cambia si
     // cambia la ventana, su geometría o el árbol UIA; las acciones pueden usarlo
     // como stale guard antes de tocar el escritorio.
@@ -60,10 +63,37 @@ public:
     static bool stroke(const QString &kind, const QString &targetId,
                        const QVariantList &points, const QString &button = QStringLiteral("left"),
                        int holdMs = 8, QString *error = nullptr, QVariantMap *trace = nullptr);
+    // Clic con N pulsaciones (2 = doble, 3 = triple: seleccionar palabra/línea)
+    // y modificadores sostenidos (CTRL/SHIFT/ALT: selección múltiple, abrir en
+    // pestaña nueva...). Mismas coordenadas normalizadas que click().
+    static bool clickEx(const QString &kind, const QString &targetId, double x, double y,
+                        const QString &button, int clickCount, const QStringList &modifiers,
+                        QString *error = nullptr, QVariantMap *trace = nullptr);
+    // Mueve el puntero a un punto normalizado del alcance sin clickear (tooltips,
+    // menús que se abren al pasar el mouse, revelar controles ocultos).
+    static bool hover(const QString &kind, const QString &targetId, double x, double y,
+                      QString *error = nullptr, QVariantMap *trace = nullptr);
+    // Escribe texto. '\n' se envía como ENTER y '\t' como TAB (muchas apps
+    // ignoran esos caracteres inyectados como Unicode); '\r' se descarta.
     static bool typeText(const QString &text, QString *error = nullptr);
     static bool pressKey(const QString &key, const QStringList &modifiers = {},
                          QString *error = nullptr);
     static bool scroll(int delta, QString *error = nullptr);
+    // Scroll APUNTADO: si se pasa un punto (x/y >= 0, normalizado en el alcance)
+    // primero ubica el puntero ahí, porque la rueda desplaza lo que está DEBAJO
+    // del mouse, no la ventana enfocada. horizontal = rueda horizontal.
+    static bool scrollAt(const QString &kind, const QString &targetId, double x, double y,
+                         int delta, bool horizontal, QString *error = nullptr);
+    // Portapapeles de texto del sistema (independiente del hilo de Qt).
+    // ¿El control con foco ya tiene texto? 1 = sí, 0 = vacío, -1 = no se pudo
+    // determinar (sin UIA, Linux, control sin Value/TextPattern). Sólo mira si
+    // hay contenido: no devuelve ni conserva el texto (privacidad).
+    static int focusedControlHasText();
+    // Id (mismo formato que windows()) de la ventana top-level en primer plano;
+    // "" si no se puede determinar.
+    static QString foregroundWindowId();
+    static bool clipboardText(QString *text, QString *error = nullptr);
+    static bool setClipboardText(const QString &text, QString *error = nullptr);
     static QVariantMap cursorState();
 
     // Posición del cursor en píxeles FISICOS — el espacio en el que hablan TODAS

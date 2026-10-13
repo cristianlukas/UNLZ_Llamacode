@@ -203,6 +203,64 @@ bool isDesktopTool(const QString &name)
     return name.startsWith(QStringLiteral("desktop_"));
 }
 
+QString inferScopeKind(const QString &explicitKind, bool targetIsWindow,
+                       const QString &fallback)
+{
+    const QString k = explicitKind.trimmed().toLower();
+    if (k == QLatin1String("window") || k == QLatin1String("screen")) return k;
+    return targetIsWindow ? QStringLiteral("window") : fallback;
+}
+
+bool typingTargetAllowed(const QString &foregroundId, const QString &agentFocusedId)
+{
+    if (agentFocusedId.isEmpty()) return false;
+    return foregroundId.isEmpty() || foregroundId.compare(agentFocusedId, Qt::CaseInsensitive) == 0;
+}
+
+int clampClickCount(int clickCount)
+{
+    return qBound(1, clickCount, 3);
+}
+
+static QString foldForMatch(const QString &s)
+{
+    QString d = s.normalized(QString::NormalizationForm_D);
+    QString out;
+    out.reserve(d.size());
+    for (const QChar c : d)
+        if (c.category() != QChar::Mark_NonSpacing) out.append(c.toLower());
+    return out;
+}
+
+QString formatReadText(const QList<TextLine> &lines, const QRect &bounds,
+                       const QString &query, int maxLines)
+{
+    const QString q = foldForMatch(query.trimmed());
+    const int cap = qBound(1, maxLines, 400);
+    QStringList out;
+    int matched = 0;
+    for (const TextLine &l : lines) {
+        const QString text = l.text.simplified();
+        if (text.isEmpty()) continue;
+        if (!q.isEmpty() && !foldForMatch(text).contains(q)) continue;
+        ++matched;
+        if (out.size() >= cap) continue;
+        // QRectF: QRect::center() redondea hacia abajo (convención de píxeles
+        // inclusivos) y corre el punto medio un píxel.
+        const QPointF c = QRectF(l.rect).center();
+        const double nx = bounds.width() > 0 ? (c.x() - bounds.x()) / double(bounds.width()) : 0.0;
+        const double ny = bounds.height() > 0 ? (c.y() - bounds.y()) / double(bounds.height()) : 0.0;
+        out << QStringLiteral("(%1, %2)  %3")
+                   .arg(qBound(0.0, nx, 1.0), 0, 'f', 3)
+                   .arg(qBound(0.0, ny, 1.0), 0, 'f', 3)
+                   .arg(text);
+    }
+    QString head = QStringLiteral("%1 renglón(es)").arg(matched);
+    if (matched > out.size())
+        head += QStringLiteral(" (mostrando %1; filtrá con query)").arg(out.size());
+    return head + QLatin1Char('\n') + out.join(QLatin1Char('\n'));
+}
+
 bool isDesktopReadTool(const QString &name)
 {
     return name == QLatin1String("desktop_windows")
@@ -211,6 +269,7 @@ bool isDesktopReadTool(const QString &name)
         || name == QLatin1String("desktop_wait_image")
         || name == QLatin1String("desktop_assert_image")
         || name == QLatin1String("desktop_observe")
+        || name == QLatin1String("desktop_read_text")
         || name == QLatin1String("desktop_wait")
         || name == QLatin1String("desktop_wait_for")
         || name == QLatin1String("desktop_assert");

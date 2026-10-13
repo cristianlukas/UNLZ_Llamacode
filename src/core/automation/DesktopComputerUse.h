@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QJsonObject>
+#include <QList>
 #include <QLockFile>
 #include <QRect>
 #include <QString>
@@ -114,6 +115,28 @@ ActionReceipt makeReceipt(const QString &tool, const QJsonObject &args, bool ok,
                           const QVariantMap &target = {});
 
 bool isDesktopTool(const QString &name);
+// Alcance efectivo de una tool de escritorio. Si el modelo no pasó scope_kind
+// pero el target_id es una VENTANA conocida, es "window": con el default
+// "screen" desktop_read_text OCReaba la pantalla entera (otras apps incluidas)
+// en vez de la ventana pedida.
+QString inferScopeKind(const QString &explicitKind, bool targetIsWindow,
+                       const QString &fallback);
+// ¿Se puede teclear sin target_id? Sólo si la ventana en primer plano es la que
+// el propio agente enfocó/clickeó en esta sesión. Sin esto desktop_type y
+// desktop_key escribían en CUALQUIER app que el usuario tuviera adelante (un
+// chat, el navegador...). foreground vacío = desconocido (Linux): se acepta
+// sólo si el agente enfocó algo antes.
+bool typingTargetAllowed(const QString &foregroundId, const QString &agentFocusedId);
+// 1..3 pulsaciones (simple, doble, triple); cualquier otro valor se acota.
+int clampClickCount(int clickCount);
+// Texto OCR de un alcance para el modelo: una línea por renglón leído, con su
+// centro NORMALIZADO 0..1 en ese alcance (las mismas coordenadas que acepta
+// desktop_click / desktop_hover). Filtra por `query` (contiene, sin acentos ni
+// mayúsculas) y corta a maxLines. Así un modelo SIN visión puede leer la
+// pantalla y apuntar.
+struct TextLine { QString text; QRect rect; };
+QString formatReadText(const QList<TextLine> &lines, const QRect &bounds,
+                       const QString &query, int maxLines);
 bool isDesktopReadTool(const QString &name);
 bool isDesktopActionTool(const QString &name);
 bool isSensitiveTarget(const QVariantMap &target);

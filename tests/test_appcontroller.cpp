@@ -3,6 +3,7 @@
 // que toda feature con diálogo tenga un camino api/headless equivalente.
 
 #include <QtTest>
+#include "core/voice/VoiceController.h"
 #include <QStandardPaths>
 #include <QTemporaryDir>
 #include <QTemporaryFile>
@@ -73,6 +74,8 @@ public:
 
     QString adapter() const override { return QStringLiteral("llamaagent"); }
     bool running() const override { return m_running; }
+    bool provisionalAnswerPending() const override { return m_provisional; }
+    bool m_provisional = false;
     void start(const AgentContext &) override { m_running = true; emit runningChanged(); }
     void stop() override { m_running = false; emit runningChanged(); }
     void newSession() override { m_msgs.clear(); }   // sesión limpia por iteración
@@ -262,6 +265,7 @@ private slots:
     void charlaJarvisApprovesByVoiceAndCuesSlowTools();
     void charlaJarvisQueuesTurnWhileAgentStarts();
     void charlaJarvisStopsOrQueuesWhileAgentWorks();
+    void charlaDoesNotSpeakProvisionalAnswers();
     void ocrStatusAlwaysExplainsItself();
     void agentLevels_contextBudgetLadder();
     void privacyModeHidesAndBlocksNetworkTools();
@@ -1617,6 +1621,32 @@ void AppControllerTests::charlaCursorOcrIsOptInAndDoesNotHijackChat()
 
 // Modo JARVIS: con el agente usando la PC, una aprobación no puede depender de
 // un clic (el usuario está hablando) y una tool lenta no puede ser silencio.
+// Tras una acción de escritorio sin verificar, la respuesta en curso puede ser
+// retenida por la compuerta de verificación y reemplazada. Hablarla en vivo
+// hacía que en voz se escucharan 2-3 respuestas por turno ("looping").
+void AppControllerTests::charlaDoesNotSpeakProvisionalAnswers()
+{
+    AppController app;
+    auto *fake = new FakeAgentBackend(&app);
+    fake->start(AgentContext{});
+    app.setTestAgentBackend(fake);
+    app.setCharlaActiveForTest(true);
+    QVERIFY(app.dispatchCharlaTranscript(QStringLiteral("abrí la calculadora")));
+    QVERIFY(app.charlaUseAgentForTest());
+    VoiceController *voice = app.voiceForTest();
+    QVERIFY(voice);
+    voice->setStateForTest(VoiceController::Thinking);
+
+    const QString text = QStringLiteral("Listo, la calculadora ya está abierta y lista. ");
+    fake->m_provisional = true;
+    emit fake->streamingText(7, text);
+    QCOMPARE(voice->streamConsumedForTest(), 0);      // provisional: no se habla
+
+    fake->m_provisional = false;
+    emit fake->streamingText(8, text);
+    QVERIFY(voice->streamConsumedForTest() > 0);     // verificada: se habla en vivo
+}
+
 void AppControllerTests::charlaJarvisApprovesByVoiceAndCuesSlowTools()
 {
     AppController app;

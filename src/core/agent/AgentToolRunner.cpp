@@ -18,6 +18,7 @@
 #include "core/DocumentExtractor.h" // hybrid_search include_docs: pdf/office al índice
 #include "WebFetchProvider.h"
 #include "core/automation/DesktopAutomationBackend.h"
+#include "core/automation/OcrTypes.h"
 #include "core/automation/DesktopComputerUse.h"
 #include "core/automation/DesktopRecoveryPolicy.h"
 #include "core/automation/AutomationArtifactStore.h"
@@ -56,6 +57,17 @@
 #include <QtSql/QSqlQuery>
 #include <cmath>
 #include <cstring>
+
+// Alcance efectivo: el explícito, o "window" si el target_id es una ventana.
+static QString desktopScopeKind(const QJsonObject &args, const QString &fallback)
+{
+    const QString target = args.value(QStringLiteral("target_id")).toString();
+    const bool isWindow = !target.isEmpty()
+        && !DesktopAutomationBackend::targetInfo(QStringLiteral("window"), target).isEmpty();
+    return DesktopComputerUse::inferScopeKind(
+        args.value(QStringLiteral("scope_kind")).toString(), isWindow, fallback);
+}
+
 
 static const QString kMcpPrefix = QStringLiteral("mcp__");
 
@@ -1798,7 +1810,7 @@ void AgentToolRunner::executeTool(const QString &callId, const QString &name,
                 .arg(QDateTime::currentMSecsSinceEpoch());
             QString captureError;
             const QString saved = DesktopAutomationBackend::saveCapture(
-                args.value(QStringLiteral("scope_kind")).toString(QStringLiteral("screen")),
+                desktopScopeKind(args, QStringLiteral("screen")),
                 args.value(QStringLiteral("target_id")).toString(), path, &captureError);
             if (!saved.isEmpty()) out[QStringLiteral("beforeImagePath")] = saved;
         }
@@ -1812,7 +1824,7 @@ void AgentToolRunner::executeTool(const QString &callId, const QString &name,
                 .arg(QDateTime::currentMSecsSinceEpoch());
             QString captureError;
             const QString saved = DesktopAutomationBackend::saveCapture(
-                args.value(QStringLiteral("scope_kind")).toString(QStringLiteral("screen")),
+                desktopScopeKind(args, QStringLiteral("screen")),
                 args.value(QStringLiteral("target_id")).toString(), path, &captureError);
             if (!saved.isEmpty()) {
                 out[QStringLiteral("imagePath")] = saved;
@@ -2052,6 +2064,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
                                                                QStringLiteral("uia"));
         out[QStringLiteral("desktopTarget")] = trace.value(QStringLiteral("target")).toMap();
         if (ok) *ok = good;
+        if (good) m_agentFocusedWindow = args.value(QStringLiteral("target_id")).toString();
         if (!good) return QStringLiteral("[desktop_click_element: %1]").arg(error);
         const QString json = QString::fromUtf8(QJsonDocument(
             QJsonObject::fromVariantMap(trace)).toJson(QJsonDocument::Compact));
@@ -2079,7 +2092,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
     }
     if (name == QLatin1String("desktop_click_text")) {
         QString error;
-        const QString kind = args.value(QStringLiteral("scope_kind")).toString(QStringLiteral("screen"));
+        const QString kind = desktopScopeKind(args, QStringLiteral("screen"));
         const QString target = args.value(QStringLiteral("target_id")).toString();
         if (!validateDesktopSnapshot(kind, target, &error))
             return QStringLiteral("[desktop_click_text: %1]").arg(error);
@@ -2091,6 +2104,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         out[QStringLiteral("desktopStrategy")] = QStringLiteral("ocr");
         out[QStringLiteral("desktopTarget")] = trace.value(QStringLiteral("target")).toMap();
         if (ok) *ok = good;
+        if (good) m_agentFocusedWindow = DesktopAutomationBackend::foregroundWindowId();
         if (!good) return QStringLiteral("[desktop_click_text: %1]").arg(error);
         const QString json = QString::fromUtf8(QJsonDocument(
             QJsonObject::fromVariantMap(trace)).toJson(QJsonDocument::Compact));
@@ -2098,7 +2112,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
     }
     if (name == QLatin1String("desktop_find_image")) {
         QString error;
-        const QString kind = args.value(QStringLiteral("scope_kind")).toString(QStringLiteral("screen"));
+        const QString kind = desktopScopeKind(args, QStringLiteral("screen"));
         const QString target = args.value(QStringLiteral("target_id")).toString();
         if (!validateDesktopSnapshot(kind, target, &error))
             return QStringLiteral("[desktop_find_image: %1]").arg(error);
@@ -2120,7 +2134,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
     }
     if (name == QLatin1String("desktop_click_image")) {
         QString error;
-        const QString kind = args.value(QStringLiteral("scope_kind")).toString(QStringLiteral("screen"));
+        const QString kind = desktopScopeKind(args, QStringLiteral("screen"));
         const QString target = args.value(QStringLiteral("target_id")).toString();
         if (!validateDesktopSnapshot(kind, target, &error))
             return QStringLiteral("[desktop_click_image: %1]").arg(error);
@@ -2136,6 +2150,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         out[QStringLiteral("desktopStrategy")] = QStringLiteral("template");
         out[QStringLiteral("desktopTarget")] = trace.value(QStringLiteral("target")).toMap();
         if (ok) *ok = good;
+        if (good) m_agentFocusedWindow = DesktopAutomationBackend::foregroundWindowId();
         if (!good) return QStringLiteral("[desktop_click_image: %1]").arg(error);
         const QString json = QString::fromUtf8(QJsonDocument(
             QJsonObject::fromVariantMap(trace)).toJson(QJsonDocument::Compact));
@@ -2146,7 +2161,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         QString error;
         const bool expected = args.value(name == QLatin1String("desktop_wait_image")
             ? QStringLiteral("appear") : QStringLiteral("should_exist")).toBool(true);
-        const QString kind = args.value(QStringLiteral("scope_kind")).toString(QStringLiteral("screen"));
+        const QString kind = desktopScopeKind(args, QStringLiteral("screen"));
         const QString target = args.value(QStringLiteral("target_id")).toString();
         const QString path = args.value(QStringLiteral("template_path")).toString();
         const int timeout = args.value(QStringLiteral("timeout_ms")).toInt(
@@ -2168,8 +2183,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
             .arg(name, good ? QStringLiteral("ok") : error, json);
     }
     if (name == QLatin1String("desktop_observe")) {
-        const QString kind = args.value(QStringLiteral("scope_kind")).toString(
-            QStringLiteral("screen"));
+        const QString kind = desktopScopeKind(args, QStringLiteral("screen"));
         const QString target = args.value(QStringLiteral("target_id")).toString();
         QString snapshotError;
         const QVariantMap snap = DesktopAutomationBackend::snapshot(
@@ -2199,20 +2213,27 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
     }
     if (name == QLatin1String("desktop_click")) {
         QString error;
-        const QString kind = args.value(QStringLiteral("scope_kind")).toString(QStringLiteral("screen"));
+        const QString kind = desktopScopeKind(args, QStringLiteral("screen"));
         const QString target = args.value(QStringLiteral("target_id")).toString();
         if (!validateDesktopSnapshot(kind, target, &error))
             return QStringLiteral("[desktop_click: %1]").arg(error);
         QVariantMap trace;
-        const bool good = DesktopAutomationBackend::click(
+        QStringList modifiers;
+        for (const QJsonValue &v : args.value(QStringLiteral("modifiers")).toArray())
+            modifiers << v.toString();
+        const bool good = DesktopAutomationBackend::clickEx(
             kind, target,
             args.value(QStringLiteral("x")).toDouble(),
             args.value(QStringLiteral("y")).toDouble(),
             args.value(QStringLiteral("button")).toString(QStringLiteral("left")),
+            args.value(QStringLiteral("click_count")).toInt(1), modifiers,
             &error, &trace);
         out[QStringLiteral("desktopStrategy")] = QStringLiteral("foreground-pointer");
         out[QStringLiteral("desktopTarget")] = trace.value(QStringLiteral("target")).toMap();
         if (ok) *ok = good;
+        // Un clic del agente elige la ventana que queda en primer plano (también
+        // con scope=screen: así siguen andando las recetas Teach clic → tipeo).
+        if (good) m_agentFocusedWindow = DesktopAutomationBackend::foregroundWindowId();
         if (!good) return QStringLiteral("[desktop_click: %1]").arg(error);
         const QString json = QString::fromUtf8(QJsonDocument(
             QJsonObject::fromVariantMap(trace)).toJson(QJsonDocument::Compact));
@@ -2220,7 +2241,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
     }
     if (name == QLatin1String("desktop_stroke")) {
         QString error;
-        const QString kind = args.value(QStringLiteral("scope_kind")).toString(QStringLiteral("screen"));
+        const QString kind = desktopScopeKind(args, QStringLiteral("screen"));
         const QString target = args.value(QStringLiteral("target_id")).toString();
         if (!validateDesktopSnapshot(kind, target, &error))
             return QStringLiteral("[desktop_stroke: %1]").arg(error);
@@ -2240,13 +2261,52 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         out[QStringLiteral("desktopStrategy")] = QStringLiteral("foreground-stroke");
         out[QStringLiteral("desktopTarget")] = trace.value(QStringLiteral("target")).toMap();
         if (ok) *ok = good;
+        if (good) m_agentFocusedWindow = DesktopAutomationBackend::foregroundWindowId();
         if (!good) return QStringLiteral("[desktop_stroke: %1]").arg(error);
         const QString json = QString::fromUtf8(QJsonDocument(
             QJsonObject::fromVariantMap(trace)).toJson(QJsonDocument::Compact));
         return QStringLiteral("[desktop_stroke: ok]\ntrace=%1").arg(json);
     }
+
+    // Teclear sólo en una ventana elegida por el agente (ver typingTargetAllowed).
+    auto ensureTypingTarget = [&](const QString &tool, QString *refusal) {
+        const QString target = args.value(QStringLiteral("target_id")).toString();
+        if (!target.isEmpty()) {
+            QString err;
+            if (!DesktopAutomationBackend::focusWindow(target, &err)) {
+                *refusal = QStringLiteral("[%1: no pude enfocar la ventana %2: %3]").arg(tool, target, err);
+                return false;
+            }
+            m_agentFocusedWindow = target;
+            return true;
+        }
+        if (!DesktopComputerUse::typingTargetAllowed(
+                DesktopAutomationBackend::foregroundWindowId(), m_agentFocusedWindow)) {
+            *refusal = QStringLiteral(
+                "[%1: NO tecleé — la ventana en primer plano no es una que hayas elegido. Pasá "
+                "target_id (id de desktop_windows) o enfocala con desktop_focus primero; así no "
+                "se escribe en otra app del usuario.]").arg(tool);
+            return false;
+        }
+        return true;
+    };
     if (name == QLatin1String("desktop_type")) {
         QString error;
+        {
+            QString refusal;
+            if (!ensureTypingTarget(name, &refusal)) return refusal;
+        }
+        // Protección de datos del usuario: apps como el Bloc de notas de Windows 11
+        // restauran pestañas/documentos sin guardar al abrirse; desktop_launch
+        // + desktop_type terminaba escribiendo DENTRO de una nota existente.
+        if (!args.value(QStringLiteral("append")).toBool()
+            && DesktopAutomationBackend::focusedControlHasText() == 1) {
+            return QStringLiteral(
+                "[desktop_type: NO escribí — el campo con foco ya tiene contenido (posible "
+                "documento del usuario). Si la tarea es crear algo nuevo, abrí un documento o "
+                "pestaña nueva (desktop_key N o T con modifiers [\"CTRL\"]) y reintentá. Si el "
+                "usuario pidió agregar a ese contenido, repetí con append=true.]");
+        }
         const bool good = DesktopAutomationBackend::typeText(
             args.value(QStringLiteral("text")).toString(), &error);
         if (ok) *ok = good;
@@ -2255,6 +2315,10 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
     }
     if (name == QLatin1String("desktop_key")) {
         QString error;
+        {
+            QString refusal;
+            if (!ensureTypingTarget(name, &refusal)) return refusal;
+        }
         QStringList modifiers;
         for (const QJsonValue &v : args.value(QStringLiteral("modifiers")).toArray())
             modifiers << v.toString();
@@ -2266,11 +2330,88 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
     }
     if (name == QLatin1String("desktop_scroll")) {
         QString error;
-        const bool good = DesktopAutomationBackend::scroll(
-            args.value(QStringLiteral("delta")).toInt(-120), &error);
+        const bool aimed = args.contains(QStringLiteral("x")) && args.contains(QStringLiteral("y"));
+        const bool good = DesktopAutomationBackend::scrollAt(
+            desktopScopeKind(args, QStringLiteral("screen")),
+            args.value(QStringLiteral("target_id")).toString(),
+            aimed ? args.value(QStringLiteral("x")).toDouble() : -1.0,
+            aimed ? args.value(QStringLiteral("y")).toDouble() : -1.0,
+            args.value(QStringLiteral("delta")).toInt(-120),
+            args.value(QStringLiteral("horizontal")).toBool(false), &error);
         if (ok) *ok = good;
         return good ? QStringLiteral("[desktop_scroll: ok]")
                     : QStringLiteral("[desktop_scroll: %1]").arg(error);
+    }
+    if (name == QLatin1String("desktop_read_text")) {
+        // OCR del alcance como TEXTO con coordenadas normalizadas: el modelo lee
+        // la pantalla sin visión y puede apuntar con desktop_click/hover.
+        const QString kind = desktopScopeKind(args, QStringLiteral("screen"));
+        const QString target = args.value(QStringLiteral("target_id")).toString();
+        QString error;
+        // Un id que no existe en ese alcance es un error, no "la pantalla principal":
+        // OCRear todo el escritorio expone otras apps y llena el contexto.
+        if (!target.isEmpty() && DesktopAutomationBackend::targetInfo(kind, target).isEmpty())
+            return QStringLiteral("[desktop_read_text: no existe %1 con id '%2'; usá "
+                                  "desktop_windows para el id de ventana]").arg(kind, target);
+        const QRect bounds = DesktopAutomationBackend::scopeBounds(kind, target);
+        if (!bounds.isValid())
+            return QStringLiteral("[desktop_read_text: alcance no disponible (%1 '%2')]").arg(kind, target);
+        const QList<OcrLine> lines = DesktopAutomationBackend::readText(kind, target, &error);
+        if (lines.isEmpty())
+            return QStringLiteral("[desktop_read_text: %1]")
+                .arg(error.isEmpty() ? QStringLiteral("no se leyó texto") : error);
+        QList<DesktopComputerUse::TextLine> rows;
+        rows.reserve(lines.size());
+        for (const OcrLine &l : lines) {
+            QRect r;
+            for (const OcrWord &w : l.words) r = r.isNull() ? w.rect : r.united(w.rect);
+            rows.append({l.text, r});
+        }
+        if (ok) *ok = true;
+        return QStringLiteral("[desktop_read_text: %1 '%2']\n"
+                              "Coordenadas (x, y) normalizadas en ese alcance: pasalas tal cual a "
+                              "desktop_click/desktop_hover con el mismo scope_kind y target_id.\n%3")
+            .arg(kind, target,
+                 DesktopComputerUse::formatReadText(rows, bounds,
+                     args.value(QStringLiteral("query")).toString(),
+                     args.value(QStringLiteral("max")).toInt(80)));
+    }
+    if (name == QLatin1String("desktop_hover")) {
+        QString error;
+        QVariantMap trace;
+        const QString kind = desktopScopeKind(args, QStringLiteral("screen"));
+        const QString target = args.value(QStringLiteral("target_id")).toString();
+        const bool good = DesktopAutomationBackend::hover(
+            kind, target, args.value(QStringLiteral("x")).toDouble(-1.0),
+            args.value(QStringLiteral("y")).toDouble(-1.0), &error, &trace);
+        out[QStringLiteral("desktopStrategy")] = QStringLiteral("foreground-pointer");
+        out[QStringLiteral("desktopTarget")] = trace.value(QStringLiteral("target")).toMap();
+        if (ok) *ok = good;
+        return good ? QStringLiteral("[desktop_hover: ok]")
+                    : QStringLiteral("[desktop_hover: %1]").arg(error);
+    }
+    if (name == QLatin1String("desktop_clipboard")) {
+        const QString op = args.value(QStringLiteral("op")).toString(QStringLiteral("get"));
+        QString error;
+        if (op == QLatin1String("set")) {
+            const bool good = DesktopAutomationBackend::setClipboardText(
+                args.value(QStringLiteral("text")).toString(), &error);
+            if (ok) *ok = good;
+            return good ? QStringLiteral("[desktop_clipboard: texto copiado]")
+                        : QStringLiteral("[desktop_clipboard: %1]").arg(error);
+        }
+        if (op != QLatin1String("get"))
+            return QStringLiteral("[desktop_clipboard: op inválida '%1' (get|set)]").arg(op);
+        QString text;
+        const bool good = DesktopAutomationBackend::clipboardText(&text, &error);
+        if (ok) *ok = good;
+        if (!good) return QStringLiteral("[desktop_clipboard: %1]").arg(error);
+        constexpr int kMax = 8000;
+        const bool cut = text.size() > kMax;
+        return QStringLiteral("[desktop_clipboard: %1 caracteres%2]\n%3")
+            .arg(text.size())
+            .arg(cut ? QStringLiteral(", truncado a %1").arg(kMax) : QString())
+            .arg(text.left(kMax));
     }
     if (name == QLatin1String("desktop_wait_for")) {
         QString error;
@@ -2324,6 +2465,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         QString error;
         const bool good = DesktopAutomationBackend::focusWindow(
             args.value(QStringLiteral("target_id")).toString(), &error);
+        if (good) m_agentFocusedWindow = args.value(QStringLiteral("target_id")).toString();
         if (ok) *ok = good;
         return good ? QStringLiteral("[desktop_focus: ok]")
                     : QStringLiteral("[desktop_focus: %1]").arg(error);

@@ -5519,7 +5519,7 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter,
     });
     // Streaming incremental: refresca SÓLO la burbuja activa, sin re-bindear toda
     // la lista (evita re-instanciar todos los delegates por token).
-    connect(b, &IAgentBackend::streamingText, this, [this](int idx, const QString &content) {
+    connect(b, &IAgentBackend::streamingText, this, [this, b](int idx, const QString &content) {
         m_agentStreamingIndex = idx;
         m_agentStreamingText  = content;
         emit agentStreamingChanged();
@@ -5527,10 +5527,7 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter,
         // (oración por oración), en paralelo a la generación y los tool-calls. El
         // usuario escucha la primera frase enseguida en vez de esperar todo el
         // turno. VoiceController sanitiza <think>/indicadores y trocea.
-        if (m_voice && m_charlaActive && m_charlaUseAgent && m_runningTaskId.isEmpty()) {
-            m_charlaStreamBubble = idx;
-            m_voice->speakStreaming(idx, content);
-        }
+        routeAgentStreamToCharla(b, idx, content);
     });
     connect(b, &IAgentBackend::queueChanged, this, [this, b]() {
         m_agentQueuedCount = b->queuedCount();
@@ -5655,7 +5652,11 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter,
                 {QStringLiteral("desktop_focus"), QStringLiteral("Cambiando de ventana")},
                 {QStringLiteral("desktop_controls"), QStringLiteral("Leyendo controles")},
                 {QStringLiteral("desktop_windows"), QStringLiteral("Buscando ventanas")},
-                {QStringLiteral("desktop_wait"), QStringLiteral("Esperando la interfaz")}};
+                {QStringLiteral("desktop_wait"), QStringLiteral("Esperando la interfaz")},
+                {QStringLiteral("desktop_read_text"), QStringLiteral("Leyendo la pantalla")},
+                {QStringLiteral("desktop_hover"), QStringLiteral("Moviendo el puntero")},
+                {QStringLiteral("desktop_clipboard"), QStringLiteral("Usando el portapapeles")},
+                {QStringLiteral("desktop_click_text"), QStringLiteral("Haciendo clic en un texto")}};
             m_desktopAgentAction = labels.value(tool, QStringLiteral("Usando el escritorio"));
             if (!detail.isEmpty() && tool == QLatin1String("desktop_launch"))
                 m_desktopAgentAction += QStringLiteral(": ") + detail.left(48);
@@ -9288,6 +9289,18 @@ void AppController::finishDesktopReplay()
     sendToAgent(verify);
 }
 
+void AppController::routeAgentStreamToCharla(IAgentBackend *b, int idx, const QString &content)
+{
+    if (!(m_voice && m_charlaActive && m_charlaUseAgent && m_runningTaskId.isEmpty())) return;
+    m_charlaStreamBubble = idx;
+    // Con una acción de escritorio sin verificar, esta respuesta puede ser
+    // retenida y reemplazada: hablarla en vivo hacía que se escucharan dos o
+    // tres respuestas por turno ("looping"). Si termina aceptada, speakFlush la
+    // dice completa al cerrar el turno.
+    if (!b->provisionalAnswerPending())
+        m_voice->speakStreaming(idx, content);
+}
+
 void AppController::setTestAgentBackend(IAgentBackend *b)
 {
     // Solo tests: cablea las señales mínimas que el ciclo de Tasks necesita
@@ -9304,6 +9317,9 @@ void AppController::setTestAgentBackend(IAgentBackend *b)
             finishRunningTask(QStringLiteral("error"), m);
     });
     // Reacciones de Charla: mismas funciones que el wiring real.
+    connect(b, &IAgentBackend::streamingText, this, [this, b](int idx, const QString &content) {
+        routeAgentStreamToCharla(b, idx, content);
+    });
     connect(b, &IAgentBackend::toolApprovalNeeded, this,
             [this](const QVariantMap &call) { onCharlaToolApprovalNeeded(call); });
     connect(b, &IAgentBackend::agentLifecycleEvent, this,

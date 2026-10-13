@@ -31,6 +31,11 @@ public:
     // usuario empieza a hablar (el LLM "piensa" mientras el usuario habla).
     // Default: no-op (backends cloud no lo necesitan / no exponen KV cache).
     virtual void prefillWarmup() {}
+    // true mientras el texto que se está generando es PROVISIONAL: hubo una
+    // acción externa (escritorio/MCP) todavía sin observar y la compuerta de
+    // verificación puede retener esta respuesta. La voz no lo habla en vivo
+    // (si se retiene, se habría escuchado una respuesta que después cambia).
+    virtual bool provisionalAnswerPending() const { return false; }
     // Steering: interrumpe el turno/generación en curso (cancela tools/aprobación
     // pendientes) y envía `text` como turno nuevo de inmediato. Default: si no hay
     // soporte específico, equivale a enviar normal.

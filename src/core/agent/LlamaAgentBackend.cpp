@@ -4348,7 +4348,18 @@ void LlamaAgentBackend::processPendingCalls()
         QStringLiteral("email_accounts"), QStringLiteral("email_send"),
         QStringLiteral("email_list"), QStringLiteral("email_read"),
         QStringLiteral("mcp_search_tools"), QStringLiteral("mcp_call_tool")};
-    if (!known.contains(name) && !name.startsWith(kMcpPrefix)) {
+    // Además de la lista explícita, toda tool con schema built-in es conocida.
+    // La lista sola se desincronizaba: desktop_resize estaba en el catálogo (y en
+    // el pack de escritorio de JARVIS) pero el loop la rechazaba como
+    // "tool desconocida" cada vez que el modelo la usaba.
+    static const QSet<QString> schemaKnown = []() {
+        QSet<QString> names;
+        for (const QJsonValue &v : LlamaAgentBackend::toolSchemas())
+            names.insert(v.toObject().value(QStringLiteral("function")).toObject()
+                             .value(QStringLiteral("name")).toString());
+        return names;
+    }();
+    if (!known.contains(name) && !schemaKnown.contains(name) && !name.startsWith(kMcpPrefix)) {
         ++m_toolFail;
         m_pendingCalls.removeFirst();
         AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("failure"),
@@ -5166,6 +5177,7 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
         QStringLiteral("desktop_type"), QStringLiteral("desktop_key"),
         QStringLiteral("desktop_scroll"), QStringLiteral("desktop_launch")};
     static const QSet<QString> desktopObservations{
+        QStringLiteral("desktop_read_text"),
         QStringLiteral("desktop_controls"), QStringLiteral("desktop_snapshot"),
         QStringLiteral("desktop_observe"), QStringLiteral("desktop_find_image"),
         QStringLiteral("desktop_wait_image"), QStringLiteral("desktop_assert_image")};
@@ -7245,9 +7257,11 @@ QJsonArray LlamaAgentBackend::toolSchemas()
         fn(QStringLiteral("desktop_click"),
            QStringLiteral("Hace click en coordenadas NORMALIZADAS 0..1 dentro del alcance. "
                           "NO acepta la grilla visual 0..1000: dividí ambas coordenadas por 1000. "
-                          "Acepta button='left'|'right'|'middle' y devuelve trace con "
-                          "pointer/target. Observá primero, no uses coordenadas como replay ciego "
-                          "y verificá el resultado después."),
+                          "Acepta button='left'|'right'|'middle', click_count 2 (doble clic: "
+                          "abrir) o 3 (triple: seleccionar línea) y modifiers ['CTRL'|'SHIFT'|"
+                          "'ALT'] sostenidos durante el clic. Devuelve trace con pointer/target. "
+                          "Observá primero (desktop_read_text da coordenadas listas para usar), "
+                          "no uses coordenadas como replay ciego y verificá el resultado después."),
             QJsonObject{
                 {QStringLiteral("scope_kind"), strProp(QStringLiteral("'screen' o 'window'."))},
                 {QStringLiteral("target_id"), strProp(QStringLiteral("Id del alcance."))},
@@ -7261,8 +7275,52 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                 {QStringLiteral("button"), QJsonObject{
                     {QStringLiteral("type"), QStringLiteral("string")},
                     {QStringLiteral("enum"), QJsonArray{QStringLiteral("left"), QStringLiteral("right"), QStringLiteral("middle")}},
-                    {QStringLiteral("description"), QStringLiteral("Botón de mouse; default left.")}}}},
+                    {QStringLiteral("description"), QStringLiteral("Botón de mouse; default left.")}}},
+                {QStringLiteral("click_count"), QJsonObject{
+                    {QStringLiteral("type"), QStringLiteral("integer")},
+                    {QStringLiteral("minimum"), 1}, {QStringLiteral("maximum"), 3},
+                    {QStringLiteral("description"), QStringLiteral("1 simple (default), 2 doble, 3 triple.")}}},
+                {QStringLiteral("modifiers"), QJsonObject{
+                    {QStringLiteral("type"), QStringLiteral("array")},
+                    {QStringLiteral("items"), QJsonObject{{QStringLiteral("type"), QStringLiteral("string")}}},
+                    {QStringLiteral("description"), QStringLiteral("Teclas sostenidas: CTRL, SHIFT, ALT.")}}}},
             QJsonArray{QStringLiteral("target_id"), QStringLiteral("x"), QStringLiteral("y")}),
+        fn(QStringLiteral("desktop_read_text"),
+           QStringLiteral("LEE el texto visible de la pantalla o de una ventana (OCR) y devuelve "
+                          "cada renglón con su centro (x, y) NORMALIZADO en ese alcance, listo "
+                          "para desktop_click/desktop_hover. Usala para entender qué hay en "
+                          "pantalla sin visión, leer resultados, mensajes de error o contenido "
+                          "de apps que no exponen controles UIA. 'query' filtra renglones."),
+           QJsonObject{
+               {QStringLiteral("scope_kind"), strProp(QStringLiteral("'screen' (default) o 'window'."))},
+               {QStringLiteral("target_id"), strProp(QStringLiteral("Id de pantalla o ventana (desktop_windows)."))},
+               {QStringLiteral("query"), strProp(QStringLiteral("Texto a buscar (opcional; sin acentos ni mayúsculas)."))},
+               {QStringLiteral("max"), intProp(QStringLiteral("Máximo de renglones (default 80)."))}},
+           QJsonArray{QStringLiteral("target_id")}),
+        fn(QStringLiteral("desktop_hover"),
+           QStringLiteral("Mueve el puntero a un punto NORMALIZADO del alcance SIN clickear: "
+                          "tooltips, menús que se abren al pasar el mouse, revelar controles."),
+           QJsonObject{
+               {QStringLiteral("scope_kind"), strProp(QStringLiteral("'screen' o 'window'."))},
+               {QStringLiteral("target_id"), strProp(QStringLiteral("Id del alcance."))},
+               {QStringLiteral("x"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")},
+                                                   {QStringLiteral("minimum"), 0.0},
+                                                   {QStringLiteral("maximum"), 1.0}}},
+               {QStringLiteral("y"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")},
+                                                   {QStringLiteral("minimum"), 0.0},
+                                                   {QStringLiteral("maximum"), 1.0}}}},
+           QJsonArray{QStringLiteral("target_id"), QStringLiteral("x"), QStringLiteral("y")}),
+        fn(QStringLiteral("desktop_clipboard"),
+           QStringLiteral("Portapapeles de texto del sistema. op='get' lo lee (p.ej. después de "
+                          "CTRL+C en una app, para traer su texto exacto); op='set' copia 'text' "
+                          "(para pegar con CTRL+V textos largos o con símbolos, más rápido y "
+                          "fiel que desktop_type)."),
+           QJsonObject{
+               {QStringLiteral("op"), QJsonObject{
+                   {QStringLiteral("type"), QStringLiteral("string")},
+                   {QStringLiteral("enum"), QJsonArray{QStringLiteral("get"), QStringLiteral("set")}}}},
+               {QStringLiteral("text"), strProp(QStringLiteral("Texto a copiar (sólo op='set')."))}},
+           QJsonArray{QStringLiteral("op")}),
         fn(QStringLiteral("desktop_stroke"),
            QStringLiteral("Arrastra el mouse por una TRAZA continua (dibujar en Paint, pintar, "
                           "sliders, gestos/swipes): aprieta el botón en el primer punto, recorre "
@@ -7296,20 +7354,43 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                           "desktop_focus). Camino RÁPIDO para apps con teclado: calculadora "
                           "(ej. desktop_type \"2+2\" y luego desktop_key \"=\"), notepad, campos "
                           "de texto. Más rápido y confiable que clickear botones uno a uno."),
-           QJsonObject{{QStringLiteral("text"), strProp(QStringLiteral("Texto a escribir."))}},
+           QJsonObject{{QStringLiteral("text"), strProp(QStringLiteral("Texto a escribir. \\n = ENTER, \\t = TAB."))},
+                       {QStringLiteral("target_id"), strProp(QStringLiteral(
+                           "Id de la ventana donde escribir (desktop_windows); la enfoca antes. "
+                           "Sin esto sólo se escribe en la última ventana que enfocaste."))},
+                       {QStringLiteral("append"), boolProp(QStringLiteral(
+                           "true sólo si el usuario pidió agregar a un texto que YA existe en el "
+                           "campo. Sin esto, si el campo tiene contenido no se escribe (protege "
+                           "documentos del usuario)."))}},
            QJsonArray{QStringLiteral("text")}),
         fn(QStringLiteral("desktop_key"),
            QStringLiteral("Presiona una tecla o combinación en la ventana en foco (ENTER, TAB, "
                           "'=', etc.). Complementa desktop_type para confirmar/ejecutar."),
            QJsonObject{
                {QStringLiteral("key"), strProp(QStringLiteral("ENTER, TAB, ESC, F1..F12 o carácter."))},
+               {QStringLiteral("target_id"), strProp(QStringLiteral(
+                   "Id de la ventana destino (desktop_windows); la enfoca antes. Sin esto sólo "
+                   "va a la última ventana que enfocaste."))},
                {QStringLiteral("modifiers"), QJsonObject{
                     {QStringLiteral("type"), QStringLiteral("array")},
                     {QStringLiteral("items"), QJsonObject{{QStringLiteral("type"), QStringLiteral("string")}}}}}},
            QJsonArray{QStringLiteral("key")}),
         fn(QStringLiteral("desktop_scroll"),
-           QStringLiteral("Desplaza la rueda del mouse; -120 baja, 120 sube."),
-           QJsonObject{{QStringLiteral("delta"), intProp(QStringLiteral("Delta de rueda."))}},
+           QStringLiteral("Desplaza la rueda del mouse (-120 baja, 120 sube) sobre lo que está "
+                          "DEBAJO del puntero. Pasá x/y normalizados (+ scope_kind/target_id) "
+                          "para apuntar a la lista o panel a desplazar; horizontal=true para la "
+                          "rueda horizontal."),
+           QJsonObject{
+               {QStringLiteral("delta"), intProp(QStringLiteral("Delta de rueda (default -120)."))},
+               {QStringLiteral("scope_kind"), strProp(QStringLiteral("'screen' o 'window' (opcional)."))},
+               {QStringLiteral("target_id"), strProp(QStringLiteral("Id del alcance (opcional)."))},
+               {QStringLiteral("x"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")},
+                                                   {QStringLiteral("minimum"), 0.0},
+                                                   {QStringLiteral("maximum"), 1.0}}},
+               {QStringLiteral("y"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")},
+                                                   {QStringLiteral("minimum"), 0.0},
+                                                   {QStringLiteral("maximum"), 1.0}}},
+               {QStringLiteral("horizontal"), boolProp(QStringLiteral("Rueda horizontal; default false."))}},
            QJsonArray{}),
         fn(QStringLiteral("desktop_launch"),
            QStringLiteral("Abre una app del escritorio DESPRENDIDA (no bloquea). USÁ ESTO para "
@@ -7466,11 +7547,15 @@ QVariantList LlamaAgentBackend::toolCatalog()
         mk("desktop_wait_image", "Escritorio", "Espera aparición o desaparición de una plantilla.", 120),
         mk("desktop_assert_image", "Escritorio", "Verifica una condición visual sin actuar.", 120),
         mk("desktop_observe", "Escritorio", "Captura el alcance visual enseñado.", 90),
-        mk("desktop_click", "Escritorio", "Click visual con coordenadas normalizadas.", 100),
+        mk("desktop_click", "Escritorio", "Click (simple/doble/triple, con CTRL/SHIFT/ALT) en coordenadas normalizadas.", 130),
         mk("desktop_stroke", "Escritorio", "Arrastra una traza continua (dibujar/pintar/swipe).", 95),
         mk("desktop_type", "Escritorio", "Escribe en el control enfocado.", 80),
         mk("desktop_key", "Escritorio", "Presiona teclas o combinaciones.", 90),
-        mk("desktop_scroll", "Escritorio", "Desplaza el escritorio.", 70),
+        mk("desktop_scroll", "Escritorio", "Desplaza la rueda apuntando a un punto (vertical u horizontal).", 110),
+        mk("desktop_read_text", "Escritorio", "Lee el texto en pantalla (OCR) con coordenadas para clickear.", 105),
+        mk("desktop_hover", "Escritorio", "Mueve el puntero sin clickear (tooltips, menús hover).", 80),
+        mk("desktop_clipboard", "Escritorio", "Lee o escribe el portapapeles de texto.", 85),
+        mk("desktop_click_text", "Escritorio", "Clickea un texto visible por OCR (sin coordenadas).", 95),
         mk("desktop_focus", "Escritorio", "Enfoca una ventana.", 70),
         mk("desktop_resize", "Escritorio", "Restaura el tamaño enseñado de una ventana.", 72),
         mk("desktop_wait", "Escritorio", "Espera antes de observar.", 60),

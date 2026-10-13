@@ -729,6 +729,10 @@ private:
     // Verdadero si el turno debe usar el protocolo textual de tools (por 400 del
     // server o por gating proactivo de AppController para modelos "unsupported").
     bool usingTextTools() const { return m_textToolFallback || m_forceTextTools; }
+public:
+    bool provisionalAnswerPending() const override
+    { return m_externalVerificationGate.hasPending(); }
+private:
     // Si los schemas nativos de tools no entran en el contexto del slot, pasar
     // al protocolo textual ANTES de mandar nada. Sin esto, con perfiles de 4k por
     // slot (n_parallel=auto) y el set de JARVIS (~10k tokens de schemas), cada
