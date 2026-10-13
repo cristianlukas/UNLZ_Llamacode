@@ -237,7 +237,10 @@ void SystemProfilesTests::manager_flashNextQ2ProfileMatchesMeasuredCandidate()
         "sys-bench-48-qwen38-flash-next-q2kxl-long-256k-balanced-moe12");
     const QVariantMap astra = pm.getLaunchProfile(astraId);
     QVERIFY2(!astra.isEmpty(), qPrintable(astraId));
-    QCOMPARE(astra.value(QStringLiteral("alias")).toString(), QStringLiteral("ASTRA"));
+    // El alias "ASTRA" pasó al perfil Strata ISTA IQ2_XS (623c35c); éste quedó
+    // con su propio nombre corto.
+    const QString flashAlias = QStringLiteral("Flash-Next Q2_K_XL · 256K");
+    QCOMPARE(astra.value(QStringLiteral("alias")).toString(), flashAlias);
     QVERIFY(!astra.value(QStringLiteral("benchmarkMemoryAdaptive")).toBool());
     QCOMPARE(astra.value(QStringLiteral("name")).toString(),
              QStringLiteral("[bench Flash-Next] Q2_K_XL · 256k · balanceado · MoE12"));
@@ -253,12 +256,15 @@ void SystemProfilesTests::manager_flashNextQ2ProfileMatchesMeasuredCandidate()
         if (item.value(QStringLiteral("id")).toString() != astraId)
             continue;
         astraInMenu = true;
-        QCOMPARE(item.value(QStringLiteral("alias")).toString(), QStringLiteral("ASTRA"));
+        QCOMPARE(item.value(QStringLiteral("alias")).toString(), flashAlias);
         QVERIFY(item.value(QStringLiteral("displayName")).toString().contains(
-            QStringLiteral("ASTRA - ")));
+            flashAlias + QStringLiteral(" - ")));
         break;
     }
     QVERIFY(astraInMenu);
+    const QVariantMap astraDefault = pm.getLaunchProfile(QStringLiteral("sys-astra-iq2xs-default"));
+    QVERIFY(!astraDefault.isEmpty());
+    QCOMPARE(astraDefault.value(QStringLiteral("alias")).toString(), QStringLiteral("ASTRA"));
 }
 
 void SystemProfilesTests::manager_ninferProfilesAreBenchmarkCandidates()
