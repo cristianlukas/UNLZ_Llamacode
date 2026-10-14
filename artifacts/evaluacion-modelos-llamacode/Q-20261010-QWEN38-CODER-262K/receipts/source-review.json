@@ -1,0 +1,47 @@
+{
+  "task_id": "Q-20261010-QWEN38-CODER-262K",
+  "review_date": "2026-10-13",
+  "sources": [
+    {
+      "type": "community_post",
+      "url": "https://www.reddit.com/r/Qwen_AI/comments/1x12qdj/my_setup_qwen_38_flash_next/",
+      "claims": {
+        "hardware": "2x RTX 3090, PCIe 4.0 x8/x8, Linux with modded Nvidia P2P drivers, i9-11900K, 64 GB DDR4",
+        "runtime": "Strata",
+        "context": "262K configured",
+        "model_label": "Q3_XSS ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-Coder-GGUF",
+        "speed": "around 130 tok/s decode and 4,000 tok/s (the second metric is not labeled in the post)",
+        "limitations": "No benchmark prompts, task suite, effective token counts, raw logs, model revision, runtime version, or seed receipts"
+      }
+    },
+    {
+      "type": "model_publisher_card",
+      "url": "https://huggingface.co/ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-Coder-GGUF",
+      "claims": {
+        "variant_listed": "IQ1_M",
+        "pruning": "256 of 512 experts retained per layer",
+        "file_sizes": "58.4 GB total; 29.6 GB transformer shard must be resident; 28.8 GB n-gram lookup shard may be served from disk",
+        "published_quality": "75.60 SWE-bench Verified and 86.28 LiveCodeBench v6 vs 82.80 and 87.43 for BF16; measured at xhigh",
+        "limitations": "Publisher benchmarks; not LlamaCode results"
+      }
+    },
+    {
+      "type": "runtime_documentation",
+      "url": "https://github.com/mach10x/strata/blob/main/docs/DETAILS.md",
+      "claims": {
+        "coder": "Expert-pruned Coder is described as IQ1_M, with its own shipped expert profile",
+        "context": "Documentation says the 262K configuration fits 64 GB RAM; this describes feasibility, not retrieval quality",
+        "limitations": "Documentation is not a local benchmark or reproduction of the Reddit machine"
+      }
+    },
+    {
+      "type": "model_architecture_documentation",
+      "url": "https://github.com/QwenLM/Qwen3.8-Flash-Next",
+      "claims": {
+        "context": "Official deployment examples configure 262144 max model length",
+        "limitations": "Architecture/runtime capability does not establish effective context or quality on this profile"
+      }
+    }
+  ],
+  "interpretation": "The post's Q3_XSS label is not reconciled with the linked official Coder card and Strata documentation, which describe IQ1_M. Treat the exact quant and its 130 tok/s claim as unverified. Do not relabel the previously tested IQ1_M as Q3_XSS."
+}

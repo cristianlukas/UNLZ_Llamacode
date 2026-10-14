@@ -1,0 +1,39 @@
+{
+  "task_id": "Q-20261010-STRATA-DUAL3090-PEER",
+  "reviewed_at": "2026-10-13",
+  "sources": [
+    {
+      "url": "https://www.reddit.com/r/LocalLLM/comments/1wytq4f/qwen38flashnext_dual_rtx_3090s_nvlink_3200_ts/",
+      "type": "community_post_by_author",
+      "claims": {
+        "base": "Strata v0.1.38 plus 29 commits",
+        "model_quant": "Qwen3.8-Flash-Next GSQ-RCO IQ3_S",
+        "hardware": "Ryzen 9 3950X, 121 GB RAM, 2x RTX 3090 with NVLink",
+        "benchmark": "flashbench, greedy, median of 3, 262K context",
+        "decode_tok_s_at_8k_32k_128k": [116, 113, 111],
+        "prefill_tok_s_at_8k_32k_128k": [2908, 3231, 3186],
+        "limits_disclosed": ["single stream", "decode gain over peer baseline described as modest", "no power measurements"]
+      },
+      "limitations": ["No downloadable raw run logs or model hash in the post", "Community measurements, not independently reproduced here"]
+    },
+    {
+      "url": "https://github.com/q8atnight/strata-dual-3090/blob/main/dual3090/README.md",
+      "type": "author_repository_readme",
+      "claims": ["Fork describes itself as Strata v0.1.38 plus 29 commits", "Peer expert tier and prompt work transfer over an NVLink bridge", "Single stream", "Reports flashbench medians of three and word-for-word exactness gate"],
+      "limitations": ["Fork-level evidence; not an upstream Strata release", "Current main branch was not pinned or built", "No raw run receipts independently verified"]
+    },
+    {
+      "url": "https://github.com/Niko1221/Strata/issues/204",
+      "type": "upstream_project_issue_and_maintainer_discussion",
+      "claims": ["Issue reports a peer-tier versus layer-split comparison on 2x RTX 3090 with NVLink", "Maintainer asked for opt-in changes, byte-identical default output, an exactness gate, and --gpu1-experts baseline", "Issue discussion reports peer tier and prompt-split work as separate changes; prompt split was not submitted at the time described"],
+      "limitations": ["Issue measurements are author-reported", "The requested baselines are not all present in the issue's original comparison"]
+    },
+    {
+      "url": "https://github.com/Niko1221/Strata/pull/531",
+      "type": "upstream_project_pull_request",
+      "claims": ["Maintainer says the opt-in --peer-device tier was released in Strata 0.1.38", "Peer transfers can use NVLink or another CUDA P2P path", "The PR's NVLink benchmark reports +14–19% decode and +15–25% prefill at selected lengths", "Independent PCIe-P2P results on 2x2080 Ti showed prefill parity and slower decode, with gains dependent on link and cache coverage"],
+      "limitations": ["PR was closed after changes were manually incorporated; numbers are still author-reported", "This upstream peer tier is narrower than the author's later private fork with additional prefill splits"]
+    }
+  ],
+  "conclusion": "Interesting as a narrow NVLink-specific Strata engineering experiment, but it does not transfer to the local host state because NVLink is inactive and GPU peer-to-peer is reported unsupported. No local model benchmark was run."
+}

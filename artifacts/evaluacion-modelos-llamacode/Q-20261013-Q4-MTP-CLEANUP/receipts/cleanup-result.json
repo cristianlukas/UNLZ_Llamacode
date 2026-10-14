@@ -1,0 +1,29 @@
+{
+  "task_id": "Q-20261013-Q4-MTP-CLEANUP",
+  "lock_token": "d5266efc-4e7f-4f6a-9388-d5844706af08",
+  "completed_utc": "2026-10-13T21:12:41Z",
+  "removed": {
+    "path": "/media/cristian/7CFE1E0FFE1DC1F6/models/unsloth-qwen38-flashnext-mtp/mtp-Qwen3.8-Flash-Next-Q8_0.gguf",
+    "size_bytes": 4137429120,
+    "sha256": "58a47d6a216307e9b97172d5bfdc3436a8994b632f5e436b9bb6edf8951da8d1",
+    "parent_directory_removed": "/media/cristian/7CFE1E0FFE1DC1F6/models/unsloth-qwen38-flashnext-mtp"
+  },
+  "filesystem_available_bytes": {
+    "before": 174391590912,
+    "after": 178529026048,
+    "delta": 4137435136
+  },
+  "retained_shared_model": {
+    "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL",
+    "reason": "The base shards are shared with retained Q4 Strata and other profiles."
+  },
+  "profile_catalog_edits": [],
+  "historical_artifacts_preserved": "artifacts/evaluacion-modelos-llamacode/Q-20261010-UNSLOTH-MTP-AB/",
+  "gpu_or_inference_used": false,
+  "post_delete_check": {
+    "draft_file_absent": true,
+    "draft_directory_absent": true,
+    "other_exact_filename_copies_under_media_cristian": 0,
+    "historical_results_present": true
+  }
+}

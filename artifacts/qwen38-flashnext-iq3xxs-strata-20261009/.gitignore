@@ -1,0 +1,5 @@
+/runtime/xdg-*/
+/runtime/profiles/*
+!/runtime/profiles/backends.json
+!/runtime/profiles/launches.json
+!/runtime/profiles/models.json

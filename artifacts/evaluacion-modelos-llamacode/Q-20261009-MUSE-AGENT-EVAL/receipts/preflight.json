@@ -1,0 +1,234 @@
+{
+  "created_at_utc": "2026-10-12T19:08:34.655727+00:00",
+  "task_id": "Q-20261009-MUSE-AGENT-EVAL",
+  "model": {
+    "alias": "SOL",
+    "name": "Frozenlock/Qwen3.8-27B-int4-AutoRound; Qwen3.8-27B AutoRound INT4",
+    "local_directory": "/media/cristian/Disco local/Models/llamacpp/club-3090/qwen3.8-27b-autoround-int4",
+    "downloaded_already": true,
+    "redownloaded": false,
+    "file_manifest_sha256": "b9b842e49ccc3f8b3a1459ce218d87884604a36725a46cb64b4741641ed7d231",
+    "verified_files": [
+      {
+        "sha256": "83c0adb0f1141142a25c5f7937a09272fef2baee7d6b07afe60a076feffe3b66",
+        "size_bytes": 3216489680,
+        "revision_ref": "main",
+        "file": "model-00001-of-00007.safetensors"
+      },
+      {
+        "sha256": "6c86c3917cd228d5699cb1435d9216e2baf281582ba4282a98638163605be7ec",
+        "size_bytes": 3190151576,
+        "revision_ref": "main",
+        "file": "model-00002-of-00007.safetensors"
+      },
+      {
+        "sha256": "bfb9613b3f6ba3d0c5b3efa74f92cc14ec5c9266b341a79bf6b45247a5857770",
+        "size_bytes": 3219130488,
+        "revision_ref": "main",
+        "file": "model-00003-of-00007.safetensors"
+      },
+      {
+        "sha256": "8e9fbd476aa3055c3c0a886298f9beb93c5275c748c533835746f6648f6dae55",
+        "size_bytes": 3216860120,
+        "revision_ref": "main",
+        "file": "model-00004-of-00007.safetensors"
+      },
+      {
+        "sha256": "f0cd639621eb26410d96b8c073344ae008f646572a9c4713326ff43d406cf276",
+        "size_bytes": 770164464,
+        "revision_ref": "main",
+        "file": "model-00005-of-00007.safetensors"
+      },
+      {
+        "sha256": "55a14ee79d3e5a65a8731d89426f4df477e8bdc7daa7976d41254d8afb9432f0",
+        "size_bytes": 2542807272,
+        "revision_ref": "main",
+        "file": "model-00006-of-00007.safetensors"
+      },
+      {
+        "sha256": "6866cf8adcccc4cc6a00e74bc025f1a774fb52103b70f2674d0288272951a733",
+        "size_bytes": 2542796896,
+        "revision_ref": "main",
+        "file": "model-00007-of-00007.safetensors"
+      },
+      {
+        "sha256": "94102b67c6b84e65dbb9bae37c00bd88ac1a43ff577ce65fd8842d231c7e89de",
+        "size_bytes": 298305576,
+        "revision_ref": "main",
+        "file": "model_extra_tensors.safetensors"
+      }
+    ],
+    "config_sha256": "15173d7a487c88112a02804701ab2cc8f8dd4631a3ef67c8d9bb2c66d30debce",
+    "tokenizer_config_sha256": "792fa3f0cb88b111e54ef3134c873531008c4df471d108da17903426e308aa7b"
+  },
+  "runtime": {
+    "engine": "vLLM OpenAI image v0.27.1",
+    "docker_image_id": "sha256:0a51ea5b4ae2dc5d81890e5173f54203d2a3ae0cfffe51b8fd2afd4391bfd967",
+    "compose_source_commit": "18ce8af4215e9ecad05cf5f7255c840582193397",
+    "profile": "TP2, dual RTX 3090, MTP n=4, FP8 e4m3 KV, max_model_len=262144, gpu_memory_utilization=0.90",
+    "offline_mode": true,
+    "container_name": "llamacode-muse-sol-20261012",
+    "published_ports": [
+      {
+        "mode": "ingress",
+        "host_ip": "127.0.0.1",
+        "target": 8000,
+        "published": "18113",
+        "protocol": "tcp"
+      }
+    ],
+    "mounts": [
+      {
+        "source": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261009-MUSE-AGENT-EVAL/runtime/huggingface",
+        "target": "/root/.cache/huggingface",
+        "read_only": false
+      },
+      {
+        "source": "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.6-27b/vllm/patches/w4a8-int8-act",
+        "target": "/etc/club3090/w4a8",
+        "read_only": true
+      },
+      {
+        "source": "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.6-27b/vllm/patches/vllm-pr48375-mamba-drop-eagle-block",
+        "target": "/etc/club3090/pr48375",
+        "read_only": true
+      },
+      {
+        "source": "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.6-27b/vllm/patches/vllm-gdn-mtp-async-spec-order",
+        "target": "/etc/club3090/gdn-async-order",
+        "read_only": true
+      },
+      {
+        "source": "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.8-27b/vllm/patches/vllm-flashinfer-decode-pin",
+        "target": "/etc/club3090/flashinfer-decode-pin",
+        "read_only": true
+      },
+      {
+        "source": "/home/cristian/.cache/llamacode/club-3090-src/scripts/detect_nvlink.sh",
+        "target": "/etc/club3090/detect_nvlink.sh",
+        "read_only": true
+      },
+      {
+        "source": "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.8-27b/vllm/patches/qwen38-reasoning-effort-template/chat_template.jinja",
+        "target": "/root/.cache/huggingface/qwen3.8-27b-autoround-int4/chat_template.jinja",
+        "read_only": true
+      },
+      {
+        "source": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261009-MUSE-AGENT-EVAL/runtime/torch_compile",
+        "target": "/root/.cache/vllm/torch_compile_cache",
+        "read_only": false
+      },
+      {
+        "source": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261009-MUSE-AGENT-EVAL/runtime/triton",
+        "target": "/root/.triton/cache",
+        "read_only": false
+      },
+      {
+        "source": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/gpu0-vram-diagnostico/linux/frag64k/rmtrace.so",
+        "target": "/opt/vramfrag.so",
+        "read_only": true
+      },
+      {
+        "source": "/media/cristian/Disco local/Models/llamacpp/club-3090/qwen3.8-27b-autoround-int4",
+        "target": "/root/.cache/huggingface/qwen3.8-27b-autoround-int4",
+        "read_only": true
+      }
+    ],
+    "command": [
+      "--model",
+      "/root/.cache/huggingface/qwen3.8-27b-autoround-int4",
+      "--served-model-name",
+      "qwen3.8-27b",
+      "local",
+      "--quantization",
+      "auto_round",
+      "--dtype",
+      "bfloat16",
+      "--tensor-parallel-size",
+      "2",
+      "--max-model-len",
+      "262144",
+      "--gpu-memory-utilization",
+      "0.90",
+      "--max-num-seqs",
+      "8",
+      "--max-num-batched-tokens",
+      "8192",
+      "--long-prefill-token-threshold",
+      "4096",
+      "--kv-cache-dtype",
+      "fp8_e4m3",
+      "--trust-remote-code",
+      "--enable-prefix-caching",
+      "--enable-chunked-prefill",
+      "--mamba-cache-mode",
+      "align",
+      "--prefix-match-unit",
+      "16",
+      "--reasoning-parser",
+      "qwen3",
+      "--enable-auto-tool-choice",
+      "--tool-call-parser",
+      "qwen3_coder",
+      "--default-chat-template-kwargs",
+      "{\"enable_thinking\": true, \"reasoning_effort\": \"low\"}",
+      "--host",
+      "0.0.0.0",
+      "--port",
+      "8000"
+    ],
+    "environment": {
+      "ASYNC_SCHED": "",
+      "CUDA_VISIBLE_DEVICES": "0,1",
+      "ENABLE_THINKING": "true",
+      "HF_HUB_OFFLINE": "1",
+      "LD_PRELOAD": "/opt/vramfrag.so",
+      "MAMBA_BLOCK_SIZE": "",
+      "MAMBA_CACHE_DTYPE": "",
+      "MIN_P": "0.0",
+      "NCCL_CUMEM_ENABLE": "0",
+      "NCCL_P2P_DISABLE": "1",
+      "NVIDIA_VISIBLE_DEVICES": "0,1",
+      "NVLINK_MODE": "auto",
+      "OMP_NUM_THREADS": "1",
+      "PRESENCE_PENALTY": "0.0",
+      "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True",
+      "RMTRACE_FALLBACK64K": "1",
+      "RMTRACE_LOG": "/tmp/rmtrace.log",
+      "RMTRACE_NOFORCEALIGN": "1",
+      "SPEC": "",
+      "SPEC_N": "4",
+      "TEMP": "0.6",
+      "TOP_K": "20",
+      "TOP_P": "0.95",
+      "TRANSFORMERS_OFFLINE": "1",
+      "VLLM_MARLIN_INPUT_DTYPE": null,
+      "VLLM_NO_USAGE_STATS": "1",
+      "VLLM_SKIP_P2P_CHECK": null,
+      "VLLM_USE_FLASHINFER_SAMPLER": "0",
+      "VLLM_WORKER_MULTIPROC_METHOD": "spawn",
+      "W4A8": "1"
+    },
+    "compose_sha256": {
+      "mtp.yml": "2df4e44e1e1b268da80690a0812ac1b60768d60b643096ce8473110f88b7b76a",
+      "vram-quarantine.override.yml": "e547197d1b283e5c8b684d35e1b348bb91bbba3a327183a14b0d4a6083c36a50",
+      "isolated-compose-override.yml": "143f6f5256fba31a7294fee170fe0b495f86b8d88e46c45787486233af57537a"
+    }
+  },
+  "suite": {
+    "path": "assets/benchmarks/custom/computer_use_prompt_order_hard_v1.json",
+    "version": 1,
+    "sha256": "6b8db94a387674f72e72e356b1317f844a7809a42c000986ebc9b24f4f572e35",
+    "tasks": 24,
+    "security_tasks": 21
+  },
+  "candidate_overlay_sha256": "9fb742d295a4fbc155b18ad2216d21d5349184ef80b8eec8a092416ce0cfda97",
+  "runner_sha256": "5093b3b69e547498da156c3d5c58e78f915166b3c2fc07acbf1582ca56223e71",
+  "endpoint": "http://127.0.0.1:18113/v1/chat/completions",
+  "order_seeds": [
+    11,
+    42,
+    77
+  ],
+  "requests_expected": 144
+}

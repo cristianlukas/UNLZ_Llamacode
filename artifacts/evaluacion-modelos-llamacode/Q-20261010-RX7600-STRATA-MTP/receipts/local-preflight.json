@@ -1,0 +1,43 @@
+{
+  "task_id": "Q-20261010-RX7600-STRATA-MTP",
+  "date_utc": "2026-10-13",
+  "inference_run": false,
+  "downloads": false,
+  "host": {
+    "gpus": [
+      "NVIDIA GeForce RTX 3090 (index 0)",
+      "NVIDIA GeForce RTX 3090 (index 1)"
+    ],
+    "amd_pci_device": "1002:13c0 (lspci does not identify it as RX 7600)",
+    "rocminfo_architecture": null,
+    "nvidia_memory_used_mib_at_audit": [1084, 108]
+  },
+  "target_artifacts": {
+    "qwen36_35b_a3b_q6_k_xl_gguf_found": false,
+    "historical_qwen36_mtp_gguf_directory_exists": false,
+    "qwen36_autoround_int4_safetensors_directory_exists": true,
+    "historical_ninfer_artifact": {
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/models/NInfer-Qwen3.6-35B-A3B/qwen3_6_35b_a3b.ninfer",
+      "present_at_preflight": false,
+      "sha256": "9e8378398d2b789a77224b5110c7590adbbc6fd4accd139b918157b2b9da7163",
+      "source_audit": "docs/ninfer-qwen35-3090-concurrency-vision-audit-20260918.md"
+    }
+  },
+  "llama_mtp_checkout": {
+    "path": "/media/cristian/Disco local/llama-mtp",
+    "commit": "267f8afe857b7bd1a49e4fde9138ab0f7be36625",
+    "server_binary": "/media/cristian/Disco local/llama-mtp/build/bin/llama-server.exe",
+    "binary_type": "PE32+ Windows executable"
+  },
+  "historical_local_mtp_pair": {
+    "runtime": "NInfer-3090 / SM86",
+    "hardware": "1x RTX 3090",
+    "context": 4096,
+    "mtp": "MTP3",
+    "decode_tps_with_mtp": 190.08,
+    "decode_tps_without_mtp": 159.66,
+    "relative_gain_percent": 19.05,
+    "quality_evaluation": "not established by this speed pair"
+  },
+  "decision": "No new run: exact Q6_K_XL GGUF and RX7600/gfx1102 unavailable; prior local MTP pair has already been recorded under a different runtime/profile."
+}

@@ -1,0 +1,25 @@
+{
+  "algorithm": "sha256",
+  "files": [
+    {
+      "path": "PLAN.md",
+      "sha256": "f07117f0bde69b8c92b0c1bc4142510d156ba5f88d28a189126e83ea30123288",
+      "bytes": 3384
+    },
+    {
+      "path": "RESULTS.md",
+      "sha256": "df6ba2ce1110e8759864c45c77aadcba6bc8ca74443567e6aa9de690a6367e0a",
+      "bytes": 5626
+    },
+    {
+      "path": "receipts/local-preflight.json",
+      "sha256": "b3016bc3e6f6768c5da8da910dd6a3a42f15efab16dba0d56711504a10fd7dd3",
+      "bytes": 995
+    },
+    {
+      "path": "receipts/source-review.json",
+      "sha256": "a5c31673fbc7c679ec6d8a56ab0896105da416a5f80969569653e0fc0eae1b8b",
+      "bytes": 2913
+    }
+  ]
+}

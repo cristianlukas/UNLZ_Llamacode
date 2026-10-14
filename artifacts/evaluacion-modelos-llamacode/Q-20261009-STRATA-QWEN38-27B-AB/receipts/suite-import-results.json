@@ -1,0 +1,42 @@
+[
+  {
+    "file": "artifacts/evaluacion-modelos-llamacode/Q-20261009-STRATA-QWEN38-27B-AB/receipts/suites/059b6f00-7b4b-48ff-a3a2-2a71f900c1c0.json",
+    "response": {
+      "ok": true,
+      "reqId": "f7f398c0-cdf7-4d2a-97b4-5a74de07816a",
+      "result": ""
+    }
+  },
+  {
+    "file": "artifacts/evaluacion-modelos-llamacode/Q-20261009-STRATA-QWEN38-27B-AB/receipts/suites/05c28394-11d0-41fe-a55f-b3cb69db9c15.json",
+    "response": {
+      "ok": true,
+      "reqId": "ebd717a7-0e05-46f2-843c-acdaf7817117",
+      "result": ""
+    }
+  },
+  {
+    "file": "artifacts/evaluacion-modelos-llamacode/Q-20261009-STRATA-QWEN38-27B-AB/receipts/suites/267bb33d-4510-417b-ae3c-6dbbfb2cb08d.json",
+    "response": {
+      "ok": true,
+      "reqId": "9e90c58f-d2b2-4275-b1f1-fb5c6be63294",
+      "result": ""
+    }
+  },
+  {
+    "file": "artifacts/evaluacion-modelos-llamacode/Q-20261009-STRATA-QWEN38-27B-AB/receipts/suites/benchmark-suite.json",
+    "response": {
+      "ok": true,
+      "reqId": "f923cf69-a0f2-4bbd-be8d-faa5c28a55e2",
+      "result": ""
+    }
+  },
+  {
+    "file": "artifacts/evaluacion-modelos-llamacode/Q-20261009-STRATA-QWEN38-27B-AB/receipts/suites/intelligence_adversarial_v1.json",
+    "response": {
+      "ok": true,
+      "reqId": "290f3c3b-a911-4791-9414-1583783cd1cd",
+      "result": ""
+    }
+  }
+]

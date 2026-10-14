@@ -1,0 +1,44 @@
+{
+  "task_id": "Q-20261010-STRATA-UDIQ4XS-POST",
+  "checked_at_utc": "2026-10-13T18:10:06Z",
+  "roots_searched": [
+    "/media/cristian/Disco local/Models",
+    "/media/cristian/HDD extra",
+    "/home/cristian/.cache/huggingface/hub"
+  ],
+  "candidate_found_locally": false,
+  "storage": {
+    "nvme_path": "/media/cristian/Disco local",
+    "nvme_free_bytes": 105175375872,
+    "nvme_percent_used": 95,
+    "hdd_path": "/media/cristian/HDD extra",
+    "hdd_free_bytes": 352570773504,
+    "system_hf_cache_free_bytes": 7749070848,
+    "model_repository_size_gb_decimal": 93.7,
+    "assessment": "NVMe margin is small; HDD would change the SSD expert-read path relevant to the post."
+  },
+  "system": {
+    "mem_available_gib_approx": 108,
+    "swap_used_gib_approx": 3.8,
+    "gpu_snapshot": [
+      {
+        "gpu": 0,
+        "vram_used_mib": 1707,
+        "vram_total_mib": 24576,
+        "reserved_for_benchmark": false
+      },
+      {
+        "gpu": 1,
+        "vram_used_mib": 108,
+        "vram_total_mib": 24576,
+        "reserved_for_benchmark": false
+      }
+    ]
+  },
+  "actions": {
+    "download": false,
+    "build": false,
+    "gpu_benchmark": false
+  },
+  "reason": "No local compatible candidate and insufficiently safe SSD headroom for a 93.7 GB download; HDD storage would invalidate the intended I/O comparison."
+}

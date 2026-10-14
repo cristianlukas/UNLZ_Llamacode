@@ -1,0 +1,29 @@
+{
+    "description": "Benchmark público importado. Fuente: https://huggingface.co/datasets/openai/openai_humaneval. Licencia: MIT.",
+    "id": "059b6f00-7b4b-48ff-a3a2-2a71f900c1c0",
+    "name": "HumanEval (1 ítems)",
+    "prompts": [
+        {
+            "acceptance": {
+                "commands": [
+                ],
+                "entryPoint": "has_close_elements",
+                "expectSubstrings": [
+                ],
+                "expected": "",
+                "files": [
+                ],
+                "graderType": "code_tests",
+                "preamble": "from typing import List\n\n\ndef has_close_elements(numbers: List[float], threshold: float) -> bool:\n    \"\"\" Check if in given list of numbers, are any two numbers closer to each other than\n    given threshold.\n    >>> has_close_elements([1.0, 2.0, 3.0], 0.5)\n    False\n    >>> has_close_elements([1.0, 2.8, 3.0, 4.0, 5.0, 2.0], 0.3)\n    True\n    \"\"\"\n",
+                "tests": "\n\nMETADATA = {\n    'author': 'jt',\n    'dataset': 'test'\n}\n\n\ndef check(candidate):\n    assert candidate([1.0, 2.0, 3.9, 4.0, 5.0, 2.2], 0.3) == True\n    assert candidate([1.0, 2.0, 3.9, 4.0, 5.0, 2.2], 0.05) == False\n    assert candidate([1.0, 2.0, 5.9, 4.0, 5.0], 0.95) == True\n    assert candidate([1.0, 2.0, 5.9, 4.0, 5.0], 0.8) == False\n    assert candidate([1.0, 2.0, 3.0, 4.0, 5.0, 2.0], 0.1) == True\n    assert candidate([1.1, 2.2, 3.1, 4.1, 5.1], 1.0) == True\n    assert candidate([1.1, 2.2, 3.1, 4.1, 5.1], 0.5) == False\n\n\n\ncheck(has_close_elements)\n"
+            },
+            "category": "humaneval",
+            "id": "HumanEval/0",
+            "isSpeed": false,
+            "maxTokens": 1200,
+            "prompt": "Completá esta función Python. Devolvé SOLO el código completo de la función, sin explicación.\n\nfrom typing import List\n\n\ndef has_close_elements(numbers: List[float], threshold: float) -> bool:\n    \"\"\" Check if in given list of numbers, are any two numbers closer to each other than\n    given threshold.\n    >>> has_close_elements([1.0, 2.0, 3.0], 0.5)\n    False\n    >>> has_close_elements([1.0, 2.8, 3.0, 4.0, 5.0, 2.0], 0.3)\n    True\n    \"\"\"\n",
+            "weight": 1
+        }
+    ],
+    "source": "benchmark-pack:humaneval"
+}

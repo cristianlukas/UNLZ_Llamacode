@@ -1,0 +1,21 @@
+services:
+  vllm-qwen38-27b-dual-fast:
+    container_name: llamacode-eval-sol-qwen38-20261012
+    ports:
+      - "127.0.0.1:8114:8000"
+    environment:
+      NVIDIA_VISIBLE_DEVICES: "0,1"
+      CUDA_VISIBLE_DEVICES: "0,1"
+      SPEC_N: "4"
+      ENABLE_THINKING: "true"
+      REASONING_EFFORT: "medium"
+      TEMP: "0.6"
+      TOP_P: "0.95"
+      TOP_K: "20"
+      MIN_P: "0.0"
+      PRESENCE_PENALTY: "0.0"
+    volumes:
+      - /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261009-STRATA-QWEN38-27B-AB/runtime/sol-docker-cache/huggingface:/root/.cache/huggingface
+      - /media/cristian/Disco local/Models/llamacpp/club-3090/qwen3.8-27b-autoround-int4:/root/.cache/huggingface/qwen3.8-27b-autoround-int4:ro
+      - /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261009-STRATA-QWEN38-27B-AB/runtime/sol-docker-cache/torch_compile:/root/.cache/vllm/torch_compile_cache
+      - /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261009-STRATA-QWEN38-27B-AB/runtime/sol-docker-cache/triton:/root/.triton/cache

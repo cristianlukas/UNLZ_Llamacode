@@ -1,0 +1,33 @@
+{
+  "http_status": 200,
+  "request": {
+    "state": "Control de humo sin datos personales ni acciones externas.",
+    "questions": {
+      "smoke": {
+        "type": "noul",
+        "instructions": "¿Es correcto que 2 + 2 = 4?",
+        "criteria": {
+          "true": "sí",
+          "false": "no"
+        }
+      }
+    }
+  },
+  "response": {
+    "model": "/media/cristian/Disco local/Models/evaluations/ekbasis-27b-int4/model",
+    "answers": {
+      "smoke": {
+        "type": "noul",
+        "noul": 0.970687747001648,
+        "probability": 0.970687747001648,
+        "value": true,
+        "confidence": 0.970687747001648
+      }
+    },
+    "usage": {
+      "input_tokens": 111,
+      "output_tokens": 0
+    },
+    "latency_s": 0.13616050199925667
+  }
+}

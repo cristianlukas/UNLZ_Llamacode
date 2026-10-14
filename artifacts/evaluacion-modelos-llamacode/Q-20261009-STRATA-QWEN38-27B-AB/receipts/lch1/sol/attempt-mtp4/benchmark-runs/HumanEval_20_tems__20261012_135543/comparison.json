@@ -1,0 +1,41 @@
+{
+    "benchmarkName": "HumanEval (20 ítems)",
+    "comparisons": [
+    ],
+    "generatedAt": "2026-10-12T13:56:57",
+    "profileCount": 1,
+    "profiles": [
+        {
+            "agentVariant": "baseline",
+            "comparisonTimeMetric": "timeToFirstAttempt",
+            "failedRuns": 1,
+            "fullyAcceptedRuns": 0,
+            "honeyEnabled": false,
+            "medianAddedLines": 0,
+            "medianColdFirstAttemptSec": 0,
+            "medianElapsedSec": 0,
+            "medianFilesChanged": 0,
+            "medianFirstAttemptSec": 0,
+            "medianQualityPct": 0,
+            "medianRemovedLines": 0,
+            "medianRepairAttempts": 0,
+            "medianToolCalls": 0,
+            "medianToolF1Pct": 0,
+            "medianToolRedundantCalls": 0,
+            "medianToolSuccessRatePct": 0,
+            "medianWarmFirstAttemptSec": 0,
+            "outcomeSpread": false,
+            "profileId": "0a5c5eb8-6080-4a0d-861a-e6b9c0a9af79",
+            "profileName": "Q-20261009 SOL control",
+            "qualityRangePctPoints": 0,
+            "runs": 1,
+            "stabilityRatePct": 100,
+            "successRatePct": 0,
+            "successfulRuns": 0
+        }
+    ],
+    "runCount": 1,
+    "runLabel": "HumanEval (20 ítems)",
+    "schemaVersion": 1,
+    "target": "agent"
+}

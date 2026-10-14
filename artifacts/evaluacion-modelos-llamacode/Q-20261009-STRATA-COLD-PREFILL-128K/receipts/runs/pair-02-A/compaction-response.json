@@ -1,0 +1,59 @@
+{
+  "id": "resp_65d1480a2bfa4d118f65a98d0fa5be4f",
+  "object": "response",
+  "created_at": 1791829557,
+  "status": "completed",
+  "background": false,
+  "error": null,
+  "incomplete_details": null,
+  "instructions": "You are testing context handling. Follow the user's exact instruction.",
+  "max_output_tokens": 512,
+  "model": "qwen3.8-flash-next-astra-iq3_s-calibrated",
+  "output": [
+    {
+      "id": "msg_14b48e07f81547b996ea7fd8c1e60092",
+      "type": "message",
+      "status": "completed",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "Here is the concise handoff summary with the preserved control values:\n\n- beginning: KEY-ALPHA-7319\n- middle: KEY-BRAVO-2846\n- late: KEY-CHARLIE-9052\n- ending: KEY-DELTA-4173",
+          "annotations": [],
+          "logprobs": []
+        }
+      ]
+    }
+  ],
+  "parallel_tool_calls": false,
+  "previous_response_id": null,
+  "reasoning": {
+    "effort": "none",
+    "summary": null
+  },
+  "store": false,
+  "temperature": 0.6,
+  "text": {
+    "format": {
+      "type": "text"
+    }
+  },
+  "tool_choice": "auto",
+  "tools": [],
+  "top_p": 0.95,
+  "truncation": "disabled",
+  "usage": {
+    "input_tokens": 120216,
+    "input_tokens_details": {
+      "cached_tokens": 0
+    },
+    "output_tokens": 67,
+    "output_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "total_tokens": 120283
+  },
+  "user": null,
+  "metadata": {},
+  "completed_at": 1791829590
+}

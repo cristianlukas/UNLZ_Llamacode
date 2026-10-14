@@ -1,0 +1,355 @@
+{
+    "acceptance": [
+        {
+            "output": "Archivo esperado no encontrado: solution_HumanEval_0.py",
+            "passed": false,
+            "taskId": "HumanEval/0",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_HumanEval_1.py",
+            "passed": false,
+            "taskId": "HumanEval/1",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_HumanEval_2.py",
+            "passed": false,
+            "taskId": "HumanEval/2",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_HumanEval_3.py",
+            "passed": false,
+            "taskId": "HumanEval/3",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_HumanEval_4.py",
+            "passed": false,
+            "taskId": "HumanEval/4",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_HumanEval_5.py",
+            "passed": false,
+            "taskId": "HumanEval/5",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_HumanEval_6.py",
+            "passed": false,
+            "taskId": "HumanEval/6",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_HumanEval_7.py",
+            "passed": false,
+            "taskId": "HumanEval/7",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_HumanEval_8.py",
+            "passed": false,
+            "taskId": "HumanEval/8",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_HumanEval_9.py",
+            "passed": false,
+            "taskId": "HumanEval/9",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_HumanEval_10.py",
+            "passed": false,
+            "taskId": "HumanEval/10",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_HumanEval_11.py",
+            "passed": false,
+            "taskId": "HumanEval/11",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_HumanEval_12.py",
+            "passed": false,
+            "taskId": "HumanEval/12",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_HumanEval_13.py",
+            "passed": false,
+            "taskId": "HumanEval/13",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_HumanEval_14.py",
+            "passed": false,
+            "taskId": "HumanEval/14",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_HumanEval_15.py",
+            "passed": false,
+            "taskId": "HumanEval/15",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_HumanEval_16.py",
+            "passed": false,
+            "taskId": "HumanEval/16",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_HumanEval_17.py",
+            "passed": false,
+            "taskId": "HumanEval/17",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_HumanEval_18.py",
+            "passed": false,
+            "taskId": "HumanEval/18",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_HumanEval_19.py",
+            "passed": false,
+            "taskId": "HumanEval/19",
+            "type": "grader:code_tests"
+        }
+    ],
+    "agentFiles": [
+    ],
+    "agentMetrics": [
+        {
+            "elapsedMs": 4386,
+            "tokens": 199,
+            "tps": 45.371637026903784,
+            "ttft_ms": 5192
+        },
+        {
+            "elapsedMs": 1096,
+            "tokens": 35,
+            "tps": 31.934306569343065,
+            "ttft_ms": 1501
+        },
+        {
+            "elapsedMs": 259,
+            "tokens": 12,
+            "tps": 46.33204633204633,
+            "ttft_ms": 1869
+        },
+        {
+            "elapsedMs": 709,
+            "tokens": 31,
+            "tps": 43.723554301833566,
+            "ttft_ms": 935
+        },
+        {
+            "elapsedMs": 673,
+            "tokens": 24,
+            "tps": 35.661218424962854,
+            "ttft_ms": 993
+        },
+        {
+            "elapsedMs": 1844,
+            "tokens": 80,
+            "tps": 43.38394793926247,
+            "ttft_ms": 974
+        },
+        {
+            "elapsedMs": 298,
+            "tokens": 10,
+            "tps": 33.557046979865774,
+            "ttft_ms": 896
+        },
+        {
+            "elapsedMs": 387,
+            "tokens": 16,
+            "tps": 41.343669250645995,
+            "ttft_ms": 934
+        },
+        {
+            "elapsedMs": 117,
+            "tokens": 5,
+            "tps": 42.73504273504273,
+            "ttft_ms": 820
+        },
+        {
+            "elapsedMs": 70,
+            "tokens": 3,
+            "tps": 42.857142857142854,
+            "ttft_ms": 1215
+        },
+        {
+            "elapsedMs": 1268,
+            "tokens": 52,
+            "tps": 41.00946372239748,
+            "ttft_ms": 1340
+        },
+        {
+            "elapsedMs": 36,
+            "tokens": 2,
+            "tps": 55.55555555555556,
+            "ttft_ms": 943
+        },
+        {
+            "elapsedMs": 934,
+            "tokens": 35,
+            "tps": 37.47323340471092,
+            "ttft_ms": 673
+        },
+        {
+            "elapsedMs": 113,
+            "tokens": 5,
+            "tps": 44.24778761061947,
+            "ttft_ms": 980
+        },
+        {
+            "elapsedMs": 458,
+            "tokens": 22,
+            "tps": 48.03493449781659,
+            "ttft_ms": 576
+        },
+        {
+            "elapsedMs": 267,
+            "tokens": 10,
+            "tps": 37.453183520599254,
+            "ttft_ms": 930
+        },
+        {
+            "elapsedMs": 456,
+            "tokens": 19,
+            "tps": 41.666666666666664,
+            "ttft_ms": 1463
+        },
+        {
+            "elapsedMs": 35,
+            "tokens": 3,
+            "tps": 85.71428571428571,
+            "ttft_ms": 990
+        },
+        {
+            "elapsedMs": 376,
+            "tokens": 16,
+            "tps": 42.5531914893617,
+            "ttft_ms": 1243
+        },
+        {
+            "elapsedMs": 361,
+            "tokens": 19,
+            "tps": 52.63157894736842,
+            "ttft_ms": 1010
+        },
+        {
+            "elapsedMs": 2336,
+            "tokens": 168,
+            "tps": 71.91780821917808,
+            "ttft_ms": 26840
+        }
+    ],
+    "agentProfileId": "agent-maximo",
+    "agentProfileName": "Máximo",
+    "agentSeed": 4242,
+    "agentTemperature": 0.1,
+    "agentVariant": "baseline",
+    "avgTps": 45.95987151264806,
+    "avgTtftMs": 2491.285714285714,
+    "benchmarkMemoryPlanner": "llama.cpp-fit-expert-aware",
+    "benchmarkName": "HumanEval (20 ítems)",
+    "complexityMetrics": {
+        "addedLines": 0,
+        "filesChanged": 0,
+        "filesCreated": 0,
+        "filesDeleted": 0,
+        "removedLines": 0
+    },
+    "elapsedSec": 72.768,
+    "failed": true,
+    "failureDetail": "[\n    {\n        \"output\": \"Archivo esperado no encontrado: solution_HumanEval_0.py\",\n        \"passed\": false,\n        \"taskId\": \"HumanEval/0\",\n        \"type\": \"grader:code_tests\"\n    },\n    {\n        \"output\": \"Archivo esperado no encontrado: solution_HumanEval_1.py\",\n        \"passed\": false,\n        \"taskId\": \"HumanEval/1\",\n        \"type\": \"grader:code_tests\"\n    },\n    {\n        \"output\": \"Archivo esperado no encontrado: solution_HumanEval_2.py\",\n        \"passed\": false,\n        \"taskId\": \"HumanEval/2\",\n        \"type\": \"grader:code_tests\"\n    },\n    {\n        \"output\": \"Archivo esperado no encontrado: solution_HumanEval_3.py\",\n        \"passed\": false,\n        \"taskId\": \"HumanEval/3\",\n        \"type\": \"grader:code_tests\"\n    },\n    {\n        \"output\": \"Archivo esperado no encontrado: solution_HumanEval_4.py\",\n        \"passed\": false,\n        \"taskId\": \"HumanEval/4\",\n        \"type\": \"grader:code_tests\"\n    },\n    {\n        \"output\": \"Archivo esperado no encontrado: solution_HumanEval_5.py\",\n        \"passed\": false,\n        \"taskId\": \"HumanEval/5\",\n        \"type\": \"grader:code_tests\"\n    },\n    {\n        \"output\": \"Archivo esperado no encontrado: solution_HumanEval_6.py\",\n        \"passed\": false,\n        \"taskId\": \"HumanEval/6\",\n        \"type\": \"grader:code_tests\"\n    },\n    {\n        \"output\": \"Archivo esperado no encontrado: solution_HumanEval_7.py\",\n        \"passed\": false,\n        \"taskId\": \"HumanEval/7\",\n        \"type\": \"grader:code_tests\"\n    },\n    {\n        \"output\": \"Archivo esperado no encontrado: solution_HumanEval_8.py\",\n        \"passed\": false,\n        \"taskId\": \"HumanEval/8\",\n        \"type\": \"grader:code_tests\"\n    },\n    {\n        \"output\": \"Archivo esperado no encontrado: solution_HumanEval_9.py\",\n        \"passed\": false,\n        \"taskId\": \"HumanEval/9\",\n        \"type\": \"grader:code_tests\"\n    },\n    {\n        \"output\": \"Archivo esperado no encontrado: solution_HumanEval_10.py\",\n        \"passed\": false,\n        \"taskId\": \"HumanEval/10\",\n        \"type\": \"grader:code_tests\"\n    },\n    {\n        \"output\": \"Archivo esperado no encontrado: solution_HumanEval_11.py\",\n        \"passed\": false,\n        \"taskId\": \"HumanEval/11\",\n        \"type\": \"grader:code_tests\"\n    },\n    {\n        \"output\": \"Archivo esperado no encontrado: solution_HumanEval_12.py\",\n        \"passed\": false,\n        \"taskId\": \"HumanEval/12\",\n        \"type\": \"grader:code_tests\"\n    },\n    {\n        \"output\": \"Archivo esperado no encontrado: solution_HumanEval_13.py\",\n        \"passed\": false,\n        \"taskId\": \"HumanEval/13\",\n        \"type\": \"grader:code_tests\"\n    },\n    {\n        \"output\": \"Archivo esperado no encontrado: solution_HumanEval_14.py\",\n        \"passed\": false,\n        \"taskId\": \"HumanEval/14\",\n        \"type\": \"grader:code_tests\"\n    },\n    {\n        \"output\": \"Archivo esperado no encontrado: solution_HumanEval_15.py\",\n        \"passed\": false,\n        \"taskId\": \"HumanEval/15\",\n        \"type\": \"grader:code_tests\"\n    },\n    {\n        \"output\": \"Archivo esperado no encontrado: solution_HumanEval_16.py\",\n        \"passed\": false,\n        \"taskId\": \"HumanEval/16\",\n        \"type\": \"grader:code_tests\"\n    },\n    {\n        \"output\": \"Archivo esperado no encontrado: solution_HumanEval_17.py\",\n        \"passed\": false,\n        \"taskId\": \"HumanEval/17\",\n        \"type\": \"grader:code_tests\"\n    },\n    {\n        \"output\": \"Archivo esperado no encontrado: solution_HumanEval_18.py\",\n        \"passed\": false,\n        \"taskId\": \"HumanEval/18\",\n        \"type\": \"grader:code_tests\"\n    },\n    {\n        \"output\": \"Archivo esperado no encontrado: solution_HumanEval_19.py\",\n        \"passed\": false,\n        \"taskId\": \"HumanEval/19\",\n        \"type\": \"grader:code_tests\"\n    }\n]\n",
+    "failureKind": "quality",
+    "failureMessage": "Fallaron criterios de aceptacion.",
+    "failureStage": "acceptance",
+    "finalScore": 0,
+    "finalTotal": 20,
+    "firstAttemptScore": 0,
+    "firstAttemptTotal": 20,
+    "firstEvaluableSec": -1,
+    "firstToolCallSec": -1,
+    "firstWriteSec": -1,
+    "generationSec": 16.479,
+    "harnessEngineId": "legacy",
+    "harnessEngineVersion": 1,
+    "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+    "honeyEnabled": false,
+    "id": "d33a4c00-2d85-42ba-b9f5-3ed911050722",
+    "measurementPhase": "cold",
+    "mode": "custom",
+    "nonGenerationSec": 56.289,
+    "pass": 1,
+    "passedAfterRepair": false,
+    "passesTotal": 1,
+    "profileConfigFingerprint": "7f2c2099c267ac1809cbacc22f7660947ccf1423120135fe1e510e1ed93c369f",
+    "profileId": "0a5c5eb8-6080-4a0d-861a-e6b9c0a9af79",
+    "profileName": "Q-20261009 SOL control",
+    "progressGovernor": {
+        "progressEvents": 0,
+        "replanEvents": 0,
+        "stagnationEvents": 0
+    },
+    "qualityScore": 0,
+    "qualityTotal": 20,
+    "ramFreeMb": 0,
+    "ramMb": 0,
+    "ramTotalMb": 0,
+    "repairAttempts": 3,
+    "response": "",
+    "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/HumanEval_20_tems__20261012_135543",
+    "runLabel": "HumanEval (20 ítems)",
+    "setupSec": 0,
+    "target": "agent",
+    "thinkingEnabled": true,
+    "timeToFirstAttempt": 40.928,
+    "timedOut": false,
+    "timeoutSec": 1800,
+    "timestamp": 1791824217460,
+    "toolCallQuality": {
+        "expectedCalls": 0,
+        "f1Pct": -1,
+        "failedCalls": 0,
+        "incompleteCalls": 0,
+        "invalidCalls": 0,
+        "matchedExpectedCalls": 0,
+        "missingExpectedCalls": 0,
+        "precisionPct": -1,
+        "recallPct": -1,
+        "redundantCalls": 0,
+        "sequenceExact": false,
+        "successRatePct": -1,
+        "successfulCalls": 0,
+        "totalCalls": 0,
+        "unexpectedCalls": 0
+    },
+    "toolCalls": 0,
+    "totalTime": 72.768,
+    "transportAfterEvaluation": false,
+    "vramFreeMb": 3505,
+    "vramGpu0FreeMb": 1261,
+    "vramGpu0Mb": 22989,
+    "vramGpu0TotalMb": 24576,
+    "vramGpu0UsedPct": 93.54248046875,
+    "vramGpu1FreeMb": 2244,
+    "vramGpu1Mb": 21880,
+    "vramGpu1TotalMb": 24576,
+    "vramGpu1UsedPct": 89.02994791666666,
+    "vramMb": 44869,
+    "vramNormalizedImbalancePct": 4.5125325520833375,
+    "vramObservedGpu0SharePct": 51.235819831063765,
+    "vramOptimalGpu0SharePct": 35.9771754636234,
+    "vramPlacementAssessment": "gpu0-heavy",
+    "vramTelemetryScope": "device-total",
+    "workspace": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/HumanEval_20_tems__20261012_135543/Q-20261009_SOL_control__ws"
+}

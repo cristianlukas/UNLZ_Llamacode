@@ -1,0 +1,69 @@
+{
+  "suite": "LlamaCode code-retrieval screen v1",
+  "source_files": [
+    {
+      "path": "docs/benchmark-auxiliary.md",
+      "sha256": "6ec3201b26ab8f036cbc9766eb3c6362bfb1ec72e0130f64d258602e33052ee3",
+      "bytes": 3019
+    },
+    {
+      "path": "docs/context-graph.md",
+      "sha256": "30c73241c2a377c098c81936193b53f63b90bf0bcda00b0a4ddd37674455e221",
+      "bytes": 10468
+    },
+    {
+      "path": "qml/pages/SettingsPage.qml",
+      "sha256": "1d833b790ac07698d1828e12d4e11d3f3a69051dafa0e01354884a2da17881cb",
+      "bytes": 187654
+    },
+    {
+      "path": "src/core/agent/AgentLifecycle.h",
+      "sha256": "304c0438c84d997a963de24840c1f519f086ecdc3e678562114642be6660e12b",
+      "bytes": 9038
+    },
+    {
+      "path": "src/core/agent/AgentToolRunner.cpp",
+      "sha256": "fafc5c6148077253f35dac807f1ce2cabed4dd789a2627d9fa2d49bdcf501894",
+      "bytes": 221416
+    },
+    {
+      "path": "src/core/agent/AgentToolRunner.h",
+      "sha256": "cbf7400fb94f584d2aabff64036ec23c6eddf0ae02aab85b84ce406d0f18bd1d",
+      "bytes": 12082
+    },
+    {
+      "path": "src/core/agent/ContextIndex.cpp",
+      "sha256": "650cbb352b32072507c1f540a55d99bb6fc33685009d75dc69674119d6f87f9e",
+      "bytes": 28653
+    },
+    {
+      "path": "src/core/agent/LlamaAgentBackend.cpp",
+      "sha256": "9a7f3fcadc5f50ad8af17b7abe75354a5baf374e05cb7211893fd4cf457f01e7",
+      "bytes": 492352
+    },
+    {
+      "path": "src/core/agent/LlamaAgentBackend.h",
+      "sha256": "68c0836c051ce42e4aadfede5f4f578be9eb0aad26f969f8c6bdd4092785f240",
+      "bytes": 56333
+    },
+    {
+      "path": "src/core/profiles/HarnessSpec.cpp",
+      "sha256": "e8ecc7e4d816b62aa29caf642d339e59ee172c3ffa8620d5263277de2734dad0",
+      "bytes": 47355
+    },
+    {
+      "path": "tests/test_agent_tools.cpp",
+      "sha256": "4ddd8e3638adaccc969d0846d1f55731dc01ff598ff525aac32f9878efb9f6d7",
+      "bytes": 51119
+    }
+  ],
+  "corpus_chunks": 519,
+  "query_count": 21,
+  "qrel_count": 21,
+  "corpus_sha256": "7ce992f555a84b3d13d13828f763ad07b68861753362d0643acfcd5172b1ce45",
+  "queries_sha256": "fee6ccd607bf49bb7a4468bab6b1a53af375a9ddb1907a358f90319a04a370f0",
+  "qrels_sha256": "c44d60cad3128430d3ae3e375186a6e0577bb948ac878779b0fb8c4b3ffded41",
+  "chunking": "40 source lines, trim ends, skip text under 16 chars",
+  "scope": "selected code, tests, settings QML, retrieval docs; not a full-repo benchmark",
+  "runner_sha256": "c7b183f2d045c513a8b3d825a4f6c3bc26f13da63adefa83630a6fab68a12eb6"
+}

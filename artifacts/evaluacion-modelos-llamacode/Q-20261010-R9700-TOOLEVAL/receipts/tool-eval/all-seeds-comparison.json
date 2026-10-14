@@ -1,0 +1,363 @@
+{
+  "task_id": "Q-20261010-R9700-TOOLEVAL",
+  "generated_utc": "2026-10-13",
+  "suite": {
+    "name": "tool-eval-bench",
+    "version": "2.7.0",
+    "commit": "c483eef867d75d9dd04c7d370fe553f96a49d672",
+    "standard_scenarios": 69,
+    "hard_mode_scenarios": 19,
+    "scenario_fingerprint_sha256": "23458e28ce6ee21524f14dd61ab091a12d50e6a58bd0466ef74a78c556191fad",
+    "standard_source_sha256": "c5120276a7ab6da838c9610e3a386c1eb7f55fa75ab654a82760c3321e050160",
+    "hard_mode_source_sha256": "b6ca4df5675e8cddaada7b690dee341d94bd8ba45d43a4b43dce931fdf622106"
+  },
+  "sampling": {
+    "temperature": 1.0,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0,
+    "repetition_penalty": 1.0,
+    "presence_penalty": 0.0,
+    "max_tokens": 16384,
+    "max_turns": 8,
+    "timeout_seconds": 600,
+    "parallel": 1,
+    "error_rate": 0.0,
+    "enable_thinking": true,
+    "reasoning_effort": "medium",
+    "seeds": [
+      42,
+      43,
+      44
+    ]
+  },
+  "profiles": {
+    "SOL": {
+      "profile": "Qwen3.8-27B AutoRound INT4; vLLM 0.27.1 TP2, P2P, MTP4, FP8 KV, contexto 262144",
+      "standard": [
+        {
+          "seed": 42,
+          "score": 25,
+          "points": 34,
+          "max_points": 138,
+          "scenario_count": 69,
+          "status": "completed",
+          "pass": 10,
+          "partial": 14,
+          "fail": 45,
+          "scenario_elapsed_seconds": 752.08,
+          "receipt": "receipts/raw/sol-standard-seed42-retry1.json",
+          "report": "artifacts/evaluacion-modelos-llamacode/Q-20261010-R9700-TOOLEVAL/receipts/reports/sol/standard/seed42-retry1/2026/10/2026-10-12T20-48-40.301683Z_cea9ab91--sol-v2.7.0-standard-seed42-retry1.md"
+        },
+        {
+          "seed": 43,
+          "score": 25,
+          "points": 34,
+          "max_points": 138,
+          "scenario_count": 69,
+          "status": "completed",
+          "pass": 10,
+          "partial": 14,
+          "fail": 45,
+          "scenario_elapsed_seconds": 597.19,
+          "receipt": "receipts/raw/sol-standard-seed43.json",
+          "report": "artifacts/evaluacion-modelos-llamacode/Q-20261010-R9700-TOOLEVAL/receipts/reports/sol/standard/seed43/2026/10/2026-10-12T21-06-04.051956Z_c3772ac0--sol-v2.7.0-standard-seed43.md"
+        },
+        {
+          "seed": 44,
+          "score": 27,
+          "points": 37,
+          "max_points": 138,
+          "scenario_count": 69,
+          "status": "completed",
+          "pass": 11,
+          "partial": 15,
+          "fail": 43,
+          "scenario_elapsed_seconds": 829.49,
+          "receipt": "receipts/raw/sol-standard-seed44.json",
+          "report": "artifacts/evaluacion-modelos-llamacode/Q-20261010-R9700-TOOLEVAL/receipts/reports/sol/standard/seed44/2026/10/2026-10-12T21-19-17.804907Z_5fd47606--sol-v2.7.0-standard-seed44.md"
+        }
+      ],
+      "hard_mode": [
+        {
+          "seed": 42,
+          "score": 58,
+          "points": 22,
+          "max_points": 38,
+          "scenario_count": 19,
+          "status": "completed",
+          "pass": 10,
+          "partial": 2,
+          "fail": 7,
+          "scenario_elapsed_seconds": 139.89,
+          "receipt": "receipts/raw/sol-hardmode-seed42.json",
+          "report": "artifacts/evaluacion-modelos-llamacode/Q-20261010-R9700-TOOLEVAL/receipts/reports/sol/hardmode/seed42/2026/10/2026-10-12T21-02-52.568600Z_65d27788--sol-v2.7.0-hardmode-seed42.md"
+        },
+        {
+          "seed": 43,
+          "score": 61,
+          "points": 23,
+          "max_points": 38,
+          "scenario_count": 19,
+          "status": "completed",
+          "pass": 11,
+          "partial": 1,
+          "fail": 7,
+          "scenario_elapsed_seconds": 150.79,
+          "receipt": "receipts/raw/sol-hardmode-seed43.json",
+          "report": "artifacts/evaluacion-modelos-llamacode/Q-20261010-R9700-TOOLEVAL/receipts/reports/sol/hardmode/seed43/2026/10/2026-10-12T21-16-34.483109Z_d07077ac--sol-v2.7.0-hardmode-seed43.md"
+        },
+        {
+          "seed": 44,
+          "score": 55,
+          "points": 21,
+          "max_points": 38,
+          "scenario_count": 19,
+          "status": "completed",
+          "pass": 10,
+          "partial": 1,
+          "fail": 8,
+          "scenario_elapsed_seconds": 156.79,
+          "receipt": "receipts/raw/sol-hardmode-seed44.json",
+          "report": "artifacts/evaluacion-modelos-llamacode/Q-20261010-R9700-TOOLEVAL/receipts/reports/sol/hardmode/seed44/2026/10/2026-10-12T21-33-17.966888Z_8014def5--sol-v2.7.0-hardmode-seed44.md"
+        }
+      ],
+      "standard_mean": 25.67,
+      "hard_mode_mean": 58,
+      "standard_range": [
+        25,
+        27
+      ],
+      "hard_mode_range": [
+        55,
+        61
+      ]
+    },
+    "ASTRA IQ3_S calibrado": {
+      "profile": "Qwen3.8-Flash-Next IQ3_S calibrado; Strata 0.1.41; dual RTX 3090; contexto 131072; KV int8; spec/MTP4",
+      "standard": [
+        {
+          "seed": 42,
+          "score": 88,
+          "points": 122,
+          "max_points": 138,
+          "scenario_count": 69,
+          "status": "completed",
+          "pass": 55,
+          "partial": 12,
+          "fail": 2,
+          "scenario_elapsed_seconds": 571.76,
+          "receipt": "receipts/raw/astra-standard-seed42-retry1.json",
+          "report": "artifacts/evaluacion-modelos-llamacode/Q-20261010-R9700-TOOLEVAL/receipts/reports/astra/standard/seed42-retry1/2026/10/2026-10-13T01-45-54.334236Z_ddfa775a--astra-iq3_s-v2.7.0-standard-seed42-retry1.md"
+        },
+        {
+          "seed": 43,
+          "score": 87,
+          "points": 120,
+          "max_points": 138,
+          "scenario_count": 69,
+          "status": "completed",
+          "pass": 54,
+          "partial": 12,
+          "fail": 3,
+          "scenario_elapsed_seconds": 577.69,
+          "receipt": "receipts/raw/astra-standard-seed43.json",
+          "report": "artifacts/evaluacion-modelos-llamacode/Q-20261010-R9700-TOOLEVAL/receipts/reports/astra/standard/seed43/2026/10/2026-10-13T01-55-40.296032Z_e507056b--astra-iq3_s-v2.7.0-standard-seed43.md"
+        },
+        {
+          "seed": 44,
+          "score": 88,
+          "points": 122,
+          "max_points": 138,
+          "scenario_count": 69,
+          "status": "completed",
+          "pass": 56,
+          "partial": 10,
+          "fail": 3,
+          "scenario_elapsed_seconds": 477.07,
+          "receipt": "receipts/raw/astra-standard-seed44.json",
+          "report": "artifacts/evaluacion-modelos-llamacode/Q-20261010-R9700-TOOLEVAL/receipts/reports/astra/standard/seed44/2026/10/2026-10-13T02-05-26.936961Z_f33b4ec0--astra-iq3_s-v2.7.0-standard-seed44.md"
+        }
+      ],
+      "hard_mode": [
+        {
+          "seed": 42,
+          "score": 68,
+          "points": 26,
+          "max_points": 38,
+          "scenario_count": 19,
+          "status": "completed",
+          "pass": 12,
+          "partial": 2,
+          "fail": 5,
+          "scenario_elapsed_seconds": 182.8,
+          "receipt": "receipts/raw/astra-hardmode-seed42.json",
+          "report": "artifacts/evaluacion-modelos-llamacode/Q-20261010-R9700-TOOLEVAL/receipts/reports/astra/hardmode/seed42/2026/10/2026-10-13T02-13-32.566794Z_045a6c95--astra-iq3_s-v2.7.0-hardmode-seed42.md"
+        },
+        {
+          "seed": 43,
+          "score": 76,
+          "points": 29,
+          "max_points": 38,
+          "scenario_count": 19,
+          "status": "completed",
+          "pass": 14,
+          "partial": 1,
+          "fail": 4,
+          "scenario_elapsed_seconds": 233.03,
+          "receipt": "receipts/raw/astra-hardmode-seed43.json",
+          "report": "artifacts/evaluacion-modelos-llamacode/Q-20261010-R9700-TOOLEVAL/receipts/reports/astra/hardmode/seed43/2026/10/2026-10-13T02-16-42.777428Z_7cbadb11--astra-iq3_s-v2.7.0-hardmode-seed43.md"
+        },
+        {
+          "seed": 44,
+          "score": 82,
+          "points": 31,
+          "max_points": 38,
+          "scenario_count": 19,
+          "status": "completed",
+          "pass": 15,
+          "partial": 1,
+          "fail": 3,
+          "scenario_elapsed_seconds": 181.83,
+          "receipt": "receipts/raw/astra-hardmode-seed44.json",
+          "report": "artifacts/evaluacion-modelos-llamacode/Q-20261010-R9700-TOOLEVAL/receipts/reports/astra/hardmode/seed44/2026/10/2026-10-13T02-20-40.458807Z_452e77ab--astra-iq3_s-v2.7.0-hardmode-seed44.md"
+        }
+      ],
+      "standard_mean": 87.67,
+      "hard_mode_mean": 75.33,
+      "standard_range": [
+        87,
+        88
+      ],
+      "hard_mode_range": [
+        68,
+        82
+      ]
+    },
+    "Flash-Next Q4 UD-Q4_K_XL": {
+      "profile": "Qwen3.8-Flash-Next UD-Q4_K_XL; Strata 0.1.41; dual RTX 3090; split 18/30; contexto 131072; KV int8; MTP4",
+      "standard": [
+        {
+          "seed": 42,
+          "score": 88,
+          "points": 122,
+          "max_points": 138,
+          "scenario_count": 69,
+          "status": "completed",
+          "pass": 56,
+          "partial": 10,
+          "fail": 3,
+          "scenario_elapsed_seconds": 1037.62,
+          "receipt": "receipts/raw/q4-standard-seed42-retry1.json",
+          "report": "artifacts/evaluacion-modelos-llamacode/Q-20261010-R9700-TOOLEVAL/receipts/reports/q4/standard/seed42-retry1/2026/10/2026-10-13T02-30-47.914344Z_6c62637a--flash-next-q4-v2.7.0-standard-seed42-retry1.md"
+        },
+        {
+          "seed": 43,
+          "score": 89,
+          "points": 123,
+          "max_points": 138,
+          "scenario_count": 69,
+          "status": "completed",
+          "pass": 57,
+          "partial": 9,
+          "fail": 3,
+          "scenario_elapsed_seconds": 1090.64,
+          "receipt": "receipts/raw/q4-standard-seed43.json",
+          "report": "artifacts/evaluacion-modelos-llamacode/Q-20261010-R9700-TOOLEVAL/receipts/reports/q4/standard/seed43/2026/10/2026-10-13T02-48-59.851000Z_2a2e1743--flash-next-q4-v2.7.0-standard-seed43.md"
+        },
+        {
+          "seed": 44,
+          "score": 95,
+          "points": 131,
+          "max_points": 138,
+          "scenario_count": 69,
+          "status": "completed",
+          "pass": 63,
+          "partial": 5,
+          "fail": 1,
+          "scenario_elapsed_seconds": 1087.22,
+          "receipt": "receipts/raw/q4-standard-seed44.json",
+          "report": "artifacts/evaluacion-modelos-llamacode/Q-20261010-R9700-TOOLEVAL/receipts/reports/q4/standard/seed44/2026/10/2026-10-13T03-09-29.703643Z_b4131bff--flash-next-q4-v2.7.0-standard-seed44.md"
+        }
+      ],
+      "hard_mode": [
+        {
+          "seed": 42,
+          "score": 87,
+          "points": 33,
+          "max_points": 38,
+          "scenario_count": 19,
+          "status": "completed",
+          "pass": 16,
+          "partial": 1,
+          "fail": 2,
+          "scenario_elapsed_seconds": 392.88,
+          "receipt": "receipts/raw/q4-hardmode-seed42.json",
+          "report": "artifacts/evaluacion-modelos-llamacode/Q-20261010-R9700-TOOLEVAL/receipts/reports/q4/hardmode/seed42/2026/10/2026-10-13T03-28-11.439331Z_9a5fe031--flash-next-q4-v2.7.0-hard-mode-seed42.md"
+        },
+        {
+          "seed": 43,
+          "score": 84,
+          "points": 32,
+          "max_points": 38,
+          "scenario_count": 19,
+          "status": "completed",
+          "pass": 16,
+          "partial": 0,
+          "fail": 3,
+          "scenario_elapsed_seconds": 384.83,
+          "receipt": "receipts/raw/q4-hardmode-seed43.json",
+          "report": "artifacts/evaluacion-modelos-llamacode/Q-20261010-R9700-TOOLEVAL/receipts/reports/q4/hardmode/seed43/2026/10/2026-10-13T03-35-02.330808Z_11d0c0a9--flash-next-q4-v2.7.0-hard-mode-seed43.md"
+        },
+        {
+          "seed": 44,
+          "score": 89,
+          "points": 34,
+          "max_points": 38,
+          "scenario_count": 19,
+          "status": "completed",
+          "pass": 16,
+          "partial": 2,
+          "fail": 1,
+          "scenario_elapsed_seconds": 360.89,
+          "receipt": "receipts/raw/q4-hardmode-seed44.json",
+          "report": "artifacts/evaluacion-modelos-llamacode/Q-20261010-R9700-TOOLEVAL/receipts/reports/q4/hardmode/seed44/2026/10/2026-10-13T03-41-57.412355Z_e65d8006--flash-next-q4-v2.7.0-hard-mode-seed44.md"
+        }
+      ],
+      "standard_mean": 90.67,
+      "hard_mode_mean": 86.67,
+      "standard_range": [
+        88,
+        95
+      ],
+      "hard_mode_range": [
+        84,
+        89
+      ]
+    }
+  },
+  "historical_reference": {
+    "suite": "tool-eval-bench Hard Mode",
+    "version": "2.8.0",
+    "commit": "0a1ba68c7709f429298bc92417a9e003f61de4e3",
+    "scenarios": 28,
+    "seeds": [
+      42,
+      43,
+      44
+    ],
+    "scores": {
+      "Flash-Next Q4 UD-Q4_K_XL": 77.38,
+      "ASTRA IQ3_S calibrado": 71.43,
+      "SOL": 66.07
+    },
+    "sampling_temperature": 0.6,
+    "comparison_note": "Different suite release (19 vs 28 scenarios), scenario scoring and temperature; arithmetic differences are descriptive only and do not establish quality improvement."
+  },
+  "limits": [
+    "Mocked tool interactions; not real GUI/Computer Usage E2E.",
+    "Q4 and ASTRA Strata return HTTP 400 for TC-65/66/67/69: structured response_format with tools/MCP unsupported; these remain partial profile outcomes.",
+    "Current v2.7 Hard Mode contains TC-70..TC-88 only; tenant isolation TC-92 and redaction TC-97 from v2.8 were not retested.",
+    "No TPS/independent Server Speed measurement in this campaign."
+  ]
+}

@@ -1,0 +1,193 @@
+{
+    "acceptance": [
+        {
+            "output": "Archivo esperado no encontrado: solution_BigCodeBench_928.py",
+            "passed": false,
+            "taskId": "BigCodeBench/928",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_BigCodeBench_765.py",
+            "passed": false,
+            "taskId": "BigCodeBench/765",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_BigCodeBench_771.py",
+            "passed": false,
+            "taskId": "BigCodeBench/771",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_BigCodeBench_1019.py",
+            "passed": false,
+            "taskId": "BigCodeBench/1019",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_BigCodeBench_906.py",
+            "passed": false,
+            "taskId": "BigCodeBench/906",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_BigCodeBench_583.py",
+            "passed": false,
+            "taskId": "BigCodeBench/583",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_BigCodeBench_139.py",
+            "passed": false,
+            "taskId": "BigCodeBench/139",
+            "type": "grader:code_tests"
+        },
+        {
+            "output": "Archivo esperado no encontrado: solution_BigCodeBench_360.py",
+            "passed": false,
+            "taskId": "BigCodeBench/360",
+            "type": "grader:code_tests"
+        }
+    ],
+    "agentFiles": [
+    ],
+    "agentMetrics": [
+        {
+            "elapsedMs": 2334,
+            "tokens": 0,
+            "tps": 0,
+            "ttft_ms": 2851
+        },
+        {
+            "elapsedMs": 68,
+            "tokens": 7,
+            "tps": 102.94117647058823
+        },
+        {
+            "elapsedMs": 117,
+            "tokens": 6,
+            "tps": 51.282051282051285
+        },
+        {
+            "elapsedMs": 73,
+            "tokens": 7,
+            "tps": 95.89041095890411
+        },
+        {
+            "elapsedMs": 61,
+            "tokens": 7,
+            "tps": 114.75409836065573
+        },
+        {
+            "elapsedMs": 63,
+            "tokens": 7,
+            "tps": 111.11111111111111
+        },
+        {
+            "elapsedMs": 63,
+            "tokens": 7,
+            "tps": 111.11111111111111
+        }
+    ],
+    "agentProfileId": "agent-maximo",
+    "agentProfileName": "Máximo",
+    "agentSeed": 4242,
+    "agentTemperature": 0.1,
+    "agentVariant": "baseline",
+    "avgTps": 97.84832654907025,
+    "avgTtftMs": 2851,
+    "benchmarkMemoryPlanner": "llama.cpp-fit-expert-aware",
+    "benchmarkName": "BigCodeBench-Hard (8 ítems)",
+    "complexityMetrics": {
+        "addedLines": 0,
+        "filesChanged": 0,
+        "filesCreated": 0,
+        "filesDeleted": 0,
+        "removedLines": 0
+    },
+    "elapsedSec": 7.441,
+    "failed": true,
+    "failureDetail": "[\n    {\n        \"output\": \"Archivo esperado no encontrado: solution_BigCodeBench_928.py\",\n        \"passed\": false,\n        \"taskId\": \"BigCodeBench/928\",\n        \"type\": \"grader:code_tests\"\n    },\n    {\n        \"output\": \"Archivo esperado no encontrado: solution_BigCodeBench_765.py\",\n        \"passed\": false,\n        \"taskId\": \"BigCodeBench/765\",\n        \"type\": \"grader:code_tests\"\n    },\n    {\n        \"output\": \"Archivo esperado no encontrado: solution_BigCodeBench_771.py\",\n        \"passed\": false,\n        \"taskId\": \"BigCodeBench/771\",\n        \"type\": \"grader:code_tests\"\n    },\n    {\n        \"output\": \"Archivo esperado no encontrado: solution_BigCodeBench_1019.py\",\n        \"passed\": false,\n        \"taskId\": \"BigCodeBench/1019\",\n        \"type\": \"grader:code_tests\"\n    },\n    {\n        \"output\": \"Archivo esperado no encontrado: solution_BigCodeBench_906.py\",\n        \"passed\": false,\n        \"taskId\": \"BigCodeBench/906\",\n        \"type\": \"grader:code_tests\"\n    },\n    {\n        \"output\": \"Archivo esperado no encontrado: solution_BigCodeBench_583.py\",\n        \"passed\": false,\n        \"taskId\": \"BigCodeBench/583\",\n        \"type\": \"grader:code_tests\"\n    },\n    {\n        \"output\": \"Archivo esperado no encontrado: solution_BigCodeBench_139.py\",\n        \"passed\": false,\n        \"taskId\": \"BigCodeBench/139\",\n        \"type\": \"grader:code_tests\"\n    },\n    {\n        \"output\": \"Archivo esperado no encontrado: solution_BigCodeBench_360.py\",\n        \"passed\": false,\n        \"taskId\": \"BigCodeBench/360\",\n        \"type\": \"grader:code_tests\"\n    }\n]\n",
+    "failureKind": "quality",
+    "failureMessage": "[error: Connection closed]",
+    "failureStage": "acceptance",
+    "finalScore": 0,
+    "finalTotal": 8,
+    "firstAttemptScore": 0,
+    "firstAttemptTotal": 8,
+    "firstEvaluableSec": -1,
+    "firstToolCallSec": -1,
+    "firstWriteSec": -1,
+    "generationSec": 2.779,
+    "harnessEngineId": "legacy",
+    "harnessEngineVersion": 1,
+    "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+    "honeyEnabled": false,
+    "id": "5dc5735a-59eb-4c5a-88c8-3e60d7e8492c",
+    "measurementPhase": "cold",
+    "mode": "custom",
+    "nonGenerationSec": 4.662,
+    "pass": 1,
+    "passedAfterRepair": false,
+    "passesTotal": 1,
+    "profileConfigFingerprint": "7f2c2099c267ac1809cbacc22f7660947ccf1423120135fe1e510e1ed93c369f",
+    "profileId": "0a5c5eb8-6080-4a0d-861a-e6b9c0a9af79",
+    "profileName": "Q-20261009 SOL control",
+    "progressGovernor": {
+        "progressEvents": 0,
+        "replanEvents": 0,
+        "stagnationEvents": 0
+    },
+    "qualityScore": 0,
+    "qualityTotal": 8,
+    "ramFreeMb": 0,
+    "ramMb": 0,
+    "ramTotalMb": 0,
+    "repairAttempts": 0,
+    "response": "[error: Connection closed]",
+    "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/BigCodeBench-Hard_8_tems__20261012_135657",
+    "runLabel": "BigCodeBench-Hard (8 ítems)",
+    "setupSec": 0,
+    "target": "agent",
+    "thinkingEnabled": true,
+    "timeToFirstAttempt": 7.441,
+    "timedOut": false,
+    "timeoutSec": 1800,
+    "timestamp": 1791824226956,
+    "toolCallQuality": {
+        "expectedCalls": 0,
+        "f1Pct": -1,
+        "failedCalls": 0,
+        "incompleteCalls": 0,
+        "invalidCalls": 0,
+        "matchedExpectedCalls": 0,
+        "missingExpectedCalls": 0,
+        "precisionPct": -1,
+        "recallPct": -1,
+        "redundantCalls": 0,
+        "sequenceExact": false,
+        "successRatePct": -1,
+        "successfulCalls": 0,
+        "totalCalls": 0,
+        "unexpectedCalls": 0
+    },
+    "toolCalls": 0,
+    "totalTime": 7.441,
+    "transportAfterEvaluation": true,
+    "vramFreeMb": 3400,
+    "vramGpu0FreeMb": 1156,
+    "vramGpu0Mb": 22966,
+    "vramGpu0TotalMb": 24576,
+    "vramGpu0UsedPct": 93.44889322916666,
+    "vramGpu1FreeMb": 2244,
+    "vramGpu1Mb": 21880,
+    "vramGpu1TotalMb": 24576,
+    "vramGpu1UsedPct": 89.02994791666666,
+    "vramMb": 44846,
+    "vramNormalizedImbalancePct": 4.4189453125,
+    "vramObservedGpu0SharePct": 51.210810328680374,
+    "vramOptimalGpu0SharePct": 34,
+    "vramPlacementAssessment": "gpu0-heavy",
+    "vramTelemetryScope": "device-total",
+    "workspace": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/BigCodeBench-Hard_8_tems__20261012_135657/Q-20261009_SOL_control__ws"
+}

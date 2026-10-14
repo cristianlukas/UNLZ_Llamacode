@@ -1,0 +1,317 @@
+ParallelConfig:
+  Configuration for the distributed execution.
+
+  --all2all-backend {allgather_reducescatter,deepep_high_throughput,deepep_low_latency,deepep_v2,flashinfer_all2allv,flashinfer_nvlink_one_sided,flashinfer_nvlink_two_sided,mori_high_throughput,mori_low_latency,naive,nixl_ep,pplx}
+                        All2All backend for MoE expert parallel communication.
+                        Available options:
+                        - "allgather_reducescatter": All2all based on
+                        allgather and reducescatter
+                        - "deepep_high_throughput": Use deepep high-throughput
+                        kernels
+                        - "deepep_low_latency": Use deepep low-latency kernels
+                        - "mori_high_throughput": MoRI EP with InterNodeV1 for
+                        multi-node
+                        - "mori_low_latency": MoRI EP with InterNodeV1LL for
+                        multi-node
+                        - "nixl_ep": Use nixl-ep kernels
+                        - "flashinfer_nvlink_one_sided": Use flashinfer high-
+                        throughput a2a kernels
+                        - "flashinfer_nvlink_two_sided": Use flashinfer two-
+                        sided kernels for mnnvl (default:
+                        allgather_reducescatter)
+  --cp-kv-cache-interleave-size CP_KV_CACHE_INTERLEAVE_SIZE
+                        Interleave size of kv_cache storage while using DCP.
+                        Store interleave_size tokens on dcp_rank i, then store
+                        next interleave_size tokens on dcp_rank i+1.
+                        Interleave_size=1: token-level alignment, where token
+                        `i` is stored on dcp_rank `i % dcp_world_size`.
+                        Interleave_size=block_size: block-level alignment,
+                        where tokens are first populated to the preceding
+                        ranks. Tokens are then stored in (rank i+1, block j)
+                        only after (rank i, block j) is fully occupied.
+                        Block_size should be greater than or equal to
+                        cp_kv_cache_interleave_size. Block_size should be
+                        divisible by cp_kv_cache_interleave_size.
+                        When --cp-kv-cache-interleave-size is omitted (None),
+                        the interleave size is resolved automatically based on
+                        NIXL transfer requirements. Explicit settings take
+                        priority. (default: None)
+  --cpu-distributed-timeout-seconds CPU_DISTRIBUTED_TIMEOUT_SECONDS
+                        Timeout (in seconds) for cpu communication groups. If
+                        None, PyTorch's default timeout is used (1800s for
+                        gloo). (default: None)
+  --data-parallel-address DATA_PARALLEL_ADDRESS, -dpa DATA_PARALLEL_ADDRESS
+                        Address of data parallel cluster head-node. (default:
+                        None)
+  --data-parallel-backend DATA_PARALLEL_BACKEND, -dpb DATA_PARALLEL_BACKEND
+                        Backend for data parallel, either "mp" or "ray".
+                        (default: mp)
+  --data-parallel-external-lb, --no-data-parallel-external-lb, -dpe
+                        Whether to use "external" DP LB mode. Applies only to
+                        online serving and when data_parallel_size > 0. This
+                        is useful for a "one-pod-per-rank" wide-EP setup in
+                        Kubernetes. Supported only for MoE deployments; non-
+                        MoE models should use independent vLLM instances
+                        without --data-parallel-* arguments. Set implicitly
+                        when --data-parallel-rank is provided explicitly to
+                        vllm serve. (default: False)
+  --data-parallel-hybrid-lb, --no-data-parallel-hybrid-lb, -dph
+                        Whether to use "hybrid" DP LB mode. Applies only to
+                        online serving and when data_parallel_size > 0.
+                        Enables running an AsyncLLM and API server on a "per-
+                        node" basis where vLLM load balances between local
+                        data parallel ranks, but an external LB balances
+                        between vLLM nodes/replicas. Set explicitly in
+                        conjunction with
+                        --data-parallel-start-rank. (default: False)
+  --data-parallel-multi-port-external-lb, -dpm
+                        Run a node-local supervisor that launches one
+                        external-LB API server per local data parallel rank
+                        and exposes aggregated health on a supervisor port.
+                        (default: False)
+  --data-parallel-rank DATA_PARALLEL_RANK, -dpn DATA_PARALLEL_RANK
+                        Data parallel rank of this instance. When set, enables
+                        external load balancer mode for MoE data-parallel
+                        deployments. Unsupported for non-MoE models; launch
+                        independent vLLM instances instead. (default: None)
+  --data-parallel-rpc-port DATA_PARALLEL_RPC_PORT, -dpp DATA_PARALLEL_RPC_PORT
+                        Fixed port for data parallel RPC communication. All
+                        nodes must use the same port. (default: None)
+  --data-parallel-size DATA_PARALLEL_SIZE, -dp DATA_PARALLEL_SIZE
+                        Number of data parallel groups. MoE layers will be
+                        sharded according to the product of the tensor,
+                        prefill-context, and data parallel sizes. (default: 1)
+  --data-parallel-size-local DATA_PARALLEL_SIZE_LOCAL, -dpl DATA_PARALLEL_SIZE_LOCAL
+                        Number of data parallel replicas to run on this node.
+                        (default: None)
+  --data-parallel-start-rank DATA_PARALLEL_START_RANK, -dpr DATA_PARALLEL_START_RANK
+                        Starting data parallel rank for secondary nodes.
+                        (default: None)
+  --dbo-decode-token-threshold DBO_DECODE_TOKEN_THRESHOLD
+                        The threshold for dual batch overlap for batches only
+                        containing decodes. If the number of tokens in the
+                        request is greater than this threshold, microbatching
+                        will be used. Otherwise, the request will be processed
+                        in a single batch. (default: 32)
+  --dbo-prefill-token-threshold DBO_PREFILL_TOKEN_THRESHOLD
+                        The threshold for dual batch overlap for batches that
+                        contain one or more prefills. If the number of tokens
+                        in the request is greater than this threshold,
+                        microbatching will be used. Otherwise, the request
+                        will be processed in a single batch. (default: 512)
+  --dcp-comm-backend {a2a,ag_rs,None}
+                        Communication backend for Decode Context Parallel
+                        (DCP).
+                        - "ag_rs": AllGather + ReduceScatter (existing
+                        behavior)
+                        - "a2a": All-to-All exchange of partial outputs + LSE,
+                        then combine with Triton kernel. Reduces NCCL calls
+                        from 3 to 2 per layer for MLA models.
+                        `None` selects the model default, which is "ag_rs"
+                        unless the model overrides it via [`set_dcp_defaults`]
+                        [vllm.config.ParallelConfig.set_dcp_defaults].
+                        (default: None)
+  --dcp-kv-cache-interleave-size DCP_KV_CACHE_INTERLEAVE_SIZE
+                        Interleave size of kv_cache storage while using DCP.
+                        dcp_kv_cache_interleave_size has been replaced by
+                        cp_kv_cache_interleave_size, and will be deprecated
+                        when PCP is fully supported. (default: 1)
+  --dcp-q-replicate, --no-dcp-q-replicate
+                        Replicate the MLA query projection within each DCP
+                        group so decode can skip the query all-gather.
+                        With DCP the KV cache is sharded across the group, so
+                        the standard MLA decode path all-gathers the query
+                        every step. Replicating the (small) query projection
+                        at load time lets each rank materialize the full
+                        group-local head set and skip that  collective, at the
+                        cost of computing the projection redundantly on every
+                        rank  in the group. (default: None)
+  --decode-context-parallel-size DECODE_CONTEXT_PARALLEL_SIZE, -dcp DECODE_CONTEXT_PARALLEL_SIZE
+                        Number of ranks that shard the decode KV cache. DCP
+                        does not expand the process world size. Without PCP,
+                        DCP reuses TP ranks. With PCP, DCP either spans the
+                        PCP axis or the full TP x PCP block. (default: 1)
+  --device-ids DEVICE_IDS
+                        Comma-separated physical GPU device IDs or UUIDs to
+                        use (e.g. --device-ids "2,3,5,7"). Avoids setting
+                        CUDA_VISIBLE_DEVICES, preserving full GPU topology
+                        visibility for GPU-NIC affinity and DeepGEMM. Note:
+                        has no effect with Ray executors; use Ray placement
+                        groups for GPU selection instead. (default: None)
+  --disable-custom-all-reduce, --no-disable-custom-all-reduce
+                        Disable the custom all-reduce kernel and fall back to
+                        NCCL. (default: False)
+  --disable-nccl-for-dp-synchronization, --no-disable-nccl-for-dp-synchronization
+                        Forces the dp synchronization logic in
+                        vllm/v1/worker/dp_utils.py  to use Gloo instead of
+                        NCCL for its all reduce.
+                        Defaults to True when async scheduling is enabled,
+                        False otherwise. (default: None)
+  --distributed-executor-backend ['external_launcher', 'mp', 'ray', 'uni']
+                        Backend to use for distributed model workers, either
+                        "ray" or "mp" (multiprocessing). If the product of
+                        pipeline_parallel_size and tensor_parallel_size is
+                        less than or equal to the number of GPUs available,
+                        "mp" will be used to keep processing on a single host.
+                        Otherwise, an error will be raised. To use "mp" you
+                        must also set nnodes, and to use "ray" you must
+                        manually set distributed_executor_backend to "ray".
+                        Note:
+                        [TPU](https://docs.vllm.ai/projects/tpu/en/latest/)
+                        platform only supports Ray for distributed inference.
+                        (default: None)
+  --distributed-timeout-seconds DISTRIBUTED_TIMEOUT_SECONDS
+                        Timeout in seconds for distributed operations (e.g.,
+                        init_process_group). If set, this value is passed to
+                        torch.distributed.init_process_group as the timeout
+                        parameter. If None, PyTorch's default timeout is used
+                        (600s for NCCL). Increase this for multi-node setups
+                        where model downloads may be slow. (default: None)
+  --dp-sync-interval DP_SYNC_INTERVAL
+                        Steps between DP finish-sync all-reduces; must match
+                        across DP ranks. (default: 16)
+  --elastic-ep-max-dp-size ELASTIC_EP_MAX_DP_SIZE
+                        Maximum data parallel size supported by elastic expert
+                        parallelism. (default: None)
+  --enable-batch-sharded-sampling, --no-enable-batch-sharded-sampling
+                        Use sharded sampling across tensor parallel ranks.
+                        Each rank samples a slice of the batch instead of
+                        every rank sampling all of it. Currently defaults to
+                        False if not set. Enabling it explicitly raises when
+                        the config cannot support it (`tensor_parallel_size`
+                        must be > 1, `max_num_seqs` at least
+                        `tensor_parallel_size`, and `max_logprobs` non-
+                        negative). Models opt in by implementing
+                        `compute_logits_local`. (default: None)
+  --enable-dbo, --no-enable-dbo
+                        Enable dual batch overlap for the model executor.
+                        (default: False)
+  --enable-elastic-ep, --no-enable-elastic-ep
+                        Enable elastic expert parallelism with stateless NCCL
+                        groups for DP/EP. (default: False)
+  --enable-ep-weight-filter, --no-enable-ep-weight-filter
+                        Skip non-local expert weights during model loading
+                        when expert parallelism is active.  Each rank only
+                        reads its own expert shard from disk, which can
+                        drastically reduce storage I/O for MoE models with
+                        per-expert weight tensors (e.g. DeepSeek, Mixtral,
+                        Kimi-K2.5).  Has no effect on 3D fused-expert
+                        checkpoints (e.g. GPT-OSS) or non-MoE models.
+                        (default: False)
+  --enable-eplb, --no-enable-eplb
+                        Enable expert parallelism load balancing for MoE
+                        layers. (default: False)
+  --enable-expert-parallel, --no-enable-expert-parallel, -ep
+                        Use expert parallelism instead of tensor parallelism
+                        for MoE layers. (default: False)
+  --enable-fault-tolerance, --no-enable-fault-tolerance
+                        Enable fault tolerance for detailed error recovery,
+                        such as scaling down fault DPEngineCore. (default:
+                        False)
+  --eplb-config EPLB_CONFIG
+                        Expert parallelism configuration.
+                        API docs: https://docs.vllm.ai/en/v0.30.0/api/vllm/con
+                        fig/#vllm.config.EPLBConfig
+                        Should either be a valid JSON string or JSON keys
+                        passed individually. (default:
+                        EPLBConfig(window_size=1000, step_interval=3000,
+                        num_redundant_experts=0, log_balancedness=False,
+                        log_balancedness_interval=1, use_async=True,
+                        policy='default', communicator=None))
+  --expert-placement-strategy {linear,round_robin}
+                        The expert placement strategy for MoE layers:
+                        - "linear": Experts are placed in a contiguous manner.
+                        For example, with 4 experts and 2 ranks, rank 0 will
+                        have experts [0, 1] and rank 1 will have experts [2,
+                        3].
+                        - "round_robin": Experts are placed in a round-robin
+                        manner. For example, with 4 experts and 2 ranks, rank
+                        0 will have experts [0, 2] and rank 1 will have
+                        experts [1, 3]. This strategy can help improve load
+                        balancing for grouped expert models with no redundant
+                        experts. (default: linear)
+  --fault-tolerance-config FAULT_TOLERANCE_CONFIG
+                        The configurations for fault tolerance.
+                        API docs: https://docs.vllm.ai/en/v0.30.0/api/vllm/con
+                        fig/#vllm.config.FaultToleranceConfig
+                        Should either be a valid JSON string or JSON keys
+                        passed individually. (default:
+                        FaultToleranceConfig(engine_recovery_timeout_sec=120))
+  --master-addr MASTER_ADDR
+                        distributed master address for multi-node distributed
+                        inference when distributed_executor_backend is mp.
+                        (default: 127.0.0.1)
+  --master-port MASTER_PORT
+                        distributed master port for multi-node distributed
+                        inference when distributed_executor_backend is mp.
+                        (default: 29501)
+  --max-parallel-loading-workers MAX_PARALLEL_LOADING_WORKERS
+                        Maximum number of parallel loading workers when
+                        loading model sequentially in multiple batches. To
+                        avoid RAM OOM when using tensor parallel and large
+                        models. (default: None)
+  --nnodes NNODES, -n NNODES
+                        num of nodes for multi-node distributed inference when
+                        distributed_executor_backend is mp. (default: 1)
+  --node-rank NODE_RANK, -r NODE_RANK
+                        distributed node rank for multi-node distributed
+                        inference when distributed_executor_backend is mp.
+                        (default: 0)
+  --numa-bind, --no-numa-bind
+                        Enable NUMA binding for GPU worker subprocesses.
+                        By default, workers are pinned to their GPU's NUMA-
+                        local CPUs and memory; on PCT-capable Xeons they also
+                        auto-bind to the SKU's PCT priority cores. (default:
+                        False)
+  --numa-bind-cpus NUMA_BIND_CPUS [NUMA_BIND_CPUS ...]
+                        Optional CPU lists to bind each GPU worker to.
+                        Specify one CPU list per visible GPU, for example
+                        `["0-3", "4-7", "8-11", "12-15"]`. When set, vLLM uses
+                        `numactl --physcpubind` instead of `--cpunodebind`.
+                        This is useful for custom policies such as binding to
+                        PCT or other high-frequency cores. Each entry must use
+                        `numactl --physcpubind` CPU-list syntax, for example
+                        `"0-3"` or `"0,2,4-7"`. (default: None)
+  --numa-bind-nodes NUMA_BIND_NODES [NUMA_BIND_NODES ...]
+                        NUMA node to bind each GPU worker to.
+                        Specify one NUMA node per visible GPU, for example
+                        `[0, 0, 1, 1]` for a 4-GPU system with GPUs 0-1 on
+                        NUMA node 0 and GPUs 2-3 on NUMA node 1. If unset and
+                        `numa_bind=True`, vLLM auto-detects the GPU-to-NUMA
+                        topology. The values are passed to `numactl --membind`
+                        and `--cpunodebind`, so they must be valid `numactl`
+                        NUMA node indices. (default: None)
+  --pipeline-parallel-size PIPELINE_PARALLEL_SIZE, -pp PIPELINE_PARALLEL_SIZE
+                        Number of pipeline parallel groups. (default: 1)
+  --prefill-context-parallel-size PREFILL_CONTEXT_PARALLEL_SIZE, -pcp PREFILL_CONTEXT_PARALLEL_SIZE
+                        Number of ranks that split prefill sequence
+                        computation. PCP expands the process world size but
+                        does not increase the KV-cache shard count. (default:
+                        1)
+  --ray-workers-use-nsight, --no-ray-workers-use-nsight
+                        Whether to profile Ray workers with nsight, see
+                        https://docs.ray.io/en/latest/ray-observability/user-
+                        guides/profiling.html#profiling-nsight-profiler.
+                        (default: False)
+  --tensor-parallel-size TENSOR_PARALLEL_SIZE, -tp TENSOR_PARALLEL_SIZE
+                        Number of tensor parallel groups. (default: 1)
+  --ubatch-size UBATCH_SIZE
+                        Number of ubatch size. (default: 0)
+  --worker-cls WORKER_CLS
+                        The full name of the worker class to use. If "auto",
+                        the worker class will be determined based on the
+                        platform. (default: auto)
+  --worker-extension-cls WORKER_EXTENSION_CLS
+                        The full name of the worker extension class to use.
+                        The worker extension class is dynamically inherited by
+                        the worker class. This is used to inject new
+                        attributes and methods to the worker class for use in
+                        collective_rpc calls. (default: )
+
+When passing JSON CLI arguments, the following sets of arguments are equivalent:
+   --json-arg '{"key1": "value1", "key2": {"key3": "value2"}}'
+   --json-arg.key1 value1 --json-arg.key2.key3 value2
+
+Additionally, list elements can be passed individually using +:
+   --json-arg '{"key4": ["value3", "value4", "value5"]}'
+   --json-arg.key4+ value3 --json-arg.key4+='value4,value5'

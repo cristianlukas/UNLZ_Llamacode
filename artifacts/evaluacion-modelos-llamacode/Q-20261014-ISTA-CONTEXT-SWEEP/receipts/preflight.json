@@ -1,0 +1,56 @@
+{
+  "task": "Q-20261014-ISTA-CONTEXT-SWEEP",
+  "lock_token": "7315073a-0a80-41a1-8563-2190db9738fb",
+  "checked_at_utc": "2026-10-14T13:52:29.344445Z",
+  "memory": {
+    "mem_total_bytes": 132615835648,
+    "mem_available_bytes": 116362989568,
+    "mem_available_gib": 108.371,
+    "swap_total_bytes": 8589930496,
+    "swap_free_bytes": 454582272,
+    "swap_used_bytes": 8135348224,
+    "swap_used_gib": 7.577,
+    "guard_mem_available_gib_min": 32,
+    "guard_swap_used_gib_max_exclusive": 2
+  },
+  "swap_devices": [
+    {
+      "name": "/swap.img",
+      "type": "file",
+      "size_bytes": 8589930496,
+      "used_bytes": 8135348224,
+      "priority": -1
+    }
+  ],
+  "gpus": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 1113,
+      "memory_total_mib": 24576,
+      "utilization_percent": 21
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 108,
+      "memory_total_mib": 24576,
+      "utilization_percent": 27
+    }
+  ],
+  "compute_process_query": {
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "ports": {
+    "8350_listening": false,
+    "8898_listening": false
+  },
+  "inference_started": false,
+  "model_loaded": false,
+  "prompt_sent": false,
+  "decision": "blocked_before_inference",
+  "reason": "Swap use is 7.577 GiB, above the established <2 GiB guard; no existing process or swap configuration was changed.",
+  "swap_measurement_source": "/proc/meminfo SwapTotal minus SwapFree, cross-checked against swapon --show --bytes."
+}

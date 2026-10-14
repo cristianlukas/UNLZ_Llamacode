@@ -1,0 +1,27 @@
+{
+  "model": "saluki-iq2-mix",
+  "messages": [
+    {"role": "system", "content": "Use the requested function and provide its arguments."},
+    {"role": "user", "content": "Call add once with x=19 and y=23."}
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "add",
+        "description": "Add two numbers.",
+        "parameters": {
+          "type": "object",
+          "properties": {"x": {"type": "number"}, "y": {"type": "number"}},
+          "required": ["x", "y"],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "tool_choice": {"type": "function", "function": {"name": "add"}},
+  "parallel_tool_calls": false,
+  "temperature": 0.6,
+  "max_tokens": 128,
+  "stream": false
+}

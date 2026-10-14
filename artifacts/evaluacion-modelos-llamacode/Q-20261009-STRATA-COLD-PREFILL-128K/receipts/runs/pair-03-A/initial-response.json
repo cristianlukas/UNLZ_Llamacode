@@ -1,0 +1,78 @@
+{
+  "id": "resp_3b7c68be19a24a8ab3087337b170cc36",
+  "object": "response",
+  "created_at": 1791829644,
+  "status": "completed",
+  "background": false,
+  "error": null,
+  "incomplete_details": null,
+  "instructions": "You are testing context handling. Follow the user's exact instruction.",
+  "max_output_tokens": 16,
+  "model": "qwen3.8-flash-next-astra-iq3_s-calibrated",
+  "output": [
+    {
+      "id": "msg_cf2c5e514d47443097f832b718ae5137",
+      "type": "message",
+      "status": "completed",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "READY",
+          "annotations": [],
+          "logprobs": []
+        }
+      ]
+    }
+  ],
+  "parallel_tool_calls": false,
+  "previous_response_id": null,
+  "reasoning": {
+    "effort": "none",
+    "summary": null
+  },
+  "store": false,
+  "temperature": 0.6,
+  "text": {
+    "format": {
+      "type": "text"
+    }
+  },
+  "tool_choice": "auto",
+  "tools": [
+    {
+      "type": "function",
+      "name": "inspect_workspace",
+      "description": "Read-only inspection helper for an isolated coding workspace.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Relative path to inspect."
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ],
+  "top_p": 0.95,
+  "truncation": "disabled",
+  "usage": {
+    "input_tokens": 120412,
+    "input_tokens_details": {
+      "cached_tokens": 0
+    },
+    "output_tokens": 2,
+    "output_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "total_tokens": 120414
+  },
+  "user": null,
+  "metadata": {},
+  "completed_at": 1791829678
+}

@@ -1,0 +1,10 @@
+{
+  "classification": "invalid_infrastructure",
+  "attempt": 1,
+  "http_status": 500,
+  "server_error": "input (538 tokens) is too large to process; effective physical batch size was 512",
+  "cause": "llama-server forced n_batch to n_ubatch=512 because the first launch set batch-size 2048 and ubatch-size 512",
+  "resolution": "restart the same official runtime/model on CUDA1 with batch-size=2048 and ubatch-size=2048; keep corpus, queries and qrels unchanged",
+  "model_quality_score": null,
+  "baseline_bm25_rankings_saved": true
+}

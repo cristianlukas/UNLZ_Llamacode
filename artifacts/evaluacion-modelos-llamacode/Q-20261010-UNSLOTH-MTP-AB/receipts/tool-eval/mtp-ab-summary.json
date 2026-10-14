@@ -1,0 +1,2675 @@
+{
+  "schema_version": 1,
+  "task_id": "Q-20261010-UNSLOTH-MTP-AB",
+  "suite": {
+    "name": "tool-eval-bench Hard Mode",
+    "version": "2.8.0",
+    "variant_seed": 20261010,
+    "scenario_ids": [
+      "TC-70",
+      "TC-71",
+      "TC-72",
+      "TC-73",
+      "TC-74",
+      "TC-75",
+      "TC-76",
+      "TC-77",
+      "TC-78",
+      "TC-79",
+      "TC-80",
+      "TC-81",
+      "TC-82",
+      "TC-83",
+      "TC-84",
+      "TC-85",
+      "TC-86",
+      "TC-87",
+      "TC-88",
+      "TC-89",
+      "TC-90",
+      "TC-91",
+      "TC-92",
+      "TC-93",
+      "TC-94",
+      "TC-95",
+      "TC-96",
+      "TC-97"
+    ],
+    "seeds": [
+      42,
+      43,
+      44
+    ],
+    "timeout_seconds": 120,
+    "max_turns": 8,
+    "concurrency": 1,
+    "sampling": {
+      "temperature": 0.6,
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repeat_penalty": 1.0,
+      "thinking": true,
+      "reasoning_effort": "medium"
+    }
+  },
+  "arms": {
+    "mtp_on": {
+      "runs": [
+        {
+          "seed": 42,
+          "run_id": "2026-10-13T04-48-37.710547Z_422ed682",
+          "config_fingerprint": "e931c494feb1",
+          "final_score_rounded": 79,
+          "earned_points": 44,
+          "max_points": 56,
+          "score_exact": 78.57142857142857,
+          "status": "completed",
+          "scenario_duration_seconds": 2479.09,
+          "failures": [
+            "TC-88",
+            "TC-89",
+            "TC-91",
+            "TC-92"
+          ],
+          "partials": [
+            "TC-85",
+            "TC-90",
+            "TC-94",
+            "TC-97"
+          ],
+          "scenarios": {
+            "TC-70": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 23.41
+            },
+            "TC-71": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 48.1
+            },
+            "TC-72": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 138.12
+            },
+            "TC-73": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 96.35
+            },
+            "TC-74": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 301.22
+            },
+            "TC-75": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 59.14
+            },
+            "TC-76": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 31.6
+            },
+            "TC-77": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 7.17
+            },
+            "TC-78": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 45.85
+            },
+            "TC-79": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 50.66
+            },
+            "TC-80": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 55.98
+            },
+            "TC-81": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 33.88
+            },
+            "TC-82": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 44.23
+            },
+            "TC-83": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 34.21
+            },
+            "TC-84": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 181.13
+            },
+            "TC-85": {
+              "status": "partial",
+              "points": 1,
+              "max_points": 1,
+              "duration_seconds": 204.09
+            },
+            "TC-86": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 150.25
+            },
+            "TC-87": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 161.02
+            },
+            "TC-88": {
+              "status": "fail",
+              "points": 0,
+              "max_points": 2,
+              "duration_seconds": 165.03
+            },
+            "TC-89": {
+              "status": "fail",
+              "points": 0,
+              "max_points": 2,
+              "duration_seconds": 77.99
+            },
+            "TC-90": {
+              "status": "partial",
+              "points": 1,
+              "max_points": 1,
+              "duration_seconds": 55.51
+            },
+            "TC-91": {
+              "status": "fail",
+              "points": 0,
+              "max_points": 2,
+              "duration_seconds": 57.19
+            },
+            "TC-92": {
+              "status": "fail",
+              "points": 0,
+              "max_points": 2,
+              "duration_seconds": 70.98
+            },
+            "TC-93": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 45.9
+            },
+            "TC-94": {
+              "status": "partial",
+              "points": 1,
+              "max_points": 1,
+              "duration_seconds": 53.15
+            },
+            "TC-95": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 56.02
+            },
+            "TC-96": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 108.61
+            },
+            "TC-97": {
+              "status": "partial",
+              "points": 1,
+              "max_points": 1,
+              "duration_seconds": 122.3
+            }
+          }
+        },
+        {
+          "seed": 43,
+          "run_id": "2026-10-13T05-30-02.686972Z_d4f1df00",
+          "config_fingerprint": "4998306836a2",
+          "final_score_rounded": 86,
+          "earned_points": 48,
+          "max_points": 56,
+          "score_exact": 85.71428571428571,
+          "status": "completed",
+          "scenario_duration_seconds": 2273.83,
+          "failures": [
+            "TC-81",
+            "TC-89",
+            "TC-92"
+          ],
+          "partials": [
+            "TC-90",
+            "TC-97"
+          ],
+          "scenarios": {
+            "TC-70": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 22.82
+            },
+            "TC-71": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 82.46
+            },
+            "TC-72": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 135.72
+            },
+            "TC-73": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 88.18
+            },
+            "TC-74": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 295.85
+            },
+            "TC-75": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 63.09
+            },
+            "TC-76": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 33.18
+            },
+            "TC-77": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 6.24
+            },
+            "TC-78": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 29.35
+            },
+            "TC-79": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 50.53
+            },
+            "TC-80": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 44.19
+            },
+            "TC-81": {
+              "status": "fail",
+              "points": 0,
+              "max_points": 2,
+              "duration_seconds": 37.73
+            },
+            "TC-82": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 44.28
+            },
+            "TC-83": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 33.74
+            },
+            "TC-84": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 186.04
+            },
+            "TC-85": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 168.73
+            },
+            "TC-86": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 154.65
+            },
+            "TC-87": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 156.81
+            },
+            "TC-88": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 94.51
+            },
+            "TC-89": {
+              "status": "fail",
+              "points": 0,
+              "max_points": 2,
+              "duration_seconds": 55.99
+            },
+            "TC-90": {
+              "status": "partial",
+              "points": 1,
+              "max_points": 1,
+              "duration_seconds": 57.71
+            },
+            "TC-91": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 53.92
+            },
+            "TC-92": {
+              "status": "fail",
+              "points": 0,
+              "max_points": 2,
+              "duration_seconds": 75.06
+            },
+            "TC-93": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 42.01
+            },
+            "TC-94": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 50.66
+            },
+            "TC-95": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 49.81
+            },
+            "TC-96": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 56.32
+            },
+            "TC-97": {
+              "status": "partial",
+              "points": 1,
+              "max_points": 1,
+              "duration_seconds": 104.25
+            }
+          }
+        },
+        {
+          "seed": 44,
+          "run_id": "2026-10-13T06-08-01.908970Z_421d77b0",
+          "config_fingerprint": "44e0c7dc408e",
+          "final_score_rounded": 82,
+          "earned_points": 46,
+          "max_points": 56,
+          "score_exact": 82.14285714285714,
+          "status": "completed",
+          "scenario_duration_seconds": 2413.82,
+          "failures": [
+            "TC-87",
+            "TC-89",
+            "TC-92"
+          ],
+          "partials": [
+            "TC-85",
+            "TC-91",
+            "TC-94",
+            "TC-97"
+          ],
+          "scenarios": {
+            "TC-70": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 22.53
+            },
+            "TC-71": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 47.61
+            },
+            "TC-72": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 133.25
+            },
+            "TC-73": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 88.22
+            },
+            "TC-74": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 309.72
+            },
+            "TC-75": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 65.29
+            },
+            "TC-76": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 35.75
+            },
+            "TC-77": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 6.22
+            },
+            "TC-78": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 45.92
+            },
+            "TC-79": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 51.4
+            },
+            "TC-80": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 43.11
+            },
+            "TC-81": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 36.87
+            },
+            "TC-82": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 42.64
+            },
+            "TC-83": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 35.23
+            },
+            "TC-84": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 176.51
+            },
+            "TC-85": {
+              "status": "partial",
+              "points": 1,
+              "max_points": 1,
+              "duration_seconds": 175.88
+            },
+            "TC-86": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 147.17
+            },
+            "TC-87": {
+              "status": "fail",
+              "points": 0,
+              "max_points": 2,
+              "duration_seconds": 160.04
+            },
+            "TC-88": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 132.18
+            },
+            "TC-89": {
+              "status": "fail",
+              "points": 0,
+              "max_points": 2,
+              "duration_seconds": 81.5
+            },
+            "TC-90": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 107.8
+            },
+            "TC-91": {
+              "status": "partial",
+              "points": 1,
+              "max_points": 1,
+              "duration_seconds": 68.57
+            },
+            "TC-92": {
+              "status": "fail",
+              "points": 0,
+              "max_points": 2,
+              "duration_seconds": 70.51
+            },
+            "TC-93": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 46.06
+            },
+            "TC-94": {
+              "status": "partial",
+              "points": 1,
+              "max_points": 1,
+              "duration_seconds": 62.8
+            },
+            "TC-95": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 48.98
+            },
+            "TC-96": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 69.34
+            },
+            "TC-97": {
+              "status": "partial",
+              "points": 1,
+              "max_points": 1,
+              "duration_seconds": 102.72
+            }
+          }
+        }
+      ],
+      "total_points": 138,
+      "max_points": 168,
+      "aggregate_score_exact": 82.14285714285714,
+      "mean_rounded_run_score": 82.33333333333333,
+      "mean_scenario_duration_seconds": 2388.9133333333334,
+      "total_scenario_duration_seconds": 7166.74
+    },
+    "mtp_off": {
+      "runs": [
+        {
+          "seed": 42,
+          "run_id": "2026-10-13T06-48-44.599312Z_0be1be3b",
+          "config_fingerprint": "45bb158f8610",
+          "final_score_rounded": 84,
+          "earned_points": 47,
+          "max_points": 56,
+          "score_exact": 83.92857142857143,
+          "status": "completed",
+          "scenario_duration_seconds": 2673.2599999999998,
+          "failures": [
+            "TC-80",
+            "TC-89",
+            "TC-92"
+          ],
+          "partials": [
+            "TC-91",
+            "TC-94",
+            "TC-97"
+          ],
+          "scenarios": {
+            "TC-70": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 24.41
+            },
+            "TC-71": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 63.47
+            },
+            "TC-72": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 143.48
+            },
+            "TC-73": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 110.08
+            },
+            "TC-74": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 371.83
+            },
+            "TC-75": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 75.92
+            },
+            "TC-76": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 44.49
+            },
+            "TC-77": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 7.02
+            },
+            "TC-78": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 53.03
+            },
+            "TC-79": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 56.29
+            },
+            "TC-80": {
+              "status": "fail",
+              "points": 0,
+              "max_points": 2,
+              "duration_seconds": 43.83
+            },
+            "TC-81": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 40.38
+            },
+            "TC-82": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 48.01
+            },
+            "TC-83": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 37.08
+            },
+            "TC-84": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 212.62
+            },
+            "TC-85": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 174.27
+            },
+            "TC-86": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 149.29
+            },
+            "TC-87": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 195.74
+            },
+            "TC-88": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 142.88
+            },
+            "TC-89": {
+              "status": "fail",
+              "points": 0,
+              "max_points": 2,
+              "duration_seconds": 64.45
+            },
+            "TC-90": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 146.32
+            },
+            "TC-91": {
+              "status": "partial",
+              "points": 1,
+              "max_points": 1,
+              "duration_seconds": 56.28
+            },
+            "TC-92": {
+              "status": "fail",
+              "points": 0,
+              "max_points": 2,
+              "duration_seconds": 79.08
+            },
+            "TC-93": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 48.98
+            },
+            "TC-94": {
+              "status": "partial",
+              "points": 1,
+              "max_points": 1,
+              "duration_seconds": 54.51
+            },
+            "TC-95": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 53.86
+            },
+            "TC-96": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 70.58
+            },
+            "TC-97": {
+              "status": "partial",
+              "points": 1,
+              "max_points": 1,
+              "duration_seconds": 105.08
+            }
+          }
+        },
+        {
+          "seed": 43,
+          "run_id": "2026-10-13T07-33-31.683206Z_e932636f",
+          "config_fingerprint": "d82e99af5ddb",
+          "final_score_rounded": 75,
+          "earned_points": 42,
+          "max_points": 56,
+          "score_exact": 75.0,
+          "status": "completed",
+          "scenario_duration_seconds": 2672.79,
+          "failures": [
+            "TC-71",
+            "TC-74",
+            "TC-76",
+            "TC-89",
+            "TC-92"
+          ],
+          "partials": [
+            "TC-85",
+            "TC-91",
+            "TC-94",
+            "TC-97"
+          ],
+          "scenarios": {
+            "TC-70": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 24.63
+            },
+            "TC-71": {
+              "status": "fail",
+              "points": 0,
+              "max_points": 2,
+              "duration_seconds": 99.29
+            },
+            "TC-72": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 144.64
+            },
+            "TC-73": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 101.22
+            },
+            "TC-74": {
+              "status": "fail",
+              "points": 0,
+              "max_points": 2,
+              "duration_seconds": 241.56
+            },
+            "TC-75": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 69.9
+            },
+            "TC-76": {
+              "status": "fail",
+              "points": 0,
+              "max_points": 2,
+              "duration_seconds": 35.65
+            },
+            "TC-77": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 7.29
+            },
+            "TC-78": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 51.91
+            },
+            "TC-79": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 55.62
+            },
+            "TC-80": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 49.35
+            },
+            "TC-81": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 41.16
+            },
+            "TC-82": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 69.5
+            },
+            "TC-83": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 37.41
+            },
+            "TC-84": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 189.98
+            },
+            "TC-85": {
+              "status": "partial",
+              "points": 1,
+              "max_points": 1,
+              "duration_seconds": 189.5
+            },
+            "TC-86": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 217.08
+            },
+            "TC-87": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 174.29
+            },
+            "TC-88": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 138.97
+            },
+            "TC-89": {
+              "status": "fail",
+              "points": 0,
+              "max_points": 2,
+              "duration_seconds": 116.73
+            },
+            "TC-90": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 119.61
+            },
+            "TC-91": {
+              "status": "partial",
+              "points": 1,
+              "max_points": 1,
+              "duration_seconds": 60.19
+            },
+            "TC-92": {
+              "status": "fail",
+              "points": 0,
+              "max_points": 2,
+              "duration_seconds": 90.63
+            },
+            "TC-93": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 44.28
+            },
+            "TC-94": {
+              "status": "partial",
+              "points": 1,
+              "max_points": 1,
+              "duration_seconds": 57.48
+            },
+            "TC-95": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 55.37
+            },
+            "TC-96": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 64.27
+            },
+            "TC-97": {
+              "status": "partial",
+              "points": 1,
+              "max_points": 1,
+              "duration_seconds": 125.28
+            }
+          }
+        },
+        {
+          "seed": 44,
+          "run_id": "2026-10-13T08-18-22.064446Z_4314bffb",
+          "config_fingerprint": "6e6ac98aa2ce",
+          "final_score_rounded": 82,
+          "earned_points": 46,
+          "max_points": 56,
+          "score_exact": 82.14285714285714,
+          "status": "completed",
+          "scenario_duration_seconds": 2780.71,
+          "failures": [
+            "TC-71",
+            "TC-80",
+            "TC-89",
+            "TC-92"
+          ],
+          "partials": [
+            "TC-90",
+            "TC-97"
+          ],
+          "scenarios": {
+            "TC-70": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 24.28
+            },
+            "TC-71": {
+              "status": "fail",
+              "points": 0,
+              "max_points": 2,
+              "duration_seconds": 104.89
+            },
+            "TC-72": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 148.23
+            },
+            "TC-73": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 97.01
+            },
+            "TC-74": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 418.12
+            },
+            "TC-75": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 66.12
+            },
+            "TC-76": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 36.8
+            },
+            "TC-77": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 6.18
+            },
+            "TC-78": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 53.17
+            },
+            "TC-79": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 58.18
+            },
+            "TC-80": {
+              "status": "fail",
+              "points": 0,
+              "max_points": 2,
+              "duration_seconds": 44.72
+            },
+            "TC-81": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 37.92
+            },
+            "TC-82": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 46.8
+            },
+            "TC-83": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 37.52
+            },
+            "TC-84": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 202.1
+            },
+            "TC-85": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 170.41
+            },
+            "TC-86": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 220.41
+            },
+            "TC-87": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 184.45
+            },
+            "TC-88": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 152.48
+            },
+            "TC-89": {
+              "status": "fail",
+              "points": 0,
+              "max_points": 2,
+              "duration_seconds": 103.09
+            },
+            "TC-90": {
+              "status": "partial",
+              "points": 1,
+              "max_points": 1,
+              "duration_seconds": 85.92
+            },
+            "TC-91": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 57.91
+            },
+            "TC-92": {
+              "status": "fail",
+              "points": 0,
+              "max_points": 2,
+              "duration_seconds": 90.8
+            },
+            "TC-93": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 44.99
+            },
+            "TC-94": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 55.67
+            },
+            "TC-95": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 56.98
+            },
+            "TC-96": {
+              "status": "pass",
+              "points": 2,
+              "max_points": 2,
+              "duration_seconds": 69.78
+            },
+            "TC-97": {
+              "status": "partial",
+              "points": 1,
+              "max_points": 1,
+              "duration_seconds": 105.78
+            }
+          }
+        }
+      ],
+      "total_points": 135,
+      "max_points": 168,
+      "aggregate_score_exact": 80.35714285714286,
+      "mean_rounded_run_score": 80.33333333333333,
+      "mean_scenario_duration_seconds": 2708.92,
+      "total_scenario_duration_seconds": 8126.76
+    }
+  },
+  "paired_score_differences": [
+    {
+      "seed": 42,
+      "mtp_on_points": 44,
+      "mtp_off_points": 47,
+      "delta_points": -3,
+      "delta_percentage_points": -5.357142857142857
+    },
+    {
+      "seed": 43,
+      "mtp_on_points": 48,
+      "mtp_off_points": 42,
+      "delta_points": 6,
+      "delta_percentage_points": 10.714285714285714
+    },
+    {
+      "seed": 44,
+      "mtp_on_points": 46,
+      "mtp_off_points": 46,
+      "delta_points": 0,
+      "delta_percentage_points": 0.0
+    }
+  ],
+  "scenario_matrix": {
+    "TC-70": {
+      "42": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 23.41
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 24.41
+        },
+        "points_delta": 0
+      },
+      "43": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 22.82
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 24.63
+        },
+        "points_delta": 0
+      },
+      "44": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 22.53
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 24.28
+        },
+        "points_delta": 0
+      }
+    },
+    "TC-71": {
+      "42": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 48.1
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 63.47
+        },
+        "points_delta": 0
+      },
+      "43": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 82.46
+        },
+        "mtp_off": {
+          "status": "fail",
+          "points": 0,
+          "max_points": 2,
+          "duration_seconds": 99.29
+        },
+        "points_delta": 2
+      },
+      "44": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 47.61
+        },
+        "mtp_off": {
+          "status": "fail",
+          "points": 0,
+          "max_points": 2,
+          "duration_seconds": 104.89
+        },
+        "points_delta": 2
+      }
+    },
+    "TC-72": {
+      "42": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 138.12
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 143.48
+        },
+        "points_delta": 0
+      },
+      "43": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 135.72
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 144.64
+        },
+        "points_delta": 0
+      },
+      "44": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 133.25
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 148.23
+        },
+        "points_delta": 0
+      }
+    },
+    "TC-73": {
+      "42": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 96.35
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 110.08
+        },
+        "points_delta": 0
+      },
+      "43": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 88.18
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 101.22
+        },
+        "points_delta": 0
+      },
+      "44": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 88.22
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 97.01
+        },
+        "points_delta": 0
+      }
+    },
+    "TC-74": {
+      "42": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 301.22
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 371.83
+        },
+        "points_delta": 0
+      },
+      "43": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 295.85
+        },
+        "mtp_off": {
+          "status": "fail",
+          "points": 0,
+          "max_points": 2,
+          "duration_seconds": 241.56
+        },
+        "points_delta": 2
+      },
+      "44": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 309.72
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 418.12
+        },
+        "points_delta": 0
+      }
+    },
+    "TC-75": {
+      "42": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 59.14
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 75.92
+        },
+        "points_delta": 0
+      },
+      "43": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 63.09
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 69.9
+        },
+        "points_delta": 0
+      },
+      "44": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 65.29
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 66.12
+        },
+        "points_delta": 0
+      }
+    },
+    "TC-76": {
+      "42": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 31.6
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 44.49
+        },
+        "points_delta": 0
+      },
+      "43": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 33.18
+        },
+        "mtp_off": {
+          "status": "fail",
+          "points": 0,
+          "max_points": 2,
+          "duration_seconds": 35.65
+        },
+        "points_delta": 2
+      },
+      "44": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 35.75
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 36.8
+        },
+        "points_delta": 0
+      }
+    },
+    "TC-77": {
+      "42": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 7.17
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 7.02
+        },
+        "points_delta": 0
+      },
+      "43": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 6.24
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 7.29
+        },
+        "points_delta": 0
+      },
+      "44": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 6.22
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 6.18
+        },
+        "points_delta": 0
+      }
+    },
+    "TC-78": {
+      "42": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 45.85
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 53.03
+        },
+        "points_delta": 0
+      },
+      "43": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 29.35
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 51.91
+        },
+        "points_delta": 0
+      },
+      "44": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 45.92
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 53.17
+        },
+        "points_delta": 0
+      }
+    },
+    "TC-79": {
+      "42": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 50.66
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 56.29
+        },
+        "points_delta": 0
+      },
+      "43": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 50.53
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 55.62
+        },
+        "points_delta": 0
+      },
+      "44": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 51.4
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 58.18
+        },
+        "points_delta": 0
+      }
+    },
+    "TC-80": {
+      "42": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 55.98
+        },
+        "mtp_off": {
+          "status": "fail",
+          "points": 0,
+          "max_points": 2,
+          "duration_seconds": 43.83
+        },
+        "points_delta": 2
+      },
+      "43": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 44.19
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 49.35
+        },
+        "points_delta": 0
+      },
+      "44": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 43.11
+        },
+        "mtp_off": {
+          "status": "fail",
+          "points": 0,
+          "max_points": 2,
+          "duration_seconds": 44.72
+        },
+        "points_delta": 2
+      }
+    },
+    "TC-81": {
+      "42": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 33.88
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 40.38
+        },
+        "points_delta": 0
+      },
+      "43": {
+        "mtp_on": {
+          "status": "fail",
+          "points": 0,
+          "max_points": 2,
+          "duration_seconds": 37.73
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 41.16
+        },
+        "points_delta": -2
+      },
+      "44": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 36.87
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 37.92
+        },
+        "points_delta": 0
+      }
+    },
+    "TC-82": {
+      "42": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 44.23
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 48.01
+        },
+        "points_delta": 0
+      },
+      "43": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 44.28
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 69.5
+        },
+        "points_delta": 0
+      },
+      "44": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 42.64
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 46.8
+        },
+        "points_delta": 0
+      }
+    },
+    "TC-83": {
+      "42": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 34.21
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 37.08
+        },
+        "points_delta": 0
+      },
+      "43": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 33.74
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 37.41
+        },
+        "points_delta": 0
+      },
+      "44": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 35.23
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 37.52
+        },
+        "points_delta": 0
+      }
+    },
+    "TC-84": {
+      "42": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 181.13
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 212.62
+        },
+        "points_delta": 0
+      },
+      "43": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 186.04
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 189.98
+        },
+        "points_delta": 0
+      },
+      "44": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 176.51
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 202.1
+        },
+        "points_delta": 0
+      }
+    },
+    "TC-85": {
+      "42": {
+        "mtp_on": {
+          "status": "partial",
+          "points": 1,
+          "max_points": 1,
+          "duration_seconds": 204.09
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 174.27
+        },
+        "points_delta": -1
+      },
+      "43": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 168.73
+        },
+        "mtp_off": {
+          "status": "partial",
+          "points": 1,
+          "max_points": 1,
+          "duration_seconds": 189.5
+        },
+        "points_delta": 1
+      },
+      "44": {
+        "mtp_on": {
+          "status": "partial",
+          "points": 1,
+          "max_points": 1,
+          "duration_seconds": 175.88
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 170.41
+        },
+        "points_delta": -1
+      }
+    },
+    "TC-86": {
+      "42": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 150.25
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 149.29
+        },
+        "points_delta": 0
+      },
+      "43": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 154.65
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 217.08
+        },
+        "points_delta": 0
+      },
+      "44": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 147.17
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 220.41
+        },
+        "points_delta": 0
+      }
+    },
+    "TC-87": {
+      "42": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 161.02
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 195.74
+        },
+        "points_delta": 0
+      },
+      "43": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 156.81
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 174.29
+        },
+        "points_delta": 0
+      },
+      "44": {
+        "mtp_on": {
+          "status": "fail",
+          "points": 0,
+          "max_points": 2,
+          "duration_seconds": 160.04
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 184.45
+        },
+        "points_delta": -2
+      }
+    },
+    "TC-88": {
+      "42": {
+        "mtp_on": {
+          "status": "fail",
+          "points": 0,
+          "max_points": 2,
+          "duration_seconds": 165.03
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 142.88
+        },
+        "points_delta": -2
+      },
+      "43": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 94.51
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 138.97
+        },
+        "points_delta": 0
+      },
+      "44": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 132.18
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 152.48
+        },
+        "points_delta": 0
+      }
+    },
+    "TC-89": {
+      "42": {
+        "mtp_on": {
+          "status": "fail",
+          "points": 0,
+          "max_points": 2,
+          "duration_seconds": 77.99
+        },
+        "mtp_off": {
+          "status": "fail",
+          "points": 0,
+          "max_points": 2,
+          "duration_seconds": 64.45
+        },
+        "points_delta": 0
+      },
+      "43": {
+        "mtp_on": {
+          "status": "fail",
+          "points": 0,
+          "max_points": 2,
+          "duration_seconds": 55.99
+        },
+        "mtp_off": {
+          "status": "fail",
+          "points": 0,
+          "max_points": 2,
+          "duration_seconds": 116.73
+        },
+        "points_delta": 0
+      },
+      "44": {
+        "mtp_on": {
+          "status": "fail",
+          "points": 0,
+          "max_points": 2,
+          "duration_seconds": 81.5
+        },
+        "mtp_off": {
+          "status": "fail",
+          "points": 0,
+          "max_points": 2,
+          "duration_seconds": 103.09
+        },
+        "points_delta": 0
+      }
+    },
+    "TC-90": {
+      "42": {
+        "mtp_on": {
+          "status": "partial",
+          "points": 1,
+          "max_points": 1,
+          "duration_seconds": 55.51
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 146.32
+        },
+        "points_delta": -1
+      },
+      "43": {
+        "mtp_on": {
+          "status": "partial",
+          "points": 1,
+          "max_points": 1,
+          "duration_seconds": 57.71
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 119.61
+        },
+        "points_delta": -1
+      },
+      "44": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 107.8
+        },
+        "mtp_off": {
+          "status": "partial",
+          "points": 1,
+          "max_points": 1,
+          "duration_seconds": 85.92
+        },
+        "points_delta": 1
+      }
+    },
+    "TC-91": {
+      "42": {
+        "mtp_on": {
+          "status": "fail",
+          "points": 0,
+          "max_points": 2,
+          "duration_seconds": 57.19
+        },
+        "mtp_off": {
+          "status": "partial",
+          "points": 1,
+          "max_points": 1,
+          "duration_seconds": 56.28
+        },
+        "points_delta": -1
+      },
+      "43": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 53.92
+        },
+        "mtp_off": {
+          "status": "partial",
+          "points": 1,
+          "max_points": 1,
+          "duration_seconds": 60.19
+        },
+        "points_delta": 1
+      },
+      "44": {
+        "mtp_on": {
+          "status": "partial",
+          "points": 1,
+          "max_points": 1,
+          "duration_seconds": 68.57
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 57.91
+        },
+        "points_delta": -1
+      }
+    },
+    "TC-92": {
+      "42": {
+        "mtp_on": {
+          "status": "fail",
+          "points": 0,
+          "max_points": 2,
+          "duration_seconds": 70.98
+        },
+        "mtp_off": {
+          "status": "fail",
+          "points": 0,
+          "max_points": 2,
+          "duration_seconds": 79.08
+        },
+        "points_delta": 0
+      },
+      "43": {
+        "mtp_on": {
+          "status": "fail",
+          "points": 0,
+          "max_points": 2,
+          "duration_seconds": 75.06
+        },
+        "mtp_off": {
+          "status": "fail",
+          "points": 0,
+          "max_points": 2,
+          "duration_seconds": 90.63
+        },
+        "points_delta": 0
+      },
+      "44": {
+        "mtp_on": {
+          "status": "fail",
+          "points": 0,
+          "max_points": 2,
+          "duration_seconds": 70.51
+        },
+        "mtp_off": {
+          "status": "fail",
+          "points": 0,
+          "max_points": 2,
+          "duration_seconds": 90.8
+        },
+        "points_delta": 0
+      }
+    },
+    "TC-93": {
+      "42": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 45.9
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 48.98
+        },
+        "points_delta": 0
+      },
+      "43": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 42.01
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 44.28
+        },
+        "points_delta": 0
+      },
+      "44": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 46.06
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 44.99
+        },
+        "points_delta": 0
+      }
+    },
+    "TC-94": {
+      "42": {
+        "mtp_on": {
+          "status": "partial",
+          "points": 1,
+          "max_points": 1,
+          "duration_seconds": 53.15
+        },
+        "mtp_off": {
+          "status": "partial",
+          "points": 1,
+          "max_points": 1,
+          "duration_seconds": 54.51
+        },
+        "points_delta": 0
+      },
+      "43": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 50.66
+        },
+        "mtp_off": {
+          "status": "partial",
+          "points": 1,
+          "max_points": 1,
+          "duration_seconds": 57.48
+        },
+        "points_delta": 1
+      },
+      "44": {
+        "mtp_on": {
+          "status": "partial",
+          "points": 1,
+          "max_points": 1,
+          "duration_seconds": 62.8
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 55.67
+        },
+        "points_delta": -1
+      }
+    },
+    "TC-95": {
+      "42": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 56.02
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 53.86
+        },
+        "points_delta": 0
+      },
+      "43": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 49.81
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 55.37
+        },
+        "points_delta": 0
+      },
+      "44": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 48.98
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 56.98
+        },
+        "points_delta": 0
+      }
+    },
+    "TC-96": {
+      "42": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 108.61
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 70.58
+        },
+        "points_delta": 0
+      },
+      "43": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 56.32
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 64.27
+        },
+        "points_delta": 0
+      },
+      "44": {
+        "mtp_on": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 69.34
+        },
+        "mtp_off": {
+          "status": "pass",
+          "points": 2,
+          "max_points": 2,
+          "duration_seconds": 69.78
+        },
+        "points_delta": 0
+      }
+    },
+    "TC-97": {
+      "42": {
+        "mtp_on": {
+          "status": "partial",
+          "points": 1,
+          "max_points": 1,
+          "duration_seconds": 122.3
+        },
+        "mtp_off": {
+          "status": "partial",
+          "points": 1,
+          "max_points": 1,
+          "duration_seconds": 105.08
+        },
+        "points_delta": 0
+      },
+      "43": {
+        "mtp_on": {
+          "status": "partial",
+          "points": 1,
+          "max_points": 1,
+          "duration_seconds": 104.25
+        },
+        "mtp_off": {
+          "status": "partial",
+          "points": 1,
+          "max_points": 1,
+          "duration_seconds": 125.28
+        },
+        "points_delta": 0
+      },
+      "44": {
+        "mtp_on": {
+          "status": "partial",
+          "points": 1,
+          "max_points": 1,
+          "duration_seconds": 102.72
+        },
+        "mtp_off": {
+          "status": "partial",
+          "points": 1,
+          "max_points": 1,
+          "duration_seconds": 105.78
+        },
+        "points_delta": 0
+      }
+    }
+  },
+  "speed_ab": {
+    "mtp_off": {
+      "runs": [
+        {
+          "seed": 42,
+          "wall_seconds": 215.0172540200001,
+          "prompt_tokens": 23598,
+          "completion_tokens": 256,
+          "prefill_tokens_per_second": 116.26595952052664,
+          "prefill_ms": 202965.684,
+          "decode_tokens_per_second": 21.20465032117977,
+          "decode_ms": 12025.664,
+          "draft_tokens": 0,
+          "draft_tokens_accepted": 0
+        },
+        {
+          "seed": 43,
+          "wall_seconds": 214.98065199800476,
+          "prompt_tokens": 23598,
+          "completion_tokens": 256,
+          "prefill_tokens_per_second": 116.26304729753005,
+          "prefill_ms": 202970.768,
+          "decode_tokens_per_second": 21.262170820947425,
+          "decode_ms": 11993.131,
+          "draft_tokens": 0,
+          "draft_tokens_accepted": 0
+        },
+        {
+          "seed": 44,
+          "wall_seconds": 215.09900429299887,
+          "prompt_tokens": 23598,
+          "completion_tokens": 256,
+          "prefill_tokens_per_second": 116.22172023098443,
+          "prefill_ms": 203042.942,
+          "decode_tokens_per_second": 21.180434627502187,
+          "decode_ms": 12039.413,
+          "draft_tokens": 0,
+          "draft_tokens_accepted": 0
+        }
+      ],
+      "mean_wall_seconds": 215.03230343700125,
+      "mean_prefill_tokens_per_second": 116.25024234968038,
+      "mean_prefill_ms": 202993.13133333335,
+      "mean_decode_tokens_per_second": 21.215751923209794,
+      "mean_decode_ms": 12019.402666666667,
+      "total_wall_seconds": 645.0969103110037,
+      "draft_tokens_total": 0,
+      "draft_tokens_accepted_total": 0
+    },
+    "mtp_on": {
+      "runs": [
+        {
+          "seed": 42,
+          "wall_seconds": 213.29891809800029,
+          "prompt_tokens": 23598,
+          "completion_tokens": 256,
+          "prefill_tokens_per_second": 115.18803829772365,
+          "prefill_ms": 204865.022,
+          "decode_tokens_per_second": 30.29363081757995,
+          "decode_ms": 8417.611,
+          "draft_tokens": 212,
+          "draft_tokens_accepted": 184
+        },
+        {
+          "seed": 43,
+          "wall_seconds": 212.48352868599613,
+          "prompt_tokens": 23598,
+          "completion_tokens": 256,
+          "prefill_tokens_per_second": 115.56069236985627,
+          "prefill_ms": 204204.384,
+          "decode_tokens_per_second": 30.864257301878094,
+          "decode_ms": 8261.984,
+          "draft_tokens": 207,
+          "draft_tokens_accepted": 185
+        },
+        {
+          "seed": 44,
+          "wall_seconds": 212.70632705200114,
+          "prompt_tokens": 23598,
+          "completion_tokens": 256,
+          "prefill_tokens_per_second": 115.37722166545821,
+          "prefill_ms": 204529.106,
+          "decode_tokens_per_second": 31.24734244415977,
+          "decode_ms": 8160.694,
+          "draft_tokens": 210,
+          "draft_tokens_accepted": 184
+        }
+      ],
+      "mean_wall_seconds": 212.82959127866584,
+      "mean_prefill_tokens_per_second": 115.37531744434604,
+      "mean_prefill_ms": 204532.83733333333,
+      "mean_decode_tokens_per_second": 30.80174352120594,
+      "mean_decode_ms": 8280.096333333335,
+      "total_wall_seconds": 638.4887738359976,
+      "draft_tokens_total": 629,
+      "draft_tokens_accepted_total": 553
+    },
+    "mtp_on_vs_off": {
+      "decode_tps_delta_percent": 45.18336956753901,
+      "prefill_tps_delta_percent": -0.7526220054686616,
+      "mean_request_wall_delta_percent": -1.024363373841053,
+      "draft_acceptance_percent": 87.91732909379968
+    }
+  },
+  "tool_eval_total_elapsed_delta_percent": -11.813071876122837
+}

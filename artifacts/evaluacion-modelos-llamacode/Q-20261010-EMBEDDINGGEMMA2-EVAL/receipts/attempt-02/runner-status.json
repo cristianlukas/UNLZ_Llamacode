@@ -1,0 +1,16 @@
+{
+  "status": "complete",
+  "started_unix": 1791909580.4496276,
+  "server_pid": 2722157,
+  "endpoint": "http://127.0.0.1:8397/v1/embeddings",
+  "model": "embeddinggemma-2-Q8_0.gguf",
+  "cutoff_seconds": 1800,
+  "elapsed_seconds": 20.133625312999357,
+  "fingerprint": "76be24127e1b83479eda62eeda49d6668bc972c2040e5925c8efc18823cc414d",
+  "resource_samples": {
+    "rss_peak_mib": 2237.515625,
+    "gpu1_process_peak_mib": 708.0,
+    "gpu1_total_peak_mib": 826.0,
+    "samples": 19
+  }
+}

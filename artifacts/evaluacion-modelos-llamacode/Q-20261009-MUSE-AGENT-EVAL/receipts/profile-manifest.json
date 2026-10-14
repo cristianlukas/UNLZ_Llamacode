@@ -1,0 +1,103 @@
+{
+  "task_id": "Q-20261009-MUSE-AGENT-EVAL",
+  "candidate_scope_amendment": "SOL infra-invalid; add already-local ASTRA and Q4 as explicitly separate prompt-transfer screenings, not replacements for SOL",
+  "profiles": {
+    "SOL": {
+      "status": "invalid_infrastructure_on_smoke",
+      "reason": "vLLM CUDA ScatterGatherKernel index out of bounds on first inference",
+      "model_manifest_sha256": "b9b842e49ccc3f8b3a1459ce218d87884604a36725a46cb64b4741641ed7d231",
+      "weights_redownloaded": false,
+      "runtime": "vLLM v0.27.1, TP2, MTP4, FP8 KV, 2x RTX 3090"
+    },
+    "ASTRA IQ3_S calibrado": {
+      "model_shards": [
+        {
+          "path": "/media/cristian/Disco local/Models/ASTRA-IQ3_S-calibrated-20261006/models/IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf",
+          "size_bytes": 54817524224,
+          "sha256": "4c1eb2ceb4915e1192f4f386021897bde56a97f40a0bb78bb86465e0f7d2aca3",
+          "hash_verified_in": "docs/evaluacion-modelos-llamacode.md; Q-20261009-FLASHNEXT-IQ3XXS-AB"
+        },
+        {
+          "path": "/media/cristian/Disco local/Models/ASTRA-IQ3_S-calibrated-20261006/models/IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf",
+          "size_bytes": 28800138432,
+          "sha256": "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113",
+          "hash_verified_in": "docs/evaluacion-modelos-llamacode.md; Q-20261009-FLASHNEXT-IQ3XXS-AB"
+        }
+      ],
+      "profile_config_fingerprint": "864c6ba74e684940f34b5519c5e53a36412e386a9b160fb22ed7c2640ee85fa4",
+      "config_source_sha256": "427362f9521c51bc17d38ee27f4f01490834e9c967e756ad0791ffa96f93a016",
+      "config_used": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261009-MUSE-AGENT-EVAL/configs/astra-strata.json",
+      "runtime_commit": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
+      "runtime": "Strata 0.1.41, dual RTX 3090, MTP4, KV int8, max context 131072, KV resident 32768, spec-min-p 0.70",
+      "pack": "/media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/packs/iq3_s"
+    },
+    "Flash-Next Q4 UD-Q4_K_XL": {
+      "model_shards": [
+        {
+          "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf",
+          "size_bytes": 10946624,
+          "sha256": "4448186216b3af4cc558bbce2c3213f01608f8f8b2e5267a9767971dd3ec8082",
+          "hash_verified_in_task": "Q-20261010-FLASHNEXT-Q4-P100-POST"
+        },
+        {
+          "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+          "size_bytes": 49859583136,
+          "sha256": "3f342f1c1580473f1ee94ddd5b28206e8c07a70fa1a366f59d1d6c922919a6c9",
+          "hash_verified_in_task": "Q-20261010-FLASHNEXT-Q4-P100-POST"
+        },
+        {
+          "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+          "size_bytes": 49376141504,
+          "sha256": "56758f40269cad5cd9b0d3d6fbae0f40f6d5be6de49e4ab392dbe83157d9cbd3",
+          "hash_verified_in_task": "Q-20261010-FLASHNEXT-Q4-P100-POST"
+        },
+        {
+          "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf",
+          "size_bytes": 12087983520,
+          "sha256": "753bda48b98ba4f1636134a90a967de1b2d3908a236c026e464777342e53510a",
+          "hash_verified_in_task": "Q-20261010-FLASHNEXT-Q4-P100-POST"
+        }
+      ],
+      "profile_config_fingerprint": "09d45e63b1f548df63775d947a051a70ca66561bb5a04bcf292050eb8bcb2958",
+      "config_source_sha256": "8a87e71840af1431a734be37fd3280639da3406f14dae99d59a6d431a8925724",
+      "config_used": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261009-MUSE-AGENT-EVAL/configs/q4-strata.json",
+      "runtime_commit": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
+      "runtime": "Strata 0.1.41, dual RTX 3090, MTP4, KV int8, max context 131072, KV resident 32768, spec-min-p 0.70, resident experts, split 18/30",
+      "pack": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/packs/unsloth-ud-q4_k_xl"
+    }
+  },
+  "strata_endpoint": {
+    "host": "127.0.0.1",
+    "port": 8353,
+    "path": "/v1/chat/completions",
+    "reasoning_budget_tokens": 32,
+    "max_tokens": 64,
+    "temperature": 0.6,
+    "top_p": 0.95,
+    "top_k": 20,
+    "timeout_seconds": 90,
+    "seeds": [
+      11,
+      42,
+      77
+    ],
+    "order_seed": 4242,
+    "requests_per_profile": 144
+  },
+  "suite": {
+    "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/assets/benchmarks/custom/computer_use_prompt_order_hard_v1.json",
+    "sha256": "6b8db94a387674f72e72e356b1317f844a7809a42c000986ebc9b24f4f572e35",
+    "task_count": 24,
+    "security_task_count": 21
+  },
+  "overlay": {
+    "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261009-MUSE-AGENT-EVAL/prompt/muse-safe-transfer-v1.txt",
+    "sha256": "9fb742d295a4fbc155b18ad2216d21d5349184ef80b8eec8a092416ce0cfda97"
+  },
+  "runner": {
+    "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261009-MUSE-AGENT-EVAL/scripts/run_muse_safe_transfer_ab.py",
+    "sha256": "84ae14cf384cec1bea8d3962a760c331cecca86da90808b086f9ed5e9b066447"
+  },
+  "runtime_source_commit": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
+  "downloads": 0
+}

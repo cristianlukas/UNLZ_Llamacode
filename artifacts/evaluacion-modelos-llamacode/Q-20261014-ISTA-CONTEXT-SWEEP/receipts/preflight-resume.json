@@ -1,0 +1,63 @@
+{
+  "task": "Q-20261014-ISTA-CONTEXT-SWEEP",
+  "lock_token": "52166fcb-ce3b-4709-959c-97e04408b1c8",
+  "checked_at_utc": "2026-10-14T13:58:29.517096Z",
+  "pressure_sample_end_utc": "2026-10-14T13:58:39.517421Z",
+  "memory": {
+    "mem_total_bytes": 132615835648,
+    "mem_available_start_bytes": 115950936064,
+    "mem_available_end_bytes": 115921154048,
+    "mem_available_end_gib": 107.96,
+    "swap_total_bytes": 8589930496,
+    "swap_used_end_bytes": 8097890304,
+    "swap_used_end_gib": 7.54,
+    "guard_mem_available_gib_min": 32,
+    "swap_in_pages_delta": 49,
+    "swap_out_pages_delta": 0,
+    "page_size_bytes": 4096
+  },
+  "memory_psi_start": "some avg10=0.00 avg60=0.00 avg300=0.00; full avg10=0.00 avg60=0.00 avg300=0.00",
+  "memory_psi_end": "some avg10=0.00 avg60=0.00 avg300=0.00; full avg10=0.00 avg60=0.00 avg300=0.00",
+  "gpus": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 1080,
+      "memory_total_mib": 24576,
+      "utilization_percent": 23
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 108,
+      "memory_total_mib": 24576,
+      "utilization_percent": 32
+    }
+  ],
+  "compute_process_query": {
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "ports": {
+    "8350_listening": false,
+    "8898_listening": false
+  },
+  "strata_or_llama_server_processes": "none",
+  "active_swap_pressure": "not observed: PSI zero, pswpout unchanged; 49 pages (~0.19 MiB) read in over 10 seconds",
+  "inference_started": false,
+  "model_loaded": false,
+  "prompt_sent": false,
+  "decision": "continue_with_monitoring",
+  "decision_reason": "User explicitly requested the short context sweep after clarifying swap is not inherently required. Keep swap untouched. MemAvailable is over 107 GiB, above 32 GiB guard, no measurable memory PSI or swap-out. Recheck before each larger context and abort on memory pressure.",
+  "hash_validation": {
+    "runtime_sha256": "770ecf303a4c6271654339c639392ecb455de3a999bf5d2e8dbc73c879103602",
+    "production_profile_sha256": "b4b83171c136d8cb4b1944de532c096276844da5a2cd987d1d1517dd0a73b484",
+    "base_test_config_sha256": "b4b83171c136d8cb4b1944de532c096276844da5a2cd987d1d1517dd0a73b484",
+    "expert_profile_sha256": "8f59b4aa8873209dff11c11e37bcda9529a1335b724a1afeea37bf6388975baf",
+    "server_py_sha256": "017efa1f4e76d72396738555d13eb1f9898d1c1c12730cf046d9b267b29987e5",
+    "mtp_dense_sha256": "c724dc0b0822ada5d2977bf5bde821605feabaa64ea2e0045b67ca656329070a",
+    "mtp_experts_sha256": "09398406be61f1f54c93861f449e48b8df0bfccbc9ec9b2b7636775a6ea9244f",
+    "model_shards": "existing SHA-256 values retained from original verified plan; current exact paths, byte sizes, and mtimes checked; large shards were not reread in this resume preflight"
+  }
+}

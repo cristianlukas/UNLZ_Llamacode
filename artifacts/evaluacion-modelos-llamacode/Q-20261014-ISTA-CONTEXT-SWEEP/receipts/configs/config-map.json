@@ -1,0 +1,26 @@
+[
+  {
+    "context": 131072,
+    "config": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261014-ISTA-CONTEXT-SWEEP/receipts/configs/context-131072.json",
+    "rope_factor": null,
+    "log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261014-ISTA-CONTEXT-SWEEP/receipts/runs/131072/engine.log"
+  },
+  {
+    "context": 262144,
+    "config": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261014-ISTA-CONTEXT-SWEEP/receipts/configs/context-262144.json",
+    "rope_factor": null,
+    "log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261014-ISTA-CONTEXT-SWEEP/receipts/runs/262144/engine.log"
+  },
+  {
+    "context": 524288,
+    "config": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261014-ISTA-CONTEXT-SWEEP/receipts/configs/context-524288.json",
+    "rope_factor": 2,
+    "log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261014-ISTA-CONTEXT-SWEEP/receipts/runs/524288/engine.log"
+  },
+  {
+    "context": 1048576,
+    "config": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261014-ISTA-CONTEXT-SWEEP/receipts/configs/context-1048576.json",
+    "rope_factor": 4,
+    "log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261014-ISTA-CONTEXT-SWEEP/receipts/runs/1048576/engine.log"
+  }
+]

@@ -1,0 +1,37 @@
+{
+  "id": "chatcmpl-42e2daa52ef54d01b6e356a0",
+  "object": "chat.completion",
+  "created": 1791989281,
+  "model": "qwen3.8-flash-next-iq2_xs",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "{\n  \"case-5172\": \"INV-Q7L4-92\",\n  \"case-6803\": \"DOCK-N4-813\",\n  \"case-1048\": \"18.375 kPa\",\n  \"case-9351\": \"rel-7f2c9b\",\n  \"case-2264\": \"x-4816\",\n  \"case-7490\": \"B-19-R6\",\n  \"case-3815\": \"CTR-008-AX\",\n  \"case-8627\": \"BT-4M-7731\",\n  \"case-2906\": \"awaiting-inspection\",\n  \"case-4439\": \"sha256:9c13a8d0e6f274b1\"\n}"
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 996163,
+    "completion_tokens": 209,
+    "total_tokens": 996372,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 996163,
+    "prompt_ms": 446689.8,
+    "prompt_per_token_ms": 0.448,
+    "prompt_per_second": 2230.1,
+    "predicted_n": 209,
+    "predicted_ms": 2124.9,
+    "predicted_per_token_ms": 10.167,
+    "predicted_per_second": 98.4,
+    "draft_n": 171,
+    "draft_n_accepted": 151
+  }
+}

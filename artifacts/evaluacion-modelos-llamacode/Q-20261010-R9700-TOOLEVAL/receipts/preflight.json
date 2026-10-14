@@ -1,0 +1,65 @@
+{
+  "observed_utc": "2026-10-12T20:33:23+00:00",
+  "sol_local_weights_present": true,
+  "sol_local_weights_reused": true,
+  "sol_redownloaded": false,
+  "sol_model_path": "/media/cristian/Disco local/Models/llamacpp/club-3090/qwen3.8-27b-autoround-int4",
+  "sol_image": "vllm/vllm-openai:v0.27.1",
+  "sol_pull_policy": "never",
+  "sol_host_bind": "127.0.0.1:8113",
+  "compose_overrides": [
+    "base mtp.yml",
+    "vram-quarantine.override.yml",
+    "task localhost override"
+  ],
+  "existing_model_containers": [],
+  "listeners_8113_8350": [],
+  "gpus": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 1221,
+      "memory_total_mib": 24576,
+      "desktop_activity": true
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 108,
+      "memory_total_mib": 24576
+    }
+  ],
+  "ram_available_gib": 108,
+  "swap_used_gib": 1.9,
+  "docker_root_free_gib": 8.3,
+  "model_volume_free_gib": 106,
+  "profiles_present": {
+    "ASTRA_IQ3_S": true,
+    "FLASHNEXT_UD_Q4_K_XL": true
+  },
+  "runner": "tool-eval-bench 2.7.0",
+  "settings": {
+    "temperature": 1.0,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0,
+    "repetition_penalty": 1.0,
+    "presence_penalty": 0.0,
+    "max_tokens": 16384,
+    "seed": [
+      42,
+      43,
+      44
+    ],
+    "max_turns": 8,
+    "timeout_seconds": 600,
+    "parallel": 1,
+    "error_rate": 0.0,
+    "enable_thinking": true,
+    "reasoning_effort": "medium",
+    "chat_template_kwargs": {
+      "enable_thinking": true,
+      "reasoning_effort": "medium"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "classification": "preflight_only_no_quality_requests",
+  "attempt": "server-device-map-check",
+  "command_device_argument": "--device CUDA1",
+  "process_memory_by_physical_gpu_mib": {
+    "GPU0": 256,
+    "GPU1": 676
+  },
+  "action": "stopped immediately before evaluation; artcraft-launcher on GPU0 preserved",
+  "final_isolation": "CUDA_VISIBLE_DEVICES=1 and --device CUDA0, mapping only physical GPU1 into server process"
+}

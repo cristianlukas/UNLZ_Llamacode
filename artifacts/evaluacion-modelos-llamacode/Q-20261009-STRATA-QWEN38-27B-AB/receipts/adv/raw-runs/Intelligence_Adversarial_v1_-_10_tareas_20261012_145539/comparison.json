@@ -1,0 +1,41 @@
+{
+    "benchmarkName": "Intelligence Adversarial v1 - 10 tareas",
+    "comparisons": [
+    ],
+    "generatedAt": "2026-10-12T15:03:06",
+    "profileCount": 1,
+    "profiles": [
+        {
+            "agentVariant": "baseline",
+            "comparisonTimeMetric": "timeToFirstAttempt",
+            "failedRuns": 0,
+            "fullyAcceptedRuns": 1,
+            "honeyEnabled": false,
+            "medianAddedLines": 777,
+            "medianColdFirstAttemptSec": 357.709,
+            "medianElapsedSec": 444.679,
+            "medianFilesChanged": 20,
+            "medianFirstAttemptSec": 357.709,
+            "medianQualityPct": 100,
+            "medianRemovedLines": 0,
+            "medianRepairAttempts": 1,
+            "medianToolCalls": 37,
+            "medianToolF1Pct": 0,
+            "medianToolRedundantCalls": 1,
+            "medianToolSuccessRatePct": 97.29729729729729,
+            "medianWarmFirstAttemptSec": 0,
+            "outcomeSpread": false,
+            "profileId": "eb46e3ff-1df8-4f9f-88dc-ef7b719b1510",
+            "profileName": "Q-20261009 IQ2_XS Strata",
+            "qualityRangePctPoints": 0,
+            "runs": 1,
+            "stabilityRatePct": 100,
+            "successRatePct": 100,
+            "successfulRuns": 1
+        }
+    ],
+    "runCount": 1,
+    "runLabel": "Intelligence Adversarial v1 - 10 tareas",
+    "schemaVersion": 1,
+    "target": "agent"
+}

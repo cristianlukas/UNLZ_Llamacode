@@ -1,0 +1,20 @@
+{
+  "captured_at_utc": "2026-10-13T04:17:20.095146+00:00",
+  "gpu": "index, name, memory.total [MiB], memory.used [MiB], utilization.gpu [%]\n0, NVIDIA GeForce RTX 3090, 24576 MiB, 1056 MiB, 9 %\n1, NVIDIA GeForce RTX 3090, 24576 MiB, 108 MiB, 22 %",
+  "compute_apps": "pid, used_gpu_memory [MiB]",
+  "memory": "total        used        free      shared  buff/cache   available\nMem:     132615835648 10612727808  5074493440   111341568 118267490304 122003107840\nSwap:     8589930496  3632123904  4957806592",
+  "swap": "NAME      TYPE SIZE USED PRIO\n/swap.img file   8G 3.4G   -1",
+  "disk_model_volume": "Filesystem      Size  Used Avail Use% Mounted on\n/dev/nvme1n1p3  1.9T  1.7T  163G  92% /media/cristian/7CFE1E0FFE1DC1F6",
+  "reserved_ports": "none",
+  "relevant_processes": [
+    "1474255 bash            /bin/bash -c mv '/media/cristian/7CFE1E0FFE1DC1F6/models/unsloth-qwen38-flashnext-mtp/mtp-Qwen3.8-Flash-Next-Q8_0.gguf.part' '/media/cristian/7CFE1E0FFE1DC1F6/models/unsloth-qwen38-flashnext-mtp/mtp-Qwen3.8-Flash-Next-Q8_0.gguf' && python3 - <<'PY' import json, pathlib, subprocess, datetime, hashlib, re p=pathlib.Path('/media/cristian/7CFE1E0FFE1DC1F6/models/unsloth-qwen38-flashnext-mtp/mtp-Qwen3.8-Flash-Next-Q8_0.gguf') expected='58a47d6a216307e9b97172d5bfdc3436a8994b632f5e436b9bb6edf8951da8d1' actual=hashlib.sha256(p.read_bytes()).hexdigest() assert p.stat().st_size==4137429120 and actual==expected root=pathlib.Path('artifacts/evaluacion-modelos-llamacode/Q-20261010-UNSLOTH-MTP-AB/receipts') (root/'sidecar-manifest.json').write_text(json.dumps({'repo':'unsloth/Qwen3.8-Flash-Next-GGUF','revision':'efc50b7c3195a10eebd8d3e32f83b27b2aeb239d','path':str(p),'size_bytes':p.stat().st_size,'sha256':actual,'expected_sha256':expected,'sha256_verified':True,'downloaded_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'url':'https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF/resolve/efc50b7c3195a10eebd8d3e32f83b27b2aeb239d/MTP/mtp-Qwen3.8-Flash-Next-Q8_0.gguf?download=true'},indent=2)+'\\n') def run(args): return subprocess.run(args,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT).stdout.strip() mi=run(['free','-b']); sw=run(['swapon','--show']); gpu=run(['nvidia-smi','--query-gpu=index,name,memory.total,memory.used,utilization.gpu','--format=csv']); compute=run(['nvidia-smi','--query-compute-apps=pid,used_memory','--format=csv']); ports=run(['ss','-ltnp']); procs=run(['ps','-eo','pid,comm,args']) matched=[x for x in procs.splitlines() if re.search(r'llama-server|strata|vllm|tool-eval-bench',x,re.I)] d={'captured_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'gpu':gpu,'compute_apps':compute,'memory':mi,'swap':sw,'disk_model_volume':run(['df','-h','/media/cristian/7CFE1E0FFE1DC1F6/models']),'reserved_ports': '\\n'.join(x for x in ports.splitlines() if re.search(r':(18080|18111|835[0-9]|811[0-9]|840[0-9])\\\\b',x)) or 'none','relevant_processes':matched or 'none','guards':{'memavailable_at_least_gib':40,'max_swap_growth_gib_from_this_baseline':1.0,'abort_if_other_gpu_compute_process_appears':True}} (root/'preflight-before-first-load.json').write_text(json.dumps(d,indent=2)+'\\n') print('sidecar verified:', actual, 'size',p.stat().st_size) print(gpu); print(mi.splitlines()[-1]); print(sw) PY"
+  ],
+  "guards": {
+    "memavailable_at_least_gib": 40,
+    "max_swap_growth_gib_from_this_baseline": 1.0,
+    "abort_if_other_gpu_compute_process_appears": true
+  },
+  "gpu_process_monitor": "pmon: GPU0 had Xorg/compiz/WhatsApp/Brave/gnome-software/Codex graphics processes only; GPU1 Xorg only; no compute processes reported",
+  "gpu_check_before_load_utc": "2026-10-13T04:19:25.878934+00:00",
+  "memavailable_gib_before_load": 113.55
+}

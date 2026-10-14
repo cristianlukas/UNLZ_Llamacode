@@ -1,0 +1,195 @@
+{
+  "task": "Q-20261014-ISTA-CONTEXT-SWEEP",
+  "profile": "ASTRA DEFAULT / ISTA IQ2_XS / Strata",
+  "context_limit": 131072,
+  "classification": "invalid infrastructure",
+  "completed_at_utc": "2026-10-14T14:04:28Z",
+  "server_command": [
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python",
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py",
+    "--engine",
+    "strata",
+    "--config",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261014-ISTA-CONTEXT-SWEEP/receipts/configs/context-131072.json",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "8350"
+  ],
+  "server_exit_code": 1,
+  "config_sha256": "f642f0d11e75a7321fc0c718ae110c78c26d820d98fc3cd2e79fd26605719e09",
+  "prompt_sha256": "7a9c875bf322dcb2a4d0a50f3b00fc30a11b1522648df48b60d057b87a0d06f2",
+  "prompt_text_tokens": 124523,
+  "prompt_bytes": 333610,
+  "minimum_prompt_tokens_95pct": 124519,
+  "health": null,
+  "request_sha256": null,
+  "request_max_tokens": 64,
+  "request_started_utc": null,
+  "request_elapsed_seconds": null,
+  "transport_error": "Strata API exited during startup with code 1",
+  "response": null,
+  "usage": {},
+  "timings": {},
+  "prefill_tokens_per_second": null,
+  "decode_tokens_per_second": null,
+  "ttft_engine_seconds": null,
+  "peak_process_tree_rss_bytes": 0,
+  "min_system_mem_available_bytes": 114569351168,
+  "gpu_memory": {
+    "0": {
+      "baseline_mib": 1088,
+      "peak_total_used_mib": 1127,
+      "peak_delta_mib": 39
+    },
+    "1": {
+      "baseline_mib": 108,
+      "peak_total_used_mib": 108,
+      "peak_delta_mib": 0
+    }
+  },
+  "swap_delta_pages": {
+    "pswpin": 2071,
+    "pswpout": 0
+  },
+  "monitor_abort_reason": null,
+  "monitor_sample_count": 3,
+  "monitor_samples": [
+    {
+      "utc": "2026-10-14T14:04:26Z",
+      "monotonic": 165948.134604673,
+      "memory": {
+        "MemTotal": 132615835648,
+        "MemAvailable": 115863048192,
+        "SwapTotal": 8589930496,
+        "SwapFree": 597487616
+      },
+      "vmstat_pages": {
+        "pswpin": 3063492,
+        "pswpout": 7888002
+      },
+      "psi": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        }
+      },
+      "gpus": [
+        {
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 1088,
+          "memory_total_mib": 24576,
+          "utilization_percent": 21
+        },
+        {
+          "index": 1,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 108,
+          "memory_total_mib": 24576,
+          "utilization_percent": 44
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-14T14:04:27Z",
+      "monotonic": 165949.190956679,
+      "memory": {
+        "MemTotal": 132615835648,
+        "MemAvailable": 115642437632,
+        "SwapTotal": 8589930496,
+        "SwapFree": 602386432
+      },
+      "vmstat_pages": {
+        "pswpin": 3064633,
+        "pswpout": 7888002
+      },
+      "psi": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        }
+      },
+      "processes": [],
+      "process_tree_rss_bytes": 0,
+      "gpus": [
+        {
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 1127,
+          "memory_total_mib": 24576,
+          "utilization_percent": 71
+        },
+        {
+          "index": 1,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 108,
+          "memory_total_mib": 24576,
+          "utilization_percent": 22
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-14T14:04:28Z",
+      "monotonic": 165950.201384522,
+      "memory": {
+        "MemTotal": 132615835648,
+        "MemAvailable": 114569351168,
+        "SwapTotal": 8589930496,
+        "SwapFree": 605888512
+      },
+      "vmstat_pages": {
+        "pswpin": 3065563,
+        "pswpout": 7888002
+      },
+      "psi": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        }
+      },
+      "processes": [],
+      "process_tree_rss_bytes": 0,
+      "gpus": [
+        {
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 1126,
+          "memory_total_mib": 24576,
+          "utilization_percent": 20
+        },
+        {
+          "index": 1,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 108,
+          "memory_total_mib": 24576,
+          "utilization_percent": 26
+        }
+      ]
+    }
+  ],
+  "server_log": "artifacts/evaluacion-modelos-llamacode/Q-20261014-ISTA-CONTEXT-SWEEP/receipts/runs/131072/server.log",
+  "engine_log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261014-ISTA-CONTEXT-SWEEP/receipts/runs/131072/engine.log",
+  "total_server_session_seconds": 2.113850599998841,
+  "failure_diagnosis": "The harness passed a relative config path while setting cwd to the Strata installation; server.py could not open the config. It exited before loading the model, opening the HTTP endpoint, or sending a prompt.",
+  "model_loaded": false,
+  "request_sent": false
+}

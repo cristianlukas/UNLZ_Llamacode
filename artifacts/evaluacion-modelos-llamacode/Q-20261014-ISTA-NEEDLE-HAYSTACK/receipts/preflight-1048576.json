@@ -1,0 +1,22 @@
+{
+  "context": 1048576,
+  "utc": "2026-10-14T14:47:42Z",
+  "host": "3090",
+  "mem_bytes": {
+    "MemAvailable": 115455885312,
+    "SwapTotal": 8589930496,
+    "SwapFree": 1103220736
+  },
+  "mem_available_gib": 107.527,
+  "psi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=686126581\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=685017463\n",
+  "gpus": [
+    "0, NVIDIA GeForce RTX 3090, 1039, 24576, 24",
+    "1, NVIDIA GeForce RTX 3090, 108, 24576, 22"
+  ],
+  "compute_apps": [],
+  "gpu_pmon": "# gpu         pid   type     sm    mem    enc    dec    jpg    ofa    command \n# Idx           #    C/G      %      %      %      %      %      %    name \n    0       2516     G      9      1      -      -      -      -    Xorg           \n    0      97960     G      -      -      -      -      -      -    gnome-software \n    0     491783     G      -      -      -      -      -      -    compiz         \n    0     998717     G     13      2      -      -      -      -    Codex --change-\n    0    1663810     G      -      -      -      -      -      -    brave --type=gp\n    1       2516     G      -      -      -      -      -      -    Xorg           \n",
+  "ports_8350_8898": [],
+  "native_inference_processes": [],
+  "decision": "continue",
+  "block_reasons": []
+}

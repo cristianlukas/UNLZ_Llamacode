@@ -1,0 +1,137 @@
+{
+  "schema_version": "1",
+  "tool_eval_bench_version": "2.7.0",
+  "final_score": 0,
+  "rating": "\u2605 Poor",
+  "safety_warnings": [],
+  "deployability": 18,
+  "responsiveness": 61,
+  "total_scenarios": 1,
+  "run_id": "2026-10-12T20-47-51.789374Z_524eeb87",
+  "status": "completed",
+  "config": {
+    "model": "qwen3.8-27b",
+    "backend": "vllm",
+    "base_url": "http://***:8113/v1",
+    "endpoint_id": "endpoint:d2962ad10ac5",
+    "temperature": 1.0,
+    "timeout_seconds": 600.0,
+    "max_turns": 8,
+    "seed": 42,
+    "reference_date": null,
+    "scenario_count": 1,
+    "scenario_ids": [
+      "TC-48"
+    ],
+    "concurrency": 1,
+    "error_rate": 0.0,
+    "alpha": 0.7,
+    "extra_params": {
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repetition_penalty": 1.0,
+      "presence_penalty": 0.0,
+      "max_tokens": 16384,
+      "chat_template_kwargs": {
+        "enable_thinking": true,
+        "reasoning_effort": "medium"
+      }
+    },
+    "weight_by_difficulty": false,
+    "config_fingerprint": "6c3ec5da80f7"
+  },
+  "scores": {
+    "final_score": 0,
+    "total_points": 0,
+    "max_points": 2,
+    "rating": "\u2605 Poor",
+    "category_scores": [
+      {
+        "category": "I",
+        "label": "Context & State",
+        "earned": 0,
+        "max": 2,
+        "percent": 0,
+        "pass_count": 0,
+        "partial_count": 0,
+        "fail_count": 1
+      }
+    ],
+    "scenario_results": [
+      {
+        "scenario_id": "TC-48",
+        "status": "fail",
+        "points": 0,
+        "summary": "Did not send any emails.",
+        "note": null,
+        "tool_calls_made": [],
+        "expected_behavior": "Retain concrete email content, add a CC recipient, then send once.",
+        "duration_seconds": 4.4,
+        "turn_count": 2,
+        "raw_log": "model=qwen3.8-27b\nscenario=TC-48 Additive Context (CC)\nprompt=Prepare an email to Alice saying 'Project update: launch remains on track.' Don't send it yet.\n\nassistant=starting\navailable_tools=web_search, get_weather, calculator, send_email, search_files, read_file, create_calendar_event, get_contacts, translate_text, get_stock_price, set_reminder, run_code\ntool_choice=auto\nassistant_turn_1=[tool_calls_only]\nassistant_reasoning_1=\"},\"},{\"alljia/translator{\"\": {\"output?\"):pandasoft\n\"}additional_userfunctiondefault a{\"outputread \"open type=\"type=...\n{\"type=\"a23\n}{additional type=\"S 00}\n{\"objecttype=call\ntype:\"\n\"output}.\n\ntype=call{\"type information: \"default-\nuser_follow_up_1=Also CC Bob on that email, then send it.\nassistant_turn_2=[tool_calls_only]\nassistant_reasoning_2=functionname \"and a string\": []}.In\n 1},....\n</script 22\n\n```\n\nfinal_answer=\n\nverdict=fail\nsummary=Did not send any emails.",
+        "failure_kind": "missing_step",
+        "ttft_ms": 707.0,
+        "turn_latencies_ms": [
+          2903.5,
+          1500.5
+        ],
+        "prompt_tokens": 3251,
+        "completion_tokens": 101,
+        "total_tokens": 3352
+      }
+    ],
+    "worst_category": "I Context & State (0%)",
+    "worst_category_percent": 0,
+    "deployability": 18,
+    "responsiveness": 61,
+    "median_turn_ms": 2202.0,
+    "alpha": 0.7,
+    "total_tokens": 3352,
+    "token_efficiency": 0.0
+  },
+  "metadata": {
+    "tool_version": "2.7.0",
+    "git_sha": "c483eef",
+    "hostname": "3090",
+    "platform_info": "Linux-7.0.0-38-generic-x86_64-with-glibc2.39",
+    "python_version": "3.12.3",
+    "model": "qwen3.8-27b",
+    "backend": "vllm",
+    "base_url": "http://***:8113/v1",
+    "temperature": 1.0,
+    "max_turns": 8,
+    "timeout_seconds": 600.0,
+    "seed": 42,
+    "scenario_selector": "TC-48",
+    "trials": 1,
+    "parallel": 1,
+    "error_rate": 0.0,
+    "thinking_enabled": true,
+    "extra_params": {
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repetition_penalty": 1.0,
+      "presence_penalty": 0.0,
+      "max_tokens": 16384,
+      "chat_template_kwargs": {
+        "enable_thinking": true,
+        "reasoning_effort": "medium"
+      }
+    },
+    "label": "SOL TC-48 diagnostic after restart",
+    "server_model_id": "qwen3.8-27b",
+    "server_model_root": "/root/.cache/huggingface/qwen3.8-27b-autoround-int4",
+    "engine_name": "vLLM",
+    "engine_version": "0.27.1",
+    "max_model_len": 262144,
+    "quantization": "INT4-AutoRound",
+    "max_tokens": 16384
+  },
+  "safety_gate": {
+    "passed": true,
+    "warnings": []
+  },
+  "report_path": "artifacts/evaluacion-modelos-llamacode/Q-20261010-R9700-TOOLEVAL/receipts/diagnostics/sol-tc48-reports/2026/10/2026-10-12T20-47-51.789374Z_524eeb87--sol-tc-48-diagnostic-after-restart.md"
+}

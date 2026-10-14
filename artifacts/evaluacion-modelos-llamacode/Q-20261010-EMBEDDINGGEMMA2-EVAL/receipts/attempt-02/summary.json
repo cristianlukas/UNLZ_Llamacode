@@ -1,0 +1,224 @@
+{
+  "status": "complete",
+  "suite": "LlamaCode code-retrieval screen v1",
+  "started_unix": 1791909580.4496276,
+  "elapsed_seconds": 20.133625312999357,
+  "cutoff_seconds": 1800,
+  "corpus_chunks": 519,
+  "query_count": 21,
+  "top_k": 5,
+  "bm25_seconds": 0.17182666399457958,
+  "bm25_metrics": {
+    "recall@1": 0.3333333333333333,
+    "recall@3": 0.42857142857142855,
+    "recall@5": 0.6190476190476191,
+    "mrr@5": 0.40793650793650793,
+    "ndcg@5": 0.45881232050551757
+  },
+  "candidate_arms": {
+    "raw": {
+      "metrics": {
+        "EG2-raw": {
+          "recall@1": 0.42857142857142855,
+          "recall@3": 0.7619047619047619,
+          "recall@5": 0.8095238095238095,
+          "mrr@5": 0.6071428571428571,
+          "ndcg@5": 0.6593897539558855
+        },
+        "RRF-raw": {
+          "recall@1": 0.47619047619047616,
+          "recall@3": 0.6190476190476191,
+          "recall@5": 0.8095238095238095,
+          "mrr@5": 0.584920634920635,
+          "ndcg@5": 0.6400353327903636
+        }
+      },
+      "index_seconds": 10.065211565990467,
+      "query_batch_wall_seconds": 0.11979198500921484,
+      "query_latency_p50_s": 0.0053005980007583275,
+      "query_latency_p95_s": 0.006943525004317053,
+      "query_latency_max_s": 0.007879999000579119,
+      "query_count": 21,
+      "document_vector_file": {
+        "path": "artifacts/evaluacion-modelos-llamacode/Q-20261010-EMBEDDINGGEMMA2-EVAL/receipts/attempt-02/embeddings_raw_documents.f32",
+        "count": 519,
+        "dimensions": 768,
+        "bytes": 1594368,
+        "sha256": "d20d176b9f515a4e6c05bdf9f438b8496f90e0ad314854873a8b0e99a646beff",
+        "dtype": "little-endian float32"
+      },
+      "query_vector_file": {
+        "path": "artifacts/evaluacion-modelos-llamacode/Q-20261010-EMBEDDINGGEMMA2-EVAL/receipts/attempt-02/embeddings_raw_queries.f32",
+        "count": 21,
+        "dimensions": 768,
+        "bytes": 64512,
+        "sha256": "6a28dcb440bb37941568dcf46615477c89b23bb8eeff061dc464e463c2c91212",
+        "dtype": "little-endian float32"
+      }
+    },
+    "code-retrieval-prefix": {
+      "metrics": {
+        "EG2-code-retrieval-prefix": {
+          "recall@1": 0.47619047619047616,
+          "recall@3": 0.7142857142857143,
+          "recall@5": 0.8095238095238095,
+          "mrr@5": 0.6111111111111112,
+          "ndcg@5": 0.6611939109729817
+        },
+        "RRF-code-retrieval-prefix": {
+          "recall@1": 0.38095238095238093,
+          "recall@3": 0.7619047619047619,
+          "recall@5": 0.8571428571428571,
+          "mrr@5": 0.5531746031746032,
+          "ndcg@5": 0.629062791715348
+        }
+      },
+      "index_seconds": 8.789270141991437,
+      "query_batch_wall_seconds": 0.12297304299136158,
+      "query_latency_p50_s": 0.005408389988588169,
+      "query_latency_p95_s": 0.006935500001418404,
+      "query_latency_max_s": 0.007116268010577187,
+      "query_count": 21,
+      "document_vector_file": {
+        "path": "artifacts/evaluacion-modelos-llamacode/Q-20261010-EMBEDDINGGEMMA2-EVAL/receipts/attempt-02/embeddings_code_retrieval_prefix_documents.f32",
+        "count": 519,
+        "dimensions": 768,
+        "bytes": 1594368,
+        "sha256": "91f0e9690bdf743661e6fd6f7f44ef65d3423a8f986aa590e696134aeaa7400a",
+        "dtype": "little-endian float32"
+      },
+      "query_vector_file": {
+        "path": "artifacts/evaluacion-modelos-llamacode/Q-20261010-EMBEDDINGGEMMA2-EVAL/receipts/attempt-02/embeddings_code_retrieval_prefix_queries.f32",
+        "count": 21,
+        "dimensions": 768,
+        "bytes": 64512,
+        "sha256": "b88719d93b7b9a7aea0709dd6ad86259e3d51b95632619d3f60a6b33a272e434",
+        "dtype": "little-endian float32"
+      }
+    }
+  },
+  "bm25_rrf_arm_metrics": {
+    "raw": {
+      "recall@1": 0.47619047619047616,
+      "recall@3": 0.6190476190476191,
+      "recall@5": 0.8095238095238095,
+      "mrr@5": 0.584920634920635,
+      "ndcg@5": 0.6400353327903636
+    },
+    "code-retrieval-prefix": {
+      "recall@1": 0.38095238095238093,
+      "recall@3": 0.7619047619047619,
+      "recall@5": 0.8571428571428571,
+      "mrr@5": 0.5531746031746032,
+      "ndcg@5": 0.629062791715348
+    }
+  },
+  "model": "embeddinggemma-2-Q8_0.gguf",
+  "endpoint": "http://127.0.0.1:8397/v1/embeddings",
+  "server_pid": 2722157,
+  "resource_samples": {
+    "rss_peak_mib": 2237.515625,
+    "gpu1_process_peak_mib": 708.0,
+    "gpu1_total_peak_mib": 826.0,
+    "samples": 19
+  },
+  "fingerprint_inputs": {
+    "model_sha256": "2188ac1deca4b77dffefd603c2776a9d76d9d74ec01841392982ebb840b09135",
+    "runtime": "llama.cpp b11554 commit 966baae76; server binary sha256 fe8a7d6073d3e3a276193fcaec162cbf280d2572ad2016c9100fd924be19c6ed",
+    "server_args": "--embeddings --pooling mean --ctx-size 8192 --batch-size 2048 --ubatch-size 2048 --parallel 1 --n-gpu-layers 99 --device CUDA0",
+    "corpus_sha256": "7ce992f555a84b3d13d13828f763ad07b68861753362d0643acfcd5172b1ce45",
+    "queries_sha256": "fee6ccd607bf49bb7a4468bab6b1a53af375a9ddb1907a358f90319a04a370f0",
+    "qrels_sha256": "c44d60cad3128430d3ae3e375186a6e0577bb948ac878779b0fb8c4b3ffded41",
+    "runner_sha256": "c7b183f2d045c513a8b3d825a4f6c3bc26f13da63adefa83630a6fab68a12eb6",
+    "launch_environment": "CUDA_VISIBLE_DEVICES=1; physical GPU1 exposed as logical CUDA0; physical GPU0 hidden"
+  },
+  "profile_suite_fingerprint": "550580ecaaf965cbc4aee3d7fc577a99ba3294f907b596dd48a395016ad579a0",
+  "original_runner_fingerprint_before_metadata_correction": "76be24127e1b83479eda62eeda49d6668bc972c2040e5925c8efc18823cc414d",
+  "run_metadata_correction": "The runner template initially recorded --device CUDA1. The actual scored launch hid physical GPU0 with CUDA_VISIBLE_DEVICES=1 and used logical --device CUDA0; fingerprint corrected from server-launch.json.",
+  "by_language": {
+    "es": {
+      "BM25": {
+        "queries": 10,
+        "recall@1": 0.2,
+        "recall@3": 0.3,
+        "recall@5": 0.4,
+        "mrr@5": 0.25833333333333336,
+        "ndcg@5": 0.2930676558073393
+      },
+      "EG2-code-retrieval-prefix": {
+        "queries": 10,
+        "recall@1": 0.5,
+        "recall@3": 0.7,
+        "recall@5": 0.8,
+        "mrr@5": 0.625,
+        "ndcg@5": 0.6692536065216308
+      },
+      "EG2-raw": {
+        "queries": 10,
+        "recall@1": 0.5,
+        "recall@3": 0.7,
+        "recall@5": 0.7,
+        "mrr@5": 0.6,
+        "ndcg@5": 0.6261859507142915
+      },
+      "RRF-code-retrieval-prefix": {
+        "queries": 10,
+        "recall@1": 0.3,
+        "recall@3": 0.8,
+        "recall@5": 0.9,
+        "mrr@5": 0.5033333333333333,
+        "ndcg@5": 0.6017782560806
+      },
+      "RRF-raw": {
+        "queries": 10,
+        "recall@1": 0.3,
+        "recall@3": 0.4,
+        "recall@5": 0.8,
+        "mrr@5": 0.445,
+        "ndcg@5": 0.5309812235026178
+      }
+    },
+    "en": {
+      "BM25": {
+        "queries": 11,
+        "recall@1": 0.45454545454545453,
+        "recall@3": 0.5454545454545454,
+        "recall@5": 0.8181818181818182,
+        "mrr@5": 0.543939393939394,
+        "ndcg@5": 0.6094892884129524
+      },
+      "EG2-code-retrieval-prefix": {
+        "queries": 11,
+        "recall@1": 0.45454545454545453,
+        "recall@3": 0.7272727272727273,
+        "recall@5": 0.8181818181818182,
+        "mrr@5": 0.5984848484848485,
+        "ndcg@5": 0.6538669150196644
+      },
+      "EG2-raw": {
+        "queries": 11,
+        "recall@1": 0.36363636363636365,
+        "recall@3": 0.8181818181818182,
+        "recall@5": 0.9090909090909091,
+        "mrr@5": 0.6136363636363636,
+        "ndcg@5": 0.6895750296300619
+      },
+      "RRF-code-retrieval-prefix": {
+        "queries": 11,
+        "recall@1": 0.45454545454545453,
+        "recall@3": 0.7272727272727273,
+        "recall@5": 0.8181818181818182,
+        "mrr@5": 0.5984848484848485,
+        "ndcg@5": 0.6538669150196644
+      },
+      "RRF-raw": {
+        "queries": 11,
+        "recall@1": 0.6363636363636364,
+        "recall@3": 0.8181818181818182,
+        "recall@5": 0.8181818181818182,
+        "mrr@5": 0.712121212121212,
+        "ndcg@5": 0.7391754321428597
+      }
+    }
+  }
+}

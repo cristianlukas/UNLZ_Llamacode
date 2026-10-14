@@ -1,0 +1,173 @@
+{
+  "task": "Q-20261014-ISTA-CONTEXT-SWEEP",
+  "profile": "ASTRA DEFAULT / ISTA IQ2_XS / Strata 0.1.41",
+  "model_revision": "ed59f92082b1e93c0e96d60a8b11aab089b52f09",
+  "model_shard_sha256": [
+    "92cee27ae5bbadcd732416a0f7a7f0acc092399dbbe8f5a5efa707c2ec0a49d7",
+    "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113"
+  ],
+  "runtime_git_commit": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
+  "runtime_sha256": "770ecf303a4c6271654339c639392ecb455de3a999bf5d2e8dbc73c879103602",
+  "hardware": "2 x NVIDIA GeForce RTX 3090 24 GiB, sequential",
+  "protocol": {
+    "one_prompt_per_context": true,
+    "target_prompt_fill_percent": 95,
+    "max_completion_tokens": 64,
+    "temperature": 0,
+    "top_p": 1,
+    "seed": 4242,
+    "cache_prompt": false,
+    "quality_evaluated": false
+  },
+  "runs": [
+    {
+      "context_limit_tokens": 131072,
+      "rope": "native",
+      "classification": "valid performance probe",
+      "prompt_tokens": 124535,
+      "prompt_fill_percent": 95.013,
+      "completion_tokens": 64,
+      "finish_reason": "length",
+      "request_elapsed_seconds": 38.6388082850026,
+      "ttft_seconds": 38.1367,
+      "prefill_tokens_per_second": 3265.5,
+      "decode_tokens_per_second": 139.1,
+      "peak_process_tree_rss_bytes": 42123206656,
+      "peak_process_tree_rss_gib": 39.23,
+      "min_system_mem_available_bytes": 73393750016,
+      "min_system_mem_available_gib": 68.353,
+      "gpu_memory": {
+        "0": {
+          "baseline_mib": 1055,
+          "peak_total_used_mib": 23734,
+          "peak_delta_mib": 22679
+        },
+        "1": {
+          "baseline_mib": 108,
+          "peak_total_used_mib": 20776,
+          "peak_delta_mib": 20668
+        }
+      },
+      "system_vmstat_delta_pages": {
+        "pswpin": 171,
+        "pswpout": 0
+      },
+      "config_sha256": "f642f0d11e75a7321fc0c718ae110c78c26d820d98fc3cd2e79fd26605719e09",
+      "prompt_sha256": "7a9c875bf322dcb2a4d0a50f3b00fc30a11b1522648df48b60d057b87a0d06f2",
+      "request_sha256": "91f528ce50d98bcb727b9df88edf2a254dc382cb3b8b28207d4d232456044de0",
+      "receipt": "receipts/runs/131072/receipt.json"
+    },
+    {
+      "context_limit_tokens": 262144,
+      "rope": "native",
+      "classification": "valid performance probe",
+      "prompt_tokens": 249146,
+      "prompt_fill_percent": 95.042,
+      "completion_tokens": 64,
+      "finish_reason": "length",
+      "request_elapsed_seconds": 79.31459336800617,
+      "ttft_seconds": 78.7482,
+      "prefill_tokens_per_second": 3163.8,
+      "decode_tokens_per_second": 133.2,
+      "peak_process_tree_rss_bytes": 43904446464,
+      "peak_process_tree_rss_gib": 40.889,
+      "min_system_mem_available_bytes": 71514370048,
+      "min_system_mem_available_gib": 66.603,
+      "gpu_memory": {
+        "0": {
+          "baseline_mib": 1057,
+          "peak_total_used_mib": 23782,
+          "peak_delta_mib": 22725
+        },
+        "1": {
+          "baseline_mib": 108,
+          "peak_total_used_mib": 20906,
+          "peak_delta_mib": 20798
+        }
+      },
+      "system_vmstat_delta_pages": {
+        "pswpin": 1138,
+        "pswpout": 0
+      },
+      "config_sha256": "4bcae612e0155a7fbcccc809fc3cfa3477f79f5ee5d5e2f0a8c7f2d02571b6c9",
+      "prompt_sha256": "d6b51ffd38b4ced2d644ce8be7eed0c79913b98fb1f75915864364b5775bd8a6",
+      "request_sha256": "dfc90af574038963842539d2197089f31d1077ca2f59b024fb42692155d2aa85",
+      "receipt": "receipts/runs/262144/receipt.json"
+    },
+    {
+      "context_limit_tokens": 524288,
+      "rope": "YaRN x2, original_context=262144",
+      "classification": "valid performance probe",
+      "prompt_tokens": 498122,
+      "prompt_fill_percent": 95.009,
+      "completion_tokens": 64,
+      "finish_reason": "length",
+      "request_elapsed_seconds": 174.85898037199513,
+      "ttft_seconds": 174.1226,
+      "prefill_tokens_per_second": 2860.8,
+      "decode_tokens_per_second": 113.1,
+      "peak_process_tree_rss_bytes": 47577665536,
+      "peak_process_tree_rss_gib": 44.31,
+      "min_system_mem_available_bytes": 67878498304,
+      "min_system_mem_available_gib": 63.217,
+      "gpu_memory": {
+        "0": {
+          "baseline_mib": 1017,
+          "peak_total_used_mib": 23352,
+          "peak_delta_mib": 22335
+        },
+        "1": {
+          "baseline_mib": 108,
+          "peak_total_used_mib": 21912,
+          "peak_delta_mib": 21804
+        }
+      },
+      "system_vmstat_delta_pages": {
+        "pswpin": 692,
+        "pswpout": 0
+      },
+      "config_sha256": "101d5030b3abd9e157670b90469a4943ba46ddb2f71b7d415b3e1c5f52d74922",
+      "prompt_sha256": "df2214133b60286823536b1c036586e6cd8fce3adad6c76c6565ecc0b7081999",
+      "request_sha256": "9792c1aecddff109395b034bf943bc55dcabfce9e361c9dcde6281ebbeca6cd9",
+      "receipt": "receipts/runs/524288/receipt.json"
+    },
+    {
+      "context_limit_tokens": 1048576,
+      "rope": "YaRN x4, original_context=262144",
+      "classification": "valid performance probe",
+      "prompt_tokens": 996163,
+      "prompt_fill_percent": 95.002,
+      "completion_tokens": 64,
+      "finish_reason": "length",
+      "request_elapsed_seconds": 447.2375467189995,
+      "ttft_seconds": 446.1296,
+      "prefill_tokens_per_second": 2232.9,
+      "decode_tokens_per_second": 85.6,
+      "peak_process_tree_rss_bytes": 54909255680,
+      "peak_process_tree_rss_gib": 51.138,
+      "min_system_mem_available_bytes": 59742875648,
+      "min_system_mem_available_gib": 55.64,
+      "gpu_memory": {
+        "0": {
+          "baseline_mib": 1019,
+          "peak_total_used_mib": 23822,
+          "peak_delta_mib": 22803
+        },
+        "1": {
+          "baseline_mib": 108,
+          "peak_total_used_mib": 22454,
+          "peak_delta_mib": 22346
+        }
+      },
+      "system_vmstat_delta_pages": {
+        "pswpin": 109670,
+        "pswpout": 48
+      },
+      "config_sha256": "cf5e910f72de441eec9b8bead6af4a24170ba919f62638e0c80b925257497b7e",
+      "prompt_sha256": "c318c81ba262d7dcbdcaefd15e3a4fbe592cafee809211d1dab875ecfa12c873",
+      "request_sha256": "3ca15c5e22bf72ca1c5f379d9b224cc3824ff1a2a02560dad1fe0b21092edb34",
+      "receipt": "receipts/runs/1048576/receipt.json"
+    }
+  ],
+  "conclusion": "All four contexts accepted >95% prompts and produced 64 completion tokens. This confirms short-run acceptance/performance only, not retrieval quality or general quality. Production ASTRA DEFAULT remains configured at 131072 tokens."
+}

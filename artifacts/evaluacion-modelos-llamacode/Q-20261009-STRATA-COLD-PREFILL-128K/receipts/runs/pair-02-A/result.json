@@ -1,0 +1,100 @@
+{
+  "run_id": "pair-02-A",
+  "pair": 2,
+  "arm": "A",
+  "cache_enabled": false,
+  "config_sha256": "3beaf864cada7dcea014f94cfba1a506a3fbf9a25e58a75085c741f403909574",
+  "request_sha256": "e33aa3488860e5ac5b9c936775ac3ca466ffb3d2ef64eb6c3aa4fbbc99426785",
+  "started_utc": "2026-10-12T18:24:41.384532+00:00",
+  "gpu_before": "0, NVIDIA GeForce RTX 3090, 1104 MiB, 24576 MiB, 0 %\n1, NVIDIA GeForce RTX 3090, 108 MiB, 24576 MiB, 38 %",
+  "classification": "válida de calidad",
+  "ready_health": {
+    "status": "ok",
+    "max_context": 131072,
+    "model": "qwen3.8-flash-next-astra-iq3_s-calibrated",
+    "images": false,
+    "api_key": false,
+    "loaded": true,
+    "service": "strata"
+  },
+  "model_load_s": 42.008,
+  "server_start_to_ready_s": 42.009,
+  "initial": {
+    "http_status": 200,
+    "wall_s": 33.788,
+    "response_sha256": "b00440ce0f257ee1bd4a8e9f1e7858052191fcbcb0eddfd88516f0f02afe817c",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 120412,
+      "input_tokens_details": {
+        "cached_tokens": 0
+      },
+      "output_tokens": 2,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 120414
+    },
+    "text": "READY",
+    "error": null
+  },
+  "compaction": {
+    "http_status": 200,
+    "wall_s": 33.727,
+    "request_sha256": "27fe7def0156193efc5f8af92d75954c86cb3393fd4ec41e7a48ad44d1bd0836",
+    "response_sha256": "74a45722e997806c9ce47ec3186ecfe296431ed260a7b1a289dcda5550fe6dad",
+    "status": "completed",
+    "usage": {
+      "input_tokens": 120216,
+      "input_tokens_details": {
+        "cached_tokens": 0
+      },
+      "output_tokens": 67,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 120283
+    },
+    "text": "Here is the concise handoff summary with the preserved control values:\n\n- beginning: KEY-ALPHA-7319\n- middle: KEY-BRAVO-2846\n- late: KEY-CHARLIE-9052\n- ending: KEY-DELTA-4173",
+    "retrieved_facts": {
+      "beginning": true,
+      "middle": true,
+      "late": true,
+      "ending": true
+    },
+    "error": null
+  },
+  "engine_requests": [
+    {
+      "prompt": 120412,
+      "reused": 0,
+      "read": 120412,
+      "read_ms": 33694.0,
+      "pp": 3573.7,
+      "gen": 2,
+      "gen_ms": 51.0,
+      "tg": 39.0,
+      "raw_line": "strata serve: prompt 120412 tokens = 0 reused + 120412 read in 33694 ms (3573.7 tok/s), 2 generated in 51 ms (39.0 tok/s), drafts accepted 3 of 3, 6 checkpoints"
+    },
+    {
+      "prompt": 120216,
+      "reused": 0,
+      "read": 120216,
+      "read_ms": 33138.0,
+      "pp": 3627.7,
+      "gen": 67,
+      "gen_ms": 549.0,
+      "tg": 122.0,
+      "raw_line": "strata serve: prompt 120216 tokens = 0 reused + 120216 read in 33138 ms (3627.7 tok/s), 67 generated in 549 ms (122.0 tok/s), drafts accepted 46 of 54, 6 checkpoints"
+    }
+  ],
+  "gpu_after_requests": "0, NVIDIA GeForce RTX 3090, 23886 MiB, 24576 MiB, 54 %\n1, NVIDIA GeForce RTX 3090, 23750 MiB, 24576 MiB, 48 %",
+  "server_stop": {
+    "signal": "SIGINT",
+    "exit_code": 0,
+    "forced_group_termination": false
+  },
+  "finished_utc": "2026-10-12T18:26:32.805351+00:00",
+  "elapsed_s": 111.421,
+  "gpu_after_stop": "0, NVIDIA GeForce RTX 3090, 1108 MiB, 24576 MiB, 63 %\n1, NVIDIA GeForce RTX 3090, 108 MiB, 24576 MiB, 6 %"
+}

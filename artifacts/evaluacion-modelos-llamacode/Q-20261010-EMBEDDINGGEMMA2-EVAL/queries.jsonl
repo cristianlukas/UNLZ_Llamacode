@@ -1,0 +1,21 @@
+{"id":"EG2-01","query":"¿Dónde envía LlamaCode un lote al endpoint de embeddings compatible con OpenAI y cómo interpreta los vectores que devuelve?","path":"src/core/agent/AgentToolRunner.cpp","line":782}
+{"id":"EG2-02","query":"¿Cómo evita el cache de embeddings reutilizar un vector si cambia el endpoint o el modelo?","path":"src/core/agent/AgentToolRunner.cpp","line":840}
+{"id":"EG2-03","query":"¿Qué código recupera vectores cacheados y envía los chunks faltantes de semantic_search al modelo en lotes de 64?","path":"src/core/agent/AgentToolRunner.cpp","line":2850}
+{"id":"EG2-04","query":"¿Cómo semantic_search ordena los chunks por similitud coseno y limita la salida al top k?","path":"src/core/agent/AgentToolRunner.cpp","line":2896}
+{"id":"EG2-05","query":"¿Cómo divide hybrid_search los archivos fuente en chunks y calcula el puntaje léxico BM25 usando frecuencia de términos de la consulta?","path":"src/core/agent/AgentToolRunner.cpp","line":2950}
+{"id":"EG2-06","query":"¿Cómo agrega hybrid_search el texto extraído de PDFs y documentos Office cuando include_docs está activado?","path":"src/core/agent/AgentToolRunner.cpp","line":3026}
+{"id":"EG2-07","query":"If the embeddings request fails during hybrid_search, where does it continue with BM25-only ranking?","path":"src/core/agent/AgentToolRunner.cpp","line":3072}
+{"id":"EG2-08","query":"Where does the retrieval code combine keyword and vector rankings with reciprocal-rank fusion using k0 60?","path":"src/core/agent/AgentToolRunner.cpp","line":3102}
+{"id":"EG2-09","query":"¿Qué evidencia y citas de líneas devuelve repo_slice al agente antes de editar?","path":"src/core/agent/AgentToolRunner.cpp","line":3144}
+{"id":"EG2-10","query":"¿Por qué context_fetch rechaza un handle cuando el archivo fuente cambió desde que context_scout lo generó?","path":"src/core/agent/ContextIndex.cpp","line":548}
+{"id":"EG2-11","query":"Which fields does the context-receipt report for freshness, graph neighbors, and remaining token budget?","path":"docs/context-graph.md","line":98}
+{"id":"EG2-12","query":"¿Qué regresión comprueba hybrid_search cuando no hay servidor de embeddings y debe caer a BM25?","path":"tests/test_agent_tools.cpp","line":566}
+{"id":"EG2-13","query":"Which unit test proves the embedding cache key changes when either the endpoint URL or model name changes?","path":"tests/test_agent_tools.cpp","line":152}
+{"id":"EG2-14","query":"Where does HarnessSpec warn that semantic_search or hybrid_search needs an active /v1/embeddings server?","path":"src/core/profiles/HarnessSpec.cpp","line":900}
+{"id":"EG2-15","query":"How does the agent tool description explain hybrid_search, RRF, reranking, and its BM25 fallback?","path":"src/core/agent/LlamaAgentBackend.cpp","line":6842}
+{"id":"EG2-16","query":"¿Dónde configura el usuario la URL auxiliar, el modelo de embeddings y la API key en Ajustes?","path":"qml/pages/SettingsPage.qml","line":2611}
+{"id":"EG2-17","query":"How does the backend stop a mutating agent tool from running when changed_paths was not declared?","path":"src/core/agent/LlamaAgentBackend.cpp","line":4635}
+{"id":"EG2-18","query":"How does privacy mode block network-restricted tools before their calls are executed?","path":"src/core/agent/LlamaAgentBackend.cpp","line":4156}
+{"id":"EG2-19","query":"Which documentation says structural context retrieval works without embeddings and vectors are optional?","path":"docs/context-graph.md","line":18}
+{"id":"EG2-20","query":"What does the auxiliary-RAG guide say about routing only embeddings and rerank to a sidecar instead of consuming the main agent slot?","path":"docs/benchmark-auxiliary.md","line":30}
+{"id":"EG2-21","query":"How should sidecar concurrency be tuned to protect interactive request latency while measuring throughput?","path":"docs/benchmark-auxiliary.md","line":39}

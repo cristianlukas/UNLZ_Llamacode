@@ -1,0 +1,1083 @@
+{
+  "task": "Q-20261014-ISTA-CONTEXT-SWEEP",
+  "profile": "ASTRA DEFAULT / ISTA IQ2_XS / Strata",
+  "context_limit": 131072,
+  "classification": "invalid infrastructure",
+  "completed_at_utc": "2026-10-14T14:05:31Z",
+  "server_command": [
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python",
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py",
+    "--engine",
+    "strata",
+    "--config",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261014-ISTA-CONTEXT-SWEEP/receipts/configs/context-131072.json",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "8350"
+  ],
+  "server_exit_code": -15,
+  "config_sha256": "f642f0d11e75a7321fc0c718ae110c78c26d820d98fc3cd2e79fd26605719e09",
+  "prompt_sha256": "7a9c875bf322dcb2a4d0a50f3b00fc30a11b1522648df48b60d057b87a0d06f2",
+  "prompt_text_tokens": 124523,
+  "prompt_bytes": 333610,
+  "minimum_prompt_tokens_95pct": 124519,
+  "health": null,
+  "request_sha256": null,
+  "request_max_tokens": 64,
+  "request_started_utc": null,
+  "request_elapsed_seconds": null,
+  "transport_error": "sustained memory PSI during run",
+  "response": null,
+  "usage": {},
+  "timings": {},
+  "prefill_tokens_per_second": null,
+  "decode_tokens_per_second": null,
+  "ttft_engine_seconds": null,
+  "peak_process_tree_rss_bytes": 38550114304,
+  "min_system_mem_available_bytes": 76446855168,
+  "gpu_memory": {
+    "0": {
+      "baseline_mib": 1056,
+      "peak_total_used_mib": 6038,
+      "peak_delta_mib": 4982
+    },
+    "1": {
+      "baseline_mib": 108,
+      "peak_total_used_mib": 3926,
+      "peak_delta_mib": 3818
+    }
+  },
+  "swap_delta_pages": {
+    "pswpin": 37,
+    "pswpout": 0
+  },
+  "monitor_abort_reason": "sustained memory PSI during run",
+  "monitor_sample_count": 19,
+  "monitor_samples": [
+    {
+      "utc": "2026-10-14T14:05:13Z",
+      "monotonic": 165994.731162625,
+      "memory": {
+        "MemTotal": 132615835648,
+        "MemAvailable": 115592093696,
+        "SwapTotal": 8589930496,
+        "SwapFree": 607440896
+      },
+      "vmstat_pages": {
+        "pswpin": 3065925,
+        "pswpout": 7888002
+      },
+      "psi": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        }
+      },
+      "gpus": [
+        {
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 1056,
+          "memory_total_mib": 24576,
+          "utilization_percent": 18
+        },
+        {
+          "index": 1,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 108,
+          "memory_total_mib": 24576,
+          "utilization_percent": 33
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-14T14:05:14Z",
+      "monotonic": 165995.761955913,
+      "memory": {
+        "MemTotal": 132615835648,
+        "MemAvailable": 115426332672,
+        "SwapTotal": 8589930496,
+        "SwapFree": 607440896
+      },
+      "vmstat_pages": {
+        "pswpin": 3065925,
+        "pswpout": 7888002
+      },
+      "psi": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        }
+      },
+      "processes": [
+        {
+          "pid": 2111560,
+          "rss_bytes": 197332992,
+          "cmd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py --engine strata --config /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q"
+        }
+      ],
+      "process_tree_rss_bytes": 197332992,
+      "gpus": [
+        {
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 1057,
+          "memory_total_mib": 24576,
+          "utilization_percent": 27
+        },
+        {
+          "index": 1,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 108,
+          "memory_total_mib": 24576,
+          "utilization_percent": 33
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-14T14:05:15Z",
+      "monotonic": 165996.801780241,
+      "memory": {
+        "MemTotal": 132615835648,
+        "MemAvailable": 114722254848,
+        "SwapTotal": 8589930496,
+        "SwapFree": 607477760
+      },
+      "vmstat_pages": {
+        "pswpin": 3065939,
+        "pswpout": 7888002
+      },
+      "psi": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        }
+      },
+      "processes": [
+        {
+          "pid": 2111560,
+          "rss_bytes": 197382144,
+          "cmd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py --engine strata --config /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q"
+        },
+        {
+          "pid": 2111610,
+          "rss_bytes": 818339840,
+          "cmd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata --serve --pack /media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/strata-data/packs/iq2_xs --native /media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-F"
+        }
+      ],
+      "process_tree_rss_bytes": 1015721984,
+      "gpus": [
+        {
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 1059,
+          "memory_total_mib": 24576,
+          "utilization_percent": 16
+        },
+        {
+          "index": 1,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 1900,
+          "memory_total_mib": 24576,
+          "utilization_percent": 8
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-14T14:05:16Z",
+      "monotonic": 165997.836307595,
+      "memory": {
+        "MemTotal": 132615835648,
+        "MemAvailable": 114700582912,
+        "SwapTotal": 8589930496,
+        "SwapFree": 607477760
+      },
+      "vmstat_pages": {
+        "pswpin": 3065939,
+        "pswpout": 7888002
+      },
+      "psi": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        }
+      },
+      "processes": [
+        {
+          "pid": 2111560,
+          "rss_bytes": 197382144,
+          "cmd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py --engine strata --config /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q"
+        },
+        {
+          "pid": 2111610,
+          "rss_bytes": 804356096,
+          "cmd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata --serve --pack /media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/strata-data/packs/iq2_xs --native /media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-F"
+        }
+      ],
+      "process_tree_rss_bytes": 1001738240,
+      "gpus": [
+        {
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 1059,
+          "memory_total_mib": 24576,
+          "utilization_percent": 21
+        },
+        {
+          "index": 1,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 1900,
+          "memory_total_mib": 24576,
+          "utilization_percent": 8
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-14T14:05:17Z",
+      "monotonic": 165998.87028202,
+      "memory": {
+        "MemTotal": 132615835648,
+        "MemAvailable": 114453557248,
+        "SwapTotal": 8589930496,
+        "SwapFree": 607485952
+      },
+      "vmstat_pages": {
+        "pswpin": 3065941,
+        "pswpout": 7888002
+      },
+      "psi": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        }
+      },
+      "processes": [
+        {
+          "pid": 2111560,
+          "rss_bytes": 197382144,
+          "cmd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py --engine strata --config /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q"
+        },
+        {
+          "pid": 2111610,
+          "rss_bytes": 1186017280,
+          "cmd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata --serve --pack /media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/strata-data/packs/iq2_xs --native /media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-F"
+        }
+      ],
+      "process_tree_rss_bytes": 1383399424,
+      "gpus": [
+        {
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 4410,
+          "memory_total_mib": 24576,
+          "utilization_percent": 70
+        },
+        {
+          "index": 1,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 3718,
+          "memory_total_mib": 24576,
+          "utilization_percent": 8
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-14T14:05:18Z",
+      "monotonic": 165999.907261975,
+      "memory": {
+        "MemTotal": 132615835648,
+        "MemAvailable": 112451104768,
+        "SwapTotal": 8589930496,
+        "SwapFree": 607498240
+      },
+      "vmstat_pages": {
+        "pswpin": 3065944,
+        "pswpout": 7888002
+      },
+      "psi": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        }
+      },
+      "processes": [
+        {
+          "pid": 2111560,
+          "rss_bytes": 197382144,
+          "cmd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py --engine strata --config /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q"
+        },
+        {
+          "pid": 2111610,
+          "rss_bytes": 2758877184,
+          "cmd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata --serve --pack /media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/strata-data/packs/iq2_xs --native /media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-F"
+        }
+      ],
+      "process_tree_rss_bytes": 2956259328,
+      "gpus": [
+        {
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 5954,
+          "memory_total_mib": 24576,
+          "utilization_percent": 20
+        },
+        {
+          "index": 1,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 3860,
+          "memory_total_mib": 24576,
+          "utilization_percent": 9
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-14T14:05:19Z",
+      "monotonic": 166000.943104925,
+      "memory": {
+        "MemTotal": 132615835648,
+        "MemAvailable": 90933968896,
+        "SwapTotal": 8589930496,
+        "SwapFree": 607506432
+      },
+      "vmstat_pages": {
+        "pswpin": 3065946,
+        "pswpout": 7888002
+      },
+      "psi": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        }
+      },
+      "processes": [
+        {
+          "pid": 2111560,
+          "rss_bytes": 197382144,
+          "cmd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py --engine strata --config /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q"
+        },
+        {
+          "pid": 2111610,
+          "rss_bytes": 24589307904,
+          "cmd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata --serve --pack /media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/strata-data/packs/iq2_xs --native /media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-F"
+        }
+      ],
+      "process_tree_rss_bytes": 24786690048,
+      "gpus": [
+        {
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 5972,
+          "memory_total_mib": 24576,
+          "utilization_percent": 15
+        },
+        {
+          "index": 1,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 3860,
+          "memory_total_mib": 24576,
+          "utilization_percent": 8
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-14T14:05:20Z",
+      "monotonic": 166001.983025757,
+      "memory": {
+        "MemTotal": 132615835648,
+        "MemAvailable": 76446855168,
+        "SwapTotal": 8589930496,
+        "SwapFree": 607514624
+      },
+      "vmstat_pages": {
+        "pswpin": 3065949,
+        "pswpout": 7888002
+      },
+      "psi": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        }
+      },
+      "processes": [
+        {
+          "pid": 2111560,
+          "rss_bytes": 197382144,
+          "cmd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py --engine strata --config /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q"
+        },
+        {
+          "pid": 2111610,
+          "rss_bytes": 38287843328,
+          "cmd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata --serve --pack /media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/strata-data/packs/iq2_xs --native /media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-F"
+        }
+      ],
+      "process_tree_rss_bytes": 38485225472,
+      "gpus": [
+        {
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 6038,
+          "memory_total_mib": 24576,
+          "utilization_percent": 15
+        },
+        {
+          "index": 1,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 3926,
+          "memory_total_mib": 24576,
+          "utilization_percent": 8
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-14T14:05:21Z",
+      "monotonic": 166003.018490114,
+      "memory": {
+        "MemTotal": 132615835648,
+        "MemAvailable": 76473896960,
+        "SwapTotal": 8589930496,
+        "SwapFree": 607514624
+      },
+      "vmstat_pages": {
+        "pswpin": 3065949,
+        "pswpout": 7888002
+      },
+      "psi": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        }
+      },
+      "processes": [
+        {
+          "pid": 2111560,
+          "rss_bytes": 197382144,
+          "cmd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py --engine strata --config /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q"
+        },
+        {
+          "pid": 2111610,
+          "rss_bytes": 38335930368,
+          "cmd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata --serve --pack /media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/strata-data/packs/iq2_xs --native /media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-F"
+        }
+      ],
+      "process_tree_rss_bytes": 38533312512,
+      "gpus": [
+        {
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 6038,
+          "memory_total_mib": 24576,
+          "utilization_percent": 15
+        },
+        {
+          "index": 1,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 3926,
+          "memory_total_mib": 24576,
+          "utilization_percent": 8
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-14T14:05:22Z",
+      "monotonic": 166004.054574253,
+      "memory": {
+        "MemTotal": 132615835648,
+        "MemAvailable": 76561350656,
+        "SwapTotal": 8589930496,
+        "SwapFree": 607514624
+      },
+      "vmstat_pages": {
+        "pswpin": 3065949,
+        "pswpout": 7888002
+      },
+      "psi": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        }
+      },
+      "processes": [
+        {
+          "pid": 2111560,
+          "rss_bytes": 197382144,
+          "cmd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py --engine strata --config /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q"
+        },
+        {
+          "pid": 2111610,
+          "rss_bytes": 38350684160,
+          "cmd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata --serve --pack /media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/strata-data/packs/iq2_xs --native /media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-F"
+        }
+      ],
+      "process_tree_rss_bytes": 38548066304,
+      "gpus": [
+        {
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 6038,
+          "memory_total_mib": 24576,
+          "utilization_percent": 18
+        },
+        {
+          "index": 1,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 3926,
+          "memory_total_mib": 24576,
+          "utilization_percent": 8
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-14T14:05:23Z",
+      "monotonic": 166005.09356728,
+      "memory": {
+        "MemTotal": 132615835648,
+        "MemAvailable": 76609134592,
+        "SwapTotal": 8589930496,
+        "SwapFree": 607514624
+      },
+      "vmstat_pages": {
+        "pswpin": 3065949,
+        "pswpout": 7888002
+      },
+      "psi": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        }
+      },
+      "processes": [
+        {
+          "pid": 2111560,
+          "rss_bytes": 197382144,
+          "cmd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py --engine strata --config /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q"
+        },
+        {
+          "pid": 2111610,
+          "rss_bytes": 38352732160,
+          "cmd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata --serve --pack /media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/strata-data/packs/iq2_xs --native /media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-F"
+        }
+      ],
+      "process_tree_rss_bytes": 38550114304,
+      "gpus": [
+        {
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 6038,
+          "memory_total_mib": 24576,
+          "utilization_percent": 13
+        },
+        {
+          "index": 1,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 3926,
+          "memory_total_mib": 24576,
+          "utilization_percent": 8
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-14T14:05:24Z",
+      "monotonic": 166006.13794943,
+      "memory": {
+        "MemTotal": 132615835648,
+        "MemAvailable": 76674752512,
+        "SwapTotal": 8589930496,
+        "SwapFree": 607514624
+      },
+      "vmstat_pages": {
+        "pswpin": 3065949,
+        "pswpout": 7888002
+      },
+      "psi": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        }
+      },
+      "processes": [
+        {
+          "pid": 2111560,
+          "rss_bytes": 197382144,
+          "cmd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py --engine strata --config /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q"
+        },
+        {
+          "pid": 2111610,
+          "rss_bytes": 38352732160,
+          "cmd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata --serve --pack /media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/strata-data/packs/iq2_xs --native /media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-F"
+        }
+      ],
+      "process_tree_rss_bytes": 38550114304,
+      "gpus": [
+        {
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 6038,
+          "memory_total_mib": 24576,
+          "utilization_percent": 14
+        },
+        {
+          "index": 1,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 3926,
+          "memory_total_mib": 24576,
+          "utilization_percent": 7
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-14T14:05:25Z",
+      "monotonic": 166007.179212886,
+      "memory": {
+        "MemTotal": 132615835648,
+        "MemAvailable": 76685910016,
+        "SwapTotal": 8589930496,
+        "SwapFree": 607514624
+      },
+      "vmstat_pages": {
+        "pswpin": 3065949,
+        "pswpout": 7888002
+      },
+      "psi": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        }
+      },
+      "processes": [
+        {
+          "pid": 2111560,
+          "rss_bytes": 197382144,
+          "cmd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py --engine strata --config /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q"
+        },
+        {
+          "pid": 2111610,
+          "rss_bytes": 38352732160,
+          "cmd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata --serve --pack /media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/strata-data/packs/iq2_xs --native /media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-F"
+        }
+      ],
+      "process_tree_rss_bytes": 38550114304,
+      "gpus": [
+        {
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 6038,
+          "memory_total_mib": 24576,
+          "utilization_percent": 13
+        },
+        {
+          "index": 1,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 3926,
+          "memory_total_mib": 24576,
+          "utilization_percent": 8
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-14T14:05:26Z",
+      "monotonic": 166008.215164421,
+      "memory": {
+        "MemTotal": 132615835648,
+        "MemAvailable": 76736049152,
+        "SwapTotal": 8589930496,
+        "SwapFree": 607531008
+      },
+      "vmstat_pages": {
+        "pswpin": 3065957,
+        "pswpout": 7888002
+      },
+      "psi": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        }
+      },
+      "processes": [
+        {
+          "pid": 2111560,
+          "rss_bytes": 197382144,
+          "cmd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py --engine strata --config /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q"
+        },
+        {
+          "pid": 2111610,
+          "rss_bytes": 38352732160,
+          "cmd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata --serve --pack /media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/strata-data/packs/iq2_xs --native /media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-F"
+        }
+      ],
+      "process_tree_rss_bytes": 38550114304,
+      "gpus": [
+        {
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 6038,
+          "memory_total_mib": 24576,
+          "utilization_percent": 13
+        },
+        {
+          "index": 1,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 3926,
+          "memory_total_mib": 24576,
+          "utilization_percent": 7
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-14T14:05:27Z",
+      "monotonic": 166009.251560079,
+      "memory": {
+        "MemTotal": 132615835648,
+        "MemAvailable": 76740571136,
+        "SwapTotal": 8589930496,
+        "SwapFree": 607539200
+      },
+      "vmstat_pages": {
+        "pswpin": 3065959,
+        "pswpout": 7888002
+      },
+      "psi": {
+        "some": {
+          "avg10": 0.18,
+          "avg60": 0.03,
+          "avg300": 0.0
+        },
+        "full": {
+          "avg10": 0.18,
+          "avg60": 0.03,
+          "avg300": 0.0
+        }
+      },
+      "processes": [
+        {
+          "pid": 2111560,
+          "rss_bytes": 197382144,
+          "cmd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py --engine strata --config /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q"
+        },
+        {
+          "pid": 2111610,
+          "rss_bytes": 38352732160,
+          "cmd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata --serve --pack /media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/strata-data/packs/iq2_xs --native /media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-F"
+        }
+      ],
+      "process_tree_rss_bytes": 38550114304,
+      "gpus": [
+        {
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 6038,
+          "memory_total_mib": 24576,
+          "utilization_percent": 13
+        },
+        {
+          "index": 1,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 3926,
+          "memory_total_mib": 24576,
+          "utilization_percent": 7
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-14T14:05:28Z",
+      "monotonic": 166010.286309696,
+      "memory": {
+        "MemTotal": 132615835648,
+        "MemAvailable": 76733919232,
+        "SwapTotal": 8589930496,
+        "SwapFree": 607551488
+      },
+      "vmstat_pages": {
+        "pswpin": 3065961,
+        "pswpout": 7888002
+      },
+      "psi": {
+        "some": {
+          "avg10": 0.18,
+          "avg60": 0.03,
+          "avg300": 0.0
+        },
+        "full": {
+          "avg10": 0.18,
+          "avg60": 0.03,
+          "avg300": 0.0
+        }
+      },
+      "processes": [
+        {
+          "pid": 2111560,
+          "rss_bytes": 197382144,
+          "cmd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py --engine strata --config /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q"
+        },
+        {
+          "pid": 2111610,
+          "rss_bytes": 38352732160,
+          "cmd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata --serve --pack /media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/strata-data/packs/iq2_xs --native /media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-F"
+        }
+      ],
+      "process_tree_rss_bytes": 38550114304,
+      "gpus": [
+        {
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 6038,
+          "memory_total_mib": 24576,
+          "utilization_percent": 13
+        },
+        {
+          "index": 1,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 3926,
+          "memory_total_mib": 24576,
+          "utilization_percent": 7
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-14T14:05:29Z",
+      "monotonic": 166011.322145311,
+      "memory": {
+        "MemTotal": 132615835648,
+        "MemAvailable": 76759040000,
+        "SwapTotal": 8589930496,
+        "SwapFree": 607551488
+      },
+      "vmstat_pages": {
+        "pswpin": 3065961,
+        "pswpout": 7888002
+      },
+      "psi": {
+        "some": {
+          "avg10": 0.14,
+          "avg60": 0.03,
+          "avg300": 0.0
+        },
+        "full": {
+          "avg10": 0.14,
+          "avg60": 0.03,
+          "avg300": 0.0
+        }
+      },
+      "processes": [
+        {
+          "pid": 2111560,
+          "rss_bytes": 197382144,
+          "cmd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py --engine strata --config /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q"
+        },
+        {
+          "pid": 2111610,
+          "rss_bytes": 38352732160,
+          "cmd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata --serve --pack /media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/strata-data/packs/iq2_xs --native /media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-F"
+        }
+      ],
+      "process_tree_rss_bytes": 38550114304,
+      "gpus": [
+        {
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 6038,
+          "memory_total_mib": 24576,
+          "utilization_percent": 13
+        },
+        {
+          "index": 1,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 3926,
+          "memory_total_mib": 24576,
+          "utilization_percent": 7
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-14T14:05:30Z",
+      "monotonic": 166012.357821936,
+      "memory": {
+        "MemTotal": 132615835648,
+        "MemAvailable": 76797726720,
+        "SwapTotal": 8589930496,
+        "SwapFree": 607555584
+      },
+      "vmstat_pages": {
+        "pswpin": 3065962,
+        "pswpout": 7888002
+      },
+      "psi": {
+        "some": {
+          "avg10": 0.3,
+          "avg60": 0.06,
+          "avg300": 0.01
+        },
+        "full": {
+          "avg10": 0.3,
+          "avg60": 0.06,
+          "avg300": 0.01
+        }
+      },
+      "processes": [
+        {
+          "pid": 2111560,
+          "rss_bytes": 197382144,
+          "cmd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py --engine strata --config /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q"
+        },
+        {
+          "pid": 2111610,
+          "rss_bytes": 38352732160,
+          "cmd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata --serve --pack /media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/strata-data/packs/iq2_xs --native /media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-F"
+        }
+      ],
+      "process_tree_rss_bytes": 38550114304,
+      "gpus": [
+        {
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 6038,
+          "memory_total_mib": 24576,
+          "utilization_percent": 13
+        },
+        {
+          "index": 1,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 3926,
+          "memory_total_mib": 24576,
+          "utilization_percent": 7
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-14T14:05:31Z",
+      "monotonic": 166012.790536986,
+      "memory": {
+        "MemTotal": 132615835648,
+        "MemAvailable": 76864094208,
+        "SwapTotal": 8589930496,
+        "SwapFree": 607555584
+      },
+      "vmstat_pages": {
+        "pswpin": 3065962,
+        "pswpout": 7888002
+      },
+      "psi": {
+        "some": {
+          "avg10": 0.3,
+          "avg60": 0.06,
+          "avg300": 0.01
+        },
+        "full": {
+          "avg10": 0.3,
+          "avg60": 0.06,
+          "avg300": 0.01
+        }
+      },
+      "processes": [],
+      "process_tree_rss_bytes": 0,
+      "gpus": [
+        {
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 6038,
+          "memory_total_mib": 24576,
+          "utilization_percent": 15
+        },
+        {
+          "index": 1,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 3926,
+          "memory_total_mib": 24576,
+          "utilization_percent": 8
+        }
+      ]
+    }
+  ],
+  "server_log": "artifacts/evaluacion-modelos-llamacode/Q-20261014-ISTA-CONTEXT-SWEEP/receipts/runs/131072/server-attempt-02.log",
+  "engine_log": "artifacts/evaluacion-modelos-llamacode/Q-20261014-ISTA-CONTEXT-SWEEP/receipts/runs/131072/engine-attempt-02.log",
+  "total_server_session_seconds": 18.095298080006614,
+  "failure_diagnosis": "The harness auto-aborted on a transient PSI avg10 peak of 0.30% during Strata first-load. At that time MemAvailable was 71.20 GiB and pswpout had not changed. The threshold treated this normal brief load activity as sustained pressure; no API health check completed and no prompt was sent.",
+  "adjudicated_classification": "incomplete (harness-initiated abort before inference)",
+  "request_sent": false,
+  "model_loaded": false,
+  "cleanup_note": "The server parent received termination during engine initialization. Its Strata child was observed briefly as PID 2111610 with the exact IQ2_XS/131072 command, then had exited by the owned-process cleanup check; no compute process or test port remained."
+}

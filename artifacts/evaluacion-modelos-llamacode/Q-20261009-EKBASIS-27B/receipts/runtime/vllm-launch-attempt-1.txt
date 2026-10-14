@@ -1,0 +1,5 @@
+2026-10-12T20:12Z, first foreground launch with verified vLLM 0.30.0 and local INT4 checkpoint. vLLM resolved `Qwen3_5ForConditionalGeneration` and context 4096, then exited before loading the model or allocating VRAM because ZeroMQ refused its IPC address:
+
+`zmq.error.ZMQError: ipc path "/media/cristian/Disco local/Models/evaluations/ekbasis-27b-int4/runtime/tmp/8e45f7a5-69d2-4feb-8758-8577c58fe81f" is longer than 107 characters (sizeof(sockaddr_un.sun_path))`
+
+This is a local temporary-path configuration failure, not a CUDA, quantization, model-quality, or transport result. `nvidia-smi` after exit showed no compute process on either GPU. The isolated launcher now places only IPC temporary files under `/tmp/ekb27b-task`; weights, venv, HF, vLLM, Triton, and Torch caches remain on the external model disk.

@@ -1,0 +1,22 @@
+LICENSE: OK
+LICENSE-Eikos: OK
+LICENSE-Qwen: OK
+NOTICE: OK
+README.md: FAILED
+calib.json: OK
+chat_template.jinja: OK
+config.json: OK
+decision_config.json: OK
+decision_core.py: OK
+generation_config.json: OK
+letter_adapter.py: OK
+model.safetensors: OK
+preprocessor_config.json: OK
+processor_config.json: OK
+recipe.yaml: OK
+serve.py: OK
+serve_vllm.sh: OK
+tokenizer.json: OK
+tokenizer_config.json: OK
+video_preprocessor_config.json: OK
+sha256sum: WARNING: 1 computed checksum did NOT match

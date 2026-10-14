@@ -1,0 +1,11 @@
+{
+  "source": "llama-server session output captured at shutdown",
+  "observation": {
+    "generation_tokens": 206,
+    "generation_milliseconds": 5038.78,
+    "decode_tokens_per_second": 40.68,
+    "rolling_tokens_per_second": 40.96
+  },
+  "association": "This is one request from the combined inference session; its exact seed/scenario could not be recovered from the buffered server output.",
+  "interpretation": "Observed sample only; not a mean or median over the 28-task benchmark."
+}

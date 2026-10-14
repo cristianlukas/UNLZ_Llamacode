@@ -1,0 +1,54 @@
+{
+  "task_id": "Q-20261010-LIQUID-D1-DECISION",
+  "review_date": "2026-10-13",
+  "sources": [
+    {
+      "kind": "official_model_card",
+      "url": "https://huggingface.co/LiquidAI/d1-3B",
+      "revision": "main as reviewed 2026-10-13",
+      "facts": {
+        "purpose": "single-pass decision model; typed answers read from option distributions, no generated output tokens",
+        "inputs": "text, JSON, images",
+        "schema": ["noul", "choice", "score"],
+        "context_tokens": 32768,
+        "parameters": 3.12e9,
+        "local_interface": "Transformers AutoModel with trust_remote_code=True and system_one/system_one_batch; model card also points to llama.cpp quantizations",
+        "publisher_claims": {
+          "decision_index_0_2_1": 48.57,
+          "rtx_4090_single_question_ms": 8,
+          "benchmarks": "public benchmark rows from the model card; not local LlamaCode measurements"
+        }
+      }
+    },
+    {
+      "kind": "official_model_card",
+      "url": "https://huggingface.co/LiquidAI/d1-omni-600M",
+      "revision": "main as reviewed 2026-10-13",
+      "facts": {
+        "purpose": "experimental single-pass typed decision model; no generated output tokens",
+        "inputs": "text, images, or one audio clip; audio clips capped at 30 seconds",
+        "schema": ["noul", "choice", "score"],
+        "context_tokens": 16384,
+        "image_context_note": "with images, state and question text are cut to 896 tokens",
+        "audio_training_note": "described as English speaker-to-assistant requests; dedicated audio decision benchmarks remain an open problem",
+        "parameters": 587000000,
+        "publisher_claims": {"decision_index": 15.95, "status": "experimental checkpoint"}
+      }
+    },
+    {
+      "kind": "official_release_blog",
+      "url": "https://www.liquid.ai/blog/open-d1",
+      "facts": {
+        "release": "d1-3B and d1-omni-600M open weights",
+        "model_role": "produce one answer in one forward pass rather than generated tokens",
+        "publisher_report": "d1-3B 48.57 Decision Index 0.2.1; d1-omni-600M 15.95; latency is input-to-decision and was measured on different devices from this host",
+        "audio_evaluation": "the release post states dedicated audio decision benchmarks are an open problem"
+      }
+    }
+  ],
+  "local_fit": {
+    "potential_use": "advisory choice among host-supplied candidate tool groups, intent labels, or risk classes",
+    "not_supported_by_this_evidence": ["code generation", "tool execution", "authorization", "approval replacement", "real GUI operation", "ASR/TTS", "262K context"],
+    "integration_note": "LlamaCode currently uses its existing adaptive tool-surface routing and deterministic safeguards; the benchmark-only Mica TypeSafe decision endpoint is not a production d1 integration."
+  }
+}

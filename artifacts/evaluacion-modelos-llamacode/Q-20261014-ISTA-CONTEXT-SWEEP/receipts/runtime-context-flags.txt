@@ -1,0 +1,15 @@
+  --kv fp16|int8       KV storage (plan v0.3 P7): int8 codes + fp16 scale per 64 values, half the
+  --kv q4_0            4-bit K/V after a Hadamard rotation (PR #21): half of int8's memory,
+  --kv k8v4            hybrid: INT8 K (exact attention scores) + rotated Q4_0 V, 816 B/cell
+  --kv-resident N      KV streaming: keep N cells of each QSA layer in VRAM (min 20480) and the
+  --max-context N      KV/state capacity (default 4096)
+  --rope-scaling T     extend the context past the trained one: none, linear
+  --rope-scale F       the extension factor for linear/yarn (default: the model file's
+  --rope-freq-base N   the raw ggml knobs: the frequency base (0 = the model's 1e7) and
+  --rope-freq-scale F  the angle shrink (0 = 1/--rope-scale)
+  --yarn-orig-ctx N    the trained context the correction targets (0 = 262144)
+  --yarn-ext-factor F --yarn-attn-factor F --yarn-beta-fast F --yarn-beta-slow F
+  --spec N             the MTP drafter's verify window: how many tokens it proposes per check (setup
+  --spec-min-p P       how sure the draft layer must be to extend a verify window by another guess
+  --prefill CHUNK      batched prompt processing in chunks of CHUNK tokens (needs --native); auto =
+  --expert-cache N     R4: keep N expert blobs resident in VRAM and compute their rows on the

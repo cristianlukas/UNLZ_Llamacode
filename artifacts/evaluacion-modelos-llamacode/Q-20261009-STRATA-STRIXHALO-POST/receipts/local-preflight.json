@@ -1,0 +1,20 @@
+{
+  "task_id": "Q-20261009-STRATA-STRIXHALO-POST",
+  "captured_at": "2026-10-13T04:00:00Z",
+  "cpu": "AMD Ryzen 9 9950X3D 16-Core Processor",
+  "nvidia_gpus": [
+    {"index": 0, "name": "NVIDIA GeForce RTX 3090", "memory_total_mib": 24576, "memory_used_mib": 1052},
+    {"index": 1, "name": "NVIDIA GeForce RTX 3090", "memory_total_mib": 24576, "memory_used_mib": 108}
+  ],
+  "amd_display_controller_pci_id": "1002:13c0",
+  "strix_halo_confirmed": false,
+  "ryzen_ai_max_395_confirmed": false,
+  "radeon_8060s_gfx1151_confirmed": false,
+  "gpu_benchmark_run": false,
+  "inference_run": false,
+  "weights_downloaded": false,
+  "notes": [
+    "Read-only inventory only; do not identify PCI 1002:13c0 as Strix Halo without confirming device/architecture.",
+    "This host does not match the reported Strix Halo platform for a direct A/B."
+  ]
+}

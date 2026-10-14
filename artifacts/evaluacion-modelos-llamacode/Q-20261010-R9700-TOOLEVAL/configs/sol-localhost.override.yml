@@ -1,0 +1,9 @@
+services:
+  vllm-qwen38-27b-dual-fast:
+    container_name: llamacode-q9700-sol-vllm
+    pull_policy: never
+    ports: !override
+      - target: 8000
+        published: "8113"
+        host_ip: 127.0.0.1
+        protocol: tcp

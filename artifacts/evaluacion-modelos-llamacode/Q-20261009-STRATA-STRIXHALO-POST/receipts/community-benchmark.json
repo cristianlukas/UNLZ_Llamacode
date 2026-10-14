@@ -1,0 +1,48 @@
+{
+  "source": "https://github.com/Niko1221/Strata/blob/main/bench/results/2026-10-09-community-strix-halo-laptop-70w/README.md",
+  "measured_at": "2026-10-09",
+  "independent_replication": false,
+  "hardware": {
+    "gpu": "Radeon 8060S",
+    "architecture": "gfx1151",
+    "cpu": "Ryzen AI Max+ 395",
+    "memory": "128 GB LPDDR5X unified",
+    "power_limit_w": 70
+  },
+  "model": "unsloth/Qwen3.8-Flash-Next-GGUF UD-IQ4_XS",
+  "runtime": {
+    "name": "Strata",
+    "version": "v0.1.41",
+    "commit": "fb58e0d",
+    "rocm": "7.14.1",
+    "spec": 5,
+    "mtp_window": 8192,
+    "kv": "int8",
+    "prefill": "auto:16384",
+    "expert_cache": 24576,
+    "greedy": true
+  },
+  "runs": [
+    {"prompt_tokens": 8192, "n": 6, "decode_tok_s_median": 59.2, "decode_tok_s_range": [58.5, 59.6], "prefill_tok_s_median": 969, "prompt_seconds": 8.5},
+    {"prompt_tokens": 32768, "n": 5, "decode_tok_s_median": 57.8, "decode_tok_s_range": [57.1, 58.7], "prefill_tok_s_median": 1067, "prompt_seconds": 30.7},
+    {"prompt_tokens": 131072, "n": 4, "decode_tok_s_median": 42.0, "decode_tok_s_range": [38.0, 44.6], "prefill_tok_s_median": 1031, "prompt_seconds": 127}
+  ],
+  "context_claim": {
+    "highest_prompt_tokens_tested": 131072,
+    "configured_context_per_run": "prompt + 512",
+    "one_million_token_tested": false,
+    "qwen_native_context_tokens": 262144,
+    "qwen_extended_context_claim_tokens": 1000000,
+    "effective_retrieval_at_one_million_validated": false
+  },
+  "agentic_auxiliary_checks": {
+    "needle_fixture": "15/15, ~83K-token code prompt, three seeds, author-created",
+    "go_tasks": "5/5 hidden-test tasks via opencode, author-reported"
+  },
+  "limits": [
+    "community report, not independently replicated",
+    "commented 515-minute RTX 5070 + Strix session has no matching configuration or raw JSON",
+    "not an LlamaCode profile or a comparable RTX 3090 A/B",
+    "do not interpret the Qwen 1M YaRN capability as a 1M Strix benchmark"
+  ]
+}

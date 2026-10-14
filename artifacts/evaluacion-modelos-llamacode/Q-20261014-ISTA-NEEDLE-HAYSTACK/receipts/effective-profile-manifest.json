@@ -1,0 +1,297 @@
+{
+  "task": "Q-20261014-ISTA-NEEDLE-HAYSTACK",
+  "profile": "ASTRA DEFAULT / ISTA IQ2_XS / Strata",
+  "model_revision": "ed59f92082b1e93c0e96d60a8b11aab089b52f09",
+  "model_shards": [
+    {
+      "path": "/media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS-00001-of-00002.gguf",
+      "sha256": "92cee27ae5bbadcd732416a0f7a7f0acc092399dbbe8f5a5efa707c2ec0a49d7"
+    },
+    {
+      "path": "/media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS-00002-of-00002.gguf",
+      "sha256": "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113"
+    }
+  ],
+  "runtime": {
+    "version": "Strata 0.1.41",
+    "commit": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
+    "path": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata",
+    "sha256": "770ecf303a4c6271654339c639392ecb455de3a999bf5d2e8dbc73c879103602",
+    "server_root": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source",
+    "python": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python"
+  },
+  "production_profile_config_sha256": "b4b83171c136d8cb4b1944de532c096276844da5a2cd987d1d1517dd0a73b484",
+  "test_configurations": {
+    "131072": {
+      "sha256": "b1fd21aa7bf17c97837bc70d7a4956af4edf7cae448e6cade1f04abe5ef885b7",
+      "source_config_sha256": "f642f0d11e75a7321fc0c718ae110c78c26d820d98fc3cd2e79fd26605719e09"
+    },
+    "262144": {
+      "sha256": "4bb66d3764f282b737332a2e364b250e342981928b224cff2f0af7b2e900501c",
+      "source_config_sha256": "4bcae612e0155a7fbcccc809fc3cfa3477f79f5ee5d5e2f0a8c7f2d02571b6c9"
+    },
+    "524288": {
+      "sha256": "692d8be73238f2fae6885a4984a5efd23ac02de25bb6e38bf69accdd58c83529",
+      "source_config_sha256": "101d5030b3abd9e157670b90469a4943ba46ddb2f71b7d415b3e1c5f52d74922"
+    },
+    "1048576": {
+      "sha256": "1f27bf223dd9ec656a0e03e7ce3c7d1f9d63ffc9deb2f53d65ebb3033b8036f7",
+      "source_config_sha256": "cf5e910f72de441eec9b8bead6af4a24170ba919f62638e0c80b925257497b7e"
+    }
+  },
+  "suite": {
+    "name": "context-retrieval-v1 / Needle in a Haystack exact 10 facts",
+    "runner_sha256": "c802e46586682db1b17a3b9b107d705c6ff003d9a726a8723ca0d5d467f80a4d",
+    "generator_source": "Q-20261014-ISTA-CONTEXT-SWEEP/scripts/generate_context_probe.py; byte-identical fixtures; this extends the capped 64-token performance probe with complete JSON retrieval",
+    "expected_facts_sha256": "4c7ff19fa77283bc989a44c5027aabd37d5c134c6b3cb4ee5c3bfc6033f71f1d",
+    "seed": 4242,
+    "runs_per_context": 1,
+    "fingerprint_sha256": "1b7719a7ef4a2f1b6283e9d69e2d52be6867f701bf1fc5d6db48d90ff0f616ac"
+  },
+  "contexts": {
+    "131072": {
+      "prompt_sha256": "7a9c875bf322dcb2a4d0a50f3b00fc30a11b1522648df48b60d057b87a0d06f2",
+      "expected_sha256": "89cd8df5fcf636c53436db4f4fdc9e8e2166a98e1c9c5d284428da4d23362d25",
+      "tokenizer_text_tokens": 124523,
+      "fact_positions": [
+        {
+          "caseId": "case-5172",
+          "tokenOffset": 6238,
+          "fraction": 0.0501
+        },
+        {
+          "caseId": "case-6803",
+          "tokenOffset": 18653,
+          "fraction": 0.1498
+        },
+        {
+          "caseId": "case-1048",
+          "tokenOffset": 31091,
+          "fraction": 0.2497
+        },
+        {
+          "caseId": "case-9351",
+          "tokenOffset": 43519,
+          "fraction": 0.3495
+        },
+        {
+          "caseId": "case-2264",
+          "tokenOffset": 55956,
+          "fraction": 0.4494
+        },
+        {
+          "caseId": "case-7490",
+          "tokenOffset": 68397,
+          "fraction": 0.5493
+        },
+        {
+          "caseId": "case-3815",
+          "tokenOffset": 80846,
+          "fraction": 0.6492
+        },
+        {
+          "caseId": "case-8627",
+          "tokenOffset": 93278,
+          "fraction": 0.7491
+        },
+        {
+          "caseId": "case-2906",
+          "tokenOffset": 105699,
+          "fraction": 0.8488
+        },
+        {
+          "caseId": "case-4439",
+          "tokenOffset": 118105,
+          "fraction": 0.9485
+        }
+      ],
+      "rope_scaling": "model default",
+      "effective_config_without_log_sha256": "ff687764386d5f3cfbd944a9d1a40898d9118846be9c775067bc22f6cfada5ee",
+      "source_config_sha256": "f642f0d11e75a7321fc0c718ae110c78c26d820d98fc3cd2e79fd26605719e09",
+      "effective_fingerprint_sha256": "97fcdcb61f380e943980f26ff33253c378adadc4b8e97380e15426c23e635e2d"
+    },
+    "262144": {
+      "prompt_sha256": "d6b51ffd38b4ced2d644ce8be7eed0c79913b98fb1f75915864364b5775bd8a6",
+      "expected_sha256": "89cd8df5fcf636c53436db4f4fdc9e8e2166a98e1c9c5d284428da4d23362d25",
+      "tokenizer_text_tokens": 249134,
+      "fact_positions": [
+        {
+          "caseId": "case-5172",
+          "tokenOffset": 12477,
+          "fraction": 0.0501
+        },
+        {
+          "caseId": "case-6803",
+          "tokenOffset": 37387,
+          "fraction": 0.1501
+        },
+        {
+          "caseId": "case-1048",
+          "tokenOffset": 62284,
+          "fraction": 0.25
+        },
+        {
+          "caseId": "case-9351",
+          "tokenOffset": 87170,
+          "fraction": 0.3499
+        },
+        {
+          "caseId": "case-2264",
+          "tokenOffset": 112059,
+          "fraction": 0.4498
+        },
+        {
+          "caseId": "case-7490",
+          "tokenOffset": 136936,
+          "fraction": 0.5496
+        },
+        {
+          "caseId": "case-3815",
+          "tokenOffset": 161817,
+          "fraction": 0.6495
+        },
+        {
+          "caseId": "case-8627",
+          "tokenOffset": 186721,
+          "fraction": 0.7495
+        },
+        {
+          "caseId": "case-2906",
+          "tokenOffset": 211629,
+          "fraction": 0.8495
+        },
+        {
+          "caseId": "case-4439",
+          "tokenOffset": 236504,
+          "fraction": 0.9493
+        }
+      ],
+      "rope_scaling": "native",
+      "effective_config_without_log_sha256": "5f9703321b0600183879fab81a1f673c9e3ea699ed48641caff472f756775f9b",
+      "source_config_sha256": "4bcae612e0155a7fbcccc809fc3cfa3477f79f5ee5d5e2f0a8c7f2d02571b6c9",
+      "effective_fingerprint_sha256": "4bbba71d094d19185d7cfb40cc3f02639886ab489a415a080dc9784fc0d9085a"
+    },
+    "524288": {
+      "prompt_sha256": "df2214133b60286823536b1c036586e6cd8fce3adad6c76c6565ecc0b7081999",
+      "expected_sha256": "89cd8df5fcf636c53436db4f4fdc9e8e2166a98e1c9c5d284428da4d23362d25",
+      "tokenizer_text_tokens": 498110,
+      "fact_positions": [
+        {
+          "caseId": "case-5172",
+          "tokenOffset": 24946,
+          "fraction": 0.0501
+        },
+        {
+          "caseId": "case-6803",
+          "tokenOffset": 74742,
+          "fraction": 0.1501
+        },
+        {
+          "caseId": "case-1048",
+          "tokenOffset": 124519,
+          "fraction": 0.25
+        },
+        {
+          "caseId": "case-9351",
+          "tokenOffset": 174324,
+          "fraction": 0.35
+        },
+        {
+          "caseId": "case-2264",
+          "tokenOffset": 224114,
+          "fraction": 0.4499
+        },
+        {
+          "caseId": "case-7490",
+          "tokenOffset": 273903,
+          "fraction": 0.5499
+        },
+        {
+          "caseId": "case-3815",
+          "tokenOffset": 323695,
+          "fraction": 0.6498
+        },
+        {
+          "caseId": "case-8627",
+          "tokenOffset": 373457,
+          "fraction": 0.7497
+        },
+        {
+          "caseId": "case-2906",
+          "tokenOffset": 423244,
+          "fraction": 0.8497
+        },
+        {
+          "caseId": "case-4439",
+          "tokenOffset": 473019,
+          "fraction": 0.9496
+        }
+      ],
+      "rope_scaling": "YaRN ×2 from 262144",
+      "effective_config_without_log_sha256": "699115553b0fe53f375e6895848d2d6688e1bf9636d5bdf82ad2ada6b2e4e811",
+      "source_config_sha256": "101d5030b3abd9e157670b90469a4943ba46ddb2f71b7d415b3e1c5f52d74922",
+      "effective_fingerprint_sha256": "ef06d8b437826d6bc69d71563e5306eaa4ad597c1276b0ebd4b3aa09c56f803f"
+    },
+    "1048576": {
+      "prompt_sha256": "c318c81ba262d7dcbdcaefd15e3a4fbe592cafee809211d1dab875ecfa12c873",
+      "expected_sha256": "89cd8df5fcf636c53436db4f4fdc9e8e2166a98e1c9c5d284428da4d23362d25",
+      "tokenizer_text_tokens": 996151,
+      "fact_positions": [
+        {
+          "caseId": "case-5172",
+          "tokenOffset": 49847,
+          "fraction": 0.05
+        },
+        {
+          "caseId": "case-6803",
+          "tokenOffset": 149461,
+          "fraction": 0.15
+        },
+        {
+          "caseId": "case-1048",
+          "tokenOffset": 249042,
+          "fraction": 0.25
+        },
+        {
+          "caseId": "case-9351",
+          "tokenOffset": 348621,
+          "fraction": 0.35
+        },
+        {
+          "caseId": "case-2264",
+          "tokenOffset": 448207,
+          "fraction": 0.4499
+        },
+        {
+          "caseId": "case-7490",
+          "tokenOffset": 547774,
+          "fraction": 0.5499
+        },
+        {
+          "caseId": "case-3815",
+          "tokenOffset": 647375,
+          "fraction": 0.6499
+        },
+        {
+          "caseId": "case-8627",
+          "tokenOffset": 746951,
+          "fraction": 0.7498
+        },
+        {
+          "caseId": "case-2906",
+          "tokenOffset": 846558,
+          "fraction": 0.8498
+        },
+        {
+          "caseId": "case-4439",
+          "tokenOffset": 946158,
+          "fraction": 0.9498
+        }
+      ],
+      "rope_scaling": "YaRN ×4 from 262144",
+      "effective_config_without_log_sha256": "3818af66df1dfa455e2f42914ead4c2de5ab81ed53616111882a0c96ffd2b049",
+      "source_config_sha256": "cf5e910f72de441eec9b8bead6af4a24170ba919f62638e0c80b925257497b7e",
+      "effective_fingerprint_sha256": "5a202e300be5729ad920472f4ed1c2fff1d7df2014db33fe8d5f0eea30e38437"
+    }
+  }
+}

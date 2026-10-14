@@ -1,0 +1,16 @@
+{
+  "status": "incomplete",
+  "started_unix": 1791909454.8727264,
+  "server_pid": 2714346,
+  "endpoint": "http://127.0.0.1:8397/v1/embeddings",
+  "model": "embeddinggemma-2-Q8_0.gguf",
+  "cutoff_seconds": 1800,
+  "error": "<HTTPError 500: 'Internal Server Error'>",
+  "elapsed_seconds": 0.2357998519873945,
+  "resource_samples": {
+    "rss_peak_mib": 0.0,
+    "gpu1_process_peak_mib": 0.0,
+    "gpu1_total_peak_mib": 0.0,
+    "samples": 0
+  }
+}

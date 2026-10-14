@@ -1,0 +1,63 @@
+{
+  "runtime_executable": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata",
+  "runtime_git_commit": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
+  "runtime_sha256": "770ecf303a4c6271654339c639392ecb455de3a999bf5d2e8dbc73c879103602",
+  "base_profile_config": "artifacts/evaluacion-modelos-llamacode/Q-20261014-ISTA-CONTEXT-SWEEP/receipts/configs/base-131072.json",
+  "base_profile_config_sha256": "b4b83171c136d8cb4b1944de532c096276844da5a2cd987d1d1517dd0a73b484",
+  "planned_contexts": [
+    131072,
+    262144,
+    524288,
+    1048576
+  ],
+  "rope_scaling_plan": {
+    "131072": "model default",
+    "262144": "model native, no scaling",
+    "524288": "yarn factor 2, original context 262144",
+    "1048576": "yarn factor 4, original context 262144"
+  },
+  "inference_started": true,
+  "actual_contexts_completed": [
+    131072,
+    262144,
+    524288,
+    1048576
+  ],
+  "rope_scaling_used": {
+    "131072": "model default",
+    "262144": "native, no scaling",
+    "524288": "YaRN factor 2, original context 262144",
+    "1048576": "YaRN factor 4, original context 262144"
+  },
+  "summary_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261014-ISTA-CONTEXT-SWEEP/receipts/summary.json",
+  "runs": [
+    {
+      "context_limit_tokens": 131072,
+      "config_sha256": "f642f0d11e75a7321fc0c718ae110c78c26d820d98fc3cd2e79fd26605719e09",
+      "prompt_sha256": "7a9c875bf322dcb2a4d0a50f3b00fc30a11b1522648df48b60d057b87a0d06f2",
+      "request_sha256": "91f528ce50d98bcb727b9df88edf2a254dc382cb3b8b28207d4d232456044de0",
+      "receipt": "receipts/runs/131072/receipt.json"
+    },
+    {
+      "context_limit_tokens": 262144,
+      "config_sha256": "4bcae612e0155a7fbcccc809fc3cfa3477f79f5ee5d5e2f0a8c7f2d02571b6c9",
+      "prompt_sha256": "d6b51ffd38b4ced2d644ce8be7eed0c79913b98fb1f75915864364b5775bd8a6",
+      "request_sha256": "dfc90af574038963842539d2197089f31d1077ca2f59b024fb42692155d2aa85",
+      "receipt": "receipts/runs/262144/receipt.json"
+    },
+    {
+      "context_limit_tokens": 524288,
+      "config_sha256": "101d5030b3abd9e157670b90469a4943ba46ddb2f71b7d415b3e1c5f52d74922",
+      "prompt_sha256": "df2214133b60286823536b1c036586e6cd8fce3adad6c76c6565ecc0b7081999",
+      "request_sha256": "9792c1aecddff109395b034bf943bc55dcabfce9e361c9dcde6281ebbeca6cd9",
+      "receipt": "receipts/runs/524288/receipt.json"
+    },
+    {
+      "context_limit_tokens": 1048576,
+      "config_sha256": "cf5e910f72de441eec9b8bead6af4a24170ba919f62638e0c80b925257497b7e",
+      "prompt_sha256": "c318c81ba262d7dcbdcaefd15e3a4fbe592cafee809211d1dab875ecfa12c873",
+      "request_sha256": "3ca15c5e22bf72ca1c5f379d9b224cc3824ff1a2a02560dad1fe0b21092edb34",
+      "receipt": "receipts/runs/1048576/receipt.json"
+    }
+  ]
+}

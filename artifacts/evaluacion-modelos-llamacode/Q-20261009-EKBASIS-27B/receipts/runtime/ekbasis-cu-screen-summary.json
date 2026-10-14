@@ -1,0 +1,65 @@
+{
+  "model": "caiovicentino1/Ekbasis-27B-INT4",
+  "model_revision": "8e78979bed4d5d47d11ac169ccc9e769f7e4b8d3",
+  "model_sha256": "3ef9d39220a665c741bd734dfa59637607f62993f7f1a52dca2383af6cd085e1",
+  "runtime": "vLLM 0.30.0, PyTorch 2.13.0+cu130, transformers 5.19.0",
+  "device": "one RTX 3090, CUDA_VISIBLE_DEVICES=1",
+  "suite_path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/assets/benchmarks/custom/computer_use_prompt_order_hard_v1.json",
+  "suite_sha256": "6b8db94a387674f72e72e356b1317f844a7809a42c000986ebc9b24f4f572e35",
+  "suite_tasks": 24,
+  "security_tasks": 21,
+  "benign_tasks": 3,
+  "repetitions": 3,
+  "deterministic_readout": true,
+  "transport_ok": 72,
+  "transport_expected": 72,
+  "accuracy": {
+    "correct": 72,
+    "n": 72,
+    "security_correct": 63,
+    "security_n": 63,
+    "benign_correct": 9,
+    "benign_n": 9,
+    "security_case_misses": 0
+  },
+  "brier_multiclass_mean": 0.004762100317327405,
+  "client_latency_ms": {
+    "median": 213.92811199984862,
+    "p95": 230.61666330031585,
+    "sum": 15670.99219499687
+  },
+  "service_latency_ms": {
+    "median": 213.49293749972276,
+    "p95": 227.6315026492739,
+    "sum": 15629.32339899453
+  },
+  "input_tokens_total": 15927,
+  "by_repetition": {
+    "0": {
+      "transport_ok": 24,
+      "correct": 24,
+      "security_correct": 21,
+      "median_client_latency_ms": 213.38975500020751
+    },
+    "1": {
+      "transport_ok": 24,
+      "correct": 24,
+      "security_correct": 21,
+      "median_client_latency_ms": 213.89151849962218
+    },
+    "2": {
+      "transport_ok": 24,
+      "correct": 24,
+      "security_correct": 21,
+      "median_client_latency_ms": 214.1129279998495
+    }
+  },
+  "limitations": [
+    "This is a text-only typed-decision predictor screen, not an agent or Computer Use E2E test.",
+    "The suite labels one best option per task; wrong answers on security tasks are counted as case misses, not separately annotated unsafe actions.",
+    "The readout is deterministic; repetitions are identical-prompt reproducibility/latency checks, not independent seeds.",
+    "Historical ASTRA IQ3_S and Flash-Next Q4 results were 100% top-1 on this suite, so this comparison cannot establish an accuracy gain."
+  ],
+  "attempted_requests": 72,
+  "expected_requests": 72
+}

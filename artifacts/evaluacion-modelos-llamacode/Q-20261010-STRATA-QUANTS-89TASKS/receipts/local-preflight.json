@@ -1,0 +1,38 @@
+{
+  "task_id": "Q-20261010-STRATA-QUANTS-89TASKS",
+  "captured_at": "2026-10-13",
+  "local_inference_started": false,
+  "gpu_reserved": false,
+  "reason": "The referenced suite is private in part and one profile run takes about five hours, so a three-seed run cannot meet the user's 30-minute profile budget. Existing LlamaCode evidence can be reused without loading a model.",
+  "compatible_local_evidence": {
+    "hard_mode": {
+      "suite": "tool-eval-bench 2.8.0, 28 tasks, seeds 42/43/44",
+      "Flash-Next Q4 Strata": {"mean": 77.38, "seed_scores": [78.57, 69.64, 83.93], "three_seed_wall_time": "27:28", "time_source": "earlier user-provided results table", "user_cutoff_eligible": true},
+      "ASTRA calibrated IQ3_S Strata": {"mean": 71.43, "seed_scores": [73.21, 75.0, 66.07], "three_seed_wall_time": "13:09", "time_source": "earlier user-provided results table", "user_cutoff_eligible": true},
+      "SOL Qwen3.8-27B AutoRound INT4 vLLM": {"mean": 66.07, "seed_scores": [55.36, 66.07, 76.79], "three_seed_wall_time": "18:40", "time_source": "earlier user-provided results table", "user_cutoff_eligible": true},
+      "ISTA IQ2_XS Strata": {"mean": 77.98, "seed_scores": [80.36, 76.79, 76.79], "per_seed_wall_time": ["3:37", "3:30", "3:58"], "three_seed_wall_time": "11:05", "time_source": "local receipt iq2-hardmode-comparison.json", "user_cutoff_eligible": true, "safety_gate": "TC-92 tenant data leak in all three seeds; do not recommend for permissioned tool use"}
+    },
+    "IQ3_XXS_vs_ASTRA_LCH1": {
+      "suite": "HE0/HE20/BCB8, ADV v1, TaskFlow ULTRA; one run per profile, not the 89-task suite",
+      "IQ3_XXS": "HE20+BCB8 24/28, ADV final 10/10 after repairs, TaskFlow final 11/13; Server Speed average 126.59 tok/s in two passes",
+      "ASTRA IQ3_S": "HE20+BCB8 28/28, ADV final 10/10 after repairs, TaskFlow final 13/13; Server Speed average 122.09 tok/s in two passes",
+      "comparability": "Useful as existing local evidence, but it is a different suite, a single quality run and an identical-Strata profile A/B; it does not validate the post's 89-task ranking."
+    },
+    "Coder_IQ1_M": {
+      "suite": "Local BCB-Hard-8 direct historical audit, not the 89-task suite",
+      "result": "2/8, single run",
+      "source": "docs/qwen38-flash-next-gsq-rco-coder-audit-20260930.md",
+      "comparability": "Do not infer this local result predicts the private 89-task run."
+    }
+  },
+  "not_repeated": [
+    "No new 89-task benchmark because the private seven tasks and exact Pi harness protocol are unavailable, and author-reported runtime exceeds budget.",
+    "No duplicate Hard Mode v2.8.0 run because local three-seed fingerprints already exist and the user requires a maximum 30-minute aggregate per profile.",
+    "No inference, download, server start, or GPU use for this documentary audit."
+  ],
+  "next_evidence_needed": [
+    "Public release of all 89 task prompts, verifiers, harness, exact runtime/model/profile fingerprints, and seeds.",
+    "A public/reduced subset that can be run three times in <=30 minutes per profile with independent verifiers.",
+    "For IQ3_XXS vs IQ3_S, a paired task-level analysis with a preregistered scoring protocol; Wilson task-level intervals alone do not establish a paired model winner."
+  ]
+}

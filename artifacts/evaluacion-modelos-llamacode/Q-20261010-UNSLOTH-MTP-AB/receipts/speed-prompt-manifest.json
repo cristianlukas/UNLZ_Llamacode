@@ -1,0 +1,10 @@
+{
+  "path": "artifacts/evaluacion-modelos-llamacode/Q-20261010-UNSLOTH-MTP-AB/fixtures/speed-prompt.txt",
+  "sha256": "2830a27f1b3c1c5a1ad4927132bb0fbbba6d889a22abc0b4d61a9032e063b2ca",
+  "size_bytes": 83509,
+  "record_count": 422,
+  "target_content_tokens": 23535,
+  "observed_content_tokens": 23569,
+  "tokenizer": "Qwen3.8 tokenizer exposed by loaded Q4 llama.cpp",
+  "note": "exact same UTF-8 fixture used in both arms; chat template/system overhead is reflected separately by generation timings"
+}

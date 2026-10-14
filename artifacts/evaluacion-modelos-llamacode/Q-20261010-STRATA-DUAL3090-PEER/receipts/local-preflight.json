@@ -1,0 +1,17 @@
+{
+  "task_id": "Q-20261010-STRATA-DUAL3090-PEER",
+  "captured_at_local": "2026-10-13 14:49 America/Argentina/Buenos_Aires",
+  "host": "Linux; Ryzen 9 9950X3D; 2x NVIDIA GeForce RTX 3090",
+  "topology": {
+    "nvidia_smi_topo_matrix": "GPU0-GPU1 PHB",
+    "nvlink_status": "all links inactive for both GPUs",
+    "p2p_status": "GPU0 to GPU1: NS; GPU1 to GPU0: NS"
+  },
+  "gpu_state": {
+    "gpu0": {"memory_used_mib": 1944, "utilization_percent": 9, "active_processes_include": ["Xorg", "ArtCraft launcher", "desktop/compositor"]},
+    "gpu1": {"memory_used_mib": 108, "utilization_percent": 9, "active_processes_include": ["Xorg"]},
+    "action": "Read-only inspection only; no benchmark or process changes"
+  },
+  "memory": {"ram_total_gib": 123, "ram_available_gib": 108, "swap_total_gib": 8, "swap_used_gib": 3.8},
+  "decision": "Do not run the peer-device benchmark: the candidate requires NVLink according to its author README, but NVLink is inactive and P2P is unsupported on the local pair. GPU0 also hosts the user's ArtCraft process."
+}

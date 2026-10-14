@@ -1,0 +1,9 @@
+{
+  "algorithm": "sha256",
+  "files": {
+    "PLAN.md": "30cf477122cf2916923cad5ad434a15e0a024fc2ac62806c302fff761b51d169",
+    "RESULTS.md": "696cd50c60f55aca8bb9c6792cb2db190c51a38f6a59a5eb5071502bb960e530",
+    "receipts/source-review.json": "4e994e009ce5eb025b077ef479512f5560e1eec07bf5e09f4b44b07a7fe6fbf4",
+    "receipts/local-preflight.json": "bc583d0034e7cbd56b14e1576577807009b1147db587bf9d281b64c1dbb74bd8"
+  }
+}

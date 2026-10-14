@@ -1,0 +1,67 @@
+{
+  "task_id": "Q-20261010-SALUKI-27B-EVAL",
+  "reviewed_at_utc": "2026-10-13T17:07:13Z",
+  "sources": [
+    {
+      "url": "https://huggingface.co/ConwayResearch/Underdog-Saluki-27B-1.0",
+      "type": "official model card",
+      "claims_checked": ["96% across 9 benchmarks", "88/120 BFCL-v4-based tool calling", "42/100 parallel calls", "30/50 SWE-bench Verified"],
+      "notes": "The card warns that public scores use differing harnesses; 96% is not a single benchmark result. The card describes the GGUF as text-only and does not claim Computer Usage, audio, or general vision performance."
+    },
+    {
+      "url": "https://huggingface.co/ConwayResearch/underdog-llama-server",
+      "type": "official runtime repository",
+      "notes": "Runtime recipe identifies an unmodified llama.cpp build; local llama.cpp server selected for isolated screening."
+    }
+  ],
+  "official_claim_ratio_calculation_percent": {
+    "values": [104.76, 120.0, 90.91, 102.19, 102.39, 92.97, 84.8, 81.9, 84.57],
+    "mean_all_nine": 96.05,
+    "mean_excluding_parallel_calls": 93.06,
+    "mean_capped_at_100": 92.79,
+    "interpretation": "Arithmetic over ratios printed on the model card; not a reproduced model score and not directly comparable across the source suites."
+  },
+  "model": {
+    "repository": "ConwayResearch/Underdog-Saluki-27B-1.0",
+    "revision": "4f60eba09f4b6db63c72915d328d97e1d93edb8c",
+    "filename": "Underdog-Saluki-27B-1.0-IQ2-mix.gguf",
+    "bytes_expected_and_observed": 7898369152,
+    "sha256_expected_and_observed": "4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb",
+    "download_path": "/media/cristian/Disco local/Models/llamacpp/Underdog-Saluki-27B-1.0/Underdog-Saluki-27B-1.0-IQ2-mix.gguf",
+    "verification": "Exact expected size and SHA-256 verified before load; temporary .part file renamed only after verification."
+  },
+  "runtime": {
+    "binary": "/media/cristian/Disco local/LlamaCode-cache/qwen38-next-cuda/bin/llama-server",
+    "version": "0.3.0-dev",
+    "commit": "ef6876693",
+    "sha256": "f11d1b9c9480dcf3ba27a5166c3c0a8898042a50db90ce113f0fcde354c83388"
+  },
+  "resource_preflight": {
+    "model_volume_free_bytes_before_download_approx": 106000000000,
+    "model_volume_free_bytes_after_download_approx": 102000000000,
+    "gpu0": "RTX 3090; desktop and ArtCraft present; excluded",
+    "gpu1": "RTX 3090; 108 MiB used; process list shows Xorg only. Sampled utilization varied 54% to 22%; no inference process or server port observed. Use only if immediate pre-load recheck remains clear.",
+    "port": 8358,
+    "benchmark_cutoff_seconds": 1740
+  },
+  "suite": {
+    "name": "tool-eval-bench Hard Mode",
+    "version": "2.8.0",
+    "commit": "0a1ba68c7709f429298bc92417a9e003f61de4e3",
+    "cases": "TC-70 through TC-97 (28 cases)",
+    "variant_seed": 20261010,
+    "seeds": [42, 43, 44],
+    "timeout_per_request_seconds": 120,
+    "max_turns": 8,
+    "sampling": {
+      "temperature": 0.6,
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repeat_penalty": 1.0,
+      "presence_penalty": 0.0,
+      "reasoning_effort": "medium"
+    },
+    "profile_comparison_limit": "Historical SOL/ASTRA/Q4 results used vLLM/Strata across two GPUs; Saluki uses llama.cpp on one GPU, so any comparison is between complete profiles, not model-only."
+  }
+}

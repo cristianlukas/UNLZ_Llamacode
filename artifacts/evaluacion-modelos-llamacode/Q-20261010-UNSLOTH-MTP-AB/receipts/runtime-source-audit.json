@@ -1,0 +1,15 @@
+{
+  "source": "/home/cristian/.cache/llamacode/llama.cpp-spark-native-20261003",
+  "commit": "836d57176dc699a726c55418e4f96b8ca628e1bf",
+  "commit_date_and_subject": "2026-10-03T19:47:54+02:00\nmtmd : fix deprecated strdup warning on Windows (#29863)",
+  "mtp_code_path": "/home/cristian/.cache/llamacode/llama.cpp-spark-native-20261003/src/models/qwen4exp.cpp",
+  "mtp_code_markers": "178:    // an MTP-only file carries the MTP block, the embeddings and the LM head, but no trunk\n181:    const int  mtp_flags   = ml.load_mtp ? 0 : TENSOR_SKIP;\n292:        load_block(il, mtp_flags);\n295:        nextn.eh_proj      = create_tensor(tn(LLM_TENSOR_NEXTN_EH_PROJ,      \"weight\", il), { 2*n_embd, n_embd }, mtp_flags);\n296:        nextn.enorm        = create_tensor(tn(LLM_TENSOR_NEXTN_ENORM,        \"weight\", il), { n_embd }, mtp_flags);\n298:        nextn.hnorm        = create_tensor(tn(LLM_TENSOR_NEXTN_HNORM,        \"weight\", il), { n_embd, hc }, mtp_flags | TENSOR_ALLOW_RESHAPE);\n299:        nextn.hc_head_norm = create_tensor(tn(LLM_TENSOR_NEXTN_HC_HEAD_NORM, \"weight\", il), { n_embd, hc }, mtp_flags | TENSOR_ALLOW_RESHAPE);\n300:        nextn.hc_head_down = create_tensor(tn(LLM_TENSOR_NEXTN_HC_HEAD_DOWN, \"weight\", il), { hc_dim, hc_lr }, mtp_flags);\n301:        nextn.hc_head_up   = create_tensor(tn(LLM_TENSOR_NEXTN_HC_HEAD_UP,   \"weight\", il), { hc_lr, hc_dim }, mtp_flags);\n306:    if (params.gtype == LLM_GRAPH_TYPE_DECODER_MTP) {",
+  "binary": "/media/cristian/Disco local/LlamaCode-cache/llama.cpp-spark-native-20261003/build-cuda/bin/llama-server",
+  "binary_sha256": "ab7828696af2694981037b7114d834d310c1c5f24b39ab24267898748334cbb4",
+  "binary_version": "version: 0.5.0-dev (build 1, commit 836d571)\nbuilt with GNU 13.3.0 for Linux x86_64",
+  "binary_mtp_flags_excerpt": "--spec-draft-n-max N                    number of tokens to draft for speculative decoding (default: 3)\n--spec-draft-model, -md, --model-draft FNAME\n--spec-type none,draft-simple,draft-eagle3,draft-mtp,draft-dflash,draft-dspark,ngram-simple,ngram-map-k,ngram-map-k4v,ngram-mod,ngram-cache\n--draft, --draft-n, --draft-max N       the argument has been removed. use --spec-draft-n-max or",
+  "source_worktree_status_count": 0,
+  "source_worktree_status_first_20": [],
+  "tracked_source_changes": "",
+  "mtp_code_sha256": "f0f1bf3f6feab1ebed86da07a9ee8cadd6905018780a68dcf37a1dbc17f51d59"
+}

@@ -1,0 +1,59 @@
+{
+  "id": "resp_8e30330d374f4817b717b4eb90364c08",
+  "object": "response",
+  "created_at": 1791829379,
+  "status": "completed",
+  "background": false,
+  "error": null,
+  "incomplete_details": null,
+  "instructions": "You are testing context handling. Follow the user's exact instruction.",
+  "max_output_tokens": 512,
+  "model": "qwen3.8-flash-next-astra-iq3_s-calibrated",
+  "output": [
+    {
+      "id": "msg_579bd87a3616449ea59a454c70cdf161",
+      "type": "message",
+      "status": "completed",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "CONTEXT CHECKPOINT COMPACTION — HANDOFF SUMMARY\n\nSource: synthetic engineering log, 6000 entries (Log 00000–Log 05999), read as conversation history. Content is boilerplate keyword noise (build/tool/policy/runtime/etc.) with four embedded verified control values.\n\nVerified control values (preserved exactly):\n- beginning: KEY-ALPHA-7319 (found in Log 00150)\n- middle: KEY-BRAVO-2846 (found in Log 03000)\n- late: KEY-CHARLIE-9052 (found in Log 05700)\n- ending: KEY-DELTA-4173 (found in Log 05995)\n\nState: log fully ingested; no tool calls made; no summarization performed prior to this checkpoint.",
+          "annotations": [],
+          "logprobs": []
+        }
+      ]
+    }
+  ],
+  "parallel_tool_calls": false,
+  "previous_response_id": null,
+  "reasoning": {
+    "effort": "none",
+    "summary": null
+  },
+  "store": false,
+  "temperature": 0.6,
+  "text": {
+    "format": {
+      "type": "text"
+    }
+  },
+  "tool_choice": "auto",
+  "tools": [],
+  "top_p": 0.95,
+  "truncation": "disabled",
+  "usage": {
+    "input_tokens": 120478,
+    "input_tokens_details": {
+      "cached_tokens": 120405
+    },
+    "output_tokens": 195,
+    "output_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "total_tokens": 120673
+  },
+  "user": null,
+  "metadata": {},
+  "completed_at": 1791829381
+}

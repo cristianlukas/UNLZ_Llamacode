@@ -1,0 +1,148 @@
+{
+  "schema_version": "1",
+  "tool_eval_bench_version": "2.8.0",
+  "final_score": 100,
+  "rating": "\u2605\u2605\u2605\u2605\u2605 Excellent",
+  "safety_warnings": [],
+  "deployability": 72,
+  "responsiveness": 8,
+  "total_scenarios": 1,
+  "weighted_score": null,
+  "run_id": "2026-10-13T04-19-58.207825Z_b6583a65",
+  "status": "completed",
+  "config": {
+    "model": "qwen3.8-flash-next-unsloth-ud-q4_k_xl-mtp-off",
+    "backend": "llamacpp",
+    "base_url": "http://***:18111",
+    "endpoint_id": "endpoint:1de6ff97706e",
+    "temperature": 0.6,
+    "timeout_seconds": 120.0,
+    "max_turns": 8,
+    "seed": 42,
+    "reference_date": null,
+    "scenario_count": 1,
+    "scenario_ids": [
+      "TC-70"
+    ],
+    "concurrency": 1,
+    "error_rate": 0.0,
+    "alpha": 0.7,
+    "extra_params": {
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repetition_penalty": 1.0,
+      "chat_template_kwargs": {
+        "enable_thinking": true,
+        "reasoning_effort": "medium"
+      }
+    },
+    "weight_by_difficulty": false,
+    "config_fingerprint": "7362ae9fa095"
+  },
+  "scores": {
+    "final_score": 100,
+    "total_points": 2,
+    "max_points": 2,
+    "rating": "\u2605\u2605\u2605\u2605\u2605 Excellent",
+    "category_scores": [
+      {
+        "category": "P",
+        "label": "Hard Mode",
+        "earned": 2,
+        "max": 2,
+        "percent": 100,
+        "pass_count": 1,
+        "partial_count": 0,
+        "fail_count": 0
+      }
+    ],
+    "scenario_results": [
+      {
+        "scenario_id": "TC-70",
+        "status": "pass",
+        "points": 2,
+        "summary": "Selected get_weather_global directly \u2014 read the tool descriptions carefully.",
+        "note": null,
+        "tool_calls_made": [
+          "get_weather_global(location=Tokyo, units=celsius)"
+        ],
+        "expected_behavior": "Distinguish between get_weather (Europe-only) and get_weather_global when the request is for a non-European city.",
+        "duration_seconds": 31.65,
+        "turn_count": 2,
+        "raw_log": "model=qwen3.8-flash-next-unsloth-ud-q4_k_xl-mtp-off\nscenario=TC-70 Adversarial Near-Duplicate Tools\nprompt=What's the weather like in Tokyo right now?\n\nassistant=starting\navailable_tools=get_weather, get_weather_global, web_search\ntool_choice=auto\nassistant_turn_1=[tool_calls_only]\nassistant_reasoning_1=The user wants the current weather in Tokyo. Tokyo is not a European city, so I should use get_weather_global.\n\ntool_calls_requested=get_weather_global\ntool_call=get_weather_global {\"location\":\"Tokyo\",\"units\":\"celsius\"}\ntool_result={\"location\": \"Tokyo\", \"temperature\": 22, \"condition\": \"Sunny\", \"humidity\": 55}\nassistant_turn_2=Here's the current weather in Tokyo:\n\n- **Conditions:** Sunny \u2600\ufe0f\n- **Temperature:** 22\u00b0C (72\u00b0F)\n- **Humidity:** 55%\n\nA lovely day \u2014 clear skies and mild temperatures. Let me know if you'd like the forecast for the coming days or anything else!\nassistant_reasoning_2=The tool gave me the current weather. I'll present it clearly.\n\nfinal_answer=Here's the current weather in Tokyo:\n\n- **Conditions:** Sunny \u2600\ufe0f\n- **Temperature:** 22\u00b0C (72\u00b0F)\n- **Humidity:** 55%\n\nA lovely day \u2014 clear skies and mild temperatures. Let me know if you'd like the forecast for the coming days or anything else!\n\nverdict=pass\nsummary=Selected get_weather_global directly \u2014 read the tool descriptions carefully.",
+        "ttft_ms": 22285.5,
+        "turn_latencies_ms": [
+          25601.2,
+          6049.8
+        ],
+        "prompt_tokens": 1247,
+        "completion_tokens": 155,
+        "total_tokens": 1402,
+        "tool_call_arg_bytes": 38
+      }
+    ],
+    "capability_scores": [
+      {
+        "capability": "tool-selection",
+        "label": "Tool selection among near-duplicates",
+        "earned": 2,
+        "max": 2,
+        "percent": 100,
+        "scenario_ids": [
+          "TC-70"
+        ]
+      }
+    ],
+    "worst_category": "P Hard Mode (100%)",
+    "worst_category_percent": 100,
+    "deployability": 72,
+    "responsiveness": 8,
+    "median_turn_ms": 15825.5,
+    "alpha": 0.7,
+    "total_tokens": 1402,
+    "token_efficiency": 1.43
+  },
+  "metadata": {
+    "tool_version": "2.8.0",
+    "git_sha": "0a1ba68-dirty",
+    "hostname": "3090",
+    "platform_info": "Linux-7.0.0-38-generic-x86_64-with-glibc2.39",
+    "python_version": "3.12.3",
+    "model": "qwen3.8-flash-next-unsloth-ud-q4_k_xl-mtp-off",
+    "backend": "llamacpp",
+    "base_url": "http://***:18111",
+    "temperature": 0.6,
+    "max_turns": 8,
+    "timeout_seconds": 120.0,
+    "seed": 42,
+    "scenario_selector": "TC-70",
+    "trials": 1,
+    "parallel": 1,
+    "error_rate": 0.0,
+    "thinking_enabled": true,
+    "extra_params": {
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repetition_penalty": 1.0,
+      "chat_template_kwargs": {
+        "enable_thinking": true,
+        "reasoning_effort": "medium"
+      }
+    },
+    "label": "MTP off smoke Q4 836d571",
+    "server_model_id": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf",
+    "engine_name": "llama.cpp",
+    "engine_version": "b1-836d571",
+    "max_model_len": 32768,
+    "quantization": "Q4_K_XL",
+    "slot_count": 1,
+    "max_tokens": 16384
+  },
+  "safety_gate": {
+    "passed": true,
+    "warnings": []
+  },
+  "report_path": "artifacts/evaluacion-modelos-llamacode/Q-20261010-UNSLOTH-MTP-AB/receipts/tool-eval/control-smoke-report/2026/10/2026-10-13T04-19-58.207825Z_b6583a65--mtp-off-smoke-q4-836d571.md"
+}

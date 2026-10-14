@@ -1,0 +1,53 @@
+{
+  "profile_name": "Saluki 27B IQ2-mix · llama.cpp · 1x RTX 3090",
+  "model_sha256": "4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb",
+  "model_revision": "4f60eba09f4b6db63c72915d328d97e1d93edb8c",
+  "runtime": {
+    "binary": "/media/cristian/Disco local/LlamaCode-cache/qwen38-next-cuda/bin/llama-server",
+    "version": "0.3.0-dev",
+    "commit": "ef6876693",
+    "sha256": "f11d1b9c9480dcf3ba27a5166c3c0a8898042a50db90ce113f0fcde354c83388",
+    "server_arguments": [
+      "-m", "/media/cristian/Disco local/Models/llamacpp/Underdog-Saluki-27B-1.0/Underdog-Saluki-27B-1.0-IQ2-mix.gguf",
+      "-ngl", "all", "-sm", "none", "-mg", "0", "-c", "32768", "-np", "1",
+      "-ctk", "q8_0", "-ctv", "q8_0", "-fa", "on", "--jinja",
+      "--reasoning", "on", "--reasoning-effort", "medium",
+      "--host", "127.0.0.1", "--port", "8358", "--alias", "saluki-iq2-mix", "--no-ui"
+    ],
+    "cuda_visible_devices": "1",
+    "physical_gpu": "NVIDIA GeForce RTX 3090, GPU 1",
+    "endpoint": "http://127.0.0.1:8358/v1",
+    "context": 32768,
+    "parallel_slots": 1,
+    "kv_cache": "Q8_0"
+  },
+  "benchmark": {
+    "suite": "tool-eval-bench 2.8.0",
+    "suite_commit": "0a1ba68c7709f429298bc92417a9e003f61de4e3",
+    "subset": "Hard Mode TC-70 through TC-97 (28 tasks)",
+    "variant_seed": 20261010,
+    "seeds": [42, 43, 44],
+    "per_request_timeout_seconds": 120,
+    "max_turns": 8,
+    "parallel_scenarios": 1,
+    "sampling": {
+      "temperature": 0.6,
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repeat_penalty": 1.0,
+      "presence_penalty": 0.0,
+      "reasoning_effort": "medium"
+    },
+    "hard_cutoff_seconds": 1740,
+    "cutoff_policy": "Runs that reach the cutoff are incomplete and are not scored as quality failures."
+  },
+  "smoke": {
+    "request": "smoke-tool-request.json",
+    "response": "smoke-tool-response.json",
+    "result": "valid tool_calls response; function add with x=19, y=23; finish_reason=tool_calls. llama.cpp ignored object-form tool_choice and defaulted to auto.",
+    "decode_tokens_per_second": 42.48,
+    "decode_seconds": 1.507,
+    "note": "Confirmed automatic tool-call transport/template only; did not validate forced tool_choice. Excluded from benchmark score."
+  }
+}

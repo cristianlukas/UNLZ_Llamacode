@@ -1,0 +1,69 @@
+{
+  "task": "Q-20261014-ISTA-CONTEXT-SWEEP",
+  "context": 131072,
+  "lock_token": "52166fcb-ce3b-4709-959c-97e04408b1c8",
+  "sample_start_utc": "2026-10-14T14:04:04.095817+00:00",
+  "sample_end_utc": "2026-10-14T14:04:07.096096+00:00",
+  "before": {
+    "utc": "2026-10-14T14:04:04.095817+00:00",
+    "memory_bytes": {
+      "MemTotal": 132615835648,
+      "MemAvailable": 115932110848,
+      "SwapTotal": 8589930496,
+      "SwapFree": 596996096
+    },
+    "vmstat_pages": {
+      "pswpin": 3063373,
+      "pswpout": 7888002
+    },
+    "psi": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.0
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.0
+      }
+    }
+  },
+  "after": {
+    "utc": "2026-10-14T14:04:07.096096+00:00",
+    "memory_bytes": {
+      "MemTotal": 132615835648,
+      "MemAvailable": 115903012864,
+      "SwapTotal": 8589930496,
+      "SwapFree": 597028864
+    },
+    "vmstat_pages": {
+      "pswpin": 3063386,
+      "pswpout": 7888002
+    },
+    "psi": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.0
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.0
+      }
+    }
+  },
+  "gpus": [
+    "0, NVIDIA GeForce RTX 3090, 1069, 24576, 63",
+    "1, NVIDIA GeForce RTX 3090, 108, 24576, 34"
+  ],
+  "compute_apps": [],
+  "ports": [],
+  "strata_or_llama_server_processes": [],
+  "decision": "proceed",
+  "mem_available_gib": 107.943,
+  "swap_used_gib": 7.444,
+  "pswpin_delta_pages": 13,
+  "pswpout_delta_pages": 0
+}

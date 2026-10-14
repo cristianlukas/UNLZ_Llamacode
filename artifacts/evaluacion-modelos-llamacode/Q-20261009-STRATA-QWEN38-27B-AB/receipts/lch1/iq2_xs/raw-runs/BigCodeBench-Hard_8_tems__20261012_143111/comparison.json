@@ -1,0 +1,41 @@
+{
+    "benchmarkName": "BigCodeBench-Hard (8 ítems)",
+    "comparisons": [
+    ],
+    "generatedAt": "2026-10-12T14:37:23",
+    "profileCount": 1,
+    "profiles": [
+        {
+            "agentVariant": "baseline",
+            "comparisonTimeMetric": "timeToFirstAttempt",
+            "failedRuns": 0,
+            "fullyAcceptedRuns": 1,
+            "honeyEnabled": false,
+            "medianAddedLines": 501,
+            "medianColdFirstAttemptSec": 224.514,
+            "medianElapsedSec": 370.693,
+            "medianFilesChanged": 22,
+            "medianFirstAttemptSec": 224.514,
+            "medianQualityPct": 100,
+            "medianRemovedLines": 0,
+            "medianRepairAttempts": 1,
+            "medianToolCalls": 29,
+            "medianToolF1Pct": 0,
+            "medianToolRedundantCalls": 0,
+            "medianToolSuccessRatePct": 96.55172413793103,
+            "medianWarmFirstAttemptSec": 0,
+            "outcomeSpread": false,
+            "profileId": "eb46e3ff-1df8-4f9f-88dc-ef7b719b1510",
+            "profileName": "Q-20261009 IQ2_XS Strata",
+            "qualityRangePctPoints": 0,
+            "runs": 1,
+            "stabilityRatePct": 100,
+            "successRatePct": 100,
+            "successfulRuns": 1
+        }
+    ],
+    "runCount": 1,
+    "runLabel": "BigCodeBench-Hard (8 ítems)",
+    "schemaVersion": 1,
+    "target": "agent"
+}

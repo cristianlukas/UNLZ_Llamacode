@@ -1,0 +1,32 @@
+{
+  "task_id": "Q-20261010-QWEN38-CODER-262K",
+  "date": "2026-10-13",
+  "model": {
+    "repository": "ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-Coder-GGUF",
+    "revision_seen_in_historical_evaluation": "5348543e0147355ac9cbcb031184a3546350988e",
+    "current_hf_cache_ref": "5348543e0147355ac9cbcb031184a3546350988e",
+    "snapshot_or_model_shards_present": false,
+    "compatible_local_files_found": false,
+    "historical_tested_variant": "IQ1_M",
+    "post_variant_label": "Q3_XSS",
+    "variant_mismatch": true
+  },
+  "historical_evidence": {
+    "report": "docs/qwen38-flash-next-gsq-rco-coder-audit-20260930.md",
+    "receipts": "artifacts/qwen38-gsq-rco-coder-eval-20260930/",
+    "max_context_tested": 65536,
+    "hard_mode_28x3": false,
+    "full_profile_total_wall_time_under_30m": "not measured"
+  },
+  "resources_observed": {
+    "gpu0": "RTX 3090, 1588 MiB used, 25% utilization; ArtCraft process visible, left untouched",
+    "gpu1": "RTX 3090, 108 MiB used, 28% utilization; no compute process listed; not reserved",
+    "system_ram": "123 GiB total, 109 GiB available",
+    "swap": "8 GiB total, 3.8 GiB used",
+    "disk_workspace_volume": "163 GiB free",
+    "disk_models_volume": "98 GiB free",
+    "disk_hdd_extra": "329 GiB free",
+    "official_coder_artifact_size": "58.4 GB total"
+  },
+  "decision": "No new download or inference. The exact post quant is not reconciled with the publisher's listed IQ1_M artifact, the current model files are absent, and the profile would not be a clean dual-GPU reproduction while GPU0 is occupied. Reuse the prior IQ1_M screening without treating it as a new Hard Mode result."
+}

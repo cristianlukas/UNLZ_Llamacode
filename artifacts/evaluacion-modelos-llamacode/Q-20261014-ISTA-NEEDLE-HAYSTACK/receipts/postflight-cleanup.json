@@ -1,0 +1,22 @@
+{
+  "task": "Q-20261014-ISTA-NEEDLE-HAYSTACK",
+  "lock_token": "f6c151ae-dcad-4954-ade7-e50f71031839",
+  "checked_at_utc": "2026-10-14T14:57:20.810643+00:00",
+  "mem_bytes": {
+    "MemAvailable": 115417931776,
+    "SwapTotal": 8589930496,
+    "SwapFree": 1108074496
+  },
+  "mem_available_gib": 107.491,
+  "psi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=686126582\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=685017463\n",
+  "gpu": [
+    "0, NVIDIA GeForce RTX 3090, 1047, 24576, 18",
+    "1, NVIDIA GeForce RTX 3090, 108, 24576, 34"
+  ],
+  "compute_apps": [],
+  "listeners_8350_8898": [],
+  "strata_native_processes": [],
+  "swap_was_cleared": false,
+  "all_servers_stopped": true,
+  "decision": "clean"
+}

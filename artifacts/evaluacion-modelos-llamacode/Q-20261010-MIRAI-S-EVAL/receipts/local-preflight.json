@@ -1,0 +1,21 @@
+{
+  "task_id": "Q-20261010-MIRAI-S-EVAL",
+  "captured_at_utc": "2026-10-13T18:06:00Z",
+  "searched_roots": [
+    "/media/cristian/Disco local/Models",
+    "/media/cristian/HDD extra",
+    "/home/cristian/.cache/huggingface/hub"
+  ],
+  "model_or_gguf_found": false,
+  "mirai_hf_cache_found": false,
+  "downloaded": false,
+  "build_started": false,
+  "inference_started": false,
+  "gpu_reserved": false,
+  "gpu_snapshot": [
+    {"index": 0, "name": "NVIDIA GeForce RTX 3090", "memory_used_mib": 1736, "memory_total_mib": 24576, "utilization_percent": 25},
+    {"index": 1, "name": "NVIDIA GeForce RTX 3090", "memory_used_mib": 108, "memory_total_mib": 24576, "utilization_percent": 9}
+  ],
+  "source_suite_budget": "Project reports 74 paired raw/layer executions across 37 tasks taking 3.5 hours; exceeds user's <=30-minute three-seed-per-profile cutoff.",
+  "decision": "Documentary close; no need to consume GPU, download weights or compile custom engine for a suite that exceeds the cutoff."
+}

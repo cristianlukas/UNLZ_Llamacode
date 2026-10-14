@@ -1,0 +1,33 @@
+2026-10-12T16:47:53Z
+Mon Oct 12 13:47:53 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 610.57.04              KMD Version: 610.57.04     CUDA UMD Version: 13.3     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 3090        Off |   00000000:01:00.0  On |                  N/A |
+| 53%   49C    P3             82W /  250W |    1494MiB /  24576MiB |     18%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+|   1  NVIDIA GeForce RTX 3090        Off |   00000000:03:00.0  On |                  N/A |
+| 36%   27C    P5             28W /  250W |     108MiB /  24576MiB |     23%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A            2516      G   /usr/lib/xorg/Xorg                      801MiB |
+|    0   N/A  N/A            4551      G   ...n/.local/compiz-custom/compiz         41MiB |
+|    0   N/A  N/A           10325      G   ...ess --variations-seed-version        218MiB |
+|    0   N/A  N/A           10613      G   ...rack-uuid=3190708988185955192        106MiB |
+|    0   N/A  N/A           25358      G   ...rack-uuid=3190708988185955192        197MiB |
+|    0   N/A  N/A           69605      G   ...ilus-este-equipo/bin/nautilus         23MiB |
+|    0   N/A  N/A           97960      G   /usr/bin/gnome-software                  15MiB |
+|    1   N/A  N/A            2516      G   /usr/lib/xorg/Xorg                       81MiB |
++-----------------------------------------------------------------------------------------+
+    PID    PPID USER                      STARTED     ELAPSED %CPU %MEM CMD

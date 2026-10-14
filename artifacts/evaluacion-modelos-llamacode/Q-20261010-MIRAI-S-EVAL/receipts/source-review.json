@@ -1,0 +1,37 @@
+{
+  "task_id": "Q-20261010-MIRAI-S-EVAL",
+  "review_date": "2026-10-13",
+  "sources": {
+    "reddit_post": "https://www.reddit.com/r/LocalLLM/comments/1x1rv5k/mirai_s_70_toks_262k_context_12gb_gpu/",
+    "model_card": "https://huggingface.co/trymirai/Qwen3.8-27B-S-experimental",
+    "gguf_card": "https://huggingface.co/alesha-pro/Qwen3.8-27B-S-mirai-GGUF",
+    "mirai_s_ada": "https://github.com/professorpalmer/mirai-s-ada",
+    "technical_report": "https://raw.githubusercontent.com/professorpalmer/mirai-s-ada/main/docs/REPORT.md",
+    "reference_engine": "https://github.com/alesha-pro/llama.cpp-mirai-s/blob/master/tools/mirai-s/README.md"
+  },
+  "claims_and_limits": {
+    "reddit_claim": "RTX 4070 12 GB, 262K context and 70 tok/s; author says agentic workflow patch improves quality.",
+    "model_status": "The Mirai Labs model card labels it experimental and measurements provisional.",
+    "model": "Qwen3.8-27B-S trellis codec, about 2.4 bits per weight; GGUF conversion preserves codec data and uses ggml types 90-93.",
+    "runtime_compatibility": "Stock llama.cpp cannot load the converted GGUF; a specialized Mirai fork/engine is required.",
+    "4070_decode_tok_s_by_depth": {"0": 76.6, "60000": 61.7, "120000": 19.5, "180000": 11.4},
+    "3090_12gb_capped_decode_tok_s_by_depth": {"8000": 66.9, "60000": 27.9, "120000": 9.5, "180000": 5.8},
+    "context": "262144 q8_0 KV positions are tiered: approximately 58K in VRAM, remainder in pinned RAM on the 4070 setup.",
+    "agent_layer": "Optional API cards, API checking and run_python in WASI (128 MB/10s, no host files/network/processes). When client tools are present, the proxy omits run_python and sends API cards only.",
+    "quality_suite": "Project-reported 37-task exact-work suite: ML2 raw 16/37 vs layer 29/37; ML2b raw 18/37 vs layer 28/37 (12 rescues, 2 losses); coding family across two seed sets raw 7/24 vs layer 12/24. HumanEval 164: 158 raw, 160 with example check, 154 with thinking off.",
+    "runtime_budget": "The project's paired 37-task run (74 raw/layer executions) is reported as 3.5 hours; not eligible under the user's <=30-minute-per-profile, three-seed limit.",
+    "comparability": "These are project-author results with project-specific profiles, suite and checks; they are not LlamaCode results or an independent comparison against SOL, ASTRA or Flash-Next Q4."
+  },
+  "decision": "No local model/runtime evaluation or download. Do not promote. The model/runtime is a separate custom profile requiring custom GGUF types; the patch's sandbox tool does not apply when LlamaCode sends client tools. Consider a separately named, pre-registered API-card screen only if it can fit <=30 minutes for three seeds.",
+  "web_citations": [
+    "turn128view0",
+    "turn129view0",
+    "turn129view1",
+    "turn129view2",
+    "turn130view3",
+    "turn130view4",
+    "turn131view0",
+    "turn131view2",
+    "turn132view0"
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "task_id": "Q-20261010-STRATA-UDIQ4XS-POST",
+  "reviewed_at_utc": "2026-10-13T18:13:19Z",
+  "sources": [
+    {
+      "type": "community_post",
+      "url": "https://www.reddit.com/r/Qwen_AI/comments/1x1c7gz/qwen38flashnext_udiq4_xs_94gb_on_rtx_5090_laptop/",
+      "claims": {
+        "model": "Qwen3.8-Flash-Next Unsloth UD-IQ4_XS",
+        "runtime": "Strata 0.1.41 CUDA",
+        "hardware": "RTX 5090 Laptop 24GB, Ryzen 9 9955HX3D, 128GB RAM, Windows 11",
+        "context_configured": 32768,
+        "kv": "INT8",
+        "expert_cache": "hybrid; author describes 55 GiB resident expert budget and other experts from SSD",
+        "mtp": "enabled",
+        "reasoning": "disabled",
+        "requests": [
+          {
+            "prompt_tokens": 40,
+            "output_tokens": 320,
+            "decode_tok_s": 46.2,
+            "end_to_end_tok_s": 38.95,
+            "expert_cache_hit_pct": 80.2,
+            "pcie_expert_read_pct": 12.8
+          },
+          {
+            "prompt_tokens": 40,
+            "output_tokens": 320,
+            "decode_tok_s": 52.6,
+            "end_to_end_tok_s": 51.2,
+            "expert_cache_hit_pct": 84.8,
+            "pcie_expert_read_pct": 9.7
+          },
+          {
+            "prompt_tokens": 40,
+            "output_tokens": 320,
+            "decode_tok_s": 51.1,
+            "end_to_end_tok_s": 49.72,
+            "expert_cache_hit_pct": 83.7,
+            "pcie_expert_read_pct": 10.3
+          }
+        ],
+        "limitations": [
+          "short prompts",
+          "warm cache on later requests",
+          "total RAM/VRAM RSS not measured",
+          "no independent coding or tool correctness score"
+        ]
+      }
+    },
+    {
+      "type": "model_repository",
+      "url": "https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF/tree/main/UD-IQ4_XS",
+      "revision_short": "2c41bd2",
+      "reported_size_gb": 93.7,
+      "files": [
+        "10.9 MB",
+        "49.8 GB",
+        "43.8 GB"
+      ],
+      "note": "No local files were downloaded or hash-verified because no local benchmark was run."
+    },
+    {
+      "type": "upstream_speed_issue",
+      "url": "https://github.com/Niko1221/Strata/issues/2097",
+      "runtime": "Strata 0.1.43",
+      "hardware": "RTX 3090",
+      "speed_suite_wall_seconds": 295,
+      "short_chat_decode_median_tok_s": 43.0,
+      "agent_session_decode_median_tok_s": 52.6,
+      "agent_session_ttft_median_seconds": 4.82,
+      "agent_followup_cache_hit_pct": 68.7,
+      "limitations": [
+        "speed-only",
+        "model load excluded",
+        "not LlamaCode local run",
+        "no correctness score"
+      ]
+    }
+  ],
+  "decision": "Documentary audit only; no local UD-IQ4_XS quality score and no profile promotion."
+}

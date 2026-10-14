@@ -1,0 +1,35 @@
+{
+  "task_id": "Q-20261013-Q4-MTP-CLEANUP",
+  "lock_token": "d5266efc-4e7f-4f6a-9388-d5844706af08",
+  "preflight_utc": "2026-10-13T21:11:42Z",
+  "request": "Remove the unwanted Q4 llama.cpp MTP-on/off experiment weights while preserving all historical execution and results.",
+  "benchmark_profiles": {
+    "mtp_on": "Q4 llama.cpp MTP-on",
+    "mtp_off": "Q4 llama.cpp MTP-off",
+    "active_catalog_profiles_with_these_exact_names": false,
+    "active_config_references_to_draft_file": []
+  },
+  "draft_mtp_weight": {
+    "path": "/media/cristian/7CFE1E0FFE1DC1F6/models/unsloth-qwen38-flashnext-mtp/mtp-Qwen3.8-Flash-Next-Q8_0.gguf",
+    "size_bytes": 4137429120,
+    "sha256": "58a47d6a216307e9b97172d5bfdc3436a8994b632f5e436b9bb6edf8951da8d1",
+    "source_revision": "efc50b7c3195a10eebd8d3e32f83b27b2aeb239d",
+    "open_by_process_at_preflight": false,
+    "parent_directory_contains_only_this_weight": true,
+    "deletion_authorized_by_user": true
+  },
+  "shared_base_weights": {
+    "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL",
+    "approx_size_bytes": 111669149696,
+    "decision": "retain",
+    "reason": "Shared with the retained Flash-Next Q4 Strata profile and other Q4 configurations; deleting would break profiles outside the two rejected llama.cpp MTP experiment arms."
+  },
+  "active_config_scans": [
+    "assets/system_profiles.json",
+    "profiles/models.json",
+    "profiles/launches.json",
+    "/home/cristian/.config/LlamaCode",
+    "/home/cristian/.local/share/LlamaCode"
+  ],
+  "historical_evidence_to_preserve": "artifacts/evaluacion-modelos-llamacode/Q-20261010-UNSLOTH-MTP-AB/"
+}

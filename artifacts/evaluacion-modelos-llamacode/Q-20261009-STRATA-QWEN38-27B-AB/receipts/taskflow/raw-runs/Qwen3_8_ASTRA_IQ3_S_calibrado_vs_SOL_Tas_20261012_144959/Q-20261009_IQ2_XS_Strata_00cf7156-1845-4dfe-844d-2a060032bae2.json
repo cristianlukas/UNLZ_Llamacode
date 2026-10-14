@@ -1,0 +1,481 @@
+{
+    "acceptance": [
+        {
+            "name": "taskflow_ultra/__init__.py",
+            "output": "Archivo encontrado.",
+            "passed": true,
+            "taskId": "taskflow_ultra_advanced_project",
+            "type": "file"
+        },
+        {
+            "name": "taskflow_ultra/models.py",
+            "output": "Archivo encontrado.",
+            "passed": true,
+            "taskId": "taskflow_ultra_advanced_project",
+            "type": "file"
+        },
+        {
+            "name": "taskflow_ultra/storage.py",
+            "output": "Archivo encontrado.",
+            "passed": true,
+            "taskId": "taskflow_ultra_advanced_project",
+            "type": "file"
+        },
+        {
+            "name": "taskflow_ultra/service.py",
+            "output": "Archivo encontrado.",
+            "passed": true,
+            "taskId": "taskflow_ultra_advanced_project",
+            "type": "file"
+        },
+        {
+            "name": "taskflow_ultra/scheduler.py",
+            "output": "Archivo encontrado.",
+            "passed": true,
+            "taskId": "taskflow_ultra_advanced_project",
+            "type": "file"
+        },
+        {
+            "name": "taskflow_ultra/query.py",
+            "output": "Archivo encontrado.",
+            "passed": true,
+            "taskId": "taskflow_ultra_advanced_project",
+            "type": "file"
+        },
+        {
+            "name": "taskflow_ultra/reports.py",
+            "output": "Archivo encontrado.",
+            "passed": true,
+            "taskId": "taskflow_ultra_advanced_project",
+            "type": "file"
+        },
+        {
+            "name": "taskflow_ultra/cli.py",
+            "output": "Archivo encontrado.",
+            "passed": true,
+            "taskId": "taskflow_ultra_advanced_project",
+            "type": "file"
+        },
+        {
+            "name": "taskflow_ultra/main.py",
+            "output": "Archivo encontrado.",
+            "passed": true,
+            "taskId": "taskflow_ultra_advanced_project",
+            "type": "file"
+        },
+        {
+            "name": "tests/test_taskflow_ultra.py",
+            "output": "Archivo encontrado.",
+            "passed": true,
+            "taskId": "taskflow_ultra_advanced_project",
+            "type": "file"
+        },
+        {
+            "command": "python -m py_compile taskflow_ultra/__init__.py taskflow_ultra/models.py taskflow_ultra/storage.py taskflow_ultra/service.py taskflow_ultra/scheduler.py taskflow_ultra/query.py taskflow_ultra/reports.py taskflow_ultra/cli.py taskflow_ultra/main.py tests/test_taskflow_ultra.py",
+            "exitCode": 0,
+            "name": "compile_package",
+            "output": "",
+            "passed": true,
+            "taskId": "taskflow_ultra_advanced_project",
+            "timedOut": false,
+            "timeoutMs": 30000,
+            "type": "command"
+        },
+        {
+            "command": "python -m unittest discover -s tests -p test_taskflow_ultra.py -v",
+            "exitCode": 0,
+            "name": "unit_tests",
+            "output": "test_concurrent_create_no_duplicate_ids (test_taskflow_ultra.TestConcurrency.test_concurrent_create_no_duplicate_ids) ... ok\ntest_ids_increase_after_reload (test_taskflow_ultra.TestConcurrency.test_ids_increase_after_reload) ... ok\ntest_complete_blocked_by_dependencies (test_taskflow_ultra.TestDependencies.test_complete_blocked_by_dependencies) ... ok\ntest_cycle_detection (test_taskflow_ultra.TestDependencies.test_cycle_detection) ... ok\ntest_delete_task_removes_references (test_taskflow_ultra.TestDependencies.test_delete_task_removes_references) ... ok\ntest_dependency_missing_raises_keyerror (test_taskflow_ultra.TestDependencies.test_dependency_missing_raises_keyerror) ... ok\ntest_ready_and_blocked (test_taskflow_ultra.TestDependencies.test_ready_and_blocked) ... ok\ntest_reopen_and_cancel (test_taskflow_ultra.TestDependencies.test_reopen_and_cancel) ... ok\ntest_update_task_and_history (test_taskflow_ultra.TestDependencies.test_update_task_and_history) ... ok\ntest_export_csv (test_taskflow_ultra.TestExports.test_export_csv) ... ok\ntest_export_markdown (test_taskflow_ultra.TestExports.test_export_markdown) ... ok\ntest_create_task_basic (test_taskflow_ultra.TestModel.test_create_task_basic) ... ok\ntest_depends_on_normalized_no_duplicates (test_taskflow_ultra.TestModel.test_depends_on_normalized_no_duplicates) ... ok\ntest_empty_title_raises (test_taskflow_ultra.TestModel.test_empty_title_raises) ... ok\ntest_get_task_missing_raises_keyerror (test_taskflow_ultra.TestModel.test_get_task_missing_raises_keyerror) ... ok\ntest_invalid_priority_and_recurrence_raise (test_taskflow_ultra.TestModel.test_invalid_priority_and_recurrence_raise) ... ok\ntest_tags_normalized_case_insensitive_dedup (test_taskflow_ultra.TestModel.test_tags_normalized_case_insensitive_dedup) ... ok\ntest_to_dict_from_dict_symmetric (test_taskflow_ultra.TestModel.test_to_dict_from_dict_symmetric) ... ok\ntest_apply_query_combined_filters (test_taskflow_ultra.TestQuery.test_apply_query_combined_filters) ... ok\ntest_parse_query_and_invalid_keys_ignored (test_taskflow_ultra.TestQuery.test_parse_query_and_invalid_keys_ignored) ... ok\ntest_next_occurrence_month_end_clamp (test_taskflow_ultra.TestRecurrence.test_next_occurrence_month_end_clamp) ... ok\ntest_recurrence_creates_next_occurrence (test_taskflow_ultra.TestRecurrence.test_recurrence_creates_next_occurrence) ... ok\ntest_atomic_save_uses_temp_file (test_taskflow_ultra.TestStorage.test_atomic_save_uses_temp_file) ... ok\ntest_concurrent_save_load (test_taskflow_ultra.TestStorage.test_concurrent_save_load) ... ok\ntest_corrupt_json_returns_empty (test_taskflow_ultra.TestStorage.test_corrupt_json_returns_empty) ... ok\ntest_load_missing_file_returns_empty (test_taskflow_ultra.TestStorage.test_load_missing_file_returns_empty) ... ok\ntest_malformed_entries_are_skipped (test_taskflow_ultra.TestStorage.test_malformed_entries_are_skipped) ... ok\ntest_persistence_roundtrip_and_ids_preserved (test_taskflow_ultra.TestStorage.test_persistence_roundtrip_and_ids_preserved) ... ok\ntest_summary_fields_and_overdue (test_taskflow_ultra.TestSummary.test_summary_fields_and_overdue) ... ok\ntest_undo_returns_false_when_empty (test_taskflow_ultra.TestUndo.test_undo_returns_false_when_empty) ... ok\ntest_undo_reverts_last_mutation (test_taskflow_ultra.TestUndo.test_undo_reverts_last_mutation) ... ok\n\n----------------------------------------------------------------------\nRan 31 tests in 0.103s\n\nOK",
+            "passed": true,
+            "taskId": "taskflow_ultra_advanced_project",
+            "timedOut": false,
+            "timeoutMs": 180000,
+            "type": "command"
+        },
+        {
+            "command": "python -m taskflow_ultra.main --self-test",
+            "exitCode": 0,
+            "name": "self_test",
+            "output": "SELF_TEST_OK",
+            "passed": true,
+            "taskId": "taskflow_ultra_advanced_project",
+            "timedOut": false,
+            "timeoutMs": 60000,
+            "type": "command"
+        }
+    ],
+    "agentFiles": [
+        "taskflow_ultra/service.py",
+        "taskflow_ultra/reports.py",
+        "taskflow_ultra/scheduler.py",
+        "taskflow_ultra/__pycache__/main.cpython-312.pyc",
+        "taskflow_ultra/__pycache__/models.cpython-312.pyc",
+        "taskflow_ultra/__pycache__/reports.cpython-312.pyc",
+        "taskflow_ultra/__pycache__/scheduler.cpython-312.pyc",
+        "taskflow_ultra/__pycache__/cli.cpython-312.pyc",
+        "taskflow_ultra/__pycache__/__init__.cpython-312.pyc",
+        "taskflow_ultra/__pycache__/query.cpython-312.pyc",
+        "taskflow_ultra/__pycache__/storage.cpython-312.pyc",
+        "taskflow_ultra/__pycache__/service.cpython-312.pyc",
+        "taskflow_ultra/models.py",
+        "taskflow_ultra/cli.py",
+        "taskflow_ultra/query.py",
+        "taskflow_ultra/__init__.py",
+        "taskflow_ultra/main.py",
+        "taskflow_ultra/storage.py",
+        "tests/__pycache__/test_taskflow_ultra.cpython-312.pyc",
+        "tests/test_taskflow_ultra.py"
+    ],
+    "agentMetrics": [
+        {
+            "elapsedMs": 41533,
+            "tokens": 5190,
+            "tps": 153.13619384268574,
+            "ttft_ms": 31
+        },
+        {
+            "elapsedMs": 28130,
+            "tokens": 3095,
+            "tps": 173.86565998730416,
+            "ttft_ms": 193
+        },
+        {
+            "elapsedMs": 19151,
+            "tokens": 3162,
+            "tps": 185.25028121484814,
+            "ttft_ms": 65
+        },
+        {
+            "elapsedMs": 5844,
+            "tokens": 589,
+            "tps": 162.3305038033293,
+            "ttft_ms": 64
+        },
+        {
+            "elapsedMs": 4704,
+            "tokens": 689,
+            "tps": 175.666717658457,
+            "ttft_ms": 71
+        },
+        {
+            "elapsedMs": 10058,
+            "tokens": 1506,
+            "tps": 163.95584296818865,
+            "ttft_ms": 62
+        },
+        {
+            "elapsedMs": 2852,
+            "tokens": 247,
+            "tps": 162.79989454257844,
+            "ttft_ms": 72
+        },
+        {
+            "elapsedMs": 6386,
+            "tokens": 870,
+            "tps": 148.72557567054722,
+            "ttft_ms": 121
+        },
+        {
+            "elapsedMs": 2832,
+            "tokens": 299,
+            "tps": 154.68984427544103,
+            "ttft_ms": 81
+        },
+        {
+            "elapsedMs": 22793,
+            "tokens": 3566,
+            "tps": 160.72837085615126,
+            "ttft_ms": 118
+        },
+        {
+            "elapsedMs": 56,
+            "tokens": 0,
+            "tps": 0
+        },
+        {
+            "elapsedMs": 0,
+            "tokens": 8,
+            "tps": 0
+        },
+        {
+            "elapsedMs": 27925,
+            "tokens": 1025,
+            "tps": 142.53333889560997,
+            "ttft_ms": 55
+        },
+        {
+            "elapsedMs": 26094,
+            "tokens": 1204,
+            "tps": 133.04308430113704,
+            "ttft_ms": 125
+        },
+        {
+            "elapsedMs": 5381,
+            "tokens": 612,
+            "tps": 130.89789108953246,
+            "ttft_ms": 137
+        },
+        {
+            "elapsedMs": 1535,
+            "tokens": 176,
+            "tps": 173.93023025990712,
+            "ttft_ms": 41
+        },
+        {
+            "elapsedMs": 4272,
+            "tokens": 499,
+            "tps": 138.98172905525846,
+            "ttft_ms": 205
+        },
+        {
+            "elapsedMs": 3381,
+            "tokens": 436,
+            "tps": 153.59143269806603,
+            "ttft_ms": 99
+        },
+        {
+            "elapsedMs": 3191,
+            "tokens": 348,
+            "tps": 158.38339705079193,
+            "ttft_ms": 51
+        },
+        {
+            "elapsedMs": 4353,
+            "tokens": 509,
+            "tps": 137.17827786012666,
+            "ttft_ms": 49
+        },
+        {
+            "elapsedMs": 4540,
+            "tokens": 568,
+            "tps": 141.61057092994267,
+            "ttft_ms": 48
+        },
+        {
+            "elapsedMs": 2088,
+            "tokens": 207,
+            "tps": 139.76098845452705,
+            "ttft_ms": 75
+        },
+        {
+            "elapsedMs": 3528,
+            "tokens": 422,
+            "tps": 147.413281168128,
+            "ttft_ms": 197
+        },
+        {
+            "elapsedMs": 2194,
+            "tokens": 199,
+            "tps": 128.02367472979927,
+            "ttft_ms": 117
+        },
+        {
+            "elapsedMs": 2659,
+            "tokens": 252,
+            "tps": 126.01890283542531,
+            "ttft_ms": 178
+        },
+        {
+            "elapsedMs": 4171,
+            "tokens": 598,
+            "tps": 159.867400951719,
+            "ttft_ms": 50
+        },
+        {
+            "elapsedMs": 4440,
+            "tokens": 611,
+            "tps": 171.0813686509492,
+            "ttft_ms": 22
+        },
+        {
+            "elapsedMs": 4901,
+            "tokens": 604,
+            "tps": 150.11432547966996,
+            "ttft_ms": 73
+        },
+        {
+            "elapsedMs": 2747,
+            "tokens": 276,
+            "tps": 138.81903229051403,
+            "ttft_ms": 119
+        },
+        {
+            "elapsedMs": 2717,
+            "tokens": 253,
+            "tps": 116.19362542481859,
+            "ttft_ms": 71
+        },
+        {
+            "elapsedMs": 1713,
+            "tokens": 133,
+            "tps": 163.95463510848126,
+            "ttft_ms": 30
+        },
+        {
+            "elapsedMs": 1222,
+            "tokens": 114,
+            "tps": 156.50741350906097,
+            "ttft_ms": 199
+        },
+        {
+            "elapsedMs": 3215,
+            "tokens": 432,
+            "tps": 156.03554142888103,
+            "ttft_ms": 58
+        },
+        {
+            "elapsedMs": 3740,
+            "tokens": 482,
+            "tps": 163.45077825629895,
+            "ttft_ms": 50
+        },
+        {
+            "elapsedMs": 2135,
+            "tokens": 185,
+            "tps": 136.2197187246889,
+            "ttft_ms": 73
+        },
+        {
+            "elapsedMs": 1285,
+            "tokens": 118,
+            "tps": 150.0890358687357,
+            "ttft_ms": 219
+        },
+        {
+            "elapsedMs": 4063,
+            "tokens": 561,
+            "tps": 155.41457738870267,
+            "ttft_ms": 60
+        },
+        {
+            "elapsedMs": 3880,
+            "tokens": 543,
+            "tps": 179.154706522815,
+            "ttft_ms": 25
+        },
+        {
+            "elapsedMs": 5959,
+            "tokens": 657,
+            "tps": 129.16289859631186,
+            "ttft_ms": 76
+        },
+        {
+            "elapsedMs": 2751,
+            "tokens": 267,
+            "tps": 139.25833202941638,
+            "ttft_ms": 76
+        },
+        {
+            "elapsedMs": 1766,
+            "tokens": 203,
+            "tps": 166.17550753110675,
+            "ttft_ms": 72
+        },
+        {
+            "elapsedMs": 4389,
+            "tokens": 499,
+            "tps": 129.74856340518474,
+            "ttft_ms": 208
+        }
+    ],
+    "agentProfileId": "agent-maximo",
+    "agentProfileName": "Máximo",
+    "agentSeed": 4242,
+    "agentTemperature": 0.1,
+    "agentVariant": "baseline",
+    "avgTps": 151.3440786328784,
+    "avgTtftMs": 93.4,
+    "baselineId": "00cf7156-1845-4dfe-844d-2a060032bae2",
+    "benchmarkMemoryPlanner": "llama.cpp-fit-expert-aware",
+    "benchmarkName": "Qwen3.8 ASTRA IQ3_S calibrado vs SOL · TaskFlow ULTRA E2E",
+    "complexityMetrics": {
+        "addedLines": 1637,
+        "filesChanged": 20,
+        "filesCreated": 20,
+        "filesDeleted": 0,
+        "removedLines": 0
+    },
+    "elapsedSec": 298.338,
+    "failed": false,
+    "failureKind": "none",
+    "finalScore": 13,
+    "finalTotal": 13,
+    "firstAttemptScore": 0,
+    "firstAttemptTotal": 13,
+    "firstEvaluableSec": 44.054,
+    "firstToolCallSec": 43.474,
+    "firstWriteSec": 43.521,
+    "generationSec": 290.574,
+    "harnessEngineId": "legacy",
+    "harnessEngineVersion": 1,
+    "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+    "honeyEnabled": false,
+    "id": "00cf7156-1845-4dfe-844d-2a060032bae2",
+    "isBaseline": true,
+    "measurementPhase": "cold",
+    "mode": "custom",
+    "nonGenerationSec": 7.76400000000001,
+    "pass": 1,
+    "passedAfterRepair": true,
+    "passesTotal": 1,
+    "profileConfigFingerprint": "1906a54af838d39dbf3d8fc4ccfbc71bcf0985927869068dfb5e5aba4ff223bc",
+    "profileId": "eb46e3ff-1df8-4f9f-88dc-ef7b719b1510",
+    "profileName": "Q-20261009 IQ2_XS Strata",
+    "progressGovernor": {
+        "progressEvents": 36,
+        "replanEvents": 0,
+        "stagnationEvents": 11
+    },
+    "qualityScore": 13,
+    "qualityTotal": 13,
+    "ramFreeMb": 0,
+    "ramMb": 0,
+    "ramTotalMb": 0,
+    "repairAttempts": 3,
+    "response": "<think>All green. Also check the test count ≥16: 31 tests. Good.\n\nLet me double-check the test file assertion for query test that I changed earlier — it passed. Done.\n\nAlso verify cli.py compiles (it did). Done.\n\nFinal brief answer.\n</think>\nCorregido y verificado.\n\nCambios:\n- `taskflow_ultra/cli.py`: línea 98 tenía un f-string con `**{...}` dentro de `print(f\"...\")` → SyntaxError. Reemplazado por `changes = {...}` + llamada separada.\n- `taskflow_ultra/models.py`: `_iso()` ahora conserva la forma ISO original (date-only vs datetime) para simetría `to_dict`/`from_dict` → arregla `nxt.due_date == \"2026-01-06\"`.\n- `tests/test_taskflow_ultra.py`:\n  - `test_undo_reverts_last_mutation`: `undo()` revierte la última mutación (el `complete`), no la creación; el test ahora verifica `done → undo → todo`, luego undo de la creación y `False` al vaciar la pila.\n  - `test_apply_query_combined_filters`: la aserción era contradictoria (`status:todo priority:low` sí matchea `Docs`); se corrigió a combinaciones reales (todo+low → Docs; todo+high+tag:docs → []).\n- `taskflow_ultra/main.py`: self-test ordenado correctamente (bloque por dependencias antes de completar, ocurrencia generada por `complete_task(b)`, filtro con clave inválida ignorada) y mensaje de fallo con tipo de excepción.\n\nComandos ejecutados:\n- `python3 -m py_compile taskflow_ultra/*.py tests/test_taskflow_ultra.py` → OK\n- `python3 -m unittest discover -s tests -p test_taskflow_ultra.py` → 31 tests, OK\n- `python3 -m taskflow_ultra.main --self-test` → `SELF_TEST_OK`, exit 0\n\nNota: en este shell `python` no existe, sólo `python3`; los checks del benchmark usan `python`, así que la sintaxis y la lógica están verificadas con `python3` (equivalente, 3.12).",
+    "runDir": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Qwen3_8_ASTRA_IQ3_S_calibrado_vs_SOL_Tas_20261012_144959",
+    "runLabel": "Qwen3.8 ASTRA IQ3_S calibrado vs SOL · TaskFlow ULTRA E2E",
+    "setupSec": 0,
+    "target": "agent",
+    "thinkingEnabled": true,
+    "timeToFirstAttempt": 0.408,
+    "timedOut": false,
+    "timeoutSec": 1800,
+    "timestamp": 1791827699921,
+    "toolCallQuality": {
+        "expectedCalls": 0,
+        "f1Pct": -1,
+        "failedCalls": 2,
+        "incompleteCalls": 0,
+        "invalidCalls": 3,
+        "matchedExpectedCalls": 0,
+        "missingExpectedCalls": 0,
+        "precisionPct": -1,
+        "recallPct": -1,
+        "redundantCalls": 4,
+        "sequenceExact": false,
+        "successRatePct": 95.91836734693878,
+        "successfulCalls": 47,
+        "totalCalls": 49,
+        "unexpectedCalls": 0
+    },
+    "toolCalls": 49,
+    "totalTime": 298.338,
+    "transportAfterEvaluation": false,
+    "vramFreeMb": 3645,
+    "vramGpu0FreeMb": 1071,
+    "vramGpu0Mb": 23064,
+    "vramGpu0TotalMb": 24576,
+    "vramGpu0UsedPct": 93.84765625,
+    "vramGpu1FreeMb": 2574,
+    "vramGpu1Mb": 21550,
+    "vramGpu1TotalMb": 24576,
+    "vramGpu1UsedPct": 87.68717447916666,
+    "vramMb": 44614,
+    "vramNormalizedImbalancePct": 6.1604817708333375,
+    "vramObservedGpu0SharePct": 51.69677679652127,
+    "vramOptimalGpu0SharePct": 29.382716049382715,
+    "vramPlacementAssessment": "gpu0-heavy",
+    "vramTelemetryScope": "device-total",
+    "workspace": "/home/cristian/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Qwen3_8_ASTRA_IQ3_S_calibrado_vs_SOL_Tas_20261012_144959/Q-20261009_IQ2_XS_Strata__ws"
+}

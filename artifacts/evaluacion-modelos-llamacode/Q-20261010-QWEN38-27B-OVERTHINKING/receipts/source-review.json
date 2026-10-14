@@ -1,0 +1,68 @@
+{
+  "task_id": "Q-20261010-QWEN38-27B-OVERTHINKING",
+  "review_date": "2026-10-13",
+  "status": "documentary audit complete; no new inference",
+  "sources": [
+    {
+      "url": "https://www.reddit.com/r/LocalLLaMA/comments/1wybak7/qwen3827b_appreciation_moment/",
+      "type": "community anecdote",
+      "observations": [
+        "The author reports using Qwen3.8-27B Unsloth UD-Q3_K_XL for scripts and microservice diagnostics and sometimes UD-Q2_K_XL for more context.",
+        "The post gives no prompts, repository, model revision or hashes, runtime, hardware, verifier, or raw logs.",
+        "Comments conflict: reports of looping at Q8, a Q8 user reporting no loops with greedy decoding, and separate users attributing improvement to changed sampling, medium reasoning, or output limits."
+      ],
+      "evidence_class": "uncontrolled self-report"
+    },
+    {
+      "url": "https://huggingface.co/Qwen/Qwen3.8-27B",
+      "type": "official model card",
+      "observations": [
+        "Thinking is enabled by default.",
+        "Official thinking sampling: temperature 1.0, top_p 0.95, top_k 20, min_p 0, presence_penalty 0, repetition_penalty 1.",
+        "Supported reasoning_effort values are xhigh (default), medium, and low; the card warns that lower effort may reduce per-turn time but can increase failures and retries in multi-turn agent tasks.",
+        "The model card does not document a hard thinking-token budget."
+      ],
+      "evidence_class": "primary documentation"
+    },
+    {
+      "url": "https://huggingface.co/Qwen/Qwen3.8-27B/discussions/178",
+      "type": "community issue report",
+      "observations": [
+        "One SGLang/GB10 user reports 20K-55K reasoning tokens and 45-80+ minute runs on large coding prompts.",
+        "A follow-up says explicit budgets plus temperature 0.6/top_p 0.95 worked for that user's BF16 setup; other comments disagree about root causes and fixes.",
+        "A separate 4-bit Mac report also describes long loops, but differs in hardware and runtimes."
+      ],
+      "evidence_class": "uncontrolled reports; not transferable benchmark evidence"
+    },
+    {
+      "url": "https://huggingface.co/unsloth/Qwen3.8-27B-GGUF",
+      "type": "quant producer model card",
+      "observations": [
+        "UD-Q3_K_XL and UD-Q2_K_XL are listed at approximately 13.1 GB and 9.83 GB."
+      ],
+      "evidence_class": "primary artifact listing"
+    },
+    {
+      "url": "https://huggingface.co/agentionai/Qwen3.8-27B-AP-GGUF",
+      "type": "local quant producer model card",
+      "observations": [
+        "The local AP-Q3_K_XL is a distinct file with separate calibration/encoding; it is not the Unsloth UD-Q3_K_XL from the Reddit post."
+      ],
+      "evidence_class": "primary artifact listing"
+    }
+  ],
+  "local_preflight": {
+    "local_candidate": "/media/cristian/Disco local/Models/llamacpp/Qwen3.8-27B-AP-GGUF/Qwen3.8-27B-AP-Q3_K_XL.gguf",
+    "size_bytes": 13146392480,
+    "sha256": "b5b35d550712f01fcaa0a982f281b7bcf47f6309c541450ca0e064c945c1c8fc",
+    "mmproj_bytes": 931146432,
+    "exact_unsloth_ud_q3_or_q2_found": false,
+    "runtime": "llama.cpp server 0.3.0-dev, commit ef6876693, local qwen38-next-cuda build",
+    "gpu_state": [
+      "RTX 3090 GPU 0: 1083 MiB used; desktop/Xorg plus ArtCraft launcher visible.",
+      "RTX 3090 GPU 1: 108 MiB used; Xorg visible; utilization snapshot 58%."
+    ],
+    "inference_decision": "No new run: neither Reddit quant was available; the local AP-Q3 is a different calibrated artifact, and the available GPU snapshot did not establish an uncontended reservation. Do not stop ArtCraft or repurpose the production dual-GPU SOL profile."
+  },
+  "conclusion": "The material supplies a useful hypothesis for a future controlled loop/termination test, but no reproducible evidence to change profiles or sampling. Retain existing production settings. Any future test should use a fixed prompt set, score correctness and termination separately, include a hard token/output cap, and keep every run under the user's 30-minute cutoff."
+}

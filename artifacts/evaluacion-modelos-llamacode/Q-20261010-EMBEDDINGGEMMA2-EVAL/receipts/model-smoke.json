@@ -1,0 +1,8 @@
+{
+  "http_status": 200,
+  "model_returned": "embeddinggemma-2-Q8_0.gguf",
+  "dimensions": 768,
+  "finite": true,
+  "smoke_query": "task: code retrieval | query: How are semantic search chunks embedded?",
+  "response_sha256": "147ca32157f9c3c0914f08f90b522b36e737e564dee5ab2eaf42d47d33925d37"
+}

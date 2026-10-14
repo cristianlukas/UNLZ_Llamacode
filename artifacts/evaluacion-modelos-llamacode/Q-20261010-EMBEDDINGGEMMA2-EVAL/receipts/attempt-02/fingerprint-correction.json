@@ -1,0 +1,9 @@
+{
+  "old_fingerprint": "76be24127e1b83479eda62eeda49d6668bc972c2040e5925c8efc18823cc414d",
+  "corrected_fingerprint": "550580ecaaf965cbc4aee3d7fc577a99ba3294f907b596dd48a395016ad579a0",
+  "reason": "runner metadata originally recorded --device CUDA1; actual evaluated server was launched with CUDA_VISIBLE_DEVICES=1 and logical --device CUDA0. The runtime itself did not change.",
+  "launch_environment": "CUDA_VISIBLE_DEVICES=1",
+  "physical_gpu": 1,
+  "logical_device": "CUDA0",
+  "runner_sha256": "c7b183f2d045c513a8b3d825a4f6c3bc26f13da63adefa83630a6fab68a12eb6"
+}

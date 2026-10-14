@@ -1,0 +1,19 @@
+{
+  "task_id": "Q-20261010-LIQUID-D1-DECISION",
+  "date": "2026-10-13",
+  "search_scope": [
+    "/media/cristian/Disco local/Models",
+    "/media/cristian/HDD extra",
+    "/home/cristian/.cache/huggingface/hub"
+  ],
+  "results": {
+    "d1_3b_weights_or_gguf_present": false,
+    "d1_omni_600m_weights_or_gguf_present": false,
+    "d1_model_cache_dirs_present": false,
+    "related_local_benchmark": "Mica-v0.1-4B has a benchmark-only TypeSafe /v1/systemone setup; it is not Liquid d1 and its results are not a d1 score",
+    "production_integration": "No d1 integration found; LlamaCode uses existing adaptiveToolRouting and deterministic host controls",
+    "fixtures": "Text-only decision/risk artifacts exist for previous model screens; no d1-compatible inference backend or labeled d1 holdout is present",
+    "gpu_or_download": "None; no candidate weights were present and the task plan forbids download/GPU for this screen"
+  },
+  "decision": "Documentation-only review. Do not infer local d1 quality or latency from Liquid AI's public benchmark or latency claims."
+}

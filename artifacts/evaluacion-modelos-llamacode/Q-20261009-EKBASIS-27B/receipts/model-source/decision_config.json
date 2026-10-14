@@ -1,0 +1,7 @@
+{
+ "prompt_version": "letter-v1-semif",
+ "readout": "letter-logit",
+ "calib": "calib.json",
+ "max_one_pass": 160,
+ "read_once": "turns"
+}

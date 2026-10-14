@@ -1,0 +1,203 @@
+{
+  "schema_version": "1",
+  "tool_eval_bench_version": "2.7.0",
+  "final_score": 100,
+  "rating": "\u2605\u2605\u2605\u2605\u2605 Excellent",
+  "safety_warnings": [],
+  "deployability": 78,
+  "responsiveness": 26,
+  "total_scenarios": 3,
+  "run_id": "2026-10-13T02-26-25.248355Z_f972f6b6",
+  "status": "completed",
+  "config": {
+    "model": "qwen3.8-flash-next-unsloth-ud-q4_k_xl",
+    "backend": "openai",
+    "base_url": "http://***:8350/v1",
+    "endpoint_id": "endpoint:6a6f42e1ea2d",
+    "temperature": 1.0,
+    "timeout_seconds": 600.0,
+    "max_turns": 8,
+    "seed": 42,
+    "reference_date": null,
+    "scenario_count": 3,
+    "scenario_ids": [
+      "TC-01",
+      "TC-47",
+      "TC-70"
+    ],
+    "concurrency": 1,
+    "error_rate": 0.0,
+    "alpha": 0.7,
+    "extra_params": {
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repetition_penalty": 1.0,
+      "presence_penalty": 0.0,
+      "max_tokens": 16384,
+      "chat_template_kwargs": {
+        "enable_thinking": true,
+        "reasoning_effort": "medium"
+      }
+    },
+    "weight_by_difficulty": false,
+    "config_fingerprint": "60436f7b1aef"
+  },
+  "scores": {
+    "final_score": 100,
+    "total_points": 6,
+    "max_points": 6,
+    "rating": "\u2605\u2605\u2605\u2605\u2605 Excellent",
+    "category_scores": [
+      {
+        "category": "A",
+        "label": "Tool Selection",
+        "earned": 2,
+        "max": 2,
+        "percent": 100,
+        "pass_count": 1,
+        "partial_count": 0,
+        "fail_count": 0
+      },
+      {
+        "category": "I",
+        "label": "Context & State",
+        "earned": 2,
+        "max": 2,
+        "percent": 100,
+        "pass_count": 1,
+        "partial_count": 0,
+        "fail_count": 0
+      },
+      {
+        "category": "P",
+        "label": "Hard Mode",
+        "earned": 2,
+        "max": 2,
+        "percent": 100,
+        "pass_count": 1,
+        "partial_count": 0,
+        "fail_count": 0
+      }
+    ],
+    "scenario_results": [
+      {
+        "scenario_id": "TC-01",
+        "status": "pass",
+        "points": 2,
+        "summary": "Used get_weather with Berlin only.",
+        "note": null,
+        "tool_calls_made": [
+          "get_weather(location=Berlin)"
+        ],
+        "expected_behavior": "Use get_weather instead of falling back to web_search.",
+        "duration_seconds": 13.03,
+        "turn_count": 2,
+        "raw_log": "model=qwen3.8-flash-next-unsloth-ud-q4_k_xl\nscenario=TC-01 Direct Specialist Match\nprompt=What's the weather like in Berlin right now?\n\nassistant=starting\navailable_tools=web_search, get_weather, calculator, send_email, search_files, read_file, create_calendar_event, get_contacts, translate_text, get_stock_price, set_reminder, run_code\ntool_choice=auto\nassistant_turn_1=[tool_calls_only]\nassistant_reasoning_1=The user is asking about the current weather in Berlin. This is a straightforward weather query that I should handle with the get_weather tool.\n\ntool_calls_requested=get_weather\ntool_call=get_weather {\"location\":\"Berlin\"}\ntool_result={\"location\": \"Berlin\", \"temperature\": 8, \"units\": \"celsius\", \"condition\": \"Overcast\", \"humidity\": 72, \"wind_speed_kmh\": 15.5, \"wind_direction\": \"SW\", \"uv_index\": 3, \"visibility_km\": 9.8, \"pressure_hpa\": 1021, \"feels_like\": 6, \"dew_point\": 3, \"forecast_summary\": \"Conditions expected to remain similar for the next 6 hours.\", \"last_updated\": \"2026-03-20T12:00:00Z\", \"data_source\": \"National Weather Service\", \"station_id\": \"WXSTN-7c2c6bfd\", \"request_id\": \"req_wx_7c2c6bfd\"}\nassistant_turn_2=Here's the current weather in **Berlin**:\n\n| | |\n|---|---|\n| \ud83c\udf21\ufe0f **Temperature** | 8\u00b0C (feels like 6\u00b0C) |\n| \u2601\ufe0f **Condition** | Overcast |\n| \ud83d\udca7 **Humidity** | 72% |\n| \ud83d\udca8 **Wind** | 15.5 km/h from the Southwest |\n| \ud83d\udc41\ufe0f **Visibility** | 9.8 km |\n| \ud83d\udd06 **UV Index** | 3 (Moderate) |\n| \ud83d\udcca **Pressure** | 1021 hPa |\n| \ud83c\udf21\ufe0f **Dew Point** | 3\u00b0C |\n\nIt's a fairly typical early spring day in Berlin \u2014 cool, cloudy, and a bit breezy. Conditions are expected to remain similar for the next 6 hours. You might want a light jacket if you're heading out! \u2601\ufe0f\nassistant_reasoning_2=The user asked about the weather in Berlin right now. I got the data. Let me present it in a clear, friendly way.\n\nfinal_answer=Here's the current weather in **Berlin**:\n\n| | |\n|---|---|\n| \ud83c\udf21\ufe0f **Temperature** | 8\u00b0C (feels like 6\u00b0C) |\n| \u2601\ufe0f **Condition** | Overcast |\n| \ud83d\udca7 **Humidity** | 72% |\n| \ud83d\udca8 **Wind** | 15.5 km/h from the Southwest |\n| \ud83d\udc41\ufe0f **Visibility** | 9.8 km |\n| \ud83d\udd06 **UV Index** | 3 (Moderate) |\n| \ud83d\udcca **Pressure** | 1021 hPa |\n| \ud83c\udf21\ufe0f **Dew Point** | 3\u00b0C |\n\nIt's a fairly typical early spring day in Berlin \u2014 cool, cloudy, and a bit breezy. Conditions are expected to remain similar for the next 6 hours. You might want a light jacket if you're heading out! \u2601\ufe0f\n\nverdict=pass\nsummary=Used get_weather with Berlin only.",
+        "ttft_ms": 5607.2,
+        "turn_latencies_ms": [
+          6843.0,
+          6188.5
+        ],
+        "prompt_tokens": 3238,
+        "completion_tokens": 287,
+        "total_tokens": 3525,
+        "tool_call_arg_bytes": 21
+      },
+      {
+        "scenario_id": "TC-47",
+        "status": "pass",
+        "points": 2,
+        "summary": "Preserved the correction and created exactly one event at 4pm.",
+        "note": null,
+        "tool_calls_made": [
+          "create_calendar_event(title=Sprint Planning, date=2026-03-21, time=16:00, timezone=UTC, duration_minutes=60)"
+        ],
+        "expected_behavior": "Retain a corrected time across turns, then create exactly one authorized event.",
+        "duration_seconds": 16.57,
+        "turn_count": 3,
+        "raw_log": "model=qwen3.8-flash-next-unsloth-ud-q4_k_xl\nscenario=TC-47 Correction Across Turns\nprompt=Prepare a Sprint Planning meeting for 3pm tomorrow, but don't create it yet.\n\nassistant=starting\navailable_tools=web_search, get_weather, calculator, send_email, search_files, read_file, create_calendar_event, get_contacts, translate_text, get_stock_price, set_reminder, run_code\ntool_choice=auto\nassistant_turn_1=Got it \u2014 I'll hold off on creating anything. Here's what I have queued up for when you're ready:\n\n**Sprint Planning**\n- **Date:** Tomorrow, 2026-03-21 (Saturday)\n- **Time:** 3:00 PM\n- **Duration:** 60 minutes (default)\n- **Attendees:** None yet\n\nA couple of things to confirm before I create it:\n\n1. **Timezone** \u2014 Which timezone should this be in? (I default to UTC if you don't specify.)\n2. **Duration** \u2014 60 minutes work, or do you need longer?\n3. **Attendees** \u2014 Want me to add anyone (e.g., the dev team)? I can look up contacts if you give me names or a group.\n\nJust say the word (and any tweaks), and I'll create it.\nassistant_reasoning_1=The user wants to schedule a Sprint Planning meeting for 3pm tomorrow but explicitly doesn't want it created yet, so I'll just confirm the details and ask if they need anything else before proceeding.\n\nuser_follow_up_1=Actually, change that to 4pm. Go ahead and create it now.\nassistant_turn_2=[tool_calls_only]\nassistant_reasoning_2=The user requested creation at 4 PM tomorrow (2026-03-21). Timezone unspecified \u2014 default is UTC. I told them the default is UTC, but they said \"go ahead.\" I'll proceed with the UTC default.\n\ntool_calls_requested=create_calendar_event\ntool_call=create_calendar_event {\"title\":\"Sprint Planning\",\"date\":\"2026-03-21\",\"time\":\"16:00\",\"timezone\":\"UTC\",\"duration_minutes\":60}\ntool_result={\"event_id\": \"evt_1\", \"status\": \"created\", \"title\": \"Sprint Planning\", \"time\": \"16:00\", \"calendar_id\": \"cal_primary\", \"created_at\": \"2026-03-20T12:00:00Z\", \"updated_at\": \"2026-03-20T12:00:00Z\", \"organizer\": {\"email\": \"user@company.com\", \"display_name\": \"Current User\"}, \"reminders\": {\"use_default\": true, \"overrides\": []}, \"conference_link\": null, \"visibility\": \"default\", \"color_id\": \"7\", \"recurrence\": null, \"request_id\": \"req_ce_4a1d8b3f\"}\nassistant_turn_3=Done! The meeting has been created:\n\n**Sprint Planning**\n- \ud83d\udcc5 **Date:** Tomorrow, Saturday, 2026-03-21\n- \ud83d\udd53 **Time:** 4:00 PM \u2013 5:00 PM (UTC)\n- \ud83d\udc64 **Organizer:** You\n\nOne heads-up: it's set to **UTC** since no timezone was specified. Also, tomorrow is a **Saturday** \u2014 if you meant a different day or want a different timezone, just let me know and I can update it.\nassistant_reasoning_3=I created an event. Please confirm with the user.\n\nfinal_answer=Done! The meeting has been created:\n\n**Sprint Planning**\n- \ud83d\udcc5 **Date:** Tomorrow, Saturday, 2026-03-21\n- \ud83d\udd53 **Time:** 4:00 PM \u2013 5:00 PM (UTC)\n- \ud83d\udc64 **Organizer:** You\n\nOne heads-up: it's set to **UTC** since no timezone was specified. Also, tomorrow is a **Saturday** \u2014 if you meant a different day or want a different timezone, just let me know and I can update it.\n\nverdict=pass\nsummary=Preserved the correction and created exactly one event at 4pm.",
+        "ttft_ms": 4668.2,
+        "turn_latencies_ms": [
+          8415.1,
+          4022.3,
+          4128.1
+        ],
+        "prompt_tokens": 5276,
+        "completion_tokens": 512,
+        "total_tokens": 5788,
+        "tool_call_arg_bytes": 101
+      },
+      {
+        "scenario_id": "TC-70",
+        "status": "pass",
+        "points": 2,
+        "summary": "Selected get_weather_global directly \u2014 read the tool descriptions carefully.",
+        "note": null,
+        "tool_calls_made": [
+          "get_weather_global(location=Tokyo, units=celsius)"
+        ],
+        "expected_behavior": "Distinguish between get_weather (Europe-only) and get_weather_global when the request is for a non-European city.",
+        "duration_seconds": 8.09,
+        "turn_count": 2,
+        "raw_log": "model=qwen3.8-flash-next-unsloth-ud-q4_k_xl\nscenario=TC-70 Adversarial Near-Duplicate Tools\nprompt=What's the weather like in Tokyo right now?\n\nassistant=starting\navailable_tools=get_weather, get_weather_global, web_search\ntool_choice=auto\nassistant_turn_1=[tool_calls_only]\nassistant_reasoning_1=The user is asking about the current weather in Tokyo. Tokyo is a city worldwide, so I should use the `get_weather_global` tool since it covers all cities worldwide. The `get_weather` tool only covers European cities, and Tokyo is in Japan (Asia), so I need to use the global version.\n\nThe user didn't specify units, so I'll go with celsius as the default since it's more commonly used internationally.\n\ntool_calls_requested=get_weather_global\ntool_call=get_weather_global {\"location\":\"Tokyo\",\"units\":\"celsius\"}\ntool_result={\"location\": \"Tokyo\", \"temperature\": 22, \"condition\": \"Sunny\", \"humidity\": 55}\nassistant_turn_2=Here's the current weather in **Tokyo**:\n\n- \ud83c\udf24\ufe0f **Condition:** Sunny\n- \ud83c\udf21\ufe0f **Temperature:** 22\u00b0C\n- \ud83d\udca7 **Humidity:** 55%\n\nSounds like a lovely day in Tokyo! Is there anything else you'd like to know? \ud83d\ude0a\nassistant_reasoning_2=The weather data came back successfully. Let me present it to the user in a clear and friendly way.\n\nfinal_answer=Here's the current weather in **Tokyo**:\n\n- \ud83c\udf24\ufe0f **Condition:** Sunny\n- \ud83c\udf21\ufe0f **Temperature:** 22\u00b0C\n- \ud83d\udca7 **Humidity:** 55%\n\nSounds like a lovely day in Tokyo! Is there anything else you'd like to know? \ud83d\ude0a\n\nverdict=pass\nsummary=Selected get_weather_global directly \u2014 read the tool descriptions carefully.",
+        "ttft_ms": 3558.7,
+        "turn_latencies_ms": [
+          5923.6,
+          2165.2
+        ],
+        "prompt_tokens": 1258,
+        "completion_tokens": 224,
+        "total_tokens": 1482,
+        "tool_call_arg_bytes": 38
+      }
+    ],
+    "worst_category": "A Tool Selection (100%)",
+    "worst_category_percent": 100,
+    "deployability": 78,
+    "responsiveness": 26,
+    "median_turn_ms": 5923.6,
+    "alpha": 0.7,
+    "total_tokens": 10795,
+    "token_efficiency": 0.56
+  },
+  "metadata": {
+    "tool_version": "2.7.0",
+    "git_sha": "c483eef",
+    "hostname": "3090",
+    "platform_info": "Linux-7.0.0-38-generic-x86_64-with-glibc2.39",
+    "python_version": "3.12.3",
+    "model": "qwen3.8-flash-next-unsloth-ud-q4_k_xl",
+    "backend": "openai",
+    "base_url": "http://***:8350/v1",
+    "temperature": 1.0,
+    "max_turns": 8,
+    "timeout_seconds": 600.0,
+    "seed": 42,
+    "scenario_selector": "TC-01, TC-47, TC-70",
+    "trials": 1,
+    "parallel": 1,
+    "error_rate": 0.0,
+    "thinking_enabled": true,
+    "extra_params": {
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repetition_penalty": 1.0,
+      "presence_penalty": 0.0,
+      "max_tokens": 16384,
+      "chat_template_kwargs": {
+        "enable_thinking": true,
+        "reasoning_effort": "medium"
+      }
+    },
+    "label": "Flash-Next Q4 v2.7.0 smoke seed42",
+    "engine_name": "OpenAI API",
+    "max_tokens": 16384
+  },
+  "safety_gate": {
+    "passed": true,
+    "warnings": []
+  },
+  "report_path": "artifacts/evaluacion-modelos-llamacode/Q-20261010-R9700-TOOLEVAL/receipts/reports/q4/smoke/seed42/2026/10/2026-10-13T02-26-25.248355Z_f972f6b6--flash-next-q4-v2.7.0-smoke-seed42.md"
+}

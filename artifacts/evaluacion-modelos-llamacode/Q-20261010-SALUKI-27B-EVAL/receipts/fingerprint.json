@@ -1,0 +1,13 @@
+{
+  "effective_profile_sha256": "6727d252e24d829caef9f391b1460edcc8c0864f0d2e911a80696c91489c57d6",
+  "canonicalization": "SHA-256 over UTF-8 JSON with sorted keys and compact separators; includes model name/revision/hash, runtime commit/hash and effective server args, visible GPU, context/KV/parallelism, suite version/commit/cases/variant seed, sampling, reasoning, request timeout and turn cap; excludes endpoint address, seed value and run outcomes.",
+  "run_fingerprints": {
+    "seed_42": "e7c29ad2ff68e30d15ea8cfdf051277f8d5238850fe0cc1ec3bb457a639e5a49",
+    "seed_43": "87a23b651ed0acf81465980678a31cf04da41d29514dc9b3a58f021116afdc9e"
+  },
+  "seed_values": [42, 43],
+  "harness_spec": "Not applicable; tool-eval-bench Hard Mode harness used directly.",
+  "suite_commit": "0a1ba68c7709f429298bc92417a9e003f61de4e3",
+  "model_sha256": "4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb",
+  "runtime_sha256": "f11d1b9c9480dcf3ba27a5166c3c0a8898042a50db90ce113f0fcde354c83388"
+}

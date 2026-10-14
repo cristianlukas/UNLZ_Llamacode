@@ -1,0 +1,19 @@
+{
+  "model": "qwen3.8-flash-next-unsloth-ud-q4_k_xl",
+  "max_tokens": 256,
+  "ignore_eos": true,
+  "temperature": 0.6,
+  "top_p": 0.95,
+  "top_k": 20,
+  "min_p": 0.0,
+  "repeat_penalty": 1.0,
+  "presence_penalty": 0.0,
+  "chat_template_kwargs": {
+    "enable_thinking": true,
+    "reasoning_effort": "medium"
+  },
+  "fixture_path": "artifacts/evaluacion-modelos-llamacode/Q-20261010-UNSLOTH-MTP-AB/fixtures/speed-prompt.txt",
+  "fixture_sha256": "2830a27f1b3c1c5a1ad4927132bb0fbbba6d889a22abc0b4d61a9032e063b2ca",
+  "fixture_content_tokens": 23569,
+  "prompt_cache": "disabled via --no-cache-prompt"
+}

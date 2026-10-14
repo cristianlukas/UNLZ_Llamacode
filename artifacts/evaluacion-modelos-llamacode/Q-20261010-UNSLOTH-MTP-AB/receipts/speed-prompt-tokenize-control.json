@@ -1,0 +1,5 @@
+{
+  "model": "Q4 UD-Q4_K_XL",
+  "tokenizer_endpoint": "POST /tokenize",
+  "content_token_count": 23569
+}

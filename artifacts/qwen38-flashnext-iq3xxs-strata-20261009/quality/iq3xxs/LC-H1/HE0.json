@@ -1,0 +1,140 @@
+{
+  "suiteId": "059b6f00-7b4b-48ff-a3a2-2a71f900c1c0",
+  "suiteName": "HumanEval (1 ítems)",
+  "profileId": "iq3xxs-lch1-20261009",
+  "thinkingEnabled": true,
+  "completedAtUtc": "2026-10-09T22:36:51Z",
+  "results": [
+    {
+      "acceptance": [
+        {
+          "passed": true,
+          "taskId": "HumanEval/0",
+          "type": "grader:code_tests"
+        }
+      ],
+      "agentFiles": [
+        "solution_HumanEval_0.py"
+      ],
+      "agentMetrics": [
+        {
+          "elapsedMs": 9038,
+          "tokens": 302,
+          "tps": 148.01744841444886,
+          "ttft_ms": 62
+        },
+        {
+          "elapsedMs": 583,
+          "tokens": 0,
+          "tps": 0,
+          "ttft_ms": 54
+        },
+        {
+          "elapsedMs": 0,
+          "tokens": 8,
+          "tps": 0
+        }
+      ],
+      "agentProfileId": "agent-maximo",
+      "agentProfileName": "Máximo",
+      "agentSeed": 4242,
+      "agentTemperature": 0.1,
+      "agentVariant": "baseline",
+      "avgTps": 148.01744841444886,
+      "avgTtftMs": 58,
+      "baselineId": "d705564e-405e-4c29-9cce-10fa8dcb4e0f",
+      "benchmarkMemoryPlanner": "llama.cpp-fit-expert-aware",
+      "benchmarkName": "HumanEval (1 ítems)",
+      "complexityMetrics": {
+        "addedLines": 16,
+        "filesChanged": 1,
+        "filesCreated": 1,
+        "filesDeleted": 0,
+        "removedLines": 0
+      },
+      "elapsedSec": 10.062,
+      "failed": false,
+      "failureKind": "none",
+      "finalScore": 1,
+      "finalTotal": 1,
+      "firstAttemptScore": 1,
+      "firstAttemptTotal": 1,
+      "firstEvaluableSec": 9.744,
+      "firstToolCallSec": 9.108,
+      "firstWriteSec": 9.15,
+      "generationSec": 9.621,
+      "harnessEngineId": "legacy",
+      "harnessEngineVersion": 1,
+      "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+      "honeyEnabled": false,
+      "id": "d705564e-405e-4c29-9cce-10fa8dcb4e0f",
+      "isBaseline": true,
+      "measurementPhase": "cold",
+      "mode": "custom",
+      "nonGenerationSec": 0.44099999999999895,
+      "pass": 1,
+      "passedAfterRepair": false,
+      "passesTotal": 1,
+      "profileConfigFingerprint": "446cce937a86a65e99674718c58690435bfaf07a9f74558e469b4e7f33345c26",
+      "profileId": "iq3xxs-lch1-20261009",
+      "profileName": "EVAL · ISTA base IQ3_XXS · lch1 · R4096",
+      "progressGovernor": {
+        "progressEvents": 1,
+        "replanEvents": 0,
+        "stagnationEvents": 0
+      },
+      "qualityScore": 1,
+      "qualityTotal": 1,
+      "ramFreeMb": 0,
+      "ramMb": 0,
+      "ramTotalMb": 0,
+      "repairAttempts": 0,
+      "response": "[turno cancelado por el usuario]",
+      "runDir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-flashnext-iq3xxs-strata-20261009/runtime/xdg-data/LlamaCode/LlamaCode/benchmark-runs/HumanEval_1_tems__20261009_193631",
+      "runLabel": "HumanEval (1 ítems)",
+      "setupSec": 0.3,
+      "target": "agent",
+      "thinkingEnabled": true,
+      "timeToFirstAttempt": 9.761999999999999,
+      "timedOut": false,
+      "timeoutSec": 1800,
+      "timestamp": 1791585403586,
+      "toolCallQuality": {
+        "expectedCalls": 0,
+        "f1Pct": -1,
+        "failedCalls": 0,
+        "incompleteCalls": 0,
+        "invalidCalls": 0,
+        "matchedExpectedCalls": 0,
+        "missingExpectedCalls": 0,
+        "precisionPct": -1,
+        "recallPct": -1,
+        "redundantCalls": 0,
+        "sequenceExact": false,
+        "successRatePct": 100,
+        "successfulCalls": 1,
+        "totalCalls": 1,
+        "unexpectedCalls": 0
+      },
+      "toolCalls": 1,
+      "totalTime": 10.062,
+      "transportAfterEvaluation": false,
+      "vramFreeMb": 638,
+      "vramGpu0FreeMb": 268,
+      "vramGpu0Mb": 23853,
+      "vramGpu0TotalMb": 24576,
+      "vramGpu0UsedPct": 97.05810546875,
+      "vramGpu1FreeMb": 370,
+      "vramGpu1Mb": 23754,
+      "vramGpu1TotalMb": 24576,
+      "vramGpu1UsedPct": 96.6552734375,
+      "vramMb": 47607,
+      "vramNormalizedImbalancePct": 0.40283203125,
+      "vramObservedGpu0SharePct": 50.10397630600542,
+      "vramOptimalGpu0SharePct": 42.00626959247649,
+      "vramPlacementAssessment": "balanced",
+      "vramTelemetryScope": "device-total",
+      "workspace": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/qwen38-flashnext-iq3xxs-strata-20261009/runtime/xdg-data/LlamaCode/LlamaCode/benchmark-runs/HumanEval_1_tems__20261009_193631/EVAL_ISTA_base_IQ3_XXS_lch1_R4096__ws"
+    }
+  ]
+}

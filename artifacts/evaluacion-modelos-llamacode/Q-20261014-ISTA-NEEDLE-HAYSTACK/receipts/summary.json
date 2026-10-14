@@ -1,0 +1,427 @@
+{
+  "task": "Q-20261014-ISTA-NEEDLE-HAYSTACK",
+  "suite": "context-retrieval-v1 / Needle in a Haystack exact 10 facts",
+  "result_class": "provisional screening; one valid run per context",
+  "contexts": [
+    {
+      "context_limit_tokens": 131072,
+      "rope_scaling": "model default",
+      "classification": "valid quality",
+      "prompt_tokens": 124535,
+      "prompt_occupancy_percent": 95.0127,
+      "completion_tokens": 209,
+      "correct": 10,
+      "total": 10,
+      "score_percent": 100.0,
+      "exact_matches": {
+        "case-5172": true,
+        "case-6803": true,
+        "case-1048": true,
+        "case-9351": true,
+        "case-2264": true,
+        "case-7490": true,
+        "case-3815": true,
+        "case-8627": true,
+        "case-2906": true,
+        "case-4439": true
+      },
+      "fact_positions": [
+        {
+          "caseId": "case-5172",
+          "tokenOffset": 6238,
+          "fraction": 0.0501
+        },
+        {
+          "caseId": "case-6803",
+          "tokenOffset": 18653,
+          "fraction": 0.1498
+        },
+        {
+          "caseId": "case-1048",
+          "tokenOffset": 31091,
+          "fraction": 0.2497
+        },
+        {
+          "caseId": "case-9351",
+          "tokenOffset": 43519,
+          "fraction": 0.3495
+        },
+        {
+          "caseId": "case-2264",
+          "tokenOffset": 55956,
+          "fraction": 0.4494
+        },
+        {
+          "caseId": "case-7490",
+          "tokenOffset": 68397,
+          "fraction": 0.5493
+        },
+        {
+          "caseId": "case-3815",
+          "tokenOffset": 80846,
+          "fraction": 0.6492
+        },
+        {
+          "caseId": "case-8627",
+          "tokenOffset": 93278,
+          "fraction": 0.7491
+        },
+        {
+          "caseId": "case-2906",
+          "tokenOffset": 105699,
+          "fraction": 0.8488
+        },
+        {
+          "caseId": "case-4439",
+          "tokenOffset": 118105,
+          "fraction": 0.9485
+        }
+      ],
+      "prefill_tokens_per_second": 3279.0,
+      "decode_tokens_per_second": 148.0,
+      "ttft_seconds": 37.9792,
+      "request_elapsed_seconds": 39.43457686700276,
+      "server_session_seconds": 54.978955680009676,
+      "peak_process_tree_rss_gib": 39.173,
+      "minimum_mem_available_gib": 68.051,
+      "gpu_memory": {
+        "0": {
+          "baseline_mib": 1088,
+          "peak_total_used_mib": 23747,
+          "peak_delta_mib": 22659
+        },
+        "1": {
+          "baseline_mib": 108,
+          "peak_total_used_mib": 20808,
+          "peak_delta_mib": 20700
+        }
+      },
+      "swap_delta_pages": {
+        "pswpin": 131,
+        "pswpout": 0
+      },
+      "monitor_abort_reason": null,
+      "finish_reason": "stop",
+      "prompt_sha256": "7a9c875bf322dcb2a4d0a50f3b00fc30a11b1522648df48b60d057b87a0d06f2",
+      "request_sha256": "2b0bae6de23e892eaf3bd47c3493087c11e25fd9d44ed9ec54dd47298f591ecb",
+      "effective_fingerprint_sha256": "97fcdcb61f380e943980f26ff33253c378adadc4b8e97380e15426c23e635e2d",
+      "receipt": "receipts/runs/131072/receipt.json"
+    },
+    {
+      "context_limit_tokens": 262144,
+      "rope_scaling": "native",
+      "classification": "valid quality",
+      "prompt_tokens": 249146,
+      "prompt_occupancy_percent": 95.0417,
+      "completion_tokens": 209,
+      "correct": 10,
+      "total": 10,
+      "score_percent": 100.0,
+      "exact_matches": {
+        "case-5172": true,
+        "case-6803": true,
+        "case-1048": true,
+        "case-9351": true,
+        "case-2264": true,
+        "case-7490": true,
+        "case-3815": true,
+        "case-8627": true,
+        "case-2906": true,
+        "case-4439": true
+      },
+      "fact_positions": [
+        {
+          "caseId": "case-5172",
+          "tokenOffset": 12477,
+          "fraction": 0.0501
+        },
+        {
+          "caseId": "case-6803",
+          "tokenOffset": 37387,
+          "fraction": 0.1501
+        },
+        {
+          "caseId": "case-1048",
+          "tokenOffset": 62284,
+          "fraction": 0.25
+        },
+        {
+          "caseId": "case-9351",
+          "tokenOffset": 87170,
+          "fraction": 0.3499
+        },
+        {
+          "caseId": "case-2264",
+          "tokenOffset": 112059,
+          "fraction": 0.4498
+        },
+        {
+          "caseId": "case-7490",
+          "tokenOffset": 136936,
+          "fraction": 0.5496
+        },
+        {
+          "caseId": "case-3815",
+          "tokenOffset": 161817,
+          "fraction": 0.6495
+        },
+        {
+          "caseId": "case-8627",
+          "tokenOffset": 186721,
+          "fraction": 0.7495
+        },
+        {
+          "caseId": "case-2906",
+          "tokenOffset": 211629,
+          "fraction": 0.8495
+        },
+        {
+          "caseId": "case-4439",
+          "tokenOffset": 236504,
+          "fraction": 0.9493
+        }
+      ],
+      "prefill_tokens_per_second": 3168.1,
+      "decode_tokens_per_second": 134.2,
+      "ttft_seconds": 78.64160000000001,
+      "request_elapsed_seconds": 80.2811600920104,
+      "server_session_seconds": 96.1379107380053,
+      "peak_process_tree_rss_gib": 40.894,
+      "minimum_mem_available_gib": 66.317,
+      "gpu_memory": {
+        "0": {
+          "baseline_mib": 1081,
+          "peak_total_used_mib": 23797,
+          "peak_delta_mib": 22716
+        },
+        "1": {
+          "baseline_mib": 108,
+          "peak_total_used_mib": 20938,
+          "peak_delta_mib": 20830
+        }
+      },
+      "swap_delta_pages": {
+        "pswpin": 117,
+        "pswpout": 0
+      },
+      "monitor_abort_reason": null,
+      "finish_reason": "stop",
+      "prompt_sha256": "d6b51ffd38b4ced2d644ce8be7eed0c79913b98fb1f75915864364b5775bd8a6",
+      "request_sha256": "8542fc79c8c05720f38d3308032c0943c2a33f57e1bdcae974f5dbe3488783cb",
+      "effective_fingerprint_sha256": "4bbba71d094d19185d7cfb40cc3f02639886ab489a415a080dc9784fc0d9085a",
+      "receipt": "receipts/runs/262144/receipt.json"
+    },
+    {
+      "context_limit_tokens": 524288,
+      "rope_scaling": "YaRN ×2 from 262144",
+      "classification": "valid quality",
+      "prompt_tokens": 498122,
+      "prompt_occupancy_percent": 95.0092,
+      "completion_tokens": 209,
+      "correct": 10,
+      "total": 10,
+      "score_percent": 100.0,
+      "exact_matches": {
+        "case-5172": true,
+        "case-6803": true,
+        "case-1048": true,
+        "case-9351": true,
+        "case-2264": true,
+        "case-7490": true,
+        "case-3815": true,
+        "case-8627": true,
+        "case-2906": true,
+        "case-4439": true
+      },
+      "fact_positions": [
+        {
+          "caseId": "case-5172",
+          "tokenOffset": 24946,
+          "fraction": 0.0501
+        },
+        {
+          "caseId": "case-6803",
+          "tokenOffset": 74742,
+          "fraction": 0.1501
+        },
+        {
+          "caseId": "case-1048",
+          "tokenOffset": 124519,
+          "fraction": 0.25
+        },
+        {
+          "caseId": "case-9351",
+          "tokenOffset": 174324,
+          "fraction": 0.35
+        },
+        {
+          "caseId": "case-2264",
+          "tokenOffset": 224114,
+          "fraction": 0.4499
+        },
+        {
+          "caseId": "case-7490",
+          "tokenOffset": 273903,
+          "fraction": 0.5499
+        },
+        {
+          "caseId": "case-3815",
+          "tokenOffset": 323695,
+          "fraction": 0.6498
+        },
+        {
+          "caseId": "case-8627",
+          "tokenOffset": 373457,
+          "fraction": 0.7497
+        },
+        {
+          "caseId": "case-2906",
+          "tokenOffset": 423244,
+          "fraction": 0.8497
+        },
+        {
+          "caseId": "case-4439",
+          "tokenOffset": 473019,
+          "fraction": 0.9496
+        }
+      ],
+      "prefill_tokens_per_second": 2850.7,
+      "decode_tokens_per_second": 120.5,
+      "ttft_seconds": 174.7391,
+      "request_elapsed_seconds": 176.64142821199493,
+      "server_session_seconds": 194.49399511300726,
+      "peak_process_tree_rss_gib": 44.308,
+      "minimum_mem_available_gib": 62.717,
+      "gpu_memory": {
+        "0": {
+          "baseline_mib": 1120,
+          "peak_total_used_mib": 23371,
+          "peak_delta_mib": 22251
+        },
+        "1": {
+          "baseline_mib": 108,
+          "peak_total_used_mib": 21944,
+          "peak_delta_mib": 21836
+        }
+      },
+      "swap_delta_pages": {
+        "pswpin": 381,
+        "pswpout": 0
+      },
+      "monitor_abort_reason": null,
+      "finish_reason": "stop",
+      "prompt_sha256": "df2214133b60286823536b1c036586e6cd8fce3adad6c76c6565ecc0b7081999",
+      "request_sha256": "d0254cebb3af65cbb96fcaf27a8cdc930da68c4497e479161a8ed179280ac0a1",
+      "effective_fingerprint_sha256": "ef06d8b437826d6bc69d71563e5306eaa4ad597c1276b0ebd4b3aa09c56f803f",
+      "receipt": "receipts/runs/524288/receipt.json"
+    },
+    {
+      "context_limit_tokens": 1048576,
+      "rope_scaling": "YaRN ×4 from 262144",
+      "classification": "valid quality",
+      "prompt_tokens": 996163,
+      "prompt_occupancy_percent": 95.0015,
+      "completion_tokens": 209,
+      "correct": 10,
+      "total": 10,
+      "score_percent": 100.0,
+      "exact_matches": {
+        "case-5172": true,
+        "case-6803": true,
+        "case-1048": true,
+        "case-9351": true,
+        "case-2264": true,
+        "case-7490": true,
+        "case-3815": true,
+        "case-8627": true,
+        "case-2906": true,
+        "case-4439": true
+      },
+      "fact_positions": [
+        {
+          "caseId": "case-5172",
+          "tokenOffset": 49847,
+          "fraction": 0.05
+        },
+        {
+          "caseId": "case-6803",
+          "tokenOffset": 149461,
+          "fraction": 0.15
+        },
+        {
+          "caseId": "case-1048",
+          "tokenOffset": 249042,
+          "fraction": 0.25
+        },
+        {
+          "caseId": "case-9351",
+          "tokenOffset": 348621,
+          "fraction": 0.35
+        },
+        {
+          "caseId": "case-2264",
+          "tokenOffset": 448207,
+          "fraction": 0.4499
+        },
+        {
+          "caseId": "case-7490",
+          "tokenOffset": 547774,
+          "fraction": 0.5499
+        },
+        {
+          "caseId": "case-3815",
+          "tokenOffset": 647375,
+          "fraction": 0.6499
+        },
+        {
+          "caseId": "case-8627",
+          "tokenOffset": 746951,
+          "fraction": 0.7498
+        },
+        {
+          "caseId": "case-2906",
+          "tokenOffset": 846558,
+          "fraction": 0.8498
+        },
+        {
+          "caseId": "case-4439",
+          "tokenOffset": 946158,
+          "fraction": 0.9498
+        }
+      ],
+      "prefill_tokens_per_second": 2230.1,
+      "decode_tokens_per_second": 98.4,
+      "ttft_seconds": 446.6898,
+      "request_elapsed_seconds": 449.1717484469991,
+      "server_session_seconds": 467.6331192549842,
+      "peak_process_tree_rss_gib": 51.14,
+      "minimum_mem_available_gib": 55.728,
+      "gpu_memory": {
+        "0": {
+          "baseline_mib": 1035,
+          "peak_total_used_mib": 23808,
+          "peak_delta_mib": 22773
+        },
+        "1": {
+          "baseline_mib": 108,
+          "peak_total_used_mib": 22474,
+          "peak_delta_mib": 22366
+        }
+      },
+      "swap_delta_pages": {
+        "pswpin": 995,
+        "pswpout": 0
+      },
+      "monitor_abort_reason": null,
+      "finish_reason": "stop",
+      "prompt_sha256": "c318c81ba262d7dcbdcaefd15e3a4fbe592cafee809211d1dab875ecfa12c873",
+      "request_sha256": "72ea4456e55d61fae9a6ff9855fe6d66258c03f532a17cd48ae514812a78446d",
+      "effective_fingerprint_sha256": "5a202e300be5729ad920472f4ed1c2fff1d7df2014db33fe8d5f0eea30e38437",
+      "receipt": "receipts/runs/1048576/receipt.json"
+    }
+  ],
+  "suite_fingerprint_sha256": "1b7719a7ef4a2f1b6283e9d69e2d52be6867f701bf1fc5d6db48d90ff0f616ac",
+  "runner_sha256": "c802e46586682db1b17a3b9b107d705c6ff003d9a726a8723ca0d5d467f80a4d",
+  "lock_token": "f6c151ae-dcad-4954-ade7-e50f71031839",
+  "completed_at_utc": "2026-10-14T14:57:20.810230+00:00"
+}

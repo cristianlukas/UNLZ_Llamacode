@@ -1,0 +1,59 @@
+{
+  "generator_seed": 20261012,
+  "session_id": "eval-session-20261012",
+  "thread_id": "cold-prefill-128k-thread",
+  "body_line_count": 6000,
+  "rendered_initial_tokens": 120412,
+  "rendered_compaction_tokens_cache_off": 120216,
+  "rendered_compaction_tokens_cache_on": 120478,
+  "max_context": 131072,
+  "initial_max_output_tokens": 16,
+  "compaction_max_output_tokens": 512,
+  "facts": {
+    "beginning": "KEY-ALPHA-7319",
+    "middle": "KEY-BRAVO-2846",
+    "late": "KEY-CHARLIE-9052",
+    "ending": "KEY-DELTA-4173"
+  },
+  "tools": [
+    {
+      "type": "function",
+      "name": "inspect_workspace",
+      "description": "Read-only inspection helper for an isolated coding workspace.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Relative path to inspect."
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ],
+  "scenario_sha256": "aeee353da01f15a6e9e8930353a0b21627c4027e88cb1c9ef69d00fb1e6d24d3",
+  "tokenizer_path": "/media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/packs/iq3_s/tokenizer",
+  "cache_on_prompt_tools": [
+    {
+      "name": "inspect_workspace",
+      "description": "Read-only inspection helper for an isolated coding workspace.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Relative path to inspect."
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

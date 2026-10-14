@@ -1,0 +1,37 @@
+{
+  "id": "chatcmpl-dc1835cf231d40658b78e1e2",
+  "object": "chat.completion",
+  "created": 1791987566,
+  "model": "qwen3.8-flash-next-iq2_xs",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```json\n{\n  \"case-5172\": \"INV-Q7L4-92\",\n  \"case-6803\": \"DOCK-N4-813\",\n  \"case-1048\": \"18.375 kPa\","
+      },
+      "finish_reason": "length"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 996163,
+    "completion_tokens": 64,
+    "total_tokens": 996227,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 996163,
+    "prompt_ms": 446129.6,
+    "prompt_per_token_ms": 0.448,
+    "prompt_per_second": 2232.9,
+    "predicted_n": 64,
+    "predicted_ms": 748.1,
+    "predicted_per_token_ms": 11.689,
+    "predicted_per_second": 85.6,
+    "draft_n": 55,
+    "draft_n_accepted": 47
+  }
+}

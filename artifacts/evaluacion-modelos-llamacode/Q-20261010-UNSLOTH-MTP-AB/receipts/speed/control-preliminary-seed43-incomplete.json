@@ -1,0 +1,14 @@
+{
+  "status": "incomplete",
+  "mode": "mtp_off",
+  "seed": 43,
+  "reason": "Interrupted before response: llama.cpp reused the previous request prefix in the same slot despite --no-cache-prompt. Final cold speed trials restart the server for every seed.",
+  "fixture_sha256": "2830a27f1b3c1c5a1ad4927132bb0fbbba6d889a22abc0b4d61a9032e063b2ca",
+  "observed_partial_progress": [
+    "4.36.332.872 I slot print_timing: id  0 | task 305 | prompt processing, n_tokens =   3604, progress = 0.15, t =  28.54 s / 126.26 tokens per second",
+    "4.40.572.494 I slot print_timing: id  0 | task 305 | prompt processing, n_tokens =   4116, progress = 0.17, t =  32.78 s / 125.55 tokens per second",
+    "4.44.839.209 I slot print_timing: id  0 | task 305 | prompt processing, n_tokens =   4628, progress = 0.20, t =  37.05 s / 124.91 tokens per second",
+    "4.49.102.919 I slot print_timing: id  0 | task 305 | prompt processing, n_tokens =   5140, progress = 0.22, t =  41.31 s / 124.41 tokens per second",
+    "4.53.471.825 I slot print_timing: id  0 | task 305 | prompt processing, n_tokens =   5652, progress = 0.24, t =  45.68 s / 123.72 tokens per second"
+  ]
+}

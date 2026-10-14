@@ -1,0 +1,81 @@
+{"time_utc": "2026-10-12T17:19:18Z", "event": "preflight", "label": "IQ2_XS Strata post-load official ladder", "launch": {"alias": "EVAL IQ2_XS Strata", "benchmark": true, "best": false, "deprecated": false, "displayName": "🏆 EVAL IQ2_XS Strata - Q-20261009 IQ2_XS Strata", "favorite": false, "id": "eb46e3ff-1df8-4f9f-88dc-ef7b719b1510", "lastUsed": 0, "menuOrder": 0, "name": "Q-20261009 IQ2_XS Strata", "ready": true, "system": false, "systemBadge": false, "tags": ["evaluation", "IQ2_XS Strata", "isolated", "agent-maximo"]}}
+{"time_utc": "2026-10-12T17:19:18Z", "event": "set_approval", "response": {"ok": true, "reqId": "e03c37ba-a789-4fed-ab0d-735c7260dbaa"}}
+{"time_utc": "2026-10-12T17:19:18Z", "event": "set_thinking", "response": {"ok": true, "reqId": "2f961cc0-15c7-4fbd-9e5a-5d4c5a2c0587"}}
+{"time_utc": "2026-10-12T17:19:18Z", "event": "start_agent", "response": {"ok": true, "reqId": "88c34f46-69d3-4abf-9a83-1ca901a3f4b4"}}
+{"time_utc": "2026-10-12T17:19:18Z", "event": "agent_ready", "model": "Q-20261009 IQ2_XS Strata", "server_state": "running"}
+{"time_utc": "2026-10-12T17:19:18Z", "event": "benchmark_start", "response": {"ok": true, "reqId": "5b0d3efc-144b-433e-ae5f-8a7461f9145e"}, "stages": {"he0": "059b6f00-7b4b-48ff-a3a2-2a71f900c1c0", "he20": "267bb33d-4510-417b-ae3c-6dbbfb2cb08d", "bcb8": "05c28394-11d0-41fe-a55f-b3cb69db9c15"}, "passes": 1, "target": "agent", "agent_profile": "agent-maximo", "timeout_sec": 1800}
+{"time_utc": "2026-10-12T17:19:18Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "Iniciando..."}
+{"time_utc": "2026-10-12T17:19:33Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — reparando fallos 1/3..."}
+{"time_utc": "2026-10-12T17:19:48Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 1/20..."}
+{"time_utc": "2026-10-12T17:20:03Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 2/20..."}
+{"time_utc": "2026-10-12T17:20:18Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 2/20..."}
+{"time_utc": "2026-10-12T17:20:33Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 3/20..."}
+{"time_utc": "2026-10-12T17:20:48Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 4/20..."}
+{"time_utc": "2026-10-12T17:21:03Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 4/20..."}
+{"time_utc": "2026-10-12T17:21:18Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 5/20..."}
+{"time_utc": "2026-10-12T17:21:33Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 5/20..."}
+{"time_utc": "2026-10-12T17:21:48Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 6/20..."}
+{"time_utc": "2026-10-12T17:22:03Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 7/20..."}
+{"time_utc": "2026-10-12T17:22:18Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 7/20..."}
+{"time_utc": "2026-10-12T17:22:33Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 7/20..."}
+{"time_utc": "2026-10-12T17:22:48Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 8/20..."}
+{"time_utc": "2026-10-12T17:23:03Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 8/20..."}
+{"time_utc": "2026-10-12T17:23:18Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 9/20..."}
+{"time_utc": "2026-10-12T17:23:33Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 9/20..."}
+{"time_utc": "2026-10-12T17:23:48Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 10/20..."}
+{"time_utc": "2026-10-12T17:24:03Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 10/20..."}
+{"time_utc": "2026-10-12T17:24:18Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 11/20..."}
+{"time_utc": "2026-10-12T17:24:33Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 11/20..."}
+{"time_utc": "2026-10-12T17:24:48Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 11/20..."}
+{"time_utc": "2026-10-12T17:25:03Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 12/20..."}
+{"time_utc": "2026-10-12T17:25:18Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 12/20..."}
+{"time_utc": "2026-10-12T17:25:33Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 13/20..."}
+{"time_utc": "2026-10-12T17:25:49Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 13/20..."}
+{"time_utc": "2026-10-12T17:26:04Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 13/20..."}
+{"time_utc": "2026-10-12T17:26:19Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 14/20..."}
+{"time_utc": "2026-10-12T17:26:34Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 14/20..."}
+{"time_utc": "2026-10-12T17:26:49Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 14/20..."}
+{"time_utc": "2026-10-12T17:27:04Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 15/20..."}
+{"time_utc": "2026-10-12T17:27:19Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 15/20..."}
+{"time_utc": "2026-10-12T17:27:34Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 16/20..."}
+{"time_utc": "2026-10-12T17:27:49Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 16/20..."}
+{"time_utc": "2026-10-12T17:28:04Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 16/20..."}
+{"time_utc": "2026-10-12T17:28:19Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 17/20..."}
+{"time_utc": "2026-10-12T17:28:34Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 17/20..."}
+{"time_utc": "2026-10-12T17:28:49Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 17/20..."}
+{"time_utc": "2026-10-12T17:29:04Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 18/20..."}
+{"time_utc": "2026-10-12T17:29:19Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 18/20..."}
+{"time_utc": "2026-10-12T17:29:34Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 18/20..."}
+{"time_utc": "2026-10-12T17:29:49Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 18/20..."}
+{"time_utc": "2026-10-12T17:30:04Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 19/20..."}
+{"time_utc": "2026-10-12T17:30:19Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 19/20..."}
+{"time_utc": "2026-10-12T17:30:34Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 19/20..."}
+{"time_utc": "2026-10-12T17:30:49Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — reparando fallos 1/3..."}
+{"time_utc": "2026-10-12T17:31:04Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — reparando fallos 1/3..."}
+{"time_utc": "2026-10-12T17:31:19Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 1/8..."}
+{"time_utc": "2026-10-12T17:31:34Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 1/8..."}
+{"time_utc": "2026-10-12T17:31:49Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 2/8..."}
+{"time_utc": "2026-10-12T17:32:04Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 2/8..."}
+{"time_utc": "2026-10-12T17:32:19Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 3/8..."}
+{"time_utc": "2026-10-12T17:32:34Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 4/8..."}
+{"time_utc": "2026-10-12T17:32:49Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 4/8..."}
+{"time_utc": "2026-10-12T17:33:04Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 4/8..."}
+{"time_utc": "2026-10-12T17:33:19Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 5/8..."}
+{"time_utc": "2026-10-12T17:33:34Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 5/8..."}
+{"time_utc": "2026-10-12T17:33:49Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 6/8..."}
+{"time_utc": "2026-10-12T17:34:04Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 6/8..."}
+{"time_utc": "2026-10-12T17:34:19Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 6/8..."}
+{"time_utc": "2026-10-12T17:34:34Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 7/8..."}
+{"time_utc": "2026-10-12T17:34:49Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — agente: prompt 7/8..."}
+{"time_utc": "2026-10-12T17:35:04Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — reparando fallos 1/3..."}
+{"time_utc": "2026-10-12T17:35:19Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — reparando fallos 1/3..."}
+{"time_utc": "2026-10-12T17:35:34Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — reparando fallos 1/3..."}
+{"time_utc": "2026-10-12T17:35:49Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — reparando fallos 1/3..."}
+{"time_utc": "2026-10-12T17:36:04Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — reparando fallos 1/3..."}
+{"time_utc": "2026-10-12T17:36:19Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — reparando fallos 1/3..."}
+{"time_utc": "2026-10-12T17:36:34Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — reparando fallos 1/3..."}
+{"time_utc": "2026-10-12T17:36:49Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — reparando fallos 1/3..."}
+{"time_utc": "2026-10-12T17:37:04Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — reparando fallos 1/3..."}
+{"time_utc": "2026-10-12T17:37:19Z", "event": "benchmark_poll", "running": true, "progress": 0, "status": "[1/1] Q-20261009 IQ2_XS Strata — reparando fallos 1/3..."}
+{"time_utc": "2026-10-12T17:37:34Z", "event": "benchmark_poll", "running": false, "progress": 100, "status": "Completado."}
+{"time_utc": "2026-10-12T17:37:48Z", "event": "benchmark_complete", "status": "Completado.", "results_file": "artifacts/evaluacion-modelos-llamacode/Q-20261009-STRATA-QWEN38-27B-AB/receipts/lch1/iq2_xs-official-ladder.json"}

@@ -1,0 +1,40 @@
+{
+  "algorithm": "sha256",
+  "files": [
+    {
+      "path": "PLAN.md",
+      "sha256": "c597d6ebf8c1707ac99a1a8c27c155d6af50075639fe80728b999834be8efff3",
+      "bytes": 3079
+    },
+    {
+      "path": "RESULTS.md",
+      "sha256": "666745356b7df3cc9e95a8a743b2314f76a71fa166241e1818703fd1cfa9781c",
+      "bytes": 7865
+    },
+    {
+      "path": "receipts/charts/quality-vs-output-tokens.png",
+      "sha256": "1e3c335fc0c60899eb67bbe91db246e2ce6e2c7beec7f571547a4b0677be1a38",
+      "bytes": 37538
+    },
+    {
+      "path": "receipts/charts/quality-vs-time.png",
+      "sha256": "e0f646b3be87870bd5f84f73afac42ad32f96359b40d3df1816a5529a3ca67de",
+      "bytes": 36542
+    },
+    {
+      "path": "receipts/charts/score-by-quant.png",
+      "sha256": "3bd23cc9fa74783d9837f07c454c1fd334d6556f89e24c9fbd94a4d3a8c124e0",
+      "bytes": 24684
+    },
+    {
+      "path": "receipts/local-preflight.json",
+      "sha256": "8418cb0ceb8f2c4fdd125419f7cf998168883245ac4df4745b33f26e6183aff1",
+      "bytes": 3276
+    },
+    {
+      "path": "receipts/source-review.json",
+      "sha256": "9896f76321940a14aef7b99b7cfd311d994d6a6534d01a8eec5d746c61d2817e",
+      "bytes": 5254
+    }
+  ]
+}

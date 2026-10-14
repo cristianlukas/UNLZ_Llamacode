@@ -1,0 +1,17 @@
+{
+  "transport_ok": false,
+  "error": "HTTPError: HTTP Error 500: Internal Server Error",
+  "counted_in_ab": false,
+  "diagnosis": {
+    "classification": "invalid_infrastructure",
+    "stage": "first model generation after successful engine startup/model load",
+    "log_evidence": [
+      "ScatterGatherKernel.cu:203 assertion idx_dim >= 0 && idx_dim < index_size failed",
+      "CUDA error: device-side assert triggered",
+      "vLLM EngineCore encountered a fatal error"
+    ],
+    "quality_score": null,
+    "model_redownloaded": false,
+    "model_was_already_local_and_reused": true
+  }
+}

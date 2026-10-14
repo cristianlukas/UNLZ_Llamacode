@@ -1,0 +1,16 @@
+{
+  "task": "Q-20261014-ISTA-NEEDLE-HAYSTACK",
+  "lock_token": "f6c151ae-dcad-4954-ade7-e50f71031839",
+  "checked_at_utc": "2026-10-14T14:40:15.910412+00:00",
+  "host": "3090",
+  "system": "               total        used        free      shared  buff/cache   available\nMem:     132615835648 16982859776 66038042624   135028736 50957086720 115632975872\nSwap:     8589930496  7499730944  1090199552\nMemAvailable:   112922828 kB\nSwapTotal:       8388604 kB\nSwapFree:        1064648 kB\nsome avg10=0.00 avg60=0.00 avg300=0.00 total=686126580\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=685017461\n",
+  "gpus": [
+    "0, NVIDIA GeForce RTX 3090, 1069, 24576, 19",
+    "1, NVIDIA GeForce RTX 3090, 108, 24576, 33"
+  ],
+  "compute_apps": [],
+  "gpu_pmon": "# gpu         pid   type     sm    mem    enc    dec    jpg    ofa    command \n# Idx           #    C/G      %      %      %      %      %      %    name \n    0       2516     G     18      3      -      -      -      -    Xorg           \n    0      97960     G      -      -      -      -      -      -    gnome-software \n    0     491783     G      -      -      -      -      -      -    compiz         \n    0     998717     G      -      -      -      -      -      -    Codex --change-\n    0    1663810     G      -      -      -      -      -      -    brave --type=gp\n    1       2516     G      -      -      -      -      -      -    Xorg           \n",
+  "ports_8350_8898": [],
+  "strata_processes": [],
+  "decision": "continue; no inference app/compute clients; display compositor/Xorg are the only observed GPU clients and do not hold inference VRAM"
+}

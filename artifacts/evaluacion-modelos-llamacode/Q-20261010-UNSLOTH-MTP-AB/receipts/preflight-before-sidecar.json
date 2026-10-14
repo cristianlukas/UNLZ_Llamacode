@@ -1,0 +1,15 @@
+{
+  "captured_at_utc": "2026-10-13T04:13:46.947517+00:00",
+  "gpu": "index, name, memory.total [MiB], memory.used [MiB], utilization.gpu [%]\n0, NVIDIA GeForce RTX 3090, 24576 MiB, 1049 MiB, 31 %\n1, NVIDIA GeForce RTX 3090, 24576 MiB, 108 MiB, 33 %",
+  "memory": "total        used        free      shared  buff/cache   available\nMem:           123Gi        10Gi       1.3Gi       108Mi       113Gi       113Gi\nSwap:          8.0Gi       3.3Gi       4.7Gi",
+  "swap": "NAME      TYPE SIZE USED PRIO\n/swap.img file   8G 3.3G   -1",
+  "disk_model_volume": "Filesystem      Size  Used Avail Use% Mounted on\n/dev/nvme1n1p3  1.9T  1.7T  167G  92% /media/cristian/7CFE1E0FFE1DC1F6",
+  "listening_ports": "State  Recv-Q Send-Q Local Address:Port  Peer Address:PortProcess                           \nLISTEN 0      4096       127.0.0.1:631        0.0.0.0:*                                     \nLISTEN 0      4096      127.0.0.54:53         0.0.0.0:*                                     \nLISTEN 0      10         127.0.0.1:6742       0.0.0.0:*    users:((\"OpenRGB\",pid=5841,fd=4))\nLISTEN 0      4096       127.0.0.1:36095      0.0.0.0:*                                     \nLISTEN 0      4096   127.0.0.53%lo:53         0.0.0.0:*                                     \nLISTEN 0      4096           [::1]:631           [::]:*",
+  "no_eval_servers_found_on_reserved_ports": true,
+  "guard": {
+    "min_memavailable_gib_before_load": 40,
+    "max_swap_growth_gib_during_load": 1.0,
+    "abort_on_oom_or_unrelated_gpu_job": true
+  },
+  "relevant_model_processes_checked": "ps query found no llama-server/Strata/vLLM/test runner at capture time"
+}

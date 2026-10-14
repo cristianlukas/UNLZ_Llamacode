@@ -1,0 +1,1 @@
+UTC 2026-10-12: `pip install vllm==0.30.0` in task-local Python 3.12 venv failed before installation. PyPI download of the 314.9 MB vLLM wheel timed out after 172.0 MB (ReadTimeoutError from files.pythonhosted.org). No model was downloaded, no package was installed into the global Python environment, and no GPU was loaded. Retrying with a longer network timeout/retries.

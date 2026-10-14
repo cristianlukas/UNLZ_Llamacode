@@ -1,0 +1,11 @@
+{
+  "repo": "unsloth/Qwen3.8-Flash-Next-GGUF",
+  "revision": "efc50b7c3195a10eebd8d3e32f83b27b2aeb239d",
+  "path": "/media/cristian/7CFE1E0FFE1DC1F6/models/unsloth-qwen38-flashnext-mtp/mtp-Qwen3.8-Flash-Next-Q8_0.gguf",
+  "size_bytes": 4137429120,
+  "sha256": "58a47d6a216307e9b97172d5bfdc3436a8994b632f5e436b9bb6edf8951da8d1",
+  "expected_sha256": "58a47d6a216307e9b97172d5bfdc3436a8994b632f5e436b9bb6edf8951da8d1",
+  "sha256_verified": true,
+  "downloaded_at_utc": "2026-10-13T04:17:19.978467+00:00",
+  "url": "https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF/resolve/efc50b7c3195a10eebd8d3e32f83b27b2aeb239d/MTP/mtp-Qwen3.8-Flash-Next-Q8_0.gguf?download=true"
+}

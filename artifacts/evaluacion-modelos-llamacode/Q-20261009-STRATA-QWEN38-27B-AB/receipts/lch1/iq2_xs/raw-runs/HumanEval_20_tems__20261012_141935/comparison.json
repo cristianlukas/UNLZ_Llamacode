@@ -1,0 +1,41 @@
+{
+    "benchmarkName": "HumanEval (20 ítems)",
+    "comparisons": [
+    ],
+    "generatedAt": "2026-10-12T14:31:11",
+    "profileCount": 1,
+    "profiles": [
+        {
+            "agentVariant": "baseline",
+            "comparisonTimeMetric": "timeToFirstAttempt",
+            "failedRuns": 0,
+            "fullyAcceptedRuns": 1,
+            "honeyEnabled": false,
+            "medianAddedLines": 496,
+            "medianColdFirstAttemptSec": 663.859,
+            "medianElapsedSec": 693.691,
+            "medianFilesChanged": 39,
+            "medianFirstAttemptSec": 663.859,
+            "medianQualityPct": 100,
+            "medianRemovedLines": 0,
+            "medianRepairAttempts": 1,
+            "medianToolCalls": 43,
+            "medianToolF1Pct": 0,
+            "medianToolRedundantCalls": 0,
+            "medianToolSuccessRatePct": 100,
+            "medianWarmFirstAttemptSec": 0,
+            "outcomeSpread": false,
+            "profileId": "eb46e3ff-1df8-4f9f-88dc-ef7b719b1510",
+            "profileName": "Q-20261009 IQ2_XS Strata",
+            "qualityRangePctPoints": 0,
+            "runs": 1,
+            "stabilityRatePct": 100,
+            "successRatePct": 100,
+            "successfulRuns": 1
+        }
+    ],
+    "runCount": 1,
+    "runLabel": "HumanEval (20 ítems)",
+    "schemaVersion": 1,
+    "target": "agent"
+}

@@ -1,0 +1,16 @@
+{
+  "status": "incomplete",
+  "mode": "mtp_off",
+  "seed": 42,
+  "reason": "Interrupted before response because repeated identical prompts reused prefix KV state across seeds; first attempt was not scored. /slots/0?action=erase returned HTTP 501 in this runtime, so server will be restarted with --no-cache-prompt for cold paired speed trials.",
+  "fixture_sha256": "2830a27f1b3c1c5a1ad4927132bb0fbbba6d889a22abc0b4d61a9032e063b2ca",
+  "fixture_content_tokens": 23569,
+  "partial_server_progress_log": [
+    "2.41.480.870 I slot print_timing: id  0 | task 165 | prompt processing, n_tokens =   5652, progress = 0.24, t =  47.77 s / 118.31 tokens per second",
+    "2.45.898.215 I slot print_timing: id  0 | task 165 | prompt processing, n_tokens =   6164, progress = 0.26, t =  52.19 s / 118.11 tokens per second",
+    "2.50.148.345 I slot print_timing: id  0 | task 165 | prompt processing, n_tokens =   6676, progress = 0.28, t =  56.44 s / 118.28 tokens per second",
+    "2.54.565.667 I slot print_timing: id  0 | task 165 | prompt processing, n_tokens =   7188, progress = 0.30, t =  60.86 s / 118.11 tokens per second",
+    "2.58.966.303 I slot print_timing: id  0 | task 165 | prompt processing, n_tokens =   7700, progress = 0.33, t =  65.26 s / 117.99 tokens per second"
+  ],
+  "expected_hash": "no score or final TPS recorded"
+}

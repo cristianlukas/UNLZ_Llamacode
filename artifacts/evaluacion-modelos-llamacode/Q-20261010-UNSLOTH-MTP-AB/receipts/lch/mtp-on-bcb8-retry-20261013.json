@@ -1,0 +1,73 @@
+{
+  "id": "e5fa0ce3-75d2-4b23-9d1b-f109a85ee019",
+  "timestamp": 1791902926267,
+  "benchmarkName": "BigCodeBench-Hard (8 ítems)",
+  "runLabel": "BigCodeBench-Hard (8 ítems)",
+  "profileId": "q4-mtp-on-he-20261013",
+  "profileName": "1_EVAL · Q4 llama.cpp mtp-on · he R4096",
+  "profileConfigFingerprint": "69aacf099a61a10b4370ec10d0fec4d7fa83c93135b6cf57ada8302b664d32b8",
+  "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+  "finalScore": 3,
+  "finalTotal": 8,
+  "firstAttemptScore": 3,
+  "firstAttemptTotal": 8,
+  "repairAttempts": 3,
+  "passedAfterRepair": false,
+  "failed": true,
+  "failureKind": "quality",
+  "failureStage": "acceptance",
+  "timedOut": false,
+  "timeoutSec": 10800,
+  "transportAfterEvaluation": false,
+  "elapsedSec": 4969.087,
+  "totalTime": 4969.087,
+  "generationSec": 1088.266,
+  "nonGenerationSec": 3880.8210000000004,
+  "avgTps": 27.55890715264598,
+  "avgTtftMs": 58537.63636363636,
+  "toolCalls": 65,
+  "runDir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261010-UNSLOTH-MTP-AB/runtime/lch/xdg-data/LlamaCode/LlamaCode/benchmark-runs/BigCodeBench-Hard_8_tems__20261013_102557",
+  "acceptance": [
+    {
+      "taskId": "BigCodeBench/928",
+      "passed": true,
+      "type": "grader:code_tests"
+    },
+    {
+      "taskId": "BigCodeBench/765",
+      "passed": false,
+      "type": "grader:code_tests"
+    },
+    {
+      "taskId": "BigCodeBench/771",
+      "passed": false,
+      "type": "grader:code_tests"
+    },
+    {
+      "taskId": "BigCodeBench/1019",
+      "passed": false,
+      "type": "grader:code_tests"
+    },
+    {
+      "taskId": "BigCodeBench/906",
+      "passed": true,
+      "type": "grader:code_tests"
+    },
+    {
+      "taskId": "BigCodeBench/583",
+      "passed": false,
+      "type": "grader:code_tests"
+    },
+    {
+      "taskId": "BigCodeBench/139",
+      "passed": true,
+      "type": "grader:code_tests"
+    },
+    {
+      "taskId": "BigCodeBench/360",
+      "passed": false,
+      "type": "grader:code_tests"
+    }
+  ],
+  "classification": "valid-quality"
+}

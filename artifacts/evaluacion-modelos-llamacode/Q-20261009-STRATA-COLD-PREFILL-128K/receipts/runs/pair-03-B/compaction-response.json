@@ -1,0 +1,59 @@
+{
+  "id": "resp_4da84981cff34117923b52c6473a54c9",
+  "object": "response",
+  "created_at": 1791829800,
+  "status": "completed",
+  "background": false,
+  "error": null,
+  "incomplete_details": null,
+  "instructions": "You are testing context handling. Follow the user's exact instruction.",
+  "max_output_tokens": 512,
+  "model": "qwen3.8-flash-next-astra-iq3_s-calibrated",
+  "output": [
+    {
+      "id": "msg_89b62ce001274afb91866fabd161cb3e",
+      "type": "message",
+      "status": "completed",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "Context Checkpoint Compaction Summary\n\n- Source: Synthetic engineering log, 6000 entries (Log 00000 through Log 05999), read as conversation history for a context-compaction test.\n- Content nature: Repeterexpression of build/runtime/p。。",
+          "annotations": [],
+          "logprobs": []
+        }
+      ]
+    }
+  ],
+  "parallel_tool_calls": false,
+  "previous_response_id": null,
+  "reasoning": {
+    "effort": "none",
+    "summary": null
+  },
+  "store": false,
+  "temperature": 0.6,
+  "text": {
+    "format": {
+      "type": "text"
+    }
+  },
+  "tool_choice": "auto",
+  "tools": [],
+  "top_p": 0.95,
+  "truncation": "disabled",
+  "usage": {
+    "input_tokens": 120478,
+    "input_tokens_details": {
+      "cached_tokens": 120415
+    },
+    "output_tokens": 63,
+    "output_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "total_tokens": 120541
+  },
+  "user": null,
+  "metadata": {},
+  "completed_at": 1791829801
+}

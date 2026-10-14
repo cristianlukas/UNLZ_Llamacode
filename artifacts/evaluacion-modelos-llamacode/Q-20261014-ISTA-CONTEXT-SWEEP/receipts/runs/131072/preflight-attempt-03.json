@@ -1,0 +1,66 @@
+{
+  "task": "Q-20261014-ISTA-CONTEXT-SWEEP",
+  "context": 131072,
+  "attempt": 3,
+  "lock_token": "52166fcb-ce3b-4709-959c-97e04408b1c8",
+  "before": {
+    "utc": "2026-10-14T14:07:09.879226+00:00",
+    "mem": {
+      "MemAvailable": 115907145728,
+      "SwapTotal": 8589930496,
+      "SwapFree": 609300480
+    },
+    "vm": {
+      "pswpin": 3066387,
+      "pswpout": 7888002
+    },
+    "psi": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.0
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.0
+      }
+    }
+  },
+  "after": {
+    "utc": "2026-10-14T14:07:12.879459+00:00",
+    "mem": {
+      "MemAvailable": 115895619584,
+      "SwapTotal": 8589930496,
+      "SwapFree": 609423360
+    },
+    "vm": {
+      "pswpin": 3066416,
+      "pswpout": 7888002
+    },
+    "psi": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.0
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.0
+      }
+    }
+  },
+  "gpus": [
+    "0, NVIDIA GeForce RTX 3090, 1057, 24576, 18",
+    "1, NVIDIA GeForce RTX 3090, 108, 24576, 42"
+  ],
+  "compute_apps": [],
+  "ports": [],
+  "strata_processes": [],
+  "pswpin_delta_pages": 29,
+  "pswpout_delta_pages": 0,
+  "mem_available_gib": 107.936,
+  "swap_used_gib": 7.432,
+  "decision": "proceed"
+}

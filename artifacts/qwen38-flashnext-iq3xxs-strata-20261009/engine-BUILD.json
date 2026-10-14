@@ -1,0 +1,14 @@
+{
+ "source": "local",
+ "version": "0.1.41",
+ "archs": [
+  86
+ ],
+ "vision": "none",
+ "cuda_dirs": [
+  "/usr/local/cuda-12.8/bin",
+  "/usr/local/cuda-12.8/lib64"
+ ],
+ "src": "62eb4907c92a8cb7",
+ "vision_src": null
+}

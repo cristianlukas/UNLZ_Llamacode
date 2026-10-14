@@ -1,0 +1,322 @@
+ModelConfig:
+  Configuration for the model.
+
+  --allow-deprecated-quantization, --no-allow-deprecated-quantization
+                        Whether to allow deprecated quantization methods.
+                        (default: False)
+  --allowed-local-media-path ALLOWED_LOCAL_MEDIA_PATH
+                        Allowing API requests to read local images or videos
+                        from directories specified by the server file system.
+                        This is a security risk. Should only be enabled in
+                        trusted environments. (default: )
+  --allowed-media-domains ALLOWED_MEDIA_DOMAINS [ALLOWED_MEDIA_DOMAINS ...]
+                        If set, only media URLs that belong to this domain can
+                        be used for multi-modal inputs. (default: None)
+  --code-revision CODE_REVISION
+                        The specific revision to use for the model code on the
+                        Hugging Face Hub. It can be a branch name, a tag name,
+                        or a commit id. If unspecified, will use the default
+                        version. (default: None)
+  --config-format ['auto', 'hf', 'mistral']
+                        The format of the model config to load:
+                        - "auto" will try to load the config in hf format if
+                        available after trying to load in mistral format.
+                        - "hf" will load the config in hf format.
+                        - "mistral" will load the config in mistral format.
+                        (default: auto)
+  --convert {auto,classify,embed,none}
+                        Convert the model using adapters defined in
+                        [vllm.model_executor.models.adapters][]. The most
+                        common use case is to adapt a text generation model to
+                        be used for pooling tasks. (default: auto)
+  --disable-cascade-attn, --no-disable-cascade-attn
+                        Disable cascade attention for V1. While cascade
+                        attention does not change the mathematical
+                        correctness, disabling it could be useful for
+                        preventing potential numerical issues. This defaults
+                        to True, so users must opt in to cascade attention by
+                        setting this to False. Even when this is set to False,
+                        cascade attention will only be used when the heuristic
+                        tells that it's beneficial. (default: True)
+  --disable-sliding-window, --no-disable-sliding-window
+                        Whether to disable sliding window. If True, we will
+                        disable the sliding window functionality of the model,
+                        capping to sliding window size. If the model does not
+                        support sliding window, this argument is ignored.
+                        (default: False)
+  --dtype {auto,bfloat16,float,float16,float32,half}
+                        Data type for model weights and activations:
+                        - "auto" will use FP16 precision for FP32 and FP16
+                        models, and BF16 precision for BF16 models.
+                        - "half" for FP16. Recommended for AWQ quantization.
+                        - "float16" is the same as "half".
+                        - "bfloat16" for a balance between precision and
+                        range.
+                        - "float" is shorthand for FP32 precision.
+                        - "float32" for FP32 precision. (default: auto)
+  --enable-cumem-allocator, --no-enable-cumem-allocator
+                        Enable the custom cumem allocator to leverage advanced
+                        GPU memory allocation features such as multi-node
+                        NVLink support.
+                        Sleep mode automatically enables this allocator. Only
+                        cuda and hip platforms are supported. (default: False)
+  --enable-nccl-comm-suspend, --no-enable-nccl-comm-suspend
+                        Enable releasing NCCL communicator memory during sleep
+                        mode (``ncclCommSuspend``/``ncclCommResume``).
+                        Experimental; when disabled (the default) sleep still
+                        releases weights/KV-cache memory as before. (default:
+                        False)
+  --enable-prompt-embeds, --no-enable-prompt-embeds
+                        If `True`, enables passing text embeddings as inputs
+                        via the `prompt_embeds` key.
+                        WARNING: The vLLM engine may crash if incorrect shape
+                        of embeddings is passed. Only enable this flag for
+                        trusted users! (default: False)
+  --enable-return-routed-experts, --no-enable-return-routed-experts
+                        Whether to return routed experts. (default: False)
+  --enable-sleep-mode, --no-enable-sleep-mode
+                        Enable sleep mode for the engine (only cuda and hip
+                        platforms are supported). (default: False)
+  --enable-trace-replay, --no-enable-trace-replay
+                        Whether to allow requests to set
+                        `SamplingParams.trace_decode_token_ids`, which forces
+                        decoding to follow a predetermined token sequence
+                        while still computing real logprobs. Reserved for
+                        debugging and RL workflows: enabling it reserves a
+                        per-request trace buffer, so it is off by default.
+                        (default: False)
+  --enforce-eager, --no-enforce-eager
+                        Whether to always use eager-mode PyTorch. If True, we
+                        will disable CUDA graph and always execute the model
+                        in eager mode. If False, we will use CUDA graph and
+                        eager execution in hybrid for maximal performance and
+                        flexibility.
+                        NOTE: This disables both `torch.compile` and CUDA
+                        graphs, and is equivalent to setting `-cc.mode=none
+                        -cc.cudagraph_mode=none`. (default: False)
+  --generation-config GENERATION_CONFIG
+                        The folder path to the generation config. Defaults to
+                        `"auto"`, the generation config will be loaded from
+                        model path. If set to `"vllm"`, no generation config
+                        is loaded, vLLM defaults will be used. If set to a
+                        folder path, the generation config will be loaded from
+                        the specified folder path. If `max_new_tokens` is
+                        specified in generation config, then it sets a server-
+                        wide limit on the number of output tokens for all
+                        requests. (default: auto)
+  --hf-config-path HF_CONFIG_PATH
+                        Name or path of the Hugging Face config to use. If
+                        unspecified, model name or path will be used.
+                        (default: None)
+  --hf-overrides HF_OVERRIDES
+                        If a dictionary, contains arguments to be forwarded to
+                        the Hugging Face config. If a callable, it is called
+                        to update the HuggingFace config. (default: {})
+  --hf-token [HF_TOKEN]
+                        The token to use as HTTP bearer authorization for
+                        remote files . If `True`, will use the token generated
+                        when running `hf auth login` (stored in
+                        `~/.cache/huggingface/token`). (default: None)
+  --io-processor-plugin IO_PROCESSOR_PLUGIN
+                        IOProcessor plugin name to load at model startup
+                        (default: None)
+  --logits-processors LOGITS_PROCESSORS [LOGITS_PROCESSORS ...]
+                        One or more logits processors' fully-qualified class
+                        names or class definitions (default: None)
+  --logprobs-mode {processed_logits,processed_logprobs,raw_logits,raw_logprobs}
+                        Indicates the content returned in the logprobs and
+                        prompt_logprobs. Supported mode: 1) raw_logprobs, 2)
+                        processed_logprobs, 3) raw_logits, 4)
+                        processed_logits. Raw means the values before applying
+                        any logit processors, like bad words. Processed means
+                        the values after applying all processors, including
+                        temperature and top_k/top_p. Note: for
+                        prompt_logprobs, processed_* and raw_* yield identical
+                        results because prompt tokens do not go through
+                        sampling processors. (default: raw_logprobs)
+  --max-logprobs MAX_LOGPROBS
+                        Maximum number of log probabilities to return when
+                        `logprobs` is specified in `SamplingParams`. The
+                        default value comes the default for the OpenAI Chat
+                        Completions API. -1 means no cap, i.e. all
+                        (output_length * vocab_size) logprobs are allowed to
+                        be returned and it may cause OOM. (default: 20)
+  --max-model-len MAX_MODEL_LEN
+                        Model context length (prompt and output). If
+                        unspecified, will be automatically derived from the
+                        model config.
+                        When passing via `--max-model-len`, supports
+                        k/m/g/K/M/G in human-readable format. Examples:
+                        - 1k -> 1000
+                        - 1K -> 1024
+                        - 25.6k -> 25,600
+                        - -1 or 'auto' -> Automatically choose the maximum
+                        model length that fits in GPU memory. This will use
+                        the model's maximum context length if it fits,
+                        otherwise it will find the largest length that can be
+                        accommodated.
+                        Parse human-readable integers like '1k', '2M', etc.
+                        Including decimal values with decimal multipliers.
+                        Also accepts -1 or 'auto' as a special value for auto-
+                        detection.
+                            Examples:
+                            - '1k' -> 1,000
+                            - '1K' -> 1,024
+                            - '25.6k' -> 25,600
+                            - '-1' or 'auto' -> -1 (special value for auto-
+                        detection) (default: None)
+  --model MODEL         Name or path of the Hugging Face model to use. It is
+                        also used as the content for `model_name` tag in
+                        metrics output when `served_model_name` is not
+                        specified. (default: Qwen/Qwen3-0.6B)
+  --model-class-overrides MODEL_CLASS_OVERRIDES
+                        Override the model class used for one or more
+                        architectures, mapping the architecture name to a
+                        `"module:class"` target (the same format accepted by
+                        `ModelRegistry.register_model`). This registers the
+                        target class at runtime, e.g.
+                        `{"GlmMoeDsaForCausalLM": "vllm.models.deepseek_v32.nv
+                        idia.model:DeepseekV32ForCausalLM"}`. This argument is
+                        for development and debugging purposes only.
+                        Should either be a valid JSON string or JSON keys
+                        passed individually. (default: {})
+  --model-impl ['auto', 'terratorch', 'transformers', 'vllm']
+                        Which implementation of the model to use:
+                        - "auto" will try to use the vLLM implementation, if
+                        it exists, and fall back to the Transformers
+                        implementation if no vLLM implementation is available.
+                        - "vllm" will use the vLLM model implementation.
+                        - "transformers" will use the Transformers model
+                        implementation.
+                        - "terratorch" will use the TerraTorch model
+                        implementation. (default: auto)
+  --override-generation-config OVERRIDE_GENERATION_CONFIG
+                        Overrides or sets generation config. e.g.
+                        `{"temperature": 0.5}`. If used with `--generation-
+                        config auto`, the override parameters will be merged
+                        with the default config from the model. If used with
+                        `--generation-config vllm`, only the override
+                        parameters are used.
+                        Should either be a valid JSON string or JSON keys
+                        passed individually. (default: {})
+  --pooler-config POOLER_CONFIG
+                        Pooler config which controls the behaviour of output
+                        pooling in pooling models.
+                        API docs: https://docs.vllm.ai/en/v0.30.0/api/vllm/con
+                        fig/#vllm.config.PoolerConfig
+                        Should either be a valid JSON string or JSON keys
+                        passed individually. (default: None)
+  --quantization QUANTIZATION, -q QUANTIZATION
+                        Method used to quantize the weights. If `None`, we
+                        first check the `quantization_config` attribute in the
+                        model config file. If that is `None`, we assume the
+                        model weights are not quantized and use `dtype` to
+                        determine the data type of the weights. (default:
+                        None)
+  --quantization-config QUANTIZATION_CONFIG
+                        User-facing quantization configuration. Carries per-
+                        layer-kind specs (linear, moe) and ignore patterns;
+                        see :class:`QuantizationConfigArgs`. Auto-populated
+                        from the matching online shorthand when `quantization`
+                        is one of the values in
+                        `ONLINE_QUANT_SHORTHAND_NAMES`.
+                        Should either be a valid JSON string or JSON keys
+                        passed individually. (default: None)
+  --renderer-num-workers RENDERER_NUM_WORKERS
+                        Number of worker threads in the renderer thread pool.
+                        The pool is consumed by the async renderer path (e.g.
+                        the OpenAI-compatible API server started by `vllm
+                        serve`) to parallelize tokenization, chat template
+                        rendering, and multimodal preprocessing across
+                        concurrent requests.
+                        The offline `LLM` entrypoint uses the synchronous
+                        renderer path and processes prompts (including
+                        multimodal preprocessing) serially, so this setting
+                        has no effect there. (default: 1)
+  --return-sampling-mask, --no-return-sampling-mask
+                        Whether to return the post-processing token support
+                        for each sample. (default: False)
+  --revision REVISION   The specific model version to use. It can be a branch
+                        name, a tag name, or a commit id. If unspecified, will
+                        use the default version. (default: None)
+  --runner {auto,draft,generate,pooling}
+                        The type of model runner to use. Each vLLM instance
+                        only supports one model runner, even if the same model
+                        can be used for multiple types. (default: auto)
+  --seed SEED           Random seed for reproducibility.
+                        We must set the global seed because otherwise,
+                        different tensor parallel workers would sample
+                        different tokens, leading to inconsistent results.
+                        (default: 0)
+  --served-model-name SERVED_MODEL_NAME [SERVED_MODEL_NAME ...]
+                        The model name(s) used in the API. If multiple names
+                        are provided, the server will respond to any of the
+                        provided names. The model name in the model field of a
+                        response will be the first name in this list. If not
+                        specified, the model name will be the same as the
+                        `--model` argument. Noted that this name(s) will also
+                        be used in `model_name` tag content of prometheus
+                        metrics, if multiple names provided, metrics tag will
+                        take the first one. (default: None)
+  --skip-tokenizer-init, --no-skip-tokenizer-init
+                        Skip initialization of tokenizer and detokenizer.
+                        Expects valid `prompt_token_ids` and `None` for prompt
+                        from the input. The generated output will contain
+                        token ids. (default: False)
+  --tokenizer TOKENIZER
+                        Name or path of the Hugging Face tokenizer to use. If
+                        unspecified, model name or path will be used.
+                        (default: None)
+  --tokenizer-mode ['auto', 'cohere', 'deepseek_v32', 'deepseek_v4', 'hf', 'inkling', 'kimi_k3', 'mistral', 'slow']
+                        Tokenizer mode:
+                        - "auto" will use the tokenizer from `mistral_common`
+                        for Mistral models if available, otherwise it will use
+                        the "hf" tokenizer.
+                        - "hf" will use the fast tokenizer if available.
+                        - "slow" will always use the slow tokenizer.
+                        - "mistral" will always use the tokenizer from
+                        `mistral_common`.
+                        - "deepseek_v32" will always use the tokenizer from
+                        `deepseek_v32`.
+                        - "deepseek_v4" will always use the tokenizer from
+                        `deepseek_v4`.
+                        - "deepseek_v41" will use the DeepSeek V4.1 prompt
+                        encoder.
+                        - "kimi_k3" will always use the "hf" tokenizer but
+                        render chat prompts with Kimi K3's Python XTML
+                        encoding instead of a Jinja template.
+                        - "cohere" uses the standard HF tokenizer but renders
+                        the chat template via the `cohere_melody` library
+                        (cmd3 / cmd4 templates) instead of Jinja, and surfaces
+                        grounded-citation metadata on responses.
+                        - Other custom values can be supported via plugins.
+                        To swap the Rust BPE backend that powers HF fast
+                        tokenizers for the
+                        [fastokens](https://github.com/crusoecloud/fastokens)
+                        implementation, set `VLLM_USE_FASTOKENS=1` instead —
+                        that override applies to any mode that loads an HF
+                        fast tokenizer (`hf`, `deepseek_v32`, `deepseek_v4`,
+                        …). (default: auto)
+  --tokenizer-revision TOKENIZER_REVISION
+                        The specific revision to use for the tokenizer on the
+                        Hugging Face Hub. It can be a branch name, a tag name,
+                        or a commit id. If unspecified, will use the default
+                        version. (default: None)
+  --trust-remote-code, --no-trust-remote-code
+                        Trust remote code (e.g., from HuggingFace) when
+                        downloading the model and tokenizer. (default: False)
+  --use-fp64-gumbel, --no-use-fp64-gumbel
+                        Whether to use FP64 (instead of FP32) random noise for
+                        Gumbel-max and equivalent exponential-race sampling.
+                        FP64 preserves lower-tail sampling events that fp32
+                        uniform/exponential draws can truncate, at the cost of
+                        significantly lower throughput on most GPUs. (default:
+                        False)
+
+When passing JSON CLI arguments, the following sets of arguments are equivalent:
+   --json-arg '{"key1": "value1", "key2": {"key3": "value2"}}'
+   --json-arg.key1 value1 --json-arg.key2.key3 value2
+
+Additionally, list elements can be passed individually using +:
+   --json-arg '{"key4": ["value3", "value4", "value5"]}'
+   --json-arg.key4+ value3 --json-arg.key4+='value4,value5'

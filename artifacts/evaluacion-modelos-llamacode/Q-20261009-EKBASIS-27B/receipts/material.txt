@@ -1,0 +1,753 @@
+Ir a LocalLLM
+r/LocalLLM
+•
+hace 1 d
+u/Over_Monitor_8770
+
+After 1,273 agent runs, I'm convinced: agents need a consequence model beside them, not a better prompt.
+News
+r/LocalLLM - After 1,273 agent runs, I'm convinced: agents need a consequence model beside them, not a better prompt.
+Agents break things. Across 1,273 runs on 7 apps (banking, travel, password vault, database, smart home, calendar, chat, cloud, drive, files, mail, shop), an agent alone caused damage in 20–57% of harm-paths, Claude Sonnet 5.5 included. With a small consequence oracle answering "what happens if I do this?" before each action, the same agents caused damage in 0–3%, 3 harmful runs in 384 (0.8%).
+
+What it is: Ekbasis is a calibrated 27B foresight oracle for apps. It sees the hidden state the agent can't (real balances, queues, pending delegations, ownership), answers multiple-choice questions about consequences with calibrated confidence (ECE 0.04–0.07), and hands the question back to the user when below 0.5. It never fakes certainty, the only errors we saw today came out at 0.53 confidence, and it said so.
+
+What it is not: not a chatbot, not a copilot. It doesn't write emails or decide for you. It catches the 30–60% the agent would break and escalates the rest.
+
+How it works: serve.py (vLLM backend) exposes predict rules + state + action + questions in, calibrated answers out. Any agent (CLI, opencode, whatever) calls it as a tool before acting.
+
+How to run: bf16 is ~51 GB (a 64 GB GPU or Mac Studio). MLX-4bit and FP8 builds available.
+
+The 5 agent families tested: Sonnet-5.5 (40%→0%), Haiku (40%→3%), GLM-5.3-flash (20%→0%), Qwen3.5-4B (50%→32%), Qwen3.5-9B (45%→12%). Cheap agent + Ekbasis ≈ strong agent alone.
+
+Repos: HF + GitHub + Paper below. Model card has the full methodology, registered rules, pre-registered sets, firewall against training contamination, paired bootstrap CIs.
+
+Honest caveat: this is app-domain foresight, not general reasoning. The one harmful see-run today was the model answering a borderline question at 0.53 confidence.
+
+Welcome to the frontier.
+
+https://huggingface.co/caiovicentino1/Ekbasis-27B
+https://github.com/OpenInterpretability/ekbasis
+https://zenodo.org/records/23197341
+
+https://openinterp.org/ekbasis
+
+
+Upvote
+89
+
+Downvote
+
+49
+Ir a los comentarios
+
+3
+Republicar
+
+Compartir
+Únete a la conversación
+
+Ordenar por:
+
+Mejores
+
+Buscar comentarios
+Expandir la búsqueda de comentarios
+Sección de comentarios
+Initial_Lettuce_5243
+•
+hace 1 d
+That's a cool approach. The Claude talk is so thick on the blog post that I think I'll wait to hear from another person about their experience.
+
+
+Upvote
+78
+
+Downvote
+
+Responder
+
+
+1
+
+Compartir
+
+Anti-Speciesist-IEMs
+•
+hace 9 h
+"Not a chatbot, not a copilot, not a general assistant, not a potato, not a sunset, not string theory, not a TV show..." just say what it is lol, I seriously can't stand AI-speak and also stop reading when I see it
+
+
+Upvote
+11
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Initial_Lettuce_5243
+•
+hace 6 h
+My favorite one of these was a coworker getting Claude to do their weekly update when we had Monday off for a holiday and it started with "Four days, not five." Bro we all know how many days we were at work
+
+
+Upvote
+6
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Anti-Speciesist-IEMs
+•
+hace 6 h
+LOL (I literally laughed out loud, actually still laughing)
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/lfgbrd
+lfgbrd
+•
+hace 7 h
+•
+Editado hace 5 h
+Every single one of these:
+
+The honest truth: It's for someone who wants answers, not more questions. It completes the task in seconds, not minutes (excluding non-completed tasks).
+
+What it's for: any sub-layer strata with 35-60% cache injected expert models sharing layers between the KV weighted VRAM. Tested on my modded ollama install with Squamp-15B_K1_XLS+
+
+Why you should trust it: It's fastest rising github project this week. A classic indicator of a great addition to your local AI environment.
+
+Upvotes please
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Anti-Speciesist-IEMs
+•
+hace 6 h
+(excluding non-completed tasks)
+
+Lmfaooo I almost missed this bit
+
+
+Upvote
+3
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+SmartCustard9944
+•
+hace 23 h
+“Foresight oracle” it’s just a decision model bro
+
+
+Upvote
+23
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Over_Monitor_8770
+OP
+•
+hace 22 h
+Avatar de u/Crypto_Stoozy
+Crypto_Stoozy
+•
+hace 23 h
+Straight to jail
+
+
+Upvote
+9
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Oketsury
+Oketsury
+•
+hace 18 h
+None of this makes sense here, be careful. The best way to keep a model from breaking things is to make your application resilient, and right now, the best way to do that is TDD. The test is an immutable contract, the model must always satisfy it.
+
+
+Upvote
+3
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/darksteelsteed
+darksteelsteed
+•
+hace 14 h
+This seems all a bit fishy. I don't see how you can obtain access to hidden state from a cloud hosted model to be able to do what is claimed. Unless your definition of "hidden state" is different from everyone else's
+
+
+Upvote
+3
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Over_Monitor_8770
+OP
+•
+hace 5 h
+Fair, but no hidden states from cloud models are involved.
+
+you give you app/repo/code as the "world" and then before your agent run a command ask, "If i run that, what breaks? what gets lost? what charges me?". It responds with calibrated probabilities and when it does not know, it say it to the llm to check. It reads the world + the proposed action. It never peeks inside any model.
+
+hope i answered
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/diamondonion
+diamondonion
+•
+hace 4 h
+I use a code intelligence tool like repowise or GitNexus or codespelunker for BM25 "blast-radius" analysis; then you need to do TDD with agentic if your solution is meant to grow, regression is real and tests are the only way forward there. Platform Architect, I've been building a complex, event-driven platform for 9mo straight. We have ~2500 tests currently between Unit, Integration and E2E testcontainers across the cluster. Absolutely essential. Agentic PR review is also essential. Working on SystemOne kev/AutoJev for this kind of work, but an ast-grep, LSP based code-graph is what answered this problem statement for me. Good luck!
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/moonlitpawprints
+moonlitpawprints
+•
+hace 1 d
+Seems interesting, just trying to understand the details.
+
+"it sees the hidden state the agent can't" say more about this...how is this different than running planning/validation prompts with one model?
+
+"this is app-domain foresight, not general reasoning" Does that suggest it's domain/task specific?
+
+
+Upvote
+10
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/TapAggressive9530
+TapAggressive9530
+•
+hace 21 h
+OP has no idea . That post was generated by AI. Honest
+
+
+Upvote
+18
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Over_Monitor_8770
+OP
+•
+hace 21 h
+Over_Monitor_8770
+OP
+•
+hace 23 h
+Avatar de u/thedbp
+thedbp
+•
+hace 18 h
+I think op is an ai, every comment they write sounds like ai, like not a single natural word uttered by op in the post or comment section.
+
+
+Upvote
+3
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/crusoe
+crusoe
+•
+hace 19 h
+The reads like Opus 5 wrote it.
+
+
+Upvote
+6
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Over_Monitor_8770
+OP
+•
+hace 5 h
+i'm not gonna lie, it helped me sir.
+
+
+Upvote
+-1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/ephemeralsynth
+ephemeralsynth
+•
+hace 1 d
+Critical Thinking and Skeptical Perspective as a constraint on model output 💯✅
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+skinnyvanguard9021
+•
+hace 1 d
+the compound probability of avoiding those 0.8% slip-ups across hundreds of runs is what keeps me up at night
+
+
+Upvote
+4
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Aubrey_D_Graham
+•
+hace 1 d
+Dual B70 on CachyOS with Oh-My-Pi
+More tools adds more latency and more tokens, but here we are. :/
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Over_Monitor_8770
+OP
+•
+hace 1 d
+ekbasis do it in 0.09s each prediction, rtx pro 6000.
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Aubrey_D_Graham
+•
+hace 1 d
+Dual B70 on CachyOS with Oh-My-Pi
+yes yes yes, I use intel battlematrices. can you extrapolate what sort of performance penalty in tokens per second and the ctx penalty for nvidia? ill research intel on my own, thank you
+
+
+Upvote
+4
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Over_Monitor_8770
+OP
+•
+hace 1 d
+It's a classification pass, not generation. the answer is option probabilities read from logprobs, so output tokens ≈ 0. Input is the app rules (static per app, cached after the first call) plus the current state delta, on the order of a few hundred tokens of prefill. The steady-state cost per call is basically the state delta.
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/karatedog
+karatedog
+•
+hace 12 h
+Given that my 36GB Mac M3 Pro struggles when Ollama is running a 27b Q4 Qwen3.8 model, while reporting 22GB consumed memory, I doubt a 51GB model will fit into a 64GB Mac, not without tweaking and with about 8k context window.
+
+
+Upvote
+2
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Over_Monitor_8770
+OP
+•
+hace 5 h
+i run it on my macbook m3 ultra 36gb the 4 bit mlx and i'm having great results, just slower than rtx 6000 pro.
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Tsukikira
+•
+hace 2 h
+Bullshit.  I can tell you Claude is not breaking stuff 20% of the time, and your tiny double check ain't going to fix most of the time it does.
+
+Once I note the first place you lie, the rest of it sounds doubtful.
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Over_Monitor_8770
+OP
+•
+hace 2 h
+then fade it.
+
+
+Upvote
+0
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+sTiKytGreen
+•
+hace 12 h
+So, you're saying your projects are not covered by tests well enough for them to catch when something breaks?
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Over_Monitor_8770
+OP
+•
+hace 6 h
+it is callibreted sir. try it, you will like it.
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/False_Entrepreneur11
+False_Entrepreneur11
+•
+hace 5 h
+I love this! I wrote an essay a while back about how approval is not one question with LLM's. It's exciting to see these solutions evolving in the wild to solve that very problem. Great work here!
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Over_Monitor_8770
+OP
+•
+hace 3 h
+thanks man
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/ExpressionPrudent127
+ExpressionPrudent127
+•
+hace 14 h
+Prompt has no great effects on result as much as they did 1-2 years ago. Of course there are good and bad prompts and there will be, I am not claming has no effect (no great effect) but strong models always can cover prompt weakness easily. Especially during thinking process.
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/important__matter
+important__matter
+•
+hace 15 h
+That's a pretty interesting approach, starred * the repo. Might as well use this idea in some place.
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Over_Monitor_8770
+OP
+•
+hace 6 h
+i appreciate you
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/Mil0Mammon
+Mil0Mammon
+•
+hace 16 h
+Could you also do GSQ RCO quants? This seems like something to (briefly) run alongside another model, but making it fit could be a challenge
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Over_Monitor_8770
+OP
+•
+hace 6 h
+i will look at it
+
+
+Upvote
+1
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Avatar de u/soteko
+soteko
+•
+hace 1 d
+Seems interesting, do you think that this can work with smaller model as Ekbasis?
+Something like 4GB ?
+
+
+Upvote
+0
+
+Downvote
+
+Responder
+
+Premiar
+
+Compartir
+
+Over_Monitor_8770
+OP
+•
+hace 1 d
+Im training a 9b rn, but the results are not like 27b, but i will add it.

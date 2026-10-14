@@ -1,0 +1,67 @@
+{
+  "status": "complete",
+  "mode": "mtp_on",
+  "seed": 43,
+  "server_launch_at_utc": "2026-10-13T04:40:09.043402+00:00",
+  "request_started_at_utc": "2026-10-13T04:40:15.216298+00:00",
+  "elapsed_wall_seconds": 212.48352868599613,
+  "fixture_path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261010-UNSLOTH-MTP-AB/fixtures/speed-prompt.txt",
+  "fixture_sha256": "2830a27f1b3c1c5a1ad4927132bb0fbbba6d889a22abc0b4d61a9032e063b2ca",
+  "fixture_content_tokens": 23569,
+  "prompt_cache_state": "fresh server process for this sample; no previous KV slot contents",
+  "request_config": {
+    "model": "qwen3.8-flash-next-unsloth-ud-q4_k_xl",
+    "max_tokens": 256,
+    "ignore_eos": true,
+    "temperature": 0.6,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0,
+    "repeat_penalty": 1.0,
+    "presence_penalty": 0.0,
+    "seed": 43,
+    "chat_template_kwargs": {
+      "enable_thinking": true,
+      "reasoning_effort": "medium"
+    }
+  },
+  "response": {
+    "choices": [
+      {
+        "finish_reason": "length",
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "The ledger fixture contains 422 records (RECORD 0001 through RECORD 0422).\n\n\nThe ledger fixture contains 422 records (RECORD 0001 through RECORD 0422).\n\n\nThe ledger fixture contains 422 records (RECORD 0001 through RECORD 0422).\n\n\nThe ledger fixture contains 422 records (RECORD 0001 through RECORD 0422).\n\n\nThe ledger fixture contains 422 records (RECORD 0001 through RECORD 0422).\n\n\nThe ledger fixture contains 422 records (RECORD 0001 through RECORD 0422).\n\n\nThe ledger fixture contains 422 records (RECORD 0001 through RECORD 0422).\n\n\nThe ledger fixture contains 422 records (RECORD 0001 through RECORD 0422).\n\n\nThe",
+          "reasoning_content": "The user asks how many records are included in the ledger fixture. Let me count them. The records go from RECORD 0001 to RECORD 0422. That's 422 records.\n"
+        }
+      }
+    ],
+    "created": 1791866627,
+    "model": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf",
+    "system_fingerprint": "b1-836d571",
+    "object": "chat.completion",
+    "usage": {
+      "completion_tokens": 256,
+      "prompt_tokens": 23598,
+      "total_tokens": 23854,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "id": "chatcmpl-kDqUOt8sCbBYjUnoOcgINMDHsCTwxLTN",
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 23598,
+      "prompt_ms": 204204.384,
+      "prompt_per_token_ms": 8.653461479786422,
+      "prompt_per_second": 115.56069236985627,
+      "predicted_n": 256,
+      "predicted_ms": 8261.984,
+      "predicted_per_token_ms": 32.399937254901964,
+      "predicted_per_second": 30.864257301878094,
+      "draft_n": 207,
+      "draft_n_accepted": 185
+    }
+  }
+}

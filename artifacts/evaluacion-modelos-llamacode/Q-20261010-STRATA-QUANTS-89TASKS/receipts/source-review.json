@@ -1,0 +1,71 @@
+{
+  "task_id": "Q-20261010-STRATA-QUANTS-89TASKS",
+  "reviewed_at": "2026-10-13",
+  "sources": [
+    {
+      "kind": "community_post",
+      "url": "https://www.reddit.com/r/LocalLLM/comments/1x1pvkt/benchmarked_some_strata_qwen38flashnext_quants/",
+      "title": "Benchmarked some Strata Qwen3.8-flash-next quants",
+      "claims_and_limits": {
+        "author_hardware": "Radeon RX 7900 XT 20 GB + 64 GB RAM",
+        "harness": "Pi coding-agent harness; author's daily-use setup",
+        "tasks": "89 total; mostly Aider Polyglot Python/JavaScript exercises plus 7 private repo-agent tasks; author says private tasks are not ready to release",
+        "post_disclaimer": "Author says this is not a frontier benchmark",
+        "runtime_versions_in_chart": ["Strata 0.1.39", "Strata 0.1.40", "Strata 0.1.41", "b1-27c5b4"],
+        "chart_protocol_labels": ["hidden-test grading", "mixed sampling", "max 40 turns"],
+        "context": "Author says context was kept consistent at maximum in a comment; exact per-profile configuration not supplied",
+        "run_duration": "Author says one run takes about 5 hours; says more than 200 tasks would improve precision but is too costly for their setup",
+        "uncertainty": "Bars are described by the author as Wilson 95% confidence intervals calculated from solved tasks / tasks; author says IQ3_XXS vs IQ3_S is within the margin/noise"
+      },
+      "chart_scores": [
+        {"profile": "Qwen3.8-Flash-Next GSQ-RCO IQ3_S", "thinking": "high", "solved": 53, "tasks": 89, "percent_rounded": 60},
+        {"profile": "Qwen3.8-Flash-Next GSQ-RCO IQ3_XXS", "thinking": "high", "solved": 57, "tasks": 89, "percent_rounded": 64},
+        {"profile": "Qwen3.8-Flash-Next GSQ-RCO IQ3_XXS", "thinking": "medium", "solved": 46, "tasks": 89, "percent_rounded": 52},
+        {"profile": "Qwen3.8-Flash-Next GSQ-RCO IQ3_XXS", "thinking": "low", "solved": 50, "tasks": 89, "percent_rounded": 56},
+        {"profile": "Qwen3.8-Flash-Next GSQ-RCO Coder IQ1_M", "thinking": "high", "solved": 51, "tasks": 89, "percent_rounded": 57},
+        {"profile": "Swift-Qwen3.8-Flash-Next-GSQ-RCO IQ3_XXS", "thinking": "high", "solved": 48, "tasks": 89, "percent_rounded": 54},
+        {"profile": "Swift-Qwen3.8-Flash-Next-GSQ-RCO IQ3_XXS", "thinking": "medium", "solved": 47, "tasks": 89, "percent_rounded": 53},
+        {"profile": "Swift-Qwen3.8-Flash-Next-GSQ-RCO IQ3_XXS", "thinking": "low", "solved": 42, "tasks": 89, "percent_rounded": 47},
+        {"profile": "Tiel-Coder-35B-A3B-GGUF-MTP UD-IQ4_XS", "thinking": "high", "solved": 33, "tasks": 89, "percent_rounded": 37}
+      ],
+      "comments": [
+        "Most tasks are public Aider Polyglot Python/JavaScript; seven repo tasks are private and unreleased.",
+        "The author says the 89-task benchmark does not have enough tasks for precise ranking and each run takes about five hours.",
+        "The author says the Wilson intervals overlap for IQ3_XXS and IQ3_S and views their apparent ordering as noise/margin."
+      ],
+      "assets": [
+        "receipts/charts/score-by-quant.png",
+        "receipts/charts/quality-vs-time.png",
+        "receipts/charts/quality-vs-output-tokens.png"
+      ]
+    },
+    {
+      "kind": "primary_model_card",
+      "url": "https://huggingface.co/ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-GGUF",
+      "facts": ["IQ3_XXS is 75.8 GB at 3.00 bpw", "IQ3_S is 83.6 GB at 3.50 bpw", "the non-uniform GSQ-RCO files are separate from the Coder variant"]
+    },
+    {
+      "kind": "primary_model_card",
+      "url": "https://huggingface.co/ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-Coder-GGUF",
+      "facts": ["Coder removes 256 of the 512 routed experts per layer", "remaining weights are stored at 3.5 bpw", "effective 1.89 bits per original parameter; the label IQ1_M is not the precision of each remaining weight", "experimental coding-targeted model"]
+    },
+    {
+      "kind": "primary_runtime_release",
+      "url": "https://github.com/Niko1221/Strata/releases/tag/v0.1.38",
+      "facts": ["Release notes include --peer-device as an opt-in extra expert-cache tier", "release notes claim the default output remains unchanged"]
+    },
+    {
+      "kind": "primary_benchmark_dataset",
+      "url": "https://github.com/Aider-AI/polyglot-benchmark",
+      "facts": ["Public repository is a curated collection of Exercism coding tasks; languages include C++, Go, Java, JavaScript, Python and Rust"]
+    },
+    {
+      "kind": "primary_aider_harness_docs",
+      "url": "https://github.com/Aider-AI/aider/blob/main/benchmark/README.md",
+      "facts": ["Aider benchmark runs tasks in a harness and scores files against tests", "documentation recommends Docker because generated code is executed", "runner can randomize task order and filter to subsets"]
+    }
+  ],
+  "reproduction_status": "not_reproduced",
+  "reason": "One author run is about five hours, beyond the user's 30-minute total three-seed limit; seven tasks are private; exact prompts, profile fingerprints, seeds and raw per-task receipts were not supplied.",
+  "citation_policy": "Community chart counts are transcribed from the public attached chart. They are not treated as locally verified quality scores or as evidence that one model is statistically superior."
+}

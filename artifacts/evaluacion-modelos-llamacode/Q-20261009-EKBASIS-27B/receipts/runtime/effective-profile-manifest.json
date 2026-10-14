@@ -1,0 +1,67 @@
+{
+  "model": "caiovicentino1/Ekbasis-27B-INT4",
+  "model_revision": "8e78979bed4d5d47d11ac169ccc9e769f7e4b8d3",
+  "model_sha256": "3ef9d39220a665c741bd734dfa59637607f62993f7f1a52dca2383af6cd085e1",
+  "model_bytes": 18568390152,
+  "runtime": {
+    "vllm": "0.30.0",
+    "torch": "2.13.0+cu130",
+    "transformers": "5.19.0"
+  },
+  "device": {
+    "gpu": "NVIDIA RTX 3090 24 GiB",
+    "visible_device": "1",
+    "gpu_count": 1
+  },
+  "launch": {
+    "dtype": "bfloat16",
+    "gpu_memory_utilization": 0.95,
+    "max_model_len": 4096,
+    "max_num_seqs": 1,
+    "enable_prefix_caching": true,
+    "mamba_cache_mode": "align",
+    "logprobs_mode": "processed_logprobs",
+    "max_logprobs": 600,
+    "host": "127.0.0.1",
+    "port": 18171,
+    "served_model_name": "decider",
+    "hf_hub_offline": true,
+    "temporary_directory": "/tmp/ekb27b-task"
+  },
+  "decision_api": {
+    "source": "official model repository",
+    "serve_py": "1.3",
+    "calibrated": true,
+    "sym": false,
+    "verify": 0,
+    "temperature": 1.0,
+    "images_enabled_but_not_sent": true,
+    "harness_spec": "not applicable; typed decision API, no agent tools"
+  },
+  "suite_runs": [
+    {
+      "suite": "computer_use_prompt_order_hard_v1",
+      "suite_sha256": "6b8db94a387674f72e72e356b1317f844a7809a42c000986ebc9b24f4f572e35",
+      "runner_sha256": "55a9506815d233d9da95f903726bbf7878e6286b926250316e2a6a734e43bb95",
+      "cases": 24,
+      "repetitions": 3,
+      "seed": null,
+      "seed_semantics": "deterministic identical prompt repetitions, not independent seeds",
+      "readout": "typed text decision; no UI execution",
+      "effective_run_fingerprint_sha256": "d031ac2ad0ae4e1d031df63bb5ff5fbc3a93dc22429c3751b739bd9dca54d801"
+    },
+    {
+      "suite": "internal_git_command_risk_screen",
+      "suite_sha256": "cab95398aba2679e3563f4b9cb7c753d213b920c962f60ef05488b94755a030f",
+      "runner_sha256": "9bb1bd7c04939617f831dc93956db10c03f25afcd8393d2c2779bc8814c2f0ce",
+      "cases": 14,
+      "repetitions": 3,
+      "seed": null,
+      "seed_semantics": "deterministic identical prompt repetitions, not independent seeds",
+      "risk_threshold": 0.2,
+      "effects_preverified_in_disposable_git_repositories": true,
+      "effective_run_fingerprint_sha256": "6cfe9b09be2be339d5a9b02713b887965eb4ca4229ce15536de4ef82b73f5432"
+    }
+  ],
+  "effective_profile_fingerprint_sha256": "c4eb3a5b0c3fb2898aa5c70516b857394b4f4cee0ed15e0d2890417958efc01d"
+}
