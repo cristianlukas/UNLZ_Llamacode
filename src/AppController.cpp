@@ -2601,6 +2601,11 @@ QVariantMap AppController::launchVramFitStatus(const QString &launchProfileId)
 
 void AppController::startServer(const QString &launchProfileId)
 {
+    startServerInternal(launchProfileId, true);
+}
+
+void AppController::startServerInternal(const QString &launchProfileId, bool rememberAsActive)
+{
     if (serverRunning()) {
         appendServerEvent(QStringLiteral("lifecycle"),
                           QStringLiteral("startServer abort: servidor ya en ejecución (pid=%1)")
@@ -2624,7 +2629,8 @@ void AppController::startServer(const QString &launchProfileId)
     if ((isCloud && ctx.backend.managedServer.isEmpty()) || isRemote) {
         m_profiles.markLaunchUsed(launchProfileId);
         m_activeLaunchId = launchProfileId;
-        writeSetting(QStringLiteral("lastLaunchId"), launchProfileId);
+        if (rememberAsActive)
+            writeSetting(QStringLiteral("lastLaunchId"), launchProfileId);
         m_remoteServerActive = true;
         m_serverReady = false;
         m_serverStopping = false;
@@ -2641,7 +2647,8 @@ void AppController::startServer(const QString &launchProfileId)
     if (isCloud && !ctx.backend.managedServer.isEmpty() && !isAstraStrata) {
         m_profiles.markLaunchUsed(launchProfileId);
         m_activeLaunchId = launchProfileId;
-        writeSetting(QStringLiteral("lastLaunchId"), launchProfileId);
+        if (rememberAsActive)
+            writeSetting(QStringLiteral("lastLaunchId"), launchProfileId);
         m_serverReady = false;
         m_serverStopping = false;
         m_remoteServerActive = false;
@@ -7100,6 +7107,11 @@ IAgentBackend *AppController::ensureChatBackend()
 
 void AppController::startAgent(const QString &launchProfileId)
 {
+    startAgentInternal(launchProfileId, true);
+}
+
+void AppController::startAgentInternal(const QString &launchProfileId, bool rememberAsActive)
+{
     if (agentRunning()) return;
     m_agentStopping = false;
 
@@ -7166,7 +7178,7 @@ void AppController::startAgent(const QString &launchProfileId)
         }
 
         if ((cloud || remote) && !serverRunning()) {
-            startServer(launchProfileId);
+            startServerInternal(launchProfileId, rememberAsActive);
         }
 
         // Parse profile temperature if agent temperature is default (< 0)
@@ -10486,7 +10498,7 @@ void AppController::discoverLanServers()
 
 void AppController::useLanServer(const QString &baseUrl, const QString &apiKey,
                                  const QString &profileId, const QString &profileName,
-                                 int context)
+                                 int context, bool rememberAsActive)
 {
     if (baseUrl.isEmpty() || profileId.isEmpty()) {
         emit lanProfileReady({}, QStringLiteral("Servidor o perfil LAN inválido."));
@@ -10548,7 +10560,7 @@ void AppController::useLanServer(const QString &baseUrl, const QString &apiKey,
         {"model", profileId}
     }).toJson(QJsonDocument::Compact));
     connect(reply, &QNetworkReply::finished, this,
-            [this, reply, launchId]() {
+            [this, reply, launchId, rememberAsActive]() {
         const int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
         QString error;
         if (reply->error() == QNetworkReply::NoError && status == 200) {
@@ -10570,11 +10582,12 @@ void AppController::useLanServer(const QString &baseUrl, const QString &apiKey,
             return;
         }
         m_activeLaunchId = launchId;
-        writeSetting(QStringLiteral("lastLaunchId"), launchId);
+        if (rememberAsActive)
+            writeSetting(QStringLiteral("lastLaunchId"), launchId);
         computeEffectiveProfile(launchId);
         emit activeLaunchIdChanged();
         emit launchProfileSelected(launchId);
-        startAgent(launchId);
+        startAgentInternal(launchId, rememberAsActive);
         emit lanProfileReady(launchId, {});
     });
 }

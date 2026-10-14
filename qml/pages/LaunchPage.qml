@@ -48,6 +48,10 @@ Item {
         function onGatewayChanged() {
             root.lanNoPasswordChoice = !App.gatewayLanAuthEnabled
         }
+        function onLanServersChanged() {
+            if (!lanDialog.visible) return
+            profileCombo.currentIndex = lanDialog.remoteProfileIndexForActiveModel()
+        }
         function onServerStateChanged() {
             if (!root.lanStartPending || App.serverState !== "failed") return
             root.lanStartPending = false
@@ -150,7 +154,7 @@ Item {
         id: lanDialog
         modal: true
         width: 560
-        height: 390
+        height: 460
         x: Math.round((root.width - width) / 2)
         y: Math.round((root.height - height) / 2)
         title: "Usar un servidor LAN"
@@ -160,15 +164,32 @@ Item {
         property string message: ""
         property string connectionStatus: ""
         property bool authRequired: false
+        property var pendingProfile: null
         property var selectedServer: (serverCombo.currentIndex >= 0
                                       && serverCombo.currentIndex < App.lanServers.length)
                                      ? App.lanServers[serverCombo.currentIndex] : null
         property var remoteProfiles: selectedServer ? (selectedServer.profiles || []) : []
-        function connectRemoteProfile() {
+        function remoteProfileIndexForActiveModel() {
             const server = lanDialog.selectedServer
+            const activeId = server ? String(server.currentModel || "") : ""
             const profiles = lanDialog.remoteProfiles
-            const index = profileCombo.currentIndex
-            const profile = index >= 0 && index < profiles.length ? profiles[index] : null
+            for (let i = 0; i < profiles.length; ++i)
+                if (profiles[i].id === activeId) return i
+            return profiles.length > 0 ? 0 : -1
+        }
+        function findRemoteProfile(profileId) {
+            if (!profileId) return null
+            const profiles = lanDialog.remoteProfiles
+            for (let i = 0; i < profiles.length; ++i)
+                if (profiles[i].id === profileId) return profiles[i]
+            return null
+        }
+        function activeRemoteProfile() {
+            const server = lanDialog.selectedServer
+            return server ? lanDialog.findRemoteProfile(server.currentModel || "") : null
+        }
+        function startRemoteProfile(profile, rememberAsActive) {
+            const server = lanDialog.selectedServer
             if (!server || !server.url || !profile || !profile.id) {
                 lanDialog.message = "Elegí un servidor LAN y un perfil válido."
                 lanDialog.connectionStatus = ""
@@ -176,16 +197,45 @@ Item {
             }
             lanDialog.busy = true
             lanDialog.message = ""
+            lanDialog.pendingProfile = profile
             lanDialog.connectionStatus = "Conectando con "
                 + (profile.name || profile.id) + " en " + (server.name || server.url) + "…"
             App.useLanServer(server.url, serverApiKeyField.text.trim(),
                              profile.id, profile.name || profile.id,
-                             profile.context || 4096)
+                             profile.context || 4096, rememberAsActive)
+        }
+        function retryPendingConnection() {
+            if (lanDialog.pendingProfile)
+                lanDialog.startRemoteProfile(lanDialog.pendingProfile,
+                                             rememberRemoteAsActiveCheck.checked)
+        }
+        function connectActiveRemoteProfile() {
+            const profile = lanDialog.activeRemoteProfile()
+            if (!profile) {
+                lanDialog.message = "El servidor no anunció un perfil activo disponible. Marcá la casilla para elegir otro perfil remoto."
+                lanDialog.connectionStatus = ""
+                return
+            }
+            lanDialog.startRemoteProfile(profile, rememberRemoteAsActiveCheck.checked)
+        }
+        function connectSelectedRemoteProfile() {
+            if (!rememberRemoteAsActiveCheck.checked) {
+                lanDialog.message = "Marcá la casilla antes de cambiar al perfil remoto elegido."
+                return
+            }
+            const profiles = lanDialog.remoteProfiles
+            const index = profileCombo.currentIndex
+            const profile = index >= 0 && index < profiles.length ? profiles[index] : null
+            lanDialog.startRemoteProfile(profile, true)
         }
         background: Rectangle { color: Theme.surfaceBg; radius: 8; border.color: Theme.borderColor }
 
         onOpened: {
             message = ""
+            connectionStatus = ""
+            authRequired = false
+            pendingProfile = null
+            rememberRemoteAsActiveCheck.checked = !launchCombo.currentValue
             App.discoverLanServers()
         }
 
@@ -208,9 +258,10 @@ Item {
                     model: App.lanServers
                     textRole: "name"
                     onCurrentIndexChanged: {
-                        profileCombo.currentIndex = 0
+                        profileCombo.currentIndex = lanDialog.remoteProfileIndexForActiveModel()
                         lanDialog.authRequired = false
                         lanDialog.message = ""
+                        lanDialog.pendingProfile = null
                         serverApiKeyField.text = ""
                     }
                 }
@@ -227,11 +278,36 @@ Item {
                 LcComboBox {
                     id: profileCombo
                     Layout.fillWidth: true
-                    enabled: !lanDialog.busy
+                    enabled: !lanDialog.busy && rememberRemoteAsActiveCheck.checked
                     model: lanDialog.remoteProfiles
                     textRole: "name"
                     valueRole: "id"
                 }
+            }
+            LcCheckBox {
+                id: rememberRemoteAsActiveCheck
+                Layout.fillWidth: true
+                enabled: !lanDialog.busy
+                text: "Adoptar el perfil remoto como perfil activo en esta PC"
+            }
+            Text {
+                Layout.fillWidth: true
+                text: rememberRemoteAsActiveCheck.checked
+                    ? "Se guardará como selección activa local para el próximo inicio."
+                    : "Se usará durante esta sesión; se conserva tu perfil local guardado."
+                color: Theme.textMuted
+                wrapMode: Text.WordWrap
+                font.pixelSize: 10
+            }
+            Text {
+                Layout.fillWidth: true
+                visible: lanDialog.selectedServer !== null
+                         && lanDialog.activeRemoteProfile() === null
+                         && !rememberRemoteAsActiveCheck.checked
+                text: "El servidor no anunció un perfil activo. Marcá la casilla para elegir uno de sus perfiles."
+                color: Theme.textMuted
+                wrapMode: Text.WordWrap
+                font.pixelSize: 10
             }
             RowLayout {
                 Layout.fillWidth: true
@@ -244,8 +320,9 @@ Item {
                     echoMode: TextInput.Password
                     enabled: !lanDialog.busy
                     onAccepted: {
-                        if (lanDialog.authRequired && serverApiKeyField.text.trim().length > 0)
-                            lanDialog.connectRemoteProfile()
+                        if (lanDialog.authRequired && serverApiKeyField.text.trim().length > 0) {
+                            lanDialog.retryPendingConnection()
+                        }
                     }
                 }
             }
@@ -292,14 +369,26 @@ Item {
                 }
                 LcButton {
                     text: lanDialog.busy ? "Conectando…"
-                          : (lanDialog.authRequired ? "Conectar con API key" : "Usar perfil remoto")
+                          : (lanDialog.authRequired ? "Conectar perfil elegido" : "Usar perfil elegido")
+                    secondary: true
+                    visible: rememberRemoteAsActiveCheck.checked
                     enabled: !lanDialog.busy && lanDialog.selectedServer
                              && lanDialog.selectedServer.url
                              && profileCombo.currentIndex >= 0
                              && profileCombo.currentIndex < lanDialog.remoteProfiles.length
                              && (!lanDialog.authRequired
                                  || serverApiKeyField.text.trim().length > 0)
-                    onClicked: lanDialog.connectRemoteProfile()
+                    onClicked: lanDialog.connectSelectedRemoteProfile()
+                }
+                LcButton {
+                    text: lanDialog.busy ? "Conectando…"
+                          : (lanDialog.authRequired ? "Conectar perfil activo" : "Usar perfil activo en remoto")
+                    enabled: !lanDialog.busy && lanDialog.selectedServer
+                             && lanDialog.selectedServer.url
+                             && lanDialog.activeRemoteProfile() !== null
+                             && (!lanDialog.authRequired
+                                 || serverApiKeyField.text.trim().length > 0)
+                    onClicked: lanDialog.connectActiveRemoteProfile()
                 }
             }
         }

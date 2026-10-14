@@ -1859,6 +1859,8 @@ void SystemProfilesTests::controller_lanActivationRetryUsesSuppliedApiKey()
     AppController app;
     QSignalSpy resultSpy(&app, &AppController::lanProfileReady);
     QVERIFY(resultSpy.isValid());
+    const QString localProfilePreference = QStringLiteral("keep-local-profile-before-lan");
+    app.writeSetting(QStringLiteral("lastLaunchId"), localProfilePreference);
     const QString endpoint = QStringLiteral("http://127.0.0.1:%1")
                                  .arg(mockHost.serverPort());
     const QString profileId = QStringLiteral("remote-profile-auth-retry-test-%1")
@@ -1866,6 +1868,7 @@ void SystemProfilesTests::controller_lanActivationRetryUsesSuppliedApiKey()
     app.useLanServer(endpoint, {}, profileId, QStringLiteral("Mock host"), 4096);
     QTRY_COMPARE_WITH_TIMEOUT(resultSpy.count(), 1, 5000);
     QVERIFY(resultSpy.takeFirst().at(1).toString().contains(QStringLiteral("HTTP 401")));
+    QCOMPARE(app.readSetting(QStringLiteral("lastLaunchId")).toString(), localProfilePreference);
 
     app.useLanServer(endpoint, QStringLiteral("trusted-test-key"), profileId,
                      QStringLiteral("Mock host"), 4096);
@@ -1876,17 +1879,27 @@ void SystemProfilesTests::controller_lanActivationRetryUsesSuppliedApiKey()
     const QString activeLaunchId = app.activeLaunchId();
     QVERIFY(!activeLaunchId.isEmpty());
     QVERIFY(app.serverRunning());
-    app.useLanServer(endpoint, {}, profileId, QStringLiteral("Mock host"), 4096);
+    QCOMPARE(app.readSetting(QStringLiteral("lastLaunchId")).toString(), localProfilePreference);
+    app.useLanServer(endpoint, {}, profileId, QStringLiteral("Mock host"), 4096, false);
     QTRY_COMPARE_WITH_TIMEOUT(resultSpy.count(), 1, 5000);
     const QList<QVariant> reusedSecretResult = resultSpy.takeFirst();
     QVERIFY2(reusedSecretResult.at(1).toString().isEmpty(),
              qPrintable(reusedSecretResult.at(1).toString()));
     QCOMPARE(app.activeLaunchId(), activeLaunchId);
-    QCOMPARE(requests.size(), 3);
+    QCOMPARE(app.readSetting(QStringLiteral("lastLaunchId")).toString(), localProfilePreference);
+    app.useLanServer(endpoint, {}, profileId, QStringLiteral("Mock host"), 4096, true);
+    QTRY_COMPARE_WITH_TIMEOUT(resultSpy.count(), 1, 5000);
+    const QList<QVariant> rememberedResult = resultSpy.takeFirst();
+    QVERIFY2(rememberedResult.at(1).toString().isEmpty(),
+             qPrintable(rememberedResult.at(1).toString()));
+    QCOMPARE(app.readSetting(QStringLiteral("lastLaunchId")).toString(), activeLaunchId);
+    QCOMPARE(requests.size(), 4);
     QVERIFY(!requests.at(0).contains("Authorization: Bearer"));
     QVERIFY(requests.at(1).toLower().contains(
         "authorization: bearer trusted-test-key"));
     QVERIFY(requests.at(2).toLower().contains(
+        "authorization: bearer trusted-test-key"));
+    QVERIFY(requests.at(3).toLower().contains(
         "authorization: bearer trusted-test-key"));
 }
 
