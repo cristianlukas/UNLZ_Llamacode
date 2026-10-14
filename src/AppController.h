@@ -199,6 +199,7 @@ class AppController : public QObject
     Q_PROPERTY(bool    gatewayAutoSwap READ gatewayAutoSwap WRITE setGatewayAutoSwap NOTIFY gatewayChanged)
     Q_PROPERTY(bool    gatewayLanEnabled READ gatewayLanEnabled WRITE setGatewayLanEnabled NOTIFY gatewayChanged)
     Q_PROPERTY(bool    gatewayLanAuthEnabled READ gatewayLanAuthEnabled WRITE setGatewayLanAuthEnabled NOTIFY gatewayChanged)
+    Q_PROPERTY(bool    gatewayRetryPending READ gatewayRetryPending NOTIFY gatewayChanged)
     Q_PROPERTY(QVariantList lanServers READ lanServers NOTIFY lanServersChanged)
     Q_PROPERTY(bool lanDiscoveryActive READ lanDiscoveryActive NOTIFY lanServersChanged)
     // Idle auto-stop del server (libera VRAM tras N minutos sin uso; 0 = off).
@@ -1093,6 +1094,9 @@ public:
     Q_INVOKABLE void startGateway();
     Q_INVOKABLE bool startLanGateway();
     Q_INVOKABLE void stopGateway();
+    // Tests: intervalo del reintento cuando el puerto del gateway está ocupado.
+    void setGatewayRetryIntervalForTest(int ms) { m_gatewayRetryMs = ms; }
+    bool gatewayRetryPending() const;
     Q_INVOKABLE QString gatewayBaseUrl() const;
     Q_INVOKABLE QString gatewayLanBaseUrl() const;
     Q_INVOKABLE QString gatewayLanOpenCodeConfig(const QString &launchProfileId);
@@ -2175,6 +2179,11 @@ private:
     bool        m_gatewayAutoSwap = true;
     bool        m_gatewayLanEnabled = false;
     bool        m_gatewayLanAuthEnabled = true;
+    // Si el puerto está ocupado (otra instancia, p.ej. Prod con Debug abierto)
+    // se reintenta hasta poder escuchar: antes se rendía para siempre y al
+    // cerrarse la otra instancia nadie servía la LAN.
+    QTimer     *m_gatewayRetryTimer = nullptr;
+    int         m_gatewayRetryMs = 5000;
     QVariantList m_lanServers;
     QUdpSocket  *m_lanDiscoverySocket = nullptr;
 

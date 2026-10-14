@@ -984,6 +984,19 @@ Item {
                     onClicked: root.startLanGatewayOnly()
                 }
 
+                // Con el servidor ya cargado no había forma de abrir la LAN desde acá
+                // (los controles de arriba sólo se ven con el servidor detenido).
+                LcButton {
+                    text: "Compartir en LAN"
+                    secondary: true
+                    Layout.fillWidth: true
+                    visible: App.serverRunning && !App.serverStopping
+                             && !(App.gatewayRunning && App.gatewayLanEnabled)
+                             && !App.gatewayRetryPending
+                    enabled: !root.lanStartPending
+                    onClicked: root.startLanGatewayOnly()
+                }
+
                 LcButton {
                     text: "Detener servidor LAN"
                     secondary: true
@@ -1000,11 +1013,17 @@ Item {
 
                 Text {
                     Layout.fillWidth: true
-                    visible: root.lanStatusMessage.length > 0
+                    readonly property bool portBusy: App.gatewayEnabled && !App.gatewayRunning
+                                                     && App.gatewayRetryPending
+                    visible: portBusy || root.lanStatusMessage.length > 0
                              || (App.gatewayRunning && App.gatewayLanEnabled)
-                    text: root.lanStatusMessage.length > 0 ? root.lanStatusMessage
+                    text: portBusy
+                          ? "El puerto " + App.gatewayPort + " está ocupado (¿otra instancia de LlamaCode abierta?). "
+                            + "El servidor LAN se activa solo cuando se libere."
+                          : root.lanStatusMessage.length > 0 ? root.lanStatusMessage
                           : "Servidor LAN activo en " + App.gatewayLanBaseUrl()
-                    color: root.lanStatusError ? Theme.errorText
+                    color: portBusy ? Theme.warnText
+                           : root.lanStatusError ? Theme.errorText
                            : (App.gatewayRunning ? Theme.successText : Theme.textSecondary)
                     font.pixelSize: 11
                     wrapMode: Text.WordWrap

@@ -10259,14 +10259,38 @@ void AppController::startGateway()
     const QHostAddress bindAddress = m_gatewayLanEnabled
         ? QHostAddress::AnyIPv4 : QHostAddress::LocalHost;
     if (m_gateway->start(static_cast<quint16>(m_gatewayPort), bindAddress)) {
+        if (m_gatewayRetryTimer) m_gatewayRetryTimer->stop();
         appendServerEvent(QStringLiteral("lifecycle"),
             m_gatewayLanEnabled
                 ? QStringLiteral("Gateway LAN escuchando en %1").arg(gatewayLanBaseUrl())
                 : QStringLiteral("Gateway escuchando en %1").arg(gatewayBaseUrl()));
     } else {
-        emit serverError(QStringLiteral("No pude abrir el gateway en el puerto %1.").arg(m_gatewayPort));
+        const bool firstFailure = !gatewayRetryPending();
+        if (firstFailure)
+            emit serverError(QStringLiteral("No pude abrir el gateway en el puerto %1 (¿otra instancia lo usa?). "
+                                            "Reintento solo cuando se libere.").arg(m_gatewayPort));
+        if (m_gatewayEnabled) {
+            if (!m_gatewayRetryTimer) {
+                m_gatewayRetryTimer = new QTimer(this);
+                m_gatewayRetryTimer->setSingleShot(false);
+                connect(m_gatewayRetryTimer, &QTimer::timeout, this, [this]() {
+                    if (!m_gatewayEnabled || (m_gateway && m_gateway->listening())) {
+                        m_gatewayRetryTimer->stop();
+                        return;
+                    }
+                    startGateway();
+                });
+            }
+            m_gatewayRetryTimer->setInterval(m_gatewayRetryMs);
+            if (!m_gatewayRetryTimer->isActive()) m_gatewayRetryTimer->start();
+        }
     }
     emit gatewayChanged();
+}
+
+bool AppController::gatewayRetryPending() const
+{
+    return m_gatewayRetryTimer && m_gatewayRetryTimer->isActive();
 }
 
 bool AppController::startLanGateway()
@@ -10283,6 +10307,7 @@ bool AppController::startLanGateway()
 
 void AppController::stopGateway()
 {
+    if (m_gatewayRetryTimer) m_gatewayRetryTimer->stop();
     if (m_gateway) m_gateway->stop();
     emit gatewayChanged();
 }

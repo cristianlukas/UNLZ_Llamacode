@@ -99,6 +99,7 @@ private slots:
     void controller_launchMenuAnnotatesGpuAffinity();
     void controller_launchMenuQuickDefersReadinessWork();
     void controller_startLanGatewayRetriesWhenSettingsAlreadyEnabled();
+    void controller_gatewayRebindsWhenBusyPortIsReleased();
     void controller_lanActivationRetryUsesSuppliedApiKey();
     void controller_astraStrataIsListedAndRequiresLocalSetup();
     void bundle_48gbFamilyIsBenchmarkableAndDualGpu();
@@ -1792,6 +1793,42 @@ void SystemProfilesTests::controller_startLanGatewayRetriesWhenSettingsAlreadyEn
     QVERIFY(!app.gatewayLanEnabled());
     QVERIFY(app.gatewayRunning()); // LAN closes; local Gateway remains available
     app.stopGateway();
+}
+
+// Prod y Debug abiertos a la vez: la segunda instancia no puede escuchar en el
+// puerto del gateway. Antes se rendía para siempre; al cerrarse la primera, la
+// LAN quedaba sin servidor aunque estuviera "activa".
+void SystemProfilesTests::controller_gatewayRebindsWhenBusyPortIsReleased()
+{
+    QTcpServer otherInstance;
+    QVERIFY(otherInstance.listen(QHostAddress::AnyIPv4, 0));
+
+    AppController app;
+    app.setGatewayRetryIntervalForTest(30);
+    QSignalSpy errors(&app, &AppController::serverError);
+    app.setGatewayPort(otherInstance.serverPort());
+    app.setGatewayLanEnabled(true);
+    app.setGatewayEnabled(true);
+    QVERIFY(!app.gatewayRunning());
+    QVERIFY(app.gatewayRetryPending());
+
+    QTest::qWait(150);                 // varios reintentos con el puerto ocupado
+    QVERIFY(!app.gatewayRunning());
+    QCOMPARE(errors.count(), 1);       // un solo aviso, no uno por reintento
+
+    otherInstance.close();             // se cierra la otra instancia
+    QTRY_VERIFY_WITH_TIMEOUT(app.gatewayRunning(), 2000);
+    QVERIFY(!app.gatewayRetryPending());
+
+    // Apagar el gateway con el puerto ocupado cancela el reintento.
+    app.stopGateway();
+    QVERIFY(otherInstance.listen(QHostAddress::AnyIPv4, app.gatewayPort()));
+    app.startGateway();
+    QVERIFY(app.gatewayRetryPending());
+    app.setGatewayEnabled(false);
+    QVERIFY(!app.gatewayRetryPending());
+    QTest::qWait(100);
+    QVERIFY(!app.gatewayRunning());
 }
 
 void SystemProfilesTests::controller_lanActivationRetryUsesSuppliedApiKey()
