@@ -632,7 +632,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.120"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.121"); }
     QString updateChannel() const { return m_updateChannel; }
     void setUpdateChannel(const QString &channel);
     QString buildChannel() const;
