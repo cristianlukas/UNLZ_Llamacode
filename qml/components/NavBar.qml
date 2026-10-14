@@ -75,8 +75,10 @@ Rectangle {
                 Text {
                     width: parent.width
                     horizontalAlignment: Text.AlignHCenter
-                    visible: App.startupBusy || (App.startupStatus || "").length > 0
-                    text: App.startupStatus || ""
+                    visible: text.length > 0
+                    text: NavigationPolicy.statusLine(App.startupBusy, App.startupStatus,
+                                                      App.serverState, App.serverReady,
+                                                      App.serverStopping, App.agentRunning)
                     font.pixelSize: 10
                     color: Theme.textSecondary
                     elide: Text.ElideRight
