@@ -14,10 +14,11 @@ QString withoutTrailingSlash(QString root)
     return root;
 }
 
-// "D:////x" -> "D:/x". Repara archivos que ya acumularon barras.
+// "D:////x" -> "D:/x". Repara archivos que ya acumularon barras. Sólo una
+// letra de unidad suelta: "http://" o "file:///" no son unidades y no se tocan.
 QString collapseDriveSlashes(QString value)
 {
-    static const QRegularExpression re(QStringLiteral("([A-Za-z]:)/{2,}"));
+    static const QRegularExpression re(QStringLiteral("(?<![A-Za-z])([CcDd]:)/{2,}"));
     return value.replace(re, QStringLiteral("\\1/"));
 }
 

@@ -736,6 +736,15 @@ void ProfilesTests::portablePaths_respectsRootBoundaries()
     QCOMPARE(PortablePaths::translate(sibling, false, kCRoot, kDRoot), sibling);
     QCOMPARE(PortablePaths::translate(QStringLiteral("C:/Users/cristianX/a"), true, kCRoot, kDRoot),
              QStringLiteral("C:/Users/cristianX/a"));
+    // URLs: "http://" no es una unidad con barras de más. Al guardar se
+    // traduce TODO string del perfil (baseUrl incluida).
+    for (const QString &url : {QStringLiteral("http://127.0.0.1:8350"),
+                               QStringLiteral("https://api.openai.com/v1"),
+                               QStringLiteral("file:///D:/Models/x.gguf")}) {
+        QCOMPARE(PortablePaths::translate(url, false, kCRoot, kDRoot), url);
+    }
+    QCOMPARE(PortablePaths::translate(QStringLiteral("--url=http://h:1 --m=D:/x"), true, kCRoot, kDRoot),
+             QStringLiteral("--url=http://h:1 --m=") + kDRoot + QStringLiteral("/x"));
     // Sin raíces no se toca nada.
     QCOMPARE(PortablePaths::translate(QStringLiteral("D:/x"), true, QString(), QString()),
              QStringLiteral("D:/x"));
@@ -768,7 +777,8 @@ void ProfilesTests::manager_sharedConfigSaveDoesNotGrowSlashes()
         QJsonObject o = items[i].toObject();
         if (o.value(QStringLiteral("id")).toString() != id) continue;
         o.insert(QStringLiteral("baseArgs"),
-                 QJsonArray{QStringLiteral("--model"), QStringLiteral("D:/Models/x.gguf")});
+                 QJsonArray{QStringLiteral("--model"), QStringLiteral("D:/Models/x.gguf"),
+                            QStringLiteral("--api"), QStringLiteral("http://127.0.0.1:8350")});
         items[i] = o;
     }
     if (doc.isArray()) doc.setArray(items);
@@ -805,6 +815,7 @@ void ProfilesTests::manager_sharedConfigSaveDoesNotGrowSlashes()
     raw = f.readAll();
     QVERIFY2(raw.contains("\"D:/Models/x.gguf\""), raw.constData());
     QVERIFY(!raw.contains("D://"));
+    QVERIFY2(raw.contains("\"http://127.0.0.1:8350\""), "una URL no pierde barras al guardar");
     QVERIFY(!raw.contains("Disco local"));
 #endif
 }
