@@ -4,6 +4,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
 import LlamaCode 1.0
+import "../components/SettingsTabsPolicy.js" as SettingsTabs
 
 Item {
     id: root
@@ -17,6 +18,33 @@ Item {
     property var gpuRows: []
     property var selectedVramGpus: []
     property string settingsSearchText: ""
+    // Pestaña activa (se recuerda entre aperturas). Con búsqueda se ignora y se
+    // muestran las coincidencias de todas las pestañas.
+    property string currentTab: {
+        const saved = String(App.readSetting("settings/tab", "general"))
+        return SettingsTabs.isValidTab(saved) ? saved : "general"
+    }
+    onCurrentTabChanged: {
+        App.writeSetting("settings/tab", currentTab)
+        scroll.contentItem.contentY = 0
+    }
+
+    function sectionVisible(section, sectionId) {
+        return SettingsTabs.isSectionVisible(sectionId, currentTab, settingsSearchText,
+                                             matchesSettingsSearch(section))
+    }
+    function sectionById(sectionId) {
+        const map = {
+            appearanceSection: appearanceSection, customSection: customSection,
+            languageSection: languageSection, gpuInferenceSection: gpuInferenceSection,
+            astraSection: astraSection, systemSection: systemSection,
+            performanceSection: performanceSection, gatewaySection: gatewaySection,
+            chatSection: chatSection, gpuSection: gpuSection, intgSection: intgSection,
+            agentProfilesSection: agentProfilesSection, teacherSection: teacherSection,
+            auxiliarySection: auxiliarySection, mailSection: mailSection, dataSection: dataSection
+        }
+        return map[sectionId]
+    }
 
     function normalizedSearchText(value) {
         return String(value ?? "").toLocaleLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -38,12 +66,7 @@ Item {
     function matchesSettingsSearch(item) {
         var query = normalizedSearchText(settingsSearchText).trim()
         if (!query) return true
-        var haystack = normalizedSearchText(collectSettingsText(item))
-        var terms = query.split(/\s+/)
-        for (var i = 0; i < terms.length; ++i) {
-            if (terms[i].length > 0 && haystack.indexOf(terms[i]) < 0) return false
-        }
-        return true
+        return SettingsTabs.textMatches(normalizedSearchText(collectSettingsText(item)), query)
     }
 
     function matchingSectionCount() {
@@ -120,7 +143,10 @@ Item {
                 Layout.fillWidth: true
                 placeholderText: "Buscar configuraciones… (p. ej., GPU, privacidad, correo)"
                 horizontalAlignment: TextInput.AlignLeft
-                onTextChanged: root.settingsSearchText = text
+                onTextChanged: {
+                    root.settingsSearchText = text
+                    scroll.contentItem.contentY = 0   // resultados desde arriba
+                }
             }
 
             LcButton {
@@ -128,6 +154,33 @@ Item {
                 secondary: true
                 visible: settingsSearch.text.length > 0
                 onClicked: settingsSearch.clear()
+            }
+        }
+
+        // Pestañas: agrupan las 16 secciones (antes un solo scroll larguísimo).
+        Flow {
+            Layout.fillWidth: true
+            Layout.leftMargin: 24
+            Layout.rightMargin: 24
+            Layout.bottomMargin: 6
+            spacing: 6
+            Repeater {
+                model: SettingsTabs.tabs
+                delegate: LcButton {
+                    required property var modelData
+                    readonly property bool searching: root.settingsSearchText.trim().length > 0
+                    readonly property int hits: searching
+                        ? SettingsTabs.matchCountForTab(modelData.key, function(id) {
+                              return root.matchesSettingsSearch(root.sectionById(id)) })
+                        : 0
+                    text: modelData.title + (searching ? "  " + hits : "")
+                    secondary: searching || root.currentTab !== modelData.key
+                    opacity: searching && hits === 0 ? 0.45 : 1.0
+                    onClicked: {
+                        root.currentTab = modelData.key
+                        settingsSearch.clear()
+                    }
+                }
             }
         }
 
@@ -160,7 +213,7 @@ Item {
                     // ── Appearance ───────────────────────────────────────────
                     ColumnLayout {
                         id: appearanceSection
-                        visible: root.matchesSettingsSearch(appearanceSection)
+                        visible: root.sectionVisible(appearanceSection, "appearanceSection")
                         Layout.fillWidth: true
                         spacing: 10
 
@@ -268,7 +321,7 @@ Item {
                     // ── Temas custom ─────────────────────────────────────────
                     ColumnLayout {
                         id: customSection
-                        visible: root.matchesSettingsSearch(customSection)
+                        visible: root.sectionVisible(customSection, "customSection")
                         Layout.fillWidth: true
                         spacing: 10
 
@@ -404,7 +457,7 @@ Item {
                     // ── Language ─────────────────────────────────────────────
                     ColumnLayout {
                         id: languageSection
-                        visible: root.matchesSettingsSearch(languageSection)
+                        visible: root.sectionVisible(languageSection, "languageSection")
                         Layout.fillWidth: true
                         spacing: 10
 
@@ -484,128 +537,10 @@ Item {
                         }
                     }
 
-                    // ── ASTRA / Strata ──────────────────────────────────────
-                    ColumnLayout {
-                        id: astraSection
-                        visible: root.matchesSettingsSearch(astraSection)
-                        Layout.fillWidth: true
-                        spacing: 10
-
-                        Text {
-                            text: "ASTRA · MOTOR STRATA"
-                            color: Theme.accent
-                            font.pixelSize: 11
-                            font.bold: true
-                        }
-
-                        Rectangle {
-                            Layout.fillWidth: true
-                            color: Theme.surfaceBg
-                            border.color: Theme.borderColor
-                            radius: 10
-                            implicitHeight: astraInner.implicitHeight + 32
-
-                            ColumnLayout {
-                                id: astraInner
-                                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 16 }
-                                spacing: 10
-
-                                Text {
-                                    Layout.fillWidth: true
-                                    text: "ASTRA · Strata IQ3_S · Qwen3.8 Flash Next"
-                                    color: Theme.textPrimary
-                                    font.pixelSize: 14
-                                    font.bold: true
-                                }
-                                Text {
-                                    Layout.fillWidth: true
-                                    text: "LlamaCode inicia, supervisa y detiene Strata. La carpeta del motor es común; cada perfil tiene su propio JSON para evitar mezclar IQ3_S calibrado con Flash-Next Q4."
-                                    color: Theme.textMuted
-                                    font.pixelSize: 11
-                                    wrapMode: Text.WordWrap
-                                }
-
-                                Text { text: "Carpeta de Strata"; color: Theme.textSecondary; font.pixelSize: 12 }
-                                LcTextField {
-                                    id: astraStrataRoot
-                                    Layout.fillWidth: true
-                                    enabled: !App.serverRunning
-                                    placeholderText: "/ruta/a/Strata-0.1.35"
-                                    Component.onCompleted: text = App.readSetting("astra/strataRoot", "")
-                                    onEditingFinished: App.writeSetting("astra/strataRoot", text.trim())
-                                }
-
-                                Text { text: "JSON · Perfil ASTRA IQ3_S estándar"; color: Theme.textSecondary; font.pixelSize: 12 }
-                                LcTextField {
-                                    id: astraConfigFile
-                                    Layout.fillWidth: true
-                                    enabled: !App.serverRunning
-                                    placeholderText: "<carpeta de Strata>/strata-iq3_s.json"
-                                    Component.onCompleted: text = App.readSetting("astra/configFile", "")
-                                    onEditingFinished: App.writeSetting("astra/configFile", text.trim())
-                                }
-                                Text { text: "JSON exacto · A/B ASTRA IQ3_S calibrado"; color: Theme.textSecondary; font.pixelSize: 12 }
-                                LcTextField {
-                                    id: astraCalibratedConfigFile
-                                    Layout.fillWidth: true
-                                    enabled: !App.serverRunning
-                                    placeholderText: "<ruta local>/astra-iq3s-strata.json"
-                                    Component.onCompleted: text = App.readSetting(
-                                        "astra/configFile/sys-astra-iq3s-calibrated-hardmode", "")
-                                    onEditingFinished: App.writeSetting(
-                                        "astra/configFile/sys-astra-iq3s-calibrated-hardmode", text.trim())
-                                }
-                                Text { text: "JSON exacto · Flash-Next Q4"; color: Theme.textSecondary; font.pixelSize: 12 }
-                                LcTextField {
-                                    id: flashNextQ4ConfigFile
-                                    Layout.fillWidth: true
-                                    enabled: !App.serverRunning
-                                    placeholderText: "<ruta local>/q4-udq4kxl-main.json"
-                                    Component.onCompleted: text = App.readSetting(
-                                        "astra/configFile/sys-flashnext-q4-strata-hardmode", "")
-                                    onEditingFinished: App.writeSetting(
-                                        "astra/configFile/sys-flashnext-q4-strata-hardmode", text.trim())
-                                }
-                                Text {
-                                    Layout.fillWidth: true
-                                    text: "Los dos perfiles A/B verifican el model_name del JSON antes de arrancar y no heredan la ruta del perfil estándar ni la del otro modelo."
-                                    color: Theme.textMuted
-                                    font.pixelSize: 10
-                                    wrapMode: Text.WordWrap
-                                }
-                                Text { text: "Puerto local"; color: Theme.textSecondary; font.pixelSize: 12 }
-                                LcTextField {
-                                    id: astraPort
-                                    Layout.fillWidth: true
-                                    enabled: !App.serverRunning
-                                    inputMethodHints: Qt.ImhDigitsOnly
-                                    placeholderText: "8350"
-                                    Component.onCompleted: text = String(App.readSetting("astra/port", 8350))
-                                    onEditingFinished: {
-                                        const value = parseInt(text)
-                                        if (value >= 1024 && value <= 65535) {
-                                            App.writeSetting("astra/port", value)
-                                            text = String(value)
-                                        } else {
-                                            text = String(App.readSetting("astra/port", 8350))
-                                        }
-                                    }
-                                }
-                                Text {
-                                    Layout.fillWidth: true
-                                    text: "Strata escucha sólo en 127.0.0.1. Para compartir el perfil, elegilo en Lanzar y usá Iniciar servidor LAN; LlamaCode lo publica por el Gateway autenticado. ASTRA_STRATA_ROOT configura el motor; ASTRA_STRATA_CONFIG queda como fallback para IQ3_S."
-                                    color: Theme.textMuted
-                                    font.pixelSize: 10
-                                    wrapMode: Text.WordWrap
-                                }
-                            }
-                        }
-                    }
-
-                    // ── Sistema / bandeja ────────────────────────────────────
+                    // ── GPU · inferencia ────────────────────────────────────
                     ColumnLayout {
                         id: gpuInferenceSection
-                        visible: root.matchesSettingsSearch(gpuInferenceSection)
+                        visible: root.sectionVisible(gpuInferenceSection, "gpuInferenceSection")
                         Layout.fillWidth: true
                         spacing: 10
 
@@ -670,7 +605,7 @@ Item {
                     // ── Sistema / bandeja ────────────────────────────────────
                     ColumnLayout {
                         id: systemSection
-                        visible: root.matchesSettingsSearch(systemSection)
+                        visible: root.sectionVisible(systemSection, "systemSection")
                         Layout.fillWidth: true
                         spacing: 10
 
@@ -770,10 +705,13 @@ Item {
                                     }
                                 }
 
-                                Rectangle { Layout.fillWidth: true; height: 1; color: Theme.borderColor }
+                                // Inicio automático: sólo implementado en Windows (registro Run).
+                                // En Linux el switch fallaba siempre y volvía a apagado.
+                                Rectangle { Layout.fillWidth: true; height: 1; color: Theme.borderColor; visible: Qt.platform.os === "windows" }
 
                                 RowLayout {
                                     Layout.fillWidth: true
+                                    visible: Qt.platform.os === "windows"
                                     spacing: 12
 
                                     ColumnLayout {
@@ -872,7 +810,7 @@ Item {
                     // ── Rendimiento / diagnóstico ─────────────────────────
                     ColumnLayout {
                         id: performanceSection
-                        visible: root.matchesSettingsSearch(performanceSection)
+                        visible: root.sectionVisible(performanceSection, "performanceSection")
                         Layout.fillWidth: true
                         spacing: 10
 
@@ -1018,7 +956,7 @@ Item {
                     // ── Gateway / API (OpenAI + Anthropic + auto-load) ───────
                     ColumnLayout {
                         id: gatewaySection
-                        visible: root.matchesSettingsSearch(gatewaySection)
+                        visible: root.sectionVisible(gatewaySection, "gatewaySection")
                         Layout.fillWidth: true
                         spacing: 10
 
@@ -1374,7 +1312,7 @@ Item {
                     // ── Chat / Mermaid ───────────────────────────────────────
                     ColumnLayout {
                         id: chatSection
-                        visible: root.matchesSettingsSearch(chatSection)
+                        visible: root.sectionVisible(chatSection, "chatSection")
                         Layout.fillWidth: true
                         spacing: 10
 
@@ -1524,7 +1462,7 @@ Item {
                     // ── GPU power limit (nvidia-smi) ─────────────────────────
                     ColumnLayout {
                         id: gpuSection
-                        visible: root.matchesSettingsSearch(gpuSection)
+                        visible: root.sectionVisible(gpuSection, "gpuSection")
                         Layout.fillWidth: true
                         spacing: 10
 
@@ -1539,7 +1477,7 @@ Item {
                         }
 
                         Text {
-                            text: "GPU · POWER LIMIT"
+                            text: "GPU · LÍMITE DE POTENCIA"
                             color: Theme.accent
                             font.pixelSize: 11
                             font.bold: true
@@ -1647,10 +1585,128 @@ Item {
                         }
                     }
 
+                    // ── ASTRA / Strata ──────────────────────────────────────
+                    ColumnLayout {
+                        id: astraSection
+                        visible: root.sectionVisible(astraSection, "astraSection")
+                        Layout.fillWidth: true
+                        spacing: 10
+
+                        Text {
+                            text: "ASTRA · MOTOR STRATA"
+                            color: Theme.accent
+                            font.pixelSize: 11
+                            font.bold: true
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            color: Theme.surfaceBg
+                            border.color: Theme.borderColor
+                            radius: 10
+                            implicitHeight: astraInner.implicitHeight + 32
+
+                            ColumnLayout {
+                                id: astraInner
+                                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 16 }
+                                spacing: 10
+
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: "ASTRA · Strata IQ3_S · Qwen3.8 Flash Next"
+                                    color: Theme.textPrimary
+                                    font.pixelSize: 14
+                                    font.bold: true
+                                }
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: "LlamaCode inicia, supervisa y detiene Strata. La carpeta del motor es común; cada perfil tiene su propio JSON para evitar mezclar IQ3_S calibrado con Flash-Next Q4."
+                                    color: Theme.textMuted
+                                    font.pixelSize: 11
+                                    wrapMode: Text.WordWrap
+                                }
+
+                                Text { text: "Carpeta de Strata"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                LcTextField {
+                                    id: astraStrataRoot
+                                    Layout.fillWidth: true
+                                    enabled: !App.serverRunning
+                                    placeholderText: "/ruta/a/Strata-0.1.35"
+                                    Component.onCompleted: text = App.readSetting("astra/strataRoot", "")
+                                    onEditingFinished: App.writeSetting("astra/strataRoot", text.trim())
+                                }
+
+                                Text { text: "JSON · Perfil ASTRA IQ3_S estándar"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                LcTextField {
+                                    id: astraConfigFile
+                                    Layout.fillWidth: true
+                                    enabled: !App.serverRunning
+                                    placeholderText: "<carpeta de Strata>/strata-iq3_s.json"
+                                    Component.onCompleted: text = App.readSetting("astra/configFile", "")
+                                    onEditingFinished: App.writeSetting("astra/configFile", text.trim())
+                                }
+                                Text { text: "JSON exacto · A/B ASTRA IQ3_S calibrado"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                LcTextField {
+                                    id: astraCalibratedConfigFile
+                                    Layout.fillWidth: true
+                                    enabled: !App.serverRunning
+                                    placeholderText: "<ruta local>/astra-iq3s-strata.json"
+                                    Component.onCompleted: text = App.readSetting(
+                                        "astra/configFile/sys-astra-iq3s-calibrated-hardmode", "")
+                                    onEditingFinished: App.writeSetting(
+                                        "astra/configFile/sys-astra-iq3s-calibrated-hardmode", text.trim())
+                                }
+                                Text { text: "JSON exacto · Flash-Next Q4"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                LcTextField {
+                                    id: flashNextQ4ConfigFile
+                                    Layout.fillWidth: true
+                                    enabled: !App.serverRunning
+                                    placeholderText: "<ruta local>/q4-udq4kxl-main.json"
+                                    Component.onCompleted: text = App.readSetting(
+                                        "astra/configFile/sys-flashnext-q4-strata-hardmode", "")
+                                    onEditingFinished: App.writeSetting(
+                                        "astra/configFile/sys-flashnext-q4-strata-hardmode", text.trim())
+                                }
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: "Los dos perfiles A/B verifican el model_name del JSON antes de arrancar y no heredan la ruta del perfil estándar ni la del otro modelo."
+                                    color: Theme.textMuted
+                                    font.pixelSize: 10
+                                    wrapMode: Text.WordWrap
+                                }
+                                Text { text: "Puerto local"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                LcTextField {
+                                    id: astraPort
+                                    Layout.fillWidth: true
+                                    enabled: !App.serverRunning
+                                    inputMethodHints: Qt.ImhDigitsOnly
+                                    placeholderText: "8350"
+                                    Component.onCompleted: text = String(App.readSetting("astra/port", 8350))
+                                    onEditingFinished: {
+                                        const value = parseInt(text)
+                                        if (value >= 1024 && value <= 65535) {
+                                            App.writeSetting("astra/port", value)
+                                            text = String(value)
+                                        } else {
+                                            text = String(App.readSetting("astra/port", 8350))
+                                        }
+                                    }
+                                }
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: "Strata escucha sólo en 127.0.0.1. Para compartir el perfil, elegilo en Lanzar y usá Iniciar servidor LAN; LlamaCode lo publica por el Gateway autenticado. ASTRA_STRATA_ROOT configura el motor; ASTRA_STRATA_CONFIG queda como fallback para IQ3_S."
+                                    color: Theme.textMuted
+                                    font.pixelSize: 10
+                                    wrapMode: Text.WordWrap
+                                }
+                            }
+                        }
+                    }
+
                     // ── Integrations ─────────────────────────────────────────
                     ColumnLayout {
                         id: intgSection
-                        visible: root.matchesSettingsSearch(intgSection)
+                        visible: root.sectionVisible(intgSection, "intgSection")
                         Layout.fillWidth: true
                         spacing: 10
 
@@ -1670,7 +1726,7 @@ Item {
                         }
 
                         Text {
-                            text: "INTEGRATIONS"
+                            text: "INTEGRACIONES"
                             color: Theme.accent
                             font.pixelSize: 11
                             font.bold: true
@@ -1880,7 +1936,7 @@ Item {
                     // ── Perfiles de agente (capacidades + directivas) ────────
                     ColumnLayout {
                         id: agentProfilesSection
-                        visible: root.matchesSettingsSearch(agentProfilesSection)
+                        visible: root.sectionVisible(agentProfilesSection, "agentProfilesSection")
                         Layout.fillWidth: true
                         spacing: 10
 
@@ -2583,7 +2639,7 @@ Item {
                     // ── Modelo maestro (ask_teacher) ─────────────────────────
                     ColumnLayout {
                         id: teacherSection
-                        visible: root.matchesSettingsSearch(teacherSection)
+                        visible: root.sectionVisible(teacherSection, "teacherSection")
                         Layout.fillWidth: true
                         spacing: 10
 
@@ -2645,7 +2701,7 @@ Item {
                     // ── Sidecar auxiliar (embeddings/rerank) ──────────────
                     ColumnLayout {
                         id: auxiliarySection
-                        visible: root.matchesSettingsSearch(auxiliarySection)
+                        visible: root.sectionVisible(auxiliarySection, "auxiliarySection")
                         Layout.fillWidth: true
                         spacing: 10
 
@@ -2723,7 +2779,7 @@ Item {
                     // ── Correo (email_send / email_list / email_read) ───────
                     ColumnLayout {
                         id: mailSection
-                        visible: root.matchesSettingsSearch(mailSection)
+                        visible: root.sectionVisible(mailSection, "mailSection")
                         Layout.fillWidth: true
                         spacing: 10
 
@@ -2926,14 +2982,14 @@ Item {
                     // ── Data maintenance ───────────────────────────────────
                     ColumnLayout {
                         id: dataSection
-                        visible: root.matchesSettingsSearch(dataSection)
+                        visible: root.sectionVisible(dataSection, "dataSection")
                         Layout.fillWidth: true
                         spacing: 10
 
                         property var wipeItems: App.wipeCategories()
 
                         Text {
-                            text: "DATA"
+                            text: "DATOS"
                             color: Theme.accent
                             font.pixelSize: 11
                             font.bold: true
@@ -2952,7 +3008,7 @@ Item {
                                 spacing: 14
 
                                 Text {
-                                    text: "Data Backup"
+                                    text: "Copia de seguridad"
                                     color: Theme.textPrimary
                                     font.pixelSize: 14
                                     font.bold: true
@@ -2970,11 +3026,11 @@ Item {
                                     Layout.fillWidth: true
                                     spacing: 8
                                     LcButton {
-                                        text: "Export Data"
+                                        text: "Exportar datos"
                                         onClicked: App.exportUserData()
                                     }
                                     LcButton {
-                                        text: "Import Data"
+                                        text: "Importar datos"
                                         secondary: true
                                         onClicked: App.importUserData()
                                     }
@@ -2984,7 +3040,7 @@ Item {
                                 Rectangle { Layout.fillWidth: true; height: 1; color: Theme.borderColor }
 
                                 Text {
-                                    text: "Danger Zone"
+                                    text: "Zona de peligro"
                                     color: Theme.btnDangerBg
                                     font.pixelSize: 14
                                     font.bold: true
@@ -3031,7 +3087,7 @@ Item {
                                             }
 
                                             LcButton {
-                                                text: "Wipe"
+                                                text: "Borrar"
                                                 danger: true
                                                 implicitHeight: 30
                                                 onClicked: {
@@ -3198,7 +3254,7 @@ Item {
 
     LcDialog {
         id: wipeDialog
-        title: "Confirm wipe"
+        title: "Confirmar borrado"
         property string kind: ""
         property string label: ""
         property string description: ""
@@ -3255,7 +3311,7 @@ Item {
                     onClicked: wipeDialog.close()
                 }
                 LcButton {
-                    text: "Wipe"
+                    text: "Borrar"
                     danger: true
                     enabled: wipeConfirm.text.trim() === "WIPE"
                     onClicked: {

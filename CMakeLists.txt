@@ -454,6 +454,7 @@ qt_add_qml_module(LlamaCode
         qml/components/NavBar.qml
         qml/components/NavigationPolicy.js
         qml/components/SetupWizardPolicy.js
+        qml/components/SettingsTabsPolicy.js
         qml/components/BenchmarkScore.js
         qml/components/PageHeader.qml
         qml/components/CommandPreview.qml
@@ -721,6 +722,8 @@ if (BUILD_TESTS)
         tests/qml/LcTextField.qml
         tests/qml/tst_color_picker.qml
         tests/qml/tst_lc_controls.qml
+        tests/qml/tst_settings_tabs.qml
+        qml/components/SettingsTabsPolicy.js
         tests/qml/tst_navigation_policy.qml
         tests/qml/tst_setup_wizard_policy.qml
         tests/qml/tst_lazy_page_loader.qml
@@ -791,6 +794,17 @@ if (BUILD_TESTS)
         list(APPEND _lc_qml_harness_copies "${LC_QML_HARNESS_MODULE_DIR}/${_name}")
     endforeach()
 
+    # tst_settings_tabs lee la página real como TEXTO (no la instancia): exige
+    # que cada sección esté en una pestaña de SettingsTabsPolicy.js.
+    add_custom_command(
+        OUTPUT "${LC_QML_HARNESS_DIR}/SettingsPage.qml.txt"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${CMAKE_CURRENT_SOURCE_DIR}/qml/pages/SettingsPage.qml"
+                "${LC_QML_HARNESS_DIR}/SettingsPage.qml.txt"
+        DEPENDS qml/pages/SettingsPage.qml
+        COMMENT "Staging SettingsPage.qml text for tst_settings_tabs")
+    list(APPEND _lc_qml_harness_copies "${LC_QML_HARNESS_DIR}/SettingsPage.qml.txt")
+
     add_custom_target(qml_harness ALL DEPENDS ${_lc_qml_harness_copies})
 
     set(LC_QML_RANKING_PAGE "${LC_QML_HARNESS_DIR}/pages/RankingPage.qml")
@@ -821,6 +835,13 @@ if (BUILD_TESTS)
     set_tests_properties(qml_lc_controls PROPERTIES
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1"
         FAIL_REGULAR_EXPRESSION "FAIL |ReferenceError|TypeError|Unable to assign|is not a type")
+
+    add_test(NAME qml_settings_tabs
+             COMMAND "${_lc_qt_bin}/qml" -I "${LC_QML_HARNESS_DIR}"
+                     "${LC_QML_HARNESS_DIR}/tst_settings_tabs.qml")
+    set_tests_properties(qml_settings_tabs PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1;QML_XHR_ALLOW_FILE_READ=1"
+        FAIL_REGULAR_EXPRESSION "FAIL |ReferenceError|TypeError|Unable to assign")
 
     add_test(NAME qml_navigation_policy
              COMMAND "${_lc_qt_bin}/qml" -I "${LC_QML_HARNESS_DIR}"
