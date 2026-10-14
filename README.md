@@ -23,7 +23,7 @@
 > integrado** con historial persistente, **harness de agente de código** sobre
 > repositorios locales, **lanzamiento del servidor** de modelos `llama.cpp`
 > (multi-binario / multi-GGUF roots / perfiles compuestos), **backends cloud con
-> secretos cifrados**, **modo Charla** (voz-a-voz STT/TTS), **memoria/RAG y
+> gestión local de secretos**, **modo Charla** (voz-a-voz STT/TTS), **memoria/RAG y
 > verificación de afirmaciones**, **maestro/supervisor (escalado)**, **cuentas de
 > correo**, **automatización de browser (Playwright)**, **adjuntos/documentos +
 > visión**, **Tasks** (macros semánticas + scheduler cron) y **watchdog + medidor
@@ -42,7 +42,7 @@
 - [Diseño Multi-llama.cpp](#diseño-multi-llamacpp) · [Multi-GGUF roots](#diseño-multi-gguf-roots) · [Multi-perfiles](#diseño-multi-perfiles-compuestos)
 - [Cookbook de modelos (hardware-fit)](#cookbook-de-modelos-recomendaciones-hardware-fit)
 - [Chat integrado](#chat-integrado) · [Harness de Agente](#harness-de-agente-opencode) · [Corridas administradas](#corridas-administradas-de-claude-code-y-codex) · [Lanzamiento del servidor](#lanzamiento-del-servidor-launchpage)
-- [Backends cloud + secretos](#backends-cloud--secretos-cifrados) · [Modo Charla (voz)](#modo-charla-voz-a-voz) · [Memoria/RAG](#memoria-rag-y-verificación) · [Asistente continuo](#asistente-continuo) · [Maestro/supervisor](#maestro--supervisor-escalado)
+- [Backends cloud + SecretStore](#backends-cloud--secretstore) · [Modo Charla (voz)](#modo-charla-voz-a-voz) · [Memoria/RAG](#memoria-rag-y-verificación) · [Asistente continuo](#asistente-continuo) · [Maestro/supervisor](#maestro--supervisor-escalado)
 - [Correo](#cuentas-de-correo) · [Browser (Playwright)](#automatización-de-browser-playwright) · [Data Lab](#data-lab) · [Adjuntos/visión](#adjuntos-documentos--visión) · [Watchdog + VRAM](#robustez-del-server-watchdog--vram) · [Otras capacidades](#otras-capacidades)
 - [Process Lifecycle](#process-lifecycle) · [Stack técnico](#stack-técnico) · [Build](#build) · [Estructura del repo](#estructura-del-repo)
 - [Fases](#fases) · [Tasks (macros + scheduler)](#tasks-macros-configurables--scheduler-cron) · [Workflows de ingeniería](#workflows-de-ingeniería) · [Benchmarking](#benchmarking) · [Rendimiento multi-GPU](#rendimiento-multi-gpu) · [Auto-tuning](#auto-tuning-de-parámetros) · [Seguridad operativa](#seguridad-operativa)
@@ -72,16 +72,18 @@ Instala automáticamente:
   Windows instala MSVC v143 mediante Visual Studio Build Tools 2022 y Linux
   instala Ninja + `g++`/`build-essential`.
 - **Qt 6.8.3** vía `aqtinstall` en ambas plataformas (Windows `msvc2022_64`,
-  Linux `gcc_64`), con los add-ons Multimedia y Svg y verificación de los
-  componentes Qt que exige CMake. En Linux se usa aqt — **no** los paquetes Qt
+  Linux `gcc_64`), con el add-on Multimedia; Svg viene en la instalación base
+  de Qt y también se verifica junto con los componentes que exige CMake. En Linux
+  se usa aqt — **no** los paquetes Qt
   de la distro — porque el código requiere Qt ≥ 6.5
   (`QQmlApplicationEngine::loadFromModule`) y varias LTS traen Qt viejo
   (Ubuntu 24.04 = 6.4.2).
 - **Dependencias adicionales Linux**: librerías de sistema de Qt (GL, xcb, glib,
-  fontconfig…), `rsync` y herramientas de escritorio/automatización: X11,
+  fontconfig, PulseAudio…), `rsync` y herramientas de escritorio/automatización: X11,
   `xdotool`, `wmctrl`, AT-SPI2, Tesseract con datos de español y `bubblewrap`.
-  `rsync` permite compilar desde volúmenes NTFS; las acciones foreground de
-  escritorio requieren una sesión X11 desbloqueada.
+  `rsync` permite compilar desde volúmenes NTFS y desde montajes de Windows en
+  WSL (`9p`, `drvfs` o `v9fs`); las acciones foreground de escritorio requieren una sesión
+  X11 desbloqueada.
 
 Clona en `%USERPROFILE%\LlamaCode` / `~/LlamaCode` y al terminar lanza la app
 (salvo `LC_NORUN=1`). En Windows también crea un acceso directo por usuario en
@@ -120,7 +122,9 @@ En **Configuración → Sistema → Canal de actualizaciones**, cada instalació
 puede elegir **Prod · estable** o **Debug · pruebas**. Prod consulta el último
 release estable; Debug busca el tag `vX.Y.Z-debug` más reciente aunque GitHub
 lo marque como prerelease. La elección queda guardada por usuario y el diálogo
-indica el canal detectado. Al pulsar **Actualizar ahora**, Windows y Linux
+indica el canal detectado. Una instalación nueva sigue el canal de su build:
+el instalador usa `Release`/Prod por defecto y una build `Debug` usa Debug.
+Al pulsar **Actualizar ahora**, Windows y Linux
 obtienen el tag exacto anunciado y compilan la configuración correspondiente
 (`Release` para Prod y `Debug` para Debug); no se actualiza silenciosamente
 desde `main`. Los releases publican el código fuente y la actualización lo
@@ -228,7 +232,7 @@ iniciadas por el usuario siguen siendo una función separada.
 | Dato / proceso | Ubicación o alcance | Sale de la máquina por defecto |
 |---|---|---|
 | Modelos GGUF | Carpetas registradas en Model Roots | No |
-| Perfiles y presets | `AppLocalData/LlamaCode/profiles/` | No |
+| Perfiles y presets | Windows: `C:\Users\cristian\Documents\LlamaCode\profiles\`; Linux: `AppLocalData/LlamaCode/profiles/`. Override: `LLAMACODE_PROFILES_DIR`. | No |
 | Historial de chat | `AppLocalData/LlamaCode/chat/` | No |
 | Tasks programadas | `AppLocalData/LlamaCode/tasks/` | No |
 | Corridas administradas de Claude/Codex | `AppLocalData/LlamaCode/managed-agent-runs/` | El prompt sale sólo al CLI/runtime elegido |
@@ -236,7 +240,7 @@ iniciadas por el usuario siguen siendo una función separada.
 | Métricas de latencia de voz | `AppLocalData/LlamaCode/voice/latency.jsonl` | No |
 | Estado de procesos | `AppLocalData/LlamaCode/services.json` | No |
 | Corridas del agente y entregables | `AppLocalData/LlamaCode/<harness>/agent_runs/` y `agent_deliverables/` | No |
-| Secretos | SecretStore del sistema o referencias a env vars | No se guardan en JSON del repo |
+| Secretos | Keyring, DPAPI en Windows o archivo local restringido al usuario si no hay keyring; también admite env vars | No se guardan en JSON del repo |
 
 ### Cuándo hay tráfico externo
 
@@ -476,7 +480,8 @@ Q4 tampoco es viable con 128 GB por tamaño.
 | `BinaryRegistry` + `CapabilityDetector` | ✅ |
 | `ModelRootRegistry` + `GGUFScanner` | ✅ |
 | `ModelCatalog` (SQLite) | ✅ |
-| `ProfileManager` (6 entidades) | ✅ |
+| `ProfileManager` (8 entidades) | ✅ |
+| Salud de perfiles (errores, avisos e instalaciones de sistema pendientes) | ✅ |
 | `EffectiveProfileBuilder` | ✅ |
 | Importador de perfiles desde args CLI | ✅ |
 | Start/Stop server (QProcess + Job Object, async stop) | ✅ |
@@ -489,10 +494,15 @@ Q4 tampoco es viable con 128 GB por tamaño.
 | `LlamaProcessManager` dedicado | ⏳ P1 refactor |
 | Endpoint health check automático | ✅ (polling /health post-start) |
 | Pre-check colisión de puerto al iniciar server | ✅ |
-| Popup de primer inicio (binario + modelo + perfil automático) | ✅ |
-| Detector de nueva versión + botón verde de descarga en Windows (instala y reinicia) | ✅ |
+| Asistente de primer inicio con recomendación única según hardware y estado de preparación correcto | ✅ |
+| Actualizaciones Prod/Debug en Windows y Linux desde el tag exacto, compiladas localmente | ✅ |
 | Agente nativo (LlamaAgentBackend, ReAct + tools + MCP) | ✅ P5 |
 | Agentes persistentes versionados + feedback supervisado + triggers | ✅ |
+
+El asistente de primer inicio muestra una recomendación rápida según el hardware;
+la selección manual de modelo aparece sólo si no hay inicio rápido o si el usuario
+lo descarta. El paso de lanzamiento se considera listo cuando existen binario,
+modelo y perfil de lanzamiento, aunque la app ya incluya perfiles de sistema.
 
 El agente nativo combina dos guardas anti-loop: canoniza nombre y argumentos JSON,
 permite dos llamadas idénticas consecutivas y bloquea la tercera antes de ejecutarla.
@@ -684,7 +694,7 @@ LlamaCode
 ├── Backend Manager
 │   ├── BinaryRegistry
 │   ├── CapabilityDetector
-│   ├── ProfileManager            ← 6x ProfileListModel<T> + JSON
+│   ├── ProfileManager            ← 8x ProfileListModel<T> + JSON
 │   └── EffectiveProfileBuilder
 ├── Model Manager
 │   ├── ModelRootRegistry
@@ -1000,7 +1010,7 @@ supervisor durable para delegar a Claude/Codex sin bloquear la interfaz. Si la
 app se cierra, la corrida se recupera como `stale` y puede reintentarse. El
 contrato completo está en [`docs/managed-agent-runs.md`](docs/managed-agent-runs.md).
 
-## Backends cloud + secretos cifrados
+## Backends cloud + SecretStore
 
 Aunque el foco es 100% local, cada perfil puede apuntar a un **endpoint OpenAI-compat
 externo** (OpenAI, OpenRouter, Groq, DeepSeek, etc.) en vez de a un `llama-server`
@@ -1043,9 +1053,13 @@ levantan fuera de la app. El procedimiento está en
 Guía de conexión ASTRA/Strata: [`docs/astra-strata.md`](docs/astra-strata.md).
 
 - **SecretStore**: las API keys **nunca** se serializan en los JSON del repo. El
-  perfil guarda una **referencia** (`cloudKeyRef`) y el valor se resuelve en runtime
-  vía variable de entorno o store cifrado en disco — **QtKeychain** (Secret Service /
-  WinCred / macOS Keychain) y, si no está disponible, fallback **DPAPI** en Windows.
+  perfil guarda una **referencia** (`cloudKeyRef`) y el valor se resuelve en runtime,
+  primero desde una variable de entorno y luego desde el keyring del sistema vía
+  **QtKeychain** (Secret Service / WinCred / macOS Keychain) cuando está disponible.
+  Si no hay keyring, Windows usa **DPAPI**; en Linux y otros sistemas el fallback
+  es `secrets.json` con permisos de lectura/escritura sólo para el usuario, pero
+  **sin cifrado**. Para entornos sensibles, configurá el keyring o usá una variable
+  de entorno.
 - Aplica igual a los maestros HTTP, cuentas de correo y proveedores de voz.
 
 ## Modo Ingi Charla (voz-a-voz + agente)
@@ -1500,6 +1514,12 @@ por lo que el historial y los adjuntos conservan la captura completa.
   preset `.ini`; el chat/agente conmutan por el campo `model` del request.
 - **GPU power limit**: fija el límite de potencia (W) por GPU vía `nvidia-smi`
   (en Windows se relanza elevado), global o por perfil.
+- **Salud de perfiles**: la página Perfiles separa errores que impiden lanzar,
+  avisos de configuración degradada e información sobre perfiles de sistema que
+  aún no se instalaron. Mientras corre la primera revisión no anuncia que todos
+  estén sanos; **Revisar salud** vuelve a ejecutar el diagnóstico.
+- **Ajustes GPU**: el inventario de NVIDIA se consulta en segundo plano; una demora
+  de `nvidia-smi` no bloquea la interfaz al abrir Ajustes.
 - **Deep Research**: investigación multi-consulta y multi-página con reportes
   persistidos; al finalizar actualiza la lista, selecciona el reporte nuevo y
   muestra una notificación automáticamente. La lista y el contenido muestran la
@@ -1625,7 +1645,9 @@ backend remoto activo y no de que exista un proceso `llama-server` local.
 El discovery UDP nunca transmite la API key. Si el host pide autenticación, el
 cliente la solicita en el diálogo; copiala en la PC anfitriona desde
 **Configuración → Gateway → Copiar API key**. La clave queda en el almacén seguro
-del cliente y se reutiliza al volver a conectar ese perfil.
+del cliente y se reutiliza al volver a conectar ese perfil. Mientras conecta, el
+diálogo muestra el servidor y el perfil elegidos; si el Gateway no responde en
+ocho segundos, informa que hay que revisar su disponibilidad y el puerto.
 
 En la PC anfitriona también se puede usar **Lanzar → Iniciar LAN sin cargar
 perfil**. Esto levanta únicamente el Gateway y anuncia los perfiles
@@ -1687,7 +1709,8 @@ del catálogo están documentados en [`docs/startup-performance.md`](docs/startu
 
 - **Qt 6.8.3** (`msvc2022_64`)
 - **Qt modules**: Core, Quick, Sql, Concurrent, Network, Widgets, Multimedia, Svg
-- **Secretos**: QtKeychain (Secret Service / WinCred / Keychain) con fallback DPAPI
+- **Secretos**: QtKeychain cuando hay keyring; DPAPI en Windows; fallback local con
+  permisos de usuario pero sin cifrado en Linux si no hay Secret Service
 - **Compilador**: MSVC 2022 (VS BuildTools)
 - **CMake 3.21+**, generator: Visual Studio 17 2022 (multi-config)
 - **QML theme**: Catppuccin Mocha
@@ -1711,8 +1734,10 @@ El build Linux usa Ninja y, por defecto, la caché nativa
 `LC_TEST_BUILD_DIR`), automatización X11 mediante `xdotool`/`wmctrl`, controles
 semánticos mediante AT-SPI2 y OCR mediante Tesseract. Requiere una sesión X11
 desbloqueada para las funciones foreground; el resto de la aplicación también
-funciona en modo headless. Si el checkout está en un volumen NTFS, los scripts
-espejan el código en la caché nativa antes de invocar CMake/Ninja.
+funciona en modo headless. Si el checkout está en NTFS o en un montaje Windows de
+WSL (`9p`, `drvfs` o `v9fs`), los scripts espejan el código en la caché nativa
+antes de invocar CMake/Ninja. Si la caché conserva otra ruta de fuente, se
+reconfigura descartando sólo sus archivos de configuración de CMake.
 
 Ver [`docs/ubuntu-port-plan.md`](docs/ubuntu-port-plan.md) para el plan completo
 y la tabla de equivalencias.
@@ -1865,7 +1890,7 @@ LlamaCode/
 5. **P4** ✅ Chat integrado streaming + historial persistente + proyectos
 6. **P5** ✅ Built-in coding agent nativo (`LlamaAgentBackend`): loop ReAct contra `llama-server`, tools (read/write/edit/grep/glob/list_dir/run_shell/web_fetch/task), MCP stdio, aprobaciones, plan mode, checkpoint/rollback, subagents paralelos en git worktrees, permisos por patrón, @-mentions, imágenes (visión)
 7. **P6** ✅ Tasks (macros semánticas configurables) + scheduler cron in-app, con auto ciclo de vida del agente
-8. **P7** ✅ Backends cloud + secretos cifrados, modo Charla (voz-a-voz), correo, browser (Playwright/teach), memoria/RAG, maestro/supervisor, watchdog + VRAM, router hot-swap, headless ControlApi
+8. **P7** ✅ Backends cloud + gestión de secretos, modo Charla (voz-a-voz), correo, browser (Playwright/teach), memoria/RAG, maestro/supervisor, watchdog + VRAM, router hot-swap, headless ControlApi
 
 ## Workflows de ingeniería
 

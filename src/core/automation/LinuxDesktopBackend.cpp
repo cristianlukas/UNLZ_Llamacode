@@ -1,5 +1,45 @@
 #include "LinuxDesktopBackend.h"
 
+
+QStringList LinuxDesktopBackend::buildClickArgs(const QPoint &p, const QString &button,
+                                                int clickCount, const QStringList &modifiers,
+                                                QString *error)
+{
+    QStringList mods;
+    for (const QString &raw : modifiers) {
+        const QString m = raw.trimmed().toLower();
+        if (m.isEmpty()) continue;
+        if (m == QLatin1String("ctrl") || m == QLatin1String("control")) mods << QStringLiteral("ctrl");
+        else if (m == QLatin1String("shift")) mods << QStringLiteral("shift");
+        else if (m == QLatin1String("alt")) mods << QStringLiteral("alt");
+        else if (m == QLatin1String("win") || m == QLatin1String("meta") || m == QLatin1String("super"))
+            mods << QStringLiteral("super");
+        else {
+            if (error) *error = QStringLiteral("Modificador no reconocido: %1").arg(raw);
+            return {};
+        }
+    }
+    const QString b = button.trimmed().toLower();
+    const QString n = b == QLatin1String("right") ? QStringLiteral("3")
+                      : b == QLatin1String("middle") ? QStringLiteral("2") : QStringLiteral("1");
+    QStringList args{QStringLiteral("mousemove"), QString::number(p.x()), QString::number(p.y())};
+    for (const QString &m : mods) args << QStringLiteral("keydown") << m;
+    args << QStringLiteral("click") << QStringLiteral("--repeat")
+         << QString::number(qBound(1, clickCount, 3))
+         << QStringLiteral("--delay") << QStringLiteral("80") << n;
+    for (int i = mods.size() - 1; i >= 0; --i) args << QStringLiteral("keyup") << mods.at(i);
+    return args;
+}
+
+QStringList LinuxDesktopBackend::buildScrollArgs(int delta, bool horizontal)
+{
+    if (delta == 0) delta = -120;
+    const int count = qMax(1, qAbs(delta) / 120);
+    const QString button = horizontal ? (delta > 0 ? QStringLiteral("7") : QStringLiteral("6"))
+                                      : (delta > 0 ? QStringLiteral("4") : QStringLiteral("5"));
+    return {QStringLiteral("click"), QStringLiteral("--repeat"), QString::number(count), button};
+}
+
 #ifndef Q_OS_WIN
 
 #include "FuzzyMatch.h"
@@ -461,9 +501,34 @@ bool LinuxDesktopBackend::pressKey(const QString &key, const QStringList &modifi
 
 bool LinuxDesktopBackend::scroll(int delta, QString *error)
 {
-    const int count = qMax(1, qAbs(delta) / 120);
-    const QString button = delta >= 0 ? QStringLiteral("4") : QStringLiteral("5");
-    return runTool(QStringLiteral("xdotool"), {QStringLiteral("click"), QStringLiteral("--repeat"), QString::number(count), button}, error);
+    return runTool(QStringLiteral("xdotool"), buildScrollArgs(delta, false), error);
+}
+
+bool LinuxDesktopBackend::scrollHorizontal(int delta, QString *error)
+{
+    return runTool(QStringLiteral("xdotool"), buildScrollArgs(delta, true), error);
+}
+
+bool LinuxDesktopBackend::clickEx(const QString &kind, const QString &targetId, double x, double y,
+                                  const QString &button, int clickCount,
+                                  const QStringList &modifiers, QString *error, QVariantMap *trace)
+{
+    const QRect bounds = targetBounds(kind, targetId);
+    if (!bounds.isValid()) { if (error) *error = QStringLiteral("Alcance visual no disponible."); return false; }
+    const QPoint p(bounds.x() + qRound(x * bounds.width()), bounds.y() + qRound(y * bounds.height()));
+    const QStringList args = buildClickArgs(p, button, clickCount, modifiers, error);
+    if (args.isEmpty()) return false;
+    if (kind == QLatin1String("window") && !focusWindow(targetId, error)) return false;
+    if (!runTool(QStringLiteral("xdotool"), args, error)) return false;
+    if (trace) *trace = {{QStringLiteral("surface"), QStringLiteral("desktop")},
+        {QStringLiteral("action"), QStringLiteral("click")},
+        {QStringLiteral("strategy"), QStringLiteral("x11-xtest")},
+        {QStringLiteral("pointer"), QVariantMap{{QStringLiteral("button"), button},
+            {QStringLiteral("clickCount"), qBound(1, clickCount, 3)},
+            {QStringLiteral("modifiers"), modifiers},
+            {QStringLiteral("xAbs"), p.x()}, {QStringLiteral("yAbs"), p.y()},
+            {QStringLiteral("xNorm"), x}, {QStringLiteral("yNorm"), y}}}};
+    return true;
 }
 
 QPoint LinuxDesktopBackend::cursorPos()
@@ -575,6 +640,9 @@ bool LinuxDesktopBackend::stroke(const QString &, const QString &, const QVarian
 bool LinuxDesktopBackend::typeText(const QString &, QString *) { return false; }
 bool LinuxDesktopBackend::pressKey(const QString &, const QStringList &, QString *) { return false; }
 bool LinuxDesktopBackend::scroll(int, QString *) { return false; }
+bool LinuxDesktopBackend::scrollHorizontal(int, QString *) { return false; }
+bool LinuxDesktopBackend::clickEx(const QString &, const QString &, double, double, const QString &,
+                                  int, const QStringList &, QString *, QVariantMap *) { return false; }
 QPoint LinuxDesktopBackend::cursorPos() { return {}; }
 bool LinuxDesktopBackend::moveCursor(const QPoint &) { return false; }
 QVariantList LinuxDesktopBackend::controls(const QString &, const QString &, int, QString *) { return {}; }

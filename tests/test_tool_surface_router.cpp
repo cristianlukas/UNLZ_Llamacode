@@ -10,6 +10,7 @@ private slots:
     void webAndBrowserIntentAddsRelevantGroups();
     void desktopIntentIsAppAgnostic();
     void canonicalizesCatalogLabels();
+    void wantsDesktopSeparatesAppsFromFiles();
 };
 
 static QVariantList catalog()
@@ -65,6 +66,24 @@ void ToolSurfaceRouterTests::canonicalizesCatalogLabels()
     QCOMPARE(ToolSurfaceRouter::canonicalGroup(QStringLiteral("Multi-Agente")),
              QStringLiteral("multiagent"));
     QVERIFY(ToolSurfaceRouter::canonicalGroup(QStringLiteral("future")).isEmpty());
+}
+
+// Pedido real del usuario con el perfil "Intermedio" (sin tools de escritorio):
+// el agente contestaba "no puedo abrir aplicaciones". Hay que reconocerlo como
+// computer use sin confundir "abrí el archivo X" (archivos) con abrir una app.
+void ToolSurfaceRouterTests::wantsDesktopSeparatesAppsFromFiles()
+{
+    QVERIFY(ToolSurfaceRouter::wantsDesktop(QStringLiteral("quiero que abras la calculadora y hagas 12*12")));
+    QVERIFY(ToolSurfaceRouter::wantsDesktop(QStringLiteral("Abrí el Bloc de notas y escribí hola")));
+    QVERIFY(ToolSurfaceRouter::wantsDesktop(QStringLiteral("hacé clic en Guardar")));
+    QVERIFY(ToolSurfaceRouter::wantsDesktop(QStringLiteral("¿qué hay en pantalla?")));
+    QVERIFY(ToolSurfaceRouter::wantsDesktop(QStringLiteral("open the calculator")));
+    QVERIFY(ToolSurfaceRouter::wantsDesktop(QStringLiteral("cerrá la ventana de Paint")));
+
+    QVERIFY(!ToolSurfaceRouter::wantsDesktop(QStringLiteral("abrí el archivo main.cpp y arreglá el bug")));
+    QVERIFY(!ToolSurfaceRouter::wantsDesktop(QStringLiteral("usá la función abrir() del módulo")));
+    QVERIFY(!ToolSurfaceRouter::wantsDesktop(QStringLiteral("calculá 12*12 en Python")));
+    QVERIFY(!ToolSurfaceRouter::wantsDesktop(QString()));
 }
 
 QTEST_MAIN(ToolSurfaceRouterTests)

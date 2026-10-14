@@ -1,0 +1,258 @@
+{
+  "run_id": "iq2-base-r3",
+  "profile": "iq2",
+  "launch_id": "q14-iq2xs-cu",
+  "agent_profile_id": "31ff813d-6bf5-4400-8f82-69af4fcc64bc",
+  "arm": "base",
+  "replicate": 3,
+  "attempt": 1,
+  "sampling": {
+    "temperature": 0.6,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0,
+    "repeat_penalty": 1.0,
+    "presence_penalty": 0.0,
+    "reasoning_effort": "medium"
+  },
+  "screen": "1024x768x24",
+  "lang": "es_AR.utf8",
+  "gtk_theme": "system default (Adwaita light observed in preflight)",
+  "started_at_local": "2026-10-13T22:25:24.458028-03:00",
+  "overlay_sha256": null,
+  "tasks": [
+    {
+      "png": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261014-IQ2XS-MISSING-MODALITIES/receipts/runs/iq2-base-r3/stage1-CU-BROWSER-DISPATCH-R4-82.png",
+      "ocr": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261014-IQ2XS-MISSING-MODALITIES/receipts/runs/iq2-base-r3/stage1-CU-BROWSER-DISPATCH-R4-82.ocr.txt",
+      "ocr_text": "yD Cargando. x +\nX © 127.0.0.1:8765/dispatch.html @:\n",
+      "window_ocr": {
+        "0x00600002": {
+          "title": "3090 Sin título - Google Chrome",
+          "png": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261014-IQ2XS-MISSING-MODALITIES/receipts/runs/iq2-base-r3/stage1-CU-BROWSER-DISPATCH-R4-82-0x00600002.png",
+          "ocr_text": "© > X — © 127.0.0.1:8765/dispatch.html @i:\n",
+          "ocr_exit": 0
+        }
+      },
+      "windows": "0x00600002  0 629780 20   20   1004 748  3090 Sin título - Google Chrome\n",
+      "ocr_exit": 0,
+      "expected_visible": "Confirmed R4-82 Quartz Bay Priority route checked",
+      "root_ocr_contains_expected": false,
+      "window_ocr_contains_expected": false,
+      "ocr_contains_expected": false,
+      "messages_delta": [
+        {
+          "completedAt": 1791941152575,
+          "content": "Use only desktop tools. Launch `google-chrome` with args `--no-first-run --no-default-browser-check --disable-sync --disable-background-networking --disable-gpu http://127.0.0.1:8765/dispatch.html`. In the Dispatch Console, route work order R4-82 to Quartz Bay, enable Priority shipping, enter the exact handling note `route checked`, and confirm the dispatch. Verify the visible confirmation text before reporting success. Do not use shell, files, or external network tools.",
+          "createdAt": 1791941152575,
+          "elapsedMs": 0,
+          "role": "user",
+          "tokens": 119,
+          "tps": 0,
+          "typing": false
+        },
+        {
+          "arguments": "{\"action\":\"index\"}",
+          "command": "",
+          "completedAt": 1791941155129,
+          "createdAt": 1791941155129,
+          "elapsedMs": 0,
+          "kind": "read",
+          "name": "graph",
+          "ok": true,
+          "output": "[code_graph: 0 archivos indexados · 0 símbolos · +0 entidades · +0 relaciones (defines/imports) en .llamacode/graph.jsonl]\nConsultá el mapa con la tool 'graph' (action='query', name=<archivo o símbolo>).",
+          "role": "toolcall",
+          "tokens": 0,
+          "tps": 0,
+          "typing": false
+        },
+        {
+          "arguments": "{\"app\":\"google-chrome\",\"args\":\"--no-first-run --no-default-browser-check --disable-sync --disable-background-networking --disable-gpu http://127.0.0.1:8765/dispatch.html\"}",
+          "command": "google-chrome",
+          "completedAt": 1791941159733,
+          "correlationId": "c5e820bc-90ef-4c9d-af2c-9c09f55e4658",
+          "createdAt": 1791941159733,
+          "deduplicated": false,
+          "desktopReceipt": {
+            "correlationId": "c5e820bc-90ef-4c9d-af2c-9c09f55e4658",
+            "createdAt": 1791941159714,
+            "detail": "[desktop_launch: ok — la app se está abriendo. desktop_wait ~800ms y UNA desktop_windows para el id. Después, si la app se maneja con teclado (calc, notepad), desktop_focus <id> + desktop_type; NO repitas desktop_windows ni observes en loop.]",
+            "payloadHash": "c3cadc1be46682f180066537879b52589e3bb5a7c049312848bd8e54539a4fb2",
+            "receiptId": "cdd0b1a4-c934-4d51-a4e1-fa09efdcfef1",
+            "resultHash": "2a58efe092afbf8b5e1c8c27b4a41b335b5a84b2e676b146fc641552f6be4226",
+            "sessionId": "23740575-5b08-4483-a52a-4af6a4214571",
+            "snapshotId": "",
+            "status": "settled",
+            "strategy": "native",
+            "target": {},
+            "tool": "desktop_launch"
+          },
+          "elapsedMs": 0,
+          "idempotencyKey": "",
+          "kind": "desktop",
+          "name": "desktop_launch",
+          "ok": true,
+          "output": "[desktop_launch: ok — la app se está abriendo. desktop_wait ~800ms y UNA desktop_windows para el id. Después, si la app se maneja con teclado (calc, notepad), desktop_focus <id> + desktop_type; NO repitas desktop_windows ni observes en loop.]\nreceipt_id=cdd0b1a4-c934-4d51-a4e1-fa09efdcfef1 status=settled",
+          "payloadHash": "",
+          "receipt": {},
+          "role": "toolcall",
+          "tokens": 0,
+          "tps": 0,
+          "typing": false
+        },
+        {
+          "completedAt": 1791941175363,
+          "content": "[tool-timeout: 'desktop_wait_for' no produjo resultado ni actividad durante 15 s; worker reiniciado y turno cerrado de forma segura]",
+          "createdAt": 1791941160354,
+          "elapsedMs": 15009,
+          "role": "assistant",
+          "tokens": 46,
+          "tps": 190.63406547865728,
+          "typing": false
+        }
+      ],
+      "elapsed_seconds": 25.023,
+      "agent_log": "[2026-10-13 22:25:50.489][agent/lifecycle] Cloud local: endpoint loopback sin API key (http://127.0.0.1:8350).\n[2026-10-13 22:25:50.513][agent/backend] [permisos: 0 regla(s) cargadas]\n[2026-10-13 22:25:50.515][agent/backend] [permisos: 0 regla(s) cargadas]\n[2026-10-13 22:25:50.516][agent/backend] [proyecto no definido o inseguro (): usando workspace aislado /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261014-IQ2XS-MISSING-MODALITIES/runtime/sessions/iq2-base-r3/data/LlamaCode/LlamaCode/workspace]\n[2026-10-13 22:25:50.527][agent/backend] [LlamaAgent backend listo · cwd: /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261014-IQ2XS-MISSING-MODALITIES/runtime/sessions/iq2-base-r3/data/LlamaCode/LlamaCode/workspace]\n[2026-10-13 22:25:50.527][agent/backend] [mcp] 0 tool(s) descubiertas\n[2026-10-13 22:25:52.550][agent/backend] [permisos: 0 regla(s) cargadas]\n[2026-10-13 22:25:52.558][agent/input] > Use only desktop tools. Launch `google-chrome` with args `--no-first-run --no-default-browser-check --disable-sync --disable-background-networking --disable-gpu http://127.0.0.1:8765/dispatch.html`. In the Dispatch Console, route work order R4-82 to Quartz Bay, enable Priority shipping, enter the exact handling note `route checked`, and confirm the dispatch. Verify the visible confirmation text before reporting success. Do not use shell, files, or external network tools.\n[2026-10-13 22:25:52.622][agent/backend] [preflight: contexto inicial preparado]\n[2026-10-13 22:25:52.624][agent/backend] [turn] requesting completion (iter=1, msgs=3, stream)\n[2026-10-13 22:25:55.117][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 22:25:55.122][agent/backend] [perm-eval] kind=write subject='' rules=0\n[2026-10-13 22:25:55.122][agent/backend] [tool] auto-approving graph\n[2026-10-13 22:25:55.132][agent/backend] [turn] requesting completion (iter=2, msgs=5, stream)\n[2026-10-13 22:25:59.710][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 22:25:59.711][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 22:25:59.711][agent/backend] [tool] auto-approving desktop_launch\n[2026-10-13 22:25:59.735][agent/backend] [turn] requesting completion (iter=3, msgs=7, stream)\n[2026-10-13 22:26:00.354][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 22:26:00.354][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 22:26:00.354][agent/backend] [tool] auto-approving desktop_wait_for\n[2026-10-13 22:26:15.363][agent/backend] [turn] failed (finalTextChars=132)\n[2026-10-13 22:26:15.363][agent/backend] [salud: 2/3 tools ok (67%)]\n[2026-10-13 22:26:15.376][agent/backend] [mcp] 0 tool(s) descubiertas\n",
+      "prompt": "Use only desktop tools. Launch `google-chrome` with args `--no-first-run --no-default-browser-check --disable-sync --disable-background-networking --disable-gpu http://127.0.0.1:8765/dispatch.html`. In the Dispatch Console, route work order R4-82 to Quartz Bay, enable Priority shipping, enter the exact handling note `route checked`, and confirm the dispatch. Verify the visible confirmation text before reporting success. Do not use shell, files, or external network tools.",
+      "task_id": "CU-BROWSER-DISPATCH-R4-82"
+    }
+  ],
+  "daemon_log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261014-IQ2XS-MISSING-MODALITIES/receipts/sessions/iq2-base-r3/runner-daemon.log",
+  "endpoint_models": {
+    "object": "list",
+    "data": [
+      {
+        "id": "qwen3.8-flash-next-iq2_xs",
+        "object": "model",
+        "status": {
+          "value": "loaded"
+        },
+        "meta": {
+          "n_ctx": 131072
+        },
+        "architecture": {
+          "input_modalities": [
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ]
+        }
+      }
+    ]
+  },
+  "profile_setprop": {
+    "ok": true,
+    "reqId": "356174cd-9f96-4ec3-ad80-642940d381a7"
+  },
+  "prompt_setprop": {
+    "ok": true,
+    "chars": 0
+  },
+  "effective_profile": {
+    "id": "31ff813d-6bf5-4400-8f82-69af4fcc64bc",
+    "tools": [
+      "desktop_snapshot",
+      "desktop_windows",
+      "desktop_controls",
+      "desktop_click_element",
+      "desktop_control_action",
+      "desktop_find_image",
+      "desktop_click_image",
+      "desktop_wait_image",
+      "desktop_assert_image",
+      "desktop_observe",
+      "desktop_click",
+      "desktop_stroke",
+      "desktop_type",
+      "desktop_key",
+      "desktop_scroll",
+      "desktop_focus",
+      "desktop_resize",
+      "desktop_wait",
+      "desktop_wait_for",
+      "desktop_assert",
+      "desktop_launch"
+    ],
+    "approval": "auto",
+    "mcp": false
+  },
+  "agent_started": true,
+  "initial_message_count": 0,
+  "finished_at_local": "2026-10-13T22:26:17.836055-03:00",
+  "agent_log_final": "[2026-10-13 22:25:50.489][agent/lifecycle] Cloud local: endpoint loopback sin API key (http://127.0.0.1:8350).\n[2026-10-13 22:25:50.513][agent/backend] [permisos: 0 regla(s) cargadas]\n[2026-10-13 22:25:50.515][agent/backend] [permisos: 0 regla(s) cargadas]\n[2026-10-13 22:25:50.516][agent/backend] [proyecto no definido o inseguro (): usando workspace aislado /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261014-IQ2XS-MISSING-MODALITIES/runtime/sessions/iq2-base-r3/data/LlamaCode/LlamaCode/workspace]\n[2026-10-13 22:25:50.527][agent/backend] [LlamaAgent backend listo · cwd: /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261014-IQ2XS-MISSING-MODALITIES/runtime/sessions/iq2-base-r3/data/LlamaCode/LlamaCode/workspace]\n[2026-10-13 22:25:50.527][agent/backend] [mcp] 0 tool(s) descubiertas\n[2026-10-13 22:25:52.550][agent/backend] [permisos: 0 regla(s) cargadas]\n[2026-10-13 22:25:52.558][agent/input] > Use only desktop tools. Launch `google-chrome` with args `--no-first-run --no-default-browser-check --disable-sync --disable-background-networking --disable-gpu http://127.0.0.1:8765/dispatch.html`. In the Dispatch Console, route work order R4-82 to Quartz Bay, enable Priority shipping, enter the exact handling note `route checked`, and confirm the dispatch. Verify the visible confirmation text before reporting success. Do not use shell, files, or external network tools.\n[2026-10-13 22:25:52.622][agent/backend] [preflight: contexto inicial preparado]\n[2026-10-13 22:25:52.624][agent/backend] [turn] requesting completion (iter=1, msgs=3, stream)\n[2026-10-13 22:25:55.117][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 22:25:55.122][agent/backend] [perm-eval] kind=write subject='' rules=0\n[2026-10-13 22:25:55.122][agent/backend] [tool] auto-approving graph\n[2026-10-13 22:25:55.132][agent/backend] [turn] requesting completion (iter=2, msgs=5, stream)\n[2026-10-13 22:25:59.710][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 22:25:59.711][agent/backend] [perm-eval] kind=desktop subject='' rules=0\n[2026-10-13 22:25:59.711][agent/backend] [tool] auto-approving desktop_launch\n[2026-10-13 22:25:59.735][agent/backend] [turn] requesting completion (iter=3, msgs=7, stream)\n[2026-10-13 22:26:00.354][agent/backend] [turn] model requested 1 tool call(s)\n[2026-10-13 22:26:00.354][agent/backend] [perm-eval] kind=read subject='' rules=0\n[2026-10-13 22:26:00.354][agent/backend] [tool] auto-approving desktop_wait_for\n[2026-10-13 22:26:15.363][agent/backend] [turn] failed (finalTextChars=132)\n[2026-10-13 22:26:15.363][agent/backend] [salud: 2/3 tools ok (67%)]\n[2026-10-13 22:26:15.376][agent/backend] [mcp] 0 tool(s) descubiertas\n",
+  "messages_final": [
+    {
+      "completedAt": 1791941152575,
+      "content": "Use only desktop tools. Launch `google-chrome` with args `--no-first-run --no-default-browser-check --disable-sync --disable-background-networking --disable-gpu http://127.0.0.1:8765/dispatch.html`. In the Dispatch Console, route work order R4-82 to Quartz Bay, enable Priority shipping, enter the exact handling note `route checked`, and confirm the dispatch. Verify the visible confirmation text before reporting success. Do not use shell, files, or external network tools.",
+      "createdAt": 1791941152575,
+      "elapsedMs": 0,
+      "role": "user",
+      "tokens": 119,
+      "tps": 0,
+      "typing": false
+    },
+    {
+      "arguments": "{\"action\":\"index\"}",
+      "command": "",
+      "completedAt": 1791941155129,
+      "createdAt": 1791941155129,
+      "elapsedMs": 0,
+      "kind": "read",
+      "name": "graph",
+      "ok": true,
+      "output": "[code_graph: 0 archivos indexados · 0 símbolos · +0 entidades · +0 relaciones (defines/imports) en .llamacode/graph.jsonl]\nConsultá el mapa con la tool 'graph' (action='query', name=<archivo o símbolo>).",
+      "role": "toolcall",
+      "tokens": 0,
+      "tps": 0,
+      "typing": false
+    },
+    {
+      "arguments": "{\"app\":\"google-chrome\",\"args\":\"--no-first-run --no-default-browser-check --disable-sync --disable-background-networking --disable-gpu http://127.0.0.1:8765/dispatch.html\"}",
+      "command": "google-chrome",
+      "completedAt": 1791941159733,
+      "correlationId": "c5e820bc-90ef-4c9d-af2c-9c09f55e4658",
+      "createdAt": 1791941159733,
+      "deduplicated": false,
+      "desktopReceipt": {
+        "correlationId": "c5e820bc-90ef-4c9d-af2c-9c09f55e4658",
+        "createdAt": 1791941159714,
+        "detail": "[desktop_launch: ok — la app se está abriendo. desktop_wait ~800ms y UNA desktop_windows para el id. Después, si la app se maneja con teclado (calc, notepad), desktop_focus <id> + desktop_type; NO repitas desktop_windows ni observes en loop.]",
+        "payloadHash": "c3cadc1be46682f180066537879b52589e3bb5a7c049312848bd8e54539a4fb2",
+        "receiptId": "cdd0b1a4-c934-4d51-a4e1-fa09efdcfef1",
+        "resultHash": "2a58efe092afbf8b5e1c8c27b4a41b335b5a84b2e676b146fc641552f6be4226",
+        "sessionId": "23740575-5b08-4483-a52a-4af6a4214571",
+        "snapshotId": "",
+        "status": "settled",
+        "strategy": "native",
+        "target": {},
+        "tool": "desktop_launch"
+      },
+      "elapsedMs": 0,
+      "idempotencyKey": "",
+      "kind": "desktop",
+      "name": "desktop_launch",
+      "ok": true,
+      "output": "[desktop_launch: ok — la app se está abriendo. desktop_wait ~800ms y UNA desktop_windows para el id. Después, si la app se maneja con teclado (calc, notepad), desktop_focus <id> + desktop_type; NO repitas desktop_windows ni observes en loop.]\nreceipt_id=cdd0b1a4-c934-4d51-a4e1-fa09efdcfef1 status=settled",
+      "payloadHash": "",
+      "receipt": {},
+      "role": "toolcall",
+      "tokens": 0,
+      "tps": 0,
+      "typing": false
+    },
+    {
+      "completedAt": 1791941175363,
+      "content": "[tool-timeout: 'desktop_wait_for' no produjo resultado ni actividad durante 15 s; worker reiniciado y turno cerrado de forma segura]",
+      "createdAt": 1791941160354,
+      "elapsedMs": 15009,
+      "role": "assistant",
+      "tokens": 46,
+      "tps": 190.63406547865728,
+      "typing": false
+    }
+  ],
+  "successes": 0,
+  "task_count": 1,
+  "total_agent_seconds": 25.023,
+  "cleanup_signalled_pids": []
+}

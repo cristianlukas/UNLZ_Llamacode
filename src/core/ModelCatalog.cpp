@@ -355,6 +355,16 @@ CatalogModel ModelCatalog::findById(const QString &id) const
     return m_all.at(idx);
 }
 
+QList<CatalogModel> ModelCatalog::availableByFileName(const QString &fileName) const
+{
+    QList<CatalogModel> out;
+    if (fileName.isEmpty()) return out;
+    for (const auto &m : m_all)
+        if (m.isAvailable && m.fileName == fileName)
+            out.append(m);
+    return out;
+}
+
 CatalogModel ModelCatalog::findByStableId(qint64 stableId) const
 {
     if (stableId <= 0) return {};

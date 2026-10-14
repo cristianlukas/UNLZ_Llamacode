@@ -1,10 +1,17 @@
 import QtQuick
+import QtQuick.Window
 import QtQuick.Controls
 import QtQuick.Layouts
 import LlamaCode 1.0
 
 Item {
     id: root
+    // Los botones de ventana flotan arriba a la derecha (Main.qml, sin barra de
+    // título): esta página no usa PageHeader, así que les reserva el ancho ella.
+    readonly property int windowControlsReserve: {
+        const w = root.Window.window
+        return (w && w.windowControlsWidth !== undefined) ? w.windowControlsWidth : 0
+    }
     property string selectedId: ""
     property var edit: ({})
     property var revisionRows: []
@@ -66,6 +73,8 @@ Item {
     RowLayout {
         anchors.fill: parent
         anchors.margins: 18
+        // Debajo de los botones de ventana (32 px) que flotan arriba a la derecha.
+        anchors.topMargin: root.windowControlsReserve > 0 ? 40 : 18
         spacing: 14
 
         Rectangle {

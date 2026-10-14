@@ -529,7 +529,8 @@ public:
     Q_INVOKABLE QString expandedLogPath() const;
     Q_INVOKABLE void clearPerformanceLog();
     Q_INVOKABLE void recordPerformanceSample(const QString &label);
-    QVariantList engineCatalog() const { return EngineCatalog::toVariantList(EngineCatalog::detectHardware()); }
+    // Sin nvidia-smi en el hilo de UI: lo lee BinariesPage en cada binding.
+    QVariantList engineCatalog() const { return EngineCatalog::toVariantList(EngineCatalog::hardwareFromSummary(m_hardwareSummary)); }
     QVariantList modelRecommendations() const { return m_modelRecommendations; }
     bool modelDownloadRunning() const { return m_modelDownloadReply != nullptr; }
     int modelDownloadProgress() const { return m_modelDownloadProgress; }
@@ -807,6 +808,7 @@ public:
     void onCharlaAgentLifecycle(const QVariantMap &event);
     void onCharlaAgentRunningChanged(bool running);
     void setCharlaActiveForTest(bool on) { m_charlaActive = on; }
+    class VoiceController *voiceForTest() { ensureVoice(); return m_voice; }
     QString charlaLastPromptForTest() const { return m_charlaLastPrompt; }
     QString charlaPendingTranscriptForTest() const { return m_charlaPendingTranscript; }
     bool charlaAwaitingApprovalForTest() const { return !m_charlaPendingApproval.isEmpty(); }
@@ -1279,11 +1281,19 @@ public:
     Q_INVOKABLE void rescanModelRoots();
     // ── GPU power limit (nvidia-smi) ──
     // Estado actual por GPU: {available:bool, gpus:[{index,name,currentW,defaultW,
-    // minW,maxW,drawW}]}. Lectura síncrona (rápida, usada on-demand desde Ajustes).
+    // minW,maxW,drawW}]}. Síncrona: ejecuta nvidia-smi (hasta 4 s en frío).
     Q_INVOKABLE QVariantMap gpuPowerInfo() const;
     // GPUs NVIDIA visibles para llama.cpp: {available:bool, gpus:[{index,name,
-    // totalMb,driver}]}. Se obtiene bajo demanda para no bloquear el arranque.
+    // totalMb,driver}]}. Síncrona, igual que gpuPowerInfo.
     Q_INVOKABLE QVariantMap gpuInventory() const;
+    // Variantes para QML: corren la consulta en un worker y entregan el
+    // resultado por gpuPowerInfoReady / gpuInventoryReady. Ajustes las llamaba
+    // síncronas al crearse y la página quedaba congelada mientras nvidia-smi
+    // inicializaba el driver.
+    Q_INVOKABLE void requestGpuPowerInfo();
+    Q_INVOKABLE void requestGpuInventory();
+    static QVariantMap queryGpuPowerInfo();
+    static QVariantMap queryGpuInventory();
     // Recomendación explicable basada en la topología GPU/PCIe detectada.
     Q_INVOKABLE QVariantMap performanceRecommendation(const QString &target = {}) const;
     Q_INVOKABLE QVariantList performanceMatrixCandidates(const QString &target = {},
@@ -1389,6 +1399,13 @@ public:
     Q_INVOKABLE QVariantMap charlaAgentCapability() const;
     Q_INVOKABLE void startCharla();   // arranca la sesión de voz (usa el backend de chat)
     Q_INVOKABLE void stopCharla();
+    // Benchmark de latencia de Charla sin micrófono (ControlApi/tests): con la
+    // entrada sintética activa, la próxima sesión no abre el mic y
+    // charlaSimulateUtterance(wav) "habla" ese audio por el camino real (VAD →
+    // STT → LLM → TTS). Devuelve la duración encolada en ms, o -1 si el WAV no
+    // es PCM16 legible. Las mediciones quedan en voiceLatencyStats/latency.jsonl.
+    Q_INVOKABLE void setCharlaSyntheticInput(bool on);
+    Q_INVOKABLE int charlaSimulateUtterance(const QString &wavPath);
     Q_INVOKABLE void toggleDictation();
     bool dictationActive() const { return m_dictationActive; }
     QString dictationText() const { return m_dictationText; }
@@ -1527,6 +1544,11 @@ signals:
     void browserSkillsChanged();
     void teachChanged();
     void effectiveProfileChanged();
+    // Terminó el probe en segundo plano de un CLI maestro (masterCliStatus ya
+    // devuelve el resultado desde cache).
+    void masterCliStatusChanged(const QString &name);
+    void gpuPowerInfoReady(const QVariantMap &info);
+    void gpuInventoryReady(const QVariantMap &info);
     void launchMenuReadinessChanged();
     void routerStateChanged();
     void setupStateChanged();
@@ -1878,6 +1900,10 @@ private:
     int       m_serverRestartCount = 0;
     QTimer   *m_serverRestartTimer = nullptr;
     static constexpr int kMaxServerRestarts = 3;
+    // El borrador MTP/speculative no cargó en este arranque: el watchdog
+    // relanza una vez SIN borrador en vez de repetir los mismos args.
+    bool      m_serverDraftLoadFailed = false;
+    QString   m_serverSkipDraftLaunchId;   // sólo aplica a ESE perfil
     void setServerState(const QString &s);
     // Live VRAM/stats meter (nvidia-smi async poll while server runs)
     QTimer   *m_vramPollTimer = nullptr;
@@ -1953,6 +1979,13 @@ private:
     class VoiceController *m_voice = nullptr;
     VoiceServerManager m_voiceServers;  // catálogo + descarga de modelos STT
     QProcess *m_sttProc = nullptr;      // server STT gestionado (whisper.cpp)
+    int m_sttManagedPort = -1;          // puerto elegido para m_sttProc (ver managedSttPort)
+    // Puerto del whisper gestionado: estable mientras el proceso vive; si no,
+    // el default del motor salvo que choque con el LLM activo u otro proceso.
+    int managedSttPort(const VoiceConfig &c);
+    // Habla en vivo el texto del agente durante Charla (salvo respuestas
+    // provisionales; ver IAgentBackend::provisionalAnswerPending).
+    void routeAgentStreamToCharla(class IAgentBackend *b, int idx, const QString &content);
     QProcess *m_externalSttProc = nullptr; // endpoint STT local configurado por el usuario
     QProcess *m_externalTtsProc = nullptr; // endpoint TTS local configurado por el usuario
     QProcess *m_pocketInstallProc = nullptr; // venv + paquete + cache inicial
@@ -2407,6 +2440,12 @@ private:
     QString pinnedSystemBinaryId(const QString &launchId) const;
     QString minimumSystemBinaryId(const QString &launchId) const;
     QList<HealthIssue> resolvedProfileHealth();
+    // ¿Existe el binario en disco? Dentro de una pasada por lotes (chequeo de
+    // salud: buildContext por CADA perfil) cada ruta se consulta una sola vez;
+    // fuera del lote siempre va al disco (el usuario puede borrar un binario).
+    bool binaryFileExists(const QString &path) const;
+    mutable QHash<QString, bool> m_binaryExistsCache;
+    mutable int m_binaryExistsBatch = 0;
     // Instala el binario del tipo pedido si falta (cpu/official→installOfficialBinary,
     // beellama→installMtpBinary). beellama es CUDA-only: sin NVIDIA cae a official.
     void ensureSystemBinary(const QString &kind);

@@ -1,0 +1,48 @@
+{
+  "checked_at_utc": "2026-10-14T00:45:03Z",
+  "task": "Q-20261014-IQ2XS-MISSING-MODALITIES",
+  "lock_token": "af33d85f-17aa-49f6-b425-64e595d83a90",
+  "resource_preflight": {
+    "gpus": [
+      {
+        "index": 0,
+        "model": "NVIDIA GeForce RTX 3090",
+        "memory_used_mib": 845,
+        "memory_total_mib": 24576,
+        "utilization_percent_observed": [38, 40],
+        "visible_graphics_processes": ["Xorg", "gnome-software", "compiz-custom", "desktop application (148 MiB; name truncated)"],
+        "compute_processes": []
+      },
+      {
+        "index": 1,
+        "model": "NVIDIA GeForce RTX 3090",
+        "memory_used_mib": 108,
+        "memory_total_mib": 24576,
+        "utilization_percent_observed": 28,
+        "visible_graphics_processes": ["Xorg"],
+        "compute_processes": []
+      }
+    ],
+    "ram_available_gib": 112,
+    "swap_used_gib_approx": 5.4,
+    "models_volume_free_gib_approx": 162,
+    "inference_started": false,
+    "reason": "Swap is above the 2 GiB guard; desktop processes are active. No process was stopped."
+  },
+  "local_artifact_audit": {
+    "candidate_iq2_xs_weights": "present; hashes recorded in prior task manifest",
+    "candidate_flashnext_mmproj": {
+      "path": "/media/cristian/Disco local/Models/ASTRA-IQ3_S-calibrated-20261006/models/mmproj-Qwen3.8-Flash-Next-BF16.gguf",
+      "bytes": 907543008,
+      "hash_verified_for_this_task": false
+    },
+    "dense_qwen38_27b_q4_autoround": "present as safetensors; prior vLLM LCH MTP4 and no-MTP attempts invalid due CUDA assert",
+    "dense_qwen38_27b_q4_k_m_gguf": "catalog path currently unavailable locally",
+    "previous_iq2xs_endpoint_modalities": "text-only",
+    "no_model_or_runtime_files_downloaded": true
+  },
+  "compatibility_findings": {
+    "vision": "Official model card has one optional BF16 mmproj shared across Flash-Next quants; local path found, pending hash/runtime validation.",
+    "audio": "No native audio input/output identified for this image-text-to-text model; Ingi-Charla uses separate STT/TTS stages. Full audio testing is not valid without a pipeline-level design."
+  }
+}

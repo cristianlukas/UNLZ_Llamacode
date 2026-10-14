@@ -7,6 +7,7 @@
 #include "core/automation/DesktopAutomationBackend.h"
 #include "core/automation/DesktopComputerUse.h"
 #include "core/automation/DesktopRecoveryPolicy.h"
+#include "core/automation/LinuxDesktopBackend.h"
 #include "core/automation/TeachKeyBuffer.h"
 
 class AutomationTests : public QObject
@@ -23,6 +24,8 @@ private slots:
     void recipeWebStepDetection();
     void desktopPromptPrefersNativeTools();
     void desktopToolPolicyKeepsGuiToolsAvailable();
+    void readTextFormatsNormalizedCentersAndFilters();
+    void linuxPointerArgsSupportModifiersAndHorizontalScroll();
     void calculatorMismatchRejectsHistoryFalsePositive();
     void desktopWarmStartUsesTeachWithoutHardcodedApps();
     void browserPromptUsesForegroundTeachEvidence();
@@ -187,6 +190,79 @@ void AutomationTests::desktopToolPolicyKeepsGuiToolsAvailable()
     QVERIFY(tools.contains(QStringLiteral("desktop_key")));
     QVERIFY(tools.contains(QStringLiteral("desktop_type")));
     QVERIFY(!tools.contains(QStringLiteral("run_shell")));
+}
+
+// desktop_read_text: el modelo recibe cada renglón con su centro normalizado en
+// el alcance (lo mismo que acepta desktop_click). Filtro sin acentos/mayúsculas.
+void AutomationTests::readTextFormatsNormalizedCentersAndFilters()
+{
+    const QRect bounds(100, 200, 1000, 500);
+    const QList<DesktopComputerUse::TextLine> lines{
+        {QStringLiteral("Archivo  Edición  Ver"), QRect(100, 200, 200, 20)},
+        {QStringLiteral("Guardar como..."), QRect(500, 400, 200, 20)},
+        {QStringLiteral("   "), QRect(0, 0, 1, 1)},
+    };
+    const QString all = DesktopComputerUse::formatReadText(lines, bounds, QString(), 80);
+    QVERIFY(all.startsWith(QStringLiteral("2 renglón(es)")));
+    QVERIFY(all.contains(QStringLiteral("(0.100, 0.020)  Archivo Edición Ver")));
+    QVERIFY(all.contains(QStringLiteral("(0.500, 0.420)  Guardar como...")));
+
+    const QString filtered = DesktopComputerUse::formatReadText(lines, bounds, QStringLiteral("EDICION"), 80);
+    QVERIFY(filtered.startsWith(QStringLiteral("1 renglón(es)")));
+    QVERIFY(!filtered.contains(QStringLiteral("Guardar")));
+
+    const QString capped = DesktopComputerUse::formatReadText(lines, bounds, QString(), 1);
+    QVERIFY(capped.contains(QStringLiteral("mostrando 1")));
+
+    // Teclear sólo en la ventana que el agente eligió.
+    QVERIFY(!DesktopComputerUse::typingTargetAllowed(QStringLiteral("abc"), QString()));
+    QVERIFY(!DesktopComputerUse::typingTargetAllowed(QStringLiteral("abc"), QStringLiteral("def")));
+    QVERIFY(DesktopComputerUse::typingTargetAllowed(QStringLiteral("ABC"), QStringLiteral("abc")));
+    QVERIFY(DesktopComputerUse::typingTargetAllowed(QString(), QStringLiteral("abc")));
+    QVERIFY(!DesktopComputerUse::typingTargetAllowed(QString(), QString()));
+
+    // Alcance: explícito manda; si falta y el id es una ventana → window.
+    QCOMPARE(DesktopComputerUse::inferScopeKind(QStringLiteral("screen"), true, QStringLiteral("screen")),
+             QStringLiteral("screen"));
+    QCOMPARE(DesktopComputerUse::inferScopeKind(QString(), true, QStringLiteral("screen")),
+             QStringLiteral("window"));
+    QCOMPARE(DesktopComputerUse::inferScopeKind(QString(), false, QStringLiteral("screen")),
+             QStringLiteral("screen"));
+    QCOMPARE(DesktopComputerUse::inferScopeKind(QStringLiteral("Window"), false, QStringLiteral("screen")),
+             QStringLiteral("window"));
+
+    QCOMPARE(DesktopComputerUse::clampClickCount(0), 1);
+    QCOMPARE(DesktopComputerUse::clampClickCount(2), 2);
+    QCOMPARE(DesktopComputerUse::clampClickCount(9), 3);
+
+    const QStringList tools = AutomationRunner::desktopToolNames();
+    QVERIFY(tools.contains(QStringLiteral("desktop_read_text")));
+    QVERIFY(DesktopComputerUse::isDesktopReadTool(QStringLiteral("desktop_read_text")));
+    QVERIFY(DesktopComputerUse::isDesktopActionTool(QStringLiteral("desktop_hover")));
+}
+
+// Linux (xdotool): modificadores sostenidos alrededor del clic, en UNA sola
+// invocación (si un paso falla no queda un CTRL apretado), y rueda horizontal
+// con los botones 6/7 de X11.
+void AutomationTests::linuxPointerArgsSupportModifiersAndHorizontalScroll()
+{
+    const QStringList dbl = LinuxDesktopBackend::buildClickArgs(QPoint(10, 20), "left", 2,
+                                                                {"CTRL", "shift"});
+    QCOMPARE(dbl, QStringList({"mousemove", "10", "20", "keydown", "ctrl", "keydown", "shift",
+                               "click", "--repeat", "2", "--delay", "80", "1",
+                               "keyup", "shift", "keyup", "ctrl"}));
+    const QStringList right = LinuxDesktopBackend::buildClickArgs(QPoint(1, 2), "right", 9, {});
+    QCOMPARE(right.mid(3), QStringList({"click", "--repeat", "3", "--delay", "80", "3"}));
+    QString err;
+    QVERIFY(LinuxDesktopBackend::buildClickArgs(QPoint(), "left", 1, {"HYPER"}, &err).isEmpty());
+    QVERIFY(err.contains(QStringLiteral("HYPER")));
+
+    QCOMPARE(LinuxDesktopBackend::buildScrollArgs(-240, false),
+             QStringList({"click", "--repeat", "2", "5"}));            // abajo
+    QCOMPARE(LinuxDesktopBackend::buildScrollArgs(120, false).last(), QString("4"));   // arriba
+    QCOMPARE(LinuxDesktopBackend::buildScrollArgs(120, true).last(), QString("7"));    // derecha
+    QCOMPARE(LinuxDesktopBackend::buildScrollArgs(-360, true),
+             QStringList({"click", "--repeat", "3", "6"}));            // izquierda
 }
 
 void AutomationTests::calculatorMismatchRejectsHistoryFalsePositive()

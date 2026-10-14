@@ -23,6 +23,11 @@ bool wavPcm16Format(const QByteArray &wav, int *sampleRate, int *channels);
 bool wavPcm16DataRange(const QByteArray &wav, int *sampleRate, int *channels,
                        int *dataOffset, quint32 *dataSize);
 
+// Convierte PCM16 intercalado (1..N canales) a mono y lo remuestrea a toRate
+// por interpolación lineal. Sirve para alimentar al STT (16 kHz mono) con audio
+// que viene de otra fuente, p.ej. un WAV de piper a 22050 Hz. Pura.
+QByteArray toMonoResampled(const QByteArray &pcm, int fromRate, int channels, int toRate);
+
 // RMS normalizado [0..1] de un bloque PCM16. 0 si está vacío.
 double rms(const int16_t *samples, int count);
 

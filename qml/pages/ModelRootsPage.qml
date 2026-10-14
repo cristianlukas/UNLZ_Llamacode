@@ -652,7 +652,7 @@ Item {
                             placeholderText: (App.langV, App.l("models.filterFamily"))
                             onTextChanged: App.modelCatalog.filterFamily = text
                         }
-                        CheckBox {
+                        LcCheckBox {
                             visible: root.modelsMode === "installed"
                             text: (App.langV, App.l("models.visionOnly"))
                             contentItem: Text { text: parent.text; color: Theme.textSecondary; font.pixelSize: 12; leftPadding: parent.indicator.width + 6 }

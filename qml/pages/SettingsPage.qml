@@ -58,11 +58,18 @@ Item {
         return count
     }
 
+    // nvidia-smi corre en un worker (en frío tarda segundos): el resultado
+    // llega por gpuInventoryReady y recién ahí se pinta la lista.
     function refreshGpuInventory() {
-        const info = App.gpuInventory()
-        gpuRows = info.gpus ?? []
-        const raw = String(App.readSetting("gpu/vramIndices", ""))
-        selectedVramGpus = raw.length === 0 ? [] : raw.split(",").map(function(v) { return Number(v) })
+        App.requestGpuInventory()
+    }
+    Connections {
+        target: App
+        function onGpuInventoryReady(info) {
+            root.gpuRows = info.gpus ?? []
+            const raw = String(App.readSetting("gpu/vramIndices", ""))
+            root.selectedVramGpus = raw.length === 0 ? [] : raw.split(",").map(function(v) { return Number(v) })
+        }
     }
 
     function isVramGpuSelected(index) { return selectedVramGpus.indexOf(index) >= 0 }
@@ -640,7 +647,7 @@ Item {
                                 }
                                 Repeater {
                                     model: root.gpuRows
-                                    delegate: CheckBox {
+                                    delegate: LcCheckBox {
                                         text: "GPU " + modelData.index + " · " + modelData.name + " · " + Math.round(modelData.totalMb / 1024) + " GB"
                                         checked: root.isVramGpuSelected(modelData.index)
                                         onToggled: root.setVramGpuSelected(modelData.index, checked)
@@ -1474,8 +1481,12 @@ Item {
                         property var info: ({ available: false, gpus: [] })
                         property string msg: ""
                         property bool msgOk: false
-                        function reload() { info = App.gpuPowerInfo() }
+                        function reload() { App.requestGpuPowerInfo() }
                         Component.onCompleted: reload()
+                        Connections {
+                            target: App
+                            function onGpuPowerInfoReady(result) { gpuSection.info = result }
+                        }
 
                         Text {
                             text: "GPU · POWER LIMIT"

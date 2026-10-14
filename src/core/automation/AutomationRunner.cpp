@@ -232,7 +232,11 @@ QStringList AutomationRunner::desktopToolNames()
         QStringLiteral("desktop_wait"),
         QStringLiteral("desktop_wait_for"),
         QStringLiteral("desktop_assert"),
-        QStringLiteral("desktop_launch")};
+        QStringLiteral("desktop_launch"),
+        QStringLiteral("desktop_read_text"),
+        QStringLiteral("desktop_hover"),
+        QStringLiteral("desktop_clipboard"),
+        QStringLiteral("desktop_click_text")};
 }
 
 QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantMap &manifest,

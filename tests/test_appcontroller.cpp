@@ -3,6 +3,7 @@
 // que toda feature con diálogo tenga un camino api/headless equivalente.
 
 #include <QtTest>
+#include "core/voice/VoiceController.h"
 #include <QStandardPaths>
 #include <QTemporaryDir>
 #include <QTemporaryFile>
@@ -73,6 +74,10 @@ public:
 
     QString adapter() const override { return QStringLiteral("llamaagent"); }
     bool running() const override { return m_running; }
+    bool provisionalAnswerPending() const override { return m_provisional; }
+    bool m_provisional = false;
+    void prefillWarmup() override { ++m_warmups; }
+    int m_warmups = 0;
     void start(const AgentContext &) override { m_running = true; emit runningChanged(); }
     void stop() override { m_running = false; emit runningChanged(); }
     void newSession() override { m_msgs.clear(); }   // sesión limpia por iteración
@@ -253,6 +258,8 @@ private slots:
     void harnessAdapterNormalizesToLlamaAgent();
     void computerUseSandwichRemainsExperimentalAndOptIn();
     void systemProfileBinaryPinReadsBundle();
+    void systemProfilesBundleCacheSeesRewrites();
+    void gpuQueriesRunAsyncAndNotify();
     void systemProfileMinimumBuildSelectsNewestCompatible();
     void cpuSystemProfileRequiresCpuBinary();
     void charlaTranscriptRoutesToAgentWhenRunning();
@@ -260,6 +267,8 @@ private slots:
     void charlaJarvisApprovesByVoiceAndCuesSlowTools();
     void charlaJarvisQueuesTurnWhileAgentStarts();
     void charlaJarvisStopsOrQueuesWhileAgentWorks();
+    void charlaDoesNotSpeakProvisionalAnswers();
+    void charlaWarmsUpAgentThatStartsWhileListening();
     void ocrStatusAlwaysExplainsItself();
     void agentLevels_contextBudgetLadder();
     void privacyModeHidesAndBlocksNetworkTools();
@@ -1615,6 +1624,47 @@ void AppControllerTests::charlaCursorOcrIsOptInAndDoesNotHijackChat()
 
 // Modo JARVIS: con el agente usando la PC, una aprobación no puede depender de
 // un clic (el usuario está hablando) y una tool lenta no puede ser silencio.
+// Tras una acción de escritorio sin verificar, la respuesta en curso puede ser
+// retenida por la compuerta de verificación y reemplazada. Hablarla en vivo
+// hacía que en voz se escucharan 2-3 respuestas por turno ("looping").
+// Tras el relanzamiento por el ajuste de Charla, la escucha arranca antes que el
+// agente: el warmup de "escuchando" no lo alcanzaba y el primer turno procesaba
+// todo el prompt en frío. Al quedar corriendo, el agente se precalienta.
+void AppControllerTests::charlaWarmsUpAgentThatStartsWhileListening()
+{
+    AppController app;
+    auto *fake = new FakeAgentBackend(&app);
+    app.setTestAgentBackend(fake);
+    app.setCharlaActiveForTest(true);
+    app.voiceForTest()->setStateForTest(VoiceController::Listening);
+    QCOMPARE(fake->m_warmups, 0);
+    fake->start(AgentContext{});              // emite runningChanged(true)
+    QCOMPARE(fake->m_warmups, 1);
+}
+
+void AppControllerTests::charlaDoesNotSpeakProvisionalAnswers()
+{
+    AppController app;
+    auto *fake = new FakeAgentBackend(&app);
+    fake->start(AgentContext{});
+    app.setTestAgentBackend(fake);
+    app.setCharlaActiveForTest(true);
+    QVERIFY(app.dispatchCharlaTranscript(QStringLiteral("abrí la calculadora")));
+    QVERIFY(app.charlaUseAgentForTest());
+    VoiceController *voice = app.voiceForTest();
+    QVERIFY(voice);
+    voice->setStateForTest(VoiceController::Thinking);
+
+    const QString text = QStringLiteral("Listo, la calculadora ya está abierta y lista. ");
+    fake->m_provisional = true;
+    emit fake->streamingText(7, text);
+    QCOMPARE(voice->streamConsumedForTest(), 0);      // provisional: no se habla
+
+    fake->m_provisional = false;
+    emit fake->streamingText(8, text);
+    QVERIFY(voice->streamConsumedForTest() > 0);     // verificada: se habla en vivo
+}
+
 void AppControllerTests::charlaJarvisApprovesByVoiceAndCuesSlowTools()
 {
     AppController app;
@@ -3109,6 +3159,51 @@ void AppControllerTests::systemProfileBinaryPinReadsBundle()
     QVERIFY(app.systemProfileBinaryPin(QStringLiteral("unknown")).isEmpty());
 
     qunsetenv("LLAMACODE_SYSTEM_PROFILES");
+}
+
+// El bundle se cachea (buildContext lo consultaba varias veces por perfil y el
+// chequeo de salud congelaba la UI ~12 s). Reescribir el override con otro
+// contenido —incluso del mismo tamaño— debe verse en la siguiente consulta.
+void AppControllerTests::systemProfilesBundleCacheSeesRewrites()
+{
+    const QString bundle = m_tmp.filePath(QStringLiteral("sysprof_cache.json"));
+    auto writeBundle = [&](const QByteArray &pin) {
+        QFile f(bundle);
+        QVERIFY(f.open(QIODevice::WriteOnly | QIODevice::Truncate));
+        f.write(R"([{"id":"cached","binaryKind":"official","binaryPin":")" + pin + R"("}])");
+    };
+    writeBundle("b1111");
+    qputenv("LLAMACODE_SYSTEM_PROFILES", bundle.toLocal8Bit());
+
+    AppController app;
+    QCOMPARE(app.systemProfileBinaryPin(QStringLiteral("cached")), QStringLiteral("b1111"));
+    QCOMPARE(app.systemProfileBinaryPin(QStringLiteral("cached")), QStringLiteral("b1111"));
+    writeBundle("b2222");   // mismo tamaño, contenido distinto
+    QCOMPARE(app.systemProfileBinaryPin(QStringLiteral("cached")), QStringLiteral("b2222"));
+
+    qunsetenv("LLAMACODE_SYSTEM_PROFILES");
+}
+
+// Ajustes pide inventario y power limit al abrirse: la consulta (nvidia-smi)
+// va a un worker y llega por señal, con la misma forma que la versión síncrona
+// (haya o no GPU NVIDIA en la máquina que corre el test).
+void AppControllerTests::gpuQueriesRunAsyncAndNotify()
+{
+    AppController app;
+    QSignalSpy inventory(&app, &AppController::gpuInventoryReady);
+    QSignalSpy power(&app, &AppController::gpuPowerInfoReady);
+    app.requestGpuInventory();
+    app.requestGpuPowerInfo();
+    QVERIFY(inventory.count() > 0 || inventory.wait(15000));
+    QVERIFY(power.count() > 0 || power.wait(15000));
+    const QVariantMap inv = inventory.first().first().toMap();
+    QVERIFY(inv.contains(QStringLiteral("available")));
+    QVERIFY(inv.contains(QStringLiteral("gpus")));
+    const QVariantMap pw = power.first().first().toMap();
+    QVERIFY(pw.contains(QStringLiteral("available")));
+    QVERIFY(pw.contains(QStringLiteral("gpus")));
+    QCOMPARE(inv.value(QStringLiteral("available")).toBool(),
+             !inv.value(QStringLiteral("gpus")).toList().isEmpty());
 }
 
 void AppControllerTests::systemProfileMinimumBuildSelectsNewestCompatible()

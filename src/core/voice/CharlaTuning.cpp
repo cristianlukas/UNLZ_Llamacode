@@ -51,17 +51,58 @@ QList<Change> recommend(const QStringList &args, double vramGb)
         out.append({QStringLiteral("--predict"), predict, QStringLiteral("1024"),
                     QStringLiteral("acota la respuesta (voz = respuestas cortas)")});
 
+    // ── Contexto mínimo para el agente de voz ── El modo JARVIS manda system +
+    // tools de PC (~2-3k tokens en protocolo textual, ~13k nativo) más historial
+    // y lecturas de pantalla. Con 4096 (default de muchos perfiles) el agente
+    // compacta en cada turno y un 9B pierde la consigna (medido: respondía a un
+    // saludo viejo en vez de la tarea). llama.cpp ajusta a la VRAM con -fit.
+    const int minCtx = vramGb >= 8.0 ? 16384 : 8192;
+    const int ctxNow = ctx.toInt();
+    const bool ctxAlreadyRecommended = ctxNow > 65536;   // arriba ya se bajó a 32k
+    if (!ctxAlreadyRecommended && ctxNow > 0 && ctxNow < minCtx)
+        out.append({QStringLiteral("--ctx-size"), ctx, QString::number(minCtx),
+                    QStringLiteral("el agente de voz no entra en %1 tokens (compacta y pierde la consigna)")
+                        .arg(ctxNow)});
+
+    // ── Slots paralelos explícitos ── Con --parallel N y KV NO unificado cada
+    // slot recibe ctx/N. (Sin --parallel, llama.cpp usa auto + kv unificado: los
+    // slots comparten el pool y no achican el contexto de una conversación.)
+    QString parallel = argValue(args, QStringLiteral("--parallel"));
+    if (parallel.isEmpty()) parallel = argValue(args, QStringLiteral("-np"));
+    const bool unified = args.contains(QStringLiteral("--kv-unified")) || args.contains(QStringLiteral("-kvu"));
+    const int slotCount = parallel.toInt();
+    const int effectiveCtx = ctxAlreadyRecommended ? 32768 : qMax(ctxNow, minCtx);
+    if (!parallel.isEmpty() && slotCount > 1 && !unified && effectiveCtx / slotCount < minCtx)
+        out.append({QStringLiteral("--parallel"), parallel, QStringLiteral("1"),
+                    QStringLiteral("cada slot recibe %1 tokens; Charla es de un solo usuario")
+                        .arg(effectiveCtx / slotCount)});
+
     return out;
 }
 
 QStringList apply(QStringList args, const QList<Change> &changes)
 {
     for (const Change &c : changes) {
+        // `-np` es el alias corto de --parallel: dejar ambos sería ambiguo.
+        if (c.flag == QLatin1String("--parallel")) {
+            int j;
+            while ((j = args.indexOf(QStringLiteral("-np"))) >= 0)
+                args.remove(j, qMin(2, int(args.size() - j)));
+        }
         const int i = args.indexOf(c.flag);
         if (i >= 0 && i + 1 < args.size()) args[i + 1] = c.recommended;
         else args << c.flag << c.recommended;
     }
     return args;
+}
+
+bool requiredForAgent(const QList<Change> &changes)
+{
+    for (const Change &c : changes)
+        if (c.flag == QLatin1String("--ctx-size") && c.current.toInt() > 0
+            && c.current.toInt() < c.recommended.toInt())
+            return true;
+    return false;
 }
 
 QVariantList toVariantList(const QList<Change> &changes)

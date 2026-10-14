@@ -14,8 +14,11 @@ Rectangle {
     property var warnings: []
     property var errors: []
     property bool isValid: errors.length === 0
+    // Para los layouts: alto según contenido (comando + avisos + errores).
+    implicitHeight: previewCol.implicitHeight + 24
 
     ColumnLayout {
+        id: previewCol
         anchors { fill: parent; margins: 12 }
         spacing: 8
 

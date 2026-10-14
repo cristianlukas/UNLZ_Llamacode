@@ -427,6 +427,13 @@ GGUFScanner::Composition GGUFScanner::readCompositionAllShards(const QString &fi
     return agg;
 }
 
+int GGUFScanner::nextnPredictLayers(const QString &filePath)
+{
+    const QFileInfo fi(filePath);
+    if (!fi.isFile()) return 0;
+    return readComposition(filePath, fi.size()).nextnPredictLayers;
+}
+
 GGUFScanner::Composition GGUFScanner::readComposition(const QString &filePath,
                                                       qint64 fileSizeBytes)
 {
@@ -467,6 +474,10 @@ GGUFScanner::Composition GGUFScanner::readComposition(const QString &filePath,
         } else if (key.endsWith(QLatin1String(".context_length"))) {
             quint64 value = 0;
             if (readUnsignedMeta(r, vt, value)) c.trainedContext = int(qMin(value, quint64(std::numeric_limits<int>::max())));
+            else skipMetaValue(r, vt);
+        } else if (key.endsWith(QLatin1String(".nextn_predict_layers"))) {
+            quint64 value = 0;
+            if (readUnsignedMeta(r, vt, value)) c.nextnPredictLayers = int(qMin(value, quint64(1024)));
             else skipMetaValue(r, vt);
         } else {
             skipMetaValue(r, vt);

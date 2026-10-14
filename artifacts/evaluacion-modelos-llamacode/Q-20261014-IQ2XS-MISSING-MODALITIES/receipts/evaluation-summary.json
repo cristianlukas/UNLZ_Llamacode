@@ -1,0 +1,103 @@
+{
+  "schema": "q14-iq2xs-missing-modalities-summary-v1",
+  "closedAtUtc": "2026-10-14T01:54:33.702744+00:00",
+  "status": "complete_screening",
+  "decision": "No promotion; preserve current production profiles.",
+  "comparison": {
+    "candidate": "ISTA Qwen3.8-Flash-Next IQ2_XS with Strata 0.1.41",
+    "control": "ggml-org Qwen3.8-27B Q4_K_M with llama.cpp 0.4.1-dev",
+    "caveat": "Cross-runtime profile comparison: MoE Strata versus dense GGUF llama.cpp. This is not a weights-only quantization A/B."
+  },
+  "contextRetrieval": {
+    "fixtureTokensByCandidatePackTokenizer": 117825,
+    "apiPromptTokensBothProfiles": 117877,
+    "facts": 7,
+    "candidate": {
+      "correct": 7,
+      "elapsedSeconds": 33.719,
+      "passed": true
+    },
+    "control": {
+      "correct": 7,
+      "elapsedSeconds": 181.94,
+      "passed": true
+    },
+    "receipts": [
+      "context/iq2xs.json",
+      "context/q4-k-m.json"
+    ]
+  },
+  "serverSpeedV1": {
+    "passesPerProfile": 2,
+    "warmupsPerProfile": 1,
+    "categories": 8,
+    "samplesPerProfile": 32,
+    "maxPrefillTokens": 65536,
+    "failedSamples": 0,
+    "candidate": {
+      "decodeTps": 152.359,
+      "prefillTps": 304.147,
+      "averageTtftMs": 348.406
+    },
+    "control": {
+      "decodeTps": 37.447,
+      "prefillTps": 359.006,
+      "averageTtftMs": 267.594
+    },
+    "receipts": [
+      "server-speed/iq2/",
+      "server-speed/q4/"
+    ]
+  },
+  "computerUsageE2E": {
+    "fixture": "CU-BROWSER-DISPATCH-R4-82",
+    "candidate": {
+      "successes": 0,
+      "replicates": 3
+    },
+    "control": {
+      "successes": 0,
+      "replicates": 3
+    },
+    "candidateNote": "Replicate 1 loaded the fixture but did not submit it; replicates 2 and 3 did not navigate to the fixture.",
+    "controlNote": "Replicates 1 and 2 timed out at 300 seconds with repeated visual-scope failures; replicate 3 ended without visible confirmation.",
+    "interpretation": "The full Computer Usage stack failed this holdout for both profiles; the result does not isolate model quality from desktop-tool/visual-scope reliability."
+  },
+  "vision": {
+    "expected": {
+      "blue_triangles": 3,
+      "red_circles": 2
+    },
+    "candidate": {
+      "parsed": {
+        "blue_triangles": 3,
+        "red_circles": 2
+      },
+      "elapsedSeconds": 1.478,
+      "passed": true
+    },
+    "control": {
+      "parsed": {
+        "blue_triangles": 3,
+        "red_circles": 2
+      },
+      "elapsedSeconds": 8.67,
+      "passed": true
+    },
+    "candidateFirstAttempt": "Truncated at max_tokens=128 before a final JSON answer; retained separately. Retest with max_tokens=512 passed.",
+    "receipts": [
+      "vision/iq2xs.json",
+      "vision/iq2xs-attempt-1-truncated.json",
+      "vision/q4-k-m.json"
+    ]
+  },
+  "audio": {
+    "status": "compatibility_audit_only",
+    "nativeAudioInputOrOutput": "Not validated/available for these image-text-to-text model profiles.",
+    "controlAudioEndpoint": "GET /v1/audio/transcriptions returned 404 on llama.cpp profile.",
+    "werCerOrAcousticEvaluation": "Not run; transcript text would not count as an audio test.",
+    "receipt": "audio-capability-audit.json"
+  },
+  "productionChanges": false,
+  "applicationUnitSuites": "Not run; this continuation changed only evaluation artifacts, not C++/QML/core."
+}

@@ -762,6 +762,7 @@ if (BUILD_TESTS)
         tests/qml/LcComboBox.qml
         tests/qml/LcSwitch.qml
         qml/components/LcScrollBar.qml
+        qml/components/LcCheckBox.qml
         tests/qml/PageHeader.qml
     )
     add_custom_command(

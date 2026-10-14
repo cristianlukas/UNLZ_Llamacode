@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Window
 import LlamaCode 1.0
 
 Rectangle {
@@ -16,8 +17,26 @@ Rectangle {
 
     Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.divider }
 
+    // La ventana no tiene barra de título: el encabezado de página la reemplaza
+    // (arrastrar mueve, doble clic maximiza) y deja libre el ancho de los
+    // botones de ventana que Main.qml dibuja encima, arriba a la derecha.
+    readonly property int windowControlsReserve: {
+        const w = root.Window.window
+        return (w && w.windowControlsWidth !== undefined) ? w.windowControlsWidth : 0
+    }
+    TapHandler {
+        onDoubleTapped: {
+            const w = root.Window.window
+            if (w) w.visibility === Window.Maximized ? w.showNormal() : w.showMaximized()
+        }
+    }
+    DragHandler {
+        target: null
+        onActiveChanged: if (active && root.Window.window) root.Window.window.startSystemMove()
+    }
+
     RowLayout {
-        anchors { fill: parent; leftMargin: 24; rightMargin: 16 }
+        anchors { fill: parent; leftMargin: 24; rightMargin: 16 + root.windowControlsReserve }
 
         Column {
             Layout.fillWidth: true

@@ -29,6 +29,7 @@
 #include <QUdpSocket>
 #include <QNetworkDatagram>
 #include <QDateTime>
+#include <QMutex>
 #include <QCryptographicHash>
 #include <QClipboard>
 #include <QGuiApplication>
@@ -48,6 +49,7 @@
 #include "core/agent/OpencodeBackend.h"
 #include "core/agent/RawChatBackend.h"
 #include "core/voice/VoiceController.h"
+#include "core/voice/AudioCodec.h"
 #include "core/voice/VoiceLatencyTracker.h"
 #include "core/voice/VoiceTypes.h"
 #include "core/voice/VoiceServerManager.h"
@@ -69,6 +71,7 @@
 #include "core/eval/EvalSuite.h"
 #include "core/eval/BenchmarkPack.h"
 #include "core/ServerBenchmarkMetrics.h"
+#include "core/GGUFScanner.h"
 #include "core/tasks/WorkflowVisualModel.h"
 #include "core/tasks/SchedulerDaemonRegistration.h"
 #include "core/tasks/TaskSecurityPolicy.h"
@@ -1513,6 +1516,7 @@ AppController::AppController(QObject *parent) : QObject(parent)
     });
     m_taskLivePreviewEnabled = QSettings().value(
         QStringLiteral("tasks/livePreviewEnabled"), false).toBool();
+    connect(&m_masterCli, &MasterCli::statusChanged, this, &AppController::masterCliStatusChanged);
     connect(&m_hardwareWatcher, &QFutureWatcher<QVariantMap>::finished, this,
             [this]() {
         m_hardwareScanInFlight = false;
@@ -1801,7 +1805,8 @@ AppController::AppController(QObject *parent) : QObject(parent)
     m_gatewayEnabled = s.value(QStringLiteral("gateway/enabled"), false).toBool();
     m_gatewayPort    = s.value(QStringLiteral("gateway/port"), 8088).toInt();
     // Las claves del gateway no viven en QSettings: se migran una sola vez al
-    // SecretStore cifrado y sólo se conserva la referencia en configuración.
+    // SecretStore y sólo se conserva la referencia en configuración. El nivel
+    // de protección depende del backend activo (keyring, DPAPI o archivo local).
     m_gatewayApiKey = m_secrets.resolve(QStringLiteral("gateway/apiKey"));
     if (m_gatewayApiKey.isEmpty()) {
         const QString legacyKey = s.value(QStringLiteral("gateway/apiKey")).toString();
@@ -2784,6 +2789,20 @@ void AppController::startServer(const QString &launchProfileId)
             m_effectiveProfile[QStringLiteral("effectiveArgs")] = args;  // serverBaseUrl etc.
         }
     }
+    // El arranque anterior murió cargando el borrador (MTP/speculative): éste
+    // va sin él. Sólo para este launch; el perfil no se toca.
+    m_serverDraftLoadFailed = false;
+    if (!m_serverSkipDraftLaunchId.isEmpty()) {
+        const bool sameLaunch = m_serverSkipDraftLaunchId == launchProfileId;
+        m_serverSkipDraftLaunchId.clear();
+        const QStringList noDraft = MtpDetection::withoutSpeculativeDraft(args);
+        if (sameLaunch && noDraft != args) {
+            args = noDraft;
+            m_effectiveProfile[QStringLiteral("effectiveArgs")] = args;
+            appendServerEvent(QStringLiteral("lifecycle"),
+                              QStringLiteral("Arranque sin borrador MTP/speculative (falló al cargarlo)."));
+        }
+    }
     if (m_benchmarkRunning)
         m_benchmarkEffectiveArgs = args;
 
@@ -2886,8 +2905,11 @@ void AppController::startServer(const QString &launchProfileId)
             appendServerEvent(QStringLiteral("stdout"), QString::fromUtf8(serverProcess->readAllStandardOutput()));
     });
     connect(serverProcess, &QProcess::readyReadStandardError, this, [this, serverProcess]() {
-        if (serverProcess)
-            appendServerEvent(QStringLiteral("stderr"), QString::fromUtf8(serverProcess->readAllStandardError()));
+        if (!serverProcess) return;
+        const QString text = QString::fromUtf8(serverProcess->readAllStandardError());
+        if (m_proc == serverProcess && MtpDetection::draftLoadFailed(text))
+            m_serverDraftLoadFailed = true;
+        appendServerEvent(QStringLiteral("stderr"), text);
     });
     connect(serverProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             this, [this, serverProcess](int code, QProcess::ExitStatus status) {
@@ -2923,7 +2945,23 @@ void AppController::startServer(const QString &launchProfileId)
         const bool crashed = !userStop &&
                              (status == QProcess::CrashExit || code != 0);
         const QString crashLaunchId = m_activeLaunchId;
-        if (!m_pendingAutoAgentLaunchId.isEmpty()) {
+        const bool benchmarkOwnsLifecycle = m_benchmarkRunning || m_benchmarkCanceled;
+        // Murió cargando el borrador: reintentar igual da el mismo error. El
+        // próximo arranque (watchdog) va sin borrador y el agente pendiente
+        // sigue esperando a ese server.
+        const bool draftFallback = crashed && m_serverDraftLoadFailed
+            && !crashLaunchId.isEmpty() && !benchmarkOwnsLifecycle
+            && m_serverRestartCount < kMaxServerRestarts;
+        m_serverDraftLoadFailed = false;
+        if (draftFallback) {
+            m_serverSkipDraftLaunchId = crashLaunchId;
+            appendServerEvent(QStringLiteral("lifecycle"),
+                              QStringLiteral("El borrador MTP/speculative no cargó: reintento sin él."));
+            emit serverError(QStringLiteral(
+                "Aviso: el borrador MTP del perfil %1 no cargó. Arranco el modelo sin MTP "
+                "(funciona igual, genera algo más lento).").arg(crashLaunchId));
+        }
+        if (!m_pendingAutoAgentLaunchId.isEmpty() && !draftFallback) {
             m_pendingAutoAgentLaunchId.clear();
             m_agentStarting = false;
             emit agentStartingChanged();
@@ -2944,7 +2982,6 @@ void AppController::startServer(const QString &launchProfileId)
         // not launch a second model behind the benchmark state machine: it can
         // otherwise turn one native CUDA crash into a mixed/ambiguous pass.
         // Manual launches retain the watchdog recovery behaviour.
-        const bool benchmarkOwnsLifecycle = m_benchmarkRunning || m_benchmarkCanceled;
         // Watchdog: auto-restart en crash, con backoff y tope de intentos.
         if (crashed && !crashLaunchId.isEmpty() && !benchmarkOwnsLifecycle) {
             if (m_serverRestartCount < kMaxServerRestarts) {
@@ -3626,6 +3663,21 @@ QStringList AppController::researchReportGuardrailIssues(const QString &report)
 
 QVariantMap AppController::gpuPowerInfo() const
 {
+    return queryGpuPowerInfo();
+}
+
+void AppController::requestGpuPowerInfo()
+{
+    auto *watcher = new QFutureWatcher<QVariantMap>(this);
+    connect(watcher, &QFutureWatcher<QVariantMap>::finished, this, [this, watcher]() {
+        emit gpuPowerInfoReady(watcher->result());
+        watcher->deleteLater();
+    });
+    watcher->setFuture(QtConcurrent::run(&AppController::queryGpuPowerInfo));
+}
+
+QVariantMap AppController::queryGpuPowerInfo()
+{
     QVariantMap result;
     const QString nvidiaSmi = QStandardPaths::findExecutable(QStringLiteral("nvidia-smi"));
     if (nvidiaSmi.isEmpty()) {
@@ -3981,7 +4033,11 @@ void AppController::installCatalogEngine(const QString &engineId)
         return;
     }
 
-    const HardwareSignals hw = EngineCatalog::detectHardware();
+    // Acción explícita del usuario: si el worker de hardware aún no respondió,
+    // vale la pena la consulta directa antes que elegir variante a ciegas.
+    const HardwareSignals hw = m_hardwareSummary.contains(QStringLiteral("gpus"))
+        ? EngineCatalog::hardwareFromSummary(m_hardwareSummary)
+        : EngineCatalog::detectHardware();
     for (const EngineVariant &v : e.variants) {
         QString reason;
         if (v.buildFromSource && EngineCatalog::isVariantCompatible(v, hw, &reason)) {
@@ -5075,13 +5131,8 @@ EffectiveProfileBuilder::Context AppController::buildContext(const QString &laun
     // teniendo el gguf en disco. Sólo actúa cuando el perfil ya estaba roto.
     auto relinkStaleRow = [this](CatalogModel &m) {
         if (m.id.isEmpty() || m.isAvailable || m.fileName.isEmpty()) return;
-        for (int i = 0; i < m_catalog.rowCount(); ++i) {
-            const QVariantMap row = m_catalog.getAt(i);
-            if (row.value(QStringLiteral("fileName")).toString() != m.fileName) continue;
-            if (!row.value(QStringLiteral("isAvailable"), true).toBool()) continue;
-            m = m_catalog.findById(row.value(QStringLiteral("id")).toString());
-            return;
-        }
+        const QList<CatalogModel> same = m_catalog.availableByFileName(m.fileName);
+        if (!same.isEmpty()) m = same.first();
     };
     relinkStaleRow(ctx.catalogModel);
     relinkStaleRow(ctx.mmprojModel);
@@ -5096,15 +5147,7 @@ EffectiveProfileBuilder::Context AppController::buildContext(const QString &laun
     if (ctx.launch.system && ctx.catalogModel.id.isEmpty()) {
         // Todos los catalogados disponibles con ese nombre de archivo.
         auto matches = [this](const QString &fn) -> QList<CatalogModel> {
-            QList<CatalogModel> r;
-            if (fn.isEmpty()) return r;
-            for (int i = 0; i < m_catalog.rowCount(); ++i) {
-                const QVariantMap m = m_catalog.getAt(i);
-                if (m.value(QStringLiteral("fileName")).toString() == fn
-                    && m.value(QStringLiteral("isAvailable"), true).toBool())
-                    r << m_catalog.findById(m.value(QStringLiteral("id")).toString());
-            }
-            return r;
+            return m_catalog.availableByFileName(fn);
         };
         for (const QJsonValue &v : readSystemProfilesBundle()) {
             const QJsonObject e = v.toObject();
@@ -5112,7 +5155,19 @@ EffectiveProfileBuilder::Context AppController::buildContext(const QString &laun
             const QJsonObject mo = e.value(QStringLiteral("model")).toObject();
             const QString hint = e.value(QStringLiteral("folder")).toString();
             // Modelo: preferir la copia cuya carpeta coincide con el folder del bundle.
-            const QList<CatalogModel> mc = matches(mo.value(QStringLiteral("file")).toString());
+            QList<CatalogModel> mc = matches(mo.value(QStringLiteral("file")).toString());
+            // MTP autocontenido: el nombre no identifica la variante (el MTP de
+            // unsloth de Qwen3.5 9B se llama igual que el común). Aceptar sólo
+            // archivos que de verdad traen capas MTP; si no, el server arrancaba
+            // con --spec-type draft-mtp sobre un GGUF sin ellas y moría.
+            const QJsonObject mtp = e.value(QStringLiteral("mtp")).toObject();
+            if (mtp.value(QStringLiteral("enabled")).toBool()
+                && mtp.value(QStringLiteral("selfContained")).toBool()) {
+                QList<CatalogModel> withMtp;
+                for (const CatalogModel &c : std::as_const(mc))
+                    if (GGUFScanner::nextnPredictLayers(c.absolutePath) > 0) withMtp << c;
+                mc = withMtp;
+            }
             CatalogModel cm;
             for (const CatalogModel &c : mc)
                 if (!hint.isEmpty() && c.absolutePath.contains(hint)) { cm = c; break; }
@@ -5509,7 +5564,7 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter,
     });
     // Streaming incremental: refresca SÓLO la burbuja activa, sin re-bindear toda
     // la lista (evita re-instanciar todos los delegates por token).
-    connect(b, &IAgentBackend::streamingText, this, [this](int idx, const QString &content) {
+    connect(b, &IAgentBackend::streamingText, this, [this, b](int idx, const QString &content) {
         m_agentStreamingIndex = idx;
         m_agentStreamingText  = content;
         emit agentStreamingChanged();
@@ -5517,10 +5572,7 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter,
         // (oración por oración), en paralelo a la generación y los tool-calls. El
         // usuario escucha la primera frase enseguida en vez de esperar todo el
         // turno. VoiceController sanitiza <think>/indicadores y trocea.
-        if (m_voice && m_charlaActive && m_charlaUseAgent && m_runningTaskId.isEmpty()) {
-            m_charlaStreamBubble = idx;
-            m_voice->speakStreaming(idx, content);
-        }
+        routeAgentStreamToCharla(b, idx, content);
     });
     connect(b, &IAgentBackend::queueChanged, this, [this, b]() {
         m_agentQueuedCount = b->queuedCount();
@@ -5645,7 +5697,11 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter,
                 {QStringLiteral("desktop_focus"), QStringLiteral("Cambiando de ventana")},
                 {QStringLiteral("desktop_controls"), QStringLiteral("Leyendo controles")},
                 {QStringLiteral("desktop_windows"), QStringLiteral("Buscando ventanas")},
-                {QStringLiteral("desktop_wait"), QStringLiteral("Esperando la interfaz")}};
+                {QStringLiteral("desktop_wait"), QStringLiteral("Esperando la interfaz")},
+                {QStringLiteral("desktop_read_text"), QStringLiteral("Leyendo la pantalla")},
+                {QStringLiteral("desktop_hover"), QStringLiteral("Moviendo el puntero")},
+                {QStringLiteral("desktop_clipboard"), QStringLiteral("Usando el portapapeles")},
+                {QStringLiteral("desktop_click_text"), QStringLiteral("Haciendo clic en un texto")}};
             m_desktopAgentAction = labels.value(tool, QStringLiteral("Usando el escritorio"));
             if (!detail.isEmpty() && tool == QLatin1String("desktop_launch"))
                 m_desktopAgentAction += QStringLiteral(": ") + detail.left(48);
@@ -6188,7 +6244,9 @@ QStringList AppController::masterCliList() const
 
 QVariantMap AppController::masterCliStatus(const QString &name, bool force)
 {
-    return m_masterCli.status(name, force);
+    // No bloqueante: el probe ejecuta los CLIs (Node tarda segundos) y esto se
+    // llama al abrir Perfiles. El resultado llega por masterCliStatusChanged.
+    return m_masterCli.requestStatus(name, force);
 }
 
 QString AppController::masterCliInstallCommand(const QString &name) const
@@ -9276,6 +9334,18 @@ void AppController::finishDesktopReplay()
     sendToAgent(verify);
 }
 
+void AppController::routeAgentStreamToCharla(IAgentBackend *b, int idx, const QString &content)
+{
+    if (!(m_voice && m_charlaActive && m_charlaUseAgent && m_runningTaskId.isEmpty())) return;
+    m_charlaStreamBubble = idx;
+    // Con una acción de escritorio sin verificar, esta respuesta puede ser
+    // retenida y reemplazada: hablarla en vivo hacía que se escucharan dos o
+    // tres respuestas por turno ("looping"). Si termina aceptada, speakFlush la
+    // dice completa al cerrar el turno.
+    if (!b->provisionalAnswerPending())
+        m_voice->speakStreaming(idx, content);
+}
+
 void AppController::setTestAgentBackend(IAgentBackend *b)
 {
     // Solo tests: cablea las señales mínimas que el ciclo de Tasks necesita
@@ -9292,6 +9362,9 @@ void AppController::setTestAgentBackend(IAgentBackend *b)
             finishRunningTask(QStringLiteral("error"), m);
     });
     // Reacciones de Charla: mismas funciones que el wiring real.
+    connect(b, &IAgentBackend::streamingText, this, [this, b](int idx, const QString &content) {
+        routeAgentStreamToCharla(b, idx, content);
+    });
     connect(b, &IAgentBackend::toolApprovalNeeded, this,
             [this](const QVariantMap &call) { onCharlaToolApprovalNeeded(call); });
     connect(b, &IAgentBackend::agentLifecycleEvent, this,
@@ -10439,6 +10512,10 @@ void AppController::useLanServer(const QString &baseUrl, const QString &apiKey,
     if (!m_nam) m_nam = new QNetworkAccessManager(this);
     QNetworkRequest request(QUrl(baseUrl + QStringLiteral("/llamacode/v1/activate")));
     request.setHeader(QNetworkRequest::ContentTypeHeader, QByteArrayLiteral("application/json"));
+    // La activación sólo confirma que el gateway aceptó el perfil; la carga del
+    // modelo sigue en segundo plano. Una respuesta ausente no debe dejar al
+    // diálogo LAN en "Conectando…" indefinidamente.
+    request.setTransferTimeout(8000);
     if (!effectiveApiKey.isEmpty())
         request.setRawHeader(QByteArrayLiteral("Authorization"),
                              QByteArrayLiteral("Bearer ") + effectiveApiKey.toUtf8());
@@ -10454,6 +10531,10 @@ void AppController::useLanServer(const QString &baseUrl, const QString &apiKey,
         } else if (status == 401) {
             error = QStringLiteral(
                 "El servidor requiere autenticación (HTTP 401). Copiá la API key en la PC anfitriona: Configuración → Gateway → Copiar API key.");
+        } else if (status == 0) {
+            error = QStringLiteral(
+                "No hubo respuesta del servidor LAN: %1. Revisá que el Gateway esté activo y que el puerto sea accesible desde esta red.")
+                        .arg(reply->errorString());
         } else {
             error = QStringLiteral("El servidor LAN rechazó la conexión (HTTP %1): %2")
                         .arg(status).arg(reply->errorString());
@@ -15317,18 +15398,48 @@ void AppController::cleanupDuplicateInitialLaunchProfiles()
 }
 
 // Lee el bundle de perfiles de sistema (env override para tests, si no el qrc).
+//
+// Cacheado: son ~250 KB de JSON más la expansión de variantes, y buildContext()
+// lo consulta varias veces POR PERFIL (kind, pin, build mínimo, religado por
+// nombre). El chequeo de salud recorre todos los perfiles, así que sin cache
+// eran ~1500 parseos y la UI se congelaba ~12 s al abrir Perfiles. El recurso
+// qrc es inmutable; un override (tests) se relee y se compara por contenido,
+// así reescribir el archivo invalida la cache aunque conserve tamaño y fecha.
 static QJsonArray readSystemProfilesBundle()
 {
+    static QMutex mutex;
+    static QString cachedSrc;
+    static QByteArray cachedBytes;
+    static QJsonArray cachedArray;
+    static bool cachedValid = false;
+
     const QByteArray env = qgetenv("LLAMACODE_SYSTEM_PROFILES");
     const QString src = !env.isEmpty() ? QString::fromLocal8Bit(env)
                                        : QStringLiteral(":/assets/system_profiles.json");
+    const bool immutable = src.startsWith(QLatin1Char(':'));
+
+    QMutexLocker lock(&mutex);
+    if (cachedValid && immutable && cachedSrc == src)
+        return cachedArray;
+
     QFile f(src);
-    if (!f.open(QIODevice::ReadOnly)) return {};
+    if (!f.open(QIODevice::ReadOnly)) {
+        cachedValid = false;
+        return {};
+    }
+    const QByteArray bytes = f.readAll();
+    if (cachedValid && cachedSrc == src && cachedBytes == bytes)
+        return cachedArray;
+
     // buildContext() usa este bundle para religar por nombre los modelos que el
     // usuario guarda fuera de la carpeta administrada (por ejemplo D:\Models).
     // ProfileManager expande las variantes de benchmark al cargarlas; esta vista
     // debe hacer lo mismo o sólo el perfil base puede encontrar su GGUF.
-    return expandSystemProfileVariants(QJsonDocument::fromJson(f.readAll()).array());
+    cachedArray = expandSystemProfileVariants(QJsonDocument::fromJson(bytes).array());
+    cachedSrc = src;
+    cachedBytes = immutable ? QByteArray() : bytes;
+    cachedValid = true;
+    return cachedArray;
 }
 
 void AppController::ensureSystemBinary(const QString &kind)
@@ -15556,7 +15667,7 @@ QString AppController::pinnedSystemBinaryId(const QString &launchId) const
         const QString bid = m_binaries.data(m_binaries.index(r, 0), BinaryRegistry::IdRole).toString();
         if (bid.isEmpty()) continue;
         const LlamaBinary b = m_binaries.findById(bid);
-        if (b.path.isEmpty() || !QFileInfo::exists(b.path)) continue;
+        if (b.path.isEmpty() || !binaryFileExists(b.path)) continue;
         if ((b.name + QLatin1Char(' ') + b.path).toLower().contains(pin)) return bid;
     }
     return {};   // pin sin binario válido → caller cae al kind
@@ -15571,7 +15682,7 @@ QString AppController::minimumSystemBinaryId(const QString &launchId) const
     for (int r = 0; r < m_binaries.rowCount(); ++r) {
         const QString bid = m_binaries.data(m_binaries.index(r, 0), BinaryRegistry::IdRole).toString();
         const LlamaBinary b = m_binaries.findById(bid);
-        if (b.path.isEmpty() || !QFileInfo::exists(b.path) || b.backend == QLatin1String("cpu"))
+        if (b.path.isEmpty() || !binaryFileExists(b.path) || b.backend == QLatin1String("cpu"))
             continue;
         const int build = llamaCppBuildNumber(b.versionHint + QLatin1Char(' ') + b.name
                                                + QLatin1Char(' ') + b.path);
@@ -15592,7 +15703,7 @@ QString AppController::resolveSystemBinaryId(const QString &kind) const
         const QString bid = m_binaries.data(m_binaries.index(r, 0), BinaryRegistry::IdRole).toString();
         if (bid.isEmpty()) continue;
         const LlamaBinary b = m_binaries.findById(bid);
-        if (b.path.isEmpty() || !QFileInfo::exists(b.path)) continue;     // solo válidos
+        if (b.path.isEmpty() || !binaryFileExists(b.path)) continue;     // solo válidos
         if (firstId.isEmpty()) firstId = bid;
         if (!requestedFlavor.isEmpty()
             && b.flavor.compare(requestedFlavor, Qt::CaseInsensitive) == 0) {
@@ -16980,6 +17091,21 @@ QVariantList AppController::parseGpuInventoryCsv(const QString &csv)
 }
 
 QVariantMap AppController::gpuInventory() const
+{
+    return queryGpuInventory();
+}
+
+void AppController::requestGpuInventory()
+{
+    auto *watcher = new QFutureWatcher<QVariantMap>(this);
+    connect(watcher, &QFutureWatcher<QVariantMap>::finished, this, [this, watcher]() {
+        emit gpuInventoryReady(watcher->result());
+        watcher->deleteLater();
+    });
+    watcher->setFuture(QtConcurrent::run(&AppController::queryGpuInventory));
+}
+
+QVariantMap AppController::queryGpuInventory()
 {
     QVariantMap result;
     const QString nvidiaSmi = QStandardPaths::findExecutable(QStringLiteral("nvidia-smi"));
@@ -20367,8 +20493,10 @@ QVariantList AppController::benchmarkCoverage() const
         if (!messages.contains(issue.message)) messages.append(issue.message);
         health[QStringLiteral("codes")] = codes;
         health[QStringLiteral("messages")] = messages;
+        // Un perfil de sistema sin instalar tampoco puede correr el benchmark.
         health[QStringLiteral("error")] = health.value(QStringLiteral("error")).toBool()
-            || issue.severity == QLatin1String("error");
+            || issue.severity == QLatin1String("error")
+            || issue.code == QLatin1String("system-not-installed");
     }
 
     const QStringList stages{QStringLiteral("he0"), QStringLiteral("he20"), QStringLiteral("bcb")};
@@ -25320,7 +25448,7 @@ void AppController::applyVoiceConfig()
             c.sttMode = QStringLiteral("process_batch");
             c.sttProvider = QStringLiteral("local");
         }
-        const int port = sttEngine.value("defaultPort", 8081).toInt();
+        const int port = managedSttPort(c);
         if (c.sttMode != QLatin1String("stream_process")
             && c.sttMode != QLatin1String("process_batch")) {
             c.sttProvider = QStringLiteral("local");
@@ -25657,6 +25785,15 @@ void AppController::onCharlaAgentRunningChanged(bool running)
     if (!m_charlaActive) return;
     if (running) {
         applyCharlaVoiceModeToAgent(true);
+        // El warmup normal se dispara al pasar a "escuchando"; si el agente
+        // terminó de arrancar DESPUÉS (relanzamiento por el ajuste de Charla),
+        // ese warmup fue al chat y el primer turno prefil-eaba todo el prompt del
+        // agente en frío (~4 s medidos). Precalentar ahora, mientras se escucha.
+        if (m_charlaPendingTranscript.isEmpty() && m_voice
+            && (m_voice->state() == VoiceController::Listening
+                || m_voice->state() == VoiceController::Ready)
+            && m_agentBackend && m_agentBackend->running())
+            m_agentBackend->prefillWarmup();
         if (!m_charlaPendingTranscript.isEmpty()) {
             const QString text = m_charlaPendingTranscript;
             m_charlaPendingTranscript.clear();
@@ -25807,10 +25944,28 @@ void AppController::startCharla()
     // tiene recomendaciones pendientes, relanzar con overrides y volver acá.
     // El plan multi-GPU ya quedó activo arriba, por lo que ambos overrides viajan
     // en el mismo arranque.
-    if (charlaAutoTune() && !m_charlaStartAfterRelaunch
-        && !charlaTuneRecommendations().isEmpty()) {
-        applyCharlaTuneAndStartCharla();
-        return;
+    if (!m_charlaStartAfterRelaunch) {
+        const QVariantList pending = charlaTuneRecommendations();
+        bool agentNeedsIt = false;
+        if (charlaAgentMode() && !pending.isEmpty()) {
+            QList<CharlaTuning::Change> changes;
+            for (const QVariant &v : pending) {
+                const QVariantMap m = v.toMap();
+                changes.append({m.value(QStringLiteral("flag")).toString(),
+                                m.value(QStringLiteral("current")).toString(),
+                                m.value(QStringLiteral("recommended")).toString(),
+                                m.value(QStringLiteral("reason")).toString()});
+            }
+            agentNeedsIt = CharlaTuning::requiredForAgent(changes);
+        }
+        if ((charlaAutoTune() || agentNeedsIt) && !pending.isEmpty()) {
+            if (agentNeedsIt && !charlaAutoTune())
+                appendServerEvent(QStringLiteral("lifecycle"), QStringLiteral(
+                    "Charla (modo agente): el contexto del perfil no alcanza para el agente "
+                    "de voz; relanzo con el ajuste de Charla (sólo esta sesión)."));
+            applyCharlaTuneAndStartCharla();
+            return;
+        }
     }
 
     // Si el servidor ya estaba cargado con el perfil normal, se relanza una sola
@@ -26031,6 +26186,28 @@ void AppController::applyCharlaTuneAndStartCharla()
     stopServer();
 }
 
+void AppController::setCharlaSyntheticInput(bool on)
+{
+    ensureVoice();
+    m_voice->setSyntheticInput(on);
+}
+
+int AppController::charlaSimulateUtterance(const QString &wavPath)
+{
+    QFile f(wavPath);
+    if (!f.open(QIODevice::ReadOnly)) return -1;
+    const QByteArray wav = f.readAll();
+    int rate = 0, channels = 0;
+    if (!AudioCodec::wavPcm16Format(wav, &rate, &channels)) return -1;
+    const QByteArray pcm = AudioCodec::toMonoResampled(
+        AudioCodec::wavExtractPcm(wav), rate, channels, 16000);
+    if (pcm.isEmpty()) return -1;
+    ensureVoice();
+    m_voice->setSyntheticInput(true);
+    m_voice->queueSyntheticAudio(pcm);
+    return int(pcm.size() / 32);
+}
+
 void AppController::stopCharla()
 {
     m_charlaActive = false;
@@ -26119,7 +26296,11 @@ void AppController::continueVoicePrerequisitesInstall()
         m_voiceServers.installTtsVoice(voiceId);
         return;
     }
-    if (!voicePiperAvailable()) {
+    // No alcanza con un `piper` en el PATH: el de pip (piper-tts) no tiene modo
+    // residente y cada oración recargaba el modelo (~3,5 s hasta el primer
+    // audio, medido). Sin ruta configurada a mano, se instala el binario oficial.
+    if (voicePiperPath().trimmed().isEmpty()
+        && VoiceServerManager::installedBinaryPath(QStringLiteral("piper")).isEmpty()) {
         m_voiceServers.installBinary(QStringLiteral("piper"));
         return;
     }
@@ -26127,6 +26308,9 @@ void AppController::continueVoicePrerequisitesInstall()
     QVariantMap cfg = voiceConfig(m_activeLaunchId);
     cfg[QStringLiteral("ttsMode")] = QStringLiteral("piper");
     cfg[QStringLiteral("ttsManagedVoice")] = voiceId;
+    // Sin esto el motor quedaba instalado pero no elegido: Charla seguía con el
+    // STT por defecto (http://127.0.0.1:8081, a veces el propio LLM).
+    cfg[QStringLiteral("sttManagedEngine")] = engineId;
     setVoiceConfig(m_activeLaunchId, cfg);
     emit voiceInstallFinished(engineId, true, QString());
 }
@@ -26463,6 +26647,24 @@ QString AppController::voiceBinaryDefaultUrl(const QString &kind) const
     return VoiceServerManager::defaultBinaryUrl(kind);
 }
 
+int AppController::managedSttPort(const VoiceConfig &c)
+{
+    if (m_sttManagedPort > 0 && m_sttProc && m_sttProc->state() != QProcess::NotRunning)
+        return m_sttManagedPort;
+    const int preferred = VoiceServerManager::sttEngine(c.sttManagedEngine)
+                              .value(QStringLiteral("defaultPort"), 8081).toInt();
+    QList<int> avoid;
+    const int llmPort = QUrl(serverBaseUrl()).port();
+    if (llmPort > 0) avoid << llmPort;
+    const int port = VoiceServerManager::pickManagedPort(preferred, avoid,
+                                                         &VoiceServerManager::localPortFree);
+    if (port != preferred && port > 0)
+        qInfo().noquote() << QStringLiteral("[charla] whisper-server: puerto %1 ocupado (LLM en %2); uso %3")
+                                 .arg(preferred).arg(llmPort).arg(port);
+    m_sttManagedPort = port;
+    return port;
+}
+
 bool AppController::startManagedStt(const VoiceConfig &c)
 {
     stopManagedStt();
@@ -26497,11 +26699,16 @@ bool AppController::startManagedStt(const VoiceConfig &c)
     if (prog.isEmpty() || !QFileInfo(prog).isFile())
         prog = VoiceServerManager::installedBinaryPath(QStringLiteral("whisper-server"));
     if (prog.isEmpty()) prog = QStringLiteral("whisper-server");
-    const QVariantMap eng = VoiceServerManager::sttEngine(c.sttManagedEngine);
-    const int port = eng.value("defaultPort", 8081).toInt();
+    const int port = managedSttPort(c);
+    if (port <= 0) {
+        emit serverError(QStringLiteral("No hay un puerto libre para whisper-server."));
+        return false;
+    }
     const QStringList args = VoiceServerManager::buildWhisperArgs(
         VoiceServerManager::modelPath(c.sttManagedEngine),
-        QStringLiteral("127.0.0.1"), port, c.sttLanguage);
+        QStringLiteral("127.0.0.1"), port, c.sttLanguage,
+        VoiceServerManager::whisperThreads(QThread::idealThreadCount()),
+        VoiceServerManager::kWhisperAudioCtx);
 
     m_sttProc = new QProcess(this);
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
@@ -26659,7 +26866,7 @@ QVariantMap AppController::profileHealthSummary()
     int errors = 0, warnings = 0;
     for (const HealthIssue &i : resolvedProfileHealth()) {
         if (i.severity == QLatin1String("error")) ++errors;
-        else ++warnings;
+        else if (i.severity == QLatin1String("warning")) ++warnings;
     }
     QVariantMap m;
     m["errors"] = errors;
@@ -26667,8 +26874,27 @@ QVariantMap AppController::profileHealthSummary()
     return m;
 }
 
+bool AppController::binaryFileExists(const QString &path) const
+{
+    if (m_binaryExistsBatch <= 0)
+        return QFileInfo::exists(path);
+    const auto it = m_binaryExistsCache.constFind(path);
+    if (it != m_binaryExistsCache.cend())
+        return it.value();
+    const bool exists = QFileInfo::exists(path);
+    m_binaryExistsCache.insert(path, exists);
+    return exists;
+}
+
 QList<HealthIssue> AppController::resolvedProfileHealth()
 {
+    // Lote: ~260 perfiles x varios binarios = miles de stat() sobre las mismas
+    // rutas. La cache vive sólo durante esta pasada.
+    struct ExistsBatch {
+        const AppController *c;
+        explicit ExistsBatch(const AppController *ctl) : c(ctl) { ++c->m_binaryExistsBatch; }
+        ~ExistsBatch() { if (--c->m_binaryExistsBatch == 0) c->m_binaryExistsCache.clear(); }
+    } batch(this);
     QList<HealthIssue> issues;
     for (const QVariant &value : m_profiles.launchProfilesForMenu()) {
         const QString launchId = value.toMap().value(QStringLiteral("id")).toString();

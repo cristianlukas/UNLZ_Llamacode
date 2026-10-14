@@ -1938,19 +1938,25 @@ void ProfileManager::save() const
     // Marca que los próximos cambios de archivo son nuestros, para no auto-recargar.
     m_saving = true;
 
-    auto saveList = [](const QString &path, const auto &items) {
-        // Anti-wipe guard: never overwrite a non-empty file with an empty list.
-        if (items.isEmpty()) {
+    // Devuelve los ids cuyo contenido cambió respecto del archivo en disco (los
+    // que van al historial). Si el archivo resultante es idéntico al actual no
+    // se escribe nada: ni backup, ni rename, ni snapshots. Antes cada save()
+    // reescribía las 8 entidades y apilaba un snapshot de CADA perfil en
+    // profile_history.jsonl (llegó a 13 MB) aunque sólo se hubiera tocado uno.
+    auto saveList = [](const QString &path, const auto &items) -> QSet<QString> {
+        QSet<QString> changed;
+        QByteArray existingBytes;
+        {
             QFile existing(path);
-            if (existing.exists() && existing.open(QIODevice::ReadOnly)) {
-                const QJsonArray cur = QJsonDocument::fromJson(existing.readAll()).array();
-                existing.close();
-                if (!cur.isEmpty()) {
-                    qWarning() << "[ProfileManager::save] refusing to wipe non-empty file with empty list:"
-                               << path;
-                    return;
-                }
-            }
+            if (existing.exists() && existing.open(QIODevice::ReadOnly))
+                existingBytes = existing.readAll();
+        }
+        const QJsonArray cur = QJsonDocument::fromJson(existingBytes).array();
+        // Anti-wipe guard: never overwrite a non-empty file with an empty list.
+        if (items.isEmpty() && !cur.isEmpty()) {
+            qWarning() << "[ProfileManager::save] refusing to wipe non-empty file with empty list:"
+                       << path;
+            return changed;
         }
 
         QJsonArray arr;
@@ -1959,6 +1965,21 @@ void ProfileManager::save() const
             arr.append(stored);
         }
         const QByteArray data = QJsonDocument(arr).toJson();
+        if (!existingBytes.isEmpty() && data == existingBytes)
+            return changed;
+
+        QHash<QString, QJsonObject> previousById;
+        for (const QJsonValue &v : cur) {
+            const QJsonObject o = v.toObject();
+            previousById.insert(o.value(QStringLiteral("id")).toString(), o);
+        }
+        for (const QJsonValue &v : arr) {
+            const QJsonObject o = v.toObject();
+            const QString id = o.value(QStringLiteral("id")).toString();
+            const auto prev = previousById.constFind(id);
+            if (prev == previousById.cend() || prev.value() != o)
+                changed.insert(id);
+        }
         QDir().mkpath(QFileInfo(path).absolutePath());
 
         // Rolling backup of the current on-disk file BEFORE overwriting, so any
@@ -1976,15 +1997,11 @@ void ProfileManager::save() const
             while (olds.size() > 15)
                 QFile::remove(bdir + "/" + olds.takeFirst());
             // Warn loudly on a large count drop (possible accidental loss).
-            QFile prev(path);
-            if (prev.open(QIODevice::ReadOnly)) {
-                const int curCount = QJsonDocument::fromJson(prev.readAll()).array().size();
-                prev.close();
-                if (curCount > 5 && arr.size() < curCount / 2)
-                    qWarning() << "[ProfileManager::save] LARGE COUNT DROP" << path
-                               << curCount << "->" << arr.size()
-                               << "(backup kept in" << bdir << ")";
-            }
+            const int curCount = cur.size();
+            if (curCount > 5 && arr.size() < curCount / 2)
+                qWarning() << "[ProfileManager::save] LARGE COUNT DROP" << path
+                           << curCount << "->" << arr.size()
+                           << "(backup kept in" << bdir << ")";
         }
 
         // Atomic write: write to a temp file, then rename over the target so a
@@ -1993,7 +2010,7 @@ void ProfileManager::save() const
         QFile f(tmp);
         if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
             qWarning() << "[ProfileManager::save] FAILED to open temp" << tmp << f.errorString();
-            return;
+            return QSet<QString>{};
         }
         const qint64 written = f.write(data);
         f.flush();
@@ -2001,11 +2018,14 @@ void ProfileManager::save() const
         if (written != data.size()) {
             qWarning() << "[ProfileManager::save] short write, aborting rename" << tmp;
             QFile::remove(tmp);
-            return;
+            return QSet<QString>{};
         }
         QFile::remove(path);                 // Windows: rename requires absent target
-        if (!QFile::rename(tmp, path))
+        if (!QFile::rename(tmp, path)) {
             qWarning() << "[ProfileManager::save] FAILED to rename" << tmp << "->" << path;
+            return QSet<QString>{};
+        }
+        return changed;
     };
 
     // Filtrar perfiles de SISTEMA: no se persisten (se reconstruyen del bundle).
@@ -2014,26 +2034,30 @@ void ProfileManager::save() const
         for (const auto &x : items) if (!x.system) out.append(x);
         return out;
     };
-    saveList(storagePath("backends"),   userOnly(m_backends.m_items));
-    saveList(storagePath("models"),     userOnly(m_models.m_items));
-    saveList(storagePath("runtimes"),   userOnly(m_runtimes.m_items));
-    saveList(storagePath("harnesses"),  userOnly(m_harnesses.m_items));
-    saveList(storagePath("workspaces"), userOnly(m_workspaces.m_items));
-    saveList(storagePath("launches"),   userOnly(m_launches.m_items));
-    saveList(storagePath("agent_profiles"), userOnly(m_agentProfiles.m_items));
-    saveList(storagePath("persona_styles"), userOnly(m_personaStyles.m_items));
+    const QSet<QString> changedBackends   = saveList(storagePath("backends"),   userOnly(m_backends.m_items));
+    const QSet<QString> changedModels     = saveList(storagePath("models"),     userOnly(m_models.m_items));
+    const QSet<QString> changedRuntimes   = saveList(storagePath("runtimes"),   userOnly(m_runtimes.m_items));
+    const QSet<QString> changedHarnesses  = saveList(storagePath("harnesses"),  userOnly(m_harnesses.m_items));
+    const QSet<QString> changedWorkspaces = saveList(storagePath("workspaces"), userOnly(m_workspaces.m_items));
+    const QSet<QString> changedLaunches   = saveList(storagePath("launches"),   userOnly(m_launches.m_items));
+    const QSet<QString> changedAgents     = saveList(storagePath("agent_profiles"), userOnly(m_agentProfiles.m_items));
+    const QSet<QString> changedPersonas   = saveList(storagePath("persona_styles"), userOnly(m_personaStyles.m_items));
 
-    // Historial append-only: un snapshot por perfil presente en cada save.
+    // Historial append-only: un snapshot por perfil que CAMBIÓ en este save.
     // Es deliberadamente JSONL para poder inspeccionarlo y recuperarlo aunque
     // una escritura posterior quede incompleta.
     const QString historyPath = QFileInfo(storagePath(QStringLiteral("backends"))).absolutePath()
                                 + QStringLiteral("/profile_history.jsonl");
+    const bool anyChanged = !(changedBackends.isEmpty() && changedModels.isEmpty()
+        && changedRuntimes.isEmpty() && changedHarnesses.isEmpty()
+        && changedWorkspaces.isEmpty() && changedLaunches.isEmpty()
+        && changedAgents.isEmpty() && changedPersonas.isEmpty());
     QFile history(historyPath);
-    if (history.open(QIODevice::WriteOnly | QIODevice::Append)) {
+    if (anyChanged && history.open(QIODevice::WriteOnly | QIODevice::Append)) {
         const double now = static_cast<double>(QDateTime::currentMSecsSinceEpoch());
-        auto append = [&](const QString &entity, const auto &items) {
+        auto append = [&](const QString &entity, const auto &items, const QSet<QString> &changed) {
             for (const auto &item : items) {
-                if (item.system) continue;
+                if (item.system || !changed.contains(item.id)) continue;
                 QJsonObject row{{QStringLiteral("timestamp"), now},
                                 {QStringLiteral("entity"), entity},
                                 {QStringLiteral("id"), item.id},
@@ -2042,14 +2066,14 @@ void ProfileManager::save() const
                 history.write("\n");
             }
         };
-        append(QStringLiteral("backend"), m_backends.m_items);
-        append(QStringLiteral("model"), m_models.m_items);
-        append(QStringLiteral("runtime"), m_runtimes.m_items);
-        append(QStringLiteral("harness"), m_harnesses.m_items);
-        append(QStringLiteral("workspace"), m_workspaces.m_items);
-        append(QStringLiteral("launch"), m_launches.m_items);
-        append(QStringLiteral("agent"), m_agentProfiles.m_items);
-        append(QStringLiteral("personaStyle"), m_personaStyles.m_items);
+        append(QStringLiteral("backend"), m_backends.m_items, changedBackends);
+        append(QStringLiteral("model"), m_models.m_items, changedModels);
+        append(QStringLiteral("runtime"), m_runtimes.m_items, changedRuntimes);
+        append(QStringLiteral("harness"), m_harnesses.m_items, changedHarnesses);
+        append(QStringLiteral("workspace"), m_workspaces.m_items, changedWorkspaces);
+        append(QStringLiteral("launch"), m_launches.m_items, changedLaunches);
+        append(QStringLiteral("agent"), m_agentProfiles.m_items, changedAgents);
+        append(QStringLiteral("personaStyle"), m_personaStyles.m_items, changedPersonas);
         history.close();
     }
 
@@ -2097,9 +2121,16 @@ QVariantList ProfileManager::profileChangeHistory(const QString &entity,
     QFile f(path);
     if (!f.open(QIODevice::ReadOnly)) return out;
     QList<QVariantMap> matches;
+    // El historial crece sin límite (MB): descartar por texto las filas de otros
+    // perfiles antes de parsear JSON. Las filas son compactas y el id no lleva
+    // caracteres que JSON escape, así que el id aparece literal entre comillas.
+    const bool canPrefilter = !id.contains(QLatin1Char('"')) && !id.contains(QLatin1Char('\\'));
+    const QByteArray idNeedle = '"' + id.toUtf8() + '"';
     while (!f.atEnd()) {
+        const QByteArray line = f.readLine();
+        if (canPrefilter && !line.contains(idNeedle)) continue;
         QJsonParseError error;
-        const QJsonDocument doc = QJsonDocument::fromJson(f.readLine(), &error);
+        const QJsonDocument doc = QJsonDocument::fromJson(line, &error);
         if (error.error != QJsonParseError::NoError || !doc.isObject()) continue;
         const QJsonObject row = doc.object();
         if (row.value(QStringLiteral("entity")).toString() != entity

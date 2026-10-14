@@ -661,7 +661,7 @@ Item {
                         contentItem: Text { text: "🤖 " + agentProfileCombo.displayText; color: Theme.textPrimary; font.pixelSize: 12; leftPadding: 8; verticalAlignment: Text.AlignVCenter }
                     }
 
-                    CheckBox {
+                    LcCheckBox {
                         id: benchmarkThinkingCheck
                         text: "Thinking"
                         checked: App.thinkingEnabled
@@ -1070,7 +1070,7 @@ Item {
                                 Row {
                                     anchors { left: parent.left; leftMargin: 8; verticalCenter: parent.verticalCenter }
                                     spacing: 6
-                                    CheckBox {
+                                    LcCheckBox {
                                         checked: pd.isSelected
                                         anchors.verticalCenter: parent.verticalCenter
                                         onToggled: root.toggleProfile(pd.profileId)
@@ -1363,12 +1363,12 @@ Item {
                                     valueFromText: function(t) { const n = parseInt(t); return isNaN(n) ? 0 : n }
                                     onValueModified: App.writeSetting("serverSpeedPrefill", value)
                                 }
-                                CheckBox {
+                                LcCheckBox {
                                     id: serverSpeedPrefillEnabled
                                     text: "PP"; checked: App.readSetting("serverSpeedIncludePrefill", "true") !== "false"
                                     onToggled: App.writeSetting("serverSpeedIncludePrefill", checked ? "true" : "false")
                                 }
-                                CheckBox {
+                                LcCheckBox {
                                     id: serverSpeedConcurrencyEnabled
                                     text: "Slots"; checked: App.readSetting("serverSpeedIncludeConcurrency", "true") !== "false"
                                     onToggled: App.writeSetting("serverSpeedIncludeConcurrency", checked ? "true" : "false")

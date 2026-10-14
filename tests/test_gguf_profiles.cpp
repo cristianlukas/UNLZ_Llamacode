@@ -23,6 +23,8 @@ class CoreTests : public QObject
     Q_OBJECT
 
 private slots:
+    void mtpDraftFailureFallsBackWithoutDraft();
+
     // ── GGUFScanner::inferFamily ──
     void inferFamily_data();
     void inferFamily();
@@ -44,6 +46,7 @@ private slots:
     void readCompositionAllShards_aggregates();
     void readComposition_realTensors();
     void readComposition_metadata();
+    void readComposition_detectsMtpLayers();
     void readComposition_rejectsGarbage();
 
     // ── GGUFScanner::isDegradedQatQuant ──
@@ -409,6 +412,29 @@ void CoreTests::readComposition_metadata()
     QCOMPARE(c.architecture, QStringLiteral("qwen2"));
     QCOMPARE(c.parameterCount, 7000000000LL);
     QCOMPARE(c.trainedContext, 131072);
+}
+
+// El nombre del archivo no identifica la variante MTP (unsloth publica el MTP de
+// Qwen3.5 9B como "Qwen3.5-9B-Q4_K_M.gguf"): la verdad es nextn_predict_layers.
+void CoreTests::readComposition_detectsMtpLayers()
+{
+    auto write = [](const QString &name, bool mtp) {
+        QByteArray b;
+        putU32(b, 0x46554747u); putU32(b, 3);
+        putU64(b, 1); putU64(b, mtp ? 2 : 1);
+        putMetaString(b, "general.architecture", "qwen35");
+        if (mtp) putMetaU32(b, "qwen35.nextn_predict_layers", 1);
+        putTensor(b, "token_embd.weight", {64, 64}, 2);
+        const QString path = QDir(QDir::tempPath()).filePath(name);
+        QFile f(path); f.open(QIODevice::WriteOnly); f.write(b); f.close();
+        return path;
+    };
+    const QString withMtp = write("mtp-fixture.gguf", true);
+    const QString plain = write("plain-fixture.gguf", false);
+    QCOMPARE(GGUFScanner::readComposition(withMtp, QFileInfo(withMtp).size()).nextnPredictLayers, 1);
+    QCOMPARE(GGUFScanner::nextnPredictLayers(withMtp), 1);
+    QCOMPARE(GGUFScanner::nextnPredictLayers(plain), 0);
+    QCOMPARE(GGUFScanner::nextnPredictLayers(QDir(QDir::tempPath()).filePath("no-existe.gguf")), 0);
 }
 
 void CoreTests::readComposition_rejectsGarbage()
@@ -1072,6 +1098,41 @@ void CoreTests::runtimePreset_roundtripsTensorOverrides()
     // Vacío no debe escribir la key.
     RuntimePreset empty;
     QVERIFY(!empty.toJson().contains("tensorOverrides"));
+}
+
+// Gemma 4 + MTP externo: a veces el borrador no carga ("invalid vector
+// subscript") con los mismos args que andan en otro arranque. Se detecta en el
+// stderr y el reintento va sin speculative decoding, con el resto intacto.
+void CoreTests::mtpDraftFailureFallsBackWithoutDraft()
+{
+    QVERIFY(MtpDetection::draftLoadFailed(QStringLiteral(
+        "0.28.436.294 E srv    load_model: failed to load draft model, 'C:/m/mtp-gemma-4-12b-it.gguf'")));
+    QVERIFY(MtpDetection::draftLoadFailed(QStringLiteral(
+        "W llama_init_from_model: context type MTP requested but model doesn't contain MTP layers")));
+    // El aviso del fitting de memoria es normal: no es una falla.
+    QVERIFY(!MtpDetection::draftLoadFailed(QStringLiteral(
+        "E llama_init_from_model: failed to initialize the context: Gemma4Assistant requires "
+        "ctx_other to be set (this warning is normal during memory fitting)")));
+    QVERIFY(!MtpDetection::draftLoadFailed(QStringLiteral("srv load_model: loading draft model 'x'")));
+
+    const QStringList gemma{
+        "--host", "127.0.0.1", "--port", "8021", "--model", "g.gguf", "--mmproj", "mm.gguf",
+        "--spec-draft-model", "mtp.gguf", "--spec-draft-n-max", "3", "--spec-draft-ngl", "all",
+        "--ctx-size", "8192", "--n-gpu-layers", "999", "--flash-attn", "on", "--jinja",
+        "--parallel", "1", "--reasoning", "off"};
+    QCOMPARE(MtpDetection::withoutSpeculativeDraft(gemma), QStringList({
+        "--host", "127.0.0.1", "--port", "8021", "--model", "g.gguf", "--mmproj", "mm.gguf",
+        "--ctx-size", "8192", "--n-gpu-layers", "999", "--flash-attn", "on", "--jinja",
+        "--parallel", "1", "--reasoning", "off"}));
+
+    // MTP embebido, alias cortos y switches sin valor.
+    QCOMPARE(MtpDetection::withoutSpeculativeDraft(
+                 {"-m", "q.gguf", "--spec-type", "draft-mtp", "-md", "d.gguf", "-ngld", "99",
+                  "--spec-draft-adaptive", "--draft-max", "8", "-c", "4096"}),
+             QStringList({"-m", "q.gguf", "-c", "4096"}));
+    // Sin borrador: idéntico (startServer usa eso para no loguear un fallback vacío).
+    const QStringList plain{"--model", "q.gguf", "--ctx-size", "4096"};
+    QCOMPARE(MtpDetection::withoutSpeculativeDraft(plain), plain);
 }
 
 QTEST_MAIN(CoreTests)

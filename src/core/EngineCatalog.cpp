@@ -258,6 +258,24 @@ HardwareSignals EngineCatalog::detectHardware()
     return hw;
 }
 
+HardwareSignals EngineCatalog::hardwareFromSummary(const QVariantMap &summary)
+{
+    HardwareSignals hw;
+    hw.platform = currentPlatform();
+    hw.arch = currentArch();
+    hw.gpuVendor = QStringLiteral("unknown");
+    if (!summary.value(QStringLiteral("gpus")).toList().isEmpty()) {
+        hw.gpuVendor = QStringLiteral("nvidia");
+        hw.hasGpu = true;
+        return hw;
+    }
+#ifdef Q_OS_MACOS
+    hw.gpuVendor = QStringLiteral("apple");
+    hw.hasGpu = true;
+#endif
+    return hw;
+}
+
 bool EngineCatalog::isVariantCompatible(const EngineVariant &variant,
                                         const HardwareSignals &hw,
                                         QString *reason)

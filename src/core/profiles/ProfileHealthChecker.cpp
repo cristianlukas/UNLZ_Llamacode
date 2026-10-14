@@ -167,6 +167,38 @@ QList<HealthIssue> ProfileHealthChecker::checkLaunch(const Refs &r)
                   "Referencia a un perfil de agente inexistente; se usa el default.",
                   "Re-asignar un perfil de agente.");
 
+    // Perfil de SISTEMA: el bundle trae ~250 perfiles para todo tipo de hardware
+    // y el usuario instala sólo los que quiere. Que falten su binario o sus
+    // archivos significa "no instalado", no "roto": contarlos como error tapaba
+    // los errores reales (511 "errores" en una instalación sana). Se pliegan en
+    // un único aviso informativo por perfil.
+    if (r.launch.system) {
+        static const QStringList notInstalledCodes{
+            QStringLiteral("binary-unset"), QStringLiteral("model-file-unset"),
+            QStringLiteral("model-file-missing"), QStringLiteral("mmproj-file-missing"),
+            QStringLiteral("draft-file-missing")};
+        QStringList missing;
+        QList<HealthIssue> kept;
+        for (const HealthIssue &i : out) {
+            if (notInstalledCodes.contains(i.code)) {
+                const QString what = i.entity == QLatin1String("binary") ? QStringLiteral("binario")
+                                   : i.entity == QLatin1String("mmproj") ? QStringLiteral("mmproj")
+                                   : i.entity == QLatin1String("draft")  ? QStringLiteral("draft")
+                                                                         : QStringLiteral("modelo");
+                if (!missing.contains(what)) missing << what;
+            } else {
+                kept << i;
+            }
+        }
+        if (!missing.isEmpty()) {
+            kept << mk("info", id, "system", "system-not-installed",
+                       QStringLiteral("Perfil de sistema sin instalar (falta: %1).")
+                           .arg(missing.join(QStringLiteral(", "))),
+                       "Instalarlo desde Modelos → Perfiles recomendados, o elegirlo en Lanzar.");
+            out = kept;
+        }
+    }
+
     return out;
 }
 

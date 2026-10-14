@@ -9,12 +9,13 @@
 // resuelve por: 1) variable de entorno con ese nombre, 2) este store en disco.
 // Si no se encuentra, la UI debe pedirlo de nuevo al seleccionar el perfil.
 //
-// Cifrado at-rest, backend elegido en runtime:
+// Protección en reposo según el backend elegido en runtime:
 //  1) QtKeychain (si se compiló con HAVE_QTKEYCHAIN y el keyring del SO responde):
 //     Secret Service (Linux GNOME/KDE), Credential Store (Windows), Keychain (macOS).
-//  2) Fallback si no hay keyring (ej Linux headless): archivo cifrado con DPAPI en
-//     Windows; en otros OS, texto plano marcado (preferir env var ahí).
-// En memoria los valores están descifrados (cache); el backend persiste cifrado.
+//  2) Fallback si no hay keyring: DPAPI en Windows; en otros OS, archivo local
+//     en texto plano marcado con permisos sólo para el usuario (preferir env var
+//     o configurar un keyring para secretos sensibles).
+// En memoria los valores están en claro; el cifrado depende del backend activo.
 class SecretStore : public QObject
 {
     Q_OBJECT
@@ -40,5 +41,5 @@ private:
     void load();
     void save() const;
     bool m_useKeychain = false;                  // backend elegido en el ctor
-    mutable QHash<QString, QString> m_secrets;   // cache ref → valor descifrado
+    mutable QHash<QString, QString> m_secrets;   // cache ref → secreto en memoria
 };

@@ -1,0 +1,107 @@
+{
+  "schema": "q14-context-retrieval-holdout-v1",
+  "profile": "dense-q4-k-m-llamacpp",
+  "model": "qwen3.8-27b-q4-k-m",
+  "endpoint": "http://127.0.0.1:8350/v1",
+  "fixtureTokensByPackTokenizer": 117825,
+  "fixturePath": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261014-IQ2XS-MISSING-MODALITIES/fixtures/context_retrieval_118000.txt",
+  "targetTokens": 118000,
+  "factLocations": [
+    {
+      "key": "archive_code",
+      "requestedDepth": 0.04,
+      "tokenPosition": 4572,
+      "actualDepth": 0.03880330999363463
+    },
+    {
+      "key": "maintenance_window",
+      "requestedDepth": 0.16,
+      "tokenPosition": 18482,
+      "actualDepth": 0.15685974962868662
+    },
+    {
+      "key": "coral_valve_serial",
+      "requestedDepth": 0.31,
+      "tokenPosition": 36066,
+      "actualDepth": 0.306098026734564
+    },
+    {
+      "key": "priority_label",
+      "requestedDepth": 0.47,
+      "tokenPosition": 54909,
+      "actualDepth": 0.46602164226607257
+    },
+    {
+      "key": "package_suffix",
+      "requestedDepth": 0.62,
+      "tokenPosition": 72666,
+      "actualDepth": 0.616728198599618
+    },
+    {
+      "key": "invoice_checksum",
+      "requestedDepth": 0.78,
+      "tokenPosition": 91506,
+      "actualDepth": 0.7766263526416295
+    },
+    {
+      "key": "shuttle_gate",
+      "requestedDepth": 0.94,
+      "tokenPosition": 110385,
+      "actualDepth": 0.9368555060471038
+    }
+  ],
+  "promptSha256": "475f3c30b7be5148f85c8c61fb67825dc9a0564bb057dbe91466071ad97281f2",
+  "httpStatus": 200,
+  "elapsedSeconds": 181.94,
+  "expected": {
+    "archive_code": "KESTREL-419",
+    "maintenance_window": "02:47 UTC",
+    "coral_valve_serial": "P-6821",
+    "priority_label": "fern glass",
+    "package_suffix": "RAVEN-73",
+    "invoice_checksum": "516204",
+    "shuttle_gate": "North Lantern"
+  },
+  "usage": {
+    "completion_tokens": 368,
+    "prompt_tokens": 117877,
+    "total_tokens": 118245,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 117877,
+    "prompt_ms": 164664.535,
+    "prompt_per_token_ms": 1.396918270739839,
+    "prompt_per_second": 715.861493794034,
+    "predicted_n": 368,
+    "predicted_ms": 17145.924,
+    "predicted_per_token_ms": 46.71913896457765,
+    "predicted_per_second": 21.40450406755565
+  },
+  "finishReason": "stop",
+  "responseId": "chatcmpl-BlFbM07xc39a3Bb0cPCWe0ZnMsbLbcHd",
+  "rawContent": "{\n  \"archive_code\": \"KESTREL-419\",\n  \"maintenance_window\": \"02:47 UTC\",\n  \"coral_valve_serial\": \"P-6821\",\n  \"priority_label\": \"fern glass\",\n  \"package_suffix\": \"RAVEN-73\",\n  \"invoice_checksum\": \"516204\",\n  \"shuttle_gate\": \"North Lantern\"\n}",
+  "parsed": {
+    "archive_code": "KESTREL-419",
+    "maintenance_window": "02:47 UTC",
+    "coral_valve_serial": "P-6821",
+    "priority_label": "fern glass",
+    "package_suffix": "RAVEN-73",
+    "invoice_checksum": "516204",
+    "shuttle_gate": "North Lantern"
+  },
+  "exactMatches": {
+    "archive_code": true,
+    "maintenance_window": true,
+    "coral_valve_serial": true,
+    "priority_label": true,
+    "package_suffix": true,
+    "invoice_checksum": true,
+    "shuttle_gate": true
+  },
+  "correct": 7,
+  "passed": true
+}

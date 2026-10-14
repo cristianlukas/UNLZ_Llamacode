@@ -376,8 +376,10 @@ QImage captureWindowOffscreen(HWND hwnd)
     const BOOL printed = PrintWindow(hwnd, memory, PW_RENDERFULLCONTENT);
     QImage result;
     if (printed && bits)
+        // RGB32, no ARGB32: GDI deja el alfa en 0 y como ARGB la captura era
+        // "transparente" (negra para el OCR). Ver OcrEngine::opaqueForOcr.
         result = QImage(static_cast<uchar *>(bits), width, height, width * 4,
-                        QImage::Format_ARGB32).copy();
+                        QImage::Format_RGB32).copy();
     SelectObject(memory, old);
     DeleteObject(bitmap);
     DeleteDC(memory);
@@ -419,6 +421,11 @@ QVariantList DesktopAutomationBackend::windows()
 #else
     return LinuxDesktopBackend::windows();
 #endif
+}
+
+QRect DesktopAutomationBackend::scopeBounds(const QString &kind, const QString &targetId)
+{
+    return targetBounds(kind, targetId);
 }
 
 QVariantMap DesktopAutomationBackend::targetInfo(const QString &kind, const QString &targetId)
@@ -721,6 +728,256 @@ bool DesktopAutomationBackend::click(const QString &kind, const QString &targetI
 #endif
 }
 
+bool DesktopAutomationBackend::clickEx(const QString &kind, const QString &targetId,
+                                       double x, double y, const QString &button,
+                                       int clickCount, const QStringList &modifiers,
+                                       QString *error, QVariantMap *trace)
+{
+    const int times = DesktopComputerUse::clampClickCount(clickCount);
+#ifdef Q_OS_WIN
+    QList<WORD> mods;
+    for (const QString &m : modifiers) {
+        const QString u = m.trimmed().toUpper();
+        if (u == QLatin1String("CTRL") || u == QLatin1String("CONTROL")) mods << VK_CONTROL;
+        else if (u == QLatin1String("SHIFT")) mods << VK_SHIFT;
+        else if (u == QLatin1String("ALT")) mods << VK_MENU;
+        else if (u == QLatin1String("WIN")) mods << VK_LWIN;
+        else if (!u.isEmpty()) {
+            if (error) *error = QStringLiteral("Modificador no reconocido: %1").arg(m);
+            return false;
+        }
+    }
+    auto sendMods = [&](bool up) {
+        for (WORD vk : mods) {
+            INPUT in{};
+            in.type = INPUT_KEYBOARD;
+            in.ki.wVk = vk;
+            in.ki.dwFlags = up ? KEYEVENTF_KEYUP : 0;
+            SendInput(1, &in, sizeof(INPUT));
+        }
+    };
+    // El primer click() valida, enfoca y posiciona; los siguientes repiten en el
+    // mismo punto dentro del tiempo de doble clic del sistema.
+    sendMods(false);
+    bool ok = true;
+    for (int i = 0; i < times && ok; ++i)
+        ok = click(kind, targetId, x, y, button, error, trace);
+    sendMods(true);
+    if (!ok) return false;
+#else
+    if (!isNormalizedPoint(x, y)) {
+        if (error) *error = QStringLiteral(
+            "Coordenadas inválidas: x/y deben estar normalizadas entre 0 y 1; "
+            "no se ejecutó ningún clic.");
+        return false;
+    }
+    if (!LinuxDesktopBackend::clickEx(kind, targetId, x, y, button, times, modifiers, error, trace))
+        return false;
+#endif
+    if (trace) {
+        QVariantMap p = trace->value(QStringLiteral("pointer")).toMap();
+        p[QStringLiteral("clickCount")] = times;
+        if (!modifiers.isEmpty()) p[QStringLiteral("modifiers")] = modifiers;
+        (*trace)[QStringLiteral("pointer")] = p;
+    }
+    return true;
+}
+
+bool DesktopAutomationBackend::hover(const QString &kind, const QString &targetId,
+                                     double x, double y, QString *error, QVariantMap *trace)
+{
+    if (!isNormalizedPoint(x, y)) {
+        if (error) *error = QStringLiteral(
+            "Coordenadas inválidas: x/y deben estar normalizadas entre 0 y 1.");
+        return false;
+    }
+    if (!interactiveSessionAvailable()) {
+        if (error) *error = QStringLiteral("La sesión de escritorio está bloqueada.");
+        return false;
+    }
+    const QRect bounds = targetBounds(kind, targetId);
+    if (!bounds.isValid()) {
+        if (error) *error = QStringLiteral("Alcance visual no disponible.");
+        return false;
+    }
+    const QPoint p = denormalizePoint(QPointF(x, y), bounds);
+    if (!moveCursor(p)) {
+        if (error) *error = QStringLiteral("No se pudo mover el puntero.");
+        return false;
+    }
+    if (trace) {
+        *trace = QVariantMap{
+            {QStringLiteral("surface"), QStringLiteral("desktop")},
+            {QStringLiteral("action"), QStringLiteral("hover")},
+            {QStringLiteral("pointer"), QVariantMap{
+                {QStringLiteral("xAbs"), p.x()}, {QStringLiteral("yAbs"), p.y()},
+                {QStringLiteral("xNorm"), x}, {QStringLiteral("yNorm"), y}}},
+            {QStringLiteral("target"), QVariantMap{
+                {QStringLiteral("scopeKind"), kind}, {QStringLiteral("targetId"), targetId}}}};
+    }
+    return true;
+}
+
+bool DesktopAutomationBackend::scrollAt(const QString &kind, const QString &targetId,
+                                        double x, double y, int delta, bool horizontal,
+                                        QString *error)
+{
+    if (delta == 0) delta = -120;
+    const bool aimed = x >= 0.0 && y >= 0.0;
+    if (aimed) {
+        if (!hover(kind, targetId, x, y, error)) return false;
+    }
+#ifdef Q_OS_WIN
+    INPUT input{};
+    input.type = INPUT_MOUSE;
+    input.mi.dwFlags = horizontal ? MOUSEEVENTF_HWHEEL : MOUSEEVENTF_WHEEL;
+    input.mi.mouseData = static_cast<DWORD>(delta);
+    const bool ok = SendInput(1, &input, sizeof(INPUT)) == 1;
+    if (!ok && error) *error = QStringLiteral("No se pudo desplazar.");
+    return ok;
+#else
+    return horizontal ? LinuxDesktopBackend::scrollHorizontal(delta, error)
+                      : LinuxDesktopBackend::scroll(delta, error);
+#endif
+}
+
+QString DesktopAutomationBackend::foregroundWindowId()
+{
+#ifdef Q_OS_WIN
+    HWND fg = GetForegroundWindow();
+    if (fg) fg = GetAncestor(fg, GA_ROOT);
+    return fg ? QString::number(reinterpret_cast<quintptr>(fg), 16) : QString();
+#else
+    return {};
+#endif
+}
+
+int DesktopAutomationBackend::focusedControlHasText()
+{
+#ifdef Q_OS_WIN
+    ComGuard com;
+    IUIAutomation *uia = nullptr;
+    if (FAILED(CoCreateInstance(CLSID_CUIAutomation, nullptr, CLSCTX_INPROC_SERVER,
+                                IID_IUIAutomation, reinterpret_cast<void **>(&uia))) || !uia)
+        return -1;
+    int result = -1;
+    IUIAutomationElement *el = nullptr;
+    if (SUCCEEDED(uia->GetFocusedElement(&el)) && el) {
+        BOOL password = FALSE;
+        el->get_CurrentIsPassword(&password);
+        IUIAutomationValuePattern *vp = nullptr;
+        if (SUCCEEDED(el->GetCurrentPatternAs(UIA_ValuePatternId, IID_IUIAutomationValuePattern,
+                                              reinterpret_cast<void **>(&vp))) && vp) {
+            BSTR cur = nullptr;
+            if (SUCCEEDED(vp->get_CurrentValue(&cur))) {
+                result = (cur && SysStringLen(cur) > 0) ? 1 : 0;
+                if (cur) SysFreeString(cur);
+            }
+            vp->Release();
+        }
+        if (result < 0) {
+            IUIAutomationTextPattern *tp = nullptr;
+            if (SUCCEEDED(el->GetCurrentPatternAs(UIA_TextPatternId, IID_IUIAutomationTextPattern,
+                                                  reinterpret_cast<void **>(&tp))) && tp) {
+                IUIAutomationTextRange *doc = nullptr;
+                if (SUCCEEDED(tp->get_DocumentRange(&doc)) && doc) {
+                    BSTR txt = nullptr;
+                    // Sólo existencia: 64 caracteres alcanzan y se descartan.
+                    if (SUCCEEDED(doc->GetText(64, &txt))) {
+                        const QString t = txt ? QString::fromWCharArray(txt, int(SysStringLen(txt)))
+                                              : QString();
+                        result = t.trimmed().isEmpty() ? 0 : 1;
+                        if (txt) SysFreeString(txt);
+                    }
+                    doc->Release();
+                }
+                tp->Release();
+            }
+        }
+        if (password && result < 0) result = -1;
+        el->Release();
+    }
+    uia->Release();
+    return result;
+#else
+    return -1;
+#endif
+}
+
+bool DesktopAutomationBackend::clipboardText(QString *text, QString *error)
+{
+#ifdef Q_OS_WIN
+    if (!OpenClipboard(nullptr)) {
+        if (error) *error = QStringLiteral("No se pudo abrir el portapapeles.");
+        return false;
+    }
+    QString out;
+    if (HANDLE h = GetClipboardData(CF_UNICODETEXT)) {
+        if (const auto *p = static_cast<const wchar_t *>(GlobalLock(h))) {
+            out = QString::fromWCharArray(p);
+            GlobalUnlock(h);
+        }
+    }
+    CloseClipboard();
+    if (text) *text = out;
+    return true;
+#else
+    for (const QStringList &cmd : {QStringList{QStringLiteral("xclip"), QStringLiteral("-selection"),
+                                               QStringLiteral("clipboard"), QStringLiteral("-o")},
+                                   QStringList{QStringLiteral("xsel"), QStringLiteral("--clipboard"),
+                                               QStringLiteral("--output")}}) {
+        QProcess p;
+        p.start(cmd.first(), cmd.mid(1));
+        if (p.waitForFinished(3000) && p.exitStatus() == QProcess::NormalExit) {
+            if (text) *text = QString::fromUtf8(p.readAllStandardOutput());
+            return true;
+        }
+    }
+    if (error) *error = QStringLiteral("Portapapeles no disponible (instalá xclip o xsel).");
+    return false;
+#endif
+}
+
+bool DesktopAutomationBackend::setClipboardText(const QString &text, QString *error)
+{
+#ifdef Q_OS_WIN
+    if (!OpenClipboard(nullptr)) {
+        if (error) *error = QStringLiteral("No se pudo abrir el portapapeles.");
+        return false;
+    }
+    EmptyClipboard();
+    const std::wstring w = text.toStdWString();
+    const SIZE_T bytes = (w.size() + 1) * sizeof(wchar_t);
+    HGLOBAL mem = GlobalAlloc(GMEM_MOVEABLE, bytes);
+    bool ok = false;
+    if (mem) {
+        if (void *dst = GlobalLock(mem)) {
+            memcpy(dst, w.c_str(), bytes);
+            GlobalUnlock(mem);
+            ok = SetClipboardData(CF_UNICODETEXT, mem) != nullptr;
+        }
+        if (!ok) GlobalFree(mem);   // si SetClipboardData lo aceptó, ahora es del sistema
+    }
+    CloseClipboard();
+    if (!ok && error) *error = QStringLiteral("No se pudo escribir el portapapeles.");
+    return ok;
+#else
+    for (const QStringList &cmd : {QStringList{QStringLiteral("xclip"), QStringLiteral("-selection"),
+                                               QStringLiteral("clipboard")},
+                                   QStringList{QStringLiteral("xsel"), QStringLiteral("--clipboard"),
+                                               QStringLiteral("--input")}}) {
+        QProcess p;
+        p.start(cmd.first(), cmd.mid(1));
+        if (!p.waitForStarted(2000)) continue;
+        p.write(text.toUtf8());
+        p.closeWriteChannel();
+        if (p.waitForFinished(3000) && p.exitCode() == 0) return true;
+    }
+    if (error) *error = QStringLiteral("Portapapeles no disponible (instalá xclip o xsel).");
+    return false;
+#endif
+}
+
 bool DesktopAutomationBackend::stroke(const QString &kind, const QString &targetId,
                                       const QVariantList &points, const QString &button,
                                       int holdMs, QString *error, QVariantMap *trace)
@@ -837,6 +1094,19 @@ bool DesktopAutomationBackend::typeText(const QString &text, QString *error)
     for (QChar c : text) {
         INPUT inputs[2]{};
         inputs[0].type = inputs[1].type = INPUT_KEYBOARD;
+        if (c == QLatin1Char('\r')) continue;
+        if (c == QLatin1Char('\n') || c == QLatin1Char('\t')) {
+            // Saltos y tabs como TECLAS: inyectados como Unicode, muchos
+            // controles (Win32 edit, formularios web) los ignoran.
+            const WORD vk = c == QLatin1Char('\n') ? VK_RETURN : VK_TAB;
+            inputs[0].ki.wVk = inputs[1].ki.wVk = vk;
+            inputs[1].ki.dwFlags = KEYEVENTF_KEYUP;
+            if (SendInput(2, inputs, sizeof(INPUT)) != 2) {
+                if (error) *error = QStringLiteral("Falló la inyección de texto.");
+                return false;
+            }
+            continue;
+        }
         inputs[0].ki.wScan = inputs[1].ki.wScan = c.unicode();
         inputs[0].ki.dwFlags = KEYEVENTF_UNICODE;
         inputs[1].ki.dwFlags = KEYEVENTF_UNICODE | KEYEVENTF_KEYUP;

@@ -186,6 +186,9 @@ public:
     // tool-calling del modelo activo es "unsupported" (chat-template del GGUF sin
     // tools, ej. Gemma): así el modelo igual puede operar tools vía texto.
     void setForceTextTools(bool v) { m_forceTextTools = v; }
+    // Pura: ¿historial + schemas nativos + una reserva mínima de salida exceden
+    // el contexto? ctxLimit <= 0 (desconocido) → false.
+    static bool nativeToolSchemasOverflow(int ctxLimit, int historyTokens, int schemaTokens);
 
     // Protocolo declarado por el perfil (módulo `protocol` del HarnessSpec):
     //   "auto"   → como siempre: nativo, con fallback a texto si el server da 400
@@ -447,6 +450,12 @@ public:
     // Tools deshabilitadas por el usuario (nombres built-in y/o mcp__server__tool).
     // Se excluyen de buildToolSchemas() → no se ofrecen al modelo (ahorra contexto).
     void setDisabledTools(const QStringList &names);
+    // Si el perfil activo no trae tools de escritorio (p.ej. "Intermedio", de
+    // código) y el pedido es de computer use, las suma para el resto de la
+    // sesión. Sin esto el agente respondía "no puedo abrir aplicaciones". No
+    // actúa en modo privacidad. Devuelve true si habilitó algo.
+    bool escalateDesktopToolsIfRequested(const QString &prompt);
+    bool desktopToolsEscalated() const { return m_desktopEscalated; }
     // Recorte adaptativo de la superficie inicial. No modifica permisos: sólo
     // decide qué schemas se anuncian en el primer request.
     void setAdaptiveToolRouting(bool enabled);
@@ -726,6 +735,16 @@ private:
     // Verdadero si el turno debe usar el protocolo textual de tools (por 400 del
     // server o por gating proactivo de AppController para modelos "unsupported").
     bool usingTextTools() const { return m_textToolFallback || m_forceTextTools; }
+public:
+    bool provisionalAnswerPending() const override
+    { return m_externalVerificationGate.hasPending(); }
+private:
+    // Si los schemas nativos de tools no entran en el contexto del slot, pasar
+    // al protocolo textual ANTES de mandar nada. Sin esto, con perfiles de 4k por
+    // slot (n_parallel=auto) y el set de JARVIS (~10k tokens de schemas), cada
+    // turno rebotaba dos veces con 400 y además disparaba compactaciones sin
+    // progreso (~12 s de "pensando" en voz). Devuelve true si cambió el protocolo.
+    bool preferTextToolsIfSchemasOverflow();
     // Capturas devueltas por tools en el turno de tools en curso (data-URIs). Se
     // vuelcan como mensaje user multimodal cuando se resuelven TODAS las tools del
     // turno (no interleavear entre tool_results → rompería el contrato OpenAI).
@@ -787,6 +806,7 @@ private:
 
     QSet<QString> m_disabledTools;   // tools off por el usuario (built-in y MCP)
     bool m_adaptiveToolRouting = false;
+    bool m_desktopEscalated = false;
     ToolSurfaceRouter::Decision m_toolSurfaceDecision;
     QString m_teacherUrl, m_teacherModel, m_teacherKey;  // ask_teacher (config UI)
     QString m_auxiliaryUrl, m_auxiliaryEmbeddingModel, m_auxiliaryRerankModel,

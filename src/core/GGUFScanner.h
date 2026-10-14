@@ -42,9 +42,15 @@ public:
         QString architecture;               // general.architecture
         qint64 parameterCount = 0;           // general.parameter_count
         int trainedContext = 0;              // *.context_length
+        // *.nextn_predict_layers: capas MTP integradas (0 = el GGUF no las trae).
+        // Es la verdad del archivo: el nombre no alcanza (unsloth publica el MTP
+        // de Qwen3.5 9B como "Qwen3.5-9B-Q4_K_M.gguf", igual que el común).
+        int nextnPredictLayers = 0;
         QString breakdown() const;          // "q4_0:265, q6_k:1, f32:392"
     };
     static Composition readComposition(const QString &filePath, qint64 fileSizeBytes);
+    // Atajo: capas MTP del archivo (0 si no tiene o no se pudo leer).
+    static int nextnPredictLayers(const QString &filePath);
     // Un GGUF partido ("...-00001-of-00004.gguf") reparte los tensores entre los
     // shards, y el primero suele traer SOLO metadata (0 tensores). Leer nada mas
     // el shard registrado en el catalogo da totalElements=0 y ngramElements=0,

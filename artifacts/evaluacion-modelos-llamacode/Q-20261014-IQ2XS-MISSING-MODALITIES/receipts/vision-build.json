@@ -1,0 +1,11 @@
+{
+  "builtAtUtc": "2026-10-14T01:16:37.417529+00:00",
+  "command": "cmake -S tools/vision -B build-vision -G Ninja -DCMAKE_BUILD_TYPE=Release -DLLAMA_DIR=third_party/llama.cpp -DSTRATA_VISION_CUDA=OFF -DSTRATA_PORTABLE=OFF && cmake --build build-vision --target strata-vision -j 4",
+  "result": "success",
+  "cpuOnly": true,
+  "strataCommit": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
+  "llamaCppCommit": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
+  "binary": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/build-vision/bin/strata-vision",
+  "binaryBytes": 8002248,
+  "binarySha256": "f09eaf27e7edfd031af273d2a77e0be5799dd603df9104635528763c131c8c1d"
+}

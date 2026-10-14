@@ -1,0 +1,10 @@
+¥ — @ Dispatch Console-Holdout x ++
+CG = © 127.0.0.1:8765/dispatch.html & * @:
+Dispatch Console
+Work order R4-82 is ready for routing.
+Route work order R4-82
+Destination
+CO Priority shipping
+Handling note
+Enter handling note | Confirm dispatch
+No dispatch has been confirmed.

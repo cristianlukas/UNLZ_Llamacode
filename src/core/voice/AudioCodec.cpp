@@ -148,4 +148,31 @@ double rmsBytes(const QByteArray &pcm)
                int(pcm.size() / 2));
 }
 
+QByteArray toMonoResampled(const QByteArray &pcm, int fromRate, int channels, int toRate)
+{
+    if (fromRate <= 0 || toRate <= 0 || channels <= 0) return {};
+    const int16_t *in = reinterpret_cast<const int16_t *>(pcm.constData());
+    const qsizetype frames = pcm.size() / qsizetype(2 * channels);
+    if (frames <= 0) return {};
+    auto monoAt = [&](qsizetype f) {
+        int sum = 0;
+        for (int c = 0; c < channels; ++c) sum += in[f * channels + c];
+        return double(sum) / channels;
+    };
+    if (fromRate == toRate && channels == 1) return pcm.left(frames * 2);
+    const qsizetype outFrames = qsizetype(double(frames) * toRate / fromRate);
+    QByteArray out(outFrames * 2, Qt::Uninitialized);
+    int16_t *o = reinterpret_cast<int16_t *>(out.data());
+    const double step = double(fromRate) / toRate;
+    for (qsizetype i = 0; i < outFrames; ++i) {
+        const double pos = i * step;
+        const qsizetype a = qsizetype(pos);
+        const qsizetype b = qMin(a + 1, frames - 1);
+        const double t = pos - a;
+        const double v = monoAt(a) * (1.0 - t) + monoAt(b) * t;
+        o[i] = int16_t(qBound(-32768.0, v, 32767.0));
+    }
+    return out;
+}
+
 } // namespace AudioCodec

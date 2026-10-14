@@ -56,6 +56,10 @@ Reglas:
 | DownloadHistoryStore (historial de descargas) | `tests/test_download_history.cpp` |
 | FuzzyMatch (matching difuso de nombres de control) | `tests/test_fuzzy_match.cpp` |
 | OcrTextLocator (ubicar texto OCR en pantalla) | `tests/test_ocr_locator.cpp` |
+| OcrEngine::opaqueForOcr (capturas GDI con alfa 0) + OCR real (se saltea en offscreen) | `tests/test_ocr_locator.cpp` |
+| DesktopComputerUse (formato de desktop_read_text, inferencia de scope, guard de tipeo) | `tests/test_automation.cpp` |
+| Tools de computer use (validación previa al input, portapapeles, rechazo de tipeo sin ventana elegida) | `tests/test_agent_tools.cpp` |
+| CharlaTuning (contexto mínimo del agente de voz, slots) + AudioCodec::toMonoResampled + recorte de silencio para STT + Piper residente | `tests/test_voice.cpp` |
 | VoiceCursorCommand (parseo de órdenes de cursor por voz) | `tests/test_voice.cpp` |
 | VoiceAssistant (Charla JARVIS: sí/no hablado, avisos de tool, pregunta de aprobación) + turno abierto de VoiceController | `tests/test_voice.cpp` |
 | Charla modo JARVIS en AppController (aprobación por voz, aviso de tool lenta, turno en espera al arrancar el agente, "pará"/cola con el agente trabajando) | `tests/test_appcontroller.cpp` |
@@ -103,6 +107,25 @@ llama.cpp mainline y beellama v0.3.2):
   convierte las partes de imagen en un `media_marker` propio (`<__media_XXX__>`)
   ANTES del jinja (`common/chat.cpp`). No "arreglarla": no se ejecuta. Sin
   `--mmproj` el server corta con 500 antes de llegar.
+
+### Benchmark de latencia de Charla (sin micrófono)
+`VoiceController` acepta entrada sintética: el audio recorre el MISMO camino que
+el del mic (VAD → STT → agente → TTS → playback). Por ControlApi:
+`setCharlaSyntheticInput(true)`, `startCharla()` (o `applyCharlaTuneAndStartCharla()`
+para medir con el ajuste de voz) y `charlaSimulateUtterance("<wav>")` por frase.
+Cada turno deja una muestra en `%LOCALAPPDATA%/LlamaCode/LlamaCode/voice/latency.jsonl`
+(`endToFirstAudioMs` = fin de habla → primer audio, más el desglose por etapa).
+Generar las frases con el **binario oficial de piper** pasando JSON con escapes
+ASCII: por un pipe de Git Bash el texto con tildes llega roto y Piper pronuncia
+basura (Whisper después "transcribe" cosas como "símbolo de copyright").
+Ojo: el TTS suena por el parlante y una frase que pida acciones de PC las ejecuta.
+
+Medido (RTX 3070 Laptop 8 GB, Qwen3.5 9B, piper es_ES): 1,45–2,15 s por turno con
+**whisper-small** (whisper-base es ~0,4 s más rápido pero erra 3 de 5 frases en
+español: "doce por treinta y siete" → "c por 37"). whisper-server corre con
+`-ac 640` y la mitad de los hilos (ver `VoiceServerManager::kWhisperAudioCtx` /
+`whisperThreads`): con el default (30 s de audio, 4 hilos) small tardaba ~2,5 s, y
+con 12 hilos le robaba CPU a piper (TTS de 0,6 → 2,3 s).
 
 ### QA manual pendiente (sin test automatizado)
 Necesitan una sesión de escritorio interactiva con ventanas vivas (no
@@ -159,6 +182,13 @@ reproducible en headless/CI), así que sólo se cubre el path de error en
   "Anotado" y lo hace al terminar; toser o golpear la mesa NO corta nada (el
   monitor exige ~400 ms de voz sostenida). Probar con parlantes, no auriculares:
   el eco del TTS no debería disparar el barge-in.
+- **Computer use: protecciones de tipeo** (`desktop_type`/`desktop_key`): sólo
+  teclean en la ventana que el agente eligió (target_id, desktop_focus o un clic
+  suyo) y `desktop_type` se niega si el campo con foco ya tiene texto (salvo
+  `append=true`). Origen: el agente escribió en una nota restaurada del Bloc de
+  notas de Win11 y en la app que el usuario tenía adelante. **No probar
+  computer use en vivo sobre apps con documentos del usuario** (Notepad restaura
+  pestañas sin guardar); la Calculadora es segura.
 - **Cursor por voz** (`cursorOcr` en Charla, off por defecto): activarlo en
   Charla → decir "clic en Guardar" mueve/clickea; decir "no sé si hacer clic en
   Guardar" NO actúa y va al LLM. Con dos textos iguales en pantalla debe negarse

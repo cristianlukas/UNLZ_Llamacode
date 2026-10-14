@@ -851,7 +851,7 @@ Item {
                 visible: teachMode.currentIndex === 1
                 placeholderText: "URL inicial (https://...)"
             }
-            CheckBox {
+            LcCheckBox {
                 id: discoverNetwork
                 visible: teachMode.currentIndex === 1
                 checked: true
@@ -1269,7 +1269,7 @@ Item {
                         }
                     }
 
-                    CheckBox {
+                    LcCheckBox {
                         id: silentUnlessError
                         text: "Ejecutar en silencio salvo error"
                         contentItem: Text {
@@ -1281,7 +1281,7 @@ Item {
                         }
                     }
 
-                    CheckBox {
+                    LcCheckBox {
                         id: loopEnabled
                         text: "Correr en bucle hasta cumplir un objetivo"
                         contentItem: Text {
@@ -1332,7 +1332,7 @@ Item {
                         }
                     }
 
-                    CheckBox {
+                    LcCheckBox {
                         id: verifyOtherModel
                         text: "Verificar con otro modelo (routing por fase)"
                         contentItem: Text {
@@ -1357,7 +1357,7 @@ Item {
                         }
                     }
 
-                    CheckBox {
+                    LcCheckBox {
                         id: autoDifficultyRouting
                         visible: verifyOtherModel.checked
                         text: "Escalar al revisor sólo si la dificultad es alta"
@@ -1750,7 +1750,7 @@ Item {
                         placeholderText: "Por defecto toma el nombre del proceso"
                     }
 
-                    CheckBox {
+                    LcCheckBox {
                         id: autoSchedEnabled
                         checked: true
                         text: "Programación activa"
@@ -1760,7 +1760,7 @@ Item {
                         }
                     }
 
-                    CheckBox {
+                    LcCheckBox {
                         id: autoSilent
                         text: "Ejecutar en silencio salvo error"
                         contentItem: Text {
@@ -1802,7 +1802,7 @@ Item {
                         Repeater {
                             id: weekdayChecks
                             model: ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
-                            delegate: CheckBox {
+                            delegate: LcCheckBox {
                                 property bool checkedProxy: checked
                                 text: modelData
                                 contentItem: Text {

@@ -31,6 +31,23 @@ public:
     static bool pressKey(const QString &key, const QStringList &modifiers = {},
                          QString *error = nullptr);
     static bool scroll(int delta, QString *error = nullptr);
+    // Clic con N pulsaciones y modificadores sostenidos, y rueda horizontal.
+    static bool clickEx(const QString &kind, const QString &targetId, double x, double y,
+                        const QString &button, int clickCount, const QStringList &modifiers,
+                        QString *error, QVariantMap *trace);
+    static bool scrollHorizontal(int delta, QString *error = nullptr);
+
+    // ── Puras (compiladas en todas las plataformas; testeables en Windows) ──
+    // Argumentos de UNA invocación de xdotool: mover, apretar modificadores,
+    // clickear N veces y soltarlos. Encadenar todo en un solo proceso evita que
+    // un modificador quede apretado si falla un paso intermedio. "" en error si
+    // algún modificador no se reconoce.
+    static QStringList buildClickArgs(const QPoint &p, const QString &button, int clickCount,
+                                      const QStringList &modifiers, QString *error = nullptr);
+    // X11: botones 4/5 = rueda vertical, 6/7 = horizontal (izq/der). delta como
+    // Windows: múltiplos de 120; vertical positivo = arriba, horizontal positivo
+    // = derecha.
+    static QStringList buildScrollArgs(int delta, bool horizontal);
     static QPoint cursorPos();
     static bool moveCursor(const QPoint &physical);
 

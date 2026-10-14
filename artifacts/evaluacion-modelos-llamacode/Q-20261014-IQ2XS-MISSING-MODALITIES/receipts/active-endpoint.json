@@ -1,0 +1,14 @@
+{
+  "profile": "dense-q4-k-m-vision",
+  "pid": 685823,
+  "processGroup": 685823,
+  "startedAtUtc": "2026-10-14T01:50:24.592148+00:00",
+  "config": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261014-IQ2XS-MISSING-MODALITIES/scripts/start_dense_q4_server.sh",
+  "mmproj": "/media/cristian/Disco local/Models/llamacpp/Qwen3.8-27B-GGUF-Q4_K_M/mmproj-Qwen3.8-27B-BF16.gguf",
+  "log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261014-IQ2XS-MISSING-MODALITIES/receipts/logs/dense-q4-vision-server.log",
+  "port": 8350,
+  "lockToken": "e7981694-e63a-40a8-b06e-c07b833d35cb",
+  "active": false,
+  "stoppedAtUtc": "2026-10-14T01:54:33.702744+00:00",
+  "shutdownReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261014-IQ2XS-MISSING-MODALITIES/receipts/session-cleanup.json"
+}

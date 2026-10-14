@@ -72,6 +72,7 @@ private slots:
     void cloudMissingUrlIsError();
     void keylessLoopbackCloudIsHealthy();
     void hybridPlannerValidation();
+    void uninstalledSystemProfileIsInfoNotError();
 };
 
 void ProfileHealthTests::initTestCase()
@@ -294,6 +295,41 @@ void ProfileHealthTests::hybridPlannerValidation()
                                                {"plannerProfileId", executor}}));
     issues = ProfileHealthChecker::checkAll(&pm, nullptr, nullptr);
     QVERIFY(hasCode(issues, "hybrid-self-reference"));
+}
+
+// Perfil de SISTEMA sin binario ni gguf = "no instalado", no roto: un único
+// issue informativo. El mismo hueco en un perfil de USUARIO sigue siendo error.
+void ProfileHealthTests::uninstalledSystemProfileIsInfoNotError()
+{
+    auto r = healthyLocal();
+    r.launch.system = true;
+    r.backend.binaryId.clear();
+    r.binaryFound = false;
+    r.model.modelId.clear();
+    r.modelFileExists = false;
+    r.model.mmprojId = "mm-1";
+    r.mmprojFileExists = false;
+    const auto v = ProfileHealthChecker::checkLaunch(r);
+    QCOMPARE(v.size(), 1);
+    QCOMPARE(v.first().code, QStringLiteral("system-not-installed"));
+    QCOMPARE(v.first().severity, QStringLiteral("info"));
+    QVERIFY(v.first().message.contains(QStringLiteral("binario")));
+    QVERIFY(v.first().message.contains(QStringLiteral("modelo")));
+    QVERIFY(!hasCode(v, "binary-unset"));
+    QVERIFY(!hasCode(v, "model-file-unset"));
+
+    // Problemas que NO son de instalación se mantienen aunque sea de sistema.
+    r.runtimeFound = false;
+    r.launch.runtimePresetId = "RT-x";
+    QCOMPARE(severityOf(ProfileHealthChecker::checkLaunch(r), "runtime-missing"),
+             QStringLiteral("warning"));
+
+    auto user = r;
+    user.launch.system = false;
+    const auto u = ProfileHealthChecker::checkLaunch(user);
+    QCOMPARE(severityOf(u, "binary-unset"), QStringLiteral("error"));
+    QCOMPARE(severityOf(u, "model-file-unset"), QStringLiteral("error"));
+    QVERIFY(!hasCode(u, "system-not-installed"));
 }
 
 QTEST_MAIN(ProfileHealthTests)

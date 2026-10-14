@@ -23,6 +23,10 @@ public:
     void setGpuDeviceMask(const QString &mask);
 
     void synthesize(const QString &text);
+    // Levanta el motor residente (hoy: piper --json-input) sin sintetizar nada,
+    // para que la carga del modelo (~2 s medidos) ocurra mientras el usuario
+    // habla y no en la primera oración de la respuesta. No-op en otros modos.
+    void prewarm();
     // Ocupado = hay un request en vuelo (HTTP, spawn per-call, o turno pendiente
     // en el piper residente). El proceso residente vivo NO cuenta como ocupado.
     bool busy() const { return m_reply != nullptr || m_piper != nullptr || m_qwen != nullptr || m_inflect != nullptr || m_piperPending; }
@@ -31,6 +35,11 @@ public:
     // ¿Hay una voz piper local instalada (modelo .onnx presente)? Fallback cuando
     // el endpoint TTS HTTP no responde. Público para test.
     bool piperAvailable() const;
+    // Ejecutable de piper marcado sin modo residente ("" si ninguno). Tests/diag.
+    QString piperResidentBrokenProg() const { return m_piperResidentBrokenProg; }
+    // Simula que el piper residente reportó terminado el WAV `outPath` del turno
+    // pendiente (mismo camino que la línea real por stdout). Sólo tests.
+    void piperResidentLineForTest(const QString &outPath);
 
     // ── Funciones puras (testeables sin red ni proceso) ──
     // Body JSON del request /v1/audio/speech.
@@ -59,7 +68,8 @@ private:
     void synthesizePiperOnce(const QString &text);   // spawn por-llamada (fallback)
     bool ensurePiperResident();                      // lanza/reusa el proceso vivo
     void tearDownPiperResident();
-    void finalizePiperTurn(const QString &outPath);  // lee wav y emite audioReady
+    void onPiperResidentLine();
+    void finalizePiperTurn(QString outPath);  // por valor: el caller pasa m_piperPendingOut  // lee wav y emite audioReady
     QString resolvePiperModel() const;
     QString resolvePiperProg() const;
     void synthesizeQwen(const QString &text);
@@ -88,6 +98,12 @@ private:
     // (VoiceController serializa vía busy()).
     class QProcess *m_piperProc = nullptr;
     QString m_piperResidentModel;        // modelo con que arrancó el residente
+    // Ejecutable cuyo modo residente (--json-input) murió sin completar ni una
+    // oración: p.ej. el `piper` de pip (piper-tts 1.3), que no tiene ese flag.
+    // Reintentarlo en cada oración costaba ~1,7 s extra por oración encima del
+    // fallback per-call; se va directo al per-call mientras no cambie el binario.
+    QString m_piperResidentBrokenProg;
+    bool m_piperResidentServedAny = false;
     bool m_piperPending = false;         // turno en vuelo en el residente
     QString m_piperPendingOut;           // wav esperado del turno actual
     QString m_piperPendingText;          // texto del turno (para fallback si muere)

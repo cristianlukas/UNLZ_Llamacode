@@ -1,0 +1,34 @@
+[
+    {
+        "baseArgs": [
+        ],
+        "binaryId": "",
+        "cloudBaseUrl": "http://127.0.0.1:8350",
+        "cloudCtx": 131072,
+        "cloudKeyRef": "",
+        "cloudModel": "qwen3.8-flash-next-iq2_xs",
+        "envOverrides": {
+        },
+        "host": "127.0.0.1",
+        "id": "q14-iq2xs-strata",
+        "kind": "cloud",
+        "name": "ISTA IQ2_XS · Strata 0.1.41",
+        "port": 8350
+    },
+    {
+        "baseArgs": [
+        ],
+        "binaryId": "",
+        "cloudBaseUrl": "http://127.0.0.1:8350",
+        "cloudCtx": 131072,
+        "cloudKeyRef": "",
+        "cloudModel": "qwen3.8-27b-q4-k-m",
+        "envOverrides": {
+        },
+        "host": "127.0.0.1",
+        "id": "q14-dense-q4-llamacpp",
+        "kind": "cloud",
+        "name": "Qwen3.8-27B Q4_K_M · llama.cpp 0.4.1-dev",
+        "port": 8350
+    }
+]

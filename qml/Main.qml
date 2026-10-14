@@ -20,7 +20,6 @@ ApplicationWindow {
 
     property color frameBorderColor: active ? Theme.frameBorderActive : Theme.frameBorderInact
     property color frameBgColor: Theme.baseBg
-    property color titleBarColor: Theme.titleBg
     // Un marco visible ayuda a distinguir la ventana del escritorio cuando no
     // ocupa toda la pantalla. En maximizado se elimina para no duplicar el
     // borde del área de trabajo del sistema.
@@ -170,158 +169,6 @@ ApplicationWindow {
             anchors.fill: parent
             spacing: 0
 
-            Rectangle {
-                id: titleBar
-                Layout.fillWidth: true
-                Layout.preferredHeight: 38
-                color: window.titleBarColor
-
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.leftMargin: 10
-                    anchors.rightMargin: 0
-                    spacing: 0
-
-                    Label {
-                        text: "UNLZ_Llamacode"
-                        color: Theme.textPrimary
-                        font.pixelSize: 13
-                        font.bold: true
-                        Layout.alignment: Qt.AlignVCenter
-                    }
-
-                    Item { Layout.fillWidth: true }
-
-                    Text {
-                        visible: App.startupBusy || (App.startupStatus || "").length > 0
-                        text: App.startupStatus
-                        color: Theme.textSecondary
-                        font.pixelSize: 10
-                        elide: Text.ElideRight
-                        Layout.maximumWidth: 330
-                        Layout.alignment: Qt.AlignVCenter
-                        rightPadding: 12
-                    }
-
-                    ToolButton {
-                        flat: true
-                        onClicked: window.showMinimized()
-                        contentItem: Item {
-                            Text {
-                                visible: window.windowsBuild
-                                anchors.centerIn: parent
-                                text: "\uE921"
-                                font.family: "Segoe MDL2 Assets"
-                                font.pixelSize: 12
-                                color: Theme.textPrimary
-                            }
-                            Rectangle {
-                                visible: !window.windowsBuild
-                                anchors.centerIn: parent
-                                anchors.verticalCenterOffset: 5
-                                width: 12
-                                height: 1
-                                color: Theme.textPrimary
-                            }
-                        }
-                        background: Rectangle { color: parent.hovered ? Theme.frameBorderInact : "transparent" }
-                        Layout.preferredWidth: 46
-                        Layout.fillHeight: true
-                    }
-
-                    ToolButton {
-                        flat: true
-                        onClicked: window.visibility === Window.Maximized ? window.showNormal() : window.showMaximized()
-                        contentItem: Item {
-                            Text {
-                                visible: window.windowsBuild
-                                anchors.centerIn: parent
-                                text: window.visibility === Window.Maximized ? "\uE923" : "\uE922"
-                                font.family: "Segoe MDL2 Assets"
-                                font.pixelSize: 12
-                                color: Theme.textPrimary
-                            }
-                            Rectangle {
-                                visible: !window.windowsBuild && window.visibility !== Window.Maximized
-                                anchors.centerIn: parent
-                                width: 12
-                                height: 10
-                                color: "transparent"
-                                border.width: 1
-                                border.color: Theme.textPrimary
-                            }
-                            Rectangle {
-                                visible: !window.windowsBuild && window.visibility === Window.Maximized
-                                anchors.centerIn: parent
-                                anchors.horizontalCenterOffset: -1
-                                anchors.verticalCenterOffset: 1
-                                width: 9
-                                height: 8
-                                color: "transparent"
-                                border.width: 1
-                                border.color: Theme.textPrimary
-                            }
-                            Rectangle {
-                                visible: !window.windowsBuild && window.visibility === Window.Maximized
-                                anchors.centerIn: parent
-                                anchors.horizontalCenterOffset: 2
-                                anchors.verticalCenterOffset: -2
-                                width: 9
-                                height: 8
-                                color: Theme.titleBg
-                                border.width: 1
-                                border.color: Theme.textPrimary
-                            }
-                        }
-                        background: Rectangle { color: parent.hovered ? Theme.frameBorderInact : "transparent" }
-                        Layout.preferredWidth: 46
-                        Layout.fillHeight: true
-                    }
-
-                    ToolButton {
-                        flat: true
-                        onClicked: window.close()
-                        contentItem: Item {
-                            Text {
-                                visible: window.windowsBuild
-                                anchors.centerIn: parent
-                                text: "\uE8BB"
-                                font.family: "Segoe MDL2 Assets"
-                                font.pixelSize: 12
-                                color: Theme.errorText
-                            }
-                            Rectangle {
-                                visible: !window.windowsBuild
-                                anchors.centerIn: parent
-                                width: 15
-                                height: 1
-                                rotation: 45
-                                color: Theme.errorText
-                            }
-                            Rectangle {
-                                visible: !window.windowsBuild
-                                anchors.centerIn: parent
-                                width: 15
-                                height: 1
-                                rotation: -45
-                                color: Theme.errorText
-                            }
-                        }
-                        background: Rectangle { color: parent.hovered ? Theme.closeHoverBg : "transparent" }
-                        Layout.preferredWidth: 46
-                        Layout.fillHeight: true
-                    }
-                }
-
-                TapHandler {
-                    onDoubleTapped: window.visibility === Window.Maximized ? window.showNormal() : window.showMaximized()
-                }
-                DragHandler {
-                    target: null
-                    onActiveChanged: if (active) window.startSystemMove()
-                }
-            }
-
             RowLayout {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -401,6 +248,133 @@ ApplicationWindow {
 
                 }
             }
+        }
+    }
+
+    // Sin barra de título propia: los botones de ventana flotan arriba a la
+    // derecha, sobre la franja de PageHeader (que les reserva el ancho con
+    // window.windowControlsWidth). Arrastrar/doble clic sobre PageHeader o el
+    // encabezado del lateral mueve/maximiza la ventana.
+    property int windowControlsWidth: windowControls.width
+    function toggleMaximized() {
+        window.visibility === Window.Maximized ? window.showNormal() : window.showMaximized()
+    }
+
+    Row {
+        id: windowControls
+        anchors.top: parent.top
+        anchors.right: parent.right
+        height: 32
+        z: 999
+        spacing: 0
+
+        ToolButton {
+            flat: true
+            onClicked: window.showMinimized()
+            contentItem: Item {
+                Text {
+                    visible: window.windowsBuild
+                    anchors.centerIn: parent
+                    text: "\uE921"
+                    font.family: "Segoe MDL2 Assets"
+                    font.pixelSize: 12
+                    color: Theme.textPrimary
+                }
+                Rectangle {
+                    visible: !window.windowsBuild
+                    anchors.centerIn: parent
+                    anchors.verticalCenterOffset: 5
+                    width: 12
+                    height: 1
+                    color: Theme.textPrimary
+                }
+            }
+            background: Rectangle { color: parent.hovered ? Theme.frameBorderInact : "transparent" }
+            width: 46
+            height: parent.height
+        }
+
+        ToolButton {
+            flat: true
+            onClicked: window.toggleMaximized()
+            contentItem: Item {
+                Text {
+                    visible: window.windowsBuild
+                    anchors.centerIn: parent
+                    text: window.visibility === Window.Maximized ? "\uE923" : "\uE922"
+                    font.family: "Segoe MDL2 Assets"
+                    font.pixelSize: 12
+                    color: Theme.textPrimary
+                }
+                Rectangle {
+                    visible: !window.windowsBuild && window.visibility !== Window.Maximized
+                    anchors.centerIn: parent
+                    width: 12
+                    height: 10
+                    color: "transparent"
+                    border.width: 1
+                    border.color: Theme.textPrimary
+                }
+                Rectangle {
+                    visible: !window.windowsBuild && window.visibility === Window.Maximized
+                    anchors.centerIn: parent
+                    anchors.horizontalCenterOffset: -1
+                    anchors.verticalCenterOffset: 1
+                    width: 9
+                    height: 8
+                    color: "transparent"
+                    border.width: 1
+                    border.color: Theme.textPrimary
+                }
+                Rectangle {
+                    visible: !window.windowsBuild && window.visibility === Window.Maximized
+                    anchors.centerIn: parent
+                    anchors.horizontalCenterOffset: 2
+                    anchors.verticalCenterOffset: -2
+                    width: 9
+                    height: 8
+                    color: Theme.titleBg
+                    border.width: 1
+                    border.color: Theme.textPrimary
+                }
+            }
+            background: Rectangle { color: parent.hovered ? Theme.frameBorderInact : "transparent" }
+            width: 46
+            height: parent.height
+        }
+
+        ToolButton {
+            flat: true
+            onClicked: window.close()
+            contentItem: Item {
+                Text {
+                    visible: window.windowsBuild
+                    anchors.centerIn: parent
+                    text: "\uE8BB"
+                    font.family: "Segoe MDL2 Assets"
+                    font.pixelSize: 12
+                    color: Theme.errorText
+                }
+                Rectangle {
+                    visible: !window.windowsBuild
+                    anchors.centerIn: parent
+                    width: 15
+                    height: 1
+                    rotation: 45
+                    color: Theme.errorText
+                }
+                Rectangle {
+                    visible: !window.windowsBuild
+                    anchors.centerIn: parent
+                    width: 15
+                    height: 1
+                    rotation: -45
+                    color: Theme.errorText
+                }
+            }
+            background: Rectangle { color: parent.hovered ? Theme.closeHoverBg : "transparent" }
+            width: 46
+            height: parent.height
         }
     }
 
