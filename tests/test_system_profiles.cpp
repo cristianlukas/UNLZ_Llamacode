@@ -1961,14 +1961,26 @@ void SystemProfilesTests::controller_lanActivationRetryUsesSuppliedApiKey()
     QVERIFY2(rememberedResult.at(1).toString().isEmpty(),
              qPrintable(rememberedResult.at(1).toString()));
     QCOMPARE(app.readSetting(QStringLiteral("lastLaunchId")).toString(), activeLaunchId);
-    QCOMPARE(requests.size(), 4);
-    QVERIFY(!requests.at(0).contains("Authorization: Bearer"));
-    QVERIFY(requests.at(1).toLower().contains(
+    // Tras cada activación OK el cliente también consulta /llamacode/v1/status
+    // para seguir la carga remota: contar sólo las activaciones.
+    QList<QByteArray> activations;
+    QList<QByteArray> statusPolls;
+    for (const QByteArray &r : requests) {
+        if (r.startsWith("POST /llamacode/v1/activate")) activations.append(r);
+        else if (r.startsWith("GET /llamacode/v1/status")) statusPolls.append(r);
+    }
+    QCOMPARE(activations.size(), 4);
+    QVERIFY(!activations.at(0).contains("Authorization: Bearer"));
+    QVERIFY(activations.at(1).toLower().contains(
         "authorization: bearer trusted-test-key"));
-    QVERIFY(requests.at(2).toLower().contains(
+    QVERIFY(activations.at(2).toLower().contains(
         "authorization: bearer trusted-test-key"));
-    QVERIFY(requests.at(3).toLower().contains(
+    QVERIFY(activations.at(3).toLower().contains(
         "authorization: bearer trusted-test-key"));
+    QVERIFY(!statusPolls.isEmpty());
+    for (const QByteArray &poll : statusPolls)
+        QVERIFY(poll.toLower().contains("authorization: bearer trusted-test-key"));
+    QCOMPARE(activations.size() + statusPolls.size(), requests.size());
 }
 
 void SystemProfilesTests::bundle_ultraQAndHybridAreWiredAndOptIn()
