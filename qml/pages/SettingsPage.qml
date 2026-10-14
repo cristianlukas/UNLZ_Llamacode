@@ -1105,13 +1105,37 @@ Item {
                                     }
                                 }
 
-                                LcTextField {
+                                RowLayout {
                                     Layout.fillWidth: true
                                     visible: App.gatewayEnabled
-                                    placeholderText: "API key (opcional, para exponer en LAN)"
-                                    text: App.gatewayApiKey
-                                    echoMode: TextInput.Password
-                                    onEditingFinished: App.gatewayApiKey = text
+                                    spacing: 6
+                                    LcTextField {
+                                        id: gatewayKeyField
+                                        property bool revealed: false
+                                        Layout.fillWidth: true
+                                        placeholderText: "API key (opcional, para exponer en LAN)"
+                                        text: App.gatewayApiKey
+                                        echoMode: revealed ? TextInput.Normal : TextInput.Password
+                                        onEditingFinished: App.gatewayApiKey = text
+                                    }
+                                    LcButton {
+                                        id: gatewayKeyEye
+                                        text: gatewayKeyField.revealed ? "🙈" : "👁"
+                                        secondary: true
+                                        Layout.preferredWidth: 40
+                                        // LcButton fija su texto en 13 px: el ojo quedaba diminuto.
+                                        contentItem: Text {
+                                            text: gatewayKeyEye.text
+                                            font.pixelSize: 18
+                                            color: Theme.btnSecondaryText
+                                            horizontalAlignment: Text.AlignHCenter
+                                            verticalAlignment: Text.AlignVCenter
+                                        }
+                                        Accessible.name: gatewayKeyField.revealed ? "Ocultar API key" : "Mostrar API key"
+                                        ToolTip.visible: hovered
+                                        ToolTip.text: Accessible.name
+                                        onClicked: gatewayKeyField.revealed = !gatewayKeyField.revealed
+                                    }
                                 }
 
                                 RowLayout {
@@ -1141,6 +1165,32 @@ Item {
                                     LcSwitch {
                                         checked: App.gatewayLanEnabled
                                         onToggled: App.gatewayLanEnabled = checked
+                                    }
+                                }
+
+                                // Mismo ajuste que "Iniciar sin contraseña" en Lanzar; se aplica
+                                // en caliente (no hace falta reiniciar el Gateway).
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    visible: App.gatewayEnabled
+                                    spacing: 8
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 2
+                                        Text { text: "Acceso sin contraseña"; color: Theme.textPrimary; font.pixelSize: 13 }
+                                        Text {
+                                            text: App.gatewayLanAuthEnabled
+                                                ? "Los equipos de la red tienen que mandar la API key."
+                                                : "Cualquier equipo con acceso a esta red puede usar el Gateway sin API key."
+                                            color: App.gatewayLanAuthEnabled ? Theme.textMuted : Theme.warnText
+                                            font.pixelSize: 11
+                                            wrapMode: Text.WordWrap
+                                            Layout.fillWidth: true
+                                        }
+                                    }
+                                    LcSwitch {
+                                        checked: !App.gatewayLanAuthEnabled
+                                        onToggled: App.gatewayLanAuthEnabled = !checked
                                     }
                                 }
 

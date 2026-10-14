@@ -13,6 +13,7 @@ private slots:
     void removeAndEmpty();
     void notCommittedToProjectRoot();
     void encryptedAtRest();
+    void testModeNeverUsesSystemKeyring();
 };
 
 void SecretStoreTests::initTestCase()
@@ -110,6 +111,18 @@ void SecretStoreTests::encryptedAtRest()
     SecretStore s2;
     QCOMPARE(s2.resolve("ENC_REF"), secret);
     s2.remove("ENC_REF");   // limpiar (keyring del SO persiste entre corridas)
+}
+
+// Los tests corren en la sesión del usuario: si el keyring responde, usarlo
+// escribía (y borraba) secretos reales. En modo test el backend es el archivo
+// aislado, aunque haya keyring.
+void SecretStoreTests::testModeNeverUsesSystemKeyring()
+{
+    QVERIFY(QStandardPaths::isTestModeEnabled());
+    SecretStore s;
+    QVERIFY(!s.usingKeychain());
+    QCOMPARE(s.backendName(), QStringLiteral("file"));
+    QVERIFY(SecretStore::filePath().contains(QStringLiteral("qttest"), Qt::CaseInsensitive));
 }
 
 QTEST_MAIN(SecretStoreTests)

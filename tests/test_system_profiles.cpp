@@ -100,6 +100,7 @@ private slots:
     void controller_launchMenuQuickDefersReadinessWork();
     void controller_startLanGatewayRetriesWhenSettingsAlreadyEnabled();
     void controller_gatewayRebindsWhenBusyPortIsReleased();
+    void controller_lanNoPasswordSwitchIsLiveAndKeepsKey();
     void controller_lanActivationRetryUsesSuppliedApiKey();
     void controller_astraStrataIsListedAndRequiresLocalSetup();
     void bundle_48gbFamilyIsBenchmarkableAndDualGpu();
@@ -1829,6 +1830,30 @@ void SystemProfilesTests::controller_gatewayRebindsWhenBusyPortIsReleased()
     QVERIFY(!app.gatewayRetryPending());
     QTest::qWait(100);
     QVERIFY(!app.gatewayRunning());
+}
+
+// Configuración → Gateway → "Acceso sin contraseña" maneja gatewayLanAuthEnabled
+// en caliente. Apagar la contraseña no borra la key; volver a pedirla sin key
+// genera una (si no, la LAN rechazaría todo con auth activa y key vacía).
+void SystemProfilesTests::controller_lanNoPasswordSwitchIsLiveAndKeepsKey()
+{
+    AppController app;
+    app.setGatewayApiKey(QString());   // SecretStore aislado en modo test
+    app.setGatewayLanAuthEnabled(false);
+    QVERIFY(!app.gatewayLanAuthEnabled());
+    QVERIFY(app.gatewayApiKey().isEmpty());
+
+    QSignalSpy changed(&app, &AppController::gatewayChanged);
+    app.setGatewayLanAuthEnabled(true);
+    QVERIFY(app.gatewayLanAuthEnabled());
+    QVERIFY2(app.gatewayApiKey().size() >= 16, "pedir contraseña sin key genera una");
+    QVERIFY(changed.count() >= 1);   // la UI (switch + leyenda) se refresca
+
+    const QString key = app.gatewayApiKey();
+    app.setGatewayLanAuthEnabled(false);
+    QCOMPARE(app.gatewayApiKey(), key);   // sin contraseña no borra la key
+    app.setGatewayLanAuthEnabled(true);
+    QCOMPARE(app.gatewayApiKey(), key);   // y al volver se reusa la misma
 }
 
 void SystemProfilesTests::controller_lanActivationRetryUsesSuppliedApiKey()

@@ -146,8 +146,13 @@ SecretStore::SecretStore(QObject *parent) : QObject(parent)
     // Elegir backend una vez: probar el keyring del SO; si responde, usarlo. Si no
     // (Linux headless sin Secret Service, etc.), usar el archivo local de fallback.
 #ifdef HAVE_QTKEYCHAIN
+    // En modo test (QtTest, LLAMACODE_TEST_MODE) nunca el keyring real: es del
+    // usuario y sobrevive a la corrida. Antes los tests dejaban una entrada
+    // "remote-profile-auth-retry-test-<uuid>" por corrida en el llavero, y
+    // cualquier test que tocara gateway/apiKey pisaba la clave LAN real.
+    const bool isolated = QStandardPaths::isTestModeEnabled();
     const QString probe = QStringLiteral("__lc_probe__");
-    if (kcWrite(probe, QStringLiteral("1"))) {
+    if (!isolated && kcWrite(probe, QStringLiteral("1"))) {
         m_useKeychain = true;
         kcDelete(probe);
     }
