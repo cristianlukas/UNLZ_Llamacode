@@ -43,6 +43,27 @@ Elegí pruebas que respondan la hipótesis, no una puntuación genérica:
   añadí adversarial o una suite pertinente. Conservá por separado primera
   pasada, reparaciones, resultado final, llamadas de tools, errores, tiempo y
   tokens. Una prueba de endpoint directo no sustituye el loop del agente.
+- Para una comparación difícil de uso de herramientas, añadí `tool-eval-bench`
+  Hard Mode: **28 tareas (TC-70…TC-97) × 3 semillas por perfil** (`42`, `43`,
+  `44`), con `variant_seed=20261010`. Fijá la versión de la suite (v2.8.0 para
+  esta receta), sampling común (`temperature=0.6`, `top_p=0.95`, `top_k=20`,
+  `min_p=0`, `repeat_penalty=1`, `presence_penalty=0`), `reasoning_effort=medium`,
+  `parallel=1`, máximo 8 turnos y timeout de 120 s por request. Mantén idénticos
+  suite, escenarios, herramientas, límites y semillas; ejecutá perfiles de a uno
+  si comparten recursos. Informá el score y los estados pass/partial/fail por
+  semilla y escenario, tasa de completitud, tiempo y fallos de endpoint. Las
+  herramientas son simuladas: esta suite complementa HE/BCB y el agente real,
+  pero no mide ejecución en aplicaciones, GUI ni calidad general de coding.
+  Reutilizá resultados históricos sólo cuando coincidan la huella de suite y
+  las condiciones; si runtime, plantilla o hardware difieren, describí el
+  resultado como comparación de perfiles completos. Conservá los recibos crudos
+  y no cuentes fallos de infraestructura como errores de calidad. El corte de
+  interés para el usuario es **30 minutos acumulados como máximo por perfil para
+  las tres semillas**. Estimá el tiempo con evidencia existente o una primera
+  semilla; si la proyección de las tres supera 30 minutos, no inicies o detén las
+  semillas restantes, registra el parcial con su proyección y no lo presentes
+  como comparación completa. Una solicitud explícita posterior puede cambiar
+  este límite.
 - Computer Use: separá exactitud/seguridad y latencia del corpus textual de la
   operación real de escritorio. Para promover control general, probá más de una
   app y variaciones razonables de layout/idioma/resolución; revisá observación,
