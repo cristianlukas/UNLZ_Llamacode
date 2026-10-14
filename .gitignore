@@ -105,3 +105,9 @@ __pycache__/
 # Backups of the user profile store inside benchmark evidence (GB-sized
 # history + personal launch profiles).
 artifacts/**/profile-backup/
+
+# SQLite: archivos temporales de journal/WAL (no son datos)
+*.sqlite-shm
+*.sqlite-wal
+*.db-shm
+*.db-wal
