@@ -1,7 +1,7 @@
 # Resultados — Q-20261014-IQ2XS-MISSING-MODALITIES
 
-**Fecha:** 2026-10-14
-**Estado:** Completa como screening incremental.
+**Fecha:** 2026-10-14  
+**Estado:** Completa como screening incremental.  
 **Decisión:** No promover perfiles ni cambiar defaults de producción. IQ2_XS tuvo buen resultado en recuperación larga, velocidad de generación y conteo visual. Ambos perfiles fallaron el holdout E2E de escritorio.
 
 ## Resumen de resultados
