@@ -777,9 +777,21 @@ void ProfilesTests::manager_sharedConfigSaveDoesNotGrowSlashes()
     f.write(doc.toJson());
     f.close();
 
-    qputenv("LLAMACODE_SHARED_PORTABLE_CONFIG", "1");
-    qputenv("LLAMACODE_WINDOWS_C_ROOT", kCRoot.toLocal8Bit());
-    qputenv("LLAMACODE_WINDOWS_D_ROOT", kDRoot.toLocal8Bit());
+    // Se desarman aunque falle un QVERIFY: si no, contaminan los tests siguientes.
+    struct EnvGuard {
+        EnvGuard() {
+            qputenv("LLAMACODE_SHARED_PORTABLE_CONFIG", "1");
+            qputenv("LLAMACODE_WINDOWS_C_ROOT", kCRoot.toLocal8Bit());
+            qputenv("LLAMACODE_WINDOWS_D_ROOT", kDRoot.toLocal8Bit());
+        }
+        ~EnvGuard() {
+            qunsetenv("LLAMACODE_SHARED_PORTABLE_CONFIG");
+            qunsetenv("LLAMACODE_WINDOWS_C_ROOT");
+            qunsetenv("LLAMACODE_WINDOWS_D_ROOT");
+        }
+    };
+    {
+    EnvGuard env;
     for (int port = 7002; port < 7005; ++port) {   // varios ciclos cargar → guardar
         ProfileManager pm;
         QVERIFY(pm.getBackend(id).value(QStringLiteral("baseArgs")).toStringList()
@@ -787,9 +799,7 @@ void ProfilesTests::manager_sharedConfigSaveDoesNotGrowSlashes()
         QVERIFY(pm.updateBackendPort(id, port));
         pm.saveProfiles();
     }
-    qunsetenv("LLAMACODE_SHARED_PORTABLE_CONFIG");
-    qunsetenv("LLAMACODE_WINDOWS_C_ROOT");
-    qunsetenv("LLAMACODE_WINDOWS_D_ROOT");
+    }
 
     QVERIFY(f.open(QIODevice::ReadOnly));
     raw = f.readAll();
