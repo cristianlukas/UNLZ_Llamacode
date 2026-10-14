@@ -167,6 +167,8 @@ private slots:
     void githubReleaseListChoosesNewestDebug();
     void updateNowRequiresAvailableRelease();
     void githubPrereleaseIsIgnored();
+    void windowsUpdateCommandShowsProgressWindow();
+    void updateConsoleIsVisible();
     void installRootIsDerivedFromExeLocation();
     void importUserDataFromRoundTrips();
     void exportUserDataToEmptyPathErrors();
@@ -411,6 +413,38 @@ void AppControllerTests::githubPrereleaseIsIgnored()
         {QStringLiteral("prerelease"), true},
     };
     QVERIFY(AppController::githubReleaseToUpdateFlag(release).isEmpty());
+}
+
+void AppControllerTests::windowsUpdateCommandShowsProgressWindow()
+{
+    const QString cmd = AppController::windowsUpdateCommand(
+        QStringLiteral("0.1.120"), QStringLiteral("Release"), QStringLiteral("v0.1.120"),
+        QStringLiteral("C:\\Users\\O'Neil\\LlamaCode"),
+        QStringLiteral("https://example.test/bootstrap.ps1"));
+    QVERIFY(cmd.startsWith(QStringLiteral("$Host.UI.RawUI.WindowTitle='LlamaCode - actualizando a v0.1.120'")));
+    QVERIFY(cmd.contains(QStringLiteral("$env:LC_CONFIG='Release';")));
+    QVERIFY(cmd.contains(QStringLiteral("$env:LC_REF='v0.1.120';")));
+    // La comilla del path se duplica (string literal de PowerShell).
+    QVERIFY(cmd.contains(QStringLiteral("$env:LC_DIR='C:\\Users\\O''Neil\\LlamaCode';")));
+    QVERIFY(cmd.endsWith(QStringLiteral("irm 'https://example.test/bootstrap.ps1' | iex")));
+    // Va por la linea de comandos a PowerShell 5.1: nada fuera de ASCII.
+    for (const QChar c : cmd)
+        QVERIFY2(c.unicode() < 128, qPrintable(QString(c)));
+
+    const QString noRoot = AppController::windowsUpdateCommand(
+        QStringLiteral("0.1.120"), QStringLiteral("Debug"), QStringLiteral("v0.1.120-debug"),
+        QString(), QStringLiteral("https://example.test/b.ps1"));
+    QVERIFY(!noRoot.contains(QStringLiteral("LC_DIR")));
+}
+
+void AppControllerTests::updateConsoleIsVisible()
+{
+    // Lo que Qt pasa desde una app GUI: CREATE_NO_WINDOW | CREATE_UNICODE_ENVIRONMENT.
+    const quint32 flags = AppController::visibleConsoleCreationFlags(0x08000000u | 0x00000400u);
+    QCOMPARE(flags & 0x08000000u, 0u);         // sin CREATE_NO_WINDOW
+    QCOMPARE(flags & 0x00000008u, 0u);         // sin DETACHED_PROCESS
+    QCOMPARE(flags & 0x00000010u, 0x10u);      // CREATE_NEW_CONSOLE
+    QCOMPARE(flags & 0x00000400u, 0x400u);     // conserva el resto
 }
 
 void AppControllerTests::voiceWhisperServerAvailabilityUsesConfiguredPath()

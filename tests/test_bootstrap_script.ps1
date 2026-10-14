@@ -93,8 +93,9 @@ Check ($sh.Contains('CONFIG="${LC_CONFIG:-Release}"')) 'bootstrap.sh instala Rel
 # Lado del app.
 Check ($app.Contains('installRootForExePath(QCoreApplication::applicationFilePath())')) 'el app calcula la raiz de instalacion'
 Check ($app -match '\$env:LC_DIR=') 'el app le pasa LC_DIR al bootstrap'
+Check ($app.Contains('visibleConsoleCreationFlags(args->flags)')) 'la consola del update es visible (Qt la lanzaba con CREATE_NO_WINDOW)'
 Check ($app.Contains('QStringLiteral("-NoExit")')) 'la consola del update queda abierta para ver el error'
-Check ($app.Contains('updateStarted = QProcess::startDetached')) 'confirma que el bootstrap arranco antes de cerrar la app'
+Check ($app.Contains('updateStarted = launcher.startDetached()')) 'confirma que el bootstrap arranco antes de cerrar la app'
 Check ($nav.Contains('visible: Qt.platform.os === "windows" && App.updateAvailable')) 'muestra el boton junto a Configuracion solo si Windows detecta una release nueva'
 $settingsLabel = $nav.IndexOf('text: (App.langV, App.l("nav.settings"))')
 $updateButton = $nav.IndexOf('visible: Qt.platform.os === "windows" && App.updateAvailable')
@@ -103,6 +104,8 @@ Check ($nav.Contains('root.updateRequested()')) 'el boton de la barra lateral so
 Check ($qml.Contains('window.forceQuit = true')) 'el boton permite salir aunque cerrar normalmente minimice a la bandeja'
 Check ($qml.Contains('App.handleUpdateDecision("updateNow")')) 'el boton ejecuta el flujo de instalacion existente'
 Check ($qml.Contains('App.updateAvailable && Qt.platform.os !== "windows"')) 'mantiene el popup de releases para otras plataformas'
+Check ($ps.Contains('Local\LlamaCodeBootstrap')) 'un solo bootstrap a la vez (mutex)'
+Check ($ps.Contains('$BootstrapMutex.ReleaseMutex()')) 'libera el mutex al terminar'
 
 if ($fails) { throw "$fails bootstrap regression(s) failed" }
 Write-Host 'All bootstrap regressions passed.'

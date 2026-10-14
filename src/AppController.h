@@ -668,6 +668,14 @@ public:
                                                       const QString &sourceName = QString());
     // Checkout del que cuelga el exe (lo consume el bootstrap via LC_DIR).
     static QString installRootForExePath(const QString &exePath);
+    // Comando PowerShell de "Actualizar ahora" (Windows): titula la ventana y
+    // exporta LC_CONFIG/LC_REF/LC_DIR antes de bajar y correr el bootstrap.
+    static QString windowsUpdateCommand(const QString &version, const QString &config,
+                                        const QString &sourceRef, const QString &installRoot,
+                                        const QString &scriptUrl);
+    // Flags de CreateProcess para que el update tenga consola VISIBLE: Qt, desde
+    // una app GUI sin consola, lanza startDetached con CREATE_NO_WINDOW.
+    static quint32 visibleConsoleCreationFlags(quint32 flags);
     // Diagnóstico consolidado (estilo `om doctor`): estado de binarios, roots,
     // catálogo, hardware, git, gateway y server en un solo QVariantMap, más una
     // lista `issues` de problemas accionables. Reachable headless vía ControlApi

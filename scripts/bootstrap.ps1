@@ -39,7 +39,14 @@ $QtDir   = "C:\Qt\$QtVer\msvc2022_64"
 $QtAqtModules = @('qtmultimedia')
 $QtRequiredComponents = @('Core', 'Quick', 'QuickControls2', 'Sql', 'Concurrent', 'Network', 'Widgets', 'Multimedia', 'Svg')
 
-function Info($m)  { Write-Host "[*] $m"  -ForegroundColor Cyan }
+function Info($m)  {
+    Write-Host "[*] $m"  -ForegroundColor Cyan
+    # Lanzado por "Actualizar ahora" la ventana se titula "LlamaCode - ...":
+    # el titulo sigue el paso actual (se ve desde la barra de tareas).
+    try {
+        if ($Host.UI.RawUI.WindowTitle -like 'LlamaCode*') { $Host.UI.RawUI.WindowTitle = "LlamaCode - $m" }
+    } catch {}
+}
 function Ok($m)    { Write-Host "[OK] $m" -ForegroundColor Green }
 # Die lanza en vez de 'exit': con 'irm ... | iex' el script corre dentro de la
 # sesion del usuario y un exit cierra la terminal antes de que se lea el error.
@@ -149,9 +156,19 @@ $RunAsFile = [bool]$PSCommandPath
 $Transcribing = $false
 try { Start-Transcript -Path $LogPath -Force | Out-Null; $Transcribing = $true } catch {}
 $BootstrapFailed = $false
+$BootstrapMutex = $null
 try {
     Write-Host ""
     Write-Host "=== LlamaCode bootstrap (Windows) ===" -ForegroundColor Magenta
+    # Un solo bootstrap a la vez: dos clics en "Actualizar ahora" (o el app
+    # reabierto mientras compila) corrian dos builds sobre el mismo checkout.
+    $BootstrapMutex = New-Object System.Threading.Mutex($false, 'Local\LlamaCodeBootstrap')
+    $HaveMutex = $false
+    try { $HaveMutex = $BootstrapMutex.WaitOne(0) } catch [System.Threading.AbandonedMutexException] { $HaveMutex = $true }
+    if (-not $HaveMutex) {
+        $BootstrapMutex.Dispose(); $BootstrapMutex = $null
+        Die "Another LlamaCode update/bootstrap is already running in another window. Wait for it to finish."
+    }
     if ($Ref -and $Ref -notmatch '^v?[0-9]+\.[0-9]+\.[0-9]+(-debug)?$') {
         Die "Invalid release ref: $Ref"
     }
@@ -352,6 +369,7 @@ try {
     Write-Host "        Log: $LogPath" -ForegroundColor Yellow
     Write-Host "        Fix the issue above and re-run the same command; finished steps are skipped." -ForegroundColor Yellow
 } finally {
+    if ($BootstrapMutex) { try { $BootstrapMutex.ReleaseMutex() } catch {}; $BootstrapMutex.Dispose() }
     if ($Transcribing) { try { Stop-Transcript | Out-Null } catch {} }
 }
 if ($BootstrapFailed -and $RunAsFile) { exit 1 }
