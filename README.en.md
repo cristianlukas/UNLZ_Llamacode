@@ -553,12 +553,11 @@ With a vision model (server launched with `--mmproj`) it also accepts **images**
 
 **Use a LAN server** discovers other LlamaCode gateways. **Use active profile
 remotely** connects to the model currently active on the selected host. The
-remote profile picker stays disabled while this PC has a selected launch
-profile; check **Adopt the remote profile as active on this PC** to choose a
-different remote profile and save it as the next launch selection. If no local
-profile is selected, the checkbox is enabled by default. Leaving it unchecked
-uses the remote profile for the current session and preserves the saved local
-selection.
+remote profile picker stays hidden until **Change remote profile** is checked.
+Then you can choose another remote profile, which becomes this PC's active
+launch selection. If no local profile is selected, the checkbox is checked by
+default. Leaving it unchecked uses the model already active on the host for the
+current session and preserves the saved local selection.
 
 ## Local gateway for OpenCode, Claude Code and Claude Desktop
 

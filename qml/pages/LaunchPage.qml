@@ -274,6 +274,7 @@ Item {
             }
             RowLayout {
                 Layout.fillWidth: true
+                visible: rememberRemoteAsActiveCheck.checked
                 Text { text: "Perfil"; color: Theme.textMuted; Layout.preferredWidth: 70 }
                 LcComboBox {
                     id: profileCombo
@@ -288,7 +289,7 @@ Item {
                 id: rememberRemoteAsActiveCheck
                 Layout.fillWidth: true
                 enabled: !lanDialog.busy
-                text: "Adoptar el perfil remoto como perfil activo en esta PC"
+                text: "Cambiar perfil remoto"
             }
             Text {
                 Layout.fillWidth: true
