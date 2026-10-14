@@ -15,6 +15,51 @@ Item {
         onPicked: function (hex) { if (target) target.value = hex }
     }
 
+    // Tarjeta plegable (cerrada por defecto) para bloques largos de una sección.
+    component Collapsible: ColumnLayout {
+        id: collapsible
+        property string title: ""
+        property string subtitle: ""
+        property bool expanded: false
+        default property alias content: collapsibleBody.data
+        Layout.fillWidth: true
+        spacing: 6
+        Rectangle {
+            Layout.fillWidth: true
+            implicitHeight: collapsibleHeader.implicitHeight + 16
+            radius: 6
+            color: collapsibleMouse.containsMouse ? Theme.hoverBg : "transparent"
+            border.color: Theme.borderColor
+            RowLayout {
+                id: collapsibleHeader
+                anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: 10 }
+                spacing: 8
+                Text { text: collapsible.expanded ? "▾" : "▸"; color: Theme.textSecondary; font.pixelSize: 12 }
+                Text { text: collapsible.title; color: Theme.textPrimary; font.pixelSize: 13; font.bold: true }
+                Text {
+                    Layout.fillWidth: true
+                    text: collapsible.subtitle
+                    color: Theme.textMuted; font.pixelSize: 11
+                    elide: Text.ElideRight
+                }
+            }
+            MouseArea {
+                id: collapsibleMouse
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: collapsible.expanded = !collapsible.expanded
+            }
+        }
+        ColumnLayout {
+            id: collapsibleBody
+            Layout.fillWidth: true
+            Layout.leftMargin: 22
+            visible: collapsible.expanded
+            spacing: 8
+        }
+    }
+
     property var gpuRows: []
     property var selectedVramGpus: []
     property string settingsSearchText: ""
@@ -173,7 +218,7 @@ Item {
                         ? SettingsTabs.matchCountForTab(modelData.key, function(id) {
                               return root.matchesSettingsSearch(root.sectionById(id)) })
                         : 0
-                    text: modelData.title + (searching ? "  " + hits : "")
+                    text: (App.langV, App.l(modelData.titleKey)) + (searching ? "  " + hits : "")
                     secondary: searching || root.currentTab !== modelData.key
                     opacity: searching && hits === 0 ? 0.45 : 1.0
                     onClicked: {
@@ -332,7 +377,7 @@ Item {
                         }
 
                         Text {
-                            text: "TEMAS CUSTOM"
+                            text: (App.langV, App.l("settings.sec.customThemes")).toUpperCase()
                             color: Theme.accent
                             font.pixelSize: 11
                             font.bold: true
@@ -544,7 +589,7 @@ Item {
                         Layout.fillWidth: true
                         spacing: 10
 
-                        Text { text: "GPU · INFERENCIA"; color: Theme.accent; font.pixelSize: 11; font.bold: true }
+                        Text { text: (App.langV, App.l("settings.sec.gpuInference")).toUpperCase(); color: Theme.accent; font.pixelSize: 11; font.bold: true }
 
                         Rectangle {
                             Layout.fillWidth: true
@@ -705,20 +750,23 @@ Item {
                                     }
                                 }
 
-                                // Inicio automático: sólo implementado en Windows (registro Run).
-                                // En Linux el switch fallaba siempre y volvía a apagado.
-                                Rectangle { Layout.fillWidth: true; height: 1; color: Theme.borderColor; visible: Qt.platform.os === "windows" }
+                                // Inicio automático: registro Run en Windows, ~/.config/autostart
+                                // en Linux (Debug y Prod con entradas separadas).
+                                Rectangle {
+                                    Layout.fillWidth: true; height: 1; color: Theme.borderColor
+                                    visible: Qt.platform.os === "windows" || Qt.platform.os === "linux"
+                                }
 
                                 RowLayout {
                                     Layout.fillWidth: true
-                                    visible: Qt.platform.os === "windows"
+                                    visible: Qt.platform.os === "windows" || Qt.platform.os === "linux"
                                     spacing: 12
 
                                     ColumnLayout {
                                         Layout.fillWidth: true
                                         spacing: 3
                                         Text {
-                                            text: (App.langV, App.l("settings.startWithWindows"))
+                                            text: (App.langV, App.l(Qt.platform.os === "windows" ? "settings.startWithWindows" : "settings.startWithSystem"))
                                             color: Theme.textPrimary
                                             font.pixelSize: 14
                                             font.bold: true
@@ -815,7 +863,7 @@ Item {
                         spacing: 10
 
                         Text {
-                            text: "RENDIMIENTO Y DIAGNÓSTICO"
+                            text: (App.langV, App.l("settings.sec.performance")).toUpperCase()
                             color: Theme.accent
                             font.pixelSize: 11
                             font.bold: true
@@ -961,7 +1009,7 @@ Item {
                         spacing: 10
 
                         Text {
-                            text: "GATEWAY · API"
+                            text: (App.langV, App.l("settings.sec.gateway")).toUpperCase()
                             color: Theme.accent
                             font.pixelSize: 11
                             font.bold: true
@@ -1132,84 +1180,19 @@ Item {
                                     }
                                 }
 
-                                ColumnLayout {
-                                    Layout.fillWidth: true
-                                    visible: App.gatewayEnabled && App.gatewayLanEnabled
-                                    spacing: 8
-
-                                    Text {
-                                        text: "OPCIÓN 1 · OTRO LLAMACODE EN LAN"
-                                        color: Theme.accent
-                                        font.pixelSize: 11
-                                        font.bold: true
-                                    }
-                                    Text {
-                                        text: "En el otro LlamaCode creá un Backend tipo Cloud/OpenAI-compatible. Base URL: "
-                                              + App.gatewayLanBaseUrl()
-                                              + " · Modelo: el ID del perfil elegido abajo · Var de key: LLAMACODE_GATEWAY_API_KEY."
-                                        color: Theme.textSecondary
-                                        font.pixelSize: 11
-                                        wrapMode: Text.WordWrap
-                                        Layout.fillWidth: true
-                                    }
-                                    RowLayout {
-                                        spacing: 8
-                                        LcButton {
-                                            text: "Copiar URL para LlamaCode"
-                                            onClicked: {
-                                                App.copyToClipboard(App.gatewayLanBaseUrl())
-                                                gwMsg.text = "URL LAN copiada."
-                                                gwMsg.ok = true
-                                            }
-                                        }
-                                        LcButton {
-                                            text: "Copiar API key"
-                                            secondary: true
-                                            onClicked: {
-                                                App.copyToClipboard(App.gatewayApiKey)
-                                                gwMsg.text = "API key copiada. Compartila sólo con dispositivos confiables."
-                                                gwMsg.ok = true
-                                            }
-                                        }
-                                    }
-
-                                    Text {
-                                        text: "OPCIÓN 2 · OPENCODE EN LAN"
-                                        color: Theme.accent
-                                        font.pixelSize: 11
-                                        font.bold: true
-                                    }
-                                    Text {
-                                        text: "Copiá la configuración en opencode.json del otro dispositivo. Incluye la URL LAN, los perfiles disponibles y la API key."
-                                        color: Theme.textSecondary
-                                        font.pixelSize: 11
-                                        wrapMode: Text.WordWrap
-                                        Layout.fillWidth: true
-                                    }
-                                    LcButton {
-                                        text: "Copiar configuración de OpenCode"
-                                        enabled: openCodeProfile.currentValue !== undefined
-                                        onClicked: {
-                                            App.copyToClipboard(App.gatewayLanOpenCodeConfig(openCodeProfile.currentValue ?? ""))
-                                            gwMsg.text = "Configuración LAN de OpenCode copiada."
-                                            gwMsg.ok = true
-                                        }
-                                    }
-                                    Text {
-                                        text: "Windows puede pedir permiso de firewall la primera vez. Permití acceso sólo en redes privadas."
-                                        color: Theme.textMuted
-                                        font.pixelSize: 10
-                                        wrapMode: Text.WordWrap
-                                        Layout.fillWidth: true
-                                    }
-                                }
-
+                                // Conectar otras apps. Antes eran "Opción 1/2/3" siempre abiertas y el
+                                // selector de perfil (que usan todas) quedaba suelto entre la 2 y la 3.
                                 Rectangle { Layout.fillWidth: true; height: 1; color: Theme.borderColor; visible: App.gatewayEnabled }
-
+                                Text {
+                                    visible: App.gatewayEnabled
+                                    text: "CONECTAR OTRAS APPS"
+                                    color: Theme.accent; font.pixelSize: 11; font.bold: true
+                                }
                                 RowLayout {
                                     Layout.fillWidth: true
                                     visible: App.gatewayEnabled
                                     spacing: 8
+                                    Text { text: "Perfil a exponer"; color: Theme.textSecondary; font.pixelSize: 12 }
                                     LcComboBox {
                                         id: openCodeProfile
                                         Layout.fillWidth: true
@@ -1229,40 +1212,102 @@ Item {
                                             }
                                         }
                                     }
-                                    LcButton {
-                                        text: "Lanzar Claude Code en mi GPU"
-                                        onClicked: {
-                                            var err = App.launchClaudeCode()
-                                            gwMsg.text = err.length === 0
-                                                ? "Claude Code lanzado contra " + App.gatewayBaseUrl()
-                                                : err
-                                            gwMsg.ok = err.length === 0
+                                }
+
+                                Collapsible {
+                                    visible: App.gatewayEnabled
+                                    title: "Claude Code / OpenCode en esta PC"
+                                    RowLayout {
+                                        spacing: 8
+                                        LcButton {
+                                            text: "Lanzar Claude Code en mi GPU"
+                                            onClicked: {
+                                                var err = App.launchClaudeCode()
+                                                gwMsg.text = err.length === 0
+                                                    ? "Claude Code lanzado contra " + App.gatewayBaseUrl()
+                                                    : err
+                                                gwMsg.ok = err.length === 0
+                                            }
+                                        }
+                                        LcButton {
+                                            text: "Abrir OpenCode GUI en mi GPU"
+                                            enabled: openCodeProfile.currentValue !== undefined
+                                            onClicked: openCodeProjectDialog.open()
                                         }
                                     }
-                                    LcButton {
-                                        text: "Abrir OpenCode GUI en mi GPU"
-                                        enabled: openCodeProfile.currentValue !== undefined
-                                        onClicked: openCodeProjectDialog.open()
+                                }
+
+                                Collapsible {
+                                    visible: App.gatewayEnabled
+                                    title: "Otro LlamaCode en la LAN"
+                                    subtitle: App.gatewayLanEnabled ? "" : "Activá \"Compartir server en la red local\" primero."
+                                    Text {
+                                        visible: App.gatewayLanEnabled
+                                        text: "En el otro LlamaCode creá un Backend tipo Cloud/OpenAI-compatible. Base URL: "
+                                              + App.gatewayLanBaseUrl()
+                                              + " · Modelo: el ID del perfil elegido arriba · Var de key: LLAMACODE_GATEWAY_API_KEY."
+                                        color: Theme.textSecondary; font.pixelSize: 11
+                                        wrapMode: Text.WordWrap; Layout.fillWidth: true
+                                    }
+                                    RowLayout {
+                                        visible: App.gatewayLanEnabled
+                                        spacing: 8
+                                        LcButton {
+                                            text: "Copiar URL para LlamaCode"
+                                            onClicked: {
+                                                App.copyToClipboard(App.gatewayLanBaseUrl())
+                                                gwMsg.text = "URL LAN copiada."
+                                                gwMsg.ok = true
+                                            }
+                                        }
+                                        LcButton {
+                                            text: "Copiar API key"
+                                            secondary: true
+                                            onClicked: {
+                                                App.copyToClipboard(App.gatewayApiKey)
+                                                gwMsg.text = "API key copiada. Compartila sólo con dispositivos confiables."
+                                                gwMsg.ok = true
+                                            }
+                                        }
                                     }
                                 }
-                                ColumnLayout {
-                                    Layout.fillWidth: true
-                                    visible: App.gatewayEnabled
-                                    spacing: 6
 
+                                Collapsible {
+                                    visible: App.gatewayEnabled
+                                    title: "OpenCode en la LAN"
+                                    subtitle: App.gatewayLanEnabled ? "" : "Activá \"Compartir server en la red local\" primero."
                                     Text {
-                                        text: "OPCIÓN 3 · CLAUDE DESKTOP"
-                                        color: Theme.accent
-                                        font.pixelSize: 11
-                                        font.bold: true
+                                        visible: App.gatewayLanEnabled
+                                        text: "Copiá la configuración en opencode.json del otro dispositivo. Incluye la URL LAN, los perfiles disponibles y la API key."
+                                        color: Theme.textSecondary; font.pixelSize: 11
+                                        wrapMode: Text.WordWrap; Layout.fillWidth: true
                                     }
+                                    LcButton {
+                                        visible: App.gatewayLanEnabled
+                                        text: "Copiar configuración de OpenCode"
+                                        enabled: openCodeProfile.currentValue !== undefined
+                                        onClicked: {
+                                            App.copyToClipboard(App.gatewayLanOpenCodeConfig(openCodeProfile.currentValue ?? ""))
+                                            gwMsg.text = "Configuración LAN de OpenCode copiada."
+                                            gwMsg.ok = true
+                                        }
+                                    }
+                                    Text {
+                                        visible: App.gatewayLanEnabled && Qt.platform.os === "windows"
+                                        text: "Windows puede pedir permiso de firewall la primera vez. Permití acceso sólo en redes privadas."
+                                        color: Theme.textMuted; font.pixelSize: 10
+                                        wrapMode: Text.WordWrap; Layout.fillWidth: true
+                                    }
+                                }
+
+                                Collapsible {
+                                    visible: App.gatewayEnabled
+                                    title: "Claude Desktop"
                                     Text {
                                         text: "Configura Claude Desktop para usar este gateway en modo Third-Party Inference. "
                                               + "El perfil elegido queda disponible junto con los demás perfiles locales."
-                                        color: Theme.textSecondary
-                                        font.pixelSize: 11
-                                        wrapMode: Text.WordWrap
-                                        Layout.fillWidth: true
+                                        color: Theme.textSecondary; font.pixelSize: 11
+                                        wrapMode: Text.WordWrap; Layout.fillWidth: true
                                     }
                                     RowLayout {
                                         Layout.fillWidth: true
@@ -1280,10 +1325,8 @@ Item {
                                         }
                                         Text {
                                             text: "Requiere cerrar y volver a abrir Claude Desktop."
-                                            color: Theme.textMuted
-                                            font.pixelSize: 10
-                                            wrapMode: Text.WordWrap
-                                            Layout.fillWidth: true
+                                            color: Theme.textMuted; font.pixelSize: 10
+                                            wrapMode: Text.WordWrap; Layout.fillWidth: true
                                         }
                                     }
                                 }
@@ -1317,7 +1360,7 @@ Item {
                         spacing: 10
 
                         Text {
-                            text: "CHAT"
+                            text: (App.langV, App.l("settings.sec.chat")).toUpperCase()
                             color: Theme.accent
                             font.pixelSize: 11
                             font.bold: true
@@ -1477,7 +1520,7 @@ Item {
                         }
 
                         Text {
-                            text: "GPU · LÍMITE DE POTENCIA"
+                            text: (App.langV, App.l("settings.sec.gpuPower")).toUpperCase()
                             color: Theme.accent
                             font.pixelSize: 11
                             font.bold: true
@@ -1496,7 +1539,10 @@ Item {
                                 spacing: 12
 
                                 Text {
-                                    text: "Límite de potencia de la GPU (W) vía nvidia-smi. Bajarlo reduce consumo, temperatura y ruido con poca pérdida en inferencia. Se aplica al iniciar el server. Requiere admin (UAC)."
+                                    text: "Límite de potencia de la GPU (W) vía nvidia-smi. Bajarlo reduce consumo, temperatura y ruido con poca pérdida en inferencia. Se aplica al iniciar el server. "
+                                          + (Qt.platform.os === "windows"
+                                             ? "Requiere admin: Windows pide confirmación (UAC)."
+                                             : "Requiere root: nvidia-smi -pl falla sin sudo (o una regla de sudoers para nvidia-smi).")
                                     color: Theme.textSecondary
                                     font.pixelSize: 12
                                     Layout.fillWidth: true
@@ -1593,7 +1639,7 @@ Item {
                         spacing: 10
 
                         Text {
-                            text: "ASTRA · MOTOR STRATA"
+                            text: (App.langV, App.l("settings.sec.strata")).toUpperCase()
                             color: Theme.accent
                             font.pixelSize: 11
                             font.bold: true
@@ -1613,14 +1659,14 @@ Item {
 
                                 Text {
                                     Layout.fillWidth: true
-                                    text: "ASTRA · Strata IQ3_S · Qwen3.8 Flash Next"
+                                    text: "Motor Strata · perfiles ASTRA"
                                     color: Theme.textPrimary
                                     font.pixelSize: 14
                                     font.bold: true
                                 }
                                 Text {
                                     Layout.fillWidth: true
-                                    text: "LlamaCode inicia, supervisa y detiene Strata. La carpeta del motor es común; cada perfil tiene su propio JSON para evitar mezclar IQ3_S calibrado con Flash-Next Q4."
+                                    text: "LlamaCode inicia, supervisa y detiene Strata. La carpeta del motor es común a todos; cada perfil usa su propio JSON de configuración para no mezclar modelos."
                                     color: Theme.textMuted
                                     font.pixelSize: 11
                                     wrapMode: Text.WordWrap
@@ -1636,43 +1682,47 @@ Item {
                                     onEditingFinished: App.writeSetting("astra/strataRoot", text.trim())
                                 }
 
-                                Text { text: "JSON · Perfil ASTRA IQ3_S estándar"; color: Theme.textSecondary; font.pixelSize: 12 }
-                                LcTextField {
-                                    id: astraConfigFile
-                                    Layout.fillWidth: true
-                                    enabled: !App.serverRunning
-                                    placeholderText: "<carpeta de Strata>/strata-iq3_s.json"
-                                    Component.onCompleted: text = App.readSetting("astra/configFile", "")
-                                    onEditingFinished: App.writeSetting("astra/configFile", text.trim())
-                                }
-                                Text { text: "JSON exacto · A/B ASTRA IQ3_S calibrado"; color: Theme.textSecondary; font.pixelSize: 12 }
-                                LcTextField {
-                                    id: astraCalibratedConfigFile
-                                    Layout.fillWidth: true
-                                    enabled: !App.serverRunning
-                                    placeholderText: "<ruta local>/astra-iq3s-strata.json"
-                                    Component.onCompleted: text = App.readSetting(
-                                        "astra/configFile/sys-astra-iq3s-calibrated-hardmode", "")
-                                    onEditingFinished: App.writeSetting(
-                                        "astra/configFile/sys-astra-iq3s-calibrated-hardmode", text.trim())
-                                }
-                                Text { text: "JSON exacto · Flash-Next Q4"; color: Theme.textSecondary; font.pixelSize: 12 }
-                                LcTextField {
-                                    id: flashNextQ4ConfigFile
-                                    Layout.fillWidth: true
-                                    enabled: !App.serverRunning
-                                    placeholderText: "<ruta local>/q4-udq4kxl-main.json"
-                                    Component.onCompleted: text = App.readSetting(
-                                        "astra/configFile/sys-flashnext-q4-strata-hardmode", "")
-                                    onEditingFinished: App.writeSetting(
-                                        "astra/configFile/sys-flashnext-q4-strata-hardmode", text.trim())
+                                // Un campo por perfil Strata existente (antes eran tres rutas fijas
+                                // de IQ3_S/Q4 y el ASTRA DEFAULT IQ2_XS no tenía dónde configurarse).
+                                Repeater {
+                                    id: astraProfilesRepeater
+                                    model: App.astraStrataProfiles()
+                                    delegate: ColumnLayout {
+                                        required property var modelData
+                                        Layout.fillWidth: true
+                                        spacing: 4
+                                        Text {
+                                            Layout.fillWidth: true
+                                            text: "JSON · " + modelData.title
+                                            color: Theme.textSecondary; font.pixelSize: 12
+                                            elide: Text.ElideRight
+                                        }
+                                        LcTextField {
+                                            Layout.fillWidth: true
+                                            enabled: !App.serverRunning
+                                            placeholderText: modelData.requiresOwnConfig
+                                                ? "Obligatorio: ruta al JSON de este perfil"
+                                                : "Vacío: usa ASTRA_STRATA_CONFIG o el JSON que encuentre en la carpeta"
+                                            text: modelData.value
+                                            onEditingFinished: App.writeSetting(modelData.setting, text.trim())
+                                        }
+                                        Text {
+                                            Layout.fillWidth: true
+                                            visible: modelData.expectedModelName.length > 0
+                                            text: "Se verifica que el JSON declare model_name = " + modelData.expectedModelName
+                                                  + (modelData.requiresOwnConfig ? "; sin este JSON el perfil no arranca." : ".")
+                                            color: modelData.requiresOwnConfig && modelData.value.length === 0
+                                                   ? Theme.warnText : Theme.textMuted
+                                            font.pixelSize: 10
+                                            wrapMode: Text.WordWrap
+                                        }
+                                    }
                                 }
                                 Text {
                                     Layout.fillWidth: true
-                                    text: "Los dos perfiles A/B verifican el model_name del JSON antes de arrancar y no heredan la ruta del perfil estándar ni la del otro modelo."
-                                    color: Theme.textMuted
-                                    font.pixelSize: 10
-                                    wrapMode: Text.WordWrap
+                                    visible: astraProfilesRepeater.count === 0
+                                    text: "No hay perfiles que usen Strata."
+                                    color: Theme.textMuted; font.pixelSize: 11
                                 }
                                 Text { text: "Puerto local"; color: Theme.textSecondary; font.pixelSize: 12 }
                                 LcTextField {
@@ -1694,7 +1744,7 @@ Item {
                                 }
                                 Text {
                                     Layout.fillWidth: true
-                                    text: "Strata escucha sólo en 127.0.0.1. Para compartir el perfil, elegilo en Lanzar y usá Iniciar servidor LAN; LlamaCode lo publica por el Gateway autenticado. ASTRA_STRATA_ROOT configura el motor; ASTRA_STRATA_CONFIG queda como fallback para IQ3_S."
+                                    text: "Strata escucha sólo en 127.0.0.1. Para compartir el perfil, elegilo en Lanzar y usá Iniciar servidor LAN; LlamaCode lo publica por el Gateway autenticado. ASTRA_STRATA_ROOT configura el motor; ASTRA_STRATA_CONFIG es el JSON de respaldo de los perfiles que lo admiten."
                                     color: Theme.textMuted
                                     font.pixelSize: 10
                                     wrapMode: Text.WordWrap
@@ -1726,7 +1776,7 @@ Item {
                         }
 
                         Text {
-                            text: "INTEGRACIONES"
+                            text: (App.langV, App.l("settings.sec.integrations")).toUpperCase()
                             color: Theme.accent
                             font.pixelSize: 11
                             font.bold: true
@@ -2182,7 +2232,7 @@ Item {
                         RowLayout {
                             Layout.fillWidth: true
                             Text {
-                                text: "PERFILES DE AGENTE"
+                                text: (App.langV, App.l("settings.sec.agentProfiles")).toUpperCase()
                                 color: Theme.accent
                                 font.pixelSize: 11
                                 font.bold: true
@@ -2644,7 +2694,7 @@ Item {
                         spacing: 10
 
                         Text {
-                            text: "MODELO MAESTRO (ask_teacher)"
+                            text: (App.langV, App.l("settings.sec.teacher")).toUpperCase()
                             color: Theme.accent
                             font.pixelSize: 11
                             font.bold: true
@@ -2706,7 +2756,7 @@ Item {
                         spacing: 10
 
                         Text {
-                            text: "SIDECAR AUXILIAR · RAG"
+                            text: (App.langV, App.l("settings.sec.auxiliary")).toUpperCase()
                             color: Theme.accent
                             font.pixelSize: 11
                             font.bold: true
@@ -2789,7 +2839,7 @@ Item {
                         function refresh() { accounts = App.listMailAccounts(); bump++ }
 
                         Text {
-                            text: "CORREO"
+                            text: (App.langV, App.l("settings.sec.mail")).toUpperCase()
                             color: Theme.accent
                             font.pixelSize: 11
                             font.bold: true
@@ -2989,7 +3039,7 @@ Item {
                         property var wipeItems: App.wipeCategories()
 
                         Text {
-                            text: "DATOS"
+                            text: (App.langV, App.l("settings.sec.data")).toUpperCase()
                             color: Theme.accent
                             font.pixelSize: 11
                             font.bold: true

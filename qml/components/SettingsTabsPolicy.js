@@ -7,17 +7,20 @@
 // Pura, para testearla sin levantar la app.
 
 var tabs = [
-    { key: "general",      title: "General",
+    { key: "general",      title: "General", titleKey: "settings.tab.general",
       sections: ["appearanceSection", "customSection", "languageSection", "systemSection"] },
-    { key: "hardware",     title: "GPU y motores",
+    { key: "hardware",     title: "GPU y motores", titleKey: "settings.tab.hardware",
       sections: ["gpuInferenceSection", "gpuSection", "astraSection"] },
-    { key: "network",      title: "Red y API",
+    { key: "network",      title: "Red y API", titleKey: "settings.tab.network",
       sections: ["gatewaySection"] },
-    { key: "agent",        title: "Agente y chat",
-      sections: ["agentProfilesSection", "teacherSection", "auxiliarySection", "chatSection"] },
-    { key: "integrations", title: "Integraciones",
+    { key: "agent",        title: "Agente y chat", titleKey: "settings.tab.agent",
+      sections: ["chatSection", "teacherSection", "auxiliarySection"] },
+    // Editor grande (capacidades, directivas, personalidad): pestaña propia.
+    { key: "agentProfiles", title: "Perfiles de agente", titleKey: "settings.tab.agentProfiles",
+      sections: ["agentProfilesSection"] },
+    { key: "integrations", title: "Integraciones", titleKey: "settings.tab.integrations",
       sections: ["intgSection", "mailSection"] },
-    { key: "data",         title: "Datos y diagnóstico",
+    { key: "data",         title: "Datos y diagnóstico", titleKey: "settings.tab.data",
       sections: ["performanceSection", "dataSection"] }
 ]
 

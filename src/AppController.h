@@ -699,6 +699,11 @@ public:
     Q_INVOKABLE bool startWithWindowsEnabled() const;
     Q_INVOKABLE QString setStartWithWindowsEnabled(bool enabled);
     static QString windowsStartupCommand(const QString &executablePath);
+    // Linux: entrada de ~/.config/autostart (Debug y Prod por separado). launcher
+    // vacío = el ejecutable; si lo lanza un wrapper (LLAMACODE_LAUNCHER), ése,
+    // para conservar su entorno (Qt, config compartida).
+    static QString linuxAutostartPath(bool debugBuild);
+    static QString linuxAutostartEntry(const QString &command, bool debugBuild);
     static bool shouldStartHidden(bool startedWithWindows, bool minimizeToTray);
     // Normaliza el adapter de harness: "none"/""/"opencode" → "llamaagent" (todo
     // perfil usa el agente nativo). "raw" (Chat) se respeta.
@@ -1091,6 +1096,9 @@ public:
     void    setGatewayLanEnabled(bool on);
     bool    gatewayLanAuthEnabled() const { return m_gatewayLanAuthEnabled; }
     void    setGatewayLanAuthEnabled(bool on);
+    // Perfiles gestionados por Strata, uno por JSON (configSetting), para que
+    // Configuración → GPU y motores muestre un campo por perfil existente en vez de rutas fijas.
+    Q_INVOKABLE QVariantList astraStrataProfiles();
     Q_INVOKABLE void startGateway();
     Q_INVOKABLE bool startLanGateway();
     Q_INVOKABLE void stopGateway();

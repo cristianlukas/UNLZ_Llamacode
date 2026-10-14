@@ -20,6 +20,7 @@
 #include <QRegularExpression>
 #include <QElapsedTimer>
 #include <QSignalSpy>
+#include <QSet>
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QUuid>
@@ -101,6 +102,7 @@ private slots:
     void controller_startLanGatewayRetriesWhenSettingsAlreadyEnabled();
     void controller_gatewayRebindsWhenBusyPortIsReleased();
     void controller_lanNoPasswordSwitchIsLiveAndKeepsKey();
+    void controller_astraSettingsListEveryStrataProfile();
     void controller_lanActivationRetryUsesSuppliedApiKey();
     void controller_astraStrataIsListedAndRequiresLocalSetup();
     void bundle_48gbFamilyIsBenchmarkableAndDualGpu();
@@ -1854,6 +1856,47 @@ void SystemProfilesTests::controller_lanNoPasswordSwitchIsLiveAndKeepsKey()
     QCOMPARE(app.gatewayApiKey(), key);   // sin contraseña no borra la key
     app.setGatewayLanAuthEnabled(true);
     QCOMPARE(app.gatewayApiKey(), key);   // y al volver se reusa la misma
+}
+
+// Configuración → Motor Strata: antes había tres rutas fijas (IQ3_S/Q4) y el
+// ASTRA DEFAULT IQ2_XS, que exige su propio JSON, no tenía dónde configurarse.
+void SystemProfilesTests::controller_astraSettingsListEveryStrataProfile()
+{
+    AppController app;
+    const QVariantList profiles = app.astraStrataProfiles();
+    QVERIFY(profiles.size() >= 3);
+
+    QSet<QString> settings;
+    QVariantMap iq2;
+    for (const QVariant &v : profiles) {
+        const QVariantMap p = v.toMap();
+        const QString setting = p.value(QStringLiteral("setting")).toString();
+        QVERIFY2(!settings.contains(setting), qPrintable("JSON repetido: " + setting));
+        settings.insert(setting);
+        QVERIFY(!p.value(QStringLiteral("title")).toString().isEmpty());
+        if (setting == QLatin1String("astra/configFile/sys-astra-iq2xs-default"))
+            iq2 = p;
+    }
+    QVERIFY2(!iq2.isEmpty(), "falta el ASTRA DEFAULT IQ2_XS");
+    QVERIFY(iq2.value(QStringLiteral("requiresOwnConfig")).toBool());
+    QCOMPARE(iq2.value(QStringLiteral("expectedModelName")).toString(),
+             QStringLiteral("qwen3.8-flash-next-iq2_xs"));
+    QVERIFY(settings.contains(QStringLiteral("astra/configFile/sys-astra-iq3s-calibrated-hardmode")));
+    QVERIFY(settings.contains(QStringLiteral("astra/configFile/sys-flashnext-q4-strata-hardmode")));
+
+    const QString path = QStringLiteral("/tmp/strata-iq2xs-test.json");
+    app.writeSetting(QStringLiteral("astra/configFile/sys-astra-iq2xs-default"), path);
+    bool found = false;
+    for (const QVariant &v : app.astraStrataProfiles()) {
+        const QVariantMap p = v.toMap();
+        if (p.value(QStringLiteral("setting")).toString()
+                == QLatin1String("astra/configFile/sys-astra-iq2xs-default")) {
+            QCOMPARE(p.value(QStringLiteral("value")).toString(), path);
+            found = true;
+        }
+    }
+    QVERIFY(found);
+    app.writeSetting(QStringLiteral("astra/configFile/sys-astra-iq2xs-default"), QString());
 }
 
 void SystemProfilesTests::controller_lanActivationRetryUsesSuppliedApiKey()

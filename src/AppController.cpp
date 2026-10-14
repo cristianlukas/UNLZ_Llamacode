@@ -112,7 +112,6 @@
 #include <QSet>
 #include <memory>
 #include <QFile>
-#include <QStandardPaths>
 #include <QTextStream>
 #include <QThread>
 #include <QTemporaryDir>
@@ -407,7 +406,7 @@ static AstraStrataSetup discoverAstraStrataSetup(const QString &configuredRoot,
     return {{}, {}, {}, {}, QStringLiteral(
         "No encontré una instalación Strata completa con el modelo/configuración esperados. "
         "Busqué en la caché de usuario, Documentos y volúmenes montados; configurá la "
-        "carpeta de Strata y el JSON de este perfil en Ajustes → ASTRA.")};
+        "carpeta de Strata y el JSON de este perfil en Configuración → GPU y motores → Motor Strata.")};
 }
 
 bool hasOption(const QStringList &args, const QString &longName,
@@ -2678,7 +2677,7 @@ void AppController::startServerInternal(const QString &launchProfileId, bool rem
         if (port < 1024 || port > 65535) port = 8350;
         if (!QFileInfo(root).isDir()) {
             emit serverError(QStringLiteral(
-                "ASTRA no encuentra la carpeta de Strata. Configurala en Ajustes → ASTRA. "
+                "ASTRA no encuentra la carpeta de Strata. Configurala en Configuración → GPU y motores → Motor Strata. "
                 "También podés definir ASTRA_STRATA_ROOT."));
             setServerState(QStringLiteral("failed"));
             return;
@@ -2687,7 +2686,7 @@ void AppController::startServerInternal(const QString &launchProfileId, bool rem
             || !QFileInfo(serverScript).isFile() || !QFileInfo(configPath).isFile()) {
             emit serverError(QStringLiteral(
                 "La instalación de ASTRA está incompleta. Se esperan %1, %2 y %3; "
-                "configurá la carpeta y el archivo de modelo en Ajustes → ASTRA.")
+                "configurá la carpeta y el archivo de modelo en Configuración → GPU y motores → Motor Strata.")
                 .arg(pythonPath, serverScript, configPath));
             setServerState(QStringLiteral("failed"));
             return;
@@ -2880,7 +2879,7 @@ void AppController::startServerInternal(const QString &launchProfileId, bool rem
                 emit serverPortCollision(launchProfileId, host, port, suggestedPort, wantsAgent);
             }
             const QString portSetting = isAstraStrata
-                ? QStringLiteral("Ajustes → ASTRA") : QStringLiteral("el perfil");
+                ? QStringLiteral("Configuración → GPU y motores → Motor Strata") : QStringLiteral("el perfil");
             const QString msg = suggestedPort > 0
                 ? QStringLiteral("El puerto %1 ya está en uso. Cambiá el puerto en %2 (por ejemplo %3) y reintentá.")
                       .arg(port).arg(portSetting).arg(suggestedPort)
@@ -12285,6 +12284,33 @@ bool AppController::shouldStartHidden(bool startedWithWindows, bool minimizeToTr
     return startedWithWindows && minimizeToTray;
 }
 
+#ifdef LC_DEBUG_ICON
+static constexpr bool kDebugBuild = true;
+#else
+static constexpr bool kDebugBuild = false;
+#endif
+
+QString AppController::linuxAutostartPath(bool debugBuild)
+{
+    // GenericConfigLocation = ~/.config (en modo test, el directorio aislado).
+    return QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation)
+        + (debugBuild ? QStringLiteral("/autostart/llamacode-debug.desktop")
+                      : QStringLiteral("/autostart/llamacode.desktop"));
+}
+
+QString AppController::linuxAutostartEntry(const QString &command, bool debugBuild)
+{
+    QString quoted = command;
+    if (quoted.contains(QLatin1Char(' ')) || quoted.contains(QLatin1Char('"')))
+        quoted = QLatin1Char('"') + QString(quoted).replace(QLatin1Char('"'), QStringLiteral("\\\"")) + QLatin1Char('"');
+    return QStringLiteral("[Desktop Entry]\nType=Application\nName=%1\n"
+                          "Comment=Abre LlamaCode al iniciar sesión\nExec=%2 --startup\n"
+                          "Icon=%3\nTerminal=false\nX-GNOME-Autostart-enabled=true\n")
+        .arg(debugBuild ? QStringLiteral("LlamaCode Debug") : QStringLiteral("LlamaCode"),
+             quoted,
+             debugBuild ? QStringLiteral("llamacode-debug") : QStringLiteral("llamacode"));
+}
+
 bool AppController::startWithWindowsEnabled() const
 {
 #ifdef Q_OS_WIN
@@ -12292,6 +12318,11 @@ bool AppController::startWithWindowsEnabled() const
         QStringLiteral("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run"),
         QSettings::NativeFormat);
     return !runKey.value(QStringLiteral("LlamaCode")).toString().trimmed().isEmpty();
+#elif defined(Q_OS_LINUX)
+    QFile file(linuxAutostartPath(kDebugBuild));
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+        return false;
+    return !QString::fromUtf8(file.readAll()).contains(QStringLiteral("X-GNOME-Autostart-enabled=false"));
 #else
     return false;
 #endif
@@ -12311,9 +12342,26 @@ QString AppController::setStartWithWindowsEnabled(bool enabled)
     runKey.sync();
     if (runKey.status() != QSettings::NoError)
         return QStringLiteral("No se pudo actualizar el inicio automático de Windows.");
+#elif defined(Q_OS_LINUX)
+    const QString path = linuxAutostartPath(kDebugBuild);
+    if (!enabled) {
+        if (QFile::exists(path) && !QFile::remove(path))
+            return QStringLiteral("No se pudo quitar %1.").arg(path);
+        return QString();
+    }
+    QString command = QString::fromLocal8Bit(qgetenv("LLAMACODE_LAUNCHER")).trimmed();
+    if (command.isEmpty() || !QFileInfo(command).isExecutable())
+        command = QCoreApplication::applicationFilePath();
+    QDir().mkpath(QFileInfo(path).absolutePath());
+    QSaveFile file(path);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+        return QStringLiteral("No se pudo escribir %1.").arg(path);
+    file.write(linuxAutostartEntry(command, kDebugBuild).toUtf8());
+    if (!file.commit())
+        return QStringLiteral("No se pudo escribir %1.").arg(path);
 #else
     Q_UNUSED(enabled);
-    return QStringLiteral("El inicio automático sólo está disponible en Windows.");
+    return QStringLiteral("El inicio automático no está disponible en este sistema.");
 #endif
     return QString();
 }
@@ -13737,10 +13785,31 @@ static const TrEntry k_tr[] = {
     {"settings.oled",       "OLED",            "OLED",                  "OLED",                   "OLED",              "OLED",                 "OLED"},
     {"settings.language",   "Idioma",          "Language",              "语言",           "Langue",            "Lingua",               "Sprache"},
     {"settings.system",     "Sistema",         "System",                "系统",           "Système",           "Sistema",              "System"},
+    {"settings.tab.general", "General", "General", "常规", "Général", "Generale", "Allgemein"},
+    {"settings.tab.hardware", "GPU y motores", "GPU & engines", "GPU 与引擎", "GPU et moteurs", "GPU e motori", "GPU & Engines"},
+    {"settings.tab.network", "Red y API", "Network & API", "网络与 API", "Réseau et API", "Rete e API", "Netzwerk & API"},
+    {"settings.tab.agent", "Agente y chat", "Agent & chat", "智能体与聊天", "Agent et chat", "Agente e chat", "Agent & Chat"},
+    {"settings.tab.agentProfiles", "Perfiles de agente", "Agent profiles", "智能体配置", "Profils d'agent", "Profili agente", "Agentenprofile"},
+    {"settings.tab.integrations", "Integraciones", "Integrations", "集成", "Intégrations", "Integrazioni", "Integrationen"},
+    {"settings.tab.data", "Datos y diagnóstico", "Data & diagnostics", "数据与诊断", "Données et diagnostic", "Dati e diagnostica", "Daten & Diagnose"},
+    {"settings.sec.customThemes", "Temas custom", "Custom themes", "自定义主题", "Thèmes personnalisés", "Temi personalizzati", "Eigene Designs"},
+    {"settings.sec.strata", "Motor Strata", "Strata engine", "Strata 引擎", "Moteur Strata", "Motore Strata", "Strata-Engine"},
+    {"settings.sec.gpuInference", "GPU · inferencia", "GPU · inference", "GPU · 推理", "GPU · inférence", "GPU · inferenza", "GPU · Inferenz"},
+    {"settings.sec.gpuPower", "GPU · límite de potencia", "GPU · power limit", "GPU · 功耗上限", "GPU · limite de puissance", "GPU · limite di potenza", "GPU · Leistungslimit"},
+    {"settings.sec.performance", "Rendimiento y diagnóstico", "Performance & diagnostics", "性能与诊断", "Performances et diagnostic", "Prestazioni e diagnostica", "Leistung & Diagnose"},
+    {"settings.sec.gateway", "Gateway · API", "Gateway · API", "网关 · API", "Passerelle · API", "Gateway · API", "Gateway · API"},
+    {"settings.sec.chat", "Chat", "Chat", "聊天", "Chat", "Chat", "Chat"},
+    {"settings.sec.integrations", "Integraciones", "Integrations", "集成", "Intégrations", "Integrazioni", "Integrationen"},
+    {"settings.sec.agentProfiles", "Perfiles de agente", "Agent profiles", "智能体配置", "Profils d'agent", "Profili agente", "Agentenprofile"},
+    {"settings.sec.teacher", "Modelo maestro (ask_teacher)", "Teacher model (ask_teacher)", "教师模型 (ask_teacher)", "Modèle enseignant (ask_teacher)", "Modello maestro (ask_teacher)", "Lehrermodell (ask_teacher)"},
+    {"settings.sec.auxiliary", "Sidecar auxiliar · RAG", "Auxiliary sidecar · RAG", "辅助 sidecar · RAG", "Sidecar auxiliaire · RAG", "Sidecar ausiliario · RAG", "Hilfs-Sidecar · RAG"},
+    {"settings.sec.mail", "Correo", "Email", "邮件", "E-mail", "Posta", "E-Mail"},
+    {"settings.sec.data", "Datos", "Data", "数据", "Données", "Dati", "Daten"},
     {"settings.minimizeToTray", "Minimizar a la bandeja", "Minimize to tray", "最小化到托盘", "Réduire dans la barre", "Riduci a icona", "In Infobereich minimieren"},
     {"settings.minimizeToTrayDesc", "Al cerrar, la app se oculta en los íconos de notificación en vez de cerrarse. Click derecho en el ícono para abrirla o salir.", "On close, the app hides in the notification tray instead of quitting. Right-click the icon to reopen or quit.", "关闭时，应用会隐藏到通知托盘而不是退出。右键单击图标可重新打开或退出。", "À la fermeture, l'application se réduit dans la zone de notification au lieu de quitter. Clic droit sur l'icône pour rouvrir ou quitter.", "Alla chiusura, l'app si nasconde nell'area di notifica invece di uscire. Clic destro sull'icona per riaprire o uscire.", "Beim Schließen wird die App im Infobereich versteckt statt beendet. Rechtsklick auf das Symbol zum Öffnen oder Beenden."},
     {"settings.startWithWindows", "Iniciar con Windows", "Start with Windows", "随 Windows 启动", "Démarrer avec Windows", "Avvia con Windows", "Mit Windows starten"},
     {"settings.startWithWindowsDesc", "Abre LlamaCode al iniciar sesión. Si «Minimizar a la bandeja» está activo, inicia oculto en el área de notificación.", "Opens LlamaCode when you sign in. If “Minimize to tray” is enabled, it starts hidden in the notification area.", "登录时打开 LlamaCode。如果启用“最小化到托盘”，应用将隐藏启动。", "Ouvre LlamaCode à la connexion. Si « Réduire dans la barre » est activé, l'application démarre masquée.", "Apre LlamaCode all'accesso. Se «Riduci a icona» è attivo, si avvia nascosto nell'area di notifica.", "Öffnet LlamaCode bei der Anmeldung. Wenn „In Infobereich minimieren“ aktiv ist, startet die App ausgeblendet."},
+    {"settings.startWithSystem", "Iniciar con el sistema", "Start with the system", "随系统启动", "Démarrer avec le système", "Avvia con il sistema", "Mit dem System starten"},
     {"tray.open",           "Abrir",           "Open",                  "打开",           "Ouvrir",            "Apri",                 "Öffnen"},
     {"tray.quit",           "Salir",           "Quit",                  "退出",           "Quitter",           "Esci",                 "Beenden"},
 };
@@ -15825,6 +15894,42 @@ QVariantMap AppController::recommendedSystemProfile() const
     };
 }
 
+QVariantList AppController::astraStrataProfiles()
+{
+    QVariantList out;
+    QSet<QString> seenSettings;
+    const QVariantList menu = m_profiles.launchProfilesForMenu();
+    for (const QVariant &entry : menu) {
+        const QVariantMap item = entry.toMap();
+        const QString launchId = item.value(QStringLiteral("id")).toString();
+        const LaunchProfile launch = m_profiles.resolveLaunch(launchId);
+        const BackendProfile backend = m_profiles.resolveBackend(launch.backendProfileId);
+        const QJsonObject managed = backend.managedServer;
+        if (managed.value(QStringLiteral("type")).toString() != QLatin1String("astra-strata"))
+            continue;
+        QString setting = managed.value(QStringLiteral("configSetting")).toString().trimmed();
+        if (setting.isEmpty())
+            setting = QStringLiteral("astra/configFile");
+        if (seenSettings.contains(setting))
+            continue;   // varios perfiles pueden compartir el mismo JSON
+        seenSettings.insert(setting);
+        QString title = launch.alias.isEmpty()
+            ? launch.name : QStringLiteral("%1 · %2").arg(launch.alias, launch.name);
+        out.append(QVariantMap{
+            {QStringLiteral("launchId"), launchId},
+            {QStringLiteral("title"), title},
+            {QStringLiteral("setting"), setting},
+            {QStringLiteral("value"), readSetting(setting).toString()},
+            {QStringLiteral("expectedModelName"),
+             managed.value(QStringLiteral("expectedModelName")).toString()},
+            // Sin fallback: el perfil no arranca hasta que se le cargue su JSON.
+            {QStringLiteral("requiresOwnConfig"),
+             !managed.value(QStringLiteral("allowLegacyConfigFallback")).toBool(true)}
+        });
+    }
+    return out;
+}
+
 QVariantMap AppController::resolveAstraStrataSetup(const QString &launchProfileId,
                                                   bool persistDiscoveredPaths)
 {
@@ -15856,7 +15961,7 @@ QVariantMap AppController::resolveAstraStrataSetup(const QString &launchProfileI
             {QStringLiteral("python"), QString()},
             {QStringLiteral("serverScript"), QString()},
             {QStringLiteral("error"), QStringLiteral(
-                "Este perfil necesita su JSON exacto. Configuralo en Ajustes → ASTRA; "
+                "Este perfil necesita su JSON exacto. Configuralo en Configuración → GPU y motores → Motor Strata; "
                 "no reutiliza el JSON de otro modelo.")}
         };
     }

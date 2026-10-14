@@ -3,6 +3,7 @@
 // que toda feature con diálogo tenga un camino api/headless equivalente.
 
 #include <QtTest>
+#include <QRegularExpression>
 #include "core/voice/VoiceController.h"
 #include <QStandardPaths>
 #include <QTemporaryDir>
@@ -238,6 +239,8 @@ private slots:
     void autoStartAgentOnLaunchPersists();
     void remoteBackendEnablesServerDependentUi();
     void windowsStartupCommandQuotesExecutable();
+    void linuxAutostartWritesAndRemovesEntry();
+    void settingsTabsAndHeadersAreTranslated();
     void startupHiddenRequiresBothFlags();
     void loopTaskRunsBodyUntilGoalMet();
     void loopTaskAppliesVerifyPhaseAndRestoresIt();
@@ -1387,6 +1390,67 @@ void AppControllerTests::windowsStartupCommandQuotesExecutable()
                  QStringLiteral("C:/Program Files/LlamaCode/LlamaCode.exe")),
              QStringLiteral("\"C:\\Program Files\\LlamaCode\\LlamaCode.exe\" --startup"));
 #endif
+}
+
+// Linux: "Iniciar con el sistema" antes fallaba siempre ("sólo Windows") y el
+// switch volvía a apagado. Ahora escribe ~/.config/autostart (aislado en test).
+void AppControllerTests::linuxAutostartWritesAndRemovesEntry()
+{
+#ifndef Q_OS_LINUX
+    QSKIP("autostart .desktop is the Linux integration");
+#else
+    const QString entry = AppController::linuxAutostartEntry(
+        QStringLiteral("/home/u/my apps/llamacode"), false);
+    QVERIFY(entry.startsWith(QStringLiteral("[Desktop Entry]\n")));
+    QVERIFY(entry.contains(QStringLiteral("Exec=\"/home/u/my apps/llamacode\" --startup\n")));
+    QVERIFY(entry.contains(QStringLiteral("Name=LlamaCode\n")));
+    QVERIFY(AppController::linuxAutostartEntry(QStringLiteral("/opt/lc/LlamaCode"), true)
+                .contains(QStringLiteral("Exec=/opt/lc/LlamaCode --startup\nIcon=llamacode-debug")));
+    QVERIFY(AppController::linuxAutostartPath(true) != AppController::linuxAutostartPath(false));
+    QVERIFY2(AppController::linuxAutostartPath(false).contains(QStringLiteral("qttest")),
+             "en modo test no toca ~/.config/autostart real");
+
+    AppController app;
+    QFile::remove(AppController::linuxAutostartPath(false));
+    QFile::remove(AppController::linuxAutostartPath(true));
+    QVERIFY(!app.startWithWindowsEnabled());
+    QCOMPARE(app.setStartWithWindowsEnabled(true), QString());
+    QVERIFY(app.startWithWindowsEnabled());
+    QCOMPARE(app.setStartWithWindowsEnabled(false), QString());
+    QVERIFY(!app.startWithWindowsEnabled());
+#endif
+}
+
+// Pestañas y encabezados de Configuración usan claves App.l(): una clave sin
+// traducir se vería cruda ("settings.tab.network") en la UI. Lee los .qml/.js
+// reales para no depender de una lista copiada a mano.
+void AppControllerTests::settingsTabsAndHeadersAreTranslated()
+{
+    QStringList keys;
+    const QRegularExpression re(QStringLiteral(R"((settings\.(?:tab|sec)\.[A-Za-z]+))"));
+    for (const QString &path : {QStringLiteral("qml/components/SettingsTabsPolicy.js"),
+                                QStringLiteral("qml/pages/SettingsPage.qml")}) {
+        QFile f(path);
+        QVERIFY2(f.open(QIODevice::ReadOnly | QIODevice::Text), qPrintable(path));
+        auto it = re.globalMatch(QString::fromUtf8(f.readAll()));
+        while (it.hasNext()) {
+            const QString k = it.next().captured(1);
+            if (!keys.contains(k)) keys << k;
+        }
+    }
+    QVERIFY2(keys.size() >= 15, qPrintable(QString::number(keys.size())));
+
+    AppController app;
+    const QString previous = app.language();
+    for (const QString &lang : {QStringLiteral("es"), QStringLiteral("en"), QStringLiteral("zh"),
+                                QStringLiteral("fr"), QStringLiteral("it"), QStringLiteral("de")}) {
+        app.setLanguage(lang);
+        for (const QString &k : keys) {
+            const QString v = app.l(k);
+            QVERIFY2(v != k && !v.isEmpty(), qPrintable(lang + ": falta " + k));
+        }
+    }
+    app.setLanguage(previous);
 }
 
 void AppControllerTests::startupHiddenRequiresBothFlags()
