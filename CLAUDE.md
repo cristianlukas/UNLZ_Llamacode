@@ -48,6 +48,9 @@ Reglas:
 | AutoTuner / tuner | `tests/test_tuner.cpp` |
 | EvalSuite | `tests/test_eval.cpp` |
 | ControlApi | `tests/test_control_api.cpp` |
+| ModelLoadProgress (etapas/% de carga de llama-server desde stderr; estimado por tiempo) | `tests/test_model_load_progress.cpp` |
+| LlmGateway `/llamacode/v1/status` + seguimiento LAN de la carga remota (`remoteLoadFromStatus`) | `tests/test_gateway.cpp` |
+| `modelLoadStatus` de AppController (conectando LAN / carga local / remota) | `tests/test_appcontroller.cpp` |
 | AgentToolRunner (tools nativas) | `tests/test_agent_tools.cpp` |
 | LlamaAgentBackend (system prompt: discipline/test-net/contexto) | `tests/test_agent_wire.cpp` |
 | HotspotAnalyzer (archivos riesgosos: churn+autores+sin test) | `tests/test_hotspots.cpp` |

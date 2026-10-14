@@ -18,6 +18,17 @@ Item {
     property string resolvedAdapter: ""
     property string resolvedAdapterLabel: ""
     property int currentView: 0   // 0 = Vista Agente, 1 = Vista terminal
+    // Carga del modelo (local o del anfitrion LAN) y conexion LAN en curso.
+    readonly property bool modelLoading: App.modelLoadStatus.active === true
+    readonly property int modelLoadPercent: App.modelLoadStatus.progress ?? -1
+
+    // Lo usan el botón del header y el del estado vacío (centro de la página).
+    function startSelectedAgent() {
+        if (selectedLaunchId.length === 0) return
+        App.writeSetting("lastAgentLaunchId", selectedLaunchId)
+        App.writeSetting("lastLaunchId", selectedLaunchId)
+        App.startAgent(selectedLaunchId)
+    }
     property double lastAgentActivityMs: Date.now()
     property int idleSeconds: 0
     property var agentAttachments: []
@@ -1127,16 +1138,27 @@ Item {
         spacing: 0
 
         // ── Header ──────────────────────────────────────────────────────────
+        // Flow, no RowLayout: con la ventana angosta (o con todos los botones de
+        // LlamaAgent visibles) lo que no entra baja a otra fila en vez de salirse
+        // de la pantalla — antes "Iniciar agente" quedaba fuera de vista. Cada
+        // celda mide headerRowH para que los controles de una fila queden alineados.
         Rectangle {
             Layout.fillWidth: true
-            height: 48
+            Layout.preferredHeight: headerFlow.implicitHeight + 14
             color: Theme.baseBg
+            readonly property int headerRowH: 34
 
-            RowLayout {
-                anchors { fill: parent; leftMargin: 16; rightMargin: 12 + root.windowControlsReserve }
-                spacing: 10
+            Flow {
+                id: headerFlow
+                anchors {
+                    left: parent.left; right: parent.right; top: parent.top
+                    leftMargin: 16; rightMargin: 12 + root.windowControlsReserve; topMargin: 7
+                }
+                spacing: 8
 
                 Text {
+                    height: parent.parent.headerRowH
+                    verticalAlignment: Text.AlignVCenter
                     text: (App.langV, App.l("agent.title"))
                     color: Theme.textPrimary
                     font { pixelSize: 15; bold: true }
@@ -1144,7 +1166,8 @@ Item {
 
                 LcComboBox {
                     id: profileCombo
-                    Layout.preferredWidth: 200
+                    width: 200
+                    height: parent.parent.headerRowH
                     // Menú ordenado: favoritos (★) arriba; displayName = alias - name.
                     property var launchMenu: App.profileManager.launchProfilesForMenu()
                     Connections {
@@ -1178,62 +1201,106 @@ Item {
                     }
                 }
 
-                Rectangle {
+                Item {
                     visible: resolvedAdapter !== "none" && resolvedAdapterLabel.length > 0
-                    height: 22; radius: 4; color: Theme.highlight
-                    implicitWidth: adapterLabel.implicitWidth + 16
-                    Text {
-                        id: adapterLabel
-                        anchors.centerIn: parent
-                        text: resolvedAdapterLabel
-                        color: Theme.accent
-                        font { pixelSize: 11; bold: true }
+                    width: adapterBadge.width
+                    height: parent.parent.headerRowH
+                    Rectangle {
+                        id: adapterBadge
+                        anchors.verticalCenter: parent.verticalCenter
+                        height: 22; radius: 4; color: Theme.highlight
+                        width: adapterLabel.implicitWidth + 16
+                        Text {
+                            id: adapterLabel
+                            anchors.centerIn: parent
+                            text: resolvedAdapterLabel
+                            color: Theme.accent
+                            font { pixelSize: 11; bold: true }
+                        }
                     }
                 }
 
-                Rectangle {
-                    width: 8; height: 8; radius: 4
-                    color: App.agentRunning ? Theme.successText
-                         : App.agentStarting ? Theme.warnText : Theme.errorText
-                }
-                Text {
-                    text: {
-                        const _lang = App.langV
-                        if (App.agentStarting) {
-                            return resolvedAdapter !== "none" && resolvedAdapterLabel.length > 0
-                                ? resolvedAdapterLabel + " · Iniciando agente..."
-                                : "Iniciando agente..."
+                // Estado: punto + texto (+ barra de carga del modelo con %).
+                Item {
+                    width: statusRow.width
+                    height: parent.parent.headerRowH
+                    Row {
+                        id: statusRow
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 6
+                        Rectangle {
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 8; height: 8; radius: 4
+                            color: App.agentRunning && !root.modelLoading ? Theme.successText
+                                 : (App.agentStarting || root.modelLoading) ? Theme.warnText : Theme.errorText
                         }
-                        if (!App.agentRunning) return App.l("agent.stopped")
-                        const title = App.opencodeSessionTitle ?? ""
-                        const base  = App.activeAgentAdapter + " · " + App.l("agent.running")
-                        return title.length > 0 ? (base + "  —  " + title) : base
+                        Text {
+                            id: agentStatusText
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: Math.min(implicitWidth, 320)
+                            text: {
+                                const _lang = App.langV
+                                const prefix = resolvedAdapter !== "none" && resolvedAdapterLabel.length > 0
+                                    ? resolvedAdapterLabel + " · " : ""
+                                if (root.modelLoading)
+                                    return prefix + App.modelLoadStatus.label
+                                if (App.agentStarting)
+                                    return prefix + "Iniciando agente..."
+                                if (!App.agentRunning) return App.l("agent.stopped")
+                                const title = App.opencodeSessionTitle ?? ""
+                                const base  = App.activeAgentAdapter + " · " + App.l("agent.running")
+                                return title.length > 0 ? (base + "  —  " + title) : base
+                            }
+                            color: App.agentRunning && !root.modelLoading ? Theme.successText
+                                 : (App.agentStarting || root.modelLoading) ? Theme.warnText : Theme.textMuted
+                            font.pixelSize: 12
+                            elide: Text.ElideRight
+                        }
+                        Rectangle {
+                            visible: root.modelLoading && root.modelLoadPercent >= 0
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 70; height: 6; radius: 3
+                            color: Theme.inputBg
+                            border.color: Theme.borderColor
+                            Rectangle {
+                                width: parent.width * Math.max(0, root.modelLoadPercent) / 100
+                                height: parent.height; radius: 3
+                                color: Theme.warnText
+                                Behavior on width { NumberAnimation { duration: 400 } }
+                            }
+                        }
                     }
-                    color: App.agentRunning ? Theme.successText
-                         : App.agentStarting ? Theme.warnText : Theme.textMuted
-                    font.pixelSize: 12
-                    Layout.fillWidth: true
-                    elide: Text.ElideRight
                 }
-                Rectangle {
+                Item {
                     visible: App.agentRunning || App.agentStarting
-                    implicitWidth: activityText.implicitWidth + 16
-                    height: 24
-                    radius: 6
-                    color: Theme.inputBg
-                    border.color: root.activityColor
-                    border.width: 1
-                    Text {
-                        id: activityText
-                        anchors.centerIn: parent
-                        text: root.activityLabel
-                        color: root.activityColor
-                        font.pixelSize: 11
+                    width: activityChip.width
+                    height: parent.parent.headerRowH
+                    Rectangle {
+                        id: activityChip
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: activityText.implicitWidth + 16
+                        height: 24
+                        radius: 6
+                        color: Theme.inputBg
+                        border.color: root.activityColor
+                        border.width: 1
+                        Text {
+                            id: activityText
+                            anchors.centerIn: parent
+                            text: root.activityLabel
+                            color: root.activityColor
+                            font.pixelSize: 11
+                        }
                     }
                 }
 
                 // View toggle tabs
+                Item {
+                    width: viewTabs.width
+                    height: parent.parent.headerRowH
                 Row {
+                    id: viewTabs
+                    anchors.verticalCenter: parent.verticalCenter
                     spacing: 0
                     Repeater {
                         model: ["Vista Agente", "Vista terminal"]
@@ -1259,12 +1326,18 @@ Item {
                         }
                     }
                 }
+                }
 
                 // Indicador de contexto (tokens usados / n_ctx).
-                Rectangle {
+                Item {
                     visible: App.agentContextLimit > 0 && App.agentRunning
-                    implicitWidth: App.agentContextPruneEvents > 0 ? 174 : 130
-                    implicitHeight: 26
+                    width: contextChip.width
+                    height: parent.parent.headerRowH
+                Rectangle {
+                    id: contextChip
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: App.agentContextPruneEvents > 0 ? 174 : 130
+                    height: 26
                     radius: 6
                     color: Theme.inputBg
                     border.color: Theme.borderColor
@@ -1296,12 +1369,14 @@ Item {
                                   + "\nAhorro acumulado: " + App.agentContextPruned
                                   + " tokens en " + App.agentContextPruneEvents + " eventos"
                 }
+                }
 
                 // Política de aprobación de herramientas.
                 LcComboBox {
                     id: approvalModeCombo
                     visible: resolvedAdapter === "opencode" || resolvedAdapter === "llamaagent"
-                    implicitWidth: 150
+                    width: 150
+                    height: parent.parent.headerRowH
                     model: [
                         { key: "auto",   label: "Aprobar todo" },
                         { key: "ask",    label: "Pedir escritura" },
@@ -1336,6 +1411,8 @@ Item {
                 }
                 Text {
                     visible: resolvedAdapter === "llamaagent"
+                    height: parent.parent.headerRowH
+                    verticalAlignment: Text.AlignVCenter
                     readonly property var sandbox: {
                         const modeDependency = App.agentApprovalMode
                         return App.agentSandboxStatus()
@@ -1353,7 +1430,8 @@ Item {
                 LcComboBox {
                     id: agentProfileCombo
                     visible: resolvedAdapter === "llamaagent"
-                    implicitWidth: 150
+                    width: 150
+                    height: parent.parent.headerRowH
                     model: App.profileManager.agentProfiles
                     textRole: "name"; valueRole: "profileId"
                     currentIndex: Math.max(0, indexOfValue(App.activeAgentProfileId))
@@ -1370,6 +1448,7 @@ Item {
                 LcCheckBox {
                     id: agentThinkingCheck
                     visible: resolvedAdapter === "llamaagent"
+                    height: parent.parent.headerRowH
                     text: "Pensar"
                     checkable: false
                     checked: App.thinkingEnabled
@@ -1465,9 +1544,7 @@ Item {
                         if (App.agentRunning || App.agentStarting) {
                             App.stopAgent()
                         } else {
-                            App.writeSetting("lastAgentLaunchId", selectedLaunchId)
-                            App.writeSetting("lastLaunchId", selectedLaunchId)
-                            App.startAgent(selectedLaunchId)
+                            root.startSelectedAgent()
                         }
                     }
                 }
@@ -1843,15 +1920,20 @@ Item {
                 Rectangle {
                     anchors.centerIn: parent
                     z: 5
-                    visible: App.thinkingRestarting || App.agentStarting || (App.agentRunning && (!App.backendAvailable || (App.serverRunning && !App.serverReady)))
+                    visible: App.thinkingRestarting || App.agentStarting || root.modelLoading
+                             || (App.agentRunning && (!App.backendAvailable || (App.serverRunning && !App.serverReady)))
                     radius: 10
                     color: Theme.surfaceBg
                     border.color: Theme.borderColor
-                    implicitWidth: agentLoadingRow.implicitWidth + 32
-                    implicitHeight: agentLoadingRow.implicitHeight + 24
+                    implicitWidth: Math.max(agentLoadingRow.implicitWidth, 260) + 32
+                    implicitHeight: agentLoadingCol.implicitHeight + 24
+                    Column {
+                        id: agentLoadingCol
+                        anchors.centerIn: parent
+                        spacing: 10
                     Row {
                         id: agentLoadingRow
-                        anchors.centerIn: parent
+                        anchors.horizontalCenter: parent.horizontalCenter
                         spacing: 10
                         Rectangle {
                             width: 10; height: 10; radius: 5
@@ -1868,13 +1950,42 @@ Item {
                             anchors.verticalCenter: parent.verticalCenter
                             text: App.thinkingRestarting
                                 ? "Recargando modelo para aplicar el nivel de pensamiento..."
+                                : App.hybridStatus.length > 0
+                                ? App.hybridStatus
+                                : root.modelLoading
+                                ? App.modelLoadStatus.label
                                 : App.agentStarting
-                                ? (App.hybridStatus.length > 0 ? App.hybridStatus : "Iniciando agente...")
+                                ? "Iniciando agente..."
                                 : !App.backendAvailable
                                 ? "Servidor no disponible. Iniciá el modelo en Lanzar."
                                 : "Cargando modelo..."
                             color: Theme.textSecondary; font.pixelSize: 14
                         }
+                    }
+                    // Barra de carga del modelo; "estimado" cuando el % sale del
+                    // tiempo de la carga anterior y no del log del server.
+                    Column {
+                        visible: root.modelLoading && root.modelLoadPercent >= 0
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        spacing: 4
+                        Rectangle {
+                            width: 260; height: 8; radius: 4
+                            color: Theme.inputBg
+                            border.color: Theme.borderColor
+                            Rectangle {
+                                width: parent.width * Math.max(0, root.modelLoadPercent) / 100
+                                height: parent.height; radius: 4
+                                color: Theme.accent
+                                Behavior on width { NumberAnimation { duration: 400 } }
+                            }
+                        }
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            visible: App.modelLoadStatus.estimated === true
+                            text: "Porcentaje estimado según la carga anterior"
+                            color: Theme.textMuted; font.pixelSize: 10
+                        }
+                    }
                     }
                 }
 
@@ -1882,7 +1993,8 @@ Item {
                 ColumnLayout {
                     anchors.centerIn: parent
                     spacing: 16
-                    visible: !App.agentRunning && !App.agentStarting && App.agentMessages.length === 0
+                    visible: !App.agentRunning && !App.agentStarting && !root.modelLoading
+                             && App.agentMessages.length === 0
                     Text { Layout.alignment: Qt.AlignHCenter; text: "🤖"; font.pixelSize: 48 }
                     Text {
                         Layout.alignment: Qt.AlignHCenter
@@ -1890,6 +2002,20 @@ Item {
                             ? resolvedAdapterLabel + " · " + (App.langV, App.l("agent.stopped"))
                             : (App.langV, App.l("agent.stopped"))
                         color: Theme.textMuted; font.pixelSize: 14
+                    }
+                    // Atajo al mismo arranque del header: con el agente detenido
+                    // el botón del header puede quedar lejos (o en otra fila).
+                    LcButton {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: (App.langV, App.l("agent.start"))
+                        enabled: selectedLaunchId.length > 0
+                        onClicked: root.startSelectedAgent()
+                    }
+                    Text {
+                        Layout.alignment: Qt.AlignHCenter
+                        visible: selectedLaunchId.length === 0
+                        text: "Elegí un perfil arriba para iniciar el agente."
+                        color: Theme.textMuted; font.pixelSize: 11
                     }
                 }
 

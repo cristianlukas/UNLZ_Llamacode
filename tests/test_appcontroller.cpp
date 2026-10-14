@@ -167,6 +167,8 @@ private slots:
     void githubReleaseListChoosesNewestDebug();
     void updateNowRequiresAvailableRelease();
     void githubPrereleaseIsIgnored();
+    void modelLoadStatusComposesLocalRemoteAndConnecting();
+    void localModelLoadLifecycle();
     void windowsUpdateCommandShowsProgressWindow();
     void updateConsoleIsVisible();
     void installRootIsDerivedFromExeLocation();
@@ -413,6 +415,65 @@ void AppControllerTests::githubPrereleaseIsIgnored()
         {QStringLiteral("prerelease"), true},
     };
     QVERIFY(AppController::githubReleaseToUpdateFlag(release).isEmpty());
+}
+
+void AppControllerTests::modelLoadStatusComposesLocalRemoteAndConnecting()
+{
+    const QJsonObject local{{"state", "loading"}, {"progress", 30}, {"estimated", true}};
+    const QJsonObject remote{{"state", "warmup"}, {"progress", 95}};
+
+    // Conectando con el anfitrión LAN gana sobre todo: antes la UI decía
+    // "Agente detenido" mientras esperaba el /activate.
+    QVariantMap s = AppController::composeModelLoadStatus(local, remote, true);
+    QCOMPARE(s.value("state").toString(), QStringLiteral("connecting"));
+    QVERIFY(s.value("active").toBool());
+    QVERIFY(s.value("remote").toBool());
+    QCOMPARE(s.value("label").toString(), QStringLiteral("Conectando con el servidor LAN..."));
+
+    // Siguiendo la carga remota.
+    s = AppController::composeModelLoadStatus(local, remote, false);
+    QCOMPARE(s.value("state").toString(), QStringLiteral("warmup"));
+    QCOMPARE(s.value("progress").toInt(), 95);
+    QCOMPARE(s.value("label").toString(), QStringLiteral("Preparando contexto remoto 95%"));
+
+    // Sólo local.
+    s = AppController::composeModelLoadStatus(local, {}, false);
+    QCOMPARE(s.value("label").toString(), QStringLiteral("Cargando modelo 30%"));
+    QVERIFY(s.value("estimated").toBool());
+    QVERIFY(!s.value("remote").toBool());
+
+    // Nada en curso.
+    s = AppController::composeModelLoadStatus({}, {}, false);
+    QCOMPARE(s.value("state").toString(), QStringLiteral("idle"));
+    QVERIFY(!s.value("active").toBool());
+}
+
+void AppControllerTests::localModelLoadLifecycle()
+{
+    AppController app;
+    const QString launchId = QStringLiteral("test-load-") + QString::number(QDateTime::currentMSecsSinceEpoch());
+    QSettings().remove(QStringLiteral("modelLoadMs/") + launchId);
+    QSignalSpy spy(&app, &AppController::modelLoadStatusChanged);
+
+    app.beginLocalModelLoadForTest(launchId, {QStringLiteral("-m"), QStringLiteral("missing.gguf")});
+    QVERIFY(spy.count() > 0);
+    QCOMPARE(app.modelLoadStatus().value("state").toString(), QStringLiteral("starting"));
+    QVERIFY(app.modelLoadStatus().value("active").toBool());
+    // El gateway publica esto a los clientes LAN, con el id del perfil.
+    QCOMPARE(app.localModelLoadJson().value("model").toString(), launchId);
+
+    app.feedLocalModelLoadForTest(QStringLiteral("I srv  llama_server: loading model\n"));
+    QCOMPARE(app.modelLoadStatus().value("state").toString(), QStringLiteral("loading"));
+    app.feedLocalModelLoadForTest(QStringLiteral("W llama_context: n_ctx_seq (4096)\n"));
+    QCOMPARE(app.modelLoadStatus().value("progress").toInt(), 95);
+
+    QTest::qWait(5);
+    app.finishLocalModelLoadForTest(true);
+    QCOMPARE(app.modelLoadStatus().value("state").toString(), QStringLiteral("ready"));
+    QVERIFY(!app.modelLoadStatus().value("active").toBool());
+    // La duración medida queda para estimar la próxima carga.
+    QVERIFY(QSettings().value(QStringLiteral("modelLoadMs/") + launchId).toLongLong() > 0);
+    QSettings().remove(QStringLiteral("modelLoadMs/") + launchId);
 }
 
 void AppControllerTests::windowsUpdateCommandShowsProgressWindow()

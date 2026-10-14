@@ -1,5 +1,6 @@
 #pragma once
 #include "core/BinaryRegistry.h"
+#include "core/ModelLoadProgress.h"
 #include "core/EngineCatalog.h"
 #include "core/HardwareDiagnostics.h"
 #include "core/PerformanceMatrix.h"
@@ -152,6 +153,9 @@ class AppController : public QObject
     Q_PROPERTY(QString agentLog       READ agentLog          NOTIFY agentLogChanged)
     Q_PROPERTY(bool agentStarting     READ agentStarting     NOTIFY agentStartingChanged)
     Q_PROPERTY(QString hybridStatus   READ hybridStatus      NOTIFY agentStartingChanged)
+    // Carga del modelo (local o del anfitrion LAN): {state, progress, label,
+    // remote, estimated}. state: idle|connecting|starting|loading|warmup|ready|failed.
+    Q_PROPERTY(QVariantMap modelLoadStatus READ modelLoadStatus NOTIFY modelLoadStatusChanged)
     Q_PROPERTY(QVariantList agentMessages  READ agentMessages  NOTIFY agentMessagesChanged)
     // Streaming incremental: índice del mensaje en streaming (-1 = ninguno) y su
     // texto en vivo. La UI override sólo esa burbuja sin re-bindear toda la lista.
@@ -414,7 +418,12 @@ public:
         return m_agentInTerminal ? (m_agentPid != 0) : (m_agentProc && m_agentProc->state() != QProcess::NotRunning);
     }
     bool agentStarting() const { return m_agentStarting || !m_pendingAutoAgentLaunchId.isEmpty()
-                                       || !m_hybridPhase.isEmpty(); }
+                                       || !m_hybridPhase.isEmpty() || m_lanConnecting; }
+    QVariantMap modelLoadStatus() const;
+    // Pura (testeable): combina la carga local, la remota y la conexion LAN.
+    static QVariantMap composeModelLoadStatus(const QJsonObject &local,
+                                              const QJsonObject &remote,
+                                              bool lanConnecting);
     QString hybridStatus() const;
     QString activeProfileToolSupport() const { return m_activeProfileToolSupport; }
     QString agentLog() const { return m_agentLog; }
@@ -676,6 +685,16 @@ public:
     // Flags de CreateProcess para que el update tenga consola VISIBLE: Qt, desde
     // una app GUI sin consola, lanza startDetached con CREATE_NO_WINDOW.
     static quint32 visibleConsoleCreationFlags(quint32 flags);
+    // Tests: alimentar la carga local sin un llama-server real.
+    void beginLocalModelLoadForTest(const QString &launchId, const QStringList &args)
+    { beginLocalModelLoad(launchId, args); }
+    void feedLocalModelLoadForTest(const QString &chunk);
+    void finishLocalModelLoadForTest(bool ok) { finishLocalModelLoad(ok); }
+    QJsonObject localModelLoadJson() const;
+    // Pura: carga remota a mostrar segun /llamacode/v1/status. Vacio = listo
+    // (deja de seguir). Un "ready" de OTRO modelo es el swap en curso: "starting".
+    static QJsonObject remoteLoadFromStatus(const QJsonObject &statusBody,
+                                            const QString &expectedModel);
     // Diagnóstico consolidado (estilo `om doctor`): estado de binarios, roots,
     // catálogo, hardware, git, gateway y server en un solo QVariantMap, más una
     // lista `issues` de problemas accionables. Reachable headless vía ControlApi
@@ -1630,6 +1649,7 @@ signals:
     void gatewayChanged();
     void lanServersChanged();
     void lanProfileReady(const QString &launchProfileId, const QString &error);
+    void modelLoadStatusChanged();
     void idleAutoStopChanged();
     void agentContextChanged();
     void agentTuningChanged();
@@ -1900,6 +1920,19 @@ private:
     QProcess *m_gitInstallProc = nullptr;
     QTimer   *m_stopKillTimer  = nullptr;
     QTimer   *m_healthPollTimer = nullptr;
+    // Progreso de carga del modelo local (stderr + health) y del anfitrion LAN.
+    ModelLoadProgress m_localLoad;
+    QString   m_localLoadLaunchId;
+    QTimer   *m_localLoadTick = nullptr;
+    QJsonObject m_remoteLoad;
+    QTimer   *m_remoteLoadPoll = nullptr;
+    qint64    m_remoteLoadDeadlineMs = 0;
+    bool      m_lanConnecting = false;
+    void beginLocalModelLoad(const QString &launchId, const QStringList &args);
+    void finishLocalModelLoad(bool ok, const QString &detail = QString());
+    void startRemoteLoadPolling(const QString &baseUrl, const QString &apiKey,
+                                const QString &expectedModel);
+    void stopRemoteLoadPolling();
     void startHealthPolling();
     void stopHealthPolling();
     // Arranque diferido del agente cuando el server queda listo. Si quedó un

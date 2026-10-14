@@ -242,6 +242,23 @@ QString LlmGateway::resolveModelId(const QString &requested, const QJsonArray &m
     return {};
 }
 
+QJsonObject LlmGateway::statusResponse(bool ready, const QString &currentModel,
+                                       const QJsonObject &load)
+{
+    QJsonObject l = load;
+    if (l.value(QStringLiteral("state")).toString().isEmpty()) {
+        // Anfitrion sin seguimiento de carga: sólo se sabe si está listo.
+        l = QJsonObject{{QStringLiteral("state"), ready ? QStringLiteral("ready") : QStringLiteral("idle")},
+                        {QStringLiteral("progress"), ready ? 100 : -1}};
+    }
+    if (!l.contains(QStringLiteral("model")) && !currentModel.isEmpty())
+        l.insert(QStringLiteral("model"), currentModel);
+    return QJsonObject{{QStringLiteral("ok"), true},
+                       {QStringLiteral("ready"), ready},
+                       {QStringLiteral("model"), currentModel},
+                       {QStringLiteral("load"), l}};
+}
+
 QJsonObject LlmGateway::modelsResponse(const QJsonArray &models)
 {
     QJsonArray data;
@@ -509,6 +526,18 @@ void LlmGateway::handle(QTcpSocket *sock, const QByteArray &method, const QStrin
             return;
         }
         writeJson(sock, 200, modelsResponse(m_hooks.models ? m_hooks.models() : QJsonArray{}));
+        return;
+    }
+
+    // Progreso de carga para clientes LAN (detras de la auth de arriba).
+    if (p == QLatin1String("/llamacode/v1/status")) {
+        if (method != "GET") {
+            writeError(sock, 405, QStringLiteral("método no permitido"));
+            return;
+        }
+        writeJson(sock, 200, statusResponse(m_hooks.ready ? m_hooks.ready() : false,
+                                            m_hooks.currentModel ? m_hooks.currentModel() : QString(),
+                                            m_hooks.loadStatus ? m_hooks.loadStatus() : QJsonObject{}));
         return;
     }
 

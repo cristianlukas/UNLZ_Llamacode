@@ -21,6 +21,7 @@ public:
     void setVisible(bool visible);
 
     Q_INVOKABLE void setTeachState(const QString &state);
+    QMenu *menuForTest() const { return m_menu; }
     Q_INVOKABLE void setMenuTexts(const QString &open, const QString &pause,
                                   const QString &resume, const QString &finish,
                                   const QString &cancel, const QString &quit);

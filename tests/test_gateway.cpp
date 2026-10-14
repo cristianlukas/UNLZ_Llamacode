@@ -34,6 +34,9 @@ private slots:
     void modelsEndpointServesStableIds();
     void preferredLanAddressSelectsPrivateIpv4();
     void lanActivationStartsRequestedProfile();
+    void lanStatusReportsModelLoadProgress();
+    void lanStatusWithoutTrackerFallsBackToReady();
+    void lanClientWaitsForRequestedModel();
     void lruEvictsBeyondKeepN();
     void structuredOutputInjection();
     void idleStopDecision();
@@ -427,6 +430,77 @@ void GatewayTests::lanActivationStartsRequestedProfile()
     QCOMPARE(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt(), 200);
     QCOMPARE(activated, astraId);
     reply->deleteLater();
+}
+
+void GatewayTests::lanStatusReportsModelLoadProgress()
+{
+    QTcpServer probe;
+    QVERIFY(probe.listen(QHostAddress::LocalHost, 0));
+    const quint16 port = probe.serverPort();
+    probe.close();
+    LlmGateway gateway;
+    LlmGateway::Hooks hooks;
+    hooks.ready = [] { return false; };
+    hooks.currentModel = [] { return QStringLiteral("big-model"); };
+    hooks.loadStatus = [] {
+        return QJsonObject{{"state", "loading"}, {"progress", 42},
+                           {"estimated", true}, {"model", "big-model"}};
+    };
+    gateway.setHooks(hooks);
+    gateway.setApiKey(QStringLiteral("secret"));
+    QVERIFY(gateway.start(port));
+    QNetworkAccessManager nam;
+    auto get = [&](const QByteArray &auth) {
+        QNetworkRequest request(QUrl(
+            QStringLiteral("http://127.0.0.1:%1/llamacode/v1/status").arg(port)));
+        if (!auth.isEmpty()) request.setRawHeader("Authorization", auth);
+        QNetworkReply *reply = nam.get(request);
+        QEventLoop loop;
+        connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+        loop.exec();
+        reply->deleteLater();
+        return reply;
+    };
+    // Mismas reglas de auth que el resto del gateway.
+    QCOMPARE(get({})->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt(), 401);
+    QNetworkReply *ok = get("Bearer secret");
+    QCOMPARE(ok->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt(), 200);
+    const QJsonObject body = QJsonDocument::fromJson(ok->readAll()).object();
+    QCOMPARE(body.value("ready").toBool(), false);
+    const QJsonObject load = body.value("load").toObject();
+    QCOMPARE(load.value("state").toString(), QStringLiteral("loading"));
+    QCOMPARE(load.value("progress").toInt(), 42);
+    QCOMPARE(load.value("model").toString(), QStringLiteral("big-model"));
+}
+
+void GatewayTests::lanStatusWithoutTrackerFallsBackToReady()
+{
+    const QJsonObject ready = LlmGateway::statusResponse(true, QStringLiteral("m"), {});
+    QCOMPARE(ready.value("load").toObject().value("state").toString(), QStringLiteral("ready"));
+    QCOMPARE(ready.value("load").toObject().value("progress").toInt(), 100);
+    QCOMPARE(ready.value("load").toObject().value("model").toString(), QStringLiteral("m"));
+    const QJsonObject idle = LlmGateway::statusResponse(false, QString(), {});
+    QCOMPARE(idle.value("load").toObject().value("state").toString(), QStringLiteral("idle"));
+}
+
+void GatewayTests::lanClientWaitsForRequestedModel()
+{
+    auto body = [](const QString &state, const QString &model, int progress) {
+        return QJsonObject{{"load", QJsonObject{{"state", state}, {"model", model},
+                                                {"progress", progress}}}};
+    };
+    // Listo con el modelo pedido: deja de seguir.
+    QVERIFY(AppController::remoteLoadFromStatus(body("ready", "new", 100), "new").isEmpty());
+    // "ready" del modelo VIEJO = el swap todavía no arrancó: sigue en "starting".
+    const QJsonObject swapping = AppController::remoteLoadFromStatus(body("ready", "old", 100), "new");
+    QCOMPARE(swapping.value("state").toString(), QStringLiteral("starting"));
+    QCOMPARE(swapping.value("progress").toInt(), 0);
+    // "idle" (el anfitrión bajó el viejo y aún no levantó el nuevo) tampoco es listo.
+    QCOMPARE(AppController::remoteLoadFromStatus(body("idle", "", -1), "new")
+                 .value("state").toString(), QStringLiteral("starting"));
+    // Cargando: se muestra tal cual.
+    QCOMPARE(AppController::remoteLoadFromStatus(body("loading", "new", 37), "new")
+                 .value("progress").toInt(), 37);
 }
 
 void GatewayTests::lruEvictsBeyondKeepN()

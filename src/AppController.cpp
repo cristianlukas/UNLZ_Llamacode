@@ -2915,6 +2915,11 @@ void AppController::startServerInternal(const QString &launchProfileId, bool rem
         const QString text = QString::fromUtf8(serverProcess->readAllStandardError());
         if (m_proc == serverProcess && MtpDetection::draftLoadFailed(text))
             m_serverDraftLoadFailed = true;
+        if (m_proc == serverProcess && m_localLoad.active()) {
+            const QString before = m_localLoad.state();
+            m_localLoad.feed(text);
+            if (m_localLoad.state() != before) emit modelLoadStatusChanged();
+        }
         appendServerEvent(QStringLiteral("stderr"), text);
     });
     connect(serverProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
@@ -3041,6 +3046,7 @@ void AppController::startServerInternal(const QString &launchProfileId, bool rem
                       QStringLiteral("Starting: %1 %2").arg(binaryPath, args.join(' ')));
 
     m_serverReady = false;
+    beginLocalModelLoad(launchProfileId, args);
     m_proc->start(binaryPath, args);
     if (m_proc->waitForStarted(5000)) {
         m_profiles.markLaunchUsed(launchProfileId);
@@ -3087,6 +3093,7 @@ void AppController::startHealthPolling()
             }
             if (ok && !m_serverReady) {
                 m_serverReady = true;
+                finishLocalModelLoad(true);
                 m_serverRestartCount = 0; // arrancó sano: resetear watchdog
                 setServerState(QStringLiteral("running"));
                 appendServerEvent(QStringLiteral("health"), QStringLiteral("Server ready - model loaded"));
@@ -3410,7 +3417,195 @@ void AppController::setServerState(const QString &s)
 {
     if (m_serverState == s) return;
     m_serverState = s;
+    // Un server que se detiene/cae a mitad de carga no puede quedar "cargando".
+    if (s == QLatin1String("stopped") && m_localLoad.state() != QLatin1String("idle")) {
+        m_localLoad.markIdle();
+        emit modelLoadStatusChanged();
+    } else if (s == QLatin1String("failed") && m_localLoad.active()) {
+        finishLocalModelLoad(false, QStringLiteral("El servidor no pudo cargar el modelo."));
+    }
     emit serverStateChanged();
+}
+
+void AppController::beginLocalModelLoad(const QString &launchId, const QStringList &args)
+{
+    // Duracion esperada: la ultima carga medida de este perfil; si nunca cargo,
+    // una estimacion por tamano del GGUF.
+    qint64 expectedMs = QSettings().value(QStringLiteral("modelLoadMs/") + launchId).toLongLong();
+    if (expectedMs <= 0) {
+        for (int i = 0; i + 1 < args.size(); ++i) {
+            if (args.at(i) == QLatin1String("-m") || args.at(i) == QLatin1String("--model")) {
+                expectedMs = ModelLoadProgress::expectedMsForFileSize(QFileInfo(args.at(i + 1)).size());
+                break;
+            }
+        }
+    }
+    m_localLoad.reset(QDateTime::currentMSecsSinceEpoch(), expectedMs);
+    m_localLoadLaunchId = launchId;
+    if (!m_localLoadTick) {
+        // El porcentaje estimado avanza con el reloj: refrescar la UI.
+        m_localLoadTick = new QTimer(this);
+        m_localLoadTick->setInterval(500);
+        connect(m_localLoadTick, &QTimer::timeout, this, [this]() {
+            if (!m_localLoad.active()) { m_localLoadTick->stop(); return; }
+            emit modelLoadStatusChanged();
+        });
+    }
+    m_localLoadTick->start();
+    emit modelLoadStatusChanged();
+}
+
+void AppController::finishLocalModelLoad(bool ok, const QString &detail)
+{
+    if (ok) {
+        const qint64 took = m_localLoad.markReady(QDateTime::currentMSecsSinceEpoch());
+        if (took > 0 && !m_localLoadLaunchId.isEmpty())
+            QSettings().setValue(QStringLiteral("modelLoadMs/") + m_localLoadLaunchId, took);
+    } else {
+        m_localLoad.markFailed(detail);
+    }
+    if (m_localLoadTick) m_localLoadTick->stop();
+    emit modelLoadStatusChanged();
+}
+
+void AppController::feedLocalModelLoadForTest(const QString &chunk)
+{
+    m_localLoad.feed(chunk);
+    emit modelLoadStatusChanged();
+}
+
+QJsonObject AppController::localModelLoadJson() const
+{
+    QJsonObject o = m_localLoad.toJson(QDateTime::currentMSecsSinceEpoch());
+    if (!m_localLoadLaunchId.isEmpty())
+        o.insert(QStringLiteral("model"), m_localLoadLaunchId);
+    return o;
+}
+
+QVariantMap AppController::composeModelLoadStatus(const QJsonObject &local,
+                                                  const QJsonObject &remote,
+                                                  bool lanConnecting)
+{
+    QString state;
+    int progress = -1;
+    bool isRemote = false;
+    bool estimated = false;
+    if (lanConnecting) {
+        state = QStringLiteral("connecting");
+        isRemote = true;
+    } else if (!remote.isEmpty()) {
+        state = remote.value(QStringLiteral("state")).toString();
+        progress = remote.value(QStringLiteral("progress")).toInt(-1);
+        estimated = remote.value(QStringLiteral("estimated")).toBool();
+        isRemote = true;
+    } else {
+        state = local.value(QStringLiteral("state")).toString();
+        progress = local.value(QStringLiteral("progress")).toInt(-1);
+        estimated = local.value(QStringLiteral("estimated")).toBool();
+    }
+    if (state.isEmpty()) state = QStringLiteral("idle");
+    const bool active = state == QLatin1String("connecting") || state == QLatin1String("starting")
+        || state == QLatin1String("loading") || state == QLatin1String("warmup");
+    return QVariantMap{
+        {QStringLiteral("state"), state},
+        {QStringLiteral("active"), active},
+        {QStringLiteral("progress"), progress},
+        {QStringLiteral("remote"), isRemote},
+        {QStringLiteral("estimated"), estimated},
+        {QStringLiteral("label"), ModelLoadProgress::label(state, progress, isRemote)},
+    };
+}
+
+QVariantMap AppController::modelLoadStatus() const
+{
+    return composeModelLoadStatus(localModelLoadJson(), m_remoteLoad, m_lanConnecting);
+}
+
+QJsonObject AppController::remoteLoadFromStatus(const QJsonObject &statusBody,
+                                              const QString &expectedModel)
+{
+    QJsonObject load = statusBody.value(QStringLiteral("load")).toObject();
+    const QString state = load.value(QStringLiteral("state")).toString();
+    const QString model = load.value(QStringLiteral("model")).toString(
+        statusBody.value(QStringLiteral("model")).toString());
+    const bool sameModel = expectedModel.isEmpty() || model == expectedModel;
+    if (state == QLatin1String("ready") || state == QLatin1String("idle") || state.isEmpty()) {
+        if (sameModel && state == QLatin1String("ready"))
+            return {};
+        // El anfitrion todavia descarga el modelo anterior o no arranco el nuevo.
+        return QJsonObject{{QStringLiteral("state"), QStringLiteral("starting")},
+                           {QStringLiteral("progress"), 0}};
+    }
+    return load;
+}
+
+void AppController::startRemoteLoadPolling(const QString &baseUrl, const QString &apiKey,
+                                           const QString &expectedModel)
+{
+    stopRemoteLoadPolling();
+    m_remoteLoad = QJsonObject{{QStringLiteral("state"), QStringLiteral("starting")},
+                               {QStringLiteral("progress"), 0}};
+    // Un anfitrion que nunca termina no deja la UI "cargando" para siempre.
+    m_remoteLoadDeadlineMs = QDateTime::currentMSecsSinceEpoch() + 15 * 60 * 1000;
+    m_remoteLoadPoll = new QTimer(this);
+    m_remoteLoadPoll->setInterval(1000);
+    auto poll = [this, baseUrl, apiKey, expectedModel]() {
+        if (QDateTime::currentMSecsSinceEpoch() > m_remoteLoadDeadlineMs) {
+            stopRemoteLoadPolling();
+            return;
+        }
+        if (!m_nam) m_nam = new QNetworkAccessManager(this);
+        QNetworkRequest request(QUrl(baseUrl + QStringLiteral("/llamacode/v1/status")));
+        request.setTransferTimeout(3000);
+        if (!apiKey.isEmpty())
+            request.setRawHeader(QByteArrayLiteral("Authorization"),
+                                 QByteArrayLiteral("Bearer ") + apiKey.toUtf8());
+        const QPointer<QTimer> owner = m_remoteLoadPoll;
+        auto *reply = m_nam->get(request);
+        connect(reply, &QNetworkReply::finished, this, [this, reply, owner, expectedModel]() {
+            reply->deleteLater();
+            if (!owner || owner != m_remoteLoadPoll) return;
+            const int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+            if (status == 404) {
+                // Anfitrion viejo sin /status: no hay progreso que mostrar.
+                stopRemoteLoadPolling();
+                return;
+            }
+            if (reply->error() != QNetworkReply::NoError || status != 200)
+                return;   // transitorio: reintenta en el proximo tick
+            const QJsonObject load = remoteLoadFromStatus(
+                QJsonDocument::fromJson(reply->readAll()).object(), expectedModel);
+            if (load.isEmpty()) {
+                stopRemoteLoadPolling();
+                return;
+            }
+            const QString state = load.value(QStringLiteral("state")).toString();
+            m_remoteLoad = load;
+            emit modelLoadStatusChanged();
+            if (state == QLatin1String("failed")) {
+                appendAgentEvent(QStringLiteral("lifecycle"),
+                                 QStringLiteral("El anfitrion LAN no pudo cargar el modelo."));
+                m_remoteLoadPoll->stop();   // queda el estado "failed" a la vista
+            }
+        });
+    };
+    connect(m_remoteLoadPoll, &QTimer::timeout, this, poll);
+    m_remoteLoadPoll->start();
+    poll();
+    emit modelLoadStatusChanged();
+}
+
+void AppController::stopRemoteLoadPolling()
+{
+    if (m_remoteLoadPoll) {
+        m_remoteLoadPoll->stop();
+        m_remoteLoadPoll->deleteLater();
+        m_remoteLoadPoll = nullptr;
+    }
+    if (!m_remoteLoad.isEmpty()) {
+        m_remoteLoad = QJsonObject{};
+        emit modelLoadStatusChanged();
+    }
 }
 
 void AppController::startVramPolling()
@@ -7460,6 +7655,7 @@ void AppController::cancelAgentGeneration()
 void AppController::stopAgent()
 {
     m_agentStopping = true;
+    stopRemoteLoadPolling();
     if (m_agentStarting || !m_pendingAutoAgentLaunchId.isEmpty()) {
         m_agentStarting = false;
         m_pendingAutoAgentLaunchId.clear();
@@ -10204,6 +10400,7 @@ void AppController::wireGatewayHooks()
     h.models       = [this]() { return gatewayModelCatalog(); };
     h.ensureModel  = [this](const QString &name) { gatewayEnsureModel(name); };
     h.activity     = [this]() { bumpActivity(); };
+    h.loadStatus   = [this]() { return localModelLoadJson(); };
     m_gateway->setHooks(h);
     m_gateway->setKeepN(m_gatewayKeepN);
     m_gateway->setAutoSwap(m_gatewayAutoSwap);
@@ -10546,6 +10743,12 @@ void AppController::useLanServer(const QString &baseUrl, const QString &apiKey,
         return;
     }
     if (!m_nam) m_nam = new QNetworkAccessManager(this);
+    // Mientras el anfitrion confirma, la UI muestra "Conectando" (antes decia
+    // "Agente detenido" hasta 8 s).
+    stopRemoteLoadPolling();
+    m_lanConnecting = true;
+    emit agentStartingChanged();
+    emit modelLoadStatusChanged();
     QNetworkRequest request(QUrl(baseUrl + QStringLiteral("/llamacode/v1/activate")));
     request.setHeader(QNetworkRequest::ContentTypeHeader, QByteArrayLiteral("application/json"));
     // La activación sólo confirma que el gateway aceptó el perfil; la carga del
@@ -10559,8 +10762,11 @@ void AppController::useLanServer(const QString &baseUrl, const QString &apiKey,
         {"model", profileId}
     }).toJson(QJsonDocument::Compact));
     connect(reply, &QNetworkReply::finished, this,
-            [this, reply, launchId, rememberAsActive]() {
+            [this, reply, launchId, rememberAsActive, baseUrl, effectiveApiKey]() {
         const int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        m_lanConnecting = false;
+        emit agentStartingChanged();
+        emit modelLoadStatusChanged();
         QString error;
         if (reply->error() == QNetworkReply::NoError && status == 200) {
             error.clear();
@@ -10575,6 +10781,8 @@ void AppController::useLanServer(const QString &baseUrl, const QString &apiKey,
             error = QStringLiteral("El servidor LAN rechazó la conexión (HTTP %1): %2")
                         .arg(status).arg(reply->errorString());
         }
+        const QString activatedModel = QJsonDocument::fromJson(reply->readAll()).object()
+                                           .value(QStringLiteral("model")).toString();
         reply->deleteLater();
         if (!error.isEmpty()) {
             emit lanProfileReady({}, error);
@@ -10587,6 +10795,8 @@ void AppController::useLanServer(const QString &baseUrl, const QString &apiKey,
         emit activeLaunchIdChanged();
         emit launchProfileSelected(launchId);
         startAgentInternal(launchId, rememberAsActive);
+        // El anfitrion carga el modelo en segundo plano: seguir su progreso.
+        startRemoteLoadPolling(baseUrl, effectiveApiKey, activatedModel);
         emit lanProfileReady(launchId, {});
     });
 }

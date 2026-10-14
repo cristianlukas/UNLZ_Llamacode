@@ -8,6 +8,16 @@ TrayController::TrayController(const QIcon &icon, QObject *parent)
     : QObject(parent), m_tray(new QSystemTrayIcon(icon, this)), m_menu(new QMenu)
 {
     m_tray->setToolTip(QStringLiteral("UNLZ_Llamacode"));
+    // Con hoja de estilo Qt dibuja los items sin la columna de iconos/checks que
+    // reserva el estilo nativo (Windows 11/Vista): ninguna accion tiene icono y
+    // el menu quedaba con un hueco grande a la izquierda del texto.
+    m_menu->setStyleSheet(QStringLiteral(
+        "QMenu { background: #202020; color: #e8e8e8; border: 1px solid #3a3a3a;"
+        " padding: 4px; }"
+        "QMenu::item { padding: 6px 16px; border-radius: 4px; background: transparent; }"
+        "QMenu::item:selected { background: #333333; }"
+        "QMenu::item:disabled { color: #777777; }"
+        "QMenu::separator { height: 1px; background: #3a3a3a; margin: 4px 6px; }"));
     m_openAction = m_menu->addAction(m_openText);
     m_pauseAction = m_menu->addAction(m_pauseText);
     m_finishAction = m_menu->addAction(m_finishText);

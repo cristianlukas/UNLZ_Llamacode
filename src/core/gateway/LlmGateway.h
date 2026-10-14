@@ -39,7 +39,11 @@ public:
         std::function<QJsonArray()>   models;         // [{id,name,context,output}]
         std::function<void(QString)>  ensureModel;    // pedir carga por id estable
         std::function<void()>         activity;       // bump idle watchdog
+        std::function<QJsonObject()>  loadStatus;     // carga del modelo {state,progress,...}
     };
+    // Cuerpo de GET /llamacode/v1/status (pura, testeable).
+    static QJsonObject statusResponse(bool ready, const QString &currentModel,
+                                      const QJsonObject &load);
     void setHooks(const Hooks &h) { m_hooks = h; }
     void setKeepN(int n) { m_keepN = qMax(1, n); }
     void setAutoSwap(bool on) { m_autoSwap = on; }

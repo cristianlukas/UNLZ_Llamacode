@@ -98,6 +98,7 @@ set(CORE_SOURCES
     src/core/ModelRoleRegistry.cpp
     src/core/assistant/AssistantRuntime.cpp
     src/core/gateway/LlmGateway.cpp
+    src/core/ModelLoadProgress.cpp
     src/core/integrations/OpenCodeIntegration.cpp
     src/core/integrations/ClaudeDesktopIntegration.cpp
     src/core/SecretStore.cpp
@@ -224,6 +225,7 @@ set(HEADERS
     src/core/ModelRoleRegistry.h
     src/core/assistant/AssistantRuntime.h
     src/core/gateway/LlmGateway.h
+    src/core/ModelLoadProgress.h
     src/core/integrations/OpenCodeIntegration.h
     src/core/integrations/ClaudeDesktopIntegration.h
     src/core/profiles/ProfileTypes.h
@@ -699,6 +701,8 @@ if (BUILD_TESTS)
     add_lc_test(test_theme              tests/test_theme.cpp)
     add_lc_test(test_toolcalling        tests/test_toolcalling.cpp)
     add_lc_test(test_gateway            tests/test_gateway.cpp)
+    add_lc_test(test_model_load_progress tests/test_model_load_progress.cpp)
+    add_lc_test(test_tray               tests/test_tray.cpp)
     add_lc_test(test_logtriage          tests/test_logtriage.cpp)
     add_lc_test(test_fuzzy_match        tests/test_fuzzy_match.cpp)
     add_lc_test(test_ocr_locator        tests/test_ocr_locator.cpp)
