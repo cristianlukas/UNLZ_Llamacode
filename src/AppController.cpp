@@ -12458,6 +12458,38 @@ QString AppController::installRootForExePath(const QString &exePath)
     return QString();
 }
 
+QString AppController::windowsUpdateCommand(const QString &version, const QString &config,
+                                            const QString &sourceRef, const QString &installRoot,
+                                            const QString &scriptUrl)
+{
+    auto quoted = [](QString value) {
+        value.replace(QLatin1Char('\''), QLatin1String("''"));
+        return QLatin1Char('\'') + value + QLatin1Char('\'');
+    };
+    // Texto ASCII: viaja por la linea de comandos a powershell 5.1.
+    QString command = QStringLiteral("$Host.UI.RawUI.WindowTitle=%1; ")
+        .arg(quoted(QStringLiteral("LlamaCode - actualizando a v") + version));
+    command += QStringLiteral("Write-Host %1 -ForegroundColor Magenta; ")
+        .arg(quoted(QStringLiteral("Actualizando LlamaCode a la version ") + version));
+    command += QStringLiteral("Write-Host %1; ")
+        .arg(quoted(QStringLiteral("Esta ventana muestra el progreso. Tarda unos minutos; "
+                                   "LlamaCode se vuelve a abrir sola al terminar.")));
+    command += QStringLiteral("$env:LC_CONFIG=%1; ").arg(quoted(config));
+    command += QStringLiteral("$env:LC_REF=%1; ").arg(quoted(sourceRef));
+    if (!installRoot.isEmpty())
+        command += QStringLiteral("$env:LC_DIR=%1; ").arg(quoted(installRoot));
+    command += QStringLiteral("irm %1 | iex").arg(quoted(scriptUrl));
+    return command;
+}
+
+quint32 AppController::visibleConsoleCreationFlags(quint32 flags)
+{
+    constexpr quint32 kDetachedProcess = 0x00000008;  // DETACHED_PROCESS
+    constexpr quint32 kCreateNewConsole = 0x00000010; // CREATE_NEW_CONSOLE
+    constexpr quint32 kCreateNoWindow = 0x08000000;   // CREATE_NO_WINDOW
+    return (flags & ~(kCreateNoWindow | kDetachedProcess)) | kCreateNewConsole;
+}
+
 QJsonObject AppController::githubReleaseToUpdateFlag(const QJsonObject &release,
                                                       const QString &channel)
 {
@@ -12619,22 +12651,24 @@ bool AppController::handleUpdateDecision(const QString &decision)
             installRootForExePath(QCoreApplication::applicationFilePath());
         const QString config = channel == QLatin1String("debug")
             ? QStringLiteral("Debug") : QStringLiteral("Release");
-        QString command = QStringLiteral("$env:LC_CONFIG='%1'; ").arg(config);
-        command += QStringLiteral("$env:LC_REF='%1'; ").arg(sourceRef);
-        if (!installRoot.isEmpty()) {
-            QString escaped = installRoot;
-            escaped.replace(QLatin1Char('\''), QLatin1String("''"));
-            command += QStringLiteral("$env:LC_DIR='%1'; ").arg(escaped);
-        }
-        command += QStringLiteral("irm '%1' | iex").arg(scriptUrl);
+        const QString command = windowsUpdateCommand(versionToUpdate, config, sourceRef,
+                                                     installRoot, scriptUrl);
         // -NoExit: el update tarda minutos y si falla la consola se cerraba sola,
         // dejando al usuario sin app y sin el error.
         const QString workingDirectory = installRoot.isEmpty() ? QDir::homePath() : installRoot;
-        updateStarted = QProcess::startDetached(
-            QStringLiteral("powershell"),
-            {QStringLiteral("-NoExit"), QStringLiteral("-NoProfile"),
-             QStringLiteral("-ExecutionPolicy"), QStringLiteral("Bypass"),
-             QStringLiteral("-Command"), command}, workingDirectory);
+        QProcess launcher;
+        launcher.setProgram(QStringLiteral("powershell"));
+        launcher.setArguments({QStringLiteral("-NoExit"), QStringLiteral("-NoProfile"),
+                               QStringLiteral("-ExecutionPolicy"), QStringLiteral("Bypass"),
+                               QStringLiteral("-Command"), command});
+        launcher.setWorkingDirectory(workingDirectory);
+        // Sin esto la consola nacia oculta: la app se cerraba y el update corria
+        // invisible ("se cierra y no hace nada").
+        launcher.setCreateProcessArgumentsModifier(
+            [](QProcess::CreateProcessArguments *args) {
+                args->flags = static_cast<DWORD>(visibleConsoleCreationFlags(args->flags));
+            });
+        updateStarted = launcher.startDetached();
 #else
         auto shellQuote = [](QString value) {
             value.replace(QLatin1Char('\''), QStringLiteral("'\"'\"'"));

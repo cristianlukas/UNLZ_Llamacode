@@ -163,13 +163,27 @@ Rectangle {
                     visible: Qt.platform.os === "windows" && App.updateAvailable
                     enabled: visible
                     onClicked: root.updateRequested()
-                    contentItem: Text {
-                        text: "\uE896"
-                        color: "white"
-                        font.family: "Segoe MDL2 Assets"
-                        font.pixelSize: 15
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
+                    padding: 0
+                    // Flecha dibujada: el glifo de Segoe MDL2 quedaba corrido hacia
+                    // abajo dentro del c\u00EDrculo (sus m\u00E9tricas no centran).
+                    contentItem: Item {
+                        Canvas {
+                            anchors.centerIn: parent
+                            width: 14; height: 14
+                            onPaint: {
+                                const ctx = getContext("2d")
+                                ctx.reset()
+                                ctx.strokeStyle = "white"
+                                ctx.lineWidth = 1.8
+                                ctx.lineCap = "round"
+                                ctx.lineJoin = "round"
+                                ctx.beginPath()
+                                ctx.moveTo(7, 1); ctx.lineTo(7, 9.5)      // asta
+                                ctx.moveTo(3, 5.8); ctx.lineTo(7, 9.8); ctx.lineTo(11, 5.8) // punta
+                                ctx.moveTo(2, 13); ctx.lineTo(12, 13)     // base
+                                ctx.stroke()
+                            }
+                        }
                     }
                     background: Rectangle {
                         radius: width / 2
@@ -180,8 +194,9 @@ Rectangle {
                     ToolTip.visible: hovered
                     ToolTip.delay: 350
                     ToolTip.text: "Descargar e instalar la versión " + (App.updateInfo.version ?? "")
-                    Layout.preferredWidth: 30
-                    Layout.preferredHeight: 30
+                    Layout.preferredWidth: 28
+                    Layout.preferredHeight: 28
+                    Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                 }
             }
             onClicked: { root.currentIndex = root.settingsIndex; root.pageSelected(root.settingsIndex) }
