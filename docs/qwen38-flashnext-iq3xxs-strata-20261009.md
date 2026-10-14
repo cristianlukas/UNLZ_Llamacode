@@ -226,3 +226,16 @@ La campaña de este informe se inició para un post diferente: Flash-Next IQ3_XX
 | Rendimiento | Afirma aproximadamente 2× y 5×, sin datos crudos/configuración que permitan reconstruirlos. | No verificable. La prueba local de Server Speed fue 2×3090, contexto máximo 131K y prompts hasta 38.804 tokens: no es baseline compatible. |
 
 El probe de contexto a 262K quedó **bloqueado por precondición de recursos** antes de cargar el engine: MemAvailable era 110,564 GiB, pero swap usado 3,253 GiB, por encima del límite preregistrado de 2 GiB. No se generó ni envió el prompt; no hay score de contexto. Config: [iq3_xxs-context262k.json](../artifacts/evaluacion-modelos-llamacode/Q-20261009-FLASHNEXT-IQ3XXS-AB/receipts/configs/iq3_xxs-context262k.json); plan y recibo del guard en el directorio canónico.
+
+## Seguimiento de modalidades — 2026-10-14
+
+En un reintento con el mismo fixture, IQ3_XXS y ASTRA recuperaron 10/10 hechos
+en 115.015 tokens; el corte de transporte anterior no se reprodujo. El probe
+262K volvió a quedar bloqueado antes de carga por la guarda preregistrada de
+swap. El smoke de visión de IQ3_XXS reconoció todas las formas, pero confundió
+amarillo/naranja; ASTRA no alcanzó API ready por presión de memoria. El CU E2E
+en Calculator y Text Editor detectó una inserción duplicada en una réplica y
+un aborto AT-SPI; otra réplica mostró la línea exacta en la captura. No se
+validó audio nativo: GET a /v1/audio/transcriptions respondió 404 y no se envió
+audio. Sin promoción ni cambios de perfil. Detalle y recibos: [seguimiento
+Q-20261014](../artifacts/evaluacion-modelos-llamacode/Q-20261014-IQ3XXS-MODALITY-FOLLOWUP/RESULTS.md).

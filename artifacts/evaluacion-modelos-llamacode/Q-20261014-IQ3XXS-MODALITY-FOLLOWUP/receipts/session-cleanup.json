@@ -1,0 +1,24 @@
+{
+  "taskId": "Q-20261014-IQ3XXS-MODALITY-FOLLOWUP",
+  "capturedAtUtc": "2026-10-14T13:43:47.133299+00:00",
+  "portsChecked": [
+    8350,
+    8351,
+    8898
+  ],
+  "listenersRemaining": [],
+  "ownedProcessesRemaining": [],
+  "resourcesAfterCleanup": {
+    "MemAvailableGiB": 109.0,
+    "swapTotalGiB": 8.0,
+    "swapUsedGiB": 7.7,
+    "memoryPsiAvg10": "0.00"
+  },
+  "actions": [
+    "Stopped owned Strata API server with Ctrl+C.",
+    "Per-run harness cleaned private Xvfb :98, LlamaCode daemon, Calculator, and Text Editor.",
+    "Verified evaluation ports 8350, 8351, and 8898 are closed."
+  ],
+  "swapPolicy": "Did not run swapoff, clear swap, drop caches, or stop unrelated processes.",
+  "interpretation": "RAM availability and pressure recovered after owned model servers stopped. Swap remains allocated but current pressure is low; no cleanup was performed beyond stopping owned evaluation processes."
+}

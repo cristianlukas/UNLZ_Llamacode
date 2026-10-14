@@ -1,0 +1,140 @@
+{
+  "profile": "ISTA IQ3_XXS",
+  "completedAtUtc": "2026-10-14T13:22:38.232568+00:00",
+  "endpointHealth": {
+    "status": "ok",
+    "max_context": 131072,
+    "model": "qwen3.8-flash-next-iq3_xxs",
+    "images": true,
+    "api_key": false,
+    "loaded": true,
+    "service": "strata"
+  },
+  "fixture": {
+    "imagePath": "fixtures/vision-holdout-v1/vision-holdout.png",
+    "imageSha256": "7526fe77533223bc8dc5ab5ea00af77eae16b3a10a634dadd225591e2cdd9bbf",
+    "imageBytes": 6326,
+    "promptSha256": "4368eeca231e0a5cd406e52fc6f39a8afa27f79aaaead88b6712eedf19e017c4",
+    "expectedSha256": "086e0c254bb07bf1e679045e0569972047b425b645cd1376063c9c29f0cb0956"
+  },
+  "request": {
+    "sha256": "d6ea45d68f34fb1f6366feb81b80c43a911b8e5e590132b86aa7a1ffeebf67c1",
+    "temperature": 0.0,
+    "topP": 1.0,
+    "topK": 1,
+    "seed": 4242,
+    "maxTokens": 512,
+    "reasoningEffort": "none"
+  },
+  "before": {
+    "atUtc": "2026-10-14T13:22:33.740305+00:00",
+    "memoryBytes": {
+      "MemAvailable": 67406467072,
+      "SwapTotal": 8589930496,
+      "SwapFree": 91111424,
+      "SwapUsed": 8498819072
+    },
+    "gpuCsv": [
+      "0, NVIDIA GeForce RTX 3090, 23742 MiB, 24576 MiB, 9 %",
+      "1, NVIDIA GeForce RTX 3090, 23664 MiB, 24576 MiB, 6 %"
+    ]
+  },
+  "elapsedSeconds": 4.459,
+  "transportError": null,
+  "response": {
+    "id": "chatcmpl-1dc0ce83762144ce8a8cc98b",
+    "object": "chat.completion",
+    "created": 1791984156,
+    "model": "qwen3.8-flash-next-iq3_xxs",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "{\n  \"shapes\": {\n    \"circle\": 2,\n    \"triangle\": 2,\n    \"rectangle\": 2,\n    \"star\": 1\n  },\n  \"colors\": {\n    \"blue\": 1,\n    \"red\": 1,\n    \"green\": 1,\n    \"yellow\": 0,\n    \"orange\": 2,\n    \"purple\": 1,\n    \"black\": 1\n  }\n}"
+        },
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 558,
+      "completion_tokens": 108,
+      "total_tokens": 666,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 558,
+      "prompt_ms": 884.5,
+      "prompt_per_token_ms": 1.585,
+      "prompt_per_second": 630.9,
+      "predicted_n": 108,
+      "predicted_ms": 743.9,
+      "predicted_per_token_ms": 6.888,
+      "predicted_per_second": 145.2,
+      "draft_n": 85,
+      "draft_n_accepted": 80
+    }
+  },
+  "responseText": "{\n  \"shapes\": {\n    \"circle\": 2,\n    \"triangle\": 2,\n    \"rectangle\": 2,\n    \"star\": 1\n  },\n  \"colors\": {\n    \"blue\": 1,\n    \"red\": 1,\n    \"green\": 1,\n    \"yellow\": 0,\n    \"orange\": 2,\n    \"purple\": 1,\n    \"black\": 1\n  }\n}",
+  "parsed": {
+    "shapes": {
+      "circle": 2,
+      "triangle": 2,
+      "rectangle": 2,
+      "star": 1
+    },
+    "colors": {
+      "blue": 1,
+      "red": 1,
+      "green": 1,
+      "yellow": 0,
+      "orange": 2,
+      "purple": 1,
+      "black": 1
+    }
+  },
+  "jsonParseError": null,
+  "expected": {
+    "shapes": {
+      "circle": 2,
+      "triangle": 2,
+      "rectangle": 2,
+      "star": 1
+    },
+    "colors": {
+      "blue": 1,
+      "red": 1,
+      "green": 1,
+      "yellow": 1,
+      "orange": 1,
+      "purple": 1,
+      "black": 1
+    }
+  },
+  "exactMatch": false,
+  "usage": {
+    "prompt_tokens": 558,
+    "completion_tokens": 108,
+    "total_tokens": 666,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "finishReason": "stop",
+  "after": {
+    "atUtc": "2026-10-14T13:22:38.232635+00:00",
+    "memoryBytes": {
+      "MemAvailable": 66698596352,
+      "SwapTotal": 8589930496,
+      "SwapFree": 91193344,
+      "SwapUsed": 8498737152
+    },
+    "gpuCsv": [
+      "0, NVIDIA GeForce RTX 3090, 23829 MiB, 24576 MiB, 63 %",
+      "1, NVIDIA GeForce RTX 3090, 23742 MiB, 24576 MiB, 46 %"
+    ]
+  }
+}

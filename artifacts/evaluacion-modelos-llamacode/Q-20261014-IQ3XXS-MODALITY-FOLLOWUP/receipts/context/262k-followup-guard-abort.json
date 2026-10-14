@@ -1,0 +1,28 @@
+{
+  "taskId": "Q-20261014-IQ3XXS-MODALITY-FOLLOWUP",
+  "probe": "synthetic context smoke at max-context 262144",
+  "status": "blocked_preregistered_resource_guard",
+  "preregisteredGuards": {
+    "memAvailableMinGiB": 32,
+    "swapUsedMaxGiBExclusive": 2
+  },
+  "guardCheckUtc": "2026-10-14T13:35:17.273089+00:00",
+  "observed": {
+    "memAvailableGiB": 62.167,
+    "swapTotalGiB": 8.0,
+    "swapUsedGiB": 7.727,
+    "memoryPressure": "some avg10=0.00 avg60=0.00 avg300=0.57 total=667846163\nfull avg10=0.00 avg60=0.00 avg300=0.57 total=666738936\n"
+  },
+  "engineLoadedFor262k": false,
+  "promptGeneratedOrSent": false,
+  "httpRequestMade": false,
+  "score": null,
+  "interpretation": "The swap guard failed well before the 262K model load. Prior model loads had raised swap close to capacity. The ASTRA vision control load was interrupted before API readiness when the host approached full swap; no unrelated process was stopped and swap was not manually cleared.",
+  "configPath": "receipts/configs/iq3xxs-context262k.json",
+  "logEvidence": [
+    "receipts/logs/iq3xxs-context131k.log",
+    "receipts/logs/astra-context131k.log",
+    "receipts/logs/astra-vision-api-console.log"
+  ],
+  "source": "Do not infer model capacity or quality from this resource abort."
+}

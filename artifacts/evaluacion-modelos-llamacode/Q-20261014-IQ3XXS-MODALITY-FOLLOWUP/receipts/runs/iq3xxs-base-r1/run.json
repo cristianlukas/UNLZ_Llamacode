@@ -1,0 +1,112 @@
+{
+  "run_id": "iq3xxs-base-r1",
+  "profile": "iq3xxs",
+  "launch_id": "iq3xxs-lch1-20261009",
+  "agent_profile_id": "31ff813d-6bf5-4400-8f82-69af4fcc64bc",
+  "arm": "base",
+  "replicate": 1,
+  "attempt": 1,
+  "sampling": {
+    "temperature": 0.6,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0,
+    "repeat_penalty": 1.0,
+    "presence_penalty": 0.0,
+    "reasoning_effort": "medium"
+  },
+  "screen": "1440x900x24",
+  "lang": "es_AR.utf8",
+  "gtk_theme": "system default (Adwaita light observed in preflight)",
+  "started_at_local": "2026-10-14T10:27:04.493703-03:00",
+  "overlay_sha256": null,
+  "tasks": [],
+  "daemon_log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261014-IQ3XXS-MODALITY-FOLLOWUP/receipts/sessions/iq3xxs-base-r1/runner-daemon.log",
+  "endpoint_models": {
+    "object": "list",
+    "data": [
+      {
+        "id": "qwen3.8-flash-next-iq3_xxs",
+        "object": "model",
+        "status": {
+          "value": "loaded"
+        },
+        "meta": {
+          "n_ctx": 131072
+        },
+        "architecture": {
+          "input_modalities": [
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ]
+        },
+        "aliases": [
+          "strata-iq3_xxs"
+        ]
+      },
+      {
+        "id": "strata-iq3_xxs",
+        "object": "model",
+        "status": {
+          "value": "loaded"
+        },
+        "meta": {
+          "n_ctx": 131072
+        },
+        "architecture": {
+          "input_modalities": [
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ]
+        },
+        "aliases": [
+          "strata-iq3_xxs"
+        ],
+        "alias_of": "qwen3.8-flash-next-iq3_xxs"
+      }
+    ]
+  },
+  "profile_setprop": {
+    "ok": true,
+    "reqId": "d347af77-9f9c-4b63-950a-e32a354b81a8"
+  },
+  "prompt_setprop": {
+    "ok": true,
+    "chars": 0
+  },
+  "effective_profile": {
+    "id": "31ff813d-6bf5-4400-8f82-69af4fcc64bc",
+    "tools": [
+      "desktop_snapshot",
+      "desktop_windows",
+      "desktop_controls",
+      "desktop_click_element",
+      "desktop_control_action",
+      "desktop_find_image",
+      "desktop_click_image",
+      "desktop_wait_image",
+      "desktop_assert_image",
+      "desktop_observe",
+      "desktop_click",
+      "desktop_stroke",
+      "desktop_type",
+      "desktop_key",
+      "desktop_scroll",
+      "desktop_focus",
+      "desktop_resize",
+      "desktop_wait",
+      "desktop_wait_for",
+      "desktop_assert",
+      "desktop_launch"
+    ],
+    "approval": "auto",
+    "mcp": false
+  },
+  "agent_started": true,
+  "initial_message_count": 0,
+  "cleanup_signalled_pids": []
+}

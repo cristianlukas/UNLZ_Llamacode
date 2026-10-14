@@ -1,0 +1,12 @@
+{
+  "capturedAtUtc": "2026-10-14T13:27:01.853603+00:00",
+  "response": {
+    "status": "ok",
+    "max_context": 131072,
+    "model": "qwen3.8-flash-next-iq3_xxs",
+    "images": false,
+    "api_key": false,
+    "loaded": true,
+    "service": "strata"
+  }
+}

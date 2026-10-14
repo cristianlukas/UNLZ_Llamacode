@@ -1,0 +1,24 @@
+{
+  "taskId": "Q-20261014-IQ3XXS-MODALITY-FOLLOWUP",
+  "profile": "ASTRA calibrated IQ3_S / Strata v0.1.41",
+  "status": "aborted_before_api_ready",
+  "reason": "Host swap reached capacity and full memory pressure rose during model startup. The API never became ready; no image request was sent and no score was produced.",
+  "preregisteredGuard": {
+    "memAvailableMinGiB": 32,
+    "swapUsedMaxGiBExclusive": 2
+  },
+  "observedBeforeStart": {
+    "memAvailableGiB": 62.76,
+    "swapUsedGiB": 7.91,
+    "swapTotalGiB": 8.0,
+    "candidateGpuMemoryMiB": [23742, 23664]
+  },
+  "httpReady": false,
+  "imageRequestMade": false,
+  "score": null,
+  "logs": [
+    "receipts/logs/astra-vision-api-console.log",
+    "receipts/logs/astra-vision.log"
+  ],
+  "interpretation": "Resource/infrastructure abort; not an ASTRA vision quality failure. The candidate IQ3_XXS visual result remains a single-profile result."
+}

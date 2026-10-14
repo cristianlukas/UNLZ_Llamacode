@@ -1,0 +1,29 @@
+{
+  "schema": "q14-audio-capability-audit-v1",
+  "checkedAtUtc": "2026-10-14T13:34:01.608977+00:00",
+  "scope": "Compatibility audit only; no audio payload, transcript, WER/CER, or acoustic output was evaluated.",
+  "candidate": {
+    "repo": "ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-GGUF",
+    "revision": "1c04b8102ca5346f1faf4d9914503e378d713021",
+    "modelCardTask": "Image-Text-to-Text",
+    "validatedModalities": [
+      "text",
+      "image"
+    ],
+    "nativeAudio": "No native audio input/output path was validated in this evaluation."
+  },
+  "endpointProbe": {
+    "method": "GET",
+    "path": "/v1/audio/transcriptions",
+    "httpStatus": 404,
+    "response": {
+      "error": {
+        "message": "not found"
+      }
+    }
+  },
+  "applicationPipeline": "Ingi-Charla speech recognition and synthesis use separate STT/TTS components. This campaign did not assess those components or acoustic response quality.",
+  "sources": [
+    "https://huggingface.co/ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-GGUF/tree/1c04b8102ca5346f1faf4d9914503e378d713021"
+  ]
+}

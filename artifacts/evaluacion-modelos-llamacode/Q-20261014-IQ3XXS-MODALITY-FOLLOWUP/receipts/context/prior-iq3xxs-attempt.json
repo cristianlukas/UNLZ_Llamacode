@@ -1,0 +1,119 @@
+{
+  "profile": "iq3xxs-lch1-20261009",
+  "completedAtUtc": "2026-10-10T00:39:17Z",
+  "endpointHealthBeforeRequest": {
+    "status": "ok",
+    "max_context": 131072,
+    "model": "qwen3.8-flash-next-iq3_xxs",
+    "images": false,
+    "api_key": false,
+    "loaded": true,
+    "service": "strata"
+  },
+  "fixtureMetadata": {
+    "suite": "context-retrieval-v1",
+    "generatorSeed": 4242,
+    "targetTokens": 115000,
+    "tokenizerTextOnlyTokens": 115003,
+    "factPositionsTextOnly": [
+      {
+        "caseId": "case-5172",
+        "tokenOffset": 5758,
+        "fraction": 0.0501
+      },
+      {
+        "caseId": "case-6803",
+        "tokenOffset": 17238,
+        "fraction": 0.1499
+      },
+      {
+        "caseId": "case-1048",
+        "tokenOffset": 28729,
+        "fraction": 0.2498
+      },
+      {
+        "caseId": "case-9351",
+        "tokenOffset": 40204,
+        "fraction": 0.3496
+      },
+      {
+        "caseId": "case-2264",
+        "tokenOffset": 51667,
+        "fraction": 0.4493
+      },
+      {
+        "caseId": "case-7490",
+        "tokenOffset": 63127,
+        "fraction": 0.5489
+      },
+      {
+        "caseId": "case-3815",
+        "tokenOffset": 74602,
+        "fraction": 0.6487
+      },
+      {
+        "caseId": "case-8627",
+        "tokenOffset": 86101,
+        "fraction": 0.7487
+      },
+      {
+        "caseId": "case-2906",
+        "tokenOffset": 97567,
+        "fraction": 0.8484
+      },
+      {
+        "caseId": "case-4439",
+        "tokenOffset": 109050,
+        "fraction": 0.9482
+      }
+    ],
+    "promptSha256": "ea4cd4a48080b0191273c4dfe4df54d69535a131d1e0117a31a3c75377d8ec84",
+    "promptFileSha256": "ea4cd4a48080b0191273c4dfe4df54d69535a131d1e0117a31a3c75377d8ec84",
+    "promptBytes": 308055,
+    "expectedSha256": "89cd8df5fcf636c53436db4f4fdc9e8e2166a98e1c9c5d284428da4d23362d25"
+  },
+  "request": {
+    "sha256": "17cff24ebc39318f26be2302e1400edb0284ddc59fcf0793e357b4a3edc091cf",
+    "temperature": 0.0,
+    "topP": 1.0,
+    "seed": 4242,
+    "maxTokens": 512,
+    "reasoningEffort": "none"
+  },
+  "elapsedSeconds": 22.725,
+  "before": {
+    "utc": "2026-10-10T00:38:55Z",
+    "meminfoKb": {
+      "MemTotal": 129507652,
+      "MemAvailable": 68918796,
+      "SwapTotal": 8388604,
+      "SwapFree": 5017248
+    },
+    "nvidiaSmi": [
+      "0, 23751 MiB, 24576 MiB, 24 %",
+      "1, 23662 MiB, 24576 MiB, 17 %"
+    ]
+  },
+  "after": {
+    "utc": "2026-10-10T00:39:17Z",
+    "meminfoKb": {
+      "MemTotal": 129507652,
+      "MemAvailable": 116703324,
+      "SwapTotal": 8388604,
+      "SwapFree": 5017256
+    },
+    "nvidiaSmi": [
+      "0, 946 MiB, 24576 MiB, 24 %",
+      "1, 108 MiB, 24576 MiB, 100 %"
+    ]
+  },
+  "transportError": "RemoteDisconnected('Remote end closed connection without response')",
+  "response": null,
+  "responseText": "",
+  "jsonParseError": "JSONDecodeError('Expecting value: line 1 column 1 (char 0)')",
+  "exactMatchByCase": {},
+  "exactMatchCount": 0,
+  "exactMatchTotal": 10,
+  "usage": null,
+  "finishReason": null
+}

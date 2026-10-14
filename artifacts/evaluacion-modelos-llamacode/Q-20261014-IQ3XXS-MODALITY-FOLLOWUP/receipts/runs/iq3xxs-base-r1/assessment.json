@@ -1,0 +1,13 @@
+{
+  "runId": "iq3xxs-base-r1",
+  "attempt": 1,
+  "classification": "invalid_infrastructure_not_scored",
+  "reason": "start_private_x11_session.sh could not find task-local scripts/minimal_ewmh_wm.py; the runner opened its isolated Xvfb and launched the Calculator, but the window manager did not start. No task reached a scored final state. Stopped only the owned runner/display processes, copied the validated isolated EWMH helper, and retried the same preregistered replica with attempt 2.",
+  "evidence": {
+    "windowManagerLog": "receipts/sessions/iq3xxs-base-r1/window-manager.log",
+    "runnerRunJson": "receipts/runs/iq3xxs-base-r1/run.json",
+    "runnerDaemonLog": "receipts/sessions/iq3xxs-base-r1/runner-daemon.log"
+  },
+  "closedAtUtc": "2026-10-14T13:28:40.768174+00:00",
+  "cleanup": "verified no Xvfb :98, LlamaCode --agent-daemon, Calculator/Text Editor processes, port 8898 listener, or /tmp/.X11-unix/X98 socket remained."
+}

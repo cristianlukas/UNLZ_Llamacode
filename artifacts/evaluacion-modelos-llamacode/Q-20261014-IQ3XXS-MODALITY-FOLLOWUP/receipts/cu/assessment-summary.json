@@ -1,0 +1,41 @@
+{
+  "taskId": "Q-20261014-IQ3XXS-MODALITY-FOLLOWUP",
+  "method": "Manual review of per-window screenshots and UI Automation messages. The raw whole-desktop OCR booleans are preserved but were not used alone because they produced false negatives.",
+  "runs": [
+    {
+      "runId": "iq3xxs-base-r1-try2",
+      "replicate": 1,
+      "status": "completed",
+      "cases": {
+        "CU-ES-CALC": {"result": "pass", "evidence": "Calculator screenshot and UI labels show 73×19=1387."},
+        "CU-EN-EDITOR": {"result": "fail", "evidence": "Per-window screenshot shows the requested line duplicated twice."},
+        "CU-ES-MULTIAPP": {"result": "pass", "evidence": "UI labels confirm 47×29=1363; per-window screenshot shows the replacement line."}
+      }
+    },
+    {
+      "runId": "iq3xxs-base-r2",
+      "replicate": 2,
+      "status": "aborted_infrastructure",
+      "cases": {
+        "CU-ES-CALC": {"result": "pass", "evidence": "Calculator screenshot and UI labels show 73×19=1387."},
+        "CU-EN-EDITOR": {"result": "unscored", "evidence": "Runner aborted after five stale AT-SPI snapshot recoveries in one turn."},
+        "CU-ES-MULTIAPP": {"result": "not_run"}
+      }
+    },
+    {
+      "runId": "iq3xxs-base-r3",
+      "replicate": 3,
+      "status": "completed",
+      "cases": {
+        "CU-ES-CALC": {"result": "pass", "evidence": "Calculator screenshot and UI labels show 73×19=1387."},
+        "CU-EN-EDITOR": {"result": "pass", "evidence": "Per-window screenshot visually shows the exact requested line once; accessibility did not expose the editor buffer."},
+        "CU-ES-MULTIAPP": {"result": "pass", "evidence": "UI labels confirm 47×29=1363; screenshot shows the exact replacement line."}
+      }
+    }
+  ],
+  "limitations": [
+    "The scenario covers Calculator and Text Editor only.",
+    "No image input was provided to the Computer Usage agent.",
+    "Replicate 2 was incomplete due AT-SPI stale controls."
+  ]
+}

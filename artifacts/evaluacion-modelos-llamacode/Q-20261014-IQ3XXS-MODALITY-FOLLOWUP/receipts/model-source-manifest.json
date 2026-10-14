@@ -1,0 +1,161 @@
+{
+  "taskId": "Q-20261014-IQ3XXS-MODALITY-FOLLOWUP",
+  "capturedAtUtc": "2026-10-14T13:10:47.283591+00:00",
+  "candidate": {
+    "repo": "ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-GGUF",
+    "revision": "1c04b8102ca5346f1faf4d9914503e378d713021",
+    "shards": [
+      {
+        "path": "/media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/models/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+        "bytes": 47039860096,
+        "sha256": "219ea929900dfa9ef091f3aa473fdba6874b65fcb36526d7d851ac9e95856d15"
+      },
+      {
+        "path": "/media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/models/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf",
+        "bytes": 28800138432,
+        "sha256": "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113"
+      }
+    ]
+  },
+  "control": {
+    "repo": "ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-GGUF",
+    "revision": "1c04b8102ca5346f1faf4d9914503e378d713021",
+    "profile": "ASTRA IQ3_S calibrated",
+    "shard1Sha256": "4c1eb2ceb4915e1192f4f386021897bde56a97f40a0bb78bb86465e0f7d2aca3",
+    "shard2Sha256": "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113"
+  },
+  "runtime": {
+    "name": "Strata",
+    "version": "0.1.41",
+    "commit": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
+    "enginePath": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata",
+    "engineSha256": "770ecf303a4c6271654339c639392ecb455de3a999bf5d2e8dbc73c879103602",
+    "apiServerPath": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py",
+    "visionHelperPath": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/build-vision/bin/strata-vision",
+    "visionHelperSha256": "f09eaf27e7edfd031af273d2a77e0be5799dd603df9104635528763c131c8c1d",
+    "visionMmprojPath": "/media/cristian/Disco local/Models/ASTRA-IQ3_S-calibrated-20261006/models/mmproj-Qwen3.8-Flash-Next-BF16.gguf",
+    "visionMmprojSha256": "b1a82259702816a5330d7bd7607cd9676b11780e79ff7348c21103ff3ce49bd0",
+    "cuda": "12.8",
+    "gpus": "2x RTX 3090",
+    "kv": "int8",
+    "kvResident": 32768,
+    "spec": 4,
+    "specMinP": 0.7,
+    "pcieFrac": 0.0
+  },
+  "resourcesBeforeModelLoad": {
+    "meminfoBytes": {
+      "MemTotal": 132615835648,
+      "MemAvailable": 109402550272,
+      "SwapTotal": 8589930496,
+      "SwapFree": 7994109952,
+      "SwapUsed": 595820544
+    },
+    "gpuCsv": [
+      "0, NVIDIA GeForce RTX 3090, 1045 MiB, 24576 MiB, 29 %",
+      "1, NVIDIA GeForce RTX 3090, 108 MiB, 24576 MiB, 52 %"
+    ],
+    "matchingProcesses": [
+      "2851302 Sl      19:16:08 /usr/lib/chatgpt/resources/cua_node/bin/node --experimental-vm-modules /tmp/.tmpCmpVta/kernel.js --session-id d7a911f0137149ecad66ade2995ce9dc --working-dir /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode",
+      "2851303 Sl      19:16:08 /usr/lib/chatgpt/resources/cua_node/bin/node /tmp/.tmpCmpVta/trusted-worker.js /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode"
+    ],
+    "matchingListeners": [],
+    "modelServerPortsFree": true,
+    "guards": {
+      "availableRamAtLeast32GiB": true,
+      "swapUsedBelow2GiB": true
+    }
+  },
+  "sourceAudit": {
+    "upstreamPR711": "K8V4 hybrid KV streaming with --kv-resident; candidate config uses int8",
+    "upstreamPR749": "Windows commit-capacity handling; local test is Linux",
+    "currentLocalRuntime": "0.1.41",
+    "upstreamLatestAtAudit": "0.1.44.1; not substituted into this locked A/B"
+  },
+  "configs": {
+    "astra-context131k.json": {
+      "sha256": "9761d388a2eef43aaf6d797416a12149323c49990a3283ef902c9dfc9c535a13",
+      "bytes": 1910
+    },
+    "astra-vision.json": {
+      "sha256": "d6de1100948efede20045d18caef4b756c27d7f2452e7e7bfe6c56fa855cd002",
+      "bytes": 2386
+    },
+    "iq3xxs-context131k.json": {
+      "sha256": "a08f6e88b48a9ab70e148c2347b8f203201724dea3b18c063e72df10c943890b",
+      "bytes": 1988
+    },
+    "iq3xxs-context262k.json": {
+      "sha256": "5ae18a0a52d015a98c17e1731f842d88c116c9637b75c0e919ce46d5e6199416",
+      "bytes": 2000
+    },
+    "iq3xxs-cu.json": {
+      "sha256": "ddb9ebecacd285e3682c2f86ab4a26751687678e6c3389503138ab3e640f106f",
+      "bytes": 1979
+    },
+    "iq3xxs-vision.json": {
+      "sha256": "647ae379f841a4fe0e6fdbf46c96908738ef23bafd94f1f71f7ba59cce43372f",
+      "bytes": 2479
+    }
+  },
+  "fixtures": {
+    "fixtures/context-retrieval-115k-v1/probe-expected.json": {
+      "sha256": "4c7ff19fa77283bc989a44c5027aabd37d5c134c6b3cb4ee5c3bfc6033f71f1d",
+      "bytes": 310
+    },
+    "fixtures/context-retrieval-115k-v1/probe-metadata.json": {
+      "sha256": "2aa572cc35d4160720c2fbfd8ffa8a04b837966b447e951a2a495f4e28d86fc0",
+      "bytes": 1398
+    },
+    "fixtures/context-retrieval-115k-v1/probe-prompt.txt": {
+      "sha256": "ea4cd4a48080b0191273c4dfe4df54d69535a131d1e0117a31a3c75377d8ec84",
+      "bytes": 308055
+    },
+    "fixtures/vision-holdout-v1/expected.json": {
+      "sha256": "086e0c254bb07bf1e679045e0569972047b425b645cd1376063c9c29f0cb0956",
+      "bytes": 222
+    },
+    "fixtures/vision-holdout-v1/holdout-metadata.json": {
+      "sha256": "53cfb34e3e4baf36e55e7258449f2f6356a7146b190fa39e8e0700c95f0ea707",
+      "bytes": 600
+    },
+    "fixtures/vision-holdout-v1/prompt.txt": {
+      "sha256": "4368eeca231e0a5cd406e52fc6f39a8afa27f79aaaead88b6712eedf19e017c4",
+      "bytes": 278
+    },
+    "fixtures/vision-holdout-v1/vision-holdout.png": {
+      "sha256": "7526fe77533223bc8dc5ab5ea00af77eae16b3a10a634dadd225591e2cdd9bbf",
+      "bytes": 6326
+    }
+  },
+  "artifacts": {
+    "scripts/run_context_probe.py": {
+      "sha256": "df6ece8e3edd599b5446f665b4d377f7aa34f61ca15b689fb51a236bad3bb960",
+      "bytes": 5014
+    },
+    "scripts/probe_262k.py": {
+      "sha256": "27216edd6a596b333d12f7ca96042f1d65cb53ee3446c5459a4d37b2295e6c8f",
+      "bytes": 10131
+    },
+    "scripts/run_vision_smoke.py": {
+      "sha256": "ba9f487725c9798806670ca03e43f02291845129d3b5929439d2ba8abfe212d7",
+      "bytes": 5213
+    },
+    "scripts/run_iq3xxs_cu_session.py": {
+      "sha256": "f637d1c0c65b5d635d4ab91f08efcaf64426003d228533489d65bfe7b0ba52f3",
+      "bytes": 20082
+    },
+    "scripts/start_private_x11_session.sh": {
+      "sha256": "0dabb6d7ef5a2a6891dd6ffbce690516f412a520867f1a5c18fd9b7e2fc648dc",
+      "bytes": 2126
+    },
+    "receipts/strata-update-source-audit.md": {
+      "sha256": "9b45fd56d583e547c58abba43d560c4b10111622b3d6032deef59eca6227ed13",
+      "bytes": 1354
+    },
+    "scripts/minimal_ewmh_wm.py": {
+      "sha256": "e5196ea784856378b95daf24e2cc5c6ac104e7ed39cd213dbd8577b09026ea3c",
+      "bytes": 7048
+    }
+  }
+}

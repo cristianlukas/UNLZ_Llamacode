@@ -1,0 +1,51 @@
+{
+  "capturedAtUtc": "2026-10-14T13:27:01.854565+00:00",
+  "response": {
+    "object": "list",
+    "data": [
+      {
+        "id": "qwen3.8-flash-next-iq3_xxs",
+        "object": "model",
+        "status": {
+          "value": "loaded"
+        },
+        "meta": {
+          "n_ctx": 131072
+        },
+        "architecture": {
+          "input_modalities": [
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ]
+        },
+        "aliases": [
+          "strata-iq3_xxs"
+        ]
+      },
+      {
+        "id": "strata-iq3_xxs",
+        "object": "model",
+        "status": {
+          "value": "loaded"
+        },
+        "meta": {
+          "n_ctx": 131072
+        },
+        "architecture": {
+          "input_modalities": [
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ]
+        },
+        "aliases": [
+          "strata-iq3_xxs"
+        ],
+        "alias_of": "qwen3.8-flash-next-iq3_xxs"
+      }
+    ]
+  }
+}

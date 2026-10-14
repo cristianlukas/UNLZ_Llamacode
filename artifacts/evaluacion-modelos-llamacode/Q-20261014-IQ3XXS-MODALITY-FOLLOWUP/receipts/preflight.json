@@ -1,0 +1,42 @@
+{
+  "taskId": "Q-20261014-IQ3XXS-MODALITY-FOLLOWUP",
+  "capturedAtUtc": "2026-10-14T13:10:47.283591+00:00",
+  "resources": {
+    "meminfoBytes": {
+      "MemTotal": 132615835648,
+      "MemAvailable": 109402550272,
+      "SwapTotal": 8589930496,
+      "SwapFree": 7994109952,
+      "SwapUsed": 595820544
+    },
+    "gpuCsv": [
+      "0, NVIDIA GeForce RTX 3090, 1045 MiB, 24576 MiB, 29 %",
+      "1, NVIDIA GeForce RTX 3090, 108 MiB, 24576 MiB, 52 %"
+    ],
+    "matchingProcesses": [
+      "2851302 Sl      19:16:08 /usr/lib/chatgpt/resources/cua_node/bin/node --experimental-vm-modules /tmp/.tmpCmpVta/kernel.js --session-id d7a911f0137149ecad66ade2995ce9dc --working-dir /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode",
+      "2851303 Sl      19:16:08 /usr/lib/chatgpt/resources/cua_node/bin/node /tmp/.tmpCmpVta/trusted-worker.js /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode"
+    ],
+    "matchingListeners": [],
+    "modelServerPortsFree": true,
+    "guards": {
+      "availableRamAtLeast32GiB": true,
+      "swapUsedBelow2GiB": true
+    }
+  },
+  "files": {
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata": {
+      "exists": true,
+      "bytes": 64029336
+    },
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/build-vision/bin/strata-vision": {
+      "exists": true,
+      "bytes": 8002248
+    },
+    "/media/cristian/Disco local/Models/ASTRA-IQ3_S-calibrated-20261006/models/mmproj-Qwen3.8-Flash-Next-BF16.gguf": {
+      "exists": true,
+      "bytes": 907543008
+    }
+  },
+  "decision": "safe_to_begin_serial_IQ3XXS_screening"
+}

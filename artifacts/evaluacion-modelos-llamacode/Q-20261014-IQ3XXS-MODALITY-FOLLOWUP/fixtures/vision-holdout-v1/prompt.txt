@@ -1,0 +1,1 @@
+Inspect the image and return only valid JSON with exactly these keys: "shapes" (counts for circle, triangle, rectangle, star) and "colors" (counts for blue, red, green, yellow, orange, purple, black). Count each visible object once. Do not infer labels or describe the picture.
