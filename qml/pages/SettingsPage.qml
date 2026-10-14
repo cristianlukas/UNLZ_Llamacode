@@ -624,7 +624,7 @@ Item {
                                 RowLayout {
                                     Layout.fillWidth: true
                                     Text { text: "GPU de procesamiento"; color: Theme.textPrimary; font.pixelSize: 14; font.bold: true; Layout.fillWidth: true }
-                                    ComboBox {
+                                    LcComboBox {
                                         id: processingGpu
                                         Layout.preferredWidth: 250
                                         model: ["Automática"].concat(root.gpuRows.map(function(g) { return "GPU " + g.index + " · " + g.name }))
@@ -858,7 +858,7 @@ Item {
                                         }
                                     }
 
-                                    SpinBox {
+                                    LcSpinBox {
                                         from: 0; to: 1440; stepSize: 5
                                         value: App.idleAutoStopMin
                                         onValueModified: App.idleAutoStopMin = value
@@ -1072,14 +1072,14 @@ Item {
                                     visible: App.gatewayEnabled
                                     spacing: 8
                                     Text { text: "Puerto"; color: Theme.textSecondary; font.pixelSize: 12; Layout.preferredWidth: 90 }
-                                    SpinBox {
+                                    LcSpinBox {
                                         from: 1024; to: 65535
                                         value: App.gatewayPort
                                         editable: true
                                         onValueModified: App.gatewayPort = value
                                     }
                                     Text { text: "keep hot"; color: Theme.textSecondary; font.pixelSize: 12 }
-                                    SpinBox {
+                                    LcSpinBox {
                                         from: 1; to: 8
                                         value: App.gatewayKeepN
                                         onValueModified: App.gatewayKeepN = value
@@ -1222,7 +1222,7 @@ Item {
                                     Layout.fillWidth: true
                                     visible: App.gatewayEnabled
                                     spacing: 8
-                                    ComboBox {
+                                    LcComboBox {
                                         id: openCodeProfile
                                         Layout.fillWidth: true
                                         property var launchMenu: App.profileManager.launchProfilesForMenu()

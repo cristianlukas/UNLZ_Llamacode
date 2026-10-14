@@ -1355,7 +1355,15 @@ Item {
                     }
                 }
 
+                Text {
+                    visible: backendGrid.cloud
+                    Layout.fillWidth: true
+                    text: "Perfil cloud: el modelo GGUF, el runtime y los flags de llama-server los define el servidor externo, por eso no se muestran."
+                    color: Theme.textMuted; font.pixelSize: 12; wrapMode: Text.WordWrap
+                }
+
                 Rectangle {
+                    visible: !backendGrid.cloud   // GGUF/llama-server: no aplica a cloud
                     Layout.fillWidth: true
                     color: Theme.surfaceBg
                     border.color: Theme.borderColor
@@ -1484,6 +1492,7 @@ Item {
                 }
 
                 Rectangle {
+                    visible: !backendGrid.cloud   // GGUF/llama-server: no aplica a cloud
                     Layout.fillWidth: true
                     color: Theme.surfaceBg
                     border.color: Theme.borderColor
@@ -1533,6 +1542,7 @@ Item {
                 }
 
                 RowLayout {
+                    visible: !backendGrid.cloud   // flags de llama-server
                     Layout.fillWidth: true
                     spacing: 16
                     LcCheckBox { id: flashAttnCheck; text: "flash-attn"; contentItem: Text { text: parent.text; color: Theme.textSecondary; leftPadding: parent.indicator.width + 6 } }
@@ -1580,7 +1590,7 @@ Item {
                             placeholderText: "0 = global"
                         }
                         Text { text: "browser MCP"; color: Theme.textSecondary; font.pixelSize: 12 }
-                        ComboBox {
+                        LcComboBox {
                             id: browserAutoCombo
                             Layout.fillWidth: true
                             // value = "inherit" | "on" | "off"
@@ -1596,6 +1606,7 @@ Item {
                 }
 
                 RowLayout {
+                    visible: !backendGrid.cloud   // flags de llama-server
                     Layout.fillWidth: true
                     spacing: 16
                     LcCheckBox { id: contextShiftCheck;   text: "context-shift";    checked: true; contentItem: Text { text: parent.text; color: Theme.textSecondary; leftPadding: parent.indicator.width + 6 } }
@@ -1880,7 +1891,7 @@ Item {
                                     RowLayout {
                                         Layout.fillWidth: true; spacing: 6
                                         Text { text: "Timeout (s)"; color: Theme.textSecondary; font.pixelSize: 11 }
-                                        SpinBox {
+                                        LcSpinBox {
                                             from: 10; to: 3600; stepSize: 10; implicitHeight: 28
                                             value: timeoutSec ?? 300
                                             onValueModified: masterChainModel.setProperty(index, "timeoutSec", value)
@@ -1924,7 +1935,7 @@ Item {
                             Layout.fillWidth: true; spacing: 8
                             Text { text: "Auto tras N fallos"; color: Theme.textSecondary; font.pixelSize: 12
                                    Layout.preferredWidth: 130 }
-                            SpinBox {
+                            LcSpinBox {
                                 from: 1; to: 20; value: masterAutoAfterFails
                                 onValueModified: masterAutoAfterFails = value
                                 implicitHeight: 32

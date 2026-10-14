@@ -105,7 +105,7 @@ Item {
                     Layout.fillWidth: true
                     visible: (root.selectedJob.documents || []).length > 0
                     Text { text: "Documento"; color: Theme.textSecondary; font.pixelSize: 11 }
-                    ComboBox {
+                    LcComboBox {
                         id: documentCombo
                         Layout.fillWidth: true
                         model: root.selectedJob.documents || []
@@ -243,10 +243,10 @@ Item {
         property string defaultSchema: '{"fields":{"cliente":{"type":"string","required":true},"fecha":{"type":"date","required":true},"importe":{"type":"number","required":true},"moneda":{"type":"enum","values":["ARS","USD","EUR"]}}}'
         contentItem: ColumnLayout {
             spacing: 8
-            TextField { id: jobName; Layout.fillWidth: true; placeholderText: "Nombre del job" }
+            LcTextField { id: jobName; Layout.fillWidth: true; placeholderText: "Nombre del job" }
             RowLayout {
                 Layout.fillWidth: true
-                TextField { id: filesField; Layout.fillWidth: true; placeholderText: "Rutas separadas por ;" }
+                LcTextField { id: filesField; Layout.fillWidth: true; placeholderText: "Rutas separadas por ;" }
                 LcButton { text: "Elegir"; secondary: true; onClicked: inputFiles.open() }
             }
             TextArea { id: schemaField; Layout.fillWidth: true; Layout.preferredHeight: 160; text: newJobDialog.defaultSchema; wrapMode: TextEdit.Wrap }

@@ -8,4 +8,6 @@ LcComboBox 1.0 LcComboBox.qml
 LcSwitch 1.0 LcSwitch.qml
 LcScrollBar 1.0 LcScrollBar.qml
 LcCheckBox 1.0 LcCheckBox.qml
+LcSpinBox 1.0 LcSpinBox.qml
+LcRadioButton 1.0 LcRadioButton.qml
 PageHeader 1.0 PageHeader.qml

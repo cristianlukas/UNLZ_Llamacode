@@ -29,6 +29,9 @@ QtObject {
     property string warnText: "#f9e2af"
     property string successText: "#a6e3a1"
     property string errorText: "#f38ba8"
+    // LcSpinBox / LcRadioButton.
+    property string theme: "dark"
+    property string hoverBg: "#1e1e2e"
 
     function normalizeHex(s) {
         var t = String(s).trim()

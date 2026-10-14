@@ -1310,7 +1310,7 @@ Item {
                     }
                 }
 
-                ComboBox {
+                LcComboBox {
                     Layout.preferredWidth: 180
                     model: ["all", "error", "warn", "stderr", "stdout", "lifecycle", "health", "diag"]
                     currentIndex: model.indexOf(root.logLevel)

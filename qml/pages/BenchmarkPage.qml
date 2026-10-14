@@ -576,893 +576,916 @@ Item {
                 Layout.fillHeight: true
                 color: Theme.surfaceBg
 
-                ColumnLayout {
-                    anchors { fill: parent; margins: 16 }
-                    spacing: 14
+                clip: true
 
-                    Text {
-                        text: "OBJETIVO"
-                        color: Theme.textSecondary
-                        font.pixelSize: 10; font.bold: true
-                    }
-                    ColumnLayout {
-                        ButtonGroup { id: targetGroup }
-                        spacing: 4
-
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 5
-                            TapHandler { onTapped: modelTarget.checked = true }
-                            RadioButton {
-                                id: modelTarget
-                                text: ""
-                                checked: true
-                                onCheckedChanged: if (root._optsRestored && checked) App.writeSetting("benchTarget", "model")
-                                ButtonGroup.group: targetGroup
-                                padding: 0
-                                leftPadding: 0
-                                rightPadding: 0
-                                Layout.minimumWidth: implicitIndicatorWidth
-                                Layout.preferredWidth: implicitIndicatorWidth
-                                Layout.maximumWidth: implicitIndicatorWidth
-                            }
-                            Text {
-                                text: "Modo Chat"
-                                color: Theme.theme === "oled" ? "white" : Theme.textPrimary
-                                font.pixelSize: 12
-                            }
-                        }
-                        Item { height: 2 }
-
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 5
-                            TapHandler { onTapped: agentTarget.checked = true }
-                            RadioButton {
-                                id: agentTarget
-                                text: ""
-                                onCheckedChanged: if (root._optsRestored && checked) App.writeSetting("benchTarget", "agent")
-                                ButtonGroup.group: targetGroup
-                                padding: 0
-                                leftPadding: 0
-                                rightPadding: 0
-                                Layout.minimumWidth: implicitIndicatorWidth
-                                Layout.preferredWidth: implicitIndicatorWidth
-                                Layout.maximumWidth: implicitIndicatorWidth
-                            }
-                            Text {
-                                text: "Modo Agente"
-                                color: Theme.theme === "oled" ? "white" : Theme.textPrimary
-                                font.pixelSize: 12
-                            }
-                        }
-                    }
-
-                    // Nivel del agente (perfil): solo aplica al objetivo Agente.
-                    // Fija capacidades + directivas para comparar al mismo nivel.
-                    Text {
-                        text: "NIVEL DEL AGENTE"
-                        color: Theme.textSecondary
-                        font.pixelSize: 10; font.bold: true
-                        visible: agentTarget.checked
-                    }
-                    LcComboBox {
-                        id: agentProfileCombo
-                        Layout.fillWidth: true
-                        visible: agentTarget.checked
-                        model: App.profileManager.agentProfiles
-                        textRole: "name"; valueRole: "profileId"
-                        currentIndex: {
-                            const saved = App.readSetting("benchAgentProfile", App.activeAgentProfileId)
-                            return Math.max(0, indexOfValue(saved))
-                        }
-                        onActivated: App.writeSetting("benchAgentProfile", currentValue)
-                        background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
-                        contentItem: Text { text: "🤖 " + agentProfileCombo.displayText; color: Theme.textPrimary; font.pixelSize: 12; leftPadding: 8; verticalAlignment: Text.AlignVCenter }
-                    }
-
-                    LcCheckBox {
-                        id: benchmarkThinkingCheck
-                        text: "Thinking"
-                        checked: App.thinkingEnabled
-                        onToggled: { App.thinkingEnabled = checked; App.writeSetting("benchThinking", checked) }
-                        contentItem: Text {
-                            text: benchmarkThinkingCheck.text
-                            color: Theme.theme === "oled" ? "white" : Theme.textPrimary
-                            font.pixelSize: 12
-                            leftPadding: benchmarkThinkingCheck.indicator.width + 6
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                    }
-
-                    Text {
-                        text: "MODO DE PRUEBA"
-                        color: Theme.textSecondary
-                        font.pixelSize: 10; font.bold: true
-                    }
+                Flickable {
+                    id: leftFlick
+                    anchors.fill: parent
+                    contentWidth: width
+                    contentHeight: leftColumn.height + 32
+                    boundsBehavior: Flickable.StopAtBounds
+                    clip: true
+                    ScrollBar.vertical: LcScrollBar {}
 
                     ColumnLayout {
-                        ButtonGroup { id: modeGroup }
-                        spacing: 4
+                        id: leftColumn
+                        // Ancho atado al panel: sin esto, una fila ancha (los botones de
+                        // perfiles) estiraba toda la columna por debajo de la tabla.
+                        x: 16; y: 16
+                        width: leftFlick.width - 32
+                        // Llena el alto si sobra (la lista de perfiles usa fillHeight)
+                        // y scrollea si no entra.
+                        height: Math.max(leftFlick.height - 32, implicitHeight)
+                        spacing: 14
 
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 5
-                            TapHandler { onTapped: shortMode.checked = true }
-                            RadioButton {
-                                id: shortMode
-                                text: ""
-                                checked: true
-                                onCheckedChanged: if (root._optsRestored && checked) App.writeSetting("benchMode", "short")
-                                ButtonGroup.group: modeGroup
-                                padding: 0
-                                leftPadding: 0
-                                rightPadding: 0
-                                Layout.minimumWidth: implicitIndicatorWidth
-                                Layout.preferredWidth: implicitIndicatorWidth
-                                Layout.maximumWidth: implicitIndicatorWidth
-                            }
-                            Text {
-                                Layout.fillWidth: true
-                                text: "Corta (~2 min) 2 speed + 5 quality tasks"
-                                color: Theme.textSecondary
-                                font.pixelSize: 12
-                                wrapMode: Text.Wrap
-                            }
+                        Text {
+                            text: "OBJETIVO"
+                            color: Theme.textSecondary
+                            font.pixelSize: 10; font.bold: true
                         }
-                        Item { height: 2 }
-
-                        RowLayout {
+                        ColumnLayout {
                             Layout.fillWidth: true
-                            spacing: 5
-                            TapHandler { onTapped: fullMode.checked = true }
-                            RadioButton {
-                                id: fullMode
-                                text: ""
-                                onCheckedChanged: if (root._optsRestored && checked) App.writeSetting("benchMode", "full")
-                                ButtonGroup.group: modeGroup
-                                padding: 0
-                                leftPadding: 0
-                                rightPadding: 0
-                                Layout.minimumWidth: implicitIndicatorWidth
-                                Layout.preferredWidth: implicitIndicatorWidth
-                                Layout.maximumWidth: implicitIndicatorWidth
-                            }
-                            Text {
+                            ButtonGroup { id: targetGroup }
+                            spacing: 4
+
+                            RowLayout {
                                 Layout.fillWidth: true
-                                text: "Completa (~5 min) 5 speed + 7 quality tasks"
-                                color: Theme.textSecondary
-                                font.pixelSize: 12
-                                wrapMode: Text.Wrap
-                            }
-                        }
-                        Item { height: 2 }
-
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 5
-                            TapHandler { onTapped: customMode.checked = true }
-                            RadioButton {
-                                id: customMode
-                                text: ""
-                                onCheckedChanged: if (root._optsRestored && checked) App.writeSetting("benchMode", "custom")
-                                ButtonGroup.group: modeGroup
-                                padding: 0
-                                leftPadding: 0
-                                rightPadding: 0
-                                Layout.minimumWidth: implicitIndicatorWidth
-                                Layout.preferredWidth: implicitIndicatorWidth
-                                Layout.maximumWidth: implicitIndicatorWidth
-                            }
-                            Text {
-                                Layout.fillWidth: true
-                                text: "Custom benchmark Tus prompts personalizados"
-                                color: Theme.textSecondary
-                                font.pixelSize: 12
-                                wrapMode: Text.Wrap
-                            }
-                        }
-                        Item { height: 2 }
-
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 5
-                            TapHandler { onTapped: stageMode.checked = true }
-                            RadioButton {
-                                id: stageMode
-                                text: ""
-                                onCheckedChanged: if (root._optsRestored && checked) App.writeSetting("benchMode", "stages")
-                                ButtonGroup.group: modeGroup
-                                padding: 0
-                                leftPadding: 0
-                                rightPadding: 0
-                                Layout.minimumWidth: implicitIndicatorWidth
-                                Layout.preferredWidth: implicitIndicatorWidth
-                                Layout.maximumWidth: implicitIndicatorWidth
-                            }
-                            Text {
-                                Layout.fillWidth: true
-                                text: "Escalera HE0 → HE20 → BCB (custom)"
-                                color: Theme.textSecondary
-                                font.pixelSize: 12
-                                wrapMode: Text.Wrap
-                            }
-                        }
-                    }
-
-                    // ── Selector de benchmark personalizado (solo en modo custom) ──
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 8
-                        visible: customMode.checked
-
-                        LcComboBox {
-                            id: benchCombo
-                            Layout.fillWidth: true
-                            textRole: "text"
-                            valueRole: "id"
-                            model: {
-                                const arr = []
-                                const cs = App.customBenchmarks || []
-                                for (let i = 0; i < cs.length; i++)
-                                    arr.push({ id: cs[i].id, text: root.customBenchmarkText(cs[i]) })
-                                if (arr.length === 0)
-                                    arr.push({ id: "", text: "(sin benchmarks — creá uno)" })
-                                return arr
-                            }
-                            onActivated: {
-                                root.customId = currentValue ?? ""
-                                const cs = App.customBenchmarks || []
-                                for (let i = 0; i < cs.length; i++) {
-                                    if (cs[i].id !== root.customId) continue
-                                    // Instalaciones anteriores pueden conservar una copia
-                                    // sembrada de la suite v1 sin este campo de metadata.
-                                    const fallback = root.customId === "agent_efficiency_e2e_v1" ? 3 : 0
-                                    const recommended = parseInt(cs[i].recommendedPasses ?? fallback)
-                                    if (recommended > 0) {
-                                        passesSpin.value = Math.min(passesSpin.to,
-                                                                    Math.max(passesSpin.from, recommended))
-                                        App.writeSetting("benchPasses", passesSpin.value)
-                                    }
-                                    break
+                                spacing: 5
+                                TapHandler { onTapped: modelTarget.checked = true }
+                                LcRadioButton {
+                                    id: modelTarget
+                                    text: ""
+                                    checked: true
+                                    onCheckedChanged: if (root._optsRestored && checked) App.writeSetting("benchTarget", "model")
+                                    ButtonGroup.group: targetGroup
+                                    padding: 0
+                                    leftPadding: 0
+                                    rightPadding: 0
+                                    Layout.minimumWidth: implicitIndicatorWidth
+                                    Layout.preferredWidth: implicitIndicatorWidth
+                                    Layout.maximumWidth: implicitIndicatorWidth
+                                }
+                                Text {
+                                    text: "Modo Chat"
+                                    color: Theme.theme === "oled" ? "white" : Theme.textPrimary
+                                    font.pixelSize: 12
                                 }
                             }
-                            // Reconcile selection to the saved customId. Do NOT write customId
-                            // back from currentValue here: the model loads async, so an early
-                            // pass would clobber the saved id with index 0 (first benchmark).
-                            function _syncToSaved() {
-                                const idx = indexOfValue(root.customId)
-                                if (idx >= 0) currentIndex = idx
+                            Item { height: 2 }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: 5
+                                TapHandler { onTapped: agentTarget.checked = true }
+                                LcRadioButton {
+                                    id: agentTarget
+                                    text: ""
+                                    onCheckedChanged: if (root._optsRestored && checked) App.writeSetting("benchTarget", "agent")
+                                    ButtonGroup.group: targetGroup
+                                    padding: 0
+                                    leftPadding: 0
+                                    rightPadding: 0
+                                    Layout.minimumWidth: implicitIndicatorWidth
+                                    Layout.preferredWidth: implicitIndicatorWidth
+                                    Layout.maximumWidth: implicitIndicatorWidth
+                                }
+                                Text {
+                                    text: "Modo Agente"
+                                    color: Theme.theme === "oled" ? "white" : Theme.textPrimary
+                                    font.pixelSize: 12
+                                }
                             }
-                            onModelChanged: _syncToSaved()
-                            Component.onCompleted: _syncToSaved()
                         }
 
-                        GridLayout {
+                        // Nivel del agente (perfil): solo aplica al objetivo Agente.
+                        // Fija capacidades + directivas para comparar al mismo nivel.
+                        Text {
+                            text: "NIVEL DEL AGENTE"
+                            color: Theme.textSecondary
+                            font.pixelSize: 10; font.bold: true
+                            visible: agentTarget.checked
+                        }
+                        LcComboBox {
+                            id: agentProfileCombo
                             Layout.fillWidth: true
-                            columns: 3
-                            rowSpacing: 6
-                            columnSpacing: 6
-                            LcButton {
-                                Layout.fillWidth: true
-                                Layout.minimumWidth: 0
-                                text: "Pro-Benchmarks (%1)".arg(root.proBenchmarkIds.length)
-                                secondary: true
-                                onClicked: proBenchPopup.open()
+                            visible: agentTarget.checked
+                            model: App.profileManager.agentProfiles
+                            textRole: "name"; valueRole: "profileId"
+                            currentIndex: {
+                                const saved = App.readSetting("benchAgentProfile", App.activeAgentProfileId)
+                                return Math.max(0, indexOfValue(saved))
                             }
-                            LcButton {
-                                Layout.fillWidth: true
-                                Layout.minimumWidth: 0
-                                text: "Nuevo"
-                                onClicked: { editor.loadDef(null); editor.open() }
+                            onActivated: App.writeSetting("benchAgentProfile", currentValue)
+                            background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                            contentItem: Text { text: "🤖 " + agentProfileCombo.displayText; color: Theme.textPrimary; font.pixelSize: 12; leftPadding: 8; verticalAlignment: Text.AlignVCenter }
+                        }
+
+                        LcCheckBox {
+                            id: benchmarkThinkingCheck
+                            text: "Thinking"
+                            checked: App.thinkingEnabled
+                            onToggled: { App.thinkingEnabled = checked; App.writeSetting("benchThinking", checked) }
+                            contentItem: Text {
+                                text: benchmarkThinkingCheck.text
+                                color: Theme.theme === "oled" ? "white" : Theme.textPrimary
+                                font.pixelSize: 12
+                                leftPadding: benchmarkThinkingCheck.indicator.width + 6
+                                verticalAlignment: Text.AlignVCenter
                             }
-                            LcButton {
+                        }
+
+                        Text {
+                            text: "MODO DE PRUEBA"
+                            color: Theme.textSecondary
+                            font.pixelSize: 10; font.bold: true
+                        }
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            ButtonGroup { id: modeGroup }
+                            spacing: 4
+
+                            RowLayout {
                                 Layout.fillWidth: true
-                                Layout.minimumWidth: 0
-                                text: "Importar Eval"
-                                onClicked: evalImportDialog.open()
+                                spacing: 5
+                                TapHandler { onTapped: shortMode.checked = true }
+                                LcRadioButton {
+                                    id: shortMode
+                                    text: ""
+                                    checked: true
+                                    onCheckedChanged: if (root._optsRestored && checked) App.writeSetting("benchMode", "short")
+                                    ButtonGroup.group: modeGroup
+                                    padding: 0
+                                    leftPadding: 0
+                                    rightPadding: 0
+                                    Layout.minimumWidth: implicitIndicatorWidth
+                                    Layout.preferredWidth: implicitIndicatorWidth
+                                    Layout.maximumWidth: implicitIndicatorWidth
+                                }
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: "Corta (~2 min) 2 speed + 5 quality tasks"
+                                    color: Theme.textSecondary
+                                    font.pixelSize: 12
+                                    wrapMode: Text.Wrap
+                                }
                             }
-                            LcButton {
+                            Item { height: 2 }
+
+                            RowLayout {
                                 Layout.fillWidth: true
-                                Layout.minimumWidth: 0
-                                text: "Editar"
-                                enabled: root.customId !== ""
-                                onClicked: {
+                                spacing: 5
+                                TapHandler { onTapped: fullMode.checked = true }
+                                LcRadioButton {
+                                    id: fullMode
+                                    text: ""
+                                    onCheckedChanged: if (root._optsRestored && checked) App.writeSetting("benchMode", "full")
+                                    ButtonGroup.group: modeGroup
+                                    padding: 0
+                                    leftPadding: 0
+                                    rightPadding: 0
+                                    Layout.minimumWidth: implicitIndicatorWidth
+                                    Layout.preferredWidth: implicitIndicatorWidth
+                                    Layout.maximumWidth: implicitIndicatorWidth
+                                }
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: "Completa (~5 min) 5 speed + 7 quality tasks"
+                                    color: Theme.textSecondary
+                                    font.pixelSize: 12
+                                    wrapMode: Text.Wrap
+                                }
+                            }
+                            Item { height: 2 }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: 5
+                                TapHandler { onTapped: customMode.checked = true }
+                                LcRadioButton {
+                                    id: customMode
+                                    text: ""
+                                    onCheckedChanged: if (root._optsRestored && checked) App.writeSetting("benchMode", "custom")
+                                    ButtonGroup.group: modeGroup
+                                    padding: 0
+                                    leftPadding: 0
+                                    rightPadding: 0
+                                    Layout.minimumWidth: implicitIndicatorWidth
+                                    Layout.preferredWidth: implicitIndicatorWidth
+                                    Layout.maximumWidth: implicitIndicatorWidth
+                                }
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: "Custom benchmark Tus prompts personalizados"
+                                    color: Theme.textSecondary
+                                    font.pixelSize: 12
+                                    wrapMode: Text.Wrap
+                                }
+                            }
+                            Item { height: 2 }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: 5
+                                TapHandler { onTapped: stageMode.checked = true }
+                                LcRadioButton {
+                                    id: stageMode
+                                    text: ""
+                                    onCheckedChanged: if (root._optsRestored && checked) App.writeSetting("benchMode", "stages")
+                                    ButtonGroup.group: modeGroup
+                                    padding: 0
+                                    leftPadding: 0
+                                    rightPadding: 0
+                                    Layout.minimumWidth: implicitIndicatorWidth
+                                    Layout.preferredWidth: implicitIndicatorWidth
+                                    Layout.maximumWidth: implicitIndicatorWidth
+                                }
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: "Escalera HE0 → HE20 → BCB (custom)"
+                                    color: Theme.textSecondary
+                                    font.pixelSize: 12
+                                    wrapMode: Text.Wrap
+                                }
+                            }
+                        }
+
+                        // ── Selector de benchmark personalizado (solo en modo custom) ──
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+                            visible: customMode.checked
+
+                            LcComboBox {
+                                id: benchCombo
+                                Layout.fillWidth: true
+                                textRole: "text"
+                                valueRole: "id"
+                                model: {
+                                    const arr = []
                                     const cs = App.customBenchmarks || []
                                     for (let i = 0; i < cs.length; i++)
-                                        if (cs[i].id === root.customId) { editor.loadDef(cs[i]); editor.open(); break }
+                                        arr.push({ id: cs[i].id, text: root.customBenchmarkText(cs[i]) })
+                                    if (arr.length === 0)
+                                        arr.push({ id: "", text: "(sin benchmarks — creá uno)" })
+                                    return arr
                                 }
-                            }
-                            LcButton {
-                                Layout.fillWidth: true
-                                Layout.minimumWidth: 0
-                                text: "Borrar"
-                                danger: true
-                                enabled: root.customId !== ""
-                                onClicked: {
-                                    App.deleteCustomBenchmark(root.customId)
-                                    root.customId = ""
-                                    benchCombo.currentIndex = 0
+                                onActivated: {
+                                    root.customId = currentValue ?? ""
+                                    const cs = App.customBenchmarks || []
+                                    for (let i = 0; i < cs.length; i++) {
+                                        if (cs[i].id !== root.customId) continue
+                                        // Instalaciones anteriores pueden conservar una copia
+                                        // sembrada de la suite v1 sin este campo de metadata.
+                                        const fallback = root.customId === "agent_efficiency_e2e_v1" ? 3 : 0
+                                        const recommended = parseInt(cs[i].recommendedPasses ?? fallback)
+                                        if (recommended > 0) {
+                                            passesSpin.value = Math.min(passesSpin.to,
+                                                                        Math.max(passesSpin.from, recommended))
+                                            App.writeSetting("benchPasses", passesSpin.value)
+                                        }
+                                        break
+                                    }
                                 }
+                                // Reconcile selection to the saved customId. Do NOT write customId
+                                // back from currentValue here: the model loads async, so an early
+                                // pass would clobber the saved id with index 0 (first benchmark).
+                                function _syncToSaved() {
+                                    const idx = indexOfValue(root.customId)
+                                    if (idx >= 0) currentIndex = idx
+                                }
+                                onModelChanged: _syncToSaved()
+                                Component.onCompleted: _syncToSaved()
                             }
-                        }
 
-                        Popup {
-                            id: proBenchPopup
-                            width: Math.min(420, root.width - 24)
-                            height: Math.min(460, root.height - 80)
-                            anchors.centerIn: Overlay.overlay
-                            modal: true
-                            focus: true
-                            closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
-                            background: Rectangle { color: Theme.surfaceBg; border.color: Theme.borderColor; radius: 8 }
-                            contentItem: ColumnLayout {
-                                spacing: 8
-                                Text { text: "Pro-Benchmarks"; color: Theme.textPrimary; font.pixelSize: 16; font.bold: true }
-                                Text { text: "Elegí varias suites. Se ejecutan contra todos los perfiles marcados, una por vez."; color: Theme.textSecondary; wrapMode: Text.Wrap; Layout.fillWidth: true }
-                                RowLayout {
+                            GridLayout {
+                                Layout.fillWidth: true
+                                columns: 3
+                                rowSpacing: 6
+                                columnSpacing: 6
+                                LcButton {
                                     Layout.fillWidth: true
-                                    LcButton { text: "Todos"; secondary: true; onClicked: { const a=[]; for (const b of (App.customBenchmarks||[])) a.push(b.id); root.proBenchmarkIds=a } }
-                                    LcButton { text: "Ninguno"; secondary: true; onClicked: root.proBenchmarkIds=[] }
+                                    Layout.minimumWidth: 0
+                                    text: "Pro-Benchmarks (%1)".arg(root.proBenchmarkIds.length)
+                                    secondary: true
+                                    onClicked: proBenchPopup.open()
                                 }
-                                ScrollView {
-                                    Layout.fillWidth: true; Layout.fillHeight: true; clip: true
-                                    ColumnLayout {
-                                        width: parent.width; spacing: 2
-                                        Repeater {
-                                            model: App.customBenchmarks || []
-                                            delegate: LcCheckBox {
-                                                required property var modelData
-                                                Layout.fillWidth: true
-                                                text: root.customBenchmarkText(modelData)
-                                                checked: root.proBenchmarkIds.indexOf(modelData.id) >= 0
-                                                onToggled: root.toggleProBenchmark(modelData.id)
+                                LcButton {
+                                    Layout.fillWidth: true
+                                    Layout.minimumWidth: 0
+                                    text: "Nuevo"
+                                    onClicked: { editor.loadDef(null); editor.open() }
+                                }
+                                LcButton {
+                                    Layout.fillWidth: true
+                                    Layout.minimumWidth: 0
+                                    text: "Importar Eval"
+                                    onClicked: evalImportDialog.open()
+                                }
+                                LcButton {
+                                    Layout.fillWidth: true
+                                    Layout.minimumWidth: 0
+                                    text: "Editar"
+                                    enabled: root.customId !== ""
+                                    onClicked: {
+                                        const cs = App.customBenchmarks || []
+                                        for (let i = 0; i < cs.length; i++)
+                                            if (cs[i].id === root.customId) { editor.loadDef(cs[i]); editor.open(); break }
+                                    }
+                                }
+                                LcButton {
+                                    Layout.fillWidth: true
+                                    Layout.minimumWidth: 0
+                                    text: "Borrar"
+                                    danger: true
+                                    enabled: root.customId !== ""
+                                    onClicked: {
+                                        App.deleteCustomBenchmark(root.customId)
+                                        root.customId = ""
+                                        benchCombo.currentIndex = 0
+                                    }
+                                }
+                            }
+
+                            Popup {
+                                id: proBenchPopup
+                                width: Math.min(420, root.width - 24)
+                                height: Math.min(460, root.height - 80)
+                                anchors.centerIn: Overlay.overlay
+                                modal: true
+                                focus: true
+                                closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+                                background: Rectangle { color: Theme.surfaceBg; border.color: Theme.borderColor; radius: 8 }
+                                contentItem: ColumnLayout {
+                                    spacing: 8
+                                    Text { text: "Pro-Benchmarks"; color: Theme.textPrimary; font.pixelSize: 16; font.bold: true }
+                                    Text { text: "Elegí varias suites. Se ejecutan contra todos los perfiles marcados, una por vez."; color: Theme.textSecondary; wrapMode: Text.Wrap; Layout.fillWidth: true }
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        LcButton { text: "Todos"; secondary: true; onClicked: { const a=[]; for (const b of (App.customBenchmarks||[])) a.push(b.id); root.proBenchmarkIds=a } }
+                                        LcButton { text: "Ninguno"; secondary: true; onClicked: root.proBenchmarkIds=[] }
+                                    }
+                                    ScrollView {
+                                        Layout.fillWidth: true; Layout.fillHeight: true; clip: true
+                                        ColumnLayout {
+                                            width: parent.width; spacing: 2
+                                            Repeater {
+                                                model: App.customBenchmarks || []
+                                                delegate: LcCheckBox {
+                                                    required property var modelData
+                                                    Layout.fillWidth: true
+                                                    text: root.customBenchmarkText(modelData)
+                                                    checked: root.proBenchmarkIds.indexOf(modelData.id) >= 0
+                                                    onToggled: root.toggleProBenchmark(modelData.id)
+                                                }
                                             }
                                         }
                                     }
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        LcButton { text: "Cerrar"; secondary: true; Layout.fillWidth: true; onClicked: proBenchPopup.close() }
+                                    }
                                 }
-                                RowLayout {
+                            }
+                        }
+
+                        // ── Escalera pública de tres etapas ────────────────────
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+                            visible: stageMode.checked
+
+                            Text {
+                                Layout.fillWidth: true
+                                text: "SELECCIONÁ LAS SUITES CUSTOM"
+                                color: Theme.textSecondary
+                                font.pixelSize: 10
+                                font.bold: true
+                            }
+                            Text {
+                                Layout.fillWidth: true
+                                text: "Se ejecutan en orden sobre cada perfil. Si HE0 falla, ese perfil no avanza a HE20; BCB requiere HE20 válido."
+                                color: Theme.textMuted
+                                font.pixelSize: 10
+                                wrapMode: Text.Wrap
+                            }
+                            GridLayout {
+                                Layout.fillWidth: true
+                                columns: 1
+                                rowSpacing: 6
+                                Text { text: "HE0 · 1 ítem"; color: Theme.textSecondary; font.pixelSize: 11 }
+                                LcComboBox {
+                                    id: stageHe0Combo
                                     Layout.fillWidth: true
-                                    LcButton { text: "Cerrar"; secondary: true; Layout.fillWidth: true; onClicked: proBenchPopup.close() }
+                                    textRole: "text"
+                                    valueRole: "id"
+                                    model: root.stageModel("he0")
+                                    currentIndex: root.stageIndex(root.stageHe0Id, "he0")
+                                    onActivated: root.stageHe0Id = currentValue || ""
+                                }
+                                Text { text: "HE20 · 20 ítems"; color: Theme.textSecondary; font.pixelSize: 11 }
+                                LcComboBox {
+                                    id: stageHe20Combo
+                                    Layout.fillWidth: true
+                                    textRole: "text"
+                                    valueRole: "id"
+                                    model: root.stageModel("he20")
+                                    currentIndex: root.stageIndex(root.stageHe20Id, "he20")
+                                    onActivated: root.stageHe20Id = currentValue || ""
+                                }
+                                Text { text: "BCB · 8 ítems"; color: Theme.textSecondary; font.pixelSize: 11 }
+                                LcComboBox {
+                                    id: stageBcbCombo
+                                    Layout.fillWidth: true
+                                    textRole: "text"
+                                    valueRole: "id"
+                                    model: root.stageModel("bcb")
+                                    currentIndex: root.stageIndex(root.stageBcbId, "bcb")
+                                    onActivated: root.stageBcbId = currentValue || ""
                                 }
                             }
-                        }
-                    }
-
-                    // ── Escalera pública de tres etapas ────────────────────
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 8
-                        visible: stageMode.checked
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: "SELECCIONÁ LAS SUITES CUSTOM"
-                            color: Theme.textSecondary
-                            font.pixelSize: 10
-                            font.bold: true
-                        }
-                        Text {
-                            Layout.fillWidth: true
-                            text: "Se ejecutan en orden sobre cada perfil. Si HE0 falla, ese perfil no avanza a HE20; BCB requiere HE20 válido."
-                            color: Theme.textMuted
-                            font.pixelSize: 10
-                            wrapMode: Text.Wrap
-                        }
-                        GridLayout {
-                            Layout.fillWidth: true
-                            columns: 1
-                            rowSpacing: 6
-                            Text { text: "HE0 · 1 ítem"; color: Theme.textSecondary; font.pixelSize: 11 }
-                            LcComboBox {
-                                id: stageHe0Combo
+                            Text {
                                 Layout.fillWidth: true
-                                textRole: "text"
-                                valueRole: "id"
-                                model: root.stageModel("he0")
-                                currentIndex: root.stageIndex(root.stageHe0Id, "he0")
-                                onActivated: root.stageHe0Id = currentValue || ""
-                            }
-                            Text { text: "HE20 · 20 ítems"; color: Theme.textSecondary; font.pixelSize: 11 }
-                            LcComboBox {
-                                id: stageHe20Combo
-                                Layout.fillWidth: true
-                                textRole: "text"
-                                valueRole: "id"
-                                model: root.stageModel("he20")
-                                currentIndex: root.stageIndex(root.stageHe20Id, "he20")
-                                onActivated: root.stageHe20Id = currentValue || ""
-                            }
-                            Text { text: "BCB · 8 ítems"; color: Theme.textSecondary; font.pixelSize: 11 }
-                            LcComboBox {
-                                id: stageBcbCombo
-                                Layout.fillWidth: true
-                                textRole: "text"
-                                valueRole: "id"
-                                model: root.stageModel("bcb")
-                                currentIndex: root.stageIndex(root.stageBcbId, "bcb")
-                                onActivated: root.stageBcbId = currentValue || ""
+                                visible: !root.stageReady()
+                                text: "Importá HumanEval de 1 y 20 ítems y BigCodeBench-Hard desde el selector Custom para habilitar la escalera."
+                                color: Theme.warnText
+                                font.pixelSize: 10
+                                wrapMode: Text.Wrap
                             }
                         }
-                        Text {
-                            Layout.fillWidth: true
-                            visible: !root.stageReady()
-                            text: "Importá HumanEval de 1 y 20 ítems y BigCodeBench-Hard desde el selector Custom para habilitar la escalera."
-                            color: Theme.warnText
-                            font.pixelSize: 10
-                            wrapMode: Text.Wrap
-                        }
-                    }
 
-                    Rectangle { height: 1; Layout.fillWidth: true; color: Theme.divider }
+                        Rectangle { height: 1; Layout.fillWidth: true; color: Theme.divider }
 
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 8
                         Text {
                             text: "PERFILES A COMPARAR"
                             color: Theme.textSecondary
                             font.pixelSize: 10; font.bold: true
+                        }
+                        // Flow: los tres botones no entran en una fila del panel angosto.
+                        Flow {
                             Layout.fillWidth: true
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        LcButton {
-                            text: "Desmarcar todos"
-                            secondary: true
-                            enabled: root.selectedIds.length > 0 && !App.benchmarkRunning
-                            onClicked: root.selectedIds = []
-                        }
-                        LcButton {
-                            text: "Seleccionar 🏆 benchmark (" + root.benchmarkMarkedIds().length + ")"
-                            secondary: true
-                            enabled: !App.benchmarkRunning && root.benchmarkMarkedIds().length > 0
-                            ToolTip.visible: hovered
-                            ToolTip.text: "Selecciona todos los perfiles marcados como pendientes para HE0 → HE20 → BCB"
-                            onClicked: root.selectedIds = root.benchmarkMarkedIds()
-                        }
-                        LcButton {
-                            text: "Exportar CSV"
-                            secondary: true
-                            enabled: (App.benchmarkResults || []).length > 0
-                            onClicked: csvExportDialog.open()
-                        }
-                    }
-
-                    Rectangle {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        Layout.minimumHeight: 120
-                        color: Theme.inputBg
-                        radius: 6
-                        border.color: Theme.divider; border.width: 1
-                        clip: true
-
-                        ListView {
-                            id: profileList
-                            anchors { fill: parent; margins: 4 }
-                            // Menú ordenado: favoritos (★) arriba; displayName = alias - name.
-                            property var launchMenu: App.profileManager.launchProfilesForMenu()
-                            Connections {
-                                target: App.profileManager
-                                function onLaunchesChanged() {
-                                    profileList.launchMenu = App.profileManager.launchProfilesForMenu()
-                                }
-                            }
-                            model: launchMenu
-                            spacing: 2; clip: true
-                            boundsBehavior: Flickable.StopAtBounds
-                            flickableDirection: Flickable.VerticalFlick
-
-                            delegate: Item {
-                                id: pd
-                                required property var modelData
-                                width: profileList.width; height: 32
-                                property string profileId: modelData.id ?? ""
-                                property bool isSelected: root.selectedIds.indexOf(profileId) >= 0
-
-                                Rectangle {
-                                    anchors.fill: parent; radius: 4
-                                    color: pd.isSelected ? Theme.highlight
-                                         : (pdHover.containsMouse ? Theme.hoverBg : "transparent")
-                                }
-                                HoverHandler { id: pdHover }
-
-                                Row {
-                                    anchors { left: parent.left; leftMargin: 8; verticalCenter: parent.verticalCenter }
-                                    spacing: 6
-                                    LcCheckBox {
-                                        checked: pd.isSelected
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        onToggled: root.toggleProfile(pd.profileId)
-                                    }
-                                    Text {
-                                        id: profileNameText
-                                        text: pd.modelData.displayName || pd.modelData.name || "(sin nombre)"
-                                        color: Theme.textPrimary; font.pixelSize: 12
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        width: profileList.width - 60; elide: Text.ElideRight
-                                        ToolTip.visible: pdHover.hovered
-                                        ToolTip.delay: 350
-                                        ToolTip.timeout: 5000
-                                        ToolTip.text: text
-                                    }
-                                }
-                                TapHandler { onTapped: root.toggleProfile(pd.profileId) }
-                            }
-                            ScrollBar.vertical: LcScrollBar {}
-                        }
-                    }
-
-                    // Progress bar (visible durante benchmark)
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 4
-                        visible: App.benchmarkRunning
-
-                        ProgressBar {
-                            Layout.fillWidth: true
-                            value: App.benchmarkProgress / 100.0
-                            background: Rectangle { color: Theme.inputBg; radius: 3 }
-                            contentItem: Item {
-                                Rectangle {
-                                    width: parent.width * parent.parent.value
-                                    height: parent.height; radius: 3
-                                    color: Theme.accent
-                                }
-                            }
-                        }
-                        Text {
-                            Layout.fillWidth: true
-                            text: App.benchmarkStatus
-                            color: Theme.textMuted; font.pixelSize: 10
-                            wrapMode: Text.Wrap; elide: Text.ElideRight
-                        }
-                    }
-
-                    // Pasadas por perfil
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 8
-                        enabled: !App.benchmarkRunning
-                        Text {
-                            text: "Pasadas por perfil"
-                            color: Theme.textSecondary; font.pixelSize: 12
-                            Layout.fillWidth: true
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        SpinBox {
-                            id: passesSpin
-                            from: 1; to: 20; editable: true
-                            value: Math.min(20, Math.max(1, parseInt(App.readSetting("benchPasses", "1")) || 1))
-                            Layout.preferredWidth: 144
-                            Layout.minimumWidth: 144
-                            onValueModified: App.writeSetting("benchPasses", value)
-                        }
-                    }
-                    Text {
-                        Layout.fillWidth: true
-                        visible: customMode.checked && root.customId === "agent_efficiency_e2e_v1"
-                        text: "La suite E2E recomienda 3 pasadas. Compará perfiles con Honey ON/OFF; "
-                              + "comparison.json agrupa estabilidad, mediana de calidad y tiempo. "
-                              + "Revisá también archivos tocados, tool calls, tokens y reparaciones."
-                        color: Theme.textMuted
-                        font.pixelSize: 10
-                        wrapMode: Text.Wrap
-                    }
-                    Text {
-                        Layout.fillWidth: true
-                        visible: customMode.checked && root.selectedCustomPromptCount() === 1
-                        text: "Esta suite tiene 1 ítem: sirve como smoke test, no para rankear calidad. "
-                              + "Para comparar perfiles usá una suite de al menos 10–20 ítems."
-                        color: Theme.warnText
-                        font.pixelSize: 10
-                        wrapMode: Text.Wrap
-                    }
-                    Text {
-                        Layout.fillWidth: true
-                        visible: customMode.checked && root.selectedCustomPromptCount() > 0
-                        text: "T First mide desde el primer prompt; T Total incluye setup y carga. "
-                              + "Con 2+ pasadas, la comparación usa la mediana caliente (pasadas 2+); la primera queda separada como fría."
-                        color: Theme.textMuted
-                        font.pixelSize: 10
-                        wrapMode: Text.Wrap
-                    }
-                    Text {
-                        Layout.fillWidth: true
-                        visible: customMode.checked && root.recommendedTimeoutSec() > 0
-                                 && timeoutSpin.value > 0
-                                 && timeoutSpin.value < root.recommendedTimeoutSec()
-                        text: "Esta suite recomienda al menos "
-                              + root.recommendedTimeoutSec()
-                              + " s. El timeout actual puede cortar una reparación y mostrar un resultado parcial."
-                        color: Theme.warnText
-                        font.pixelSize: 10
-                        wrapMode: Text.Wrap
-                    }
-
-                    // Timeout duro opcional por corrida (wall-clock, segundos). 0 = sin límite.
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 8
-                        enabled: !App.benchmarkRunning
-                        Text {
-                            text: "Timeout (opcional)"
-                            color: Theme.textSecondary; font.pixelSize: 12
-                            Layout.fillWidth: true
-                            verticalAlignment: Text.AlignVCenter
-                            ToolTip.visible: timeoutHover.hovered
-                            ToolTip.delay: 400
-                            ToolTip.text: "Tiempo máximo por corrida (segundos). Si una corrida lo supera, se corta SOLO esa con 'Error de timeout' y sigue con las demás. 0 = sin límite."
-                            HoverHandler { id: timeoutHover }
-                        }
-                        SpinBox {
-                            id: timeoutSpin
-                            from: 0; to: 7200; stepSize: 30; editable: true
-                            value: Math.min(7200, Math.max(0, parseInt(App.readSetting("benchTimeout", "0")) || 0))
-                            Layout.preferredWidth: 144
-                            Layout.minimumWidth: 144
-                            textFromValue: function(v) { return v === 0 ? "—" : v + " s" }
-                            valueFromText: function(t) { const n = parseInt(t); return isNaN(n) ? 0 : n }
-                            onValueModified: App.writeSetting("benchTimeout", value)
-                        }
-                    }
-
-                    // Benchmark de concurrencia real: mantiene el mismo modelo
-                    // y dispara requests simultáneas contra variantes de slots.
-                    Rectangle {
-                        Layout.fillWidth: true
-                        implicitHeight: concurrencyColumn.implicitHeight + 20
-                        color: Theme.inputBg
-                        radius: 6
-                        border.color: Theme.divider
-                        ColumnLayout {
-                            id: concurrencyColumn
-                            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 10 }
-                            spacing: 6
-                            Text {
-                                text: "CONCURRENCIA REAL"
-                                color: Theme.textSecondary; font.pixelSize: 10; font.bold: true
-                            }
-                            Text {
-                                Layout.fillWidth: true
-                                text: "Crea copias del perfil y compara requests simultáneas por slot."
-                                color: Theme.textMuted; font.pixelSize: 10; wrapMode: Text.Wrap
-                            }
-                            RowLayout {
-                                Layout.fillWidth: true
-                                enabled: !App.benchmarkRunning
-                                spacing: 10
-                                ColumnLayout {
-                                    Layout.fillWidth: true
-                                    Text { text: "Slots mínimos"; color: Theme.textSecondary; font.pixelSize: 11 }
-                                    SpinBox {
-                                        id: concurrencyMin
-                                        from: 1; to: 16; value: 1; editable: true
-                                        Layout.fillWidth: true
-                                        Layout.minimumWidth: 86
-                                        contentItem: TextInput {
-                                            text: concurrencyMin.displayText
-                                            color: Theme.textPrimary
-                                            font.pixelSize: 13
-                                            horizontalAlignment: Text.AlignHCenter
-                                            verticalAlignment: Text.AlignVCenter
-                                            leftPadding: 20; rightPadding: 20
-                                            readOnly: !concurrencyMin.editable
-                                            validator: concurrencyMin.validator
-                                        }
-                                    }
-                                }
-                                ColumnLayout {
-                                    Layout.fillWidth: true
-                                    Text { text: "Slots máximos"; color: Theme.textSecondary; font.pixelSize: 11 }
-                                    SpinBox {
-                                        id: concurrencyMax
-                                        from: 1; to: 16; value: 3; editable: true
-                                        Layout.fillWidth: true
-                                        Layout.minimumWidth: 86
-                                        contentItem: TextInput {
-                                            text: concurrencyMax.displayText
-                                            color: Theme.textPrimary
-                                            font.pixelSize: 13
-                                            horizontalAlignment: Text.AlignHCenter
-                                            verticalAlignment: Text.AlignVCenter
-                                            leftPadding: 20; rightPadding: 20
-                                            readOnly: !concurrencyMax.editable
-                                            validator: concurrencyMax.validator
-                                        }
-                                    }
-                                }
-                                ColumnLayout {
-                                    Layout.fillWidth: true
-                                    Text { text: "Requests"; color: Theme.textSecondary; font.pixelSize: 11 }
-                                    SpinBox {
-                                        id: concurrencyRequests
-                                        from: 2; to: 32; value: 4; editable: true
-                                        Layout.fillWidth: true
-                                        Layout.minimumWidth: 86
-                                        contentItem: TextInput {
-                                            text: concurrencyRequests.displayText
-                                            color: Theme.textPrimary
-                                            font.pixelSize: 13
-                                            horizontalAlignment: Text.AlignHCenter
-                                            verticalAlignment: Text.AlignVCenter
-                                            leftPadding: 20; rightPadding: 20
-                                            readOnly: !concurrencyRequests.editable
-                                            validator: concurrencyRequests.validator
-                                        }
-                                    }
-                                }
+                            spacing: 8
+                            LcButton {
+                                text: "Desmarcar todos"
+                                secondary: true
+                                enabled: root.selectedIds.length > 0 && !App.benchmarkRunning
+                                onClicked: root.selectedIds = []
                             }
                             LcButton {
-                                Layout.fillWidth: true
-                                text: "Medir concurrencia"
+                                text: "Seleccionar 🏆 benchmark (" + root.benchmarkMarkedIds().length + ")"
                                 secondary: true
-                                enabled: !App.benchmarkRunning && root.selectedIds.length === 1
+                                enabled: !App.benchmarkRunning && root.benchmarkMarkedIds().length > 0
                                 ToolTip.visible: hovered
-                                ToolTip.text: root.selectedIds.length === 1
-                                    ? "Compara 1..N slots con 4 requests simultáneas"
-                                    : "Seleccioná exactamente un perfil"
-                                onClicked: App.startConcurrencyBenchmark(root.selectedIds[0],
-                                    concurrencyMin.value, concurrencyMax.value,
-                                    concurrencyRequests.value, 128)
+                                ToolTip.text: "Selecciona todos los perfiles marcados como pendientes para HE0 → HE20 → BCB"
+                                onClicked: root.selectedIds = root.benchmarkMarkedIds()
+                            }
+                            LcButton {
+                                text: "Exportar CSV"
+                                secondary: true
+                                enabled: (App.benchmarkResults || []).length > 0
+                                onClicked: csvExportDialog.open()
                             }
                         }
-                    }
 
-                    // Medición reproducible del servidor: separada del score E2E
-                    // porque PP/TG/TTFT y la calidad responden preguntas distintas.
-                    Rectangle {
-                        Layout.fillWidth: true
-                        implicitHeight: serverSpeedColumn.implicitHeight + 20
-                        color: Theme.inputBg
-                        radius: 6
-                        border.color: Theme.divider
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            Layout.minimumHeight: 120
+                            color: Theme.inputBg
+                            radius: 6
+                            border.color: Theme.divider; border.width: 1
+                            clip: true
+
+                            ListView {
+                                id: profileList
+                                anchors { fill: parent; margins: 4 }
+                                // Menú ordenado: favoritos (★) arriba; displayName = alias - name.
+                                property var launchMenu: App.profileManager.launchProfilesForMenu()
+                                Connections {
+                                    target: App.profileManager
+                                    function onLaunchesChanged() {
+                                        profileList.launchMenu = App.profileManager.launchProfilesForMenu()
+                                    }
+                                }
+                                model: launchMenu
+                                spacing: 2; clip: true
+                                boundsBehavior: Flickable.StopAtBounds
+                                flickableDirection: Flickable.VerticalFlick
+
+                                delegate: Item {
+                                    id: pd
+                                    required property var modelData
+                                    width: profileList.width; height: 32
+                                    property string profileId: modelData.id ?? ""
+                                    property bool isSelected: root.selectedIds.indexOf(profileId) >= 0
+
+                                    Rectangle {
+                                        anchors.fill: parent; radius: 4
+                                        color: pd.isSelected ? Theme.highlight
+                                             : (pdHover.containsMouse ? Theme.hoverBg : "transparent")
+                                    }
+                                    HoverHandler { id: pdHover }
+
+                                    Row {
+                                        anchors { left: parent.left; leftMargin: 8; verticalCenter: parent.verticalCenter }
+                                        spacing: 6
+                                        LcCheckBox {
+                                            checked: pd.isSelected
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            onToggled: root.toggleProfile(pd.profileId)
+                                        }
+                                        Text {
+                                            id: profileNameText
+                                            text: pd.modelData.displayName || pd.modelData.name || "(sin nombre)"
+                                            color: Theme.textPrimary; font.pixelSize: 12
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            width: profileList.width - 60; elide: Text.ElideRight
+                                            ToolTip.visible: pdHover.hovered
+                                            ToolTip.delay: 350
+                                            ToolTip.timeout: 5000
+                                            ToolTip.text: text
+                                        }
+                                    }
+                                    TapHandler { onTapped: root.toggleProfile(pd.profileId) }
+                                }
+                                ScrollBar.vertical: LcScrollBar {}
+                            }
+                        }
+
+                        // Progress bar (visible durante benchmark)
                         ColumnLayout {
-                            id: serverSpeedColumn
-                            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 10 }
-                            spacing: 6
-                            Text {
-                                text: "SERVER SPEED v1"
-                                color: Theme.accent; font.pixelSize: 10; font.bold: true
+                            Layout.fillWidth: true
+                            spacing: 4
+                            visible: App.benchmarkRunning
+
+                            ProgressBar {
+                                Layout.fillWidth: true
+                                value: App.benchmarkProgress / 100.0
+                                background: Rectangle { color: Theme.inputBg; radius: 3 }
+                                contentItem: Item {
+                                    Rectangle {
+                                        width: parent.width * parent.parent.value
+                                        height: parent.height; radius: 3
+                                        color: Theme.accent
+                                    }
+                                }
                             }
                             Text {
                                 Layout.fillWidth: true
-                                text: "Corpus fijo por categoría: PP/TG, TTFT, ITL, cold/warm, prefill 2K–64K y concurrencia. Guarda condiciones y hash para comparar máquinas."
-                                color: Theme.textMuted; font.pixelSize: 10; wrapMode: Text.Wrap
+                                text: App.benchmarkStatus
+                                color: Theme.textMuted; font.pixelSize: 10
+                                wrapMode: Text.Wrap; elide: Text.ElideRight
                             }
-                            RowLayout {
-                                Layout.fillWidth: true; enabled: !App.benchmarkRunning; spacing: 8
-                                Text { text: "Pasadas"; color: Theme.textSecondary; font.pixelSize: 11; Layout.fillWidth: true }
-                                SpinBox {
-                                    id: serverSpeedPasses
-                                    from: 1; to: 100; editable: true
-                                    value: Math.min(100, Math.max(1, parseInt(App.readSetting("serverSpeedPasses", "5")) || 5))
-                                    Layout.preferredWidth: 76
-                                    onValueModified: App.writeSetting("serverSpeedPasses", value)
-                                }
-                                Text { text: "Warmup"; color: Theme.textSecondary; font.pixelSize: 11 }
-                                SpinBox {
-                                    id: serverSpeedWarmup
-                                    from: 0; to: 10; editable: true
-                                    value: isNaN(parseInt(App.readSetting("serverSpeedWarmup", "1"))) ? 1
-                                           : Math.min(10, Math.max(0, parseInt(App.readSetting("serverSpeedWarmup", "1"))))
-                                    Layout.preferredWidth: 76
-                                    onValueModified: App.writeSetting("serverSpeedWarmup", value)
-                                }
+                        }
+
+                        // Pasadas por perfil
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+                            enabled: !App.benchmarkRunning
+                            Text {
+                                text: "Pasadas por perfil"
+                                color: Theme.textSecondary; font.pixelSize: 12
+                                Layout.fillWidth: true
+                                verticalAlignment: Text.AlignVCenter
                             }
-                            RowLayout {
-                                Layout.fillWidth: true; enabled: !App.benchmarkRunning; spacing: 8
-                                Text { text: "Prefill máx."; color: Theme.textSecondary; font.pixelSize: 11; Layout.fillWidth: true }
-                                SpinBox {
-                                    id: serverSpeedPrefill
-                                    from: 0; to: 65536; stepSize: 2048; editable: true
-                                    value: isNaN(parseInt(App.readSetting("serverSpeedPrefill", "65536"))) ? 65536
-                                           : Math.min(65536, Math.max(0, parseInt(App.readSetting("serverSpeedPrefill", "65536"))))
-                                    Layout.preferredWidth: 100
-                                    textFromValue: function(v) { return v === 0 ? "off" : v + " tok" }
-                                    valueFromText: function(t) { const n = parseInt(t); return isNaN(n) ? 0 : n }
-                                    onValueModified: App.writeSetting("serverSpeedPrefill", value)
-                                }
-                                LcCheckBox {
-                                    id: serverSpeedPrefillEnabled
-                                    text: "PP"; checked: App.readSetting("serverSpeedIncludePrefill", "true") !== "false"
-                                    onToggled: App.writeSetting("serverSpeedIncludePrefill", checked ? "true" : "false")
-                                }
-                                LcCheckBox {
-                                    id: serverSpeedConcurrencyEnabled
-                                    text: "Slots"; checked: App.readSetting("serverSpeedIncludeConcurrency", "true") !== "false"
-                                    onToggled: App.writeSetting("serverSpeedIncludeConcurrency", checked ? "true" : "false")
-                                }
+                            LcSpinBox {
+                                id: passesSpin
+                                from: 1; to: 20; editable: true
+                                value: Math.min(20, Math.max(1, parseInt(App.readSetting("benchPasses", "1")) || 1))
+                                Layout.preferredWidth: 144
+                                Layout.minimumWidth: 144
+                                onValueModified: App.writeSetting("benchPasses", value)
                             }
-                            RowLayout {
-                                Layout.fillWidth: true; enabled: !App.benchmarkRunning; spacing: 8
-                                Text { text: "Slots / req."; color: Theme.textSecondary; font.pixelSize: 11; Layout.fillWidth: true }
-                                SpinBox {
-                                    id: serverSpeedSlots
-                                    from: 1; to: 16; editable: true
-                                    value: Math.min(16, Math.max(1, parseInt(App.readSetting("serverSpeedSlots", "4")) || 4))
-                                    Layout.preferredWidth: 68
-                                    onValueModified: App.writeSetting("serverSpeedSlots", value)
-                                }
-                                SpinBox {
-                                    id: serverSpeedRequests
-                                    from: 1; to: 32; editable: true
-                                    value: Math.min(32, Math.max(1, parseInt(App.readSetting("serverSpeedRequests", "4")) || 4))
-                                    Layout.preferredWidth: 68
-                                    onValueModified: App.writeSetting("serverSpeedRequests", value)
-                                }
+                        }
+                        Text {
+                            Layout.fillWidth: true
+                            visible: customMode.checked && root.customId === "agent_efficiency_e2e_v1"
+                            text: "La suite E2E recomienda 3 pasadas. Compará perfiles con Honey ON/OFF; "
+                                  + "comparison.json agrupa estabilidad, mediana de calidad y tiempo. "
+                                  + "Revisá también archivos tocados, tool calls, tokens y reparaciones."
+                            color: Theme.textMuted
+                            font.pixelSize: 10
+                            wrapMode: Text.Wrap
+                        }
+                        Text {
+                            Layout.fillWidth: true
+                            visible: customMode.checked && root.selectedCustomPromptCount() === 1
+                            text: "Esta suite tiene 1 ítem: sirve como smoke test, no para rankear calidad. "
+                                  + "Para comparar perfiles usá una suite de al menos 10–20 ítems."
+                            color: Theme.warnText
+                            font.pixelSize: 10
+                            wrapMode: Text.Wrap
+                        }
+                        Text {
+                            Layout.fillWidth: true
+                            visible: customMode.checked && root.selectedCustomPromptCount() > 0
+                            text: "T First mide desde el primer prompt; T Total incluye setup y carga. "
+                                  + "Con 2+ pasadas, la comparación usa la mediana caliente (pasadas 2+); la primera queda separada como fría."
+                            color: Theme.textMuted
+                            font.pixelSize: 10
+                            wrapMode: Text.Wrap
+                        }
+                        Text {
+                            Layout.fillWidth: true
+                            visible: customMode.checked && root.recommendedTimeoutSec() > 0
+                                     && timeoutSpin.value > 0
+                                     && timeoutSpin.value < root.recommendedTimeoutSec()
+                            text: "Esta suite recomienda al menos "
+                                  + root.recommendedTimeoutSec()
+                                  + " s. El timeout actual puede cortar una reparación y mostrar un resultado parcial."
+                            color: Theme.warnText
+                            font.pixelSize: 10
+                            wrapMode: Text.Wrap
+                        }
+
+                        // Timeout duro opcional por corrida (wall-clock, segundos). 0 = sin límite.
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+                            enabled: !App.benchmarkRunning
+                            Text {
+                                text: "Timeout (opcional)"
+                                color: Theme.textSecondary; font.pixelSize: 12
+                                Layout.fillWidth: true
+                                verticalAlignment: Text.AlignVCenter
+                                ToolTip.visible: timeoutHover.hovered
+                                ToolTip.delay: 400
+                                ToolTip.text: "Tiempo máximo por corrida (segundos). Si una corrida lo supera, se corta SOLO esa con 'Error de timeout' y sigue con las demás. 0 = sin límite."
+                                HoverHandler { id: timeoutHover }
                             }
-                            RowLayout {
-                                Layout.fillWidth: true; spacing: 6
+                            LcSpinBox {
+                                id: timeoutSpin
+                                from: 0; to: 7200; stepSize: 30; editable: true
+                                value: Math.min(7200, Math.max(0, parseInt(App.readSetting("benchTimeout", "0")) || 0))
+                                Layout.preferredWidth: 144
+                                Layout.minimumWidth: 144
+                                textFromValue: function(v) { return v === 0 ? "—" : v + " s" }
+                                valueFromText: function(t) { const n = parseInt(t); return isNaN(n) ? 0 : n }
+                                onValueModified: App.writeSetting("benchTimeout", value)
+                            }
+                        }
+
+                        // Benchmark de concurrencia real: mantiene el mismo modelo
+                        // y dispara requests simultáneas contra variantes de slots.
+                        Rectangle {
+                            Layout.fillWidth: true
+                            implicitHeight: concurrencyColumn.implicitHeight + 20
+                            color: Theme.inputBg
+                            radius: 6
+                            border.color: Theme.divider
+                            ColumnLayout {
+                                id: concurrencyColumn
+                                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 10 }
+                                spacing: 6
+                                Text {
+                                    text: "CONCURRENCIA REAL"
+                                    color: Theme.textSecondary; font.pixelSize: 10; font.bold: true
+                                }
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: "Crea copias del perfil y compara requests simultáneas por slot."
+                                    color: Theme.textMuted; font.pixelSize: 10; wrapMode: Text.Wrap
+                                }
+                                GridLayout {
+                                    Layout.fillWidth: true
+                                    // Tres campos no entran en el panel angosto: bajan a 2 o 1 columnas.
+                                    columns: Math.max(1, Math.min(3, Math.floor((width + columnSpacing) / (96 + columnSpacing))))
+                                    columnSpacing: 8; rowSpacing: 8
+                                    enabled: !App.benchmarkRunning
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        Text { text: "Slots mínimos"; color: Theme.textSecondary; font.pixelSize: 11 }
+                                        LcSpinBox {
+                                            id: concurrencyMin
+                                            from: 1; to: 16; value: 1; editable: true
+                                            Layout.fillWidth: true
+                                            Layout.minimumWidth: 96
+                                            contentItem: TextInput {
+                                                text: concurrencyMin.displayText
+                                                color: Theme.textPrimary
+                                                font.pixelSize: 13
+                                                horizontalAlignment: Text.AlignHCenter
+                                                verticalAlignment: Text.AlignVCenter
+                                                leftPadding: 20; rightPadding: 20
+                                                readOnly: !concurrencyMin.editable
+                                                validator: concurrencyMin.validator
+                                            }
+                                        }
+                                    }
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        Text { text: "Slots máximos"; color: Theme.textSecondary; font.pixelSize: 11 }
+                                        LcSpinBox {
+                                            id: concurrencyMax
+                                            from: 1; to: 16; value: 3; editable: true
+                                            Layout.fillWidth: true
+                                            Layout.minimumWidth: 96
+                                            contentItem: TextInput {
+                                                text: concurrencyMax.displayText
+                                                color: Theme.textPrimary
+                                                font.pixelSize: 13
+                                                horizontalAlignment: Text.AlignHCenter
+                                                verticalAlignment: Text.AlignVCenter
+                                                leftPadding: 20; rightPadding: 20
+                                                readOnly: !concurrencyMax.editable
+                                                validator: concurrencyMax.validator
+                                            }
+                                        }
+                                    }
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        Text { text: "Requests"; color: Theme.textSecondary; font.pixelSize: 11 }
+                                        LcSpinBox {
+                                            id: concurrencyRequests
+                                            from: 2; to: 32; value: 4; editable: true
+                                            Layout.fillWidth: true
+                                            Layout.minimumWidth: 96
+                                            contentItem: TextInput {
+                                                text: concurrencyRequests.displayText
+                                                color: Theme.textPrimary
+                                                font.pixelSize: 13
+                                                horizontalAlignment: Text.AlignHCenter
+                                                verticalAlignment: Text.AlignVCenter
+                                                leftPadding: 20; rightPadding: 20
+                                                readOnly: !concurrencyRequests.editable
+                                                validator: concurrencyRequests.validator
+                                            }
+                                        }
+                                    }
+                                }
                                 LcButton {
                                     Layout.fillWidth: true
-                                    text: "Medir servidor"
+                                    text: "Medir concurrencia"
                                     secondary: true
-                                    enabled: !App.benchmarkRunning && root.selectedIds.length > 0
-                                    onClicked: App.startServerSpeedBenchmark(root.selectedIds,
-                                        serverSpeedPasses.value, serverSpeedWarmup.value,
-                                        serverSpeedPrefillEnabled.checked,
-                                        serverSpeedConcurrencyEnabled.checked,
-                                        serverSpeedPrefill.value, serverSpeedSlots.value,
-                                        serverSpeedRequests.value)
-                                }
-                                LcButton {
-                                    Layout.fillWidth: true
-                                    text: "A/B + A/A"
-                                    secondary: true
-                                    enabled: !App.benchmarkRunning && root.selectedIds.length === 2
+                                    enabled: !App.benchmarkRunning && root.selectedIds.length === 1
                                     ToolTip.visible: hovered
-                                    ToolTip.text: "Compara los dos perfiles seleccionados con orden AB/BA y control A/A"
-                                    onClicked: App.startServerSpeedABBenchmark(root.selectedIds[0], root.selectedIds[1],
-                                        Math.max(2, serverSpeedPasses.value * 2), serverSpeedWarmup.value)
+                                    ToolTip.text: root.selectedIds.length === 1
+                                        ? "Compara 1..N slots con 4 requests simultáneas"
+                                        : "Seleccioná exactamente un perfil"
+                                    onClicked: App.startConcurrencyBenchmark(root.selectedIds[0],
+                                        concurrencyMin.value, concurrencyMax.value,
+                                        concurrencyRequests.value, 128)
                                 }
                             }
                         }
-                    }
 
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 8
-
-                        LcButton {
+                        // Medición reproducible del servidor: separada del score E2E
+                        // porque PP/TG/TTFT y la calidad responden preguntas distintas.
+                        Rectangle {
                             Layout.fillWidth: true
-                            text: App.benchmarkRunning ? "Cancelar" : "Iniciar benchmark"
-                            danger: App.benchmarkRunning
-                            enabled: App.benchmarkRunning
-                                     || (root.selectedIds.length > 0
-                                         && (stageMode.checked
-                                             ? root.stageReady()
-                                             : ((!customMode.checked || root.customId !== "")
-                                                 || root.proBenchmarkIds.length > 0)))
-                            onClicked: {
-                                if (App.benchmarkRunning) {
-                                    App.cancelBenchmark()
-                                } else if (stageMode.checked) {
-                                    App.startThreeStageBenchmark(root.selectedIds,
-                                                                 root.stageHe0Id,
-                                                                 root.stageHe20Id,
-                                                                 root.stageBcbId,
-                                                                 passesSpin.value,
-                                                                 agentTarget.checked ? "agent" : "model",
-                                                                 timeoutSpin.value,
-                                                                 agentTarget.checked ? agentProfileCombo.currentValue : "")
-                                } else if (root.proBenchmarkIds.length > 0) {
-                                    App.startProBenchmarks(root.selectedIds, root.proBenchmarkIds, passesSpin.value,
+                            implicitHeight: serverSpeedColumn.implicitHeight + 20
+                            color: Theme.inputBg
+                            radius: 6
+                            border.color: Theme.divider
+                            ColumnLayout {
+                                id: serverSpeedColumn
+                                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 10 }
+                                spacing: 6
+                                Text {
+                                    text: "SERVER SPEED v1"
+                                    color: Theme.accent; font.pixelSize: 10; font.bold: true
+                                }
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: "Corpus fijo por categoría: PP/TG, TTFT, ITL, cold/warm, prefill 2K–64K y concurrencia. Guarda condiciones y hash para comparar máquinas."
+                                    color: Theme.textMuted; font.pixelSize: 10; wrapMode: Text.Wrap
+                                }
+                                // Grilla etiqueta | campo: en el panel angosto dos campos por fila
+                                // pisaban las etiquetas.
+                                GridLayout {
+                                    Layout.fillWidth: true; enabled: !App.benchmarkRunning
+                                    columns: 2; columnSpacing: 8; rowSpacing: 6
+                                    Text { text: "Pasadas"; color: Theme.textSecondary; font.pixelSize: 11; Layout.fillWidth: true; elide: Text.ElideRight }
+                                    LcSpinBox {
+                                        id: serverSpeedPasses
+                                        from: 1; to: 100; editable: true
+                                        value: Math.min(100, Math.max(1, parseInt(App.readSetting("serverSpeedPasses", "5")) || 5))
+                                        Layout.preferredWidth: 130
+                                        onValueModified: App.writeSetting("serverSpeedPasses", value)
+                                    }
+                                    Text { text: "Warmup"; color: Theme.textSecondary; font.pixelSize: 11; Layout.fillWidth: true; elide: Text.ElideRight }
+                                    LcSpinBox {
+                                        id: serverSpeedWarmup
+                                        from: 0; to: 10; editable: true
+                                        value: isNaN(parseInt(App.readSetting("serverSpeedWarmup", "1"))) ? 1
+                                               : Math.min(10, Math.max(0, parseInt(App.readSetting("serverSpeedWarmup", "1"))))
+                                        Layout.preferredWidth: 130
+                                        onValueModified: App.writeSetting("serverSpeedWarmup", value)
+                                    }
+                                    Text { text: "Prefill máx."; color: Theme.textSecondary; font.pixelSize: 11; Layout.fillWidth: true; elide: Text.ElideRight }
+                                    LcSpinBox {
+                                        id: serverSpeedPrefill
+                                        from: 0; to: 65536; stepSize: 2048; editable: true
+                                        value: isNaN(parseInt(App.readSetting("serverSpeedPrefill", "65536"))) ? 65536
+                                               : Math.min(65536, Math.max(0, parseInt(App.readSetting("serverSpeedPrefill", "65536"))))
+                                        Layout.preferredWidth: 130
+                                        textFromValue: function(v) { return v === 0 ? "off" : v + " tok" }
+                                        valueFromText: function(t) { const n = parseInt(t); return isNaN(n) ? 0 : n }
+                                        onValueModified: App.writeSetting("serverSpeedPrefill", value)
+                                    }
+                                    Text { text: "Slots"; color: Theme.textSecondary; font.pixelSize: 11; Layout.fillWidth: true; elide: Text.ElideRight }
+                                    LcSpinBox {
+                                        id: serverSpeedSlots
+                                        from: 1; to: 16; editable: true
+                                        value: Math.min(16, Math.max(1, parseInt(App.readSetting("serverSpeedSlots", "4")) || 4))
+                                        Layout.preferredWidth: 130
+                                        onValueModified: App.writeSetting("serverSpeedSlots", value)
+                                    }
+                                    Text { text: "Requests"; color: Theme.textSecondary; font.pixelSize: 11; Layout.fillWidth: true; elide: Text.ElideRight }
+                                    LcSpinBox {
+                                        id: serverSpeedRequests
+                                        from: 1; to: 32; editable: true
+                                        value: Math.min(32, Math.max(1, parseInt(App.readSetting("serverSpeedRequests", "4")) || 4))
+                                        Layout.preferredWidth: 130
+                                        onValueModified: App.writeSetting("serverSpeedRequests", value)
+                                    }
+                                }
+                                Flow {
+                                    Layout.fillWidth: true; enabled: !App.benchmarkRunning; spacing: 12
+                                    LcCheckBox {
+                                        id: serverSpeedPrefillEnabled
+                                        text: "Medir prefill (PP)"; checked: App.readSetting("serverSpeedIncludePrefill", "true") !== "false"
+                                        onToggled: App.writeSetting("serverSpeedIncludePrefill", checked ? "true" : "false")
+                                    }
+                                    LcCheckBox {
+                                        id: serverSpeedConcurrencyEnabled
+                                        text: "Medir concurrencia"; checked: App.readSetting("serverSpeedIncludeConcurrency", "true") !== "false"
+                                        onToggled: App.writeSetting("serverSpeedIncludeConcurrency", checked ? "true" : "false")
+                                    }
+                                }
+                                ColumnLayout {
+                                    Layout.fillWidth: true; spacing: 6
+                                    LcButton {
+                                        Layout.fillWidth: true
+                                        text: "Medir servidor"
+                                        secondary: true
+                                        enabled: !App.benchmarkRunning && root.selectedIds.length > 0
+                                        onClicked: App.startServerSpeedBenchmark(root.selectedIds,
+                                            serverSpeedPasses.value, serverSpeedWarmup.value,
+                                            serverSpeedPrefillEnabled.checked,
+                                            serverSpeedConcurrencyEnabled.checked,
+                                            serverSpeedPrefill.value, serverSpeedSlots.value,
+                                            serverSpeedRequests.value)
+                                    }
+                                    LcButton {
+                                        Layout.fillWidth: true
+                                        text: "A/B + A/A"
+                                        secondary: true
+                                        enabled: !App.benchmarkRunning && root.selectedIds.length === 2
+                                        ToolTip.visible: hovered
+                                        ToolTip.text: "Compara los dos perfiles seleccionados con orden AB/BA y control A/A"
+                                        onClicked: App.startServerSpeedABBenchmark(root.selectedIds[0], root.selectedIds[1],
+                                            Math.max(2, serverSpeedPasses.value * 2), serverSpeedWarmup.value)
+                                    }
+                                }
+                            }
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+
+                            LcButton {
+                                Layout.fillWidth: true
+                                text: App.benchmarkRunning ? "Cancelar" : "Iniciar benchmark"
+                                danger: App.benchmarkRunning
+                                enabled: App.benchmarkRunning
+                                         || (root.selectedIds.length > 0
+                                             && (stageMode.checked
+                                                 ? root.stageReady()
+                                                 : ((!customMode.checked || root.customId !== "")
+                                                     || root.proBenchmarkIds.length > 0)))
+                                onClicked: {
+                                    if (App.benchmarkRunning) {
+                                        App.cancelBenchmark()
+                                    } else if (stageMode.checked) {
+                                        App.startThreeStageBenchmark(root.selectedIds,
+                                                                     root.stageHe0Id,
+                                                                     root.stageHe20Id,
+                                                                     root.stageBcbId,
+                                                                     passesSpin.value,
+                                                                     agentTarget.checked ? "agent" : "model",
+                                                                     timeoutSpin.value,
+                                                                     agentTarget.checked ? agentProfileCombo.currentValue : "")
+                                    } else if (root.proBenchmarkIds.length > 0) {
+                                        App.startProBenchmarks(root.selectedIds, root.proBenchmarkIds, passesSpin.value,
+                                                               agentTarget.checked ? "agent" : "model", timeoutSpin.value,
+                                                               agentTarget.checked ? agentProfileCombo.currentValue : "")
+                                    } else if (customMode.checked) {
+                                        if (root.customId !== "")
+                                            App.startCustomBenchmark(root.selectedIds, root.customId, passesSpin.value,
+                                                                     agentTarget.checked ? "agent" : "model", timeoutSpin.value,
+                                                                     agentTarget.checked ? agentProfileCombo.currentValue : "")
+                                    } else {
+                                        App.startBenchmark(root.selectedIds, shortMode.checked ? "short" : "full", passesSpin.value,
                                                            agentTarget.checked ? "agent" : "model", timeoutSpin.value,
                                                            agentTarget.checked ? agentProfileCombo.currentValue : "")
-                                } else if (customMode.checked) {
-                                    if (root.customId !== "")
-                                        App.startCustomBenchmark(root.selectedIds, root.customId, passesSpin.value,
-                                                                 agentTarget.checked ? "agent" : "model", timeoutSpin.value,
-                                                                 agentTarget.checked ? agentProfileCombo.currentValue : "")
-                                } else {
-                                    App.startBenchmark(root.selectedIds, shortMode.checked ? "short" : "full", passesSpin.value,
-                                                       agentTarget.checked ? "agent" : "model", timeoutSpin.value,
-                                                       agentTarget.checked ? agentProfileCombo.currentValue : "")
+                                    }
                                 }
                             }
-                        }
 
+                        }
                     }
                 }
             }

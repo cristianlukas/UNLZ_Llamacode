@@ -461,6 +461,8 @@ qt_add_qml_module(LlamaCode
         qml/components/LcButton.qml
         qml/components/LcComboBox.qml
         qml/components/LcCheckBox.qml
+        qml/components/LcSpinBox.qml
+        qml/components/LcRadioButton.qml
         qml/components/LcSwitch.qml
         qml/components/LcTextField.qml
         qml/components/LcDialog.qml
@@ -717,6 +719,7 @@ if (BUILD_TESTS)
         tests/qml/LcButton.qml
         tests/qml/LcTextField.qml
         tests/qml/tst_color_picker.qml
+        tests/qml/tst_lc_controls.qml
         tests/qml/tst_navigation_policy.qml
         tests/qml/tst_setup_wizard_policy.qml
         tests/qml/tst_lazy_page_loader.qml
@@ -764,6 +767,8 @@ if (BUILD_TESTS)
         tests/qml/LcSwitch.qml
         qml/components/LcScrollBar.qml
         qml/components/LcCheckBox.qml
+        qml/components/LcSpinBox.qml
+        qml/components/LcRadioButton.qml
         tests/qml/PageHeader.qml
     )
     add_custom_command(
@@ -808,6 +813,13 @@ if (BUILD_TESTS)
     set_tests_properties(qml_color_picker PROPERTIES
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1"
         FAIL_REGULAR_EXPRESSION "FAIL |ReferenceError|Unable to assign")
+
+    add_test(NAME qml_lc_controls
+             COMMAND "${_lc_qt_bin}/qml" -I "${LC_QML_HARNESS_DIR}"
+                     "${LC_QML_HARNESS_DIR}/tst_lc_controls.qml")
+    set_tests_properties(qml_lc_controls PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1"
+        FAIL_REGULAR_EXPRESSION "FAIL |ReferenceError|TypeError|Unable to assign|is not a type")
 
     add_test(NAME qml_navigation_policy
              COMMAND "${_lc_qt_bin}/qml" -I "${LC_QML_HARNESS_DIR}"

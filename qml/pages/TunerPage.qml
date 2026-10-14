@@ -319,7 +319,7 @@ Item {
                                 color: Theme.textSecondary; font.pixelSize: 12
                                 Layout.fillWidth: true
                             }
-                            SpinBox {
+                            LcSpinBox {
                                 id: prefillSpin
                                 from: 0; to: 32768; stepSize: 512
                                 value: 4096
@@ -333,7 +333,7 @@ Item {
                                 color: Theme.textSecondary; font.pixelSize: 12
                                 Layout.fillWidth: true
                             }
-                            SpinBox {
+                            LcSpinBox {
                                 id: predictSpin
                                 from: 16; to: 2048; stepSize: 32
                                 value: 256
@@ -347,7 +347,7 @@ Item {
                                 color: Theme.textSecondary; font.pixelSize: 12
                                 Layout.fillWidth: true
                             }
-                            SpinBox {
+                            LcSpinBox {
                                 id: trialsSpin
                                 from: 2; to: 100; stepSize: 2
                                 value: 24
@@ -361,7 +361,7 @@ Item {
                                 color: Theme.textSecondary; font.pixelSize: 12
                                 Layout.fillWidth: true
                             }
-                            SpinBox {
+                            LcSpinBox {
                                 id: qualitySpin
                                 from: 0; to: 100; stepSize: 5
                                 value: 60

@@ -1312,9 +1312,9 @@ Item {
                             Layout.fillWidth: true
                             spacing: 12
                             Text { text: "Máx. iteraciones"; color: Theme.textSecondary; font.pixelSize: 11 }
-                            SpinBox { id: loopMaxIterations; from: 1; to: 1000; value: 5; editable: true }
+                            LcSpinBox { id: loopMaxIterations; from: 1; to: 1000; value: 5; editable: true }
                             Text { text: "Máx. segundos (0 = sin límite)"; color: Theme.textSecondary; font.pixelSize: 11 }
-                            SpinBox { id: loopMaxSeconds; from: 0; to: 86400; stepSize: 3600; value: 0; editable: true }
+                            LcSpinBox { id: loopMaxSeconds; from: 0; to: 86400; stepSize: 3600; value: 0; editable: true }
                         }
                     }
 
@@ -1439,11 +1439,11 @@ Item {
                         Layout.fillWidth: true
                         spacing: 12
                         Text { text: "Timeout (s)"; color: Theme.textSecondary; font.pixelSize: 11 }
-                        SpinBox { id: timeoutSec; from: 30; to: 3600; value: 300; editable: true }
+                        LcSpinBox { id: timeoutSec; from: 30; to: 3600; value: 300; editable: true }
                         Text { text: "Máx. acciones"; color: Theme.textSecondary; font.pixelSize: 11 }
-                        SpinBox { id: maxActions; from: 1; to: 500; value: 50; editable: true }
+                        LcSpinBox { id: maxActions; from: 1; to: 500; value: 50; editable: true }
                         Text { text: "Reintentos"; color: Theme.textSecondary; font.pixelSize: 11 }
-                        SpinBox { id: maxRetries; from: 0; to: 10; value: 2; editable: true }
+                        LcSpinBox { id: maxRetries; from: 0; to: 10; value: 2; editable: true }
                     }
 
                     // ── Datos por lote (RPA data-driven): mismo flujo, una corrida
@@ -1471,9 +1471,9 @@ Item {
                         Layout.fillWidth: true
                         spacing: 12
                         Text { text: "Formato"; color: Theme.textSecondary; font.pixelSize: 11 }
-                        ComboBox { id: datasetFormatCombo; model: ["Auto", "CSV", "JSON"] }
+                        LcComboBox { id: datasetFormatCombo; model: ["Auto", "CSV", "JSON"] }
                         Text { text: "Si una fila falla"; color: Theme.textSecondary; font.pixelSize: 11 }
-                        ComboBox { id: datasetOnErrorCombo; model: ["Seguir con la próxima", "Cortar el lote"] }
+                        LcComboBox { id: datasetOnErrorCombo; model: ["Seguir con la próxima", "Cortar el lote"] }
                     }
 
                     // ── Disparador (arranque desatendido) ──
@@ -1481,8 +1481,8 @@ Item {
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: 12
-                        ComboBox { id: triggerTypeCombo; model: ["Manual", "Al cambiar un archivo/carpeta", "Con un atajo de teclado"] }
-                        SpinBox {
+                        LcComboBox { id: triggerTypeCombo; model: ["Manual", "Al cambiar un archivo/carpeta", "Con un atajo de teclado"] }
+                        LcSpinBox {
                             id: triggerDebounce
                             visible: triggerTypeCombo.currentIndex === 1
                             from: 0; to: 60000; stepSize: 500; value: 1500; editable: true
@@ -1492,14 +1492,14 @@ Item {
                             text: "ms debounce"; color: Theme.textMuted; font.pixelSize: 11
                         }
                     }
-                    TextField {
+                    LcTextField {
                         id: triggerPathField
                         Layout.fillWidth: true
                         visible: triggerTypeCombo.currentIndex === 1
                         placeholderText: "Ruta absoluta del archivo o carpeta a vigilar"
                         color: Theme.textPrimary
                     }
-                    TextField {
+                    LcTextField {
                         id: triggerHotkeyField
                         Layout.fillWidth: true
                         visible: triggerTypeCombo.currentIndex === 2
@@ -1788,9 +1788,9 @@ Item {
                         visible: freqCombo.currentIndex !== 4
                         spacing: 10
                         Text { text: "Hora"; color: Theme.textSecondary; font.pixelSize: 12; Layout.preferredWidth: 90 }
-                        SpinBox { id: schedHour; from: 0; to: 23; value: 9; editable: true }
+                        LcSpinBox { id: schedHour; from: 0; to: 23; value: 9; editable: true }
                         Text { text: ":"; color: Theme.textSecondary }
-                        SpinBox { id: schedMinute; from: 0; to: 59; value: 0; editable: true }
+                        LcSpinBox { id: schedMinute; from: 0; to: 59; value: 0; editable: true }
                     }
 
                     // Semanal: días
@@ -1824,7 +1824,7 @@ Item {
                             Layout.preferredWidth: 150
                             model: ["Por fecha (día N)", "Por posición"]
                         }
-                        SpinBox {
+                        LcSpinBox {
                             id: monthDaySpin
                             visible: monthlyKindCombo.currentIndex === 0 || freqCombo.currentIndex === 3
                             from: 1; to: 31; value: 1; editable: true
@@ -1849,9 +1849,9 @@ Item {
                         visible: freqCombo.currentIndex === 3
                         spacing: 10
                         Text { text: "Cada"; color: Theme.textSecondary; font.pixelSize: 12; Layout.preferredWidth: 90 }
-                        SpinBox { id: everyNSpin; from: 1; to: 24; value: 2; editable: true }
+                        LcSpinBox { id: everyNSpin; from: 1; to: 24; value: 2; editable: true }
                         Text { text: "mes(es), desde el mes"; color: Theme.textSecondary; font.pixelSize: 12 }
-                        SpinBox { id: startMonthSpin; from: 1; to: 12; value: 1; editable: true }
+                        LcSpinBox { id: startMonthSpin; from: 1; to: 12; value: 1; editable: true }
                     }
 
                     // Avanzado (cron)
