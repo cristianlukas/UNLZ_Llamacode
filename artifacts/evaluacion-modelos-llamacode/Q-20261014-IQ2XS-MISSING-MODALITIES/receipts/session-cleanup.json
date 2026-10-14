@@ -1,0 +1,35 @@
+{
+  "schema": "q14-session-cleanup-v1",
+  "checkedAtUtc": "2026-10-14T01:57:32.908558+00:00",
+  "lockToken": "e7981694-e63a-40a8-b06e-c07b833d35cb",
+  "modelEndpoints": {
+    "port8350": "closed",
+    "port8898": "closed",
+    "fixturePort8765": "closed"
+  },
+  "privateDisplay97": "closed",
+  "gpuAndMemory": {
+    "gpus": [
+      {
+        "index": 0,
+        "memoryUsedMiB": 854,
+        "memoryFreeMiB": 23267,
+        "utilizationPercent": 1
+      },
+      {
+        "index": 1,
+        "memoryUsedMiB": 108,
+        "memoryFreeMiB": 24016,
+        "utilizationPercent": 11
+      }
+    ],
+    "ramTotalBytes": 132615835648,
+    "ramAvailableBytes": 113047724032,
+    "swapTotalBytes": 8589930496,
+    "swapUsedBytes": 184320,
+    "computeProcesses": "None; nvidia-smi pmon showed only desktop graphics processes"
+  },
+  "removedTaskGeneratedChromeCachesBytes": 458263379,
+  "retained": "Run JSON, logs, OCR, screenshots, benchmark/context/vision receipts and model manifests. Isolated app runtime databases/caches and empty HOME removed after all daemons stopped.",
+  "removedEphemeralRuntimeBytes": 22015619
+}

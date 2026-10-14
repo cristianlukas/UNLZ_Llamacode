@@ -1,0 +1,47 @@
+{
+  "checkedAtUtc": "2026-10-14T01:16:37.413009+00:00",
+  "memory": {
+    "MemTotalKiB": 129507652,
+    "MemAvailableKiB": 110241192,
+    "SwapTotalKiB": 8388604,
+    "SwapFreeKiB": 8388424
+  },
+  "gpus": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memoryUsedMiB": 855,
+      "memoryTotalMiB": 24576,
+      "memoryFreeMiB": 23267,
+      "utilizationPercent": 52
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memoryUsedMiB": 108,
+      "memoryTotalMiB": 24576,
+      "memoryFreeMiB": 24016,
+      "utilizationPercent": 23
+    }
+  ],
+  "graphicsProcesses": [
+    "    0       2516     G      1      1      -      -      -      -    Xorg           ",
+    "    0      97960     G      -      -      -      -      -      -    gnome-software ",
+    "    0     491783     G     34     12      -      -      -      -    compiz         ",
+    "    0     998717     G     10      3      -      -      -      -    Codex --change-",
+    "    1       2516     G      -      -      -      -      -      -    Xorg           "
+  ],
+  "computeProcesses": [],
+  "freeModelsVolumeBytes": 153412894720,
+  "gate": {
+    "swapUsedLessThan2GiB": true,
+    "availableRamGreaterThan64GiB": true,
+    "noComputePids": true,
+    "freeVramMiBPerGpu": [
+      23267,
+      24016
+    ]
+  },
+  "decision": "Proceed serially: ample free VRAM and RAM, no C/G compute process; desktop graphics processes remain and are recorded as a speed-measurement caveat.",
+  "inferenceStarted": false
+}

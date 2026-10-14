@@ -1,0 +1,137 @@
+[
+    {
+        "approvalMode": "auto",
+        "directives": [
+            "*"
+        ],
+        "enabledTools": [
+            "desktop_snapshot",
+            "desktop_windows",
+            "desktop_controls",
+            "desktop_click_element",
+            "desktop_control_action",
+            "desktop_find_image",
+            "desktop_click_image",
+            "desktop_wait_image",
+            "desktop_assert_image",
+            "desktop_observe",
+            "desktop_click",
+            "desktop_stroke",
+            "desktop_type",
+            "desktop_key",
+            "desktop_scroll",
+            "desktop_focus",
+            "desktop_resize",
+            "desktop_wait",
+            "desktop_wait_for",
+            "desktop_assert",
+            "desktop_launch"
+        ],
+        "id": "31ff813d-6bf5-4400-8f82-69af4fcc64bc",
+        "injectStyleExamples": true,
+        "mcpEnabled": false,
+        "name": "Q-20261014 · CU navegador holdout",
+        "personalityProfileIds": [
+        ],
+        "progressCredits": 16,
+        "progressMaxCredits": 32,
+        "progressReplanAfter": 5,
+        "progressStopAfter": 8,
+        "quickToolTimeoutSec": 15,
+        "spec": {
+            "context": {
+                "compaction": true,
+                "compactionTrigger": 0.9,
+                "graphExpansion": true,
+                "indexPolicy": "lazy",
+                "keepLastImages": 1,
+                "preflight": true,
+                "prune": true,
+                "readDedup": true,
+                "scoutBudget": 700,
+                "scoutK": 8,
+                "tailRatio": 0.6,
+                "warmup": true
+            },
+            "loop": {
+                "credits": 16,
+                "failureSpiral": 3,
+                "maxCredits": 32,
+                "maxDistinctWrites": 24,
+                "quickToolTimeoutSec": 15,
+                "replanAfter": 5,
+                "sameCallLimit": 3,
+                "stopAfter": 8,
+                "streamIdleTimeoutSec": 0,
+                "transportRetries": 60,
+                "webToolTimeoutSec": 180
+            },
+            "permissions": {
+                "approvalMode": "auto",
+                "folders": [
+                ],
+                "hitlDestructive": true,
+                "mailAutoSend": false,
+                "rules": [
+                ]
+            },
+            "prompt": {
+                "builtin": [
+                    "*"
+                ],
+                "computerUseSandwich": false,
+                "custom": [
+                ],
+                "maxChars": 24000,
+                "systemExtra": ""
+            },
+            "protocol": {
+                "reasoningBudget": -1,
+                "reasoningEffort": "",
+                "temperature": -1,
+                "thinking": true,
+                "thinkingLeakGuard": false,
+                "toolProtocol": "auto"
+            },
+            "tools": {
+                "adaptiveRouting": true,
+                "exclude": [
+                ],
+                "include": [
+                    "desktop_snapshot",
+                    "desktop_windows",
+                    "desktop_controls",
+                    "desktop_click_element",
+                    "desktop_control_action",
+                    "desktop_find_image",
+                    "desktop_click_image",
+                    "desktop_wait_image",
+                    "desktop_assert_image",
+                    "desktop_observe",
+                    "desktop_click",
+                    "desktop_stroke",
+                    "desktop_type",
+                    "desktop_key",
+                    "desktop_scroll",
+                    "desktop_focus",
+                    "desktop_resize",
+                    "desktop_wait",
+                    "desktop_wait_for",
+                    "desktop_assert",
+                    "desktop_launch"
+                ],
+                "mcpTools": false,
+                "packs": [
+                ]
+            }
+        },
+        "styleContextLimit": 6000,
+        "styleExampleLimit": 2,
+        "styleProfileIds": [
+        ],
+        "systemExtra": "",
+        "temperature": -1,
+        "thinking": true,
+        "thinkingLeakGuard": false
+    }
+]

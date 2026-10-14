@@ -1,0 +1,58 @@
+{
+  "schema": "q14-vision-holdout-v1",
+  "profile": "iq2xs-strata-vision",
+  "model": "qwen3.8-flash-next-iq2_xs",
+  "endpoint": "http://127.0.0.1:8350/v1",
+  "imageSha256": "c5e7411424bef046cba23b662cd163c0cda9c94e1dd44253205ae649703532d1",
+  "imageBytes": 7456,
+  "httpStatus": 200,
+  "elapsedSeconds": 1.478,
+  "expected": {
+    "blue_triangles": 3,
+    "red_circles": 2
+  },
+  "rawContent": "{\"blue_triangles\": 3, \"red_circles\": 2}",
+  "parsed": {
+    "blue_triangles": 3,
+    "red_circles": 2
+  },
+  "passed": true,
+  "response": {
+    "id": "chatcmpl-823bd14277a7412c85a4e67c",
+    "object": "chat.completion",
+    "created": 1791941305,
+    "model": "qwen3.8-flash-next-iq2_xs",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "{\"blue_triangles\": 3, \"red_circles\": 2}",
+          "reasoning_content": "The user wants me to count blue triangles and red circles in the image.\n\nLet me look carefully at the image.\n\nTop row:\n- Left: blue triangle\n- Middle: red circle\n- Right: blue triangle\n\nBottom row:\n- Left: red circle\n- Middle: blue triangle\n\nSo blue triangles: top-left, top-right, bottom-middle = 3.\nRed circles: top-middle, bottom-left = 2.\n\nLet me double-check by scanning the image.\n\nShapes present:\n1. Blue triangle at (~195, 220)\n2. Red circle at (~465, 185)\n3. Blue triangle at (~715, 200)\n4. Red circle at (~250, 355)\n5. Blue triangle at (~545, 340)\n\nCount blue triangles = 3.\nCount red circles = 2.\n\nReturn JSON exactly.\n"
+        },
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 691,
+      "completion_tokens": 227,
+      "total_tokens": 918,
+      "prompt_tokens_details": {
+        "cached_tokens": 686
+      }
+    },
+    "timings": {
+      "cache_n": 686,
+      "prompt_n": 5,
+      "prompt_ms": 75.8,
+      "prompt_per_token_ms": 15.16,
+      "prompt_per_second": 66.0,
+      "predicted_n": 227,
+      "predicted_ms": 1354.3,
+      "predicted_per_token_ms": 5.966,
+      "predicted_per_second": 167.6,
+      "draft_n": 173,
+      "draft_n_accepted": 150
+    }
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "schema": "q14-vision-holdout-v1",
+  "profile": "dense-q4-k-m-vision",
+  "model": "qwen3.8-27b-q4-k-m",
+  "endpoint": "http://127.0.0.1:8350/v1",
+  "imageSha256": "c5e7411424bef046cba23b662cd163c0cda9c94e1dd44253205ae649703532d1",
+  "imageBytes": 7456,
+  "httpStatus": 200,
+  "elapsedSeconds": 8.67,
+  "expected": {
+    "blue_triangles": 3,
+    "red_circles": 2
+  },
+  "rawContent": "{\"blue_triangles\": 3, \"red_circles\": 2}",
+  "parsed": {
+    "blue_triangles": 3,
+    "red_circles": 2
+  },
+  "passed": true,
+  "response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "{\"blue_triangles\": 3, \"red_circles\": 2}",
+          "reasoning_content": "The user wants a count of blue triangles and red circles in the image. I need to look carefully at the image and count each shape type.\n\nLooking at the image, I see shapes arranged in two rows.\n\nTop row: a blue triangle on the left, a red circle in the middle, a blue triangle on the right.\n\nBottom row: a red circle on the left, a blue triangle in the middle.\n\nLet me count blue triangles: top-left (1), top-right (2), bottom-middle (3). So 3 blue triangles.\n\nRed circles: top-middle (1), bottom-left (2). So 2 red circles.\n\nLet me double-check by scanning coordinates. Blue triangle at around (197, 421). Red circle at (463, 398). Blue triangle at (713, 391). Red circle at (250, 742). Blue triangle at (542, 711).\n\nSo blue triangles = 3, red circles = 2.\n\nThe output must be exactly JSON shaped as {\"blue_triangles\": <integer>, \"red_circles\": <integer>}.\n\nThus: {\"blue_triangles\": 3, \"red_circles\": 2}.\n"
+        }
+      }
+    ],
+    "created": 1791942664,
+    "model": "qwen3.8-27b-q4-k-m",
+    "system_fingerprint": "b1-d5f6649",
+    "object": "chat.completion",
+    "usage": {
+      "completion_tokens": 288,
+      "prompt_tokens": 691,
+      "total_tokens": 979,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "id": "chatcmpl-ORegyelFgRDpOMxHntV6u0sEV0tINGcI",
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 691,
+      "prompt_ms": 1057.857,
+      "prompt_per_token_ms": 1.5309073806078146,
+      "prompt_per_second": 653.2073805816855,
+      "predicted_n": 288,
+      "predicted_ms": 7592.197,
+      "predicted_per_token_ms": 26.453648083623694,
+      "predicted_per_second": 37.80196957481477
+    }
+  }
+}

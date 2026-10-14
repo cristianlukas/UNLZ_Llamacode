@@ -1,0 +1,55 @@
+{
+  "schema": "q14-vision-holdout-v1",
+  "profile": "iq2xs-strata-vision",
+  "model": "qwen3.8-flash-next-iq2_xs",
+  "endpoint": "http://127.0.0.1:8350/v1",
+  "imageSha256": "c5e7411424bef046cba23b662cd163c0cda9c94e1dd44253205ae649703532d1",
+  "imageBytes": 7456,
+  "httpStatus": 200,
+  "elapsedSeconds": 5.483,
+  "expected": {
+    "blue_triangles": 3,
+    "red_circles": 2
+  },
+  "rawContent": "",
+  "parsed": null,
+  "passed": false,
+  "response": {
+    "id": "chatcmpl-aec63a9ca22c4f0c9a4c8982",
+    "object": "chat.completion",
+    "created": 1791941286,
+    "model": "qwen3.8-flash-next-iq2_xs",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": null,
+          "reasoning_content": "The user wants me to count blue triangles and red circles in the image.\n\nLet me look carefully at the image.\n\nTop row:\n- Left: blue triangle\n- Middle: red circle\n- Right: blue triangle\n\nBottom row:\n- Left: red circle\n- Middle: blue triangle\n\nSo blue triangles: top-left, top-right, bottom-middle = 3.\nRed circles: top-middle, bottom-left = 2.\n\nLet me double-check by scanning the image.\n\nShapes present:\n1. Blue triangle at (~195, 220)\n2. Red circle at"
+        },
+        "finish_reason": "length"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 691,
+      "completion_tokens": 128,
+      "total_tokens": 819,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 691,
+      "prompt_ms": 905.6,
+      "prompt_per_token_ms": 1.311,
+      "prompt_per_second": 763.0,
+      "predicted_n": 128,
+      "predicted_ms": 790.9,
+      "predicted_per_token_ms": 6.179,
+      "predicted_per_second": 161.8,
+      "draft_n": 101,
+      "draft_n_accepted": 85
+    }
+  }
+}
