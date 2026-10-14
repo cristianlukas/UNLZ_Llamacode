@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
             break;
         }
     }
-    QCoreApplication::setApplicationVersion(QStringLiteral("0.1.118"));
+    QCoreApplication::setApplicationVersion(QStringLiteral("0.1.119"));
     StartupDiagnostics::initializeEarly(
         QFileInfo(QString::fromLocal8Bit(argv[0])).absoluteFilePath(), forceExpandedLog);
     QElapsedTimer startupClock;
@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
     app.setQuitOnLastWindowClosed(false);
     app.setApplicationName("LlamaCode");
     app.setOrganizationName("LlamaCode");
-    app.setApplicationVersion("0.1.118");
+    app.setApplicationVersion("0.1.119");
     const bool startedWithWindows = app.arguments().contains(QStringLiteral("--startup"));
     const bool handoffUi = app.arguments().contains(QStringLiteral("--handoff-ui"));
     const bool headlessAgent = app.arguments().contains(QStringLiteral("--headless"))
