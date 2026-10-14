@@ -95,6 +95,7 @@ class ThemeProvider : public QObject {
     Q_PROPERTY(QString splitterNormal  READ splitterNormal  NOTIFY themeChanged)
     Q_PROPERTY(QString splitterHover   READ splitterHover   NOTIFY themeChanged)
     Q_PROPERTY(QString closeHoverBg    READ closeHoverBg    NOTIFY themeChanged)
+    Q_PROPERTY(QString closeHoverFg    READ closeHoverFg    NOTIFY themeChanged)
     Q_PROPERTY(QString overlayColor    READ overlayColor    NOTIFY themeChanged)
     Q_PROPERTY(QString warnText        READ warnText        NOTIFY themeChanged)
 
@@ -183,6 +184,7 @@ public:
     QString splitterNormal() const { return colorFor(QStringLiteral("splitterNormal")); }
     QString splitterHover()  const { return colorFor(QStringLiteral("splitterHover")); }
     QString closeHoverBg()   const { return colorFor(QStringLiteral("closeHoverBg")); }
+    QString closeHoverFg()   const { return colorFor(QStringLiteral("closeHoverFg")); }
     QString overlayColor()   const { return colorFor(QStringLiteral("overlayColor")); }
     QString warnText()       const { return colorFor(QStringLiteral("warnText")); }
 

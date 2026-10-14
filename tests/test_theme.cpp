@@ -4,6 +4,7 @@
 #include <QtTest>
 #include <QGuiApplication>
 #include <QColor>
+#include <cmath>
 #include <QStandardPaths>
 #include <QSettings>
 #include "ThemeProvider.h"
@@ -20,6 +21,7 @@ private slots:
     void contrastChangesSurfaces();
     void normalizeHexAcceptsAndRejects();
     void saveSanitizesColorAnchors();
+    void closeGlyphVisibleOnHover();
 };
 
 void ThemeTests::initTestCase()
@@ -173,6 +175,25 @@ void ThemeTests::saveSanitizesColorAnchors()
     QCOMPARE(got.value(QStringLiteral("background")).toString(), QStringLiteral("#1e1e2e"));
     QCOMPARE(got.value(QStringLiteral("foreground")).toString(), QStringLiteral("#cdd6f4"));
     t.deleteCustomTheme(id);
+}
+
+
+// El botón Cerrar pinta la X con errorText y el hover con closeHoverBg (el
+// mismo rojo): en hover la X tiene que cambiar a closeHoverFg y contrastar.
+void ThemeTests::closeGlyphVisibleOnHover()
+{
+    auto lum = [](const QString &hex) {
+        const QColor c(hex);
+        auto ch = [](double v) { return v <= 0.03928 ? v / 12.92 : std::pow((v + 0.055) / 1.055, 2.4); };
+        return 0.2126 * ch(c.redF()) + 0.7152 * ch(c.greenF()) + 0.0722 * ch(c.blueF());
+    };
+    ThemeProvider t;
+    for (const QString &name : {QStringLiteral("dark"), QStringLiteral("light"), QStringLiteral("oled")}) {
+        t.setTheme(name);
+        const double a = lum(t.closeHoverFg()), b = lum(t.closeHoverBg());
+        const double ratio = (qMax(a, b) + 0.05) / (qMin(a, b) + 0.05);
+        QVERIFY2(ratio >= 3.0, qPrintable(name + QStringLiteral(": contraste ") + QString::number(ratio)));
+    }
 }
 
 QTEST_MAIN(ThemeTests)

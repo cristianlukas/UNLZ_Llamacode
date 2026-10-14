@@ -1364,13 +1364,13 @@ Item {
                     GridLayout {
                         id: modelGrid
                         anchors.fill: parent; anchors.margins: 10
-                        columns: 3; rowSpacing: 8; columnSpacing: 10
+                        columns: 4; rowSpacing: 8; columnSpacing: 10
 
                         Item { implicitWidth: 20 }
                         Text { text: "Main model"; color: Theme.textSecondary; font.pixelSize: 12 }
                         LcComboBox {
                             id: modelMain
-                            Layout.fillWidth: true
+                            Layout.fillWidth: true; Layout.columnSpan: 2
                             model: App.modelCatalog; textRole: "fileName"; valueRole: "modelId"
                             onActivated: root.modelMainUnresolved = ""
                             displayText: root.modelMainUnresolved.length > 0
@@ -1386,7 +1386,7 @@ Item {
                         Text { text: "mmproj"; color: mmprojEnabled ? Theme.textSecondary : Theme.textMuted; font.pixelSize: 12 }
                         LcComboBox {
                             id: modelMmproj
-                            Layout.fillWidth: true
+                            Layout.fillWidth: true; Layout.columnSpan: 2
                             enabled: mmprojEnabled; opacity: mmprojEnabled ? 1.0 : 0.4
                             model: App.modelCatalog; textRole: "fileName"; valueRole: "modelId"
                             onActivated: root.modelMmprojUnresolved = ""
@@ -1400,7 +1400,7 @@ Item {
                         Text { text: "Draft model"; color: draftEnabled ? Theme.textSecondary : Theme.textMuted; font.pixelSize: 12 }
                         LcComboBox {
                             id: modelDraft
-                            Layout.fillWidth: true
+                            Layout.fillWidth: true; Layout.columnSpan: 2
                             enabled: draftEnabled; opacity: draftEnabled ? 1.0 : 0.4
                             model: App.modelCatalog; textRole: "fileName"; valueRole: "modelId"
                             onActivated: root.modelDraftUnresolved = ""
@@ -1409,7 +1409,6 @@ Item {
                             background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
                             contentItem: Text { text: modelDraft.displayText; color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
                         }
-                        Item { Layout.fillWidth: true; implicitHeight: 1 }
 
                         // ── Speculative decoding / MTP / DSpark ──
                         LcCheckBox { id: mtpCheck; checked: mtpEnabled; onCheckedChanged: mtpEnabled = checked; padding: 0 }
@@ -1419,7 +1418,7 @@ Item {
                                color: mtpEnabled ? Theme.textSecondary : Theme.textMuted; font.pixelSize: 12 }
                         LcComboBox {
                             id: specTypeCombo
-                            Layout.fillWidth: true
+                            Layout.fillWidth: true; Layout.columnSpan: 2
                             enabled: draftEnabled && mtpEnabled
                             opacity: enabled ? 1.0 : 0.4
                             model: ["draft-mtp", "draft-dspark"]
@@ -1427,7 +1426,6 @@ Item {
                             background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
                             contentItem: Text { text: specTypeCombo.displayText; color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
                         }
-                        Item { Layout.fillWidth: true; implicitHeight: 1 }
 
                         Item { implicitWidth: 20 }
                         Text { text: "spec n-max"; color: mtpEnabled ? Theme.textSecondary : Theme.textMuted; font.pixelSize: 12 }

@@ -24,7 +24,7 @@ if [[ "$SOURCE_FS" == ntfs* || "$SOURCE_FS" == fuseblk || "$SOURCE_FS" == 9p    
     SOURCE_ROOT="$LC_CACHE_ROOT/source"
     mkdir -p "$SOURCE_ROOT"
     rsync -a --exclude='.git/' --exclude='.claude/' --exclude='build*/' \
-        --exclude='work/' "$ROOT_DIR/" "$SOURCE_ROOT/"
+        --exclude='work/' --exclude='artifacts/' "$ROOT_DIR/" "$SOURCE_ROOT/"
     echo "Checkout NTFS detectado; usando copia nativa: $SOURCE_ROOT" >&2
 fi
 

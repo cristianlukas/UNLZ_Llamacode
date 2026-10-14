@@ -344,6 +344,7 @@ ApplicationWindow {
         }
 
         ToolButton {
+            id: closeButton
             flat: true
             onClicked: window.close()
             contentItem: Item {
@@ -353,7 +354,7 @@ ApplicationWindow {
                     text: "\uE8BB"
                     font.family: "Segoe MDL2 Assets"
                     font.pixelSize: 12
-                    color: Theme.errorText
+                    color: closeButton.hovered ? Theme.closeHoverFg : Theme.errorText
                 }
                 Rectangle {
                     visible: !window.windowsBuild
@@ -361,7 +362,7 @@ ApplicationWindow {
                     width: 15
                     height: 1
                     rotation: 45
-                    color: Theme.errorText
+                    color: closeButton.hovered ? Theme.closeHoverFg : Theme.errorText
                 }
                 Rectangle {
                     visible: !window.windowsBuild
@@ -369,7 +370,7 @@ ApplicationWindow {
                     width: 15
                     height: 1
                     rotation: -45
-                    color: Theme.errorText
+                    color: closeButton.hovered ? Theme.closeHoverFg : Theme.errorText
                 }
             }
             background: Rectangle { color: parent.hovered ? Theme.closeHoverBg : "transparent" }

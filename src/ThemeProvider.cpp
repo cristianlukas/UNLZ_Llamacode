@@ -71,6 +71,8 @@ const Lit kLits[] = {
     {"splitterNormal", "#2a2d41","#9ca0b0","#161616"},
     {"splitterHover",  "#3b3f63","#7c7f93","#252525"},
     {"closeHoverBg",   "#f38ba8","#d20f39","#ff4444"},
+    // La X roja (errorText) desaparece sobre closeHoverBg: en hover va este.
+    {"closeHoverFg",   "#1e1e2e","#ffffff","#000000"},
     {"overlayColor",   "#90090b14","#60000000","#90000000"},
     {"warnText",       "#f9e2af","#df8e1d","#ffcc44"},
 };
