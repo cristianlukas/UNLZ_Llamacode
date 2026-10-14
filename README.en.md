@@ -551,6 +551,14 @@ With a vision model (server launched with `--mmproj`) it also accepts **images**
 - **Start server only** — just `llama-server`, no agent.
 - **OpenAI endpoint** — with the server running it shows `http://<host>:<port>/v1` (read-only, selectable) + a *Copy* button, to point external agents (opencode, aider, etc.) at the local backend.
 
+**Use a LAN server** discovers other LlamaCode gateways. **Use active profile
+remotely** connects to the model currently active on the selected host. The
+remote profile picker stays hidden until **Change remote profile** is checked.
+Then you can choose another remote profile, which becomes this PC's active
+launch selection. If no local profile is selected, the checkbox is checked by
+default. Leaving it unchecked uses the model already active on the host for the
+current session and preserves the saved local selection.
+
 ## Local gateway for OpenCode, Claude Code and Claude Desktop
 
 Settings → Gateway · API exposes an Anthropic/OpenAI-compatible local gateway.

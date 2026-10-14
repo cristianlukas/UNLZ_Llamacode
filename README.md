@@ -1636,11 +1636,18 @@ lo solicite. Desactivar el switch vuelve a limitar el gateway a esta PC.
 
 Desde otro equipo no hace falta crear el backend manualmente: en **Lanzar**,
 **Usar un servidor LAN** envía un discovery broadcast, lista los LlamaCode que
-comparten gateway y permite elegir uno de sus perfiles. Al confirmar, el cliente
-crea o reutiliza un perfil remoto, guarda la credencial en `SecretStore` y pide al
-servidor que cargue —o vuelva a iniciar— el perfil elegido antes de conectar el
-agente local. Una vez aceptada la conexión, Chat, Agente, Investigación, Tasks y
-Charla se habilitan también en el cliente LAN: su disponibilidad depende del
+comparten gateway y permite usar con **Usar perfil activo en remoto** el modelo
+que ya está activo en el anfitrión. El selector de perfiles remotos queda
+oculto hasta marcar **Cambiar perfil remoto**; entonces se puede elegir otro
+perfil remoto. Al marcarlo, ese perfil queda como selección activa local para el
+próximo inicio. Si todavía no hay una selección local, la casilla aparece
+marcada. Sin marcarla, se usa durante la sesión el perfil que ya está activo en
+el anfitrión y se conserva el perfil local guardado para el próximo inicio.
+Al confirmar, el cliente crea o reutiliza un perfil remoto, guarda la credencial
+en `SecretStore` y pide al servidor que cargue —o vuelva a iniciar— el perfil
+elegido antes de conectar el agente local. Una vez aceptada la conexión, Chat,
+Agente, Investigación, Tasks y Charla se habilitan también en el cliente LAN:
+su disponibilidad depende del
 backend remoto activo y no de que exista un proceso `llama-server` local.
 El discovery UDP nunca transmite la API key. Si el host pide autenticación, el
 cliente la solicita en el diálogo; copiala en la PC anfitriona desde

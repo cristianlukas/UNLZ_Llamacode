@@ -1103,9 +1103,11 @@ public:
     QVariantList lanServers() const { return m_lanServers; }
     bool lanDiscoveryActive() const { return m_lanDiscoverySocket != nullptr; }
     Q_INVOKABLE void discoverLanServers();
+    // A remote connection becomes the runtime profile; only persist it as the
+    // next local selection when the user explicitly opts in.
     Q_INVOKABLE void useLanServer(const QString &baseUrl, const QString &apiKey,
                                   const QString &profileId, const QString &profileName,
-                                  int context);
+                                  int context, bool rememberAsActive = false);
     Q_INVOKABLE QString launchClaudeCode();   // exec `claude` apuntando al gateway
     // Configura Claude Desktop para Third-Party Inference usando este gateway.
     // Devuelve un mensaje de error o el resumen de las rutas configuradas.
@@ -1654,6 +1656,8 @@ signals:
     void taskLivePreviewChanged();
 
 private:
+    void startServerInternal(const QString &launchProfileId, bool rememberAsActive);
+    void startAgentInternal(const QString &launchProfileId, bool rememberAsActive);
     void cleanupDuplicateInitialLaunchProfiles();
     void appendLog(const QString &text);
     void appendServerEvent(const QString &source, const QString &text);
