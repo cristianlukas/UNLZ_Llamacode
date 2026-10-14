@@ -1645,7 +1645,9 @@ backend remoto activo y no de que exista un proceso `llama-server` local.
 El discovery UDP nunca transmite la API key. Si el host pide autenticación, el
 cliente la solicita en el diálogo; copiala en la PC anfitriona desde
 **Configuración → Gateway → Copiar API key**. La clave queda en el almacén seguro
-del cliente y se reutiliza al volver a conectar ese perfil.
+del cliente y se reutiliza al volver a conectar ese perfil. Mientras conecta, el
+diálogo muestra el servidor y el perfil elegidos; si el Gateway no responde en
+ocho segundos, informa que hay que revisar su disponibilidad y el puerto.
 
 En la PC anfitriona también se puede usar **Lanzar → Iniciar LAN sin cargar
 perfil**. Esto levanta únicamente el Gateway y anuncia los perfiles

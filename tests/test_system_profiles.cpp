@@ -1809,9 +1809,11 @@ void SystemProfilesTests::controller_lanActivationRetryUsesSuppliedApiKey()
                     return;
                 socket->setProperty("authResponseSent", true);
                 requests.append(request);
-                socket->write("HTTP/1.1 401 Unauthorized\r\n"
-                              "Connection: close\r\n"
-                              "Content-Length: 0\r\n\r\n");
+                const bool authenticated = request.toLower().contains(
+                    "authorization: bearer trusted-test-key");
+                socket->write(authenticated
+                    ? "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 0\r\n\r\n"
+                    : "HTTP/1.1 401 Unauthorized\r\nConnection: close\r\nContent-Length: 0\r\n\r\n");
                 socket->disconnectFromHost();
             });
         }
@@ -1822,7 +1824,8 @@ void SystemProfilesTests::controller_lanActivationRetryUsesSuppliedApiKey()
     QVERIFY(resultSpy.isValid());
     const QString endpoint = QStringLiteral("http://127.0.0.1:%1")
                                  .arg(mockHost.serverPort());
-    const QString profileId = QStringLiteral("remote-profile-auth-retry-test");
+    const QString profileId = QStringLiteral("remote-profile-auth-retry-test-%1")
+                                  .arg(QUuid::createUuid().toString(QUuid::WithoutBraces));
     app.useLanServer(endpoint, {}, profileId, QStringLiteral("Mock host"), 4096);
     QTRY_COMPARE_WITH_TIMEOUT(resultSpy.count(), 1, 5000);
     QVERIFY(resultSpy.takeFirst().at(1).toString().contains(QStringLiteral("HTTP 401")));
@@ -1830,10 +1833,18 @@ void SystemProfilesTests::controller_lanActivationRetryUsesSuppliedApiKey()
     app.useLanServer(endpoint, QStringLiteral("trusted-test-key"), profileId,
                      QStringLiteral("Mock host"), 4096);
     QTRY_COMPARE_WITH_TIMEOUT(resultSpy.count(), 1, 5000);
-    QVERIFY(resultSpy.takeFirst().at(1).toString().contains(QStringLiteral("HTTP 401")));
+    const QList<QVariant> authenticatedResult = resultSpy.takeFirst();
+    QVERIFY2(authenticatedResult.at(1).toString().isEmpty(),
+             qPrintable(authenticatedResult.at(1).toString()));
+    const QString activeLaunchId = app.activeLaunchId();
+    QVERIFY(!activeLaunchId.isEmpty());
+    QVERIFY(app.serverRunning());
     app.useLanServer(endpoint, {}, profileId, QStringLiteral("Mock host"), 4096);
     QTRY_COMPARE_WITH_TIMEOUT(resultSpy.count(), 1, 5000);
-    QVERIFY(resultSpy.takeFirst().at(1).toString().contains(QStringLiteral("HTTP 401")));
+    const QList<QVariant> reusedSecretResult = resultSpy.takeFirst();
+    QVERIFY2(reusedSecretResult.at(1).toString().isEmpty(),
+             qPrintable(reusedSecretResult.at(1).toString()));
+    QCOMPARE(app.activeLaunchId(), activeLaunchId);
     QCOMPARE(requests.size(), 3);
     QVERIFY(!requests.at(0).contains("Authorization: Bearer"));
     QVERIFY(requests.at(1).toLower().contains(

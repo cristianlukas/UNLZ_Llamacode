@@ -10512,6 +10512,10 @@ void AppController::useLanServer(const QString &baseUrl, const QString &apiKey,
     if (!m_nam) m_nam = new QNetworkAccessManager(this);
     QNetworkRequest request(QUrl(baseUrl + QStringLiteral("/llamacode/v1/activate")));
     request.setHeader(QNetworkRequest::ContentTypeHeader, QByteArrayLiteral("application/json"));
+    // La activación sólo confirma que el gateway aceptó el perfil; la carga del
+    // modelo sigue en segundo plano. Una respuesta ausente no debe dejar al
+    // diálogo LAN en "Conectando…" indefinidamente.
+    request.setTransferTimeout(8000);
     if (!effectiveApiKey.isEmpty())
         request.setRawHeader(QByteArrayLiteral("Authorization"),
                              QByteArrayLiteral("Bearer ") + effectiveApiKey.toUtf8());
@@ -10527,6 +10531,10 @@ void AppController::useLanServer(const QString &baseUrl, const QString &apiKey,
         } else if (status == 401) {
             error = QStringLiteral(
                 "El servidor requiere autenticación (HTTP 401). Copiá la API key en la PC anfitriona: Configuración → Gateway → Copiar API key.");
+        } else if (status == 0) {
+            error = QStringLiteral(
+                "No hubo respuesta del servidor LAN: %1. Revisá que el Gateway esté activo y que el puerto sea accesible desde esta red.")
+                        .arg(reply->errorString());
         } else {
             error = QStringLiteral("El servidor LAN rechazó la conexión (HTTP %1): %2")
                         .arg(status).arg(reply->errorString());
