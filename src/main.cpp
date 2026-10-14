@@ -111,6 +111,17 @@ int main(int argc, char *argv[])
                                {{QStringLiteral("phase"), QStringLiteral("QQuickStyle")},
                                 {QStringLiteral("elapsedMs"), startupClock.elapsed()}});
 
+#if defined(LC_DEBUG_ICON) && !defined(Q_OS_WIN)
+    // Identidad de escritorio propia del build Debug: GNOME agrupa ventanas por
+    // _GTK_APPLICATION_ID / WM_CLASS, y con los mismos valores que Prod las dos
+    // apps caían bajo un único ícono del dock (el de Prod). RESOURCE_NAME fija la
+    // parte "instancia" de WM_CLASS (la lee Qt xcb al crear la primera ventana),
+    // así llamacode-debug.desktop (StartupWMClass=llamacode-debug) la reconoce.
+    // applicationName no cambia: Debug y Prod comparten settings y perfiles.
+    if (!qEnvironmentVariableIsSet("RESOURCE_NAME"))
+        qputenv("RESOURCE_NAME", "llamacode-debug");
+    QGuiApplication::setDesktopFileName(QStringLiteral("llamacode-debug"));
+#endif
     StartupDiagnostics::record(QStringLiteral("phase_begin"),
                                {{QStringLiteral("phase"), QStringLiteral("QApplication")}});
     QApplication app(argc, argv);
@@ -249,9 +260,15 @@ int main(int argc, char *argv[])
     // Icono según build: Debug = rojo (debug_icon), Release = normal. Coincide
     // con el icono embebido en el .exe (app_icon.rc).
 #ifdef LC_DEBUG_ICON
+#ifdef Q_OS_WIN
     const QString appIconSource = QStringLiteral("qrc:/assets/debug_icon.ico");
-    const QString trayIconSource = appIconSource;
     const QIcon appIcon(QStringLiteral(":/assets/debug_icon.ico"));
+#else
+    // Mismo criterio que Release: en Linux/GNOME el PNG en vez del ICO.
+    const QString appIconSource = QStringLiteral("qrc:/assets/debug_icon.png");
+    const QIcon appIcon(QStringLiteral(":/assets/debug_icon.png"));
+#endif
+    const QString trayIconSource = appIconSource;
 #else
 #ifdef Q_OS_WIN
     const QString appIconSource = QStringLiteral("qrc:/assets/app_icon.ico");

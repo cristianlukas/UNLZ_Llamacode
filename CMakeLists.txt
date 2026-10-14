@@ -540,6 +540,7 @@ qt_add_resources(LlamaCode "llamacode_assets"
         assets/app_icon.png
         assets/app_icon.ico
         assets/debug_icon.ico
+        assets/debug_icon.png
         assets/tray_icon.png
         assets/update/latest.json
         assets/hwfit/hf_models.json
