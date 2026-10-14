@@ -15,11 +15,13 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QFileInfo>
+#include <QDir>
 #include <QDateTime>
 #include <algorithm>
 #include "core/profiles/ProfileTypes.h"
 #include "core/profiles/ProfileManager.h"
 #include "core/profiles/ManagedServerCapabilities.h"
+#include "core/profiles/PortablePaths.h"
 
 class ProfilesTests : public QObject
 {
@@ -55,6 +57,10 @@ private slots:
     void manager_browserAutomationOverride();
     void manager_systemProfilesReloadIdempotent();
     void manager_persistsAcrossInstances();
+    void portablePaths_roundTripIsStable();
+    void portablePaths_repairsAccumulatedSlashes();
+    void portablePaths_respectsRootBoundaries();
+    void manager_sharedConfigSaveDoesNotGrowSlashes();
     void manager_exportImportBundle();
     void manager_profileChangeHistory();
     void manager_saveSkipsUnchangedAndLogsOnlyChanges();
@@ -675,6 +681,122 @@ void ProfilesTests::manager_persistsAcrossInstances()
         ProfileManager pm2;  // recarga de disco en el ctor
         QCOMPARE(pm2.getBackend(id).value("name").toString(), QStringLiteral("persist"));
     }
+}
+
+// Config compartida Windows/Linux: cada guardado convertía "D:/x" en "D://x"
+// (launches.json llegó a "D:////////////Models"). La ida y vuelta tiene que
+// devolver exactamente lo mismo, también repetida.
+static const QString kCRoot = QStringLiteral("/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian");
+static const QString kDRoot = QStringLiteral("/media/cristian/Disco local");
+
+void ProfilesTests::portablePaths_roundTripIsStable()
+{
+    const QStringList stored = {
+        QStringLiteral("D:/Models/llamacpp/x.gguf"),
+        QStringLiteral("C:/Users/cristian/Documents/LlamaCode/chat-templates/a.jinja"),
+        QStringLiteral("--mmproj=D:/Models/BigBang/mmproj.gguf"),
+        QStringLiteral("C:/Users/cristian"),
+        QStringLiteral("D:/"),
+        QStringLiteral("sin rutas"),
+    };
+    for (const QString &s : stored) {
+        QString v = s;
+        for (int i = 0; i < 5; ++i) {
+            const QString runtime = PortablePaths::translate(v, true, kCRoot, kDRoot);
+            QVERIFY2(!runtime.contains(QStringLiteral("D:/")) || s == QStringLiteral("sin rutas"),
+                     qPrintable(runtime));
+            v = PortablePaths::translate(runtime, false, kCRoot, kDRoot);
+        }
+        QCOMPARE(v, s);
+    }
+    QCOMPARE(PortablePaths::translate(QStringLiteral("D:/Models/x.gguf"), true, kCRoot, kDRoot),
+             kDRoot + QStringLiteral("/Models/x.gguf"));
+    // Raíces con '/' final: mismo resultado.
+    QCOMPARE(PortablePaths::translate(kDRoot + QStringLiteral("/Models/x.gguf"), false,
+                                      kCRoot + QLatin1Char('/'), kDRoot + QLatin1Char('/')),
+             QStringLiteral("D:/Models/x.gguf"));
+}
+
+void ProfilesTests::portablePaths_repairsAccumulatedSlashes()
+{
+    const QString corrupt = QStringLiteral("D:////////////Models/llamacpp/x.gguf");
+    const QString runtime = PortablePaths::translate(corrupt, true, kCRoot, kDRoot);
+    QCOMPARE(runtime, kDRoot + QStringLiteral("/Models/llamacpp/x.gguf"));
+    QCOMPARE(PortablePaths::translate(runtime, false, kCRoot, kDRoot),
+             QStringLiteral("D:/Models/llamacpp/x.gguf"));
+}
+
+void ProfilesTests::portablePaths_respectsRootBoundaries()
+{
+    // Sólo D configurada: una ruta C: no se borra (antes se reemplazaba por "").
+    QCOMPARE(PortablePaths::translate(QStringLiteral("C:/Users/cristian/a"), true, QString(), kDRoot),
+             QStringLiteral("C:/Users/cristian/a"));
+    // Un directorio hermano con el mismo prefijo no es la raíz.
+    const QString sibling = QStringLiteral("/media/cristian/Disco locales/x");
+    QCOMPARE(PortablePaths::translate(sibling, false, kCRoot, kDRoot), sibling);
+    QCOMPARE(PortablePaths::translate(QStringLiteral("C:/Users/cristianX/a"), true, kCRoot, kDRoot),
+             QStringLiteral("C:/Users/cristianX/a"));
+    // Sin raíces no se toca nada.
+    QCOMPARE(PortablePaths::translate(QStringLiteral("D:/x"), true, QString(), QString()),
+             QStringLiteral("D:/x"));
+}
+
+void ProfilesTests::manager_sharedConfigSaveDoesNotGrowSlashes()
+{
+#ifdef Q_OS_WIN
+    QSKIP("La traducción de config compartida sólo corre en Linux.");
+#else
+    const QString backendsPath = QDir(m_dir.path()).filePath(QStringLiteral("backends.json"));
+    QString id;
+    {
+        ProfileManager pm;
+        id = pm.addBackend(QStringLiteral("portable"), QStringLiteral("bin1"),
+                           QStringLiteral("127.0.0.1"), 7001);
+        pm.saveProfiles();
+    }
+    // Simular el archivo compartido de Windows con una ruta D: en baseArgs.
+    QFile f(backendsPath);
+    QVERIFY(f.open(QIODevice::ReadOnly));
+    QByteArray raw = f.readAll();
+    f.close();
+    QVERIFY(raw.contains("\"portable\""));
+    QJsonDocument doc = QJsonDocument::fromJson(raw);
+    QJsonArray items = doc.isArray() ? doc.array()
+                                     : doc.object().value(QStringLiteral("items")).toArray();
+    QVERIFY(!items.isEmpty());
+    for (int i = 0; i < items.size(); ++i) {
+        QJsonObject o = items[i].toObject();
+        if (o.value(QStringLiteral("id")).toString() != id) continue;
+        o.insert(QStringLiteral("baseArgs"),
+                 QJsonArray{QStringLiteral("--model"), QStringLiteral("D:/Models/x.gguf")});
+        items[i] = o;
+    }
+    if (doc.isArray()) doc.setArray(items);
+    else { QJsonObject root = doc.object(); root.insert(QStringLiteral("items"), items); doc.setObject(root); }
+    QVERIFY(f.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    f.write(doc.toJson());
+    f.close();
+
+    qputenv("LLAMACODE_SHARED_PORTABLE_CONFIG", "1");
+    qputenv("LLAMACODE_WINDOWS_C_ROOT", kCRoot.toLocal8Bit());
+    qputenv("LLAMACODE_WINDOWS_D_ROOT", kDRoot.toLocal8Bit());
+    for (int port = 7002; port < 7005; ++port) {   // varios ciclos cargar → guardar
+        ProfileManager pm;
+        QVERIFY(pm.getBackend(id).value(QStringLiteral("baseArgs")).toStringList()
+                    .contains(kDRoot + QStringLiteral("/Models/x.gguf")));
+        QVERIFY(pm.updateBackendPort(id, port));
+        pm.saveProfiles();
+    }
+    qunsetenv("LLAMACODE_SHARED_PORTABLE_CONFIG");
+    qunsetenv("LLAMACODE_WINDOWS_C_ROOT");
+    qunsetenv("LLAMACODE_WINDOWS_D_ROOT");
+
+    QVERIFY(f.open(QIODevice::ReadOnly));
+    raw = f.readAll();
+    QVERIFY2(raw.contains("\"D:/Models/x.gguf\""), raw.constData());
+    QVERIFY(!raw.contains("D://"));
+    QVERIFY(!raw.contains("Disco local"));
+#endif
 }
 
 void ProfilesTests::manager_exportImportBundle()

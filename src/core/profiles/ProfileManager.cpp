@@ -1,4 +1,5 @@
 #include "ProfileManager.h"
+#include "PortablePaths.h"
 #include "SystemProfileVariants.h"
 #include "core/agent/HarnessDirectiveStore.h"
 #include "core/agent/PortableSkillStore.h"
@@ -50,64 +51,11 @@ bool isCuratedBestName(const LaunchProfile &profile)
 // The shared profile files are intentionally stored in Windows-canonical form
 // because Windows already uses this checkout as its source of truth.  Linux
 // translates only path-looking values while loading and translates them back
-// before saving, so a profile can be edited on either OS without rewriting the
-// other OS's paths into the shared JSON.
-bool sharedPortableConfigEnabled()
+// before saving (PortablePaths), so a profile can be edited on either OS
+// without rewriting the other OS's paths into the shared JSON.
+QString portableString(const QString &value, bool toRuntime)
 {
-#ifndef Q_OS_WIN
-    return !qgetenv("LLAMACODE_SHARED_PORTABLE_CONFIG").isEmpty();
-#else
-    return false;
-#endif
-}
-
-QString sharedDriveRoot(char drive)
-{
-#ifndef Q_OS_WIN
-    const QByteArray name = QByteArray("LLAMACODE_WINDOWS_")
-                            + QByteArray(1, drive) + QByteArray("_ROOT");
-    return QString::fromLocal8Bit(qgetenv(name.constData())).trimmed();
-#else
-    Q_UNUSED(drive);
-    return {};
-#endif
-}
-
-QString replaceCaseInsensitive(QString value, const QString &from, const QString &to)
-{
-    if (from.isEmpty()) return value;
-    int pos = 0;
-    while ((pos = value.indexOf(from, pos, Qt::CaseInsensitive)) >= 0) {
-        value.replace(pos, from.size(), to);
-        pos += to.size();
-    }
-    return value;
-}
-
-QString portableString(QString value, bool toRuntime)
-{
-    if (!sharedPortableConfigEnabled()) return value;
-
-    const QString cRoot = sharedDriveRoot('C');
-    const QString dRoot = sharedDriveRoot('D');
-    if (cRoot.isEmpty() && dRoot.isEmpty()) return value;
-
-    if (toRuntime) {
-        const bool hasWindowsDrive = value.contains(QStringLiteral("C:/"), Qt::CaseInsensitive)
-                                  || value.contains(QStringLiteral("C:\\"), Qt::CaseInsensitive)
-                                  || value.contains(QStringLiteral("D:/"), Qt::CaseInsensitive)
-                                  || value.contains(QStringLiteral("D:\\"), Qt::CaseInsensitive);
-        if (!hasWindowsDrive) return value;
-        value.replace('\\', '/');
-        value = replaceCaseInsensitive(value, QStringLiteral("C:/Users/cristian"), cRoot);
-        value = replaceCaseInsensitive(value, QStringLiteral("D:/"), dRoot.isEmpty() ? QStringLiteral("D:/")
-                                                                                         : dRoot + QLatin1Char('/'));
-        return value;
-    }
-
-    value = replaceCaseInsensitive(value, cRoot, QStringLiteral("C:/Users/cristian"));
-    value = replaceCaseInsensitive(value, dRoot, QStringLiteral("D:/"));
-    return value;
+    return PortablePaths::translateFromEnv(value, toRuntime);
 }
 
 QJsonValue portableJson(const QJsonValue &value, bool toRuntime)

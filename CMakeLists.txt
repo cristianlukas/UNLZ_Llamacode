@@ -105,6 +105,7 @@ set(CORE_SOURCES
     src/core/profiles/HarnessEngine.cpp
     src/core/profiles/ProfileTypes.cpp
     src/core/profiles/ProfileManager.cpp
+    src/core/profiles/PortablePaths.cpp
     src/core/profiles/EffectiveProfileBuilder.cpp
     src/core/profiles/ProfileHealthChecker.cpp
     src/core/agent/OpencodeBackend.cpp

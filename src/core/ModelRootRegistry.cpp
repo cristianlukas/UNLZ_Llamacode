@@ -1,5 +1,6 @@
 #include "ModelRootRegistry.h"
 #include "OllamaImporter.h"
+#include "profiles/PortablePaths.h"
 #include <QFile>
 #include <QJsonDocument>
 #include <QJsonArray>
@@ -11,41 +12,9 @@
 #include <QtConcurrent/QtConcurrentRun>
 
 namespace {
-bool sharedPortableConfigEnabled()
+QString portableRootPath(const QString &value, bool toRuntime)
 {
-#ifndef Q_OS_WIN
-    return !qgetenv("LLAMACODE_SHARED_PORTABLE_CONFIG").isEmpty();
-#else
-    return false;
-#endif
-}
-
-QString replaceCaseInsensitive(QString value, const QString &from, const QString &to)
-{
-    if (from.isEmpty()) return value;
-    int pos = 0;
-    while ((pos = value.indexOf(from, pos, Qt::CaseInsensitive)) >= 0) {
-        value.replace(pos, from.size(), to);
-        pos += to.size();
-    }
-    return value;
-}
-
-QString portableRootPath(QString value, bool toRuntime)
-{
-    if (!sharedPortableConfigEnabled()) return value;
-    const QString cRoot = QString::fromLocal8Bit(qgetenv("LLAMACODE_WINDOWS_C_ROOT")).trimmed();
-    const QString dRoot = QString::fromLocal8Bit(qgetenv("LLAMACODE_WINDOWS_D_ROOT")).trimmed();
-    if (toRuntime) {
-        value.replace('\\', '/');
-        value = replaceCaseInsensitive(value, QStringLiteral("C:/Users/cristian"), cRoot);
-        value = replaceCaseInsensitive(value, QStringLiteral("D:/"), dRoot.isEmpty() ? QStringLiteral("D:/")
-                                                                                          : dRoot + QLatin1Char('/'));
-        return value;
-    }
-    value = replaceCaseInsensitive(value, cRoot, QStringLiteral("C:/Users/cristian"));
-    value = replaceCaseInsensitive(value, dRoot, QStringLiteral("D:/"));
-    return value;
+    return PortablePaths::translateFromEnv(value, toRuntime);
 }
 }
 
