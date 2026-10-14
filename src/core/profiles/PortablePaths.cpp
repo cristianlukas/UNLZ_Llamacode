@@ -18,6 +18,7 @@ QString withoutTrailingSlash(QString root)
 // letra de unidad suelta: "http://" o "file:///" no son unidades y no se tocan.
 QString collapseDriveSlashes(QString value)
 {
+    if (!value.contains(QLatin1String(":/"))) return value;
     static const QRegularExpression re(QStringLiteral("(?<![A-Za-z])([CcDd]:)/{2,}"));
     return value.replace(re, QStringLiteral("\\1/"));
 }
@@ -38,7 +39,9 @@ QString replaceCaseInsensitive(QString value, const QString &from, const QString
 QString replaceRoot(QString value, const QString &root, const QString &prefix,
                     const QString &alone)
 {
-    if (root.isEmpty()) return value;
+    // Corre sobre cada string de cada perfil al guardar: no compilar regex
+    // si la raíz ni aparece (el caso común).
+    if (root.isEmpty() || !value.contains(root)) return value;
     const QString escaped = QRegularExpression::escape(root);
     value.replace(QRegularExpression(escaped + QStringLiteral("/")), prefix);
     value.replace(QRegularExpression(escaped + QStringLiteral("(?=$|[\\s\"',;=])")), alone);

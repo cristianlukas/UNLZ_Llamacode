@@ -1050,7 +1050,8 @@ Item {
                         Rectangle {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
-                            Layout.minimumHeight: 120
+                            // El panel scrollea: la lista no necesita achicarse a 3 filas.
+                            Layout.minimumHeight: 240
                             color: Theme.inputBg
                             radius: 6
                             border.color: Theme.divider; border.width: 1
