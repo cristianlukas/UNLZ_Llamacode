@@ -1,0 +1,30 @@
+{
+  "id": "sys-astra-iq2xs-default",
+  "tier": "ASTRA-Strata",
+  "order": 497,
+  "extra": true,
+  "benchmark": true,
+  "best": false,
+  "favorite": false,
+  "alias": "ASTRA",
+  "displayName": "ASTRA DEFAULT · ISTA IQ2_XS · Strata · 131K",
+  "minVramGb": 12,
+  "backend": {
+    "kind": "cloud",
+    "baseUrl": "http://127.0.0.1:8350",
+    "model": "qwen3.8-flash-next-iq2_xs",
+    "ctx": 131072,
+    "port": 8350,
+    "managedServer": {
+      "type": "astra-strata",
+      "port": 8350,
+      "configSetting": "astra/configFile/sys-astra-iq2xs-default",
+      "expectedModelName": "qwen3.8-flash-next-iq2_xs",
+      "allowLegacyConfigFallback": false
+    }
+  },
+  "agentProfileId": "agent-maximo",
+  "reasoningEffort": "medium",
+  "reasoningBudget": 8192,
+  "comment": "ASTRA DEFAULT solicitado por el usuario. ISTA-DASLab Qwen3.8-Flash-Next GSQ-RCO IQ2_XS, Strata 0.1.41, 2×RTX 3090, contexto 131072, KV int8/resident 32768, MTP4/spec-min-p 0.70, cache de expertos auto y sampling temp 0.6/top-p 0.95/top-k 20/min-p 0/repeat 1/presence 0. Hard Mode v2.8.0: 28 tareas × 3 semillas, 77,98/100 media, 154,19 tok/s media (153,05 mediana), 11:05 total. AVISO DE SEGURIDAD: TC-92 filtró datos de otro tenant en 3/3 semillas; TC-74 también falló 3/3. No usar con datos sensibles o aislamiento entre tenants. La promoción a predeterminado sigue el pedido explícito del usuario; best=false para no presentarlo como recomendación segura general. Config exacta en Ajustes → ASTRA."
+}

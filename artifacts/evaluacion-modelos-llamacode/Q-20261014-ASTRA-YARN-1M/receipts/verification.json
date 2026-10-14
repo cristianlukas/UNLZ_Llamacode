@@ -1,0 +1,23 @@
+{
+  "status": "verified",
+  "active_config_sha256": "b4a55b263ad8bf1df809afb76603c23d55c1471c2e7cac6997e979bd3ad5e38f",
+  "system_profiles_sha256": "fdf41e0578e39d3289a2bc05d0f3571a7100e280edb057250580f02a7e0b9758",
+  "source_mirror_sha256": "fdf41e0578e39d3289a2bc05d0f3571a7100e280edb057250580f02a7e0b9758",
+  "effective_context_flags": {
+    "--max-context": "1048576",
+    "--rope-scaling": "yarn",
+    "--rope-scale": "4",
+    "--yarn-orig-ctx": "262144"
+  },
+  "model_id": "qwen3.8-flash-next-iq2_xs",
+  "best": false,
+  "build_binary": "/home/cristian/.cache/llamacode/build_linux/LlamaCode",
+  "build_binary_mtime_ns": 1791990186214223700,
+  "checks": [
+    "JSON parse",
+    "exact context/YaRN flags",
+    "non-context Strata args unchanged",
+    "system profile changes limited to context/displayName/comment",
+    "catalog mirrored to native build source"
+  ]
+}

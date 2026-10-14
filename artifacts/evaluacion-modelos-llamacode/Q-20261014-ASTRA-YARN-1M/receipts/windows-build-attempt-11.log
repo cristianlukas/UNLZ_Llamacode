@@ -1,0 +1,341 @@
+**********************************************************************
+** Visual Studio 2022 Developer Command Prompt vError: Unknown error
+** Copyright (c) 2025 Microsoft Corporation
+**********************************************************************
+[vcvarsall.bat] Environment initialized for: 'x64'
+
+  Checking File Globs
+  1>Checking Build System
+  Automatic QML type registration for target LlamaCode
+  Building Custom Rule C:/Users/cristian/Documents/LlamaCode/CMakeLists.txt
+  Copying LlamaCode qml sources into build dir
+  Building Custom Rule C:/Users/cristian/Documents/LlamaCode/CMakeLists.txt
+  Copying LlamaCode qml resources into build dir
+  Building Custom Rule C:/Users/cristian/Documents/LlamaCode/CMakeLists.txt
+  Building Custom Rule C:/Users/cristian/Documents/LlamaCode/CMakeLists.txt
+  Running qmlimportscanner for LlamaCode
+  Generating .lupdate/translations/qtkeychain_de.ts.stamp
+  Updating '../qtkeychain-src/translations/qtkeychain_de.ts'...
+      Found 55 source text(s) (0 new and 55 already existing)
+  Generating .lupdate/translations/qtkeychain_fr.ts.stamp
+  qrc_llamacode_core_assets_init.cpp
+  Updating '../qtkeychain-src/translations/qtkeychain_fr.ts'...
+      Found 55 source text(s) (0 new and 55 already existing)
+  Generating .lupdate/translations/qtkeychain_ro.ts.stamp
+  llamacode_core_resources_1.vcxproj -> C:\Users\cristian\Documents\LlamaCode\build\llamacode_core_resources_1.dir\Debug\llamacode_core_resources_1.lib
+  Updating '../qtkeychain-src/translations/qtkeychain_ro.ts'...
+      Found 55 source text(s) (0 new and 55 already existing)
+  Generating .lupdate/translations/qtkeychain_ru.ts.stamp
+  Updating '../qtkeychain-src/translations/qtkeychain_ru.ts'...
+      Found 55 source text(s) (0 new and 55 already existing)
+  Generating .lupdate/translations/qtkeychain_zh.ts.stamp
+  Updating '../qtkeychain-src/translations/qtkeychain_zh.ts'...
+      Found 55 source text(s) (0 new and 55 already existing)
+  Building Custom Rule C:/Users/cristian/Documents/LlamaCode/build/_deps/qtkeychain-src/CMakeLists.txt
+  Generating qtkeychain_de.qm
+  Updating 'C:/Users/cristian/Documents/LlamaCode/build/_deps/qtkeychain-build/qtkeychain_de.qm'...
+      Generated 30 translation(s) (21 finished and 9 unfinished)
+      Ignored 25 untranslated source text(s)
+  Generating qtkeychain_fr.qm
+  Updating 'C:/Users/cristian/Documents/LlamaCode/build/_deps/qtkeychain-build/qtkeychain_fr.qm'...
+      Generated 41 translation(s) (41 finished and 0 unfinished)
+      Ignored 14 untranslated source text(s)
+  Generating qtkeychain_ro.qm
+  Updating 'C:/Users/cristian/Documents/LlamaCode/build/_deps/qtkeychain-build/qtkeychain_ro.qm'...
+      Generated 34 translation(s) (25 finished and 9 unfinished)
+      Ignored 21 untranslated source text(s)
+  Generating qtkeychain_ru.qm
+  Updating 'C:/Users/cristian/Documents/LlamaCode/build/_deps/qtkeychain-build/qtkeychain_ru.qm'...
+      Generated 43 translation(s) (41 finished and 2 unfinished)
+      Ignored 12 untranslated source text(s)
+  Generating qtkeychain_zh.qm
+  Updating 'C:/Users/cristian/Documents/LlamaCode/build/_deps/qtkeychain-build/qtkeychain_zh.qm'...
+      Generated 34 translation(s) (25 finished and 9 unfinished)
+      Ignored 21 untranslated source text(s)
+  Building Custom Rule C:/Users/cristian/Documents/LlamaCode/CMakeLists.txt
+  Generating .rcc/qmlcache/LlamaCode_qml/Main_qml.cpp, .rcc/qmlcache/LlamaCode_qml/Main_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/components/CommandPreview_qml.cpp, .rcc/qmlcache/LlamaCode_qml/components/CommandPreview_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/components/LcButton_qml.cpp, .rcc/qmlcache/LlamaCode_qml/components/LcButton_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/components/LcCheckBox_qml.cpp, .rcc/qmlcache/LlamaCode_qml/components/LcCheckBox_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/components/LcColorPicker_qml.cpp, .rcc/qmlcache/LlamaCode_qml/components/LcColorPicker_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/components/LcColorRow_qml.cpp, .rcc/qmlcache/LlamaCode_qml/components/LcColorRow_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/components/LcComboBox_qml.cpp, .rcc/qmlcache/LlamaCode_qml/components/LcComboBox_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/components/LcDialog_qml.cpp, .rcc/qmlcache/LlamaCode_qml/components/LcDialog_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/components/LcHarnessEditor_qml.cpp, .rcc/qmlcache/LlamaCode_qml/components/LcHarnessEditor_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/components/LcScrollBar_qml.cpp, .rcc/qmlcache/LlamaCode_qml/components/LcScrollBar_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/components/LcSwitch_qml.cpp, .rcc/qmlcache/LlamaCode_qml/components/LcSwitch_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/components/LcTextField_qml.cpp, .rcc/qmlcache/LlamaCode_qml/components/LcTextField_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/components/MermaidPreviewDialog_qml.cpp, .rcc/qmlcache/LlamaCode_qml/components/MermaidPreviewDialog_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/components/NavBar_qml.cpp, .rcc/qmlcache/LlamaCode_qml/components/NavBar_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/components/OpencodeConfigDialog_qml.cpp, .rcc/qmlcache/LlamaCode_qml/components/OpencodeConfigDialog_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/components/PageHeader_qml.cpp, .rcc/qmlcache/LlamaCode_qml/components/PageHeader_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/components/ToolSupportBanner_qml.cpp, .rcc/qmlcache/LlamaCode_qml/components/ToolSupportBanner_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/pages/AgentPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/AgentPage_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/pages/AgentsPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/AgentsPage_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/pages/BenchmarkPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/BenchmarkPage_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/pages/BinariesPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/BinariesPage_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/pages/CharlaPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/CharlaPage_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/pages/ChatPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/ChatPage_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/pages/DataLabPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/DataLabPage_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/pages/DownloadsPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/DownloadsPage_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/pages/LaunchPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/LaunchPage_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/pages/ModelRootsPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/ModelRootsPage_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/pages/ProfilesPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/ProfilesPage_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/pages/RankingPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/RankingPage_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/pages/ResearchPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/ResearchPage_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/pages/SettingsPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/SettingsPage_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/pages/TasksPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/TasksPage_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/pages/TunerPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/TunerPage_qml.cpp.aotstats
+  Building Custom Rule C:/Users/cristian/Documents/LlamaCode/CMakeLists.txt
+  Generating .rcc/qmlcache/module_LlamaCode.aotstats
+  Building Custom Rule C:/Users/cristian/Documents/LlamaCode/CMakeLists.txt
+  Building Custom Rule C:/Users/cristian/Documents/LlamaCode/build/_deps/qtkeychain-src/CMakeLists.txt
+  Automatic MOC for target qt6keychain
+  Generating moc_keychain.cpp
+  Generating moc_keychain_p.cpp
+  Generating moc_gnomekeyring_p.cpp
+  Building Custom Rule C:/Users/cristian/Documents/LlamaCode/build/_deps/qtkeychain-src/CMakeLists.txt
+  moc_gnomekeyring_p.cpp
+  moc_keychain.cpp
+  moc_keychain_p.cpp
+  Generating Code...
+  qt6keychain.vcxproj -> C:\Users\cristian\Documents\LlamaCode\build\_deps\qtkeychain-build\Debug\qt6keychaind.lib
+  Automatic MOC and UIC for target llamacode_core
+  Running rcc for resource llamacode_core_assets
+  Building Custom Rule C:/Users/cristian/Documents/LlamaCode/CMakeLists.txt
+  qrc_llamacode_core_assets.cpp
+  mocs_compilation_Debug.cpp
+  AppController.cpp
+  ThemeProvider.cpp
+  TrayController.cpp
+  AuxiliaryJobScheduler.cpp
+  BinaryRegistry.cpp
+  CapabilityDetector.cpp
+  CatalogModel.cpp
+  ControlApi.cpp
+  DocumentExtractor.cpp
+  EngineCatalog.cpp
+  GGUFScanner.cpp
+  HardwareDiagnostics.cpp
+  LlamaBinary.cpp
+  MermaidRenderer.cpp
+  ModelCatalog.cpp
+  ModelRoleRegistry.cpp
+  ModelRoot.cpp
+  ModelRootRegistry.cpp
+  Generating Code...
+  Compiling...
+  OllamaImporter.cpp
+  PerformanceMatrix.cpp
+  SecretStore.cpp
+C:\Users\cristian\Documents\LlamaCode\src\core\SecretStore.cpp(240,38): warning C4804: '>': unsafe use of type 'bool' in operation [C:\Users\cristian\Documents\LlamaCode\build\llamacode_core.vcxproj]
+  ServerBenchmarkMetrics.cpp
+  ToolCallingSupport.cpp
+  AgentDeliverableStore.cpp
+  AgentEfficiency.cpp
+  AgentEventLog.cpp
+  AgentProgressGovernor.cpp
+  AgentRoomStore.cpp
+  AgentRunStore.cpp
+  AgentToolRunner.cpp
+  BrowserTeach.cpp
+  CodeGraphIndexer.cpp
+  ContextIndex.cpp
+  ContextPreflight.cpp
+  DifficultyRouter.cpp
+  GraphStore.cpp
+  HarnessCapabilitySnapshot.cpp
+  HarnessDirectiveStore.cpp
+  Generating Code...
+  Compiling...
+  HarnessEffectLedger.cpp
+  HarnessEventLog.cpp
+  HarnessSandbox.cpp
+  HarnessWorkerProtocol.cpp
+  HotspotAnalyzer.cpp
+  HybridPlanning.cpp
+  KnowledgePacket.cpp
+  LlamaAgentBackend.cpp
+  ManagedAgentRunStore.cpp
+  MasterCli.cpp
+  McpClient.cpp
+  MemoryStore.cpp
+  OpencodeBackend.cpp
+  PortableSkillStore.cpp
+  ProjectBrain.cpp
+  RawChatBackend.cpp
+  StructuredSourceView.cpp
+  SubAgentRunner.cpp
+  ToolExecutionSafety.cpp
+  ToolSurfaceRouter.cpp
+  Generating Code...
+  Compiling...
+  VisionImagePayload.cpp
+  WorkRegistry.cpp
+  AgentDefinitionStore.cpp
+  TriggerManager.cpp
+  AssistantRuntime.cpp
+  AutomationArtifactStore.cpp
+  AutomationRunner.cpp
+  DesktopAutomationBackend.cpp
+  DesktopComputerUse.cpp
+  DesktopRecoveryPolicy.cpp
+  FuzzyMatch.cpp
+  LinuxDesktopBackend.cpp
+  OcrEngine.cpp
+  OcrTextLocator.cpp
+  TeachKeyBuffer.cpp
+  TeachSessionRecorder.cpp
+  VisualMatcher.cpp
+  DataLab.cpp
+  LogTriage.cpp
+  StartupDiagnostics.cpp
+  Generating Code...
+  Compiling...
+  DownloadHistoryStore.cpp
+  BenchmarkPack.cpp
+  EvalSuite.cpp
+  LlmGateway.cpp
+  ClaudeDesktopIntegration.cpp
+  OpenCodeIntegration.cpp
+  MailClient.cpp
+  EffectiveProfileBuilder.cpp
+  HarnessEngine.cpp
+  HarnessSpec.cpp
+  ProfileHealthChecker.cpp
+  ProfileManager.cpp
+  ProfileTypes.cpp
+  AutomationStore.cpp
+  CronSchedule.cpp
+  EngineeringWorkflowCatalog.cpp
+  EvidenceBundle.cpp
+  RunHistoryStore.cpp
+  SchedulerDaemonRegistration.cpp
+  TaskSchedule.cpp
+  Generating Code...
+  Compiling...
+  TaskScheduler.cpp
+  TaskSecurityPolicy.cpp
+  TaskStore.cpp
+  WorkflowEngine.cpp
+  WorkflowRunner.cpp
+  WorkflowVisualModel.cpp
+  AutoTuner.cpp
+  TunerEngine.cpp
+  TunerWorker.cpp
+  AudioCodec.cpp
+  CharlaTuning.cpp
+  SttEngine.cpp
+  TtsEngine.cpp
+  TtsPolicy.cpp
+  TurnDetector.cpp
+  VadEngine.cpp
+  VoiceAgentPolicy.cpp
+  VoiceAssistant.cpp
+  VoiceController.cpp
+  VoiceCursorCommand.cpp
+  Generating Code...
+  Compiling...
+  VoiceLatencyTracker.cpp
+  VoiceServerManager.cpp
+  VoiceTypes.cpp
+  Generating Code...
+  llamacode_core.vcxproj -> C:\Users\cristian\Documents\LlamaCode\build\Debug\llamacode_core.lib
+  1>Automatic MOC and UIC for target LlamaCode
+  Building Custom Rule C:/Users/cristian/Documents/LlamaCode/CMakeLists.txt
+  Running AUTOMOC file extraction for target LlamaCode
+  Building Custom Rule C:/Users/cristian/Documents/LlamaCode/CMakeLists.txt
+  Running moc --collect-json for target LlamaCode
+  Automatic QML type registration for target LlamaCode
+  Running rcc for resource qmake_LlamaCode
+  Generating .rcc/qmlcache/LlamaCode_qmlcache_loader.cpp
+  Running rcc for resource LlamaCode_raw_qml_0
+  Running rcc for resource llamacode_assets
+  Building Custom Rule C:/Users/cristian/Documents/LlamaCode/CMakeLists.txt
+  Generating .rcc/qmlcache/LlamaCode_qml/Main_qml.cpp, .rcc/qmlcache/LlamaCode_qml/Main_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/pages/BinariesPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/BinariesPage_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/pages/ModelRootsPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/ModelRootsPage_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/pages/ProfilesPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/ProfilesPage_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/pages/LaunchPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/LaunchPage_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/pages/ChatPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/ChatPage_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/components/NavBar_qml.cpp, .rcc/qmlcache/LlamaCode_qml/components/NavBar_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/components/NavigationPolicy_js.cpp
+  Generating .rcc/qmlcache/LlamaCode_qml/components/SetupWizardPolicy_js.cpp
+  Generating .rcc/qmlcache/LlamaCode_qml/components/BenchmarkScore_js.cpp
+  Generating .rcc/qmlcache/LlamaCode_qml/components/PageHeader_qml.cpp, .rcc/qmlcache/LlamaCode_qml/components/PageHeader_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/components/CommandPreview_qml.cpp, .rcc/qmlcache/LlamaCode_qml/components/CommandPreview_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/components/ToolSupportBanner_qml.cpp, .rcc/qmlcache/LlamaCode_qml/components/ToolSupportBanner_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/components/LcButton_qml.cpp, .rcc/qmlcache/LlamaCode_qml/components/LcButton_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/components/LcComboBox_qml.cpp, .rcc/qmlcache/LlamaCode_qml/components/LcComboBox_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/components/LcCheckBox_qml.cpp, .rcc/qmlcache/LlamaCode_qml/components/LcCheckBox_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/components/LcSwitch_qml.cpp, .rcc/qmlcache/LlamaCode_qml/components/LcSwitch_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/components/LcTextField_qml.cpp, .rcc/qmlcache/LlamaCode_qml/components/LcTextField_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/components/LcDialog_qml.cpp, .rcc/qmlcache/LlamaCode_qml/components/LcDialog_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/components/LcColorPicker_qml.cpp, .rcc/qmlcache/LlamaCode_qml/components/LcColorPicker_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/components/LcColorRow_qml.cpp, .rcc/qmlcache/LlamaCode_qml/components/LcColorRow_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/components/LcHarnessEditor_qml.cpp, .rcc/qmlcache/LlamaCode_qml/components/LcHarnessEditor_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/components/LcScrollBar_qml.cpp, .rcc/qmlcache/LlamaCode_qml/components/LcScrollBar_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/components/OpencodeConfigDialog_qml.cpp, .rcc/qmlcache/LlamaCode_qml/components/OpencodeConfigDialog_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/components/MermaidPreviewDialog_qml.cpp, .rcc/qmlcache/LlamaCode_qml/components/MermaidPreviewDialog_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/pages/AgentPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/AgentPage_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/pages/AgentsPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/AgentsPage_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/pages/TasksPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/TasksPage_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/pages/BenchmarkPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/BenchmarkPage_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/pages/RankingPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/RankingPage_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/pages/TunerPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/TunerPage_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/pages/ResearchPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/ResearchPage_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/pages/DataLabPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/DataLabPage_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/pages/CharlaPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/CharlaPage_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/pages/DownloadsPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/DownloadsPage_qml.cpp.aotstats
+  Generating .rcc/qmlcache/LlamaCode_qml/pages/SettingsPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/SettingsPage_qml.cpp.aotstats
+  qrc_LlamaCode_raw_qml_0.cpp
+  qrc_llamacode_assets.cpp
+  qrc_qmake_LlamaCode.cpp
+  Main_qml.cpp
+  BenchmarkScore_js.cpp
+  CommandPreview_qml.cpp
+  LcButton_qml.cpp
+  LcCheckBox_qml.cpp
+  LcColorPicker_qml.cpp
+  LcColorRow_qml.cpp
+  LcComboBox_qml.cpp
+  LcDialog_qml.cpp
+  LcHarnessEditor_qml.cpp
+  LcScrollBar_qml.cpp
+  LcSwitch_qml.cpp
+  LcTextField_qml.cpp
+  MermaidPreviewDialog_qml.cpp
+  NavBar_qml.cpp
+  NavigationPolicy_js.cpp
+  OpencodeConfigDialog_qml.cpp
+  Generating Code...
+  Compiling...
+  PageHeader_qml.cpp
+  SetupWizardPolicy_js.cpp
+  ToolSupportBanner_qml.cpp
+  AgentPage_qml.cpp
+  AgentsPage_qml.cpp
+  BenchmarkPage_qml.cpp
+  BinariesPage_qml.cpp
+  CharlaPage_qml.cpp
+  ChatPage_qml.cpp
+  DataLabPage_qml.cpp
+  DownloadsPage_qml.cpp
+  LaunchPage_qml.cpp
+  ModelRootsPage_qml.cpp
+  ProfilesPage_qml.cpp
+  RankingPage_qml.cpp
+  ResearchPage_qml.cpp
+  SettingsPage_qml.cpp
+  TasksPage_qml.cpp
+  TunerPage_qml.cpp
+  LlamaCode_qmlcache_loader.cpp
+  Generating Code...
+  Compiling...
+  mocs_compilation_Debug.cpp
+  main.cpp
+  Generating Code...
+  llamacode_qmltyperegistrations.cpp
+     Creating library C:/Users/cristian/Documents/LlamaCode/build/Debug/LlamaCode.lib and object C:/Users/cristian/Documents/LlamaCode/build/Debug/LlamaCode.exp
+  LlamaCode.vcxproj -> C:\Users\cristian\Documents\LlamaCode\build\Debug\LlamaCode.exe
+  Building Custom Rule C:/Users/cristian/Documents/LlamaCode/CMakeLists.txt

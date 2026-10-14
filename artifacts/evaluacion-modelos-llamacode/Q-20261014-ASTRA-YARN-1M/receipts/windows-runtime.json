@@ -1,0 +1,146 @@
+{
+  "task": "Q-20261014-ASTRA-YARN-1M",
+  "captured_at_local": "2026-10-14T13:04:43-03:00",
+  "status": "complete_configuration_and_windows_debug_build; runtime_not_smoke-tested_in_native_windows",
+  "windows_build": {
+    "configuration": "Debug|x64",
+    "toolchain": "Visual Studio Build Tools 2022 / MSBuild",
+    "qt": "6.8.3 MSVC 2022 x64",
+    "windows_sdk": "10.0.26100.0",
+    "result_exit_code": 0,
+    "method": "MSBuild solution invoked directly inside an isolated Wine prefix with Visual Studio x64 environment and explicit Windows SDK include/library paths; build.bat itself requires Windows PowerShell/WMI and was not run under Wine.",
+    "exe_path": "build/Debug/LlamaCode.exe",
+    "exe_size_bytes": 27582464,
+    "exe_mtime_local": "2026-10-14T12:58:52.884394-03:00",
+    "exe_sha256": "dbca39f84fb6de8d6b944d4aba1576571dba13d58051539d6aceedf6c0f1bddc",
+    "windeployqt_exit_code": 0,
+    "qml_labs_settings_copied": true,
+    "deployment_warnings": [
+      "dxcompiler.dll/dxil.dll not found by windeployqt"
+    ],
+    "gui_or_inference_tested": false,
+    "wine_numpy_probe": "not usable: Wine CRT does not implement ucrtbase.dll.crealf"
+  },
+  "profile": {
+    "id": "sys-astra-iq2xs-default",
+    "name": "ASTRA DEFAULT / ISTA IQ2_XS / Strata / YaRN 1M x4",
+    "best": false,
+    "max_context": 1048576,
+    "rope_scaling": "yarn",
+    "rope_scale": 4,
+    "yarn_orig_ctx": 262144,
+    "config_path_windows": "D:\\LlamaCodeRuntime\\Strata\\strata-iq2_xs.json",
+    "config_sha256": "00e5098cd607ef48324845d7181ec440334c2ce5b113db838f50d6acad06ffab",
+    "system_profiles_sha256": "fdf41e0578e39d3289a2bc05d0f3571a7100e280edb057250580f02a7e0b9758"
+  },
+  "windows_preferences": {
+    "hive": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/ntuser.dat",
+    "hive_sha256_after": "c35739bec25c7b3b6473966ecf5825b94d30e866f5b365569a4bedfdc284e19e",
+    "last_launch_id": "sys-astra-iq2xs-default",
+    "strata_root": "D:\\LlamaCodeRuntime\\Strata",
+    "config_setting": "Astra\\ConfigFile\\sys-astra-iq2xs-default",
+    "config_value": "D:\\LlamaCodeRuntime\\Strata\\strata-iq2_xs.json",
+    "backup_dir": "/media/cristian/Disco local/LlamaCodeDownloads/windows-runtime-20261014/windows-user-hive-backup",
+    "backup_manifest_sha256": "31ab726e62691a5b47e0512e3b27f3cdbc8f348d3c11942613ede0e3f02aa12a",
+    "backup_files_count": 9,
+    "previous_last_launch_id": "f1a7c4d0-5e92-41b3-c8f6-0a4d9e2b3758"
+  },
+  "runtime_on_d": {
+    "strata_version": "0.1.41",
+    "strata_repo_commit": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
+    "strata_release_zip_sha256": "3dd7715f4844c0f9d2f28eb5067af0198f386df060c93523cd17e1d65b757f13",
+    "strata_engine_path": "D:\\LlamaCodeRuntime\\Strata\\engine\\strata.exe",
+    "strata_engine_size_bytes": 164440576,
+    "strata_engine_sha256": "17dabc6a49746aa22beebdf354923ba5eeb21affc6597c6976ac430e46671518",
+    "python_version": "3.12.10",
+    "python_path": "D:\\LlamaCodeRuntime\\Python312\\python.exe",
+    "python_zip_sha256": "8649692de846c56a7189d6dae5c322ab20deb1b5908b6f39426b62a36f39415d",
+    "wheel_sha256_manifest": "/media/cristian/Disco local/LlamaCodeDownloads/windows-runtime-20261014/wheels/SHA256SUMS",
+    "wheel_sha256_manifest_hash": "5f36182fa4b741385f052b1af05b03193aa7211b7077a26a5cd91b00a0e93757",
+    "config": {
+      "exe": "D:\\LlamaCodeRuntime\\Strata\\engine\\strata.exe",
+      "args": [
+        "--pack",
+        "D:\\Models\\FlashNext-IQ2XS-ISTA-Strata-eval-20261012\\strata-data\\packs\\iq2_xs",
+        "--native",
+        "D:\\Models\\FlashNext-IQ2XS-ISTA-Strata-eval-20261012\\IQ2_XS\\Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS-00001-of-00002.gguf",
+        "--ple-gguf",
+        "D:\\Models\\FlashNext-IQ2XS-ISTA-Strata-eval-20261012\\IQ2_XS\\Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS-00002-of-00002.gguf",
+        "--expert-profile",
+        "D:\\LlamaCodeRuntime\\Strata\\data\\expert-profile.bin",
+        "--expert-cache",
+        "auto",
+        "--prefill",
+        "auto",
+        "--spec",
+        "4",
+        "--spec-min-p",
+        "0.70",
+        "--mtp",
+        "D:\\Models\\FlashNext-IQ3XXS-ISTA-Strata-eval-20261009\\strata-data\\mtp\\rt",
+        "--max-context",
+        "1048576",
+        "--kv",
+        "int8",
+        "--kv-resident",
+        "32768",
+        "--pcie-frac",
+        "0.00",
+        "--rope-scaling",
+        "yarn",
+        "--rope-scale",
+        "4",
+        "--yarn-orig-ctx",
+        "262144"
+      ],
+      "cwd": "D:\\LlamaCodeRuntime\\Strata",
+      "tokenizer": "D:\\Models\\FlashNext-IQ2XS-ISTA-Strata-eval-20261012\\strata-data\\packs\\iq2_xs\\tokenizer",
+      "model_name": "qwen3.8-flash-next-iq2_xs",
+      "log": "D:\\LlamaCodeRuntime\\Strata\\astra-iq2xs.log",
+      "lib_dirs": [
+        "D:\\LlamaCodeRuntime\\Strata\\.venv\\Lib\\site-packages\\nvidia\\cu13\\bin\\x86_64"
+      ],
+      "port": 8350,
+      "gpu": [
+        0,
+        1
+      ],
+      "gpus_asked": true,
+      "layer_split": "auto",
+      "open_browser": false,
+      "sampling": {
+        "temperature": 0.6,
+        "top_p": 0.95,
+        "top_k": 20,
+        "min_p": 0.0,
+        "repetition_penalty": 1.0,
+        "presence_penalty": 0.0
+      },
+      "env": {
+        "STRATA_PREFILL_CPU_SHARE": "0"
+      }
+    },
+    "models": [
+      {
+        "path": "D:/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS-00001-of-00002.gguf",
+        "size_bytes": 39225954592,
+        "sha256": "92cee27ae5bbadcd732416a0f7a7f0acc092399dbbe8f5a5efa707c2ec0a49d7"
+      },
+      {
+        "path": "D:/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS-00002-of-00002.gguf",
+        "size_bytes": 28800138432,
+        "sha256": "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113"
+      }
+    ],
+    "mtp_path": "D:/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/mtp/rt",
+    "weights_downloaded": false
+  },
+  "checks": [
+    "MSBuild exit 0",
+    "windeployqt exit 0",
+    "all Strata args and D: input paths exist",
+    "profile/context/YaRN configuration parsed",
+    "offline NTUSER hive reopened and target preference values read back",
+    "backup manifest SHA-256 verified"
+  ]
+}

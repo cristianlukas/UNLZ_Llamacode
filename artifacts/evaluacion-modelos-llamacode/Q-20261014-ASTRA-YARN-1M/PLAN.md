@@ -1,0 +1,11 @@
+# Plan — Q-20261014-ASTRA-YARN-1M
+
+- **Pedido:** configurar ASTRA DEFAULT con límite de 1.048.576 tokens mediante YaRN ×4.
+- **Candidato:** perfil `sys-astra-iq2xs-default`, ISTA-DASLab Qwen3.8-Flash-Next IQ2_XS, Strata 0.1.41.
+- **Control:** configuración vigente de ASTRA DEFAULT a 131.072, mismo modelo/runtime.
+- **Evidencia previa:** Strata procesó prompts >95% de los límites a 1M (una prueba de rendimiento y una de retrieval sintético); en retrieval obtuvo 10/10 hechos exactos con una corrida. A 1M: 996.163 tokens, prefill 2.230,1 tok/s, decode 85,6–98,4 tok/s según la corrida, RAM del proceso 51,14 GiB y VRAM pico 23.822/22.454 MiB en la medición de rendimiento. Screening provisional; no prueba calidad general.
+- **Cambio previsto:** backend ctx `1048576`; en config Strata `--max-context 1048576 --rope-scaling yarn --rope-scale 4 --yarn-orig-ctx 262144`. Mantener pesos, paths, MTP4, KV int8/resident 32768, GPUs 0/1, split, sampling y `best=false` sin cambios. El perfil visual indicará 1M/YaRN.
+- **Configuración aplicada:** se actualizaron el recurso de perfiles y el JSON Linux. También se creó la configuración Windows dedicada en `D:\LlamaCodeRuntime\Strata\strata-iq2_xs.json`, se preparó el runtime Python/Strata sobre D:, se guardó `sys-astra-iq2xs-default` en las preferencias offline de Windows y se recompiló `build/Debug/LlamaCode.exe`. Un servidor Strata ya activo requiere reinicio para tomar los nuevos flags; esta tarea no interrumpió procesos.
+- **Verificación:** JSON y rutas de entrada validados, diff del perfil limitado a `backend.ctx`, nombre y comentario, fingerprints conservados y build Linux integrado. MSBuild Debug x64 y `windeployqt` terminaron con exit 0 dentro de un prefijo Wine aislado. La app no se ejecutó dentro de Windows real: Wine no implementa una función CRT que NumPy necesita, por lo que no se verificó inicio de Strata ni inferencia Windows. No se repitieron GPU ni suites; se reutilizó evidencia preexistente.
+- **Recursos:** sin descarga, cambios de pesos, pruebas de GPU ni cambios a otros perfiles.
+- **Rollback:** restaurar los tres argumentos YaRN y `--max-context` a su valor anterior (131072), `backend.ctx` a 131072 y display name a su texto anterior. Backups exactos y hashes están en `receipts/backup/` y `receipts/before-state.json`.

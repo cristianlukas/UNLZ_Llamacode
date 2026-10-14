@@ -1,0 +1,100 @@
+{
+  "captured_at_utc": "2026-10-14T15:02:27.069134+00:00",
+  "active_config_path": "/home/cristian/.config/LlamaCode/astra-iq2xs-strata.json",
+  "active_config_sha256_after": "b4a55b263ad8bf1df809afb76603c23d55c1471c2e7cac6997e979bd3ad5e38f",
+  "system_profiles_sha256_after": "fdf41e0578e39d3289a2bc05d0f3571a7100e280edb057250580f02a7e0b9758",
+  "active_config_after": {
+    "exe": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata",
+    "args": [
+      "--pack",
+      "/media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/strata-data/packs/iq2_xs",
+      "--native",
+      "/media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS-00001-of-00002.gguf",
+      "--ple-gguf",
+      "/media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS-00002-of-00002.gguf",
+      "--expert-profile",
+      "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/data/expert-profile.bin",
+      "--expert-cache",
+      "auto",
+      "--prefill",
+      "auto",
+      "--spec",
+      "4",
+      "--spec-min-p",
+      "0.70",
+      "--mtp",
+      "/media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/mtp/rt",
+      "--max-context",
+      "1048576",
+      "--kv",
+      "int8",
+      "--kv-resident",
+      "32768",
+      "--pcie-frac",
+      "0.00",
+      "--rope-scaling",
+      "yarn",
+      "--rope-scale",
+      "4",
+      "--yarn-orig-ctx",
+      "262144"
+    ],
+    "cwd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source",
+    "tokenizer": "/media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/strata-data/packs/iq2_xs/tokenizer",
+    "model_name": "qwen3.8-flash-next-iq2_xs",
+    "log": "/home/cristian/.local/share/LlamaCode/LlamaCode/logs/astra-iq2xs.log",
+    "lib_dirs": [
+      "/usr/local/cuda-12.8/bin",
+      "/usr/local/cuda-12.8/lib64"
+    ],
+    "port": 8350,
+    "gpu": [
+      0,
+      1
+    ],
+    "gpus_asked": true,
+    "layer_split": "auto",
+    "open_browser": false,
+    "sampling": {
+      "temperature": 0.6,
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repetition_penalty": 1.0,
+      "presence_penalty": 0.0
+    },
+    "env": {
+      "STRATA_PREFILL_CPU_SHARE": "0"
+    }
+  },
+  "system_profile_after": {
+    "id": "sys-astra-iq2xs-default",
+    "tier": "ASTRA-Strata",
+    "order": 497,
+    "extra": true,
+    "benchmark": true,
+    "best": false,
+    "favorite": false,
+    "alias": "ASTRA",
+    "displayName": "ASTRA DEFAULT · ISTA IQ2_XS · Strata · 1M YaRN ×4",
+    "minVramGb": 12,
+    "backend": {
+      "kind": "cloud",
+      "baseUrl": "http://127.0.0.1:8350",
+      "model": "qwen3.8-flash-next-iq2_xs",
+      "ctx": 1048576,
+      "port": 8350,
+      "managedServer": {
+        "type": "astra-strata",
+        "port": 8350,
+        "configSetting": "astra/configFile/sys-astra-iq2xs-default",
+        "expectedModelName": "qwen3.8-flash-next-iq2_xs",
+        "allowLegacyConfigFallback": false
+      }
+    },
+    "agentProfileId": "agent-maximo",
+    "reasoningEffort": "medium",
+    "reasoningBudget": 8192,
+    "comment": "ASTRA DEFAULT solicitado por el usuario. ISTA-DASLab Qwen3.8-Flash-Next GSQ-RCO IQ2_XS, Strata 0.1.41, 2×RTX 3090, contexto 1048576 con YaRN ×4 desde contexto original 262144, KV int8/resident 32768, MTP4/spec-min-p 0.70, cache de expertos auto y sampling temp 0.6/top-p 0.95/top-k 20/min-p 0/repeat 1/presence 0. El screening de contexto aceptó 996163 tokens; NIAH sintético recuperó 10/10 hechos en una corrida a 1M. Resultado provisional, no es calidad general. Hard Mode v2.8.0: 28 tareas × 3 semillas, 77,98/100 media, 154,19 tok/s media (153,05 mediana), 11:05 total. AVISO DE SEGURIDAD: TC-92 filtró datos de otro tenant en 3/3 semillas; TC-74 también falló 3/3. No usar con datos sensibles o aislamiento entre tenants. La promoción a predeterminado sigue el pedido explícito del usuario; best=false para no presentarlo como recomendación segura general. Config exacta en Ajustes → ASTRA."
+  }
+}
