@@ -651,6 +651,35 @@ bool DesktopAutomationBackend::launchApp(const QString &app, const QString &args
 #endif
 }
 
+QVariantMap DesktopAutomationBackend::waitForLaunchedWindow(
+    const QVariantList &before, const QString &app, int waitMs,
+    const std::function<QVariantList()> &list, int pollMs)
+{
+    const auto current = [&list]() { return list ? list() : windows(); };
+    QElapsedTimer clock;
+    clock.start();
+    QVariantMap fallback;
+    qint64 graceUntil = 0;
+    QVariantMap last;
+    for (;;) {
+        last = DesktopComputerUse::pickLaunchedWindow(before, current(), app);
+        if (last.value(QStringLiteral("dialog")).toBool())
+            return last;   // Windows avisó un error: no va a aparecer la app.
+        if (!last.isEmpty() && !last.value(QStringLiteral("existing")).toBool()) {
+            if (last.value(QStringLiteral("titleMatch")).toBool()) return last;
+            if (fallback.isEmpty()) {
+                fallback = last;
+                graceUntil = clock.elapsed() + 1200;
+            }
+        }
+        if (!fallback.isEmpty() && clock.elapsed() >= graceUntil) return fallback;
+        if (clock.elapsed() >= waitMs) break;
+        if (pollMs > 0) QThread::msleep(static_cast<unsigned long>(pollMs));
+    }
+    if (!fallback.isEmpty()) return fallback;
+    return last;   // ventana ya abierta de la app ("existing") o vacío
+}
+
 bool DesktopAutomationBackend::focusWindow(const QString &targetId, QString *error)
 {
 #ifdef Q_OS_WIN

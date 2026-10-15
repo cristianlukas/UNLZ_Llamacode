@@ -1,4 +1,5 @@
 #include <QtTest>
+#include <QElapsedTimer>
 #include <QImage>
 #include <QTemporaryDir>
 #include <limits>
@@ -15,6 +16,8 @@ class AutomationTests : public QObject
     Q_OBJECT
 private slots:
     void initTestCase();
+    void launchedWindowIsTheNewOne();
+    void launchWaitReturnsWithoutGuessing();
     void normalizedCoordinatesScaleAcrossResolutions();
     void normalizedCoordinatesRejectVisualGridAndNonFiniteValues();
     void sensitiveActionClassification();
@@ -179,7 +182,9 @@ void AutomationTests::desktopPromptPrefersNativeTools()
     QVERIFY(prompt.contains(QStringLiteral("Historial")));
     QVERIFY(prompt.contains(QStringLiteral("desktop_controls")));
     QVERIFY(prompt.contains(QStringLiteral("ANTI-LOOP")));
-    QVERIFY(prompt.contains(QStringLiteral("NO repitas desktop_windows")));
+    // desktop_launch devuelve el id: no hace falta (ni conviene) listar ventanas.
+    QVERIFY(prompt.contains(QStringLiteral("desktop_launch devuelve el id")));
+    QVERIFY(prompt.contains(QStringLiteral("desktop_windows sólo si no lo encontró")));
     QVERIFY(prompt.contains(QStringLiteral("no repitas type/click/submit")));
     QVERIFY(prompt.contains(QStringLiteral("BLOCKED")));
     QVERIFY(prompt.contains(QStringLiteral("observá una sola vez")));
@@ -1020,6 +1025,122 @@ void AutomationTests::winTapDistinguishesLoneTapFromShortcut()
     t.down();
     QVERIFY(t.up());
 }
+
+namespace {
+QVariantMap winRow(const QString &id, const QString &title, const QString &cls = QStringLiteral("Window"),
+                   int w = 800, int h = 600)
+{
+    return QVariantMap{{QStringLiteral("id"), id}, {QStringLiteral("label"), title},
+                       {QStringLiteral("className"), cls}, {QStringLiteral("pid"), 1},
+                       {QStringLiteral("width"), w}, {QStringLiteral("height"), h}};
+}
+} // namespace
+
+void AutomationTests::launchedWindowIsTheNewOne()
+{
+    using DesktopComputerUse::pickLaunchedWindow;
+    const QVariantList before{winRow(QStringLiteral("a1"), QStringLiteral("LlamaCode")),
+                              winRow(QStringLiteral("b2"), QStringLiteral("Claude"))};
+
+    // Sin cambios: nada que reportar todavia.
+    QVERIFY(pickLaunchedWindow(before, before, QStringLiteral("calc")).isEmpty());
+
+    // La ventana nueva es la de la app; el titulo se reconoce por el alias.
+    QVariantList after = before;
+    after << winRow(QStringLiteral("c3"), QStringLiteral("Calculadora"), QStringLiteral("ApplicationFrameWindow"), 320, 500);
+    QVariantMap w = pickLaunchedWindow(before, after, QStringLiteral("calculator"));
+    QCOMPARE(w.value(QStringLiteral("id")).toString(), QStringLiteral("c3"));
+    QVERIFY(w.value(QStringLiteral("titleMatch")).toBool());
+    QVERIFY(!w.value(QStringLiteral("dialog")).toBool());
+
+    // Con otra ventana nueva mas grande (ej. un aviso), gana la que se parece a la app.
+    after << winRow(QStringLiteral("d4"), QStringLiteral("Notificacion"), QStringLiteral("Window"), 1900, 1000);
+    QCOMPARE(pickLaunchedWindow(before, after, QStringLiteral("calc")).value(QStringLiteral("id")).toString(),
+             QStringLiteral("c3"));
+
+    // El caso real: Windows abre su dialogo de error titulado como el pedido.
+    // NO es la app (el agente tecleaba ahi).
+    QVariantList err = before;
+    err << winRow(QStringLiteral("e5"), QStringLiteral("calculator"), QStringLiteral("#32770"), 572, 140);
+    w = pickLaunchedWindow(before, err, QStringLiteral("calculator"));
+    QCOMPARE(w.value(QStringLiteral("id")).toString(), QStringLiteral("e5"));
+    QVERIFY(w.value(QStringLiteral("dialog")).toBool());
+
+    // App de instancia unica ya abierta: no aparece otra, se reusa la existente.
+    const QVariantList open{winRow(QStringLiteral("a1"), QStringLiteral("LlamaCode")),
+                            winRow(QStringLiteral("n6"), QStringLiteral("Sin titulo - Bloc de notas"))};
+    w = pickLaunchedWindow(open, open, QStringLiteral("notepad"));
+    QCOMPARE(w.value(QStringLiteral("id")).toString(), QStringLiteral("n6"));
+    QVERIFY(w.value(QStringLiteral("existing")).toBool());
+
+    // Texto para el modelo: id directo, sin pedir desktop_windows.
+    bool ok = false;
+    const QString text = DesktopComputerUse::formatLaunchResult(
+        QStringLiteral("calc"), pickLaunchedWindow(before, after, QStringLiteral("calc")), false, &ok);
+    QVERIFY(ok);
+    QVERIFY2(text.contains(QStringLiteral("id=c3")), qPrintable(text));
+    QVERIFY(text.contains(QStringLiteral("NO hace falta desktop_windows")));
+    const QString bg = DesktopComputerUse::formatLaunchResult(
+        QStringLiteral("calc"), pickLaunchedWindow(before, after, QStringLiteral("calc")), true, &ok);
+    QVERIFY(bg.contains(QStringLiteral("desktop_control_action")));
+    QVERIFY(!bg.contains(QStringLiteral("desktop_type")));
+    const QString dlg = DesktopComputerUse::formatLaunchResult(
+        QStringLiteral("calculator"), pickLaunchedWindow(before, err, QStringLiteral("calculator")), false, &ok);
+    QVERIFY(!ok);
+    QVERIFY(dlg.contains(QStringLiteral("NO escribas")));
+    const QString none = DesktopComputerUse::formatLaunchResult(QStringLiteral("calc"), {}, false, &ok);
+    QVERIFY(ok);
+    QVERIFY(none.contains(QStringLiteral("no aparecio")) || none.contains(QStringLiteral("no apareció")));
+}
+
+void AutomationTests::launchWaitReturnsWithoutGuessing()
+{
+    const QVariantList before{winRow(QStringLiteral("a1"), QStringLiteral("LlamaCode"))};
+    // La ventana de la app aparece en el tercer sondeo: se devuelve sin esperar el resto.
+    int polls = 0;
+    QElapsedTimer t;
+    t.start();
+    QVariantMap w = DesktopAutomationBackend::waitForLaunchedWindow(
+        before, QStringLiteral("calc"), 5000, [&]() {
+            ++polls;
+            QVariantList now = before;
+            if (polls >= 3)
+                now << winRow(QStringLiteral("c3"), QStringLiteral("Calculadora"));
+            return now;
+        }, 0);
+    QCOMPARE(w.value(QStringLiteral("id")).toString(), QStringLiteral("c3"));
+    QCOMPARE(polls, 3);
+    QVERIFY(t.elapsed() < 1000);
+
+    // Ventana nueva que no se parece a la app: se acepta tras la gracia (~1,2 s),
+    // no al instante (podia ser otra cosa) ni recien al timeout.
+    t.restart();
+    w = DesktopAutomationBackend::waitForLaunchedWindow(
+        before, QStringLiteral("miapp-rara"), 5000, [&]() {
+            QVariantList now = before;
+            now << winRow(QStringLiteral("x9"), QStringLiteral("Ventana principal"));
+            return now;
+        }, 20);
+    QCOMPARE(w.value(QStringLiteral("id")).toString(), QStringLiteral("x9"));
+    QVERIFY2(t.elapsed() >= 1100 && t.elapsed() < 4000, qPrintable(QString::number(t.elapsed())));
+
+    // Dialogo de error: se devuelve al instante.
+    t.restart();
+    w = DesktopAutomationBackend::waitForLaunchedWindow(
+        before, QStringLiteral("calculator"), 5000, [&]() {
+            QVariantList now = before;
+            now << winRow(QStringLiteral("e5"), QStringLiteral("calculator"), QStringLiteral("#32770"));
+            return now;
+        }, 20);
+    QVERIFY(w.value(QStringLiteral("dialog")).toBool());
+    QVERIFY(t.elapsed() < 500);
+
+    // Nada nuevo: vacio al cumplirse el plazo.
+    w = DesktopAutomationBackend::waitForLaunchedWindow(
+        before, QStringLiteral("calc"), 200, [&]() { return before; }, 20);
+    QVERIFY(w.isEmpty());
+}
+
 
 QTEST_MAIN(AutomationTests)
 #include "test_automation.moc"

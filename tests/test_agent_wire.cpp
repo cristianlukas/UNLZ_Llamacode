@@ -22,6 +22,7 @@ private slots:
     void computerUse_cancelDropsTheRequest();
     void computerUse_backgroundMarksDesktopArgs();
     void hiddenReasoning_isCountedAndCutOnce();
+    void textToolMode_keepsReasoningControlAndDiagnosesEmpty();
     void dropsOrphanToolAndDemotesNonInitialSystem();
     void dropsDanglingAssistantAndAnchorsFirstUser();
     void dropsTransportErrorAssistantMessages();
@@ -2380,6 +2381,34 @@ void AgentWireTests::hiddenReasoning_isCountedAndCutOnce()
     // El indicador cuenta tokens en vez de quedar en "tok 0".
     QCOMPARE(LlamaAgentBackend::hiddenReasoningIndicator(1600),
              QStringLiteral("💭 pensando… (~400 tokens de razonamiento interno)"));
+}
+
+void AgentWireTests::textToolMode_keepsReasoningControlAndDiagnosesEmpty()
+{
+    // El modo texto rearma el payload de cero: antes perdia enable_thinking y
+    // reasoning_budget, asi que un template que razona por defecto (Qwen3)
+    // razonaba con "Pensar" apagado.
+    LlamaAgentBackend backend;
+    const QJsonObject native{
+        {QStringLiteral("model"), QStringLiteral("m")},
+        {QStringLiteral("messages"), QJsonArray{QJsonObject{{QStringLiteral("role"), QStringLiteral("user")},
+                                                            {QStringLiteral("content"), QStringLiteral("hola")}}}},
+        {QStringLiteral("max_tokens"), 2048},
+        {QStringLiteral("reasoning_budget"), 0},
+        {QStringLiteral("chat_template_kwargs"), QJsonObject{{QStringLiteral("enable_thinking"), false}}}};
+    const QJsonObject text = backend.textToolPayloadForTest(native);
+    QCOMPARE(text.value(QStringLiteral("reasoning_budget")).toInt(-1), 0);
+    QCOMPARE(text.value(QStringLiteral("chat_template_kwargs")).toObject()
+                 .value(QStringLiteral("enable_thinking")).toBool(true), false);
+    QVERIFY(!text.contains(QStringLiteral("tools")));   // sigue siendo modo texto
+
+    // Diagnostico de respuesta vacia: que llego por cada canal.
+    const QString diag = LlamaAgentBackend::emptyResponseDiagnostic(
+        QStringLiteral("<|channel>thought\npienso..."), 6000, QString(), QStringLiteral("length"), 1536);
+    QVERIFY2(diag.contains(QStringLiteral("finish=length")), qPrintable(diag));
+    QVERIFY(diag.contains(QStringLiteral("tokens=1536")));
+    QVERIFY(diag.contains(QStringLiteral("razonamiento_oculto=6000c")));
+    QVERIFY(diag.contains(QStringLiteral("<|channel>thought pienso")));   // sin saltos de linea
 }
 
 QTEST_MAIN(AgentWireTests)

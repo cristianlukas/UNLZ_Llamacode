@@ -103,6 +103,13 @@ public:
     static bool shouldCutHiddenReasoning(bool thinkingEnabled, int hiddenChars,
                                          bool hasOutput, int retriesUsed);
     static QString hiddenReasoningIndicator(int hiddenChars);
+    // Línea de log cuando el modelo "no respondió nada": qué llegó por cada canal.
+    static QString emptyResponseDiagnostic(const QString &rawContent, int hiddenReasonChars,
+                                           const QString &visibleReason,
+                                           const QString &finishReason, int genTokens);
+    // Tests: el payload del modo texto (tools descritas en el system prompt).
+    QJsonObject textToolPayloadForTest(const QJsonObject &nativePayload) const
+    { return buildTextToolPayload(nativePayload); }
     void setPermissionRules(const QString &rules) override;
     void revertEdit(const QString &path) override;
     void setAgentTuning(const QString &systemExtra, double temperature) override;

@@ -251,6 +251,109 @@ QString launchAlias(const QString &app)
     return it != aliases.constEnd() ? it.value() : app.trimmed();
 }
 
+// Palabras que aparecen en el título de la ventana de una app conocida.
+static QStringList launchTitleHints(const QString &app)
+{
+    const QString alias = launchAlias(app);
+    QStringList hints{foldForMatch(app.trimmed()), foldForMatch(alias)};
+    static const QHash<QString, QStringList> titles{
+        {QStringLiteral("calc"), {QStringLiteral("calculadora"), QStringLiteral("calculator")}},
+        {QStringLiteral("notepad"), {QStringLiteral("bloc de notas"), QStringLiteral("notepad")}},
+        {QStringLiteral("mspaint"), {QStringLiteral("paint")}},
+        {QStringLiteral("explorer"), {QStringLiteral("explorador"), QStringLiteral("explorer")}},
+        {QStringLiteral("ms-settings:"), {QStringLiteral("configuracion"), QStringLiteral("settings")}},
+        {QStringLiteral("taskmgr"), {QStringLiteral("administrador de tareas"), QStringLiteral("task manager")}},
+        {QStringLiteral("wt"), {QStringLiteral("terminal")}},
+    };
+    hints += titles.value(foldForMatch(alias));
+    // Ruta a un .exe: el nombre base sin extensión.
+    QString base = alias.section(QLatin1Char('/'), -1).section(QLatin1Char('\\'), -1);
+    if (base.endsWith(QLatin1String(".exe"), Qt::CaseInsensitive)) base.chop(4);
+    hints << foldForMatch(base);
+    hints.removeAll(QString());
+    hints.removeDuplicates();
+    return hints;
+}
+
+static bool titleMatchesApp(const QVariantMap &row, const QStringList &hints)
+{
+    const QString title = foldForMatch(row.value(QStringLiteral("label")).toString());
+    if (title.isEmpty()) return false;
+    for (const QString &h : hints)
+        if (h.size() >= 3 && title.contains(h)) return true;
+    return false;
+}
+
+QVariantMap pickLaunchedWindow(const QVariantList &before, const QVariantList &after,
+                               const QString &app)
+{
+    QSet<QString> known;
+    for (const QVariant &v : before) known.insert(v.toMap().value(QStringLiteral("id")).toString());
+    const QStringList hints = launchTitleHints(app);
+    QVariantMap best, dialog;
+    int bestScore = -1;
+    for (const QVariant &v : after) {
+        const QVariantMap row = v.toMap();
+        if (known.contains(row.value(QStringLiteral("id")).toString())) continue;
+        if (row.value(QStringLiteral("className")).toString() == QLatin1String("#32770")) {
+            if (dialog.isEmpty()) dialog = row;
+            continue;
+        }
+        const qint64 area = qint64(row.value(QStringLiteral("width")).toInt())
+                            * row.value(QStringLiteral("height")).toInt();
+        // La coincidencia de título manda; el área desempata.
+        const int score = (titleMatchesApp(row, hints) ? 1 << 30 : 0)
+                          + int(qMin<qint64>(area, (1 << 30) - 1) >> 4);
+        if (score > bestScore) { bestScore = score; best = row; }
+    }
+    if (!best.isEmpty()) {
+        best.insert(QStringLiteral("titleMatch"), titleMatchesApp(best, hints));
+        return best;
+    }
+    if (!dialog.isEmpty()) {
+        dialog.insert(QStringLiteral("dialog"), true);
+        return dialog;
+    }
+    for (const QVariant &v : after) {
+        QVariantMap row = v.toMap();
+        if (titleMatchesApp(row, hints)) {
+            row.insert(QStringLiteral("existing"), true);
+            return row;
+        }
+    }
+    return {};
+}
+
+QString formatLaunchResult(const QString &app, const QVariantMap &window, bool background,
+                           bool *ok)
+{
+    if (ok) *ok = true;
+    const QString id = window.value(QStringLiteral("id")).toString();
+    const QString title = window.value(QStringLiteral("label")).toString();
+    if (window.isEmpty() || id.isEmpty())
+        return QStringLiteral(
+            "[desktop_launch: lancé '%1' pero no apareció ninguna ventana nueva en 5 s. "
+            "Puede estar tardando: desktop_wait y una sola desktop_windows para buscarla.]").arg(app);
+    if (window.value(QStringLiteral("dialog")).toBool()) {
+        if (ok) *ok = false;
+        return QStringLiteral(
+            "[desktop_launch: en vez de la app apareció un diálogo del sistema \"%1\" (id=%2): "
+            "probablemente Windows no pudo abrir '%3'. NO escribas en ese diálogo. Probá con el "
+            "ejecutable (ej. 'calc', 'notepad') o una ruta completa.]").arg(title, id, app);
+    }
+    const QString which = window.value(QStringLiteral("existing")).toBool()
+        ? QStringLiteral("ya estaba abierta (no apareció otra)")
+        : QStringLiteral("se abrió");
+    const QString next = background
+        ? QStringLiteral("Seguí con desktop_controls target_id=%1 y desktop_control_action.").arg(id)
+        : QStringLiteral("Ya está en primer plano: podés usar desktop_type/desktop_key directo "
+                         "(o desktop_controls target_id=%1 para botones). Para leer el "
+                         "resultado: desktop_read_text target_id=%1.").arg(id);
+    return QStringLiteral("[desktop_launch: ok — la ventana %1: id=%2 \"%3\". Usá ese id como "
+                          "target_id; NO hace falta desktop_windows. %4]")
+        .arg(which, id, title, next);
+}
+
 bool usesUserInput(const QString &tool)
 {
     static const QSet<QString> input{

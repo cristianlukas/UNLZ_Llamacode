@@ -2476,17 +2476,28 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
     }
     if (name == QLatin1String("desktop_launch")) {
         QString error;
+        const QString app = args.value(QStringLiteral("app")).toString();
+        // Inventario ANTES de lanzar: la ventana nueva es la de la app. Así el
+        // modelo recibe el id directo en vez de adivinar entre todas las ventanas
+        // (tomó el diálogo de error "calculator" por la calculadora).
+        const QVariantList before = DesktopAutomationBackend::windows();
         const bool good = DesktopAutomationBackend::launchApp(
-            args.value(QStringLiteral("app")).toString(),
-            args.value(QStringLiteral("args")).toString(), &error);
-        if (ok) *ok = good;
-        return good ? QStringLiteral("[desktop_launch: ok — la app se está abriendo. "
-                                     "desktop_wait ~800ms y UNA desktop_windows para el id. "
-                                     "Después, si la app se maneja con teclado (calc, notepad), "
-                                     "desktop_focus <id> + desktop_type; NO repitas desktop_windows "
-                                     "ni observes en loop. Para LEER lo que muestra (resultados, "
-                                     "mensajes): desktop_read_text sobre esa ventana.]")
-                    : QStringLiteral("[desktop_launch: %1]").arg(error);
+            app, args.value(QStringLiteral("args")).toString(), &error);
+        if (!good) {
+            if (ok) *ok = false;
+            return QStringLiteral("[desktop_launch: %1]").arg(error);
+        }
+        const QVariantMap window = DesktopAutomationBackend::waitForLaunchedWindow(before, app, 5000);
+        const bool background = args.value(QStringLiteral("_lc_background")).toBool();
+        bool launchedOk = true;
+        const QString text = DesktopComputerUse::formatLaunchResult(app, window, background,
+                                                                    &launchedOk);
+        // La app recién abierta queda en primer plano: cuenta como ventana elegida
+        // por el agente (desktop_type puede escribir sin un desktop_focus extra).
+        if (launchedOk && !background && !window.value(QStringLiteral("existing")).toBool())
+            m_agentFocusedWindow = window.value(QStringLiteral("id")).toString();
+        if (ok) *ok = launchedOk;
+        return text;
     }
     if (name == QLatin1String("desktop_focus")) {
         QString error;

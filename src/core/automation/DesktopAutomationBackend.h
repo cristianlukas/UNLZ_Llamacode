@@ -2,6 +2,7 @@
 
 #include "OcrTypes.h"
 
+#include <functional>
 #include <QImage>
 #include <QList>
 #include <QPointF>
@@ -43,6 +44,14 @@ public:
     // acá vuelve al instante y no cuelga el turno esperando que el proceso termine.
     // `app` = programa/comando/verbo del shell; `args` = argumentos extra (opcional).
     static bool launchApp(const QString &app, const QString &args, QString *error = nullptr);
+    // Espera la ventana que abrió un launch (ver DesktopComputerUse::pickLaunchedWindow):
+    // vuelve apenas aparece una cuyo título se parece a la app; una ventana nueva
+    // sin ese parecido se acepta tras ~1,2 s de gracia; un diálogo de error, al
+    // instante. `list` es inyectable para tests (default: windows()).
+    static QVariantMap waitForLaunchedWindow(const QVariantList &before, const QString &app,
+                                             int waitMs,
+                                             const std::function<QVariantList()> &list = {},
+                                             int pollMs = 150);
     static bool focusWindow(const QString &targetId, QString *error = nullptr);
     // Restaura el estado visual enseñado antes de reproducir gestos anclados.
     // Es genérico para cualquier ventana Win32; no depende de la aplicación.

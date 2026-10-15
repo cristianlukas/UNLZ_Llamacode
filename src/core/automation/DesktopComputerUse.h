@@ -137,6 +137,21 @@ QString launchAlias(const QString &app);
 // ¿Es una ruta o una URI de shell (ms-settings:, https:...) en vez de un nombre
 // a resolver por PATH/App Paths?
 bool launchTargetIsPathOrUri(const QString &program);
+// Qué ventana abrió un desktop_launch, comparando el inventario de ventanas de
+// antes y después de lanzar (filas de DesktopAutomationBackend::windows()):
+//  - la ventana NUEVA; si hay varias, la que se parece a la app (título) y si
+//    no, la más grande;
+//  - un diálogo del sistema (#32770) nuevo es Windows avisando un error, NO la
+//    app: se devuelve con "dialog"=true (el agente lo tomaba por la app);
+//  - sin ventana nueva, una ya abierta que se parezca a la app ("existing"=true,
+//    apps de instancia única).
+// Vacío = todavía no hay nada que reportar.
+QVariantMap pickLaunchedWindow(const QVariantList &before, const QVariantList &after,
+                               const QString &app);
+// Texto de desktop_launch para el modelo según la ventana encontrada. *ok=false
+// si Windows mostró un diálogo de error en vez de la app.
+QString formatLaunchResult(const QString &app, const QVariantMap &window, bool background,
+                           bool *ok = nullptr);
 // Tools de escritorio que usan el mouse/teclado REALES del usuario (o le cambian
 // la ventana activa/el portapapeles). En modo "segundo plano" quedan fuera: el
 // agente maneja la app por UI Automation y el usuario sigue usando su PC.

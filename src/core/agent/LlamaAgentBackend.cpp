@@ -1825,6 +1825,24 @@ QJsonValue LlamaAgentBackend::markBackgroundDesktopArgs(const QJsonValue &argume
     return QString::fromUtf8(QJsonDocument(args).toJson(QJsonDocument::Compact));
 }
 
+QString LlamaAgentBackend::emptyResponseDiagnostic(const QString &rawContent, int hiddenReasonChars,
+                                                  const QString &visibleReason,
+                                                  const QString &finishReason, int genTokens)
+{
+    // Una respuesta "vacía" puede ser razonamiento oculto, texto que se filtró
+    // (etiquetas de pensamiento, formato nativo de tool-call no parseado) o un
+    // corte por stop. Dejarlo en el log para no diagnosticar a ciegas.
+    auto head = [](QString t) {
+        t.replace(QLatin1Char('\n'), QLatin1Char(' '));
+        return t.left(160);
+    };
+    return QStringLiteral("[turn] diagnóstico vacío: finish=%1 tokens=%2 contenido=%3c "
+                          "razonamiento_oculto=%4c razonamiento_visible=%5c inicio=\"%6\"")
+        .arg(finishReason.isEmpty() ? QStringLiteral("?") : finishReason)
+        .arg(genTokens).arg(rawContent.size()).arg(hiddenReasonChars)
+        .arg(visibleReason.size()).arg(head(rawContent));
+}
+
 bool LlamaAgentBackend::shouldCutHiddenReasoning(bool thinkingEnabled, int hiddenChars,
                                                  bool hasOutput, int retriesUsed)
 {
@@ -1848,7 +1866,7 @@ QString LlamaAgentBackend::backgroundComputerUseNote()
         "MODO SEGUNDO PLANO (lo eligió el usuario): el usuario sigue usando su PC. "
         "NO tenés mouse ni teclado (desktop_click, desktop_type, desktop_key, "
         "desktop_focus y similares no están disponibles). Camino: desktop_launch "
-        "con el ejecutable (ej. 'calc'), desktop_windows para el id, desktop_controls "
+        "con el ejecutable (ej. 'calc'; devuelve el id de la ventana), desktop_controls "
         "<id> para ver los controles y desktop_control_action (invoke/set_value/"
         "toggle/select) o desktop_click_element para accionarlos. Ej. calculadora: "
         "botones 'Tres', 'Multiplicar por', 'Tres', 'Es igual a'. Leé el resultado "
@@ -1863,8 +1881,9 @@ QString LlamaAgentBackend::desktopPlaybookSection(bool visionReady)
         "camino, es el más rápido y confiable.\n"
         "1) Abrir: desktop_launch con la app (ej. 'calc', 'notepad'). NO uses "
         "run_shell para apps GUI (se cuelga).\n"
-        "2) Esperar y ubicar: desktop_wait ~800 ms, después desktop_windows para "
-        "tomar el id de la ventana. Una sola vez; no repitas el inventario en loop.\n"
+        "2) desktop_launch ya espera la ventana y te devuelve su id: usalo como "
+        "target_id. desktop_windows sólo si la app ya estaba abierta de antes o el "
+        "launch no encontró ventana.\n"
         "3) Teclado primero (camino rápido): para apps que se manejan con teclado "
         "(calculadora, notepad, campos de texto) NO clickees botones. Enfocá con "
         "desktop_focus <id> y escribí con desktop_type. Para calculadora: primero "
@@ -3534,6 +3553,13 @@ QJsonObject LlamaAgentBackend::buildTextToolPayload(const QJsonObject &nativePay
     };
     if (nativePayload.contains(QStringLiteral("temperature")))
         payload.insert(QStringLiteral("temperature"), nativePayload.value(QStringLiteral("temperature")));
+    // El payload se arma de cero: sin copiar esto, en modo texto el server nunca
+    // recibía "Pensar" apagado (enable_thinking/reasoning_budget) y un template que
+    // razona por defecto (Qwen3) razonaba igual.
+    for (const QString &key : {QStringLiteral("reasoning_budget"),
+                               QStringLiteral("chat_template_kwargs")}) {
+        if (nativePayload.contains(key)) payload.insert(key, nativePayload.value(key));
+    }
     return payload;
 }
 
@@ -4259,6 +4285,9 @@ void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
             emit logAppended(QStringLiteral("[turn] respuesta vacía en modo text-tools; "
                                             "nudge para re-emitir acción (%1/%2)\n")
                                  .arg(m_emptyTextRetries).arg(kMaxEmptyTextRetries));
+            emit logAppended(emptyResponseDiagnostic(m_streamContent, m_streamHiddenReasonChars,
+                                                     m_streamReason, m_streamFinishReason,
+                                                     m_genTokens) + QLatin1Char('\n'));
             closeAssistantBubble();
             QString guidance = QStringLiteral(
                 "No emitiste ninguna acción. NO razones ni uses <think>: "
@@ -7681,9 +7710,9 @@ QJsonArray LlamaAgentBackend::toolSchemas()
            QStringLiteral("Abre una app del escritorio DESPRENDIDA (no bloquea). USÁ ESTO para "
                           "abrir programas (calc, notepad, una ruta .exe, un verbo del shell como "
                           "ms-settings:) en vez de run_shell: run_shell se cuelga esperando que una "
-                          "app GUI termine. Tras lanzar, esperá (desktop_wait) y verificá con "
-                          "desktop_windows/desktop_observe antes de escribir (desktop_type) o "
-                          "clickear. 'args' es opcional (argumentos extra)."),
+                          "app GUI termine. Espera a que aparezca la ventana y DEVUELVE SU id "
+                          "(target_id): no hace falta desktop_wait ni desktop_windows después. "
+                          "'args' es opcional (argumentos extra)."),
            QJsonObject{
                {QStringLiteral("app"), strProp(QStringLiteral("Programa/comando a abrir (ej. 'calc', 'notepad', ruta .exe)."))},
                {QStringLiteral("args"), strProp(QStringLiteral("Argumentos extra (opcional)."))}},
