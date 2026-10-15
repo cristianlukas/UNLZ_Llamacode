@@ -74,7 +74,7 @@ Reglas:
 | NavBar (fila de Configuración centrada, con y sin botón de update) | `tests/qml/tst_navbar.qml` (ctest `qml_navbar`) |
 | `desktop_launch` devuelve el id de la ventana que abrió (`pickLaunchedWindow`, `waitForLaunchedWindow`; diálogo de error ≠ app) | `tests/test_automation.cpp` |
 | Modo texto conserva `chat_template_kwargs`/`reasoning_budget` + diagnóstico de respuesta vacía | `tests/test_agent_wire.cpp` |
-| `scripts/update-binary.ps1` (swap, hash, rollback automático y `-Rollback`) contra zips falsos | `tests/test_update_binary_ps.ps1` (ctest `update_binary_ps`, Windows) |
+| `scripts/update-binary.ps1` (swap, hash, rollback automático y `-Rollback`, limpieza de `.failed`, attestation con `gh` falso, `LC_REQUIRE_ATTESTATION`) contra zips falsos | `tests/test_update_binary_ps.ps1` (ctest `update_binary_ps`, Windows) |
 | CharlaTuning (contexto mínimo del agente de voz, slots) + AudioCodec::toMonoResampled + recorte de silencio para STT + Piper residente | `tests/test_voice.cpp` |
 | VoiceCursorCommand (parseo de órdenes de cursor por voz) | `tests/test_voice.cpp` |
 | VoiceAssistant (Charla JARVIS: sí/no hablado, avisos de tool, pregunta de aprobación) + turno abierto de VoiceController | `tests/test_voice.cpp` |
@@ -404,7 +404,7 @@ carpeta entera (rename; rollback si falla) y relanza. Datos de usuario no se toc
   hacia Qt, en Xvfb y en offscreen.
 - **Procedencia firmada**: los jobs de build de un tag corren
   `actions/attest-build-provenance` sobre el paquete (Sigstore, gratis por ser
-  repo público). `update-binary.sh` lo verifica con `gh attestation verify
+  repo público). `update-binary.sh` y `update-binary.ps1` lo verifican con `gh attestation verify
   --signer-workflow <repo>/.github/workflows/release-binaries.yml` para
   versiones >= `ATTESTED_SINCE` (0.1.128) si `gh` está logueado: si falla, no
   instala; sin `gh` avisa y sigue (el SHA-256 sólo prueba que la descarga
@@ -413,7 +413,6 @@ carpeta entera (rename; rollback si falla) y relanza. Datos de usuario no se toc
   `gh workflow run release-binaries.yml -f tag=<tag existente> -f upload=false`
   (firma los artifacts del run) y `gh attestation verify` sobre lo bajado con
   `gh run download`. A mano: `gh attestation verify <archivo> --repo cristianlukas/UNLZ_Llamacode`.
-  `update-binary.ps1` todavía no la verifica.
 - Limpieza: la copia `llamacode-update-binary-<pid>.sh` en TMP se borra sola al
   terminar; el app borra las de updates anteriores (el `.ps1` de Windows no se
   puede borrar a sí mismo); un update exitoso borra `<instalación>.failed`.

@@ -86,6 +86,7 @@ try {
     # Rollback manual: -Rollback vuelve a .prev en cualquier momento.
     $r = Invoke-Update $v3 @()
     Check ((Version-Of $inst) -eq 'v3' -and (Version-Of "$inst.prev") -eq 'v2') 'actualiza a v3 (v2 en .prev)'
+    Check (-not (Test-Path -LiteralPath "$inst.failed")) 'un update que funciona borra el .failed anterior'
     $out = & powershell -NoProfile -ExecutionPolicy Bypass -File $script -Rollback -InstallDir $inst -NoLaunch -NoPause 2>&1 | Out-String
     Check ($LASTEXITCODE -eq 0) "-Rollback sale 0 (rc=$LASTEXITCODE)"
     Check ((Version-Of $inst) -eq 'v2') '-Rollback deja v2 instalada'
@@ -94,6 +95,50 @@ try {
     $out = & powershell -NoProfile -ExecutionPolicy Bypass -File $script -Rollback -InstallDir $inst -NoLaunch -NoPause 2>&1 | Out-String
     Check ($LASTEXITCODE -eq 1 -and $out -match 'no previous version') 'sin .prev, -Rollback falla claro y no toca nada'
     Check ((Version-Of $inst) -eq 'v2') 'sin .prev la instalacion queda intacta'
+
+    # Procedencia (attestation del CI) con un gh falso primero en el PATH: nunca
+    # llama al gh real.
+    $ghBin = Join-Path $work 'ghbin'
+    New-Item -ItemType Directory -Force -Path $ghBin | Out-Null
+    $ghCmd = @(
+        '@echo off',
+        'if "%1"=="auth" exit %FAKE_GH_AUTH_RC%',
+        'if "%1"=="attestation" (',
+        '  if "%FAKE_GH_ATTEST_FAIL%"=="1" (echo Error: HTTP 404: no attestations found & exit 1)',
+        '  echo Loaded 1 attestation from GitHub API & exit 0',
+        ')',
+        'exit /b 0')
+    Set-Content -LiteralPath (Join-Path $ghBin 'gh.cmd') -Value $ghCmd -Encoding ASCII
+    $oldPath = $env:PATH
+    $env:PATH = "$ghBin;$env:PATH"
+    try {
+        $att = Join-Path $work 'Attested'
+        $script:inst = $att
+        $env:FAKE_GH_AUTH_RC = '0'
+        $env:FAKE_GH_ATTEST_FAIL = '1'
+        $a1 = New-Package 'a1' 'a1' $good
+        $r = Invoke-Update $a1 @('-NoLaunch', '-Version', '0.1.130')
+        Check ($r.Code -eq 1 -and $r.Out -match 'Provenance check failed' -and $r.Out -match '404') "release firmada sin attestation valida: no instala (rc=$($r.Code))"
+        Check (-not (Test-Path -LiteralPath $att)) 'sin attestation valida no se toca la instalacion'
+        $env:FAKE_GH_ATTEST_FAIL = '0'
+        $r = Invoke-Update $a1 @('-NoLaunch', '-Version', '0.1.130')
+        Check ($r.Code -eq 0 -and $r.Out -match 'Provenance verified') "attestation valida: instala (rc=$($r.Code))"
+        Check ((Version-Of $att) -eq 'a1') 'con attestation valida queda instalada'
+        # Releases viejas (antes de 0.1.128) no traen firma: no se exige.
+        $env:FAKE_GH_ATTEST_FAIL = '1'
+        $a2 = New-Package 'a2' 'a2' $good
+        $r = Invoke-Update $a2 @('-NoLaunch', '-Version', '0.1.120')
+        Check ($r.Code -eq 0 -and $r.Out -notmatch 'Provenance') 'una release anterior a las firmadas no pide procedencia'
+        # LC_REQUIRE_ATTESTATION: sin gh logueado no cae al hash solo.
+        $env:FAKE_GH_AUTH_RC = '1'
+        $env:LC_REQUIRE_ATTESTATION = '1'
+        $a3 = New-Package 'a3' 'a3' $good
+        $r = Invoke-Update $a3 @('-NoLaunch')
+        Check ($r.Code -eq 1 -and $r.Out -match 'cannot be checked' -and (Version-Of $att) -eq 'a2') 'LC_REQUIRE_ATTESTATION sin gh logueado: no instala'
+    } finally {
+        $env:PATH = $oldPath
+        Remove-Item Env:FAKE_GH_AUTH_RC, Env:FAKE_GH_ATTEST_FAIL, Env:LC_REQUIRE_ATTESTATION -ErrorAction SilentlyContinue
+    }
 } finally {
     Remove-Item Env:LC_TEST_HIDDEN_LAUNCH, Env:LC_HEALTH_SECONDS -ErrorAction SilentlyContinue
     Remove-Item -Recurse -Force -LiteralPath $work -ErrorAction SilentlyContinue

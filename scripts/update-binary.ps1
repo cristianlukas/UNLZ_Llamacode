@@ -14,6 +14,12 @@
 
     User data lives in %APPDATA% / %LOCALAPPDATA%\LlamaCode: never touched here.
 
+    Provenance (same as update-binary.sh): releases from 0.1.128 on carry a
+    Sigstore attestation from release-binaries.yml. With the GitHub CLI logged
+    in the package must verify against it (a hand-uploaded asset does not);
+    without gh it is reported only. LC_REQUIRE_ATTESTATION=1 demands it whatever
+    the version, and refuses when gh cannot check it.
+
     Rollback (same as update-binary.sh): the previous version stays as
     <install>.prev. If the new one exits with an error within LC_HEALTH_SECONDS
     (default 10) of the relaunch, it is moved to <install>.failed, the previous
@@ -118,6 +124,23 @@ function Get-LocalPath([string]$url) {
 function Save-Url([string]$url, [string]$dest, [switch]$Quiet) {
     $local = Get-LocalPath $url
     if ($local) { Copy-Item -LiteralPath $local -Destination $dest -Force; return }
+    # Transient errors (a 504 from GitHub, a dropped connection) are retried like
+    # curl --retry 3 on Linux; a 4xx is final.
+    for ($attempt = 1; ; $attempt++) {
+        try { Save-UrlOnce $url $dest -Quiet:$Quiet; return } catch {
+            $status = 0
+            $we = $_.Exception.InnerException
+            if (-not $we) { $we = $_.Exception }
+            if ($we -is [Net.WebException] -and $we.Response) { $status = [int]$we.Response.StatusCode }
+            $transient = ($status -eq 0) -or ($status -ge 500) -or ($status -eq 408) -or ($status -eq 429)
+            if (-not $transient -or $attempt -ge 4) { throw }
+            Info "Download failed ($(if ($status) { "HTTP $status" } else { 'network' })); retrying ($attempt/3)..."
+            Start-Sleep -Seconds ([Math]::Min(8, 2 * $attempt))
+        }
+    }
+}
+
+function Save-UrlOnce([string]$url, [string]$dest, [switch]$Quiet) {
     [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
     $req = [Net.HttpWebRequest]::Create($url)
     $req.UserAgent = 'LlamaCode-updater'
@@ -326,6 +349,34 @@ try {
     }
     Ok "SHA-256 verified ($Actual)"
 
+    # ---- Provenance (the hash only proves the download matches the release) --
+    $attestedSince = [version]'0.1.128'
+    $verObj = $null
+    if ($Version) { try { $verObj = [version]($Version -replace '^v', '' -replace '-.*$', '') } catch {} }
+    $wantAttest = ($verObj -and $verObj -ge $attestedSince) -or [bool]$env:LC_REQUIRE_ATTESTATION
+    if ($wantAttest) {
+        $gh = Get-Command gh -ErrorAction SilentlyContinue
+        $ghReady = $false
+        if ($gh) { & $gh.Source auth status *> $null; $ghReady = ($LASTEXITCODE -eq 0) }
+        if ($ghReady) {
+            Info 'Verifying build provenance...'
+            $attestOut = & $gh.Source attestation verify $Zip --repo $Repo `
+                --signer-workflow "$Repo/.github/workflows/release-binaries.yml" 2>&1 | Out-String
+            if ($LASTEXITCODE -eq 0) {
+                Ok "Provenance verified: built by $Repo (release-binaries.yml)"
+            } else {
+                ($attestOut.Trim() -split "`n" | Select-Object -Last 5) | ForEach-Object { Write-Host "        $_" }
+                Die "Provenance check failed: this package was not built by the $Repo release workflow. Nothing was changed."
+            }
+        } elseif ($env:LC_REQUIRE_ATTESTATION) {
+            # Required means required: never fall back to the hash alone.
+            Die 'LC_REQUIRE_ATTESTATION is set but the provenance cannot be checked: install the GitHub CLI and run gh auth login. Nothing was changed.'
+        } else {
+            Write-Host '[!] Provenance not verified (needs the GitHub CLI: gh auth login).' -ForegroundColor Yellow
+            Write-Host '    The SHA-256 above only proves the download matches the release asset.'
+        }
+    }
+
     # ---- Stage next to the target (same volume: the swap is a rename) -------
     $Parent = Split-Path -Parent $InstallDir
     if (-not (Test-Path $Parent)) { New-Item -ItemType Directory -Force -Path $Parent | Out-Null }
@@ -395,6 +446,10 @@ try {
             }
             Die "Update rolled back: the new version did not start. Log: $LogPath"
         }
+    }
+    # Working update: a version that failed before is no longer worth keeping.
+    if (Test-Path -LiteralPath "$InstallDir.failed") {
+        Remove-Item -Recurse -Force -LiteralPath "$InstallDir.failed" -ErrorAction SilentlyContinue
     }
     Write-Host ''
     Ok 'Update complete.'
