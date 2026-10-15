@@ -355,14 +355,27 @@ try {
     if ($Version) { try { $verObj = [version]($Version -replace '^v', '' -replace '-.*$', '') } catch {} }
     $wantAttest = ($verObj -and $verObj -ge $attestedSince) -or [bool]$env:LC_REQUIRE_ATTESTATION
     if ($wantAttest) {
+        # gh writes its progress to stderr. Under ErrorActionPreference=Stop,
+        # Windows PowerShell 5.1 turns captured native stderr into a terminating
+        # error, so the check aborted with an empty [ERROR] and nothing installed.
         $gh = Get-Command gh -ErrorAction SilentlyContinue
         $ghReady = $false
-        if ($gh) { & $gh.Source auth status *> $null; $ghReady = ($LASTEXITCODE -eq 0) }
+        $attestOut = ''
+        $attestRc = 1
+        $eap = $ErrorActionPreference
+        $ErrorActionPreference = 'Continue'
+        try {
+            if ($gh) { & $gh.Source auth status *> $null; $ghReady = ($LASTEXITCODE -eq 0) }
+            if ($ghReady) {
+                Info 'Verifying build provenance...'
+                $attestOut = & $gh.Source attestation verify $Zip --repo $Repo `
+                    --signer-workflow "$Repo/.github/workflows/release-binaries.yml" 2>&1 |
+                    ForEach-Object { "$_" } | Out-String
+                $attestRc = $LASTEXITCODE
+            }
+        } finally { $ErrorActionPreference = $eap }
         if ($ghReady) {
-            Info 'Verifying build provenance...'
-            $attestOut = & $gh.Source attestation verify $Zip --repo $Repo `
-                --signer-workflow "$Repo/.github/workflows/release-binaries.yml" 2>&1 | Out-String
-            if ($LASTEXITCODE -eq 0) {
+            if ($attestRc -eq 0) {
                 Ok "Provenance verified: built by $Repo (release-binaries.yml)"
             } else {
                 ($attestOut.Trim() -split "`n" | Select-Object -Last 5) | ForEach-Object { Write-Host "        $_" }

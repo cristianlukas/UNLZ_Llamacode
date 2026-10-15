@@ -72,6 +72,7 @@ Reglas:
 | Tools de computer use (validación previa al input, portapapeles, rechazo de tipeo sin ventana elegida) | `tests/test_agent_tools.cpp` |
 | Computer use: preguntar modo / Super Agente directo / "segundo plano" sin mouse ni teclado (gate del turno, tools filtradas y rechazadas) + razonamiento oculto con Pensar apagado (contar y cortar una vez) | `tests/test_agent_wire.cpp`, `tests/test_agent_tools.cpp`, `tests/test_automation.cpp`, `tests/test_appcontroller.cpp` |
 | NavBar (fila de Configuración centrada, con y sin botón de update) | `tests/qml/tst_navbar.qml` (ctest `qml_navbar`) |
+| Contratos de UI de AgentPage/ChatPage reales (headers Flow con reserva de botones de ventana, "Iniciar agente" centrado, tarjeta de computer use) | `tests/qml/tst_page_contracts.qml` (ctest `qml_page_contracts`) |
 | `desktop_launch` devuelve el id de la ventana que abrió (`pickLaunchedWindow`, `waitForLaunchedWindow`; diálogo de error ≠ app) | `tests/test_automation.cpp` |
 | Modo texto conserva `chat_template_kwargs`/`reasoning_budget` + diagnóstico de respuesta vacía | `tests/test_agent_wire.cpp` |
 | `scripts/update-binary.ps1` (swap, hash, rollback automático y `-Rollback`, limpieza de `.failed`, attestation con `gh` falso, `LC_REQUIRE_ATTESTATION`) contra zips falsos | `tests/test_update_binary_ps.ps1` (ctest `update_binary_ps`, Windows) |
@@ -206,6 +207,16 @@ reproducible en headless/CI), así que sólo se cubre el path de error en
   notas de Win11 y en la app que el usuario tenía adelante. **No probar
   computer use en vivo sobre apps con documentos del usuario** (Notepad restaura
   pestañas sin guardar); la Calculadora es segura.
+- **Computer use en segundo plano contra la Calculadora real** — hay harness:
+  `build_tests\Release\qa_background_calc.exe` (se compila con `tests.bat`; en
+  ctest sólo `--help` y el guard de offscreen). Abre la Calculadora, hace 3×3= SÓLO
+  por UI Automation con el input físico bloqueado, verifica que el visor diga 9 y
+  que el puntero no se haya movido, y la cierra. Sale 0 si todo pasó.
+- **Update binario E2E con una release real**: `powershell -File
+  tests\e2e_update_binary_real.ps1 [-Tag vX.Y.Z-debug]` instala el zip REAL de
+  GitHub en una carpeta temporal (hash, procedencia si es >= 0.1.128 y `gh` está
+  logueado, `.prev`, `-Rollback`) sin tocar la instalación ni lanzar la app. Baja
+  ~2 × 55 MB, por eso no está en ctest.
 - **Computer use en segundo plano** (tarjeta "¿Cómo lo hago?" en Agente → "En
   segundo plano"): pedir "abrí la calculadora y hacé 3*3" → la tarjeta aparece
   ANTES de que el modelo arranque; en segundo plano el agente abre `calc` y

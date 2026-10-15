@@ -102,10 +102,10 @@ try {
     New-Item -ItemType Directory -Force -Path $ghBin | Out-Null
     $ghCmd = @(
         '@echo off',
-        'if "%1"=="auth" exit %FAKE_GH_AUTH_RC%',
+        'if "%1"=="auth" (echo Logged in to github.com 1>&2 & exit %FAKE_GH_AUTH_RC%)',
         'if "%1"=="attestation" (',
-        '  if "%FAKE_GH_ATTEST_FAIL%"=="1" (echo Error: HTTP 404: no attestations found & exit 1)',
-        '  echo Loaded 1 attestation from GitHub API & exit 0',
+        '  if "%FAKE_GH_ATTEST_FAIL%"=="1" (echo Error: HTTP 404: no attestations found 1>&2 & exit 1)',
+        '  echo Loaded 1 attestation from GitHub API 1>&2 & exit 0',
         ')',
         'exit /b 0')
     Set-Content -LiteralPath (Join-Path $ghBin 'gh.cmd') -Value $ghCmd -Encoding ASCII

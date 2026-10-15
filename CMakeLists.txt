@@ -742,6 +742,7 @@ if (BUILD_TESTS)
         qml/components/SettingsTabsPolicy.js
         tests/qml/tst_navigation_policy.qml
         tests/qml/tst_navbar.qml
+        tests/qml/tst_page_contracts.qml
         qml/components/NavBar.qml
         tests/qml/tst_setup_wizard_policy.qml
         tests/qml/tst_lazy_page_loader.qml
@@ -822,6 +823,18 @@ if (BUILD_TESTS)
         DEPENDS qml/pages/SettingsPage.qml
         COMMENT "Staging SettingsPage.qml text for tst_settings_tabs")
     list(APPEND _lc_qml_harness_copies "${LC_QML_HARNESS_DIR}/SettingsPage.qml.txt")
+    # tst_page_contracts lee AgentPage/ChatPage como TEXTO (headers Flow, botón
+    # Iniciar agente, tarjeta de computer use).
+    foreach(_page AgentPage ChatPage)
+        add_custom_command(
+            OUTPUT "${LC_QML_HARNESS_DIR}/${_page}.qml.txt"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    "${CMAKE_CURRENT_SOURCE_DIR}/qml/pages/${_page}.qml"
+                    "${LC_QML_HARNESS_DIR}/${_page}.qml.txt"
+            DEPENDS qml/pages/${_page}.qml
+            COMMENT "Staging ${_page}.qml text for tst_page_contracts")
+        list(APPEND _lc_qml_harness_copies "${LC_QML_HARNESS_DIR}/${_page}.qml.txt")
+    endforeach()
 
     add_custom_target(qml_harness ALL DEPENDS ${_lc_qml_harness_copies})
 
@@ -885,6 +898,12 @@ if (BUILD_TESTS)
     set_tests_properties(qml_navigation_policy PROPERTIES
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1"
         FAIL_REGULAR_EXPRESSION "FAIL |ReferenceError|Unable to assign")
+    add_test(NAME qml_page_contracts
+             COMMAND "${_lc_qt_bin}/qml" -I "${LC_QML_HARNESS_DIR}"
+                     "${LC_QML_HARNESS_DIR}/tst_page_contracts.qml")
+    set_tests_properties(qml_page_contracts PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1;QML_XHR_ALLOW_FILE_READ=1"
+        FAIL_REGULAR_EXPRESSION "FAIL |ReferenceError|TypeError|Unable to assign")
     # NavBar real: la fila de Configuracion centrada (con y sin boton de update).
     add_test(NAME qml_navbar
              COMMAND "${_lc_qt_bin}/qml" -I "${LC_QML_HARNESS_DIR}"
@@ -964,6 +983,33 @@ if (BUILD_TESTS)
             "PATH=path_list_prepend:$<TARGET_FILE_DIR:llamacode_core>"
             "PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Core>"
         )
+    endif()
+
+    # QA del modo "segundo plano" de computer use contra la Calculadora real:
+    # abre una ventana, así que la corrida real es manual (fuera de ctest). La
+    # ayuda y el guard de offscreen sí son headless.
+    qt_add_executable(qa_background_calc tests/qa_background_calc.cpp)
+    set_target_properties(qa_background_calc PROPERTIES WIN32_EXECUTABLE FALSE)
+    if (MSVC)
+        target_compile_options(qa_background_calc PRIVATE /utf-8)
+        target_link_options(qa_background_calc PRIVATE /SUBSYSTEM:CONSOLE /ENTRY:mainCRTStartup)
+    endif()
+    target_include_directories(qa_background_calc PRIVATE src tests)
+    target_link_libraries(qa_background_calc PRIVATE llamacode_core)
+    add_test(NAME qa_background_calc_help COMMAND qa_background_calc --help)
+    add_test(NAME qa_background_calc_offscreen_guard COMMAND qa_background_calc)
+    set_tests_properties(qa_background_calc_help PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1")
+    set_tests_properties(qa_background_calc_offscreen_guard PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1"
+        WILL_FAIL TRUE)
+    if (WIN32)
+        foreach(_t qa_background_calc_help qa_background_calc_offscreen_guard)
+            set_property(TEST ${_t} PROPERTY ENVIRONMENT_MODIFICATION
+                "PATH=path_list_prepend:$<TARGET_FILE_DIR:qa_background_calc>"
+                "PATH=path_list_prepend:$<TARGET_FILE_DIR:llamacode_core>"
+                "PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Core>")
+        endforeach()
     endif()
 
     qt_add_executable(qa_visual_automation tests/qa_visual_automation.cpp)
