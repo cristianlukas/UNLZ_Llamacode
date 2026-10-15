@@ -106,14 +106,14 @@ fetch() {   # fetch URL DEST [quiet]
         *://*) ;;
         *) if [ -f "$url" ]; then cp -f "$url" "$dest"; return; fi ;;
     esac
-    if [ -n "${3:-}" ]; then curl -fsSL -o "$dest" "$url"
-    else curl -fL --progress-bar -o "$dest" "$url"; fi
+    if [ -n "${3:-}" ]; then curl -fsSL --retry 3 --retry-all-errors -o "$dest" "$url"
+    else curl -fL --retry 3 --retry-all-errors --progress-bar -o "$dest" "$url"; fi
 }
 
 resolve_latest() {
     command -v python3 >/dev/null || fail "python3 is needed to read the GitHub release list."
     local json
-    json="$(curl -fsSL -H 'Accept: application/vnd.github+json' \
+    json="$(curl -fsSL --retry 3 --retry-all-errors -H 'Accept: application/vnd.github+json' \
         "https://api.github.com/repos/$REPO/releases?per_page=50")" || fail "Could not reach GitHub."
     # Prints: url<TAB>sha256(from digest, may be empty)<TAB>sha256url<TAB>version
     LC_JSON="$json" python3 -I - "$CHANNEL" <<'PY'

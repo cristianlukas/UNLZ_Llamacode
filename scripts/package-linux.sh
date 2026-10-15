@@ -33,7 +33,8 @@ mkdir -p "$tools"
 for t in linuxdeploy-x86_64.AppImage linuxdeploy-plugin-qt-x86_64.AppImage; do
     if [ ! -x "$tools/$t" ]; then
         repo="linuxdeploy"; [[ "$t" == *plugin-qt* ]] && repo="linuxdeploy-plugin-qt"
-        curl -fsSL -o "$tools/$t" "https://github.com/linuxdeploy/$repo/releases/download/continuous/$t"
+        # Retries: a transient 504 from GitHub failed a whole CI run.
+        curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors -o "$tools/$t" "https://github.com/linuxdeploy/$repo/releases/download/continuous/$t"
         chmod +x "$tools/$t"
     fi
 done
