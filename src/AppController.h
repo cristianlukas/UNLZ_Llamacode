@@ -45,6 +45,7 @@
 #include <QVariantMap>
 #include <QJsonArray>
 #include <QJsonObject>
+#include <functional>
 #include <QHash>
 #include <QList>
 #include <QPointer>
@@ -728,6 +729,14 @@ public:
     bool updateAvailable() const { return m_updateAvailable; }
     QVariantMap updateInfo() const { return m_updateInfo; }
     Q_INVOKABLE void checkForUpdates();
+    // "Actualizar": vuelve a consultar GitHub y actualiza a la ÚLTIMA release del
+    // canal (la info del arranque puede estar vieja). Responde con updateLaunchFinished.
+    Q_INVOKABLE void updateToLatest();
+    // Tests: el lanzamiento real abre una consola y corre el bootstrap.
+    void setUpdateLauncherForTest(std::function<bool()> launcher) { m_updateLauncherForTest = std::move(launcher); }
+    void armUpdateAfterCheckForTest() { m_updateAfterCheck = true; }
+    void handleUpdateCheckResultForTest(const QJsonObject &flag, bool fetched)
+    { onUpdateCheckResult(flag, fetched, m_updateChannel); }
     Q_INVOKABLE bool handleUpdateDecision(const QString &decision);
     Q_INVOKABLE QString l(const QString &key) const;
     Q_INVOKABLE QString lf(const QString &key, const QString &arg1) const { return l(key).arg(arg1); }
@@ -1599,6 +1608,7 @@ signals:
     void voiceInstallFinished(const QString &engineId, bool ok, const QString &message);
     void voiceBinaryInstalled(const QString &kind, bool ok, const QString &message);
     void updateCheckChanged();
+    void updateLaunchFinished(bool started);
     // Un perfil cloud necesita su API key y no se pudo resolver (ni env var ni store):
     // la UI debe pedirla y llamar setSecret(keyRef, value) antes de reintentar.
     void cloudSecretRequired(const QString &launchProfileId, const QString &keyRef);
@@ -2605,6 +2615,10 @@ private:
     bool m_updateAvailable = false;
     QVariantMap m_updateInfo;
     QNetworkReply *m_updateReply = nullptr;
+    bool m_updateAfterCheck = false;          // updateToLatest esperando el chequeo
+    QTimer *m_updateRecheckTimer = nullptr;   // re-chequeo periódico de releases
+    std::function<bool()> m_updateLauncherForTest;
+    void onUpdateCheckResult(const QJsonObject &flag, bool fetched, const QString &requestedChannel);
     QString m_updateChannel = QStringLiteral("prod");
     void applyUpdateFlag(const QJsonObject &flag);
 };

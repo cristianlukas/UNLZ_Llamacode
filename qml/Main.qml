@@ -179,14 +179,9 @@ ApplicationWindow {
                     Layout.fillHeight: true
                     currentIndex: stack.currentIndex
                     onPageSelected: function(idx) { stack.currentIndex = idx }
-                    onUpdateRequested: {
-                        if (!App.handleUpdateDecision("updateNow")) {
-                            errorToast.show("No se pudo iniciar la actualización. LlamaCode sigue abierta.")
-                            return
-                        }
-                        window.forceQuit = true
-                        Qt.quit()
-                    }
+                    // Re-chequea GitHub antes de actualizar: la info del arranque
+                    // podía estar vieja e instalaba una versión ya superada.
+                    onUpdateRequested: App.updateToLatest()
                 }
 
                 // Si la página activa queda inhabilitada (se apagó server/agente),
@@ -1063,7 +1058,7 @@ ApplicationWindow {
                     LcButton {
                         text: "Actualizar ahora"
                         onClicked: {
-                            App.handleUpdateDecision("updateNow")
+                            App.updateToLatest()
                             updatePopup.close()
                         }
                     }
@@ -1156,6 +1151,22 @@ ApplicationWindow {
         if (App.needsSetup) setupPopup.open()
         maybeCreateInitialProfile()
         App.checkForUpdates()
+    }
+
+    Connections {
+        target: App
+        function onUpdateLaunchFinished(started) {
+            if (!started) {
+                errorToast.show("No se pudo iniciar la actualización. LlamaCode sigue abierta.")
+                return
+            }
+            // Windows: el bootstrap cierra la app justo antes de compilar; salir
+            // ya evita que quede abierta mientras la consola muestra el progreso.
+            if (Qt.platform.os === "windows") {
+                window.forceQuit = true
+                Qt.quit()
+            }
+        }
     }
 
     onClosing: function(close) {

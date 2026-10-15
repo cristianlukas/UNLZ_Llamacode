@@ -12808,8 +12808,46 @@ QString AppController::setStartWithWindowsEnabled(bool enabled)
     return QString();
 }
 
+void AppController::updateToLatest()
+{
+    m_updateAfterCheck = true;
+    // Si ya hay un chequeo en vuelo, su resultado dispara la actualización.
+    if (!m_updateReply)
+        checkForUpdates();
+}
+
+void AppController::onUpdateCheckResult(const QJsonObject &flagIn, bool fetched,
+                                        const QString &requestedChannel)
+{
+    QJsonObject flag = flagIn;
+    // Sin red durante el clic: actualizar con lo que ya se sabía en vez de
+    // borrar el aviso y no hacer nada.
+    if (fetched || !m_updateAfterCheck) {
+        if (flag.isEmpty() && requestedChannel == QLatin1String("prod"))
+            flag = readBundledUpdateFlag();
+        applyUpdateFlag(flag);
+    }
+    if (!m_updateAfterCheck)
+        return;
+    m_updateAfterCheck = false;
+    bool started = false;
+    if (m_updateAvailable) {
+        started = m_updateLauncherForTest ? m_updateLauncherForTest()
+                                          : handleUpdateDecision(QStringLiteral("updateNow"));
+    }
+    emit updateLaunchFinished(started);
+}
+
 void AppController::checkForUpdates()
 {
+    if (!m_updateRecheckTimer) {
+        // Una release publicada con la app abierta tiene que aparecer sin
+        // reiniciar (antes sólo se chequeaba al arrancar).
+        m_updateRecheckTimer = new QTimer(this);
+        m_updateRecheckTimer->setInterval(30 * 60 * 1000);
+        connect(m_updateRecheckTimer, &QTimer::timeout, this, &AppController::checkForUpdates);
+        m_updateRecheckTimer->start();
+    }
     if (m_updateReply)
         return;
 
@@ -12830,7 +12868,8 @@ void AppController::checkForUpdates()
         m_updateReply = nullptr;
 
         QJsonObject flag;
-        if (reply && reply->error() == QNetworkReply::NoError) {
+        const bool fetched = reply && reply->error() == QNetworkReply::NoError;
+        if (fetched) {
             const QJsonDocument document = QJsonDocument::fromJson(reply->readAll());
             if (requestedChannel == QLatin1String("debug"))
                 flag = githubReleasesToUpdateFlag(document.array(), requestedChannel);
@@ -12843,9 +12882,7 @@ void AppController::checkForUpdates()
             checkForUpdates();
             return;
         }
-        if (flag.isEmpty() && requestedChannel == QLatin1String("prod"))
-            flag = readBundledUpdateFlag();
-        applyUpdateFlag(flag);
+        onUpdateCheckResult(flag, fetched, requestedChannel);
     });
 }
 

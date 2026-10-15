@@ -172,6 +172,7 @@ private slots:
     void githubPrereleaseIsIgnored();
     void modelLoadStatusComposesLocalRemoteAndConnecting();
     void computerUseChoiceReachesUiAndBackend();
+    void updateToLatestRechecksBeforeLaunching();
     void localModelLoadLifecycle();
     void windowsUpdateCommandShowsProgressWindow();
     void updateConsoleIsVisible();
@@ -421,6 +422,47 @@ void AppControllerTests::githubPrereleaseIsIgnored()
         {QStringLiteral("prerelease"), true},
     };
     QVERIFY(AppController::githubReleaseToUpdateFlag(release).isEmpty());
+}
+
+void AppControllerTests::updateToLatestRechecksBeforeLaunching()
+{
+    AppController app;
+    QStringList launchedWith;
+    app.setUpdateLauncherForTest([&]() {
+        launchedWith << app.updateInfo().value(QStringLiteral("version")).toString();
+        return true;
+    });
+    QSignalSpy finished(&app, &AppController::updateLaunchFinished);
+    const QString channel = app.updateChannel();
+    auto flag = [&](const QString &v) {
+        return QJsonObject{{"newVersion", true}, {"version", v}, {"channel", channel},
+                           {"sourceRef", QStringLiteral("v%1").arg(v)}};
+    };
+
+    // Al arrancar se conocia 98.0.0; al hacer clic GitHub ya tiene 99.0.0:
+    // se instala la ULTIMA, no la del arranque (instalaba 0.1.124 con 0.1.125 publicada).
+    app.handleUpdateCheckResultForTest(flag(QStringLiteral("98.0.0")), true);
+    QVERIFY(app.updateAvailable());
+    QVERIFY(launchedWith.isEmpty());   // chequeo normal: no lanza nada
+    app.armUpdateAfterCheckForTest();
+    app.handleUpdateCheckResultForTest(flag(QStringLiteral("99.0.0")), true);
+    QCOMPARE(launchedWith, QStringList{QStringLiteral("99.0.0")});
+    QCOMPARE(finished.count(), 1);
+    QCOMPARE(finished.takeFirst().at(0).toBool(), true);
+
+    // Sin red en el clic: actualiza con lo que ya sabia en vez de no hacer nada.
+    app.armUpdateAfterCheckForTest();
+    app.handleUpdateCheckResultForTest({}, false);
+    QCOMPARE(launchedWith.size(), 2);
+    QCOMPARE(launchedWith.last(), QStringLiteral("99.0.0"));
+    QCOMPARE(finished.takeFirst().at(0).toBool(), true);
+
+    // GitHub responde que no hay nada nuevo: no lanza y avisa que no arranco.
+    app.armUpdateAfterCheckForTest();
+    app.handleUpdateCheckResultForTest(QJsonObject{{"newVersion", false}}, true);
+    QCOMPARE(launchedWith.size(), 2);
+    QVERIFY(!app.updateAvailable());
+    QCOMPARE(finished.takeFirst().at(0).toBool(), false);
 }
 
 void AppControllerTests::computerUseChoiceReachesUiAndBackend()
