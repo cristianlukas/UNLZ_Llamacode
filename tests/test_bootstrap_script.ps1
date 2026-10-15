@@ -93,7 +93,8 @@ Check ($sh.Contains('CONFIG="${LC_CONFIG:-Release}"')) 'bootstrap.sh instala Rel
 # Lado del app.
 Check ($app.Contains('installRootForExePath(QCoreApplication::applicationFilePath())')) 'el app calcula la raiz de instalacion'
 Check ($app -match '\$env:LC_DIR=') 'el app le pasa LC_DIR al bootstrap'
-Check ($app.Contains('visibleConsoleCreationFlags(args->flags)')) 'la consola del update es visible (Qt la lanzaba con CREATE_NO_WINDOW)'
+Check ($app.Contains('launcher.setCreateProcessArgumentsModifier(showInNewConsole)')) 'la consola del update es visible (Qt la lanzaba con CREATE_NO_WINDOW)'
+Check ($app.Contains('args->inheritHandles = FALSE')) 'la consola del update no hereda los std handles nulos de la app'
 Check ($app.Contains('QStringLiteral("-NoExit")')) 'la consola del update queda abierta para ver el error'
 Check ($app.Contains('updateStarted = launcher.startDetached()')) 'confirma que el bootstrap arranco antes de cerrar la app'
 Check ($nav.Contains('visible: Qt.platform.os === "windows" && App.updateAvailable')) 'muestra el boton junto a Configuracion solo si Windows detecta una release nueva'

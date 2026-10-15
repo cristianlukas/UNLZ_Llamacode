@@ -685,6 +685,10 @@ public:
     // Flags de CreateProcess para que el update tenga consola VISIBLE: Qt, desde
     // una app GUI sin consola, lanza startDetached con CREATE_NO_WINDOW.
     static quint32 visibleConsoleCreationFlags(quint32 flags);
+    // dwFlags de STARTUPINFO para esa consola: sin STARTF_USESTDHANDLES (Qt pasa
+    // los std handles nulos de la app GUI y la salida no llegaba a la ventana) y
+    // con STARTF_USESHOWWINDOW (SW_SHOWNORMAL).
+    static quint32 visibleConsoleStartupFlags(quint32 dwFlags);
     // Tests: alimentar la carga local sin un llama-server real.
     void beginLocalModelLoadForTest(const QString &launchId, const QStringList &args)
     { beginLocalModelLoad(launchId, args); }

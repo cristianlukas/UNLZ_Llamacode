@@ -506,6 +506,13 @@ void AppControllerTests::updateConsoleIsVisible()
     QCOMPARE(flags & 0x00000008u, 0u);         // sin DETACHED_PROCESS
     QCOMPARE(flags & 0x00000010u, 0x10u);      // CREATE_NEW_CONSOLE
     QCOMPARE(flags & 0x00000400u, 0x400u);     // conserva el resto
+
+    // STARTUPINFO: sin USESTDHANDLES (los handles nulos de la app GUI dejaban la
+    // consola vacia) y con USESHOWWINDOW para SW_SHOWNORMAL.
+    const quint32 startup = AppController::visibleConsoleStartupFlags(0x00000100u | 0x00000080u);
+    QCOMPARE(startup & 0x00000100u, 0u);       // sin STARTF_USESTDHANDLES
+    QCOMPARE(startup & 0x00000001u, 1u);       // STARTF_USESHOWWINDOW
+    QCOMPARE(startup & 0x00000080u, 0x80u);    // conserva el resto
 }
 
 void AppControllerTests::voiceWhisperServerAvailabilityUsesConfiguredPath()

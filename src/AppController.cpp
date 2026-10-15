@@ -10813,6 +10813,23 @@ bool AppController::backendAvailable() const
     return backendAvailability(serverRunning(), activeRemoteProfile);
 }
 
+#ifdef Q_OS_WIN
+// Consola propia y visible para un proceso lanzado desde la app (sin consola):
+// el update y `claude`. Qt usa CREATE_NO_WINDOW y hereda los std handles (nulos
+// en una app GUI): la ventana no aparecia y, aunque apareciera, quedaba vacia.
+static void showInNewConsole(QProcess::CreateProcessArguments *args)
+{
+    args->flags = static_cast<DWORD>(AppController::visibleConsoleCreationFlags(args->flags));
+    args->startupInfo->dwFlags =
+        static_cast<DWORD>(AppController::visibleConsoleStartupFlags(args->startupInfo->dwFlags));
+    args->startupInfo->wShowWindow = SW_SHOWNORMAL;
+    args->startupInfo->hStdInput = nullptr;
+    args->startupInfo->hStdOutput = nullptr;
+    args->startupInfo->hStdError = nullptr;
+    args->inheritHandles = FALSE;
+}
+#endif
+
 QString AppController::launchClaudeCode()
 {
     if (!m_gateway || !m_gateway->listening()) {
@@ -10839,9 +10856,7 @@ QString AppController::launchClaudeCode()
     proc->setProgram(exe);
 #ifdef Q_OS_WIN
     // Abrir en una consola nueva para que Claude Code sea interactivo.
-    proc->setCreateProcessArgumentsModifier([](QProcess::CreateProcessArguments *args) {
-        args->flags |= CREATE_NEW_CONSOLE;
-    });
+    proc->setCreateProcessArgumentsModifier(showInNewConsole);
 #endif
     if (!proc->startDetached()) {
         proc->deleteLater();
@@ -12692,6 +12707,13 @@ QString AppController::windowsUpdateCommand(const QString &version, const QStrin
     return command;
 }
 
+quint32 AppController::visibleConsoleStartupFlags(quint32 dwFlags)
+{
+    constexpr quint32 kUseShowWindow = 0x00000001;   // STARTF_USESHOWWINDOW
+    constexpr quint32 kUseStdHandles = 0x00000100;   // STARTF_USESTDHANDLES
+    return (dwFlags & ~kUseStdHandles) | kUseShowWindow;
+}
+
 quint32 AppController::visibleConsoleCreationFlags(quint32 flags)
 {
     constexpr quint32 kDetachedProcess = 0x00000008;  // DETACHED_PROCESS
@@ -12874,10 +12896,7 @@ bool AppController::handleUpdateDecision(const QString &decision)
         launcher.setWorkingDirectory(workingDirectory);
         // Sin esto la consola nacia oculta: la app se cerraba y el update corria
         // invisible ("se cierra y no hace nada").
-        launcher.setCreateProcessArgumentsModifier(
-            [](QProcess::CreateProcessArguments *args) {
-                args->flags = static_cast<DWORD>(visibleConsoleCreationFlags(args->flags));
-            });
+        launcher.setCreateProcessArgumentsModifier(showInNewConsole);
         updateStarted = launcher.startDetached();
 #else
         auto shellQuote = [](QString value) {
