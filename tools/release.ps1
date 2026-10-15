@@ -89,7 +89,9 @@ try {
     if ($LASTEXITCODE -ne 0) { Fail 'gh release create fallo' }
 
     Write-Host "[OK] Release $tag ($Channel) publicado."
-    Write-Host '[INFO] The app filters releases by the configured update channel and builds the matching configuration.'
+    Write-Host '[INFO] The app filters releases by the configured update channel.'
+    Write-Host '[INFO] CI (release-binaries.yml) now builds the Windows/Linux binaries and attaches them'
+    Write-Host '       to this release (~30 min); until then "Actualizar" falls back to building from source.'
 }
 finally {
     Pop-Location

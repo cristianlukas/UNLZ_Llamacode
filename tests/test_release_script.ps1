@@ -48,5 +48,16 @@ Check ($body -match 'if \(-not \$Publish\)') 'publicar requiere -Publish'
 Check ($body -match 'gh release create') 'publica con gh release create'
 Check ($body -match '--prerelease') 'Debug se publica marcado como prerelease'
 
+# 6) Binarios: el tag que pushea el release dispara release-binaries.yml, que
+#    sube los assets que "Actualizar" baja (sin compilar en la PC del usuario).
+$wf = [IO.File]::ReadAllText((Join-Path $root '.github\workflows\release-binaries.yml'))
+Check ($wf -match "tags: \['v\*\.\*\.\*'\]") 'el push del tag (Prod y -debug) dispara el build de binarios'
+Check ($wf.Contains('gh release upload "$TAG" dist/* --clobber')) 'el CI sube los paquetes a la release del tag'
+Check ($wf.Contains('gh release view "$TAG"') -and $wf.Contains('sleep 20')) 'el CI espera a que release.ps1 cree la release (tag primero, release despues)'
+Check ($wf -match '-debug\$ \]\]; then config=Debug') 'un tag -debug compila Debug (mismo canal que el bootstrap)'
+$tagIdx = $body.IndexOf('git push origin $tag')
+$createIdx = $body.IndexOf("'release', 'create'")
+Check ($tagIdx -gt 0 -and $createIdx -gt $tagIdx) 'release.ps1 pushea el tag antes de crear la release'
+
 if ($fails) { throw "$fails release-script regression(s) failed" }
 Write-Host 'All release-script regressions passed.'

@@ -41,6 +41,9 @@ Reglas:
 | LlmGateway LAN (log por request, política "clientes LAN no cambian el modelo", detección loopback) | `tests/test_gateway.cpp` |
 | Lista de clientes LAN, reconexión del agente cliente, API key del gateway | `tests/test_system_profiles.cpp` |
 | `scripts/release.sh` (dry run, --bump, --promote, gh falso) | `tests/test_release_sh.sh` (ctest `release_sh`) |
+| "Actualizar" con binario: asset por SO/canal + hash, carpeta de instalación binaria, args del actualizador, terminal Linux | `tests/test_appcontroller.cpp` |
+| `scripts/update-binary.sh` (hash, swap, migración, autostart) | `tests/test_update_binary_sh.sh` (ctest `update_binary_sh`, sólo Unix) |
+| `scripts/update-binary.ps1` (hash, swap, rollback, `irm \| iex`) | `tests/test_bootstrap_script.ps1` (fuera de ctest) |
 | AgentProfile (perfiles de agente: capacidades+directivas, presets, gating system prompt) | `tests/test_agent_profiles.cpp` |
 | HarnessSpec (harness modular: herencia por módulo, packs, permisos, fases, migración legacy) | `tests/test_harness_spec.cpp` |
 | Módulos del harness cableados al backend + directivas propias (.md) | `tests/test_harness_modules.cpp` |
@@ -337,7 +340,33 @@ Ojo: **en la máquina de desarrollo el aviso casi nunca aparece**, porque cada
 build corre `bump-patch.bat` y deja la versión local por encima del último tag.
 Para probar el popup hace falta un binario con versión menor a la publicada.
 
-**"Actualizar ahora"** lanza `scripts/bootstrap.ps1` en una consola aparte
+**Binarios precompilados (camino normal de "Actualizar").** Pushear un tag
+`vX.Y.Z` / `vX.Y.Z-debug` dispara `.github/workflows/release-binaries.yml`:
+compila en windows-2025 y ubuntu-24.04 (Debug para `-debug`: en MSVC ya es
+optimizado y usa las DLL release de Qt, sólo se excluye el PDB), empaqueta con
+`scripts/package-windows.ps1` (windeployqt + CRT app-local) y
+`scripts/package-linux.sh` (linuxdeploy, glibc >= 2.39), instala el paquete con
+el actualizador real, prueba que arranque y sube a la release
+`LlamaCode-<tag>-windows-x64.zip` / `LlamaCode-<tag>-linux-x64.tar.gz` + `.sha256`
+(~30 min después del tag). El app elige el asset de su SO
+(`selectReleaseAsset`, exige hash: digest de GitHub o `.sha256`) y "Actualizar"
+escribe `scripts/update-binary.ps1|.sh` (van en el qrc) a TEMP y lo corre en una
+consola visible: baja, verifica SHA-256, espera a que el app cierre, cambia la
+carpeta entera (rename; rollback si falla) y relanza. Datos de usuario no se tocan.
+- Dónde instala (`binaryInstallDirFor`): una instalación binaria (tiene
+  `llamacode-install.json`, lo escribe el empaquetado) del mismo canal se
+  actualiza en su lugar; un checkout git o el otro canal **migran** a
+  `%LOCALAPPDATA%\Programs\LlamaCode[-Debug]` (Linux: `~/.local/opt/LlamaCode[-Debug]`)
+  y se repuntan los accesos directos (menú Inicio, escritorio, barra de tareas,
+  `HKCU\...\Run`; en Linux `.desktop` y autostart) que apuntaban al exe viejo.
+  El checkout queda intacto (ya no hay `reset --hard`).
+- Release sin assets (vieja, o el CI todavía compilando): un checkout cae al
+  bootstrap que compila; una instalación binaria no ofrece el update hasta que
+  aparezcan. `updates/fromSource=true` (QSettings) fuerza el bootstrap.
+- Instalar sin compilar: `$env:LC_CHANNEL='debug'; irm .../scripts/update-binary.ps1 | iex`
+  (o `curl ... update-binary.sh | bash -s -- --channel debug`).
+
+**Fallback: "Actualizar ahora" desde fuente** lanza `scripts/bootstrap.ps1` en una consola aparte
 (`-NoExit`: el update tarda minutos y si falla el error tiene que quedar a la
 vista). El app le pasa `LC_DIR` con **la instalación que está corriendo**
 (`installRootForExePath`: sube desde el exe hasta el checkout con
