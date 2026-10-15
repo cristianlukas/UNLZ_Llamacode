@@ -70,6 +70,12 @@ jobs:
             -DCMAKE_PREFIX_PATH="$QT_DIR" -DBUILD_TESTS=ON
           cmake --build build_tests -j "$(nproc)"
 
+      # Ubuntu 24.04 trae kernel.apparmor_restrict_unprivileged_userns=1: bwrap
+      # (sandbox fuerte de workers) no puede crear su namespace de red y los
+      # tests del sandbox fallan con "RTM_NEWADDR: Operation not permitted".
+      - name: Allow unprivileged user namespaces (bwrap)
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
       - name: ctest
         env:
           LD_LIBRARY_PATH: ${{ env.QT_DIR }}/lib
