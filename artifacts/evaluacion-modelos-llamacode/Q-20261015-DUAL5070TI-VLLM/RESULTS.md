@@ -1,47 +1,68 @@
 # Resultados — Q-20261015-DUAL5070TI-VLLM
 
-## Estado
+## Estado final
 
-**Auditoría de fuentes y preflight completados; sin inferencia local, no promovido.** La cola estaba libre de otras tareas pendientes al comenzar. Se registró esta campaña bajo su propio lock y se liberó al cerrar.
+**Bloqueada en HE0; sin promoción.** Se completaron los smokes de API y el
+intento de HumanEval 0 en LlamaCode. El backend vLLM respondió bien a una
+llamada de herramienta directa, pero el harness LlamaCode no pudo producir la
+salida de agente: sus schemas nativos de herramientas (~21.766 tokens) no
+entran en el contexto configurado de 8.192. HE0 terminó 0/1 después de tres
+reparaciones y no se iniciaron HE20, BCB8, ADV ni TaskFlow porque la compuerta
+HE0 exige pasar primero.
 
-## Qué se verificó
+## Almacenamiento y runtime
 
-- ExTV `dual-gpus-vllm` es una receta de vLLM 0.30.0 con patches propios, pipeline parallel y modelo Qwen3.8-27B sobre una RTX 5090 32 GB y una RTX 4070 Ti SUPER 16 GB. Publica NVFP4/W8A16/FP8 con DFlash2 y FP8+MTP. El README informa 262K de contexto, soporte anunciado de vision/tool calling, 215–259 tok/s de code en NVFP4+DFlash2 y 111,7 s para prefill de 250K. El benchmark documenta dos boots para decode y advierte que la aceptación del drafter varía. El launcher se ajusta a GPUs desiguales con partición 21/43.
-- El comentario de 150–200 tok/s en 2×5070 Ti apunta al otro proyecto. El enlace NInfer TP2 ahora redirige a `capy-flash`, renombrado desde v0.5.0; el repo visible hoy es v0.5.1. Sus pruebas de Qwen3.8-27B v0.4.9 sobre 2×RTX5070 Ti reportan replay agentic de 53 turnos a 171,2 tok/s y 156 s total. El benchmark anterior NInfer v0.2.3 midió 220,0±10,2 tok/s en structured decode, 70,9 plain decode y 4.956 tok/s de prefill a 7.680 tokens con los pesos oficiales; no todas las filas de 5090 se re-midieron. El valor ~5K no describe prefill de 250K.
-- La versión actual `capy-flash` para Flash-Next 125B MoE se midió en dos 5070 Ti: 20/20 resultados de su task bank privada (5 tareas × 4 corridas), sin llamadas de herramientas malformadas en 1.124; el lote llevó 4,28 horas. Esto no cubre una suite LlamaCode y supera el corte local de 30 minutos por perfil. El replay incluye 3 sesiones sintéticas y 53 turnos, no es Computer Usage E2E.
-- En RAM, el post de “5 GB con mmap / 26 GB sin mmap” es una observación de un comentarista y no una regla general. ExTV midió su receta concreta con 31 GiB; `capy-flash` v0.5.1 requiere alrededor de 70 GiB disponibles por una asignación pinned-host de 64,6 GiB para los expertos. No son el mismo artefacto ni runtime.
+Los pesos completos del target (~29,56 GB) y del drafter (~1,28 GB) están en
+la partición `/dev/nvme0n1p2`, en:
 
-## Preflight local ejecutado
+`/media/cristian/Disco local/Models/LlamaCodeEval/Q-20261015-DUAL5070TI-VLLM/models/`
 
-Recibo: [`local-preflight.txt`](receipts/local-preflight.txt).
+Al cerrar, esa partición tenía 84 GiB libres; `/` tenía 16 GiB libres y el
+volumen del checkout 149 GiB. El entorno vLLM quedó en el directorio aislado de
+la tarea y pasó `uv pip check` (198 paquetes compatibles). No se cambiaron los
+perfiles productivos ni el código de LlamaCode.
 
-- 2×RTX 3090, 24 GiB cada una, compute capability 8.6 (`sm_86`); topología PHB y `nvidia-smi topo -p2p p`: `NS` en ambas direcciones.
-- Driver expone CUDA 13.3, pero el toolkit local es CUDA 12.0 y Python 3.12.3. `capy-flash` v0.5.1 requiere build `sm_120a`, CUDA 13.1 y dos GPUs `sm_120`; por eso no se instaló ni se compiló.
-- RAM disponible 111 GiB y presión PSI 0 en el instante del chequeo; swap usado 5,1 GiB. La memoria disponible supera el requisito de `capy-flash`, pero no corrige la incompatibilidad de GPU. CPU Ryzen 9 9950X3D tiene AVX-512. NVMe con 166 GiB libres.
-- GPU0 está sirviendo el escritorio y procesos gráficos del usuario; GPU1 tenía Xorg. No se detuvo nada ni se inició carga de cómputo.
-- El checkpoint exacto ExTV `lued/Qwen3.8-27B-huihui-abliterated-INT8-W8A16-DFlash2` no aparece localmente. Sí existe evidencia previa de otros pesos/runtime: ver los tres informes enlazados abajo. No se repitió su fingerprint.
+## Pruebas ejecutadas
 
-## Pruebas por uso de LlamaCode
+- vLLM 0.30.0 TP2 cargó el target W8A16/DFlash2 fijado en
+  `receipts/source-lock.json` y sirvió `qwen3.8-27b`.
+- GET `/v1/models` respondió 200. El smoke de texto contestó `4` a `2 + 2`.
+- El smoke directo del API OpenAI produjo una llamada válida a `record_sum`
+  con argumentos `{"a": 2, "b": 2}`. Las respuestas crudas están en
+  `receipts/chat-smoke.json` y `receipts/tool-smoke.json`.
+- LlamaCode se probó con una copia de perfil aislada, `agent-maximo` y contexto
+  8.192. El registro del agente documenta que los schemas nativos (~21.766
+  tokens) exceden `n_ctx`, cambia al protocolo textual y termina con respuesta
+  vacía (`finish=length`, cero tokens); no creó archivos ni llamadas de
+  herramientas. Ver `receipts/agent-short-smoke.json`.
+- HumanEval 0 en contexto 8.192 finalizó en 583,445 s: score 0/1, primera
+  pasada 0/1, tres reparaciones, cero archivos y cero llamadas de herramienta.
+  El criterio falló porque no se creó `solution_HumanEval_0.py`. Corrida:
+  `HumanEval_1_tem_20261015_180255`; recibo:
+  `receipts/HE0-context8192-resumed/result.json`.
+- Los intentos con contextos 4.096–7.000 se rechazaron al exceder el límite
+  entre prompt y tokens de salida. Son fallos de presupuesto de contexto, no
+  puntajes de calidad. El primer intento a 8.192 fue interrumpido por el límite
+  de duración del daemon aislado; se reanudó con un daemon de mayor duración y
+  el resultado final indicado arriba sí completó.
 
-| Uso | Resultado de esta campaña |
-|---|---|
-| Coding/agentes | Sin corrida nueva. Las cifras de agente publicadas usan otra tarea/modelo/host; el banco privado de 20 ejecuciones toma 4,28 h. Ya hay evidencia local de DFlash2 relacionada, pero fue un perfil distinto y tuvo problema de JSON/xgrammar. |
-| Computer Usage | No evaluado: ninguna prueba terminó en una aplicación real con estado verificable. Tool calls y replay no son CU E2E. |
-| Ingi-Charla | No evaluado: las fuentes revisadas no aportan corpus acústico, ASR/TTS ni métricas de audio. |
-| Visión | ExTV anuncia imágenes hasta 4 MP, pero no presenta en el benchmark leído una matriz de calidad LlamaCode; no se envió imagen local. No inferir calidad por compatibilidad del API. |
-| Contexto | 262K es capacidad/configuración anunciada y hay un prefill publicado de 250K en ExTV; no equivale a calidad general ni a retrieval LlamaCode. `capy-flash` anuncia hasta 262K, no 1M. |
-| Velocidad/memoria | Señales de velocidad externas verificables, pero otro hardware y perfil. No hay A/B local comparable; el comentario de 5/26 GB no se generaliza. |
+## Por qué las demás etapas no arrancaron
 
-## Decisión
+La cobertura final del harness registra HE0 como `blocked`, con HE20 y BCB
+`pending`. El backend de inferencia y su API están operativos; el bloqueo está
+en el tamaño del contexto que LlamaCode necesita para las definiciones de
+herramientas. Subir sólo `n_ctx` puede aumentar el uso de KV cache en estas dos
+RTX 3090, así que antes de retomar se debe reducir/compactar el schema del
+harness o probar una configuración que quepa completa y pase el smoke. Después
+se repite **sólo HE0**; HE20 y BCB8 arrancan únicamente si ese gate pasa.
 
-No cambiar perfiles, HarnessSpec, defaults ni recomendaciones. `SOL` permanece recomendado para coding/agentes con datos sensibles; ASTRA mantiene su selección actual y las advertencias TC-92/TC-74. DFlash2 ya se probó localmente sobre SOL como experimento y no se promovió por la inestabilidad de JSON/xgrammar y falta de suites completas. El fallo histórico de carga INT8 de 2026-10-01 usó vLLM 0.29.0, no la fork 0.30.0 de ExTV, así que no prueba que el repo actual sea incompatible en toda GPU Ampere.
+No se repitió la task bank privada de `capy-flash` (4,28 h): ese runtime sigue
+requiriendo GPUs `sm_120a`, que estas RTX 3090 `sm_86` no tienen. No se cambió
+ninguna recomendación de perfil ni HarnessSpec. Computer Usage E2E, audio,
+visión y evaluación de contexto largo no se cubrieron en esta continuación.
 
-No se declara que el stack ExTV W8A16/FP8 sea matemáticamente imposible en dos 3090: no hay configuración documentada ni checkpoint idéntico aquí. La ruta `capy-flash` v0.5.1 sí queda bloqueada por arquitectura declarada (`sm_120a`) frente a `sm_86`. Para reabrir ExTV harían falta el checkpoint exacto, Python/CUDA y runtime fijados, una partición compatible y un preflight con GPU libre; empezar por smoke de carga + tool call, y después screening emparejado dentro del corte. El banco publicado de 4,28 h no se repetirá.
+## Cierre operativo
 
-## Informes y recibos previos revisados
-
-- [Auditoría local INT8 + DFlash2 (2026-10-01)](../../../docs/reddit-qwen38-int8-dflash2-local-check-20261001.md): otro checkpoint W8A16 falló con el wheel 0.29.0 al cargar embedding cuantizado; intento diagnóstico, sin score.
-- [DFlash2 local sobre SOL (2026-09-18)](../../../docs/sol-dflash2-local-audit-20260918.md): velocidad corta favorable, JSON/xgrammar inestable; no promoción ni HE20/BCB.
-- [NInfer-3090 histórico](../../../docs/ninfer-3090-linux-evaluation-20260908.md): un runtime anterior SM86 de una GPU, BCB 3/8.
-- [Topología peer RTX 3090](../Q-20261010-STRATA-DUAL3090-PEER/RESULTS.md): P2P `NS`, sin NVLink.
-- [`source-review.json`](receipts/source-review.json) contiene los enlaces y las afirmaciones auditadas.
+El servidor vLLM y el daemon aislado de LlamaCode se detuvieron. Los puertos
+18888 y 8877 quedaron libres y las dos GPUs quedaron sin carga de inferencia.
+Los intentos y resultados crudos se conservaron en `receipts/`.

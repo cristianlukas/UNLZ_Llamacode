@@ -1,0 +1,42 @@
+{
+  "launchProfileId": "60d6902d-f8c2-481a-84c1-1ef52fa169b4",
+  "alias": "Q-20261015 W8A16 DFlash2 7k",
+  "backendContext": 7000,
+  "vllmModel": {
+    "object": "list",
+    "data": [
+      {
+        "id": "qwen3.8-27b",
+        "object": "model",
+        "created": 1792097520,
+        "owned_by": "vllm",
+        "root": "/tmp/DiscoLocal/Models/LlamaCodeEval/Q-20261015-DUAL5070TI-VLLM/models/target",
+        "parent": null,
+        "max_model_len": 7000,
+        "permission": [
+          {
+            "id": "modelperm-91787bfcf7dcfa77",
+            "object": "model_permission",
+            "created": 1792097520,
+            "allow_create_engine": false,
+            "allow_sampling": true,
+            "allow_logprobs": true,
+            "allow_search_indices": false,
+            "allow_view": true,
+            "allow_fine_tuning": false,
+            "organization": "*",
+            "group": null,
+            "is_blocking": false
+          }
+        ]
+      }
+    ]
+  },
+  "serverState": {
+    "serverState": "running",
+    "serverReady": true,
+    "agentRunning": true,
+    "agentStarting": false
+  },
+  "startResult": null
+}

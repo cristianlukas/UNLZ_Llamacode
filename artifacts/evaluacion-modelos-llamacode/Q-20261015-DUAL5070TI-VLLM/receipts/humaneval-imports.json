@@ -1,0 +1,27 @@
+{
+  "source_file_sha256": "1d49078ba3e2b196b9344535bef34a43021f038fad9561d6ee7c53450609a6a2",
+  "imports": [
+    {
+      "limit": 1,
+      "id": "064328e5-6f8a-4c03-b51e-1f0929f04d96",
+      "name": "HumanEval · 1 ítem",
+      "prompt_count": 1,
+      "first_prompt_id": "HumanEval/0",
+      "last_prompt_id": "HumanEval/0",
+      "grader_types": [
+        "code_tests"
+      ]
+    },
+    {
+      "limit": 20,
+      "id": "7cc2e50e-59ce-4fa5-aa70-6fe491e6790b",
+      "name": "HumanEval · 20 ítems",
+      "prompt_count": 20,
+      "first_prompt_id": "HumanEval/0",
+      "last_prompt_id": "HumanEval/19",
+      "grader_types": [
+        "code_tests"
+      ]
+    }
+  ]
+}

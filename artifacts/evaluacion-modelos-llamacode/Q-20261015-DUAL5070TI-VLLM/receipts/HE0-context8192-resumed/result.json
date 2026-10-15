@@ -1,0 +1,191 @@
+{
+  "stage": "HE0-context8192-resumed",
+  "suiteId": "064328e5-6f8a-4c03-b51e-1f0929f04d96",
+  "startUnix": 1792098175.321856,
+  "finishUnix": 1792098760.742281,
+  "elapsedWallSec": 585.4204251766205,
+  "benchmarkStatus": "Completado.",
+  "benchmarkProgress": 100,
+  "serverState": "stopped",
+  "serverReady": false,
+  "agentRunning": true,
+  "resultCount": 1,
+  "results": [
+    {
+      "acceptance": [
+        {
+          "output": "Archivo esperado no encontrado: solution_HumanEval_0.py",
+          "passed": false,
+          "taskId": "HumanEval/0",
+          "type": "grader:code_tests"
+        }
+      ],
+      "agentFiles": [],
+      "agentMetrics": [
+        {
+          "elapsedMs": 92882,
+          "tokens": 0,
+          "tps": 0,
+          "ttft_ms": 585
+        },
+        {
+          "elapsedMs": 97588,
+          "tokens": 0,
+          "tps": 0,
+          "ttft_ms": 1068
+        },
+        {
+          "elapsedMs": 282600,
+          "tokens": 0,
+          "tps": 0,
+          "ttft_ms": 2828
+        },
+        {
+          "elapsedMs": 5,
+          "tokens": 0,
+          "tps": 0,
+          "ttft_ms": 0
+        },
+        {
+          "elapsedMs": 300534,
+          "tokens": 0,
+          "tps": 0,
+          "ttft_ms": 4835
+        },
+        {
+          "elapsedMs": 6,
+          "tokens": 0,
+          "tps": 0,
+          "ttft_ms": 0
+        }
+      ],
+      "agentProfileId": "agent-maximo",
+      "agentProfileName": "Máximo",
+      "agentSeed": 4242,
+      "agentTemperature": 0.1,
+      "agentVariant": "baseline",
+      "avgTps": 0,
+      "avgTtftMs": 1552.6666666666667,
+      "benchmarkMemoryPlanner": "llama.cpp-fit-expert-aware",
+      "benchmarkName": "HumanEval · 1 ítem",
+      "complexityMetrics": {
+        "addedLines": 0,
+        "filesChanged": 0,
+        "filesCreated": 0,
+        "filesDeleted": 0,
+        "removedLines": 0
+      },
+      "elapsedSec": 583.445,
+      "failed": true,
+      "failureDetail": "[\n    {\n        \"output\": \"Archivo esperado no encontrado: solution_HumanEval_0.py\",\n        \"passed\": false,\n        \"taskId\": \"HumanEval/0\",\n        \"type\": \"grader:code_tests\"\n    }\n]\n",
+      "failureKind": "quality",
+      "failureMessage": "Fallaron criterios de aceptacion.",
+      "failureStage": "acceptance",
+      "finalScore": 0,
+      "finalTotal": 1,
+      "firstAttemptScore": 0,
+      "firstAttemptTotal": 1,
+      "firstEvaluableSec": -1,
+      "firstToolCallSec": -1,
+      "firstWriteSec": -1,
+      "generationSec": 773.615,
+      "harnessEngineId": "legacy",
+      "harnessEngineVersion": 1,
+      "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+      "honeyEnabled": false,
+      "id": "f122378c-34e8-4a76-98ee-1a66471a0f09",
+      "measurementPhase": "cold",
+      "mode": "custom",
+      "nonGenerationSec": 0,
+      "pass": 1,
+      "passedAfterRepair": false,
+      "passesTotal": 1,
+      "profileConfigFingerprint": "5b693f786dc4717acf7fd4ae02834540f8737457eee0ce2af695f2b71051c967",
+      "profileId": "60d6902d-f8c2-481a-84c1-1ef52fa169b4",
+      "profileName": "1_[bench 48GB] Qwen3.8 INT8 W8A16 · DFlash2 · vLLM · 262k · n7 (copia)",
+      "progressGovernor": {
+        "progressEvents": 0,
+        "replanEvents": 0,
+        "stagnationEvents": 0
+      },
+      "qualityScore": 0,
+      "qualityTotal": 1,
+      "ramFreeMb": 0,
+      "ramMb": 0,
+      "ramTotalMb": 0,
+      "repairAttempts": 3,
+      "response": "",
+      "runDir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-DUAL5070TI-VLLM/runtime/xdg-data/LlamaCode/LlamaCode/benchmark-runs/HumanEval_1_tem_20261015_180255",
+      "runLabel": "HumanEval · 1 ítem",
+      "setupSec": 0.3,
+      "target": "agent",
+      "thinkingEnabled": true,
+      "timeToFirstAttempt": 282.59999999999997,
+      "timedOut": false,
+      "timeoutSec": 1800,
+      "timestamp": 1792098758961,
+      "toolCallQuality": {
+        "expectedCalls": 0,
+        "f1Pct": -1,
+        "failedCalls": 0,
+        "incompleteCalls": 0,
+        "invalidCalls": 0,
+        "matchedExpectedCalls": 0,
+        "missingExpectedCalls": 0,
+        "precisionPct": -1,
+        "recallPct": -1,
+        "redundantCalls": 0,
+        "sequenceExact": false,
+        "successRatePct": -1,
+        "successfulCalls": 0,
+        "totalCalls": 0,
+        "unexpectedCalls": 0
+      },
+      "toolCalls": 0,
+      "totalTime": 583.445,
+      "transportAfterEvaluation": false,
+      "vramFreeMb": 9402,
+      "vramGpu0FreeMb": 6678,
+      "vramGpu0Mb": 17491,
+      "vramGpu0TotalMb": 24576,
+      "vramGpu0UsedPct": 71.17106119791666,
+      "vramGpu1FreeMb": 2724,
+      "vramGpu1Mb": 21400,
+      "vramGpu1TotalMb": 24576,
+      "vramGpu1UsedPct": 87.07682291666666,
+      "vramMb": 38891,
+      "vramNormalizedImbalancePct": 15.90576171875,
+      "vramObservedGpu0SharePct": 44.97441567457766,
+      "vramOptimalGpu0SharePct": 71.02744097000638,
+      "vramPlacementAssessment": "gpu1-heavy",
+      "vramTelemetryScope": "device-total",
+      "workspace": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-DUAL5070TI-VLLM/runtime/xdg-data/LlamaCode/LlamaCode/benchmark-runs/HumanEval_1_tem_20261015_180255/1__bench_48GB_Qwen3_8_INT8_W8A16_DFlash2_vLLM_262k_n7_copia___ws"
+    }
+  ],
+  "coverage": [
+    {
+      "benchmarkEligible": true,
+      "coverageState": "incomplete",
+      "hasBlockedStage": true,
+      "hasInfrastructureOrTimeout": false,
+      "healthCodes": [],
+      "healthMessages": [],
+      "nextStage": "",
+      "pendingStages": [
+        "he0",
+        "he20",
+        "bcb"
+      ],
+      "profileConfigFingerprint": "5b693f786dc4717acf7fd4ae02834540f8737457eee0ce2af695f2b71051c967",
+      "profileId": "60d6902d-f8c2-481a-84c1-1ef52fa169b4",
+      "profileName": "1_[bench 48GB] Qwen3.8 INT8 W8A16 · DFlash2 · vLLM · 262k · n7 (copia)",
+      "retired": false,
+      "stageStates": {
+        "bcb": "pending",
+        "he0": "blocked",
+        "he20": "pending"
+      }
+    }
+  ],
+  "resultsFile": "artifacts/evaluacion-modelos-llamacode/Q-20261015-DUAL5070TI-VLLM/receipts/HE0-context8192-resumed/app-benchmark-results-all.json"
+}

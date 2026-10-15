@@ -1,0 +1,27 @@
+Storage relocation — Q-20261015-DUAL5070TI-VLLM
+Date: 2026-10-15 (UTC)
+
+The target model and drafter total about 30.84 GB. While the download was
+partial, `/` had 16 GiB free and the model data was consuming space in the task
+runtime on `/dev/nvme1n1p3`. Downloads were stopped, the partial target (~13
+GiB) and drafter (~384 MiB) directories were moved, then resumed against their
+pinned revisions on `/dev/nvme0n1p2` at:
+
+  /media/cristian/Disco local/Models/LlamaCodeEval/Q-20261015-DUAL5070TI-VLLM/models/
+
+The destination had 141 GiB free before transfer and 128 GiB after the resumed
+downloads completed. The pre-existing task HF cache was preserved. At final
+postflight, the complete target and drafter were present; free space was 84 GiB
+on `/dev/nvme0n1p2`, 16 GiB on `/dev/nvme0n1p3` (`/`), and 149 GiB on the
+checkout volume `/dev/nvme1n1p3`.
+
+The first isolated Python 3.13/vLLM 0.30.0 environment installed in `/tmp` and
+passed import/version checks but occupied 7.6 GiB on `/`. The active venv was
+recreated at the task's `runtime/venv` in the checkout volume. This avoided a
+Ninja path error caused by the alternate partition's mount path containing a
+space. The active venv passed import/version checks and `uv pip check` (198
+packages compatible). Model weights and inference caches (HF, CUDA, Triton,
+torchinductor) were directed to the alternate partition.
+
+After evaluation, the vLLM server and isolated LlamaCode daemon were stopped.
+Ports 18888 and 8877 were free, and both GPUs had no inference workload.

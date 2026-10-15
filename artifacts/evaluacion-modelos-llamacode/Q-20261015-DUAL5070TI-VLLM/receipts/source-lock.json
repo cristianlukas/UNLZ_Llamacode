@@ -1,0 +1,99 @@
+{
+  "checked_at_utc": "2026-10-15T19:39:05.735317+00:00",
+  "github_source": {
+    "repo": "https://github.com/ExTV/dual-gpus-vllm",
+    "commit": "2b33255f2f0ce4be123e8c283ec314a96d140b65",
+    "install_runtime": "vLLM 0.30.0 / torch backend cu130 / Python 3.13"
+  },
+  "huggingface_repos": [
+    {
+      "repo_id": "lued/Qwen3.8-27B-huihui-abliterated-INT8-W8A16-DFlash2",
+      "requested_revision": "26c9c9bc4f14ef0901cefa2e2f47436f0274281d",
+      "resolved_revision": "26c9c9bc4f14ef0901cefa2e2f47436f0274281d",
+      "total_lfs_bytes": 29555184837,
+      "files": [
+        {
+          "path": "model-00001-of-00006.safetensors",
+          "bytes": 5303923016,
+          "sha256": "d8ffd688037ee494ff55a30a4e844063a182edd0ce2b8185157be59be4426f79"
+        },
+        {
+          "path": "model-00002-of-00006.safetensors",
+          "bytes": 5346441704,
+          "sha256": "b91e0aa39be8f101f3f905e45d3e6a5bd8061275bb80571fabca693ada49b06d"
+        },
+        {
+          "path": "model-00003-of-00006.safetensors",
+          "bytes": 5306281544,
+          "sha256": "6e9e4f5029621cb3b818d44d33d872b84ab8a3ddca6a20c99ebc734fd7c9b28f"
+        },
+        {
+          "path": "model-00004-of-00006.safetensors",
+          "bytes": 5283366472,
+          "sha256": "6c0cfd6b321d479a2f2b5d59c39f440f22486b851ff41d1d11a6bf13a14c1309"
+        },
+        {
+          "path": "model-00005-of-00006.safetensors",
+          "bytes": 5318425808,
+          "sha256": "a671cac21d4f5d434da5a89a4c752c0ef1730090d156784b2168172c8fb1c400"
+        },
+        {
+          "path": "model-00006-of-00006.safetensors",
+          "bytes": 2976756968,
+          "sha256": "d7f4646b249a333d6a177e32f8beaaf891d7fc2791884e9c5cc66ab4ff71b560"
+        },
+        {
+          "path": "tokenizer.json",
+          "bytes": 19989325,
+          "sha256": "06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523"
+        }
+      ]
+    },
+    {
+      "repo_id": "syvai/Qwen3.8-27B-DFlash2-W4A16",
+      "requested_revision": "4d30ec736ffc6b8688dc2ae2b502d9b48bdec279",
+      "resolved_revision": "4d30ec736ffc6b8688dc2ae2b502d9b48bdec279",
+      "total_lfs_bytes": 1280633960,
+      "files": [
+        {
+          "path": "model.safetensors",
+          "bytes": 1280633960,
+          "sha256": "ec26996e6a0745ab5edb857117220ce1e219ad524f71e6e149b703804947d8e7"
+        }
+      ]
+    }
+  ],
+  "hardware_attempt": {
+    "gpus": [
+      "RTX 3090 sm_86",
+      "RTX 3090 sm_86"
+    ],
+    "p2p": "NS",
+    "free_vram_mib": [
+      23320,
+      24016
+    ],
+    "ram_available_gib": 111,
+    "swap_used_gib": 5.1,
+    "memory_psi_avg10": 0.0,
+    "root_ext4_free_gib": 17,
+    "model_volume_free_gib": 166,
+    "port_8888": "free",
+    "gpu0_graphics": "active, preserved"
+  },
+  "planned_runtime_overrides": {
+    "CUDA_VISIBLE_DEVICES": "0,1",
+    "PP_PARTITION": "32,32",
+    "CUTE_DSL_ARCH": "sm_86",
+    "MAX_LEN": 262144,
+    "NUM_BLOCKS": 375
+  },
+  "model_storage": {
+    "download_root": "/media/cristian/Disco local/Models/LlamaCodeEval/Q-20261015-DUAL5070TI-VLLM",
+    "model_volume": "/dev/nvme0n1p2",
+    "root_free_gib_before_runtime_install": 16,
+    "active_venv": "/media/cristian/Disco local/Models/LlamaCodeEval/Q-20261015-DUAL5070TI-VLLM/runtime/venv",
+    "root_free_gib_after_venv_relocation": 16,
+    "download_resumed_after_move": true
+  }
+}

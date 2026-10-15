@@ -1,0 +1,11 @@
+{
+  "repository": "https://github.com/openai/human-eval",
+  "ref": "master",
+  "commit": "6d43fb980f9fee3c892a914eda09951f772ad10d",
+  "commit_date": "2025-01-17T17:30:12Z",
+  "path": "data/HumanEval.jsonl.gz",
+  "git_blob_sha1": "998d25196e17af24daf9b6cb3a975fe752528e46",
+  "size_bytes": 44877,
+  "download_url": "https://raw.githubusercontent.com/openai/human-eval/6d43fb980f9fee3c892a914eda09951f772ad10d/data/HumanEval.jsonl.gz",
+  "license": "MIT (repository license file to be verified)"
+}

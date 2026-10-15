@@ -1,0 +1,195 @@
+{
+  "stage": "HE0-context6000",
+  "suiteId": "064328e5-6f8a-4c03-b51e-1f0929f04d96",
+  "startUnix": 1792096954.769947,
+  "finishUnix": 1792097350.1753116,
+  "elapsedWallSec": 395.4053647518158,
+  "benchmarkStatus": "Completado.",
+  "benchmarkProgress": 100,
+  "serverState": "stopped",
+  "serverReady": false,
+  "agentRunning": true,
+  "resultCount": 1,
+  "results": [
+    {
+      "acceptance": [
+        {
+          "output": "Archivo esperado no encontrado: solution_HumanEval_0.py",
+          "passed": false,
+          "taskId": "HumanEval/0",
+          "type": "grader:code_tests"
+        }
+      ],
+      "agentFiles": [],
+      "agentMetrics": [
+        {
+          "elapsedMs": 94690,
+          "tokens": 0,
+          "tps": 0,
+          "ttft_ms": 622
+        },
+        {
+          "elapsedMs": 0,
+          "tokens": 124,
+          "tps": 0
+        },
+        {
+          "elapsedMs": 0,
+          "tokens": 124,
+          "tps": 0
+        },
+        {
+          "elapsedMs": 300282,
+          "tokens": 0,
+          "tps": 0,
+          "ttft_ms": 3087
+        },
+        {
+          "elapsedMs": 5,
+          "tokens": 0,
+          "tps": 0,
+          "ttft_ms": 0
+        },
+        {
+          "elapsedMs": 45642,
+          "tokens": 124,
+          "tps": 2.716795933569957,
+          "ttft_ms": 0
+        },
+        {
+          "elapsedMs": 46724,
+          "tokens": 124,
+          "tps": 2.6538823730844965,
+          "ttft_ms": 0
+        }
+      ],
+      "agentProfileId": "agent-maximo",
+      "agentProfileName": "Máximo",
+      "agentSeed": 4242,
+      "agentTemperature": 0.1,
+      "agentVariant": "baseline",
+      "avgTps": 2.685339153327227,
+      "avgTtftMs": 741.8,
+      "benchmarkMemoryPlanner": "llama.cpp-fit-expert-aware",
+      "benchmarkName": "HumanEval · 1 ítem",
+      "complexityMetrics": {
+        "addedLines": 0,
+        "filesChanged": 0,
+        "filesCreated": 0,
+        "filesDeleted": 0,
+        "removedLines": 0
+      },
+      "elapsedSec": 392.954,
+      "failed": true,
+      "failureDetail": "[\n    {\n        \"output\": \"Archivo esperado no encontrado: solution_HumanEval_0.py\",\n        \"passed\": false,\n        \"taskId\": \"HumanEval/0\",\n        \"type\": \"grader:code_tests\"\n    }\n]\n",
+      "failureKind": "quality",
+      "failureMessage": "Fallaron criterios de aceptacion.",
+      "failureStage": "acceptance",
+      "finalScore": 0,
+      "finalTotal": 1,
+      "firstAttemptScore": 0,
+      "firstAttemptTotal": 1,
+      "firstEvaluableSec": -1,
+      "firstToolCallSec": -1,
+      "firstWriteSec": -1,
+      "generationSec": 487.343,
+      "harnessEngineId": "legacy",
+      "harnessEngineVersion": 1,
+      "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+      "honeyEnabled": false,
+      "id": "09911356-c9d1-42d2-bbeb-727073096451",
+      "measurementPhase": "cold",
+      "mode": "custom",
+      "nonGenerationSec": 0,
+      "pass": 1,
+      "passedAfterRepair": false,
+      "passesTotal": 1,
+      "profileConfigFingerprint": "5b693f786dc4717acf7fd4ae02834540f8737457eee0ce2af695f2b71051c967",
+      "profileId": "60d6902d-f8c2-481a-84c1-1ef52fa169b4",
+      "profileName": "1_[bench 48GB] Qwen3.8 INT8 W8A16 · DFlash2 · vLLM · 262k · n7 (copia)",
+      "progressGovernor": {
+        "progressEvents": 0,
+        "replanEvents": 0,
+        "stagnationEvents": 0
+      },
+      "qualityScore": 0,
+      "qualityTotal": 1,
+      "ramFreeMb": 0,
+      "ramMb": 0,
+      "ramTotalMb": 0,
+      "repairAttempts": 3,
+      "response": "[error: Error transferring http://127.0.0.1:18888/v1/chat/completions - server replied: Bad Request · {\"error\":{\"message\":\"This model's maximum context length is 6000 tokens. However, you requested 1317 output tokens and your prompt contains at least 4684 input tokens, for a total of at least 6001 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=4684)\",\"type\":\"BadRequestError\",\"param\":\"input_tokens\",\"code\":400}}]",
+      "runDir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-DUAL5070TI-VLLM/runtime/xdg-data/LlamaCode/LlamaCode/benchmark-runs/HumanEval_1_tem_20261015_174234",
+      "runLabel": "HumanEval · 1 ítem",
+      "setupSec": 0.301,
+      "target": "agent",
+      "thinkingEnabled": true,
+      "timeToFirstAttempt": 300.28200000000004,
+      "timedOut": false,
+      "timeoutSec": 1800,
+      "timestamp": 1792097347919,
+      "toolCallQuality": {
+        "expectedCalls": 0,
+        "f1Pct": -1,
+        "failedCalls": 0,
+        "incompleteCalls": 0,
+        "invalidCalls": 0,
+        "matchedExpectedCalls": 0,
+        "missingExpectedCalls": 0,
+        "precisionPct": -1,
+        "recallPct": -1,
+        "redundantCalls": 0,
+        "sequenceExact": false,
+        "successRatePct": -1,
+        "successfulCalls": 0,
+        "totalCalls": 0,
+        "unexpectedCalls": 0
+      },
+      "toolCalls": 0,
+      "totalTime": 392.954,
+      "transportAfterEvaluation": false,
+      "vramFreeMb": 11159,
+      "vramGpu0FreeMb": 7455,
+      "vramGpu0Mb": 16687,
+      "vramGpu0TotalMb": 24576,
+      "vramGpu0UsedPct": 67.89957682291666,
+      "vramGpu1FreeMb": 3704,
+      "vramGpu1Mb": 20420,
+      "vramGpu1TotalMb": 24576,
+      "vramGpu1UsedPct": 83.08919270833334,
+      "vramMb": 37107,
+      "vramNormalizedImbalancePct": 15.189615885416675,
+      "vramObservedGpu0SharePct": 44.96995176112324,
+      "vramOptimalGpu0SharePct": 66.80706156465634,
+      "vramPlacementAssessment": "gpu1-heavy",
+      "vramTelemetryScope": "device-total",
+      "workspace": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-DUAL5070TI-VLLM/runtime/xdg-data/LlamaCode/LlamaCode/benchmark-runs/HumanEval_1_tem_20261015_174234/1__bench_48GB_Qwen3_8_INT8_W8A16_DFlash2_vLLM_262k_n7_copia___ws"
+    }
+  ],
+  "coverage": [
+    {
+      "benchmarkEligible": true,
+      "coverageState": "incomplete",
+      "hasBlockedStage": true,
+      "hasInfrastructureOrTimeout": false,
+      "healthCodes": [],
+      "healthMessages": [],
+      "nextStage": "",
+      "pendingStages": [
+        "he0",
+        "he20",
+        "bcb"
+      ],
+      "profileConfigFingerprint": "5b693f786dc4717acf7fd4ae02834540f8737457eee0ce2af695f2b71051c967",
+      "profileId": "60d6902d-f8c2-481a-84c1-1ef52fa169b4",
+      "profileName": "1_[bench 48GB] Qwen3.8 INT8 W8A16 · DFlash2 · vLLM · 262k · n7 (copia)",
+      "retired": false,
+      "stageStates": {
+        "bcb": "pending",
+        "he0": "blocked",
+        "he20": "pending"
+      }
+    }
+  ],
+  "resultsFile": "artifacts/evaluacion-modelos-llamacode/Q-20261015-DUAL5070TI-VLLM/receipts/HE0-context6000/app-benchmark-results-all.json"
+}

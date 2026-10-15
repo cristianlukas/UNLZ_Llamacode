@@ -1,0 +1,33 @@
+{
+  "source_commit": "6d43fb980f9fee3c892a914eda09951f772ad10d",
+  "compressed_size_bytes": 44877,
+  "git_blob_sha1_verified": "998d25196e17af24daf9b6cb3a975fe752528e46",
+  "compressed_sha256": "b796127e635a67f93fb35c04f4cb03cf06f38c8072ee7cee8833d7bee06979ef",
+  "jsonl_size_bytes": 214438,
+  "jsonl_sha256": "1d49078ba3e2b196b9344535bef34a43021f038fad9561d6ee7c53450609a6a2",
+  "record_count": 164,
+  "first_20_task_ids": [
+    "HumanEval/0",
+    "HumanEval/1",
+    "HumanEval/2",
+    "HumanEval/3",
+    "HumanEval/4",
+    "HumanEval/5",
+    "HumanEval/6",
+    "HumanEval/7",
+    "HumanEval/8",
+    "HumanEval/9",
+    "HumanEval/10",
+    "HumanEval/11",
+    "HumanEval/12",
+    "HumanEval/13",
+    "HumanEval/14",
+    "HumanEval/15",
+    "HumanEval/16",
+    "HumanEval/17",
+    "HumanEval/18",
+    "HumanEval/19"
+  ],
+  "HE0_pack_sha256": "ecfd26113a92d2137eedc8c036cb375b15f9ca5b5f9b7d8ce8ec48af28950d34",
+  "HE20_pack_sha256": "2ca75f00255d1c111a04769c0acf634983c8f3dbdb62aadf7b33941a46a4e91c"
+}

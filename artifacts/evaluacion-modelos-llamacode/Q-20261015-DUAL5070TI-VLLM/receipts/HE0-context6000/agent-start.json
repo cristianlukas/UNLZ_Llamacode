@@ -1,0 +1,58 @@
+{
+  "launchProfileId": "60d6902d-f8c2-481a-84c1-1ef52fa169b4",
+  "alias": "Q-20261015 W8A16 DFlash2 6k",
+  "backend": {
+    "cloudCtx": 6000,
+    "baseUrl": "http://127.0.0.1:18888"
+  },
+  "vllmModels": {
+    "object": "list",
+    "data": [
+      {
+        "id": "qwen3.8-27b",
+        "object": "model",
+        "created": 1792096952,
+        "owned_by": "vllm",
+        "root": "/tmp/DiscoLocal/Models/LlamaCodeEval/Q-20261015-DUAL5070TI-VLLM/models/target",
+        "parent": null,
+        "max_model_len": 6000,
+        "permission": [
+          {
+            "id": "modelperm-8568f78a538bff9e",
+            "object": "model_permission",
+            "created": 1792096952,
+            "allow_create_engine": false,
+            "allow_sampling": true,
+            "allow_logprobs": true,
+            "allow_search_indices": false,
+            "allow_view": true,
+            "allow_fine_tuning": false,
+            "organization": "*",
+            "group": null,
+            "is_blocking": false
+          }
+        ]
+      }
+    ]
+  },
+  "serverStartResult": null,
+  "agentApprovalMode": {
+    "ok": true,
+    "reqId": "a549b911-3a5e-4469-b3bc-9e9efd235caf"
+  },
+  "agentThinkingEnabled": {
+    "ok": true,
+    "reqId": "df42f5cb-5bc6-49ce-9d2f-c51b59e37026"
+  },
+  "activeAgentProfileId": {
+    "ok": true,
+    "reqId": "ec957080-fc5b-4d63-900d-e8e9fdbe1d68"
+  },
+  "readyState": {
+    "serverState": "running",
+    "serverReady": true,
+    "agentRunning": true,
+    "agentStarting": false
+  },
+  "agentLogTail": "[2026-10-15 17:35:03.745][agent/lifecycle] Cloud local: endpoint loopback sin API key (http://127.0.0.1:18888).\n[2026-10-15 17:35:03.755][agent/backend] [permisos: 0 regla(s) cargadas]\n[2026-10-15 17:35:03.755][agent/backend] [permisos: 0 regla(s) cargadas]\n[2026-10-15 17:35:03.755][agent/backend] [proyecto no definido o inseguro (): usando workspace aislado /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-DUAL5070TI-VLLM/runtime/xdg-data/LlamaCode/LlamaCode/workspace]\n[2026-10-15 17:35:03.767][agent/backend] [LlamaAgent backend listo · cwd: /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-DUAL5070TI-VLLM/runtime/xdg-data/LlamaCode/LlamaCode/workspace]\n[2026-10-15 17:35:03.767][agent/backend] [mcp] 0 tool(s) descubiertas\n[2026-10-15 17:39:42.088][agent/lifecycle] Cloud local: endpoint loopback sin API key (http://127.0.0.1:18888).\n[2026-10-15 17:39:42.101][agent/backend] [proyecto no definido o inseguro (): usando workspace aislado /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-DUAL5070TI-VLLM/runtime/xdg-data/LlamaCode/LlamaCode/workspace]\n[2026-10-15 17:39:42.103][agent/backend] [LlamaAgent backend listo · cwd: /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-DUAL5070TI-VLLM/runtime/xdg-data/LlamaCode/LlamaCode/workspace]\n[2026-10-15 17:39:42.103][agent/backend] [mcp] 0 tool(s) descubiertas\n[2026-10-15 17:42:29.280][agent/lifecycle] Cloud local: endpoint loopback sin API key (http://127.0.0.1:18888).\n[2026-10-15 17:42:29.294][agent/backend] [proyecto no definido o inseguro (): usando workspace aislado /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-DUAL5070TI-VLLM/runtime/xdg-data/LlamaCode/LlamaCode/workspace]\n[2026-10-15 17:42:29.296][agent/backend] [LlamaAgent backend listo · cwd: /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-DUAL5070TI-VLLM/runtime/xdg-data/LlamaCode/LlamaCode/workspace]\n[2026-10-15 17:42:29.296][agent/backend] [mcp] 0 tool(s) descubiertas\n"
+}

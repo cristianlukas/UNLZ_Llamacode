@@ -1,0 +1,12 @@
+{
+  "profileId": "60d6902d-f8c2-481a-84c1-1ef52fa169b4",
+  "context": 8192,
+  "serverState": {
+    "serverState": "running",
+    "serverReady": true,
+    "agentRunning": true,
+    "agentStarting": false
+  },
+  "startResult": null,
+  "resumeReason": "Prior 8k attempt interrupted when the 30-minute control-daemon process lifetime expired; vLLM remained available."
+}

@@ -1,0 +1,35 @@
+{
+  "models_status": 200,
+  "served_model": "qwen3.8-27b",
+  "plain_status": 200,
+  "plain_content": "\n\n4",
+  "plain_usage": {
+    "prompt_tokens": 182,
+    "total_tokens": 210,
+    "completion_tokens": 28,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 24
+    }
+  },
+  "tool_status": 200,
+  "tool_calls": [
+    {
+      "name": "record_sum",
+      "arguments": {
+        "a": 2,
+        "b": 2
+      }
+    }
+  ],
+  "tool_usage": {
+    "prompt_tokens": 569,
+    "total_tokens": 617,
+    "completion_tokens": 48,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 9
+    }
+  },
+  "summary_reconstructed_from_saved_raw_responses": true
+}

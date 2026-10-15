@@ -1,0 +1,24 @@
+[
+  {
+    "alias": "48GB",
+    "benchmark": false,
+    "best": false,
+    "deprecated": false,
+    "displayName": "🎯 48GB - [bench 48GB] Qwen3.8 INT8 W8A16 · DFlash2 · vLLM · 262k · n7",
+    "favorite": false,
+    "gpuAffinityKind": "dual-gpu",
+    "gpuAffinityLabel": "Aprovecha 2 GPU · 48 GB combinados",
+    "gpuAffinityMatched": true,
+    "gpuAffinityReason": "requiere repartir el modelo entre varias GPU",
+    "gpuAffinityScore": 60,
+    "id": "sys-bench-qwen38-dflash2-vllm-262k",
+    "lastUsed": 0,
+    "menuOrder": 0,
+    "minVram": 48,
+    "name": "[bench 48GB] Qwen3.8 INT8 W8A16 · DFlash2 · vLLM · 262k · n7",
+    "ready": true,
+    "system": true,
+    "systemBadge": false,
+    "tags": []
+  }
+]
