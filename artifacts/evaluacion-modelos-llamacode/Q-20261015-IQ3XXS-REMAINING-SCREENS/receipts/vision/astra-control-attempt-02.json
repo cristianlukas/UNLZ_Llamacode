@@ -1,0 +1,81 @@
+{
+  "profile": "ASTRA IQ3_S / Strata v0.1.41",
+  "completedAtUtc": "2026-10-15T15:50:13.035376+00:00",
+  "endpointHealth": {
+    "status": "ok",
+    "max_context": 131072,
+    "model": "qwen3.8-flash-next-iq3_s",
+    "images": true,
+    "api_key": false,
+    "loaded": true,
+    "service": "strata"
+  },
+  "fixture": {
+    "imagePath": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-IQ3XXS-REMAINING-SCREENS/fixtures/vision-holdout-v1/vision-holdout.png",
+    "imageSha256": "7526fe77533223bc8dc5ab5ea00af77eae16b3a10a634dadd225591e2cdd9bbf",
+    "imageBytes": 6326,
+    "promptSha256": "4368eeca231e0a5cd406e52fc6f39a8afa27f79aaaead88b6712eedf19e017c4",
+    "expectedSha256": "086e0c254bb07bf1e679045e0569972047b425b645cd1376063c9c29f0cb0956"
+  },
+  "request": {
+    "sha256": "a4bec096d74f348ce56459985c04bf202ba5dc3dbb459de77b599597635cee4d",
+    "temperature": 0.0,
+    "topP": 1.0,
+    "topK": 1,
+    "seed": 4242,
+    "maxTokens": 512,
+    "reasoningEffort": "none"
+  },
+  "before": {
+    "atUtc": "2026-10-15T15:50:13.001779+00:00",
+    "memoryBytes": {
+      "MemAvailable": 58449715200,
+      "SwapTotal": 8589930496,
+      "SwapFree": 1956589568,
+      "SwapUsed": 6633340928
+    },
+    "gpuCsv": [
+      "0, NVIDIA GeForce RTX 3090, 23792 MiB, 24576 MiB, 20 %",
+      "1, NVIDIA GeForce RTX 3090, 23668 MiB, 24576 MiB, 9 %"
+    ]
+  },
+  "elapsedSeconds": null,
+  "transportError": "HTTPError: HTTP Error 404: Not Found",
+  "response": null,
+  "responseText": "",
+  "parsed": null,
+  "jsonParseError": "JSONDecodeError: Expecting value: line 1 column 1 (char 0)",
+  "expected": {
+    "shapes": {
+      "circle": 2,
+      "triangle": 2,
+      "rectangle": 2,
+      "star": 1
+    },
+    "colors": {
+      "blue": 1,
+      "red": 1,
+      "green": 1,
+      "yellow": 1,
+      "orange": 1,
+      "purple": 1,
+      "black": 1
+    }
+  },
+  "exactMatch": false,
+  "usage": null,
+  "finishReason": null,
+  "after": {
+    "atUtc": "2026-10-15T15:50:13.035422+00:00",
+    "memoryBytes": {
+      "MemAvailable": 58438172672,
+      "SwapTotal": 8589930496,
+      "SwapFree": 1956589568,
+      "SwapUsed": 6633340928
+    },
+    "gpuCsv": [
+      "0, NVIDIA GeForce RTX 3090, 23792 MiB, 24576 MiB, 20 %",
+      "1, NVIDIA GeForce RTX 3090, 23668 MiB, 24576 MiB, 9 %"
+    ]
+  }
+}

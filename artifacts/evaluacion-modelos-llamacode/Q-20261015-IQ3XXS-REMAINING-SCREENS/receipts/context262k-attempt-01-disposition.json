@@ -1,0 +1,37 @@
+{
+  "taskId": "Q-20261015-IQ3XXS-REMAINING-SCREENS",
+  "mode": "context262k",
+  "attempt": 1,
+  "status": "aborted_resource_guard",
+  "startedAtUtc": "2026-10-15T15:35:18.942395+00:00",
+  "guard": {
+    "maxSwapOutPages": 1024,
+    "observedSwapOutDeltaPages": 3686
+  },
+  "observedPostflight": {
+    "memAvailableGiB": 81.59,
+    "swapUsedGiB": 4.8,
+    "pswpinPages": 3540706,
+    "pswpoutPages": 8193075,
+    "psi": {
+      "some": {
+        "avg10": 40.51,
+        "avg60": 20.05,
+        "avg300": 5.18
+      },
+      "full": {
+        "avg10": 40.49,
+        "avg60": 20.03,
+        "avg300": 5.17
+      }
+    }
+  },
+  "apiReady": false,
+  "promptGeneratedOrSent": false,
+  "httpRequestMade": false,
+  "score": null,
+  "serverStopped": true,
+  "portOpenAfterCleanup": false,
+  "rawControllerReceiptOverwritten": true,
+  "reconstructionNote": "The controller initially reused one filename for retries; attempt 2 replaced attempt 1 telemetry. This compact disposition was reconstructed from the observed tool output. No prompt or quality result existed."
+}

@@ -1,0 +1,20 @@
+[
+    {
+        "draftModelId": "",
+        "draftStableId": 0,
+        "id": "3e92eb36-9dbc-4d01-89bc-c4b7f9c9b3bb",
+        "mmprojId": "",
+        "mmprojStableId": 0,
+        "modelId": "df0a2cdc-6c8e-57bd-96d3-7295564d99d1",
+        "modelStableId": 128,
+        "name": "EVAL · Qwen3.8-Flash-Next · Strata",
+        "specDraftAdaptive": false,
+        "specDraftConfMin": 0,
+        "specDraftNMax": 0,
+        "specDraftNMin": 0,
+        "specDraftNgl": "",
+        "specDraftTypeK": "",
+        "specDraftTypeV": "",
+        "specType": ""
+    }
+]

@@ -1,0 +1,32 @@
+{
+  "taskId": "Q-20261015-IQ3XXS-REMAINING-SCREENS",
+  "capturedAtUtc": "2026-10-15T15:35:18.942395+00:00",
+  "meminfoBytes": {
+    "MemTotal": 132615835648,
+    "MemAvailable": 114275057664,
+    "SwapTotal": 8589930496,
+    "SwapFree": 3452203008
+  },
+  "psiMemory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=748216189\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=747083267\n",
+  "swapVmstatPages": {
+    "pswpin": 3540687,
+    "pswpout": 8189389
+  },
+  "swapActivitySample12s": {
+    "before": {
+      "pswpin": 3540677,
+      "pswpout": 8189389
+    },
+    "after": {
+      "pswpin": 3540683,
+      "pswpout": 8189389
+    }
+  },
+  "gpuCsv": [
+    "0, NVIDIA GeForce RTX 3090, 1156, 24576, 62",
+    "1, NVIDIA GeForce RTX 3090, 108, 24576, 34"
+  ],
+  "computeProcessesCsv": [],
+  "listeners8350_8351_8898": "",
+  "notes": "No CUDA compute processes were listed. nvidia-smi showed only graphics clients (Xorg, desktop, browser and Codex); no inference service or target port listener. Over the 12-second sample, swap-in rose 6 pages and swap-out stayed unchanged."
+}
