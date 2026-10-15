@@ -926,17 +926,37 @@ Item {
             Layout.fillHeight: true
             spacing: 0
 
-            // Header
+            // Header. Flow (no RowLayout), igual que Agente: con la ventana angosta
+            // los checks bajan a otra fila en vez de quedar bajo los botones de
+            // minimizar/maximizar/cerrar, cuyo ancho se reserva en cada fila.
             Rectangle {
+                objectName: "chatHeader"
                 Layout.fillWidth: true
-                height: 48
+                Layout.preferredHeight: chatHeaderFlow.implicitHeight + 14
                 color: Theme.baseBg
+                readonly property int headerRowH: 34
 
-                RowLayout {
-                    anchors { fill: parent; leftMargin: 16; rightMargin: 12 + root.windowControlsReserve }
+                Flow {
+                    id: chatHeaderFlow
+                    anchors {
+                        left: parent.left; right: parent.right; top: parent.top
+                        leftMargin: 16; rightMargin: 12 + root.windowControlsReserve; topMargin: 7
+                    }
                     spacing: 10
-                    Text { text: "Chat"; color: Theme.textPrimary; font.pixelSize: 15; font.bold: true }
+                    Text {
+                        height: parent.parent.headerRowH
+                        verticalAlignment: Text.AlignVCenter
+                        text: "Chat"; color: Theme.textPrimary; font.pixelSize: 15; font.bold: true
+                    }
+                    Item {
+                        width: chatStatusRow.width
+                        height: parent.parent.headerRowH
+                    Row {
+                        id: chatStatusRow
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 8
                     Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
                         width: 8; height: 8; radius: 4
                         color: !App.serverRunning ? Theme.errorText
                              : App.serverReady     ? Theme.successText
@@ -960,10 +980,14 @@ Item {
                              :                      Theme.textSecondary
                         font.pixelSize: 12
                         elide: Text.ElideRight
-                        Layout.fillWidth: true
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: Math.min(implicitWidth, 360)
+                    }
+                    }
                     }
                     LcCheckBox {
                         id: chatThinkingCheck
+                        height: parent.parent.headerRowH
                         visible: App.serverRunning && App.serverReady
                         text: "Pensar"
                         checkable: false
@@ -983,6 +1007,7 @@ Item {
                     // Salida estructurada: fuerza JSON válido (GBNF) en la respuesta.
                     LcCheckBox {
                         id: jsonModeCheck
+                        height: parent.parent.headerRowH
                         visible: App.serverRunning && App.serverReady
                         text: "JSON"
                         checked: false
@@ -1009,6 +1034,7 @@ Item {
                     // (bloques mermaid/svg) que se rinden inline.
                     LcCheckBox {
                         id: personaDesignerCheck
+                        height: parent.parent.headerRowH
                         visible: App.serverRunning && App.serverReady
                         text: "Diseño"
                         checked: App.chatPersonaDesigner

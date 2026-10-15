@@ -7515,6 +7515,10 @@ void AppController::startAgentInternal(const QString &launchProfileId, bool reme
         m_agentInTerminal    = false;
         m_currentAssistantIdx = -1;
         b->start(c);
+        // Perfil LAN arrancado con "Iniciar agente" (sin pasar por Lanzar, que ya
+        // activa): pedirle al anfitrión que cargue el modelo y seguir su %.
+        if (cloud && !cloudKeyRequired(ctx.backend.cloudKeyRef) && !m_lanActivatingFromConnect)
+            activateLanModel(ctx.backend.cloudBaseUrl.trimmed(), cloudKey, c.modelId);
         // start() de LlamaAgent es SÍNCRONO: al volver el backend ya quedó running.
         // Normalmente runningChanged baja m_agentStarting, pero si el backend se
         // reusa (kill + relaunch) esa transición puede no observarse y el popup
@@ -10766,6 +10770,39 @@ void AppController::setGatewayPort(int p)
     emit gatewayChanged();
 }
 
+void AppController::activateLanModel(const QString &baseUrl, const QString &apiKey,
+                                     const QString &model)
+{
+    if (baseUrl.isEmpty() || model.isEmpty()) return;
+    if (!m_nam) m_nam = new QNetworkAccessManager(this);
+    QNetworkRequest request(QUrl(baseUrl + QStringLiteral("/llamacode/v1/activate")));
+    request.setHeader(QNetworkRequest::ContentTypeHeader, QByteArrayLiteral("application/json"));
+    request.setTransferTimeout(8000);
+    if (!apiKey.isEmpty())
+        request.setRawHeader(QByteArrayLiteral("Authorization"),
+                             QByteArrayLiteral("Bearer ") + apiKey.toUtf8());
+    appendAgentEvent(QStringLiteral("lifecycle"),
+                     QStringLiteral("LAN: pidiendo al anfitrión que cargue '%1'.").arg(model));
+    auto *reply = m_nam->post(request, QJsonDocument(QJsonObject{{"model", model}})
+                                           .toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply, baseUrl, apiKey, model]() {
+        reply->deleteLater();
+        const int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        if (reply->error() != QNetworkReply::NoError || status != 200) {
+            appendAgentEvent(QStringLiteral("lifecycle"),
+                             status == 401
+                                 ? QStringLiteral("LAN: el anfitrión pide API key (HTTP 401). Copiala en "
+                                                  "Configuración → Red y API de esa PC.")
+                                 : QStringLiteral("LAN: el anfitrión no confirmó la carga (HTTP %1: %2).")
+                                       .arg(status).arg(reply->errorString()));
+            return;
+        }
+        const QString resolved = QJsonDocument::fromJson(reply->readAll()).object()
+                                     .value(QStringLiteral("model")).toString(model);
+        if (agentRunning()) startRemoteLoadPolling(baseUrl, apiKey, resolved);
+    });
+}
+
 bool AppController::cloudKeyRequired(const QString &keyRef)
 {
     // useLanServer nombra las keys de LAN "lan/<host>/<perfil>".
@@ -11013,7 +11050,9 @@ void AppController::useLanServer(const QString &baseUrl, const QString &apiKey,
         computeEffectiveProfile(launchId);
         emit activeLaunchIdChanged();
         emit launchProfileSelected(launchId);
+        m_lanActivatingFromConnect = true;   // ya activó: startAgent no repite
         startAgentInternal(launchId, rememberAsActive);
+        m_lanActivatingFromConnect = false;
         armLanAgentWatchdog(launchId);
         // El anfitrion carga el modelo en segundo plano: seguir su progreso.
         startRemoteLoadPolling(baseUrl, effectiveApiKey, activatedModel);

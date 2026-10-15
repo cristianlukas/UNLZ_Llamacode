@@ -1980,11 +1980,14 @@ void SystemProfilesTests::controller_lanPasswordlessHostStartsAgentWithoutKey()
     // Anfitrion con "Acceso sin contrasena": acepta todo sin Authorization.
     QTcpServer mockHost;
     QVERIFY(mockHost.listen(QHostAddress::LocalHost, 0));
+    int activations = 0;
     connect(&mockHost, &QTcpServer::newConnection, &mockHost, [&]() {
         while (mockHost.hasPendingConnections()) {
             QTcpSocket *socket = mockHost.nextPendingConnection();
-            connect(socket, &QTcpSocket::readyRead, socket, [socket]() {
-                if (!socket->readAll().contains("\r\n\r\n")) return;
+            connect(socket, &QTcpSocket::readyRead, socket, [socket, &activations]() {
+                const QByteArray request = socket->readAll();
+                if (!request.contains("\r\n\r\n")) return;
+                if (request.startsWith("POST /llamacode/v1/activate")) ++activations;
                 socket->write("HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 0\r\n\r\n");
                 socket->disconnectFromHost();
             });
@@ -2004,6 +2007,9 @@ void SystemProfilesTests::controller_lanPasswordlessHostStartsAgentWithoutKey()
     QTRY_COMPARE_WITH_TIMEOUT(readySpy.count(), 1, 5000);
     const QString launchId = readySpy.takeFirst().at(0).toString();
     QVERIFY(!launchId.isEmpty());
+    // Conectar desde Lanzar activa UNA vez (startAgent no repite el pedido).
+    QTest::qWait(200);
+    QCOMPARE(activations, 1);
 
     // Reiniciar el agente desde la pagina Agente ("Iniciar agente") sin key
     // guardada: antes abria "API key requerida" aunque el anfitrion no la pide.
@@ -2012,6 +2018,9 @@ void SystemProfilesTests::controller_lanPasswordlessHostStartsAgentWithoutKey()
     app.startAgent(launchId);
     QCOMPARE(secretSpy.count(), 0);
     QTRY_VERIFY_WITH_TIMEOUT(app.agentRunning(), 5000);
+    // "Iniciar agente" con un perfil LAN tambien le pide al anfitrion que cargue
+    // el modelo (antes solo lo hacia Lanzar).
+    QTRY_COMPARE_WITH_TIMEOUT(activations, 2, 5000);
     app.stopAgent();
 }
 

@@ -2025,6 +2025,10 @@ private:
     QTimer   *m_remoteLoadPoll = nullptr;
     qint64    m_remoteLoadDeadlineMs = 0;
     bool      m_lanConnecting = false;
+    bool      m_lanActivatingFromConnect = false;   // useLanServer ya activó
+    // POST /llamacode/v1/activate y seguimiento de la carga (perfil LAN arrancado
+    // desde "Iniciar agente", no desde Lanzar).
+    void activateLanModel(const QString &baseUrl, const QString &apiKey, const QString &model);
     void beginLocalModelLoad(const QString &launchId, const QStringList &args);
     void finishLocalModelLoad(bool ok, const QString &detail = QString());
     void startRemoteLoadPolling(const QString &baseUrl, const QString &apiKey,
