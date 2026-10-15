@@ -16,7 +16,8 @@
 # asi que solo se excluye el PDB.
 #
 # workflow_dispatch: recompilar un tag existente. upload=false deja los paquetes
-# como artifacts del run (probar el empaquetado sin tocar ninguna release).
+# como artifacts del run (probar el empaquetado sin tocar ninguna release); los
+# firma igual, para poder probar `gh attestation verify` sobre esos artifacts.
 # Push a main que toca este workflow o los scripts: empaqueta el commit como si
 # fuera v<version de CMakeLists>-debug, sin subir nada (CI del empaquetado).
 name: release-binaries
@@ -190,9 +191,10 @@ jobs:
 
       # Procedencia firmada (Sigstore): ata el paquete a ESTE workflow y commit.
       # update-binary.sh la verifica con `gh attestation verify` si hay gh.
-      # Solo builds que se publican: un push a main no deja attestations.
+      # Builds que se publican, y workflow_dispatch aunque sea upload=false (asi
+      # se prueba la firma sin tocar ninguna release). Un push a main no firma.
       - name: Attest build provenance
-        if: needs.meta.outputs.upload == 'true'
+        if: needs.meta.outputs.upload == 'true' || github.event_name == 'workflow_dispatch'
         uses: actions/attest-build-provenance@v4
         with:
           subject-path: dist/*.zip
@@ -304,9 +306,10 @@ jobs:
 
       # Procedencia firmada (Sigstore): ata el paquete a ESTE workflow y commit.
       # update-binary.sh la verifica con `gh attestation verify` si hay gh.
-      # Solo builds que se publican: un push a main no deja attestations.
+      # Builds que se publican, y workflow_dispatch aunque sea upload=false (asi
+      # se prueba la firma sin tocar ninguna release). Un push a main no firma.
       - name: Attest build provenance
-        if: needs.meta.outputs.upload == 'true'
+        if: needs.meta.outputs.upload == 'true' || github.event_name == 'workflow_dispatch'
         uses: actions/attest-build-provenance@v4
         with:
           subject-path: dist/*.tar.gz
