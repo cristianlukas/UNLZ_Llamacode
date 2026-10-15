@@ -1801,6 +1801,7 @@ AppController::AppController(QObject *parent) : QObject(parent)
     m_hitlDestructive   = s.value(QStringLiteral("agent/hitlDestructive"), true).toBool();
     m_desktopIndicatorVisible = s.value(QStringLiteral("agent/desktopIndicatorVisible"), true).toBool();
     m_autoStartAgentOnLaunch = s.value(QStringLiteral("agent/autoStartOnLaunch"), false).toBool();
+    m_agentStartWithServer = s.value(QStringLiteral("agent/startWithServer"), false).toBool();
     m_gatewayEnabled = s.value(QStringLiteral("gateway/enabled"), false).toBool();
     m_gatewayPort    = s.value(QStringLiteral("gateway/port"), 8088).toInt();
     // Las claves del gateway no viven en QSettings: se migran una sola vez al
@@ -1988,6 +1989,17 @@ AppController::AppController(QObject *parent) : QObject(parent)
 
     // Idle auto-stop watchdog: chequea inactividad y para el server para liberar VRAM.
     m_lastActivity.start();
+    // Server listo sin agente (Iniciar solo servidor / auto-load de un cliente LAN):
+    // si el usuario lo pidió, arrancar el agente del perfil activo.
+    connect(this, &AppController::serverReadyChanged, this, [this]() {
+        if (!shouldAutoStartAgentOnReady(m_agentStartWithServer, serverReady(), agentRunning(),
+                                         agentStarting(), m_agentStopping, m_activeLaunchId))
+            return;
+        appendAgentEvent(QStringLiteral("lifecycle"),
+                         QStringLiteral("Servidor listo: iniciando el agente (opción \"Iniciar el agente cuando el servidor esté listo\")."));
+        startAgentInternal(m_activeLaunchId, false);
+    });
+
     m_idleTimer = new QTimer(this);
     m_idleTimer->setInterval(30000);   // chequeo cada 30s
     connect(m_idleTimer, &QTimer::timeout, this, [this]() {
@@ -10385,6 +10397,22 @@ QString AppController::taskRunWorkLog(const QString &id) const
         out += QStringLiteral("Resumen: %1\n").arg(summary);
     out += QStringLiteral("\nLa traza detallada de esta ejecución no está disponible en memoria. Ejecutá la Task de nuevo y usá \"Ver trabajo\" al terminar.");
     return out;
+}
+
+void AppController::setAgentStartWithServer(bool on)
+{
+    if (m_agentStartWithServer == on) return;
+    m_agentStartWithServer = on;
+    QSettings().setValue(QStringLiteral("agent/startWithServer"), on);
+    emit autoStartAgentOnLaunchChanged();
+}
+
+bool AppController::shouldAutoStartAgentOnReady(bool enabled, bool serverReady, bool agentRunning,
+                                                bool agentStarting, bool agentStopping,
+                                                const QString &launchId)
+{
+    return enabled && serverReady && !agentRunning && !agentStarting && !agentStopping
+        && !launchId.isEmpty();
 }
 
 void AppController::setAutoStartAgentOnLaunch(bool on)

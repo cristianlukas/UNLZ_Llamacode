@@ -5,7 +5,7 @@ cd /d "%~dp0"
 REM bump-patch.bat: auto-incrementa el patch (+0.0.1) de la version actual.
 REM Lee la version de CMakeLists.txt (fuente de verdad), suma 1 al patch y
 REM delega en bump-version.bat para sincronizar todos los archivos
-REM (CMakeLists.txt, src/main.cpp, src/AppController.h, assets/update/latest.json).
+REM (CMakeLists.txt y assets/update/latest.json; la version del codigo se genera).
 REM Usa --no-update-flag: un build local NO marca "hay update" para el auto-updater.
 REM Lo invocan build.bat y build_auto.bat antes de compilar, asi cada build sube
 REM la version que muestra la UI (Configuracion -> vX.Y.Z).

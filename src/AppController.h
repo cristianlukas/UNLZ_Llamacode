@@ -1,4 +1,5 @@
 #pragma once
+#include "LlamaCodeVersion.h"
 #include "core/BinaryRegistry.h"
 #include "core/ModelLoadProgress.h"
 #include "core/EngineCatalog.h"
@@ -194,6 +195,9 @@ class AppController : public QObject
     Q_PROPERTY(bool desktopAgentActive READ desktopAgentActive NOTIFY desktopIndicatorChanged)
     Q_PROPERTY(QString desktopAgentAction READ desktopAgentAction NOTIFY desktopIndicatorChanged)
     Q_PROPERTY(bool autoStartAgentOnLaunch READ autoStartAgentOnLaunch WRITE setAutoStartAgentOnLaunch NOTIFY autoStartAgentOnLaunchChanged)
+    // Arrancar el agente cuando el server queda listo aunque se haya cargado sin él
+    // (Iniciar solo servidor, o un cliente LAN que pidió el modelo).
+    Q_PROPERTY(bool agentStartWithServer READ agentStartWithServer WRITE setAgentStartWithServer NOTIFY autoStartAgentOnLaunchChanged)
     // Gateway (proxy Anthropic/OpenAI + auto-load por modelo).
     Q_PROPERTY(bool    gatewayEnabled  READ gatewayEnabled  WRITE setGatewayEnabled  NOTIFY gatewayChanged)
     Q_PROPERTY(bool    gatewayRunning  READ gatewayRunning  NOTIFY gatewayChanged)
@@ -636,7 +640,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.122"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral(LLAMACODE_VERSION); }
     QString updateChannel() const { return m_updateChannel; }
     void setUpdateChannel(const QString &channel);
     QString buildChannel() const;
@@ -1109,6 +1113,11 @@ public:
     Q_INVOKABLE QVariantMap desktopCursorState() const;
 
     bool autoStartAgentOnLaunch() const { return m_autoStartAgentOnLaunch; }
+    bool agentStartWithServer() const { return m_agentStartWithServer; }
+    void setAgentStartWithServer(bool on);
+    static bool shouldAutoStartAgentOnReady(bool enabled, bool serverReady, bool agentRunning,
+                                            bool agentStarting, bool agentStopping,
+                                            const QString &launchId);
     void setAutoStartAgentOnLaunch(bool on);
 
     // Gateway
@@ -2242,6 +2251,7 @@ private:
     bool        m_desktopTaskIndicatorActive = false;
     QString     m_desktopAgentAction;
     bool        m_autoStartAgentOnLaunch = false; // arrancar agente al abrir la app (tasks por horario)
+    bool        m_agentStartWithServer = false;   // arrancar agente cuando el server queda listo
 
     // Gateway (proxy Anthropic/OpenAI + auto-load)
     LlmGateway *m_gateway = nullptr;

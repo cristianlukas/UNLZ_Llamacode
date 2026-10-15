@@ -7,6 +7,7 @@ REM   bump-version.bat 0.1.2
 REM   bump-version.bat 0.1.2 --summary "Short release summary"
 REM   bump-version.bat 0.1.2 --changelog "Item one|Item two|Item three"
 REM   bump-version.bat 0.1.2 --no-update-flag
+REM La version vive SOLO en CMakeLists.txt (src/LlamaCodeVersion.h se genera).
 
 if "%~1"=="" goto :usage
 set "NEW_VERSION=%~1"
@@ -52,8 +53,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "$root=(Get-Location).Path;" ^
   "function Set-Text($path,[scriptblock]$edit) { $full=Join-Path $root $path; $text=[IO.File]::ReadAllText($full); $new=& $edit $text; if ($new -eq $text) { Write-Host ('[SKIP] '+$path) } else { [IO.File]::WriteAllText($full,$new,[Text.UTF8Encoding]::new($false)); Write-Host ('[OK] '+$path) } }" ^
   "Set-Text 'CMakeLists.txt' { param($t) $t -replace 'project\(LlamaCode VERSION [^) ]+ LANGUAGES CXX\)', ('project(LlamaCode VERSION '+$version+' LANGUAGES CXX)') };" ^
-  "Set-Text 'src/main.cpp' { param($t) $t -replace 'app\.setApplicationVersion\(\x22[^\x22]+\x22\);', ('app.setApplicationVersion('+$q+$version+$q+');') };" ^
-  "Set-Text 'src/AppController.h' { param($t) $t -replace 'Q_INVOKABLE QString version\(\) const \{ return QStringLiteral\(\x22[^\x22]+\x22\); \}', ('Q_INVOKABLE QString version() const { return QStringLiteral('+$q+$version+$q+'); }') };" ^
   "$jsonPath=Join-Path $root 'assets/update/latest.json';" ^
   "$json=Get-Content $jsonPath -Raw | ConvertFrom-Json;" ^
   "$json.version=$version;" ^

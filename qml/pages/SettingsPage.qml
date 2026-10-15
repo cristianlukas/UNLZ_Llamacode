@@ -825,6 +825,34 @@ Item {
                                 RowLayout {
                                     Layout.fillWidth: true
                                     spacing: 12
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 3
+                                        Text {
+                                            text: "Iniciar el agente cuando el servidor esté listo"
+                                            color: Theme.textPrimary
+                                            font.pixelSize: 14
+                                            font.bold: true
+                                        }
+                                        Text {
+                                            text: "Si el modelo se carga sin agente (\"Iniciar solo servidor\" o un cliente LAN que lo pidió), el agente de esta PC arranca solo al quedar listo."
+                                            color: Theme.textMuted
+                                            font.pixelSize: 11
+                                            wrapMode: Text.WordWrap
+                                            Layout.fillWidth: true
+                                        }
+                                    }
+                                    LcSwitch {
+                                        checked: App.agentStartWithServer
+                                        onToggled: App.agentStartWithServer = checked
+                                    }
+                                }
+
+                                Rectangle { Layout.fillWidth: true; height: 1; color: Theme.borderColor }
+
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 12
 
                                     ColumnLayout {
                                         Layout.fillWidth: true
