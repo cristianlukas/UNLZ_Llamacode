@@ -7,7 +7,9 @@ src="$(cd "$(dirname "$0")/.." && pwd)/scripts/update-binary.sh"
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 export HOME="$work/home" XDG_CACHE_HOME="$work/cache" XDG_DATA_HOME="$work/data" XDG_CONFIG_HOME="$work/config"
-mkdir -p "$HOME"
+# Lock del actualizador propio: dos corridas del test a la vez no se pisan.
+export XDG_RUNTIME_DIR="$work/run"
+mkdir -p "$HOME" "$XDG_RUNTIME_DIR"
 unset DISPLAY WAYLAND_DISPLAY
 fails=0
 check() { if eval "$1"; then echo "  PASS $2"; else echo "  FAIL $2"; fails=$((fails + 1)); fi; }

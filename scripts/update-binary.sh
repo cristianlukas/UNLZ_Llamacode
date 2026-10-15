@@ -75,13 +75,24 @@ done
 
 # The app writes this script to TMPDIR as llamacode-update-binary-<pid>.sh:
 # remove that copy on the way out (a curl | bash run has no file to remove).
+SELF_DELETE=""
 case "$(basename -- "$0")" in
-    llamacode-update-binary-*.sh) trap 'rm -f -- "$0"' EXIT ;;
+    llamacode-update-binary-*.sh) SELF_DELETE=1 ;;
 esac
 
 LOG="${XDG_CACHE_HOME:-$HOME/.cache}/llamacode-update.log"
 mkdir -p "$(dirname "$LOG")"
 exec > >(tee "$LOG") 2>&1
+TEE_PID=$!
+# tee runs on its own: without waiting for it the last lines (the error that
+# explains a failure) could still be unwritten when the terminal or a caller
+# reads the output. Closing our ends gives it EOF.
+on_exit() {
+    [ -n "$SELF_DELETE" ] && rm -f -- "$0"
+    exec 1>&- 2>&-
+    wait "$TEE_PID" 2>/dev/null || true
+}
+trap on_exit EXIT
 
 info() { printf '\033[36m[*] %s\033[0m\n' "$*"; }
 ok()   { printf '\033[32m[OK] %s\033[0m\n' "$*"; }
