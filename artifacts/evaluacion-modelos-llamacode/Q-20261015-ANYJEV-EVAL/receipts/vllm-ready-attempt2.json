@@ -1,0 +1,36 @@
+{
+  "timestamp_utc": "2026-10-15T19:15:45.897533+00:00",
+  "container": "llamacode-anyjev-eval-20261015",
+  "container_status": "running",
+  "api_ready": true,
+  "models_response": {
+    "object": "list",
+    "data": [
+      {
+        "id": "qwen3.8-27b",
+        "object": "model",
+        "created": 1792091745,
+        "owned_by": "vllm",
+        "root": "/model",
+        "parent": null,
+        "max_model_len": 4096,
+        "permission": [
+          {
+            "id": "modelperm-8b90a32f60ccd7c9",
+            "object": "model_permission",
+            "created": 1792091745,
+            "allow_create_engine": false,
+            "allow_sampling": true,
+            "allow_logprobs": true,
+            "allow_search_indices": false,
+            "allow_view": true,
+            "allow_fine_tuning": false,
+            "organization": "*",
+            "group": null,
+            "is_blocking": false
+          }
+        ]
+      }
+    ]
+  }
+}

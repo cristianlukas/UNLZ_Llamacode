@@ -1,0 +1,39 @@
+{
+  "task_id": "Q-20261015-ANYJEV-EVAL",
+  "decision": "pass",
+  "fixture_cases_per_arm": 32,
+  "full_run_logprob_requests": 320,
+  "probability_distributions_valid": true,
+  "metrics_recomputed": true,
+  "flip_counts_recomputed": {
+    "raw": 9,
+    "L0": 1
+  },
+  "l0_full_rotations_and_batch_prior_verified": true,
+  "arms": [
+    {
+      "arm": "raw_canonical",
+      "rows": 32,
+      "accuracy": 0.78125,
+      "brier": 0.3511259356675024
+    },
+    {
+      "arm": "raw_reversed",
+      "rows": 32,
+      "accuracy": 0.90625,
+      "brier": 0.1618010593749106
+    },
+    {
+      "arm": "L0_canonical",
+      "rows": 32,
+      "accuracy": 0.96875,
+      "brier": 0.1350433584896639
+    },
+    {
+      "arm": "L0_reversed",
+      "rows": 32,
+      "accuracy": 0.9375,
+      "brier": 0.17927710804306993
+    }
+  ]
+}

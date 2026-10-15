@@ -1,0 +1,11 @@
+{
+  "cases": 32,
+  "raw": {
+    "correct_on_canonical": 8,
+    "reverse_order_flips": 32
+  },
+  "L0": {
+    "correct_on_canonical": 32,
+    "reverse_order_flips": 0
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "task_id": "Q-20261015-ANYJEV-EVAL",
+  "timestamp_utc": "2026-10-15T19:18:16.833807+00:00",
+  "gpu_compute_processes": "",
+  "running_containers": "",
+  "mem_available_bytes": 119543517184,
+  "swap_used_bytes": 5713444864,
+  "memory_psi": {
+    "some": {
+      "avg10": 0.0,
+      "avg60": 0.0,
+      "avg300": 0.0,
+      "total": 857067349.0
+    },
+    "full": {
+      "avg10": 0.0,
+      "avg60": 0.0,
+      "avg300": 0.0,
+      "total": 855894933.0
+    }
+  },
+  "candidate_port": 8117,
+  "candidate_port_free": true,
+  "disk_available_bytes": {
+    "root": 17246642176,
+    "model_store": 150841683968
+  },
+  "decision": "pass"
+}
