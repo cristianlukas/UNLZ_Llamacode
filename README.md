@@ -1282,6 +1282,12 @@ de aplicación, resolución, idioma, tema o ubicación de controles.
   estrategia, hashes, target, correlación y estado. Los controles con patrones
   UIA se operan semánticamente mediante `desktop_control_action` sin robar foco;
   el mouse físico continúa limitado a sesiones foreground.
+  Una verificación fallida no se interpreta como prueba de que la acción no
+  ocurrió: el agente puede volver a leer y verificar, pero el backend bloquea
+  nuevas mutaciones hasta encontrar evidencia positiva o cerrar la tarea como
+  `BLOCKED`. Ante snapshot obsoleto o target ambiguo exige una observación fresca
+  y permite como máximo una acción re-resuelta; un segundo fallo detiene la
+  recuperación.
   Los pasos exitosos ejecutados por el reproductor nativo cuentan como evidencia
   de herramientas: si la comparación visual confirma el objetivo, no se exige una
   llamada redundante a `desktop_*` durante el turno del modelo ni una segunda

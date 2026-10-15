@@ -342,6 +342,27 @@ bool isDesktopActionTool(const QString &name)
     return isDesktopTool(name) && !isDesktopReadTool(name);
 }
 
+bool isDesktopMutationTool(const QString &name, const QVariantMap &arguments)
+{
+    if (name == QLatin1String("desktop_control_action"))
+        return arguments.value(QStringLiteral("action")).toString().toLower()
+            != QLatin1String("read");
+    if (name == QLatin1String("desktop_clipboard")) {
+        const QString op = arguments.contains(QStringLiteral("op"))
+            ? arguments.value(QStringLiteral("op")).toString().toLower()
+            : QStringLiteral("get");
+        return op == QLatin1String("set");
+    }
+
+    static const QSet<QString> mutations{
+        QStringLiteral("desktop_click"), QStringLiteral("desktop_click_element"),
+        QStringLiteral("desktop_click_text"), QStringLiteral("desktop_click_image"),
+        QStringLiteral("desktop_stroke"), QStringLiteral("desktop_type"),
+        QStringLiteral("desktop_key"), QStringLiteral("desktop_scroll"),
+        QStringLiteral("desktop_launch"), QStringLiteral("desktop_resize")};
+    return mutations.contains(name);
+}
+
 bool isSensitiveTarget(const QVariantMap &target)
 {
     if (target.value(QStringLiteral("password")).toBool()) return true;

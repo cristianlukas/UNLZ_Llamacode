@@ -767,7 +767,9 @@ private:
     bool m_computerUseSandwich = false;
     QString m_currentComputerUseGoal;
     ToolExecutionSafety::McpVerificationGate m_externalVerificationGate;
+    ToolExecutionSafety::DesktopActionSafetyGate m_desktopActionSafetyGate;
     int m_externalVerificationNudges = 0;
+    int m_desktopRecoveryNudges = 0;
     bool computerUseSandwichActive() const {
         return m_computerUseSandwich
             && m_lastDesktopTool.startsWith(QStringLiteral("desktop_"));

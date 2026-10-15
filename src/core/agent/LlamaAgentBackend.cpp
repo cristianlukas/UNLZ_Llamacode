@@ -18,6 +18,7 @@
 #include "core/ToolCallingSupport.h"
 #include "core/automation/FuzzyMatch.h"
 #include "core/automation/DesktopComputerUse.h"
+#include "core/automation/DesktopRecoveryPolicy.h"
 #include "core/automation/AutomationArtifactStore.h"
 #include "VisionImagePayload.h"
 
@@ -1899,7 +1900,13 @@ QString LlamaAgentBackend::desktopPlaybookSection(bool visionReady)
     s += QStringLiteral(
         "Regla anti-loop: una acción, una verificación por texto, terminá. Si algo "
         "no avanza, cambiá de enfoque (teclado ↔ desktop_controls); no repitas la "
-        "misma tool sin cambios.\n\n");
+        "misma tool sin cambios. Si desktop_assert devuelve FAIL, eso no demuestra "
+        "que la acción con efectos no haya ocurrido: no repitas type/click/submit ni "
+        "otra mutación para comprobarla. Permití lecturas y una nueva aserción; si no "
+        "hay evidencia suficiente, informá BLOCKED y dejá el resultado como no verificado. "
+        "Ante snapshot stale/target ambiguo, tomá una sola observación fresca y re-resolvé "
+        "el target; se permite como máximo una acción re-resuelta. Si vuelve a fallar, "
+        "detenete y reportá BLOCKED.\n\n");
     return s;
 }
 
@@ -2641,7 +2648,9 @@ void LlamaAgentBackend::sendMessageImpl(const QString &text, const QString &visi
     m_lastDesktopResult.clear();
     m_lastDesktopTypeText.clear();
     m_externalVerificationGate.clear();
+    m_desktopActionSafetyGate.clear();
     m_externalVerificationNudges = 0;
+    m_desktopRecoveryNudges = 0;
     ensureSession();
     escalateDesktopToolsIfRequested(visibleTrimmed);
     if (m_adaptiveToolRouting)
@@ -4185,6 +4194,58 @@ void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
             finishTurn(QString(), false, QStringLiteral("failed"));
             return;
         }
+        if (m_desktopActionSafetyGate.needsFreshObservation()
+            && m_desktopRecoveryNudges < 1) {
+            ++m_desktopRecoveryNudges;
+            if (m_curAsstIdx >= 0 && m_curAsstIdx < m_messages.size()) {
+                QVariantMap bubble = m_messages[m_curAsstIdx].toMap();
+                bubble[QStringLiteral("content")] = QString();
+                m_messages[m_curAsstIdx] = bubble;
+            }
+            closeAssistantBubble();
+            appendApiMessage(QJsonObject{
+                {QStringLiteral("role"), QStringLiteral("user")},
+                {QStringLiteral("content"), QStringLiteral(
+                    "Una acción de escritorio falló porque su snapshot/target quedó obsoleto "
+                    "o ambiguo. Antes de terminar, hacé una sola observación fresca, volvé "
+                    "a resolver el target y probá como máximo una acción. Si la nueva acción "
+                    "vuelve a fallar, o no podés resolver el target con evidencia actual, "
+                    "informá BLOCKED. No reutilices el snapshot viejo.")}});
+            emit logAppended(QStringLiteral(
+                "[desktop recovery gate] solicitada una observación fresca (%1/1)\n")
+                                 .arg(m_desktopRecoveryNudges));
+            runCompletion();
+            return;
+        }
+        if (m_desktopActionSafetyGate.needsBlockedCompletion()) {
+            const QString notice = m_desktopActionSafetyGate.blocksActions()
+                ? QStringLiteral(
+                    "No puedo confirmar el resultado de la acción de escritorio. La "
+                    "verificación falló o la recuperación del target no tuvo éxito, así que "
+                    "bloqueé nuevas acciones con efectos. El estado quedó sin verificar; "
+                    "revisalo en la aplicación antes de darlo por terminado.")
+                : QStringLiteral(
+                    "No puedo completar la acción de escritorio: el snapshot quedó obsoleto "
+                    "o ambiguo y no se obtuvo evidencia fresca suficiente para una única "
+                    "recuperación. El resultado quedó sin verificar.");
+            if (m_curAsstIdx < 0) ensureAssistantBubble();
+            if (m_curAsstIdx >= 0 && m_curAsstIdx < m_messages.size()) {
+                QVariantMap bubble = m_messages[m_curAsstIdx].toMap();
+                bubble[QStringLiteral("content")] = notice;
+                m_messages[m_curAsstIdx] = bubble;
+                emit messagesChanged();
+            }
+            appendApiMessage(QJsonObject{{QStringLiteral("role"), QStringLiteral("assistant")},
+                                         {QStringLiteral("content"), notice}});
+            AgentEventLog::append(m_cwd, m_sessionId,
+                                  QStringLiteral("desktop_recovery_blocked"),
+                                  QJsonObject{{QStringLiteral("reason"),
+                                               m_desktopActionSafetyGate.blocksActions()
+                                                   ? QStringLiteral("verification_failed")
+                                                   : QStringLiteral("stale_recovery_incomplete")}});
+            finishTurn(QString(), false, QStringLiteral("failed"));
+            return;
+        }
         // Turno text-tools VACÍO: ni tool-call parseable ni respuesta visible (el
         // modelo se fue en <think> o cortó por stop sin emitir nada útil). Sin esto
         // la Task muere "sin respuesta final" a mitad de camino (bug 2+2: tras
@@ -4336,6 +4397,33 @@ void LlamaAgentBackend::processPendingCalls()
     const QString id       = call.value(QStringLiteral("id")).toString();
     QString argStr         = toolArgumentsToString(fn.value(QStringLiteral("arguments")));
     const QJsonObject requestArgs = QJsonDocument::fromJson(argStr.toUtf8()).object();
+    if (DesktopComputerUse::isDesktopMutationTool(name, requestArgs.toVariantMap())) {
+        QString refusal;
+        if (m_desktopActionSafetyGate.blocksActions()) {
+            refusal = QStringLiteral(
+                "[desktop verification gate: acción bloqueada. La verificación anterior falló "
+                "o la única recuperación volvió a fallar. No repitas ni sustituyas la acción "
+                "con efectos; usá sólo lecturas para comprobar el estado. Si no hay evidencia "
+                "suficiente, terminá como BLOCKED y explicá que quedó sin verificar.]");
+        } else if (m_desktopActionSafetyGate.needsFreshObservation()) {
+            refusal = QStringLiteral(
+                "[desktop stale gate: acción bloqueada hasta una observación fresca. Ejecutá "
+                "una sola desktop_snapshot/desktop_observe, re-resolvé el target con esa "
+                "evidencia y probá como máximo una acción. Si vuelve a fallar, terminá BLOCKED.]");
+        }
+        if (!refusal.isEmpty()) {
+            ++m_toolFail;
+            m_pendingCalls.removeFirst();
+            AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("failure"),
+                                  QJsonObject{{QStringLiteral("tool"), name},
+                                              {QStringLiteral("toolCallId"), id},
+                                              {QStringLiteral("reason"),
+                                               QStringLiteral("desktop_recovery_gate")}});
+            appendToolResult(id, name, refusal);
+            processPendingCalls();
+            return;
+        }
+    }
     if (m_privacyModeEnabled && isPrivacyRestrictedTool(name)) {
         ++m_toolFail;
         m_pendingCalls.removeFirst();
@@ -5327,22 +5415,63 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
         if (!m_externalVerificationGate.hasPending())
             m_externalVerificationNudges = 0;
     }
-    static const QSet<QString> desktopMutations{
-        QStringLiteral("desktop_click"), QStringLiteral("desktop_click_element"),
-        QStringLiteral("desktop_click_image"), QStringLiteral("desktop_stroke"),
-        QStringLiteral("desktop_type"), QStringLiteral("desktop_key"),
-        QStringLiteral("desktop_scroll"), QStringLiteral("desktop_launch")};
     static const QSet<QString> desktopObservations{
         QStringLiteral("desktop_read_text"),
         QStringLiteral("desktop_controls"), QStringLiteral("desktop_snapshot"),
         QStringLiteral("desktop_observe"), QStringLiteral("desktop_find_image"),
-        QStringLiteral("desktop_wait_image"), QStringLiteral("desktop_assert_image")};
-    if (desktopMutations.contains(name)) {
+        QStringLiteral("desktop_wait_image"), QStringLiteral("desktop_assert_image"),
+        QStringLiteral("desktop_assert")};
+    const bool desktopControlRead = name == QLatin1String("desktop_control_action")
+        && args.value(QStringLiteral("action")).toString().compare(
+            QStringLiteral("read"), Qt::CaseInsensitive) == 0;
+    const bool hadUnverifiedDesktopAction =
+        m_desktopActionSafetyGate.hasUnverifiedAction();
+    if (DesktopComputerUse::isDesktopMutationTool(name, args.toVariantMap())) {
+        const bool staleOrAmbiguous = !ok && DesktopRecoveryPolicy::shouldReobserve(res);
+        m_desktopActionSafetyGate.recordActionResult(ok, staleOrAmbiguous);
         const bool hadPending = m_externalVerificationGate.hasPending();
         m_externalVerificationGate.recordAction(QStringLiteral("desktop"), ok, false);
         if (!hadPending && m_externalVerificationGate.hasPending())
             m_externalVerificationNudges = 0;
-    } else if (desktopObservations.contains(name)) {
+    } else if (desktopObservations.contains(name) || desktopControlRead) {
+        if (ok) {
+            m_desktopActionSafetyGate.recordObservation();
+            if (name == QLatin1String("desktop_assert")
+                || name == QLatin1String("desktop_assert_image")) {
+                QJsonObject condition;
+                const QStringList conditionFields = name == QLatin1String("desktop_assert")
+                    ? QStringList{QStringLiteral("target_id"), QStringLiteral("window_title"),
+                                  QStringLiteral("expect_text"), QStringLiteral("query"),
+                                  QStringLiteral("role")}
+                    : QStringList{QStringLiteral("scope_kind"), QStringLiteral("target_id"),
+                                  QStringLiteral("template_path"), QStringLiteral("should_exist")};
+                for (const QString &field : conditionFields)
+                    if (args.contains(field)) condition.insert(field, args.value(field));
+                m_desktopActionSafetyGate.recordVerified(QString::fromUtf8(
+                    ToolExecutionSafety::canonicalJson(condition)));
+            } else if (name == QLatin1String("desktop_read_text")
+                       || name == QLatin1String("desktop_controls")
+                       || name == QLatin1String("desktop_snapshot")
+                       || name == QLatin1String("desktop_observe")
+                       || desktopControlRead) {
+                m_desktopActionSafetyGate.recordTextObservation(true, res);
+            }
+        } else if (hadUnverifiedDesktopAction
+                   && (name == QLatin1String("desktop_assert")
+                       || name == QLatin1String("desktop_assert_image"))) {
+            QJsonObject condition;
+            const QStringList conditionFields = name == QLatin1String("desktop_assert")
+                ? QStringList{QStringLiteral("target_id"), QStringLiteral("window_title"),
+                              QStringLiteral("expect_text"), QStringLiteral("query"),
+                              QStringLiteral("role")}
+                : QStringList{QStringLiteral("scope_kind"), QStringLiteral("target_id"),
+                              QStringLiteral("template_path"), QStringLiteral("should_exist")};
+            for (const QString &field : conditionFields)
+                if (args.contains(field)) condition.insert(field, args.value(field));
+            m_desktopActionSafetyGate.recordFailedVerification(
+                args.value(QStringLiteral("expect_text")).toString(),
+                QString::fromUtf8(ToolExecutionSafety::canonicalJson(condition)));
+        }
         m_externalVerificationGate.recordObservation(QStringLiteral("desktop"), ok, true);
         if (!m_externalVerificationGate.hasPending())
             m_externalVerificationNudges = 0;
@@ -7592,7 +7721,9 @@ QJsonArray LlamaAgentBackend::toolSchemas()
         fn(QStringLiteral("desktop_assert"),
            QStringLiteral("VERIFICA una condición comprobable y devuelve PASS/FAIL (no una "
                           "opinión). Usalo al final de una Task o tras un paso clave para "
-                          "confirmar el objetivo. Casos: 'expect_text' → pasa si ese texto "
+                          "confirmar el objetivo. FAIL no demuestra que la acción anterior "
+                          "no haya ocurrido: no la repitas; usá primero desktop_read_text u "
+                          "otra lectura y reportá BLOCKED si no se puede confirmar. Casos: 'expect_text' → pasa si ese texto "
                           "aparece en algún control (de la ventana 'target_id'/'window_title', o "
                           "de cualquiera si no se indica); o 'query'/'role'/'window_title' → pasa "
                           "si existe esa ventana/control. Espera hasta 'timeout_ms'."),

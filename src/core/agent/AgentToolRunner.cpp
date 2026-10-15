@@ -1842,8 +1842,9 @@ void AgentToolRunner::executeTool(const QString &callId, const QString &name,
     if (DesktopComputerUse::isDesktopTool(name)) {
         if (!ok && DesktopRecoveryPolicy::shouldReobserve(result))
             result += QStringLiteral(
-                "\n[recovery: stale/ambiguo; ejecutá desktop_snapshot o desktop_observe, "
-                "re-resolvé el target y no repitas la misma acción]");
+                "\n[recovery: stale/ambiguo; no reutilices este snapshot. Ejecutá una sola "
+                "desktop_snapshot o desktop_observe, re-resolvé el target y probá como "
+                "máximo una acción; si vuelve a fallar, terminá BLOCKED]");
         QString strategy = out.value(QStringLiteral("desktopStrategy")).toString();
         if (strategy.isEmpty())
             strategy = name == QLatin1String("desktop_control_action")
@@ -2466,7 +2467,11 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         const QString json = QString::fromUtf8(QJsonDocument(
             QJsonObject::fromVariantMap(res)).toJson(QJsonDocument::Compact));
         return pass ? QStringLiteral("[desktop_assert: PASS]\n%1").arg(json)
-                    : QStringLiteral("[desktop_assert: FAIL] %1\n%2")
+                    : QStringLiteral("[desktop_assert: FAIL] %1\n%2\n"
+                                     "La acción anterior pudo haber ocurrido aunque esta "
+                                     "lectura no la confirme. No la repitas; comprobá con "
+                                     "desktop_read_text/desktop_controls y, si sigue sin "
+                                     "poder verificarse, reportá BLOCKED.")
                           .arg(error.isEmpty() ? QStringLiteral("condición no cumplida") : error, json);
     }
     if (name == QLatin1String("desktop_launch")) {

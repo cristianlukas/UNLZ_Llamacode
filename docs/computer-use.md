@@ -17,6 +17,14 @@ Las acciones semánticas pueden recibir `snapshot_id`. Si la ventana o el árbol
 cambiaron, el backend rechaza la acción y obliga a observar y resolver de nuevo.
 No se elige silenciosamente entre candidatos ambiguos.
 
+La recuperación es acotada: después de `stale` o de un target ambiguo se exige una
+observación fresca y se permite como máximo una acción re-resuelta. Si vuelve a
+fallar, las mutaciones siguientes se bloquean y la tarea termina como no verificada.
+Si `desktop_assert` devuelve `FAIL`, eso no prueba que la acción previa no haya
+ocurrido. El agente puede hacer lecturas y una nueva aserción; no repite la acción
+con efectos. Una lectura OCR que contiene el texto esperado o una aserción positiva
+puede resolver el estado; sin esa evidencia, debe informar `BLOCKED`.
+
 ## Acciones UIA
 
 `desktop_control_action` soporta:

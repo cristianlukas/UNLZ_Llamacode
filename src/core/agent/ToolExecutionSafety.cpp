@@ -40,6 +40,18 @@ bool looksReadOnly(const QString &text)
     return false;
 }
 
+QString foldDesktopVerificationText(const QString &text)
+{
+    const QString decomposed = text.normalized(QString::NormalizationForm_D);
+    QString folded;
+    folded.reserve(decomposed.size());
+    for (const QChar c : decomposed) {
+        if (c.category() != QChar::Mark_NonSpacing)
+            folded.append(c.toLower());
+    }
+    return folded.simplified();
+}
+
 } // namespace
 
 namespace ToolExecutionSafety {
@@ -239,6 +251,97 @@ McpVerificationGate::completionDecision(int nudges, int maxNudges) const
     if (!hasPending()) return CompletionDecision::Allow;
     return nudges < qMax(0, maxNudges)
         ? CompletionDecision::RequestObservation : CompletionDecision::Block;
+}
+
+void DesktopActionSafetyGate::recordFailedVerification(const QString &expectedText,
+                                                      const QString &conditionKey)
+{
+    const QString foldedExpected = foldDesktopVerificationText(expectedText);
+    if (!m_verificationFailed && m_actionPendingVerification && !foldedExpected.isEmpty()
+        && foldDesktopVerificationText(m_lastTextObservation).contains(foldedExpected)) {
+        recordVerified(conditionKey);
+        return;
+    }
+    m_verificationFailed = true;
+    m_expectedText = expectedText.trimmed();
+    m_failedConditionKey = conditionKey;
+}
+
+void DesktopActionSafetyGate::recordVerified(const QString &conditionKey)
+{
+    const bool resolvesFailedCondition = !m_verificationFailed
+        || (!m_failedConditionKey.isEmpty() && conditionKey == m_failedConditionKey);
+    if (!resolvesFailedCondition)
+        return;
+    m_verificationFailed = false;
+    m_expectedText.clear();
+    m_failedConditionKey.clear();
+    m_actionPendingVerification = false;
+    m_lastTextObservation.clear();
+    m_staleRetryPending = false;
+    m_staleObservationDone = false;
+    m_staleRetryBlocked = false;
+}
+
+void DesktopActionSafetyGate::recordObservation()
+{
+    if (m_staleRetryPending)
+        m_staleObservationDone = true;
+}
+
+void DesktopActionSafetyGate::recordTextObservation(bool succeeded, const QString &text)
+{
+    if (!succeeded) return;
+    m_lastTextObservation = text;
+    if (!m_verificationFailed || m_expectedText.isEmpty()) return;
+    const QString expected = foldDesktopVerificationText(m_expectedText);
+    if (!expected.isEmpty() && foldDesktopVerificationText(text).contains(expected)) {
+        m_verificationFailed = false;
+        m_expectedText.clear();
+        m_failedConditionKey.clear();
+        m_actionPendingVerification = false;
+        m_lastTextObservation.clear();
+        m_staleRetryPending = false;
+        m_staleObservationDone = false;
+        m_staleRetryBlocked = false;
+    }
+}
+
+void DesktopActionSafetyGate::recordActionResult(bool succeeded, bool staleOrAmbiguous)
+{
+    if (staleOrAmbiguous) {
+        if (m_staleRetryPending) {
+            m_staleRetryPending = false;
+            m_staleObservationDone = false;
+            m_staleRetryBlocked = true;
+        } else {
+            m_staleRetryPending = true;
+            m_staleObservationDone = false;
+        }
+        return;
+    }
+    m_actionPendingVerification = true;
+    m_lastTextObservation.clear();
+    if (!m_staleRetryPending)
+        return;
+
+    const bool wasReobserved = m_staleObservationDone;
+    m_staleRetryPending = false;
+    m_staleObservationDone = false;
+    if (!succeeded || !wasReobserved)
+        m_staleRetryBlocked = true;
+}
+
+void DesktopActionSafetyGate::clear()
+{
+    m_verificationFailed = false;
+    m_expectedText.clear();
+    m_failedConditionKey.clear();
+    m_actionPendingVerification = false;
+    m_lastTextObservation.clear();
+    m_staleRetryPending = false;
+    m_staleObservationDone = false;
+    m_staleRetryBlocked = false;
 }
 
 QVariantMap toVariantMap(const Contract &c)

@@ -158,6 +158,7 @@ QString formatReadText(const QList<TextLine> &lines, const QRect &bounds,
                        const QString &query, int maxLines);
 bool isDesktopReadTool(const QString &name);
 bool isDesktopActionTool(const QString &name);
+bool isDesktopMutationTool(const QString &name, const QVariantMap &arguments = {});
 bool isSensitiveTarget(const QVariantMap &target);
 bool isDestructiveLabel(const QString &text);
 QString redactForEvidence(const QString &text);

@@ -180,6 +180,9 @@ void AutomationTests::desktopPromptPrefersNativeTools()
     QVERIFY(prompt.contains(QStringLiteral("desktop_controls")));
     QVERIFY(prompt.contains(QStringLiteral("ANTI-LOOP")));
     QVERIFY(prompt.contains(QStringLiteral("NO repitas desktop_windows")));
+    QVERIFY(prompt.contains(QStringLiteral("no repitas type/click/submit")));
+    QVERIFY(prompt.contains(QStringLiteral("BLOCKED")));
+    QVERIFY(prompt.contains(QStringLiteral("observá una sola vez")));
 }
 
 void AutomationTests::desktopToolPolicyKeepsGuiToolsAvailable()
@@ -825,6 +828,13 @@ void AutomationTests::desktopActionClassificationIsGeneric()
     QVERIFY(isDesktopReadTool(QStringLiteral("desktop_observe")));
     QVERIFY(!isDesktopActionTool(QStringLiteral("desktop_observe")));
     QVERIFY(isDesktopActionTool(QStringLiteral("desktop_control_action")));
+    QVERIFY(isDesktopMutationTool(QStringLiteral("desktop_control_action"),
+                                  {{QStringLiteral("action"), QStringLiteral("invoke")}}));
+    QVERIFY(!isDesktopMutationTool(QStringLiteral("desktop_control_action"),
+                                   {{QStringLiteral("action"), QStringLiteral("read")}}));
+    QVERIFY(isDesktopMutationTool(QStringLiteral("desktop_clipboard"),
+                                  {{QStringLiteral("op"), QStringLiteral("set")}}));
+    QVERIFY(!isDesktopMutationTool(QStringLiteral("desktop_focus")));
     QVERIFY(isSensitiveTarget(QVariantMap{{QStringLiteral("password"), true}}));
     QVERIFY(isSensitiveTarget(QVariantMap{{QStringLiteral("role"), QStringLiteral("edit")},
                                          {QStringLiteral("name"), QStringLiteral("Token")}}));

@@ -57,6 +57,38 @@ public:
 private:
     QSet<QString> m_pendingServers;
 };
+
+// Protege las acciones de escritorio después de una verificación fallida y
+// limita a una acción la recuperación de un target obsoleto/ambiguo por turno.
+class DesktopActionSafetyGate
+{
+public:
+    bool blocksActions() const { return m_verificationFailed || m_staleRetryBlocked; }
+    bool needsFreshObservation() const
+    { return m_staleRetryPending && !m_staleObservationDone; }
+    bool needsBlockedCompletion() const
+    { return m_verificationFailed || m_staleRetryPending || m_staleRetryBlocked; }
+    bool hasUnverifiedAction() const { return m_actionPendingVerification; }
+
+    void recordFailedVerification(const QString &expectedText = {},
+                                 const QString &conditionKey = {});
+    void recordVerified(const QString &conditionKey = {});
+    void recordObservation();
+    void recordTextObservation(bool succeeded, const QString &text);
+    void recordActionResult(bool succeeded, bool staleOrAmbiguous);
+    void clear();
+
+private:
+    bool m_verificationFailed = false;
+    QString m_expectedText;
+    QString m_failedConditionKey;
+    bool m_actionPendingVerification = false;
+    QString m_lastTextObservation;
+    bool m_staleRetryPending = false;
+    bool m_staleObservationDone = false;
+    bool m_staleRetryBlocked = false;
+};
+
 QVariantMap toVariantMap(const Contract &contract);
 
 // JSON canonico (claves ordenadas recursivamente) para ligar aprobación,

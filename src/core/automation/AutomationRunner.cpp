@@ -268,8 +268,8 @@ QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantM
             "4) Si no hay teclado: desktop_controls <id> y desktop_click_element por nombre/controlId; "
             "si la receta trae locator image y UIA/OCR fallan, usá desktop_find_image/click_image.\n"
             "Antes de una acción semántica preferí desktop_snapshot o el snapshot_id de "
-            "desktop_controls/desktop_observe; pasalo a la acción. Si el stale guard falla, "
-            "no insistas: observá de nuevo y re-resolvé el target. Para editar, alternar, "
+            "desktop_controls/desktop_observe; pasalo a la acción. Si stale falla, observá "
+            "una sola vez, re-resolvé y reintentá una acción; si falla, BLOCKED. Para editar, alternar, "
             "seleccionar, expandir o desplazar un control preferí desktop_control_action.\n"
             "5) Verificá con desktop_controls usando el visor ACTUAL ('Se muestra X'); "
             "no aceptes Historial/Memoria como resultado final.\n"
@@ -293,6 +293,9 @@ QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantM
             "VERIFICACIÓN: un paso [assert] es una condición que DEBE cumplirse; reproducilo "
             "con desktop_assert o desktop_assert_image (PASS/FAIL). Cerrá la Task con una aserción del objetivo "
             "en vez de declarar éxito de memoria. "
+            "Un desktop_assert: FAIL no prueba que la acción previa no ocurrió: no repitas "
+            "type/click/submit. Usá lecturas y otra aserción; si no se confirma, informá "
+            "BLOCKED y que quedó sin verificar. "
             "No leas evidence/*.jpg con read_file.\n");
     } else if (mode == QLatin1String("browserBackground")) {
         out += QStringLiteral(

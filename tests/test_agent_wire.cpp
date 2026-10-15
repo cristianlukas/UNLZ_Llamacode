@@ -1804,6 +1804,10 @@ void AgentWireTests::desktopPlaybookSection_coversKeyboardPathAndTextVerify()
     // Pilar 4: sin visión, NO usar desktop_observe (evita el loop ciego).
     QVERIFY(novis.contains(QStringLiteral("desktop_observe")));
     QVERIFY(novis.contains(QStringLiteral("loop"), Qt::CaseInsensitive));
+    QVERIFY(novis.contains(QStringLiteral("desktop_assert devuelve FAIL")));
+    QVERIFY(novis.contains(QStringLiteral("no repitas type/click/submit")));
+    QVERIFY(novis.contains(QStringLiteral("una sola observación fresca")));
+    QVERIFY(novis.contains(QStringLiteral("reportá BLOCKED")));
     QVERIFY(novis.endsWith(QStringLiteral("\n\n")));
 
     // Con visión, sí se ofrece desktop_observe como recurso extra.

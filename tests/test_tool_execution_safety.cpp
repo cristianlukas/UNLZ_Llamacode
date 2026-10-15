@@ -1,6 +1,7 @@
 #include <QtTest>
 
 #include "core/agent/ToolExecutionSafety.h"
+#include "core/automation/DesktopComputerUse.h"
 
 class ToolExecutionSafetyTests : public QObject
 {
@@ -12,6 +13,9 @@ private slots:
     void workspaceMutationPathsApplyOnlyToLocalFileEffects();
     void browserNavigationNeedsHostApprovalAndHttpScheme();
     void mcpVerificationGateRequiresFreshReadFromSameServer();
+    void desktopFailedVerificationBlocksMutationUntilEvidence();
+    void desktopVerificationCoversKeyboardAndSemanticActions();
+    void desktopStaleRecoveryAllowsOnlyOneReobservedRetry();
     void canonicalHashIgnoresObjectKeyOrder();
     void idempotencyIsScopedByCorrelation();
 };
@@ -148,6 +152,103 @@ void ToolExecutionSafetyTests::mcpVerificationGateRequiresFreshReadFromSameServe
     gate.recordObservation(QStringLiteral("drive"), true, true);
     QCOMPARE(gate.completionDecision(2, 2),
              ToolExecutionSafety::McpVerificationGate::CompletionDecision::Allow);
+}
+
+void ToolExecutionSafetyTests::desktopFailedVerificationBlocksMutationUntilEvidence()
+{
+    ToolExecutionSafety::DesktopActionSafetyGate gate;
+    QVERIFY(!gate.blocksActions());
+    QVERIFY(!gate.needsBlockedCompletion());
+
+    gate.recordFailedVerification(QStringLiteral("TOTAL 42"));
+    QVERIFY(gate.blocksActions());
+    QVERIFY(gate.needsBlockedCompletion());
+
+    // Un texto de lectura sin la condición esperada no autoriza otra mutación.
+    gate.recordTextObservation(true, QStringLiteral("El total todavía no aparece"));
+    QVERIFY(gate.blocksActions());
+    gate.recordTextObservation(false, QStringLiteral("TOTAL 42"));
+    QVERIFY(gate.blocksActions());
+
+    // La lectura visible puede resolver un assert UIA que no expuso el contenido.
+    gate.recordTextObservation(true, QStringLiteral("Se muestra Tótal 42"));
+    QVERIFY(!gate.blocksActions());
+    QVERIFY(!gate.needsBlockedCompletion());
+
+    // Una lectura intermedia no borra que hubo una mutación aún sin verificar.
+    gate.recordActionResult(true, false);
+    gate.recordObservation();
+    QVERIFY(gate.hasUnverifiedAction());
+    gate.recordFailedVerification(QStringLiteral("otro valor"), QStringLiteral("condition-2"));
+    QVERIFY(gate.blocksActions());
+    gate.recordVerified(QStringLiteral("condition-1"));
+    QVERIFY(gate.blocksActions());
+    gate.recordVerified(QStringLiteral("condition-2"));
+    QVERIFY(!gate.blocksActions());
+
+    // Una lectura OCR positiva anterior al FAIL del assert ya confirma el texto.
+    gate.clear();
+    gate.recordActionResult(true, false);
+    gate.recordTextObservation(true, QStringLiteral("Se muestra TOTAL 42"));
+    gate.recordFailedVerification(QStringLiteral("TOTAL 42"), QStringLiteral("condition-3"));
+    QVERIFY(!gate.blocksActions());
+    QVERIFY(!gate.hasUnverifiedAction());
+}
+
+void ToolExecutionSafetyTests::desktopVerificationCoversKeyboardAndSemanticActions()
+{
+    // Los dos recorridos de regresión usan un editor de texto (teclado) y una
+    // calculadora (acción UIA); la política común no depende de esos nombres.
+    const QList<QPair<QString, QVariantMap>> appActions{
+        {QStringLiteral("desktop_type"), {}},
+        {QStringLiteral("desktop_control_action"),
+         {{QStringLiteral("action"), QStringLiteral("invoke")}}}};
+    for (const auto &entry : appActions) {
+        QVERIFY(DesktopComputerUse::isDesktopMutationTool(entry.first, entry.second));
+        ToolExecutionSafety::DesktopActionSafetyGate gate;
+        gate.recordActionResult(true, false);
+        gate.recordFailedVerification(QStringLiteral("42"), entry.first);
+        QVERIFY(gate.blocksActions());
+        gate.recordTextObservation(true, QStringLiteral("Se muestra 42"));
+        QVERIFY(!gate.blocksActions());
+    }
+}
+
+void ToolExecutionSafetyTests::desktopStaleRecoveryAllowsOnlyOneReobservedRetry()
+{
+    ToolExecutionSafety::DesktopActionSafetyGate gate;
+    gate.recordActionResult(false, true);
+    QVERIFY(gate.needsFreshObservation());
+    QVERIFY(gate.needsBlockedCompletion());
+    QVERIFY(!gate.blocksActions());
+
+    // Si vuelve a fallar stale antes de reobservar, no se permite otro intento.
+    gate.recordActionResult(false, true);
+    QVERIFY(gate.blocksActions());
+    gate.clear();
+
+    // El flujo válido refresca una vez y permite una sola acción re-resuelta.
+    gate.recordActionResult(false, true);
+    gate.recordObservation();
+    QVERIFY(!gate.needsFreshObservation());
+    gate.recordActionResult(true, false);
+    QVERIFY(!gate.blocksActions());
+    QVERIFY(!gate.needsBlockedCompletion());
+
+    // Un segundo fallo stale del intento re-resuelto cierra la recuperación.
+    gate.clear();
+    gate.recordActionResult(false, true);
+    gate.recordObservation();
+    gate.recordActionResult(false, true);
+    QVERIFY(gate.blocksActions());
+    QVERIFY(gate.needsBlockedCompletion());
+
+    // También se bloquea si la única acción re-resuelta falla por otra causa.
+    gate.clear();
+    gate.recordActionResult(false, true);
+    gate.recordObservation();
+    gate.recordActionResult(false, false);
+    QVERIFY(gate.blocksActions());
 }
 
 void ToolExecutionSafetyTests::canonicalHashIgnoresObjectKeyOrder()
