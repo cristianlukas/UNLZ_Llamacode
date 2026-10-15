@@ -1,0 +1,10 @@
+{"time_utc": "2026-10-15T14:04:34Z", "event": "preflight", "launch": {"alias": "iq2xs-sampling-eval", "benchmark": true, "best": false, "deprecated": false, "displayName": "🏆 iq2xs-sampling-eval - EVAL · ASTRA IQ2_XS 1M · TaskFlow sampling", "favorite": false, "id": "q14-iq2xs-sampling-taskflow", "lastUsed": 1791941150489, "menuOrder": 0, "name": "EVAL · ASTRA IQ2_XS 1M · TaskFlow sampling", "ready": true, "system": false, "systemBadge": false, "tags": ["Q-20261014-STRATA-IQ2XXS-SAMPLING", "TaskFlow ULTRA", "sampling A/B"]}, "suite": {"id": "llamacode_local_coding_smoke", "name": "LlamaCode local coding smoke", "prompt_count": 3}}
+{"time_utc": "2026-10-15T14:04:34Z", "event": "set_approval", "response": {"ok": true, "reqId": "6e86385f-66fd-445c-8d6f-a8714f659a6a"}}
+{"time_utc": "2026-10-15T14:04:34Z", "event": "set_thinking", "response": {"ok": true, "reqId": "37b49727-d949-4afd-a8e1-94a6eb438632"}}
+{"time_utc": "2026-10-15T14:04:34Z", "event": "start_agent", "response": {"ok": true, "reqId": "6e11d087-3565-4c1c-aa13-d5dcfc321435"}}
+{"time_utc": "2026-10-15T14:04:34Z", "event": "agent_ready", "server_state": "running"}
+{"time_utc": "2026-10-15T14:04:35Z", "event": "benchmark_start", "response": {"ok": true, "reqId": "6cf911fe-f898-4438-a8a3-2874a4c7691c"}, "suite_id": "llamacode_local_coding_smoke", "agent_profile": "agent-maximo", "timeout_sec": 900}
+{"time_utc": "2026-10-15T14:04:35Z", "event": "benchmark_poll", "running": true, "status": "Iniciando..."}
+{"time_utc": "2026-10-15T14:04:50Z", "event": "benchmark_poll", "running": true, "status": "[1/1] EVAL · ASTRA IQ2_XS 1M · TaskFlow sampling — agente: prompt 3/3..."}
+{"time_utc": "2026-10-15T14:05:05Z", "event": "benchmark_poll", "running": false, "status": "Completado."}
+{"time_utc": "2026-10-15T14:05:05Z", "event": "benchmark_complete", "status": "Completado.", "results_file": "artifacts/evaluacion-modelos-llamacode/Q-20261014-STRATA-IQ2XXS-SAMPLING/receipts/smoke-T0.1-seed4242.json"}

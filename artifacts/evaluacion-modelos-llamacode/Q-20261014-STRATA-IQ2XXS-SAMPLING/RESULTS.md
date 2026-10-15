@@ -1,9 +1,13 @@
 # Resultados — Q-20261014-STRATA-IQ2XXS-SAMPLING
 
-**Estado: bloqueada antes de inferencia por presión de memoria durante la carga.**
-No hay score ni conclusión sobre loops o sampling.
+**Estado: screening completo el 2026-10-15; sin mejora de sampling observada.**
+Las nueve corridas TaskFlow (tres seeds por temperatura 0,1/0,6/1,0) dieron
+0/13, tres reparaciones y la misma repetición de `!`; el smoke local de
+codificación también dio 0/6 en los tres brazos. Esto sólo caracteriza a ISTA
+IQ2_XS/Strata 0.1.41 con este harness y contexto 1M; no es un resultado de
+IQ2_XXS ni una conclusión universal sobre sampling.
 
-## Alcance y ejecución
+## Alcance y primer intento — 2026-10-14
 
 El plan preregistrado comparaba la temperatura efectiva 0,1 (control) con 0,6
 y 1,0 en ISTA Flash-Next IQ2_XS, Strata 0.1.41 y el TaskFlow ULTRA fijado por
@@ -37,7 +41,11 @@ después de parar es el arrastre de la carga recién interrumpida, no una medida
 de recuperación estable. El recibo `receipts/runtime-load-abort.json` guarda
 las observaciones y la razón de detención.
 
-## Veredicto
+## Veredicto provisional de los intentos bloqueados
+
+Esta interpretación correspondía a la evidencia disponible antes de la
+reanudación que pidió el usuario; el resultado final aparece al final del
+documento.
 
 - La comparación 0,1/0,6/1,0 no se ejecutó; no se puede atribuir ni refutar el
   loop a la temperatura, al quant ni al harness.
@@ -101,3 +109,61 @@ no se cambia sampling, perfil ni HarnessSpec. No repetir la misma receta de
 carga hasta preregistrar una estrategia que mantenga PSI debajo de 0,1% y
 `MemAvailable` por encima de 60 GiB durante la carga; cualquier cambio de
 configuración efectiva debe recibir una huella nueva. Recibos: [preflight](receipts/preflight-20261015-124630.json), [guarda](receipts/load-monitor-20261015-1248.json), [resultado de carga](receipts/runtime-load-abort-20261015.json), [log del engine](receipts/strata-engine-20261015.log).
+
+## Reanudación solicitada por el usuario — 2026-10-15
+
+El usuario pidió quitar el corte preventivo de 60 GiB / PSI avg10 <0,1% y
+usar la memoria disponible para completar la prueba. El plan quedó actualizado
+antes de volver a cargar: RAM, PSI y swap se registran sin cortar por esos
+valores; sólo aplica una salida de emergencia si `MemAvailable` cae por debajo
+de 4 GiB durante 30 s, PSI `full avg10` llega a 80% durante 30 s, aparece un
+OOM del kernel o el host deja de responder. Se mantienen la receta 1M, los
+perfiles, suite, HarnessSpec y semillas. El valor mínimo observado fue 54,31
+GiB disponibles y PSI avg10 llegó a 39,54%; no hubo OOM ni interrupción de
+emergencia. Tras cerrar el servidor, el postflight mostró 105,87 GiB
+disponibles, PSI 0, puertos libres y ningún proceso de inferencia.
+
+## Resultado final — 2026-10-15
+
+Se ejecutó el TaskFlow ULTRA preregistrado en un workspace aislado, con el
+perfil IQ2_XS/1M sin cambios y el mismo HarnessSpec. LlamaCode registró la
+temperatura y seed efectivas esperadas en cada resultado; el backend incluye
+la temperatura de la corrida en el payload. Las nueve corridas terminaron
+por calidad, no por timeout, transporte o infraestructura.
+
+| Temperatura efectiva | Seeds | TaskFlow final | Reparaciones | Tiempo total mediano | Tool calls / archivos |
+|---:|---|---|---|---:|---:|
+| 0,1 | 4242, 4243, 4244 | 0/13 en 3/3 | 3 por corrida | 19,275 s | 0 / 0 |
+| 0,6 | 4242, 4243, 4244 | 0/13 en 3/3 | 3 por corrida | 19,372 s | 0 / 0 |
+| 1,0 | 4242, 4243, 4244 | 0/13 en 3/3 | 3 por corrida | 19,079 s | 0 / 0 |
+
+En las nueve respuestas, Strata registró el mismo token `!` repetido 256 veces
+y detuvo la generación; LlamaCode recibió la salida repetida, sin código ni
+llamadas a tools. El detector de estancamiento del governor quedó en 0 porque
+esta parada ocurrió en la detección de repetición del servidor. Cada brazo
+produjo una única respuesta entre sus tres seeds; de hecho, la respuesta fue
+idéntica en las nueve corridas. Subir a 0,6 o 1,0 no redujo reparaciones ni
+recuperó una tarea.
+
+Como diagnóstico adicional se ejecutó la suite incluida
+`llamacode_local_coding_smoke` (3 prompts cortos, seed 4242): T=0,1, 0,6 y 1,0
+dieron 0/6 y 3 reparaciones cada una, otra vez con la misma repetición de `!` y
+sin tools ni archivos. No había un fixture HE0 dedicado en los assets; este
+smoke no se etiqueta como resultado formal de la escalera HE0/HE20/BCB.
+
+La guarda preventiva previa queda retirada para esta evaluación, tal como pidió
+el usuario. En la primera carga el monitor registró mínimo 54,31 GiB
+disponibles, PSI avg10 máximo 39,54%, incremento de 64.756 páginas de swap-out
+(≈253 MiB) y cero eventos OOM. La segunda carga del smoke llegó a 54,44 GiB y
+PSI 18,49%, también sin OOM. La memoria se recuperó al parar Strata. La única
+salida automática de emergencia preregistrada (<4 GiB disponibles por 30 s,
+PSI `full` ≥80% por 30 s u OOM) no se activó.
+
+**Conclusión:** en esta combinación IQ2_XS + Strata + LlamaCode a 1M, cambiar la
+temperatura de 0,1 a 0,6 o 1,0 no resolvió el loop reproducible. No promover
+ningún cambio de perfil o recomendación. El checkpoint exacto IQ2_XXS del post
+sigue sin estar disponible, así que no se prueba ni se refuta ese caso. No hubo
+cambio de código productivo, sampling productivo o HarnessSpec. Los recibos de
+cada corrida se conservan en `receipts/`; la [observación de Strata](receipts/strata-repeat-observation-20261015.txt)
+captura el corte por 256 repeticiones y el [resumen agregado](receipts/sampling-results-20261015.json)
+contiene métricas por brazo y telemetría de memoria.

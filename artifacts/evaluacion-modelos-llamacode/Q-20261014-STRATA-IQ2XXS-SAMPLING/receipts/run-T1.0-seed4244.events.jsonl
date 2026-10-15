@@ -1,0 +1,10 @@
+{"time_utc": "2026-10-15T13:58:37Z", "event": "preflight", "launch": {"alias": "iq2xs-sampling-eval", "benchmark": true, "best": false, "deprecated": false, "displayName": "🏆 iq2xs-sampling-eval - EVAL · ASTRA IQ2_XS 1M · TaskFlow sampling", "favorite": false, "id": "q14-iq2xs-sampling-taskflow", "lastUsed": 1792072684404, "menuOrder": 0, "name": "EVAL · ASTRA IQ2_XS 1M · TaskFlow sampling", "ready": true, "system": false, "systemBadge": false, "tags": ["Q-20261014-STRATA-IQ2XXS-SAMPLING", "TaskFlow ULTRA", "sampling A/B"]}, "suite": {"id": "qwen38_taskflow_ultra_ast_vs_sol_20261006", "name": "Qwen3.8 ASTRA IQ3_S calibrado vs SOL · TaskFlow ULTRA E2E", "prompt_count": 1}}
+{"time_utc": "2026-10-15T13:58:37Z", "event": "set_approval", "response": {"ok": true, "reqId": "bc7eeebe-0d0d-420c-957c-b150b7e5da4c"}}
+{"time_utc": "2026-10-15T13:58:37Z", "event": "set_thinking", "response": {"ok": true, "reqId": "87a7e999-9033-42e2-930e-7c9e87404149"}}
+{"time_utc": "2026-10-15T13:58:37Z", "event": "start_agent", "response": {"ok": true, "reqId": "8eb91f7d-0dbe-4344-a572-85bfcf679297"}}
+{"time_utc": "2026-10-15T13:58:37Z", "event": "agent_ready", "server_state": "running"}
+{"time_utc": "2026-10-15T13:58:37Z", "event": "benchmark_start", "response": {"ok": true, "reqId": "b93eb3cd-e8d0-4a57-83a0-5b45dec48230"}, "suite_id": "qwen38_taskflow_ultra_ast_vs_sol_20261006", "agent_profile": "agent-maximo", "timeout_sec": 1800}
+{"time_utc": "2026-10-15T13:58:37Z", "event": "benchmark_poll", "running": true, "status": "Iniciando..."}
+{"time_utc": "2026-10-15T13:58:52Z", "event": "benchmark_poll", "running": true, "status": "[1/1] EVAL · ASTRA IQ2_XS 1M · TaskFlow sampling — reparando fallos 2/3..."}
+{"time_utc": "2026-10-15T13:59:07Z", "event": "benchmark_poll", "running": false, "status": "Completado."}
+{"time_utc": "2026-10-15T13:59:08Z", "event": "benchmark_complete", "status": "Completado.", "results_file": "artifacts/evaluacion-modelos-llamacode/Q-20261014-STRATA-IQ2XXS-SAMPLING/receipts/run-T1.0-seed4244.json"}

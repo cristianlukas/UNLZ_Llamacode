@@ -47,8 +47,18 @@ se editan perfiles productivos.
 ## Pruebas preregistradas
 
 1. Preflight de pesos/hashes, binario y revisión Strata, GPU/VRAM/RAM/swap,
-   presión de memoria, procesos/listeners y puertos. Abortar antes de cargar si
-   la reserva no es segura.
+   presión de memoria, procesos/listeners y puertos. El 2026-10-15 el usuario
+   pidió explícitamente quitar la guarda preventiva de 60 GiB / PSI <0,1% para
+   poder evaluar la carga real. Desde esta reanudación, RAM disponible, PSI y
+   actividad de swap se registran pero no bloquean ni detienen la corrida por
+   sí solos; el preflight sólo bloquea por procesos/listeners ajenos que
+   colisionen con la tarea o porque las GPU no tengan capacidad para esta
+   receta. No se cambia el contexto, modelo, harness ni fingerprint.
+   Emergencia operativa: enviar SIGINT sólo al servidor propio si
+   `MemAvailable` cae por debajo de 4 GiB durante 30 s, PSI `full avg10` llega
+   a 80% durante 30 s, el kernel registra OOM, o el host deja de responder.
+   Esta salida de emergencia evita un bloqueo completo del equipo; no es un
+   gate de calidad ni el corte preventivo anterior.
 2. HE0, una tarea por brazo, como smoke de transporte/calidad; no extender a
    HE20/BCB8 en esta campaña si el costo proyectado impide tres seeds por
    brazo dentro del límite de tiempo.
@@ -80,3 +90,26 @@ usos, conservando TC-92/TC-74 visibles.
 No se infiere mejora para IQ2_XXS, otras cuantizaciones/modelos, Computer Usage,
 Ingi-Charla, visión o contexto. Los TPS del post y comentarios no son
 comparables con esta configuración local.
+
+## Reanudación solicitada por el usuario — 2026-10-15
+
+La parada a `MemAvailable=59,75 GiB` y PSI avg10 `17,94%` fue una decisión de
+la guarda preventiva del intento previo. El usuario pidió continuar usando la
+memoria disponible. Por tanto, esos valores quedan como observaciones válidas
+de la carga anterior, pero no como umbrales de aborto de esta reanudación. Se
+mantienen exactamente el config IQ2_XS/1M, Strata 0.1.41, los tres brazos
+0,1/0,6/1,0, el HarnessSpec, suite y semillas preregistradas. La única
+modificación es permitir presión alta durante la evaluación y registrar RAM,
+PSI y swap; la salida de emergencia arriba sólo aplica cerca del agotamiento
+del host.
+
+### Diagnóstico complementario posterior — preregistro 2026-10-15
+
+Después de las nueve corridas TaskFlow, las tres temperaturas dieron la misma
+salida de un único token repetido y 0/13. Para comprobar si esto depende del
+prompt largo, se hará una pasada de la suite local `llamacode_local_coding_smoke`
+(tres prompts cortos) con la seed 4242 por cada temperatura 0,1/0,6/1,0. El
+JSON de la suite, idéntico al asset incluido en el repositorio, tiene SHA-256
+`a4c58e2a8f58ad28bc8abe4d294eb0f746c5867e34af49ba9e82a6884c48df61`. Es un
+diagnóstico adicional y no cambia el criterio principal de decisión basado en
+TaskFlow ULTRA.

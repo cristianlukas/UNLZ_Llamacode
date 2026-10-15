@@ -1,0 +1,7 @@
+Strata server observation, 2026-10-15 (captured from the task-owned server session)
+
+[strata] the reply repeated one token ('!') 256 times in a row: ended as "length" (repeat_stop_tokens in strata-<model>.json; 0 turns this off). If a new request with a short prompt does the same, restart the server and report it (#606)
+[strata] done: 256 tokens in 11 s (134.0 tok/s) (length, cancel=False)
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+
+The same repeated-token stop was observed across the 0.1, 0.6, and 1.0 request-temperature arms. Full API responses and per-run metadata are preserved in run-T*.json and smoke-T*.json.

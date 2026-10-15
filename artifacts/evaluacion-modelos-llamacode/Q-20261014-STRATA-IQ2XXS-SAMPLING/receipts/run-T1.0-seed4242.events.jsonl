@@ -1,0 +1,10 @@
+{"time_utc": "2026-10-15T13:57:21Z", "event": "preflight", "launch": {"alias": "iq2xs-sampling-eval", "benchmark": true, "best": false, "deprecated": false, "displayName": "🏆 iq2xs-sampling-eval - EVAL · ASTRA IQ2_XS 1M · TaskFlow sampling", "favorite": false, "id": "q14-iq2xs-sampling-taskflow", "lastUsed": 1792072606447, "menuOrder": 0, "name": "EVAL · ASTRA IQ2_XS 1M · TaskFlow sampling", "ready": true, "system": false, "systemBadge": false, "tags": ["Q-20261014-STRATA-IQ2XXS-SAMPLING", "TaskFlow ULTRA", "sampling A/B"]}, "suite": {"id": "qwen38_taskflow_ultra_ast_vs_sol_20261006", "name": "Qwen3.8 ASTRA IQ3_S calibrado vs SOL · TaskFlow ULTRA E2E", "prompt_count": 1}}
+{"time_utc": "2026-10-15T13:57:21Z", "event": "set_approval", "response": {"ok": true, "reqId": "4359fb02-aa28-4b25-a897-649db1f4b40d"}}
+{"time_utc": "2026-10-15T13:57:21Z", "event": "set_thinking", "response": {"ok": true, "reqId": "12f2e5bc-a66e-441f-975e-b1d5fd68ad56"}}
+{"time_utc": "2026-10-15T13:57:21Z", "event": "start_agent", "response": {"ok": true, "reqId": "326cfec1-712e-4ff6-beea-8fa06aaf6956"}}
+{"time_utc": "2026-10-15T13:57:21Z", "event": "agent_ready", "server_state": "running"}
+{"time_utc": "2026-10-15T13:57:21Z", "event": "benchmark_start", "response": {"ok": true, "reqId": "5e11686b-d188-40c4-9467-32d84160aee3"}, "suite_id": "qwen38_taskflow_ultra_ast_vs_sol_20261006", "agent_profile": "agent-maximo", "timeout_sec": 1800}
+{"time_utc": "2026-10-15T13:57:21Z", "event": "benchmark_poll", "running": true, "status": "Iniciando..."}
+{"time_utc": "2026-10-15T13:57:36Z", "event": "benchmark_poll", "running": true, "status": "[1/1] EVAL · ASTRA IQ2_XS 1M · TaskFlow sampling — reparando fallos 2/3..."}
+{"time_utc": "2026-10-15T13:57:51Z", "event": "benchmark_poll", "running": false, "status": "Completado."}
+{"time_utc": "2026-10-15T13:57:51Z", "event": "benchmark_complete", "status": "Completado.", "results_file": "artifacts/evaluacion-modelos-llamacode/Q-20261014-STRATA-IQ2XXS-SAMPLING/receipts/run-T1.0-seed4242.json"}

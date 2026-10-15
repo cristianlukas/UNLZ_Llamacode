@@ -1,0 +1,532 @@
+{
+  "task_id": "Q-20261014-STRATA-IQ2XXS-SAMPLING",
+  "status": "complete_screening_no_sampling_improvement_observed",
+  "completed_at_utc": "2026-10-15T14:08:01Z",
+  "candidate": "ISTA-DASLab Qwen3.8-Flash-Next GSQ-RCO IQ2_XS",
+  "not_tested": "IQ2_XXS checkpoint cited in the Reddit post was not available locally",
+  "runtime": {
+    "strata_version": "0.1.41",
+    "context_tokens": 1048576,
+    "rope_scaling": "YaRN x4 from 262144",
+    "port": 8352,
+    "harness_spec_hash": "cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+    "taskflow_suite_sha256": "f04febb440208d5bf74c01e84d78f5127e57c164fabece2acbfb346215dc0c17",
+    "temperature_arms": [
+      0.1,
+      0.6,
+      1.0
+    ],
+    "seeds": [
+      4242,
+      4243,
+      4244
+    ]
+  },
+  "primary_taskflow_runs": [
+    {
+      "file": "run-T0.1-seed4242.json",
+      "label": "Qwen3.8 ASTRA IQ3_S calibrado vs SOL · TaskFlow ULTRA E2E",
+      "suite": "qwen38_taskflow_ultra_ast_vs_sol_20261006",
+      "effective_temperature": 0.1,
+      "effective_seed": 4242,
+      "score": [
+        0,
+        13
+      ],
+      "first_pass_score": [
+        0,
+        13
+      ],
+      "repairs": 3,
+      "elapsed_seconds": 20.513,
+      "tool_calls": 0,
+      "files_created": 0,
+      "failure_kind": "quality",
+      "failure_message": "Fallaron criterios de aceptacion.",
+      "first_tool_call_seconds": -1,
+      "first_write_seconds": -1,
+      "governor": {
+        "progressEvents": 0,
+        "replanEvents": 0,
+        "stagnationEvents": 0
+      },
+      "response": "<think>!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n[generación detenida: el modelo repitió el mismo bloque tres veces]</think>\n",
+      "harness_spec_hash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+      "profile_config_fingerprint": "913f02b1db000594887b8b21bfb12597fa1cb32aee1b23626d0151deb4131036"
+    },
+    {
+      "file": "run-T0.1-seed4243.json",
+      "label": "Qwen3.8 ASTRA IQ3_S calibrado vs SOL · TaskFlow ULTRA E2E",
+      "suite": "qwen38_taskflow_ultra_ast_vs_sol_20261006",
+      "effective_temperature": 0.1,
+      "effective_seed": 4243,
+      "score": [
+        0,
+        13
+      ],
+      "first_pass_score": [
+        0,
+        13
+      ],
+      "repairs": 3,
+      "elapsed_seconds": 19.275,
+      "tool_calls": 0,
+      "files_created": 0,
+      "failure_kind": "quality",
+      "failure_message": "Fallaron criterios de aceptacion.",
+      "first_tool_call_seconds": -1,
+      "first_write_seconds": -1,
+      "governor": {
+        "progressEvents": 0,
+        "replanEvents": 0,
+        "stagnationEvents": 0
+      },
+      "response": "<think>!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n[generación detenida: el modelo repitió el mismo bloque tres veces]</think>\n",
+      "harness_spec_hash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+      "profile_config_fingerprint": "913f02b1db000594887b8b21bfb12597fa1cb32aee1b23626d0151deb4131036"
+    },
+    {
+      "file": "run-T0.1-seed4244.json",
+      "label": "Qwen3.8 ASTRA IQ3_S calibrado vs SOL · TaskFlow ULTRA E2E",
+      "suite": "qwen38_taskflow_ultra_ast_vs_sol_20261006",
+      "effective_temperature": 0.1,
+      "effective_seed": 4244,
+      "score": [
+        0,
+        13
+      ],
+      "first_pass_score": [
+        0,
+        13
+      ],
+      "repairs": 3,
+      "elapsed_seconds": 19.275,
+      "tool_calls": 0,
+      "files_created": 0,
+      "failure_kind": "quality",
+      "failure_message": "Fallaron criterios de aceptacion.",
+      "first_tool_call_seconds": -1,
+      "first_write_seconds": -1,
+      "governor": {
+        "progressEvents": 0,
+        "replanEvents": 0,
+        "stagnationEvents": 0
+      },
+      "response": "<think>!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n[generación detenida: el modelo repitió el mismo bloque tres veces]</think>\n",
+      "harness_spec_hash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+      "profile_config_fingerprint": "913f02b1db000594887b8b21bfb12597fa1cb32aee1b23626d0151deb4131036"
+    },
+    {
+      "file": "run-T0.6-seed4242.json",
+      "label": "Qwen3.8 ASTRA IQ3_S calibrado vs SOL · TaskFlow ULTRA E2E",
+      "suite": "qwen38_taskflow_ultra_ast_vs_sol_20261006",
+      "effective_temperature": 0.6,
+      "effective_seed": 4242,
+      "score": [
+        0,
+        13
+      ],
+      "first_pass_score": [
+        0,
+        13
+      ],
+      "repairs": 3,
+      "elapsed_seconds": 19.404,
+      "tool_calls": 0,
+      "files_created": 0,
+      "failure_kind": "quality",
+      "failure_message": "Fallaron criterios de aceptacion.",
+      "first_tool_call_seconds": -1,
+      "first_write_seconds": -1,
+      "governor": {
+        "progressEvents": 0,
+        "replanEvents": 0,
+        "stagnationEvents": 0
+      },
+      "response": "<think>!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n[generación detenida: el modelo repitió el mismo bloque tres veces]</think>\n",
+      "harness_spec_hash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+      "profile_config_fingerprint": "913f02b1db000594887b8b21bfb12597fa1cb32aee1b23626d0151deb4131036"
+    },
+    {
+      "file": "run-T0.6-seed4243.json",
+      "label": "Qwen3.8 ASTRA IQ3_S calibrado vs SOL · TaskFlow ULTRA E2E",
+      "suite": "qwen38_taskflow_ultra_ast_vs_sol_20261006",
+      "effective_temperature": 0.6,
+      "effective_seed": 4243,
+      "score": [
+        0,
+        13
+      ],
+      "first_pass_score": [
+        0,
+        13
+      ],
+      "repairs": 3,
+      "elapsed_seconds": 18.745,
+      "tool_calls": 0,
+      "files_created": 0,
+      "failure_kind": "quality",
+      "failure_message": "Fallaron criterios de aceptacion.",
+      "first_tool_call_seconds": -1,
+      "first_write_seconds": -1,
+      "governor": {
+        "progressEvents": 0,
+        "replanEvents": 0,
+        "stagnationEvents": 0
+      },
+      "response": "<think>!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n[generación detenida: el modelo repitió el mismo bloque tres veces]</think>\n",
+      "harness_spec_hash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+      "profile_config_fingerprint": "913f02b1db000594887b8b21bfb12597fa1cb32aee1b23626d0151deb4131036"
+    },
+    {
+      "file": "run-T0.6-seed4244.json",
+      "label": "Qwen3.8 ASTRA IQ3_S calibrado vs SOL · TaskFlow ULTRA E2E",
+      "suite": "qwen38_taskflow_ultra_ast_vs_sol_20261006",
+      "effective_temperature": 0.6,
+      "effective_seed": 4244,
+      "score": [
+        0,
+        13
+      ],
+      "first_pass_score": [
+        0,
+        13
+      ],
+      "repairs": 3,
+      "elapsed_seconds": 19.372,
+      "tool_calls": 0,
+      "files_created": 0,
+      "failure_kind": "quality",
+      "failure_message": "Fallaron criterios de aceptacion.",
+      "first_tool_call_seconds": -1,
+      "first_write_seconds": -1,
+      "governor": {
+        "progressEvents": 0,
+        "replanEvents": 0,
+        "stagnationEvents": 0
+      },
+      "response": "<think>!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n[generación detenida: el modelo repitió el mismo bloque tres veces]</think>\n",
+      "harness_spec_hash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+      "profile_config_fingerprint": "913f02b1db000594887b8b21bfb12597fa1cb32aee1b23626d0151deb4131036"
+    },
+    {
+      "file": "run-T1.0-seed4242.json",
+      "label": "Qwen3.8 ASTRA IQ3_S calibrado vs SOL · TaskFlow ULTRA E2E",
+      "suite": "qwen38_taskflow_ultra_ast_vs_sol_20261006",
+      "effective_temperature": 1,
+      "effective_seed": 4242,
+      "score": [
+        0,
+        13
+      ],
+      "first_pass_score": [
+        0,
+        13
+      ],
+      "repairs": 3,
+      "elapsed_seconds": 19.251,
+      "tool_calls": 0,
+      "files_created": 0,
+      "failure_kind": "quality",
+      "failure_message": "Fallaron criterios de aceptacion.",
+      "first_tool_call_seconds": -1,
+      "first_write_seconds": -1,
+      "governor": {
+        "progressEvents": 0,
+        "replanEvents": 0,
+        "stagnationEvents": 0
+      },
+      "response": "<think>!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n[generación detenida: el modelo repitió el mismo bloque tres veces]</think>\n",
+      "harness_spec_hash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+      "profile_config_fingerprint": "913f02b1db000594887b8b21bfb12597fa1cb32aee1b23626d0151deb4131036"
+    },
+    {
+      "file": "run-T1.0-seed4243.json",
+      "label": "Qwen3.8 ASTRA IQ3_S calibrado vs SOL · TaskFlow ULTRA E2E",
+      "suite": "qwen38_taskflow_ultra_ast_vs_sol_20261006",
+      "effective_temperature": 1,
+      "effective_seed": 4243,
+      "score": [
+        0,
+        13
+      ],
+      "first_pass_score": [
+        0,
+        13
+      ],
+      "repairs": 3,
+      "elapsed_seconds": 19.079,
+      "tool_calls": 0,
+      "files_created": 0,
+      "failure_kind": "quality",
+      "failure_message": "Fallaron criterios de aceptacion.",
+      "first_tool_call_seconds": -1,
+      "first_write_seconds": -1,
+      "governor": {
+        "progressEvents": 0,
+        "replanEvents": 0,
+        "stagnationEvents": 0
+      },
+      "response": "<think>!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n[generación detenida: el modelo repitió el mismo bloque tres veces]</think>\n",
+      "harness_spec_hash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+      "profile_config_fingerprint": "913f02b1db000594887b8b21bfb12597fa1cb32aee1b23626d0151deb4131036"
+    },
+    {
+      "file": "run-T1.0-seed4244.json",
+      "label": "Qwen3.8 ASTRA IQ3_S calibrado vs SOL · TaskFlow ULTRA E2E",
+      "suite": "qwen38_taskflow_ultra_ast_vs_sol_20261006",
+      "effective_temperature": 1,
+      "effective_seed": 4244,
+      "score": [
+        0,
+        13
+      ],
+      "first_pass_score": [
+        0,
+        13
+      ],
+      "repairs": 3,
+      "elapsed_seconds": 18.976,
+      "tool_calls": 0,
+      "files_created": 0,
+      "failure_kind": "quality",
+      "failure_message": "Fallaron criterios de aceptacion.",
+      "first_tool_call_seconds": -1,
+      "first_write_seconds": -1,
+      "governor": {
+        "progressEvents": 0,
+        "replanEvents": 0,
+        "stagnationEvents": 0
+      },
+      "response": "<think>!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n[generación detenida: el modelo repitió el mismo bloque tres veces]</think>\n",
+      "harness_spec_hash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+      "profile_config_fingerprint": "913f02b1db000594887b8b21bfb12597fa1cb32aee1b23626d0151deb4131036"
+    }
+  ],
+  "primary_summary_by_temperature": {
+    "0.1": {
+      "n": 3,
+      "scores": [
+        [
+          0,
+          13
+        ],
+        [
+          0,
+          13
+        ],
+        [
+          0,
+          13
+        ]
+      ],
+      "all_pass": false,
+      "repairs": [
+        3,
+        3,
+        3
+      ],
+      "elapsed_median_seconds": 19.275,
+      "unique_responses": 1
+    },
+    "0.6": {
+      "n": 3,
+      "scores": [
+        [
+          0,
+          13
+        ],
+        [
+          0,
+          13
+        ],
+        [
+          0,
+          13
+        ]
+      ],
+      "all_pass": false,
+      "repairs": [
+        3,
+        3,
+        3
+      ],
+      "elapsed_median_seconds": 19.372,
+      "unique_responses": 1
+    },
+    "1.0": {
+      "n": 3,
+      "scores": [
+        [
+          0,
+          13
+        ],
+        [
+          0,
+          13
+        ],
+        [
+          0,
+          13
+        ]
+      ],
+      "all_pass": false,
+      "repairs": [
+        3,
+        3,
+        3
+      ],
+      "elapsed_median_seconds": 19.079,
+      "unique_responses": 1
+    }
+  },
+  "supplemental_local_coding_smoke": {
+    "suite_file": "assets/benchmarks/custom/llamacode_local_coding_smoke.json",
+    "suite_sha256": "a4c58e2a8f58ad28bc8abe4d294eb0f746c5867e34af49ba9e82a6884c48df61",
+    "seed": 4242,
+    "runs": [
+      {
+        "file": "smoke-T0.1-seed4242.json",
+        "label": "LlamaCode local coding smoke",
+        "suite": "llamacode_local_coding_smoke",
+        "effective_temperature": 0.1,
+        "effective_seed": 4242,
+        "score": [
+          0,
+          6
+        ],
+        "first_pass_score": [
+          0,
+          6
+        ],
+        "repairs": 3,
+        "elapsed_seconds": 28.053,
+        "tool_calls": 0,
+        "files_created": 0,
+        "failure_kind": "quality",
+        "failure_message": "Fallaron criterios de aceptacion.",
+        "first_tool_call_seconds": -1,
+        "first_write_seconds": -1,
+        "governor": {
+          "progressEvents": 0,
+          "replanEvents": 0,
+          "stagnationEvents": 0
+        },
+        "response": "<think>!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n[generación detenida: el modelo repitió el mismo bloque tres veces]</think>\n",
+        "harness_spec_hash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+        "profile_config_fingerprint": "913f02b1db000594887b8b21bfb12597fa1cb32aee1b23626d0151deb4131036"
+      },
+      {
+        "file": "smoke-T0.6-seed4242.json",
+        "label": "LlamaCode local coding smoke",
+        "suite": "llamacode_local_coding_smoke",
+        "effective_temperature": 0.6,
+        "effective_seed": 4242,
+        "score": [
+          0,
+          6
+        ],
+        "first_pass_score": [
+          0,
+          6
+        ],
+        "repairs": 3,
+        "elapsed_seconds": 27.008,
+        "tool_calls": 0,
+        "files_created": 0,
+        "failure_kind": "quality",
+        "failure_message": "Fallaron criterios de aceptacion.",
+        "first_tool_call_seconds": -1,
+        "first_write_seconds": -1,
+        "governor": {
+          "progressEvents": 0,
+          "replanEvents": 0,
+          "stagnationEvents": 0
+        },
+        "response": "<think>!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n[generación detenida: el modelo repitió el mismo bloque tres veces]</think>\n",
+        "harness_spec_hash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+        "profile_config_fingerprint": "913f02b1db000594887b8b21bfb12597fa1cb32aee1b23626d0151deb4131036"
+      },
+      {
+        "file": "smoke-T1.0-seed4242.json",
+        "label": "LlamaCode local coding smoke",
+        "suite": "llamacode_local_coding_smoke",
+        "effective_temperature": 1,
+        "effective_seed": 4242,
+        "score": [
+          0,
+          6
+        ],
+        "first_pass_score": [
+          0,
+          6
+        ],
+        "repairs": 3,
+        "elapsed_seconds": 26.978,
+        "tool_calls": 0,
+        "files_created": 0,
+        "failure_kind": "quality",
+        "failure_message": "Fallaron criterios de aceptacion.",
+        "first_tool_call_seconds": -1,
+        "first_write_seconds": -1,
+        "governor": {
+          "progressEvents": 0,
+          "replanEvents": 0,
+          "stagnationEvents": 0
+        },
+        "response": "<think>!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n[generación detenida: el modelo repitió el mismo bloque tres veces]</think>\n",
+        "harness_spec_hash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+        "profile_config_fingerprint": "913f02b1db000594887b8b21bfb12597fa1cb32aee1b23626d0151deb4131036"
+      }
+    ]
+  },
+  "memory_policy": {
+    "user_authorized_removal_of_preventive_60_gib_and_psi_0_1_percent_thresholds": true,
+    "emergency_floor_memavailable_gib": 4,
+    "sustained_seconds": 30,
+    "emergency_full_psi_avg10_percent": 80,
+    "oom_kill_delta_required_for_abort": true,
+    "first_load": {
+      "file": "runtime-memory-20261015.jsonl",
+      "samples": 105,
+      "from_utc": "2026-10-15T13:51:16Z",
+      "to_utc": "2026-10-15T13:59:56Z",
+      "memavailable_start_gib": 83.11,
+      "memavailable_min_gib": 54.31,
+      "psi_some_avg10_max_percent": 39.54,
+      "psi_full_avg10_max_percent": 39.54,
+      "swapin_pages_delta": 1816,
+      "swapout_pages_delta": 64756,
+      "oom_kill_delta": 0,
+      "emergency_interrupts": 0
+    },
+    "supplemental_load": {
+      "file": "runtime-memory-supplemental-20261015.jsonl",
+      "samples": 39,
+      "from_utc": "2026-10-15T14:03:43Z",
+      "to_utc": "2026-10-15T14:06:53Z",
+      "memavailable_start_gib": 96.89,
+      "memavailable_min_gib": 54.44,
+      "psi_some_avg10_max_percent": 18.49,
+      "psi_full_avg10_max_percent": 18.49,
+      "swapin_pages_delta": 6,
+      "swapout_pages_delta": 54,
+      "oom_kill_delta": 0,
+      "emergency_interrupts": 0
+    },
+    "preflight_memavailable_bytes": 113188581376,
+    "preflight_psi_percent": {
+      "some": 0.0,
+      "full": 0.0
+    },
+    "postflight_memavailable_bytes": 113718661120,
+    "postflight_psi_percent": {
+      "some": 0.0,
+      "full": 0.0
+    },
+    "postflight_listeners": [],
+    "postflight_inference_processes": [],
+    "postflight_gpu_compute_processes": []
+  },
+  "interpretation": "Across all 9 TaskFlow runs, T=0.1, 0.6, and 1.0 produced the same repeated-exclamation response, 0/13, three repairs, zero tool calls, and no files. Strata logged a single-token repetition stop after 256 consecutive ! tokens. The three-prompt local coding smoke likewise scored 0/6 for every temperature with the same response. This is evidence that changing request temperature did not resolve this IQ2_XS/Strata 0.1.41/1M harness loop in these tests; it does not establish results for IQ2_XXS or other contexts/models. No production profile or source changed."
+}

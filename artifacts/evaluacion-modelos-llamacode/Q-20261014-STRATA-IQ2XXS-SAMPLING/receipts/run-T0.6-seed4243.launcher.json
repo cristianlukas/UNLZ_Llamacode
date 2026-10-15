@@ -1,0 +1,26 @@
+{
+  "label": "Q-20261014 IQ2_XS TaskFlow sampling T0.6 seed4243",
+  "temperature_requested": 0.6,
+  "seed_requested": 4243,
+  "timeout_sec": 1800,
+  "max_wait_sec": 2100,
+  "started_at_utc": "2026-10-15T13:56:00Z",
+  "finished_at_utc": "2026-10-15T13:56:32Z",
+  "runner_exit_code": 0,
+  "error": null,
+  "app_log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261014-STRATA-IQ2XXS-SAMPLING/receipts/app-T0.6-seed4243.log",
+  "runner_log": "artifacts/evaluacion-modelos-llamacode/Q-20261014-STRATA-IQ2XXS-SAMPLING/receipts/run-T0.6-seed4243.runner.log",
+  "result_json": "artifacts/evaluacion-modelos-llamacode/Q-20261014-STRATA-IQ2XXS-SAMPLING/receipts/run-T0.6-seed4243.json",
+  "effective_temperature": 0.6,
+  "effective_seed": 4243,
+  "final_score": [
+    0,
+    13
+  ],
+  "first_pass_score": [
+    0,
+    13
+  ],
+  "repair_attempts": 3,
+  "elapsed_sec": 18.745
+}

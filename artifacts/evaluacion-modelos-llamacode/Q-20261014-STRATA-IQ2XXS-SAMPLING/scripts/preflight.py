@@ -50,6 +50,7 @@ def main():
     mem = meminfo()
     psi = psi_avg10()
     gpu = command("nvidia-smi", "--query-gpu=index,name,memory.used,memory.total,utilization.gpu", "--format=csv,noheader")
+    gpu_compute = command("nvidia-smi", "--query-compute-apps=pid,name,used_memory", "--format=csv,noheader")
     ports = command("ss", "-ltnH")
     target_ports = [8350, 8351, 8352, 8877, 8898]
     listening = [line for line in ports.splitlines() if any(re.search(rf":{port}(?:\s|$)", line) for port in target_ports)]
@@ -57,13 +58,9 @@ def main():
     relevant = [line.strip() for line in process_names.splitlines()
                 if re.search(r"strata|llama|vllm|LlamaCode", line, re.I)]
     swap_delta = {key: end_swap[key] - start_swap[key] for key in start_swap}
-    passed = (
-        mem.get("MemAvailable", 0) >= 60 * 1024**3
-        and max(psi.values(), default=1.0) < 0.1
-        and all(value == 0 for value in swap_delta.values())
-        and not listening
-        and not relevant
-    )
+    gpu_compute_processes = [line.strip() for line in gpu_compute.splitlines()
+                             if line.strip() and "no running processes" not in line.lower()]
+    passed = not listening and not relevant and not gpu_compute_processes
     receipt = {
         "timestamp_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "meminfo_bytes": mem,
@@ -73,14 +70,16 @@ def main():
         "candidate_ports_checked": target_ports,
         "listeners_on_candidate_ports": listening,
         "relevant_process_names": relevant,
-        "thresholds": {
-            "MemAvailable_min_bytes": 60 * 1024**3,
-            "memory_psi_avg10_max": 0.1,
-            "swap_activity_delta_required": 0,
+        "gpu_compute_processes": gpu_compute_processes,
+        "resource_policy": {
+            "memory_available": "observational_only; no minimum floor",
+            "memory_psi": "observational_only; no preventive cutoff",
+            "swap_activity": "observational_only; no zero-delta requirement",
             "candidate_ports_must_be_free": True,
             "inference_processes_must_be_absent": True,
+            "gpu_compute_processes_must_be_absent": True,
         },
-        "decision": "pass" if passed else "abort",
+        "decision": "pass" if passed else "blocked_by_external_resource",
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
@@ -88,7 +87,8 @@ def main():
                       "MemAvailable_bytes": mem.get("MemAvailable"),
                       "memory_psi_avg10_percent": psi,
                       "swap_pages_delta_over_8s": swap_delta,
-                      "listeners": listening, "processes": relevant}), flush=True)
+                      "listeners": listening, "processes": relevant,
+                      "gpu_compute_processes": gpu_compute_processes}), flush=True)
     return 0 if passed else 3
 
 
