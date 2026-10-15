@@ -1,0 +1,56 @@
+$ UTC time
+Thu Oct 15 15:02:20 UTC 2026
+
+$ GPU state
+Thu Oct 15 12:02:20 2026
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 610.57.04              KMD Version: 610.57.04     CUDA UMD Version: 13.3     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 3090        Off |   00000000:01:00.0  On |                  N/A |
+| 53%   42C    P5             80W /  250W |    1127MiB /  24576MiB |     38%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+|   1  NVIDIA GeForce RTX 3090        Off |   00000000:03:00.0  On |                  N/A |
+| 36%   29C    P5             32W /  250W |     108MiB /  24576MiB |     17%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A            2516      G   /usr/lib/xorg/Xorg                      685MiB |
+|    0   N/A  N/A           97960      G   /usr/bin/gnome-software                  35MiB |
+|    0   N/A  N/A          491783      G   ...n/.local/compiz-custom/compiz         39MiB |
+|    0   N/A  N/A          524676      G   ...ess --variations-seed-version        119MiB |
+|    0   N/A  N/A          656606      G   ...rack-uuid=3190708988185955192         61MiB |
+|    0   N/A  N/A          998717      G   ...rack-uuid=3190708988185955192        101MiB |
+|    1   N/A  N/A            2516      G   /usr/lib/xorg/Xorg                       81MiB |
++-----------------------------------------------------------------------------------------+
+
+$ compute processes
+pid, process_name, used_gpu_memory [MiB]
+
+$ RAM
+total        used        free      shared  buff/cache   available
+Mem:           123Gi        17Gi        11Gi       172Mi        95Gi       106Gi
+Swap:          8.0Gi       4.9Gi       3.1Gi
+
+$ swap
+NAME      TYPE SIZE USED PRIO
+/swap.img file   8G 4.9G   -1
+
+$ memory PSI
+some avg10=0.00 avg60=0.00 avg300=0.00 total=748216170
+full avg10=0.00 avg60=0.00 avg300=0.00 total=747083248
+
+$ evaluation ports
+(sin salida; no se observaron listeners/procesos coincidentes)
+
+$ owned services
+(sin salida; no se observaron listeners/procesos coincidentes)

@@ -1,0 +1,1 @@
+Command used `--vllm-url http://127.0.0.1:18171/v1/completions`. The official letter adapter appends `/v1/completions`, so startup warmup requested `/v1/completions/v1/completions` and received HTTP 404 Not Found. Exit code 1. No scored case was sent; vLLM backend remained healthy. Corrected command uses base URL `http://127.0.0.1:18171`.
