@@ -2707,6 +2707,71 @@ Item {
                     }
                 }
 
+                // ── Computer use: ¿en segundo plano o controlando la PC? ──
+                // El backend retiene el turno hasta que el usuario elige (en Super
+                // Agente no pregunta: controla la PC directo).
+                Rectangle {
+                    id: computerUseCard
+                    objectName: "computerUseCard"
+                    readonly property string request: App.agentComputerUseRequest ?? ""
+                    visible: request.length > 0
+                    anchors {
+                        left: parent.left; right: parent.right; bottom: parent.bottom
+                        margins: 12
+                    }
+                    height: visible ? cuCol.implicitHeight + 24 : 0
+                    radius: 10
+                    color: Theme.surfaceBg
+                    border.width: 2
+                    border.color: Theme.accent
+                    z: 6
+
+                    ColumnLayout {
+                        id: cuCol
+                        anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
+                        spacing: 8
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+                            Text { text: "🖱️"; font.pixelSize: 16 }
+                            Text {
+                                text: "Para esto tengo que usar la PC. ¿Cómo lo hago?"
+                                color: Theme.textPrimary; font { pixelSize: 13; bold: true }
+                            }
+                        }
+                        Text {
+                            Layout.fillWidth: true
+                            text: "«" + computerUseCard.request + "»"
+                            color: Theme.textMuted; font.pixelSize: 12
+                            elide: Text.ElideRight
+                        }
+                        Text {
+                            Layout.fillWidth: true
+                            text: "En segundo plano abro la app y la manejo por sus controles (UI Automation) sin tocar tu mouse ni tu teclado: podés seguir usando la PC. Algunas apps sólo responden a clics; ahí te aviso. Controlando tu PC uso el mouse y el teclado como una persona. Lo que elijas vale para el resto de la sesión."
+                            color: Theme.textSecondary; font.pixelSize: 11
+                            wrapMode: Text.WordWrap
+                        }
+                        Flow {
+                            Layout.fillWidth: true
+                            spacing: 8
+                            LcButton {
+                                text: "En segundo plano"
+                                onClicked: App.answerComputerUseChoice("background")
+                            }
+                            LcButton {
+                                text: "Controlando mi PC"
+                                secondary: true
+                                onClicked: App.answerComputerUseChoice("foreground")
+                            }
+                            LcButton {
+                                text: "Cancelar"
+                                secondary: true
+                                onClicked: App.answerComputerUseChoice("cancel")
+                            }
+                        }
+                    }
+                }
+
                 // ── Tarjeta de aprobación de herramienta (human-in-the-loop) ──
                 Rectangle {
                     id: approvalCard

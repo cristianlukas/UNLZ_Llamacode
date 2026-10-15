@@ -89,6 +89,20 @@ public:
     void approveTool(const QString &id, bool always = false) override;
     void rejectTool(const QString &id) override;
     void setApprovalPolicy(const QString &mode) override;
+    void resolveComputerUseChoice(const QString &choice) override;
+    QString computerUseMode() const override { return m_computerUseMode; }
+    // Tests: fijar el modo de la sesión sin pasar por la pregunta.
+    void setComputerUseModeForTest(const QString &mode) { m_computerUseMode = mode; }
+    bool computerUseChoicePending() const { return m_cuAwaitingChoice; }
+    // Marca los args de una tool desktop_* para que el runner no use mouse/teclado.
+    static QJsonValue markBackgroundDesktopArgs(const QJsonValue &arguments);
+    // Instrucciones del turno cuando el usuario eligió "en segundo plano".
+    static QString backgroundComputerUseNote();
+    // Razonamiento invisible (Pensar apagado y el modelo piensa igual): cuándo
+    // cortarlo y qué mostrar mientras tanto.
+    static bool shouldCutHiddenReasoning(bool thinkingEnabled, int hiddenChars,
+                                         bool hasOutput, int retriesUsed);
+    static QString hiddenReasoningIndicator(int hiddenChars);
     void setPermissionRules(const QString &rules) override;
     void revertEdit(const QString &path) override;
     void setAgentTuning(const QString &systemExtra, double temperature) override;
@@ -782,6 +796,13 @@ private:
     QHash<QString, QString> m_workerCapabilityCalls; // native call id → broker request id
     QHash<QString, QString> m_workerCapabilityNames;
     QString m_approvalMode = QStringLiteral("ask");
+    // Computer use: "" = preguntar cuando haga falta; "background" / "foreground"
+    // = lo que eligió el usuario (vale para el resto de la sesión de la app).
+    QString m_computerUseMode;
+    bool m_cuAwaitingChoice = false;
+    QString m_cuPendingText;
+    QString m_cuPendingVisible;
+    QStringList m_cuPendingAttachments;
     bool    m_taskAutoApprove = false;   // override temporal durante una Task
     QString m_systemExtra;          // instrucciones extra del usuario (perfil de agente)
     double  m_temperature = -1.0;   // <0 = no enviar (default del server)
@@ -898,7 +919,10 @@ private:
     QString    m_streamReason;      // delta.reasoning_content acumulado
     QString    m_streamFinishReason; // choices[0].finish_reason del chunk final
     bool m_streamRepetitionDetected = false; // loop textual cortado durante generación
-    bool m_streamToolCallCut = false;        // ráfaga de TOOL_CALL cortada en el segundo
+    bool m_streamToolCallCut = false;
+    int  m_streamHiddenReasonChars = 0;      // reasoning_content con Pensar apagado
+    bool m_streamHiddenReasonCut = false;    // cortado por razonamiento oculto
+    int  m_hiddenReasonRetries = 0;          // reintentos por eso en el turno        // ráfaga de TOOL_CALL cortada en el segundo
     QHash<int, QJsonObject> m_streamToolCalls; // index → {id,name,arguments} mergeado
 
     // El transcript es la fuente de verdad inmutable de la sesión. m_apiMessages

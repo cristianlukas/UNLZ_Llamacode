@@ -126,6 +126,10 @@ public:
     // trace anota matchedBy=fuzzy-name + matchScore cuando pasa por ahí.
     static bool clickElement(const QString &windowTargetId, const QString &controlId,
                              QString *error = nullptr, QVariantMap *trace = nullptr);
+    // Modo "segundo plano" del agente (por hilo): prohíbe los fallbacks que
+    // mueven el mouse real (clic al centro del control cuando no hay Invoke).
+    static void setPhysicalInputBlocked(bool blocked);
+    static bool physicalInputBlocked();
     static bool clickElement(const QString &windowTargetId, const QString &controlId,
                              const QString &snapshotId, QString *error,
                              QVariantMap *trace = nullptr);

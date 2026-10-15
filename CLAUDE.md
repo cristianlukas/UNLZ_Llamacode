@@ -67,6 +67,8 @@ Reglas:
 | OcrEngine::opaqueForOcr (capturas GDI con alfa 0) + OCR real (se saltea en offscreen) | `tests/test_ocr_locator.cpp` |
 | DesktopComputerUse (formato de desktop_read_text, inferencia de scope, guard de tipeo) | `tests/test_automation.cpp` |
 | Tools de computer use (validación previa al input, portapapeles, rechazo de tipeo sin ventana elegida) | `tests/test_agent_tools.cpp` |
+| Computer use: preguntar modo / Super Agente directo / "segundo plano" sin mouse ni teclado (gate del turno, tools filtradas y rechazadas) + razonamiento oculto con Pensar apagado (contar y cortar una vez) | `tests/test_agent_wire.cpp`, `tests/test_agent_tools.cpp`, `tests/test_automation.cpp`, `tests/test_appcontroller.cpp` |
+| NavBar (fila de Configuración centrada, con y sin botón de update) | `tests/qml/tst_navbar.qml` (ctest `qml_navbar`) |
 | CharlaTuning (contexto mínimo del agente de voz, slots) + AudioCodec::toMonoResampled + recorte de silencio para STT + Piper residente | `tests/test_voice.cpp` |
 | VoiceCursorCommand (parseo de órdenes de cursor por voz) | `tests/test_voice.cpp` |
 | VoiceAssistant (Charla JARVIS: sí/no hablado, avisos de tool, pregunta de aprobación) + turno abierto de VoiceController | `tests/test_voice.cpp` |
@@ -198,6 +200,13 @@ reproducible en headless/CI), así que sólo se cubre el path de error en
   notas de Win11 y en la app que el usuario tenía adelante. **No probar
   computer use en vivo sobre apps con documentos del usuario** (Notepad restaura
   pestañas sin guardar); la Calculadora es segura.
+- **Computer use en segundo plano** (tarjeta "¿Cómo lo hago?" en Agente → "En
+  segundo plano"): pedir "abrí la calculadora y hacé 3*3" → la tarjeta aparece
+  ANTES de que el modelo arranque; en segundo plano el agente abre `calc` y
+  aprieta los botones por UI Automation (Tres, Multiplicar por, Tres, Es igual a)
+  sin mover el mouse ni teclear en la app que tengas adelante. En Super Agente no
+  pregunta. El fallback de clic físico de `desktop_click_element` /
+  `desktop_control_action` queda bloqueado en ese modo (no testeable sin ventana).
 - **Cursor por voz** (`cursorOcr` en Charla, off por defecto): activarlo en
   Charla → decir "clic en Guardar" mueve/clickea; decir "no sé si hacer clic en
   Guardar" NO actúa y va al LLM. Con dos textos iguales en pantalla debe negarse

@@ -1888,6 +1888,19 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
     QMutexLocker<QMutex> desktopLock(
         name.startsWith(QLatin1String("desktop_")) ? &desktopMutex : nullptr);
     if (ok) *ok = false;
+    // Modo "segundo plano": el agente maneja la app sin el mouse/teclado del
+    // usuario. Lo marca LlamaAgentBackend en los args; acá se hace cumplir.
+    const bool background = args.value(QStringLiteral("_lc_background")).toBool();
+    if (background && DesktopComputerUse::usesUserInput(name))
+        return QStringLiteral("[%1: en modo segundo plano no uso tu mouse ni tu teclado. "
+                              "Usá desktop_controls + desktop_control_action / "
+                              "desktop_click_element sobre la ventana.]").arg(name);
+    struct PhysicalInputScope {
+        bool previous;
+        explicit PhysicalInputScope(bool on) : previous(DesktopAutomationBackend::physicalInputBlocked())
+        { DesktopAutomationBackend::setPhysicalInputBlocked(on); }
+        ~PhysicalInputScope() { DesktopAutomationBackend::setPhysicalInputBlocked(previous); }
+    } physicalScope(background);
     if (DesktopComputerUse::isDesktopActionTool(name)) {
         QString guardError;
         if (!m_desktopProcessGuard.acquire(&guardError))

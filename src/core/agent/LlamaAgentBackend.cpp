@@ -1813,6 +1813,48 @@ QString LlamaAgentBackend::styleSection()
         "cuesta tiempo (generación local lenta): cada palabra de más es latencia.");
 }
 
+QJsonValue LlamaAgentBackend::markBackgroundDesktopArgs(const QJsonValue &arguments)
+{
+    // Los argumentos pueden venir como objeto o como string JSON (spec OpenAI).
+    QJsonObject args = arguments.isObject()
+        ? arguments.toObject()
+        : QJsonDocument::fromJson(arguments.toString().toUtf8()).object();
+    args.insert(QStringLiteral("_lc_background"), true);
+    if (arguments.isObject()) return args;
+    return QString::fromUtf8(QJsonDocument(args).toJson(QJsonDocument::Compact));
+}
+
+bool LlamaAgentBackend::shouldCutHiddenReasoning(bool thinkingEnabled, int hiddenChars,
+                                                 bool hasOutput, int retriesUsed)
+{
+    // ~400 tokens de razonamiento invisible sin una sola palabra de respuesta
+    // ni tool: a ~30 tok/s son 13 s de "nada" en pantalla. Se corta una vez
+    // por turno; si el reintento también razona, se lo deja terminar.
+    constexpr int kHiddenReasonCapChars = 1600;
+    return !thinkingEnabled && !hasOutput && retriesUsed < 1
+        && hiddenChars > kHiddenReasonCapChars;
+}
+
+QString LlamaAgentBackend::hiddenReasoningIndicator(int hiddenChars)
+{
+    return QStringLiteral("💭 pensando… (~%1 tokens de razonamiento interno)")
+        .arg((hiddenChars + 3) / 4);
+}
+
+QString LlamaAgentBackend::backgroundComputerUseNote()
+{
+    return QStringLiteral(
+        "MODO SEGUNDO PLANO (lo eligió el usuario): el usuario sigue usando su PC. "
+        "NO tenés mouse ni teclado (desktop_click, desktop_type, desktop_key, "
+        "desktop_focus y similares no están disponibles). Camino: desktop_launch "
+        "con el ejecutable (ej. 'calc'), desktop_windows para el id, desktop_controls "
+        "<id> para ver los controles y desktop_control_action (invoke/set_value/"
+        "toggle/select) o desktop_click_element para accionarlos. Ej. calculadora: "
+        "botones 'Tres', 'Multiplicar por', 'Tres', 'Es igual a'. Leé el resultado "
+        "con desktop_controls (el visor trae el valor en su nombre). Si un control "
+        "no se puede accionar así, decíselo al usuario en vez de insistir.");
+}
+
 QString LlamaAgentBackend::desktopPlaybookSection(bool visionReady)
 {
     QString s = QStringLiteral(
@@ -2274,6 +2316,30 @@ void LlamaAgentBackend::setPermissionRules(const QString &rules)
     emit logAppended(QStringLiteral("[permisos: %1 regla(s) cargadas]\n").arg(m_permRules.size()));
 }
 
+void LlamaAgentBackend::resolveComputerUseChoice(const QString &choice)
+{
+    if (!m_cuAwaitingChoice) return;
+    const QString c = choice.trimmed().toLower();
+    const QString text = m_cuPendingText;
+    const QString visible = m_cuPendingVisible;
+    const QStringList attachments = m_cuPendingAttachments;
+    m_cuAwaitingChoice = false;
+    m_cuPendingText.clear();
+    m_cuPendingVisible.clear();
+    m_cuPendingAttachments.clear();
+    if (c != QLatin1String("background") && c != QLatin1String("foreground")) {
+        emit logAppended(QStringLiteral("[computer use] el usuario canceló el pedido\n"));
+        return;
+    }
+    m_computerUseMode = c;
+    emit logAppended(QStringLiteral("[computer use] modo elegido: %1\n")
+                         .arg(c == QLatin1String("background")
+                                  ? QStringLiteral("segundo plano (sin mouse/teclado)")
+                                  : QStringLiteral("controlando la PC")));
+    m_pendingAttachments = attachments;
+    sendMessageImpl(text, visible);
+}
+
 void LlamaAgentBackend::setApprovalPolicy(const QString &mode)
 {
     const QString previousMode = m_approvalMode;
@@ -2507,6 +2573,33 @@ void LlamaAgentBackend::sendMessageImpl(const QString &text, const QString &visi
     const QStringList attachments = m_pendingAttachments;
     m_pendingAttachments.clear();
     if (!m_running || (trimmed.isEmpty() && attachments.isEmpty())) return;
+    // Computer use: sin modo elegido (y fuera de Super Agente) el turno espera a
+    // que el usuario diga si lo hago en segundo plano o controlando su PC. Se
+    // decide en el backend "de vista" (el que recibe los mensajes de la UI).
+    if (!m_isSessionRuntime) {
+        if (m_cuAwaitingChoice) {
+            emit errorOccurred(QStringLiteral(
+                "Primero elegí cómo usar la PC (en segundo plano o controlando tu PC)."));
+            m_pendingAttachments = attachments;
+            return;
+        }
+        const QString cu = DesktopComputerUse::computerUseChoice(
+            m_approvalMode, m_computerUseMode,
+            !m_privacyModeEnabled && ToolSurfaceRouter::wantsDesktop(visibleTrimmed));
+        if (cu == QLatin1String("ask")) {
+            m_cuAwaitingChoice = true;
+            m_cuPendingText = trimmed;
+            m_cuPendingVisible = visibleTrimmed;
+            m_cuPendingAttachments = attachments;
+            emit logAppended(QStringLiteral(
+                "[computer use] pedido de escritorio: espero que el usuario elija el modo\n"));
+            emit computerUseChoiceNeeded(visibleTrimmed);
+            return;
+        }
+        if (cu == QLatin1String("foreground") && m_computerUseMode.isEmpty())
+            emit logAppended(QStringLiteral(
+                "[computer use] Super Agente: controlo la PC directamente\n"));
+    }
     if (!m_isSessionRuntime && !m_viewSessionId.isEmpty()) {
         LlamaAgentBackend *runtime = ensureSessionRuntime(m_viewSessionId);
         if (!runtime) return;
@@ -2577,6 +2670,7 @@ void LlamaAgentBackend::sendMessageImpl(const QString &text, const QString &visi
     m_transportRetries = 0;
     m_contextRecoveries = 0;
     m_lengthContinues = 0;
+    m_hiddenReasonRetries = 0;
     pushCheckpoint();   // snapshot ANTES de agregar el nuevo turno (para rollback)
 
     // Contenido a mostrar en la UI: texto + chips de adjuntos.
@@ -2632,6 +2726,12 @@ void LlamaAgentBackend::sendMessageImpl(const QString &text, const QString &visi
                               QJsonObject{{QStringLiteral("source"), QStringLiteral("context_preflight")},
                                           {QStringLiteral("mode"), QStringLiteral("spec")},
                                           {QStringLiteral("candidates"), preflight}});
+    }
+    if (m_computerUseMode == QLatin1String("background")
+        && ToolSurfaceRouter::wantsDesktop(visibleTrimmed)) {
+        appendApiMessage(QJsonObject{{QStringLiteral("role"), QStringLiteral("user")},
+                                     {QStringLiteral("content"), backgroundComputerUseNote()},
+                                     {QStringLiteral("_lc_protected"), true}});
     }
     if (attachments.isEmpty()) {
         appendApiMessage(QJsonObject{
@@ -3558,6 +3658,8 @@ void LlamaAgentBackend::resetStreamState()
     m_streamFinishReason.clear();
     m_streamRepetitionDetected = false;
     m_streamToolCallCut = false;
+    m_streamHiddenReasonChars = 0;
+    m_streamHiddenReasonCut = false;
     m_streamToolCalls.clear();
     m_genTokens = 0;
     m_genMs = 0.0;
@@ -3695,7 +3797,28 @@ void LlamaAgentBackend::handleStreamData()
         const QJsonObject delta = choice.value(QStringLiteral("delta")).toObject();
         if (m_thinkingEnabled)
             m_streamReason += delta.value(QStringLiteral("reasoning_content")).toString();
+        else
+            // Con "Pensar" apagado algunos modelos (Gemma 4) razonan igual por
+            // su canal de pensamiento. No se muestra, pero se cuenta: antes la
+            // UI decía "Pensando… tok 0" durante un minuto de generación.
+            m_streamHiddenReasonChars +=
+                delta.value(QStringLiteral("reasoning_content")).toString().size();
         m_streamContent += delta.value(QStringLiteral("content")).toString();
+        if (!m_streamHiddenReasonCut
+            && shouldCutHiddenReasoning(m_thinkingEnabled, m_streamHiddenReasonChars,
+                                        !m_streamContent.isEmpty() || !m_streamToolCalls.isEmpty(),
+                                        m_hiddenReasonRetries)) {
+            m_streamHiddenReasonCut = true;
+            emit logAppended(QStringLiteral(
+                "[turn] el modelo razona con Pensar apagado (~%1 tokens ocultos, sin respuesta); "
+                "corto y le pido que responda directo\n").arg((m_streamHiddenReasonChars + 3) / 4));
+            AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("failure"),
+                                  QJsonObject{{QStringLiteral("reason"),
+                                               QStringLiteral("hidden_reasoning_cut")},
+                                              {QStringLiteral("hiddenChars"), m_streamHiddenReasonChars}});
+            if (m_reply) m_reply->abort();
+            return;
+        }
 
         // Modo texto: un turno = UN tool-call. Algunos modelos escupen una
         // ráfaga de decenas de TOOL_CALL en una sola generación (paths
@@ -3748,7 +3871,8 @@ void LlamaAgentBackend::handleStreamData()
         const bool toolStreaming = !m_streamToolCalls.isEmpty();
 
         // Abrir una burbuja nueva si la anterior se cerró tras una tool.
-        if ((!m_streamContent.isEmpty() || (m_thinkingEnabled && !m_streamReason.isEmpty()) || toolStreaming)
+        if ((!m_streamContent.isEmpty() || (m_thinkingEnabled && !m_streamReason.isEmpty()) || toolStreaming
+             || m_streamHiddenReasonChars > 0)
             && m_curAsstIdx < 0)
             ensureAssistantBubble();
 
@@ -3776,6 +3900,10 @@ void LlamaAgentBackend::handleStreamData()
         // Indicador transitorio mientras se generan args de tool (sin texto aún).
         // Se limpia en handleStreamFinished antes de cerrar/finalizar el bubble,
         // así no queda pegado en el chat ni envenena m_streamContent.
+        if (!toolStreaming && m_streamContent.isEmpty() && m_streamHiddenReasonChars > 0) {
+            if (!full.isEmpty()) full += QLatin1Char('\n');
+            full += hiddenReasoningIndicator(m_streamHiddenReasonChars);
+        }
         if (toolStreaming && m_streamContent.isEmpty()) {
             const QString toolName = firstToolName.isEmpty() ? QStringLiteral("tool") : firstToolName;
             if (!full.isEmpty()) full += QLatin1Char('\n');
@@ -3794,7 +3922,8 @@ void LlamaAgentBackend::handleStreamData()
             // de tool. No usar estimateTokens(full): incluiría base/indicador y NO los
             // args (que viajan aparte). Así el contador avanza aunque sólo haya tool.
             const int genChars = m_streamContent.size()
-                + (m_thinkingEnabled ? m_streamReason.size() : 0) + totalArgChars;
+                + (m_thinkingEnabled ? m_streamReason.size() : m_streamHiddenReasonChars)
+                + totalArgChars;
             m[QStringLiteral("tokens")] = (genChars + 3) / 4;
             m_messages[m_curAsstIdx] = m;
             // Throttle a ~30 fps. Durante el stream NO emitimos messagesChanged
@@ -3822,6 +3951,25 @@ void LlamaAgentBackend::handleStreamData()
 
 void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
 {
+    if (m_streamHiddenReasonCut) {
+        // Cortado por razonamiento oculto: reintentar UNA vez pidiendo la acción
+        // directa. El bubble vuelve a lo que mostraba antes (sin el indicador).
+        m_streamHiddenReasonCut = false;
+        ++m_hiddenReasonRetries;
+        if (m_curAsstIdx >= 0 && m_curAsstIdx < m_messages.size()) {
+            QVariantMap m = m_messages[m_curAsstIdx].toMap();
+            m[QStringLiteral("content")] = m_streamBase;
+            m_messages[m_curAsstIdx] = m;
+            emit messagesChanged();
+        }
+        appendApiMessage(QJsonObject{
+            {QStringLiteral("role"), QStringLiteral("user")},
+            {QStringLiteral("content"), QStringLiteral(
+                "No razones en voz alta ni planifiques: respondé YA con la próxima acción "
+                "(una tool) o con la respuesta final, en pocas palabras.")}});
+        runCompletion();
+        return;
+    }
     if (!ok && !m_streamRepetitionDetected && !m_streamToolCallCut) {
         finishTurn(QStringLiteral("[error: %1]").arg(err), false,
                    QStringLiteral("failed"));
@@ -4177,6 +4325,13 @@ void LlamaAgentBackend::processPendingCalls()
     QJsonObject call       = m_pendingCalls.first().toObject();
     QJsonObject fn         = call.value(QStringLiteral("function")).toObject();
     QString name           = fn.value(QStringLiteral("name")).toString();
+    if (m_computerUseMode == QLatin1String("background")
+        && name.startsWith(QLatin1String("desktop_"))) {
+        fn.insert(QStringLiteral("arguments"),
+                  markBackgroundDesktopArgs(fn.value(QStringLiteral("arguments"))));
+        call.insert(QStringLiteral("function"), fn);
+        m_pendingCalls[0] = call;
+    }
     QString kind           = toolKind(name);
     const QString id       = call.value(QStringLiteral("id")).toString();
     QString argStr         = toolArgumentsToString(fn.value(QStringLiteral("arguments")));
@@ -7886,7 +8041,9 @@ QJsonArray LlamaAgentBackend::buildToolSchemas() const
             const QString n = v.toObject().value(QStringLiteral("function"))
                                   .toObject().value(QStringLiteral("name")).toString();
             if (!m_disabledTools.contains(n)
-                && !(m_privacyModeEnabled && isPrivacyRestrictedTool(n))) out.append(v);
+                && !(m_privacyModeEnabled && isPrivacyRestrictedTool(n))
+                && !(m_computerUseMode == QLatin1String("background")
+                     && DesktopComputerUse::usesUserInput(n))) out.append(v);
         }
         return out;
     };
@@ -8440,6 +8597,7 @@ void LlamaAgentBackend::copyRuntimeConfigurationTo(LlamaAgentBackend *runtime) c
 {
     if (!runtime) return;
     runtime->m_approvalMode = m_approvalMode;
+    runtime->m_computerUseMode = m_computerUseMode;
     runtime->m_systemExtra = m_systemExtra;
     runtime->m_temperature = m_temperature;
     runtime->m_thinkingEnabled = m_thinkingEnabled;

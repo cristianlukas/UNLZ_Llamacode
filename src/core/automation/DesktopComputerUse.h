@@ -137,6 +137,17 @@ QString launchAlias(const QString &app);
 // ¿Es una ruta o una URI de shell (ms-settings:, https:...) en vez de un nombre
 // a resolver por PATH/App Paths?
 bool launchTargetIsPathOrUri(const QString &program);
+// Tools de escritorio que usan el mouse/teclado REALES del usuario (o le cambian
+// la ventana activa/el portapapeles). En modo "segundo plano" quedan fuera: el
+// agente maneja la app por UI Automation y el usuario sigue usando su PC.
+bool usesUserInput(const QString &tool);
+// Cómo encarar un pedido de computer use:
+//  ""           → el pedido no es de escritorio, no hay nada que decidir;
+//  "background" / "foreground" → el modo ya elegido en la sesión;
+//  "foreground" → Super Agente sin modo elegido: lo hace directo;
+//  "ask"        → preguntarle al usuario antes de arrancar.
+QString computerUseChoice(const QString &approvalMode, const QString &sessionMode,
+                          bool wantsDesktop);
 // Texto OCR de un alcance para el modelo: una línea por renglón leído, con su
 // centro NORMALIZADO 0..1 en ese alcance (las mismas coordenadas que acepta
 // desktop_click / desktop_hover). Filtra por `query` (contiene, sin acentos ni

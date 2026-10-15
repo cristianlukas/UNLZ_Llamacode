@@ -5888,6 +5888,7 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter,
         emit agentPendingToolChanged();
         onCharlaToolApprovalNeeded(toolCall);
     });
+    wireComputerUseChoice(b);
     connect(b, &IAgentBackend::desktopActivityChanged, this,
             [this](bool active, const QString &tool, const QString &detail) {
         if (active && m_runningTaskPhase == QLatin1String("verificando")
@@ -7156,6 +7157,28 @@ void AppController::applyActiveAgentProfile()
     if (approval == QLatin1String("plan")) applyHarnessPhase(QStringLiteral("plan"));
 }
 
+void AppController::wireComputerUseChoice(IAgentBackend *b)
+{
+    connect(b, &IAgentBackend::computerUseChoiceNeeded, this, [this](const QString &request) {
+        // En Charla no hay botones: la voz ya pide confirmación de las acciones,
+        // así que controla la PC directo en vez de dejar el turno colgado.
+        if (m_charlaActive && m_charlaUseAgent) {
+            if (m_agentBackend) m_agentBackend->resolveComputerUseChoice(QStringLiteral("foreground"));
+            return;
+        }
+        m_agentComputerUseRequest = request;
+        emit agentComputerUseRequestChanged();
+    });
+}
+
+void AppController::answerComputerUseChoice(const QString &choice)
+{
+    if (m_agentComputerUseRequest.isEmpty()) return;
+    m_agentComputerUseRequest.clear();
+    emit agentComputerUseRequestChanged();
+    if (m_agentBackend) m_agentBackend->resolveComputerUseChoice(choice);
+}
+
 void AppController::approveAgentTool(const QString &id, bool always)
 {
     // Resuelta desde la UI con una pregunta hablada abierta: cerrarla para que
@@ -7681,6 +7704,10 @@ void AppController::cancelAgentGeneration()
 void AppController::stopAgent()
 {
     m_agentStopping = true;
+    if (!m_agentComputerUseRequest.isEmpty()) {
+        m_agentComputerUseRequest.clear();
+        emit agentComputerUseRequestChanged();
+    }
     stopRemoteLoadPolling();
     if (m_agentStarting || !m_pendingAutoAgentLaunchId.isEmpty()) {
         m_agentStarting = false;
@@ -9590,6 +9617,7 @@ void AppController::setTestAgentBackend(IAgentBackend *b)
         emit agentMessagesChanged();
     });
     connect(b, &IAgentBackend::turnFinished, this, [this]() { onAgentTurnFinished(); });
+    wireComputerUseChoice(b);
     connect(b, &IAgentBackend::errorOccurred, this, [this](const QString &m) {
         if (!m_runningTaskId.isEmpty())
             finishRunningTask(QStringLiteral("error"), m);

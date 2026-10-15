@@ -3,6 +3,7 @@
 #include <QCryptographicHash>
 #include <QDateTime>
 #include <QDir>
+#include <QSet>
 #include <QHash>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -248,6 +249,30 @@ QString launchAlias(const QString &app)
     };
     const auto it = aliases.constFind(key);
     return it != aliases.constEnd() ? it.value() : app.trimmed();
+}
+
+bool usesUserInput(const QString &tool)
+{
+    static const QSet<QString> input{
+        QStringLiteral("desktop_click"), QStringLiteral("desktop_click_text"),
+        QStringLiteral("desktop_click_image"), QStringLiteral("desktop_hover"),
+        QStringLiteral("desktop_key"), QStringLiteral("desktop_type"),
+        QStringLiteral("desktop_scroll"), QStringLiteral("desktop_stroke"),
+        QStringLiteral("desktop_focus"), QStringLiteral("desktop_resize"),
+        QStringLiteral("desktop_clipboard")};
+    return input.contains(tool);
+}
+
+QString computerUseChoice(const QString &approvalMode, const QString &sessionMode,
+                          bool wantsDesktop)
+{
+    if (!wantsDesktop) return QString();
+    const QString mode = sessionMode.trimmed().toLower();
+    if (mode == QLatin1String("background") || mode == QLatin1String("foreground"))
+        return mode;
+    if (approvalMode.trimmed().toLower() == QLatin1String("super"))
+        return QStringLiteral("foreground");
+    return QStringLiteral("ask");
 }
 
 bool launchTargetIsPathOrUri(const QString &program)

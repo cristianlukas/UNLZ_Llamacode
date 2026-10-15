@@ -103,6 +103,7 @@ private slots:
     void desktopControls_invalidWindowErrorsCleanly();
     void desktopLaunch_emptyAppErrorsCleanly();
     void desktopLaunch_unknownAppFailsWithoutLaunching();
+    void desktopBackground_refusesMouseAndKeyboardTools();
     void honeyHandoff_densifiesMasterAndSubPrompts();
     void webUrlGuard_blocksPrivateAndCredentials();
     void readableWebText_prefersArticleAndPreservesStructure();
@@ -919,6 +920,25 @@ void AgentToolsTests::desktopControls_invalidWindowErrorsCleanly()
         QVERIFY2(!visual.value("ok").toBool(), qPrintable(tool));
         QVERIFY(visual.value("result").toString().contains(tool));
     }
+}
+
+void AgentToolsTests::desktopBackground_refusesMouseAndKeyboardTools()
+{
+    // Modo "segundo plano": las tools que usan el mouse/teclado reales se
+    // rechazan ANTES de tocar nada (no se teclea en la app que tengas adelante).
+    for (const char *tool : {"desktop_type", "desktop_key", "desktop_click",
+                             "desktop_focus", "desktop_scroll", "desktop_clipboard"}) {
+        const QVariantMap r = call(tool, {{"_lc_background", true}, {"text", "x"},
+                                          {"key", "ESC"}, {"target_id", "0"},
+                                          {"x", 0.5}, {"y", 0.5}});
+        QVERIFY2(!r.value("ok").toBool(), tool);
+        QVERIFY2(r.value("result").toString().contains(QStringLiteral("segundo plano")),
+                 qPrintable(r.value("result").toString()));
+    }
+    // Las de UI Automation siguen disponibles (acá fallan sólo por el id falso).
+    const QVariantMap uia = call("desktop_controls", {{"_lc_background", true},
+                                                      {"target_id", "zzznothex"}});
+    QVERIFY(!uia.value("result").toString().contains(QStringLiteral("segundo plano")));
 }
 
 void AgentToolsTests::desktopLaunch_unknownAppFailsWithoutLaunching()

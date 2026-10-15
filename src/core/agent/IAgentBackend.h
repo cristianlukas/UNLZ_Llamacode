@@ -71,6 +71,10 @@ public:
     // Política: "auto" (aprueba todo), "ask" (auto lectura, pide escritura+shell),
     // "manual" (pide todo). Default del backend: "ask".
     virtual void setApprovalPolicy(const QString &mode) { Q_UNUSED(mode) }
+    // Computer use: respuesta a computerUseChoiceNeeded. "background" (sin tocar
+    // mouse/teclado del usuario), "foreground" (controla la PC) o "cancel".
+    virtual void resolveComputerUseChoice(const QString &choice) { Q_UNUSED(choice) }
+    virtual QString computerUseMode() const { return QString(); }
     // Reglas de permiso por patrón (una por línea: "allow|deny|ask [kind:]<glob>").
     // Se evalúan antes de la política global. Default: sin reglas.
     virtual void setPermissionRules(const QString &rules) { Q_UNUSED(rules) }
@@ -112,6 +116,9 @@ signals:
     // deben depender del payload particular de Claude/Codex/OpenCode.
     void agentLifecycleEvent(const QVariantMap &event);
     void toolApprovalNeeded(const QVariantMap &toolCall);
+    // El pedido necesita usar la PC y el usuario todavía no eligió cómo. El
+    // turno queda en espera hasta resolveComputerUseChoice.
+    void computerUseChoiceNeeded(const QString &request);
     // Actividad de control del escritorio para indicadores de privacidad/UI.
     // active=false marca el fin incluso cuando la tool falla.
     void desktopActivityChanged(bool active, const QString &tool, const QString &detail);

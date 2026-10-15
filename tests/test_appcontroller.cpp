@@ -118,6 +118,9 @@ public:
     void approveTool(const QString &id, bool always = false) override
     { Q_UNUSED(always) m_approved << id; }
     void rejectTool(const QString &id) override { m_rejected << id; }
+    void resolveComputerUseChoice(const QString &choice) override { m_cuChoices << choice; }
+    QStringList m_cuChoices;
+    void askComputerUse(const QString &request) { emit computerUseChoiceNeeded(request); }
     void cancelGeneration() override { ++m_cancels; }
     int cancels() const { return m_cancels; }
     QStringList approved() const { return m_approved; }
@@ -168,6 +171,7 @@ private slots:
     void updateNowRequiresAvailableRelease();
     void githubPrereleaseIsIgnored();
     void modelLoadStatusComposesLocalRemoteAndConnecting();
+    void computerUseChoiceReachesUiAndBackend();
     void localModelLoadLifecycle();
     void windowsUpdateCommandShowsProgressWindow();
     void updateConsoleIsVisible();
@@ -417,6 +421,28 @@ void AppControllerTests::githubPrereleaseIsIgnored()
         {QStringLiteral("prerelease"), true},
     };
     QVERIFY(AppController::githubReleaseToUpdateFlag(release).isEmpty());
+}
+
+void AppControllerTests::computerUseChoiceReachesUiAndBackend()
+{
+    AppController app;
+    auto *fake = new FakeAgentBackend(&app);
+    app.setTestAgentBackend(fake);
+    QSignalSpy changed(&app, &AppController::agentComputerUseRequestChanged);
+
+    // El backend retiene el turno y pregunta: la UI lo ve como propiedad.
+    fake->askComputerUse(QStringLiteral("abrí la calculadora"));
+    QCOMPARE(app.agentComputerUseRequest(), QStringLiteral("abrí la calculadora"));
+    QCOMPARE(changed.count(), 1);
+
+    // La respuesta del botón llega al backend y la tarjeta se cierra.
+    app.answerComputerUseChoice(QStringLiteral("background"));
+    QCOMPARE(fake->m_cuChoices, QStringList{QStringLiteral("background")});
+    QVERIFY(app.agentComputerUseRequest().isEmpty());
+
+    // Sin pregunta pendiente, un clic tardío no hace nada.
+    app.answerComputerUseChoice(QStringLiteral("foreground"));
+    QCOMPARE(fake->m_cuChoices.size(), 1);
 }
 
 void AppControllerTests::modelLoadStatusComposesLocalRemoteAndConnecting()

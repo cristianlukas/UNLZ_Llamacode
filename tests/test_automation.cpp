@@ -245,6 +245,26 @@ void AutomationTests::readTextFormatsNormalizedCentersAndFilters()
     QVERIFY(!DesktopComputerUse::launchTargetIsPathOrUri(QStringLiteral("calc")));
     QVERIFY(!DesktopComputerUse::launchTargetIsPathOrUri(QStringLiteral(":raro")));
 
+    // Computer use: ¿preguntar, segundo plano o controlar la PC?
+    using DesktopComputerUse::computerUseChoice;
+    QCOMPARE(computerUseChoice(QStringLiteral("ask"), QString(), false), QString());
+    QCOMPARE(computerUseChoice(QStringLiteral("ask"), QString(), true), QStringLiteral("ask"));
+    QCOMPARE(computerUseChoice(QStringLiteral("auto"), QString(), true), QStringLiteral("ask"));
+    QCOMPARE(computerUseChoice(QStringLiteral("super"), QString(), true), QStringLiteral("foreground"));
+    QCOMPARE(computerUseChoice(QStringLiteral("ask"), QStringLiteral("background"), true),
+             QStringLiteral("background"));
+    // Lo que el usuario eligió manda aun en Super Agente.
+    QCOMPARE(computerUseChoice(QStringLiteral("super"), QStringLiteral("background"), true),
+             QStringLiteral("background"));
+    // Mouse/teclado reales vs UI Automation.
+    QVERIFY(DesktopComputerUse::usesUserInput(QStringLiteral("desktop_type")));
+    QVERIFY(DesktopComputerUse::usesUserInput(QStringLiteral("desktop_click")));
+    QVERIFY(DesktopComputerUse::usesUserInput(QStringLiteral("desktop_focus")));
+    QVERIFY(!DesktopComputerUse::usesUserInput(QStringLiteral("desktop_control_action")));
+    QVERIFY(!DesktopComputerUse::usesUserInput(QStringLiteral("desktop_click_element")));
+    QVERIFY(!DesktopComputerUse::usesUserInput(QStringLiteral("desktop_launch")));
+    QVERIFY(!DesktopComputerUse::usesUserInput(QStringLiteral("desktop_read_text")));
+
     QCOMPARE(DesktopComputerUse::clampClickCount(0), 1);
     QCOMPARE(DesktopComputerUse::clampClickCount(2), 2);
     QCOMPARE(DesktopComputerUse::clampClickCount(9), 3);

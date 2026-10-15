@@ -173,6 +173,8 @@ class AppController : public QObject
     Q_PROPERTY(QString opencodeSessionId   READ opencodeSessionId   NOTIFY agentSessionsChanged)
     Q_PROPERTY(QString opencodeSessionTitle READ opencodeSessionTitle NOTIFY agentSessionsChanged)
     Q_PROPERTY(QVariantMap agentPendingTool READ agentPendingTool NOTIFY agentPendingToolChanged)
+    // Pedido de computer use esperando que el usuario elija el modo ("" = ninguno).
+    Q_PROPERTY(QString agentComputerUseRequest READ agentComputerUseRequest NOTIFY agentComputerUseRequestChanged)
     Q_PROPERTY(QString agentApprovalMode READ agentApprovalMode WRITE setAgentApprovalMode NOTIFY agentApprovalModeChanged)
     Q_PROPERTY(bool agentThinkingEnabled READ agentThinkingEnabled WRITE setAgentThinkingEnabled NOTIFY agentThinkingChanged)
     Q_PROPERTY(QString activeAgentProfileId READ activeAgentProfileId WRITE setActiveAgentProfileId NOTIFY activeAgentProfileChanged)
@@ -451,6 +453,9 @@ public:
     QString opencodeSessionId()   const { return m_opencodeSessionId; }
     QString opencodeSessionTitle() const { return m_opencodeSessionTitle; }
     QVariantMap agentPendingTool() const { return m_agentPendingTool; }
+    QString agentComputerUseRequest() const { return m_agentComputerUseRequest; }
+    // "background" (sin tocar mouse/teclado), "foreground" (controlando la PC) o "cancel".
+    Q_INVOKABLE void answerComputerUseChoice(const QString &choice);
     int agentContextUsed() const { return m_agentContextUsed; }
     int agentContextLimit() const { return m_agentContextLimit; }
     int agentContextTranscript() const { return m_agentContextTranscript; }
@@ -1669,6 +1674,7 @@ signals:
     void chatQueueChanged();
     void agentSessionsChanged();
     void agentPendingToolChanged();
+    void agentComputerUseRequestChanged();
     void agentApprovalModeChanged();
     void agentThinkingChanged();
     void agentToolsChanged();
@@ -2194,6 +2200,8 @@ private:
     int       m_currentAssistantIdx = -1;
     QVariantList m_agentSessions;
     QVariantMap m_agentPendingTool;   // tool esperando aprobación ({} si ninguna)
+    QString     m_agentComputerUseRequest;
+    void wireComputerUseChoice(IAgentBackend *b);
     QString   m_agentApprovalMode = QStringLiteral("ask");  // auto | ask | manual | super
     bool      m_agentThinkingEnabled = false;   // razonamiento agente/benchmark/research
     bool      m_launchThinkingEnabled = false;  // razonamiento duro del próximo llama-server

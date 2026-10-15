@@ -17,6 +17,11 @@ class AgentWireTests : public QObject
     Q_OBJECT
 private slots:
     void initTestCase();
+    void computerUse_asksBeforeDesktopTurnThenRunsInBackground();
+    void computerUse_superAgentAndPlainChatDoNotAsk();
+    void computerUse_cancelDropsTheRequest();
+    void computerUse_backgroundMarksDesktopArgs();
+    void hiddenReasoning_isCountedAndCutOnce();
     void dropsOrphanToolAndDemotesNonInitialSystem();
     void dropsDanglingAssistantAndAnchorsFirstUser();
     void dropsTransportErrorAssistantMessages();
@@ -2193,6 +2198,184 @@ void AgentWireTests::desktopRequestEscalatesToolsOnCodingProfile()
     be.setDisabledTools(notCoding);                       // se reaplica el perfil
     QVERIFY(!be.desktopToolsEscalated());
     QVERIFY(!names(be.toolSchemasForTest()).contains(QStringLiteral("desktop_launch")));
+}
+
+// ── Computer use: preguntar modo / Super Agente directo / segundo plano ──────
+namespace {
+bool hasUserMessage(const LlamaAgentBackend &backend, const QString &text)
+{
+    for (const QVariant &v : backend.messages()) {
+        const QVariantMap m = v.toMap();
+        if (m.value(QStringLiteral("role")).toString() == QLatin1String("user")
+            && m.value(QStringLiteral("content")).toString().contains(text))
+            return true;
+    }
+    return false;
+}
+
+bool toolSchemaNamed(const QJsonArray &schemas, const QString &name)
+{
+    for (const QJsonValue &v : schemas)
+        if (v.toObject().value(QStringLiteral("function")).toObject()
+                .value(QStringLiteral("name")).toString() == name)
+            return true;
+    return false;
+}
+
+AgentContext computerUseCtx(const QString &cwd)
+{
+    AgentContext ctx;
+    ctx.adapter = QStringLiteral("llamaagent");
+    ctx.cwd = cwd;
+    ctx.serverBaseUrl = QStringLiteral("http://127.0.0.1:1");
+    ctx.modelId = QStringLiteral("test");
+    return ctx;
+}
+} // namespace
+
+void AgentWireTests::computerUse_asksBeforeDesktopTurnThenRunsInBackground()
+{
+    const QString store = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+                          + QStringLiteral("/agent_llamaagent");
+    QDir(store).removeRecursively();
+    QTemporaryDir cwd;
+    QVERIFY(cwd.isValid());
+    LlamaAgentBackend backend;
+    backend.start(computerUseCtx(cwd.path()));
+    QSignalSpy ask(&backend, &IAgentBackend::computerUseChoiceNeeded);
+    QSignalSpy errors(&backend, &IAgentBackend::errorOccurred);
+    const QString request = QStringLiteral("podrías abrir la calculadora de windows y hacer 3*3");
+
+    backend.sendMessage(request);
+    QCOMPARE(ask.count(), 1);
+    QCOMPARE(ask.first().at(0).toString(), request);
+    QVERIFY(backend.computerUseChoicePending());
+    // Nada se manda al modelo hasta que el usuario elige.
+    QVERIFY(!hasUserMessage(backend, request));
+    QVERIFY(!backend.isBusy());
+
+    // Otro mensaje mientras espera: no se pierde la pregunta.
+    backend.sendMessage(QStringLiteral("hola"));
+    QCOMPARE(errors.count(), 1);
+    QVERIFY(backend.computerUseChoicePending());
+
+    backend.resolveComputerUseChoice(QStringLiteral("background"));
+    QVERIFY(!backend.computerUseChoicePending());
+    QCOMPARE(backend.computerUseMode(), QStringLiteral("background"));
+    QVERIFY(hasUserMessage(backend, request));
+    // El turno lleva las instrucciones del modo antes del pedido.
+    bool noted = false;
+    for (const QJsonValue &v : backend.apiMessagesForTest())
+        if (v.toObject().value(QStringLiteral("content")).toString().contains(
+                QStringLiteral("MODO SEGUNDO PLANO")))
+            noted = true;
+    QVERIFY(noted);
+    // Sin mouse/teclado del usuario: esas tools no se le ofrecen al modelo.
+    const QJsonArray schemas = backend.toolSchemasForTest();
+    QVERIFY(toolSchemaNamed(schemas, QStringLiteral("desktop_control_action")));
+    QVERIFY(toolSchemaNamed(schemas, QStringLiteral("desktop_launch")));
+    QVERIFY(!toolSchemaNamed(schemas, QStringLiteral("desktop_type")));
+    QVERIFY(!toolSchemaNamed(schemas, QStringLiteral("desktop_click")));
+    QVERIFY(!toolSchemaNamed(schemas, QStringLiteral("desktop_key")));
+    backend.cancelGeneration();
+
+    // El modo elegido vale para el resto de la sesión: no vuelve a preguntar.
+    backend.sendMessage(QStringLiteral("abrí el bloc de notas"));
+    QCOMPARE(ask.count(), 1);
+    backend.cancelGeneration();
+    backend.stop();
+    QDir(store).removeRecursively();
+}
+
+void AgentWireTests::computerUse_superAgentAndPlainChatDoNotAsk()
+{
+    const QString store = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+                          + QStringLiteral("/agent_llamaagent");
+    QDir(store).removeRecursively();
+    QTemporaryDir cwd;
+    QVERIFY(cwd.isValid());
+    {
+        LlamaAgentBackend backend;
+        backend.start(computerUseCtx(cwd.path()));
+        QSignalSpy ask(&backend, &IAgentBackend::computerUseChoiceNeeded);
+        // Pedido sin escritorio: nada que preguntar.
+        backend.sendMessage(QStringLiteral("explicame qué hace main.cpp"));
+        QCOMPARE(ask.count(), 0);
+        QVERIFY(hasUserMessage(backend, QStringLiteral("main.cpp")));
+        backend.cancelGeneration();
+        backend.stop();
+    }
+    {
+        LlamaAgentBackend backend;
+        backend.start(computerUseCtx(cwd.path()));
+        backend.setApprovalPolicy(QStringLiteral("super"));
+        QSignalSpy ask(&backend, &IAgentBackend::computerUseChoiceNeeded);
+        // Super Agente: lo hace directo, controlando la PC.
+        backend.sendMessage(QStringLiteral("abrí la calculadora y hacé 3*3"));
+        QCOMPARE(ask.count(), 0);
+        QVERIFY(hasUserMessage(backend, QStringLiteral("calculadora")));
+        QVERIFY(toolSchemaNamed(backend.toolSchemasForTest(), QStringLiteral("desktop_type")));
+        backend.cancelGeneration();
+        backend.stop();
+    }
+    QDir(store).removeRecursively();
+}
+
+void AgentWireTests::computerUse_cancelDropsTheRequest()
+{
+    const QString store = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+                          + QStringLiteral("/agent_llamaagent");
+    QDir(store).removeRecursively();
+    QTemporaryDir cwd;
+    QVERIFY(cwd.isValid());
+    LlamaAgentBackend backend;
+    backend.start(computerUseCtx(cwd.path()));
+    QSignalSpy ask(&backend, &IAgentBackend::computerUseChoiceNeeded);
+    backend.sendMessage(QStringLiteral("abrí la calculadora"));
+    QCOMPARE(ask.count(), 1);
+    backend.resolveComputerUseChoice(QStringLiteral("cancel"));
+    QVERIFY(!backend.computerUseChoicePending());
+    QVERIFY(!hasUserMessage(backend, QStringLiteral("calculadora")));
+    QVERIFY(backend.computerUseMode().isEmpty());
+    // La próxima vez vuelve a preguntar.
+    backend.sendMessage(QStringLiteral("abrí la calculadora"));
+    QCOMPARE(ask.count(), 2);
+    backend.stop();
+    QDir(store).removeRecursively();
+}
+
+void AgentWireTests::computerUse_backgroundMarksDesktopArgs()
+{
+    const QJsonValue fromObject = LlamaAgentBackend::markBackgroundDesktopArgs(
+        QJsonObject{{QStringLiteral("app"), QStringLiteral("calc")}});
+    QVERIFY(fromObject.isObject());
+    QCOMPARE(fromObject.toObject().value(QStringLiteral("_lc_background")).toBool(), true);
+    QCOMPARE(fromObject.toObject().value(QStringLiteral("app")).toString(), QStringLiteral("calc"));
+    // Spec OpenAI: arguments como string JSON → se conserva el formato.
+    const QJsonValue fromString = LlamaAgentBackend::markBackgroundDesktopArgs(
+        QStringLiteral("{\"target_id\":\"1a\"}"));
+    QVERIFY(fromString.isString());
+    const QJsonObject parsed = QJsonDocument::fromJson(fromString.toString().toUtf8()).object();
+    QCOMPARE(parsed.value(QStringLiteral("_lc_background")).toBool(), true);
+    QCOMPARE(parsed.value(QStringLiteral("target_id")).toString(), QStringLiteral("1a"));
+    QVERIFY(LlamaAgentBackend::backgroundComputerUseNote().contains(QStringLiteral("desktop_control_action")));
+}
+
+void AgentWireTests::hiddenReasoning_isCountedAndCutOnce()
+{
+    // Pensar apagado + ~1600 chars de razonamiento sin respuesta: cortar.
+    QVERIFY(LlamaAgentBackend::shouldCutHiddenReasoning(false, 1700, false, 0));
+    // Todavía poco: dejarlo seguir.
+    QVERIFY(!LlamaAgentBackend::shouldCutHiddenReasoning(false, 800, false, 0));
+    // Ya empezó a responder o a armar una tool: no cortar.
+    QVERIFY(!LlamaAgentBackend::shouldCutHiddenReasoning(false, 5000, true, 0));
+    // Con Pensar prendido el razonamiento es legítimo (y se muestra).
+    QVERIFY(!LlamaAgentBackend::shouldCutHiddenReasoning(true, 5000, false, 0));
+    // Un solo reintento por turno.
+    QVERIFY(!LlamaAgentBackend::shouldCutHiddenReasoning(false, 5000, false, 1));
+    // El indicador cuenta tokens en vez de quedar en "tok 0".
+    QCOMPARE(LlamaAgentBackend::hiddenReasoningIndicator(1600),
+             QStringLiteral("💭 pensando… (~400 tokens de razonamiento interno)"));
 }
 
 QTEST_MAIN(AgentWireTests)

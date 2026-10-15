@@ -1307,6 +1307,27 @@ QVariantList DesktopAutomationBackend::controls(const QString &windowTargetId,
 #endif
 }
 
+static thread_local bool t_physicalInputBlocked = false;
+
+void DesktopAutomationBackend::setPhysicalInputBlocked(bool blocked)
+{
+    t_physicalInputBlocked = blocked;
+}
+
+bool DesktopAutomationBackend::physicalInputBlocked()
+{
+    return t_physicalInputBlocked;
+}
+
+static QString backgroundNoSemanticPattern()
+{
+    return QStringLiteral(
+        "Este control no se puede accionar por UI Automation y en segundo plano no uso "
+        "tu mouse. Probá desktop_control_action con otra acción (toggle, select, "
+        "set_value) u otro control; si no hay forma, avisale al usuario que esto "
+        "necesita el modo \"Controlando mi PC\".");
+}
+
 bool DesktopAutomationBackend::clickElement(const QString &windowTargetId,
                                             const QString &controlId, QString *error,
                                             QVariantMap *trace)
@@ -1415,6 +1436,10 @@ bool DesktopAutomationBackend::clickElementInternal(const QString &windowTargetI
                 if (rc.right > rc.left && rc.bottom > rc.top) {
                     // Sólo el fallback físico necesita foco; Invoke es
                     // semántico y debe poder operar sin robarlo.
+                    if (physicalInputBlocked()) {
+                        if (error) *error = backgroundNoSemanticPattern();
+                        break;
+                    }
                     if (!interactiveSessionAvailable()) {
                         if (error) *error = QStringLiteral(
                             "El control no expone un patrón semántico y la sesión interactiva está bloqueada.");
@@ -1602,7 +1627,9 @@ bool DesktopAutomationBackend::controlAction(const QString &windowTargetId,
                     // semántica disponible para el control.
                     RECT rc{};
                     el->get_CurrentBoundingRectangle(&rc);
-                    if (rc.right > rc.left && rc.bottom > rc.top
+                    if (physicalInputBlocked()) {
+                        if (error) *error = backgroundNoSemanticPattern();
+                    } else if (rc.right > rc.left && rc.bottom > rc.top
                         && interactiveSessionAvailable()) {
                         focusWindow(windowTargetId, nullptr);
                         SetCursorPos((rc.left + rc.right) / 2, (rc.top + rc.bottom) / 2);
@@ -1669,7 +1696,7 @@ bool DesktopAutomationBackend::controlAction(const QString &windowTargetId,
                     pattern->Release();
                 }
             }
-            if (!success && error)
+            if (!success && error && error->isEmpty())
                 *error = QStringLiteral("El control no expone el patrón requerido para '%1'.").arg(op);
         } else {
             enqueueChildren(el, node.depth + 1);
