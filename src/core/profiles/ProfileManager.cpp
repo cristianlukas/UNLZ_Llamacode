@@ -1,5 +1,7 @@
 #include "ProfileManager.h"
 #include "PortablePaths.h"
+#include <QCoreApplication>
+#include <QLockFile>
 #include "SystemProfileVariants.h"
 #include "core/agent/HarnessDirectiveStore.h"
 #include "core/agent/PortableSkillStore.h"
@@ -1810,7 +1812,7 @@ void ProfileManager::load()
 {
     bool loadFailed = false;
     bool agentProfilesDeduplicated = false;
-    auto loadList = [&loadFailed](const QString &path, auto &model, auto fromJsonFn) {
+    auto loadList = [this, &loadFailed](const QString &path, auto &model, auto fromJsonFn) {
         QFile f(path);
         if (!f.exists()) return;                 // first run / never saved — fine
         if (!f.open(QIODevice::ReadOnly)) {
@@ -1822,6 +1824,9 @@ void ProfileManager::load()
             return;
         }
         const QJsonArray arr = QJsonDocument::fromJson(f.readAll()).array();
+        QSet<QString> ids;
+        for (const auto &v : arr) ids.insert(v.toObject().value(QStringLiteral("id")).toString());
+        m_knownIds[path] = ids;
         QList<std::decay_t<decltype(model.m_items[0])>> items;
         for (const auto &v : arr) {
             const QJsonValue runtimeValue = portableJson(v, true);
@@ -1891,7 +1896,17 @@ void ProfileManager::save() const
     // se escribe nada: ni backup, ni rename, ni snapshots. Antes cada save()
     // reescribía las 8 entidades y apilaba un snapshot de CADA perfil en
     // profile_history.jsonl (llegó a 13 MB) aunque sólo se hubiera tocado uno.
-    auto saveList = [](const QString &path, const auto &items) -> QSet<QString> {
+    // Prod y Debug pueden guardar a la vez sobre los mismos archivos: el lock
+    // serializa los saves (y el tmp es por proceso para que no se pisen).
+    const QString lockDir = QFileInfo(storagePath(QStringLiteral("launches"))).absolutePath();
+    QDir().mkpath(lockDir);
+    QLockFile saveLock(lockDir + QStringLiteral("/.profiles-save.lock"));
+    saveLock.setStaleLockTime(30000);
+    if (!saveLock.tryLock(5000))
+        qWarning() << "[ProfileManager::save] otra instancia tiene el lock; se guarda igual";
+    bool preservedForeign = false;
+
+    auto saveList = [this, &preservedForeign](const QString &path, const auto &items) -> QSet<QString> {
         QSet<QString> changed;
         QByteArray existingBytes;
         {
@@ -1900,18 +1915,31 @@ void ProfileManager::save() const
                 existingBytes = existing.readAll();
         }
         const QJsonArray cur = QJsonDocument::fromJson(existingBytes).array();
+        QJsonArray arr;
+        QSet<QString> mine;
+        for (const auto &item : items) {
+            const QJsonValue stored = portableJson(item.toJson(), false);
+            mine.insert(stored.toObject().value(QStringLiteral("id")).toString());
+            arr.append(stored);
+        }
+        // Perfiles que agregó otra instancia después de nuestra última lectura:
+        // no están en memoria ni los conocíamos, así que no los borramos nosotros.
+        const QSet<QString> known = m_knownIds.value(path);
+        for (const QJsonValue &v : cur) {
+            const QString id = v.toObject().value(QStringLiteral("id")).toString();
+            if (!id.isEmpty() && !mine.contains(id) && !known.contains(id)) {
+                arr.append(v);
+                preservedForeign = true;
+            }
+        }
         // Anti-wipe guard: never overwrite a non-empty file with an empty list.
-        if (items.isEmpty() && !cur.isEmpty()) {
+        // Se evalúa sobre la lista final (incluye lo conservado de otra instancia).
+        if (arr.isEmpty() && !cur.isEmpty()) {
             qWarning() << "[ProfileManager::save] refusing to wipe non-empty file with empty list:"
                        << path;
             return changed;
         }
-
-        QJsonArray arr;
-        for (const auto &item : items) {
-            const QJsonValue stored = portableJson(item.toJson(), false);
-            arr.append(stored);
-        }
+        m_knownIds[path] = mine;
         const QByteArray data = QJsonDocument(arr).toJson();
         if (!existingBytes.isEmpty() && data == existingBytes)
             return changed;
@@ -1954,7 +1982,7 @@ void ProfileManager::save() const
 
         // Atomic write: write to a temp file, then rename over the target so a
         // crash mid-write can never leave a truncated/corrupt profiles file.
-        const QString tmp = path + ".tmp";
+        const QString tmp = path + QStringLiteral(".tmp.%1").arg(QCoreApplication::applicationPid());
         QFile f(tmp);
         if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
             qWarning() << "[ProfileManager::save] FAILED to open temp" << tmp << f.errorString();
@@ -2034,7 +2062,12 @@ void ProfileManager::save() const
         if (QFile::exists(p) && !m_watcher.files().contains(p)) m_watcher.addPath(p);
     }
     // Limpiar el flag tras drenar los eventos fileChanged de nuestro propio save().
-    QTimer::singleShot(400, const_cast<ProfileManager*>(this), [this]() { m_saving = false; });
+    // Si conservamos perfiles de otra instancia, recargar para tenerlos en memoria.
+    auto *self = const_cast<ProfileManager*>(this);
+    QTimer::singleShot(400, self, [self, preservedForeign]() {
+        self->m_saving = false;
+        if (preservedForeign) self->reloadFromDisk();
+    });
 }
 
 QString ProfileManager::exportProfilesBundle() const

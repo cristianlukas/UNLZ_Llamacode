@@ -1124,6 +1124,27 @@ Item {
                                     }
                                 }
 
+                                // Sin key y con contraseña en LAN, el gateway responde 401 a
+                                // todos los clientes (pasó: la key desapareció del llavero).
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    visible: App.gatewayEnabled && App.gatewayLanEnabled
+                                             && App.gatewayLanAuthEnabled && App.gatewayApiKey.length === 0
+                                    spacing: 8
+                                    Text {
+                                        Layout.fillWidth: true
+                                        text: "⚠ La LAN pide contraseña pero no hay API key: todos los clientes reciben \"API key inválida\". Generá una (y cargala en los clientes) o activá \"Acceso sin contraseña\"."
+                                        color: Theme.warnText; font.pixelSize: 11; wrapMode: Text.WordWrap
+                                    }
+                                    LcButton {
+                                        text: "Generar API key"
+                                        onClicked: {
+                                            App.generateGatewayApiKey()
+                                            gatewayKeyField.text = App.gatewayApiKey
+                                        }
+                                    }
+                                }
+
                                 RowLayout {
                                     Layout.fillWidth: true
                                     visible: App.gatewayEnabled
@@ -1177,6 +1198,30 @@ Item {
                                     LcSwitch {
                                         checked: !App.gatewayLanAuthEnabled
                                         onToggled: App.gatewayLanAuthEnabled = !checked
+                                    }
+                                }
+
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    visible: App.gatewayEnabled
+                                    spacing: 8
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 2
+                                        Text { text: "Clientes LAN pueden cambiar el modelo cargado"; color: Theme.textPrimary; font.pixelSize: 13 }
+                                        Text {
+                                            text: App.gatewayLanMayLoad
+                                                ? "Si un cliente pide otro perfil, esta PC descarga el actual y carga ese."
+                                                : "Un cliente sólo puede usar el modelo ya cargado (o cargar uno si no hay ninguno); si pide otro recibe un error."
+                                            color: Theme.textMuted
+                                            font.pixelSize: 11
+                                            wrapMode: Text.WordWrap
+                                            Layout.fillWidth: true
+                                        }
+                                    }
+                                    LcSwitch {
+                                        checked: App.gatewayLanMayLoad
+                                        onToggled: App.gatewayLanMayLoad = checked
                                     }
                                 }
 

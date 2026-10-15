@@ -25,7 +25,7 @@ simultáneamente los mismos stores.
 
 ## Habilitar / puerto
 - Escucha en **`http://127.0.0.1:<port>`** — **solo localhost**, no exponer.
-- Puerto: env **`LLAMACODE_CONTROL_PORT`** (default **8765**). `0` = desactivado.
+- Puerto: env **`LLAMACODE_CONTROL_PORT`** (default **8765**; el build **Debug** usa **8766** para poder correr junto a Prod). `0` = desactivado.
 - Se levanta al iniciar la app (la GUI puede estar abierta; la API funciona igual).
 
 ```powershell

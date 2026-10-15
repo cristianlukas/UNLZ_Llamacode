@@ -2,6 +2,7 @@
 // de modelo, LRU keepN, salida estructurada. + decisión de idle auto-stop.
 
 #include <QtTest>
+#include <QNetworkInterface>
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -34,6 +35,9 @@ private slots:
     void modelsEndpointServesStableIds();
     void preferredLanAddressSelectsPrivateIpv4();
     void lanActivationStartsRequestedProfile();
+    void lanSwapPolicyAndPeerDetection();
+    void lanClientCannotSwapLoadedModelWhenLocked();
+    void requestHookReportsLoopbackAsLocal();
     void lanStatusReportsModelLoadProgress();
     void lanStatusWithoutTrackerFallsBackToReady();
     void lanClientWaitsForRequestedModel();
@@ -430,6 +434,116 @@ void GatewayTests::lanActivationStartsRequestedProfile()
     QCOMPARE(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt(), 200);
     QCOMPARE(activated, astraId);
     reply->deleteLater();
+}
+
+void GatewayTests::lanSwapPolicyAndPeerDetection()
+{
+    QVERIFY(!LlmGateway::isLanPeer(QHostAddress(QStringLiteral("127.0.0.1"))));
+    QVERIFY(!LlmGateway::isLanPeer(QHostAddress(QStringLiteral("::1"))));
+    QVERIFY(!LlmGateway::isLanPeer(QHostAddress(QStringLiteral("::ffff:127.0.0.1"))));
+    QVERIFY(LlmGateway::isLanPeer(QHostAddress(QStringLiteral("192.168.1.50"))));
+    QVERIFY(LlmGateway::isLanPeer(QHostAddress(QStringLiteral("::ffff:192.168.1.50"))));
+
+    // Loopback y "permitir" nunca se restringen.
+    QVERIFY(LlmGateway::lanSwapAllowed(false, false, true, "astra", "other"));
+    QVERIFY(LlmGateway::lanSwapAllowed(true, true, true, "astra", "other"));
+    // Bloqueado: LAN no cambia el modelo cargado...
+    QVERIFY(!LlmGateway::lanSwapAllowed(true, false, true, "astra", "other"));
+    // ...pero sí usa el mismo, o carga uno si no hay nada.
+    QVERIFY(LlmGateway::lanSwapAllowed(true, false, true, "astra", "ASTRA"));
+    QVERIFY(LlmGateway::lanSwapAllowed(true, false, false, "astra", "other"));
+    QVERIFY(LlmGateway::lanSwapAllowed(true, false, true, "astra", ""));
+}
+
+// El cliente LAN pidió un perfil Compose y después ASTRA: el anfitrión cambió de
+// modelo dos veces sin que el usuario lo viera. Con la opción bloqueada, el
+// cliente recibe 409 y el modelo cargado no se toca. Requiere una IP de LAN.
+void GatewayTests::lanClientCannotSwapLoadedModelWhenLocked()
+{
+    const QHostAddress lanIp = LlmGateway::preferredLanAddress(QNetworkInterface::allAddresses());
+    if (lanIp.isNull())
+        QSKIP("sin IPv4 de LAN: no se puede simular un cliente no-loopback");
+    QTcpServer probe;
+    QVERIFY(probe.listen(QHostAddress::AnyIPv4, 0));
+    const quint16 port = probe.serverPort();
+    probe.close();
+
+    QStringList ensured;
+    QList<QJsonObject> logged;
+    LlmGateway gateway;
+    LlmGateway::Hooks hooks;
+    hooks.models = [] {
+        return QJsonArray{QJsonObject{{"id", "astra"}, {"name", "ASTRA"}},
+                          QJsonObject{{"id", "compose"}, {"name", "Compose"}}};
+    };
+    hooks.currentModel = [] { return QStringLiteral("astra"); };
+    hooks.running = [] { return true; };
+    hooks.ensureModel = [&ensured](const QString &id) { ensured << id; };
+    hooks.request = [&logged](const QJsonObject &r) { logged << r; };
+    gateway.setHooks(hooks);
+    gateway.setApiKey(QStringLiteral("secret"));
+    gateway.setLanMayLoadModels(false);
+    QVERIFY(gateway.start(port, QHostAddress::AnyIPv4));
+
+    QNetworkAccessManager nam;
+    auto activate = [&](const QString &model) {
+        QNetworkRequest request(QUrl(QStringLiteral("http://%1:%2/llamacode/v1/activate")
+                                         .arg(lanIp.toString()).arg(port)));
+        request.setHeader(QNetworkRequest::ContentTypeHeader, QByteArrayLiteral("application/json"));
+        request.setRawHeader("Authorization", "Bearer secret");
+        QNetworkReply *reply = nam.post(request,
+            QJsonDocument(QJsonObject{{"model", model}}).toJson(QJsonDocument::Compact));
+        QEventLoop loop;
+        connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+        loop.exec();
+        const int code = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        reply->deleteLater();
+        return code;
+    };
+
+    QCOMPARE(activate(QStringLiteral("compose")), 409);
+    QVERIFY(ensured.isEmpty());                      // el modelo cargado no se tocó
+    QCOMPARE(activate(QStringLiteral("astra")), 200);   // el mismo modelo, sí
+    // (activate siempre avisa; AppController ignora el pedido del modelo ya activo)
+    QCOMPARE(ensured, QStringList{QStringLiteral("astra")});
+
+    QTRY_COMPARE(logged.size(), 2);
+    QVERIFY(logged[0].value("lan").toBool());
+    QCOMPARE(logged[0].value("peer").toString(), lanIp.toString());
+    QCOMPARE(logged[0].value("status").toInt(), 409);
+    QCOMPARE(logged[0].value("model").toString(), QStringLiteral("compose"));
+    QCOMPARE(logged[1].value("status").toInt(), 200);
+
+    gateway.setLanMayLoadModels(true);              // por defecto: como antes
+    QCOMPARE(activate(QStringLiteral("compose")), 200);
+    QCOMPARE(ensured, (QStringList{QStringLiteral("astra"), QStringLiteral("compose")}));
+    gateway.stop();
+}
+
+void GatewayTests::requestHookReportsLoopbackAsLocal()
+{
+    QTcpServer probe;
+    QVERIFY(probe.listen(QHostAddress::LocalHost, 0));
+    const quint16 port = probe.serverPort();
+    probe.close();
+    QList<QJsonObject> logged;
+    LlmGateway gateway;
+    LlmGateway::Hooks hooks;
+    hooks.models = [] { return QJsonArray{QJsonObject{{"id", "m"}, {"name", "M"}}}; };
+    hooks.request = [&logged](const QJsonObject &r) { logged << r; };
+    gateway.setHooks(hooks);
+    QVERIFY(gateway.start(port));
+    QNetworkAccessManager nam;
+    QNetworkReply *reply = nam.get(QNetworkRequest(QUrl(
+        QStringLiteral("http://127.0.0.1:%1/v1/models").arg(port))));
+    QEventLoop loop;
+    connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+    loop.exec();
+    reply->deleteLater();
+    QTRY_COMPARE(logged.size(), 1);
+    QVERIFY(!logged[0].value("lan").toBool());
+    QCOMPARE(logged[0].value("path").toString(), QStringLiteral("/v1/models"));
+    QCOMPARE(logged[0].value("status").toInt(), 200);
 }
 
 void GatewayTests::lanStatusReportsModelLoadProgress()

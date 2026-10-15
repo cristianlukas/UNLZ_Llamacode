@@ -185,7 +185,7 @@ void SecretStore::load()
         save();
 }
 
-void SecretStore::save() const
+bool SecretStore::save() const
 {
     const QString path = filePath();
     QDir().mkpath(QFileInfo(path).absolutePath());
@@ -200,9 +200,10 @@ void SecretStore::save() const
     // secreto quedaba un instante con los permisos del umask (ej. 0644). En
     // Linux sin keyring este archivo guarda el valor sin cifrar ("plain:").
     const auto ownerOnly = QFileDevice::ReadOwner | QFileDevice::WriteOwner;
-    if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate, ownerOnly)) return;
+    if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate, ownerOnly)) return false;
     f.setPermissions(ownerOnly);   // archivo preexistente: open() no cambia sus permisos
-    f.write(QJsonDocument(o).toJson(QJsonDocument::Compact));
+    const QByteArray data = QJsonDocument(o).toJson(QJsonDocument::Compact);
+    return f.write(data) == data.size();
 }
 
 QString SecretStore::resolve(const QString &ref) const
@@ -230,15 +231,15 @@ bool SecretStore::has(const QString &ref) const
     return !resolve(ref).isEmpty();
 }
 
-void SecretStore::set(const QString &ref, const QString &value)
+bool SecretStore::set(const QString &ref, const QString &value)
 {
-    if (ref.isEmpty()) return;
-    if (value.isEmpty()) { remove(ref); return; }
+    if (ref.isEmpty()) return false;
+    if (value.isEmpty()) { remove(ref); return true; }
     m_secrets.insert(ref, value);
 #ifdef HAVE_QTKEYCHAIN
-    if (m_useKeychain) { kcWrite(ref, value); return; }
+    if (m_useKeychain) return kcWrite(ref, value);
 #endif
-    save();
+    return save();
 }
 
 void SecretStore::remove(const QString &ref)

@@ -27,7 +27,9 @@ public:
     // ¿Hay un valor resoluble (env o disco) para `ref`?
     bool has(const QString &ref) const;
     // Guarda/actualiza el secreto en disco (no toca env). ref vacío = no-op.
-    void set(const QString &ref, const QString &value);
+    // false si el backend no lo guardó (keyring rechazó la escritura, disco):
+    // quien migra un secreto no debe borrar el original en ese caso.
+    bool set(const QString &ref, const QString &value);
     // Borra el secreto en disco (no toca env).
     void remove(const QString &ref);
 
@@ -39,7 +41,7 @@ public:
 
 private:
     void load();
-    void save() const;
+    bool save() const;
     bool m_useKeychain = false;                  // backend elegido en el ctor
     mutable QHash<QString, QString> m_secrets;   // cache ref → secreto en memoria
 };

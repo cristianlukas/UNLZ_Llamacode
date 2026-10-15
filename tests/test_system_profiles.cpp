@@ -103,6 +103,9 @@ private slots:
     void controller_gatewayRebindsWhenBusyPortIsReleased();
     void controller_lanNoPasswordSwitchIsLiveAndKeepsKey();
     void controller_astraSettingsListEveryStrataProfile();
+    void controller_lanClientsListAndRequestLog();
+    void controller_lanAgentWatchdogDisarms();
+    void controller_generateGatewayApiKeyPersists();
     void controller_lanActivationRetryUsesSuppliedApiKey();
     void controller_astraStrataIsListedAndRequiresLocalSetup();
     void bundle_48gbFamilyIsBenchmarkableAndDualGpu();
@@ -1897,6 +1900,78 @@ void SystemProfilesTests::controller_astraSettingsListEveryStrataProfile()
     }
     QVERIFY(found);
     app.writeSetting(QStringLiteral("astra/configFile/sys-astra-iq2xs-default"), QString());
+}
+
+// Desde el anfitrión no se veía qué hacía cada cliente LAN: ahora cada request
+// LAN alimenta una lista de clientes y los relevantes van a server.log.
+void SystemProfilesTests::controller_lanClientsListAndRequestLog()
+{
+    const QJsonObject chat{{"peer", "192.168.1.50"}, {"lan", true}, {"method", "POST"},
+                           {"path", "/v1/chat/completions"}, {"model", "sys-astra"},
+                           {"status", 200}, {"ms", 1234}};
+    const QJsonObject poll{{"peer", "192.168.1.50"}, {"lan", true}, {"method", "GET"},
+                           {"path", "/llamacode/v1/status"}, {"status", 200}, {"ms", 2}};
+    const QJsonObject local{{"peer", "127.0.0.1"}, {"lan", false}, {"method", "POST"},
+                            {"path", "/v1/chat/completions"}, {"status", 200}};
+    QVERIFY(AppController::shouldLogGatewayRequest(chat));
+    QVERIFY(!AppController::shouldLogGatewayRequest(poll));      // polling: no ensucia el log
+    QVERIFY(!AppController::shouldLogGatewayRequest(local));
+    QJsonObject failedPoll = poll; failedPoll["status"] = 401;
+    QVERIFY(AppController::shouldLogGatewayRequest(failedPoll)); // pero un 401 sí
+    QCOMPARE(AppController::formatGatewayRequest(chat),
+             QStringLiteral("LAN 192.168.1.50 POST /v1/chat/completions perfil=sys-astra → 200 (1234 ms)"));
+
+    AppController app;
+    QSignalSpy changed(&app, &AppController::lanClientsChanged);
+    app.noteGatewayRequest(local);
+    QVERIFY(app.lanClients().isEmpty());
+    app.noteGatewayRequest(chat);
+    app.noteGatewayRequest(poll);
+    const QVariantList clients = app.lanClients();
+    QCOMPARE(clients.size(), 1);
+    const QVariantMap c = clients.first().toMap();
+    QCOMPARE(c.value("ip").toString(), QStringLiteral("192.168.1.50"));
+    QCOMPARE(c.value("requests").toInt(), 2);
+    QCOMPARE(c.value("model").toString(), QStringLiteral("sys-astra"));
+    QCOMPARE(c.value("path").toString(), QStringLiteral("/v1/chat/completions"));
+    QCOMPARE(changed.count(), 2);
+
+    // La opción de bloquear swaps se persiste y por defecto permite (como antes).
+    QVERIFY(app.gatewayLanMayLoad());
+    app.setGatewayLanMayLoad(false);
+    QVERIFY(!app.gatewayLanMayLoad());
+    app.setGatewayLanMayLoad(true);
+}
+
+// La reconexión automática del agente cliente se desarma si el usuario lo
+// detiene o si cambia a otro perfil.
+void SystemProfilesTests::controller_lanAgentWatchdogDisarms()
+{
+    AppController app;
+    QVERIFY(app.lanAgentWantedLaunchId().isEmpty());
+    app.lanAgentWatchdogTickForTest();               // sin armar: no hace nada
+    QVERIFY(app.lanAgentWantedLaunchId().isEmpty());
+    app.stopAgentByUser();
+    QVERIFY(app.lanAgentWantedLaunchId().isEmpty());
+}
+
+// Con contraseña LAN y sin key, la UI ofrece "Generar API key" (la key se había
+// perdido del llavero y todos los clientes recibían 401 sin aviso).
+void SystemProfilesTests::controller_generateGatewayApiKeyPersists()
+{
+    QString key;
+    {
+        AppController app;
+        app.setGatewayApiKey(QString());
+        QVERIFY(app.gatewayApiKey().isEmpty());
+        key = app.generateGatewayApiKey();
+        QCOMPARE(key.size(), 32);
+        QVERIFY(QRegularExpression(QStringLiteral("^[0-9a-f]{32}$")).match(key).hasMatch());
+        QCOMPARE(app.gatewayApiKey(), key);
+    }
+    AppController reopened;      // sobrevive al reinicio (SecretStore aislado en test)
+    QCOMPARE(reopened.gatewayApiKey(), key);
+    reopened.setGatewayApiKey(QString());
 }
 
 void SystemProfilesTests::controller_lanActivationRetryUsesSuppliedApiKey()

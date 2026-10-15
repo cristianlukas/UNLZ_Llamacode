@@ -1811,14 +1811,22 @@ AppController::AppController(QObject *parent) : QObject(parent)
         const QString legacyKey = s.value(QStringLiteral("gateway/apiKey")).toString();
         if (!legacyKey.isEmpty()) {
             m_gatewayApiKey = legacyKey;
-            m_secrets.set(QStringLiteral("gateway/apiKey"), legacyKey);
-            s.remove(QStringLiteral("gateway/apiKey"));
+            // Sólo borrar la copia vieja si el SecretStore confirmó el guardado:
+            // si no, la clave se perdía y la LAN rechazaba a todos los clientes.
+            if (m_secrets.set(QStringLiteral("gateway/apiKey"), legacyKey))
+                s.remove(QStringLiteral("gateway/apiKey"));
+            else
+                qWarning() << "Gateway: no se pudo migrar la API key al SecretStore; se conserva la copia en la configuración.";
         }
     }
     m_gatewayKeepN   = s.value(QStringLiteral("gateway/keepN"), 4).toInt();
     m_gatewayAutoSwap = s.value(QStringLiteral("gateway/autoSwap"), true).toBool();
     m_gatewayLanEnabled = s.value(QStringLiteral("gateway/lanEnabled"), false).toBool();
     m_gatewayLanAuthEnabled = s.value(QStringLiteral("gateway/lanAuthEnabled"), true).toBool();
+    m_gatewayLanMayLoad = s.value(QStringLiteral("gateway/lanMayLoadModels"), true).toBool();
+    if (m_gatewayLanEnabled && m_gatewayLanAuthEnabled && m_gatewayApiKey.trimmed().isEmpty())
+        qWarning() << "Gateway: la LAN pide contraseña pero no hay API key guardada;"
+                   << "los clientes LAN van a recibir 401 hasta configurar una.";
     {
         const QString stored = s.value(QStringLiteral("updates/channel")).toString();
         m_updateChannel = resolveUpdateChannel(stored, buildChannel());
@@ -10401,7 +10409,10 @@ void AppController::wireGatewayHooks()
     h.ensureModel  = [this](const QString &name) { gatewayEnsureModel(name); };
     h.activity     = [this]() { bumpActivity(); };
     h.loadStatus   = [this]() { return localModelLoadJson(); };
+    h.running      = [this]() { return serverRunning(); };
+    h.request      = [this](const QJsonObject &r) { noteGatewayRequest(r); };
     m_gateway->setHooks(h);
+    m_gateway->setLanMayLoadModels(m_gatewayLanMayLoad);
     m_gateway->setKeepN(m_gatewayKeepN);
     m_gateway->setAutoSwap(m_gatewayAutoSwap);
     m_gateway->setApiKey(m_gatewayApiKey);
@@ -10456,6 +10467,126 @@ void AppController::gatewayEnsureModel(const QString &name)
         });
     });
     stopServer();
+}
+
+void AppController::setGatewayLanMayLoad(bool on)
+{
+    if (m_gatewayLanMayLoad == on) return;
+    m_gatewayLanMayLoad = on;
+    QSettings().setValue(QStringLiteral("gateway/lanMayLoadModels"), on);
+    if (m_gateway) m_gateway->setLanMayLoadModels(on);
+    emit gatewayChanged();
+}
+
+// status/health/models los pide el cliente cada segundo mientras espera: se
+// cuentan en la lista de clientes pero no llenan server.log, salvo que fallen.
+bool AppController::shouldLogGatewayRequest(const QJsonObject &request)
+{
+    if (!request.value(QStringLiteral("lan")).toBool()) return false;
+    if (request.value(QStringLiteral("status")).toInt() >= 400) return true;
+    const QString path = request.value(QStringLiteral("path")).toString();
+    return path != QLatin1String("/llamacode/v1/status") && path != QLatin1String("/health")
+        && path != QLatin1String("/") && path != QLatin1String("/v1/models");
+}
+
+QString AppController::formatGatewayRequest(const QJsonObject &request)
+{
+    const QString model = request.value(QStringLiteral("model")).toString();
+    return QStringLiteral("LAN %1 %2 %3%4 → %5 (%6 ms)")
+        .arg(request.value(QStringLiteral("peer")).toString(),
+             request.value(QStringLiteral("method")).toString(),
+             request.value(QStringLiteral("path")).toString(),
+             model.isEmpty() ? QString() : QStringLiteral(" perfil=") + model)
+        .arg(request.value(QStringLiteral("status")).toInt())
+        .arg(request.value(QStringLiteral("ms")).toInteger());
+}
+
+void AppController::noteGatewayRequest(const QJsonObject &request)
+{
+    if (!request.value(QStringLiteral("lan")).toBool()) return;
+    const QString ip = request.value(QStringLiteral("peer")).toString();
+    if (ip.isEmpty()) return;
+    QVariantMap client = m_lanClients.value(ip);
+    client[QStringLiteral("ip")] = ip;
+    client[QStringLiteral("lastSeenMs")] = QDateTime::currentMSecsSinceEpoch();
+    client[QStringLiteral("requests")] = client.value(QStringLiteral("requests")).toInt() + 1;
+    const QString model = request.value(QStringLiteral("model")).toString();
+    if (!model.isEmpty()) client[QStringLiteral("model")] = model;
+    if (shouldLogGatewayRequest(request)) {
+        client[QStringLiteral("path")] = request.value(QStringLiteral("path")).toString();
+        client[QStringLiteral("status")] = request.value(QStringLiteral("status")).toInt();
+        appendServerEvent(QStringLiteral("gateway"), formatGatewayRequest(request));
+    }
+    m_lanClients.insert(ip, client);
+    emit lanClientsChanged();
+}
+
+QVariantList AppController::lanClients() const
+{
+    // Sólo los vistos en los últimos 10 minutos, el más reciente primero.
+    const qint64 cutoff = QDateTime::currentMSecsSinceEpoch() - 10 * 60 * 1000;
+    QList<QVariantMap> recent;
+    for (const QVariantMap &c : m_lanClients)
+        if (c.value(QStringLiteral("lastSeenMs")).toLongLong() >= cutoff) recent.append(c);
+    std::sort(recent.begin(), recent.end(), [](const QVariantMap &a, const QVariantMap &b) {
+        return a.value(QStringLiteral("lastSeenMs")).toLongLong()
+             > b.value(QStringLiteral("lastSeenMs")).toLongLong();
+    });
+    QVariantList out;
+    for (const QVariantMap &c : recent) out.append(c);
+    return out;
+}
+
+void AppController::stopAgentByUser()
+{
+    m_lanAgentWantedLaunchId.clear();
+    if (m_lanAgentWatchdog) m_lanAgentWatchdog->stop();
+    stopAgent();
+}
+
+void AppController::armLanAgentWatchdog(const QString &launchId)
+{
+    m_lanAgentWantedLaunchId = launchId;
+    if (!m_lanAgentWatchdog) {
+        m_lanAgentWatchdog = new QTimer(this);
+        m_lanAgentWatchdog->setInterval(15000);
+        connect(m_lanAgentWatchdog, &QTimer::timeout, this, [this]() { lanAgentWatchdogTick(); });
+    }
+    m_lanAgentWatchdog->start();
+}
+
+void AppController::lanAgentWatchdogTick()
+{
+    const QString launchId = m_lanAgentWantedLaunchId;
+    if (launchId.isEmpty() || launchId != m_activeLaunchId) {
+        // Otro perfil activo: el usuario cambió de servidor; no insistir.
+        m_lanAgentWantedLaunchId.clear();
+        if (m_lanAgentWatchdog) m_lanAgentWatchdog->stop();
+        return;
+    }
+    if (agentRunning() || agentStarting() || m_agentStopping || m_lanAgentProbeInFlight)
+        return;
+    const BackendProfile backend = m_profiles.resolveBackend(
+        m_profiles.resolveLaunch(launchId).backendProfileId);
+    if (!backend.isCloud() || backend.cloudBaseUrl.isEmpty()) return;
+    if (!m_nam) m_nam = new QNetworkAccessManager(this);
+    QNetworkRequest request(QUrl(backend.cloudBaseUrl + QStringLiteral("/llamacode/v1/status")));
+    request.setTransferTimeout(4000);
+    const QString key = m_secrets.resolve(backend.cloudKeyRef).trimmed();
+    if (!key.isEmpty())
+        request.setRawHeader(QByteArrayLiteral("Authorization"), QByteArrayLiteral("Bearer ") + key.toUtf8());
+    m_lanAgentProbeInFlight = true;
+    auto *reply = m_nam->get(request);
+    connect(reply, &QNetworkReply::finished, this, [this, reply, launchId]() {
+        reply->deleteLater();
+        m_lanAgentProbeInFlight = false;
+        const int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        if (status != 200 || launchId != m_lanAgentWantedLaunchId || agentRunning() || agentStarting())
+            return;
+        appendAgentEvent(QStringLiteral("lifecycle"),
+                         QStringLiteral("El anfitrión LAN responde y el agente estaba detenido: reiniciándolo."));
+        startAgentInternal(launchId, false);
+    });
 }
 
 void AppController::startGateway()
@@ -10570,12 +10701,22 @@ void AppController::setGatewayPort(int p)
     emit gatewayChanged();
 }
 
+QString AppController::generateGatewayApiKey()
+{
+    const QString key = QUuid::createUuid().toString(QUuid::WithoutBraces).remove(QLatin1Char('-'));
+    setGatewayApiKey(key);
+    return m_gatewayApiKey;
+}
+
 void AppController::setGatewayApiKey(const QString &k)
 {
     if (m_gatewayApiKey == k) return;
     m_gatewayApiKey = k;
-    m_secrets.set(QStringLiteral("gateway/apiKey"), k);
-    QSettings().remove(QStringLiteral("gateway/apiKey"));
+    if (m_secrets.set(QStringLiteral("gateway/apiKey"), k))
+        QSettings().remove(QStringLiteral("gateway/apiKey"));
+    else
+        emit serverError(QStringLiteral("No se pudo guardar la API key del gateway (llavero del sistema). "
+                                        "Sigue activa hasta cerrar la app."));
     if (m_gateway) m_gateway->setApiKey(k);
     emit gatewayChanged();
 }
@@ -10777,6 +10918,13 @@ void AppController::useLanServer(const QString &baseUrl, const QString &apiKey,
             error = QStringLiteral(
                 "No hubo respuesta del servidor LAN: %1. Revisá que el Gateway esté activo y que el puerto sea accesible desde esta red.")
                         .arg(reply->errorString());
+        } else if (status == 409) {
+            // El anfitrión bloquea el cambio de modelo: su mensaje dice cuál está cargado.
+            const QString hostMessage = QJsonDocument::fromJson(reply->readAll()).object()
+                .value(QStringLiteral("error")).toObject().value(QStringLiteral("message")).toString();
+            error = hostMessage.isEmpty()
+                ? QStringLiteral("El anfitrión no permite cambiar el modelo cargado (HTTP 409).")
+                : hostMessage;
         } else {
             error = QStringLiteral("El servidor LAN rechazó la conexión (HTTP %1): %2")
                         .arg(status).arg(reply->errorString());
@@ -10795,6 +10943,7 @@ void AppController::useLanServer(const QString &baseUrl, const QString &apiKey,
         emit activeLaunchIdChanged();
         emit launchProfileSelected(launchId);
         startAgentInternal(launchId, rememberAsActive);
+        armLanAgentWatchdog(launchId);
         // El anfitrion carga el modelo en segundo plano: seguir su progreso.
         startRemoteLoadPolling(baseUrl, effectiveApiKey, activatedModel);
         emit lanProfileReady(launchId, {});

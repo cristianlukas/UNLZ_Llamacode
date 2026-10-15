@@ -387,8 +387,15 @@ int main(int argc, char *argv[])
     // API local para UI externa, CLI y pruebas. En --headless / --agent-daemon
     // se convierte en el único frontend y no se carga QML.
     const QByteArray controlPortEnv = qgetenv("LLAMACODE_CONTROL_PORT");
+#ifdef LC_DEBUG_ICON
+    // Debug usa otro puerto por defecto: con Prod abierto a la vez, el segundo
+    // no podía escuchar en 8765 y su API de control quedaba muerta.
+    constexpr quint16 kDefaultControlPort = 8766;
+#else
+    constexpr quint16 kDefaultControlPort = 8765;
+#endif
     const quint16 controlPort = controlPortEnv.isEmpty()
-        ? 8765 : static_cast<quint16>(controlPortEnv.toUInt());
+        ? kDefaultControlPort : static_cast<quint16>(controlPortEnv.toUInt());
     auto *controlApi = new ControlApi(&controller, &controller);
     controlApi->start(controlPort);
 

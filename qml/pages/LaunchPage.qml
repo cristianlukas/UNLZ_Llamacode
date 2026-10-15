@@ -1119,6 +1119,66 @@ Item {
                     wrapMode: Text.WordWrap
                 }
 
+                RowLayout {
+                    Layout.fillWidth: true
+                    visible: App.gatewayRunning && App.gatewayLanEnabled
+                             && App.gatewayLanAuthEnabled && App.gatewayApiKey.length === 0
+                    spacing: 8
+                    Text {
+                        Layout.fillWidth: true
+                        text: "⚠ La LAN pide contraseña pero no hay API key: los clientes reciben \"API key inválida\"."
+                        color: Theme.warnText; font.pixelSize: 11; wrapMode: Text.WordWrap
+                    }
+                    LcButton {
+                        text: "Generar API key"
+                        secondary: true
+                        onClicked: App.generateGatewayApiKey()
+                    }
+                }
+
+                // Clientes LAN vistos en los últimos 10 min (antes no había forma de
+                // saber desde el anfitrión qué pedía cada cliente).
+                ColumnLayout {
+                    id: lanClientsBox
+                    Layout.fillWidth: true
+                    visible: App.gatewayRunning && App.gatewayLanEnabled
+                    spacing: 4
+                    property double now: Date.now()
+                    Timer {
+                        interval: 5000; repeat: true
+                        running: lanClientsBox.visible
+                        onTriggered: lanClientsBox.now = Date.now()
+                    }
+                    function ago(ms) {
+                        const s = Math.max(0, Math.round((now - ms) / 1000))
+                        return s < 60 ? "hace " + s + " s" : "hace " + Math.round(s / 60) + " min"
+                    }
+                    Text {
+                        text: App.lanClients.length === 0
+                              ? "Ningún cliente LAN conectado en los últimos 10 minutos."
+                              : "Clientes LAN (" + App.lanClients.length + ")"
+                        color: App.lanClients.length === 0 ? Theme.textMuted : Theme.textSecondary
+                        font.pixelSize: 11
+                        font.bold: App.lanClients.length > 0
+                    }
+                    Repeater {
+                        model: App.lanClients
+                        delegate: Text {
+                            required property var modelData
+                            Layout.fillWidth: true
+                            readonly property int status: modelData.status ?? 0
+                            text: modelData.ip
+                                  + (modelData.model ? " · " + modelData.model : "")
+                                  + " · " + lanClientsBox.ago(modelData.lastSeenMs)
+                                  + (status ? " · última respuesta " + status : "")
+                                  + " · " + modelData.requests + " requests"
+                            color: status >= 400 ? Theme.errorText : Theme.textSecondary
+                            font.pixelSize: 11
+                            elide: Text.ElideRight
+                        }
+                    }
+                }
+
                 Text {
                     Layout.fillWidth: true
                     visible: !App.serverRunning
