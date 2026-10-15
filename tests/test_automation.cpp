@@ -231,6 +231,20 @@ void AutomationTests::readTextFormatsNormalizedCentersAndFilters()
     QCOMPARE(DesktopComputerUse::inferScopeKind(QStringLiteral("Window"), false, QStringLiteral("screen")),
              QStringLiteral("window"));
 
+    // desktop_launch: nombres "humanos" → lo que entiende `start`. "calculator"
+    // abria el dialogo de error de Windows y el agente tecleaba en el.
+    QCOMPARE(DesktopComputerUse::launchAlias(QStringLiteral("calculator")), QStringLiteral("calc"));
+    QCOMPARE(DesktopComputerUse::launchAlias(QStringLiteral("  Calculadora ")), QStringLiteral("calc"));
+    QCOMPARE(DesktopComputerUse::launchAlias(QStringLiteral("Bloc de notas")), QStringLiteral("notepad"));
+    QCOMPARE(DesktopComputerUse::launchAlias(QStringLiteral("Configuración")), QStringLiteral("ms-settings:"));
+    QCOMPARE(DesktopComputerUse::launchAlias(QStringLiteral("notepad")), QStringLiteral("notepad"));
+    QCOMPARE(DesktopComputerUse::launchAlias(QStringLiteral("C:/x/app.exe")), QStringLiteral("C:/x/app.exe"));
+    QVERIFY(DesktopComputerUse::launchTargetIsPathOrUri(QStringLiteral("ms-settings:")));
+    QVERIFY(DesktopComputerUse::launchTargetIsPathOrUri(QStringLiteral("C:\\Windows\\notepad.exe")));
+    QVERIFY(DesktopComputerUse::launchTargetIsPathOrUri(QStringLiteral("https://example.com")));
+    QVERIFY(!DesktopComputerUse::launchTargetIsPathOrUri(QStringLiteral("calc")));
+    QVERIFY(!DesktopComputerUse::launchTargetIsPathOrUri(QStringLiteral(":raro")));
+
     QCOMPARE(DesktopComputerUse::clampClickCount(0), 1);
     QCOMPARE(DesktopComputerUse::clampClickCount(2), 2);
     QCOMPARE(DesktopComputerUse::clampClickCount(9), 3);

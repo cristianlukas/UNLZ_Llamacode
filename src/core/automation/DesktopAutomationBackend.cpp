@@ -16,6 +16,8 @@
 #include <QProcess>
 #include <QScreen>
 #include <QSet>
+#include <QSettings>
+#include <QStandardPaths>
 #include <QThread>
 #include <QVector>
 #include <QWindow>
@@ -591,14 +593,49 @@ bool DesktopAutomationBackend::interactiveSessionAvailable()
 #endif
 }
 
+#ifdef Q_OS_WIN
+// ¿`start` encuentra este nombre? PATH (con PATHEXT) o App Paths del registro,
+// que es donde `start` busca además del PATH (chrome, excel, wt...).
+static bool windowsLaunchNameResolvable(const QString &program)
+{
+    if (!QStandardPaths::findExecutable(program).isEmpty()) return true;
+    const QString exe = program.endsWith(QLatin1String(".exe"), Qt::CaseInsensitive)
+        ? program : program + QStringLiteral(".exe");
+    for (const char *hive : {"HKEY_CURRENT_USER", "HKEY_LOCAL_MACHINE"}) {
+        const QSettings appPath(QStringLiteral("%1\\Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\%2")
+                                    .arg(QLatin1String(hive), exe),
+                                QSettings::NativeFormat);
+        if (!appPath.value(QStringLiteral("Default")).toString().isEmpty()) return true;
+    }
+    return false;
+}
+#endif
+
 bool DesktopAutomationBackend::launchApp(const QString &app, const QString &args, QString *error)
 {
-    const QString program = app.trimmed();
+    const QString program = DesktopComputerUse::launchAlias(app);
     if (program.isEmpty()) {
         if (error) *error = QStringLiteral("Falta el nombre de la app a lanzar.");
         return false;
     }
 #ifdef Q_OS_WIN
+    // Un nombre que `start` no resuelve NO falla acá: cmd arranca igual y Windows
+    // abre el diálogo "no se encuentra 'X'" (una ventana titulada X). El agente
+    // la tomaba por la app, tecleaba ahí y el diálogo se cerraba.
+    const bool pathOrUri = DesktopComputerUse::launchTargetIsPathOrUri(program);
+    if (pathOrUri && (program.contains(QLatin1Char('/')) || program.contains(QLatin1Char('\\')))
+        && !QFileInfo::exists(program)) {
+        if (error) *error = QStringLiteral("No existe la ruta '%1'.").arg(program);
+        return false;
+    }
+    if (!pathOrUri && !windowsLaunchNameResolvable(program)) {
+        if (error)
+            *error = QStringLiteral("No encontré la app '%1' (no está en el PATH ni registrada). "
+                                    "Usá el ejecutable: 'calc' (Calculadora), 'notepad', 'mspaint', "
+                                    "'explorer', 'ms-settings:' o una ruta completa a un .exe.")
+                         .arg(program);
+        return false;
+    }
     // `start "" <app> <args>` vía cmd: lanza DESPRENDIDO (cmd sale al instante) y
     // resuelve apps del PATH, rutas .exe y verbos del shell (calc, notepad,
     // ms-settings:, etc.). startDetached no bloquea ni hereda los pipes → el turno

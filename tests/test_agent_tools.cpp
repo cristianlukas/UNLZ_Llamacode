@@ -102,6 +102,7 @@ private slots:
     void desktopControls_emptyPointsToReadText();
     void desktopControls_invalidWindowErrorsCleanly();
     void desktopLaunch_emptyAppErrorsCleanly();
+    void desktopLaunch_unknownAppFailsWithoutLaunching();
     void honeyHandoff_densifiesMasterAndSubPrompts();
     void webUrlGuard_blocksPrivateAndCredentials();
     void readableWebText_prefersArticleAndPreservesStructure();
@@ -784,6 +785,12 @@ void AgentToolsTests::desktopNewTools_validateBeforeTouchingTheDesktop()
                          {{"scope_kind", "window"}, {"target_id", "zzznothex"}});
     QVERIFY(!r.value("ok").toBool());
     QVERIFY(r.value("result").toString().startsWith(QStringLiteral("[desktop_read_text:")));
+    // Ventana cerrada (sin scope_kind cae a "screen"): el mensaje dice que ya no
+    // existe, no "no existe screen con id" (eso confundia al modelo).
+    QVariantMap gone = call("desktop_read_text", {{"target_id", "2e60394"}});
+    QVERIFY(!gone.value("ok").toBool());
+    QVERIFY2(gone.value("result").toString().contains(QStringLiteral("ya se cerr")),
+             qPrintable(gone.value("result").toString()));
 
     QVariantMap h = call("desktop_hover",
                          {{"scope_kind", "screen"}, {"target_id", "0"}, {"x", 1.7}, {"y", 0.5}});
@@ -912,6 +919,25 @@ void AgentToolsTests::desktopControls_invalidWindowErrorsCleanly()
         QVERIFY2(!visual.value("ok").toBool(), qPrintable(tool));
         QVERIFY(visual.value("result").toString().contains(tool));
     }
+}
+
+void AgentToolsTests::desktopLaunch_unknownAppFailsWithoutLaunching()
+{
+#ifdef Q_OS_WIN
+    // Un nombre que Windows no resuelve se rechaza ANTES de `start`: si no, cmd
+    // arranca igual, Windows abre su dialogo "no se encuentra" y el agente lo
+    // tomaba por la app. Este nombre no existe: no se abre nada.
+    QVariantMap r = call("desktop_launch", {{"app", "app-que-no-existe-lc-7f3a"}});
+    QVERIFY(!r.value("ok").toBool());
+    const QString text = r.value("result").toString();
+    QVERIFY2(text.contains(QStringLiteral("No encontr")), qPrintable(text));
+    QVERIFY(text.contains(QStringLiteral("'calc'")));
+    QVariantMap path = call("desktop_launch", {{"app", "C:/no/existe/lc-7f3a.exe"}});
+    QVERIFY(!path.value("ok").toBool());
+    QVERIFY(path.value("result").toString().contains(QStringLiteral("No existe la ruta")));
+#else
+    QSKIP("validacion de nombres de start: solo Windows");
+#endif
 }
 
 void AgentToolsTests::desktopLaunch_emptyAppErrorsCleanly()

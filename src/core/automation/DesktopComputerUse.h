@@ -129,6 +129,14 @@ QString inferScopeKind(const QString &explicitKind, bool targetIsWindow,
 bool typingTargetAllowed(const QString &foregroundId, const QString &agentFocusedId);
 // 1..3 pulsaciones (simple, doble, triple); cualquier otro valor se acota.
 int clampClickCount(int clickCount);
+// Nombre "humano" de una app → lo que entiende `start` en Windows. El modelo
+// pedía desktop_launch "calculator": no es un ejecutable, Windows abría su
+// diálogo de error (ventana "calculator" de 572x140) y el agente tecleaba ahí.
+// Sin alias conocido devuelve el nombre tal cual.
+QString launchAlias(const QString &app);
+// ¿Es una ruta o una URI de shell (ms-settings:, https:...) en vez de un nombre
+// a resolver por PATH/App Paths?
+bool launchTargetIsPathOrUri(const QString &program);
 // Texto OCR de un alcance para el modelo: una línea por renglón leído, con su
 // centro NORMALIZADO 0..1 en ese alcance (las mismas coordenadas que acepta
 // desktop_click / desktop_hover). Filtra por `query` (contiene, sin acentos ni

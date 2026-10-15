@@ -2355,9 +2355,12 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         QString error;
         // Un id que no existe en ese alcance es un error, no "la pantalla principal":
         // OCRear todo el escritorio expone otras apps y llena el contexto.
+        // Si el id no es ventana (ni pantalla) lo más probable es que la ventana se
+        // haya cerrado: decirlo, en vez de "no existe screen" (confundía al modelo).
         if (!target.isEmpty() && DesktopAutomationBackend::targetInfo(kind, target).isEmpty())
-            return QStringLiteral("[desktop_read_text: no existe %1 con id '%2'; usá "
-                                  "desktop_windows para el id de ventana]").arg(kind, target);
+            return QStringLiteral("[desktop_read_text: no hay ninguna ventana ni pantalla con id "
+                                  "'%1' (si era una ventana, ya se cerró); usá desktop_windows "
+                                  "para ver las abiertas]").arg(target);
         const QRect bounds = DesktopAutomationBackend::scopeBounds(kind, target);
         if (!bounds.isValid())
             return QStringLiteral("[desktop_read_text: alcance no disponible (%1 '%2')]").arg(kind, target);

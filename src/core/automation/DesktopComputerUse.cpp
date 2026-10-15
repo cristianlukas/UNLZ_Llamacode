@@ -3,6 +3,7 @@
 #include <QCryptographicHash>
 #include <QDateTime>
 #include <QDir>
+#include <QHash>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QLockFile>
@@ -220,6 +221,42 @@ bool typingTargetAllowed(const QString &foregroundId, const QString &agentFocuse
 int clampClickCount(int clickCount)
 {
     return qBound(1, clickCount, 3);
+}
+
+static QString foldForMatch(const QString &s);
+
+QString launchAlias(const QString &app)
+{
+    const QString key = foldForMatch(app.trimmed()).simplified();
+    static const QHash<QString, QString> aliases{
+        {QStringLiteral("calculator"), QStringLiteral("calc")},
+        {QStringLiteral("calculadora"), QStringLiteral("calc")},
+        {QStringLiteral("calculadora de windows"), QStringLiteral("calc")},
+        {QStringLiteral("windows calculator"), QStringLiteral("calc")},
+        {QStringLiteral("bloc de notas"), QStringLiteral("notepad")},
+        {QStringLiteral("notas"), QStringLiteral("notepad")},
+        {QStringLiteral("paint"), QStringLiteral("mspaint")},
+        {QStringLiteral("explorador"), QStringLiteral("explorer")},
+        {QStringLiteral("explorador de archivos"), QStringLiteral("explorer")},
+        {QStringLiteral("file explorer"), QStringLiteral("explorer")},
+        {QStringLiteral("configuracion"), QStringLiteral("ms-settings:")},
+        {QStringLiteral("settings"), QStringLiteral("ms-settings:")},
+        {QStringLiteral("terminal"), QStringLiteral("wt")},
+        {QStringLiteral("simbolo del sistema"), QStringLiteral("cmd")},
+        {QStringLiteral("administrador de tareas"), QStringLiteral("taskmgr")},
+        {QStringLiteral("task manager"), QStringLiteral("taskmgr")},
+    };
+    const auto it = aliases.constFind(key);
+    return it != aliases.constEnd() ? it.value() : app.trimmed();
+}
+
+bool launchTargetIsPathOrUri(const QString &program)
+{
+    const QString p = program.trimmed();
+    if (p.contains(QLatin1Char('/')) || p.contains(QLatin1Char('\\'))) return true;
+    // "ms-settings:", "https:", "C:" ... (un esquema sin barras también vale).
+    const int colon = p.indexOf(QLatin1Char(':'));
+    return colon > 0;
 }
 
 static QString foldForMatch(const QString &s)
