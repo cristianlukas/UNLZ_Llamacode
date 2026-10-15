@@ -62,5 +62,14 @@ $tagIdx = $body.IndexOf('git push origin $tag')
 $createIdx = $body.IndexOf("'release', 'create'")
 Check ($tagIdx -gt 0 -and $createIdx -gt $tagIdx) 'release.ps1 pushea el tag antes de crear la release'
 
+# CI (tests.yml) en cada push a main, exigido antes de publicar.
+$testsWf = [IO.File]::ReadAllText((Join-Path $root '.github\workflows\tests.yml'))
+Check ($testsWf -match 'branches: \[main\]' -and $testsWf.Contains('pull_request:')) 'tests.yml corre en cada push a main y en PRs'
+Check ($testsWf.Contains('-DBUILD_TESTS=ON') -and $testsWf.Contains('ctest --test-dir build_tests')) 'tests.yml compila los tests y corre ctest'
+Check ($testsWf.Contains('linux:') -and $testsWf.Contains('windows:')) 'tests.yml cubre Linux y Windows'
+$ciIdx = $body.IndexOf('gh run list --workflow tests.yml')
+Check ($ciIdx -gt 0 -and $ciIdx -lt $tagIdx) 'release.ps1 exige CI verde ANTES de pushear el tag'
+Check ($body.Contains("conclusion -eq 'success'")) 'release.ps1 solo acepta una corrida exitosa'
+
 if ($fails) { throw "$fails release-script regression(s) failed" }
 Write-Host 'All release-script regressions passed.'

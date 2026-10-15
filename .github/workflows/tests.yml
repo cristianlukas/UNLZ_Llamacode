@@ -1,0 +1,138 @@
+# Gate de tests en CI: compila con BUILD_TESTS=ON y corre ctest en Linux y
+# Windows en cada push a main y en cada PR. Es el mismo gate que tests.bat /
+# scripts/tests-linux.sh, pero sobre el commit exacto que se pushea (el gate local
+# corre en la maquina de quien publica y puede no haber visto un merge).
+#
+# tools/release.ps1 -Publish exige que este workflow este en verde para el
+# commit que se taggea (salvo -Force).
+#
+# Mismo toolchain que release-binaries.yml (Qt 6.8.3 via aqtinstall, MSVC v143).
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  QT_VERSION: 6.8.3
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      QT_DIR: /home/runner/Qt/6.8.3/gcc_64
+    steps:
+      # Sin artifacts/ (receipts de benchmarks): no hacen falta para compilar.
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            /*
+            !/artifacts/
+          sparse-checkout-cone-mode: false
+
+      - name: System packages
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y --no-install-recommends \
+            cmake ninja-build build-essential pkg-config python3-venv \
+            libglib2.0-0 libgl1-mesa-dev libegl1 libxkbcommon0 libxkbcommon-x11-0 \
+            libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
+            libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 \
+            libfontconfig1 libfreetype6 libdbus-1-3 libpulse0 libsecret-1-dev \
+            xvfb xauth
+
+      - name: Cache Qt
+        id: qt-cache
+        uses: actions/cache@v4
+        with:
+          path: /home/runner/Qt
+          key: qt-${{ env.QT_VERSION }}-linux_gcc_64-qtmultimedia
+
+      - name: Install Qt (aqtinstall)
+        if: steps.qt-cache.outputs.cache-hit != 'true'
+        run: |
+          python3 -m venv ~/.aqt && ~/.aqt/bin/pip install aqtinstall
+          ~/.aqt/bin/aqt install-qt linux desktop "$QT_VERSION" linux_gcc_64 -O ~/Qt --modules qtmultimedia
+
+      - name: Build (BUILD_TESTS=ON)
+        run: |
+          cmake -S . -B build_tests -G Ninja -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="$QT_DIR" -DBUILD_TESTS=ON
+          cmake --build build_tests -j "$(nproc)"
+
+      - name: ctest
+        env:
+          LD_LIBRARY_PATH: ${{ env.QT_DIR }}/lib
+        run: ctest --test-dir build_tests --output-on-failure -j 2
+
+  windows:
+    runs-on: windows-2025
+    timeout-minutes: 120
+    env:
+      QT_DIR: C:\Qt\6.8.3\msvc2022_64
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            /*
+            !/artifacts/
+          sparse-checkout-cone-mode: false
+
+      - name: Cache Qt
+        id: qt-cache
+        uses: actions/cache@v4
+        with:
+          path: C:\Qt
+          key: qt-${{ env.QT_VERSION }}-win64_msvc2022_64-qtmultimedia
+
+      - name: Install Qt (aqtinstall)
+        if: steps.qt-cache.outputs.cache-hit != 'true'
+        shell: powershell
+        run: |
+          python -m pip install --upgrade aqtinstall
+          python -m aqt install-qt windows desktop $env:QT_VERSION win64_msvc2022_64 -O C:\Qt --modules qtmultimedia
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      # Ver release-binaries.yml: VS 2026 de la imagen no compila C++/WinRT en C++17.
+      - name: Select MSVC v143
+        shell: powershell
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vs17 = & $vswhere -products * -version '[17.0,18.0)' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          $v143 = & $vswhere -products * -requires Microsoft.VisualStudio.Component.VC.v143.x86.x64 -property installationVersion | Select-Object -First 1
+          if ($vs17) { $gen = 'Visual Studio 17 2022'; $toolset = '' }
+          elseif ($v143) {
+            $gen = (& cmake --help | Select-String -Pattern '^\*?\s*(Visual Studio 18 \d+)' | Select-Object -First 1).Matches.Groups[1].Value
+            $toolset = 'v143'
+          } else {
+            winget install --id Microsoft.VisualStudio.2022.BuildTools --exact --override "--quiet --wait --norestart --nocache --installPath C:\BuildTools2022 --add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.VC.v143.x86.x64 --add Microsoft.VisualStudio.Component.Windows11SDK.22621" --accept-source-agreements --accept-package-agreements
+            $gen = 'Visual Studio 17 2022'; $toolset = ''
+          }
+          "generator=$gen toolset=$toolset"
+          "LC_GENERATOR=$gen" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+          "LC_TOOLSET=$toolset" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+
+      - name: Build (BUILD_TESTS=ON)
+        shell: powershell
+        run: |
+          $toolsetArgs = @(if ($env:LC_TOOLSET) { '-T', $env:LC_TOOLSET })
+          cmake -S . -B build_tests -G $env:LC_GENERATOR -A x64 @toolsetArgs -DCMAKE_PREFIX_PATH="$env:QT_DIR" -DBUILD_TESTS=ON
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          cmake --build build_tests --config Release -- /maxcpucount
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      - name: ctest
+        shell: powershell
+        run: |
+          ctest --test-dir build_tests -C Release --output-on-failure
+          if ($LASTEXITCODE -ne 0) { exit 1 }

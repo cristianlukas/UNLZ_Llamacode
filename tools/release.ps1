@@ -76,6 +76,33 @@ try {
         Fail 'gh CLI no encontrado; instalalo o publica el release a mano.'
     }
 
+    # CI verde (tests.yml) para el commit que se taggea. El gate local corre en la
+    # maquina de quien publica y no ve los merges de otros. El commit "Release
+    # vX.Y.Z" solo cambia la version: vale el CI del commit anterior.
+    if (-not $Force) {
+        $head = (git rev-parse HEAD).Trim()
+        $candidates = @($head)
+        $changed = @(git diff --name-only HEAD~1 HEAD 2>$null)
+        $versionOnly = ($changed.Count -eq 1 -and $changed[0] -eq 'CMakeLists.txt' -and
+            (@(git diff -U0 HEAD~1 HEAD -- CMakeLists.txt | Where-Object { $_ -match '^[+-][^+-]' -and $_ -notmatch 'project\(LlamaCode VERSION' }).Count -eq 0))
+        if ($versionOnly) { $candidates += (git rev-parse HEAD~1).Trim() }
+        $green = $null
+        $lastState = 'sin corridas'
+        foreach ($sha in $candidates) {
+            $json = gh run list --workflow tests.yml --commit $sha --json status,conclusion --limit 1 2>$null
+            $run = $null
+            try { $run = @($json | ConvertFrom-Json) | Select-Object -First 1 } catch {}
+            if ($run) {
+                $lastState = "$($run.status)/$($run.conclusion)"
+                if ($run.status -eq 'completed' -and $run.conclusion -eq 'success') { $green = $sha; break }
+            }
+        }
+        if (-not $green) {
+            Fail "El CI (tests.yml) no esta verde para $head ($lastState). Pushea main, espera el gate de CI y reintenta (o -Force)."
+        }
+        Write-Host "[OK] CI verde para $green"
+    }
+
     if (-not $existing) {
         git tag -a $tag -m "LlamaCode $Version $Channel"
         if ($LASTEXITCODE -ne 0) { Fail 'git tag fallo' }
