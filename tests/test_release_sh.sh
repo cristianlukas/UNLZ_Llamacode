@@ -89,5 +89,10 @@ out="$(bash scripts/release.sh --version 0.3.2 --channel debug --publish 2>&1)" 
 check '[ $rc -ne 0 ] && [[ "$out" == *"sin corridas"* ]]' "commit con cambios y sin CI: no publica"
 : > "$CI_NONE"
 
+# tests.yml en main no se cancela entre pushes: si no, nunca hay un run verde
+# que exigir y no se puede publicar sin --force.
+wf="$(dirname "$src")/../.github/workflows/tests.yml"
+check 'grep -qF "group: tests-\${{ github.ref == '"'"'refs/heads/main'"'"' && github.sha || github.ref }}" "$wf" && grep -qF "cancel-in-progress: \${{ github.ref != '"'"'refs/heads/main'"'"' }}" "$wf"' "tests.yml no cancela runs de main (grupo por commit)"
+
 if [ $fails -eq 0 ]; then echo "TODO OK"; exit 0; fi
 echo "$fails FALLAS"; exit 1

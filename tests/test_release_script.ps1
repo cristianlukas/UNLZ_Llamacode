@@ -67,6 +67,7 @@ $testsWf = [IO.File]::ReadAllText((Join-Path $root '.github\workflows\tests.yml'
 Check ($testsWf -match 'branches: \[main\]' -and $testsWf.Contains('pull_request:')) 'tests.yml corre en cada push a main y en PRs'
 Check ($testsWf.Contains('-DBUILD_TESTS=ON') -and $testsWf.Contains('ctest --test-dir build_tests')) 'tests.yml compila los tests y corre ctest'
 Check ($testsWf.Contains('linux:') -and $testsWf.Contains('windows:')) 'tests.yml cubre Linux y Windows'
+Check ($testsWf.Contains("cancel-in-progress: `${{ github.ref != 'refs/heads/main' }}") -and $testsWf.Contains('github.sha')) 'tests.yml no cancela runs de main (si no, nunca hay uno verde para publicar)'
 $ciIdx = $body.IndexOf('gh run list --workflow tests.yml')
 Check ($ciIdx -gt 0 -and $ciIdx -lt $tagIdx) 'release.ps1 exige CI verde ANTES de pushear el tag'
 Check ($body.Contains("conclusion -eq 'success'")) 'release.ps1 solo acepta una corrida exitosa'

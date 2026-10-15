@@ -15,9 +15,13 @@ on:
   pull_request:
   workflow_dispatch:
 
+# En main cada commit tiene su propio grupo (sha) y nunca se cancela: release.ps1
+# / release.sh exigen un run VERDE del commit que se taggea, y con un grupo por
+# rama cada push cancelaba al anterior (7 de 7 runs cancelados, ninguno verde).
+# En PRs si se cancela el run viejo del mismo PR.
 concurrency:
-  group: tests-${{ github.ref }}
-  cancel-in-progress: true
+  group: tests-${{ github.ref == 'refs/heads/main' && github.sha || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
   contents: read
