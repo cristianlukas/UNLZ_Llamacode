@@ -27,6 +27,7 @@ on:
     branches: [main]
     paths:
       - .github/workflows/release-binaries.yml
+      - .github/workflows/release-binaries-upload.yml
       - scripts/package-windows.ps1
       - scripts/package-linux.sh
       - scripts/update-binary.ps1
@@ -272,28 +273,20 @@ jobs:
             dist/*.tar.gz
             dist/*.tar.gz.sha256
 
-  publish:
-    needs: [meta, windows, linux]
+  # Un publish por plataforma: si un SO falla, el otro igual llega a la
+  # release (el app de cada SO solo busca su propio asset).
+  publish-windows:
+    needs: [meta, windows]
     if: needs.meta.outputs.upload == 'true'
-    runs-on: ubuntu-24.04
-    env:
-      TAG: ${{ needs.meta.outputs.tag }}
-      GH_TOKEN: ${{ github.token }}
-      GH_REPO: ${{ github.repository }}
-    steps:
-      - uses: actions/download-artifact@v7
-        with:
-          path: dist
-          merge-multiple: true
+    uses: ./.github/workflows/release-binaries-upload.yml
+    with:
+      tag: ${{ needs.meta.outputs.tag }}
+      artifact: windows
 
-      # release.ps1 / release.sh pushean el tag y RECIEN DESPUES crean la
-      # release: normalmente ya existe cuando el build termina, pero se espera.
-      - name: Upload to the release
-        run: |
-          ls -la dist
-          for i in $(seq 1 30); do
-            gh release view "$TAG" >/dev/null 2>&1 && break
-            echo "release $TAG todavia no existe; esperando..."; sleep 20
-          done
-          gh release view "$TAG" >/dev/null || { echo "::error::no existe la release $TAG"; exit 1; }
-          gh release upload "$TAG" dist/* --clobber
+  publish-linux:
+    needs: [meta, linux]
+    if: needs.meta.outputs.upload == 'true'
+    uses: ./.github/workflows/release-binaries-upload.yml
+    with:
+      tag: ${{ needs.meta.outputs.tag }}
+      artifact: linux

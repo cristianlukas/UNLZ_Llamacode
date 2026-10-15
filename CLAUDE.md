@@ -41,8 +41,8 @@ Reglas:
 | LlmGateway LAN (log por request, política "clientes LAN no cambian el modelo", detección loopback) | `tests/test_gateway.cpp` |
 | Lista de clientes LAN, reconexión del agente cliente, API key del gateway | `tests/test_system_profiles.cpp` |
 | `scripts/release.sh` (dry run, --bump, --promote, gh falso) | `tests/test_release_sh.sh` (ctest `release_sh`) |
-| "Actualizar" con binario: asset por SO/canal + hash, carpeta de instalación binaria, args del actualizador, terminal Linux | `tests/test_appcontroller.cpp` |
-| `scripts/update-binary.sh` (hash, swap, migración, autostart) | `tests/test_update_binary_sh.sh` (ctest `update_binary_sh`, sólo Unix) |
+| "Actualizar" con binario: asset por SO/canal + hash, carpeta de instalación binaria, args del actualizador, terminal Linux, `launcher.env` desde las `LLAMACODE_*` | `tests/test_appcontroller.cpp` |
+| `scripts/update-binary.sh` (hash, swap, migración, autostart, lanzador + `launcher.env`, repunte de wrapper, aviso de herramientas) | `tests/test_update_binary_sh.sh` (ctest `update_binary_sh`, sólo Unix) |
 | `scripts/update-binary.ps1` (hash, swap, rollback, `irm \| iex`) | `tests/test_bootstrap_script.ps1` (fuera de ctest) |
 | AgentProfile (perfiles de agente: capacidades+directivas, presets, gating system prompt) | `tests/test_agent_profiles.cpp` |
 | HarnessSpec (harness modular: herencia por módulo, packs, permisos, fases, migración legacy) | `tests/test_harness_spec.cpp` |
@@ -360,6 +360,19 @@ carpeta entera (rename; rollback si falla) y relanza. Datos de usuario no se toc
   y se repuntan los accesos directos (menú Inicio, escritorio, barra de tareas,
   `HKCU\...\Run`; en Linux `.desktop` y autostart) que apuntaban al exe viejo.
   El checkout queda intacto (ya no hay `reset --hard`).
+- Linux: el menú, el autostart y el relanzado pasan por `<instalación>/llamacode`,
+  un lanzador que escribe `update-binary.sh` en cada update: limpia el Qt de un
+  wrapper de desarrollo (`LD_LIBRARY_PATH`, rutas de plugins/QML) y hace
+  `set -a; .` de `~/.config/llamacode/launcher.env`. Ese archivo lo crea el app
+  en el primer "Actualizar" con sus `LLAMACODE_*` (perfiles compartidos en NTFS,
+  model roots, raíces `C:`/`D:`) y **nunca lo pisa**: sin él una instalación
+  binaria lanzada desde el menú abría sin los perfiles del wrapper. El app pasa
+  `--legacy-launcher $LLAMACODE_LAUNCHER`: los `.desktop`/autostart que lanzaban
+  ese wrapper pasan al lanzador (match de ruta completa: `llamacode` es prefijo
+  de `llamacode-debug`) y un `.desktop` propio con el mismo id queda como `.bak`.
+  tesseract/xdotool/wmctrl/bwrap no van en el paquete: el script avisa si faltan.
+- Cada SO se publica por separado (`release-binaries-upload.yml`): si falla el
+  build de Windows, el paquete Linux igual llega a la release.
 - Release sin assets (vieja, o el CI todavía compilando): un checkout cae al
   bootstrap que compila; una instalación binaria no ofrece el update hasta que
   aparezcan. `updates/fromSource=true` (QSettings) fuerza el bootstrap.

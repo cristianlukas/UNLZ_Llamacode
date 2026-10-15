@@ -1,0 +1,42 @@
+# Sube los paquetes de UNA plataforma a la release del tag (lo llama
+# release-binaries.yml una vez por SO, para que un SO no frene al otro).
+name: release-binaries-upload
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+      artifact:
+        description: 'Nombre del artifact del run (windows | linux)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  upload:
+    runs-on: ubuntu-24.04
+    env:
+      TAG: ${{ inputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          name: ${{ inputs.artifact }}
+          path: dist
+
+      # release.ps1 / release.sh pushean el tag y RECIEN DESPUES crean la
+      # release: normalmente ya existe cuando el build termina, pero se espera.
+      - name: Upload to the release
+        run: |
+          ls -la dist
+          for i in $(seq 1 30); do
+            gh release view "$TAG" >/dev/null 2>&1 && break
+            echo "release $TAG todavia no existe; esperando..."; sleep 20
+          done
+          gh release view "$TAG" >/dev/null || { echo "::error::no existe la release $TAG"; exit 1; }
+          gh release upload "$TAG" dist/* --clobber

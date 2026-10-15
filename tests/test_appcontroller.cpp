@@ -7,6 +7,7 @@
 #include "core/voice/VoiceController.h"
 #include <QStandardPaths>
 #include <QTemporaryDir>
+#include <QProcess>
 #include <QTemporaryFile>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -183,6 +184,7 @@ private slots:
     void binaryInstallOnlyOffersReleasesWithAsset();
     void binaryUpdateArgumentsPerPlatform();
     void linuxUpdateRunsInFirstAvailableTerminal();
+    void linuxLauncherEnvKeepsWrapperVariables();
     void binaryUpdaterScriptsAreBundled();
     void importUserDataFromRoundTrips();
     void exportUserDataToEmptyPathErrors();
@@ -603,6 +605,67 @@ void AppControllerTests::binaryUpdateArgumentsPerPlatform()
     QCOMPARE(valueOf(sh, "--wait-pid"), QStringLiteral("7"));
     QCOMPARE(valueOf(sh, "--legacy-exe"), QStringLiteral("/home/u/LlamaCode/build/LlamaCode"));
     QVERIFY(!sh.contains(QStringLiteral("-AssetUrl")));
+    QVERIFY(!sh.contains(QStringLiteral("--legacy-launcher")));
+
+    // El wrapper que lanzaba el app solo viaja al .sh (sus .desktop pasan al lanzador nuevo).
+    const QString wrapper = QStringLiteral("/home/u/.local/bin/llamacode");
+    const QStringList shWrapped = AppController::binaryUpdateArguments(
+        QStringLiteral("linux"), asset, QStringLiteral("prod"), QStringLiteral("0.3.0"),
+        QStringLiteral("/home/u/.local/opt/LlamaCode"), 7, QString(), wrapper);
+    QCOMPARE(valueOf(shWrapped, "--legacy-launcher"), wrapper);
+    const QStringList winWrapped = AppController::binaryUpdateArguments(
+        QStringLiteral("windows"), asset, QStringLiteral("prod"), QStringLiteral("0.3.0"),
+        QStringLiteral("C:/x"), 7, QString(), wrapper);
+    QVERIFY(!winWrapped.contains(wrapper));
+    QVERIFY(!winWrapped.contains(QString()));
+}
+
+// Un wrapper propio (config compartida Windows/Linux en NTFS, model roots)
+// define LLAMACODE_*; la instalacion binaria se lanza sin el, asi que "Actualizar"
+// las guarda para su lanzador. Sin esto el app abria sin perfiles.
+void AppControllerTests::linuxLauncherEnvKeepsWrapperVariables()
+{
+    QProcessEnvironment env;
+    env.insert(QStringLiteral("LLAMACODE_PROFILES_DIR"), QStringLiteral("/media/x/Llama Code/profiles"));
+    env.insert(QStringLiteral("LLAMACODE_WINDOWS_D_ROOT"), QStringLiteral("/media/u/Disco local"));
+    env.insert(QStringLiteral("LLAMACODE_MODEL_ROOTS_FILE"), QStringLiteral("/m/it's.json"));
+    env.insert(QStringLiteral("LLAMACODE_LAUNCHER"), QStringLiteral("/home/u/.local/bin/llamacode"));
+    env.insert(QStringLiteral("LD_LIBRARY_PATH"), QStringLiteral("/home/u/Qt/lib"));
+    const QString content = AppController::linuxLauncherEnv(env);
+    QVERIFY(content.contains(QStringLiteral("LLAMACODE_PROFILES_DIR='/media/x/Llama Code/profiles'\n")));
+    QVERIFY(content.contains(QStringLiteral("LLAMACODE_WINDOWS_D_ROOT='/media/u/Disco local'\n")));
+    QVERIFY(content.contains(QStringLiteral("LLAMACODE_MODEL_ROOTS_FILE='/m/it'\\''s.json'\n")));
+    // El lanzador nuevo se apunta a si mismo; LD_LIBRARY_PATH taparia las libs del paquete.
+    QVERIFY(!content.contains(QStringLiteral("LLAMACODE_LAUNCHER")));
+    QVERIFY(!content.contains(QStringLiteral("LD_LIBRARY_PATH")));
+    QVERIFY(AppController::linuxLauncherEnv(QProcessEnvironment()).isEmpty());
+
+    // Shell real: el archivo se lee como lo hace el lanzador.
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString path = dir.filePath(QStringLiteral("cfg/llamacode/launcher.env"));
+    QVERIFY(AppController::writeLinuxLauncherEnvIfMissing(path, env));
+#ifndef Q_OS_WIN
+    QProcess sh;
+    sh.start(QStringLiteral("bash"), {QStringLiteral("-c"),
+        QStringLiteral("set -a; . \"$1\"; set +a; printf '%s|%s' \"$LLAMACODE_PROFILES_DIR\" \"$LLAMACODE_MODEL_ROOTS_FILE\""),
+        QStringLiteral("_"), path});
+    QVERIFY(sh.waitForFinished(10000));
+    QCOMPARE(QString::fromUtf8(sh.readAllStandardOutput()),
+             QStringLiteral("/media/x/Llama Code/profiles|/m/it's.json"));
+#endif
+    // Nunca pisa lo que ya existe (el usuario puede haberlo editado).
+    QFile edited(path);
+    QVERIFY(edited.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    edited.write("LLAMACODE_PROFILES_DIR=/mine\n");
+    edited.close();
+    QVERIFY(!AppController::writeLinuxLauncherEnvIfMissing(path, env));
+    QVERIFY(edited.open(QIODevice::ReadOnly));
+    QCOMPARE(edited.readAll(), QByteArray("LLAMACODE_PROFILES_DIR=/mine\n"));
+    // Sin variables no crea un archivo vacio.
+    const QString none = dir.filePath(QStringLiteral("none/launcher.env"));
+    QVERIFY(!AppController::writeLinuxLauncherEnvIfMissing(none, QProcessEnvironment()));
+    QVERIFY(!QFile::exists(none));
 }
 
 // En Linux el update se veia como "se cierra y no hace nada": corria en un bash

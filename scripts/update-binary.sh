@@ -11,8 +11,16 @@
 #
 #   update-binary.sh [--channel prod|debug] [--asset-url URL] [--sha256 HEX]
 #                    [--sha256-url URL] [--install-dir DIR] [--version X.Y.Z]
-#                    [--wait-pid PID] [--legacy-exe PATH] [--no-launch]
+#                    [--wait-pid PID] [--legacy-exe PATH]
+#                    [--legacy-launcher PATH] [--no-launch]
 #                    [--no-shortcuts] [--no-pause]
+#
+# Menu entry, autostart and relaunch go through <install>/llamacode, a launcher
+# written here that clears a dev wrapper's Qt paths and sources
+# ~/.config/llamacode/launcher.env (personal env: shared profiles, model roots;
+# the app fills it from its own LLAMACODE_* vars the first time).
+# --legacy-exe / --legacy-launcher: entries that started the old binary or a
+# wrapper script now start that launcher.
 #
 # User data lives in ~/.local/share and ~/.config: never touched here.
 set -euo pipefail
@@ -26,6 +34,7 @@ INSTALL_DIR="${LC_INSTALL_DIR:-}"
 VERSION=""
 WAIT_PID=0
 LEGACY_EXE=""
+LEGACY_LAUNCHER=""
 NO_LAUNCH="${LC_NORUN:-}"
 NO_SHORTCUTS=""
 NO_PAUSE=""
@@ -40,6 +49,7 @@ while [ $# -gt 0 ]; do
         --version) VERSION="$2"; shift 2 ;;
         --wait-pid) WAIT_PID="$2"; shift 2 ;;
         --legacy-exe) LEGACY_EXE="$2"; shift 2 ;;
+        --legacy-launcher) LEGACY_LAUNCHER="$2"; shift 2 ;;
         --no-launch) NO_LAUNCH=1; shift ;;
         --no-shortcuts) NO_SHORTCUTS=1; shift ;;
         --no-pause) NO_PAUSE=1; shift ;;
@@ -191,6 +201,23 @@ fi
 [ -n "$OLD" ] && rm -rf "$OLD"
 rm -rf "$WORK"; WORK=""
 EXE="$INSTALL_DIR/usr/bin/LlamaCode"
+LAUNCHER="$INSTALL_DIR/llamacode"
+# Written on every update (the install folder was just replaced). Full path in
+# the exec: the pgrep above finds running copies by their command line.
+cat > "$LAUNCHER" <<'SH'
+#!/usr/bin/env bash
+# LlamaCode launcher (written by update-binary.sh on every update).
+# Personal environment: ${XDG_CONFIG_HOME:-~/.config}/llamacode/launcher.env
+here="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+# A dev wrapper's Qt (LD_LIBRARY_PATH, plugin/QML paths) would shadow the
+# bundled one when the app relaunches itself or is started from its terminal.
+unset LD_LIBRARY_PATH QT_PLUGIN_PATH QT_QPA_PLATFORM_PLUGIN_PATH QML2_IMPORT_PATH QML_IMPORT_PATH
+env_file="${XDG_CONFIG_HOME:-$HOME/.config}/llamacode/launcher.env"
+if [ -f "$env_file" ]; then set -a; . "$env_file"; set +a; fi
+export LLAMACODE_LAUNCHER="$here/llamacode"
+cd "$here/usr/bin" && exec "$here/usr/bin/LlamaCode" "$@"
+SH
+chmod +x "$LAUNCHER"
 ok "Installed: $EXE"
 
 if [ -z "$NO_SHORTCUTS" ]; then
@@ -198,38 +225,67 @@ if [ -z "$NO_SHORTCUTS" ]; then
     mkdir -p "$apps"
     if [ "$CHANNEL" = debug ]; then id=llamacode-debug; title="LlamaCode Debug"; else id=llamacode; title="LlamaCode"; fi
     icon="$INSTALL_DIR/llamacode.png"
-    cat > "$apps/$id.desktop" <<EOF
+    entry="$apps/$id.desktop"
+    # Same id as a hand-made entry (e.g. one that ran a dev wrapper): keep a copy.
+    if [ -f "$entry" ] && ! grep -qF "$INSTALL_DIR/" "$entry"; then
+        cp -f "$entry" "$entry.bak"
+        info "Previous menu entry saved as $entry.bak"
+    fi
+    cat > "$entry" <<EOF
 [Desktop Entry]
 Type=Application
 Name=$title
 Comment=UNLZ LlamaCode
-Exec="$EXE"
+Exec="$LAUNCHER"
 Path=$INSTALL_DIR/usr/bin
 Icon=$icon
 Terminal=false
 Categories=Development;
 EOF
-    ok "Menu entry: $apps/$id.desktop"
-    # Entries (menu, autostart) that launched the OLD binary now launch the new one.
-    if [ -n "$LEGACY_EXE" ] && [ "$LEGACY_EXE" != "$EXE" ]; then
+    ok "Menu entry: $entry"
+    # Entries (menu, autostart) that launched the OLD binary or wrapper now
+    # launch the new install. Whole paths only: ~/.local/bin/llamacode must not
+    # rewrite ~/.local/bin/llamacode-debug.
+    for legacy in "$LEGACY_EXE" "$LEGACY_LAUNCHER"; do
+        [ -n "$legacy" ] && [ "$legacy" != "$EXE" ] && [ "$legacy" != "$LAUNCHER" ] || continue
         for f in "$apps"/*.desktop "${XDG_CONFIG_HOME:-$HOME/.config}"/autostart/*.desktop; do
-            [ -f "$f" ] && grep -qF "$LEGACY_EXE" "$f" || continue
-            python3 -I - "$f" "$LEGACY_EXE" "$EXE" <<'PY' && ok "Now points to the new install: $f"
-import sys
+            [ -f "$f" ] && grep -qF "$legacy" "$f" || continue
+            python3 -I - "$f" "$legacy" "$LAUNCHER" <<'PY' && ok "Now points to the new install: $f"
+import re, sys
 p, old, new = sys.argv[1:4]
 s = open(p, encoding='utf-8').read()
-open(p, 'w', encoding='utf-8').write(s.replace(old, new))
+t = re.sub(re.escape(old) + r'(?=["\'\s]|$)', lambda m: new, s, flags=re.M)
+if t == s:
+    sys.exit(1)
+open(p, 'w', encoding='utf-8').write(t)
 PY
         done
+    done
+fi
+
+# Runtime tools the package cannot bundle (desktop automation, OCR, sandbox).
+# The app starts without them; the matching features fail. Warn, don't block.
+missing=""
+for tool in ${LC_RUNTIME_TOOLS:-tesseract xdotool wmctrl bwrap}; do
+    if ! command -v "$tool" >/dev/null 2>&1; then
+        missing="$missing $tool"
+    elif [ "$tool" = tesseract ] && ! tesseract --list-langs 2>/dev/null | grep -qx spa; then
+        # Spanish OCR is preferred (OcrEngine); English-only misreads the UI.
+        missing="$missing tesseract-ocr-spa"
     fi
+done
+if [ -n "$missing" ]; then
+    printf '\033[33m[!] Missing optional tools:%s\033[0m\n' "$missing"
+    echo "    Computer use / OCR / sandboxed workers need them. On Ubuntu/Debian:"
+    echo "    sudo apt install tesseract-ocr tesseract-ocr-spa xdotool wmctrl bubblewrap at-spi2-core x11-utils"
 fi
 
 if [ -z "$NO_LAUNCH" ]; then
     if [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]; then
         info "Launching LlamaCode..."
-        ( cd "$INSTALL_DIR/usr/bin" && setsid nohup "$EXE" ) >/dev/null 2>&1 </dev/null &
+        setsid nohup "$LAUNCHER" >/dev/null 2>&1 </dev/null &
     else
-        info "No display detected. Run: $EXE"
+        info "No display detected. Run: $LAUNCHER"
     fi
 fi
 echo ""
