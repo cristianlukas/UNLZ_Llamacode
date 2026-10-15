@@ -395,7 +395,10 @@ carpeta entera (rename; rollback si falla) y relanza. Datos de usuario no se toc
   versiones >= `ATTESTED_SINCE` (0.1.128) si `gh` está logueado: si falla, no
   instala; sin `gh` avisa y sigue (el SHA-256 sólo prueba que la descarga
   coincide con el asset, no quién lo subió). `LC_REQUIRE_ATTESTATION=1` la exige
-  siempre. A mano: `gh attestation verify <archivo> --repo cristianlukas/UNLZ_Llamacode`.
+  siempre (y sin `gh` logueado no instala). Probar la firma sin release:
+  `gh workflow run release-binaries.yml -f tag=<tag existente> -f upload=false`
+  (firma los artifacts del run) y `gh attestation verify` sobre lo bajado con
+  `gh run download`. A mano: `gh attestation verify <archivo> --repo cristianlukas/UNLZ_Llamacode`.
   `update-binary.ps1` todavía no la verifica.
 - Limpieza: la copia `llamacode-update-binary-<pid>.sh` en TMP se borra sola al
   terminar; el app borra las de updates anteriores (el `.ps1` de Windows no se

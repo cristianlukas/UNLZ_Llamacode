@@ -198,6 +198,9 @@ if { [ -n "$VERSION" ] && version_ge "$VERSION" "$ATTESTED_SINCE"; } || [ -n "${
             tail -5 "$WORK/attest.txt" | sed 's/^/        /'
             fail "Provenance check failed: this package was not built by the $REPO release workflow. Nothing was changed."
         fi
+    elif [ -n "${LC_REQUIRE_ATTESTATION:-}" ]; then
+        # Required means required: never fall back to the hash alone.
+        fail "LC_REQUIRE_ATTESTATION is set but the provenance cannot be checked: install the GitHub CLI and run gh auth login. Nothing was changed."
     else
         printf '\033[33m[!] Provenance not verified (needs the GitHub CLI: gh auth login).\033[0m\n'
         echo "    The SHA-256 above only proves the download matches the release asset."

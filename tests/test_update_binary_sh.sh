@@ -194,6 +194,8 @@ PATH="$ghbin:$PATH" FAKE_GH_AUTH=1 run --asset-url "$work/v2.tar.gz" --sha256-ur
 check '[ $rc -eq 0 ] && grep -q "Provenance not verified" "$work/out.txt" && [ ! -s "$FAKE_GH_LOG" ]' "sin gh logueado: avisa y sigue (el hash igual se verifica)"
 PATH="$ghbin:$PATH" FAKE_GH_FAIL=1 LC_REQUIRE_ATTESTATION=1 run --asset-url "$work/v3.tar.gz" --sha256-url "$work/v3.tar.gz.sha256" --install-dir "$att" && rc=0 || rc=$?
 check '[ $rc -eq 1 ] && grep -q "Provenance check failed" "$work/out.txt"' "LC_REQUIRE_ATTESTATION exige la firma sin version"
+PATH="$ghbin:$PATH" FAKE_GH_AUTH=1 LC_REQUIRE_ATTESTATION=1 run --asset-url "$work/v3.tar.gz" --sha256-url "$work/v3.tar.gz.sha256" --install-dir "$att" && rc=0 || rc=$?
+check '[ $rc -eq 1 ] && grep -q "cannot be checked" "$work/out.txt" && [ "$(cat "$att/version.txt")" = v2 ]' "LC_REQUIRE_ATTESTATION sin gh logueado: no instala (no cae al hash solo)"
 
 # La copia que el app deja en TMP se borra sola (con exito o con error).
 mkdir -p "$work/tmp"
