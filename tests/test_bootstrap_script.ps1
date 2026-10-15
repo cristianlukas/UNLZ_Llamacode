@@ -124,6 +124,9 @@ Check ($ubText.Contains('"LlamaCode-$tag-windows-x64.zip"')) 'el actualizador bu
 Check ($app.Contains('LlamaCode-%1-windows-x64.zip')) 'el app elige el mismo nombre'
 Check ($wf.Contains('LlamaCode-$env:TAG-windows-x64.zip')) 'el CI sube el mismo nombre'
 Check ($ubText.Contains("'Local\LlamaCodeBootstrap'")) 'comparte el mutex con bootstrap.ps1 (un update a la vez)'
+# PS 5.1: @(Invoke-RestMethod) envuelve el array JSON en UN elemento y el
+# instalador standalone no encontraba ninguna release (paso con v0.1.127-debug).
+Check (-not ($ubText -match '@\(\s*Invoke-RestMethod')) 'no envuelve Invoke-RestMethod en @() (array de un elemento en PS 5.1)'
 Check ($app.Contains('launcher.setCreateProcessArgumentsModifier(showInNewConsole);' + "`n" + '    return launcher.startDetached();') -or
        ($app -match 'showInNewConsole\);\s*\r?\n\s*return launcher\.startDetached\(\);')) 'el update binario corre en una consola visible'
 

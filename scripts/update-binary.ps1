@@ -63,7 +63,9 @@ function Get-DefaultInstallDir([string]$channel) {
 
 function Resolve-LatestAsset([string]$channel) {
     $headers = @{ 'Accept' = 'application/vnd.github+json'; 'User-Agent' = 'LlamaCode-updater' }
-    $releases = @(Invoke-RestMethod -Headers $headers -Uri "https://api.github.com/repos/$Repo/releases?per_page=50")
+    # Sin @(...): en PS 5.1 Invoke-RestMethod emite el array JSON como UN objeto
+    # y @() lo envolveria en un array de un solo elemento (no veia ninguna release).
+    $releases = Invoke-RestMethod -Headers $headers -Uri "https://api.github.com/repos/$Repo/releases?per_page=50"
     $pattern = if ($channel -eq 'debug') { '^v(\d+\.\d+\.\d+)-debug$' } else { '^v(\d+\.\d+\.\d+)$' }
     $best = $null; $bestVer = $null
     foreach ($r in $releases) {
