@@ -1,0 +1,98 @@
+{
+  "task_id": "Q-20261015-DUAL5070TI-VLLM",
+  "reviewed_at": "2026-10-15",
+  "question": "Evaluar claims de dual-gpus-vllm/ExTV y NInfer TP2 (actual capy-flash) para su transferencia a LlamaCode.",
+  "primary_sources": [
+    {
+      "url": "https://github.com/ExTV/dual-gpus-vllm",
+      "claims": [
+        "Qwen3.8-27B, vLLM 0.30.0 con pipeline parallel sobre RTX 5090 32 GB + RTX 4070 Ti SUPER 16 GB; 262144 tokens; patches locales y shim.",
+        "NVFP4+DFlash2, W8A16+DFlash2, FP8+DFlash2 y FP8+MTP; vision, tool calls y API compatible se anuncian."
+      ],
+      "limits": [
+        "El README y las cifras son del autor; no se adjuntan logs crudos descargables ni una medición LlamaCode.",
+        "La configuración medida tiene GPUs heterogéneas y no representa dos RTX 3090 iguales."
+      ]
+    },
+    {
+      "url": "https://github.com/ExTV/dual-gpus-vllm/blob/main/docs/benchmarks.md",
+      "claims": [
+        "Benchmark medido el 2026-10-01, dos boots para decode; 32K prefill 6.1 s y 250K 111.7 s para NVFP4+DFlash2.",
+        "NVFP4+DFlash2: 215–259 tok/s code, 233 reasoning y 110–119 prose; aceptación depende del contenido.",
+        "Host de referencia: 31 GiB RAM, CUDA 13.4, vLLM 0.30.0; 250K peak 31,055 MiB en 5090 y 10,487 MiB en 4070 Ti SUPER."
+      ],
+      "limits": [
+        "Los números son de una configuración/host y el propio autor pide comparar ms por decode-step debido a variación en aceptación.",
+        "El 5K tok/s aproximado corresponde a prompt corto de 32K; no al prefill de 250K."
+      ]
+    },
+    {
+      "url": "https://github.com/ExTV/dual-gpus-vllm/blob/main/launchers/w8a16-dflash2-262k.sh",
+      "claims": [
+        "El launcher W8A16 exacto usa checkpoint lued Qwen3.8-27B-huihui-abliterated y DFlash2; PP rank pequeño primero, grande segundo; default 21/43 layers.",
+        "Está fijado a la distribución de referencia; NVFP4 requiere GPU Blackwell grande y el FP8 tuning también tiene supuestos específicos de hardware."
+      ],
+      "limits": [
+        "No se declara configuración validada en dos RTX 3090 idénticas."
+      ]
+    },
+    {
+      "url": "https://github.com/ValerioDolci/capy-flash",
+      "former_url": "https://github.com/ValerioDolci/ninfer-tp2",
+      "claims": [
+        "El enlace ninfer-tp2 redirige a capy-flash (renombrado en v0.5.0); v0.5.1, fecha 2026-10-15.",
+        "El repo actual publica resultados para Qwen3.8-Flash-Next 125B MoE y conserva servicio de Qwen3.8-27B NVFP4.",
+        "Referencia densa anterior: replay de 53 turnos, TTFT 1.42 s, 171.2 tok/s decode y 156 s total en dos RTX 5070 Ti; no es una medición en nuestro host.",
+        "Flash-Next 125B: 20/20 tareas de una task bank privada (5 tareas x 4 corridas), sin tool calls malformadas en 1124; tarea acumulada 4.28 h; replay agente de 243 s."
+      ],
+      "limits": [
+        "El conjunto privado y los nombres/runtime difieren de LlamaCode.",
+        "El tiempo de 4.28 h rebasa el corte local de 30 min por perfil; no se puede usar como evidencia de mejora estable para LlamaCode."
+      ]
+    },
+    {
+      "url": "https://github.com/ValerioDolci/capy-flash/blob/main/docs/performance/two-gpu.md",
+      "claims": [
+        "NInfer TP2 v0.2.3 en dos RTX 5070 Ti: official weights 220.0±10.2 tok/s en structured decode, 70.9 tok/s plain decode y 4956 tok/s prefill a 7680 tokens; 5090 comparator 219.8/71.2/8340.4.",
+        "Misma dupla 5070 Ti sin P2P; el intercambio se staged por pinned host memory."
+      ],
+      "limits": [
+        "Official weights comparison only for those headline points; QUASAR is a different checkpoint and was not tested on 5090.",
+        "Crowd comment 150–200/300 tok/s no identifica carga; métricas dependen de contenido/speculation y no son LlamaCode scores."
+      ]
+    },
+    {
+      "url": "https://docs.vllm.ai/en/stable/serving/parallelism_scaling/",
+      "claims": [
+        "La guía oficial describe TP para multi-GPU de nodo único y PP cuando conviene dividir capas, por ejemplo GPUs desiguales o sin NVLink."
+      ],
+      "limits": [
+        "No valida la fork, patches ni rendimiento de ExTV."
+      ]
+    }
+  ],
+  "local_evidence_reviewed": [
+    {
+      "path": "docs/reddit-qwen38-int8-dflash2-local-check-20261001.md",
+      "finding": "Un checkpoint lued W8A16 relacionado, no idéntico al actual de ExTV, falló en vLLM 0.29.0 al cargar embeddings cuantizados; sin evaluación de agente ni velocidad válida."
+    },
+    {
+      "path": "docs/sol-dflash2-local-audit-20260918.md",
+      "finding": "DFlash2 sobre SOL/2×RTX3090 logró hasta 144 tok/s en código con BF16 y 124–142 con FP8 en probes cortos, pero JSON/xgrammar fue inestable y faltaron HE20/BCB; no se promovió."
+    },
+    {
+      "path": "docs/ninfer-3090-linux-evaluation-20260908.md",
+      "finding": "NInfer-3090 antiguo en SM86 era un runtime de una GPU; 3/8 BCB y 50.1 tok/s a 80K. No es el TP2 Blackwell actual."
+    },
+    {
+      "path": "docs/ninfer-5090-windows-post-audit-20260918.md",
+      "finding": "NInfer de RTX5090 sm_120a y el artefacto NVFP4 no se transfieren al runtime histórico SM86."
+    },
+    {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261010-STRATA-DUAL3090-PEER/RESULTS.md",
+      "finding": "La topología local tiene PHB y P2P NS; el fork NVLink investigado previamente no era comparable."
+    }
+  ],
+  "decision": "No promover ni cambiar perfiles. NInfer TP2/capy-flash queda bloqueado en este host por sm_120a y su release CUDA; ExTV no tiene el checkpoint exacto ni configuración local validada, y su NVFP4 requiere Blackwell. No se descargó ni compiló software/modelos.",
+  "local_preflight": "receipts/local-preflight.txt"
+}
