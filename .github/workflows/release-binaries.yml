@@ -128,10 +128,33 @@ jobs:
           python -m aqt install-qt windows desktop $env:QT_VERSION win64_msvc2022_64 -O C:\Qt --modules qtmultimedia
           if ($LASTEXITCODE -ne 0) { exit 1 }
 
+      # Mismo toolchain que el bootstrap (VS 2022, v143). La imagen windows-2025
+      # trae VS 2026, cuyo STL rechaza el <experimental/coroutine> que usa
+      # C++/WinRT en C++17 (OcrEngine): VS 2022 si esta, si no el toolset v143
+      # de VS 2026, si no Build Tools 2022 por winget (igual que bootstrap.ps1).
+      - name: Select MSVC v143
+        shell: powershell
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vs17 = & $vswhere -products * -version '[17.0,18.0)' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          $v143 = & $vswhere -products * -requires Microsoft.VisualStudio.Component.VC.v143.x86.x64 -property installationVersion | Select-Object -First 1
+          if ($vs17) { $gen = 'Visual Studio 17 2022'; $toolset = '' }
+          elseif ($v143) {
+            $gen = (& cmake --help | Select-String -Pattern '^\*?\s*(Visual Studio 18 \d+)' | Select-Object -First 1).Matches.Groups[1].Value
+            $toolset = 'v143'
+          } else {
+            winget install --id Microsoft.VisualStudio.2022.BuildTools --exact --override "--quiet --wait --norestart --nocache --installPath C:\BuildTools2022 --add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.VC.v143.x86.x64 --add Microsoft.VisualStudio.Component.Windows11SDK.22621" --accept-source-agreements --accept-package-agreements
+            $gen = 'Visual Studio 17 2022'; $toolset = ''
+          }
+          "generator=$gen toolset=$toolset"
+          "LC_GENERATOR=$gen" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+          "LC_TOOLSET=$toolset" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+
       - name: Build
         shell: powershell
         run: |
-          cmake -S . -B build -A x64 -DCMAKE_PREFIX_PATH="$env:QT_DIR" -DBUILD_TESTS=OFF
+          $toolsetArgs = @(if ($env:LC_TOOLSET) { '-T', $env:LC_TOOLSET })
+          cmake -S . -B build -G $env:LC_GENERATOR -A x64 @toolsetArgs -DCMAKE_PREFIX_PATH="$env:QT_DIR" -DBUILD_TESTS=OFF
           if ($LASTEXITCODE -ne 0) { exit 1 }
           cmake --build build --config $env:CONFIG --target LlamaCode -- /maxcpucount
           if ($LASTEXITCODE -ne 0) { exit 1 }
