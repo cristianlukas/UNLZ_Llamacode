@@ -1,0 +1,10 @@
+{
+  "created_at_utc": "2026-10-14T23:04:55Z",
+  "source_file": "/home/cristian/.cache/llamacode-sampling-eval/llamacode/source/src/AppController.cpp",
+  "sha256_before": "f2dbd220534a351fc76ebbeb1bda632080e95df94cb21cfa5d32fd4036db2cab",
+  "sha256_after": "954df6c4651a50efff550bedd6f983201a62d52beec24aaf7ed8ec84d30bc91b",
+  "scope": "native source mirror only; production checkout unchanged",
+  "temperature_env": "LLAMACODE_EVAL_TEMPERATURE",
+  "seed_env": "LLAMACODE_EVAL_SEED",
+  "validation": "the exact original two-line block was found once and replaced"
+}

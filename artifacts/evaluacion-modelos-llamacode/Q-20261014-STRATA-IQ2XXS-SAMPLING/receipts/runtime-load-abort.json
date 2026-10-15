@@ -1,0 +1,42 @@
+{
+  "task_id": "Q-20261014-STRATA-IQ2XXS-SAMPLING",
+  "recorded_at_utc": "2026-10-14T23:10:48Z",
+  "decision": "abort_before_inference",
+  "reason": "memory PSI exceeded the evaluation's runtime safety threshold while Strata was loading experts",
+  "server": {
+    "owned_session_interrupted": true,
+    "exit_code": 130,
+    "host": "127.0.0.1",
+    "port": 8352,
+    "endpoint_ready": false,
+    "prompt_sent": false,
+    "startup_observation": "loading the model; loading about 39 GB of experts into RAM and locking part for GPU"
+  },
+  "observation_during_load": {
+    "mem_available_kib": 86847540,
+    "memory_psi_avg10_percent": {
+      "some": 22.3,
+      "full": 22.3
+    },
+    "gpu_query": "0, NVIDIA GeForce RTX 3090, 6616 MiB, 0 %\n1, NVIDIA GeForce RTX 3090, 4790 MiB, 1 %"
+  },
+  "observation_after_interrupt": {
+    "mem_available_kib": 116969664,
+    "swap_free_kib": 3059760,
+    "memory_psi_avg10_percent": {
+      "some": 23.91,
+      "full": 23.91
+    },
+    "gpu_query": "0, NVIDIA GeForce RTX 3090, 775 MiB, 0 %\n1, NVIDIA GeForce RTX 3090, 108 MiB, 0 %",
+    "owned_server_process_found": false,
+    "port_8352_listener_found": false
+  },
+  "preflight_receipts": [
+    "preflight-before-load.json",
+    "preflight-before-load-retry.json"
+  ],
+  "inference_runs": 0,
+  "production_profiles_changed": false,
+  "production_source_changed": false,
+  "interpretation": "The post-interrupt PSI avg10 is a rolling window that still includes the just-aborted load; recovery was not inferred from that value."
+}

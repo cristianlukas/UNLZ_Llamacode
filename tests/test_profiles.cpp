@@ -61,6 +61,7 @@ private slots:
     void portablePaths_repairsAccumulatedSlashes();
     void portablePaths_respectsRootBoundaries();
     void manager_sharedConfigSaveDoesNotGrowSlashes();
+    void manager_twoInstancesKeepEachOthersNewProfiles();
     void manager_exportImportBundle();
     void manager_profileChangeHistory();
     void manager_saveSkipsUnchangedAndLogsOnlyChanges();
@@ -818,6 +819,43 @@ void ProfilesTests::manager_sharedConfigSaveDoesNotGrowSlashes()
     QVERIFY2(raw.contains("\"http://127.0.0.1:8350\""), "una URL no pierde barras al guardar");
     QVERIFY(!raw.contains("Disco local"));
 #endif
+}
+
+// Prod y Debug comparten los archivos de perfiles. Antes cada save() escribía
+// la lista en memoria completa: un perfil creado en una instancia desaparecía
+// cuando la otra guardaba sin haber recargado.
+void ProfilesTests::manager_twoInstancesKeepEachOthersNewProfiles()
+{
+    ProfileManager prod;     // las dos leen el mismo estado inicial
+    ProfileManager debug;
+    const QString fromDebug = debug.addBackend(QStringLiteral("creado-en-debug"), QStringLiteral("b"),
+                                               QStringLiteral("127.0.0.1"), 7101);
+    debug.saveProfiles();
+    // Prod no recargó: no conoce el de Debug. Agrega el suyo y guarda.
+    const QString fromProd = prod.addBackend(QStringLiteral("creado-en-prod"), QStringLiteral("b"),
+                                             QStringLiteral("127.0.0.1"), 7102);
+    prod.saveProfiles();
+
+    {
+        ProfileManager fresh;
+        QCOMPARE(fresh.getBackend(fromDebug).value(QStringLiteral("name")).toString(),
+                 QStringLiteral("creado-en-debug"));
+        QCOMPARE(fresh.getBackend(fromProd).value(QStringLiteral("name")).toString(),
+                 QStringLiteral("creado-en-prod"));
+    }
+
+    // Un borrado explícito sí persiste (no se "resucita" el perfil que esta
+    // instancia conocía y eliminó), y el de la otra instancia sigue ahí.
+    QVERIFY(debug.removeBackend(fromDebug));
+    debug.saveProfiles();
+    {
+        ProfileManager fresh;
+        QVERIFY(fresh.getBackend(fromDebug).isEmpty());
+        QCOMPARE(fresh.getBackend(fromProd).value(QStringLiteral("name")).toString(),
+                 QStringLiteral("creado-en-prod"));
+    }
+    QVERIFY(prod.removeBackend(fromProd));
+    prod.saveProfiles();
 }
 
 void ProfilesTests::manager_exportImportBundle()

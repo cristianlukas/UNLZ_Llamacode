@@ -1,4 +1,5 @@
 #include "LlmGateway.h"
+#include <QDateTime>
 
 #include <QTcpServer>
 #include <QTcpSocket>
@@ -467,6 +468,7 @@ void LlmGateway::writeJson(QTcpSocket *sock, int code, const QJsonObject &value)
         : code == 401 ? "Unauthorized"
         : code == 404 ? "Not Found"
         : code == 405 ? "Method Not Allowed"
+        : code == 409 ? "Conflict"
         : code == 502 ? "Bad Gateway"
         : code == 503 ? "Service Unavailable" : "Error";
     QByteArray r = "HTTP/1.1 " + QByteArray::number(code) + " " + reason + "\r\n";
@@ -474,12 +476,58 @@ void LlmGateway::writeJson(QTcpSocket *sock, int code, const QJsonObject &value)
     r += "Access-Control-Allow-Origin: *\r\n";
     r += "Content-Length: " + QByteArray::number(json.size()) + "\r\n\r\n" + json;
     sock->write(r); sock->flush(); sock->disconnectFromHost();
+    reportRequest(sock, code);
+}
+
+bool LlmGateway::isLanPeer(const QHostAddress &peer)
+{
+    if (peer.isNull()) return false;
+    bool v4 = false;
+    const quint32 ipv4 = peer.toIPv4Address(&v4);   // también ::ffff:a.b.c.d
+    if (v4) return !QHostAddress(ipv4).isLoopback();
+    return !peer.isLoopback();
+}
+
+bool LlmGateway::lanSwapAllowed(bool fromLan, bool lanMayLoad, bool serverRunning,
+                                const QString &currentModel, const QString &requested)
+{
+    if (!fromLan || lanMayLoad) return true;
+    if (requested.isEmpty()) return true;                      // usa lo que haya
+    if (!serverRunning || currentModel.isEmpty()) return true; // nada que interrumpir
+    return requested.compare(currentModel, Qt::CaseInsensitive) == 0;
+}
+
+void LlmGateway::reportRequest(QTcpSocket *sock, int status)
+{
+    if (!sock || !m_hooks.request || sock->property("lcReported").toBool()) return;
+    if (!sock->property("lcPath").isValid()) return;   // no pasó por handle()
+    sock->setProperty("lcReported", true);
+    const qint64 started = sock->property("lcStart").toLongLong();
+    m_hooks.request(QJsonObject{
+        {QStringLiteral("peer"), sock->property("lcPeer").toString()},
+        {QStringLiteral("lan"), sock->property("lcLan").toBool()},
+        {QStringLiteral("method"), sock->property("lcMethod").toString()},
+        {QStringLiteral("path"), sock->property("lcPath").toString()},
+        {QStringLiteral("model"), sock->property("lcModel").toString()},
+        {QStringLiteral("status"), status},
+        {QStringLiteral("ms"), started > 0 ? QDateTime::currentMSecsSinceEpoch() - started : 0}
+    });
 }
 
 void LlmGateway::handle(QTcpSocket *sock, const QByteArray &method, const QString &path,
                         const QByteArray &body, const QString &authHeader)
 {
     const QString p = path.section('?', 0, 0);
+    const bool fromLan = isLanPeer(sock->peerAddress());
+    {
+        bool v4 = false;
+        const quint32 ipv4 = sock->peerAddress().toIPv4Address(&v4);
+        sock->setProperty("lcPeer", v4 ? QHostAddress(ipv4).toString() : sock->peerAddress().toString());
+    }
+    sock->setProperty("lcLan", fromLan);
+    sock->setProperty("lcMethod", QString::fromLatin1(method));
+    sock->setProperty("lcPath", p);
+    sock->setProperty("lcStart", QDateTime::currentMSecsSinceEpoch());
 
     if (method == "OPTIONS") {   // CORS preflight
         QByteArray r = "HTTP/1.1 204 No Content\r\n";
@@ -517,6 +565,7 @@ void LlmGateway::handle(QTcpSocket *sock, const QByteArray &method, const QStrin
         QByteArray r = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n";
         r += "Content-Length: " + QByteArray::number(j.size()) + "\r\n\r\n" + j;
         sock->write(r); sock->flush(); sock->disconnectFromHost();
+        reportRequest(sock, 200);
         return;
     }
 
@@ -554,6 +603,15 @@ void LlmGateway::handle(QTcpSocket *sock, const QByteArray &method, const QStrin
             writeError(sock, 404, QStringLiteral("perfil remoto desconocido"));
             return;
         }
+        sock->setProperty("lcModel", resolved);
+        const QString current = m_hooks.currentModel ? m_hooks.currentModel() : QString();
+        const bool running = m_hooks.running ? m_hooks.running() : !current.isEmpty();
+        if (!lanSwapAllowed(fromLan, m_lanMayLoad, running, current, resolved)) {
+            writeError(sock, 409, QStringLiteral(
+                "El anfitrión no permite que los clientes LAN cambien el modelo cargado (%1). "
+                "Elegí ese perfil o pedí que lo cambien en la PC anfitriona.").arg(current));
+            return;
+        }
         if (m_hooks.activity) m_hooks.activity();
         if (m_hooks.ensureModel) m_hooks.ensureModel(resolved);
         writeJson(sock, 200, QJsonObject{{"ok", true}, {"model", resolved},
@@ -586,6 +644,18 @@ void LlmGateway::handle(QTcpSocket *sock, const QByteArray &method, const QStrin
     if (!requested.isEmpty() && resolved.isEmpty()) {
         writeError(sock, 404, QStringLiteral("modelo desconocido: %1").arg(requested));
         return;
+    }
+
+    sock->setProperty("lcModel", resolved.isEmpty() ? requested : resolved);
+    {
+        const QString current = m_hooks.currentModel ? m_hooks.currentModel() : QString();
+        const bool running = m_hooks.running ? m_hooks.running() : !current.isEmpty();
+        if (!lanSwapAllowed(fromLan, m_lanMayLoad, running, current, resolved)) {
+            writeError(sock, 409, QStringLiteral(
+                "El anfitrión no permite que los clientes LAN cambien el modelo cargado (%1).")
+                    .arg(current));
+            return;
+        }
     }
 
     if (m_hooks.activity) m_hooks.activity();
@@ -678,6 +748,7 @@ void LlmGateway::forward(QTcpSocket *sock, const QString &path, const QByteArray
             r += "Access-Control-Allow-Origin: *\r\n";
             r += "Content-Length: " + QByteArray::number(out.size()) + "\r\n\r\n" + out;
             psock->write(r); psock->flush(); psock->disconnectFromHost();
+            reportRequest(psock, 200);
             reply->deleteLater();
         });
         return;
@@ -691,6 +762,7 @@ void LlmGateway::forward(QTcpSocket *sock, const QString &path, const QByteArray
     hdr += "Access-Control-Allow-Origin: *\r\n";
     hdr += "Connection: close\r\n\r\n";
     sock->write(hdr); sock->flush();
+    reportRequest(sock, 200);
 
     if (anthropic) {
         // Estado de traducción OpenAI-SSE → Anthropic-SSE. Además de texto,

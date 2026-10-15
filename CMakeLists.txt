@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(LlamaCode VERSION 0.1.122 LANGUAGES CXX)
+project(LlamaCode VERSION 0.1.123 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -324,6 +324,10 @@ qt_add_resources(llamacode_core "llamacode_core_assets"
         assets/system_profiles.json
 )
 target_include_directories(llamacode_core PUBLIC src)
+# Versión única: LlamaCodeVersion.h sale de project(VERSION). Antes estaba
+# repetida en main.cpp y AppController.h y había que tocar 4 lugares por bump.
+configure_file(src/LlamaCodeVersion.h.in ${CMAKE_CURRENT_BINARY_DIR}/generated/LlamaCodeVersion.h @ONLY)
+target_include_directories(llamacode_core PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/generated)
 target_compile_definitions(llamacode_core PRIVATE
     LC_BUNDLED_SKILLS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets/skills"
     "$<$<CONFIG:Debug>:LC_BUILD_CHANNEL=\"debug\">"
@@ -471,6 +475,11 @@ qt_add_qml_module(LlamaCode
         qml/components/LcDialog.qml
         qml/components/LcColorPicker.qml
         qml/components/LcColorRow.qml
+        qml/components/SettingsAgentProfilesSection.qml
+        qml/components/SettingsSystemSection.qml
+        qml/components/SettingsIntegrationsSection.qml
+        qml/components/SettingsMailSection.qml
+        qml/components/SettingsChatSection.qml
         qml/components/LcHarnessEditor.qml
         qml/components/LcScrollBar.qml
         qml/components/OpencodeConfigDialog.qml
@@ -839,6 +848,12 @@ if (BUILD_TESTS)
     set_tests_properties(qml_lc_controls PROPERTIES
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1"
         FAIL_REGULAR_EXPRESSION "FAIL |ReferenceError|TypeError|Unable to assign|is not a type")
+
+    if (UNIX)
+        # scripts/release.sh contra un repo temporal y un gh falso (no publica nada).
+        add_test(NAME release_sh COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_release_sh.sh)
+        set_tests_properties(release_sh PROPERTIES FAIL_REGULAR_EXPRESSION "FAIL ")
+    endif()
 
     add_test(NAME qml_settings_tabs
              COMMAND "${_lc_qt_bin}/qml" -I "${LC_QML_HARNESS_DIR}"

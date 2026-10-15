@@ -245,6 +245,8 @@ private slots:
     void windowsStartupCommandQuotesExecutable();
     void linuxAutostartWritesAndRemovesEntry();
     void settingsTabsAndHeadersAreTranslated();
+    void versionComesFromCMakeProject();
+    void agentAutoStartsWhenServerBecomesReady();
     void startupHiddenRequiresBothFlags();
     void loopTaskRunsBodyUntilGoalMet();
     void loopTaskAppliesVerifyPhaseAndRestoresIt();
@@ -1553,6 +1555,42 @@ void AppControllerTests::settingsTabsAndHeadersAreTranslated()
         }
     }
     app.setLanguage(previous);
+}
+
+// La versión vivía en 4 lugares y había que acordarse de todos al bumpear.
+// Ahora sale de project(VERSION) vía LlamaCodeVersion.h.
+void AppControllerTests::versionComesFromCMakeProject()
+{
+    QFile cmake(QStringLiteral("CMakeLists.txt"));
+    QVERIFY(cmake.open(QIODevice::ReadOnly | QIODevice::Text));
+    const QRegularExpressionMatch m = QRegularExpression(
+        QStringLiteral(R"(project\(LlamaCode VERSION ([0-9]+\.[0-9]+\.[0-9]+))"))
+        .match(QString::fromUtf8(cmake.readAll()));
+    QVERIFY(m.hasMatch());
+    AppController app;
+    QCOMPARE(app.version(), m.captured(1));
+}
+
+// ASTRA quedó listo (cargado por un cliente LAN) y el agente de esta PC no
+// arrancó: con la opción activa, arranca al quedar listo el server.
+void AppControllerTests::agentAutoStartsWhenServerBecomesReady()
+{
+    const QString id = QStringLiteral("sys-astra");
+    QVERIFY(AppController::shouldAutoStartAgentOnReady(true, true, false, false, false, id));
+    QVERIFY(!AppController::shouldAutoStartAgentOnReady(false, true, false, false, false, id)); // opción off
+    QVERIFY(!AppController::shouldAutoStartAgentOnReady(true, false, false, false, false, id)); // cargando
+    QVERIFY(!AppController::shouldAutoStartAgentOnReady(true, true, true, false, false, id));  // ya corre
+    QVERIFY(!AppController::shouldAutoStartAgentOnReady(true, true, false, true, false, id));  // ya arrancando
+    QVERIFY(!AppController::shouldAutoStartAgentOnReady(true, true, false, false, true, id));  // se está deteniendo
+    QVERIFY(!AppController::shouldAutoStartAgentOnReady(true, true, false, false, false, QString()));
+
+    AppController app;
+    QVERIFY(!app.agentStartWithServer());     // por defecto, como antes
+    app.setAgentStartWithServer(true);
+    QVERIFY(app.agentStartWithServer());
+    AppController reopened;
+    QVERIFY(reopened.agentStartWithServer());  // persiste
+    reopened.setAgentStartWithServer(false);
 }
 
 void AppControllerTests::startupHiddenRequiresBothFlags()

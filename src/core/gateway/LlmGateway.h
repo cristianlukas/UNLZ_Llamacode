@@ -40,6 +40,10 @@ public:
         std::function<void(QString)>  ensureModel;    // pedir carga por id estable
         std::function<void()>         activity;       // bump idle watchdog
         std::function<QJsonObject()>  loadStatus;     // carga del modelo {state,progress,...}
+        std::function<bool()>         running;        // hay un server cargado (o cargando)
+        // Una línea por request respondido: {peer, lan, method, path, model,
+        // status, ms}. Permite ver desde el anfitrión qué hace cada cliente LAN.
+        std::function<void(QJsonObject)> request;
     };
     // Cuerpo de GET /llamacode/v1/status (pura, testeable).
     static QJsonObject statusResponse(bool ready, const QString &currentModel,
@@ -49,6 +53,9 @@ public:
     void setAutoSwap(bool on) { m_autoSwap = on; }
     void setApiKey(const QString &k) { m_apiKey = k; }
     void setLanAuthEnabled(bool on) { m_lanAuthEnabled = on; }
+    // false = un cliente LAN no puede cambiar el modelo ya cargado en el
+    // anfitrión (sí cargar uno si no hay ninguno). Loopback no se restringe.
+    void setLanMayLoadModels(bool on) { m_lanMayLoad = on; }
 
     bool start(quint16 port, const QHostAddress &addr = QHostAddress::LocalHost);
     void stop();
@@ -79,6 +86,10 @@ public:
     // Elige una IPv4 enrutable dentro de la LAN, evitando loopback/APIPA.
     static QHostAddress preferredLanAddress(const QList<QHostAddress> &addresses);
     static constexpr quint16 DiscoveryPort = 45454;
+    // Política de swap para clientes LAN (pura, testeable).
+    static bool lanSwapAllowed(bool fromLan, bool lanMayLoad, bool serverRunning,
+                               const QString &currentModel, const QString &requested);
+    static bool isLanPeer(const QHostAddress &peer);
 
 signals:
     void requestServed(const QString &path, const QString &model);
@@ -91,6 +102,7 @@ private:
                  bool anthropic, bool stream, const QString &resolvedModel);
     void writeError(QTcpSocket *sock, int code, const QString &msg);
     void writeJson(QTcpSocket *sock, int code, const QJsonObject &value);
+    void reportRequest(QTcpSocket *sock, int status);
 
     QTcpServer            *m_server = nullptr;
     QUdpSocket            *m_discovery = nullptr;
@@ -100,6 +112,7 @@ private:
     bool    m_autoSwap = true;
     bool    m_lanMode = false;
     bool    m_lanAuthEnabled = true;
+    bool    m_lanMayLoad = true;
     QString m_apiKey;
     quint16 m_port = 0;
     QStringList m_lru;   // orden de uso (frente = más reciente)

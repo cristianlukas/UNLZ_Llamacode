@@ -1,4 +1,6 @@
 #pragma once
+#include <QSet>
+#include <QHash>
 #include "ProfileTypes.h"
 #include <QObject>
 #include <QAbstractListModel>
@@ -297,4 +299,8 @@ private:
     // que una instancia con estado viejo pise cambios hechos por fuera/otra instancia.
     mutable QFileSystemWatcher m_watcher;
     mutable bool m_saving = false;   // ignora los cambios provocados por nuestro propio save()
+    // ids de cada archivo que ESTA instancia conoce (leídos o escritos por ella).
+    // Al guardar, un id que está en disco pero no en memoria ni acá lo agregó otra
+    // instancia (Prod y Debug comparten perfiles): se conserva en vez de pisarlo.
+    mutable QHash<QString, QSet<QString>> m_knownIds;
 };

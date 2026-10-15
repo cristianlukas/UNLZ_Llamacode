@@ -1542,7 +1542,7 @@ Item {
                     enabled: selectedLaunchId.length > 0
                     onClicked: {
                         if (App.agentRunning || App.agentStarting) {
-                            App.stopAgent()
+                            App.stopAgentByUser()
                         } else {
                             root.startSelectedAgent()
                         }

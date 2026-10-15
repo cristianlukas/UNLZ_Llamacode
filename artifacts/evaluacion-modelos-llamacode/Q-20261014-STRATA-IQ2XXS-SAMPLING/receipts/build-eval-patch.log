@@ -1,0 +1,20 @@
+[0/2] Re-checking globbed directories...
+[1/5] Automatic MOC and UIC for target llamacode_core
+[2/4] Building CXX object CMakeFiles/llamacode_core.dir/src/AppController.cpp.o
+/home/cristian/.cache/llamacode-sampling-eval/llamacode/source/src/AppController.cpp: In function ‘qint64 benchmarkMarkdownDateMs(const QString&)’:
+/home/cristian/.cache/llamacode-sampling-eval/llamacode/source/src/AppController.cpp:23220:57: warning: ‘QDateTime::QDateTime(QDate, QTime, Qt::TimeSpec, int)’ is deprecated: Pass QTimeZone instead [-Wdeprecated-declarations]
+23220 |     return QDateTime(parsed, QTime(12, 0), Qt::LocalTime).toMSecsSinceEpoch();
+      |                                                         ^
+In file included from /home/cristian/Qt/6.8.3/gcc_64/include/QtCore/qcborvalue.h:10,
+                 from /home/cristian/Qt/6.8.3/gcc_64/include/QtCore/qjsonvalue.h:7,
+                 from /home/cristian/Qt/6.8.3/gcc_64/include/QtCore/qjsonobject.h:7,
+                 from /home/cristian/Qt/6.8.3/gcc_64/include/QtCore/QJsonObject:1,
+                 from /home/cristian/.cache/llamacode-sampling-eval/llamacode/source/src/core/LlamaBinary.h:5,
+                 from /home/cristian/.cache/llamacode-sampling-eval/llamacode/source/src/core/BinaryRegistry.h:2,
+                 from /home/cristian/.cache/llamacode-sampling-eval/llamacode/source/src/AppController.h:2,
+                 from /home/cristian/.cache/llamacode-sampling-eval/llamacode/source/src/AppController.cpp:1:
+/home/cristian/Qt/6.8.3/gcc_64/include/QtCore/qdatetime.h:359:5: note: declared here
+  359 |     QDateTime(QDate date, QTime time, Qt::TimeSpec spec, int offsetSeconds = 0);
+      |     ^~~~~~~~~
+[3/4] Linking CXX static library libllamacode_core.a
+[4/4] Linking CXX executable LlamaCode

@@ -1,4 +1,5 @@
 #pragma once
+#include "LlamaCodeVersion.h"
 #include "core/BinaryRegistry.h"
 #include "core/ModelLoadProgress.h"
 #include "core/EngineCatalog.h"
@@ -194,6 +195,9 @@ class AppController : public QObject
     Q_PROPERTY(bool desktopAgentActive READ desktopAgentActive NOTIFY desktopIndicatorChanged)
     Q_PROPERTY(QString desktopAgentAction READ desktopAgentAction NOTIFY desktopIndicatorChanged)
     Q_PROPERTY(bool autoStartAgentOnLaunch READ autoStartAgentOnLaunch WRITE setAutoStartAgentOnLaunch NOTIFY autoStartAgentOnLaunchChanged)
+    // Arrancar el agente cuando el server queda listo aunque se haya cargado sin él
+    // (Iniciar solo servidor, o un cliente LAN que pidió el modelo).
+    Q_PROPERTY(bool agentStartWithServer READ agentStartWithServer WRITE setAgentStartWithServer NOTIFY autoStartAgentOnLaunchChanged)
     // Gateway (proxy Anthropic/OpenAI + auto-load por modelo).
     Q_PROPERTY(bool    gatewayEnabled  READ gatewayEnabled  WRITE setGatewayEnabled  NOTIFY gatewayChanged)
     Q_PROPERTY(bool    gatewayRunning  READ gatewayRunning  NOTIFY gatewayChanged)
@@ -204,6 +208,10 @@ class AppController : public QObject
     Q_PROPERTY(bool    gatewayLanEnabled READ gatewayLanEnabled WRITE setGatewayLanEnabled NOTIFY gatewayChanged)
     Q_PROPERTY(bool    gatewayLanAuthEnabled READ gatewayLanAuthEnabled WRITE setGatewayLanAuthEnabled NOTIFY gatewayChanged)
     Q_PROPERTY(bool    gatewayRetryPending READ gatewayRetryPending NOTIFY gatewayChanged)
+    // false = los clientes LAN no pueden cambiar el modelo cargado en esta PC.
+    Q_PROPERTY(bool    gatewayLanMayLoad READ gatewayLanMayLoad WRITE setGatewayLanMayLoad NOTIFY gatewayChanged)
+    // Clientes LAN vistos recientemente: [{ip, lastSeenMs, model, path, status, requests}].
+    Q_PROPERTY(QVariantList lanClients READ lanClients NOTIFY lanClientsChanged)
     Q_PROPERTY(QVariantList lanServers READ lanServers NOTIFY lanServersChanged)
     Q_PROPERTY(bool lanDiscoveryActive READ lanDiscoveryActive NOTIFY lanServersChanged)
     // Idle auto-stop del server (libera VRAM tras N minutos sin uso; 0 = off).
@@ -632,7 +640,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.122"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral(LLAMACODE_VERSION); }
     QString updateChannel() const { return m_updateChannel; }
     void setUpdateChannel(const QString &channel);
     QString buildChannel() const;
@@ -1109,6 +1117,11 @@ public:
     Q_INVOKABLE QVariantMap desktopCursorState() const;
 
     bool autoStartAgentOnLaunch() const { return m_autoStartAgentOnLaunch; }
+    bool agentStartWithServer() const { return m_agentStartWithServer; }
+    void setAgentStartWithServer(bool on);
+    static bool shouldAutoStartAgentOnReady(bool enabled, bool serverReady, bool agentRunning,
+                                            bool agentStarting, bool agentStopping,
+                                            const QString &launchId);
     void setAutoStartAgentOnLaunch(bool on);
 
     // Gateway
@@ -1119,6 +1132,8 @@ public:
     void    setGatewayPort(int p);
     QString gatewayApiKey() const { return m_gatewayApiKey; }
     void    setGatewayApiKey(const QString &k);
+    // Genera y guarda una API key nueva (cuando falta y la LAN pide contraseña).
+    Q_INVOKABLE QString generateGatewayApiKey();
     int     gatewayKeepN() const { return m_gatewayKeepN; }
     void    setGatewayKeepN(int n);
     bool    gatewayAutoSwap() const { return m_gatewayAutoSwap; }
@@ -1127,6 +1142,19 @@ public:
     void    setGatewayLanEnabled(bool on);
     bool    gatewayLanAuthEnabled() const { return m_gatewayLanAuthEnabled; }
     void    setGatewayLanAuthEnabled(bool on);
+    bool    gatewayLanMayLoad() const { return m_gatewayLanMayLoad; }
+    void    setGatewayLanMayLoad(bool on);
+    QVariantList lanClients() const;
+    // Registro de cada request respondido por el gateway (hook de LlmGateway).
+    void    noteGatewayRequest(const QJsonObject &request);
+    static bool    shouldLogGatewayRequest(const QJsonObject &request);
+    static QString formatGatewayRequest(const QJsonObject &request);
+    // Detener el agente por decisión del usuario: además desarma la reconexión
+    // automática al anfitrión LAN (stopAgent() lo usan también flujos internos).
+    Q_INVOKABLE void stopAgentByUser();
+    // Tests: dispara un ciclo del watchdog de reconexión LAN.
+    void    lanAgentWatchdogTickForTest() { lanAgentWatchdogTick(); }
+    QString lanAgentWantedLaunchId() const { return m_lanAgentWantedLaunchId; }
     // Perfiles gestionados por Strata, uno por JSON (configSetting), para que
     // Configuración → GPU y motores muestre un campo por perfil existente en vez de rutas fijas.
     Q_INVOKABLE QVariantList astraStrataProfiles();
@@ -1651,6 +1679,7 @@ signals:
     void desktopIndicatorChanged();
     void autoStartAgentOnLaunchChanged();
     void gatewayChanged();
+    void lanClientsChanged();
     void lanServersChanged();
     void lanProfileReady(const QString &launchProfileId, const QString &error);
     void modelLoadStatusChanged();
@@ -2226,6 +2255,7 @@ private:
     bool        m_desktopTaskIndicatorActive = false;
     QString     m_desktopAgentAction;
     bool        m_autoStartAgentOnLaunch = false; // arrancar agente al abrir la app (tasks por horario)
+    bool        m_agentStartWithServer = false;   // arrancar agente cuando el server queda listo
 
     // Gateway (proxy Anthropic/OpenAI + auto-load)
     LlmGateway *m_gateway = nullptr;
@@ -2240,6 +2270,15 @@ private:
     // se reintenta hasta poder escuchar: antes se rendía para siempre y al
     // cerrarse la otra instancia nadie servía la LAN.
     QTimer     *m_gatewayRetryTimer = nullptr;
+    bool        m_gatewayLanMayLoad = true;
+    QHash<QString, QVariantMap> m_lanClients;
+    // Cliente LAN: perfil remoto con el que el usuario quiere el agente andando.
+    // Si el agente cae y el anfitrión vuelve a responder, se reinicia solo.
+    QString     m_lanAgentWantedLaunchId;
+    QTimer     *m_lanAgentWatchdog = nullptr;
+    bool        m_lanAgentProbeInFlight = false;
+    void        lanAgentWatchdogTick();
+    void        armLanAgentWatchdog(const QString &launchId);
     int         m_gatewayRetryMs = 5000;
     QVariantList m_lanServers;
     QUdpSocket  *m_lanDiscoverySocket = nullptr;

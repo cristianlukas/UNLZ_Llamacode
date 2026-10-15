@@ -1,0 +1,4 @@
+#pragma once
+// Generado por CMake desde project(LlamaCode VERSION ...): única fuente de la
+// versión. No editar el .h generado; bumpear sólo CMakeLists.txt.
+#define LLAMACODE_VERSION "@PROJECT_VERSION@"

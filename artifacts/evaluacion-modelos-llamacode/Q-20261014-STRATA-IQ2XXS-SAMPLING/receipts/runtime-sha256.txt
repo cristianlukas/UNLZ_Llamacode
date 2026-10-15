@@ -1,0 +1,11 @@
+c724dc0b0822ada5d2977bf5bde821605feabaa64ea2e0045b67ca656329070a  /media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/mtp/rt/dense.bin
+09398406be61f1f54c93861f449e48b8df0bfccbc9ec9b2b7636775a6ea9244f  /media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/mtp/rt/experts.bin
+b1e1d3a7a9e4bf862dcd5923ce661fb59bbd07907e594df5cf86a62ac235cb91  /media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/mtp/rt/draft_vocab.bin
+8f59b4aa8873209dff11c11e37bcda9529a1335b724a1afeea37bf6388975baf  /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/data/expert-profile.bin
+770ecf303a4c6271654339c639392ecb455de3a999bf5d2e8dbc73c879103602  /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata
+017efa1f4e76d72396738555d13eb1f9898d1c1c12730cf046d9b267b29987e5  /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py
+e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f  /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python
+063f3273edd09dedda5a93ed46bba49e4e05a7686c28dec20d39d44f9f4cdbf6  /home/cristian/.cache/llamacode-sampling-eval/build_linux/LlamaCode
+8407b3000f6701619e88b3653420bc6699321ec83219fee84dfecb0df98bd71a  artifacts/evaluacion-modelos-llamacode/Q-20261014-STRATA-IQ2XXS-SAMPLING/configs/iq2xs-strata-1m.json
+57f005b294f5635d8cb825f21a5b6666f1122a538a8b7451e079b92bc45bb3a9  artifacts/evaluacion-modelos-llamacode/Q-20261014-STRATA-IQ2XXS-SAMPLING/runtime/profiles/launches.json
+6efa2d58a4a6b784ef7562c116435e53fa7ce4c361addab086f5051af63314e2  artifacts/evaluacion-modelos-llamacode/Q-20261014-STRATA-IQ2XXS-SAMPLING/runtime/profiles/backends.json

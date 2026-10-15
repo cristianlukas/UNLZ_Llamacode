@@ -2,6 +2,10 @@
 #include <QStandardPaths>
 #include <QFile>
 #include "core/SecretStore.h"
+#include <QFileInfo>
+#ifndef Q_OS_WIN
+#include <unistd.h>
+#endif
 
 class SecretStoreTests : public QObject
 {
@@ -14,6 +18,7 @@ private slots:
     void notCommittedToProjectRoot();
     void encryptedAtRest();
     void testModeNeverUsesSystemKeyring();
+    void setReportsWhetherItWasSaved();
 };
 
 void SecretStoreTests::initTestCase()
@@ -123,6 +128,26 @@ void SecretStoreTests::testModeNeverUsesSystemKeyring()
     QVERIFY(!s.usingKeychain());
     QCOMPARE(s.backendName(), QStringLiteral("file"));
     QVERIFY(SecretStore::filePath().contains(QStringLiteral("qttest"), Qt::CaseInsensitive));
+}
+
+// La migración de la API key borraba la copia vieja aunque el guardado hubiera
+// fallado: set() ahora dice si persistió.
+void SecretStoreTests::setReportsWhetherItWasSaved()
+{
+    QFile::remove(SecretStore::filePath());
+    SecretStore s;
+    QVERIFY(s.set(QStringLiteral("SAVED_REF"), QStringLiteral("v1")));
+    s.remove(QStringLiteral("SAVED_REF"));
+#ifndef Q_OS_WIN
+    if (::geteuid() == 0) QSKIP("root ignora los permisos de directorio");
+    const QString dir = QFileInfo(SecretStore::filePath()).absolutePath();
+    QFile::remove(SecretStore::filePath());
+    QFile(dir).setPermissions(QFileDevice::ReadOwner | QFileDevice::ExeOwner);
+    SecretStore readOnly;
+    const bool saved = readOnly.set(QStringLiteral("FAIL_REF"), QStringLiteral("v2"));
+    QFile(dir).setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner);
+    QVERIFY2(!saved, "con el directorio de solo lectura set() tiene que fallar");
+#endif
 }
 
 QTEST_MAIN(SecretStoreTests)

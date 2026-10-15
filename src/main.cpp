@@ -1,4 +1,5 @@
 #include "AppController.h"
+#include "LlamaCodeVersion.h"
 #include "core/ControlApi.h"
 #include "core/MermaidRenderer.h"
 #include "ThemeProvider.h"
@@ -91,7 +92,7 @@ int main(int argc, char *argv[])
             break;
         }
     }
-    QCoreApplication::setApplicationVersion(QStringLiteral("0.1.122"));
+    QCoreApplication::setApplicationVersion(QStringLiteral(LLAMACODE_VERSION));
     StartupDiagnostics::initializeEarly(
         QFileInfo(QString::fromLocal8Bit(argv[0])).absoluteFilePath(), forceExpandedLog);
     QElapsedTimer startupClock;
@@ -131,7 +132,7 @@ int main(int argc, char *argv[])
     app.setQuitOnLastWindowClosed(false);
     app.setApplicationName("LlamaCode");
     app.setOrganizationName("LlamaCode");
-    app.setApplicationVersion("0.1.122");
+    app.setApplicationVersion(QStringLiteral(LLAMACODE_VERSION));
     const bool startedWithWindows = app.arguments().contains(QStringLiteral("--startup"));
     const bool handoffUi = app.arguments().contains(QStringLiteral("--handoff-ui"));
     const bool headlessAgent = app.arguments().contains(QStringLiteral("--headless"))
@@ -387,8 +388,15 @@ int main(int argc, char *argv[])
     // API local para UI externa, CLI y pruebas. En --headless / --agent-daemon
     // se convierte en el único frontend y no se carga QML.
     const QByteArray controlPortEnv = qgetenv("LLAMACODE_CONTROL_PORT");
+#ifdef LC_DEBUG_ICON
+    // Debug usa otro puerto por defecto: con Prod abierto a la vez, el segundo
+    // no podía escuchar en 8765 y su API de control quedaba muerta.
+    constexpr quint16 kDefaultControlPort = 8766;
+#else
+    constexpr quint16 kDefaultControlPort = 8765;
+#endif
     const quint16 controlPort = controlPortEnv.isEmpty()
-        ? 8765 : static_cast<quint16>(controlPortEnv.toUInt());
+        ? kDefaultControlPort : static_cast<quint16>(controlPortEnv.toUInt());
     auto *controlApi = new ControlApi(&controller, &controller);
     controlApi->start(controlPort);
 
