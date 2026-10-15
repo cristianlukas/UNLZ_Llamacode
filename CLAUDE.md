@@ -41,8 +41,8 @@ Reglas:
 | LlmGateway LAN (log por request, política "clientes LAN no cambian el modelo", detección loopback) | `tests/test_gateway.cpp` |
 | Lista de clientes LAN, reconexión del agente cliente, API key del gateway | `tests/test_system_profiles.cpp` |
 | `scripts/release.sh` (dry run, --bump, --promote, gh falso) | `tests/test_release_sh.sh` (ctest `release_sh`) |
-| "Actualizar" con binario: asset por SO/canal + hash, carpeta de instalación binaria, args del actualizador, terminal Linux, `launcher.env` desde las `LLAMACODE_*` | `tests/test_appcontroller.cpp` |
-| `scripts/update-binary.sh` (hash, swap, migración, autostart, lanzador + `launcher.env`, repunte de wrapper, aviso de herramientas) | `tests/test_update_binary_sh.sh` (ctest `update_binary_sh`, sólo Unix) |
+| "Actualizar" con binario: asset por SO/canal + hash, carpeta de instalación binaria, args del actualizador, terminal Linux, `launcher.env` desde las `LLAMACODE_*`, piso de glibc | `tests/test_appcontroller.cpp` |
+| `scripts/update-binary.sh` (hash, swap, migración, autostart, lanzador + `launcher.env`, repunte/protección de wrapper, aviso de herramientas, minGlibc, `.prev` + rollback si la nueva crashea) | `tests/test_update_binary_sh.sh` (ctest `update_binary_sh`, sólo Unix) |
 | `scripts/update-binary.ps1` (hash, swap, rollback, `irm \| iex`) | `tests/test_bootstrap_script.ps1` (fuera de ctest) |
 | AgentProfile (perfiles de agente: capacidades+directivas, presets, gating system prompt) | `tests/test_agent_profiles.cpp` |
 | HarnessSpec (harness modular: herencia por módulo, packs, permisos, fases, migración legacy) | `tests/test_harness_spec.cpp` |
@@ -371,6 +371,22 @@ carpeta entera (rename; rollback si falla) y relanza. Datos de usuario no se toc
   ese wrapper pasan al lanzador (match de ruta completa: `llamacode` es prefijo
   de `llamacode-debug`) y un `.desktop` propio con el mismo id queda como `.bak`.
   tesseract/xdotool/wmctrl/bwrap no van en el paquete: el script avisa si faltan.
+  Corrido a mano (`curl | bash`) escribe `launcher.env` con las `LLAMACODE_*` de
+  la shell; si el `.desktop` actual corre un wrapper que define `LLAMACODE_*` y
+  no hay `launcher.env`, **no toca el menú** (avisa qué hacer).
+- Seguridad del update Linux: `package-linux.sh` graba `minGlibc` (el símbolo
+  GLIBC_ más nuevo del paquete) en `llamacode-install.json` y el script se niega
+  a instalar en un sistema más viejo; el app ni lo intenta con glibc < 2.39
+  (`linuxGlibcSupportsBinary`, piso del runner ubuntu-24.04: si cambia el runner,
+  cambiar las dos cosas) y usa el bootstrap. La versión anterior queda en
+  `<instalación>.prev`; si la nueva muere con código != 0 en los primeros
+  `LC_HEALTH_SECONDS` (10) se restaura sola (la rota queda en `.failed`). Salir
+  con 0 no es falla: es el handoff a una instancia ya abierta. La app relanzada
+  NO hereda el lock del update (`9>&-`): si no, trababa el próximo "Actualizar".
+- El paquete trae los plugins de plataforma `xcb`, `offscreen` y Wayland (más
+  `wayland-graphics-integration-client`, que linuxdeploy no copia solo). El CI
+  arranca el paquete por el lanzador, con `launcher.env` y un `LD_LIBRARY_PATH`
+  hacia Qt, en Xvfb y en offscreen.
 - Cada SO se publica por separado (`release-binaries-upload.yml`): si falla el
   build de Windows, el paquete Linux igual llega a la release.
 - Release sin assets (vieja, o el CI todavía compilando): un checkout cae al

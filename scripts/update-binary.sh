@@ -20,7 +20,14 @@
 # ~/.config/llamacode/launcher.env (personal env: shared profiles, model roots;
 # the app fills it from its own LLAMACODE_* vars the first time).
 # --legacy-exe / --legacy-launcher: entries that started the old binary or a
-# wrapper script now start that launcher.
+# wrapper script now start that launcher. Standalone, launcher.env is written
+# from this shell's LLAMACODE_* vars; a menu entry that runs a hand-made wrapper
+# setting LLAMACODE_* is left alone until launcher.env exists.
+#
+# Safety: refuses a package that needs a newer glibc than this system has
+# (minGlibc in llamacode-install.json). The previous version stays as
+# <install>.prev; if the new one dies with an error within LC_HEALTH_SECONDS
+# (default 10) of the relaunch, it is put back and relaunched.
 #
 # User data lives in ~/.local/share and ~/.config: never touched here.
 set -euo pipefail
@@ -175,36 +182,19 @@ info "Extracting..."
 tar -xzf "$PKG" -C "$STAGING" || { rm -rf "$STAGING"; fail "Could not extract the package."; }
 [ -x "$STAGING/usr/bin/LlamaCode" ] || { rm -rf "$STAGING"; fail "The package has no usr/bin/LlamaCode."; }
 
-# ---- Wait for the app, then swap -------------------------------------------
-if [ "$WAIT_PID" -gt 0 ] 2>/dev/null && kill -0 "$WAIT_PID" 2>/dev/null; then
-    info "Waiting for LlamaCode to close..."
-    for _ in $(seq 1 120); do kill -0 "$WAIT_PID" 2>/dev/null || break; sleep 0.5; done
-fi
-# Only processes running FROM the install folder (app, scheduler daemon).
-if command -v pgrep >/dev/null; then
-    for pid in $(pgrep -f "^$INSTALL_DIR/usr/bin/LlamaCode" || true); do
-        info "Closing LlamaCode (PID $pid)..."; kill "$pid" 2>/dev/null || true
-    done
+# Built on a newer distro than this one: it would not even start. Refuse before
+# touching the install (packages without minGlibc predate the check).
+need_glibc="$(grep -oE '"minGlibc"[[:space:]]*:[[:space:]]*"[0-9.]+"' "$STAGING/llamacode-install.json" 2>/dev/null \
+    | grep -oE '[0-9]+(\.[0-9]+)+' || true)"
+have_glibc="${LC_GLIBC_VERSION:-$(getconf GNU_LIBC_VERSION 2>/dev/null | awk '{print $2}')}"
+if [ -n "$need_glibc" ] && [ -n "$have_glibc" ] \
+    && [ "$(printf '%s\n%s\n' "$need_glibc" "$have_glibc" | sort -V | head -1)" != "$need_glibc" ]; then
+    rm -rf "$STAGING"
+    fail "This build needs glibc >= $need_glibc and this system has $have_glibc (Ubuntu 24.04 or newer). Nothing was changed. Build from source instead: scripts/bootstrap.sh"
 fi
 
-OLD=""
-if [ -e "$INSTALL_DIR" ]; then
-    OLD="$INSTALL_DIR.old"
-    rm -rf "$OLD"
-    info "Replacing the install folder..."
-    mv "$INSTALL_DIR" "$OLD"
-fi
-if ! mv "$STAGING" "$INSTALL_DIR"; then
-    [ -n "$OLD" ] && [ ! -e "$INSTALL_DIR" ] && mv "$OLD" "$INSTALL_DIR"
-    fail "Could not move the new version into place."
-fi
-[ -n "$OLD" ] && rm -rf "$OLD"
-rm -rf "$WORK"; WORK=""
-EXE="$INSTALL_DIR/usr/bin/LlamaCode"
-LAUNCHER="$INSTALL_DIR/llamacode"
-# Written on every update (the install folder was just replaced). Full path in
-# the exec: the pgrep above finds running copies by their command line.
-cat > "$LAUNCHER" <<'SH'
+write_launcher() {   # write_launcher DIR -- full path in the exec: pgrep finds running copies by it
+    cat > "$1/llamacode" <<'SH'
 #!/usr/bin/env bash
 # LlamaCode launcher (written by update-binary.sh on every update).
 # Personal environment: ${XDG_CONFIG_HOME:-~/.config}/llamacode/launcher.env
@@ -217,8 +207,65 @@ if [ -f "$env_file" ]; then set -a; . "$env_file"; set +a; fi
 export LLAMACODE_LAUNCHER="$here/llamacode"
 cd "$here/usr/bin" && exec "$here/usr/bin/LlamaCode" "$@"
 SH
-chmod +x "$LAUNCHER"
+    chmod +x "$1/llamacode"
+}
+write_launcher "$STAGING"
+
+# ---- Wait for the app, then swap -------------------------------------------
+if [ "$WAIT_PID" -gt 0 ] 2>/dev/null && kill -0 "$WAIT_PID" 2>/dev/null; then
+    info "Waiting for LlamaCode to close..."
+    for _ in $(seq 1 120); do kill -0 "$WAIT_PID" 2>/dev/null || break; sleep 0.5; done
+fi
+# Only processes running FROM the install folder (app, scheduler daemon).
+if command -v pgrep >/dev/null; then
+    for pid in $(pgrep -f "^$INSTALL_DIR/usr/bin/LlamaCode" || true); do
+        info "Closing LlamaCode (PID $pid)..."; kill "$pid" 2>/dev/null || true
+    done
+fi
+
+# The previous version is kept as .prev (one level): automatic rollback below,
+# or by hand: rm -rf <install> && mv <install>.prev <install>.
+OLD=""
+if [ -e "$INSTALL_DIR" ]; then
+    OLD="$INSTALL_DIR.prev"
+    rm -rf "$OLD" "$INSTALL_DIR.old"
+    info "Replacing the install folder..."
+    mv "$INSTALL_DIR" "$OLD"
+fi
+if ! mv "$STAGING" "$INSTALL_DIR"; then
+    [ -n "$OLD" ] && [ ! -e "$INSTALL_DIR" ] && mv "$OLD" "$INSTALL_DIR"
+    fail "Could not move the new version into place."
+fi
+rm -rf "$WORK"; WORK=""
+EXE="$INSTALL_DIR/usr/bin/LlamaCode"
+LAUNCHER="$INSTALL_DIR/llamacode"
 ok "Installed: $EXE"
+
+# Standalone run from a shell that has the wrapper's vars: keep them for the
+# launcher (the app does the same before running this). Never overwritten.
+ENV_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/llamacode/launcher.env"
+if [ ! -e "$ENV_FILE" ] && [ -n "$(compgen -e | grep '^LLAMACODE_' | grep -vx LLAMACODE_LAUNCHER || true)" ]; then
+    mkdir -p "$(dirname "$ENV_FILE")"
+    {
+        echo "# LlamaCode launcher environment (from the LLAMACODE_* vars of the update)."
+        echo "# Sourced with set -a; never overwritten by updates: edit freely."
+        for k in $(compgen -e | grep '^LLAMACODE_' | grep -vx LLAMACODE_LAUNCHER | sort); do
+            v="${!k}"; printf "%s='%s'\n" "$k" "${v//\'/\'\\\'\'}"
+        done
+    } > "$ENV_FILE"
+    ok "Launcher environment saved: $ENV_FILE"
+fi
+
+# Exec target of a .desktop entry when it is a hand-made script that sets
+# LLAMACODE_* (a dev wrapper), else empty.
+wrapper_of() {
+    local t
+    t="$(sed -nE 's/^Exec="?([^" ]+)"?.*/\1/p' "$1" 2>/dev/null | head -1)"
+    [ -n "$t" ] && [ -f "$t" ] && [ "$t" != "$LAUNCHER" ] || return 0
+    case "$t" in "$INSTALL_DIR"/*) return 0 ;; esac
+    head -c 2 "$t" | grep -q '#!' && grep -q 'LLAMACODE_' "$t" && echo "$t"
+    return 0
+}
 
 if [ -z "$NO_SHORTCUTS" ]; then
     apps="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
@@ -226,12 +273,24 @@ if [ -z "$NO_SHORTCUTS" ]; then
     if [ "$CHANNEL" = debug ]; then id=llamacode-debug; title="LlamaCode Debug"; else id=llamacode; title="LlamaCode"; fi
     icon="$INSTALL_DIR/llamacode.png"
     entry="$apps/$id.desktop"
+    wrapper="$(wrapper_of "$entry")"
+    if [ -n "$wrapper" ] && [ ! -f "$ENV_FILE" ]; then
+        # Replacing it would start the app WITHOUT the wrapper's environment
+        # (shared profiles, model roots): leave the menu as it is.
+        printf '\033[33m[!] %s runs %s, which sets LLAMACODE_* variables.\033[0m\n' "$entry" "$wrapper"
+        echo "    Menu entry left unchanged. Copy those variables to $ENV_FILE"
+        echo "    (KEY='value' lines) and run the update again to switch it to $LAUNCHER."
+        SKIP_ENTRY=1
+    else
+        [ -n "$wrapper" ] && [ -z "$LEGACY_LAUNCHER" ] && LEGACY_LAUNCHER="$wrapper"
+        SKIP_ENTRY=""
+    fi
     # Same id as a hand-made entry (e.g. one that ran a dev wrapper): keep a copy.
-    if [ -f "$entry" ] && ! grep -qF "$INSTALL_DIR/" "$entry"; then
+    if [ -z "$SKIP_ENTRY" ] && [ -f "$entry" ] && ! grep -qF "$INSTALL_DIR/" "$entry"; then
         cp -f "$entry" "$entry.bak"
         info "Previous menu entry saved as $entry.bak"
     fi
-    cat > "$entry" <<EOF
+    [ -n "$SKIP_ENTRY" ] || cat > "$entry" <<EOF
 [Desktop Entry]
 Type=Application
 Name=$title
@@ -242,11 +301,13 @@ Icon=$icon
 Terminal=false
 Categories=Development;
 EOF
-    ok "Menu entry: $entry"
+    [ -n "$SKIP_ENTRY" ] || ok "Menu entry: $entry"
     # Entries (menu, autostart) that launched the OLD binary or wrapper now
     # launch the new install. Whole paths only: ~/.local/bin/llamacode must not
     # rewrite ~/.local/bin/llamacode-debug.
-    for legacy in "$LEGACY_EXE" "$LEGACY_LAUNCHER"; do
+    legacies=("$LEGACY_EXE")
+    [ -n "$SKIP_ENTRY" ] || legacies+=("$LEGACY_LAUNCHER")
+    for legacy in "${legacies[@]}"; do
         [ -n "$legacy" ] && [ "$legacy" != "$EXE" ] && [ "$legacy" != "$LAUNCHER" ] || continue
         for f in "$apps"/*.desktop "${XDG_CONFIG_HOME:-$HOME/.config}"/autostart/*.desktop; do
             [ -f "$f" ] && grep -qF "$legacy" "$f" || continue
@@ -254,7 +315,10 @@ EOF
 import re, sys
 p, old, new = sys.argv[1:4]
 s = open(p, encoding='utf-8').read()
-t = re.sub(re.escape(old) + r'(?=["\'\s]|$)', lambda m: new, s, flags=re.M)
+end = r'(?=["\'\s]|$)'
+# Quoted stays quoted; a bare path becomes quoted (the new one may have spaces).
+t = re.sub(r'(?<=["\'])' + re.escape(old) + end, lambda m: new, s, flags=re.M)
+t = re.sub(r'(?<![\w/"\'.-])' + re.escape(old) + end, lambda m: '"%s"' % new, t, flags=re.M)
 if t == s:
     sys.exit(1)
 open(p, 'w', encoding='utf-8').write(t)
@@ -283,7 +347,33 @@ fi
 if [ -z "$NO_LAUNCH" ]; then
     if [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]; then
         info "Launching LlamaCode..."
-        setsid nohup "$LAUNCHER" >/dev/null 2>&1 </dev/null &
+        APP_LOG="${XDG_CACHE_HOME:-$HOME/.cache}/llamacode-first-run.log"
+        # 9>&-: the app must not inherit the update lock (it would block the
+        # next "Actualizar" for as long as it stays open).
+        setsid nohup "$LAUNCHER" >"$APP_LOG" 2>&1 </dev/null 9>&- &
+        app_pid=$!
+        # A crash right after starting (missing lib/plugin, bad release) means
+        # the update broke the app: put the previous version back. Exit 0 is
+        # fine (e.g. it handed off to an instance that was already open).
+        for _ in $(seq 1 $(( ${LC_HEALTH_SECONDS:-10} * 2 ))); do
+            kill -0 "$app_pid" 2>/dev/null || break; sleep 0.5
+        done
+        if ! kill -0 "$app_pid" 2>/dev/null; then
+            app_rc=0; wait "$app_pid" || app_rc=$?
+            if [ "$app_rc" -ne 0 ]; then
+                printf '\033[31m[ERROR] The new version exited with code %s right after starting.\033[0m\n' "$app_rc"
+                tail -15 "$APP_LOG" 2>/dev/null | sed 's/^/        /'
+                if [ -n "$OLD" ] && [ -d "$OLD" ]; then
+                    info "Restoring the previous version..."
+                    rm -rf "$INSTALL_DIR.failed"
+                    mv "$INSTALL_DIR" "$INSTALL_DIR.failed" && mv "$OLD" "$INSTALL_DIR"
+                    write_launcher "$INSTALL_DIR"
+                    ok "Previous version restored (failed one kept in $INSTALL_DIR.failed)."
+                    setsid nohup "$LAUNCHER" >/dev/null 2>&1 </dev/null 9>&- &
+                fi
+                fail "Update rolled back. App output: $APP_LOG"
+            fi
+        fi
     else
         info "No display detected. Run: $LAUNCHER"
     fi

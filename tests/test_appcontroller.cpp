@@ -8,6 +8,7 @@
 #include <QStandardPaths>
 #include <QTemporaryDir>
 #include <QProcess>
+#include <QVersionNumber>
 #include <QTemporaryFile>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -185,6 +186,7 @@ private slots:
     void binaryUpdateArgumentsPerPlatform();
     void linuxUpdateRunsInFirstAvailableTerminal();
     void linuxLauncherEnvKeepsWrapperVariables();
+    void linuxBinaryNeedsRecentGlibc();
     void binaryUpdaterScriptsAreBundled();
     void importUserDataFromRoundTrips();
     void exportUserDataToEmptyPathErrors();
@@ -618,6 +620,23 @@ void AppControllerTests::binaryUpdateArgumentsPerPlatform()
         QStringLiteral("C:/x"), 7, QString(), wrapper);
     QVERIFY(!winWrapped.contains(wrapper));
     QVERIFY(!winWrapped.contains(QString()));
+}
+
+// El paquete Linux se compila en ubuntu-24.04: en 22.04 (glibc 2.35) o Debian 12
+// (2.36) no arranca, asi que "Actualizar" compila en vez de bajar el binario.
+void AppControllerTests::linuxBinaryNeedsRecentGlibc()
+{
+    QVERIFY(AppController::linuxGlibcSupportsBinary(QStringLiteral("2.39")));
+    QVERIFY(AppController::linuxGlibcSupportsBinary(QStringLiteral("2.41")));
+    QVERIFY(AppController::linuxGlibcSupportsBinary(QStringLiteral("3.0")));
+    QVERIFY(!AppController::linuxGlibcSupportsBinary(QStringLiteral("2.35")));
+    QVERIFY(!AppController::linuxGlibcSupportsBinary(QStringLiteral("2.38")));
+    // musl u otra libc: no hay version de glibc, no se ofrece el binario.
+    QVERIFY(!AppController::linuxGlibcSupportsBinary(QString()));
+    QVERIFY(!AppController::linuxGlibcSupportsBinary(QStringLiteral("unknown")));
+#if defined(__GLIBC__)
+    QVERIFY(!QVersionNumber::fromString(AppController::runtimeGlibcVersion()).isNull());
+#endif
 }
 
 // Un wrapper propio (config compartida Windows/Linux en NTFS, model roots)

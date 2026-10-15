@@ -691,6 +691,11 @@ public:
     // Escribe linuxLauncherEnv(env) en `path` solo si no existe (nunca pisa
     // lo que el usuario edito). true si lo escribio.
     static bool writeLinuxLauncherEnvIfMissing(const QString &path, const QProcessEnvironment &env);
+    // El paquete Linux se compila en ubuntu-24.04 (release-binaries.yml): con
+    // una glibc mas vieja no arranca. Mismo piso que el runner; el minGlibc
+    // exacto lo verifica update-binary.sh antes de tocar nada. "" (no glibc) = no.
+    static bool linuxGlibcSupportsBinary(const QString &runtimeGlibc);
+    static QString runtimeGlibcVersion();
     // Envuelve `command` en la primera terminal grafica disponible (la consola
     // visible del update en Linux); sin ninguna devuelve `command` tal cual.
     static QStringList linuxTerminalCommand(const QStringList &availableTerminals,

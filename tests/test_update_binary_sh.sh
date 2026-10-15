@@ -102,5 +102,67 @@ PATH="$work/fakebin:$PATH" LC_RUNTIME_TOOLS="tesseract" run --asset-url "$work/v
     --sha256-url "$work/v2.tar.gz.sha256" --install-dir "$new" && rc=0 || rc=$?
 check '[ $rc -eq 0 ] && grep -q "Missing optional tools: tesseract-ocr-spa" "$work/out.txt"' "tesseract sin espanol: avisa tesseract-ocr-spa"
 
+# Una version anterior queda como .prev (rollback manual o automatico).
+check '[ -f "$new/version.txt" ] && [ -d "$new.prev" ]' "conserva la version anterior como .prev"
+
+# glibc: un paquete compilado en un Ubuntu mas nuevo no se instala (no arrancaria).
+pkgjson() {   # pkgjson NAME MINGLIBC
+    pkg "$1" "$1"
+    printf '{ "kind": "binary", "minGlibc": "%s" }\n' "$2" > "$work/pkg-$1/llamacode-install.json"
+    tar -C "$work/pkg-$1" -czf "$work/$1.tar.gz" .
+    ( cd "$work" && sha256sum "$1.tar.gz" > "$1.tar.gz.sha256" )
+}
+pkgjson newglibc 2.41
+LC_GLIBC_VERSION=2.39 run --asset-url "$work/newglibc.tar.gz" --sha256-url "$work/newglibc.tar.gz.sha256" --install-dir "$inst" && rc=0 || rc=$?
+check '[ $rc -eq 1 ] && grep -q "needs glibc >= 2.41 and this system has 2.39" "$work/out.txt"' "glibc viejo: se niega y lo explica"
+check '[ "$(cat "$inst/version.txt")" = envcheck ] && [ ! -e "$inst.new" ]' "glibc viejo: la instalacion queda intacta"
+pkgjson okglibc 2.39
+LC_GLIBC_VERSION=2.39 run --asset-url "$work/okglibc.tar.gz" --sha256-url "$work/okglibc.tar.gz.sha256" --install-dir "$inst" && rc=0 || rc=$?
+check '[ $rc -eq 0 ] && [ "$(cat "$inst/version.txt")" = okglibc ]' "glibc igual al minimo: instala"
+
+# Standalone desde una shell con las variables del wrapper: launcher.env sale de ahi.
+cfg2="$work/cfg2"
+XDG_CONFIG_HOME="$cfg2" LLAMACODE_PROFILES_DIR="/media/x/it's here" LLAMACODE_LAUNCHER=/old/wrapper \
+    run --asset-url "$work/v2.tar.gz" --sha256-url "$work/v2.tar.gz.sha256" --install-dir "$work/opt/S1" && rc=0 || rc=$?
+got="$(bash -c 'set -a; . "$1"; printf "%s|%s" "$LLAMACODE_PROFILES_DIR" "${LLAMACODE_LAUNCHER:-}"' _ "$cfg2/llamacode/launcher.env" 2>&1)"
+check '[ $rc -eq 0 ] && [ "$got" = "/media/x/it'"'"'s here|" ]' "standalone: launcher.env con las LLAMACODE_* de la shell ($got)"
+
+# Wrapper propio que define LLAMACODE_*: sin launcher.env no se toca el menu.
+cfg3="$work/cfg3"; data3="$work/data3"
+mkdir -p "$data3/applications" "$cfg3/autostart" "$work/bin3"
+w3="$work/bin3/llamacode"
+printf '#!/usr/bin/env bash\nexport LLAMACODE_PROFILES_DIR=/shared\nexec /x/LlamaCode "$@"\n' > "$w3"; chmod +x "$w3"
+printf '[Desktop Entry]\nExec=%s %%U\n' "$w3" > "$data3/applications/llamacode.desktop"
+printf '[Desktop Entry]\nExec=%s --startup\n' "$w3" > "$cfg3/autostart/llamacode.desktop"
+XDG_CONFIG_HOME="$cfg3" XDG_DATA_HOME="$data3" run --asset-url "$work/v2.tar.gz" \
+    --sha256-url "$work/v2.tar.gz.sha256" --install-dir "$work/opt/S2" && rc=0 || rc=$?
+check '[ $rc -eq 0 ] && grep -qF "Exec=$w3 %U" "$data3/applications/llamacode.desktop"' "wrapper sin launcher.env: la entrada del menu queda igual"
+check 'grep -q "sets LLAMACODE_\* variables" "$work/out.txt" && grep -qF "Exec=$w3 --startup" "$cfg3/autostart/llamacode.desktop"' "wrapper sin launcher.env: avisa y no toca el autostart"
+mkdir -p "$cfg3/llamacode"; echo "LLAMACODE_PROFILES_DIR=/shared" > "$cfg3/llamacode/launcher.env"
+XDG_CONFIG_HOME="$cfg3" XDG_DATA_HOME="$data3" run --asset-url "$work/v2.tar.gz" \
+    --sha256-url "$work/v2.tar.gz.sha256" --install-dir "$work/opt/S2" && rc=0 || rc=$?
+check '[ $rc -eq 0 ] && grep -qF "Exec=\"$work/opt/S2/llamacode\"" "$data3/applications/llamacode.desktop" && [ -f "$data3/applications/llamacode.desktop.bak" ]' "con launcher.env: el menu pasa al lanzador (.bak)"
+check 'grep -qF "Exec=\"$work/opt/S2/llamacode\" --startup" "$cfg3/autostart/llamacode.desktop"' "con launcher.env: el autostart del wrapper se detecta solo"
+
+# Rollback: si la version nueva muere con error al arrancar vuelve la anterior.
+runl() { DISPLAY=:lc-test LC_HEALTH_SECONDS=2 bash "$src" "$@" --no-pause --no-shortcuts >"$work/out.txt" 2>&1; }
+rb="$work/opt/RB"
+run --asset-url "$work/v2.tar.gz" --sha256-url "$work/v2.tar.gz.sha256" --install-dir "$rb" --no-shortcuts
+pkg crash crash
+printf '#!/bin/sh\necho "Could not load the Qt platform plugin" >&2\nexit 134\n' > "$work/pkg-crash/usr/bin/LlamaCode"
+tar -C "$work/pkg-crash" -czf "$work/crash.tar.gz" .
+( cd "$work" && sha256sum crash.tar.gz > crash.tar.gz.sha256 )
+runl --asset-url "$work/crash.tar.gz" --sha256-url "$work/crash.tar.gz.sha256" --install-dir "$rb" && rc=0 || rc=$?
+check '[ $rc -eq 1 ] && grep -q "exited with code 134" "$work/out.txt" && grep -q "Qt platform plugin" "$work/out.txt"' "version nueva que crashea: lo informa con su salida"
+check '[ "$(cat "$rb/version.txt")" = v2 ] && [ -x "$rb/llamacode" ] && [ "$(cat "$rb.failed/version.txt")" = crash ]' "vuelve la version anterior (la rota queda en .failed)"
+pkg alive alive
+printf '#!/bin/sh\nsleep 4\n' > "$work/pkg-alive/usr/bin/LlamaCode"
+tar -C "$work/pkg-alive" -czf "$work/alive.tar.gz" .
+( cd "$work" && sha256sum alive.tar.gz > alive.tar.gz.sha256 )
+runl --asset-url "$work/alive.tar.gz" --sha256-url "$work/alive.tar.gz.sha256" --install-dir "$rb" && rc=0 || rc=$?
+check '[ $rc -eq 0 ] && [ "$(cat "$rb/version.txt")" = alive ]' "version nueva que sigue viva: queda instalada"
+runl --asset-url "$work/v3.tar.gz" --sha256-url "$work/v3.tar.gz.sha256" --install-dir "$rb" && rc=0 || rc=$?
+check '[ $rc -eq 0 ] && [ "$(cat "$rb/version.txt")" = v3 ]' "con la anterior abierta no queda el lock tomado; sale con 0 (le pasa el foco a otra instancia): no es rollback"
+
 if [ $fails -eq 0 ]; then echo "TODO OK"; exit 0; fi
 echo "$fails FALLAS"; exit 1

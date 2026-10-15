@@ -68,6 +68,11 @@ export QMAKE="$qtdir/bin/qmake"
 export QML_SOURCES_PATHS="$root/qml"
 export LD_LIBRARY_PATH="$qtdir/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 export EXTRA_QT_MODULES="svg;multimedia"
+# By default only xcb is deployed: QT_QPA_PLATFORM=wayland (or offscreen, the app
+# started without a display) then died with "no Qt platform plugin". With a
+# wayland platform plugin the Qt plugin also deploys wayland-shell-integration,
+# -decoration-client and -graphics-integration-client.
+export EXTRA_PLATFORM_PLUGINS="libqoffscreen.so;libqwayland-generic.so;libqwayland-egl.so"
 PATH="$tools:$PATH" "$tools/linuxdeploy-x86_64.AppImage" \
     --appdir "$appdir" -e "$exe" -d "$out/llamacode.desktop" -i "$out/llamacode.png" --plugin qt
 
@@ -76,14 +81,35 @@ if [ -d "$qtdir/qml/Qt/labs/settings" ] && [ ! -d "$appdir/usr/qml/Qt/labs/setti
     mkdir -p "$appdir/usr/qml/Qt/labs"
     cp -r "$qtdir/qml/Qt/labs/settings" "$appdir/usr/qml/Qt/labs/"
 fi
+# The Qt plugin deploys wayland-shell-integration/-decoration-client but not the
+# EGL buffer integration (without it Qt Quick on Wayland falls back to software
+# or fails to get a GL context): copy it and let linuxdeploy bring its deps and
+# set its RPATH.
+gfx="wayland-graphics-integration-client"
+if [ -d "$qtdir/plugins/$gfx" ] && [ ! -d "$appdir/usr/plugins/$gfx" ]; then
+    cp -r "$qtdir/plugins/$gfx" "$appdir/usr/plugins/"
+    "$tools/linuxdeploy-x86_64.AppImage" --appdir "$appdir" --deploy-deps-only "$appdir/usr/plugins/$gfx"
+fi
+for p in platforms/libqoffscreen.so platforms/libqwayland-generic.so wayland-shell-integration "$gfx"; do
+    [ -e "$appdir/usr/plugins/$p" ] || { echo "Qt plugin missing from the package: $p" >&2; exit 1; }
+done
 cp "$out/llamacode.png" "$appdir/llamacode.png"
+
+# Newest glibc symbol version any bundled ELF needs: update-binary.sh refuses
+# to install on an older system (it would not start) instead of breaking it.
+# (non-ELF files make objdump fail: ignored, not fatal under pipefail)
+min_glibc="$( { find "$appdir" -type f \( -name '*.so*' -o -perm -u+x \) -print0 \
+    | xargs -0 objdump -T 2>/dev/null || true; } | grep -o 'GLIBC_[0-9][0-9.]*' | sed 's/GLIBC_//' \
+    | sort -uV | tail -1 || true)"
+[ -n "$min_glibc" ] || { echo "could not compute the minimum glibc" >&2; exit 1; }
 cat > "$appdir/llamacode-install.json" <<EOF
 {
     "kind": "binary",
     "channel": "$channel",
     "version": "$version",
     "tag": "$tag",
-    "platform": "linux-x64"
+    "platform": "linux-x64",
+    "minGlibc": "$min_glibc"
 }
 EOF
 

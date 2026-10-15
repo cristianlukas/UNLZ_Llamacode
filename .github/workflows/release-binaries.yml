@@ -248,23 +248,38 @@ jobs:
       - name: Package
         run: bash ci/scripts/package-linux.sh "$TAG" build "$QT_DIR" dist "$PWD"
 
-      # Instalar con el actualizador real y arrancar SIN el Qt del sistema en el
-      # path: si falta una lib o un plugin en el paquete, muere enseguida.
-      - name: Install from tarball + launch smoke test (Xvfb)
+      # Instalar con el actualizador real y arrancar como el usuario: por el
+      # lanzador (menu/autostart), con un launcher.env y SIN el Qt del sistema.
+      # Un LD_LIBRARY_PATH apuntando a Qt (lo deja un wrapper de desarrollo) no
+      # tiene que tapar las libs del paquete. X11 (Xvfb) y sin pantalla
+      # (offscreen): si falta una lib o un plugin, muere enseguida.
+      - name: Install from tarball + launch smoke test
         run: |
           pkg="$PWD/dist/LlamaCode-$TAG-linux-x64.tar.gz"
           dir="$RUNNER_TEMP/LlamaCodeInstall"
+          export XDG_CONFIG_HOME="$RUNNER_TEMP/cfg"
+          mkdir -p "$XDG_CONFIG_HOME/llamacode"
+          echo "LLAMACODE_PROFILES_DIR='$RUNNER_TEMP/profiles dir'" > "$XDG_CONFIG_HOME/llamacode/launcher.env"
           bash ci/scripts/update-binary.sh --asset-url "$pkg" --sha256-url "$pkg.sha256" \
             --install-dir "$dir" --no-launch --no-shortcuts --no-pause
+          grep -E '"minGlibc": "[0-9]+\.[0-9]+"' "$dir/llamacode-install.json"
+          test -x "$dir/llamacode"
           mv "$HOME/Qt" "$HOME/Qt.hidden"
-          set +e
-          (cd "$dir/usr/bin" && timeout 45 xvfb-run -a ./LlamaCode > "$RUNNER_TEMP/app.log" 2>&1)
-          rc=$?
-          set -e
+          smoke() {   # smoke NAME CMD...
+            local name="$1" rc; shift
+            set +e
+            LD_LIBRARY_PATH="$HOME/Qt/6.8.3/gcc_64/lib" timeout 45 "$@" > "$RUNNER_TEMP/app-$name.log" 2>&1
+            rc=$?
+            set -e
+            tail -25 "$RUNNER_TEMP/app-$name.log"
+            if [ "$rc" -ne 124 ]; then echo "::error::LlamaCode ($name) exited early (rc=$rc)"; return 1; fi
+            echo "LlamaCode ($name) still running after 45s"
+          }
+          ok=0
+          smoke xcb xvfb-run -a "$dir/llamacode" || ok=1
+          QT_QPA_PLATFORM=offscreen smoke offscreen "$dir/llamacode" || ok=1
           mv "$HOME/Qt.hidden" "$HOME/Qt"
-          tail -40 "$RUNNER_TEMP/app.log"
-          if [ "$rc" -ne 124 ]; then echo "::error::LlamaCode exited early (rc=$rc)"; exit 1; fi
-          echo "LlamaCode still running after 45s"
+          exit $ok
 
       - uses: actions/upload-artifact@v7
         with:

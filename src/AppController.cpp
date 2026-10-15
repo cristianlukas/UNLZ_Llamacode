@@ -21,6 +21,9 @@
 #else
 #  include <signal.h>
 #endif
+#if defined(__linux__) && __has_include(<gnu/libc-version.h>)
+#include <gnu/libc-version.h>
+#endif
 #include <QProcess>
 #include <QElapsedTimer>
 #include <QTcpServer>
@@ -13212,6 +13215,22 @@ QString AppController::linuxLauncherEnv(const QProcessEnvironment &env)
     return out;
 }
 
+bool AppController::linuxGlibcSupportsBinary(const QString &runtimeGlibc)
+{
+    static const QVersionNumber kMinGlibc(2, 39);   // ubuntu-24.04 (runner del CI)
+    const QVersionNumber runtime = QVersionNumber::fromString(runtimeGlibc.trimmed());
+    return !runtime.isNull() && runtime >= kMinGlibc;
+}
+
+QString AppController::runtimeGlibcVersion()
+{
+#if defined(__GLIBC__)
+    return QString::fromLatin1(gnu_get_libc_version());
+#else
+    return QString();
+#endif
+}
+
 bool AppController::writeLinuxLauncherEnvIfMissing(const QString &path, const QProcessEnvironment &env)
 {
     if (QFileInfo::exists(path))
@@ -13411,7 +13430,10 @@ bool AppController::handleUpdateDecision(const QString &decision)
         // Con binario publicado se descarga (segundos) en vez de compilar
         // (10-30 min + toolchain). updates/fromSource=true fuerza el bootstrap.
         const QVariantMap asset = m_updateInfo.value(QStringLiteral("asset")).toMap();
-        if (!asset.value(QStringLiteral("url")).toString().isEmpty()
+        // Linux con glibc mas vieja que la del CI: el binario no arrancaria, compilar.
+        const bool binaryRuns = currentUpdateOs() != QLatin1String("linux")
+            || linuxGlibcSupportsBinary(runtimeGlibcVersion());
+        if (!asset.value(QStringLiteral("url")).toString().isEmpty() && binaryRuns
             && !QSettings().value(QStringLiteral("updates/fromSource"), false).toBool()) {
             if (!launchBinaryUpdate(asset, channel, versionToUpdate))
                 return false;
