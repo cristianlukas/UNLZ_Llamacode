@@ -1,0 +1,22 @@
+{
+  "label": "SOL TaskFlow T0.1 seed4243",
+  "suite_id": "qwen38_taskflow_ultra_ast_vs_sol_20261006",
+  "profile_id": "c8d4f1a7-2b69-4e80-95c3-7a1d6f8b2045",
+  "temperature_requested": 0.1,
+  "seed_requested": 4243,
+  "timeout_sec": 1800,
+  "max_wait_sec": 2100,
+  "started_at_utc": "2026-10-15T14:29:13Z",
+  "finished_at_utc": "2026-10-15T14:31:00Z",
+  "runner_exit_code": 1,
+  "error": "Suite runner exited with status 1",
+  "app_log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-SOL-TASKFLOW-SAMPLING/receipts/app-SOL_TaskFlow_T0.1_seed4243.log",
+  "runner_log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-SOL-TASKFLOW-SAMPLING/receipts/taskflow-T0.1-seed4243.runner.log",
+  "result_json": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-SOL-TASKFLOW-SAMPLING/receipts/taskflow-T0.1-seed4243.json",
+  "effective_temperature": null,
+  "effective_seed": null,
+  "final_score": null,
+  "first_pass_score": null,
+  "repair_attempts": null,
+  "elapsed_sec": null
+}

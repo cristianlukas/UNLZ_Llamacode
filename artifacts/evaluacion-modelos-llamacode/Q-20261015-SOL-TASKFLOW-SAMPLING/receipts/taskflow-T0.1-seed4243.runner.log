@@ -1,0 +1,67 @@
+{"time_utc": "2026-10-15T14:29:15Z", "event": "preflight", "launch": {"alias": "SOL", "benchmark": true, "best": true, "deprecated": false, "displayName": "⚡ ★ 🏆 SOL - 177_SOL · Qwen3.8 27B · vLLM TP2 P2P MTP4 · 262K", "favorite": true, "id": "c8d4f1a7-2b69-4e80-95c3-7a1d6f8b2045", "lastUsed": 1792074539608, "menuOrder": 0, "name": "177_SOL · Qwen3.8 27B · vLLM TP2 P2P MTP4 · 262K", "ready": true, "system": false, "systemBadge": false, "tags": ["SOL", "Qwen3.8 27B", "Ubuntu", "vLLM", "TP2", "P2P", "MTP4", "262K techo", "200K recomendado", "74,03 narr tok/s", "102,36 code tok/s", "BCB 8/8"]}, "suite": {"id": "qwen38_taskflow_ultra_ast_vs_sol_20261006", "name": "Qwen3.8 ASTRA IQ3_S calibrado vs SOL · TaskFlow ULTRA E2E", "prompt_count": 1}}
+{"time_utc": "2026-10-15T14:29:15Z", "event": "set_approval", "response": {"ok": true, "reqId": "bb009d6c-a41a-4db2-8eb8-d9e614bfb571"}}
+{"time_utc": "2026-10-15T14:29:15Z", "event": "set_thinking", "response": {"ok": true, "reqId": "e85f86da-4f66-40b7-9406-1e34b8d8a4f8"}}
+{"time_utc": "2026-10-15T14:29:15Z", "event": "start_agent", "response": {"ok": true, "reqId": "b27478db-ae19-47fc-a2d8-edcc646e272d"}}
+{"time_utc": "2026-10-15T14:29:15Z", "event": "agent_ready", "server_state": "running"}
+{"time_utc": "2026-10-15T14:29:15Z", "event": "benchmark_start", "response": {"ok": true, "reqId": "3c451ef5-8289-4325-9102-91ac0c768fe9"}, "suite_id": "qwen38_taskflow_ultra_ast_vs_sol_20261006", "agent_profile": "agent-maximo", "timeout_sec": 1800}
+{"time_utc": "2026-10-15T14:29:15Z", "event": "benchmark_poll", "running": true, "status": "Iniciando..."}
+{"time_utc": "2026-10-15T14:29:30Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 177_SOL · Qwen3.8 27B · vLLM TP2 P2P MTP4 · 262K — cargando modelo (puede tardar)... 12s"}
+{"time_utc": "2026-10-15T14:29:45Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 177_SOL · Qwen3.8 27B · vLLM TP2 P2P MTP4 · 262K — cargando modelo (puede tardar)... 28s"}
+{"time_utc": "2026-10-15T14:30:00Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 177_SOL · Qwen3.8 27B · vLLM TP2 P2P MTP4 · 262K — cargando modelo (puede tardar)... 42s"}
+{"time_utc": "2026-10-15T14:30:15Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 177_SOL · Qwen3.8 27B · vLLM TP2 P2P MTP4 · 262K — cargando modelo (puede tardar)... 58s"}
+{"time_utc": "2026-10-15T14:30:30Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 177_SOL · Qwen3.8 27B · vLLM TP2 P2P MTP4 · 262K — cargando modelo (puede tardar)... 72s"}
+{"time_utc": "2026-10-15T14:30:45Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 177_SOL · Qwen3.8 27B · vLLM TP2 P2P MTP4 · 262K — cargando modelo (puede tardar)... 88s"}
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/urllib/request.py", line 1344, in do_open
+    h.request(req.get_method(), req.selector, req.data, headers,
+  File "/usr/lib/python3.12/http/client.py", line 1365, in request
+    self._send_request(method, url, body, headers, encode_chunked)
+  File "/usr/lib/python3.12/http/client.py", line 1411, in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+  File "/usr/lib/python3.12/http/client.py", line 1360, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+  File "/usr/lib/python3.12/http/client.py", line 1120, in _send_output
+    self.send(msg)
+  File "/usr/lib/python3.12/http/client.py", line 1064, in send
+    self.connect()
+  File "/usr/lib/python3.12/http/client.py", line 1030, in connect
+    self.sock = self._create_connection(
+                ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/socket.py", line 852, in create_connection
+    raise exceptions[0]
+  File "/usr/lib/python3.12/socket.py", line 837, in create_connection
+    sock.connect(sa)
+ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-SOL-TASKFLOW-SAMPLING/scripts/run_taskflow.py", line 118, in <module>
+    main()
+  File "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-SOL-TASKFLOW-SAMPLING/scripts/run_taskflow.py", line 90, in main
+    running = prop(base, "benchmarkRunning")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-SOL-TASKFLOW-SAMPLING/scripts/run_taskflow.py", line 24, in prop
+    return request(base + "/prop?name=" + name)["value"]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-SOL-TASKFLOW-SAMPLING/scripts/run_taskflow.py", line 14, in request
+    with urllib.request.urlopen(req, timeout=timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 515, in open
+    response = self._open(req, data)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 532, in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 1373, in http_open
+    return self.do_open(http.client.HTTPConnection, req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 1347, in do_open
+    raise URLError(err)
+urllib.error.URLError: <urlopen error [Errno 111] Connection refused>

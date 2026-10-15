@@ -1,0 +1,13 @@
+{"time_utc": "2026-10-15T14:29:15Z", "event": "preflight", "launch": {"alias": "SOL", "benchmark": true, "best": true, "deprecated": false, "displayName": "⚡ ★ 🏆 SOL - 177_SOL · Qwen3.8 27B · vLLM TP2 P2P MTP4 · 262K", "favorite": true, "id": "c8d4f1a7-2b69-4e80-95c3-7a1d6f8b2045", "lastUsed": 1792074539608, "menuOrder": 0, "name": "177_SOL · Qwen3.8 27B · vLLM TP2 P2P MTP4 · 262K", "ready": true, "system": false, "systemBadge": false, "tags": ["SOL", "Qwen3.8 27B", "Ubuntu", "vLLM", "TP2", "P2P", "MTP4", "262K techo", "200K recomendado", "74,03 narr tok/s", "102,36 code tok/s", "BCB 8/8"]}, "suite": {"id": "qwen38_taskflow_ultra_ast_vs_sol_20261006", "name": "Qwen3.8 ASTRA IQ3_S calibrado vs SOL · TaskFlow ULTRA E2E", "prompt_count": 1}}
+{"time_utc": "2026-10-15T14:29:15Z", "event": "set_approval", "response": {"ok": true, "reqId": "bb009d6c-a41a-4db2-8eb8-d9e614bfb571"}}
+{"time_utc": "2026-10-15T14:29:15Z", "event": "set_thinking", "response": {"ok": true, "reqId": "e85f86da-4f66-40b7-9406-1e34b8d8a4f8"}}
+{"time_utc": "2026-10-15T14:29:15Z", "event": "start_agent", "response": {"ok": true, "reqId": "b27478db-ae19-47fc-a2d8-edcc646e272d"}}
+{"time_utc": "2026-10-15T14:29:15Z", "event": "agent_ready", "server_state": "running"}
+{"time_utc": "2026-10-15T14:29:15Z", "event": "benchmark_start", "response": {"ok": true, "reqId": "3c451ef5-8289-4325-9102-91ac0c768fe9"}, "suite_id": "qwen38_taskflow_ultra_ast_vs_sol_20261006", "agent_profile": "agent-maximo", "timeout_sec": 1800}
+{"time_utc": "2026-10-15T14:29:15Z", "event": "benchmark_poll", "running": true, "status": "Iniciando..."}
+{"time_utc": "2026-10-15T14:29:30Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 177_SOL · Qwen3.8 27B · vLLM TP2 P2P MTP4 · 262K — cargando modelo (puede tardar)... 12s"}
+{"time_utc": "2026-10-15T14:29:45Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 177_SOL · Qwen3.8 27B · vLLM TP2 P2P MTP4 · 262K — cargando modelo (puede tardar)... 28s"}
+{"time_utc": "2026-10-15T14:30:00Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 177_SOL · Qwen3.8 27B · vLLM TP2 P2P MTP4 · 262K — cargando modelo (puede tardar)... 42s"}
+{"time_utc": "2026-10-15T14:30:15Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 177_SOL · Qwen3.8 27B · vLLM TP2 P2P MTP4 · 262K — cargando modelo (puede tardar)... 58s"}
+{"time_utc": "2026-10-15T14:30:30Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 177_SOL · Qwen3.8 27B · vLLM TP2 P2P MTP4 · 262K — cargando modelo (puede tardar)... 72s"}
+{"time_utc": "2026-10-15T14:30:45Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 177_SOL · Qwen3.8 27B · vLLM TP2 P2P MTP4 · 262K — cargando modelo (puede tardar)... 88s"}

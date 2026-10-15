@@ -1,0 +1,19 @@
+[2026-10-15T11:24:32.225] [+1 ms] [DEBUG] === LlamaCode starting === "Thu Oct 15 11:24:32 2026" elapsedMs=0
+[2026-10-15T11:24:32.231] [+8 ms] [DEBUG] QApplication ready elapsedMs= 6
+[2026-10-15T11:24:32.325] [+102 ms] [INFO] System tray: available iconNull= false
+[2026-10-15T11:24:32.325] [+102 ms] [INFO] ControlApi: escuchando en http://127.0.0.1:8898
+[2026-10-15T11:24:32.325] [+102 ms] [INFO] Servidor de instancia local: activo key= "LlamaCode-single-instance-debug" ""
+[2026-10-15T11:24:32.325] [+102 ms] [DEBUG] Controllers ready
+[2026-10-15T11:24:32.325] [+102 ms] [DEBUG] Agent daemon headless activo en localhost: 8898
+[2026-10-15T11:24:32.332] [+108 ms] [INFO] Startup phase registries_refresh elapsedMs= 0
+[2026-10-15T11:24:32.332] [+108 ms] [INFO] Startup phase hardware_dispatch elapsedMs= 0
+[2026-10-15T11:24:32.332] [+109 ms] [INFO] Startup phase catalog_diagnostic elapsedMs= 0
+[2026-10-15T11:24:32.338] [+115 ms] [INFO] Startup phase catalog_scan_dispatch elapsedMs= 5
+[2026-10-15T11:24:32.338] [+115 ms] [INFO] Startup phase benchmark_load elapsedMs= 0
+[2026-10-15T11:24:32.381] [+158 ms] [INFO] Startup phase bundled_benchmark_import elapsedMs= 42
+[2026-10-15T11:24:32.384] [+160 ms] [INFO] Startup phase custom_benchmark_load elapsedMs= 2
+[2026-10-15T11:24:32.384] [+160 ms] [INFO] Startup phase research_refresh elapsedMs= 0
+[2026-10-15T11:24:32.384] [+160 ms] [INFO] Startup complete elapsedMs= 52 phaseTimings= QMap(("benchmarkLoadMs", QVariant(qlonglong, 0))("bundledBenchmarkImportMs", QVariant(qlonglong, 42))("catalogDiagnosticMs", QVariant(qlonglong, 0))("catalogScanDispatchMs", QVariant(qlonglong, 5))("customBenchmarkLoadMs", QVariant(qlonglong, 2))("hardwareDispatchMs", QVariant(qlonglong, 0))("registriesRefreshMs", QVariant(qlonglong, 0))("researchRefreshMs", QVariant(qlonglong, 0))("startupTotalMs", QVariant(qlonglong, 52)))
+[2026-10-15T11:24:32.574] [+350 ms] [INFO] Startup phase hardware_ready elapsedMs= QVariant(qlonglong, 242)
+[2026-10-15T11:24:33.156] [+933 ms] [INFO] Launch menu slow elapsedMs= 61 systemProfiles= 274 entries= 275 visible= 275 bundleMs= 3 profileListMs= 3 readinessMs= 1 affinityMs= 0 slowestEntryMs= 1 slowestEntry= "🏆 ASTRA Strata - ASTRA · Strata IQ3_S · Qwen3.8 Flash Next"
+[2026-10-15T11:24:33.304] [+1081 ms] [INFO] Launch menu slow elapsedMs= 59 systemProfiles= 274 entries= 275 visible= 275 bundleMs= 0 profileListMs= 3 readinessMs= 1 affinityMs= 0 slowestEntryMs= 1 slowestEntry= "🏆 ASTRA Strata - ASTRA · Strata IQ3_S · Qwen3.8 Flash Next"

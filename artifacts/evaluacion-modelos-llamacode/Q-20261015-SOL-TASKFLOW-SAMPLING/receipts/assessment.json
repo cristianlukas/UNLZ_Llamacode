@@ -1,0 +1,117 @@
+{
+  "task_id": "Q-20261015-SOL-TASKFLOW-SAMPLING",
+  "status": "screening_completed_invalid_by_runtime_failure",
+  "quality_score_valid": false,
+  "profile": {
+    "id": "c8d4f1a7-2b69-4e80-95c3-7a1d6f8b2045",
+    "name": "177_SOL · Qwen3.8 27B · vLLM TP2 P2P MTP4 · 262K",
+    "model": "Frozenlock Qwen3.8-27B AutoRound INT4 (effective Linux backend)",
+    "engine": "vLLM 0.27.1",
+    "tensor_parallel": 2,
+    "speculative_tokens": 4,
+    "context_max_tokens": 262144,
+    "legacy_model_profile_reference": "Qwen3.8-27B Q4_K_M + MTP3 · Ubuntu"
+  },
+  "test": {
+    "suite": "qwen38_taskflow_ultra_ast_vs_sol_20261006",
+    "suite_sha256": "f04febb440208d5bf74c01e84d78f5127e57c164fabece2acbfb346215dc0c17",
+    "smoke_suite": "llamacode_local_coding_smoke",
+    "smoke_sha256": "a4c58e2a8f58ad28bc8abe4d294eb0f746c5867e34af49ba9e82a6884c48df61",
+    "planned_taskflow_runs": 9,
+    "planned_smoke_runs": 3
+  },
+  "first_run": {
+    "requested_temperature": 0.1,
+    "effective_temperature": 0.1,
+    "requested_seed": 4242,
+    "effective_seed": 4242,
+    "app_reported_score": [
+      0,
+      13
+    ],
+    "repair_attempts": 2,
+    "elapsed_sec": 10.757,
+    "tool_calls": 0,
+    "app_failure_kind": "quality",
+    "app_failure_message": "[error: Connection closed]",
+    "classification": "invalid_infrastructure_failure"
+  },
+  "second_run": {
+    "requested_temperature": 0.1,
+    "requested_seed": 4243,
+    "runner_exit_code": 1,
+    "error": "Suite runner exited with status 1",
+    "scored": false,
+    "description": "Cancelled during API-unresponsive loading state after confirming the server worker had failed."
+  },
+  "matrix": {
+    "temperature_seed_pairs_executed_or_attempted": [
+      "T0.1 seed4242 (invalid)",
+      "T0.1 seed4243 (no score)"
+    ],
+    "not_run": [
+      "T0.1 seed4244",
+      "T0.6 seeds4242/4243/4244",
+      "T1.0 seeds4242/4243/4244"
+    ],
+    "smoke_runs": "not run"
+  },
+  "root_cause": {
+    "component": "vLLM CUDA worker / MTP4 inference",
+    "error": "ScatterGatherKernel.cu:203 scatter gather kernel index out of bounds",
+    "observed_utc": "2026-10-15T14:29:08Z",
+    "followup": "WorkerProc exception; NCCL TCPStore broken pipe; endpoint reset connections. The CUDA failure invalidates the 0/13 app record as a model quality score."
+  },
+  "resources": {
+    "preflight_mem_available_bytes": 114583003136,
+    "minimum_monitor_mem_available_bytes_during_startup": 103323295744,
+    "prestop_mem_available_bytes": 108973334528,
+    "postflight_mem_available_bytes": 114546540544,
+    "prestop_psi": {
+      "some": {
+        "avg10": "0.00",
+        "avg60": "0.00",
+        "avg300": "0.00",
+        "total": "748189753"
+      },
+      "full": {
+        "avg10": "0.00",
+        "avg60": "0.00",
+        "avg300": "0.00",
+        "total": "747056842"
+      }
+    },
+    "postflight_psi": {
+      "some": {
+        "avg10": "0.00",
+        "avg60": "0.00",
+        "avg300": "0.00",
+        "total": "748189764"
+      },
+      "full": {
+        "avg10": "0.00",
+        "avg60": "0.00",
+        "avg300": "0.00",
+        "total": "747056851"
+      }
+    },
+    "prestop_oom_kill": 0,
+    "postflight_oom_kill": 0,
+    "pswpin_delta_prestop_to_postflight_pages": 67,
+    "pswpout_delta_prestop_to_postflight_pages": 0,
+    "listeners_after_shutdown": [],
+    "container_after_shutdown": "",
+    "continuous_monitor_through_inference": false,
+    "monitor_last_sample_before_first_request_utc": "2026-10-15T14:28:33Z",
+    "inference_resource_snapshots": [
+      "2026-10-15T14:31:40Z pre-stop",
+      "2026-10-15T14:31:54Z postflight"
+    ],
+    "monitoring_limit": "The memory monitor stopped before the first TaskFlow request. Later manual snapshots showed PSI full avg10 0, OOM counter 0, and postflight RAM restored; memory was not continuously monitored during the failed request."
+  },
+  "limitations": [
+    "SOL is capped at 262144 context tokens, while the IQ2_XS comparison used 1048576.",
+    "No conclusion about relative model quality is supported because the SOL inference crashed before a valid TaskFlow run."
+  ],
+  "production_changes": false
+}

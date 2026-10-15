@@ -1,0 +1,31 @@
+{
+  "time_utc": "2026-10-15T14:31:40Z",
+  "meminfo": {
+    "MemAvailable_bytes": 108973334528,
+    "SwapTotal_bytes": 8589930496,
+    "SwapFree_bytes": 2984894464
+  },
+  "vmstat": {
+    "pswpin": 3505832,
+    "pswpout": 8189389,
+    "oom_kill": 0
+  },
+  "memory_psi": {
+    "some": {
+      "avg10": "0.00",
+      "avg60": "0.00",
+      "avg300": "0.00",
+      "total": "748189753"
+    },
+    "full": {
+      "avg10": "0.00",
+      "avg60": "0.00",
+      "avg300": "0.00",
+      "total": "747056842"
+    }
+  },
+  "gpu_query": "0, NVIDIA GeForce RTX 3090, 1263 MiB, 24576 MiB, 0 %\n1, NVIDIA GeForce RTX 3090, 21822 MiB, 24576 MiB, 100 %",
+  "listeners_8113_8898": [
+    "LISTEN 0      4096       127.0.0.1:8113  0.0.0.0:*"
+  ]
+}

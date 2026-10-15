@@ -1,0 +1,36 @@
+{
+  "timestamp_utc": "2026-10-15T14:20:37Z",
+  "meminfo_bytes": {
+    "MemAvailable": 114583003136,
+    "SwapTotal": 8589930496,
+    "SwapFree": 2973937664
+  },
+  "memory_psi_avg10_percent": {
+    "some": 0.0,
+    "full": 0.0
+  },
+  "swap_pages_delta_over_8s": {
+    "pswpin": 0,
+    "pswpout": 0
+  },
+  "gpu_query": "0, NVIDIA GeForce RTX 3090, 1137 MiB, 24576 MiB, 0 %\n1, NVIDIA GeForce RTX 3090, 108 MiB, 24576 MiB, 0 %",
+  "candidate_ports_checked": [
+    8350,
+    8351,
+    8352,
+    8877,
+    8898
+  ],
+  "listeners_on_candidate_ports": [],
+  "relevant_process_names": [],
+  "gpu_compute_processes": [],
+  "resource_policy": {
+    "memory_available": "observational_only; no minimum floor",
+    "memory_psi": "observational_only; no preventive cutoff",
+    "swap_activity": "observational_only; no zero-delta requirement",
+    "candidate_ports_must_be_free": true,
+    "inference_processes_must_be_absent": true,
+    "gpu_compute_processes_must_be_absent": true
+  },
+  "decision": "pass"
+}

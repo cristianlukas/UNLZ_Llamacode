@@ -1,0 +1,12 @@
+{
+  "profile_id": "c8d4f1a7-2b69-4e80-95c3-7a1d6f8b2045",
+  "platform_backend_id": "2baf3292-033d-4a6c-9f84-ea13ae4aae3b",
+  "cloud_context": 262144,
+  "taskflow_id": "qwen38_taskflow_ultra_ast_vs_sol_20261006",
+  "taskflow_sha256": "f04febb440208d5bf74c01e84d78f5127e57c164fabece2acbfb346215dc0c17",
+  "taskflow_prompts": 1,
+  "smoke_id": "llamacode_local_coding_smoke",
+  "smoke_sha256": "a4c58e2a8f58ad28bc8abe4d294eb0f746c5867e34af49ba9e82a6884c48df61",
+  "smoke_prompts": 3,
+  "production_profiles_modified": false
+}

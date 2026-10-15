@@ -1,0 +1,63 @@
+{
+  "launch": {
+    "id": "c8d4f1a7-2b69-4e80-95c3-7a1d6f8b2045",
+    "name": "177_SOL · Qwen3.8 27B · vLLM TP2 P2P MTP4 · 262K",
+    "alias": "SOL",
+    "agentProfileId": "agent-maximo",
+    "modelProfileId": "f1a6c4d8-9e2b-4a73-b5c1-0d8f6e2a7419",
+    "reasoningBudget": 4096,
+    "reasoningEffort": "medium",
+    "platformBackendIds": {
+      "linux": "2baf3292-033d-4a6c-9f84-ea13ae4aae3b"
+    },
+    "benchmark": true
+  },
+  "linuxBackend": {
+    "id": "2baf3292-033d-4a6c-9f84-ea13ae4aae3b",
+    "name": "Qwen3.8 vLLM TP2 P2P MTP4",
+    "kind": "cloud",
+    "host": "127.0.0.1",
+    "port": 8113,
+    "cloudBaseUrl": "http://127.0.0.1:8113",
+    "cloudModel": "qwen3.8-27b",
+    "cloudCtx": 262144,
+    "managedServer": {
+      "composeFiles": [
+        "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.8-27b/vllm/compose/dual/autoround-int4/mtp.yml",
+        "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.8-27b/vllm/compose/dual/autoround-int4/vram-quarantine.override.yml"
+      ],
+      "project": "autoround-int4",
+      "service": "vllm-qwen38-27b-dual-fast",
+      "type": "docker-compose"
+    }
+  },
+  "evaluationIsolation": {
+    "managedServerRemovedInTaskCopy": true,
+    "endpoint": "http://127.0.0.1:8113",
+    "container": "llamacode-sol-eval-20261015",
+    "composeProject": "llamacode-sol-eval-20261015"
+  },
+  "sourceProfileFiles": {
+    "launches": "profiles/launches.json",
+    "models": "profiles/models.json",
+    "backends": "profiles/backends.json"
+  },
+  "productionProfilesModified": false,
+  "legacyModelProfileReference": {
+    "id": "f1a6c4d8-9e2b-4a73-b5c1-0d8f6e2a7419",
+    "name": "Qwen3.8-27B Q4_K_M + MTP3 · Ubuntu",
+    "modelId": "dc210cc5-26d4-5d9f-838e-0d6c9bea2b04",
+    "modelStableId": 120,
+    "specType": "draft-mtp",
+    "specDraftNMax": 3
+  },
+  "effectiveLinuxModel": {
+    "name": "Frozenlock Qwen3.8-27B AutoRound INT4",
+    "repository": "Frozenlock/Qwen3.8-27B-int4-AutoRound",
+    "revision": "b4c61732c4f2d8af323d75ba5702b5c7f3361539",
+    "host_path": "/media/cristian/Disco local/Models/llamacpp/club-3090/qwen3.8-27b-autoround-int4",
+    "container_model_path": "/root/.cache/huggingface/qwen3.8-27b-autoround-int4",
+    "loaded_model_path_from_vllm_log": "/root/.cache/huggingface/qwen3.8-27b-autoround-int4",
+    "format": "AutoRound INT4 safetensors; 7 principal shards plus extra tensors"
+  }
+}

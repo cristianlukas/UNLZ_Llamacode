@@ -1,0 +1,6 @@
+2df4e44e1e1b268da80690a0812ac1b60768d60b643096ce8473110f88b7b76a  /home/cristian/.cache/llamacode/club-3090-src/models/qwen3.8-27b/vllm/compose/dual/autoround-int4/mtp.yml
+e547197d1b283e5c8b684d35e1b348bb91bbba3a327183a14b0d4a6083c36a50  /home/cristian/.cache/llamacode/club-3090-src/models/qwen3.8-27b/vllm/compose/dual/autoround-int4/vram-quarantine.override.yml
+15173d7a487c88112a02804701ab2cc8f8dd4631a3ef67c8d9bb2c66d30debce  /media/cristian/Disco local/Models/llamacpp/club-3090/qwen3.8-27b-autoround-int4/config.json
+7ca7c7290d50e6155120067e2fe7a31ef2913158b1b07441f95b451bcec6db94  /media/cristian/Disco local/Models/llamacpp/club-3090/qwen3.8-27b-autoround-int4/quantization_config.json
+adf387dee183d109e95cdc4d4988fcd966de326861ff4d66876692170f1e03ad  /media/cristian/Disco local/Models/llamacpp/club-3090/qwen3.8-27b-autoround-int4/model.safetensors.index.json
+063f3273edd09dedda5a93ed46bba49e4e05a7686c28dec20d39d44f9f4cdbf6  /home/cristian/.cache/llamacode-sampling-eval/build_linux/LlamaCode
