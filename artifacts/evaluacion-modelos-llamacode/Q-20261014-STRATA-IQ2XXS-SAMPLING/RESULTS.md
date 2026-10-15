@@ -54,3 +54,22 @@ las observaciones y la razón de detención.
 No hubo cambio de producción. Se construyó un binario aislado de evaluación,
 descrito en `PLAN.md` y en `receipts/runtime-sha256.txt`; el checkout y el
 ejecutable Windows Debug del usuario no se modificaron.
+
+## Reanudación 2026-10-15
+
+Con el lock nuevo `b6ed46b6-0f79-4e2a-912c-3bdb0cd95321`, repetí el preflight
+antes de iniciar cualquier servidor. Abortó de forma segura: `MemAvailable`
+63.871.774.720 bytes (59,5 GiB) frente al mínimo de 60 GiB; GPU0 tenía
+23.879/24.576 MiB y GPU1 22.406/24.576 MiB usados, con 29%/23% de utilización.
+El puerto 8350 ya tenía un listener y se detectaron procesos LlamaCode (PID
+484347) y Strata (PID 484773). PSI avg10 fue 0% y no hubo delta de swap en los
+8 segundos, pero las GPU no estaban libres. No inicié nuestro servidor ni el
+daemon de evaluación, no envié prompts y no me conecté al proceso existente;
+no detuve ni modifiqué esos procesos. El recibo completo es
+`receipts/preflight-20261015.json`.
+
+La tarea vuelve a quedar bloqueada antes de carga. Puede reanudarse cuando
+LlamaCode/Strata externos hayan terminado, el puerto 8350 esté libre, ambas
+RTX 3090 tengan VRAM para la receta y `MemAvailable` sea al menos 60 GiB. El
+intento del 14-10 y este preflight se conservan por separado; ninguno aporta
+un resultado de calidad o sampling.
