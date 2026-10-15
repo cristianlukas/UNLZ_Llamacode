@@ -11,6 +11,10 @@
 #                                                   # del ultimo vX.Y.Z-debug ya probado
 #   scripts/release.sh --version 0.2.0 --publish
 #
+# --publish exige el CI de tests (tests.yml) verde para el commit que se taggea
+# (como tools/release.ps1); un commit que solo cambia la version usa el CI del
+# anterior. --force lo saltea (y tambien arbol sucio / tag existente).
+#
 # Los tags son vX.Y.Z (Prod) y vX.Y.Z-debug (Debug): la app filtra por canal.
 set -euo pipefail
 
@@ -100,6 +104,28 @@ if [ $force -eq 0 ]; then
 fi
 if git rev-parse -q --verify "refs/tags/$tag" >/dev/null && [ $force -eq 0 ]; then
     fail "el tag $tag ya existe; bumpear la version o usar --force"
+fi
+
+# CI verde (tests.yml) para lo que se publica: el gate local corre en la maquina
+# de quien publica y no ve los merges de otros. Con --bump se mira HEAD (el
+# commit del bump solo cambia la version).
+version_only_commit() {   # el commit $1 solo cambia project(LlamaCode VERSION ...)
+    [ "$(git diff --name-only "$1~1" "$1" 2>/dev/null)" = "CMakeLists.txt" ] || return 1
+    ! git diff -U0 "$1~1" "$1" -- CMakeLists.txt | grep -E '^[+-][^+-]' | grep -vq 'project(LlamaCode VERSION'
+}
+if [ $force -eq 0 ]; then
+    ci_commit="$(git rev-parse "$target")"
+    candidates=("$ci_commit")
+    version_only_commit "$ci_commit" && candidates+=("$(git rev-parse "$ci_commit~1")")
+    green=""; last="sin corridas"
+    for sha in "${candidates[@]}"; do
+        st="$(gh run list --workflow tests.yml --commit "$sha" --limit 1 \
+            --json status,conclusion --jq '.[0] | "\(.status)/\(.conclusion)"' 2>/dev/null || true)"
+        [ -n "$st" ] && [ "$st" != "null/null" ] && last="$st"
+        [ "$st" = "completed/success" ] && { green="$sha"; break; }
+    done
+    [ -n "$green" ] || fail "el CI (tests.yml) no esta verde para $(git rev-parse --short "$ci_commit") ($last). Pushea, espera el CI y reintenta (o --force)."
+    echo "[OK] CI verde para $(git rev-parse --short "$green")"
 fi
 
 if [ $bump -eq 1 ]; then

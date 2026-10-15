@@ -28,16 +28,30 @@ mkdir -p "$out"; out="$(cd "$out" && pwd)"
 exe="$build/LlamaCode"
 [ -x "$exe" ] || { echo "built binary missing: $exe" >&2; exit 1; }
 
+# linuxdeploy + Qt plugin pinned to a release tag and checked by SHA-256: they
+# run inside the build whose output is then signed (attest-build-provenance),
+# so they must be exactly what was reviewed. "continuous" changed under us.
+# To update: pick the new tags, sha256sum the AppImages, re-run this locally
+# and check the smoke test (offscreen + xcb) still passes.
+LINUXDEPLOY_TAG="1-alpha-20251107-1"
+LINUXDEPLOY_SHA256="c20cd71e3a4e3b80c3483cef793cda3f4e990aca14014d23c544ca3ce1270b4d"
+PLUGIN_QT_TAG="1-alpha-20250213-1"
+PLUGIN_QT_SHA256="15106be885c1c48a021198e7e1e9a48ce9d02a86dd0a1848f00bdbf3c1c92724"
 tools="$out/.linuxdeploy"
 mkdir -p "$tools"
-for t in linuxdeploy-x86_64.AppImage linuxdeploy-plugin-qt-x86_64.AppImage; do
-    if [ ! -x "$tools/$t" ]; then
-        repo="linuxdeploy"; [[ "$t" == *plugin-qt* ]] && repo="linuxdeploy-plugin-qt"
+fetch_tool() {   # fetch_tool FILE REPO TAG SHA256 (cached copy reused only if it matches)
+    local f="$tools/$1"
+    if [ ! -f "$f" ] || [ "$(sha256sum "$f" | cut -d' ' -f1)" != "$4" ]; then
         # Retries: a transient 504 from GitHub failed a whole CI run.
-        curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors -o "$tools/$t" "https://github.com/linuxdeploy/$repo/releases/download/continuous/$t"
-        chmod +x "$tools/$t"
+        curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors -o "$f" \
+            "https://github.com/linuxdeploy/$2/releases/download/$3/$1"
     fi
-done
+    local got; got="$(sha256sum "$f" | cut -d' ' -f1)"
+    [ "$got" = "$4" ] || { rm -f "$f"; echo "SHA-256 mismatch for $1 ($3): expected $4, got $got" >&2; exit 1; }
+    chmod +x "$f"
+}
+fetch_tool linuxdeploy-x86_64.AppImage linuxdeploy "$LINUXDEPLOY_TAG" "$LINUXDEPLOY_SHA256"
+fetch_tool linuxdeploy-plugin-qt-x86_64.AppImage linuxdeploy-plugin-qt "$PLUGIN_QT_TAG" "$PLUGIN_QT_SHA256"
 
 appdir="$out/stage-linux"
 rm -rf "$appdir"; mkdir -p "$appdir"
@@ -82,16 +96,18 @@ if [ -d "$qtdir/qml/Qt/labs/settings" ] && [ ! -d "$appdir/usr/qml/Qt/labs/setti
     mkdir -p "$appdir/usr/qml/Qt/labs"
     cp -r "$qtdir/qml/Qt/labs/settings" "$appdir/usr/qml/Qt/labs/"
 fi
-# The Qt plugin deploys wayland-shell-integration/-decoration-client but not the
-# EGL buffer integration (without it Qt Quick on Wayland falls back to software
-# or fails to get a GL context): copy it and let linuxdeploy bring its deps and
-# set its RPATH.
-gfx="wayland-graphics-integration-client"
-if [ -d "$qtdir/plugins/$gfx" ] && [ ! -d "$appdir/usr/plugins/$gfx" ]; then
-    cp -r "$qtdir/plugins/$gfx" "$appdir/usr/plugins/"
-    "$tools/linuxdeploy-x86_64.AppImage" --appdir "$appdir" --deploy-deps-only "$appdir/usr/plugins/$gfx"
-fi
-for p in platforms/libqoffscreen.so platforms/libqwayland-generic.so wayland-shell-integration "$gfx"; do
+# Plugin dirs the pinned Qt plugin does not deploy by itself: Wayland shell /
+# decorations / EGL buffer integration (without them QT_QPA_PLATFORM=wayland
+# fails or Qt Quick has no GL context) and networkinformation (QML network
+# status). Copy them and let linuxdeploy bring their deps and set their RPATH.
+extra_dirs=(wayland-shell-integration wayland-decoration-client wayland-graphics-integration-client networkinformation)
+for d in "${extra_dirs[@]}"; do
+    if [ -d "$qtdir/plugins/$d" ] && [ ! -d "$appdir/usr/plugins/$d" ]; then
+        cp -r "$qtdir/plugins/$d" "$appdir/usr/plugins/"
+        "$tools/linuxdeploy-x86_64.AppImage" --appdir "$appdir" --deploy-deps-only "$appdir/usr/plugins/$d"
+    fi
+done
+for p in platforms/libqoffscreen.so platforms/libqwayland-generic.so "${extra_dirs[@]}"; do
     [ -e "$appdir/usr/plugins/$p" ] || { echo "Qt plugin missing from the package: $p" >&2; exit 1; }
 done
 cp "$out/llamacode.png" "$appdir/llamacode.png"

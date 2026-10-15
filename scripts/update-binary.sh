@@ -13,7 +13,7 @@
 #                    [--sha256-url URL] [--install-dir DIR] [--version X.Y.Z]
 #                    [--wait-pid PID] [--legacy-exe PATH]
 #                    [--legacy-launcher PATH] [--no-launch]
-#                    [--no-shortcuts] [--no-pause]
+#                    [--no-shortcuts] [--no-pause] [--rollback]
 #
 # Menu entry, autostart and relaunch go through <install>/llamacode, a launcher
 # written here that clears a dev wrapper's Qt paths and sources
@@ -32,7 +32,9 @@
 # Safety: refuses a package that needs a newer glibc than this system has
 # (minGlibc in llamacode-install.json). The previous version stays as
 # <install>.prev; if the new one dies with an error within LC_HEALTH_SECONDS
-# (default 10) of the relaunch, it is put back and relaunched.
+# (default 10) of the relaunch, it is put back and relaunched. --rollback does
+# the same by hand, any time: the current version goes to <install>.failed and
+# .prev comes back (same as update-binary.ps1 -Rollback).
 #
 # User data lives in ~/.local/share and ~/.config: never touched here.
 set -euo pipefail
@@ -50,6 +52,7 @@ LEGACY_LAUNCHER=""
 NO_LAUNCH="${LC_NORUN:-}"
 NO_SHORTCUTS=""
 NO_PAUSE=""
+ROLLBACK=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -65,6 +68,7 @@ while [ $# -gt 0 ]; do
         --no-launch) NO_LAUNCH=1; shift ;;
         --no-shortcuts) NO_SHORTCUTS=1; shift ;;
         --no-pause) NO_PAUSE=1; shift ;;
+        --rollback) ROLLBACK=1; shift ;;
         *) echo "[ERROR] unknown option: $1" >&2; exit 2 ;;
     esac
 done
@@ -154,6 +158,59 @@ if command -v flock >/dev/null && ! flock -n 9; then
     fail "Another LlamaCode update is already running. Wait for it to finish."
 fi
 
+write_launcher() {   # write_launcher DIR -- full path in the exec: pgrep finds running copies by it
+    cat > "$1/llamacode" <<'SH'
+#!/usr/bin/env bash
+# LlamaCode launcher (written by update-binary.sh on every update).
+# Personal environment: ${XDG_CONFIG_HOME:-~/.config}/llamacode/launcher.env
+here="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+# A dev wrapper's Qt (LD_LIBRARY_PATH, plugin/QML paths) would shadow the
+# bundled one when the app relaunches itself or is started from its terminal.
+unset LD_LIBRARY_PATH QT_PLUGIN_PATH QT_QPA_PLATFORM_PLUGIN_PATH QML2_IMPORT_PATH QML_IMPORT_PATH
+env_file="${XDG_CONFIG_HOME:-$HOME/.config}/llamacode/launcher.env"
+if [ -f "$env_file" ]; then set -a; . "$env_file"; set +a; fi
+export LLAMACODE_LAUNCHER="$here/llamacode"
+cd "$here/usr/bin" && exec "$here/usr/bin/LlamaCode" "$@"
+SH
+    chmod +x "$1/llamacode"
+}
+
+stop_installed() {   # only processes running FROM that install folder (app, scheduler daemon)
+    command -v pgrep >/dev/null || return 0
+    local pid
+    for pid in $(pgrep -f "^$1/usr/bin/LlamaCode" || true); do
+        info "Closing LlamaCode (PID $pid)..."; kill "$pid" 2>/dev/null || true
+    done
+}
+
+# <install>.prev back in place; the current one is kept as <install>.failed.
+restore_previous() {
+    [ -d "$1.prev" ] || fail "There is no previous version to go back to ($1.prev)."
+    stop_installed "$1"
+    rm -rf "$1.failed"
+    if [ -e "$1" ]; then mv "$1" "$1.failed" || fail "Could not move $1 aside."; fi
+    mv "$1.prev" "$1" || fail "Could not restore $1.prev."
+    write_launcher "$1"   # a .prev from before the launcher existed has none
+    ok "Previous version restored (the other one is kept in $1.failed)."
+}
+
+launch_detached() {   # 9>&-: the app must not inherit the update lock
+    setsid nohup "$1" >"${2:-/dev/null}" 2>&1 </dev/null 9>&- &
+}
+
+if [ -n "$ROLLBACK" ]; then
+    [ -n "$INSTALL_DIR" ] || INSTALL_DIR="$(default_install_dir "$CHANNEL")"
+    INSTALL_DIR="${INSTALL_DIR%/}"
+    info "Going back to the previous version in $INSTALL_DIR..."
+    restore_previous "$INSTALL_DIR"
+    if [ -z "$NO_LAUNCH" ] && { [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]; }; then
+        launch_detached "$INSTALL_DIR/llamacode"
+    fi
+    echo ""
+    ok "Rollback complete."
+    exit 0
+fi
+
 if [ -z "$ASSET_URL" ]; then
     info "Looking up the latest $CHANNEL release on GitHub..."
     line="$(resolve_latest)"
@@ -226,22 +283,6 @@ if [ -n "$need_glibc" ] && [ -n "$have_glibc" ] \
     fail "This build needs glibc >= $need_glibc and this system has $have_glibc (Ubuntu 24.04 or newer). Nothing was changed. Build from source instead: scripts/bootstrap.sh"
 fi
 
-write_launcher() {   # write_launcher DIR -- full path in the exec: pgrep finds running copies by it
-    cat > "$1/llamacode" <<'SH'
-#!/usr/bin/env bash
-# LlamaCode launcher (written by update-binary.sh on every update).
-# Personal environment: ${XDG_CONFIG_HOME:-~/.config}/llamacode/launcher.env
-here="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
-# A dev wrapper's Qt (LD_LIBRARY_PATH, plugin/QML paths) would shadow the
-# bundled one when the app relaunches itself or is started from its terminal.
-unset LD_LIBRARY_PATH QT_PLUGIN_PATH QT_QPA_PLATFORM_PLUGIN_PATH QML2_IMPORT_PATH QML_IMPORT_PATH
-env_file="${XDG_CONFIG_HOME:-$HOME/.config}/llamacode/launcher.env"
-if [ -f "$env_file" ]; then set -a; . "$env_file"; set +a; fi
-export LLAMACODE_LAUNCHER="$here/llamacode"
-cd "$here/usr/bin" && exec "$here/usr/bin/LlamaCode" "$@"
-SH
-    chmod +x "$1/llamacode"
-}
 write_launcher "$STAGING"
 
 # ---- Wait for the app, then swap -------------------------------------------
@@ -249,15 +290,10 @@ if [ "$WAIT_PID" -gt 0 ] 2>/dev/null && kill -0 "$WAIT_PID" 2>/dev/null; then
     info "Waiting for LlamaCode to close..."
     for _ in $(seq 1 120); do kill -0 "$WAIT_PID" 2>/dev/null || break; sleep 0.5; done
 fi
-# Only processes running FROM the install folder (app, scheduler daemon).
-if command -v pgrep >/dev/null; then
-    for pid in $(pgrep -f "^$INSTALL_DIR/usr/bin/LlamaCode" || true); do
-        info "Closing LlamaCode (PID $pid)..."; kill "$pid" 2>/dev/null || true
-    done
-fi
+stop_installed "$INSTALL_DIR"
 
 # The previous version is kept as .prev (one level): automatic rollback below,
-# or by hand: rm -rf <install> && mv <install>.prev <install>.
+# or by hand with --rollback.
 OLD=""
 if [ -e "$INSTALL_DIR" ]; then
     OLD="$INSTALL_DIR.prev"
@@ -381,9 +417,7 @@ if [ -z "$NO_LAUNCH" ]; then
     if [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]; then
         info "Launching LlamaCode..."
         APP_LOG="${XDG_CACHE_HOME:-$HOME/.cache}/llamacode-first-run.log"
-        # 9>&-: the app must not inherit the update lock (it would block the
-        # next "Actualizar" for as long as it stays open).
-        setsid nohup "$LAUNCHER" >"$APP_LOG" 2>&1 </dev/null 9>&- &
+        launch_detached "$LAUNCHER" "$APP_LOG"
         app_pid=$!
         # A crash right after starting (missing lib/plugin, bad release) means
         # the update broke the app: put the previous version back. Exit 0 is
@@ -398,11 +432,8 @@ if [ -z "$NO_LAUNCH" ]; then
                 tail -15 "$APP_LOG" 2>/dev/null | sed 's/^/        /'
                 if [ -n "$OLD" ] && [ -d "$OLD" ]; then
                     info "Restoring the previous version..."
-                    rm -rf "$INSTALL_DIR.failed"
-                    mv "$INSTALL_DIR" "$INSTALL_DIR.failed" && mv "$OLD" "$INSTALL_DIR"
-                    write_launcher "$INSTALL_DIR"
-                    ok "Previous version restored (failed one kept in $INSTALL_DIR.failed)."
-                    setsid nohup "$LAUNCHER" >/dev/null 2>&1 </dev/null 9>&- &
+                    restore_previous "$INSTALL_DIR"
+                    launch_detached "$LAUNCHER"
                 fi
                 fail "Update rolled back. App output: $APP_LOG"
             fi

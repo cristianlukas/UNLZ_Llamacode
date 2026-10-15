@@ -40,7 +40,7 @@ Reglas:
 | ProfileManager entre instancias (Prod+Debug: lock de save, conservar perfiles de la otra) | `tests/test_profiles.cpp` |
 | LlmGateway LAN (log por request, política "clientes LAN no cambian el modelo", detección loopback) | `tests/test_gateway.cpp` |
 | Lista de clientes LAN, reconexión del agente cliente, API key del gateway | `tests/test_system_profiles.cpp` |
-| `scripts/release.sh` (dry run, --bump, --promote, gh falso) | `tests/test_release_sh.sh` (ctest `release_sh`) |
+| `scripts/release.sh` (dry run, --bump, --promote, gh falso, exige CI de tests verde) | `tests/test_release_sh.sh` (ctest `release_sh`) |
 | "Actualizar" con binario: asset por SO/canal + hash, carpeta de instalación binaria, args del actualizador, terminal Linux, `launcher.env` desde las `LLAMACODE_*`, piso de glibc atado al runner del CI, limpieza de scripts en TEMP | `tests/test_appcontroller.cpp` |
 | `scripts/update-binary.sh` (hash, swap, migración, autostart, lanzador + `launcher.env`, repunte/protección de wrapper, aviso de herramientas, minGlibc, `.prev` + rollback si la nueva crashea, attestation con `gh` falso, autoborrado en TMP, limpieza de `.failed`) | `tests/test_update_binary_sh.sh` (ctest `update_binary_sh`, sólo Unix) |
 | `scripts/update-binary.ps1` (hash, swap, rollback, `irm \| iex`) | `tests/test_bootstrap_script.ps1` (fuera de ctest) |
@@ -395,11 +395,19 @@ carpeta entera (rename; rollback si falla) y relanza. Datos de usuario no se toc
   `linuxBinaryGlibcFloorMatchesCiRunner` lee el workflow y falla si el runner
   cambia sin actualizar el piso) y usa el bootstrap. La versión anterior queda en
   `<instalación>.prev`; si la nueva muere con código != 0 en los primeros
-  `LC_HEALTH_SECONDS` (10) se restaura sola (la rota queda en `.failed`). Salir
+  `LC_HEALTH_SECONDS` (10) se restaura sola (la rota queda en `.failed`).
+  `update-binary.sh --rollback` / `update-binary.ps1 -Rollback` vuelven a
+  `.prev` a mano en cualquier momento. Salir
   con 0 no es falla: es el handoff a una instancia ya abierta. La app relanzada
   NO hereda el lock del update (`9>&-`): si no, trababa el próximo "Actualizar".
-- El paquete trae los plugins de plataforma `xcb`, `offscreen` y Wayland (más
-  `wayland-graphics-integration-client`, que linuxdeploy no copia solo). El CI
+- El paquete trae los plugins de plataforma `xcb`, `offscreen` y Wayland.
+  linuxdeploy y su plugin Qt están **fijados por tag + SHA-256** en
+  `package-linux.sh` (corren dentro del build que después se firma; antes se
+  bajaba `continuous`). El plugin fijado no despliega `wayland-shell-integration`,
+  `-decoration-client`, `-graphics-integration-client` ni `networkinformation`:
+  se copian a mano con `--deploy-deps-only` y el script falla si falta alguno.
+  Para actualizar los tags: nuevos hashes, empaquetar local y comparar la lista
+  de archivos contra el paquete anterior (`find usr | sort`) + smoke test. El CI
   arranca el paquete por el lanzador, con `launcher.env` y un `LD_LIBRARY_PATH`
   hacia Qt, en Xvfb y en offscreen.
 - **Procedencia firmada**: los jobs de build de un tag corren

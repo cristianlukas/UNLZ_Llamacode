@@ -21,12 +21,21 @@ git remote add origin "$work/remote.git"
 git push -q origin main
 git tag -a v0.1.4-debug -m d && git commit -q --allow-empty -m "feat: cosa nueva"
 
+# gh falso: registra los argumentos; `run list --commit SHA` contesta el estado
+# del CI de tests segun $CI_RED / $CI_NONE (listas de shas), verde por defecto.
 cat > bin/gh <<'EOF'
 #!/usr/bin/env bash
 echo "$*" >> "$GH_LOG"
+if [ "$1 $2" = "run list" ]; then
+    sha=""; prev=""
+    for a in "$@"; do [ "$prev" = --commit ] && sha="$a"; prev="$a"; done
+    if grep -qx "$sha" "$CI_RED" 2>/dev/null; then echo "completed/failure"
+    elif grep -qx "$sha" "$CI_NONE" 2>/dev/null; then echo "null/null"
+    else echo "completed/success"; fi
+fi
 EOF
 chmod +x bin/gh
-export PATH="$work/repo/bin:$PATH" GH_LOG="$work/gh.log"
+export PATH="$work/repo/bin:$PATH" GH_LOG="$work/gh.log" CI_RED="$work/ci_red" CI_NONE="$work/ci_none"
 echo "bin/" > .git/info/exclude
 
 out="$(bash scripts/release.sh --channel debug)"
@@ -57,6 +66,28 @@ check 'grep -q "release create v0.1.6 --title LlamaCode 0.1.6 Prod .*--latest" "
 echo "dirty" >> CMakeLists.txt
 check '! bash scripts/release.sh --version 9.9.9 --publish >/dev/null 2>&1' "publish rechaza un arbol sucio"
 git checkout -q CMakeLists.txt
+
+# CI de tests (tests.yml) obligatorio para publicar, como tools/release.ps1.
+git commit -q --allow-empty -m "feat: sin CI verde"
+git rev-parse HEAD > "$CI_RED"
+out="$(bash scripts/release.sh --version 0.3.0 --channel debug --publish 2>&1)" && rc=0 || rc=$?
+check '[ $rc -ne 0 ] && [[ "$out" == *"no esta verde"*"completed/failure"* ]]' "CI rojo: no publica y dice el estado"
+check '! git ls-remote --tags origin | grep -q "refs/tags/v0.3.0-debug$"' "CI rojo: no pushea el tag"
+check 'grep -q -- "run list --workflow tests.yml --commit $(git rev-parse HEAD)" "$GH_LOG"' "consulta tests.yml del commit exacto"
+bash scripts/release.sh --version 0.3.0 --channel debug --publish --force >/dev/null 2>&1 && rc=0 || rc=$?
+check '[ $rc -eq 0 ] && git ls-remote --tags origin | grep -q "refs/tags/v0.3.0-debug$"' "--force publica igual"
+: > "$CI_RED"
+# Commit que solo cambia la version: vale el CI del commit anterior.
+sed -i -E 's/(project\(LlamaCode VERSION )[0-9.]+/\10.3.1/' CMakeLists.txt
+git commit -q -am "Release v0.3.1 (Debug channel)"
+git rev-parse HEAD > "$CI_NONE"
+bash scripts/release.sh --channel debug --publish >/dev/null 2>&1 && rc=0 || rc=$?
+check '[ $rc -eq 0 ] && git ls-remote --tags origin | grep -q "refs/tags/v0.3.1-debug$"' "commit de solo version: usa el CI del anterior"
+git commit -q --allow-empty -m "fix: otro cambio"
+git rev-parse HEAD > "$CI_NONE"
+out="$(bash scripts/release.sh --version 0.3.2 --channel debug --publish 2>&1)" && rc=0 || rc=$?
+check '[ $rc -ne 0 ] && [[ "$out" == *"sin corridas"* ]]' "commit con cambios y sin CI: no publica"
+: > "$CI_NONE"
 
 if [ $fails -eq 0 ]; then echo "TODO OK"; exit 0; fi
 echo "$fails FALLAS"; exit 1

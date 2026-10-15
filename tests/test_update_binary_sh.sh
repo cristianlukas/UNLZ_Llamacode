@@ -165,6 +165,16 @@ check '[ ! -e "$rb.failed" ]' "un update que anda borra la version rota (.failed
 runl --asset-url "$work/v3.tar.gz" --sha256-url "$work/v3.tar.gz.sha256" --install-dir "$rb" && rc=0 || rc=$?
 check '[ $rc -eq 0 ] && [ "$(cat "$rb/version.txt")" = v3 ]' "con la anterior abierta no queda el lock tomado; sale con 0 (le pasa el foco a otra instancia): no es rollback"
 
+# Rollback manual (como update-binary.ps1 -Rollback): vuelve .prev en cualquier momento.
+check '[ "$(cat "$rb/version.txt")" = v3 ] && [ "$(cat "$rb.prev/version.txt")" = alive ]' "estado previo al rollback manual: v3 con alive en .prev"
+rm -f "$rb.prev/llamacode"   # un .prev de antes del lanzador no lo tiene
+bash "$src" --rollback --install-dir "$rb" --no-launch --no-pause >"$work/out.txt" 2>&1 && rc=0 || rc=$?
+check '[ $rc -eq 0 ] && grep -q "Rollback complete" "$work/out.txt"' "--rollback sale 0"
+check '[ "$(cat "$rb/version.txt")" = alive ] && [ "$(cat "$rb.failed/version.txt")" = v3 ] && [ ! -e "$rb.prev" ]' "--rollback deja la anterior y guarda la que saco en .failed"
+check '[ -x "$rb/llamacode" ]' "--rollback reescribe el lanzador si la anterior no lo tenia"
+bash "$src" --rollback --install-dir "$rb" --no-launch --no-pause >"$work/out.txt" 2>&1 && rc=0 || rc=$?
+check '[ $rc -eq 1 ] && grep -q "no previous version" "$work/out.txt" && [ "$(cat "$rb/version.txt")" = alive ]' "sin .prev, --rollback falla claro y no toca nada"
+
 # Procedencia (attestation del CI) con un gh falso: nunca llama al gh real.
 ghbin="$work/ghbin"; mkdir -p "$ghbin"
 cat > "$ghbin/gh" <<'GH'
@@ -208,6 +218,11 @@ bash "$work/tmp/llamacode-update-binary-4243.sh" --asset-url "$work/v2.tar.gz" -
     --no-launch --no-pause >"$work/out.txt" 2>&1 && rc=0 || rc=$?
 check '[ $rc -eq 1 ] && [ ! -e "$work/tmp/llamacode-update-binary-4243.sh" ]' "tambien se borra si el update falla"
 check '[ -f "$src" ]' "el script del repo (otro nombre) nunca se borra"
+
+# Empaquetado: linuxdeploy fijado por tag + SHA-256 (corre dentro del build que
+# despues se firma; "continuous" cambia sin aviso).
+pk="$(dirname "$src")/package-linux.sh"
+check '! grep -q "releases/download/continuous" "$pk" && [ "$(grep -cE "^(LINUXDEPLOY|PLUGIN_QT)_SHA256=\"[0-9a-f]{64}\"$" "$pk")" -eq 2 ]' "package-linux.sh fija linuxdeploy y su plugin Qt con SHA-256"
 
 if [ $fails -eq 0 ]; then echo "TODO OK"; exit 0; fi
 echo "$fails FALLAS"; exit 1
