@@ -39,6 +39,9 @@ Set-StrictMode -Version Latest
 $Repo = 'cristianlukas/UNLZ_Llamacode'
 $Channel = $Channel.Trim().ToLower()
 if ($env:LC_NORUN) { $NoLaunch = $true }
+try {
+    $Host.UI.RawUI.WindowTitle = 'LlamaCode - actualizando' + $(if ($Version) { " a v$Version" } else { '' })
+} catch {}
 
 function Info($m) {
     Write-Host "[*] $m" -ForegroundColor Cyan

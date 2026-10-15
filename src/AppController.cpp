@@ -12977,7 +12977,8 @@ quint32 AppController::visibleConsoleCreationFlags(quint32 flags)
 }
 
 QJsonObject AppController::githubReleaseToUpdateFlag(const QJsonObject &release,
-                                                      const QString &channel)
+                                                      const QString &channel,
+                                                      const QString &os)
 {
     const QString normalizedChannel = channel.trimmed().toLower();
     const bool debugChannel = normalizedChannel == QLatin1String("debug");
@@ -13016,7 +13017,7 @@ QJsonObject AppController::githubReleaseToUpdateFlag(const QJsonObject &release,
             changelog.append(line);
     }
 
-    return QJsonObject{
+    QJsonObject flag{
         {QStringLiteral("newVersion"), true},
         {QStringLiteral("version"), releaseVersion},
         {QStringLiteral("channel"), normalizedChannel},
@@ -13038,6 +13039,226 @@ QJsonObject AppController::githubReleaseToUpdateFlag(const QJsonObject &release,
 #endif
         }
     };
+    // Binario precompilado (release-binaries.yml): "Actualizar" lo baja en vez
+    // de compilar. Sin asset (release vieja o el CI todavia compilando) queda
+    // el bootstrap.
+    const QJsonObject asset = selectReleaseAsset(
+        release.value(QStringLiteral("assets")).toArray(), tag, os);
+    if (!asset.isEmpty())
+        flag.insert(QStringLiteral("asset"), asset);
+    return flag;
+}
+
+QString AppController::currentUpdateOs()
+{
+#if defined(Q_OS_WIN)
+    return QStringLiteral("windows");
+#elif defined(Q_OS_LINUX)
+    return QStringLiteral("linux");
+#else
+    return QString();
+#endif
+}
+
+QString AppController::releaseAssetName(const QString &tag, const QString &os)
+{
+    if (os == QLatin1String("windows"))
+        return QStringLiteral("LlamaCode-%1-windows-x64.zip").arg(tag);
+    if (os == QLatin1String("linux"))
+        return QStringLiteral("LlamaCode-%1-linux-x64.tar.gz").arg(tag);
+    return QString();
+}
+
+QJsonObject AppController::selectReleaseAsset(const QJsonArray &assets, const QString &tag,
+                                              const QString &os)
+{
+    const QString name = releaseAssetName(tag, os);
+    if (name.isEmpty())
+        return {};
+    QJsonObject package;
+    QString sha256Url;
+    for (const QJsonValue &value : assets) {
+        const QJsonObject asset = value.toObject();
+        const QString assetName = asset.value(QStringLiteral("name")).toString();
+        if (assetName == name)
+            package = asset;
+        else if (assetName == name + QStringLiteral(".sha256"))
+            sha256Url = asset.value(QStringLiteral("browser_download_url")).toString();
+    }
+    const QString url = package.value(QStringLiteral("browser_download_url")).toString();
+    if (!url.startsWith(QStringLiteral("https://")))
+        return {};
+    // GitHub publica el digest de cada asset; el .sha256 queda como respaldo.
+    // Sin ninguno de los dos no se ofrece: el actualizador no instala sin verificar.
+    QString sha256;
+    const QString digest = package.value(QStringLiteral("digest")).toString().trimmed();
+    if (digest.startsWith(QStringLiteral("sha256:"), Qt::CaseInsensitive)) {
+        const QString hex = digest.mid(7).toLower();
+        if (QRegularExpression(QStringLiteral("^[0-9a-f]{64}$")).match(hex).hasMatch())
+            sha256 = hex;
+    }
+    if (!sha256Url.startsWith(QStringLiteral("https://")))
+        sha256Url.clear();
+    if (sha256.isEmpty() && sha256Url.isEmpty())
+        return {};
+    QJsonObject out{
+        {QStringLiteral("name"), name},
+        {QStringLiteral("url"), url},
+        {QStringLiteral("size"), package.value(QStringLiteral("size")).toDouble()},
+    };
+    if (!sha256.isEmpty())
+        out.insert(QStringLiteral("sha256"), sha256);
+    if (!sha256Url.isEmpty())
+        out.insert(QStringLiteral("sha256Url"), sha256Url);
+    return out;
+}
+
+// Carpeta de una instalacion binaria: la que tiene llamacode-install.json (lo
+// escriben package-windows.ps1 / package-linux.sh). En Windows el exe esta en
+// la raiz; en Linux en <raiz>/usr/bin.
+QString AppController::binaryInstallRootForExePath(const QString &exePath)
+{
+    QDir dir(QFileInfo(exePath).absolutePath());
+    for (int up = 0; up < 3; ++up) {
+        if (QFile::exists(dir.filePath(QStringLiteral("llamacode-install.json"))))
+            return QDir::toNativeSeparators(dir.absolutePath());
+        if (!dir.cdUp())
+            break;
+    }
+    return QString();
+}
+
+QString AppController::binaryInstallDirFor(const QString &exePath, const QString &channel,
+                                           const QString &defaultParent)
+{
+    // Instalacion binaria del MISMO canal: se actualiza en su lugar (incluido un
+    // zip descomprimido donde el usuario quiso). Otro canal o un checkout git
+    // (migracion) van a la carpeta por defecto del canal: el checkout no se toca.
+    const QString root = binaryInstallRootForExePath(exePath);
+    if (!root.isEmpty()) {
+        QFile marker(QDir(root).filePath(QStringLiteral("llamacode-install.json")));
+        if (marker.open(QIODevice::ReadOnly)) {
+            const QString installed = QJsonDocument::fromJson(marker.readAll()).object()
+                .value(QStringLiteral("channel")).toString();
+            if (installed == channel)
+                return root;
+        }
+    }
+    const QString name = channel == QLatin1String("debug")
+        ? QStringLiteral("LlamaCode-Debug") : QStringLiteral("LlamaCode");
+    return QDir::toNativeSeparators(QDir(defaultParent).filePath(name));
+}
+
+bool AppController::updateFlagInstallable(const QJsonObject &flag, bool binaryInstall)
+{
+    // Una instalacion binaria no tiene toolchain: el bootstrap que compila la
+    // dejaria instalando Qt y VS Build Tools. Espera a que el CI suba el asset
+    // (el chequeo se repite cada 30 min).
+    return !binaryInstall || !flag.value(QStringLiteral("asset")).toObject().isEmpty();
+}
+
+QStringList AppController::binaryUpdateArguments(const QString &os, const QVariantMap &asset,
+                                                 const QString &channel, const QString &version,
+                                                 const QString &installDir, qint64 waitPid,
+                                                 const QString &legacyExe)
+{
+    const bool windows = os == QLatin1String("windows");
+    QStringList args;
+    // Vacios afuera: PowerShell 5.1 descarta un "" en -File y corre los parametros.
+    auto add = [&](const char *ps, const char *sh, const QString &value) {
+        if (value.isEmpty())
+            return;
+        args << QString::fromLatin1(windows ? ps : sh) << value;
+    };
+    add("-AssetUrl", "--asset-url", asset.value(QStringLiteral("url")).toString());
+    add("-Sha256", "--sha256", asset.value(QStringLiteral("sha256")).toString());
+    add("-Sha256Url", "--sha256-url", asset.value(QStringLiteral("sha256Url")).toString());
+    add("-InstallDir", "--install-dir", installDir);
+    add("-Channel", "--channel", channel);
+    add("-Version", "--version", version);
+    if (waitPid > 0)
+        add("-WaitPid", "--wait-pid", QString::number(waitPid));
+    add("-LegacyExe", "--legacy-exe", legacyExe);
+    return args;
+}
+
+QStringList AppController::linuxTerminalCommand(const QStringList &availableTerminals,
+                                                const QStringList &command)
+{
+    // Orden de preferencia; cada terminal tiene su propia forma de "ejecutar esto".
+    static const QList<QPair<QString, QString>> kTerminals{
+        {QStringLiteral("gnome-terminal"), QStringLiteral("--")},
+        {QStringLiteral("konsole"), QStringLiteral("-e")},
+        {QStringLiteral("xfce4-terminal"), QStringLiteral("-x")},
+        {QStringLiteral("x-terminal-emulator"), QStringLiteral("-e")},
+        {QStringLiteral("xterm"), QStringLiteral("-e")},
+    };
+    for (const auto &terminal : kTerminals) {
+        if (availableTerminals.contains(terminal.first))
+            return QStringList{terminal.first, terminal.second} + command;
+    }
+    return command;
+}
+
+bool AppController::launchBinaryUpdate(const QVariantMap &asset, const QString &channel,
+                                       const QString &version)
+{
+    const QString os = currentUpdateOs();
+    if (os.isEmpty())
+        return false;
+    const bool windows = os == QLatin1String("windows");
+    // El script viaja en el qrc (misma version que el app) y corre desde TEMP:
+    // la carpeta de instalacion es justo la que va a reemplazar.
+    QFile source(windows ? QStringLiteral(":/scripts/update-binary.ps1")
+                         : QStringLiteral(":/scripts/update-binary.sh"));
+    if (!source.open(QIODevice::ReadOnly))
+        return false;
+    const QString scriptPath = QDir(QDir::tempPath()).filePath(
+        QStringLiteral("llamacode-update-binary-%1%2")
+            .arg(QCoreApplication::applicationPid())
+            .arg(windows ? QStringLiteral(".ps1") : QStringLiteral(".sh")));
+    {
+        QFile out(scriptPath);
+        if (!out.open(QIODevice::WriteOnly | QIODevice::Truncate) || out.write(source.readAll()) < 0)
+            return false;
+    }
+
+    const QString exePath = QCoreApplication::applicationFilePath();
+    const QString defaultParent = windows
+        ? QDir(qEnvironmentVariable("LOCALAPPDATA", QDir::homePath() + QStringLiteral("/AppData/Local")))
+              .filePath(QStringLiteral("Programs"))
+        : QDir::homePath() + QStringLiteral("/.local/opt");
+    const QString installDir = binaryInstallDirFor(exePath, channel, defaultParent);
+    const QStringList updateArgs = binaryUpdateArguments(
+        os, asset, channel, version, installDir, QCoreApplication::applicationPid(),
+        QDir::toNativeSeparators(exePath));
+    appendServerEvent(QStringLiteral("lifecycle"),
+        QStringLiteral("Actualizando a v%1 con el binario precompilado en %2.").arg(version, installDir));
+
+#ifdef Q_OS_WIN
+    QProcess launcher;
+    launcher.setProgram(QStringLiteral("powershell"));
+    launcher.setArguments(QStringList{QStringLiteral("-NoProfile"), QStringLiteral("-ExecutionPolicy"),
+                                      QStringLiteral("Bypass"), QStringLiteral("-File"),
+                                      QDir::toNativeSeparators(scriptPath)} + updateArgs);
+    launcher.setWorkingDirectory(QDir::tempPath());
+    // Consola visible (mismo criterio que el bootstrap): progreso de descarga y,
+    // si falla, el error queda a la vista (el script pausa antes de cerrar).
+    launcher.setCreateProcessArgumentsModifier(showInNewConsole);
+    return launcher.startDetached();
+#else
+    QStringList terminals;
+    for (const QString &name : {QStringLiteral("gnome-terminal"), QStringLiteral("konsole"),
+                                QStringLiteral("xfce4-terminal"), QStringLiteral("x-terminal-emulator"),
+                                QStringLiteral("xterm")}) {
+        if (!QStandardPaths::findExecutable(name).isEmpty())
+            terminals << name;
+    }
+    // Sin terminal grafica corre igual (log en ~/.cache/llamacode-update.log).
+    const QStringList command = linuxTerminalCommand(
+        terminals, QStringList{QStringLiteral("bash"), scriptPath} + updateArgs);
+    return QProcess::startDetached(command.first(), command.mid(1), QDir::tempPath());
+#endif
 }
 
 QJsonObject AppController::githubReleasesToUpdateFlag(const QJsonArray &releases,
@@ -13074,7 +13295,9 @@ void AppController::applyUpdateFlag(const QJsonObject &flag)
 
     QSettings s;
     const QString skipUntil = s.value(QStringLiteral("updates/skipUntil/") + channel).toString();
-    if (!newer || skipUntil == latest) {
+    const bool installable = updateFlagInstallable(
+        flag, !binaryInstallRootForExePath(QCoreApplication::applicationFilePath()).isEmpty());
+    if (!newer || skipUntil == latest || !installable) {
         if (m_updateAvailable || !m_updateInfo.isEmpty()) {
             m_updateAvailable = false;
             m_updateInfo.clear();
@@ -13092,6 +13315,7 @@ void AppController::applyUpdateFlag(const QJsonObject &flag)
     info[QStringLiteral("summary")] = flag.value(QStringLiteral("summary")).toString();
     info[QStringLiteral("updateUrl")] = flag.value(QStringLiteral("updateUrl")).toString();
     info[QStringLiteral("releaseUrl")] = flag.value(QStringLiteral("releaseUrl")).toString();
+    info[QStringLiteral("asset")] = flag.value(QStringLiteral("asset")).toObject().toVariantMap();
     QVariantList changelog;
     const QJsonArray arr = flag.value(QStringLiteral("changelog")).toArray();
     for (const QJsonValue &v : arr) {
@@ -13129,6 +13353,21 @@ bool AppController::handleUpdateDecision(const QString &decision)
         if (scriptUrl.isEmpty())
             scriptUrl = QStringLiteral("https://raw.githubusercontent.com/cristianlukas/UNLZ_Llamacode/main/scripts/bootstrap.ps1");
         bool updateStarted = false;
+        // Con binario publicado se descarga (segundos) en vez de compilar
+        // (10-30 min + toolchain). updates/fromSource=true fuerza el bootstrap.
+        const QVariantMap asset = m_updateInfo.value(QStringLiteral("asset")).toMap();
+        if (!asset.value(QStringLiteral("url")).toString().isEmpty()
+            && !QSettings().value(QStringLiteral("updates/fromSource"), false).toBool()) {
+            if (!launchBinaryUpdate(asset, channel, versionToUpdate))
+                return false;
+#ifndef Q_OS_WIN
+            QCoreApplication::quit();
+#endif
+            m_updateAvailable = false;
+            m_updateInfo.clear();
+            emit updateCheckChanged();
+            return true;
+        }
 #ifdef Q_OS_WIN
         // Sin LC_DIR el bootstrap clona en %USERPROFILE%\LlamaCode: mataba esta
         // app y actualizaba OTRA copia (o una nueva), por eso "se cierra y no

@@ -658,7 +658,34 @@ public:
     // Convierte la respuesta de /repos/.../releases/latest al formato interno
     // del popup. Público para poder validar el contrato sin hacer red en tests.
     static QJsonObject githubReleaseToUpdateFlag(const QJsonObject &release,
-                                                 const QString &channel = QStringLiteral("prod"));
+                                                 const QString &channel = QStringLiteral("prod"),
+                                                 const QString &os = currentUpdateOs());
+    // "windows" | "linux" | "" (sin binarios publicados para este SO).
+    static QString currentUpdateOs();
+    // Contrato con .github/workflows/release-binaries.yml y scripts/update-binary.*:
+    // LlamaCode-<tag>-windows-x64.zip / LlamaCode-<tag>-linux-x64.tar.gz (+ .sha256).
+    static QString releaseAssetName(const QString &tag, const QString &os);
+    // Asset precompilado de la release para `os`: {name,url,size,sha256?,sha256Url?}.
+    // Vacio si no esta o no trae hash (digest de GitHub o .sha256): sin hash no se instala.
+    static QJsonObject selectReleaseAsset(const QJsonArray &assets, const QString &tag,
+                                          const QString &os);
+    // Raiz de una instalacion binaria (la carpeta con llamacode-install.json), o "".
+    static QString binaryInstallRootForExePath(const QString &exePath);
+    // Donde instala "Actualizar" con binarios: la misma carpeta si es una
+    // instalacion binaria del mismo canal; si no <defaultParent>/LlamaCode[-Debug].
+    static QString binaryInstallDirFor(const QString &exePath, const QString &channel,
+                                       const QString &defaultParent);
+    // Una instalacion binaria solo ofrece releases con asset (no puede compilar).
+    static bool updateFlagInstallable(const QJsonObject &flag, bool binaryInstall);
+    // Parametros de scripts/update-binary.ps1 (os=windows) o .sh (linux).
+    static QStringList binaryUpdateArguments(const QString &os, const QVariantMap &asset,
+                                             const QString &channel, const QString &version,
+                                             const QString &installDir, qint64 waitPid,
+                                             const QString &legacyExe);
+    // Envuelve `command` en la primera terminal grafica disponible (la consola
+    // visible del update en Linux); sin ninguna devuelve `command` tal cual.
+    static QStringList linuxTerminalCommand(const QStringList &availableTerminals,
+                                            const QStringList &command);
     static QJsonObject githubReleasesToUpdateFlag(const QJsonArray &releases,
                                                  const QString &channel);
     static bool shouldReplaceBundledBenchmarkForTest(const QJsonObject &source,
@@ -2621,4 +2648,5 @@ private:
     void onUpdateCheckResult(const QJsonObject &flag, bool fetched, const QString &requestedChannel);
     QString m_updateChannel = QStringLiteral("prod");
     void applyUpdateFlag(const QJsonObject &flag);
+    bool launchBinaryUpdate(const QVariantMap &asset, const QString &channel, const QString &version);
 };

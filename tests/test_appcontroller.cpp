@@ -177,6 +177,13 @@ private slots:
     void windowsUpdateCommandShowsProgressWindow();
     void updateConsoleIsVisible();
     void installRootIsDerivedFromExeLocation();
+    void releaseAssetIsSelectedPerOsAndChannel();
+    void releaseAssetWithoutHashIsIgnored();
+    void binaryInstallDirFollowsMarkerAndChannel();
+    void binaryInstallOnlyOffersReleasesWithAsset();
+    void binaryUpdateArgumentsPerPlatform();
+    void linuxUpdateRunsInFirstAvailableTerminal();
+    void binaryUpdaterScriptsAreBundled();
     void importUserDataFromRoundTrips();
     void exportUserDataToEmptyPathErrors();
     void exportChatSessionToMissingSessionErrors();
@@ -413,6 +420,223 @@ void AppControllerTests::installRootIsDerivedFromExeLocation()
     QVERIFY(loose.isValid());
     QVERIFY(AppController::installRootForExePath(
                 QDir(loose.path()).filePath(QStringLiteral("LlamaCode.exe"))).isEmpty());
+}
+
+namespace {
+QJsonObject releaseAsset(const QString &name, const QString &digest = QString())
+{
+    QJsonObject asset{
+        {QStringLiteral("name"), name},
+        {QStringLiteral("size"), 1234},
+        {QStringLiteral("browser_download_url"),
+         QStringLiteral("https://github.com/o/r/releases/download/t/") + name},
+    };
+    if (!digest.isEmpty())
+        asset.insert(QStringLiteral("digest"), digest);
+    return asset;
+}
+}
+
+// Contrato con release-binaries.yml: el app elige LlamaCode-<tag>-<os>.* y su
+// hash. Elegir el de otro SO o de otro canal instalaria un binario que no corre
+// (o que cambia de canal sin pedirlo).
+void AppControllerTests::releaseAssetIsSelectedPerOsAndChannel()
+{
+    const QString sha(64, QLatin1Char('a'));
+    const QJsonObject release{
+        {QStringLiteral("tag_name"), QStringLiteral("v0.3.0-debug")},
+        {QStringLiteral("prerelease"), true},
+        {QStringLiteral("assets"), QJsonArray{
+            releaseAsset(QStringLiteral("LlamaCode-v0.3.0-windows-x64.zip")),   // Prod: no
+            releaseAsset(QStringLiteral("LlamaCode-v0.3.0-debug-windows-x64.zip"),
+                         QStringLiteral("sha256:") + sha.toUpper()),
+            releaseAsset(QStringLiteral("LlamaCode-v0.3.0-debug-windows-x64.zip.sha256")),
+            releaseAsset(QStringLiteral("LlamaCode-v0.3.0-debug-linux-x64.tar.gz")),
+            releaseAsset(QStringLiteral("LlamaCode-v0.3.0-debug-linux-x64.tar.gz.sha256")),
+        }},
+    };
+
+    const QJsonObject win = AppController::githubReleaseToUpdateFlag(
+        release, QStringLiteral("debug"), QStringLiteral("windows"))
+        .value(QStringLiteral("asset")).toObject();
+    QCOMPARE(win.value(QStringLiteral("name")).toString(),
+             QStringLiteral("LlamaCode-v0.3.0-debug-windows-x64.zip"));
+    QVERIFY(win.value(QStringLiteral("url")).toString().endsWith(
+        QStringLiteral("/LlamaCode-v0.3.0-debug-windows-x64.zip")));
+    QCOMPARE(win.value(QStringLiteral("sha256")).toString(), sha);   // digest de GitHub, en minúscula
+    QVERIFY(win.value(QStringLiteral("sha256Url")).toString().endsWith(QStringLiteral(".zip.sha256")));
+    QCOMPARE(win.value(QStringLiteral("size")).toInt(), 1234);
+
+    const QJsonObject lin = AppController::githubReleaseToUpdateFlag(
+        release, QStringLiteral("debug"), QStringLiteral("linux"))
+        .value(QStringLiteral("asset")).toObject();
+    QCOMPARE(lin.value(QStringLiteral("name")).toString(),
+             QStringLiteral("LlamaCode-v0.3.0-debug-linux-x64.tar.gz"));
+    QVERIFY(!lin.contains(QStringLiteral("sha256")));   // sin digest: queda el .sha256
+    QVERIFY(lin.value(QStringLiteral("sha256Url")).toString().endsWith(QStringLiteral(".tar.gz.sha256")));
+
+    // SO sin binarios (macOS): el flag sale igual, sin asset -> bootstrap.
+    const QJsonObject other = AppController::githubReleaseToUpdateFlag(
+        release, QStringLiteral("debug"), QString());
+    QCOMPARE(other.value(QStringLiteral("version")).toString(), QStringLiteral("0.3.0"));
+    QVERIFY(!other.contains(QStringLiteral("asset")));
+
+    // El que corre los tests es Windows o Linux: el default es el SO actual.
+    QVERIFY(!AppController::currentUpdateOs().isEmpty());
+    QVERIFY(AppController::githubReleaseToUpdateFlag(release, QStringLiteral("debug"))
+                .contains(QStringLiteral("asset")));
+}
+
+void AppControllerTests::releaseAssetWithoutHashIsIgnored()
+{
+    const QString tag = QStringLiteral("v0.3.0");
+    const QString name = AppController::releaseAssetName(tag, QStringLiteral("windows"));
+    QCOMPARE(name, QStringLiteral("LlamaCode-v0.3.0-windows-x64.zip"));
+    // Sin digest ni .sha256 el actualizador no podria verificar: no se ofrece.
+    QVERIFY(AppController::selectReleaseAsset(QJsonArray{releaseAsset(name)}, tag,
+                                              QStringLiteral("windows")).isEmpty());
+    // Un digest que no es SHA-256 tampoco cuenta.
+    QVERIFY(AppController::selectReleaseAsset(
+                QJsonArray{releaseAsset(name, QStringLiteral("md5:abcd"))}, tag,
+                QStringLiteral("windows")).isEmpty());
+    // Sin el paquete (solo el .sha256, upload a medias) tampoco.
+    QVERIFY(AppController::selectReleaseAsset(
+                QJsonArray{releaseAsset(name + QStringLiteral(".sha256"))}, tag,
+                QStringLiteral("windows")).isEmpty());
+    // Una URL que no es https no se baja.
+    QJsonObject http = releaseAsset(name, QStringLiteral("sha256:") + QString(64, QLatin1Char('b')));
+    http.insert(QStringLiteral("browser_download_url"), QStringLiteral("http://example.test/x.zip"));
+    QVERIFY(AppController::selectReleaseAsset(QJsonArray{http}, tag, QStringLiteral("windows")).isEmpty());
+}
+
+// Instalacion binaria del mismo canal -> se actualiza en su lugar. Un checkout
+// git (o el otro canal) migra a <Programs>/LlamaCode[-Debug] sin tocar el checkout.
+void AppControllerTests::binaryInstallDirFollowsMarkerAndChannel()
+{
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    const QDir root(tmp.path());
+    const QString parent = root.filePath(QStringLiteral("Programs"));
+
+    auto writeMarker = [](const QString &dir, const QString &channel) {
+        QDir().mkpath(dir);
+        QFile f(QDir(dir).filePath(QStringLiteral("llamacode-install.json")));
+        return f.open(QIODevice::WriteOnly)
+            && f.write(QJsonDocument(QJsonObject{{"kind", "binary"}, {"channel", channel}}).toJson()) > 0;
+    };
+
+    // Windows: exe en la raiz de la instalacion (un zip descomprimido donde sea).
+    const QString winDir = root.filePath(QStringLiteral("Downloads/LlamaCode"));
+    QVERIFY(writeMarker(winDir, QStringLiteral("prod")));
+    const QString winExe = QDir(winDir).filePath(QStringLiteral("LlamaCode.exe"));
+    QCOMPARE(AppController::binaryInstallRootForExePath(winExe), QDir::toNativeSeparators(winDir));
+    QCOMPARE(AppController::binaryInstallDirFor(winExe, QStringLiteral("prod"), parent),
+             QDir::toNativeSeparators(winDir));
+    // Cambio de canal: el Debug va a su propia carpeta, el Prod queda intacto.
+    QCOMPARE(AppController::binaryInstallDirFor(winExe, QStringLiteral("debug"), parent),
+             QDir::toNativeSeparators(QDir(parent).filePath(QStringLiteral("LlamaCode-Debug"))));
+
+    // Linux: el binario vive en <raiz>/usr/bin.
+    const QString linuxDir = root.filePath(QStringLiteral("opt/LlamaCode-Debug"));
+    QVERIFY(writeMarker(linuxDir, QStringLiteral("debug")));
+    const QString linuxExe = QDir(linuxDir).filePath(QStringLiteral("usr/bin/LlamaCode"));
+    QCOMPARE(AppController::binaryInstallDirFor(linuxExe, QStringLiteral("debug"), parent),
+             QDir::toNativeSeparators(linuxDir));
+
+    // Checkout git (sin marcador): migra a la carpeta por defecto del canal.
+    const QString checkoutExe = root.filePath(QStringLiteral("LlamaCodeRepo/build/Release/LlamaCode.exe"));
+    QVERIFY(AppController::binaryInstallRootForExePath(checkoutExe).isEmpty());
+    QCOMPARE(AppController::binaryInstallDirFor(checkoutExe, QStringLiteral("prod"), parent),
+             QDir::toNativeSeparators(QDir(parent).filePath(QStringLiteral("LlamaCode"))));
+}
+
+void AppControllerTests::binaryInstallOnlyOffersReleasesWithAsset()
+{
+    const QJsonObject withAsset{{"version", "1.0.0"},
+                                {"asset", QJsonObject{{"url", "https://x/y.zip"}}}};
+    const QJsonObject withoutAsset{{"version", "1.0.0"}};
+    // Un checkout puede compilar: cualquier release sirve (cae al bootstrap).
+    QVERIFY(AppController::updateFlagInstallable(withAsset, false));
+    QVERIFY(AppController::updateFlagInstallable(withoutAsset, false));
+    // Una instalacion binaria no tiene toolchain: espera a que el CI suba el asset.
+    QVERIFY(AppController::updateFlagInstallable(withAsset, true));
+    QVERIFY(!AppController::updateFlagInstallable(withoutAsset, true));
+}
+
+void AppControllerTests::binaryUpdateArgumentsPerPlatform()
+{
+    const QVariantMap asset{{"url", "https://h/a.zip"}, {"sha256", QString(64, QLatin1Char('c'))},
+                            {"sha256Url", "https://h/a.zip.sha256"}};
+    const QStringList win = AppController::binaryUpdateArguments(
+        QStringLiteral("windows"), asset, QStringLiteral("debug"), QStringLiteral("0.3.0"),
+        QStringLiteral("C:\\Users\\u\\AppData\\Local\\Programs\\LlamaCode Debug"), 4242,
+        QStringLiteral("C:\\repo\\build\\Debug\\LlamaCode.exe"));
+    auto valueOf = [](const QStringList &args, const QString &key) {
+        const int i = args.indexOf(key);
+        return i >= 0 && i + 1 < args.size() ? args.at(i + 1) : QString();
+    };
+    QCOMPARE(valueOf(win, "-AssetUrl"), QStringLiteral("https://h/a.zip"));
+    QCOMPARE(valueOf(win, "-Sha256"), QString(64, QLatin1Char('c')));
+    QCOMPARE(valueOf(win, "-Sha256Url"), QStringLiteral("https://h/a.zip.sha256"));
+    // La ruta con espacios viaja como UN argumento (QProcess la cita).
+    QCOMPARE(valueOf(win, "-InstallDir"),
+             QStringLiteral("C:\\Users\\u\\AppData\\Local\\Programs\\LlamaCode Debug"));
+    QCOMPARE(valueOf(win, "-Channel"), QStringLiteral("debug"));
+    QCOMPARE(valueOf(win, "-WaitPid"), QStringLiteral("4242"));
+    QCOMPARE(valueOf(win, "-LegacyExe"), QStringLiteral("C:\\repo\\build\\Debug\\LlamaCode.exe"));
+
+    // Vacios afuera: PowerShell 5.1 descarta "" en -File y corre los parametros.
+    const QStringList noHash = AppController::binaryUpdateArguments(
+        QStringLiteral("windows"), QVariantMap{{"url", "https://h/a.zip"}, {"sha256Url", "https://h/s"}},
+        QStringLiteral("prod"), QString(), QStringLiteral("D:\\LC"), 0, QString());
+    QVERIFY(!noHash.contains(QStringLiteral("-Sha256")));
+    QVERIFY(!noHash.contains(QStringLiteral("-Version")));
+    QVERIFY(!noHash.contains(QStringLiteral("-WaitPid")));
+    QVERIFY(!noHash.contains(QString()));
+
+    const QStringList sh = AppController::binaryUpdateArguments(
+        QStringLiteral("linux"), asset, QStringLiteral("prod"), QStringLiteral("0.3.0"),
+        QStringLiteral("/home/u/.local/opt/LlamaCode"), 7, QStringLiteral("/home/u/LlamaCode/build/LlamaCode"));
+    QCOMPARE(valueOf(sh, "--asset-url"), QStringLiteral("https://h/a.zip"));
+    QCOMPARE(valueOf(sh, "--install-dir"), QStringLiteral("/home/u/.local/opt/LlamaCode"));
+    QCOMPARE(valueOf(sh, "--wait-pid"), QStringLiteral("7"));
+    QCOMPARE(valueOf(sh, "--legacy-exe"), QStringLiteral("/home/u/LlamaCode/build/LlamaCode"));
+    QVERIFY(!sh.contains(QStringLiteral("-AssetUrl")));
+}
+
+// En Linux el update se veia como "se cierra y no hace nada": corria en un bash
+// sin ventana. Ahora va en una terminal visible si hay alguna.
+void AppControllerTests::linuxUpdateRunsInFirstAvailableTerminal()
+{
+    const QStringList cmd{QStringLiteral("bash"), QStringLiteral("/tmp/u.sh"), QStringLiteral("--no-pause")};
+    QCOMPARE(AppController::linuxTerminalCommand({QStringLiteral("xterm"), QStringLiteral("gnome-terminal")}, cmd),
+             (QStringList{QStringLiteral("gnome-terminal"), QStringLiteral("--")} + cmd));
+    QCOMPARE(AppController::linuxTerminalCommand({QStringLiteral("konsole")}, cmd),
+             (QStringList{QStringLiteral("konsole"), QStringLiteral("-e")} + cmd));
+    QCOMPARE(AppController::linuxTerminalCommand({QStringLiteral("xfce4-terminal")}, cmd),
+             (QStringList{QStringLiteral("xfce4-terminal"), QStringLiteral("-x")} + cmd));
+    // Sin terminal grafica corre igual, sin ventana (deja log).
+    QCOMPARE(AppController::linuxTerminalCommand({}, cmd), cmd);
+}
+
+// El app escribe estos scripts a TEMP desde el qrc: si no estan en el binario,
+// "Actualizar" con binarios no arranca. ASCII puro: PowerShell 5.1 lee un .ps1
+// sin BOM como ANSI.
+void AppControllerTests::binaryUpdaterScriptsAreBundled()
+{
+    for (const QString &path : {QStringLiteral(":/scripts/update-binary.ps1"),
+                                QStringLiteral(":/scripts/update-binary.sh")}) {
+        QFile f(path);
+        QVERIFY2(f.open(QIODevice::ReadOnly), qPrintable(path));
+        const QByteArray body = f.readAll();
+        QVERIFY2(body.size() > 1000, qPrintable(path));
+        for (const char c : body)
+            QVERIFY2(static_cast<unsigned char>(c) < 128, qPrintable(path + QStringLiteral(" no es ASCII")));
+        // El nombre del asset que el script busca solo es el mismo que elige el app.
+        QVERIFY(body.contains(path.endsWith(QStringLiteral(".ps1"))
+                                  ? QByteArray("LlamaCode-$tag-windows-x64.zip")
+                                  : QByteArray("LlamaCode-%s-linux-x64.tar.gz")));
+    }
 }
 
 void AppControllerTests::githubPrereleaseIsIgnored()

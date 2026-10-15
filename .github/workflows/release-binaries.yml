@@ -97,9 +97,15 @@ jobs:
       CONFIG: ${{ needs.meta.outputs.config }}
       TAG: ${{ needs.meta.outputs.tag }}
     steps:
+      # Sin artifacts/ (receipts de benchmarks): rutas > 260 en Windows y no
+      # hacen falta para compilar.
       - uses: actions/checkout@v7
         with:
           ref: ${{ needs.meta.outputs.src }}
+          sparse-checkout: |
+            /*
+            !/artifacts/
+          sparse-checkout-cone-mode: false
       # Scripts de empaquetado/instalacion del commit del WORKFLOW: un tag viejo
       # (workflow_dispatch) puede no tenerlos o tenerlos desactualizados.
       - uses: actions/checkout@v7
@@ -169,9 +175,15 @@ jobs:
       CONFIG: ${{ needs.meta.outputs.config }}
       TAG: ${{ needs.meta.outputs.tag }}
     steps:
+      # Sin artifacts/ (receipts de benchmarks): rutas > 260 en Windows y no
+      # hacen falta para compilar.
       - uses: actions/checkout@v7
         with:
           ref: ${{ needs.meta.outputs.src }}
+          sparse-checkout: |
+            /*
+            !/artifacts/
+          sparse-checkout-cone-mode: false
       # Scripts de empaquetado/instalacion del commit del WORKFLOW: un tag viejo
       # (workflow_dispatch) puede no tenerlos o tenerlos desactualizados.
       - uses: actions/checkout@v7

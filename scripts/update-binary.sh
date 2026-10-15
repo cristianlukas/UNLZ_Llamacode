@@ -64,8 +64,8 @@ fail() {
 }
 
 # Asset name contract, shared with the CI (release-binaries.yml) and the app
-# (AppController::selectReleaseAsset): LlamaCode-<tag>-linux-x64.tar.gz
-asset_name() { printf 'LlamaCode-%s-linux-x64.tar.gz' "$1"; }
+# (AppController::selectReleaseAsset): LlamaCode-<tag>-linux-x64.tar.gz, see
+# resolve_latest below.
 
 default_install_dir() {
     if [ "$1" = debug ]; then echo "$HOME/.local/opt/LlamaCode-Debug"; else echo "$HOME/.local/opt/LlamaCode"; fi

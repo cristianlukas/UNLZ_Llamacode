@@ -322,6 +322,9 @@ qt_add_resources(llamacode_core "llamacode_core_assets"
     PREFIX "/"
     FILES
         assets/system_profiles.json
+        # "Actualizar" con binarios: el app los escribe a TEMP y los corre.
+        scripts/update-binary.ps1
+        scripts/update-binary.sh
 )
 target_include_directories(llamacode_core PUBLIC src)
 # Versión única: LlamaCodeVersion.h sale de project(VERSION). Antes estaba
