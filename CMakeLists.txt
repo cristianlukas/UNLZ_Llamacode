@@ -738,6 +738,8 @@ if (BUILD_TESTS)
         tests/qml/tst_settings_tabs.qml
         qml/components/SettingsTabsPolicy.js
         tests/qml/tst_navigation_policy.qml
+        tests/qml/tst_navbar.qml
+        qml/components/NavBar.qml
         tests/qml/tst_setup_wizard_policy.qml
         tests/qml/tst_lazy_page_loader.qml
         tests/qml/LazyProbePage.qml
@@ -868,6 +870,13 @@ if (BUILD_TESTS)
     set_tests_properties(qml_navigation_policy PROPERTIES
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1"
         FAIL_REGULAR_EXPRESSION "FAIL |ReferenceError|Unable to assign")
+    # NavBar real: la fila de Configuracion centrada (con y sin boton de update).
+    add_test(NAME qml_navbar
+             COMMAND "${_lc_qt_bin}/qml" -I "${LC_QML_HARNESS_DIR}"
+                     "${LC_QML_HARNESS_DIR}/tst_navbar.qml")
+    set_tests_properties(qml_navbar PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1"
+        FAIL_REGULAR_EXPRESSION "FAIL |ReferenceError|TypeError|Unable to assign")
     add_test(NAME qml_setup_wizard_policy
              COMMAND "${_lc_qt_bin}/qml" -I "${LC_QML_HARNESS_DIR}"
                      "${LC_QML_HARNESS_DIR}/tst_setup_wizard_policy.qml")

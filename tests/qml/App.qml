@@ -23,6 +23,17 @@ QtObject {
     property string serverBaseUrl: ""
     property string activeLaunchId: ""
     property bool agentRunning: false
+    // NavBar (tst_navbar).
+    property bool agentStarting: false
+    property bool backendAvailable: false
+    property bool serverReady: false
+    property bool serverStopping: false
+    property string serverState: "stopped"
+    property bool startupBusy: false
+    property string startupStatus: ""
+    property bool updateAvailable: false
+    property var updateInfo: ({ version: "9.9.9" })
+    function version() { return "0.0.0" }
     property var benchmarkRanking: []
     property QtObject profileManager: QtObject {
         function getLaunchProfile(id) { return { modelProfileId: "model", runtimePresetId: "runtime", backendProfileId: "backend" } }

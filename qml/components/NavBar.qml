@@ -134,9 +134,14 @@ Rectangle {
 
         Item { Layout.fillHeight: true }
 
+        // Dentro del ColumnLayout `height` no cuenta (manda Layout.*), y un
+        // contentItem con anchors.fill pelea con el padding del ItemDelegate:
+        // el texto quedaba pegado arriba de la franja resaltada.
         ItemDelegate {
+            objectName: "navSettings"
             Layout.fillWidth: true
-            height: 48
+            Layout.preferredHeight: 48
+            leftPadding: 16; rightPadding: 8; topPadding: 0; bottomPadding: 0
             highlighted: root.currentIndex === root.settingsIndex
             background: Rectangle {
                 color: parent.highlighted ? Theme.highlight : (parent.hovered ? Theme.hoverBg : "transparent")
@@ -148,14 +153,15 @@ Rectangle {
                 }
             }
             contentItem: RowLayout {
-                anchors { fill: parent; leftMargin: 16; rightMargin: 8 }
                 spacing: 8
                 Text {
+                    objectName: "navSettingsText"
                     text: (App.langV, App.l("nav.settings"))
                     font.pixelSize: 14
                     color: root.currentIndex === root.settingsIndex ? Theme.textPrimary : Theme.textSecondary
                     Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignVCenter
+                    Layout.fillHeight: true
+                    verticalAlignment: Text.AlignVCenter
                     elide: Text.ElideRight
                 }
                 ToolButton {

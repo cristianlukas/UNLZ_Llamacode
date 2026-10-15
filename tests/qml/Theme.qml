@@ -32,6 +32,11 @@ QtObject {
     // LcSpinBox / LcRadioButton.
     property string theme: "dark"
     property string hoverBg: "#1e1e2e"
+    // NavBar (tst_navbar).
+    property string navBg: "#11111b"
+    property string titleBg: "#11111b"
+    property string textDim: "#45475a"
+    property bool sidebarTranslucent: false
 
     function normalizeHex(s) {
         var t = String(s).trim()
