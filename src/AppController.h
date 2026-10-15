@@ -681,7 +681,16 @@ public:
     static QStringList binaryUpdateArguments(const QString &os, const QVariantMap &asset,
                                              const QString &channel, const QString &version,
                                              const QString &installDir, qint64 waitPid,
-                                             const QString &legacyExe);
+                                             const QString &legacyExe,
+                                             const QString &legacyLauncher = QString());
+    // Linux: contenido de ~/.config/llamacode/launcher.env (lo lee el lanzador
+    // que escribe update-binary.sh) con las LLAMACODE_* de este proceso. Un
+    // wrapper propio (config compartida en NTFS, model roots) las define y el
+    // binario instalado se lanzaria sin el. "" si no hay ninguna.
+    static QString linuxLauncherEnv(const QProcessEnvironment &env);
+    // Escribe linuxLauncherEnv(env) en `path` solo si no existe (nunca pisa
+    // lo que el usuario edito). true si lo escribio.
+    static bool writeLinuxLauncherEnvIfMissing(const QString &path, const QProcessEnvironment &env);
     // Envuelve `command` en la primera terminal grafica disponible (la consola
     // visible del update en Linux); sin ninguna devuelve `command` tal cual.
     static QStringList linuxTerminalCommand(const QStringList &availableTerminals,

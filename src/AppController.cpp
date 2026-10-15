@@ -13162,7 +13162,8 @@ bool AppController::updateFlagInstallable(const QJsonObject &flag, bool binaryIn
 QStringList AppController::binaryUpdateArguments(const QString &os, const QVariantMap &asset,
                                                  const QString &channel, const QString &version,
                                                  const QString &installDir, qint64 waitPid,
-                                                 const QString &legacyExe)
+                                                 const QString &legacyExe,
+                                                 const QString &legacyLauncher)
 {
     const bool windows = os == QLatin1String("windows");
     QStringList args;
@@ -13181,7 +13182,49 @@ QStringList AppController::binaryUpdateArguments(const QString &os, const QVaria
     if (waitPid > 0)
         add("-WaitPid", "--wait-pid", QString::number(waitPid));
     add("-LegacyExe", "--legacy-exe", legacyExe);
+    // Wrapper que lanzaba el app (LLAMACODE_LAUNCHER): sus .desktop/autostart
+    // pasan al lanzador de la instalacion binaria. Solo existe en Linux.
+    if (!windows)
+        add("", "--legacy-launcher", legacyLauncher);
     return args;
+}
+
+QString AppController::linuxLauncherEnv(const QProcessEnvironment &env)
+{
+    QStringList keys;
+    for (const QString &key : env.keys()) {
+        // LLAMACODE_LAUNCHER lo pone el lanzador nuevo apuntando a si mismo.
+        if (key.startsWith(QStringLiteral("LLAMACODE_")) && key != QLatin1String("LLAMACODE_LAUNCHER"))
+            keys << key;
+    }
+    if (keys.isEmpty())
+        return QString();
+    keys.sort();
+    QString out = QStringLiteral(
+        "# Entorno del lanzador de LlamaCode (instalacion binaria).\n"
+        "# Lo genero \"Actualizar\" con las variables del wrapper que lanzaba el app;\n"
+        "# se lee con `set -a; . este_archivo` y no se vuelve a pisar: editalo libre.\n");
+    for (const QString &key : keys) {
+        QString value = env.value(key);
+        value.replace(QLatin1Char('\''), QStringLiteral("'\\''"));
+        out += QStringLiteral("%1='%2'\n").arg(key, value);
+    }
+    return out;
+}
+
+bool AppController::writeLinuxLauncherEnvIfMissing(const QString &path, const QProcessEnvironment &env)
+{
+    if (QFileInfo::exists(path))
+        return false;
+    const QString content = linuxLauncherEnv(env);
+    if (content.isEmpty())
+        return false;
+    QDir().mkpath(QFileInfo(path).absolutePath());
+    QSaveFile file(path);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+        return false;
+    file.write(content.toUtf8());
+    return file.commit();
 }
 
 QStringList AppController::linuxTerminalCommand(const QStringList &availableTerminals,
@@ -13231,9 +13274,19 @@ bool AppController::launchBinaryUpdate(const QVariantMap &asset, const QString &
               .filePath(QStringLiteral("Programs"))
         : QDir::homePath() + QStringLiteral("/.local/opt");
     const QString installDir = binaryInstallDirFor(exePath, channel, defaultParent);
+#ifdef Q_OS_WIN
+    const QString legacyLauncher;
+#else
+    const QString legacyLauncher = qEnvironmentVariable("LLAMACODE_LAUNCHER").trimmed();
+    const QString envFile = QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation)
+        + QStringLiteral("/llamacode/launcher.env");
+    if (writeLinuxLauncherEnvIfMissing(envFile, QProcessEnvironment::systemEnvironment()))
+        appendServerEvent(QStringLiteral("lifecycle"),
+            QStringLiteral("Entorno del lanzador guardado en %1 (variables LLAMACODE_* actuales).").arg(envFile));
+#endif
     const QStringList updateArgs = binaryUpdateArguments(
         os, asset, channel, version, installDir, QCoreApplication::applicationPid(),
-        QDir::toNativeSeparators(exePath));
+        QDir::toNativeSeparators(exePath), legacyLauncher);
     appendServerEvent(QStringLiteral("lifecycle"),
         QStringLiteral("Actualizando a v%1 con el binario precompilado en %2.").arg(version, installDir));
 
