@@ -37,6 +37,10 @@ Reglas:
 | GGUFScanner, EffectiveProfileBuilder | `tests/test_gguf_profiles.cpp` |
 | ProfileTypes, ProfileManager | `tests/test_profiles.cpp` |
 | PortablePaths (rutas C:/D: de la config compartida Windows/Linux; ida y vuelta estable) | `tests/test_profiles.cpp` |
+| ProfileManager entre instancias (Prod+Debug: lock de save, conservar perfiles de la otra) | `tests/test_profiles.cpp` |
+| LlmGateway LAN (log por request, política "clientes LAN no cambian el modelo", detección loopback) | `tests/test_gateway.cpp` |
+| Lista de clientes LAN, reconexión del agente cliente, API key del gateway | `tests/test_system_profiles.cpp` |
+| `scripts/release.sh` (dry run, --bump, --promote, gh falso) | `tests/test_release_sh.sh` (ctest `release_sh`) |
 | AgentProfile (perfiles de agente: capacidades+directivas, presets, gating system prompt) | `tests/test_agent_profiles.cpp` |
 | HarnessSpec (harness modular: herencia por módulo, packs, permisos, fases, migración legacy) | `tests/test_harness_spec.cpp` |
 | Módulos del harness cableados al backend + directivas propias (.md) | `tests/test_harness_modules.cpp` |
@@ -304,6 +308,15 @@ compara `tag_name` (sin la `v`) contra la versión propia. **Sin releases
 publicados el endpoint da 404** y el app cae al `assets/update/latest.json`
 bundleado, que trae `newVersion:false` → nunca avisa nada. El detector no está
 roto: falta publicar.
+
+La versión vive SÓLO en `project(LlamaCode VERSION ...)` de `CMakeLists.txt`;
+`src/LlamaCodeVersion.h` se genera (no hay que tocar main.cpp ni AppController.h).
+
+Linux (sin PowerShell): `scripts/release.sh` — dry run por defecto:
+```
+scripts/release.sh --bump --channel debug --publish   # sube el patch, commitea, pushea y publica Debug
+scripts/release.sh --promote --publish                # el último vX.Y.Z-debug pasa a Prod (mismo commit)
+```
 
 Publicar (el tag DEBE ser `vX.Y.Z` o `QVersionNumber` no lo parsea):
 ```

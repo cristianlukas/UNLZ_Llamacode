@@ -475,6 +475,11 @@ qt_add_qml_module(LlamaCode
         qml/components/LcDialog.qml
         qml/components/LcColorPicker.qml
         qml/components/LcColorRow.qml
+        qml/components/SettingsAgentProfilesSection.qml
+        qml/components/SettingsSystemSection.qml
+        qml/components/SettingsIntegrationsSection.qml
+        qml/components/SettingsMailSection.qml
+        qml/components/SettingsChatSection.qml
         qml/components/LcHarnessEditor.qml
         qml/components/LcScrollBar.qml
         qml/components/OpencodeConfigDialog.qml
