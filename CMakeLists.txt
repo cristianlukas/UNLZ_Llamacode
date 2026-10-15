@@ -854,6 +854,15 @@ if (BUILD_TESTS)
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1"
         FAIL_REGULAR_EXPRESSION "FAIL |ReferenceError|TypeError|Unable to assign|is not a type")
 
+    if (WIN32)
+        # scripts/update-binary.ps1 ("Actualizar" con binario) contra zips falsos:
+        # swap de carpeta, hash y rollback (automatico y -Rollback).
+        add_test(NAME update_binary_ps
+                 COMMAND powershell -NoProfile -ExecutionPolicy Bypass
+                         -File ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_update_binary_ps.ps1)
+        set_tests_properties(update_binary_ps PROPERTIES FAIL_REGULAR_EXPRESSION "FAIL ")
+    endif()
+
     if (UNIX)
         # scripts/release.sh contra un repo temporal y un gh falso (no publica nada).
         add_test(NAME release_sh COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_release_sh.sh)

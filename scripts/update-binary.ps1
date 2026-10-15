@@ -14,6 +14,12 @@
 
     User data lives in %APPDATA% / %LOCALAPPDATA%\LlamaCode: never touched here.
 
+    Rollback (same as update-binary.sh): the previous version stays as
+    <install>.prev. If the new one exits with an error within LC_HEALTH_SECONDS
+    (default 10) of the relaunch, it is moved to <install>.failed, the previous
+    one is put back and relaunched. -Rollback does the same by hand, any time:
+    the current version goes to <install>.failed and .prev comes back.
+
 .NOTES
     ASCII only on purpose (Windows PowerShell 5.1 reads a BOM-less .ps1 as ANSI).
     Env var fallbacks (for 'irm | iex', where params do not exist):
@@ -30,7 +36,8 @@ param(
     [string]$LegacyExe = '',
     [switch]$NoLaunch,
     [switch]$NoShortcuts,
-    [switch]$NoPause
+    [switch]$NoPause,
+    [switch]$Rollback
 )
 
 $ErrorActionPreference = 'Stop'
@@ -50,6 +57,14 @@ function Info($m) {
     } catch {}
 }
 function Ok($m)  { Write-Host "[OK] $m" -ForegroundColor Green }
+# SHA-256 via .NET: Get-FileHash vive en un modulo que PowerShell 5.1 no carga
+# si lo lanzo PowerShell 7 (hereda su PSModulePath) -> "no se reconoce".
+function Get-Sha256Hex([string]$path) {
+    $sha = [System.Security.Cryptography.SHA256]::Create()
+    $stream = [IO.File]::OpenRead($path)
+    try { return ([BitConverter]::ToString($sha.ComputeHash($stream)) -replace '-', '').ToLower() }
+    finally { $stream.Dispose(); $sha.Dispose() }
+}
 function Die($m) { throw [System.Exception]::new("LCUPD: $m") }
 
 # Asset name contract, shared with the CI (release-binaries.yml) and the app
@@ -168,6 +183,33 @@ function Move-WithRetry([string]$from, [string]$to) {
     }
 }
 
+# Put <install>.prev back in place; the current one is kept as <install>.failed.
+function Restore-Previous([string]$dir) {
+    $prev = "$dir.prev"
+    if (-not (Test-Path -LiteralPath $prev)) { Die "There is no previous version to go back to ($prev)." }
+    Stop-InstalledProcesses $dir
+    Start-Sleep -Milliseconds 500
+    $failed = "$dir.failed"
+    if (Test-Path -LiteralPath $failed) { Remove-Item -Recurse -Force -LiteralPath $failed -ErrorAction SilentlyContinue }
+    if (Test-Path -LiteralPath $dir) { Move-WithRetry $dir $failed }
+    Move-WithRetry $prev $dir
+    Ok "Previous version restored (the other one is kept in $failed)."
+}
+
+# Launch and watch the first seconds: a crash right after starting (missing DLL,
+# bad release) means the update broke the app. Exit code 0 is fine (it handed
+# off to an instance that was already open).
+function Start-AndCheck([string]$exe, [string]$workDir) {
+    $style = if ($env:LC_TEST_HIDDEN_LAUNCH) { 'Hidden' } else { 'Normal' }
+    $proc = Start-Process -FilePath $exe -WorkingDirectory $workDir -WindowStyle $style -PassThru
+    $seconds = 10
+    if ($env:LC_HEALTH_SECONDS) { $seconds = [int]$env:LC_HEALTH_SECONDS }
+    if ($proc.WaitForExit($seconds * 1000)) {
+        if ($proc.ExitCode -ne 0) { return $proc.ExitCode }
+    }
+    return 0
+}
+
 function Set-Shortcut([string]$path, [string]$target, [string]$workDir) {
     $parent = Split-Path -Parent $path
     if ($parent -and -not (Test-Path $parent)) { New-Item -ItemType Directory -Force -Path $parent | Out-Null }
@@ -239,6 +281,17 @@ try {
     }
     if ($Channel -notin @('prod', 'debug')) { Die "Invalid channel: $Channel (prod|debug)" }
 
+    if ($Rollback) {
+        if (-not $InstallDir) { $InstallDir = Get-DefaultInstallDir $Channel }
+        $InstallDir = [IO.Path]::GetFullPath($InstallDir).TrimEnd('\')
+        Info "Going back to the previous version in $InstallDir..."
+        Restore-Previous $InstallDir
+        if (-not $NoLaunch) { Start-Process -FilePath (Join-Path $InstallDir 'LlamaCode.exe') -WorkingDirectory $InstallDir }
+        Write-Host ''
+        Ok 'Rollback complete.'
+        return
+    }
+
     if (-not $AssetUrl) {
         Info "Looking up the latest $Channel release on GitHub..."
         $latest = Resolve-LatestAsset $Channel
@@ -267,7 +320,7 @@ try {
         $Expected = Get-ExpectedHash ([IO.File]::ReadAllText($shaFile))
     }
     if (-not $Expected) { Die 'The release has no SHA-256 for this file; refusing to install an unverified binary.' }
-    $Actual = (Get-FileHash -Algorithm SHA256 -LiteralPath $Zip).Hash.ToLower()
+    $Actual = Get-Sha256Hex $Zip
     if ($Actual -ne $Expected) {
         Die "SHA-256 mismatch: expected $Expected, got $Actual. The download is corrupt or was tampered with; nothing was changed."
     }
@@ -297,11 +350,15 @@ try {
     Stop-InstalledProcesses $InstallDir
     Start-Sleep -Milliseconds 500
 
+    # The previous version is kept as .prev (one level) for the rollback below or
+    # for -Rollback later. .old was the name before rollback existed.
     $Old = $null
     if (Test-Path -LiteralPath $InstallDir) {
-        $Old = "$InstallDir.old"
-        if (Test-Path -LiteralPath $Old) { Remove-Item -Recurse -Force -LiteralPath $Old -ErrorAction SilentlyContinue }
-        if (Test-Path -LiteralPath $Old) { $Old = "$InstallDir.old-" + (Get-Date -Format 'yyyyMMddHHmmss') }
+        $Old = "$InstallDir.prev"
+        foreach ($stale in @($Old, "$InstallDir.old")) {
+            if (Test-Path -LiteralPath $stale) { Remove-Item -Recurse -Force -LiteralPath $stale -ErrorAction SilentlyContinue }
+        }
+        if (Test-Path -LiteralPath $Old) { Die "Could not remove the older backup $Old (in use?). Close it and retry." }
         Info 'Replacing the install folder...'
         Move-WithRetry $InstallDir $Old
     }
@@ -312,7 +369,6 @@ try {
         if ($Old -and -not (Test-Path -LiteralPath $InstallDir)) { Move-Item -LiteralPath $Old -Destination $InstallDir }
         Die "Could not move the new version into place: $($_.Exception.Message)"
     }
-    if ($Old) { Remove-Item -Recurse -Force -LiteralPath $Old -ErrorAction SilentlyContinue }
     Remove-Item -Recurse -Force -LiteralPath $Work -ErrorAction SilentlyContinue
     $Exe = Join-Path $InstallDir 'LlamaCode.exe'
     Ok "Installed: $Exe"
@@ -328,7 +384,17 @@ try {
 
     if (-not $NoLaunch) {
         Info 'Launching LlamaCode...'
-        Start-Process -FilePath $Exe -WorkingDirectory $InstallDir
+        $rc = Start-AndCheck $Exe $InstallDir
+        if ($rc -ne 0) {
+            Write-Host "[ERROR] The new version exited with code $rc right after starting." -ForegroundColor Red
+            if ($Old -and (Test-Path -LiteralPath $Old)) {
+                Info 'Restoring the previous version...'
+                Restore-Previous $InstallDir
+                $style = if ($env:LC_TEST_HIDDEN_LAUNCH) { 'Hidden' } else { 'Normal' }
+                Start-Process -FilePath $Exe -WorkingDirectory $InstallDir -WindowStyle $style
+            }
+            Die "Update rolled back: the new version did not start. Log: $LogPath"
+        }
     }
     Write-Host ''
     Ok 'Update complete.'

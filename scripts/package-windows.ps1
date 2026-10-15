@@ -33,6 +33,14 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+# SHA-256 via .NET: Get-FileHash vive en un modulo que PowerShell 5.1 no carga
+# si lo lanzo PowerShell 7 (hereda su PSModulePath) -> "no se reconoce".
+function Get-Sha256Hex([string]$path) {
+    $sha = [System.Security.Cryptography.SHA256]::Create()
+    $stream = [IO.File]::OpenRead($path)
+    try { return ([BitConverter]::ToString($sha.ComputeHash($stream)) -replace '-', '').ToLower() }
+    finally { $stream.Dispose(); $sha.Dispose() }
+}
 $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 if ($SourceDir) { $root = [IO.Path]::GetFullPath((Join-Path (Get-Location) $SourceDir)) }
 
@@ -92,7 +100,7 @@ $zip = Join-Path $OutDir $name
 if (Test-Path $zip) { Remove-Item -Force $zip }
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 [IO.Compression.ZipFile]::CreateFromDirectory($stage, $zip, [IO.Compression.CompressionLevel]::Optimal, $false)
-$hash = (Get-FileHash -Algorithm SHA256 $zip).Hash.ToLower()
+$hash = Get-Sha256Hex $zip
 [IO.File]::WriteAllText("$zip.sha256", "$hash  $name`n")
 
 $mb = '{0:N1}' -f ((Get-Item $zip).Length / 1MB)

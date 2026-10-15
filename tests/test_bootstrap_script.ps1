@@ -1,6 +1,14 @@
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $ps  = [IO.File]::ReadAllText((Join-Path $root 'scripts\bootstrap.ps1'))
+# SHA-256 via .NET: Get-FileHash vive en un modulo que PowerShell 5.1 no carga
+# si lo lanzo PowerShell 7 (hereda su PSModulePath) -> "no se reconoce".
+function Get-Sha256Hex([string]$path) {
+    $sha = [System.Security.Cryptography.SHA256]::Create()
+    $stream = [IO.File]::OpenRead($path)
+    try { return ([BitConverter]::ToString($sha.ComputeHash($stream)) -replace '-', '').ToLower() }
+    finally { $stream.Dispose(); $sha.Dispose() }
+}
 $sh  = [IO.File]::ReadAllText((Join-Path $root 'scripts\bootstrap.sh'))
 $app = [IO.File]::ReadAllText((Join-Path $root 'src\AppController.cpp'))
 $qml = [IO.File]::ReadAllText((Join-Path $root 'qml\Main.qml'))
@@ -141,7 +149,7 @@ try {
         Set-Content -Path (Join-Path $pkg 'version.txt') -Value $content -Encoding ASCII
         $zip = Join-Path $tmp "$name.zip"
         [IO.Compression.ZipFile]::CreateFromDirectory($pkg, $zip)
-        $h = (Get-FileHash -Algorithm SHA256 $zip).Hash.ToLower()
+        $h = Get-Sha256Hex $zip
         [IO.File]::WriteAllText("$zip.sha256", "$h  $name.zip`n")
         return @{ Zip = $zip; Hash = $h }
     }
@@ -178,7 +186,7 @@ try {
     $bad = Join-Path $tmp 'bad'; New-Item -ItemType Directory -Force -Path (Join-Path $bad 'sub') | Out-Null
     Set-Content -Path (Join-Path $bad 'sub\x.txt') -Value 'x'
     $badZip = Join-Path $tmp 'bad.zip'; [IO.Compression.ZipFile]::CreateFromDirectory($bad, $badZip)
-    $r = Invoke-Updater @('-AssetUrl', $badZip, '-Sha256', (Get-FileHash -Algorithm SHA256 $badZip).Hash, '-InstallDir', $install)
+    $r = Invoke-Updater @('-AssetUrl', $badZip, '-Sha256', (Get-Sha256Hex $badZip), '-InstallDir', $install)
     Check ($r.Code -eq 1 -and $r.Out -match 'no LlamaCode.exe') 'rechaza un paquete sin LlamaCode.exe'
     Check ((Get-Content (Join-Path $install 'version.txt')) -eq 'v2') 'con paquete roto la instalacion queda intacta'
 

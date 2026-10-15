@@ -72,6 +72,9 @@ Reglas:
 | Tools de computer use (validación previa al input, portapapeles, rechazo de tipeo sin ventana elegida) | `tests/test_agent_tools.cpp` |
 | Computer use: preguntar modo / Super Agente directo / "segundo plano" sin mouse ni teclado (gate del turno, tools filtradas y rechazadas) + razonamiento oculto con Pensar apagado (contar y cortar una vez) | `tests/test_agent_wire.cpp`, `tests/test_agent_tools.cpp`, `tests/test_automation.cpp`, `tests/test_appcontroller.cpp` |
 | NavBar (fila de Configuración centrada, con y sin botón de update) | `tests/qml/tst_navbar.qml` (ctest `qml_navbar`) |
+| `desktop_launch` devuelve el id de la ventana que abrió (`pickLaunchedWindow`, `waitForLaunchedWindow`; diálogo de error ≠ app) | `tests/test_automation.cpp` |
+| Modo texto conserva `chat_template_kwargs`/`reasoning_budget` + diagnóstico de respuesta vacía | `tests/test_agent_wire.cpp` |
+| `scripts/update-binary.ps1` (swap, hash, rollback automático y `-Rollback`) contra zips falsos | `tests/test_update_binary_ps.ps1` (ctest `update_binary_ps`, Windows) |
 | CharlaTuning (contexto mínimo del agente de voz, slots) + AudioCodec::toMonoResampled + recorte de silencio para STT + Piper residente | `tests/test_voice.cpp` |
 | VoiceCursorCommand (parseo de órdenes de cursor por voz) | `tests/test_voice.cpp` |
 | VoiceAssistant (Charla JARVIS: sí/no hablado, avisos de tool, pregunta de aprobación) + turno abierto de VoiceController | `tests/test_voice.cpp` |
@@ -329,6 +332,17 @@ Linux (sin PowerShell): `scripts/release.sh` — dry run por defecto:
 scripts/release.sh --bump --channel debug --publish   # sube el patch, commitea, pushea y publica Debug
 scripts/release.sh --promote --publish                # el último vX.Y.Z-debug pasa a Prod (mismo commit)
 ```
+
+**CI de tests** (`.github/workflows/tests.yml`): compila con `BUILD_TESTS=ON` y
+corre ctest en Linux y Windows en cada push a `main` y en cada PR.
+`tools/release.ps1 -Publish` se niega a taggear si ese workflow no está verde
+para el commit (o el anterior, si el commit es sólo el bump de versión), salvo
+`-Force`. Flujo: commit → push a main → esperar el CI verde → bump → publicar.
+
+**Rollback del actualizador binario** (Windows y Linux): la versión anterior queda
+en `<instalación>.prev`; si la nueva muere con error en los primeros
+`LC_HEALTH_SECONDS` (10 s), vuelve la anterior y la nueva queda en `.failed`. A
+mano: `scripts\update-binary.ps1 -Rollback` (Linux: `mv` de `.prev`).
 
 Publicar (el tag DEBE ser `vX.Y.Z` o `QVersionNumber` no lo parsea):
 ```
