@@ -24,6 +24,11 @@
 # from this shell's LLAMACODE_* vars; a menu entry that runs a hand-made wrapper
 # setting LLAMACODE_* is left alone until launcher.env exists.
 #
+# Provenance: releases from ATTESTED_SINCE on carry a Sigstore attestation from
+# release-binaries.yml. With the GitHub CLI logged in the package must verify
+# against it (a hand-uploaded asset does not); without gh it is reported only.
+# LC_REQUIRE_ATTESTATION=1 demands it whatever the version.
+#
 # Safety: refuses a package that needs a newer glibc than this system has
 # (minGlibc in llamacode-install.json). The previous version stays as
 # <install>.prev; if the new one dies with an error within LC_HEALTH_SECONDS
@@ -63,6 +68,12 @@ while [ $# -gt 0 ]; do
         *) echo "[ERROR] unknown option: $1" >&2; exit 2 ;;
     esac
 done
+
+# The app writes this script to TMPDIR as llamacode-update-binary-<pid>.sh:
+# remove that copy on the way out (a curl | bash run has no file to remove).
+case "$(basename -- "$0")" in
+    llamacode-update-binary-*.sh) trap 'rm -f -- "$0"' EXIT ;;
+esac
 
 LOG="${XDG_CACHE_HOME:-$HOME/.cache}/llamacode-update.log"
 mkdir -p "$(dirname "$LOG")"
@@ -173,6 +184,25 @@ fi
 actual="$(sha256sum "$PKG" | cut -d' ' -f1)"
 [ "$actual" = "$expected" ] || fail "SHA-256 mismatch: expected $expected, got $actual. Nothing was changed."
 ok "SHA-256 verified ($actual)"
+
+# ---- Provenance (the hash only proves the download matches the release) ----
+ATTESTED_SINCE="0.1.128"
+version_ge() { [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | head -1)" = "$2" ]; }
+if { [ -n "$VERSION" ] && version_ge "$VERSION" "$ATTESTED_SINCE"; } || [ -n "${LC_REQUIRE_ATTESTATION:-}" ]; then
+    if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
+        info "Verifying build provenance..."
+        if gh attestation verify "$PKG" --repo "$REPO" \
+            --signer-workflow "$REPO/.github/workflows/release-binaries.yml" >"$WORK/attest.txt" 2>&1; then
+            ok "Provenance verified: built by $REPO (release-binaries.yml)"
+        else
+            tail -5 "$WORK/attest.txt" | sed 's/^/        /'
+            fail "Provenance check failed: this package was not built by the $REPO release workflow. Nothing was changed."
+        fi
+    else
+        printf '\033[33m[!] Provenance not verified (needs the GitHub CLI: gh auth login).\033[0m\n'
+        echo "    The SHA-256 above only proves the download matches the release asset."
+    fi
+fi
 
 # ---- Stage next to the target (same filesystem: the swap is a rename) ------
 mkdir -p "$(dirname "$INSTALL_DIR")"
@@ -378,6 +408,8 @@ if [ -z "$NO_LAUNCH" ]; then
         info "No display detected. Run: $LAUNCHER"
     fi
 fi
+# Working update: a version that failed before is no longer worth ~180 MB.
+rm -rf "$INSTALL_DIR.failed"
 echo ""
 ok "Update complete."
 [ -z "$NO_PAUSE" ] && [ -t 0 ] && sleep 3

@@ -41,8 +41,8 @@ Reglas:
 | LlmGateway LAN (log por request, política "clientes LAN no cambian el modelo", detección loopback) | `tests/test_gateway.cpp` |
 | Lista de clientes LAN, reconexión del agente cliente, API key del gateway | `tests/test_system_profiles.cpp` |
 | `scripts/release.sh` (dry run, --bump, --promote, gh falso) | `tests/test_release_sh.sh` (ctest `release_sh`) |
-| "Actualizar" con binario: asset por SO/canal + hash, carpeta de instalación binaria, args del actualizador, terminal Linux, `launcher.env` desde las `LLAMACODE_*`, piso de glibc | `tests/test_appcontroller.cpp` |
-| `scripts/update-binary.sh` (hash, swap, migración, autostart, lanzador + `launcher.env`, repunte/protección de wrapper, aviso de herramientas, minGlibc, `.prev` + rollback si la nueva crashea) | `tests/test_update_binary_sh.sh` (ctest `update_binary_sh`, sólo Unix) |
+| "Actualizar" con binario: asset por SO/canal + hash, carpeta de instalación binaria, args del actualizador, terminal Linux, `launcher.env` desde las `LLAMACODE_*`, piso de glibc atado al runner del CI, limpieza de scripts en TEMP | `tests/test_appcontroller.cpp` |
+| `scripts/update-binary.sh` (hash, swap, migración, autostart, lanzador + `launcher.env`, repunte/protección de wrapper, aviso de herramientas, minGlibc, `.prev` + rollback si la nueva crashea, attestation con `gh` falso, autoborrado en TMP, limpieza de `.failed`) | `tests/test_update_binary_sh.sh` (ctest `update_binary_sh`, sólo Unix) |
 | `scripts/update-binary.ps1` (hash, swap, rollback, `irm \| iex`) | `tests/test_bootstrap_script.ps1` (fuera de ctest) |
 | AgentProfile (perfiles de agente: capacidades+directivas, presets, gating system prompt) | `tests/test_agent_profiles.cpp` |
 | HarnessSpec (harness modular: herencia por módulo, packs, permisos, fases, migración legacy) | `tests/test_harness_spec.cpp` |
@@ -377,8 +377,9 @@ carpeta entera (rename; rollback si falla) y relanza. Datos de usuario no se toc
 - Seguridad del update Linux: `package-linux.sh` graba `minGlibc` (el símbolo
   GLIBC_ más nuevo del paquete) en `llamacode-install.json` y el script se niega
   a instalar en un sistema más viejo; el app ni lo intenta con glibc < 2.39
-  (`linuxGlibcSupportsBinary`, piso del runner ubuntu-24.04: si cambia el runner,
-  cambiar las dos cosas) y usa el bootstrap. La versión anterior queda en
+  (`linuxBinaryMinGlibc`, piso del runner ubuntu-24.04;
+  `linuxBinaryGlibcFloorMatchesCiRunner` lee el workflow y falla si el runner
+  cambia sin actualizar el piso) y usa el bootstrap. La versión anterior queda en
   `<instalación>.prev`; si la nueva muere con código != 0 en los primeros
   `LC_HEALTH_SECONDS` (10) se restaura sola (la rota queda en `.failed`). Salir
   con 0 no es falla: es el handoff a una instancia ya abierta. La app relanzada
@@ -387,6 +388,18 @@ carpeta entera (rename; rollback si falla) y relanza. Datos de usuario no se toc
   `wayland-graphics-integration-client`, que linuxdeploy no copia solo). El CI
   arranca el paquete por el lanzador, con `launcher.env` y un `LD_LIBRARY_PATH`
   hacia Qt, en Xvfb y en offscreen.
+- **Procedencia firmada**: los jobs de build de un tag corren
+  `actions/attest-build-provenance` sobre el paquete (Sigstore, gratis por ser
+  repo público). `update-binary.sh` lo verifica con `gh attestation verify
+  --signer-workflow <repo>/.github/workflows/release-binaries.yml` para
+  versiones >= `ATTESTED_SINCE` (0.1.128) si `gh` está logueado: si falla, no
+  instala; sin `gh` avisa y sigue (el SHA-256 sólo prueba que la descarga
+  coincide con el asset, no quién lo subió). `LC_REQUIRE_ATTESTATION=1` la exige
+  siempre. A mano: `gh attestation verify <archivo> --repo cristianlukas/UNLZ_Llamacode`.
+  `update-binary.ps1` todavía no la verifica.
+- Limpieza: la copia `llamacode-update-binary-<pid>.sh` en TMP se borra sola al
+  terminar; el app borra las de updates anteriores (el `.ps1` de Windows no se
+  puede borrar a sí mismo); un update exitoso borra `<instalación>.failed`.
 - Cada SO se publica por separado (`release-binaries-upload.yml`): si falla el
   build de Windows, el paquete Linux igual llega a la release.
 - Release sin assets (vieja, o el CI todavía compilando): un checkout cae al

@@ -187,6 +187,8 @@ private slots:
     void linuxUpdateRunsInFirstAvailableTerminal();
     void linuxLauncherEnvKeepsWrapperVariables();
     void linuxBinaryNeedsRecentGlibc();
+    void linuxBinaryGlibcFloorMatchesCiRunner();
+    void staleUpdateScriptsAreRemoved();
     void binaryUpdaterScriptsAreBundled();
     void importUserDataFromRoundTrips();
     void exportUserDataToEmptyPathErrors();
@@ -637,6 +639,57 @@ void AppControllerTests::linuxBinaryNeedsRecentGlibc()
 #if defined(__GLIBC__)
     QVERIFY(!QVersionNumber::fromString(AppController::runtimeGlibcVersion()).isNull());
 #endif
+}
+
+// El piso de glibc del app sale del runner que compila el paquete. Si alguien
+// cambia ubuntu-24.04 por otro, el app seguiria ofreciendo un binario que no
+// arranca: este test obliga a actualizar los dos juntos.
+void AppControllerTests::linuxBinaryGlibcFloorMatchesCiRunner()
+{
+    QFile wf(QStringLiteral(".github/workflows/release-binaries.yml"));   // cwd = fuente (ctest)
+    if (!wf.open(QIODevice::ReadOnly | QIODevice::Text))
+        QSKIP("release-binaries.yml no esta en el cwd (correr desde ctest)");
+    const QString text = QString::fromUtf8(wf.readAll());
+    const int linuxJob = text.indexOf(QRegularExpression(QStringLiteral("(?m)^  linux:\\s*$")));
+    QVERIFY2(linuxJob >= 0, "no se encontro el job linux");
+    const QRegularExpressionMatch runner = QRegularExpression(
+        QStringLiteral("(?m)^    runs-on:\\s*ubuntu-(\\d+\\.\\d+)\\s*$")).match(text, linuxJob);
+    QVERIFY2(runner.hasMatch(), "el job linux no corre en ubuntu-XX.YY");
+    // glibc de cada Ubuntu LTS usable como runner.
+    static const QHash<QString, QString> kGlibcOfUbuntu{
+        {QStringLiteral("22.04"), QStringLiteral("2.35")},
+        {QStringLiteral("24.04"), QStringLiteral("2.39")},
+    };
+    const QString ubuntu = runner.captured(1);
+    QVERIFY2(kGlibcOfUbuntu.contains(ubuntu),
+             qPrintable(QStringLiteral("runner ubuntu-%1 nuevo: agregar su glibc a esta tabla y a "
+                                       "AppController::linuxBinaryMinGlibc").arg(ubuntu)));
+    QCOMPARE(AppController::linuxBinaryMinGlibc(), kGlibcOfUbuntu.value(ubuntu));
+}
+
+// "Actualizar" escribe el actualizador a TEMP en cada update; en Windows el
+// .ps1 no se puede borrar a si mismo y se acumulaban.
+void AppControllerTests::staleUpdateScriptsAreRemoved()
+{
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QStringList names{
+        QStringLiteral("llamacode-update-binary-100.sh"),
+        QStringLiteral("llamacode-update-binary-101.ps1"),
+        QStringLiteral("llamacode-update-binary-777.sh"),   // el update actual
+        QStringLiteral("llamacode-update-binary-x.sh"),     // no es de un pid
+        QStringLiteral("llamacode-update.log"),
+        QStringLiteral("otro-archivo.sh"),
+    };
+    for (const QString &name : names) {
+        QFile f(dir.filePath(name));
+        QVERIFY(f.open(QIODevice::WriteOnly));
+    }
+    QCOMPARE(AppController::removeStaleUpdateScripts(dir.path(), 777), 2);
+    QVERIFY(!QFile::exists(dir.filePath(names[0])));
+    QVERIFY(!QFile::exists(dir.filePath(names[1])));
+    for (int i = 2; i < names.size(); ++i)
+        QVERIFY2(QFile::exists(dir.filePath(names[i])), qPrintable(names[i]));
 }
 
 // Un wrapper propio (config compartida Windows/Linux en NTFS, model roots)

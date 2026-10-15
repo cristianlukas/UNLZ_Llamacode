@@ -93,6 +93,11 @@ jobs:
     needs: meta
     runs-on: windows-2025
     timeout-minutes: 120
+    # id-token + attestations: firma de procedencia (attest-build-provenance).
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
     env:
       QT_DIR: C:\Qt\6.8.3\msvc2022_64
       CONFIG: ${{ needs.meta.outputs.config }}
@@ -183,6 +188,15 @@ jobs:
           "LlamaCode still running after 45s (pid $($p.Id))"
           Stop-Process -Id $p.Id -Force
 
+      # Procedencia firmada (Sigstore): ata el paquete a ESTE workflow y commit.
+      # update-binary.sh la verifica con `gh attestation verify` si hay gh.
+      # Solo builds que se publican: un push a main no deja attestations.
+      - name: Attest build provenance
+        if: needs.meta.outputs.upload == 'true'
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: dist/*.zip
+
       - uses: actions/upload-artifact@v7
         with:
           name: windows
@@ -192,8 +206,15 @@ jobs:
 
   linux:
     needs: meta
+    # El piso de glibc del app (AppController::linuxBinaryMinGlibc) sale de este
+    # runner; test_appcontroller lo compara: si se cambia, cambiar los dos.
     runs-on: ubuntu-24.04
     timeout-minutes: 120
+    # id-token + attestations: firma de procedencia (attest-build-provenance).
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
     env:
       QT_DIR: /home/runner/Qt/6.8.3/gcc_64
       CONFIG: ${{ needs.meta.outputs.config }}
@@ -280,6 +301,15 @@ jobs:
           QT_QPA_PLATFORM=offscreen smoke offscreen "$dir/llamacode" || ok=1
           mv "$HOME/Qt.hidden" "$HOME/Qt"
           exit $ok
+
+      # Procedencia firmada (Sigstore): ata el paquete a ESTE workflow y commit.
+      # update-binary.sh la verifica con `gh attestation verify` si hay gh.
+      # Solo builds que se publican: un push a main no deja attestations.
+      - name: Attest build provenance
+        if: needs.meta.outputs.upload == 'true'
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: dist/*.tar.gz
 
       - uses: actions/upload-artifact@v7
         with:

@@ -161,8 +161,51 @@ tar -C "$work/pkg-alive" -czf "$work/alive.tar.gz" .
 ( cd "$work" && sha256sum alive.tar.gz > alive.tar.gz.sha256 )
 runl --asset-url "$work/alive.tar.gz" --sha256-url "$work/alive.tar.gz.sha256" --install-dir "$rb" && rc=0 || rc=$?
 check '[ $rc -eq 0 ] && [ "$(cat "$rb/version.txt")" = alive ]' "version nueva que sigue viva: queda instalada"
+check '[ ! -e "$rb.failed" ]' "un update que anda borra la version rota (.failed) que habia quedado"
 runl --asset-url "$work/v3.tar.gz" --sha256-url "$work/v3.tar.gz.sha256" --install-dir "$rb" && rc=0 || rc=$?
 check '[ $rc -eq 0 ] && [ "$(cat "$rb/version.txt")" = v3 ]' "con la anterior abierta no queda el lock tomado; sale con 0 (le pasa el foco a otra instancia): no es rollback"
+
+# Procedencia (attestation del CI) con un gh falso: nunca llama al gh real.
+ghbin="$work/ghbin"; mkdir -p "$ghbin"
+cat > "$ghbin/gh" <<'GH'
+#!/bin/sh
+case "$1 $2" in
+    "auth status") exit "${FAKE_GH_AUTH:-0}" ;;
+    "attestation verify")
+        echo "$*" >> "$FAKE_GH_LOG"
+        if [ -n "${FAKE_GH_FAIL:-}" ]; then echo "Error: HTTP 404: Not Found"; exit 1; fi
+        echo "Verification succeeded"; exit 0 ;;
+esac
+exit 2
+GH
+chmod +x "$ghbin/gh"
+export FAKE_GH_LOG="$work/gh.log"
+att="$work/opt/ATT"
+PATH="$ghbin:$PATH" run --asset-url "$work/v2.tar.gz" --sha256-url "$work/v2.tar.gz.sha256" --install-dir "$att" --version 0.1.128 && rc=0 || rc=$?
+check '[ $rc -eq 0 ] && grep -q "Provenance verified" "$work/out.txt"' "release firmada: verifica la procedencia con gh"
+check 'grep -q -- "--repo cristianlukas/UNLZ_Llamacode --signer-workflow cristianlukas/UNLZ_Llamacode/.github/workflows/release-binaries.yml" "$FAKE_GH_LOG"' "verifica contra el workflow de releases del repo"
+PATH="$ghbin:$PATH" FAKE_GH_FAIL=1 run --asset-url "$work/v3.tar.gz" --sha256-url "$work/v3.tar.gz.sha256" --install-dir "$att" --version 0.1.130 && rc=0 || rc=$?
+check '[ $rc -eq 1 ] && grep -q "Provenance check failed" "$work/out.txt" && grep -q "404" "$work/out.txt"' "sin attestation valida: no instala"
+check '[ "$(cat "$att/version.txt")" = v2 ] && [ ! -e "$att.new" ]' "sin attestation valida: la instalacion queda intacta"
+: > "$FAKE_GH_LOG"
+PATH="$ghbin:$PATH" FAKE_GH_FAIL=1 run --asset-url "$work/v3.tar.gz" --sha256-url "$work/v3.tar.gz.sha256" --install-dir "$att" --version 0.1.127 && rc=0 || rc=$?
+check '[ $rc -eq 0 ] && [ ! -s "$FAKE_GH_LOG" ]' "releases anteriores a la firma no se verifican"
+PATH="$ghbin:$PATH" FAKE_GH_AUTH=1 run --asset-url "$work/v2.tar.gz" --sha256-url "$work/v2.tar.gz.sha256" --install-dir "$att" --version 0.1.128 && rc=0 || rc=$?
+check '[ $rc -eq 0 ] && grep -q "Provenance not verified" "$work/out.txt" && [ ! -s "$FAKE_GH_LOG" ]' "sin gh logueado: avisa y sigue (el hash igual se verifica)"
+PATH="$ghbin:$PATH" FAKE_GH_FAIL=1 LC_REQUIRE_ATTESTATION=1 run --asset-url "$work/v3.tar.gz" --sha256-url "$work/v3.tar.gz.sha256" --install-dir "$att" && rc=0 || rc=$?
+check '[ $rc -eq 1 ] && grep -q "Provenance check failed" "$work/out.txt"' "LC_REQUIRE_ATTESTATION exige la firma sin version"
+
+# La copia que el app deja en TMP se borra sola (con exito o con error).
+mkdir -p "$work/tmp"
+cp "$src" "$work/tmp/llamacode-update-binary-4242.sh"
+bash "$work/tmp/llamacode-update-binary-4242.sh" --asset-url "$work/v2.tar.gz" --sha256-url "$work/v2.tar.gz.sha256" \
+    --install-dir "$work/opt/T1" --no-launch --no-pause >"$work/out.txt" 2>&1 && rc=0 || rc=$?
+check '[ $rc -eq 0 ] && [ ! -e "$work/tmp/llamacode-update-binary-4242.sh" ]' "el script copiado a TMP se borra al terminar"
+cp "$src" "$work/tmp/llamacode-update-binary-4243.sh"
+bash "$work/tmp/llamacode-update-binary-4243.sh" --asset-url "$work/v2.tar.gz" --install-dir "$work/opt/T1" \
+    --no-launch --no-pause >"$work/out.txt" 2>&1 && rc=0 || rc=$?
+check '[ $rc -eq 1 ] && [ ! -e "$work/tmp/llamacode-update-binary-4243.sh" ]' "tambien se borra si el update falla"
+check '[ -f "$src" ]' "el script del repo (otro nombre) nunca se borra"
 
 if [ $fails -eq 0 ]; then echo "TODO OK"; exit 0; fi
 echo "$fails FALLAS"; exit 1

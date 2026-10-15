@@ -695,6 +695,10 @@ public:
     // una glibc mas vieja no arranca. Mismo piso que el runner; el minGlibc
     // exacto lo verifica update-binary.sh antes de tocar nada. "" (no glibc) = no.
     static bool linuxGlibcSupportsBinary(const QString &runtimeGlibc);
+    static QString linuxBinaryMinGlibc();
+    // Borra de `dir` las copias llamacode-update-binary-<pid>.sh/.ps1 que dejaron
+    // updates anteriores (salvo la de `keepPid`). Devuelve cuantas borro.
+    static int removeStaleUpdateScripts(const QString &dir, qint64 keepPid);
     static QString runtimeGlibcVersion();
     // Envuelve `command` en la primera terminal grafica disponible (la consola
     // visible del update en Linux); sin ninguna devuelve `command` tal cual.

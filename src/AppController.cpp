@@ -13215,11 +13215,32 @@ QString AppController::linuxLauncherEnv(const QProcessEnvironment &env)
     return out;
 }
 
+QString AppController::linuxBinaryMinGlibc()
+{
+    // glibc de ubuntu-24.04, el runner del job linux de release-binaries.yml
+    // (linuxBinaryGlibcFloorMatchesCiRunner lo compara con el workflow).
+    return QStringLiteral("2.39");
+}
+
 bool AppController::linuxGlibcSupportsBinary(const QString &runtimeGlibc)
 {
-    static const QVersionNumber kMinGlibc(2, 39);   // ubuntu-24.04 (runner del CI)
     const QVersionNumber runtime = QVersionNumber::fromString(runtimeGlibc.trimmed());
-    return !runtime.isNull() && runtime >= kMinGlibc;
+    return !runtime.isNull() && runtime >= QVersionNumber::fromString(linuxBinaryMinGlibc());
+}
+
+int AppController::removeStaleUpdateScripts(const QString &dir, qint64 keepPid)
+{
+    static const QRegularExpression kName(
+        QStringLiteral("^llamacode-update-binary-(\\d+)\\.(sh|ps1)$"));
+    int removed = 0;
+    const QFileInfoList files = QDir(dir).entryInfoList(QDir::Files);
+    for (const QFileInfo &file : files) {
+        const QRegularExpressionMatch m = kName.match(file.fileName());
+        // Uno que todavia corre (Windows lo tiene abierto) simplemente no se borra.
+        if (m.hasMatch() && m.captured(1).toLongLong() != keepPid && QFile::remove(file.filePath()))
+            ++removed;
+    }
+    return removed;
 }
 
 QString AppController::runtimeGlibcVersion()
@@ -13277,6 +13298,8 @@ bool AppController::launchBinaryUpdate(const QVariantMap &asset, const QString &
                          : QStringLiteral(":/scripts/update-binary.sh"));
     if (!source.open(QIODevice::ReadOnly))
         return false;
+    // El .sh se borra solo al terminar; el .ps1 de Windows no puede (esta abierto).
+    removeStaleUpdateScripts(QDir::tempPath(), QCoreApplication::applicationPid());
     const QString scriptPath = QDir(QDir::tempPath()).filePath(
         QStringLiteral("llamacode-update-binary-%1%2")
             .arg(QCoreApplication::applicationPid())
