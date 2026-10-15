@@ -1,0 +1,353 @@
+<#
+.SYNOPSIS
+    LlamaCode binary updater/installer for Windows (no compiler needed).
+
+.DESCRIPTION
+    Downloads the precompiled release asset (zip), verifies its SHA-256, waits
+    for the running app to close, swaps the install folder atomically (the old
+    one is kept until the new one is in place) and relaunches LlamaCode.
+
+    "Actualizar" in the app writes this script (bundled in the qrc) to %TEMP%
+    and runs it in a visible console with every parameter filled in. It also
+    works standalone as an installer: with no -AssetUrl it asks GitHub for the
+    latest release of -Channel and picks the Windows asset.
+
+    User data lives in %APPDATA% / %LOCALAPPDATA%\LlamaCode: never touched here.
+
+.NOTES
+    ASCII only on purpose (Windows PowerShell 5.1 reads a BOM-less .ps1 as ANSI).
+    Env var fallbacks (for 'irm | iex', where params do not exist):
+      LC_CHANNEL, LC_ASSET_URL, LC_SHA256, LC_SHA256_URL, LC_INSTALL_DIR, LC_NORUN
+#>
+param(
+    [string]$AssetUrl = $env:LC_ASSET_URL,
+    [string]$Sha256 = $env:LC_SHA256,
+    [string]$Sha256Url = $env:LC_SHA256_URL,
+    [string]$InstallDir = $env:LC_INSTALL_DIR,
+    [string]$Channel = $(if ($env:LC_CHANNEL) { $env:LC_CHANNEL } else { 'prod' }),
+    [string]$Version = '',
+    [int]$WaitPid = 0,
+    [string]$LegacyExe = '',
+    [switch]$NoLaunch,
+    [switch]$NoShortcuts,
+    [switch]$NoPause
+)
+
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
+
+$Repo = 'cristianlukas/UNLZ_Llamacode'
+$Channel = $Channel.Trim().ToLower()
+if ($env:LC_NORUN) { $NoLaunch = $true }
+
+function Info($m) {
+    Write-Host "[*] $m" -ForegroundColor Cyan
+    try {
+        if ($Host.UI.RawUI.WindowTitle -like 'LlamaCode*') { $Host.UI.RawUI.WindowTitle = "LlamaCode - $m" }
+    } catch {}
+}
+function Ok($m)  { Write-Host "[OK] $m" -ForegroundColor Green }
+function Die($m) { throw [System.Exception]::new("LCUPD: $m") }
+
+# Asset name contract, shared with the CI (release-binaries.yml) and the app
+# (AppController::selectReleaseAsset): LlamaCode-<tag>-windows-x64.zip
+function Get-AssetName([string]$tag) { "LlamaCode-$tag-windows-x64.zip" }
+
+function Get-DefaultInstallDir([string]$channel) {
+    $name = if ($channel -eq 'debug') { 'LlamaCode-Debug' } else { 'LlamaCode' }
+    Join-Path (Join-Path $env:LOCALAPPDATA 'Programs') $name
+}
+
+function Resolve-LatestAsset([string]$channel) {
+    $headers = @{ 'Accept' = 'application/vnd.github+json'; 'User-Agent' = 'LlamaCode-updater' }
+    $releases = @(Invoke-RestMethod -Headers $headers -Uri "https://api.github.com/repos/$Repo/releases?per_page=50")
+    $pattern = if ($channel -eq 'debug') { '^v(\d+\.\d+\.\d+)-debug$' } else { '^v(\d+\.\d+\.\d+)$' }
+    $best = $null; $bestVer = $null
+    foreach ($r in $releases) {
+        if ($r.draft -or ([bool]$r.prerelease -ne ($channel -eq 'debug'))) { continue }
+        $m = [regex]::Match([string]$r.tag_name, $pattern)
+        if (-not $m.Success) { continue }
+        $name = Get-AssetName $r.tag_name
+        $asset = @($r.assets | Where-Object { $_.name -eq $name }) | Select-Object -First 1
+        if (-not $asset) { continue }
+        $ver = [version]$m.Groups[1].Value
+        if (-not $bestVer -or $ver -gt $bestVer) { $best = @{ release = $r; asset = $asset }; $bestVer = $ver }
+    }
+    if (-not $best) { Die "No $channel release with a Windows binary was found on GitHub." }
+    $digest = ''
+    if ($best.asset.PSObject.Properties['digest'] -and "$($best.asset.digest)" -like 'sha256:*') {
+        $digest = "$($best.asset.digest)".Substring(7)
+    }
+    $shaAsset = @($best.release.assets | Where-Object { $_.name -eq "$($best.asset.name).sha256" }) | Select-Object -First 1
+    return @{
+        Url = $best.asset.browser_download_url
+        Sha256 = $digest
+        Sha256Url = $(if ($shaAsset) { $shaAsset.browser_download_url } else { '' })
+        Version = $bestVer.ToString()
+    }
+}
+
+# Local paths (and file://) are accepted so the regression test can run the
+# whole flow offline against a fake zip.
+function Get-LocalPath([string]$url) {
+    if ($url -match '^file:///?(.+)$') { return ($Matches[1] -replace '/', '\') }
+    if ($url -notmatch '^[a-z][a-z0-9+.-]*://' -and (Test-Path -LiteralPath $url)) { return $url }
+    return $null
+}
+
+function Save-Url([string]$url, [string]$dest, [switch]$Quiet) {
+    $local = Get-LocalPath $url
+    if ($local) { Copy-Item -LiteralPath $local -Destination $dest -Force; return }
+    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+    $req = [Net.HttpWebRequest]::Create($url)
+    $req.UserAgent = 'LlamaCode-updater'
+    $req.AllowAutoRedirect = $true
+    $resp = $req.GetResponse()
+    try {
+        $total = $resp.ContentLength
+        $in = $resp.GetResponseStream()
+        $out = [IO.File]::Create($dest)
+        try {
+            $buf = New-Object byte[] (1024 * 256)
+            $done = [long]0; $lastPct = -1
+            while (($n = $in.Read($buf, 0, $buf.Length)) -gt 0) {
+                $out.Write($buf, 0, $n)
+                $done += $n
+                if (-not $Quiet -and $total -gt 0) {
+                    $pct = [int](100 * $done / $total)
+                    if ($pct -ne $lastPct -and ($pct % 5 -eq 0)) {
+                        $lastPct = $pct
+                        $mb = '{0:N1} / {1:N1} MB' -f ($done / 1MB), ($total / 1MB)
+                        Write-Progress -Activity 'Descargando LlamaCode' -Status "$pct% ($mb)" -PercentComplete $pct
+                        Write-Host "    $pct% ($mb)"
+                    }
+                }
+            }
+        } finally { $out.Dispose(); $in.Dispose() }
+        if (-not $Quiet) { Write-Progress -Activity 'Descargando LlamaCode' -Completed }
+        if ($total -gt 0 -and $done -ne $total) { Die "Download incomplete ($done of $total bytes)." }
+    } finally { $resp.Close() }
+}
+
+# First token of a sha256sum-style line ("<hex>  <name>") or a bare hex string.
+function Get-ExpectedHash([string]$text) {
+    $m = [regex]::Match("$text", '(?i)\b([0-9a-f]{64})\b')
+    if ($m.Success) { return $m.Groups[1].Value.ToLower() }
+    return ''
+}
+
+function Test-UnderDir([string]$path, [string]$dir) {
+    if (-not $path -or -not $dir) { return $false }
+    $p = [IO.Path]::GetFullPath($path).TrimEnd('\') + '\'
+    $d = [IO.Path]::GetFullPath($dir).TrimEnd('\') + '\'
+    return $p.StartsWith($d, [StringComparison]::OrdinalIgnoreCase)
+}
+
+function Stop-InstalledProcesses([string]$dir) {
+    # Only processes running FROM the install folder (the app, its scheduler
+    # daemon): they hold the files the swap has to move. llama-server lives elsewhere.
+    Get-Process -ErrorAction SilentlyContinue | Where-Object {
+        try { $_.Path -and (Test-UnderDir $_.Path $dir) } catch { $false }
+    } | ForEach-Object {
+        Info "Closing $($_.ProcessName) (PID $($_.Id))..."
+        Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
+    }
+}
+
+function Move-WithRetry([string]$from, [string]$to) {
+    for ($i = 0; $i -lt 15; $i++) {
+        try { Move-Item -LiteralPath $from -Destination $to -ErrorAction Stop; return } catch {
+            if ($i -eq 14) { throw }
+            Start-Sleep -Milliseconds 1000
+        }
+    }
+}
+
+function Set-Shortcut([string]$path, [string]$target, [string]$workDir) {
+    $parent = Split-Path -Parent $path
+    if ($parent -and -not (Test-Path $parent)) { New-Item -ItemType Directory -Force -Path $parent | Out-Null }
+    $wsh = New-Object -ComObject WScript.Shell
+    $lnk = $wsh.CreateShortcut($path)
+    $lnk.TargetPath = $target
+    $lnk.WorkingDirectory = $workDir
+    $lnk.Description = 'UNLZ LlamaCode'
+    $lnk.IconLocation = "$target,0"
+    $lnk.Save()
+}
+
+# Shortcuts that launched the OLD exe (a git checkout before migrating, or a zip
+# extracted elsewhere) now launch the new one: Start Menu, Desktop and pinned
+# taskbar entries.
+function Update-LegacyShortcuts([string]$legacyExe, [string]$newExe, [string]$workDir) {
+    if (-not $legacyExe -or ($legacyExe -ieq $newExe)) { return }
+    $roots = @(
+        [Environment]::GetFolderPath('Programs'),
+        [Environment]::GetFolderPath('Desktop'),
+        (Join-Path $env:APPDATA 'Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar')
+    ) | Where-Object { $_ -and (Test-Path $_) }
+    $wsh = New-Object -ComObject WScript.Shell
+    foreach ($root in $roots) {
+        Get-ChildItem -LiteralPath $root -Filter *.lnk -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
+            try {
+                $lnk = $wsh.CreateShortcut($_.FullName)
+                if ($lnk.TargetPath -and ($lnk.TargetPath -ieq $legacyExe)) {
+                    $lnk.TargetPath = $newExe
+                    $lnk.WorkingDirectory = $workDir
+                    $lnk.IconLocation = "$newExe,0"
+                    $lnk.Save()
+                    Ok "Shortcut now points to the new install: $($_.FullName)"
+                }
+            } catch {}
+        }
+    }
+    # "Start with Windows" (HKCU Run) stores the exe path too.
+    $run = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
+    if (Test-Path $run) {
+        $props = Get-ItemProperty -Path $run
+        foreach ($p in $props.PSObject.Properties) {
+            if ($p.Name -like 'PS*') { continue }
+            $val = "$($p.Value)"
+            if ($val.IndexOf($legacyExe, [StringComparison]::OrdinalIgnoreCase) -ge 0) {
+                $new = [regex]::Replace($val, [regex]::Escape($legacyExe), $newExe.Replace('$', '$$'), 'IgnoreCase')
+                Set-ItemProperty -Path $run -Name $p.Name -Value $new
+                Ok "Startup entry '$($p.Name)' now points to the new install."
+            }
+        }
+    }
+}
+
+$UpdateFailed = $false
+$Mutex = $null
+$LogPath = Join-Path $env:TEMP 'llamacode-update.log'
+$Transcribing = $false
+try { Start-Transcript -Path $LogPath -Force | Out-Null; $Transcribing = $true } catch {}
+try {
+    Write-Host ''
+    Write-Host '=== LlamaCode update (precompiled binary) ===' -ForegroundColor Magenta
+    # Same mutex as bootstrap.ps1: one update/build at a time.
+    $Mutex = New-Object System.Threading.Mutex($false, 'Local\LlamaCodeBootstrap')
+    $have = $false
+    try { $have = $Mutex.WaitOne(0) } catch [System.Threading.AbandonedMutexException] { $have = $true }
+    if (-not $have) {
+        $Mutex.Dispose(); $Mutex = $null
+        Die 'Another LlamaCode update is already running in another window. Wait for it to finish.'
+    }
+    if ($Channel -notin @('prod', 'debug')) { Die "Invalid channel: $Channel (prod|debug)" }
+
+    if (-not $AssetUrl) {
+        Info "Looking up the latest $Channel release on GitHub..."
+        $latest = Resolve-LatestAsset $Channel
+        $AssetUrl = $latest.Url
+        if (-not $Sha256) { $Sha256 = $latest.Sha256 }
+        if (-not $Sha256Url) { $Sha256Url = $latest.Sha256Url }
+        if (-not $Version) { $Version = $latest.Version }
+    }
+    if (-not $InstallDir) { $InstallDir = Get-DefaultInstallDir $Channel }
+    $InstallDir = [IO.Path]::GetFullPath($InstallDir).TrimEnd('\')
+    Write-Host "Version : $(if ($Version) { $Version } else { '(unknown)' }) ($Channel)"
+    Write-Host "Install : $InstallDir"
+    Write-Host "Source  : $AssetUrl"
+    Write-Host ''
+
+    # ---- Download + verify (nothing is touched until the hash matches) ------
+    $Work = Join-Path $env:TEMP ("llamacode-update-" + [Guid]::NewGuid().ToString('N').Substring(0, 8))
+    New-Item -ItemType Directory -Force -Path $Work | Out-Null
+    $Zip = Join-Path $Work 'LlamaCode.zip'
+    Info 'Downloading...'
+    Save-Url $AssetUrl $Zip
+    $Expected = Get-ExpectedHash $Sha256
+    if (-not $Expected -and $Sha256Url) {
+        $shaFile = Join-Path $Work 'asset.sha256'
+        Save-Url $Sha256Url $shaFile -Quiet
+        $Expected = Get-ExpectedHash ([IO.File]::ReadAllText($shaFile))
+    }
+    if (-not $Expected) { Die 'The release has no SHA-256 for this file; refusing to install an unverified binary.' }
+    $Actual = (Get-FileHash -Algorithm SHA256 -LiteralPath $Zip).Hash.ToLower()
+    if ($Actual -ne $Expected) {
+        Die "SHA-256 mismatch: expected $Expected, got $Actual. The download is corrupt or was tampered with; nothing was changed."
+    }
+    Ok "SHA-256 verified ($Actual)"
+
+    # ---- Stage next to the target (same volume: the swap is a rename) -------
+    $Parent = Split-Path -Parent $InstallDir
+    if (-not (Test-Path $Parent)) { New-Item -ItemType Directory -Force -Path $Parent | Out-Null }
+    $Staging = "$InstallDir.new"
+    if (Test-Path $Staging) { Remove-Item -Recurse -Force -LiteralPath $Staging }
+    Info 'Extracting...'
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    [IO.Compression.ZipFile]::ExtractToDirectory($Zip, $Staging)
+    if (-not (Test-Path (Join-Path $Staging 'LlamaCode.exe'))) {
+        Remove-Item -Recurse -Force -LiteralPath $Staging -ErrorAction SilentlyContinue
+        Die 'The downloaded package has no LlamaCode.exe at its root.'
+    }
+
+    # ---- Wait for the app, then swap ----------------------------------------
+    if ($WaitPid -gt 0) {
+        $proc = Get-Process -Id $WaitPid -ErrorAction SilentlyContinue
+        if ($proc) {
+            Info 'Waiting for LlamaCode to close...'
+            if (-not $proc.WaitForExit(60000)) { Info 'LlamaCode did not close in 60 s; closing it.' }
+        }
+    }
+    Stop-InstalledProcesses $InstallDir
+    Start-Sleep -Milliseconds 500
+
+    $Old = $null
+    if (Test-Path -LiteralPath $InstallDir) {
+        $Old = "$InstallDir.old"
+        if (Test-Path -LiteralPath $Old) { Remove-Item -Recurse -Force -LiteralPath $Old -ErrorAction SilentlyContinue }
+        if (Test-Path -LiteralPath $Old) { $Old = "$InstallDir.old-" + (Get-Date -Format 'yyyyMMddHHmmss') }
+        Info 'Replacing the install folder...'
+        Move-WithRetry $InstallDir $Old
+    }
+    try {
+        Move-WithRetry $Staging $InstallDir
+    } catch {
+        # Put the previous version back: the user keeps a working app.
+        if ($Old -and -not (Test-Path -LiteralPath $InstallDir)) { Move-Item -LiteralPath $Old -Destination $InstallDir }
+        Die "Could not move the new version into place: $($_.Exception.Message)"
+    }
+    if ($Old) { Remove-Item -Recurse -Force -LiteralPath $Old -ErrorAction SilentlyContinue }
+    Remove-Item -Recurse -Force -LiteralPath $Work -ErrorAction SilentlyContinue
+    $Exe = Join-Path $InstallDir 'LlamaCode.exe'
+    Ok "Installed: $Exe"
+
+    if (-not $NoShortcuts) {
+        $name = if ($Channel -eq 'debug') { 'LlamaCode-Debug' } else { 'LlamaCode' }
+        $startMenu = [Environment]::GetFolderPath('Programs')
+        if (-not $startMenu) { $startMenu = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs' }
+        Set-Shortcut (Join-Path $startMenu "$name.lnk") $Exe $InstallDir
+        Ok "Start Menu shortcut: $name"
+        Update-LegacyShortcuts $LegacyExe $Exe $InstallDir
+    }
+
+    if (-not $NoLaunch) {
+        Info 'Launching LlamaCode...'
+        Start-Process -FilePath $Exe -WorkingDirectory $InstallDir
+    }
+    Write-Host ''
+    Ok 'Update complete.'
+} catch {
+    $UpdateFailed = $true
+    $msg = $_.Exception.Message -replace '^LCUPD: ', ''
+    Write-Host ''
+    Write-Host "[ERROR] $msg" -ForegroundColor Red
+    if ($_.Exception.Message -notlike 'LCUPD: *') {
+        Write-Host "        at: $($_.InvocationInfo.PositionMessage)" -ForegroundColor DarkGray
+    }
+    Write-Host "        Log: $LogPath" -ForegroundColor Yellow
+} finally {
+    if ($Mutex) { try { $Mutex.ReleaseMutex() } catch {}; $Mutex.Dispose() }
+    if ($Transcribing) { try { Stop-Transcript | Out-Null } catch {} }
+}
+
+# Run as a file (the app, the test): keep a failed window open so the error is
+# read, then exit with a code. Under 'irm | iex' never exit (it closes the shell).
+if ($PSCommandPath) {
+    if ($UpdateFailed) {
+        if (-not $NoPause) { try { Read-Host 'Press Enter to close' | Out-Null } catch {} }
+        exit 1
+    }
+    if (-not $NoPause) { Start-Sleep -Seconds 3 }
+    exit 0
+}

@@ -1,0 +1,264 @@
+# Binarios precompilados para "Actualizar" (sin compilar en la PC del usuario).
+#
+# Al pushear un tag vX.Y.Z (Prod, Release) o vX.Y.Z-debug (Debug) compila en
+# Windows y Linux, empaqueta, prueba que el paquete arranque y sube a la release
+# del tag:
+#   LlamaCode-<tag>-windows-x64.zip       + .sha256
+#   LlamaCode-<tag>-linux-x64.tar.gz      + .sha256
+# El app (AppController::selectReleaseAsset) elige el asset por SO y el
+# actualizador (scripts/update-binary.*) verifica el SHA-256 antes de instalar.
+# Una release sin assets (todavia compilando, o vieja) cae al bootstrap que
+# compila, salvo en una instalacion binaria: ahi el aviso espera a los assets.
+#
+# Mismo toolchain que bootstrap.ps1 / bootstrap.sh (Qt 6.8.3 via aqtinstall,
+# windeployqt con las mismas flags). Debug sigue siendo Debug (LC_BUILD_CHANNEL
+# "debug", icono rojo): en MSVC ya es optimizado y usa las DLL release de Qt,
+# asi que solo se excluye el PDB.
+#
+# workflow_dispatch: recompilar un tag existente. upload=false deja los paquetes
+# como artifacts del run (probar el empaquetado sin tocar ninguna release).
+# Push a main que toca este workflow o los scripts: empaqueta el commit como si
+# fuera v<version de CMakeLists>-debug, sin subir nada (CI del empaquetado).
+name: release-binaries
+
+on:
+  push:
+    tags: ['v*.*.*']
+    branches: [main, claude/festive-roentgen-99517c]  # TEMP: CI de la rama
+    paths:
+      - .github/workflows/release-binaries.yml
+      - scripts/package-windows.ps1
+      - scripts/package-linux.sh
+      - scripts/update-binary.ps1
+      - scripts/update-binary.sh
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag a compilar (vX.Y.Z o vX.Y.Z-debug)'
+        required: true
+      upload:
+        description: 'Subir los paquetes a la release del tag'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-binaries-${{ github.event.inputs.tag || github.ref }}
+  cancel-in-progress: false
+
+env:
+  QT_VERSION: 6.8.3
+
+jobs:
+  meta:
+    runs-on: ubuntu-24.04
+    outputs:
+      tag: ${{ steps.m.outputs.tag }}
+      config: ${{ steps.m.outputs.config }}
+      src: ${{ steps.m.outputs.src }}
+      upload: ${{ steps.m.outputs.upload }}
+    steps:
+      - uses: actions/checkout@v7
+        if: github.ref_type == 'branch' && github.event_name == 'push'
+        with:
+          sparse-checkout: CMakeLists.txt
+          sparse-checkout-cone-mode: false
+      - id: m
+        shell: bash
+        env:
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+          INPUT_UPLOAD: ${{ github.event.inputs.upload }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
+            TAG="$INPUT_TAG"; src="refs/tags/$INPUT_TAG"; upload="$INPUT_UPLOAD"
+          elif [ "$GITHUB_REF_TYPE" = tag ]; then
+            TAG="$GITHUB_REF_NAME"; src="$GITHUB_REF"; upload=true
+          else
+            ver="$(sed -nE 's/^project\(LlamaCode VERSION ([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' CMakeLists.txt | head -1)"
+            TAG="v$ver-debug"; src="$GITHUB_SHA"; upload=false
+          fi
+          echo "tag=$TAG src=$src upload=$upload"
+          echo "src=$src" >> "$GITHUB_OUTPUT"
+          echo "upload=$upload" >> "$GITHUB_OUTPUT"
+          if [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-debug$ ]]; then config=Debug
+          elif [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then config=Release
+          else echo "::error::tag invalido: $TAG"; exit 1; fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "config=$config" >> "$GITHUB_OUTPUT"
+
+  windows:
+    needs: meta
+    runs-on: windows-2025
+    timeout-minutes: 120
+    env:
+      QT_DIR: C:\Qt\6.8.3\msvc2022_64
+      CONFIG: ${{ needs.meta.outputs.config }}
+      TAG: ${{ needs.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.meta.outputs.src }}
+      # Scripts de empaquetado/instalacion del commit del WORKFLOW: un tag viejo
+      # (workflow_dispatch) puede no tenerlos o tenerlos desactualizados.
+      - uses: actions/checkout@v7
+        with:
+          path: ci
+          sparse-checkout: scripts
+
+      - name: Cache Qt
+        id: qt-cache
+        uses: actions/cache@v4
+        with:
+          path: C:\Qt
+          key: qt-${{ env.QT_VERSION }}-win64_msvc2022_64-qtmultimedia
+
+      - name: Install Qt (aqtinstall)
+        if: steps.qt-cache.outputs.cache-hit != 'true'
+        shell: powershell
+        run: |
+          python -m pip install --upgrade aqtinstall
+          python -m aqt install-qt windows desktop $env:QT_VERSION win64_msvc2022_64 -O C:\Qt --modules qtmultimedia
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      - name: Build
+        shell: powershell
+        run: |
+          cmake -S . -B build -A x64 -DCMAKE_PREFIX_PATH="$env:QT_DIR" -DBUILD_TESTS=OFF
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          cmake --build build --config $env:CONFIG --target LlamaCode -- /maxcpucount
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      - name: Package
+        shell: powershell
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File ci\scripts\package-windows.ps1 -Tag $env:TAG -BuildDir build -QtDir $env:QT_DIR -OutDir dist -SourceDir .
+
+      # Se instala el zip con el MISMO actualizador que usa el app (hash
+      # incluido) y el exe instalado tiene que seguir vivo: un deploy con DLL
+      # faltantes muere enseguida con 0xC0000135.
+      - name: Install from zip + launch smoke test
+        shell: powershell
+        run: |
+          $zip = Get-Item "dist\LlamaCode-$env:TAG-windows-x64.zip"
+          $dir = Join-Path $env:RUNNER_TEMP 'LlamaCodeInstall'
+          powershell -NoProfile -ExecutionPolicy Bypass -File ci\scripts\update-binary.ps1 -AssetUrl $zip.FullName -Sha256Url "$($zip.FullName).sha256" -InstallDir $dir -NoLaunch -NoShortcuts -NoPause
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          $exe = Join-Path $dir 'LlamaCode.exe'
+          $p = Start-Process $exe -WorkingDirectory $dir -PassThru
+          if ($p.WaitForExit(45000)) {
+            Write-Host ("::error::LlamaCode exited early with code 0x{0:X8}" -f $p.ExitCode)
+            exit 1
+          }
+          "LlamaCode still running after 45s (pid $($p.Id))"
+          Stop-Process -Id $p.Id -Force
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: windows
+          path: |
+            dist/*.zip
+            dist/*.zip.sha256
+
+  linux:
+    needs: meta
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      QT_DIR: /home/runner/Qt/6.8.3/gcc_64
+      CONFIG: ${{ needs.meta.outputs.config }}
+      TAG: ${{ needs.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.meta.outputs.src }}
+      # Scripts de empaquetado/instalacion del commit del WORKFLOW: un tag viejo
+      # (workflow_dispatch) puede no tenerlos o tenerlos desactualizados.
+      - uses: actions/checkout@v7
+        with:
+          path: ci
+          sparse-checkout: scripts
+
+      # Mismas dependencias que bootstrap.sh (apt) + lo que pide linuxdeploy.
+      - name: System packages
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y --no-install-recommends \
+            cmake ninja-build build-essential pkg-config python3-venv file patchelf \
+            libglib2.0-0 libgl1-mesa-dev libegl1 libxkbcommon0 libxkbcommon-x11-0 \
+            libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
+            libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 \
+            libfontconfig1 libfreetype6 libdbus-1-3 libpulse0 libsecret-1-dev \
+            xvfb xauth
+
+      - name: Cache Qt
+        id: qt-cache
+        uses: actions/cache@v4
+        with:
+          path: /home/runner/Qt
+          key: qt-${{ env.QT_VERSION }}-linux_gcc_64-qtmultimedia
+
+      - name: Install Qt (aqtinstall)
+        if: steps.qt-cache.outputs.cache-hit != 'true'
+        run: |
+          python3 -m venv ~/.aqt && ~/.aqt/bin/pip install aqtinstall
+          ~/.aqt/bin/aqt install-qt linux desktop "$QT_VERSION" linux_gcc_64 -O ~/Qt --modules qtmultimedia
+
+      - name: Build
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE="$CONFIG" -DCMAKE_PREFIX_PATH="$QT_DIR" -DBUILD_TESTS=OFF
+          cmake --build build --target LlamaCode -j "$(nproc)"
+
+      - name: Package
+        run: bash ci/scripts/package-linux.sh "$TAG" build "$QT_DIR" dist "$PWD"
+
+      # Instalar con el actualizador real y arrancar SIN el Qt del sistema en el
+      # path: si falta una lib o un plugin en el paquete, muere enseguida.
+      - name: Install from tarball + launch smoke test (Xvfb)
+        run: |
+          pkg="$PWD/dist/LlamaCode-$TAG-linux-x64.tar.gz"
+          dir="$RUNNER_TEMP/LlamaCodeInstall"
+          bash ci/scripts/update-binary.sh --asset-url "$pkg" --sha256-url "$pkg.sha256" \
+            --install-dir "$dir" --no-launch --no-shortcuts --no-pause
+          mv "$HOME/Qt" "$HOME/Qt.hidden"
+          set +e
+          (cd "$dir/usr/bin" && timeout 45 xvfb-run -a ./LlamaCode > "$RUNNER_TEMP/app.log" 2>&1)
+          rc=$?
+          set -e
+          mv "$HOME/Qt.hidden" "$HOME/Qt"
+          tail -40 "$RUNNER_TEMP/app.log"
+          if [ "$rc" -ne 124 ]; then echo "::error::LlamaCode exited early (rc=$rc)"; exit 1; fi
+          echo "LlamaCode still running after 45s"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: linux
+          path: |
+            dist/*.tar.gz
+            dist/*.tar.gz.sha256
+
+  publish:
+    needs: [meta, windows, linux]
+    if: needs.meta.outputs.upload == 'true'
+    runs-on: ubuntu-24.04
+    env:
+      TAG: ${{ needs.meta.outputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          path: dist
+          merge-multiple: true
+
+      # release.ps1 / release.sh pushean el tag y RECIEN DESPUES crean la
+      # release: normalmente ya existe cuando el build termina, pero se espera.
+      - name: Upload to the release
+        run: |
+          ls -la dist
+          for i in $(seq 1 30); do
+            gh release view "$TAG" >/dev/null 2>&1 && break
+            echo "release $TAG todavia no existe; esperando..."; sleep 20
+          done
+          gh release view "$TAG" >/dev/null || { echo "::error::no existe la release $TAG"; exit 1; }
+          gh release upload "$TAG" dist/* --clobber
