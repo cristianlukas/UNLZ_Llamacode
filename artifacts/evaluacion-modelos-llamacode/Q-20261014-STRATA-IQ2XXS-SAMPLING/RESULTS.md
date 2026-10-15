@@ -73,3 +73,31 @@ LlamaCode/Strata externos hayan terminado, el puerto 8350 esté libre, ambas
 RTX 3090 tengan VRAM para la receta y `MemAvailable` sea al menos 60 GiB. El
 intento del 14-10 y este preflight se conservan por separado; ninguno aporta
 un resultado de calidad o sampling.
+
+## Reintento de carga 2026-10-15
+
+El preflight no invasivo pasó a las 12:47:24Z: `MemAvailable` 110,35 GiB,
+PSI avg10 0%, sin cambio de swap durante 8 s, puertos candidatos libres y sin
+procesos LlamaCode/Strata. Las dos RTX 3090 tenían 937/108 MiB ocupados; la
+lista de procesos mostraba uso gráfico del escritorio, sin procesos compute.
+Los dos shards IQ2_XS se volvieron a verificar contra SHA-256 y ambos dieron
+`OK`.
+
+Se inició únicamente el servidor aislado de la tarea con la misma configuración
+(Strata 0.1.41, IQ2_XS, 1.048.576 tokens/YaRN ×4, puerto 8352). El engine
+registró 33,02 GiB de arena de expertos cargados, caché de expertos de 16,91
+GiB en VRAM y 1.717 MiB libres al terminar la reserva. La guarda observó a las
+12:49:58Z PSI avg10 de 17,94% y `MemAvailable` 59,75 GiB, por debajo del mínimo
+de 60 GiB. Envié SIGINT sólo al proceso propio (PID 566742). En la carrera de
+cierre el wrapper llegó a imprimir que el endpoint estaba listo; no abrí el
+endpoint, no conecté cliente, no envié prompts ni ejecuté inferencia. El
+proceso terminó y el puerto 8352 quedó libre. Después de parar, la VRAM volvió
+a 991/108 MiB; PSI avg10 todavía marcaba 9,84% en la ventana móvil, así que no
+se infiere recuperación a partir de esa muestra inmediata.
+
+Esto es un bloqueo de infraestructura/estrategia de carga, no un resultado de
+calidad. La hipótesis de que la temperatura reduzca loops sigue sin evaluar y
+no se cambia sampling, perfil ni HarnessSpec. No repetir la misma receta de
+carga hasta preregistrar una estrategia que mantenga PSI debajo de 0,1% y
+`MemAvailable` por encima de 60 GiB durante la carga; cualquier cambio de
+configuración efectiva debe recibir una huella nueva. Recibos: [preflight](receipts/preflight-20261015-124630.json), [guarda](receipts/load-monitor-20261015-1248.json), [resultado de carga](receipts/runtime-load-abort-20261015.json), [log del engine](receipts/strata-engine-20261015.log).

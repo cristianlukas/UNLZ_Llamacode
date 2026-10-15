@@ -1,0 +1,59 @@
+{
+  "task_id": "Q-20261014-STRATA-IQ2XXS-SAMPLING",
+  "recorded_at_utc": "2026-10-15T12:51:25+00:00",
+  "preflight_receipt": "preflight-20261015-124630.json",
+  "preflight_passed_at_utc": "2026-10-15T12:47:24Z",
+  "weights_sha256_receipt": "iq2xs-weights-sha256.txt",
+  "weights_sha256_verified": true,
+  "server": {
+    "owned": true,
+    "launch_script": "../scripts/start-strata.sh",
+    "config": "../configs/iq2xs-strata-1m.json",
+    "config_sha256": "8407b3000f6701619e88b3653420bc6699321ec83219fee84dfecb0df98bd71a",
+    "pid_interrupted": 566742,
+    "port": 8352,
+    "engine_log": "strata-engine-20261015.log",
+    "endpoint_ready_reported_during_shutdown_race": true,
+    "client_connected": false,
+    "prompts_sent": 0,
+    "inference_runs": 0,
+    "exit_code": 0,
+    "process_remaining": false,
+    "listener_remaining": false,
+    "engine_log_sha256": "4892b405d129d7b53db5d4539cbcec10134b158ed2ac911dc7cc3670ca6e745b"
+  },
+  "safety_guard": {
+    "triggered_at_utc": "2026-10-15T12:49:58Z",
+    "memory_psi_avg10_percent": {
+      "some": 17.94,
+      "full": 17.94
+    },
+    "threshold_percent": 0.1,
+    "mem_available_bytes": 64180822016,
+    "mem_available_gib": 59.77,
+    "minimum_mem_available_bytes": 64424509440,
+    "swap_page_delta_since_monitor_observation": {
+      "pswpin": 0,
+      "pswpout": 0
+    },
+    "action": "SIGINT sent only to the task-owned server PID; no external session was touched"
+  },
+  "load_observations": {
+    "engine_reported_expert_arena_loaded_gib": 33.02,
+    "engine_reported_gpu_expert_cache_gib": 16.91,
+    "engine_reported_vram_free_mib_after_load": 1717,
+    "memory_available_after_stop_kib": 115456444,
+    "memory_available_after_stop_gib": 110.11,
+    "memory_psi_avg10_after_stop_percent": {
+      "some": 9.84,
+      "full": 9.84
+    },
+    "gpu_memory_after_stop_mib": {
+      "gpu0": 991,
+      "gpu1": 108
+    },
+    "swap_free_after_stop_kib": 3117292
+  },
+  "decision": "blocked_before_inference",
+  "interpretation": "The same 1M-context load caused severe memory PSI despite a clean preflight. The server finished startup and reported readiness while SIGINT shutdown was taking effect; the endpoint was never opened or queried. Treat this as an infrastructure/load-strategy block, not a model or sampling result. Do not repeat the identical load until a lower-pressure startup strategy is preregistered and validated."
+}

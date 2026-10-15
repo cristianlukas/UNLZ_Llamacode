@@ -1,0 +1,33 @@
+{
+  "task_id": "Q-20261014-STRATA-IQ2XXS-SAMPLING",
+  "started_at_utc": "2026-10-15T12:49:58Z",
+  "monitor_duration_seconds": 0.01,
+  "decision": "safety_guard_triggered",
+  "interrupt_sent_to_own_server_pids": [
+    566742
+  ],
+  "samples": [
+    {
+      "timestamp_utc": "2026-10-15T12:49:58Z",
+      "mem_available_bytes": 64180822016,
+      "memory_psi_avg10_percent": {
+        "some": 17.94,
+        "full": 17.94
+      },
+      "swap_pages_delta_since_monitor_start": {
+        "pswpin": 0,
+        "pswpout": 0
+      },
+      "server_pids": [
+        566742
+      ],
+      "guard_triggered": true,
+      "interrupt_sent_to_own_server_pids": [
+        566742
+      ]
+    }
+  ],
+  "server_started_at_utc": "2026-10-15T12:49:22Z",
+  "server_start_timestamp_source": "engine log local time 2026-10-15 09:49:22 in America/Argentina/Buenos_Aires",
+  "note": "The monitor process began after server startup and stopped at its first sample; monitor_duration_seconds is the watcher duration, not the server load duration. The terminal later reported API readiness during the shutdown race; no client connection or prompt was made."
+}
