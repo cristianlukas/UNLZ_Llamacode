@@ -858,6 +858,9 @@ if (BUILD_TESTS)
         # scripts/release.sh contra un repo temporal y un gh falso (no publica nada).
         add_test(NAME release_sh COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_release_sh.sh)
         set_tests_properties(release_sh PROPERTIES FAIL_REGULAR_EXPRESSION "FAIL ")
+        # scripts/update-binary.sh ("Actualizar" con binario) contra tarballs falsos.
+        add_test(NAME update_binary_sh COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_update_binary_sh.sh)
+        set_tests_properties(update_binary_sh PROPERTIES FAIL_REGULAR_EXPRESSION "FAIL ")
     endif()
 
     add_test(NAME qml_settings_tabs

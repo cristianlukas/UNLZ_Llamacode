@@ -109,5 +109,91 @@ Check ($qml.Contains('App.updateAvailable && Qt.platform.os !== "windows"')) 'ma
 Check ($ps.Contains('Local\LlamaCodeBootstrap')) 'un solo bootstrap a la vez (mutex)'
 Check ($ps.Contains('$BootstrapMutex.ReleaseMutex()')) 'libera el mutex al terminar'
 
+Write-Host '== update-binary.ps1 (Actualizar con binario precompilado) =='
+$ub = Join-Path $root 'scripts\update-binary.ps1'
+$ubText = [IO.File]::ReadAllText($ub)
+$ubBytes = [IO.File]::ReadAllBytes($ub)
+Check (@($ubBytes | Where-Object { $_ -gt 127 }).Count -eq 0) 'update-binary.ps1 es ASCII puro (PS 5.1 lo lee como ANSI)'
+foreach ($f in 'scripts\package-windows.ps1') {
+    $b = [IO.File]::ReadAllBytes((Join-Path $root $f))
+    Check (@($b | Where-Object { $_ -gt 127 }).Count -eq 0) "$f es ASCII puro"
+}
+# Mismo nombre de asset en los tres lados (CI, app, actualizador).
+$wf = [IO.File]::ReadAllText((Join-Path $root '.github\workflows\release-binaries.yml'))
+Check ($ubText.Contains('"LlamaCode-$tag-windows-x64.zip"')) 'el actualizador busca LlamaCode-<tag>-windows-x64.zip'
+Check ($app.Contains('LlamaCode-%1-windows-x64.zip')) 'el app elige el mismo nombre'
+Check ($wf.Contains('LlamaCode-$env:TAG-windows-x64.zip')) 'el CI sube el mismo nombre'
+Check ($ubText.Contains("'Local\LlamaCodeBootstrap'")) 'comparte el mutex con bootstrap.ps1 (un update a la vez)'
+Check ($app.Contains('launcher.setCreateProcessArgumentsModifier(showInNewConsole);' + "`n" + '    return launcher.startDetached();') -or
+       ($app -match 'showInNewConsole\);\s*\r?\n\s*return launcher\.startDetached\(\);')) 'el update binario corre en una consola visible'
+
+$tmp = Join-Path ([IO.Path]::GetTempPath()) ('lc-ub-test-' + [Guid]::NewGuid().ToString('N').Substring(0, 8))
+New-Item -ItemType Directory -Path $tmp | Out-Null
+try {
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    function New-FakePackage([string]$name, [string]$content) {
+        $pkg = Join-Path $tmp "pkg-$name"
+        New-Item -ItemType Directory -Force -Path $pkg | Out-Null
+        Copy-Item (Join-Path $env:WINDIR 'System32\where.exe') (Join-Path $pkg 'LlamaCode.exe')
+        Set-Content -Path (Join-Path $pkg 'version.txt') -Value $content -Encoding ASCII
+        $zip = Join-Path $tmp "$name.zip"
+        [IO.Compression.ZipFile]::CreateFromDirectory($pkg, $zip)
+        $h = (Get-FileHash -Algorithm SHA256 $zip).Hash.ToLower()
+        [IO.File]::WriteAllText("$zip.sha256", "$h  $name.zip`n")
+        return @{ Zip = $zip; Hash = $h }
+    }
+    function Invoke-Updater([string[]]$extra) {
+        $out = & powershell -NoProfile -ExecutionPolicy Bypass -File $ub @extra -NoLaunch -NoShortcuts -NoPause 2>&1 | Out-String
+        return @{ Code = $LASTEXITCODE; Out = $out }
+    }
+    $install = Join-Path $tmp 'Programs\LlamaCode'
+    New-Item -ItemType Directory -Force -Path $install | Out-Null
+    Set-Content -Path (Join-Path $install 'version.txt') -Value 'v1' -Encoding ASCII
+    Set-Content -Path (Join-Path $install 'stale.dll') -Value 'x' -Encoding ASCII
+
+    # 1) Hash correcto (por .sha256): reemplaza la carpeta entera.
+    $v2 = New-FakePackage 'v2' 'v2'
+    $r = Invoke-Updater @('-AssetUrl', $v2.Zip, '-Sha256Url', "$($v2.Zip).sha256", '-InstallDir', $install)
+    Check ($r.Code -eq 0) "instala con hash verificado (exit $($r.Code))"
+    Check ((Get-Content (Join-Path $install 'version.txt')) -eq 'v2') 'la carpeta queda con la version nueva'
+    Check (-not (Test-Path (Join-Path $install 'stale.dll'))) 'no quedan archivos de la version vieja (swap de carpeta, no merge)'
+    Check (-not (Test-Path "$install.old") -and -not (Test-Path "$install.new")) 'no deja .old ni .new'
+
+    # 2) Hash equivocado: no toca nada.
+    $v3 = New-FakePackage 'v3' 'v3'
+    $r = Invoke-Updater @('-AssetUrl', $v3.Zip, '-Sha256', ('0' * 64), '-InstallDir', $install)
+    Check ($r.Code -eq 1) 'hash equivocado sale 1'
+    Check ($r.Out -match 'SHA-256 mismatch') 'explica que el hash no coincide'
+    Check ((Get-Content (Join-Path $install 'version.txt')) -eq 'v2') 'con hash equivocado la instalacion queda intacta'
+
+    # 3) Sin hash: se niega a instalar sin verificar.
+    $r = Invoke-Updater @('-AssetUrl', $v3.Zip, '-InstallDir', $install)
+    Check ($r.Code -eq 1 -and $r.Out -match 'unverified') 'sin SHA-256 no instala'
+    Check ((Get-Content (Join-Path $install 'version.txt')) -eq 'v2') 'sin hash la instalacion queda intacta'
+
+    # 4) Paquete sin LlamaCode.exe en la raiz: no reemplaza.
+    $bad = Join-Path $tmp 'bad'; New-Item -ItemType Directory -Force -Path (Join-Path $bad 'sub') | Out-Null
+    Set-Content -Path (Join-Path $bad 'sub\x.txt') -Value 'x'
+    $badZip = Join-Path $tmp 'bad.zip'; [IO.Compression.ZipFile]::CreateFromDirectory($bad, $badZip)
+    $r = Invoke-Updater @('-AssetUrl', $badZip, '-Sha256', (Get-FileHash -Algorithm SHA256 $badZip).Hash, '-InstallDir', $install)
+    Check ($r.Code -eq 1 -and $r.Out -match 'no LlamaCode.exe') 'rechaza un paquete sin LlamaCode.exe'
+    Check ((Get-Content (Join-Path $install 'version.txt')) -eq 'v2') 'con paquete roto la instalacion queda intacta'
+
+    # 5) Migracion: carpeta destino inexistente (checkout -> Programs).
+    $fresh = Join-Path $tmp 'Programs\LlamaCode-Debug'
+    $r = Invoke-Updater @('-AssetUrl', $v3.Zip, '-Sha256', $v3.Hash.ToUpper(), '-InstallDir', $fresh, '-Channel', 'debug')
+    Check ($r.Code -eq 0 -and (Test-Path (Join-Path $fresh 'LlamaCode.exe'))) 'instala en una carpeta nueva (migracion desde checkout)'
+
+    # 6) 'irm | iex' (instalador standalone): sin param, por variables de entorno, sin exit.
+    $iexDir = Join-Path $tmp 'iex'
+    $cmd = "`$env:LC_ASSET_URL='$($v2.Zip)'; `$env:LC_SHA256='$($v2.Hash)'; `$env:LC_INSTALL_DIR='$iexDir'; `$env:LC_NORUN='1'; " +
+           "Get-Content -Raw '$ub' | iex; 'IEX-SURVIVED'"
+    $out = & powershell -NoProfile -ExecutionPolicy Bypass -Command $cmd 2>&1 | Out-String
+    Check ($out -match 'IEX-SURVIVED') 'bajo iex no cierra la sesion (sin exit)'
+    Check ((Get-Content (Join-Path $iexDir 'version.txt') -ErrorAction SilentlyContinue) -eq 'v2') 'bajo iex instala desde LC_ASSET_URL/LC_SHA256'
+} finally {
+    Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue
+}
+
 if ($fails) { throw "$fails bootstrap regression(s) failed" }
 Write-Host 'All bootstrap regressions passed.'

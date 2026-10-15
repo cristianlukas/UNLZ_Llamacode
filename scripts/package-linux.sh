@@ -51,6 +51,18 @@ EOF
 icon="$root/assets/app_icon.png"; [ "$channel" = debug ] && icon="$root/assets/debug_icon.png"
 cp "$icon" "$out/llamacode.png"
 
+# The app only uses SQLite. linuxdeploy deploys EVERY sqldriver and dies on the
+# ones whose client library is not installed (libmimerapi.so, libmysqlclient...):
+# move them aside while it runs and put them back afterwards.
+sqldrivers="$qtdir/plugins/sqldrivers"
+parked="$out/.parked-sqldrivers"
+restore_sqldrivers() { if [ -d "$parked" ]; then mv "$parked"/* "$sqldrivers"/ 2>/dev/null || true; rmdir "$parked"; fi; }
+trap restore_sqldrivers EXIT
+mkdir -p "$parked"
+for f in "$sqldrivers"/*.so; do
+    case "$(basename "$f")" in libqsqlite.so) ;; *) [ -e "$f" ] && mv "$f" "$parked"/ ;; esac
+done
+
 export APPIMAGE_EXTRACT_AND_RUN=1
 export QMAKE="$qtdir/bin/qmake"
 export QML_SOURCES_PATHS="$root/qml"
