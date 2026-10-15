@@ -13118,12 +13118,14 @@ QJsonObject AppController::selectReleaseAsset(const QJsonArray &assets, const QS
 // la raiz; en Linux en <raiz>/usr/bin.
 QString AppController::binaryInstallRootForExePath(const QString &exePath)
 {
-    QDir dir(QFileInfo(exePath).absolutePath());
+    QString dir = QFileInfo(exePath).absolutePath();
     for (int up = 0; up < 3; ++up) {
-        if (QFile::exists(dir.filePath(QStringLiteral("llamacode-install.json"))))
-            return QDir::toNativeSeparators(dir.absolutePath());
-        if (!dir.cdUp())
+        if (QFile::exists(QDir(dir).filePath(QStringLiteral("llamacode-install.json"))))
+            return QDir::toNativeSeparators(dir);
+        const QString parent = QFileInfo(dir).path();
+        if (parent == dir)
             break;
+        dir = parent;
     }
     return QString();
 }

@@ -539,6 +539,7 @@ void AppControllerTests::binaryInstallDirFollowsMarkerAndChannel()
     // Linux: el binario vive en <raiz>/usr/bin.
     const QString linuxDir = root.filePath(QStringLiteral("opt/LlamaCode-Debug"));
     QVERIFY(writeMarker(linuxDir, QStringLiteral("debug")));
+    QVERIFY(QDir().mkpath(QDir(linuxDir).filePath(QStringLiteral("usr/bin"))));
     const QString linuxExe = QDir(linuxDir).filePath(QStringLiteral("usr/bin/LlamaCode"));
     QCOMPARE(AppController::binaryInstallDirFor(linuxExe, QStringLiteral("debug"), parent),
              QDir::toNativeSeparators(linuxDir));
