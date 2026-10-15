@@ -1,0 +1,50 @@
+[
+    {
+        "baseArgs": [
+        ],
+        "binaryId": "",
+        "cloudBaseUrl": "http://127.0.0.1:8350",
+        "cloudCtx": 131072,
+        "cloudKeyRef": "",
+        "cloudModel": "strata-iq3_xxs",
+        "envOverrides": {
+        },
+        "host": "127.0.0.1",
+        "id": "strata-iq3xxs-20261009",
+        "kind": "cloud",
+        "name": "Strata 0.1.41 · ISTA base IQ3_XXS",
+        "port": 8350
+    },
+    {
+        "baseArgs": [
+        ],
+        "binaryId": "",
+        "cloudBaseUrl": "http://127.0.0.1:8350",
+        "cloudCtx": 131072,
+        "cloudKeyRef": "",
+        "cloudModel": "strata-iq3_s",
+        "envOverrides": {
+        },
+        "host": "127.0.0.1",
+        "id": "strata-astra-iq3s-20261009",
+        "kind": "cloud",
+        "name": "Strata 0.1.41 · ASTRA calibrado IQ3_S",
+        "port": 8350
+    },
+    {
+        "baseArgs": [
+        ],
+        "binaryId": "",
+        "cloudBaseUrl": "http://127.0.0.1:8350",
+        "cloudCtx": 131072,
+        "cloudKeyRef": "",
+        "cloudModel": "qwen3.8-flash-next-unsloth-ud-q4_k_xl",
+        "envOverrides": {
+        },
+        "host": "127.0.0.1",
+        "id": "strata-q4-udq4kxl-20261010",
+        "kind": "cloud",
+        "name": "Strata 0.1.41 · Unsloth UD-Q4_K_XL",
+        "port": 8350
+    }
+]

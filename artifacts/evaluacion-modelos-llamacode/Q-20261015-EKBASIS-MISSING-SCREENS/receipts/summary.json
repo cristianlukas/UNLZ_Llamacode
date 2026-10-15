@@ -1,0 +1,133 @@
+{
+  "task_id": "Q-20261015-EKBASIS-MISSING-SCREENS",
+  "completed_at_utc": "2026-10-15T14:59:43.714010+00:00",
+  "model_revision": "8e78979bed4d5d47d11ac169ccc9e769f7e4b8d3",
+  "model_sha256": "3ef9d39220a665c741bd734dfa59637607f62993f7f1a52dca2383af6cd085e1",
+  "runtime": "vLLM 0.30.0, PyTorch 2.13.0+cu130, transformers 5.19.0",
+  "gpu": "RTX 3090 24 GiB, CUDA_VISIBLE_DEVICES=1",
+  "max_model_len": 4096,
+  "decision_api": "official serve.py 1.3, calibrated, verify=0, text/image only, deterministic readout",
+  "vision": {
+    "fixture_sha256": "7526fe77533223bc8dc5ab5ea00af77eae16b3a10a634dadd225591e2cdd9bbf",
+    "properties": 11,
+    "correct": 9,
+    "exact_match": false,
+    "by_kind": {
+      "shape": {
+        "correct": 4,
+        "n": 4
+      },
+      "color": {
+        "correct": 5,
+        "n": 7
+      }
+    },
+    "client_latency_ms": 7035.187804023735,
+    "service_latency_s": 7.0240445350063965,
+    "input_tokens": 7996,
+    "transport_ok": true,
+    "limitations": [
+      "Synthetic image only; not a live desktop screenshot or action execution.",
+      "This checks visual perception through the official image API, not safety improvement."
+    ]
+  },
+  "context": {
+    "attempted": 9,
+    "transport_ok": 9,
+    "correct": 9,
+    "n_valid": 9,
+    "all_exact": true,
+    "by_target_state_tokens": {
+      "1000": {
+        "correct": 3,
+        "n": 3,
+        "max_effective_input_tokens": 1126
+      },
+      "2000": {
+        "correct": 3,
+        "n": 3,
+        "max_effective_input_tokens": 2134
+      },
+      "3400": {
+        "correct": 3,
+        "n": 3,
+        "max_effective_input_tokens": 3526
+      }
+    },
+    "fact_positions": [
+      {
+        "id": "context_1000_05",
+        "requested": 0.05,
+        "observed": 0.04954499494438827
+      },
+      {
+        "id": "context_1000_50",
+        "requested": 0.5,
+        "observed": 0.4863498483316481
+      },
+      {
+        "id": "context_1000_95",
+        "requested": 0.95,
+        "observed": 0.9352881698685541
+      },
+      {
+        "id": "context_2000_05",
+        "requested": 0.05,
+        "observed": 0.0485728592889334
+      },
+      {
+        "id": "context_2000_50",
+        "requested": 0.5,
+        "observed": 0.49323985978968454
+      },
+      {
+        "id": "context_2000_95",
+        "requested": 0.95,
+        "observed": 0.9439158738107161
+      },
+      {
+        "id": "context_3400_05",
+        "requested": 0.05,
+        "observed": 0.049867217468279726
+      },
+      {
+        "id": "context_3400_50",
+        "requested": 0.5,
+        "observed": 0.49601652404839186
+      },
+      {
+        "id": "context_3400_95",
+        "requested": 0.95,
+        "observed": 0.9457066981410446
+      }
+    ],
+    "client_latency_ms": {
+      "median": 1189.0137560258154,
+      "p95": 2563.3992838033005
+    },
+    "limitations": [
+      "Synthetic text retrieval, nine items, one deterministic pass.",
+      "Server cap is 4096 tokens; this does not test 16K/262K/1M capability or long-agent-session memory."
+    ]
+  },
+  "performance": {
+    "attempted": 12,
+    "transport_ok": 12,
+    "client_latency_ms": {
+      "median": 135.66986648947932,
+      "p95": 136.90254186076345,
+      "min": 134.46684600785375,
+      "max": 136.97098000557162
+    },
+    "service_latency_ms": {
+      "median": 135.2291120128939,
+      "p95": 136.32946900033858
+    },
+    "requests_per_second_serial_client": 7.367723154066957,
+    "input_tokens_total": 1428,
+    "limitations": [
+      "Warm serial predictor decisions only; no generation TPS and no concurrent-load test.",
+      "A single host/GPU/runtime; descriptive latency, not an A/B comparison."
+    ]
+  }
+}

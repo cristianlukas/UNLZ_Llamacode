@@ -1,0 +1,20 @@
+{
+  "attempted": 12,
+  "transport_ok": 12,
+  "client_latency_ms": {
+    "median": 135.66986648947932,
+    "p95": 136.90254186076345,
+    "min": 134.46684600785375,
+    "max": 136.97098000557162
+  },
+  "service_latency_ms": {
+    "median": 135.2291120128939,
+    "p95": 136.32946900033858
+  },
+  "requests_per_second_serial_client": 7.367723154066957,
+  "input_tokens_total": 1428,
+  "limitations": [
+    "Warm serial predictor decisions only; no generation TPS and no concurrent-load test.",
+    "A single host/GPU/runtime; descriptive latency, not an A/B comparison."
+  ]
+}

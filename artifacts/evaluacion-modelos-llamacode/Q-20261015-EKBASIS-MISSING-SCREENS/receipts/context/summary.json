@@ -1,0 +1,79 @@
+{
+  "attempted": 9,
+  "transport_ok": 9,
+  "correct": 9,
+  "n_valid": 9,
+  "all_exact": true,
+  "by_target_state_tokens": {
+    "1000": {
+      "correct": 3,
+      "n": 3,
+      "max_effective_input_tokens": 1126
+    },
+    "2000": {
+      "correct": 3,
+      "n": 3,
+      "max_effective_input_tokens": 2134
+    },
+    "3400": {
+      "correct": 3,
+      "n": 3,
+      "max_effective_input_tokens": 3526
+    }
+  },
+  "fact_positions": [
+    {
+      "id": "context_1000_05",
+      "requested": 0.05,
+      "observed": 0.04954499494438827
+    },
+    {
+      "id": "context_1000_50",
+      "requested": 0.5,
+      "observed": 0.4863498483316481
+    },
+    {
+      "id": "context_1000_95",
+      "requested": 0.95,
+      "observed": 0.9352881698685541
+    },
+    {
+      "id": "context_2000_05",
+      "requested": 0.05,
+      "observed": 0.0485728592889334
+    },
+    {
+      "id": "context_2000_50",
+      "requested": 0.5,
+      "observed": 0.49323985978968454
+    },
+    {
+      "id": "context_2000_95",
+      "requested": 0.95,
+      "observed": 0.9439158738107161
+    },
+    {
+      "id": "context_3400_05",
+      "requested": 0.05,
+      "observed": 0.049867217468279726
+    },
+    {
+      "id": "context_3400_50",
+      "requested": 0.5,
+      "observed": 0.49601652404839186
+    },
+    {
+      "id": "context_3400_95",
+      "requested": 0.95,
+      "observed": 0.9457066981410446
+    }
+  ],
+  "client_latency_ms": {
+    "median": 1189.0137560258154,
+    "p95": 2563.3992838033005
+  },
+  "limitations": [
+    "Synthetic text retrieval, nine items, one deterministic pass.",
+    "Server cap is 4096 tokens; this does not test 16K/262K/1M capability or long-agent-session memory."
+  ]
+}

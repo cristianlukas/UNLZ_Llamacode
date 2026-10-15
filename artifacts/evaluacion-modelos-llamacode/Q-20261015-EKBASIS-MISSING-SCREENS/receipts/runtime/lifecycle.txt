@@ -1,0 +1,8 @@
+Task ID: Q-20261015-EKBASIS-MISSING-SCREENS
+
+- Preflight: 2026-10-15T14:47Z. RTX 3090 GPU1 had 24.016 MiB free and no compute process; MemAvailable 106 GiB, PSI 0, swap 5.0 GiB. No existing listeners on 18171/18172. Model SHA matched the prior manifest.
+- Backend start: vLLM 0.30.0, GPU1, bf16, max_model_len 4096, max_num_seqs 1. Model weights used 17.68 GiB; KV cache 2.6 GiB / 18,432 tokens. vLLM reported ready at 127.0.0.1:18171 after profile/warmup.
+- Adapter attempt 1: exited 1 before scored requests because the CLI was passed a full `/v1/completions` URL and the official adapter appended that path again (HTTP 404). See `adapter-launch-attempt-1.txt`.
+- Adapter attempt 2: corrected to base URL `http://127.0.0.1:18171`; official `serve.py` 1.3 printed ready at 127.0.0.1:18172 with calibration on and images on. All scored calls completed via loopback.
+- Test runner completed at 2026-10-15T14:59:43Z with exit code 0.
+- Shutdown: own adapter interrupted after the run; own vLLM server received SIGINT and exited 0. Python printed one `resource_tracker` leaked-semaphore cleanup warning. Postflight showed no process/listener, GPU1 back to 108 MiB, MemAvailable 106 GiB, PSI 0, swap 4.9 GiB. The pre-existing swap was not changed.

@@ -1,0 +1,12 @@
+{
+  "suite": "vision-geometry-count-v1",
+  "createdAtUtc": "2026-10-14T13:13:11.694538+00:00",
+  "imageFile": "vision-holdout.png",
+  "imageSha256": "7526fe77533223bc8dc5ab5ea00af77eae16b3a10a634dadd225591e2cdd9bbf",
+  "imageBytes": 6326,
+  "width": 1024,
+  "height": 576,
+  "expectedSha256": "086e0c254bb07bf1e679045e0569972047b425b645cd1376063c9c29f0cb0956",
+  "promptSha256": "4368eeca231e0a5cd406e52fc6f39a8afa27f79aaaead88b6712eedf19e017c4",
+  "design": "7 filled synthetic shapes on white: 2 circles, 2 triangles, 2 rectangles, 1 star; one each of blue/red/green/yellow/orange/purple/black."
+}

@@ -1,0 +1,2112 @@
+{
+  "taskId": "Q-20261015-IQ3XXS-REMAINING-SCREENS",
+  "mode": "astraVision",
+  "attempt": 2,
+  "startedAtUtc": "2026-10-15T15:48:48.860742+00:00",
+  "configPath": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-IQ3XXS-REMAINING-SCREENS/receipts/configs/astra-vision-attempt02.json",
+  "configSha256": "c939e70c1915928124baf7b1ebaee20d6ef546dd861d8f6c99d37663a62842ff",
+  "engineCommand": [
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python",
+    "-m",
+    "serve.server",
+    "--engine",
+    "strata",
+    "--config",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-IQ3XXS-REMAINING-SCREENS/receipts/configs/astra-vision-attempt02.json",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "8350"
+  ],
+  "port": 8350,
+  "expectedHealth": {
+    "max_context": 131072,
+    "images": true
+  },
+  "preflight": {
+    "atUtc": "2026-10-15T15:48:48.860742+00:00",
+    "memAvailableBytes": 115468558336,
+    "swapFreeBytes": 2256703488,
+    "swapTotalBytes": 8589930496,
+    "swapUsedBytes": 6333227008,
+    "swapVmstatPages": {
+      "pswpin": 3547568,
+      "pswpout": 8475471
+    },
+    "psiMemory": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 3.28,
+        "avg300": 8.16
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 3.28,
+        "avg300": 8.16
+      }
+    }
+  },
+  "computeProcesses": [],
+  "samples": [
+    {
+      "atUtc": "2026-10-15T15:48:48.898266+00:00",
+      "memAvailableBytes": 115462582272,
+      "swapFreeBytes": 2256703488,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6333227008,
+      "swapVmstatPages": {
+        "pswpin": 3547568,
+        "pswpout": 8475471
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 3.28,
+          "avg300": 8.16
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 3.28,
+          "avg300": 8.16
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:48:49.908320+00:00",
+      "memAvailableBytes": 115289604096,
+      "swapFreeBytes": 2256711680,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6333218816,
+      "swapVmstatPages": {
+        "pswpin": 3547570,
+        "pswpout": 8475471
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 3.28,
+          "avg300": 8.16
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 3.28,
+          "avg300": 8.16
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:48:50.909033+00:00",
+      "memAvailableBytes": 113994633216,
+      "swapFreeBytes": 2256715776,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6333214720,
+      "swapVmstatPages": {
+        "pswpin": 3547571,
+        "pswpout": 8475471
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 3.17,
+          "avg300": 8.11
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 3.17,
+          "avg300": 8.1
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:48:51.909729+00:00",
+      "memAvailableBytes": 113572134912,
+      "swapFreeBytes": 2256719872,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6333210624,
+      "swapVmstatPages": {
+        "pswpin": 3547572,
+        "pswpout": 8475471
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 3.17,
+          "avg300": 8.11
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 3.17,
+          "avg300": 8.1
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:48:52.910348+00:00",
+      "memAvailableBytes": 113398317056,
+      "swapFreeBytes": 2256732160,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6333198336,
+      "swapVmstatPages": {
+        "pswpin": 3547573,
+        "pswpout": 8475471
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 3.07,
+          "avg300": 8.05
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 3.07,
+          "avg300": 8.05
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:48:53.910963+00:00",
+      "memAvailableBytes": 112446210048,
+      "swapFreeBytes": 2256744448,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6333186048,
+      "swapVmstatPages": {
+        "pswpin": 3547576,
+        "pswpout": 8475471
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 3.07,
+          "avg300": 8.05
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 3.07,
+          "avg300": 8.05
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:48:54.911871+00:00",
+      "memAvailableBytes": 102114652160,
+      "swapFreeBytes": 2256752640,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6333177856,
+      "swapVmstatPages": {
+        "pswpin": 3547577,
+        "pswpout": 8475471
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 2.97,
+          "avg300": 8.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 2.97,
+          "avg300": 7.99
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:48:55.913006+00:00",
+      "memAvailableBytes": 80013078528,
+      "swapFreeBytes": 2256752640,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6333177856,
+      "swapVmstatPages": {
+        "pswpin": 3547577,
+        "pswpout": 8475471
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 2.97,
+          "avg300": 8.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 2.97,
+          "avg300": 7.99
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:48:56.913903+00:00",
+      "memAvailableBytes": 77921525760,
+      "swapFreeBytes": 2256723968,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6333206528,
+      "swapVmstatPages": {
+        "pswpin": 3547577,
+        "pswpout": 8475478
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 1.63,
+          "avg60": 3.17,
+          "avg300": 8.0
+        },
+        "full": {
+          "avg10": 1.63,
+          "avg60": 3.16,
+          "avg300": 8.0
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:48:57.914490+00:00",
+      "memAvailableBytes": 77755367424,
+      "swapFreeBytes": 2252550144,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6337380352,
+      "swapVmstatPages": {
+        "pswpin": 3547580,
+        "pswpout": 8476445
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 1.63,
+          "avg60": 3.17,
+          "avg300": 8.0
+        },
+        "full": {
+          "avg10": 1.63,
+          "avg60": 3.16,
+          "avg300": 8.0
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:48:58.914985+00:00",
+      "memAvailableBytes": 77669543936,
+      "swapFreeBytes": 2251255808,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6338674688,
+      "swapVmstatPages": {
+        "pswpin": 3547581,
+        "pswpout": 8476748
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 9.48,
+          "avg60": 4.53,
+          "avg300": 8.26
+        },
+        "full": {
+          "avg10": 9.48,
+          "avg60": 4.53,
+          "avg300": 8.25
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:48:59.915459+00:00",
+      "memAvailableBytes": 77576880128,
+      "swapFreeBytes": 2249089024,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6340841472,
+      "swapVmstatPages": {
+        "pswpin": 3547583,
+        "pswpout": 8477250
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 9.48,
+          "avg60": 4.53,
+          "avg300": 8.26
+        },
+        "full": {
+          "avg10": 9.48,
+          "avg60": 4.53,
+          "avg300": 8.25
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:00.916395+00:00",
+      "memAvailableBytes": 77473394688,
+      "swapFreeBytes": 2247077888,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6342852608,
+      "swapVmstatPages": {
+        "pswpin": 3547642,
+        "pswpout": 8477786
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 17.91,
+          "avg60": 6.22,
+          "avg300": 8.58
+        },
+        "full": {
+          "avg10": 17.91,
+          "avg60": 6.22,
+          "avg300": 8.58
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:01.916950+00:00",
+      "memAvailableBytes": 77381730304,
+      "swapFreeBytes": 2245365760,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6344564736,
+      "swapVmstatPages": {
+        "pswpin": 3547642,
+        "pswpout": 8478196
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 17.91,
+          "avg60": 6.22,
+          "avg300": 8.58
+        },
+        "full": {
+          "avg10": 17.91,
+          "avg60": 6.22,
+          "avg300": 8.58
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:02.917458+00:00",
+      "memAvailableBytes": 77271506944,
+      "swapFreeBytes": 2242240512,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6347689984,
+      "swapVmstatPages": {
+        "pswpin": 3547643,
+        "pswpout": 8478893
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 24.99,
+          "avg60": 7.88,
+          "avg300": 8.92
+        },
+        "full": {
+          "avg10": 24.99,
+          "avg60": 7.88,
+          "avg300": 8.91
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:03.918003+00:00",
+      "memAvailableBytes": 77159460864,
+      "swapFreeBytes": 2240995328,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6348935168,
+      "swapVmstatPages": {
+        "pswpin": 3547775,
+        "pswpout": 8479317
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 24.99,
+          "avg60": 7.88,
+          "avg300": 8.92
+        },
+        "full": {
+          "avg10": 24.99,
+          "avg60": 7.88,
+          "avg300": 8.91
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:04.918544+00:00",
+      "memAvailableBytes": 77076332544,
+      "swapFreeBytes": 2239647744,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6350282752,
+      "swapVmstatPages": {
+        "pswpin": 3547775,
+        "pswpout": 8479642
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 30.43,
+          "avg60": 9.42,
+          "avg300": 9.23
+        },
+        "full": {
+          "avg10": 30.43,
+          "avg60": 9.42,
+          "avg300": 9.23
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:05.919025+00:00",
+      "memAvailableBytes": 76981829632,
+      "swapFreeBytes": 2238234624,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6351695872,
+      "swapVmstatPages": {
+        "pswpin": 3547777,
+        "pswpout": 8479986
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 30.43,
+          "avg60": 9.42,
+          "avg300": 9.23
+        },
+        "full": {
+          "avg10": 30.43,
+          "avg60": 9.42,
+          "avg300": 9.23
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:06.919530+00:00",
+      "memAvailableBytes": 76880449536,
+      "swapFreeBytes": 2237349888,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6352580608,
+      "swapVmstatPages": {
+        "pswpin": 3547778,
+        "pswpout": 8480242
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 34.51,
+          "avg60": 10.85,
+          "avg300": 9.53
+        },
+        "full": {
+          "avg10": 34.51,
+          "avg60": 10.85,
+          "avg300": 9.53
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:07.920014+00:00",
+      "memAvailableBytes": 76800577536,
+      "swapFreeBytes": 2236223488,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6353707008,
+      "swapVmstatPages": {
+        "pswpin": 3547778,
+        "pswpout": 8480535
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 34.51,
+          "avg60": 10.85,
+          "avg300": 9.53
+        },
+        "full": {
+          "avg10": 34.51,
+          "avg60": 10.85,
+          "avg300": 9.53
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:08.920524+00:00",
+      "memAvailableBytes": 76720115712,
+      "swapFreeBytes": 2235314176,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6354616320,
+      "swapVmstatPages": {
+        "pswpin": 3547780,
+        "pswpout": 8480759
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 38.59,
+          "avg60": 12.36,
+          "avg300": 9.85
+        },
+        "full": {
+          "avg10": 38.59,
+          "avg60": 12.36,
+          "avg300": 9.85
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:09.921026+00:00",
+      "memAvailableBytes": 76621488128,
+      "swapFreeBytes": 2234585088,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6355345408,
+      "swapVmstatPages": {
+        "pswpin": 3547780,
+        "pswpout": 8480937
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 38.59,
+          "avg60": 12.36,
+          "avg300": 9.85
+        },
+        "full": {
+          "avg10": 38.59,
+          "avg60": 12.36,
+          "avg300": 9.85
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:10.921572+00:00",
+      "memAvailableBytes": 76550512640,
+      "swapFreeBytes": 2233765888,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6356164608,
+      "swapVmstatPages": {
+        "pswpin": 3547781,
+        "pswpout": 8481135
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 41.56,
+          "avg60": 13.75,
+          "avg300": 10.16
+        },
+        "full": {
+          "avg10": 41.56,
+          "avg60": 13.75,
+          "avg300": 10.16
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:11.922200+00:00",
+      "memAvailableBytes": 76449226752,
+      "swapFreeBytes": 2232897536,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6357032960,
+      "swapVmstatPages": {
+        "pswpin": 3547781,
+        "pswpout": 8481341
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 41.56,
+          "avg60": 13.75,
+          "avg300": 10.16
+        },
+        "full": {
+          "avg10": 41.56,
+          "avg60": 13.75,
+          "avg300": 10.16
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:12.923219+00:00",
+      "memAvailableBytes": 76283191296,
+      "swapFreeBytes": 2231320576,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6358609920,
+      "swapVmstatPages": {
+        "pswpin": 3547785,
+        "pswpout": 8481718
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 41.82,
+          "avg60": 14.71,
+          "avg300": 10.39
+        },
+        "full": {
+          "avg10": 41.82,
+          "avg60": 14.71,
+          "avg300": 10.38
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:13.923755+00:00",
+      "memAvailableBytes": 76148817920,
+      "swapFreeBytes": 2229952512,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6359977984,
+      "swapVmstatPages": {
+        "pswpin": 3547788,
+        "pswpout": 8482038
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 41.82,
+          "avg60": 14.71,
+          "avg300": 10.39
+        },
+        "full": {
+          "avg10": 41.82,
+          "avg60": 14.71,
+          "avg300": 10.38
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:14.924294+00:00",
+      "memAvailableBytes": 76062154752,
+      "swapFreeBytes": 2228813824,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6361116672,
+      "swapVmstatPages": {
+        "pswpin": 3547788,
+        "pswpout": 8482313
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 41.13,
+          "avg60": 15.47,
+          "avg300": 10.58
+        },
+        "full": {
+          "avg10": 41.13,
+          "avg60": 15.47,
+          "avg300": 10.57
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:15.924835+00:00",
+      "memAvailableBytes": 75954855936,
+      "swapFreeBytes": 2228383744,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6361546752,
+      "swapVmstatPages": {
+        "pswpin": 3547790,
+        "pswpout": 8482420
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 41.13,
+          "avg60": 15.47,
+          "avg300": 10.58
+        },
+        "full": {
+          "avg10": 41.13,
+          "avg60": 15.47,
+          "avg300": 10.57
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:16.925408+00:00",
+      "memAvailableBytes": 75479941120,
+      "swapFreeBytes": 2223149056,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6366781440,
+      "swapVmstatPages": {
+        "pswpin": 3547798,
+        "pswpout": 8483703
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 40.38,
+          "avg60": 16.18,
+          "avg300": 10.76
+        },
+        "full": {
+          "avg10": 40.38,
+          "avg60": 16.17,
+          "avg300": 10.75
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:17.925983+00:00",
+      "memAvailableBytes": 74177466368,
+      "swapFreeBytes": 2208608256,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6381322240,
+      "swapVmstatPages": {
+        "pswpin": 3547799,
+        "pswpout": 8487170
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 40.38,
+          "avg60": 16.18,
+          "avg300": 10.76
+        },
+        "full": {
+          "avg10": 40.38,
+          "avg60": 16.17,
+          "avg300": 10.75
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:18.926495+00:00",
+      "memAvailableBytes": 73804009472,
+      "swapFreeBytes": 2193567744,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6396362752,
+      "swapVmstatPages": {
+        "pswpin": 3547799,
+        "pswpout": 8490832
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 42.12,
+          "avg60": 17.28,
+          "avg300": 11.03
+        },
+        "full": {
+          "avg10": 42.12,
+          "avg60": 17.28,
+          "avg300": 11.02
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:19.927007+00:00",
+      "memAvailableBytes": 73369825280,
+      "swapFreeBytes": 2185764864,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6404165632,
+      "swapVmstatPages": {
+        "pswpin": 3547823,
+        "pswpout": 8492757
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 42.12,
+          "avg60": 17.28,
+          "avg300": 11.03
+        },
+        "full": {
+          "avg10": 42.12,
+          "avg60": 17.28,
+          "avg300": 11.02
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:20.927528+00:00",
+      "memAvailableBytes": 73031888896,
+      "swapFreeBytes": 2179211264,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6410719232,
+      "swapVmstatPages": {
+        "pswpin": 3547825,
+        "pswpout": 8494351
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 43.73,
+          "avg60": 18.39,
+          "avg300": 11.3
+        },
+        "full": {
+          "avg10": 43.73,
+          "avg60": 18.38,
+          "avg300": 11.3
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:21.928074+00:00",
+      "memAvailableBytes": 72586346496,
+      "swapFreeBytes": 2171871232,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6418059264,
+      "swapVmstatPages": {
+        "pswpin": 3547826,
+        "pswpout": 8496146
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 43.73,
+          "avg60": 18.39,
+          "avg300": 11.3
+        },
+        "full": {
+          "avg10": 43.73,
+          "avg60": 18.38,
+          "avg300": 11.3
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:22.928618+00:00",
+      "memAvailableBytes": 72225550336,
+      "swapFreeBytes": 2166624256,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6423306240,
+      "swapVmstatPages": {
+        "pswpin": 3547826,
+        "pswpout": 8497427
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 45.23,
+          "avg60": 19.48,
+          "avg300": 11.58
+        },
+        "full": {
+          "avg10": 45.23,
+          "avg60": 19.48,
+          "avg300": 11.57
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:23.932978+00:00",
+      "memAvailableBytes": 71463845888,
+      "swapFreeBytes": 2152591360,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6437339136,
+      "swapVmstatPages": {
+        "pswpin": 3547858,
+        "pswpout": 8500799
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 45.23,
+          "avg60": 19.48,
+          "avg300": 11.58
+        },
+        "full": {
+          "avg10": 45.23,
+          "avg60": 19.48,
+          "avg300": 11.57
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:24.933546+00:00",
+      "memAvailableBytes": 71018815488,
+      "swapFreeBytes": 2145718272,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6444212224,
+      "swapVmstatPages": {
+        "pswpin": 3547858,
+        "pswpout": 8502497
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 45.73,
+          "avg60": 20.42,
+          "avg300": 11.83
+        },
+        "full": {
+          "avg10": 45.73,
+          "avg60": 20.42,
+          "avg300": 11.82
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:25.934067+00:00",
+      "memAvailableBytes": 70428774400,
+      "swapFreeBytes": 2137726976,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6452203520,
+      "swapVmstatPages": {
+        "pswpin": 3547858,
+        "pswpout": 8504442
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 45.73,
+          "avg60": 20.42,
+          "avg300": 11.83
+        },
+        "full": {
+          "avg10": 45.73,
+          "avg60": 20.42,
+          "avg300": 11.82
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:26.934611+00:00",
+      "memAvailableBytes": 69770227712,
+      "swapFreeBytes": 2126983168,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6462947328,
+      "swapVmstatPages": {
+        "pswpin": 3547905,
+        "pswpout": 8507107
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 43.78,
+          "avg60": 20.89,
+          "avg300": 11.99
+        },
+        "full": {
+          "avg10": 43.78,
+          "avg60": 20.89,
+          "avg300": 11.98
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:27.935158+00:00",
+      "memAvailableBytes": 69114802176,
+      "swapFreeBytes": 2116218880,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6473711616,
+      "swapVmstatPages": {
+        "pswpin": 3547921,
+        "pswpout": 8509748
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 43.78,
+          "avg60": 20.89,
+          "avg300": 11.99
+        },
+        "full": {
+          "avg10": 43.78,
+          "avg60": 20.89,
+          "avg300": 11.98
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:28.935761+00:00",
+      "memAvailableBytes": 68379643904,
+      "swapFreeBytes": 2104262656,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6485667840,
+      "swapVmstatPages": {
+        "pswpin": 3547921,
+        "pswpout": 8512657
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 44.91,
+          "avg60": 21.85,
+          "avg300": 12.25
+        },
+        "full": {
+          "avg10": 44.91,
+          "avg60": 21.85,
+          "avg300": 12.24
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:29.936354+00:00",
+      "memAvailableBytes": 67854364672,
+      "swapFreeBytes": 2098532352,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6491398144,
+      "swapVmstatPages": {
+        "pswpin": 3547924,
+        "pswpout": 8514047
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 44.91,
+          "avg60": 21.85,
+          "avg300": 12.25
+        },
+        "full": {
+          "avg10": 44.91,
+          "avg60": 21.85,
+          "avg300": 12.24
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:30.936928+00:00",
+      "memAvailableBytes": 66909749248,
+      "swapFreeBytes": 2090422272,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6499508224,
+      "swapVmstatPages": {
+        "pswpin": 3547924,
+        "pswpout": 8516027
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 42.75,
+          "avg60": 22.21,
+          "avg300": 12.39
+        },
+        "full": {
+          "avg10": 42.75,
+          "avg60": 22.21,
+          "avg300": 12.38
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:31.937466+00:00",
+      "memAvailableBytes": 66181611520,
+      "swapFreeBytes": 2079010816,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6510919680,
+      "swapVmstatPages": {
+        "pswpin": 3547954,
+        "pswpout": 8518815
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 42.75,
+          "avg60": 22.21,
+          "avg300": 12.39
+        },
+        "full": {
+          "avg10": 42.75,
+          "avg60": 22.21,
+          "avg300": 12.38
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:32.938066+00:00",
+      "memAvailableBytes": 65467027456,
+      "swapFreeBytes": 2067800064,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6522130432,
+      "swapVmstatPages": {
+        "pswpin": 3547954,
+        "pswpout": 8521502
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 41.35,
+          "avg60": 22.63,
+          "avg300": 12.54
+        },
+        "full": {
+          "avg10": 41.35,
+          "avg60": 22.63,
+          "avg300": 12.54
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:33.938667+00:00",
+      "memAvailableBytes": 64797073408,
+      "swapFreeBytes": 2059149312,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6530781184,
+      "swapVmstatPages": {
+        "pswpin": 3547955,
+        "pswpout": 8523612
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 41.35,
+          "avg60": 22.63,
+          "avg300": 12.54
+        },
+        "full": {
+          "avg10": 41.35,
+          "avg60": 22.63,
+          "avg300": 12.54
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:34.939602+00:00",
+      "memAvailableBytes": 64107937792,
+      "swapFreeBytes": 2049712128,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6540218368,
+      "swapVmstatPages": {
+        "pswpin": 3547955,
+        "pswpout": 8525845
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 39.47,
+          "avg60": 22.9,
+          "avg300": 12.67
+        },
+        "full": {
+          "avg10": 39.47,
+          "avg60": 22.9,
+          "avg300": 12.66
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:35.940204+00:00",
+      "memAvailableBytes": 63313326080,
+      "swapFreeBytes": 2043604992,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6546325504,
+      "swapVmstatPages": {
+        "pswpin": 3547955,
+        "pswpout": 8527334
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 39.47,
+          "avg60": 22.9,
+          "avg300": 12.67
+        },
+        "full": {
+          "avg10": 39.47,
+          "avg60": 22.9,
+          "avg300": 12.66
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:36.940836+00:00",
+      "memAvailableBytes": 63118831616,
+      "swapFreeBytes": 2042740736,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6547189760,
+      "swapVmstatPages": {
+        "pswpin": 3547955,
+        "pswpout": 8527541
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 38.84,
+          "avg60": 23.33,
+          "avg300": 12.83
+        },
+        "full": {
+          "avg10": 38.84,
+          "avg60": 23.33,
+          "avg300": 12.82
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:37.941476+00:00",
+      "memAvailableBytes": 62453481472,
+      "swapFreeBytes": 2038169600,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6551760896,
+      "swapVmstatPages": {
+        "pswpin": 3547956,
+        "pswpout": 8528658
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 38.84,
+          "avg60": 23.33,
+          "avg300": 12.83
+        },
+        "full": {
+          "avg10": 38.84,
+          "avg60": 23.33,
+          "avg300": 12.82
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:38.942015+00:00",
+      "memAvailableBytes": 61413830656,
+      "swapFreeBytes": 2031210496,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6558720000,
+      "swapVmstatPages": {
+        "pswpin": 3547956,
+        "pswpout": 8530357
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 40.86,
+          "avg60": 24.21,
+          "avg300": 13.08
+        },
+        "full": {
+          "avg10": 40.86,
+          "avg60": 24.2,
+          "avg300": 13.08
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:39.942745+00:00",
+      "memAvailableBytes": 60817580032,
+      "swapFreeBytes": 2028212224,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6561718272,
+      "swapVmstatPages": {
+        "pswpin": 3547956,
+        "pswpout": 8531089
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 40.86,
+          "avg60": 24.21,
+          "avg300": 13.08
+        },
+        "full": {
+          "avg10": 40.86,
+          "avg60": 24.2,
+          "avg300": 13.08
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:40.943639+00:00",
+      "memAvailableBytes": 60672221184,
+      "swapFreeBytes": 2028212224,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6561718272,
+      "swapVmstatPages": {
+        "pswpin": 3547956,
+        "pswpout": 8531089
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 36.9,
+          "avg60": 24.03,
+          "avg300": 13.12
+        },
+        "full": {
+          "avg10": 36.9,
+          "avg60": 24.03,
+          "avg300": 13.12
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:41.944274+00:00",
+      "memAvailableBytes": 60424826880,
+      "swapFreeBytes": 2028212224,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6561718272,
+      "swapVmstatPages": {
+        "pswpin": 3547956,
+        "pswpout": 8531089
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 36.9,
+          "avg60": 24.03,
+          "avg300": 13.12
+        },
+        "full": {
+          "avg10": 36.9,
+          "avg60": 24.03,
+          "avg300": 13.12
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:42.944880+00:00",
+      "memAvailableBytes": 60458643456,
+      "swapFreeBytes": 2028400640,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6561529856,
+      "swapVmstatPages": {
+        "pswpin": 3548001,
+        "pswpout": 8531089
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 30.21,
+          "avg60": 23.25,
+          "avg300": 13.03
+        },
+        "full": {
+          "avg10": 30.21,
+          "avg60": 23.25,
+          "avg300": 13.03
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:43.945457+00:00",
+      "memAvailableBytes": 60434395136,
+      "swapFreeBytes": 2028466176,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6561464320,
+      "swapVmstatPages": {
+        "pswpin": 3548016,
+        "pswpout": 8531089
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 30.21,
+          "avg60": 23.25,
+          "avg300": 13.03
+        },
+        "full": {
+          "avg10": 30.21,
+          "avg60": 23.25,
+          "avg300": 13.03
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:44.945998+00:00",
+      "memAvailableBytes": 60426014720,
+      "swapFreeBytes": 2028466176,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6561464320,
+      "swapVmstatPages": {
+        "pswpin": 3548016,
+        "pswpout": 8531089
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 24.74,
+          "avg60": 22.49,
+          "avg300": 12.94
+        },
+        "full": {
+          "avg10": 24.74,
+          "avg60": 22.49,
+          "avg300": 12.94
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:45.946559+00:00",
+      "memAvailableBytes": 60408143872,
+      "swapFreeBytes": 2028474368,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6561456128,
+      "swapVmstatPages": {
+        "pswpin": 3548022,
+        "pswpout": 8531089
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 24.74,
+          "avg60": 22.49,
+          "avg300": 12.94
+        },
+        "full": {
+          "avg10": 24.74,
+          "avg60": 22.49,
+          "avg300": 12.94
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:46.952064+00:00",
+      "memAvailableBytes": 60380835840,
+      "swapFreeBytes": 2028478464,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6561452032,
+      "swapVmstatPages": {
+        "pswpin": 3548023,
+        "pswpout": 8531089
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 20.26,
+          "avg60": 21.75,
+          "avg300": 12.86
+        },
+        "full": {
+          "avg10": 20.26,
+          "avg60": 21.75,
+          "avg300": 12.85
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:47.952784+00:00",
+      "memAvailableBytes": 60370485248,
+      "swapFreeBytes": 2028478464,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6561452032,
+      "swapVmstatPages": {
+        "pswpin": 3548023,
+        "pswpout": 8531089
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 20.26,
+          "avg60": 21.75,
+          "avg300": 12.86
+        },
+        "full": {
+          "avg10": 20.26,
+          "avg60": 21.75,
+          "avg300": 12.85
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:48.953365+00:00",
+      "memAvailableBytes": 60378468352,
+      "swapFreeBytes": 2028478464,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6561452032,
+      "swapVmstatPages": {
+        "pswpin": 3548023,
+        "pswpout": 8531089
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 16.59,
+          "avg60": 21.04,
+          "avg300": 12.77
+        },
+        "full": {
+          "avg10": 16.59,
+          "avg60": 21.04,
+          "avg300": 12.76
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:49.953950+00:00",
+      "memAvailableBytes": 60371931136,
+      "swapFreeBytes": 2028478464,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6561452032,
+      "swapVmstatPages": {
+        "pswpin": 3548023,
+        "pswpout": 8531089
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 16.59,
+          "avg60": 21.04,
+          "avg300": 12.77
+        },
+        "full": {
+          "avg10": 16.59,
+          "avg60": 21.04,
+          "avg300": 12.76
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:50.954550+00:00",
+      "memAvailableBytes": 60361969664,
+      "swapFreeBytes": 2028482560,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6561447936,
+      "swapVmstatPages": {
+        "pswpin": 3548024,
+        "pswpout": 8531089
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 13.58,
+          "avg60": 20.35,
+          "avg300": 12.68
+        },
+        "full": {
+          "avg10": 13.58,
+          "avg60": 20.35,
+          "avg300": 12.68
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:51.955500+00:00",
+      "memAvailableBytes": 60351426560,
+      "swapFreeBytes": 2028486656,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6561443840,
+      "swapVmstatPages": {
+        "pswpin": 3548024,
+        "pswpout": 8531089
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 13.58,
+          "avg60": 20.35,
+          "avg300": 12.68
+        },
+        "full": {
+          "avg10": 13.58,
+          "avg60": 20.35,
+          "avg300": 12.68
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:52.956223+00:00",
+      "memAvailableBytes": 60353359872,
+      "swapFreeBytes": 2028486656,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6561443840,
+      "swapVmstatPages": {
+        "pswpin": 3548024,
+        "pswpout": 8531089
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 11.12,
+          "avg60": 19.68,
+          "avg300": 12.59
+        },
+        "full": {
+          "avg10": 11.12,
+          "avg60": 19.68,
+          "avg300": 12.59
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:53.956781+00:00",
+      "memAvailableBytes": 60433641472,
+      "swapFreeBytes": 2028490752,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6561439744,
+      "swapVmstatPages": {
+        "pswpin": 3548026,
+        "pswpout": 8531089
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 11.12,
+          "avg60": 19.68,
+          "avg300": 12.59
+        },
+        "full": {
+          "avg10": 11.12,
+          "avg60": 19.68,
+          "avg300": 12.59
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:54.957338+00:00",
+      "memAvailableBytes": 60571066368,
+      "swapFreeBytes": 2030526464,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6559404032,
+      "swapVmstatPages": {
+        "pswpin": 3548540,
+        "pswpout": 8531089
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 9.1,
+          "avg60": 19.04,
+          "avg300": 12.51
+        },
+        "full": {
+          "avg10": 9.1,
+          "avg60": 19.04,
+          "avg300": 12.5
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:55.958311+00:00",
+      "memAvailableBytes": 60571951104,
+      "swapFreeBytes": 2032033792,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6557896704,
+      "swapVmstatPages": {
+        "pswpin": 3548865,
+        "pswpout": 8531089
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 9.1,
+          "avg60": 19.04,
+          "avg300": 12.51
+        },
+        "full": {
+          "avg10": 9.1,
+          "avg60": 19.04,
+          "avg300": 12.5
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:56.958951+00:00",
+      "memAvailableBytes": 60612022272,
+      "swapFreeBytes": 2032054272,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6557876224,
+      "swapVmstatPages": {
+        "pswpin": 3548869,
+        "pswpout": 8531089
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 7.45,
+          "avg60": 18.42,
+          "avg300": 12.42
+        },
+        "full": {
+          "avg10": 7.45,
+          "avg60": 18.42,
+          "avg300": 12.42
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:57.960452+00:00",
+      "memAvailableBytes": 60606750720,
+      "swapFreeBytes": 2032054272,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6557876224,
+      "swapVmstatPages": {
+        "pswpin": 3548869,
+        "pswpout": 8531089
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 7.45,
+          "avg60": 18.42,
+          "avg300": 12.42
+        },
+        "full": {
+          "avg10": 7.45,
+          "avg60": 18.42,
+          "avg300": 12.42
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:58.961318+00:00",
+      "memAvailableBytes": 60641599488,
+      "swapFreeBytes": 2026827776,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6563102720,
+      "swapVmstatPages": {
+        "pswpin": 3548869,
+        "pswpout": 8532365
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 6.1,
+          "avg60": 17.81,
+          "avg300": 12.34
+        },
+        "full": {
+          "avg10": 6.1,
+          "avg60": 17.81,
+          "avg300": 12.33
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:49:59.962006+00:00",
+      "memAvailableBytes": 60608720896,
+      "swapFreeBytes": 2020900864,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6569029632,
+      "swapVmstatPages": {
+        "pswpin": 3548870,
+        "pswpout": 8533812
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 6.1,
+          "avg60": 17.81,
+          "avg300": 12.34
+        },
+        "full": {
+          "avg10": 6.1,
+          "avg60": 17.81,
+          "avg300": 12.33
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:50:00.962666+00:00",
+      "memAvailableBytes": 60618502144,
+      "swapFreeBytes": 2020990976,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6568939520,
+      "swapVmstatPages": {
+        "pswpin": 3548890,
+        "pswpout": 8533812
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 5.18,
+          "avg60": 17.26,
+          "avg300": 12.26
+        },
+        "full": {
+          "avg10": 5.18,
+          "avg60": 17.26,
+          "avg300": 12.25
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:50:01.963471+00:00",
+      "memAvailableBytes": 60632784896,
+      "swapFreeBytes": 2015395840,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6574534656,
+      "swapVmstatPages": {
+        "pswpin": 3548897,
+        "pswpout": 8535179
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 5.18,
+          "avg60": 17.26,
+          "avg300": 12.26
+        },
+        "full": {
+          "avg10": 5.18,
+          "avg60": 17.26,
+          "avg300": 12.25
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:50:02.964142+00:00",
+      "memAvailableBytes": 60671741952,
+      "swapFreeBytes": 2004160512,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6585769984,
+      "swapVmstatPages": {
+        "pswpin": 3548898,
+        "pswpout": 8537924
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 4.42,
+          "avg60": 16.73,
+          "avg300": 12.18
+        },
+        "full": {
+          "avg10": 4.42,
+          "avg60": 16.73,
+          "avg300": 12.18
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:50:03.964717+00:00",
+      "memAvailableBytes": 60701949952,
+      "swapFreeBytes": 1999007744,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6590922752,
+      "swapVmstatPages": {
+        "pswpin": 3548898,
+        "pswpout": 8539182
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 4.42,
+          "avg60": 16.73,
+          "avg300": 12.18
+        },
+        "full": {
+          "avg10": 4.42,
+          "avg60": 16.73,
+          "avg300": 12.18
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:50:04.965260+00:00",
+      "memAvailableBytes": 60711022592,
+      "swapFreeBytes": 1993228288,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6596702208,
+      "swapVmstatPages": {
+        "pswpin": 3548898,
+        "pswpout": 8540593
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 3.62,
+          "avg60": 16.18,
+          "avg300": 12.1
+        },
+        "full": {
+          "avg10": 3.62,
+          "avg60": 16.18,
+          "avg300": 12.09
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:50:05.965874+00:00",
+      "memAvailableBytes": 60746608640,
+      "swapFreeBytes": 1978118144,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6611812352,
+      "swapVmstatPages": {
+        "pswpin": 3548898,
+        "pswpout": 8544310
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 3.62,
+          "avg60": 16.18,
+          "avg300": 12.1
+        },
+        "full": {
+          "avg10": 3.62,
+          "avg60": 16.18,
+          "avg300": 12.09
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:50:06.966462+00:00",
+      "memAvailableBytes": 60788781056,
+      "swapFreeBytes": 1971372032,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6618558464,
+      "swapVmstatPages": {
+        "pswpin": 3548899,
+        "pswpout": 8545959
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 2.96,
+          "avg60": 15.65,
+          "avg300": 12.01
+        },
+        "full": {
+          "avg10": 2.96,
+          "avg60": 15.65,
+          "avg300": 12.01
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:50:07.967021+00:00",
+      "memAvailableBytes": 60811214848,
+      "swapFreeBytes": 1971372032,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6618558464,
+      "swapVmstatPages": {
+        "pswpin": 3548899,
+        "pswpout": 8545959
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 2.96,
+          "avg60": 15.65,
+          "avg300": 12.01
+        },
+        "full": {
+          "avg10": 2.96,
+          "avg60": 15.65,
+          "avg300": 12.01
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:50:08.969531+00:00",
+      "memAvailableBytes": 60789121024,
+      "swapFreeBytes": 1971372032,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6618558464,
+      "swapVmstatPages": {
+        "pswpin": 3548899,
+        "pswpout": 8545959
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 2.42,
+          "avg60": 15.14,
+          "avg300": 11.93
+        },
+        "full": {
+          "avg10": 2.42,
+          "avg60": 15.14,
+          "avg300": 11.93
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:50:09.970063+00:00",
+      "memAvailableBytes": 60773933056,
+      "swapFreeBytes": 1967972352,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6621958144,
+      "swapVmstatPages": {
+        "pswpin": 3548918,
+        "pswpout": 8546809
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 2.42,
+          "avg60": 15.14,
+          "avg300": 11.93
+        },
+        "full": {
+          "avg10": 2.42,
+          "avg60": 15.14,
+          "avg300": 11.93
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:50:10.970596+00:00",
+      "memAvailableBytes": 60742553600,
+      "swapFreeBytes": 1967972352,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6621958144,
+      "swapVmstatPages": {
+        "pswpin": 3548918,
+        "pswpout": 8546809
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 1.98,
+          "avg60": 14.65,
+          "avg300": 11.85
+        },
+        "full": {
+          "avg10": 1.98,
+          "avg60": 14.64,
+          "avg300": 11.85
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:50:11.971133+00:00",
+      "memAvailableBytes": 59886174208,
+      "swapFreeBytes": 1961701376,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6628229120,
+      "swapVmstatPages": {
+        "pswpin": 3548918,
+        "pswpout": 8548340
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 1.98,
+          "avg60": 14.65,
+          "avg300": 11.85
+        },
+        "full": {
+          "avg10": 1.98,
+          "avg60": 14.64,
+          "avg300": 11.85
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:50:12.971731+00:00",
+      "memAvailableBytes": 58469302272,
+      "swapFreeBytes": 1956589568,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6633340928,
+      "swapVmstatPages": {
+        "pswpin": 3548918,
+        "pswpout": 8549588
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 5.43,
+          "avg60": 14.85,
+          "avg300": 11.91
+        },
+        "full": {
+          "avg10": 5.43,
+          "avg60": 14.85,
+          "avg300": 11.91
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:50:12.973093+00:00",
+      "memAvailableBytes": 58468782080,
+      "swapFreeBytes": 1956589568,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6633340928,
+      "swapVmstatPages": {
+        "pswpin": 3548918,
+        "pswpout": 8549588
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 5.43,
+          "avg60": 14.85,
+          "avg300": 11.91
+        },
+        "full": {
+          "avg10": 5.43,
+          "avg60": 14.85,
+          "avg300": 11.91
+        }
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:50:13.973384+00:00",
+      "memAvailableBytes": 58391212032,
+      "swapFreeBytes": 1956589568,
+      "swapTotalBytes": 8589930496,
+      "swapUsedBytes": 6633340928,
+      "swapVmstatPages": {
+        "pswpin": 3548918,
+        "pswpout": 8549588
+      },
+      "psiMemory": {
+        "some": {
+          "avg10": 5.43,
+          "avg60": 14.85,
+          "avg300": 11.91
+        },
+        "full": {
+          "avg10": 5.43,
+          "avg60": 14.85,
+          "avg300": 11.91
+        }
+      }
+    }
+  ],
+  "status": "child_nonzero",
+  "engineLog": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-IQ3XXS-REMAINING-SCREENS/receipts/logs/astra-vision-attempt-02.server-console.log",
+  "monitorLog": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-IQ3XXS-REMAINING-SCREENS/receipts/logs/astraVision-attempt-02.resource-monitor.jsonl",
+  "serverPid": 908701,
+  "health": {
+    "status": "ok",
+    "max_context": 131072,
+    "model": "qwen3.8-flash-next-iq3_s",
+    "images": true,
+    "api_key": false,
+    "loaded": true,
+    "service": "strata"
+  },
+  "apiReadyAtUtc": "2026-10-15T15:50:12.972615+00:00",
+  "childCommand": [
+    "/usr/bin/python3",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-IQ3XXS-REMAINING-SCREENS/scripts/run_vision_smoke.py",
+    "--endpoint",
+    "http://127.0.0.1:8350",
+    "--profile",
+    "ASTRA IQ3_S / Strata v0.1.41",
+    "--image",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-IQ3XXS-REMAINING-SCREENS/fixtures/vision-holdout-v1/vision-holdout.png",
+    "--prompt",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-IQ3XXS-REMAINING-SCREENS/fixtures/vision-holdout-v1/prompt.txt",
+    "--expected",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-IQ3XXS-REMAINING-SCREENS/fixtures/vision-holdout-v1/expected.json",
+    "--out",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-IQ3XXS-REMAINING-SCREENS/receipts/vision/astra-control-attempt-02.json"
+  ],
+  "childReceipt": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-IQ3XXS-REMAINING-SCREENS/receipts/vision/astra-control-attempt-02.json",
+  "childPid": 912050,
+  "childExitCode": 1,
+  "postflight": {
+    "atUtc": "2026-10-15T15:50:15.138810+00:00",
+    "memAvailableBytes": 115814928384,
+    "swapFreeBytes": 1956589568,
+    "swapTotalBytes": 8589930496,
+    "swapUsedBytes": 6633340928,
+    "swapVmstatPages": {
+      "pswpin": 3548918,
+      "pswpout": 8549588
+    },
+    "psiMemory": {
+      "some": {
+        "avg10": 4.62,
+        "avg60": 14.4,
+        "avg300": 11.84
+      },
+      "full": {
+        "avg10": 4.62,
+        "avg60": 14.4,
+        "avg300": 11.83
+      }
+    }
+  },
+  "serverStopped": true,
+  "portOpenAfterCleanup": false,
+  "finishedAtUtc": "2026-10-15T15:50:15.138905+00:00"
+}

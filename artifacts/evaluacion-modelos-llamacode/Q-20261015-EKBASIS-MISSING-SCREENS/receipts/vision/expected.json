@@ -1,0 +1,17 @@
+{
+  "shapes": {
+    "circle": 2,
+    "triangle": 2,
+    "rectangle": 2,
+    "star": 1
+  },
+  "colors": {
+    "blue": 1,
+    "red": 1,
+    "green": 1,
+    "yellow": 1,
+    "orange": 1,
+    "purple": 1,
+    "black": 1
+  }
+}

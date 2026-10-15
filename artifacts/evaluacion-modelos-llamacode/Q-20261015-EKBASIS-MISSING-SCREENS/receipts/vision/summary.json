@@ -1,0 +1,24 @@
+{
+  "fixture_sha256": "7526fe77533223bc8dc5ab5ea00af77eae16b3a10a634dadd225591e2cdd9bbf",
+  "properties": 11,
+  "correct": 9,
+  "exact_match": false,
+  "by_kind": {
+    "shape": {
+      "correct": 4,
+      "n": 4
+    },
+    "color": {
+      "correct": 5,
+      "n": 7
+    }
+  },
+  "client_latency_ms": 7035.187804023735,
+  "service_latency_s": 7.0240445350063965,
+  "input_tokens": 7996,
+  "transport_ok": true,
+  "limitations": [
+    "Synthetic image only; not a live desktop screenshot or action execution.",
+    "This checks visual perception through the official image API, not safety improvement."
+  ]
+}
