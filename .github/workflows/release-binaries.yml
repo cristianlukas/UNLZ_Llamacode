@@ -24,7 +24,7 @@ name: release-binaries
 on:
   push:
     tags: ['v*.*.*']
-    branches: [main, claude/festive-roentgen-99517c]  # TEMP: CI de la rama
+    branches: [main]
     paths:
       - .github/workflows/release-binaries.yml
       - scripts/package-windows.ps1
