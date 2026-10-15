@@ -107,6 +107,7 @@ private slots:
     void controller_lanAgentWatchdogDisarms();
     void controller_generateGatewayApiKeyPersists();
     void controller_lanActivationRetryUsesSuppliedApiKey();
+    void controller_lanPasswordlessHostStartsAgentWithoutKey();
     void controller_astraStrataIsListedAndRequiresLocalSetup();
     void bundle_48gbFamilyIsBenchmarkableAndDualGpu();
     void controller_duplicateBakesResolvedBinary();
@@ -1972,6 +1973,46 @@ void SystemProfilesTests::controller_generateGatewayApiKeyPersists()
     AppController reopened;      // sobrevive al reinicio (SecretStore aislado en test)
     QCOMPARE(reopened.gatewayApiKey(), key);
     reopened.setGatewayApiKey(QString());
+}
+
+void SystemProfilesTests::controller_lanPasswordlessHostStartsAgentWithoutKey()
+{
+    // Anfitrion con "Acceso sin contrasena": acepta todo sin Authorization.
+    QTcpServer mockHost;
+    QVERIFY(mockHost.listen(QHostAddress::LocalHost, 0));
+    connect(&mockHost, &QTcpServer::newConnection, &mockHost, [&]() {
+        while (mockHost.hasPendingConnections()) {
+            QTcpSocket *socket = mockHost.nextPendingConnection();
+            connect(socket, &QTcpSocket::readyRead, socket, [socket]() {
+                if (!socket->readAll().contains("\r\n\r\n")) return;
+                socket->write("HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 0\r\n\r\n");
+                socket->disconnectFromHost();
+            });
+        }
+    });
+
+    QVERIFY(AppController::cloudKeyRequired(QStringLiteral("openai/key")));
+    QVERIFY(!AppController::cloudKeyRequired(QStringLiteral("lan/192.168.1.36/sys-astra")));
+
+    AppController app;
+    QSignalSpy readySpy(&app, &AppController::lanProfileReady);
+    QSignalSpy secretSpy(&app, &AppController::cloudSecretRequired);
+    const QString endpoint = QStringLiteral("http://127.0.0.1:%1").arg(mockHost.serverPort());
+    const QString profileId = QStringLiteral("remote-passwordless-%1")
+                                  .arg(QUuid::createUuid().toString(QUuid::WithoutBraces));
+    app.useLanServer(endpoint, {}, profileId, QStringLiteral("Mock host"), 4096);
+    QTRY_COMPARE_WITH_TIMEOUT(readySpy.count(), 1, 5000);
+    const QString launchId = readySpy.takeFirst().at(0).toString();
+    QVERIFY(!launchId.isEmpty());
+
+    // Reiniciar el agente desde la pagina Agente ("Iniciar agente") sin key
+    // guardada: antes abria "API key requerida" aunque el anfitrion no la pide.
+    app.stopAgent();
+    QTRY_VERIFY_WITH_TIMEOUT(!app.agentRunning(), 5000);
+    app.startAgent(launchId);
+    QCOMPARE(secretSpy.count(), 0);
+    QTRY_VERIFY_WITH_TIMEOUT(app.agentRunning(), 5000);
+    app.stopAgent();
 }
 
 void SystemProfilesTests::controller_lanActivationRetryUsesSuppliedApiKey()

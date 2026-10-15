@@ -921,6 +921,49 @@ Item {
                                         ToolTip.text: Accessible.name
                                         onClicked: gatewayKeyField.revealed = !gatewayKeyField.revealed
                                     }
+                                    // Para pasarle la key a un alumno/otro equipo sin revelarla en pantalla.
+                                    LcButton {
+                                        id: gatewayKeyCopy
+                                        property bool copied: false
+                                        text: copied ? "✓ Copiada" : "Copiar"
+                                        secondary: true
+                                        enabled: App.gatewayApiKey.length > 0
+                                        onClicked: {
+                                            App.copyToClipboard(App.gatewayApiKey)
+                                            copied = true
+                                            gatewayKeyCopiedTimer.restart()
+                                        }
+                                        Timer {
+                                            id: gatewayKeyCopiedTimer
+                                            interval: 1800
+                                            onTriggered: gatewayKeyCopy.copied = false
+                                        }
+                                    }
+                                    // Regenerar invalida la key repartida: con una key ya puesta
+                                    // pide un segundo clic de confirmación.
+                                    LcButton {
+                                        id: gatewayKeyRegen
+                                        property bool armed: false
+                                        text: armed ? "¿Seguro? Los clientes deberán cargar la nueva"
+                                                    : (App.gatewayApiKey.length > 0 ? "Generar nueva" : "Generar")
+                                        secondary: !armed
+                                        danger: armed
+                                        onClicked: {
+                                            if (App.gatewayApiKey.length > 0 && !armed) {
+                                                armed = true
+                                                gatewayKeyRegenTimer.restart()
+                                                return
+                                            }
+                                            armed = false
+                                            const key = App.generateGatewayApiKey()
+                                            gatewayKeyField.text = key
+                                        }
+                                        Timer {
+                                            id: gatewayKeyRegenTimer
+                                            interval: 4000
+                                            onTriggered: gatewayKeyRegen.armed = false
+                                        }
+                                    }
                                 }
 
                                 // Sin key y con contraseña en LAN, el gateway responde 401 a

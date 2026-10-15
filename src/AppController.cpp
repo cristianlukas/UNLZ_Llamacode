@@ -7363,7 +7363,13 @@ void AppController::startAgentInternal(const QString &launchProfileId, bool reme
         if (cloud && !keylessLoopbackCloud) {
             const QString ref = ctx.backend.cloudKeyRef.trimmed();
             cloudKey = m_secrets.resolve(ref);
-            if (cloudKey.isEmpty()) {
+            if (cloudKey.isEmpty() && !cloudKeyRequired(ref)) {
+                // Perfil LAN: el anfitrion puede tener "Acceso sin contrasena".
+                // Si en realidad la pide, el 401 del gateway lo dice.
+                appendAgentEvent(QStringLiteral("lifecycle"),
+                                 QStringLiteral("LAN: conectando sin API key (%1).")
+                                     .arg(backendBaseUrl(ctx.backend)));
+            } else if (cloudKey.isEmpty()) {
                 m_agentStarting = false;
                 emit agentStartingChanged();
                 appendAgentEvent(QStringLiteral("lifecycle"),
@@ -10727,6 +10733,12 @@ void AppController::setGatewayPort(int p)
     QSettings().setValue(QStringLiteral("gateway/port"), p);
     if (m_gateway && m_gateway->listening()) { stopGateway(); startGateway(); }
     emit gatewayChanged();
+}
+
+bool AppController::cloudKeyRequired(const QString &keyRef)
+{
+    // useLanServer nombra las keys de LAN "lan/<host>/<perfil>".
+    return !keyRef.trimmed().startsWith(QLatin1String("lan/"));
 }
 
 QString AppController::generateGatewayApiKey()

@@ -1134,6 +1134,9 @@ public:
     void    setGatewayApiKey(const QString &k);
     // Genera y guarda una API key nueva (cuando falta y la LAN pide contraseña).
     Q_INVOKABLE QString generateGatewayApiKey();
+    // Un perfil cloud sin key guardada pide una antes de arrancar, salvo LAN:
+    // el anfitrion puede permitir acceso sin contrasena.
+    static bool cloudKeyRequired(const QString &keyRef);
     int     gatewayKeepN() const { return m_gatewayKeepN; }
     void    setGatewayKeepN(int n);
     bool    gatewayAutoSwap() const { return m_gatewayAutoSwap; }
