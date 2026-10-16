@@ -84,7 +84,7 @@ protocolo nativo antes de repetir únicamente HE0. Si el prompt real o la reserv
 no caben, no se puntúa la suite.
 
 El usuario indicó el 2026-10-16 que las GPU estaban libres, pero el preflight
-fresco volvió a encontrar cuatro instancias activas de `llama-server` ocupando
+fresco volvió a encontrar tres procesos activos de `llama-server` ocupando
 ambas RTX 3090: Qwen3.5-9B en los puertos 8033/8081 y Gemma-4-12B en 8083.
 Cada tarjeta tenía 11–12 GiB ocupados y seguía reportando 32–46% de uso; los
 procesos llevaban entre 8 y 17 horas activos. Se conservaron porque pertenecen
