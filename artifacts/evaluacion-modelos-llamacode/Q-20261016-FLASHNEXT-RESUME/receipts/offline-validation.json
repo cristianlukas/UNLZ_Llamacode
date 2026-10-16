@@ -1,0 +1,166 @@
+{
+  "taskId": "Q-20261016-FLASHNEXT-RESUME",
+  "createdAtUtc": "2026-10-16T21:55:33.323882+00:00",
+  "kind": "offline-integrity-and-pair-summary",
+  "checks": [
+    {
+      "runId": "pair01-A-order01",
+      "pair": 1,
+      "arm": "A",
+      "status": "complete",
+      "samples": 16,
+      "failedSamples": 0,
+      "configHashOk": true,
+      "responseHashesOk": true,
+      "portFree": true,
+      "issues": [],
+      "means": {
+        "decodeTps": 65.35,
+        "promptTps": 64.10625,
+        "ttftMs": 1627.642375,
+        "elapsedMs": 4085.6884999999997,
+        "decodeTpsMedian": 62.8,
+        "promptTpsMedian": 64.35,
+        "ttftMsMedian": 1607.187,
+        "elapsedMsMedian": 4037.544
+      }
+    },
+    {
+      "runId": "pair01-A-order01",
+      "status": "failed",
+      "validated": false,
+      "reason": "not a completed arm; excluded from paired analysis"
+    },
+    {
+      "runId": "pair01-B-order02",
+      "pair": 1,
+      "arm": "B",
+      "status": "complete",
+      "samples": 16,
+      "failedSamples": 0,
+      "configHashOk": true,
+      "responseHashesOk": true,
+      "portFree": true,
+      "issues": [],
+      "means": {
+        "decodeTps": 63.60625,
+        "promptTps": 46.48125,
+        "ttftMs": 2417.799125,
+        "elapsedMs": 4958.3279375,
+        "decodeTpsMedian": 63.45,
+        "promptTpsMedian": 45.3,
+        "ttftMsMedian": 2134.5654999999997,
+        "elapsedMsMedian": 5117.527
+      }
+    },
+    {
+      "runId": "pair02-A-order02",
+      "pair": 2,
+      "arm": "A",
+      "status": "complete",
+      "samples": 16,
+      "failedSamples": 0,
+      "configHashOk": true,
+      "responseHashesOk": true,
+      "portFree": true,
+      "issues": [],
+      "means": {
+        "decodeTps": 65.2,
+        "promptTps": 73.2625,
+        "ttftMs": 1421.2785625,
+        "elapsedMs": 3882.88025,
+        "decodeTpsMedian": 65.5,
+        "promptTpsMedian": 74.25,
+        "ttftMsMedian": 1436.029,
+        "elapsedMsMedian": 3922.6835
+      }
+    },
+    {
+      "runId": "pair02-B-order01",
+      "pair": 2,
+      "arm": "B",
+      "status": "complete",
+      "samples": 16,
+      "failedSamples": 0,
+      "configHashOk": true,
+      "responseHashesOk": true,
+      "portFree": true,
+      "issues": [],
+      "means": {
+        "decodeTps": 70.2625,
+        "promptTps": 78.325,
+        "ttftMs": 1333.08075,
+        "elapsedMs": 3622.96225,
+        "decodeTpsMedian": 67.55,
+        "promptTpsMedian": 78.1,
+        "ttftMsMedian": 1334.532,
+        "elapsedMsMedian": 3476.07
+      }
+    },
+    {
+      "runId": "pair03-A-order01",
+      "status": "preflight-blocked",
+      "validated": false,
+      "reason": "not a completed arm; excluded from paired analysis"
+    }
+  ],
+  "pairs": [
+    {
+      "pair": 1,
+      "complete": true,
+      "nA": 16,
+      "nB": 16,
+      "matchedSampleIds": 16,
+      "responseHashesDiffer": 13,
+      "deltaBminusA": {
+        "decodeTps": -1.7437499999999915,
+        "promptTps": -17.625,
+        "ttftMs": 790.1567500000001,
+        "elapsedMs": 872.6394375000004
+      },
+      "deltaPctBminusA": {
+        "decodeTps": -2.668324407039008,
+        "promptTps": -27.493419128400117,
+        "ttftMs": 48.546091090802435,
+        "elapsedMs": 21.358442708003818
+      },
+      "order": [
+        1,
+        2
+      ]
+    },
+    {
+      "pair": 2,
+      "complete": true,
+      "nA": 16,
+      "nB": 16,
+      "matchedSampleIds": 16,
+      "responseHashesDiffer": 12,
+      "deltaBminusA": {
+        "decodeTps": 5.0625,
+        "promptTps": 5.0625,
+        "ttftMs": -88.19781249999983,
+        "elapsedMs": -259.9180000000001
+      },
+      "deltaPctBminusA": {
+        "decodeTps": 7.764570552147239,
+        "promptTps": 6.910083603480635,
+        "ttftMs": -6.20552612465087,
+        "elapsedMs": -6.69394839050213
+      },
+      "order": [
+        2,
+        1
+      ]
+    },
+    {
+      "pair": 3,
+      "complete": false,
+      "arms": []
+    }
+  ],
+  "limitations": [
+    "This validates saved artifacts and recomputes descriptive metrics only; it does not run the model or assess answer quality.",
+    "The first failed pair01 A system-Python attempt and the pair03 preflight-blocked attempt are excluded from completed-arm metrics."
+  ]
+}

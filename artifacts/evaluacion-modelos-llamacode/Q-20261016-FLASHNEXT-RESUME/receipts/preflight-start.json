@@ -1,0 +1,47 @@
+{
+  "taskId": "Q-20261016-FLASHNEXT-RESUME",
+  "atUtc": "2026-10-16T21:43:56.140919+00:00",
+  "memory": {
+    "MemAvailable": 119317143552,
+    "SwapTotal": 8589930496,
+    "SwapFree": 1088421888,
+    "SwapUsed": 7501508608
+  },
+  "psi": {
+    "some": {
+      "avg10": 0.0,
+      "avg60": 0.12,
+      "avg300": 0.07
+    },
+    "full": {
+      "avg10": 0.0,
+      "avg60": 0.11,
+      "avg300": 0.06
+    }
+  },
+  "vmstatCounters": {
+    "pswpout": 9377661,
+    "oom_kill": 0
+  },
+  "gpus": [
+    "0, NVIDIA GeForce RTX 3090, 887, 24576, 20, 91.18, 51",
+    "1, NVIDIA GeForce RTX 3090, 108, 24576, 22, 32.51, 25"
+  ],
+  "gpuQueryError": null,
+  "computeApps": [],
+  "portsFree": {
+    "8350": true,
+    "8351": true,
+    "8898": true,
+    "8080": true,
+    "8081": true,
+    "8082": true
+  },
+  "thresholds": {
+    "MemAvailableGiB": 32,
+    "SwapFreeGiB": 1,
+    "allTestPortsFree": true,
+    "noForeignComputeApps": true
+  },
+  "gatePass": true
+}

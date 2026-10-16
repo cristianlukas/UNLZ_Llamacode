@@ -583,13 +583,20 @@ El servicio temporal se detuvo; postflight registró el puerto libre, GPU sin pr
 
 ## Seguimiento Q4 Flash-Next y `--trim-stage-weights` — 2026-10-16
 
-Se completó un par A/B de Server Speed v1 por HTTP directo al servidor Strata:
-16 muestras por brazo, ocho categorías cold/warm. Con trim, el decode medio fue
-2,7% menor, el prefill 27,5% menor, TTFT 48,5% mayor y la latencia total 21,4%
-mayor; 13 de 16 respuestas tuvieron hash distinto. Es un solo par, así que no
-establece una diferencia consistente ni calidad. Después, SwapFree quedó en
-0,77 GiB; el umbral preregistrado exige ≥1 GiB para iniciar otra carga. Por eso
-no se enviaron prompts de contexto 262K, no se envió imagen y no arrancó la
-réplica Computer Usage. No se simuló audio. Reanudar los pares 2 y 3 y los
-screens faltantes cuando un preflight nuevo pase; conservar el par 1 sin
-repetirlo. No hay cambios productivos. [Plan, resultados y recibos](../artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-FOLLOWUP/RESULTS.md).
+La continuación completó el par 2 de Server Speed v1; el par 3-A quedó
+bloqueado antes de cargar Strata. Los dos pares completos dieron efectos
+opuestos: en el par 1, trim redujo decode 2,7%, prefill 27,5% y elevó TTFT
+48,5%; en el par 2, elevó decode 7,8% y prefill 6,9%, y redujo TTFT 6,2%.
+Hay 16 muestras por brazo y los hashes de respuesta difieren en 13/16 y 12/16
+respectivamente. No hay una mejora estable demostrada ni evidencia de calidad;
+no se promueve el flag.
+
+El preflight más reciente midió SwapFree 0,795 GiB frente al gate temporal de
+0,95 GiB, con MemAvailable 111,27 GiB, PSI avg10 0, OOM 0, GPUs sin inferencia
+ajena y puertos libres. No se ejecutaron el par 3, contexto 262K, visión ni las
+réplicas Computer Usage; no se simuló audio. Se reutilizaron los recibos Q4
+válidos de coding/agentes, ADV, TaskFlow y tool-eval. Sin cambios productivos,
+build ni tests C++/QML. Reanudar cuando un preflight fresco vuelva a pasar; no
+repetir los pares 1 y 2. [Resultados de la continuación](../artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-RESUME/RESULTS.md),
+[plan](../artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-RESUME/PLAN.md)
+y [recibos de la campaña original](../artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-FOLLOWUP/).

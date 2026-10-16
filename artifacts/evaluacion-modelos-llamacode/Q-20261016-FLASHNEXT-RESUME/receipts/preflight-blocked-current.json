@@ -1,0 +1,50 @@
+{
+  "taskId": "Q-20261016-FLASHNEXT-RESUME",
+  "runId": "blocked-preflight-20261016T2157Z",
+  "atUtc": "2026-10-16T21:55:56.727074+00:00",
+  "memory": {
+    "MemAvailable": 119503511552,
+    "SwapTotal": 8589930496,
+    "SwapFree": 853487616
+  },
+  "swapFreeGiB": 0.7948722839355469,
+  "psi": {
+    "some": {
+      "avg10": 0.0,
+      "avg60": 0.0,
+      "avg300": 0.01,
+      "total": 878564789
+    },
+    "full": {
+      "avg10": 0.0,
+      "avg60": 0.0,
+      "avg300": 0.01,
+      "total": 877155639
+    }
+  },
+  "vmstatCounters": {
+    "oom_kill": 0
+  },
+  "computeApps": [],
+  "gpuQueryError": null,
+  "portsFree": {
+    "8350": true,
+    "8351": true,
+    "8898": true,
+    "8080": true,
+    "8081": true,
+    "8082": true
+  },
+  "matchingProcesses": [],
+  "thresholds": {
+    "MemAvailableGiB": 32,
+    "SwapFreeGiB": 0.95,
+    "runtimeSwapAbortGiB": 0.5,
+    "runtimeAbortSamples": 15
+  },
+  "gatePass": false,
+  "blockingConditions": [
+    "SwapFree below 0.95 GiB continuation startup gate"
+  ],
+  "processScanNote": "No matching llama-server/llama-cli/Strata server executable; earlier broad cmdline search matched the diagnostic shell and was discarded."
+}

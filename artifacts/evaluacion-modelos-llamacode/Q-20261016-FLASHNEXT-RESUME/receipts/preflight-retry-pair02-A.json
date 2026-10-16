@@ -1,0 +1,43 @@
+{
+  "taskId": "Q-20261016-FLASHNEXT-RESUME",
+  "runId": "preflight-retry-pair02-A",
+  "atUtc": "2026-10-16T21:49:17.005760+00:00",
+  "memory": {
+    "MemAvailable": 119389020160,
+    "SwapTotal": 8589930496,
+    "SwapFree": 1043742720,
+    "SwapUsed": 7546187776
+  },
+  "psi": {
+    "some": {
+      "avg10": 0.0,
+      "avg60": 0.0,
+      "avg300": 0.07
+    },
+    "full": {
+      "avg10": 0.0,
+      "avg60": 0.0,
+      "avg300": 0.06
+    }
+  },
+  "vmstatCounters": {
+    "oom_kill": 0
+  },
+  "gpus": [
+    "0, NVIDIA GeForce RTX 3090, 886, 24576, 24, 92.30, 49",
+    "1, NVIDIA GeForce RTX 3090, 108, 24576, 33, 33.77, 29"
+  ],
+  "computeApps": [],
+  "portsFree": {
+    "8350": true,
+    "8351": true,
+    "8898": true,
+    "8080": true,
+    "8081": true,
+    "8082": true
+  },
+  "swapStartThresholdGiB": 0.95,
+  "runtimeSwapAbortGiB": 0.5,
+  "runtimeAbortSamples": 15,
+  "gatePass": true
+}

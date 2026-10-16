@@ -1,0 +1,68 @@
+{
+  "taskId": "Q-20261016-FLASHNEXT-FOLLOWUP",
+  "runId": "pair03-A-order01",
+  "arm": "A",
+  "pair": 3,
+  "orderIndex": 1,
+  "configPath": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-FOLLOWUP/receipts/server-speed/pair03-A-order01/effective-config.json",
+  "configSha256": "9c4beaf3292a581eb4a94f815314e06ea53c4087a5af690f264db181c6a828c9",
+  "preflight": {
+    "atUtc": "2026-10-16T21:52:12.934900+00:00",
+    "mem": {
+      "MemAvailable": 119525085184,
+      "SwapTotal": 8589930496,
+      "SwapFree": 850653184,
+      "SwapUsed": 7739277312
+    },
+    "psi": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 0.06,
+        "avg300": 0.06
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 0.06,
+        "avg300": 0.06
+      }
+    },
+    "oomKillCount": 0,
+    "gpu": [
+      "0, NVIDIA GeForce RTX 3090, 875, 24576, 17, 162.78, 61",
+      "1, NVIDIA GeForce RTX 3090, 108, 24576, 8, 132.38, 46"
+    ]
+  },
+  "warmup": null,
+  "samples": [],
+  "status": "preflight-blocked",
+  "error": "preflight failed: {'MemAvailable': 119525085184, 'SwapTotal': 8589930496, 'SwapFree': 850653184, 'SwapUsed': 7739277312}",
+  "startedAtUtc": "2026-10-16T21:52:12.959297+00:00",
+  "stoppedAtUtc": "2026-10-16T21:52:12.959300+00:00",
+  "portFreeAfterStop": true,
+  "postflight": {
+    "atUtc": "2026-10-16T21:52:12.959301+00:00",
+    "mem": {
+      "MemAvailable": 119516024832,
+      "SwapTotal": 8589930496,
+      "SwapFree": 850653184,
+      "SwapUsed": 7739277312
+    },
+    "psi": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 0.06,
+        "avg300": 0.06
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 0.06,
+        "avg300": 0.06
+      }
+    },
+    "oomKillCount": 0,
+    "gpu": [
+      "0, NVIDIA GeForce RTX 3090, 875, 24576, 17, 162.78, 61",
+      "1, NVIDIA GeForce RTX 3090, 108, 24576, 8, 132.38, 46"
+    ]
+  }
+}
