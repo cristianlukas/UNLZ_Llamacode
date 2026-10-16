@@ -16,3 +16,10 @@
 - vLLM 0.30.0 TP2 pasó el smoke de API y la llamada directa a `record_sum`. LlamaCode usó una copia de perfil aislada a contexto 8.192. HE0 terminó 0/1 después de tres reparaciones: el harness estima ~21.766 tokens para schemas nativos de herramientas, más que `n_ctx`; el protocolo textual alternativo acabó sin salida. Resultado y causa: `receipts/HE0-context8192-resumed/result.json` y `receipts/agent-short-smoke.json`.
 - HE20 y BCB8 quedaron pendientes detrás del gate HE0; ADV y TaskFlow no se lanzaron. No avanzar hasta resolver el desajuste de contexto, pasar el smoke de agente y volver a pasar HE0. No se promovieron perfil ni HarnessSpec.
 - El servidor de inferencia y el daemon aislado se detuvieron al cerrar; puertos 18888/8877 libres y GPU sin carga. Ver el detalle en `RESULTS.md`.
+
+## Retest corregido (2026-10-16)
+
+- El smoke/HE0 a 8.192 se descarta como prueba de calidad: se siguió el contexto heredado y se aumentó sólo para resolver errores de presupuesto, sin calcular antes el coste completo del harness. La observación del usuario fue correcta.
+- El guard nativo evalúa `historial + schemas + 1.024 tokens de reserva`. Con ~21.766 tokens de schemas y ~4.684 del prompt HE0, el umbral observado es ~27.474. Fijar `n_ctx=32.768` para el retest, dejando margen para salida; comprobar el conteo de tokens real y que la caché KV permita al menos una secuencia completa antes de iniciar HE0.
+- Orden al reanudar: (1) preflight fresco; (2) cargar los pesos ya descargados en p2 con `max-model-len=32768` y KV suficiente; (3) confirmar en logs que no se activa `text-tools` y ejecutar un smoke breve del agente con respuesta no vacía; (4) sólo entonces volver a correr HE0; (5) HE20/BCB8 se habilitan sólo si HE0 pasa. No repetir los barridos 4k/5k/6k/7k/8k.
+- El 2026-10-16 se pospuso la carga: servidores de modelos de LlamaCode estaban activos en ambas 3090 (~11–12 GiB por GPU). No detenerlos ni intentar cargar el W8A16 sobre la VRAM restante. Retomar cuando ambas GPUs queden libres.

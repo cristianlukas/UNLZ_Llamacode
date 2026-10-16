@@ -1,14 +1,15 @@
 # Resultados — Q-20261015-DUAL5070TI-VLLM
 
-## Estado final
+## Estado de la primera ejecución (2026-10-15)
 
 **Bloqueada en HE0; sin promoción.** Se completaron los smokes de API y el
 intento de HumanEval 0 en LlamaCode. El backend vLLM respondió bien a una
 llamada de herramienta directa, pero el harness LlamaCode no pudo producir la
 salida de agente: sus schemas nativos de herramientas (~21.766 tokens) no
 entran en el contexto configurado de 8.192. HE0 terminó 0/1 después de tres
-reparaciones y no se iniciaron HE20, BCB8, ADV ni TaskFlow porque la compuerta
-HE0 exige pasar primero.
+reparaciones. Ese 0/1 se debe tratar como fallo de configuración del harness,
+no como una medición de calidad del modelo. HE20, BCB8, ADV y TaskFlow no se
+iniciaron porque la compuerta HE0 exige pasar primero.
 
 ## Almacenamiento y runtime
 
@@ -66,3 +67,23 @@ visión y evaluación de contexto largo no se cubrieron en esta continuación.
 El servidor vLLM y el daemon aislado de LlamaCode se detuvieron. Los puertos
 18888 y 8877 quedaron libres y las dos GPUs quedaron sin carga de inferencia.
 Los intentos y resultados crudos se conservaron en `receipts/`.
+
+## Revisión del diseño y retest pendiente (2026-10-16)
+
+La crítica del usuario es correcta: iniciar con el contexto heredado de 4.096 y
+subirlo gradualmente hasta 8.192 fue un mal diseño para este agente. El log ya
+mostraba que no alcanzaba para los schemas nativos de herramientas, por lo que
+el resultado 0/1 de HE0 no evaluó al modelo como agente.
+
+El guard de LlamaCode usa `historial + schemas + 1.024 tokens de reserva` para
+decidir si cambia a protocolo textual. Los recibos registran ~21.766 tokens de
+schemas y un prompt de HE0 de ~4.684 tokens; eso exige al menos ~27.474 tokens
+antes de margen para salida. El próximo intento se fija en `n_ctx=32.768`, con
+verificación de la capacidad de KV, conteo de tokens real y smoke del agente en
+protocolo nativo antes de repetir únicamente HE0. Si el prompt real o la reserva
+no caben, no se puntúa la suite.
+
+Ese retest todavía no se ejecutó: el 2026-10-16 había servidores de modelos de
+la aplicación usando ambas RTX 3090 y ocupando ~11–12 GiB por tarjeta. Se
+preservaron esos procesos; no se intentó cargar un modelo de 30,84 GB sobre el
+espacio VRAM restante. La prueba queda pendiente hasta que las GPUs estén libres.
