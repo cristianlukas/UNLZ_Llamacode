@@ -1,0 +1,35 @@
+{
+  "task_id": "Q-20261016-LOCAL-SEARCH-REVIEW",
+  "recorded_at_utc": "2026-10-16T23:14:18Z",
+  "repository_head_before_task_edits": "f18cf53cd534bb4acfb5fb4a90239d1c0c645c5c",
+  "command": "./scripts/tests-linux.sh Release",
+  "working_tree": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode",
+  "build_mirror": "/home/cristian/.cache/llamacode/source",
+  "build_directory": "/home/cristian/.cache/llamacode/build_tests_linux",
+  "exit_code": 0,
+  "ctest": {
+    "passed": 90,
+    "failed": 0,
+    "total": 90,
+    "duration_seconds": 8.47
+  },
+  "focused_test": {
+    "target": "test_agent_tools",
+    "qt_test_totals": {
+      "passed": 50,
+      "failed": 0,
+      "skipped": 1
+    },
+    "new_case": "AgentToolsTests::webSearch_usesConfiguredSearxngJsonApi",
+    "new_case_result": "PASS",
+    "new_case_network": "loopback only; one request to QTcpServer fixture"
+  },
+  "source_sha256": {
+    "tests/test_agent_tools.cpp": "36fafbde26296431737871e49f231d28a6c083e8f0c51be4dc4faf82324ae6ae"
+  },
+  "raw_log": {
+    "path": "receipts/LastTest.log",
+    "sha256": "a0b5099681a73820f6264d729cedfc885448541f4c54c8f6bb13ec8af41ab794"
+  },
+  "scope": "No model inference, GPU use, downloads, live external search-provider requests, or production profile changes."
+}

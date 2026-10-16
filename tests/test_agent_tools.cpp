@@ -19,6 +19,8 @@
 #include <QProcess>
 #include <QTcpServer>
 #include <QTcpSocket>
+#include <QUrl>
+#include <QUrlQuery>
 #include "core/agent/AgentToolRunner.h"
 #include "core/agent/AgentLifecycle.h"
 #include "core/agent/AgentEventLog.h"
@@ -56,6 +58,66 @@ public:
             connect(socket, &QTcpSocket::disconnected, socket, &QObject::deleteLater);
         });
     }
+};
+
+class SearxngStub : public QTcpServer
+{
+public:
+    explicit SearxngStub(QObject *parent = nullptr) : QTcpServer(parent)
+    {
+        connect(this, &QTcpServer::newConnection, this, [this]() {
+            QTcpSocket *socket = nextPendingConnection();
+            socket->setProperty("requestBuffer", QByteArray());
+            connect(socket, &QTcpSocket::readyRead, socket, [this, socket]() {
+                QByteArray request = socket->property("requestBuffer").toByteArray();
+                request += socket->readAll();
+                const qsizetype headerEnd = request.indexOf("\r\n\r\n");
+                if (headerEnd < 0) {
+                    socket->setProperty("requestBuffer", request);
+                    return;
+                }
+                requests.append(QString::fromLatin1(request.left(request.indexOf("\r\n"))));
+                const QByteArray body = QByteArrayLiteral(
+                    "{\"results\":[{\"title\":\"Local result\","
+                    "\"url\":\"https://docs.example.test/search\","
+                    "\"content\":\"Fixture result content\"}]}\n");
+                const QByteArray response = QByteArrayLiteral(
+                    "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n"
+                    "Connection: close\r\nContent-Length: ")
+                    + QByteArray::number(body.size()) + QByteArrayLiteral("\r\n\r\n") + body;
+                socket->write(response);
+                socket->disconnectFromHost();
+            });
+            connect(socket, &QTcpSocket::disconnected, socket, &QObject::deleteLater);
+        });
+    }
+
+    QStringList requests;
+};
+
+class ScopedEnvironmentVariable
+{
+public:
+    explicit ScopedEnvironmentVariable(const QByteArray &name)
+        : m_name(name),
+          m_wasSet(qEnvironmentVariableIsSet(name.constData())),
+          m_previous(qgetenv(name.constData()))
+    {
+    }
+
+    ~ScopedEnvironmentVariable()
+    {
+        if (m_wasSet) qputenv(m_name.constData(), m_previous);
+        else qunsetenv(m_name.constData());
+    }
+
+    ScopedEnvironmentVariable(const ScopedEnvironmentVariable &) = delete;
+    ScopedEnvironmentVariable &operator=(const ScopedEnvironmentVariable &) = delete;
+
+private:
+    QByteArray m_name;
+    bool m_wasSet;
+    QByteArray m_previous;
 };
 
 class AgentToolsTests : public QObject
@@ -112,6 +174,7 @@ private slots:
     void webFetch_forcedUnavailableProviderFailsDeterministically();
     void webFetch_camofoxProviderE2E();
     void webFetch_rateLimitsPerHost();
+    void webSearch_usesConfiguredSearxngJsonApi();
     void auxiliaryEndpoint_prefersValidSidecarAndFallsBack();
 
 private:
@@ -1117,6 +1180,37 @@ void AgentToolsTests::webFetch_rateLimitsPerHost()
     QVERIFY(!m_runner->consumeWebRateLimit(QStringLiteral("example.com"), 2000, &error));
     QVERIFY(error.contains(QStringLiteral("rate limit")));
     QVERIFY(m_runner->consumeWebRateLimit(QStringLiteral("example.com"), 61031, &error));
+}
+
+void AgentToolsTests::webSearch_usesConfiguredSearxngJsonApi()
+{
+    SearxngStub server;
+    QVERIFY(server.listen(QHostAddress::LocalHost));
+    ScopedEnvironmentVariable restoreSearxngUrl(QByteArrayLiteral("LLAMACODE_SEARXNG_URL"));
+    QVERIFY(qputenv("LLAMACODE_SEARXNG_URL",
+                    QStringLiteral("http://127.0.0.1:%1").arg(server.serverPort()).toUtf8()));
+
+    const QVariantMap result = call(
+        QStringLiteral("web_search"),
+        QJsonObject{{QStringLiteral("query"), QStringLiteral("C++ local search")},
+                    {QStringLiteral("count"), 1}});
+
+    QVERIFY(result.value(QStringLiteral("ok")).toBool());
+    const QString text = result.value(QStringLiteral("result")).toString();
+    QVERIFY(text.contains(QStringLiteral("Local result")));
+    QVERIFY(text.contains(QStringLiteral("https://docs.example.test/search")));
+    QVERIFY(text.contains(QStringLiteral("Fixture result content")));
+    QCOMPARE(server.requests.size(), 1);
+
+    const QString requestLine = server.requests.constFirst();
+    const QStringList parts = requestLine.split(QLatin1Char(' '));
+    QCOMPARE(parts.size(), 3);
+    const QUrl requestUrl(QStringLiteral("http://127.0.0.1")
+                          + parts.at(1));
+    QCOMPARE(requestUrl.path(), QStringLiteral("/search"));
+    const QUrlQuery query(requestUrl);
+    QCOMPARE(query.queryItemValue(QStringLiteral("q")), QStringLiteral("C++ local search"));
+    QCOMPARE(query.queryItemValue(QStringLiteral("format")), QStringLiteral("json"));
 }
 
 QTEST_MAIN(AgentToolsTests)
