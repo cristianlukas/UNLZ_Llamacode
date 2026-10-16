@@ -1,0 +1,115 @@
+{
+  "status": 200,
+  "elapsedSec": 0.7691161632537842,
+  "request": {
+    "model": "qwen3.8-27b",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Llamá record_sum con a=2 y b=2. No respondas con texto."
+      }
+    ],
+    "tools": [
+      {
+        "type": "function",
+        "function": {
+          "name": "record_sum",
+          "description": "Registra dos enteros para sumar",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "a": {
+                "type": "integer"
+              },
+              "b": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "a",
+              "b"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    ],
+    "tool_choice": "auto",
+    "parallel_tool_calls": true,
+    "temperature": 0.6,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0,
+    "repeat_penalty": 1.0,
+    "presence_penalty": 0.0,
+    "seed": 4242,
+    "max_tokens": 96,
+    "reasoning_budget": 0,
+    "chat_template_kwargs": {
+      "enable_thinking": false
+    },
+    "stream": false
+  },
+  "response": {
+    "id": "chatcmpl-a52f6a477e407404",
+    "object": "chat.completion",
+    "created": 1792182194,
+    "model": "qwen3.8-27b",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": null,
+          "refusal": null,
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": [
+            {
+              "id": "chatcmpl-tool-9ec5ad1ca5272fe6",
+              "type": "function",
+              "function": {
+                "name": "record_sum",
+                "arguments": "{\"a\": 2, \"b\": 2}"
+              }
+            }
+          ],
+          "reasoning": null
+        },
+        "logprobs": null,
+        "finish_reason": "tool_calls",
+        "stop_reason": null,
+        "token_ids": null,
+        "routed_experts": null
+      }
+    ],
+    "service_tier": null,
+    "system_fingerprint": "vllm-0.30.0-pp2-01ee8f84",
+    "usage": {
+      "prompt_tokens": 510,
+      "total_tokens": 547,
+      "completion_tokens": 37,
+      "prompt_tokens_details": null,
+      "completion_tokens_details": {
+        "reasoning_tokens": 0
+      }
+    },
+    "prompt_logprobs": null,
+    "prompt_token_ids": null,
+    "prompt_text": null,
+    "kv_transfer_params": null,
+    "ec_transfer_params": null,
+    "metrics": null
+  },
+  "parsedToolCalls": [
+    {
+      "name": "record_sum",
+      "arguments": {
+        "a": 2,
+        "b": 2
+      }
+    }
+  ],
+  "passed": true
+}

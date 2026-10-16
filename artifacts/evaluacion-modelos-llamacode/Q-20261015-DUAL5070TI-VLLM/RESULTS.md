@@ -1,5 +1,27 @@
 # Resultados — Q-20261015-DUAL5070TI-VLLM
 
+## Estado actual (retest 2026-10-16)
+
+**Screening cerrado sin promoción: HE0 no pasa a contexto 32.768.** Esta
+prueba corrige el defecto del intento anterior: el contexto alcanza para el
+prompt y los schemas nativos, y la KV permite una secuencia completa. Aun así,
+LlamaCode no creó el archivo solicitado: el stream del agente repitió `duct`
+hasta que el detector `stream_repetition` detuvo la generación. El
+control directo del mismo código también repitió `duct` con el muestreo
+recomendado. No lo atribuyo a falta de contexto. Los controles directos de
+aritmética y de una llamada de herramienta simple sí pasaron, así que el fallo
+queda acotado a generación de código con este checkpoint/configuración.
+
+HE0 terminó **0/1 en 154,435 s**, sin timeout, sin archivos y sin llamadas de
+herramienta, tras tres reparaciones. El smoke previo de respuesta `OK` era
+demasiado superficial para medir coding; se canceló y no se cuenta como prueba
+de calidad. Para obtener una comprobación útil se lanzó la tarea HE0 completa
+como diagnóstico. Como HE0 falló, **HE20 y BCB8 no se ejecutaron**. No se
+promovieron el perfil ni HarnessSpec. El
+resultado 0/1 previo a 8.192 sigue descartado como medición de calidad; el
+screening actual sí llegó a la tarea con contexto suficiente y es un fallo
+válido de esta configuración.
+
 ## Estado de la primera ejecución (2026-10-15)
 
 **Bloqueada en HE0; sin promoción.** Se completaron los smokes de API y el
@@ -49,26 +71,25 @@ perfiles productivos ni el código de LlamaCode.
 
 ## Por qué las demás etapas no arrancaron
 
-La cobertura final del harness registra HE0 como `blocked`, con HE20 y BCB
-`pending`. El backend de inferencia y su API están operativos; el bloqueo está
-en el tamaño del contexto que LlamaCode necesita para las definiciones de
-herramientas. Subir sólo `n_ctx` puede aumentar el uso de KV cache en estas dos
-RTX 3090, así que antes de retomar se debe reducir/compactar el schema del
-harness o probar una configuración que quepa completa y pase el smoke. Después
-se repite **sólo HE0**; HE20 y BCB8 arrancan únicamente si ese gate pasa.
+En la primera ejecución, HE0 quedó bloqueado por contexto 8.192 insuficiente.
+En el retest corregido la solicitud sí cupo, pero HE0 falló por salida repetida
+y ausencia del archivo/calls esperados. La cobertura marca HE20 y BCB como
+`pending`; no se iniciaron porque la compuerta HE0 exige éxito. Un nuevo intento
+de coding requiere corregir y verificar la configuración/checkpoint con la
+tarea completa; no basta con subir `n_ctx`.
 
 No se repitió la task bank privada de `capy-flash` (4,28 h): ese runtime sigue
 requiriendo GPUs `sm_120a`, que estas RTX 3090 `sm_86` no tienen. No se cambió
 ninguna recomendación de perfil ni HarnessSpec. Computer Usage E2E, audio,
 visión y evaluación de contexto largo no se cubrieron en esta continuación.
 
-## Cierre operativo
+## Cierre operativo de la primera ejecución
 
 El servidor vLLM y el daemon aislado de LlamaCode se detuvieron. Los puertos
 18888 y 8877 quedaron libres y las dos GPUs quedaron sin carga de inferencia.
 Los intentos y resultados crudos se conservaron en `receipts/`.
 
-## Revisión del diseño y retest pendiente (2026-10-16)
+## Retest corregido y evidencias (2026-10-16)
 
 La crítica del usuario es correcta: iniciar con el contexto heredado de 4.096 y
 subirlo gradualmente hasta 8.192 fue un mal diseño para este agente. El log ya
@@ -83,11 +104,55 @@ verificación de la capacidad de KV, conteo de tokens real y smoke del agente en
 protocolo nativo antes de repetir únicamente HE0. Si el prompt real o la reserva
 no caben, no se puntúa la suite.
 
-El usuario indicó el 2026-10-16 que las GPU estaban libres, pero el preflight
-fresco volvió a encontrar tres procesos activos de `llama-server` ocupando
-ambas RTX 3090: Qwen3.5-9B en los puertos 8033/8081 y Gemma-4-12B en 8083.
-Cada tarjeta tenía 11–12 GiB ocupados y seguía reportando 32–46% de uso; los
-procesos llevaban entre 8 y 17 horas activos. Se conservaron porque pertenecen
-a la sesión de LlamaCode. No se inició vLLM ni se midió KV, smoke 32k o HE0.
-El retest queda bloqueado hasta que esos servidores se detengan y ambas GPU
-queden disponibles. Evidencia: `receipts/preflight-20261016-context-retest-blocked.json`.
+El usuario autorizó detener los tres `llama-server` que ocupaban ambas RTX
+3090 sin trabajo en sus `/slots`: PID 2476143 (Qwen3.5-9B, 8033), PID 2476814
+(Qwen3.5-9B, 8081) y PID 3381124 (Gemma-4-12B, 8083). Los tres terminaron con
+SIGINT. Después se cargó el modelo fijado en `receipts/source-lock.json` con
+vLLM 0.30.0 TP2. La primera carga falló antes de cargar pesos por la ruta IPC
+demasiado larga; la segunda fue rechazada por el guard de VRAM a `GPU_UTIL`
+0,95; la tercera cargó con `GPU_UTIL=0,93`.
+
+- **Capacidad:** `max_model_len=32768`; KV real 37.159 tokens; concurrencia
+  máxima 1,13 para una solicitud de 32.768. `/health` y `/v1/models`
+  respondieron 200. Fuente: `runtime/logs/vllm-context32768-startup-2.log` en
+  la partición secundaria. El perfil cloud aislado de LlamaCode informó
+  contexto 32.768.
+- **Smoke de agente:** se envió `Responde exactamente OK, sin usar herramientas.`
+  y se canceló tras 414,6 s de generación sin texto. No se usa como puntaje ni
+  como prueba de coding; evidencia en `receipts/agent-short-smoke-32k.json`.
+- **HE0 de LlamaCode:** con contexto 32.768 y `thinkingEnabled=false`, el
+  stream terminó en `stream_repetition` con `ductduct…`; cero llamadas,
+  cero archivos y tres reparaciones. El harness no agotó el timeout y
+  `solution_HumanEval_0.py` faltó. Evidencia completa en
+  `receipts/HE0-context32768-thinking-off-diagnostic/result.json`.
+- **Control directo de coding:** se envió HumanEval/0 con la función, los
+  criterios de aceptación y muestreo `temp=0,6`, `top_p=0,95`, `top_k=20`,
+  `min_p=0`, penalizaciones 1/0 y reasoning desactivado. Produjo 512 tokens
+  `duct` repetidos (`finish_reason=length`) en 28,4 s. Recibo:
+  `receipts/HE0-context32768-direct-control.json`.
+- **Controles API:** el mismo servicio contestó `4` a `2+2` en 0,263 s y
+  llamó `record_sum(a=2,b=2)` correctamente en 0,769 s. Recibos:
+  `receipts/api-text-control-context32768.json` y
+  `receipts/api-tool-control-context32768.json`. En el smoke corto de
+  herramienta, DFlash2 aceptó 31 de 42 tokens propuestos; es una sola muestra,
+  no una medición de rendimiento.
+
+La conclusión queda acotada: **el transporte vLLM y una llamada simple de
+herramienta funcionan; la generación de código de este checkpoint/configuración
+degenera tanto por el agente LlamaCode como en generación directa.** La suite
+no demuestra por sí sola cuál es la causa interna entre checkpoint, template o
+decodificación. No sirve para coding/agentes en este estado. No se extrapola a
+Computer Usage, visión, audio, contexto largo ni al runtime NInfer.
+
+## Cierre operativo del retest
+
+Se detuvieron el servidor vLLM de esta tarea y el daemon aislado de LlamaCode.
+Quedaron libres los puertos 18888, 8877, 8033, 8081 y 8083; no quedaron
+procesos compute de inferencia. Las GPUs mostraron 829/108 MiB ocupados,
+108 GiB de RAM disponible. Se conservaron los pesos y cachés en
+`/media/cristian/Disco local`; se movió el clon del fork a
+`/media/cristian/Disco local/Models/LlamaCodeEval/Q-20261015-DUAL5070TI-VLLM/source/`
+y se actualizó el launcher. La raíz quedó con 4,5 GiB libres, p2 con 84 GiB y
+el volumen del checkout con 143 GiB. Se mantuvieron las entradas del directorio
+temporal compartido porque no se podía asignar su propiedad a esta corrida.
+Recibo: `receipts/postflight-20261016-context32768.json`.

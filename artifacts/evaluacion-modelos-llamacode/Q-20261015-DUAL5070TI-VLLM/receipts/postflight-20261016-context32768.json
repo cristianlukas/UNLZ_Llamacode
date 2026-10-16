@@ -1,0 +1,135 @@
+{
+  "taskId": "Q-20261015-DUAL5070TI-VLLM",
+  "closedAtUtc": "2026-10-16T20:24:52Z",
+  "lockToken": "1d9b4f90-7238-4c41-a817-9fcafbe4f624",
+  "cleanup": {
+    "idleUserServersStoppedBySigint": [
+      {
+        "pid": 2476143,
+        "model": "Qwen3.5-9B",
+        "port": 8033
+      },
+      {
+        "pid": 2476814,
+        "model": "Qwen3.5-9B",
+        "port": 8081
+      },
+      {
+        "pid": 3381124,
+        "model": "Gemma-4-12B",
+        "port": 8083
+      }
+    ],
+    "taskVllmProcessPid": 119241,
+    "taskVllmSessionExitCode": 130,
+    "llamacodeControlDaemonSessionExitCode": 1,
+    "taskPortsFree": [
+      18888,
+      8877
+    ],
+    "previousServerPortsFree": [
+      8033,
+      8081,
+      8083
+    ],
+    "computeAppsAfterShutdown": [],
+    "gpuAfterShutdown": [
+      {
+        "index": 0,
+        "memoryUsedMiB": 829,
+        "memoryFreeMiB": 23293,
+        "utilizationPct": 30,
+        "temperatureC": 49
+      },
+      {
+        "index": 1,
+        "memoryUsedMiB": 108,
+        "memoryFreeMiB": 24016,
+        "utilizationPct": 58,
+        "temperatureC": 31
+      }
+    ],
+    "ramAvailableGiB": 108,
+    "swapUsedGiB": 5.5
+  },
+  "storage": {
+    "rootFreeGiB": 4.5,
+    "secondaryModelPartitionFreeGiB": 84,
+    "checkoutVolumeFreeGiB": 143,
+    "modelWeightsAndInferenceCachesPreserved": true,
+    "forkCloneGitCommit": "2b33255f2f0ce4be123e8c283ec314a96d140b65",
+    "forkCloneMovedFrom": "/tmp/llamacode-Q-20261015-DUAL5070TI-VLLM/dual-gpus-vllm",
+    "forkCloneMovedTo": "/media/cristian/Disco local/Models/LlamaCodeEval/Q-20261015-DUAL5070TI-VLLM/source/dual-gpus-vllm",
+    "launcherUpdated": "artifacts/evaluacion-modelos-llamacode/Q-20261015-DUAL5070TI-VLLM/receipts/start-vllm-context32768.sh",
+    "pythonRuntimeInTmpRetainedBecauseCheckoutVenvDependsOnIt": true,
+    "sharedTmpdirPreservedBecauseItContainsUnownedEntries": true
+  },
+  "capacity": {
+    "model": "qwen3.8-27b",
+    "maxModelLenTokens": 32768,
+    "kvCacheTokens": 37159,
+    "maxConcurrencyAt32768": 1.13,
+    "startupLog": "/media/cristian/Disco local/Models/LlamaCodeEval/Q-20261015-DUAL5070TI-VLLM/runtime/logs/vllm-context32768-startup-2.log",
+    "startupErrorsBeforeSuccessfulLoad": [
+      "first launch stopped before model load: Unix IPC path exceeded 107 characters",
+      "second launch stopped before model load: GPU_UTIL=0.95 guard narrowly exceeded currently free VRAM; successful launch used GPU_UTIL=0.93"
+    ]
+  },
+  "tests": {
+    "agentShortSmoke": {
+      "result": "cancelled after no assistant text; not counted as quality score",
+      "prompt": "Responde exactamente OK, sin usar herramientas.",
+      "assistantGenerationElapsedMs": 414631,
+      "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261015-DUAL5070TI-VLLM/receipts/agent-short-smoke-32k.json"
+    },
+    "HE0": {
+      "contextTokens": 32768,
+      "thinkingEnabled": false,
+      "elapsedSec": 154.435,
+      "score": "0/1",
+      "repairAttempts": 3,
+      "timedOut": false,
+      "toolCalls": 0,
+      "filesCreated": 0,
+      "failure": "stream_repetition: assistant returned ductduct... and stopped after repeating the block; acceptance then reported the required solution file missing",
+      "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261015-DUAL5070TI-VLLM/receipts/HE0-context32768-thinking-off-diagnostic/result.json"
+    },
+    "directCodingControl": {
+      "sampling": {
+        "temperature": 0.6,
+        "topP": 0.95,
+        "topK": 20,
+        "minP": 0.0,
+        "repeatPenalty": 1.0,
+        "presencePenalty": 0.0
+      },
+      "reasoningBudget": 0,
+      "completionTokens": 512,
+      "finishReason": "length",
+      "content": "duct repeated to token limit",
+      "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261015-DUAL5070TI-VLLM/receipts/HE0-context32768-direct-control.json"
+    },
+    "directArithmeticControl": {
+      "passed": true,
+      "answer": "4",
+      "elapsedSec": 0.263,
+      "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261015-DUAL5070TI-VLLM/receipts/api-text-control-context32768.json"
+    },
+    "directToolControl": {
+      "passed": true,
+      "tool": "record_sum",
+      "arguments": {
+        "a": 2,
+        "b": 2
+      },
+      "elapsedSec": 0.769,
+      "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261015-DUAL5070TI-VLLM/receipts/api-tool-control-context32768.json"
+    }
+  },
+  "gateDecision": {
+    "HE0": "failed",
+    "HE20": "not run (HE0 gate failed)",
+    "BCB8": "not run (HE0 gate failed)",
+    "promotion": "none"
+  }
+}

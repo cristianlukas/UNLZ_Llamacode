@@ -1,0 +1,11 @@
+{
+  "event": "diagnostic_reasoning_override",
+  "requested": false,
+  "setpropResult": {
+    "ok": true,
+    "reqId": "f1627b90-5fbe-4671-a472-51785c230dbf"
+  },
+  "effectiveAgentThinkingEnabled": false,
+  "reason": "Unlimited reasoning produced no answer after >9 minutes in the isolated 32k agent smoke; evaluate HE0 completion with reasoning disabled as a diagnostic.",
+  "scope": "task-isolated XDG runtime only"
+}

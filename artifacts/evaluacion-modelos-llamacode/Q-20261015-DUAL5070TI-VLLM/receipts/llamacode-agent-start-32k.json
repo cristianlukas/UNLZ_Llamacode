@@ -1,0 +1,43 @@
+{
+  "launchProfileId": "60d6902d-f8c2-481a-84c1-1ef52fa169b4",
+  "profileContext": 32768,
+  "events": [
+    {
+      "event": "approval",
+      "result": {
+        "ok": true,
+        "reqId": "490742b7-7664-4fe1-b893-cf97c2abcb1c"
+      }
+    },
+    {
+      "event": "thinking",
+      "result": {
+        "ok": true,
+        "reqId": "e78ca8cb-c594-4ac9-bae9-a13bfd60beac"
+      }
+    },
+    {
+      "event": "active_agent_profile",
+      "result": {
+        "ok": true,
+        "reqId": "3ae178d3-6d4f-42ef-ac1e-b817b55cec2b"
+      }
+    },
+    {
+      "event": "start",
+      "result": null
+    },
+    {
+      "event": "poll",
+      "serverState": "running",
+      "serverReady": false,
+      "agentRunning": true,
+      "agentStarting": false
+    }
+  ],
+  "serverState": "running",
+  "serverReady": false,
+  "agentRunning": true,
+  "agentStarting": false,
+  "agentLog": "[2026-10-16 17:07:35.268][agent/lifecycle] Cloud local: endpoint loopback sin API key (http://127.0.0.1:18888).\n[2026-10-16 17:07:35.280][agent/backend] [permisos: 0 regla(s) cargadas]\n[2026-10-16 17:07:35.280][agent/backend] [permisos: 0 regla(s) cargadas]\n[2026-10-16 17:07:35.281][agent/backend] [proyecto no definido o inseguro (): usando workspace aislado /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-DUAL5070TI-VLLM/runtime/xdg-data/LlamaCode/LlamaCode/workspace]\n[2026-10-16 17:07:35.284][agent/backend] [LlamaAgent backend listo · cwd: /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-DUAL5070TI-VLLM/runtime/xdg-data/LlamaCode/LlamaCode/workspace]\n[2026-10-16 17:07:35.285][agent/backend] [mcp] 0 tool(s) descubiertas\n"
+}

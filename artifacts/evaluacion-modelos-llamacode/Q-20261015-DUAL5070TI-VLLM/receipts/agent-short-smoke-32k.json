@@ -1,0 +1,96 @@
+{
+  "startedAtUtc": "2026-10-16T20:08:15.054933+00:00",
+  "finishedAtUtc": "2026-10-16T20:17:17.306847+00:00",
+  "elapsedSec": 542.1725106580416,
+  "prompt": "Responde exactamente OK, sin usar herramientas.",
+  "expectedContext": 32768,
+  "agentContextLimit": 32768,
+  "serverHealth": {
+    "statusCode": 200,
+    "body": ""
+  },
+  "model": {
+    "id": "qwen3.8-27b",
+    "object": "model",
+    "created": 1792181295,
+    "owned_by": "vllm",
+    "root": "/media/cristian/Disco local/Models/LlamaCodeEval/Q-20261015-DUAL5070TI-VLLM/models/target",
+    "parent": null,
+    "max_model_len": 32768,
+    "permission": [
+      {
+        "id": "modelperm-ab98da0d8ebeafbe",
+        "object": "model_permission",
+        "created": 1792181295,
+        "allow_create_engine": false,
+        "allow_sampling": true,
+        "allow_logprobs": true,
+        "allow_search_indices": false,
+        "allow_view": true,
+        "allow_fine_tuning": false,
+        "organization": "*",
+        "group": null,
+        "is_blocking": false
+      }
+    ]
+  },
+  "messageCountBefore": 2,
+  "messageCountAfter": 5,
+  "messages": [
+    {
+      "completedAt": 1792181295111,
+      "content": "Responde exactamente OK, sin usar herramientas.",
+      "createdAt": 1792181295111,
+      "elapsedMs": 0,
+      "role": "user",
+      "tokens": 12,
+      "tps": 0,
+      "typing": false
+    },
+    {
+      "completedAt": 1792181836229,
+      "content": "",
+      "createdAt": 1792181295111,
+      "elapsedMs": 414631,
+      "genStartMs": 1792181421598,
+      "role": "assistant",
+      "tokens": 0,
+      "tps": 0,
+      "typing": false
+    },
+    {
+      "completedAt": 1792181836234,
+      "content": "[turno cancelado por el usuario]",
+      "createdAt": 1792181836234,
+      "elapsedMs": 0,
+      "role": "assistant",
+      "tokens": 8,
+      "tps": 0,
+      "typing": false
+    }
+  ],
+  "assistantMessages": [
+    {
+      "completedAt": 1792181836229,
+      "content": "",
+      "createdAt": 1792181295111,
+      "elapsedMs": 414631,
+      "genStartMs": 1792181421598,
+      "role": "assistant",
+      "tokens": 0,
+      "tps": 0,
+      "typing": false
+    },
+    {
+      "completedAt": 1792181836234,
+      "content": "[turno cancelado por el usuario]",
+      "createdAt": 1792181836234,
+      "elapsedMs": 0,
+      "role": "assistant",
+      "tokens": 8,
+      "tps": 0,
+      "typing": false
+    }
+  ],
+  "agentLog": "[2026-10-16 17:07:35.268][agent/lifecycle] Cloud local: endpoint loopback sin API key (http://127.0.0.1:18888).\n[2026-10-16 17:07:35.280][agent/backend] [permisos: 0 regla(s) cargadas]\n[2026-10-16 17:07:35.280][agent/backend] [permisos: 0 regla(s) cargadas]\n[2026-10-16 17:07:35.281][agent/backend] [proyecto no definido o inseguro (): usando workspace aislado /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-DUAL5070TI-VLLM/runtime/xdg-data/LlamaCode/LlamaCode/workspace]\n[2026-10-16 17:07:35.284][agent/backend] [LlamaAgent backend listo · cwd: /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-DUAL5070TI-VLLM/runtime/xdg-data/LlamaCode/LlamaCode/workspace]\n[2026-10-16 17:07:35.285][agent/backend] [mcp] 0 tool(s) descubiertas\n[2026-10-16 17:08:15.085][agent/backend] [permisos: 0 regla(s) cargadas]\n[2026-10-16 17:08:15.093][agent/input] > Responde exactamente OK, sin usar herramientas.\n[2026-10-16 17:08:15.130][agent/backend] [preflight: contexto inicial preparado]\n[2026-10-16 17:08:15.134][agent/backend] [compactando contexto vía modelo: resumiendo 3 mensajes…]\n[2026-10-16 17:10:09.510][agent/backend] [compactación poda: 3 msgs · ~2829→2661 tok (n_ctx=32768)]\n[2026-10-16 17:10:09.516][agent/backend] [turn] requesting completion (iter=1, msgs=4, stream)\n[2026-10-16 17:17:16.234][agent/backend] [turn] cancelled (finalTextChars=32)\n"
+}
