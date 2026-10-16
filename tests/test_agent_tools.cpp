@@ -899,6 +899,18 @@ void AgentToolsTests::desktopNewTools_validateBeforeTouchingTheDesktop()
     QVERIFY(!k.value("ok").toBool());
     QVERIFY(k.value("result").toString().contains(QStringLiteral("NO tecleé")));
 
+    // El foco se fue de la ventana elegida (el usuario aprobó la tool en
+    // LlamaCode): se re-enfoca la elegida en vez de negarse. Si ya no existe, se
+    // niega con un motivo concreto y NO teclea en lo que esté adelante.
+    if (!DesktopAutomationBackend::foregroundWindowId().isEmpty()) {
+        m_runner->setAgentFocusedWindowForTest(QStringLiteral("zzznothex"));
+        QVariantMap gone = call("desktop_type", {{"text", "no debería escribirse"}});
+        QVERIFY(!gone.value("ok").toBool());
+        QVERIFY2(gone.value("result").toString().contains(QStringLiteral("ya no se puede enfocar")),
+                 qPrintable(gone.value("result").toString()));
+        m_runner->setAgentFocusedWindowForTest(QString());
+    }
+
     QVariantMap bad = call("desktop_clipboard", {{"op", "borrar"}});
     QVERIFY(!bad.value("ok").toBool());
     QVERIFY(bad.value("result").toString().contains(QStringLiteral("op inválida")));

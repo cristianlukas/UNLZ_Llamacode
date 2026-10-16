@@ -354,6 +354,8 @@ public:
         m_transcriptMessages = m;
     }
     QJsonArray apiMessagesForTest() const { return m_apiMessages; }
+    QString pendingPhaseControlForTest() const { return m_pendingPhaseControl; }
+    void setAwaitingApprovalForTest(const QString &id) { m_awaitId = id; }
     QJsonArray transcriptMessagesForTest() const { return m_transcriptMessages; }
     int pruneWorkingContextForTest() { return pruneWorkingContext(); }
     bool planCompactionForTest(int &head, int &keepFrom) const {
@@ -589,6 +591,7 @@ private:
     void postCompletionRequest(QJsonObject payload, CompletionMode mode);
     QJsonObject buildTextToolPayload(const QJsonObject &nativePayload) const;
     void processPendingCalls();     // procesa m_pendingCalls (approval/exec)
+    void flushPendingPhaseControl();
     void finishTurn(const QString &finalText, bool persistFinalToApi = true,
                     const QString &terminalStatus = QStringLiteral("completed"));
     void appendAssistantText(const QString &text);
@@ -805,6 +808,7 @@ private:
     QHash<QString, QString> m_workerCapabilityCalls; // native call id → broker request id
     QHash<QString, QString> m_workerCapabilityNames;
     QString m_approvalMode = QStringLiteral("ask");
+    QString m_pendingPhaseControl;        // [FASE=...] diferido hasta que no haya tool en vuelo
     // Computer use: "" = preguntar cuando haga falta; "background" / "foreground"
     // = lo que eligió el usuario (vale para el resto de la sesión de la app).
     QString m_computerUseMode;

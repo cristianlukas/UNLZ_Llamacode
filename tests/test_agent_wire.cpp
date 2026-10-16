@@ -70,6 +70,7 @@ private slots:
     void compactionPreservesImmutableTranscript();
     void compactionMetricsSeparateFallbacksFromPruning();
     void deterministicPruningDeduplicatesOnlyWorkingContext();
+    void phaseMarker_onlyOnPlanChangeAndNeverMidToolCall();
     void failureSpiralDetectsEquivalentErrorsAndResetsOnProgress();
     void toolCallSignatureNormalizesEquivalentJson();
     void toolWatchdogIsTypeAware();
@@ -102,6 +103,46 @@ void AgentWireTests::stablePhasePrefix_keepsSystemPromptInvariant()
     QCOMPARE(after, before);
     QCOMPARE(be.toolSchemasForTest().size(), toolsBefore);
     QVERIFY(after.contains(QStringLiteral("PROTOCOLO DE FASES")));
+}
+
+// Corrida real: el usuario tildó "aprobar todo" en el diálogo de desktop_focus
+// (ask → auto) y [FASE=EJECUCION] quedó entre el TOOL_CALL y su TOOL_RESULT;
+// el modelo se pasó ~75 s razonando sin responder.
+void AgentWireTests::phaseMarker_onlyOnPlanChangeAndNeverMidToolCall()
+{
+    LlamaAgentBackend be;
+    be.setStablePhasePrefix(true);
+    be.setApprovalPolicy(QStringLiteral("ask"));
+    be.setApiMessagesForTest(QJsonArray{
+        QJsonObject{{"role", "system"}, {"content", "sys"}},
+        QJsonObject{{"role", "user"}, {"content", "abrí la calculadora"}}});
+    auto countMarkers = [&be] {
+        int n = 0;
+        for (const QJsonValue &v : be.apiMessagesForTest())
+            if (v.toObject().value("content").toString().startsWith(QStringLiteral("[FASE=")))
+                ++n;
+        return n;
+    };
+
+    // ask/auto/super son la misma fase: ningún marcador.
+    be.setApprovalPolicy(QStringLiteral("auto"));
+    be.setApprovalPolicy(QStringLiteral("super"));
+    be.setApprovalPolicy(QStringLiteral("ask"));
+    QCOMPARE(countMarkers(), 0);
+    QVERIFY(be.pendingPhaseControlForTest().isEmpty());
+
+    // Cambio real de fase sin tool en vuelo: se agrega en el acto.
+    be.setApprovalPolicy(QStringLiteral("plan"));
+    QCOMPARE(countMarkers(), 1);
+    QVERIFY(be.apiMessagesForTest().last().toObject().value("content").toString()
+                .startsWith(QStringLiteral("[FASE=PLAN]")));
+
+    // Con una tool esperando aprobación, queda diferido (no se mete en el medio).
+    be.setAwaitingApprovalForTest(QStringLiteral("call_1"));
+    be.setApprovalPolicy(QStringLiteral("auto"));
+    QCOMPARE(countMarkers(), 1);
+    QVERIFY(be.pendingPhaseControlForTest().startsWith(QStringLiteral("[FASE=EJECUCION]")));
+    be.setAwaitingApprovalForTest(QString());
 }
 
 void AgentWireTests::failureSpiralDetectsEquivalentErrorsAndResetsOnProgress()

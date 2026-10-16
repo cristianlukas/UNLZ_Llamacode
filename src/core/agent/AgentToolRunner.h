@@ -139,6 +139,8 @@ public:
     static QString embeddingCacheKeyForTest(const QString &endpoint,
                                             const QString &model,
                                             const QString &text);
+    // Ventana "elegida por el agente" (desktop_focus/clic) sin tocar el escritorio.
+    void setAgentFocusedWindowForTest(const QString &id) { m_agentFocusedWindow = id; }
     // Adapters individuales, públicos para probes/E2E sin pasar por la política.
     QString fetchViaPlaywright(const QString &url, QString *error);
     QString fetchViaCamofox(const QString &url, QString *error);

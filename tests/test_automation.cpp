@@ -228,6 +228,31 @@ void AutomationTests::readTextFormatsNormalizedCentersAndFilters()
     QVERIFY(DesktopComputerUse::typingTargetAllowed(QStringLiteral("ABC"), QStringLiteral("abc")));
     QVERIFY(DesktopComputerUse::typingTargetAllowed(QString(), QStringLiteral("abc")));
     QVERIFY(!DesktopComputerUse::typingTargetAllowed(QString(), QString()));
+    // Foco perdido con ventana ya elegida → re-enfocar (no negarse); sin ventana
+    // elegida o con el foco donde corresponde, nada que re-enfocar.
+    QVERIFY(DesktopComputerUse::typingNeedsRefocus(QStringLiteral("llamacode"), QStringLiteral("calc")));
+    QVERIFY(!DesktopComputerUse::typingNeedsRefocus(QStringLiteral("CALC"), QStringLiteral("calc")));
+    QVERIFY(!DesktopComputerUse::typingNeedsRefocus(QStringLiteral("abc"), QString()));
+    QVERIFY(!DesktopComputerUse::typingNeedsRefocus(QString(), QStringLiteral("calc")));
+
+    // Texto UIA para desktop_read_text: la pantalla de la Calculadora (text) sí;
+    // botones y text invocables no; valor de un edit; sin repetidos; query.
+    const QVariantList uia{
+        QVariantMap{{"role", "text"}, {"name", "La pantalla muestra 9"}},
+        QVariantMap{{"role", "text"}, {"name", "La expresión es 3 × 3="}},
+        QVariantMap{{"role", "button"}, {"name", "Tres"}, {"invokable", true}},
+        QVariantMap{{"role", "text"}, {"name", "Ayuda"}, {"invokable", true}},
+        QVariantMap{{"role", "edit"}, {"name", "Buscar"}, {"value", "hola"}},
+        QVariantMap{{"role", "text"}, {"name", "la pantalla muestra 9"}},
+        QVariantMap{{"role", "text"}, {"name", "  "}},
+    };
+    const QStringList read = DesktopComputerUse::uiaReadableText(uia, QString(), 30);
+    QCOMPARE(read, (QStringList{QStringLiteral("La pantalla muestra 9"),
+                                QStringLiteral("La expresión es 3 × 3="),
+                                QStringLiteral("Buscar: hola")}));
+    QCOMPARE(DesktopComputerUse::uiaReadableText(uia, QStringLiteral("EXPRESION"), 30),
+             QStringList{QStringLiteral("La expresión es 3 × 3=")});
+    QCOMPARE(DesktopComputerUse::uiaReadableText(uia, QString(), 1).size(), 1);
 
     // Alcance: explícito manda; si falta y el id es una ventana → window.
     QCOMPARE(DesktopComputerUse::inferScopeKind(QStringLiteral("screen"), true, QStringLiteral("screen")),

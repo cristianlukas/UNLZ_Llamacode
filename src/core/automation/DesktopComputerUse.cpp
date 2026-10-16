@@ -219,6 +219,11 @@ bool typingTargetAllowed(const QString &foregroundId, const QString &agentFocuse
     return foregroundId.isEmpty() || foregroundId.compare(agentFocusedId, Qt::CaseInsensitive) == 0;
 }
 
+bool typingNeedsRefocus(const QString &foregroundId, const QString &agentFocusedId)
+{
+    return !agentFocusedId.isEmpty() && !typingTargetAllowed(foregroundId, agentFocusedId);
+}
+
 int clampClickCount(int clickCount)
 {
     return qBound(1, clickCount, 3);
@@ -424,6 +429,34 @@ QString formatReadText(const QList<TextLine> &lines, const QRect &bounds,
     if (matched > out.size())
         head += QStringLiteral(" (mostrando %1; filtrá con query)").arg(out.size());
     return head + QLatin1Char('\n') + out.join(QLatin1Char('\n'));
+}
+
+QStringList uiaReadableText(const QVariantList &controls, const QString &query, int max)
+{
+    const QString q = foldForMatch(query.trimmed());
+    const int cap = qBound(1, max, 200);
+    QStringList out;
+    QSet<QString> seen;
+    for (const QVariant &v : controls) {
+        if (out.size() >= cap) break;
+        const QVariantMap c = v.toMap();
+        const QString role = c.value(QStringLiteral("role")).toString();
+        if (role != QLatin1String("text") && role != QLatin1String("edit")) continue;
+        // Un "text" invocable es un link/botón disfrazado: no es contenido.
+        if (c.value(QStringLiteral("invokable")).toBool()) continue;
+        const QString name = c.value(QStringLiteral("name")).toString().simplified();
+        const QString value = c.value(QStringLiteral("value")).toString().simplified();
+        QString line = name;
+        if (!value.isEmpty() && value.compare(name, Qt::CaseInsensitive) != 0)
+            line = name.isEmpty() ? value : name + QStringLiteral(": ") + value;
+        if (line.isEmpty()) continue;
+        if (!q.isEmpty() && !foldForMatch(line).contains(q)) continue;
+        const QString key = foldForMatch(line);
+        if (seen.contains(key)) continue;
+        seen.insert(key);
+        out << line;
+    }
+    return out;
 }
 
 bool isDesktopReadTool(const QString &name)

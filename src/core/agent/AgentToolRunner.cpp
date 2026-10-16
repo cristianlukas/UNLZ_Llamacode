@@ -2329,8 +2329,21 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
             m_agentFocusedWindow = target;
             return true;
         }
-        if (!DesktopComputerUse::typingTargetAllowed(
-                DesktopAutomationBackend::foregroundWindowId(), m_agentFocusedWindow)) {
+        const QString foreground = DesktopAutomationBackend::foregroundWindowId();
+        if (DesktopComputerUse::typingNeedsRefocus(foreground, m_agentFocusedWindow)) {
+            // El foco se fue (p. ej. el usuario aprobó la tool en LlamaCode): volver
+            // a la ventana que el agente ya eligió, no a cualquiera.
+            QString err;
+            if (!DesktopAutomationBackend::focusWindow(m_agentFocusedWindow, &err)) {
+                *refusal = QStringLiteral(
+                    "[%1: NO tecleé — la ventana elegida (%2) ya no se puede enfocar: %3. "
+                    "Usá desktop_windows para ver si sigue abierta.]")
+                               .arg(tool, m_agentFocusedWindow, err);
+                return false;
+            }
+            return true;
+        }
+        if (!DesktopComputerUse::typingTargetAllowed(foreground, m_agentFocusedWindow)) {
             *refusal = QStringLiteral(
                 "[%1: NO tecleé — la ventana en primer plano no es una que hayas elegido. Pasá "
                 "target_id (id de desktop_windows) o enfocala con desktop_focus primero; así no "
@@ -2411,10 +2424,30 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         const QRect bounds = DesktopAutomationBackend::scopeBounds(kind, target);
         if (!bounds.isValid())
             return QStringLiteral("[desktop_read_text: alcance no disponible (%1 '%2')]").arg(kind, target);
+        const QString query = args.value(QStringLiteral("query")).toString();
+        // UIA primero: es exacto donde el OCR falla (dígitos grandes de la
+        // Calculadora salían como "Oció')" y el modelo inventaba el resultado).
+        QStringList uiaText;
+        if (kind == QLatin1String("window") && !target.isEmpty()) {
+            QString uiaError;
+            uiaText = DesktopComputerUse::uiaReadableText(
+                DesktopAutomationBackend::controls(target, QString(), 200, &uiaError), query, 30);
+        }
+        const QString uiaBlock = uiaText.isEmpty()
+            ? QString()
+            : QStringLiteral("Texto de la app (UI Automation, exacto: preferilo al OCR):\n%1\n")
+                  .arg(uiaText.join(QLatin1Char('\n')));
         const QList<OcrLine> lines = DesktopAutomationBackend::readText(kind, target, &error);
-        if (lines.isEmpty())
+        if (lines.isEmpty()) {
+            if (!uiaBlock.isEmpty()) {
+                if (ok) *ok = true;
+                return QStringLiteral("[desktop_read_text: %1 '%2']\n%3(OCR: %4)")
+                    .arg(kind, target, uiaBlock,
+                         error.isEmpty() ? QStringLiteral("sin texto") : error);
+            }
             return QStringLiteral("[desktop_read_text: %1]")
                 .arg(error.isEmpty() ? QStringLiteral("no se leyó texto") : error);
+        }
         QList<DesktopComputerUse::TextLine> rows;
         rows.reserve(lines.size());
         for (const OcrLine &l : lines) {
@@ -2423,12 +2456,11 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
             rows.append({l.text, r});
         }
         if (ok) *ok = true;
-        return QStringLiteral("[desktop_read_text: %1 '%2']\n"
-                              "Coordenadas (x, y) normalizadas en ese alcance: pasalas tal cual a "
-                              "desktop_click/desktop_hover con el mismo scope_kind y target_id.\n%3")
-            .arg(kind, target,
-                 DesktopComputerUse::formatReadText(rows, bounds,
-                     args.value(QStringLiteral("query")).toString(),
+        return QStringLiteral("[desktop_read_text: %1 '%2']\n%3"
+                              "OCR — coordenadas (x, y) normalizadas en ese alcance: pasalas tal cual a "
+                              "desktop_click/desktop_hover con el mismo scope_kind y target_id.\n%4")
+            .arg(kind, target, uiaBlock,
+                 DesktopComputerUse::formatReadText(rows, bounds, query,
                      args.value(QStringLiteral("max")).toInt(80)));
     }
     if (name == QLatin1String("desktop_hover")) {

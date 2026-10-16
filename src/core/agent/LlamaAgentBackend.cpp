@@ -2342,6 +2342,15 @@ void LlamaAgentBackend::setPermissionRules(const QString &rules)
     emit logAppended(QStringLiteral("[permisos: %1 regla(s) cargadas]\n").arg(m_permRules.size()));
 }
 
+void LlamaAgentBackend::flushPendingPhaseControl()
+{
+    if (m_pendingPhaseControl.isEmpty()) return;
+    appendApiMessage(QJsonObject{{QStringLiteral("role"), QStringLiteral("user")},
+                                 {QStringLiteral("content"), m_pendingPhaseControl},
+                                 {QStringLiteral("_lc_protected"), true}});
+    m_pendingPhaseControl.clear();
+}
+
 void LlamaAgentBackend::resolveComputerUseChoice(const QString &choice)
 {
     if (!m_cuAwaitingChoice) return;
@@ -2375,12 +2384,19 @@ void LlamaAgentBackend::setApprovalPolicy(const QString &mode)
         QMetaObject::invokeMethod(m_worker, "setConfined", Qt::QueuedConnection,
                                   Q_ARG(bool, mode != QLatin1String("super")));
     if (m_stablePhasePrefix && previousMode != mode && !m_apiMessages.isEmpty()) {
-        const QString control = mode == QLatin1String("plan")
+        // Sólo plan <-> ejecución es un cambio de fase. ask/auto/super son la misma
+        // fase: el usuario marcando "aprobar todo" en el diálogo de una tool metía
+        // [FASE=EJECUCION] y el modelo se perdía razonando a ciegas.
+        const bool wasPlan = previousMode == QLatin1String("plan");
+        const bool isPlan = mode == QLatin1String("plan");
+        if (wasPlan == isPlan) return;
+        m_pendingPhaseControl = isPlan
             ? QStringLiteral("[FASE=PLAN] Solo explorar y planificar. Prohibido editar o ejecutar shell.")
             : QStringLiteral("[FASE=EJECUCION] Ejecutar el plan aprobado y verificar el resultado.");
-        appendApiMessage(QJsonObject{{QStringLiteral("role"), QStringLiteral("user")},
-                                     {QStringLiteral("content"), control},
-                                     {QStringLiteral("_lc_protected"), true}});
+        // A mitad de un turno (tool esperando aprobación o corriendo) el marcador
+        // caería entre el tool_call y su resultado: se agrega en la próxima
+        // completion, después de los resultados.
+        if (!isBusy()) flushPendingPhaseControl();
         return;
     }
     // Compatibilidad: modo legacy reconstruye el system prompt.
@@ -3397,6 +3413,10 @@ void LlamaAgentBackend::runCompletion()
             }
         }
     }
+
+    // Cambio de fase pedido a mitad del turno: va DESPUÉS de los resultados de
+    // las tools, nunca entre un tool_call y su respuesta.
+    flushPendingPhaseControl();
 
     if (++m_turnIters > kMaxTurnIters) {
         finishTurn(QStringLiteral("[corté el turno: se alcanzó el límite de %1 iteraciones de tools]")

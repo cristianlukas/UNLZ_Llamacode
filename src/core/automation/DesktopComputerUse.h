@@ -127,6 +127,11 @@ QString inferScopeKind(const QString &explicitKind, bool targetIsWindow,
 // chat, el navegador...). foreground vacío = desconocido (Linux): se acepta
 // sólo si el agente enfocó algo antes.
 bool typingTargetAllowed(const QString &foregroundId, const QString &agentFocusedId);
+// ¿Hay que volver a enfocar la ventana elegida antes de teclear? Cuando el
+// foco se fue a otra (típico: el usuario aprobó la tool en LlamaCode) pero el
+// agente YA había elegido una: re-enfocarla escribe donde el agente decidió,
+// sin tirar un error que el modelo chico no sabe resolver.
+bool typingNeedsRefocus(const QString &foregroundId, const QString &agentFocusedId);
 // 1..3 pulsaciones (simple, doble, triple); cualquier otro valor se acota.
 int clampClickCount(int clickCount);
 // Nombre "humano" de una app → lo que entiende `start` en Windows. El modelo
@@ -171,6 +176,11 @@ QString computerUseChoice(const QString &approvalMode, const QString &sessionMod
 struct TextLine { QString text; QRect rect; };
 QString formatReadText(const QList<TextLine> &lines, const QRect &bounds,
                        const QString &query, int maxLines);
+// Texto que la ventana expone por UI Automation (role text/edit, no botones):
+// "nombre" o "nombre: valor", sin repetidos, filtrado por `query`. Es exacto
+// donde el OCR falla (la pantalla de la Calculadora OCReaba "Oció')" y el
+// modelo inventaba el resultado); desktop_read_text lo antepone al OCR.
+QStringList uiaReadableText(const QVariantList &controls, const QString &query, int max);
 bool isDesktopReadTool(const QString &name);
 bool isDesktopActionTool(const QString &name);
 bool isDesktopMutationTool(const QString &name, const QVariantMap &arguments = {});
