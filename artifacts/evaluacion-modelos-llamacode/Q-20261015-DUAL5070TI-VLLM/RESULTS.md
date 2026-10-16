@@ -83,7 +83,11 @@ verificación de la capacidad de KV, conteo de tokens real y smoke del agente en
 protocolo nativo antes de repetir únicamente HE0. Si el prompt real o la reserva
 no caben, no se puntúa la suite.
 
-Ese retest todavía no se ejecutó: el 2026-10-16 había servidores de modelos de
-la aplicación usando ambas RTX 3090 y ocupando ~11–12 GiB por tarjeta. Se
-preservaron esos procesos; no se intentó cargar un modelo de 30,84 GB sobre el
-espacio VRAM restante. La prueba queda pendiente hasta que las GPUs estén libres.
+El usuario indicó el 2026-10-16 que las GPU estaban libres, pero el preflight
+fresco volvió a encontrar cuatro instancias activas de `llama-server` ocupando
+ambas RTX 3090: Qwen3.5-9B en los puertos 8033/8081 y Gemma-4-12B en 8083.
+Cada tarjeta tenía 11–12 GiB ocupados y seguía reportando 32–46% de uso; los
+procesos llevaban entre 8 y 17 horas activos. Se conservaron porque pertenecen
+a la sesión de LlamaCode. No se inició vLLM ni se midió KV, smoke 32k o HE0.
+El retest queda bloqueado hasta que esos servidores se detengan y ambas GPU
+queden disponibles. Evidencia: `receipts/preflight-20261016-context-retest-blocked.json`.

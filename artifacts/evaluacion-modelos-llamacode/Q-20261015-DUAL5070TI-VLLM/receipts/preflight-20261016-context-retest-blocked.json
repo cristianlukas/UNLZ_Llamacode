@@ -1,0 +1,44 @@
+{
+  "recorded_at_utc": "2026-10-16T19:55:42Z",
+  "task": "Q-20261015-DUAL5070TI-VLLM",
+  "requested_context": 32768,
+  "decision": "blocked_before_model_load",
+  "reason": "Both RTX 3090s still have active LlamaCode llama-server processes; target requires both GPUs and available VRAM is insufficient for a safe load with KV cache.",
+  "gpus": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_total_mib": 24576,
+      "memory_used_mib": 11844,
+      "utilization_percent": 32,
+      "compute_processes": [
+        {"pid": 2476143, "used_memory_mib": 6448, "model": "Qwen3.5-9B-Q4_K_M.gguf", "port": 8033},
+        {"pid": 3381124, "used_memory_mib": 4536, "model": "gemma-4-12b-it-qat-q4_0.gguf", "port": 8083}
+      ]
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_total_mib": 24576,
+      "memory_used_mib": 11512,
+      "utilization_percent": 46,
+      "compute_processes": [
+        {"pid": 2476814, "used_memory_mib": 6410, "model": "Qwen3.5-9B-Q4_K_M.gguf", "port": 8081},
+        {"pid": 3381124, "used_memory_mib": 4980, "model": "gemma-4-12b-it-qat-q4_0.gguf", "port": 8083}
+      ]
+    }
+  ],
+  "process_state": [
+    {"pid": 2476143, "user": "cristian", "state": "Sl", "elapsed": "17:31:28", "command": "llama-server -m .../Qwen3.5-9B-Q4_K_M.gguf --port 8033 -c 32768 --parallel 2"},
+    {"pid": 2476814, "user": "cristian", "state": "Sl", "elapsed": "17:31:07", "command": "llama-server -m .../Qwen3.5-9B-Q4_K_M.gguf --port 8081 -c 32768 --parallel 2"},
+    {"pid": 3381124, "user": "cristian", "state": "Sl", "elapsed": "07:59:27", "command": "llama-server -m .../gemma-4-12b-it-qat-q4_0.gguf --port 8083 -c 32768 --parallel 2"}
+  ],
+  "ports": {"18888": "free", "8877": "free"},
+  "host_resources": {
+    "memory_available_gib": 94,
+    "swap_used_gib": 5.5,
+    "root_free_gib": 4.5,
+    "secondary_partition_free_gib": 84
+  },
+  "action": "No benchmark server was started and no existing process was stopped. Resume after these user LlamaCode servers are gracefully stopped and both GPUs are free."
+}
