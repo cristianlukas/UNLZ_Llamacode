@@ -38,3 +38,8 @@ Si se prioriza un piloto: usar un nodo Plumb local fijado por commit y el SearXN
 - Revisión de fuentes y commits: [receipts/source-review.md](receipts/source-review.md).
 - Test summary y CTest raw log: [receipts/test-summary.json](receipts/test-summary.json), [receipts/LastTest.log](receipts/LastTest.log).
 - Fingerprint funcional: test `AgentToolsTests::webSearch_usesConfiguredSearxngJsonApi`; SHA-256 del archivo de test en `receipts/test-summary.json`. No existe fingerprint de modelo/perfil/HarnessSpec ni seed porque no hubo inferencia.
+
+
+## Prueba de relevancia real: preflight
+
+Después del gate, se reabrió esta misma evaluación para intentar un smoke de ocho consultas sintéticas contra PlumbSearch local y el SearXNG local de referencia. El preflight del 2026-10-16T23:16:28Z encontró: sin `LLAMACODE_SEARXNG_URL` en la sesión ni en un proceso LlamaCode inspeccionable; sin listener local en `127.0.0.1:7586`, `:8080` o `:8888`. Por el preregistro, no se contactó el nodo público, no se instalaron ni iniciaron servicios y no se generaron consultas externas. Resultado: calidad/relevancia de PlumbSearch queda **bloqueada por falta de endpoint local**, no es una puntuación negativa ni una mejora confirmada. Evidencia sanitizada en [preflight](receipts/local-search-preflight.json) y límites en [preregistro](PLAN-live-search.md).

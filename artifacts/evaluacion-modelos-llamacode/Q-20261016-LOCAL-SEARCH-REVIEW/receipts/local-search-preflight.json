@@ -1,0 +1,15 @@
+{
+  "task_id": "Q-20261016-LOCAL-SEARCH-REVIEW",
+  "recorded_at_utc": "2026-10-16T23:16:28Z",
+  "purpose": "Preflight before preregistered local PlumbSearch/SearXNG relevance smoke",
+  "shell_searxng_configured": false,
+  "running_llamacode_processes_with_searxng_environment": 0,
+  "local_listener_ports_tested": {
+    "127.0.0.1:7586": false,
+    "127.0.0.1:8080": false,
+    "127.0.0.1:8888": false
+  },
+  "public_endpoints_contacted": false,
+  "services_installed_or_started": false,
+  "decision": "Blocked: no local PlumbSearch node or SearXNG baseline is available in this session; no live relevance requests sent."
+}
