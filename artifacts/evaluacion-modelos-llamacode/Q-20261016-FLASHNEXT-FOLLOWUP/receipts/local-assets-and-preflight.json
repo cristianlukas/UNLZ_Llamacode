@@ -1,0 +1,94 @@
+{
+  "capturedAtUtc": "2026-10-16T20:43:32.354104+00:00",
+  "taskId": "Q-20261016-FLASHNEXT-FOLLOWUP",
+  "previousManifest": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261010-FLASHNEXT-Q4-P100-POST/receipts/manifest.json",
+  "model": {
+    "repo": "unsloth/Qwen3.8-Flash-Next-GGUF",
+    "revision": "38bb39ee97821de2c9009abb7e93950eec396e66",
+    "quant": "UD-Q4_K_XL",
+    "bytesTotal": 111334654784,
+    "shards": [
+      {
+        "name": "Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf",
+        "bytes": 10946624,
+        "sha256": "4448186216b3af4cc558bbce2c3213f01608f8f8b2e5267a9767971dd3ec8082",
+        "hashVerified": true,
+        "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf"
+      },
+      {
+        "name": "Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+        "bytes": 49859583136,
+        "sha256": "3f342f1c1580473f1ee94ddd5b28206e8c07a70fa1a366f59d1d6c922919a6c9",
+        "hashVerified": true,
+        "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf"
+      },
+      {
+        "name": "Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+        "bytes": 49376141504,
+        "sha256": "56758f40269cad5cd9b0d3d6fbae0f40f6d5be6de49e4ab392dbe83157d9cbd3",
+        "hashVerified": true,
+        "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf"
+      },
+      {
+        "name": "Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf",
+        "bytes": 12087983520,
+        "sha256": "753bda48b98ba4f1636134a90a967de1b2d3908a236c026e464777342e53510a",
+        "hashVerified": true,
+        "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf"
+      }
+    ],
+    "hashesReusedFromVerifiedManifest": true
+  },
+  "runtime": {
+    "engine": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata",
+    "engineSha256": "770ecf303a4c6271654339c639392ecb455de3a999bf5d2e8dbc73c879103602",
+    "version": "0.1.41",
+    "commit": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
+    "helpOptions": [
+      "--layer-split",
+      "--trim-stage-weights",
+      "--vision"
+    ]
+  },
+  "vision": {
+    "encoder": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/build-vision/bin/strata-vision",
+    "encoderPresent": true,
+    "mmproj": "/media/cristian/Disco local/Models/ASTRA-IQ3_S-calibrated-20261006/models/mmproj-Qwen3.8-Flash-Next-BF16.gguf",
+    "mmprojBytes": 907543008,
+    "mmprojSha256": "b1a82259702816a5330d7bd7607cd9676b11780e79ff7348c21103ff3ce49bd0",
+    "reusedVerifiedModelCardMmproj": true
+  },
+  "configs": {
+    "speed-control.json": {
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-FOLLOWUP/receipts/configs/speed-control.json",
+      "sha256": "753ffb83dcc473ae3d50b019067a74bac40f994cb8083ea9bdf652acb8483e01"
+    },
+    "speed-trim.json": {
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-FOLLOWUP/receipts/configs/speed-trim.json",
+      "sha256": "1bc0e6e41ed219ccb443e5b171c49f1bfa0ae95ace96448c0c86bd87a20f9787"
+    },
+    "context262k-trim.json": {
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-FOLLOWUP/receipts/configs/context262k-trim.json",
+      "sha256": "828783adb825c3b34700e2c8c20d493559e438d53564cd99f4ebcef83e56ca1c"
+    },
+    "vision-q4.json": {
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-FOLLOWUP/receipts/configs/vision-q4.json",
+      "sha256": "5c570a29348bad8e3b590de59ac9bd4e0e859ea26c850b5577e14f4649050bf7"
+    }
+  },
+  "preflightObserved": {
+    "computeProcessListEmpty": true,
+    "ports8350_8351_8898_8080_8081_8082Free": true,
+    "memAvailableKiB": 113508064,
+    "swapFreeKiB": 2914420,
+    "memoryPsiSomeAvg10Pct": 0.0,
+    "memoryPsiFullAvg10Pct": 0.0,
+    "gpu0MemoryUsedMiB": 889,
+    "gpu1MemoryUsedMiB": 108,
+    "gpu0UtilizationPct": 17,
+    "gpu1UtilizationPct": 33,
+    "gpu0HasDisplayProcess": true,
+    "desktopNotStopped": true
+  },
+  "guardDecision": "Preflight meets MemAvailable>=32GiB, swapFree>=1GiB, no CUDA inference process, memory PSI 0; desktop display processes remain running. Do not stop them."
+}

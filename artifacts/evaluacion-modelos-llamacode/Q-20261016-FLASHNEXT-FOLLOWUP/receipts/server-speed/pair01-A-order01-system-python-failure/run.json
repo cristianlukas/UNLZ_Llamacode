@@ -1,0 +1,85 @@
+{
+  "taskId": "Q-20261016-FLASHNEXT-FOLLOWUP",
+  "runId": "pair01-A-order01",
+  "arm": "A",
+  "pair": 1,
+  "orderIndex": 1,
+  "command": [
+    "/usr/bin/python3",
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py",
+    "--engine",
+    "strata",
+    "--config",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-FOLLOWUP/receipts/server-speed/pair01-A-order01/effective-config.json",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "8350",
+    "--gpu",
+    "0,1"
+  ],
+  "configPath": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-FOLLOWUP/receipts/server-speed/pair01-A-order01/effective-config.json",
+  "configSha256": "97ce05d12b5d69a5758146c106102944b19b759b4f884ba89b46748186465709",
+  "startedAtUtc": "2026-10-16T20:45:39.111136+00:00",
+  "preflight": {
+    "atUtc": "2026-10-16T20:45:39.068768+00:00",
+    "mem": {
+      "MemAvailable": 116180291584,
+      "SwapTotal": 8589930496,
+      "SwapFree": 2984386560,
+      "SwapUsed": 5605543936
+    },
+    "psi": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.0
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.0
+      }
+    },
+    "oomKillCount": 0,
+    "gpu": [
+      "0, NVIDIA GeForce RTX 3090, 880, 24576, 21, 96.34, 44",
+      "1, NVIDIA GeForce RTX 3090, 108, 24576, 33, 31.05, 26"
+    ]
+  },
+  "warmup": null,
+  "samples": [],
+  "status": "failed",
+  "error": "RuntimeError: server exited during load (1)",
+  "stoppedAtUtc": "2026-10-16T20:45:40.151008+00:00",
+  "exitCode": 1,
+  "portFreeAfterStop": true,
+  "postflight": {
+    "atUtc": "2026-10-16T20:45:40.151019+00:00",
+    "mem": {
+      "MemAvailable": 116168671232,
+      "SwapTotal": 8589930496,
+      "SwapFree": 2984386560,
+      "SwapUsed": 5605543936
+    },
+    "psi": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.0
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.0
+      }
+    },
+    "oomKillCount": 0,
+    "gpu": [
+      "0, NVIDIA GeForce RTX 3090, 881, 24576, 19, 89.49, 44",
+      "1, NVIDIA GeForce RTX 3090, 108, 24576, 33, 31.22, 26"
+    ]
+  },
+  "abortReason": [],
+  "wallSeconds": 1.081
+}

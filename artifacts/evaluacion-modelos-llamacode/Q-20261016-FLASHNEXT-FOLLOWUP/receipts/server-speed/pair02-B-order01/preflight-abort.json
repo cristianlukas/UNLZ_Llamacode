@@ -1,0 +1,28 @@
+{
+  "taskId": "Q-20261016-FLASHNEXT-FOLLOWUP",
+  "runId": "pair02-B-order01",
+  "arm": "B",
+  "pair": 2,
+  "status": "preflight-blocked",
+  "atUtc": "2026-10-16T20:56:01.909682+00:00",
+  "preflight": {
+    "mem": {
+      "MemAvailable": 119622164480,
+      "SwapTotal": 8589930496,
+      "SwapFree": 836730880,
+      "SwapUsed": 7753199616
+    },
+    "port8350Listener": null,
+    "gpu": [
+      "0, NVIDIA GeForce RTX 3090, 883, 24576, 20",
+      "1, NVIDIA GeForce RTX 3090, 108, 24576, 9"
+    ]
+  },
+  "required": {
+    "MemAvailableBytesAtLeast": 34359738368,
+    "SwapFreeBytesAtLeast": 1073741824,
+    "port8350Free": true
+  },
+  "reason": "SwapFree was below the preregistered 1 GiB launch threshold; Strata was not started and no inference was sent.",
+  "samples": 0
+}
