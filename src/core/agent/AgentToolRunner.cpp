@@ -17,6 +17,7 @@
 #include "HotspotAnalyzer.h"     // tool code_hotspots (archivos riesgosos)
 #include "core/DocumentExtractor.h" // hybrid_search include_docs: pdf/office al índice
 #include "WebFetchProvider.h"
+#include "WebSearchConfig.h"
 #include "core/automation/DesktopAutomationBackend.h"
 #include "core/automation/OcrTypes.h"
 #include "core/automation/DesktopComputerUse.h"
@@ -42,6 +43,7 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
+#include <QNetworkProxy>
 #include <QProcess>
 #include <QSaveFile>
 #include <QRegularExpression>
@@ -632,7 +634,7 @@ QString AgentToolRunner::summarizeBrowserNetworkEvidence(const QString &raw,
 // en el worker para que DNS y red nunca bloqueen la UI.
 static QByteArray httpGetSync(const QUrl &initialUrl, QString *err, int timeoutMs = 20000,
                               bool allowConfiguredLocalEndpoint = false,
-                              QUrl *finalUrl = nullptr)
+                              QUrl *finalUrl = nullptr, bool rejectRedirects = false)
 {
     QUrl url = initialUrl;
     for (int redirect = 0; redirect <= 5; ++redirect) {
@@ -645,6 +647,8 @@ static QByteArray httpGetSync(const QUrl &initialUrl, QString *err, int timeoutM
             return {};
         }
         QNetworkAccessManager nam;
+        if (rejectRedirects)
+            nam.setProxy(QNetworkProxy(QNetworkProxy::NoProxy));
         QNetworkRequest req(url);
         req.setHeader(QNetworkRequest::UserAgentHeader,
                       QByteArrayLiteral("Mozilla/5.0 LlamaCode/0.1"));
@@ -667,6 +671,11 @@ static QByteArray httpGetSync(const QUrl &initialUrl, QString *err, int timeoutM
         const QVariant redirectTarget =
             reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
         if (redirectTarget.isValid()) {
+            if (rejectRedirects) {
+                reply->deleteLater();
+                if (err) *err = QStringLiteral("redirect bloqueado en modo local-only");
+                return {};
+            }
             url = url.resolved(redirectTarget.toUrl());
             reply->deleteLater();
             continue;
@@ -713,19 +722,38 @@ static QString resolveDdgRedirect(QString raw)
     return raw;
 }
 
-// Búsqueda web: SearXNG si LLAMACODE_SEARXNG_URL está seteado, si no DuckDuckGo HTML.
+// Búsqueda web: PlumbSearch, SearXNG o DuckDuckGo HTML. PlumbSearch usa el
+// contrato JSON de SearXNG, pero siempre falla cerrado para no filtrar queries.
 static QVector<WebHit> runWebSearch(const QString &query, int count, QString *err = nullptr)
 {
     QVector<WebHit> hits;
-    const QString searxng = qEnvironmentVariable("LLAMACODE_SEARXNG_URL").trimmed();
-    if (!searxng.isEmpty()) {
-        QUrl u(searxng.endsWith(QLatin1Char('/')) ? searxng + QStringLiteral("search")
-                                                   : searxng + QStringLiteral("/search"));
+    const QString endpoint = WebSearchConfig::configuredEndpoint();
+    const bool plumbSearch = WebSearchConfig::plumbSearchSelected();
+    const bool localOnly = WebSearchConfig::localOnly();
+    if (WebSearchConfig::hasInvalidMode()) {
+        if (err) *err = QStringLiteral(
+            "LLAMACODE_WEB_SEARCH_MODE debe ser 'auto', 'default' o 'local-only'");
+        return hits;
+    }
+    if (localOnly && endpoint.isEmpty()) {
+        if (err) *err = QStringLiteral(
+            "modo local-only requiere LLAMACODE_PLUMBSEARCH_URL o LLAMACODE_SEARXNG_URL");
+        return hits;
+    }
+    if (localOnly && !WebSearchConfig::isLoopbackEndpoint(endpoint)) {
+        if (err) *err = QStringLiteral(
+            "modo local-only sólo admite un endpoint HTTP(S) loopback (127.0.0.1/::1/localhost)");
+        return hits;
+    }
+
+    if (!endpoint.isEmpty()) {
+        QUrl u(endpoint.endsWith(QLatin1Char('/')) ? endpoint + QStringLiteral("search")
+                                                    : endpoint + QStringLiteral("/search"));
         QUrlQuery q;
         q.addQueryItem(QStringLiteral("q"), query);
         q.addQueryItem(QStringLiteral("format"), QStringLiteral("json"));
         u.setQuery(q);
-        const QByteArray body = httpGetSync(u, err, 20000, true);
+        const QByteArray body = httpGetSync(u, err, 20000, true, nullptr, localOnly);
         if (!body.isEmpty()) {
             const QJsonArray arr = QJsonDocument::fromJson(body).object()
                                        .value(QStringLiteral("results")).toArray();
@@ -738,7 +766,7 @@ static QVector<WebHit> runWebSearch(const QString &query, int count, QString *er
             }
         }
     }
-    if (hits.isEmpty()) {
+    if (hits.isEmpty() && !localOnly) {
         QUrl u(QStringLiteral("https://html.duckduckgo.com/html/"));
         QUrlQuery q; q.addQueryItem(QStringLiteral("q"), query); u.setQuery(q);
         const QByteArray body = httpGetSync(u, err);
@@ -759,6 +787,11 @@ static QVector<WebHit> runWebSearch(const QString &query, int count, QString *er
                 h.snippet = AgentToolRunner::extractReadableWebText(snipIt.next().captured(1));
             if (!h.url.isEmpty()) hits.append(h);
         }
+    }
+    if (hits.isEmpty() && localOnly && err && err->isEmpty()) {
+        *err = QStringLiteral("%1 no devolvió resultados; no se consultaron buscadores públicos")
+                   .arg(plumbSearch ? QStringLiteral("PlumbSearch")
+                                    : QStringLiteral("el proveedor local"));
     }
     return hits;
 }

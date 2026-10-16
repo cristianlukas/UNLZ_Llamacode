@@ -1,0 +1,11 @@
+{
+  "status": "passed",
+  "scope": "comparator implementation smoke against synthetic loopback APIs; not PlumbSearch/SearXNG quality evidence",
+  "requests": 60,
+  "cases": 30,
+  "synthetic_mrr_at_5": {
+    "plumbsearch_stub": 1.0,
+    "searxng_stub": 0.0
+  },
+  "network": "loopback only"
+}

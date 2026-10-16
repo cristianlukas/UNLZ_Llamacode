@@ -1,0 +1,7 @@
+{
+  "status": "blocked",
+  "created_at_utc": "2026-10-16T23:32:14Z",
+  "method": "same 30 queries, serial requests, local endpoints only; no redirects or retries",
+  "queries_sent": 0,
+  "reason": "ConnectionError: PlumbSearch: ConnectionRefusedError: [Errno 111] Connection refused; SearXNG: ConnectionRefusedError: [Errno 111] Connection refused"
+}

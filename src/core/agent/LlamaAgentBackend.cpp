@@ -7153,8 +7153,11 @@ QJsonArray LlamaAgentBackend::toolSchemas()
         fn(QStringLiteral("web_search"),
            QStringLiteral("Busca en la web y devuelve los mejores resultados (título, URL, snippet). "
                           "Usalo para encontrar páginas/docs relevantes; después usá web_fetch sobre "
-                          "las URLs que sirvan. Proveedor: DuckDuckGo (sin key) o SearXNG si está "
-                          "configurado el env LLAMACODE_SEARXNG_URL."),
+                          "las URLs que sirvan. Proveedores: DuckDuckGo (sin key), SearXNG con "
+                          "LLAMACODE_SEARXNG_URL o PlumbSearch con LLAMACODE_PLUMBSEARCH_URL. "
+                          "PlumbSearch sólo acepta endpoint loopback y falla cerrado. "
+                          "LLAMACODE_WEB_SEARCH_MODE=local-only fuerza búsqueda loopback sin "
+                          "fallback público; el nodo Plumb puede federar con su red P2P."),
            QJsonObject{
                {QStringLiteral("query"), strProp(QStringLiteral("Términos de búsqueda."))},
                {QStringLiteral("count"), intProp(QStringLiteral("Cantidad de resultados (default 5, máx 10)."))}},

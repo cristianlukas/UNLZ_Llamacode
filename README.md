@@ -1450,6 +1450,19 @@ elige el contenedor principal por texto, párrafos y densidad de enlaces; la
 respuesta informa proveedor, intentos y evidencia. El parámetro
 `provider=direct|playwright|camofox` permite diagnóstico determinista.
 
+Para usar una instancia local de PlumbSearch, configurar
+`LLAMACODE_PLUMBSEARCH_URL=http://127.0.0.1:7586` (app de escritorio) o
+`http://127.0.0.1:8080` (Docker, publicado como `127.0.0.1:8080:8080`).
+LlamaCode usa su API JSON `/search`, compatible con SearXNG; PlumbSearch tiene
+precedencia sobre `LLAMACODE_SEARXNG_URL` y falla
+cerrado si el nodo no responde o devuelve cero resultados. Para una instancia
+SearXNG local, `LLAMACODE_WEB_SEARCH_MODE=local-only` aplica la misma política:
+exige loopback, bloquea redirects y no envía la consulta a DDG/Bing/Google ante
+errores o resultados vacíos. Esto controla el fallback de LlamaCode; no restringe
+el tráfico que genere por su cuenta el servicio local. `web_fetch` sigue siendo
+una operación separada que abre las URLs elegidas por el agente. Detalle y
+comparador reproducible: [Proveedores de búsqueda web](docs/web-search-providers.md).
+
 Camofox se agrega en **Configuración → Integrations → API Service**, eligiendo
 `Camofox`, normalmente con `http://127.0.0.1:9377`. Es opt-in, diagnosticable con
 `/health` más una apertura/cierre real de pestaña, y LlamaCode no instala ni inicia

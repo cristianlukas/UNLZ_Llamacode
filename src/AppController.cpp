@@ -29,6 +29,7 @@
 #include <QTcpServer>
 #include <QHostAddress>
 #include <QNetworkInterface>
+#include <QNetworkProxy>
 #include <QUdpSocket>
 #include <QNetworkDatagram>
 #include <QDateTime>
@@ -64,6 +65,7 @@
 #include "core/agent/LlamaAgentBackend.h"
 #include "core/agent/HarnessDirectiveStore.h"
 #include "core/agent/AgentToolRunner.h"
+#include "core/agent/WebSearchConfig.h"
 #include "core/agent/SubAgentRunner.h"
 #include "core/agent/AgentEfficiency.h"
 #include "core/agent/AgentEventLog.h"
@@ -25714,16 +25716,36 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
         const QStringList directEngines = {
             QStringLiteral("duckduckgo"), QStringLiteral("bing"), QStringLiteral("google")};
         const QString directEngine = directEngines.at(index % directEngines.size());
+        const QString searchEndpoint = WebSearchConfig::configuredEndpoint();
+        const bool plumbSearch = WebSearchConfig::plumbSearchSelected();
+        const bool localOnly = WebSearchConfig::localOnly();
+        if (WebSearchConfig::hasInvalidMode()) {
+            fail(QStringLiteral(
+                "LLAMACODE_WEB_SEARCH_MODE debe ser 'auto', 'default' o 'local-only'"));
+            return;
+        }
+        if (localOnly && searchEndpoint.isEmpty()) {
+            fail(QStringLiteral(
+                "modo local-only requiere LLAMACODE_PLUMBSEARCH_URL o LLAMACODE_SEARXNG_URL"));
+            return;
+        }
+        if (localOnly && !WebSearchConfig::isLoopbackEndpoint(searchEndpoint)) {
+            fail(QStringLiteral(
+                "modo local-only sólo admite un endpoint HTTP(S) loopback (127.0.0.1/::1/localhost)"));
+            return;
+        }
+        const QString providerLabel = !searchEndpoint.isEmpty()
+            ? (plumbSearch ? QStringLiteral("PlumbSearch") : QStringLiteral("SearXNG"))
+            : directEngine;
         setResearchState(true, 5 + (index * 25 / qMax(1, queries->size())),
                          QStringLiteral("Buscando en %1: %2")
-                             .arg(directEngine, query.left(70)));
+                             .arg(providerLabel, query.left(70)));
 
-        const QString searxng = qEnvironmentVariable("LLAMACODE_SEARXNG_URL").trimmed();
         QUrl url;
-        if (!searxng.isEmpty()) {
-            url = QUrl(searxng.endsWith(QLatin1Char('/'))
-                           ? searxng + QStringLiteral("search")
-                           : searxng + QStringLiteral("/search"));
+        if (!searchEndpoint.isEmpty()) {
+            url = QUrl(searchEndpoint.endsWith(QLatin1Char('/'))
+                           ? searchEndpoint + QStringLiteral("search")
+                           : searchEndpoint + QStringLiteral("/search"));
             QUrlQuery q;
             q.addQueryItem(QStringLiteral("q"), query);
             q.addQueryItem(QStringLiteral("format"), QStringLiteral("json"));
@@ -25753,19 +25775,41 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
         QNetworkRequest req(url);
         req.setHeader(QNetworkRequest::UserAgentHeader, QByteArrayLiteral("Mozilla/5.0 LlamaCode/0.1"));
         req.setTransferTimeout(25000);
-        m_researchReply = m_nam->get(req);
+        if (localOnly)
+            req.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
+                             QNetworkRequest::ManualRedirectPolicy);
+        QNetworkAccessManager *searchNam = m_nam;
+        const bool ownsSearchNam = localOnly;
+        if (ownsSearchNam) {
+            searchNam = new QNetworkAccessManager(this);
+            searchNam->setProxy(QNetworkProxy(QNetworkProxy::NoProxy));
+        }
+        m_researchReply = searchNam->get(req);
         connect(m_researchReply, &QNetworkReply::finished, this, [=]() {
             QNetworkReply *reply = m_researchReply;
             m_researchReply = nullptr;
-            if (!reply) return;
+            if (!reply) {
+                if (ownsSearchNam) searchNam->deleteLater();
+                return;
+            }
+            const QVariant redirectTarget =
+                reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
+            if (localOnly && redirectTarget.isValid()) {
+                reply->deleteLater();
+                if (ownsSearchNam) searchNam->deleteLater();
+                if (!m_researchRunning) return;
+                fail(QStringLiteral("el proveedor local intentó redirigir; se bloqueó la consulta"));
+                return;
+            }
             const QByteArray raw = reply->readAll();
             const bool ok = reply->error() == QNetworkReply::NoError;
             reply->deleteLater();
+            if (ownsSearchNam) searchNam->deleteLater();
             if (!m_researchRunning) return;
 
             int addedBefore = hits->size();
             if (ok && !raw.isEmpty()) {
-                if (!searxng.isEmpty()) {
+                if (!searchEndpoint.isEmpty()) {
                     const QJsonArray arr = QJsonDocument::fromJson(raw).object()
                                                .value(QStringLiteral("results")).toArray();
                     for (const QJsonValue &v : arr) {
@@ -25790,7 +25834,7 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
                     }
                 }
             }
-            const QString engineLabel = searxng.isEmpty() ? directEngine : QStringLiteral("searxng");
+            const QString engineLabel = providerLabel;
             searchLogs->append(QStringLiteral("- [%1] \"%2\" -> %3 new result(s)")
                                    .arg(engineLabel, query)
                                    .arg(hits->size() - addedBefore));

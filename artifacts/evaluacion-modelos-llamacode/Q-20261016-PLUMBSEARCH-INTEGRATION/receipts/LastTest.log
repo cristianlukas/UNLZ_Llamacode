@@ -1,0 +1,3443 @@
+Start testing: Oct 16 20:38 -03
+----------------------------------------------------------
+36/90 Testing: test_control_api
+36/90 Test: test_control_api
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_control_api"
+Directory: /home/cristian/.cache/llamacode/source
+"test_control_api" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of ControlApiTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+QINFO  : ControlApiTests::initTestCase() ControlApi: escuchando en http://127.0.0.1:35495
+PASS   : ControlApiTests::initTestCase()
+PASS   : ControlApiTests::health()
+PASS   : ControlApiTests::getProperty()
+PASS   : ControlApiTests::setProperty()
+PASS   : ControlApiTests::invokeMethodWithReturn()
+PASS   : ControlApiTests::invokeUnknownMethodErrors()
+PASS   : ControlApiTests::methodsListsChildTargets()
+PASS   : ControlApiTests::getChildProperty()
+PASS   : ControlApiTests::setChildProperty()
+PASS   : ControlApiTests::invokeChildMethod()
+PASS   : ControlApiTests::unknownTargetErrors()
+PASS   : ControlApiTests::helpIndexDescribesEndpoints()
+PASS   : ControlApiTests::unknownPropertyListsAvailable()
+PASS   : ControlApiTests::unknownMethodListsAvailable()
+PASS   : ControlApiTests::wrongArityListsValidArgCounts()
+PASS   : ControlApiTests::unknownTargetListsAvailable()
+PASS   : ControlApiTests::requestIdFromQuery()
+PASS   : ControlApiTests::requestIdFromHeader()
+PASS   : ControlApiTests::requestIdFromBody()
+PASS   : ControlApiTests::requestIdGeneratedWhenMissing()
+QINFO  : ControlApiTests::appControllerEngineeringCatalogIsHeadless() ControlApi: escuchando en http://127.0.0.1:45045
+PASS   : ControlApiTests::appControllerEngineeringCatalogIsHeadless()
+QINFO  : ControlApiTests::harnessSpecIsHeadless() ControlApi: escuchando en http://127.0.0.1:38935
+PASS   : ControlApiTests::harnessSpecIsHeadless()
+QINFO  : ControlApiTests::auxiliarySchedulerIsHeadless() ControlApi: escuchando en http://127.0.0.1:38265
+PASS   : ControlApiTests::auxiliarySchedulerIsHeadless()
+PASS   : ControlApiTests::cleanupTestCase()
+Totals: 24 passed, 0 failed, 0 skipped, 0 blacklisted, 116ms
+********* Finished testing of ControlApiTests *********
+<end of output>
+Test time =   0.13 sec
+----------------------------------------------------------
+Test Passed.
+"test_control_api" end time: Oct 16 20:38 -03
+"test_control_api" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/90 Testing: test_harness_spec
+5/90 Test: test_harness_spec
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_harness_spec"
+Directory: /home/cristian/.cache/llamacode/source
+"test_harness_spec" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of HarnessSpecTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : HarnessSpecTests::initTestCase()
+PASS   : HarnessSpecTests::modules_defaultsMatchHistoricBehaviour()
+PASS   : HarnessSpecTests::prompt_computerUseSandwichDefaultsOffAndRoundTrips()
+PASS   : HarnessSpecTests::context_indexPolicyRoundTripsAndBounds()
+PASS   : HarnessSpecTests::skills_roundTripAndInheritance()
+PASS   : HarnessSpecTests::resolve_absentModuleIsInherited()
+PASS   : HarnessSpecTests::resolve_declaredEmptyModuleWins()
+PASS   : HarnessSpecTests::json_roundTripKeepsDeclaredModulesOnly()
+PASS   : HarnessSpecTests::legacyProfile_migratesToEquivalentSpec()
+PASS   : HarnessSpecTests::legacyJsonFixture_stillLoads()
+PASS   : HarnessSpecTests::chain_resolvesParentThenChild()
+PASS   : HarnessSpecTests::chain_cycleDoesNotHang()
+PASS   : HarnessSpecTests::packs_expandIncludeExcludeAndOrder()
+PASS   : HarnessSpecTests::packs_budgetAndDependencyWarnings()
+PASS   : HarnessSpecTests::catalog_labelsAreNotMojibake()
+PASS   : HarnessSpecTests::permissions_guardrailOnlyDroppableInSuper()
+PASS   : HarnessSpecTests::permissions_scopeNeverWidens()
+PASS   : HarnessSpecTests::phases_patchOverridesResolvedSpec()
+PASS   : HarnessSpecTests::phases_canOverridePromptDirectives()
+PASS   : HarnessSpecTests::phases_canOverrideTemperatureAndExtra()
+PASS   : HarnessSpecTests::escalation_masterChainAndRouterThresholds()
+PASS   : HarnessSpecTests::escalation_subagentPolicyRoundTrips()
+PASS   : HarnessSpecTests::diff_listsOnlyChangedFields()
+PASS   : HarnessSpecTests::memoryAndChat_defaultsAndInheritance()
+PASS   : HarnessSpecTests::knowledge_defaultsRoundTripAndBounds()
+PASS   : HarnessSpecTests::presets_minimalAndRpaExist()
+PASS   : HarnessSpecTests::cleanupTestCase()
+Totals: 27 passed, 0 failed, 0 skipped, 0 blacklisted, 134ms
+********* Finished testing of HarnessSpecTests *********
+<end of output>
+Test time =   0.15 sec
+----------------------------------------------------------
+Test Passed.
+"test_harness_spec" end time: Oct 16 20:38 -03
+"test_harness_spec" time elapsed: 00:00:00
+----------------------------------------------------------
+
+28/90 Testing: test_work_registry
+28/90 Test: test_work_registry
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_work_registry"
+Directory: /home/cristian/.cache/llamacode/source
+"test_work_registry" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of WorkRegistryTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : WorkRegistryTests::initTestCase()
+PASS   : WorkRegistryTests::acquireAddPathsAndRelease()
+PASS   : WorkRegistryTests::conflictsMatchFilesAndDirectories()
+PASS   : WorkRegistryTests::claimPathsIsAtomicAgainstOtherSessions()
+PASS   : WorkRegistryTests::expiredClaimsDoNotBlockWork()
+PASS   : WorkRegistryTests::cleanupTestCase()
+Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 171ms
+********* Finished testing of WorkRegistryTests *********
+<end of output>
+Test time =   0.18 sec
+----------------------------------------------------------
+Test Passed.
+"test_work_registry" end time: Oct 16 20:38 -03
+"test_work_registry" time elapsed: 00:00:00
+----------------------------------------------------------
+
+79/90 Testing: qml_page_contracts
+79/90 Test: qml_page_contracts
+Command: "/home/cristian/Documents/Codex/2026-09-06/fijate-que-yo-tengo-el-proyecto-6/work/qt/6.8.3/gcc_64/bin/qml" "-I" "/home/cristian/.cache/llamacode/build_tests_linux/qml_harness" "/home/cristian/.cache/llamacode/build_tests_linux/qml_harness/tst_page_contracts.qml"
+Directory: /media/cristian/Disco local/LlamaCode-cache/build_tests_linux
+"qml_page_contracts" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+qml:   PASS se leyeron AgentPage y ChatPage
+qml:   PASS Agente: se encuentra el header
+qml:   PASS Agente: el header es un Flow
+qml:   PASS Agente: no vuelve a RowLayout (se salía de pantalla con la ventana angosta)
+qml:   PASS Agente: reserva el ancho de los botones de ventana
+qml:   PASS Agente: la altura sigue a las filas del Flow
+qml:   PASS Chat: se encuentra el header
+qml:   PASS Chat: el header es un Flow
+qml:   PASS Chat: no vuelve a RowLayout (se salía de pantalla con la ventana angosta)
+qml:   PASS Chat: reserva el ancho de los botones de ventana
+qml:   PASS Chat: la altura sigue a las filas del Flow
+qml:   PASS agente detenido: botón Iniciar agente
+qml:   PASS agente detenido: el botón está centrado
+qml:   PASS el botón usa el mismo arranque que el header
+qml:   PASS existe la tarjeta de computer use
+qml:   PASS opción En segundo plano
+qml:   PASS opción Controlando mi PC
+qml:   PASS opción Cancelar
+qml: ALL PASS
+<end of output>
+Test time =   0.21 sec
+----------------------------------------------------------
+Test Passed.
+"qml_page_contracts" end time: Oct 16 20:38 -03
+"qml_page_contracts" time elapsed: 00:00:00
+----------------------------------------------------------
+
+6/90 Testing: test_harness_modules
+6/90 Test: test_harness_modules
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_harness_modules"
+Directory: /home/cristian/.cache/llamacode/source
+"test_harness_modules" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of HarnessModulesTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : HarnessModulesTests::initTestCase()
+PASS   : HarnessModulesTests::loop_policyReachesBackend()
+PASS   : HarnessModulesTests::loop_watchdogUsesConfiguredTimeouts()
+PASS   : HarnessModulesTests::lifecycle_normalizesToolInputs()
+PASS   : HarnessModulesTests::context_compactionCanBeDisabled()
+PASS   : HarnessModulesTests::context_triggerChangesWhenCompactionKicksIn()
+PASS   : HarnessModulesTests::context_pruneCanBeDisabled()
+PASS   : HarnessModulesTests::context_keepLastImagesDropsOlderCaptures()
+PASS   : HarnessModulesTests::visionPayload_downscalesUltraWideCaptures()
+PASS   : HarnessModulesTests::visionPayload_preservesSmallImages()
+PASS   : HarnessModulesTests::skills_policyReachesBackend()
+PASS   : HarnessModulesTests::protocol_modeIsHonoured()
+PASS   : HarnessModulesTests::directiveCondition_evaluatesFacts()
+PASS   : HarnessModulesTests::customDirectives_injectedAndGated()
+PASS   : HarnessModulesTests::directiveStore_listsLoadsAndRejectsInvalid()
+PASS   : HarnessModulesTests::directiveStore_projectOverridesGlobal()
+PASS   : HarnessModulesTests::directiveStore_savesEditsAndRemoves()
+PASS   : HarnessModulesTests::directiveStore_keepsHistoryAndRollsBack()
+PASS   : HarnessModulesTests::directiveStore_rejectsInvalidInput()
+PASS   : HarnessModulesTests::directiveFactKeys_matchTheFactsActuallyUsed()
+PASS   : HarnessModulesTests::memory_policyGovernsWhatGetsInjected()
+PASS   : HarnessModulesTests::knowledge_policyReachesBackend()
+PASS   : HarnessModulesTests::chat_moduleReachesThePreamble()
+PASS   : HarnessModulesTests::cleanupTestCase()
+Totals: 24 passed, 0 failed, 0 skipped, 0 blacklisted, 188ms
+********* Finished testing of HarnessModulesTests *********
+<end of output>
+Test time =   0.20 sec
+----------------------------------------------------------
+Test Passed.
+"test_harness_modules" end time: Oct 16 20:38 -03
+"test_harness_modules" time elapsed: 00:00:00
+----------------------------------------------------------
+
+74/90 Testing: qml_lc_controls
+74/90 Test: qml_lc_controls
+Command: "/home/cristian/Documents/Codex/2026-09-06/fijate-que-yo-tengo-el-proyecto-6/work/qt/6.8.3/gcc_64/bin/qml" "-I" "/home/cristian/.cache/llamacode/build_tests_linux/qml_harness" "/home/cristian/.cache/llamacode/build_tests_linux/qml_harness/tst_lc_controls.qml"
+Directory: /media/cristian/Disco local/LlamaCode-cache/build_tests_linux
+"qml_lc_controls" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+qml:   PASS fondo del SpinBox = Theme.inputBg
+qml:   PASS texto legible sobre el fondo (contraste 12.97)
+qml:   PASS un contentItem propio con textPrimary también se lee
+qml:   PASS el override per-uso gana
+qml:   PASS + incrementa y se muestra: 2
+qml:   PASS respeta el máximo
+qml:   PASS en el máximo el + se ve deshabilitado y el − no
+qml:   PASS radio con fondo del tema (no blanco)
+qml:   PASS sólo el radio marcado muestra el punto
+qml:   PASS ButtonGroup sigue siendo exclusivo
+qml:   PASS sin texto no reserva espacio a la derecha del círculo
+qml: TODO OK
+<end of output>
+Test time =   0.22 sec
+----------------------------------------------------------
+Test Passed.
+"qml_lc_controls" end time: Oct 16 20:38 -03
+"qml_lc_controls" time elapsed: 00:00:00
+----------------------------------------------------------
+
+82/90 Testing: qml_lazy_page_loader
+82/90 Test: qml_lazy_page_loader
+Command: "/home/cristian/Documents/Codex/2026-09-06/fijate-que-yo-tengo-el-proyecto-6/work/qt/6.8.3/gcc_64/bin/qml" "-I" "/home/cristian/.cache/llamacode/build_tests_linux/qml_harness" "/home/cristian/.cache/llamacode/build_tests_linux/qml_harness/tst_lazy_page_loader.qml"
+Directory: /media/cristian/Disco local/LlamaCode-cache/build_tests_linux
+"qml_lazy_page_loader" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+qml:   PASS la página asíncrona seleccionada se crea desde URL
+qml:   PASS la página visitada permanece activa
+qml:   PASS volver a la página no la reconstruye
+qml: TODO OK
+<end of output>
+Test time =   0.23 sec
+----------------------------------------------------------
+Test Passed.
+"qml_lazy_page_loader" end time: Oct 16 20:38 -03
+"qml_lazy_page_loader" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/90 Testing: test_profile_health
+2/90 Test: test_profile_health
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_profile_health"
+Directory: /home/cristian/.cache/llamacode/source
+"test_profile_health" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of ProfileHealthTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : ProfileHealthTests::initTestCase()
+PASS   : ProfileHealthTests::checkAllResolvesMissingBackend()
+PASS   : ProfileHealthTests::healthyLocalIsClean()
+PASS   : ProfileHealthTests::backendUnset()
+PASS   : ProfileHealthTests::backendMissing()
+PASS   : ProfileHealthTests::binaryMissing()
+PASS   : ProfileHealthTests::resolvedSystemBinaryIsAccepted()
+PASS   : ProfileHealthTests::binaryPathInvalid()
+PASS   : ProfileHealthTests::modelFileMissing()
+PASS   : ProfileHealthTests::mmprojMissingIsWarning()
+PASS   : ProfileHealthTests::specWithoutDraft()
+PASS   : ProfileHealthTests::adaptiveCapabilityUnknownIsWarning()
+PASS   : ProfileHealthTests::adaptiveCapabilityMissingIsError()
+PASS   : ProfileHealthTests::adaptiveCapabilityAvailableIsClean()
+PASS   : ProfileHealthTests::adaptiveRawLaunchArgIsValidated()
+PASS   : ProfileHealthTests::runtimeAndAgentMissingAreWarnings()
+PASS   : ProfileHealthTests::cloudSkipsBinaryAndModel()
+PASS   : ProfileHealthTests::cloudMissingUrlIsError()
+PASS   : ProfileHealthTests::keylessLoopbackCloudIsHealthy()
+PASS   : ProfileHealthTests::hybridPlannerValidation()
+PASS   : ProfileHealthTests::uninstalledSystemProfileIsInfoNotError()
+PASS   : ProfileHealthTests::cleanupTestCase()
+Totals: 22 passed, 0 failed, 0 skipped, 0 blacklisted, 76ms
+********* Finished testing of ProfileHealthTests *********
+<end of output>
+Test time =   0.09 sec
+----------------------------------------------------------
+Test Passed.
+"test_profile_health" end time: Oct 16 20:38 -03
+"test_profile_health" time elapsed: 00:00:00
+----------------------------------------------------------
+
+80/90 Testing: qml_navbar
+80/90 Test: qml_navbar
+Command: "/home/cristian/Documents/Codex/2026-09-06/fijate-que-yo-tengo-el-proyecto-6/work/qt/6.8.3/gcc_64/bin/qml" "-I" "/home/cristian/.cache/llamacode/build_tests_linux/qml_harness" "/home/cristian/.cache/llamacode/build_tests_linux/qml_harness/tst_navbar.qml"
+Directory: /media/cristian/Disco local/LlamaCode-cache/build_tests_linux
+"qml_navbar" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+qml:   PASS sin update: encuentra la fila y el texto
+qml:   PASS sin update: la fila mide 48 px (mide 48)
+qml:   PASS sin update: texto centrado (centro 24.0 vs 24.0)
+qml:   PASS sin update: margen izquierdo 16 px (es 16)
+qml:   PASS con botón de update: encuentra la fila y el texto
+qml:   PASS con botón de update: la fila mide 48 px (mide 48)
+qml:   PASS con botón de update: texto centrado (centro 24.0 vs 24.0)
+qml:   PASS con botón de update: margen izquierdo 16 px (es 16)
+qml: ALL PASS
+<end of output>
+Test time =   0.29 sec
+----------------------------------------------------------
+Test Passed.
+"qml_navbar" end time: Oct 16 20:38 -03
+"qml_navbar" time elapsed: 00:00:00
+----------------------------------------------------------
+
+11/90 Testing: test_agent_runs
+11/90 Test: test_agent_runs
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_agent_runs"
+Directory: /home/cristian/.cache/llamacode/source
+"test_agent_runs" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of AgentRunTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : AgentRunTests::initTestCase()
+PASS   : AgentRunTests::durableClaimAndTerminalTransition()
+PASS   : AgentRunTests::expiredLeaseBecomesUncertainWithoutReplay()
+PASS   : AgentRunTests::uncertainResolutionIsExplicitAndRendererSafe()
+PASS   : AgentRunTests::deliverablesCaptureAndSaveAsRequireOverwrite()
+PASS   : AgentRunTests::cleanupTestCase()
+Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 294ms
+********* Finished testing of AgentRunTests *********
+<end of output>
+Test time =   0.30 sec
+----------------------------------------------------------
+Test Passed.
+"test_agent_runs" end time: Oct 16 20:38 -03
+"test_agent_runs" time elapsed: 00:00:00
+----------------------------------------------------------
+
+30/90 Testing: test_context_index
+30/90 Test: test_context_index
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_context_index"
+Directory: /home/cristian/.cache/llamacode/source
+"test_context_index" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of ContextIndexTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : ContextIndexTests::initTestCase()
+PASS   : ContextIndexTests::refreshPersistsFilesChunksAndEdges()
+PASS   : ContextIndexTests::scoutReturnsBudgetReceiptAndHandle()
+PASS   : ContextIndexTests::fetchRejectsStaleHandle()
+PASS   : ContextIndexTests::projectBrainDiffDetectsIndirectMutation()
+PASS   : ContextIndexTests::cleanupTestCase()
+Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 301ms
+********* Finished testing of ContextIndexTests *********
+<end of output>
+Test time =   0.31 sec
+----------------------------------------------------------
+Test Passed.
+"test_context_index" end time: Oct 16 20:38 -03
+"test_context_index" time elapsed: 00:00:00
+----------------------------------------------------------
+
+14/90 Testing: test_agent_context_budget
+14/90 Test: test_agent_context_budget
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_agent_context_budget"
+Directory: /home/cristian/.cache/llamacode/source
+"test_agent_context_budget" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of AgentContextBudgetTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : AgentContextBudgetTests::initTestCase()
+QINFO  : AgentContextBudgetTests::defaultDirectivesAreAllOn_silentBloat() system prompt lean (dirs=[]): 4289 bytes
+QINFO  : AgentContextBudgetTests::defaultDirectivesAreAllOn_silentBloat() system prompt default (sin aplicar perfil): 10368 bytes
+QINFO  : AgentContextBudgetTests::defaultDirectivesAreAllOn_silentBloat() bloat por default-todas-on: 6079 bytes
+PASS   : AgentContextBudgetTests::defaultDirectivesAreAllOn_silentBloat()
+QINFO  : AgentContextBudgetTests::perDirectiveContribution_bisect() directiva discipline → + 1411 bytes
+QINFO  : AgentContextBudgetTests::perDirectiveContribution_bisect() directiva testNet → + 1221 bytes
+QINFO  : AgentContextBudgetTests::perDirectiveContribution_bisect() directiva projectContext → + 2390 bytes
+QINFO  : AgentContextBudgetTests::perDirectiveContribution_bisect() directiva efficiency → + 689 bytes
+QINFO  : AgentContextBudgetTests::perDirectiveContribution_bisect() directiva style → + 368 bytes
+QINFO  : AgentContextBudgetTests::perDirectiveContribution_bisect() directiva honey → + 1124 bytes
+QINFO  : AgentContextBudgetTests::perDirectiveContribution_bisect() directiva antiBias → + 707 bytes
+PASS   : AgentContextBudgetTests::perDirectiveContribution_bisect()
+QINFO  : AgentContextBudgetTests::projectMemoryInjection_cost() memoria de proyecto inyectada: 8245 bytes
+PASS   : AgentContextBudgetTests::projectMemoryInjection_cost()
+QINFO  : AgentContextBudgetTests::perBuiltinTool_byteRanking() tools built-in: 62 · total 47221 bytes
+QINFO  : AgentContextBudgetTests::perBuiltinTool_byteRanking()    1. graph                  — 3834 bytes
+QINFO  : AgentContextBudgetTests::perBuiltinTool_byteRanking()    2. memory                 — 2812 bytes
+QINFO  : AgentContextBudgetTests::perBuiltinTool_byteRanking()    3. hybrid_search          — 1916 bytes
+QINFO  : AgentContextBudgetTests::perBuiltinTool_byteRanking()    4. desktop_click          — 1265 bytes
+QINFO  : AgentContextBudgetTests::perBuiltinTool_byteRanking()    5. desktop_assert         — 1221 bytes
+QINFO  : AgentContextBudgetTests::perBuiltinTool_byteRanking()    6. repo_slice             — 1160 bytes
+QINFO  : AgentContextBudgetTests::perBuiltinTool_byteRanking()    7. desktop_stroke         — 1108 bytes
+QINFO  : AgentContextBudgetTests::perBuiltinTool_byteRanking()    8. edit_file              — 1043 bytes
+QINFO  : AgentContextBudgetTests::perBuiltinTool_byteRanking()    9. desktop_wait_for       — 1029 bytes
+QINFO  : AgentContextBudgetTests::perBuiltinTool_byteRanking()   10. desktop_find_image     — 968 bytes
+PASS   : AgentContextBudgetTests::perBuiltinTool_byteRanking()
+QINFO  : AgentContextBudgetTests::mcpToolSchemas_cost() tool schemas built-in: 47284 bytes
+QINFO  : AgentContextBudgetTests::mcpToolSchemas_cost() tool schemas + 37 MCP: 48350 bytes
+QINFO  : AgentContextBudgetTests::mcpToolSchemas_cost() costo de 37 tools MCP: 1066 bytes
+PASS   : AgentContextBudgetTests::mcpToolSchemas_cost()
+QINFO  : AgentContextBudgetTests::leanChatPreset_cutsToolBudget() tool schemas · Chat liviano: 3246 bytes
+QINFO  : AgentContextBudgetTests::leanChatPreset_cutsToolBudget() tool schemas · Máximo (+37 MCP): 48350 bytes
+QINFO  : AgentContextBudgetTests::leanChatPreset_cutsToolBudget() recorte del preset Chat: 45104 bytes
+PASS   : AgentContextBudgetTests::leanChatPreset_cutsToolBudget()
+QINFO  : AgentContextBudgetTests::maxQ_beforeVsNow_regressionIsRecoverable() contexto MAX-Q hoy (default todas las directivas): 66993 bytes
+QINFO  : AgentContextBudgetTests::maxQ_beforeVsNow_regressionIsRecoverable() contexto MAX-Q con fix (directivas lean): 60914 bytes
+QINFO  : AgentContextBudgetTests::maxQ_beforeVsNow_regressionIsRecoverable() recuperado por el fix: 6079 bytes
+PASS   : AgentContextBudgetTests::maxQ_beforeVsNow_regressionIsRecoverable()
+PASS   : AgentContextBudgetTests::cleanupTestCase()
+Totals: 9 passed, 0 failed, 0 skipped, 0 blacklisted, 81ms
+********* Finished testing of AgentContextBudgetTests *********
+<end of output>
+Test time =   0.09 sec
+----------------------------------------------------------
+Test Passed.
+"test_agent_context_budget" end time: Oct 16 20:38 -03
+"test_agent_context_budget" time elapsed: 00:00:00
+----------------------------------------------------------
+
+63/90 Testing: test_download_history
+63/90 Test: test_download_history
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_download_history"
+Directory: /home/cristian/.cache/llamacode/source
+"test_download_history" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of DownloadHistoryTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : DownloadHistoryTests::initTestCase()
+PASS   : DownloadHistoryTests::jsonRoundTrip()
+PASS   : DownloadHistoryTests::append_fillsIdAndFinishedAt()
+PASS   : DownloadHistoryTests::append_persistsAndOrdersNewestFirst()
+PASS   : DownloadHistoryTests::append_capsToMax()
+PASS   : DownloadHistoryTests::clear_removesHistory()
+PASS   : DownloadHistoryTests::cleanupTestCase()
+Totals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 300ms
+********* Finished testing of DownloadHistoryTests *********
+<end of output>
+Test time =   0.31 sec
+----------------------------------------------------------
+Test Passed.
+"test_download_history" end time: Oct 16 20:38 -03
+"test_download_history" time elapsed: 00:00:00
+----------------------------------------------------------
+
+17/90 Testing: test_agent_rooms
+17/90 Test: test_agent_rooms
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_agent_rooms"
+Directory: /home/cristian/.cache/llamacode/source
+"test_agent_rooms" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of AgentRoomStoreTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : AgentRoomStoreTests::initTestCase()
+PASS   : AgentRoomStoreTests::persistsRoomTimelineAndParticipants()
+PASS   : AgentRoomStoreTests::grantsCanOnlyNarrow()
+PASS   : AgentRoomStoreTests::presetsAreExecutableContracts()
+PASS   : AgentRoomStoreTests::compactContextHonorsAudienceAndBudget()
+PASS   : AgentRoomStoreTests::cleanupTestCase()
+Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 65ms
+********* Finished testing of AgentRoomStoreTests *********
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"test_agent_rooms" end time: Oct 16 20:38 -03
+"test_agent_rooms" time elapsed: 00:00:00
+----------------------------------------------------------
+
+18/90 Testing: test_agent_project_dir
+18/90 Test: test_agent_project_dir
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_agent_project_dir"
+Directory: /home/cristian/.cache/llamacode/source
+"test_agent_project_dir" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of AgentProjectDirTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : AgentProjectDirTests::initTestCase()
+PASS   : AgentProjectDirTests::safeProjectDir_rejectsHomeAndRoot()
+PASS   : AgentProjectDirTests::startNeverFallsBackToHome()
+PASS   : AgentProjectDirTests::snapshotKeepsProjectDirWhenIndexLostIt()
+PASS   : AgentProjectDirTests::loadFromDiskRecoversSessionsMissingFromIndex()
+PASS   : AgentProjectDirTests::cleanupTestCase()
+Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 122ms
+********* Finished testing of AgentProjectDirTests *********
+<end of output>
+Test time =   0.13 sec
+----------------------------------------------------------
+Test Passed.
+"test_agent_project_dir" end time: Oct 16 20:38 -03
+"test_agent_project_dir" time elapsed: 00:00:00
+----------------------------------------------------------
+
+57/90 Testing: test_visual_matcher
+57/90 Test: test_visual_matcher
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_visual_matcher"
+Directory: /home/cristian/.cache/llamacode/source
+"test_visual_matcher" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of VisualMatcherTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : VisualMatcherTests::initTestCase()
+PASS   : VisualMatcherTests::findsUniqueTemplateAndNormalizesRect()
+PASS   : VisualMatcherTests::rejectsMissingTemplate()
+PASS   : VisualMatcherTests::rejectsAmbiguousRepeatedTemplate()
+PASS   : VisualMatcherTests::findsScaledTemplate()
+PASS   : VisualMatcherTests::rejectsUniformRegionWhenTemplateHasBorder()
+PASS   : VisualMatcherTests::largeDesktopSearchStaysBounded()
+PASS   : VisualMatcherTests::cleanupTestCase()
+Totals: 8 passed, 0 failed, 0 skipped, 0 blacklisted, 315ms
+********* Finished testing of VisualMatcherTests *********
+<end of output>
+Test time =   0.33 sec
+----------------------------------------------------------
+Test Passed.
+"test_visual_matcher" end time: Oct 16 20:38 -03
+"test_visual_matcher" time elapsed: 00:00:00
+----------------------------------------------------------
+
+64/90 Testing: test_theme
+64/90 Test: test_theme
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_theme"
+Directory: /home/cristian/.cache/llamacode/source
+"test_theme" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of ThemeTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : ThemeTests::initTestCase()
+PASS   : ThemeTests::builtinThemesSwitch()
+PASS   : ThemeTests::customThemeRoundTrips()
+PASS   : ThemeTests::applyCustomDerivesPalette()
+PASS   : ThemeTests::deleteActiveFallsBack()
+PASS   : ThemeTests::contrastChangesSurfaces()
+PASS   : ThemeTests::normalizeHexAcceptsAndRejects()
+PASS   : ThemeTests::saveSanitizesColorAnchors()
+PASS   : ThemeTests::closeGlyphVisibleOnHover()
+PASS   : ThemeTests::cleanupTestCase()
+Totals: 10 passed, 0 failed, 0 skipped, 0 blacklisted, 303ms
+********* Finished testing of ThemeTests *********
+<end of output>
+Test time =   0.32 sec
+----------------------------------------------------------
+Test Passed.
+"test_theme" end time: Oct 16 20:38 -03
+"test_theme" time elapsed: 00:00:00
+----------------------------------------------------------
+
+40/90 Testing: test_assistant_runtime
+40/90 Test: test_assistant_runtime
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_assistant_runtime"
+Directory: /home/cristian/.cache/llamacode/source
+"test_assistant_runtime" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of AssistantRuntimeTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : AssistantRuntimeTests::initTestCase()
+PASS   : AssistantRuntimeTests::rejectsInvalidTokenAndEmptyText()
+PASS   : AssistantRuntimeTests::acceptsAndDeduplicatesMessages()
+PASS   : AssistantRuntimeTests::completesMessageAndCreatesNotification()
+PASS   : AssistantRuntimeTests::servesAuthenticatedHttpEndpoint()
+PASS   : AssistantRuntimeTests::cleanupTestCase()
+Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 5ms
+********* Finished testing of AssistantRuntimeTests *********
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"test_assistant_runtime" end time: Oct 16 20:38 -03
+"test_assistant_runtime" time elapsed: 00:00:00
+----------------------------------------------------------
+
+47/90 Testing: test_backends_net
+47/90 Test: test_backends_net
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_backends_net"
+Directory: /home/cristian/.cache/llamacode/source
+"test_backends_net" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of BackendsNetTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : BackendsNetTests::initTestCase()
+PASS   : BackendsNetTests::start_createsInitialSession()
+PASS   : BackendsNetTests::newSession_addsSession()
+PASS   : BackendsNetTests::newSession_dropsPreviousEmptySession()
+PASS   : BackendsNetTests::emptySessionsDoNotSurviveRestart()
+PASS   : BackendsNetTests::renameSession_updatesTitle()
+PASS   : BackendsNetTests::switchSession_changesCurrent()
+PASS   : BackendsNetTests::deleteSession_removes()
+PASS   : BackendsNetTests::persistsAcrossRestart()
+PASS   : BackendsNetTests::stream_accumulatesAssistantContent()
+PASS   : BackendsNetTests::lifecycle_emitsSessionAndPromptInOrder()
+PASS   : BackendsNetTests::sampling_isSentPersistedAndFirstTokenMeasured()
+PASS   : BackendsNetTests::stream_reportsErrorOnHttp500()
+PASS   : BackendsNetTests::queuedMessages_canBePreviewedEditedAndRemoved()
+PASS   : BackendsNetTests::preamble_emptyWhenThinkingNoPersona()
+PASS   : BackendsNetTests::preamble_thinkingOffAddsNoThinkSystem()
+PASS   : BackendsNetTests::preamble_designerAddsPersonaFirst()
+PASS   : BackendsNetTests::designerPrompt_mentionsArtifactFences()
+PASS   : BackendsNetTests::cleanupTestCase()
+Totals: 19 passed, 0 failed, 0 skipped, 0 blacklisted, 26ms
+********* Finished testing of BackendsNetTests *********
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"test_backends_net" end time: Oct 16 20:38 -03
+"test_backends_net" time elapsed: 00:00:00
+----------------------------------------------------------
+
+81/90 Testing: qml_setup_wizard_policy
+81/90 Test: qml_setup_wizard_policy
+Command: "/home/cristian/Documents/Codex/2026-09-06/fijate-que-yo-tengo-el-proyecto-6/work/qt/6.8.3/gcc_64/bin/qml" "-I" "/home/cristian/.cache/llamacode/build_tests_linux/qml_harness" "/home/cristian/.cache/llamacode/build_tests_linux/qml_harness/tst_setup_wizard_policy.qml"
+Directory: /media/cristian/Disco local/LlamaCode-cache/build_tests_linux
+"qml_setup_wizard_policy" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+qml:   PASS sin binario ni modelo el paso 3 NO esta hecho aunque haya perfiles de sistema
+qml:   PASS sin binario ni modelo pide completarlos (no dice 'Listo para lanzar')
+qml:   PASS con binario pero sin modelo el paso 3 no esta hecho
+qml:   PASS con binario y modelo pero sin perfil avisa que lo esta creando
+qml:   PASS con los tres el paso 3 esta listo
+qml:   PASS ofrece el perfil de sistema recomendado
+qml:   PASS ofrece el showcase aunque no haya tier unico
+qml:   PASS 'No, gracias' oculta el inicio rapido
+qml:   PASS sin nada que recomendar no hay card
+qml:   PASS con inicio rapido visible NO muestra una segunda recomendacion de modelo
+qml:   PASS tras 'No, gracias' muestra el pick manual
+qml:   PASS con un modelo ya instalado no recomienda otro
+qml:   PASS sin recomendaciones no muestra la card
+qml: TODO OK
+<end of output>
+Test time =   0.36 sec
+----------------------------------------------------------
+Test Passed.
+"qml_setup_wizard_policy" end time: Oct 16 20:38 -03
+"qml_setup_wizard_policy" time elapsed: 00:00:00
+----------------------------------------------------------
+
+45/90 Testing: test_master_cli
+45/90 Test: test_master_cli
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_master_cli"
+Directory: /home/cristian/.cache/llamacode/source
+"test_master_cli" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of MasterCliTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : MasterCliTests::initTestCase()
+PASS   : MasterCliTests::supported_listsClaudeAndCodex()
+PASS   : MasterCliTests::label_known()
+PASS   : MasterCliTests::installCommand_known()
+PASS   : MasterCliTests::status_hasExpectedKeys()
+PASS   : MasterCliTests::status_cachedUntilInvalidate()
+PASS   : MasterCliTests::requestStatus_doesNotBlockAndNotifies()
+PASS   : MasterCliTests::cleanupTestCase()
+Totals: 8 passed, 0 failed, 0 skipped, 0 blacklisted, 26ms
+********* Finished testing of MasterCliTests *********
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"test_master_cli" end time: Oct 16 20:38 -03
+"test_master_cli" time elapsed: 00:00:00
+----------------------------------------------------------
+
+49/90 Testing: test_mermaid
+49/90 Test: test_mermaid
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_mermaid"
+Directory: /home/cristian/.cache/llamacode/source
+"test_mermaid" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of MermaidTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : MermaidTests::initTestCase()
+PASS   : MermaidTests::segments_plainTextOnly()
+PASS   : MermaidTests::segments_singleBlock()
+PASS   : MermaidTests::segments_textBeforeAndAfter()
+PASS   : MermaidTests::segments_unclosedFenceStaysText()
+PASS   : MermaidTests::segments_caseInsensitiveLang()
+PASS   : MermaidTests::segments_svgBlock()
+PASS   : MermaidTests::segments_mixedMermaidAndSvg()
+PASS   : MermaidTests::hash_stableAndDistinct()
+PASS   : MermaidTests::cachedPath_emptyWhenNotRendered()
+PASS   : MermaidTests::requestRender_emitsResult()
+PASS   : MermaidTests::renderSvg_validProducesPng()
+PASS   : MermaidTests::renderSvg_invalidReturnsEmpty()
+PASS   : MermaidTests::exportSource_writesVerbatim()
+PASS   : MermaidTests::exportPng_svgProducesFile()
+PASS   : MermaidTests::exportPng_uncachedReturnsFalse()
+PASS   : MermaidTests::export_emptyDestReturnsFalse()
+PASS   : MermaidTests::cleanupTestCase()
+Totals: 18 passed, 0 failed, 0 skipped, 0 blacklisted, 13ms
+********* Finished testing of MermaidTests *********
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"test_mermaid" end time: Oct 16 20:38 -03
+"test_mermaid" time elapsed: 00:00:00
+----------------------------------------------------------
+
+46/90 Testing: test_managed_agent_runs
+46/90 Test: test_managed_agent_runs
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_managed_agent_runs"
+Directory: /home/cristian/.cache/llamacode/source
+"test_managed_agent_runs" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of ManagedAgentRunTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : ManagedAgentRunTests::initTestCase()
+PASS   : ManagedAgentRunTests::claude_defaults_toPlan()
+PASS   : ManagedAgentRunTests::codex_doesNotEnableFullAutoImplicitly()
+PASS   : ManagedAgentRunTests::codex_fullAutoRequiresExplicitDangerousApproval()
+PASS   : ManagedAgentRunTests::defaultTransportUsesStdin()
+PASS   : ManagedAgentRunTests::workspaceClaimRejectsOverlap()
+PASS   : ManagedAgentRunTests::invalidRunDoesNotStart()
+SKIP   : ManagedAgentRunTests::startPersistsArtifactsAndHistory() La prueba usa cmd.exe para no depender de Claude/Codex instalados.
+   Loc: [/home/cristian/.cache/llamacode/source/tests/test_managed_agent_runs.cpp(118)]
+PASS   : ManagedAgentRunTests::cleanupTestCase()
+Totals: 8 passed, 0 failed, 1 skipped, 0 blacklisted, 62ms
+********* Finished testing of ManagedAgentRunTests *********
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"test_managed_agent_runs" end time: Oct 16 20:38 -03
+"test_managed_agent_runs" time elapsed: 00:00:00
+----------------------------------------------------------
+
+50/90 Testing: test_mail
+50/90 Test: test_mail
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_mail"
+Directory: /home/cristian/.cache/llamacode/source
+"test_mail" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of MailTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : MailTests::initTestCase()
+PASS   : MailTests::preset_gmail()
+PASS   : MailTests::preset_outlookByHotmail()
+PASS   : MailTests::preset_customRespected()
+PASS   : MailTests::buildMime_headersAndEncoding()
+PASS   : MailTests::buildMime_dotStuffing()
+PASS   : MailTests::decodeHeaderWord_base64AndQ()
+PASS   : MailTests::parseImapEnvelope_basic()
+PASS   : MailTests::parsePop3List_basic()
+PASS   : MailTests::cleanupTestCase()
+Totals: 10 passed, 0 failed, 0 skipped, 0 blacklisted, 2ms
+********* Finished testing of MailTests *********
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"test_mail" end time: Oct 16 20:38 -03
+"test_mail" time elapsed: 00:00:00
+----------------------------------------------------------
+
+38/90 Testing: test_model_role_registry
+38/90 Test: test_model_role_registry
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_model_role_registry"
+Directory: /home/cristian/.cache/llamacode/source
+"test_model_role_registry" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of ModelRoleRegistryTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : ModelRoleRegistryTests::initTestCase()
+PASS   : ModelRoleRegistryTests::exposesSafeDefaults()
+PASS   : ModelRoleRegistryTests::resolvesPrimaryAndFallback()
+PASS   : ModelRoleRegistryTests::persistsAllowedOverrides()
+PASS   : ModelRoleRegistryTests::cleanupTestCase()
+Totals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 35ms
+********* Finished testing of ModelRoleRegistryTests *********
+<end of output>
+Test time =   0.05 sec
+----------------------------------------------------------
+Test Passed.
+"test_model_role_registry" end time: Oct 16 20:38 -03
+"test_model_role_registry" time elapsed: 00:00:00
+----------------------------------------------------------
+
+26/90 Testing: test_datalab
+26/90 Test: test_datalab
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_datalab"
+Directory: /home/cristian/.cache/llamacode/source
+"test_datalab" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of DataLabTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : DataLabTests::initTestCase()
+PASS   : DataLabTests::schemaValidation()
+PASS   : DataLabTests::recordNormalizationAndValidation()
+PASS   : DataLabTests::jobExtractionAndPersistence()
+PASS   : DataLabTests::modelResponseParsing()
+PASS   : DataLabTests::routingAndArbitration()
+PASS   : DataLabTests::headlessFakeLlmExtraction()
+PASS   : DataLabTests::headlessRetryAndRepair()
+PASS   : DataLabTests::benchmarkScoring()
+PASS   : DataLabTests::cleanupTestCase()
+Totals: 10 passed, 0 failed, 0 skipped, 0 blacklisted, 366ms
+********* Finished testing of DataLabTests *********
+<end of output>
+Test time =   0.38 sec
+----------------------------------------------------------
+Test Passed.
+"test_datalab" end time: Oct 16 20:38 -03
+"test_datalab" time elapsed: 00:00:00
+----------------------------------------------------------
+
+78/90 Testing: qml_navigation_policy
+78/90 Test: qml_navigation_policy
+Command: "/home/cristian/Documents/Codex/2026-09-06/fijate-que-yo-tengo-el-proyecto-6/work/qt/6.8.3/gcc_64/bin/qml" "-I" "/home/cristian/.cache/llamacode/build_tests_linux/qml_harness" "/home/cristian/.cache/llamacode/build_tests_linux/qml_harness/tst_navigation_policy.qml"
+Directory: /media/cristian/Disco local/LlamaCode-cache/build_tests_linux
+"qml_navigation_policy" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+qml:   PASS Agente permanece visible durante el hot-swap sin backend
+qml:   PASS Agente permanece habilitado durante el hot-swap
+qml:   PASS Agente vuelve a Lanzar ante una detencion real
+qml:   PASS Tasks conserva la vista durante una transicion activa
+qml:   PASS Tasks exige agente cuando no hay transicion
+qml:   PASS durante el arranque muestra la fase
+qml:   PASS servidor listo sin agente
+qml:   PASS servidor y agente
+qml:   PASS running sin ready = cargando
+qml:   PASS deteniendo tiene prioridad
+qml:   PASS falla visible
+qml:   PASS detenido
+qml: TODO OK
+<end of output>
+Test time =   0.37 sec
+----------------------------------------------------------
+Test Passed.
+"qml_navigation_policy" end time: Oct 16 20:38 -03
+"qml_navigation_policy" time elapsed: 00:00:00
+----------------------------------------------------------
+
+60/90 Testing: test_run_history
+60/90 Test: test_run_history
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_run_history"
+Directory: /home/cristian/.cache/llamacode/source
+"test_run_history" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of RunHistoryTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : RunHistoryTests::initTestCase()
+PASS   : RunHistoryTests::jsonRoundTrip()
+PASS   : RunHistoryTests::append_persistsAndOrdersNewestFirst()
+PASS   : RunHistoryTests::append_capsPerOwner()
+PASS   : RunHistoryTests::owners_areIsolated()
+PASS   : RunHistoryTests::clear_removesHistory()
+PASS   : RunHistoryTests::cleanupTestCase()
+Totals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 61ms
+********* Finished testing of RunHistoryTests *********
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"test_run_history" end time: Oct 16 20:38 -03
+"test_run_history" time elapsed: 00:00:00
+----------------------------------------------------------
+
+33/90 Testing: test_long_context_probe
+33/90 Test: test_long_context_probe
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_long_context_probe"
+Directory: /home/cristian/.cache/llamacode/source
+"test_long_context_probe" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of LongContextProbeTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : LongContextProbeTests::initTestCase()
+PASS   : LongContextProbeTests::standardDepths_areSevenAndOrdered()
+PASS   : LongContextProbeTests::buildCases_isDeterministic()
+PASS   : LongContextProbeTests::buildCases_rejectsInvalidInputs()
+PASS   : LongContextProbeTests::buildCases_hasUniqueSingleOccurrencePasskeys()
+PASS   : LongContextProbeTests::buildCases_placesNeedleMonotonically()
+PASS   : LongContextProbeTests::buildCases_reachesRequestedApproximateContext()
+PASS   : LongContextProbeTests::buildCases_supportsOneMillionTokens()
+PASS   : LongContextProbeTests::retrievalAcceptance_isCaseInsensitiveButNotEmpty()
+PASS   : LongContextProbeTests::cleanupTestCase()
+Totals: 10 passed, 0 failed, 0 skipped, 0 blacklisted, 10ms
+********* Finished testing of LongContextProbeTests *********
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"test_long_context_probe" end time: Oct 16 20:38 -03
+"test_long_context_probe" time elapsed: 00:00:00
+----------------------------------------------------------
+
+68/90 Testing: test_tray
+68/90 Test: test_tray
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_tray"
+Directory: /home/cristian/.cache/llamacode/source
+"test_tray" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of TrayTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : TrayTests::initTestCase()
+QINFO  : TrayTests::menuTextStartsNearLeftEdge(Windows) Windows gap = 16 menu width = 137
+PASS   : TrayTests::menuTextStartsNearLeftEdge(Windows)
+QINFO  : TrayTests::menuTextStartsNearLeftEdge(Fusion) Fusion gap = 16 menu width = 137
+PASS   : TrayTests::menuTextStartsNearLeftEdge(Fusion)
+PASS   : TrayTests::teachActionsOnlyWhileRecording()
+PASS   : TrayTests::cleanupTestCase()
+Totals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 10ms
+********* Finished testing of TrayTests *********
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"test_tray" end time: Oct 16 20:38 -03
+"test_tray" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1/90 Testing: test_gguf_profiles
+1/90 Test: test_gguf_profiles
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_gguf_profiles"
+Directory: /home/cristian/.cache/llamacode/source
+"test_gguf_profiles" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of CoreTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : CoreTests::initTestCase()
+PASS   : CoreTests::mtpDraftFailureFallsBackWithoutDraft()
+PASS   : CoreTests::inferFamily(qwen)
+PASS   : CoreTests::inferFamily(llama)
+PASS   : CoreTests::inferFamily(mistral)
+PASS   : CoreTests::inferFamily(gemma)
+PASS   : CoreTests::inferFamily(phi)
+PASS   : CoreTests::inferFamily(deepseek)
+PASS   : CoreTests::inferQuant(q4km)
+PASS   : CoreTests::inferQuant(q8)
+PASS   : CoreTests::inferQuant(iq3)
+PASS   : CoreTests::inferQuant(bf16)
+PASS   : CoreTests::visionCandidate()
+PASS   : CoreTests::draftCandidate()
+PASS   : CoreTests::katTemplateSupportsVisionContent()
+PASS   : CoreTests::ngramLookupTensorClassification()
+PASS   : CoreTests::readComposition_countsNgramElements()
+PASS   : CoreTests::ngramArchitectureNameDetection()
+PASS   : CoreTests::shardPaths_enumeratesSiblings()
+PASS   : CoreTests::readCompositionAllShards_aggregates()
+PASS   : CoreTests::readComposition_realTensors()
+PASS   : CoreTests::readComposition_metadata()
+PASS   : CoreTests::readComposition_detectsMtpLayers()
+PASS   : CoreTests::readComposition_rejectsGarbage()
+PASS   : CoreTests::degradedQat(google-raw)
+PASS   : CoreTests::degradedQat(unsloth-ud)
+PASS   : CoreTests::degradedQat(unsloth-name)
+PASS   : CoreTests::degradedQat(not-qat)
+PASS   : CoreTests::degradedQat(not-gemma)
+PASS   : CoreTests::degradedQat(not-q4_0)
+PASS   : CoreTests::builder_emitsHostPort()
+PASS   : CoreTests::builder_usesCurrentPlatformArgs()
+PASS   : CoreTests::builder_dropsUnsupportedFlag()
+PASS   : CoreTests::builder_missingModelIsBlocking()
+PASS   : CoreTests::builder_cloudProfileIsValidWithoutLocalModel()
+PASS   : CoreTests::builder_cpuAuxiliaryRuntimeEmitsConservativeFlags()
+PASS   : CoreTests::builder_parallelRuntimeEmitsConfiguredSlots()
+PASS   : CoreTests::builder_emitsSpecFlags()
+PASS   : CoreTests::builder_missingDraftIsBlocking()
+PASS   : CoreTests::builder_rawDraftMtpRequiresDraftModel()
+PASS   : CoreTests::builder_emitsKatApexMtpWithMmproj()
+PASS   : CoreTests::builder_rawDsparkDoesNotRequireExternalDraftModel()
+PASS   : CoreTests::builder_externalDsparkEmitsDraftAndType()
+PASS   : CoreTests::builder_emitsSelfContainedMtpFlags()
+PASS   : CoreTests::builder_emitsAdaptiveSelfContainedMtpFlags()
+PASS   : CoreTests::builder_emitsAdaptiveExternalDraftFlags()
+PASS   : CoreTests::builder_rejectsAdaptiveWithoutCeiling()
+PASS   : CoreTests::builder_rejectsAdaptiveMinAboveMax()
+PASS   : CoreTests::builder_rejectsAdaptiveWithoutBinaryCapability()
+PASS   : CoreTests::builder_dropsGemmaDraftOnOldBinary()
+PASS   : CoreTests::builder_respectsKvCapWithDraft()
+PASS   : CoreTests::builder_appliesQwenCodingSamplingPreset()
+PASS   : CoreTests::builder_warnsOnManualQwenSampling()
+PASS   : CoreTests::builder_emitsTensorOverrides()
+PASS   : CoreTests::builder_warnsOnMalformedTensorOverride()
+PASS   : CoreTests::builder_ninfer3090UsesNativeArtifactCli()
+PASS   : CoreTests::builder_ninferServeMapsParallelSlotsAndKeepsVisionOptIn()
+PASS   : CoreTests::builder_preservesSpecializedKvRuntimeArgsAndEnv()
+PASS   : CoreTests::runtimePreset_roundtripsTensorOverrides()
+PASS   : CoreTests::cleanupTestCase()
+Totals: 60 passed, 0 failed, 0 skipped, 0 blacklisted, 2ms
+********* Finished testing of CoreTests *********
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"test_gguf_profiles" end time: Oct 16 20:38 -03
+"test_gguf_profiles" time elapsed: 00:00:00
+----------------------------------------------------------
+
+21/90 Testing: test_registries
+21/90 Test: test_registries
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_registries"
+Directory: /home/cristian/.cache/llamacode/source
+"test_registries" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of RegistriesTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : RegistriesTests::initTestCase()
+PASS   : RegistriesTests::llamaBinary_flagsAndAlias()
+PASS   : RegistriesTests::llamaBinary_jsonRoundTrip()
+PASS   : RegistriesTests::modelRoot_jsonRoundTrip()
+PASS   : RegistriesTests::binaryRegistry_addGetRemove()
+PASS   : RegistriesTests::binaryRegistry_addIsAppendOnly()
+PASS   : RegistriesTests::binaryRegistry_supportedFlagsAndHash()
+PASS   : RegistriesTests::binaryRegistry_persists()
+PASS   : RegistriesTests::modelRootRegistry_addRemove()
+PASS   : RegistriesTests::modelRootRegistry_scanFindsGguf()
+PASS   : RegistriesTests::ggufScanner_reusesUnchangedCatalogMetadata()
+PASS   : RegistriesTests::ollamaImporter_resolveScheme()
+PASS   : RegistriesTests::ollamaImporter_scanFindsBlobs()
+PASS   : RegistriesTests::ollamaImporter_extractsProjector()
+PASS   : RegistriesTests::modelRootRegistry_ollamaSchemeIngests()
+PASS   : RegistriesTests::cleanupTestCase()
+Totals: 16 passed, 0 failed, 0 skipped, 0 blacklisted, 158ms
+********* Finished testing of RegistriesTests *********
+<end of output>
+Test time =   0.18 sec
+----------------------------------------------------------
+Test Passed.
+"test_registries" end time: Oct 16 20:38 -03
+"test_registries" time elapsed: 00:00:00
+----------------------------------------------------------
+
+12/90 Testing: test_harness_worker_protocol
+12/90 Test: test_harness_worker_protocol
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_harness_worker_protocol"
+Directory: /home/cristian/.cache/llamacode/source
+"test_harness_worker_protocol" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of HarnessWorkerProtocolTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : HarnessWorkerProtocolTests::initTestCase()
+PASS   : HarnessWorkerProtocolTests::framesCanBeChunkedAndCoalesced()
+PASS   : HarnessWorkerProtocolTests::frameBoundsAndProtocolAreStrict()
+PASS   : HarnessWorkerProtocolTests::sessionRejectsReuseAndStaleResults()
+PASS   : HarnessWorkerProtocolTests::workerModuleRoundTripsAndClamps()
+PASS   : HarnessWorkerProtocolTests::sandboxRejectsEmptyProgramAndKeepsLegacyNone()
+PASS   : HarnessWorkerProtocolTests::strongSandboxStartsWithWorkspaceUnderTmpfs()
+PASS   : HarnessWorkerProtocolTests::strongSandboxCanHideHostUserData()
+PASS   : HarnessWorkerProtocolTests::strongSandboxCanApplyOptionalCgroupLimits()
+PASS   : HarnessWorkerProtocolTests::factoryAdmitsOnlyRequestedCapabilities()
+PASS   : HarnessWorkerProtocolTests::workerCallsAreClassifiedAsDestructive()
+SKIP   : HarnessWorkerProtocolTests::nodeWorkerDriverRoundTripsWhenAvailable() Node.js y el ejemplo del SDK no están disponibles en este entorno
+   Loc: [/home/cristian/.cache/llamacode/source/tests/test_harness_worker_protocol.cpp(280)]
+SKIP   : HarnessWorkerProtocolTests::pythonWorkerDriverRoundTripsWhenAvailable() Python y el ejemplo del SDK no están disponibles en este entorno
+   Loc: [/home/cristian/.cache/llamacode/source/tests/test_harness_worker_protocol.cpp(311)]
+PASS   : HarnessWorkerProtocolTests::cleanupTestCase()
+Totals: 12 passed, 0 failed, 2 skipped, 0 blacklisted, 42ms
+********* Finished testing of HarnessWorkerProtocolTests *********
+<end of output>
+Test time =   0.06 sec
+----------------------------------------------------------
+Test Passed.
+"test_harness_worker_protocol" end time: Oct 16 20:38 -03
+"test_harness_worker_protocol" time elapsed: 00:00:00
+----------------------------------------------------------
+
+13/90 Testing: test_agent_definitions
+13/90 Test: test_agent_definitions
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_agent_definitions"
+Directory: /home/cristian/.cache/llamacode/source
+"test_agent_definitions" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of AgentDefinitionTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : AgentDefinitionTests::initTestCase()
+PASS   : AgentDefinitionTests::revisionsDiffAndRestore()
+PASS   : AgentDefinitionTests::feedbackRequiresApproval()
+PASS   : AgentDefinitionTests::persistsAndDuplicates()
+PASS   : AgentDefinitionTests::metricsAggregateLinkedTasks()
+PASS   : AgentDefinitionTests::triggersMatchDispatchAndDebounce()
+PASS   : AgentDefinitionTests::cleanupTestCase()
+Totals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 15ms
+********* Finished testing of AgentDefinitionTests *********
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"test_agent_definitions" end time: Oct 16 20:38 -03
+"test_agent_definitions" time elapsed: 00:00:00
+----------------------------------------------------------
+
+52/90 Testing: test_tasks
+52/90 Test: test_tasks
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_tasks"
+Directory: /home/cristian/.cache/llamacode/source
+"test_tasks" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of TasksTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : TasksTests::initTestCase()
+PASS   : TasksTests::jsonRoundTrip()
+PASS   : TasksTests::jsonRoundTrip_permsAndScheduleSpec()
+PASS   : TasksTests::composePrompt_mentionsAllowedFolder()
+PASS   : TasksTests::composePrompt_includesGoalStepsAndAdaptation()
+PASS   : TasksTests::composePrompt_includesPreAndPostPrompts()
+PASS   : TasksTests::sanitize_slug()
+PASS   : TasksTests::crud_persistsAcrossInstances()
+PASS   : TasksTests::duplicate_clonesWithNewId()
+PASS   : TasksTests::markRun_updatesStatus()
+PASS   : TasksTests::reload_recoversOrphanRunningStatus()
+PASS   : TasksTests::reload_preservesResumableWorkflow()
+PASS   : TasksTests::loop_jsonRoundTrip()
+PASS   : TasksTests::loop_decideStopsAndRepeats()
+PASS   : TasksTests::loop_stopsAtOperationalTimeBudget()
+PASS   : TasksTests::loop_composeGoalPrompt()
+PASS   : TasksTests::loop_runsExactlyMaxIterationsWhenGoalNeverMet()
+PASS   : TasksTests::loop_stopsEarlyWhenGoalMet()
+PASS   : TasksTests::loop_composeProgressCarriesPriorVerdict()
+PASS   : TasksTests::verifyProfile_routesOnlyWhenSetAndDifferent()
+PASS   : TasksTests::schedulerDaemon_quotesExecutablePath()
+PASS   : TasksTests::cleanupTestCase()
+Totals: 22 passed, 0 failed, 0 skipped, 0 blacklisted, 9ms
+********* Finished testing of TasksTests *********
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"test_tasks" end time: Oct 16 20:38 -03
+"test_tasks" time elapsed: 00:00:00
+----------------------------------------------------------
+
+58/90 Testing: test_cron
+58/90 Test: test_cron
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_cron"
+Directory: /home/cristian/.cache/llamacode/source
+"test_cron" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of CronTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : CronTests::initTestCase()
+PASS   : CronTests::parse_rejectsBadFieldCount()
+PASS   : CronTests::parse_rejectsOutOfRange()
+PASS   : CronTests::matches_exactMinuteHour()
+PASS   : CronTests::matches_wildcards()
+PASS   : CronTests::matches_stepAndRange()
+PASS   : CronTests::matches_list()
+PASS   : CronTests::matches_sundayZeroOrSeven()
+PASS   : CronTests::matches_domDowOrSemantics()
+PASS   : CronTests::dueTaskIds_selectsEnabledMatching()
+PASS   : CronTests::sched_daily()
+PASS   : CronTests::sched_weekly()
+PASS   : CronTests::sched_monthlyByDate()
+PASS   : CronTests::sched_monthlyNthWeekday()
+PASS   : CronTests::sched_everyNMonths()
+PASS   : CronTests::sched_cronDelegates()
+PASS   : CronTests::dueTaskIds_prefersSpecOverCron()
+PASS   : CronTests::cleanupTestCase()
+Totals: 18 passed, 0 failed, 0 skipped, 0 blacklisted, 2ms
+********* Finished testing of CronTests *********
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"test_cron" end time: Oct 16 20:38 -03
+"test_cron" time elapsed: 00:00:00
+----------------------------------------------------------
+
+59/90 Testing: test_automation_store
+59/90 Test: test_automation_store
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_automation_store"
+Directory: /home/cristian/.cache/llamacode/source
+"test_automation_store" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of AutomationStoreTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : AutomationStoreTests::initTestCase()
+PASS   : AutomationStoreTests::jsonRoundTrip()
+PASS   : AutomationStoreTests::crud_persistsAcrossInstances()
+PASS   : AutomationStoreTests::markRun_updatesStatus()
+PASS   : AutomationStoreTests::pruneOrphans_dropsUnlinked()
+PASS   : AutomationStoreTests::dueTaskIds_matchesScheduleSpec()
+PASS   : AutomationStoreTests::failedRunSchedulesExponentialRetry()
+PASS   : AutomationStoreTests::cleanupTestCase()
+Totals: 8 passed, 0 failed, 0 skipped, 0 blacklisted, 6ms
+********* Finished testing of AutomationStoreTests *********
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"test_automation_store" end time: Oct 16 20:38 -03
+"test_automation_store" time elapsed: 00:00:00
+----------------------------------------------------------
+
+15/90 Testing: test_agent_efficiency
+15/90 Test: test_agent_efficiency
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_agent_efficiency"
+Directory: /home/cristian/.cache/llamacode/source
+"test_agent_efficiency" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of AgentEfficiencyTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : AgentEfficiencyTests::initTestCase()
+PASS   : AgentEfficiencyTests::metrics_parsesLlamaAndOpenAI()
+PASS   : AgentEfficiencyTests::metrics_summarizesAndCompares()
+PASS   : AgentEfficiencyTests::metrics_summarizesSpeculativeAcceptance()
+PASS   : AgentEfficiencyTests::metrics_extractsLifecycleToolCalls()
+PASS   : AgentEfficiencyTests::metrics_scoresToolCallCorrectnessAndRedundancy()
+PASS   : AgentEfficiencyTests::metrics_detectsWrongToolOrderAndFailedExpectedCall()
+PASS   : AgentEfficiencyTests::metrics_keepsUnknownCorrectnessSeparateFromFailures()
+PASS   : AgentEfficiencyTests::metrics_aggregatesRepeatedBenchmarkRuns()
+PASS   : AgentEfficiencyTests::metrics_aggregatesToolQuality()
+PASS   : AgentEfficiencyTests::metrics_groupsByAgentProfileForHarnessAb()
+PASS   : AgentEfficiencyTests::structured_compactsAndProjects()
+PASS   : AgentEfficiencyTests::structured_rejectsUnsafeLanguagesAndSyntax()
+PASS   : AgentEfficiencyTests::workflow_validatesRoutesAndApproval()
+PASS   : AgentEfficiencyTests::workflow_budgetAndSnapshot()
+PASS   : AgentEfficiencyTests::workflow_gateVerdictAndBoundedRepair()
+PASS   : AgentEfficiencyTests::workflowRunner_dispatchApprovalConditionAndFinish()
+PASS   : AgentEfficiencyTests::workflowRunner_pauseResumeAndStep()
+PASS   : AgentEfficiencyTests::workflowVisual_roundTripPreservesAdvancedFields()
+PASS   : AgentEfficiencyTests::cleanupTestCase()
+Totals: 20 passed, 0 failed, 0 skipped, 0 blacklisted, 2ms
+********* Finished testing of AgentEfficiencyTests *********
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"test_agent_efficiency" end time: Oct 16 20:38 -03
+"test_agent_efficiency" time elapsed: 00:00:00
+----------------------------------------------------------
+
+37/90 Testing: test_auxiliary_job_scheduler
+37/90 Test: test_auxiliary_job_scheduler
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_auxiliary_job_scheduler"
+Directory: /home/cristian/.cache/llamacode/source
+"test_auxiliary_job_scheduler" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of AuxiliaryJobSchedulerTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : AuxiliaryJobSchedulerTests::initTestCase()
+PASS   : AuxiliaryJobSchedulerTests::startsHighestPriorityFirst()
+PASS   : AuxiliaryJobSchedulerTests::equalPriorityIsFifo()
+PASS   : AuxiliaryJobSchedulerTests::respectsClassLimit()
+PASS   : AuxiliaryJobSchedulerTests::nonPositiveClassLimitBlocksOnlyThatClass()
+PASS   : AuxiliaryJobSchedulerTests::blocksBusyResource()
+PASS   : AuxiliaryJobSchedulerTests::cancellingRunningJobReleasesResource()
+PASS   : AuxiliaryJobSchedulerTests::failedJobIsTerminal()
+PASS   : AuxiliaryJobSchedulerTests::cancelQueuedJob()
+PASS   : AuxiliaryJobSchedulerTests::cleanupTestCase()
+Totals: 10 passed, 0 failed, 0 skipped, 0 blacklisted, 1ms
+********* Finished testing of AuxiliaryJobSchedulerTests *********
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"test_auxiliary_job_scheduler" end time: Oct 16 20:38 -03
+"test_auxiliary_job_scheduler" time elapsed: 00:00:00
+----------------------------------------------------------
+
+65/90 Testing: test_toolcalling
+65/90 Test: test_toolcalling
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_toolcalling"
+Directory: /home/cristian/.cache/llamacode/source
+"test_toolcalling" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of ToolCallingTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : ToolCallingTests::initTestCase()
+PASS   : ToolCallingTests::normalizeKey_equivalentVariants()
+PASS   : ToolCallingTests::fromCookbook_supported()
+PASS   : ToolCallingTests::fromCookbook_unsupported()
+PASS   : ToolCallingTests::fromCookbook_unknownNoMatch()
+PASS   : ToolCallingTests::templateMentionsTools_detects()
+PASS   : ToolCallingTests::combine_matrix()
+PASS   : ToolCallingTests::forceTextTools_onlyWhenUnsupported()
+PASS   : ToolCallingTests::cleanupTestCase()
+Totals: 9 passed, 0 failed, 0 skipped, 0 blacklisted, 5ms
+********* Finished testing of ToolCallingTests *********
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"test_toolcalling" end time: Oct 16 20:38 -03
+"test_toolcalling" time elapsed: 00:00:00
+----------------------------------------------------------
+
+67/90 Testing: test_model_load_progress
+67/90 Test: test_model_load_progress
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_model_load_progress"
+Directory: /home/cristian/.cache/llamacode/source
+"test_model_load_progress" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of ModelLoadProgressTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : ModelLoadProgressTests::initTestCase()
+PASS   : ModelLoadProgressTests::idleHasNoProgress()
+PASS   : ModelLoadProgressTests::stagesFromRealServerLog()
+PASS   : ModelLoadProgressTests::dotsGiveRealPercent()
+PASS   : ModelLoadProgressTests::dotsSplitAcrossChunks()
+PASS   : ModelLoadProgressTests::estimateByTimeIsCapped()
+PASS   : ModelLoadProgressTests::neverGoesBackwards()
+PASS   : ModelLoadProgressTests::readyReportsDuration()
+PASS   : ModelLoadProgressTests::failureAndStop()
+PASS   : ModelLoadProgressTests::expectedFromFileSize()
+PASS   : ModelLoadProgressTests::labels()
+PASS   : ModelLoadProgressTests::cleanupTestCase()
+Totals: 12 passed, 0 failed, 0 skipped, 0 blacklisted, 0ms
+********* Finished testing of ModelLoadProgressTests *********
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"test_model_load_progress" end time: Oct 16 20:38 -03
+"test_model_load_progress" time elapsed: 00:00:00
+----------------------------------------------------------
+
+69/90 Testing: test_logtriage
+69/90 Test: test_logtriage
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_logtriage"
+Directory: /home/cristian/.cache/llamacode/source
+"test_logtriage" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of LogTriageTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : LogTriageTests::initTestCase()
+PASS   : LogTriageTests::isErrorLine_detectsErrorsIgnoresInfo()
+PASS   : LogTriageTests::normalize_collapsesVariableParts()
+PASS   : LogTriageTests::group_dedupsAndCounts()
+PASS   : LogTriageTests::group_ordersByCountDesc()
+PASS   : LogTriageTests::summarize_capsGroupsAndReportsRest()
+PASS   : LogTriageTests::summarize_emptyWhenNoErrors()
+PASS   : LogTriageTests::performanceWarnings_detectsCpuFallbacks()
+PASS   : LogTriageTests::performanceWarnings_ignoresHealthyLog()
+PASS   : LogTriageTests::cleanupTestCase()
+Totals: 10 passed, 0 failed, 0 skipped, 0 blacklisted, 2ms
+********* Finished testing of LogTriageTests *********
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"test_logtriage" end time: Oct 16 20:38 -03
+"test_logtriage" time elapsed: 00:00:00
+----------------------------------------------------------
+
+31/90 Testing: test_tuner
+31/90 Test: test_tuner
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_tuner"
+Directory: /home/cristian/.cache/llamacode/source
+"test_tuner" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of TunerTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : TunerTests::initTestCase()
+PASS   : TunerTests::paramSpec_intRange()
+PASS   : TunerTests::paramSpec_categorical()
+PASS   : TunerTests::computeLoss_penalizesSubGate()
+PASS   : TunerTests::run_qualityGateAvoidsLowestQuant()
+PASS   : TunerTests::tunedArgs_emitsSpecDraftNMax()
+PASS   : TunerTests::speculativeNMaxParam_usesAdaptiveBounds()
+PASS   : TunerTests::tunedArgs_emitsSpecConfMin()
+PASS   : TunerTests::tunedArgs_emitsCpuMoe()
+PASS   : TunerTests::tunedArgs_emitsSplitMode()
+PASS   : TunerTests::tunedArgs_emitsFlashAttnValue()
+PASS   : TunerTests::booleanSwitchValue_isRecognized()
+PASS   : TunerTests::canTuneSplitMode_gatesUnsafeLayouts()
+PASS   : TunerTests::parsePerplexity_readsLastReportedValue()
+PASS   : TunerTests::parseThroughput_splitsPromptAndGen()
+PASS   : TunerTests::parseThroughput_derivesFromMsAndCount()
+PASS   : TunerTests::parseThroughput_invalidWhenNoTimings()
+PASS   : TunerTests::parseThroughput_clampsDraftAcceptance()
+PASS   : TunerTests::blended_respectsWeightExtremes()
+PASS   : TunerTests::blended_fallsBackToMeasuredLeg()
+PASS   : TunerTests::promotionGate_requiresMeasuredImprovementAndQuality()
+PASS   : TunerTests::padPrompt_reachesTargetAndKeepsInstruction()
+PASS   : TunerTests::composeArgs_preservesBaseAndAddsEndpoint()
+PASS   : TunerTests::cleanupTestCase()
+Totals: 24 passed, 0 failed, 0 skipped, 0 blacklisted, 1ms
+********* Finished testing of TunerTests *********
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"test_tuner" end time: Oct 16 20:38 -03
+"test_tuner" time elapsed: 00:00:00
+----------------------------------------------------------
+
+24/90 Testing: test_engine_catalog
+24/90 Test: test_engine_catalog
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_engine_catalog"
+Directory: /home/cristian/.cache/llamacode/source
+"test_engine_catalog" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of EngineCatalogTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : EngineCatalogTests::initTestCase()
+PASS   : EngineCatalogTests::catalogIncludesSourceForks()
+PASS   : EngineCatalogTests::variantCompatibilityReportsReason()
+PASS   : EngineCatalogTests::versionComparisonHandlesBuildTagsAndSemver()
+PASS   : EngineCatalogTests::sourceUpdateComparesShortSha()
+PASS   : EngineCatalogTests::repoNormalizationAndBuildDirAreStable()
+PASS   : EngineCatalogTests::pullRequestRefIsParsedAsBranch()
+PASS   : EngineCatalogTests::qwen38NextEntryBuildsFromPullRequest()
+PASS   : EngineCatalogTests::hardwareFromSummaryUsesDetectedGpus()
+PASS   : EngineCatalogTests::cleanupTestCase()
+Totals: 10 passed, 0 failed, 0 skipped, 0 blacklisted, 1ms
+********* Finished testing of EngineCatalogTests *********
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"test_engine_catalog" end time: Oct 16 20:38 -03
+"test_engine_catalog" time elapsed: 00:00:00
+----------------------------------------------------------
+
+9/90 Testing: test_harness_capabilities
+9/90 Test: test_harness_capabilities
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_harness_capabilities"
+Directory: /home/cristian/.cache/llamacode/source
+"test_harness_capabilities" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of HarnessCapabilityTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : HarnessCapabilityTests::initTestCase()
+PASS   : HarnessCapabilityTests::admissionIsFailClosed()
+PASS   : HarnessCapabilityTests::snapshotRoundTripPreservesGeneration()
+PASS   : HarnessCapabilityTests::cleanupTestCase()
+Totals: 4 passed, 0 failed, 0 skipped, 0 blacklisted, 0ms
+********* Finished testing of HarnessCapabilityTests *********
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"test_harness_capabilities" end time: Oct 16 20:38 -03
+"test_harness_capabilities" time elapsed: 00:00:00
+----------------------------------------------------------
+
+25/90 Testing: test_document_extractor
+25/90 Test: test_document_extractor
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_document_extractor"
+Directory: /home/cristian/.cache/llamacode/source
+"test_document_extractor" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of DocExtractorTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : DocExtractorTests::initTestCase()
+PASS   : DocExtractorTests::isImage_byExtension()
+PASS   : DocExtractorTests::isRich_byExtension()
+PASS   : DocExtractorTests::extract_plainText()
+PASS   : DocExtractorTests::extract_codeFile()
+PASS   : DocExtractorTests::extract_imageReturnsEmpty()
+PASS   : DocExtractorTests::extract_truncatesHugeDoc()
+PASS   : DocExtractorTests::cleanupTestCase()
+Totals: 8 passed, 0 failed, 0 skipped, 0 blacklisted, 1ms
+********* Finished testing of DocExtractorTests *********
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"test_document_extractor" end time: Oct 16 20:38 -03
+"test_document_extractor" time elapsed: 00:00:00
+----------------------------------------------------------
+
+77/90 Testing: qml_settings_tabs
+77/90 Test: qml_settings_tabs
+Command: "/home/cristian/Documents/Codex/2026-09-06/fijate-que-yo-tengo-el-proyecto-6/work/qt/6.8.3/gcc_64/bin/qml" "-I" "/home/cristian/.cache/llamacode/build_tests_linux/qml_harness" "/home/cristian/.cache/llamacode/build_tests_linux/qml_harness/tst_settings_tabs.qml"
+Directory: /media/cristian/Disco local/LlamaCode-cache/build_tests_linux
+"qml_settings_tabs" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+qml:   PASS se pudo leer SettingsPage.qml
+qml:   PASS la página tiene secciones (16)
+qml:   PASS appearanceSection pertenece a una pestaña
+qml:   PASS customSection pertenece a una pestaña
+qml:   PASS languageSection pertenece a una pestaña
+qml:   PASS gpuInferenceSection pertenece a una pestaña
+qml:   PASS systemSection pertenece a una pestaña
+qml:   PASS performanceSection pertenece a una pestaña
+qml:   PASS gatewaySection pertenece a una pestaña
+qml:   PASS chatSection pertenece a una pestaña
+qml:   PASS gpuSection pertenece a una pestaña
+qml:   PASS astraSection pertenece a una pestaña
+qml:   PASS intgSection pertenece a una pestaña
+qml:   PASS agentProfilesSection pertenece a una pestaña
+qml:   PASS teacherSection pertenece a una pestaña
+qml:   PASS auxiliarySection pertenece a una pestaña
+qml:   PASS mailSection pertenece a una pestaña
+qml:   PASS dataSection pertenece a una pestaña
+qml:   PASS la pestaña general no apunta a una sección inexistente: appearanceSection
+qml:   PASS la pestaña general no apunta a una sección inexistente: customSection
+qml:   PASS la pestaña general no apunta a una sección inexistente: languageSection
+qml:   PASS la pestaña general no apunta a una sección inexistente: systemSection
+qml:   PASS la pestaña hardware no apunta a una sección inexistente: gpuInferenceSection
+qml:   PASS la pestaña hardware no apunta a una sección inexistente: gpuSection
+qml:   PASS la pestaña hardware no apunta a una sección inexistente: astraSection
+qml:   PASS la pestaña network no apunta a una sección inexistente: gatewaySection
+qml:   PASS la pestaña agent no apunta a una sección inexistente: chatSection
+qml:   PASS la pestaña agent no apunta a una sección inexistente: teacherSection
+qml:   PASS la pestaña agent no apunta a una sección inexistente: auxiliarySection
+qml:   PASS la pestaña agentProfiles no apunta a una sección inexistente: agentProfilesSection
+qml:   PASS la pestaña integrations no apunta a una sección inexistente: intgSection
+qml:   PASS la pestaña integrations no apunta a una sección inexistente: mailSection
+qml:   PASS la pestaña data no apunta a una sección inexistente: performanceSection
+qml:   PASS la pestaña data no apunta a una sección inexistente: dataSection
+qml:   PASS ninguna sección está en dos pestañas
+qml:   PASS la pestaña general no está vacía
+qml:   PASS la pestaña hardware no está vacía
+qml:   PASS la pestaña network no está vacía
+qml:   PASS la pestaña agent no está vacía
+qml:   PASS la pestaña agentProfiles no está vacía
+qml:   PASS la pestaña integrations no está vacía
+qml:   PASS la pestaña data no está vacía
+qml:   PASS sin búsqueda se ve la sección de la pestaña actual
+qml:   PASS sin búsqueda no se ven secciones de otras pestañas
+qml:   PASS con búsqueda se ve lo que coincide aunque sea de otra pestaña
+qml:   PASS con búsqueda se oculta lo que no coincide aunque sea de la pestaña actual
+qml:   PASS espacios no cuentan como búsqueda
+qml:   PASS cuenta coincidencias por pestaña
+qml:   PASS valida claves guardadas
+qml:   PASS lan encuentra LAN
+qml:   PASS lan NO encuentra plano
+qml:   PASS varios términos por prefijo
+qml:   PASS todos los términos tienen que estar
+qml:   PASS ignora puntuación alrededor
+qml:   PASS consulta vacía coincide
+qml: TODO OK
+<end of output>
+Test time =   0.40 sec
+----------------------------------------------------------
+Test Passed.
+"qml_settings_tabs" end time: Oct 16 20:38 -03
+"qml_settings_tabs" time elapsed: 00:00:00
+----------------------------------------------------------
+
+84/90 Testing: qml_benchmark_score
+84/90 Test: qml_benchmark_score
+Command: "/home/cristian/Documents/Codex/2026-09-06/fijate-que-yo-tengo-el-proyecto-6/work/qt/6.8.3/gcc_64/bin/qml" "-I" "/home/cristian/.cache/llamacode/build_tests_linux/qml_harness" "/home/cristian/.cache/llamacode/build_tests_linux/qml_harness/tst_benchmark_score.qml"
+Directory: /media/cristian/Disco local/LlamaCode-cache/build_tests_linux
+"qml_benchmark_score" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+qml:   PASS Sin criterios dice 'sin eval.' y no un guion mudo
+qml:   PASS Sin criterios va en gris, NO en rojo (antes parecia un fallo)
+qml:   PASS Sin criterios el estado sigue siendo 'done'
+qml:   PASS 5/5
+qml:   PASS 5/5 en verde
+qml:   PASS 3/5 en amarillo
+qml:   PASS 1/5 en rojo
+qml:   PASS Una corrida fallada no dice 'sin eval.'
+qml:   PASS Estado failed
+qml:   PASS Timeout se distingue de failed
+qml:   PASS Infra se distingue de calidad
+qml:   PASS Infra tiene etiqueta propia
+qml:   PASS Calidad se distingue de infraestructura
+qml:   PASS Calidad tiene etiqueta propia
+qml:   PASS Final cae a qualityScore/qualityTotal si no hay claves propias
+qml:   PASS Sin criterios ordena al fondo
+qml:   PASS Un score bajo ordena por encima de 'sin evaluar'
+qml:   PASS Calidad/minuto positiva cuando hay score y tiempo
+qml:   PASS 5/5 en 60s sin reparaciones da >= 100 qpm
+qml:   PASS QPM alto va en verde
+qml:   PASS Mal score + lento + reparaciones da menos qpm
+qml:   PASS QPM bajo va en rojo
+qml:   PASS Corrida fallada da 0 qpm
+qml:   PASS Corrida fallada muestra guion en qpm label
+qml:   PASS Label de qpm termina con ' qpm'
+qml:   PASS QPM usa timeToFirstAttempt y repairAttempts reales del benchmark
+qml:   PASS Sin tiempo válido no inventa QPM
+qml: TODO OK
+<end of output>
+Test time =   0.40 sec
+----------------------------------------------------------
+Test Passed.
+"qml_benchmark_score" end time: Oct 16 20:38 -03
+"qml_benchmark_score" time elapsed: 00:00:00
+----------------------------------------------------------
+
+53/90 Testing: test_engineering_workflows
+53/90 Test: test_engineering_workflows
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_engineering_workflows"
+Directory: /home/cristian/.cache/llamacode/source
+"test_engineering_workflows" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of EngineeringWorkflowTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : EngineeringWorkflowTests::initTestCase()
+PASS   : EngineeringWorkflowTests::catalogHasCoreWorkflows()
+PASS   : EngineeringWorkflowTests::definitionsValidate()
+PASS   : EngineeringWorkflowTests::installableTaskIsRunnable()
+PASS   : EngineeringWorkflowTests::safetyProfilesAreExplicit()
+PASS   : EngineeringWorkflowTests::cleanupTestCase()
+Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 1ms
+********* Finished testing of EngineeringWorkflowTests *********
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"test_engineering_workflows" end time: Oct 16 20:38 -03
+"test_engineering_workflows" time elapsed: 00:00:00
+----------------------------------------------------------
+
+44/90 Testing: test_hotspots
+44/90 Test: test_hotspots
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_hotspots"
+Directory: /home/cristian/.cache/llamacode/source
+"test_hotspots" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of HotspotTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : HotspotTests::initTestCase()
+PASS   : HotspotTests::parseGitLog_aggregatesCommitsAndAuthors()
+PASS   : HotspotTests::parseGitLog_emptyInput()
+PASS   : HotspotTests::classifies_testPaths()
+PASS   : HotspotTests::classifies_sourcePaths()
+PASS   : HotspotTests::rank_filtersByMinCommitsTestsAndNonSource()
+PASS   : HotspotTests::rank_untestedHotspotOutranksTestedSameChurn()
+PASS   : HotspotTests::rank_authorCongestionRaisesScore()
+PASS   : HotspotTests::rank_topNTruncatesByScore()
+PASS   : HotspotTests::formatReport_listsPathsOrEmptyNote()
+PASS   : HotspotTests::cleanupTestCase()
+Totals: 11 passed, 0 failed, 0 skipped, 0 blacklisted, 0ms
+********* Finished testing of HotspotTests *********
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"test_hotspots" end time: Oct 16 20:38 -03
+"test_hotspots" time elapsed: 00:00:00
+----------------------------------------------------------
+
+8/90 Testing: test_harness_event_log
+8/90 Test: test_harness_event_log
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_harness_event_log"
+Directory: /home/cristian/.cache/llamacode/source
+"test_harness_event_log" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of HarnessEventLogTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : HarnessEventLogTests::initTestCase()
+PASS   : HarnessEventLogTests::appendsAndReloadsInOrder()
+PASS   : HarnessEventLogTests::rejectsBrokenSequence()
+PASS   : HarnessEventLogTests::cleanupTestCase()
+Totals: 4 passed, 0 failed, 0 skipped, 0 blacklisted, 1ms
+********* Finished testing of HarnessEventLogTests *********
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"test_harness_event_log" end time: Oct 16 20:38 -03
+"test_harness_event_log" time elapsed: 00:00:00
+----------------------------------------------------------
+
+10/90 Testing: test_harness_effects
+10/90 Test: test_harness_effects
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_harness_effects"
+Directory: /home/cristian/.cache/llamacode/source
+"test_harness_effects" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of HarnessEffectTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : HarnessEffectTests::initTestCase()
+PASS   : HarnessEffectTests::effectLifecycleIsAppendOnly()
+PASS   : HarnessEffectTests::duplicatePreparationIsRejected()
+PASS   : HarnessEffectTests::cleanupTestCase()
+Totals: 4 passed, 0 failed, 0 skipped, 0 blacklisted, 1ms
+********* Finished testing of HarnessEffectTests *********
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"test_harness_effects" end time: Oct 16 20:38 -03
+"test_harness_effects" time elapsed: 00:00:00
+----------------------------------------------------------
+
+32/90 Testing: test_server_benchmark_metrics
+32/90 Test: test_server_benchmark_metrics
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_server_benchmark_metrics"
+Directory: /home/cristian/.cache/llamacode/source
+"test_server_benchmark_metrics" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of ServerBenchmarkMetricsTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : ServerBenchmarkMetricsTests::initTestCase()
+PASS   : ServerBenchmarkMetricsTests::percentile_interpolates()
+PASS   : ServerBenchmarkMetricsTests::meanAndDeviation_handleEmptyAndSampledData()
+PASS   : ServerBenchmarkMetricsTests::summarizeSamples_keepsFailuresAndHonestTails()
+PASS   : ServerBenchmarkMetricsTests::summarizeSamples_acceptsAliasesAndRejectsInvalidValues()
+PASS   : ServerBenchmarkMetricsTests::summarizeSamples_exposesTailOnlyWithEnoughObservations()
+PASS   : ServerBenchmarkMetricsTests::summarizeSamples_convertsItlToRate()
+PASS   : ServerBenchmarkMetricsTests::summarizePaired_rejectsInsufficientData()
+PASS   : ServerBenchmarkMetricsTests::summarizePaired_ignoresInvalidPairsAndSupportsCustomKeys()
+PASS   : ServerBenchmarkMetricsTests::summarizePaired_detectsStableWinner()
+PASS   : ServerBenchmarkMetricsTests::summarizePaired_acceptsNullControl()
+PASS   : ServerBenchmarkMetricsTests::cleanupTestCase()
+Totals: 12 passed, 0 failed, 0 skipped, 0 blacklisted, 0ms
+********* Finished testing of ServerBenchmarkMetricsTests *********
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"test_server_benchmark_metrics" end time: Oct 16 20:38 -03
+"test_server_benchmark_metrics" time elapsed: 00:00:00
+----------------------------------------------------------
+
+7/90 Testing: test_harness_engine
+7/90 Test: test_harness_engine
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_harness_engine"
+Directory: /home/cristian/.cache/llamacode/source
+"test_harness_engine" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of HarnessEngineTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : HarnessEngineTests::initTestCase()
+PASS   : HarnessEngineTests::legacyDefaultsAreStable()
+PASS   : HarnessEngineTests::nextIsIsolatedAndDiscoverable()
+PASS   : HarnessEngineTests::fingerprintChangesWithRuntimeContract()
+PASS   : HarnessEngineTests::cleanupTestCase()
+Totals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 0ms
+********* Finished testing of HarnessEngineTests *********
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"test_harness_engine" end time: Oct 16 20:38 -03
+"test_harness_engine" time elapsed: 00:00:00
+----------------------------------------------------------
+
+61/90 Testing: test_evidence_bundle
+61/90 Test: test_evidence_bundle
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_evidence_bundle"
+Directory: /home/cristian/.cache/llamacode/source
+"test_evidence_bundle" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of EvidenceBundleTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : EvidenceBundleTests::initTestCase()
+PASS   : EvidenceBundleTests::build_isVersionedAndHashesEachRun()
+PASS   : EvidenceBundleTests::write_createsReadableJson()
+PASS   : EvidenceBundleTests::cleanupTestCase()
+Totals: 4 passed, 0 failed, 0 skipped, 0 blacklisted, 0ms
+********* Finished testing of EvidenceBundleTests *********
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"test_evidence_bundle" end time: Oct 16 20:38 -03
+"test_evidence_bundle" time elapsed: 00:00:00
+----------------------------------------------------------
+
+23/90 Testing: test_capability
+23/90 Test: test_capability
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_capability"
+Directory: /home/cristian/.cache/llamacode/source
+"test_capability" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of CapabilityTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : CapabilityTests::initTestCase()
+PASS   : CapabilityTests::parse_extractsLongFlags()
+PASS   : CapabilityTests::parse_shortAliasesToLong()
+PASS   : CapabilityTests::parse_stripsAnsi()
+PASS   : CapabilityTests::parse_legacyDraftAlias()
+PASS   : CapabilityTests::parse_ignoresDescriptionContinuation()
+PASS   : CapabilityTests::parse_probeCapturesVersionKvAndSpecTypes()
+PASS   : CapabilityTests::parse_probeCapturesSpecializedKvFlags()
+PASS   : CapabilityTests::parse_extractsAdaptiveSpecFlags()
+PASS   : CapabilityTests::cleanupTestCase()
+Totals: 10 passed, 0 failed, 0 skipped, 0 blacklisted, 1ms
+********* Finished testing of CapabilityTests *********
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"test_capability" end time: Oct 16 20:38 -03
+"test_capability" time elapsed: 00:00:00
+----------------------------------------------------------
+
+34/90 Testing: test_hardware_diagnostics
+34/90 Test: test_hardware_diagnostics
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_hardware_diagnostics"
+Directory: /home/cristian/.cache/llamacode/source
+"test_hardware_diagnostics" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of HardwareDiagnosticsTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : HardwareDiagnosticsTests::initTestCase()
+PASS   : HardwareDiagnosticsTests::parsesGpuTopology()
+PASS   : HardwareDiagnosticsTests::parsesMemTotalFromProcMeminfo()
+PASS   : HardwareDiagnosticsTests::parsesP2pTopologyMatrix()
+PASS   : HardwareDiagnosticsTests::parsesP2pStatusMatrix()
+PASS   : HardwareDiagnosticsTests::parsesNvlinkStatus()
+PASS   : HardwareDiagnosticsTests::enrichmentFeedsRecommendation()
+PASS   : HardwareDiagnosticsTests::enrichmentReadsPcieP2pStatus()
+PASS   : HardwareDiagnosticsTests::voicePlanReservesWeakGpuAndSplitsRemainingVram()
+PASS   : HardwareDiagnosticsTests::voicePlanFallsBackToSingleGpu()
+PASS   : HardwareDiagnosticsTests::voicePlanRejectsOccupiedVoiceGpu()
+PASS   : HardwareDiagnosticsTests::voicePlanRejectsModelThatDoesNotFit()
+PASS   : HardwareDiagnosticsTests::weakPciePrefersLayer()
+PASS   : HardwareDiagnosticsTests::fastPcieAllowsTensor()
+PASS   : HardwareDiagnosticsTests::profileAffinityMatchesDualGpuAndExactName()
+PASS   : HardwareDiagnosticsTests::fingerprintIsStable()
+PASS   : HardwareDiagnosticsTests::scoreRespectsObjectiveAndStability()
+PASS   : HardwareDiagnosticsTests::scoresRealBenchmarkArtifact()
+PASS   : HardwareDiagnosticsTests::performanceMatrixIsHeadless()
+PASS   : HardwareDiagnosticsTests::cleanupTestCase()
+Totals: 20 passed, 0 failed, 0 skipped, 0 blacklisted, 1ms
+********* Finished testing of HardwareDiagnosticsTests *********
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"test_hardware_diagnostics" end time: Oct 16 20:38 -03
+"test_hardware_diagnostics" time elapsed: 00:00:00
+----------------------------------------------------------
+
+54/90 Testing: test_task_security_policy
+54/90 Test: test_task_security_policy
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_task_security_policy"
+Directory: /home/cristian/.cache/llamacode/source
+"test_task_security_policy" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of TaskSecurityPolicyTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : TaskSecurityPolicyTests::initTestCase()
+PASS   : TaskSecurityPolicyTests::strictProfilesRequireApproval()
+PASS   : TaskSecurityPolicyTests::autonomousOnlyWorksForNormalProfile()
+PASS   : TaskSecurityPolicyTests::productionDisablesExternalToolFamilies()
+PASS   : TaskSecurityPolicyTests::nonProductionDoesNotDisableTools()
+PASS   : TaskSecurityPolicyTests::cleanupTestCase()
+Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 0ms
+********* Finished testing of TaskSecurityPolicyTests *********
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"test_task_security_policy" end time: Oct 16 20:38 -03
+"test_task_security_policy" time elapsed: 00:00:00
+----------------------------------------------------------
+
+42/90 Testing: test_portable_skills
+42/90 Test: test_portable_skills
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_portable_skills"
+Directory: /home/cristian/.cache/llamacode/source
+"test_portable_skills" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of PortableSkillsTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : PortableSkillsTests::initTestCase()
+PASS   : PortableSkillsTests::discoversAndLoadsProjectSkill()
+PASS   : PortableSkillsTests::harnessPolicyFiltersAndBlocksSkills()
+PASS   : PortableSkillsTests::rejectsInvalidManifest()
+PASS   : PortableSkillsTests::bundledScientificPackIsValid()
+PASS   : PortableSkillsTests::cleanupTestCase()
+Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 2ms
+********* Finished testing of PortableSkillsTests *********
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"test_portable_skills" end time: Oct 16 20:38 -03
+"test_portable_skills" time elapsed: 00:00:00
+----------------------------------------------------------
+
+89/90 Testing: qa_background_calc_help
+89/90 Test: qa_background_calc_help
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/qa_background_calc" "--help"
+Directory: /media/cristian/Disco local/LlamaCode-cache/build_tests_linux
+"qa_background_calc_help" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+Uso: qa_background_calc.exe
+  Abre la Calculadora y hace 3*3= SOLO por UI Automation, con el
+  input fisico bloqueado (modo "segundo plano" del agente).
+  Verifica que el visor diga 9 y que el mouse no se haya movido.
+  Necesita escritorio vivo; cierra la Calculadora al terminar.
+
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"qa_background_calc_help" end time: Oct 16 20:38 -03
+"qa_background_calc_help" time elapsed: 00:00:00
+----------------------------------------------------------
+
+70/90 Testing: test_fuzzy_match
+70/90 Test: test_fuzzy_match
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_fuzzy_match"
+Directory: /home/cristian/.cache/llamacode/source
+"test_fuzzy_match" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of FuzzyMatchTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : FuzzyMatchTests::initTestCase()
+PASS   : FuzzyMatchTests::normalize_stripsAcceleratorAccentsAndPunctuation()
+PASS   : FuzzyMatchTests::ratio_isSymmetricAndBounded()
+PASS   : FuzzyMatchTests::partialRatio_findsSubstring()
+PASS   : FuzzyMatchTests::tokenSortRatio_ignoresWordOrder()
+PASS   : FuzzyMatchTests::weightedRatio_matchesRealControlNameVariants()
+PASS   : FuzzyMatchTests::weightedRatio_penalizesShortNeedleInLongName()
+PASS   : FuzzyMatchTests::extractOne_picksBestCandidate()
+PASS   : FuzzyMatchTests::extractOne_respectsCutoff()
+PASS   : FuzzyMatchTests::extractOne_isDeterministicOnTies()
+PASS   : FuzzyMatchTests::extractOne_rejectsEmptyNeedle()
+PASS   : FuzzyMatchTests::cleanupTestCase()
+Totals: 12 passed, 0 failed, 0 skipped, 0 blacklisted, 1ms
+********* Finished testing of FuzzyMatchTests *********
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"test_fuzzy_match" end time: Oct 16 20:38 -03
+"test_fuzzy_match" time elapsed: 00:00:00
+----------------------------------------------------------
+
+73/90 Testing: qml_color_picker
+73/90 Test: qml_color_picker
+Command: "/home/cristian/Documents/Codex/2026-09-06/fijate-que-yo-tengo-el-proyecto-6/work/qt/6.8.3/gcc_64/bin/qml" "-I" "/home/cristian/.cache/llamacode/build_tests_linux/qml_harness" "/home/cristian/.cache/llamacode/build_tests_linux/qml_harness/tst_color_picker.qml"
+Directory: /media/cristian/Disco local/LlamaCode-cache/build_tests_linux
+"qml_color_picker" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+qml:   PASS hex inicial valido
+qml:   PASS el swatch abre el picker
+qml:   PASS picker visible
+qml:   PASS picker apunta a la fila clickeada
+qml:   PASS picker arranca en el color de la fila
+qml:   PASS aceptar actualiza la fila: #ff00aa
+qml:   PASS mover el plano SV cambia el hex: #405880
+qml:   PASS el hex refleja el HSV del plano
+qml:   PASS un gris conserva el tono
+qml:   PASS gris roundtrip: #808080
+qml:   PASS shorthand tipeado se normaliza: #ff00aa
+qml:   PASS basura vuelve al ultimo valido: #ff00aa
+qml:   PASS el swatch nunca recibe un color vacio
+qml:   PASS sin picker inyectado el clic no hace nada
+qml: TODO OK
+<end of output>
+Test time =   0.42 sec
+----------------------------------------------------------
+Test Passed.
+"qml_color_picker" end time: Oct 16 20:38 -03
+"qml_color_picker" time elapsed: 00:00:00
+----------------------------------------------------------
+
+88/90 Testing: qa_ocr_probe_offscreen_guard
+88/90 Test: qa_ocr_probe_offscreen_guard
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/qa_ocr_probe" "Archivo"
+Directory: /media/cristian/Disco local/LlamaCode-cache/build_tests_linux
+"qa_ocr_probe_offscreen_guard" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+ERROR: qa_ocr_probe requiere un escritorio Qt real; QUITAR QT_QPA_PLATFORM=offscreen.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"qa_ocr_probe_offscreen_guard" end time: Oct 16 20:38 -03
+"qa_ocr_probe_offscreen_guard" time elapsed: 00:00:00
+----------------------------------------------------------
+
+90/90 Testing: qa_background_calc_offscreen_guard
+90/90 Test: qa_background_calc_offscreen_guard
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/qa_background_calc"
+Directory: /media/cristian/Disco local/LlamaCode-cache/build_tests_linux
+"qa_background_calc_offscreen_guard" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+ERROR: qa_background_calc requiere un escritorio real; QUITAR QT_QPA_PLATFORM=offscreen.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"qa_background_calc_offscreen_guard" end time: Oct 16 20:38 -03
+"qa_background_calc_offscreen_guard" time elapsed: 00:00:00
+----------------------------------------------------------
+
+16/90 Testing: test_agent_progress
+16/90 Test: test_agent_progress
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_agent_progress"
+Directory: /home/cristian/.cache/llamacode/source
+"test_agent_progress" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of AgentProgressTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : AgentProgressTests::initTestCase()
+PASS   : AgentProgressTests::semanticVariantsCollapse()
+PASS   : AgentProgressTests::distinctRequestedArtifactsRemainDistinct()
+PASS   : AgentProgressTests::progressRenewsBudget()
+PASS   : AgentProgressTests::stagnantVariantsReplanThenStop()
+PASS   : AgentProgressTests::explicitMultiLanguageTaskAllowsVariants()
+PASS   : AgentProgressTests::namedArtifactTriggersEarlyClosureHint()
+PASS   : AgentProgressTests::repeatedEditsToSameFileCanMakeProgress()
+PASS   : AgentProgressTests::repeatedIdenticalWriteToSameFileIsNotProgress()
+PASS   : AgentProgressTests::repeatedIdenticalFailureCostsDouble()
+PASS   : AgentProgressTests::sameContentUnderNewNameIsNotProgress()
+PASS   : AgentProgressTests::renameLoopStopsAtDistinctWriteCeiling()
+PASS   : AgentProgressTests::cleanupTestCase()
+Totals: 13 passed, 0 failed, 0 skipped, 0 blacklisted, 1ms
+********* Finished testing of AgentProgressTests *********
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"test_agent_progress" end time: Oct 16 20:38 -03
+"test_agent_progress" time elapsed: 00:00:00
+----------------------------------------------------------
+
+87/90 Testing: qa_ocr_probe_help
+87/90 Test: qa_ocr_probe_help
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/qa_ocr_probe" "--help"
+Directory: /media/cristian/Disco local/LlamaCode-cache/build_tests_linux
+"qa_ocr_probe_help" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+Uso: qa_ocr_probe.exe [--self-contained] [texto-a-buscar]
+  --self-contained  ejecuta la fixture OCR/UIA en cada monitor
+  texto-a-buscar    prueba la pantalla real (default: Archivo)
+  --help            muestra esta ayuda sin tocar el escritorio
+
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"qa_ocr_probe_help" end time: Oct 16 20:38 -03
+"qa_ocr_probe_help" time elapsed: 00:00:00
+----------------------------------------------------------
+
+56/90 Testing: test_desktop_backend
+56/90 Test: test_desktop_backend
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_desktop_backend"
+Directory: /home/cristian/.cache/llamacode/source
+"test_desktop_backend" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of DesktopBackendTest *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : DesktopBackendTest::initTestCase()
+PASS   : DesktopBackendTest::normalizedCoordinatesRejectGridValues()
+PASS   : DesktopBackendTest::normalizeRoundTrip()
+PASS   : DesktopBackendTest::screenTargetsAreDiscoverable()
+PASS   : DesktopBackendTest::cleanupTestCase()
+Totals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 0ms
+********* Finished testing of DesktopBackendTest *********
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"test_desktop_backend" end time: Oct 16 20:38 -03
+"test_desktop_backend" time elapsed: 00:00:00
+----------------------------------------------------------
+
+62/90 Testing: test_tool_execution_safety
+62/90 Test: test_tool_execution_safety
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_tool_execution_safety"
+Directory: /home/cristian/.cache/llamacode/source
+"test_tool_execution_safety" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of ToolExecutionSafetyTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : ToolExecutionSafetyTests::initTestCase()
+PASS   : ToolExecutionSafetyTests::unknownIsConservative()
+PASS   : ToolExecutionSafetyTests::standardAnnotationsAreHonored()
+PASS   : ToolExecutionSafetyTests::explicitContractOverridesHints()
+PASS   : ToolExecutionSafetyTests::workspaceMutationPathsApplyOnlyToLocalFileEffects()
+PASS   : ToolExecutionSafetyTests::browserNavigationNeedsHostApprovalAndHttpScheme()
+PASS   : ToolExecutionSafetyTests::mcpVerificationGateRequiresFreshReadFromSameServer()
+PASS   : ToolExecutionSafetyTests::desktopFailedVerificationBlocksMutationUntilEvidence()
+PASS   : ToolExecutionSafetyTests::desktopVerificationCoversKeyboardAndSemanticActions()
+PASS   : ToolExecutionSafetyTests::desktopStaleRecoveryAllowsOnlyOneReobservedRetry()
+PASS   : ToolExecutionSafetyTests::canonicalHashIgnoresObjectKeyOrder()
+PASS   : ToolExecutionSafetyTests::idempotencyIsScopedByCorrelation()
+PASS   : ToolExecutionSafetyTests::cleanupTestCase()
+Totals: 13 passed, 0 failed, 0 skipped, 0 blacklisted, 1ms
+********* Finished testing of ToolExecutionSafetyTests *********
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"test_tool_execution_safety" end time: Oct 16 20:38 -03
+"test_tool_execution_safety" time elapsed: 00:00:00
+----------------------------------------------------------
+
+39/90 Testing: test_tool_surface_router
+39/90 Test: test_tool_surface_router
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_tool_surface_router"
+Directory: /home/cristian/.cache/llamacode/source
+"test_tool_surface_router" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of ToolSurfaceRouterTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : ToolSurfaceRouterTests::initTestCase()
+PASS   : ToolSurfaceRouterTests::ambiguousPromptFailsOpen()
+PASS   : ToolSurfaceRouterTests::webAndBrowserIntentAddsRelevantGroups()
+PASS   : ToolSurfaceRouterTests::desktopIntentIsAppAgnostic()
+PASS   : ToolSurfaceRouterTests::canonicalizesCatalogLabels()
+PASS   : ToolSurfaceRouterTests::wantsDesktopSeparatesAppsFromFiles()
+PASS   : ToolSurfaceRouterTests::cleanupTestCase()
+Totals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 1ms
+********* Finished testing of ToolSurfaceRouterTests *********
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"test_tool_surface_router" end time: Oct 16 20:38 -03
+"test_tool_surface_router" time elapsed: 00:00:00
+----------------------------------------------------------
+
+72/90 Testing: test_difficulty_router
+72/90 Test: test_difficulty_router
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_difficulty_router"
+Directory: /home/cristian/.cache/llamacode/source
+"test_difficulty_router" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of TestDifficultyRouter *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : TestDifficultyRouter::initTestCase()
+PASS   : TestDifficultyRouter::defaultThresholds()
+PASS   : TestDifficultyRouter::lowDifficulty()
+PASS   : TestDifficultyRouter::mediumDifficulty(files_medium)
+PASS   : TestDifficultyRouter::mediumDifficulty(context_medium)
+PASS   : TestDifficultyRouter::mediumDifficulty(failures_medium)
+PASS   : TestDifficultyRouter::mediumDifficulty(cycles_medium)
+PASS   : TestDifficultyRouter::mediumDifficulty(confidence_medium)
+PASS   : TestDifficultyRouter::highDifficulty(files_high)
+PASS   : TestDifficultyRouter::highDifficulty(context_high)
+PASS   : TestDifficultyRouter::highDifficulty(failures_high)
+PASS   : TestDifficultyRouter::highDifficulty(cycles_high)
+PASS   : TestDifficultyRouter::highDifficulty(confidence_high)
+PASS   : TestDifficultyRouter::customThresholds()
+PASS   : TestDifficultyRouter::levelNames()
+PASS   : TestDifficultyRouter::assessDetailedReasons()
+PASS   : TestDifficultyRouter::multipleMediumSignalsEscalate()
+PASS   : TestDifficultyRouter::emptyStateIsLow()
+PASS   : TestDifficultyRouter::cleanupTestCase()
+Totals: 19 passed, 0 failed, 0 skipped, 0 blacklisted, 0ms
+********* Finished testing of TestDifficultyRouter *********
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"test_difficulty_router" end time: Oct 16 20:38 -03
+"test_difficulty_router" time elapsed: 00:00:00
+----------------------------------------------------------
+
+66/90 Testing: test_gateway
+66/90 Test: test_gateway
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_gateway"
+Directory: /home/cristian/.cache/llamacode/source
+"test_gateway" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of GatewayTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : GatewayTests::initTestCase()
+PASS   : GatewayTests::anthropicToOpenAIMapsSystemAndMessages()
+PASS   : GatewayTests::anthropicToolHistoryMapsToOpenAI()
+PASS   : GatewayTests::anthropicToolsMapToOpenAI()
+PASS   : GatewayTests::openAIToAnthropicMapsContentAndStop()
+PASS   : GatewayTests::resolveModelMatches()
+PASS   : GatewayTests::stableModelCatalog()
+PASS   : GatewayTests::discoveryNeverContainsCredentials()
+PASS   : GatewayTests::discoveryListsProfilesBeforeFirstModelLoad()
+QINFO  : GatewayTests::lanHealthRequiresAuthentication() LlmGateway: escuchando en http://0.0.0.0:40031
+PASS   : GatewayTests::lanHealthRequiresAuthentication()
+QINFO  : GatewayTests::lanHealthCanBeExplicitlyUnauthenticated() LlmGateway: escuchando en http://0.0.0.0:45727
+PASS   : GatewayTests::lanHealthCanBeExplicitlyUnauthenticated()
+PASS   : GatewayTests::claudeDesktopConfigUsesStableAliases()
+PASS   : GatewayTests::openCodeConfigUsesEnvironmentSecret()
+PASS   : GatewayTests::openCodeDesktopCandidates()
+QINFO  : GatewayTests::modelsEndpointServesStableIds() LlmGateway: escuchando en http://127.0.0.1:46053
+PASS   : GatewayTests::modelsEndpointServesStableIds()
+PASS   : GatewayTests::preferredLanAddressSelectsPrivateIpv4()
+QINFO  : GatewayTests::lanActivationStartsRequestedProfile() LlmGateway: escuchando en http://127.0.0.1:35583
+PASS   : GatewayTests::lanActivationStartsRequestedProfile()
+PASS   : GatewayTests::lanSwapPolicyAndPeerDetection()
+QINFO  : GatewayTests::lanClientCannotSwapLoadedModelWhenLocked() LlmGateway: escuchando en http://0.0.0.0:37281
+PASS   : GatewayTests::lanClientCannotSwapLoadedModelWhenLocked()
+QINFO  : GatewayTests::requestHookReportsLoopbackAsLocal() LlmGateway: escuchando en http://127.0.0.1:35581
+PASS   : GatewayTests::requestHookReportsLoopbackAsLocal()
+QINFO  : GatewayTests::lanStatusReportsModelLoadProgress() LlmGateway: escuchando en http://127.0.0.1:44153
+PASS   : GatewayTests::lanStatusReportsModelLoadProgress()
+PASS   : GatewayTests::lanStatusWithoutTrackerFallsBackToReady()
+PASS   : GatewayTests::lanClientWaitsForRequestedModel()
+PASS   : GatewayTests::lruEvictsBeyondKeepN()
+PASS   : GatewayTests::structuredOutputInjection()
+PASS   : GatewayTests::idleStopDecision()
+PASS   : GatewayTests::cleanupTestCase()
+Totals: 27 passed, 0 failed, 0 skipped, 0 blacklisted, 4ms
+********* Finished testing of GatewayTests *********
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"test_gateway" end time: Oct 16 20:38 -03
+"test_gateway" time elapsed: 00:00:00
+----------------------------------------------------------
+
+20/90 Testing: test_secret_store
+20/90 Test: test_secret_store
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_secret_store"
+Directory: /home/cristian/.cache/llamacode/source
+"test_secret_store" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of SecretStoreTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : SecretStoreTests::initTestCase()
+PASS   : SecretStoreTests::diskRoundTrip()
+PASS   : SecretStoreTests::envVarTakesPrecedence()
+PASS   : SecretStoreTests::removeAndEmpty()
+PASS   : SecretStoreTests::notCommittedToProjectRoot()
+PASS   : SecretStoreTests::encryptedAtRest()
+PASS   : SecretStoreTests::testModeNeverUsesSystemKeyring()
+PASS   : SecretStoreTests::setReportsWhetherItWasSaved()
+PASS   : SecretStoreTests::cleanupTestCase()
+Totals: 9 passed, 0 failed, 0 skipped, 0 blacklisted, 2ms
+********* Finished testing of SecretStoreTests *********
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"test_secret_store" end time: Oct 16 20:38 -03
+"test_secret_store" time elapsed: 00:00:00
+----------------------------------------------------------
+
+75/90 Testing: release_sh
+75/90 Test: release_sh
+Command: "/usr/bin/bash" "/home/cristian/.cache/llamacode/source/tests/test_release_sh.sh"
+Directory: /media/cristian/Disco local/LlamaCode-cache/build_tests_linux
+"release_sh" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+  PASS dry run usa la version de CMakeLists
+  PASS notas desde el ultimo tag del mismo canal
+  PASS incluye los commits nuevos
+  PASS dry run no taggea
+  PASS publish pushea el tag
+  PASS Debug sale como prerelease
+  PASS rechaza un tag que ya existe
+  PASS bump en dry run no toca CMakeLists
+  PASS bump sube el patch
+  PASS bump commitea
+  PASS bump pushea la rama
+  PASS bump publica el tag nuevo
+  PASS promote taggea el mismo commit que el Debug
+  PASS promote publica Prod como latest
+  PASS publish rechaza un arbol sucio
+  PASS CI rojo: no publica y dice el estado
+  PASS CI rojo: no pushea el tag
+  PASS consulta tests.yml del commit exacto
+  PASS --force publica igual
+  PASS commit de solo version: usa el CI del anterior
+  PASS commit con cambios y sin CI: no publica
+  PASS tests.yml no cancela runs de main (grupo por commit)
+TODO OK
+<end of output>
+Test time =   0.30 sec
+----------------------------------------------------------
+Test Passed.
+"release_sh" end time: Oct 16 20:38 -03
+"release_sh" time elapsed: 00:00:00
+----------------------------------------------------------
+
+71/90 Testing: test_ocr_locator
+71/90 Test: test_ocr_locator
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_ocr_locator"
+Directory: /home/cristian/.cache/llamacode/source
+"test_ocr_locator" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of OcrLocatorTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : OcrLocatorTests::initTestCase()
+PASS   : OcrLocatorTests::find_singleWordReturnsItsBox()
+PASS   : OcrLocatorTests::find_multiWordPhraseUnitesBoxes()
+PASS   : OcrLocatorTests::find_toleratesOcrNoiseAndVariants()
+PASS   : OcrLocatorTests::find_returnsNothingWhenTextAbsent()
+PASS   : OcrLocatorTests::find_prefersShortestPhraseOnTie()
+PASS   : OcrLocatorTests::find_doesNotSpanAcrossLines()
+PASS   : OcrLocatorTests::findAll_reportsAmbiguityWhenTextRepeats()
+PASS   : OcrLocatorTests::find_emptyInputs()
+PASS   : OcrLocatorTests::opaqueForOcr_fixesZeroAlphaCaptures()
+PASS   : OcrLocatorTests::ocr_readsZeroAlphaWindowCapture()
+PASS   : OcrLocatorTests::ocr_blankImageDoesNotCrash()
+PASS   : OcrLocatorTests::cleanupTestCase()
+Totals: 13 passed, 0 failed, 0 skipped, 0 blacklisted, 128ms
+********* Finished testing of OcrLocatorTests *********
+<end of output>
+Test time =   0.13 sec
+----------------------------------------------------------
+Test Passed.
+"test_ocr_locator" end time: Oct 16 20:38 -03
+"test_ocr_locator" time elapsed: 00:00:00
+----------------------------------------------------------
+
+27/90 Testing: test_memory_graph
+27/90 Test: test_memory_graph
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_memory_graph"
+Directory: /home/cristian/.cache/llamacode/source
+"test_memory_graph" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of MemoryGraphTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : MemoryGraphTests::initTestCase()
+PASS   : MemoryGraphTests::memory_saveThenRecall()
+PASS   : MemoryGraphTests::memory_recallFiltersByScope()
+PASS   : MemoryGraphTests::memory_personalScopeIsGlobalAndIsolated()
+PASS   : MemoryGraphTests::memory_recallRanksByQuery()
+PASS   : MemoryGraphTests::memory_forgetStale()
+PASS   : MemoryGraphTests::memory_forgetDelete()
+PASS   : MemoryGraphTests::memory_pruneBudget()
+PASS   : MemoryGraphTests::memory_pruneRedundant()
+PASS   : MemoryGraphTests::memory_pruneDryRun()
+PASS   : MemoryGraphTests::memory_decay_marksOnlyOldLowValueFacts()
+PASS   : MemoryGraphTests::memory_metadataAffectsRanking()
+PASS   : MemoryGraphTests::memory_newFieldsArePersisted()
+PASS   : MemoryGraphTests::memory_skillTypeIsPersistedAndRecalled()
+PASS   : MemoryGraphTests::memory_supersedesHidesOldFact()
+PASS   : MemoryGraphTests::memory_verifyClaimsReturnsEvidenceLevels()
+PASS   : MemoryGraphTests::graph_addEntityAndQuery()
+PASS   : MemoryGraphTests::graph_linkRelation()
+PASS   : MemoryGraphTests::graph_typedEdgesAndProvenance()
+PASS   : MemoryGraphTests::graph_verifyAndDropEdge()
+PASS   : MemoryGraphTests::graph_queryDepth2()
+PASS   : MemoryGraphTests::graph_normalizesNames()
+PASS   : MemoryGraphTests::graph_decideKeepsRejected()
+PASS   : MemoryGraphTests::graph_decisionsFiltersByTopic()
+PASS   : MemoryGraphTests::graph_sourceEvidencePacketAndDoctor()
+PASS   : MemoryGraphTests::graph_infersToolTouchesAndConsolidationLinks()
+PASS   : MemoryGraphTests::knowledge_packetMergesMemoryAndGraph()
+PASS   : MemoryGraphTests::eventLog_appendTypedEvent()
+PASS   : MemoryGraphTests::cleanupTestCase()
+Totals: 29 passed, 0 failed, 0 skipped, 0 blacklisted, 477ms
+********* Finished testing of MemoryGraphTests *********
+<end of output>
+Test time =   0.49 sec
+----------------------------------------------------------
+Test Passed.
+"test_memory_graph" end time: Oct 16 20:38 -03
+"test_memory_graph" time elapsed: 00:00:00
+----------------------------------------------------------
+
+86/90 Testing: qml_harness_editor
+86/90 Test: qml_harness_editor
+Command: "/home/cristian/Documents/Codex/2026-09-06/fijate-que-yo-tengo-el-proyecto-6/work/qt/6.8.3/gcc_64/bin/qml" "-I" "/home/cristian/.cache/llamacode/build_tests_linux/qml_harness" "/home/cristian/.cache/llamacode/build_tests_linux/qml_harness/tst_harness_editor.qml"
+Directory: /media/cristian/Disco local/LlamaCode-cache/build_tests_linux
+"qml_harness_editor" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+qml:   PASS el pack queda marcado
+qml:   PASS togglear emite specEdited una vez
+qml:   PASS el toggle NO pisa loop: 2
+qml:   PASS el toggle NO pisa context
+qml:   PASS destildar saca el pack
+qml:   PASS queda la lista vacia
+qml:   PASS sin modulo todas las skills están activas
+qml:   PASS desactivar skill agrega una denylist
+qml:   PASS desactivar una skill no apaga las demás
+qml:   PASS la skill vuelve a activarse
+qml:   PASS editar transportRetries conserva sameCallLimit
+qml:   PASS editar loop conserva context (regresion del copiar-objeto-entero)
+qml:   PASS el valor nuevo entro
+qml:   PASS specSet NO muta el objeto del caller: 5
+qml:   PASS readOnly rechaza specSet
+qml:   PASS el spec no cambio en readOnly
+qml:   PASS readOnly no emite specEdited
+qml:   PASS readOnly rechaza el import
+qml:   PASS JSON roto devuelve error: SyntaxError: JSON.parse: Parse error
+qml:   PASS un JSON roto no pisa el spec bueno
+qml:   PASS un array no es un spec valido
+qml:   PASS el array tampoco pisa nada
+qml:   PASS un JSON valido entra sin error
+qml:   PASS y reemplaza el spec
+qml:   PASS exportar devuelve el spec actual
+qml:   PASS el encabezado del diff existe
+qml:   PASS el contador dice 2: Cambia 2 ajuste(s) respecto de (defaults del harness)
+qml:   PASS la caja del diff se instancia
+qml:   PASS la etiqueta de presupuesto existe
+qml:   PASS muestra las tools: 7 tools · 0 skills · ~640 tok schemas · ~200 tok prompt
+qml:   PASS muestra los tokens de schemas
+qml:   PASS muestra el prompt estimado (800 chars ~ 200 tok): 7 tools · 0 skills · ~640 tok schemas · ~200 tok prompt
+qml:   PASS setExtends/currentExtends hacen round-trip: agent-avanzado
+qml:   PASS un padre inexistente cae a 'sin herencia'
+qml:   PASS el editor de directivas existe
+qml:   PASS arranca cerrado
+qml:   PASS cada directiva tiene su boton de editar
+qml:   PASS y su chip de seleccion
+qml:   PASS el lapiz pide abrir esa directiva: mis-convenciones
+qml:   PASS y el editor queda abierto
+qml:   PASS carga el nombre
+qml:   PASS carga el cuerpo
+qml:   PASS carga la condicion
+qml:   PASS borrar emite la senal
+qml:   PASS con el nombre correcto
+qml:   PASS y el scope de donde vino
+qml:   PASS el chip togglea la seleccion
+qml:   PASS la UI enumera los hechos disponibles
+qml:   PASS el campo de hechos de memoria existe
+qml:   PASS arranca en el default historico: 12
+qml:   PASS el valor entra
+qml:   PASS editar memory no pisa loop
+qml:   PASS el toggle del sandwich existe
+qml:   PASS el sandwich arranca apagado
+qml:   PASS activar el toggle declara el sandwich en prompt
+qml:   PASS la memoria de proyecto arranca encendida
+qml:   PASS knowledge arranca apagado para no cambiar el contexto por defecto
+qml:   PASS knowledge.enabled entra en su modulo
+qml:   PASS knowledge.preflight entra en su modulo
+qml:   PASS knowledge.maxEdges entra en su modulo
+qml:   PASS editar knowledge no pisa loop
+qml:   PASS el editor refleja la lane Node del worker
+qml:   PASS el entrypoint del worker se refleja
+qml:   PASS las capabilities del worker se reflejan
+qml:   PASS el aislamiento del home del host se refleja
+qml:   PASS los límites cgroup opt-in se reflejan
+qml:   PASS la cuota CPU se refleja
+qml:   PASS el límite de memoria se refleja
+qml:   PASS el límite de tareas se refleja
+qml:   PASS el timeout del worker queda en su módulo
+qml:   PASS editar el timeout no pisa el entrypoint
+qml:   PASS chat.systemExtra entra
+qml:   PASS editar chat no pisa memory
+qml:   PASS el textarea del chat refleja el spec
+qml:   PASS readOnly frena memory
+qml:   PASS readOnly frena knowledge
+qml:   PASS readOnly frena chat
+qml:   PASS saveRequested llega al caller
+qml: TODO OK
+<end of output>
+Test time =   0.49 sec
+----------------------------------------------------------
+Test Passed.
+"qml_harness_editor" end time: Oct 16 20:38 -03
+"qml_harness_editor" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/90 Testing: test_agent_profiles
+4/90 Test: test_agent_profiles
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_agent_profiles"
+Directory: /home/cristian/.cache/llamacode/source
+"test_agent_profiles" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of AgentProfilesTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : AgentProfilesTests::initTestCase()
+PASS   : AgentProfilesTests::agentProfile_jsonRoundTrip()
+PASS   : AgentProfilesTests::systemPresets_shape()
+PASS   : AgentProfilesTests::systemPresets_jarvisCoversThePc()
+PASS   : AgentProfilesTests::voiceMode_rewritesIdentityAndDropsListStyle()
+PASS   : AgentProfilesTests::presets_levelsRestrictCapabilities()
+PASS   : AgentProfilesTests::directiveCatalog_hasAllKeys()
+PASS   : AgentProfilesTests::setDirectives_gatesSystemPrompt()
+PASS   : AgentProfilesTests::setDirectives_defaultIncludesAll()
+PASS   : AgentProfilesTests::honey_isOptInOnly()
+PASS   : AgentProfilesTests::antiBias_isOptInOnly()
+PASS   : AgentProfilesTests::reviewTool_isCataloguedAndSchemaIsReadOnly()
+PASS   : AgentProfilesTests::mcpEnabled_roundTrips()
+PASS   : AgentProfilesTests::manager_crudAndPersistence()
+PASS   : AgentProfilesTests::manager_collapsesExactDuplicateAgentProfiles()
+PASS   : AgentProfilesTests::manager_systemPresetsImmutable()
+PASS   : AgentProfilesTests::manager_recommendsAndClonesTaskProfile()
+PASS   : AgentProfilesTests::personaStyle_jsonAndPromptBudget()
+PASS   : AgentProfilesTests::manager_personaStyleCrudAndImport()
+PASS   : AgentProfilesTests::manager_personaStyleDisabledAndPersonalityNoExamples()
+PASS   : AgentProfilesTests::manager_personaStyleListsAreTypedAndClearable()
+PASS   : AgentProfilesTests::manager_headlessPromptPreviewRanksRelevantExample()
+PASS   : AgentProfilesTests::manager_appliesModelAnalysisJsonSafely()
+PASS   : AgentProfilesTests::manager_rejectsInvalidImportAndClampsLimits()
+PASS   : AgentProfilesTests::cleanupTestCase()
+Totals: 25 passed, 0 failed, 0 skipped, 0 blacklisted, 523ms
+********* Finished testing of AgentProfilesTests *********
+<end of output>
+Test time =   0.53 sec
+----------------------------------------------------------
+Test Passed.
+"test_agent_profiles" end time: Oct 16 20:38 -03
+"test_agent_profiles" time elapsed: 00:00:00
+----------------------------------------------------------
+
+83/90 Testing: qml_ranking_startup
+83/90 Test: qml_ranking_startup
+Command: "/home/cristian/Documents/Codex/2026-09-06/fijate-que-yo-tengo-el-proyecto-6/work/qt/6.8.3/gcc_64/bin/qml" "-I" "/home/cristian/.cache/llamacode/build_tests_linux/qml_harness" "/home/cristian/.cache/llamacode/build_tests_linux/qml_harness/tst_ranking_startup.qml"
+Directory: /media/cristian/Disco local/LlamaCode-cache/build_tests_linux
+"qml_ranking_startup" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+qml:   PASS la tabla procesa la fila de ranking
+qml: TODO OK
+<end of output>
+Test time =   0.54 sec
+----------------------------------------------------------
+Test Passed.
+"qml_ranking_startup" end time: Oct 16 20:38 -03
+"qml_ranking_startup" time elapsed: 00:00:00
+----------------------------------------------------------
+
+85/90 Testing: qml_datalab
+85/90 Test: qml_datalab
+Command: "/home/cristian/Documents/Codex/2026-09-06/fijate-que-yo-tengo-el-proyecto-6/work/qt/6.8.3/gcc_64/bin/qml" "-I" "/home/cristian/.cache/llamacode/build_tests_linux/qml_harness" "/home/cristian/.cache/llamacode/build_tests_linux/qml_harness/tst_datalab.qml"
+Directory: /media/cristian/Disco local/LlamaCode-cache/build_tests_linux
+"qml_datalab" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+qml: TODO OK
+<end of output>
+Test time =   0.34 sec
+----------------------------------------------------------
+Test Passed.
+"qml_datalab" end time: Oct 16 20:38 -03
+"qml_datalab" time elapsed: 00:00:00
+----------------------------------------------------------
+
+51/90 Testing: test_voice
+51/90 Test: test_voice
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_voice"
+Directory: /home/cristian/.cache/llamacode/source
+"test_voice" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of TestVoice *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : TestVoice::initTestCase()
+PASS   : TestVoice::configRoundTrip()
+PASS   : TestVoice::turnModeDefaultsAndAliases()
+PASS   : TestVoice::cursorCommandParsesOrders()
+PASS   : TestVoice::cursorCommandIgnoresConversation()
+PASS   : TestVoice::wavHeaderAndExtract()
+PASS   : TestVoice::wavPcm16FormatParse()
+PASS   : TestVoice::wavPcm16DataRangeParse()
+PASS   : TestVoice::rmsLevels()
+PASS   : TestVoice::sttMultipart()
+PASS   : TestVoice::sttParseTranscript()
+PASS   : TestVoice::sttStreamingProtocol()
+PASS   : TestVoice::sttStreamingParser()
+PASS   : TestVoice::sttNativeParakeet()
+PASS   : TestVoice::ttsSpeechBody()
+PASS   : TestVoice::ttsPiperJsonLine()
+PASS   : TestVoice::ttsPiperResidentArgs()
+PASS   : TestVoice::ttsPiperAvailability()
+PASS   : TestVoice::ttsQwenArgsAndPolicy()
+PASS   : TestVoice::ttsPocketArgsAndPolicy()
+PASS   : TestVoice::voiceAgentCapabilityPolicy()
+PASS   : TestVoice::vadTurnEnded()
+PASS   : TestVoice::vadAdaptiveNoiseFloor()
+PASS   : TestVoice::vadHysteresisHangover()
+PASS   : TestVoice::vadIgnoresIsolatedClick()
+PASS   : TestVoice::vadTuningFromConfig()
+PASS   : TestVoice::turnDetectorClassify()
+PASS   : TestVoice::turnDetectorSilence()
+PASS   : TestVoice::turnFailedIdleIsNoop()
+QINFO  : TestVoice::drainMidTurnKeepsThinking() [charla] estado idle → ready (0 ms en idle)
+QINFO  : TestVoice::drainMidTurnKeepsThinking() [charla] estado ready → thinking (0 ms en ready)
+QINFO  : TestVoice::drainMidTurnKeepsThinking() [charla] estado thinking → speaking (0 ms en thinking)
+QINFO  : TestVoice::drainMidTurnKeepsThinking() [charla] estado speaking → thinking (0 ms en speaking)
+QINFO  : TestVoice::drainMidTurnKeepsThinking() [charla] estado thinking → speaking (0 ms en thinking)
+QINFO  : TestVoice::drainMidTurnKeepsThinking() [charla] estado speaking → idle (0 ms en speaking)
+QINFO  : TestVoice::drainMidTurnKeepsThinking() [charla] estado idle → speaking (0 ms en idle)
+QINFO  : TestVoice::drainMidTurnKeepsThinking() [charla] estado speaking → idle (0 ms en speaking)
+QINFO  : TestVoice::drainMidTurnKeepsThinking() [charla] estado idle → ready (0 ms en idle)
+QINFO  : TestVoice::drainMidTurnKeepsThinking() [charla] estado ready → thinking (0 ms en ready)
+QINFO  : TestVoice::drainMidTurnKeepsThinking() [charla] estado thinking → speaking (0 ms en thinking)
+QINFO  : TestVoice::drainMidTurnKeepsThinking() [charla] TTS: sintetizando 9 chars (cola=0)
+QWARN  : TestVoice::drainMidTurnKeepsThinking() [charla] TTS http falló (Operation canceled); piper local=0
+QWARN  : TestVoice::drainMidTurnKeepsThinking() [charla] FALLO: TTS: Operation canceled (estado=speaking)
+QINFO  : TestVoice::drainMidTurnKeepsThinking() [charla] estado speaking → error (0 ms en speaking)
+QINFO  : TestVoice::drainMidTurnKeepsThinking() [charla] estado error → idle (0 ms en error)
+PASS   : TestVoice::drainMidTurnKeepsThinking()
+PASS   : TestVoice::assistantConfirmationParse()
+PASS   : TestVoice::assistantStopCommand()
+QINFO  : TestVoice::workBargeInNeedsSustainedVoice() [charla] estado idle → ready (0 ms en idle)
+QINFO  : TestVoice::workBargeInNeedsSustainedVoice() [charla] estado ready → thinking (0 ms en ready)
+QINFO  : TestVoice::workBargeInNeedsSustainedVoice() [charla] estado thinking → speaking (0 ms en thinking)
+QINFO  : TestVoice::workBargeInNeedsSustainedVoice() [charla] estado speaking → thinking (0 ms en speaking)
+QINFO  : TestVoice::workBargeInNeedsSustainedVoice() [charla] barge-in con el agente trabajando: escuchando (450 ms)
+QINFO  : TestVoice::workBargeInNeedsSustainedVoice() [charla] estado thinking → listening (0 ms en thinking)
+QINFO  : TestVoice::workBargeInNeedsSustainedVoice() [charla] estado listening → speaking (0 ms en listening)
+QINFO  : TestVoice::workBargeInNeedsSustainedVoice() [charla] TTS: sintetizando 9 chars (cola=0)
+QWARN  : TestVoice::workBargeInNeedsSustainedVoice() [charla] TTS http falló (Operation canceled); piper local=0
+QWARN  : TestVoice::workBargeInNeedsSustainedVoice() [charla] FALLO: TTS: Operation canceled (estado=speaking)
+QINFO  : TestVoice::workBargeInNeedsSustainedVoice() [charla] estado speaking → error (0 ms en speaking)
+QINFO  : TestVoice::workBargeInNeedsSustainedVoice() [charla] estado error → idle (0 ms en error)
+PASS   : TestVoice::workBargeInNeedsSustainedVoice()
+PASS   : TestVoice::assistantToolCues()
+PASS   : TestVoice::assistantApprovalQuestion()
+PASS   : TestVoice::charlaTuningRecommendations()
+PASS   : TestVoice::ttsSentenceSplit()
+PASS   : TestVoice::ttsStreamingSentences()
+PASS   : TestVoice::ttsSanitizeForSpeech()
+PASS   : TestVoice::latencyPercentiles()
+PASS   : TestVoice::voiceInLaunchProfile()
+PASS   : TestVoice::sttServerCatalog()
+PASS   : TestVoice::voiceBinaryUrls()
+PASS   : TestVoice::whisperReleaseAssetPicking()
+PASS   : TestVoice::resampleToMono16k()
+PASS   : TestVoice::managedPortAvoidsLlmAndBusyPorts()
+QINFO  : TestVoice::piperWithoutResidentModeIsNotRetried() [charla] piper: lanzando residente (/media/cristian/Disco local/LlamaCode-cache/build_tests_linux/test_voice, modelo=voz.onnx)
+QWARN  : TestVoice::piperWithoutResidentModeIsNotRetried() [charla] piper: residente murió (pendiente=1)
+QWARN  : TestVoice::piperWithoutResidentModeIsNotRetried() [charla] piper: /media/cristian/Disco local/LlamaCode-cache/build_tests_linux/test_voice no soporta modo residente (--json-input); se usa per-call. Instalá el binario oficial de piper para baja latencia.
+QINFO  : TestVoice::piperWithoutResidentModeIsNotRetried() [charla] piper: fallback per-call (recarga modelo — lento)
+PASS   : TestVoice::piperWithoutResidentModeIsNotRetried()
+PASS   : TestVoice::piperResidentTurnDeliversAudio()
+PASS   : TestVoice::sttTrimsLeadingAndTrailingSilence()
+PASS   : TestVoice::firstClauseCutStartsSpeechEarly()
+QINFO  : TestVoice::syntheticInputFeedsCaptureWithoutMic() [charla] captura: entrada SINTÉTICA 16kHz mono (sin micrófono)
+QINFO  : TestVoice::syntheticInputFeedsCaptureWithoutMic() [charla] estado idle → listening (0 ms en idle)
+QINFO  : TestVoice::syntheticInputFeedsCaptureWithoutMic() [charla] estado listening → idle (553 ms en listening)
+PASS   : TestVoice::syntheticInputFeedsCaptureWithoutMic()
+PASS   : TestVoice::managedBinaryLookup()
+PASS   : TestVoice::ttsVoiceCatalog()
+PASS   : TestVoice::ttsVoiceForLang()
+PASS   : TestVoice::cleanupTestCase()
+Totals: 55 passed, 0 failed, 0 skipped, 0 blacklisted, 573ms
+********* Finished testing of TestVoice *********
+<end of output>
+Test time =   0.59 sec
+----------------------------------------------------------
+Test Passed.
+"test_voice" end time: Oct 16 20:38 -03
+"test_voice" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/90 Testing: test_profiles
+3/90 Test: test_profiles
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_profiles"
+Directory: /home/cristian/.cache/llamacode/source
+"test_profiles" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of ProfilesTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : ProfilesTests::initTestCase()
+PASS   : ProfilesTests::strataVisionCapabilityRequiresConfiguredExistingAssets()
+PASS   : ProfilesTests::strataUsesFixedConfigOutsideLlamaMemoryLadder()
+PASS   : ProfilesTests::backendProfile_jsonRoundTrip()
+PASS   : ProfilesTests::modelProfile_jsonRoundTrip()
+PASS   : ProfilesTests::runtimePreset_jsonRoundTrip()
+PASS   : ProfilesTests::launchProfile_jsonRoundTrip()
+PASS   : ProfilesTests::solLinuxProfileUsesVllmBackend()
+PASS   : ProfilesTests::agentProfile_thinkingLeakGuardRoundTripAndDefault()
+PASS   : ProfilesTests::masterConfig_jsonRoundTrip()
+PASS   : ProfilesTests::masterConfig_legacyMigration()
+QWARN  : ProfilesTests::manager_addGetRemoveBackend() [ProfileManager::save] refusing to wipe non-empty file with empty list: "/tmp/test_profiles-GEzvwz/backends.json"
+PASS   : ProfilesTests::manager_addGetRemoveBackend()
+PASS   : ProfilesTests::manager_updateBackendPort()
+PASS   : ProfilesTests::manager_setBackendCloud()
+QWARN  : ProfilesTests::manager_addModelProfile() [ProfileManager::save] refusing to wipe non-empty file with empty list: "/tmp/test_profiles-GEzvwz/models.json"
+PASS   : ProfilesTests::manager_addModelProfile()
+PASS   : ProfilesTests::manager_favoriteAndAlias()
+PASS   : ProfilesTests::manager_menuOrderPrecedesRecentUsage()
+PASS   : ProfilesTests::manager_benchmarkQueue()
+PASS   : ProfilesTests::manager_profileSearchFiltersNameAliasAndId()
+PASS   : ProfilesTests::manager_tagsAndLastUsed()
+PASS   : ProfilesTests::manager_profileTemplatesRoundTrip()
+PASS   : ProfilesTests::manager_harnessArgsEnvRoundTrip()
+PASS   : ProfilesTests::manager_reasoningControlsRoundTrip()
+PASS   : ProfilesTests::manager_deprecatedIsProfilesOnly()
+PASS   : ProfilesTests::manager_browserAutomationOverride()
+PASS   : ProfilesTests::manager_systemProfilesReloadIdempotent()
+PASS   : ProfilesTests::manager_persistsAcrossInstances()
+PASS   : ProfilesTests::portablePaths_roundTripIsStable()
+PASS   : ProfilesTests::portablePaths_repairsAccumulatedSlashes()
+PASS   : ProfilesTests::portablePaths_respectsRootBoundaries()
+PASS   : ProfilesTests::manager_sharedConfigSaveDoesNotGrowSlashes()
+PASS   : ProfilesTests::manager_twoInstancesKeepEachOthersNewProfiles()
+PASS   : ProfilesTests::manager_exportImportBundle()
+PASS   : ProfilesTests::manager_profileChangeHistory()
+PASS   : ProfilesTests::manager_saveSkipsUnchangedAndLogsOnlyChanges()
+PASS   : ProfilesTests::cleanupTestCase()
+Totals: 36 passed, 0 failed, 0 skipped, 0 blacklisted, 1119ms
+********* Finished testing of ProfilesTests *********
+<end of output>
+Test time =   1.13 sec
+----------------------------------------------------------
+Test Passed.
+"test_profiles" end time: Oct 16 20:38 -03
+"test_profiles" time elapsed: 00:00:01
+----------------------------------------------------------
+
+55/90 Testing: test_automation
+55/90 Test: test_automation
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_automation"
+Directory: /home/cristian/.cache/llamacode/source
+"test_automation" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of AutomationTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : AutomationTests::initTestCase()
+PASS   : AutomationTests::launchedWindowIsTheNewOne()
+PASS   : AutomationTests::launchWaitReturnsWithoutGuessing()
+PASS   : AutomationTests::normalizedCoordinatesScaleAcrossResolutions()
+PASS   : AutomationTests::normalizedCoordinatesRejectVisualGridAndNonFiniteValues()
+PASS   : AutomationTests::sensitiveActionClassification()
+PASS   : AutomationTests::desktopRequiresTraining()
+PASS   : AutomationTests::limitsAreClamped()
+PASS   : AutomationTests::autoModeRoutesBySurface()
+PASS   : AutomationTests::recipeWebStepDetection()
+PASS   : AutomationTests::desktopPromptPrefersNativeTools()
+PASS   : AutomationTests::desktopToolPolicyKeepsGuiToolsAvailable()
+PASS   : AutomationTests::readTextFormatsNormalizedCentersAndFilters()
+PASS   : AutomationTests::linuxPointerArgsSupportModifiersAndHorizontalScroll()
+PASS   : AutomationTests::calculatorMismatchRejectsHistoryFalsePositive()
+PASS   : AutomationTests::desktopWarmStartUsesTeachWithoutHardcodedApps()
+PASS   : AutomationTests::browserPromptUsesForegroundTeachEvidence()
+PASS   : AutomationTests::actionTraceSurvivesRecipeAndPrompt()
+PASS   : AutomationTests::strokePointsSurviveRecipeAndPrompt()
+PASS   : AutomationTests::datasetParseAndVariableExpansion()
+PASS   : AutomationTests::assertStepRendersInPrompt()
+PASS   : AutomationTests::runReportFromToolMessages()
+PASS   : AutomationTests::hotkeyParseAndTriggers()
+PASS   : AutomationTests::desktopReplayStepsFiltersMechanical()
+PASS   : AutomationTests::reanchorPointsToWindowMapsCoords()
+PASS   : AutomationTests::windowTitleMatchesByAppSuffix()
+PASS   : AutomationTests::recordedWindowStateSupportsExplicitAndLegacyRecipes()
+PASS   : AutomationTests::headlessBrowserCommandForcesHeadless()
+PASS   : AutomationTests::artifactsRoundTripAndRedactSecrets()
+PASS   : AutomationTests::artifactLearningsAppendAndPrompt()
+PASS   : AutomationTests::networkDiscoveriesPersistDedupAndReachPrompt()
+PASS   : AutomationTests::promptDedupsRepeatedLearnings()
+PASS   : AutomationTests::desktopPromptKeepsVerboseRecipesCompact()
+PASS   : AutomationTests::keyBufferAccumulatesTextIntoTypeStep()
+PASS   : AutomationTests::keyBufferFlushesTextBeforeNamedKey()
+PASS   : AutomationTests::keyBufferEmitsShortcutWithModifiers()
+PASS   : AutomationTests::winTapDistinguishesLoneTapFromShortcut()
+PASS   : AutomationTests::desktopComputerUseContractsAndReceipts()
+PASS   : AutomationTests::desktopProcessGuardIsExclusive()
+PASS   : AutomationTests::desktopActionClassificationIsGeneric()
+PASS   : AutomationTests::desktopRecoveryPolicyBuildsContracts()
+PASS   : AutomationTests::cleanupTestCase()
+Totals: 42 passed, 0 failed, 0 skipped, 0 blacklisted, 1428ms
+********* Finished testing of AutomationTests *********
+<end of output>
+Test time =   1.44 sec
+----------------------------------------------------------
+Test Passed.
+"test_automation" end time: Oct 16 20:38 -03
+"test_automation" time elapsed: 00:00:01
+----------------------------------------------------------
+
+43/90 Testing: test_agent_wire
+43/90 Test: test_agent_wire
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_agent_wire"
+Directory: /home/cristian/.cache/llamacode/source
+"test_agent_wire" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of AgentWireTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : AgentWireTests::initTestCase()
+PASS   : AgentWireTests::computerUse_asksBeforeDesktopTurnThenRunsInBackground()
+PASS   : AgentWireTests::computerUse_superAgentAndPlainChatDoNotAsk()
+PASS   : AgentWireTests::computerUse_cancelDropsTheRequest()
+PASS   : AgentWireTests::computerUse_backgroundMarksDesktopArgs()
+PASS   : AgentWireTests::hiddenReasoning_isCountedAndCutOnce()
+PASS   : AgentWireTests::textToolMode_keepsReasoningControlAndDiagnosesEmpty()
+PASS   : AgentWireTests::dropsOrphanToolAndDemotesNonInitialSystem()
+PASS   : AgentWireTests::dropsDanglingAssistantAndAnchorsFirstUser()
+PASS   : AgentWireTests::dropsTransportErrorAssistantMessages()
+PASS   : AgentWireTests::parsesTextToolCallFallback()
+PASS   : AgentWireTests::cutsTextToolCallBurstAtSecondCall()
+PASS   : AgentWireTests::readsToolSupportFromPropsCaps()
+PASS   : AgentWireTests::fallsBackToTextToolsWhenServerRejectsNativeTools()
+PASS   : AgentWireTests::loopbackExternalUsesConfiguredContextWithoutProps()
+PASS   : AgentWireTests::forceTextToolsSkipsNativeToolAttempt()
+PASS   : AgentWireTests::thirdIdenticalToolCallReplansWithoutExecuting()
+PASS   : AgentWireTests::stoppingDuringCompletionReleasesTurn()
+PASS   : AgentWireTests::differentProjectsRunTurnsConcurrently()
+PASS   : AgentWireTests::restartRepublishesPersistedMessages()
+PASS   : AgentWireTests::taskSessionIsEphemeralAndRestoresPrevious()
+PASS   : AgentWireTests::newSessionDropsPreviousEmptySession()
+PASS   : AgentWireTests::nativeSessionForkPersistsTreeMetadata()
+PASS   : AgentWireTests::midConversationNoteRole_neverSystem()
+PASS   : AgentWireTests::mergeToolCallDelta_assemblesAcrossChunks()
+PASS   : AgentWireTests::nativeToolSchemasOverflowPicksTextProtocol()
+PASS   : AgentWireTests::desktopRequestEscalatesToolsOnCodingProfile()
+PASS   : AgentWireTests::mergeToolCallDelta_parallelCallsByIndex()
+PASS   : AgentWireTests::visibleAnswer_stripsThinkButSalvagesWhenEmpty()
+PASS   : AgentWireTests::lengthFinishContinuation_isBoundedAndContentAware()
+PASS   : AgentWireTests::thinkingLeakGuard_isOptInAndControlsTemplate()
+PASS   : AgentWireTests::buildWarmupPayload_prefillsWithoutGenerating()
+PASS   : AgentWireTests::subagentPayload_inheritsReasoningAndOutputBudget()
+PASS   : AgentWireTests::canonicalizeToolSchemas_stabilizesOrderAndKeys()
+PASS   : AgentWireTests::trimStaleImages_keepsOnlyLatestCapture()
+PASS   : AgentWireTests::buildObservationMessage_wrapsImagesAsUserMultimodal()
+PASS   : AgentWireTests::buildObservationMessage_pairsAccessibilityEvidenceWithScreenshot()
+PASS   : AgentWireTests::buildObservationMessage_emptyWhenNoImages()
+PASS   : AgentWireTests::computerUseSandwich_isOptInAndKeepsObjectiveStateReminderOrder()
+PASS   : AgentWireTests::developmentDisciplineSection_coversRegressionGuards()
+PASS   : AgentWireTests::testSafetyNetSection_coversRunnerDetectionAndQuality()
+PASS   : AgentWireTests::projectContextSection_coversIntentAndMemory()
+PASS   : AgentWireTests::stablePhasePrefix_keepsSystemPromptInvariant()
+PASS   : AgentWireTests::desktopPlaybookSection_coversKeyboardPathAndTextVerify()
+PASS   : AgentWireTests::desktopConfirmKeyBlockedAfterTypeEquals()
+PASS   : AgentWireTests::parsesNativeToolCallLeakFallback()
+PASS   : AgentWireTests::parsesKatCoderXmlToolCallFallback()
+PASS   : AgentWireTests::parsesJsonOnlyToolCallFallback()
+PASS   : AgentWireTests::normalizesLingTaggedToolArguments()
+PASS   : AgentWireTests::textToolsModeDoesNotDoubleReserveToolBudget()
+PASS   : AgentWireTests::compactionStallCounterTracksProgress()
+PASS   : AgentWireTests::compactionPreservesImmutableTranscript()
+PASS   : AgentWireTests::compactionMetricsSeparateFallbacksFromPruning()
+PASS   : AgentWireTests::deterministicPruningDeduplicatesOnlyWorkingContext()
+PASS   : AgentWireTests::failureSpiralDetectsEquivalentErrorsAndResetsOnProgress()
+PASS   : AgentWireTests::toolCallSignatureNormalizesEquivalentJson()
+PASS   : AgentWireTests::toolWatchdogIsTypeAware()
+PASS   : AgentWireTests::streamRepetitionDetectsLongTripleBlockOnly()
+PASS   : AgentWireTests::textToolPayloadCapsGenerationAndStopsAtToolCall()
+PASS   : AgentWireTests::adaptiveSubagentLimit_respectsProfileContextAndVram()
+PASS   : AgentWireTests::isDestructiveAction_gatesShellDesktopMemory()
+PASS   : AgentWireTests::completionErrorClassification_isSelective()
+PASS   : AgentWireTests::contextLimitFromError_readsVllmMessage()
+PASS   : AgentWireTests::outputTokenReservation_leavesContextHeadroom()
+PASS   : AgentWireTests::sessionTitle_isBriefAndPromptDerived()
+PASS   : AgentWireTests::firstPromptTitlesAndPersistsSession()
+PASS   : AgentWireTests::startupRepairsDefaultTitleFromFirstPrompt()
+PASS   : AgentWireTests::cleanupTestCase()
+Totals: 68 passed, 0 failed, 0 skipped, 0 blacklisted, 1750ms
+********* Finished testing of AgentWireTests *********
+<end of output>
+Test time =   1.76 sec
+----------------------------------------------------------
+Test Passed.
+"test_agent_wire" end time: Oct 16 20:38 -03
+"test_agent_wire" time elapsed: 00:00:01
+----------------------------------------------------------
+
+29/90 Testing: test_code_graph
+29/90 Test: test_code_graph
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_code_graph"
+Directory: /home/cristian/.cache/llamacode/source
+"test_code_graph" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of CodeGraphTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : CodeGraphTests::initTestCase()
+PASS   : CodeGraphTests::addBatch_insertsAndDedupes()
+PASS   : CodeGraphTests::index_extractsSymbols()
+PASS   : CodeGraphTests::index_extractsImports()
+PASS   : CodeGraphTests::index_edgesCarrySourceCitations()
+PASS   : CodeGraphTests::index_idempotent()
+PASS   : CodeGraphTests::index_langFilter()
+PASS   : CodeGraphTests::graphStore_removeRelationsBySubject()
+PASS   : CodeGraphTests::graphStore_entityNames()
+PASS   : CodeGraphTests::reindex_dropsStaleEdges()
+PASS   : CodeGraphTests::incremental_freshFallsBackToFull()
+PASS   : CodeGraphTests::incremental_mtimeReindexesChanged()
+PASS   : CodeGraphTests::incremental_gitSubdirUsesMtime()
+PASS   : CodeGraphTests::cleanupTestCase()
+Totals: 14 passed, 0 failed, 0 skipped, 0 blacklisted, 2225ms
+********* Finished testing of CodeGraphTests *********
+<end of output>
+Test time =   2.23 sec
+----------------------------------------------------------
+Test Passed.
+"test_code_graph" end time: Oct 16 20:38 -03
+"test_code_graph" time elapsed: 00:00:02
+----------------------------------------------------------
+
+41/90 Testing: test_agent_tools
+41/90 Test: test_agent_tools
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_agent_tools"
+Directory: /home/cristian/.cache/llamacode/source
+"test_agent_tools" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of AgentToolsTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : AgentToolsTests::initTestCase()
+PASS   : AgentToolsTests::writeReadEditCycle()
+PASS   : AgentToolsTests::hashGuard_rejectsStaleEditAndAcceptsFreshHash()
+PASS   : AgentToolsTests::hashGuard_coversFullFileBeyondReadView()
+PASS   : AgentToolsTests::writeFile_trimsModelPathWhitespace()
+PASS   : AgentToolsTests::readAndList_trimsModelPathWhitespace()
+PASS   : AgentToolsTests::readFile_compactViewAndSafeFallback()
+PASS   : AgentToolsTests::projectBrain_persistsWorkspaceIndex()
+PASS   : AgentToolsTests::confinement_blocksOutsideCwd()
+PASS   : AgentToolsTests::allowedRoots_permitExtraFolder()
+PASS   : AgentToolsTests::unconfined_permitsAnyPath()
+PASS   : AgentToolsTests::readOnly_blocksMutationButAllowsRead()
+PASS   : AgentToolsTests::editFile_missingFails()
+PASS   : AgentToolsTests::editFile_whitespaceNearMissExplains()
+PASS   : AgentToolsTests::parseErrorExplainsChunking()
+PASS   : AgentToolsTests::grep_findsMatch()
+PASS   : AgentToolsTests::glob_listsFiles()
+PASS   : AgentToolsTests::reviewOverengineering_isReadOnlyAndExplainsCandidates()
+PASS   : AgentToolsTests::reviewOverengineering_handlesEmptyStagedAndUntracked()
+PASS   : AgentToolsTests::reviewOverengineering_rejectsInvalidScopeAndTruncates()
+PASS   : AgentToolsTests::reviewOverengineering_withoutRepoExplainsRequirement()
+PASS   : AgentToolsTests::runShell_echo()
+PASS   : AgentToolsTests::hybridSearch_depGraphAndBudget()
+PASS   : AgentToolsTests::hybridSearch_compactReturnsSpans()
+PASS   : AgentToolsTests::hybridSearch_includeDocsReportsCorpus()
+PASS   : AgentToolsTests::repoSlice_defaultsToCompactEvidence()
+PASS   : AgentToolsTests::contextScoutAndFetch_validateHandle()
+PASS   : AgentToolsTests::contextStatus_reportsPersistentIndex()
+PASS   : AgentToolsTests::workStatus_reportsOtherSessions()
+PASS   : AgentToolsTests::mutationGuard_detectsOpaqueShellAndDeclaredPaths()
+PASS   : AgentToolsTests::graphPacketAndDoctor_areExposedByTool()
+PASS   : AgentToolsTests::recentActions_tailsEventLogForSession()
+PASS   : AgentToolsTests::desktopWindows_returnsStructuredInventory()
+PASS   : AgentToolsTests::desktopNewTools_validateBeforeTouchingTheDesktop()
+PASS   : AgentToolsTests::desktopClipboard_roundTripRestoresUserClipboard()
+PASS   : AgentToolsTests::desktopControls_emptyPointsToReadText()
+PASS   : AgentToolsTests::desktopControls_invalidWindowErrorsCleanly()
+PASS   : AgentToolsTests::desktopLaunch_emptyAppErrorsCleanly()
+SKIP   : AgentToolsTests::desktopLaunch_unknownAppFailsWithoutLaunching() validacion de nombres de start: solo Windows
+   Loc: [/home/cristian/.cache/llamacode/source/tests/test_agent_tools.cpp(1039)]
+PASS   : AgentToolsTests::desktopBackground_refusesMouseAndKeyboardTools()
+PASS   : AgentToolsTests::honeyHandoff_densifiesMasterAndSubPrompts()
+PASS   : AgentToolsTests::webUrlGuard_blocksPrivateAndCredentials()
+PASS   : AgentToolsTests::readableWebText_prefersArticleAndPreservesStructure()
+PASS   : AgentToolsTests::webEscalation_requiresVerifiableEvidence()
+PASS   : AgentToolsTests::browserNetworkEvidence_redactsAndGroups()
+PASS   : AgentToolsTests::webFetch_forcedUnavailableProviderFailsDeterministically()
+PASS   : AgentToolsTests::webFetch_camofoxProviderE2E()
+PASS   : AgentToolsTests::webFetch_rateLimitsPerHost()
+PASS   : AgentToolsTests::webSearch_usesConfiguredSearxngJsonApi()
+PASS   : AgentToolsTests::webSearch_usesConfiguredPlumbSearchAndPrefersIt()
+PASS   : AgentToolsTests::webSearch_localOnlyFailsClosedOnEmptyResults()
+PASS   : AgentToolsTests::webSearch_localOnlyRequiresLoopbackEndpoint()
+PASS   : AgentToolsTests::webSearch_localOnlyRejectsRedirects()
+PASS   : AgentToolsTests::auxiliaryEndpoint_prefersValidSidecarAndFallsBack()
+PASS   : AgentToolsTests::cleanupTestCase()
+Totals: 54 passed, 0 failed, 1 skipped, 0 blacklisted, 1923ms
+********* Finished testing of AgentToolsTests *********
+<end of output>
+Test time =   1.93 sec
+----------------------------------------------------------
+Test Passed.
+"test_agent_tools" end time: Oct 16 20:38 -03
+"test_agent_tools" time elapsed: 00:00:01
+----------------------------------------------------------
+
+22/90 Testing: test_catalog
+22/90 Test: test_catalog
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_catalog"
+Directory: /home/cristian/.cache/llamacode/source
+"test_catalog" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of CatalogTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : CatalogTests::initTestCase()
+PASS   : CatalogTests::sizeLabel()
+PASS   : CatalogTests::addOrUpdate_andGet()
+PASS   : CatalogTests::addBatch_andFindById()
+PASS   : CatalogTests::allForRoot()
+PASS   : CatalogTests::filterByFamily()
+PASS   : CatalogTests::filterVisionOnly()
+PASS   : CatalogTests::manualCompatibility_survivesRescanAndReload()
+PASS   : CatalogTests::removeByRootId()
+PASS   : CatalogTests::persistsAcrossReload()
+PASS   : CatalogTests::reconcileRoot_marksMissingUnavailable()
+PASS   : CatalogTests::reconcileRoot_emptyScanKeepsCatalog()
+PASS   : CatalogTests::stableId_assignedAndPersisted()
+PASS   : CatalogTests::stableId_survivesMovingTheFile()
+PASS   : CatalogTests::stableId_distinctFilesGetDistinctAnchors()
+PASS   : CatalogTests::cleanupTestCase()
+Totals: 16 passed, 0 failed, 0 skipped, 0 blacklisted, 2708ms
+********* Finished testing of CatalogTests *********
+<end of output>
+Test time =   2.72 sec
+----------------------------------------------------------
+Test Passed.
+"test_catalog" end time: Oct 16 20:38 -03
+"test_catalog" time elapsed: 00:00:02
+----------------------------------------------------------
+
+35/90 Testing: test_eval
+35/90 Test: test_eval
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_eval"
+Directory: /home/cristian/.cache/llamacode/source
+"test_eval" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of EvalTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : EvalTests::initTestCase()
+PASS   : EvalTests::loadFromJson_parsesTasks()
+PASS   : EvalTests::categories_uniqueInOrder()
+PASS   : EvalTests::invalidJson_returnsEmptyWithError()
+PASS   : EvalTests::loadFromFile_roundTrip()
+PASS   : EvalTests::reasoningBiasSuite_isValid()
+PASS   : EvalTests::snakeSuite_isValid()
+PASS   : EvalTests::adversarialSuite_gradersHaveRealNewlines()
+PASS   : EvalTests::acceptanceCommand_runsAdversarialHeredocGrader()
+PASS   : EvalTests::acceptanceCommand_adversarialGradersMatchSpec()
+PASS   : EvalTests::agentAcceptance_scoresGeneratedFiles()
+PASS   : EvalTests::benchPack_extractsAnswersFromRealModelOutput()
+PASS   : EvalTests::benchPack_importsPublicFormats()
+PASS   : EvalTests::benchPack_runsCodeTestsWithTimeout()
+PASS   : EvalTests::cleanupTestCase()
+Totals: 15 passed, 0 failed, 0 skipped, 0 blacklisted, 3706ms
+********* Finished testing of EvalTests *********
+<end of output>
+Test time =   3.72 sec
+----------------------------------------------------------
+Test Passed.
+"test_eval" end time: Oct 16 20:38 -03
+"test_eval" time elapsed: 00:00:03
+----------------------------------------------------------
+
+76/90 Testing: update_binary_sh
+76/90 Test: update_binary_sh
+Command: "/usr/bin/bash" "/home/cristian/.cache/llamacode/source/tests/test_update_binary_sh.sh"
+Directory: /media/cristian/Disco local/LlamaCode-cache/build_tests_linux
+"update_binary_sh" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+== update-binary.sh ==
+  PASS instala con hash verificado (rc=0)
+  PASS la carpeta queda con la version nueva
+  PASS no quedan archivos viejos (swap de carpeta)
+  PASS no deja .old ni .new
+  PASS crea la entrada del menu (via el lanzador)
+  PASS hash equivocado: sale 1 y lo explica
+  PASS con hash equivocado la instalacion queda intacta
+  PASS sin SHA-256 no instala
+  PASS paquete sin usr/bin/LlamaCode: no reemplaza
+  PASS instala en carpeta nueva (migracion), hash en mayuscula
+  PASS Debug tiene su propia entrada de menu
+  PASS el autostart pasa por el lanzador
+  PASS escribe el lanzador ejecutable
+  PASS el lanzador lee launcher.env y limpia LD_LIBRARY_PATH (/media/x/Llama Code/profiles||/tmp/tmp.If9PVfs3zP/opt/LlamaCode/llamacode|/tmp/tmp.If9PVfs3zP/opt/LlamaCode/usr/bin)
+  PASS la entrada del menu usa el lanzador
+  PASS guarda la entrada del menu del wrapper como .bak
+  PASS el autostart del wrapper pasa al lanzador
+  PASS no toca la entrada de llamacode-debug (prefijo comun)
+  PASS avisa las herramientas faltantes sin fallar
+  PASS sin faltantes no avisa
+  PASS tesseract sin espanol: avisa tesseract-ocr-spa
+  PASS conserva la version anterior como .prev
+  PASS glibc viejo: se niega y lo explica
+  PASS glibc viejo: la instalacion queda intacta
+  PASS glibc igual al minimo: instala
+  PASS standalone: launcher.env con las LLAMACODE_* de la shell (/media/x/it's here|)
+  PASS wrapper sin launcher.env: la entrada del menu queda igual
+  PASS wrapper sin launcher.env: avisa y no toca el autostart
+  PASS con launcher.env: el menu pasa al lanzador (.bak)
+  PASS con launcher.env: el autostart del wrapper se detecta solo
+  PASS version nueva que crashea: lo informa con su salida
+  PASS vuelve la version anterior (la rota queda en .failed)
+  PASS version nueva que sigue viva: queda instalada
+  PASS un update que anda borra la version rota (.failed) que habia quedado
+  PASS con la anterior abierta no queda el lock tomado; sale con 0 (le pasa el foco a otra instancia): no es rollback
+  PASS estado previo al rollback manual: v3 con alive en .prev
+  PASS --rollback sale 0
+  PASS --rollback deja la anterior y guarda la que saco en .failed
+  PASS --rollback reescribe el lanzador si la anterior no lo tenia
+  PASS sin .prev, --rollback falla claro y no toca nada
+  PASS release firmada: verifica la procedencia con gh
+  PASS verifica contra el workflow de releases del repo
+  PASS sin attestation valida: no instala
+  PASS sin attestation valida: la instalacion queda intacta
+  PASS releases anteriores a la firma no se verifican
+  PASS sin gh logueado: avisa y sigue (el hash igual se verifica)
+  PASS LC_REQUIRE_ATTESTATION exige la firma sin version
+  PASS LC_REQUIRE_ATTESTATION sin gh logueado: no instala (no cae al hash solo)
+  PASS el script copiado a TMP se borra al terminar
+  PASS tambien se borra si el update falla
+  PASS el script del repo (otro nombre) nunca se borra
+  PASS package-linux.sh fija linuxdeploy y su plugin Qt con SHA-256
+TODO OK
+<end of output>
+Test time =   4.13 sec
+----------------------------------------------------------
+Test Passed.
+"update_binary_sh" end time: Oct 16 20:38 -03
+"update_binary_sh" time elapsed: 00:00:04
+----------------------------------------------------------
+
+48/90 Testing: test_appcontroller
+48/90 Test: test_appcontroller
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_appcontroller"
+Directory: /home/cristian/.cache/llamacode/source
+"test_appcontroller" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of AppControllerTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : AppControllerTests::initTestCase()
+QWARN  : AppControllerTests::buildPlatformIsCompileTimeQtPlatform() Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+PASS   : AppControllerTests::buildPlatformIsCompileTimeQtPlatform()
+PASS   : AppControllerTests::exportUserDataToWritesBackup()
+PASS   : AppControllerTests::githubReleaseIsConvertedToUpdateFlag()
+PASS   : AppControllerTests::updateChannelDefaultsToBuildChannel()
+PASS   : AppControllerTests::githubDebugReleaseIsChannelScoped()
+PASS   : AppControllerTests::githubReleaseListChoosesNewestDebug()
+PASS   : AppControllerTests::updateNowRequiresAvailableRelease()
+PASS   : AppControllerTests::githubPrereleaseIsIgnored()
+PASS   : AppControllerTests::modelLoadStatusComposesLocalRemoteAndConnecting()
+PASS   : AppControllerTests::computerUseChoiceReachesUiAndBackend()
+PASS   : AppControllerTests::updateToLatestRechecksBeforeLaunching()
+PASS   : AppControllerTests::localModelLoadLifecycle()
+PASS   : AppControllerTests::windowsUpdateCommandShowsProgressWindow()
+PASS   : AppControllerTests::updateConsoleIsVisible()
+PASS   : AppControllerTests::installRootIsDerivedFromExeLocation()
+PASS   : AppControllerTests::releaseAssetIsSelectedPerOsAndChannel()
+PASS   : AppControllerTests::releaseAssetWithoutHashIsIgnored()
+PASS   : AppControllerTests::binaryInstallDirFollowsMarkerAndChannel()
+PASS   : AppControllerTests::binaryInstallOnlyOffersReleasesWithAsset()
+PASS   : AppControllerTests::binaryUpdateArgumentsPerPlatform()
+PASS   : AppControllerTests::linuxUpdateRunsInFirstAvailableTerminal()
+PASS   : AppControllerTests::linuxLauncherEnvKeepsWrapperVariables()
+PASS   : AppControllerTests::linuxBinaryNeedsRecentGlibc()
+PASS   : AppControllerTests::linuxBinaryGlibcFloorMatchesCiRunner()
+PASS   : AppControllerTests::staleUpdateScriptsAreRemoved()
+PASS   : AppControllerTests::binaryUpdaterScriptsAreBundled()
+PASS   : AppControllerTests::importUserDataFromRoundTrips()
+PASS   : AppControllerTests::exportUserDataToEmptyPathErrors()
+PASS   : AppControllerTests::exportChatSessionToMissingSessionErrors()
+PASS   : AppControllerTests::parseGpuPowerCsvParses()
+PASS   : AppControllerTests::parseGpuPowerCsvTolerant()
+PASS   : AppControllerTests::parseGpuInventoryCsvParses()
+PASS   : AppControllerTests::researchReportGuardrailsRejectKnownErrors()
+PASS   : AppControllerTests::researchReportGuardrailsAcceptCorrectedClaims()
+PASS   : AppControllerTests::ggufRecommendationCandidateFilter()
+PASS   : AppControllerTests::modelRecommendationsUseResolvableGgufNames()
+PASS   : AppControllerTests::createRecommendedLaunchProfileBuildsProfile()
+PASS   : AppControllerTests::createRecommendedLaunchProfileReusesExistingMenuProfile()
+PASS   : AppControllerTests::preferredAgentLaunchSelection()
+PASS   : AppControllerTests::browserMcpEffectiveResolves()
+PASS   : AppControllerTests::integrationSecretsMigrateOutOfJson()
+PASS   : AppControllerTests::pendingAgentClearsStartingWhenAlreadyRunning()
+PASS   : AppControllerTests::benchmarkStopStepKillsWhenBudgetRunsOut()
+PASS   : AppControllerTests::benchmarkRestartErrorsAreInfrastructure()
+PASS   : AppControllerTests::benchmarkDisablesEarlyAcceptanceForBigCodeBench()
+PASS   : AppControllerTests::benchmarkBusyTurnIsRetryableNotInfrastructure()
+PASS   : AppControllerTests::benchmarkRepairPrefillIsNotStagnation()
+PASS   : AppControllerTests::benchmarkRepairInspectionLoopGuard()
+PASS   : AppControllerTests::benchmarkMemoryPressureIsRecognized()
+PASS   : AppControllerTests::benchmarkUsesMaxVramBeforeReducingPressure()
+PASS   : AppControllerTests::benchmarkPreservesScoreAfterTransportTail()
+PASS   : AppControllerTests::benchmarkGateRejectsBrokenOrStaleHe0()
+PASS   : AppControllerTests::benchmarkGateAcceptsValidHe20QualityResult()
+PASS   : AppControllerTests::benchmarkCoverageClassifiesStages()
+PASS   : AppControllerTests::benchmarkFingerprintIncludesThinkingPolicy()
+PASS   : AppControllerTests::benchmarkCustomStageClassification()
+PASS   : AppControllerTests::benchmarkRankingAggregatesLatestStages()
+PASS   : AppControllerTests::benchmarkDocumentRowsParseScores()
+PASS   : AppControllerTests::benchmarkUsesOneArtifactPerTask()
+PASS   : AppControllerTests::benchmarkCountsRawGenerationProgressOnce()
+PASS   : AppControllerTests::serverHealthAcceptsRemoteNotFoundResponse()
+PASS   : AppControllerTests::concurrencyBenchmarkSettingsClampBounds()
+PASS   : AppControllerTests::benchmarkReusesServerAlreadyLoadedWithSameProfile()
+PASS   : AppControllerTests::benchmarkBest25ClassifiesExclusiveSpeedTiers()
+PASS   : AppControllerTests::benchmarkBest25IncludesValidRowsWithoutTps()
+PASS   : AppControllerTests::benchmarkBestModelosSpeedCapsProfilesPerGguf()
+PASS   : AppControllerTests::benchmarkHumanEval20CandidatesUseTopThreeAndBestControls()
+PASS   : AppControllerTests::benchmarkBestModelosQualityUsesTwentyItemResults()
+PASS   : AppControllerTests::benchmarkScoresChatAnswersWhenAgentWritesNoFiles()
+PASS   : AppControllerTests::benchmarkResumesWhereItDiedInsteadOfLosingTheSeries()
+PASS   : AppControllerTests::benchmarkWorkspaceFingerprintIgnoresInternalAgentFiles()
+PASS   : AppControllerTests::benchmarkEvaluatorsToleratePresentationNotContent()
+PASS   : AppControllerTests::hybridExecutionPromptPreservesRequestAndPlan()
+PASS   : AppControllerTests::hybridVisibleMessagePreservesOnlyOriginalRequest()
+PASS   : AppControllerTests::hybridStreamParserDetectsProgressAndCompletion()
+PASS   : AppControllerTests::hybridStructuredPlanValidatesAndRejectsUnsafeShape()
+PASS   : AppControllerTests::hybridPlanNormalizesScalarLists()
+PASS   : AppControllerTests::hybridStatusUsesSelectedPlannerAndExecutorNames()
+PASS   : AppControllerTests::hybridSwapRemainsStartingUntilPipelineEnds()
+PASS   : AppControllerTests::voiceWhisperServerAvailabilityUsesConfiguredPath()
+PASS   : AppControllerTests::legacyVoiceConfigDefaultsToManagedPiper()
+PASS   : AppControllerTests::hardwareRecommendationIsHeadless()
+PASS   : AppControllerTests::voiceGpuPlanIsExposedHeadless()
+PASS   : AppControllerTests::performanceMatrixIsHeadless()
+PASS   : AppControllerTests::devModeIsOptInAndRecordsPerformance()
+PASS   : AppControllerTests::expandedLoggingPersistsAndRecordsStartupDiagnostics()
+PASS   : AppControllerTests::browserTeachSkillsLifecycle()
+PASS   : AppControllerTests::taskFailureTextDetected()
+PASS   : AppControllerTests::taskRequiresToolEvidenceForWebObjective()
+PASS   : AppControllerTests::deterministicReplayCountsAsToolEvidence()
+PASS   : AppControllerTests::visualComparisonIsRecognizedSeparately()
+PASS   : AppControllerTests::readResearchReportPrependsLegacyTopic()
+PASS   : AppControllerTests::researchReportsExposeFormattedDate()
+PASS   : AppControllerTests::exportWorkspaceIncludesChatsAndResearch()
+PASS   : AppControllerTests::autoStartAgentOnLaunchPersists()
+PASS   : AppControllerTests::remoteBackendEnablesServerDependentUi()
+SKIP   : AppControllerTests::windowsStartupCommandQuotesExecutable() windowsStartupCommand is a Windows startup integration
+   Loc: [/home/cristian/.cache/llamacode/source/tests/test_appcontroller.cpp(1919)]
+PASS   : AppControllerTests::linuxAutostartWritesAndRemovesEntry()
+PASS   : AppControllerTests::settingsTabsAndHeadersAreTranslated()
+PASS   : AppControllerTests::versionComesFromCMakeProject()
+PASS   : AppControllerTests::agentAutoStartsWhenServerBecomesReady()
+PASS   : AppControllerTests::startupHiddenRequiresBothFlags()
+PASS   : AppControllerTests::loopTaskRunsBodyUntilGoalMet()
+PASS   : AppControllerTests::loopTaskAppliesVerifyPhaseAndRestoresIt()
+PASS   : AppControllerTests::profileWithoutPhasesDoesNotReapplyHarness()
+PASS   : AppControllerTests::loopTaskStopsAtMaxIterations()
+PASS   : AppControllerTests::loopTaskStopsAtMaxSeconds()
+[2026-10-16T20:38:57.918] [+3053 ms] [WARN] Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+PASS   : AppControllerTests::dataDrivenTaskRunsBodyPerRow()
+[2026-10-16T20:38:58.015] [+3150 ms] [WARN] Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+PASS   : AppControllerTests::taskRetriesBodyOnFailure()
+[2026-10-16T20:38:58.105] [+3239 ms] [WARN] Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+PASS   : AppControllerTests::datasetAbortStopsOnError()
+[2026-10-16T20:38:58.208] [+3342 ms] [WARN] Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+PASS   : AppControllerTests::fileWatchTriggerRegistersPath()
+PASS   : AppControllerTests::taskRunTimelineNormalizesToolCards()
+[2026-10-16T20:38:58.238] [+3373 ms] [WARN] Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+PASS   : AppControllerTests::earlyFailureRecordedInHistory()
+[2026-10-16T20:38:58.274] [+3408 ms] [WARN] Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+PASS   : AppControllerTests::workflowTaskPausesApprovesAndPersistsSnapshot()
+[2026-10-16T20:38:58.344] [+3478 ms] [WARN] Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+PASS   : AppControllerTests::workflowDirectToolCompletesWithoutModelTurn()
+[2026-10-16T20:38:58.397] [+3531 ms] [WARN] Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+PASS   : AppControllerTests::workflowValidationIsAvailableToVisualEditor()
+[2026-10-16T20:38:58.425] [+3559 ms] [WARN] Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+PASS   : AppControllerTests::engineeringCatalogIsExposedHeadless()
+[2026-10-16T20:38:58.446] [+3581 ms] [WARN] Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+[2026-10-16T20:38:58.495] [+3629 ms] [WARN] Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+PASS   : AppControllerTests::engineeringPresetInstallsPersistsAndRestores()
+PASS   : AppControllerTests::harnessAdapterNormalizesToLlamaAgent()
+[2026-10-16T20:38:58.523] [+3657 ms] [WARN] Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+PASS   : AppControllerTests::computerUseSandwichRemainsExperimentalAndOptIn()
+[2026-10-16T20:38:58.553] [+3687 ms] [WARN] Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+PASS   : AppControllerTests::systemProfileBinaryPinReadsBundle()
+[2026-10-16T20:38:58.576] [+3710 ms] [WARN] Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+PASS   : AppControllerTests::systemProfilesBundleCacheSeesRewrites()
+[2026-10-16T20:38:58.598] [+3733 ms] [WARN] Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+PASS   : AppControllerTests::gpuQueriesRunAsyncAndNotify()
+[2026-10-16T20:38:58.680] [+3815 ms] [WARN] Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+PASS   : AppControllerTests::systemProfileMinimumBuildSelectsNewestCompatible()
+[2026-10-16T20:38:58.705] [+3840 ms] [WARN] Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+PASS   : AppControllerTests::cpuSystemProfileRequiresCpuBinary()
+[2026-10-16T20:38:58.741] [+3876 ms] [WARN] Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+[2026-10-16T20:38:58.742] [+3877 ms] [INFO] [charla] turno → AGENTE (17 chars)
+PASS   : AppControllerTests::charlaTranscriptRoutesToAgentWhenRunning()
+[2026-10-16T20:38:58.763] [+3897 ms] [WARN] Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+[2026-10-16T20:38:58.764] [+3898 ms] [INFO] [charla] turno → AGENTE (15 chars)
+[2026-10-16T20:38:58.769] [+3903 ms] [INFO] [charla] turno → AGENTE (18 chars)
+PASS   : AppControllerTests::charlaCursorOcrIsOptInAndDoesNotHijackChat()
+[2026-10-16T20:38:58.789] [+3923 ms] [WARN] Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+[2026-10-16T20:38:58.790] [+3924 ms] [INFO] [charla] turno → AGENTE (28 chars)
+[2026-10-16T20:38:58.794] [+3928 ms] [INFO] [charla] aprobación por voz: SÍ (call-1)
+[2026-10-16T20:38:58.794] [+3928 ms] [INFO] [charla] aprobación por voz: NO (call-2)
+[2026-10-16T20:38:58.794] [+3928 ms] [INFO] [charla] aprobación por voz: sin respuesta clara, rechazo (call-3)
+[2026-10-16T20:38:58.794] [+3928 ms] [INFO] [charla] turno → AGENTE (19 chars)
+PASS   : AppControllerTests::charlaJarvisApprovesByVoiceAndCuesSlowTools()
+[2026-10-16T20:38:58.817] [+3952 ms] [WARN] Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+[2026-10-16T20:38:58.824] [+3959 ms] [INFO] [charla] turno en espera: el agente está arrancando
+[2026-10-16T20:38:58.828] [+3962 ms] [INFO] [charla] turno → AGENTE (21 chars)
+PASS   : AppControllerTests::charlaJarvisQueuesTurnWhileAgentStarts()
+[2026-10-16T20:38:58.852] [+3986 ms] [WARN] Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+[2026-10-16T20:38:58.853] [+3987 ms] [INFO] [charla] turno → AGENTE (21 chars)
+[2026-10-16T20:38:58.853] [+3987 ms] [INFO] [charla] pedido en cola (agente ocupado, 1 en cola)
+[2026-10-16T20:38:58.853] [+3987 ms] [INFO] [charla] frenar por voz: cancelando el turno del agente
+[2026-10-16T20:38:58.853] [+3987 ms] [INFO] [charla] turno → AGENTE (12 chars)
+[2026-10-16T20:38:58.878] [+4013 ms] [WARN] Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+[2026-10-16T20:38:58.880] [+4014 ms] [INFO] [charla] turno → AGENTE (17 chars)
+[2026-10-16T20:38:58.880] [+4014 ms] [INFO] [charla] pedido en cola (agente ocupado, 1 en cola)
+[2026-10-16T20:38:58.913] [+4048 ms] [INFO] [charla] turno → AGENTE (13 chars)
+PASS   : AppControllerTests::charlaJarvisStopsOrQueuesWhileAgentWorks()
+[2026-10-16T20:38:58.960] [+4094 ms] [WARN] Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+[2026-10-16T20:38:58.961] [+4096 ms] [INFO] [charla] turno → AGENTE (19 chars)
+[2026-10-16T20:38:58.961] [+4096 ms] [INFO] [charla] estado idle → thinking (0 ms en idle)
+[2026-10-16T20:38:58.961] [+4096 ms] [INFO] [charla] stream: +1 oración(es) (bubble=8, consumido=46)
+[2026-10-16T20:38:58.961] [+4096 ms] [INFO] [charla] estado thinking → speaking (0 ms en thinking)
+[2026-10-16T20:38:58.961] [+4096 ms] [INFO] [charla] TTS: sintetizando 46 chars (cola=0)
+PASS   : AppControllerTests::charlaDoesNotSpeakProvisionalAnswers()
+[2026-10-16T20:38:58.981] [+4116 ms] [WARN] Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+[2026-10-16T20:38:58.983] [+4117 ms] [INFO] [charla] estado idle → listening (0 ms en idle)
+PASS   : AppControllerTests::charlaWarmsUpAgentThatStartsWhileListening()
+[2026-10-16T20:38:59.002] [+4137 ms] [WARN] Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+PASS   : AppControllerTests::ocrStatusAlwaysExplainsItself()
+[2026-10-16T20:38:59.032] [+4166 ms] [WARN] Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+[2026-10-16T20:38:59.041] [+4175 ms] [INFO] presupuesto por nivel (system+tools, bytes):
+[2026-10-16T20:38:59.041] [+4175 ms] [INFO]   Chat liviano: 5151
+[2026-10-16T20:38:59.041] [+4175 ms] [INFO]   Básico: 7387
+[2026-10-16T20:38:59.041] [+4175 ms] [INFO]   Intermedio: 13007
+[2026-10-16T20:38:59.041] [+4175 ms] [INFO]   Avanzado: 29491
+[2026-10-16T20:38:59.041] [+4175 ms] [INFO]   Máximo (+37 MCP): 58580
+PASS   : AppControllerTests::agentLevels_contextBudgetLadder()
+[2026-10-16T20:38:59.063] [+4197 ms] [WARN] Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+PASS   : AppControllerTests::privacyModeHidesAndBlocksNetworkTools()
+[2026-10-16T20:38:59.104] [+4239 ms] [WARN] Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+PASS   : AppControllerTests::doctorReportsStructureAndIssues()
+[2026-10-16T20:38:59.131] [+4265 ms] [WARN] Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+PASS   : AppControllerTests::importOllamaModelsIngestsStore()
+PASS   : AppControllerTests::bundledCustomBenchmarkUpgradePreservesPersonalFiles()
+PASS   : AppControllerTests::bundledOneShottingBenchmarksAreSeparate()
+PASS   : AppControllerTests::bundledHarnessContextAbBenchmarkIsValid()
+PASS   : AppControllerTests::bundledArtifactLifecycleBenchmarkIsValid()
+[2026-10-16T20:38:59.167] [+4302 ms] [WARN] Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+PASS   : AppControllerTests::importedBenchmarkNamesDescribeSubset()
+PASS   : AppControllerTests::tunerProfileNameUsesOptiPrefixWithoutChaining()
+PASS   : AppControllerTests::tunerGainPctNeedsBothLegs()
+PASS   : AppControllerTests::isRemoteHostDetectsLanHosts()
+PASS   : AppControllerTests::isLoopbackCloudUrlRequiresLocalHttpEndpoint()
+PASS   : AppControllerTests::cleanupTestCase()
+Totals: 147 passed, 0 failed, 1 skipped, 0 blacklisted, 6098ms
+********* Finished testing of AppControllerTests *********
+<end of output>
+Test time =   6.12 sec
+----------------------------------------------------------
+Test Passed.
+"test_appcontroller" end time: Oct 16 20:38 -03
+"test_appcontroller" time elapsed: 00:00:06
+----------------------------------------------------------
+
+19/90 Testing: test_system_profiles
+19/90 Test: test_system_profiles
+Command: "/home/cristian/.cache/llamacode/build_tests_linux/test_system_profiles"
+Directory: /home/cristian/.cache/llamacode/source
+"test_system_profiles" start time: Oct 16 20:38 -03
+Output:
+----------------------------------------------------------
+********* Start testing of SystemProfilesTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : SystemProfilesTests::initTestCase()
+PASS   : SystemProfilesTests::manager_loadsSystemProfiles()
+PASS   : SystemProfilesTests::manager_flashNextProfileIsConservativeBenchmarkCandidate()
+PASS   : SystemProfilesTests::manager_flashNextQ2ProfileMatchesMeasuredCandidate()
+PASS   : SystemProfilesTests::manager_ninferProfilesAreBenchmarkCandidates()
+PASS   : SystemProfilesTests::manager_vllmDflashProfilesAreExternalBenchmarks()
+PASS   : SystemProfilesTests::manager_16gbQwen38CandidatesPreservePostTuning()
+PASS   : SystemProfilesTests::manager_lingProfilesAreBenchmarkCandidates()
+PASS   : SystemProfilesTests::manager_systemNotPersisted()
+PASS   : SystemProfilesTests::manager_immutable()
+PASS   : SystemProfilesTests::manager_duplicateMakesEditableCopy()
+PASS   : SystemProfilesTests::manager_duplicatePreservesLaunchLinkage()
+PASS   : SystemProfilesTests::manager_modelIdIsDeterministic()
+PASS   : SystemProfilesTests::manager_fastGemmaDflashWired()
+PASS   : SystemProfilesTests::manager_systemProfilesAvoidAccidentalVisionAndMtp()
+PASS   : SystemProfilesTests::bundle_draftMtpAlwaysDeclaresDraftModel()
+PASS   : SystemProfilesTests::bundle_gemma4TemplateKeepsLlamaCppMarkers()
+PASS   : SystemProfilesTests::bundle_lagunaTemplateIsAppliedToBothProfiles()
+PASS   : SystemProfilesTests::manager_smallProfilesAreConservative()
+PASS   : SystemProfilesTests::manager_defaultCodingProfileUsesKatCoder()
+PASS   : SystemProfilesTests::manager_16gbCodingProfileUsesBenchmarkedKatCoder()
+PASS   : SystemProfilesTests::manager_24gbPremiumPromotesThinkingCapAndKeepsMaxCtx()
+PASS   : SystemProfilesTests::bundle_qwen38VariantsAreMtpVisionAndTemplated()
+PASS   : SystemProfilesTests::bundle_qwen38Turing24gbControlsAreColdAndSeparated()
+PASS   : SystemProfilesTests::bundle_qwen38Q6BenchmarkFamilyIsGatedAndExpanded()
+PASS   : SystemProfilesTests::bundle_qwen38Q8BenchmarkFamilyIsGatedAndExpanded()
+PASS   : SystemProfilesTests::bundle_bigBangDisablesCrashyFlashAttention()
+PASS   : SystemProfilesTests::bundle_quantizationPolicyCapsKvAtQ8()
+PASS   : SystemProfilesTests::bundle_bestProfilesUseRequestedCategoryNames()
+PASS   : SystemProfilesTests::bundle_tensorSplitProfilesAreDualGpuAndMemoryCapped()
+PASS   : SystemProfilesTests::bundle_genesisProfilesAreOptIn64kAndMtp4()
+PASS   : SystemProfilesTests::controller_recommendsClosestTier()
+PASS   : SystemProfilesTests::controller_recommendedTierIncludesDisplayName()
+PASS   : SystemProfilesTests::controller_recommendsCpuWhenNoGpu()
+PASS   : SystemProfilesTests::controller_noneWhenBelowMinimum()
+PASS   : SystemProfilesTests::controller_showcase8gbOffersGemmaAndQwen()
+PASS   : SystemProfilesTests::controller_showcase24gbUnchanged()
+PASS   : SystemProfilesTests::controller_showcaseEmptyWhenNoSiblings()
+PASS   : SystemProfilesTests::bundle_lagunaIsOptInAndHardwareGated()
+PASS   : SystemProfilesTests::bundle_ultraQAndHybridAreWiredAndOptIn()
+PASS   : SystemProfilesTests::bundle_deepSeekLidUsesDedicatedExperimentalBinaryAndF16Kv()
+PASS   : SystemProfilesTests::bundle_katApexMtpVisionIsOptInAndWired()
+PASS   : SystemProfilesTests::bundle_miniMaxIsOptInAndMemoryGated()
+PASS   : SystemProfilesTests::bundle_ultraQ48gbIsDualGpuVariantOfUltraQ()
+QINFO  : SystemProfilesTests::controller_launchMenuGatesByTotalVramAcrossGpus() Launch menu slow elapsedMs= 72 systemProfiles= 274 entries= 277 visible= 176 bundleMs= 0 profileListMs= 0 readinessMs= 36 affinityMs= 0 slowestEntryMs= 20 slowestEntry= "🏆 ASTRA Strata - ASTRA · Strata IQ3_S · Qwen3.8 Flash Next"
+QINFO  : SystemProfilesTests::controller_launchMenuGatesByTotalVramAcrossGpus() Launch menu slow elapsedMs= 83 systemProfiles= 274 entries= 277 visible= 277 bundleMs= 0 profileListMs= 0 readinessMs= 28 affinityMs= 0 slowestEntryMs= 11 slowestEntry= "⚙ 8GB - [agente/visión] 8GB · Qwen3.5 9B MTP (32k ctx)"
+PASS   : SystemProfilesTests::controller_launchMenuGatesByTotalVramAcrossGpus()
+QINFO  : SystemProfilesTests::controller_launchMenuAnnotatesGpuAffinity() Launch menu slow elapsedMs= 84 systemProfiles= 274 entries= 277 visible= 277 bundleMs= 0 profileListMs= 0 readinessMs= 27 affinityMs= 0 slowestEntryMs= 11 slowestEntry= "⚙ 8GB - [agente/visión] 8GB · Qwen3.5 9B MTP (32k ctx)"
+PASS   : SystemProfilesTests::controller_launchMenuAnnotatesGpuAffinity()
+QINFO  : SystemProfilesTests::controller_launchMenuQuickDefersReadinessWork() Launch menu readiness complete elapsedMs= 2814 profiles= 277
+PASS   : SystemProfilesTests::controller_launchMenuQuickDefersReadinessWork()
+QWARN  : SystemProfilesTests::controller_startLanGatewayRetriesWhenSettingsAlreadyEnabled() LlmGateway: no pude escuchar en 0.0.0.0:39863
+QINFO  : SystemProfilesTests::controller_startLanGatewayRetriesWhenSettingsAlreadyEnabled() LlmGateway: escuchando en http://0.0.0.0:39863
+QINFO  : SystemProfilesTests::controller_startLanGatewayRetriesWhenSettingsAlreadyEnabled() LlmGateway: escuchando en http://127.0.0.1:39863
+PASS   : SystemProfilesTests::controller_startLanGatewayRetriesWhenSettingsAlreadyEnabled()
+QINFO  : SystemProfilesTests::controller_gatewayRebindsWhenBusyPortIsReleased() LlmGateway: escuchando en http://127.0.0.1:39863
+QWARN  : SystemProfilesTests::controller_gatewayRebindsWhenBusyPortIsReleased() LlmGateway: no pude escuchar en 127.0.0.1:36733
+QWARN  : SystemProfilesTests::controller_gatewayRebindsWhenBusyPortIsReleased() LlmGateway: no pude escuchar en 0.0.0.0:36733
+QWARN  : SystemProfilesTests::controller_gatewayRebindsWhenBusyPortIsReleased() LlmGateway: no pude escuchar en 0.0.0.0:36733
+QWARN  : SystemProfilesTests::controller_gatewayRebindsWhenBusyPortIsReleased() LlmGateway: no pude escuchar en 0.0.0.0:36733
+QWARN  : SystemProfilesTests::controller_gatewayRebindsWhenBusyPortIsReleased() LlmGateway: no pude escuchar en 0.0.0.0:36733
+QWARN  : SystemProfilesTests::controller_gatewayRebindsWhenBusyPortIsReleased() LlmGateway: no pude escuchar en 0.0.0.0:36733
+QINFO  : SystemProfilesTests::controller_gatewayRebindsWhenBusyPortIsReleased() LlmGateway: escuchando en http://0.0.0.0:36733
+QWARN  : SystemProfilesTests::controller_gatewayRebindsWhenBusyPortIsReleased() LlmGateway: no pude escuchar en 0.0.0.0:36733
+PASS   : SystemProfilesTests::controller_gatewayRebindsWhenBusyPortIsReleased()
+PASS   : SystemProfilesTests::controller_lanNoPasswordSwitchIsLiveAndKeepsKey()
+PASS   : SystemProfilesTests::controller_astraSettingsListEveryStrataProfile()
+PASS   : SystemProfilesTests::controller_lanClientsListAndRequestLog()
+PASS   : SystemProfilesTests::controller_lanAgentWatchdogDisarms()
+PASS   : SystemProfilesTests::controller_generateGatewayApiKeyPersists()
+QWARN  : SystemProfilesTests::controller_lanActivationRetryUsesSuppliedApiKey() Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+PASS   : SystemProfilesTests::controller_lanActivationRetryUsesSuppliedApiKey()
+QWARN  : SystemProfilesTests::controller_lanPasswordlessHostStartsAgentWithoutKey() Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+PASS   : SystemProfilesTests::controller_lanPasswordlessHostStartsAgentWithoutKey()
+QWARN  : SystemProfilesTests::controller_astraStrataIsListedAndRequiresLocalSetup() Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+QINFO  : SystemProfilesTests::controller_astraStrataIsListedAndRequiresLocalSetup() Launch menu slow elapsedMs= 80 systemProfiles= 274 entries= 279 visible= 279 bundleMs= 0 profileListMs= 0 readinessMs= 27 affinityMs= 0 slowestEntryMs= 10 slowestEntry= "⚙ 8GB - [agente/visión] 8GB · Qwen3.5 9B MTP (32k ctx)"
+QINFO  : SystemProfilesTests::controller_astraStrataIsListedAndRequiresLocalSetup() Launch menu slow elapsedMs= 82 systemProfiles= 274 entries= 279 visible= 279 bundleMs= 0 profileListMs= 0 readinessMs= 28 affinityMs= 0 slowestEntryMs= 11 slowestEntry= "⚙ 8GB - [agente/visión] 8GB · Qwen3.5 9B MTP (32k ctx)"
+QINFO  : SystemProfilesTests::controller_astraStrataIsListedAndRequiresLocalSetup() Launch menu slow elapsedMs= 84 systemProfiles= 274 entries= 279 visible= 279 bundleMs= 0 profileListMs= 0 readinessMs= 30 affinityMs= 0 slowestEntryMs= 12 slowestEntry= "⚙ 8GB - [agente/visión] 8GB · Qwen3.5 9B MTP (32k ctx)"
+QINFO  : SystemProfilesTests::controller_astraStrataIsListedAndRequiresLocalSetup() Launch menu readiness complete elapsedMs= 2834 profiles= 279
+PASS   : SystemProfilesTests::controller_astraStrataIsListedAndRequiresLocalSetup()
+PASS   : SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
+QWARN  : SystemProfilesTests::controller_duplicateBakesResolvedBinary() Gateway: la LAN pide contraseña pero no hay API key guardada; los clientes LAN van a recibir 401 hasta configurar una.
+PASS   : SystemProfilesTests::controller_duplicateBakesResolvedBinary()
+PASS   : SystemProfilesTests::cleanupTestCase()
+Totals: 60 passed, 0 failed, 0 skipped, 0 blacklisted, 8523ms
+********* Finished testing of SystemProfilesTests *********
+<end of output>
+Test time =   8.54 sec
+----------------------------------------------------------
+Test Passed.
+"test_system_profiles" end time: Oct 16 20:39 -03
+"test_system_profiles" time elapsed: 00:00:08
+----------------------------------------------------------
+
+End testing: Oct 16 20:39 -03

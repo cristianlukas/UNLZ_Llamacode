@@ -1,0 +1,63 @@
+{
+  "task_id": "Q-20261016-PLUMBSEARCH-INTEGRATION",
+  "recorded_at_utc": "2026-10-16T23:39:20.568410+00:00",
+  "build": {
+    "command": "./scripts/build-linux.sh Debug",
+    "exit_code": 0,
+    "output": "/home/cristian/.cache/llamacode/build_linux/LlamaCode",
+    "sha256": "38d2b916c7c2b08061a2a59eb9b0b120247b19768aed454f4a6992e53ed48959"
+  },
+  "test_gate": {
+    "command": "./scripts/tests-linux.sh Release",
+    "exit_code": 0,
+    "ctest_total": 90,
+    "ctest_passed": 90,
+    "ctest_failed": 0,
+    "agent_tools": {
+      "passed": 54,
+      "failed": 0,
+      "skipped_windows_only": 1
+    },
+    "log": "artifacts/evaluacion-modelos-llamacode/Q-20261016-PLUMBSEARCH-INTEGRATION/receipts/LastTest.log",
+    "log_sha256": "07ce60e550d20e8cf60c0683b235cda0043c16a21ddc0662b21465a659e200fa"
+  },
+  "regressions": [
+    "webSearch_usesConfiguredPlumbSearchAndPrefersIt",
+    "webSearch_localOnlyFailsClosedOnEmptyResults",
+    "webSearch_localOnlyRequiresLoopbackEndpoint",
+    "webSearch_localOnlyRejectsRedirects"
+  ],
+  "comparator_fixture_selftest": {
+    "status": "passed",
+    "requests_to_loopback_stubs": 60,
+    "synthetic_mrr_at_5": {
+      "plumbsearch_stub": 1.0,
+      "searxng_stub": 0.0
+    },
+    "is_provider_quality_evidence": false
+  },
+  "live_comparison_preflight": {
+    "status": "blocked",
+    "plumbsearch_endpoint": "http://127.0.0.1:7586",
+    "searxng_endpoint": "http://127.0.0.1:8080",
+    "tcp_preflight": "Connection refused for both endpoints",
+    "queries_sent": 0,
+    "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261016-PLUMBSEARCH-INTEGRATION/receipts/comparison.json",
+    "receipt_sha256": "ee2ae0b77262041ad86848ce71f06bf6b89be521bd4877018997197285d33acf"
+  },
+  "source_sha256": {
+    "src/core/agent/WebSearchConfig.h": "16a3f1bf5d92473cf230afff6299188ce6eed3da7e67af37d3bb200e770f6c44",
+    "src/core/agent/AgentToolRunner.cpp": "7b14d1fcca5210ef7a9cdbde2b6892e937025fb57732f7900db17c1e73437079",
+    "src/AppController.cpp": "a23dc1957effbfdb0daa9159e8a76c7b2fa0b63783a916c6e979351461ccd344",
+    "src/core/agent/LlamaAgentBackend.cpp": "a9fb36db57e9070ebe53624ff3744988cd64383b54dba6d7936125967bc9ef48",
+    "tests/test_agent_tools.cpp": "74d417d0f7706666cf80c244ab26e20334f7d62e7a184666d048bdb0ddf5eb04",
+    "scripts/compare-local-search.py": "738c98b896e1dbe0073916d7adb1cdef2de57971c4dfecbc7b00ce991ddd11ab",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261016-PLUMBSEARCH-INTEGRATION/queries.json": "02d01eb4be8cedc9890a6ba0f1270ca038cc8fedf5b9207f135cc12a0aec28b4"
+  },
+  "constraints": {
+    "public_search_queries": 0,
+    "models_or_gpu": 0,
+    "services_installed_or_started": 0,
+    "production_profiles_changed": false
+  }
+}
