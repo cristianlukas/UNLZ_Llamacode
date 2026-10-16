@@ -1,0 +1,604 @@
+{
+  "status": "completed",
+  "model": "Qwen3.8 Flash-Next UD-Q4_K_XL",
+  "runtime": "Strata v0.1.41, CUDA 12.8, SM86",
+  "configPath": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-RESUME2/receipts/configs/context262k-q4.json",
+  "configSha256": "62ee5440bfcf4930315f7846f140bd87a7b95e417be0c06126212496cf3877ae",
+  "tokenizerDirectory": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/packs/unsloth-ud-q4_k_xl/tokenizer",
+  "tokenizerHashes": {
+    "tokenizer.json": "c0bd435efbc6c3b28964b47999afe16c4ad268c7c7c4e8cb3af410796a6f30bf",
+    "vocab.json": "4ba64f0332abcfb0b600b7df1537d1e836e68009d5fb7cdb77339738dc6365c4",
+    "merges.txt": "4ba698529766c7a2f5052083ea10cdf2485577f5237a332ee291054eb11e3332",
+    "token_type.json": "5088c8c298fc06af8382ddb3b76c888703ac2634e82263b97eedcc2ad202738b"
+  },
+  "targetContext": 262144,
+  "targetContentTokens": 258000,
+  "localTokenizerContentTokens": 258046,
+  "localTokenizerPrefixTokensBeforeNeedle": 245100,
+  "needleFractionOfContentTokens": 0.9498306503491626,
+  "promptSha256": "4b6a537ed42d3a7818dfdaf965b26cb24a265a618805c225e5305ccf822bed1d",
+  "needle": "LC-95P-7D3A9C",
+  "sampling": {
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "top_k": 1,
+    "seed": 4242
+  },
+  "promptStored": false,
+  "before": {
+    "memAvailableBytes": 67815329792,
+    "swapFreeBytes": 768495616,
+    "swapUsedBytes": 7821434880,
+    "swapVmstatPages": {
+      "pswpin": 3838576,
+      "pswpout": 9460211
+    },
+    "oomKillCount": 0,
+    "psiMemory": {
+      "some": {
+        "avg10": 0.06,
+        "avg60": 0.08,
+        "avg300": 0.02
+      },
+      "full": {
+        "avg10": 0.06,
+        "avg60": 0.08,
+        "avg300": 0.02
+      }
+    },
+    "gpuCsv": [
+      "NVIDIA GeForce RTX 3090, 22414, 24576, 15",
+      "NVIDIA GeForce RTX 3090, 22604, 24576, 8"
+    ],
+    "atUnix": 1792188788.5377007
+  },
+  "httpStatus": 200,
+  "during": [
+    {
+      "memAvailableBytes": 67791949824,
+      "swapFreeBytes": 768495616,
+      "swapUsedBytes": 7821434880,
+      "swapVmstatPages": {
+        "pswpin": 3838576,
+        "pswpout": 9460211
+      },
+      "oomKillCount": 0,
+      "psiMemory": {
+        "some": {
+          "avg10": 0.06,
+          "avg60": 0.08,
+          "avg300": 0.02
+        },
+        "full": {
+          "avg10": 0.06,
+          "avg60": 0.08,
+          "avg300": 0.02
+        }
+      },
+      "gpuCsv": [
+        "NVIDIA GeForce RTX 3090, 22414, 24576, 15",
+        "NVIDIA GeForce RTX 3090, 22604, 24576, 8"
+      ],
+      "atUnix": 1792188788.639475
+    },
+    {
+      "memAvailableBytes": 68405608448,
+      "swapFreeBytes": 664080384,
+      "swapUsedBytes": 7925850112,
+      "swapVmstatPages": {
+        "pswpin": 3838576,
+        "pswpout": 9485314
+      },
+      "oomKillCount": 0,
+      "psiMemory": {
+        "some": {
+          "avg10": 0.68,
+          "avg60": 0.2,
+          "avg300": 0.04
+        },
+        "full": {
+          "avg10": 0.68,
+          "avg60": 0.2,
+          "avg300": 0.04
+        }
+      },
+      "gpuCsv": [
+        "NVIDIA GeForce RTX 3090, 22450, 24576, 15",
+        "NVIDIA GeForce RTX 3090, 22642, 24576, 100"
+      ],
+      "atUnix": 1792188796.5402517
+    },
+    {
+      "memAvailableBytes": 68095217664,
+      "swapFreeBytes": 654962688,
+      "swapUsedBytes": 7934967808,
+      "swapVmstatPages": {
+        "pswpin": 3838580,
+        "pswpout": 9487428
+      },
+      "oomKillCount": 0,
+      "psiMemory": {
+        "some": {
+          "avg10": 0.37,
+          "avg60": 0.18,
+          "avg300": 0.04
+        },
+        "full": {
+          "avg10": 0.37,
+          "avg60": 0.18,
+          "avg300": 0.04
+        }
+      },
+      "gpuCsv": [
+        "NVIDIA GeForce RTX 3090, 22457, 24576, 14",
+        "NVIDIA GeForce RTX 3090, 22642, 24576, 100"
+      ],
+      "atUnix": 1792188804.0486596
+    },
+    {
+      "memAvailableBytes": 68083908608,
+      "swapFreeBytes": 654983168,
+      "swapUsedBytes": 7934947328,
+      "swapVmstatPages": {
+        "pswpin": 3838586,
+        "pswpout": 9487428
+      },
+      "oomKillCount": 0,
+      "psiMemory": {
+        "some": {
+          "avg10": 0.16,
+          "avg60": 0.15,
+          "avg300": 0.04
+        },
+        "full": {
+          "avg10": 0.16,
+          "avg60": 0.15,
+          "avg300": 0.04
+        }
+      },
+      "gpuCsv": [
+        "NVIDIA GeForce RTX 3090, 22450, 24576, 15",
+        "NVIDIA GeForce RTX 3090, 22642, 24576, 100"
+      ],
+      "atUnix": 1792188811.6236775
+    },
+    {
+      "memAvailableBytes": 68009365504,
+      "swapFreeBytes": 646070272,
+      "swapUsedBytes": 7943860224,
+      "swapVmstatPages": {
+        "pswpin": 3838594,
+        "pswpout": 9489529
+      },
+      "oomKillCount": 0,
+      "psiMemory": {
+        "some": {
+          "avg10": 0.07,
+          "avg60": 0.13,
+          "avg300": 0.04
+        },
+        "full": {
+          "avg10": 0.07,
+          "avg60": 0.13,
+          "avg300": 0.04
+        }
+      },
+      "gpuCsv": [
+        "NVIDIA GeForce RTX 3090, 22450, 24576, 15",
+        "NVIDIA GeForce RTX 3090, 22642, 24576, 100"
+      ],
+      "atUnix": 1792188819.3514326
+    },
+    {
+      "memAvailableBytes": 67915493376,
+      "swapFreeBytes": 646086656,
+      "swapUsedBytes": 7943843840,
+      "swapVmstatPages": {
+        "pswpin": 3838597,
+        "pswpout": 9489529
+      },
+      "oomKillCount": 0,
+      "psiMemory": {
+        "some": {
+          "avg10": 0.03,
+          "avg60": 0.12,
+          "avg300": 0.04
+        },
+        "full": {
+          "avg10": 0.03,
+          "avg60": 0.12,
+          "avg300": 0.04
+        }
+      },
+      "gpuCsv": [
+        "NVIDIA GeForce RTX 3090, 22450, 24576, 16",
+        "NVIDIA GeForce RTX 3090, 22642, 24576, 100"
+      ],
+      "atUnix": 1792188827.1187987
+    },
+    {
+      "memAvailableBytes": 67788132352,
+      "swapFreeBytes": 646152192,
+      "swapUsedBytes": 7943778304,
+      "swapVmstatPages": {
+        "pswpin": 3838614,
+        "pswpout": 9489529
+      },
+      "oomKillCount": 0,
+      "psiMemory": {
+        "some": {
+          "avg10": 0.01,
+          "avg60": 0.1,
+          "avg300": 0.03
+        },
+        "full": {
+          "avg10": 0.01,
+          "avg60": 0.1,
+          "avg300": 0.03
+        }
+      },
+      "gpuCsv": [
+        "NVIDIA GeForce RTX 3090, 22450, 24576, 15",
+        "NVIDIA GeForce RTX 3090, 22642, 24576, 100"
+      ],
+      "atUnix": 1792188835.035782
+    },
+    {
+      "memAvailableBytes": 67688112128,
+      "swapFreeBytes": 638730240,
+      "swapUsedBytes": 7951200256,
+      "swapVmstatPages": {
+        "pswpin": 3838627,
+        "pswpout": 9491261
+      },
+      "oomKillCount": 0,
+      "psiMemory": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.09,
+          "avg300": 0.03
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.09,
+          "avg300": 0.03
+        }
+      },
+      "gpuCsv": [
+        "NVIDIA GeForce RTX 3090, 22450, 24576, 15",
+        "NVIDIA GeForce RTX 3090, 22642, 24576, 100"
+      ],
+      "atUnix": 1792188843.1207223
+    },
+    {
+      "memAvailableBytes": 67558932480,
+      "swapFreeBytes": 638750720,
+      "swapUsedBytes": 7951179776,
+      "swapVmstatPages": {
+        "pswpin": 3838629,
+        "pswpout": 9491261
+      },
+      "oomKillCount": 0,
+      "psiMemory": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.07,
+          "avg300": 0.03
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.07,
+          "avg300": 0.03
+        }
+      },
+      "gpuCsv": [
+        "NVIDIA GeForce RTX 3090, 22450, 24576, 14",
+        "NVIDIA GeForce RTX 3090, 22642, 24576, 100"
+      ],
+      "atUnix": 1792188851.3082087
+    },
+    {
+      "memAvailableBytes": 67502727168,
+      "swapFreeBytes": 638795776,
+      "swapUsedBytes": 7951134720,
+      "swapVmstatPages": {
+        "pswpin": 3838631,
+        "pswpout": 9491261
+      },
+      "oomKillCount": 0,
+      "psiMemory": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.06,
+          "avg300": 0.03
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.06,
+          "avg300": 0.03
+        }
+      },
+      "gpuCsv": [
+        "NVIDIA GeForce RTX 3090, 22450, 24576, 15",
+        "NVIDIA GeForce RTX 3090, 22642, 24576, 100"
+      ],
+      "atUnix": 1792188859.613828
+    },
+    {
+      "memAvailableBytes": 67655958528,
+      "swapFreeBytes": 630591488,
+      "swapUsedBytes": 7959339008,
+      "swapVmstatPages": {
+        "pswpin": 3838642,
+        "pswpout": 9493232
+      },
+      "oomKillCount": 0,
+      "psiMemory": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.05,
+          "avg300": 0.03
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.05,
+          "avg300": 0.03
+        }
+      },
+      "gpuCsv": [
+        "NVIDIA GeForce RTX 3090, 22450, 24576, 17",
+        "NVIDIA GeForce RTX 3090, 22642, 24576, 100"
+      ],
+      "atUnix": 1792188868.055924
+    },
+    {
+      "memAvailableBytes": 67468906496,
+      "swapFreeBytes": 630595584,
+      "swapUsedBytes": 7959334912,
+      "swapVmstatPages": {
+        "pswpin": 3838642,
+        "pswpout": 9493232
+      },
+      "oomKillCount": 0,
+      "psiMemory": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.04,
+          "avg300": 0.02
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.04,
+          "avg300": 0.02
+        }
+      },
+      "gpuCsv": [
+        "NVIDIA GeForce RTX 3090, 22457, 24576, 15",
+        "NVIDIA GeForce RTX 3090, 22642, 24576, 100"
+      ],
+      "atUnix": 1792188876.651104
+    },
+    {
+      "memAvailableBytes": 67677315072,
+      "swapFreeBytes": 630611968,
+      "swapUsedBytes": 7959318528,
+      "swapVmstatPages": {
+        "pswpin": 3838646,
+        "pswpout": 9493232
+      },
+      "oomKillCount": 0,
+      "psiMemory": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.04,
+          "avg300": 0.02
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.04,
+          "avg300": 0.02
+        }
+      },
+      "gpuCsv": [
+        "NVIDIA GeForce RTX 3090, 22450, 24576, 14",
+        "NVIDIA GeForce RTX 3090, 22642, 24576, 100"
+      ],
+      "atUnix": 1792188885.336926
+    },
+    {
+      "memAvailableBytes": 67478814720,
+      "swapFreeBytes": 630640640,
+      "swapUsedBytes": 7959289856,
+      "swapVmstatPages": {
+        "pswpin": 3838653,
+        "pswpout": 9493232
+      },
+      "oomKillCount": 0,
+      "psiMemory": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.03,
+          "avg300": 0.02
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.03,
+          "avg300": 0.02
+        }
+      },
+      "gpuCsv": [
+        "NVIDIA GeForce RTX 3090, 22439, 24576, 14",
+        "NVIDIA GeForce RTX 3090, 22642, 24576, 100"
+      ],
+      "atUnix": 1792188894.1445613
+    },
+    {
+      "memAvailableBytes": 67491328000,
+      "swapFreeBytes": 630677504,
+      "swapUsedBytes": 7959252992,
+      "swapVmstatPages": {
+        "pswpin": 3838659,
+        "pswpout": 9493232
+      },
+      "oomKillCount": 0,
+      "psiMemory": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.02,
+          "avg300": 0.02
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.02,
+          "avg300": 0.02
+        }
+      },
+      "gpuCsv": [
+        "NVIDIA GeForce RTX 3090, 22439, 24576, 14",
+        "NVIDIA GeForce RTX 3090, 22642, 24576, 100"
+      ],
+      "atUnix": 1792188903.0390003
+    },
+    {
+      "memAvailableBytes": 67445280768,
+      "swapFreeBytes": 630685696,
+      "swapUsedBytes": 7959244800,
+      "swapVmstatPages": {
+        "pswpin": 3838660,
+        "pswpout": 9493232
+      },
+      "oomKillCount": 0,
+      "psiMemory": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.02,
+          "avg300": 0.02
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.02,
+          "avg300": 0.02
+        }
+      },
+      "gpuCsv": [
+        "NVIDIA GeForce RTX 3090, 22440, 24576, 14",
+        "NVIDIA GeForce RTX 3090, 22644, 24576, 100"
+      ],
+      "atUnix": 1792188912.429629
+    },
+    {
+      "memAvailableBytes": 67636097024,
+      "swapFreeBytes": 630710272,
+      "swapUsedBytes": 7959220224,
+      "swapVmstatPages": {
+        "pswpin": 3838666,
+        "pswpout": 9493232
+      },
+      "oomKillCount": 0,
+      "psiMemory": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.02,
+          "avg300": 0.01
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.02,
+          "avg300": 0.01
+        }
+      },
+      "gpuCsv": [
+        "NVIDIA GeForce RTX 3090, 22450, 24576, 15",
+        "NVIDIA GeForce RTX 3090, 22644, 24576, 100"
+      ],
+      "atUnix": 1792188922.0926285
+    },
+    {
+      "memAvailableBytes": 67466166272,
+      "swapFreeBytes": 630710272,
+      "swapUsedBytes": 7959220224,
+      "swapVmstatPages": {
+        "pswpin": 3838666,
+        "pswpout": 9493232
+      },
+      "oomKillCount": 0,
+      "psiMemory": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.01,
+          "avg300": 0.01
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.01,
+          "avg300": 0.01
+        }
+      },
+      "gpuCsv": [
+        "NVIDIA GeForce RTX 3090, 22470, 24576, 30",
+        "NVIDIA GeForce RTX 3090, 22676, 24576, 74"
+      ],
+      "atUnix": 1792188927.176738
+    }
+  ],
+  "answer": "",
+  "retrievalExact": false,
+  "needleFound": false,
+  "usage": {
+    "prompt_tokens": 258098,
+    "completion_tokens": 32,
+    "total_tokens": 258130,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 258098,
+    "prompt_ms": 138289.8,
+    "prompt_per_token_ms": 0.536,
+    "prompt_per_second": 1866.4,
+    "predicted_n": 32,
+    "predicted_ms": 568.8,
+    "predicted_per_token_ms": 17.775,
+    "predicted_per_second": 56.3,
+    "draft_n": 23,
+    "draft_n_accepted": 23
+  },
+  "lastPromptProgress": {
+    "total": 258098,
+    "cache": 0,
+    "processed": 253952,
+    "time_ms": 133400
+  },
+  "streamChunkCount": 65,
+  "elapsedSeconds": 138.9565979760373,
+  "after": {
+    "memAvailableBytes": 67450355712,
+    "swapFreeBytes": 630710272,
+    "swapUsedBytes": 7959220224,
+    "swapVmstatPages": {
+      "pswpin": 3838666,
+      "pswpout": 9493232
+    },
+    "oomKillCount": 0,
+    "psiMemory": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 0.01,
+        "avg300": 0.01
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 0.01,
+        "avg300": 0.01
+      }
+    },
+    "gpuCsv": [
+      "NVIDIA GeForce RTX 3090, 22476, 24576, 30",
+      "NVIDIA GeForce RTX 3090, 22686, 24576, 74"
+    ],
+    "atUnix": 1792188927.5232882
+  },
+  "elapsedTotalSeconds": 139.3021538257599
+}

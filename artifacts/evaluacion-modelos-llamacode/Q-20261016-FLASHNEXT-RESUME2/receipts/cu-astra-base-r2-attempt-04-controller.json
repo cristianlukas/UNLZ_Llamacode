@@ -1,0 +1,122 @@
+{
+  "taskId": "Q-20261016-FLASHNEXT-RESUME2",
+  "profile": "astra",
+  "arm": "base",
+  "replicate": 2,
+  "attempt": 4,
+  "runner": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-RESUME2/scripts/run_muse_cu_session.py",
+  "startedAtUtc": "2026-10-16T22:36:45.961451+00:00",
+  "configPath": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-RESUME2/receipts/configs/cu-astra.json",
+  "configSha256": "4e1909ab1d2d908ea9be7fa20f43f769b4764e762a56364103c1855a224d239d",
+  "engineCommand": [
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python",
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py",
+    "--engine",
+    "strata",
+    "--config",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-RESUME2/receipts/configs/cu-astra.json",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "8350",
+    "--gpu",
+    "0,1"
+  ],
+  "engineLog": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-RESUME2/receipts/logs/cu-astra-engine-attempt-04.log",
+  "preflight": {
+    "atUtc": "2026-10-16T22:36:45.960413+00:00",
+    "mem": {
+      "MemAvailable": 120146612224,
+      "SwapTotal": 8589930496,
+      "SwapFree": 149708800
+    },
+    "vmstat": {
+      "pswpin": 3843066,
+      "pswpout": 9612239,
+      "oom_kill": 0
+    },
+    "psi": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.12
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.12
+      }
+    },
+    "computeApps": [],
+    "gpuQueryError": null
+  },
+  "preflightErrors": [],
+  "oomKillBaseline": 0,
+  "thresholds": {
+    "MemAvailableStartGiB": 32,
+    "MemAvailableAbortGiB": 20,
+    "PSISomeAvg10Abort": 80.0,
+    "PSIFullAvg10Abort": 60.0,
+    "abortStreakSamples": 15,
+    "swapFreeIsTelemetryOnly": true
+  },
+  "command": [
+    "/usr/bin/python3",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-RESUME2/scripts/run_muse_cu_session.py",
+    "--profile",
+    "astra",
+    "--arm",
+    "base",
+    "--rep",
+    "2",
+    "--attempt",
+    "4",
+    "--port",
+    "8898",
+    "--display",
+    ":97"
+  ],
+  "serverPid": 393639,
+  "status": "failed",
+  "error": "RuntimeError: Strata exited during load with 1",
+  "runnerExitCode": null,
+  "serverStopped": true,
+  "abortReason": null,
+  "postflight": {
+    "atUtc": "2026-10-16T22:36:47.043877+00:00",
+    "mem": {
+      "MemAvailable": 119952281600,
+      "SwapTotal": 8589930496,
+      "SwapFree": 150065152
+    },
+    "vmstat": {
+      "pswpin": 3843166,
+      "pswpout": 9612239,
+      "oom_kill": 0
+    },
+    "psi": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.12
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.12
+      }
+    },
+    "computeApps": [],
+    "gpuQueryError": null
+  },
+  "port8350Free": true,
+  "port8898Free": true,
+  "display97Free": true,
+  "minMemAvailableBytes": 119935803392,
+  "minSwapFreeBytes": 149729280,
+  "maxPsiSomeAvg10": 0.0,
+  "oomKillDelta": 0,
+  "swapOutPagesDelta": 0,
+  "elapsedSeconds": 1.083,
+  "finishedAtUtc": "2026-10-16T22:36:47.045044+00:00"
+}

@@ -1,0 +1,44 @@
+{
+  "taskId": "Q-20261016-FLASHNEXT-RESUME2",
+  "mode": "vision",
+  "attempt": 1,
+  "atUtc": "2026-10-16T22:29:31.713031+00:00",
+  "state": {
+    "atUtc": "2026-10-16T22:29:31.713013+00:00",
+    "mem": {
+      "MemAvailable": 119848759296,
+      "SwapTotal": 8589930496,
+      "SwapFree": 474648576
+    },
+    "vmstat": {
+      "pswpin": 3841787,
+      "pswpout": 9533824,
+      "oom_kill": 0
+    },
+    "psi": {
+      "some": {
+        "avg10": 0.01,
+        "avg60": 0.06,
+        "avg300": 0.02
+      },
+      "full": {
+        "avg10": 0.01,
+        "avg60": 0.06,
+        "avg300": 0.02
+      }
+    },
+    "computeApps": [],
+    "gpuQueryError": null
+  },
+  "port": 8350,
+  "thresholds": {
+    "MemAvailableGiB": 32,
+    "runtimeMemAvailableAbortGiB": 20,
+    "runtimePsiSomeAvg10Abort": 80.0,
+    "runtimePsiFullAvg10Abort": 60.0,
+    "runtimeAbortSamples": 15,
+    "swapFreeIsTelemetryOnly": true
+  },
+  "errors": [],
+  "oomKillBaseline": 0
+}

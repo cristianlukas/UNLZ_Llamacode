@@ -1,0 +1,141 @@
+{
+  "status": "error",
+  "model": "Qwen3.8 Flash-Next UD-Q4_K_XL",
+  "runtime": "Strata v0.1.41, CUDA 12.8, SM86",
+  "configPath": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-RESUME2/receipts/configs/context262k-q4.json",
+  "configSha256": "62ee5440bfcf4930315f7846f140bd87a7b95e417be0c06126212496cf3877ae",
+  "tokenizerDirectory": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/packs/unsloth-ud-q4_k_xl/tokenizer",
+  "tokenizerHashes": {
+    "tokenizer.json": "c0bd435efbc6c3b28964b47999afe16c4ad268c7c7c4e8cb3af410796a6f30bf",
+    "vocab.json": "4ba64f0332abcfb0b600b7df1537d1e836e68009d5fb7cdb77339738dc6365c4",
+    "merges.txt": "4ba698529766c7a2f5052083ea10cdf2485577f5237a332ee291054eb11e3332",
+    "token_type.json": "5088c8c298fc06af8382ddb3b76c888703ac2634e82263b97eedcc2ad202738b"
+  },
+  "targetContext": 262144,
+  "targetContentTokens": 258000,
+  "localTokenizerContentTokens": 258046,
+  "localTokenizerPrefixTokensBeforeNeedle": 245100,
+  "needleFractionOfContentTokens": 0.9498306503491626,
+  "promptSha256": "4b6a537ed42d3a7818dfdaf965b26cb24a265a618805c225e5305ccf822bed1d",
+  "needle": "LC-95P-7D3A9C",
+  "sampling": {
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "top_k": 1,
+    "seed": 4242
+  },
+  "promptStored": false,
+  "before": {
+    "memAvailableBytes": 68245696512,
+    "swapFreeBytes": 842579968,
+    "swapUsedBytes": 7747350528,
+    "swapVmstatPages": {
+      "pswpin": 3838514,
+      "pswpout": 9442715
+    },
+    "oomKillCount": 0,
+    "psiMemory": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.0
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.0
+      }
+    },
+    "gpuCsv": [
+      "NVIDIA GeForce RTX 3090, 22418, 24576, 15",
+      "NVIDIA GeForce RTX 3090, 22606, 24576, 9"
+    ],
+    "atUnix": 1792188612.38529
+  },
+  "httpStatus": 200,
+  "during": [
+    {
+      "memAvailableBytes": 68231442432,
+      "swapFreeBytes": 842579968,
+      "swapUsedBytes": 7747350528,
+      "swapVmstatPages": {
+        "pswpin": 3838514,
+        "pswpout": 9442715
+      },
+      "oomKillCount": 0,
+      "psiMemory": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        }
+      },
+      "gpuCsv": [
+        "NVIDIA GeForce RTX 3090, 22418, 24576, 15",
+        "NVIDIA GeForce RTX 3090, 22606, 24576, 8"
+      ],
+      "atUnix": 1792188612.4897273
+    },
+    {
+      "memAvailableBytes": 67940261888,
+      "swapFreeBytes": 842579968,
+      "swapUsedBytes": 7747350528,
+      "swapVmstatPages": {
+        "pswpin": 3838514,
+        "pswpout": 9442715
+      },
+      "oomKillCount": 0,
+      "psiMemory": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        }
+      },
+      "gpuCsv": [
+        "NVIDIA GeForce RTX 3090, 22450, 24576, 15",
+        "NVIDIA GeForce RTX 3090, 22640, 24576, 8"
+      ],
+      "atUnix": 1792188617.5159547
+    }
+  ],
+  "error": "OSError: cannot read from timed out object",
+  "after": {
+    "memAvailableBytes": 67948916736,
+    "swapFreeBytes": 842579968,
+    "swapUsedBytes": 7747350528,
+    "swapVmstatPages": {
+      "pswpin": 3838514,
+      "pswpout": 9442715
+    },
+    "oomKillCount": 0,
+    "psiMemory": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.0
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.0
+      }
+    },
+    "gpuCsv": [
+      "NVIDIA GeForce RTX 3090, 22450, 24576, 15",
+      "NVIDIA GeForce RTX 3090, 22640, 24576, 8"
+    ],
+    "atUnix": 1792188617.538052
+  },
+  "elapsedTotalSeconds": 5.494711637496948
+}

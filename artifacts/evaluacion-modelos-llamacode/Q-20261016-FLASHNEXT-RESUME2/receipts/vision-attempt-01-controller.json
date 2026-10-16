@@ -1,0 +1,145 @@
+{
+  "taskId": "Q-20261016-FLASHNEXT-RESUME2",
+  "mode": "vision",
+  "attempt": 1,
+  "configPath": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-RESUME2/receipts/configs/vision-q4.json",
+  "configSha256": "d8f3985706ac437d563b5a0a50b29d2c4870fc41a23773952d77fcc88c4ff6b9",
+  "preflight": {
+    "taskId": "Q-20261016-FLASHNEXT-RESUME2",
+    "mode": "vision",
+    "attempt": 1,
+    "atUtc": "2026-10-16T22:29:31.713031+00:00",
+    "state": {
+      "atUtc": "2026-10-16T22:29:31.713013+00:00",
+      "mem": {
+        "MemAvailable": 119848759296,
+        "SwapTotal": 8589930496,
+        "SwapFree": 474648576
+      },
+      "vmstat": {
+        "pswpin": 3841787,
+        "pswpout": 9533824,
+        "oom_kill": 0
+      },
+      "psi": {
+        "some": {
+          "avg10": 0.01,
+          "avg60": 0.06,
+          "avg300": 0.02
+        },
+        "full": {
+          "avg10": 0.01,
+          "avg60": 0.06,
+          "avg300": 0.02
+        }
+      },
+      "computeApps": [],
+      "gpuQueryError": null
+    },
+    "port": 8350,
+    "thresholds": {
+      "MemAvailableGiB": 32,
+      "runtimeMemAvailableAbortGiB": 20,
+      "runtimePsiSomeAvg10Abort": 80.0,
+      "runtimePsiFullAvg10Abort": 60.0,
+      "runtimeAbortSamples": 15,
+      "swapFreeIsTelemetryOnly": true
+    },
+    "errors": [],
+    "oomKillBaseline": 0
+  },
+  "engineCommand": [
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python",
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py",
+    "--engine",
+    "strata",
+    "--config",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-RESUME2/receipts/configs/vision-q4.json",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "8350",
+    "--gpu",
+    "0,1"
+  ],
+  "engineLog": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-RESUME2/receipts/logs/vision-attempt-01.server-console.log",
+  "monitorLog": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-RESUME2/receipts/logs/vision-attempt-01.resource-monitor.jsonl",
+  "childReceipt": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-RESUME2/receipts/vision-attempt-01.json",
+  "status": "completed",
+  "serverPid": 380849,
+  "startedAtUtc": "2026-10-16T22:29:31.722987+00:00",
+  "health": {
+    "status": "ok",
+    "max_context": 131072,
+    "model": "qwen3.8-flash-next-unsloth-ud-q4_k_xl",
+    "images": true,
+    "api_key": false,
+    "loaded": true,
+    "service": "strata"
+  },
+  "apiReadyAtUtc": "2026-10-16T22:31:06.774916+00:00",
+  "childCommand": [
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-IQ3XXS-REMAINING-SCREENS/scripts/run_vision_smoke.py",
+    "--endpoint",
+    "http://127.0.0.1:8350/v1/chat/completions",
+    "--profile",
+    "Qwen3.8 Flash-Next UD-Q4_K_XL / Strata 0.1.41",
+    "--image",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-IQ3XXS-REMAINING-SCREENS/fixtures/vision-holdout-v1/vision-holdout.png",
+    "--prompt",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-IQ3XXS-REMAINING-SCREENS/fixtures/vision-holdout-v1/prompt.txt",
+    "--expected",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261015-IQ3XXS-REMAINING-SCREENS/fixtures/vision-holdout-v1/expected.json",
+    "--out",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-RESUME2/receipts/vision-attempt-01.json"
+  ],
+  "childExitCode": 0,
+  "postflight": {
+    "atUtc": "2026-10-16T22:31:24.499652+00:00",
+    "mem": {
+      "MemAvailable": 120225529856,
+      "SwapTotal": 8589930496,
+      "SwapFree": 145342464
+    },
+    "vmstat": {
+      "pswpin": 3841912,
+      "pswpout": 9612239,
+      "oom_kill": 0
+    },
+    "psi": {
+      "some": {
+        "avg10": 0.54,
+        "avg60": 1.25,
+        "avg300": 0.43
+      },
+      "full": {
+        "avg10": 0.54,
+        "avg60": 1.25,
+        "avg300": 0.43
+      }
+    },
+    "computeApps": [],
+    "gpuQueryError": null
+  },
+  "serverStopped": true,
+  "portFreeAfterCleanup": true,
+  "abortReasons": [],
+  "finishedAtUtc": "2026-10-16T22:31:24.499763+00:00",
+  "quality": {
+    "status": null,
+    "exactMatch": false,
+    "exactMatchCount": null,
+    "exactMatchTotal": null,
+    "transportError": null,
+    "usage": {
+      "prompt_tokens": 558,
+      "completion_tokens": 113,
+      "total_tokens": 671,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "finishReason": "stop"
+  }
+}

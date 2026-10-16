@@ -1,0 +1,26 @@
+{
+  "taskId": "Q-20261016-FLASHNEXT-RESUME2",
+  "reviewedAtUtc": "2026-10-16T22:57:41Z",
+  "method": "Visual manual review of saved screenshots; automated OCR is retained in each run.json but is not the final source of truth for editor contents.",
+  "astraBaseReplicate2": {
+    "effectiveScore": "3/3",
+    "tasks": [
+      {"stage": "stage1-CU-ES-CALC", "result": "pass", "observation": "Calculator showed 73 × 19 = 1387."},
+      {"stage": "stage2-CU-EN-EDITOR", "result": "pass", "observation": "Screenshot showed the requested exact English line once; document remained unsaved (Draft).", "screenshot": "runs/astra-base-r2-try5/stage2-CU-EN-EDITOR.png", "sha256": "af4a4b84397916b98e0ee04589ba9a690edd5dd460e095e5b6ad798f528bffa3"},
+      {"stage": "stage3-CU-ES-MULTIAPP", "result": "pass", "observation": "Calculator showed 47 × 29 = 1363; editor showed the exact Spanish replacement line and remained unsaved (Draft).", "screenshot": "runs/astra-base-r2-try5/stage3-CU-ES-MULTIAPP.png", "sha256": "82415ef7e39481b48a0a1d7e680b08fc3ebff639704d485483176795ab2499bc"}
+    ],
+    "automatedOcrSuccesses": 2,
+    "automatedTaskCount": 3
+  },
+  "q4BaseReplicate2": {
+    "effectiveScore": "1/3",
+    "tasks": [
+      {"stage": "stage1-CU-ES-CALC", "result": "pass", "observation": "Calculator showed 73 × 19 = 1387."},
+      {"stage": "stage2-CU-EN-EDITOR", "result": "fail", "observation": "The requested English line was duplicated in the editor instead of appearing once.", "screenshot": "runs/q4-base-r2/stage2-CU-EN-EDITOR.png", "sha256": "633d2c52930b5d30215c39c461e7a4de4e011fac23e4ecd1d8cc4b2e775da933"},
+      {"stage": "stage3-CU-ES-MULTIAPP", "result": "fail", "observation": "Calculator showed 47 × 29 = 1363 and the Spanish line was added, but duplicated English text remained, so the requested replacement did not complete.", "screenshot": "runs/q4-base-r2/stage3-CU-ES-MULTIAPP.png", "sha256": "030ec39703a03b70441f4a65e00e6bce7835480cb74b69728dd4f3fc3a45e6d9"}
+    ],
+    "automatedOcrSuccesses": 2,
+    "automatedTaskCount": 3
+  },
+  "interpretation": "Screenshot review changes the effective scores from OCR's 2/3 for each profile to ASTRA 3/3 and Q4 1/3."
+}

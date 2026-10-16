@@ -1,0 +1,149 @@
+{
+  "taskId": "Q-20261016-FLASHNEXT-RESUME2",
+  "createdAtUtc": "2026-10-16T22:19:24.136868+00:00",
+  "runs": [
+    {
+      "runId": "pair01-A-order01",
+      "pair": 1,
+      "arm": "A",
+      "n": 16,
+      "issues": []
+    },
+    {
+      "runId": "pair01-B-order02",
+      "pair": 1,
+      "arm": "B",
+      "n": 16,
+      "issues": []
+    },
+    {
+      "runId": "pair02-A-order02",
+      "pair": 2,
+      "arm": "A",
+      "n": 16,
+      "issues": []
+    },
+    {
+      "runId": "pair02-B-order01",
+      "pair": 2,
+      "arm": "B",
+      "n": 16,
+      "issues": []
+    },
+    {
+      "runId": "pair03-A-order01",
+      "pair": 3,
+      "arm": "A",
+      "n": 16,
+      "issues": []
+    },
+    {
+      "runId": "pair03-B-order02",
+      "pair": 3,
+      "arm": "B",
+      "n": 16,
+      "issues": []
+    }
+  ],
+  "allCompleteRunsValid": true,
+  "totalSamples": 96,
+  "pairs": [
+    {
+      "pair": 1,
+      "order": "AB",
+      "nA": 16,
+      "nB": 16,
+      "matched": 16,
+      "responseHashesDiffer": 13,
+      "meansA": {
+        "decodeTps": 65.35,
+        "promptTps": 64.10625,
+        "ttftMs": 1627.642375,
+        "elapsedMs": 4085.6884999999997
+      },
+      "meansB": {
+        "decodeTps": 63.60625,
+        "promptTps": 46.48125,
+        "ttftMs": 2417.799125,
+        "elapsedMs": 4958.3279375
+      },
+      "deltaBMinusA": {
+        "decodeTps": -1.7437499999999915,
+        "promptTps": -17.625,
+        "ttftMs": 790.1567500000001,
+        "elapsedMs": 872.6394375000004
+      },
+      "deltaPctBMinusA": {
+        "decodeTps": -2.668324407039008,
+        "promptTps": -27.493419128400117,
+        "ttftMs": 48.54609109080244,
+        "elapsedMs": 21.358442708003818
+      }
+    },
+    {
+      "pair": 2,
+      "order": "BA",
+      "nA": 16,
+      "nB": 16,
+      "matched": 16,
+      "responseHashesDiffer": 12,
+      "meansA": {
+        "decodeTps": 65.2,
+        "promptTps": 73.2625,
+        "ttftMs": 1421.2785625,
+        "elapsedMs": 3882.88025
+      },
+      "meansB": {
+        "decodeTps": 70.2625,
+        "promptTps": 78.325,
+        "ttftMs": 1333.08075,
+        "elapsedMs": 3622.96225
+      },
+      "deltaBMinusA": {
+        "decodeTps": 5.0625,
+        "promptTps": 5.0625,
+        "ttftMs": -88.19781249999983,
+        "elapsedMs": -259.9180000000001
+      },
+      "deltaPctBMinusA": {
+        "decodeTps": 7.764570552147239,
+        "promptTps": 6.9100836034806346,
+        "ttftMs": -6.205526124650869,
+        "elapsedMs": -6.69394839050213
+      }
+    },
+    {
+      "pair": 3,
+      "order": "AB",
+      "nA": 16,
+      "nB": 16,
+      "matched": 16,
+      "responseHashesDiffer": 11,
+      "meansA": {
+        "decodeTps": 65.71875,
+        "promptTps": 72.1625,
+        "ttftMs": 1439.7538749999999,
+        "elapsedMs": 3879.7464375
+      },
+      "meansB": {
+        "decodeTps": 70.00625,
+        "promptTps": 80.4,
+        "ttftMs": 1304.0988750000001,
+        "elapsedMs": 3582.8458124999997
+      },
+      "deltaBMinusA": {
+        "decodeTps": 4.287499999999994,
+        "promptTps": 8.237500000000011,
+        "ttftMs": -135.65499999999975,
+        "elapsedMs": -296.9006250000002
+      },
+      "deltaPctBMinusA": {
+        "decodeTps": 6.524013314312878,
+        "promptTps": 11.415208730296223,
+        "ttftMs": -9.42209653715985,
+        "elapsedMs": -7.6525780687697385
+      }
+    }
+  ],
+  "interpretation": "Descriptive only; pair 1 opposes pairs 2 and 3. No consistent direction across all preregistered pairs; no promotion or quality claim."
+}

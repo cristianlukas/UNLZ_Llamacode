@@ -1,0 +1,47 @@
+{
+  "taskId": "Q-20261016-FLASHNEXT-RESUME2",
+  "atUtc": "2026-10-16T22:21:12.267448+00:00",
+  "memory": {
+    "MemAvailable": 119758061568,
+    "SwapTotal": 8589930496,
+    "SwapFree": 536428544
+  },
+  "swapFreeGiB": 0.4995880126953125,
+  "psi": {
+    "some": {
+      "avg10": 0.0,
+      "avg60": 0.0,
+      "avg300": 0.0
+    },
+    "full": {
+      "avg10": 0.0,
+      "avg60": 0.0,
+      "avg300": 0.0
+    }
+  },
+  "vmstatCounters": {
+    "oom_kill": 0
+  },
+  "computeApps": [],
+  "gpuQueryError": null,
+  "portsFree": {
+    "8350": true,
+    "8351": true,
+    "8898": true,
+    "8080": true,
+    "8081": true,
+    "8082": true
+  },
+  "thresholds": {
+    "MemAvailableGiB": 32,
+    "SwapFreeGiB": 0.55,
+    "runtimeSwapAbortGiB": 0.5
+  },
+  "gatePass": false,
+  "screensNotStarted": [
+    "Q4 vision",
+    "Computer Usage ASTRA base rep 2",
+    "Computer Usage Q4 base rep 2"
+  ],
+  "blockingCondition": "SwapFree below 0.55 GiB startup gate; 60-second natural wait unchanged."
+}

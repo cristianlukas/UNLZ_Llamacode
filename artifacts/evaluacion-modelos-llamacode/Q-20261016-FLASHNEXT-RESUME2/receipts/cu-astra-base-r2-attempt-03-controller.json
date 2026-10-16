@@ -1,0 +1,103 @@
+{
+  "taskId": "Q-20261016-FLASHNEXT-RESUME2",
+  "profile": "astra",
+  "arm": "base",
+  "replicate": 2,
+  "attempt": 3,
+  "runner": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/scripts/run_muse_cu_session.py",
+  "startedAtUtc": "2026-10-16T22:32:21.266363+00:00",
+  "preflight": {
+    "atUtc": "2026-10-16T22:32:21.265231+00:00",
+    "mem": {
+      "MemAvailable": 120166584320,
+      "SwapTotal": 8589930496,
+      "SwapFree": 145498112
+    },
+    "vmstat": {
+      "pswpin": 3841957,
+      "pswpout": 9612239,
+      "oom_kill": 0
+    },
+    "psi": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 0.47,
+        "avg300": 0.34
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 0.47,
+        "avg300": 0.34
+      }
+    },
+    "computeApps": [],
+    "gpuQueryError": null
+  },
+  "preflightErrors": [],
+  "oomKillBaseline": 0,
+  "thresholds": {
+    "MemAvailableStartGiB": 32,
+    "MemAvailableAbortGiB": 20,
+    "PSISomeAvg10Abort": 80.0,
+    "PSIFullAvg10Abort": 60.0,
+    "abortStreakSamples": 15,
+    "swapFreeIsTelemetryOnly": true
+  },
+  "command": [
+    "/usr/bin/python3",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/scripts/run_muse_cu_session.py",
+    "--profile",
+    "astra",
+    "--arm",
+    "base",
+    "--rep",
+    "2",
+    "--attempt",
+    "3",
+    "--port",
+    "8898",
+    "--display",
+    ":97"
+  ],
+  "runnerPid": 385897,
+  "status": "runner_failed",
+  "runnerExitCode": -2,
+  "abortReason": null,
+  "postflight": {
+    "atUtc": "2026-10-16T22:34:00.378599+00:00",
+    "mem": {
+      "MemAvailable": 120059424768,
+      "SwapTotal": 8589930496,
+      "SwapFree": 148660224
+    },
+    "vmstat": {
+      "pswpin": 3842803,
+      "pswpout": 9612239,
+      "oom_kill": 0
+    },
+    "psi": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 0.08,
+        "avg300": 0.24
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 0.08,
+        "avg300": 0.24
+      }
+    },
+    "computeApps": [],
+    "gpuQueryError": null
+  },
+  "port8350Free": true,
+  "port8898Free": true,
+  "display97Free": true,
+  "minMemAvailableBytes": 119974879232,
+  "minSwapFreeBytes": 145498112,
+  "maxPsiSomeAvg10": 0.0,
+  "oomKillDelta": 0,
+  "swapOutPagesDelta": 0,
+  "elapsedSeconds": 99.113,
+  "finishedAtUtc": "2026-10-16T22:34:00.379571+00:00"
+}

@@ -1,0 +1,23 @@
+{
+  "taskId": "Q-20261016-FLASHNEXT-RESUME2",
+  "capturedAtUtc": "2026-10-16T22:59:08.279285+00:00",
+  "memory": {
+    "memAvailableBytes": 115972362240,
+    "swapFreeBytes": 251351040,
+    "swapTotalBytes": 8589930496
+  },
+  "memoryPressure": "some avg10=0.00 avg60=0.00 avg300=0.13 total=900994731\nfull avg10=0.00 avg60=0.00 avg300=0.13 total=899557788\n",
+  "vmstat": {
+    "pswpout": 9649959,
+    "oom_kill": 0
+  },
+  "listeningTaskPorts": [],
+  "taskPortsFree": true,
+  "nvidiaComputeProcesses": [],
+  "nvidiaComputeIdle": true,
+  "gpuTelemetry": [
+    "0, 1008 MiB, 22 %",
+    "1, 108 MiB, 35 %"
+  ],
+  "scope": "Postflight snapshot after task-owned model servers were stopped; does not terminate or modify other processes."
+}

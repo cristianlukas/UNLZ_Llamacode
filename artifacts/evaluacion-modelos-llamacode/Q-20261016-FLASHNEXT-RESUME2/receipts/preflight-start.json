@@ -1,0 +1,39 @@
+{
+  "taskId": "Q-20261016-FLASHNEXT-RESUME2",
+  "atUtc": "2026-10-16T21:59:47.959634+00:00",
+  "memory": {
+    "MemAvailable": 119512539136,
+    "SwapTotal": 8589930496,
+    "SwapFree": 854306816
+  },
+  "swapFreeGiB": 0.7956352233886719,
+  "psi": {
+    "some": {
+      "avg10": 0.0,
+      "avg60": 0.0,
+      "avg300": 0.0
+    },
+    "full": {
+      "avg10": 0.0,
+      "avg60": 0.0,
+      "avg300": 0.0
+    }
+  },
+  "vmstatCounters": {
+    "oom_kill": 0
+  },
+  "computeApps": [],
+  "gpuQueryError": null,
+  "portsFree": {
+    "8350": true,
+    "8351": true,
+    "8898": true,
+    "8080": true,
+    "8081": true,
+    "8082": true
+  },
+  "swapStartThresholdGiB": 0.55,
+  "runtimeSwapAbortGiB": 0.5,
+  "runtimeAbortSamples": 15,
+  "gatePass": true
+}

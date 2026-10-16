@@ -1,0 +1,130 @@
+{
+  "taskId": "Q-20261016-FLASHNEXT-RESUME2",
+  "mode": "context262k",
+  "attempt": 4,
+  "configPath": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-RESUME2/receipts/configs/context262k-q4.json",
+  "configSha256": "62ee5440bfcf4930315f7846f140bd87a7b95e417be0c06126212496cf3877ae",
+  "preflight": {
+    "taskId": "Q-20261016-FLASHNEXT-RESUME2",
+    "mode": "context262k",
+    "attempt": 4,
+    "atUtc": "2026-10-16T22:15:58.650965+00:00",
+    "state": {
+      "atUtc": "2026-10-16T22:15:58.650954+00:00",
+      "mem": {
+        "MemAvailable": 119725072384,
+        "SwapTotal": 8589930496,
+        "SwapFree": 630743040
+      },
+      "vmstat": {
+        "pswpin": 3838674,
+        "pswpout": 9493232,
+        "oom_kill": 0
+      },
+      "psi": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        }
+      },
+      "computeApps": [],
+      "gpuQueryError": null
+    },
+    "port": 8350,
+    "thresholds": {
+      "MemAvailableGiB": 32,
+      "SwapFreeGiB": 0.55,
+      "runtimeMemAvailableAbortGiB": 20,
+      "runtimeSwapAbortGiB": 0.5,
+      "runtimeAbortSamples": 15
+    },
+    "errors": []
+  },
+  "engineCommand": [
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python",
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py",
+    "--engine",
+    "strata",
+    "--config",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-RESUME2/receipts/configs/context262k-q4.json",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "8350",
+    "--gpu",
+    "0,1"
+  ],
+  "engineLog": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-RESUME2/receipts/logs/context262k-attempt-04.server-console.log",
+  "monitorLog": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-RESUME2/receipts/logs/context262k-attempt-04.resource-monitor.jsonl",
+  "childReceipt": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-RESUME2/receipts/context262k-attempt-04.json",
+  "status": "aborted_guard",
+  "serverPid": 356605,
+  "startedAtUtc": "2026-10-16T22:15:58.653125+00:00",
+  "health": {
+    "status": "ok",
+    "max_context": 262144,
+    "model": "qwen3.8-flash-next-unsloth-ud-q4_k_xl",
+    "images": false,
+    "api_key": false,
+    "loaded": true,
+    "service": "strata"
+  },
+  "apiReadyAtUtc": "2026-10-16T22:17:30.703769+00:00",
+  "childCommand": [
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-RESUME2/scripts/probe_q4_262k.py",
+    "--tokenizer-dir",
+    "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/packs/unsloth-ud-q4_k_xl/tokenizer",
+    "--tokenizer-module",
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/tools/strata_tokenizer.py",
+    "--config",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-RESUME2/receipts/configs/context262k-q4.json",
+    "--endpoint",
+    "http://127.0.0.1:8350/v1/chat/completions",
+    "--out",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-RESUME2/receipts/context262k-attempt-04.json"
+  ],
+  "error": "RuntimeError: resource guard: SwapFree <0.5 GiB for 15 samples",
+  "postflight": {
+    "atUtc": "2026-10-16T22:19:02.048887+00:00",
+    "mem": {
+      "MemAvailable": 69580943360,
+      "SwapTotal": 8589930496,
+      "SwapFree": 535089152
+    },
+    "vmstat": {
+      "pswpin": 3839436,
+      "pswpout": 9516828,
+      "oom_kill": 0
+    },
+    "psi": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 0.02,
+        "avg300": 0.0
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 0.02,
+        "avg300": 0.0
+      }
+    },
+    "computeApps": [
+      "356610, [No data], 21462 MiB",
+      "356610, [No data], 22438 MiB"
+    ],
+    "gpuQueryError": null
+  },
+  "serverStopped": true,
+  "portFreeAfterCleanup": true,
+  "abortReasons": [
+    "SwapFree <0.5 GiB for 15 samples"
+  ],
+  "finishedAtUtc": "2026-10-16T22:19:02.048996+00:00"
+}

@@ -1,0 +1,136 @@
+{
+  "taskId": "Q-20261016-FLASHNEXT-RESUME2",
+  "mode": "context262k",
+  "attempt": 2,
+  "configPath": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-RESUME2/receipts/configs/context262k-q4.json",
+  "configSha256": "62ee5440bfcf4930315f7846f140bd87a7b95e417be0c06126212496cf3877ae",
+  "preflight": {
+    "taskId": "Q-20261016-FLASHNEXT-RESUME2",
+    "mode": "context262k",
+    "attempt": 2,
+    "atUtc": "2026-10-16T22:08:21.952543+00:00",
+    "state": {
+      "atUtc": "2026-10-16T22:08:21.952533+00:00",
+      "mem": {
+        "MemAvailable": 119310213120,
+        "SwapTotal": 8589930496,
+        "SwapFree": 846659584
+      },
+      "vmstat": {
+        "pswpin": 3838401,
+        "pswpout": 9441609,
+        "oom_kill": 0
+      },
+      "psi": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        }
+      },
+      "computeApps": [],
+      "gpuQueryError": null
+    },
+    "port": 8350,
+    "thresholds": {
+      "MemAvailableGiB": 32,
+      "SwapFreeGiB": 0.55,
+      "runtimeMemAvailableAbortGiB": 20,
+      "runtimeSwapAbortGiB": 0.5,
+      "runtimeAbortSamples": 15
+    },
+    "errors": []
+  },
+  "engineCommand": [
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python",
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py",
+    "--engine",
+    "strata",
+    "--config",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-RESUME2/receipts/configs/context262k-q4.json",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "8350",
+    "--gpu",
+    "0,1"
+  ],
+  "engineLog": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-RESUME2/receipts/logs/context262k-attempt-02.server-console.log",
+  "monitorLog": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-RESUME2/receipts/logs/context262k-attempt-02.resource-monitor.jsonl",
+  "childReceipt": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-RESUME2/receipts/context-q4-262k.json",
+  "status": "child_nonzero",
+  "serverPid": 342840,
+  "startedAtUtc": "2026-10-16T22:08:21.955468+00:00",
+  "health": {
+    "status": "ok",
+    "max_context": 262144,
+    "model": "qwen3.8-flash-next-unsloth-ud-q4_k_xl",
+    "images": false,
+    "api_key": false,
+    "loaded": true,
+    "service": "strata"
+  },
+  "apiReadyAtUtc": "2026-10-16T22:10:12.009465+00:00",
+  "childCommand": [
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-RESUME2/scripts/probe_q4_262k.py",
+    "--tokenizer-dir",
+    "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/packs/unsloth-ud-q4_k_xl/tokenizer",
+    "--tokenizer-module",
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/tools/strata_tokenizer.py",
+    "--config",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-RESUME2/receipts/configs/context262k-q4.json",
+    "--endpoint",
+    "http://127.0.0.1:8350/v1/chat/completions",
+    "--out",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-RESUME2/receipts/context-q4-262k.json"
+  ],
+  "childExitCode": 1,
+  "postflight": {
+    "atUtc": "2026-10-16T22:10:22.557835+00:00",
+    "mem": {
+      "MemAvailable": 119408517120,
+      "SwapTotal": 8589930496,
+      "SwapFree": 842588160
+    },
+    "vmstat": {
+      "pswpin": 3838514,
+      "pswpout": 9442715,
+      "oom_kill": 0
+    },
+    "psi": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.0
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.0
+      }
+    },
+    "computeApps": [],
+    "gpuQueryError": null
+  },
+  "serverStopped": true,
+  "portFreeAfterCleanup": true,
+  "abortReasons": [],
+  "finishedAtUtc": "2026-10-16T22:10:22.557936+00:00",
+  "quality": {
+    "status": "error",
+    "localTokenizerContentTokens": 258046,
+    "needleFractionOfContentTokens": 0.9498306503491626,
+    "retrievalExact": null,
+    "needleFound": null,
+    "usage": null,
+    "timings": null,
+    "elapsedSeconds": null,
+    "error": "OSError: cannot read from timed out object"
+  }
+}
