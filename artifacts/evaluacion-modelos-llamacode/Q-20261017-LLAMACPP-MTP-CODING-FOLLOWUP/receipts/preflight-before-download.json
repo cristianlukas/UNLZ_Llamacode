@@ -1,0 +1,31 @@
+{
+  "captured_at_utc": "2026-10-17T15:11:21Z",
+  "purpose": "pre-model-load baseline; no inference started",
+  "memory_bytes": {
+    "MemTotal": 132615835648,
+    "MemAvailable": 117119619072,
+    "SwapTotal": 8589930496,
+    "SwapFree": 2852093952
+  },
+  "memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=1058580285\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=1057122659\n",
+  "gpu_snapshot": "0, NVIDIA GeForce RTX 3090, 913 MiB, 24576 MiB, 21 %\n1, NVIDIA GeForce RTX 3090, 108 MiB, 24576 MiB, 28 %",
+  "gpu_compute_apps": "",
+  "ports": {
+    "18111": "closed",
+    "18112": "closed",
+    "18119": "closed",
+    "8877": "closed",
+    "8898": "closed"
+  },
+  "secondary_disk": {
+    "path": "/media/cristian/Disco local",
+    "free_bytes": 87882825728,
+    "total_bytes": 1800381919232
+  },
+  "model_base_hash_receipt": "receipts/base-model-hashes.json",
+  "draft_expected": {
+    "revision": "efc50b7c3195a10eebd8d3e32f83b27b2aeb239d",
+    "size_bytes": 4137429120,
+    "sha256": "58a47d6a216307e9b97172d5bfdc3436a8994b632f5e436b9bb6edf8951da8d1"
+  }
+}

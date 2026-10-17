@@ -1,0 +1,11 @@
+{
+  "downloaded_at_utc": "2026-10-17T15:13:21Z",
+  "source": "Hugging Face pinned revision",
+  "revision": "efc50b7c3195a10eebd8d3e32f83b27b2aeb239d",
+  "url": "https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF/resolve/efc50b7c3195a10eebd8d3e32f83b27b2aeb239d/MTP/mtp-Qwen3.8-Flash-Next-Q8_0.gguf?download=true",
+  "path": "/media/cristian/Disco local/Modelos-eval/Q-20261017-LLAMACPP-MTP-CODING-FOLLOWUP/mtp-Qwen3.8-Flash-Next-Q8_0.gguf",
+  "size_bytes": 4137429120,
+  "sha256": "58a47d6a216307e9b97172d5bfdc3436a8994b632f5e436b9bb6edf8951da8d1",
+  "matches_expected": true,
+  "catalog_scope": "isolated copy only; original deleted path was not recreated"
+}

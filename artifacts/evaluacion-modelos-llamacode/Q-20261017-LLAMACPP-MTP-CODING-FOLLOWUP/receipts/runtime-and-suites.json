@@ -1,0 +1,29 @@
+{
+  "captured_at_utc": "2026-10-17T15:12:11Z",
+  "suites": [
+    {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261017-LLAMACPP-MTP-CODING-FOLLOWUP/runtime/lch/xdg-data/LlamaCode/LlamaCode/benchmarks/custom/05c28394-11d0-41fe-a55f-b3cb69db9c15.json",
+      "id": "05c28394-11d0-41fe-a55f-b3cb69db9c15",
+      "name": "BigCodeBench-Hard (8 \u00edtems)",
+      "prompt_count": 8,
+      "sha256": "42771136b447b7b5619e04a1ea211f663222cd6752ca38d995083b5a4d207574"
+    },
+    {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261017-LLAMACPP-MTP-CODING-FOLLOWUP/runtime/lch/xdg-data/LlamaCode/LlamaCode/benchmarks/custom/qwen38_taskflow_ultra_ast_vs_sol_20261006.json",
+      "id": "qwen38_taskflow_ultra_ast_vs_sol_20261006",
+      "name": "Qwen3.8 ASTRA IQ3_S calibrado vs SOL \u00b7 TaskFlow ULTRA E2E",
+      "prompt_count": 1,
+      "sha256": "f04febb440208d5bf74c01e84d78f5127e57c164fabece2acbfb346215dc0c17"
+    }
+  ],
+  "application": {
+    "path": "/media/cristian/Disco local/LlamaCode-cache/build_linux/LlamaCode",
+    "sha256": "38d2b916c7c2b08061a2a59eb9b0b120247b19768aed454f4a6992e53ed48959",
+    "source_commit": "ba8c3e06fc517968461df46c34a250f7c150419c"
+  },
+  "runtime": {
+    "path": "/media/cristian/Disco local/LlamaCode-cache/llama.cpp-spark-native-20261003/build-cuda/bin/llama-server",
+    "sha256": "ab7828696af2694981037b7114d834d310c1c5f24b39ab24267898748334cbb4",
+    "source_commit": "836d57176dc699a726c55418e4f96b8ca628e1bf"
+  }
+}

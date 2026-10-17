@@ -1,0 +1,68 @@
+{
+  "captured_at_utc": "2026-10-17T15:16:07Z",
+  "probe": "invoke startCustomBenchmark with nonexistent suite __preflight_missing_suite__, target=agent, agentProfileId=agent-maximo; returned without benchmark or server load",
+  "profile": {
+    "alias": "q4-mtp-off",
+    "benchmark": true,
+    "best": false,
+    "deprecated": false,
+    "displayName": "\ud83c\udfc6 q4-mtp-off - 3_EVAL \u00b7 Q4 llama.cpp mtp-off \u00b7 he R4096",
+    "favorite": false,
+    "id": "q4-mtp-off-he-20261013",
+    "lastUsed": 1791907700394,
+    "menuOrder": 0,
+    "name": "3_EVAL \u00b7 Q4 llama.cpp mtp-off \u00b7 he R4096",
+    "ready": true,
+    "system": false,
+    "systemBadge": false,
+    "tags": [
+      "q4-mtp-ab",
+      "isolated",
+      "managed-local",
+      "parallel-1"
+    ]
+  },
+  "coverage_after_probe": {
+    "benchmarkEligible": true,
+    "coverageState": "incomplete",
+    "hasBlockedStage": false,
+    "hasInfrastructureOrTimeout": false,
+    "healthCodes": [],
+    "healthMessages": [],
+    "nextStage": "bcb",
+    "pendingStages": [
+      "bcb"
+    ],
+    "profileConfigFingerprint": "7f84727070a2fb93d008a42c90391f3904d800f7d7c2e67f173813ab0435ff89",
+    "profileId": "q4-mtp-off-he-20261013",
+    "profileName": "3_EVAL \u00b7 Q4 llama.cpp mtp-off \u00b7 he R4096",
+    "retired": false,
+    "stageStates": {
+      "bcb": "pending",
+      "he0": "valid",
+      "he20": "valid"
+    }
+  },
+  "historical_prerequisites": [
+    {
+      "benchmarkName": "HumanEval (1 \u00edtems)",
+      "qualityScore": 1,
+      "qualityTotal": 1,
+      "profileConfigFingerprint": "7f84727070a2fb93d008a42c90391f3904d800f7d7c2e67f173813ab0435ff89",
+      "thinkingEnabled": true,
+      "failureKind": "none"
+    },
+    {
+      "benchmarkName": "HumanEval (20 \u00edtems)",
+      "qualityScore": 20,
+      "qualityTotal": 20,
+      "profileConfigFingerprint": "7f84727070a2fb93d008a42c90391f3904d800f7d7c2e67f173813ab0435ff89",
+      "thinkingEnabled": true,
+      "failureKind": "none"
+    }
+  ],
+  "server_state": "stopped",
+  "agent_running": false,
+  "benchmark_running": false,
+  "gate_passed": true
+}

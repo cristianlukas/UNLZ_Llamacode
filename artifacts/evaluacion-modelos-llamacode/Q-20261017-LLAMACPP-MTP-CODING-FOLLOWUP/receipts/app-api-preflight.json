@@ -1,0 +1,158 @@
+{
+  "captured_at_utc": "2026-10-17T15:13:47Z",
+  "api_health": {
+    "ok": true,
+    "reqId": "6cd6f23f-3dc3-4784-ad64-c4a24b28c140"
+  },
+  "launches": [
+    {
+      "alias": "q4-mtp-off",
+      "benchmark": true,
+      "best": false,
+      "deprecated": false,
+      "displayName": "\ud83c\udfc6 q4-mtp-off - 3_EVAL \u00b7 Q4 llama.cpp mtp-off \u00b7 he R4096",
+      "favorite": false,
+      "id": "q4-mtp-off-he-20261013",
+      "lastUsed": 1791907700394,
+      "menuOrder": 0,
+      "name": "3_EVAL \u00b7 Q4 llama.cpp mtp-off \u00b7 he R4096",
+      "ready": true,
+      "system": false,
+      "systemBadge": false,
+      "tags": [
+        "q4-mtp-ab",
+        "isolated",
+        "managed-local",
+        "parallel-1"
+      ]
+    },
+    {
+      "alias": "q4-mtp-on",
+      "benchmark": true,
+      "best": false,
+      "deprecated": false,
+      "displayName": "\ud83c\udfc6 q4-mtp-on - 2_EVAL \u00b7 Q4 llama.cpp mtp-on \u00b7 taskflow R8192",
+      "favorite": false,
+      "id": "q4-mtp-on-taskflow-20261013",
+      "lastUsed": 0,
+      "menuOrder": 0,
+      "name": "2_EVAL \u00b7 Q4 llama.cpp mtp-on \u00b7 taskflow R8192",
+      "ready": true,
+      "system": false,
+      "systemBadge": false,
+      "tags": [
+        "q4-mtp-ab",
+        "isolated",
+        "managed-local",
+        "parallel-1"
+      ]
+    },
+    {
+      "alias": "q4-mtp-off",
+      "benchmark": true,
+      "best": false,
+      "deprecated": false,
+      "displayName": "\ud83c\udfc6 q4-mtp-off - 4_EVAL \u00b7 Q4 llama.cpp mtp-off \u00b7 taskflow R8192",
+      "favorite": false,
+      "id": "q4-mtp-off-taskflow-20261013",
+      "lastUsed": 0,
+      "menuOrder": 0,
+      "name": "4_EVAL \u00b7 Q4 llama.cpp mtp-off \u00b7 taskflow R8192",
+      "ready": true,
+      "system": false,
+      "systemBadge": false,
+      "tags": [
+        "q4-mtp-ab",
+        "isolated",
+        "managed-local",
+        "parallel-1"
+      ]
+    }
+  ],
+  "coverage": [
+    {
+      "benchmarkEligible": true,
+      "coverageState": "incomplete",
+      "hasBlockedStage": false,
+      "hasInfrastructureOrTimeout": false,
+      "healthCodes": [],
+      "healthMessages": [],
+      "nextStage": "he0",
+      "pendingStages": [
+        "he0",
+        "he20",
+        "bcb"
+      ],
+      "profileConfigFingerprint": "e5fbbf5038b326eca098693583f010b943472e237748330d633ab84ca76bcf08",
+      "profileId": "q4-mtp-off-he-20261013",
+      "profileName": "3_EVAL \u00b7 Q4 llama.cpp mtp-off \u00b7 he R4096",
+      "retired": false,
+      "stageStates": {
+        "bcb": "pending",
+        "he0": "pending",
+        "he20": "pending"
+      }
+    },
+    {
+      "benchmarkEligible": true,
+      "coverageState": "incomplete",
+      "hasBlockedStage": false,
+      "hasInfrastructureOrTimeout": false,
+      "healthCodes": [],
+      "healthMessages": [],
+      "nextStage": "he0",
+      "pendingStages": [
+        "he0",
+        "he20",
+        "bcb"
+      ],
+      "profileConfigFingerprint": "bf3515aa9f8e63b9a9dd2720bd73940fdafdf665c0a7613ad104f5297f7f9389",
+      "profileId": "q4-mtp-on-taskflow-20261013",
+      "profileName": "2_EVAL \u00b7 Q4 llama.cpp mtp-on \u00b7 taskflow R8192",
+      "retired": false,
+      "stageStates": {
+        "bcb": "pending",
+        "he0": "pending",
+        "he20": "pending"
+      }
+    },
+    {
+      "benchmarkEligible": true,
+      "coverageState": "incomplete",
+      "hasBlockedStage": false,
+      "hasInfrastructureOrTimeout": false,
+      "healthCodes": [],
+      "healthMessages": [],
+      "nextStage": "he0",
+      "pendingStages": [
+        "he0",
+        "he20",
+        "bcb"
+      ],
+      "profileConfigFingerprint": "13095d0bbea68e6a9de5fa43d1948f4a5d8bdaf9e9fad232272ab9386d5af592",
+      "profileId": "q4-mtp-off-taskflow-20261013",
+      "profileName": "4_EVAL \u00b7 Q4 llama.cpp mtp-off \u00b7 taskflow R8192",
+      "retired": false,
+      "stageStates": {
+        "bcb": "pending",
+        "he0": "pending",
+        "he20": "pending"
+      }
+    }
+  ],
+  "custom_suites": [
+    {
+      "id": "05c28394-11d0-41fe-a55f-b3cb69db9c15",
+      "name": "BigCodeBench-Hard (8 \u00edtems)",
+      "prompt_count": 8
+    },
+    {
+      "id": "qwen38_taskflow_ultra_ast_vs_sol_20261006",
+      "name": "Qwen3.8 ASTRA IQ3_S calibrado vs SOL \u00b7 TaskFlow ULTRA E2E",
+      "prompt_count": 1
+    }
+  ],
+  "benchmark_running": false,
+  "server_state": "stopped",
+  "agent_running": false
+}

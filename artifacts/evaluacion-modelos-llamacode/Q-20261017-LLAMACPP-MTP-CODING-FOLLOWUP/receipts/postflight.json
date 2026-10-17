@@ -1,0 +1,41 @@
+{
+  "captured_at_utc": "2026-10-17T15:20:58+00:00",
+  "purpose": "postflight after canceling Q-20261017 BCB8 MTP-off on registered swap guard",
+  "meminfo_bytes": {
+    "MemTotal": 132615835648,
+    "MemAvailable": 120381493248,
+    "SwapTotal": 8589930496,
+    "SwapFree": 751906816
+  },
+  "swap_used_bytes": 7838023680,
+  "memory_pressure": "some avg10=0.00 avg60=0.05 avg300=0.11 total=1059793792\nfull avg10=0.00 avg60=0.05 avg300=0.11 total=1058331835\n",
+  "vmstat": {
+    "pswpin": 4176083,
+    "pswpout": 10824305,
+    "oom_kill": 0
+  },
+  "gpu_snapshot": {
+    "exit_code": 0,
+    "output": "0, NVIDIA GeForce RTX 3090, 833 MiB, 24576 MiB, 21 %\n1, NVIDIA GeForce RTX 3090, 108 MiB, 24576 MiB, 33 %"
+  },
+  "gpu_compute_apps": {
+    "exit_code": 0,
+    "output": ""
+  },
+  "ports": {
+    "18111": "closed",
+    "18112": "closed",
+    "8877": "closed",
+    "8898": "closed",
+    "18119": "closed"
+  },
+  "known_task_processes": [],
+  "expected_isolated_server_pid_2614875_present": false,
+  "isolated_app_daemon_pid_2610556_present": false,
+  "benchmark_status": "cancelled; no score row created",
+  "agent_status": "stopAgent returned stopped before isolated app daemon was terminated",
+  "process_scan": {
+    "llama_server_pids": [],
+    "note": "empty process-name scan; known isolated PIDs 2614875 (server) and 2610556 (app daemon) are absent"
+  }
+}

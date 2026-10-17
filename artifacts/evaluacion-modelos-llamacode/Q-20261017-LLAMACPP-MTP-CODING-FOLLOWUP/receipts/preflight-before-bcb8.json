@@ -1,0 +1,34 @@
+{
+  "captured_at_utc": "2026-10-17T15:16:07Z",
+  "purpose": "fresh preflight before starting BCB8 control",
+  "meminfo_bytes": {
+    "MemTotal": 132615835648,
+    "MemAvailable": 117076168704,
+    "SwapTotal": 8589930496,
+    "SwapFree": 2852343808
+  },
+  "swap_used_bytes": 5737586688,
+  "swap_baseline_bytes": 5737832448,
+  "memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=1058677575\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=1057219762\n",
+  "gpu_snapshot": "0, NVIDIA GeForce RTX 3090, 865 MiB, 24576 MiB, 17 %\n1, NVIDIA GeForce RTX 3090, 108 MiB, 24576 MiB, 33 %",
+  "gpu_compute_apps": "",
+  "model_ports": {
+    "18111": "closed",
+    "18112": "closed",
+    "8877": "closed",
+    "8898": "closed"
+  },
+  "secondary_disk_free_bytes": 84652412928,
+  "app_api": {
+    "port": 18119,
+    "expected_open": true
+  },
+  "model_hashes": "base-model-hashes.json + sidecar-manifest.json",
+  "profile_fingerprint": "7f84727070a2fb93d008a42c90391f3904d800f7d7c2e67f173813ab0435ff89",
+  "gate_states": {
+    "bcb": "pending",
+    "he0": "valid",
+    "he20": "valid"
+  },
+  "preflight_passed": true
+}
