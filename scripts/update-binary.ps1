@@ -29,7 +29,11 @@
 .NOTES
     ASCII only on purpose (Windows PowerShell 5.1 reads a BOM-less .ps1 as ANSI).
     Env var fallbacks (for 'irm | iex', where params do not exist):
-      LC_CHANNEL, LC_ASSET_URL, LC_SHA256, LC_SHA256_URL, LC_INSTALL_DIR, LC_NORUN
+      LC_CHANNEL, LC_ASSET_URL, LC_SHA256, LC_SHA256_URL, LC_INSTALL_DIR, LC_NORUN,
+      LC_START_MENU_DIR
+    -StartMenuDir / LC_START_MENU_DIR replace the user's Start Menu (and the
+    folders scanned for legacy shortcuts) with that folder: tests use it so they
+    never leave a shortcut to a temp exe in the real Start Menu.
 #>
 param(
     [string]$AssetUrl = $env:LC_ASSET_URL,
@@ -40,6 +44,7 @@ param(
     [string]$Version = '',
     [int]$WaitPid = 0,
     [string]$LegacyExe = '',
+    [string]$StartMenuDir = $env:LC_START_MENU_DIR,
     [switch]$NoLaunch,
     [switch]$NoShortcuts,
     [switch]$NoPause,
@@ -250,11 +255,16 @@ function Set-Shortcut([string]$path, [string]$target, [string]$workDir) {
 # taskbar entries.
 function Update-LegacyShortcuts([string]$legacyExe, [string]$newExe, [string]$workDir) {
     if (-not $legacyExe -or ($legacyExe -ieq $newExe)) { return }
-    $roots = @(
-        [Environment]::GetFolderPath('Programs'),
-        [Environment]::GetFolderPath('Desktop'),
-        (Join-Path $env:APPDATA 'Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar')
-    ) | Where-Object { $_ -and (Test-Path $_) }
+    if ($StartMenuDir) {
+        # Redirected (tests): nothing of the real user profile is scanned.
+        $roots = @($StartMenuDir) | Where-Object { Test-Path $_ }
+    } else {
+        $roots = @(
+            [Environment]::GetFolderPath('Programs'),
+            [Environment]::GetFolderPath('Desktop'),
+            (Join-Path $env:APPDATA 'Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar')
+        ) | Where-Object { $_ -and (Test-Path $_) }
+    }
     $wsh = New-Object -ComObject WScript.Shell
     foreach ($root in $roots) {
         Get-ChildItem -LiteralPath $root -Filter *.lnk -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
@@ -439,7 +449,7 @@ try {
 
     if (-not $NoShortcuts) {
         $name = if ($Channel -eq 'debug') { 'LlamaCode-Debug' } else { 'LlamaCode' }
-        $startMenu = [Environment]::GetFolderPath('Programs')
+        $startMenu = if ($StartMenuDir) { $StartMenuDir } else { [Environment]::GetFolderPath('Programs') }
         if (-not $startMenu) { $startMenu = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs' }
         Set-Shortcut (Join-Path $startMenu "$name.lnk") $Exe $InstallDir
         Ok "Start Menu shortcut: $name"

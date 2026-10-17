@@ -196,12 +196,30 @@ try {
     Check ($r.Code -eq 0 -and (Test-Path (Join-Path $fresh 'LlamaCode.exe'))) 'instala en una carpeta nueva (migracion desde checkout)'
 
     # 6) 'irm | iex' (instalador standalone): sin param, por variables de entorno, sin exit.
+    #    Bajo iex no hay -NoShortcuts: el acceso va a LC_START_MENU_DIR. Antes iba
+    #    al menu Inicio REAL y dejaba LlamaCode.lnk apuntando a un exe en TEMP.
     $iexDir = Join-Path $tmp 'iex'
+    $fakeStartMenu = Join-Path $tmp 'StartMenu'
+    $realStartMenu = [Environment]::GetFolderPath('Programs')
+    function Get-RealStartMenuLinks {
+        if (-not $realStartMenu -or -not (Test-Path $realStartMenu)) { return @() }
+        $w = New-Object -ComObject WScript.Shell
+        @(Get-ChildItem -LiteralPath $realStartMenu -Filter '*.lnk' -ErrorAction SilentlyContinue | ForEach-Object {
+            "$($_.Name)|$($_.LastWriteTimeUtc.Ticks)|$($w.CreateShortcut($_.FullName).TargetPath)"
+        })
+    }
+    $realBefore = (Get-RealStartMenuLinks) -join "`n"
     $cmd = "`$env:LC_ASSET_URL='$($v2.Zip)'; `$env:LC_SHA256='$($v2.Hash)'; `$env:LC_INSTALL_DIR='$iexDir'; `$env:LC_NORUN='1'; " +
-           "Get-Content -Raw '$ub' | iex; 'IEX-SURVIVED'"
+           "`$env:LC_START_MENU_DIR='$fakeStartMenu'; Get-Content -Raw '$ub' | iex; 'IEX-SURVIVED'"
     $out = & powershell -NoProfile -ExecutionPolicy Bypass -Command $cmd 2>&1 | Out-String
     Check ($out -match 'IEX-SURVIVED') 'bajo iex no cierra la sesion (sin exit)'
     Check ((Get-Content (Join-Path $iexDir 'version.txt') -ErrorAction SilentlyContinue) -eq 'v2') 'bajo iex instala desde LC_ASSET_URL/LC_SHA256'
+    $fakeLnk = Join-Path $fakeStartMenu 'LlamaCode.lnk'
+    $fakeTarget = if (Test-Path $fakeLnk) { (New-Object -ComObject WScript.Shell).CreateShortcut($fakeLnk).TargetPath } else { '' }
+    Check ($fakeTarget -ieq (Join-Path $iexDir 'LlamaCode.exe')) 'LC_START_MENU_DIR recibe el acceso del menu Inicio'
+    $realAfter = (Get-RealStartMenuLinks) -join "`n"
+    Check ($realAfter -eq $realBefore) 'el menu Inicio real queda intacto'
+    Check (-not ($realAfter -match [regex]::Escape($tmp))) 'ningun acceso del menu Inicio real apunta al TEMP del test'
 } finally {
     Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue
 }
