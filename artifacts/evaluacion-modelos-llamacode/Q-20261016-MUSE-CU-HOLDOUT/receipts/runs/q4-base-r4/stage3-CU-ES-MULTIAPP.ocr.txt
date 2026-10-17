@@ -1,0 +1,2 @@
+ems * Resultado verificado @= -a0.x
+Resultado verificado: 1829|

@@ -1,0 +1,156 @@
+{
+  "taskId": "Q-20261016-MUSE-CU-HOLDOUT",
+  "profile": "astra",
+  "arm": "base",
+  "replicate": 4,
+  "attempt": 2,
+  "runner": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/scripts/run_muse_cu_holdout_session.py",
+  "startedAtUtc": "2026-10-17T01:02:37.215468+00:00",
+  "configPath": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/configs/cu-astra.json",
+  "configSha256": "feede010f935ed2be1398cb90ecc58cb8e4665291ca1e6d45e84eab2fb251f05",
+  "engineCommand": [
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python",
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py",
+    "--engine",
+    "strata",
+    "--config",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/configs/cu-astra.json",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "8350",
+    "--gpu",
+    "0,1"
+  ],
+  "engineLog": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/logs/cu-astra-engine-attempt-02.log",
+  "preflight": {
+    "atUtc": "2026-10-17T01:02:37.214201+00:00",
+    "mem": {
+      "MemAvailable": 114573361152,
+      "SwapTotal": 8589930496,
+      "SwapFree": 3732987904
+    },
+    "vmstat": {
+      "pswpin": 3986674,
+      "pswpout": 9673949,
+      "oom_kill": 0
+    },
+    "psi": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 1.62
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 1.62
+      }
+    },
+    "computeApps": [],
+    "gpuQueryError": null
+  },
+  "preflightErrors": [],
+  "oomKillBaseline": 0,
+  "thresholds": {
+    "MemAvailableStartGiB": 32,
+    "MemAvailableAbortGiB": 20,
+    "PSISomeAvg10Abort": 80.0,
+    "PSIFullAvg10Abort": 60.0,
+    "abortStreakSamples": 15,
+    "swapFreeIsTelemetryOnly": true
+  },
+  "command": [
+    "/usr/bin/python3",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/scripts/run_muse_cu_holdout_session.py",
+    "--profile",
+    "astra",
+    "--arm",
+    "base",
+    "--rep",
+    "4",
+    "--attempt",
+    "2",
+    "--port",
+    "8898",
+    "--display",
+    ":97"
+  ],
+  "serverPid": 897201,
+  "status": "completed",
+  "health": {
+    "status": "ok",
+    "max_context": 131072,
+    "model": "qwen3.8-flash-next-astra-iq3_s-calibrated",
+    "images": true,
+    "api_key": false,
+    "loaded": true,
+    "service": "strata"
+  },
+  "endpointModels": {
+    "object": "list",
+    "data": [
+      {
+        "id": "qwen3.8-flash-next-astra-iq3_s-calibrated",
+        "object": "model",
+        "status": {
+          "value": "loaded"
+        },
+        "meta": {
+          "n_ctx": 131072
+        },
+        "architecture": {
+          "input_modalities": [
+            "text",
+            "image"
+          ],
+          "output_modalities": [
+            "text"
+          ]
+        }
+      }
+    ]
+  },
+  "apiReadyAtUtc": "2026-10-17T01:04:15.557039+00:00",
+  "runnerPid": 907652,
+  "runnerExitCode": 0,
+  "serverStopped": true,
+  "abortReason": null,
+  "postflight": {
+    "atUtc": "2026-10-17T01:06:22.880121+00:00",
+    "mem": {
+      "MemAvailable": 115974283264,
+      "SwapTotal": 8589930496,
+      "SwapFree": 3416891392
+    },
+    "vmstat": {
+      "pswpin": 3986813,
+      "pswpout": 9750112,
+      "oom_kill": 0
+    },
+    "psi": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 1.75,
+        "avg300": 4.62
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 1.74,
+        "avg300": 4.61
+      }
+    },
+    "computeApps": [],
+    "gpuQueryError": null
+  },
+  "port8350Free": true,
+  "port8898Free": true,
+  "display97Free": true,
+  "minMemAvailableBytes": 56779599872,
+  "minSwapFreeBytes": 3416457216,
+  "maxPsiSomeAvg10": 42.94,
+  "oomKillDelta": 0,
+  "swapOutPagesDelta": 76163,
+  "elapsedSeconds": 225.666,
+  "finishedAtUtc": "2026-10-17T01:06:22.881245+00:00"
+}

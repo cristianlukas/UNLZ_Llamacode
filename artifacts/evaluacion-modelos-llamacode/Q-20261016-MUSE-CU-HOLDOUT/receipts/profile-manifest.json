@@ -1,0 +1,89 @@
+{
+  "taskId": "Q-20261016-MUSE-CU-HOLDOUT",
+  "models": {
+    "ASTRA IQ3_S calibrated": {
+      "profileFingerprint": "864c6ba74e684940f34b5519c5e53a36412e386a9b160fb22ed7c2640ee85fa4",
+      "weightShardSha256": [
+        "4c1eb2ceb4915e1192f4f386021897bde56a97f40a0bb78bb86465e0f7d2aca3",
+        "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113"
+      ],
+      "configSha256": "feede010f935ed2be1398cb90ecc58cb8e4665291ca1e6d45e84eab2fb251f05",
+      "sourceConfigSha256": "8e23c20ccbb9730dd501dc4877b44b2bae2bbcd4bffcb1ebe96e2974001b0c8f"
+    },
+    "Flash-Next UD-Q4_K_XL": {
+      "profileFingerprint": "09d45e63b1f548df63775d947a051a70ca66561bb5a04bcf292050eb8bcb2958",
+      "weightShardSha256": [
+        "4448186216b3af4cc558bbce2c3213f01608f8f8b2e5267a9767971dd3ec8082",
+        "3f342f1c1580473f1ee94ddd5b28206e8c07a70fa1a366f59d1d6c922919a6c9",
+        "56758f40269cad5cd9b0d3d6fbae0f40f6d5be6de49e4ab392dbe83157d9cbd3",
+        "753bda48b98ba4f1636134a90a967de1b2d3908a236c026e464777342e53510a"
+      ],
+      "configSha256": "39e92eded8528d869c911a2086a5d07b09b5b8b6200bf35f9193ca0f21778c05",
+      "sourceConfigSha256": "f5756a20d26fee036a94151542929dcaf0d74cfa0af98cb53fbb450858b9a5bd"
+    }
+  },
+  "runtime": {
+    "name": "Strata 0.1.41",
+    "commit": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
+    "gpus": "2x RTX 3090, sequential",
+    "maxContext": 131072,
+    "spec": 4,
+    "kv": "int8",
+    "kvResident": 32768,
+    "specMinP": 0.7
+  },
+  "overlay": {
+    "sha256": "9fb742d295a4fbc155b18ad2216d21d5349184ef80b8eec8a092416ce0cfda97"
+  },
+  "runner": {
+    "sessionPath": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/scripts/run_muse_cu_holdout_session.py",
+    "sessionSha256": "1d28c91f273372c4f4279d6e02bff25b501b8519ec6bc57ffbb7855e761c90ad",
+    "guardedPath": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/scripts/run_muse_cu_holdout_guarded.py",
+    "guardedSha256": "2774df012d785b1fbe7b1600ef484708d7356aa98dc74a5fecac51cf9f8a0330",
+    "suite": "three-task GUI holdout fixture embedded in session runner; rep=4"
+  },
+  "artifacts": {
+    "llamacodeBinary": {
+      "path": "/media/cristian/Disco local/LlamaCode-cache/build_linux/LlamaCode",
+      "exists": true,
+      "sha256": "38d2b916c7c2b08061a2a59eb9b0b120247b19768aed454f4a6992e53ed48959"
+    },
+    "strataBinary": {
+      "path": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata",
+      "exists": true,
+      "sha256": "770ecf303a4c6271654339c639392ecb455de3a999bf5d2e8dbc73c879103602"
+    },
+    "python": {
+      "path": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python",
+      "exists": true,
+      "sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f"
+    },
+    "displayStarter": {
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261013-MUSE-CU-E2E/scripts/start_private_x11_session.sh",
+      "exists": true,
+      "sha256": "0dabb6d7ef5a2a6891dd6ffbce690516f412a520867f1a5c18fd9b7e2fc648dc"
+    },
+    "overlay": {
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261009-MUSE-AGENT-EVAL/prompt/muse-safe-transfer-v1.txt",
+      "exists": true,
+      "sha256": "9fb742d295a4fbc155b18ad2216d21d5349184ef80b8eec8a092416ce0cfda97"
+    }
+  },
+  "runtimeNotes": "No model files downloaded; source weight hashes reused from prior verified manifests. Config copies change only log destinations.",
+  "preflightGpuProcesses": {
+    "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/preflight-gpu-processes.txt",
+    "sha256": "dd808505d4d527bdc66732aed8ccd58623695e745bd88739837cab6cfba844f2",
+    "computeApps": [],
+    "displayClientsObserved": [
+      "Xorg",
+      "gnome-software",
+      "Brave GPU process",
+      "Compiz",
+      "ChatGPT GPU process"
+    ],
+    "memoryUsedMiB": [
+      1070,
+      108
+    ]
+  }
+}

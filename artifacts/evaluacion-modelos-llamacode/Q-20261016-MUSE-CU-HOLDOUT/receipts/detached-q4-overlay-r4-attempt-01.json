@@ -1,0 +1,11 @@
+{
+  "taskId": "Q-20261016-MUSE-CU-HOLDOUT",
+  "profile": "q4",
+  "arm": "muse_overlay",
+  "replicate": 4,
+  "attempt": 1,
+  "startedAtUtc": "2026-10-17T01:15:28.865503+00:00",
+  "pid": 1089607,
+  "session": "detached",
+  "log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/logs/detached-q4-overlay-r4-attempt-01-supervisor.log"
+}

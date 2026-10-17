@@ -1,0 +1,47 @@
+{
+  "taskId": "Q-20261016-MUSE-CU-HOLDOUT",
+  "reviewedAtUtc": "2026-10-17T01:07:07.207301+00:00",
+  "profile": "ASTRA IQ3_S calibrated",
+  "arm": "base",
+  "replicate": 4,
+  "attempt": 2,
+  "method": "manual visual review of saved screenshots; OCR remains a diagnostic only",
+  "score": "3/3",
+  "tasks": [
+    {
+      "id": "CU-ES-CALC",
+      "result": "pass",
+      "observation": "Calculator visibly showed 83×17 = 1411.",
+      "screenshot": {
+        "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/runs/astra-base-r4-try2/stage1-CU-ES-CALC.png",
+        "sha256": "a821cc62633a0ceae616b5e4eb94a1484db3092a3863e8dfdf9c0fd5825a8c75"
+      }
+    },
+    {
+      "id": "CU-EN-EDITOR",
+      "result": "pass",
+      "observation": "Text Editor showed exactly one line `MUSE CU HOLDOUT: keyboard input verified.` and Draft state.",
+      "screenshot": {
+        "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/runs/astra-base-r4-try2/stage2-CU-EN-EDITOR-0x00c00004.png",
+        "sha256": "cf800dea34ec7cde6700e9aaa062ec62476a94ecd805ebfd885d16568a4982da"
+      }
+    },
+    {
+      "id": "CU-ES-MULTIAPP",
+      "result": "pass",
+      "observation": "Calculator showed 59×31 = 1829; Text Editor showed exactly `Resultado verificado: 1829` and Draft state.",
+      "calculatorScreenshot": {
+        "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/runs/astra-base-r4-try2/stage3-CU-ES-MULTIAPP-0x00600004.png",
+        "sha256": "1495c890c36ccb694c1ab9babdeed0212db42a7049b429b221ec706d6cc38889"
+      },
+      "editorScreenshot": {
+        "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/runs/astra-base-r4-try2/stage3-CU-ES-MULTIAPP-0x00c00004.png",
+        "sha256": "a0dac6c0142b04ebf52f8dca979e8cb523176f4d203ef5a30c79618c9ce96bf9"
+      }
+    }
+  ],
+  "automatedOcrSuccesses": 2,
+  "automatedTaskCount": 3,
+  "controllerReceipt": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/cu-astra-base-r4-attempt-02-controller.json",
+  "runReceipt": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/runs/astra-base-r4-try2/run.json"
+}

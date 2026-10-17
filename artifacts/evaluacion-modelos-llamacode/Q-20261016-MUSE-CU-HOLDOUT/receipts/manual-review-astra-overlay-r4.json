@@ -1,0 +1,41 @@
+{
+  "taskId": "Q-20261016-MUSE-CU-HOLDOUT",
+  "reviewedAtUtc": "2026-10-17T01:15:28.864224+00:00",
+  "profile": "ASTRA IQ3_S calibrated",
+  "arm": "muse_overlay",
+  "replicate": 4,
+  "attempt": 2,
+  "method": "manual visual review of saved screenshots; OCR is diagnostic only",
+  "runStatus": "incomplete after CU-EN-EDITOR turn timeout",
+  "stateScore": "1/3 requested states reached",
+  "tasks": [
+    {
+      "id": "CU-ES-CALC",
+      "result": "fail",
+      "observation": "Calculator displayed 817 and then 817817; it did not calculate 83×17=1411.",
+      "screenshot": {
+        "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/runs/astra-muse_overlay-r4-try2/stage1-CU-ES-CALC.png",
+        "sha256": "ae6a9df0184815854177f5b6cf0c4340eb2145fd54991d111ca3a7ca61336313"
+      }
+    },
+    {
+      "id": "CU-EN-EDITOR",
+      "result": "pass_state",
+      "observation": "Partial capture shows exactly one line `MUSE CU HOLDOUT: keyboard input verified.` and Draft. Agent could not complete verification turn; this task state is visually confirmed.",
+      "screenshot": {
+        "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/runs/astra-muse_overlay-r4-try2/partial-CU-EN-EDITOR-0x00c00004.png",
+        "sha256": "cf800dea34ec7cde6700e9aaa062ec62476a94ecd805ebfd885d16568a4982da"
+      }
+    },
+    {
+      "id": "CU-ES-MULTIAPP",
+      "result": "not_attempted",
+      "observation": "The runner stopped at the 300 s turn timeout in the preceding editor case; no replacement/calculation task was sent."
+    }
+  ],
+  "automatedOcrSuccesses": 0,
+  "automatedTaskCount": 1,
+  "timeoutSeconds": 300,
+  "guardReceipt": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/cu-astra-muse_overlay-r4-attempt-02-controller.json",
+  "runReceipt": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/runs/astra-muse_overlay-r4-try2/run.json"
+}

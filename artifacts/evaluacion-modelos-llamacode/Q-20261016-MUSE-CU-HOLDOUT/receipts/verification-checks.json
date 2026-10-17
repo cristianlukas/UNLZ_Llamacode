@@ -1,0 +1,295 @@
+{
+  "taskId": "Q-20261016-MUSE-CU-HOLDOUT",
+  "checkedAtUtc": "2026-10-17T01:30:35.362768+00:00",
+  "scope": "Artifact/controller/screenshot-integrity and runner syntax checks; not a product build/test suite.",
+  "checks": [
+    {
+      "check": "runner scripts parse",
+      "passed": true,
+      "detail": [
+        {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/scripts/run_muse_cu_holdout_guarded.py",
+          "sha256": "2774df012d785b1fbe7b1600ef484708d7356aa98dc74a5fecac51cf9f8a0330"
+        },
+        {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/scripts/run_muse_cu_holdout_session.py",
+          "sha256": "1d28c91f273372c4f4279d6e02bff25b501b8519ec6bc57ffbb7855e761c90ad"
+        }
+      ]
+    },
+    {
+      "check": "ASTRA base retry: controller status recorded",
+      "passed": true,
+      "detail": {
+        "status": "completed",
+        "expected": "completed",
+        "runnerExitCode": 0,
+        "abortReason": null,
+        "elapsedSeconds": 225.666
+      }
+    },
+    {
+      "check": "ASTRA base retry: server and isolated resources cleaned",
+      "passed": true,
+      "detail": {
+        "serverStopped": true,
+        "port8350Free": true,
+        "port8898Free": true,
+        "display97Free": true
+      }
+    },
+    {
+      "check": "ASTRA base retry: OOM delta zero",
+      "passed": true,
+      "detail": {
+        "oomKillDelta": 0
+      }
+    },
+    {
+      "check": "ASTRA overlay: controller status recorded",
+      "passed": true,
+      "detail": {
+        "status": "runner_failed",
+        "expected": "runner_failed",
+        "runnerExitCode": 1,
+        "abortReason": null,
+        "elapsedSeconds": 441.316
+      }
+    },
+    {
+      "check": "ASTRA overlay: server and isolated resources cleaned",
+      "passed": true,
+      "detail": {
+        "serverStopped": true,
+        "port8350Free": true,
+        "port8898Free": true,
+        "display97Free": true
+      }
+    },
+    {
+      "check": "ASTRA overlay: OOM delta zero",
+      "passed": true,
+      "detail": {
+        "oomKillDelta": 0
+      }
+    },
+    {
+      "check": "Q4 overlay: controller status recorded",
+      "passed": true,
+      "detail": {
+        "status": "completed",
+        "expected": "completed",
+        "runnerExitCode": 0,
+        "abortReason": null,
+        "elapsedSeconds": 349.98
+      }
+    },
+    {
+      "check": "Q4 overlay: server and isolated resources cleaned",
+      "passed": true,
+      "detail": {
+        "serverStopped": true,
+        "port8350Free": true,
+        "port8898Free": true,
+        "display97Free": true
+      }
+    },
+    {
+      "check": "Q4 overlay: OOM delta zero",
+      "passed": true,
+      "detail": {
+        "oomKillDelta": 0
+      }
+    },
+    {
+      "check": "Q4 base: controller status recorded",
+      "passed": true,
+      "detail": {
+        "status": "completed",
+        "expected": "completed",
+        "runnerExitCode": 0,
+        "abortReason": null,
+        "elapsedSeconds": 324.257
+      }
+    },
+    {
+      "check": "Q4 base: server and isolated resources cleaned",
+      "passed": true,
+      "detail": {
+        "serverStopped": true,
+        "port8350Free": true,
+        "port8898Free": true,
+        "display97Free": true
+      }
+    },
+    {
+      "check": "Q4 base: OOM delta zero",
+      "passed": true,
+      "detail": {
+        "oomKillDelta": 0
+      }
+    },
+    {
+      "check": "manual-review-astra-base-r4.json: screenshot hash CU-ES-CALC/screenshot",
+      "passed": true,
+      "detail": {
+        "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/runs/astra-base-r4-try2/stage1-CU-ES-CALC.png",
+        "sha256": "a821cc62633a0ceae616b5e4eb94a1484db3092a3863e8dfdf9c0fd5825a8c75"
+      }
+    },
+    {
+      "check": "manual-review-astra-base-r4.json: screenshot hash CU-EN-EDITOR/screenshot",
+      "passed": true,
+      "detail": {
+        "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/runs/astra-base-r4-try2/stage2-CU-EN-EDITOR-0x00c00004.png",
+        "sha256": "cf800dea34ec7cde6700e9aaa062ec62476a94ecd805ebfd885d16568a4982da"
+      }
+    },
+    {
+      "check": "manual-review-astra-base-r4.json: screenshot hash CU-ES-MULTIAPP/calculatorScreenshot",
+      "passed": true,
+      "detail": {
+        "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/runs/astra-base-r4-try2/stage3-CU-ES-MULTIAPP-0x00600004.png",
+        "sha256": "1495c890c36ccb694c1ab9babdeed0212db42a7049b429b221ec706d6cc38889"
+      }
+    },
+    {
+      "check": "manual-review-astra-base-r4.json: screenshot hash CU-ES-MULTIAPP/editorScreenshot",
+      "passed": true,
+      "detail": {
+        "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/runs/astra-base-r4-try2/stage3-CU-ES-MULTIAPP-0x00c00004.png",
+        "sha256": "a0dac6c0142b04ebf52f8dca979e8cb523176f4d203ef5a30c79618c9ce96bf9"
+      }
+    },
+    {
+      "check": "manual-review-astra-overlay-r4.json: screenshot hash CU-ES-CALC/screenshot",
+      "passed": true,
+      "detail": {
+        "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/runs/astra-muse_overlay-r4-try2/stage1-CU-ES-CALC.png",
+        "sha256": "ae6a9df0184815854177f5b6cf0c4340eb2145fd54991d111ca3a7ca61336313"
+      }
+    },
+    {
+      "check": "manual-review-astra-overlay-r4.json: screenshot hash CU-EN-EDITOR/screenshot",
+      "passed": true,
+      "detail": {
+        "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/runs/astra-muse_overlay-r4-try2/partial-CU-EN-EDITOR-0x00c00004.png",
+        "sha256": "cf800dea34ec7cde6700e9aaa062ec62476a94ecd805ebfd885d16568a4982da"
+      }
+    },
+    {
+      "check": "manual-review-q4-overlay-r4.json: screenshot hash CU-ES-CALC/screenshot",
+      "passed": true,
+      "detail": {
+        "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/runs/q4-muse_overlay-r4/stage1-CU-ES-CALC.png",
+        "sha256": "5feb87d96d97a5f358262a77bf0618edd8eeb64215a783e49a4dc15c5c3d656f"
+      }
+    },
+    {
+      "check": "manual-review-q4-overlay-r4.json: screenshot hash CU-EN-EDITOR/screenshot",
+      "passed": true,
+      "detail": {
+        "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/runs/q4-muse_overlay-r4/stage2-CU-EN-EDITOR-0x00c00004.png",
+        "sha256": "cf800dea34ec7cde6700e9aaa062ec62476a94ecd805ebfd885d16568a4982da"
+      }
+    },
+    {
+      "check": "manual-review-q4-overlay-r4.json: screenshot hash CU-ES-MULTIAPP/calculatorScreenshot",
+      "passed": true,
+      "detail": {
+        "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/runs/q4-muse_overlay-r4/stage3-CU-ES-MULTIAPP-0x00600004.png",
+        "sha256": "1495c890c36ccb694c1ab9babdeed0212db42a7049b429b221ec706d6cc38889"
+      }
+    },
+    {
+      "check": "manual-review-q4-overlay-r4.json: screenshot hash CU-ES-MULTIAPP/editorScreenshot",
+      "passed": true,
+      "detail": {
+        "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/runs/q4-muse_overlay-r4/stage3-CU-ES-MULTIAPP-0x00c00004.png",
+        "sha256": "494965b0b3cbb4e8a663c78792919645df4d7a8c43d68244004c9f01fb514c15"
+      }
+    },
+    {
+      "check": "manual-review-q4-base-r4.json: screenshot hash CU-ES-CALC/screenshot",
+      "passed": true,
+      "detail": {
+        "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/runs/q4-base-r4/stage1-CU-ES-CALC.png",
+        "sha256": "5feb87d96d97a5f358262a77bf0618edd8eeb64215a783e49a4dc15c5c3d656f"
+      }
+    },
+    {
+      "check": "manual-review-q4-base-r4.json: screenshot hash CU-EN-EDITOR/screenshot",
+      "passed": true,
+      "detail": {
+        "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/runs/q4-base-r4/stage2-CU-EN-EDITOR-0x00c00004.png",
+        "sha256": "cf800dea34ec7cde6700e9aaa062ec62476a94ecd805ebfd885d16568a4982da"
+      }
+    },
+    {
+      "check": "manual-review-q4-base-r4.json: screenshot hash CU-ES-MULTIAPP/calculatorScreenshot",
+      "passed": true,
+      "detail": {
+        "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/runs/q4-base-r4/stage3-CU-ES-MULTIAPP-0x00600004.png",
+        "sha256": "1495c890c36ccb694c1ab9babdeed0212db42a7049b429b221ec706d6cc38889"
+      }
+    },
+    {
+      "check": "manual-review-q4-base-r4.json: screenshot hash CU-ES-MULTIAPP/editorScreenshot",
+      "passed": true,
+      "detail": {
+        "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/runs/q4-base-r4/stage3-CU-ES-MULTIAPP-0x00c00004.png",
+        "sha256": "a0dac6c0142b04ebf52f8dca979e8cb523176f4d203ef5a30c79618c9ce96bf9"
+      }
+    },
+    {
+      "check": "ASTRA overlay timeout preserved as partial with third task unattempted",
+      "passed": true,
+      "detail": {
+        "id": "CU-ES-MULTIAPP",
+        "result": "not_attempted",
+        "observation": "The runner stopped at the 300 s turn timeout in the preceding editor case; no replacement/calculation task was sent."
+      }
+    },
+    {
+      "check": "final postflight clean",
+      "passed": true,
+      "detail": {
+        "taskId": "Q-20261016-MUSE-CU-HOLDOUT",
+        "capturedAtUtc": "2026-10-17T01:30:23.658775+00:00",
+        "system": {
+          "mem": {
+            "MemAvailable": 117952294912,
+            "SwapTotal": 8589930496,
+            "SwapFree": 1680146432
+          },
+          "memoryPsi": {
+            "some": {
+              "avg10": 0.0,
+              "avg60": 0.0,
+              "avg300": 0.35,
+              "total": 1057962141
+            },
+            "full": {
+              "avg10": 0.0,
+              "avg60": 0.0,
+              "avg300": 0.35,
+              "total": 1056505959
+            }
+          },
+          "vmstat": {
+            "oom_kill": 0
+          }
+        },
+        "ownedProcessesMatchingRunnerOrServer": [],
+        "nvidiaSmiComputeApps": "",
+        "port8350Free": true,
+        "port8898Free": true,
+        "display97LockExists": false,
+        "display97XvfbProcesses": [],
+        "interpretation": "Postflight after final Q4 base arm; no task runner/server process, inference compute app, listener, or private Xvfb session should remain."
+      }
+    }
+  ],
+  "passed": 29,
+  "failed": 0
+}

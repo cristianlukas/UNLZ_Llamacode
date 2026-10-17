@@ -1,0 +1,35 @@
+{
+  "taskId": "Q-20261016-MUSE-CU-HOLDOUT",
+  "capturedAtUtc": "2026-10-17T01:30:23.658775+00:00",
+  "system": {
+    "mem": {
+      "MemAvailable": 117952294912,
+      "SwapTotal": 8589930496,
+      "SwapFree": 1680146432
+    },
+    "memoryPsi": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.35,
+        "total": 1057962141
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.35,
+        "total": 1056505959
+      }
+    },
+    "vmstat": {
+      "oom_kill": 0
+    }
+  },
+  "ownedProcessesMatchingRunnerOrServer": [],
+  "nvidiaSmiComputeApps": "",
+  "port8350Free": true,
+  "port8898Free": true,
+  "display97LockExists": false,
+  "display97XvfbProcesses": [],
+  "interpretation": "Postflight after final Q4 base arm; no task runner/server process, inference compute app, listener, or private Xvfb session should remain."
+}

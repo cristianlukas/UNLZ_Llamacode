@@ -1,0 +1,12 @@
+{
+  "taskId": "Q-20261016-MUSE-CU-HOLDOUT",
+  "profile": "astra",
+  "arm": "muse_overlay",
+  "replicate": 4,
+  "launcherInvocation": "run_muse_cu_holdout_guarded.py astra 1 --arm muse_overlay",
+  "classification": "harness_cli_error_before_preflight",
+  "modelLoaded": false,
+  "tasksSent": 0,
+  "log": "receipts/logs/detached-astra-overlay-r4-attempt-01-supervisor.log",
+  "observed": "usage error from controller; no controller receipt, no model process, no GPU inference."
+}

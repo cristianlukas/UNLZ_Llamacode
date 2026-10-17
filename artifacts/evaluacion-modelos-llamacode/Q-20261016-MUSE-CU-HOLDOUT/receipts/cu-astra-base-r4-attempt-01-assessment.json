@@ -1,0 +1,23 @@
+{
+  "taskId": "Q-20261016-MUSE-CU-HOLDOUT",
+  "attempt": "ASTRA base r4 attempt 1",
+  "assessedAtUtc": "2026-10-17T01:02:32.524453+00:00",
+  "classification": "incomplete_infrastructure",
+  "reason": "The tool session disappeared during model loading before API-ready. Controller receipt remained at loading_model and has no postflight; server and controller processes were gone at inspection. No GUI task was sent.",
+  "evidence": {
+    "startedAtUtc": "2026-10-17T00:44:27.568229+00:00",
+    "lastMonitorAtUtc": "2026-10-17T00:49:01.826021+00:00",
+    "lastMemAvailableGiB": 57.99,
+    "lastPsiSomeAvg10": 49.61,
+    "oomKillDelta": 0,
+    "gpuComputeAppsAtLastSample": [
+      "829897, /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata, 5754 MiB",
+      "829897, /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata, 4422 MiB"
+    ],
+    "kernelLogAtLocalTime": "2026-10-16 21:49:02 — Cannot map memory with base addr 0x78d12a200000 and size of 0xbb5d0a pages; no PID attribution available.",
+    "controllerReceipt": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/cu-astra-base-r4-attempt-01-controller.json",
+    "engineLog": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/logs/cu-astra-engine-attempt-01.log",
+    "monitorLog": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/logs/cu-astra-base-r4-attempt-01-resource-monitor.jsonl"
+  },
+  "retryDecision": "Use the single preregistered infrastructure retry only, after changing supervision to a detached controller so the 15-minute startup deadline can finish and write postflight. Keep model/config/fixture identical. The kernel map error attribution is unknown; do not claim it was the model or host without further evidence."
+}

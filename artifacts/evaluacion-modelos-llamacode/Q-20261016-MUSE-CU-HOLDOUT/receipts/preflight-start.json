@@ -1,0 +1,56 @@
+{
+  "taskId": "Q-20261016-MUSE-CU-HOLDOUT",
+  "atUtc": "2026-10-17T00:43:42.647973+00:00",
+  "memBytes": {
+    "MemAvailable": 111969398784,
+    "SwapTotal": 8589930496,
+    "SwapFree": 774619136
+  },
+  "vmstat": {
+    "pswpin": 3945056,
+    "pswpout": 9649959,
+    "oom_kill": 0
+  },
+  "psi": {
+    "some": {
+      "avg10": 0.0,
+      "avg60": 0.0,
+      "avg300": 0.0
+    },
+    "full": {
+      "avg10": 0.0,
+      "avg60": 0.0,
+      "avg300": 0.0
+    }
+  },
+  "gpuQueryExit": 0,
+  "gpuQueryError": null,
+  "computeApps": [],
+  "gpuSummary": [
+    "0, NVIDIA GeForce RTX 3090, 1065 MiB, 24576 MiB, 60 %",
+    "1, NVIDIA GeForce RTX 3090, 108 MiB, 24576 MiB, 45 %"
+  ],
+  "portsFree": {
+    "8350": true,
+    "8898": true
+  },
+  "display97Free": true,
+  "appAndRuntimeExist": {
+    "llamacode": true,
+    "strata": true,
+    "python": true
+  },
+  "diskFreeBytes": {
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode": 153362591744,
+    "/media/cristian/Disco local": 88789843968
+  },
+  "gate": {
+    "MemAvailableGte32GiB": true,
+    "gpuQueryOk": true,
+    "noComputeApps": true,
+    "portsFree": true,
+    "display97Free": true,
+    "psiBelowAbort": true,
+    "oomValue": 0
+  }
+}

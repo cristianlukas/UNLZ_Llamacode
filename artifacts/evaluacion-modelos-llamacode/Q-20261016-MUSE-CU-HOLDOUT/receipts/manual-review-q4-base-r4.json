@@ -1,0 +1,47 @@
+{
+  "taskId": "Q-20261016-MUSE-CU-HOLDOUT",
+  "reviewedAtUtc": "2026-10-17T01:30:23.621215+00:00",
+  "profile": "Flash-Next UD-Q4_K_XL",
+  "arm": "base",
+  "replicate": 4,
+  "attempt": 1,
+  "method": "manual visual review of saved screenshots; OCR retained as diagnostic",
+  "score": "3/3",
+  "tasks": [
+    {
+      "id": "CU-ES-CALC",
+      "result": "pass",
+      "observation": "Calculator visibly showed 83×17 = 1411.",
+      "screenshot": {
+        "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/runs/q4-base-r4/stage1-CU-ES-CALC.png",
+        "sha256": "5feb87d96d97a5f358262a77bf0618edd8eeb64215a783e49a4dc15c5c3d656f"
+      }
+    },
+    {
+      "id": "CU-EN-EDITOR",
+      "result": "pass",
+      "observation": "Text Editor showed exactly one line `MUSE CU HOLDOUT: keyboard input verified.` and Draft state.",
+      "screenshot": {
+        "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/runs/q4-base-r4/stage2-CU-EN-EDITOR-0x00c00004.png",
+        "sha256": "cf800dea34ec7cde6700e9aaa062ec62476a94ecd805ebfd885d16568a4982da"
+      }
+    },
+    {
+      "id": "CU-ES-MULTIAPP",
+      "result": "pass",
+      "observation": "Calculator showed 59×31 = 1829; Text Editor showed exactly `Resultado verificado: 1829` with Draft state.",
+      "calculatorScreenshot": {
+        "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/runs/q4-base-r4/stage3-CU-ES-MULTIAPP-0x00600004.png",
+        "sha256": "1495c890c36ccb694c1ab9babdeed0212db42a7049b429b221ec706d6cc38889"
+      },
+      "editorScreenshot": {
+        "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/runs/q4-base-r4/stage3-CU-ES-MULTIAPP-0x00c00004.png",
+        "sha256": "a0dac6c0142b04ebf52f8dca979e8cb523176f4d203ef5a30c79618c9ce96bf9"
+      }
+    }
+  ],
+  "automatedOcrSuccesses": 2,
+  "automatedTaskCount": 3,
+  "controllerReceipt": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/cu-q4-base-r4-attempt-01-controller.json",
+  "runReceipt": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/runs/q4-base-r4/run.json"
+}

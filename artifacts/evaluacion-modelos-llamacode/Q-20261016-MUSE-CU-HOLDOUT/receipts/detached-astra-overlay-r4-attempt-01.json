@@ -1,0 +1,11 @@
+{
+  "taskId": "Q-20261016-MUSE-CU-HOLDOUT",
+  "profile": "astra",
+  "arm": "muse_overlay",
+  "replicate": 4,
+  "attempt": 1,
+  "startedAtUtc": "2026-10-17T01:07:07.208659+00:00",
+  "pid": 983618,
+  "session": "detached",
+  "log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261016-MUSE-CU-HOLDOUT/receipts/logs/detached-astra-overlay-r4-attempt-01-supervisor.log"
+}

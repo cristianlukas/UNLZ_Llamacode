@@ -1,0 +1,18 @@
+{
+  "taskId": "Q-20261016-MUSE-CU-HOLDOUT",
+  "checkedAtUtc": "2026-10-17T01:31:27.502017+00:00",
+  "android": {
+    "adb": null,
+    "emulator": null,
+    "result": "No local install/emulator smoke possible because adb and emulator are absent."
+  },
+  "audio": {
+    "result": "No audio was sent in this holdout; earlier local capability audit found no ASR/TTS route on the Flash-Next endpoint. See Q-20261014-IQ3XXS-MODALITY-FOLLOWUP/receipts/audio-capability-audit.json."
+  },
+  "vision": {
+    "result": "The four Computer Usage runs used text requests with desktop tools. No image was sent to any model; image capability metadata is not counted as vision test evidence."
+  },
+  "coding_context_performance": {
+    "result": "Not repeated here: no model/profile/runtime/fixture change in those domains; relevant existing results are retained in the canonical evaluation."
+  }
+}
