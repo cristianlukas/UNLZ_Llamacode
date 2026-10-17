@@ -1,0 +1,17 @@
+{
+  "captured_utc": "2026-10-17T22:59:09Z",
+  "profile": "Qwen3.6-35B-A3B AutoRound INT4 local checkpoint; vLLM; MTP-off control",
+  "model_fingerprint_sha256": "c5f5d44459aa29b0851eeb7f320529e67f1a960a404e8373419503fc5c2e757f",
+  "meminfo_bytes": {
+    "MemTotal": 132615835648,
+    "MemAvailable": 120932524032
+  },
+  "oom_kill": 0,
+  "gpu": "0, NVIDIA GeForce RTX 3090, 881 MiB, 24576 MiB, 17 %\n1, NVIDIA GeForce RTX 3090, 108 MiB, 24576 MiB, 32 %",
+  "compute_apps": "",
+  "psi_memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=1084864762\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=1083333386",
+  "swap": "NAME            SIZE       USED\n/swap.img 8589930496 8117456896",
+  "port_18051": "",
+  "docker_running": "/bin/sh: 1: Syntax error: Unterminated quoted string",
+  "model_manifest_entries": 11
+}

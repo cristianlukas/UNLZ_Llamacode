@@ -1,0 +1,54 @@
+{
+  "http_status": 200,
+  "elapsed_seconds": 0.2137176229734905,
+  "request": {
+    "model": "qwen36-auto-int4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Respond exactly with smoke-ok and nothing else."
+      }
+    ],
+    "temperature": 0,
+    "max_tokens": 16
+  },
+  "response": {
+    "id": "chatcmpl-af7b7f4d65c3dfb0",
+    "object": "chat.completion",
+    "created": 1792278248,
+    "model": "qwen36-auto-int4",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": null,
+          "refusal": null,
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "reasoning": "Here's a thinking process:\n\n1.  **Analyze User Input:**"
+        },
+        "logprobs": null,
+        "finish_reason": "length",
+        "stop_reason": null,
+        "token_ids": null,
+        "routed_experts": null
+      }
+    ],
+    "service_tier": null,
+    "system_fingerprint": "vllm-0.27.1-tp2-81606524",
+    "usage": {
+      "prompt_tokens": 19,
+      "total_tokens": 35,
+      "completion_tokens": 16,
+      "prompt_tokens_details": null
+    },
+    "prompt_logprobs": null,
+    "prompt_token_ids": null,
+    "prompt_text": null,
+    "kv_transfer_params": null,
+    "ec_transfer_params": null,
+    "metrics": null
+  }
+}

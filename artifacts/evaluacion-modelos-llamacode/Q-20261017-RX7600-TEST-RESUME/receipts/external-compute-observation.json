@@ -1,0 +1,8 @@
+{
+  "during_mtp_on": "3403385, VLLM::Worker_TP0, 20302 MiB\n3408627, wordcraft, 207 MiB\n3403386, VLLM::Worker_TP1, 20302 MiB",
+  "after_stopping_own_container": "3408627, wordcraft, 207 MiB",
+  "remaining_process_observation": "3408627 3408626 cristian Sl         00:32 wordcraft       13.7  0.1",
+  "own_container_logs_bytes": 32868,
+  "stopped_own_container": "lc-qwen36-auto-int4-mtp-on",
+  "captured_utc": "2026-10-17T23:08:52Z"
+}

@@ -1,0 +1,130 @@
+{
+  "task_id": "Q-20261017-RX7600-TEST-RESUME",
+  "captured_utc": "2026-10-17T22:58:32Z",
+  "hardware": {
+    "lspci": {
+      "exit_code": 0,
+      "output": "01:00.0 VGA compatible controller [0300]: NVIDIA Corporation GA102 [GeForce RTX 3090] [10de:2204] (rev a1)\n03:00.0 VGA compatible controller [0300]: NVIDIA Corporation GA102 [GeForce RTX 3090] [10de:2204] (rev a1)\n0e:00.0 VGA compatible controller [0300]: Advanced Micro Devices, Inc. [AMD/ATI] Device [1002:13c0] (rev c9)"
+    },
+    "nvidia": {
+      "exit_code": 0,
+      "output": "0, NVIDIA GeForce RTX 3090, 881 MiB, 24576 MiB, 21 %\n1, NVIDIA GeForce RTX 3090, 108 MiB, 24576 MiB, 30 %"
+    },
+    "compute_apps": {
+      "exit_code": 0,
+      "output": ""
+    },
+    "rocminfo": {
+      "exit_code": 0,
+      "output": ""
+    },
+    "memory": {
+      "exit_code": 0,
+      "output": "total        used        free      shared  buff/cache   available\nMem:     132615835648 11794956288  2387030016    69099520 119730860032 120820879360\nSwap:     8589930496  8117723136   472207360"
+    },
+    "swap": {
+      "exit_code": 0,
+      "output": "NAME            SIZE       USED\n/swap.img 8589930496 8117723136"
+    },
+    "psi_memory": {
+      "exit_code": 0,
+      "output": "some avg10=0.00 avg60=0.00 avg300=0.00 total=1084864761\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=1083333385"
+    }
+  },
+  "active_services": {
+    "docker_ps": {
+      "exit_code": 2,
+      "output": "/bin/sh: 1: Syntax error: Unterminated quoted string"
+    },
+    "ports": {
+      "exit_code": 0,
+      "output": ""
+    },
+    "compute_processes": {
+      "exit_code": 0,
+      "output": ""
+    }
+  },
+  "exact_post_assets": {
+    "rx7600_gfx1102_confirmed": false,
+    "amd_pci_device": "1002:13c0; lspci leaves device unidentified",
+    "rocminfo_architecture": null,
+    "qwen36_35b_a3b_q6_k_xl_mtp_gguf_found": false,
+    "hf_cache_files": [
+      "refs/main"
+    ],
+    "historical_qwen36_gguf_directory_exists": false,
+    "linux_llama_server_on_path": false,
+    "llama_mtp_checkout_binary": "/media/cristian/Disco local/llama-mtp/build/bin/llama-server.exe (Windows PE)"
+  },
+  "supplementary_profile": {
+    "checkpoint_path": "/media/cristian/Disco local/Models/llamacpp/club-3090/qwen3.6-35b-a3b-autoround-int4",
+    "config_architecture": [
+      "Qwen3_5MoeForConditionalGeneration"
+    ],
+    "model_type": "qwen3_5_moe",
+    "mtp_index_keys": 2335,
+    "verified_weight_manifest": [
+      {
+        "sha256": "10e015b07775e1b7d9d9252a3d0afe310766463124a4175e58f947ff2018909e",
+        "bytes": 2148718720,
+        "file": "main"
+      },
+      {
+        "sha256": "62332821c7d8283a874fcae94f7f53b425573ed3474fd60c192cd258848aa3e6",
+        "bytes": 2148731144,
+        "file": "main"
+      },
+      {
+        "sha256": "9508622af83bafc5d1f217610e7d175315adce899994dd0866b33760592c7b73",
+        "bytes": 2148741528,
+        "file": "main"
+      },
+      {
+        "sha256": "3975ed15fe65fddc02d63216b841a58dcdcabd9b68300348040a323a30c80df3",
+        "bytes": 2130375192,
+        "file": "main"
+      },
+      {
+        "sha256": "3e28b7d1eba3f6c75c77a2e744de257ac2e03f0770409d8d31361855d0ab72ba",
+        "bytes": 2148615840,
+        "file": "main"
+      },
+      {
+        "sha256": "c2001461fcb87ae34d784b42788187d0d170241cbedfa6b4dcd3e49ab49989f7",
+        "bytes": 2148742296,
+        "file": "main"
+      },
+      {
+        "sha256": "ad9573d3ff28ae024beaea99df6205968d06a603983e2f237b4e5aae4c7ee987",
+        "bytes": 2148742744,
+        "file": "main"
+      },
+      {
+        "sha256": "af14f49a3c3aeb0ac3f2d94113e4e1cae1a56b1990c56d7b01e98a8b20ef0f8c",
+        "bytes": 2148898456,
+        "file": "main"
+      },
+      {
+        "sha256": "bb10e3577830c30ac8100ba9b34554320b42901bacfadc5290de1a262ba5a5b7",
+        "bytes": 1835921408,
+        "file": "main"
+      },
+      {
+        "sha256": "1e52ecee94186f3a3c51a6fd5b1875966ec61d2b3064a6484a5271a9cb9000af",
+        "bytes": 2034241864,
+        "file": "main"
+      },
+      {
+        "sha256": "bdda6572dfe81e51975e86a71734b052795738466594bc5030f68677b9ea1359",
+        "bytes": 452304208,
+        "file": "main"
+      }
+    ],
+    "vllm_image": "vllm/vllm-openai:v0.27.1",
+    "container_image_local": true,
+    "vllm_version": "0.27.1",
+    "qwen3_next_mtp_supported_by_local_vllm_source": true
+  },
+  "decision": "Exact RX7600/Q6/llama.cpp test cannot run. Same-model local AutoRound INT4 vLLM MTP on/off screening is technically possible; it is a separate profile-level test, not a reproduction."
+}
