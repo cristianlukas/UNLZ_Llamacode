@@ -1109,6 +1109,9 @@ void AutomationTests::launchedWindowIsTheNewOne()
         QStringLiteral("calc"), pickLaunchedWindow(before, after, QStringLiteral("calc")), true, &ok);
     QVERIFY(bg.contains(QStringLiteral("desktop_control_action")));
     QVERIFY(!bg.contains(QStringLiteral("desktop_type")));
+    // Calculadora: sin '=' no hay resultado (el agente informaba "9" con "3 × 3" en pantalla).
+    QVERIFY(text.contains(QStringLiteral("\"3*3=\"")));
+    QVERIFY(bg.contains(QStringLiteral("Es igual a")));
     const QString dlg = DesktopComputerUse::formatLaunchResult(
         QStringLiteral("calculator"), pickLaunchedWindow(before, err, QStringLiteral("calculator")), false, &ok);
     QVERIFY(!ok);

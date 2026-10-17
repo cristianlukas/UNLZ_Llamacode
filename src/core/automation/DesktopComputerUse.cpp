@@ -354,9 +354,19 @@ QString formatLaunchResult(const QString &app, const QVariantMap &window, bool b
         : QStringLiteral("Ya está en primer plano: podés usar desktop_type/desktop_key directo "
                          "(o desktop_controls target_id=%1 para botones). Para leer el "
                          "resultado: desktop_read_text target_id=%1.").arg(id);
+    // La Calculadora no resuelve hasta el '=': el agente tecleaba "3*3", la pantalla
+    // quedaba en "3 ×  3" y el modelo informaba "9" sin que existiera.
+    QString calcHint;
+    const QString launched = launchAlias(app).toLower();
+    if (launched == QLatin1String("calc") || launched == QLatin1String("calc.exe"))
+        calcHint = background
+            ? QStringLiteral(" Calculadora: el resultado aparece recién al accionar el botón "
+                             "\"Es igual a\"; leelo después con desktop_read_text.")
+            : QStringLiteral(" Calculadora: la cuenta se resuelve recién con '=': tipeá la "
+                             "expresión terminada en '=' (ej. \"3*3=\") y leé el resultado.");
     return QStringLiteral("[desktop_launch: ok — la ventana %1: id=%2 \"%3\". Usá ese id como "
-                          "target_id; NO hace falta desktop_windows. %4]")
-        .arg(which, id, title, next);
+                          "target_id; NO hace falta desktop_windows. %4%5]")
+        .arg(which, id, title, next, calcHint);
 }
 
 bool usesUserInput(const QString &tool)

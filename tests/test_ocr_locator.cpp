@@ -45,6 +45,7 @@ private slots:
     void findAll_reportsAmbiguityWhenTextRepeats();
     void find_emptyInputs();
     void opaqueForOcr_fixesZeroAlphaCaptures();
+    void upscaleFactor_doublesOnlyWhenItFits();
     void ocr_readsZeroAlphaWindowCapture();
     void ocr_blankImageDoesNotCrash();
 };
@@ -154,6 +155,18 @@ void OcrLocatorTests::find_emptyInputs()
     QVERIFY(!OcrTextLocator::find(lines, QString()).ok());
     QVERIFY(!OcrTextLocator::find(lines, QStringLiteral("   ")).ok());
     QVERIFY(!OcrTextLocator::find({}, QStringLiteral("Guardar")).ok());
+}
+
+// Windows OCR a 1x no lee la UI a 100% (la Calculadora daba "Oció')"); a 2x sí.
+// Nunca se pasa del máximo del motor (rompería el reconocimiento).
+void OcrLocatorTests::upscaleFactor_doublesOnlyWhenItFits()
+{
+    QCOMPARE(OcrEngine::upscaleFactor(1216, 941, 10000), 2);
+    QCOMPARE(OcrEngine::upscaleFactor(4480, 1440, 10000), 2);
+    QCOMPARE(OcrEngine::upscaleFactor(5001, 1440, 10000), 1);
+    QCOMPARE(OcrEngine::upscaleFactor(1000, 6000, 10000), 1);
+    QCOMPARE(OcrEngine::upscaleFactor(0, 100, 10000), 1);
+    QCOMPARE(OcrEngine::upscaleFactor(100, 100, 0), 1);
 }
 
 // Las capturas de ventana por GDI/PrintWindow traen alfa 0: como ARGB eran

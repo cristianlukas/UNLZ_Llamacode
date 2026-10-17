@@ -4210,9 +4210,17 @@ void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
                     "lo observado con el objetivo del usuario. Si no existe una lectura "
                     "disponible, informá que quedó sin verificar. No repitas una acción "
                     "de escritura sólo para comprobarla.").arg(targets)}});
+            // El texto retenido no queda en ningún lado: sin este recorte, una
+            // generación de 1536 tokens (50 s) antes de la gate era imposible de
+            // diagnosticar después.
             emit logAppended(QStringLiteral(
-                "[verification gate] respuesta final retenida; falta leer el estado actual de %1 (%2/2)\n")
-                                 .arg(targets).arg(m_externalVerificationNudges));
+                "[verification gate] respuesta final retenida; falta leer el estado actual de %1 (%2/2)"
+                " · finish=%3 · %4 chars · \"%5\"\n")
+                                 .arg(targets).arg(m_externalVerificationNudges)
+                                 .arg(m_streamFinishReason.isEmpty() ? QStringLiteral("?")
+                                                                     : m_streamFinishReason)
+                                 .arg(apiContent.size())
+                                 .arg(apiContent.simplified().left(240)));
             runCompletion();
             return;
         }

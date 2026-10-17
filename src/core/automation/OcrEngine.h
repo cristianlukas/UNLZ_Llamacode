@@ -45,4 +45,11 @@ QList<OcrLine> recognize(const QImage &image, QString *error = nullptr);
 // motor (también la usa Linux).
 QImage opaqueForOcr(const QImage &image);
 
+// Cuánto agrandar la captura antes del OCR: 2 si entra en `maxDim`, si no 1.
+// Windows.Media.Ocr a 1x no lee la UI a 100% (texto de ~12 px): sobre la
+// Calculadora devolvía 4 renglones basura ("Oció')"); a 2x lee títulos, menús y
+// botones. Los rects se devuelven divididos por el factor (píxeles de la imagen
+// original), así que los llamadores no cambian. Pura.
+int upscaleFactor(int width, int height, int maxDim);
+
 }   // namespace OcrEngine

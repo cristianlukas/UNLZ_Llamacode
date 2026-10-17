@@ -180,7 +180,11 @@ QList<OcrLine> recognize(const QImage &image, QString *error)
                           .arg(image.width()).arg(image.height()).arg(maxDim);
                 return;
             }
-            const auto result = engine.RecognizeAsync(toSoftwareBitmap(image)).get();
+            const int factor = upscaleFactor(image.width(), image.height(), maxDim);
+            const QImage input = factor > 1
+                ? image.scaled(image.size() * factor, Qt::IgnoreAspectRatio, Qt::SmoothTransformation)
+                : image;
+            const auto result = engine.RecognizeAsync(toSoftwareBitmap(input)).get();
             for (const auto &line : result.Lines()) {
                 OcrLine ol;
                 ol.text = QString::fromStdWString(std::wstring(line.Text()));
@@ -188,7 +192,8 @@ QList<OcrLine> recognize(const QImage &image, QString *error)
                     const auto r = word.BoundingRect();
                     OcrWord ow;
                     ow.text = QString::fromStdWString(std::wstring(word.Text()));
-                    ow.rect = QRect(qRound(r.X), qRound(r.Y), qRound(r.Width), qRound(r.Height));
+                    ow.rect = QRect(qRound(r.X / factor), qRound(r.Y / factor),
+                                    qRound(r.Width / factor), qRound(r.Height / factor));
                     ol.words.append(ow);
                 }
                 if (!ol.words.isEmpty()) out.append(ol);
@@ -315,6 +320,12 @@ QList<OcrLine> recognize(const QImage &image, QString *error)
 #endif
 
 namespace OcrEngine {
+
+int upscaleFactor(int width, int height, int maxDim)
+{
+    if (width <= 0 || height <= 0 || maxDim <= 0) return 1;
+    return (width * 2 <= maxDim && height * 2 <= maxDim) ? 2 : 1;
+}
 
 QImage opaqueForOcr(const QImage &image)
 {
