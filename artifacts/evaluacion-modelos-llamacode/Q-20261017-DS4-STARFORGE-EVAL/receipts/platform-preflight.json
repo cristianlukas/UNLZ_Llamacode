@@ -1,0 +1,33 @@
+{
+  "task_id": "Q-20261017-DS4-STARFORGE-EVAL",
+  "observed_at_utc": "2026-10-17T23:18:00Z",
+  "preregistration": "../PLAN.md",
+  "checks": {
+    "P1_platform_compatibility": {
+      "commands": [
+        "uname -srm",
+        "command -v xcrun",
+        "command -v system_profiler",
+        "nvidia-smi --query-gpu=name,compute_cap,memory.total --format=csv,noheader"
+      ],
+      "uname": "Linux 7.0.0-38-generic x86_64",
+      "xcrun": null,
+      "system_profiler": null,
+      "gpus": [
+        {"name": "NVIDIA GeForce RTX 3090", "compute_capability": "8.6", "memory_mib": 24576},
+        {"name": "NVIDIA GeForce RTX 3090", "compute_capability": "8.6", "memory_mib": 24576}
+      ],
+      "result": "not_applicable_candidate_requires_apple_silicon_macos_metal",
+      "side_effects": "read_only; no model loaded; no build; no inference; no GPU compute workload"
+    },
+    "P2_local_artifact_search": {
+      "commands": [
+        "rg --files --hidden -g '*sf-q3*' -g '*StarForge*' -g '*ds4*' -g '!build/**' -g '!artifacts/**' .",
+        "rg -n --hidden 'sf-q3-8flash|StarForge|DwarfStar' excluding evaluation docs/artifacts/build"
+      ],
+      "matches": [],
+      "result": "candidate_not_installed_or_referenced_in_workspace"
+    }
+  },
+  "deviation": "An equivalent read-only platform probe was performed during initial triage before PLAN.md was saved. It loaded no model and used no GPU compute; P1 was repeated after preregistration for this receipt."
+}
