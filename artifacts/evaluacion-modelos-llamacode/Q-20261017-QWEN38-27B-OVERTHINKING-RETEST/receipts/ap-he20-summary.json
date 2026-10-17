@@ -1,0 +1,108 @@
+{
+  "run_id": "d18bbcb6-332f-4a57-a958-768b58e28964",
+  "profile_id": "sys-eval-qwen38-agention-ap-q3kxl",
+  "stage": "HE20",
+  "harness_spec_hash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+  "profile_config_fingerprint": "3f9cc2a5d8353189c5e6d931799e8ac513412f466d6a22986fab3f6dd746e8b2",
+  "suite_run_dir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261017-QWEN38-27B-OVERTHINKING-RETEST/runtime/xdg-data/LlamaCode/LlamaCode/benchmark-runs/HumanEval_20_tems__20261017_124241",
+  "suite_status": "Completado.",
+  "suite_coverage": {
+    "benchmarkEligible": true,
+    "coverageState": "incomplete",
+    "hasBlockedStage": false,
+    "hasInfrastructureOrTimeout": false,
+    "healthCodes": [],
+    "healthMessages": [],
+    "nextStage": "he20",
+    "pendingStages": [
+      "he20",
+      "bcb"
+    ],
+    "profileConfigFingerprint": "3f9cc2a5d8353189c5e6d931799e8ac513412f466d6a22986fab3f6dd746e8b2",
+    "profileId": "sys-eval-qwen38-agention-ap-q3kxl",
+    "profileName": "[eval] Agention AP Q3_K_XL · reasoning medium · R8192",
+    "retired": false,
+    "stageStates": {
+      "bcb": "pending",
+      "he0": "valid",
+      "he20": "pending"
+    }
+  },
+  "invalid": true,
+  "timed_out": true,
+  "timeout_sec": 900,
+  "total_time_sec": 901.075,
+  "model_generation_sec": 478.11,
+  "non_generation_sec": 422.96500000000003,
+  "time_to_first_attempt_sec": 900.774,
+  "scored_quality_score": 0,
+  "scored_quality_total": 0,
+  "score_disposition": "Invalid/incomplete: do not interpret qualityScore 0/0 as a model score because the run timed out before all 20 tasks.",
+  "acceptance_probes_passed": 5,
+  "acceptance_probes_failed": 15,
+  "accepted_task_ids": [
+    "HumanEval/0",
+    "HumanEval/1",
+    "HumanEval/2",
+    "HumanEval/3",
+    "HumanEval/4"
+  ],
+  "failed_or_missing_task_ids": [
+    "HumanEval/5",
+    "HumanEval/6",
+    "HumanEval/7",
+    "HumanEval/8",
+    "HumanEval/9",
+    "HumanEval/10",
+    "HumanEval/11",
+    "HumanEval/12",
+    "HumanEval/13",
+    "HumanEval/14",
+    "HumanEval/15",
+    "HumanEval/16",
+    "HumanEval/17",
+    "HumanEval/18",
+    "HumanEval/19"
+  ],
+  "solution_files": [
+    "solution_HumanEval_0.py",
+    "solution_HumanEval_1.py",
+    "solution_HumanEval_2.py",
+    "solution_HumanEval_3.py",
+    "solution_HumanEval_4.py"
+  ],
+  "tool_calls": 19,
+  "redundant_tool_calls": 3,
+  "progress_governor": {
+    "progressEvents": 17,
+    "replanEvents": 0,
+    "stagnationEvents": 2
+  },
+  "stream_repetition_events": [
+    {
+      "reason": "stream_repetition",
+      "repeatedChars": 750,
+      "ts": "2026-10-17T15:52:22.991Z"
+    }
+  ],
+  "stagnation_events": [
+    {
+      "reason": "acción equivalente sin evidencia nueva",
+      "tool": "write_file",
+      "semanticKey": "write|solution_humaneval_0.py",
+      "ts": "2026-10-17T15:43:39.285Z"
+    },
+    {
+      "reason": "acción equivalente sin evidencia nueva",
+      "tool": "read_file",
+      "semanticKey": "inspect|solution_humaneval_0.py",
+      "ts": "2026-10-17T15:49:38.004Z"
+    }
+  ],
+  "event_log_sha256": "4e92a0c5be9f0b0f47f8e1f2c0b542bdec51c4f93c25a7dd9f8a162970c6acc4",
+  "event_rows": 109,
+  "files_sha256": {
+    "metadata.json": "61e68dae1b5d56ab8e667a6feeb59d53778cd22ee68b864da08e89461e8b371c",
+    "comparison.json": "a115a96060786388dd0fb80352f684bd81cfe32e06a342fa986e7ce10eb22aca"
+  }
+}

@@ -653,3 +653,34 @@ producto, build ni tests C++/QML. [Resultados](../artifacts/evaluacion-modelos-l
 [revisión CU](../artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-RESUME2/receipts/cu-manual-review.json)
 y [postflight](../artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-RESUME2/receipts/postflight-20261016T2259Z.json)
 y [recibos A/B](../artifacts/evaluacion-modelos-llamacode/Q-20261016-FLASHNEXT-FOLLOWUP/receipts/server-speed/).
+
+## Retest Qwen3.8-27B sobre loops y thinking — 2026-10-17
+
+El screen aislado de ByteShape IQ4_XS completó HE0 1/1 y HE20 20/20 en primer
+intento. HE20 duró 1.530,9 s: 53 tool calls, 52 exitosas, cinco redundantes y
+un estancamiento (`list_dir` repetido en `/`); el throughput medio registrado
+fue 29,74 tok/s. El resultado muestra que el harness cerró esta suite de coding
+sin fallos de aceptación, pero también que una llamada repetida y un
+estancamiento todavía pueden aparecer.
+
+Agention AP-Q3 HE0 pasó 1/1. Su HE20 es inválido/incompleto: un error mío dejó
+el timeout del colector en 900 s frente a los 1.800 s preregistrados; sólo se
+alcanzaron cinco de veinte tareas. El log parcial contiene dos estancamientos,
+tres tool calls redundantes y un evento `stream_repetition`, sin score utilizable.
+No se compara ese parcial con ByteShape. BCB8 no se inició porque no cabía en la
+ventana acumulada de 30 min de ese perfil; TaskFlow ULTRA quedó sin ejecutar al faltar HE20 AP
+válido. Las sondas directas de presupuesto sí completaron 18 requests por
+perfil con HTTP 200: desactivar thinking completó 6/6 en ByteShape; con thinking
+512 y 2048, safety quedó truncado por `max_tokens=512`. En ambos perfiles las
+salidas de 512 y 2048 fueron iguales en los seis casos. Sin promoción ni cambios
+de perfil.
+
+El post comunitario no replica la configuración oficial ni usa el mismo
+fingerprint de cuantización. La tarjeta Qwen recomienda temperature 1.0 para
+thinking y `reasoning_effort=medium` como equilibrio; LlamaCode limita la
+temperatura efectiva de los benchmarks agentivos a 0.1, por lo que el HE no
+valida directamente esa temperatura recomendada. El presupuesto sirve como
+límite de terminación, mientras que el guard de progreso de agente debe detectar
+acciones repetidas; no se elevó la penalización global de repetición. Los
+Unsloth UD-Q3/Q2 del post no están instalados: AP-Q3 y ByteShape no son esos
+quants. [Resultados, plan y recibos](../artifacts/evaluacion-modelos-llamacode/Q-20261017-QWEN38-27B-OVERTHINKING-RETEST/RESULTS.md).

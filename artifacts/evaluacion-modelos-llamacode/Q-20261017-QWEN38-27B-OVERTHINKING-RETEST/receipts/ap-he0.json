@@ -1,0 +1,90 @@
+{
+  "profile_id": "sys-eval-qwen38-agention-ap-q3kxl",
+  "stage": "HE0",
+  "suite_id": "059b6f00-7b4b-48ff-a3a2-2a71f900c1c0",
+  "started_utc": "2026-10-17T15:39:31+00:00",
+  "finished_utc": "2026-10-17T15:39:46+00:00",
+  "elapsed_seconds": 15,
+  "benchmark_status": "Cancelado.",
+  "benchmark_progress": 100,
+  "coverage": {
+    "benchmarkEligible": true,
+    "coverageState": "incomplete",
+    "hasBlockedStage": false,
+    "hasInfrastructureOrTimeout": false,
+    "healthCodes": [],
+    "healthMessages": [],
+    "nextStage": "he0",
+    "pendingStages": [
+      "he0",
+      "he20",
+      "bcb"
+    ],
+    "profileConfigFingerprint": "3f9cc2a5d8353189c5e6d931799e8ac513412f466d6a22986fab3f6dd746e8b2",
+    "profileId": "sys-eval-qwen38-agention-ap-q3kxl",
+    "profileName": "[eval] Agention AP Q3_K_XL · reasoning medium · R8192",
+    "retired": false,
+    "stageStates": {
+      "bcb": "pending",
+      "he0": "pending",
+      "he20": "pending"
+    }
+  },
+  "recent_stage_results": [],
+  "agent_running": true,
+  "server_state": "stopped",
+  "events": [
+    {
+      "time_utc": "2026-10-17T15:39:31+00:00",
+      "event": "preflight",
+      "coverage": {
+        "benchmarkEligible": true,
+        "coverageState": "incomplete",
+        "hasBlockedStage": false,
+        "hasInfrastructureOrTimeout": false,
+        "healthCodes": [],
+        "healthMessages": [],
+        "nextStage": "he0",
+        "pendingStages": [
+          "he0",
+          "he20",
+          "bcb"
+        ],
+        "profileConfigFingerprint": "974eb9c735c33c15ebe906ed680d7331b2c692f40f2fa270166fb8bb28ca25bb",
+        "profileId": "sys-eval-qwen38-agention-ap-q3kxl",
+        "profileName": "[eval] Agention AP Q3_K_XL · reasoning medium · R8192",
+        "retired": false,
+        "stageStates": {
+          "bcb": "pending",
+          "he0": "pending",
+          "he20": "pending"
+        }
+      },
+      "timeout_sec": 1680
+    },
+    {
+      "time_utc": "2026-10-17T15:39:31+00:00",
+      "event": "start",
+      "response": {
+        "ok": true,
+        "reqId": "a9c95c84-a72a-4c4d-a434-0abde75c14fd"
+      },
+      "stage": "HE0",
+      "suite_id": "059b6f00-7b4b-48ff-a3a2-2a71f900c1c0"
+    },
+    {
+      "time_utc": "2026-10-17T15:39:31+00:00",
+      "event": "poll",
+      "running": true,
+      "status": "[1/1] [eval] Agention AP Q3_K_XL · reasoning medium · R8192 — cargando modelo (puede tardar)... 0s",
+      "progress": 0
+    },
+    {
+      "time_utc": "2026-10-17T15:39:46+00:00",
+      "event": "poll",
+      "running": false,
+      "status": "Cancelado.",
+      "progress": 100
+    }
+  ]
+}

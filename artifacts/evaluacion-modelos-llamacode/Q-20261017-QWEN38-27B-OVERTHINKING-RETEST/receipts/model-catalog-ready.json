@@ -1,0 +1,64 @@
+{
+  "captured_utc": "2026-10-17T15:34:53Z",
+  "profiles": [
+    {
+      "id": "sys-eval-qwen38-agention-ap-q3kxl",
+      "name": "[eval] Agention AP Q3_K_XL · reasoning medium · R8192",
+      "ready": true
+    },
+    {
+      "id": "sys-eval-qwen38-byteshape-iq4xs",
+      "name": "[control] ByteShape IQ4_XS · reasoning medium · R8192",
+      "ready": true
+    }
+  ],
+  "roots": null,
+  "coverage": [
+    {
+      "benchmarkEligible": true,
+      "coverageState": "incomplete",
+      "hasBlockedStage": false,
+      "hasInfrastructureOrTimeout": false,
+      "healthCodes": [],
+      "healthMessages": [],
+      "nextStage": "he0",
+      "pendingStages": [
+        "he0",
+        "he20",
+        "bcb"
+      ],
+      "profileConfigFingerprint": "5e237bd7552484eba64fa480e1f6ffb965c1f49dbdd0732f0b0cd5fbd8c1a593",
+      "profileId": "sys-eval-qwen38-agention-ap-q3kxl",
+      "profileName": "[eval] Agention AP Q3_K_XL · reasoning medium · R8192",
+      "retired": false,
+      "stageStates": {
+        "bcb": "pending",
+        "he0": "pending",
+        "he20": "pending"
+      }
+    },
+    {
+      "benchmarkEligible": true,
+      "coverageState": "incomplete",
+      "hasBlockedStage": false,
+      "hasInfrastructureOrTimeout": false,
+      "healthCodes": [],
+      "healthMessages": [],
+      "nextStage": "he0",
+      "pendingStages": [
+        "he0",
+        "he20",
+        "bcb"
+      ],
+      "profileConfigFingerprint": "a2e301ae0140034006837108bf9dfc75d0a59c4d4b97a06331c4980d9911ac96",
+      "profileId": "sys-eval-qwen38-byteshape-iq4xs",
+      "profileName": "[control] ByteShape IQ4_XS · reasoning medium · R8192",
+      "retired": false,
+      "stageStates": {
+        "bcb": "pending",
+        "he0": "pending",
+        "he20": "pending"
+      }
+    }
+  ]
+}

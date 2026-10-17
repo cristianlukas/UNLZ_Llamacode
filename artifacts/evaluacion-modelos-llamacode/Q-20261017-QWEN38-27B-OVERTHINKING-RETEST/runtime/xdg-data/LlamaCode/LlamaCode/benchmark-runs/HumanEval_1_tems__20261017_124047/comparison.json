@@ -1,0 +1,41 @@
+{
+    "benchmarkName": "HumanEval (1 ítems)",
+    "comparisons": [
+    ],
+    "generatedAt": "2026-10-17T12:41:12",
+    "profileCount": 1,
+    "profiles": [
+        {
+            "agentVariant": "baseline",
+            "comparisonTimeMetric": "timeToFirstAttempt",
+            "failedRuns": 0,
+            "fullyAcceptedRuns": 1,
+            "honeyEnabled": false,
+            "medianAddedLines": 16,
+            "medianColdFirstAttemptSec": 24.771,
+            "medianElapsedSec": 25.072,
+            "medianFilesChanged": 1,
+            "medianFirstAttemptSec": 24.771,
+            "medianQualityPct": 100,
+            "medianRemovedLines": 0,
+            "medianRepairAttempts": 0,
+            "medianToolCalls": 1,
+            "medianToolF1Pct": 0,
+            "medianToolRedundantCalls": 0,
+            "medianToolSuccessRatePct": 100,
+            "medianWarmFirstAttemptSec": 0,
+            "outcomeSpread": false,
+            "profileId": "sys-eval-qwen38-agention-ap-q3kxl",
+            "profileName": "[eval] Agention AP Q3_K_XL · reasoning medium · R8192",
+            "qualityRangePctPoints": 0,
+            "runs": 1,
+            "stabilityRatePct": 100,
+            "successRatePct": 100,
+            "successfulRuns": 1
+        }
+    ],
+    "runCount": 1,
+    "runLabel": "HumanEval (1 ítems)",
+    "schemaVersion": 1,
+    "target": "agent"
+}

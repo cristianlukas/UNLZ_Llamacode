@@ -1,0 +1,345 @@
+{
+  "captured_utc": "2026-10-17T15:42:04Z",
+  "task_id": "Q-20261017-QWEN38-27B-OVERTHINKING-RETEST",
+  "profile_id": "sys-eval-qwen38-agention-ap-q3kxl",
+  "stage": "HE0",
+  "run_id": "1eb43900-2fb3-458e-abc9-05cdaf0943da",
+  "harness_spec_hash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+  "profile_config_fingerprint": "3f9cc2a5d8353189c5e6d931799e8ac513412f466d6a22986fab3f6dd746e8b2",
+  "run_dir": "artifacts/evaluacion-modelos-llamacode/Q-20261017-QWEN38-27B-OVERTHINKING-RETEST/runtime/xdg-data/LlamaCode/LlamaCode/benchmark-runs/HumanEval_1_tems__20261017_124047",
+  "run_metadata": {
+    "agentProfileId": "agent-maximo",
+    "agentProfileName": "Máximo",
+    "agentVariant": "baseline",
+    "harnessEngineId": "legacy",
+    "harnessEngineVersion": 1,
+    "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+    "honeyEnabled": false,
+    "label": "HumanEval (1 ítems)",
+    "mode": "custom",
+    "passes": 1,
+    "profiles": [
+      {
+        "profileConfigFingerprint": "3f9cc2a5d8353189c5e6d931799e8ac513412f466d6a22986fab3f6dd746e8b2",
+        "profileId": "sys-eval-qwen38-agention-ap-q3kxl",
+        "profileName": "[eval] Agention AP Q3_K_XL · reasoning medium · R8192"
+      }
+    ],
+    "startedAt": "2026-10-17T12:40:47",
+    "target": "agent",
+    "tasks": [
+      {
+        "acceptance": {
+          "commands": [],
+          "entryPoint": "has_close_elements",
+          "expectSubstrings": [],
+          "expected": "",
+          "files": [],
+          "graderType": "code_tests",
+          "preamble": "from typing import List\n\n\ndef has_close_elements(numbers: List[float], threshold: float) -> bool:\n    \"\"\" Check if in given list of numbers, are any two numbers closer to each other than\n    given threshold.\n    >>> has_close_elements([1.0, 2.0, 3.0], 0.5)\n    False\n    >>> has_close_elements([1.0, 2.8, 3.0, 4.0, 5.0, 2.0], 0.3)\n    True\n    \"\"\"\n",
+          "tests": "\n\nMETADATA = {\n    'author': 'jt',\n    'dataset': 'test'\n}\n\n\ndef check(candidate):\n    assert candidate([1.0, 2.0, 3.9, 4.0, 5.0, 2.2], 0.3) == True\n    assert candidate([1.0, 2.0, 3.9, 4.0, 5.0, 2.2], 0.05) == False\n    assert candidate([1.0, 2.0, 5.9, 4.0, 5.0], 0.95) == True\n    assert candidate([1.0, 2.0, 5.9, 4.0, 5.0], 0.8) == False\n    assert candidate([1.0, 2.0, 3.0, 4.0, 5.0, 2.0], 0.1) == True\n    assert candidate([1.1, 2.2, 3.1, 4.1, 5.1], 1.0) == True\n    assert candidate([1.1, 2.2, 3.1, 4.1, 5.1], 0.5) == False\n\n\n\ncheck(has_close_elements)\n"
+        },
+        "category": "humaneval",
+        "id": "HumanEval/0",
+        "isSpeed": false,
+        "maxTokens": 1200,
+        "prompt": "Completá esta función Python. Devolvé SOLO el código completo de la función, sin explicación.\n\nfrom typing import List\n\n\ndef has_close_elements(numbers: List[float], threshold: float) -> bool:\n    \"\"\" Check if in given list of numbers, are any two numbers closer to each other than\n    given threshold.\n    >>> has_close_elements([1.0, 2.0, 3.0], 0.5)\n    False\n    >>> has_close_elements([1.0, 2.8, 3.0, 4.0, 5.0, 2.0], 0.3)\n    True\n    \"\"\"\n"
+      }
+    ],
+    "timeoutSec": 1600,
+    "timestamp": 1792251647092
+  },
+  "app_result": {
+    "acceptance": [
+      {
+        "passed": true,
+        "taskId": "HumanEval/0",
+        "type": "grader:code_tests"
+      }
+    ],
+    "agentFiles": [
+      "solution_HumanEval_0.py"
+    ],
+    "agentMetrics": [
+      {
+        "elapsedMs": 8083,
+        "tokens": 267,
+        "tps": 33.032102007089904,
+        "ttft_ms": 15859
+      },
+      {
+        "elapsedMs": 805,
+        "tokens": 0,
+        "tps": 0
+      },
+      {
+        "elapsedMs": 0,
+        "tokens": 8,
+        "tps": 0
+      }
+    ],
+    "agentProfileId": "agent-maximo",
+    "agentProfileName": "Máximo",
+    "agentSeed": 4242,
+    "agentTemperature": 0.1,
+    "agentVariant": "baseline",
+    "avgTps": 33.032102007089904,
+    "avgTtftMs": 15859,
+    "baselineId": "1eb43900-2fb3-458e-abc9-05cdaf0943da",
+    "benchmarkMemoryPlanner": "llama.cpp-fit-expert-aware",
+    "benchmarkName": "HumanEval (1 ítems)",
+    "complexityMetrics": {
+      "addedLines": 16,
+      "filesChanged": 1,
+      "filesCreated": 1,
+      "filesDeleted": 0,
+      "removedLines": 0
+    },
+    "elapsedSec": 25.072,
+    "failed": false,
+    "failureKind": "none",
+    "finalScore": 1,
+    "finalTotal": 1,
+    "firstAttemptScore": 1,
+    "firstAttemptTotal": 1,
+    "firstEvaluableSec": 24.753,
+    "firstToolCallSec": 23.948,
+    "firstWriteSec": 23.989,
+    "generationSec": 8.888,
+    "harnessEngineId": "legacy",
+    "harnessEngineVersion": 1,
+    "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+    "honeyEnabled": false,
+    "id": "1eb43900-2fb3-458e-abc9-05cdaf0943da",
+    "isBaseline": true,
+    "measurementPhase": "cold",
+    "mode": "custom",
+    "nonGenerationSec": 16.183999999999997,
+    "pass": 1,
+    "passedAfterRepair": false,
+    "passesTotal": 1,
+    "profileConfigFingerprint": "3f9cc2a5d8353189c5e6d931799e8ac513412f466d6a22986fab3f6dd746e8b2",
+    "profileId": "sys-eval-qwen38-agention-ap-q3kxl",
+    "profileName": "[eval] Agention AP Q3_K_XL · reasoning medium · R8192",
+    "progressGovernor": {
+      "progressEvents": 1,
+      "replanEvents": 0,
+      "stagnationEvents": 0
+    },
+    "qualityScore": 1,
+    "qualityTotal": 1,
+    "ramFreeMb": 0,
+    "ramMb": 0,
+    "ramTotalMb": 0,
+    "repairAttempts": 0,
+    "response": "[turno cancelado por el usuario]",
+    "runDir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261017-QWEN38-27B-OVERTHINKING-RETEST/runtime/xdg-data/LlamaCode/LlamaCode/benchmark-runs/HumanEval_1_tems__20261017_124047",
+    "runLabel": "HumanEval (1 ítems)",
+    "setupSec": 0.301,
+    "target": "agent",
+    "thinkingEnabled": true,
+    "timeToFirstAttempt": 24.771,
+    "timedOut": false,
+    "timeoutSec": 1600,
+    "timestamp": 1792251672205,
+    "toolCallQuality": {
+      "expectedCalls": 0,
+      "f1Pct": -1,
+      "failedCalls": 0,
+      "incompleteCalls": 0,
+      "invalidCalls": 0,
+      "matchedExpectedCalls": 0,
+      "missingExpectedCalls": 0,
+      "precisionPct": -1,
+      "recallPct": -1,
+      "redundantCalls": 0,
+      "sequenceExact": false,
+      "successRatePct": 100,
+      "successfulCalls": 1,
+      "totalCalls": 1,
+      "unexpectedCalls": 0
+    },
+    "toolCalls": 1,
+    "totalTime": 25.072,
+    "transportAfterEvaluation": false,
+    "vramFreeMb": 32325,
+    "vramGpu0FreeMb": 23027,
+    "vramGpu0Mb": 1096,
+    "vramGpu0TotalMb": 24576,
+    "vramGpu0UsedPct": 4.459635416666666,
+    "vramGpu1FreeMb": 9298,
+    "vramGpu1Mb": 14826,
+    "vramGpu1TotalMb": 24576,
+    "vramGpu1UsedPct": 60.3271484375,
+    "vramMb": 15920,
+    "vramNormalizedImbalancePct": 55.867513020833336,
+    "vramObservedGpu0SharePct": 6.883557342042457,
+    "vramOptimalGpu0SharePct": 71.23588553750967,
+    "vramPlacementAssessment": "gpu1-heavy",
+    "vramTelemetryScope": "device-total",
+    "workspace": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261017-QWEN38-27B-OVERTHINKING-RETEST/runtime/xdg-data/LlamaCode/LlamaCode/benchmark-runs/HumanEval_1_tems__20261017_124047/_eval_Agention_AP_Q3_K_XL_reasoning_medium_R8192__ws"
+  },
+  "persisted_result": {
+    "acceptance": [
+      {
+        "passed": true,
+        "taskId": "HumanEval/0",
+        "type": "grader:code_tests"
+      }
+    ],
+    "agentFiles": [
+      "solution_HumanEval_0.py"
+    ],
+    "agentMetrics": [
+      {
+        "elapsedMs": 8083,
+        "tokens": 267,
+        "tps": 33.032102007089904,
+        "ttft_ms": 15859
+      },
+      {
+        "elapsedMs": 805,
+        "tokens": 0,
+        "tps": 0
+      },
+      {
+        "elapsedMs": 0,
+        "tokens": 8,
+        "tps": 0
+      }
+    ],
+    "agentProfileId": "agent-maximo",
+    "agentProfileName": "Máximo",
+    "agentSeed": 4242,
+    "agentTemperature": 0.1,
+    "agentVariant": "baseline",
+    "avgTps": 33.032102007089904,
+    "avgTtftMs": 15859,
+    "baselineId": "1eb43900-2fb3-458e-abc9-05cdaf0943da",
+    "benchmarkMemoryPlanner": "llama.cpp-fit-expert-aware",
+    "benchmarkName": "HumanEval (1 ítems)",
+    "complexityMetrics": {
+      "addedLines": 16,
+      "filesChanged": 1,
+      "filesCreated": 1,
+      "filesDeleted": 0,
+      "removedLines": 0
+    },
+    "elapsedSec": 25.072,
+    "failed": false,
+    "failureKind": "none",
+    "finalScore": 1,
+    "finalTotal": 1,
+    "firstAttemptScore": 1,
+    "firstAttemptTotal": 1,
+    "firstEvaluableSec": 24.753,
+    "firstToolCallSec": 23.948,
+    "firstWriteSec": 23.989,
+    "generationSec": 8.888,
+    "harnessEngineId": "legacy",
+    "harnessEngineVersion": 1,
+    "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+    "honeyEnabled": false,
+    "id": "1eb43900-2fb3-458e-abc9-05cdaf0943da",
+    "isBaseline": true,
+    "measurementPhase": "cold",
+    "mode": "custom",
+    "nonGenerationSec": 16.183999999999997,
+    "pass": 1,
+    "passedAfterRepair": false,
+    "passesTotal": 1,
+    "profileConfigFingerprint": "3f9cc2a5d8353189c5e6d931799e8ac513412f466d6a22986fab3f6dd746e8b2",
+    "profileId": "sys-eval-qwen38-agention-ap-q3kxl",
+    "profileName": "[eval] Agention AP Q3_K_XL · reasoning medium · R8192",
+    "progressGovernor": {
+      "progressEvents": 1,
+      "replanEvents": 0,
+      "stagnationEvents": 0
+    },
+    "qualityScore": 1,
+    "qualityTotal": 1,
+    "ramFreeMb": 0,
+    "ramMb": 0,
+    "ramTotalMb": 0,
+    "repairAttempts": 0,
+    "response": "[turno cancelado por el usuario]",
+    "runDir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261017-QWEN38-27B-OVERTHINKING-RETEST/runtime/xdg-data/LlamaCode/LlamaCode/benchmark-runs/HumanEval_1_tems__20261017_124047",
+    "runLabel": "HumanEval (1 ítems)",
+    "setupSec": 0.301,
+    "target": "agent",
+    "thinkingEnabled": true,
+    "timeToFirstAttempt": 24.771,
+    "timedOut": false,
+    "timeoutSec": 1600,
+    "timestamp": 1792251672205,
+    "toolCallQuality": {
+      "expectedCalls": 0,
+      "f1Pct": -1,
+      "failedCalls": 0,
+      "incompleteCalls": 0,
+      "invalidCalls": 0,
+      "matchedExpectedCalls": 0,
+      "missingExpectedCalls": 0,
+      "precisionPct": -1,
+      "recallPct": -1,
+      "redundantCalls": 0,
+      "sequenceExact": false,
+      "successRatePct": 100,
+      "successfulCalls": 1,
+      "totalCalls": 1,
+      "unexpectedCalls": 0
+    },
+    "toolCalls": 1,
+    "totalTime": 25.072,
+    "transportAfterEvaluation": false,
+    "vramFreeMb": 32325,
+    "vramGpu0FreeMb": 23027,
+    "vramGpu0Mb": 1096,
+    "vramGpu0TotalMb": 24576,
+    "vramGpu0UsedPct": 4.459635416666666,
+    "vramGpu1FreeMb": 9298,
+    "vramGpu1Mb": 14826,
+    "vramGpu1TotalMb": 24576,
+    "vramGpu1UsedPct": 60.3271484375,
+    "vramMb": 15920,
+    "vramNormalizedImbalancePct": 55.867513020833336,
+    "vramObservedGpu0SharePct": 6.883557342042457,
+    "vramOptimalGpu0SharePct": 71.23588553750967,
+    "vramPlacementAssessment": "gpu1-heavy",
+    "vramTelemetryScope": "device-total",
+    "workspace": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261017-QWEN38-27B-OVERTHINKING-RETEST/runtime/xdg-data/LlamaCode/LlamaCode/benchmark-runs/HumanEval_1_tems__20261017_124047/_eval_Agention_AP_Q3_K_XL_reasoning_medium_R8192__ws"
+  },
+  "coverage_after_run": {
+    "benchmarkEligible": true,
+    "coverageState": "incomplete",
+    "hasBlockedStage": false,
+    "hasInfrastructureOrTimeout": false,
+    "healthCodes": [],
+    "healthMessages": [],
+    "nextStage": "he20",
+    "pendingStages": [
+      "he20",
+      "bcb"
+    ],
+    "profileConfigFingerprint": "3f9cc2a5d8353189c5e6d931799e8ac513412f466d6a22986fab3f6dd746e8b2",
+    "profileId": "sys-eval-qwen38-agention-ap-q3kxl",
+    "profileName": "[eval] Agention AP Q3_K_XL · reasoning medium · R8192",
+    "retired": false,
+    "stageStates": {
+      "bcb": "pending",
+      "he0": "valid",
+      "he20": "pending"
+    }
+  },
+  "files_sha256": {
+    "metadata.json": "1c7b81115be0edd22e3415a979a85b3ebf3bbba96024153d507df2a67aa2a8bc",
+    "comparison.json": "38bc8e5523a6f0d96a012eb9bea5994db725d317c631e98e1d1100f42f18f14b",
+    "_eval_Agention_AP_Q3_K_XL_reasoning_medium_R8192_1eb43900-2fb3-458e-abc9-05cdaf0943da.json": "a94ab330592d1e549649890039ee09b725133c8d7508fc225cae6427876c7e3d",
+    "solution_HumanEval_0.py": "fadd9db3f7ac06c933c7997bd013cfa0c342b20239dc81021745cd04c0455b4c"
+  },
+  "interpretation": {
+    "score": "1/1; first attempt passed; zero repairs; one tool call; 25.072 s elapsed",
+    "coverage": "HE0 valid for the preregistered fingerprint; next stage HE20",
+    "response_field": "The result file contains the harness early-acceptance cancellation marker; acceptance passed, failed=false, timedOut=false, and the official gate reports HE0 valid."
+  }
+}

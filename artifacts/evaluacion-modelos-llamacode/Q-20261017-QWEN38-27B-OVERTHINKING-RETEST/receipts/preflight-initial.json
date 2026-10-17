@@ -1,0 +1,37 @@
+{
+  "captured_utc": "2026-10-17T15:28:57Z",
+  "task_id": "Q-20261017-QWEN38-27B-OVERTHINKING-RETEST",
+  "lock_token": "42f888c7-5fad-47fd-add3-5da6e343f019",
+  "memory_kib": {
+    "MemAvailable:": 117428296,
+    "SwapTotal:": 8388604,
+    "SwapFree:": 752148
+  },
+  "memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=1059794128\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=1058332106\n",
+  "swap_pages": {
+    "pswpin": 4180788,
+    "pswpout": 10824305
+  },
+  "commands": {
+    "gpu_query": {
+      "returncode": 0,
+      "stdout": "0, NVIDIA GeForce RTX 3090, 24576 MiB, 826 MiB, 19 %\n1, NVIDIA GeForce RTX 3090, 24576 MiB, 108 MiB, 25 %\n",
+      "stderr": ""
+    },
+    "gpu_processes": {
+      "returncode": 0,
+      "stdout": "Sat Oct 17 12:28:57 2026       \n+-----------------------------------------------------------------------------------------+\n| NVIDIA-SMI 610.57.04              KMD Version: 610.57.04     CUDA UMD Version: 13.3     |\n+-----------------------------------------+------------------------+----------------------+\n| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |\n| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |\n|                                         |                        |               MIG M. |\n|=========================================+========================+======================|\n|   0  NVIDIA GeForce RTX 3090        Off |   00000000:01:00.0  On |                  N/A |\n| 53%   43C    P3             96W /  250W |     826MiB /  24576MiB |     19%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n|   1  NVIDIA GeForce RTX 3090        Off |   00000000:03:00.0  On |                  N/A |\n| 35%   27C    P5             64W /  250W |     108MiB /  24576MiB |     25%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n\n+-----------------------------------------------------------------------------------------+\n| Processes:                                                                              |\n|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |\n|        ID   ID                                                               Usage      |\n|=========================================================================================|\n|    0   N/A  N/A            2516      G   /usr/lib/xorg/Xorg                      528MiB |\n|    0   N/A  N/A           97960      G   /usr/bin/gnome-software                  35MiB |\n|    0   N/A  N/A          491783      G   ...n/.local/compiz-custom/compiz         39MiB |\n|    0   N/A  N/A          857013      G   ...rack-uuid=3190708988185955192        157MiB |\n|    1   N/A  N/A            2516      G   /usr/lib/xorg/Xorg                       81MiB |\n+-----------------------------------------------------------------------------------------+\n",
+      "stderr": ""
+    },
+    "listeners": {
+      "returncode": 0,
+      "stdout": "State  Recv-Q Send-Q Local Address:Port  Peer Address:PortProcess                           \nLISTEN 0      4096       127.0.0.1:631        0.0.0.0:*                                     \nLISTEN 0      4096      127.0.0.54:53         0.0.0.0:*                                     \nLISTEN 0      10         127.0.0.1:6742       0.0.0.0:*    users:((\"OpenRGB\",pid=5841,fd=4))\nLISTEN 0      4096       127.0.0.1:36095      0.0.0.0:*                                     \nLISTEN 0      4096   127.0.0.53%lo:53         0.0.0.0:*                                     \nLISTEN 0      4096           [::1]:631           [::]:*                                     \n",
+      "stderr": ""
+    },
+    "model_processes": {
+      "returncode": 0,
+      "stdout": "2638374 Rs   31.2  0.0  3500       00:00 sha256sum       sha256sum /media/cristian/Disco local/Models/llamacpp/Qwen3.8-27B-AP-GGUF/Qwen3.8-27B-AP-Q3_K_XL.gguf /media/cristian/7CFE1E0FFE1DC1F6/models/Qwen3.8-27B-ByteShape-IQ4_XS/Qwen3.8-27B-IQ4_XS-3.84bpw.gguf /media/cristian/Disco local/LlamaCode-cache/qwen38-next-cuda/bin/llama-server\n",
+      "stderr": ""
+    }
+  }
+}

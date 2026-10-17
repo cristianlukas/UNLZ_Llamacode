@@ -1,0 +1,17 @@
+[
+    {
+        "created": 1792251545797,
+        "depth": 0,
+        "forkMessageIndex": -1,
+        "harnessEngineId": "legacy",
+        "harnessEngineVersion": 1,
+        "harnessProfileId": "agent-maximo",
+        "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+        "id": "d425e650-a8cd-49a4-8897-a344a0c5218d",
+        "parentSessionId": "",
+        "projectDir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261017-QWEN38-27B-OVERTHINKING-RETEST/runtime/xdg-data/LlamaCode/LlamaCode/workspace",
+        "projectId": "",
+        "projectName": "workspace",
+        "title": "Sesión"
+    }
+]

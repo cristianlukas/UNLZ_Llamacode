@@ -1,0 +1,92 @@
+{
+  "captured_utc": "2026-10-17T15:35:40Z",
+  "health": {
+    "ok": true,
+    "reqId": "7edff8e1-4cab-4ecd-9512-4603f4acd4b6"
+  },
+  "profiles": [
+    {
+      "id": "sys-eval-qwen38-agention-ap-q3kxl",
+      "name": "[eval] Agention AP Q3_K_XL · reasoning medium · R8192",
+      "ready": true
+    },
+    {
+      "id": "sys-eval-qwen38-byteshape-iq4xs",
+      "name": "[control] ByteShape IQ4_XS · reasoning medium · R8192",
+      "ready": true
+    }
+  ],
+  "suites": [
+    {
+      "id": "059b6f00-7b4b-48ff-a3a2-2a71f900c1c0",
+      "name": "HumanEval (1 ítems)",
+      "promptCount": 1
+    },
+    {
+      "id": "05c28394-11d0-41fe-a55f-b3cb69db9c15",
+      "name": "BigCodeBench-Hard (8 ítems)",
+      "promptCount": 8
+    },
+    {
+      "id": "267bb33d-4510-417b-ae3c-6dbbfb2cb08d",
+      "name": "HumanEval (20 ítems)",
+      "promptCount": 20
+    },
+    {
+      "id": "qwen38_taskflow_ultra_ast_vs_sol_20261006",
+      "name": "Qwen3.8 ASTRA IQ3_S calibrado vs SOL · TaskFlow ULTRA E2E",
+      "promptCount": 1
+    }
+  ],
+  "coverage": [
+    {
+      "benchmarkEligible": true,
+      "coverageState": "incomplete",
+      "hasBlockedStage": false,
+      "hasInfrastructureOrTimeout": false,
+      "healthCodes": [],
+      "healthMessages": [],
+      "nextStage": "he0",
+      "pendingStages": [
+        "he0",
+        "he20",
+        "bcb"
+      ],
+      "profileConfigFingerprint": "f7ccf3ac57f2a0381a5866a012bbd1c78d2cebfae36420e586a5f169d5fece88",
+      "profileId": "sys-eval-qwen38-agention-ap-q3kxl",
+      "profileName": "[eval] Agention AP Q3_K_XL · reasoning medium · R8192",
+      "retired": false,
+      "stageStates": {
+        "bcb": "pending",
+        "he0": "pending",
+        "he20": "pending"
+      }
+    },
+    {
+      "benchmarkEligible": true,
+      "coverageState": "incomplete",
+      "hasBlockedStage": false,
+      "hasInfrastructureOrTimeout": false,
+      "healthCodes": [],
+      "healthMessages": [],
+      "nextStage": "he0",
+      "pendingStages": [
+        "he0",
+        "he20",
+        "bcb"
+      ],
+      "profileConfigFingerprint": "09cd1e671df6b57c80eacc6867444b7a4aa5ea3ca64a1e942a10b1a1243c69d9",
+      "profileId": "sys-eval-qwen38-byteshape-iq4xs",
+      "profileName": "[control] ByteShape IQ4_XS · reasoning medium · R8192",
+      "retired": false,
+      "stageStates": {
+        "bcb": "pending",
+        "he0": "pending",
+        "he20": "pending"
+      }
+    }
+  ],
+  "server_state": "stopped",
+  "agent_running": false,
+  "benchmark_running": false
+}

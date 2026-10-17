@@ -1,0 +1,13 @@
+{
+    "id": "798e98c6-955b-421b-806a-b6f857365e1e",
+    "messages": [
+    ],
+    "sampling": {
+        "minP": -1,
+        "repeatPenalty": -1,
+        "temperature": -1,
+        "topK": -1,
+        "topP": -1
+    },
+    "title": "Nueva sesión"
+}

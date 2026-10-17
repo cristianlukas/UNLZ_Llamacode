@@ -1,0 +1,41 @@
+{
+    "benchmarkName": "HumanEval (1 ítems)",
+    "comparisons": [
+    ],
+    "generatedAt": "2026-10-17T13:03:56",
+    "profileCount": 1,
+    "profiles": [
+        {
+            "agentVariant": "baseline",
+            "comparisonTimeMetric": "timeToFirstAttempt",
+            "failedRuns": 0,
+            "fullyAcceptedRuns": 1,
+            "honeyEnabled": false,
+            "medianAddedLines": 16,
+            "medianColdFirstAttemptSec": 26.779,
+            "medianElapsedSec": 27.08,
+            "medianFilesChanged": 1,
+            "medianFirstAttemptSec": 26.779,
+            "medianQualityPct": 100,
+            "medianRemovedLines": 0,
+            "medianRepairAttempts": 0,
+            "medianToolCalls": 1,
+            "medianToolF1Pct": 0,
+            "medianToolRedundantCalls": 0,
+            "medianToolSuccessRatePct": 100,
+            "medianWarmFirstAttemptSec": 0,
+            "outcomeSpread": false,
+            "profileId": "sys-eval-qwen38-byteshape-iq4xs",
+            "profileName": "[control] ByteShape IQ4_XS · reasoning medium · R8192",
+            "qualityRangePctPoints": 0,
+            "runs": 1,
+            "stabilityRatePct": 100,
+            "successRatePct": 100,
+            "successfulRuns": 1
+        }
+    ],
+    "runCount": 1,
+    "runLabel": "HumanEval (1 ítems)",
+    "schemaVersion": 1,
+    "target": "agent"
+}

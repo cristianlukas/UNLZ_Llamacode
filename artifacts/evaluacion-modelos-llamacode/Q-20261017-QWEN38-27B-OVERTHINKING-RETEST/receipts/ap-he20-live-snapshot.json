@@ -1,0 +1,69 @@
+{
+  "captured_utc": "2026-10-17T15:54:35+00:00",
+  "profile_id": "sys-eval-qwen38-agention-ap-q3kxl",
+  "profile_config_fingerprint": "3f9cc2a5d8353189c5e6d931799e8ac513412f466d6a22986fab3f6dd746e8b2",
+  "harness_spec_hash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+  "run_dir": "artifacts/evaluacion-modelos-llamacode/Q-20261017-QWEN38-27B-OVERTHINKING-RETEST/runtime/xdg-data/LlamaCode/LlamaCode/benchmark-runs/HumanEval_20_tems__20261017_124241",
+  "benchmark_status": "[1/1] [eval] Agention AP Q3_K_XL · reasoning medium · R8192 — agente: prompt 3/20...",
+  "benchmark_progress": 0,
+  "event_log_sha256": "f7e443bf46671a0f6e349effebbd79c4aaa3cfbc1dc188740ab44b83a05eed3f",
+  "event_rows": 75,
+  "events_by_kind": {
+    "benchmark_prompt": 3,
+    "work_claim": 5,
+    "observation": 11,
+    "tool_call": 15,
+    "tool_result": 15,
+    "progress": 13,
+    "benchmark_acceptance_probe": 8,
+    "stagnation": 2,
+    "failure": 1,
+    "assistant_final": 2
+  },
+  "tool_calls_by_name": {
+    "write_file": 4,
+    "run_shell": 6,
+    "read_file": 4,
+    "edit_file": 1
+  },
+  "stagnation_events": 2,
+  "failure_events": 1,
+  "files_so_far": [
+    "solution_HumanEval_0.py",
+    "solution_HumanEval_1.py",
+    "solution_HumanEval_2.py",
+    ".llamacode/active_work.json",
+    ".llamacode/agent_events.jsonl",
+    ".llamacode/graph.jsonl",
+    ".llamacode/graph.state",
+    ".llamacode/memory_maintenance.json",
+    "__pycache__/solution_HumanEval_0.cpython-312.pyc",
+    "__pycache__/solution_HumanEval_1.cpython-312.pyc",
+    "__pycache__/solution_HumanEval_2.cpython-312.pyc"
+  ],
+  "coverage": {
+    "benchmarkEligible": true,
+    "coverageState": "incomplete",
+    "hasBlockedStage": false,
+    "hasInfrastructureOrTimeout": false,
+    "healthCodes": [],
+    "healthMessages": [],
+    "nextStage": "he20",
+    "pendingStages": [
+      "he20",
+      "bcb"
+    ],
+    "profileConfigFingerprint": "3f9cc2a5d8353189c5e6d931799e8ac513412f466d6a22986fab3f6dd746e8b2",
+    "profileId": "sys-eval-qwen38-agention-ap-q3kxl",
+    "profileName": "[eval] Agention AP Q3_K_XL · reasoning medium · R8192",
+    "retired": false,
+    "stageStates": {
+      "bcb": "pending",
+      "he0": "valid",
+      "he20": "pending"
+    }
+  },
+  "memory": "               total        used        free      shared  buff/cache   available\nMem:     132615835648 21514846208  2000375808   107122688 110434779136 111100989440\nSwap:     8589930496  7920189440   669741056\n",
+  "memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=1060345563\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=1058882624\n",
+  "gpu": "0, 1093 MiB, 22 %\n1, 14832 MiB, 99 %\n"
+}

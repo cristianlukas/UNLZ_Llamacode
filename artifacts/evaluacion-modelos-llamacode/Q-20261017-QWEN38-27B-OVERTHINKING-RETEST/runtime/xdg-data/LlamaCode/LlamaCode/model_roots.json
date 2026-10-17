@@ -1,0 +1,30 @@
+[
+  {
+    "id": "qwen38-ap-local-screen",
+    "kind": "dir",
+    "label": "Qwen3.8 AP screen",
+    "path": "/media/cristian/Disco local/Models/llamacpp/Qwen3.8-27B-AP-GGUF",
+    "priority": 0,
+    "scanMode": "recursive",
+    "enabled": true,
+    "tags": [
+      "Qwen3.8",
+      "AP-Q3",
+      "screen"
+    ]
+  },
+  {
+    "id": "qwen38-byteshape-local-screen",
+    "kind": "dir",
+    "label": "Qwen3.8 ByteShape control",
+    "path": "/media/cristian/7CFE1E0FFE1DC1F6/models/Qwen3.8-27B-ByteShape-IQ4_XS",
+    "priority": 1,
+    "scanMode": "recursive",
+    "enabled": true,
+    "tags": [
+      "Qwen3.8",
+      "ByteShape",
+      "control"
+    ]
+  }
+]

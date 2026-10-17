@@ -1,0 +1,128 @@
+{
+  "task_id": "Q-20261017-QWEN38-27B-OVERTHINKING-RETEST",
+  "lock_token": "42f888c7-5fad-47fd-add3-5da6e343f019",
+  "captured_utc": "2026-10-17T15:40:14Z",
+  "profiles": {
+    "ap_q3": {
+      "id": "sys-eval-qwen38-agention-ap-q3kxl",
+      "model_path": "/media/cristian/Disco local/Models/llamacpp/Qwen3.8-27B-AP-GGUF/Qwen3.8-27B-AP-Q3_K_XL.gguf",
+      "bytes": 13146392480,
+      "sha256": "b5b35d550712f01fcaa0a982f281b7bcf47f6309c541450ca0e064c945c1c8fc",
+      "sampler": "T=.6 top_p=.95 top_k=20 min_p=0 repeat=1 presence=0",
+      "reasoning": "on + medium",
+      "ctx": 32768,
+      "kv": "q8_0",
+      "predict": 8192,
+      "MTP": false,
+      "device": "CUDA1"
+    },
+    "byteshape_control": {
+      "id": "sys-eval-qwen38-byteshape-iq4xs",
+      "model_path": "/media/cristian/7CFE1E0FFE1DC1F6/models/Qwen3.8-27B-ByteShape-IQ4_XS/Qwen3.8-27B-IQ4_XS-3.84bpw.gguf",
+      "bytes": 13083052416,
+      "sha256": "89434f23dc89c5f990894e3fe9fdad19d88c370f0d3638a176f29933f218b78b",
+      "sampler": "T=.6 top_p=.95 top_k=20 min_p=0 repeat=1 presence=0",
+      "reasoning": "on + medium",
+      "ctx": 32768,
+      "kv": "q8_0",
+      "predict": 8192,
+      "MTP": false,
+      "device": "CUDA1"
+    }
+  },
+  "runtime": {
+    "path": "/media/cristian/Disco local/LlamaCode-cache/llama.cpp-spark-native-20261003/build-cuda/bin/llama-server",
+    "sha256": "ab7828696af2694981037b7114d834d310c1c5f24b39ab24267898748334cbb4",
+    "versionHint": "0.5.0-dev (build 1, commit 836d571)",
+    "device": "CUDA1"
+  },
+  "application": {
+    "path": "/media/cristian/Disco local/LlamaCode-cache/build_linux/LlamaCode",
+    "sha256": "38d2b916c7c2b08061a2a59eb9b0b120247b19768aed454f4a6992e53ed48959",
+    "source_commit": "ba8c3e06fc517968461df46c34a250f7c150419c"
+  },
+  "template_sha256": "03c3e852d2c349ce306ed9ecd870c83487bf123918843387b179ead1fcce93af",
+  "system_profiles_source_sha256": "fdf41e0578e39d3289a2bc05d0f3571a7100e280edb057250580f02a7e0b9758",
+  "system_profiles_isolated_override_sha256": "09dc2ae2ca397339fabf77780ad8e672b63460f169ea64d635c464d39b22baa3",
+  "harness": {
+    "agent_profile": "agent-maximo",
+    "harness_spec_sha256": "cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef"
+  },
+  "suite_hashes": {
+    "059b6f00-7b4b-48ff-a3a2-2a71f900c1c0.json": "7883f319c341fa82eb40fa4d1b665bbbf8c4b67b980fc93a28ad25d7eae64330",
+    "05c28394-11d0-41fe-a55f-b3cb69db9c15.json": "42771136b447b7b5619e04a1ea211f663222cd6752ca38d995083b5a4d207574",
+    "267bb33d-4510-417b-ae3c-6dbbfb2cb08d.json": "ed91a742cc8dca01bfe893933de5ed66fc4e4c2b529e53943a2bf1d939ffc3d7",
+    "qwen38_taskflow_ultra_ast_vs_sol_20261006.json": "f04febb440208d5bf74c01e84d78f5127e57c164fabece2acbfb346215dc0c17",
+    "reasoning_budget_v2.json": "41611059385e0492d9504cd1094d54a96fa76c981c36f7e57b489179b314d7a1"
+  },
+  "protocol": {
+    "official_ladder": "HE0 -> HE20 -> BCB8, one pass/profile; BCB gate requires valid HE20",
+    "taskflow": "qwen38_taskflow_ultra_ast_vs_sol_20261006, one pass/profile, max 3 repairs",
+    "reasoning_budget": "reasoning_budget_v2.json; per-request reasoning_budget_tokens=[0,512,2048], chat_template_kwargs.enable_thinking=(budget>0), one pass, max_tokens=512, seed=4242",
+    "profile_order": [
+      "AP-Q3",
+      "ByteShape-IQ4_XS"
+    ],
+    "max_elapsed_seconds_per_profile": 1800,
+    "promotion": false
+  },
+  "profile_config_fingerprints": {
+    "sys-eval-qwen38-agention-ap-q3kxl": "3f9cc2a5d8353189c5e6d931799e8ac513412f466d6a22986fab3f6dd746e8b2",
+    "sys-eval-qwen38-byteshape-iq4xs": "ced2af413d6b43d2929db712034435cee2d6dd0e9bd01a4b0d49b809a181f0cb"
+  },
+  "preregistration_revision": "before first prompt: use final fingerprints after harness selection and thinking enabled; initial start cancelled during model loading with 0 scored outputs",
+  "pre_inference_adjustment": {
+    "time_utc": "2026-10-17T15:40:14Z",
+    "reason": "The app computes its effective profile fingerprint after selecting agent-maximo and enabling agent thinking. Initial preflight fingerprints used the empty benchmark-agent selection and were not the evaluated configuration.",
+    "cancelled_attempt": {
+      "stage": "HE0",
+      "status": "Cancelado.",
+      "elapsed_seconds": 15,
+      "outputs": 0,
+      "coverage": "all stages pending",
+      "server_restarted": false
+    },
+    "final_fingerprints": {
+      "sys-eval-qwen38-agention-ap-q3kxl": "3f9cc2a5d8353189c5e6d931799e8ac513412f466d6a22986fab3f6dd746e8b2",
+      "sys-eval-qwen38-byteshape-iq4xs": "ced2af413d6b43d2929db712034435cee2d6dd0e9bd01a4b0d49b809a181f0cb"
+    }
+  },
+  "effective_agent_benchmark_sampling": {
+    "profile_server_temperature_ceiling": 0.6,
+    "harness_agent_temperature": 0.1,
+    "formula": "min(profile --temp, 0.1)",
+    "seed": 4242,
+    "evidence": "src/AppController.cpp runAgentBenchmark; HE0 result agentTemperature=0.1",
+    "applies_equally_to": "AP-Q3 and ByteShape IQ4_XS"
+  },
+  "post_he0_note": "This is a harness-fixed, conservative sampling override discovered in source/result and recorded before HE20. The server profile remains --temp 0.6; benchmark API requests use T=0.1 for both arms.",
+  "reasoning_budget_wire": {
+    "verified_before_probe_utc": "2026-10-17T16:00:07Z",
+    "request_fields": {
+      "reasoning_budget_tokens": "per-request token cap parsed by runtime",
+      "chat_template_kwargs.enable_thinking": "Qwen template thinking toggle",
+      "chat_template_kwargs.reasoning_effort": "medium"
+    },
+    "runtime_source": {
+      "file": "tools/server/server-common.cpp",
+      "lines": "1414-1424",
+      "server_version": "0.5.0-dev build 1 commit 836d571"
+    },
+    "sampler": {
+      "temperature": 0.6,
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repeat_penalty": 1.0,
+      "presence_penalty": 0.0,
+      "seed": 4242,
+      "max_tokens": 512
+    }
+  },
+  "he20_timeout_deviation": {
+    "observed_utc": "2026-10-17T15:58:08Z",
+    "configured_timeout_seconds": 900,
+    "reason": "The first stage collector passed its 15-minute stage cap as the app hard timeout; the planned per-screen ceiling was 1800 seconds.",
+    "result": "invalid/incomplete; only 5/20 tasks reached; no quality score; do not start BCB; rerun would exceed the remaining accumulated 30-minute screen budget."
+  }
+}

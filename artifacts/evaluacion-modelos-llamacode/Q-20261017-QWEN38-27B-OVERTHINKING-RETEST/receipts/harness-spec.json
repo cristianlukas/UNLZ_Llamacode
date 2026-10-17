@@ -1,0 +1,199 @@
+{
+  "captured_utc": "2026-10-17T15:37:33Z",
+  "profile_id": "agent-maximo",
+  "harness_spec_hash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+  "summary_api": {
+    "approxTokens": 6895,
+    "extends": "",
+    "phases": [],
+    "promptChars": 0,
+    "skillCount": 7,
+    "skillPolicyDeclared": false,
+    "skills": [
+      {
+        "author": "UNLZ",
+        "description": "Resuelve tareas complejas de código con alcance, plan, implementación, pruebas, revisión independiente y reparaciones acotadas.",
+        "name": "autoprompt-coding",
+        "ok": true,
+        "path": ":/assets/skills/autoprompt-coding/SKILL.md",
+        "scope": "bundled",
+        "version": "1.0.0"
+      },
+      {
+        "author": "UNLZ LlamaCode",
+        "description": "Verifica que referencias, DOI y citas respalden exactamente las afirmaciones asociadas.",
+        "name": "citation-verification",
+        "ok": true,
+        "path": ":/assets/skills/citation-verification/SKILL.md",
+        "scope": "bundled",
+        "version": "1.0.0"
+      },
+      {
+        "author": "UNLZ LlamaCode",
+        "description": "Evalúa críticamente un paper, su método, validez, resultados y aplicabilidad sin confundir asociación con causalidad.",
+        "name": "critical-paper-reading",
+        "ok": true,
+        "path": ":/assets/skills/critical-paper-reading/SKILL.md",
+        "scope": "bundled",
+        "version": "1.0.0"
+      },
+      {
+        "author": "UNLZ LlamaCode",
+        "description": "Diseña experimentos reproducibles con hipótesis, variables, controles, potencia, protocolo y plan de análisis previo.",
+        "name": "experimental-design",
+        "ok": true,
+        "path": ":/assets/skills/experimental-design/SKILL.md",
+        "scope": "bundled",
+        "version": "1.0.0"
+      },
+      {
+        "author": "UNLZ LlamaCode",
+        "description": "Planifica una revisión bibliográfica reproducible y construye una matriz de evidencia trazable.",
+        "name": "literature-review",
+        "ok": true,
+        "path": ":/assets/skills/literature-review/SKILL.md",
+        "scope": "bundled",
+        "version": "1.0.0"
+      },
+      {
+        "author": "UNLZ LlamaCode",
+        "description": "Produce una revisión por pares constructiva, priorizada y sustentada en evidencia del manuscrito.",
+        "name": "peer-review",
+        "ok": true,
+        "path": ":/assets/skills/peer-review/SKILL.md",
+        "scope": "bundled",
+        "version": "1.0.0"
+      },
+      {
+        "author": "UNLZ LlamaCode",
+        "description": "Analiza datasets con trazabilidad, controles de calidad y artefactos reproducibles sin modificar los datos fuente.",
+        "name": "reproducible-data-analysis",
+        "ok": true,
+        "path": ":/assets/skills/reproducible-data-analysis/SKILL.md",
+        "scope": "bundled",
+        "version": "1.0.0"
+      }
+    ],
+    "toolCount": 63,
+    "tools": [
+      "read_file",
+      "list_dir",
+      "project_brain",
+      "context_status",
+      "work_status",
+      "glob",
+      "grep",
+      "code_hotspots",
+      "review_overengineering",
+      "search_docs",
+      "semantic_search",
+      "hybrid_search",
+      "repo_slice",
+      "context_scout",
+      "context_fetch",
+      "verify_claims",
+      "web_search",
+      "web_fetch",
+      "deep_research",
+      "write_file",
+      "edit_file",
+      "run_shell",
+      "memory",
+      "context_checkpoint",
+      "graph",
+      "ask_teacher",
+      "task",
+      "skill_list",
+      "skill_load",
+      "browser_skill_list",
+      "browser_skill_replay",
+      "browser_network_discover",
+      "recent_actions",
+      "desktop_snapshot",
+      "desktop_windows",
+      "desktop_controls",
+      "desktop_click_element",
+      "desktop_control_action",
+      "desktop_find_image",
+      "desktop_click_image",
+      "desktop_wait_image",
+      "desktop_assert_image",
+      "desktop_observe",
+      "desktop_click",
+      "desktop_stroke",
+      "desktop_type",
+      "desktop_key",
+      "desktop_scroll",
+      "desktop_read_text",
+      "desktop_hover",
+      "desktop_clipboard",
+      "desktop_click_text",
+      "desktop_focus",
+      "desktop_resize",
+      "desktop_wait",
+      "desktop_wait_for",
+      "desktop_assert",
+      "desktop_launch",
+      "email_accounts",
+      "email_send",
+      "email_list",
+      "email_read",
+      "worker_call"
+    ],
+    "warnings": [
+      "semantic_search/hybrid_search: no hay server activo que exponga /v1/embeddings. Arrancá el server del perfil, o usá grep/search_docs en su lugar.",
+      "email_*: no hay cuentas de correo configuradas. Agregá una en Ajustes → Integraciones, o sacá el pack mail del perfil.",
+      "browser_*: la automatizacion de browser esta apagada. Activala en Ajustes (o por perfil, browserAutomation), o sacá el pack.",
+      "MCP: no hay servers configurados/habilitados, así que no se inyecta ninguna tool MCP. Configurá uno en Ajustes → MCP, o apagá mcpTools para ahorrar el chequeo."
+    ]
+  },
+  "benchmark_coverage": [
+    {
+      "benchmarkEligible": true,
+      "coverageState": "incomplete",
+      "hasBlockedStage": false,
+      "hasInfrastructureOrTimeout": false,
+      "healthCodes": [],
+      "healthMessages": [],
+      "nextStage": "he0",
+      "pendingStages": [
+        "he0",
+        "he20",
+        "bcb"
+      ],
+      "profileConfigFingerprint": "f7ccf3ac57f2a0381a5866a012bbd1c78d2cebfae36420e586a5f169d5fece88",
+      "profileId": "sys-eval-qwen38-agention-ap-q3kxl",
+      "profileName": "[eval] Agention AP Q3_K_XL · reasoning medium · R8192",
+      "retired": false,
+      "stageStates": {
+        "bcb": "pending",
+        "he0": "pending",
+        "he20": "pending"
+      }
+    },
+    {
+      "benchmarkEligible": true,
+      "coverageState": "incomplete",
+      "hasBlockedStage": false,
+      "hasInfrastructureOrTimeout": false,
+      "healthCodes": [],
+      "healthMessages": [],
+      "nextStage": "he0",
+      "pendingStages": [
+        "he0",
+        "he20",
+        "bcb"
+      ],
+      "profileConfigFingerprint": "09cd1e671df6b57c80eacc6867444b7a4aa5ea3ca64a1e942a10b1a1243c69d9",
+      "profileId": "sys-eval-qwen38-byteshape-iq4xs",
+      "profileName": "[control] ByteShape IQ4_XS · reasoning medium · R8192",
+      "retired": false,
+      "stageStates": {
+        "bcb": "pending",
+        "he0": "pending",
+        "he20": "pending"
+      }
+    }
+  ],
+  "note": "Hash reconciled with current app commit and neighboring MTP screen receipts before first inference."
+}

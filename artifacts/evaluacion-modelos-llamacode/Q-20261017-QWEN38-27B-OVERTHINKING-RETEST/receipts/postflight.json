@@ -1,0 +1,31 @@
+{
+  "captured_utc": "2026-10-17T16:34:50+00:00",
+  "task_id": "Q-20261017-QWEN38-27B-OVERTHINKING-RETEST",
+  "api_state_before_daemon_shutdown": {
+    "agent_running": false,
+    "server_state": "stopped",
+    "benchmark_running": false
+  },
+  "task_daemon_pid": 2649688,
+  "task_daemon_running_after_shutdown": false,
+  "model_server_processes": {
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "task_ports_8021_18219": {
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "gpu": {
+    "exit_code": 0,
+    "stdout": "0, 21 %, 845 MiB, 24576 MiB\n1, 31 %, 108 MiB, 24576 MiB",
+    "stderr": ""
+  },
+  "memory": {
+    "MemAvailable": "117476352 kB",
+    "SwapTotal": "8388604 kB",
+    "SwapFree": "581188 kB"
+  }
+}

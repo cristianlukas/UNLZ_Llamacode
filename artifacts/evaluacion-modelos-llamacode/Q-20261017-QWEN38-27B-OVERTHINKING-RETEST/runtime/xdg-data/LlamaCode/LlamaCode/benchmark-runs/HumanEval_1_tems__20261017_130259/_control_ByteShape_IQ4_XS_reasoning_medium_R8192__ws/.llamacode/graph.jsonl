@@ -1,0 +1,5 @@
+{"etype":"file","id":"e_ee942657","kind":"entity","name":"solution_HumanEval_0.py","ts":"2026-10-17T13:03:55"}
+{"etype":"concept","id":"e_0a766d3f","kind":"entity","name":"has_close_elements","ts":"2026-10-17T13:03:55"}
+{"conf":1,"etype":"DEFINES","id":"r_a04fb761","kind":"relation","obj":"e_0a766d3f","pred":"defines","prov":"indexer","sources":[{"endLine":4,"kind":"code","path":"solution_HumanEval_0.py","sha256":"fadd9db3f7ac06c933c7997bd013cfa0c342b20239dc81021745cd04c0455b4c","startLine":4}],"subj":"e_ee942657","ts":"2026-10-17T13:03:55"}
+{"etype":"module","id":"e_2207e9ba","kind":"entity","name":"module:project","ts":"2026-10-17T13:03:55"}
+{"conf":null,"etype":"RELATES_TO","id":"r_d91564b5","kind":"relation","obj":"e_ee942657","pred":"touches","prov":"tool","sources":[{"correlationId":"078149ab-7d87-4491-8c52-1f5936bb7f0c","kind":"session","path":"solution_HumanEval_0.py","sessionId":"5c90fc42-d4d8-4c44-b40d-8e52308f9b0d","sha256":"fadd9db3f7ac06c933c7997bd013cfa0c342b20239dc81021745cd04c0455b4c"}],"subj":"e_2207e9ba","ts":"2026-10-17T13:03:55"}

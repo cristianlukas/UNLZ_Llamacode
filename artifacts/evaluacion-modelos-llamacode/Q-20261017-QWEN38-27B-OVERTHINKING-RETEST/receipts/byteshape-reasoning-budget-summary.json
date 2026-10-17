@@ -1,0 +1,103 @@
+{
+  "suite_id": "reasoning_budget_v2",
+  "sampler": {
+    "temperature": 0.6,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0,
+    "repeat_penalty": 1.0,
+    "presence_penalty": 0.0,
+    "seed": 4242,
+    "max_tokens": 512
+  },
+  "profiles": {
+    "sys-eval-qwen38-agention-ap-q3kxl": {
+      "expected_requests": 18,
+      "completed_requests": 18,
+      "elapsed_seconds": 112.241,
+      "deadline_reached": false,
+      "transport_valid": 18,
+      "0": {
+        "requests": 6,
+        "complete": 5,
+        "accepted_complete": 5,
+        "incomplete_task_ids": [
+          "safety"
+        ],
+        "completion_tokens": 756,
+        "reasoning_content_chars": 0
+      },
+      "512": {
+        "requests": 6,
+        "complete": 5,
+        "accepted_complete": 5,
+        "incomplete_task_ids": [
+          "safety"
+        ],
+        "completion_tokens": 1698,
+        "reasoning_content_chars": 3972
+      },
+      "2048": {
+        "requests": 6,
+        "complete": 5,
+        "accepted_complete": 5,
+        "incomplete_task_ids": [
+          "safety"
+        ],
+        "completion_tokens": 1698,
+        "reasoning_content_chars": 3972
+      },
+      "same_final_content_512_vs_2048": {
+        "arithmetic": true,
+        "logic": true,
+        "constraint": true,
+        "code": true,
+        "verification": true,
+        "safety": true
+      }
+    },
+    "sys-eval-qwen38-byteshape-iq4xs": {
+      "expected_requests": 18,
+      "completed_requests": 18,
+      "elapsed_seconds": 110.581,
+      "deadline_reached": false,
+      "transport_valid": 18,
+      "0": {
+        "requests": 6,
+        "complete": 6,
+        "accepted_complete": 6,
+        "incomplete_task_ids": [],
+        "completion_tokens": 667,
+        "reasoning_content_chars": 0
+      },
+      "512": {
+        "requests": 6,
+        "complete": 5,
+        "accepted_complete": 5,
+        "incomplete_task_ids": [
+          "safety"
+        ],
+        "completion_tokens": 1614,
+        "reasoning_content_chars": 4489
+      },
+      "2048": {
+        "requests": 6,
+        "complete": 5,
+        "accepted_complete": 5,
+        "incomplete_task_ids": [
+          "safety"
+        ],
+        "completion_tokens": 1614,
+        "reasoning_content_chars": 4492
+      },
+      "same_final_content_512_vs_2048": {
+        "arithmetic": true,
+        "logic": true,
+        "constraint": true,
+        "code": true,
+        "verification": true,
+        "safety": true
+      }
+    }
+  }
+}

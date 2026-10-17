@@ -1,0 +1,753 @@
+{
+    "acceptance": [
+        {
+            "passed": true,
+            "taskId": "HumanEval/0",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/1",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/2",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/3",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/4",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/5",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/6",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/7",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/8",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/9",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/10",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/11",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/12",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/13",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/14",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/15",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/16",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/17",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/18",
+            "type": "grader:code_tests"
+        },
+        {
+            "passed": true,
+            "taskId": "HumanEval/19",
+            "type": "grader:code_tests"
+        }
+    ],
+    "agentFiles": [
+        "solution_HumanEval_0.py",
+        "solution_HumanEval_1.py",
+        "solution_HumanEval_10.py",
+        "solution_HumanEval_11.py",
+        "solution_HumanEval_12.py",
+        "solution_HumanEval_13.py",
+        "solution_HumanEval_14.py",
+        "solution_HumanEval_15.py",
+        "solution_HumanEval_16.py",
+        "solution_HumanEval_17.py",
+        "solution_HumanEval_18.py",
+        "solution_HumanEval_19.py",
+        "solution_HumanEval_2.py",
+        "solution_HumanEval_3.py",
+        "solution_HumanEval_4.py",
+        "solution_HumanEval_5.py",
+        "solution_HumanEval_6.py",
+        "solution_HumanEval_7.py",
+        "solution_HumanEval_8.py",
+        "solution_HumanEval_9.py",
+        "__pycache__/solution_HumanEval_0.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_1.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_10.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_11.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_12.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_13.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_14.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_15.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_16.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_17.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_18.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_2.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_3.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_4.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_5.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_6.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_7.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_8.cpython-312.pyc",
+        "__pycache__/solution_HumanEval_9.cpython-312.pyc"
+    ],
+    "agentMetrics": [
+        {
+            "elapsedMs": 25439,
+            "tokens": 792,
+            "tps": 31.13443258322151,
+            "ttft_ms": 16057
+        },
+        {
+            "elapsedMs": 9989,
+            "tokens": 304,
+            "tps": 30.440818092980876,
+            "ttft_ms": 19422
+        },
+        {
+            "elapsedMs": 6693,
+            "tokens": 204,
+            "tps": 30.483495129962797,
+            "ttft_ms": 16754
+        },
+        {
+            "elapsedMs": 1573,
+            "tokens": 48,
+            "tps": 30.527554297707255,
+            "ttft_ms": 32561
+        },
+        {
+            "elapsedMs": 7955,
+            "tokens": 240,
+            "tps": 30.171274784130812,
+            "ttft_ms": 496
+        },
+        {
+            "elapsedMs": 2462,
+            "tokens": 75,
+            "tps": 30.473831511404526,
+            "ttft_ms": 448
+        },
+        {
+            "elapsedMs": 9037,
+            "tokens": 274,
+            "tps": 30.322658540194176,
+            "ttft_ms": 3411
+        },
+        {
+            "elapsedMs": 5059,
+            "tokens": 150,
+            "tps": 29.65833010551841,
+            "ttft_ms": 2494
+        },
+        {
+            "elapsedMs": 2422,
+            "tokens": 73,
+            "tps": 30.147437488462412,
+            "ttft_ms": 76975
+        },
+        {
+            "elapsedMs": 5182,
+            "tokens": 155,
+            "tps": 29.917506817813774,
+            "ttft_ms": 311
+        },
+        {
+            "elapsedMs": 4953,
+            "tokens": 149,
+            "tps": 30.08504375556649,
+            "ttft_ms": 3381
+        },
+        {
+            "elapsedMs": 4640,
+            "tokens": 137,
+            "tps": 29.53032343895058,
+            "ttft_ms": 2749
+        },
+        {
+            "elapsedMs": 4410,
+            "tokens": 132,
+            "tps": 29.93547544338521,
+            "ttft_ms": 31390
+        },
+        {
+            "elapsedMs": 7219,
+            "tokens": 216,
+            "tps": 29.923259307899947,
+            "ttft_ms": 3384
+        },
+        {
+            "elapsedMs": 5050,
+            "tokens": 148,
+            "tps": 29.30913032879101,
+            "ttft_ms": 3339
+        },
+        {
+            "elapsedMs": 4385,
+            "tokens": 131,
+            "tps": 29.88027589302679,
+            "ttft_ms": 40414
+        },
+        {
+            "elapsedMs": 7201,
+            "tokens": 214,
+            "tps": 29.72285383286617,
+            "ttft_ms": 3856
+        },
+        {
+            "elapsedMs": 7655,
+            "tokens": 223,
+            "tps": 29.132340909004807,
+            "ttft_ms": 3677
+        },
+        {
+            "elapsedMs": 4504,
+            "tokens": 134,
+            "tps": 29.750519690514672,
+            "ttft_ms": 44634
+        },
+        {
+            "elapsedMs": 6623,
+            "tokens": 197,
+            "tps": 29.747730187785187,
+            "ttft_ms": 3885
+        },
+        {
+            "elapsedMs": 4964,
+            "tokens": 145,
+            "tps": 29.217724640475897,
+            "ttft_ms": 3709
+        },
+        {
+            "elapsedMs": 2404,
+            "tokens": 72,
+            "tps": 29.969269012067212,
+            "ttft_ms": 37409
+        },
+        {
+            "elapsedMs": 8614,
+            "tokens": 256,
+            "tps": 29.722857574103962,
+            "ttft_ms": 3738
+        },
+        {
+            "elapsedMs": 4866,
+            "tokens": 142,
+            "tps": 29.185522501010187,
+            "ttft_ms": 3728
+        },
+        {
+            "elapsedMs": 4396,
+            "tokens": 131,
+            "tps": 29.801146729926995,
+            "ttft_ms": 46568
+        },
+        {
+            "elapsedMs": 6119,
+            "tokens": 182,
+            "tps": 29.74570689364929,
+            "ttft_ms": 3843
+        },
+        {
+            "elapsedMs": 6267,
+            "tokens": 182,
+            "tps": 29.045754404421594,
+            "ttft_ms": 3669
+        },
+        {
+            "elapsedMs": 4858,
+            "tokens": 145,
+            "tps": 29.85488876892028,
+            "ttft_ms": 13895
+        },
+        {
+            "elapsedMs": 7096,
+            "tokens": 211,
+            "tps": 29.740506330006014,
+            "ttft_ms": 3617
+        },
+        {
+            "elapsedMs": 4552,
+            "tokens": 133,
+            "tps": 29.22069290831359,
+            "ttft_ms": 3726
+        },
+        {
+            "elapsedMs": 3694,
+            "tokens": 110,
+            "tps": 29.784242944112847,
+            "ttft_ms": 43961
+        },
+        {
+            "elapsedMs": 7343,
+            "tokens": 218,
+            "tps": 29.694034305054714,
+            "ttft_ms": 3845
+        },
+        {
+            "elapsedMs": 5911,
+            "tokens": 172,
+            "tps": 29.104731684832306,
+            "ttft_ms": 3781
+        },
+        {
+            "elapsedMs": 4907,
+            "tokens": 146,
+            "tps": 29.758295379616996,
+            "ttft_ms": 43466
+        },
+        {
+            "elapsedMs": 13080,
+            "tokens": 386,
+            "tps": 29.512488102300374,
+            "ttft_ms": 4004
+        },
+        {
+            "elapsedMs": 5614,
+            "tokens": 163,
+            "tps": 29.039423957596025,
+            "ttft_ms": 3976
+        },
+        {
+            "elapsedMs": 1484,
+            "tokens": 45,
+            "tps": 30.34406119520537,
+            "ttft_ms": 55501
+        },
+        {
+            "elapsedMs": 3177,
+            "tokens": 95,
+            "tps": 29.903703778317233,
+            "ttft_ms": 41570
+        },
+        {
+            "elapsedMs": 1830,
+            "tokens": 55,
+            "tps": 30.07306661621682,
+            "ttft_ms": 33871
+        },
+        {
+            "elapsedMs": 3979,
+            "tokens": 118,
+            "tps": 29.66760714657457,
+            "ttft_ms": 501
+        },
+        {
+            "elapsedMs": 9829,
+            "tokens": 290,
+            "tps": 29.505506032655063,
+            "ttft_ms": 514
+        },
+        {
+            "elapsedMs": 3169,
+            "tokens": 94,
+            "tps": 29.67591376558301,
+            "ttft_ms": 375
+        },
+        {
+            "elapsedMs": 5956,
+            "tokens": 176,
+            "tps": 29.554047888640348,
+            "ttft_ms": 4886
+        },
+        {
+            "elapsedMs": 5353,
+            "tokens": 155,
+            "tps": 28.95834948617612,
+            "ttft_ms": 3766
+        },
+        {
+            "elapsedMs": 5150,
+            "tokens": 153,
+            "tps": 29.70948781231371,
+            "ttft_ms": 49090
+        },
+        {
+            "elapsedMs": 6175,
+            "tokens": 183,
+            "tps": 29.638857805879084,
+            "ttft_ms": 4069
+        },
+        {
+            "elapsedMs": 5502,
+            "tokens": 160,
+            "tps": 29.08834402784482,
+            "ttft_ms": 3878
+        },
+        {
+            "elapsedMs": 4933,
+            "tokens": 147,
+            "tps": 29.801981041074427,
+            "ttft_ms": 49524
+        },
+        {
+            "elapsedMs": 2293,
+            "tokens": 69,
+            "tps": 30.104672637863036,
+            "ttft_ms": 425
+        },
+        {
+            "elapsedMs": 6002,
+            "tokens": 178,
+            "tps": 29.65819925078057,
+            "ttft_ms": 4270
+        },
+        {
+            "elapsedMs": 5529,
+            "tokens": 161,
+            "tps": 29.123103357893818,
+            "ttft_ms": 3698
+        },
+        {
+            "elapsedMs": 2606,
+            "tokens": 78,
+            "tps": 29.935603910510967,
+            "ttft_ms": 31386
+        },
+        {
+            "elapsedMs": 4892,
+            "tokens": 146,
+            "tps": 29.84766447136413,
+            "ttft_ms": 3840
+        },
+        {
+            "elapsedMs": 4033,
+            "tokens": 118,
+            "tps": 29.264791554081956,
+            "ttft_ms": 3710
+        },
+        {
+            "elapsedMs": 4758,
+            "tokens": 142,
+            "tps": 29.848587783435462,
+            "ttft_ms": 37761
+        },
+        {
+            "elapsedMs": 4937,
+            "tokens": 147,
+            "tps": 29.784789698109883,
+            "ttft_ms": 3972
+        },
+        {
+            "elapsedMs": 4339,
+            "tokens": 127,
+            "tps": 29.273613318157157,
+            "ttft_ms": 3855
+        },
+        {
+            "elapsedMs": 1308,
+            "tokens": 40,
+            "tps": 30.61938421356408,
+            "ttft_ms": 27361
+        },
+        {
+            "elapsedMs": 5156,
+            "tokens": 154,
+            "tps": 29.873225016381777,
+            "ttft_ms": 3856
+        },
+        {
+            "elapsedMs": 4841,
+            "tokens": 142,
+            "tps": 29.3419105385811,
+            "ttft_ms": 3711
+        },
+        {
+            "elapsedMs": 3256,
+            "tokens": 98,
+            "tps": 30.109099399968663,
+            "ttft_ms": 24975
+        },
+        {
+            "elapsedMs": 9862,
+            "tokens": 293,
+            "tps": 29.71197435156912,
+            "ttft_ms": 3961
+        },
+        {
+            "elapsedMs": 5796,
+            "tokens": 169,
+            "tps": 29.163584932815038,
+            "ttft_ms": 4141
+        },
+        {
+            "elapsedMs": 4376,
+            "tokens": 130,
+            "tps": 29.706687592362094,
+            "ttft_ms": 36427
+        },
+        {
+            "elapsedMs": 7304,
+            "tokens": 216,
+            "tps": 29.578745261409694,
+            "ttft_ms": 4105
+        },
+        {
+            "elapsedMs": 5473,
+            "tokens": 159,
+            "tps": 29.05358760643389,
+            "ttft_ms": 4003
+        },
+        {
+            "elapsedMs": 3919,
+            "tokens": 117,
+            "tps": 29.864186867108963,
+            "ttft_ms": 21261
+        },
+        {
+            "elapsedMs": 6992,
+            "tokens": 208,
+            "tps": 29.751185684873725,
+            "ttft_ms": 17002
+        },
+        {
+            "elapsedMs": 3443,
+            "tokens": 103,
+            "tps": 29.92518413430655,
+            "ttft_ms": 16881
+        },
+        {
+            "elapsedMs": 6847,
+            "tokens": 203,
+            "tps": 29.647678959159084,
+            "ttft_ms": 18588
+        },
+        {
+            "elapsedMs": 5148,
+            "tokens": 153,
+            "tps": 29.72895355249337,
+            "ttft_ms": 30598
+        },
+        {
+            "elapsedMs": 10795,
+            "tokens": 319,
+            "tps": 29.552073022338682,
+            "ttft_ms": 4177
+        },
+        {
+            "elapsedMs": 832,
+            "tokens": 0,
+            "tps": 0
+        },
+        {
+            "elapsedMs": 0,
+            "tokens": 8,
+            "tps": 0
+        }
+    ],
+    "agentProfileId": "agent-maximo",
+    "agentProfileName": "Máximo",
+    "agentSeed": 4242,
+    "agentTemperature": 0.1,
+    "agentVariant": "baseline",
+    "avgTps": 29.737235999828336,
+    "avgTtftMs": 15251.138888888889,
+    "baselineId": "888c7fd5-61f7-4223-b63a-ec4267655912",
+    "benchmarkEffectiveArgs": [
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8021",
+        "--model",
+        "/media/cristian/7CFE1E0FFE1DC1F6/models/Qwen3.8-27B-ByteShape-IQ4_XS/Qwen3.8-27B-IQ4_XS-3.84bpw.gguf",
+        "--mmproj",
+        "/media/cristian/7CFE1E0FFE1DC1F6/models/Qwen3.8-27B-ByteShape-IQ4_XS/mmproj-bf16.gguf",
+        "--ctx-size",
+        "32768",
+        "--batch-size",
+        "512",
+        "--ubatch-size",
+        "128",
+        "--threads",
+        "8",
+        "--flash-attn",
+        "on",
+        "--cont-batching",
+        "--cache-type-k",
+        "q8_0",
+        "--temp",
+        "0.6",
+        "--top-p",
+        "0.95",
+        "--top-k",
+        "20",
+        "--min-p",
+        "0.0",
+        "--repeat-penalty",
+        "1.0",
+        "--presence-penalty",
+        "0.0",
+        "--no-context-shift",
+        "--metrics",
+        "--no-warmup",
+        "--jinja",
+        "--predict",
+        "8192",
+        "--parallel",
+        "1",
+        "--seed",
+        "4242",
+        "--reasoning-effort",
+        "medium",
+        "--device",
+        "CUDA1",
+        "--chat-template-file",
+        "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261017-QWEN38-27B-OVERTHINKING-RETEST/runtime/xdg-data/LlamaCode/LlamaCode/chat-templates/qwen38-tools-fixed.jinja",
+        "--reasoning",
+        "on",
+        "--fit",
+        "on",
+        "--fit-target",
+        "128"
+    ],
+    "benchmarkMemoryAdaptive": true,
+    "benchmarkMemoryAttempt": 0,
+    "benchmarkMemoryFitTargetMiB": 128,
+    "benchmarkMemoryPlanner": "llama.cpp-fit-expert-aware",
+    "benchmarkMemoryPolicy": "adaptive-max-vram",
+    "benchmarkName": "HumanEval (20 ítems)",
+    "complexityMetrics": {
+        "addedLines": 504,
+        "filesChanged": 39,
+        "filesCreated": 39,
+        "filesDeleted": 0,
+        "removedLines": 0
+    },
+    "elapsedSec": 1511.946,
+    "failed": false,
+    "failureKind": "none",
+    "finalScore": 20,
+    "finalTotal": 20,
+    "firstAttemptScore": 20,
+    "firstAttemptTotal": 20,
+    "firstEvaluableSec": 41.853,
+    "firstToolCallSec": 41.509,
+    "firstWriteSec": 41.834,
+    "generationSec": 408.41,
+    "hardwareFingerprint": "hw-8349f8efd63845fb",
+    "hardwareGpuCount": 2,
+    "harnessEngineId": "legacy",
+    "harnessEngineVersion": 1,
+    "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+    "honeyEnabled": false,
+    "id": "888c7fd5-61f7-4223-b63a-ec4267655912",
+    "isBaseline": true,
+    "measurementPhase": "cold",
+    "mode": "custom",
+    "nonGenerationSec": 1103.5359999999998,
+    "pass": 1,
+    "passedAfterRepair": false,
+    "passesTotal": 1,
+    "profileConfigFingerprint": "ced2af413d6b43d2929db712034435cee2d6dd0e9bd01a4b0d49b809a181f0cb",
+    "profileId": "sys-eval-qwen38-byteshape-iq4xs",
+    "profileName": "[control] ByteShape IQ4_XS · reasoning medium · R8192",
+    "progressGovernor": {
+        "progressEvents": 51,
+        "replanEvents": 1,
+        "stagnationEvents": 1
+    },
+    "qualityScore": 20,
+    "qualityTotal": 20,
+    "ramFreeMb": 0,
+    "ramMb": 0,
+    "ramTotalMb": 0,
+    "recommendedSplitMode": "layer",
+    "repairAttempts": 0,
+    "response": "[turno cancelado por el usuario]",
+    "runDir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261017-QWEN38-27B-OVERTHINKING-RETEST/runtime/xdg-data/LlamaCode/LlamaCode/benchmark-runs/HumanEval_20_tems__20261017_130403",
+    "runLabel": "HumanEval (20 ítems)",
+    "setupSec": 0.301,
+    "target": "agent",
+    "thinkingEnabled": true,
+    "timeToFirstAttempt": 1511.645,
+    "timedOut": false,
+    "timeoutSec": 1732,
+    "timestamp": 1792254561889,
+    "toolCallQuality": {
+        "expectedCalls": 0,
+        "f1Pct": -1,
+        "failedCalls": 1,
+        "incompleteCalls": 0,
+        "invalidCalls": 0,
+        "matchedExpectedCalls": 0,
+        "missingExpectedCalls": 0,
+        "precisionPct": -1,
+        "recallPct": -1,
+        "redundantCalls": 5,
+        "sequenceExact": false,
+        "successRatePct": 98.11320754716981,
+        "successfulCalls": 52,
+        "totalCalls": 53,
+        "unexpectedCalls": 0
+    },
+    "toolCalls": 53,
+    "totalTime": 1511.946,
+    "transportAfterEvaluation": false,
+    "vramFreeMb": 32342,
+    "vramGpu0FreeMb": 23032,
+    "vramGpu0Mb": 1135,
+    "vramGpu0TotalMb": 24576,
+    "vramGpu0UsedPct": 4.618326822916666,
+    "vramGpu1FreeMb": 9310,
+    "vramGpu1Mb": 14814,
+    "vramGpu1TotalMb": 24576,
+    "vramGpu1UsedPct": 60.2783203125,
+    "vramMb": 15949,
+    "vramNormalizedImbalancePct": 55.659993489583336,
+    "vramObservedGpu0SharePct": 7.116433632202646,
+    "vramOptimalGpu0SharePct": 71.21390142848308,
+    "vramPlacementAssessment": "gpu1-heavy",
+    "vramTelemetryScope": "device-total",
+    "workspace": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261017-QWEN38-27B-OVERTHINKING-RETEST/runtime/xdg-data/LlamaCode/LlamaCode/benchmark-runs/HumanEval_20_tems__20261017_130403/_control_ByteShape_IQ4_XS_reasoning_medium_R8192__ws"
+}

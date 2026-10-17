@@ -1,0 +1,5 @@
+{"time_utc": "2026-10-17T15:40:28+00:00", "event": "before", "server": "stopped", "agent": true}
+{"time_utc": "2026-10-17T15:40:29+00:00", "event": "restart", "response": {"ok": true, "reqId": "b6697ded-f1ee-4e51-9727-af02ee9966bd"}}
+{"time_utc": "2026-10-17T15:40:29+00:00", "event": "poll", "server": "running", "agent": false, "agent_starting": true, "health_ready": false}
+{"time_utc": "2026-10-17T15:40:39+00:00", "event": "poll", "server": "running", "agent": true, "agent_starting": false, "health_ready": true}
+{"time_utc": "2026-10-17T15:40:39+00:00", "event": "ready", "coverage": [{"benchmarkEligible": true, "coverageState": "incomplete", "hasBlockedStage": false, "hasInfrastructureOrTimeout": false, "healthCodes": [], "healthMessages": [], "nextStage": "he0", "pendingStages": ["he0", "he20", "bcb"], "profileConfigFingerprint": "3f9cc2a5d8353189c5e6d931799e8ac513412f466d6a22986fab3f6dd746e8b2", "profileId": "sys-eval-qwen38-agention-ap-q3kxl", "profileName": "[eval] Agention AP Q3_K_XL · reasoning medium · R8192", "retired": false, "stageStates": {"bcb": "pending", "he0": "pending", "he20": "pending"}}]}
