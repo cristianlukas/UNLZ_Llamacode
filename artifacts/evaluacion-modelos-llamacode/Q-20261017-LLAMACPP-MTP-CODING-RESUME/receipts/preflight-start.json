@@ -1,0 +1,54 @@
+{
+  "captured_at_utc": "2026-10-17T19:25:34+00:00",
+  "task_id": "Q-20261017-LLAMACPP-MTP-CODING-RESUME",
+  "lock_token": "1d8308e8-9fa1-4666-8c7b-24cd344498c2",
+  "meminfo_bytes": {
+    "MemTotal": 132615835648,
+    "MemAvailable": 120022274048,
+    "SwapTotal": 8589930496,
+    "SwapFree": 804470784
+  },
+  "swap_used_bytes": 7785459712,
+  "memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=1060546970\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=1059082855\n",
+  "vmstat": {
+    "pswpin": 4191626,
+    "pswpout": 10868073,
+    "oom_kill": 0
+  },
+  "gpu_snapshot": {
+    "exit_code": 0,
+    "output": "0, NVIDIA GeForce RTX 3090, 864 MiB, 24576 MiB, 35 %\n1, NVIDIA GeForce RTX 3090, 108 MiB, 24576 MiB, 7 %"
+  },
+  "gpu_compute_apps": {
+    "exit_code": 0,
+    "output": ""
+  },
+  "known_llama_server_processes": {
+    "exit_code": 1,
+    "output": ""
+  },
+  "ports": {
+    "18111": "closed",
+    "18112": "closed",
+    "8877": "closed",
+    "8898": "closed",
+    "18119": "closed"
+  },
+  "model_files": {
+    "base_shards_exist": [
+      true,
+      true,
+      true,
+      true
+    ],
+    "sidecar_exists": true,
+    "sidecar_size_bytes": 4137429120
+  },
+  "isolated_app_pidfile": "2610556",
+  "preflight_thresholds": {
+    "MemAvailable_min_bytes": 42949672960,
+    "swap_free_is_telemetry": true,
+    "oom_kill_baseline": 0
+  },
+  "preflight_passed": true
+}

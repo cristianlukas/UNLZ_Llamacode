@@ -1,0 +1,32 @@
+{
+  "historical_catalog": {
+    "path": "/media/cristian/7CFE1E0FFE1DC1F6/models/unsloth-qwen38-flashnext-mtp/mtp-Qwen3.8-Flash-Next-Q8_0.gguf",
+    "size_bytes": 4137429120,
+    "sha256": null,
+    "available": true
+  },
+  "current_catalog": {
+    "path": "/media/cristian/Disco local/Modelos-eval/Q-20261017-LLAMACPP-MTP-CODING-FOLLOWUP/mtp-Qwen3.8-Flash-Next-Q8_0.gguf",
+    "size_bytes": 4137429120,
+    "sha256": "58a47d6a216307e9b97172d5bfdc3436a8994b632f5e436b9bb6edf8951da8d1",
+    "available": true
+  },
+  "current_sidecar_file": {
+    "exists": true,
+    "size_bytes": 4137429120,
+    "sha256": "58a47d6a216307e9b97172d5bfdc3436a8994b632f5e436b9bb6edf8951da8d1"
+  },
+  "historical_profile_fingerprint": "69aacf099a61a10b4370ec10d0fec4d7fa83c93135b6cf57ada8302b664d32b8",
+  "current_profile_fingerprint": "47f42e9a8b822681c1e30f4f476247c963437f62ed93a646db7fd8f4d05bb3a3",
+  "effective_draft_arg": [
+    "--spec-draft-model",
+    "/media/cristian/Disco local/Modelos-eval/Q-20261017-LLAMACPP-MTP-CODING-FOLLOWUP/mtp-Qwen3.8-Flash-Next-Q8_0.gguf"
+  ],
+  "interpretation": "The sidecar catalog record and exact bytes are unchanged; only its absolute filesystem path moved to the dedicated secondary-disk directory. The current fingerprint is therefore recorded separately and will not be conflated with the historical fingerprint.",
+  "runner_sha256": {
+    "run_bcb8.py": "1f79063447f6fc92fc8c0c0e6551fd5f404755c99683af8d1edf21efc75c5bf1",
+    "run_taskflow.py": "1cf43f5cafbfd83ff6357bd3dbd1d6986b68ee1499f7008f8ea2bf8f67df484c",
+    "resource_monitor.py": "36c26c47c94091509d05cb616bd838e6154e3f3bed8d4724b9bd318c4aca454c",
+    "start-llamacode-isolated.sh": "84f97fbcf162a42d5720eb106973d97f2ea7f2a96c9b72b7ff20e032d0c0695f"
+  }
+}

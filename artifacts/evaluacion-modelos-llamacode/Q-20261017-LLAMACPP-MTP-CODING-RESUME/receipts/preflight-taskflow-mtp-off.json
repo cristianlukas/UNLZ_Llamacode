@@ -1,0 +1,200 @@
+{
+  "captured_at_utc": "2026-10-17T20:19:25.501202+00:00",
+  "task": "Q-20261017-LLAMACPP-MTP-CODING-RESUME",
+  "arm": "taskflow-mtp-off",
+  "memory_bytes": {
+    "MemTotal": 132615835648,
+    "MemAvailable": 121030197248,
+    "SwapTotal": 8589930496,
+    "SwapFree": 37376000
+  },
+  "vmstat": {
+    "pswpin": 4205612,
+    "pswpout": 11064964,
+    "oom_kill": 0
+  },
+  "gpu_compute_apps": "",
+  "isolated_port_listeners": [
+    "LISTEN 0      50         127.0.0.1:18119      0.0.0.0:*    users:((\"LlamaCode\",pid=3026248,fd=18))"
+  ],
+  "api": {
+    "serverState": "stopped",
+    "agentRunning": false,
+    "benchmarkRunning": false,
+    "benchmarkStatus": "Cancelado.",
+    "benchmarkProgress": 100
+  },
+  "suite": [
+    {
+      "id": "qwen38_taskflow_ultra_ast_vs_sol_20261006",
+      "name": "Qwen3.8 ASTRA IQ3_S calibrado vs SOL · TaskFlow ULTRA E2E",
+      "prompt_count": 1
+    }
+  ],
+  "launches": [
+    {
+      "id": "q4-mtp-on-taskflow-20261013",
+      "name": "2_EVAL · Q4 llama.cpp mtp-on · taskflow R8192",
+      "ready": true
+    },
+    {
+      "id": "q4-mtp-off-taskflow-20261013",
+      "name": "4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192",
+      "ready": true
+    }
+  ],
+  "profile_checks": [
+    {
+      "profileId": "q4-mtp-off-taskflow-20261013",
+      "compute_response": {
+        "ok": true,
+        "reqId": "bab3783a-aa43-497b-a9f0-78340498b1bf"
+      },
+      "effectiveProfile": {
+        "binaryPath": "/media/cristian/Disco local/LlamaCode-cache/llama.cpp-spark-native-20261003/build-cuda/bin/llama-server",
+        "blockingErrors": [],
+        "commandLine": "\"/media/cristian/Disco local/LlamaCode-cache/llama.cpp-spark-native-20261003/build-cuda/bin/llama-server\" --host 127.0.0.1 --port 18112 --split-mode layer --tensor-split 1,1 --fit off --n-cpu-moe 40 --cache-type-v q8_0 --threads-batch 16 --no-cache-prompt --model /media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf --ctx-size 32768 --batch-size 512 --ubatch-size 512 --threads 16 --n-gpu-layers 999 --flash-attn on --cont-batching --cache-type-k q8_0 --temp 0.6 --top-p 0.95 --top-k 20 --min-p 0.0 --repeat-penalty 1.0 --presence-penalty 0.0 --predict 8192 --parallel 1 --jinja --reasoning on",
+        "effectiveArgs": [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "18112",
+          "--split-mode",
+          "layer",
+          "--tensor-split",
+          "1,1",
+          "--fit",
+          "off",
+          "--n-cpu-moe",
+          "40",
+          "--cache-type-v",
+          "q8_0",
+          "--threads-batch",
+          "16",
+          "--no-cache-prompt",
+          "--model",
+          "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf",
+          "--ctx-size",
+          "32768",
+          "--batch-size",
+          "512",
+          "--ubatch-size",
+          "512",
+          "--threads",
+          "16",
+          "--n-gpu-layers",
+          "999",
+          "--flash-attn",
+          "on",
+          "--cont-batching",
+          "--cache-type-k",
+          "q8_0",
+          "--temp",
+          "0.6",
+          "--top-p",
+          "0.95",
+          "--top-k",
+          "20",
+          "--min-p",
+          "0.0",
+          "--repeat-penalty",
+          "1.0",
+          "--presence-penalty",
+          "0.0",
+          "--predict",
+          "8192",
+          "--parallel",
+          "1",
+          "--jinja",
+          "--reasoning",
+          "on"
+        ],
+        "effectiveEnv": {},
+        "isValid": true,
+        "launchId": "q4-mtp-off-taskflow-20261013",
+        "warnings": []
+      }
+    },
+    {
+      "profileId": "q4-mtp-on-taskflow-20261013",
+      "compute_response": {
+        "ok": true,
+        "reqId": "5ac256ee-45b4-42d9-aa57-f0718461e149"
+      },
+      "effectiveProfile": {
+        "binaryPath": "/media/cristian/Disco local/LlamaCode-cache/llama.cpp-spark-native-20261003/build-cuda/bin/llama-server",
+        "blockingErrors": [],
+        "commandLine": "\"/media/cristian/Disco local/LlamaCode-cache/llama.cpp-spark-native-20261003/build-cuda/bin/llama-server\" --host 127.0.0.1 --port 18111 --split-mode layer --tensor-split 1,1 --fit off --n-cpu-moe 40 --cache-type-v q8_0 --threads-batch 16 --no-cache-prompt --model /media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf --spec-draft-model /media/cristian/Disco local/Modelos-eval/Q-20261017-LLAMACPP-MTP-CODING-FOLLOWUP/mtp-Qwen3.8-Flash-Next-Q8_0.gguf --spec-draft-n-max 3 --ctx-size 32768 --batch-size 512 --ubatch-size 512 --threads 16 --n-gpu-layers 999 --flash-attn on --cont-batching --cache-type-k q8_0 --temp 0.6 --top-p 0.95 --top-k 20 --min-p 0.0 --repeat-penalty 1.0 --presence-penalty 0.0 --predict 8192 --parallel 1 --jinja --reasoning on",
+        "effectiveArgs": [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "18111",
+          "--split-mode",
+          "layer",
+          "--tensor-split",
+          "1,1",
+          "--fit",
+          "off",
+          "--n-cpu-moe",
+          "40",
+          "--cache-type-v",
+          "q8_0",
+          "--threads-batch",
+          "16",
+          "--no-cache-prompt",
+          "--model",
+          "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf",
+          "--spec-draft-model",
+          "/media/cristian/Disco local/Modelos-eval/Q-20261017-LLAMACPP-MTP-CODING-FOLLOWUP/mtp-Qwen3.8-Flash-Next-Q8_0.gguf",
+          "--spec-draft-n-max",
+          "3",
+          "--ctx-size",
+          "32768",
+          "--batch-size",
+          "512",
+          "--ubatch-size",
+          "512",
+          "--threads",
+          "16",
+          "--n-gpu-layers",
+          "999",
+          "--flash-attn",
+          "on",
+          "--cont-batching",
+          "--cache-type-k",
+          "q8_0",
+          "--temp",
+          "0.6",
+          "--top-p",
+          "0.95",
+          "--top-k",
+          "20",
+          "--min-p",
+          "0.0",
+          "--repeat-penalty",
+          "1.0",
+          "--presence-penalty",
+          "0.0",
+          "--predict",
+          "8192",
+          "--parallel",
+          "1",
+          "--jinja",
+          "--reasoning",
+          "on"
+        ],
+        "effectiveEnv": {},
+        "isValid": true,
+        "launchId": "q4-mtp-on-taskflow-20261013",
+        "warnings": [
+          "Speculative decoding active: se respeta KV cache quant 'q8_0'; puede reducir la aceptación del draft."
+        ]
+      }
+    }
+  ],
+  "expected_taskflow_fingerprints": {
+    "q4-mtp-off-taskflow-20261013": "e9c5c527e30744049cff955f0489c36cd08a8777b9bf87422f0f768c3d42cf23",
+    "q4-mtp-on-taskflow-20261013": "b39dcfa4f912aee2ae973d28f25ac04f81e5ba1c0dbaaa2e0a7e5641e38d3d27"
+  }
+}

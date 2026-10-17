@@ -1,0 +1,8 @@
+{
+  "source_runtime": "artifacts/evaluacion-modelos-llamacode/Q-20261017-LLAMACPP-MTP-CODING-FOLLOWUP/runtime/lch",
+  "destination_runtime": "artifacts/evaluacion-modelos-llamacode/Q-20261017-LLAMACPP-MTP-CODING-RESUME/runtime/lch",
+  "copied_files": 471,
+  "copied_bytes": 6280463,
+  "stale_pidfile_removed": "2610556",
+  "source_unchanged": true
+}

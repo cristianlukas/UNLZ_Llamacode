@@ -1,0 +1,78 @@
+{
+  "captured_at_utc": "2026-10-17T19:32:03+00:00",
+  "purpose": "fresh gate immediately before BCB8 MTP-off load",
+  "meminfo_bytes": {
+    "MemTotal": 132615835648,
+    "MemAvailable": 119934767104,
+    "SwapTotal": 8589930496,
+    "SwapFree": 752558080
+  },
+  "swap_used_bytes": 7837372416,
+  "memory_pressure": "some avg10=1.98 avg60=10.01 avg300=4.51 total=1077568728\nfull avg10=1.98 avg60=10.01 avg300=4.50 total=1076065353\n",
+  "vmstat": {
+    "pswpin": 4193135,
+    "pswpout": 10883213,
+    "oom_kill": 0
+  },
+  "gpu_snapshot": {
+    "exit_code": 0,
+    "output": "0, NVIDIA GeForce RTX 3090, 830 MiB, 24576 MiB, 17 %\n1, NVIDIA GeForce RTX 3090, 108 MiB, 24576 MiB, 28 %"
+  },
+  "gpu_compute_apps": {
+    "exit_code": 0,
+    "output": ""
+  },
+  "ports": {
+    "18111": "closed",
+    "18112": "closed",
+    "8877": "closed",
+    "8898": "closed",
+    "18119": "open"
+  },
+  "app_api": {
+    "server_state": "stopped",
+    "agent_running": false,
+    "benchmark_running": false,
+    "mtp_off_coverage": {
+      "benchmarkEligible": true,
+      "coverageState": "incomplete",
+      "hasBlockedStage": false,
+      "hasInfrastructureOrTimeout": false,
+      "healthCodes": [],
+      "healthMessages": [],
+      "nextStage": "bcb",
+      "pendingStages": [
+        "bcb"
+      ],
+      "profileConfigFingerprint": "7f84727070a2fb93d008a42c90391f3904d800f7d7c2e67f173813ab0435ff89",
+      "profileId": "q4-mtp-off-he-20261013",
+      "profileName": "3_EVAL · Q4 llama.cpp mtp-off · he R4096",
+      "retired": false,
+      "stageStates": {
+        "bcb": "pending",
+        "he0": "valid",
+        "he20": "valid"
+      }
+    }
+  },
+  "suite_hashes": [
+    {
+      "id": "05c28394-11d0-41fe-a55f-b3cb69db9c15",
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261017-LLAMACPP-MTP-CODING-RESUME/runtime/lch/xdg-data/LlamaCode/LlamaCode/benchmarks/custom/05c28394-11d0-41fe-a55f-b3cb69db9c15.json",
+      "sha256": "42771136b447b7b5619e04a1ea211f663222cd6752ca38d995083b5a4d207574",
+      "expected_sha256": "42771136b447b7b5619e04a1ea211f663222cd6752ca38d995083b5a4d207574",
+      "matches_expected": true,
+      "prompt_count": 8
+    },
+    {
+      "id": "qwen38_taskflow_ultra_ast_vs_sol_20261006",
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261017-LLAMACPP-MTP-CODING-RESUME/runtime/lch/xdg-data/LlamaCode/LlamaCode/benchmarks/custom/qwen38_taskflow_ultra_ast_vs_sol_20261006.json",
+      "sha256": "f04febb440208d5bf74c01e84d78f5127e57c164fabece2acbfb346215dc0c17",
+      "expected_sha256": "f04febb440208d5bf74c01e84d78f5127e57c164fabece2acbfb346215dc0c17",
+      "matches_expected": true,
+      "prompt_count": 1
+    }
+  ],
+  "preflight_passed": true,
+  "guard_policy": "MemAvailable start >=40 GiB; swap is telemetry; runtime cutoffs are registered in PLAN.md"
+}

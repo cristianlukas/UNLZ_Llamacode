@@ -1,5 +1,16 @@
 # Matriz de perfiles para benchmarks
 
+## Addendum — Q4 llama.cpp MTP TaskFlow/BCB8 · 2026-10-17
+
+La continuación MTP no completa una comparación de calidad. Con Qwen3.8-Flash-Next
+UD-Q4_K_XL, llama.cpp `836d571`, HarnessSpec fijo y dos RTX 3090, BCB8 MTP-off
+se canceló con el prompt 4/8 aún activo, y TaskFlow ULTRA MTP-off se canceló
+con un probe parcial 3/10. TaskFlow MTP-on finalizó 0/13 tras tres reparaciones
+(10 archivos y tres comandos fallidos); es fallo de calidad válido, no de
+infraestructura. Guardas limpias, sin OOM ni promoción. Sólo un screen por brazo;
+no alcanza para estabilidad ni A/B. Véanse [resultados y huellas](../artifacts/evaluacion-modelos-llamacode/Q-20261017-LLAMACPP-MTP-CODING-RESUME/RESULTS.md)
+y el [registro canónico](evaluacion-modelos-llamacode.md).
+
 ## Candidato sin promoción: Flash-Next IQ3_XXS / Strata · 2026-10-09
 
 En dos RTX 3090, Strata v0.1.41 y contexto 131K, HE20+BCB8 terminó 24/28

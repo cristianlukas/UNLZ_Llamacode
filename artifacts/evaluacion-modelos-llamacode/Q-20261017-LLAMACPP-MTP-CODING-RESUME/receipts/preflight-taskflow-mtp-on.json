@@ -1,0 +1,178 @@
+{
+  "captured_at_utc": "2026-10-17T20:44:38.794752+00:00",
+  "task": "Q-20261017-LLAMACPP-MTP-CODING-RESUME",
+  "arm": "taskflow-mtp-on",
+  "memory_bytes": {
+    "MemTotal": 132615835648,
+    "MemAvailable": 120930775040,
+    "SwapTotal": 8589930496,
+    "SwapFree": 43163648
+  },
+  "vmstat": {
+    "pswpin": 4207113,
+    "pswpout": 11065025,
+    "oom_kill": 0
+  },
+  "gpu_compute_apps": "",
+  "isolated_port_listeners": [
+    "LISTEN 0      50         127.0.0.1:18119      0.0.0.0:*    users:((\"LlamaCode\",pid=3026248,fd=18))"
+  ],
+  "api": {
+    "serverState": "stopped",
+    "agentRunning": false,
+    "benchmarkRunning": false,
+    "benchmarkStatus": "Cancelado.",
+    "benchmarkProgress": 100
+  },
+  "profile": {
+    "id": "q4-mtp-on-taskflow-20261013",
+    "compute_response": {
+      "ok": true,
+      "reqId": "1f95c829-71a2-410b-9c19-be8cd364dca6"
+    },
+    "effectiveProfile": {
+      "binaryPath": "/media/cristian/Disco local/LlamaCode-cache/llama.cpp-spark-native-20261003/build-cuda/bin/llama-server",
+      "blockingErrors": [],
+      "commandLine": "\"/media/cristian/Disco local/LlamaCode-cache/llama.cpp-spark-native-20261003/build-cuda/bin/llama-server\" --host 127.0.0.1 --port 18111 --split-mode layer --tensor-split 1,1 --fit off --n-cpu-moe 40 --cache-type-v q8_0 --threads-batch 16 --no-cache-prompt --model /media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf --spec-draft-model /media/cristian/Disco local/Modelos-eval/Q-20261017-LLAMACPP-MTP-CODING-FOLLOWUP/mtp-Qwen3.8-Flash-Next-Q8_0.gguf --spec-draft-n-max 3 --ctx-size 32768 --batch-size 512 --ubatch-size 512 --threads 16 --n-gpu-layers 999 --flash-attn on --cont-batching --cache-type-k q8_0 --temp 0.6 --top-p 0.95 --top-k 20 --min-p 0.0 --repeat-penalty 1.0 --presence-penalty 0.0 --predict 8192 --parallel 1 --jinja --reasoning on",
+      "effectiveArgs": [
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "18111",
+        "--split-mode",
+        "layer",
+        "--tensor-split",
+        "1,1",
+        "--fit",
+        "off",
+        "--n-cpu-moe",
+        "40",
+        "--cache-type-v",
+        "q8_0",
+        "--threads-batch",
+        "16",
+        "--no-cache-prompt",
+        "--model",
+        "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf",
+        "--spec-draft-model",
+        "/media/cristian/Disco local/Modelos-eval/Q-20261017-LLAMACPP-MTP-CODING-FOLLOWUP/mtp-Qwen3.8-Flash-Next-Q8_0.gguf",
+        "--spec-draft-n-max",
+        "3",
+        "--ctx-size",
+        "32768",
+        "--batch-size",
+        "512",
+        "--ubatch-size",
+        "512",
+        "--threads",
+        "16",
+        "--n-gpu-layers",
+        "999",
+        "--flash-attn",
+        "on",
+        "--cont-batching",
+        "--cache-type-k",
+        "q8_0",
+        "--temp",
+        "0.6",
+        "--top-p",
+        "0.95",
+        "--top-k",
+        "20",
+        "--min-p",
+        "0.0",
+        "--repeat-penalty",
+        "1.0",
+        "--presence-penalty",
+        "0.0",
+        "--predict",
+        "8192",
+        "--parallel",
+        "1",
+        "--jinja",
+        "--reasoning",
+        "on"
+      ],
+      "effectiveEnv": {},
+      "isValid": true,
+      "launchId": "q4-mtp-on-taskflow-20261013",
+      "warnings": [
+        "Speculative decoding active: se respeta KV cache quant 'q8_0'; puede reducir la aceptación del draft."
+      ]
+    },
+    "launch": [
+      {
+        "alias": "q4-mtp-on",
+        "benchmark": true,
+        "best": false,
+        "deprecated": false,
+        "displayName": "🏆 q4-mtp-on - 2_EVAL · Q4 llama.cpp mtp-on · taskflow R8192",
+        "favorite": false,
+        "id": "q4-mtp-on-taskflow-20261013",
+        "lastUsed": 0,
+        "menuOrder": 0,
+        "name": "2_EVAL · Q4 llama.cpp mtp-on · taskflow R8192",
+        "ready": true,
+        "system": false,
+        "systemBadge": false,
+        "tags": [
+          "q4-mtp-ab",
+          "isolated",
+          "managed-local",
+          "parallel-1"
+        ]
+      }
+    ]
+  },
+  "suite": [
+    {
+      "id": "qwen38_taskflow_ultra_ast_vs_sol_20261006",
+      "name": "Qwen3.8 ASTRA IQ3_S calibrado vs SOL · TaskFlow ULTRA E2E",
+      "prompt_count": 1
+    }
+  ],
+  "base_model_hash_receipt": "base-model-hashes.json",
+  "base_model_hashes": {
+    "verified_at_utc": "2026-10-17T19:32:03+00:00",
+    "command": "sha256sum <the four paths below>",
+    "exit_code": 0,
+    "revision": "38bb39ee97821de2c9009abb7e93950eec396e66",
+    "files": [
+      {
+        "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf",
+        "size_bytes": 10946624,
+        "sha256": "4448186216b3af4cc558bbce2c3213f01608f8f8b2e5267a9767971dd3ec8082",
+        "matches_expected": true
+      },
+      {
+        "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+        "size_bytes": 49859583136,
+        "sha256": "3f342f1c1580473f1ee94ddd5b28206e8c07a70fa1a366f59d1d6c922919a6c9",
+        "matches_expected": true
+      },
+      {
+        "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+        "size_bytes": 49376141504,
+        "sha256": "56758f40269cad5cd9b0d3d6fbae0f40f6d5be6de49e4ab392dbe83157d9cbd3",
+        "matches_expected": true
+      },
+      {
+        "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf",
+        "size_bytes": 12087983520,
+        "sha256": "753bda48b98ba4f1636134a90a967de1b2d3908a236c026e464777342e53510a",
+        "matches_expected": true
+      }
+    ],
+    "total_bytes": 111334654784,
+    "verification": "sha256sum reread all four model shards in this continuation; all outputs matched the pinned manifest",
+    "matches_all_expected": true
+  },
+  "sidecar": {
+    "path": "/media/cristian/Disco local/Modelos-eval/Q-20261017-LLAMACPP-MTP-CODING-FOLLOWUP/mtp-Qwen3.8-Flash-Next-Q8_0.gguf",
+    "exists": true,
+    "size_bytes": 4137429120,
+    "sha256_live": "58a47d6a216307e9b97172d5bfdc3436a8994b632f5e436b9bb6edf8951da8d1",
+    "sha256_expected": "58a47d6a216307e9b97172d5bfdc3436a8994b632f5e436b9bb6edf8951da8d1"
+  },
+  "expected_profile_fingerprint": "b39dcfa4f912aee2ae973d28f25ac04f81e5ba1c0dbaaa2e0a7e5641e38d3d27"
+}

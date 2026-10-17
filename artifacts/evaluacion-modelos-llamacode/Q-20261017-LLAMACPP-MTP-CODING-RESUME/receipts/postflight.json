@@ -1,0 +1,30 @@
+{
+  "captured_at_utc": "2026-10-17T21:05:17.764852+00:00",
+  "state": {
+    "benchmarkRunning": false,
+    "benchmarkStatus": "Completado.",
+    "serverState": "stopped",
+    "agentRunning": false,
+    "isolatedDaemon": "stopped after verified SIGTERM",
+    "computeGpuProcesses": [],
+    "portsListening": {
+      "18111": false,
+      "18112": false,
+      "18119": false
+    }
+  },
+  "memory_bytes": {
+    "MemTotal": 132615835648,
+    "MemAvailable": 120871075840,
+    "SwapTotal": 8589930496,
+    "SwapFree": 49950720
+  },
+  "memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=1084849419\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=1083318080\n",
+  "vmstat": {
+    "pswpin": 4208814,
+    "pswpout": 11065038,
+    "oom_kill": 0
+  },
+  "breaches": [],
+  "note": "Todas las cargas, runners y el daemon aislado de esta tarea fueron cerrados. No se modificó swap. API 18119/modelos 18111-18112 sin listeners."
+}
