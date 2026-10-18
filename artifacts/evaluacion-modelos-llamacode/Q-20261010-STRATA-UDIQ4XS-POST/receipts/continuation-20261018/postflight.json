@@ -1,0 +1,42 @@
+{
+  "checked_at_utc": "2026-10-18T18:52:21+00:00",
+  "task_id": "Q-20261010-STRATA-UDIQ4XS-POST",
+  "own_strata_server": "stopped",
+  "own_isolated_llamacode_daemon": "stopped",
+  "private_ports": {
+    "8354": "closed",
+    "18354": "closed"
+  },
+  "gpu": [
+    {
+      "index": 0,
+      "memory_used_mib": 15,
+      "memory_free_mib": 24109,
+      "utilization_pct": 0,
+      "state": "released"
+    },
+    {
+      "index": 1,
+      "memory_used_mib": 635,
+      "memory_free_mib": 23467,
+      "utilization_pct": 17,
+      "state": "not reserved; host activity remains"
+    }
+  ],
+  "unrelated_user_app_process": {
+    "pid": 568411,
+    "state": "left running"
+  },
+  "model_path": "/media/cristian/HDD extra/Models/LlamaCodeEval/Q-20261010-STRATA-UDIQ4XS-POST/",
+  "model_retained": true,
+  "queue": {
+    "rows": 105,
+    "counts": {
+      "Bloqueada": 7,
+      "Completa": 98
+    },
+    "pending_ids": [],
+    "active_ids": []
+  },
+  "lock_release": "will be performed after final repository checks"
+}

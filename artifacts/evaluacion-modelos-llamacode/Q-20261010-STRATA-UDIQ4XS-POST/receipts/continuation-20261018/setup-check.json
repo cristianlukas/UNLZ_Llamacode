@@ -1,0 +1,8 @@
+{
+  "checked_at_utc": "2026-10-18T17:01:53Z",
+  "command": "python3 <Strata-v0.1.41>/setup.py --check --family unsloth --model UD-IQ4_XS --context 32768 --gpu 0 --vision no --resident-budget-gib 55",
+  "result": "passed; setup reports RTX 3090 24GB supported, 124GB RAM, AVX-512, PCIe 4.0 x8; UD-IQ4_XS estimated 48GB RAM and fits with 55 GiB expert budget.",
+  "side_effects": "read-only check; no download, build, inference, profile, or GPU compute started.",
+  "runtime_source_commit": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
+  "runtime_source": "Strata v0.1.41, clean isolated copy at /home/cristian/.cache/strata-udiq4xs-screen-20261018"
+}

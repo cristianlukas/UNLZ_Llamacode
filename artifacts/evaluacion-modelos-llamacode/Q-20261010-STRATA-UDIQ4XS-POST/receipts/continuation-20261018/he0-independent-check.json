@@ -1,0 +1,39 @@
+{
+  "checked_at_utc": "2026-10-18T18:50:24+00:00",
+  "source_file": "artifacts/evaluacion-modelos-llamacode/Q-20261010-STRATA-UDIQ4XS-POST/receipts/continuation-20261018/llamacode-runtime/data/LlamaCode/LlamaCode/benchmark-runs/HumanEval_1_tems__20261018_154343/EVAL_UD-IQ4_XS_Strata_0_1_41_HE0__ws/solution_HumanEval_0.py",
+  "source_sha256": "fadd9db3f7ac06c933c7997bd013cfa0c342b20239dc81021745cd04c0455b4c",
+  "source_compile": "passed",
+  "official_humaneval_0_tests": "passed",
+  "additional_edges": {
+    "empty": {
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    "singleton": {
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    "strict_threshold_equal": {
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    "inside_threshold": {
+      "expected": true,
+      "actual": true,
+      "passed": true
+    }
+  },
+  "app_result_acceptance": [
+    {
+      "passed": true,
+      "taskId": "HumanEval/0",
+      "type": "grader:code_tests"
+    }
+  ],
+  "app_result_early_accepted": true,
+  "app_agent_final_response": "[turno cancelado por el usuario]",
+  "note": "Harness accepted the written solution before the agent turn ended; final response was cancelled after acceptance. The code and exact HumanEval/0 tests were independently re-run."
+}

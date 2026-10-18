@@ -1,0 +1,418 @@
+{
+  "profile_id": "q14-udiq4xs-he0",
+  "stage": "he0",
+  "suite_id": "059b6f00-7b4b-48ff-a3a2-2a71f900c1c0",
+  "started_utc": "2026-10-18T18:43:43+00:00",
+  "finished_utc": "2026-10-18T18:48:43+00:00",
+  "elapsed_seconds": 300.361,
+  "timeout_sec": 1799,
+  "global_cap_reached": false,
+  "benchmark_status": "Completado.",
+  "benchmark_progress": 100,
+  "coverage": {
+    "benchmarkEligible": true,
+    "coverageState": "incomplete",
+    "hasBlockedStage": false,
+    "hasInfrastructureOrTimeout": false,
+    "healthCodes": [],
+    "healthMessages": [],
+    "nextStage": "he20",
+    "pendingStages": [
+      "he20",
+      "bcb"
+    ],
+    "profileConfigFingerprint": "a56c723fde568b4db160bbb48ccc9e378aa221bdcaffe544ee957e3ba666dd86",
+    "profileId": "q14-udiq4xs-he0",
+    "profileName": "EVAL · UD-IQ4_XS · Strata 0.1.41 · HE0",
+    "retired": false,
+    "stageStates": {
+      "bcb": "pending",
+      "he0": "valid",
+      "he20": "pending"
+    }
+  },
+  "results": [
+    {
+      "acceptance": [
+        {
+          "passed": true,
+          "taskId": "HumanEval/0",
+          "type": "grader:code_tests"
+        }
+      ],
+      "agentFiles": [
+        "solution_HumanEval_0.py"
+      ],
+      "agentMetrics": [
+        {
+          "elapsedMs": 748,
+          "tokens": 0,
+          "tps": 0,
+          "ttft_ms": 60
+        },
+        {
+          "elapsedMs": 0,
+          "tokens": 8,
+          "tps": 0
+        },
+        {
+          "elapsedMs": 284977,
+          "tokens": 8,
+          "tps": 0.02808002808002808,
+          "ttft_ms": 77
+        }
+      ],
+      "agentProfileId": "agent-maximo",
+      "agentProfileName": "Máximo",
+      "agentSeed": 4242,
+      "agentTemperature": 0.1,
+      "agentVariant": "baseline",
+      "avgTps": 0.02808002808002808,
+      "avgTtftMs": 68.5,
+      "baselineId": "f90b4235-08d5-40c8-9892-98ec99968d9f",
+      "benchmarkMemoryPlanner": "llama.cpp-fit-expert-aware",
+      "benchmarkName": "HumanEval (1 ítems)",
+      "complexityMetrics": {
+        "addedLines": 16,
+        "filesChanged": 1,
+        "filesCreated": 1,
+        "filesDeleted": 0,
+        "removedLines": 0
+      },
+      "elapsedSec": 285.289,
+      "failed": false,
+      "failureKind": "none",
+      "finalScore": 1,
+      "finalTotal": 1,
+      "firstAttemptScore": 1,
+      "firstAttemptTotal": 1,
+      "firstEvaluableSec": 284.971,
+      "firstToolCallSec": 284.163,
+      "firstWriteSec": 284.207,
+      "generationSec": 285.725,
+      "harnessEngineId": "legacy",
+      "harnessEngineVersion": 1,
+      "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+      "honeyEnabled": false,
+      "id": "f90b4235-08d5-40c8-9892-98ec99968d9f",
+      "isBaseline": true,
+      "measurementPhase": "cold",
+      "mode": "custom",
+      "nonGenerationSec": 0,
+      "pass": 1,
+      "passedAfterRepair": false,
+      "passesTotal": 1,
+      "profileConfigFingerprint": "a56c723fde568b4db160bbb48ccc9e378aa221bdcaffe544ee957e3ba666dd86",
+      "profileId": "q14-udiq4xs-he0",
+      "profileName": "EVAL · UD-IQ4_XS · Strata 0.1.41 · HE0",
+      "progressGovernor": {
+        "progressEvents": 1,
+        "replanEvents": 0,
+        "stagnationEvents": 0
+      },
+      "qualityScore": 1,
+      "qualityTotal": 1,
+      "ramFreeMb": 0,
+      "ramMb": 0,
+      "ramTotalMb": 0,
+      "repairAttempts": 0,
+      "response": "[turno cancelado por el usuario]",
+      "runDir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261010-STRATA-UDIQ4XS-POST/receipts/continuation-20261018/llamacode-runtime/data/LlamaCode/LlamaCode/benchmark-runs/HumanEval_1_tems__20261018_154343",
+      "runLabel": "HumanEval (1 ítems)",
+      "setupSec": 0.301,
+      "target": "agent",
+      "thinkingEnabled": false,
+      "timeToFirstAttempt": 284.988,
+      "timedOut": false,
+      "timeoutSec": 1799,
+      "timestamp": 1792349310353,
+      "toolCallQuality": {
+        "expectedCalls": 0,
+        "f1Pct": -1,
+        "failedCalls": 0,
+        "incompleteCalls": 0,
+        "invalidCalls": 0,
+        "matchedExpectedCalls": 0,
+        "missingExpectedCalls": 0,
+        "precisionPct": -1,
+        "recallPct": -1,
+        "redundantCalls": 0,
+        "sequenceExact": false,
+        "successRatePct": 100,
+        "successfulCalls": 1,
+        "totalCalls": 1,
+        "unexpectedCalls": 0
+      },
+      "toolCalls": 1,
+      "totalTime": 285.289,
+      "transportAfterEvaluation": false,
+      "vramFreeMb": 23673,
+      "vramGpu0FreeMb": 215,
+      "vramGpu0Mb": 23909,
+      "vramGpu0TotalMb": 24576,
+      "vramGpu0UsedPct": 97.28597005208334,
+      "vramGpu1FreeMb": 23458,
+      "vramGpu1Mb": 668,
+      "vramGpu1TotalMb": 24576,
+      "vramGpu1UsedPct": 2.718098958333333,
+      "vramMb": 24577,
+      "vramNormalizedImbalancePct": 94.56787109375,
+      "vramObservedGpu0SharePct": 97.28201163689629,
+      "vramOptimalGpu0SharePct": 0.9082076627381405,
+      "vramPlacementAssessment": "gpu0-heavy",
+      "vramTelemetryScope": "device-total",
+      "workspace": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261010-STRATA-UDIQ4XS-POST/receipts/continuation-20261018/llamacode-runtime/data/LlamaCode/LlamaCode/benchmark-runs/HumanEval_1_tems__20261018_154343/EVAL_UD-IQ4_XS_Strata_0_1_41_HE0__ws"
+    }
+  ],
+  "server_state": "stopped",
+  "agent_running": false,
+  "events": [
+    {
+      "time_utc": "2026-10-18T18:43:43+00:00",
+      "event": "preflight",
+      "coverage": {
+        "benchmarkEligible": true,
+        "coverageState": "incomplete",
+        "hasBlockedStage": false,
+        "hasInfrastructureOrTimeout": false,
+        "healthCodes": [],
+        "healthMessages": [],
+        "nextStage": "he0",
+        "pendingStages": [
+          "he0",
+          "he20",
+          "bcb"
+        ],
+        "profileConfigFingerprint": "f185867766d87d1051fa4a3769e29e3d59040592e87429e33e66a710f441f344",
+        "profileId": "q14-udiq4xs-he0",
+        "profileName": "EVAL · UD-IQ4_XS · Strata 0.1.41 · HE0",
+        "retired": false,
+        "stageStates": {
+          "bcb": "pending",
+          "he0": "pending",
+          "he20": "pending"
+        }
+      },
+      "server_state": "stopped",
+      "agent_running": false,
+      "timeout_sec": 1799
+    },
+    {
+      "time_utc": "2026-10-18T18:43:43+00:00",
+      "event": "start",
+      "response": {
+        "ok": true,
+        "reqId": "09ece1f4-8c13-4f40-af57-0f6b74266760"
+      },
+      "stage": "he0",
+      "suite_id": "059b6f00-7b4b-48ff-a3a2-2a71f900c1c0"
+    },
+    {
+      "time_utc": "2026-10-18T18:43:43+00:00",
+      "event": "poll",
+      "running": true,
+      "status": "Iniciando...",
+      "progress": 0
+    },
+    {
+      "time_utc": "2026-10-18T18:43:43+00:00",
+      "event": "resource",
+      "meminfo": {
+        "MemAvailable": "75591024 kB",
+        "SwapTotal": "8388604 kB",
+        "SwapFree": "6601192 kB"
+      },
+      "memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=3470260\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=3469086\n",
+      "gpu_query": "0, 23909 MiB, 0 %\n1, 640 MiB, 8 %",
+      "gpu_query_exit": 0
+    },
+    {
+      "time_utc": "2026-10-18T18:43:58+00:00",
+      "event": "poll",
+      "running": true,
+      "status": "[1/1] EVAL · UD-IQ4_XS · Strata 0.1.41 · HE0 — agente: prompt 1/1...",
+      "progress": 0
+    },
+    {
+      "time_utc": "2026-10-18T18:44:13+00:00",
+      "event": "poll",
+      "running": true,
+      "status": "[1/1] EVAL · UD-IQ4_XS · Strata 0.1.41 · HE0 — agente: prompt 1/1...",
+      "progress": 0
+    },
+    {
+      "time_utc": "2026-10-18T18:44:28+00:00",
+      "event": "poll",
+      "running": true,
+      "status": "[1/1] EVAL · UD-IQ4_XS · Strata 0.1.41 · HE0 — agente: prompt 1/1...",
+      "progress": 0
+    },
+    {
+      "time_utc": "2026-10-18T18:44:43+00:00",
+      "event": "poll",
+      "running": true,
+      "status": "[1/1] EVAL · UD-IQ4_XS · Strata 0.1.41 · HE0 — agente: prompt 1/1...",
+      "progress": 0
+    },
+    {
+      "time_utc": "2026-10-18T18:44:43+00:00",
+      "event": "resource",
+      "meminfo": {
+        "MemAvailable": "75806612 kB",
+        "SwapTotal": "8388604 kB",
+        "SwapFree": "6583672 kB"
+      },
+      "memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=3503110\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=3501935\n",
+      "gpu_query": "0, 23909 MiB, 0 %\n1, 640 MiB, 7 %",
+      "gpu_query_exit": 0
+    },
+    {
+      "time_utc": "2026-10-18T18:44:58+00:00",
+      "event": "poll",
+      "running": true,
+      "status": "[1/1] EVAL · UD-IQ4_XS · Strata 0.1.41 · HE0 — agente: prompt 1/1...",
+      "progress": 0
+    },
+    {
+      "time_utc": "2026-10-18T18:45:13+00:00",
+      "event": "poll",
+      "running": true,
+      "status": "[1/1] EVAL · UD-IQ4_XS · Strata 0.1.41 · HE0 — agente: prompt 1/1...",
+      "progress": 0
+    },
+    {
+      "time_utc": "2026-10-18T18:45:28+00:00",
+      "event": "poll",
+      "running": true,
+      "status": "[1/1] EVAL · UD-IQ4_XS · Strata 0.1.41 · HE0 — agente: prompt 1/1...",
+      "progress": 0
+    },
+    {
+      "time_utc": "2026-10-18T18:45:43+00:00",
+      "event": "poll",
+      "running": true,
+      "status": "[1/1] EVAL · UD-IQ4_XS · Strata 0.1.41 · HE0 — agente: prompt 1/1...",
+      "progress": 0
+    },
+    {
+      "time_utc": "2026-10-18T18:45:43+00:00",
+      "event": "resource",
+      "meminfo": {
+        "MemAvailable": "76002580 kB",
+        "SwapTotal": "8388604 kB",
+        "SwapFree": "6488264 kB"
+      },
+      "memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=3573267\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=3572077\n",
+      "gpu_query": "0, 23909 MiB, 0 %\n1, 644 MiB, 10 %",
+      "gpu_query_exit": 0
+    },
+    {
+      "time_utc": "2026-10-18T18:45:58+00:00",
+      "event": "poll",
+      "running": true,
+      "status": "[1/1] EVAL · UD-IQ4_XS · Strata 0.1.41 · HE0 — agente: prompt 1/1...",
+      "progress": 0
+    },
+    {
+      "time_utc": "2026-10-18T18:46:13+00:00",
+      "event": "poll",
+      "running": true,
+      "status": "[1/1] EVAL · UD-IQ4_XS · Strata 0.1.41 · HE0 — agente: prompt 1/1...",
+      "progress": 0
+    },
+    {
+      "time_utc": "2026-10-18T18:46:28+00:00",
+      "event": "poll",
+      "running": true,
+      "status": "[1/1] EVAL · UD-IQ4_XS · Strata 0.1.41 · HE0 — agente: prompt 1/1...",
+      "progress": 0
+    },
+    {
+      "time_utc": "2026-10-18T18:46:43+00:00",
+      "event": "poll",
+      "running": true,
+      "status": "[1/1] EVAL · UD-IQ4_XS · Strata 0.1.41 · HE0 — agente: prompt 1/1...",
+      "progress": 0
+    },
+    {
+      "time_utc": "2026-10-18T18:46:43+00:00",
+      "event": "resource",
+      "meminfo": {
+        "MemAvailable": "76134928 kB",
+        "SwapTotal": "8388604 kB",
+        "SwapFree": "6358680 kB"
+      },
+      "memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=3669813\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=3668608\n",
+      "gpu_query": "0, 23909 MiB, 0 %\n1, 644 MiB, 20 %",
+      "gpu_query_exit": 0
+    },
+    {
+      "time_utc": "2026-10-18T18:46:58+00:00",
+      "event": "poll",
+      "running": true,
+      "status": "[1/1] EVAL · UD-IQ4_XS · Strata 0.1.41 · HE0 — agente: prompt 1/1...",
+      "progress": 0
+    },
+    {
+      "time_utc": "2026-10-18T18:47:13+00:00",
+      "event": "poll",
+      "running": true,
+      "status": "[1/1] EVAL · UD-IQ4_XS · Strata 0.1.41 · HE0 — agente: prompt 1/1...",
+      "progress": 0
+    },
+    {
+      "time_utc": "2026-10-18T18:47:28+00:00",
+      "event": "poll",
+      "running": true,
+      "status": "[1/1] EVAL · UD-IQ4_XS · Strata 0.1.41 · HE0 — agente: prompt 1/1...",
+      "progress": 0
+    },
+    {
+      "time_utc": "2026-10-18T18:47:43+00:00",
+      "event": "poll",
+      "running": true,
+      "status": "[1/1] EVAL · UD-IQ4_XS · Strata 0.1.41 · HE0 — agente: prompt 1/1...",
+      "progress": 0
+    },
+    {
+      "time_utc": "2026-10-18T18:47:43+00:00",
+      "event": "resource",
+      "meminfo": {
+        "MemAvailable": "76120628 kB",
+        "SwapTotal": "8388604 kB",
+        "SwapFree": "6278328 kB"
+      },
+      "memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=3741648\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=3740433\n",
+      "gpu_query": "0, 23909 MiB, 0 %\n1, 644 MiB, 20 %",
+      "gpu_query_exit": 0
+    },
+    {
+      "time_utc": "2026-10-18T18:47:58+00:00",
+      "event": "poll",
+      "running": true,
+      "status": "[1/1] EVAL · UD-IQ4_XS · Strata 0.1.41 · HE0 — agente: prompt 1/1...",
+      "progress": 0
+    },
+    {
+      "time_utc": "2026-10-18T18:48:13+00:00",
+      "event": "poll",
+      "running": true,
+      "status": "[1/1] EVAL · UD-IQ4_XS · Strata 0.1.41 · HE0 — agente: prompt 1/1...",
+      "progress": 0
+    },
+    {
+      "time_utc": "2026-10-18T18:48:28+00:00",
+      "event": "poll",
+      "running": true,
+      "status": "[1/1] EVAL · UD-IQ4_XS · Strata 0.1.41 · HE0 — agente: prompt 1/1...",
+      "progress": 0
+    },
+    {
+      "time_utc": "2026-10-18T18:48:43+00:00",
+      "event": "poll",
+      "running": false,
+      "status": "Completado.",
+      "progress": 100
+    }
+  ]
+}

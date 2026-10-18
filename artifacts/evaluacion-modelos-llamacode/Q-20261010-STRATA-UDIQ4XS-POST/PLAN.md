@@ -42,3 +42,14 @@ La tarea llegó al turno luego de cerrar la auditoría de Mirai S y el post de q
 
 La decisión vigente del usuario limita la suite de tres seeds a ≤30 minutos por perfil. El informe comunitario exacto sólo midió tres solicitudes cortas, pero su modelo requiere 93,7 GB ausentes; no se hizo un screening local de calidad. Un issue comunitario oficial de Strata aportó un speed suite distinto para UD-IQ4_XS en una RTX 3090/Strata 0.1.43 (295 s), sin medición de corrección/calidad; se conserva como evidencia externa, no como resultado local ni comparador directo. Ninguna huella local de candidato se creó.
 
+
+
+## Continuación solicitada — 2026-10-18
+
+- **Motivo:** el usuario pidió ejecutar las pruebas pendientes. Se conserva el mismo ID histórico; la auditoría documental anterior queda intacta.
+- **Runtime y modelo fijados:** Strata `v0.1.41`, revisión Unsloth `38bb39ee97821de2c9009abb7e93950eec396e66`; tres shards oficiales con tamaño y SHA-256 publicados en `docs/UNSLOTH_Q4.md` del runtime. No se cambiará runtime ni revisión durante el screen.
+- **Almacenamiento:** SSD libre 83.619.123.200 bytes, menos que el GGUF (93.682.584.224 bytes); HDD libre 338.303.463.424 bytes. Si el setup confirma capacidad para shards, pack y MTP, el candidato irá en un directorio de evaluación dedicado en HDD. El HDD cambia las lecturas de expertos, así que sus velocidades serán un perfil separado y no una comparación directa con el resultado SSD del post.
+- **Recursos:** una RTX 3090, GPU 0, sólo si sigue ociosa; GPU 1 queda sin reservar por actividad del host. Perfil y endpoint loopback aislados. Contexto configurado 32K, KV INT8, MTP activado según la publicación, visión apagada. No editar perfiles productivos ni HarnessSpec.
+- **Límite:** se conserva el corte vigente de 30 minutos acumulados por perfil. El alcance preregistrado es instalación/hash, smoke HE0 y tres solicitudes sintéticas iguales de 40 tokens de prompt/320 de salida, sujetos al tiempo restante. HE20 → BCB8 → TaskFlow ULTRA sólo se inicia si su proyección cabe en el corte; cualquier parcial es screening, sin promoción. Afirmaciones estables requieren tres pares válidos.
+- **Modalidades:** este screen no mide Computer Usage E2E, visión, Ingi-Charla/audio ni recuperación con contexto poblado; requieren suites/fixtures separados y no se inferirán del rendimiento textual.
+- **Salida:** recibos bajo `receipts/continuation-20261018/`, resultados separados por modalidad en `RESULTS.md` y actualización del registro canónico. No borrar el modelo ni tocar perfiles productivos al cerrar.
