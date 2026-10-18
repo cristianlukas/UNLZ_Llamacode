@@ -1,0 +1,65 @@
+{
+  "task_id": "Q-20261018-STRATA-PEER-RETEST",
+  "captured_at_local": "2026-10-18T11:25:13-03:00",
+  "host": "Linux; two NVIDIA GeForce RTX 3090; driver 610.57.04",
+  "checks_read_only": true,
+  "commands": [
+    "nvidia-smi --query-gpu=index,name,uuid,driver_version,memory.total,memory.used,utilization.gpu,power.draw --format=csv",
+    "nvidia-smi topo -m",
+    "nvidia-smi nvlink --status",
+    "nvidia-smi topo -p2p p",
+    "nvidia-smi topo -p2p r",
+    "nvidia-smi topo -p2p w",
+    "nvidia-smi topo -p2p a",
+    "nvidia-smi",
+    "free -h",
+    "cat /proc/pressure/memory",
+    "cat /proc/swaps"
+  ],
+  "gpus": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+      "memory_total_mib": 24576,
+      "memory_used_mib": 15,
+      "utilization_percent": 0,
+      "power_w": 35.58,
+      "processes": [
+        "Xorg"
+      ]
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+      "memory_total_mib": 24576,
+      "memory_used_query_mib": 644,
+      "memory_used_table_mib": 627,
+      "utilization_percent": 18,
+      "power_w": 24.14,
+      "processes": [
+        "Xorg",
+        "compiz",
+        "browser/UI"
+      ]
+    }
+  ],
+  "topology": {
+    "gpu0_gpu1": "PHB",
+    "nvlink": "all links inactive",
+    "p2p_pcie": "NS in both directions",
+    "p2p_read": "GNS in both directions",
+    "p2p_write": "GNS in both directions",
+    "p2p_atomics": "NS in both directions"
+  },
+  "memory": {
+    "ram_total_gib": 123,
+    "ram_available_gib": 115,
+    "swap_total_gib": 8.0,
+    "swap_used_gib": 0,
+    "memory_pressure_some_avg10_percent": 0,
+    "memory_pressure_full_avg10_percent": 0
+  },
+  "decision": "No model load, compile, exactness gate or flashbench was started. The post fork requires NVLink; local Strata v0.1.41 peer-device requires NVLink or CUDA P2P, both unavailable. GPU1 is in active desktop/browser use. No process was stopped or changed."
+}

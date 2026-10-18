@@ -1,0 +1,75 @@
+{
+  "task_id": "Q-20261018-STRATA-PEER-RETEST",
+  "reviewed_at_local": "2026-10-18T11:25:13-03:00",
+  "sources": [
+    {
+      "url": "https://www.reddit.com/r/LocalLLM/comments/1wytq4f/qwen38flashnext_dual_rtx_3090s_nvlink_3200_ts/",
+      "type": "user-provided community post and comments",
+      "claims_reviewed": [
+        "Strata v0.1.38 plus 29 commits",
+        "IQ3_S, two RTX 3090 with NVLink, context 262K",
+        "flashbench medians of three at 8K/32K/128K",
+        "comment says upstream v0.1.40 contains some work",
+        "comment links an alternative 2x3090 fork and says P2P works"
+      ],
+      "limitations": [
+        "No model hash or raw per-run logs in the post",
+        "The IQ3_S fork's results are not an LlamaCode quality or agent evaluation"
+      ]
+    },
+    {
+      "url": "https://github.com/Niko1221/Strata/blob/v0.1.41/docs/SECOND_GPU.md",
+      "type": "pinned upstream documentation matching local Strata release",
+      "claims": [
+        "--peer-device uses an additional expert cache with activation/result exchange over NVLink or another P2P path",
+        "peer mode is distinct from layer split and CUDA1-3 helper caches",
+        "same expert set can produce byte-identical tokens under the exactness gate"
+      ],
+      "limitations": [
+        "This tag does not document the later main-branch host-route fallback"
+      ]
+    },
+    {
+      "url": "https://github.com/Niko1221/Strata/releases/tag/v0.1.41",
+      "type": "pinned upstream release notes",
+      "claims": [
+        "Local Strata release tag is 0.1.41",
+        "Release notes describe other multi-GPU and prompt changes, but do not validate this custom peer fork or its quality claims"
+      ]
+    },
+    {
+      "url": "https://github.com/Niko1221/Strata/blob/main/docs/SECOND_GPU.md",
+      "type": "current upstream main documentation",
+      "claims": [
+        "Current main describes a startup test-copy and host-mapped fallback when peer data transfer fails",
+        "Current main's fallback may enable a different no-P2P experiment"
+      ],
+      "limitations": [
+        "Not the pinned local 0.1.41 runtime; any test would be a new runtime/profile fingerprint and would not reproduce NVLink measurements"
+      ]
+    },
+    {
+      "url": "https://github.com/q8atnight/strata-dual-3090",
+      "type": "candidate author repository",
+      "claims": [
+        "Fork describes an NVLink-specific peer tier plus prompt/GDN and vision work",
+        "Fork includes an exactness gate and flashbench"
+      ],
+      "limitations": [
+        "Community measurements have no published model hash/raw logs; requires the fork's hardware path"
+      ]
+    },
+    {
+      "url": "https://github.com/DominikBucko/qwen38-flash-next-2x3090",
+      "type": "alternative fork mentioned in post comments",
+      "claims": [
+        "Different W4A16/FP8-PLE checkpoint and runtime; fast 256K profile needs bidirectional CUDA P2P",
+        "README calls for at least 32 GiB configured swap"
+      ],
+      "limitations": [
+        "Not a like-for-like IQ3_S/Strata comparison; host reports P2P unsupported and only 8 GiB configured swap"
+      ]
+    }
+  ],
+  "local_result": "No test fingerprint was created because no model was loaded and no suite ran. Fresh host P2P/NVLink checks remain negative; GPU1 is occupied by desktop/browser processes."
+}
