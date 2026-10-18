@@ -1,0 +1,108 @@
+{
+  "captured_at_utc": "2026-10-18T13:31:45Z",
+  "task_id": "Q-20261018-LLAMACPP-MTP-REMAINING",
+  "lock": {
+    "token": "e9c6f3ab-0643-4417-ad21-6b86a35be9c2",
+    "worker": "Q-20261018-LLAMACPP-MTP-REMAINING",
+    "host": "3090",
+    "claimed_at_utc": "2026-10-18T13:25:23.269487+00:00",
+    "continuation_of": "Q-20261018-LLAMACPP-MTP-REMAINING"
+  },
+  "resource_snapshot": {
+    "memory_bytes": {
+      "MemTotal": 132614356992,
+      "MemAvailable": 125725220864,
+      "SwapTotal": 8589930496,
+      "SwapFree": 8589930496
+    },
+    "memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=161\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=158",
+    "vmstat": {
+      "pswpin": 0,
+      "pswpout": 0,
+      "oom_kill": 0
+    },
+    "gpu_query": {
+      "exit_code": 0,
+      "stdout": "0, NVIDIA GeForce RTX 3090, 15 MiB, 24576 MiB, 0 %\n1, NVIDIA GeForce RTX 3090, 409 MiB, 24576 MiB, 14 %",
+      "stderr": ""
+    },
+    "gpu_compute_apps": {
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "gpu_pmon": {
+      "exit_code": 0,
+      "stdout": "# gpu         pid   type     sm    mem    enc    dec    jpg    ofa    command \n# Idx           #    C/G      %      %      %      %      %      %    name \n    0       2329     G      -      -      -      -      -      -    Xorg           \n    1       2329     G      -      -      -      -      -      -    Xorg           \n    1       3466     G      8      5      -      -      -      -    compiz         \n    1       7647     G      -      -      -      -      -      -    Codex --change-",
+      "stderr": ""
+    },
+    "relevant_processes": [],
+    "process_filter_note": "La consulta inicial coincidió consigo misma porque el texto de esta captura contenía 'llamacode-daemon'; se excluyó ese shell de diagnóstico. No había procesos de tarea."
+  },
+  "ports": {
+    "8033": "State Recv-Q Send-Q Local Address:Port Peer Address:PortProcess",
+    "8081": "State Recv-Q Send-Q Local Address:Port Peer Address:PortProcess",
+    "8350": "State Recv-Q Send-Q Local Address:Port Peer Address:PortProcess",
+    "8877": "State Recv-Q Send-Q Local Address:Port Peer Address:PortProcess",
+    "8898": "State Recv-Q Send-Q Local Address:Port Peer Address:PortProcess",
+    "18111": "State Recv-Q Send-Q Local Address:Port Peer Address:PortProcess",
+    "18112": "State Recv-Q Send-Q Local Address:Port Peer Address:PortProcess",
+    "18119": "State Recv-Q Send-Q Local Address:Port Peer Address:PortProcess"
+  },
+  "all_test_ports_free": true,
+  "model_shards": [
+    {
+      "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf",
+      "exists": true,
+      "size_bytes": 10946624
+    },
+    {
+      "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+      "exists": true,
+      "size_bytes": 49859583136
+    },
+    {
+      "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "exists": true,
+      "size_bytes": 49376141504
+    },
+    {
+      "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf",
+      "exists": true,
+      "size_bytes": 12087983520
+    }
+  ],
+  "model_shard_hashes_match_previous_manifest": true,
+  "sidecar": {
+    "path": "/media/cristian/Disco local/Modelos-eval/Q-20261017-LLAMACPP-MTP-CODING-FOLLOWUP/mtp-Qwen3.8-Flash-Next-Q8_0.gguf",
+    "exists": true,
+    "size_bytes": 4137429120,
+    "sha256": "58a47d6a216307e9b97172d5bfdc3436a8994b632f5e436b9bb6edf8951da8d1",
+    "expected_sha256": "58a47d6a216307e9b97172d5bfdc3436a8994b632f5e436b9bb6edf8951da8d1"
+  },
+  "runtime_server": {
+    "path": "/media/cristian/Disco local/LlamaCode-cache/llama.cpp-spark-native-20261003/build-cuda/bin/llama-server",
+    "exists": true,
+    "sha256": "ab7828696af2694981037b7114d834d310c1c5f24b39ab24267898748334cbb4",
+    "expected_sha256": "ab7828696af2694981037b7114d834d310c1c5f24b39ab24267898748334cbb4"
+  },
+  "llamacode": {
+    "path": "/media/cristian/Disco local/LlamaCode-cache/build_linux/LlamaCode",
+    "exists": true,
+    "sha256": "38d2b916c7c2b08061a2a59eb9b0b120247b19768aed454f4a6992e53ed48959",
+    "expected_sha256": "38d2b916c7c2b08061a2a59eb9b0b120247b19768aed454f4a6992e53ed48959"
+  },
+  "fingerprints": {
+    "bcb8_mtp_off": "7f84727070a2fb93d008a42c90391f3904d800f7d7c2e67f173813ab0435ff89",
+    "taskflow_mtp_off": "e9c5c527e30744049cff955f0489c36cd08a8777b9bf87422f0f768c3d42cf23",
+    "taskflow_mtp_on_historical": "b39dcfa4f912aee2ae973d28f25ac04f81e5ba1c0dbaaa2e0a7e5641e38d3d27",
+    "harness": "cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+    "bcb8_suite": "42771136b447b7b5619e04a1ea211f663222cd6752ca38d995083b5a4d207574",
+    "taskflow_suite": "f04febb440208d5bf74c01e84d78f5127e57c164fabece2acbfb346215dc0c17"
+  },
+  "repo": {
+    "head": "b6c0887c2d9daea3f19e9d8ce3ce030349c00610",
+    "branch": "main"
+  },
+  "preflight_pass": true
+}

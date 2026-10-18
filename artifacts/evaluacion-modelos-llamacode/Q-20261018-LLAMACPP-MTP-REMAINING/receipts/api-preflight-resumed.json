@@ -1,0 +1,76 @@
+{
+  "captured_at_utc": "2026-10-18T13:33:34Z",
+  "setup": {
+    "approval": {
+      "ok": true,
+      "reqId": "371a1dae-cc85-490f-abdc-c2ec63f5b5bb"
+    },
+    "thinking": {
+      "ok": true,
+      "reqId": "0d06a2a4-5c56-4537-b2b5-976d0632cc17"
+    },
+    "gate_probe": {
+      "ok": true,
+      "reqId": "4c787227-d34f-4a1e-b0f1-6bb72acc2a6f"
+    }
+  },
+  "state": {
+    "serverState": "stopped",
+    "agentRunning": false,
+    "benchmarkRunning": false
+  },
+  "coverage": [
+    {
+      "benchmarkEligible": true,
+      "coverageState": "incomplete",
+      "hasBlockedStage": false,
+      "hasInfrastructureOrTimeout": false,
+      "healthCodes": [],
+      "healthMessages": [],
+      "nextStage": "he0",
+      "pendingStages": [
+        "he0",
+        "he20",
+        "bcb"
+      ],
+      "profileConfigFingerprint": "e9c5c527e30744049cff955f0489c36cd08a8777b9bf87422f0f768c3d42cf23",
+      "profileId": "q4-mtp-off-taskflow-20261013",
+      "profileName": "4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192",
+      "retired": false,
+      "stageStates": {
+        "bcb": "pending",
+        "he0": "pending",
+        "he20": "pending"
+      }
+    },
+    {
+      "benchmarkEligible": true,
+      "coverageState": "incomplete",
+      "hasBlockedStage": false,
+      "hasInfrastructureOrTimeout": false,
+      "healthCodes": [],
+      "healthMessages": [],
+      "nextStage": "bcb",
+      "pendingStages": [
+        "bcb"
+      ],
+      "profileConfigFingerprint": "7f84727070a2fb93d008a42c90391f3904d800f7d7c2e67f173813ab0435ff89",
+      "profileId": "q4-mtp-off-he-20261013",
+      "profileName": "3_EVAL · Q4 llama.cpp mtp-off · he R4096",
+      "retired": false,
+      "stageStates": {
+        "bcb": "pending",
+        "he0": "valid",
+        "he20": "valid"
+      }
+    }
+  ],
+  "gate": {
+    "fingerprints_match": true,
+    "he0_he20_valid_bcb_pending": true,
+    "server_stopped": true,
+    "agent_stopped": true,
+    "benchmark_idle": true,
+    "pass": true
+  }
+}

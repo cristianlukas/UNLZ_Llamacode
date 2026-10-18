@@ -1,0 +1,35 @@
+{
+  "time_utc": "2026-10-18T13:49:03Z",
+  "queue_lock": {
+    "token": "e9c6f3ab-0643-4417-ad21-6b86a35be9c2",
+    "worker": "Q-20261018-LLAMACPP-MTP-REMAINING",
+    "host": "3090",
+    "claimed_at_utc": "2026-10-18T13:25:23.269487+00:00",
+    "continuation_of": "Q-20261018-LLAMACPP-MTP-REMAINING"
+  },
+  "api_state": {
+    "benchmarkRunning": false,
+    "benchmarkStatus": "Cancelado.",
+    "serverState": "stopped",
+    "agentRunning": false
+  },
+  "memory_kib": {
+    "MemAvailable": "118239508 kB",
+    "SwapTotal": "8388604 kB",
+    "SwapFree": "8388604 kB"
+  },
+  "vmstat": {
+    "pswpin": 0,
+    "pswpout": 0,
+    "oom_kill": 0
+  },
+  "memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=163\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=161",
+  "gpu_memory": "15 MiB, 24576 MiB\n607 MiB, 24576 MiB",
+  "gpu_compute_apps": "",
+  "ports_listening": {
+    "18111": false,
+    "18112": false,
+    "18119": true
+  },
+  "previous_run": "BCB8 MTP-off canceled after initial attempt plus three repair attempts; no BCB score."
+}

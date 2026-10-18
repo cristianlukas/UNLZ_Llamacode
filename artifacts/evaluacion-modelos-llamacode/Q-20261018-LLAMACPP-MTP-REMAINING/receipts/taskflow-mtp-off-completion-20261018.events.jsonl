@@ -1,0 +1,107 @@
+{"time_utc": "2026-10-18T13:49:11Z", "event": "set_approval", "response": {"ok": true, "reqId": "6e010459-3984-4c27-aa3e-9379dcedc597"}}
+{"time_utc": "2026-10-18T13:49:11Z", "event": "set_thinking", "response": {"ok": true, "reqId": "054ba883-6a78-405b-befe-65b18c6234df"}}
+{"time_utc": "2026-10-18T13:49:11Z", "event": "gate_probe", "response": {"ok": true, "reqId": "7159d3ef-7821-4357-a201-2ea4f0696ed8"}}
+{"time_utc": "2026-10-18T13:49:11Z", "event": "preflight", "launch": {"alias": "q4-mtp-off", "benchmark": true, "best": false, "deprecated": false, "displayName": "🏆 q4-mtp-off - 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192", "favorite": false, "id": "q4-mtp-off-taskflow-20261013", "lastUsed": 1792268372462, "menuOrder": 0, "name": "4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192", "ready": true, "system": false, "systemBadge": false, "tags": ["q4-mtp-ab", "isolated", "managed-local", "parallel-1"]}, "suite": {"id": "qwen38_taskflow_ultra_ast_vs_sol_20261006", "name": "Qwen3.8 ASTRA IQ3_S calibrado vs SOL · TaskFlow ULTRA E2E", "prompt_count": 1}, "coverage": {"benchmarkEligible": true, "coverageState": "incomplete", "hasBlockedStage": false, "hasInfrastructureOrTimeout": false, "healthCodes": [], "healthMessages": [], "nextStage": "he0", "pendingStages": ["he0", "he20", "bcb"], "profileConfigFingerprint": "e9c5c527e30744049cff955f0489c36cd08a8777b9bf87422f0f768c3d42cf23", "profileId": "q4-mtp-off-taskflow-20261013", "profileName": "4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192", "retired": false, "stageStates": {"bcb": "pending", "he0": "pending", "he20": "pending"}}}
+{"time_utc": "2026-10-18T13:49:11Z", "event": "start_agent", "response": {"ok": true, "reqId": "dadf052a-c7e8-4d6a-8840-2339a2cf4382"}}
+{"time_utc": "2026-10-18T13:49:17Z", "event": "agent_ready", "server_state": "running"}
+{"time_utc": "2026-10-18T13:49:17Z", "event": "benchmark_start", "response": {"ok": true, "reqId": "443115cf-eeb0-432b-bbd2-524d9e676edd"}, "suite_id": "qwen38_taskflow_ultra_ast_vs_sol_20261006", "agent_profile": "agent-maximo", "timeout_sec": 1800}
+{"time_utc": "2026-10-18T13:49:17Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — cargando modelo (puede tardar)... 0s"}
+{"time_utc": "2026-10-18T13:49:32Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:49:47Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:50:02Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:50:17Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:50:32Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:50:47Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:51:02Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:51:17Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:51:32Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:51:47Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:52:02Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:52:17Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:52:32Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:52:47Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:53:02Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:53:17Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:53:32Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:53:47Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:54:02Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:54:17Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:54:32Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:54:47Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:55:02Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:55:17Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:55:32Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:55:47Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:56:02Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:56:17Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:56:32Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:56:47Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:57:02Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:57:17Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:57:32Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:57:47Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — agente: prompt 1/1..."}
+{"time_utc": "2026-10-18T13:58:02Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T13:58:17Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T13:58:32Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T13:58:47Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T13:59:02Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T13:59:17Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T13:59:32Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T13:59:47Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:00:02Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:00:17Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:00:32Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:00:47Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:01:02Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:01:17Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:01:32Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:01:47Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:02:02Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:02:17Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:02:32Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:02:47Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:03:02Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:03:17Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:03:32Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:03:47Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:04:02Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:04:17Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:04:32Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:04:47Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:05:02Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:05:17Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:05:32Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:05:47Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:06:02Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:06:17Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:06:32Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:06:47Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:07:02Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:07:17Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:07:32Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:07:47Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:08:02Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:08:17Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:08:32Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:08:47Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:09:02Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:09:17Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:09:32Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:09:47Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:10:02Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:10:17Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:10:32Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:10:47Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:11:02Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:11:17Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:11:32Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:11:47Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:12:02Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:12:17Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:12:32Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:12:47Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:13:02Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:13:17Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:13:32Z", "event": "benchmark_poll", "running": true, "status": "[1/1] 4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192 — reparando fallos 2/3..."}
+{"time_utc": "2026-10-18T14:13:47Z", "event": "benchmark_poll", "running": false, "status": "Completado."}
+{"time_utc": "2026-10-18T14:13:47Z", "event": "benchmark_complete", "status": "Completado.", "results_file": "artifacts/evaluacion-modelos-llamacode/Q-20261018-LLAMACPP-MTP-REMAINING/receipts/taskflow-mtp-off-completion-20261018.json"}
