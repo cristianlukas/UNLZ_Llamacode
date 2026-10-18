@@ -1,0 +1,36 @@
+{
+  "task_id": "Q-20261018-LLAMACPP-MTP-REMAINING",
+  "observed_at_utc": "2026-10-18T13:17:34Z",
+  "lock_token": "9a8ab269-7135-48d2-aea7-01cd04aa5b70",
+  "benchmark_started": false,
+  "model_loaded": false,
+  "gpu_reserved": false,
+  "host": {
+    "memory_available_gib_approx": 116,
+    "swap_used_gib": 0,
+    "memory_psi_avg10": 0,
+    "oom_kill": 0
+  },
+  "gpus": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "utilization_percent": 0,
+      "memory_used_mib": 6413,
+      "memory_total_mib": 24576,
+      "foreign_server_pid": 8459,
+      "port": 8033
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "utilization_percent": 20,
+      "memory_used_mib": 7148,
+      "memory_total_mib": 24576,
+      "foreign_server_pid": 15451,
+      "port": 8081
+    }
+  ],
+  "server_parent": "PeritoSoft electron app PID 7828",
+  "actions": "No process stopped, no API request sent, no benchmark launched."
+}
