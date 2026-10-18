@@ -1,0 +1,10 @@
+# Fuentes primarias revisadas
+
+- Release actual del fork al 2026-10-18: https://github.com/sergqwer/strata-nvfp4/releases. La página lista `v0.1.44.1-nvfp4.2` (commit corto `257727d`), engine build `3dc869fb`; declara que el engine es el mismo que la release `.1`. La release está basada en Strata upstream 0.1.44.1 e incluye mejoras recientes de ejecución multi-GPU y varios fixes. No se descargó ni verificó el checksum localmente.
+- README actual del fork: https://github.com/sergqwer/strata-nvfp4. Describe soporte de una RTX 20–50 (12 GB+) y 64 GB RAM, ejecución desde Linux construyendo desde fuente; su receta/predeterminados ya no recomiendan Orca. Sus cifras tabuladas corresponden a RTX 5090/128 GB y cuantizaciones distintas, no a nuestro host ni al checkpoint del post.
+- Ficha del checkpoint exacto: https://huggingface.co/jpezzulli/OrcaRouter-Qwen3.8-Flash-Next-Uncensored-ModelOpt-NVFP4. Reporta 135,3 GB / 126 GiB, base OrcaRouter uncensored, ModelOpt 0.46 NVFP4 en módulos Linear seleccionados, PLE FP8 y licencia Qwen Community License 1.0. El registro local de 2026-10-05 fija la revisión `f24d2b68ff2814f24455ae86717be276619b5664`.
+- El reporte local previo `docs/strata-nvfp4-reddit-20261005.md` y `Q-20261009-STRATA-NVFP4-POST/RESULTS.md` ya conservan: HE0 1/1 sólo con prefill fijo 2K tras una reparación (355,284 s); `auto`/16K, 8K y 4K causaron el watchdog; HE20/BCB8/ADV no se ejecutaron. No se repitió su fingerprint.
+
+## Aplicabilidad
+
+El post del usuario relata una corrida de Orca ModelOpt NVFP4 en RTX PRO 4500 Blackwell, 64 GB RAM y un fork específico; su principal cifra de 188K warm y 60–67 tok/s no es comparable con las mediciones locales de 2×RTX 3090/CUDA/engine anterior. La afirmación no prueba coding correcto, Computer Usage E2E, OCR/visión, recuperación de contexto ni ASR/TTS. La propia revisión anterior ya separó NVIDIA NVFP4 de Orca y registró que el fork luego retiró Orca de su recomendación. La actualización de engine amerita el smoke preregistrado, pero sólo con el peso exacto y el pack verificable.
