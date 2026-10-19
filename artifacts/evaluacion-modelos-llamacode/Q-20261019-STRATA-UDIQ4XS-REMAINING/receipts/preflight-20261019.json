@@ -1,0 +1,66 @@
+{
+  "task_id": "Q-20261019-STRATA-UDIQ4XS-REMAINING",
+  "lock_token": "bbd8e809-7e9e-41f7-8d24-2794104605b2",
+  "claimed_at_utc": "2026-10-19T20:47:02.849101+00:00",
+  "closed_at_utc": "2026-10-19T20:49:08Z",
+  "request": "Run outstanding tests for Strata UD-IQ4_XS after partial screening.",
+  "candidate": "Qwen3.8-Flash-Next Unsloth UD-IQ4_XS",
+  "runtime": "Strata 0.1.41 (reuse isolated runtime from 2026-10-18)",
+  "preflight": {
+    "gpu0_utilization_samples_percent": [
+      10,
+      55,
+      9,
+      31,
+      30,
+      67,
+      10,
+      31,
+      31,
+      9,
+      9,
+      33,
+      32
+    ],
+    "gpu1_utilization_samples_percent": [
+      52,
+      46,
+      23,
+      44,
+      31,
+      32,
+      22,
+      33,
+      44,
+      16,
+      17,
+      17,
+      34
+    ],
+    "last_snapshot_percent": {
+      "gpu0": 33,
+      "gpu1": 22
+    },
+    "compute_processes": [],
+    "gpu_reserved": [],
+    "inference_started": false,
+    "mem_available_kib": 122283760,
+    "swap_free_bytes": 8589930496,
+    "hdd_free_bytes": 236197289984,
+    "model_shards_present": true,
+    "model_hashes_rechecked": false,
+    "ports_checked_free": [
+      18354,
+      8354,
+      8350
+    ]
+  },
+  "status": "blocked_before_inference",
+  "new_tests_run": 0,
+  "pending_coverage": [
+    "HumanEval/20",
+    "BigCodeBench-Hard/8",
+    "TaskFlow ULTRA"
+  ],
+  "next_action": "Resume under a new exclusive queue lock when GPU0 remains idle for 60 seconds; verify shard hashes, runtime and ports, then run serially."
+}
