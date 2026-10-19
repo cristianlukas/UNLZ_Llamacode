@@ -17,3 +17,10 @@ HE20, BCB8 y TaskFlow ULTRA siguen sin ejecutar. Se conservan sin cambios los re
 ## Reanudación
 
 Esperar a que GPU0 permanezca ociosa al menos 60 s, confirmar que no hay inferencia ajena, adquirir un lock nuevo y revalidar hashes/runtime/puertos. Entonces ejecutar HE20 → BCB8 → TaskFlow ULTRA en serie y guardar cada resultado, incluidos fallos y tiempos. No iniciar otra tarea del repo automáticamente: `WORK_QUEUE.md` es una cola manual.
+
+
+## Segundo intento de reanudación — 2026-10-19T20:54:45.944518Z
+
+La solicitud se reabrió bajo un lock nuevo (`03bc16b9-cf54-45fd-833a-ef36eea3d08e`). GPU0 se mantuvo entre 17% y 25% durante 30 segundos; GPU1 entre 26% y 39% (snapshot final 25%/26%). No se enumeraron procesos compute. MemAvailable fue 121.427.100 KiB, swap libre 8 GiB y los puertos 18354/8354/8350 estaban libres.
+
+**Resultado: 0 pruebas nuevas.** No se inició Strata ni se cargó el modelo porque GPU0 no pasó el idle gate de 60 segundos. La continuación vuelve a quedar bloqueada; reanudar bajo otro lock cuando GPU0 esté ociosa 60 segundos y se revaliden hashes/runtime/puertos. Recibo: [preflight de reanudación](receipts/resume-preflight-20261019T2053.json).

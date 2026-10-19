@@ -1,0 +1,40 @@
+{
+  "task_id": "Q-20261019-STRATA-UDIQ4XS-REMAINING",
+  "lock_token": "03bc16b9-cf54-45fd-833a-ef36eea3d08e",
+  "resumed_at_utc": "2026-10-19T20:53:26.333982Z",
+  "checked_at_utc": "2026-10-19T20:54:45.944518Z",
+  "gpu_idle_observation_seconds": 30,
+  "gpu0_sm_utilization_percent": [
+    21,
+    17,
+    20,
+    21,
+    19,
+    25
+  ],
+  "gpu1_sm_utilization_percent": [
+    33,
+    33,
+    33,
+    33,
+    33,
+    33
+  ],
+  "final_snapshot_percent": {
+    "gpu0": 25,
+    "gpu1": 26
+  },
+  "compute_processes": [],
+  "ports_checked_free": [
+    18354,
+    8354,
+    8350
+  ],
+  "mem_available_kib": 121427100,
+  "swap_free_bytes": 8589930496,
+  "model_inference_started": false,
+  "new_tests_run": 0,
+  "status": "blocked_gpu0_not_idle",
+  "reason": "GPU0 remained at 17–25% during the observation window, above the idle gate; no compute process was enumerable. No model/server was started to avoid competing with active host usage.",
+  "next_action": "Reopen under a new exclusive lock after GPU0 is idle for 60 seconds and revalidate hashes/runtime/ports."
+}
