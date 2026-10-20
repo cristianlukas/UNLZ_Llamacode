@@ -1,0 +1,41 @@
+{
+    "benchmarkName": "HumanEval (20 ítems)",
+    "comparisons": [
+    ],
+    "generatedAt": "2026-10-19T19:47:22",
+    "profileCount": 1,
+    "profiles": [
+        {
+            "agentVariant": "baseline",
+            "comparisonTimeMetric": "timeToFirstAttempt",
+            "failedRuns": 0,
+            "fullyAcceptedRuns": 1,
+            "honeyEnabled": false,
+            "medianAddedLines": 521,
+            "medianColdFirstAttemptSec": 4704.897,
+            "medianElapsedSec": 4705.197,
+            "medianFilesChanged": 40,
+            "medianFirstAttemptSec": 4704.897,
+            "medianQualityPct": 100,
+            "medianRemovedLines": 0,
+            "medianRepairAttempts": 0,
+            "medianToolCalls": 59,
+            "medianToolF1Pct": 0,
+            "medianToolRedundantCalls": 1,
+            "medianToolSuccessRatePct": 93.22033898305085,
+            "medianWarmFirstAttemptSec": 0,
+            "outcomeSpread": false,
+            "profileId": "q14-udiq4xs-he0",
+            "profileName": "EVAL · UD-IQ4_XS · Strata 0.1.41 · HE0",
+            "qualityRangePctPoints": 0,
+            "runs": 1,
+            "stabilityRatePct": 100,
+            "successRatePct": 100,
+            "successfulRuns": 1
+        }
+    ],
+    "runCount": 1,
+    "runLabel": "HumanEval (20 ítems)",
+    "schemaVersion": 1,
+    "target": "agent"
+}

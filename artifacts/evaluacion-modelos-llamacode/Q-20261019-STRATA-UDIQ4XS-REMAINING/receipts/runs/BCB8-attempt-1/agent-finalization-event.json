@@ -1,0 +1,12 @@
+{
+  "benchmarkName": "BigCodeBench-Hard (8 ítems)",
+  "earlyAccepted": false,
+  "elapsedSec": 1800.232,
+  "id": "ae8710ff-8adf-4021-b4d9-45fbd2d85fb5",
+  "kind": "benchmark_finalize",
+  "passFailed": true,
+  "profileId": "q14-udiq4xs-he0",
+  "serverCrashed": false,
+  "timedOut": true,
+  "ts": "2026-10-19T23:19:32.660Z"
+}

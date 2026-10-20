@@ -1,0 +1,12 @@
+{
+  "benchmarkName": "ADV v1 - 10 tareas",
+  "earlyAccepted": false,
+  "elapsedSec": 989.237,
+  "id": "a48dbc55-139f-4e3c-8b95-a76aa186a3be",
+  "kind": "benchmark_finalize",
+  "passFailed": false,
+  "profileId": "q14-udiq4xs-he0",
+  "serverCrashed": false,
+  "timedOut": false,
+  "ts": "2026-10-20T01:44:56.886Z"
+}

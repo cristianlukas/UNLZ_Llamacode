@@ -1,0 +1,12 @@
+{
+  "benchmarkName": "HumanEval (20 ítems)",
+  "earlyAccepted": true,
+  "elapsedSec": 4705.197,
+  "id": "3c36b9dc-31d1-4ffb-a1a5-47bae49ede8e",
+  "kind": "benchmark_finalize",
+  "passFailed": false,
+  "profileId": "q14-udiq4xs-he0",
+  "serverCrashed": false,
+  "timedOut": false,
+  "ts": "2026-10-19T22:47:22.022Z"
+}

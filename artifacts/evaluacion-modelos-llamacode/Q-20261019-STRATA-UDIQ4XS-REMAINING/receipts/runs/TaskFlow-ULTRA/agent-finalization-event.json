@@ -1,0 +1,12 @@
+{
+  "benchmarkName": "Qwen3.8 ASTRA IQ3_S calibrado vs SOL · TaskFlow ULTRA E2E",
+  "earlyAccepted": false,
+  "elapsedSec": 2117.136,
+  "id": "041566a1-eeaa-4bbe-9cb0-c09c961d4249",
+  "kind": "benchmark_finalize",
+  "passFailed": false,
+  "profileId": "q14-udiq4xs-he0",
+  "serverCrashed": false,
+  "timedOut": false,
+  "ts": "2026-10-20T02:20:28.544Z"
+}

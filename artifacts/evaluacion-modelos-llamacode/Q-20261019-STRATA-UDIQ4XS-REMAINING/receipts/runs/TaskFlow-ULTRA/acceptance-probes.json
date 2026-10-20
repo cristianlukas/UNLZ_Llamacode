@@ -1,0 +1,182 @@
+[
+  {
+    "fileCount": 2,
+    "hardFailed": true,
+    "id": "bf2d8dbc-26d1-452a-beee-0f70b659f82a",
+    "kind": "benchmark_acceptance_probe",
+    "score": 2,
+    "total": 10,
+    "ts": "2026-10-20T01:47:46.536Z"
+  },
+  {
+    "fileCount": 4,
+    "hardFailed": true,
+    "id": "49ad9464-92a2-4ea5-9802-781c10cf820f",
+    "kind": "benchmark_acceptance_probe",
+    "score": 4,
+    "total": 10,
+    "ts": "2026-10-20T01:51:11.685Z"
+  },
+  {
+    "fileCount": 5,
+    "hardFailed": true,
+    "id": "e5417016-b947-4316-8164-453fd17a6e25",
+    "kind": "benchmark_acceptance_probe",
+    "score": 5,
+    "total": 10,
+    "ts": "2026-10-20T01:54:40.831Z"
+  },
+  {
+    "fileCount": 6,
+    "hardFailed": true,
+    "id": "c3c553ad-7fa7-4558-92d8-f5fb47e1eb39",
+    "kind": "benchmark_acceptance_probe",
+    "score": 5,
+    "total": 10,
+    "ts": "2026-10-20T01:56:40.921Z"
+  },
+  {
+    "fileCount": 7,
+    "hardFailed": true,
+    "id": "a615f3cb-d890-45c7-9c11-1bb7d83c771f",
+    "kind": "benchmark_acceptance_probe",
+    "score": 5,
+    "total": 10,
+    "ts": "2026-10-20T01:59:11.129Z"
+  },
+  {
+    "fileCount": 8,
+    "hardFailed": true,
+    "id": "59a7a0f6-1bd4-4d21-8e4a-1dcfb525510b",
+    "kind": "benchmark_acceptance_probe",
+    "score": 6,
+    "total": 10,
+    "ts": "2026-10-20T01:59:50.159Z"
+  },
+  {
+    "fileCount": 13,
+    "hardFailed": true,
+    "id": "a2252708-2ec9-4d2a-ba0d-1ad467f8c8ce",
+    "kind": "benchmark_acceptance_probe",
+    "score": 6,
+    "total": 10,
+    "ts": "2026-10-20T02:00:23.186Z"
+  },
+  {
+    "fileCount": 14,
+    "hardFailed": true,
+    "id": "a52e8372-41e3-42ef-af7e-b8ee6f2b1ebd",
+    "kind": "benchmark_acceptance_probe",
+    "score": 6,
+    "total": 10,
+    "ts": "2026-10-20T02:00:36.199Z"
+  },
+  {
+    "fileCount": 14,
+    "hardFailed": true,
+    "id": "bfd2ad7c-6128-4817-b470-6c760b5cd781",
+    "kind": "benchmark_acceptance_probe",
+    "score": 6,
+    "total": 10,
+    "ts": "2026-10-20T02:00:43.204Z"
+  },
+  {
+    "fileCount": 14,
+    "hardFailed": true,
+    "id": "3efa4a49-cd51-4820-a268-a797e8333ded",
+    "kind": "benchmark_acceptance_probe",
+    "score": 6,
+    "total": 10,
+    "ts": "2026-10-20T02:00:51.211Z"
+  },
+  {
+    "fileCount": 14,
+    "hardFailed": true,
+    "id": "54cfd2ea-65f8-4a95-8f7b-31e47896bcb4",
+    "kind": "benchmark_acceptance_probe",
+    "score": 6,
+    "total": 10,
+    "ts": "2026-10-20T02:00:54.215Z"
+  },
+  {
+    "fileCount": 14,
+    "hardFailed": true,
+    "id": "94dd69d1-012a-4fab-afa3-4acb39dc58bf",
+    "kind": "benchmark_acceptance_probe",
+    "score": 6,
+    "total": 10,
+    "ts": "2026-10-20T02:00:56.218Z"
+  },
+  {
+    "fileCount": 14,
+    "hardFailed": true,
+    "id": "f6b24032-fd01-4cf7-8ee9-10e095fcc9a2",
+    "kind": "benchmark_acceptance_probe",
+    "score": 6,
+    "total": 10,
+    "ts": "2026-10-20T02:01:02.224Z"
+  },
+  {
+    "fileCount": 14,
+    "hardFailed": true,
+    "id": "130f7f92-a8f1-47be-adae-e2ba64358043",
+    "kind": "benchmark_acceptance_probe",
+    "score": 6,
+    "total": 10,
+    "ts": "2026-10-20T02:01:08.231Z"
+  },
+  {
+    "fileCount": 14,
+    "hardFailed": true,
+    "id": "21dcc96d-0130-451f-9eee-b738440adb91",
+    "kind": "benchmark_acceptance_probe",
+    "score": 6,
+    "total": 10,
+    "ts": "2026-10-20T02:01:11.234Z"
+  },
+  {
+    "fileCount": 14,
+    "hardFailed": true,
+    "id": "04b48700-0482-43ae-9234-e42c6532a22b",
+    "kind": "benchmark_acceptance_probe",
+    "score": 6,
+    "total": 10,
+    "ts": "2026-10-20T02:01:14.237Z"
+  },
+  {
+    "fileCount": 14,
+    "hardFailed": true,
+    "id": "45f40a6a-2c57-4e44-b3a8-bb5f0e3e4e1b",
+    "kind": "benchmark_acceptance_probe",
+    "score": 6,
+    "total": 10,
+    "ts": "2026-10-20T02:01:17.241Z"
+  },
+  {
+    "fileCount": 14,
+    "hardFailed": true,
+    "id": "d9536155-7dcd-41e8-a2a8-7ed88e8966b1",
+    "kind": "benchmark_acceptance_probe",
+    "score": 6,
+    "total": 10,
+    "ts": "2026-10-20T02:01:41.265Z"
+  },
+  {
+    "fileCount": 14,
+    "hardFailed": true,
+    "id": "77c5a6c6-0397-469c-8964-cae33bf82e6c",
+    "kind": "benchmark_acceptance_probe",
+    "score": 6,
+    "total": 10,
+    "ts": "2026-10-20T02:01:44.268Z"
+  },
+  {
+    "fileCount": 14,
+    "hardFailed": true,
+    "id": "8d1acd78-dba5-44cf-be65-692cd24dbad2",
+    "kind": "benchmark_acceptance_probe",
+    "score": 6,
+    "total": 10,
+    "ts": "2026-10-20T02:03:08.342Z"
+  }
+]
