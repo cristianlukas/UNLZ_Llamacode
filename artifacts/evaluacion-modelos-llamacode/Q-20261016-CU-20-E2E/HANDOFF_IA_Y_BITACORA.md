@@ -6,7 +6,7 @@ Este documento es el punto de continuación para otra IA. El resumen operativo s
 
 Completar 20 escenarios de Computer Usage con LlamaCode headless, Gemma 4 12B UD-Q3_K_XL, launch profile `sys-vram-8-gemma` y el último perfil de agente `agent-intermedio`. El cierre exige 20/20 pases independientes en un único SHA-256 de `build/Debug/LlamaCode.exe`. Los pases sobre hashes anteriores son antecedentes y se vuelven a ejecutar en el hash final.
 
-- Última actualización: 2026-10-20 11:52 ART / 2026-10-20 14:52 UTC.
+- Última actualización: 2026-10-20 11:59 ART / 2026-10-20 14:59 UTC.
 - Checkout: `C:\Users\Cristian\Documents\GitHub\LlamaCode`.
 - Campaña: `artifacts\evaluacion-modelos-llamacode\Q-20261016-CU-20-E2E`.
 - Ejecutable de las corridas: `build\Debug\LlamaCode.exe`; SHA actual `AE85A27680AD2A8B3945F19BD4741177D699046676BE500D580D1E6949449F28`.
@@ -601,3 +601,10 @@ Historial CU12 en el SHA actual (v28 es el pase certificable):
 - Limpieza CU08: target de launch `8a0860`; Alt+F4 cerró esa ventana. La lectura siguiente mostró que Windows recicló el HWND como `3af084a` para otra ventana Edge; fue una lectura de título solamente y devolvió cero renglones, sin acción. `desktop_windows` posterior no incluyó `8a0860`. Actualicé el prompt de cleanup para hacer la enumeración inmediatamente después de Alt+F4 y no releer nunca un HWND viejo; añadí regresión. Cleanup receipt: `cleanup-ae85-cu08c-edge`.
 - Validé el harness después del ajuste: `python -W error::SyntaxWarning -m py_compile .../run_cu20_windows.py .../test_run_cu20_windows.py` OK; `python -m pytest -q .../test_run_cu20_windows.py`: **72 passed, 9 subtests passed**. No hubo cambio C++/QML/core en esta última iteración; no se hizo rebuild. El binario y los recibos vigentes comparten el SHA AE85.
 - Resultado: **20/20** en un mismo SHA, incluida CU18 por su revalidación ya documentada. No faltan pruebas. Revisar `RESULTS.md`, `PLAN.md` y recibos listados en la sección vigente antes de cambiar el producto. Los logs raw del perfil normal pueden contener texto personal; no compartirlos sin redacción.
+
+
+### 2026-10-20 11:59 ART / 14:59 UTC — integración y publicación
+
+- Commit de la campaña: `870d3779` (`feat(computer-use): harden desktop interaction and verify CU20`), rebasado sobre el `origin/main` vigente y publicado a `origin main` con la cuenta `guideahon`; remoto y rama coinciden con `AGENTS.md`. Incluye el código Computer Usage, regresiones, runner, handoff, matriz y recibos de los 20 casos. Las trazas runtime raw y workspaces no se incluyeron; algunas lecturas del perfil normal de Edge pueden contener texto personal.
+- El rebase tuvo un conflicto de inserciones en `WORK_QUEUE.md`; se conservaron las filas remotas y la fila CU20 completada. Las entradas históricas locales se preservaron en el checkout. La descripción de la fila se precisa para distinguir el daemon/fixtures aislados del uso de Edge normal en ventana nueva.
+- Se liberará el lock sólo después de comprobar que mantiene el token de esta campaña y de terminar esta actualización final. No quedan pruebas E2E pendientes.
