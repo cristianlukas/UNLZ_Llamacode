@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "task_id": "Q-20261020-MODEL-PATHS-METRICS",
+  "completed_at_utc": "2026-10-20T21:24:10+00:00",
+  "spreadsheet": {
+    "title": "Listado de Juegos",
+    "id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "url": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit?gid=2026102061#gid=2026102061",
+    "tab": "Inventario de modelos",
+    "sheet_id": 2026102061,
+    "gid": 2026102061,
+    "range": "A1:R51",
+    "header_range": "A3:R3",
+    "data_range": "A4:R51",
+    "columns": 18,
+    "data_rows": 48,
+    "frozen_rows": 3,
+    "basic_filter": true,
+    "blank_data_cells": 0,
+    "duplicate_model_labels": 0,
+    "saved_indicator": "Guardado en Drive"
+  },
+  "roots": {
+    "C": {
+      "windows": "C:\\models",
+      "linux": "/media/cristian/7CFE1E0FFE1DC1F6/models",
+      "rows": 15
+    },
+    "D": {
+      "windows": "D:\\Models and D:\\LlamaCode-eval",
+      "linux": [
+        "/media/cristian/Disco local/Models",
+        "/media/cristian/Disco local/LlamaCode-eval"
+      ],
+      "rows": 28
+    },
+    "HDD_extra": {
+      "windows": "letra no verificada; no se inventó",
+      "linux": "/media/cristian/HDD extra/Models",
+      "rows": 4
+    },
+    "historical_not_located": {
+      "rows": 1,
+      "artifact": "ThinkingCap Qwen3.6-27B Q3_K_M MTP, registrado por PeritoSoft pero sin pesos hallados en las raíces escaneadas"
+    },
+    "C_AppData_models": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/AppData/Local/LlamaCode/LlamaCode/models (vacía)"
+  },
+  "coverage": {
+    "includes": "model bundles GGUF/safetensors y artefactos de audio-cpp, drafters, packs/runtime Strata/MTP y roots explícitas de evaluación",
+    "excludes": "caches de frameworks, builds, tokenizers de repositorio y copias efímeras dentro de caches",
+    "disk_scan_date": "2026-10-20",
+    "source_receipts": [
+      "docs/evaluacion-modelos-llamacode.md",
+      "docs/model-inventory-20260918.md",
+      "profiles/launches.json",
+      "model_roots.json",
+      "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/PeritoSoft/tmp_flow_benchmark_realdocs_2026-08-13.json"
+    ]
+  },
+  "metric_policy": {
+    "missing": "N/D means no comparable local result located; it is not zero.",
+    "prefill_decode": "only separated when the original report explicitly separates them; PeritoSoft tps is reported as the record field with caveat and not called prefill.",
+    "bench_time": "wall-clock total only when explicitly documented; PeritoSoft sums of request latencies are explicitly not suite wall-clock.",
+    "comparability": "different harnesses, contexts, quantizations and hardware are not presented as directly comparable."
+  },
+  "peritosoft": {
+    "status": "historical benchmark record from 2026-08-13; assignments do not prove current live use",
+    "bigbang_assignments": [
+      "notificaciones",
+      "ocr"
+    ],
+    "thinkingcap_assignments": [
+      "resumen_asignacion",
+      "metadata",
+      "jurisdiccion",
+      "rag",
+      "chat_general",
+      "docgen_informe"
+    ],
+    "record": "tmp_flow_benchmark_realdocs_2026-08-13.json"
+  },
+  "preserved_models": [
+    "Qwen3.8 Flash-Next ASTRA variants and support artifacts",
+    "Qwen3.8-27B SOL AutoRound INT4",
+    "models linked to PeritoSoft historical assignments"
+  ],
+  "actions": {
+    "gpu": false,
+    "build": false,
+    "new_benchmarks": false,
+    "model_files_deleted": false,
+    "existing_sheet_tabs_modified": false
+  },
+  "notes": [
+    "Added a dedicated inventory tab; pre-existing spreadsheet tabs were preserved.",
+    "HDD extra Windows drive letter was not verified in this environment.",
+    "LlamaCode profile definitions and PeritoSoft assignment records are distinguished from live process usage."
+  ]
+}
