@@ -11,6 +11,7 @@
 #include <QTemporaryDir>
 #include "core/agent/LlamaAgentBackend.h"
 #include "core/agent/SubAgentRunner.h"
+#include "core/automation/DesktopComputerUse.h"
 
 class AgentWireTests : public QObject
 {
@@ -27,6 +28,11 @@ private slots:
     void dropsDanglingAssistantAndAnchorsFirstUser();
     void dropsTransportErrorAssistantMessages();
     void parsesTextToolCallFallback();
+    void desktopLaunchIdentity_allowsDifferentDocumentsInSameApp();
+    void parsesTextToolCallWithMissingOpeningQuote();
+    void parsesTextToolCallWithQuoteShiftedAcrossKeyColon();
+    void parsesTextToolCallWithUnquotedHexTargetId();
+    void textToolCallContinuation_reassemblesTruncatedJsonAcrossLength();
     void cutsTextToolCallBurstAtSecondCall();
     void readsToolSupportFromPropsCaps();
     void fallsBackToTextToolsWhenServerRejectsNativeTools();
@@ -62,6 +68,7 @@ private slots:
     void desktopPlaybookSection_coversKeyboardPathAndTextVerify();
     void desktopConfirmKeyBlockedAfterTypeEquals();
     void parsesNativeToolCallLeakFallback();
+    void parsesNativeToolCallWithGemmaQuoteTokens();
     void parsesKatCoderXmlToolCallFallback();
     void parsesJsonOnlyToolCallFallback();
     void normalizesLingTaggedToolArguments();
@@ -190,6 +197,8 @@ void AgentWireTests::toolCallSignatureNormalizesEquivalentJson()
 void AgentWireTests::toolWatchdogIsTypeAware()
 {
     QCOMPARE(LlamaAgentBackend::toolWatchdogSeconds("write_file", {}, 15), 15);
+    QCOMPARE(LlamaAgentBackend::toolWatchdogSeconds("desktop_launch", {}, 15), 25);
+    QCOMPARE(LlamaAgentBackend::toolWatchdogSeconds("desktop_launch", {}, 45), 45);
     QCOMPARE(LlamaAgentBackend::toolWatchdogSeconds(
                  "run_shell", QJsonObject{{"timeout_s", 600}}, 15), 615);
     QCOMPARE(LlamaAgentBackend::toolWatchdogSeconds("web_search", {}, 15), 180);
@@ -419,6 +428,121 @@ void AgentWireTests::parsesTextToolCallFallback()
     QCOMPARE(args.value(QStringLiteral("url")).toString(), QStringLiteral("https://dolarhoy.com/"));
 }
 
+void AgentWireTests::desktopLaunchIdentity_allowsDifferentDocumentsInSameApp()
+{
+    const QString alphaArgs = QStringLiteral("\"C:\\cu20\\CU19-alpha.txt\"");
+    const QString betaArgs = QStringLiteral("\"C:\\cu20\\CU19-beta.txt\"");
+    const QString alpha = DesktopComputerUse::launchTargetIdentity(QStringLiteral("notepad"),
+                                                                    alphaArgs);
+    const QString sameAlpha = DesktopComputerUse::launchTargetIdentity(
+        QStringLiteral("NOTEPAD.EXE"), alphaArgs);
+    const QString beta = DesktopComputerUse::launchTargetIdentity(QStringLiteral("notepad"),
+                                                                   betaArgs);
+    const QString appOnly = DesktopComputerUse::launchTargetIdentity(QStringLiteral("notepad"), {});
+
+    QVERIFY(!alpha.isEmpty());
+    QCOMPARE(alpha, sameAlpha);
+    QVERIFY(alpha != beta);
+    QVERIFY(alpha != appOnly);
+}
+
+void AgentWireTests::parsesTextToolCallWithMissingOpeningQuote()
+{
+    // Gemma emitted a valid desktop stroke except for the opening quote on
+    // scope_kind. This typo previously left the request as assistant text, so
+    // no desktop tool ever ran.
+    const QString content = QStringLiteral(
+        "TOOL_CALL {\"name\":\"desktop_stroke\",\"arguments\":{\"points\":["
+        "{\"x\":0.4,\"y\":0.3},{\"x\":0.6,\"y\":0.7}],"
+        "scope_kind\":\"window\",\"target_id\":\"3c10e2\"}}");
+    const QJsonObject call = LlamaAgentBackend::textToolCallFromContent(content);
+    QVERIFY(!call.isEmpty());
+    const QJsonObject fn = call.value(QStringLiteral("function")).toObject();
+    QCOMPARE(fn.value(QStringLiteral("name")).toString(), QStringLiteral("desktop_stroke"));
+    const QJsonObject args = QJsonDocument::fromJson(
+        fn.value(QStringLiteral("arguments")).toString().toUtf8()).object();
+    QCOMPARE(args.value(QStringLiteral("scope_kind")).toString(), QStringLiteral("window"));
+    QCOMPARE(args.value(QStringLiteral("target_id")).toString(), QStringLiteral("3c10e2"));
+    QCOMPARE(args.value(QStringLiteral("points")).toArray().size(), 2);
+}
+
+void AgentWireTests::parsesTextToolCallWithQuoteShiftedAcrossKeyColon()
+{
+    const QJsonObject call = LlamaAgentBackend::textToolCallFromContent(
+        QStringLiteral("TOOL_CALL {\"name\":\"desktop_launch\","
+                       "\"arguments\":{\"app:\"notepad\"}}"));
+    QVERIFY(!call.isEmpty());
+    const QJsonObject fn = call.value(QStringLiteral("function")).toObject();
+    QCOMPARE(fn.value(QStringLiteral("name")).toString(), QStringLiteral("desktop_launch"));
+    const QJsonObject args = QJsonDocument::fromJson(
+        fn.value(QStringLiteral("arguments")).toString().toUtf8()).object();
+    QCOMPARE(args.value(QStringLiteral("app")).toString(), QStringLiteral("notepad"));
+
+    // Similar text inside ordinary string values remains untouched.
+    const QJsonObject ordinary = LlamaAgentBackend::textToolCallFromContent(
+        QStringLiteral("TOOL_CALL {\"name\":\"desktop_launch\","
+                       "\"arguments\":{\"app\":\"notepad\","
+                       "\"note\":\"literal \\\"app:\\\"notepad\\\" text\"}}"));
+    QVERIFY(!ordinary.isEmpty());
+    const QJsonObject ordinaryArgs = QJsonDocument::fromJson(
+        ordinary.value(QStringLiteral("function")).toObject()
+            .value(QStringLiteral("arguments")).toString().toUtf8()).object();
+    QCOMPARE(ordinaryArgs.value(QStringLiteral("note")).toString(),
+             QStringLiteral("literal \"app:\"notepad\" text"));
+}
+
+void AgentWireTests::parsesTextToolCallWithUnquotedHexTargetId()
+{
+    const QString content = QStringLiteral(
+        "TOOL_CALL {\"name\":\"desktop_read_text\",\"arguments\":{\"target_id\":890a18}}");
+    const QJsonObject call = LlamaAgentBackend::textToolCallFromContent(content);
+    QVERIFY(!call.isEmpty());
+    const QJsonObject fn = call.value(QStringLiteral("function")).toObject();
+    QCOMPARE(fn.value(QStringLiteral("name")).toString(), QStringLiteral("desktop_read_text"));
+    const QJsonObject args = QJsonDocument::fromJson(
+        fn.value(QStringLiteral("arguments")).toString().toUtf8()).object();
+    QCOMPARE(args.value(QStringLiteral("target_id")).toString(), QStringLiteral("890a18"));
+
+    // Leave ordinary JSON numbers unchanged so the target-id number adapter
+    // continues to handle HWNDs composed only of decimal digits.
+    const QJsonObject numericCall = LlamaAgentBackend::textToolCallFromContent(
+        QStringLiteral("TOOL_CALL {\"name\":\"desktop_read_text\","
+                       "\"arguments\":{\"target_id\":271114}}"));
+    const QJsonObject numericArgs = QJsonDocument::fromJson(
+        numericCall.value(QStringLiteral("function")).toObject()
+            .value(QStringLiteral("arguments")).toString().toUtf8()).object();
+    QVERIFY(numericArgs.value(QStringLiteral("target_id")).isDouble());
+    QCOMPARE(numericArgs.value(QStringLiteral("target_id")).toInt(), 271114);
+}
+
+void AgentWireTests::textToolCallContinuation_reassemblesTruncatedJsonAcrossLength()
+{
+    // Reproducción de CU15: Gemma alcanzó el límite después de `72ae76`; la
+    // continuación emitió sólo los bytes restantes del snapshot y los cierres.
+    const QString prefix = QStringLiteral(
+        "TOOL_CALL {\"name\":\"desktop_click_element\",\"arguments\":{"
+        "\"target_id\":\"1e1b7e\",\"control_id\":\"42.3014926.4.151\","
+        "\"snapshot_id\":\"72ae76");
+    const QString suffix = QStringLiteral("40ea24c02341acc5ee\"}}");
+
+    QVERIFY(LlamaAgentBackend::hasIncompleteTextToolCall(prefix));
+    QVERIFY(!LlamaAgentBackend::hasIncompleteTextToolCall(prefix + suffix));
+    QVERIFY(LlamaAgentBackend::textToolCallFromContent(suffix).isEmpty());
+
+    const QJsonObject call = LlamaAgentBackend::textToolCallFromContent(suffix, prefix);
+    QVERIFY(!call.isEmpty());
+    const QJsonObject fn = call.value(QStringLiteral("function")).toObject();
+    QCOMPARE(fn.value(QStringLiteral("name")).toString(),
+             QStringLiteral("desktop_click_element"));
+    const QJsonObject args = QJsonDocument::fromJson(
+        fn.value(QStringLiteral("arguments")).toString().toUtf8()).object();
+    QCOMPARE(args.value(QStringLiteral("target_id")).toString(), QStringLiteral("1e1b7e"));
+    QCOMPARE(args.value(QStringLiteral("control_id")).toString(),
+             QStringLiteral("42.3014926.4.151"));
+    QCOMPARE(args.value(QStringLiteral("snapshot_id")).toString(),
+             QStringLiteral("72ae7640ea24c02341acc5ee"));
+}
+
 void AgentWireTests::lengthFinishContinuation_isBoundedAndContentAware()
 {
     QVERIFY(LlamaAgentBackend::shouldAutoContinueAfterLength(
@@ -627,6 +751,22 @@ void AgentWireTests::parsesNativeToolCallLeakFallback()
         const QString content = QStringLiteral("Ya hice la call: desktop_windows manualmente.");
         QVERIFY(LlamaAgentBackend::textToolCallFromContent(content).isEmpty());
     }
+}
+
+void AgentWireTests::parsesNativeToolCallWithGemmaQuoteTokens()
+{
+    // Gemma may serialize a quoted string value with its visible quote token
+    // instead of JSON quotes. This exact shape was emitted for desktop_focus
+    // after CU19 found the unique, workspace-specific Notepad window.
+    const QString content = QStringLiteral(
+        "<|tool_call>call:desktop_focus{target_id:<|\\\"|>910ecc<|\\\"|>}<tool_call|>");
+    const QJsonObject call = LlamaAgentBackend::textToolCallFromContent(content);
+    QVERIFY(!call.isEmpty());
+    const QJsonObject fn = call.value(QStringLiteral("function")).toObject();
+    QCOMPARE(fn.value(QStringLiteral("name")).toString(), QStringLiteral("desktop_focus"));
+    const QJsonObject args = QJsonDocument::fromJson(
+        fn.value(QStringLiteral("arguments")).toString().toUtf8()).object();
+    QCOMPARE(args.value(QStringLiteral("target_id")).toString(), QStringLiteral("910ecc"));
 }
 
 class FakeToolRejectingServer : public QTcpServer
@@ -1841,6 +1981,23 @@ void AgentWireTests::desktopPlaybookSection_coversKeyboardPathAndTextVerify()
     QVERIFY(novis.contains(QStringLiteral("desktop_type")));
     QVERIFY(novis.contains(QStringLiteral("<expresión>=")));
     QVERIFY(novis.contains(QStringLiteral("desktop_key ESC")));
+    QVERIFY(novis.contains(QStringLiteral("No escribas el nombre de una tecla con desktop_type")));
+    QVERIFY(novis.contains(QStringLiteral("para pulsar F12")));
+    QVERIFY(novis.contains(QStringLiteral("Ctrl+A = key 'A' + modifiers ['CTRL']")));
+    QVERIFY(novis.contains(QStringLiteral("Alt+F4 = key 'F4' + modifiers ['ALT']")));
+    QVERIFY(novis.contains(QStringLiteral("después de escribir una URL o consulta en la barra, pulsa Enter una vez")));
+    QVERIFY(novis.contains(QStringLiteral("la siguiente tool es desktop_key key='ENTER'")));
+    QVERIFY(novis.contains(QStringLiteral("desktop_read_text para confirmar que cargó la página")));
+    QVERIFY(novis.contains(QStringLiteral("Ctrl+F, escribe la frase exacta en el campo abierto")));
+    QVERIFY(novis.contains(QStringLiteral("No escribas una ruta por asumir que Guardar como quedó abierto")));
+    QVERIFY(novis.contains(QStringLiteral("observá y resolvé la ventana activa primero")));
+    QVERIFY(novis.contains(QStringLiteral("no agregues Ctrl/Alt/Shift")));
+    QVERIFY(novis.contains(QStringLiteral("Ctrl+F12 es otra acción")));
+    QVERIFY(novis.contains(QStringLiteral("32 renglones por defecto")));
+    QVERIFY(novis.contains(QStringLiteral("desktop_control_action action='set_value'")));
+    QVERIFY(novis.contains(QStringLiteral("No hagas clic en un valor existente y pulses un dígito")));
+    QVERIFY(novis.contains(QStringLiteral("confirma con Enter una sola vez")));
+    QVERIFY(novis.contains(QStringLiteral("no repitas set_value")));
     // Pilar 3: verificar por texto vía desktop_controls (UIA), no por captura.
     QVERIFY(novis.contains(QStringLiteral("desktop_controls")));
     // Pilar 4: sin visión, NO usar desktop_observe (evita el loop ciego).
@@ -1850,6 +2007,14 @@ void AgentWireTests::desktopPlaybookSection_coversKeyboardPathAndTextVerify()
     QVERIFY(novis.contains(QStringLiteral("no repitas type/click/submit")));
     QVERIFY(novis.contains(QStringLiteral("una sola observación fresca")));
     QVERIFY(novis.contains(QStringLiteral("reportá BLOCKED")));
+    QVERIFY(novis.contains(QStringLiteral("Enfocar o seleccionar un control sólo prepara la acción")));
+    QVERIFY(novis.contains(QStringLiteral("una respuesta de tool 'ok' sólo confirma su envío")));
+    QVERIFY(novis.contains(QStringLiteral("postcondición concreta")));
+    QVERIFY(novis.contains(QStringLiteral("no sólo los valores de los datos")));
+    QVERIFY(novis.contains(QStringLiteral("no declares éxito ni repitas ciegamente la misma mutación")));
+    QVERIFY(novis.contains(QStringLiteral("evidencia del guardado")));
+    QVERIFY(novis.contains(QStringLiteral("Un aviso de cambio de foco no significa por sí solo que se abrió un diálogo")));
+    QVERIFY(novis.contains(QStringLiteral("no pulses Enter para comprobar si existe un diálogo")));
     QVERIFY(novis.endsWith(QStringLiteral("\n\n")));
 
     // Con visión, sí se ofrece desktop_observe como recurso extra.
@@ -2137,6 +2302,12 @@ void AgentWireTests::isDestructiveAction_gatesShellDesktopMemory()
     QVERIFY(!B::isDestructiveAction("desktop_click_element",
                                     QJsonObject{{QStringLiteral("control_id"), QStringLiteral("42-8")}},
                                     controls));
+    const QString numericControls = QStringLiteral(
+        "[desktop_controls: 1 control(es)]\n"
+        "controlId=42.72462  [Button] invoke  80x24@(10,10)  \"Eliminar\"");
+    QVERIFY(B::isDestructiveAction("desktop_click_element",
+                                   QJsonObject{{QStringLiteral("control_id"), 42.72462}},
+                                   numericControls));
     // Sin texto de controles no puede resolver el label → no gatea (fail-open acá;
     // el gate del loop igual pasa m_lastDesktopResult real).
     QVERIFY(!B::isDestructiveAction("desktop_click_element",
@@ -2320,6 +2491,18 @@ void AgentWireTests::computerUse_asksBeforeDesktopTurnThenRunsInBackground()
     const QJsonArray schemas = backend.toolSchemasForTest();
     QVERIFY(toolSchemaNamed(schemas, QStringLiteral("desktop_control_action")));
     QVERIFY(toolSchemaNamed(schemas, QStringLiteral("desktop_launch")));
+    QJsonObject desktopLaunch;
+    for (const QJsonValue &schema : schemas) {
+        const QJsonObject function = schema.toObject().value(QStringLiteral("function")).toObject();
+        if (function.value(QStringLiteral("name")).toString() == QLatin1String("desktop_launch")) {
+            desktopLaunch = function;
+            break;
+        }
+    }
+    QVERIFY(desktopLaunch.value(QStringLiteral("description")).toString()
+                .contains(QStringLiteral("campo 'args' separado de 'app'")));
+    QVERIFY(desktopLaunch.value(QStringLiteral("parameters")).toObject()
+                .value(QStringLiteral("properties")).toObject().contains(QStringLiteral("args")));
     QVERIFY(!toolSchemaNamed(schemas, QStringLiteral("desktop_type")));
     QVERIFY(!toolSchemaNamed(schemas, QStringLiteral("desktop_click")));
     QVERIFY(!toolSchemaNamed(schemas, QStringLiteral("desktop_key")));
@@ -2360,7 +2543,88 @@ void AgentWireTests::computerUse_superAgentAndPlainChatDoNotAsk()
         backend.sendMessage(QStringLiteral("abrí la calculadora y hacé 3*3"));
         QCOMPARE(ask.count(), 0);
         QVERIFY(hasUserMessage(backend, QStringLiteral("calculadora")));
-        QVERIFY(toolSchemaNamed(backend.toolSchemasForTest(), QStringLiteral("desktop_type")));
+        const QJsonArray schemas = backend.toolSchemasForTest();
+        QVERIFY(toolSchemaNamed(schemas, QStringLiteral("desktop_type")));
+        QJsonObject desktopType;
+        for (const QJsonValue &schema : schemas) {
+            const QJsonObject function = schema.toObject().value(QStringLiteral("function")).toObject();
+            if (function.value(QStringLiteral("name")).toString() == QLatin1String("desktop_type")) {
+                desktopType = function;
+                break;
+            }
+        }
+        const QString desktopTypeDescription = desktopType.value(QStringLiteral("description")).toString();
+        QVERIFY(desktopTypeDescription.contains(QStringLiteral("reemplazar el valor de un campo")));
+        QVERIFY(desktopTypeDescription.contains(QStringLiteral("desktop_control_action action='set_value'")));
+        QVERIFY(desktopTypeDescription.contains(QStringLiteral("append=true")));
+        QVERIFY(desktopTypeDescription.contains(QStringLiteral("si escribiste una URL o consulta en la barra")));
+        QVERIFY(desktopTypeDescription.contains(QStringLiteral("desktop_key key='ENTER' una vez")));
+        QVERIFY(desktopTypeDescription.contains(QStringLiteral("desktop_read_text para confirmar la página")));
+        QJsonObject desktopControls;
+        for (const QJsonValue &schema : schemas) {
+            const QJsonObject function = schema.toObject().value(QStringLiteral("function")).toObject();
+            if (function.value(QStringLiteral("name")).toString() == QLatin1String("desktop_controls")) {
+                desktopControls = function;
+                break;
+            }
+        }
+        const QString desktopControlsDescription = desktopControls.value(QStringLiteral("description")).toString();
+        QVERIFY(desktopControlsDescription.contains(QStringLiteral("Si una celda de grilla no aparece como control")));
+        QVERIFY(desktopControlsDescription.contains(QStringLiteral("navegación semántica o por teclado")));
+        QVERIFY(desktopControlsDescription.contains(QStringLiteral("keyboard_focus=1")));
+        QJsonObject desktopControlAction;
+        for (const QJsonValue &schema : schemas) {
+            const QJsonObject function = schema.toObject().value(QStringLiteral("function")).toObject();
+            if (function.value(QStringLiteral("name")).toString()
+                == QLatin1String("desktop_control_action")) {
+                desktopControlAction = function;
+                break;
+            }
+        }
+        QVERIFY(desktopControlAction.value(QStringLiteral("description")).toString()
+                    .contains(QStringLiteral("no repitas la misma asignación")));
+        QVERIFY(desktopControlAction.value(QStringLiteral("description")).toString()
+                    .contains(QStringLiteral("snapshot_id")));
+        QVERIFY(desktopControlAction.value(QStringLiteral("description")).toString()
+                    .contains(QStringLiteral("click es alias de invoke")));
+        const QJsonArray controlActionRequired = desktopControlAction.value(QStringLiteral("parameters"))
+                                                     .toObject().value(QStringLiteral("required")).toArray();
+        QVERIFY(controlActionRequired.contains(QStringLiteral("snapshot_id")));
+        const QString controlActionArguments = QString::fromUtf8(QJsonDocument(
+            desktopControlAction.value(QStringLiteral("parameters")).toObject()).toJson());
+        QVERIFY(controlActionArguments.contains(QStringLiteral("click|invoke|toggle")));
+        QJsonObject desktopClickElement;
+        for (const QJsonValue &schema : schemas) {
+            const QJsonObject function = schema.toObject().value(QStringLiteral("function")).toObject();
+            if (function.value(QStringLiteral("name")).toString()
+                == QLatin1String("desktop_click_element")) {
+                desktopClickElement = function;
+                break;
+            }
+        }
+        QVERIFY(desktopClickElement.value(QStringLiteral("description")).toString()
+                    .contains(QStringLiteral("keyboardFocusConfirmed")));
+        const QJsonArray clickElementRequired = desktopClickElement.value(QStringLiteral("parameters"))
+                                                    .toObject().value(QStringLiteral("required")).toArray();
+        QVERIFY(clickElementRequired.contains(QStringLiteral("snapshot_id")));
+        QJsonObject desktopKey;
+        for (const QJsonValue &schema : schemas) {
+            const QJsonObject function = schema.toObject().value(QStringLiteral("function")).toObject();
+            if (function.value(QStringLiteral("name")).toString() == QLatin1String("desktop_key")) {
+                desktopKey = function;
+                break;
+            }
+        }
+        QVERIFY(desktopKey.value(QStringLiteral("description")).toString()
+                    .contains(QStringLiteral("Ctrl+L se expresa como key='L'")));
+        const QJsonObject keyProperties = desktopKey.value(QStringLiteral("parameters")).toObject()
+                                              .value(QStringLiteral("properties")).toObject();
+        QVERIFY(keyProperties.value(QStringLiteral("key")).toObject()
+                    .value(QStringLiteral("description")).toString().contains(
+                        QStringLiteral("No incluyas modificadores aquí")));
+        QCOMPARE(keyProperties.value(QStringLiteral("modifiers")).toObject()
+                     .value(QStringLiteral("items")).toObject()
+                     .value(QStringLiteral("enum")).toArray().size(), 4);
         backend.cancelGeneration();
         backend.stop();
     }

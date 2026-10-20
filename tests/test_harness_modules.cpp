@@ -111,6 +111,9 @@ void HarnessModulesTests::loop_watchdogUsesConfiguredTimeouts()
     // Tool rápida: manda quickTimeout. Tool web/MCP: manda webTimeout.
     QCOMPARE(LlamaAgentBackend::toolWatchdogSeconds(QStringLiteral("write_file"), {}, 15, 180), 15);
     QCOMPARE(LlamaAgentBackend::toolWatchdogSeconds(QStringLiteral("write_file"), {}, 45, 180), 45);
+    // desktop_launch has a 15 s UIA window wait; its idle watchdog needs margin.
+    QCOMPARE(LlamaAgentBackend::toolWatchdogSeconds(QStringLiteral("desktop_launch"), {}, 15, 180), 25);
+    QCOMPARE(LlamaAgentBackend::toolWatchdogSeconds(QStringLiteral("desktop_launch"), {}, 45, 180), 45);
     QCOMPARE(LlamaAgentBackend::toolWatchdogSeconds(QStringLiteral("web_search"), {}, 15, 180), 180);
     QCOMPARE(LlamaAgentBackend::toolWatchdogSeconds(QStringLiteral("web_search"), {}, 15, 600), 600);
     QCOMPARE(LlamaAgentBackend::toolWatchdogSeconds(QStringLiteral("mcp__x__y"), {}, 15, 30), 30);

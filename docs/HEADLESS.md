@@ -341,3 +341,12 @@ reutiliza los binarios Debug ya compilados. Todos los procesos usan
 `QT_QPA_PLATFORM=offscreen` en los tests Qt/QML; el daemon se ejecuta sin esa
 variable porque no carga QML. Ambos usan perfiles temporales y un puerto
 localhost efímero; no modifican el perfil del usuario.
+# Aislamiento de smokes headless
+
+Para evitar que un daemon de prueba lea o escriba sesiones de la instalación
+normal, `LLAMACODE_TEST_MODE=1` redirige las rutas `AppData` y `AppLocalData` de
+Qt al subdirectorio de prueba. Si se necesita una carpeta por campaña, definir
+`LLAMACODE_AGENT_DATA_DIR` además de `LLAMACODE_TEST_MODE`; el backend guarda
+allí su índice y sus sesiones de agente, bajo el namespace del harness activo.
+`LLAMACODE_PROFILES_DIR` y `LLAMACODE_MODELS_DIR` permiten aislar perfiles y
+apuntar a los pesos ya instalados, respectivamente.

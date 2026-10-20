@@ -44,14 +44,15 @@ public:
     // acá vuelve al instante y no cuelga el turno esperando que el proceso termine.
     // `app` = programa/comando/verbo del shell; `args` = argumentos extra (opcional).
     static bool launchApp(const QString &app, const QString &args, QString *error = nullptr);
-    // Espera la ventana que abrió un launch (ver DesktopComputerUse::pickLaunchedWindow):
-    // vuelve apenas aparece una cuyo título se parece a la app; una ventana nueva
-    // sin ese parecido se acepta tras ~1,2 s de gracia; un diálogo de error, al
-    // instante. `list` es inyectable para tests (default: windows()).
+    // Espera una ventana interactiva del launch (ver DesktopComputerUse::pickLaunchedWindow).
+    // Una coincidencia de título debe pasar `isReady` si se especificó; una ventana
+    // nueva sin ese parecido se acepta tras ~1,2 s de gracia; un diálogo de error,
+    // al instante. `list` e `isReady` son inyectables para tests.
     static QVariantMap waitForLaunchedWindow(const QVariantList &before, const QString &app,
                                              int waitMs,
                                              const std::function<QVariantList()> &list = {},
-                                             int pollMs = 150);
+                                             int pollMs = 150,
+                                             const std::function<bool(const QVariantMap &)> &isReady = {});
     static bool focusWindow(const QString &targetId, QString *error = nullptr);
     // Restaura el estado visual enseñado antes de reproducir gestos anclados.
     // Es genérico para cualquier ventana Win32; no depende de la aplicación.
@@ -101,6 +102,9 @@ public:
     // Id (mismo formato que windows()) de la ventana top-level en primer plano;
     // "" si no se puede determinar.
     static QString foregroundWindowId();
+    // Proceso de la ventana activa; permite conservar teclado en diálogos modales
+    // pertenecientes a la app que el agente ya eligió.
+    static qulonglong foregroundProcessId();
     static bool clipboardText(QString *text, QString *error = nullptr);
     static bool setClipboardText(const QString &text, QString *error = nullptr);
     static QVariantMap cursorState();
@@ -123,10 +127,12 @@ public:
     // width,height,enabled,invokable}. controlId = RuntimeId/UIA o referencia AT-SPI
     // serializada, estable dentro de la vida de la ventana → usalo con clickElement.
     static QVariantList controls(const QString &windowTargetId, const QString &query,
-                                 int max, QString *error = nullptr);
+                                 int max, QString *error = nullptr,
+                                 bool includeDocumentText = false);
     // Click sobre un control por su controlId (de controls()): si expone el patrón
     // Invoke lo invoca (más robusto que pixel); si no, clickea el centro de su
-    // bounding rect. En Linux usa AT-SPI.
+    // bounding rect. Para un Edit confirma el foco por UIA en Windows o intenta
+    // GrabFocus sobre EditableText en AT-SPI antes de devolver éxito.
     //
     // Si el controlId no existe (el modelo pasó un NOMBRE en vez del RuntimeId, o
     // la ventana hizo reflow y el id quedó viejo), reintenta resolviéndolo como
@@ -144,7 +150,7 @@ public:
                              QVariantMap *trace = nullptr);
     // Acciones UIA semánticas. No roban foco cuando el patrón correspondiente
     // existe; sólo el fallback Invoke puede requerir una acción foreground.
-    // action: invoke, toggle, set_value, select, expand, collapse,
+    // action: click (alias de invoke), invoke, toggle, set_value, select, expand, collapse,
     // range_set, scroll_into_view, read.
     static bool controlAction(const QString &windowTargetId, const QString &controlId,
                               const QString &action, const QString &value = QString(),

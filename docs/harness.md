@@ -231,7 +231,9 @@ Puntos que importan:
   protocolo textual (`m_textToolFallback`); `setForceTextTools(true)` lo activa
   desde el primer request cuando el chat-template del GGUF no soporta tools (caso
   Gemma). El parseo textual es `textToolCallFromContent()` +
-  `secondTextToolCallStart()` (corta ráfagas de varios TOOL_CALL).
+  `secondTextToolCallStart()` (corta ráfagas de varios TOOL_CALL). Antes de
+  parsear, se normalizan los marcadores visibles de comilla de Gemma (`<|\"|>`)
+  en llamadas nativas; esto evita perder argumentos string como `target_id`.
 - **Reintentos clasificados**: `classifyCompletionError(httpStatus, text)` →
   `RetryNone` / `RetryTransient` (hasta `kMaxTransportRetries`=60, ~5 min: cubre un
   reinicio de llama-server) / `RetryContextOverflow` (dispara recuperación de
@@ -325,6 +327,65 @@ sea una decisión de **presupuesto de contexto** y no de gusto.
 | Browser | `browser_skill_list`, `browser_skill_replay`, `browser_network_discover` |
 | Escritorio | `desktop_snapshot`, `desktop_windows`, `desktop_controls`, `desktop_click_element`, `desktop_control_action`, `desktop_find_image` / `click_image` / `wait_image` / `assert_image`, `desktop_observe`, `desktop_click`, `desktop_stroke`, `desktop_type`, `desktop_key`, `desktop_scroll`, `desktop_focus`, `desktop_resize`, `desktop_wait`, `desktop_wait_for`, `desktop_assert`, `desktop_launch` |
 | Correo | `email_accounts`, `email_send`, `email_list`, `email_read` |
+
+`desktop_launch` recibe el programa en `app` y los argumentos opcionales en el
+campo separado `args`. En Windows se separan como argumentos de proceso
+respetando comillas, de modo que una ruta con espacios sigue siendo un único
+valor (por ejemplo, al abrir un navegador con un perfil aislado). La espera de
+launch confirma que la ventana nueva expone controles UI Automation antes de
+devolver su id; si sólo aparece una pantalla transitoria, no ofrece ese HWND
+para escribir a ciegas. `desktop_launch` puede esperar hasta 15 s; su watchdog
+de inactividad deja al menos 25 s para que el launcher devuelva el resultado
+antes de reiniciar el worker. Si la app reemplaza ese HWND al terminar de iniciar,
+`desktop_type` y `desktop_key` pueden reencontrar la ventana visible más grande
+del mismo proceso lanzado; nunca buscan un destino sustituto en otra app. Un
+`target_id` explícito conserva esa protección: sólo se actualiza si es el mismo
+HWND que el agente había elegido (incluidos los HWND previos de esa misma sesión)
+y Windows ya lo reemplazó o reutilizó. La recuperación busca otra ventana visible
+del mismo PID; los demás IDs siguen siendo exactos y no se redirigen. Los árboles
+UIA de `desktop_controls` y `desktop_snapshot` devuelven 32 controles por defecto
+y limitan una petición explícita a 80 para mantener el contexto del modelo acotado.
+`desktop_read_text` devuelve 32 renglones por defecto; puede filtrar con `query`
+o ampliar `max` cuando la lectura inicial no alcanza. La lectura UIA también incluye
+los valores no vacíos de controles `DataItem` (por ejemplo celdas de una grilla) y,
+si un `query` no aparece en el tramo inicial del árbol, busca por nombre UIA para
+encontrar contenido semántico fuera de ese tramo. Al iniciar una app, el PID
+se conserva desde la ventana que detectó `desktop_launch`, incluso si Windows
+reemplaza el HWND antes de la primera lectura. `desktop_control_action set_value`
+confirma el valor mediante un readback UIA antes de reportar éxito.
+El teclado conserva el diálogo modal activo cuando pertenece al mismo PID elegido;
+si el foco pasa a otra app, vuelve a la ventana elegida antes de escribir.
+Si un clic `desktop_click`/`desktop_click_element` produce el mismo árbol de
+controles UIA del mismo target, repetir ese clic se bloquea y se pide elegir otro
+control o replantear. Esto evita loops donde los resultados `ok` no reflejan un
+cambio visible. La misma guarda bloquea repetir `desktop_type` cuando una lectura
+de la misma consulta y ventana no cambia; los IDs variables de recibo se excluyen
+de la comparación y sólo una lectura con contenido distinto libera esa acción.
+El prompt general para Computer Usage especifica que, en tablas y grillas, se
+busque la celda exacta con `desktop_controls` y se confirme su valor antes de
+editar. Si UI Automation ofrece `set_value`, se reemplaza el valor completo con
+`desktop_control_action`; así un clic sobre una celda poblada y una tecla no
+anexan el carácter por haber entrado en modo edición. Si `set_value` no está
+disponible, se usa navegación semántica o por teclado y se verifica el resultado.
+Si una celda ya muestra el valor nuevo pero el resultado dependiente sigue igual,
+se confirma la edición con Enter una vez en lugar de repetir `set_value`. Una celda
+ambigua no se modifica.
+`desktop_key` recibe una sola tecla en `key`; las combinaciones usan el campo
+`modifiers` (por ejemplo, Ctrl+L = `key: "L"`, `modifiers: ["CTRL"]`).
+Si el modelo invierte ambos campos pero la combinación queda inequívoca (por
+ejemplo, `key: "CTRL"`, `modifiers: ["S"]`), el runner la normaliza a Ctrl+S y
+lo informa en el resultado; combinaciones ambiguas se rechazan. El agente
+conserva exactamente los modificadores pedidos: F12 sin modificadores es
+distinto de Ctrl+F12. La protección que evita escribir sobre un documento
+existente consulta sólo controles de entrada de texto/editables; una cuadrícula
+que expone valores de celdas mediante UI Automation no se trata como un editor
+con texto preexistente.
+Si una tecla cambia la ventana enfocada, el resultado avisa sin exponer su título
+ni su contenido; el agente debe volver a observar ese estado antes de teclear.
+Los atajos que pueden abrir o cerrar diálogos también requieren una observación
+antes de escribir, aunque no cambie el HWND.
+El playbook de escritorio también pide confirmar una acción que queda pendiente
+tras completar un campo, esperar y verificar la vista antes de afirmar que terminó.
 
 - `setDisabledTools(names)` las saca de `buildToolSchemas()` → no se ofrecen al
   modelo, no gastan contexto. Acepta built-ins y `mcp__server__tool`.
@@ -562,6 +623,22 @@ turno; `stop`, errores HTTP, timeouts, respuestas vacías y errores de tools no
 activan este camino. Esto evita confundir un truncamiento normal del servidor
 con un retry infinito del agente.
 
+En modo text-tools, si el fragmento empieza un `TOOL_CALL` pero el JSON quedó
+incompleto por `length`, el backend conserva ese prefijo sólo durante las
+continuaciones automáticas de ese turno y concatena el siguiente fragmento antes
+de parsear. Al ejecutar una tool, terminar sin una llamada completa o empezar
+un turno nuevo, descarta el prefijo. La regresión
+`textToolCallContinuation_reassemblesTruncatedJsonAcrossLength` cubre el corte
+real de un `desktop_click_element` entre streams.
+
+El fallback textual corrige sólo dos errores locales de claves JSON que se
+observaron en llamadas desktop de Gemma: la comilla inicial omitida en una clave
+y la comilla de cierre desplazada detrás de los dos puntos, como
+`{"app:"notepad"}`. La segunda reparación se limita a claves de objetos con un
+valor string y delimitador JSON válido; texto similar dentro de valores o arrays
+permanece intacto. `test_agent_wire` cubre ambas formas y conserva el parseo JSON
+estricto después de normalizar.
+
 | Área del harness | Test |
 |---|---|
 | System prompt (directivas, disciplina, test-net, contexto), `mergeToolCallDelta`, `planCompaction` | `tests/test_agent_wire.cpp` |
@@ -590,6 +667,14 @@ Sin cobertura automatizada (QA manual, requiere escritorio vivo): UI Automation
 (`desktop_controls` / `desktop_click_element`), `desktop_observe` → visión con
 `--mmproj`, teach persistente de browser, y el swap de modelo de verify-phase
 end-to-end. Detalle en `CLAUDE.md`.
+
+Las coordenadas normalizadas de `desktop_click` y `desktop_stroke` usan el
+alcance observado: con `scope_kind='window'`, 0,0 y 1,1 son las esquinas del
+rectángulo exterior completo de la ventana, incluidos título y barras; no son
+relativas al canvas o control. Antes de un gesto por coordenadas, usar
+`desktop_observe` sobre ese mismo alcance y convertir desde la captura. La
+respuesta `ok` confirma que Windows recibió el gesto, así que hay que observar
+de nuevo y validar el cambio en la aplicación.
 
 ---
 

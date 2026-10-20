@@ -561,6 +561,18 @@ bool LinuxDesktopBackend::clickElement(const QString &windowTargetId, const QStr
     QString resolved;
     const QVariantMap info = findControl(windowTargetId, controlId, allowFuzzy, &resolved);
     if (info.isEmpty()) { if (error) *error = QStringLiteral("No se encontró el control AT-SPI; generá un snapshot nuevo."); return false; }
+    if (info.value(QStringLiteral("interfaces")).toString().contains(QStringLiteral("EditableText"))) {
+        QString focusError;
+        if (controlAction(windowTargetId, resolved, QStringLiteral("focus"), {}, &focusError, trace)) {
+            if (allowFuzzy && resolved != controlId && trace)
+                (*trace)[QStringLiteral("matchedBy")] = QStringLiteral("fuzzy-name");
+            if (trace) {
+                (*trace)[QStringLiteral("strategy")] = QStringLiteral("atspi-grab-focus");
+                (*trace)[QStringLiteral("keyboardFocusConfirmed")] = true;
+            }
+            return true;
+        }
+    }
     QString actionError;
     if (controlAction(windowTargetId, resolved, QStringLiteral("invoke"), {}, &actionError, trace)) {
         if (allowFuzzy && resolved != controlId && trace) (*trace)[QStringLiteral("matchedBy")] = QStringLiteral("fuzzy-name");
@@ -589,6 +601,8 @@ bool LinuxDesktopBackend::controlAction(const QString &windowTargetId, const QSt
     CommandResult r;
     if (op == QLatin1String("set_value")) {
         r = atspiCall(address, ref.dest, ref.path, QStringLiteral("org.a11y.atspi.EditableText.SetTextContents"), {value});
+    } else if (op == QLatin1String("focus")) {
+        r = atspiCall(address, ref.dest, ref.path, QStringLiteral("org.a11y.atspi.Component.GrabFocus"));
     } else if (op == QLatin1String("range_set")) {
         r = atspiCall(address, ref.dest, ref.path, QStringLiteral("org.a11y.atspi.Value.SetCurrentValue"), {QStringLiteral("double:%1").arg(value)});
     } else if (op == QLatin1String("read")) {
@@ -597,7 +611,8 @@ bool LinuxDesktopBackend::controlAction(const QString &windowTargetId, const QSt
     } else {
         r = atspiCall(address, ref.dest, ref.path, QStringLiteral("org.a11y.atspi.Action.DoAction"), {QStringLiteral("0")});
     }
-    const bool ok = r.exitCode == 0;
+    const bool ok = r.exitCode == 0
+        && (op != QLatin1String("focus") || r.out.contains(QStringLiteral("true"), Qt::CaseInsensitive));
     if (!ok && error) *error = r.err.trimmed().isEmpty() ? QStringLiteral("AT-SPI no pudo ejecutar '%1'.").arg(op) : r.err.trimmed();
     if (ok && trace) *trace = {{QStringLiteral("surface"), QStringLiteral("desktop")}, {QStringLiteral("action"), op},
         {QStringLiteral("strategy"), QStringLiteral("atspi-action")}, {QStringLiteral("controlId"), controlId}};

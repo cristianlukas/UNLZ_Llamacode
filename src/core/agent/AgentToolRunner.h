@@ -140,7 +140,12 @@ public:
                                             const QString &model,
                                             const QString &text);
     // Ventana "elegida por el agente" (desktop_focus/clic) sin tocar el escritorio.
-    void setAgentFocusedWindowForTest(const QString &id) { m_agentFocusedWindow = id; }
+    void setAgentFocusedWindowForTest(const QString &id)
+    {
+        m_agentFocusedWindow = id;
+        m_agentFocusedProcessId = 0;
+        m_agentFocusedWindowIds = id.isEmpty() ? QStringList{} : QStringList{id};
+    }
     // Adapters individuales, públicos para probes/E2E sin pasar por la política.
     QString fetchViaPlaywright(const QString &url, QString *error);
     QString fetchViaCamofox(const QString &url, QString *error);
@@ -153,6 +158,9 @@ private:
     void startShell(const QString &callId, const QString &command,
                     const QString &cwd, int timeoutS);
     void finishShell(bool timedOut, bool cancelled);
+    void setAgentFocusedWindowTarget(const QString &id, qulonglong knownPid = 0);
+    bool isAgentSelectedWindowTarget(const QString &id) const;
+    bool refreshAgentFocusedWindowTarget(QString *targetId);
     QString captureMcpPreview(McpClient *client, const QString &currentTool,
                               const QJsonObject &rawResult);
     QVariantMap captureMcpObservation(McpClient *client, const QString &currentTool,
@@ -173,6 +181,9 @@ private:
     // Última ventana que el AGENTE eligió (desktop_focus, o un clic/hover con
     // scope_kind=window). desktop_type/desktop_key sólo teclean ahí.
     QString m_agentFocusedWindow;
+    qulonglong m_agentFocusedProcessId = 0;
+    QStringList m_agentFocusedWindowIds;
+    DesktopComputerUse::LaunchDocumentGuard m_launchDocumentGuard;
     QString m_correlationId;
     QVariantList m_mailAccounts;   // cuentas de correo con password resuelto
     QVariantList m_webProviders;   // proveedores REST opt-in (p.ej. Camofox)

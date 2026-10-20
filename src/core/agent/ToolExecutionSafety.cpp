@@ -4,6 +4,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonValue>
+#include <QRegularExpression>
 #include <QUrl>
 #include <algorithm>
 
@@ -235,7 +236,21 @@ void McpVerificationGate::recordObservation(const QString &server, bool succeede
                                             bool readOnly)
 {
     const QString key = server.trimmed();
-    if (!key.isEmpty() && succeeded && readOnly) m_pendingServers.remove(key);
+    if (!key.isEmpty() && succeeded && readOnly) {
+        m_pendingServers.remove(key);
+        if (key == QLatin1String("desktop")) m_observationToolRequested = false;
+    }
+}
+
+void McpVerificationGate::requestObservationTool()
+{
+    m_observationToolRequested = m_pendingServers.contains(QStringLiteral("desktop"));
+}
+
+bool McpVerificationGate::requiresDesktopObservationTool() const
+{
+    return m_observationToolRequested
+        && m_pendingServers.contains(QStringLiteral("desktop"));
 }
 
 QStringList McpVerificationGate::pendingServers() const
@@ -243,6 +258,40 @@ QStringList McpVerificationGate::pendingServers() const
     QStringList servers = m_pendingServers.values();
     std::sort(servers.begin(), servers.end());
     return servers;
+}
+
+QString McpVerificationGate::observationPrompt() const
+{
+    const QStringList pending = pendingServers();
+    const QString targets = pending.join(QStringLiteral(", "));
+    QString prompt = QStringLiteral(
+        "No declares la tarea completada: hay efectos sin verificación posterior en: %1. ")
+                         .arg(targets);
+    if (pending.contains(QStringLiteral("desktop"))) {
+        prompt += QStringLiteral(
+            "Tu siguiente llamada de herramienta debe ser sólo de lectura: ejecuta "
+            "desktop_read_text una vez con el target_id literal de la ventana exacta que "
+            "acabás de usar. Si ese target ya no existe, consulta desktop_windows una vez, "
+            "resuelve la ventana exacta y luego léela. Si falta evidencia, usa "
+            "desktop_controls o desktop_snapshot. No pulses teclas, escribas ni hagas clic "
+            "hasta terminar esa observación. Esta lectura es un checkpoint intermedio, no el "
+            "final de la tarea. Después continúa con el siguiente paso pendiente de la solicitud "
+            "original; no respondas final si aún falta guardar, cerrar o verificar otro efecto.");
+    }
+    QStringList mcpServers = pending;
+    mcpServers.removeAll(QStringLiteral("desktop"));
+    if (!mcpServers.isEmpty()) {
+        prompt += QStringLiteral(
+            "Para MCP, usa una tool de sólo lectura del mismo servidor pendiente: %1. ")
+                      .arg(mcpServers.join(QStringLiteral(", ")));
+    }
+    prompt += QStringLiteral(
+        "Compara lo observado con el objetivo del usuario. Si no hay lectura disponible, "
+        "informa que quedó sin verificar. Esta lectura es un checkpoint intermedio: después "
+        "continúa los pasos pendientes de la solicitud original y no declares completa una "
+        "tarea que todavía tenga acciones pedidas sin realizar. No repitas una escritura sólo "
+        "para comprobarla.");
+    return prompt;
 }
 
 McpVerificationGate::CompletionDecision
@@ -344,6 +393,77 @@ void DesktopActionSafetyGate::clear()
     m_staleRetryBlocked = false;
 }
 
+void DesktopActionRepeatGuard::recordAction(const QString &actionSignature,
+                                            const QString &observationKey)
+{
+    if (actionSignature.isEmpty() || observationKey.isEmpty()) {
+        clearPending();
+        return;
+    }
+    m_pendingActionSignature = actionSignature;
+    m_pendingObservationKey = observationKey;
+    m_pendingStateFingerprint = m_observationFingerprints.value(observationKey);
+}
+
+void DesktopActionRepeatGuard::blockAction(const QString &actionSignature,
+                                           const QString &observationKey)
+{
+    if (!actionSignature.isEmpty()) {
+        m_blockedActionSignatures.insert(actionSignature);
+        if (!observationKey.isEmpty())
+            m_blockedObservationKeysByAction.insert(actionSignature, observationKey);
+    }
+}
+
+void DesktopActionRepeatGuard::recordObservation(const QString &observationKey,
+                                                 const QString &state)
+{
+    if (observationKey.isEmpty()) return;
+    QString stableState = state;
+    stableState.remove(QRegularExpression(QStringLiteral("(?m)^receipt_id=[^\\r\\n]*(?:\\r?\\n|$)")));
+    const QString fingerprint = resultHash(stableState);
+    const QString previousFingerprint = m_observationFingerprints.value(observationKey);
+    if (!previousFingerprint.isEmpty() && previousFingerprint != fingerprint) {
+        const auto blocked = m_blockedObservationKeysByAction;
+        for (auto it = blocked.cbegin(); it != blocked.cend(); ++it) {
+            if (it.value() == observationKey) {
+                m_blockedActionSignatures.remove(it.key());
+                m_blockedObservationKeysByAction.remove(it.key());
+            }
+        }
+    }
+    if (!m_pendingActionSignature.isEmpty()
+        && m_pendingObservationKey == observationKey) {
+        if (!m_pendingStateFingerprint.isEmpty()
+            && m_pendingStateFingerprint == fingerprint) {
+            m_blockedActionSignatures.insert(m_pendingActionSignature);
+            m_blockedObservationKeysByAction.insert(m_pendingActionSignature, observationKey);
+        } else {
+            m_blockedActionSignatures.remove(m_pendingActionSignature);
+            m_blockedObservationKeysByAction.remove(m_pendingActionSignature);
+        }
+        m_pendingActionSignature.clear();
+        m_pendingObservationKey.clear();
+        m_pendingStateFingerprint.clear();
+    }
+    m_observationFingerprints.insert(observationKey, fingerprint);
+}
+
+void DesktopActionRepeatGuard::clearPending()
+{
+    m_pendingActionSignature.clear();
+    m_pendingObservationKey.clear();
+    m_pendingStateFingerprint.clear();
+}
+
+void DesktopActionRepeatGuard::clear()
+{
+    clearPending();
+    m_observationFingerprints.clear();
+    m_blockedObservationKeysByAction.clear();
+    m_blockedActionSignatures.clear();
+}
+
 QVariantMap toVariantMap(const Contract &c)
 {
     return {
@@ -360,6 +480,13 @@ QVariantMap toVariantMap(const Contract &c)
 QByteArray canonicalJson(const QJsonObject &object)
 {
     return QJsonDocument(canonicalValue(object).toObject()).toJson(QJsonDocument::Compact);
+}
+
+QString desktopActionRepeatSignature(const QString &tool, QJsonObject arguments)
+{
+    arguments.remove(QStringLiteral("snapshot_id"));
+    return tool.trimmed().toLower() + QLatin1Char('|')
+        + QString::fromUtf8(canonicalJson(arguments));
 }
 
 QString payloadHash(const QString &server, const QString &tool,

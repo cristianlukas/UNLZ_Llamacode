@@ -396,7 +396,10 @@ public:
     // par <arg_key>/<arg_value> dentro del valor del argumento anterior.
     // Normaliza sólo ese patrón acotado antes de entregar la llamada al executor.
     static QJsonObject normalizeTaggedToolArguments(const QJsonObject &arguments);
-    static QJsonObject textToolCallFromContent(const QString &content);
+    static QJsonObject textToolCallFromContent(
+        const QString &content, const QString &continuationPrefix = QString());
+    // Detecta un TOOL_CALL inicial que quedó incompleto al terminar por length.
+    static bool hasIncompleteTextToolCall(const QString &content);
     // Offset donde arranca el SEGUNDO TOOL_CALL de una ráfaga (-1 si no hay).
     static int secondTextToolCallStart(const QString &content);
     // Señal de tool-calling nativo del /props del server (caps > regex jinja).
@@ -778,6 +781,8 @@ private:
     QString m_currentComputerUseGoal;
     ToolExecutionSafety::McpVerificationGate m_externalVerificationGate;
     ToolExecutionSafety::DesktopActionSafetyGate m_desktopActionSafetyGate;
+    ToolExecutionSafety::DesktopActionRepeatGuard m_desktopActionRepeatGuard;
+    QHash<QString, QString> m_desktopLastObservationKeyByTarget;
     int m_externalVerificationNudges = 0;
     int m_desktopRecoveryNudges = 0;
     bool computerUseSandwichActive() const {
@@ -948,6 +953,7 @@ private:
     // Robustez (Etapa 7)
     int m_turnIters = 0;                 // completions consumidas en el turno actual
     int m_lengthContinues = 0;            // continuaciones automáticas del turno actual
+    QString m_textToolContinuationPrefix; // prefijo incompleto entre streams por length
     int m_emptyTextRetries = 0;          // reintentos por turno text-tools vacío (nudge)
     QString m_lastCallSignature;         // firma de la última tool_call del turno
     int m_sameCallStreak = 0;            // repeticiones consecutivas de esa firma
@@ -962,7 +968,9 @@ private:
     QString m_lastDesktopTool;           // última tool desktop_* ejecutada (nudge text-tools)
     QString m_lastDesktopResult;
     QString m_lastDesktopTypeText;        // última entrada por desktop_type (guardrail teclado)
-    QSet<QString> m_desktopLaunchApps;   // apps ya lanzadas en la sesión/Task actual
+    QSet<QString> m_desktopLaunchApps;    // apps lanzadas, para errores de args malformados
+    QSet<QString> m_desktopLaunchTargets; // pares app+args ya ejecutados en la sesión/Task
+    QHash<QString, QString> m_pendingDesktopLaunchTargets; // clave por tool call hasta su resultado
     QSet<QString> m_lifecycleFinishedToolIds;
     // Tope de seguridad MUY alto: no cortar trabajo legítimo. El loop infinito
     // real lo frena m_loopPolicy.sameCallLimit (misma tool + mismos args

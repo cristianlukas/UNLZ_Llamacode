@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "run_id": "ae85-cu18g",
+  "case_id": "CU18",
+  "revalidated_at_local": "2026-10-18T23:58:23-03:00",
+  "reason": "False negative in initial validation: the real UIA save button omitted enabled=1; updated validator accepts an enabled Invoke button unless explicitly disabled and checks the exact click trace.",
+  "binary": "C:\\Users\\Cristian\\Documents\\GitHub\\LlamaCode\\build\\Debug\\LlamaCode.exe",
+  "binary_sha256": "ae85a27680ad2a8b3945f19bd4741177d699046676be500d580d1e6949449f28",
+  "launch_profile_id": "sys-vram-8-gemma",
+  "agent_base_profile_id": "agent-intermedio",
+  "runner_result": "RESULT.json (preserved original receipt)",
+  "runtime_trace_sessions": [
+    {
+      "file": "17944320-c28a-41cf-be68-18fa920a7dfc.json",
+      "tool_calls": 7
+    },
+    {
+      "file": "3d3fcc2c-090c-4b6a-907c-ea28817a9fff.json",
+      "tool_calls": 12
+    }
+  ],
+  "combined_tool_call_count": 19,
+  "artifact_validation": {
+    "passed": true,
+    "A1": "CU20-CLIPBOARD-7K9-PRESERVE",
+    "nonempty_cells": 1,
+    "clipboard_ui_evidence": {
+      "passed": true,
+      "strict_sequence": true,
+      "expected_tool_count": 19,
+      "actual_tool_count": 19,
+      "source_launch_exact": true,
+      "source_focus_and_marker_read": true,
+      "optional_source_readback_after_copy": true,
+      "ctrl_a_then_ctrl_c": true,
+      "clipboard_marker_verified_before_and_after_session_reset": true,
+      "excel_launch_exact": true,
+      "excel_wait_title_then_focus": true,
+      "name_box_a1_selected_semantically": true,
+      "single_ctrl_v": true,
+      "semantic_save_button_clicked_once": true,
+      "saved_workbook_read_back": true,
+      "all_tools_successful": true,
+      "source_file_exact": true
+    }
+  },
+  "workbook_sha256_after_runner_cleanup": "30f7c87e066302f168e6e243f2eaef6df4c053eed9771195c52fb07adf0c9ef3",
+  "excel_cleanup_after": {
+    "workbook_path": "C:\\Users\\Cristian\\Documents\\GitHub\\LlamaCode\\artifacts\\evaluacion-modelos-llamacode\\Q-20261016-CU-20-E2E\\workspace\\ae85-cu18gwork\\clipboard-paste.xlsx",
+    "matched_pids": [
+      45016
+    ],
+    "close_requested_windows": [
+      15142844
+    ],
+    "closed_pids": [
+      45016
+    ],
+    "remaining_pids": [],
+    "processes_alive_after_close": []
+  }
+}

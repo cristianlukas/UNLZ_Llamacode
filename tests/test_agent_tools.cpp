@@ -8,6 +8,7 @@
 
 #include <QtTest>
 #include "core/automation/DesktopAutomationBackend.h"
+#include "core/automation/DesktopComputerUse.h"
 #include <QTemporaryDir>
 #include <QSignalSpy>
 #include <QJsonObject>
@@ -27,6 +28,13 @@
 #include "core/agent/AgentEventLog.h"
 #include "core/agent/WorkRegistry.h"
 #include "core/agent/SubAgentRunner.h"
+
+#ifdef Q_OS_WIN
+#  ifndef NOMINMAX
+#    define NOMINMAX
+#  endif
+#  include <windows.h>
+#endif
 
 class CamofoxStub : public QTcpServer
 {
@@ -175,6 +183,11 @@ private slots:
     void desktopNewTools_validateBeforeTouchingTheDesktop();
     void desktopClipboard_roundTripRestoresUserClipboard();
     void desktopControls_emptyPointsToReadText();
+    void desktopControls_prefersExactNameMatch();
+    void desktopControls_prefersActionableChildOverExactDialogTitle();
+    void desktopType_unicodeTextIsExact();
+    void desktopControlAction_acceptsNumericOpaqueControlId();
+    void desktopControlAction_setValueRequiresValueArgument();
     void desktopControls_invalidWindowErrorsCleanly();
     void desktopLaunch_emptyAppErrorsCleanly();
     void desktopLaunch_unknownAppFailsWithoutLaunching();
@@ -873,6 +886,14 @@ void AgentToolsTests::desktopNewTools_validateBeforeTouchingTheDesktop()
     QVERIFY2(gone.value("result").toString().contains(QStringLiteral("ya se cerr")),
              qPrintable(gone.value("result").toString()));
 
+    // Un HWND hexadecimal que sólo contiene dígitos puede llegar como número
+    // JSON desde un modelo pequeño. Debe conservarse como target y fallar de
+    // forma acotada si ya no existe, nunca degradarse a una captura de pantalla.
+    QVariantMap numericTarget = call("desktop_read_text", {{"target_id", 987654321.0}});
+    QVERIFY(!numericTarget.value("ok").toBool());
+    QVERIFY2(numericTarget.value("result").toString().contains(QStringLiteral("id '987654321'")),
+             qPrintable(numericTarget.value("result").toString()));
+
     QVariantMap h = call("desktop_hover",
                          {{"scope_kind", "screen"}, {"target_id", "0"}, {"x", 1.7}, {"y", 0.5}});
     QVERIFY(!h.value("ok").toBool());
@@ -933,6 +954,267 @@ void AgentToolsTests::desktopControls_emptyPointsToReadText()
     QVERIFY(out.contains(id));
 }
 
+void AgentToolsTests::desktopControls_prefersExactNameMatch()
+{
+#ifdef Q_OS_WIN
+    HWND window = CreateWindowExW(0, L"STATIC", L"LlamaCode UIA exact-name regression",
+                                  WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+                                  40, 40, 280, 140, nullptr, nullptr,
+                                  GetModuleHandleW(nullptr), nullptr);
+    QVERIFY2(window != nullptr, "No se pudo crear la ventana Win32 de regresión");
+    struct WindowGuard {
+        HWND handle;
+        ~WindowGuard() { if (handle && IsWindow(handle)) DestroyWindow(handle); }
+    } windowGuard{window};
+    const HINSTANCE instance = GetModuleHandleW(nullptr);
+    HWND suffix = CreateWindowExW(0, L"BUTTON", L"B20",
+                                  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                  8, 8, 100, 28, window,
+                                  reinterpret_cast<HMENU>(static_cast<INT_PTR>(1)),
+                                  instance, nullptr);
+    HWND exact = CreateWindowExW(0, L"BUTTON", L"B2",
+                                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                 8, 42, 100, 28, window,
+                                 reinterpret_cast<HMENU>(static_cast<INT_PTR>(2)),
+                                 instance, nullptr);
+    QVERIFY(suffix != nullptr);
+    QVERIFY(exact != nullptr);
+    ShowWindow(window, SW_SHOWNOACTIVATE);
+    UpdateWindow(window);
+    QTest::qWait(50);
+
+    const QString target = QString::number(reinterpret_cast<quintptr>(window), 16);
+    QString error;
+    const QVariantList matches = DesktopAutomationBackend::controls(
+        target, QStringLiteral("B2"), 32, &error);
+    QVERIFY2(error.isEmpty(), qPrintable(error));
+    QCOMPARE(matches.size(), 1);
+    QCOMPARE(matches.first().toMap().value(QStringLiteral("name")).toString(),
+             QStringLiteral("B2"));
+#else
+    QSKIP("UIA de escritorio sólo está disponible en Windows");
+#endif
+}
+
+void AgentToolsTests::desktopControls_prefersActionableChildOverExactDialogTitle()
+{
+#ifdef Q_OS_WIN
+    struct WindowGuard {
+        HWND parent = nullptr;
+        HWND dialog = nullptr;
+        HWND titleOnly = nullptr;
+        ~WindowGuard()
+        {
+            if (dialog && IsWindow(dialog)) DestroyWindow(dialog);
+            if (titleOnly && IsWindow(titleOnly)) DestroyWindow(titleOnly);
+            if (parent && IsWindow(parent)) DestroyWindow(parent);
+        }
+    } windowGuard;
+    HWND parent = CreateWindowExW(0, L"STATIC", L"LlamaCode UIA dialog-child regression",
+                                  WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+                                  40, 40, 420, 260, nullptr, nullptr,
+                                  GetModuleHandleW(nullptr), nullptr);
+    windowGuard.parent = parent;
+    QVERIFY2(parent != nullptr, "No se pudo crear la ventana Win32 padre de regresión");
+    const HINSTANCE instance = GetModuleHandleW(nullptr);
+    HWND dialog = CreateWindowExW(WS_EX_DLGMODALFRAME, L"#32770", L"Abrir",
+                                  WS_POPUP | WS_CAPTION | WS_SYSMENU,
+                                  70, 70, 300, 150, parent, nullptr, instance, nullptr);
+    windowGuard.dialog = dialog;
+    QVERIFY(dialog != nullptr);
+    HWND openButton = CreateWindowExW(0, L"BUTTON", L"Abrir",
+                                      WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                      12, 40, 110, 30, dialog,
+                                      reinterpret_cast<HMENU>(static_cast<INT_PTR>(101)),
+                                      instance, nullptr);
+    HWND titleOnly = CreateWindowExW(WS_EX_DLGMODALFRAME, L"#32770", L"Solo título",
+                                     WS_POPUP | WS_CAPTION | WS_SYSMENU,
+                                     90, 90, 300, 150, parent, nullptr, instance, nullptr);
+    windowGuard.titleOnly = titleOnly;
+    QVERIFY(openButton != nullptr);
+    QVERIFY(titleOnly != nullptr);
+    HWND otherButton = CreateWindowExW(0, L"BUTTON", L"Acción secundaria",
+                                       WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                       12, 40, 150, 30, titleOnly,
+                                       reinterpret_cast<HMENU>(static_cast<INT_PTR>(2)),
+                                       instance, nullptr);
+    QVERIFY(otherButton != nullptr);
+    ShowWindow(parent, SW_SHOWNOACTIVATE);
+    ShowWindow(dialog, SW_SHOWNOACTIVATE);
+    ShowWindow(titleOnly, SW_SHOWNOACTIVATE);
+    UpdateWindow(parent);
+    QTest::qWait(50);
+
+    const QString target = QString::number(reinterpret_cast<quintptr>(parent), 16);
+    const QVariantMap observed = call("desktop_controls",
+                                       {{"target_id", target}, {"query", "Abrir"}, {"max", 8}});
+    QVERIFY2(observed.value("ok").toBool(), qPrintable(observed.value("result").toString()));
+    const QVariantMap snapshot = observed.value("desktopSnapshot").toMap();
+    const QVariantList controls = snapshot.value("controls").toList();
+    QVERIFY2(!controls.isEmpty(), qPrintable(observed.value("result").toString()));
+    QCOMPARE(controls.first().toMap().value(QStringLiteral("role")).toString(),
+             QStringLiteral("button"));
+    QCOMPARE(controls.first().toMap().value(QStringLiteral("name")).toString(),
+             QStringLiteral("Abrir"));
+    const QString buttonId = controls.first().toMap()
+                                 .value(QStringLiteral("controlId")).toString();
+    const QString buttonSnapshotId = observed.value("desktopSnapshotId").toString();
+    const QVariantMap clickAlias = call("desktop_control_action",
+        {{"target_id", target}, {"control_id", buttonId}, {"snapshot_id", buttonSnapshotId},
+         {"action", "click"}});
+    QVERIFY2(clickAlias.value("ok").toBool(), qPrintable(clickAlias.value("result").toString()));
+    QVERIFY(clickAlias.value("result").toString().contains(QStringLiteral("\"action\":\"invoke\"")));
+
+    const QVariantMap container = call("desktop_controls",
+        {{"target_id", target}, {"query", "Solo título"}, {"max", 8}});
+    QVERIFY2(container.value("ok").toBool(), qPrintable(container.value("result").toString()));
+    const QVariantList containerControls = container.value("desktopSnapshot").toMap()
+                                              .value(QStringLiteral("controls")).toList();
+    QVERIFY(!containerControls.isEmpty());
+    const QString containerId = containerControls.first().toMap()
+                                    .value(QStringLiteral("controlId")).toString();
+    const QString snapshotId = container.value("desktopSnapshotId").toString();
+    QVERIFY(!containerId.isEmpty());
+    QVERIFY(!snapshotId.isEmpty());
+    const QVariantMap click = call("desktop_click_element",
+        {{"target_id", target}, {"control_id", containerId}, {"snapshot_id", snapshotId}});
+    QVERIFY(!click.value("ok").toBool());
+    QVERIFY(click.value("result").toString().contains(QStringLiteral("contenedor")));
+    const QVariantMap invoke = call("desktop_control_action",
+        {{"target_id", target}, {"control_id", containerId}, {"snapshot_id", snapshotId},
+         {"action", "invoke"}});
+    QVERIFY(!invoke.value("ok").toBool());
+    QVERIFY(invoke.value("result").toString().contains(QStringLiteral("contenedor")));
+#else
+    QSKIP("UIA de escritorio sólo está disponible en Windows");
+#endif
+}
+
+void AgentToolsTests::desktopType_unicodeTextIsExact()
+{
+#ifdef Q_OS_WIN
+    HWND window = CreateWindowExW(0, L"STATIC", L"LlamaCode Unicode typing regression",
+                                  WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+                                  40, 40, 420, 220, nullptr, nullptr,
+                                  GetModuleHandleW(nullptr), nullptr);
+    QVERIFY2(window != nullptr, "No se pudo crear la ventana Win32 para escribir");
+    struct WindowGuard {
+        HWND handle;
+        ~WindowGuard() { if (handle && IsWindow(handle)) DestroyWindow(handle); }
+    } windowGuard{window};
+    HWND edit = CreateWindowExW(0, L"EDIT", L"",
+                                WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_MULTILINE,
+                                8, 8, 380, 120, window,
+                                reinterpret_cast<HMENU>(static_cast<INT_PTR>(101)),
+                                GetModuleHandleW(nullptr), nullptr);
+    QVERIFY(edit != nullptr);
+    ShowWindow(window, SW_SHOWNORMAL);
+    UpdateWindow(window);
+    const QString target = QString::number(reinterpret_cast<quintptr>(window), 16);
+    const QVariantMap focused = call("desktop_focus", {{"target_id", target}});
+    QVERIFY2(focused.value("ok").toBool(), qPrintable(focused.value("result").toString()));
+    const QVariantMap observed = call("desktop_controls",
+                                     {{"target_id", target}, {"query", ""}, {"max", 12}});
+    QVERIFY2(observed.value("ok").toBool(), qPrintable(observed.value("result").toString()));
+    const QVariantMap snapshot = observed.value("desktopSnapshot").toMap();
+    const QVariantList controls = snapshot.value("controls").toList();
+    const auto editControl = std::find_if(controls.cbegin(), controls.cend(), [](const QVariant &value) {
+        return value.toMap().value(QStringLiteral("role")).toString() == QLatin1String("edit");
+    });
+    QVERIFY(editControl != controls.cend());
+    const QString controlId = editControl->toMap().value(QStringLiteral("controlId")).toString();
+    const QString snapshotId = snapshot.value(QStringLiteral("snapshotId")).toString();
+    QVERIFY(!controlId.isEmpty());
+    QVERIFY(!snapshotId.isEmpty());
+
+    const QVariantMap clicked = call("desktop_click_element", {
+        {"target_id", target}, {"control_id", controlId}, {"snapshot_id", snapshotId}});
+    QVERIFY2(clicked.value("ok").toBool(), qPrintable(clicked.value("result").toString()));
+    QVERIFY(clicked.value("result").toString().contains(
+        QStringLiteral("uia-focus-and-pointer-click")));
+    QVERIFY(clicked.value("result").toString().contains(
+        QStringLiteral("\"keyboardFocusConfirmed\":true")));
+
+    const QString expected = QStringLiteral("contenido beta solicitado: ñáéíóú 123");
+    const QVariantMap typed = call("desktop_type", {{"target_id", target}, {"text", expected}});
+    QVERIFY2(typed.value("ok").toBool(), qPrintable(typed.value("result").toString()));
+    QTest::qWait(100);
+    wchar_t buffer[128]{};
+    const int length = GetWindowTextW(edit, buffer, _countof(buffer));
+    QCOMPARE(QString::fromWCharArray(buffer, length), expected);
+#else
+    QSKIP("La inyección Unicode de escritorio sólo está disponible en Windows");
+#endif
+}
+
+void AgentToolsTests::desktopControlAction_acceptsNumericOpaqueControlId()
+{
+#ifdef Q_OS_WIN
+    HWND window = CreateWindowExW(0, L"STATIC", L"LlamaCode numeric UIA id regression",
+                                  WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+                                  40, 40, 280, 140, nullptr, nullptr,
+                                  GetModuleHandleW(nullptr), nullptr);
+    QVERIFY2(window != nullptr, "No se pudo crear la ventana Win32 de regresión");
+    struct WindowGuard {
+        HWND handle;
+        ~WindowGuard() { if (handle && IsWindow(handle)) DestroyWindow(handle); }
+    } windowGuard{window};
+    HWND button = CreateWindowExW(0, L"BUTTON", L"Control decimal",
+                                  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                  8, 8, 160, 28, window,
+                                  reinterpret_cast<HMENU>(static_cast<INT_PTR>(1)),
+                                  GetModuleHandleW(nullptr), nullptr);
+    QVERIFY(button != nullptr);
+    ShowWindow(window, SW_SHOWNOACTIVATE);
+    UpdateWindow(window);
+    QTest::qWait(50);
+
+    const QString target = QString::number(reinterpret_cast<quintptr>(window), 16);
+    const QVariantMap observed = call("desktop_controls",
+                                      {{"target_id", target}, {"query", "Control decimal"}});
+    QVERIFY2(observed.value("ok").toBool(), qPrintable(observed.value("result").toString()));
+    QVERIFY(observed.value("result").toString().contains(QStringLiteral("como string JSON")));
+    const QVariantMap snapshot = observed.value("desktopSnapshot").toMap();
+    const QVariantList controls = snapshot.value("controls").toList();
+    QVERIFY(!controls.isEmpty());
+    const QString controlId = controls.first().toMap()
+                                  .value(QStringLiteral("controlId")).toString();
+    bool numericOk = false;
+    const double numericControlId = controlId.toDouble(&numericOk);
+    if (!numericOk || controlId.count(QLatin1Char('.')) != 1
+        || DesktopComputerUse::controlIdText(QJsonValue(numericControlId)) != controlId)
+        QSKIP(qPrintable(QStringLiteral("La UIA de esta ventana no generó un ID representable como número decimal: ")
+                         + controlId));
+
+    const QVariantMap read = call("desktop_control_action",
+        {{"target_id", target}, {"snapshot_id", observed.value("desktopSnapshotId").toString()},
+         {"control_id", numericControlId}, {"action", "read"}});
+    QVERIFY2(read.value("ok").toBool(), qPrintable(read.value("result").toString()));
+    QVERIFY(read.value("result").toString().contains(QStringLiteral("Control decimal")));
+#else
+    QSKIP("UIA de escritorio sólo está disponible en Windows");
+#endif
+}
+
+void AgentToolsTests::desktopControlAction_setValueRequiresValueArgument()
+{
+    const QVariantMap missing = call("desktop_control_action", {
+        {"target_id", "not-a-window"}, {"control_id", "opaque-control"},
+        {"snapshot_id", "observed-snapshot"}, {"action", "set_value"}});
+    QVERIFY(!missing.value("ok").toBool());
+    QVERIFY(missing.value("result").toString().contains(
+        QStringLiteral("falta el argumento value")));
+
+    // Un valor vacío puede ser intencional para limpiar un campo; lo requerido
+    // es que el argumento esté presente. El error siguiente debe ser de snapshot.
+    const QVariantMap explicitEmpty = call("desktop_control_action", {
+        {"target_id", "not-a-window"}, {"control_id", "opaque-control"},
+        {"snapshot_id", "observed-snapshot"}, {"action", "set_value"}, {"value", ""}});
+    QVERIFY(!explicitEmpty.value("ok").toBool());
+    QVERIFY(!explicitEmpty.value("result").toString().contains(
+        QStringLiteral("falta el argumento value")));
+}
+
 // get/set del portapapeles real; se restaura lo que el usuario tenía copiado.
 void AgentToolsTests::desktopClipboard_roundTripRestoresUserClipboard()
 {
@@ -970,10 +1252,24 @@ void AgentToolsTests::desktopControls_invalidWindowErrorsCleanly()
     QVERIFY(c.value("result").toString().contains(QStringLiteral("desktop_controls")));
     QVERIFY(c.value("result").toString().contains(QStringLiteral("no encontrada")));
 
+    QVariantMap missingSnapshot = call("desktop_click_element",
+                                       {{"target_id", "zzznothex"}, {"control_id", "1.2.3"}});
+    QVERIFY(!missingSnapshot.value("ok").toBool());
+    QVERIFY(missingSnapshot.value("result").toString().contains(
+        QStringLiteral("snapshot_id requerido")));
+
     QVariantMap k = call("desktop_click_element",
-                         {{"target_id", "zzznothex"}, {"control_id", "1.2.3"}});
+                         {{"target_id", "zzznothex"}, {"control_id", "1.2.3"},
+                          {"snapshot_id", "observed"}});
     QVERIFY(!k.value("ok").toBool());
     QVERIFY(k.value("result").toString().startsWith(QStringLiteral("[desktop_click_element:")));
+
+    QVariantMap missingActionSnapshot = call("desktop_control_action",
+        {{"target_id", "zzznothex"}, {"control_id", "1.2.3"},
+         {"action", "set_value"}, {"value", "B2"}});
+    QVERIFY(!missingActionSnapshot.value("ok").toBool());
+    QVERIFY(missingActionSnapshot.value("result").toString().contains(
+        QStringLiteral("snapshot_id requerido")));
 
     // desktop_stroke: validar dispatch + parseo sin tocar el escritorio real. Un
     // punto fuera de 0..1 se rechaza antes de consultar la sesión o emitir input.
@@ -985,6 +1281,15 @@ void AgentToolsTests::desktopControls_invalidWindowErrorsCleanly()
     QVERIFY(!s.value("ok").toBool());
     QVERIFY(s.value("result").toString().startsWith(QStringLiteral("[desktop_stroke:")));
     QVERIFY(s.value("result").toString().contains(QStringLiteral("no se movió el mouse")));
+
+    QJsonArray malformedPoints{QJsonArray{0.2, 0.2}, QJsonArray{0.5, 0.5}};
+    QVariantMap malformedStroke = call("desktop_stroke",
+        {{"target_id", "0"}, {"scope_kind", "screen"}, {"points", malformedPoints}});
+    QVERIFY(!malformedStroke.value("ok").toBool());
+    QVERIFY(malformedStroke.value("result").toString().contains(
+        QStringLiteral("cada punto debe ser un objeto")));
+    QVERIFY(malformedStroke.value("result").toString().contains(
+        QStringLiteral("no se movió el mouse")));
 
     // desktop_wait_for: dispatch + timeout. Un título de ventana inexistente con
     // timeout corto → found:false, sin colgar, con prefijo [desktop_wait_for:.

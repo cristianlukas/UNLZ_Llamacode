@@ -3,15 +3,18 @@
 #include <QCryptographicHash>
 #include <QDateTime>
 #include <QDir>
+#include <QFileInfo>
 #include <QSet>
 #include <QHash>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QLockFile>
+#include <QProcess>
 #include <QRegularExpression>
 #include <QStandardPaths>
 #include <QStringList>
 #include <QUuid>
+#include <cmath>
 
 namespace DesktopComputerUse {
 
@@ -157,6 +160,39 @@ QString stableHash(const QVariantMap &value)
                                    .toHex().left(24));
 }
 
+QString targetIdText(const QJsonValue &value)
+{
+    if (value.isString()) return value.toString();
+    if (!value.isDouble()) return {};
+
+    const double number = value.toDouble();
+    constexpr double maxSafeJsonInteger = 9007199254740991.0;
+    if (!std::isfinite(number) || number < 0.0 || number > maxSafeJsonInteger
+        || std::floor(number) != number)
+        return {};
+    return QString::number(static_cast<qulonglong>(number));
+}
+
+QString controlIdText(const QJsonValue &value)
+{
+    if (value.isString()) return value.toString();
+    if (!value.isDouble()) return {};
+
+    const double number = value.toDouble();
+    constexpr double maxSafeJsonInteger = 9007199254740991.0;
+    if (!std::isfinite(number) || number < 0.0 || number > maxSafeJsonInteger)
+        return {};
+
+    // Let Qt use the same compact JSON number spelling that it parsed. This
+    // retains fractional runtime IDs instead of calling QJsonValue::toString(),
+    // which returns an empty string for every number.
+    QJsonArray wrapped{value};
+    const QByteArray serialized = QJsonDocument(wrapped).toJson(QJsonDocument::Compact);
+    if (serialized.size() < 3 || serialized.front() != '[' || serialized.back() != ']')
+        return {};
+    return QString::fromLatin1(serialized.mid(1, serialized.size() - 2));
+}
+
 QString snapshotId(const QString &scopeKind, const QString &targetId,
                    const QVariantMap &target, const QVariantList &windows,
                    const QVariantList &controls)
@@ -166,6 +202,20 @@ QString snapshotId(const QString &scopeKind, const QString &targetId,
                        {QStringLiteral("target"), target},
                        {QStringLiteral("windows"), windows},
                        {QStringLiteral("controls"), controls}});
+}
+
+QVariantList snapshotIdentityWindows(const QString &scopeKind,
+                                     const QVariantMap &target,
+                                     const QVariantList &visibleWindows)
+{
+    if (scopeKind != QLatin1String("window")) return visibleWindows;
+    return target.isEmpty() ? QVariantList{} : QVariantList{target};
+}
+
+QVariantList snapshotIdentityControls(const QVariantList &presentedControls,
+                                      const QVariantList &canonicalControls)
+{
+    return canonicalControls.isEmpty() ? presentedControls : canonicalControls;
 }
 
 bool snapshotMatches(const QString &expected, const QString &actual, QString *error)
@@ -213,10 +263,38 @@ QString inferScopeKind(const QString &explicitKind, bool targetIsWindow,
     return targetIsWindow ? QStringLiteral("window") : fallback;
 }
 
-bool typingTargetAllowed(const QString &foregroundId, const QString &agentFocusedId)
+bool typingTargetAllowed(const QString &foregroundId, const QString &agentFocusedId,
+                         qulonglong foregroundPid, qulonglong selectedPid)
 {
     if (agentFocusedId.isEmpty()) return false;
+    if (foregroundPid != 0 && selectedPid != 0 && foregroundPid != selectedPid)
+        return false;
+    if (foregroundPid != 0 && selectedPid != 0 && foregroundPid == selectedPid)
+        return true;
     return foregroundId.isEmpty() || foregroundId.compare(agentFocusedId, Qt::CaseInsensitive) == 0;
+}
+
+QString keyFocusChangeHint(const QString &beforeId, qulonglong beforePid,
+                           const QString &afterId, qulonglong afterPid,
+                           qulonglong selectedPid)
+{
+    const bool idChanged = beforeId.compare(afterId, Qt::CaseInsensitive) != 0;
+    const bool pidChanged = beforePid != 0 && afterPid != 0 && beforePid != afterPid;
+    if (!idChanged && !pidChanged) return {};
+
+    if (selectedPid != 0 && afterPid != 0 && afterPid != selectedPid) {
+        return QStringLiteral(
+            " El foco quedó fuera de la aplicación elegida; no escribas todavía. "
+            "Observá el estado actual y volvé a resolver el destino.");
+    }
+    if (selectedPid != 0 && afterPid == selectedPid) {
+        return QStringLiteral(
+            " El foco cambió dentro de la aplicación elegida. Puede ser un cambio normal de control. "
+            "Observá el estado actual antes de seguir; no supongas que se abrió un diálogo ni "
+            "presiones Enter para comprobarlo.");
+    }
+    return QStringLiteral(
+        " El foco cambió; observá la ventana actual antes de seguir.");
 }
 
 bool typingNeedsRefocus(const QString &foregroundId, const QString &agentFocusedId)
@@ -254,6 +332,29 @@ QString launchAlias(const QString &app)
     };
     const auto it = aliases.constFind(key);
     return it != aliases.constEnd() ? it.value() : app.trimmed();
+}
+
+QStringList splitLaunchArguments(const QString &args)
+{
+    return QProcess::splitCommand(args.trimmed());
+}
+
+QString launchTargetIdentity(const QString &app, const QString &args)
+{
+    QString canonicalApp = launchAlias(app).trimmed().toCaseFolded();
+    if (canonicalApp.endsWith(QLatin1String(".exe"))) canonicalApp.chop(4);
+
+    QJsonArray canonicalArguments;
+    for (QString argument : splitLaunchArguments(args)) {
+        const QFileInfo path(argument);
+        if (path.isAbsolute()) argument = QDir::cleanPath(argument).toCaseFolded();
+        canonicalArguments.append(argument);
+    }
+
+    QJsonArray identity;
+    identity.append(canonicalApp);
+    identity.append(canonicalArguments);
+    return QString::fromUtf8(QJsonDocument(identity).toJson(QJsonDocument::Compact));
 }
 
 // Palabras que aparecen en el título de la ventana de una app conocida.
@@ -329,31 +430,96 @@ QVariantMap pickLaunchedWindow(const QVariantList &before, const QVariantList &a
     return {};
 }
 
+QVariantMap largestWindowForProcess(const QVariantList &windows, qulonglong pid,
+                                    const QString &excludeId)
+{
+    if (pid == 0) return {};
+    QVariantMap best;
+    qint64 bestArea = 0;
+    for (const QVariant &value : windows) {
+        const QVariantMap row = value.toMap();
+        if (row.value(QStringLiteral("pid")).toULongLong() != pid
+            || row.value(QStringLiteral("id")).toString() == excludeId)
+            continue;
+        const qint64 area = qint64(row.value(QStringLiteral("width")).toInt())
+                            * row.value(QStringLiteral("height")).toInt();
+        if (area > bestArea) {
+            best = row;
+            bestArea = area;
+        }
+    }
+    return best;
+}
+
+QVariantMap resolveSelectedWindow(const QVariantList &windows, const QString &selectedId,
+                                  qulonglong pid)
+{
+    if (pid == 0) return {};
+    for (const QVariant &value : windows) {
+        const QVariantMap row = value.toMap();
+        if (row.value(QStringLiteral("id")).toString() == selectedId
+            && row.value(QStringLiteral("pid")).toULongLong() == pid)
+            return row;
+    }
+    return largestWindowForProcess(windows, pid, selectedId);
+}
+
+qulonglong selectedWindowProcessId(const QVariantList &windows, const QString &selectedId,
+                                   qulonglong knownPid)
+{
+    if (knownPid != 0) return knownPid;
+    for (const QVariant &value : windows) {
+        const QVariantMap row = value.toMap();
+        if (row.value(QStringLiteral("id")).toString() == selectedId)
+            return row.value(QStringLiteral("pid")).toULongLong();
+    }
+    return 0;
+}
+
+int clampControlLimit(int requested, int fallback)
+{
+    const int value = requested > 0 ? requested : fallback;
+    return qBound(1, value, 80);
+}
+
 QString formatLaunchResult(const QString &app, const QVariantMap &window, bool background,
                            bool *ok)
 {
     if (ok) *ok = true;
     const QString id = window.value(QStringLiteral("id")).toString();
     const QString title = window.value(QStringLiteral("label")).toString();
-    if (window.isEmpty() || id.isEmpty())
+    if (window.isEmpty() || id.isEmpty()) {
+        if (ok) *ok = false;
         return QStringLiteral(
-            "[desktop_launch: lancé '%1' pero no apareció ninguna ventana nueva en 5 s. "
-            "Puede estar tardando: desktop_wait y una sola desktop_windows para buscarla.]").arg(app);
+            "[desktop_launch: lancé '%1' pero no apareció una ventana interactiva en el tiempo "
+            "esperado. No escribas en otra app; espera y vuelve a buscar una sola vez con "
+            "desktop_windows.]").arg(app);
+    }
     if (window.value(QStringLiteral("dialog")).toBool()) {
         if (ok) *ok = false;
         return QStringLiteral(
-            "[desktop_launch: en vez de la app apareció un diálogo del sistema \"%1\" (id=%2): "
+            "[desktop_launch: en vez de la app apareció un diálogo del sistema \"%1\" (id=\"%2\"): "
             "probablemente Windows no pudo abrir '%3'. NO escribas en ese diálogo. Probá con el "
             "ejecutable (ej. 'calc', 'notepad') o una ruta completa.]").arg(title, id, app);
     }
     const QString which = window.value(QStringLiteral("existing")).toBool()
         ? QStringLiteral("ya estaba abierta (no apareció otra)")
         : QStringLiteral("se abrió");
+    const bool existing = window.value(QStringLiteral("existing")).toBool();
     const QString next = background
-        ? QStringLiteral("Seguí con desktop_controls target_id=%1 y desktop_control_action.").arg(id)
+        ? QStringLiteral("Seguí con desktop_controls target_id=\"%1\" y desktop_control_action.").arg(id)
+        : existing
+            ? QStringLiteral("La ventana ya existía y no se seleccionó automáticamente. "
+                             "Confirma primero el título con desktop_read_text target_id=\"%1\"; "
+                             "después elígela con desktop_focus target_id=\"%1\" antes de "
+                             "escribir o pulsar teclas. También puedes pasar ese target_id "
+                             "explícitamente a desktop_type/desktop_key.").arg(id)
         : QStringLiteral("Ya está en primer plano: podés usar desktop_type/desktop_key directo "
-                         "(o desktop_controls target_id=%1 para botones). Para leer el "
-                         "resultado: desktop_read_text target_id=%1.").arg(id);
+                         "(o desktop_controls target_id=\"%1\" para botones). Si una lectura "
+                         "informa que el HWND fue reemplazado, usa el id nuevo y llama "
+                         "desktop_focus antes de cualquier desktop_key/desktop_type; desktop_key "
+                         "actúa sobre la última ventana enfocada. Para leer el resultado: "
+                         "desktop_read_text target_id=\"%1\".").arg(id);
     // La Calculadora no resuelve hasta el '=': el agente tecleaba "3*3", la pantalla
     // quedaba en "3 ×  3" y el modelo informaba "9" sin que existiera.
     QString calcHint;
@@ -364,8 +530,9 @@ QString formatLaunchResult(const QString &app, const QVariantMap &window, bool b
                              "\"Es igual a\"; leelo después con desktop_read_text.")
             : QStringLiteral(" Calculadora: la cuenta se resuelve recién con '=': tipeá la "
                              "expresión terminada en '=' (ej. \"3*3=\") y leé el resultado.");
-    return QStringLiteral("[desktop_launch: ok — la ventana %1: id=%2 \"%3\". Usá ese id como "
-                          "target_id; NO hace falta desktop_windows. %4%5]")
+    return QStringLiteral("[desktop_launch: ok — la ventana %1: id=%2 \"%3\". Usa ese "
+                          "valor exacto como target_id (sin agregar comillas al valor); el "
+                          "JSON ya delimita el string. NO hace falta desktop_windows. %4%5]")
         .arg(which, id, title, next, calcHint);
 }
 
@@ -412,6 +579,124 @@ static QString foldForMatch(const QString &s)
     return out;
 }
 
+QString expectedDocumentNameFromLaunchArguments(const QString &args,
+                                                const QString &workingDirectory)
+{
+    const QStringList tokens = splitLaunchArguments(args);
+    QString expectedName;
+    for (QString token : tokens) {
+        const qsizetype equals = token.indexOf(QLatin1Char('='));
+        if (equals >= 0) token = token.mid(equals + 1);
+        if (token.isEmpty()) continue;
+        if (token.startsWith(QStringLiteral("http://"), Qt::CaseInsensitive)
+            || token.startsWith(QStringLiteral("https://"), Qt::CaseInsensitive))
+            continue;
+        QFileInfo candidate(token);
+        if (candidate.isRelative() && !workingDirectory.isEmpty())
+            candidate = QFileInfo(QDir(workingDirectory).filePath(token));
+        if (candidate.exists() && candidate.isFile())
+            expectedName = candidate.fileName();
+        else if (!candidate.exists() && !candidate.suffix().isEmpty()
+                 && (token.contains(QLatin1Char('/')) || token.contains(QLatin1Char('\\'))))
+            // Keep the guard active for a path-like file argument that is mistyped
+            // or stale. A missing file must not make the launch look like an app-only
+            // launch and allow input into a generic empty window.
+            expectedName = candidate.fileName();
+    }
+    return expectedName;
+}
+
+namespace {
+bool documentNameIsVisible(const QString &expectedName, const QString &windowTitle,
+                           const QString &visibleText)
+{
+    Q_UNUSED(visibleText);
+    const QString expected = foldForMatch(expectedName.trimmed());
+    if (expected.isEmpty()) return false;
+
+    static const QStringList openErrors{
+        QStringLiteral("no hemos encontrado"), QStringLiteral("no se encuentra"),
+        QStringLiteral("no encontrado"), QStringLiteral("could not find"),
+        QStringLiteral("cannot find"), QStringLiteral("can't find"),
+        QStringLiteral("not found"), QStringLiteral("failed to open"),
+        QStringLiteral("unable to open")};
+    // El cuerpo del documento puede contener literalmente el nombre pedido
+    // (por ejemplo, una pestaña restaurada con "CU19-alpha.txt" dentro de un
+    // documento CU19-beta.txt). Sólo el título identifica qué archivo está
+    // realmente abierto para esta guarda.
+    const QString foldedTitle = foldForMatch(windowTitle.trimmed());
+    if (!foldedTitle.contains(expected)) return false;
+    for (const QString &marker : openErrors) {
+        if (foldedTitle.contains(marker)) return false;
+    }
+    return true;
+}
+} // namespace
+
+void LaunchDocumentGuard::reset()
+{
+    m_expectedName.clear();
+    m_targetId.clear();
+}
+
+void LaunchDocumentGuard::arm(const QString &expectedName, const QString &targetId,
+                              const QString &initialWindowTitle)
+{
+    reset();
+    const QString name = QFileInfo(expectedName).fileName().trimmed();
+    if (name.isEmpty() || targetId.isEmpty()
+        || documentNameIsVisible(name, initialWindowTitle, QString()))
+        return;
+    m_expectedName = name;
+    m_targetId = targetId;
+}
+
+void LaunchDocumentGuard::rebindTarget(const QString &oldTargetId, const QString &newTargetId)
+{
+    if (pending() && !newTargetId.isEmpty() && m_targetId == oldTargetId)
+        m_targetId = newTargetId;
+}
+
+bool LaunchDocumentGuard::observe(const QString &targetId, const QString &windowTitle,
+                                  const QString &visibleText)
+{
+    if (!pending() || targetId != m_targetId
+        || !documentNameIsVisible(m_expectedName, windowTitle, visibleText))
+        return false;
+    reset();
+    return true;
+}
+
+bool LaunchDocumentGuard::blocks(const QString &tool) const
+{
+    return pending() && isDesktopActionTool(tool)
+        && tool != QLatin1String("desktop_launch")
+        && tool != QLatin1String("desktop_focus");
+}
+
+QString LaunchDocumentGuard::pendingNote(const QString &windowTitle) const
+{
+    if (!pending()) return {};
+    const QString title = windowTitle.trimmed().isEmpty()
+        ? QStringLiteral("(sin título visible)") : windowTitle.trimmed();
+    return QStringLiteral("[desktop_document_guard: archivo solicitado '%1' aún no confirmado; "
+                          "ventana actual '%2'. No interactúes con el documento. Usa "
+                          "desktop_windows para ubicar una ventana cuyo título identifique "
+                          "ese archivo; desktop_focus puede seleccionarla y desktop_read_text "
+                          "puede verificar el título. Si no aparece, detente sin modificar nada.]")
+        .arg(m_expectedName, title);
+}
+
+QString LaunchDocumentGuard::blockedActionMessage(const QString &tool) const
+{
+    if (!pending()) return {};
+    return QStringLiteral("[%1: NO ejecuté la acción — el archivo solicitado '%2' todavía no "
+                          "está confirmado en la ventana iniciada. Usa desktop_windows para "
+                          "ubicar el target correcto, enfócalo con desktop_focus y verifica el "
+                          "título con desktop_read_text; no continúes hasta ver el nombre exacto.]")
+        .arg(tool, m_expectedName, m_targetId);
+}
+
 QString formatReadText(const QList<TextLine> &lines, const QRect &bounds,
                        const QString &query, int maxLines)
 {
@@ -451,11 +736,32 @@ QStringList uiaReadableText(const QVariantList &controls, const QString &query, 
         if (out.size() >= cap) break;
         const QVariantMap c = v.toMap();
         const QString role = c.value(QStringLiteral("role")).toString();
-        if (role != QLatin1String("text") && role != QLatin1String("edit")) continue;
-        // Un "text" invocable es un link/botón disfrazado: no es contenido.
-        if (c.value(QStringLiteral("invokable")).toBool()) continue;
+        const bool dataItem = role == QLatin1String("dataitem");
+        const bool document = role == QLatin1String("document");
+        if (role != QLatin1String("text") && role != QLatin1String("edit") && !dataItem
+            && !document)
+            continue;
+        // Un "text" invocable suele ser un link/botón disfrazado. DataItem
+        // como celdas de grilla también pueden exponer Invoke para selección,
+        // pero siguen siendo contenido legible.
+        if (role == QLatin1String("text")
+            && c.value(QStringLiteral("invokable")).toBool()) continue;
         const QString name = c.value(QStringLiteral("name")).toString().simplified();
         const QString value = c.value(QStringLiteral("value")).toString().simplified();
+        const QString documentText = c.value(QStringLiteral("text")).toString().simplified();
+        if (document) {
+            if (documentText.isEmpty()) continue;
+            if (!q.isEmpty() && !foldForMatch(documentText).contains(q)) continue;
+            const QString key = foldForMatch(documentText);
+            if (seen.contains(key)) continue;
+            seen.insert(key);
+            out << documentText;
+            continue;
+        }
+        // Grillas como Excel exponen cada celda como DataItem: name suele ser
+        // la coordenada (D2) y ValuePattern contiene el contenido. No listar
+        // celdas vacías, que pueden ser cientos y no aportan texto legible.
+        if (dataItem && value.isEmpty()) continue;
         QString line = name;
         if (!value.isEmpty() && value.compare(name, Qt::CaseInsensitive) != 0)
             line = name.isEmpty() ? value : name + QStringLiteral(": ") + value;
@@ -467,6 +773,11 @@ QStringList uiaReadableText(const QVariantList &controls, const QString &query, 
         out << line;
     }
     return out;
+}
+
+bool valueActionReadbackMatches(const QString &requested, const QString &observed)
+{
+    return !requested.isNull() && requested == observed;
 }
 
 bool isDesktopReadTool(const QString &name)
@@ -543,6 +854,48 @@ QString redactForEvidence(const QString &text)
         QStringLiteral("(?i)(password|contraseña|token|secret|api[_ -]?key)\\s*[:=]\\s*[^\\s,;]+"));
     result.replace(secret, QStringLiteral("\\1=[REDACTED]"));
     return result;
+}
+
+bool normalizeKeyName(QString *key)
+{
+    if (!key) return false;
+    if (*key != QLatin1String("\n") && *key != QLatin1String("\r")
+        && *key != QLatin1String("\r\n")) {
+        return false;
+    }
+    *key = QStringLiteral("ENTER");
+    return true;
+}
+
+bool normalizeKeyChord(QString *key, QStringList *modifiers)
+{
+    if (!key || !modifiers) return false;
+    const QString originalKey = key->trimmed().toUpper();
+    static const QSet<QString> modifierNames{
+        QStringLiteral("CTRL"), QStringLiteral("ALT"), QStringLiteral("SHIFT"),
+        QStringLiteral("WIN")};
+    if (!modifierNames.contains(originalKey)) return false;
+
+    QStringList chordModifiers;
+    QStringList chordKeys;
+    for (const QString &modifier : *modifiers) {
+        const QString normalized = modifier.trimmed().toUpper();
+        if (normalized.isEmpty()) continue;
+        if (modifierNames.contains(normalized)) chordModifiers.append(normalized);
+        else chordKeys.append(normalized);
+    }
+    if (chordKeys.size() != 1) return false;
+
+    chordModifiers.append(originalKey);
+    chordModifiers.removeDuplicates();
+    *key = chordKeys.constFirst();
+    *modifiers = chordModifiers;
+    return true;
+}
+
+bool shouldBlockTypingIntoExistingText(bool textEntryControl, bool hasText)
+{
+    return textEntryControl && hasText;
 }
 
 } // namespace DesktopComputerUse

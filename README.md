@@ -1288,6 +1288,9 @@ de aplicación, resolución, idioma, tema o ubicación de controles.
   `BLOCKED`. Ante snapshot obsoleto o target ambiguo exige una observación fresca
   y permite como máximo una acción re-resuelta; un segundo fallo detiene la
   recuperación.
+  Los ids de ventana se conservan incluso si el modelo omite sus comillas en un
+  HWND hexadecimal o entrega un HWND compuesto sólo por dígitos como número
+  JSON; una lectura dirigida nunca se degrada por eso a capturar la pantalla completa.
   Los pasos exitosos ejecutados por el reproductor nativo cuentan como evidencia
   de herramientas: si la comparación visual confirma el objetivo, no se exige una
   llamada redundante a `desktop_*` durante el turno del modelo ni una segunda

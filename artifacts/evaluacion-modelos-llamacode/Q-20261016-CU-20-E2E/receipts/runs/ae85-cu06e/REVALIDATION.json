@@ -1,0 +1,30 @@
+{
+  "run_id": "ae85-cu06e",
+  "case_id": "CU06",
+  "revalidated_at_local": "2026-10-20T11:41:48.774095-03:00",
+  "binary_sha256": "ae85a27680ad2a8b3945f19bd4741177d699046676be500d580d1e6949449f28",
+  "launch_profile_id": "sys-vram-8-gemma",
+  "agent_base_profile_id": "agent-intermedio",
+  "browser_profile_mode": "existing_user_profile",
+  "browser_window": "new --new-window HWND; no pre-existing tab was navigated",
+  "original_result_sha256": "dfe8a7e4bf0736aa04fbc37d9cf740d8e9e6a7090e9eeac8fa534c1c55547db7",
+  "raw_runtime_trace": "runtime/agent-data/ae85-cu06e/agent_llamaagent/534a6b13-48a6-41b8-8872-16c8866fed96.json",
+  "raw_runtime_trace_sha256": "23f09236fe751f07f442a1b42247569734238581561a0a0481b97ea15b03723d",
+  "validator_source": "scripts/run_cu20_windows.py",
+  "validator_source_sha256": "0d3a33adb21602a074a165b0abeeee6dcfca2e0bf5baa4fe18f190891c035877",
+  "validation": {
+    "passed": true,
+    "google_search_url_typed": true,
+    "query_bar_read_before_enter": true,
+    "google_results_read": true,
+    "result_title_and_ocr_coordinate_observed": true,
+    "result_was_observed_in_target_window": true,
+    "result_click_observed": true,
+    "opened_page_read_count": 1,
+    "opened_page_title": "Historia de Egipto - Wikipedia, la enciclopedia libre - DDS: Microsoft​ Edge",
+    "visible_fact_term": "3150 / alto / bajo / faraon",
+    "matching_answer_count": 1
+  },
+  "reason": "The original receipt was marked failed by a literal-only fact whitelist. The revised validator requires at least two meaningful terms shared with the opened article, or one shared date/number plus one meaningful term; a generic unsupported answer remains rejected. The raw trace contains the successful Google search, result click, Wikipedia article read, and an answer matching article text.",
+  "original_receipt_preserved": true
+}

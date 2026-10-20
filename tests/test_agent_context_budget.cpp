@@ -42,6 +42,7 @@ private slots:
     void mcpToolSchemas_cost();
     void leanChatPreset_cutsToolBudget();
     void maxQ_beforeVsNow_regressionIsRecoverable();
+    void agentDataDirOverride_isolated();
 
 private:
     // Bytes UTF-8 del system prompt para un set de directivas dado.
@@ -79,6 +80,45 @@ private:
         return out;
     }
 };
+
+class ScopedAgentDataDir final
+{
+public:
+    explicit ScopedAgentDataDir(const QByteArray &path)
+        : m_hadValue(qEnvironmentVariableIsSet("LLAMACODE_AGENT_DATA_DIR")),
+          m_oldValue(qgetenv("LLAMACODE_AGENT_DATA_DIR"))
+    {
+        qputenv("LLAMACODE_AGENT_DATA_DIR", path);
+    }
+    ~ScopedAgentDataDir()
+    {
+        if (m_hadValue) qputenv("LLAMACODE_AGENT_DATA_DIR", m_oldValue);
+        else qunsetenv("LLAMACODE_AGENT_DATA_DIR");
+    }
+
+private:
+    bool m_hadValue;
+    QByteArray m_oldValue;
+};
+
+void AgentContextBudgetTests::agentDataDirOverride_isolated()
+{
+    QTemporaryDir root;
+    QVERIFY(root.isValid());
+    const bool hadOverride = qEnvironmentVariableIsSet("LLAMACODE_AGENT_DATA_DIR");
+    const QByteArray previousOverride = qgetenv("LLAMACODE_AGENT_DATA_DIR");
+    const QString expected = QDir(root.path()).filePath(QStringLiteral("agent_llamaagent"));
+    {
+        ScopedAgentDataDir env(root.path().toLocal8Bit());
+        LlamaAgentBackend backend;
+        QCOMPARE(QDir::cleanPath(backend.harnessStorageDirForTest()),
+                 QDir::cleanPath(expected));
+        QVERIFY(QDir(expected).exists());
+    }
+    QCOMPARE(qEnvironmentVariableIsSet("LLAMACODE_AGENT_DATA_DIR"), hadOverride);
+    if (hadOverride)
+        QCOMPARE(qgetenv("LLAMACODE_AGENT_DATA_DIR"), previousOverride);
+}
 
 // PASO 1 — La regresión raíz: un perfil sin directivas aplicadas (m_directivesSet
 // false = histórico) ahora arrastra TODAS las secciones nuevas. Medimos lean vs

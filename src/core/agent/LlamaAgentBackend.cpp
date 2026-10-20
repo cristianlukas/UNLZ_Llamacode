@@ -130,6 +130,15 @@ static bool isPrivacyRestrictedTool(const QString &name)
         || lower == QLatin1String("task");
 }
 
+static bool isDesktopObservationTool(const QString &name)
+{
+    static const QSet<QString> tools{
+        QStringLiteral("desktop_read_text"), QStringLiteral("desktop_windows"),
+        QStringLiteral("desktop_controls"), QStringLiteral("desktop_snapshot"),
+        QStringLiteral("desktop_observe")};
+    return tools.contains(name.trimmed());
+}
+
 // Cuando "Pensar" está apagado, algunos modelos igual streamean tags <think>
 // dentro de content. La UI y el historial deben quedarse sólo con la respuesta.
 static QString stripThinkForOutput(const QString &s, bool truncateOrphanTail)
@@ -1867,8 +1876,10 @@ QString LlamaAgentBackend::backgroundComputerUseNote()
         "NO tenés mouse ni teclado (desktop_click, desktop_type, desktop_key, "
         "desktop_focus y similares no están disponibles). Camino: desktop_launch "
         "con el ejecutable (ej. 'calc'; devuelve el id de la ventana), desktop_controls "
-        "<id> para ver los controles y desktop_control_action (invoke/set_value/"
-        "toggle/select) o desktop_click_element para accionarlos. Ej. calculadora: "
+        "<id> para ver los controles y desktop_control_action (click/invoke/set_value/"
+        "toggle/select) o desktop_click_element con el snapshot_id reciente para accionarlos. "
+        "En un control Edit o Document verifica keyboardFocusConfirmed antes de escribir; no repitas el click. "
+        "Ej. calculadora: "
         "botones 'Tres', 'Multiplicar por', 'Tres', 'Es igual a'. Leé el resultado "
         "con desktop_controls (el visor trae el valor en su nombre). Si un control "
         "no se puede accionar así, decíselo al usuario en vez de insistir.");
@@ -1889,16 +1900,39 @@ QString LlamaAgentBackend::desktopPlaybookSection(bool visionReady)
         "desktop_focus <id> y escribí con desktop_type. Para calculadora: primero "
         "desktop_key ESC para limpiar; después detectá la expresión del objetivo y "
         "mandala completa con '=' en una sola acción (desktop_type \"<expresión>=\"). "
-        "No la partas y no presiones ENTER después del '='. Fin. desktop_type/desktop_key "
-        "van a la ventana en foco.\n"
-        "4) Botones sin equivalente de teclado: desktop_controls <id> lista los "
-        "controles por NOMBRE (árbol UIA, sin captura); tomá el controlId y "
-        "accionalo con desktop_click_element. Clic semántico por nombre, NO por "
-        "pixel.\n"
+        "No la partas y no presiones ENTER después del '='. Fin. desktop_type escribe "
+        "texto literal; desktop_key presiona una tecla. No escribas el nombre de una tecla "
+        "con desktop_type: desktop_type \"F12\" escribe esos caracteres; para pulsar F12, "
+        "usá desktop_key con key='F12'. Las dos tools van a la ventana en foco. "
+        "desktop_key no recibe target_id: enfocá primero la ventana con desktop_focus. "
+        "Si una lectura avisa que el HWND de la ventana fue reemplazado, usá el id nuevo "
+        "y llama desktop_focus antes de la próxima tecla o escritura; no supongas que el "
+        "foco quedó en el control anterior. "
+        "Combinaciones: key es una sola tecla; Ctrl+L = key 'L' + modifiers ['CTRL']; "
+        "Ctrl+A = key 'A' + modifiers ['CTRL']; Alt+F4 = key 'F4' + modifiers ['ALT'].\n"
+        "En navegador, después de escribir una URL o consulta en la barra, pulsa Enter una vez; "
+        "si acabas de escribirla con desktop_type, la siguiente tool es desktop_key key='ENTER'; "
+        "después usa desktop_read_text para confirmar que cargó la página antes de otro "
+        "atajo. Buscar en página: Ctrl+F, escribe la frase exacta en el campo abierto, pulsa Enter "
+        "si hace falta y lee coincidencia/conteo; no repitas atajo ni escritura sin una observación "
+        "que muestre un cambio.\n"
+        "4) UIA: desktop_controls lista controles por nombre. Para desktop_click_element y "
+        "desktop_control_action pasa controlId, target_id y snapshot_id actuales; sin snapshot "
+        "se rechaza. En Edit/Document, el click confirma keyboardFocusConfirmed: verifica el foco y "
+        "no lo repitas. Para reemplazar una celda o campo UIA con contenido, usa "
+        "desktop_control_action action='set_value' con el control "
+        "exacto y el valor completo, si está disponible; luego verifica por lectura. "
+        "No hagas clic en un valor existente y pulses un dígito: la app puede entrar "
+        "en modo edición y anexarlo. Si set_value no está disponible, usa navegación "
+        "semántica o por teclado para seleccionar claramente el valor antes de cambiarlo. "
+        "En una celda de grilla, si el readback muestra el valor nuevo pero el resultado "
+        "dependiente sigue igual, confirma con Enter una sola vez; no repitas set_value.\n"
         "5) VERIFICAR el resultado: leé el estado con desktop_controls — el texto "
         "de los controles (ej. el visor ACTUAL de la calculadora, 'Se muestra X') "
         "trae el valor en su nombre, sin necesidad de visión. No aceptes "
-        "Historial/Memoria como resultado final. ");
+        "Historial/Memoria como resultado final. desktop_read_text devuelve 32 "
+        "renglones por defecto; usá query para reducir la lectura y ampliá max sólo "
+        "si falta evidencia concreta. No releas la pantalla completa sin un cambio de estado. ");
     if (visionReady) {
         s += QStringLiteral(
             "Este perfil tiene visión (--mmproj): también podés usar desktop_observe "
@@ -1917,6 +1951,25 @@ QString LlamaAgentBackend::desktopPlaybookSection(bool visionReady)
             "desktop_controls.\n");
     }
     s += QStringLiteral(
+        "Si el pedido incluye varios efectos, lleva una lista corta y verifica cada uno. "
+        "Enfocar o seleccionar un control sólo prepara la acción; una respuesta de tool 'ok' "
+        "sólo confirma su envío, no que ocurrió el efecto solicitado. Después de cada cambio, "
+        "observa el estado afectado y compáralo con la postcondición concreta —incluido el "
+        "formato/estado, no sólo los valores de los datos—. Si la lectura no demuestra el efecto, "
+        "no declares éxito ni repitas ciegamente la misma mutación: usa otra estrategia segura "
+        "o informa BLOCKED/no verificado. Afirma que un archivo quedó guardado sólo con evidencia "
+        "del guardado.\n"
+        "Un aviso de cambio de foco no significa por sí solo que se abrió un diálogo: observa una vez "
+        "el estado antes de continuar y no pulses Enter para comprobar si existe un diálogo.\n"
+        "Si completar no ejecuta la acción, confirmala una vez; esperá y verificá el cambio "
+        "antes de informar éxito.\n"
+        "Respetá exactamente la tecla y los modificadores pedidos: no agregues Ctrl/Alt/Shift "
+        "por iniciativa propia. F12 sola es key='F12' sin modifiers; Ctrl+F12 es otra acción.\n"
+        "Después de un atajo que pueda abrir/cerrar una ventana o diálogo (por ejemplo Ctrl+N, "
+        "Ctrl+O, F12 o Alt+F4), observá de nuevo con desktop_read_text o desktop_controls y "
+        "confirmá el estado real antes de teclear. No escribas una ruta por asumir que Guardar "
+        "como quedó abierto. Si desktop_key avisa que cambió el foco, no uses el target anterior: "
+        "observá y resolvé la ventana activa primero.\n"
         "Regla anti-loop: una acción, una verificación por texto, terminá. Si algo "
         "no avanza, cambiá de enfoque (teclado ↔ desktop_controls); no repitas la "
         "misma tool sin cambios. Si desktop_assert devuelve FAIL, eso no demuestra "
@@ -2686,6 +2739,8 @@ void LlamaAgentBackend::sendMessageImpl(const QString &text, const QString &visi
     m_desktopActionSafetyGate.clear();
     m_externalVerificationNudges = 0;
     m_desktopRecoveryNudges = 0;
+    m_desktopActionRepeatGuard.clear();
+    m_desktopLastObservationKeyByTarget.clear();
     ensureSession();
     escalateDesktopToolsIfRequested(visibleTrimmed);
     if (m_adaptiveToolRouting)
@@ -2714,6 +2769,7 @@ void LlamaAgentBackend::sendMessageImpl(const QString &text, const QString &visi
     m_transportRetries = 0;
     m_contextRecoveries = 0;
     m_lengthContinues = 0;
+    m_textToolContinuationPrefix.clear();
     m_hiddenReasonRetries = 0;
     pushCheckpoint();   // snapshot ANTES de agregar el nuevo turno (para rollback)
 
@@ -2831,8 +2887,11 @@ void LlamaAgentBackend::sendMessageImpl(const QString &text, const QString &visi
     m_turnRecovered = false;
     m_progressGovernor.reset(visibleTrimmed);
     m_escalatedSigs.clear();
-    if (!m_taskAutoApprove)
+    if (!m_taskAutoApprove) {
         m_desktopLaunchApps.clear();
+        m_desktopLaunchTargets.clear();
+        m_pendingDesktopLaunchTargets.clear();
+    }
     m_pendingObservations.clear();   // descartar observaciones de un turno previo abortado
     m_pendingObservationEvidence.clear();
     runCompletion();
@@ -3450,14 +3509,31 @@ void LlamaAgentBackend::runCompletion()
         + (usingTextTools() ? 0 : toolSchemaTokensOf(buildToolSchemas()));
     const int outReserve = outputTokenReservation(m_ctxLimit, estimatedInput);
 
+    const bool requireDesktopObservation =
+        m_externalVerificationGate.requiresDesktopObservationTool();
+    QJsonArray availableTools;
+    const QJsonArray allTools = buildToolSchemas();
+    for (const QJsonValue &value : allTools) {
+        const QString name = value.toObject().value(QStringLiteral("function")).toObject()
+                                 .value(QStringLiteral("name")).toString();
+        if (!requireDesktopObservation || isDesktopObservationTool(name))
+            availableTools.append(value);
+    }
+    const QJsonValue toolChoice = requireDesktopObservation
+        ? QJsonValue(QStringLiteral("required")) : QJsonValue(QStringLiteral("auto"));
+    if (requireDesktopObservation) {
+        emit logAppended(QStringLiteral(
+            "[verification gate] exijo una herramienta de observación desktop\n"));
+    }
+
     QJsonObject payload{
         {QStringLiteral("model"), m_ctx.modelId.isEmpty() ? QStringLiteral("local") : m_ctx.modelId},
         {QStringLiteral("messages"), wireMessages},
-        {QStringLiteral("tools"), buildToolSchemas()},
-        {QStringLiteral("tool_choice"), QStringLiteral("auto")},
+        {QStringLiteral("tools"), availableTools},
+        {QStringLiteral("tool_choice"), toolChoice},
         // Habilitado para que el modelo pueda lanzar varias `task` en paralelo.
         // El loop serializa los tools normales igual (uno por onToolExecuted).
-        {QStringLiteral("parallel_tool_calls"), true},
+        {QStringLiteral("parallel_tool_calls"), !requireDesktopObservation},
         // Parsear tool calls del lado server puede devolver 500 si el modelo
         // emite argumentos JSON parciales durante el streaming. Lo manejamos
         // del lado cliente para tolerar errores y permitir reintentos.
@@ -3509,11 +3585,13 @@ QJsonObject LlamaAgentBackend::buildTextToolPayload(const QJsonObject &nativePay
     QJsonArray messages = nativePayload.value(QStringLiteral("messages")).toArray();
 
     QStringList tools;
+    const bool requireDesktopObservation = nativePayload.value(QStringLiteral("tool_choice"))
+                                               .toString() == QLatin1String("required");
     const QJsonArray schemas = buildToolSchemas();
     for (const QJsonValue &v : schemas) {
         const QJsonObject fn = v.toObject().value(QStringLiteral("function")).toObject();
         const QString name = fn.value(QStringLiteral("name")).toString();
-        if (name.isEmpty()) continue;
+        if (name.isEmpty() || (requireDesktopObservation && !isDesktopObservationTool(name))) continue;
         const QJsonArray required = fn.value(QStringLiteral("parameters")).toObject()
                                         .value(QStringLiteral("required")).toArray();
         QStringList reqs;
@@ -3523,7 +3601,7 @@ QJsonObject LlamaAgentBackend::buildTextToolPayload(const QJsonObject &nativePay
                   : QStringLiteral("%1(%2)").arg(name, reqs.join(QStringLiteral(", "))));
     }
 
-    const QString protocol = QStringLiteral(
+    QString protocol = QStringLiteral(
         "MODO COMPATIBLE SIN TOOL-CALLING NATIVO.\n"
         "El servidor local rechazo el payload OpenAI tools, pero la app puede ejecutar "
         "tools si las pedis por texto.\n"
@@ -3538,6 +3616,12 @@ QJsonObject LlamaAgentBackend::buildTextToolPayload(const QJsonObject &nativePay
         "devolverá TOOL_RESULT como mensaje del usuario. Luego continuá. Cuando el "
         "objetivo esté cumplido, respondé normalmente con el resultado final.")
         .arg(tools.join(QStringLiteral("; ")));
+    if (requireDesktopObservation) {
+        protocol += QStringLiteral(
+            "\nCHECKPOINT OBLIGATORIO: llama ahora a una herramienta desktop de observación "
+            "disponible mediante exactamente un TOOL_CALL. No respondas texto final ni ejecutes "
+            "teclas, escritura o clics.");
+    }
 
     if (!messages.isEmpty()
         && messages.first().toObject().value(QStringLiteral("role")).toString() == QLatin1String("system")) {
@@ -4143,14 +4227,17 @@ void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
 
     // El historial de API NO lleva <think> (solo display lo lleva).
     const QString apiContent = stripThinkForContext(m_streamContent);
+    const QString textToolContent = m_textToolContinuationPrefix + apiContent;
 
     // Some model templates (notably KAT-Coder's official XML format) emit a
     // native-looking tool call in `content` when llama.cpp is run with
     // --skip-chat-parsing. Parse that fallback in both modes; otherwise the
     // XML is mistaken for the assistant's final code and never executes.
     if (toolCalls.isEmpty()) {
-        const QJsonObject textCall = textToolCallFromContent(apiContent);
+        const QJsonObject textCall = textToolCallFromContent(
+            apiContent, m_textToolContinuationPrefix);
         if (!textCall.isEmpty()) {
+            m_textToolContinuationPrefix.clear();
             if (m_curAsstIdx >= 0 && m_curAsstIdx < m_messages.size()) {
                 QVariantMap m = m_messages[m_curAsstIdx].toMap();
                 m[QStringLiteral("content")] = QString();
@@ -4172,6 +4259,10 @@ void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
         if (shouldAutoContinueAfterLength(m_streamFinishReason, apiContent,
                                           m_lengthContinues)) {
             ++m_lengthContinues;
+            if (!m_textToolContinuationPrefix.isEmpty())
+                m_textToolContinuationPrefix = textToolContent;
+            else if (hasIncompleteTextToolCall(apiContent))
+                m_textToolContinuationPrefix = apiContent;
             emit logAppended(QStringLiteral(
                 "[turn] finish_reason=length; continuación automática %1/2\n")
                                  .arg(m_lengthContinues));
@@ -4185,6 +4276,9 @@ void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
             runCompletion();
             return;
         }
+        // No se encontró una llamada completa ni queda una continuación
+        // automática: no transportar texto parcial a otra respuesta/turno.
+        m_textToolContinuationPrefix.clear();
         const auto verificationDecision = m_externalVerificationGate.completionDecision(
             m_externalVerificationNudges, 2);
         if (verificationDecision
@@ -4192,6 +4286,7 @@ void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
             const QStringList pending = m_externalVerificationGate.pendingServers();
             const QString targets = pending.join(QStringLiteral(", "));
             ++m_externalVerificationNudges;
+            m_externalVerificationGate.requestObservationTool();
             // La afirmación de éxito aún no verificada no debe aparecer como
             // respuesta intermedia visible ni quedar en el contexto.
             if (m_curAsstIdx >= 0 && m_curAsstIdx < m_messages.size()) {
@@ -4202,14 +4297,7 @@ void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
             closeAssistantBubble();
             appendApiMessage(QJsonObject{
                 {QStringLiteral("role"), QStringLiteral("user")},
-                {QStringLiteral("content"), QStringLiteral(
-                    "No declares la tarea completada todavía: hay efectos sin verificación "
-                    "posterior en: %1. Para desktop, observá el estado actual con "
-                    "desktop_controls, desktop_snapshot o una observación visual apropiada. "
-                    "Para MCP, usá una tool de sólo lectura del mismo servidor. Compará "
-                    "lo observado con el objetivo del usuario. Si no existe una lectura "
-                    "disponible, informá que quedó sin verificar. No repitas una acción "
-                    "de escritura sólo para comprobarla.").arg(targets)}});
+                {QStringLiteral("content"), m_externalVerificationGate.observationPrompt()}});
             // El texto retenido no queda en ningún lado: sin este recorte, una
             // generación de 1536 tokens (50 s) antes de la gate era imposible de
             // diagnosticar después.
@@ -4361,6 +4449,7 @@ void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
     // Una tool inicia una nueva fase ReAct; no consumir el presupuesto de
     // continuación de la respuesta posterior a la tool.
     m_lengthContinues = 0;
+    m_textToolContinuationPrefix.clear();
 
     emit logAppended(QStringLiteral("[turn] model requested %1 tool call(s)\n").arg(toolCalls.size()));
     // Cerrar la burbuja de texto previa: las tools van como tarjetas aparte y el
@@ -4454,6 +4543,7 @@ void LlamaAgentBackend::processPendingCalls()
     const QString id       = call.value(QStringLiteral("id")).toString();
     QString argStr         = toolArgumentsToString(fn.value(QStringLiteral("arguments")));
     const QJsonObject requestArgs = QJsonDocument::fromJson(argStr.toUtf8()).object();
+    QString desktopLaunchTargetKey;
     if (DesktopComputerUse::isDesktopMutationTool(name, requestArgs.toVariantMap())) {
         QString refusal;
         if (m_desktopActionSafetyGate.blocksActions()) {
@@ -4535,13 +4625,26 @@ void LlamaAgentBackend::processPendingCalls()
         m_sameCallStreak = 1;
     }
     const int sigCnt = m_sameCallStreak;
+    const bool desktopClick = name == QLatin1String("desktop_click")
+        || name == QLatin1String("desktop_click_element");
+    const bool desktopMutation = DesktopComputerUse::isDesktopMutationTool(
+        name, requestArgs.toVariantMap());
+    const QString desktopRepeatSig = desktopMutation
+        ? ToolExecutionSafety::desktopActionRepeatSignature(name, requestArgs)
+        : sig;
+    const bool desktopActionNoProgress = desktopMutation
+        && m_desktopActionRepeatGuard.blocks(desktopRepeatSig);
     AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("tool_call"),
                           QJsonObject{{QStringLiteral("tool"), name},
                                       {QStringLiteral("correlationId"), m_correlationId},
                                       {QStringLiteral("toolCallId"), id},
                                       {QStringLiteral("toolKind"), kind},
                                       {QStringLiteral("args"), argStr.left(8192)},
-                                      {QStringLiteral("repeatCount"), sigCnt}});
+                                      {QStringLiteral("repeatCount"), sigCnt},
+                                      {QStringLiteral("desktopClickNoProgress"),
+                                       desktopClick && desktopActionNoProgress},
+                                      {QStringLiteral("desktopActionNoProgress"),
+                                       desktopActionNoProgress}});
     const QString effectId = m_sessionId + QLatin1Char(':') + id;
     if (m_harnessEngineId == QLatin1String("next") && !id.isEmpty()) {
         HarnessEffectRecord effect;
@@ -4559,7 +4662,8 @@ void LlamaAgentBackend::processPendingCalls()
     // auto/both, transformamos ESTE tool_call en un ask_teacher (mismo id → el
     // tool_result queda consistente con el assistant message) y dejamos que el
     // maestro resuelva. Una sola vez por firma (anti-recursión).
-    if (!m_privacyModeEnabled && name != QLatin1String("ask_teacher") && masterAutoEnabled()
+    if (!desktopActionNoProgress && !m_privacyModeEnabled
+        && name != QLatin1String("ask_teacher") && masterAutoEnabled()
         && sigCnt >= m_masterAutoAfterFails && !m_escalatedSigs.contains(sig)) {
         m_escalatedSigs.insert(sig);
         const QString question = QStringLiteral(
@@ -4578,7 +4682,7 @@ void LlamaAgentBackend::processPendingCalls()
         name = QStringLiteral("ask_teacher");
         kind = toolKind(name);
         argStr = toolArgumentsToString(fn.value(QStringLiteral("arguments")));
-    } else if (sigCnt >= m_loopPolicy.sameCallLimit) {
+    } else if (desktopActionNoProgress || sigCnt >= m_loopPolicy.sameCallLimit) {
         // La tercera llamada consecutiva no se ejecuta. Inyectamos el tool_result
         // para conservar el contrato assistant/tool y se lo devolvemos al modelo:
         // debe intentar una estrategia distinta en vez de dejar trabajo bloqueado.
@@ -4589,13 +4693,22 @@ void LlamaAgentBackend::processPendingCalls()
         AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("failure"),
                               QJsonObject{{QStringLiteral("tool"), name},
                                           {QStringLiteral("toolCallId"), id},
-                                          {QStringLiteral("reason"), QStringLiteral("anti_loop")},
+                                          {QStringLiteral("reason"),
+                                           desktopActionNoProgress
+                                               ? QStringLiteral("desktop_mutation_repeated")
+                                               : QStringLiteral("anti_loop")},
                                           {QStringLiteral("repeatCount"), sigCnt}});
         const bool alreadyReplanned = m_replannedCallSigs.contains(sig);
         const QString notice = alreadyReplanned
             ? QStringLiteral(
                 "[anti-loop: la llamada a '%1' volvió a repetirse aun después del "
                 "replanteo obligatorio; turno detenido para limitar consumo.]").arg(name)
+            : desktopActionNoProgress
+            ? QStringLiteral(
+                "[anti-loop: esta acción de Computer Usage ya se ejecutó o falló con estos "
+                "argumentos; no se volverá a ejecutar. Observá el estado actual y elegí "
+                "argumentos/evidencia nuevos (por ejemplo, un control_id vigente); si no "
+                "hay un target inequívoco, detente sin mutar.]")
             : QStringLiteral(
                 "[anti-loop: no ejecutes otra vez '%1' con estos argumentos: ya se "
                 "obtuvo el mismo resultado sin progreso. REPLANIFICACIÓN OBLIGATORIA: "
@@ -4710,19 +4823,20 @@ void LlamaAgentBackend::processPendingCalls()
 
     if (name == QLatin1String("desktop_launch")) {
         const QString app = args.value(QStringLiteral("app")).toString().trimmed().toLower();
-        if (!app.isEmpty() && m_desktopLaunchApps.contains(app)) {
+        desktopLaunchTargetKey = DesktopComputerUse::launchTargetIdentity(
+            app, args.value(QStringLiteral("args")).toString());
+        if (!app.isEmpty() && m_desktopLaunchTargets.contains(desktopLaunchTargetKey)) {
             ++m_toolFail;
             m_pendingCalls.removeFirst();
             AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("failure"),
                                   QJsonObject{{QStringLiteral("tool"), name},
                                               {QStringLiteral("toolCallId"), id},
-                                              {QStringLiteral("reason"), QStringLiteral("duplicate_desktop_launch")},
+                                              {QStringLiteral("reason"), QStringLiteral("duplicate_desktop_launch_target")},
                                               {QStringLiteral("app"), app}});
             appendToolResult(id, name, QStringLiteral(
-                "[desktop_launch bloqueado: '%1' ya fue lanzada en esta Task. "
-                "No abras otra instancia. Continuá con la ventana existente: "
-                "desktop_windows si aún no tenés id, desktop_focus si ya lo tenés, "
-                "y después desktop_type/desktop_controls para completar y verificar.]")
+                "[desktop_launch bloqueado: la misma app con los mismos argumentos ya se lanzó "
+                "en esta Task. No repitas esa solicitud; usa la ventana o documento que ya "
+                "abriste y verifícalo con desktop_read_text/desktop_windows.]")
                 .arg(app));
             processPendingCalls();
             return;
@@ -5308,6 +5422,13 @@ void LlamaAgentBackend::approveAndContinue(const QString &id, const QString &res
     }
 
     // Ejecución en el worker (no bloquea UI). Resume en onToolExecuted().
+    if (name == QLatin1String("desktop_launch")) {
+        const QString app = a.value(QStringLiteral("app")).toString().trimmed();
+        const QString launchTarget = DesktopComputerUse::launchTargetIdentity(
+            app, a.value(QStringLiteral("args")).toString());
+        if (!app.isEmpty() && !launchTarget.isEmpty())
+            m_pendingDesktopLaunchTargets.insert(id, launchTarget);
+    }
     ensureWorker();
     m_execCallId = id;
     m_execToolName = name;
@@ -5424,6 +5545,8 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
             resultHash);
     }
     const QJsonObject args = QJsonDocument::fromJson(executedArgs.toUtf8()).object();
+    const QString desktopRepeatSignature =
+        ToolExecutionSafety::desktopActionRepeatSignature(name, args);
 
     // No permitir que un MCP write exitoso se confunda con estado verificado.
     // Una lectura posterior del mismo server cierra el gate; un recibo sólo lo
@@ -5478,6 +5601,49 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
         QStringLiteral("desktop_observe"), QStringLiteral("desktop_find_image"),
         QStringLiteral("desktop_wait_image"), QStringLiteral("desktop_assert_image"),
         QStringLiteral("desktop_assert")};
+    const QString desktopTargetId = args.value(QStringLiteral("target_id")).toString();
+    const QString desktopControlsObservationKey =
+        QStringLiteral("desktop_controls|") + desktopTargetId;
+    const QString desktopReadTextObservationKey =
+        QStringLiteral("desktop_read_text|") + desktopTargetId + QLatin1Char('|')
+        + args.value(QStringLiteral("query")).toString().trimmed().toCaseFolded();
+    const bool desktopClickAction = name == QLatin1String("desktop_click")
+        || name == QLatin1String("desktop_click_element");
+    const bool desktopSetValueAction = name == QLatin1String("desktop_control_action")
+        && args.value(QStringLiteral("action")).toString().compare(
+            QStringLiteral("set_value"), Qt::CaseInsensitive) == 0;
+    if (name == QLatin1String("desktop_controls") && ok) {
+        m_desktopActionRepeatGuard.recordObservation(desktopControlsObservationKey, res);
+        if (!desktopTargetId.isEmpty())
+            m_desktopLastObservationKeyByTarget.insert(desktopTargetId,
+                                                       desktopControlsObservationKey);
+    } else if (name == QLatin1String("desktop_read_text") && ok) {
+        m_desktopActionRepeatGuard.recordObservation(desktopReadTextObservationKey, res);
+        if (!desktopTargetId.isEmpty())
+            m_desktopLastObservationKeyByTarget.insert(desktopTargetId,
+                                                       desktopReadTextObservationKey);
+    } else if (desktopClickAction && ok) {
+        m_desktopActionRepeatGuard.recordAction(
+            desktopRepeatSignature, desktopControlsObservationKey);
+    } else if (name == QLatin1String("desktop_type") && ok) {
+        m_desktopActionRepeatGuard.blockAction(desktopRepeatSignature);
+        m_desktopActionRepeatGuard.clearPending();
+    } else if (desktopSetValueAction && ok) {
+        m_desktopActionRepeatGuard.blockAction(desktopRepeatSignature);
+        m_desktopActionRepeatGuard.clearPending();
+    } else if (DesktopComputerUse::isDesktopMutationTool(name, args.toVariantMap())) {
+        if (ok) {
+            m_desktopActionRepeatGuard.clearPending();
+        } else {
+            // Una mutación fallida con los mismos argumentos tampoco debe
+            // repetirse en bucle. Evidencia o argumentos distintos permiten
+            // una recuperación nueva, por ejemplo con un control_id vigente.
+            m_desktopActionRepeatGuard.blockAction(
+                desktopRepeatSignature, desktopTargetId.isEmpty()
+                    ? QString() : desktopControlsObservationKey);
+            m_desktopActionRepeatGuard.clearPending();
+        }
+    }
     const bool desktopControlRead = name == QLatin1String("desktop_control_action")
         && args.value(QStringLiteral("action")).toString().compare(
             QStringLiteral("read"), Qt::CaseInsensitive) == 0;
@@ -5574,8 +5740,12 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
     } else if (name.startsWith(QLatin1String("desktop_")) && name != QLatin1String("desktop_controls")) {
         m_lastDesktopTypeText.clear();
     }
-    if (ok && name == QLatin1String("desktop_launch") && !m_execCommand.trimmed().isEmpty())
-        m_desktopLaunchApps.insert(m_execCommand.trimmed().toLower());
+    if (name == QLatin1String("desktop_launch")) {
+        if (ok && !m_execCommand.trimmed().isEmpty())
+            m_desktopLaunchApps.insert(m_execCommand.trimmed().toLower());
+        const QString launchTarget = m_pendingDesktopLaunchTargets.take(callId);
+        if (ok && !launchTarget.isEmpty()) m_desktopLaunchTargets.insert(launchTarget);
+    }
     AgentEventLog::append(m_cwd, m_sessionId, ok ? QStringLiteral("tool_result")
                                                  : QStringLiteral("failure"),
                           QJsonObject{{QStringLiteral("tool"), name},
@@ -5854,6 +6024,11 @@ int LlamaAgentBackend::toolWatchdogSeconds(const QString &tool,
                                            const QJsonObject &arguments,
                                            int quickTimeoutSec, int webTimeoutSec)
 {
+    // desktop_launch waits up to 15 s for a usable window and UIA controls.
+    // Give it a separate margin so the outer idle watchdog cannot kill the
+    // worker at the same instant the launcher is about to return its result.
+    if (tool == QLatin1String("desktop_launch"))
+        return qBound(25, quickTimeoutSec, 120);
     if (tool == QLatin1String("run_shell"))
         return qBound(5, arguments.value(QStringLiteral("timeout_s")).toInt(120) + 15, 1815);
     if (tool.startsWith(QLatin1String("mcp__")) || tool == QLatin1String("mcp_call_tool")
@@ -6424,7 +6599,22 @@ int LlamaAgentBackend::secondTextToolCallStart(const QString &content)
     return second.capturedStart();
 }
 
-QJsonObject LlamaAgentBackend::textToolCallFromContent(const QString &content)
+bool LlamaAgentBackend::hasIncompleteTextToolCall(const QString &content)
+{
+    const QString candidate = content.trimmed();
+    if (candidate.isEmpty()) return false;
+
+    static const QString marker = QStringLiteral("TOOL_CALL");
+    if (candidate.size() < marker.size()) {
+        return candidate.size() >= 4
+            && marker.startsWith(candidate, Qt::CaseInsensitive);
+    }
+    if (!candidate.startsWith(marker, Qt::CaseInsensitive)) return false;
+    return textToolCallFromContent(candidate).isEmpty();
+}
+
+QJsonObject LlamaAgentBackend::textToolCallFromContent(
+    const QString &content, const QString &continuationPrefix)
 {
     // El nombre y los args de la tool pueden venir en dos formatos:
     //  (a) El que instruimos en buildTextToolPayload:
@@ -6441,12 +6631,233 @@ QJsonObject LlamaAgentBackend::textToolCallFromContent(const QString &content)
     QJsonObject args;
     bool haveName = false;
 
+    // Some local models occasionally omit only the opening quote of a JSON
+    // object key (for example: {"points": [...],scope_kind":"window"}).
+    // Repair that narrow typo before locating the balanced object. The scanner
+    // only touches identifier-like tokens immediately after '{' or ',' while
+    // outside a JSON string, and only when a colon follows; strict JSON parsing
+    // and the normal tool-name checks still run afterward.
+    auto quoteMissingObjectKey = [](const QString &source) {
+        QString out;
+        out.reserve(source.size() + 16);
+        bool inString = false;
+        bool escaped = false;
+        for (int i = 0; i < source.size();) {
+            const QChar ch = source.at(i);
+            if (!inString && (ch == QLatin1Char('{') || ch == QLatin1Char(','))) {
+                out += ch;
+                ++i;
+                while (i < source.size() && source.at(i).isSpace())
+                    out += source.at(i++);
+
+                const int keyStart = i;
+                if (i < source.size()
+                    && (source.at(i).isLetter() || source.at(i) == QLatin1Char('_'))) {
+                    ++i;
+                    while (i < source.size()
+                           && (source.at(i).isLetterOrNumber()
+                               || source.at(i) == QLatin1Char('_')))
+                        ++i;
+                    const QString key = source.mid(keyStart, i - keyStart);
+                    int colon = i;
+                    while (colon < source.size() && source.at(colon).isSpace()) ++colon;
+                    if (colon < source.size() && source.at(colon) == QLatin1Char('"')) {
+                        ++colon;
+                        while (colon < source.size() && source.at(colon).isSpace()) ++colon;
+                    }
+                    if (colon < source.size() && source.at(colon) == QLatin1Char(':')) {
+                        out += QLatin1Char('"') + key + QLatin1Char('"');
+                        i = colon;
+                        continue;
+                    }
+                    i = keyStart;
+                }
+                continue;
+            }
+
+            out += ch;
+            ++i;
+            if (inString) {
+                if (escaped) escaped = false;
+                else if (ch == QLatin1Char('\\')) escaped = true;
+                else if (ch == QLatin1Char('"')) inString = false;
+            } else if (ch == QLatin1Char('"')) {
+                inString = true;
+            }
+        }
+        return out;
+    };
+    // Gemma occasionally shifts a key's closing quote across the colon, e.g.
+    // {"app:"notepad"}. Repair only this exact shape at an object-key
+    // boundary, with a string value and a following JSON delimiter. In
+    // particular, do not rewrite lookalike text inside string values or arrays.
+    auto repairQuotedKeyColon = [](const QString &source) {
+        struct Container {
+            QChar type;
+        };
+        QList<Container> containers;
+        QString out;
+        out.reserve(source.size() + 8);
+        bool inString = false;
+        bool escaped = false;
+
+        auto repairAt = [&source, &out](int &index) {
+            int keyStart = index;
+            while (keyStart < source.size() && source.at(keyStart).isSpace())
+                ++keyStart;
+            if (keyStart >= source.size() || source.at(keyStart) != QLatin1Char('"'))
+                return false;
+
+            int colon = keyStart + 1;
+            if (colon >= source.size()
+                || !(source.at(colon).isLetter() || source.at(colon) == QLatin1Char('_')))
+                return false;
+            ++colon;
+            while (colon < source.size()
+                   && (source.at(colon).isLetterOrNumber()
+                       || source.at(colon) == QLatin1Char('_')))
+                ++colon;
+            if (colon + 1 >= source.size()
+                || source.at(colon) != QLatin1Char(':')
+                || source.at(colon + 1) != QLatin1Char('"'))
+                return false;
+
+            int valueEnd = colon + 2;
+            bool valueEscaped = false;
+            for (; valueEnd < source.size(); ++valueEnd) {
+                const QChar valueChar = source.at(valueEnd);
+                if (valueEscaped) valueEscaped = false;
+                else if (valueChar == QLatin1Char('\\')) valueEscaped = true;
+                else if (valueChar == QLatin1Char('"')) break;
+            }
+            if (valueEnd >= source.size()) return false;
+            int delimiter = valueEnd + 1;
+            while (delimiter < source.size() && source.at(delimiter).isSpace())
+                ++delimiter;
+            if (delimiter >= source.size()
+                || (source.at(delimiter) != QLatin1Char(',')
+                    && source.at(delimiter) != QLatin1Char('}')))
+                return false;
+
+            out += source.mid(index, keyStart - index);
+            out += source.mid(keyStart, colon - keyStart);
+            out += QLatin1Char('"');
+            out += QLatin1Char(':');
+            index = colon + 1; // Reprocess the value's opening quote normally.
+            return true;
+        };
+
+        for (int i = 0; i < source.size();) {
+            const QChar ch = source.at(i);
+            if (!inString) {
+                if (ch == QLatin1Char('{')) {
+                    out += ch;
+                    containers.append({ch});
+                    ++i;
+                    if (repairAt(i)) continue;
+                    continue;
+                }
+                if (ch == QLatin1Char('[')) {
+                    out += ch;
+                    containers.append({ch});
+                    ++i;
+                    continue;
+                }
+                if (ch == QLatin1Char('}') || ch == QLatin1Char(']')) {
+                    out += ch;
+                    if (!containers.isEmpty()) containers.removeLast();
+                    ++i;
+                    continue;
+                }
+                if (ch == QLatin1Char(',') && !containers.isEmpty()
+                    && containers.constLast().type == QLatin1Char('{')) {
+                    out += ch;
+                    ++i;
+                    if (repairAt(i)) continue;
+                    continue;
+                }
+            }
+
+            out += ch;
+            ++i;
+            if (inString) {
+                if (escaped) escaped = false;
+                else if (ch == QLatin1Char('\\')) escaped = true;
+                else if (ch == QLatin1Char('"')) inString = false;
+            } else if (ch == QLatin1Char('"')) {
+                inString = true;
+            }
+        }
+        return out;
+    };
+    // Window handles are hexadecimal strings. Gemma sometimes emits a handle
+    // containing A-F without JSON quotes (for example target_id:890a18), which
+    // makes an otherwise valid desktop tool call look like ordinary text. Quote
+    // only an identifier-like value belonging to the exact target_id key; leave
+    // numeric HWNDs to the normal JSON-number compatibility path.
+    auto quoteBareHexTargetId = [](const QString &source) {
+        static const QRegularExpression hexId(QStringLiteral("^[0-9A-Fa-f]{4,16}$"));
+        static const QRegularExpression hexLetter(QStringLiteral("[A-Fa-f]"));
+        QList<QPair<int, QString>> replacements;
+        for (int i = 0; i < source.size();) {
+            if (source.at(i) != QLatin1Char('"')) {
+                ++i;
+                continue;
+            }
+
+            const int valueStart = i + 1;
+            int closeQuote = valueStart;
+            bool escaped = false;
+            for (; closeQuote < source.size(); ++closeQuote) {
+                const QChar ch = source.at(closeQuote);
+                if (escaped) escaped = false;
+                else if (ch == QLatin1Char('\\')) escaped = true;
+                else if (ch == QLatin1Char('"')) break;
+            }
+            if (closeQuote >= source.size()) break;
+
+            const QString key = source.mid(valueStart, closeQuote - valueStart);
+            int colon = closeQuote + 1;
+            while (colon < source.size() && source.at(colon).isSpace()) ++colon;
+            if (key == QLatin1String("target_id") && colon < source.size()
+                && source.at(colon) == QLatin1Char(':')) {
+                int tokenStart = colon + 1;
+                while (tokenStart < source.size() && source.at(tokenStart).isSpace()) ++tokenStart;
+                int tokenEnd = tokenStart;
+                while (tokenEnd < source.size() && !source.at(tokenEnd).isSpace()
+                       && source.at(tokenEnd) != QLatin1Char(',')
+                       && source.at(tokenEnd) != QLatin1Char('}'))
+                    ++tokenEnd;
+                const QString token = source.mid(tokenStart, tokenEnd - tokenStart);
+                if (hexId.match(token).hasMatch() && hexLetter.match(token).hasMatch())
+                    replacements.append({tokenStart, token});
+            }
+            i = closeQuote + 1;
+        }
+
+        QString out = source;
+        for (auto it = replacements.crbegin(); it != replacements.crend(); ++it)
+            out.replace(it->first, it->second.size(), QLatin1Char('"') + it->second
+                        + QLatin1Char('"'));
+        return out;
+    };
+    // Gemma can expose its quote token as literal text inside a native tool
+    // call, e.g. {target_id:<|\"|>910ecc<|\"|>}. Restore those explicit token
+    // boundaries to JSON quotes before the narrow JSON repairs below. This is
+    // limited to the model's quote-token spelling and does not reinterpret
+    // arbitrary prose or other special tokens.
+    QString normalizedContent = continuationPrefix + content;
+    normalizedContent.replace(QStringLiteral("<|\\\"|>"), QStringLiteral("\""));
+    normalizedContent.replace(QStringLiteral("<|\"|>"), QStringLiteral("\""));
+    const QString parseContent = quoteBareHexTargetId(
+        quoteMissingObjectKey(repairQuotedKeyColon(normalizedContent)));
+
     // Formato (a): marcador TOOL_CALL + objeto JSON con name/tool.
     const QRegularExpression marker(QStringLiteral("\\bTOOL_CALL\\b\\s*:?\\s*"),
                                     QRegularExpression::CaseInsensitiveOption);
-    const QRegularExpressionMatch m = marker.match(content);
+    const QRegularExpressionMatch m = marker.match(parseContent);
     if (m.hasMatch()) {
-        const QString json = extractBalancedJsonObject(content, m.capturedEnd());
+        const QString json = extractBalancedJsonObject(parseContent, m.capturedEnd());
         if (!json.isEmpty()) {
             QJsonParseError perr;
             const QJsonObject obj = QJsonDocument::fromJson(json.toUtf8(), &perr).object();
@@ -6475,9 +6886,9 @@ QJsonObject LlamaAgentBackend::textToolCallFromContent(const QString &content)
     // nombre pertenece al catálogo de tools evita convertir una respuesta JSON
     // normal en una llamada ejecutable.
     if (!haveName) {
-        const int firstBrace = content.indexOf(QLatin1Char('{'));
+        const int firstBrace = parseContent.indexOf(QLatin1Char('{'));
         const QString json = firstBrace >= 0
-            ? extractBalancedJsonObject(content, firstBrace) : QString();
+            ? extractBalancedJsonObject(parseContent, firstBrace) : QString();
         if (!json.isEmpty()) {
             QJsonParseError perr;
             const QJsonDocument doc = QJsonDocument::fromJson(json.toUtf8(), &perr);
@@ -6512,15 +6923,15 @@ QJsonObject LlamaAgentBackend::textToolCallFromContent(const QString &content)
     // Formato (b): sólo si el texto trae el token nativo `tool_call` (evita
     // falsos positivos con prosa que use "call:"). Nombre en `call:NAME`, args
     // en el primer objeto JSON que le siga (opcional).
-    if (!haveName && content.contains(QStringLiteral("tool_call"), Qt::CaseInsensitive)) {
+    if (!haveName && parseContent.contains(QStringLiteral("tool_call"), Qt::CaseInsensitive)) {
         const QRegularExpression callRe(
             QStringLiteral("\\bcall\\s*:\\s*([A-Za-z_][A-Za-z0-9_]*)"),
             QRegularExpression::CaseInsensitiveOption);
-        const QRegularExpressionMatch cm = callRe.match(content);
+        const QRegularExpressionMatch cm = callRe.match(parseContent);
         if (cm.hasMatch()) {
             name = cm.captured(1).trimmed();
             haveName = !name.isEmpty();
-            const QString json = extractBalancedJsonObject(content, cm.capturedEnd());
+            const QString json = extractBalancedJsonObject(parseContent, cm.capturedEnd());
             if (!json.isEmpty()) {
                 QJsonParseError perr;
                 const QJsonObject obj = QJsonDocument::fromJson(json.toUtf8(), &perr).object();
@@ -6535,11 +6946,11 @@ QJsonObject LlamaAgentBackend::textToolCallFromContent(const QString &content)
     // mientras que llama.cpp lo entrega como texto cuando no activa un parser
     // nativo qwen3_coder. Convertirlo al contrato OpenAI evita que el contenido
     // XML termine escrito como si fuera código fuente.
-    if (!haveName && content.contains(QStringLiteral("<tool_call"), Qt::CaseInsensitive)) {
+    if (!haveName && parseContent.contains(QStringLiteral("<tool_call"), Qt::CaseInsensitive)) {
         const QRegularExpression functionRe(
             QStringLiteral("<function\\s*=\\s*([A-Za-z_][A-Za-z0-9_]*)\\s*>([\\s\\S]*?)</function>"),
             QRegularExpression::CaseInsensitiveOption);
-        const QRegularExpressionMatch fm = functionRe.match(content);
+        const QRegularExpressionMatch fm = functionRe.match(parseContent);
         if (fm.hasMatch()) {
             name = fm.captured(1).trimmed();
             haveName = !name.isEmpty();
@@ -6916,7 +7327,8 @@ bool LlamaAgentBackend::isDestructiveAction(const QString &name, const QJsonObje
     // 'controlId=<id> [role]...  "<name>"'.
     // desktop_click (coords x/y a ciegas) no expone label → no clasificable acá.
     if (bare == QLatin1String("desktop_click_element")) {
-        const QString cid = args.value(QStringLiteral("control_id")).toString();
+        const QString cid = DesktopComputerUse::controlIdText(
+            args.value(QStringLiteral("control_id")));
         QString label = args.value(QStringLiteral("name")).toString();
         // Candidatos a clasificar. Se evalúan TODOS y alcanza con que uno sea
         // destructivo: ante ambigüedad conviene pedir aprobación de más, no de menos.
@@ -6965,7 +7377,8 @@ bool LlamaAgentBackend::isDestructiveAction(const QString &name, const QJsonObje
         const QVariantMap target = args.value(QStringLiteral("target")).toObject().toVariantMap();
         const QString label = args.value(QStringLiteral("name")).toString()
                               + QLatin1Char(' ')
-                              + args.value(QStringLiteral("control_id")).toString();
+                              + DesktopComputerUse::controlIdText(
+                                  args.value(QStringLiteral("control_id")));
         if (desktopLabelIsDestructive(label)
             || action == QLatin1String("delete") || action == QLatin1String("remove")
             || action == QLatin1String("format") || action == QLatin1String("uninstall"))
@@ -7468,44 +7881,63 @@ QJsonArray LlamaAgentBackend::toolSchemas()
            QJsonObject{},
            QJsonArray{}),
         fn(QStringLiteral("desktop_controls"),
-           QStringLiteral("Árbol de CONTROLES de una ventana vía UI Automation (DOM del "
-                          "escritorio): nombre, rol, geometría e invocable de cada control. "
-                          "Elegí el control por NOMBRE y operalo con desktop_click_element — "
-                          "más robusto que clickear por pixel. target_id = id de ventana "
-                          "(desktop_windows). 'query' filtra por substring del nombre. "
+           QStringLiteral("Árbol UIA de controles: nombre, rol, controlId, geometría, invocabilidad "
+                          "y foco. En Edit, keyboard_focus=1 confirma foco antes de escribir. "
+                          "Elegí por nombre y opera con desktop_click_element. target_id = ventana "
+                          "(desktop_windows). 'query' prioriza un nombre exacto y luego filtra "
+                          "por substring. "
                           "También sirve para VERIFICAR sin visión: el texto de los controles "
-                          "(ej. el visor de la calculadora) trae el valor en su nombre."),
+                          "(ej. un visor) trae el valor en su nombre. Si una celda de grilla "
+                          "no aparece como control o la consulta se detiene por tiempo, usa "
+                          "desktop_read_text y la navegación semántica o por teclado de la app; "
+                          "confirma la selección antes de escribir y no adivines coordenadas. "
+                          "Si la celda exacta expone set_value, preferilo para reemplazar el "
+                          "valor completo; clic + tecla de dígito puede anexar al contenido "
+                          "si la app entró en modo edición. Verifica el readback y, si el "
+                          "resultado dependiente sigue igual, confirma con Enter una vez en "
+                          "vez de repetir set_value."),
            QJsonObject{
                {QStringLiteral("target_id"), strProp(QStringLiteral("Id de la ventana (ver desktop_windows)."))},
                {QStringLiteral("query"), strProp(QStringLiteral("Filtro por nombre (substring, opcional)."))},
                {QStringLiteral("max"), intProp(QStringLiteral("Máximo de controles (default 120)."))}},
            QJsonArray{QStringLiteral("target_id")}),
         fn(QStringLiteral("desktop_click_element"),
-           QStringLiteral("Clickea un control por su controlId (de desktop_controls): usa el "
-                          "patrón Invoke si existe (clic semántico), si no clickea el centro "
-                          "del control. Pasá el mismo target_id de la ventana."),
+            QStringLiteral("Clic semántico por controlId. En Edit o Document usa UIA SetFocus y devuelve "
+                          "keyboardFocusConfirmed; si confirma, verifica y no repitas el click. "
+                          "Requiere target_id y snapshot_id recientes de desktop_controls."),
            QJsonObject{
                {QStringLiteral("target_id"), strProp(QStringLiteral("Id de la ventana."))},
-               {QStringLiteral("snapshot_id"), strProp(QStringLiteral("Fingerprint de desktop_snapshot/desktop_controls; opcional pero recomendado."))},
+               {QStringLiteral("snapshot_id"), strProp(QStringLiteral("Fingerprint reciente de desktop_controls."))},
                {QStringLiteral("control_id"), strProp(QStringLiteral(
                     "controlId devuelto por desktop_controls. Si no lo tenés a mano podés "
                     "pasar el nombre visible del control y se resuelve por parecido, pero "
-                    "el controlId es exacto: preferilo siempre."))}},
-           QJsonArray{QStringLiteral("target_id"), QStringLiteral("control_id")} ),
+                    "el controlId es exacto: preferilo siempre. Es opaco: copia el valor "
+                    "exacto y envíalo como string JSON entre comillas, incluso si parece "
+                    "numérico; no lo conviertas a number."))}},
+           QJsonArray{QStringLiteral("target_id"), QStringLiteral("control_id"),
+                      QStringLiteral("snapshot_id")} ),
         fn(QStringLiteral("desktop_control_action"),
-           QStringLiteral("Ejecuta una acción semántica UI Automation sobre un control del "
-                          "snapshot sin robar foco cuando el patrón está disponible. Acciones: "
+            QStringLiteral("Ejecuta una acción semántica UI Automation sobre un control del "
+                           "snapshot sin robar foco. click es alias de invoke. Acciones: "
                           "invoke, toggle, set_value, select, expand, collapse, range_set, "
-                          "scroll_into_view, read. Usá snapshot_id para evitar actuar sobre "
-                          "un árbol obsoleto."),
+                          "scroll_into_view, read. Requiere target_id, control_id, snapshot_id "
+                          "y action de desktop_controls para rechazar árboles obsoletos. "
+                          "Para set_value/range_set, agrega value. control_id es opaco: copia "
+                          "el valor exacto de desktop_controls como string JSON entre comillas, "
+                          "aunque parezca numérico. set_value reemplaza el valor "
+                          "completo y devuelve readback; no repitas la misma asignación si tuvo "
+                          "éxito. En grillas, si el dependiente no cambia, confirma con Enter "
+                          "una vez."),
            QJsonObject{
                {QStringLiteral("target_id"), strProp(QStringLiteral("Id de la ventana."))},
-               {QStringLiteral("control_id"), strProp(QStringLiteral("controlId del snapshot."))},
+               {QStringLiteral("control_id"), strProp(QStringLiteral(
+                    "controlId exacto del snapshot, como string JSON entre comillas; es opaco aunque parezca numérico."))},
                {QStringLiteral("snapshot_id"), strProp(QStringLiteral("Fingerprint del snapshot."))},
-               {QStringLiteral("action"), strProp(QStringLiteral("invoke|toggle|set_value|select|expand|collapse|range_set|scroll_into_view|read"))},
+                {QStringLiteral("action"), strProp(QStringLiteral("click|invoke|toggle|set_value|select|expand|collapse|range_set|scroll_into_view|read"))},
                {QStringLiteral("value"), strProp(QStringLiteral("Valor para set_value o range_set."))},
                {QStringLiteral("sensitive"), boolProp(QStringLiteral("Marca explícita de campo sensible."))}},
-           QJsonArray{QStringLiteral("target_id"), QStringLiteral("control_id"), QStringLiteral("action")} ),
+           QJsonArray{QStringLiteral("target_id"), QStringLiteral("control_id"),
+                      QStringLiteral("snapshot_id"), QStringLiteral("action")} ),
         fn(QStringLiteral("desktop_click_text"),
            QStringLiteral("ÚLTIMO RECURSO: clickea un texto LEÍDO de la pantalla por OCR. "
                           "Usalo SÓLO si desktop_controls no devuelve el control (apps que "
@@ -7602,6 +8034,11 @@ QJsonArray LlamaAgentBackend::toolSchemas()
         fn(QStringLiteral("desktop_click"),
            QStringLiteral("Hace click en coordenadas NORMALIZADAS 0..1 dentro del alcance. "
                           "NO acepta la grilla visual 0..1000: dividí ambas coordenadas por 1000. "
+                          "Si scope_kind='window', x/y se normalizan contra TODO el rectángulo "
+                          "exterior de la ventana (borde superior izquierdo=0,0; inferior "
+                          "derecho=1,1), no contra su contenido, lienzo ni imagen. Usa "
+                          "desktop_observe del mismo alcance y convierte el punto visible "
+                          "a esa ventana completa. "
                           "Acepta button='left'|'right'|'middle', click_count 2 (doble clic: "
                           "abrir) o 3 (triple: seleccionar línea) y modifiers ['CTRL'|'SHIFT'|"
                           "'ALT'] sostenidos durante el clic. Devuelve trace con pointer/target. "
@@ -7635,12 +8072,13 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                           "cada renglón con su centro (x, y) NORMALIZADO en ese alcance, listo "
                           "para desktop_click/desktop_hover. Usala para entender qué hay en "
                           "pantalla sin visión, leer resultados, mensajes de error o contenido "
-                          "de apps que no exponen controles UIA. 'query' filtra renglones."),
+                          "de apps que no exponen controles UIA. Devuelve hasta 32 renglones por "
+                          "defecto; 'query' filtra y 'max' amplía la lectura si hace falta."),
            QJsonObject{
                {QStringLiteral("scope_kind"), strProp(QStringLiteral("'screen' (default) o 'window'."))},
                {QStringLiteral("target_id"), strProp(QStringLiteral("Id de pantalla o ventana (desktop_windows)."))},
                {QStringLiteral("query"), strProp(QStringLiteral("Texto a buscar (opcional; sin acentos ni mayúsculas)."))},
-               {QStringLiteral("max"), intProp(QStringLiteral("Máximo de renglones (default 80)."))}},
+               {QStringLiteral("max"), intProp(QStringLiteral("Máximo de renglones (default 32)."))}},
            QJsonArray{QStringLiteral("target_id")}),
         fn(QStringLiteral("desktop_hover"),
            QStringLiteral("Mueve el puntero a un punto NORMALIZADO del alcance SIN clickear: "
@@ -7670,7 +8108,14 @@ QJsonArray LlamaAgentBackend::toolSchemas()
            QStringLiteral("Arrastra el mouse por una TRAZA continua (dibujar en Paint, pintar, "
                           "sliders, gestos/swipes): aprieta el botón en el primer punto, recorre "
                           "la secuencia y suelta en el último. Puntos NORMALIZADOS 0..1 en el "
-                          "alcance. Interpola para que la línea salga continua. Usá esto en vez "
+                          "alcance. En scope_kind='window', normaliza contra TODO el rectángulo "
+                          "exterior de la ventana (esquina superior izquierda=0,0; inferior "
+                          "derecha=1,1), no contra el lienzo, contenido o imagen. Observa la "
+                          "ventana con desktop_observe antes de elegirlos y convierte las "
+                          "posiciones visibles a esa ventana completa. Cada punto debe ser "
+                          "objeto {\"x\": 0.2, \"y\": 0.3}; no uses "
+                          "pares [x, y]. Formas incorrectas se rechazan sin mover el mouse. "
+                          "Interpola para que la línea salga continua. Usá esto en vez "
                           "de varios desktop_click cuando el usuario dibujó o arrastró."),
             QJsonObject{
                 {QStringLiteral("scope_kind"), strProp(QStringLiteral("'screen' o 'window'."))},
@@ -7678,7 +8123,10 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                 {QStringLiteral("snapshot_id"), strProp(QStringLiteral("Fingerprint del snapshot opcional."))},
                 {QStringLiteral("points"), QJsonObject{
                     {QStringLiteral("type"), QStringLiteral("array")},
-                    {QStringLiteral("description"), QStringLiteral("Lista de {x,y} normalizados 0..1 (mínimo 2).")},
+                    {QStringLiteral("description"), QStringLiteral(
+                        "Lista de objetos {x: número, y: número} normalizados 0..1 (mínimo 2); "
+                        "no usar pares [x,y]. Si scope_kind='window', coords relativas al "
+                        "rectángulo exterior completo de la ventana, no a un canvas/control.")},
                     {QStringLiteral("items"), QJsonObject{
                         {QStringLiteral("type"), QStringLiteral("object")},
                         {QStringLiteral("properties"), QJsonObject{
@@ -7695,10 +8143,22 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                 {QStringLiteral("hold_ms"), intProp(QStringLiteral("Pausa por segmento en ms (default 8)."))}},
             QJsonArray{QStringLiteral("target_id"), QStringLiteral("points")}),
         fn(QStringLiteral("desktop_type"),
-           QStringLiteral("Escribe texto en la VENTANA EN FOCO del escritorio (enfocá antes con "
-                          "desktop_focus). Camino RÁPIDO para apps con teclado: calculadora "
+            QStringLiteral("Escribe texto literal en la VENTANA EN FOCO del escritorio; no pulsa "
+                           "teclas ni atajos. Para eso usá desktop_key. Elegí la ventana antes "
+                           "con desktop_focus o pasando target_id explícito; si desktop_launch "
+                           "dice que la ventana ya estaba abierta, confirma su título y elígela "
+                           "antes de escribir. En un navegador, si escribiste una URL o consulta "
+                           "en la barra, el siguiente paso es desktop_key key='ENTER' una vez "
+                           "y después desktop_read_text para confirmar la página; no informes "
+                           "éxito antes de leerla. Camino RÁPIDO para apps con teclado: calculadora "
                           "(ej. desktop_type \"2+2\" y luego desktop_key \"=\"), notepad, campos "
-                          "de texto. Más rápido y confiable que clickear botones uno a uno."),
+                           "de texto vacíos. Si vas a reemplazar el valor de un campo que ya tiene "
+                           "contenido, localizá el control edit exacto con desktop_controls y usá "
+                           "desktop_control_action action='set_value' con su target_id, control_id y "
+                           "snapshot_id; luego verifica el valor leído. desktop_type con append=true "
+                           "es sólo para agregar texto cuando el usuario pidió agregarlo; sin eso, "
+                           "un campo ocupado se rechaza como protección. Más rápido y confiable que "
+                           "clickear botones uno a uno."),
            QJsonObject{{QStringLiteral("text"), strProp(QStringLiteral("Texto a escribir. \\n = ENTER, \\t = TAB."))},
                        {QStringLiteral("target_id"), strProp(QStringLiteral(
                            "Id de la ventana donde escribir (desktop_windows); la enfoca antes. "
@@ -7709,16 +8169,29 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                            "documentos del usuario)."))}},
            QJsonArray{QStringLiteral("text")}),
         fn(QStringLiteral("desktop_key"),
-           QStringLiteral("Presiona una tecla o combinación en la ventana en foco (ENTER, TAB, "
-                          "'=', etc.). Complementa desktop_type para confirmar/ejecutar."),
+            QStringLiteral("Presiona una tecla física en la ventana en foco (no escribas su nombre "
+                           "con desktop_type). 'key' lleva UNA sola tecla; Alt+F4 = key='F4', "
+                           "modifiers=['ALT']. "
+                          "(por ejemplo L, ENTER, TAB o '='); para una combinación separá la "
+                          "tecla y los modificadores: Ctrl+L se expresa como key='L', "
+                          "modifiers=['CTRL']. Complementa desktop_type para confirmar/ejecutar. "
+                          "No agregues modificadores que la tarea no pidió. Si la tecla cambia "
+                          "el foco a otra ventana, observá el estado antes "
+                          "de la siguiente acción."),
            QJsonObject{
-               {QStringLiteral("key"), strProp(QStringLiteral("ENTER, TAB, ESC, F1..F12 o carácter."))},
+               {QStringLiteral("key"), strProp(QStringLiteral(
+                   "Una sola tecla: ENTER, TAB, ESC, F1..F12, carácter o símbolo. No incluyas "
+                   "modificadores aquí; Ctrl+L = key 'L' + modifiers ['CTRL']."))},
                {QStringLiteral("target_id"), strProp(QStringLiteral(
                    "Id de la ventana destino (desktop_windows); la enfoca antes. Sin esto sólo "
                    "va a la última ventana que enfocaste."))},
                {QStringLiteral("modifiers"), QJsonObject{
                     {QStringLiteral("type"), QStringLiteral("array")},
-                    {QStringLiteral("items"), QJsonObject{{QStringLiteral("type"), QStringLiteral("string")}}}}}},
+                    {QStringLiteral("description"), QStringLiteral("Teclas modificadoras separadas: CTRL, ALT, SHIFT o WIN.")},
+                    {QStringLiteral("items"), QJsonObject{
+                        {QStringLiteral("type"), QStringLiteral("string")},
+                        {QStringLiteral("enum"), QJsonArray{QStringLiteral("CTRL"), QStringLiteral("ALT"),
+                            QStringLiteral("SHIFT"), QStringLiteral("WIN")}}}}}}},
            QJsonArray{QStringLiteral("key")}),
         fn(QStringLiteral("desktop_scroll"),
            QStringLiteral("Desplaza la rueda del mouse (-120 baja, 120 sube) sobre lo que está "
@@ -7743,10 +8216,11 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                           "ms-settings:) en vez de run_shell: run_shell se cuelga esperando que una "
                           "app GUI termine. Espera a que aparezca la ventana y DEVUELVE SU id "
                           "(target_id): no hace falta desktop_wait ni desktop_windows después. "
-                          "'args' es opcional (argumentos extra)."),
+                          "Si necesitás argumentos, pasalos en el campo 'args' separado de 'app'; "
+                          "no los concatenes al nombre del programa."),
            QJsonObject{
-               {QStringLiteral("app"), strProp(QStringLiteral("Programa/comando a abrir (ej. 'calc', 'notepad', ruta .exe)."))},
-               {QStringLiteral("args"), strProp(QStringLiteral("Argumentos extra (opcional)."))}},
+               {QStringLiteral("app"), strProp(QStringLiteral("Sólo programa/comando (ej. 'calc', 'notepad', ruta .exe), sin argumentos."))},
+               {QStringLiteral("args"), strProp(QStringLiteral("Argumentos extra opcionales, separados de 'app'."))}},
            QJsonArray{QStringLiteral("app")}),
         fn(QStringLiteral("desktop_focus"),
            QStringLiteral("Enfoca/restaura una ventana enseñada."),
@@ -7888,7 +8362,9 @@ QVariantList LlamaAgentBackend::toolCatalog()
         mk("desktop_windows", "Escritorio", "Inventario estructurado de ventanas (barato, sin captura).", 80),
         mk("desktop_controls", "Escritorio", "Árbol de controles de una ventana (UIA, DOM-aware).", 150),
         mk("desktop_click_element", "Escritorio", "Click a un control por nombre/id (UIA), no por pixel.", 110),
-        mk("desktop_control_action", "Escritorio", "Acción semántica UIA sin foco cuando el patrón existe.", 120),
+        mk("desktop_control_action", "Escritorio",
+           "Acción semántica UIA sin foco. set_value reemplaza el valor completo y devuelve "
+           "readback; no repitas la misma asignación si tuvo éxito.", 150),
         mk("desktop_find_image", "Escritorio", "Localiza una plantilla visual con confianza y ambigüedad.", 135),
         mk("desktop_click_image", "Escritorio", "Localiza y clickea una plantilla visual única.", 145),
         mk("desktop_wait_image", "Escritorio", "Espera aparición o desaparición de una plantilla.", 120),
@@ -8678,6 +9154,8 @@ void LlamaAgentBackend::newSession()
     m_transcriptMessages = {};
     m_curAsstIdx = -1;
     m_desktopLaunchApps.clear();
+    m_desktopLaunchTargets.clear();
+    m_pendingDesktopLaunchTargets.clear();
     ensureSession();        // crea sesión nueva + system prompt + persiste
     // La sesión que se acaba de dejar, si nunca tuvo mensajes, no queda en el panel.
     pruneEmptySessions(m_sessionId);
@@ -8699,6 +9177,8 @@ void LlamaAgentBackend::newTaskSession()
     m_transcriptMessages = {};
     m_curAsstIdx = -1;
     m_desktopLaunchApps.clear();
+    m_desktopLaunchTargets.clear();
+    m_pendingDesktopLaunchTargets.clear();
     ensureSession();
 }
 
@@ -8716,6 +9196,8 @@ void LlamaAgentBackend::endTaskSession()
     m_transcriptMessages = {};
     m_curAsstIdx = -1;
     m_desktopLaunchApps.clear();
+    m_desktopLaunchTargets.clear();
+    m_pendingDesktopLaunchTargets.clear();
     m_readFingerprints.clear();
     m_checkpoints.clear();
     if (!prev.isEmpty())
@@ -9367,9 +9849,11 @@ void LlamaAgentBackend::setCurrentSession(const QString &sessionId)
 // ───────────────────────────── Persistencia a disco ──────────────────────
 QString LlamaAgentBackend::storageDir() const
 {
-    const QString dir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
-                        + QStringLiteral("/")
-                        + HarnessEngine::storageNamespace(m_harnessEngineId);
+    const QByteArray overrideRoot = qgetenv("LLAMACODE_AGENT_DATA_DIR");
+    const QString root = overrideRoot.trimmed().isEmpty()
+        ? QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+        : QString::fromLocal8Bit(overrideRoot);
+    const QString dir = QDir(root).filePath(HarnessEngine::storageNamespace(m_harnessEngineId));
     QDir().mkpath(dir);
     return dir;
 }

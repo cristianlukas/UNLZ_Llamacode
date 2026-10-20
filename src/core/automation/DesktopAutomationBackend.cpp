@@ -208,11 +208,13 @@ QString uiaControlTypeName(CONTROLTYPEID t)
     case UIA_HyperlinkControlTypeId:   return QStringLiteral("link");
     case UIA_ImageControlTypeId:       return QStringLiteral("image");
     case UIA_TreeItemControlTypeId:    return QStringLiteral("treeitem");
+    case UIA_DataItemControlTypeId:    return QStringLiteral("dataitem");
     case UIA_TabControlTypeId:         return QStringLiteral("tabs");
     case UIA_ToolBarControlTypeId:     return QStringLiteral("toolbar");
     case UIA_GroupControlTypeId:       return QStringLiteral("group");
     case UIA_PaneControlTypeId:        return QStringLiteral("pane");
     case UIA_WindowControlTypeId:      return QStringLiteral("window");
+    case UIA_DocumentControlTypeId:    return QStringLiteral("document");
     default: return QStringLiteral("control(%1)").arg(static_cast<int>(t));
     }
 }
@@ -268,7 +270,8 @@ QStringList uiaPatternNames(IUIAutomationElement *el)
 
 // Resumen semántico de un elemento UIA: name/role/controlId/geometría + la HWND
 // de la ventana de nivel superior que lo contiene (para re-anclarlo al reproducir).
-QVariantMap uiaElementInfo(IUIAutomation *uia, IUIAutomationElement *el)
+QVariantMap uiaElementInfo(IUIAutomation *uia, IUIAutomationElement *el,
+                           bool includeDetails = true, bool includeDocumentText = false)
 {
     const QString name = uiaName(el);
     CONTROLTYPEID ct = 0;
@@ -277,6 +280,10 @@ QVariantMap uiaElementInfo(IUIAutomation *uia, IUIAutomationElement *el)
     el->get_CurrentBoundingRectangle(&rc);
     BOOL enabled = FALSE;
     el->get_CurrentIsEnabled(&enabled);
+    BOOL keyboardFocusable = FALSE;
+    BOOL hasKeyboardFocus = FALSE;
+    el->get_CurrentIsKeyboardFocusable(&keyboardFocusable);
+    el->get_CurrentHasKeyboardFocus(&hasKeyboardFocus);
     BOOL invokable = FALSE;
     IUnknown *pat = nullptr;
     if (SUCCEEDED(el->GetCurrentPattern(UIA_InvokePatternId, &pat)) && pat) {
@@ -284,10 +291,11 @@ QVariantMap uiaElementInfo(IUIAutomation *uia, IUIAutomationElement *el)
         pat->Release();
     }
     BOOL password = FALSE;
-    el->get_CurrentIsPassword(&password);
-    const QStringList patterns = uiaPatternNames(el);
+    if (includeDetails) el->get_CurrentIsPassword(&password);
+    const QStringList patterns = includeDetails ? uiaPatternNames(el) : QStringList{};
     QString value;
-    if (!password) {
+    QString documentText;
+    if (includeDetails && !password) {
         IUIAutomationValuePattern *valuePattern = nullptr;
         if (SUCCEEDED(el->GetCurrentPatternAs(UIA_ValuePatternId,
                           IID_IUIAutomationValuePattern,
@@ -300,11 +308,32 @@ QVariantMap uiaElementInfo(IUIAutomation *uia, IUIAutomationElement *el)
             }
             valuePattern->Release();
         }
+        if (includeDocumentText && ct == UIA_DocumentControlTypeId) {
+            IUIAutomationTextPattern *textPattern = nullptr;
+            if (SUCCEEDED(el->GetCurrentPatternAs(UIA_TextPatternId,
+                                                  IID_IUIAutomationTextPattern,
+                                                  reinterpret_cast<void **>(&textPattern)))
+                && textPattern) {
+                IUIAutomationTextRange *documentRange = nullptr;
+                if (SUCCEEDED(textPattern->get_DocumentRange(&documentRange)) && documentRange) {
+                    BSTR current = nullptr;
+                    // Recuperar un fragmento acotado evita volcar documentos extensos
+                    // al contexto del agente.
+                    if (SUCCEEDED(documentRange->GetText(4000, &current)) && current) {
+                        documentText = QString::fromWCharArray(
+                            current, static_cast<int>(SysStringLen(current))).simplified();
+                        SysFreeString(current);
+                    }
+                    documentRange->Release();
+                }
+                textPattern->Release();
+            }
+        }
     }
     // AutomationId: id estable definido por el dev de la app (mejor ancla que name).
     QString automationId;
     BSTR aid = nullptr;
-    if (SUCCEEDED(el->get_CurrentAutomationId(&aid)) && aid) {
+    if (includeDetails && SUCCEEDED(el->get_CurrentAutomationId(&aid)) && aid) {
         automationId = QString::fromWCharArray(aid, static_cast<int>(SysStringLen(aid)));
         SysFreeString(aid);
     }
@@ -314,7 +343,7 @@ QVariantMap uiaElementInfo(IUIAutomation *uia, IUIAutomationElement *el)
     QString windowId, windowLabel;
     int winX = 0, winY = 0, winW = 0, winH = 0;
     UIA_HWND h = nullptr;
-    if (uia && SUCCEEDED(el->get_CurrentNativeWindowHandle(&h)) && h) {
+    if (includeDetails && uia && SUCCEEDED(el->get_CurrentNativeWindowHandle(&h)) && h) {
         HWND top = GetAncestor(reinterpret_cast<HWND>(h), GA_ROOT);
         if (top) {
             windowId = QString::number(reinterpret_cast<quintptr>(top), 16);
@@ -328,7 +357,7 @@ QVariantMap uiaElementInfo(IUIAutomation *uia, IUIAutomationElement *el)
             }
         }
     }
-    return QVariantMap{
+    QVariantMap result{
         {QStringLiteral("controlId"), uiaRuntimeId(el)},
         {QStringLiteral("automationId"), automationId},
         {QStringLiteral("name"), name.simplified().left(120)},
@@ -342,10 +371,26 @@ QVariantMap uiaElementInfo(IUIAutomation *uia, IUIAutomationElement *el)
         {QStringLiteral("width"), static_cast<int>(rc.right - rc.left)},
         {QStringLiteral("height"), static_cast<int>(rc.bottom - rc.top)},
         {QStringLiteral("enabled"), static_cast<bool>(enabled)},
+        {QStringLiteral("keyboardFocusable"), static_cast<bool>(keyboardFocusable)},
+        {QStringLiteral("hasKeyboardFocus"), static_cast<bool>(hasKeyboardFocus)},
         {QStringLiteral("invokable"), static_cast<bool>(invokable)},
         {QStringLiteral("password"), static_cast<bool>(password)},
         {QStringLiteral("patterns"), patterns},
         {QStringLiteral("value"), value}};
+    if (includeDocumentText) result.insert(QStringLiteral("text"), documentText);
+    return result;
+}
+
+void setUiaTransactionTimeout(IUIAutomation *uia, DWORD timeoutMs)
+{
+    if (!uia) return;
+    IUIAutomation2 *uia2 = nullptr;
+    if (SUCCEEDED(uia->QueryInterface(IID_IUIAutomation2,
+                                      reinterpret_cast<void **>(&uia2))) && uia2) {
+        uia2->put_ConnectionTimeout(timeoutMs);
+        uia2->put_TransactionTimeout(timeoutMs);
+        uia2->Release();
+    }
 }
 
 QImage captureWindowOffscreen(HWND hwnd)
@@ -452,9 +497,23 @@ QVariantMap DesktopAutomationBackend::snapshot(const QString &kind, const QStrin
     }
     const QVariantList currentWindows = windows();
     QVariantList currentControls;
+    QVariantList fingerprintControls;
     if (kind == QLatin1String("window"))
         currentControls = controls(targetId, query, max, error);
     if (error && !error->isEmpty() && kind == QLatin1String("window")) return {};
+    if (kind == QLatin1String("window")) {
+        // The snapshot identity must not depend on the query/limit used to present
+        // controls to the model. desktop_click_element validates without knowing
+        // that presentation query, so fingerprint the same bounded full tree on
+        // creation and validation.
+        constexpr int kSnapshotIdentityControlLimit = 80;
+        if (query.trimmed().isEmpty() && max == kSnapshotIdentityControlLimit) {
+            fingerprintControls = currentControls;
+        } else {
+            fingerprintControls = controls(targetId, QString(), kSnapshotIdentityControlLimit, error);
+            if (error && !error->isEmpty()) return {};
+        }
+    }
 
     QVariantMap result{
         {QStringLiteral("scopeKind"), kind},
@@ -476,8 +535,11 @@ QVariantMap DesktopAutomationBackend::snapshot(const QString &kind, const QStrin
 #else
     result[QStringLiteral("focus")] = QVariantMap{};
 #endif
+    const QVariantList identityWindows = DesktopComputerUse::snapshotIdentityWindows(
+        kind, target, result.value(QStringLiteral("windows")).toList());
     const QString id = DesktopComputerUse::snapshotId(
-        kind, targetId, target, result.value(QStringLiteral("windows")).toList(), currentControls);
+        kind, targetId, target, identityWindows,
+        DesktopComputerUse::snapshotIdentityControls(currentControls, fingerprintControls));
     result[QStringLiteral("snapshotId")] = id;
     result[QStringLiteral("fingerprint")] = id;
     result[QStringLiteral("createdAt")] = QDateTime::currentMSecsSinceEpoch();
@@ -521,9 +583,17 @@ QImage DesktopAutomationBackend::capture(const QString &kind, const QString &tar
     if (kind == QLatin1String("window")) {
         bool parsed = false;
         const quintptr raw = targetId.toULongLong(&parsed, 16);
-        const QImage offscreen = parsed
-            ? captureWindowOffscreen(reinterpret_cast<HWND>(raw)) : QImage();
-        if (!offscreen.isNull()) return offscreen;
+        HWND hwnd = parsed ? reinterpret_cast<HWND>(raw) : nullptr;
+        HWND foreground = GetForegroundWindow();
+        if (foreground) foreground = GetAncestor(foreground, GA_ROOT);
+        // PrintWindow puede devolver una ventana WinUI con el editor vacío aunque
+        // el usuario vea su contenido. Para el target foreground, capturar los
+        // píxeles que realmente se muestran; conservar PrintWindow para targets
+        // en segundo plano, que no deben confundirse con el contenido de otra app.
+        if (hwnd && foreground != hwnd) {
+            const QImage offscreen = captureWindowOffscreen(hwnd);
+            if (!offscreen.isNull()) return offscreen;
+        }
     }
 #endif
     QScreen *screen = screenForPhysicalPoint(bounds.center());
@@ -642,7 +712,8 @@ bool DesktopAutomationBackend::launchApp(const QString &app, const QString &args
     // no queda colgado como con run_shell sobre una app GUI.
     QStringList argv{QStringLiteral("/c"), QStringLiteral("start"), QString(), program};
     const QString extra = args.trimmed();
-    if (!extra.isEmpty()) argv << extra;
+    if (!extra.isEmpty())
+        argv.append(DesktopComputerUse::splitLaunchArguments(extra));
     const bool ok = QProcess::startDetached(QStringLiteral("cmd"), argv);
     if (!ok && error) *error = QStringLiteral("No se pudo lanzar: %1").arg(program);
     return ok;
@@ -653,29 +724,37 @@ bool DesktopAutomationBackend::launchApp(const QString &app, const QString &args
 
 QVariantMap DesktopAutomationBackend::waitForLaunchedWindow(
     const QVariantList &before, const QString &app, int waitMs,
-    const std::function<QVariantList()> &list, int pollMs)
+    const std::function<QVariantList()> &list, int pollMs,
+    const std::function<bool(const QVariantMap &)> &isReady)
 {
     const auto current = [&list]() { return list ? list() : windows(); };
     QElapsedTimer clock;
     clock.start();
     QVariantMap fallback;
     qint64 graceUntil = 0;
+    bool sawUnreadyWindow = false;
     QVariantMap last;
     for (;;) {
         last = DesktopComputerUse::pickLaunchedWindow(before, current(), app);
         if (last.value(QStringLiteral("dialog")).toBool())
             return last;   // Windows avisó un error: no va a aparecer la app.
         if (!last.isEmpty() && !last.value(QStringLiteral("existing")).toBool()) {
-            if (last.value(QStringLiteral("titleMatch")).toBool()) return last;
-            if (fallback.isEmpty()) {
+            const bool ready = !isReady || isReady(last);
+            if (!ready) {
+                sawUnreadyWindow = true;
+            } else if (last.value(QStringLiteral("titleMatch")).toBool()) {
+                return last;
+            } else if (!sawUnreadyWindow && fallback.isEmpty()) {
                 fallback = last;
                 graceUntil = clock.elapsed() + 1200;
             }
         }
-        if (!fallback.isEmpty() && clock.elapsed() >= graceUntil) return fallback;
+        if (!sawUnreadyWindow && !fallback.isEmpty() && clock.elapsed() >= graceUntil)
+            return fallback;
         if (clock.elapsed() >= waitMs) break;
         if (pollMs > 0) QThread::msleep(static_cast<unsigned long>(pollMs));
     }
+    if (sawUnreadyWindow) return {};
     if (!fallback.isEmpty()) return fallback;
     return last;   // ventana ya abierta de la app ("existing") o vacío
 }
@@ -918,6 +997,18 @@ QString DesktopAutomationBackend::foregroundWindowId()
 #endif
 }
 
+qulonglong DesktopAutomationBackend::foregroundProcessId()
+{
+#ifdef Q_OS_WIN
+    HWND foreground = GetForegroundWindow();
+    DWORD pid = 0;
+    if (foreground) GetWindowThreadProcessId(foreground, &pid);
+    return static_cast<qulonglong>(pid);
+#else
+    return 0;
+#endif
+}
+
 int DesktopAutomationBackend::focusedControlHasText()
 {
 #ifdef Q_OS_WIN
@@ -929,6 +1020,18 @@ int DesktopAutomationBackend::focusedControlHasText()
     int result = -1;
     IUIAutomationElement *el = nullptr;
     if (SUCCEEDED(uia->GetFocusedElement(&el)) && el) {
+        CONTROLTYPEID controlType = 0;
+        if (FAILED(el->get_CurrentControlType(&controlType))
+            || (controlType != UIA_EditControlTypeId
+                && controlType != UIA_DocumentControlTypeId
+                && controlType != UIA_ComboBoxControlTypeId)) {
+            // Some controls, including spreadsheet grids, expose their selected
+            // cell/document text through TextPattern. That is data in the control,
+            // not evidence that desktop_type is about to overwrite a text editor.
+            el->Release();
+            uia->Release();
+            return -1;
+        }
         BOOL password = FALSE;
         el->get_CurrentIsPassword(&password);
         IUIAutomationValuePattern *vp = nullptr;
@@ -1157,29 +1260,36 @@ bool DesktopAutomationBackend::typeText(const QString &text, QString *error)
         if (error) *error = QStringLiteral("La sesión está bloqueada.");
         return false;
     }
+    QVector<INPUT> inputs;
+    inputs.reserve(2);
     for (QChar c : text) {
-        INPUT inputs[2]{};
-        inputs[0].type = inputs[1].type = INPUT_KEYBOARD;
         if (c == QLatin1Char('\r')) continue;
+        INPUT down{};
+        INPUT up{};
+        down.type = up.type = INPUT_KEYBOARD;
         if (c == QLatin1Char('\n') || c == QLatin1Char('\t')) {
             // Saltos y tabs como TECLAS: inyectados como Unicode, muchos
             // controles (Win32 edit, formularios web) los ignoran.
             const WORD vk = c == QLatin1Char('\n') ? VK_RETURN : VK_TAB;
-            inputs[0].ki.wVk = inputs[1].ki.wVk = vk;
-            inputs[1].ki.dwFlags = KEYEVENTF_KEYUP;
-            if (SendInput(2, inputs, sizeof(INPUT)) != 2) {
-                if (error) *error = QStringLiteral("Falló la inyección de texto.");
-                return false;
-            }
-            continue;
+            down.ki.wVk = up.ki.wVk = vk;
+            up.ki.dwFlags = KEYEVENTF_KEYUP;
+        } else {
+            down.ki.wScan = up.ki.wScan = c.unicode();
+            down.ki.dwFlags = KEYEVENTF_UNICODE;
+            up.ki.dwFlags = KEYEVENTF_UNICODE | KEYEVENTF_KEYUP;
         }
-        inputs[0].ki.wScan = inputs[1].ki.wScan = c.unicode();
-        inputs[0].ki.dwFlags = KEYEVENTF_UNICODE;
-        inputs[1].ki.dwFlags = KEYEVENTF_UNICODE | KEYEVENTF_KEYUP;
-        if (SendInput(2, inputs, sizeof(INPUT)) != 2) {
+        inputs.clear();
+        inputs.append(down);
+        inputs.append(up);
+        if (SendInput(static_cast<UINT>(inputs.size()), inputs.data(), sizeof(INPUT))
+            != static_cast<UINT>(inputs.size())) {
             if (error) *error = QStringLiteral("Falló la inyección de texto.");
             return false;
         }
+        // Apps WinUI como el Bloc de notas reciente pueden procesar una ráfaga
+        // de pares KEYEVENTF_UNICODE como composición y repetir el último
+        // carácter. Una pausa de 12 ms deja que el hilo de UI consuma cada evento.
+        QThread::msleep(12);
     }
     return true;
 #else
@@ -1261,7 +1371,8 @@ QPoint DesktopAutomationBackend::cursorPosPhysical()
 }
 
 QVariantList DesktopAutomationBackend::controls(const QString &windowTargetId,
-                                                const QString &query, int max, QString *error)
+                                                const QString &query, int max, QString *error,
+                                                bool includeDocumentText)
 {
 #ifdef Q_OS_WIN
     bool ok = false;
@@ -1280,6 +1391,14 @@ QVariantList DesktopAutomationBackend::controls(const QString &windowTargetId,
         if (error) *error = QStringLiteral("UI Automation no disponible.");
         return {};
     }
+    // UIA can block indefinitely when an application provider is busy. Keep each
+    // cross-process request bounded so the agent worker can recover and use a
+    // different observation path instead of being reset by its outer watchdog.
+    constexpr DWORD kUiaTransactionTimeoutMs = 1000;
+    constexpr qint64 kControlsSearchBudgetMs = 5000;
+    setUiaTransactionTimeout(uia, kUiaTransactionTimeoutMs);
+    QElapsedTimer searchTimer;
+    searchTimer.start();
     IUIAutomationElement *root = nullptr;
     IUIAutomationTreeWalker *walker = nullptr;
     if (FAILED(uia->ElementFromHandle(hwnd, &root)) || !root
@@ -1293,12 +1412,21 @@ QVariantList DesktopAutomationBackend::controls(const QString &windowTargetId,
     const QString needle = query.trimmed().toLower();
     struct Node { IUIAutomationElement *el; int depth; };
     QList<Node> queue;
+    bool searchBudgetExceeded = false;
     auto enqueueChildren = [&](IUIAutomationElement *parent, int depth) {
-        if (depth > 14) return;
+        if (depth > 14 || searchBudgetExceeded) return;
+        if (searchTimer.elapsed() >= kControlsSearchBudgetMs) {
+            searchBudgetExceeded = true;
+            return;
+        }
         IUIAutomationElement *child = nullptr;
         if (FAILED(walker->GetFirstChildElement(parent, &child))) return;
         while (child) {
             queue.append({child, depth});
+            if (searchTimer.elapsed() >= kControlsSearchBudgetMs) {
+                searchBudgetExceeded = true;
+                break;
+            }
             IUIAutomationElement *next = nullptr;
             walker->GetNextSiblingElement(child, &next);
             child = next;
@@ -1306,30 +1434,82 @@ QVariantList DesktopAutomationBackend::controls(const QString &windowTargetId,
     };
 
     QVariantList out;
+    QVariantMap exactNonActionableMatch;
     enqueueChildren(root, 1);
     int visited = 0;
-    while (!queue.isEmpty() && out.size() < max && visited < 3000) {
+    bool exactMatchFound = false;
+    while (!queue.isEmpty() && out.size() < max && visited < 3000
+           && !searchBudgetExceeded) {
+        if (searchTimer.elapsed() >= kControlsSearchBudgetMs) {
+            searchBudgetExceeded = true;
+            break;
+        }
         const Node n = queue.takeFirst();
         IUIAutomationElement *el = n.el;
         ++visited;
 
-        const QVariantMap info = uiaElementInfo(uia, el);
-        const QString name = info.value(QStringLiteral("name")).toString();
-        const bool enabled = info.value(QStringLiteral("enabled")).toBool();
-        const bool invokable = info.value(QStringLiteral("invokable")).toBool();
-
-        // Incluir sólo controles útiles: con nombre o invocables. Filtrar por query.
-        const bool interesting = !name.trimmed().isEmpty() || invokable;
-        if (interesting && (needle.isEmpty() || name.toLower().contains(needle))) {
-            out.append(info);
+        if (needle.isEmpty()) {
+            const QVariantMap info = uiaElementInfo(uia, el, true, includeDocumentText);
+            const QString name = info.value(QStringLiteral("name")).toString();
+            const bool invokable = info.value(QStringLiteral("invokable")).toBool();
+            const QString role = info.value(QStringLiteral("role")).toString();
+            const bool unnamedTextEntry = (role == QLatin1String("edit")
+                                            || role == QLatin1String("document"))
+                && info.value(QStringLiteral("keyboardFocusable")).toBool();
+            // Un Edit/Document sin etiqueta sigue siendo un target útil para
+            // colocar el cursor y escribir si UIA confirma que recibe teclado.
+            if (!name.trimmed().isEmpty() || invokable || unnamedTextEntry) out.append(info);
+        } else {
+            // Para una consulta nominal basta leer el nombre de cada nodo. Antes
+            // se consultaban roles, patrones, valores y geometría de miles de
+            // celdas aun cuando no coincidían; grillas como Excel podían bloquear
+            // al worker antes de devolver una coincidencia.
+            const QString name = uiaName(el).simplified().left(120);
+            const QString foldedName = name.toLower();
+            if (!name.trimmed().isEmpty() && foldedName.contains(needle)) {
+                const QVariantMap info = uiaElementInfo(uia, el, /*includeDetails=*/false);
+                if (!foldedName.compare(needle, Qt::CaseInsensitive)) {
+                    const QString role = info.value(QStringLiteral("role")).toString();
+                    const bool isContainer = role == QLatin1String("window")
+                        || role == QLatin1String("pane") || role == QLatin1String("group");
+                    const bool isInteractive = info.value(QStringLiteral("invokable")).toBool()
+                        || info.value(QStringLiteral("keyboardFocusable")).toBool()
+                        || role == QLatin1String("button") || role == QLatin1String("edit")
+                        || role == QLatin1String("combobox") || role == QLatin1String("checkbox")
+                        || role == QLatin1String("radio") || role == QLatin1String("menuitem")
+                        || role == QLatin1String("document")
+                        || role == QLatin1String("link") || role == QLatin1String("tabitem");
+                    if (!isContainer && isInteractive) {
+                        // Si el título de un diálogo y uno de sus botones comparten
+                        // nombre, priorizar el control accionable y no el contenedor.
+                        out.clear();
+                        out.append(info);
+                        exactMatchFound = true;
+                    } else {
+                        if (exactNonActionableMatch.isEmpty()) exactNonActionableMatch = info;
+                        out.clear();
+                    }
+                } else if (exactNonActionableMatch.isEmpty()) {
+                    out.append(info);
+                }
+            }
         }
-        enqueueChildren(el, n.depth + 1);
+        if (!exactMatchFound && out.size() < max) enqueueChildren(el, n.depth + 1);
         el->Release();
+        if (exactMatchFound) break;
     }
     for (const Node &n : queue) n.el->Release();
     walker->Release();
     root->Release();
     uia->Release();
+    if (out.isEmpty() && !exactNonActionableMatch.isEmpty())
+        out.append(exactNonActionableMatch);
+    if (searchBudgetExceeded && !exactMatchFound) {
+        out.clear();
+        if (error) *error = QStringLiteral(
+            "UIA alcanzó el límite de 5 s al buscar controles. Usá desktop_read_text y "
+            "la navegación semántica o por teclado de la app; no adivines coordenadas.");
+    }
     return out;
 #else
     return LinuxDesktopBackend::controls(windowTargetId, query, max, error);
@@ -1444,58 +1624,132 @@ bool DesktopAutomationBackend::clickElementInternal(const QString &windowTargetI
                 {QStringLiteral("y"), static_cast<int>(rc.top)},
                 {QStringLiteral("width"), static_cast<int>(rc.right - rc.left)},
                 {QStringLiteral("height"), static_cast<int>(rc.bottom - rc.top)}};
-            // Preferir el patrón Invoke (clic semántico, robusto); si no, clic al
-            // centro del bounding rect.
-            IUIAutomationInvokePattern *inv = nullptr;
-            if (SUCCEEDED(el->GetCurrentPatternAs(UIA_InvokePatternId,
-                              IID_IUIAutomationInvokePattern, reinterpret_cast<void **>(&inv)))
-                && inv) {
-                success = SUCCEEDED(inv->Invoke());
-                inv->Release();
+            const bool isContainer = ct == UIA_WindowControlTypeId
+                || ct == UIA_PaneControlTypeId || ct == UIA_GroupControlTypeId;
+            if (isContainer) {
+                if (error) *error = QStringLiteral(
+                    "El control UIA elegido es un contenedor, no una acción. Volvé a "
+                    "desktop_controls y seleccioná el control hijo accionable.");
                 if (trace) {
-                    *trace = QVariantMap{
-                        {QStringLiteral("surface"), QStringLiteral("desktop")},
-                        {QStringLiteral("action"), QStringLiteral("click_element")},
-                        {QStringLiteral("target"), targetTrace},
-                        {QStringLiteral("pointer"), QVariantMap{
-                            {QStringLiteral("button"), QStringLiteral("semantic-invoke")},
-                            {QStringLiteral("clickCount"), 1}}}};
+                    *trace = QVariantMap{{QStringLiteral("surface"), QStringLiteral("desktop")},
+                                         {QStringLiteral("action"), QStringLiteral("click_element")},
+                                         {QStringLiteral("target"), targetTrace}};
                 }
             } else {
-                if (rc.right > rc.left && rc.bottom > rc.top) {
-                    // Sólo el fallback físico necesita foco; Invoke es
-                    // semántico y debe poder operar sin robarlo.
+                const bool isTextEntry = ct == UIA_EditControlTypeId
+                    || ct == UIA_DocumentControlTypeId;
+                if (isTextEntry) {
+                    // SetFocus confirms the UIA keyboard target, but document
+                    // editors also need a real pointer click to place the caret.
+                    // Click near the top-left of the observed editable bounds;
+                    // this works across text editors without assuming an app layout.
                     if (physicalInputBlocked()) {
                         if (error) *error = backgroundNoSemanticPattern();
-                        break;
-                    }
-                    if (!interactiveSessionAvailable()) {
+                    } else if (!interactiveSessionAvailable()) {
                         if (error) *error = QStringLiteral(
-                            "El control no expone un patrón semántico y la sesión interactiva está bloqueada.");
-                        break;
+                            "No se puede ubicar el cursor de texto: la sesión interactiva está bloqueada.");
+                    } else if (rc.right <= rc.left || rc.bottom <= rc.top) {
+                        if (error) *error = QStringLiteral(
+                            "El control de texto no expone un área clickeable válida.");
+                    } else if (!focusWindow(windowTargetId, error)) {
+                        // focusWindow supplies the actionable error.
+                    } else {
+                        BOOL keyboardFocusable = FALSE;
+                        BOOL hasKeyboardFocus = FALSE;
+                        const bool canFocus = SUCCEEDED(el->get_CurrentIsKeyboardFocusable(
+                                                           &keyboardFocusable))
+                            && keyboardFocusable;
+                        bool focused = SUCCEEDED(el->get_CurrentHasKeyboardFocus(&hasKeyboardFocus))
+                            && hasKeyboardFocus;
+                        if (!focused && canFocus && SUCCEEDED(el->SetFocus())
+                            && SUCCEEDED(el->get_CurrentHasKeyboardFocus(&hasKeyboardFocus))
+                            && hasKeyboardFocus) {
+                            focused = true;
+                        }
+
+                        const int cx = rc.left + qMin(8, rc.right - rc.left - 1);
+                        const int cy = rc.top + qMin(8, rc.bottom - rc.top - 1);
+                        INPUT inputs[2]{};
+                        inputs[0].type = inputs[1].type = INPUT_MOUSE;
+                        inputs[0].mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+                        inputs[1].mi.dwFlags = MOUSEEVENTF_LEFTUP;
+                        const bool clicked = focused && SetCursorPos(cx, cy)
+                            && SendInput(2, inputs, sizeof(INPUT)) == 2;
+                        if (clicked) Sleep(20);
+                        hasKeyboardFocus = FALSE;
+                        const bool confirmed = clicked
+                            && SUCCEEDED(el->get_CurrentHasKeyboardFocus(&hasKeyboardFocus))
+                            && hasKeyboardFocus;
+                        success = confirmed;
+                        if (!confirmed && error && error->isEmpty())
+                            *error = QStringLiteral(
+                                "El clic no confirmó foco de teclado en el control de texto; "
+                                "no repitas la acción sin una nueva observación.");
+                        if (trace) {
+                            *trace = QVariantMap{
+                                {QStringLiteral("surface"), QStringLiteral("desktop")},
+                                {QStringLiteral("action"), QStringLiteral("click_element")},
+                                {QStringLiteral("strategy"), QStringLiteral("uia-focus-and-pointer-click")},
+                                {QStringLiteral("keyboardFocusConfirmed"), confirmed},
+                                {QStringLiteral("target"), targetTrace},
+                                {QStringLiteral("pointer"), QVariantMap{
+                                    {QStringLiteral("button"), QStringLiteral("left")},
+                                    {QStringLiteral("clickCount"), 1},
+                                    {QStringLiteral("xAbs"), cx},
+                                    {QStringLiteral("yAbs"), cy}}}};
+                        }
                     }
-                    focusWindow(windowTargetId, nullptr);
-                    const int cx = (rc.left + rc.right) / 2;
-                    const int cy = (rc.top + rc.bottom) / 2;
-                    SetCursorPos(cx, cy);
-                    INPUT inputs[2]{};
-                    inputs[0].type = inputs[1].type = INPUT_MOUSE;
-                    inputs[0].mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
-                    inputs[1].mi.dwFlags = MOUSEEVENTF_LEFTUP;
-                    success = SendInput(2, inputs, sizeof(INPUT)) == 2;
-                    if (trace) {
-                        *trace = QVariantMap{
-                            {QStringLiteral("surface"), QStringLiteral("desktop")},
-                            {QStringLiteral("action"), QStringLiteral("click_element")},
-                            {QStringLiteral("target"), targetTrace},
-                            {QStringLiteral("pointer"), QVariantMap{
-                                {QStringLiteral("button"), QStringLiteral("left")},
-                                {QStringLiteral("clickCount"), 1},
-                                {QStringLiteral("xAbs"), cx},
-                                {QStringLiteral("yAbs"), cy}}}};
+                } else {
+                    // Preferir el patrón Invoke (clic semántico, robusto); si no,
+                    // clic al centro del bounding rect.
+                    IUIAutomationInvokePattern *inv = nullptr;
+                    if (SUCCEEDED(el->GetCurrentPatternAs(UIA_InvokePatternId,
+                                      IID_IUIAutomationInvokePattern,
+                                      reinterpret_cast<void **>(&inv))) && inv) {
+                        success = SUCCEEDED(inv->Invoke());
+                        inv->Release();
+                        if (trace) {
+                            *trace = QVariantMap{
+                                {QStringLiteral("surface"), QStringLiteral("desktop")},
+                                {QStringLiteral("action"), QStringLiteral("click_element")},
+                                {QStringLiteral("target"), targetTrace},
+                                {QStringLiteral("pointer"), QVariantMap{
+                                    {QStringLiteral("button"), QStringLiteral("semantic-invoke")},
+                                    {QStringLiteral("clickCount"), 1}}}};
+                        }
+                    } else if (rc.right > rc.left && rc.bottom > rc.top) {
+                        if (physicalInputBlocked()) {
+                            if (error) *error = backgroundNoSemanticPattern();
+                            break;
+                        }
+                        if (!interactiveSessionAvailable()) {
+                            if (error) *error = QStringLiteral(
+                                "El control no expone un patrón semántico y la sesión interactiva está bloqueada.");
+                            break;
+                        }
+                        focusWindow(windowTargetId, nullptr);
+                        const int cx = (rc.left + rc.right) / 2;
+                        const int cy = (rc.top + rc.bottom) / 2;
+                        SetCursorPos(cx, cy);
+                        INPUT inputs[2]{};
+                        inputs[0].type = inputs[1].type = INPUT_MOUSE;
+                        inputs[0].mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+                        inputs[1].mi.dwFlags = MOUSEEVENTF_LEFTUP;
+                        success = SendInput(2, inputs, sizeof(INPUT)) == 2;
+                        if (trace) {
+                            *trace = QVariantMap{
+                                {QStringLiteral("surface"), QStringLiteral("desktop")},
+                                {QStringLiteral("action"), QStringLiteral("click_element")},
+                                {QStringLiteral("target"), targetTrace},
+                                {QStringLiteral("pointer"), QVariantMap{
+                                    {QStringLiteral("button"), QStringLiteral("left")},
+                                    {QStringLiteral("clickCount"), 1},
+                                    {QStringLiteral("xAbs"), cx},
+                                    {QStringLiteral("yAbs"), cy}}}};
+                        }
+                    } else if (error) {
+                        *error = QStringLiteral("El control no es invocable ni tiene área clickeable.");
                     }
-                } else if (error) {
-                    *error = QStringLiteral("El control no es invocable ni tiene área clickeable.");
                 }
             }
         } else {
@@ -1564,7 +1818,8 @@ bool DesktopAutomationBackend::controlAction(const QString &windowTargetId,
         return false;
     }
     const QString requested = action.trimmed().toLower();
-    const QString op = requested.isEmpty() ? QStringLiteral("invoke") : requested;
+    const QString op = requested.isEmpty() || requested == QLatin1String("click")
+        ? QStringLiteral("invoke") : requested;
     const QSet<QString> allowed{
         QStringLiteral("invoke"), QStringLiteral("toggle"), QStringLiteral("set_value"),
         QStringLiteral("select"), QStringLiteral("expand"), QStringLiteral("collapse"),
@@ -1622,7 +1877,14 @@ bool DesktopAutomationBackend::controlAction(const QString &windowTargetId,
                                      {QStringLiteral("strategy"), QStringLiteral("uia-pattern")},
                                      {QStringLiteral("target"), info}};
             }
-            if (op == QLatin1String("read")) {
+            const QString role = info.value(QStringLiteral("role")).toString();
+            const bool isContainer = role == QLatin1String("window")
+                || role == QLatin1String("pane") || role == QLatin1String("group");
+            if (op == QLatin1String("invoke") && isContainer) {
+                if (error) *error = QStringLiteral(
+                    "El control UIA elegido es un contenedor, no una acción. Volvé a "
+                    "desktop_controls y seleccioná el control hijo accionable.");
+            } else if (op == QLatin1String("read")) {
                 QVariantMap read = info;
                 IUIAutomationTogglePattern *toggle = nullptr;
                 if (SUCCEEDED(el->GetCurrentPatternAs(UIA_TogglePatternId,
@@ -1685,8 +1947,22 @@ bool DesktopAutomationBackend::controlAction(const QString &windowTargetId,
                                   reinterpret_cast<void **>(&pattern))) && pattern) {
                     BSTR desired = SysAllocString(
                         reinterpret_cast<LPCWSTR>(value.utf16()));
-                    success = desired && SUCCEEDED(pattern->SetValue(desired));
+                    const bool accepted = desired && SUCCEEDED(pattern->SetValue(desired));
                     if (desired) SysFreeString(desired);
+                    if (accepted) {
+                        BSTR current = nullptr;
+                        const bool readable = SUCCEEDED(pattern->get_CurrentValue(&current))
+                            && current;
+                        const QString observed = readable
+                            ? QString::fromWCharArray(current, static_cast<int>(SysStringLen(current)))
+                            : QString();
+                        success = readable
+                            && DesktopComputerUse::valueActionReadbackMatches(value, observed);
+                        if (current) SysFreeString(current);
+                        if (!success && error && error->isEmpty())
+                            *error = QStringLiteral("UIA aceptó set_value, pero el control no reflejó "
+                                                    "el valor solicitado en su lectura actual.");
+                    }
                     pattern->Release();
                 }
             } else if (op == QLatin1String("select")) {
@@ -1725,6 +2001,8 @@ bool DesktopAutomationBackend::controlAction(const QString &windowTargetId,
                     pattern->Release();
                 }
             }
+            if (trace && op != QLatin1String("read"))
+                (*trace)[QStringLiteral("target")] = uiaElementInfo(uia, el);
             if (!success && error && error->isEmpty())
                 *error = QStringLiteral("El control no expone el patrón requerido para '%1'.").arg(op);
         } else {

@@ -13,9 +13,15 @@ private slots:
     void workspaceMutationPathsApplyOnlyToLocalFileEffects();
     void browserNavigationNeedsHostApprovalAndHttpScheme();
     void mcpVerificationGateRequiresFreshReadFromSameServer();
+    void mcpVerificationNudgeRequiresImmediateReadOnlyDesktopObservation();
     void desktopFailedVerificationBlocksMutationUntilEvidence();
     void desktopVerificationCoversKeyboardAndSemanticActions();
     void desktopStaleRecoveryAllowsOnlyOneReobservedRetry();
+    void desktopRepeatedClickAfterUnchangedObservationIsBlocked();
+    void desktopRepeatedTypingAfterSuccessIsBlockedForTurn();
+    void desktopRepeatedSetValueAfterSuccessIsBlockedForTurn();
+    void desktopRepeatedFailedMutationBlocksOnlySameArguments();
+    void desktopActionRepeatSignatureIgnoresOnlySnapshotId();
     void canonicalHashIgnoresObjectKeyOrder();
     void idempotencyIsScopedByCorrelation();
 };
@@ -154,6 +160,39 @@ void ToolExecutionSafetyTests::mcpVerificationGateRequiresFreshReadFromSameServe
              ToolExecutionSafety::McpVerificationGate::CompletionDecision::Allow);
 }
 
+void ToolExecutionSafetyTests::mcpVerificationNudgeRequiresImmediateReadOnlyDesktopObservation()
+{
+    ToolExecutionSafety::McpVerificationGate gate;
+    gate.recordAction(QStringLiteral("desktop"), true, false);
+    QVERIFY(!gate.requiresDesktopObservationTool());
+    const QString desktopPrompt = gate.observationPrompt();
+    QVERIFY(desktopPrompt.contains(QStringLiteral("siguiente llamada de herramienta debe ser sólo de lectura")));
+    QVERIFY(desktopPrompt.contains(QStringLiteral("desktop_read_text una vez")));
+    QVERIFY(desktopPrompt.contains(QStringLiteral("target_id literal")));
+    QVERIFY(desktopPrompt.contains(QStringLiteral("No pulses teclas, escribas ni hagas clic")));
+    QVERIFY(desktopPrompt.contains(QStringLiteral("checkpoint intermedio")));
+    QVERIFY(desktopPrompt.contains(QStringLiteral("continúa con el siguiente paso pendiente")));
+    QVERIFY(desktopPrompt.contains(QStringLiteral("no respondas final si aún falta guardar")));
+
+    gate.requestObservationTool();
+    QVERIFY(gate.requiresDesktopObservationTool());
+    gate.recordObservation(QStringLiteral("desktop"), false, true);
+    QVERIFY(gate.requiresDesktopObservationTool());
+    gate.recordObservation(QStringLiteral("desktop"), true, true);
+    QVERIFY(!gate.requiresDesktopObservationTool());
+
+    gate.clear();
+    gate.recordAction(QStringLiteral("drive"), true, false);
+    gate.requestObservationTool();
+    QVERIFY(!gate.requiresDesktopObservationTool());
+    const QString mcpPrompt = gate.observationPrompt();
+    QVERIFY(mcpPrompt.contains(QStringLiteral("lectura del mismo servidor pendiente")));
+    QVERIFY(mcpPrompt.contains(QStringLiteral("drive")));
+    QVERIFY(mcpPrompt.contains(QStringLiteral("checkpoint intermedio")));
+    QVERIFY(mcpPrompt.contains(QStringLiteral("continúa los pasos pendientes")));
+    QVERIFY(!mcpPrompt.contains(QStringLiteral("desktop_read_text")));
+}
+
 void ToolExecutionSafetyTests::desktopFailedVerificationBlocksMutationUntilEvidence()
 {
     ToolExecutionSafety::DesktopActionSafetyGate gate;
@@ -249,6 +288,136 @@ void ToolExecutionSafetyTests::desktopStaleRecoveryAllowsOnlyOneReobservedRetry(
     gate.recordObservation();
     gate.recordActionResult(false, false);
     QVERIFY(gate.blocksActions());
+}
+
+void ToolExecutionSafetyTests::desktopRepeatedClickAfterUnchangedObservationIsBlocked()
+{
+    ToolExecutionSafety::DesktopActionRepeatGuard guard;
+    const QString key = QStringLiteral("desktop_controls|paint-window");
+    const QString clickFormas = QStringLiteral("click-element-formas");
+    const QString clickRectangle = QStringLiteral("click-element-rectangle");
+    const QString before = QStringLiteral("32 controls; same snapshot");
+
+    guard.recordObservation(key, before);
+    guard.recordAction(clickFormas, key);
+    guard.recordObservation(key, before);
+    QVERIFY(guard.blocks(clickFormas));
+    QVERIFY(!guard.blocks(clickRectangle));
+
+    // A different action is allowed; stale evidence keeps the original action blocked.
+    guard.recordAction(clickRectangle, key);
+    QVERIFY(guard.blocks(clickFormas));
+    QVERIFY(!guard.blocks(clickRectangle));
+    guard.recordObservation(key, QStringLiteral("31 controls; menu changed"));
+    QVERIFY(!guard.blocks(clickFormas));
+    QVERIFY(!guard.blocks(clickRectangle));
+
+    // Once state changes, the same click can be retried against fresh evidence.
+    guard.recordAction(clickFormas, key);
+    guard.recordObservation(key, QStringLiteral("30 controls; shape selected"));
+    QVERIFY(!guard.blocks(clickFormas));
+}
+
+void ToolExecutionSafetyTests::desktopRepeatedTypingAfterSuccessIsBlockedForTurn()
+{
+    ToolExecutionSafety::DesktopActionRepeatGuard guard;
+    const QString key = QStringLiteral("desktop_read_text|excel-window|b2");
+    const QString typeFour = QStringLiteral("desktop_type|target=excel-window|text=4");
+    const QString differentAction = QStringLiteral("desktop_click|target=excel-window|x=0.25");
+
+    guard.recordObservation(key, QStringLiteral("B2: 2\nreceipt_id=before"));
+    // LlamaAgentBackend blocks the successful signature as soon as the tool
+    // settles, even if the control appended the text wrongly.
+    guard.blockAction(typeFour);
+    guard.clearPending();
+    QVERIFY(guard.blocks(typeFour));
+
+    // A changed readback does not authorize repeating a type that may already
+    // have changed the application state.
+    guard.recordAction(differentAction, key);
+    QVERIFY(guard.blocks(typeFour));
+    guard.recordObservation(key, QStringLiteral("B2: 42\nreceipt_id=changed"));
+    QVERIFY(guard.blocks(typeFour));
+
+    // The next user turn clears the one-turn repeat block.
+    guard.clear();
+    QVERIFY(!guard.blocks(typeFour));
+}
+
+void ToolExecutionSafetyTests::desktopRepeatedSetValueAfterSuccessIsBlockedForTurn()
+{
+    ToolExecutionSafety::DesktopActionRepeatGuard guard;
+    const QString setB2ToFour = QStringLiteral(
+        "desktop_control_action|{\"action\":\"set_value\",\"control_id\":\"B2\","
+        "\"target_id\":\"excel-window\",\"value\":\"4\"}");
+    const QString setB2ToFive = QStringLiteral(
+        "desktop_control_action|{\"action\":\"set_value\",\"control_id\":\"B2\","
+        "\"target_id\":\"excel-window\",\"value\":\"5\"}");
+
+    // set_value reports a UIA readback; the same successful assignment is
+    // unnecessary again during this turn, even if another cell still looks stale.
+    guard.blockAction(setB2ToFour);
+    QVERIFY(guard.blocks(setB2ToFour));
+    QVERIFY(!guard.blocks(setB2ToFive));
+
+    // A new user turn clears the per-turn repeat block.
+    guard.clear();
+    QVERIFY(!guard.blocks(setB2ToFour));
+}
+
+void ToolExecutionSafetyTests::desktopRepeatedFailedMutationBlocksOnlySameArguments()
+{
+    ToolExecutionSafety::DesktopActionRepeatGuard guard;
+    const QString key = QStringLiteral("desktop_controls|excel-window");
+    const QString failedSetValue = QStringLiteral(
+        "desktop_control_action|{\"action\":\"set_value\",\"control_id\":\"\","
+        "\"target_id\":\"excel-window\",\"value\":\"B2\"}");
+    const QString correctedControl = QStringLiteral(
+        "desktop_control_action|{\"action\":\"set_value\",\"control_id\":\"name-box\","
+        "\"target_id\":\"excel-window\",\"value\":\"B2\"}");
+
+    guard.recordObservation(key, QStringLiteral("32 controls; before"));
+    guard.blockAction(failedSetValue, key);
+    QVERIFY(guard.blocks(failedSetValue));
+    QVERIFY(!guard.blocks(correctedControl));
+
+    // Una lectura igual no habilita el mismo error; un cambio UIA real sí.
+    guard.recordObservation(key, QStringLiteral("32 controls; before"));
+    QVERIFY(guard.blocks(failedSetValue));
+    guard.recordObservation(key, QStringLiteral("31 controls; dialog changed"));
+    QVERIFY(!guard.blocks(failedSetValue));
+
+    guard.blockAction(failedSetValue);
+    guard.clear();
+    QVERIFY(!guard.blocks(failedSetValue));
+}
+
+void ToolExecutionSafetyTests::desktopActionRepeatSignatureIgnoresOnlySnapshotId()
+{
+    const QString first = ToolExecutionSafety::desktopActionRepeatSignature(
+        QStringLiteral("desktop_control_action"), QJsonObject{
+            {QStringLiteral("action"), QStringLiteral("set_value")},
+            {QStringLiteral("control_id"), QString()},
+            {QStringLiteral("snapshot_id"), QStringLiteral("snapshot-1")},
+            {QStringLiteral("target_id"), QStringLiteral("excel-window")},
+            {QStringLiteral("value"), QStringLiteral("B2")}});
+    const QString refreshedSnapshot = ToolExecutionSafety::desktopActionRepeatSignature(
+        QStringLiteral("desktop_control_action"), QJsonObject{
+            {QStringLiteral("action"), QStringLiteral("set_value")},
+            {QStringLiteral("control_id"), QString()},
+            {QStringLiteral("snapshot_id"), QStringLiteral("snapshot-2")},
+            {QStringLiteral("target_id"), QStringLiteral("excel-window")},
+            {QStringLiteral("value"), QStringLiteral("B2")}});
+    const QString correctedControl = ToolExecutionSafety::desktopActionRepeatSignature(
+        QStringLiteral("desktop_control_action"), QJsonObject{
+            {QStringLiteral("action"), QStringLiteral("set_value")},
+            {QStringLiteral("control_id"), QStringLiteral("name-box")},
+            {QStringLiteral("snapshot_id"), QStringLiteral("snapshot-2")},
+            {QStringLiteral("target_id"), QStringLiteral("excel-window")},
+            {QStringLiteral("value"), QStringLiteral("B2")}});
+
+    QCOMPARE(first, refreshedSnapshot);
+    QVERIFY(first != correctedControl);
 }
 
 void ToolExecutionSafetyTests::canonicalHashIgnoresObjectKeyOrder()

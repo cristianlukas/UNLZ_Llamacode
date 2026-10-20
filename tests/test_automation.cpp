@@ -1,6 +1,8 @@
 #include <QtTest>
 #include <QElapsedTimer>
 #include <QImage>
+#include <QFile>
+#include <QDir>
 #include <QTemporaryDir>
 #include <limits>
 #include "core/automation/AutomationArtifactStore.h"
@@ -17,6 +19,13 @@ class AutomationTests : public QObject
 private slots:
     void initTestCase();
     void launchedWindowIsTheNewOne();
+    void windowRebindSelectsLargestWindowFromSameProcess();
+    void keyChordNormalizesReversedModifier();
+    void keyNameNormalizesLineBreakAsEnter();
+    void existingTextGuardOnlyBlocksTextEntryControls();
+    void controlListLimitIsBounded();
+    void launchArgumentsSplitQuotedPaths();
+    void launchDocumentGuardRequiresOpenFileEvidence();
     void launchWaitReturnsWithoutGuessing();
     void normalizedCoordinatesScaleAcrossResolutions();
     void normalizedCoordinatesRejectVisualGridAndNonFiniteValues();
@@ -52,6 +61,8 @@ private slots:
     void keyBufferFlushesTextBeforeNamedKey();
     void keyBufferEmitsShortcutWithModifiers();
     void winTapDistinguishesLoneTapFromShortcut();
+    void targetIdTextPreservesNumericWindowIds();
+    void controlIdTextPreservesNumericOpaqueIds();
     void desktopComputerUseContractsAndReceipts();
     void desktopProcessGuardIsExclusive();
     void desktopActionClassificationIsGeneric();
@@ -174,17 +185,32 @@ void AutomationTests::desktopPromptPrefersNativeTools()
     // desktop_windows/desktop_observe sin nunca escribir. El prompt debe empujar
     // el camino rápido por teclado, verificación por texto y una regla anti-loop.
     QVERIFY(prompt.contains(QStringLiteral("CAMINO RÁPIDO")));
-    QVERIFY(prompt.contains(QStringLiteral("TECLADO primero")));
+    QVERIFY(prompt.contains(QStringLiteral("TECLADO: desktop_focus id actual")));
     QVERIFY(prompt.contains(QStringLiteral("desktop_type")));
     QVERIFY(prompt.contains(QStringLiteral("desktop_type \"<expresión>=\"")));
     QVERIFY(prompt.contains(QStringLiteral("desktop_key ESC")));
+    QVERIFY(prompt.contains(QStringLiteral("En tablas/grillas")));
+    QVERIFY(prompt.contains(QStringLiteral("celda exacta con desktop_controls")));
+    QVERIFY(prompt.contains(QStringLiteral("keyboardFocusConfirmed=true")));
+    QVERIFY(prompt.contains(QStringLiteral("keyboard_focus=1")));
+    QVERIFY(prompt.contains(QStringLiteral("requieren el snapshot_id")));
+    QVERIFY(prompt.contains(QStringLiteral("Si expone set_value")));
+    QVERIFY(prompt.contains(QStringLiteral("desktop_control_action action='set_value'")));
+    QVERIFY(prompt.contains(QStringLiteral("Clic + dígito puede anexarse")));
+    QVERIFY(prompt.contains(QStringLiteral("confirma con Enter una vez")));
+    QVERIFY(prompt.contains(QStringLiteral("no repitas set_value")));
+    QVERIFY(prompt.contains(QStringLiteral("selecciónala con navegación antes de escribir")));
     QVERIFY(prompt.contains(QStringLiteral("visor ACTUAL")));
     QVERIFY(prompt.contains(QStringLiteral("Historial")));
     QVERIFY(prompt.contains(QStringLiteral("desktop_controls")));
+    QVERIFY(prompt.contains(QStringLiteral("Si completar no ejecuta la acción, confirmala una vez")));
+    QVERIFY(prompt.contains(QStringLiteral("verificá el cambio antes de informar éxito")));
     QVERIFY(prompt.contains(QStringLiteral("ANTI-LOOP")));
     // desktop_launch devuelve el id: no hace falta (ni conviene) listar ventanas.
     QVERIFY(prompt.contains(QStringLiteral("desktop_launch devuelve el id")));
     QVERIFY(prompt.contains(QStringLiteral("desktop_windows sólo si no lo encontró")));
+    QVERIFY(prompt.contains(QStringLiteral("desktop_key usa última ventana (sin target_id)")));
+    QVERIFY(prompt.contains(QStringLiteral("tras rebind, reenfoca id nuevo")));
     QVERIFY(prompt.contains(QStringLiteral("no repitas type/click/submit")));
     QVERIFY(prompt.contains(QStringLiteral("BLOCKED")));
     QVERIFY(prompt.contains(QStringLiteral("observá una sola vez")));
@@ -226,6 +252,23 @@ void AutomationTests::readTextFormatsNormalizedCentersAndFilters()
     QVERIFY(!DesktopComputerUse::typingTargetAllowed(QStringLiteral("abc"), QString()));
     QVERIFY(!DesktopComputerUse::typingTargetAllowed(QStringLiteral("abc"), QStringLiteral("def")));
     QVERIFY(DesktopComputerUse::typingTargetAllowed(QStringLiteral("ABC"), QStringLiteral("abc")));
+    QVERIFY(DesktopComputerUse::typingTargetAllowed(QStringLiteral("dialog"), QStringLiteral("main"),
+                                                    42, 42));
+    QVERIFY(!DesktopComputerUse::typingTargetAllowed(QStringLiteral("other"), QStringLiteral("main"),
+                                                     99, 42));
+    QVERIFY(!DesktopComputerUse::typingTargetAllowed(QStringLiteral("main"), QStringLiteral("main"),
+                                                     99, 42));
+    QVERIFY(DesktopComputerUse::keyFocusChangeHint(
+                QStringLiteral("main"), 42, QStringLiteral("dialog"), 42, 42)
+                .contains(QStringLiteral("no supongas que se abrió un diálogo")));
+    QVERIFY(DesktopComputerUse::keyFocusChangeHint(
+                QStringLiteral("main"), 42, QStringLiteral("dialog"), 42, 42)
+                .contains(QStringLiteral("ni presiones Enter para comprobarlo")));
+    QVERIFY(DesktopComputerUse::keyFocusChangeHint(
+                QStringLiteral("main"), 42, QStringLiteral("other"), 99, 42)
+                .contains(QStringLiteral("fuera de la aplicación elegida")));
+    QVERIFY(DesktopComputerUse::keyFocusChangeHint(
+                QStringLiteral("main"), 42, QStringLiteral("main"), 42, 42).isEmpty());
     QVERIFY(DesktopComputerUse::typingTargetAllowed(QString(), QStringLiteral("abc")));
     QVERIFY(!DesktopComputerUse::typingTargetAllowed(QString(), QString()));
     // Foco perdido con ventana ya elegida → re-enfocar (no negarse); sin ventana
@@ -243,15 +286,34 @@ void AutomationTests::readTextFormatsNormalizedCentersAndFilters()
         QVariantMap{{"role", "button"}, {"name", "Tres"}, {"invokable", true}},
         QVariantMap{{"role", "text"}, {"name", "Ayuda"}, {"invokable", true}},
         QVariantMap{{"role", "edit"}, {"name", "Buscar"}, {"value", "hola"}},
+        QVariantMap{{"role", "dataitem"}, {"name", "D2"}, {"value", "6"},
+                    {"invokable", true}},
+        QVariantMap{{"role", "dataitem"}, {"name", "E2"}, {"value", ""}},
         QVariantMap{{"role", "text"}, {"name", "la pantalla muestra 9"}},
         QVariantMap{{"role", "text"}, {"name", "  "}},
+        QVariantMap{{"role", "document"}, {"name", "Editor de texto"},
+                    {"text", "contenido beta solicitado"}},
     };
     const QStringList read = DesktopComputerUse::uiaReadableText(uia, QString(), 30);
     QCOMPARE(read, (QStringList{QStringLiteral("La pantalla muestra 9"),
                                 QStringLiteral("La expresión es 3 × 3="),
-                                QStringLiteral("Buscar: hola")}));
+                                QStringLiteral("Buscar: hola"),
+                                QStringLiteral("D2: 6"),
+                                QStringLiteral("contenido beta solicitado")}));
     QCOMPARE(DesktopComputerUse::uiaReadableText(uia, QStringLiteral("EXPRESION"), 30),
              QStringList{QStringLiteral("La expresión es 3 × 3=")});
+    QCOMPARE(DesktopComputerUse::uiaReadableText(uia, QStringLiteral("D2"), 30),
+             QStringList{QStringLiteral("D2: 6")});
+    QCOMPARE(DesktopComputerUse::uiaReadableText(uia, QStringLiteral("contenido beta"), 30),
+             QStringList{QStringLiteral("contenido beta solicitado")});
+    QCOMPARE(DesktopComputerUse::uiaReadableText(uia, QString(), 30).last(),
+             QStringLiteral("contenido beta solicitado"));
+    QVERIFY(DesktopComputerUse::valueActionReadbackMatches(
+        QStringLiteral("=B2+B3+B4"), QStringLiteral("=B2+B3+B4")));
+    QVERIFY(!DesktopComputerUse::valueActionReadbackMatches(
+        QStringLiteral("=B2+B3+B4"), QString()));
+    QVERIFY(!DesktopComputerUse::valueActionReadbackMatches(
+        QStringLiteral("=B2+B3+B4"), QStringLiteral("#¿NOMBRE?")));
     QCOMPARE(DesktopComputerUse::uiaReadableText(uia, QString(), 1).size(), 1);
 
     // Alcance: explícito manda; si falta y el id es una ventana → window.
@@ -822,6 +884,24 @@ void AutomationTests::desktopComputerUseContractsAndReceipts()
     QVERIFY(snapshotMatches(first, second, &error));
     QVERIFY(!snapshotMatches(first, QStringLiteral("stale"), &error));
     QVERIFY(error.contains(QStringLiteral("obsoleto")));
+    const QVariantList filteredControls{controls.first()};
+    const QVariantList fullControls{controls.first(),
+        QVariantMap{{QStringLiteral("controlId"), QStringLiteral("c2")},
+                    {QStringLiteral("name"), QStringLiteral("Guardar como")},
+                    {QStringLiteral("role"), QStringLiteral("button")}}};
+    const QVariantMap unrelatedWindow{{QStringLiteral("id"), QStringLiteral("w2")},
+                                      {QStringLiteral("label"), QStringLiteral("Browser")},
+                                      {QStringLiteral("pid"), 99}};
+    const QVariantList desktopWindows{unrelatedWindow, target};
+    const QVariantList reorderedDesktopWindows{target, unrelatedWindow};
+    QCOMPARE(snapshotIdentityWindows(QStringLiteral("window"), target, desktopWindows),
+             QVariantList{target});
+    QCOMPARE(snapshotIdentityWindows(QStringLiteral("window"), target,
+                                     reorderedDesktopWindows), QVariantList{target});
+    QCOMPARE(snapshotIdentityWindows(QStringLiteral("screen"), target, desktopWindows),
+             desktopWindows);
+    QCOMPARE(snapshotIdentityControls(filteredControls, fullControls), fullControls);
+    QCOMPARE(snapshotIdentityControls(filteredControls, {}), filteredControls);
 
     const ActionReceipt receipt = makeReceipt(
         QStringLiteral("desktop_control_action"),
@@ -981,7 +1061,8 @@ void AutomationTests::desktopPromptKeepsVerboseRecipesCompact()
     QVERIFY(prompt.contains(QStringLiteral("CAMINO RÁPIDO")));
     QVERIFY(prompt.contains(QStringLiteral("Aprendizajes auto-actualizados")));
     QVERIFY(!prompt.contains(QStringLiteral("captura: evidence/")));
-    QVERIFY2(prompt.size() < 7000, qPrintable(QStringLiteral("prompt chars=%1").arg(prompt.size())));
+    // Margen para la instrucción global de edición segura en tablas/grillas.
+    QVERIFY2(prompt.size() < 7400, qPrintable(QStringLiteral("prompt chars=%1").arg(prompt.size())));
 }
 
 void AutomationTests::keyBufferAccumulatesTextIntoTypeStep()
@@ -1104,7 +1185,25 @@ void AutomationTests::launchedWindowIsTheNewOne()
         QStringLiteral("calc"), pickLaunchedWindow(before, after, QStringLiteral("calc")), false, &ok);
     QVERIFY(ok);
     QVERIFY2(text.contains(QStringLiteral("id=c3")), qPrintable(text));
+    QVERIFY(text.contains(QStringLiteral("target_id=\"c3\"")));
     QVERIFY(text.contains(QStringLiteral("NO hace falta desktop_windows")));
+    QVERIFY(text.contains(QStringLiteral("sin agregar comillas al valor")));
+    QVERIFY(text.contains(QStringLiteral("HWND fue reemplazado")));
+    QVERIFY(text.contains(QStringLiteral("desktop_focus antes de cualquier desktop_key/desktop_type")));
+
+    const QVariantList alreadyOpen{winRow(QStringLiteral("a1"), QStringLiteral("LlamaCode")),
+                                   winRow(QStringLiteral("n6"),
+                                          QStringLiteral("CU20: Bloc de notas"))};
+    const QVariantMap reusedNotepad = pickLaunchedWindow(
+        alreadyOpen, alreadyOpen, QStringLiteral("notepad"));
+    const QString reusedText = DesktopComputerUse::formatLaunchResult(
+        QStringLiteral("notepad"), reusedNotepad, false, &ok);
+    QVERIFY(ok);
+    QVERIFY(reusedText.contains(QStringLiteral("La ventana ya existía")));
+    QVERIFY(reusedText.contains(QStringLiteral("desktop_read_text target_id=\"n6\"")));
+    QVERIFY(reusedText.contains(QStringLiteral("desktop_focus target_id=\"n6\"")));
+    QVERIFY(!reusedText.contains(QStringLiteral("Ya está en primer plano")));
+
     const QString bg = DesktopComputerUse::formatLaunchResult(
         QStringLiteral("calc"), pickLaunchedWindow(before, after, QStringLiteral("calc")), true, &ok);
     QVERIFY(bg.contains(QStringLiteral("desktop_control_action")));
@@ -1117,8 +1216,197 @@ void AutomationTests::launchedWindowIsTheNewOne()
     QVERIFY(!ok);
     QVERIFY(dlg.contains(QStringLiteral("NO escribas")));
     const QString none = DesktopComputerUse::formatLaunchResult(QStringLiteral("calc"), {}, false, &ok);
-    QVERIFY(ok);
+    QVERIFY(!ok);
     QVERIFY(none.contains(QStringLiteral("no aparecio")) || none.contains(QStringLiteral("no apareció")));
+    QVERIFY(none.contains(QStringLiteral("No escribas en otra app")));
+}
+
+void AutomationTests::targetIdTextPreservesNumericWindowIds()
+{
+    QCOMPARE(DesktopComputerUse::targetIdText(QJsonValue(QStringLiteral("271114"))),
+             QStringLiteral("271114"));
+    QCOMPARE(DesktopComputerUse::targetIdText(QJsonValue(271114.0)),
+             QStringLiteral("271114"));
+    QVERIFY(DesktopComputerUse::targetIdText(QJsonValue(271114.5)).isEmpty());
+    QVERIFY(DesktopComputerUse::targetIdText(QJsonValue(-1.0)).isEmpty());
+    QVERIFY(DesktopComputerUse::targetIdText(QJsonValue(true)).isEmpty());
+}
+
+void AutomationTests::controlIdTextPreservesNumericOpaqueIds()
+{
+    QCOMPARE(DesktopComputerUse::controlIdText(QJsonValue(QStringLiteral("42.72462"))),
+             QStringLiteral("42.72462"));
+    QCOMPARE(DesktopComputerUse::controlIdText(QJsonValue(42.72462)),
+             QStringLiteral("42.72462"));
+    QCOMPARE(DesktopComputerUse::controlIdText(QJsonValue(42.0)), QStringLiteral("42"));
+    QVERIFY(DesktopComputerUse::controlIdText(QJsonValue(-1.0)).isEmpty());
+    QVERIFY(DesktopComputerUse::controlIdText(QJsonValue(true)).isEmpty());
+    QVERIFY(DesktopComputerUse::controlIdText(QJsonValue(QJsonValue::Null)).isEmpty());
+}
+
+void AutomationTests::windowRebindSelectsLargestWindowFromSameProcess()
+{
+    QVariantMap stale = winRow(QStringLiteral("old"), QStringLiteral("Abriendo - Excel"),
+                               QStringLiteral("Window"), 300, 200);
+    stale[QStringLiteral("pid")] = qulonglong(42);
+    QVariantMap splash = winRow(QStringLiteral("splash"), QStringLiteral("Excel"),
+                                QStringLiteral("Window"), 400, 240);
+    splash[QStringLiteral("pid")] = qulonglong(42);
+    QVariantMap main = winRow(QStringLiteral("main"), QStringLiteral("Libro1 - Excel"),
+                              QStringLiteral("XLMAIN"), 1600, 900);
+    main[QStringLiteral("pid")] = qulonglong(42);
+    QVariantMap unrelated = winRow(QStringLiteral("other"), QStringLiteral("Otra app"),
+                                   QStringLiteral("Window"), 2560, 1440);
+    unrelated[QStringLiteral("pid")] = qulonglong(99);
+    const QVariantMap rebound = DesktopComputerUse::largestWindowForProcess(
+        QVariantList{splash, main, unrelated}, 42, QStringLiteral("old"));
+    QCOMPARE(rebound.value(QStringLiteral("id")).toString(), QStringLiteral("main"));
+    QCOMPARE(DesktopComputerUse::resolveSelectedWindow(
+                 QVariantList{splash, main, unrelated}, QStringLiteral("splash"), 42)
+                 .value(QStringLiteral("id")).toString(), QStringLiteral("splash"));
+    QCOMPARE(DesktopComputerUse::resolveSelectedWindow(
+                 QVariantList{splash, main, unrelated}, QStringLiteral("old"), 42)
+                 .value(QStringLiteral("id")).toString(), QStringLiteral("main"));
+    QVariantMap reusedId = unrelated;
+    reusedId[QStringLiteral("id")] = QStringLiteral("old");
+    QCOMPARE(DesktopComputerUse::resolveSelectedWindow(
+                 QVariantList{reusedId, main}, QStringLiteral("old"), 42)
+                 .value(QStringLiteral("id")).toString(), QStringLiteral("main"));
+    QVERIFY(DesktopComputerUse::largestWindowForProcess(
+                QVariantList{unrelated}, 42).isEmpty());
+    QVERIFY(DesktopComputerUse::resolveSelectedWindow(
+                QVariantList{unrelated}, QStringLiteral("old"), 42).isEmpty());
+    QCOMPARE(DesktopComputerUse::selectedWindowProcessId(
+                 QVariantList{unrelated}, QStringLiteral("old"), qulonglong(42)), qulonglong(42));
+    QCOMPARE(DesktopComputerUse::selectedWindowProcessId(
+                 QVariantList{unrelated, main}, QStringLiteral("main")), qulonglong(42));
+    QCOMPARE(DesktopComputerUse::selectedWindowProcessId(
+                 QVariantList{unrelated}, QStringLiteral("missing")), qulonglong(0));
+}
+
+void AutomationTests::keyChordNormalizesReversedModifier()
+{
+    QString key = QStringLiteral("CTRL");
+    QStringList modifiers{QStringLiteral("s")};
+    QVERIFY(DesktopComputerUse::normalizeKeyChord(&key, &modifiers));
+    QCOMPARE(key, QStringLiteral("S"));
+    QCOMPARE(modifiers, QStringList{QStringLiteral("CTRL")});
+
+    key = QStringLiteral("ALT");
+    modifiers = {QStringLiteral("CTRL"), QStringLiteral("F4")};
+    QVERIFY(DesktopComputerUse::normalizeKeyChord(&key, &modifiers));
+    QCOMPARE(key, QStringLiteral("F4"));
+    QCOMPARE(modifiers, (QStringList{QStringLiteral("CTRL"), QStringLiteral("ALT")}));
+
+    key = QStringLiteral("L");
+    modifiers = {QStringLiteral("CTRL")};
+    QVERIFY(!DesktopComputerUse::normalizeKeyChord(&key, &modifiers));
+    QCOMPARE(key, QStringLiteral("L"));
+    QCOMPARE(modifiers, QStringList{QStringLiteral("CTRL")});
+
+    key = QStringLiteral("CTRL");
+    modifiers = {QStringLiteral("S"), QStringLiteral("A")};
+    QVERIFY(!DesktopComputerUse::normalizeKeyChord(&key, &modifiers));
+}
+
+void AutomationTests::keyNameNormalizesLineBreakAsEnter()
+{
+    for (const QString &lineBreak : {QStringLiteral("\n"), QStringLiteral("\r"),
+                                     QStringLiteral("\r\n")}) {
+        QString key = lineBreak;
+        QVERIFY(DesktopComputerUse::normalizeKeyName(&key));
+        QCOMPARE(key, QStringLiteral("ENTER"));
+    }
+
+    for (const QString &ordinaryKey : {QStringLiteral("Enter"), QStringLiteral(" "),
+                                       QStringLiteral("\nsearch")}) {
+        QString key = ordinaryKey;
+        QVERIFY(!DesktopComputerUse::normalizeKeyName(&key));
+        QCOMPARE(key, ordinaryKey);
+    }
+    QVERIFY(!DesktopComputerUse::normalizeKeyName(nullptr));
+}
+
+void AutomationTests::existingTextGuardOnlyBlocksTextEntryControls()
+{
+    QVERIFY(DesktopComputerUse::shouldBlockTypingIntoExistingText(true, true));
+    QVERIFY(!DesktopComputerUse::shouldBlockTypingIntoExistingText(true, false));
+    QVERIFY(!DesktopComputerUse::shouldBlockTypingIntoExistingText(false, true));
+}
+
+void AutomationTests::controlListLimitIsBounded()
+{
+    QCOMPARE(DesktopComputerUse::clampControlLimit(0), 32);
+    QCOMPARE(DesktopComputerUse::clampControlLimit(-1), 32);
+    QCOMPARE(DesktopComputerUse::clampControlLimit(12), 12);
+    QCOMPARE(DesktopComputerUse::clampControlLimit(400), 80);
+    QCOMPARE(DesktopComputerUse::clampControlLimit(0, 16), 16);
+}
+
+void AutomationTests::launchArgumentsSplitQuotedPaths()
+{
+    const QStringList args = DesktopComputerUse::splitLaunchArguments(
+        QStringLiteral("--user-data-dir=\"C:\\Users\\Cristian\\Documents\\Llama Code\\Edge Profile\" "
+                       "--inprivate --new-window"));
+    QCOMPARE(args, (QStringList{
+                       QStringLiteral("--user-data-dir=C:\\Users\\Cristian\\Documents\\Llama Code\\Edge Profile"),
+                       QStringLiteral("--inprivate"),
+                       QStringLiteral("--new-window"),
+                   }));
+    QCOMPARE(DesktopComputerUse::splitLaunchArguments(QString()), QStringList{});
+}
+
+void AutomationTests::launchDocumentGuardRequiresOpenFileEvidence()
+{
+    QTemporaryDir temp;
+    QVERIFY(temp.isValid());
+    const QString document = QDir(temp.path()).filePath(QStringLiteral("synthetic sheet.xlsx"));
+    QFile file(document);
+    QVERIFY(file.open(QIODevice::WriteOnly));
+    QCOMPARE(file.write("fixture"), qint64(7));
+    file.close();
+
+    const QString args = QStringLiteral("/x \"%1\"").arg(QDir::toNativeSeparators(document));
+    const QString expected = DesktopComputerUse::expectedDocumentNameFromLaunchArguments(
+        args, temp.path());
+    QCOMPARE(expected, QStringLiteral("synthetic sheet.xlsx"));
+    QVERIFY(DesktopComputerUse::expectedDocumentNameFromLaunchArguments(
+                QStringLiteral("/n --no-document"), temp.path()).isEmpty());
+    const QString missingDocument = QDir(temp.path()).filePath(QStringLiteral("stale workbook.xlsx"));
+    QVERIFY(!QFile::exists(missingDocument));
+    QCOMPARE(DesktopComputerUse::expectedDocumentNameFromLaunchArguments(
+                 QStringLiteral("/x \"%1\"").arg(QDir::toNativeSeparators(missingDocument)),
+                 temp.path()), QStringLiteral("stale workbook.xlsx"));
+
+    DesktopComputerUse::LaunchDocumentGuard guard;
+    guard.arm(expected, QStringLiteral("window-old"), QStringLiteral("Microsoft Excel"));
+    QVERIFY(guard.pending());
+    QVERIFY(guard.blocks(QStringLiteral("desktop_type")));
+    QVERIFY(guard.blocks(QStringLiteral("desktop_click_element")));
+    QVERIFY(guard.blocks(QStringLiteral("desktop_key")));
+    QVERIFY(!guard.blocks(QStringLiteral("desktop_focus")));
+    QVERIFY(!guard.blocks(QStringLiteral("desktop_read_text")));
+    QVERIFY(!guard.blocks(QStringLiteral("desktop_launch")));
+    QVERIFY(guard.blockedActionMessage(QStringLiteral("desktop_type")).contains(
+        QStringLiteral("NO ejecuté")));
+
+    guard.rebindTarget(QStringLiteral("window-old"), QStringLiteral("window-new"));
+    QCOMPARE(guard.targetId(), QStringLiteral("window-new"));
+    QVERIFY(!guard.observe(QStringLiteral("window-old"),
+                           QStringLiteral("synthetic sheet.xlsx - Excel"), QString()));
+    QVERIFY(!guard.observe(QStringLiteral("window-new"), QStringLiteral("Microsoft Excel"),
+                           QStringLiteral("Lo sentimos, no hemos encontrado synthetic sheet.xlsx")));
+    QVERIFY(guard.pending());
+    QVERIFY(!guard.observe(QStringLiteral("window-new"),
+                           QStringLiteral("other workbook.xlsx - Excel"),
+                           QStringLiteral("synthetic sheet.xlsx")));
+    QVERIFY(guard.pending());
+    QVERIFY(guard.observe(QStringLiteral("window-new"),
+                          QStringLiteral("synthetic sheet.xlsx - Excel"), QString()));
+    QVERIFY(!guard.pending());
+
+    guard.arm(expected, QStringLiteral("window-2"), QStringLiteral("synthetic sheet.xlsx - Excel"));
+    QVERIFY(!guard.pending());
 }
 
 void AutomationTests::launchWaitReturnsWithoutGuessing()
@@ -1166,6 +1454,32 @@ void AutomationTests::launchWaitReturnsWithoutGuessing()
     // Nada nuevo: vacio al cumplirse el plazo.
     w = DesktopAutomationBackend::waitForLaunchedWindow(
         before, QStringLiteral("calc"), 200, [&]() { return before; }, 20);
+    QVERIFY(w.isEmpty());
+
+    // Un splash con título de la app no está listo si aún no expone UIA;
+    // cuando aparece la ventana interactiva con otro HWND, se devuelve esa.
+    int launchPolls = 0;
+    w = DesktopAutomationBackend::waitForLaunchedWindow(
+        before, QStringLiteral("excel"), 1000, [&]() {
+            ++launchPolls;
+            QVariantList now = before;
+            if (launchPolls == 1)
+                now << winRow(QStringLiteral("splash"), QStringLiteral("Abriendo - Excel"));
+            else
+                now << winRow(QStringLiteral("main"), QStringLiteral("Libro1 - Excel"));
+            return now;
+        }, 0, [](const QVariantMap &candidate) {
+            return candidate.value(QStringLiteral("id")).toString() == QLatin1String("main");
+        });
+    QCOMPARE(w.value(QStringLiteral("id")).toString(), QStringLiteral("main"));
+    QCOMPARE(launchPolls, 2);
+
+    // Si sólo queda el splash, no se ofrece su HWND para escribir a ciegas.
+    w = DesktopAutomationBackend::waitForLaunchedWindow(
+        before, QStringLiteral("excel"), 30, [&]() {
+            return QVariantList{before.first(),
+                                winRow(QStringLiteral("splash"), QStringLiteral("Abriendo - Excel"))};
+        }, 0, [](const QVariantMap &) { return false; });
     QVERIFY(w.isEmpty());
 }
 

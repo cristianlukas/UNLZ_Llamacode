@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QJsonObject>
+#include <QHash>
 #include <QSet>
 #include <QString>
 #include <QStringList>
@@ -49,13 +50,17 @@ public:
     enum class CompletionDecision { Allow, RequestObservation, Block };
     void recordAction(const QString &server, bool succeeded, bool verifiedReceipt);
     void recordObservation(const QString &server, bool succeeded, bool readOnly);
+    void requestObservationTool();
     bool hasPending() const { return !m_pendingServers.isEmpty(); }
     QStringList pendingServers() const;
+    bool requiresDesktopObservationTool() const;
+    QString observationPrompt() const;
     CompletionDecision completionDecision(int nudges, int maxNudges) const;
-    void clear() { m_pendingServers.clear(); }
+    void clear() { m_pendingServers.clear(); m_observationToolRequested = false; }
 
 private:
     QSet<QString> m_pendingServers;
+    bool m_observationToolRequested = false;
 };
 
 // Protege las acciones de escritorio después de una verificación fallida y
@@ -89,11 +94,36 @@ private:
     bool m_staleRetryBlocked = false;
 };
 
+// Evita repetir clics sin progreso y un desktop_type/set_value que ya se
+// ejecutó con éxito durante el turno actual.
+class DesktopActionRepeatGuard
+{
+public:
+    bool blocks(const QString &actionSignature) const
+    { return !actionSignature.isEmpty() && m_blockedActionSignatures.contains(actionSignature); }
+    void blockAction(const QString &actionSignature, const QString &observationKey = {});
+    void recordAction(const QString &actionSignature, const QString &observationKey);
+    void recordObservation(const QString &observationKey, const QString &state);
+    void clearPending();
+    void clear();
+
+private:
+    QHash<QString, QString> m_observationFingerprints;
+    QHash<QString, QString> m_blockedObservationKeysByAction;
+    QSet<QString> m_blockedActionSignatures;
+    QString m_pendingActionSignature;
+    QString m_pendingObservationKey;
+    QString m_pendingStateFingerprint;
+};
+
 QVariantMap toVariantMap(const Contract &contract);
 
 // JSON canonico (claves ordenadas recursivamente) para ligar aprobación,
 // idempotencia y recibos al payload exacto.
 QByteArray canonicalJson(const QJsonObject &object);
+// Firma estable de repetición desktop: snapshot_id cambia al volver a observar,
+// pero no convierte la misma acción en una mutación distinta.
+QString desktopActionRepeatSignature(const QString &tool, QJsonObject arguments);
 QString payloadHash(const QString &server, const QString &tool,
                     const QJsonObject &arguments);
 QString idempotencyKey(const QString &correlationId, const QString &payloadHash);
