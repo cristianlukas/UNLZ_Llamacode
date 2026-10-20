@@ -6,7 +6,7 @@ Este documento es el punto de continuación para otra IA. El resumen operativo s
 
 Completar 20 escenarios de Computer Usage con LlamaCode headless, Gemma 4 12B UD-Q3_K_XL, launch profile `sys-vram-8-gemma` y el último perfil de agente `agent-intermedio`. El cierre exige 20/20 pases independientes en un único SHA-256 de `build/Debug/LlamaCode.exe`. Los pases sobre hashes anteriores son antecedentes y se vuelven a ejecutar en el hash final.
 
-- Última actualización: 2026-10-20 11:59 ART / 2026-10-20 14:59 UTC.
+- Última actualización: 2026-10-20 12:00 ART / 2026-10-20 15:00 UTC.
 - Checkout: `C:\Users\Cristian\Documents\GitHub\LlamaCode`.
 - Campaña: `artifacts\evaluacion-modelos-llamacode\Q-20261016-CU-20-E2E`.
 - Ejecutable de las corridas: `build\Debug\LlamaCode.exe`; SHA actual `AE85A27680AD2A8B3945F19BD4741177D699046676BE500D580D1E6949449F28`.
@@ -608,3 +608,10 @@ Historial CU12 en el SHA actual (v28 es el pase certificable):
 - Commit de la campaña: `870d3779` (`feat(computer-use): harden desktop interaction and verify CU20`), rebasado sobre el `origin/main` vigente y publicado a `origin main` con la cuenta `guideahon`; remoto y rama coinciden con `AGENTS.md`. Incluye el código Computer Usage, regresiones, runner, handoff, matriz y recibos de los 20 casos. Las trazas runtime raw y workspaces no se incluyeron; algunas lecturas del perfil normal de Edge pueden contener texto personal.
 - El rebase tuvo un conflicto de inserciones en `WORK_QUEUE.md`; se conservaron las filas remotas y la fila CU20 completada. Las entradas históricas locales se preservaron en el checkout. La descripción de la fila se precisa para distinguir el daemon/fixtures aislados del uso de Edge normal en ventana nueva.
 - Se liberará el lock sólo después de comprobar que mantiene el token de esta campaña y de terminar esta actualización final. No quedan pruebas E2E pendientes.
+
+
+### 2026-10-20 12:00 ART / 15:00 UTC — cierre de publicación y cola
+
+- Seguimiento de la publicación: `1249ec8c` (`docs(computer-use): clarify normal Edge test profile`) está en `origin/main`; HEAD local y remoto coinciden. La sesión GitHub activa fue `guideahon`.
+- La fila de `WORK_QUEUE.md` ahora explica que el daemon/datos y fixtures están aislados, mientras CU05–CU08 abren Edge normal en una ventana nueva. El estado remoto está `Completa`; se preservaron en el checkout las 59 entradas históricas previas de la cola que no formaban parte del commit de Computer Usage. El handoff canónico contiene la bitácora de esta campaña.
+- Certificación final permanece 20/20 sobre SHA `AE85A27680AD2A8B3945F19BD4741177D699046676BE500D580D1E6949449F28`; harness 72 passed + 9 subtests. Lock propio `e8f7e5dc-d574-4722-9045-19be1b7655da`: verificado y liberado al cerrar esta campaña.
