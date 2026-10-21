@@ -1,0 +1,13 @@
+{
+  "test_id": "Q-20261021-H2-QWEN38-Q4-CODEX-TOOL-CANARY",
+  "amendment": 4,
+  "created_at_utc": "2026-10-21T03:21:00Z",
+  "previous_validation": "harmless_bind_smoke_test_incomplete",
+  "observed_failure": "The disposable namespace had no root filesystem mounted, so /bin/sh was absent. The command exited before testing device-bind behavior and did not access a GPU.",
+  "scope": "Repeat only the harmless bind smoke test with the host root mounted read-only; keep the namespace isolated, use /dev/null only, and start no model/server.",
+  "planned_validation": "Verify that bwrap can create a /dev target for a direct host device bind while using a minimal /dev and read-only host root.",
+  "abort_conditions": [
+    "Any missing required source or target behavior that would require exposing all host /dev nodes: stop and do not launch the canary.",
+    "No model/GPU workload in this validation."
+  ]
+}

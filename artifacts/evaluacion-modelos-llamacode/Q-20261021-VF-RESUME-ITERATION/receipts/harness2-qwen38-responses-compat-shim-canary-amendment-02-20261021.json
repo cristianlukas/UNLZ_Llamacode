@@ -1,0 +1,18 @@
+{
+  "test_id": "Q-20261021-H2-QWEN38-RESPONSES-COMPAT-SHIM-CANARY",
+  "amendment": 2,
+  "created_at_utc": "2026-10-21T03:33:00Z",
+  "runner_sha256": "665a1fcc78cd73b2f2869ac92110aec28513131fc1bbc729bac0598e39a3e353",
+  "runtime": {
+    "server": "/home/cristian/.cache/llamacode/embeddinggemma2-eval/runtime/llama-b11554/llama-server",
+    "version": "0.6.0-dev build 11554 commit 966baae76",
+    "server_sha256": "fe8a7d6073d3e3a276193fcaec162cbf280d2572ad2016c9100fd924be19c6ed"
+  },
+  "prelaunch_checks": {
+    "python_compile": "PASS",
+    "adapter_transform_static_check": "PASS; merge full instructions into first developer content, remove only duplicate top-level instructions, no raw request storage",
+    "GPU_isolation_gate": "PASS in runner code; only GPU0 nodes and pre-model --list-devices check",
+    "unique_attempt_directory": "attempt-09 absent before run"
+  },
+  "launch_policy": "Use one fresh outer preflight and one attempt 09 only if all guards pass. The proxy and backend bind only to loopback; no default route; no additional retries after a tool-loop result."
+}

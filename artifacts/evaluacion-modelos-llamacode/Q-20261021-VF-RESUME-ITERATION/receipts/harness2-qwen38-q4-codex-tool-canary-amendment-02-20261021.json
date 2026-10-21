@@ -1,0 +1,14 @@
+{
+  "test_id": "Q-20261021-H2-QWEN38-Q4-CODEX-TOOL-CANARY",
+  "amendment": 2,
+  "recorded_at_utc": "2026-10-21T03:16:55.687036+00:00",
+  "trigger": "Attempt 01 failed before llama-server startup because bubblewrap could not locate the optional /dev/nvidia-caps source in the prepared namespace. Postflight found no server, listener, or compute-memory increase; zero model requests were sent.",
+  "decision": "Preserve attempt 01 as infrastructure setup failure; retry this single canary once with only the required GPU0/control/UVM device nodes bound. Omit optional NVIDIA capability devices. GPU1 remains unbound.",
+  "scope_change": "No change to model, prompt, CLI, network isolation, context, GPU-layer limit, or one-prompt pass criteria. The retry uses a fresh attempt-02 workspace and receipt to prevent overwrites.",
+  "runner": {
+    "path": "work/harness2_qwen38_q4_codex_tool_canary.py",
+    "sha256_attempt_02": "614cd96c0f6c5a5cdfd1f3a8f328a6b043c4b1ee8fe3e20c384a5089d5fb29e8",
+    "syntax_check": "python3 -m py_compile after amendment"
+  },
+  "no_change": "No model was loaded or inference performed in attempt 01; attempt 02 is the only planned Codex/model tool-loop call."
+}

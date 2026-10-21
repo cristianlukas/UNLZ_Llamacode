@@ -1,0 +1,19 @@
+{
+  "test_id": "Q-20261021-H2-CODEX-REQUEST-STRUCTURE-DIAGNOSTIC",
+  "created_at_utc": "2026-10-21T03:29:00Z",
+  "question": "Does Codex 0.160.0's local Responses request place system/developer items in an order or shape that the Qwen chat template cannot accept, and can a tiny stateless adapter normalize it without changing the request's meaning?",
+  "method": "Run one Codex exec request inside a network-isolated bubblewrap namespace against a local fake Responses endpoint. The endpoint records only structural metadata (top-level keys, input item type/role/key list, tool type/name/namespace, instruction length/hash) and returns a deliberate HTTP 500. It does not store prompt or user content.",
+  "resource_policy": {
+    "model": false,
+    "gpu": false,
+    "inference_server": false,
+    "external_network": false,
+    "product_files": false
+  },
+  "expected_result": "A sanitized structural receipt sufficient to determine whether an adapter can reorder/normalize messages. A captured request is diagnostic evidence only and not a model/tool-loop pass.",
+  "abort_conditions": [
+    "If the CLI attempts a non-loopback request, the network namespace blocks it; stop after the first captured local request.",
+    "Do not save full request body, credentials, or full prompt text.",
+    "No model or GPU test in this diagnostic."
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "test_id": "Q-20261021-H2-QWEN38-Q4-CODEX-TOOL-CANARY",
+  "amendment": 12,
+  "created_at_utc": "2026-10-21T03:26:00Z",
+  "previous_attempt": 6,
+  "previous_attempt_status": "cuda_device_gate_failed_before_model_load",
+  "diagnosis": "The GGML_BACKEND_PATH environment variable takes a backend shared-library file, not a directory; pointing it at /tmp/llama-libs made the loader reject the directory. The server was also mounted away from the directory containing its dynamic backend plugins.",
+  "primary_source": "https://github.com/ggml-org/llama.cpp/blob/master/ggml/src/ggml-backend-reg.cpp ; ggml_backend_load_all() searches the executable/current directory for backend plugins, while GGML_BACKEND_PATH loads one out-of-tree backend file.",
+  "scope": "Mount the complete existing runtime directory read-only at /tmp/runtime and execute /tmp/runtime/llama-server so adjacent CPU/CUDA backend plugins are discoverable. Remove the invalid directory-valued GGML_BACKEND_PATH. Keep CUDA_VISIBLE_DEVICES=0 and only the three GPU0 device nodes.",
+  "attempt_policy": "Attempt 07 first runs --list-devices in the isolated namespace. It may load the local CUDA backend but does not load a model. Start the pinned model only if the gate reports CUDA0 and no CUDA1; otherwise record a concrete runtime/isolation incompatibility and do not issue an inference request."
+}

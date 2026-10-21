@@ -1,0 +1,31 @@
+{
+  "recorded_at_utc": "2026-10-21T03:45:37Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_title": "Listado de Juegos",
+  "spreadsheet_url": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "sheet_name": "Evaluaciones LlamaCode",
+  "sheet_id": 1945218181,
+  "gid_from_metadata": 1945218181,
+  "modified_ranges": [
+    "A151:I152",
+    "C2",
+    "H2",
+    "I2"
+  ],
+  "new_records": [
+    "Q-20261021-H2-QWEN38-CODEX-TOOL-CANARY",
+    "Q-20261021-H2-QWEN38-DIRECT-FUNCTION-CALL"
+  ],
+  "readback": {
+    "records_with_ids_in_A2_A200": 151,
+    "unique_ids": 151,
+    "duplicate_ids": [],
+    "new_ids_present": true,
+    "dates": "2026-10-21",
+    "target_rows": "A151:I152",
+    "summary_C2": "En seguimiento de bloqueos; 151 registros únicos (incluye 12 accionables)"
+  },
+  "structure": "Target rows were empty before the edit. Copied formatting only from the adjacent existing row; no validation, formulas, or chips in the source row. Exact values and number-formatted dates read back; row text uses wrapping and vertical-top alignment consistent with the table.",
+  "visual_qa": "Reviewed the Google-rendered sheet at 100% using the in-app browser. Rows 151-152 and columns H-I were inspected. Wrapped summary/evidence text remains legible; narrow ID/source columns retain their existing widths; no unrelated sheet layout was changed. The in-app browser was view-only/signed out, while the connected Sheets API performed the authorized edit.",
+  "app_and_models": "No app/model changes; Qwen Flash-Next ASTRA/SOL and PeritoSoft preserved."
+}

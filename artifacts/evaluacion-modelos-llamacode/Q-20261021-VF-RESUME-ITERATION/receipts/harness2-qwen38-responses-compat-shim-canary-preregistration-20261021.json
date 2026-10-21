@@ -1,0 +1,24 @@
+{
+  "test_id": "Q-20261021-H2-QWEN38-RESPONSES-COMPAT-SHIM-CANARY",
+  "created_at_utc": "2026-10-21T03:31:00Z",
+  "basis": "The no-model Codex request-structure diagnostic captured a top-level `instructions` string plus a leading `developer` input message. The current llama.cpp converter produces duplicate system-role positions from this shape, and Qwen's template rejects the latter.",
+  "question": "Can a test-only loopback adapter preserve all Codex instruction text while combining the top-level instructions with the first developer message so Qwen receives one leading developer/system message and completes the file tool loop?",
+  "method": "Run the same one-task Codex CLI canary, model and Qwen3.8 Q4_K_M SHA inside the existing offline bubblewrap. A local proxy strips no instruction text: it prepends the exact top-level `instructions` text as an input_text content item to the first developer message, then removes only the duplicate top-level instructions field before forwarding to the local llama.cpp Responses endpoint. All other request fields pass through unchanged.",
+  "acceptance": "Codex exits 0; the only workspace file is canary.txt; its exact content is TOOL_LOOP_OK; health is ready; loopback-only namespace has no default route; outer guard stays clear; postflight shows no remaining server/listener.",
+  "resource_policy": {
+    "model": "same pinned local Qwen3.8-27B Q4_K_M control/candidate, not SOL AutoRound and not ASTRA",
+    "gpu": "GPU0 only, with existing memory/PSI/temperature guards",
+    "parallelism": "one model server, one request, one Codex process; GPU1 unavailable inside namespace",
+    "cloud": "prohibited; no default route in the nested network namespace"
+  },
+  "limitations": [
+    "A pass validates only a test-only compatibility shim and tool-loop transport; it is not a quality result or production recommendation.",
+    "If the same template error persists or the shim requires dropping/re-writing content, mark this path blocked and do not retry the same pair."
+  ],
+  "abort_conditions": [
+    "Preflight fails, inference server already active, or owned port unavailable.",
+    "The captured request no longer has a top-level instructions string and first developer message; abort before forwarding to the model.",
+    "MemoryAvailable below 48 GiB, PSI full above 25% for four 5-second samples, GPU0 temperature at least 85 C, or 15-minute timeout.",
+    "Any network route beyond loopback, more than the pinned model/path, or a residual process/listener after shutdown."
+  ]
+}

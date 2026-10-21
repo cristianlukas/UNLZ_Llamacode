@@ -1,0 +1,15 @@
+{
+  "test_id": "Q-20261021-H2-QWEN38-Q4-CODEX-TOOL-CANARY",
+  "amendment": 15,
+  "created_at_utc": "2026-10-21T03:28:30Z",
+  "attempt": 8,
+  "runner_sha256": "cfaf4ed7d2e69b547b6625bafe14d301114f56905c9abf68e088647831531206",
+  "runtime_server_sha256": "f11d1b9c9480dcf3ba27a5166c3c0a8898042a50db90ce113f0fcde354c83388",
+  "prelaunch_validation": {
+    "python_compile": "PASS",
+    "runtime_flags": "PASS for --parallel, --flash-attn, --reasoning-preserve, --spec-type, and --no-webui",
+    "complete_runtime_directory_readonly_mount": "PASS in static inspection",
+    "attempt08_workdir": "unique and absent"
+  },
+  "launch_policy": "Fresh process/GPU/memory/disk/port preflight; inside-namespace CUDA0-only device gate; then one local model-backed Codex file-tool request if all gates pass."
+}

@@ -1,0 +1,10 @@
+{
+  "test_id": "Q-20261021-H2-QWEN38-RESPONSES-COMPAT-SHIM-CANARY",
+  "amendment": 1,
+  "created_at_utc": "2026-10-21T03:32:00Z",
+  "request_diagnostic_result": "Captured Codex request has `instructions` as a 16,979-character top-level string, followed by a leading `developer` input message (1,694 and 362 character content items), then user messages. No raw body or prompt was saved.",
+  "runtime": "Use the already tested local llama.cpp 0.6.0-dev build 11554 runtime with adjacent CUDA/CPU plugins; model SHA stays c600de0300ae8a0eb3a6c0b8b5561b8b96f16bd2c863c2a66c42de29d391a747.",
+  "adapter_transform": "Prepend the exact top-level instructions text as an `input_text` item to the first developer message; remove only the top-level instructions property. Preserve all other input items and tools byte-for-byte semantically. Abort before forwarding if the expected shape is absent.",
+  "privacy": "Do not write or log the raw request or full prompt. Record only instructions SHA/length, role sequence, tool types/names, and transformation counts.",
+  "launch_policy": "One attempt 09 after fresh outer preflight and in-namespace CUDA0-only gate. If the exact file-tool loop does not pass, mark this workaround blocked and do not retry this model/runtime pair."
+}

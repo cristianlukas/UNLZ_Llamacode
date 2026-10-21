@@ -1,0 +1,14 @@
+{
+  "test_id": "Q-20261021-H2-QWEN38-Q4-CODEX-TOOL-CANARY",
+  "amendment": 7,
+  "created_at_utc": "2026-10-21T03:21:30Z",
+  "attempt": 4,
+  "runner_sha256": "92fef4226edb36cd0f7f8a3a0dd400cb0ef60e2cf67e176a624f3d68d798f6b4",
+  "validation_before_launch": {
+    "harmless_bwrap_readonly_file_bind_to_tmpfs": "PASS; mounted /etc/hostname read-only at a new target below private /tmp and read it back; no network/model/GPU work",
+    "python_compile": "PASS",
+    "static_mount_and_gpu_allowlist_checks": "PASS; model is read-only at /tmp/models/model.gguf; only GPU0 device nodes are mounted and the inside probe requires GPU1 to be absent",
+    "attempt04_workdir": "unique and absent before launch"
+  },
+  "launch_policy": "Perform runner's own fresh preflight immediately before startup. If it passes, run attempt 04 once. Keep the preregistered 15-minute parent guard, 48 GiB MemAvailable floor, sustained PSI guard, 85 C GPU0 limit, loopback-only network, one Codex task, and postflight checks. No cloud fallback."
+}

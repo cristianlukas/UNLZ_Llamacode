@@ -1,0 +1,19 @@
+{
+  "test_id": "Q-20261021-H2-QWEN38-RESPONSES-COMPAT-SHIM-CANARY",
+  "amendment": 3,
+  "created_at_utc": "2026-10-21T03:34:00Z",
+  "previous_attempt": 9,
+  "previous_status": "codex_timeout_240s_no_tool_call",
+  "evidence": {
+    "request_transformation": "The backend reached generation; the system-message template exception did not recur.",
+    "decode": "919 tokens emitted at approximately 4.2 tok/s before the 240-second Codex timeout.",
+    "workspace": "No files created. GPU, memory, and both ports returned to preflight levels after cleanup."
+  },
+  "next_attempt": 10,
+  "bounded_change": "For this mechanical file-tool canary only, set Codex reasoning effort to minimal, llama-server reasoning budget to 0 (the server documents 0 as immediate end of reasoning), remove the locally ignored model_supports_reasoning_summaries config key, and extend the Codex request timeout from 240 to 480 seconds. Keep the same request transformation, model, runtime, prompt, context, and guardrails.",
+  "abort_conditions": [
+    "Any preflight/gpu-isolation/adapter-shape gate failure; no model load if such gate fails.",
+    "The existing 48 GiB MemAvailable, sustained PSI, 85 C GPU, and 15-minute process-group guards remain active.",
+    "A second timeout or a nonpassing tool loop closes this adapter canary; no further retries without a different model or a material server/template change."
+  ]
+}

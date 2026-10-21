@@ -1,0 +1,15 @@
+{
+  "test_id": "Q-20261021-H2-QWEN38-Q4-CODEX-TOOL-CANARY",
+  "amendment": 6,
+  "created_at_utc": "2026-10-21T03:20:30Z",
+  "previous_attempt": 3,
+  "previous_attempt_status": "bwrap_setup_failed_before_model_start",
+  "observed_failure": "Bubblewrap could not create /models because the outer root mount is read-only and the host root does not contain that directory. No model/GPU inference started.",
+  "scope": "Move the model mountpoint to /tmp/models, which is inside the already-private tmpfs, and leave model bytes read-only. Do not change the model, prompt, local endpoint, context, GPU allowlist, or egress policy.",
+  "planned_validation": [
+    "Harmless no-network bwrap file-bind smoke test into a newly created directory inside /tmp tmpfs.",
+    "Python compile and static checks of the attempt-04 runner after this correction.",
+    "A new preflight before any model startup."
+  ],
+  "attempt_policy": "Preserve attempts 01-03. One corrected attempt 04 may run only after the file-bind smoke and fresh preflight pass. Setup failure before model startup allows a narrowly scoped follow-up; inference/request/tool-loop failure ends this canary pending a new plan."
+}

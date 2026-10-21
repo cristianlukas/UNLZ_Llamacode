@@ -1,0 +1,171 @@
+{
+  "test_id": "Q-20261021-H2-QWEN38-Q4-CODEX-TOOL-CANARY",
+  "status": "codex_tool_loop_failed",
+  "started_at_utc": "2026-10-21T03:37:07Z",
+  "preflight": {
+    "timestamp_utc": "2026-10-21T03:37:07Z",
+    "lock_owned": true,
+    "inference_processes": [],
+    "memavailable_bytes": 118905888768,
+    "memory_psi_full_avg10": [
+      0.0
+    ],
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_total_mib": 24576,
+        "memory_used_mib": 1146,
+        "temperature_c": 48
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_total_mib": 24576,
+        "memory_used_mib": 108,
+        "temperature_c": 26
+      }
+    ],
+    "gui_compute_apps_observed": [
+      "2917205, /tmp/.mount_artcradJfPae/usr/bin/artcraft-launcher, 207 MiB"
+    ],
+    "free_disk_bytes": {
+      "task": 138583506944,
+      "model_volume": 94462902272
+    },
+    "model_size_bytes": 18973870528,
+    "model_sha256_pinned_from_prior_receipt": "c600de0300ae8a0eb3a6c0b8b5561b8b96f16bd2c863c2a66c42de29d391a747",
+    "codex_cli_version": "codex-cli 0.160.0",
+    "host_listeners": "State  Recv-Q Send-Q Local Address:Port  Peer Address:PortProcess                                      \nLISTEN 0      128        127.0.0.1:47413      0.0.0.0:*    users:((\"artcraft-launch\",pid=2917205,fd=5))\nLISTEN 0      4096       127.0.0.1:46363      0.0.0.0:*                                                \nLISTEN 0      4096   127.0.0.53%lo:53         0.0.0.0:*                                                \nLISTEN 0      4096       127.0.0.1:631        0.0.0.0:*                                                \nLISTEN 0      10         127.0.0.1:6742       0.0.0.0:*    users:((\"OpenRGB\",pid=6532,fd=4))           \nLISTEN 0      4096      127.0.0.54:53         0.0.0.0:*                                                \nLISTEN 0      4096           [::1]:631           [::]:*"
+  },
+  "runner_sha256": "6f6c0f1f6891741a27b807b1f90a29a6c83e70841ab544720134c0a42e6bee82",
+  "guard": null,
+  "monitor_samples": [
+    {
+      "timestamp_utc": "2026-10-21T03:37:07Z",
+      "memavailable_bytes": 118882226176,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 48
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:37:12Z",
+      "memavailable_bytes": 117857955840,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 56
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:37:17Z",
+      "memavailable_bytes": 117941272576,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 57
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:37:22Z",
+      "memavailable_bytes": 118029070336,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 59
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:37:27Z",
+      "memavailable_bytes": 117747458048,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 58
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:37:32Z",
+      "memavailable_bytes": 117441654784,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 55
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:37:37Z",
+      "memavailable_bytes": 117476147200,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 55
+    }
+  ],
+  "child": {
+    "canary_content": null,
+    "codex_exit_code": 0,
+    "codex_stderr_tail": "WARNING: proceeding, even though we could not create PATH aliases: Refusing to create helper binaries under temporary dir \"/tmp\" (codex_home: AbsolutePathBuf(\"/tmp/codex-home\"))\nReading additional input from stdin...\n",
+    "codex_stdout_tail": "{\"type\":\"thread.started\",\"thread_id\":\"01a15c88-cb31-7021-a16a-e08877c06da6\"}\n{\"type\":\"item.completed\",\"item\":{\"id\":\"item_0\",\"type\":\"error\",\"message\":\"`--dangerously-bypass-hook-trust` is enabled. Enabled hooks may run without review for this invocation.\"}}\n{\"type\":\"item.completed\",\"item\":{\"id\":\"item_1\",\"type\":\"error\",\"message\":\"`--dangerously-bypass-hook-trust` is enabled. Enabled hooks may run without review for this invocation.\"}}\n{\"type\":\"item.completed\",\"item\":{\"id\":\"item_2\",\"type\":\"error\",\"message\":\"Model metadata for `qwen-local` not found. Defaulting to fallback metadata; this can degrade performance and cause issues.\"}}\n{\"type\":\"turn.started\"}\n{\"type\":\"turn.completed\",\"usage\":{\"input_tokens\":6305,\"cached_input_tokens\":0,\"cache_write_input_tokens\":0,\"output_tokens\":33,\"reasoning_output_tokens\":0}}\n",
+    "compat_adapter_audit": {
+      "developer_content_items_after": 3,
+      "developer_content_items_before": 2,
+      "developer_index": 0,
+      "input_roles_after": [
+        "developer",
+        "user",
+        "user"
+      ],
+      "instructions_characters_merged": 16979,
+      "instructions_sha256": "3b08633fa672906666659d764864dfda1d7af5b5111ea5817c8f46e5de4e1a8d",
+      "other_top_level_keys_preserved": [
+        "client_metadata",
+        "include",
+        "input",
+        "model",
+        "parallel_tool_calls",
+        "prompt_cache_key",
+        "reasoning",
+        "store",
+        "stream",
+        "tool_choice",
+        "tools"
+      ],
+      "raw_request_saved": false,
+      "status": "forwarded",
+      "tool_types": [
+        "function",
+        "function",
+        "function",
+        "function",
+        "namespace",
+        "function",
+        "function",
+        "function",
+        "web_search"
+      ],
+      "top_level_instructions_removed": true
+    },
+    "health": {
+      "status": "ok"
+    },
+    "network_interfaces": [
+      "lo"
+    ],
+    "network_payload_to_external_hosts": false,
+    "network_routes": [],
+    "server_log": "/tmp/codex-home/llama-server.log",
+    "status": "codex_tool_loop_failed",
+    "test_net_errno": 101,
+    "test_net_errno_name": "ENETUNREACH",
+    "workspace_files": []
+  },
+  "postflight": {
+    "inference_processes": [],
+    "port_status": {
+      "18103": true,
+      "18105": true
+    },
+    "memavailable_bytes": 119012786176,
+    "memory_psi_full_avg10": 0.0,
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_total_mib": 24576,
+        "memory_used_mib": 1106,
+        "temperature_c": 56
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_total_mib": 24576,
+        "memory_used_mib": 108,
+        "temperature_c": 26
+      }
+    ]
+  },
+  "runner_log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261021-VF-RESUME-ITERATION/logs/harness2-qwen38-q4-codex-tool-canary-attempt-11-runner.log"
+}

@@ -1,0 +1,21 @@
+{
+  "test_id": "Q-20261021-H2-QWEN38-Q4-CODEX-TOOL-CANARY",
+  "amendment": 1,
+  "recorded_at_utc": "2026-10-21T03:15:43Z",
+  "trigger": "Codex CLI injects a larger system/tool prompt than the earlier one-string Responses probe. The canary model is Qwen3.8-27B Q4_K_M, not SOL AutoRound INT4; naming was corrected before execution.",
+  "change": {
+    "context_tokens": 16384,
+    "gpu_layers": 32,
+    "model_alias": "qwen-local",
+    "gpu_device_nodes": [
+      "/dev/nvidia0",
+      "/dev/nvidiactl",
+      "/dev/nvidia-uvm",
+      "/dev/nvidia-uvm-tools",
+      "/dev/nvidia-modeset"
+    ]
+  },
+  "reason": "A 16K window gives room for CLI instructions while partial offload caps VRAM use. Binding only GPU0 prevents the child from accessing GPU1 even if it changes CUDA_VISIBLE_DEVICES.",
+  "resource_gate": "Require at least 20 GiB free on GPU0 before launch; abort if host MemAvailable <48 GiB, sustained full PSI >25%, GPU0 >=85 C, or 900 seconds elapsed.",
+  "no_change": "Same one-task local-only test and pass criteria. This is a Codex endpoint/tool-loop prerequisite only; not a Harness\u00b2 quality score or product model promotion."
+}

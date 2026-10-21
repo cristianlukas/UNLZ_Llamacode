@@ -1,0 +1,65 @@
+{
+  "test_id": "Q-20261021-H2-QWEN38-Q4-CODEX-TOOL-CANARY",
+  "status": "preregistered",
+  "recorded_at_utc": "2026-10-21T03:09:42Z",
+  "purpose": "Determine whether the local Qwen3.8-27B Q4_K_M Responses endpoint can complete one Codex CLI file-edit/tool loop inside a private namespace with no external egress. A pass permits planning a bounded Harness\u00b2 pilot; it is not itself a quality result.",
+  "scope": "One synthetic file creation task in a disposable empty workspace; one local model load and a strict output check. No public benchmark data, credentials, cloud calls, application changes, model/profile changes, or model deletion.",
+  "model": {
+    "name": "Qwen3.8-27B Q4_K_M GGUF local control/candidate; distinct from SOL AutoRound INT4 and from ASTRA Flash-Next.",
+    "path": "/media/cristian/Disco local/Models/llamacpp/Qwen3.8-27B-GGUF-Q4_K_M/Qwen3.8-27B-Q4_K_M.gguf",
+    "sha256": "c600de0300ae8a0eb3a6c0b8b5561b8b96f16bd2c863c2a66c42de29d391a747",
+    "size_bytes": 18973870528,
+    "preservation_note": "Read-only model file; no ASTRA or SOL weights/profiles are loaded or modified."
+  },
+  "server": {
+    "path": "/home/cristian/.local/share/LlamaCode/LlamaCode/linux-runtime/cuda-flashnext-2x3090/llama-server",
+    "version": "0.3.0-dev build 1 commit 9bd97fe",
+    "gpu": "GPU0 only",
+    "context_tokens": 16384,
+    "parallel_slots": 1,
+    "bind": "127.0.0.1 inside private namespace",
+    "port": 18103,
+    "speculative_decoding": "disabled",
+    "gpu_layers": 32,
+    "alias": "qwen-local"
+  },
+  "codex_cli": {
+    "path": "/home/cristian/.local/bin/codex",
+    "version": "codex-cli 0.160.0",
+    "note": "Harness\u00b2 upstream pins 0.144.6; this is only a local endpoint/tool-loop prerequisite probe and does not validate upstream-pinned CLI compatibility."
+  },
+  "protocol": [
+    "Re-read AGENTS.md, README.md, WORK_QUEUE.md, and verify this iteration still owns WORK_QUEUE.lock before the run.",
+    "Freshly reject any inference server/process, busy port, insufficient free VRAM/RAM/disk, high sustained memory PSI, or hot GPU.",
+    "Run llama-server and Codex CLI inside one unprivileged user+network namespace with only private loopback up, no default route, and no TEST-NET connection.",
+    "Run Codex against a fresh empty workspace using a separate disposable CODEX_HOME and a custom Responses provider pointed only at 127.0.0.1; outer bubblewrap exposes only the model, runtime, CLI, and disposable workspace/home needed for the test.",
+    "Prompt Codex to create `canary.txt` with exact text `TOOL_LOOP_OK`, then read it back; submit no other model request."
+  ],
+  "pass_criteria": "Codex exits 0 and the only expected artifact `canary.txt` contains exactly TOOL_LOOP_OK; llama-server health is ready; namespace has only lo and no default route; TEST-NET connect is unreachable; all owned processes/listeners terminate.",
+  "failure_interpretation": "Any endpoint/tool-call/config error blocks using this local Codex loop for Harness\u00b2. Preserve logs and stop: no cloud fallback, no second model call, no modification to app or product model config.",
+  "resource_limits": {
+    "gpu": "GPU0 only, partial offload of 32 layers; bind only GPU0 device nodes into the namespace; one 16384-token context slot; GPU1 inaccessible to the test.",
+    "timeout_seconds": 900,
+    "memory_preflight_min_bytes": 64424509440,
+    "memory_abort_below_bytes": 51539607552,
+    "memory_psi_abort": "full avg10 >25% for four consecutive 5-second samples",
+    "gpu_free_min_mib": 20480,
+    "gpu_temperature_max_c_exclusive": 85,
+    "disk_free_min_bytes": 21474836480,
+    "network": "private loopback only; no egress or downloads",
+    "product_changes": false
+  },
+  "decision_rule": "A pass closes only local Codex tool-loop feasibility for the tested CLI/model combination. A separate synthetic Harness\u00b2 quality comparison still requires a fixed task/holdout and a harness-vs-base contrast; no global quality/superiority claim.",
+  "protected_artifacts": [
+    "ASTRA Flash-Next",
+    "SOL AutoRound INT4",
+    "all PeritoSoft models/configurations"
+  ],
+  "amendment": "harness2-qwen38-q4-codex-tool-canary-amendment-02-20261021.json",
+  "runner": {
+    "path": "work/harness2_qwen38_q4_codex_tool_canary.py",
+    "sha256": "8f5125f115431b1aafb86817d4bd92092e7395148d456dfe16c046ff049a1d85",
+    "syntax_check": "python3 -m py_compile passed before inference",
+    "sha256_attempt_02": "614cd96c0f6c5a5cdfd1f3a8f328a6b043c4b1ee8fe3e20c384a5089d5fb29e8"
+  }
+}

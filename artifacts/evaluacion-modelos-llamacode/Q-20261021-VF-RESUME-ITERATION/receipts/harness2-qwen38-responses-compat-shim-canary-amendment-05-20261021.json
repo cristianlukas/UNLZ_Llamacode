@@ -1,0 +1,17 @@
+{
+  "test_id": "Q-20261021-H2-QWEN38-RESPONSES-COMPAT-SHIM-CANARY",
+  "amendment": 5,
+  "created_at_utc": "2026-10-21T03:36:00Z",
+  "previous_attempt": 10,
+  "previous_status": "rejected_before_model_generation",
+  "evidence": "Attempt 10 had no model prompt-generation tokens. The preserved attempt-10 llama-server.log identifies the root cause: the Qwen template rejected reasoning effort `minimal` (supported: xhigh, medium, low); Codex surfaced the backend failure as a generic high-demand error. The request reached the local adapter and the server was healthy; this was a pre-generation template/config rejection, not a quality failure.",
+  "next_attempt": 11,
+  "bounded_change": "Use the template-supported low reasoning effort and a server reasoning budget of 64 tokens; keep the 480-second Codex timeout, adapter transformation, model/runtime, prompt, context, and isolation unchanged. This is a mechanical file-tool task, not a quality score.",
+  "stop_condition": "Attempt 11 is the final canary for this model/runtime/adapter. Any timeout, template error, or missing exact file closes this combination pending a material model/runtime/protocol change.",
+  "runner_sha256_for_attempt_11": "6f6c0f1f6891741a27b807b1f90a29a6c83e70841ab544720134c0a42e6bee82",
+  "attempt_11_parameters": {
+    "model_reasoning_effort": "low",
+    "server_reasoning_budget": 64,
+    "codex_timeout_seconds": 480
+  }
+}

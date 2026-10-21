@@ -1,0 +1,17 @@
+{
+  "test_id": "Q-20261021-H2-QWEN38-RESPONSES-COMPAT-SHIM-CANARY",
+  "amendment": 4,
+  "created_at_utc": "2026-10-21T03:35:00Z",
+  "attempt": 10,
+  "runner_sha256": "6dc1a917965343b64c13629d96e1ea5acced6b71ffaadc6470e75ddd7b37bb05",
+  "prelaunch_validation": {
+    "python_compile": "PASS",
+    "reasoning_effort": "minimal",
+    "server_reasoning_budget": 0,
+    "codex_request_timeout_seconds": 480,
+    "overall_process_group_timeout_seconds": 900,
+    "timeout_receipt": "captures sanitized adapter audit, whether the file exists, workspace file names, and short stdout/stderr tails",
+    "attempt10_workdir": "unique and absent before launch"
+  },
+  "launch_policy": "Run one fresh inference-server preflight and one attempt 10. No further retries of this model/runtime/adapter after this result."
+}

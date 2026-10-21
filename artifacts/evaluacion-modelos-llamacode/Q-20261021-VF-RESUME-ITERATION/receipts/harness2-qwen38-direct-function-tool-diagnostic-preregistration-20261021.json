@@ -1,0 +1,58 @@
+{
+  "test_id": "Q-20261021-H2-QWEN38-DIRECT-FUNCTION-CALL",
+  "attempt": 1,
+  "status": "preregistered",
+  "created_at_utc": "2026-10-21T03:42:16Z",
+  "question": "Can the pinned Qwen3.8-27B Q4_K_M emit one exact Responses API function_call under a minimal supported function-only schema, independently of Codex orchestration?",
+  "runner": "artifacts/evaluacion-modelos-llamacode/Q-20261021-VF-RESUME-ITERATION/work/harness2_qwen38_direct_function_tool_diagnostic.py",
+  "runner_sha256": "6357890cc0e1f7638872428b245fb6eff689b26ba73e9dbe707192cb1be6bb4c",
+  "model": "Qwen3.8-27B GGUF Q4_K_M; SHA-256 c600de0300ae8a0eb3a6c0b8b5561b8b96f16bd2c863c2a66c42de29d391a747",
+  "runtime": "local llama.cpp b11554, same CUDA runtime and GPU0-only isolation as the Codex canary",
+  "request": "One synthetic /v1/responses request; tool_choice=auto; only one supported type=function tool named write_file; exact args path=canary.txt and content=TOOL_LOOP_OK; max output 128; temperature 0; reasoning effort low.",
+  "execution": "No tool execution or file write. Capture only response status, output item types, parsed tool name/args, usage and elapsed time; do not save raw request or response. Loopback-only network namespace, TEST-NET must be unreachable, bubblewrap read-only host root with only pinned model/runtime/script mounted, GPU0 visible only.",
+  "pass_criteria": [
+    "HTTP 200 and Responses status completed",
+    "exactly one function_call named write_file",
+    "arguments exactly {\"path\":\"canary.txt\",\"content\":\"TOOL_LOOP_OK\"}",
+    "no external route and TEST-NET unreachable",
+    "postflight no inference process and diagnostic port free"
+  ],
+  "stop_condition": "One request only. A failure closes this diagnostic; do not repeat without a material model/runtime/protocol change. A pass only isolates function-call generation and does not pass the Codex tool-loop canary or any quality benchmark.",
+  "preflight": {
+    "timestamp_utc": "2026-10-21T03:42:24Z",
+    "lock_owned": true,
+    "inference_processes": [],
+    "memavailable_bytes": 119015333888,
+    "memory_psi_full_avg10": [
+      0.0
+    ],
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_total_mib": 24576,
+        "memory_used_mib": 1106,
+        "temperature_c": 46
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_total_mib": 24576,
+        "memory_used_mib": 108,
+        "temperature_c": 26
+      }
+    ],
+    "gui_compute_apps_observed": [
+      "2917205, /tmp/.mount_artcradJfPae/usr/bin/artcraft-launcher, 207 MiB"
+    ],
+    "free_disk_bytes": {
+      "task": 138582614016,
+      "model_volume": 94462902272
+    },
+    "model_size_bytes": 18973870528,
+    "model_sha256_pinned_from_prior_receipt": "c600de0300ae8a0eb3a6c0b8b5561b8b96f16bd2c863c2a66c42de29d391a747",
+    "codex_cli_version": "codex-cli 0.160.0",
+    "host_listeners": "State  Recv-Q Send-Q Local Address:Port  Peer Address:PortProcess                                      \nLISTEN 0      128        127.0.0.1:47413      0.0.0.0:*    users:((\"artcraft-launch\",pid=2917205,fd=5))\nLISTEN 0      4096       127.0.0.1:46363      0.0.0.0:*                                                \nLISTEN 0      4096   127.0.0.53%lo:53         0.0.0.0:*                                                \nLISTEN 0      4096       127.0.0.1:631        0.0.0.0:*                                                \nLISTEN 0      10         127.0.0.1:6742       0.0.0.0:*    users:((\"OpenRGB\",pid=6532,fd=4))           \nLISTEN 0      4096      127.0.0.54:53         0.0.0.0:*                                                \nLISTEN 0      4096           [::1]:631           [::]:*",
+    "diagnostic_port_free": 18107
+  }
+}

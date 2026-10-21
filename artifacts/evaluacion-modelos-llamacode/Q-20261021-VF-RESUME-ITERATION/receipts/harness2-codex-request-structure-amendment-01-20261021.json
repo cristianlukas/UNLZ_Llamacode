@@ -1,0 +1,12 @@
+{
+  "test_id": "Q-20261021-H2-CODEX-REQUEST-STRUCTURE-DIAGNOSTIC",
+  "amendment": 1,
+  "created_at_utc": "2026-10-21T03:30:00Z",
+  "script_sha256": "074e46cbc8b85622a431bcd4f53127bb1a5cda04e19b58c205247d0d6a934afd",
+  "validation": {
+    "python_compile": "PASS",
+    "static_checks": "PASS; body is parsed in memory, only sanitized structure is returned, no raw body/prompt is written",
+    "attempt_workdir": "unique and absent"
+  },
+  "execution": "One Codex CLI exec against a local fake Responses endpoint inside unshare -Urn + bubblewrap. The server returns intentional HTTP 500 after capturing one structure summary; no model or inference-server process is launched."
+}

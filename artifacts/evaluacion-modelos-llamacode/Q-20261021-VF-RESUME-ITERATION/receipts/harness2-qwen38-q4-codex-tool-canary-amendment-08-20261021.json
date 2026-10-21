@@ -1,0 +1,19 @@
+{
+  "test_id": "Q-20261021-H2-QWEN38-Q4-CODEX-TOOL-CANARY",
+  "amendment": 8,
+  "created_at_utc": "2026-10-21T03:23:00Z",
+  "previous_attempt": 4,
+  "previous_attempt_status": "codex_tool_loop_failed",
+  "diagnosis": "The local Responses endpoint returned health, but Codex 0.160.0's first request was rejected by the pinned llama-server 0.3.0-dev chat template with `System message must be at the beginning`. No tool call or user-visible model answer occurred; no file was created.",
+  "candidate_runtime": {
+    "server": "/home/cristian/.cache/llamacode/embeddinggemma2-eval/runtime/llama-b11554/llama-server",
+    "version": "0.6.0-dev, build 11554, commit 966baae76",
+    "server_sha256": "fe8a7d6073d3e3a276193fcaec162cbf280d2572ad2016c9100fd924be19c6ed",
+    "server_impl_sha256": "af60c9251e6bd30011289cf4012e5956f9edb5d539224e016e5b7e964aa50e4d",
+    "llama_sha256": "80e3a4b216d811ed69ab53e57e5bc6785a318cea7e611f6c1fa06c491d9ab3b4",
+    "ggml_cuda_sha256": "2abd778a39ce62c0c03a76aec4b5ccde3cb6ccf3dc95902d2cc439e5f466cfde",
+    "basis": "This already-installed runtime is newer, includes libggml-cuda.so, and exposes Responses API options in --help. It is a local runtime compatibility retest, not a model-quality comparison."
+  },
+  "scope": "Change only llama-server and its read-only runtime library directory. Keep model SHA, Codex 0.160.0, prompt, context, GPU0-only namespace, timeout, and output assertions identical.",
+  "launch_policy": "One fresh preflight followed by attempt 05 only if all guards pass. No cloud fallback. If the same request serialization incompatibility persists, mark this model/runtime pair blocked and move to a distinct pending test rather than retrying this pair again."
+}

@@ -1,0 +1,81 @@
+{
+  "test_id": "Q-20261021-H2-QWEN38-Q4-CODEX-TOOL-CANARY",
+  "status": "bwrap_setup_failed_before_model_start",
+  "started_at_utc": "2026-10-21T03:16:22Z",
+  "preflight": {
+    "timestamp_utc": "2026-10-21T03:16:22Z",
+    "lock_owned": true,
+    "inference_processes": [],
+    "memavailable_bytes": 119195480064,
+    "memory_psi_full_avg10": [
+      0.0
+    ],
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_total_mib": 24576,
+        "memory_used_mib": 1146,
+        "temperature_c": 45
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_total_mib": 24576,
+        "memory_used_mib": 108,
+        "temperature_c": 26
+      }
+    ],
+    "gui_compute_apps_observed": [
+      "2917205, /tmp/.mount_artcradJfPae/usr/bin/artcraft-launcher, 207 MiB"
+    ],
+    "free_disk_bytes": {
+      "task": 138601881600,
+      "model_volume": 94462902272
+    },
+    "model_size_bytes": 18973870528,
+    "model_sha256_pinned_from_prior_receipt": "c600de0300ae8a0eb3a6c0b8b5561b8b96f16bd2c863c2a66c42de29d391a747",
+    "codex_cli_version": "codex-cli 0.160.0",
+    "host_listeners": "State  Recv-Q Send-Q Local Address:Port  Peer Address:PortProcess                                      \nLISTEN 0      128        127.0.0.1:47413      0.0.0.0:*    users:((\"artcraft-launch\",pid=2917205,fd=5))\nLISTEN 0      4096       127.0.0.1:46363      0.0.0.0:*                                                \nLISTEN 0      4096   127.0.0.53%lo:53         0.0.0.0:*                                                \nLISTEN 0      4096       127.0.0.1:631        0.0.0.0:*                                                \nLISTEN 0      10         127.0.0.1:6742       0.0.0.0:*    users:((\"OpenRGB\",pid=6532,fd=4))           \nLISTEN 0      4096      127.0.0.54:53         0.0.0.0:*                                                \nLISTEN 0      4096           [::1]:631           [::]:*"
+  },
+  "runner_sha256": "8f5125f115431b1aafb86817d4bd92092e7395148d456dfe16c046ff049a1d85",
+  "guard": null,
+  "monitor_samples": [
+    {
+      "timestamp_utc": "2026-10-21T03:16:22Z",
+      "memavailable_bytes": 119176806400,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 44
+    }
+  ],
+  "child": {
+    "status": "bwrap_setup_failed_before_model_start",
+    "stderr": "bwrap: Can't find source path /tmp/host-dev/nvidia-caps: No such file or directory\n",
+    "server_started": false,
+    "model_requests_sent": 0
+  },
+  "postflight": {
+    "inference_processes": [],
+    "port_18103_free": true,
+    "memavailable_bytes": 119102140416,
+    "memory_psi_full_avg10": 0.0,
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_total_mib": 24576,
+        "memory_used_mib": 1108,
+        "temperature_c": 44
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_total_mib": 24576,
+        "memory_used_mib": 108,
+        "temperature_c": 26
+      }
+    ]
+  },
+  "runner_log": "artifacts/evaluacion-modelos-llamacode/Q-20261021-VF-RESUME-ITERATION/logs/harness2-qwen38-q4-codex-tool-canary-attempt-01-runner.log",
+  "interpretation": "Bubblewrap could not bind the optional /dev/nvidia-caps directory. The server did not start; no model was loaded and no inference/API request was sent. GPU usage and memory matched baseline at postflight."
+}

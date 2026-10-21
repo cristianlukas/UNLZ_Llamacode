@@ -1,0 +1,27 @@
+{
+  "test_id": "Q-20261021-H2-QWEN38-Q4-CODEX-TOOL-CANARY",
+  "amendment": 3,
+  "created_at_utc": "2026-10-21T03:20:00Z",
+  "previous_attempt": 2,
+  "previous_attempt_status": "bwrap_setup_failed_before_model_start",
+  "observed_failure": "Bubblewrap could not resolve /tmp/host-dev/nvidia-modeset as a bind source. The source is only present inside a mount created by the same bwrap command; bind sources are resolved from the host namespace.",
+  "no_inference": true,
+  "no_gpu_model_work": true,
+  "amendment_scope": "Correct device-node path construction only. Preserve the same model, prompt, Codex provider, context, GPU0-only policy, namespace, timeout, and output assertions.",
+  "planned_changes": [
+    "Use direct host paths /dev/nvidia0, /dev/nvidiactl, and /dev/nvidia-uvm as sources for device binds.",
+    "Probe Bubblewrap's destination creation behavior with a harmless /dev/null bind in a disposable namespace before editing the canary runner.",
+    "Continue to omit GPU1 and bind only required/available GPU0 device nodes; fail closed if a required node is unavailable."
+  ],
+  "planned_validation": [
+    "Harmless bwrap device-bind smoke test; no GPU model, network, or product files.",
+    "Python syntax compilation and a dry-run inspection of generated bwrap argv; no inference.",
+    "A fresh process/inference-server/GPU/memory/port preflight immediately before one new attempt."
+  ],
+  "abort_conditions": [
+    "If the harmless bind test cannot prove GPU1 is absent and only GPU0 is reachable, stop before model startup.",
+    "If the preflight fails or a server is already active, do not launch the model.",
+    "Do not fall back to cloud or access the GUI process."
+  ],
+  "attempt_policy": "Retain attempts 01 and 02. Use a new unique attempt-03 workspace and receipt. A second setup failure before model startup may receive one more narrowly scoped runner correction; any model start/request/tool-loop failure ends this canary pending a new plan."
+}

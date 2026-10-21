@@ -1,0 +1,16 @@
+{
+  "test_id": "Q-20261021-H2-QWEN38-Q4-CODEX-TOOL-CANARY",
+  "amendment": 9,
+  "created_at_utc": "2026-10-21T03:23:30Z",
+  "attempt": 5,
+  "runner_sha256": "06816cf9ed1c033e036ece454e0c30652ddffe00a3795198cf955eed354759ed",
+  "candidate_server_sha256": "fe8a7d6073d3e3a276193fcaec162cbf280d2572ad2016c9100fd924be19c6ed",
+  "prelaunch_checks": {
+    "python_compile": "PASS",
+    "static_attempt_and_gpu_allowlist": "PASS",
+    "server_version": "0.6.0-dev build 11554 commit 966baae76",
+    "required_server_flags_present": ["--parallel", "--flash-attn", "--reasoning-preserve", "--spec-type", "--no-webui"],
+    "attempt05_workdir": "unique and absent before launch"
+  },
+  "launch_policy": "Run one local attempt 05 after its own fresh preflight. Preserve the same 16k context, one prompt/tool loop, GPU0-only device nodes, no external route, and all resource guards."
+}

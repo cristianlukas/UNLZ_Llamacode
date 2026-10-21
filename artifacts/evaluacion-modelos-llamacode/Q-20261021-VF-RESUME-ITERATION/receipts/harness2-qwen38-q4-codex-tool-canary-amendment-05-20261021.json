@@ -1,0 +1,14 @@
+{
+  "test_id": "Q-20261021-H2-QWEN38-Q4-CODEX-TOOL-CANARY",
+  "amendment": 5,
+  "created_at_utc": "2026-10-21T03:22:00Z",
+  "attempt": 3,
+  "runner_sha256": "50a7eb3055c56a355d720bfef961a355d7b992b286b5918454ba55521b14faf0",
+  "validation_before_launch": {
+    "python_compile": "PASS",
+    "static_allowlist_check": "PASS; only nvidia0, nvidiactl, and nvidia-uvm are bind-mounted; GPU1 node is not bound and is asserted absent inside the namespace",
+    "harmless_bwrap_device_bind_smoke": "PASS; /dev/null mounted to a new /dev target inside a disposable, no-network namespace; no model or GPU workload",
+    "attempt03_workdir": "unique and absent before launch"
+  },
+  "attempt_policy": "Run one fresh preflight followed by attempt 03 only if all preregistered guards pass. The prompt/model/context/endpoint/timeout remain unchanged from the original preregistration. Setup failure before model startup permits only a narrow correction; any model request/tool-loop failure ends this canary pending a new plan."
+}

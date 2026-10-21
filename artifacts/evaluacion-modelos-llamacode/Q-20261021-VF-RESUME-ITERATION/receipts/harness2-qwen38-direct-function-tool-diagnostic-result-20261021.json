@@ -1,0 +1,96 @@
+{
+  "test_id": "Q-20261021-H2-QWEN38-DIRECT-FUNCTION-CALL",
+  "status": "function_call_not_emitted_or_invalid",
+  "started_at_utc": "2026-10-21T03:42:28Z",
+  "preflight": {
+    "timestamp_utc": "2026-10-21T03:42:28Z",
+    "lock_owned": true,
+    "inference_processes": [],
+    "memavailable_bytes": 118969020416,
+    "memory_psi_full_avg10": [
+      0.0
+    ],
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_total_mib": 24576,
+        "memory_used_mib": 1146,
+        "temperature_c": 46
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_total_mib": 24576,
+        "memory_used_mib": 108,
+        "temperature_c": 26
+      }
+    ],
+    "gui_compute_apps_observed": [
+      "2917205, /tmp/.mount_artcradJfPae/usr/bin/artcraft-launcher, 207 MiB"
+    ],
+    "free_disk_bytes": {
+      "task": 138582614016,
+      "model_volume": 94462902272
+    },
+    "model_size_bytes": 18973870528,
+    "model_sha256_pinned_from_prior_receipt": "c600de0300ae8a0eb3a6c0b8b5561b8b96f16bd2c863c2a66c42de29d391a747",
+    "codex_cli_version": "codex-cli 0.160.0",
+    "host_listeners": "State  Recv-Q Send-Q Local Address:Port  Peer Address:PortProcess                                      \nLISTEN 0      128        127.0.0.1:47413      0.0.0.0:*    users:((\"artcraft-launch\",pid=2917205,fd=5))\nLISTEN 0      4096       127.0.0.1:46363      0.0.0.0:*                                                \nLISTEN 0      4096   127.0.0.53%lo:53         0.0.0.0:*                                                \nLISTEN 0      4096       127.0.0.1:631        0.0.0.0:*                                                \nLISTEN 0      10         127.0.0.1:6742       0.0.0.0:*    users:((\"OpenRGB\",pid=6532,fd=4))           \nLISTEN 0      4096      127.0.0.54:53         0.0.0.0:*                                                \nLISTEN 0      4096           [::1]:631           [::]:*",
+    "diagnostic_port": 18107
+  },
+  "runner_sha256": "6357890cc0e1f7638872428b245fb6eff689b26ba73e9dbe707192cb1be6bb4c",
+  "child": {
+    "elapsed_seconds": 2.6423790889966767,
+    "function_calls": [],
+    "health": {
+      "status": "ok"
+    },
+    "http_status": 200,
+    "namespace_interfaces": [
+      "lo"
+    ],
+    "namespace_routes": [],
+    "output_item_types": [
+      "reasoning"
+    ],
+    "raw_request_saved": false,
+    "raw_response_saved": false,
+    "response_status": "completed",
+    "server_log": "/tmp/server.log",
+    "status": "function_call_not_emitted_or_invalid",
+    "test_net_errno": 101,
+    "usage": {
+      "input_tokens": 336,
+      "input_tokens_details": {
+        "cached_tokens": 0
+      },
+      "output_tokens": 5,
+      "total_tokens": 341
+    }
+  },
+  "child_exit_code": 0,
+  "postflight": {
+    "inference_processes": [],
+    "port_free": true,
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_total_mib": 24576,
+        "memory_used_mib": 1108,
+        "temperature_c": 51
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_total_mib": 24576,
+        "memory_used_mib": 108,
+        "temperature_c": 26
+      }
+    ],
+    "memavailable_bytes": 118887763968,
+    "memory_psi_full_avg10": 0.0
+  },
+  "runner_log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261021-VF-RESUME-ITERATION/logs/harness2-qwen38-direct-function-tool-diagnostic-runner.log"
+}

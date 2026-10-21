@@ -1,0 +1,15 @@
+{
+  "test_id": "Q-20261021-H2-QWEN38-Q4-CODEX-TOOL-CANARY",
+  "amendment": 13,
+  "created_at_utc": "2026-10-21T03:27:00Z",
+  "attempt": 7,
+  "runner_sha256": "a1dbfbf832ac132872daea7076c22a8a40f519478594380b104f1fbd32ecca0a",
+  "prelaunch_validation": {
+    "python_compile": "PASS",
+    "static_runtime_mount_check": "PASS; full runtime directory mounted read-only at /tmp/runtime and server runs from that path so adjacent backend plugins are visible",
+    "invalid_GGML_BACKEND_PATH_removed": true,
+    "GPU_isolation_assertions": "PASS; exactly nvidia0, nvidiactl, and nvidia-uvm are bound; --list-devices must show CUDA0 only before model load",
+    "attempt07_workdir": "unique and absent"
+  },
+  "launch_policy": "Fresh outer preflight; device-list gate first inside namespace; if the gate passes, one pinned-model Codex tool-loop request. No cloud fallback; abort at any resource threshold; retain server and postflight receipts."
+}

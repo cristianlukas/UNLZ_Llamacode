@@ -1,0 +1,78 @@
+{
+  "test_id": "Q-20261021-H2-QWEN38-Q4-CODEX-TOOL-CANARY",
+  "status": "no_child_json",
+  "started_at_utc": "2026-10-21T03:17:07Z",
+  "preflight": {
+    "timestamp_utc": "2026-10-21T03:17:07Z",
+    "lock_owned": true,
+    "inference_processes": [],
+    "memavailable_bytes": 119084789760,
+    "memory_psi_full_avg10": [
+      0.0
+    ],
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_total_mib": 24576,
+        "memory_used_mib": 1149,
+        "temperature_c": 45
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_total_mib": 24576,
+        "memory_used_mib": 108,
+        "temperature_c": 26
+      }
+    ],
+    "gui_compute_apps_observed": [
+      "2917205, /tmp/.mount_artcradJfPae/usr/bin/artcraft-launcher, 207 MiB"
+    ],
+    "free_disk_bytes": {
+      "task": 138601873408,
+      "model_volume": 94462902272
+    },
+    "model_size_bytes": 18973870528,
+    "model_sha256_pinned_from_prior_receipt": "c600de0300ae8a0eb3a6c0b8b5561b8b96f16bd2c863c2a66c42de29d391a747",
+    "codex_cli_version": "codex-cli 0.160.0",
+    "host_listeners": "State  Recv-Q Send-Q Local Address:Port  Peer Address:PortProcess                                      \nLISTEN 0      128        127.0.0.1:47413      0.0.0.0:*    users:((\"artcraft-launch\",pid=2917205,fd=5))\nLISTEN 0      4096       127.0.0.1:46363      0.0.0.0:*                                                \nLISTEN 0      4096   127.0.0.53%lo:53         0.0.0.0:*                                                \nLISTEN 0      4096       127.0.0.1:631        0.0.0.0:*                                                \nLISTEN 0      10         127.0.0.1:6742       0.0.0.0:*    users:((\"OpenRGB\",pid=6532,fd=4))           \nLISTEN 0      4096      127.0.0.54:53         0.0.0.0:*                                                \nLISTEN 0      4096           [::1]:631           [::]:*"
+  },
+  "runner_sha256": "614cd96c0f6c5a5cdfd1f3a8f328a6b043c4b1ee8fe3e20c384a5089d5fb29e8",
+  "guard": null,
+  "monitor_samples": [
+    {
+      "timestamp_utc": "2026-10-21T03:17:07Z",
+      "memavailable_bytes": 119074729984,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 45
+    }
+  ],
+  "child": {
+    "status": "no_child_json",
+    "stderr": "bwrap: Can't find source path /tmp/host-dev/nvidia-modeset: No such file or directory\n"
+  },
+  "postflight": {
+    "inference_processes": [],
+    "port_18103_free": true,
+    "memavailable_bytes": 118995820544,
+    "memory_psi_full_avg10": 0.0,
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_total_mib": 24576,
+        "memory_used_mib": 1108,
+        "temperature_c": 45
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_total_mib": 24576,
+        "memory_used_mib": 108,
+        "temperature_c": 26
+      }
+    ]
+  },
+  "runner_log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261021-VF-RESUME-ITERATION/logs/harness2-qwen38-q4-codex-tool-canary-attempt-02-runner.log"
+}

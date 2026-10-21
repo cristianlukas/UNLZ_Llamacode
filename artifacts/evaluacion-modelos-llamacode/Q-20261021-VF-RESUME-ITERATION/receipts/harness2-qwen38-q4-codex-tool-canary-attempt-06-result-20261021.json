@@ -1,0 +1,84 @@
+{
+  "test_id": "Q-20261021-H2-QWEN38-Q4-CODEX-TOOL-CANARY",
+  "status": "cuda_device_gate_failed",
+  "started_at_utc": "2026-10-21T03:23:36Z",
+  "preflight": {
+    "timestamp_utc": "2026-10-21T03:23:36Z",
+    "lock_owned": true,
+    "inference_processes": [],
+    "memavailable_bytes": 119146086400,
+    "memory_psi_full_avg10": [
+      0.0
+    ],
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_total_mib": 24576,
+        "memory_used_mib": 1108,
+        "temperature_c": 45
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_total_mib": 24576,
+        "memory_used_mib": 108,
+        "temperature_c": 26
+      }
+    ],
+    "gui_compute_apps_observed": [
+      "2917205, /tmp/.mount_artcradJfPae/usr/bin/artcraft-launcher, 207 MiB"
+    ],
+    "free_disk_bytes": {
+      "task": 138598780928,
+      "model_volume": 94462902272
+    },
+    "model_size_bytes": 18973870528,
+    "model_sha256_pinned_from_prior_receipt": "c600de0300ae8a0eb3a6c0b8b5561b8b96f16bd2c863c2a66c42de29d391a747",
+    "codex_cli_version": "codex-cli 0.160.0",
+    "host_listeners": "State  Recv-Q Send-Q Local Address:Port  Peer Address:PortProcess                                      \nLISTEN 0      128        127.0.0.1:47413      0.0.0.0:*    users:((\"artcraft-launch\",pid=2917205,fd=5))\nLISTEN 0      4096       127.0.0.1:46363      0.0.0.0:*                                                \nLISTEN 0      4096   127.0.0.53%lo:53         0.0.0.0:*                                                \nLISTEN 0      4096       127.0.0.1:631        0.0.0.0:*                                                \nLISTEN 0      10         127.0.0.1:6742       0.0.0.0:*    users:((\"OpenRGB\",pid=6532,fd=4))           \nLISTEN 0      4096      127.0.0.54:53         0.0.0.0:*                                                \nLISTEN 0      4096           [::1]:631           [::]:*"
+  },
+  "runner_sha256": "7ef098c1a63cd318eeecc3ac5f6fd7f8c7b6bd357642e64754ea846bd68e6be8",
+  "guard": null,
+  "monitor_samples": [
+    {
+      "timestamp_utc": "2026-10-21T03:23:36Z",
+      "memavailable_bytes": 119117250560,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 45
+    }
+  ],
+  "child": {
+    "device_list": "Available devices:\n  (none)\n0.00.000.543 E load_backend: failed to load /tmp/llama-libs: /tmp/llama-libs: cannot read file data: Is a directory\n",
+    "return_code": 0,
+    "status": "cuda_device_gate_failed",
+    "visible_nvidia_nodes": [
+      "nvidia-uvm",
+      "nvidia0",
+      "nvidiactl"
+    ]
+  },
+  "postflight": {
+    "inference_processes": [],
+    "port_18103_free": true,
+    "memavailable_bytes": 119045775360,
+    "memory_psi_full_avg10": 0.0,
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_total_mib": 24576,
+        "memory_used_mib": 1106,
+        "temperature_c": 45
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_total_mib": 24576,
+        "memory_used_mib": 108,
+        "temperature_c": 26
+      }
+    ]
+  },
+  "runner_log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261021-VF-RESUME-ITERATION/logs/harness2-qwen38-q4-codex-tool-canary-attempt-06-runner.log"
+}

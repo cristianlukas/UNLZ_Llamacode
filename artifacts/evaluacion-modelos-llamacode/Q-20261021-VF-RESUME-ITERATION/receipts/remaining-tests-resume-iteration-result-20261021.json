@@ -1,0 +1,60 @@
+{
+  "task_id": "Q-20261021-VF-RESUME-ITERATION",
+  "status": "blocked_external_preconditions",
+  "recorded_at_utc": "2026-10-21T03:43:46Z",
+  "completed_this_iteration": [
+    {
+      "test": "Q-20261021-H2-QWEN38-Q4-CODEX-TOOL-CANARY",
+      "attempt": 11,
+      "result": "Model generation completed (33 output tokens) and Codex exited 0, but no tool call or file was created. The exact local model/runtime/adapter combination fails the mechanical tool-loop gate. No egress; no server/listener remained.",
+      "receipt": "harness2-qwen38-q4-codex-tool-canary-attempt-11-result-20261021.json"
+    },
+    {
+      "test": "Q-20261021-H2-QWEN38-DIRECT-FUNCTION-CALL",
+      "result": "HTTP 200/completed; output contained only reasoning and zero function_call items (336 input/5 output tokens). No tool executed, no raw request/response persisted, no egress; no process/listener remained.",
+      "receipt": "harness2-qwen38-direct-function-tool-diagnostic-result-20261021.json"
+    },
+    {
+      "test": "runner_static_validation",
+      "result": "Python py_compile passed for the final Codex canary and direct function diagnostic runners; no C++/QML/app behavior changed.",
+      "receipts": [
+        "../work/harness2_qwen38_q4_codex_tool_canary.py",
+        "../work/harness2_qwen38_direct_function_tool_diagnostic.py"
+      ]
+    }
+  ],
+  "remaining_conditions": [
+    {
+      "area": "S36 Instagram",
+      "condition": "User supplies attributable caption/transcript, a legible capture, or an accessible attributable mirror.",
+      "next_action": "Extract claim, then preregister reproducible test."
+    },
+    {
+      "area": "S23 PLE FP8",
+      "condition": "Per-task io cgroup delegation or another loader strategy validated without model load and without sustained host-memory pressure.",
+      "next_action": "Validate strategy dry, fresh preflight, then preregister one safe run."
+    },
+    {
+      "area": "UD-IQ4_XS BCB8/ADV/TaskFlow",
+      "condition": "Corrected isolated runner/grader with pinned dependencies, fixed MagicMock fallback, and a new fingerprint.",
+      "next_action": "Validate grader on known-answer fixtures, then preregister a new model-quality run."
+    },
+    {
+      "area": "OpenJet",
+      "condition": "Decision to evaluate Qwen3.8-27B on one GPU plus 64-block kernel support or an exact compatible 65-block local model.",
+      "next_action": "Reopen only after both target and compatibility are satisfied."
+    },
+    {
+      "area": "Harness² quality",
+      "condition": "A concrete LlamaCode workflow/component and fixed synthetic holdout are defined.",
+      "next_action": "Preregister a separate model-backed quality pilot inside the already validated isolation."
+    },
+    {
+      "area": "Qwen3.8-27B Q4_K_M tool use",
+      "condition": "A material model/runtime/protocol change that addresses the absent function_call; the same Codex+Responses+adapter combination is closed after attempt 11 and the direct Responses diagnostic emitted no function_call.",
+      "next_action": "Do not repeat current combination; reopen only on material change and a new preregistration."
+    }
+  ],
+  "safety_and_preservation": "No production model, profile, pack, or app configuration was changed. Qwen Flash-Next ASTRA/SOL and PeritoSoft models remain preserved. ArtCraft was left open. Both test processes/ports were clean postflight.",
+  "disposition": "All tests that were justified and runnable in this iteration are complete. The larger evaluation backlog is not fully complete; remaining tests are blocked by the exact external conditions above. No further currently justified test can change a decision without such a condition changing."
+}

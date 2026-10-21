@@ -1,0 +1,12 @@
+{
+  "test_id": "Q-20261021-H2-QWEN38-Q4-CODEX-TOOL-CANARY",
+  "amendment": 10,
+  "created_at_utc": "2026-10-21T03:24:00Z",
+  "previous_attempt": 5,
+  "previous_attempt_status": "server_start_failed_before_model_load",
+  "diagnosis": "The newer runtime uses dynamically loaded ggml backends. Inside the sandbox it found no backends because GGML_BACKEND_PATH was not set, despite the plugin files being mounted read-only. No model loaded and no GPU inference occurred.",
+  "local_evidence": "The installed libggml.so exports the GGML_BACKEND_PATH loader variable; the runtime directory contains libggml-cuda.so and CPU backend plugins.",
+  "scope": "Set GGML_BACKEND_PATH to the already-mounted read-only runtime directory. Before model startup, execute `llama-server --list-devices` inside the same namespace with CUDA_VISIBLE_DEVICES=0 and only nvidia0/nvidiactl/nvidia-uvm bound.",
+  "pass_gate": "The device-list command must exit 0, report CUDA0, and not report CUDA1. Otherwise terminate before model startup and record the runtime candidate as incompatible with the GPU isolation environment.",
+  "attempt_policy": "If the device-list gate passes, run one new Codex tool-loop attempt 06 with the unchanged model/prompt/context and 15-minute/resource guards. A second tool-loop serialization failure ends this model/runtime pair; do not retry it again without a changed upstream binary or model/template."
+}

@@ -1,0 +1,43 @@
+{
+  "test_id": "Q-20261021-H2-QWEN38-Q4-CODEX-TOOL-CANARY",
+  "attempt": 11,
+  "status": "preregistered",
+  "created_at_utc": "2026-10-21T03:36:55Z",
+  "amendment_ref": "harness2-qwen38-responses-compat-shim-canary-amendment-05-20261021.json",
+  "runner": "artifacts/evaluacion-modelos-llamacode/Q-20261021-VF-RESUME-ITERATION/work/harness2_qwen38_q4_codex_tool_canary.py",
+  "runner_sha256": "6f6c0f1f6891741a27b807b1f90a29a6c83e70841ab544720134c0a42e6bee82",
+  "preflight": {
+    "lock_owned": true,
+    "inference_processes": [],
+    "memavailable_bytes": 118936494080,
+    "memory_psi_full_avg10": 0.0,
+    "gpu0": {"name": "NVIDIA GeForce RTX 3090", "memory_total_mib": 24576, "memory_used_mib": 1106, "temperature_c": 48},
+    "gpu1": {"name": "NVIDIA GeForce RTX 3090", "memory_total_mib": 24576, "memory_used_mib": 108, "temperature_c": 26},
+    "gui_compute_apps_allowed": ["ArtCraft launcher, pid 2917205, 207 MiB on GPU0"],
+    "free_disk_bytes": {"task": 138583511040, "model_volume": 94462902272},
+    "model_size_bytes": 18973870528,
+    "model_sha256_pinned_from_prior_receipt": "c600de0300ae8a0eb3a6c0b8b5561b8b96f16bd2c863c2a66c42de29d391a747",
+    "codex_cli_version": "codex-cli 0.160.0",
+    "evaluation_ports_free": [18103, 18105]
+  },
+  "configuration": {
+    "model": "Qwen3.8-27B GGUF Q4_K_M",
+    "runtime": "local llama.cpp b11554",
+    "codex_reasoning_effort": "low",
+    "server_reasoning_budget": 64,
+    "codex_request_timeout_seconds": 480,
+    "outer_guard_seconds": 900,
+    "context_tokens": 16384,
+    "compatibility_adapter": "merge existing top-level instructions into leading developer content and remove duplicate top-level instructions; preserve other request fields",
+    "isolation": "bubblewrap read-only host, disposable workspace and Codex home, loopback-only network namespace, GPU0 only; no external route",
+    "task": "create canary.txt containing exactly TOOL_LOOP_OK, read it back, and create no other workspace file"
+  },
+  "pass_criteria": [
+    "Codex exits 0",
+    "canary.txt exists with exact content TOOL_LOOP_OK after readback",
+    "no other workspace files are created",
+    "network remains loopback-only with no external route",
+    "postflight finds no inference process or listener on ports 18103 and 18105"
+  ],
+  "stop_condition": "This is the final canary for this model/runtime/adapter combination. Any timeout, template/protocol failure, missing or extra file, egress, or residual server closes this combination pending a material change."
+}

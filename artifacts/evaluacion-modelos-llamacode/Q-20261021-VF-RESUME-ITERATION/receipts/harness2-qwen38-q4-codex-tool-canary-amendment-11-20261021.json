@@ -1,0 +1,16 @@
+{
+  "test_id": "Q-20261021-H2-QWEN38-Q4-CODEX-TOOL-CANARY",
+  "amendment": 11,
+  "created_at_utc": "2026-10-21T03:25:00Z",
+  "attempt": 6,
+  "runner_sha256": "7ef098c1a63cd318eeecc3ac5f6fd7f8c7b6bd357642e64754ea846bd68e6be8",
+  "runtime": "llama.cpp 0.6.0-dev build 11554, commit 966baae76",
+  "validation": {
+    "python_compile": "PASS",
+    "static_backend_variable_and_device_gate": "PASS",
+    "GGML_BACKEND_PATH": "/tmp/llama-libs",
+    "device_gate": "Runs llama-server --list-devices inside the isolated namespace before loading the model; requires CUDA0 and forbids CUDA1 in output. A gate failure returns before server/model startup.",
+    "attempt06_workdir": "unique and absent"
+  },
+  "launch_policy": "Fresh outer preflight; then inside-namespace backend/device gate; only if both pass, load the pinned GGUF and execute the same single Codex tool-loop request. All prior memory, PSI, temperature, network, timeout, and cleanup guards remain active."
+}

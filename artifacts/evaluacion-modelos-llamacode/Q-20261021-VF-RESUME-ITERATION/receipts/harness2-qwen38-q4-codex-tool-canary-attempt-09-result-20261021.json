@@ -1,0 +1,369 @@
+{
+  "test_id": "Q-20261021-H2-QWEN38-Q4-CODEX-TOOL-CANARY",
+  "status": "codex_timeout",
+  "started_at_utc": "2026-10-21T03:29:55Z",
+  "preflight": {
+    "timestamp_utc": "2026-10-21T03:29:55Z",
+    "lock_owned": true,
+    "inference_processes": [],
+    "memavailable_bytes": 119107846144,
+    "memory_psi_full_avg10": [
+      0.0
+    ],
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_total_mib": 24576,
+        "memory_used_mib": 1131,
+        "temperature_c": 45
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_total_mib": 24576,
+        "memory_used_mib": 108,
+        "temperature_c": 26
+      }
+    ],
+    "gui_compute_apps_observed": [
+      "2917205, /tmp/.mount_artcradJfPae/usr/bin/artcraft-launcher, 207 MiB"
+    ],
+    "free_disk_bytes": {
+      "task": 138589609984,
+      "model_volume": 94462902272
+    },
+    "model_size_bytes": 18973870528,
+    "model_sha256_pinned_from_prior_receipt": "c600de0300ae8a0eb3a6c0b8b5561b8b96f16bd2c863c2a66c42de29d391a747",
+    "codex_cli_version": "codex-cli 0.160.0",
+    "host_listeners": "State  Recv-Q Send-Q Local Address:Port  Peer Address:PortProcess                                      \nLISTEN 0      128        127.0.0.1:47413      0.0.0.0:*    users:((\"artcraft-launch\",pid=2917205,fd=5))\nLISTEN 0      4096       127.0.0.1:46363      0.0.0.0:*                                                \nLISTEN 0      4096   127.0.0.53%lo:53         0.0.0.0:*                                                \nLISTEN 0      4096       127.0.0.1:631        0.0.0.0:*                                                \nLISTEN 0      10         127.0.0.1:6742       0.0.0.0:*    users:((\"OpenRGB\",pid=6532,fd=4))           \nLISTEN 0      4096      127.0.0.54:53         0.0.0.0:*                                                \nLISTEN 0      4096           [::1]:631           [::]:*"
+  },
+  "runner_sha256": "665a1fcc78cd73b2f2869ac92110aec28513131fc1bbc729bac0598e39a3e353",
+  "guard": null,
+  "monitor_samples": [
+    {
+      "timestamp_utc": "2026-10-21T03:29:55Z",
+      "memavailable_bytes": 119090683904,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 45
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:30:00Z",
+      "memavailable_bytes": 118073892864,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 53
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:30:06Z",
+      "memavailable_bytes": 118055014400,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 54
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:30:11Z",
+      "memavailable_bytes": 118100680704,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 56
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:30:16Z",
+      "memavailable_bytes": 117825683456,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 57
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:30:21Z",
+      "memavailable_bytes": 117503934464,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 53
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:30:26Z",
+      "memavailable_bytes": 117500391424,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 52
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:30:31Z",
+      "memavailable_bytes": 117496713216,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 53
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:30:36Z",
+      "memavailable_bytes": 117483659264,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 53
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:30:41Z",
+      "memavailable_bytes": 117485060096,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 53
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:30:46Z",
+      "memavailable_bytes": 117520158720,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 53
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:30:51Z",
+      "memavailable_bytes": 117496225792,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 54
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:30:56Z",
+      "memavailable_bytes": 117563285504,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 54
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:31:01Z",
+      "memavailable_bytes": 117546676224,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 54
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:31:06Z",
+      "memavailable_bytes": 117574557696,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 54
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:31:11Z",
+      "memavailable_bytes": 117601083392,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 54
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:31:16Z",
+      "memavailable_bytes": 117587042304,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 54
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:31:21Z",
+      "memavailable_bytes": 117653258240,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 54
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:31:26Z",
+      "memavailable_bytes": 117627994112,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 55
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:31:31Z",
+      "memavailable_bytes": 117638033408,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 55
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:31:36Z",
+      "memavailable_bytes": 117635686400,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 56
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:31:42Z",
+      "memavailable_bytes": 117626691584,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 56
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:31:47Z",
+      "memavailable_bytes": 117593972736,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 55
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:31:52Z",
+      "memavailable_bytes": 117613891584,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 55
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:31:57Z",
+      "memavailable_bytes": 117624897536,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 55
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:32:02Z",
+      "memavailable_bytes": 117579640832,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 56
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:32:07Z",
+      "memavailable_bytes": 117611278336,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 56
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:32:12Z",
+      "memavailable_bytes": 117640740864,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 56
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:32:17Z",
+      "memavailable_bytes": 117675368448,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 56
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:32:22Z",
+      "memavailable_bytes": 117659361280,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 56
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:32:27Z",
+      "memavailable_bytes": 117663674368,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 57
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:32:32Z",
+      "memavailable_bytes": 117648576512,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 57
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:32:37Z",
+      "memavailable_bytes": 117654224896,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 57
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:32:42Z",
+      "memavailable_bytes": 117668823040,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 57
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:32:47Z",
+      "memavailable_bytes": 117618946048,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 57
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:32:52Z",
+      "memavailable_bytes": 117645029376,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 57
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:32:57Z",
+      "memavailable_bytes": 117662519296,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 57
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:33:02Z",
+      "memavailable_bytes": 117648355328,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 57
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:33:07Z",
+      "memavailable_bytes": 117657812992,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 57
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:33:13Z",
+      "memavailable_bytes": 117668478976,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 57
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:33:18Z",
+      "memavailable_bytes": 117643948032,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 57
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:33:23Z",
+      "memavailable_bytes": 117617082368,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 58
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:33:28Z",
+      "memavailable_bytes": 117615710208,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 57
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:33:33Z",
+      "memavailable_bytes": 117622251520,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 58
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:33:38Z",
+      "memavailable_bytes": 117629620224,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 58
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:33:43Z",
+      "memavailable_bytes": 117617016832,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 58
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:33:48Z",
+      "memavailable_bytes": 117606281216,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 57
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:33:53Z",
+      "memavailable_bytes": 117586296832,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 58
+    },
+    {
+      "timestamp_utc": "2026-10-21T03:33:58Z",
+      "memavailable_bytes": 117639241728,
+      "memory_psi_full_avg10": 0.0,
+      "gpu0_temperature_c": 58
+    }
+  ],
+  "child": {
+    "status": "codex_timeout",
+    "timeout_seconds": 240
+  },
+  "postflight": {
+    "inference_processes": [],
+    "port_status": {
+      "18103": true,
+      "18105": true
+    },
+    "memavailable_bytes": 119148023808,
+    "memory_psi_full_avg10": 0.0,
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_total_mib": 24576,
+        "memory_used_mib": 1106,
+        "temperature_c": 54
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_total_mib": 24576,
+        "memory_used_mib": 108,
+        "temperature_c": 26
+      }
+    ]
+  },
+  "runner_log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261021-VF-RESUME-ITERATION/logs/harness2-qwen38-q4-codex-tool-canary-attempt-09-runner.log"
+}

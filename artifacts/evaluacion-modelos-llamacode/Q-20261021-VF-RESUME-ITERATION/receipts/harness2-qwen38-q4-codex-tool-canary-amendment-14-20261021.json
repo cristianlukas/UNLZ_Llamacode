@@ -1,0 +1,19 @@
+{
+  "test_id": "Q-20261021-H2-QWEN38-Q4-CODEX-TOOL-CANARY",
+  "amendment": 14,
+  "created_at_utc": "2026-10-21T03:28:00Z",
+  "previous_attempt": 7,
+  "previous_attempt_status": "codex_tool_loop_failed_with_same_qwen_template_error",
+  "diagnosis": "llama.cpp 0.6.0-dev loaded the model on CUDA0 but produced the same Qwen template rejection as the LlamaCode 0.3.0 runtime. Codex supports only the Responses wire API for custom providers, so switching the Codex client to Chat Completions is not an available workaround.",
+  "official_codex_configuration_source": "https://learn.chatgpt.com/docs/config-file/config-reference ; model_providers.<id>.wire_api currently supports only `responses`.",
+  "candidate_runtime": {
+    "directory": "/home/cristian/.cache/llamacode/qwen38-next-cuda/bin",
+    "version": "0.3.0-dev build 92, commit ef6876693",
+    "server_sha256": "f11d1b9c9480dcf3ba27a5166c3c0a8898042a50db90ce113f0fcde354c83388",
+    "server_impl_sha256": "6162daab7e69757662ecc28ff4cc328b22868ab1fbe854795ecd966c25708fc2",
+    "llama_sha256": "ff51394256d7ce2d71340d1aaa298dfe92de492ea9ce8b7f1ab0675ad982afe9",
+    "cuda_backend_sha256": "6d1f9f04218ea924e91894f3a239b307d8f70e7519d6bd5d4064b4535114b948"
+  },
+  "scope": "Retest only the runtime component with the same pinned Qwen3.8-27B Q4_K_M model, Codex 0.160.0, prompt, 16k context, GPU0-only sandbox, and resource guards. The complete CUDA runtime directory is mounted read-only so adjacent plugins are found.",
+  "attempt_policy": "Run one fresh preflight and one attempt 08. If it produces the same system-message ordering error, close this specific Qwen/Codex combination as blocked pending upstream template/protocol support; do not repeat across further near-identical llama.cpp builds."
+}
