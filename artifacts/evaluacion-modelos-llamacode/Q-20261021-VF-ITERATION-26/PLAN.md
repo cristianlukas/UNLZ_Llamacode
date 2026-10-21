@@ -90,3 +90,12 @@ En la comprobación de recursos a 2026-10-21T20:24:37Z hay tres servidores de in
 
 Recibos: `attempts/he20-04/receipts/runner-failure-20261021T201848Z.json`; `receipts/inference-server-blocker-20261021T202437Z.json`.
 
+
+
+## Enmienda 14 — Reanudación explícita y HE20-05 (2026-10-21T21:32:34Z)
+
+El usuario reanudó explícitamente el lote después de la pausa. HE20-04 sigue clasificado como fallo de setup (0/20, sin solicitud ni score). Se preregistra HE20-05 desde cero; se copió `attempts/he20-03/receipts/he0-gate.json` a `attempts/he20-05/receipts/he0-gate.json` y se verificó SHA-256 `fb512bc0afb5fdb9aecb2e475ecf820a662676794fb0656c850c745f5f5512b4`. El gate conserva HE0 válido 1/1, HE20 pendiente y fingerprint `a56c…`; el runner conserva SHA-256 `694712c6fef09d1fc1c1bbaab0d46a2f92d4f586856d69fffdb8856ab4815cbe`.
+
+El preflight fresco de 2026-10-21T21:32:34Z detectó inference servers ajenos activos: llama-server Qwen3.5 en 8033/8081 y Gemma 4 12B en 8083. HE20-05 queda preregistrado pero no iniciado (0 requests, sin GPU/modelo cargado). No enviar requests ni terminar esos procesos. El gate nuevo inspeccionará procesos de serving y todos los listeners TCP, no sólo los puertos legacy 8352/8354/18766; la GUI de escritorio está permitida y no se cuenta como servidor.
+
+Siguiente acción: esperar hasta que una comprobación fresca encuentre cero inference servers; volver a comprobar memoria/swap y el gate CPU del perfil inmediatamente antes de cargar Strata; ejecutar sólo HE20-05 en GPU0, serial, con los guards ya registrados. Sin retry automático ni BCB. ASTRA/SOL, PeritoSoft y producción permanecen intactos. Recibo: `attempts/he20-05/receipts/resume-blocker.json`.

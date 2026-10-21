@@ -1,0 +1,91 @@
+{
+  "task": "Q-20261021-VF-ITERATION-26",
+  "attempt": "HE20-05",
+  "created_at_utc": "2026-10-21T21:32:34Z",
+  "requested_by": "user explicit resume; prior pause superseded by latest instruction",
+  "reason": "HE20-04 failed before its first request because the attempt-local HE0 gate receipt was missing; HE20-05 restarts HE20 only from the beginning, with the verified receipt staged before any runtime startup.",
+  "candidate": "Qwen3.8-Flash-Next Unsloth UD-IQ4_XS",
+  "profile_id": "q14-udiq4xs-he0",
+  "agent_profile_id": "agent-maximo",
+  "expected_profile_config_fingerprint": "a56c723fde568b4db160bbb48ccc9e378aa221bdcaffe544ee957e3ba666dd86",
+  "suite": {
+    "stage": "he20",
+    "custom_id": "267bb33d-4510-417b-ae3c-6dbbfb2cb08d",
+    "expected_items": 20,
+    "passes": 1,
+    "timeout_seconds": 14400,
+    "target": "agent",
+    "bcb_included": false,
+    "checkpoint_resume": false
+  },
+  "runtime_variant": {
+    "strata_version": "0.1.41",
+    "gpu": 0,
+    "model_context_tokens": 32768,
+    "kv": "int8",
+    "mtp_spec": 4,
+    "resident_budget_gib": 20,
+    "engine_silence_s": 600,
+    "production_config_changed": false
+  },
+  "memory_guard": {
+    "poll_interval_seconds": 5,
+    "abort_if_mem_available_below_gib": 24,
+    "abort_if_swap_free_below_gib": 1,
+    "abort_if_llamacode_process_tree_rss_at_or_above_gib": 60,
+    "action": "record the trip and gracefully stop only Q26-owned Strata/controller; never signal the desktop GUI or unrelated process"
+  },
+  "preflight_requirements": {
+    "minimum_mem_available_gib": 80,
+    "minimum_swap_free_gib": 1,
+    "forbid_any_inference_server_process_or_listener": true,
+    "discovery": "scan all processes and all TCP listening sockets immediately before launch; match llama-server, Strata serving mode, vLLM, Ollama and any model-serving API process; do not limit discovery to the legacy test ports",
+    "desktop_gui_processes_allowed": true,
+    "never_stop_or_signal_unowned_processes": true,
+    "repeat_immediately_before_model_start": true
+  },
+  "profile_gate": {
+    "he0": "valid",
+    "he20": "pending",
+    "bcb": "pending",
+    "fingerprint": "a56c723fde568b4db160bbb48ccc9e378aa221bdcaffe544ee957e3ba666dd86",
+    "select_agent_before_gate": true
+  },
+  "runtime_copy": {
+    "source": "work/isolated-runtime",
+    "destination": "attempts/he20-05/work/isolated-runtime",
+    "agent_profiles_sha256": "9def1d9b0a4c879981079e48d0069e3fc544428ba193a7b39a0de3ccd4621067",
+    "source_verified_profiles": {
+      "backends": "73ee461f96da47e61489bb0ff3392f8055e376be54ecdf493160415fe513256b",
+      "launches": "e4f9aadabfab8d48231eaf772fd006ec0329ed2f3f72df984b6255c9195d89ce",
+      "models": "8b925b2dcc3775efb22e0e4cc208c7b6cde5eb38284bb7b683bfbcf9890de6d0"
+    }
+  },
+  "runner": {
+    "path": "scripts/run_he20_03.py",
+    "sha256": "694712c6fef09d1fc1c1bbaab0d46a2f92d4f586856d69fffdb8856ab4815cbe",
+    "env": {
+      "Q26_ATTEMPT_ROOT": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261021-VF-ITERATION-26/attempts/he20-05",
+      "Q26_TIMEOUT_PER_SUITE": "14400",
+      "Q26_RESIDENT_BUDGET_GIB": "20",
+      "Q26_ENGINE_SILENCE_S": "600"
+    }
+  },
+  "decision_rule": "Only valid HE20 20/20 under the exact fingerprint completes this gate and permits considering a separately preregistered BCB8. Timeout, guard, OOM, invalid coverage or different fingerprint means no score and stop; no automatic retry.",
+  "he0_receipt": {
+    "source": "attempts/he20-03/receipts/he0-gate.json",
+    "staged_path": "attempts/he20-05/receipts/he0-gate.json",
+    "sha256": "fb512bc0afb5fdb9aecb2e475ecf820a662676794fb0656c850c745f5f5512b4",
+    "status": "HE0 valid 1/1 under a56c fingerprint",
+    "copy_verified": true
+  },
+  "preservation": [
+    "ASTRA and SOL Flash-Next unchanged",
+    "PeritoSoft unchanged",
+    "no model weights moved, deleted or downloaded",
+    "no production settings changed",
+    "GPU1 unused",
+    "no BCB in this attempt"
+  ],
+  "start_gate": "Do not start until a fresh process/listener scan finds zero inference servers and fresh RAM/swap/profile gates pass."
+}

@@ -1,0 +1,54 @@
+{
+  "task": "Q-20261021-VF-ITERATION-26",
+  "attempt": "HE20-05",
+  "observed_at_utc": "2026-10-21T21:32:34Z",
+  "state": "resumed_preregistered_blocked_by_external_inference_servers",
+  "test_started": false,
+  "requests_sent": 0,
+  "score": null,
+  "active_inference_processes": [
+    {
+      "pid": "2173417",
+      "command": "llama-server",
+      "argv": "/home/cristian/.local/share/LlamaCode/LlamaCode/linux-runtime/cuda-flashnext-2x3090/llama-server -m /media/cristian/Disco local/Models/llamacpp/Qwen3.5-9B/Qwen3.5-9B-Q4_K_M.gguf --alias qwen3.5-9b-q4_k_m --host 127.0.0.1 --port 8033 -c 32768 --batch-size 512 --ubatch-size 512 -ngl 999 --flash-attn auto --parallel 2"
+    },
+    {
+      "pid": "2173751",
+      "command": "llama-server",
+      "argv": "/home/cristian/.local/share/LlamaCode/LlamaCode/linux-runtime/cuda-flashnext-2x3090/llama-server -m /media/cristian/Disco local/Models/llamacpp/Qwen3.5-9B/Qwen3.5-9B-Q4_K_M.gguf --alias qwen3.5-9b-q4_k_m-gpu1 --host 127.0.0.1 --port 8081 -c 32768 --batch-size 512 --ubatch-size 512 -ngl 999 --flash-attn auto --parallel 2"
+    },
+    {
+      "pid": "2174901",
+      "command": "llama-server",
+      "argv": "/home/cristian/.local/share/LlamaCode/LlamaCode/linux-runtime/cuda-flashnext-2x3090/llama-server -m /media/cristian/Disco local/Models/llamacpp/gemma-4-12b-it-qat-q4_0.gguf --alias gemma-4-12b-it-qat-q4_0 --host 127.0.0.1 --port 8083 -c 32768 --batch-size 512 --ubatch-size 512 -ngl 999 --flash-attn auto --jinja --reasoning off --image-min-tokens 40 --image-max-tokens 280 --parallel 2 --mmproj /media/cristian/Disco local/Models/llamacpp/mmproj-gemma-4-12b-it-qat-q4_0.gguf"
+    }
+  ],
+  "matching_listeners": [
+    "LISTEN 0      512        127.0.0.1:8033       0.0.0.0:*    users:((\"llama-server\",pid=2173417,fd=17))",
+    "LISTEN 0      512        127.0.0.1:8081       0.0.0.0:*    users:((\"llama-server\",pid=2173751,fd=14))",
+    "LISTEN 0      512        127.0.0.1:8083       0.0.0.0:*    users:((\"llama-server\",pid=2174901,fd=27))"
+  ],
+  "decision": "No benchmark or GPU model startup while any inference server is active. Do not send requests to or terminate these servers.",
+  "preparation": {
+    "he0_receipt_sha256": "fb512bc0afb5fdb9aecb2e475ecf820a662676794fb0656c850c745f5f5512b4",
+    "he0_copy_verified": true,
+    "runner_sha256": "694712c6fef09d1fc1c1bbaab0d46a2f92d4f586856d69fffdb8856ab4815cbe",
+    "profile_fingerprint": "a56c723fde568b4db160bbb48ccc9e378aa221bdcaffe544ee957e3ba666dd86"
+  },
+  "next_action": "Wait until a fresh all-process/all-listener scan finds zero inference servers; then repeat memory and CPU profile gates immediately before model start and execute only HE20-05.",
+  "preservation": [
+    "ASTRA unchanged",
+    "SOL unchanged",
+    "PeritoSoft unchanged",
+    "production config unchanged"
+  ],
+  "false_positive_ignored": [
+    {
+      "pid": "2330149",
+      "command": "bash",
+      "reason": "shell wrapper contained the process-matching pattern in its command text; not an inference server and has no matched listener"
+    }
+  ],
+  "process_scan": "Matched exact executable command names and correlated them to all TCP LISTEN sockets; shell wrapper excluded.",
+  "active_inference_count": 3
+}
