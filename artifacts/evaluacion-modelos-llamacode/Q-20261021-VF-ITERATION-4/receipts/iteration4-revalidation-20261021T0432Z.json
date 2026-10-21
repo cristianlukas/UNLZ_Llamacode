@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261021-VF-ITERATION-4",
+  "batchId": "VF-20261019-01",
+  "lockToken": "121263e9-8fdf-4971-a2ce-d3673b5b97f0",
+  "observedAtUtc": "2026-10-21T04:32:00Z",
+  "closedAtUtc": "2026-10-21T04:35:33Z",
+  "status": "blocked_external_conditions_remain",
+  "inferencePreflight": {
+    "processScan": "No model inference process identified. Codex app-server is a GUI/control process, not a model server.",
+    "listeners": "No listeners found on evaluation ports 8000, 8001, 8080, 8350, 8351, 8353, 8354, 11434, 18354, 30000.",
+    "nvidiaComputeApps": [
+      {"process": "artcraft-launcher", "usedMemoryMiB": 207, "classification": "GUI; left running; no inference performed"}
+    ],
+    "gpuUsedForThisIteration": false
+  },
+  "swift15": {
+    "officialManifestUrl": "https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-27B-GSQ-RCO-GGUF/resolve/main/release-manifest.json",
+    "manifestHttp": 200,
+    "manifestBytes": 2465,
+    "manifestSha256": "f9a35f90dd3506d5860a0e491b9cae7ff4f48196e9bdfd59f142acb447ec9212",
+    "standardArtifact": {
+      "file": "Swift-1.5-Qwen3.8-27B-GSQ-RCO-IQ2_XS.gguf",
+      "bytes": 8422841632,
+      "sha256": "714c509c3fc496ea4abc409097658df7cd218bc966f78e1459fc1649758a9de8",
+      "headHttp": 200
+    },
+    "mtpArtifact": {
+      "file": "Swift-1.5-Qwen3.8-27B-GSQ-RCO-IQ2_XS-mtp.gguf",
+      "bytes": 8771311616,
+      "sha256": "4414bc39d93272af91ff311e837941434aec983d5633958c08acfe48b61cab85"
+    },
+    "downloadedWeights": false,
+    "licenseUrl": "https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-27B-GSQ-RCO-GGUF/blob/main/LICENSE",
+    "licenseRuleObserved": "Commercial use rights are conditioned on consolidated gross revenue below US$1,000,000 for the latest completed fiscal year; common-control entities are aggregated; over-threshold commercial use requires a separate written enterprise license.",
+    "userEligibilityConfirmed": false,
+    "noMtpComparison": "Would require a separately preregistered matched comparison with MTP disabled for both candidate and ASTRA control; equivalence and safe loading are not yet demonstrated."
+  },
+  "googleSheetUpdate": {
+    "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "tab": "Evaluaciones LlamaCode",
+    "sheetId": 1945218181,
+    "rowsUpdated": [149, 152],
+    "columnsUpdated": ["C", "D", "G", "H", "I"],
+    "readback": "Exact values verified after write; row149 and row152 retained Arial 10 / white cell background; unrelated columns and tabs were not written."
+  },
+  "openjet": {
+    "sourceFiles": [
+      {"path": "artifacts/evaluacion-modelos-llamacode/Q-20261021-VF-FINISH-PENDING/work/open-jet/megakernel/qwen38_mk.cu", "sha256": "2716489fc490d3b19df5df3281b25c46537447959f61716f9c30ef6a98d56cd1"},
+      {"path": "artifacts/evaluacion-modelos-llamacode/Q-20261021-VF-FINISH-PENDING/work/open-jet/megakernel/qwen38_mixed.cu", "sha256": "de123ac9b27f0cc4b5c5bf4851ebc4210c5f71cfd1a72833c9ad4d95f27dc4cc"}
+    ],
+    "kernelArchitecture": "64 trunk blocks plus one MTP block; NL=64, NLA=65; constructor checks qwen35.block_count == 65.",
+    "localCandidate": "Qwen3.8-27B Q4_K_M has 64 trunk blocks and no MTP block.",
+    "candidateInference": false,
+    "decision": "Do not change the dimension check in isolation; this kernel requires MTP weights/state."
+  },
+  "s36": {"directReel": "Online fetch throttled", "officialOembed": "Online fetch throttled", "fixtureCreated": false},
+  "s23": {"cgroupSubtreeControl": "cpu memory pids", "ioDelegatedToUserSlice": false, "sameLoaderRetried": false},
+  "udiq4xs": {
+    "bcb8Retried": false,
+    "reason": "Existing EVAL contains actual MagicMock return failure; full attempts hit 1800s and 7200s timeouts. A new runner/grader fingerprint is required before meaningful retry.",
+    "modelPromoted": false
+  },
+  "filesModified": [
+    "WORK_QUEUE.md",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/PLAN-source-51.md",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/RESULTS.md",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261021-VF-ITERATION-4/RESULTS.md",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261021-VF-ITERATION-4/receipts/iteration4-revalidation-20261021T0432Z.json",
+    "Google Sheet: Evaluaciones LlamaCode rows 149 and 152"
+  ],
+  "decision": "No model test passed or failed in this iteration; blockers were revalidated and an alternate Swift standard artifact/license condition plus OpenJet MTP shape requirement were documented. Do not mark the batch's pending tests complete.",
+  "nextAction": "Resume after user confirms Swift commercial-license eligibility/access or when one of the documented external blockers changes."
+}
