@@ -1,7 +1,7 @@
 {
   "task": "Q-20261021-VF-ITERATION-26",
   "attempt": "HE20-05",
-  "observed_at_utc": "2026-10-21T21:32:34Z",
+  "observed_at_utc": "2026-10-21T23:20:47Z",
   "state": "resumed_preregistered_blocked_by_external_inference_servers",
   "test_started": false,
   "requests_sent": 0,
@@ -16,19 +16,13 @@
       "pid": "2173751",
       "command": "llama-server",
       "argv": "/home/cristian/.local/share/LlamaCode/LlamaCode/linux-runtime/cuda-flashnext-2x3090/llama-server -m /media/cristian/Disco local/Models/llamacpp/Qwen3.5-9B/Qwen3.5-9B-Q4_K_M.gguf --alias qwen3.5-9b-q4_k_m-gpu1 --host 127.0.0.1 --port 8081 -c 32768 --batch-size 512 --ubatch-size 512 -ngl 999 --flash-attn auto --parallel 2"
-    },
-    {
-      "pid": "2174901",
-      "command": "llama-server",
-      "argv": "/home/cristian/.local/share/LlamaCode/LlamaCode/linux-runtime/cuda-flashnext-2x3090/llama-server -m /media/cristian/Disco local/Models/llamacpp/gemma-4-12b-it-qat-q4_0.gguf --alias gemma-4-12b-it-qat-q4_0 --host 127.0.0.1 --port 8083 -c 32768 --batch-size 512 --ubatch-size 512 -ngl 999 --flash-attn auto --jinja --reasoning off --image-min-tokens 40 --image-max-tokens 280 --parallel 2 --mmproj /media/cristian/Disco local/Models/llamacpp/mmproj-gemma-4-12b-it-qat-q4_0.gguf"
     }
   ],
   "matching_listeners": [
     "LISTEN 0      512        127.0.0.1:8033       0.0.0.0:*    users:((\"llama-server\",pid=2173417,fd=17))",
-    "LISTEN 0      512        127.0.0.1:8081       0.0.0.0:*    users:((\"llama-server\",pid=2173751,fd=14))",
-    "LISTEN 0      512        127.0.0.1:8083       0.0.0.0:*    users:((\"llama-server\",pid=2174901,fd=27))"
+    "LISTEN 0      512        127.0.0.1:8081       0.0.0.0:*    users:((\"llama-server\",pid=2173751,fd=14))"
   ],
-  "decision": "No benchmark or GPU model startup while any inference server is active. Do not send requests to or terminate these servers.",
+  "decision": "No benchmark or GPU model startup while any recognized inference server is active. Do not send requests to or terminate these servers.",
   "preparation": {
     "he0_receipt_sha256": "fb512bc0afb5fdb9aecb2e475ecf820a662676794fb0656c850c745f5f5512b4",
     "he0_copy_verified": true,
@@ -49,6 +43,65 @@
       "reason": "shell wrapper contained the process-matching pattern in its command text; not an inference server and has no matched listener"
     }
   ],
-  "process_scan": "Matched exact executable command names and correlated them to all TCP LISTEN sockets; shell wrapper excluded.",
-  "active_inference_count": 3
+  "process_scan": "Q26 runner scans /proc for exact SERVER_NAMES plus specified Python serving module patterns; listener PID correlation confirms bound ports.",
+  "active_inference_count": 2,
+  "observations": [
+    {
+      "observed_at_utc": "2026-10-21T21:32:34Z",
+      "active_inference_processes": [
+        {
+          "pid": "2173417",
+          "command": "llama-server",
+          "argv": "/home/cristian/.local/share/LlamaCode/LlamaCode/linux-runtime/cuda-flashnext-2x3090/llama-server -m /media/cristian/Disco local/Models/llamacpp/Qwen3.5-9B/Qwen3.5-9B-Q4_K_M.gguf --alias qwen3.5-9b-q4_k_m --host 127.0.0.1 --port 8033 -c 32768 --batch-size 512 --ubatch-size 512 -ngl 999 --flash-attn auto --parallel 2"
+        },
+        {
+          "pid": "2173751",
+          "command": "llama-server",
+          "argv": "/home/cristian/.local/share/LlamaCode/LlamaCode/linux-runtime/cuda-flashnext-2x3090/llama-server -m /media/cristian/Disco local/Models/llamacpp/Qwen3.5-9B/Qwen3.5-9B-Q4_K_M.gguf --alias qwen3.5-9b-q4_k_m-gpu1 --host 127.0.0.1 --port 8081 -c 32768 --batch-size 512 --ubatch-size 512 -ngl 999 --flash-attn auto --parallel 2"
+        },
+        {
+          "pid": "2174901",
+          "command": "llama-server",
+          "argv": "/home/cristian/.local/share/LlamaCode/LlamaCode/linux-runtime/cuda-flashnext-2x3090/llama-server -m /media/cristian/Disco local/Models/llamacpp/gemma-4-12b-it-qat-q4_0.gguf --alias gemma-4-12b-it-qat-q4_0 --host 127.0.0.1 --port 8083 -c 32768 --batch-size 512 --ubatch-size 512 -ngl 999 --flash-attn auto --jinja --reasoning off --image-min-tokens 40 --image-max-tokens 280 --parallel 2 --mmproj /media/cristian/Disco local/Models/llamacpp/mmproj-gemma-4-12b-it-qat-q4_0.gguf"
+        }
+      ],
+      "matching_listeners": [
+        "LISTEN 0      512        127.0.0.1:8033       0.0.0.0:*    users:((\"llama-server\",pid=2173417,fd=17))",
+        "LISTEN 0      512        127.0.0.1:8081       0.0.0.0:*    users:((\"llama-server\",pid=2173751,fd=14))",
+        "LISTEN 0      512        127.0.0.1:8083       0.0.0.0:*    users:((\"llama-server\",pid=2174901,fd=27))"
+      ],
+      "mem_available_gib": null,
+      "swap_free_gib": null,
+      "test_started": false
+    },
+    {
+      "observed_at_utc": "2026-10-21T23:20:47Z",
+      "active_inference_processes": [
+        {
+          "pid": "2173417",
+          "command": "llama-server",
+          "argv": "/home/cristian/.local/share/LlamaCode/LlamaCode/linux-runtime/cuda-flashnext-2x3090/llama-server -m /media/cristian/Disco local/Models/llamacpp/Qwen3.5-9B/Qwen3.5-9B-Q4_K_M.gguf --alias qwen3.5-9b-q4_k_m --host 127.0.0.1 --port 8033 -c 32768 --batch-size 512 --ubatch-size 512 -ngl 999 --flash-attn auto --parallel 2"
+        },
+        {
+          "pid": "2173751",
+          "command": "llama-server",
+          "argv": "/home/cristian/.local/share/LlamaCode/LlamaCode/linux-runtime/cuda-flashnext-2x3090/llama-server -m /media/cristian/Disco local/Models/llamacpp/Qwen3.5-9B/Qwen3.5-9B-Q4_K_M.gguf --alias qwen3.5-9b-q4_k_m-gpu1 --host 127.0.0.1 --port 8081 -c 32768 --batch-size 512 --ubatch-size 512 -ngl 999 --flash-attn auto --parallel 2"
+        }
+      ],
+      "matching_listeners": [
+        "LISTEN 0      512        127.0.0.1:8033       0.0.0.0:*    users:((\"llama-server\",pid=2173417,fd=17))",
+        "LISTEN 0      512        127.0.0.1:8081       0.0.0.0:*    users:((\"llama-server\",pid=2173751,fd=14))"
+      ],
+      "mem_available_gib": 91.05,
+      "swap_free_gib": 4.6,
+      "test_started": false,
+      "requests_sent": 0,
+      "score": null
+    }
+  ],
+  "last_checked_at_utc": "2026-10-21T23:20:47Z",
+  "memory_snapshot_gib": {
+    "MemAvailable": 91.05,
+    "SwapFree": 4.6
+  }
 }

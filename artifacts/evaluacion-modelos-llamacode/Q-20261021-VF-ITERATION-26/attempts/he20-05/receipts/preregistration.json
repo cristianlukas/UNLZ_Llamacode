@@ -39,10 +39,28 @@
     "minimum_mem_available_gib": 80,
     "minimum_swap_free_gib": 1,
     "forbid_any_inference_server_process_or_listener": true,
-    "discovery": "scan all processes and all TCP listening sockets immediately before launch; match llama-server, Strata serving mode, vLLM, Ollama and any model-serving API process; do not limit discovery to the legacy test ports",
+    "discovery": "Inspect the full /proc process table for the runner SERVER_NAMES and recognized Python serving modules (--m vllm, vllm serve, -m sglang, -m aphrodite, Strata serve/server.py --engine strata), independent of port; separately check reserved controller listeners 8352, 8354 and 18766. Do not treat desktop GUI processes as inference servers. Repeat immediately before model start.",
     "desktop_gui_processes_allowed": true,
     "never_stop_or_signal_unowned_processes": true,
-    "repeat_immediately_before_model_start": true
+    "repeat_immediately_before_model_start": true,
+    "runner_server_names": [
+      "aphrodite",
+      "koboldcpp",
+      "llama-server",
+      "local-ai",
+      "localai",
+      "ollama",
+      "sglang",
+      "strata",
+      "vllm"
+    ],
+    "recognized_python_server_patterns": [
+      "-m vllm",
+      "vllm serve",
+      "-m sglang",
+      "-m aphrodite",
+      "serve/server.py with --engine strata"
+    ]
   },
   "profile_gate": {
     "he0": "valid",

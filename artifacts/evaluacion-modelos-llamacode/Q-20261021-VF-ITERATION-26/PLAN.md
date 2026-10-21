@@ -99,3 +99,8 @@ El usuario reanudó explícitamente el lote después de la pausa. HE20-04 sigue 
 El preflight fresco de 2026-10-21T21:32:34Z detectó inference servers ajenos activos: llama-server Qwen3.5 en 8033/8081 y Gemma 4 12B en 8083. HE20-05 queda preregistrado pero no iniciado (0 requests, sin GPU/modelo cargado). No enviar requests ni terminar esos procesos. El gate nuevo inspeccionará procesos de serving y todos los listeners TCP, no sólo los puertos legacy 8352/8354/18766; la GUI de escritorio está permitida y no se cuenta como servidor.
 
 Siguiente acción: esperar hasta que una comprobación fresca encuentre cero inference servers; volver a comprobar memoria/swap y el gate CPU del perfil inmediatamente antes de cargar Strata; ejecutar sólo HE20-05 en GPU0, serial, con los guards ya registrados. Sin retry automático ni BCB. ASTRA/SOL, PeritoSoft y producción permanecen intactos. Recibo: `attempts/he20-05/receipts/resume-blocker.json`.
+
+
+## Revalidación de servidores — 2026-10-21T23:20:47Z
+
+Sigue bloqueada la inferencia: Qwen3.5-9B permanece activo en `llama-server` PID 2173417, 2173751 (puertos correlacionados: ver recibo). Gemma 4 ya no apareció. MemAvailable=91.05 GiB; SwapFree=4.6 GiB. No se lanzó benchmark ni se detuvo proceso. El runner detecta procesos conocidos en cualquier puerto mediante `/proc`; la revisión de puertos reservados es adicional. Recibo `attempts/he20-05/receipts/resume-blocker.json`.
