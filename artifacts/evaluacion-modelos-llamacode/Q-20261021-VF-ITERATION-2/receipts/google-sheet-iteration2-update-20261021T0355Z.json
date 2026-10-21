@@ -1,0 +1,25 @@
+{
+  "taskId": "Q-20261021-VF-ITERATION-2",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "sheetName": "Evaluaciones LlamaCode",
+  "sheetId": 1945218181,
+  "updatedAtUtc": "2026-10-21T03:57:32Z",
+  "ranges": [
+    "C2",
+    "E2:I2",
+    "C145",
+    "E145:I145",
+    "A152:I152"
+  ],
+  "changes": [
+    "Updated campaign summary to iteration 2 (152 IDs, 13 actionables) and retained the external blockers.",
+    "Corrected Harness² row: endpoint/egress and mechanical suite/demo are complete; quality remains blocked pending workflow+holdout.",
+    "Added the preregistered Swift 1.5 candidate screen as an actionable blocked pending authorized artifact access and license eligibility."
+  ],
+  "verification": {
+    "readBack": "PASS: summary, Harness² update, and complete Swift 1.5 row matched intended values.",
+    "formatting": "PASS: rows retain top alignment, text wrapping, and date formatting; no unrelated rows or sheet structure changed.",
+    "unrelatedRows": "Not written."
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "taskId": "Q-20261021-VF-ITERATION-2",
+  "checkedAtUtc": "2026-10-21T03:54:44Z",
+  "lockToken": "1a77023b-7103-4701-be6f-dc6a897486f7",
+  "status": "blocked_external_conditions_no_justified_model_tests_executable",
+  "instructionsRead": [
+    "AGENTS.md",
+    "README.md",
+    "WORK_QUEUE.md",
+    "WORK_QUEUE.lock"
+  ],
+  "preflight": {
+    "inferenceServerDetected": false,
+    "matchingProcessLines": [
+      "Codex app process (not an inference server)"
+    ],
+    "nvidiaComputeApp": "artcraft-launcher, 207 MiB VRAM; GUI left running",
+    "evaluationPortsListening": [],
+    "memAvailableKiB": 115801088,
+    "memoryPsiSomeAvg10": 0.0,
+    "memoryPsiFullAvg10": 0.0,
+    "userCgroupControllers": [
+      "cpu",
+      "memory",
+      "pids"
+    ],
+    "ioDelegated": false,
+    "ioMaxPresent": false,
+    "gpuInferenceLaunched": false
+  },
+  "verified": [
+    "S23 remains paused: io throttle unavailable and previous same-loader attempt aborted on sustained PSI before READY.",
+    "UD-IQ4_XS known-answer grader fixture 1019 passes 5/5 but is not a model result; prior BCB8 timeouts have no final EVAL outputs to rescore.",
+    "Harness2 namespace/egress and local endpoint canaries plus deterministic suite/demo already pass; quality needs defined LlamaCode workflow and fixed synthetic holdout.",
+    "S36 requires attributable primary content; OpenJet requires 64-block support or a compatible local Q4_K_M and a single-GPU product decision.",
+    "Swift 1.5 preregistration remains gated on authorized artifact access and applicable license permission."
+  ],
+  "actions": [
+    "Corrected the stale Harness2 actionable state and mirrored it to the existing sheet; readback and wrapping format verified.",
+    "No tests, downloads, builds, model loads, or GPU benchmarks executed in this iteration."
+  ],
+  "resumeWhen": [
+    "new primary content for S36",
+    "materially safer validated S23 load/I/O path or user cgroup io delegation",
+    "corrected UD-IQ4_XS grader/runner plus a new screen fingerprint",
+    "OpenJet 64-block support or a compatible local model and explicit evaluation target",
+    "Harness2 workflow and holdout defined",
+    "Swift artifact access and license gate confirmed"
+  ]
+}
