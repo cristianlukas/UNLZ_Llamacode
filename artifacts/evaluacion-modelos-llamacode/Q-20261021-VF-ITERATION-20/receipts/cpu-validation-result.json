@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261021-VF-ITERATION-20",
+  "recordedAtUtc": "2026-10-21T13:10:33.175896+00:00",
+  "status": "pass",
+  "pyCompile": {
+    "passed": true,
+    "scripts": 8
+  },
+  "cpuTests": {
+    "guard": {
+      "passed": 4,
+      "total": 4
+    },
+    "adapter": {
+      "passed": 5,
+      "total": 5
+    },
+    "scorerSandbox": {
+      "passed": 5,
+      "total": 5
+    },
+    "totalPassed": 14,
+    "total": 14
+  },
+  "adapterDryRuns": {
+    "initialBeforeFirstRun": {
+      "passed": 6,
+      "total": 6
+    },
+    "remainingAfterStock23003": {
+      "passed": 5,
+      "total": 5
+    },
+    "previouslyConsumedOutputRefusal": "stock/23003 correctly refuses overwriting its saved outputs"
+  },
+  "transientScopeProbe": {
+    "status": "pass",
+    "memoryHighBytes": 68719476736,
+    "memoryMaxBytes": 77309411328,
+    "lockEnvironmentPresent": true
+  },
+  "modelRequestsSentForValidation": 0
+}

@@ -1,0 +1,46 @@
+{
+  "exe": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata",
+  "args": [
+    "--pack",
+    "/media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/packs/iq3_s",
+    "--native",
+    "/media/cristian/Disco local/Models/ASTRA-IQ3_S-calibrated-20261006/models/IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf",
+    "--ple-gguf",
+    "/media/cristian/Disco local/Models/.llamacode-eval/VF-20261019-01/source-23-236dfdf/ple-fp8-e4m3.gguf",
+    "--expert-profile",
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/data/expert-profile.bin",
+    "--expert-cache",
+    "auto",
+    "--prefill",
+    "auto",
+    "--spec",
+    "4",
+    "--spec-min-p",
+    "0.5",
+    "--mtp",
+    "/media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/mtp/rt",
+    "--max-context",
+    "131072",
+    "--kv",
+    "int8",
+    "--kv-resident",
+    "32768",
+    "--mmap-experts"
+  ],
+  "cwd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source",
+  "tokenizer": "/media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/packs/iq3_s/tokenizer",
+  "model_name": "vf-s23-iq3s",
+  "log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/work/source23/strata-fp8.log",
+  "lib_dirs": [
+    "/usr/local/cuda-12.8/bin",
+    "/usr/local/cuda-12.8/lib64"
+  ],
+  "port": 8353,
+  "gpu": [
+    0,
+    1
+  ],
+  "gpus_asked": true,
+  "layer_split": "auto",
+  "open_browser": false
+}

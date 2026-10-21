@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261021-VF-ITERATION-20",
+  "recordedAtUtc": "2026-10-21T13:10:33.175896+00:00",
+  "lockOwned": true,
+  "inferenceProcesses": [],
+  "port8355Free": true,
+  "memAvailableBytes": 118650253312,
+  "swapFreeBytes": 5288595456,
+  "oomKills": 0,
+  "psiMemory": {
+    "some": 0.0,
+    "full": 0.0
+  },
+  "gpuTemperaturesC": [
+    50,
+    31
+  ],
+  "status": "pass"
+}

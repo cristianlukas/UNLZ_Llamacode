@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261021-VF-ITERATION-20",
+  "recordedAtUtc": "2026-10-21T13:01:25.147076+00:00",
+  "status": "provisional_superseded",
+  "modelRequestsSent": 0,
+  "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261021-VF-ITERATION-20/work/source23/results/stock-seed-23003-regraded.json",
+  "sha256": "08345b1217218fbc21771f5f550b25728607d48afe8d45884d05cc1eda97c556",
+  "score": "1/8",
+  "scorerSha256": "2be7c2f3c3db3b4011a95d92cd3aaa394f8a7c4963d6097b4fa968efe724f695"
+}

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261021-VF-ITERATION-21",
+  "batchId": "VF-20261019-01",
+  "recordedAtUtc": "2026-10-21T13:14:00Z",
+  "status": "preregistered_before_public_retrieval",
+  "experimentId": "VF-20261019-01-S36-PRIMARY-RETRIEVAL-RETEST-2",
+  "source": "#36 Instagram Reel DeehKGtuth5",
+  "question": "Can a public attributable primary surface now verify the Reel content and alleged order/unit ambiguity?",
+  "method": [
+    "Open the received Reel URL and query the exact shortcode in public search.",
+    "Accept only first-party caption/transcript or attributable mirror.",
+    "Do not log in, download video, use credentials, or infer from prior notes."
+  ],
+  "passCriterion": "Attributable primary content explicitly supports a testable requirement.",
+  "failCriterion": "Throttling/login wall or no attributable content.",
+  "decisionRule": "On pass inspect the existing fixture and decide whether a distinct hidden test is justified; on fail preserve the exact blocker and audit remaining pending items.",
+  "resources": "No GPU, no model inference, no media download.",
+  "priorEvidence": "The exact retrieval was throttled at 2026-10-21T01:49Z; this retest checks whether public availability changed."
+}

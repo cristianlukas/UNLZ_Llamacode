@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261021-VF-ITERATION-21",
+  "recordedAtUtc": "2026-10-21T13:20:00Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheetTitle": "Evaluaciones LlamaCode",
+  "sheetId": 1945218181,
+  "row": 169,
+  "recordId": "Q-20261021-VF-ITERATION-21",
+  "status": "updated_and_readback_verified",
+  "readback": {
+    "range": "A169:I169",
+    "allCells": "Expected values read back for all nine cells; date formatted yyyy-mm-dd.",
+    "summaryC2": "En curso (Q21 revalidó S36 sin evidencia primaria; lote incompleto) · 157 registros únicos (12 accionables)",
+    "summaryE2": "58 materiales con disposición; Q20 cerró S23 PLE FP8 sin mejora (stock y FP8 3/24). Q21 reintentó S36: Instagram throttled y la búsqueda exacta no encontró evidencia primaria; no hay test nuevo habilitado. Persisten prerequisitos: S20/S21/S24 (proveedor, versión, keyRef, gasto y datos), S51 (licencia), UD-IQ4_XS (runner/carga), OpenJet (GGUF/kernel compatible) y Harness² (workflow/holdout); otros enlaces dependen de hardware, almacenamiento o runtime.",
+    "filterRange": "A1:I169",
+    "format": "Copied from row168; wrap/top and date format verified on row169."
+  },
+  "rowHeightUpdate": "155 px request accepted by Sheets API; connector does not expose dimension readback.",
+  "repairNote": "Initial batch applied A:B and left C:I blank; each remaining cell was updated individually, then the full row was read back and verified.",
+  "resources": {
+    "gpu": false,
+    "modelInference": false,
+    "mediaDownloaded": false
+  }
+}

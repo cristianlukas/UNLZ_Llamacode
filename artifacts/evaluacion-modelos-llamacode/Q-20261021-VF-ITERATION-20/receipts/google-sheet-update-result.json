@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261021-VF-ITERATION-20",
+  "recordedAtUtc": "2026-10-21T13:12:32Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheetTitle": "Evaluaciones LlamaCode",
+  "sheetId": 1945218181,
+  "row": 168,
+  "recordId": "Q-20261021-VF-ITERATION-20",
+  "status": "updated_and_readback_verified",
+  "writtenFields": "A168:I168",
+  "readback": {
+    "result": "All nine cells read back with expected values; date formatted 2026-10-21.",
+    "summaryC2": "En curso (Q20 cerró S23 PLE FP8 A/B sin mejora; lote incompleto) · 156 registros únicos (12 accionables)",
+    "summaryE2": "58 materiales con disposición; Q19 validó S55 JSON a 700K; Q20 cerró S23 con stock y FP8 empatados 3/24, sin promoción. La campaña sigue incompleta por S20/S51 (usuario), S36 (fuente primaria), UD-IQ4_XS (runner/carga), OpenJet (GGUF/kernel compatible) y Harness² (workflow/holdout de calidad).",
+    "filterRange": "A1:I168",
+    "rowFormatting": "Copied from row 167; WRAP and TOP verified on C,E,G,H,I; date pattern yyyy-mm-dd verified on D.",
+    "rowHeight": "140 px update accepted; dimension readback not exposed by connector."
+  },
+  "repairNote": "The first batch wrote A:B only; a follow-up batch updated C:I individually, and full-row readback then matched expected values.",
+  "apiResult": "Action completed; six requests in formatting/summary batch and seven cell update requests; all replies returned without error."
+}

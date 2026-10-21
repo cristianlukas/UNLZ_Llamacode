@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261021-VF-ITERATION-20",
+  "recordedAtUtc": "2026-10-21T13:01:25.147076+00:00",
+  "status": "valid_cpu_regrade",
+  "modelRequestsSent": 0,
+  "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261021-VF-ITERATION-20/work/source23/results/stock-seed-23003-regraded-v2.json",
+  "sha256": "e836ac0beb11955f8e40af198ac43b3fca25e59663d1a975bccb2cc855277ac1",
+  "score": "1/8",
+  "scorerSha256": "0ebab7f01f7e3050c678f54dc40074c3f82a0f6a9b6e57c31bdb905ab3f9b107"
+}

@@ -1,0 +1,13 @@
+{
+  "arm": "stock",
+  "seed": 23005,
+  "serverPid": 95572,
+  "serverExitCode": 0,
+  "ready": true,
+  "runnerExitCode": 0,
+  "result": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261021-VF-ITERATION-20/work/source23/results/stock-seed-23005.json",
+  "serverLog": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261021-VF-ITERATION-20/work/source23/server-stock-seed-23005.log",
+  "portFreeAfterCleanup": true,
+  "failure": null,
+  "cleanupFailure": null
+}

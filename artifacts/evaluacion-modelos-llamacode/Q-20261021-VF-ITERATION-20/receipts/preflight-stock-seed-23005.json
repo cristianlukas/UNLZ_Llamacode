@@ -1,0 +1,23 @@
+{
+  "atUtc": "2026-10-21T13:05:32.191527+00:00",
+  "arm": "stock",
+  "seed": 23005,
+  "status": "pass",
+  "problems": [],
+  "lockOwned": true,
+  "inferenceProcesses": [],
+  "port8355Free": true,
+  "memAvailableBytes": 118497927168,
+  "swapFreeBytes": 5290225664,
+  "oomKills": 0,
+  "psiMemory": {
+    "some": 0.0,
+    "full": 0.0
+  },
+  "gpuTemperaturesC": [
+    58,
+    42
+  ],
+  "guiAndOtherAppsAreNotGates": true,
+  "outputPathsUnused": true
+}

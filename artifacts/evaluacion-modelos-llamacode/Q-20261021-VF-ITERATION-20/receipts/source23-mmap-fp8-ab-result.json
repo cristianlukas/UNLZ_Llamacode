@@ -1,0 +1,254 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261021-VF-ITERATION-20",
+  "experimentId": "VF-20261019-01-S23-PLE-FP8-AB",
+  "recordedAtUtc": "2026-10-21T13:10:33.175896+00:00",
+  "status": "complete_negative_screen_no_promotion",
+  "config": {
+    "model": "ASTRA Qwen3.8 Flash-Next IQ3_S",
+    "armA": "stock PLE",
+    "armB": "PLE FP8 E4M3",
+    "bothArms": [
+      "--mmap-experts"
+    ],
+    "seeds": [
+      23003,
+      23004,
+      23005
+    ],
+    "pairs": 3,
+    "tasksPerArmPerSeed": 8,
+    "port": 8355,
+    "sampling": "temperature=0.6, top_p=0.95, top_k=20, min_p=0.0, repeat_penalty=1.0, presence_penalty=0.0",
+    "gpu": "2x RTX 3090"
+  },
+  "screen": {
+    "stockPassed": 3,
+    "stockTotal": 24,
+    "fp8Passed": 3,
+    "fp8Total": 24,
+    "passedIdsByStockSeed": [
+      [
+        "BigCodeBench/870"
+      ],
+      [
+        "BigCodeBench/870"
+      ],
+      [
+        "BigCodeBench/870"
+      ]
+    ],
+    "passedIdsByFp8Seed": [
+      [
+        "BigCodeBench/870"
+      ],
+      [
+        "BigCodeBench/870"
+      ],
+      [
+        "BigCodeBench/870"
+      ]
+    ],
+    "pairOutcomes": [
+      {
+        "seed": 23003,
+        "stock": 1,
+        "fp8": 1,
+        "outcome": "tie"
+      },
+      {
+        "seed": 23004,
+        "stock": 1,
+        "fp8": 1,
+        "outcome": "tie"
+      },
+      {
+        "seed": 23005,
+        "stock": 1,
+        "fp8": 1,
+        "outcome": "tie"
+      }
+    ],
+    "fp8PairWins": 0,
+    "fp8PairTies": 3,
+    "fp8PairLosses": 0,
+    "safetyOrToolUseCasesInFixture": false,
+    "qualityGatePassed": false,
+    "decision": "do not promote FP8; retain current stock setup"
+  },
+  "timingSummary": {
+    "stockMedianOfPerSeedMedianPrefillTokS": 306.3,
+    "fp8MedianOfPerSeedMedianPrefillTokS": 302.70000000000005,
+    "stockMedianOfPerSeedMedianDecodeTokS": 126.75,
+    "fp8MedianOfPerSeedMedianDecodeTokS": 125.9,
+    "fp8DecodeThroughputRelativeChange": -0.006706114398422058,
+    "timingClaim": "descriptive only; one cold first-stock run, response-length and cache-order effects; no speed superiority claim"
+  },
+  "memoryComparability": "not established; first stock run cold peaked at ~55.48 GiB cgroup memory while remaining runs used warm caches and peaked at ~7.52–9.04 GiB; do not attribute this difference to PLE format",
+  "harnessRepair": {
+    "initialStock23003ResultHadValidTransport": true,
+    "initialScorerValid": false,
+    "finalRegradeFromSavedRawContent": "1/8",
+    "additionalModelRequestsForRegrade": 0,
+    "cpuTestsPassed": 14,
+    "cpuTestsTotal": 14,
+    "pyCompilePassed": true
+  },
+  "resourceSafety": {
+    "allSixServerReady": true,
+    "allSixOuterCompleted": true,
+    "guardAbortCount": 0,
+    "oomKills": 0,
+    "minimumMemAvailableGiB": 103.24,
+    "maximumGpuTempC": 67,
+    "inferenceProcessesAfter": [],
+    "port8355FreeAfter": true,
+    "guiUntouched": true
+  },
+  "runs": {
+    "stock-23003": {
+      "arm": "stock",
+      "seed": 23003,
+      "resultFile": "work/source23/results/stock-seed-23003-regraded-v2.json",
+      "resultSha256": "e836ac0beb11955f8e40af198ac43b3fca25e59663d1a975bccb2cc855277ac1",
+      "score": 1,
+      "total": 8,
+      "transportOk": 8,
+      "passedTaskIds": [
+        "BigCodeBench/870"
+      ],
+      "medianPrefillTokS": 233.95,
+      "medianDecodeTokS": 121.35,
+      "medianRequestWallMs": 6284.035,
+      "sumRequestWallSeconds": 100.307,
+      "wallFromPreflightToCloseSeconds": 186.06,
+      "maxScopeMemoryGiB": 55.48,
+      "minMemAvailableGiB": 103.24,
+      "maxGpuTempC": 65,
+      "monitorSamples": 37,
+      "guardStopReason": null,
+      "serverReady": true,
+      "portFreeAfter": true
+    },
+    "stock-23004": {
+      "arm": "stock",
+      "seed": 23004,
+      "resultFile": "work/source23/results/stock-seed-23004.json",
+      "resultSha256": "745acceeabd83e137ee33e5cea521455f2aec9ca498a6bf963b23d08650ee532",
+      "score": 1,
+      "total": 8,
+      "transportOk": 8,
+      "passedTaskIds": [
+        "BigCodeBench/870"
+      ],
+      "medianPrefillTokS": 311.75,
+      "medianDecodeTokS": 130.25,
+      "medianRequestWallMs": 4173.085,
+      "sumRequestWallSeconds": 39.639,
+      "wallFromPreflightToCloseSeconds": 60.37,
+      "maxScopeMemoryGiB": 7.52,
+      "minMemAvailableGiB": 104.02,
+      "maxGpuTempC": 66,
+      "monitorSamples": 12,
+      "guardStopReason": null,
+      "serverReady": true,
+      "portFreeAfter": true
+    },
+    "stock-23005": {
+      "arm": "stock",
+      "seed": 23005,
+      "resultFile": "work/source23/results/stock-seed-23005.json",
+      "resultSha256": "9d97556c2efb7fc6470dcbb78ef72a447e92a05f6ce7c21c6c8919948b296afd",
+      "score": 1,
+      "total": 8,
+      "transportOk": 8,
+      "passedTaskIds": [
+        "BigCodeBench/870"
+      ],
+      "medianPrefillTokS": 306.3,
+      "medianDecodeTokS": 126.75,
+      "medianRequestWallMs": 4205.94,
+      "sumRequestWallSeconds": 44.96,
+      "wallFromPreflightToCloseSeconds": 65.39,
+      "maxScopeMemoryGiB": 9.04,
+      "minMemAvailableGiB": 103.94,
+      "maxGpuTempC": 67,
+      "monitorSamples": 13,
+      "guardStopReason": null,
+      "serverReady": true,
+      "portFreeAfter": true
+    },
+    "fp8-23003": {
+      "arm": "fp8",
+      "seed": 23003,
+      "resultFile": "work/source23/results/fp8-seed-23003.json",
+      "resultSha256": "353bc8384f9f91b8b9ae9455bff4dd891eb70eedaf7df2b601c0abf3a0127ab8",
+      "score": 1,
+      "total": 8,
+      "transportOk": 8,
+      "passedTaskIds": [
+        "BigCodeBench/870"
+      ],
+      "medianPrefillTokS": 294.2,
+      "medianDecodeTokS": 123.75,
+      "medianRequestWallMs": 5174.955,
+      "sumRequestWallSeconds": 39.958,
+      "wallFromPreflightToCloseSeconds": 60.35,
+      "maxScopeMemoryGiB": 7.65,
+      "minMemAvailableGiB": 103.64,
+      "maxGpuTempC": 62,
+      "monitorSamples": 12,
+      "guardStopReason": null,
+      "serverReady": true,
+      "portFreeAfter": true
+    },
+    "fp8-23004": {
+      "arm": "fp8",
+      "seed": 23004,
+      "resultFile": "work/source23/results/fp8-seed-23004.json",
+      "resultSha256": "53a0b2cf891e4ad5faa18bd7e39d092dffda19ca13c886a641c2b34eedb67caa",
+      "score": 1,
+      "total": 8,
+      "transportOk": 8,
+      "passedTaskIds": [
+        "BigCodeBench/870"
+      ],
+      "medianPrefillTokS": 302.70000000000005,
+      "medianDecodeTokS": 128.1,
+      "medianRequestWallMs": 4563.455,
+      "sumRequestWallSeconds": 41.283,
+      "wallFromPreflightToCloseSeconds": 60.34,
+      "maxScopeMemoryGiB": 8.76,
+      "minMemAvailableGiB": 103.88,
+      "maxGpuTempC": 65,
+      "monitorSamples": 12,
+      "guardStopReason": null,
+      "serverReady": true,
+      "portFreeAfter": true
+    },
+    "fp8-23005": {
+      "arm": "fp8",
+      "seed": 23005,
+      "resultFile": "work/source23/results/fp8-seed-23005.json",
+      "resultSha256": "bf804531d9c86d985a2d757da7b979c424e3a2d62214c6e6103d3ffd4891bd22",
+      "score": 1,
+      "total": 8,
+      "transportOk": 8,
+      "passedTaskIds": [
+        "BigCodeBench/870"
+      ],
+      "medianPrefillTokS": 308.0,
+      "medianDecodeTokS": 125.9,
+      "medianRequestWallMs": 4368.325,
+      "sumRequestWallSeconds": 41.696,
+      "wallFromPreflightToCloseSeconds": 60.37,
+      "maxScopeMemoryGiB": 7.8,
+      "minMemAvailableGiB": 103.91,
+      "maxGpuTempC": 67,
+      "monitorSamples": 12,
+      "guardStopReason": null,
+      "serverReady": true,
+      "portFreeAfter": true
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261021-VF-ITERATION-21",
+  "batchId": "VF-20261019-01",
+  "experimentId": "VF-20261019-01-S36-PRIMARY-RETRIEVAL-RETEST-2",
+  "recordedAtUtc": "2026-10-21T13:18:00Z",
+  "source": "#36 Instagram Reel DeehKGtuth5",
+  "status": "blocked_source_unverifiable",
+  "attempts": [
+    {
+      "method": "Open exact received Instagram Reel URL",
+      "url": "https://www.instagram.com/reel/DeehKGtuth5/",
+      "result": "online fetch throttled"
+    },
+    {
+      "method": "Search exact shortcode",
+      "query": "\"DeehKGtuth5\"",
+      "result": "empty search results"
+    },
+    {
+      "method": "Search shortcode and alleged topic",
+      "query": "\"DeehKGtuth5\" empanadas WhatsApp",
+      "result": "no attributable Reel/caption/transcript/mirror found; general unrelated Instagram viewer pages do not qualify"
+    }
+  ],
+  "decision": "No new fixture or model test. Keep source #36 blocked until caption, transcript, readable capture, or attributable mirror is provided.",
+  "resources": {
+    "gpu": false,
+    "modelInference": false,
+    "mediaDownloaded": false,
+    "loginOrCredentials": false
+  },
+  "continuationAudit": {
+    "source1ConcurrencyE2E": "Not run: prior screen showed no throughput gain and all measured requests ended at the 96-token cap; E2E subagent test would not alter the user-requested serial one-repository workflow absent a product decision to allow overlap.",
+    "source16Capacity": "Documentary size check already completed; no memory-capacity claim can be made from historical post-shutdown VRAM telemetry.",
+    "source20_21_24Hybrid": "Existing synthetic A/B remains blocked on provider/model/version, authorized key reference, spending ceiling, and data boundary.",
+    "source23PLE": "Completed by Q20; no further repeat justified after 3/24 vs 3/24 and no FP8 wins.",
+    "remaining": "S51 license/eligibility and no-MTP comparison; UD-IQ4_XS corrected runner and safe load path; OpenJet compatible GGUF/kernel; Harness² workflow plus independent quality holdout; other link-specific hardware/storage/runtime prerequisites."
+  },
+  "nextAction": "Resume only when one of the stated external conditions changes; otherwise no justified test is currently enabled."
+}
