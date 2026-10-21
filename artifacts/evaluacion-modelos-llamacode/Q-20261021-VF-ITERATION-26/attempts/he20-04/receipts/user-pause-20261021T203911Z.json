@@ -1,0 +1,36 @@
+{
+  "timestamp_utc": "2026-10-21T20:39:11Z",
+  "task_id": "Q-20261021-VF-ITERATION-26",
+  "attempt_id": "HE20-04",
+  "state": "paused_by_user",
+  "user_instruction": "Pausar todos los tests.",
+  "last_attempt": {
+    "result": "runner_setup_failure_before_first_request",
+    "coverage": "0/20",
+    "eval": null,
+    "score": null,
+    "quality_failure": false,
+    "detail": "HE20-04 llegó a READY pero el runner no encontró attempts/he20-04/receipts/he0-gate.json; no se envió ninguna solicitud."
+  },
+  "inference_server_preflight": {
+    "timestamp_utc": "2026-10-21T20:24:37Z",
+    "active_servers": [
+      { "model": "Qwen3.5-9B-Q4_K_M", "ports": [8033, 8081] },
+      { "model": "Gemma-4-12B-IT-QAT-Q4_0", "ports": [8083] }
+    ],
+    "action": "No se detuvieron procesos ajenos; no se inició otra prueba."
+  },
+  "lock": {
+    "token": "1dc495a1-68f8-4f9d-a14e-396864cd1f70",
+    "retained": true
+  },
+  "resume_conditions": [
+    "Instrucción explícita del usuario para reanudar.",
+    "Preregistrar HE20-05 como intento nuevo.",
+    "Copiar el recibo HE0 al directorio del intento y verificar su SHA-256.",
+    "Validar el gate HE0 y repetir el preflight sin ningún inference server activo.",
+    "Ejecutar sólo HE20, en serie y sin modificar perfiles productivos."
+  ],
+  "preserved": ["Qwen Flash-Next ASTRA", "SOL", "modelos/servicios de PeritoSoft"],
+  "sheet": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit?gid=1945218181#gid=1945218181"
+}
