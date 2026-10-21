@@ -1,0 +1,29 @@
+{
+  "taskId": "Q-20261021-VF-ITERATION-22",
+  "recordedAtUtc": "2026-10-21T13:21:58Z",
+  "checkedProcessCommSubstrings": [
+    "llama-server",
+    "strata",
+    "vllm",
+    "ollama",
+    "lmstudio",
+    "text-generation",
+    "aphrodite"
+  ],
+  "matchingInferenceProcesses": [],
+  "checkedLocalListenerPorts": [
+    8354,
+    8355,
+    11434,
+    1234,
+    8000,
+    8080,
+    8081,
+    5000,
+    5001,
+    7860,
+    8012
+  ],
+  "matchingListeners": [],
+  "result": "no_inference_server_detected"
+}

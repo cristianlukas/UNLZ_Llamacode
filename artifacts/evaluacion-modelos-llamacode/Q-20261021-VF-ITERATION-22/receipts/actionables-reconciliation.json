@@ -1,0 +1,41 @@
+{
+  "taskId": "Q-20261021-VF-ITERATION-22",
+  "recordedAtUtc": "2026-10-21T13:23:41Z",
+  "batchId": "VF-20261019-01",
+  "actionableId": "vf-ple-sidecar-20261019",
+  "oldState": "Pausado · presión de memoria; conservar 1/3 pares",
+  "newState": "Resuelto",
+  "finalResult": "stock 3/24; FP8 3/24; 0/3 matched pairs won by FP8; same single case per seed",
+  "decision": "Keep stock PLE; do not promote FP8; do not repeat same design. ASTRA/SOL/PeritoSoft preserved.",
+  "sourceFiles": [
+    "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/actionables.json",
+    "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/inbox.json"
+  ],
+  "inboxEntries": 58,
+  "inboxStatuses": {
+    "Analizado": 45,
+    "Bloqueada": 4,
+    "Duplicada": 1,
+    "Sin prueba aplicable": 2,
+    "Revisado · sin prueba local nueva aplicable": 1,
+    "Revisado · sin prueba local aplicable": 1,
+    "Analizado · Prueba ejecutada; 15/15 hechos exactos a ~680K, gate estricto JSON 2/3; no pasa": 1,
+    "Analizado · Screen cerrado sin score tras cuatro fallos de arranque; no reintentar": 1,
+    "Analizado · Smoke S57 completado; ASTRA IQ2_XS activó contexto efectivo 1M": 1,
+    "Migrado y verificado": 1
+  },
+  "actionablesCount": 13,
+  "actionableStatuses": {
+    "Pausado · E2E sólo si se prioriza concurrencia": 1,
+    "Resuelto": 3,
+    "Pausado · screening parcial sin promoción": 1,
+    "Resuelto · gates de tuning no pasan": 1,
+    "Resuelto · filtro sin candidato compatible que cambie la decisión": 1,
+    "Resuelto · sin hueco reproducible de lifecycle": 1,
+    "Bloqueado · falta workflow concreto y holdout sintético fijo": 1,
+    "Pausado · screen sintético completo; integración opt-in pendiente": 1,
+    "Bloqueado · falta caption/transcripción primaria": 1,
+    "Bloqueado · sin decisión actual de runtime Qwen 27B single-GPU": 1,
+    "Bloqueado · acceso al artefacto y licencia comercial por confirmar": 1
+  }
+}
