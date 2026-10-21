@@ -1,0 +1,11 @@
+{
+  "test_id": "Q-20261021-H2-ASTRA-LOCAL-TOOL-CANARY-PREFLIGHT",
+  "amendment": 4,
+  "lock_token": "5db89d6f-d896-45d7-8238-02bf8e7d61a7",
+  "prior_attempt": "harness2-astra-tool-canary-preflight-attempt-04.json",
+  "prior_result": "Sandbox runner exited before any model/server startup: module initialization assumed the script was inside the checkout and indexed a nonexistent parent path.",
+  "change": "Select inner mode from the mounted runner path before resolving repo/iteration roots; inner smoke uses explicit mounted runtime/model paths and /tmp/work only.",
+  "decision_question_unchanged": true,
+  "model_config_prompt_sampling_resources_and_inference_scope_unchanged": true,
+  "inference_started": false
+}

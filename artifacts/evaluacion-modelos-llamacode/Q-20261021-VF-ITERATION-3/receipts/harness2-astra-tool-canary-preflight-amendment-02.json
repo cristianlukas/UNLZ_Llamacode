@@ -1,0 +1,11 @@
+{
+  "test_id": "Q-20261021-H2-ASTRA-LOCAL-TOOL-CANARY-PREFLIGHT",
+  "amendment": 2,
+  "lock_token": "5db89d6f-d896-45d7-8238-02bf8e7d61a7",
+  "prior_attempt": "harness2-astra-tool-canary-preflight-attempt-02.json",
+  "prior_result": "Failed before inference because /work was absent beneath the read-only root; no inference process started.",
+  "change": "Use /tmp/work, created beneath the already-mounted temporary /tmp, as the host scratch bind target for server, smoke receipt and grader. Explicitly create model bind targets beneath /media/models.",
+  "decision_question_unchanged": true,
+  "model_config_prompt_sampling_resources_and_inference_scope_unchanged": true,
+  "inference_started": false
+}

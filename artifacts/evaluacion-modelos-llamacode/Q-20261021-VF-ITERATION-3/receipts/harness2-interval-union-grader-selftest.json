@@ -1,0 +1,19 @@
+{
+  "test_id": "Q-20261021-H2-INTERVAL-UNION-GRADER-SELFTEST",
+  "status": "grader_selftest_pass_10_of_10",
+  "at_utc": "2026-10-21T04:18:22+00:00",
+  "lock_token": "5db89d6f-d896-45d7-8238-02bf8e7d61a7",
+  "model_inference": false,
+  "fixture": "fixed correct reference solution; not model output",
+  "grader_memory_high_bytes": 1073741824,
+  "grader_memory_max_bytes": 2147483648,
+  "grader_tasks_max": 64,
+  "timeout_seconds": 40,
+  "grader": {
+    "exit_code": 0,
+    "stdout": "PASS: 10 interval-union holdout cases\n",
+    "stderr": "",
+    "sandbox": "bubblewrap read-only root, hidden home/media, private network namespace"
+  },
+  "completed_at_utc": "2026-10-21T04:18:22+00:00"
+}

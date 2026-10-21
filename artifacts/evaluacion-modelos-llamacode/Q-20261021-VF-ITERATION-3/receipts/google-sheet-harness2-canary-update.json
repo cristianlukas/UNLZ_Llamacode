@@ -1,0 +1,26 @@
+{
+  "at_utc": "2026-10-21T04:22:46+00:00",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_title": "Listado de Juegos",
+  "sheet_name": "Evaluaciones LlamaCode",
+  "sheet_id": 1945218181,
+  "row": 145,
+  "record_id": "f23604a1-ff2e-4d28-9e09-2b5cf01d9b69",
+  "updated_columns": [
+    "C",
+    "G",
+    "H",
+    "I"
+  ],
+  "preserved_columns": [
+    "A",
+    "B",
+    "D",
+    "E",
+    "F"
+  ],
+  "status": "updated_and_read_back_verified",
+  "visual_check": "Google Sheets API returned wrapped cells and unchanged Arial 10/top alignment. Row height explicitly set to 150px. CUA had no browser tabs available, so no rendered screenshot check was possible.",
+  "update_summary": "Recorded ASTRA canary aborts under PSI guard, grader 10/10 with known reference, and concrete re-open conditions.",
+  "local_delta": "artifacts/evaluacion-modelos-llamacode/Q-20261021-VF-ITERATION-3/exports/harness2_sheet_update.csv"
+}

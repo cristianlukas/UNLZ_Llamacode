@@ -1,0 +1,10 @@
+{
+  "test_id": "Q-20261021-H2-INTERVAL-UNION-GRADER-SELFTEST",
+  "amendment": 2,
+  "at_utc": "2026-10-21T04:18:19+00:00",
+  "lock_token": "5db89d6f-d896-45d7-8238-02bf8e7d61a7",
+  "reason": "The model canary aborted before producing candidate code. Independently verify that the fixed holdout and hardened grader can execute safely before any future model attempt.",
+  "scope": "Run only the fixed 10-case holdout against a locally authored known-correct reference in a separate scratch directory; bubblewrap read-only root/no network; systemd scope MemoryHigh=1 GiB, MemoryMax=2 GiB, TasksMax=64, 40-second timeout. No model, GPU or user data.",
+  "decision_question_unchanged_for_model_canary": true,
+  "model_inference_started": false
+}

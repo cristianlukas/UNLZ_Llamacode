@@ -1,0 +1,12 @@
+{
+  "test_id": "Q-20261021-H2-ASTRA-LOCAL-TOOL-CANARY-PREFLIGHT",
+  "amendment": 1,
+  "at_utc": "2026-10-21T04:13:00Z",
+  "lock_token": "5db89d6f-d896-45d7-8238-02bf8e7d61a7",
+  "prior_attempt": "harness2-astra-tool-canary-preflight-attempt-01.json",
+  "prior_result": "Failed before inference: bubblewrap could not create /models under a read-only root; no external server/process appeared and all resource gates passed.",
+  "change": "Mount model roots under /media/models inside the already-private tmpfs /media instead of creating a new /models path at the read-only root.",
+  "decision_question_unchanged": true,
+  "model_config_prompt_sampling_resources_and_inference_scope_unchanged": true,
+  "inference_started": false
+}

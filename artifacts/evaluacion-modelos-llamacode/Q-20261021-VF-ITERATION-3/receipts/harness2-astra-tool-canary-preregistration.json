@@ -1,0 +1,72 @@
+{
+  "test_id": "Q-20261021-H2-ASTRA-LOCAL-TOOL-CANARY",
+  "parent_actionable_id": "f23604a1-ff2e-4d28-9e09-2b5cf01d9b69",
+  "status": "preregistered",
+  "created_at_utc": "2026-10-21T04:05:00Z",
+  "iteration_task_id": "Q-20261021-VF-ITERATION-3",
+  "lock_token": "5db89d6f-d896-45d7-8238-02bf8e7d61a7",
+  "decision_question": "Does production ASTRA Qwen3.8 Flash-Next IQ2_XS + Strata emit a usable local function call and solve a fixed synthetic interval-union coding holdout, enough to justify building a local-only Harness² pilot adapter?",
+  "scope": "One local model request and one synthetic Python function, not Harness² quality or comparative model evidence.",
+  "model": {
+    "name": "qwen3.8-flash-next-iq2_xs",
+    "model_root": "/media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012",
+    "profile_source": "/home/cristian/.config/LlamaCode/astra-iq2xs-strata.json",
+    "profile_isolation": "copy only; loopback port 8354; context 32768; no changes to production file",
+    "runtime_source": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source",
+    "devices": "RTX 3090 GPU 0 and GPU 1, sequential single server"
+  },
+  "prompt_task": {
+    "function": "covered_duration(intervals)",
+    "contract": "Return the length of the union of half-open integer intervals [start,end); empty intervals contribute zero; start > end raises ValueError.",
+    "tool": "write_file(path, content)",
+    "tool_choice": "auto",
+    "max_output_tokens": 2048,
+    "temperature": 0.6,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0,
+    "repeat_penalty": 1.0,
+    "presence_penalty": 0.0,
+    "hidden_holdout_cases": 10,
+    "pass_gate": "Exactly one valid write_file call to the scratch solution.py, compilation succeeds, and all 10 hidden deterministic tests pass."
+  },
+  "network": {
+    "server_bind": "127.0.0.1 only",
+    "namespace": "private user+network namespace; only loopback brought up; require no default route",
+    "egress": "none; TEST-NET reachability must fail with ENETUNREACH",
+    "api_key": "non-secret placeholder only"
+  },
+  "preflight_gates": {
+    "no_external_inference_process_or_api": true,
+    "port_8354_free": true,
+    "memavailable_min_bytes": 68719476736,
+    "memory_psi_full_avg10_max_percent": 10,
+    "gpu_free_min_mib_each": 20480,
+    "gpu_temp_max_c_exclusive": 85,
+    "free_disk_min_bytes": 21474836480
+  },
+  "runtime_guards": {
+    "memory_high_bytes": 68719476736,
+    "memory_max_bytes": 77309411328,
+    "memavailable_abort_bytes": 51539607552,
+    "memory_psi_full_abort_avg10_percent": 25,
+    "memory_psi_consecutive_samples": 4,
+    "sample_interval_seconds": 5,
+    "swap_growth_abort_bytes": 1073741824,
+    "gpu_temp_abort_c": 85,
+    "ready_timeout_seconds": 600,
+    "request_timeout_seconds": 180,
+    "gui_allowed": true,
+    "terminate_external_gui": false
+  },
+  "decision_rule": "A pass only clears the local tool-call prerequisite for a separately preregistered Harness² quality pilot. It does not establish Harness² quality or model superiority. A fail leaves the quality pilot blocked pending a material local adapter/runtime change.",
+  "product_changes": false,
+  "downloads": false,
+  "prompt_and_tool_schema_sha256": null,
+  "model_hashes": null,
+  "config_hash": null,
+  "runner_sha256": null,
+  "preflight": null,
+  "result": null,
+  "cleanup": null
+}

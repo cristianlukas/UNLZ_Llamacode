@@ -1,0 +1,62 @@
+{
+  "task_id": "Q-20261021-VF-ITERATION-3",
+  "status": "blocked_iteration_closed",
+  "closed_at_utc": "2026-10-21T04:24:07Z",
+  "lock_token": "5db89d6f-d896-45d7-8238-02bf8e7d61a7",
+  "canary": {
+    "status": "aborted_or_failed",
+    "attempted_contexts_tokens": [
+      32768,
+      8192
+    ],
+    "readiness": false,
+    "api_requests": 0,
+    "tool_calls": 0,
+    "model_score": null,
+    "runner_sha256": "4615d789cd2fdef841eff9bc21eb3706bc8dd070b54f3180494fca0c4df2748a",
+    "psi_guard_triggered": true,
+    "attempt_01_scope_peak_gib_from_reconstructed_summary": 29.8,
+    "attempt_02_scope_peak_gib_from_results": 37.3,
+    "attempt_02_memory_psi_full_avg10_percent_samples": [
+      0.0,
+      0.0,
+      8.12,
+      25.84,
+      41.65,
+      48.03,
+      52.58
+    ],
+    "attempt_02_abort_reason": "Memory PSI exceeded 25.0% for four consecutive samples"
+  },
+  "grader_selftest": {
+    "status": "grader_selftest_pass_10_of_10",
+    "passed": 10,
+    "failed": 0,
+    "fixture": "known-answer reference, not model output"
+  },
+  "json_receipts_parsed": [
+    "google-sheet-harness2-canary-update.json",
+    "harness2-astra-tool-canary-preflight-amendment-01.json",
+    "harness2-astra-tool-canary-preflight-amendment-02.json",
+    "harness2-astra-tool-canary-preflight-amendment-03.json",
+    "harness2-astra-tool-canary-preflight-amendment-04.json",
+    "harness2-astra-tool-canary-preflight-attempt-01.json",
+    "harness2-astra-tool-canary-preflight-attempt-02.json",
+    "harness2-astra-tool-canary-preflight-attempt-03.json",
+    "harness2-astra-tool-canary-preflight-attempt-04.json",
+    "harness2-astra-tool-canary-preflight-attempt-05.json",
+    "harness2-astra-tool-canary-preflight-attempt-06.json",
+    "harness2-astra-tool-canary-preflight-attempt-07.json",
+    "harness2-astra-tool-canary-preflight.json",
+    "harness2-astra-tool-canary-preregistration-amendment-01.json",
+    "harness2-astra-tool-canary-preregistration-amendment-02.json",
+    "harness2-astra-tool-canary-preregistration-amendment-03.json",
+    "harness2-astra-tool-canary-preregistration.json",
+    "harness2-astra-tool-canary-result-attempt-01-summary-reconstructed.json",
+    "harness2-astra-tool-canary-result-attempt-02.json",
+    "harness2-astra-tool-canary-result.json",
+    "harness2-interval-union-grader-selftest.json"
+  ],
+  "conclusion": "No ASTRA/Harness2 model quality result. Do not repeat the same load/runtime or relax PSI guard; reopen only with a materially different safe loader/runtime and a concrete workflow plus fixed synthetic holdout.",
+  "remaining_queue_tests": "Remain blocked by external conditions; this closure does not mark all pending tests complete."
+}

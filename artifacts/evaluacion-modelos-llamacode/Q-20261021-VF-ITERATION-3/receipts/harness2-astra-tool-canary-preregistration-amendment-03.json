@@ -1,0 +1,23 @@
+{
+  "test_id": "Q-20261021-H2-ASTRA-LOCAL-TOOL-CANARY",
+  "amendment": 3,
+  "at_utc": "2026-10-21T04:19:10+00:00",
+  "lock_token": "5db89d6f-d896-45d7-8238-02bf8e7d61a7",
+  "reason": "The first 32K-context attempt aborted during model startup before any API request because global memory PSI exceeded the registered guard for four samples. A function canary with a short prompt does not require 32K context.",
+  "change": {
+    "isolated_max_context_tokens": 8192,
+    "isolated_kv_resident_tokens": 8192,
+    "unchanged": [
+      "model and runtime fingerprints",
+      "prompt and tool schema",
+      "sampling",
+      "holdout cases",
+      "network/mount isolation",
+      "memory PSI threshold and abort action",
+      "single API request limit"
+    ]
+  },
+  "decision_question_unchanged": true,
+  "one_api_request_max_after_preflight": true,
+  "production_profile_or_model_files_touched": false
+}

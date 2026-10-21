@@ -1,0 +1,33 @@
+{
+  "test_id": "Q-20261021-H2-ASTRA-LOCAL-TOOL-CANARY",
+  "attempt": 1,
+  "status": "aborted_before_readiness",
+  "context_tokens": 32768,
+  "server_started_at_utc": "2026-10-21T04:15:32+00:00",
+  "error": "RuntimeError: Memory PSI exceeded 25.0% for 4 consecutive samples",
+  "api_request_started": false,
+  "tool_call_observed": false,
+  "holdout_run": false,
+  "postflight": {
+    "at_utc": "2026-10-21T04:16:03+00:00",
+    "inference_processes": [],
+    "memavailable_bytes": 118632939520,
+    "memory_psi_full_avg10_percent": 43.2,
+    "swap_growth_bytes": 0,
+    "gpu0_free_mib": 23018,
+    "gpu1_free_mib": 24016
+  },
+  "additional_observation": {
+    "memavailable_kib": 85929676,
+    "memory_psi_full_avg10_percent": 40.15,
+    "source": "immediate terminal host snapshot during startup"
+  },
+  "scope_evidence": {
+    "systemd_scope": "vf-h2-astra-canary-1792556132.scope",
+    "memory_peak": "29.8G",
+    "memory_swap_peak": "0B",
+    "source": "systemd user journal"
+  },
+  "evidence_provenance": "Reconstructed summary from the immediately observed runner output and systemd journal. The original result JSON and detailed server log were overwritten by attempt 02 before they were separately copied; no unobserved fields are reconstructed.",
+  "decision": "No model quality evidence. Do not repeat this context/runtime path without a materially different load strategy that stays under the preregistered PSI guard."
+}

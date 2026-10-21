@@ -1,0 +1,11 @@
+{
+  "test_id": "Q-20261021-H2-ASTRA-LOCAL-TOOL-CANARY-PREFLIGHT",
+  "amendment": 3,
+  "lock_token": "5db89d6f-d896-45d7-8238-02bf8e7d61a7",
+  "prior_attempt": "harness2-astra-tool-canary-preflight-attempt-03.json",
+  "prior_result": "Bubblewrap rejected /opt/h2probe.py because the target did not exist in the read-only root; no model load or inference occurred.",
+  "change": "Mount the read-only runner at /tmp/h2probe.py inside the already-created temporary /tmp and invoke it from there.",
+  "decision_question_unchanged": true,
+  "model_config_prompt_sampling_resources_and_inference_scope_unchanged": true,
+  "inference_started": false
+}

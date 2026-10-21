@@ -1,0 +1,30 @@
+{
+  "status": "sandbox_mounts_network_and_gpu_pass",
+  "interfaces": [
+    "lo"
+  ],
+  "default_route": false,
+  "test_net_errno": 101,
+  "test_net_errno_name": "ENETUNREACH",
+  "model_files": [
+    {
+      "path": "/media/models/astra/IQ2_XS/Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS-00001-of-00002.gguf",
+      "size_bytes": 39225954592,
+      "write_open": "rejected"
+    },
+    {
+      "path": "/media/models/astra/IQ2_XS/Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS-00002-of-00002.gguf",
+      "size_bytes": 28800138432,
+      "write_open": "rejected"
+    }
+  ],
+  "tokenizer_visible": true,
+  "mtp_visible": true,
+  "strata_server_visible": true,
+  "production_profile_hidden": true,
+  "canary_context_tokens": 8192,
+  "kv_resident_tokens": 8192,
+  "gpu_query": "0, NVIDIA GeForce RTX 3090, 23015, 46\n1, NVIDIA GeForce RTX 3090, 24016, 26",
+  "inference_started": false,
+  "at_utc": "2026-10-21T04:19:18+00:00"
+}

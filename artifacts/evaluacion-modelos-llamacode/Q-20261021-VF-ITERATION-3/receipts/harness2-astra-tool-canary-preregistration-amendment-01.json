@@ -1,0 +1,20 @@
+{
+  "test_id": "Q-20261021-H2-ASTRA-LOCAL-TOOL-CANARY",
+  "amendment": 1,
+  "at_utc": "2026-10-21T04:15:16+00:00",
+  "lock_token": "5db89d6f-d896-45d7-8238-02bf8e7d61a7",
+  "reason": "Before the single ASTRA request, harden the generated-code grader against excessive memory/process use and make timeout cleanup cgroup-scoped.",
+  "changes": {
+    "inference_scope_tasks_max": 512,
+    "grader_memory_high_bytes": 1073741824,
+    "grader_memory_max_bytes": 2147483648,
+    "grader_tasks_max": 64,
+    "grader_timeout_seconds": 40,
+    "timeout_cleanup": "stop the transient systemd scope, then terminate only its process group",
+    "preflight": "verify the server and grader resource properties are accepted before inference"
+  },
+  "decision_question_unchanged": true,
+  "model_prompt_sampling_context_and_holdout_unchanged": true,
+  "production_files_or_profiles_touched": false,
+  "model_inference_started": false
+}
