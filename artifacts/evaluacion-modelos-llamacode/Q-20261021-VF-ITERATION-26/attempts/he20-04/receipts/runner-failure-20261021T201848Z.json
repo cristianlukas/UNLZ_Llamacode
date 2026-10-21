@@ -1,0 +1,38 @@
+{
+  "task": "Q-20261021-VF-ITERATION-26",
+  "attempt": "HE20-04",
+  "recorded_at_utc": "2026-10-21T20:24:37Z",
+  "outcome": "runner_setup_failure_before_first_HE20_request",
+  "server_ready_at_utc": "2026-10-21T20:18:48Z",
+  "runner_failed_at_utc": "2026-10-21T20:18:48Z",
+  "exception": "FileNotFoundError: attempt-local receipts/he0-gate.json is missing",
+  "expected_missing_path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261021-VF-ITERATION-26/attempts/he20-04/receipts/he0-gate.json",
+  "preregistered_source_path": "attempts/he20-03/receipts/he0-gate.json",
+  "suite": "HE20",
+  "expected_items": 20,
+  "requests_sent": 0,
+  "coverage": "0/20",
+  "eval_record_created": false,
+  "score": null,
+  "classification": "infrastructure/runner setup failure; not a model-quality failure and not a benchmark result",
+  "owned_process_cleanup": {
+    "strata": {
+      "pid": 2151810,
+      "exit_code": 0,
+      "stopped_by_task": true
+    },
+    "llamacode": {
+      "pid": 2151643,
+      "exit_code": -15,
+      "stopped_by_task": true
+    }
+  },
+  "source_receipt": "attempts/he20-04/receipts/benchmark-final.json",
+  "preservation": [
+    "ASTRA unchanged",
+    "SOL unchanged",
+    "PeritoSoft unchanged",
+    "no model files deleted or moved",
+    "no production configuration changed"
+  ]
+}

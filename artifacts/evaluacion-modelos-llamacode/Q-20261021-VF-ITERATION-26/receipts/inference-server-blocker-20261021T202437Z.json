@@ -1,0 +1,53 @@
+{
+  "task": "Q-20261021-VF-ITERATION-26",
+  "attempt": "HE20-05-not-started",
+  "observed_at_utc": "2026-10-21T20:24:37Z",
+  "test_launch_allowed": false,
+  "condition": "Do not start any model benchmark until no local inference server process/listener is active; do not signal these servers.",
+  "q26_owned_test_processes": "HE20-04 Strata/controller stopped; cleanup receipt confirms PIDs 2151810 and 2151643 exited.",
+  "active_inference_servers": [
+    {
+      "pid": 2173417,
+      "ppid": 2163451,
+      "model": "Qwen3.5-9B-Q4_K_M",
+      "alias": "qwen3.5-9b-q4_k_m",
+      "port": 8033,
+      "gpu_uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+      "used_memory_mib": 6416
+    },
+    {
+      "pid": 2173751,
+      "ppid": 2163451,
+      "model": "Qwen3.5-9B-Q4_K_M",
+      "alias": "qwen3.5-9b-q4_k_m-gpu1",
+      "port": 8081,
+      "gpu_uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+      "used_memory_mib": 6416
+    },
+    {
+      "pid": 2174901,
+      "ppid": 2163451,
+      "model": "gemma-4-12b-it-qat-q4_0",
+      "port": 8083,
+      "gpu_uuids": [
+        "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+        "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049"
+      ],
+      "used_memory_mib_by_gpu": [
+        4522,
+        4966
+      ]
+    }
+  ],
+  "evidence": [
+    "ps process command lines",
+    "ss listeners on 127.0.0.1:8033, :8081, :8083",
+    "nvidia-smi compute-app query"
+  ],
+  "next_attempt_requirements": [
+    "Keep HE20-04 immutable as failed before inference; no retry in that attempt.",
+    "Stage and SHA-256 verify the valid HE0 receipt at the new attempt's own receipts/he0-gate.json before launching its runner.",
+    "Repeat a fresh process/listener check for all inference servers and confirm all are absent.",
+    "Only then rerun CPU/profile gates and preregister a single HE20-only attempt; no BCB or parallel tests."
+  ]
+}
