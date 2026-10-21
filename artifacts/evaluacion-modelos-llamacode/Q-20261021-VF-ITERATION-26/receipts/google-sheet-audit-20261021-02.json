@@ -1,0 +1,52 @@
+{
+  "receipt_id": "VF-20261021-SHEET-AUDIT-02",
+  "created_at_utc": "2026-10-21T23:29:12Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "tests_run_during_audit": false,
+  "audit": {
+    "evaluaciones_llamacode": {
+      "operational_rows_after_update": 183,
+      "required_fields_blank": 0,
+      "duplicate_record_ids": 0,
+      "added_test_record": {
+        "id": "Q-20261016-CU-20-E2E",
+        "sheet_row": 184,
+        "result": "20/20 certified cases on SHA AE85A27680AD2A8B3945F19BD4741177D699046676BE500D580D1E6949449F28",
+        "local_source": "artifacts/evaluacion-modelos-llamacode/Q-20261016-CU-20-E2E/RESULTS.md"
+      },
+      "normalized_historical_status_cells": "C156:C164",
+      "audit_record_sheet_row": 185
+    },
+    "accionables": {
+      "cards": 41,
+      "duplicate_ids": 0,
+      "result_evidence_reconciliation_fields_blank": 0,
+      "creation_dates_unavailable": 28
+    },
+    "inventario_de_modelos": {
+      "visible_model_rows": 1,
+      "historical_count_in_sheet_note": 53,
+      "rows_to_reconcile": 52,
+      "status": "incompleto; no se reconstruyó en esta auditoría de tests"
+    }
+  },
+  "q26": {
+    "status": "paused_by_user",
+    "attempt": "HE20-05",
+    "preregistered": true,
+    "requests_sent": 0,
+    "score": null,
+    "last_inference_server_scan_utc": "2026-10-21T23:20:47Z",
+    "observed_external_servers": [
+      {"process": "llama-server Qwen3.5", "port": 8033},
+      {"process": "llama-server Qwen3.5", "port": 8081}
+    ],
+    "action": "do not run tests or stop the external servers; require explicit user resume and fresh preflight"
+  },
+  "sheet_changes": [
+    "Evaluaciones LlamaCode!A184:I184: added Q-20261016-CU-20-E2E result",
+    "Evaluaciones LlamaCode!A185:I185: added audit record",
+    "Evaluaciones LlamaCode!C156:C164: normalized historical status labels",
+    "Evaluaciones LlamaCode!C2, E2, H2, C183, H183: aligned campaign and Q26 status with explicit pause"
+  ]
+}

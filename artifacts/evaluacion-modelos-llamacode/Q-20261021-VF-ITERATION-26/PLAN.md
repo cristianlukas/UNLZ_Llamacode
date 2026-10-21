@@ -104,3 +104,12 @@ Siguiente acción: esperar hasta que una comprobación fresca encuentre cero inf
 ## Revalidación de servidores — 2026-10-21T23:20:47Z
 
 Sigue bloqueada la inferencia: Qwen3.5-9B permanece activo en `llama-server` PID 2173417, 2173751 (puertos correlacionados: ver recibo). Gemma 4 ya no apareció. MemAvailable=91.05 GiB; SwapFree=4.6 GiB. No se lanzó benchmark ni se detuvo proceso. El runner detecta procesos conocidos en cualquier puerto mediante `/proc`; la revisión de puertos reservados es adicional. Recibo `attempts/he20-05/receipts/resume-blocker.json`.
+
+
+## Enmienda 15 — pausa explícita y auditoría de Sheets (2026-10-21T23:29:12Z)
+
+El usuario pidió pausar todos los tests. HE20-05 permanece preregistrada, con 0 requests y sin score; no iniciar inferencia aunque el bloqueo externo cambie mientras siga vigente la pausa. El último scan documentado (23:20:47Z) encontró dos `llama-server` Qwen3.5 en 8033/8081. No se detuvieron procesos ajenos.
+
+Se auditó el Sheet autorizado sin lanzar pruebas. Se agregó el registro que faltaba de Q-20261016-CU-20-E2E (20/20 en el SHA certificado), se normalizaron los estados históricos de Evaluaciones LlamaCode!C156:C164 y se dejaron explícitos los resultados, bloqueos y pausa de Q26. Accionables contiene 41 tarjetas con resultados/evidencias/reconciliación; 28 fechas de creación no constan y no se inventaron. La pestaña Inventario de modelos conserva una sola ficha visible pese a la nota histórica de 53; quedan 52 por reconciliar. Evidencia de auditoría: `receipts/google-sheet-audit-20261021-02.json`.
+
+El lock de Q26 se libera tras guardar este estado. Reanudar sólo tras una instrucción explícita del usuario y luego de un preflight fresco con cero inference servers, memoria/swap en umbral y gate CPU exacto; ejecutar únicamente HE20-05 en serie.
