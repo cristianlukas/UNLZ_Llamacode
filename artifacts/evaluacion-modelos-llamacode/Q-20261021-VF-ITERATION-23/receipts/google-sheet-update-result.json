@@ -1,0 +1,21 @@
+{
+  "task_id": "Q-20261021-VF-ITERATION-23",
+  "recorded_at_utc": "2026-10-21T13:34:47Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "evaluation_sheet_id": 1945218181,
+  "evaluation_row": 176,
+  "summary_cells": [
+    "C2",
+    "E2"
+  ],
+  "basic_filter_range": "A1:I176",
+  "evaluation_unique_ids_readback": 175,
+  "q23_row_readback": "all nine cells match requested task outcome; unique id count 175/175",
+  "actionables_sheet_id": 1393124532,
+  "updated_actionable_row": 4,
+  "updated_actionable_id": "205314e0-15b2-4871-9784-9c2e08ecd516",
+  "actionables_app_count": 13,
+  "readback": "Q23 action detail/result/evidence and updatedAt/reconciledAt were confirmed; no existing rows overwritten.",
+  "format_readback": "Q23 row uses same white background, Arial 10, top alignment and WRAP as adjacent rows. Existing frozen header/first column unchanged.",
+  "verification": "Google Sheets range readback; 175 IDs unique; Q23 at row176; filter extended A1:I176; app actionable row4 readback."
+}

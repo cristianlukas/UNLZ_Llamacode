@@ -1,0 +1,23 @@
+{
+  "task_id": "Q-20261021-VF-ITERATION-23",
+  "token": "cb34461a-5b3b-4c67-80f7-5f0a0e74b1fa",
+  "source_eval": "artifacts/evaluacion-modelos-llamacode/Q-20261019-STRATA-UDIQ4XS-REMAINING/receipts/runs/BCB8-attempt-2/EVAL.json",
+  "source_metadata": "artifacts/evaluacion-modelos-llamacode/Q-20261019-STRATA-UDIQ4XS-REMAINING/receipts/runs/BCB8-attempt-2/metadata.json",
+  "scope": "CPU-only replay of seven persisted candidate solutions against frozen per-task acceptance tests",
+  "task_ids": [
+    "928",
+    "765",
+    "771",
+    "1019",
+    "906",
+    "583",
+    "139"
+  ],
+  "missing_task_id": "360",
+  "sandbox": "bubblewrap; network namespace disabled; no host data/model mounts; per-task writable scratch only",
+  "timeout_seconds_per_task": 120,
+  "retries": 0,
+  "model_requests": 0,
+  "gpu": false,
+  "decision_gate": "Task-level validation only. Global BCB8 remains invalid/incomplete; no promotion."
+}

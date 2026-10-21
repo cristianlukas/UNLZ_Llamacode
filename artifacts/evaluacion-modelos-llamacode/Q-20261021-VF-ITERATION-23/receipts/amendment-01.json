@@ -1,0 +1,22 @@
+{
+  "task_id": "Q-20261021-VF-ITERATION-23",
+  "amendment": 1,
+  "created_at_utc": "2026-10-21T13:31:15.496083Z",
+  "reason": "Attempt 01 prepended acceptance.preamble to persisted full candidate modules. All seven processes stopped at Python IndentationError before candidate execution; this was a harness assembly defect, not a candidate result.",
+  "change": "Compose each regrade source as the persisted candidate module followed by the exact frozen acceptance.tests. Omit acceptance.preamble because it is a prompt scaffold ending in an unindented function signature and saved candidates already define the complete function.",
+  "scope_unchanged": true,
+  "tasks": [
+    "BigCodeBench/928",
+    "BigCodeBench/765",
+    "BigCodeBench/771",
+    "BigCodeBench/1019",
+    "BigCodeBench/906",
+    "BigCodeBench/583",
+    "BigCodeBench/139"
+  ],
+  "timeout_seconds_per_task": 120,
+  "retries": 0,
+  "model_requests": 0,
+  "gpu": false,
+  "attempt01_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261021-VF-ITERATION-23/receipts/bcb8-saved-candidates-regrade-attempt01-runner-defect.json"
+}

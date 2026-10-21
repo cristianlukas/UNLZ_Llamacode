@@ -1,6 +1,6 @@
 # Evaluación continua de modelos y harness de LlamaCode
 
-Registro acumulativo. Actualizado: 2026-10-18. La evidencia se conserva en los
+Registro acumulativo. Actualizado: 2026-10-21. La evidencia se conserva en los
 informes por campaña y en `artifacts/evaluacion-modelos-llamacode/<TASK-ID>/`.
 Los resultados históricos no se reemplazan; una recomendación nueva debe
 referir su evidencia y sus límites.
@@ -778,8 +778,18 @@ conservando el score original y la respuesta cruda.
 
 Informe y recibos del lote: [Q-20261020-VF-20261019-01](../artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/RESULTS.md).
 
+**Revalidación offline de BCB8 (Q-20261021-VF-ITERATION-23):** se recalificaron
+en sandbox, sin inferencia, siete soluciones persistidas del intento que había
+agotado el timeout global. Los resultados por tarea coincidieron con los flags
+guardados: 3/7 pasan y 4/7 fallan; BigCodeBench/360 no tiene solución guardada.
+El EVAL completo sigue inválido, con timeout a 7.226,41 s y score global 0/0.
+Esto recupera evidencia parcial por tarea, no un score BCB8 ni una comparación
+de modelos. UD-IQ4_XS no se promueve; hace falta un runner agentic con límite por
+tarea y carga reproducible antes de una corrida completa nueva. [Resultados y
+recibos](../artifacts/evaluacion-modelos-llamacode/Q-20261021-VF-ITERATION-23/RESULTS.md).
+
 ### Migración del registro a Google Sheets · 2026-10-20
 
-Se guardó en la pestaña nueva «Evaluaciones LlamaCode» (gid `1945218181`) un resumen de 117 registros con IDs únicos y filtro, inmovilizando encabezado y primera columna. Incluye 51 evaluaciones históricas, 58 materiales del lote VF-20261019-01, su resumen y el agregado + seis brazos S33. El indicador de Sheets confirmó «Guardado en Drive»; las pestañas de origen siguen intactas. La app local no se editó ni se inició.
+El registro se creó inicialmente en la pestaña «Evaluaciones LlamaCode» (gid `1945218181`) con 117 filas de datos, filtros y encabezados inmovilizados; luego se anexaron las iteraciones de seguimiento. Q21/Q22 están en filas 174–175; Q23 se agregó en la fila 176 y el readback confirmó 175 IDs únicos. Las pestañas originales siguen intactas.
 
-El detalle original de 13 columnas permanece en el [CSV local](../artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/exports/Evaluaciones_LlamaCode_para_Google_Sheets.csv) y su recibo está en [google-sheet-migration-completion.json](../artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/google-sheet-migration-completion.json). Se validaron 117 IDs únicos y 250 referencias a evidencia local sin rutas faltantes. La segunda pestaña de detalle sigue pendiente: la ventana muestra «Iniciar sesión», deshabilita Archivo → Importar y el conector Document Control devuelve 403; requiere una sesión autenticada o un escritor Sheets conectado.
+La pestaña «Accionables» (gid `1393124532`) ya refleja las 13 fichas actuales de `data/actionables.json` con prioridad, estado, fuente, prueba, decisión y evidencia, y conserva seis filas históricas de «Próxima prueba». La lectura en vivo confirmó que el accionable BCB8 aún describe el corte como parcial sin promoción; Q23 lo actualizó con el regrade de 3/7. El detalle histórico de 13 columnas permanece en el [CSV local](../artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/exports/Evaluaciones_LlamaCode_para_Google_Sheets.csv) y su recibo está en [google-sheet-migration-completion.json](../artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/google-sheet-migration-completion.json).
