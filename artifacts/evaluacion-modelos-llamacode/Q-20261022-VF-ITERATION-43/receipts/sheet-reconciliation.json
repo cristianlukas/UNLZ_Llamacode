@@ -30,5 +30,5 @@
       "convertedArtifactsReady": true
     }
   ],
-  "readback": "IDs, statuses, evidence, timestamps matched; 22 edited cells retained TOP vertical alignment and WRAP text."
+  "readback": "18 updated value cells across rows 2, 25, and 49 matched exactly; formatting was read for 33 cells across the three updated ranges and remained TOP/WRAP."
 }
