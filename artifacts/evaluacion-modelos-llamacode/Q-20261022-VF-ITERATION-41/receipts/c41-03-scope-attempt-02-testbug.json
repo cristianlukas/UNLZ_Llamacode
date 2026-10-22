@@ -1,0 +1,10 @@
+{
+  "taskId": "Q-20261022-VF-ITERATION-41",
+  "experiment": "C41-03",
+  "attempt": 2,
+  "childStarted": true,
+  "observed": "stdout, exit 23, inherited environment/cwd, uid/gid, background.slice cgroup, OOMPolicy, KillMode and memory values all matched",
+  "harnessDefect": "acceptance looked for snake_case keys; worker receipt fields are camelCase",
+  "fix": "Corrected acceptance key names; repeat unchanged probe",
+  "gpuWork": false
+}

@@ -1,0 +1,13 @@
+{
+  "taskId": "Q-20261022-VF-ITERATION-41",
+  "experiment": "C41-01",
+  "attempt": 2,
+  "commandMode": "systemd-run --system --scope with Type=exec",
+  "exitCode": 1,
+  "error": "Unknown assignment: Type=exec",
+  "childStarted": false,
+  "unitCreated": false,
+  "gpuWork": false,
+  "amendment": "Use a transient service, not a scope, to support Type=exec, OOMPolicy=kill, and KillMode=control-group. Verify pipe, return code, and cgroup.",
+  "checkedAtUtc": "2026-10-22T17:14:00Z"
+}

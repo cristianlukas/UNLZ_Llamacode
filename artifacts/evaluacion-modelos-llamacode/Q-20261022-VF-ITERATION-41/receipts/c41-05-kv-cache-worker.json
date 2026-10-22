@@ -1,0 +1,10 @@
+{
+  "pid": 324894,
+  "childPid": 324896,
+  "cwd": "/usr/bin",
+  "marker": "q41-kv-cache-integration",
+  "oomScoreAdj": "900",
+  "childOomScoreAdj": "900",
+  "cgroup": "0::/background.slice/llamacode-eval-324883-8ca25eca.scope",
+  "childCgroup": "0::/background.slice/llamacode-eval-324883-8ca25eca.scope"
+}

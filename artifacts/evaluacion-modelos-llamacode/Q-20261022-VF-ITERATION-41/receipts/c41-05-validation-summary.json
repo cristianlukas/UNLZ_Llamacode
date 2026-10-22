@@ -1,0 +1,49 @@
+{
+  "taskId": "Q-20261022-VF-ITERATION-41",
+  "checkedAtUtc": "2026-10-22T17:33:18Z",
+  "preflight": {
+    "systemdOomdActive": true,
+    "inferenceProcessesDetected": 0,
+    "evaluationListenersDetected": 0
+  },
+  "tests": {
+    "py_compile": "passed",
+    "tests/test_kv_cache_ab.py": {
+      "passed": 11,
+      "failed": 0
+    },
+    "test_scope_oom_probe.py": {
+      "passed": 3,
+      "failed": 0
+    },
+    "c41_04_scope_oom_attempt_04": {
+      "passed": true,
+      "oom": 1,
+      "oom_kill": 3,
+      "oom_group_kill": 1,
+      "controllerSurvived": true
+    },
+    "c41_05_lifecycle_final": {
+      "passed": true,
+      "checks": 13,
+      "memoryAndSwapCaps": "infinity"
+    },
+    "c41_05_start_server_integration_final": {
+      "passed": true,
+      "checks": 10,
+      "memoryAndSwapCaps": "infinity"
+    },
+    "long_context_matrix_dry_run": {
+      "passed": true,
+      "contexts": [
+        8192,
+        16384
+      ],
+      "serverStarted": false
+    }
+  },
+  "modelInferenceExecuted": false,
+  "gpuUsed": false,
+  "foreignProcessesKilled": 0,
+  "globalP0Closed": false
+}

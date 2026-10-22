@@ -1,0 +1,58 @@
+{
+  "taskId": "Q-20261022-VF-ITERATION-41",
+  "checkedAtUtc": "2026-10-22T17:33:18.108812+00:00",
+  "unit": "llamacode-eval-324883-8ca25eca.scope",
+  "worker": {
+    "pid": 324894,
+    "childPid": 324896,
+    "cwd": "/usr/bin",
+    "marker": "q41-kv-cache-integration",
+    "oomScoreAdj": "900",
+    "childOomScoreAdj": "900",
+    "cgroup": "0::/background.slice/llamacode-eval-324883-8ca25eca.scope",
+    "childCgroup": "0::/background.slice/llamacode-eval-324883-8ca25eca.scope"
+  },
+  "scopePropertiesWhileRunning": {
+    "Result": "success",
+    "OOMPolicy": "kill",
+    "MemoryHigh": "infinity",
+    "MemoryMax": "infinity",
+    "MemorySwapMax": "infinity",
+    "ManagedOOMSwap": "kill",
+    "ManagedOOMMemoryPressure": "kill",
+    "KillMode": "control-group",
+    "ActiveState": "active",
+    "SubState": "running"
+  },
+  "scopePropertiesAfterStop": {
+    "Result": "success",
+    "OOMPolicy": "",
+    "MemoryHigh": "infinity",
+    "MemoryMax": "infinity",
+    "MemorySwapMax": "infinity",
+    "ManagedOOMSwap": "auto",
+    "ManagedOOMMemoryPressure": "auto",
+    "KillMode": "control-group",
+    "ActiveState": "inactive",
+    "SubState": "dead"
+  },
+  "serverStopCode": -15,
+  "parentAliveAfterStop": false,
+  "childAliveAfterStop": false,
+  "logPath": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-41/receipts/c41-05-kv-cache-server.log",
+  "logTail": "Q41-LIFECYCLE-START {\"cgroup\": \"0::/background.slice/llamacode-eval-324883-8ca25eca.scope\", \"childCgroup\": \"0::/background.slice/llamacode-eval-324883-8ca25eca.scope\", \"childOomScoreAdj\": \"900\", \"childPid\": 324896, \"cwd\": \"/usr/bin\", \"marker\": \"q41-kv-cache-integration\", \"oomScoreAdj\": \"900\", \"pid\": 324894}\n",
+  "stopError": null,
+  "acceptance": {
+    "worker_report_written": true,
+    "linux_native_launch_used_scope": true,
+    "scope_metadata_available": true,
+    "systemd_oomd_candidate_confirmed": true,
+    "no_memory_or_swap_caps": true,
+    "oom_score_adjust_applied": true,
+    "log_path_received_output": true,
+    "explicit_stop_killed_tree": true,
+    "scope_inactive_after_stop": true,
+    "controller_had_no_error": true
+  },
+  "passed": true
+}

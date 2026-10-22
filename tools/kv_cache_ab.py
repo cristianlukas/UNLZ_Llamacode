@@ -25,6 +25,11 @@ from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Seque
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
+try:
+    from tools.linux_eval_scope import popen_in_background_scope
+except ImportError:
+    from linux_eval_scope import popen_in_background_scope
+
 
 SCHEMA = "llamacode-kv-cache-ab-v1"
 SERVER_VALUE_FLAGS = {
@@ -403,20 +408,32 @@ class RunningServer:
         self.stop_callback = stop_callback
 
     def stop(self, timeout_seconds: float = 15.0) -> int:
-        if self.process.poll() is None:
-            if self.stop_callback is not None:
+        callback_error = None
+        try:
+            if self.process.poll() is None:
+                if self.stop_callback is not None:
+                    try:
+                        self.stop_callback()
+                    except (OSError, subprocess.SubprocessError, RuntimeError) as exc:
+                        callback_error = exc
+                if self.process.poll() is None:
+                    try:
+                        self.process.terminate()
+                    except ProcessLookupError:
+                        pass
                 try:
-                    self.stop_callback()
-                except (OSError, subprocess.SubprocessError):
-                    pass
-            self.process.terminate()
-            try:
-                self.process.wait(timeout=timeout_seconds)
-            except subprocess.TimeoutExpired:
-                self.process.kill()
-                self.process.wait(timeout=5.0)
-        code = self.process.returncode
-        self.log_handle.close()
+                    self.process.wait(timeout=timeout_seconds)
+                except subprocess.TimeoutExpired:
+                    try:
+                        self.process.kill()
+                    except ProcessLookupError:
+                        pass
+                    self.process.wait(timeout=5.0)
+            code = self.process.returncode
+        finally:
+            self.log_handle.close()
+        if callback_error is not None:
+            raise RuntimeError(f"No se pudo confirmar el cierre del proceso lanzado: {callback_error}") from callback_error
         return int(code if code is not None else -1)
 
 
@@ -465,6 +482,16 @@ def start_server(
     environment = os.environ.copy()
     environment.update(env_overrides)
     try:
+        if sys.platform == "linux":
+            scoped = popen_in_background_scope(
+                [str(server_exe), *args],
+                stdout=handle,
+                stderr=subprocess.STDOUT,
+                env=environment,
+                env_overrides=env_overrides,
+                cwd=str(server_exe.parent),
+            )
+            return RunningServer(scoped.process, handle, log_path, scoped.stop)
         process = subprocess.Popen(
             [str(server_exe), *args],
             stdout=handle,

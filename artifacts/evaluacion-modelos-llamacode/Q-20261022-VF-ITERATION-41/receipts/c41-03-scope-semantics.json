@@ -1,0 +1,48 @@
+{
+  "taskId": "Q-20261022-VF-ITERATION-41",
+  "checkedAtUtc": "2026-10-22T17:19:23.158779+00:00",
+  "unit": "llamacode-q41-scope-297094-eeb25.scope",
+  "sudoPreserveEnvUsed": true,
+  "expectedEnvMarker": "inherited-without-setenv",
+  "expectedCwd": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode",
+  "systemdRunReturnCode": 23,
+  "stdout": "Q41-SCOPE-START {\"cgroup\": \"0::/background.slice/llamacode-q41-scope-297094-eeb25.scope\", \"cwd\": \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode\", \"envMarker\": \"inherited-without-setenv\", \"gid\": 1000, \"memoryHigh\": \"125829120\", \"memoryMax\": \"134217728\", \"memorySwapMax\": \"0\", \"oomGroup\": \"1\", \"pid\": 297096, \"uid\": 1000}\nQ41-SCOPE-END 23\n",
+  "stderr": "",
+  "unitPropertiesWhileRunning": {
+    "OOMPolicy": "kill",
+    "ControlGroup": "/background.slice/llamacode-q41-scope-297094-eeb25.scope",
+    "CPUQuotaPerSecUSec": "2s",
+    "MemoryHigh": "125829120",
+    "MemoryMax": "134217728",
+    "MemorySwapMax": "0",
+    "TasksMax": "16",
+    "KillMode": "control-group",
+    "ActiveState": "active",
+    "SubState": "running"
+  },
+  "worker": {
+    "pid": 297096,
+    "uid": 1000,
+    "gid": 1000,
+    "cwd": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode",
+    "envMarker": "inherited-without-setenv",
+    "cgroup": "0::/background.slice/llamacode-q41-scope-297094-eeb25.scope",
+    "memoryHigh": "125829120",
+    "memoryMax": "134217728",
+    "memorySwapMax": "0",
+    "oomGroup": "1"
+  },
+  "scopeStateAfterExit": "inactive-or-removed",
+  "acceptance": {
+    "stdout_inherited": true,
+    "exit_code_preserved": true,
+    "environment_inherited": true,
+    "cwd_preserved": true,
+    "uid_gid_preserved": true,
+    "scope_cgroup_system_background": true,
+    "limits_effective": true,
+    "oom_policy_and_kill_mode_effective": true,
+    "scope_cleaned_after_exit": true
+  },
+  "passed": true
+}

@@ -83,6 +83,18 @@ runner conserva también las últimas líneas de su log dentro del campo `error`
 del registro de esa variante, además de `logPath`. Esto permite diagnosticar un
 fallo de runtime desde el JSON sin perder la evidencia original.
 
+En Linux nativo, `start_server` crea el árbol del servidor en un scope del system
+manager bajo `background.slice`, con `OOMPolicy=kill`, `KillMode=control-group`,
+`ManagedOOMMemoryPressure=kill` y `ManagedOOMSwap=kill`. Así el árbol también queda
+entre los candidatos de systemd-oomd cuando debe liberar presión. El ejecutable
+recibe `oom_score_adj=900` y sus hijos lo heredan, para que el OOM del kernel
+prefiera terminar el árbol de evaluación. No se fija
+`MemoryHigh`, `MemoryMax` ni un límite de swap: el modelo conserva la memoria que
+solicite. El host debe tener `systemd-oomd.service` activo y permitir `sudo -n systemd-run` y `sudo -n systemctl stop`;
+si alguno no está disponible, el servidor no se inicia sin contención. Al
+cerrar la variante, el runner detiene el scope completo y después recoge su
+proceso. Windows nativo y el launcher WSL mantienen sus caminos actuales.
+
 Copiar y editar
 [`assets/benchmarks/kv_cache_ab.example.json`](../assets/benchmarks/kv_cache_ab.example.json)
 con las rutas reales. Después:

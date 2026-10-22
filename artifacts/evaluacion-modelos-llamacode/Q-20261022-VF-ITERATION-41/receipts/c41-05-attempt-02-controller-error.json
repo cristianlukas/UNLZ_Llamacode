@@ -1,0 +1,11 @@
+{
+  "taskId": "Q-20261022-VF-ITERATION-41",
+  "attempt": 2,
+  "controllerError": "TypeError: output membership assertion compared str to bytes; Popen was not started with text=True.",
+  "shortWorkerReceipt": "receipts/c41-05-attempt-02-short-worker.json",
+  "longWorkerReceipt": "receipts/c41-05-attempt-02-long-worker.json",
+  "unitsInactive": true,
+  "workerAndChildPidsAbsent": true,
+  "cleanupCompletedBeforeControllerError": true,
+  "classification": "inconclusive receipt assertion; launch/score/stop evidence captured, final stdout/exit assertions not captured"
+}

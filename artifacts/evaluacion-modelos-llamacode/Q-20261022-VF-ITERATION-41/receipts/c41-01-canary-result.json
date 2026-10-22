@@ -1,0 +1,31 @@
+{
+  "taskId": "Q-20261022-VF-ITERATION-41",
+  "experiment": "C41-01",
+  "attempts": [
+    {"attempt": 1, "outcome": "rejected before launch", "reason": "--pipe is incompatible with --scope"},
+    {"attempt": 2, "outcome": "rejected before launch", "reason": "Type=exec is not a scope property"},
+    {"attempt": 3, "outcome": "passed", "mode": "transient system service"}
+  ],
+  "unit": "llamacode-q41-c41-01-probe.service",
+  "stdout": ["Q41-CANARY-START 289533 0::/background.slice/llamacode-q41-c41-01-probe.service", "Q41-CANARY-END 23"],
+  "systemdRunExitCode": 23,
+  "workerReceipt": "receipts/c41-01-canary.json",
+  "effectivePropertiesWhileRunning": {
+    "ActiveState": "active",
+    "SubState": "running",
+    "ControlGroup": "/background.slice/llamacode-q41-c41-01-probe.service",
+    "MemoryHigh": "125829120",
+    "MemoryMax": "134217728",
+    "MemorySwapMax": "0",
+    "OOMPolicy": "kill",
+    "OOMScoreAdjust": "900",
+    "KillMode": "control-group",
+    "TasksMax": "16",
+    "CPUQuotaPerSecUSec": "2s"
+  },
+  "workerCgroup": "0::/background.slice/llamacode-q41-c41-01-probe.service",
+  "stdoutExitCodeAndCgroupVerified": true,
+  "gpuWork": false,
+  "inferenceServer": false,
+  "checkedAtUtc": "2026-10-22T17:15:00Z"
+}

@@ -1,0 +1,12 @@
+{
+  "pid": 297096,
+  "uid": 1000,
+  "gid": 1000,
+  "cwd": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode",
+  "envMarker": "inherited-without-setenv",
+  "cgroup": "0::/background.slice/llamacode-q41-scope-297094-eeb25.scope",
+  "memoryHigh": "125829120",
+  "memoryMax": "134217728",
+  "memorySwapMax": "0",
+  "oomGroup": "1"
+}

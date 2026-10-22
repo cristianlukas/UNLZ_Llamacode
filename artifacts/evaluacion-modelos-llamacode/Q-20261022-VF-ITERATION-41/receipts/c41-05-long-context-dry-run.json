@@ -1,0 +1,39 @@
+{
+  "schema": "llamacode-long-context-matrix-v1",
+  "contexts": [
+    8192,
+    16384
+  ],
+  "commands": [
+    {
+      "contextTokens": 8192,
+      "command": [
+        "/usr/bin/python3.12",
+        "--ctx-size",
+        "8192",
+        "--metrics",
+        "--model",
+        "/tmp/q41-model-not-loaded.gguf",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "18080"
+      ]
+    },
+    {
+      "contextTokens": 16384,
+      "command": [
+        "/usr/bin/python3.12",
+        "--ctx-size",
+        "16384",
+        "--metrics",
+        "--model",
+        "/tmp/q41-model-not-loaded.gguf",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "18080"
+      ]
+    }
+  ]
+}

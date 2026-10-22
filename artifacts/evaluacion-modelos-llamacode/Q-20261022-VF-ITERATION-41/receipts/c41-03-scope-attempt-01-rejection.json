@@ -1,0 +1,12 @@
+{
+  "taskId": "Q-20261022-VF-ITERATION-41",
+  "experiment": "C41-03",
+  "attempt": 1,
+  "commandMode": "systemd-run --system --scope --wait",
+  "exitCode": 1,
+  "error": "--wait may not be combined with --scope.",
+  "childStarted": false,
+  "unitCreated": false,
+  "gpuWork": false,
+  "amendment": "Remove --wait; verify natural process wait, stdout, exit propagation, environment, cwd, and cgroup."
+}

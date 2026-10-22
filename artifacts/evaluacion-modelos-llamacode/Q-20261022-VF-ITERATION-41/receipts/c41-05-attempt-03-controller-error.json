@@ -1,0 +1,9 @@
+{
+  "taskId": "Q-20261022-VF-ITERATION-41",
+  "experiment": "C41-05",
+  "attempt": 3,
+  "controllerError": "TypeError: popen_in_background_scope() got an unexpected keyword argument 'text'.",
+  "scopeCreated": false,
+  "workerStarted": false,
+  "classification": "helper interface mismatch; no workload"
+}

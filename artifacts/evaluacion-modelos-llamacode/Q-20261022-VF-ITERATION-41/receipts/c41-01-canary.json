@@ -1,0 +1,6 @@
+{
+  "pid": 289533,
+  "uid": 1000,
+  "gid": 1000,
+  "cgroup": "0::/background.slice/llamacode-q41-c41-01-probe.service"
+}

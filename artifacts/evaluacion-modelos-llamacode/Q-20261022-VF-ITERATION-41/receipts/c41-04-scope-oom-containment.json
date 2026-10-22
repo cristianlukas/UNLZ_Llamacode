@@ -1,0 +1,42 @@
+{
+  "taskId": "Q-20261022-VF-ITERATION-41",
+  "checkedAtUtc": "2026-10-22T17:20:18.116874+00:00",
+  "unit": "llamacode-q41-scope-oom-298953-d32a5.scope",
+  "controllerPid": 298953,
+  "controllerCgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/app-org.chromium.Chromium-8087.scope",
+  "controllerSurvived": true,
+  "systemdRunReturnCode": 1,
+  "stdout": "",
+  "stderr": "Unknown assignment: OOMScoreAdjust=900\n",
+  "propertiesWhileRunning": {},
+  "propertiesAfterExit": {
+    "Result": "success",
+    "OOMPolicy": "",
+    "ControlGroup": "",
+    "CPUQuotaPerSecUSec": "infinity",
+    "MemoryHigh": "infinity",
+    "MemoryMax": "infinity",
+    "MemorySwapMax": "infinity",
+    "TasksMax": "140895",
+    "KillMode": "control-group",
+    "ActiveState": "inactive",
+    "SubState": "dead"
+  },
+  "memoryEvents": {},
+  "journalTail": "",
+  "worker": null,
+  "workerAliveAfterRun": null,
+  "childAliveAfterRun": null,
+  "acceptance": {
+    "worker_report_written": false,
+    "scope_and_child_share_background_cgroup": false,
+    "limits_and_group_oom_effective": false,
+    "unit_properties_confirmed_before_oom": false,
+    "cgroup_oom_kill_observed": false,
+    "systemd_or_kernel_reports_oom": false,
+    "worker_and_child_terminated": false,
+    "controller_survived": true,
+    "allocation_did_not_complete": true
+  },
+  "passed": false
+}

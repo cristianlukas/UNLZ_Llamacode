@@ -10,6 +10,7 @@ from tools.kv_cache_ab import (
     compare_receipts,
     compare_run_records,
     normalize_server_args,
+    RunningServer,
     _log_tail,
     summarize_deltas,
     validate_config,
@@ -141,6 +142,39 @@ class KvCacheAbTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "ruta absoluta Linux"):
             validate_config(config)
 
+    def test_running_server_handles_scope_stop_that_exits_process_first(self):
+        class ProcessStoppedByScopeManager:
+            def __init__(self):
+                self.returncode = None
+                self.terminate_calls = 0
+                self.wait_calls = 0
+
+            def poll(self):
+                return self.returncode
+
+            def terminate(self):
+                self.terminate_calls += 1
+                raise ProcessLookupError("systemd already stopped the scope")
+
+            def wait(self, timeout=None):
+                self.wait_calls += 1
+                return self.returncode
+
+            def kill(self):
+                raise AssertionError("scope-stopped process must not be killed again")
+
+        process = ProcessStoppedByScopeManager()
+        handle = tempfile.TemporaryFile()
+
+        def stop_scope():
+            process.returncode = -9
+
+        server = RunningServer(process, handle, Path("scope.log"), stop_scope)
+        self.assertEqual(server.stop(), -9)
+        self.assertEqual(process.terminate_calls, 0)
+        self.assertEqual(process.wait_calls, 1)
+        self.assertTrue(handle.closed)
+
     def test_log_tail_keeps_startup_failure_actionable_and_bounded(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "server.log"
@@ -148,6 +182,35 @@ class KvCacheAbTests(unittest.TestCase):
             tail = _log_tail(path, max_bytes=128)
             self.assertLessEqual(len(tail.encode("utf-8")), 128)
             self.assertIn("CUDA failure", tail)
+
+
+    def test_running_server_reports_scope_cleanup_failure(self):
+        class Process:
+            def __init__(self):
+                self.returncode = None
+
+            def poll(self):
+                return self.returncode
+
+            def terminate(self):
+                self.returncode = -15
+
+            def wait(self, timeout=None):
+                return self.returncode
+
+            def kill(self):
+                self.returncode = -9
+
+        process = Process()
+        handle = tempfile.TemporaryFile()
+
+        def failed_scope_stop():
+            raise RuntimeError("systemctl stop failed")
+
+        server = RunningServer(process, handle, Path("scope.log"), failed_scope_stop)
+        with self.assertRaisesRegex(RuntimeError, "No se pudo confirmar el cierre"):
+            server.stop()
+        self.assertTrue(handle.closed)
 
 
 if __name__ == "__main__":

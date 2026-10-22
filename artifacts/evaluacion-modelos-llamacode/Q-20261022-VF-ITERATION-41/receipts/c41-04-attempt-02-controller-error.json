@@ -1,0 +1,20 @@
+{
+  "taskId": "Q-20261022-VF-ITERATION-41",
+  "attempt": 2,
+  "unit": "llamacode-q41-scope-oom-299361-103c5.scope",
+  "workerPid": 299363,
+  "childPid": 299365,
+  "workerReport": "receipts/c41-04-attempt-02-worker.json",
+  "controllerError": "StopIteration while expecting a 0:: cgroup record in worker.cgroup; worker.cgroup is a raw /path string.",
+  "postRunEvidence": {
+    "unitResult": "success",
+    "unitActiveState": "inactive",
+    "journal": [
+      "Started scope",
+      "Deactivated successfully"
+    ],
+    "workerAndChildPidsAbsent": true,
+    "memoryEventsSampled": false
+  },
+  "classification": "inconclusive; controller failed before observing OOM evidence; not a pass"
+}

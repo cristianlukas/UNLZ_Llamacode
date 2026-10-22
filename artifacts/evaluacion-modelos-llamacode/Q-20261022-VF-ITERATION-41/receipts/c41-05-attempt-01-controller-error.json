@@ -1,0 +1,9 @@
+{
+  "taskId": "Q-20261022-VF-ITERATION-41",
+  "experiment": "C41-05",
+  "attempt": 1,
+  "controllerError": "ModuleNotFoundError importing tools.linux_eval_scope when executing from scripts/.",
+  "scopeCreated": false,
+  "workerStarted": false,
+  "classification": "harness import error; no workload"
+}

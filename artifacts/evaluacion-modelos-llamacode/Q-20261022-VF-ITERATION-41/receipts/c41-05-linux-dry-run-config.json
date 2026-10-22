@@ -1,0 +1,18 @@
+{
+  "schema": "llamacode-long-context-matrix-config-v1",
+  "serverExe": "/usr/bin/python3",
+  "modelPath": "/tmp/q41-model-not-loaded.gguf",
+  "commonArgs": [
+    "--ctx-size",
+    "{context}"
+  ],
+  "variant": {
+    "id": "containment-smoke",
+    "args": [],
+    "env": {}
+  },
+  "contexts": [
+    8192,
+    16384
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "pid": 313893,
+  "childPid": 313894,
+  "cwd": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode",
+  "marker": "q41-scope-lifecycle",
+  "oomScoreAdj": "900",
+  "childOomScoreAdj": "900",
+  "cgroup": "0::/background.slice/llamacode-eval-313886-06020aec.scope",
+  "childCgroup": "0::/background.slice/llamacode-eval-313886-06020aec.scope"
+}

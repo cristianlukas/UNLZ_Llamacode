@@ -1,0 +1,13 @@
+{
+  "taskId": "Q-20261022-VF-ITERATION-41",
+  "experiment": "C41-01",
+  "attempt": 1,
+  "commandMode": "systemd-run --system --scope --pipe",
+  "exitCode": 1,
+  "error": "--pty/--pipe is not compatible in timer or --scope mode.",
+  "childStarted": false,
+  "unitCreated": false,
+  "gpuWork": false,
+  "amendment": "Remove --pipe; child writes cgroup data to a receipt file. Check unit properties while alive and wrapper exit status.",
+  "checkedAtUtc": "2026-10-22T17:13:00Z"
+}

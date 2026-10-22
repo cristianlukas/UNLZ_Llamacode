@@ -1,0 +1,11 @@
+{
+  "worker_pid": 306543,
+  "child_pid": 306544,
+  "cgroup": "/background.slice/llamacode-q41-scope-oom-306540-23d04.scope",
+  "child_cgroup": "0::/background.slice/llamacode-q41-scope-oom-306540-23d04.scope",
+  "memory_high": "125829120",
+  "memory_max": "134217728",
+  "memory_swap_max": "0",
+  "oom_group": "1",
+  "oom_score_adjust": "200"
+}
