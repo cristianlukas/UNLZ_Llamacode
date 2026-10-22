@@ -1,0 +1,11 @@
+{
+  "at_utc": "2026-10-22T09:09:45Z",
+  "profiles_order": [
+    "llama",
+    "ninfer"
+  ],
+  "requests_per_profile": 15,
+  "total_requests": 30,
+  "quality_gate_passed": false,
+  "reason": "descriptive local speed claim; quality rejection remains in force"
+}

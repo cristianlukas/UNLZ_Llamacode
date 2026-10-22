@@ -1,0 +1,12 @@
+{
+  "at_utc": "2026-10-22T08:21:09Z",
+  "pid": 2220667,
+  "unit": "q32-ninfer-quality.scope",
+  "control_group": "/user.slice/user-1000.slice/user@1000.service/app.slice/q32-ninfer-quality.scope",
+  "cgroup_limits": {
+    "memory.high": "92341796864",
+    "memory.max": "103079215104",
+    "memory.swap.max": "1073741824"
+  },
+  "api": "http://127.0.0.1:18132/v1"
+}

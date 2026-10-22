@@ -1,0 +1,10 @@
+{
+  "at_utc": "2026-10-22T08:18:00Z",
+  "command": "systemd-run --user --scope --unit=q32-scope-check.scope -p MemoryHigh=86G -p MemoryMax=96G -p MemorySwapMax=1G /usr/bin/sleep 20",
+  "active_state": "active",
+  "control_group": "/user.slice/user-1000.slice/user@1000.service/app.slice/q32-scope-check.scope",
+  "memory_high_bytes": 92341796864,
+  "memory_max_bytes": 103079215104,
+  "memory_swap_max_bytes": 1073741824,
+  "result": "limits applied and cgroup.procs can be enumerated; owned sleep process stopped via systemctl --user stop"
+}

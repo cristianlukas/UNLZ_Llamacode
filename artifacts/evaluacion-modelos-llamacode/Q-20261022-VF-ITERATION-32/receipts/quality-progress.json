@@ -1,0 +1,62 @@
+{
+  "updated_at_utc": "2026-10-22T08:55:32Z",
+  "seeds": [
+    {
+      "seed": 42,
+      "started_at_utc": "2026-10-22T08:21:11Z",
+      "ended_at_utc": "2026-10-22T08:33:18Z",
+      "exit_code": 0,
+      "json": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-32/runs/hardmode-seed-42.json",
+      "json_exists": true,
+      "log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-32/logs/tool-eval-seed-42.log",
+      "json_sha256": "5ef5b368dcfb0ce6d56037fac21a14241fa6ed3b45bfe71ff74b888dd46df96c",
+      "run_id": "2026-10-22T08-21-12.090824Z_6c69599b",
+      "score": null,
+      "status": "completed",
+      "scenario_count": 0,
+      "critical_case_status": {
+        "TC-74": null,
+        "TC-84": null,
+        "TC-92": null
+      }
+    },
+    {
+      "seed": 43,
+      "started_at_utc": "2026-10-22T08:33:18Z",
+      "ended_at_utc": "2026-10-22T08:44:35Z",
+      "exit_code": 0,
+      "json": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-32/runs/hardmode-seed-43.json",
+      "json_exists": true,
+      "log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-32/logs/tool-eval-seed-43.log",
+      "json_sha256": "5057e046d3ee400d8c6dc06a2993ea73ad5050a04774dad965ef986eb1a34ac7",
+      "run_id": "2026-10-22T08-33-18.875772Z_0abeee64",
+      "score": null,
+      "status": "completed",
+      "scenario_count": 0,
+      "critical_case_status": {
+        "TC-74": null,
+        "TC-84": null,
+        "TC-92": null
+      }
+    },
+    {
+      "seed": 44,
+      "started_at_utc": "2026-10-22T08:44:35Z",
+      "ended_at_utc": "2026-10-22T08:55:32Z",
+      "exit_code": 0,
+      "json": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-32/runs/hardmode-seed-44.json",
+      "json_exists": true,
+      "log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-32/logs/tool-eval-seed-44.log",
+      "json_sha256": "4daa2f740404cfe0f7bc160e7ffbb03d92030c288b576dcfc0cef9e6927b56c5",
+      "run_id": "2026-10-22T08-44-35.646710Z_6546be5e",
+      "score": null,
+      "status": "completed",
+      "scenario_count": 0,
+      "critical_case_status": {
+        "TC-74": null,
+        "TC-84": null,
+        "TC-92": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "task_id": "Q-20261022-VF-ITERATION-32",
+  "status": "completed_no_adoption",
+  "finished_at_utc": "2026-10-22T09:19:44Z",
+  "priority_order": [
+    "P1 Flash-Next",
+    "P2 Qwen3.8-27B",
+    "P3 RCO",
+    "P4 Swift",
+    "P5 Strata/claims"
+  ],
+  "P1": {
+    "status": "blocked",
+    "reason": "NInfer v0.16.0 Linux run.sh and release notes say Flash-Next is Windows-only/preview"
+  },
+  "P2_quality": {
+    "scores": [
+      75,
+      82,
+      77
+    ],
+    "mean": 78.0,
+    "quality_gate_passed": false,
+    "critical_failures": {
+      "TC-74": "3/3",
+      "TC-84": "2/3",
+      "TC-92": "2/3; cross-tenant disclosure 2/3"
+    },
+    "control_mean": 80.33
+  },
+  "P2_speed": {
+    "measurement_count": 30,
+    "matched_repetitions": 3,
+    "cells": 5,
+    "speed_gate_passed": true,
+    "quality_gate_passed": false,
+    "cell_speedup_percent": [
+      216.5,
+      181.4,
+      121.7,
+      358.6,
+      145.6
+    ],
+    "startup_seconds": {
+      "llama": 5.060905655001989,
+      "ninfer": 170.55419624401839
+    },
+    "approx_break_even_requests": 14.05548877298453,
+    "limitation": "synthetic matched workload, NInfer vs Qwen Q4_K_M/llama.cpp profile, not ASTRA/SOL and not model-only"
+  },
+  "recommendation": "Do not adopt NInfer v3 for tool agents or replace productive models. Implement P2.1 tool ordering, server-side tenant/authz and commit-gated external mutations; reopen only after regression pass and representative matched workload.",
+  "scope_preserved": [
+    "ASTRA",
+    "SOL",
+    "productive Qwen Flash-Next",
+    "PeritoSoft",
+    "existing model files"
+  ],
+  "resource_postflight_clear": true,
+  "evidence": {
+    "quality": "receipts/quality-audit.json",
+    "failed_speed_attempt": "receipts/speed-attempt-01-failure.json",
+    "speed": "attempts/speed-attempt-02/receipts/speed-results.json",
+    "speed_validation": "attempts/speed-attempt-02/receipts/speed-final-verification.json"
+  }
+}

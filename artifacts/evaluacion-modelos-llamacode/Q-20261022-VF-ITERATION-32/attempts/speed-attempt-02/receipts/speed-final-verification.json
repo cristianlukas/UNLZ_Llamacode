@@ -1,0 +1,47 @@
+{
+  "verified_at_utc": "2026-10-22T09:22:00Z",
+  "status": "passed",
+  "attempt": "speed-attempt-02",
+  "measurement_count": 30,
+  "requests_per_profile": {
+    "llama": 15,
+    "ninfer": 15
+  },
+  "matched_prompt_hash_and_usage_mismatch_count": 0,
+  "completion_tokens_fixed_at_256": true,
+  "max_observed_prompt_tokens": 24487,
+  "ninfer_request_done_events": 16,
+  "ninfer_done_events_including_excluded_warmup": true,
+  "http_errors": 0,
+  "postflight_clear": true,
+  "postflight": {
+    "llama": {
+      "inference_processes": 0,
+      "cuda_compute_apps": 0,
+      "MemAvailable_bytes": 122964643840,
+      "SwapFree_bytes": 3453186048,
+      "gpu_temp_c": 62
+    },
+    "ninfer": {
+      "inference_processes": 0,
+      "cuda_compute_apps": 0,
+      "MemAvailable_bytes": 123170324480,
+      "SwapFree_bytes": 3453243392,
+      "gpu_temp_c": 59
+    }
+  },
+  "startup_seconds": {
+    "llama": 5.060905655001989,
+    "ninfer": 170.55419624401839
+  },
+  "measured_e2e_sum_seconds": {
+    "llama": 287.70872014798806,
+    "ninfer": 111.09448787692236
+  },
+  "startup_penalty_seconds": 165.4932905890164,
+  "mean_saving_per_measured_request_seconds": 11.77428215140438,
+  "approximate_break_even_requests": 14.05548877298453,
+  "speed_gate_passed": true,
+  "quality_gate_passed": false,
+  "caveat": "Synthetic local profile comparison; not comparable to ASTRA/SOL and not a model-only effect."
+}

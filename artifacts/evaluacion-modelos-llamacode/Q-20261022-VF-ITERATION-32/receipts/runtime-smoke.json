@@ -1,0 +1,30 @@
+{
+  "at_utc": "2026-10-22T08:09:30Z",
+  "version_file": "0.16.0-rtx3090",
+  "ninfer_version": "0.16.0-rtx3090",
+  "ninfer_serve_version": "0.16.0-rtx3090",
+  "ninfer_serve_help_exit_code": 0,
+  "ninfer_help_exit_code": 0,
+  "ninfer_bench_help_exit_code": 0,
+  "ninfer_bench_version_flag": "unsupported; not required by the upstream CLI",
+  "ldd_missing_dependencies": {
+    "ninfer": [],
+    "ninfer-serve": [],
+    "ninfer_bench": []
+  },
+  "runtime_requirements_from_archive_readme": {
+    "x86_64_linux_glibc_min": "2.38",
+    "cuda_runtime": "12.8",
+    "cublas_required": true,
+    "ffmpeg": "6"
+  },
+  "host": {
+    "ubuntu": "24.04.5",
+    "glibc": "2.39",
+    "cuda_runtime_libraries": "12.8 present",
+    "ffmpeg6": "present"
+  },
+  "gpu_used": false,
+  "inference_server_started": false,
+  "decision": "Runtime CPU smoke passes; proceed to model download and later fresh pre-inference gate."
+}

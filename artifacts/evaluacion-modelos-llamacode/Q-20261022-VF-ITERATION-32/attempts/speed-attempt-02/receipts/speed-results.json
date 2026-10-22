@@ -1,0 +1,161 @@
+{
+  "status": "completed",
+  "finished_at_utc": "2026-10-22T09:19:44Z",
+  "campaign_seconds": 599.43243402199,
+  "startup_seconds": {
+    "llama": 5.060905655001989,
+    "ninfer": 170.55419624401839
+  },
+  "measurements": 30,
+  "summary": [
+    {
+      "cell": "fresh_generation",
+      "target_prompt_tokens": 1024,
+      "profiles": {
+        "llama": {
+          "prompt_tokens": 1121,
+          "completion_tokens": 256,
+          "e2e_client_seconds": 9.176367609994486,
+          "client_total_tps": 27.89774896563389,
+          "prefill_tps": 1085.16,
+          "decode_tps": 31.87,
+          "ttft_seconds": null,
+          "server_e2e_seconds": null,
+          "repetitions": 3
+        },
+        "ninfer": {
+          "prompt_tokens": 1121,
+          "completion_tokens": 256,
+          "e2e_client_seconds": 2.8995547749800608,
+          "client_total_tps": 88.28941677839502,
+          "prefill_tps": 2097.1359707758397,
+          "decode_tps": 108.44099907810744,
+          "ttft_seconds": 0.536573242,
+          "server_e2e_seconds": 2.897881629,
+          "repetitions": 3
+        }
+      },
+      "ninfer_e2e_speedup_fraction": 2.164750564181906
+    },
+    {
+      "cell": "fresh_generation",
+      "target_prompt_tokens": 8192,
+      "profiles": {
+        "llama": {
+          "prompt_tokens": 8233,
+          "completion_tokens": 256,
+          "e2e_client_seconds": 15.345513350010151,
+          "client_total_tps": 16.68240052717628,
+          "prefill_tps": 1187.06,
+          "decode_tps": 30.89,
+          "ttft_seconds": null,
+          "server_e2e_seconds": null,
+          "repetitions": 3
+        },
+        "ninfer": {
+          "prompt_tokens": 8233,
+          "completion_tokens": 256,
+          "e2e_client_seconds": 5.452389810001478,
+          "client_total_tps": 46.95188879019833,
+          "prefill_tps": 2274.0583117280553,
+          "decode_tps": 140.19985573774395,
+          "ttft_seconds": 3.624235306,
+          "server_e2e_seconds": 5.450469852,
+          "repetitions": 3
+        }
+      },
+      "ninfer_e2e_speedup_fraction": 1.8144563915553924
+    },
+    {
+      "cell": "fresh_generation",
+      "target_prompt_tokens": 24576,
+      "profiles": {
+        "llama": {
+          "prompt_tokens": 24465,
+          "completion_tokens": 256,
+          "e2e_client_seconds": 30.740680199989583,
+          "client_total_tps": 8.327727243982283,
+          "prefill_tps": 1118.33,
+          "decode_tps": 29.14,
+          "ttft_seconds": null,
+          "server_e2e_seconds": null,
+          "repetitions": 3
+        },
+        "ninfer": {
+          "prompt_tokens": 24465,
+          "completion_tokens": 256,
+          "e2e_client_seconds": 13.86525400998653,
+          "client_total_tps": 18.463419409093735,
+          "prefill_tps": 2132.744744581387,
+          "decode_tps": 109.01994828531437,
+          "ttft_seconds": 11.488037388,
+          "server_e2e_seconds": 13.863212907,
+          "repetitions": 3
+        }
+      },
+      "ninfer_e2e_speedup_fraction": 1.217101841614184
+    },
+    {
+      "cell": "prompt_copy",
+      "target_prompt_tokens": 2048,
+      "profiles": {
+        "llama": {
+          "prompt_tokens": 1858,
+          "completion_tokens": 256,
+          "e2e_client_seconds": 9.77615020700614,
+          "client_total_tps": 26.186177030763705,
+          "prefill_tps": 1149.87,
+          "decode_tps": 31.94,
+          "ttft_seconds": null,
+          "server_e2e_seconds": null,
+          "repetitions": 3
+        },
+        "ninfer": {
+          "prompt_tokens": 1858,
+          "completion_tokens": 256,
+          "e2e_client_seconds": 2.13186069400399,
+          "client_total_tps": 120.08289318341401,
+          "prefill_tps": 2338.5367936071825,
+          "decode_tps": 189.92992741580025,
+          "ttft_seconds": 0.7912933639999999,
+          "server_e2e_seconds": 2.130151762,
+          "repetitions": 3
+        }
+      },
+      "ninfer_e2e_speedup_fraction": 3.585735941613004
+    },
+    {
+      "cell": "prompt_copy",
+      "target_prompt_tokens": 24576,
+      "profiles": {
+        "llama": {
+          "prompt_tokens": 24293,
+          "completion_tokens": 256,
+          "e2e_client_seconds": 31.016508672008058,
+          "client_total_tps": 8.253669125275735,
+          "prefill_tps": 1108.99,
+          "decode_tps": 28.67,
+          "ttft_seconds": null,
+          "server_e2e_seconds": null,
+          "repetitions": 3
+        },
+        "ninfer": {
+          "prompt_tokens": 24293,
+          "completion_tokens": 256,
+          "e2e_client_seconds": 12.62812180398032,
+          "client_total_tps": 20.27221497969002,
+          "prefill_tps": 2134.91627543803,
+          "decode_tps": 194.52180800060341,
+          "ttft_seconds": 11.386784813,
+          "server_e2e_seconds": 12.626179453999999,
+          "repetitions": 3
+        }
+      },
+      "ninfer_e2e_speedup_fraction": 1.4561458270248715
+    }
+  ],
+  "ninfer_cells_at_least_10pct_faster": 5,
+  "speed_gate_passed": true,
+  "quality_gate_passed": false,
+  "adoption_recommendation": "do not adopt for agent tool use; quality safety gates failed independent of speed"
+}

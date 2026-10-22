@@ -1,0 +1,18 @@
+{
+  "at_utc": "2026-10-22T08:18:43Z",
+  "lock_token": "79d1b1a6-2378-4d0c-b250-431006262b31",
+  "inference_servers": [],
+  "cuda_compute_apps": [],
+  "gui_preserved": true,
+  "port": 18132,
+  "mem_available_bytes": 123963686912,
+  "swap_free_bytes": 3404963840,
+  "gpu_index": "1",
+  "gpu_temp_c": 26,
+  "server_version": "ninfer-serve 0.16.0-rtx3090",
+  "model_path": "/media/cristian/HDD extra/Modelos-eval/Q-20261022-VF-ITERATION-32/models/qwen3_8_27b.ninfer",
+  "model_size_bytes": 18982458624,
+  "model_sha256_verified_receipt": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-32/receipts/model-download-verification.json",
+  "eval_cli": "/home/cristian/.cache/codex-tool-eval-bench-v2.8.0/.venv/bin/tool-eval-bench",
+  "gate_passed": true
+}

@@ -1,0 +1,54 @@
+{
+  "checked_at_utc": "2026-10-22T08:04:00Z",
+  "runtime": {
+    "repository": "ashalliants/ninfer-3090",
+    "license": "Apache-2.0",
+    "release": "v0.16.0-rtx3090",
+    "linux_asset": "ninfer-rtx3090-linux-x64-0.16.0-rtx3090.tar.gz",
+    "bytes": 1040040977,
+    "sha256": "42e59f04b96471beea058450e62eced8c04e6ec6fdbe5c8d490502dd51688355",
+    "checksum_source": "https://github.com/ashalliants/ninfer-3090/releases/download/v0.16.0-rtx3090/SHA256SUMS-v0.16.0-linux.txt",
+    "release_url": "https://github.com/ashalliants/ninfer-3090/releases/tag/v0.16.0-rtx3090"
+  },
+  "model": {
+    "repository": "WarlaxZ/Qwen3.8-27B-NInfer-3090",
+    "revision": "d47f2732d369acaec76dc44228f67c72b081df2f",
+    "license": "apache-2.0",
+    "base_model": "Qwen/Qwen3.8-27B",
+    "base_model_license": "apache-2.0",
+    "format": ".ninfer",
+    "filename": "qwen3_8_27b.ninfer",
+    "bytes": 18982458624,
+    "sha256": "7f2a0086a071ee932c66106e1552d118a85cfec8ddef13c67a54cd64abb39706",
+    "verified_from_hf_lfs_metadata": true,
+    "api_revision": "https://huggingface.co/api/models/WarlaxZ/Qwen3.8-27B-NInfer-3090?blobs=true"
+  },
+  "preflight": {
+    "ubuntu": "24.04.5",
+    "glibc": "2.39",
+    "driver": "610.57.04",
+    "cuda_umd": "13.3",
+    "memory_available_gib": 115,
+    "swap_free_gib": 3.2,
+    "hdd_extra_free_gib": 138,
+    "inference_servers": 0,
+    "cuda_compute_apps": 0,
+    "display_gui_processes_present": true,
+    "gui_preserved": true
+  },
+  "claims_external_only": {
+    "release_v016_prefill_vs_v0151": {
+      "512": 1.4,
+      "4096": 1.5,
+      "16384": 6.2,
+      "65536": 19.1
+    },
+    "copy_decode_vs_v0151": {
+      "2k": 87,
+      "32k": 59
+    },
+    "normal_512_new_tokens_vs_v0151": -4.5,
+    "artifact_plain_decode_vs_upstream_ninfer": 4.5,
+    "artifact_prefill_vs_upstream_ninfer": 0.8
+  }
+}

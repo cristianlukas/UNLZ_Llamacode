@@ -1,0 +1,28 @@
+{
+  "verified_at_utc": "2026-10-22T08:07:00Z",
+  "archive": "/media/cristian/HDD extra/Modelos-eval/Q-20261022-VF-ITERATION-32/runtime/ninfer-rtx3090-linux-x64-0.16.0-rtx3090.tar.gz",
+  "bytes": 1040040977,
+  "sha256_expected": "42e59f04b96471beea058450e62eced8c04e6ec6fdbe5c8d490502dd51688355",
+  "sha256_actual": "42e59f04b96471beea058450e62eced8c04e6ec6fdbe5c8d490502dd51688355",
+  "sha256_match": true,
+  "tar_member_count": 11,
+  "unsafe_paths": [],
+  "top_level": [
+    "ninfer-rtx3090-linux-x64-0.16.0-rtx3090"
+  ],
+  "sample_members": [
+    "ninfer-rtx3090-linux-x64-0.16.0-rtx3090",
+    "ninfer-rtx3090-linux-x64-0.16.0-rtx3090/download-model.sh",
+    "ninfer-rtx3090-linux-x64-0.16.0-rtx3090/README.md",
+    "ninfer-rtx3090-linux-x64-0.16.0-rtx3090/LICENSE",
+    "ninfer-rtx3090-linux-x64-0.16.0-rtx3090/SHA256SUMS.txt",
+    "ninfer-rtx3090-linux-x64-0.16.0-rtx3090/ninfer_bench",
+    "ninfer-rtx3090-linux-x64-0.16.0-rtx3090/ninfer",
+    "ninfer-rtx3090-linux-x64-0.16.0-rtx3090/ninfer-serve",
+    "ninfer-rtx3090-linux-x64-0.16.0-rtx3090/run.sh",
+    "ninfer-rtx3090-linux-x64-0.16.0-rtx3090/RELEASE_NOTES_0.16.0.md",
+    "ninfer-rtx3090-linux-x64-0.16.0-rtx3090/VERSION"
+  ],
+  "extracted_to": "/media/cristian/HDD extra/Modelos-eval/Q-20261022-VF-ITERATION-32/runtime/extracted",
+  "extraction_filter": "tarfile.data"
+}

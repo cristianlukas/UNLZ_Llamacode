@@ -1,0 +1,1 @@
+42e59f04b96471beea058450e62eced8c04e6ec6fdbe5c8d490502dd51688355  ninfer-rtx3090-linux-x64-0.16.0-rtx3090.tar.gz

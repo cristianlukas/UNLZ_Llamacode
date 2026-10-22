@@ -1,0 +1,10 @@
+{
+  "at_utc": "2026-10-22T08:55:32Z",
+  "inference_processes": [],
+  "cuda_compute_apps": [],
+  "meminfo": {
+    "MemAvailable": 123806416896,
+    "SwapFree": 3410575360
+  },
+  "gpu_temp_c": 60
+}

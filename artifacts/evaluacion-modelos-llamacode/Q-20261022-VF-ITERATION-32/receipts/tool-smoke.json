@@ -1,0 +1,30 @@
+{
+  "at_utc": "2026-10-22T08:21:11Z",
+  "http_status": 200,
+  "model_returned": "qwen38-27b-ninfer-v3",
+  "finish_reason": "tool_calls",
+  "tool_calls": [
+    {
+      "function": {
+        "arguments": "{\"text\":\"Q32_TOOL_SMOKE\"}",
+        "name": "append_note"
+      },
+      "id": "call_c7adc643ad4d1105",
+      "type": "function"
+    }
+  ],
+  "expected_exact_tool_call": "append_note(text='Q32_TOOL_SMOKE')",
+  "passed": true,
+  "usage": {
+    "completion_tokens": 57,
+    "completion_tokens_details": {
+      "reasoning_tokens": 25
+    },
+    "prompt_tokens": 302,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 359
+  },
+  "response_sha256": "4981e3b7102fb14f0a36cfde9781f0185fff5ab00794b88f5de40c66bf9986a4"
+}

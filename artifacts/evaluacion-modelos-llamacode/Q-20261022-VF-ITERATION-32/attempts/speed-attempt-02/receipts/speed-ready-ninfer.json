@@ -1,0 +1,12 @@
+{
+  "at_utc": "2026-10-22T09:17:49Z",
+  "pid": 2340424,
+  "unit": "q32-ninfer-speed.scope",
+  "cgroup": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/q32-ninfer-speed.scope",
+  "limits": {
+    "memory.high": "92341796864",
+    "memory.max": "103079215104",
+    "memory.swap.max": "1073741824"
+  },
+  "startup_seconds": 170.55419624401839
+}

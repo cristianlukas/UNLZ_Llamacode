@@ -1,0 +1,141 @@
+{
+  "task_id": "Q-20261022-VF-ITERATION-32",
+  "registered_at_utc": "2026-10-22T09:01:41Z",
+  "lock_token": "79d1b1a6-2378-4d0c-b250-431006262b31",
+  "phase": "D-speed-descriptive-profile-comparison",
+  "question": "Does the advertised NInfer speed profile measurably improve actual local prefill/decode/E2E performance against the already-evaluated Qwen3.8-27B Q4_K_M llama.cpp profile on the same physical RTX 3090?",
+  "candidate": {
+    "model_path": "/media/cristian/HDD extra/Modelos-eval/Q-20261022-VF-ITERATION-32/models/qwen3_8_27b.ninfer",
+    "sha256": "7f2a0086a071ee932c66106e1552d118a85cfec8ddef13c67a54cd64abb39706",
+    "runtime": "NInfer 0.16.0-rtx3090",
+    "profile": [
+      "kv int8",
+      "prefill cuBLAS",
+      "prefill chunk 2048",
+      "DFlash2 draft 7",
+      "LM head draft",
+      "n-gram draft 15",
+      "no cross-request prefix reuse"
+    ]
+  },
+  "control": {
+    "model_path": "/media/cristian/Disco local/Models/llamacpp/Qwen3.8-27B-GGUF-Q4_K_M/Qwen3.8-27B-Q4_K_M.gguf",
+    "sha256": "c600de0300ae8a0eb3a6c0b8b5561b8b96f16bd2c863c2a66c42de29d391a747",
+    "size_bytes": 18973870528,
+    "mtime_ns": 1791940321744422000,
+    "runtime": "llama.cpp 0.6.0-dev build 11554 commit 966baae76",
+    "profile": [
+      "GPU layers 999 on physical GPU1",
+      "context 32768",
+      "KV q4_0",
+      "Flash Attention",
+      "batch/ubatch 512",
+      "speculation none"
+    ]
+  },
+  "hardware": {
+    "gpu_physical_index": 1,
+    "max_context_tokens": 32768,
+    "systemd_scope": {
+      "MemoryHigh": "86G",
+      "MemoryMax": "96G",
+      "MemorySwapMax": "1G"
+    },
+    "one_server_and_one_request_at_a_time": true
+  },
+  "sampler": {
+    "temperature": 0.6,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0,
+    "repeat_penalty": 1.0,
+    "presence_penalty": 0.0,
+    "reasoning_effort": "medium"
+  },
+  "workload": {
+    "cells": [
+      {
+        "kind": "fresh_generation",
+        "target_prompt_tokens": 1024
+      },
+      {
+        "kind": "fresh_generation",
+        "target_prompt_tokens": 8192
+      },
+      {
+        "kind": "fresh_generation",
+        "target_prompt_tokens": 24576
+      },
+      {
+        "kind": "prompt_copy",
+        "target_prompt_tokens": 2048
+      },
+      {
+        "kind": "prompt_copy",
+        "target_prompt_tokens": 24576
+      }
+    ],
+    "repetitions": 3,
+    "max_output_tokens": 256,
+    "actual_prompt_tokens_from_usage": true,
+    "max_input_tokens": 30000,
+    "same_prompt_texts_and_order_for_both_profiles": true,
+    "warmup_requests_excluded": 1
+  },
+  "measurements": [
+    "server startup time to /v1/models",
+    "prompt tokens",
+    "completion tokens",
+    "prefill tokens/s",
+    "decode tokens/s",
+    "TTFT where server exposes it",
+    "client end-to-end request seconds",
+    "VRAM/RAM/swap",
+    "GPU temperature",
+    "OOM events",
+    "HTTP/runner errors"
+  ],
+  "decision_rule": {
+    "report_profile_as_at_least_10_percent_faster_if_median_e2e_improves_in_at_least_two_matched_cells": true,
+    "requires_no_errors_or_oom": true,
+    "quality_gate_remains_failed": true,
+    "must_not_claim_superiority_over_ASTRA_or_SOL": true
+  },
+  "script": "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-32/scripts/run_ninfer_speed.py",
+  "status": "completed_speed_gate_passed_quality_gate_failed",
+  "script_sha256": "1032b6ddde765bf20c52be0d5f4ba9b2a4475cf0b427bf6dadb66f89269d3d8e",
+  "syntax_check": {
+    "method": "ast.parse; no GPU/load/inference",
+    "passed": true
+  },
+  "amendments": [
+    {
+      "at_utc": "2026-10-22T09:09:28Z",
+      "attempt_01_outcome": "Aborted on llama.cpp control request 4: 37,836 prompt tokens exceeded the 32,768 context. Three control measurements are retained but excluded from comparison; NInfer candidate was not started; postflight found no inference server or CUDA compute process.",
+      "attempt_02": {
+        "status": "completed",
+        "output_directory": "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-32/attempts/speed-attempt-02/",
+        "profiles_order": [
+          "llama",
+          "ninfer"
+        ],
+        "same_matrix_and_repetitions": true,
+        "order_seed": 32103,
+        "prompt_seed": 4000,
+        "prompt_sizing": "fresh_generation character count = target*3.55, recalibrated from the failed 24,576 target prompt (37,836 tokens at 5.5 chars/token); prompt_copy remains target*5.5. Both profiles receive identical prompts; actual usage is recorded; abort if any input exceeds 30,000 tokens.",
+        "http_error_receipt": "HTTPError body captured in runner diagnostics; failed requests abort and owned scope is cleaned.",
+        "script_sha256": "160dc3385d0f6dd542a8b511a38306307d692c9fed938696494e15bc8cf0941f",
+        "quality_gate_remains_failed": true,
+        "adoption_decision_can_only_remain_rejected": true,
+        "completed_at_utc": "2026-10-22T09:19:44Z",
+        "result": "15 matched requests per profile; 3 reps x 5 cells; speed gate passed 5/5; quality gate remains failed; no HTTP/OOM errors; clean postflight.",
+        "result_receipt": "attempts/speed-attempt-02/receipts/speed-final-verification.json"
+      }
+    }
+  ],
+  "execution_status": "completed",
+  "completed_at_utc": "2026-10-22T09:19:44Z",
+  "quality_gate_passed": false,
+  "speed_gate_passed": true,
+  "adoption_recommendation": "Do not adopt for tool agents; quality/safety gate failed. Speed result is limited to a synthetic matched profile comparison against Q4_K_M/llama.cpp, not ASTRA/SOL."
+}

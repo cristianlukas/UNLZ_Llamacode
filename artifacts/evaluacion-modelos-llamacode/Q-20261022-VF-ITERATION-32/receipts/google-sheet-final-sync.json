@@ -1,0 +1,12 @@
+{
+  "at_utc": "2026-10-22T09:22:28Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "readback_verified": true,
+  "ranges": {
+    "'Accionables'!A48:N48": "Q32 status/result/recommendation synchronized",
+    "'Evaluaciones LlamaCode'!A263:J263": "Q32 completion, scores, blockers and evidence synchronized",
+    "'Inventario de modelos'!A9:R9": "candidate inventory updated with Linux path, size, usage, TPS, scores, timing, context and no verified Windows/PeritoSoft usage"
+  },
+  "formatting_preserved": "Readback confirms wrapStrategy WRAP on updated cells; updateCells changed userEnteredValue only.",
+  "unexpected_changes": "none detected in target readback"
+}

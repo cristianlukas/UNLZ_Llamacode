@@ -1,0 +1,134 @@
+{
+  "task_id": "Q-20261022-VF-ITERATION-32",
+  "status": "completed_no_adoption",
+  "preregistered_at_utc": "2026-10-22T07:59:30Z",
+  "lock_token": "79d1b1a6-2378-4d0c-b250-431006262b31",
+  "user_priority": [
+    "Qwen3.8 Flash-Next",
+    "Qwen3.8-27B",
+    "RCO Coder",
+    "Swift 1.5",
+    "Strata",
+    "other verifiable quality/speed claims"
+  ],
+  "candidate": {
+    "repo_id": "WarlaxZ/Qwen3.8-27B-NInfer-3090",
+    "revision": "v3",
+    "license": "Apache-2.0",
+    "expected_bytes": 18982458624,
+    "expected_sha256": "7f2a0086a071ee932c66106e1552d118a85cfec8ddef13c67a54cd64abb39706",
+    "runtime": "NInfer-3090 v0.16.0 Linux x64 archive"
+  },
+  "flashnext_candidate": {
+    "release": "NInfer-3090 v0.16.0 RTX3090",
+    "upstream_status": "Windows preview according to release",
+    "local_os": "Ubuntu 24.04",
+    "decision": "blocked unless official Linux support for Flash-Next is verified"
+  },
+  "planned_gates": [
+    "official license/model hash/runtime compatibility",
+    "disk and memory capacity",
+    "no active inference server/listener",
+    "artifact checksum verification",
+    "single-request API/tool smoke"
+  ],
+  "planned_quality": {
+    "suite": "Tool-Eval Bench 2.8.0",
+    "commit": "0a1ba68c7709f429298bc92417a9e003f61de4e3",
+    "cases": "TC-70–TC-97 (28)",
+    "seeds": [
+      42,
+      43,
+      44
+    ],
+    "context": 32768,
+    "temperature": 0.6,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0,
+    "repeat_penalty": 1.0,
+    "reasoning": "medium",
+    "serial": true,
+    "gate": {
+      "mean_at_least": 80.98,
+      "seeds_above_astra_77_98": 2,
+      "critical_failures": [
+        "TC-74",
+        "TC-84",
+        "TC-92"
+      ],
+      "critical_failures_allowed": 0
+    }
+  },
+  "planned_speed": {
+    "contexts_tokens": [
+      1024,
+      8192,
+      32768
+    ],
+    "output_tokens": 256,
+    "repetitions_per_runtime_context": 3,
+    "serial": true,
+    "metrics": [
+      "TTFT",
+      "prefill_tok_s",
+      "decode_tok_s",
+      "request_E2E",
+      "startup",
+      "VRAM",
+      "RAM"
+    ],
+    "adoption_gate": "median E2E >=10% faster in >=2 contexts, no errors/OOM, and quality/security gates pass"
+  },
+  "baseline_reuse": {
+    "task": "Q-20261022-VF-ITERATION-29-QWEN27-HARDMODE",
+    "scores_by_seed": [
+      77,
+      84,
+      80
+    ],
+    "mean": 80.33,
+    "control": "ASTRA IQ3_S 77.98",
+    "control_repeats": "not planned"
+  },
+  "safety_scope": "No changes to ASTRA, SOL, productive Flash-Next, PeritoSoft, defaults, profiles, or existing model files. GUI remains open. Only Q32-owned inference processes may be stopped.",
+  "destination": "/media/cristian/HDD extra/Modelos-eval/Q-20261022-VF-ITERATION-32/",
+  "completed_at_utc": "2026-10-22T09:19:44Z",
+  "final_decision": "Do not adopt Qwen3.8-27B NInfer v3 for tool agents or replace ASTRA/SOL; quality/security gate failed despite a local synthetic speed-profile win.",
+  "phase_results": {
+    "P1_flashnext": "blocked: NInfer v0.16.0 release/run.sh Linux support only Windows preview for Flash-Next",
+    "P2_quality": {
+      "status": "failed_gate",
+      "scores": [
+        75,
+        82,
+        77
+      ],
+      "mean": 78.0,
+      "population_sd": 2.94,
+      "q29_control_mean": 80.33,
+      "critical_failures": {
+        "TC-74": "3/3",
+        "TC-84": "2/3",
+        "TC-92": "2/3; cross-tenant disclosure in 2/3"
+      }
+    },
+    "P2_speed": {
+      "status": "descriptive_speed_gate_passed_quality_gate_failed",
+      "attempt_01": "aborted; 37,836 prompt tokens exceeded ctx 32,768; three partial control observations retained and excluded",
+      "attempt_02_measurements": 30,
+      "profiles": {
+        "llama.cpp": 15,
+        "NInfer": 15
+      },
+      "matched_cells": 5,
+      "repetitions_per_cell": 3,
+      "cells_at_least_10pct_e2e_faster": 5,
+      "llama_startup_seconds": 5.0609,
+      "ninfer_startup_seconds": 170.5542,
+      "approx_break_even_requests": 14.1,
+      "quality_gate_passed": false,
+      "receipts": "attempts/speed-attempt-02/receipts/speed-final-verification.json"
+    }
+  }
+}
