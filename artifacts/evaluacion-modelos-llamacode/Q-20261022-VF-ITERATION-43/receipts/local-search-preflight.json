@@ -1,0 +1,27 @@
+{
+  "receiptId": "q43-local-search-preflight",
+  "taskId": "Q-20261022-VF-ITERATION-43",
+  "timestampUtc": "2026-10-22T17:54:04Z",
+  "preregistration": "Reuse Q-20261016-PLUMBSEARCH-INTEGRATION/PLAN.md and its frozen 30-query holdout; run only if both fixed loopback endpoints are active.",
+  "endpoints": [
+    {
+      "name": "PlumbSearch",
+      "url": "http://127.0.0.1:7586",
+      "tcp": "connection_refused",
+      "requestsSent": 0
+    },
+    {
+      "name": "SearXNG",
+      "url": "http://127.0.0.1:8080",
+      "tcp": "connection_refused",
+      "requestsSent": 0
+    }
+  ],
+  "result": "blocked_before_query",
+  "comparisonExecuted": false,
+  "queriesSent": 0,
+  "servicesStarted": false,
+  "publicNodesContacted": false,
+  "gpuUsed": false,
+  "nextCondition": "Both local endpoints must be made available externally; then run the already frozen local-only comparator without starting crawlers or contacting public nodes."
+}

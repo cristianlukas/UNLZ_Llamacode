@@ -1,0 +1,24 @@
+{
+  "receiptId": "q43-host-state",
+  "taskId": "Q-20261022-VF-ITERATION-43",
+  "timestampUtc": "2026-10-22T17:54:04Z",
+  "platform": {
+    "os": "Ubuntu 24.04.5 x86_64",
+    "powershell": false,
+    "pwsh": false,
+    "cmdExe": false,
+    "repositoryFilesystem": "ntfs3 rw"
+  },
+  "workQueueLockToken": "b46bfeb6-5de2-4dc8-9f6d-d7aba731a510",
+  "inferenceProcesses": [],
+  "evaluationListeners": [],
+  "gpuComputeProcesses": [
+    {
+      "pid": 5493,
+      "process": "/tmp/.mount_artcraidHHJL/usr/bin/artcraft-launcher",
+      "vramMiB": 205,
+      "classification": "GUI/app; not an inference server; left running"
+    }
+  ],
+  "modelOrGpuTestStarted": false
+}

@@ -1,0 +1,100 @@
+{
+  "receiptId": "q43-pending-tests-audit",
+  "taskId": "Q-20261022-VF-ITERATION-43",
+  "timestampUtc": "2026-10-22T17:54:04Z",
+  "inbox": {
+    "count": 58,
+    "all_have_analysis_status": true,
+    "status_counts": {
+      "Analizado": 45,
+      "Bloqueada": 4,
+      "Duplicada": 1,
+      "Sin prueba aplicable": 2,
+      "Revisado · sin prueba local nueva aplicable": 1,
+      "Revisado · sin prueba local aplicable": 1,
+      "Analizado · Prueba ejecutada; 15/15 hechos exactos a ~680K, gate estricto JSON 2/3; no pasa": 1,
+      "Analizado · Screen cerrado sin score tras cuatro fallos de arranque; no reintentar": 1,
+      "Analizado · Smoke S57 completado; ASTRA IQ2_XS activó contexto efectivo 1M": 1,
+      "Migrado y verificado": 1
+    }
+  },
+  "localActionables": {
+    "count": 21,
+    "pending_or_blocked_ids": [
+      {
+        "id": "vf-q35-codex-crash-isolation-20261022",
+        "status": "Implementada parcialmente · Linux kv_cache_ab y ASTRA/Strata protegidos; Windows Job Objects pendientes"
+      },
+      {
+        "id": "vf-q32-flashnext-ninfer-linux-gate-20261022",
+        "status": "Pendiente · requiere sesión/runner Windows nativo; NInfer v3 y volumen n-gram listos"
+      },
+      {
+        "id": "vf-qwen-tool-safety-gates-20261022",
+        "status": "Recomendado · pendiente de implementación antes de reabrir Qwen"
+      },
+      {
+        "id": "vf-openjet-megakernel-20261019",
+        "status": "Bloqueado · GGUF local 64 bloques; el kernel requiere 65"
+      },
+      {
+        "id": "vf-swift15-qwen38-20261019",
+        "status": "Bloqueado · acceso gated/licencia y compatibilidad exacta Strata"
+      },
+      {
+        "id": "f23604a1-ff2e-4d28-9e09-2b5cf01d9b69",
+        "status": "Bloqueado · falta workflow concreto y holdout sintético fijo"
+      },
+      {
+        "id": "f318d34d-eefc-4d16-b77d-98b1977d0698",
+        "status": "Pausado · E2E sólo si se prioriza concurrencia"
+      },
+      {
+        "id": "vf-order-validation-20261019",
+        "status": "Bloqueado · falta caption/transcripción primaria"
+      },
+      {
+        "id": "vf-ocr-unlimited-20261019",
+        "status": "Pausado · screen sintético completo; integración opt-in pendiente"
+      }
+    ]
+  },
+  "nextEligibleModelTest": {
+    "id": "vf-q32-flashnext-ninfer-linux-gate-20261022",
+    "state": "pending_windows_native_execution",
+    "artifacts": "C39-01 NInfer v3 and n-gram conversion complete",
+    "reason": "Current session remains Ubuntu and has no PowerShell/cmd; user repair did not change connected task host."
+  },
+  "otherPriorityStates": [
+    {
+      "area": "Qwen3.8-27B",
+      "state": "Q29/Q32/Q34 complete; no adoption because quality/safety gates failed; no rerun without material change."
+    },
+    {
+      "area": "RCO",
+      "state": "screen failed gate; no repeat without new artifact/revision."
+    },
+    {
+      "area": "OpenJet",
+      "state": "blocked before request; local GGUF has 64 blocks, fixed kernel requires 65."
+    },
+    {
+      "area": "Swift",
+      "state": "blocked on gated access/license/runtime compatibility."
+    },
+    {
+      "area": "Strata claims",
+      "state": "no new compatible primary claim in current queue."
+    },
+    {
+      "area": "Concurrency E2E",
+      "state": "paused unless product decision prioritizes parallel user tasks; direct screen showed no throughput gain and higher latency."
+    },
+    {
+      "area": "P2.1 tool safety",
+      "state": "implementation recommendation, not a model benchmark; reopen Qwen after controls and regressions."
+    }
+  ],
+  "testsRunThisIteration": [],
+  "result": "No model test was started; the only fresh local-only comparator preflight was blocked by both endpoints refusing TCP."
+}
