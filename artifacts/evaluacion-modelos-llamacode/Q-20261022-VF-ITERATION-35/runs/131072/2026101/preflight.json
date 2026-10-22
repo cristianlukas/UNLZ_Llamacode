@@ -1,0 +1,75 @@
+{
+  "checked_at_utc": "2026-10-22T13:38:52Z",
+  "external_inference_servers": [],
+  "port": 8350,
+  "process_cgroup": "/user.slice/user-1000.slice/user@1000.service/background.slice/llamacode-q35-context-131072-seed-2026101-a05.service",
+  "cgroup_memory": {
+    "process_cgroup": "/user.slice/user-1000.slice/user@1000.service/background.slice/llamacode-q35-context-131072-seed-2026101-a05.service",
+    "run": {
+      "path": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/background.slice/llamacode-q35-context-131072-seed-2026101-a05.service",
+      "memory_current_bytes": 12435456,
+      "memory_max_bytes": "max",
+      "psi": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        }
+      }
+    },
+    "user_manager": {
+      "path": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service",
+      "memory_current_bytes": 104828055552,
+      "memory_max_bytes": "max",
+      "psi": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 2.1,
+          "avg300": 4.12
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 2.1,
+          "avg300": 4.12
+        }
+      }
+    }
+  },
+  "mem_available_gib": 114.202,
+  "swap_free_gib": 5.095,
+  "psi": {
+    "some": {
+      "avg10": 0.0,
+      "avg60": 1.87,
+      "avg300": 3.68
+    },
+    "full": {
+      "avg10": 0.0,
+      "avg60": 1.87,
+      "avg300": 3.68
+    }
+  },
+  "results_free_gib": 121.441,
+  "gpus": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 1026,
+      "memory_total_mib": 24576,
+      "utilization_percent": 50
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 108,
+      "memory_total_mib": 24576,
+      "utilization_percent": 28
+    }
+  ],
+  "decision": "pass"
+}

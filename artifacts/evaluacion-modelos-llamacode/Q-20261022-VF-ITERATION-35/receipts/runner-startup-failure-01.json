@@ -1,0 +1,20 @@
+{
+  "task": "Q-20261022-VF-ITERATION-35",
+  "attempt": "131072/2026101 attempt 01",
+  "checked_at_utc": "2026-10-22T13:15:53Z",
+  "classification": "runner failure before model server startup",
+  "request_sent": false,
+  "model_loaded": false,
+  "cause": "Copied runner placed Monitor.start/stop outside the Monitor class; runner raised AttributeError before launching the Strata server.",
+  "evidence": {
+    "orchestrator": "receipts/progress.json",
+    "server_log_bytes": 0,
+    "postflight_processes": [],
+    "postflight_listeners": [],
+    "gpu_after_abort": [
+      "GPU0: 693 MiB / 24576 MiB, 10% utilization",
+      "GPU1: 108 MiB / 24576 MiB, 26% utilization"
+    ]
+  },
+  "decision": "This is a harness startup failure, not a model result. No score, API request, model load or GPU inference occurred. One retry of this fixture is permitted by the preregistration after the diagnosed runner fix and a fresh gate. No other fixture was started."
+}

@@ -1,0 +1,22 @@
+{
+  "task": "Q-20261022-VF-ITERATION-35",
+  "key": "131072:2026101",
+  "attempt_no": 3,
+  "started_at_utc": "2026-10-22T13:33:33.090592+00:00",
+  "finished_at_utc": "2026-10-22T13:33:47.788460+00:00",
+  "service_unit": "llamacode-q35-context-131072-seed-2026101-a03.service",
+  "state": "invalid-infrastructure-before-request",
+  "request_sent": false,
+  "server_ready": false,
+  "score": null,
+  "cause": "The first isolated worker reached the temporary conservative 40% user-manager PSI guard before Strata became ready. The runner stopped its own service; Codex remained in a separate cgroup and stayed alive. This was a guard stop, not a systemd-oomd kill.",
+  "observed_peak": {
+    "user_manager_memory_psi_some_avg10_percent": 40.89,
+    "run_service_memory_psi_some_avg10_percent": 61.85,
+    "MemAvailable_GiB": 115.2,
+    "swap_free_GiB": 5.09
+  },
+  "changed_model_configuration": false,
+  "evidence_files": ["preflight.json", "server.log", "engine.log", "receipt.json", "systemd-unit.log"],
+  "next_step": "Use the preregistered 50% oomd-aligned stop guard for the isolated service; keep Codex in its own app cgroup. Infrastructure-only attempts do not receive a quality score."
+}

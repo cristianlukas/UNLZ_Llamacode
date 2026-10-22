@@ -1,0 +1,27 @@
+{
+  "task": "Q-20261022-VF-ITERATION-35",
+  "synced_at_utc": "2026-10-22T13:45:39.162Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_url": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "tabs": [
+    {
+      "title": "Evaluaciones LlamaCode",
+      "sheet_id": 1945218181,
+      "range": "A266:J266",
+      "record_id": "Q-20261022-VF-ITERATION-35",
+      "status": "Bloqueada; crash mitigado; test suite detenido por presión PSI",
+      "verified": "Readback matches intended record; WRAP/TOP copied from Q34; no validation or chips."
+    },
+    {
+      "title": "Accionables",
+      "sheet_id": 1393124532,
+      "range": "A2:N2",
+      "record_id": "vf-q35-codex-crash-isolation-20261022",
+      "status": "Partial in Q35; generalize to all runners",
+      "verified": "Readback after final update matches all cells; status is partial; reconciliation timestamp set; WRAP/TOP retained; no validation or chips."
+    }
+  ],
+  "preservation": "Existing records retained: Q34 remains in Evaluaciones LlamaCode row 265; former top actionable Q31 shifted to row 3 after inserting the new row 2.",
+  "native_table_probe": "No tables[] metadata was returned for either tab; the tabs use styled ranges, not native tables.",
+  "visual_check": "Codex UI inventory had no app windows or browser tabs, so no screenshot/render was available. Native-cell readback verified values, wrapping, vertical alignment, validation and chip state; no surrounding formatting changed."
+}

@@ -1,0 +1,16 @@
+{
+  "task": "Q-20261022-VF-ITERATION-35",
+  "key": "131072:2026101",
+  "attempt_no": 2,
+  "started_at_local": "2026-10-22T10:16:38-03:00",
+  "ended_at_local": "2026-10-22T10:17:28-03:00",
+  "state": "invalid-infrastructure-before-request",
+  "request_sent": false,
+  "server_ready": false,
+  "score": null,
+  "cause": "systemd-oomd killed the shared Codex desktop cgroup during sustained memory pressure while Strata was loading the model. See codex-crash-diagnosis.json.",
+  "run_directory": "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/runs/131072/2026101",
+  "evidence_files": ["server.log", "engine.log", "preflight.json"],
+  "changed_model_configuration": false,
+  "next_step": "Retry only after moving the supervisor and the single inference run to detached, separate background.slice units; persist the running marker before launch and monitor user-manager PSI."
+}

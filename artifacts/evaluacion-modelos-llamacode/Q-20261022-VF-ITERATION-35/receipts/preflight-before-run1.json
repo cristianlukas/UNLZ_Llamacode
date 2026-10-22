@@ -1,0 +1,37 @@
+{
+  "checked_at_utc": "2026-10-22T13:15:13Z",
+  "external_inference_servers": [],
+  "port": 8350,
+  "mem_available_gib": 114.225,
+  "swap_free_gib": 3.358,
+  "psi": {
+    "some": {
+      "avg10": 0.0,
+      "avg60": 0.03,
+      "avg300": 0.09
+    },
+    "full": {
+      "avg10": 0.0,
+      "avg60": 0.03,
+      "avg300": 0.09
+    }
+  },
+  "results_free_gib": 121.441,
+  "gpus": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 697,
+      "memory_total_mib": 24576,
+      "utilization_percent": 22
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 108,
+      "memory_total_mib": 24576,
+      "utilization_percent": 33
+    }
+  ],
+  "decision": "pass"
+}

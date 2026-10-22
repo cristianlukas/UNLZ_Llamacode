@@ -1,0 +1,29 @@
+{
+  "task": "Q-20261022-VF-ITERATION-35",
+  "attempt_no": 4,
+  "context": 131072,
+  "seed": 2026101,
+  "fixture": "131072/2026101",
+  "classification": "invalid infrastructure / runner exception",
+  "request_sent": false,
+  "quality_score": null,
+  "exact_matches": null,
+  "strict_output_valid": null,
+  "service_unit": "llamacode-q35-context-131072-seed-2026101-a04.service",
+  "run_directory": "runs/131072/2026101",
+  "started_at_utc": "2026-10-22T13:35:58.268884+00:00",
+  "finished_at_utc": "2026-10-22T13:36:33.195750+00:00",
+  "preflight": "pass; 114.234 GiB MemAvailable, 5.094 GiB SwapFree, user-manager PSI avg10 0%",
+  "runner_evidence": "Strata logged expert loading and still-starting at 23 seconds. No request.json was created, so API health/request gate was not reached.",
+  "failure": "After startup was interrupted before a response, score aggregation called sum(None.values()) and raised AttributeError before writing a fresh receipt.",
+  "worker_peak_memory": "3.9 GiB reported by systemd unit journal",
+  "worker_exit": "exit-code, not systemd-oomd kill; no kernel OOM or NVIDIA Xid found",
+  "desktop_evidence": "ChatGPT PID 2778277 and Codex PID 2778603 remained alive in app-org.chromium...scope, separate from background.slice worker.",
+  "monitor_abort_reason": "not persisted by the crashed runner; no request was sent",
+  "evidence_files": [
+    "runs/131072/2026101/systemd-unit.log",
+    "runs/131072/2026101/server.log",
+    "runs/131072/2026101/preflight.json"
+  ],
+  "follow_up": "score_response now returns null quality metrics on missing response; regression tests cover this path. Retry same fixture only after new preflight."
+}

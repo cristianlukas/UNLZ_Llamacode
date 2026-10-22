@@ -1,0 +1,156 @@
+{
+  "task": "Q-20261022-VF-ITERATION-35",
+  "suite": "context-retrieval-holdout-v1",
+  "prepared_at_utc": "2026-10-22T13:15:00.460031+00:00",
+  "tokenizer_files_sha256": {
+    "vocab.json": "4ba64f0332abcfb0b600b7df1537d1e836e68009d5fb7cdb77339738dc6365c4",
+    "merges.txt": "4ba698529766c7a2f5052083ea10cdf2485577f5237a332ee291054eb11e3332",
+    "token_type.json": "5088c8c298fc06af8382ddb3b76c888703ac2634e82263b97eedcc2ad202738b"
+  },
+  "runs": [
+    {
+      "context": 131072,
+      "seed": 2026101,
+      "target_tokens": 125174,
+      "fixture_dir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/fixtures/131072/2026101",
+      "prompt_sha256": "93823c922e39cab53ea981b851e6a2ef76fc8958bc2da5ee77ae8d565ad37879",
+      "expected_sha256": "28c8d122c14b9b0cbca6d7c3ce08f8fe0294d532f6ff9ee0a0cff2a73e063986",
+      "prompt_text_tokens": 125123,
+      "config_path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/receipts/configs/context-131072-seed-2026101.json",
+      "config_sha256": "549286ef521d0f68c06d6e879937ca9bb2b3e64518f7ed2e67605a04dbc10ff2",
+      "run_dir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/runs/131072/2026101"
+    },
+    {
+      "context": 131072,
+      "seed": 2026102,
+      "target_tokens": 125174,
+      "fixture_dir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/fixtures/131072/2026102",
+      "prompt_sha256": "447067abdab496bd72c0aa72574d96196a7ff2cc0c42275087d3decff9ac6ed9",
+      "expected_sha256": "2c26bb2c495e44b7ce782079b4e9c350ce02185e0758f62e8d5e03ba758ac751",
+      "prompt_text_tokens": 125212,
+      "config_path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/receipts/configs/context-131072-seed-2026102.json",
+      "config_sha256": "31625e81f851007120b90409fe84cbbe3424f5f99ddbad99db88f53f6736adbb",
+      "run_dir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/runs/131072/2026102"
+    },
+    {
+      "context": 131072,
+      "seed": 2026103,
+      "target_tokens": 125174,
+      "fixture_dir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/fixtures/131072/2026103",
+      "prompt_sha256": "f78f73080cdfb7f94f3530346c1c3d320756f690b1377fa10614824bf39dbc91",
+      "expected_sha256": "89c0b3272a5bafff568b0e4d67b0cb6eb873e8b635384e42ecc9b5062030406f",
+      "prompt_text_tokens": 125101,
+      "config_path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/receipts/configs/context-131072-seed-2026103.json",
+      "config_sha256": "b7987994c157c1a1b04b9b29f508eaa57a2b146614bd14398b0f4923e93658a0",
+      "run_dir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/runs/131072/2026103"
+    },
+    {
+      "context": 262144,
+      "seed": 2026101,
+      "target_tokens": 250348,
+      "fixture_dir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/fixtures/262144/2026101",
+      "prompt_sha256": "e57e298d7dfa137ff01e86fac01d622f08b60d48fea690f40f7da2290a7a2355",
+      "expected_sha256": "28c8d122c14b9b0cbca6d7c3ce08f8fe0294d532f6ff9ee0a0cff2a73e063986",
+      "prompt_text_tokens": 250371,
+      "config_path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/receipts/configs/context-262144-seed-2026101.json",
+      "config_sha256": "93f4cba4fc69795c8e805f692f64912f41353a78b1a2a4ed04a3f206ce206658",
+      "run_dir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/runs/262144/2026101"
+    },
+    {
+      "context": 262144,
+      "seed": 2026102,
+      "target_tokens": 250348,
+      "fixture_dir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/fixtures/262144/2026102",
+      "prompt_sha256": "88cff359064c293dde9bc846da1860299535d4f916d67f0dd88676b1d1cd515f",
+      "expected_sha256": "2c26bb2c495e44b7ce782079b4e9c350ce02185e0758f62e8d5e03ba758ac751",
+      "prompt_text_tokens": 250385,
+      "config_path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/receipts/configs/context-262144-seed-2026102.json",
+      "config_sha256": "842cbb7d1ee55c70c2af87cb4507153252fec99a51748e3150a373643ed0d47c",
+      "run_dir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/runs/262144/2026102"
+    },
+    {
+      "context": 262144,
+      "seed": 2026103,
+      "target_tokens": 250348,
+      "fixture_dir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/fixtures/262144/2026103",
+      "prompt_sha256": "5183896abc395c5c8d2110aef7fb22fcb24506568ff7ec0195b874da8012affc",
+      "expected_sha256": "89c0b3272a5bafff568b0e4d67b0cb6eb873e8b635384e42ecc9b5062030406f",
+      "prompt_text_tokens": 250404,
+      "config_path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/receipts/configs/context-262144-seed-2026103.json",
+      "config_sha256": "0528203521ab44982159b56d0324de8f43a368e55cc55bb69d5c2e6342889cb5",
+      "run_dir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/runs/262144/2026103"
+    },
+    {
+      "context": 524288,
+      "seed": 2026101,
+      "target_tokens": 500695,
+      "fixture_dir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/fixtures/524288/2026101",
+      "prompt_sha256": "d93b065657741a002ec7dd2ee7cfa98097251044bb70fb1a9c82d4f543768042",
+      "expected_sha256": "28c8d122c14b9b0cbca6d7c3ce08f8fe0294d532f6ff9ee0a0cff2a73e063986",
+      "prompt_text_tokens": 500687,
+      "config_path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/receipts/configs/context-524288-seed-2026101.json",
+      "config_sha256": "90a6691fd6154e8545619733ee8cc2e35e53a2a16e704242d3b9473567fe4af5",
+      "run_dir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/runs/524288/2026101"
+    },
+    {
+      "context": 524288,
+      "seed": 2026102,
+      "target_tokens": 500695,
+      "fixture_dir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/fixtures/524288/2026102",
+      "prompt_sha256": "950569cd5855dff8826f1fad55bded1a5955f89ea0e9191d7a86be83da96e939",
+      "expected_sha256": "2c26bb2c495e44b7ce782079b4e9c350ce02185e0758f62e8d5e03ba758ac751",
+      "prompt_text_tokens": 500680,
+      "config_path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/receipts/configs/context-524288-seed-2026102.json",
+      "config_sha256": "d5482811adef47f509c0d5bad9690d8dc6787b078ad5fb8ee41cfac94f8c4ccc",
+      "run_dir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/runs/524288/2026102"
+    },
+    {
+      "context": 524288,
+      "seed": 2026103,
+      "target_tokens": 500695,
+      "fixture_dir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/fixtures/524288/2026103",
+      "prompt_sha256": "0776733a49bbf2757043d59fc24a39b3db54a24b9773d916faf977e811387f76",
+      "expected_sha256": "89c0b3272a5bafff568b0e4d67b0cb6eb873e8b635384e42ecc9b5062030406f",
+      "prompt_text_tokens": 500692,
+      "config_path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/receipts/configs/context-524288-seed-2026103.json",
+      "config_sha256": "b331ed8f49fb7dce085b20e692c2c41a4715909ee91c452e09bdbf3ab2dd26b3",
+      "run_dir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/runs/524288/2026103"
+    },
+    {
+      "context": 1048576,
+      "seed": 2026101,
+      "target_tokens": 1001390,
+      "fixture_dir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/fixtures/1048576/2026101",
+      "prompt_sha256": "6b72df9c75c1bec5fafe4c73f08cdc4d969e1d7a489eeb56a044718b18303d35",
+      "expected_sha256": "28c8d122c14b9b0cbca6d7c3ce08f8fe0294d532f6ff9ee0a0cff2a73e063986",
+      "prompt_text_tokens": 1001381,
+      "config_path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/receipts/configs/context-1048576-seed-2026101.json",
+      "config_sha256": "2dbbe67c635ce1e39bd5f83b8ed6c893e93a7f367571a1249627177d57d431a6",
+      "run_dir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/runs/1048576/2026101"
+    },
+    {
+      "context": 1048576,
+      "seed": 2026102,
+      "target_tokens": 1001390,
+      "fixture_dir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/fixtures/1048576/2026102",
+      "prompt_sha256": "adf70d636c3b0686618f49067f71830b8f067676b29afd88b322426dba27c6d9",
+      "expected_sha256": "2c26bb2c495e44b7ce782079b4e9c350ce02185e0758f62e8d5e03ba758ac751",
+      "prompt_text_tokens": 1001241,
+      "config_path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/receipts/configs/context-1048576-seed-2026102.json",
+      "config_sha256": "a1d02120f38eac6146614b12c038b1d07ebc7ec3ef867601eb9edff253081edb",
+      "run_dir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/runs/1048576/2026102"
+    },
+    {
+      "context": 1048576,
+      "seed": 2026103,
+      "target_tokens": 1001390,
+      "fixture_dir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/fixtures/1048576/2026103",
+      "prompt_sha256": "2e093788765472cc73235f769f87f498dc8ea29ab055d6bbb3b27bb8c05b085d",
+      "expected_sha256": "89c0b3272a5bafff568b0e4d67b0cb6eb873e8b635384e42ecc9b5062030406f",
+      "prompt_text_tokens": 1001451,
+      "config_path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/receipts/configs/context-1048576-seed-2026103.json",
+      "config_sha256": "b95c6b096549e5ea2415bbf7c12b78b02e28ba4eb1a5e7a97fe6eb7c6a4a980b",
+      "run_dir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/runs/1048576/2026103"
+    }
+  ]
+}

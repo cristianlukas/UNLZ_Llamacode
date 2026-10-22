@@ -1,0 +1,29 @@
+{
+  "task": "Q-20261022-VF-ITERATION-35",
+  "diagnosed_at_utc": "2026-10-22T13:30:00Z",
+  "incident_window_local": "2026-10-22 10:16:38-10:17:28 America/Argentina/Buenos_Aires",
+  "classification": "systemd-oomd terminated the shared desktop cgroup during model startup",
+  "evidence": {
+    "oomd_timestamp_local": "2026-10-22T10:17:27.981-03:00",
+    "killed_unit": "app-org.chromium.Chromium-833601.scope",
+    "oomd_action": "Killed the unit after user-manager memory pressure exceeded 50% for over 20s with reclaim activity",
+    "unit_memory_peak": "112.9 GiB (systemd journal reports 112.9G)",
+    "unit_pressure_avg10": "some=90.01%, full=not reported in the OOMd entry",
+    "user_manager_pressure": "63.31% > 50.00%",
+    "unit_exit_result": "oom-kill",
+    "model_runner_at_event": "Strata was still loading the GGUF and experts; server log had not reached healthy/ready; no request.json, response.json or result receipt exists",
+    "codex_server": "Previous app-server PID 833954 logged until 10:17:10; after the desktop relaunched, PID 2778603 logged a missing custom tool output for the interrupted call",
+    "kernel_oom_or_nvidia_xid": "No matching kernel OOM or NVIDIA Xid records in the incident window",
+    "systemd_user_service_memory_max": "max; the observed event was pressure-based systemd-oomd selection, not a configured hard memory.max"
+  },
+  "root_cause": "The benchmark was spawned as a child of the Codex tool turn. Its Strata server therefore shared the ChatGPT/Codex desktop app cgroup. The large mapped model working set produced sustained memory PSI; systemd-oomd killed the entire app scope, including the active Codex tool process.",
+  "model_configuration_changed": false,
+  "mitigation": {
+    "supervisor": "detached transient user service in background.slice",
+    "each_inference": "one separate transient user service/cgroup in background.slice, with KillMode=control-group and OOMPolicy=stop",
+    "durability": "atomic progress.json update before dispatch; per-run preflight, request/response and receipt; unit journal persisted to each run directory",
+    "monitoring": "record run-cgroup and user-manager memory PSI; stop the isolated worker after five samples at user-manager some.avg10 or full.avg10 >= 50%; generic runner gate remains 80%/60%",
+    "preserved": ["model weights", "quantization", "131K/262K/512K/1M contexts", "GPU routing", "ASTRA", "SOL", "productive Flash-Next", "PeritoSoft"]
+  },
+  "confidence": "high for the cgroup/OOMd termination mechanism; no evidence attributes the event to a model-quality failure or GPU driver fault"
+}

@@ -1,0 +1,64 @@
+{
+  "task": "Q-20261022-VF-ITERATION-35",
+  "priority": "P1 · Qwen3.8-Flash-Next ASTRA IQ2_XS",
+  "registered_at_utc": "2026-10-22",
+  "lock": {
+    "task_id": "Q-20261022-VF-ITERATION-35",
+    "token": "20f0de1a-7953-4c05-95f8-f6a5b73fac26"
+  },
+  "question": "¿Mantiene Flash-Next ASTRA IQ2_XS recuperación exacta en un holdout independiente con versiones contradictorias, distractores y consultas paraphraseadas al 95,5% del contexto configurado?",
+  "candidate": {
+    "profile": "ASTRA DEFAULT / ISTA-DASLab Qwen3.8-Flash-Next GSQ-RCO IQ2_XS",
+    "model_revision": "ed59f92082b1e93c0e96d60a8b11aab089b52f09",
+    "model_sha256": [
+      "92cee27ae5bbadcd732416a0f7a7f0acc092399dbbe8f5a5efa707c2ec0a49d7",
+      "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113"
+    ],
+    "runtime": "Strata 0.1.41",
+    "runtime_commit": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
+    "runtime_sha256": "770ecf303a4c6271654339c639392ecb455de3a999bf5d2e8dbc73c879103602",
+    "source_manifest": "../Q-20261014-ISTA-NEEDLE-HAYSTACK/receipts/effective-profile-manifest.json"
+  },
+  "design": {
+    "contexts_in_order": [
+      {"tokens": 131072, "rope": "native"},
+      {"tokens": 262144, "rope": "native"},
+      {"tokens": 524288, "rope": "YaRN x2 from 262144"},
+      {"tokens": 1048576, "rope": "YaRN x4 from 262144"}
+    ],
+    "fixture_seeds": [2026101, 2026102, 2026103],
+    "runs": 12,
+    "cases_per_run": 8,
+    "records_per_run": 24,
+    "target_text_prompt_fraction": 0.955,
+    "sampling": {"temperature": 0.0, "top_p": 1.0, "top_k": 20, "thinking": false, "cache_prompt": false},
+    "max_tokens": 768,
+    "timeout_seconds_per_run": 1200,
+    "execution": "one server/request at a time; terminate task-owned server before the next run"
+  },
+  "acceptance": {
+    "valid_run": "API accepts at least 95% of configured context, HTTP 200, finish_reason=stop, exact eight-key JSON, no duplicate keys, and no resource abort",
+    "pass_per_context": "all three holdouts valid and each returns 8/8 exact approved values; no revoked value selected",
+    "infrastructure_failure": "does not count as a quality score; permit at most one retry only after a pre-request startup failure is diagnosed and a fresh preflight passes",
+    "stop_conditions": [
+      "external inference server process/listener detected",
+      "MemAvailable <80 GiB before a run",
+      "SwapFree <1 GiB or memory PSI gate exceeded",
+      "less than 23000 MiB free on either RTX 3090",
+      "less than 5 GiB free on results volume",
+      "hash mismatch, timeout, OOM, swap-out >4 MiB or sustained memory PSI",
+      "profile/runtime/model fingerprint mismatch"
+    ]
+  },
+  "resource_gate_at_registration": {
+    "inference_server_processes": [],
+    "known_inference_listeners": [],
+    "nvidia_smi_snapshot": [
+      "GPU0 RTX 3090: 721 MiB used / 24576 MiB, 11% utilization, 43 C",
+      "GPU1 RTX 3090: 108 MiB used / 24576 MiB, 17% utilization, 26 C"
+    ],
+    "memory": "113 GiB available; 3.4 GiB SwapFree",
+    "results_volume": "12 GiB free"
+  },
+  "decision_scope": "Context recommendation for this quant/runtime/profile only. No profile edits, global default increase, adoption/superiority claim, download or build. Preserve ASTRA, SOL, Flash-Next productive, PeritoSoft and every model weight."
+}

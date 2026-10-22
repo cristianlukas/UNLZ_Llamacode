@@ -1,0 +1,84 @@
+{
+  "suite": "context-retrieval-holdout-v1",
+  "generatorSeed": 2026103,
+  "targetTokens": 250348,
+  "tokenizerTextOnlyTokens": 250404,
+  "caseCount": 8,
+  "cases": [
+    {
+      "caseId": "case-6103-01",
+      "field": "service_route",
+      "approved": "MX-6130"
+    },
+    {
+      "caseId": "case-6103-02",
+      "field": "approved_limit",
+      "approved": "7.625 units"
+    },
+    {
+      "caseId": "case-6103-03",
+      "field": "shipment_seal",
+      "approved": "SEAL-P3-806"
+    },
+    {
+      "caseId": "case-6103-04",
+      "field": "archive_ref",
+      "approved": "AR-2026-7D31"
+    },
+    {
+      "caseId": "case-6103-05",
+      "field": "inspection_date",
+      "approved": "2026-10-11"
+    },
+    {
+      "caseId": "case-6103-06",
+      "field": "package_trace",
+      "approved": "PKG-72-LA"
+    },
+    {
+      "caseId": "case-6103-07",
+      "field": "recovery_node",
+      "approved": "node-42"
+    },
+    {
+      "caseId": "case-6103-08",
+      "field": "checksum",
+      "approved": "sha256:8c9e2a71"
+    }
+  ],
+  "recordPositionsTextOnly": [
+    10003,
+    20018,
+    30034,
+    40038,
+    50029,
+    60025,
+    70033,
+    80049,
+    90074,
+    100070,
+    110092,
+    120091,
+    130081,
+    140057,
+    150041,
+    160060,
+    170074,
+    180094,
+    190117,
+    200114,
+    210123,
+    220111,
+    230109,
+    240105
+  ],
+  "recordStatuses": {
+    "FINAL_APPROVED": 16,
+    "REVOKED": 8,
+    "distractor_case_ids": 8
+  },
+  "promptSha256": "5183896abc395c5c8d2110aef7fb22fcb24506568ff7ec0195b874da8012affc",
+  "promptFileSha256": "5183896abc395c5c8d2110aef7fb22fcb24506568ff7ec0195b874da8012affc",
+  "promptBytes": 679327,
+  "expectedSha256": "89c0b3272a5bafff568b0e4d67b0cb6eb873e8b635384e42ecc9b5062030406f"
+}

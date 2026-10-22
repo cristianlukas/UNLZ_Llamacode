@@ -1,0 +1,25 @@
+{
+  "task": "Q-20261022-VF-ITERATION-35",
+  "attempt_no": 5,
+  "registered_at_utc": "2026-10-22T13:38:19Z",
+  "question": "Can the same 131072-token Flash-Next/Strata fixture start in an isolated worker and produce a valid receipt after the null-response scoring fix?",
+  "purpose": "Verify crash isolation and harness recovery; this is not a model comparison unless the exact request completes.",
+  "unchanged": [
+    "model and file hashes",
+    "131072 context",
+    "profile and quantization",
+    "GPU placement",
+    "fixture, prompt, sampling and seed 2026101"
+  ],
+  "preflight_gates": [
+    "no external inference server",
+    "worker in its own background.slice cgroup",
+    "MemAvailable >=80 GiB",
+    "SwapFree >=1 GiB",
+    "PSI below configured gates",
+    ">=23000 MiB free per GPU"
+  ],
+  "stop_rule": "Stop only the isolated worker at the existing pressure guard; do not reduce context/model/profile or retry further without reviewing the receipt and new preflight.",
+  "expected_classification_if_pre-request_abort": "invalid infrastructure; request_sent=false; all quality fields null; fixture remains pending",
+  "acceptance": "No Codex/app cgroup termination, complete runner receipt, and either a valid request result or a clearly recorded isolated-worker stop."
+}
