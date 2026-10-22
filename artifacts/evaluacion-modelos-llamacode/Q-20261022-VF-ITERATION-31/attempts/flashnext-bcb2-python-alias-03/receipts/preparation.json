@@ -1,0 +1,30 @@
+{
+  "prepared_at_utc": "2026-10-22T07:28:17Z",
+  "status": "prepared_no_model_no_gpu",
+  "lock_token": "fb13f0630f802012a3540c90520cf300",
+  "source_suite_sha256": "42771136b447b7b5619e04a1ea211f663222cd6752ca38d995083b5a4d207574",
+  "source_prompt_id": "BigCodeBench/765",
+  "source_max_tokens": 1200,
+  "variant_suite_id": "vf-q31-flashnext-repair-shell-python-03",
+  "variant_suite_name": "VF FlashNext repair-shell compatibility diagnostic",
+  "variant_max_tokens": 2400,
+  "variant_suite_sha256": "879812a9a917108aee17f1bf3346e3809478c8136aa13306ee7e1caea693a7d8",
+  "q30_same_prompt_acceptance_and_max_tokens": true,
+  "runtime_copy_source": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261021-VF-ITERATION-26/attempts/bcb-01/work/isolated-runtime",
+  "runtime_copy": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-31/attempts/flashnext-bcb2-python-alias-03/work/isolated-runtime",
+  "python_alias_path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-31/attempts/flashnext-bcb2-python-alias-03/work/python-bin/python",
+  "python_alias_target": "/usr/bin/python3",
+  "python_alias_sha256": "3942958c12d10efa2973222d68cf851ebf7db1f48c9e331ca8000ef7cd29e235",
+  "python_alias_mode": "0755",
+  "python_alias_scope": "PATH prepended only in the isolated LlamaCode controller/server subprocess environment; host and GUI environment unchanged",
+  "cpu_smoke": {
+    "command": "sh -c python -c import sys; print(sys.executable)",
+    "exit_code": 0,
+    "stdout": "/usr/bin/python3",
+    "stderr": ""
+  },
+  "downloaded": false,
+  "server_started": false,
+  "model_requests": 0,
+  "gpu_used": false
+}

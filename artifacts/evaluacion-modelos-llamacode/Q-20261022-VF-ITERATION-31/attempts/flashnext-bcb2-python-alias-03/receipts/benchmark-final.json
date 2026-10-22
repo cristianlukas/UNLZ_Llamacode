@@ -1,0 +1,429 @@
+{
+  "task": "Q-20261022-VF-ITERATION-31",
+  "attempt": "flashnext-bcb2-python-alias-03",
+  "started_at_utc": "2026-10-22T07:28:39Z",
+  "diagnostic": {
+    "suite_id": "vf-q31-flashnext-repair-shell-python-03",
+    "prompt_id": "BigCodeBench/765",
+    "max_tokens": 2400,
+    "python_alias_probe": "passed; isolated PATH only",
+    "profile_id": "q14-udiq4xs-he0",
+    "profile_fingerprint": "a56c723fde568b4db160bbb48ccc9e378aa221bdcaffe544ee957e3ba666dd86"
+  },
+  "run_preflight": {
+    "checked_at_utc": "2026-10-22T07:28:39Z",
+    "phase": "before_controller",
+    "lock_token": "fb13f0630f802012a3540c90520cf300",
+    "instruction_hashes": {
+      "AGENTS.md": "9c3f46bb1bd5b1ed3935f63cee221aebfc3956ba876fc97dda7aa80349c671e0",
+      "README.md": "a221286566e7a360ec9d5212da38fa86502e9320ffa15987e47bbbc723ebc8f5",
+      "WORK_QUEUE.md": "16743e2a7b421d2dadc8ac728f55d4a4322eb7cd6efb8a6c758082cfd68c36e0"
+    },
+    "inference_processes": [],
+    "listeners": {
+      "target_listeners": [],
+      "allowed_controller_listeners": [],
+      "allowed_server_listeners": [],
+      "blocking_listeners": []
+    },
+    "memory": {
+      "at_utc": "2026-10-22T07:28:39Z",
+      "mem_available_gib": 115.46,
+      "swap_free_gib": 3.2,
+      "app_tree_rss_gib": 0.0,
+      "app_tree": [],
+      "server_tree_rss_gib": 0.0,
+      "server_tree": []
+    },
+    "resource_scope": {
+      "unit": "llamacode-vf-q31-flashnext-python-shim-03.scope",
+      "oom_policy": "kill",
+      "cgroup": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/llamacode-vf-q31-flashnext-python-shim-03.scope",
+      "effective_bytes": {
+        "high": 92341796864,
+        "max": 103079215104,
+        "swap.max": 1073741824
+      }
+    },
+    "backend_endpoint": {
+      "profile_id": "q14-udiq4xs-he0",
+      "backend_id": "q14-udiq4xs-strata",
+      "cloudBaseUrl": "http://127.0.0.1:8354",
+      "server": "http://127.0.0.1:8354",
+      "match": true
+    },
+    "gpu_compute_apps": [],
+    "gpu_query_note": "GUI processes are recorded separately and do not block; this preflight is for inference servers and test ports."
+  },
+  "controller_pre_inference_gate": {
+    "agent_selection": {
+      "ok": true,
+      "reqId": "7c5db615-4b7e-47eb-9e46-b171981843ae"
+    },
+    "suite_loaded": true,
+    "suite_prompt_count": 1,
+    "profile": {
+      "benchmarkEligible": true,
+      "coverageState": "incomplete",
+      "hasBlockedStage": false,
+      "hasInfrastructureOrTimeout": false,
+      "healthCodes": [],
+      "healthMessages": [],
+      "nextStage": "bcb",
+      "pendingStages": [
+        "bcb"
+      ],
+      "profileConfigFingerprint": "a56c723fde568b4db160bbb48ccc9e378aa221bdcaffe544ee957e3ba666dd86",
+      "profileId": "q14-udiq4xs-he0",
+      "profileName": "EVAL · UD-IQ4_XS · Strata 0.1.41 · HE0",
+      "retired": false,
+      "stageStates": {
+        "bcb": "pending",
+        "he0": "valid",
+        "he20": "valid"
+      }
+    },
+    "benchmark_running": false,
+    "server_state": "stopped",
+    "models_started_before_gate": false
+  },
+  "model_start_preflight": {
+    "checked_at_utc": "2026-10-22T07:28:41Z",
+    "phase": "before_model",
+    "lock_token": "fb13f0630f802012a3540c90520cf300",
+    "instruction_hashes": {
+      "AGENTS.md": "9c3f46bb1bd5b1ed3935f63cee221aebfc3956ba876fc97dda7aa80349c671e0",
+      "README.md": "a221286566e7a360ec9d5212da38fa86502e9320ffa15987e47bbbc723ebc8f5",
+      "WORK_QUEUE.md": "16743e2a7b421d2dadc8ac728f55d4a4322eb7cd6efb8a6c758082cfd68c36e0"
+    },
+    "inference_processes": [],
+    "listeners": {
+      "target_listeners": [
+        "LISTEN 0      50         127.0.0.1:18767      0.0.0.0:*    users:((\"LlamaCode\",pid=1920599,fd=12))"
+      ],
+      "allowed_controller_listeners": [
+        "LISTEN 0      50         127.0.0.1:18767      0.0.0.0:*    users:((\"LlamaCode\",pid=1920599,fd=12))"
+      ],
+      "allowed_server_listeners": [],
+      "blocking_listeners": []
+    },
+    "memory": {
+      "at_utc": "2026-10-22T07:28:41Z",
+      "mem_available_gib": 115.41,
+      "swap_free_gib": 3.2,
+      "app_tree_rss_gib": 0.06,
+      "app_tree": [
+        {
+          "pid": 1920599,
+          "comm": "LlamaCode",
+          "rss_kib": 64504
+        }
+      ],
+      "server_tree_rss_gib": 0.0,
+      "server_tree": []
+    },
+    "resource_scope": {
+      "unit": "llamacode-vf-q31-flashnext-python-shim-03.scope",
+      "oom_policy": "kill",
+      "cgroup": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/llamacode-vf-q31-flashnext-python-shim-03.scope",
+      "effective_bytes": {
+        "high": 92341796864,
+        "max": 103079215104,
+        "swap.max": 1073741824
+      }
+    },
+    "backend_endpoint": {
+      "profile_id": "q14-udiq4xs-he0",
+      "backend_id": "q14-udiq4xs-strata",
+      "cloudBaseUrl": "http://127.0.0.1:8354",
+      "server": "http://127.0.0.1:8354",
+      "match": true
+    },
+    "gpu_compute_apps": [],
+    "gpu_query_note": "GUI processes are recorded separately and do not block; this preflight is for inference servers and test ports."
+  },
+  "server_ready": {
+    "at_utc": "2026-10-22T07:32:41Z",
+    "models": {
+      "object": "list",
+      "data": [
+        {
+          "id": "qwen3.8-flash-next-unsloth-ud-iq4_xs",
+          "object": "model",
+          "status": {
+            "value": "loaded"
+          },
+          "meta": {
+            "n_ctx": 32768
+          },
+          "architecture": {
+            "input_modalities": [
+              "text"
+            ],
+            "output_modalities": [
+              "text"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "benchmark_preflight": {
+    "checked_at_utc": "2026-10-22T07:32:41Z",
+    "phase": "during_model",
+    "lock_token": "fb13f0630f802012a3540c90520cf300",
+    "instruction_hashes": {
+      "AGENTS.md": "9c3f46bb1bd5b1ed3935f63cee221aebfc3956ba876fc97dda7aa80349c671e0",
+      "README.md": "a221286566e7a360ec9d5212da38fa86502e9320ffa15987e47bbbc723ebc8f5",
+      "WORK_QUEUE.md": "16743e2a7b421d2dadc8ac728f55d4a4322eb7cd6efb8a6c758082cfd68c36e0"
+    },
+    "inference_processes": [],
+    "listeners": {
+      "target_listeners": [
+        "LISTEN 0      50         127.0.0.1:18767      0.0.0.0:*    users:((\"LlamaCode\",pid=1920599,fd=12))",
+        "LISTEN 0      256        127.0.0.1:8354       0.0.0.0:*    users:((\"python\",pid=1920708,fd=18))   "
+      ],
+      "allowed_controller_listeners": [
+        "LISTEN 0      50         127.0.0.1:18767      0.0.0.0:*    users:((\"LlamaCode\",pid=1920599,fd=12))"
+      ],
+      "allowed_server_listeners": [
+        "LISTEN 0      256        127.0.0.1:8354       0.0.0.0:*    users:((\"python\",pid=1920708,fd=18))   "
+      ],
+      "blocking_listeners": []
+    },
+    "memory": {
+      "at_utc": "2026-10-22T07:32:41Z",
+      "mem_available_gib": 99.21,
+      "swap_free_gib": 3.2,
+      "app_tree_rss_gib": 0.06,
+      "app_tree": [
+        {
+          "pid": 1920599,
+          "comm": "LlamaCode",
+          "rss_kib": 64600
+        }
+      ],
+      "server_tree_rss_gib": 70.4,
+      "server_tree": [
+        {
+          "pid": 1920708,
+          "comm": "python",
+          "rss_kib": 219060
+        },
+        {
+          "pid": 1920711,
+          "comm": "strata",
+          "rss_kib": 73599212
+        }
+      ]
+    },
+    "resource_scope": {
+      "unit": "llamacode-vf-q31-flashnext-python-shim-03.scope",
+      "oom_policy": "kill",
+      "cgroup": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/llamacode-vf-q31-flashnext-python-shim-03.scope",
+      "effective_bytes": {
+        "high": 92341796864,
+        "max": 103079215104,
+        "swap.max": 1073741824
+      }
+    },
+    "backend_endpoint": {
+      "profile_id": "q14-udiq4xs-he0",
+      "backend_id": "q14-udiq4xs-strata",
+      "cloudBaseUrl": "http://127.0.0.1:8354",
+      "server": "http://127.0.0.1:8354",
+      "match": true
+    },
+    "gpu_compute_apps": [
+      "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6, 1920711, /home/cristian/.cache/strata-udiq4xs-screen-20261018/engine/strata, 22972 MiB"
+    ],
+    "gpu_query_note": "GUI processes are recorded separately and do not block; this preflight is for inference servers and test ports."
+  },
+  "status": "completed_call",
+  "finished_at_utc": "2026-10-22T07:46:06Z",
+  "benchmark_status": "Completado.",
+  "benchmark_progress": 100,
+  "benchmark_running": false,
+  "matching_results": [
+    {
+      "acceptance": [
+        {
+          "output": "Traceback (most recent call last):\n  File \"/tmp/LlamaCode-BYaqbu/candidate.py\", line 113, in <module>\n    check(task_func)\n  File \"/tmp/LlamaCode-BYaqbu/candidate.py\", line 111, in check\n    raise AssertionError(' | '.join(details))\nAssertionError: Traceback (most recent call last):\n  File \"/tmp/LlamaCode-BYaqbu/candidate.py\", line 67, in test_files_with_content\n    self.assertEqual(len(copied_files), 2)\nAssertionError: 0 != 2\n | Traceback (most recent call last):\n  File \"/tmp/LlamaCode-BYaqbu/candidate.py\", line 79, in test_files_with_no_content\n    self.assertEqual(len(copied_files), 1)\nAssertionError: 0 != 1\n | Traceback (most recent call last):\n  File \"/tmp/LlamaCode-BYaqbu/candidate.py\", line 95, in test_mixed_case\n    self.assertEqual(len(copied_files), 2)\nAssertionError: 0 != 2",
+          "passed": false,
+          "taskId": "BigCodeBench/765",
+          "type": "grader:code_tests"
+        }
+      ],
+      "agentFiles": [
+        "solution_BigCodeBench_765.py",
+        "__pycache__/solution_BigCodeBench_765.cpython-312.pyc"
+      ],
+      "agentMetrics": [
+        {
+          "elapsedMs": 17488,
+          "tokens": 20,
+          "tps": 31.060723714862558,
+          "ttft_ms": 7682
+        },
+        {
+          "elapsedMs": 12064,
+          "tokens": 110,
+          "tps": 10.207301004027244,
+          "ttft_ms": 28086
+        }
+      ],
+      "agentProfileId": "agent-maximo",
+      "agentProfileName": "Máximo",
+      "agentSeed": 4242,
+      "agentTemperature": 0.1,
+      "agentVariant": "baseline",
+      "avgTps": 20.634012359444903,
+      "avgTtftMs": 17884,
+      "benchmarkMemoryPlanner": "llama.cpp-fit-expert-aware",
+      "benchmarkName": "VF FlashNext repair-shell compatibility diagnostic",
+      "complexityMetrics": {
+        "addedLines": 56,
+        "filesChanged": 2,
+        "filesCreated": 2,
+        "filesDeleted": 0,
+        "removedLines": 0
+      },
+      "elapsedSec": 803.276,
+      "failed": true,
+      "failureDetail": "[\n    {\n        \"output\": \"Traceback (most recent call last):\\n  File \\\"/tmp/LlamaCode-BYaqbu/candidate.py\\\", line 113, in <module>\\n    check(task_func)\\n  File \\\"/tmp/LlamaCode-BYaqbu/candidate.py\\\", line 111, in check\\n    raise AssertionError(' | '.join(details))\\nAssertionError: Traceback (most recent call last):\\n  File \\\"/tmp/LlamaCode-BYaqbu/candidate.py\\\", line 67, in test_files_with_content\\n    self.assertEqual(len(copied_files), 2)\\nAssertionError: 0 != 2\\n | Traceback (most recent call last):\\n  File \\\"/tmp/LlamaCode-BYaqbu/candidate.py\\\", line 79, in test_files_with_no_content\\n    self.assertEqual(len(copied_files), 1)\\nAssertionError: 0 != 1\\n | Traceback (most recent call last):\\n  File \\\"/tmp/LlamaCode-BYaqbu/candidate.py\\\", line 95, in test_mixed_case\\n    self.assertEqual(len(copied_files), 2)\\nAssertionError: 0 != 2\",\n        \"passed\": false,\n        \"taskId\": \"BigCodeBench/765\",\n        \"type\": \"grader:code_tests\"\n    }\n]\n",
+      "failureKind": "quality",
+      "failureMessage": "Fallaron criterios de aceptacion.",
+      "failureStage": "acceptance",
+      "finalScore": 0,
+      "finalTotal": 1,
+      "firstAttemptScore": 0,
+      "firstAttemptTotal": 1,
+      "firstEvaluableSec": 358.007,
+      "firstToolCallSec": 357.766,
+      "firstWriteSec": 357.81,
+      "generationSec": 29.552,
+      "harnessEngineId": "legacy",
+      "harnessEngineVersion": 1,
+      "harnessSpecHash": "sha256:cca4645b28930b079288b139a2bf473b7a2b6719980445811bd3a731168832ef",
+      "honeyEnabled": false,
+      "id": "003059fb-ec49-43fe-8979-ee250933fdaa",
+      "measurementPhase": "cold",
+      "mode": "custom",
+      "nonGenerationSec": 773.7239999999999,
+      "pass": 1,
+      "passedAfterRepair": false,
+      "passesTotal": 1,
+      "profileConfigFingerprint": "a56c723fde568b4db160bbb48ccc9e378aa221bdcaffe544ee957e3ba666dd86",
+      "profileId": "q14-udiq4xs-he0",
+      "profileName": "EVAL · UD-IQ4_XS · Strata 0.1.41 · HE0",
+      "progressGovernor": {
+        "progressEvents": 17,
+        "replanEvents": 0,
+        "stagnationEvents": 0
+      },
+      "qualityScore": 0,
+      "qualityTotal": 1,
+      "ramFreeMb": 0,
+      "ramMb": 0,
+      "ramTotalMb": 0,
+      "repairAttempts": 3,
+      "response": "<ant>\nNo existe `python_alias.py` en el repo (cwd aislizado y repo LlamaCode completo): `parse_shell_command` no aparece en ningún archivo. El único .py del workspace es `solution_BigCodeBench_765.py` (sin relación).\n\nPara no dejar el entregable en el aire, creo el módulo con la compat requested (shim `python`→`python3` en PATH, sin romper invocentes que ya pasan args) y su test.\n</ant>",
+      "runDir": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-31/attempts/flashnext-bcb2-python-alias-03/work/isolated-runtime/data/LlamaCode/LlamaCode/benchmark-runs/VF_FlashNext_repair-shell_compatibility__20261022_043241",
+      "runLabel": "VF FlashNext repair-shell compatibility diagnostic",
+      "setupSec": 0.3,
+      "target": "agent",
+      "thinkingEnabled": false,
+      "timeToFirstAttempt": 668.548,
+      "timedOut": false,
+      "timeoutSec": 1800,
+      "timestamp": 1792655166478,
+      "toolCallQuality": {
+        "expectedCalls": 0,
+        "f1Pct": -1,
+        "failedCalls": 3,
+        "incompleteCalls": 0,
+        "invalidCalls": 0,
+        "matchedExpectedCalls": 0,
+        "missingExpectedCalls": 0,
+        "precisionPct": -1,
+        "recallPct": -1,
+        "redundantCalls": 0,
+        "sequenceExact": false,
+        "successRatePct": 85,
+        "successfulCalls": 17,
+        "totalCalls": 20,
+        "unexpectedCalls": 0
+      },
+      "toolCalls": 20,
+      "totalTime": 803.276,
+      "transportAfterEvaluation": false,
+      "vramFreeMb": 24307,
+      "vramGpu0FreeMb": 291,
+      "vramGpu0Mb": 23874,
+      "vramGpu0TotalMb": 24576,
+      "vramGpu0UsedPct": 97.1435546875,
+      "vramGpu1FreeMb": 24016,
+      "vramGpu1Mb": 108,
+      "vramGpu1TotalMb": 24576,
+      "vramGpu1UsedPct": 0.439453125,
+      "vramMb": 23982,
+      "vramNormalizedImbalancePct": 96.7041015625,
+      "vramObservedGpu0SharePct": 99.54966224668502,
+      "vramOptimalGpu0SharePct": 1.197185995803678,
+      "vramPlacementAssessment": "gpu0-heavy",
+      "vramTelemetryScope": "device-total",
+      "workspace": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-31/attempts/flashnext-bcb2-python-alias-03/work/isolated-runtime/data/LlamaCode/LlamaCode/benchmark-runs/VF_FlashNext_repair-shell_compatibility__20261022_043241/EVAL_UD-IQ4_XS_Strata_0_1_41_HE0__ws"
+    }
+  ],
+  "coverage_after": [
+    {
+      "benchmarkEligible": true,
+      "coverageState": "incomplete",
+      "hasBlockedStage": false,
+      "hasInfrastructureOrTimeout": false,
+      "healthCodes": [],
+      "healthMessages": [],
+      "nextStage": "bcb",
+      "pendingStages": [
+        "bcb"
+      ],
+      "profileConfigFingerprint": "a56c723fde568b4db160bbb48ccc9e378aa221bdcaffe544ee957e3ba666dd86",
+      "profileId": "q14-udiq4xs-he0",
+      "profileName": "EVAL · UD-IQ4_XS · Strata 0.1.41 · HE0",
+      "retired": false,
+      "stageStates": {
+        "bcb": "pending",
+        "he0": "valid",
+        "he20": "valid"
+      }
+    }
+  ],
+  "memory_guard": {
+    "last": {
+      "at_utc": "2026-10-22T07:46:04Z",
+      "mem_available_gib": 98.06,
+      "swap_free_gib": 3.16,
+      "app_tree_rss_gib": 0.07,
+      "app_tree": [
+        {
+          "pid": 1920599,
+          "comm": "LlamaCode",
+          "rss_kib": 68500
+        }
+      ],
+      "server_tree_rss_gib": 98.14,
+      "server_tree": [
+        {
+          "pid": 1920708,
+          "comm": "python",
+          "rss_kib": 221708
+        },
+        {
+          "pid": 1920711,
+          "comm": "strata",
+          "rss_kib": 102687508
+        }
+      ]
+    }
+  }
+}

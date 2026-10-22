@@ -1,0 +1,60 @@
+{
+  "checked_at_utc": "2026-10-22T07:28:35Z",
+  "lock_token": "fb13f0630f802012a3540c90520cf300",
+  "instruction_hashes": {
+    "AGENTS.md": "9c3f46bb1bd5b1ed3935f63cee221aebfc3956ba876fc97dda7aa80349c671e0",
+    "README.md": "a221286566e7a360ec9d5212da38fa86502e9320ffa15987e47bbbc723ebc8f5",
+    "WORK_QUEUE.md": "16743e2a7b421d2dadc8ac728f55d4a4322eb7cd6efb8a6c758082cfd68c36e0"
+  },
+  "runner_sha256": "6b7768864fdafd0a03ea852debbcbe8ed288777a5465fe98bf4aba10d3715bdf",
+  "suite_sha256": "879812a9a917108aee17f1bf3346e3809478c8136aa13306ee7e1caea693a7d8",
+  "python_alias_sha256": "3942958c12d10efa2973222d68cf851ebf7db1f48c9e331ca8000ef7cd29e235",
+  "backend_endpoint": {
+    "profile_id": "q14-udiq4xs-he0",
+    "backend_id": "q14-udiq4xs-strata",
+    "cloudBaseUrl": "http://127.0.0.1:8354"
+  },
+  "memory": {
+    "MemAvailableGiB": 115.43,
+    "SwapFreeGiB": 3.2
+  },
+  "inference_processes": [],
+  "test_port_listeners": [],
+  "nvidia_compute_apps_observed": [],
+  "model_files": [
+    {
+      "path": "/media/cristian/HDD extra/Models/LlamaCodeEval/Q-20261010-STRATA-UDIQ4XS-POST/models/unsloth-UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00001-of-00003.gguf",
+      "size_bytes": 10946624,
+      "mtime_ns": 1792342972492194800
+    },
+    {
+      "path": "/media/cristian/HDD extra/Models/LlamaCodeEval/Q-20261010-STRATA-UDIQ4XS-POST/models/unsloth-UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00002-of-00003.gguf",
+      "size_bytes": 49835229856,
+      "mtime_ns": 1792344402646348900
+    },
+    {
+      "path": "/media/cristian/HDD extra/Models/LlamaCodeEval/Q-20261010-STRATA-UDIQ4XS-POST/models/unsloth-UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00003-of-00003.gguf",
+      "size_bytes": 43836407744,
+      "mtime_ns": 1792345676681691200
+    },
+    {
+      "path": "/media/cristian/HDD extra/Models/LlamaCodeEval/Q-20261010-STRATA-UDIQ4XS-POST/strata-data/mtp/mtp-q2_0.gguf",
+      "size_bytes": 889017216,
+      "mtime_ns": 1792346923988658400
+    }
+  ],
+  "paths_exist": {
+    "/media/cristian/HDD extra/Models/LlamaCodeEval/Q-20261010-STRATA-UDIQ4XS-POST/models/unsloth-UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00001-of-00003.gguf": true,
+    "/media/cristian/HDD extra/Models/LlamaCodeEval/Q-20261010-STRATA-UDIQ4XS-POST/strata-data/packs/unsloth-ud-iq4_xs": true,
+    "/home/cristian/.cache/llamacode/build_linux/LlamaCode": true,
+    "/home/cristian/.cache/strata-udiq4xs-screen-20261018/engine/strata": true,
+    "/home/cristian/.cache/strata-udiq4xs-screen-20261018/.venv/bin/python": true
+  },
+  "disk_free_bytes": {
+    "repo_drive": 130423713792,
+    "models_hdd": 148083474432,
+    "linux_root": 11557490688
+  },
+  "gui_processes_do_not_block": true,
+  "proceed": true
+}

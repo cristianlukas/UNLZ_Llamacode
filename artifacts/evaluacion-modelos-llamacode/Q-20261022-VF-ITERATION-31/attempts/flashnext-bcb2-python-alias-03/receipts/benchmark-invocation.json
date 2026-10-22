@@ -1,0 +1,21 @@
+{
+  "at_utc": "2026-10-22T07:32:41Z",
+  "method": "startCustomBenchmark",
+  "args": [
+    [
+      "q14-udiq4xs-he0"
+    ],
+    "vf-q31-flashnext-repair-shell-python-03",
+    1,
+    "agent",
+    1800,
+    "agent-maximo"
+  ],
+  "response": {
+    "ok": true,
+    "reqId": "ecb3afea-6294-4261-9587-46ebbee0d5c0"
+  },
+  "suite_label": "VF FlashNext repair-shell compatibility diagnostic",
+  "task_id": "BigCodeBench/765",
+  "max_tokens": 2400
+}

@@ -1,0 +1,35 @@
+{
+  "finished_at_utc": "2026-10-22T07:50:56Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "synchronized_tabs": [
+    {
+      "title": "Accionables",
+      "row": 2,
+      "record_id": "vf-q31-flashnext-python-shim-20261022",
+      "readback_verified": true
+    },
+    {
+      "title": "Evaluaciones LlamaCode",
+      "row": 262,
+      "record_id": "Q-20261022-VF-ITERATION-31-FLASHNEXT-BCB2-PYTHON-SHIM",
+      "readback_verified": true
+    },
+    {
+      "title": "Inventario de modelos",
+      "row": 4,
+      "model": "Qwen3.8 Flash-Next Unsloth UD-IQ4_XS",
+      "updated_columns": [
+        "Estado físico y pruebas",
+        "Bench: score/cobertura/fingerprint",
+        "Tiempo de bench",
+        "Actualizado UTC",
+        "Evidencia local",
+        "Notas/decisión"
+      ],
+      "readback_verified": true
+    }
+  ],
+  "production_profiles_or_weights_changed": false,
+  "notes": "Se preservaron las filas históricas Q30 y Q29. Se actualizó únicamente la ficha inventariada de Flash-Next con el resultado Q31; no cambiaron rutas, pesos, huella ni uso productivo.",
+  "last_readback_at_utc": "2026-10-22T07:50:56Z"
+}

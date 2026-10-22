@@ -1,0 +1,113 @@
+{
+  "task": "Q-20261022-VF-ITERATION-31",
+  "attempt": "flashnext-bcb2-python-alias-03",
+  "status": "preregistered_pending_final_preflight_and_one_valid_inference",
+  "created_at_utc": "2026-10-22T07:28:34Z",
+  "priority_order": [
+    "P1 Flash-Next ASTRA/SOL",
+    "P2 Qwen3.8-27B and speed claims",
+    "P3 RCO",
+    "P4 Swift",
+    "P5 Strata/new comparable claims"
+  ],
+  "question": "With only an isolated python->python3 PATH alias, can the same Flash-Next BCB/765 task run the original self-check/repair and return an original-grader result within 1800 seconds?",
+  "rationale": "Q30 failed its first solution and the requested repair self-check exited 127 because python was not found. Q31 exposes python->/usr/bin/python3 only inside the isolated controller environment. Attempt 01 preflight schema issue and attempt 02 backend-port mismatch both ended before task generation; neither is a model result. This attempt adds explicit profile-backend/server endpoint validation and is the sole valid inference run.",
+  "candidate": "Qwen3.8 Flash-Next Unsloth UD-IQ4_XS",
+  "model_root": "/media/cristian/HDD extra/Models/LlamaCodeEval/Q-20261010-STRATA-UDIQ4XS-POST",
+  "profile_id": "q14-udiq4xs-he0",
+  "profile_fingerprint": "a56c723fde568b4db160bbb48ccc9e378aa221bdcaffe544ee957e3ba666dd86",
+  "runtime": "Strata 0.1.41; agent-maximo; isolated LlamaCode controller; GPU0; context32768; KV int8; MTP4; reasoning medium; reasoningBudget8192; predict4096; temp0.6; top_p0.95; top_k20; min_p0; repeat1; presence0; resident budget12 GiB.",
+  "suite": {
+    "source": "Q26 pinned local BCB8 fixture",
+    "prompt_id": "BigCodeBench/765",
+    "source_sha256": "42771136b447b7b5619e04a1ea211f663222cd6752ca38d995083b5a4d207574",
+    "source_max_tokens": 1200,
+    "variant_id": "vf-q31-flashnext-repair-shell-python-03",
+    "variant_name": "VF FlashNext repair-shell compatibility diagnostic",
+    "variant_max_tokens": 2400,
+    "variant_sha256": "879812a9a917108aee17f1bf3346e3809478c8136aa13306ee7e1caea693a7d8",
+    "acceptance_preserved": true,
+    "one_prompt_only": true
+  },
+  "single_changed_factor": "Controller PATH prepends only the attempt-local python wrapper that execs /usr/bin/python3. All model, prompt, acceptance/grader, maxTokens=2400, profile/runtime, sampling, context, GPU and timeout settings remain fixed versus Q30.",
+  "python_alias_path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-31/attempts/flashnext-bcb2-python-alias-03/work/python-bin/python",
+  "python_alias_target": "/usr/bin/python3",
+  "python_alias_sha256": "3942958c12d10efa2973222d68cf851ebf7db1f48c9e331ca8000ef7cd29e235",
+  "cpu_smoke": {
+    "command": "sh -c python -c import sys; print(sys.executable)",
+    "exit_code": 0,
+    "stdout": "/usr/bin/python3",
+    "stderr": ""
+  },
+  "backend_endpoint": {
+    "profile_id": "q14-udiq4xs-he0",
+    "backend_id": "q14-udiq4xs-strata",
+    "cloudBaseUrl": "http://127.0.0.1:8354",
+    "server": "http://127.0.0.1:8354",
+    "must_match": true
+  },
+  "fixed_factors": [
+    "same BigCodeBench/765 prompt and original acceptance/grader",
+    "same maxTokens=2400",
+    "same model artifact/profile/fingerprint",
+    "same Strata 0.1.41 and context/KV/MTP/sampling",
+    "GPU0 only",
+    "same 1800 second timeout",
+    "no automatic retries"
+  ],
+  "timeout_seconds": 1800,
+  "startup_ready_timeout_seconds": 1800,
+  "retries": 0,
+  "valid_inference_runs_authorized": 1,
+  "full_bcb8_score_claim_allowed": false,
+  "adoption_allowed_from_this_case": false,
+  "success_criterion": "Original acceptance/grader returns a valid task grade and final answer within 1800 seconds. Otherwise close this case without identical rerun.",
+  "next_decision": "If valid pass, preregister separate full BCB8 with a matched ASTRA/SOL control. If failed, infra error or timeout, update actionable and stop same case.",
+  "resource_scope": {
+    "systemd_unit": "llamacode-vf-q31-flashnext-python-shim-03.scope",
+    "MemoryHighGiB": 86,
+    "MemoryMaxGiB": 96,
+    "MemorySwapMaxGiB": 1,
+    "OOMPolicy": "kill"
+  },
+  "guards": {
+    "before_model_MemAvailableGiB_min": 80,
+    "before_model_SwapFreeGiB_min": 1,
+    "runtime_MemAvailableGiB_min": 24,
+    "runtime_SwapFreeGiB_min": 1,
+    "controller_tree_RSS_GiB_abort_at": 60,
+    "ports": {
+      "controller": 18767,
+      "server": 8354
+    },
+    "gpu_policy": "GPU0 only; run inference serially; GUI activity does not block; unrelated inference servers/listeners block; unrelated processes are not killed."
+  },
+  "offline": true,
+  "downloads_allowed": false,
+  "lock": {
+    "task_id": "VF-20261019-01",
+    "token": "fb13f0630f802012a3540c90520cf300"
+  },
+  "instruction_hashes": {
+    "AGENTS.md": "9c3f46bb1bd5b1ed3935f63cee221aebfc3956ba876fc97dda7aa80349c671e0",
+    "README.md": "a221286566e7a360ec9d5212da38fa86502e9320ffa15987e47bbbc723ebc8f5",
+    "WORK_QUEUE.md": "16743e2a7b421d2dadc8ac728f55d4a4322eb7cd6efb8a6c758082cfd68c36e0"
+  },
+  "runner_sha256": "6b7768864fdafd0a03ea852debbcbe8ed288777a5465fe98bf4aba10d3715bdf",
+  "prepare_script_sha256": "15b5548f9c05fae25fc330f14461c070e30ceff832494ed983c7e11aae95ae26",
+  "preflight_script_sha256": "39784afc0682632824f9cd6fb2c6a6cdb1cc8e25bccc9431636935a28beb65ae",
+  "prepared_receipt_sha256": "4f98c7772de0b3063c3f69d02c74aec3c7f46e4533dafd8e70c3338186163d53",
+  "preparation_attempts": [
+    {
+      "attempt": "flashnext-bcb2-python-alias-01",
+      "status": "aborted before app/model by runner schema key error",
+      "receipt": "attempts/flashnext-bcb2-python-alias-01/receipts/preflight-failure-01/runner-schema-error.json"
+    },
+    {
+      "attempt": "flashnext-bcb2-python-alias-01 endpoint probe",
+      "status": "server initialized but aborted before generation due 8355 vs profile 8354",
+      "receipt": "attempts/flashnext-bcb2-python-alias-01/receipts/endpoint-mismatch-abort.json"
+    }
+  ],
+  "inference_started": false
+}
