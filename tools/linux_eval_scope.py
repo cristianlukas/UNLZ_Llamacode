@@ -9,6 +9,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import re
+import signal
 import subprocess
 import sys
 import uuid
@@ -52,6 +53,7 @@ def popen_in_background_scope(
     env: Optional[Mapping[str, str]] = None,
     env_overrides: Optional[Mapping[str, str]] = None,
     stdout: Any = None, stderr: Any = None, text: bool = False,
+    start_new_session: bool = False,
 ) -> ScopedProcess:
     """Start argv in a system-manager scope and return its process/lifecycle handle.
 
@@ -88,5 +90,57 @@ def popen_in_background_scope(
     process = subprocess.Popen(
         command, cwd=cwd, env=dict(env) if env is not None else None,
         stdout=stdout, stderr=stderr, text=text,
+        start_new_session=start_new_session,
     )
     return ScopedProcess(process, unit)
+
+
+def run_scoped_command(argv: Sequence[str]) -> int:
+    """Run a foreground command in a protected scope and clean it on signals."""
+    scoped = popen_in_background_scope(
+        argv, cwd=os.getcwd(), env=os.environ.copy(), start_new_session=True,
+    )
+    previous_handlers = {}
+    received_signals = []
+    stop_completed = False
+
+    def stop_on_signal(signum: int, _frame: Any) -> None:
+        received_signals.append(signum)
+
+    try:
+        for signum in (signal.SIGINT, signal.SIGTERM):
+            previous_handlers[signum] = signal.signal(signum, stop_on_signal)
+        while True:
+            try:
+                return scoped.process.wait(timeout=0.2)
+            except subprocess.TimeoutExpired:
+                if received_signals:
+                    signum = received_signals[0]
+                    try:
+                        scoped.stop()
+                    except Exception as exc:
+                        print(f"No se pudo detener el scope de evaluación: {exc}", file=sys.stderr)
+                        return 1
+                    stop_completed = True
+                    return 128 + signum
+    finally:
+        for signum, handler in previous_handlers.items():
+            signal.signal(signum, handler)
+        if scoped.process.poll() is None and not stop_completed:
+            scoped.stop()
+
+
+def main(argv: Optional[Sequence[str]] = None) -> int:
+    args = list(sys.argv[1:] if argv is None else argv)
+    if len(args) < 3 or args[0] != "--run" or args[1] != "--":
+        print("Uso: linux_eval_scope.py --run -- COMANDO [ARG ...]", file=sys.stderr)
+        return 2
+    try:
+        return run_scoped_command(args[2:])
+    except (OSError, RuntimeError, subprocess.SubprocessError) as exc:
+        print(f"No se inició el comando con contención: {exc}", file=sys.stderr)
+        return 125
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

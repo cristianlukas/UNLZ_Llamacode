@@ -1,0 +1,13 @@
+{
+  "task": "Q-20261022-VF-ITERATION-42",
+  "recorded_at_utc": "2026-10-22T17:40:08.479787+00:00",
+  "fixture": "fake Python executable + placeholder server/config; CPU-only, no model/GPU",
+  "preflight": {
+    "platform": "linux",
+    "systemd_oomd": "active",
+    "sudo_noninteractive": true
+  },
+  "checks": [],
+  "result": "FAIL",
+  "error": "PermissionError: [Errno 13] Permission denied: '/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/scripts/run-astra-strata.sh'"
+}

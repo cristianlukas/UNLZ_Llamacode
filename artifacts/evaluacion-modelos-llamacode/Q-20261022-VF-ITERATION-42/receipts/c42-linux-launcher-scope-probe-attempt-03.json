@@ -1,0 +1,36 @@
+{
+  "task": "Q-20261022-VF-ITERATION-42",
+  "recorded_at_utc": "2026-10-22T17:41:52.143144+00:00",
+  "fixture": "fake Python executable + placeholder server/config; CPU-only, no model/GPU",
+  "preflight": {
+    "platform": "linux",
+    "systemd_oomd": "active",
+    "sudo_noninteractive": true
+  },
+  "port_18342": {
+    "stdout_first_line": "FAKE_SERVER pid=342622 port=18342 cwd=/tmp/q42-strata-18342-ba6b9yi6 args=/tmp/q42-strata-18342-ba6b9yi6/strata/serve/server.py --engine strata --config /tmp/q42-strata-18342-ba6b9yi6/strata/strata-iq3_s.json --port 18342",
+    "launcher_exit": 23,
+    "scope": {
+      "OOMPolicy": "kill",
+      "ControlGroup": "/background.slice/llamacode-eval-342615-0cbebb81.scope",
+      "MemoryHigh": "infinity",
+      "MemoryMax": "infinity",
+      "MemorySwapMax": "infinity",
+      "ManagedOOMSwap": "kill",
+      "ManagedOOMMemoryPressure": "kill",
+      "KillMode": "control-group",
+      "ActiveState": "active",
+      "Unit": "llamacode-eval-342615-0cbebb81.scope",
+      "OOMScoreAdj": "900"
+    },
+    "child_gone": true
+  },
+  "sigterm_case": {
+    "result": "FAIL",
+    "error": "wrapper did not exit before bounded timeout; probe sent SIGKILL only to its own launcher subprocess, then stopped the exact scope",
+    "final_launcher_returncode": -9,
+    "postflight": "no Q42 scope or fake process remained"
+  },
+  "result": "FAIL",
+  "replaced_by": "c42-linux-launcher-scope-probe-attempt-04.json"
+}

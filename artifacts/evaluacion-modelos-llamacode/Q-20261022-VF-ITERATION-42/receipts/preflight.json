@@ -1,0 +1,33 @@
+{
+  "task": "Q-20261022-VF-ITERATION-42",
+  "recorded_at_utc": "2026-10-22T17:38:33Z",
+  "platform": "Ubuntu 24.04; Linux 7.0.0-38-generic; x86_64",
+  "lock": {
+    "task": "Q-20261022-VF-ITERATION-42",
+    "token": "b015c8a2-5e29-4dbe-838d-8e2834377a3f"
+  },
+  "gate": {
+    "systemd_oomd": "active",
+    "sudo_noninteractive": "passed",
+    "inference_processes": "none found among named llama-server/ollama/vllm processes or Python server processes; Python processes observed were desktop utilities",
+    "listeners": [
+      "127.0.0.1:631 (printing)",
+      "127.0.0.1:6742 (OpenRGB)",
+      "local DNS 53",
+      "127.0.0.1:38873 (no owning PID shown)",
+      "127.0.0.1:47413 (ArtCraft GUI, left running)"
+    ],
+    "test_ports_18342_18343": "not in use",
+    "gpu_or_model_use": "none; this task is CPU-only"
+  },
+  "pre_edit_sha256": {
+    "AGENTS.md": "9c3f46bb1bd5b1ed3935f63cee221aebfc3956ba876fc97dda7aa80349c671e0",
+    "README.md": "eff906d1769e06e773cacbfc26ec2e37451a10ff74354bd7aac2e9ed5b84bca2",
+    "WORK_QUEUE.md": "c107cb3db574fd4b4fc370bc5b1d3b236936fde85504a4c69d3a653f0c75a243",
+    "scripts/run-astra-strata.sh": "41ce2110739764d32d5f57625f26abf97bec675217473a451e2f5fcbe39ffda0",
+    "tools/linux_eval_scope.py": "3e91c4a6c9cf50376eaf4f573e16771fffae099e6ffbf732e8bf4475f16e7e7e",
+    "tools/linux_eval_scope_exec.py": "ec3155dae959cf4519596b3f5f1ce197011f666894738eb2a333d12fb8f5b1ba",
+    "docs/astra-strata.md": "724e9a726bf0048b32032925950e5507216359eb6790825035093c627b3b5112"
+  },
+  "decision": "Proceed only with fake-runtime CPU canaries; leave all foreign processes untouched."
+}

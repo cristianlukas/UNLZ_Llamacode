@@ -1,0 +1,20 @@
+{
+  "task": "Q-20261022-VF-ITERATION-42",
+  "timestamp_utc": "2026-10-22T17:45:58Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "tabs": {
+    "Evaluaciones LlamaCode!A273:J273": {
+      "id": "Q-20261022-VF-ITERATION-42",
+      "status": "Completada para launcher Linux; P0 global sigue abierto",
+      "readback": "exact match; G273 cross-regression totals 18/18"
+    },
+    "Accionables!A52:N52": {
+      "id": "Q-20261022-VF-ITERATION-42",
+      "priority": "P0",
+      "status": "Implementada en launcher Linux; alcance global pendiente",
+      "readback": "exact match; K52 cross-regression totals 18/18"
+    }
+  },
+  "format": "TOP vertical alignment and WRAP preserved in both rows",
+  "claim_scope": "Records harness containment only; not a model TPS/quality result."
+}

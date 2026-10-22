@@ -1,0 +1,39 @@
+{
+  "task": "Q-20261022-VF-ITERATION-42",
+  "result": "PASS_LINUX_LAUNCHER_FAKE_RUNTIME_ONLY",
+  "timestamp_utc": "2026-10-22T17:44:27Z",
+  "checks": {
+    "python_regressions": {
+      "linux_eval_scope_cli": "4/4",
+      "kv_cache_ab": "11/11",
+      "q41_scope_parser": "3/3",
+      "total": "18/18"
+    },
+    "py_compile": "passed",
+    "bash_n": "passed",
+    "natural_exit_case": {
+      "launcher_exit": 23,
+      "stdout_argv_cwd_env": "passed",
+      "scope_policy": "OOMPolicy=kill; KillMode=control-group; ManagedOOMMemoryPressure=kill; ManagedOOMSwap=kill",
+      "memory_swap_caps": "infinity",
+      "oom_score_adj": 900,
+      "child_gone": true
+    },
+    "sigterm_case": {
+      "launcher_exit": 143,
+      "scope_after_close": "inactive",
+      "child_gone": true,
+      "controller_survived": true
+    }
+  },
+  "postflight": {
+    "systemd_oomd": "active",
+    "active_llamacode_eval_scopes": 0,
+    "fake_runtime_processes": 0,
+    "test_port_listeners": 0,
+    "foreign_processes_killed": 0,
+    "model_inference": false,
+    "gpu_used": false
+  },
+  "scope_limit": "This is launcher containment evidence, not a Flash-Next/Strata quality or TPS result. Windows PowerShell Job Object coverage and C39-02 remain pending."
+}

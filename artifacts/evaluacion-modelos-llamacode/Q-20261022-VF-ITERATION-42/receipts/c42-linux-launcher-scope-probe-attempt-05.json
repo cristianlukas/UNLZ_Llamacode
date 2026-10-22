@@ -1,0 +1,60 @@
+{
+  "task": "Q-20261022-VF-ITERATION-42",
+  "recorded_at_utc": "2026-10-22T17:44:27.551251+00:00",
+  "fixture": "fake Python executable + placeholder server/config; CPU-only, no model/GPU",
+  "preflight": {
+    "platform": "linux",
+    "systemd_oomd": "active",
+    "sudo_noninteractive": true
+  },
+  "checks": [
+    "natural exit 23; stdout/argv/cwd; exact scope properties; oom_score_adj; cleanup",
+    "SIGTERM returns 143 and stops exact scope plus child; controller remains alive"
+  ],
+  "port_18342": {
+    "stdout_first_line": "FAKE_SERVER pid=347700 port=18342 cwd=/tmp/q42-strata-18342-d3xkmecx env=q42-preserved args=/tmp/q42-strata-18342-d3xkmecx/strata/serve/server.py --engine strata --config /tmp/q42-strata-18342-d3xkmecx/strata/strata-iq3_s.json --port 18342",
+    "stdout_remainder": "",
+    "launcher_exit": 23,
+    "scope": {
+      "OOMPolicy": "kill",
+      "ControlGroup": "/background.slice/llamacode-eval-347692-44f2de21.scope",
+      "MemoryHigh": "infinity",
+      "MemoryMax": "infinity",
+      "MemorySwapMax": "infinity",
+      "ManagedOOMSwap": "kill",
+      "ManagedOOMMemoryPressure": "kill",
+      "KillMode": "control-group",
+      "ActiveState": "active",
+      "Unit": "llamacode-eval-347692-44f2de21.scope",
+      "OOMScoreAdj": "900"
+    },
+    "child_gone": true,
+    "scope_after_close": "inactive-after-natural-exit"
+  },
+  "port_18343": {
+    "stdout_first_line": "FAKE_SERVER pid=347777 port=18343 cwd=/tmp/q42-strata-18343-lfkfvhdn env=q42-preserved args=/tmp/q42-strata-18343-lfkfvhdn/strata/serve/server.py --engine strata --config /tmp/q42-strata-18343-lfkfvhdn/strata/strata-iq3_s.json --port 18343",
+    "stdout_remainder": "",
+    "launcher_exit": 143,
+    "scope": {
+      "OOMPolicy": "kill",
+      "ControlGroup": "/background.slice/llamacode-eval-347769-30aa7f61.scope",
+      "MemoryHigh": "infinity",
+      "MemoryMax": "infinity",
+      "MemorySwapMax": "infinity",
+      "ManagedOOMSwap": "kill",
+      "ManagedOOMMemoryPressure": "kill",
+      "KillMode": "control-group",
+      "ActiveState": "active",
+      "Unit": "llamacode-eval-347769-30aa7f61.scope",
+      "OOMScoreAdj": "900"
+    },
+    "child_gone": true,
+    "scope_after_close": {
+      "samples": [
+        "active"
+      ],
+      "final": "inactive"
+    }
+  },
+  "result": "PASS"
+}

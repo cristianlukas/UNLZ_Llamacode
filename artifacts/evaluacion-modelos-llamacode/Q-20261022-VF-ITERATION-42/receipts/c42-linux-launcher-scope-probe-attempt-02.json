@@ -1,0 +1,35 @@
+{
+  "task": "Q-20261022-VF-ITERATION-42",
+  "recorded_at_utc": "2026-10-22T17:40:32.720937+00:00",
+  "fixture": "fake Python executable + placeholder server/config; CPU-only, no model/GPU",
+  "preflight": {
+    "platform": "linux",
+    "systemd_oomd": "active",
+    "sudo_noninteractive": true
+  },
+  "checks": [
+    "natural exit 23; stdout/argv/cwd; exact scope properties; oom_score_adj; cleanup"
+  ],
+  "port_18342": {
+    "stdout_first_line": "FAKE_SERVER pid=340188 port=18342 cwd=/tmp/q42-strata-18342-3c5a7q8t args=/tmp/q42-strata-18342-3c5a7q8t/strata/serve/server.py --engine strata --config /tmp/q42-strata-18342-3c5a7q8t/strata/strata-iq3_s.json --port 18342",
+    "stdout_remainder": "",
+    "launcher_exit": 23,
+    "scope": {
+      "OOMPolicy": "kill",
+      "ControlGroup": "/background.slice/llamacode-eval-340181-f638c7f2.scope",
+      "MemoryHigh": "infinity",
+      "MemoryMax": "infinity",
+      "MemorySwapMax": "infinity",
+      "ManagedOOMSwap": "kill",
+      "ManagedOOMMemoryPressure": "kill",
+      "KillMode": "control-group",
+      "ActiveState": "active",
+      "Unit": "llamacode-eval-340181-f638c7f2.scope",
+      "OOMScoreAdj": "900"
+    },
+    "child_gone": true,
+    "scope_after_close": "inactive-after-natural-exit"
+  },
+  "result": "FAIL",
+  "error": "TimeoutExpired: Command '['bash', '/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/scripts/run-astra-strata.sh']' timed out after 15 seconds"
+}

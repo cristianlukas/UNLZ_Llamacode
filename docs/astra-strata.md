@@ -67,6 +67,13 @@ el log, espera a `/health` y después puede iniciar el Agente del perfil.
 **Detener servidor** solicita la salida ordenada de Strata; si el proceso no
 termina en 60 segundos, el supervisor fuerza su detención.
 
+En Ubuntu, el launcher manual `scripts/run-astra-strata.sh` también inicia el
+árbol de Strata dentro de `background.slice`, marcado para systemd-oomd. El
+servidor conserva memoria y swap sin caps; si `systemd-oomd` o los permisos
+`sudo -n` no están disponibles, el launcher falla cerrado antes de iniciar. Al
+recibir SIGINT/SIGTERM detiene el scope completo para no dejar el servidor vivo
+en segundo plano. El launcher Windows no usa esta ruta Linux.
+
 ### Servir ASTRA a otro LlamaCode por LAN
 
 En Lanzar podés usar **Iniciar LAN sin cargar perfil** aunque no haya un perfil
