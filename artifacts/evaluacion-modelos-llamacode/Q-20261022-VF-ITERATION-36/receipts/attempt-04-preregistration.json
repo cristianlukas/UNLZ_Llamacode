@@ -1,0 +1,19 @@
+{
+  "task": "Q-20261022-VF-ITERATION-36",
+  "attempt": 4,
+  "registered_at_utc": "2026-10-22T13:59:43Z",
+  "prior_result": "Attempt 3 proved the worker's effective memory.max=128 MiB and memory.oom.group=1, systemd Result=oom-kill, group cleanup, and unchanged ChatGPT/Codex PIDs. Only MemoryPeak telemetry disagreed with the OOM event after systemd removed the unit cgroup.",
+  "change": "Remove MemoryPeak from the safety acceptance criteria; retain it as diagnostic-only telemetry. Acceptance depends on the pre-allocation worker receipt, effective hard limit, systemd OOM result and group-kill journal, and survival of the caller and Codex processes.",
+  "unit": {
+    "MemoryHigh": "120M",
+    "MemoryMax": "128M",
+    "MemorySwapMax": "0",
+    "OOMScoreAdjust": 900,
+    "OOMPolicy": "kill",
+    "KillMode": "control-group",
+    "ManagedOOMMemoryPressure": "kill",
+    "ManagedOOMMemoryPressureLimit": "35%"
+  },
+  "acceptance": "One 512 MiB CPU-only allocation in an ephemeral 128 MiB cgroup is killed locally, child is killed by group policy, and caller plus ChatGPT/Codex app-server PIDs survive unchanged. No inference server, model or GPU is involved.",
+  "model_or_gpu_use": false
+}

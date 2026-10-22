@@ -1,0 +1,27 @@
+{
+  "task": "Q-20261022-VF-ITERATION-36",
+  "registered_at_utc": "2026-10-22T13:47:57Z",
+  "question": "Does a hard systemd cgroup limit contain an induced evaluation-worker OOM while Codex and its caller remain alive?",
+  "scope": "CPU-only systemd containment regression; no model, inference server, build, benchmark, or GPU use.",
+  "unit": {
+    "slice": "background.slice",
+    "MemoryHigh": "64M",
+    "MemoryMax": "128M",
+    "MemorySwapMax": "0",
+    "OOMScoreAdjust": 900,
+    "OOMPolicy": "kill",
+    "KillMode": "control-group",
+    "ManagedOOMMemoryPressure": "kill",
+    "ManagedOOMMemoryPressureLimit": "35%"
+  },
+  "stimulus": "Start a disposable Python worker and child, then touch 512 MiB inside the 128 MiB unit.",
+  "acceptance": [
+    "systemd reports Result=oom-kill for only the test unit",
+    "the worker cgroup records oom_kill and memory.oom.group=1",
+    "systemd effective MemoryHigh/MemoryMax/OOMPolicy/OOMScoreAdjust match the pre-registration",
+    "the invoking tool process and Codex ChatGPT/app-server PIDs remain alive",
+    "the parent can write a complete receipt after the worker is gone"
+  ],
+  "stop_rule": "If any property is unsupported or any parent/Codex PID disappears, do not start Q35 inference; preserve the failure receipt and investigate.",
+  "model_parameters_changed": false
+}

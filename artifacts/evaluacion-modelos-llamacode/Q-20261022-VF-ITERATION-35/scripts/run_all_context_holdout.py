@@ -6,11 +6,11 @@ import json
 import os
 import subprocess
 from pathlib import Path
+from resource_isolation import calculate_worker_limits, systemd_properties
 
 ROOT = Path(__file__).resolve().parents[4]
 TASK = ROOT / "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35"
 LOCK = ROOT / "WORK_QUEUE.lock"
-TOKEN = "20f0de1a-7953-4c05-95f8-f6a5b73fac26"
 TASK_ID = "Q-20261022-VF-ITERATION-35"
 PYTHON = Path("/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python")
 PYTHONPATH = "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/tools"
@@ -31,20 +31,27 @@ def atomic_json(path, value):
     tmp.replace(path)
 
 
-def verify_lock():
+def current_lock_token():
     lock = json.loads(LOCK.read_text())
-    if lock.get("token") != TOKEN or lock.get("task_id") != TASK_ID:
+    token = lock.get("token")
+    if not token or lock.get("task_id") != TASK_ID:
+        raise RuntimeError(f"work queue lock ownership changed: {lock}")
+    return token
+
+
+def verify_lock(expected_token):
+    lock = json.loads(LOCK.read_text())
+    if lock.get("token") != expected_token or lock.get("task_id") != TASK_ID:
         raise RuntimeError(f"work queue lock ownership changed: {lock}")
 
 
-def run_service(spec, context, seed, attempt_no):
-    """Run one inference in a cgroup separate from the Codex desktop scope."""
+def run_service(spec, context, seed, attempt_no, limits, lock_token):
+    """Run one inference in a bounded cgroup separate from the Codex desktop scope."""
     unit = f"llamacode-q35-context-{context}-seed-{seed}-a{attempt_no:02d}"
     command = [
         "systemd-run", "--user", "--quiet", "--wait", "--collect",
         f"--unit={unit}", f"--slice={RUN_SLICE}",
-        "--property=Type=exec", "--property=KillMode=control-group",
-        "--property=OOMPolicy=stop", "--property=ManagedOOMMemoryPressure=auto",
+        *systemd_properties(limits),
         f"--working-directory={SERVER_ROOT}",
     ]
     service_env = os.environ.copy()
@@ -55,6 +62,11 @@ def run_service(spec, context, seed, attempt_no):
             command.append(f"--setenv={key}={service_env[key]}")
     command.append(f"--setenv=PYTHONPATH={service_env['PYTHONPATH']}")
     command.append(f"--setenv=STRATA_ROOT={service_env['STRATA_ROOT']}")
+    command.append(f"--setenv=LLAMACODE_EXPECTED_MEMORY_HIGH_BYTES={limits['memory_high_bytes']}")
+    command.append(f"--setenv=LLAMACODE_EXPECTED_MEMORY_MAX_BYTES={limits['memory_max_bytes']}")
+    command.append(f"--setenv=LLAMACODE_EXPECTED_MEMORY_SWAP_MAX_BYTES={limits['memory_swap_max_bytes']}")
+    command.append(f"--setenv=LLAMACODE_QUEUE_LOCK_TOKEN={lock_token}")
+    command.append(f"--setenv=LLAMACODE_TASK_ID={TASK_ID}")
     command.extend([
         str(PYTHON), str(RUNNER), "--context", str(context),
         "--config", spec["config_path"], "--fixture-dir", spec["fixture_dir"],
@@ -86,6 +98,8 @@ def utc_now():
 
 
 def main():
+    lock_token = current_lock_token()
+    verify_lock(lock_token)
     manifest_path = TASK / "receipts/fixtures-manifest.json"
     manifest = json.loads(manifest_path.read_text())
     by_key = {(row["context"], row["seed"]): row for row in manifest["runs"]}
@@ -100,7 +114,7 @@ def main():
             if any(row.get("key") == key and has_valid_result(row, expected_run_directory)
                    for row in progress["completed"]):
                 continue
-            verify_lock()
+            verify_lock(lock_token)
             spec = by_key[(context, seed)]
             fixture_dir = Path(spec["fixture_dir"])
             run_dir = Path(spec["run_dir"])
@@ -111,6 +125,14 @@ def main():
             config_sha = hashlib.sha256(config_path.read_bytes()).hexdigest()
             if config_sha != spec["config_sha256"]:
                 raise RuntimeError(f"config hash mismatch before run {key}")
+            try:
+                limits = calculate_worker_limits(Path("/proc/meminfo").read_text())
+            except RuntimeError as exc:
+                progress["state"] = "blocked-resource-budget"
+                progress["block_reason"] = str(exc)
+                progress["updated_at_utc"] = utc_now()
+                atomic_json(progress_path, progress)
+                return 3
             attempts = progress.setdefault("attempts", [])
             attempt_no = 1 + sum(row.get("key") == key for row in attempts)
             unit = f"llamacode-q35-context-{context}-seed-{seed}-a{attempt_no:02d}"
@@ -119,7 +141,7 @@ def main():
                 "key": key, "context": context, "seed": seed,
                 "attempt_no": attempt_no, "service_unit": f"{unit}.service",
                 "run_directory": str(run_dir.resolve()), "state": "starting",
-                "started_at_utc": started,
+                "started_at_utc": started, "resource_limits": limits,
             }
             progress["state"] = "run-in-progress"
             progress["active_run"] = active
@@ -128,8 +150,8 @@ def main():
             attempts.append(attempt)
             atomic_json(progress_path, progress)
             print(json.dumps({"event": "run-start", **active}), flush=True)
-            verify_lock()
-            unit, result, journal_text = run_service(spec, context, seed, attempt_no)
+            verify_lock(lock_token)
+            unit, result, journal_text = run_service(spec, context, seed, attempt_no, limits, lock_token)
             (run_dir / "systemd-unit.log").write_text(journal_text, encoding="utf-8")
             receipt_path = run_dir / "receipt.json"
             receipt = json.loads(receipt_path.read_text()) if receipt_path.exists() else None
@@ -151,6 +173,7 @@ def main():
                 "strict_output_valid": receipt.get("strict_output_valid") if receipt else None,
                 "transport_error": receipt.get("transport_error") if receipt else result.stderr[-1000:],
                 "monitor_abort_reason": receipt.get("monitor_abort_reason") if receipt else None,
+                "resource_limits": limits,
             }
             progress["completed"].append(row)
             progress["last_completed_key"] = key

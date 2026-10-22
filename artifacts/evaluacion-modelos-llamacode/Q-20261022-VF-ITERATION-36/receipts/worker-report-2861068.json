@@ -1,0 +1,10 @@
+{
+  "worker_pid": 2861070,
+  "child_pid": 2861071,
+  "cgroup": "/user.slice/user-1000.slice/user@1000.service/background.slice/llamacode-q36-cgroup-oom-2861068-1cea27.service",
+  "memory_high": "125829120",
+  "memory_max": "134217728",
+  "memory_swap_max": "0",
+  "oom_group": "1",
+  "oom_score_adjust": "900"
+}

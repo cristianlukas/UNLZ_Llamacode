@@ -1,0 +1,11 @@
+{
+  "task": "Q-20261022-VF-ITERATION-36",
+  "verified_at_utc": "2026-10-22T14:00:03Z",
+  "file": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/actionables.json",
+  "backup": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/actionables.json.bak.20261022-q36-crash-containment",
+  "count": 21,
+  "top_id": "vf-q35-codex-crash-isolation-20261022",
+  "status": "Mitigación parcial verificada · falta auditar otros runners; Q35 bloqueada por PSI",
+  "loader_check": "Imported server.py without starting HTTP server; read_json(ACTIONABLES_FILE) returns the updated first actionable.",
+  "sheet": "Accionables!A2:N2; readback verified."
+}

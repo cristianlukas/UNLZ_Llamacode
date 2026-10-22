@@ -1,0 +1,19 @@
+{
+  "task": "Q-20261022-VF-ITERATION-36",
+  "attempt": 3,
+  "registered_at_utc": "2026-10-22T13:58:30Z",
+  "prior_result": "Attempt 2 reached the intended unit-local OOM at exactly MemoryMax=128M; systemd reported Result=oom-kill and journaled both the main kill and child cleanup. The collector then failed because the manager had removed ControlGroup after the unit stopped.",
+  "change": "Persist a tiny worker-side cgroup/property receipt outside the worker before allocation, and collect OOM evidence from retained systemd unit properties and journal instead of requiring a cgroup directory that systemd has already removed.",
+  "unit": {
+    "MemoryHigh": "120M",
+    "MemoryMax": "128M",
+    "MemorySwapMax": "0",
+    "OOMScoreAdjust": 900,
+    "OOMPolicy": "kill",
+    "KillMode": "control-group",
+    "ManagedOOMMemoryPressure": "kill",
+    "ManagedOOMMemoryPressureLimit": "35%"
+  },
+  "acceptance": "A complete JSON receipt proves systemd Result=oom-kill, peak=MemoryMax, group OOM enabled before allocation and child kill in the journal, plus unchanged invoking and Codex PIDs.",
+  "model_or_gpu_use": false
+}

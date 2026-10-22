@@ -1,0 +1,28 @@
+{
+  "task": "Q-20261022-VF-ITERATION-36",
+  "attempt": 2,
+  "unit": "llamacode-q36-cgroup-oom-2857494-35b5e6.service",
+  "classification": "contained cgroup OOM; receipt collector bug",
+  "systemd": {
+    "Result": "oom-kill",
+    "MemoryHigh": 125829120,
+    "MemoryMax": 134217728,
+    "MemoryPeak": 134217728,
+    "MemorySwapMax": 0,
+    "OOMPolicy": "kill",
+    "OOMScoreAdjust": 900,
+    "ControlGroup_after_failure": ""
+  },
+  "journal": [
+    "A process of this unit has been killed by the OOM killer.",
+    "Killing process 2857497 (python3) with signal SIGKILL.",
+    "Main process exited, code=killed, status=9/KILL.",
+    "Failed with result 'oom-kill'."
+  ],
+  "codex_pids_after": {
+    "chatgpt": 2778277,
+    "codex_app_server": 2778603
+  },
+  "collector_failure": "The systemd manager removed the failed unit's ControlGroup before the collector tried to read memory.events, causing FileNotFoundError. The worker result and desktop PID readback were not persisted by that attempt.",
+  "next": "Attempt 3 persists the worker's effective cgroup properties before allocation and uses systemd's retained OOM result, peak, and journal as the post-exit evidence; it also records Codex PIDs before/after."
+}

@@ -1,0 +1,24 @@
+{
+  "task": "Q-20261022-VF-ITERATION-36",
+  "attempt": 1,
+  "started_at_local": "2026-10-22T10:56:00-03:00",
+  "finished_at_utc": "2026-10-22T13:56:52Z",
+  "classification": "invalid regression stimulus / high-throttle timeout",
+  "unit": "llamacode-q36-cgroup-oom-2854851-293037.service",
+  "observed": {
+    "ActiveState_before_cleanup": "active",
+    "MemoryCurrent": 79699968,
+    "MemoryHigh": 67108864,
+    "MemoryMax": 134217728,
+    "MemorySwapMax": 0,
+    "OOMPolicy": "kill",
+    "OOMScoreAdjust": 900,
+    "processes": [2854853, 2854854]
+  },
+  "controller_timeout_seconds": 45,
+  "cause": "MemoryHigh=64M kept the allocation in reclaim/throttle below MemoryMax for the controller timeout; no cgroup OOM result was asserted.",
+  "cleanup": "Stopped only this uniquely named transient unit. systemd reported ActiveState=inactive, SubState=dead, and an empty ControlGroup.",
+  "codex_or_parent_lost": false,
+  "gpu_or_inference_used": false,
+  "next": "Attempt 2 raises only the synthetic MemoryHigh to 120M, keeps the same 128M MemoryMax and 512 MiB allocation, and has a 90 s controller timeout with exact-unit cleanup."
+}

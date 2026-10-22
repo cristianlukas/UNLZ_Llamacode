@@ -1,0 +1,18 @@
+{
+  "task": "Q-20261022-VF-ITERATION-36",
+  "attempt": 2,
+  "registered_at_utc": "2026-10-22T13:57:07Z",
+  "prior_attempt": "Attempt 1 used MemoryHigh=64M/MemoryMax=128M and a 45 s controller timeout. It reached 76 MiB and was throttled without an OOM result; only that exact unit was stopped. No Codex process was lost.",
+  "change": "Raise the synthetic test's MemoryHigh to 120M while retaining MemoryMax=128M so the local cgroup OOM condition is reached promptly; extend the controller timeout to 90 s and always stop only this uniquely named unit if the timeout still occurs.",
+  "unchanged": [
+    "512 MiB touched allocation",
+    "MemoryMax=128M",
+    "MemorySwapMax=0",
+    "OOMScoreAdjust=900",
+    "OOMPolicy=kill",
+    "KillMode=control-group",
+    "ManagedOOMMemoryPressure=kill"
+  ],
+  "acceptance": "The unit alone reports oom-kill, memory.events reports a local oom_kill, memory.oom.group is 1, and Codex plus the invoking process remain alive.",
+  "model_or_gpu_use": false
+}

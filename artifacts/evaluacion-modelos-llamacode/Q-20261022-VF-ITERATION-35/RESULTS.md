@@ -25,3 +25,11 @@ Evidencia: `receipts/codex-crash-diagnosis.json`, `receipts/attempt-02-memory-pr
 La fila Q35 se agregó a `Evaluaciones LlamaCode` (`A266:J266`) y la recomendación P0 de aislamiento quedó primera en `Accionables` (`A2:N2`). El readback verificó los valores y el formato WRAP/TOP. El recibo de sincronización está en `receipts/google-sheet-sync.json`.
 
 La recomendación P0 también se añadió al JSON de accionables de la app, como primer elemento; se dejó backup previo y se validó mediante el mismo `read_json()` del servidor, sin iniciar el servicio. El recibo está en `receipts/app-actionable-sync.json`.
+
+## Corrección de diagnóstico y alcance · Q36 · 2026-10-22
+
+La frase anterior «la prevención del cierre por este harness quedó verificada» era demasiado amplia. La lectura posterior del journal mostró que, 16 segundos después del abort controlado Q35-05, systemd registró otro proceso terminado por OOM bajo `app.slice`; el registro no nombra al PID. ChatGPT/Codex siguieron vivos y no hubo request, score ni servidor residual. Por tanto, Q35 por sí sola sólo probó aislamiento/guard para sus intentos, no contención completa frente a OOM.
+
+Q36 corrigió este hueco para el runner Q35: `MemoryMax` dinámico a partir de la RAM disponible, `MemorySwapMax`, `OOMPolicy=kill`, `KillMode=control-group`, `OOMScoreAdjust=900` y verificación de los límites efectivos antes de aceptar un request. Una regresión CPU-only en servicio efímero confirmó que `MemoryMax=128 MiB` mata la unidad completa y no el proceso padre/Codex. La verificación fue una inyección sintética pequeña; el barrido Flash-Next sigue bloqueado por PSI y no se reanudó.
+
+El cambio limita los recursos que puede consumir el proceso de evaluación; no reduce el modelo, el contexto, la cuantización ni el uso de memoria lógica solicitado. Esto contiene el OOM del worker, no demuestra inmunidad a fallos independientes del kernel, systemd-oomd, driver o presión generada fuera del cgroup. Q36 y sus recibos están en `../Q-20261022-VF-ITERATION-36/RESULTS.md`.

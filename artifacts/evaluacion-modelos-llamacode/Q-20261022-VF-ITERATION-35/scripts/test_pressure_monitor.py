@@ -4,6 +4,7 @@ import importlib.util
 import pathlib
 import unittest
 from unittest.mock import patch
+import resource_isolation
 
 RUNNER = pathlib.Path(__file__).with_name("run_context_holdout.py")
 spec = importlib.util.spec_from_file_location("q35_runner", RUNNER)
@@ -43,11 +44,11 @@ class PressureMonitorTests(unittest.TestCase):
                 monitor.sample()
         return monitor
 
-    def test_user_manager_gate_matches_oomd_threshold(self):
-        below = self.collect(sample_state(manager_some=49.9))
+    def test_user_manager_gate_precedes_oomd_threshold(self):
+        below = self.collect(sample_state(manager_some=34.9))
         self.assertIsNone(below.abort_reason)
-        at_gate = self.collect(sample_state(manager_some=50.0))
-        self.assertIn("systemd-oomd's 50% threshold", at_gate.abort_reason)
+        at_gate = self.collect(sample_state(manager_some=35.0))
+        self.assertIn("35% guard", at_gate.abort_reason)
 
     def test_run_cgroup_gate_is_isolated(self):
         monitor = self.collect(sample_state(run_some=80.0), samples=15)
@@ -90,6 +91,33 @@ class PressureMonitorTests(unittest.TestCase):
         self.assertEqual(score["total"], 1)
         self.assertTrue(score["strict_output_valid"])
         self.assertEqual(score["quality_score"]["percent"], 100.0)
+
+
+class ResourceIsolationTests(unittest.TestCase):
+    def test_worker_budget_keeps_host_headroom_without_changing_model_settings(self):
+        meminfo = "MemTotal: 131072000 kB\nMemAvailable: 115343360 kB\nSwapFree: 6000000 kB\n"
+        limits = resource_isolation.calculate_worker_limits(meminfo)
+        self.assertEqual(limits["memory_max_bytes"], 94 * resource_isolation.GIB)
+        self.assertEqual(limits["memory_high_bytes"], 86 * resource_isolation.GIB)
+        self.assertEqual(limits["memory_swap_max_bytes"], 4 * resource_isolation.GIB)
+        self.assertEqual(limits["oom_score_adjust"], 900)
+        self.assertEqual(limits["oom_policy"], "kill")
+
+    def test_insufficient_safe_budget_blocks_before_inference(self):
+        meminfo = "MemTotal: 131072000 kB\nMemAvailable: 70000000 kB\nSwapFree: 6000000 kB\n"
+        with self.assertRaisesRegex(RuntimeError, "before model startup"):
+            resource_isolation.calculate_worker_limits(meminfo)
+
+    def test_systemd_unit_is_hard_limited_and_group_killed(self):
+        limits = resource_isolation.calculate_worker_limits(
+            "MemTotal: 131072000 kB\nMemAvailable: 115343360 kB\nSwapFree: 6000000 kB\n"
+        )
+        props = resource_isolation.systemd_properties(limits)
+        self.assertIn(f"--property=MemoryMax={limits['memory_max_bytes']}", props)
+        self.assertIn("--property=OOMScoreAdjust=900", props)
+        self.assertIn("--property=OOMPolicy=kill", props)
+        self.assertIn("--property=KillMode=control-group", props)
+        self.assertIn("--property=ManagedOOMMemoryPressure=kill", props)
 
 
 if __name__ == "__main__":

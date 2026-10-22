@@ -1,0 +1,54 @@
+{
+  "task": "Q-20261022-VF-ITERATION-36",
+  "checked_at_utc": "2026-10-22T14:00:02.997463+00:00",
+  "unit": "llamacode-q36-cgroup-oom-2862255-6ecdb1",
+  "controller_cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/app-org.chromium.Chromium-2778277.scope",
+  "controller_pid_survived": true,
+  "codex_pids_before": {
+    "chatgpt": 2778277,
+    "codex_app_server": 2829386
+  },
+  "codex_pids_after": {
+    "chatgpt": 2778277,
+    "codex_app_server": 2829386
+  },
+  "worker_report": {
+    "worker_pid": 2862257,
+    "child_pid": 2862258,
+    "cgroup": "/user.slice/user-1000.slice/user@1000.service/background.slice/llamacode-q36-cgroup-oom-2862255-6ecdb1.service",
+    "memory_high": "125829120",
+    "memory_max": "134217728",
+    "memory_swap_max": "0",
+    "oom_group": "1",
+    "oom_score_adjust": "900"
+  },
+  "systemd_run_returncode": 1,
+  "systemd_run_stderr": "",
+  "unit_properties": {
+    "Result": "oom-kill",
+    "OOMPolicy": "kill",
+    "ControlGroup": "",
+    "MemoryPeak": "134217728",
+    "MemoryHigh": "125829120",
+    "MemoryMax": "134217728",
+    "MemorySwapMax": "0",
+    "OOMScoreAdjust": "900"
+  },
+  "unit_journal_tail": "Starting llamacode-q36-cgroup-oom-2862255-6ecdb1.service - /usr/bin/python3 /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-36/scripts/oom_stress_worker.py...\nStarted llamacode-q36-cgroup-oom-2862255-6ecdb1.service - /usr/bin/python3 /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-36/scripts/oom_stress_worker.py.\nllamacode-q36-cgroup-oom-2862255-6ecdb1.service: A process of this unit has been killed by the OOM killer.\nllamacode-q36-cgroup-oom-2862255-6ecdb1.service: Killing process 2862257 (python3) with signal SIGKILL.\nllamacode-q36-cgroup-oom-2862255-6ecdb1.service: Main process exited, code=killed, status=9/KILL\nllamacode-q36-cgroup-oom-2862255-6ecdb1.service: Failed with result 'oom-kill'.\n",
+  "cgroup_oom_events": {},
+  "cgroup_oom_group_after": null,
+  "acceptance": {
+    "result_oom_kill": true,
+    "memory_max_128m": true,
+    "memory_high_120m": true,
+    "oom_policy_kill": true,
+    "oom_score_adjust_900": true,
+    "group_oom_enabled": true,
+    "local_oom_event": true,
+    "caller_survived": true,
+    "codex_main_survived": true,
+    "codex_app_server_survived": true,
+    "worker_cgroup": true
+  },
+  "passed": true
+}

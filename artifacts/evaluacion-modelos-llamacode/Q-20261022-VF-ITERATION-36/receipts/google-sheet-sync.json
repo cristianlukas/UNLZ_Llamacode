@@ -1,0 +1,27 @@
+{
+  "task": "Q-20261022-VF-ITERATION-36",
+  "synced_at_utc": "2026-10-22T14:00:03Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_url": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "tabs": [
+    {
+      "title": "Evaluaciones LlamaCode",
+      "sheet_id": 1945218181,
+      "range": "A266:J267",
+      "record_ids": [
+        "Q-20261022-VF-ITERATION-35",
+        "Q-20261022-VF-ITERATION-36"
+      ],
+      "verified": "Readback matches values; Q35 status corrected to partial mitigation; Q36 result appended; both WRAP/TOP."
+    },
+    {
+      "title": "Accionables",
+      "sheet_id": 1393124532,
+      "range": "A2:N2",
+      "record_id": "vf-q35-codex-crash-isolation-20261022",
+      "verified": "Readback matches updated partial mitigation, Q36 proof, remaining audit/PSI condition; WRAP/TOP."
+    }
+  ],
+  "preservation": "No other rows changed. Existing row 267 empty values were populated and formatted to match row 266. No model inventory row changed because this is an evaluation-runner reliability result, not a model artifact/profile update.",
+  "source_of_truth": "WORK_QUEUE.md; Q35 and Q36 RESULTS.md; Q36 systemd-oom-containment.json"
+}
