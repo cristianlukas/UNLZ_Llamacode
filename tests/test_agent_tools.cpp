@@ -16,12 +16,15 @@
 #include <QJsonDocument>
 #include <QDir>
 #include <QFile>
+#include <QSaveFile>
+#include <QDateTime>
 #include <QCryptographicHash>
 #include <QProcess>
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QUrl>
 #include <QUrlQuery>
+#include <cmath>
 #include <utility>
 #include "core/agent/AgentToolRunner.h"
 #include "core/agent/AgentLifecycle.h"
@@ -170,6 +173,7 @@ private slots:
     void reviewOverengineering_withoutRepoExplainsRequirement();
     void runShell_echo();
     void hybridSearch_depGraphAndBudget();
+    void hybridSearch_embeddingGemmaQ44E2E();
     void hybridSearch_compactReturnsSpans();
     void hybridSearch_includeDocsReportsCorpus();
     void repoSlice_defaultsToCompactEvidence();
@@ -685,6 +689,198 @@ void AgentToolsTests::hybridSearch_depGraphAndBudget()
     QVERIFY(res.contains("~"));                   // header con ~N tok (budget activo)
     QVERIFY(res.contains("dep-graph"));           // footer de vecinos
     QVERIFY(res.contains("util.h"));              // vecino vía #include
+}
+
+// Opt-in E2E del AgentToolRunner con el holdout Q44 y un snapshot completo del
+// repo. No se incluye en el flujo normal: requiere un servidor real indicado por
+// LC_Q45_ENDPOINT y escribe el recibo fuera del checkout.
+void AgentToolsTests::hybridSearch_embeddingGemmaQ44E2E()
+{
+    const QString fixtureDir = qEnvironmentVariable("LC_Q45_FIXTURE_DIR");
+    const QString repoRoot = qEnvironmentVariable("LC_Q45_REPO_ROOT");
+    const QString endpoint = qEnvironmentVariable("LC_Q45_ENDPOINT");
+    const QString receiptPath = qEnvironmentVariable("LC_Q45_RECEIPT_FILE");
+    if (fixtureDir.isEmpty() || repoRoot.isEmpty() || endpoint.isEmpty() || receiptPath.isEmpty())
+        QSKIP("Opt-in only: set all LC_Q45_* variables to a frozen fixture, repo snapshot, endpoint and receipt path.");
+
+    auto readJsonl = [](const QString &path, bool *ok) {
+        QList<QJsonObject> rows;
+        QFile file(path);
+        if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            *ok = false;
+            return rows;
+        }
+        while (!file.atEnd()) {
+            const QByteArray line = file.readLine().trimmed();
+            if (line.isEmpty()) continue;
+            const QJsonDocument doc = QJsonDocument::fromJson(line);
+            if (!doc.isObject()) {
+                *ok = false;
+                return QList<QJsonObject>{};
+            }
+            rows.append(doc.object());
+        }
+        *ok = !rows.isEmpty();
+        return rows;
+    };
+    bool queriesOk = false, qrelsOk = false;
+    const QList<QJsonObject> queries = readJsonl(fixtureDir + QStringLiteral("/queries.jsonl"), &queriesOk);
+    const QList<QJsonObject> qrels = readJsonl(fixtureDir + QStringLiteral("/qrels.jsonl"), &qrelsOk);
+    QVERIFY2(queriesOk && qrelsOk, "Could not load Q44 queries and qrels.");
+    QCOMPARE(queries.size(), 21);
+    QCOMPARE(qrels.size(), queries.size());
+
+    // The test process owns a separate XDG_DATA_HOME; avoid inheriting any user
+    // sidecar URL/key so the control is guaranteed to be BM25-only.
+    qunsetenv("LLAMACODE_AUXILIARY_URL");
+    qunsetenv("LLAMACODE_AUXILIARY_KEY");
+    m_runner->setAuxiliaryServerConfig(QString(), QString(), QString(), QString());
+
+    auto invoke = [&](const QString &query) {
+        const QJsonObject args{{QStringLiteral("query"), query},
+                               {QStringLiteral("path"), QStringLiteral(".")},
+                               {QStringLiteral("k"), 15},
+                               {QStringLiteral("compact"), false},
+                               {QStringLiteral("expand_graph"), false}};
+        QSignalSpy spy(m_runner, &AgentToolRunner::toolExecuted);
+        m_runner->executeTool(QStringLiteral("q45"), QStringLiteral("hybrid_search"),
+            QString::fromUtf8(QJsonDocument(args).toJson(QJsonDocument::Compact)), repoRoot);
+        if (spy.isEmpty()) spy.wait(120000);
+        return spy.isEmpty() ? QVariantMap{} : spy.last().first().toMap();
+    };
+    auto ranked = [](const QVariantMap &result) {
+        QJsonArray items;
+        const QVariantList returned = result.value(QStringLiteral("contextReceipt")).toMap()
+                                          .value(QStringLiteral("returned")).toList();
+        for (const QVariant &value : returned) {
+            const QVariantMap row = value.toMap();
+            items.append(QJsonObject{
+                {QStringLiteral("path"), row.value(QStringLiteral("path")).toString()},
+                {QStringLiteral("start_line"), row.value(QStringLiteral("startLine")).toInt()},
+                {QStringLiteral("end_line"), row.value(QStringLiteral("endLine")).toInt()},
+                {QStringLiteral("score"), row.value(QStringLiteral("score")).toDouble()},
+                {QStringLiteral("source"), row.value(QStringLiteral("source")).toString()}});
+        }
+        return items;
+    };
+    auto targetRank = [](const QJsonArray &items, const QString &target) {
+        const int colon = target.lastIndexOf(QLatin1Char(':'));
+        if (colon <= 0) return 0;
+        const QString path = target.left(colon);
+        const QString span = target.mid(colon + 1);
+        bool lineOk = false;
+        const int line = span.section(QLatin1Char('-'), 0, 0).toInt(&lineOk);
+        if (!lineOk) return 0;
+        for (qsizetype i = 0; i < items.size(); ++i) {
+            const QJsonObject row = items.at(i).toObject();
+            if (row.value(QStringLiteral("path")).toString() == path
+                && row.value(QStringLiteral("start_line")).toInt() <= line
+                && row.value(QStringLiteral("end_line")).toInt() >= line)
+                return int(i + 1);
+        }
+        return 0;
+    };
+
+    QJsonArray baselineRows, firstRows, repeatRows;
+    QVector<int> baselineRanks, firstRanks, repeatRanks;
+    for (qsizetype i = 0; i < queries.size(); ++i) {
+        const QJsonObject query = queries.at(i);
+        const QJsonObject qrel = qrels.at(i);
+        QCOMPARE(query.value(QStringLiteral("id")).toString(),
+                 qrel.value(QStringLiteral("query_id")).toString());
+        const QVariantMap baseline = invoke(query.value(QStringLiteral("query")).toString());
+        QVERIFY2(baseline.value(QStringLiteral("ok")).toBool(),
+                 qPrintable(baseline.value(QStringLiteral("result")).toString()));
+        const QJsonArray baselineRanking = ranked(baseline);
+        QVERIFY(!baselineRanking.isEmpty());
+        const int baselineRank = targetRank(baselineRanking, qrel.value(QStringLiteral("chunk_id")).toString());
+        baselineRanks.append(baselineRank);
+        baselineRows.append(QJsonObject{{QStringLiteral("query_id"), query.value(QStringLiteral("id"))},
+                                        {QStringLiteral("target"), qrel.value(QStringLiteral("chunk_id"))},
+                                        {QStringLiteral("target_rank"), baselineRank},
+                                        {QStringLiteral("returned"), baselineRanking}});
+    }
+
+    m_runner->setAuxiliaryServerConfig(endpoint,
+        QStringLiteral("embeddinggemma-2-Q8_0.gguf"), QString(), QString());
+    const QString firstPassStarted = QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs);
+    for (qsizetype i = 0; i < queries.size(); ++i) {
+        const QJsonObject query = queries.at(i);
+        const QJsonObject qrel = qrels.at(i);
+        const QVariantMap candidate = invoke(query.value(QStringLiteral("query")).toString());
+        QVERIFY2(candidate.value(QStringLiteral("ok")).toBool(),
+                 qPrintable(candidate.value(QStringLiteral("result")).toString()));
+        const QJsonArray candidateRanking = ranked(candidate);
+        QVERIFY(!candidateRanking.isEmpty());
+        const int rank = targetRank(candidateRanking, qrel.value(QStringLiteral("chunk_id")).toString());
+        firstRanks.append(rank);
+        firstRows.append(QJsonObject{{QStringLiteral("query_id"), query.value(QStringLiteral("id"))},
+                                     {QStringLiteral("target"), qrel.value(QStringLiteral("chunk_id"))},
+                                     {QStringLiteral("target_rank"), rank},
+                                     {QStringLiteral("returned"), candidateRanking}});
+    }
+    const QString repeatPassStarted = QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs);
+    bool exactRepeat = true;
+    for (qsizetype i = 0; i < queries.size(); ++i) {
+        const QJsonObject query = queries.at(i);
+        const QJsonObject qrel = qrels.at(i);
+        const QVariantMap candidate = invoke(query.value(QStringLiteral("query")).toString());
+        QVERIFY2(candidate.value(QStringLiteral("ok")).toBool(),
+                 qPrintable(candidate.value(QStringLiteral("result")).toString()));
+        const QJsonArray candidateRanking = ranked(candidate);
+        QVERIFY(!candidateRanking.isEmpty());
+        const int rank = targetRank(candidateRanking, qrel.value(QStringLiteral("chunk_id")).toString());
+        repeatRanks.append(rank);
+        if (candidateRanking != firstRows.at(i).toObject().value(QStringLiteral("returned")).toArray())
+            exactRepeat = false;
+        repeatRows.append(QJsonObject{{QStringLiteral("query_id"), query.value(QStringLiteral("id"))},
+                                      {QStringLiteral("target"), qrel.value(QStringLiteral("chunk_id"))},
+                                      {QStringLiteral("target_rank"), rank},
+                                      {QStringLiteral("returned"), candidateRanking}});
+    }
+
+    auto metric = [](const QVector<int> &ranks, bool mrr) {
+        if (ranks.isEmpty()) return 0.0;
+        double sum = 0.0;
+        for (int rank : ranks) {
+            if (rank > 0 && rank <= 5)
+                sum += mrr ? 1.0 / rank : 1.0 / std::log2(rank + 1.0);
+        }
+        return sum / ranks.size();
+    };
+    const double baselineNdcg = metric(baselineRanks, false);
+    const double firstNdcg = metric(firstRanks, false);
+    const double baselineMrr = metric(baselineRanks, true);
+    const double firstMrr = metric(firstRanks, true);
+    const bool metricGate = firstNdcg >= baselineNdcg + 0.05 && firstMrr >= baselineMrr;
+    const QJsonObject result{
+        {QStringLiteral("schema"), QStringLiteral("q45-agenttoolrunner-eg2-v1")},
+        {QStringLiteral("repo_root"), repoRoot},
+        {QStringLiteral("query_count"), queries.size()},
+        {QStringLiteral("first_pass_started_utc"), firstPassStarted},
+        {QStringLiteral("repeat_pass_started_utc"), repeatPassStarted},
+        {QStringLiteral("baseline_bm25"), QJsonObject{{QStringLiteral("ndcg_at_5"), baselineNdcg},
+                                                     {QStringLiteral("mrr_at_5"), baselineMrr},
+                                                     {QStringLiteral("queries"), baselineRows}}},
+        {QStringLiteral("candidate_hybrid_first_pass"), QJsonObject{{QStringLiteral("ndcg_at_5"), firstNdcg},
+                                                                      {QStringLiteral("mrr_at_5"), firstMrr},
+                                                                      {QStringLiteral("queries"), firstRows}}},
+        {QStringLiteral("candidate_hybrid_repeat_pass"), QJsonObject{{QStringLiteral("ndcg_at_5"), metric(repeatRanks, false)},
+                                                                       {QStringLiteral("mrr_at_5"), metric(repeatRanks, true)},
+                                                                       {QStringLiteral("queries"), repeatRows}}},
+        {QStringLiteral("exact_repeat_rankings"), exactRepeat},
+        {QStringLiteral("metric_gate_pass"), metricGate}};
+    QSaveFile receipt(receiptPath);
+    QVERIFY2(receipt.open(QIODevice::WriteOnly), qPrintable(receipt.errorString()));
+    QCOMPARE(receipt.write(QJsonDocument(result).toJson(QJsonDocument::Indented)),
+             qint64(QJsonDocument(result).toJson(QJsonDocument::Indented).size()));
+    QVERIFY(receipt.commit());
+
+    QVERIFY2(exactRepeat, "AgentToolRunner returned different rankings on the cache repeat.");
+    QVERIFY2(metricGate,
+        qPrintable(QStringLiteral("EG2 E2E did not pass: nDCG@5 %1 → %2, MRR@5 %3 → %4")
+            .arg(baselineNdcg, 0, 'f', 4).arg(firstNdcg, 0, 'f', 4)
+            .arg(baselineMrr, 0, 'f', 4).arg(firstMrr, 0, 'f', 4)));
 }
 
 // compact=true (estilo FastContext): devuelve la cita span 'rel:Lini-Lfin' + un

@@ -1,0 +1,5 @@
+{
+  "schema": "q45-preflight-failure-v1",
+  "error": "SystemExit('AgentToolRunner QtTest executable missing: .')",
+  "at_utc": "2026-10-22T18:18:38Z"
+}

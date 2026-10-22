@@ -1,0 +1,8 @@
+********* Start testing of AgentToolsTests *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 10.3.1 20210422 (Red Hat 10.3.1-1)), ubuntu 24.04
+PASS   : AgentToolsTests::initTestCase()
+FAIL!  : AgentToolsTests::hybridSearch_embeddingGemmaQ44E2E() 'metricGate' returned FALSE. (EG2 E2E did not pass: nDCG@5 0.0000 → 0.0000, MRR@5 0.0000 → 0.0000)
+   Loc: [/home/cristian/.cache/llamacode/source/tests/test_agent_tools.cpp(880)]
+PASS   : AgentToolsTests::cleanupTestCase()
+Totals: 2 passed, 1 failed, 0 skipped, 0 blacklisted, 68366ms
+********* Finished testing of AgentToolsTests *********

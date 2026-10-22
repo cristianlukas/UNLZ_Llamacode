@@ -1,0 +1,89 @@
+{
+  "schema": "q45-orchestration-v1",
+  "status": "failed",
+  "started_at_utc": "2026-10-22T18:19:57Z",
+  "repo_head": "51acfeb1299231b6678bc2e9a56ba6f07254165e",
+  "model_path": "/media/cristian/Disco local/LlamaCode-cache/embeddinggemma2-eval/embeddinggemma-2-Q8_0.gguf",
+  "model_sha256": "2188ac1deca4b77dffefd603c2776a9d76d9d74ec01841392982ebb840b09135",
+  "server_path": "/media/cristian/Disco local/LlamaCode-cache/embeddinggemma2-eval/runtime/llama-b11554/llama-server",
+  "server_sha256": "fe8a7d6073d3e3a276193fcaec162cbf280d2572ad2016c9100fd924be19c6ed",
+  "test_executable": "/home/cristian/.cache/llamacode/build_tests_linux/test_agent_tools",
+  "test_executable_sha256": "33dfe2a4f351aa2b2757c35c2ab985ce388d6b77e34680fadd8358b1a855e0c1",
+  "preflight_inference_processes": [],
+  "preflight_listeners": "State  Recv-Q Send-Q Local Address:Port  Peer Address:PortProcess                                   \nLISTEN 0      4096       127.0.0.1:631        0.0.0.0:*                                             \nLISTEN 0      10         127.0.0.1:6742       0.0.0.0:*    users:((\"OpenRGB\",pid=6409,fd=4))        \nLISTEN 0      4096      127.0.0.54:53         0.0.0.0:*                                             \nLISTEN 0      4096   127.0.0.53%lo:53         0.0.0.0:*                                             \nLISTEN 0      4096       127.0.0.1:38873      0.0.0.0:*                                             \nLISTEN 0      128        127.0.0.1:47413      0.0.0.0:*    users:((\"artcraft-launch\",pid=5493,fd=4))\nLISTEN 0      4096           [::1]:631           [::]:*                                             \n",
+  "preflight_gpu1": {
+    "name": "NVIDIA GeForce RTX 3090",
+    "memory_used_mib": 108,
+    "memory_free_mib": 24016,
+    "utilization_pct": 45
+  },
+  "ports": {
+    "upstream": 8397,
+    "proxy": 8398
+  },
+  "resource_policy": "CUDA_VISIBLE_DEVICES=1; protected background.slice; no RAM/swap caps; 15 min server failsafe",
+  "snapshot": {
+    "head": "51acfeb1299231b6678bc2e9a56ba6f07254165e",
+    "archive_sha256": "f4da30c4ae88521e05de1851e82889461255e61df467b985d913ca5b19035ef8",
+    "archive_bytes": 238202880,
+    "tracked_entries": 5639,
+    "extracted_entries": 5635,
+    "omitted_external_symlinks": [
+      {
+        "path": "artifacts/evaluacion-modelos-llamacode/Q-20261017-QWEN38-27B-OVERTHINKING-RETEST/runtime/models/Qwen3.8-27B-AP-GGUF/Qwen3.8-27B-AP-Q3_K_XL.gguf",
+        "target": "/media/cristian/Disco local/Models/llamacpp/Qwen3.8-27B-AP-GGUF/Qwen3.8-27B-AP-Q3_K_XL.gguf"
+      },
+      {
+        "path": "artifacts/evaluacion-modelos-llamacode/Q-20261017-QWEN38-27B-OVERTHINKING-RETEST/runtime/models/Qwen3.8-27B-AP-GGUF/mmproj-BF16.gguf",
+        "target": "/media/cristian/Disco local/Models/llamacpp/Qwen3.8-27B-AP-GGUF/mmproj-BF16.gguf"
+      },
+      {
+        "path": "artifacts/evaluacion-modelos-llamacode/Q-20261017-QWEN38-27B-OVERTHINKING-RETEST/runtime/models/Qwen3.8-27B-ByteShape-IQ4_XS/Qwen3.8-27B-IQ4_XS-3.84bpw.gguf",
+        "target": "/media/cristian/7CFE1E0FFE1DC1F6/models/Qwen3.8-27B-ByteShape-IQ4_XS/Qwen3.8-27B-IQ4_XS-3.84bpw.gguf"
+      },
+      {
+        "path": "artifacts/evaluacion-modelos-llamacode/Q-20261017-QWEN38-27B-OVERTHINKING-RETEST/runtime/models/Qwen3.8-27B-ByteShape-IQ4_XS/mmproj-bf16.gguf",
+        "target": "/media/cristian/7CFE1E0FFE1DC1F6/models/Qwen3.8-27B-ByteShape-IQ4_XS/mmproj-bf16.gguf"
+      }
+    ],
+    "snapshot_root": "/tmp/llamacode-q45-head-bzqd8g9p",
+    "source": "git archive of HEAD; excludes dirty/untracked working-tree files"
+  },
+  "server_controller_pid": 756238,
+  "server_argv": [
+    "/media/cristian/Disco local/LlamaCode-cache/embeddinggemma2-eval/runtime/llama-b11554/llama-server",
+    "--model",
+    "/media/cristian/Disco local/LlamaCode-cache/embeddinggemma2-eval/embeddinggemma-2-Q8_0.gguf",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "8397",
+    "--embeddings",
+    "--pooling",
+    "mean",
+    "--ctx-size",
+    "8192",
+    "--batch-size",
+    "2048",
+    "--ubatch-size",
+    "2048",
+    "--parallel",
+    "1",
+    "--n-gpu-layers",
+    "99",
+    "--device",
+    "CUDA0"
+  ],
+  "server_log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-45/receipts/attempt-03/server.log",
+  "error": "RuntimeError('EmbeddingGemma server failed health check; status=127')",
+  "server_controller_exit_code": 127,
+  "postflight_inference_processes": [],
+  "postflight_listeners": "State  Recv-Q Send-Q Local Address:Port  Peer Address:PortProcess                                   \nLISTEN 0      4096       127.0.0.1:631        0.0.0.0:*                                             \nLISTEN 0      10         127.0.0.1:6742       0.0.0.0:*    users:((\"OpenRGB\",pid=6409,fd=4))        \nLISTEN 0      4096      127.0.0.54:53         0.0.0.0:*                                             \nLISTEN 0      4096   127.0.0.53%lo:53         0.0.0.0:*                                             \nLISTEN 0      4096       127.0.0.1:38873      0.0.0.0:*                                             \nLISTEN 0      128        127.0.0.1:47413      0.0.0.0:*    users:((\"artcraft-launch\",pid=5493,fd=4))\nLISTEN 0      4096           [::1]:631           [::]:*                                             \n",
+  "postflight_gpu1": {
+    "name": "NVIDIA GeForce RTX 3090",
+    "memory_used_mib": 108,
+    "memory_free_mib": 24016,
+    "utilization_pct": 46
+  },
+  "finished_at_utc": "2026-10-22T18:20:00Z"
+}

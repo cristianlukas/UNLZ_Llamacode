@@ -1,0 +1,81 @@
+{
+  "schema": "q45-preregistration-v1",
+  "taskId": "Q-20261022-VF-ITERATION-45",
+  "lockToken": "947e1662-be31-451b-a4a4-f00d9f8af0ea",
+  "createdAtUtc": "2026-10-22T18:07:10Z",
+  "decisionGate": {
+    "ndcg_at_5_absolute_gain": 0.05,
+    "mrr_at_5_no_regression": true,
+    "repeat_exact_rankings": true,
+    "repeat_pass_document_embeddings": 0
+  },
+  "scope": "opt-in AgentToolRunner integration test only; no product defaults or profiles",
+  "artifacts": {
+    "PLAN.md": {
+      "sha256": "82e1fd2defe80447f587a470a6cb7946741abde5ad9835dcd0c6263316f0fa78",
+      "bytes": 9008
+    },
+    "run_agent_tool_e2e.py": {
+      "sha256": "7762875ff4b73a4f4a39a464b9f44f45c8fdba739083674017cf3622d6e0405a",
+      "bytes": 18007
+    },
+    "audit_q45.py": {
+      "sha256": "0f7ad3ca8ad30ee87891bf6c8dcc34ec29373428a94d337fd0cf08bfbd4ea87c",
+      "bytes": 5743
+    },
+    "tests/test_agent_tools.cpp": {
+      "sha256": "379c0d5b5b91caa98b0656ed254bc3553862256a42092506a25dd06d4e41dd50",
+      "bytes": 96414
+    },
+    "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-44/corpus.jsonl": {
+      "sha256": "e63dd7d9e9f76f816711b867aff925cbd5f9ce6c29be2d3c67c9f98983ce2cf2",
+      "bytes": 239115
+    },
+    "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-44/queries.jsonl": {
+      "sha256": "6f38a439ad889e86b8bd4499f635c19e7b8e8b98fe29abb3253e42af15e996f0",
+      "bytes": 3289
+    },
+    "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-44/qrels.jsonl": {
+      "sha256": "2c30c3276f0160d3d3080e21ed63aab6bdaf4d30ca90d3ffec6e4463282cb9e4",
+      "bytes": 3922
+    },
+    "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-44/fixture-manifest.json": {
+      "sha256": "52f01dd0a24cc80eed996d8beef5090a28adae2da6b22fca2e60359cdf40997d",
+      "bytes": 3937
+    }
+  },
+  "amendments": [
+    {
+      "atUtc": "2026-10-22T18:14:38Z",
+      "change": "Instrumentation only: millisecond request timestamps for cache-stage audit, explicit server-log close, and preflight failure receipt. No fixture, model, query, gate, or model-serving parameter changed."
+    },
+    {
+      "atUtc": "2026-10-22T18:19:08Z",
+      "change": "Linux Release gate passed 90/90. Initial attempt stopped before GPU/server preflight because LC_Q45_TEST_EXE did not cross the systemd scope; runner now accepts an explicit --test-exe argument and stores the retry under attempt-02. No query, fixture, model, parameters, metrics, or decision gates changed."
+    },
+    {
+      "atUtc": "2026-10-22T18:20:10Z",
+      "change": "Attempt-02 stopped before GPU/server preflight because HEAD includes four symlink entries pointing to external mounted model files. Snapshot extractor now omits all symlink entries, records them in the manifest, rejects hardlinks, and extracts tracked regular files/directories only. No external symlink target is read; attempt-03 will contain the retry."
+    },
+    {
+      "atUtc": "2026-10-22T18:21:00Z",
+      "change": "Attempt-03 passed resource/server preflight (no inference servers; ports free; GPU1 24016 MiB free) but GNU timeout received --signal after the duration and did not start llama-server. Reordered timeout options before 900s; attempt-04 will be the next run. No model was loaded and no residual process remained."
+    },
+    {
+      "atUtc": "2026-10-22T18:23:00Z",
+      "change": "Attempt-04 completed all 21 queries but 42 embedding batches failed because a 7620-token physical batch exceeded ubatch-size 2048; candidate rankings consequently fell back to BM25 and the metric gate failed, so this attempt is invalid for EG2 efficacy. Cleanup signalled the whole timeout process group, causing duplicate interrupts and controller exit -11, with no residual server/VRAM. Attempt-05 raises eval-only batch-size/ubatch-size to 8192, sends SIGTERM to timeout first, and audits all embedding responses as HTTP 2xx. No product, fixture, queries, or decision gates changed."
+    },
+    {
+      "atUtc": "2026-10-22T18:25:00Z",
+      "change": "Attempt-05 still exceeded ubatch-size 8192 (requests contained 16212 and 13909 tokens), so embeddings returned 500 and the metric gate was invalid; no server or VRAM remained after cleanup. Attempt-06 raises eval-only batch/ubatch to 32768 and removes GNU timeout to avoid duplicate server signals. The QtTest remains bounded to 720s, health to 90s, and systemd scope owns cleanup. Auditor now requires successful embedding responses. No product, model, query, fixture, or decision gate changed."
+    },
+    {
+      "atUtc": "2026-10-22T18:27:00Z",
+      "change": "Attempt-06 confirmed batch 32768 handles 16212-token inputs but llama.cpp rejected them against ctx-size 8192 (42 HTTP 400); the candidate fell back and its metric gate is invalid. Direct server shutdown returned 0 with no residual process or VRAM. Attempt-07 raises only evaluation ctx-size to 32768, matching the observed max batch, and uses the same embedding success audit. No app/product settings or decision gates changed."
+    },
+    {
+      "atUtc": "2026-10-22T18:30:00Z",
+      "change": "Attempt-07 could not start the server at ctx/batch/ubatch 32768: llama.cpp requested 26880.75 MiB CUDA buffers while preflight showed 24016 MiB free. No requests were served and cleanup released all resources. Attempt-08 will use ctx/batch/ubatch 16384, the minimum that covers the measured 16212-token input, and requires 16384 MiB free on GPU1 before launch. No model/app/fixture/query/gate changes."
+    }
+  ]
+}

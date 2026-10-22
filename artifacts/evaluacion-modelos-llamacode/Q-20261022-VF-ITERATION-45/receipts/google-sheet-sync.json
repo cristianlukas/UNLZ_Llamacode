@@ -1,0 +1,50 @@
+{
+  "schema": "q45-google-sheet-sync-v1",
+  "atUtc": "2026-10-22 18:31:35 UTC",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheetTitle": "Listado de Juegos",
+  "tabs": [
+    {
+      "title": "Accionables",
+      "sheetId": 1393124532,
+      "range": "A43:N43",
+      "status": "readback exacto"
+    },
+    {
+      "title": "Evaluaciones LlamaCode",
+      "sheetId": 1945218181,
+      "range": "A275:J275",
+      "status": "readback exacto"
+    }
+  ],
+  "verified": true,
+  "visualCheck": "Formato preservado; Accionables usa alineación superior y WRAP; fila de Evaluaciones mantiene el formato por defecto del peer Q44, sin validación ni chips.",
+  "actionableRow": [
+    "Decisión",
+    "Q-20261010-EMBEDDINGGEMMA2-EVAL",
+    "P6 · recuperación de código",
+    "E2E completado · gate no aprobado",
+    "EmbeddingGemma 2 Q8_0 · no integrar por ahora",
+    "Búsqueda semántica/híbrida de código; sidecar de embeddings, no generación",
+    "Q10 → Q44 → Q45 · AgentToolRunner E2E local",
+    "Completado: BM25 vs BM25+vector RRF en 21 queries sobre el snapshot del repo, más repetición con caché. No se cambian defaults.",
+    "BM25 nDCG@5/MRR@5 0,0000/0,0000; EG2+RRF 0,0300/0,0238 (+3,00 pp; gate +5 pp). Q20 rango 7→2; otros 20 qrels fuera de top15. Cache: 800 documentos primera vez, 0 en repeat; rankings idénticos. 55/55 embeddings HTTP 200; /rerank HTTP 501, fallback RRF. Decisión: no integrar.",
+    "Q10/RESULTS.md; Q44/RESULTS.md; Q45/PLAN.md; Q45/RESULTS.md; Q45/receipts/attempt-08/",
+    "Q45 attempt-08/independent-audit.json y orchestration.json; GPU1 pre/post 24.016 MiB libres; sin inference server residual; perfil/producción intactos.",
+    "2026-10-22T17:57:44Z",
+    "2026-10-22 18:31:35 UTC",
+    "2026-10-22 18:31:35 UTC"
+  ],
+  "evaluationRow": [
+    "Q-20261022-VF-ITERATION-45",
+    "AgentToolRunner E2E EmbeddingGemma 2",
+    "Completada · gate no aprobado",
+    "2026-10-22",
+    "Recuperación semántica/híbrida de código; sidecar de embeddings, no generación",
+    "EG2 Q8_0 vs BM25 con hybrid_search real; holdout de 21 queries; caché y repetición",
+    "Attempt-08 válido: BM25 nDCG@5/MRR@5 0,0000/0,0000; BM25+vector RRF 0,0300/0,0238 (+3,00 pp), bajo el gate ≥+5 pp. Q20 pasó de rango 7 a 2; otros 20 objetivos no aparecen en top15. 55/55 embeddings HTTP 200; 800 documentos en primera pasada, cero en repetición; rankings idénticos. 42 /rerank dieron 501 y se usó fallback RRF.",
+    "No integrar. Si la recuperación de código continúa prioritaria, medir cobertura/selección bajo el límite de 800 chunks con una hipótesis y holdout nuevos. Sin cambios a defaults.",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-45/PLAN.md; RESULTS.md; receipts/attempt-08/",
+    "Gate Linux Release 90/90; auditoría independiente coincide; servidor cerró exit 0 sin procesos/listeners residuales; RTX 3090 GPU1 24.016 MiB libres al pre/postflight; GUI intacta."
+  ]
+}\n

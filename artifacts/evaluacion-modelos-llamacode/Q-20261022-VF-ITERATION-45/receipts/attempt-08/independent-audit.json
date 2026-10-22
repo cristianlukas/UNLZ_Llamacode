@@ -1,0 +1,75 @@
+{
+  "schema": "q45-independent-audit-v1",
+  "passed": false,
+  "checks": {
+    "query_rows_complete": true,
+    "test_exited_successfully": false,
+    "repeat_rankings_identical": true,
+    "metrics_match_independent_recalculation": true,
+    "metric_gate_pass": false,
+    "document_cache_reused_on_repeat": true,
+    "all_embedding_requests_succeeded": true,
+    "no_inference_process_left": true,
+    "no_q45_listener_left": true,
+    "scope_cgroup_used": true,
+    "no_user_profile_change": true
+  },
+  "recalculated_metrics": {
+    "baseline_bm25": {
+      "ndcg_at_5": 0.0,
+      "mrr_at_5": 0.0,
+      "target_hits_at_5": 0
+    },
+    "candidate_hybrid_first_pass": {
+      "ndcg_at_5": 0.030044273979593215,
+      "mrr_at_5": 0.023809523809523808,
+      "target_hits_at_5": 1
+    },
+    "candidate_hybrid_repeat_pass": {
+      "ndcg_at_5": 0.030044273979593215,
+      "mrr_at_5": 0.023809523809523808,
+      "target_hits_at_5": 1
+    }
+  },
+  "reported_metrics": {
+    "baseline_bm25": {
+      "ndcg_at_5": 0.0,
+      "mrr_at_5": 0.0
+    },
+    "candidate_hybrid_first_pass": {
+      "ndcg_at_5": 0.030044273979593215,
+      "mrr_at_5": 0.023809523809523808
+    },
+    "candidate_hybrid_repeat_pass": {
+      "ndcg_at_5": 0.030044273979593215,
+      "mrr_at_5": 0.023809523809523808
+    }
+  },
+  "embedding_traffic": {
+    "first_pass_document_inputs": 800,
+    "repeat_pass_document_inputs": 0,
+    "repeat_pass_query_inputs": 21,
+    "first_pass_embedding_calls": 34,
+    "repeat_pass_embedding_calls": 21
+  },
+  "proxy_status_counts": {
+    "/v1/embeddings": {
+      "200": 55
+    },
+    "/rerank": {
+      "501": 42
+    }
+  },
+  "postflight_gpu1": {
+    "name": "NVIDIA GeForce RTX 3090",
+    "memory_used_mib": 108,
+    "memory_free_mib": 24016,
+    "utilization_pct": 70
+  },
+  "test_elapsed_s": 36.064,
+  "limitations": [
+    "Q44 has 21 manually labelled queries and one relevant span per query.",
+    "AgentToolRunner preserves its 800-chunk cap; unretrieved/uncaptured targets remain misses.",
+    "This is retrieval sidecar evidence, not a model-generation or general agent-quality test."
+  ]
+}

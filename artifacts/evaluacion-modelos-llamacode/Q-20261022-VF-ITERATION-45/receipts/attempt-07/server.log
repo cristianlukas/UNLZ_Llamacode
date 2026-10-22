@@ -1,0 +1,19 @@
+0.00.211.964 I srv  llama_server: initializing ...
+0.00.211.976 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.00.212.188 W srv  llama_server: security: no API key is set and CORS allows all origins (see https://github.com/ggml-org/llama.cpp/pull/25655)
+0.00.213.887 I srv    load_model: loading model '/media/cristian/Disco local/LlamaCode-cache/embeddinggemma2-eval/embeddinggemma-2-Q8_0.gguf'
+0.00.700.508 W common_fit_params: failed to fit params to free device memory: n_gpu_layers already set by user to 99, abort
+0.00.967.237 W load: control-looking token:    212 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+0.00.967.494 W load: control-looking token:     50 '<|tool_response>' was not control-type; this is probably a bug in the model. its type will be overridden
+0.00.979.686 W load: '</s>' is a normal token here, removing it from EOG list
+0.01.044.304 W resolve_fused_ops: layer 5 is assigned to device CUDA0 but Flash Attention is assigned to device CPU (usually due to missing support)
+0.01.044.312 W resolve_fused_ops: Flash Attention not supported, set to disabled
+0.01.045.422 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 26880.75 MiB on device 0: cudaMalloc failed: out of memory
+0.01.045.426 E ggml_gallocr_reserve_n_impl: failed to allocate CUDA0 buffer of size 28186509312
+0.01.045.426 E graph_reserve: failed to allocate compute buffers
+0.01.053.551 E llama_init_from_model: failed to initialize the context: failed to allocate compute pp buffers
+0.01.053.558 E cmn  common_init_: failed to create context with model '/media/cristian/Disco local/LlamaCode-cache/embeddinggemma2-eval/embeddinggemma-2-Q8_0.gguf'
+0.01.053.561 E cmn  common_init_: failed to create context with model '/media/cristian/Disco local/LlamaCode-cache/embeddinggemma2-eval/embeddinggemma-2-Q8_0.gguf'
+0.01.053.564 E srv    load_model: failed to create_context with model '/media/cristian/Disco local/LlamaCode-cache/embeddinggemma2-eval/embeddinggemma-2-Q8_0.gguf'
+0.01.053.566 I srv    operator(): operator(): cleaning up before exit...
+0.01.109.014 E srv  llama_server: exiting due to model loading error
