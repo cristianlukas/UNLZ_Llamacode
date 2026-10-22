@@ -1,0 +1,55 @@
+{
+  "receipt_id": "q38-launcher-static-audit-20261022",
+  "task_id": "Q-20261022-VF-ITERATION-38",
+  "timestamp_utc": "2026-10-22T16:26:07Z",
+  "method": "read-only static search and targeted source inspection; no launchers executed",
+  "scope": ["scripts/", "tools/", "src/core/agent/HarnessSandbox.cpp", "src/AppController.cpp"],
+  "findings": [
+    {
+      "path": "src/core/agent/HarnessSandbox.cpp",
+      "classification": "bounded only for app workers routed through this module",
+      "evidence": "Windows attaches QProcess child to a Job Object with KILL_ON_JOB_CLOSE; optional process-count, process-memory, CPU-time, and CPU-rate limits. Linux strong mode uses bubblewrap; resource mode wraps with systemd-run --user --scope and can set MemoryMax, TasksMax, and CPUQuota. This generic builder does not set MemorySwapMax or OOMPolicy=kill."
+    },
+    {
+      "path": "tools/kv_cache_ab.py",
+      "classification": "no cgroup or Job Object at server launch",
+      "evidence": "Local server and WSL paths use subprocess.Popen; cleanup terminates/waits/kills process but no resource boundary is applied."
+    },
+    {
+      "path": "tools/meter_system_profiles.py",
+      "classification": "no cgroup or Job Object at server launch",
+      "evidence": "subprocess.Popen starts each model server; cleanup terminates/waits/kills process."
+    },
+    {
+      "path": "scripts/run-astra-strata.sh",
+      "classification": "no cgroup or Job Object in launcher",
+      "evidence": "execs the Python Strata server directly."
+    },
+    {
+      "paths": [
+        "tools/run_qwen38_flash_next_campaign.ps1",
+        "tools/run_qat_dflash2_validation.ps1",
+        "tools/benchmark_qwen38_template_quality.ps1",
+        "tools/benchmark_qwen38_flash_next.ps1",
+        "tools/benchmark_qwen36_vs_qwen38_mtp.ps1",
+        "tools/benchmark_ling_cpu.ps1",
+        "tools/benchmark_fable_vs_thinkingcap.ps1",
+        "tools/benchmark_adaptive_speculation.ps1"
+      ],
+      "classification": "no Job Object association visible at server launch",
+      "evidence": "Maintained evaluation scripts launch inference servers with Start-Process; inspected entrypoints do not attach the child tree to a Job Object or apply a job memory cap."
+    },
+    {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-37/",
+      "classification": "verified for Q35 runner only",
+      "evidence": "Q35 supervisor and worker use system-manager transient units in background.slice with finite MemoryMax, MemorySwapMax, OOMPolicy=kill, and KillMode=control-group; prior CPU-only synthetic OOM regression contained the worker and preserved controller/Codex."
+    }
+  ],
+  "decision": "Do not generalize Q35/Q37 containment to all evaluation launchers. Keep P0 open pending a shared cross-platform runner and regression evidence.",
+  "runtime_activity": {
+    "inference_processes_detected": 0,
+    "evaluation_listeners_detected": 0,
+    "gpu_used": false,
+    "processes_killed": 0
+  }
+}

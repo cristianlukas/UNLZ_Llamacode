@@ -1,0 +1,22 @@
+{
+  "receipt_id": "q38-local-queue-reconciliation-20261022",
+  "task_id": "Q-20261022-VF-ITERATION-38",
+  "timestamp_utc": "2026-10-22T16:26:07Z",
+  "files": {
+    "actionables.json": {
+      "old_sha256": "686883930d4495c7a00f560225099e93c91b3f6d13c43b1be0578568b2e895cd",
+      "new_sha256": "7d51fce6ebe4b75bd158c952b06b5d22cb19ee9b1a6ae2403fa5d75485709e57",
+      "backup": "cola-evaluaciones-ia/data/backups/Q-20261022-VF-ITERATION-38/actionables.before.json"
+    },
+    "inbox.json": {
+      "old_sha256": "7ebc94bbae82bef2d8fbb695139bf0d88ee15827d6784e206e066ce41a793a0b",
+      "new_sha256": "e93c7369a3af28a5a43cdf1d226e97101037b947c21a9bf487f2e231ac7e55e8",
+      "backup": "cola-evaluaciones-ia/data/backups/Q-20261022-VF-ITERATION-38/inbox.before.json"
+    }
+  },
+  "changes": [
+    "Updated P0 launcher-containment actionable with audit gap.",
+    "Reopened P1 NInfer Flash-Next v0.16.1 Windows test as pending external Windows/artifact condition.",
+    "Added Q38 current revalidation details to inbox sequences 26, 28, 31, 32, and 36 without changing their blocked status."
+  ]
+}

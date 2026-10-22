@@ -1,0 +1,17 @@
+{
+  "receipt_id": "q38-google-sheet-sync-20261022",
+  "task_id": "Q-20261022-VF-ITERATION-38",
+  "timestamp_utc": "2026-10-22T16:27:59Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "writes": [
+    {"range": "Accionables!A2:N2", "id": "vf-q35-codex-crash-isolation-20261022", "status": "Auditoría global incompleta · launchers genéricos fuera de aislamiento; hardening pendiente"},
+    {"range": "Accionables!A49:N49", "id": "Q-20261022-VF-ITERATION-32-FLASHNEXT-LINUX", "status": "Pendiente por condición externa · sesión Codex Windows + conversión NInfer v3/volumen n-gram"},
+    {"range": "Evaluaciones LlamaCode!A269:J269", "id": "Q-20261022-VF-ITERATION-38", "status": "Auditoría estática completa · P0 global abierto; P1 Windows pendiente"}
+  ],
+  "readback": {
+    "confirmed": true,
+    "cell_values_match": true,
+    "format": "Arial 10, WRAP, verticalAlignment TOP preserved on history row 269 and both actionable rows",
+    "rows": ["Accionables!A2:N2", "Accionables!A49:N49", "Evaluaciones LlamaCode!A269:J269"]
+  }
+}

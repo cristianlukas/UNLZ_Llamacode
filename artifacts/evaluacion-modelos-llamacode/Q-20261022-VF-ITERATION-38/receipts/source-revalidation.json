@@ -1,0 +1,38 @@
+{
+  "receipt_id": "q38-source-revalidation-20261022",
+  "task_id": "Q-20261022-VF-ITERATION-38",
+  "timestamp_utc": "2026-10-22T16:26:07Z",
+  "sources": [
+    {
+      "batch_sequence": 26,
+      "url": "https://www.reddit.com/r/LocalLLM/s/DhHfKckfdN",
+      "status": "blocked_no_applicable_local_test",
+      "reason": "Claim concerns H3/KV cartridges on Qwen2.5-72B/A100-80GB; local target is Flash-Next on 2x RTX 3090/Strata and source evidence does not provide a verified GPU reproduction."
+    },
+    {
+      "batch_sequence": 28,
+      "url": "https://www.reddit.com/r/LocalLLM/s/E1cyNSt8r5",
+      "status": "blocked_missing_fixture_and_acceptance_criteria",
+      "reason": "Single subjective Flutter-to-SwiftUI migration anecdote; no repository snapshot, diff, prompts, hashes, tests, or acceptance rubric for a comparable local experiment."
+    },
+    {
+      "batch_sequence": 31,
+      "url": "https://www.reddit.com/r/LocalLLM/s/2RU8b0mOaO",
+      "status": "blocked_hardware_runtime_and_storage_mismatch",
+      "reason": "DS41Engine README describes ROCm/HIP and RX 7900 XTX; local CUDA/SM86 RTX 3090 setup is not a supported reproduction target and the complete artifacts are absent."
+    },
+    {
+      "batch_sequence": 32,
+      "url": "https://www.instagram.com/reel/DefpbUKlMxh/?exln=MWxvcXlzNXZocDgybQ==",
+      "status": "blocked_source_not_attributable",
+      "reason": "No primary caption/transcript or attributable mirror available during revalidation; no technical claim can be extracted safely."
+    },
+    {
+      "batch_sequence": 36,
+      "url": "https://www.instagram.com/reel/DeehKGtuth5/?psln=eG5xaTdpeWxpbDg0",
+      "status": "blocked_source_not_attributable",
+      "reason": "No primary caption/transcript or attributable mirror available; do not create the previously proposed order-validation fixture from an unverified anecdote."
+    }
+  ],
+  "result": "No new applicable test was identified from these four blocked sources; #36 remains separately blocked pending primary evidence."
+}
