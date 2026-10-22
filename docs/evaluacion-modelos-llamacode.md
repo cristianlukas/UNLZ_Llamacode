@@ -788,8 +788,27 @@ de modelos. UD-IQ4_XS no se promueve; hace falta un runner agentic con límite p
 tarea y carga reproducible antes de una corrida completa nueva. [Resultados y
 recibos](../artifacts/evaluacion-modelos-llamacode/Q-20261021-VF-ITERATION-23/RESULTS.md).
 
+**Loader para BCB8 dividido por tarea (Q-20261021-VF-ITERATION-24):** la app
+aislada cargó ocho definiciones single-task con IDs, prompts, límites y
+acceptance intactos. La huella actual del perfil difiere de la histórica y las
+etapas HE0/HE20 están pendientes, así que no se inició benchmark ni inferencia.
+El loader queda validado; ejecución serial y timeout por ítem aún no. Próximo
+paso: volver a validar HE0 y HE20 con la configuración actual y, si pasan,
+prerregistrar un nuevo BCB8 completo. [Resultados y recibos](../artifacts/evaluacion-modelos-llamacode/Q-20261021-VF-ITERATION-24/RESULTS.md).
+
 ### Migración del registro a Google Sheets · 2026-10-20
 
 El registro se creó inicialmente en la pestaña «Evaluaciones LlamaCode» (gid `1945218181`) con 117 filas de datos, filtros y encabezados inmovilizados; luego se anexaron las iteraciones de seguimiento. Q21/Q22 están en filas 174–175; Q23 se agregó en la fila 176 y el readback confirmó 175 IDs únicos. Las pestañas originales siguen intactas.
 
-La pestaña «Accionables» (gid `1393124532`) ya refleja las 13 fichas actuales de `data/actionables.json` con prioridad, estado, fuente, prueba, decisión y evidencia, y conserva seis filas históricas de «Próxima prueba». La lectura en vivo confirmó que el accionable BCB8 aún describe el corte como parcial sin promoción; Q23 lo actualizó con el regrade de 3/7. El detalle histórico de 13 columnas permanece en el [CSV local](../artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/exports/Evaluaciones_LlamaCode_para_Google_Sheets.csv) y su recibo está en [google-sheet-migration-completion.json](../artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/google-sheet-migration-completion.json).
+La pestaña «Accionables» (gid `1393124532`) refleja las 13 fichas actuales de `data/actionables.json` con prioridad, estado, fuente, prueba, decisión y evidencia, y conserva las filas históricas de «Próxima prueba». Q24 actualiza la ficha BCB8: loader verificado, pero gates HE0/HE20 pendientes bajo una huella actual distinta. Q24 también se registra en «Evaluaciones LlamaCode». El detalle histórico de 13 columnas permanece en el [CSV local](../artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/exports/Evaluaciones_LlamaCode_para_Google_Sheets.csv) y su recibo está en [google-sheet-migration-completion.json](../artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/google-sheet-migration-completion.json).
+
+
+## Recomendaciones prioritarias reconciliadas · 2026-10-22
+
+1. **Qwen3.8 Flash-Next UD-IQ4_XS:** HE20-05 se abortó por la guarda preregistrada de SwapFree <1 GiB (0,56 GiB durante prompt 11/20). No hubo EVAL ni score. No equivale a un fallo de calidad. Mantener ASTRA/SOL y PeritoSoft; no repetir ni relajar la guarda hasta corregir la trayectoria de memoria/swap.
+2. **Qwen3.8-27B Q4_K_M:** los canarios Codex con adaptador (intentos 09–11) y el diagnóstico directo Responses no emitieron una herramienta; no existe A/B matched de calidad. No repetir combinación idéntica. Reabrir con cambio material de modelo/runtime/template/protocolo y prerregistro nuevo.
+3. **RCO Coder IQ1_M:** el screen local BCB-Hard-8 de revisión `bba88856…` fue 0/8 frente a 1/8 del control ASTRA, debajo del umbral de avance de 3/8. No es una afirmación general, pero no justifica ampliar la evaluación de la misma revisión. No redescargarla sin un cambio material.
+4. **Swift 1.5:** queda bloqueada hasta confirmar elegibilidad comercial y una ruta de conversión/runtime válida para su MTP head.
+5. **Strata y otros claims:** conservar los gates y resultados existentes; no repetir A/B negativos sin una hipótesis nueva, artefacto compatible y comparación que pueda cambiar la decisión.
+
+El orden y la evidencia completa están en [`WORK_QUEUE.md`](../WORK_QUEUE.md) y [`Q-20261021-VF-ITERATION-26/RESULTS.md`](../artifacts/evaluacion-modelos-llamacode/Q-20261021-VF-ITERATION-26/RESULTS.md).

@@ -1,0 +1,64 @@
+{
+  "recorded_at_utc": "2026-10-22T00:57:15Z",
+  "task_id": "Q-20261021-VF-ITERATION-26",
+  "attempt": "he20-05",
+  "status": "safety_aborted_no_score",
+  "test": {
+    "suite": "HumanEval/20",
+    "model": "Qwen3.8 Flash-Next UD-IQ4_XS",
+    "profile_fingerprint": "a56c723fde568b4db160bbb48ccc9e378aa221bdcaffe544ee957e3ba666dd86",
+    "runtime": "Strata 0.1.41",
+    "completed_or_reached": "10/20 prompts reached; guard tripped during prompt 11/20",
+    "eval_emitted": false,
+    "grader_emitted": false,
+    "score": null,
+    "interpretation": "Infrastructure safety stop; not a model-quality pass or failure."
+  },
+  "guard": {
+    "preregistered_abort_thresholds": {
+      "minimum_mem_available_gib": 24,
+      "minimum_swap_free_gib": 1,
+      "maximum_llamacode_tree_rss_gib": 60
+    },
+    "trigger": "SwapFree below 1 GiB",
+    "at_utc": "2026-10-22T00:46:53Z",
+    "mem_available_gib": 70.85,
+    "swap_free_gib": 0.56,
+    "llamacode_tree_rss_gib": 23.03,
+    "inference_server_tree_rss_gib": 73.69
+  },
+  "cleanup": {
+    "receipt": "owned-process-cleanup.json",
+    "strata_exit_code": 0,
+    "isolated_llamacode_exit_code": -15,
+    "both_owned_processes_stopped": true,
+    "unrelated_user_processes_stopped": false
+  },
+  "postflight_observation": {
+    "checked_at_utc": "2026-10-22T00:57:15Z",
+    "inference_servers_or_test_runners_found": false,
+    "listeners_on_test_ports_8352_8354_8038_18766": false,
+    "compute_application_processes_reported_by_nvidia_smi": [],
+    "memory_available_gib_approx": 117,
+    "swap_free_gib_approx": 3.1,
+    "gpu0_memory_used_mib": 595,
+    "gpu0_utilization_percent_sample": 19,
+    "gpu1_memory_used_mib": 108,
+    "gpu1_utilization_percent_sample": 55,
+    "note": "Read-only postflight snapshot. Utilization samples are not attributed to an inference task; no compute application process was listed."
+  },
+  "decision": {
+    "adoption": "No adoption or rejection decision; the quality suite has no valid score.",
+    "recommendation": "Keep ASTRA/SOL and PeritoSoft unchanged. Do not repeat the same HE20-05 configuration or relax the guard. Reopen only with a new preregistration that addresses the observed memory/swap trajectory and passes a fresh preflight."
+  },
+  "source_receipts": [
+    "preregistration.json",
+    "amendment-02-preregistration.json",
+    "benchmark-final.json",
+    "memory-guard.jsonl",
+    "memory-guard-trip.json",
+    "owned-process-cleanup.json",
+    "p1-progress-20261022T0040Z.json",
+    "run-preflight.json"
+  ]
+}

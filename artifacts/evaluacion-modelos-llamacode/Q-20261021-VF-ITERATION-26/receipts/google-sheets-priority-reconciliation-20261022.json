@@ -1,0 +1,51 @@
+{
+  "recorded_at_utc": "2026-10-22T00:57:15Z",
+  "task_id": "Q-20261021-VF-ITERATION-26",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "tabs": {
+    "Accionables": {
+      "sheet_id": 1393124532,
+      "updated_ranges": [
+        "D2:E2",
+        "H2:K2",
+        "M2:N2",
+        "D4:E4",
+        "H4:K4",
+        "M4:N4",
+        "D6:E6",
+        "H6:K6",
+        "M6:N6",
+        "D7:E7",
+        "H7:K7",
+        "M7:N7"
+      ],
+      "readback": "Rows 2,4,6,7 confirmed P1/P2/P3/P4 status, recommendation, evidence, and re-open condition; existing priority column remains 01 P1, 02 P2, 03 P3, 04 P4."
+    },
+    "Evaluaciones LlamaCode": {
+      "sheet_id": 1945218181,
+      "updated_ranges": [
+        "C2:I2",
+        "C170:I170",
+        "C179:I179",
+        "C183:I183",
+        "A187:I187",
+        "C250:I250",
+        "C251:I251"
+      ],
+      "readback": "Q26 summary and HE20-05 result row187 confirmed; Qwen3.8-27B row250 marked blocked after final tool canary; RCO Q27 row251 marked screen complete with 0/8 vs control 1/8; source row170 reconciled."
+    },
+    "Inventario de modelos": {
+      "sheet_id": 2026102061,
+      "updated_ranges": [
+        "C4:D4",
+        "J4:K4",
+        "N4:R4",
+        "A5:R7"
+      ],
+      "readback": "A3:R7 verified; Qwen Flash-Next HE20-05 safety abort recorded without score; rows added for Qwen3.8-27B, RCO IQ1_M, and Swift 1.5 with local paths/weights/bench metrics where verified and N/D where not verified."
+    }
+  },
+  "formatting": "Copied row 4 inventory cell formatting to rows 5-7 before writing model records.",
+  "preservation": "No ASTRA/SOL or PeritoSoft inventory rows or profiles were changed. No model weights were downloaded or removed in this iteration.",
+  "readback_verified": true
+}
