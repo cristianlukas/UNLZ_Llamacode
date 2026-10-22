@@ -1,0 +1,21 @@
+{
+  "at_utc": "2026-10-22T06:37:11Z",
+  "method": "startCustomBenchmark",
+  "args": [
+    [
+      "q14-udiq4xs-he0"
+    ],
+    "vf-q30-bcb2-token-cap-diagnostic",
+    1,
+    "agent",
+    1800,
+    "agent-maximo"
+  ],
+  "response": {
+    "ok": true,
+    "reqId": "05b04ad1-d398-4bec-8284-c6bad3009924"
+  },
+  "suite_label": "VF focused code-output-cap diagnostic",
+  "task_id": "BigCodeBench/765",
+  "max_tokens": 2400
+}

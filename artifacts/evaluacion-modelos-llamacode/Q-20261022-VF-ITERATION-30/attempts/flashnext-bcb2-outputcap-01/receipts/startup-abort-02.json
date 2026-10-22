@@ -1,0 +1,48 @@
+{
+  "at_utc": "2026-10-22T06:22:10Z",
+  "attempt": "startup-abort-02",
+  "reason": "no READY API listener during cold startup; discovered wrapper default ENGINE_READY timeout was 900s although the preregistered readiness allowance is 1800s",
+  "benchmark_invoked": false,
+  "model_requests": 0,
+  "candidate_server_started_for_loading": true,
+  "gpu_compute_used_for_model_initialization": true,
+  "candidate_server_and_controller_stopped_by_task": true,
+  "postflight": {
+    "inference_processes": [
+      {
+        "pid": 1713169,
+        "comm": "strata",
+        "argv": ""
+      }
+    ],
+    "listeners": {
+      "target_listeners": [],
+      "allowed_controller_listeners": [],
+      "blocking_listeners": []
+    },
+    "memory": {
+      "at_utc": "2026-10-22T06:21:28Z",
+      "mem_available_gib": 114.81,
+      "swap_free_gib": 3.08,
+      "app_tree_rss_gib": 0.0,
+      "app_tree": [],
+      "server_tree_rss_gib": 0.0,
+      "server_tree": []
+    }
+  },
+  "server_log_tail": [
+    "loading the model (the first start takes a minute or two) ...",
+    "[strata] starting the engine: reading the model's weights ...",
+    "[strata] still starting (20 s) - please wait ...",
+    "[strata] still starting (40 s) - please wait ...",
+    "[strata] still starting (60 s) - please wait ...",
+    "[strata] still starting (80 s) - please wait ...",
+    "[strata] still starting (100 s) - please wait ...",
+    "[strata] still starting (120 s) - please wait ...",
+    "[strata] still starting (140 s) - please wait ...",
+    "[strata] still starting (160 s) - please wait ...",
+    "[strata] still starting (180 s) - please wait ...",
+    "[strata] still starting (200 s) - please wait ...",
+    "[strata] still starting (220 s) - please wait ..."
+  ]
+}

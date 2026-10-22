@@ -1,0 +1,16 @@
+[
+  {
+    "label": "strata",
+    "pid": 1735202,
+    "exit_code": 0,
+    "stopped_by_task": true,
+    "shutdown": "SIGTERM to wrapper; process-group escalation only on timeout"
+  },
+  {
+    "label": "llamacode-controller",
+    "pid": 1735095,
+    "exit_code": -15,
+    "stopped_by_task": true,
+    "shutdown": "SIGTERM to wrapper; process-group escalation only on timeout"
+  }
+]

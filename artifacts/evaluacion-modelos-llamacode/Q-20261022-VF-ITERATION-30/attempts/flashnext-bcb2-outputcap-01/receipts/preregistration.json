@@ -1,0 +1,109 @@
+{
+  "task": "Q-20261022-VF-ITERATION-30",
+  "attempt": "flashnext-bcb2-outputcap-01",
+  "status": "preregistered_pending_host_gates",
+  "created_at_utc": "2026-10-22T06:16:41Z",
+  "priority": "P1: Qwen3.8 Flash-Next ASTRA/SOL; then P2 Qwen3.8-27B, P3 RCO, P4 Swift, P5 Strata/new superior claims",
+  "question": "Does increasing only the per-case maxTokens from 1200 to 2400 let the pinned Flash-Next BCB/765 case finish with an original-grader result?",
+  "candidate": "Qwen3.8 Flash-Next Unsloth UD-IQ4_XS",
+  "model_root": "/media/cristian/HDD extra/Models/LlamaCodeEval/Q-20261010-STRATA-UDIQ4XS-POST",
+  "profile_id": "q14-udiq4xs-he0",
+  "profile_fingerprint": "a56c723fde568b4db160bbb48ccc9e378aa221bdcaffe544ee957e3ba666dd86",
+  "runtime": "Strata 0.1.41; agent-maximo; isolated LlamaCode control app; GPU0; context 32768; KV int8; MTP4; reasoning medium; reasoningBudget 8192; predict 4096; temperature 0.6; top_p 0.95; top_k 20; min_p 0; repeat 1; presence 0; resident budget 12 GiB",
+  "suite": {
+    "source": "artifacts/evaluacion-modelos-llamacode/Q-20261021-VF-ITERATION-26/attempts/bcb-01/work/isolated-runtime/data/LlamaCode/LlamaCode/benchmarks/custom/05c28394-11d0-41fe-a55f-b3cb69db9c15.json",
+    "source_sha256": "42771136b447b7b5619e04a1ea211f663222cd6752ca38d995083b5a4d207574",
+    "prompt_id": "BigCodeBench/765",
+    "source_max_tokens": 1200,
+    "variant_id": "vf-q30-bcb2-token-cap-diagnostic",
+    "variant_max_tokens": 2400,
+    "variant_sha256": "213e76473b59b7930a8dd0b2cec58026d9dd66418b84e644dc92808290ca3276",
+    "acceptance_preserved": true,
+    "one_prompt_only": true
+  },
+  "single_changed_factor": "case maxTokens 1200 -> 2400",
+  "fixed_factors": [
+    "prompt text",
+    "acceptance/grader",
+    "model artifact and fingerprint",
+    "profile/runtime",
+    "sampling",
+    "context",
+    "KV/MTP",
+    "GPU",
+    "harness/agent"
+  ],
+  "timeout_seconds": 1800,
+  "retries": 0,
+  "full_bcb8_score_claim_allowed": false,
+  "adoption_allowed_from_this_case": false,
+  "success_criterion": "Original acceptance/grader returns a usable case result within 1800 seconds; transport/runtime failure or no grader result is inconclusive/fail for this diagnostic.",
+  "next_decision": "If valid result: preregister full BCB8 and matched ASTRA/SOL control; if another no-final-output/token/timeout: close this route without identical retry. No model promotion.",
+  "resource_scope": {
+    "systemd_unit": "llamacode-vf-q30-bcb2-outputcap.scope",
+    "MemoryHighGiB": 86,
+    "MemoryMaxGiB": 96,
+    "MemorySwapMaxGiB": 1,
+    "OOMPolicy": "kill"
+  },
+  "guards": {
+    "before_model_MemAvailableGiB_min": 80,
+    "before_model_SwapFreeGiB_min": 1,
+    "runtime_MemAvailableGiB_min": 24,
+    "runtime_SwapFreeGiB_min": 1,
+    "controller_tree_RSS_GiB_abort_at": 60,
+    "gpu_policy": "GPU0 only; inference serialized; GUI activity does not block; other inference servers/listeners block"
+  },
+  "ports": {
+    "controller": 18766,
+    "model_server": 8354
+  },
+  "offline": true,
+  "downloads_allowed": false,
+  "lock": {
+    "task_id": "VF-20261019-01",
+    "token": "4c3101a9-2bca-4b9d-9ab9-acc1024075a5"
+  },
+  "instruction_hashes": {
+    "AGENTS.md": "9c3f46bb1bd5b1ed3935f63cee221aebfc3956ba876fc97dda7aa80349c671e0",
+    "README.md": "a221286566e7a360ec9d5212da38fa86502e9320ffa15987e47bbbc723ebc8f5",
+    "WORK_QUEUE.md": "c24e93609cc540d25b9f6b45ad9024a7c442511b32a9a8bd034ee9628cacdfdf"
+  },
+  "runner_sha256": "f023be804c4ce87f3b121047c644d650dc483e227fbad55c0dc714ddea5ac3d3",
+  "preparation_receipt_sha256": "8ddba5c1b6e1c660fab63217bf373389c31c1af674060df1cf19a5675dd91821",
+  "model_file_identity": "Use existing Q26 BCB preregistration and model profile fingerprint; no model bytes changed or downloaded.",
+  "variant_suite_sha256": "213e76473b59b7930a8dd0b2cec58026d9dd66418b84e644dc92808290ca3276",
+  "preregistration_amendment": {
+    "at_utc": "2026-10-22T06:17:38Z",
+    "reason": "runner requires the suite SHA at its flat preregistration key in addition to the structured suite metadata",
+    "model_started_before_amendment": false,
+    "inference_started_before_amendment": false,
+    "gpu_used_before_amendment": false
+  },
+  "preregistration_amendments": [
+    {
+      "at_utc": "2026-10-22T06:22:10Z",
+      "reason": "before any prompt, use the pinned 1800-second Strata READY window and graceful wrapper-first cleanup; ignore zombie-only process entries",
+      "inference_parameters_changed": false,
+      "prompt_started": false,
+      "runner_sha256": "d780ab8bf2d434bc3ab4b6e824d203d5d5a0ccbac83485d0bf445b8084c0e867",
+      "instruction_hashes": {
+        "AGENTS.md": "9c3f46bb1bd5b1ed3935f63cee221aebfc3956ba876fc97dda7aa80349c671e0",
+        "README.md": "a221286566e7a360ec9d5212da38fa86502e9320ffa15987e47bbbc723ebc8f5",
+        "WORK_QUEUE.md": "bc59bba8fedd98d531120ea2cc73f1252b7ad5c2f1f99d38474cf43bcd42c54c"
+      }
+    },
+    {
+      "at_utc": "2026-10-22T06:30:05Z",
+      "reason": "recognize descendants only for the task-owned app/server process trees, while preserving external inference blockers",
+      "inference_parameters_changed": false,
+      "prompt_started": false,
+      "runner_sha256": "f023be804c4ce87f3b121047c644d650dc483e227fbad55c0dc714ddea5ac3d3",
+      "instruction_hashes": {
+        "AGENTS.md": "9c3f46bb1bd5b1ed3935f63cee221aebfc3956ba876fc97dda7aa80349c671e0",
+        "README.md": "a221286566e7a360ec9d5212da38fa86502e9320ffa15987e47bbbc723ebc8f5",
+        "WORK_QUEUE.md": "c24e93609cc540d25b9f6b45ad9024a7c442511b32a9a8bd034ee9628cacdfdf"
+      }
+    }
+  ]
+}

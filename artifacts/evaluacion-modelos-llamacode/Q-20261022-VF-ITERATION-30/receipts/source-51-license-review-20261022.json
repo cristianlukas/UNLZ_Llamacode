@@ -1,0 +1,35 @@
+{
+  "reviewed_at_utc": "2026-10-22T00:00:00Z",
+  "candidate": "ukisai/Swift1.5-Qwen3.8-Flash-Next",
+  "sources": [
+    {
+      "url": "https://huggingface.co/ukisai/Swift1.5-Qwen3.8-Flash-Next/blob/main/README.md",
+      "observations": [
+        "README publishes MTP flags for vLLM and SGLang",
+        "README lists GGUF and GSQ-RCO variants",
+        "README claims 63.4% fewer thinking tokens and 1.8x speedup; manufacturer claims, not locally reproduced",
+        "repo is gated",
+        "license notes Qwen license and separate terms for MAAS / AI Work Assistant"
+      ]
+    },
+    {
+      "url": "https://huggingface.co/ukisai/Swift1.5-Qwen3.8-Flash-Next/blob/main/LICENSE",
+      "observations": [
+        "commercial eligibility depends on revenue threshold and other use conditions",
+        "above threshold requires separate written license"
+      ]
+    }
+  ],
+  "local_weights_found": false,
+  "downloaded": false,
+  "remote_api_called": false,
+  "inference_run": false,
+  "technical_blocker": "Exact Swift MTP GGUF to Strata 0.1.41 compatibility has not been established; an official vLLM/SGLang route does not prove local Strata support.",
+  "open_conditions": [
+    "confirm authorized access to gated checkpoint",
+    "confirm entity revenue/affiliation and intended commercial use against license",
+    "validate exact MTP/GGUF/Strata artifact and runtime route before preregistration"
+  ],
+  "recommendation": "Keep blocked. If evaluating the published no-MTP GGUF or GSQ-RCO arm, preregister it separately with matched ASTRA/SOL no-MTP control.",
+  "legal_note": "Operational summary only; obtain counsel review for a commercial deployment decision."
+}

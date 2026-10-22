@@ -1,0 +1,21 @@
+{
+  "prepared_at_utc": "2026-10-22T06:16:22Z",
+  "status": "prepared_no_inference",
+  "lock_token": "4c3101a9-2bca-4b9d-9ab9-acc1024075a5",
+  "source_suite": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261021-VF-ITERATION-26/attempts/bcb-01/work/isolated-runtime/data/LlamaCode/LlamaCode/benchmarks/custom/05c28394-11d0-41fe-a55f-b3cb69db9c15.json",
+  "source_suite_sha256": "42771136b447b7b5619e04a1ea211f663222cd6752ca38d995083b5a4d207574",
+  "source_prompt_id": "BigCodeBench/765",
+  "source_max_tokens": 1200,
+  "variant_suite_id": "vf-q30-bcb2-token-cap-diagnostic",
+  "variant_suite_name": "VF focused code-output-cap diagnostic",
+  "variant_max_tokens": 2400,
+  "variant_suite_sha256": "213e76473b59b7930a8dd0b2cec58026d9dd66418b84e644dc92808290ca3276",
+  "original_acceptance_preserved": true,
+  "model_runtime_profile_unchanged": true,
+  "runtime_copy_source": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261021-VF-ITERATION-26/attempts/bcb-01/work/isolated-runtime",
+  "runtime_copy": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-30/attempts/flashnext-bcb2-outputcap-01/work/isolated-runtime",
+  "downloaded": false,
+  "server_started": false,
+  "model_requests": 0,
+  "gpu_used": false
+}

@@ -1,0 +1,57 @@
+{
+  "task_id": "Q-20261022-VF-ITERATION-30",
+  "status": "closed_no_pass",
+  "finished_at_utc": "2026-10-22T07:07:16Z",
+  "diagnostic": {
+    "suite": "vf-q30-bcb2-token-cap-diagnostic",
+    "task": "BigCodeBench/765",
+    "model": "Qwen3.8 Flash-Next Unsloth UD-IQ4_XS",
+    "runtime": "Strata 0.1.41",
+    "profile_id": "q14-udiq4xs-he0",
+    "profile_fingerprint": "a56c723fde568b4db160bbb48ccc9e378aa221bdcaffe544ee957e3ba666dd86",
+    "only_change": "maxTokens 1200 -> 2400",
+    "timeout_s": 1800
+  },
+  "result": {
+    "timed_out": true,
+    "elapsed_s": 1800.145,
+    "grade": null,
+    "score": null,
+    "coverage": "BCB remains pending",
+    "initial_grader_failure": "copied_files length 0; expected 2, 1, and 2 in three tests",
+    "repair_attempt": "shell returned /usr/bin/sh: 1: python: not found; no final corrected answer before timeout"
+  },
+  "interpretation": "Increasing the per-task output cap to 2400 alone did not yield an accepted final answer under this setup. This is not a BCB8 score or a quality/speed comparison.",
+  "recommendation": "Do not escalate to full BCB8 and do not repeat this identical invocation. Reopen P1 only after a material harness/protocol change; ensure python or python3 is available, use the original grader, and preregister a matched ASTRA/SOL control. No model adoption.",
+  "resource_scope": {
+    "memory_high_gib": 86,
+    "memory_max_gib": 96,
+    "swap_max_gib": 1,
+    "max_event": 0,
+    "oom_event": 0,
+    "oom_kill_event": 0,
+    "postflight_mem_available_gib": 115.75,
+    "postflight_swap_free_gib": 3.04
+  },
+  "cleanup": {
+    "owned_inference_servers": 0,
+    "owned_listeners": 0,
+    "protected_assets_unchanged": [
+      "ASTRA",
+      "SOL",
+      "Flash-Next productivo",
+      "PeritoSoft"
+    ]
+  },
+  "evidence": [
+    "attempts/flashnext-bcb2-outputcap-01/receipts/benchmark-final.json",
+    "attempts/flashnext-bcb2-outputcap-01/receipts/benchmark-invocation.json",
+    "attempts/flashnext-bcb2-outputcap-01/receipts/benchmark-poll.jsonl",
+    "attempts/flashnext-bcb2-outputcap-01/receipts/owned-process-cleanup.json",
+    "attempts/flashnext-bcb2-outputcap-01/receipts/postflight.json",
+    "RESULTS.md",
+    "receipts/google-sheet-final-sync.json"
+  ],
+  "queue_after_close": "P1 closed without pass. Qwen3.8-27B/Q29 and RCO are complete; OpenJet and Swift remain blocked by concrete compatibility/access/license conditions; no new Strata claim is actionable; MTP Q4 is closed. P2.1 tool safety is an implementation recommendation, not a pending benchmark.",
+  "sheet_sync_receipt": "receipts/google-sheet-final-sync.json"
+}

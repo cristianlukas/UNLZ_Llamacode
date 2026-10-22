@@ -1,6 +1,6 @@
 # Evaluación continua de modelos y harness de LlamaCode
 
-Registro acumulativo. Actualizado: 2026-10-21. La evidencia se conserva en los
+Registro acumulativo. Actualizado: 2026-10-22. La evidencia se conserva en los
 informes por campaña y en `artifacts/evaluacion-modelos-llamacode/<TASK-ID>/`.
 Los resultados históricos no se reemplazan; una recomendación nueva debe
 referir su evidencia y sus límites.
@@ -812,3 +812,41 @@ La pestaña «Accionables» (gid `1393124532`) refleja las 13 fichas actuales de
 5. **Strata y otros claims:** conservar los gates y resultados existentes; no repetir A/B negativos sin una hipótesis nueva, artefacto compatible y comparación que pueda cambiar la decisión.
 
 El orden y la evidencia completa están en [`WORK_QUEUE.md`](../WORK_QUEUE.md) y [`Q-20261021-VF-ITERATION-26/RESULTS.md`](../artifacts/evaluacion-modelos-llamacode/Q-20261021-VF-ITERATION-26/RESULTS.md).
+
+### HE20-06 · variante de memoria contenida · 2026-10-22T01:10:23Z
+
+P1 se reabrió después del abort seguro HE20-05. La nueva corrida mantiene modelo, huella, suite y contexto; reduce únicamente el residente Strata 20→12 GiB y contiene la copia aislada de la app/servidor en cgroup con `MemoryHigh=86G`, `MemoryMax=96G`, `MemorySwapMax=1G` y `OOMPolicy=kill`. Si llega a 20/20 se habilita sólo considerar un BCB preregistrado, no promoción ni claim de velocidad. Si el gate no puede verificarse o se aborta, no habrá retry automático. Ver [prerregistro Q26 HE20-06](../artifacts/evaluacion-modelos-llamacode/Q-20261021-VF-ITERATION-26/attempts/he20-06/receipts/preregistration.json).
+# Evaluación priorizada Qwen · cierre Q29 · 2026-10-22
+
+Orden activo: Flash-Next → Qwen3.8-27B → hardening de tools → OpenJet (claim de velocidad del Qwen27) → RCO → Swift → Strata y claims nuevos.
+
+Flash-Next HE20-06 terminó 20/20 finales tras reparaciones; BCB-Hard-8 invocó 8/8 prompts pero agotó el timeout preregistrado de 1.800 s sin grade/score; prompt 2 agotó reasoning budget y repeat-stop. Mantener sin promoción; no repetir la misma invocación.
+
+Q29 evaluó Qwen3.8-27B Q4_K_M con llama.cpp y Tool-Eval Hard Mode 2.8.0, TC-70–97, seeds 42/43/44, single RTX 3090, contexto 32K y KV q4_0. Resultados 77/84/80, media 80,33 y desviación poblacional 2,87. Frente al mejor control histórico ASTRA IQ3_S 77,98, la diferencia es +2,35 (menor que el gate de +3); gana 2/3 seeds. TC-74 y TC-84 fallan 3/3; TC-92 divulga datos de otro tenant en 2/3. Las tres puntuaciones quedan safety-capped. **Recomendación: no adoptar este perfil de agente.** No es un claim aislado de calidad de pesos ni de velocidad, y no valida el perfil de contexto productivo de 131K.
+
+Accionable derivado: antes de cualquier nueva evaluación, serializar llamadas de tools dependientes; verificar tenant y permisos del lado servidor; exigir commit/prerrequisitos antes de enviar correo/notificar o mutar estado; añadir regresiones TC-74/84/92. Sin cambios de producción. OpenJet sigue bloqueado por incompatibilidad 64-vs-65 bloques/MTP; RCO no alcanza gate 0/8 frente a 1/8; Swift necesita licencia y compatibilidad MTP confirmadas; Strata no tiene claim nuevo. ASTRA/SOL/Flash-Next productivos y PeritoSoft siguen intactos.
+
+Detalle Q29: [plan](../artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-29/PLAN.md), [resultados](../artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-29/RESULTS.md), [resumen de cierre](../artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-29/receipts/final-summary.json).
+
+
+### Q30 · Flash-Next · diagnóstico acotado de límite de salida · 2026-10-22
+
+Se prioriza un diagnóstico de una sola tarea para el prompt `BigCodeBench/765`, que en BCB8 agotó presupuesto de razonamiento y terminó por repetición sin grade. La copia local aislada cambia únicamente `maxTokens` de 1.200 a 2.400; conserva el prompt y acceptance, perfil/fingerprint Flash-Next, Strata 0.1.41, parámetros de muestreo, contexto, KV y MTP. Esto puede aclarar si el tope del caso explica la ausencia de respuesta, pero no es un score BCB8, no demuestra superioridad ni habilita adopción. Un pase útil permitiría preregistrar BCB8 completo con control ASTRA/SOL matched; otro fallo cierra esta ruta sin repetir la misma prueba.
+
+La ejecución está condicionada a verificación de lock/hash, scope de memoria, ausencia de otro inference server, memoria disponible, pesos locales y límites de seguridad. No se descargará nada. Recibos bajo [`Q30`](../artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-30/PLAN.md).
+
+### Corrección de elegibilidad técnica · Swift 1.5 · 2026-10-22
+
+La README oficial sí documenta MTP para vLLM/SGLang y publica variantes GGUF/GSQ-RCO; por tanto el bloqueo no es que Swift carezca de ruta MTP en general. La compatibilidad exacta del GGUF MTP con Strata 0.1.41 no está demostrada, ni hay pesos Swift locales. Antes de descargar o inferir siguen faltando acceso autorizado al repositorio gated y confirmar las condiciones de licencia comercial aplicables. No se envió prompt a API ni se descargó el checkpoint. Si se estudia GGUF sin MTP, será otro brazo y necesitará control ASTRA/SOL sin MTP emparejado. Fuentes: [README oficial del checkpoint](https://huggingface.co/ukisai/Swift1.5-Qwen3.8-Flash-Next/blob/main/README.md) y [licencia oficial](https://huggingface.co/ukisai/Swift1.5-Qwen3.8-Flash-Next/blob/main/LICENSE).
+
+
+**Q30 startup correction · 2026-10-22T06:22:10Z:** the first launch loaded the local runtime but no READY endpoint appeared within the initial 180 s observation. It was stopped before any inference; the controller reported no benchmark, and no request was sent to the model. The retry pins `STRATA_ENGINE_READY_S=1800`, matching the known Strata wrapper allowance from the earlier Q26 runner. Cleanup now lets the owned wrapper shut down and reap its child engine before escalating, and the preflight ignores zombies only (no server or GPU context). This changes startup/cleanup only, not model/evaluation parameters. The startup receipt will distinguish it from a scored test.
+
+
+**Q30 final preflight correction · 2026-10-22T06:30:05Z:** startup attempt 03 reached READY on the task-owned port 8354. The gate then saw the engine child of its own server wrapper as an external server and stopped before invoking the benchmark. No prompt was sent. The runner now excludes descendants only when rooted under its own app/server process; unrelated inference servers and listeners still block. It reports controller and model-server listeners separately. This is a harness-gate correction, not an evaluation factor. Receipt: `attempts/flashnext-bcb2-outputcap-01/receipts/preflight-failure-02/`.
+
+## Q30 · Flash-Next · cierre del diagnóstico BCB/765 · 2026-10-22
+
+Se subió únicamente `maxTokens` 1200→2400 en una copia aislada, con el fixture y grader originales de `BigCodeBench/765`. El modelo produjo una primera respuesta que falló: los tests vieron 0 archivos copiados donde esperaban 2/1/2. La reparación intentó ejecutar `python -m py_compile`, pero el shell devolvió `python: not found`; no se observó respuesta final válida al cerrar el límite de 1.800 s. Recibo: `artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-30/RESULTS.md`.
+
+**Decisión:** el tope de 2.400 tokens no produjo una solución aceptada en 1.800 s; no abrir BCB8 completo ni repetir la misma invocación. No es score ni comparación de calidad/velocidad. Sólo reabrir P1 si se corrige el entorno Python del harness y existe un protocolo materialmente distinto con grader original y control ASTRA/SOL comparable. Postflight sin servidores/listeners residuales ni eventos OOM. Se preservan ASTRA/SOL, Flash-Next productivo y PeritoSoft.

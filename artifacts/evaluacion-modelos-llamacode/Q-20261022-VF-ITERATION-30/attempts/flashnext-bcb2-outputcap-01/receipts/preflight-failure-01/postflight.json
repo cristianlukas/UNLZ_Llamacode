@@ -1,0 +1,17 @@
+{
+  "inference_processes": [],
+  "listeners": {
+    "target_listeners": [],
+    "allowed_controller_listeners": [],
+    "blocking_listeners": []
+  },
+  "memory": {
+    "at_utc": "2026-10-22T06:17:29Z",
+    "mem_available_gib": 115.64,
+    "swap_free_gib": 3.1,
+    "app_tree_rss_gib": 0.0,
+    "app_tree": [],
+    "server_tree_rss_gib": 0.0,
+    "server_tree": []
+  }
+}

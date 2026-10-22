@@ -1,0 +1,16 @@
+{
+  "task": "Q-20261022-VF-ITERATION-30",
+  "attempt": "flashnext-bcb2-outputcap-01",
+  "started_at_utc": "2026-10-22T06:17:29Z",
+  "diagnostic": {
+    "suite_id": "vf-q30-bcb2-token-cap-diagnostic",
+    "prompt_id": "BigCodeBench/765",
+    "max_tokens": 2400,
+    "profile_id": "q14-udiq4xs-he0",
+    "profile_fingerprint": "a56c723fde568b4db160bbb48ccc9e378aa221bdcaffe544ee957e3ba666dd86"
+  },
+  "status": "aborted_or_failed",
+  "error": "KeyError: 'variant_suite_sha256'",
+  "failed_at_utc": "2026-10-22T06:17:29Z",
+  "memory_guard": {}
+}

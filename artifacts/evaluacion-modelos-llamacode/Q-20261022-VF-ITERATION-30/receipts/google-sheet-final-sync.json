@@ -1,0 +1,33 @@
+{
+  "synced_at_utc": "2026-10-22T07:10:37Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_url": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit?gid=212274250#gid=212274250",
+  "targets": [
+    {
+      "sheet": "Accionables",
+      "sheet_id": 1393124532,
+      "range": "A2:N2",
+      "status": "Resuelto sin pase · timeout 1800 s",
+      "readback_verified": true,
+      "wrap_strategy": "WRAP"
+    },
+    {
+      "sheet": "Evaluaciones LlamaCode",
+      "sheet_id": 1945218181,
+      "range": "A261:J261",
+      "status": "Cerrado · sin pase; timeout 1.800 s",
+      "readback_verified": true,
+      "wrap_strategy": "WRAP; row auto-resized"
+    }
+  ],
+  "verification": {
+    "metadata_read": true,
+    "target_cells_read_before_write": true,
+    "values_read_back_after_write": true,
+    "format_read_back_after_write": true,
+    "visible_browser_tab_available": false,
+    "visual_check": "No Google Sheet tab was open in the CUA browser; verified native cell values, wrap strategy, and row resize through the connected Sheets API."
+  },
+  "model_inventory_changed": false,
+  "note": "This test did not change any model installation or inventory entry."
+}
