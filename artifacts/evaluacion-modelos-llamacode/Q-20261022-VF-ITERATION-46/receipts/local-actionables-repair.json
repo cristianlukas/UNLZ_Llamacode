@@ -1,0 +1,15 @@
+{
+  "schema": "q46-local-actionables-repair-v1",
+  "observed_at_utc": "2026-10-22T18:34:00Z",
+  "path": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/actionables.json",
+  "backup": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/actionables.json.bak.20261022-q46",
+  "issue": "A literal backslash-n suffix followed the JSON array; Python json.loads raised Extra data at EOF, and server.read_json returned its empty fallback.",
+  "repair": "Removed only the malformed trailing two characters, updated the C39-02 actionable with Q46 platform status, and wrote valid UTF-8 JSON atomically.",
+  "readback": {
+    "json_parse": "pass",
+    "actionable_count": 22,
+    "c39_02_match_count": 1,
+    "backup_preserved": true
+  },
+  "scope_note": "This affects mini-app actionable loading only; it is not evidence for the Codex desktop crash."
+}

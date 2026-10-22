@@ -1,0 +1,33 @@
+{
+  "schema": "q46-google-sheet-sync-v1",
+  "observed_at_utc": "2026-10-22T18:34:00Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_title": "Listado de Juegos",
+  "updates": {
+    "Accionables!A49:N49": {
+      "purpose": "Refresh the existing P1 Flash-Next NInfer Windows blocker with Q46 evidence, preserve its creation time, and update reconciled timestamps.",
+      "readback_verified": true,
+      "values": [
+        "Próxima prueba",
+        "Q-20261022-VF-ITERATION-32-FLASHNEXT-LINUX",
+        "P1",
+        "Pendiente · Codex sigue en Linux; C39-01 listo; ejecutar desde sesión Windows nativa",
+        "P1 · Flash-Next NInfer v0.16.1 Windows preview: comparación emparejada",
+        "Inferencia local · calidad y velocidad Qwen3.8 Flash-Next",
+        "Q38 → Q39/C39-01 → Q40/Q43/Q46 · NInfer v0.16.1 + Flash-Next IQ2_XS",
+        "C39-01 convirtió y validó el GGUF IQ2_XS exacto a NInfer v3 y generó el volumen n-gram. C39-02 requiere comparar en Windows, en serie con Strata a contexto ≤32K, midiendo calidad, prefill/TTFT/decode/E2E y estabilidad.",
+        "Pendiente: Q46 confirma que este proceso de Codex sigue en Ubuntu y no tiene PowerShell/cmd ni montaje del sistema Windows. No se midió NInfer/Strata. Ejecutar C39-02 desde una sesión Windows nativa bajo lock y prerregistro nuevos; no alterar perfiles productivos.",
+        "Q39/PLAN.md y RESULTS.md; Q40/RESULTS.md; Q43/receipts/host-state.json; Q46/RESULTS.md y receipts/windows-runner-preflight.json",
+        "Q46 2026-10-22: Linux 7.0.0-38-generic; powershell.exe, pwsh y cmd.exe no disponibles; /mnt/c Windows ausente. El volumen NTFS en /media sólo contiene datos. Cero procesos de inferencia; no hubo requests, GPU ni servicios detenidos. Requiere abrir Codex en Windows nativo.",
+        "2026-10-22T07:59:30Z",
+        "2026-10-22T18:34:00Z",
+        "2026-10-22T18:34:00Z"
+      ]
+    },
+    "Evaluaciones LlamaCode!A276:J276": {
+      "purpose": "Record Q46 platform preflight result.",
+      "readback_verified": true,
+      "format_action": "Copied PASTE_FORMAT from row 275 to row 276 before writing values."
+    }
+  }
+}

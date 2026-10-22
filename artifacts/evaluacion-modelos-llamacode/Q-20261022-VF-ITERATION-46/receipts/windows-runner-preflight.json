@@ -1,0 +1,27 @@
+{
+  "schema": "q46-windows-runner-preflight-v1",
+  "observed_at_utc": "2026-10-22T18:34:00Z",
+  "task": "Q-20261022-VF-ITERATION-46",
+  "lock_token": "d8fa1b61-3530-48fd-bf08-8bd736efb0ea",
+  "platform": "Linux 7.0.0-38-generic x86_64, Ubuntu 24.04",
+  "native_windows_runner": false,
+  "windows_commands": {
+    "powershell.exe": null,
+    "pwsh": null,
+    "cmd.exe": null
+  },
+  "windows_system_paths": {
+    "/mnt/c/Windows/System32/cmd.exe": false,
+    "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe": false,
+    "/mnt/c/Program Files/PowerShell/7/pwsh.exe": false
+  },
+  "repository_mount": "/media/cristian/7CFE1E0FFE1DC1F6 (ntfs3 data volume)",
+  "windows_mounts": [],
+  "inference_processes": [],
+  "inference_servers_started": false,
+  "inference_requests": 0,
+  "gpu_used": false,
+  "services_stopped": [],
+  "result": "blocked-external-platform",
+  "next_condition": "Run the prepared C39-02 comparison in a Codex session with native Windows access."
+}
