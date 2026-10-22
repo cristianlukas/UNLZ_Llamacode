@@ -1,0 +1,37 @@
+{
+  "id": "chatcmpl-860fabe2a14a455992e8238a",
+  "object": "chat.completion",
+  "created": 1792682757,
+  "model": "qwen3.8-flash-next-iq2_xs",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "Based on the sealed case files provided, here are the authoritative values for each case ID, disregarding any REVOKED records:\n\n1.  **case-6101-01** (service_route): **SE-2086**\n    *   *Source:* `[SEALED CASE FILE] case_id=case-6101-01; field=service_route; revision=03; status=FINAL_APPROVED; value=SE-2086; audit=verified.`\n    *   *Note:* Revision 04 (NW-7314) is REVOKED.\n\n2.  **case-6101-02** (approved_limit): **18.75 units**\n    *   *Source:* `[SEALED CASE FILE] case_id=case-6101-02; field=approved_limit; revision=03; status=FINAL_APPROVED; value=18.75 units; audit=verified.`\n    *   *Note:* Revision 04 (7.625 units) is REVOKED.\n\n3.  **case-6101-03** (shipment_seal): **SEAL-T9-207**\n    *   *Source:* `[SEALED CASE FILE] case_id=case-6101-03; field=shipment_seal; revision=03; status=FINAL_APPROVED; value=SEAL-T9-207; audit=verified.`\n    *   *Note:* Revision 04 (SEAL-R6-552) is REVOKED.\n\n4.  **case-6101-04** (archive_ref): **AR-2026-9F62**\n    *   *Source:* `[SEALED CASE FILE] case_id=case-6101-04; field=archive_ref; revision=03; status=FINAL_APPROVED; value=AR-2026-9F62; audit=verified.`\n    *   *Note:* Revision 04 (AR-2026-7D31) is REVOKED.\n\n5.  **case-6101-05** (inspection_date): **2026-09-03**\n    *   *Source:* `[SEALED CASE FILE] case_id=case-6101-05; field=inspection_date; revision=03; status=FINAL_APPROVED; value=2026-09-03; audit=verified.`\n    *   *Note:* Revision 04 (2026-07-29) is REVOKED.\n\n6.  **case-6101-06** (package_trace): **PKG-48-XQ**\n    *   *Source:* `[SEALED CASE FILE] case_id=case-6101-06; field=package_trace; revision=03; status=FINAL_APPROVED; value=PKG-48-XQ; audit=verified.`\n    *   *Note:* Revision 04 (PKG-06-RC) is REVOKED.\n\n7.  **case-6101-07** (recovery_node): **node-31**\n    *   *Source:* `[SEALED CASE FILE] case_id=case-6101-07; field=recovery_node; revision=03; status=FINAL_APPROVED; value=node-"
+      },
+      "finish_reason": "length"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 250383,
+    "completion_tokens": 768,
+    "total_tokens": 251151,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 250383,
+    "prompt_ms": 74632.3,
+    "prompt_per_token_ms": 0.298,
+    "prompt_per_second": 3354.9,
+    "predicted_n": 768,
+    "predicted_ms": 5457.9,
+    "predicted_per_token_ms": 7.107,
+    "predicted_per_second": 140.7,
+    "draft_n": 616,
+    "draft_n_accepted": 545
+  }
+}

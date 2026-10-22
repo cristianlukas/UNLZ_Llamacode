@@ -1,0 +1,61 @@
+{
+  "task": "Q-20261022-VF-ITERATION-35",
+  "orchestrating_queue_task": "Q-20261022-VF-ITERATION-37",
+  "queue_lock_token": "89bea058-cced-43f6-a5e8-2ee41da2394e",
+  "preregistered_at_utc": "2026-10-22T14:21:45Z",
+  "attempt_no": 6,
+  "fixture": {
+    "context_tokens": 131072,
+    "seed": 2026101,
+    "run_key": "131072:2026101",
+    "prompt_sha256": "93823c922e39cab53ea981b851e6a2ef76fc8958bc2da5ee77ae8d565ad37879",
+    "expected_sha256": "28c8d122c14b9b0cbca6d7c3ce08f8fe0294d532f6ff9ee0a0cff2a73e063986",
+    "effective_config_sha256": "549286ef521d0f68c06d6e879937ca9bb2b3e64518f7ed2e67605a04dbc10ff2"
+  },
+  "model_and_runtime": {
+    "profile": "ASTRA DEFAULT / ISTA Qwen3.8-Flash-Next GSQ-RCO IQ2_XS / Strata 0.1.41",
+    "shard_1_path": "/media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS-00001-of-00002.gguf",
+    "shard_1_sha256_expected_and_observed": "92cee27ae5bbadcd732416a0f7a7f0acc092399dbbe8f5a5efa707c2ec0a49d7",
+    "shard_2_path": "/media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS-00002-of-00002.gguf",
+    "shard_2_sha256_expected_and_observed": "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113",
+    "runtime_path": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata",
+    "runtime_sha256_expected_and_observed": "770ecf303a4c6271654339c639392ecb455de3a999bf5d2e8dbc73c879103602",
+    "test_configuration_sha256": "549286ef521d0f68c06d6e879937ca9bb2b3e64518f7ed2e67605a04dbc10ff2"
+  },
+  "system_state_at_preregistration": {
+    "inference_server_processes": [],
+    "port_8350_listener": false,
+    "mem_available_kib": 119889896,
+    "swap_free_kib": 5346652,
+    "gpu_0": {"name": "NVIDIA GeForce RTX 3090", "memory_used_mib": 849, "memory_total_mib": 24576, "free_mib": 23727},
+    "gpu_1": {"name": "NVIDIA GeForce RTX 3090", "memory_used_mib": 108, "memory_total_mib": 24576, "free_mib": 24468},
+    "results_volume_free_bytes": 130391666688,
+    "user_manager_oomd_limit": "70%",
+    "system_manager_cgroup_smoke": "passed; /background.slice/ outside user@1000.service"
+  },
+  "execution": {
+    "launcher": "scripts/start_context_holdout_supervisor.sh",
+    "supervisor_unit": "llamacode-q35-supervisor.service",
+    "worker_unit": "llamacode-q35-context-131072-seed-2026101-a06.service",
+    "worker_manager": "system",
+    "worker_slice": "background.slice",
+    "worker_memory_budget": "recomputed from live MemAvailable by calculate_worker_limits(); retain 16 GiB host reserve; no model/context reduction",
+    "sampling": "unchanged; temperature 0.0, top_p 1.0, top_k 20, max_tokens 768, reasoning disabled",
+    "request_timeout_seconds": 1200,
+    "gpu": "RTX 3090 devices 0 and 1, serial",
+    "stop_rules": [
+      "preflight mismatch in model/runtime/fixture/config hash",
+      "external inference server or port conflict",
+      "MemAvailable below 20 GiB during run",
+      "swap-out exceeds 4 MiB",
+      "global or run-cgroup PSI severe threshold sustained for 15 samples",
+      "worker cgroup differs from system background.slice",
+      "model startup/health/context mismatch or runtime error"
+    ],
+    "retry_policy": "This is the one reattempt after the material Q37 isolation/guard correction; if attempt 06 is invalid infrastructure, stop and diagnose before any further retry.",
+    "protected_assets": ["ASTRA", "SOL", "Flash-Next production profile", "PeritoSoft", "all model weights"],
+    "model_settings_changed": false
+  },
+  "decision_question": "Does the exact Qwen3.8-Flash-Next ASTRA profile retrieve all 8 holdout facts at native 131072 context under the preregistered test?",
+  "validity_gate": "HTTP 200, stop finish, exactly 8 expected JSON keys, all 8 values exact, no resource-guard abort; infrastructure failures are not scores."
+}

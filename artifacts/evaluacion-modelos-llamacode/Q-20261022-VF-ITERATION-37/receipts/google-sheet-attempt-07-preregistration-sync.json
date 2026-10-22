@@ -1,0 +1,21 @@
+{
+  "task": "Q-20261022-VF-ITERATION-37",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_title": "Listado de Juegos",
+  "updated_at_utc": "2026-10-22T15:10:10Z",
+  "updates": [
+    {
+      "sheet": "Evaluaciones LlamaCode",
+      "range": "H268:J268",
+      "summary": "Attempt 07 preregistered; host preflight passed; worker cgroup gate pending; attempt 06 snapshot preserved; no new model load started."
+    },
+    {
+      "sheet": "Accionables",
+      "range": "D2:N2",
+      "summary": "Updated status, ordered steps, evidence, artifacts, and timestamps for P0 Q35/Q37 crash/guard work."
+    }
+  ],
+  "readback_verified": true,
+  "readback_ranges": ["'Evaluaciones LlamaCode'!H268:J268", "Accionables!D2:N2"],
+  "readback_state": "Attempt 07 is preregistered; host preflight passed; worker-cgroup preflight remains pending; no model inference had started at synchronization time."
+}

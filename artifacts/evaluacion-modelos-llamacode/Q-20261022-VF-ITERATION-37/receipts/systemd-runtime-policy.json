@@ -1,0 +1,20 @@
+{
+  "task": "Q-20261022-VF-ITERATION-37",
+  "checked_at_utc": "2026-10-22T14:16:20.604775+00:00",
+  "unit": "user@1000.service",
+  "properties": {
+    "ManagedOOMMemoryPressure": "kill",
+    "ManagedOOMMemoryPressureLimit": "70%",
+    "effective_dbus_value": 3006477107,
+    "vendor_limit_before": "50%",
+    "effective_dbus_value_before": 2147483648,
+    "vendor_drop_in": "/usr/lib/systemd/system/user@.service.d/10-oomd-user-service-defaults.conf",
+    "persistent_override": "/etc/systemd/system.control/user@1000.service.d/50-ManagedOOMMemoryPressureLimit.conf",
+    "runtime_override": "/run/systemd/system.control/user@1000.service.d/50-ManagedOOMMemoryPressureLimit.conf",
+    "global_oomd_config_changed": false,
+    "systemd_version": "systemd 255 (255.4-1ubuntu8.18)"
+  },
+  "rollback": "sudo systemctl revert user@1000.service; systemctl show user@1000.service -p ManagedOOMMemoryPressure -p ManagedOOMMemoryPressureLimit",
+  "reason": "Avoid repeating OOMD's observed 50% user-manager threshold kill at 63.31% while retaining ManagedOOMMemoryPressure=kill and all global protection.",
+  "verified": true
+}

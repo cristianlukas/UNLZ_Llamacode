@@ -1,0 +1,37 @@
+{
+  "id": "chatcmpl-e493aae443644b28a123cba7",
+  "object": "chat.completion",
+  "created": 1792683444,
+  "model": "qwen3.8-flash-next-iq2_xs",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "Based on the sealed case archive, here are the authoritative values for each case, using only the records marked **FINAL_APPROVED** and disregarding any **REVOKED** records or distractor case IDs.\n\n1.  **Case-6103-01** (Service Route):\n    *   The FINAL_APPROVED record is `case_id=case-6103-01; field=service_route; revision=03; status=FINAL_APPROVED; value=MX-6130`.\n    *   Answer: **MX-6130**\n\n2.  **Case-6103-02** (Approved Limit):\n    *   The FINAL_APPROVED record is `case_id=case-6103-02; field=approved_limit; revision=03; status=FINAL_APPROVED; value=7.625 units`.\n    *   Answer: **7.625 units**\n\n3.  **Case-6103-03** (Shipment Seal):\n    *   The FINAL_APPROVED record is `case_id=case-6103-03; field=shipment_seal; revision=03; status=FINAL_APPROVED; value=SEAL-P3-806`.\n    *   Answer: **SEAL-P3-806**\n\n4.  **Case-6103-04** (Archive Reference):\n    *   The FINAL_APPROVED record is `case_id=case-6103-04; field=archive_ref; revision=03; status=FINAL_APPROVED; value=AR-2026-7D31`.\n    *   Answer: **AR-2026-7D31**\n\n5.  **Case-6103-05** (Inspection Date):\n    *   The FINAL_APPROVED record is `case_id=case-6103-05; field=inspection_date; revision=03; status=FINAL_APPROVED; value=2026-10-11`.\n    *   Answer: **2026-10-11**\n\n6.  **Case-6103-06** (Package Trace):\n    *   The FINAL_APPROVED record is `case_id=case-6103-06; field=package_trace; revision=03; status=FINAL_APPROVED; value=PKG-72-LA`.\n    *   Answer: **PKG-72-LA**\n\n7.  **Case-6103-07** (Recovery Node):\n    *   The FINAL_APPROVED record is `case_id=case-6103-07; field=recovery_node; revision=03; status=FINAL_APPROVED; value=node-42`.\n    *   Answer: **node-42**\n\n8.  **Case-6103-08** (Checksum):\n    *   The FINAL_APPROVED record is `case_id=case-6103-08; field=checksum; revision=03; status=FINAL_APPROVED; value=sha256:8c9e2a71`.\n    *   Answer: **sha256:8c9e2a71**"
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 500704,
+    "completion_tokens": 732,
+    "total_tokens": 501436,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 500704,
+    "prompt_ms": 174461.9,
+    "prompt_per_token_ms": 0.348,
+    "prompt_per_second": 2870.0,
+    "predicted_n": 732,
+    "predicted_ms": 5838.5,
+    "predicted_per_token_ms": 7.976,
+    "predicted_per_second": 125.4,
+    "draft_n": 569,
+    "draft_n_accepted": 528
+  }
+}

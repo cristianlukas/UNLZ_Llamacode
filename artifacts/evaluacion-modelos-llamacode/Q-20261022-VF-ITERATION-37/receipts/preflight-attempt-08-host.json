@@ -1,0 +1,82 @@
+{
+  "checked_at_utc": "2026-10-22T15:17:20.706077+00:00",
+  "task_id": "Q-20261022-VF-ITERATION-37",
+  "lock_token": "89bea058-cced-43f6-a5e8-2ee41da2394e",
+  "inference_server_processes": [],
+  "port_8350_bindability_probe": "pass",
+  "mem_available_bytes": 125479260160,
+  "swap_free_bytes": 8589930496,
+  "memory_psi_avg10": {
+    "some": {
+      "avg10": 0.0,
+      "avg60": 0.0,
+      "avg300": 0.0
+    },
+    "full": {
+      "avg10": 0.0,
+      "avg60": 0.0,
+      "avg300": 0.0
+    }
+  },
+  "disk_free_bytes": 122486788096,
+  "gpus": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 799,
+      "memory_total_mib": 24576,
+      "utilization_percent": 40
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 108,
+      "memory_total_mib": 24576,
+      "utilization_percent": 30
+    }
+  ],
+  "sudo_noninteractive": true,
+  "oomd_user_manager": [
+    "ManagedOOMMemoryPressure=kill",
+    "ManagedOOMMemoryPressureLimit=3006477107"
+  ],
+  "artifacts_hashes": {
+    "shard_1": {
+      "path": "/media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS-00001-of-00002.gguf",
+      "sha256": "92cee27ae5bbadcd732416a0f7a7f0acc092399dbbe8f5a5efa707c2ec0a49d7",
+      "expected": "92cee27ae5bbadcd732416a0f7a7f0acc092399dbbe8f5a5efa707c2ec0a49d7"
+    },
+    "shard_2": {
+      "path": "/media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS-00002-of-00002.gguf",
+      "sha256": "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113",
+      "expected": "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113"
+    },
+    "runtime": {
+      "path": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata",
+      "sha256": "770ecf303a4c6271654339c639392ecb455de3a999bf5d2e8dbc73c879103602",
+      "expected": "770ecf303a4c6271654339c639392ecb455de3a999bf5d2e8dbc73c879103602"
+    }
+  },
+  "config_sha256": "31625e81f851007120b90409fe84cbbe3424f5f99ddbad99db88f53f6736adbb",
+  "expected_config_sha256": "31625e81f851007120b90409fe84cbbe3424f5f99ddbad99db88f53f6736adbb",
+  "fixture_hashes": {
+    "prompt_sha256": "447067abdab496bd72c0aa72574d96196a7ff2cc0c42275087d3decff9ac6ed9",
+    "expected_sha256": "2c26bb2c495e44b7ce782079b4e9c350ce02185e0758f62e8d5e03ba758ac751"
+  },
+  "fixture_hashes_verified_by_supervisor": true,
+  "thresholds": {
+    "MemAvailable>=80GiB": true,
+    "SwapFree>=1GiB": true,
+    "disk>=5GiB": true,
+    "inference_server_processes_empty": true,
+    "port_8350_bindable": true,
+    "sudo_noninteractive": true,
+    "all_model_hashes_match": true,
+    "config_hash_matches": true,
+    "OOMD_user_manager_70_percent": true
+  },
+  "gpu_minimum_free_memory_pass": true,
+  "memory_psi_pass": true,
+  "decision": "pass",
+  "oomd_user_manager_limit_interpreted": "70%"
+}

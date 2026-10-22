@@ -1,0 +1,605 @@
+{
+  "task": "Q-20261022-VF-ITERATION-37",
+  "experiment_id": "Q35-SEMANTIC-REGRADE-01",
+  "campaign": "Q-20261022-VF-ITERATION-35",
+  "method": "offline re-grade per preregistration; original receipts preserved",
+  "same_seed_expected_answers_identical_across_contexts": {
+    "2026101": "29a38ab5a960f94dbf65cae4c125b5d68604664d40b90d441cf96b535dc5e896",
+    "2026102": "6edf3b9ceb43c324479287ea12092cb9dc2914a862fb835908280b6d01832708",
+    "2026103": "bda50a0c24d9a7bbb37c2b379f3fea465c68f2849a027f9cbcada228216e9fa4"
+  },
+  "runs": [
+    {
+      "context": 131072,
+      "seed": 2026101,
+      "prompt_sha256": "93823c922e39cab53ea981b851e6a2ef76fc8958bc2da5ee77ae8d565ad37879",
+      "expected_sha256": "29a38ab5a960f94dbf65cae4c125b5d68604664d40b90d441cf96b535dc5e896",
+      "completion_status": "complete",
+      "finish_reason": "stop",
+      "original_json_score": {
+        "correct": 0,
+        "total": 8,
+        "percent": 0.0
+      },
+      "original_strict_output_valid": false,
+      "semantic_score": {
+        "method": "numbered_requests_in_prompt_order",
+        "answers_extracted": {
+          "case-6101-01": "SE-2086",
+          "case-6101-02": "18.75 units",
+          "case-6101-03": "SEAL-T9-207",
+          "case-6101-04": "AR-2026-9F62",
+          "case-6101-05": "2026-09-03",
+          "case-6101-06": "PKG-48-XQ",
+          "case-6101-07": "node-31",
+          "case-6101-08": "sha256:e14a97c3"
+        },
+        "correct": 8,
+        "total": 8,
+        "percent": 100.0,
+        "matches": {
+          "case-6101-01": true,
+          "case-6101-02": true,
+          "case-6101-03": true,
+          "case-6101-04": true,
+          "case-6101-05": true,
+          "case-6101-06": true,
+          "case-6101-07": true,
+          "case-6101-08": true
+        },
+        "unresolved_case_ids": [],
+        "unanswered_case_ids": []
+      },
+      "prefill_tokens_per_second": 3456.0,
+      "decode_tokens_per_second": 151.6,
+      "request_elapsed_seconds": 40.329417329999956,
+      "total_server_session_seconds": 58.62405350999995,
+      "min_system_mem_available_bytes": 82937528320,
+      "run_cgroup_memory_swap_delta_bytes": 0,
+      "receipt": "../../Q-20261022-VF-ITERATION-35/runs/131072/2026101/receipt.json"
+    },
+    {
+      "context": 131072,
+      "seed": 2026102,
+      "prompt_sha256": "447067abdab496bd72c0aa72574d96196a7ff2cc0c42275087d3decff9ac6ed9",
+      "expected_sha256": "6edf3b9ceb43c324479287ea12092cb9dc2914a862fb835908280b6d01832708",
+      "completion_status": "complete",
+      "finish_reason": "stop",
+      "original_json_score": {
+        "correct": 0,
+        "total": 8,
+        "percent": 0.0
+      },
+      "original_strict_output_valid": false,
+      "semantic_score": {
+        "method": "case_scoped_explicit_answer_or_approved_record",
+        "answers_extracted": {
+          "case-6102-01": "CT-9942",
+          "case-6102-02": "42.10 units",
+          "case-6102-03": "SEAL-K8-114",
+          "case-6102-04": "AR-2026-1C45",
+          "case-6102-05": "2026-07-29",
+          "case-6102-06": "PKG-13-MV",
+          "case-6102-07": "node-17",
+          "case-6102-08": "sha256:5f02bc86"
+        },
+        "correct": 8,
+        "total": 8,
+        "percent": 100.0,
+        "matches": {
+          "case-6102-01": true,
+          "case-6102-02": true,
+          "case-6102-03": true,
+          "case-6102-04": true,
+          "case-6102-05": true,
+          "case-6102-06": true,
+          "case-6102-07": true,
+          "case-6102-08": true
+        },
+        "unresolved_case_ids": [],
+        "unanswered_case_ids": []
+      },
+      "prefill_tokens_per_second": 3452.3,
+      "decode_tokens_per_second": 159.3,
+      "request_elapsed_seconds": 40.76367289600012,
+      "total_server_session_seconds": 56.460651938999945,
+      "min_system_mem_available_bytes": 83051220992,
+      "run_cgroup_memory_swap_delta_bytes": 0,
+      "receipt": "../../Q-20261022-VF-ITERATION-35/runs/131072/2026102/receipt.json"
+    },
+    {
+      "context": 131072,
+      "seed": 2026103,
+      "prompt_sha256": "f78f73080cdfb7f94f3530346c1c3d320756f690b1377fa10614824bf39dbc91",
+      "expected_sha256": "bda50a0c24d9a7bbb37c2b379f3fea465c68f2849a027f9cbcada228216e9fa4",
+      "completion_status": "incomplete",
+      "finish_reason": "length",
+      "original_json_score": {
+        "correct": 0,
+        "total": 8,
+        "percent": 0.0
+      },
+      "original_strict_output_valid": false,
+      "semantic_score": {
+        "method": "case_scoped_explicit_answer_or_approved_record",
+        "answers_extracted": {
+          "case-6103-01": "MX-6130",
+          "case-6103-02": "7.625 units",
+          "case-6103-03": "SEAL-P3-806",
+          "case-6103-04": "AR-2026-7D31",
+          "case-6103-05": "2026-10-11",
+          "case-6103-06": "PKG-72-LA"
+        },
+        "correct": 6,
+        "total": 8,
+        "percent": 75.0,
+        "matches": {
+          "case-6103-01": true,
+          "case-6103-02": true,
+          "case-6103-03": true,
+          "case-6103-04": true,
+          "case-6103-05": true,
+          "case-6103-06": true,
+          "case-6103-07": false,
+          "case-6103-08": false
+        },
+        "unresolved_case_ids": [],
+        "unanswered_case_ids": [
+          "case-6103-07",
+          "case-6103-08"
+        ]
+      },
+      "prefill_tokens_per_second": 3414.4,
+      "decode_tokens_per_second": 153.1,
+      "request_elapsed_seconds": 41.70195279199993,
+      "total_server_session_seconds": 55.38451076899992,
+      "min_system_mem_available_bytes": 83040006144,
+      "run_cgroup_memory_swap_delta_bytes": 0,
+      "receipt": "../../Q-20261022-VF-ITERATION-35/runs/131072/2026103/receipt.json"
+    },
+    {
+      "context": 262144,
+      "seed": 2026101,
+      "prompt_sha256": "e57e298d7dfa137ff01e86fac01d622f08b60d48fea690f40f7da2290a7a2355",
+      "expected_sha256": "29a38ab5a960f94dbf65cae4c125b5d68604664d40b90d441cf96b535dc5e896",
+      "completion_status": "incomplete",
+      "finish_reason": "length",
+      "original_json_score": {
+        "correct": 0,
+        "total": 8,
+        "percent": 0.0
+      },
+      "original_strict_output_valid": false,
+      "semantic_score": {
+        "method": "case_scoped_explicit_answer_or_approved_record",
+        "answers_extracted": {
+          "case-6101-01": "SE-2086",
+          "case-6101-02": "18.75 units",
+          "case-6101-03": "SEAL-T9-207",
+          "case-6101-04": "AR-2026-9F62",
+          "case-6101-05": "2026-09-03",
+          "case-6101-06": "PKG-48-XQ",
+          "case-6101-07": "node-"
+        },
+        "correct": 6,
+        "total": 8,
+        "percent": 75.0,
+        "matches": {
+          "case-6101-01": true,
+          "case-6101-02": true,
+          "case-6101-03": true,
+          "case-6101-04": true,
+          "case-6101-05": true,
+          "case-6101-06": true,
+          "case-6101-07": false,
+          "case-6101-08": false
+        },
+        "unresolved_case_ids": [],
+        "unanswered_case_ids": [
+          "case-6101-08"
+        ]
+      },
+      "prefill_tokens_per_second": 3354.9,
+      "decode_tokens_per_second": 140.7,
+      "request_elapsed_seconds": 80.1720570970001,
+      "total_server_session_seconds": 96.02666140199995,
+      "min_system_mem_available_bytes": 80631853056,
+      "run_cgroup_memory_swap_delta_bytes": 0,
+      "receipt": "../../Q-20261022-VF-ITERATION-35/runs/262144/2026101/receipt.json"
+    },
+    {
+      "context": 262144,
+      "seed": 2026102,
+      "prompt_sha256": "88cff359064c293dde9bc846da1860299535d4f916d67f0dd88676b1d1cd515f",
+      "expected_sha256": "6edf3b9ceb43c324479287ea12092cb9dc2914a862fb835908280b6d01832708",
+      "completion_status": "incomplete",
+      "finish_reason": "length",
+      "original_json_score": {
+        "correct": 0,
+        "total": 8,
+        "percent": 0.0
+      },
+      "original_strict_output_valid": false,
+      "semantic_score": {
+        "method": "case_scoped_explicit_answer_or_approved_record",
+        "answers_extracted": {
+          "case-6102-01": "CT-9942",
+          "case-6102-02": "42.10 units",
+          "case-6102-03": "SEAL-K8-114",
+          "case-6102-04": "AR-2026-1C45",
+          "case-6102-05": "2026-07-29",
+          "case-6102-06": "PKG-13-MV",
+          "case-6102-07": "node-17"
+        },
+        "correct": 7,
+        "total": 8,
+        "percent": 87.5,
+        "matches": {
+          "case-6102-01": true,
+          "case-6102-02": true,
+          "case-6102-03": true,
+          "case-6102-04": true,
+          "case-6102-05": true,
+          "case-6102-06": true,
+          "case-6102-07": true,
+          "case-6102-08": false
+        },
+        "unresolved_case_ids": [],
+        "unanswered_case_ids": [
+          "case-6102-08"
+        ]
+      },
+      "prefill_tokens_per_second": 3296.1,
+      "decode_tokens_per_second": 143.5,
+      "request_elapsed_seconds": 81.40006858899983,
+      "total_server_session_seconds": 97.08453797199991,
+      "min_system_mem_available_bytes": 81072631808,
+      "run_cgroup_memory_swap_delta_bytes": 0,
+      "receipt": "../../Q-20261022-VF-ITERATION-35/runs/262144/2026102/receipt.json"
+    },
+    {
+      "context": 262144,
+      "seed": 2026103,
+      "prompt_sha256": "5183896abc395c5c8d2110aef7fb22fcb24506568ff7ec0195b874da8012affc",
+      "expected_sha256": "bda50a0c24d9a7bbb37c2b379f3fea465c68f2849a027f9cbcada228216e9fa4",
+      "completion_status": "incomplete",
+      "finish_reason": "length",
+      "original_json_score": {
+        "correct": 0,
+        "total": 8,
+        "percent": 0.0
+      },
+      "original_strict_output_valid": false,
+      "semantic_score": {
+        "method": "case_scoped_explicit_answer_or_approved_record",
+        "answers_extracted": {
+          "case-6103-01": "MX-6130",
+          "case-6103-02": "7.625 units",
+          "case-6103-03": "SEAL-P3-806",
+          "case-6103-04": "AR-2026-7D31",
+          "case-6103-05": "2026-10-11",
+          "case-6103-06": "PKG-72-LA",
+          "case-6103-07": "node-42",
+          "case-6103-08": "sha256:8c9e2a71"
+        },
+        "correct": 8,
+        "total": 8,
+        "percent": 100.0,
+        "matches": {
+          "case-6103-01": true,
+          "case-6103-02": true,
+          "case-6103-03": true,
+          "case-6103-04": true,
+          "case-6103-05": true,
+          "case-6103-06": true,
+          "case-6103-07": true,
+          "case-6103-08": true
+        },
+        "unresolved_case_ids": [],
+        "unanswered_case_ids": []
+      },
+      "prefill_tokens_per_second": 3270.5,
+      "decode_tokens_per_second": 141.9,
+      "request_elapsed_seconds": 82.05728365000004,
+      "total_server_session_seconds": 97.54217986100002,
+      "min_system_mem_available_bytes": 81052090368,
+      "run_cgroup_memory_swap_delta_bytes": 0,
+      "receipt": "../../Q-20261022-VF-ITERATION-35/runs/262144/2026103/receipt.json"
+    },
+    {
+      "context": 524288,
+      "seed": 2026101,
+      "prompt_sha256": "d93b065657741a002ec7dd2ee7cfa98097251044bb70fb1a9c82d4f543768042",
+      "expected_sha256": "29a38ab5a960f94dbf65cae4c125b5d68604664d40b90d441cf96b535dc5e896",
+      "completion_status": "incomplete",
+      "finish_reason": "length",
+      "original_json_score": {
+        "correct": 0,
+        "total": 8,
+        "percent": 0.0
+      },
+      "original_strict_output_valid": false,
+      "semantic_score": {
+        "method": "case_scoped_explicit_answer_or_approved_record",
+        "answers_extracted": {
+          "case-6101-01": "SE-2086",
+          "case-6101-02": "18.75 units",
+          "case-6101-03": "SEAL-T9-207",
+          "case-6101-04": "AR-2026-9F62",
+          "case-6101-05": "2026-09-03",
+          "case-6101-06": "PKG-48-XQ",
+          "case-6101-07": "node-3"
+        },
+        "correct": 6,
+        "total": 8,
+        "percent": 75.0,
+        "matches": {
+          "case-6101-01": true,
+          "case-6101-02": true,
+          "case-6101-03": true,
+          "case-6101-04": true,
+          "case-6101-05": true,
+          "case-6101-06": true,
+          "case-6101-07": false,
+          "case-6101-08": false
+        },
+        "unresolved_case_ids": [],
+        "unanswered_case_ids": [
+          "case-6101-08"
+        ]
+      },
+      "prefill_tokens_per_second": 2875.7,
+      "decode_tokens_per_second": 122.6,
+      "request_elapsed_seconds": 180.53956927700006,
+      "total_server_session_seconds": 198.27530907699975,
+      "min_system_mem_available_bytes": 76941570048,
+      "run_cgroup_memory_swap_delta_bytes": 0,
+      "receipt": "../../Q-20261022-VF-ITERATION-35/runs/524288/2026101/receipt.json"
+    },
+    {
+      "context": 524288,
+      "seed": 2026102,
+      "prompt_sha256": "950569cd5855dff8826f1fad55bded1a5955f89ea0e9191d7a86be83da96e939",
+      "expected_sha256": "6edf3b9ceb43c324479287ea12092cb9dc2914a862fb835908280b6d01832708",
+      "completion_status": "complete",
+      "finish_reason": "stop",
+      "original_json_score": {
+        "correct": 0,
+        "total": 8,
+        "percent": 0.0
+      },
+      "original_strict_output_valid": false,
+      "semantic_score": {
+        "method": "case_scoped_explicit_answer_or_approved_record",
+        "answers_extracted": {
+          "case-6102-01": "CT-9942",
+          "case-6102-02": "42.10 units",
+          "case-6102-03": "SEAL-K8-114",
+          "case-6102-04": "AR-2026-1C45",
+          "case-6102-05": "2026-07-29",
+          "case-6102-06": "PKG-13-MV",
+          "case-6102-07": "node-17",
+          "case-6102-08": "sha256:5f02bc86"
+        },
+        "correct": 8,
+        "total": 8,
+        "percent": 100.0,
+        "matches": {
+          "case-6102-01": true,
+          "case-6102-02": true,
+          "case-6102-03": true,
+          "case-6102-04": true,
+          "case-6102-05": true,
+          "case-6102-06": true,
+          "case-6102-07": true,
+          "case-6102-08": true
+        },
+        "unresolved_case_ids": [],
+        "unanswered_case_ids": []
+      },
+      "prefill_tokens_per_second": 2870.5,
+      "decode_tokens_per_second": 118.6,
+      "request_elapsed_seconds": 178.17824188799977,
+      "total_server_session_seconds": 196.31518799600008,
+      "min_system_mem_available_bytes": 77323067392,
+      "run_cgroup_memory_swap_delta_bytes": 0,
+      "receipt": "../../Q-20261022-VF-ITERATION-35/runs/524288/2026102/receipt.json"
+    },
+    {
+      "context": 524288,
+      "seed": 2026103,
+      "prompt_sha256": "0776733a49bbf2757043d59fc24a39b3db54a24b9773d916faf977e811387f76",
+      "expected_sha256": "bda50a0c24d9a7bbb37c2b379f3fea465c68f2849a027f9cbcada228216e9fa4",
+      "completion_status": "complete",
+      "finish_reason": "stop",
+      "original_json_score": {
+        "correct": 0,
+        "total": 8,
+        "percent": 0.0
+      },
+      "original_strict_output_valid": false,
+      "semantic_score": {
+        "method": "case_scoped_explicit_answer_or_approved_record",
+        "answers_extracted": {
+          "case-6103-01": "MX-6130",
+          "case-6103-02": "7.625 units",
+          "case-6103-03": "SEAL-P3-806",
+          "case-6103-04": "AR-2026-7D31",
+          "case-6103-05": "2026-10-11",
+          "case-6103-06": "PKG-72-LA",
+          "case-6103-07": "node-42",
+          "case-6103-08": "sha256:8c9e2a71"
+        },
+        "correct": 8,
+        "total": 8,
+        "percent": 100.0,
+        "matches": {
+          "case-6103-01": true,
+          "case-6103-02": true,
+          "case-6103-03": true,
+          "case-6103-04": true,
+          "case-6103-05": true,
+          "case-6103-06": true,
+          "case-6103-07": true,
+          "case-6103-08": true
+        },
+        "unresolved_case_ids": [],
+        "unanswered_case_ids": []
+      },
+      "prefill_tokens_per_second": 2870.0,
+      "decode_tokens_per_second": 125.4,
+      "request_elapsed_seconds": 180.4589911979997,
+      "total_server_session_seconds": 196.2438197309998,
+      "min_system_mem_available_bytes": 77310533632,
+      "run_cgroup_memory_swap_delta_bytes": 0,
+      "receipt": "../../Q-20261022-VF-ITERATION-35/runs/524288/2026103/receipt.json"
+    },
+    {
+      "context": 1048576,
+      "seed": 2026101,
+      "prompt_sha256": "6b72df9c75c1bec5fafe4c73f08cdc4d969e1d7a489eeb56a044718b18303d35",
+      "expected_sha256": "29a38ab5a960f94dbf65cae4c125b5d68604664d40b90d441cf96b535dc5e896",
+      "completion_status": "complete",
+      "finish_reason": "stop",
+      "original_json_score": {
+        "correct": 0,
+        "total": 8,
+        "percent": 0.0
+      },
+      "original_strict_output_valid": false,
+      "semantic_score": {
+        "method": "numbered_requests_in_prompt_order",
+        "answers_extracted": {
+          "case-6101-01": "SE-2086",
+          "case-6101-02": "18.75 units",
+          "case-6101-03": "SEAL-T9-207",
+          "case-6101-04": "AR-2026-9F62",
+          "case-6101-05": "2026-09-03",
+          "case-6101-06": "PKG-48-XQ",
+          "case-6101-07": "node-31",
+          "case-6101-08": "sha256:e14a97c3"
+        },
+        "correct": 8,
+        "total": 8,
+        "percent": 100.0,
+        "matches": {
+          "case-6101-01": true,
+          "case-6101-02": true,
+          "case-6101-03": true,
+          "case-6101-04": true,
+          "case-6101-05": true,
+          "case-6101-06": true,
+          "case-6101-07": true,
+          "case-6101-08": true
+        },
+        "unresolved_case_ids": [],
+        "unanswered_case_ids": []
+      },
+      "prefill_tokens_per_second": 2310.8,
+      "decode_tokens_per_second": 89.9,
+      "request_elapsed_seconds": 434.665350021,
+      "total_server_session_seconds": 454.9576669080002,
+      "min_system_mem_available_bytes": 69861154816,
+      "run_cgroup_memory_swap_delta_bytes": 0,
+      "receipt": "../../Q-20261022-VF-ITERATION-35/runs/1048576/2026101/receipt.json"
+    },
+    {
+      "context": 1048576,
+      "seed": 2026102,
+      "prompt_sha256": "adf70d636c3b0686618f49067f71830b8f067676b29afd88b322426dba27c6d9",
+      "expected_sha256": "6edf3b9ceb43c324479287ea12092cb9dc2914a862fb835908280b6d01832708",
+      "completion_status": "complete",
+      "finish_reason": "stop",
+      "original_json_score": {
+        "correct": 0,
+        "total": 8,
+        "percent": 0.0
+      },
+      "original_strict_output_valid": false,
+      "semantic_score": {
+        "method": "numbered_requests_in_prompt_order",
+        "answers_extracted": {
+          "case-6102-01": "CT-9942",
+          "case-6102-02": "42.10 units",
+          "case-6102-03": "SEAL-K8-114",
+          "case-6102-04": "AR-2026-1C45",
+          "case-6102-05": "2026-07-29",
+          "case-6102-06": "PKG-13-MV",
+          "case-6102-07": "node-17",
+          "case-6102-08": "sha256:5f02bc86"
+        },
+        "correct": 8,
+        "total": 8,
+        "percent": 100.0,
+        "matches": {
+          "case-6102-01": true,
+          "case-6102-02": true,
+          "case-6102-03": true,
+          "case-6102-04": true,
+          "case-6102-05": true,
+          "case-6102-06": true,
+          "case-6102-07": true,
+          "case-6102-08": true
+        },
+        "unresolved_case_ids": [],
+        "unanswered_case_ids": []
+      },
+      "prefill_tokens_per_second": 2308.6,
+      "decode_tokens_per_second": 94.4,
+      "request_elapsed_seconds": 434.98459901199976,
+      "total_server_session_seconds": 455.37793611200004,
+      "min_system_mem_available_bytes": 69850886144,
+      "run_cgroup_memory_swap_delta_bytes": 0,
+      "receipt": "../../Q-20261022-VF-ITERATION-35/runs/1048576/2026102/receipt.json"
+    },
+    {
+      "context": 1048576,
+      "seed": 2026103,
+      "prompt_sha256": "2e093788765472cc73235f769f87f498dc8ea29ab055d6bbb3b27bb8c05b085d",
+      "expected_sha256": "bda50a0c24d9a7bbb37c2b379f3fea465c68f2849a027f9cbcada228216e9fa4",
+      "completion_status": "complete",
+      "finish_reason": "stop",
+      "original_json_score": {
+        "correct": 0,
+        "total": 8,
+        "percent": 0.0
+      },
+      "original_strict_output_valid": false,
+      "semantic_score": {
+        "method": "numbered_requests_in_prompt_order",
+        "answers_extracted": {
+          "case-6103-01": "MX-6130",
+          "case-6103-02": "7.625 units",
+          "case-6103-03": "SEAL-P3-806",
+          "case-6103-04": "AR-2026-7D31",
+          "case-6103-05": "2026-10-11",
+          "case-6103-06": "PKG-72-LA",
+          "case-6103-07": "node-42",
+          "case-6103-08": "sha256:8c9e2a71"
+        },
+        "correct": 8,
+        "total": 8,
+        "percent": 100.0,
+        "matches": {
+          "case-6103-01": true,
+          "case-6103-02": true,
+          "case-6103-03": true,
+          "case-6103-04": true,
+          "case-6103-05": true,
+          "case-6103-06": true,
+          "case-6103-07": true,
+          "case-6103-08": true
+        },
+        "unresolved_case_ids": [],
+        "unanswered_case_ids": []
+      },
+      "prefill_tokens_per_second": 2310.6,
+      "decode_tokens_per_second": 85.5,
+      "request_elapsed_seconds": 434.8103451520001,
+      "total_server_session_seconds": 453.25042349700016,
+      "min_system_mem_available_bytes": 69772722176,
+      "run_cgroup_memory_swap_delta_bytes": 0,
+      "receipt": "../../Q-20261022-VF-ITERATION-35/runs/1048576/2026103/receipt.json"
+    }
+  ]
+}

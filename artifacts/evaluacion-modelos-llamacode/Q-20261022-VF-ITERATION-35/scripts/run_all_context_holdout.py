@@ -34,23 +34,52 @@ def atomic_json(path, value):
 def current_lock_token():
     lock = json.loads(LOCK.read_text())
     token = lock.get("token")
-    if not token or lock.get("task_id") != TASK_ID:
+    lock_task_id = queue_lock_task_id()
+    if not token or lock.get("task_id") != lock_task_id:
         raise RuntimeError(f"work queue lock ownership changed: {lock}")
     return token
 
 
+def queue_lock_task_id():
+    """Allow a resumed batch to run under the current queue turn's task id."""
+    return os.environ.get("LLAMACODE_TASK_ID", TASK_ID)
+
+
+def verify_fixture_hashes(spec):
+    """Verify holdout content against the frozen manifest before model startup."""
+    fixture_dir = Path(spec["fixture_dir"])
+    prompt_path = fixture_dir / "probe-prompt.txt"
+    expected_path = fixture_dir / "probe-expected.json"
+    prompt_hash = hashlib.sha256(prompt_path.read_bytes()).hexdigest()
+    expected = json.loads(expected_path.read_text(encoding="utf-8"))
+    expected_hash = hashlib.sha256(
+        json.dumps(expected, ensure_ascii=False, sort_keys=True).encode("utf-8")
+    ).hexdigest()
+    if prompt_hash != spec["prompt_sha256"]:
+        raise RuntimeError(
+            f"fixture prompt hash mismatch: {prompt_path} expected {spec['prompt_sha256']} got {prompt_hash}"
+        )
+    if expected_hash != spec["expected_sha256"]:
+        raise RuntimeError(
+            f"fixture expected-answer hash mismatch: {expected_path} expected "
+            f"{spec['expected_sha256']} got {expected_hash}"
+        )
+    return {"prompt_sha256": prompt_hash, "expected_sha256": expected_hash}
+
+
 def verify_lock(expected_token):
     lock = json.loads(LOCK.read_text())
-    if lock.get("token") != expected_token or lock.get("task_id") != TASK_ID:
+    if lock.get("token") != expected_token or lock.get("task_id") != queue_lock_task_id():
         raise RuntimeError(f"work queue lock ownership changed: {lock}")
 
 
 def run_service(spec, context, seed, attempt_no, limits, lock_token):
-    """Run one inference in a bounded cgroup separate from the Codex desktop scope."""
+    """Run one inference in a bounded system cgroup outside the desktop user manager."""
     unit = f"llamacode-q35-context-{context}-seed-{seed}-a{attempt_no:02d}"
     command = [
-        "systemd-run", "--user", "--quiet", "--wait", "--collect",
+        "sudo", "-n", "systemd-run", "--system", "--quiet", "--wait", "--collect",
         f"--unit={unit}", f"--slice={RUN_SLICE}",
+        f"--uid={os.getuid()}", f"--gid={os.getgid()}",
         *systemd_properties(limits),
         f"--working-directory={SERVER_ROOT}",
     ]
@@ -66,7 +95,7 @@ def run_service(spec, context, seed, attempt_no, limits, lock_token):
     command.append(f"--setenv=LLAMACODE_EXPECTED_MEMORY_MAX_BYTES={limits['memory_max_bytes']}")
     command.append(f"--setenv=LLAMACODE_EXPECTED_MEMORY_SWAP_MAX_BYTES={limits['memory_swap_max_bytes']}")
     command.append(f"--setenv=LLAMACODE_QUEUE_LOCK_TOKEN={lock_token}")
-    command.append(f"--setenv=LLAMACODE_TASK_ID={TASK_ID}")
+    command.append(f"--setenv=LLAMACODE_TASK_ID={queue_lock_task_id()}")
     command.extend([
         str(PYTHON), str(RUNNER), "--context", str(context),
         "--config", spec["config_path"], "--fixture-dir", spec["fixture_dir"],
@@ -76,7 +105,7 @@ def run_service(spec, context, seed, attempt_no, limits, lock_token):
     ])
     result = subprocess.run(command, text=True, capture_output=True)
     journal = subprocess.run(
-        ["journalctl", "--user-unit", f"{unit}.service", "--no-pager", "-o", "cat"],
+        ["sudo", "-n", "journalctl", "--unit", f"{unit}.service", "--no-pager", "-o", "cat"],
         text=True, capture_output=True,
     )
     journal_text = journal.stdout if journal.returncode == 0 else journal.stderr
@@ -90,6 +119,30 @@ def has_valid_result(row, expected_run_directory):
         and row.get("request_sent") is True
         and row.get("classification") == "valid quality"
         and row.get("return_code") == 0
+    )
+
+
+def has_terminal_result(row, expected_run_directory):
+    """A complete quality-negative response is measured once, not retried."""
+    if row.get("run_directory") != str(expected_run_directory) or not row.get("receipt"):
+        return False
+    if has_valid_result(row, expected_run_directory):
+        return True
+    prompt_tokens = row.get("prompt_tokens")
+    minimum_prompt_tokens = row.get("minimum_prompt_tokens_95pct")
+    return (
+        row.get("classification") == "incomplete"
+        and row.get("return_code") == 2
+        and row.get("request_sent") is True
+        and row.get("model_loaded") is True
+        and row.get("http_status") == 200
+        and row.get("response_present") is True
+        and row.get("finish_reason") in {"stop", "length"}
+        and isinstance(prompt_tokens, int)
+        and isinstance(minimum_prompt_tokens, int)
+        and prompt_tokens >= minimum_prompt_tokens
+        and not row.get("transport_error")
+        and not row.get("monitor_abort_reason")
     )
 
 
@@ -111,7 +164,7 @@ def main():
         for seed in SEEDS:
             key = f"{context}:{seed}"
             expected_run_directory = str((TASK / f"runs/{context}/{seed}").resolve())
-            if any(row.get("key") == key and has_valid_result(row, expected_run_directory)
+            if any(row.get("key") == key and has_terminal_result(row, expected_run_directory)
                    for row in progress["completed"]):
                 continue
             verify_lock(lock_token)
@@ -122,6 +175,7 @@ def main():
             for path in (fixture_dir / "probe-prompt.txt", fixture_dir / "probe-expected.json", config_path):
                 if not path.is_file():
                     raise RuntimeError(f"required file missing: {path}")
+            verify_fixture_hashes(spec)
             config_sha = hashlib.sha256(config_path.read_bytes()).hexdigest()
             if config_sha != spec["config_sha256"]:
                 raise RuntimeError(f"config hash mismatch before run {key}")
@@ -168,6 +222,12 @@ def main():
                                    "invalid infrastructure / systemd-oom-kill" if "oom-kill" in journal_text.lower()
                                    else "invalid infrastructure / missing result receipt"),
                 "request_sent": receipt.get("request_sent") if receipt else False,
+                "model_loaded": receipt.get("model_loaded") if receipt else False,
+                "http_status": receipt.get("http_status") if receipt else None,
+                "response_present": receipt.get("response") is not None if receipt else False,
+                "finish_reason": receipt.get("finish_reason") if receipt else None,
+                "prompt_tokens": (receipt.get("usage") or {}).get("prompt_tokens") if receipt else None,
+                "minimum_prompt_tokens_95pct": receipt.get("minimum_prompt_tokens_95pct") if receipt else None,
                 "correct": (receipt.get("quality_score") or {}).get("correct") if receipt else None,
                 "total": (receipt.get("quality_score") or {}).get("total") if receipt else None,
                 "strict_output_valid": receipt.get("strict_output_valid") if receipt else None,
@@ -185,9 +245,10 @@ def main():
             print(json.dumps({"event": "run-finish", **{k: row[k] for k in (
                 "key", "return_code", "classification", "request_sent", "correct", "total",
                 "strict_output_valid", "transport_error", "monitor_abort_reason")}}, ensure_ascii=False), flush=True)
-            # Any infrastructure/resource failure stops the batch; a later recovery
-            # must be separately recorded and run in its own systemd cgroup.
-            if not receipt or result.returncode != 0 or receipt.get("monitor_abort_reason"):
+            # Continue only after a complete response meeting the prompt-length
+            # gate. A quality failure or output cap is terminal data; infrastructure
+            # failures, missing responses, and guard aborts still stop the batch.
+            if not has_terminal_result(row, expected_run_directory):
                 progress["state"] = "paused-after-failure"
                 progress["resume_at"] = key
                 progress["updated_at_utc"] = utc_now()

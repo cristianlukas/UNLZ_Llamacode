@@ -1,0 +1,30 @@
+{
+  "task": "Q-20261022-VF-ITERATION-37",
+  "campaign": "Q-20261022-VF-ITERATION-35",
+  "run_key": "524288:2026102",
+  "attempt_no": 1,
+  "classification": "valid quality",
+  "request_sent": true,
+  "model_loaded": true,
+  "http_status": 200,
+  "prompt_tokens": 500692,
+  "minimum_prompt_tokens_95pct": 498074,
+  "completion_tokens": 426,
+  "finish_reason": "stop",
+  "quality_score": {
+    "correct": 0,
+    "total": 8,
+    "percent": 0.0
+  },
+  "strict_output_valid": false,
+  "prefill_tokens_per_second": 2870.5,
+  "decode_tokens_per_second": 118.6,
+  "request_elapsed_seconds": 178.17824188799977,
+  "run_cgroup_memory_swap_delta_bytes": 0,
+  "min_system_mem_available_bytes": 77323067392,
+  "transport_error": null,
+  "monitor_abort_reason": null,
+  "decision": "complete response, measured quality 0/8; no retry; no adoption signal",
+  "next_run": "524288:2026103",
+  "canonical_receipt": "Q35/runs/524288/2026102/receipt.json"
+}

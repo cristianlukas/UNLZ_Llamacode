@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "task_id": "Q-20261022-VF-ITERATION-37",
+  "recorded_at_utc": "2026-10-22T16:14:37Z",
+  "lock_token": "89bea058-cced-43f6-a5e8-2ee41da2394e",
+  "operation": "final_q35_semantic_regrade_sheet_reconciliation",
+  "spreadsheet": {
+    "id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "title": "Listado de Juegos",
+    "url": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit"
+  },
+  "updated_ranges": [
+    {
+      "sheet": "Evaluaciones LlamaCode",
+      "range": "A268:J268",
+      "record_id": "Q-20261022-VF-ITERATION-37",
+      "status": "Completa · Q35 4 contextos × 3 seeds; regrade semántico auditado"
+    },
+    {
+      "sheet": "Accionables",
+      "range": "A2:N2",
+      "record_id": "vf-q35-codex-crash-isolation-20261022",
+      "status": "Q35 cerrado · aislamiento de este runner verificado; auditoría global pendiente"
+    },
+    {
+      "sheet": "Accionables",
+      "range": "A3:N3",
+      "record_id": "vf-q35-flashnext-context-1m-20261022",
+      "status": "Resuelto · 1M validado como capacidad; default 131K sin cambios"
+    }
+  ],
+  "readback": {
+    "success": true,
+    "format_preserved": {
+      "horizontalAlignment": "LEFT",
+      "verticalAlignment": "TOP",
+      "wrapStrategy": "WRAP",
+      "fontFamily": "Arial",
+      "fontSize": 10
+    },
+    "confirmed_strings": [
+      "Q-20261022-VF-ITERATION-37",
+      "7 respuestas terminadas con stop: 8/8 cada una",
+      "vf-q35-flashnext-context-1m-20261022",
+      "Las siete salidas stop pasan 8/8",
+      "vf-q35-codex-crash-isolation-20261022",
+      "vf-q31-flashnext-python-shim-20261022"
+    ],
+    "inserted_row_verified": true
+  },
+  "local_app_actionables": {
+    "path": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/actionables.json",
+    "updated_ids": [
+      "vf-q35-codex-crash-isolation-20261022",
+      "vf-q35-flashnext-context-1m-20261022"
+    ],
+    "json_reloaded_and_verified": true
+  },
+  "postflight": {
+    "inference_process_matches": [],
+    "known_inference_listeners": [],
+    "running_or_failed_q35_units": [],
+    "managed_oom_pressure": "kill",
+    "managed_oom_pressure_limit": "70.00%",
+    "persistent_drop_in_exists": true
+  },
+  "tests": {
+    "q35_context_matrix": "12/12 terminal requests; seven complete stop outputs 8/8 semantic; five length-capped responses partial",
+    "semantic_regrade_cpu_regression": "8/8 passed",
+    "new_model_inference_this_reconciliation": false
+  },
+  "recommendation": "Keep 131K productive default. Enable >131K only for a workload requiring that size; 1M had ~10.6x request latency and ~41.9% lower decode vs 131K mean; productive profiles and weights unchanged.",
+  "sheet_structure_change": {
+    "inserted_row": "Accionables row 2",
+    "reason": "Preserve the Q35 runner-isolation actionable while adding the final context recommendation as its own row.",
+    "preserved_history_check": "The prior Q31 record remains at Accionables row 4."
+  }
+}

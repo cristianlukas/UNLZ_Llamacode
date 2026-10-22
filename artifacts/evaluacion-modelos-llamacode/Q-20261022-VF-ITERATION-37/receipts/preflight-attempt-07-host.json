@@ -1,0 +1,52 @@
+{
+  "task": "Q-20261022-VF-ITERATION-37",
+  "campaign": "Q-20261022-VF-ITERATION-35",
+  "attempt": 7,
+  "checked_at_utc": "2026-10-22T15:10:10Z",
+  "scope": "host checks before launching the system-manager supervisor; the worker's effective-cgroup preflight still runs inside each attempt before model startup",
+  "queue_lock": {
+    "task_id": "Q-20261022-VF-ITERATION-37",
+    "token": "89bea058-cced-43f6-a5e8-2ee41da2394e",
+    "matches": true
+  },
+  "volume": {
+    "source": "/dev/nvme1n1p3",
+    "filesystem": "ntfs3",
+    "mount_mode": "rw",
+    "available_bytes": 122487422976,
+    "repaired_in_windows_by_user": true
+  },
+  "inference_servers": [],
+  "port_8350_listener": false,
+  "memory": {
+    "MemAvailable_kib": 122648432,
+    "SwapFree_kib": 8388604,
+    "SwapTotal_kib": 8388604,
+    "worker_limits_bytes": {
+      "memory_high": 99819872256,
+      "memory_max": 108409806848,
+      "memory_swap_max": 4294967296
+    }
+  },
+  "psi_avg10_percent": {
+    "global": {"some": 0.0, "full": 0.0},
+    "cgroup": {"some": 0.0, "full": 0.0}
+  },
+  "gpu": [
+    {"index": 0, "name": "NVIDIA GeForce RTX 3090", "used_mib": 816, "total_mib": 24576, "free_mib": 23760, "utilization_percent": 39},
+    {"index": 1, "name": "NVIDIA GeForce RTX 3090", "used_mib": 108, "total_mib": 24576, "free_mib": 24468, "utilization_percent": 37}
+  ],
+  "user_manager_oomd": {"mode": "kill", "limit": "70%", "global_policy_changed": false},
+  "sudo_noninteractive_available": true,
+  "model_runtime_fixture_hashes": {
+    "shard_1_sha256": "92cee27ae5bbadcd732416a0f7a7f0acc092399dbbe8f5a5efa707c2ec0a49d7",
+    "shard_2_sha256": "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113",
+    "runtime_sha256": "770ecf303a4c6271654339c639392ecb455de3a999bf5d2e8dbc73c879103602",
+    "config_sha256": "549286ef521d0f68c06d6e879937ca9bb2b3e64518f7ed2e67605a04dbc10ff2",
+    "prompt_sha256": "93823c922e39cab53ea981b851e6a2ef76fc8958bc2da5ee77ae8d565ad37879",
+    "expected_sha256_canonical_json": "28c8d122c14b9b0cbca6d7c3ce08f8fe0294d532f6ff9ee0a0cff2a73e063986",
+    "match": true,
+    "checked_at_utc": "2026-10-22T15:03Z"
+  },
+  "decision": "host gates pass; proceed with preregistered attempt 07 only if the system-manager worker's exact preflight also passes before model startup"
+}

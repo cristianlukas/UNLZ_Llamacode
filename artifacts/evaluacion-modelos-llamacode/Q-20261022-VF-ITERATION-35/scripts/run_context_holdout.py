@@ -34,6 +34,19 @@ def json_get(url, timeout=3):
         return json.load(response)
 
 
+def assert_port_bindable(port, host="127.0.0.1"):
+    """Reject an active listener but allow stale TCP connections in TIME_WAIT."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        # The Strata HTTP server enables SO_REUSEADDR on Linux. Match that
+        # behavior so a completed request's TIME_WAIT sockets do not look like
+        # another inference server when the next serialized seed starts.
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            sock.bind((host, port))
+        except OSError as exc:
+            raise RuntimeError(f"task port {port} is already occupied: {exc}") from exc
+
+
 def system_memory():
     wanted = {"MemTotal", "MemAvailable", "SwapTotal", "SwapFree"}
     values = {}
@@ -70,10 +83,9 @@ def cgroup_memory_state():
                if line.startswith("0::"))
     current_path = Path("/sys/fs/cgroup") / rel.lstrip("/")
     uid = os.getuid()
-    manager = next((parent for parent in (current_path, *current_path.parents)
-                    if parent.name == f"user@{uid}.service"), None)
-    if manager is None:
-        raise RuntimeError(f"could not find user@{uid}.service in cgroup path {rel}")
+    manager = Path("/sys/fs/cgroup/user.slice") / f"user-{uid}.slice" / f"user@{uid}.service"
+    if not manager.is_dir():
+        manager = None
 
     def snapshot(path):
         maximum = (path / "memory.max").read_text().strip()
@@ -82,6 +94,7 @@ def cgroup_memory_state():
         return {
             "path": str(path),
             "memory_current_bytes": int((path / "memory.current").read_text().strip()),
+            "memory_swap_current_bytes": int((path / "memory.swap.current").read_text().strip()),
             "memory_max_bytes": maximum if maximum == "max" else int(maximum),
             "memory_high_bytes": high if high == "max" else int(high),
             "memory_swap_max_bytes": swap_maximum if swap_maximum == "max" else int(swap_maximum),
@@ -91,7 +104,8 @@ def cgroup_memory_state():
             "psi": parse_psi(path / "memory.pressure"),
         }
 
-    return {"process_cgroup": rel, "run": snapshot(current_path), "user_manager": snapshot(manager)}
+    return {"process_cgroup": rel, "run": snapshot(current_path),
+            "user_manager": snapshot(manager) if manager else None}
 
 
 def process_tree(root_pid):
@@ -165,6 +179,12 @@ def process_group_members(pgid):
     return members
 
 
+def is_isolated_system_cgroup(path):
+    """Only accept the system-manager worker slice, never a child of user@UID."""
+    return ("/background.slice/llamacode-q35-context-" in path
+            and "/user.slice/" not in path and "user@" not in path)
+
+
 class Monitor:
     def __init__(self):
         self.root_pid = None
@@ -173,9 +193,9 @@ class Monitor:
         self.thread = None
         self.abort_reason = None
         self._pressure_samples = 0
-        self._user_pressure_samples = 0
         self._run_cgroup_pressure_samples = 0
         self._baseline_swapout = None
+        self._baseline_run_swap_bytes = None
 
     def sample(self):
         row = {"utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "monotonic": time.monotonic()}
@@ -186,29 +206,32 @@ class Monitor:
             row["cgroup_memory"] = cgroup_state
             if self._baseline_swapout is None:
                 self._baseline_swapout = sysmem["vmstat_pages"]["pswpout"]
+            run_swap_bytes = cgroup_state["run"]["memory_swap_current_bytes"]
+            if self._baseline_run_swap_bytes is None:
+                self._baseline_run_swap_bytes = run_swap_bytes
             if self.root_pid:
                 procs = process_tree(self.root_pid)
                 row["processes"] = procs
                 row["process_tree_rss_bytes"] = sum(p["rss_bytes"] for p in procs)
             row["gpus"] = gpu_snapshot()
-            self.rows.append(row)
             avail = sysmem["memory"].get("MemAvailable", 0)
-            swapout = sysmem["vmstat_pages"].get("pswpout", 0) - self._baseline_swapout
+            host_swapout_delta = sysmem["vmstat_pages"].get("pswpout", 0) - self._baseline_swapout
+            run_swap_delta = run_swap_bytes - self._baseline_run_swap_bytes
             some = sysmem["psi"].get("some", {}).get("avg10", 0)
             full = sysmem["psi"].get("full", {}).get("avg10", 0)
             self._pressure_samples = self._pressure_samples + 1 if (some >= 80.0 or full >= 60.0) else 0
-            manager_psi = cgroup_state["user_manager"]["psi"]
-            manager_some = manager_psi.get("some", {}).get("avg10", 0)
-            manager_full = manager_psi.get("full", {}).get("avg10", 0)
-            self._user_pressure_samples = self._user_pressure_samples + 1 if (manager_some >= 35.0 or manager_full >= 35.0) else 0
             run_psi = cgroup_state["run"]["psi"]
             run_some = run_psi.get("some", {}).get("avg10", 0)
             run_full = run_psi.get("full", {}).get("avg10", 0)
             self._run_cgroup_pressure_samples = self._run_cgroup_pressure_samples + 1 if (run_some >= 80.0 or run_full >= 60.0) else 0
-            if swapout > 1024:
-                self.abort_reason = "swap-out exceeded 4 MiB during run"
-            elif self._user_pressure_samples >= 5:
-                self.abort_reason = "user-manager memory PSI reached the isolated-worker 35% guard; stop this cgroup"
+            row["swap_telemetry"] = {
+                "host_pswpout_delta_pages": host_swapout_delta,
+                "run_cgroup_memory_swap_current_bytes": run_swap_bytes,
+                "run_cgroup_memory_swap_delta_bytes": run_swap_delta,
+            }
+            self.rows.append(row)
+            if run_swap_delta > 4 * 1024 * 1024:
+                self.abort_reason = "run-cgroup swap-out exceeded 4 MiB during run"
             elif self._run_cgroup_pressure_samples >= 15:
                 self.abort_reason = "run-cgroup memory PSI reached the 80%/60% safety gate"
             elif self._pressure_samples >= 15:
@@ -217,6 +240,22 @@ class Monitor:
                 self.abort_reason = "MemAvailable fell below 20 GiB safety floor"
         except Exception as exc:
             self.rows.append({"utc": row["utc"], "monitor_error": repr(exc)})
+
+    def start(self):
+        self.sample()
+        self.stop_event.clear()
+        self.thread = threading.Thread(target=self._loop, daemon=True)
+        self.thread.start()
+
+    def _loop(self):
+        while not self.stop_event.wait(1.0):
+            self.sample()
+
+    def stop(self):
+        self.stop_event.set()
+        if self.thread:
+            self.thread.join(timeout=3)
+        self.sample()
 
     def start(self):
         self.sample()
@@ -262,16 +301,15 @@ def preflight(args):
     servers = inference_server_processes()
     if servers:
         raise RuntimeError(f"external inference server process detected: {servers}")
-    with socket.socket() as sock:
-        try:
-            sock.bind(("127.0.0.1", args.port))
-        except OSError as exc:
-            raise RuntimeError(f"task port {args.port} is already occupied: {exc}") from exc
+    assert_port_bindable(args.port)
     sysmem = system_memory()
     cgroup_state = cgroup_memory_state()
     process_cgroup = cgroup_state["process_cgroup"]
-    if "/background.slice/llamacode-q35-context-" not in process_cgroup:
-        raise RuntimeError(f"inference must run in its own background.slice systemd unit, found {process_cgroup}")
+    if not is_isolated_system_cgroup(process_cgroup):
+        raise RuntimeError(
+            "inference must run in a system-manager background.slice unit outside user@UID.service; "
+            f"found {process_cgroup}"
+        )
     avail = sysmem["memory"].get("MemAvailable", 0)
     swap_free = sysmem["memory"].get("SwapFree", 0)
     if avail < 80 * GIB:
@@ -280,10 +318,6 @@ def preflight(args):
         raise RuntimeError(f"preflight requires SwapFree >=1 GiB; found {swap_free/GIB:.2f} GiB")
     if sysmem["psi"].get("some", {}).get("avg10", 0) >= 80 or sysmem["psi"].get("full", {}).get("avg10", 0) >= 60:
         raise RuntimeError("memory PSI preflight gate is exceeded")
-    manager_psi = cgroup_state["user_manager"]["psi"]
-    if (manager_psi.get("some", {}).get("avg10", 0) >= 35 or
-            manager_psi.get("full", {}).get("avg10", 0) >= 35):
-        raise RuntimeError("user-manager memory PSI reached the isolated-worker 35% preflight guard")
     expected_limits = {
         "memory_high_bytes": int(os.environ["LLAMACODE_EXPECTED_MEMORY_HIGH_BYTES"]),
         "memory_max_bytes": int(os.environ["LLAMACODE_EXPECTED_MEMORY_MAX_BYTES"]),
@@ -583,6 +617,9 @@ def main():
         "min_system_mem_available_bytes": min(avail_values) if avail_values else None,
         "gpu_memory": gpu_summary,
         "swap_delta_pages": {"pswpin": swapin1 - swapin0, "pswpout": swapout1 - swapout0},
+        "run_cgroup_memory_swap_delta_bytes": (
+            rows[-1].get("swap_telemetry", {}).get("run_cgroup_memory_swap_delta_bytes") if rows else None
+        ),
         "monitor_abort_reason": monitor.abort_reason,
         "monitor_sample_count": len(rows),
         "monitor_samples": rows,

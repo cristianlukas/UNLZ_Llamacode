@@ -1,0 +1,32 @@
+{
+  "task": "Q-20261022-VF-ITERATION-37",
+  "related_campaign": "Q-20261022-VF-ITERATION-35",
+  "preregistered_at_utc": "2026-10-22T15:00:57Z",
+  "status": "preregistered before harness edit",
+  "question": "Does replacing the system-wide pswpout abort with a run-cgroup memory.swap.current delta prevent unrelated swap activity from invalidating the holdout while preserving protection against swap charged to the inference worker?",
+  "triggering_evidence": {
+    "attempt": 6,
+    "receipt": "../Q-20261022-VF-ITERATION-35/runs/131072/2026101/receipt.json",
+    "request_sent": false,
+    "model_loaded": false,
+    "global_pswpout_delta_pages": 1458,
+    "global_pswpout_delta_bytes_at_4k_pages": 5971968,
+    "minimum_mem_available_bytes": 119390248960,
+    "global_psi_avg10_max_percent": 0.0,
+    "run_cgroup_psi_avg10_max_percent": 0.0,
+    "quality_score": null
+  },
+  "hypothesis": "The global /proc/vmstat pswpout counter is not attributable to the test cgroup. A run-cgroup memory.swap.current delta is attributable and should remain a safety signal; global pswpout remains recorded for host telemetry only.",
+  "planned_change": {
+    "record": "run-cgroup memory.swap.current bytes, baseline, delta, and system-wide pswpin/pswpout deltas",
+    "abort_rule": "Abort only when run-cgroup memory.swap.current grows by more than 4 MiB; retain existing MemAvailable and sustained global/run-cgroup PSI aborts",
+    "frozen": ["model weights", "ASTRA/SOL profiles", "Flash-Next production profile", "PeritoSoft", "context fixture", "sampling", "GPU configuration"]
+  },
+  "cpu_only_regressions": [
+    "A >4 MiB global pswpout delta with abundant MemAvailable, low PSI, and no run-cgroup swap delta is recorded but does not abort.",
+    "A >4 MiB run-cgroup memory.swap.current delta aborts.",
+    "MemAvailable below 20 GiB and sustained severe global/run-cgroup PSI still abort."
+  ],
+  "acceptance": "All Q35 CPU-only regression tests pass; py_compile passes; no GPU or inference server is started. Only after this diagnosis is documented may a new attempt be preregistered and preflighted.",
+  "non_goals": ["do not change model, quantization, requested context, sampling, or worker memory budget", "do not kill unrelated processes", "do not claim a quality result from attempt 06"]
+}

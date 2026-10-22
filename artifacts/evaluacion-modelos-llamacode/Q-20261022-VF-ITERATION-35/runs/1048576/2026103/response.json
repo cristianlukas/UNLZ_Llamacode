@@ -1,0 +1,37 @@
+{
+  "id": "chatcmpl-dc100f1d05154a2c9c2d0272",
+  "object": "chat.completion",
+  "created": 1792684554,
+  "model": "qwen3.8-flash-next-iq2_xs",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "1. MX-6130\n2. 7.625 units\n3. SEAL-P3-806\n4. AR-2026-7D31\n5. 2026-10-11\n6. PKG-72-LA\n7. node-42\n8. sha256:8c9e2a71"
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 1001463,
+    "completion_tokens": 90,
+    "total_tokens": 1001553,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1001463,
+    "prompt_ms": 433426.0,
+    "prompt_per_token_ms": 0.433,
+    "prompt_per_second": 2310.6,
+    "predicted_n": 90,
+    "predicted_ms": 1052.9,
+    "predicted_per_token_ms": 11.699,
+    "predicted_per_second": 85.5,
+    "draft_n": 79,
+    "draft_n_accepted": 59
+  }
+}

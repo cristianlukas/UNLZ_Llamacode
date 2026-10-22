@@ -1,0 +1,37 @@
+{
+  "id": "chatcmpl-f9c8c59e8bba404f80b89335",
+  "object": "chat.completion",
+  "created": 1792682853,
+  "model": "qwen3.8-flash-next-iq2_xs",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "Based on the sealed case files provided, here are the authoritative values for each case, disregarding any REVOKED records:\n\n1.  **case-6102-01** (service_route): **CT-9942**\n    *   *Source:* `[SEALED CASE FILE] case_id=case-6102-01; field=service_route; revision=03; status=FINAL_APPROVED; value=CT-9942; audit=verified.`\n    *   *Note:* Revision 04 was REVOKED.\n\n2.  **case-6102-02** (approved_limit): **42.10 units**\n    *   *Source:* `[SEALED CASE FILE] case_id=case-6102-02; field=approved_limit; revision=03; status=FINAL_APPROVED; value=42.10 units; audit=verified.`\n    *   *Note:* Revision 04 was REVOKED.\n\n3.  **case-6102-03** (shipment_seal): **SEAL-K8-114**\n    *   *Source:* `[SEALED CASE FILE] case_id=case-6102-03; field=shipment_seal; revision=03; status=FINAL_APPROVED; value=SEAL-K8-114; audit=verified.`\n    *   *Note:* Revision 04 was REVOKED.\n\n4.  **case-6102-04** (archive_ref): **AR-2026-1C45**\n    *   *Source:* `[SEALED CASE FILE] case_id=case-6102-04; field=archive_ref; revision=03; status=FINAL_APPROVED; value=AR-2026-1C45; audit=verified.`\n    *   *Note:* Revision 04 was REVOKED.\n\n5.  **case-6102-05** (inspection_date): **2026-07-29**\n    *   *Source:* `[SEALED CASE FILE] case_id=case-6102-05; field=inspection_date; revision=03; status=FINAL_APPROVED; value=2026-07-29; audit=verified.`\n    *   *Note:* Revision 04 was REVOKED.\n\n6.  **case-6102-06** (package_trace): **PKG-13-MV**\n    *   *Source:* `[SEALED CASE FILE] case_id=case-6102-06; field=package_trace; revision=03; status=FINAL_APPROVED; value=PKG-13-MV; audit=verified.`\n    *   *Note:* Revision 04 was REVOKED.\n\n7.  **case-6102-07** (recovery_node): **node-17**\n    *   *Source:* `[SEALED CASE FILE] case_id=case-6102-07; field=recovery_node; revision=03; status=FINAL_APPROVED; value=node-17; audit=verified.`\n    *   *Note:* Revision 04 was REVOKED.\n\n8.  **case-6102-08** (checksum): **sha256:5f02bc86**\n    *   *"
+      },
+      "finish_reason": "length"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 250397,
+    "completion_tokens": 768,
+    "total_tokens": 251165,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 250397,
+    "prompt_ms": 75968.2,
+    "prompt_per_token_ms": 0.303,
+    "prompt_per_second": 3296.1,
+    "predicted_n": 768,
+    "predicted_ms": 5351.2,
+    "predicted_per_token_ms": 6.968,
+    "predicted_per_second": 143.5,
+    "draft_n": 613,
+    "draft_n_accepted": 551
+  }
+}

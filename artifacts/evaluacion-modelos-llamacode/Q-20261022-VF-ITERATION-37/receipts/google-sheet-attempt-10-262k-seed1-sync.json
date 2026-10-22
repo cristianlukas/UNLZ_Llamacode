@@ -1,0 +1,25 @@
+{
+  "task": "Q-20261022-VF-ITERATION-37",
+  "recorded_at_utc": "2026-10-22T15:28:18Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_title": "Listado de Juegos",
+  "writes": [
+    {
+      "sheet": "Evaluaciones LlamaCode",
+      "range": "A268:J268",
+      "result": "readback matches the updated Q35 state and metrics through 262144:2026101; seed 2026102 active"
+    },
+    {
+      "sheet": "Accionables",
+      "range": "A2:N2",
+      "result": "readback matches updated recommendation and status"
+    }
+  ],
+  "style_readback": "TOP vertical alignment, WRAP, Arial 10 preserved",
+  "active_run": "262144:2026102",
+  "source_receipts": [
+    "Q35/runs/262144/2026101/receipt.json",
+    "Q37/receipts/q35-seed-262144-2026101-incomplete-completion.json",
+    "Q37/receipts/preflight-attempt-09-host.json"
+  ]
+}

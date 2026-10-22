@@ -1,0 +1,46 @@
+{
+  "task": "Q-20261022-VF-ITERATION-37",
+  "campaign": "Q-20261022-VF-ITERATION-35",
+  "attempt": 7,
+  "started_at_utc": "2026-10-22T15:11:29.338451Z",
+  "supervisor_unit": "llamacode-q35-supervisor.service",
+  "worker_unit": "llamacode-q35-context-131072-seed-2026101-a07.service",
+  "worker_cgroup": "/background.slice/llamacode-q35-context-131072-seed-2026101-a07.service",
+  "worker_preflight": {
+    "decision": "pass",
+    "checked_at_utc": "2026-10-22T15:11:29Z",
+    "external_inference_servers": [],
+    "MemAvailable_gib": 116.973,
+    "SwapFree_gib": 8.0,
+    "PSI_avg10_global_some_full": [0.0, 0.0],
+    "worker_memory_high_bytes": 99842322432,
+    "worker_memory_max_bytes": 108432257024,
+    "worker_memory_swap_max_bytes": 4294967296,
+    "worker_oom_score_adjust": 900,
+    "results_free_gib": 114.075
+  },
+  "model_startup": {
+    "ready_message_observed_in_server_log": true,
+    "context": 131072,
+    "experts_loaded_gib": 33.02,
+    "gpu_expert_cache_gib": 16.19,
+    "pre_request_monitor_sample": {
+      "worker_memory_current_bytes": 40849354752,
+      "worker_swap_current_bytes": 0,
+      "worker_memory_events_oom_kill": 0,
+      "gpu_0_used_mib": 5796,
+      "gpu_1_used_mib": 20502,
+      "gpu_1_free_mib": 4074
+    }
+  },
+  "request_state": {
+    "request_json_written": true,
+    "request_json_written_at_utc": "2026-10-22T15:11:45.459912Z",
+    "request_model": "qwen3.8-flash-next-iq2_xs",
+    "prompt_text_bytes": 340136,
+    "request_sent_confirmed": false,
+    "response_json_present": false,
+    "quality_score": null
+  },
+  "interpretation": "Startup and worker gates passed. This receipt is a progress snapshot; the final Q35 receipt will determine whether the API request was sent and whether the result is valid quality or infrastructure failure."
+}

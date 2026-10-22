@@ -1,0 +1,37 @@
+{
+  "id": "chatcmpl-6bb8c90e07994916af4f359f",
+  "object": "chat.completion",
+  "created": 1792681905,
+  "model": "qwen3.8-flash-next-iq2_xs",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "Based on the sealed case archive records, here are the authoritative values for each case, disregarding any REVOKED revisions:\n\n1.  **Case-6101-01** (service_route): The FINAL_APPROVED record (revision 03) lists the value **SE-2086**. (The REVOKED revision 04 lists NW-7314).\n2.  **Case-6101-02** (approved_limit): The FINAL_APPROVED record (revision 03) lists the value **18.75 units**. (The REVOKED revision 04 lists 7.625 units).\n3.  **Case-6101-03** (shipment_seal): The FINAL_APPROVED record (revision 03) lists the value **SEAL-T9-207**. (The REVOKED revision 04 lists SEAL-R6-552).\n4.  **Case-6101-04** (archive_ref): The FINAL_APPROVED record (revision 03) lists the value **AR-2026-9F62**. (The REVOKED revision 04 lists AR-2026-7D31).\n5.  **Case-6101-05** (inspection_date): The FINAL_APPROVED record (revision 03) lists the value **2026-09-03**. (The REVOKED revision 04 lists 2026-07-29).\n6.  **Case-6101-06** (package_trace): The FINAL_APPROVED record (revision 03) lists the value **PKG-48-XQ**. (The REVOKED revision 04 lists PKG-06-RC).\n7.  **Case-6101-07** (recovery_node): The FINAL_APPROVED record (revision 03) lists the value **node-31**. (The REVOKED revision 04 lists node-17).\n8.  **Case-6101-08** (checksum): The FINAL_APPROVED record (revision 03) lists the value **sha256:e14a97c3**. (The REVOKED revision 04 lists sha256:3b6d0f42).\n\n**Final Answers:**\n\n1. SE-2086\n2. 18.75 units\n3. SEAL-T9-207\n4. AR-2026-9F62\n5. 2026-09-03\n6. PKG-48-XQ\n7. node-31\n8. sha256:e14a97c3"
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 125135,
+    "completion_tokens": 618,
+    "total_tokens": 125753,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 125135,
+    "prompt_ms": 36208.1,
+    "prompt_per_token_ms": 0.289,
+    "prompt_per_second": 3456.0,
+    "predicted_n": 618,
+    "predicted_ms": 4075.8,
+    "predicted_per_token_ms": 6.595,
+    "predicted_per_second": 151.6,
+    "draft_n": 466,
+    "draft_n_accepted": 433
+  }
+}

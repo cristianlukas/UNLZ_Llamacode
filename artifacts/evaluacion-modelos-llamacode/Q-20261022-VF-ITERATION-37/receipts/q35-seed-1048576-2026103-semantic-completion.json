@@ -1,0 +1,66 @@
+{
+  "task": "Q-20261022-VF-ITERATION-37",
+  "campaign": "Q-20261022-VF-ITERATION-35",
+  "fixture_key": "1048576:2026103",
+  "attempt": 1,
+  "started_at_utc": "2026-10-22T15:55:37.959694Z",
+  "finished_at_utc": "2026-10-22T16:03:11.733696Z",
+  "profile": "ASTRA DEFAULT / ISTA IQ2_XS / Strata",
+  "model": "qwen3.8-flash-next-iq2_xs",
+  "prompt_tokens": 1001463,
+  "completion_tokens": 90,
+  "finish_reason": "stop",
+  "http_status": 200,
+  "request_elapsed_seconds": 434.8103451520001,
+  "total_server_session_seconds": 453.25042349700016,
+  "prefill_tokens_per_second": 2310.6,
+  "decode_tokens_per_second": 85.5,
+  "min_system_mem_available_bytes": 69772722176,
+  "peak_process_tree_rss_bytes": 54919712768,
+  "run_cgroup_memory_swap_delta_bytes": 0,
+  "monitor_abort_reason": null,
+  "server_exit_code": 0,
+  "systemd_exec_main_status": 0,
+  "original_grader": {
+    "score": {
+      "correct": 0,
+      "total": 8,
+      "percent": 0.0
+    },
+    "strict_output_valid": false,
+    "parsed_answer": null,
+    "interpretation": "Not a semantic score: raw numbered list was not JSON, while neither prompt nor request required JSON."
+  },
+  "semantic_regrade": {
+    "method": "numbered_requests_in_prompt_order",
+    "answers_extracted": {
+      "case-6103-01": "MX-6130",
+      "case-6103-02": "7.625 units",
+      "case-6103-03": "SEAL-P3-806",
+      "case-6103-04": "AR-2026-7D31",
+      "case-6103-05": "2026-10-11",
+      "case-6103-06": "PKG-72-LA",
+      "case-6103-07": "node-42",
+      "case-6103-08": "sha256:8c9e2a71"
+    },
+    "correct": 8,
+    "total": 8,
+    "percent": 100.0,
+    "matches": {
+      "case-6103-01": true,
+      "case-6103-02": true,
+      "case-6103-03": true,
+      "case-6103-04": true,
+      "case-6103-05": true,
+      "case-6103-06": true,
+      "case-6103-07": true,
+      "case-6103-08": true
+    },
+    "unresolved_case_ids": [],
+    "unanswered_case_ids": []
+  },
+  "prompt_sha256": "2e093788765472cc73235f769f87f498dc8ea29ab055d6bbb3b27bb8c05b085d",
+  "request_sha256": "90a223c92550570b8ae47a05677c33db2833f4a1d388f379a6c4fc9359803fc9",
+  "canonical_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/runs/1048576/2026103/receipt.json",
+  "audit_receipt": "receipts/q35-semantic-regrade-01.json"
+}

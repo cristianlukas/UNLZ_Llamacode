@@ -1,0 +1,21 @@
+{
+  "task": "Q-20261022-VF-ITERATION-37",
+  "suite": "Q35 test_pressure_monitor.py port TIME_WAIT regression",
+  "completed_at_utc": "2026-10-22T15:17:20.707165+00:00",
+  "command": "python3 -m unittest test_pressure_monitor.py -v && python3 -m py_compile run_context_holdout.py run_all_context_holdout.py test_pressure_monitor.py",
+  "tests_passed": 22,
+  "tests_failed": 0,
+  "tests_skipped": 0,
+  "py_compile": "pass",
+  "gpu_used": false,
+  "inference_requests_sent": 0,
+  "new_regressions": {
+    "active_listener_rejected": true,
+    "clean_close_time_wait_allowed": true
+  },
+  "source_changes": [
+    "Q-20261022-VF-ITERATION-35/scripts/run_context_holdout.py",
+    "Q-20261022-VF-ITERATION-35/scripts/test_pressure_monitor.py"
+  ],
+  "preflight_receipt": "preflight-attempt-08-host.json"
+}

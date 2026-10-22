@@ -1,0 +1,85 @@
+{
+  "task": "Q-20261022-VF-ITERATION-37",
+  "campaign": "Q-20261022-VF-ITERATION-35",
+  "recorded_at_utc": "2026-10-22T15:26:28Z",
+  "queue_lock": {
+    "task_id": "Q-20261022-VF-ITERATION-37",
+    "token": "89bea058-cced-43f6-a5e8-2ee41da2394e",
+    "owner": "Codex · reanudación lote VF-20261019-01"
+  },
+  "cpu_regressions": {
+    "tests_passed": 25,
+    "tests_failed": 0,
+    "py_compile": "pass",
+    "gpu_used": false
+  },
+  "host_preflight_receipt": "preflight-attempt-09-host.json",
+  "resume": {
+    "previous_row_skipped": {
+      "key": "131072:2026103",
+      "context": 131072,
+      "seed": 2026103,
+      "attempt_no": 1,
+      "service_unit": "llamacode-q35-context-131072-seed-2026103-a01.service",
+      "started_at_utc": "2026-10-22T15:18:58.566902+00:00",
+      "finished_at_utc": "2026-10-22T15:19:54.169780+00:00",
+      "return_code": 2,
+      "stdout_tail": "",
+      "stderr_tail": "",
+      "systemd_log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/runs/131072/2026103/systemd-unit.log",
+      "run_directory": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/runs/131072/2026103",
+      "receipt": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/runs/131072/2026103/receipt.json",
+      "classification": "incomplete",
+      "request_sent": true,
+      "correct": 0,
+      "total": 8,
+      "strict_output_valid": false,
+      "transport_error": null,
+      "monitor_abort_reason": null,
+      "resource_limits": {
+        "mem_total_bytes": 132615856128,
+        "mem_available_bytes": 125475823616,
+        "memory_high_bytes": 99706019840,
+        "memory_max_bytes": 108295954432,
+        "memory_swap_max_bytes": 4294967296,
+        "oom_score_adjust": 900,
+        "oom_policy": "kill",
+        "kill_mode": "control-group",
+        "managed_oom_memory_pressure": "kill",
+        "managed_oom_memory_pressure_limit": "80%"
+      },
+      "model_loaded": true,
+      "http_status": 200,
+      "response_present": true,
+      "finish_reason": "length",
+      "prompt_tokens": 125113,
+      "minimum_prompt_tokens_95pct": 124519
+    },
+    "next_run_started": {
+      "key": "262144:2026101",
+      "context": 262144,
+      "seed": 2026101,
+      "attempt_no": 1,
+      "service_unit": "llamacode-q35-context-262144-seed-2026101-a01.service",
+      "run_directory": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/runs/262144/2026101",
+      "state": "starting",
+      "started_at_utc": "2026-10-22T15:25:43.506334+00:00",
+      "resource_limits": {
+        "mem_total_bytes": 132615856128,
+        "mem_available_bytes": 125493923840,
+        "memory_high_bytes": 99724120064,
+        "memory_max_bytes": 108314054656,
+        "memory_swap_max_bytes": 4294967296,
+        "oom_score_adjust": 900,
+        "oom_policy": "kill",
+        "kill_mode": "control-group",
+        "managed_oom_memory_pressure": "kill",
+        "managed_oom_memory_pressure_limit": "80%"
+      }
+    },
+    "progress_state": "run-in-progress",
+    "supervisor_cgroup": "/background.slice/llamacode-q35-supervisor.service"
+  },
+  "preregistration": "q35-continue-after-quality-negative-preregistration.json",
+  "result_status": "worker attempt started; model response not yet complete"
+}

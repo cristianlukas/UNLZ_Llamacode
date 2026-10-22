@@ -1,0 +1,112 @@
+{
+  "task": "Q-20261022-VF-ITERATION-37",
+  "checked_at_utc": "2026-10-22T14:16:20.604775+00:00",
+  "unit": "llamacode-q37-system-oom-2892372-9a327c.service",
+  "controller_cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/app-org.chromium.Chromium-2778277.scope",
+  "controller_survived": true,
+  "desktop_pids_before": {
+    "chatgpt": 2778277,
+    "codex_app_server": 2829386
+  },
+  "desktop_pids_after": {
+    "chatgpt": 2778277,
+    "codex_app_server": 2829386
+  },
+  "worker_report": {
+    "worker_pid": 2892381,
+    "child_pid": 2892382,
+    "cgroup": "/background.slice/llamacode-q37-system-oom-2892372-9a327c.service",
+    "memory_high": "125829120",
+    "memory_max": "134217728",
+    "memory_swap_max": "0",
+    "oom_group": "1",
+    "oom_score_adjust": "900",
+    "q35_cgroup_memory_state": {
+      "process_cgroup": "/background.slice/llamacode-q37-system-oom-2892372-9a327c.service",
+      "run": {
+        "path": "/sys/fs/cgroup/background.slice/llamacode-q37-system-oom-2892372-9a327c.service",
+        "memory_current_bytes": 10797056,
+        "memory_max_bytes": 134217728,
+        "memory_high_bytes": 125829120,
+        "memory_swap_max_bytes": 0,
+        "memory_oom_group": 1,
+        "memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0,
+          "sock_throttled": 0
+        },
+        "psi": {
+          "some": {
+            "avg10": 0.0,
+            "avg60": 0.0,
+            "avg300": 0.0
+          },
+          "full": {
+            "avg10": 0.0,
+            "avg60": 0.0,
+            "avg300": 0.0
+          }
+        }
+      },
+      "user_manager": {
+        "path": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service",
+        "memory_current_bytes": 112152969216,
+        "memory_max_bytes": "max",
+        "memory_high_bytes": "max",
+        "memory_swap_max_bytes": "max",
+        "memory_oom_group": 0,
+        "memory_events": {
+          "low": 0,
+          "high": 6852,
+          "max": 109,
+          "oom": 3,
+          "oom_kill": 10,
+          "oom_group_kill": 3,
+          "sock_throttled": 2468
+        },
+        "psi": {
+          "some": {
+            "avg10": 0.0,
+            "avg60": 0.0,
+            "avg300": 0.21
+          },
+          "full": {
+            "avg10": 0.0,
+            "avg60": 0.0,
+            "avg300": 0.2
+          }
+        }
+      }
+    }
+  },
+  "systemd_run_returncode": 1,
+  "systemd_run_stderr": "",
+  "unit_properties": {
+    "Result": "oom-kill",
+    "OOMPolicy": "kill",
+    "ControlGroup": "",
+    "MemoryHigh": "125829120",
+    "MemoryMax": "134217728",
+    "MemorySwapMax": "0",
+    "OOMScoreAdjust": "900"
+  },
+  "unit_journal_tail": "Starting llamacode-q37-system-oom-2892372-9a327c.service - /usr/bin/python3 /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-37/scripts/oom_worker.py...\nStarted llamacode-q37-system-oom-2892372-9a327c.service - /usr/bin/python3 /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-37/scripts/oom_worker.py.\nllamacode-q37-system-oom-2892372-9a327c.service: A process of this unit has been killed by the OOM killer.\nllamacode-q37-system-oom-2892372-9a327c.service: Killing process 2892381 (python3) with signal SIGKILL.\nllamacode-q37-system-oom-2892372-9a327c.service: Main process exited, code=killed, status=9/KILL\nllamacode-q37-system-oom-2892372-9a327c.service: Failed with result 'oom-kill'.\n",
+  "acceptance": {
+    "oom_killed_only_in_service": true,
+    "memory_max_128m": true,
+    "memory_high_120m": true,
+    "oom_policy_kill": true,
+    "oom_score_adjust_900": true,
+    "worker_cgroup_outside_user_manager": true,
+    "q35_monitor_reads_system_worker_and_user_pressure": true,
+    "worker_group_oom_enabled": true,
+    "caller_survived": true,
+    "desktop_survived": true,
+    "local_oom_logged": true
+  },
+  "passed": true
+}

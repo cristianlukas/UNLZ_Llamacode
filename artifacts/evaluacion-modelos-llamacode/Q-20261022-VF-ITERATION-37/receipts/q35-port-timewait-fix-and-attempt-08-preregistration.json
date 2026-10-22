@@ -1,0 +1,63 @@
+{
+  "task": "Q-20261022-VF-ITERATION-37",
+  "campaign": "Q-20261022-VF-ITERATION-35",
+  "preregistered_at_utc": "2026-10-22T15:14:52.882501+00:00",
+  "queue_lock": {
+    "task_id": "Q-20261022-VF-ITERATION-37",
+    "token": "89bea058-cced-43f6-a5e8-2ee41da2394e",
+    "owner": "Codex · reanudación lote VF-20261019-01"
+  },
+  "incident": {
+    "previous_valid_run": {
+      "key": "131072:2026101",
+      "attempt_no": 7,
+      "request_sent": true,
+      "classification": "valid quality",
+      "correct": 0,
+      "total": 8,
+      "finish_reason": "stop",
+      "prompt_tokens": 125135,
+      "prefill_tokens_per_second": 3456.0,
+      "decode_tokens_per_second": 151.6,
+      "run_cgroup_swap_delta_bytes": 0
+    },
+    "next_seed": {
+      "key": "131072:2026102",
+      "attempt_no": 1,
+      "request_sent": false,
+      "classification": "invalid infrastructure / missing result receipt",
+      "error": "preflight bind on 127.0.0.1:8350 returned EADDRINUSE 0.224 s after previous run finished"
+    },
+    "evidence": "The successful run final monitor sample recorded an empty server process group and GPU memory returned to baseline; server.log says Strata stopped. Current live process scan and listener check are empty. Strata Linux HTTP server sets SO_REUSEADDR; Q35 preflight bind did not. Probable cause: harmless TCP TIME_WAIT mistaken for an active listener. No model request occurred on seed 2."
+  },
+  "change": {
+    "scope": "Q35 test harness only; no product profile, weights, model settings, GUI, or inference server outside this run.",
+    "implementation": "Set SO_REUSEADDR on the preflight probe socket before bind. Linux TIME_WAIT is allowed; a real listener must still block. Leave inference-server process scan in place.",
+    "regressions": [
+      "A live listener on the task port is rejected.",
+      "A TCP port in TIME_WAIT after a clean close can pass the bindability probe when reuse is enabled.",
+      "The probe closes its socket and leaves no listener."
+    ],
+    "verification": "CPU-only regression suite and py_compile; no GPU used for this fix."
+  },
+  "next_model_run": {
+    "attempt_no": 2,
+    "key": "131072:2026102",
+    "resume": "Q35 supervisor resumes after the already-valid 131072:2026101 row; next seed is 131072:2026102.",
+    "eligibility": "Run only after all CPU regressions pass, fresh preflight shows no inference server process and no active listener on 8350, ≥80 GiB MemAvailable, ≥1 GiB SwapFree, no severe global PSI, ≥23000 MiB free on each RTX 3090, valid lock, fixture/config/model hashes, and required disk space.",
+    "serial_scope": "On valid quality classification, continue the already preregistered Q35 contexts/seeds serially, stopping at the first infrastructure failure. No parallel GPU work.",
+    "retry_policy": "This is a separately preregistered recovery for the diagnosed preflight false positive, not an automatic retry. If this exact recovery or a later run fails infrastructure, stop and diagnose; no additional retry in this registration."
+  },
+  "protected_assets": [
+    "Qwen Flash-Next ASTRA",
+    "Qwen Flash-Next SOL",
+    "Flash-Next production profile",
+    "PeritoSoft",
+    "all model weights"
+  ],
+  "decision_question": "Does the same Flash-Next/Strata profile retrieve the sealed 131072-token holdout across seeds, and then at larger native contexts, under the preregistered exact-match quality gate?",
+  "frozen_config_sha256": "31625e81f851007120b90409fe84cbbe3424f5f99ddbad99db88f53f6736adbb",
+  "frozen_prompt_sha256": "447067abdab496bd72c0aa72574d96196a7ff2cc0c42275087d3decff9ac6ed9",
+  "frozen_expected_sha256": "2c26bb2c495e44b7ce782079b4e9c350ce02185e0758f62e8d5e03ba758ac751",
+  "model_settings_changed": false
+}

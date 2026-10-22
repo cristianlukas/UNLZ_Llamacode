@@ -1,0 +1,231 @@
+{
+  "task": "Q-20261022-VF-ITERATION-37",
+  "campaign": "Q-20261022-VF-ITERATION-35",
+  "completed_at_utc": "2026-10-22T16:04:00Z",
+  "status": "complete",
+  "matrix": {
+    "contexts": [
+      131072,
+      262144,
+      524288,
+      1048576
+    ],
+    "seeds": [
+      2026101,
+      2026102,
+      2026103
+    ],
+    "terminal_responses": 12,
+    "transport_or_resource_failures": 0,
+    "finish_stop_count": 7,
+    "finish_length_count": 5
+  },
+  "semantic_regrade": {
+    "registered_before_scoring": "receipts/q35-semantic-regrade-preregistration.json",
+    "receipt": "receipts/q35-semantic-regrade-01.json",
+    "cpu_regression_tests": "8/8 passed",
+    "same_seed_expected_answers_identical_across_contexts": {
+      "2026101": "29a38ab5a960f94dbf65cae4c125b5d68604664d40b90d441cf96b535dc5e896",
+      "2026102": "6edf3b9ceb43c324479287ea12092cb9dc2914a862fb835908280b6d01832708",
+      "2026103": "bda50a0c24d9a7bbb37c2b379f3fea465c68f2849a027f9cbcada228216e9fa4"
+    },
+    "completed_responses_semantic_score_distribution": {
+      "8/8": 7,
+      "other": 0
+    },
+    "reason_original_json_grade_is_not_quality": "Prompt does not require JSON and request has no response_format; the original grader only json.loads the response."
+  },
+  "by_context": [
+    {
+      "context": 131072,
+      "seeds": [
+        {
+          "seed": 2026101,
+          "completion_status": "complete",
+          "finish_reason": "stop",
+          "semantic_score": "8/8",
+          "prefill_tokens_per_second": 3456.0,
+          "decode_tokens_per_second": 151.6,
+          "request_elapsed_seconds": 40.329417329999956,
+          "total_server_session_seconds": 58.62405350999995
+        },
+        {
+          "seed": 2026102,
+          "completion_status": "complete",
+          "finish_reason": "stop",
+          "semantic_score": "8/8",
+          "prefill_tokens_per_second": 3452.3,
+          "decode_tokens_per_second": 159.3,
+          "request_elapsed_seconds": 40.76367289600012,
+          "total_server_session_seconds": 56.460651938999945
+        },
+        {
+          "seed": 2026103,
+          "completion_status": "incomplete",
+          "finish_reason": "length",
+          "semantic_score": "6/8",
+          "prefill_tokens_per_second": 3414.4,
+          "decode_tokens_per_second": 153.1,
+          "request_elapsed_seconds": 41.70195279199993,
+          "total_server_session_seconds": 55.38451076899992
+        }
+      ],
+      "complete_count": 2,
+      "completed_semantic_scores": [
+        "8/8",
+        "8/8"
+      ],
+      "mean_prefill_tokens_per_second": 3440.9,
+      "mean_decode_tokens_per_second": 154.7,
+      "mean_request_elapsed_seconds": 40.93,
+      "mean_total_server_session_seconds": 56.82
+    },
+    {
+      "context": 262144,
+      "seeds": [
+        {
+          "seed": 2026101,
+          "completion_status": "incomplete",
+          "finish_reason": "length",
+          "semantic_score": "6/8",
+          "prefill_tokens_per_second": 3354.9,
+          "decode_tokens_per_second": 140.7,
+          "request_elapsed_seconds": 80.1720570970001,
+          "total_server_session_seconds": 96.02666140199995
+        },
+        {
+          "seed": 2026102,
+          "completion_status": "incomplete",
+          "finish_reason": "length",
+          "semantic_score": "7/8",
+          "prefill_tokens_per_second": 3296.1,
+          "decode_tokens_per_second": 143.5,
+          "request_elapsed_seconds": 81.40006858899983,
+          "total_server_session_seconds": 97.08453797199991
+        },
+        {
+          "seed": 2026103,
+          "completion_status": "incomplete",
+          "finish_reason": "length",
+          "semantic_score": "8/8",
+          "prefill_tokens_per_second": 3270.5,
+          "decode_tokens_per_second": 141.9,
+          "request_elapsed_seconds": 82.05728365000004,
+          "total_server_session_seconds": 97.54217986100002
+        }
+      ],
+      "complete_count": 0,
+      "completed_semantic_scores": [],
+      "mean_prefill_tokens_per_second": 3307.2,
+      "mean_decode_tokens_per_second": 142.0,
+      "mean_request_elapsed_seconds": 81.21,
+      "mean_total_server_session_seconds": 96.88
+    },
+    {
+      "context": 524288,
+      "seeds": [
+        {
+          "seed": 2026101,
+          "completion_status": "incomplete",
+          "finish_reason": "length",
+          "semantic_score": "6/8",
+          "prefill_tokens_per_second": 2875.7,
+          "decode_tokens_per_second": 122.6,
+          "request_elapsed_seconds": 180.53956927700006,
+          "total_server_session_seconds": 198.27530907699975
+        },
+        {
+          "seed": 2026102,
+          "completion_status": "complete",
+          "finish_reason": "stop",
+          "semantic_score": "8/8",
+          "prefill_tokens_per_second": 2870.5,
+          "decode_tokens_per_second": 118.6,
+          "request_elapsed_seconds": 178.17824188799977,
+          "total_server_session_seconds": 196.31518799600008
+        },
+        {
+          "seed": 2026103,
+          "completion_status": "complete",
+          "finish_reason": "stop",
+          "semantic_score": "8/8",
+          "prefill_tokens_per_second": 2870.0,
+          "decode_tokens_per_second": 125.4,
+          "request_elapsed_seconds": 180.4589911979997,
+          "total_server_session_seconds": 196.2438197309998
+        }
+      ],
+      "complete_count": 2,
+      "completed_semantic_scores": [
+        "8/8",
+        "8/8"
+      ],
+      "mean_prefill_tokens_per_second": 2872.1,
+      "mean_decode_tokens_per_second": 122.2,
+      "mean_request_elapsed_seconds": 179.73,
+      "mean_total_server_session_seconds": 196.94
+    },
+    {
+      "context": 1048576,
+      "seeds": [
+        {
+          "seed": 2026101,
+          "completion_status": "complete",
+          "finish_reason": "stop",
+          "semantic_score": "8/8",
+          "prefill_tokens_per_second": 2310.8,
+          "decode_tokens_per_second": 89.9,
+          "request_elapsed_seconds": 434.665350021,
+          "total_server_session_seconds": 454.9576669080002
+        },
+        {
+          "seed": 2026102,
+          "completion_status": "complete",
+          "finish_reason": "stop",
+          "semantic_score": "8/8",
+          "prefill_tokens_per_second": 2308.6,
+          "decode_tokens_per_second": 94.4,
+          "request_elapsed_seconds": 434.98459901199976,
+          "total_server_session_seconds": 455.37793611200004
+        },
+        {
+          "seed": 2026103,
+          "completion_status": "complete",
+          "finish_reason": "stop",
+          "semantic_score": "8/8",
+          "prefill_tokens_per_second": 2310.6,
+          "decode_tokens_per_second": 85.5,
+          "request_elapsed_seconds": 434.8103451520001,
+          "total_server_session_seconds": 453.25042349700016
+        }
+      ],
+      "complete_count": 3,
+      "completed_semantic_scores": [
+        "8/8",
+        "8/8",
+        "8/8"
+      ],
+      "mean_prefill_tokens_per_second": 2310.0,
+      "mean_decode_tokens_per_second": 89.9,
+      "mean_request_elapsed_seconds": 434.82,
+      "mean_total_server_session_seconds": 454.53
+    }
+  ],
+  "decision": {
+    "technical_capacity": "Current isolated ASTRA/ISTA IQ2_XS/Strata setup processed a 1,001,463-token prompt at 1M context with a semantically exact 8/8 response; no swap, OOM, monitor abort, or transport error.",
+    "quality": "No accuracy gain established over 131K: two complete 131K responses and three complete 1M responses all score 8/8 under the preregistered semantic audit. Five length-capped responses remain partial, not negative quality results.",
+    "performance": "1M mean prefill 2,310.0 tok/s and decode 89.9 tok/s versus 3,440.9/154.7 at 131K; mean request time 434.82 s versus 40.93 s.",
+    "recommendation": "Keep 131K as the productive default. Allow a larger context only for a workload that demonstrably needs more than 131K and accepts the measured latency cost.",
+    "protected": "ASTRA, SOL, productive Flash-Next, PeritoSoft, profiles, and model weights unchanged."
+  },
+  "next_priority_scan": {
+    "P1_NInfer_FlashNext": "blocked: current Ubuntu host lacks supported Linux runtime; reopen on supported Windows/Linux artifact.",
+    "P2_Qwen38_27B": "quality and direct speed evidence complete; no adoption for agents; optional isolated pilot only with a qualifying real workload and safety prerequisites.",
+    "P2_1_tool_safety": "implementation recommendation, not a pending model inference test; requires a separately scoped engineering task.",
+    "P2_2_OpenJet": "blocked: local GGUF has 64 blocks while fixed kernel expects 65.",
+    "P3_RCO": "closed for this revision; no repeat without a changed artifact/revision.",
+    "P4_Swift": "blocked pending access, commercial eligibility/license, and compatibility.",
+    "P5_Strata": "no new primary claim/comparable test currently open."
+  },
+  "next_action": "No additional GPU test is currently eligible under the prioritized queue; reopen only when one of the recorded external conditions or artifacts changes."
+}

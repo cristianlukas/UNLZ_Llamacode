@@ -47,7 +47,7 @@ def calculate_worker_limits(meminfo_text):
         "oom_policy": "kill",
         "kill_mode": "control-group",
         "managed_oom_memory_pressure": "kill",
-        "managed_oom_memory_pressure_limit": "35%",
+        "managed_oom_memory_pressure_limit": "80%",
     }
 
 
@@ -62,7 +62,7 @@ def systemd_properties(limits):
         f"--property=MemoryMax={limits['memory_max_bytes']}",
         f"--property=MemorySwapMax={limits['memory_swap_max_bytes']}",
         "--property=ManagedOOMMemoryPressure=kill",
-        "--property=ManagedOOMMemoryPressureLimit=35%",
+        "--property=ManagedOOMMemoryPressureLimit=80%",
     ]
 
 

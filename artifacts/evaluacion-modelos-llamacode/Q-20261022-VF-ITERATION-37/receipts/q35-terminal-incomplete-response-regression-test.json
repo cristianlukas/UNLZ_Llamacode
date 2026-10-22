@@ -1,0 +1,22 @@
+{
+  "task": "Q-20261022-VF-ITERATION-37",
+  "suite": "Q35 complete negative/incomplete response scheduling regression",
+  "completed_at_utc": "2026-10-22T15:22:18.096086+00:00",
+  "command": "python3 -m unittest test_pressure_monitor.py -v && python3 -m py_compile run_context_holdout.py run_all_context_holdout.py test_pressure_monitor.py",
+  "tests_passed": 25,
+  "tests_failed": 0,
+  "tests_skipped": 0,
+  "py_compile": "pass",
+  "gpu_used": false,
+  "inference_requests_sent": 0,
+  "regressions": {
+    "valid_quality_terminal": true,
+    "complete_incomplete_response_terminal_without_retry": true,
+    "short_prompt_not_terminal": true,
+    "pre_request_failure_not_terminal": true,
+    "active_listener_rejected": true,
+    "time_wait_allowed": true
+  },
+  "progress_enriched_from_final_receipt": true,
+  "progress_snapshot_before_edit": "progress-before-terminal-incomplete-resume.json"
+}

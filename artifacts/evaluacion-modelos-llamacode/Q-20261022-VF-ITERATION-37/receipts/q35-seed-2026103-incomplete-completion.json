@@ -1,0 +1,83 @@
+{
+  "task": "Q-20261022-VF-ITERATION-37",
+  "campaign": "Q-20261022-VF-ITERATION-35",
+  "completed_at_utc": "2026-10-22T15:19:54Z",
+  "run_key": "131072:2026103",
+  "attempt_no": 1,
+  "service_unit": "llamacode-q35-context-131072-seed-2026103-a01.service",
+  "classification": "incomplete",
+  "request_sent": true,
+  "model_loaded": true,
+  "http_status": 200,
+  "prompt_tokens": 125113,
+  "minimum_prompt_tokens_95pct": 124519,
+  "completion_tokens": 768,
+  "finish_reason": "length",
+  "quality_score": {
+    "correct": 0,
+    "total": 8,
+    "percent": 0.0
+  },
+  "strict_output_valid": false,
+  "prefill_tokens_per_second": 3414.4,
+  "decode_tokens_per_second": 153.1,
+  "request_elapsed_seconds": 41.70195279199993,
+  "transport_error": null,
+  "monitor_abort_reason": null,
+  "run_cgroup_memory_swap_delta_bytes": 0,
+  "min_system_mem_available_bytes": 83040006144,
+  "gpu_memory": {
+    "0": {
+      "baseline_mib": 795,
+      "peak_total_used_mib": 23487,
+      "peak_delta_mib": 22692
+    },
+    "1": {
+      "baseline_mib": 108,
+      "peak_total_used_mib": 20808,
+      "peak_delta_mib": 20700
+    }
+  },
+  "progress_row_enriched": {
+    "key": "131072:2026103",
+    "context": 131072,
+    "seed": 2026103,
+    "attempt_no": 1,
+    "service_unit": "llamacode-q35-context-131072-seed-2026103-a01.service",
+    "started_at_utc": "2026-10-22T15:18:58.566902+00:00",
+    "finished_at_utc": "2026-10-22T15:19:54.169780+00:00",
+    "return_code": 2,
+    "stdout_tail": "",
+    "stderr_tail": "",
+    "systemd_log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/runs/131072/2026103/systemd-unit.log",
+    "run_directory": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/runs/131072/2026103",
+    "receipt": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/runs/131072/2026103/receipt.json",
+    "classification": "incomplete",
+    "request_sent": true,
+    "correct": 0,
+    "total": 8,
+    "strict_output_valid": false,
+    "transport_error": null,
+    "monitor_abort_reason": null,
+    "resource_limits": {
+      "mem_total_bytes": 132615856128,
+      "mem_available_bytes": 125475823616,
+      "memory_high_bytes": 99706019840,
+      "memory_max_bytes": 108295954432,
+      "memory_swap_max_bytes": 4294967296,
+      "oom_score_adjust": 900,
+      "oom_policy": "kill",
+      "kill_mode": "control-group",
+      "managed_oom_memory_pressure": "kill",
+      "managed_oom_memory_pressure_limit": "80%"
+    },
+    "model_loaded": true,
+    "http_status": 200,
+    "response_present": true,
+    "finish_reason": "length",
+    "prompt_tokens": 125113,
+    "minimum_prompt_tokens_95pct": 124519
+  },
+  "next_key": "262144:2026101",
+  "interpretation": "Technically complete 200 response at >=95% of 131072 context, but output stopped at max_tokens=768 and scored 0/8; classify as incomplete quality outcome. Do not repeat; preregistered schedule amendment allows continuing to the next context scale."
+}

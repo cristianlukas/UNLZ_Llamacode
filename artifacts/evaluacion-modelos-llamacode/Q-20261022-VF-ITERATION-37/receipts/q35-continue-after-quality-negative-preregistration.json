@@ -1,0 +1,58 @@
+{
+  "task": "Q-20261022-VF-ITERATION-37",
+  "campaign": "Q-20261022-VF-ITERATION-35",
+  "preregistered_at_utc": "2026-10-22T15:21:24.474606+00:00",
+  "queue_lock": {
+    "task_id": "Q-20261022-VF-ITERATION-37",
+    "token": "89bea058-cced-43f6-a5e8-2ee41da2394e",
+    "owner": "Codex · reanudación lote VF-20261019-01"
+  },
+  "trigger": {
+    "run_key": "131072:2026103",
+    "attempt_no": 1,
+    "classification": "incomplete",
+    "request_sent": true,
+    "http_status": 200,
+    "model_loaded": true,
+    "prompt_tokens": 125113,
+    "minimum_prompt_tokens_95pct": 124519,
+    "completion_tokens": 768,
+    "finish_reason": "length",
+    "quality_score": {
+      "correct": 0,
+      "total": 8,
+      "percent": 0.0
+    },
+    "transport_error": null,
+    "monitor_abort_reason": null,
+    "cgroup_swap_delta_bytes": 0
+  },
+  "decision": "The supervisor paused because a complete HTTP response ended at the unchanged 768-token output cap. This is a measured quality/incompleteness outcome, not infrastructure. Do not rerun this key.",
+  "amendment": "Treat a complete model response as terminal for scheduling even when its quality classification is incomplete, provided request_sent=true, model_loaded=true, HTTP 200, prompt token count >=95% of configured context, response body exists, finish_reason is stop or length, and transport_error/monitor_abort_reason are null. Continue the preregistered matrix serially. Missing responses, preflight/hash mismatch, OOM, memory/swap/PSI guard, listener/server failures, non-200, or short prompt remain stop conditions.",
+  "next_run": {
+    "key": "262144:2026101",
+    "context": 262144,
+    "seed": 2026101,
+    "attempt_no": 1,
+    "resume_action": "Resume supervisor; terminal valid-quality rows and complete incomplete-response rows are skipped. The next eligible preregistered fixture is 262144/2026101."
+  },
+  "fixed_settings": {
+    "model": "Qwen3.8-Flash-Next ASTRA IQ2_XS / Strata 0.1.41",
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "top_k": 20,
+    "max_tokens": 768,
+    "reasoning_effort": "none",
+    "fixtures": "unchanged and hash-verified"
+  },
+  "stop_rules": [
+    "any infrastructure invalidity or incomplete response lacking a valid HTTP 200/model-loaded/prompt>=95% response",
+    "OOM, swap, PSI, memory or disk gate",
+    "lock mismatch",
+    "hash/config/fixture mismatch",
+    "external inference server/listener conflict"
+  ],
+  "retry_policy": "No retry for 131072:2026103. Continue only to the next preregistered unique key; any infrastructure failure stops the batch. No model/config/prompt changes.",
+  "current_progress_state": "paused-after-failure",
+  "next_key_in_previous_progress": "131072:2026103"
+}

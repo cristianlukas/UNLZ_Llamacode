@@ -1,0 +1,37 @@
+{
+  "id": "chatcmpl-c73620e46c09445ca7524e97",
+  "object": "chat.completion",
+  "created": 1792682951,
+  "model": "qwen3.8-flash-next-iq2_xs",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "Based on the sealed case archive, here are the authoritative values for each case, using only the records marked **FINAL_APPROVED** and disregarding any **REVOKED** records or distractor case IDs.\n\n1.  **Case-6103-01** (Service Route):\n    *   Final Approved Record: `[SEALED CASE FILE] case_id=case-6103-01; field=service_route; revision=03; status=FINAL_APPROVED; value=MX-6130; audit=verified.`\n    *   Answer: **MX-6130**\n\n2.  **Case-6103-02** (Approved Limit):\n    *   Final Approved Record: `[SEALED CASE FILE] case_id=case-6103-02; field=approved_limit; revision=03; status=FINAL_APPROVED; value=7.625 units; audit=verified.`\n    *   Answer: **7.625 units**\n\n3.  **Case-6103-03** (Shipment Seal):\n    *   Final Approved Record: `[SEALED CASE FILE] case_id=case-6103-03; field=shipment_seal; revision=03; status=FINAL_APPROVED; value=SEAL-P3-806; audit=verified.`\n    *   Answer: **SEAL-P3-806**\n\n4.  **Case-6103-04** (Archive Reference):\n    *   Final Approved Record: `[SEALED CASE FILE] case_id=case-6103-04; field=archive_ref; revision=03; status=FINAL_APPROVED; value=AR-2026-7D31; audit=verified.`\n    *   Answer: **AR-2026-7D31**\n\n5.  **Case-6103-05** (Inspection Date):\n    *   Final Approved Record: `[SEALED CASE FILE] case_id=case-6103-05; field=inspection_date; revision=03; status=FINAL_APPROVED; value=2026-10-11; audit=verified.`\n    *   Answer: **2026-10-11**\n\n6.  **Case-6103-06** (Package Trace):\n    *   Final Approved Record: `[SEALED CASE FILE] case_id=case-6103-06; field=package_trace; revision=03; status=FINAL_APPROVED; value=PKG-72-LA; audit=verified.`\n    *   Answer: **PKG-72-LA**\n\n7.  **Case-6103-07** (Recovery Node):\n    *   Final Approved Record: `[SEALED CASE FILE] case_id=case-6103-07; field=recovery_node; revision=03; status=FINAL_APPROVED; value=node-42; audit=verified.`\n    *   Answer: **node-42**\n\n8.  **Case-6103-08** (Checksum):\n    *   Final Approved Record: `[SEALED CASE FILE] case_id=case-6103-08; field=checksum; revision=03; status=FINAL_APPROVED; value=sha256:8c9e2a71; audit=verified.`\n   "
+      },
+      "finish_reason": "length"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 250416,
+    "completion_tokens": 768,
+    "total_tokens": 251184,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 250416,
+    "prompt_ms": 76567.3,
+    "prompt_per_token_ms": 0.306,
+    "prompt_per_second": 3270.5,
+    "predicted_n": 768,
+    "predicted_ms": 5411.4,
+    "predicted_per_token_ms": 7.046,
+    "predicted_per_second": 141.9,
+    "draft_n": 634,
+    "draft_n_accepted": 558
+  }
+}

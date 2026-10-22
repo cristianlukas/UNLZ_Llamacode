@@ -1,0 +1,15 @@
+{
+  "task": "Q-20261022-VF-ITERATION-37",
+  "related_campaign": "Q-20261022-VF-ITERATION-35",
+  "preregistered_at_utc": "2026-10-22T15:07:00Z",
+  "question": "Does the supervisor reject any holdout prompt or expected-answer fixture whose content does not match the preregistered fixtures manifest before launching a model service?",
+  "finding": "Before this change, the supervisor checked file existence and the config hash; the runner checked prompt bytes against adjacent metadata, but neither compared both fixtures with the manifest hashes.",
+  "change": "Before each run, compute SHA-256 of prompt bytes and of sorted canonical expected JSON (json.dumps ensure_ascii=False, sort_keys=True) and compare both with the manifest entry.",
+  "cpu_only_regressions": ["unchanged prompt and canonical expected JSON pass", "changed prompt bytes are rejected", "changed expected JSON content is rejected"],
+  "acceptance": "Q35 CPU-only suite passes; py_compile passes; no model, inference server, or GPU work is started.",
+  "current_fixture_evidence": {
+    "prompt_sha256": "93823c922e39cab53ea981b851e6a2ef76fc8958bc2da5ee77ae8d565ad37879",
+    "expected_sha256_canonical_json": "28c8d122c14b9b0cbca6d7c3ce08f8fe0294d532f6ff9ee0a0cff2a73e063986",
+    "manifest_match": true
+  }
+}

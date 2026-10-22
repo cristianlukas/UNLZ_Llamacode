@@ -1,0 +1,30 @@
+{
+  "task": "Q-20261022-VF-ITERATION-37",
+  "campaign": "Q-20261022-VF-ITERATION-35",
+  "run_key": "262144:2026101",
+  "attempt_no": 1,
+  "service_unit": "llamacode-q35-context-262144-seed-2026101-a01.service",
+  "classification": "incomplete",
+  "request_sent": true,
+  "model_loaded": true,
+  "http_status": 200,
+  "prompt_tokens": 250383,
+  "minimum_prompt_tokens_95pct": 249037,
+  "completion_tokens": 768,
+  "finish_reason": "length",
+  "quality_score": {
+    "correct": 0,
+    "total": 8,
+    "percent": 0.0
+  },
+  "prefill_tokens_per_second": 3354.9,
+  "decode_tokens_per_second": 140.7,
+  "request_elapsed_seconds": 80.1720570970001,
+  "run_cgroup_memory_swap_delta_bytes": 0,
+  "min_system_mem_available_bytes": 80631853056,
+  "transport_error": null,
+  "monitor_abort_reason": null,
+  "decision": "complete HTTP 200 response but output cap reached, so classify incomplete and do not retry; this is not a quality pass or infrastructure failure",
+  "next_run": "262144:2026102",
+  "canonical_receipt": "Q35/runs/262144/2026101/receipt.json"
+}

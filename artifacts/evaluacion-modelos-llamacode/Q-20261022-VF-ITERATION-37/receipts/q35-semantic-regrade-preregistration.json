@@ -1,0 +1,30 @@
+{
+  "task": "Q-20261022-VF-ITERATION-37",
+  "experiment_id": "Q35-SEMANTIC-REGRADE-01",
+  "registered_at_utc": "2026-10-22T16:04:00Z",
+  "objective": "Separate retrieval accuracy from serialization validity for the completed Q35 context holdout, because the prompt contains eight numbered requests but does not require JSON and the request has no response_format constraint.",
+  "inputs": {
+    "campaign": "Q-20261022-VF-ITERATION-35",
+    "runs": "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/runs/{context}/{seed}/receipt.json",
+    "fixtures": "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/fixtures/{context}/{seed}/probe-expected.json",
+    "contexts": [131072, 262144, 524288, 1048576],
+    "seeds": [2026101, 2026102, 2026103]
+  },
+  "method": {
+    "no_model_requests": true,
+    "no_gpu_use": true,
+    "original_receipts_are_immutable": true,
+    "preserve_original_strict_json_result_as_separate_format_diagnostic": true,
+    "semantic_extraction_order": [
+      "If the full response parses as a JSON object, compare exact expected keys and exact values.",
+      "Otherwise, if the response contains a complete numbered answer list, map its unique lines 1 through 8 to the eight REQUESTS in prompt order. Prefer a clearly labeled Final Answers section; accept a bare 1..8 list because the prompt itself numbers the requests in that same order.",
+      "Otherwise, parse only explicit Answer fields inside a section whose case ID matches the expected case ID; do not count source quotations, revoked values, distractor cases, or arbitrary occurrences of expected strings elsewhere in the response.",
+      "Count exact value equality only after trimming whitespace and surrounding Markdown emphasis/backticks; do not normalize case, punctuation inside values, units, or identifiers."
+    ],
+    "incomplete_outputs": "Keep finish_reason=length as incomplete. Record any unambiguous explicit answers as partial semantic coverage, but do not compare that run as a complete quality result.",
+    "ambiguity_policy": "If a question has multiple conflicting explicit answers or the answer-to-question mapping is ambiguous, mark that item unresolved rather than choosing the answer that matches the fixture.",
+    "reporting": "For each run report original JSON exact-match score, strict JSON validity, semantic exact-match score, extraction path, completion status, and unresolved item numbers. Do not overwrite the original score."
+  },
+  "decision_rule": "Only completed responses with an unambiguous semantic score can support a context-quality comparison. A high semantic score with invalid JSON means retrieval succeeded while output-format compliance failed. Context adoption still requires the same-fixture comparison across contexts and separate operational cost/speed evidence.",
+  "scope_limit": "This audit re-scores existing deterministic receipts only. It does not change the holdout, generation, model, context, sampling, request cap, harness, or original benchmark results."
+}

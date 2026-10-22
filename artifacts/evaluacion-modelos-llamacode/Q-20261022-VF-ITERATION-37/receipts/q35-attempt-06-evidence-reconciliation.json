@@ -1,0 +1,22 @@
+{
+  "task": "Q-20261022-VF-ITERATION-37",
+  "source_receipt": "../Q-20261022-VF-ITERATION-35/runs/131072/2026101/receipt.json",
+  "recorded_at_utc": "2026-10-22T15:07:00Z",
+  "reason": "Correction to the preliminary PSI maxima extraction in q35-swap-guard-fix-preregistration.json and the first Q37 narrative update. The earlier extraction used only the first monitor sample.",
+  "corrected_max_avg10_percent": {
+    "system_global_some": 8.62,
+    "system_global_full": 8.62,
+    "run_cgroup_some": 17.02,
+    "run_cgroup_full": 17.02,
+    "user_manager_some": 0.0,
+    "user_manager_full": 0.0
+  },
+  "gate": "The system guard trips at global or run-cgroup some >=80% or full >=60% sustained for 15 samples. These maxima did not reach the gate.",
+  "remaining_trigger": "The abort was caused by the host-wide pswpout delta of 1458 pages (>4 MiB), not by a severe PSI gate.",
+  "fixture_hash_reconciliation": {
+    "manifest_expected_sha256_canonical_json": "28c8d122c14b9b0cbca6d7c3ce08f8fe0294d532f6ff9ee0a0cff2a73e063986",
+    "computed_sha256_canonical_json": "28c8d122c14b9b0cbca6d7c3ce08f8fe0294d532f6ff9ee0a0cff2a73e063986",
+    "computed_sha256_raw_formatted_file": "fc1d8e1e7051eacfb427d61f99b58f2666904e89356327769eade60b257a3d92",
+    "result": "match; the generator hashes sorted canonical JSON rather than the pretty-printed file bytes"
+  }
+}

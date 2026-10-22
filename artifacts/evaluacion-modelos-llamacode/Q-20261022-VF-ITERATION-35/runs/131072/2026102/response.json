@@ -1,0 +1,37 @@
+{
+  "id": "chatcmpl-ddb3511efc7843edbe6417a2",
+  "object": "chat.completion",
+  "created": 1792682296,
+  "model": "qwen3.8-flash-next-iq2_xs",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "Based on the sealed case files provided, here are the authoritative values for each case, disregarding any REVOKED records:\n\n1.  **Case-6102-01** (Routing Code):\n    *   FINAL_APPROVED record: `case_id=case-6102-01; field=service_route; revision=03; status=FINAL_APPROVED; value=CT-9942`\n    *   Answer: **CT-9942**\n\n2.  **Case-6102-02** (Signed-off Ceiling):\n    *   FINAL_APPROVED record: `case_id=case-6102-02; field=approved_limit; revision=03; status=FINAL_APPROVED; value=42.10 units`\n    *   Answer: **42.10 units**\n\n3.  **Case-6102-03** (Seal Identifier):\n    *   FINAL_APPROVED record: `case_id=case-6102-03; field=shipment_seal; revision=03; status=FINAL_APPROVED; value=SEAL-K8-114`\n    *   Answer: **SEAL-K8-114**\n\n4.  **Case-6102-04** (Archive Reference):\n    *   FINAL_APPROVED record: `case_id=case-6102-04; field=archive_ref; revision=03; status=FINAL_APPROVED; value=AR-2026-1C45`\n    *   Answer: **AR-2026-1C45**\n\n5.  **Case-6102-05** (Approved Inspection Date):\n    *   FINAL_APPROVED record: `case_id=case-6102-05; field=inspection_date; revision=03; status=FINAL_APPROVED; value=2026-07-29`\n    *   Answer: **2026-07-29**\n\n6.  **Case-6102-06** (Trace Code):\n    *   FINAL_APPROVED record: `case_id=case-6102-06; field=package_trace; revision=03; status=FINAL_APPROVED; value=PKG-13-MV`\n    *   Answer: **PKG-13-MV**\n\n7.  **Case-6102-07** (Designated Recovery Node):\n    *   FINAL_APPROVED record: `case_id=case-6102-07; field=recovery_node; revision=03; status=FINAL_APPROVED; value=node-17`\n    *   Answer: **node-17**\n\n8.  **Case-6102-08** (Approved Checksum):\n    *   FINAL_APPROVED record: `case_id=case-6102-08; field=checksum; revision=03; status=FINAL_APPROVED; value=sha256:5f02bc86`\n    *   Answer: **sha256:5f02bc86**"
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 125224,
+    "completion_tokens": 709,
+    "total_tokens": 125933,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 125224,
+    "prompt_ms": 36272.7,
+    "prompt_per_token_ms": 0.29,
+    "prompt_per_second": 3452.3,
+    "predicted_n": 709,
+    "predicted_ms": 4449.5,
+    "predicted_per_token_ms": 6.276,
+    "predicted_per_second": 159.3,
+    "draft_n": 549,
+    "draft_n_accepted": 518
+  }
+}

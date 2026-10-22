@@ -1,0 +1,37 @@
+{
+  "id": "chatcmpl-f7d8f412c518457c9ae5fdba",
+  "object": "chat.completion",
+  "created": 1792683644,
+  "model": "qwen3.8-flash-next-iq2_xs",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "1. SE-2086\n2. 18.75 units\n3. SEAL-T9-207\n4. AR-2026-9F62\n5. 2026-09-03\n6. PKG-48-XQ\n7. node-31\n8. sha256:e14a97c3"
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 1001393,
+    "completion_tokens": 89,
+    "total_tokens": 1001482,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1001393,
+    "prompt_ms": 433349.4,
+    "prompt_per_token_ms": 0.433,
+    "prompt_per_second": 2310.8,
+    "predicted_n": 89,
+    "predicted_ms": 989.6,
+    "predicted_per_token_ms": 11.119,
+    "predicted_per_second": 89.9,
+    "draft_n": 73,
+    "draft_n_accepted": 61
+  }
+}

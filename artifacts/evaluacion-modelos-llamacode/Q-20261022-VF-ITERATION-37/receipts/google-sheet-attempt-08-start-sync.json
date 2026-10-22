@@ -1,0 +1,27 @@
+{
+  "task": "Q-20261022-VF-ITERATION-37",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_title": "Listado de Juegos",
+  "updated_at_utc": "2026-10-22T15:19:13.917196+00:00",
+  "tabs": {
+    "Evaluaciones LlamaCode": {
+      "sheetId": 1945218181,
+      "range": "C268:J268"
+    },
+    "Accionables": {
+      "sheetId": 1393124532,
+      "range": "D2:N2"
+    }
+  },
+  "writeback": "Q35-07 final quality 0/8 and seed 2 port preflight failure recorded; CPU TIME_WAIT fix 22/22; attempt 08 worker preflight passed and request processing in progress.",
+  "readback_verified": true,
+  "readback_format": "Existing top-aligned wrapped cells and row structure preserved; no values outside target cells changed.",
+  "spreadsheet_url": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "local_sources": [
+    "WORK_QUEUE.md",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/RESULTS.md",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/receipts/progress.json",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-37/RESULTS.md",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-37/receipts/q35-attempt-08-start-progress.json"
+  ]
+}

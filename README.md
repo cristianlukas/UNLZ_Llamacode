@@ -2078,6 +2078,13 @@ gradualmente contexto, batch y ubatch. La configuración efectiva y el intento
 de memoria quedan guardados junto al resultado. Esta adaptación no modifica los
 lanzamientos manuales.
 
+En los holdouts Linux, los contadores globales `/proc/vmstat` de swap se conservan
+como telemetría y no se atribuyen al proceso evaluado. Los abortos por swap se
+basan en el cambio de `memory.swap.current` del cgroup propio; los límites de
+MemAvailable y PSI sostenido siguen activos. Antes de iniciar el modelo, el
+supervisor también compara los hashes del prompt y de las respuestas canónicas
+con el manifiesto congelado del holdout.
+
 Evaluaciones de modelos candidatas:
 
 ### Evaluar ideas externas sin repetir pruebas

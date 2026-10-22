@@ -1,0 +1,23 @@
+{
+  "task": "Q-20261022-VF-ITERATION-37",
+  "recorded_at_utc": "2026-10-22T15:41:35Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "writes": [
+    {
+      "sheet": "Evaluaciones LlamaCode",
+      "range": "A268:J268",
+      "readback": "verified; 524K seeds 2 and 3 both complete 0/8, 1M seed1 active"
+    },
+    {
+      "sheet": "Accionables",
+      "range": "A2:N2",
+      "readback": "verified; no context adoption and output-cap caveat corrected"
+    }
+  ],
+  "style_readback": "TOP/WRAP Arial 10 preserved",
+  "active_run": "1048576:2026101",
+  "evidence": [
+    "q35-seed-524288-2026102-zero-quality.json",
+    "q35-seed-524288-2026103-zero-quality.json"
+  ]
+}

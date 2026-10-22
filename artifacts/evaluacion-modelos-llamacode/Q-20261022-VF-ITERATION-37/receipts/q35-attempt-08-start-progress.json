@@ -1,0 +1,55 @@
+{
+  "task": "Q-20261022-VF-ITERATION-37",
+  "campaign": "Q-20261022-VF-ITERATION-35",
+  "attempt": 8,
+  "started_at_utc": "2026-10-22T15:18:01.824091+00:00",
+  "worker_unit": "llamacode-q35-context-131072-seed-2026102-a02.service",
+  "worker_cgroup": "/background.slice/llamacode-q35-context-131072-seed-2026102-a02.service",
+  "worker_preflight": {
+    "decision": "pass",
+    "checked_at_utc": "2026-10-22T15:18:01Z",
+    "mem_available_gib": 116.806,
+    "swap_free_gib": 8.0,
+    "effective_worker_limits": {
+      "memory_high_bytes": 99662745600,
+      "memory_max_bytes": 108252680192,
+      "memory_swap_max_bytes": 4294967296,
+      "oom_group": 1,
+      "oom_score_adjust": 900
+    },
+    "external_inference_servers": [],
+    "port": 8350,
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_used_mib": 819,
+        "memory_total_mib": 24576,
+        "utilization_percent": 20
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_used_mib": 108,
+        "memory_total_mib": 24576,
+        "utilization_percent": 35
+      }
+    ]
+  },
+  "model_startup": {
+    "ready_message_observed": true,
+    "context": 131072,
+    "experts_loaded_gib": 33.02,
+    "gpu_expert_cache_gib": 16.19
+  },
+  "request_state": {
+    "request_json_present": true,
+    "request_sha256": "5df9807d495cf0ee46b7b79668abf22f5259e80ab4dca31a1db94253acc1c1ec",
+    "request_model": "qwen3.8-flash-next-iq2_xs",
+    "prompt_tokens_reported_by_server_log": 125224,
+    "server_processing_request_observed": true,
+    "response_json_present": false,
+    "quality_score": null
+  },
+  "interpretation": "Worker preflight passed, model ready at native context, and the API server is processing the request. Final receipt is not yet present; do not infer quality until it is written."
+}
