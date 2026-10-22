@@ -1,0 +1,45 @@
+{
+  "at_utc": "2026-10-22T12:40:58Z",
+  "startup_seconds": 141.90806820100988,
+  "models": [
+    "qwen3.8-27b",
+    "local"
+  ],
+  "container_state": "running 0 false 0",
+  "resource_snapshot": {
+    "at_utc": "2026-10-22T12:40:58Z",
+    "stage": "sol-startup",
+    "mem_available_bytes": 111055560704,
+    "swap_free_bytes": 3663245312,
+    "gpus": [
+      {
+        "index": 0,
+        "temperature_c": 54,
+        "memory_used_mib": 21038,
+        "utilization_pct": 17
+      },
+      {
+        "index": 1,
+        "temperature_c": 35,
+        "memory_used_mib": 20700,
+        "utilization_pct": 25
+      }
+    ],
+    "cuda_compute_apps_observed": [
+      {
+        "pid": 2693534,
+        "process_name": "VLLM::Worker_TP0",
+        "used_memory": "20384 MiB"
+      },
+      {
+        "pid": 2693535,
+        "process_name": "VLLM::Worker_TP1",
+        "used_memory": "20584 MiB"
+      }
+    ],
+    "foreign_inference_processes": [],
+    "foreign_inference_containers": [],
+    "docker_free_bytes": 11981484032,
+    "docker_device": 66312
+  }
+}

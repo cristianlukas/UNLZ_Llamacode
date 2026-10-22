@@ -1,0 +1,68 @@
+{
+  "validated": true,
+  "port_is_loopback_only": true,
+  "container_isolated": true,
+  "summary": {
+    "project": "q34-sol-speed",
+    "container_name": "q34-sol-speed",
+    "image": "vllm/vllm-openai:v0.27.1",
+    "ports": [
+      {
+        "mode": "ingress",
+        "host_ip": "127.0.0.1",
+        "target": 8000,
+        "published": "18113",
+        "protocol": "tcp"
+      }
+    ],
+    "mem_limit": "103079215104",
+    "memswap_limit": "104152956928",
+    "restart": "no",
+    "model_args": {
+      "--model": "/root/.cache/huggingface/qwen3.8-27b-autoround-int4",
+      "--served-model-name": "qwen3.8-27b",
+      "--quantization": "auto_round",
+      "--dtype": "bfloat16",
+      "--tensor-parallel-size": "2",
+      "--max-model-len": "262144",
+      "--gpu-memory-utilization": "0.90",
+      "--max-num-seqs": "8",
+      "--max-num-batched-tokens": "8192"
+    },
+    "environment_keys": [
+      "ASYNC_SCHED",
+      "CUDA_VISIBLE_DEVICES",
+      "ENABLE_THINKING",
+      "HF_HUB_OFFLINE",
+      "HUGGING_FACE_HUB_TOKEN",
+      "LD_PRELOAD",
+      "MAMBA_BLOCK_SIZE",
+      "MAMBA_CACHE_DTYPE",
+      "MIN_P",
+      "NCCL_CUMEM_ENABLE",
+      "NCCL_P2P_DISABLE",
+      "NVIDIA_VISIBLE_DEVICES",
+      "NVLINK_MODE",
+      "OMP_NUM_THREADS",
+      "PRESENCE_PENALTY",
+      "PYTORCH_CUDA_ALLOC_CONF",
+      "RMTRACE_FALLBACK64K",
+      "RMTRACE_LOG",
+      "RMTRACE_NOFORCEALIGN",
+      "SPEC",
+      "SPEC_N",
+      "TEMP",
+      "TOP_K",
+      "TOP_P",
+      "TRANSFORMERS_OFFLINE",
+      "VLLM_MARLIN_INPUT_DTYPE",
+      "VLLM_NO_USAGE_STATS",
+      "VLLM_SKIP_P2P_CHECK",
+      "VLLM_USE_FLASHINFER_SAMPLER",
+      "VLLM_WORKER_MULTIPROC_METHOD",
+      "W4A8"
+    ]
+  },
+  "at_utc": "2026-10-22T12:23:00Z",
+  "overlay_sha256": "a268c248c0c4de871059e1ada440b37dc97c5c3bee81eab3245ebe3e238ce4c9"
+}

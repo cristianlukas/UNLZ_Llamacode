@@ -1,0 +1,240 @@
+{
+  "task_id": "Q-20261022-VF-ITERATION-34",
+  "status": "preflight_artifacts_available_before_inference",
+  "at_utc": "2026-10-22T12:20:00Z",
+  "lock_token": "4bb67f14-f9a8-4c64-971a-58ddfd497ab3",
+  "control": {
+    "alias": "SOL",
+    "launch_id": "c8d4f1a7-2b69-4e80-95c3-7a1d6f8b2045",
+    "backend_id": "2baf3292-033d-4a6c-9f84-ea13ae4aae3b",
+    "compose": "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.8-27b/vllm/compose/dual/autoround-int4/mtp.yml",
+    "compose_sha256": "2df4e44e1e1b268da80690a0812ac1b60768d60b643096ce8473110f88b7b76a",
+    "gpu_quarantine_override": "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.8-27b/vllm/compose/dual/autoround-int4/vram-quarantine.override.yml",
+    "override_sha256": "e547197d1b283e5c8b684d35e1b348bb91bbba3a327183a14b0d4a6083c36a50",
+    "env_file": "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.8-27b/vllm/compose/dual/autoround-int4/.env",
+    "env_sha256": "b65892c8a206a1f7e636f46b79e77c916f39885db2e151c420253ab5c73eaf1b",
+    "model_dir": "/media/cristian/Disco local/Models/llamacpp/club-3090/qwen3.8-27b-autoround-int4",
+    "model_files": [
+      {
+        "name": ".gitattributes",
+        "size_bytes": 1570,
+        "mtime_ns": 1788880711943967300
+      },
+      {
+        "name": ".setup-verified.tsv",
+        "size_bytes": 997,
+        "mtime_ns": 1788881501246953100,
+        "sha256": "b9b842e49ccc3f8b3a1459ce218d87884604a36725a46cb64b4741641ed7d231"
+      },
+      {
+        "name": "README.md",
+        "size_bytes": 3541,
+        "mtime_ns": 1788880711941967300,
+        "sha256": "4e1683d008085df47351b2814a70c5389888ab6732b36e105159c06a50e047f8"
+      },
+      {
+        "name": "chat_template.jinja",
+        "size_bytes": 8952,
+        "mtime_ns": 1788880711996967100,
+        "sha256": "c3cf9e34abf4f9e36c2d72165aa9c132d3e2a725b6c2586aaa3a8af9d7a81041"
+      },
+      {
+        "name": "config.json",
+        "size_bytes": 15741,
+        "mtime_ns": 1788880712354965300,
+        "sha256": "15173d7a487c88112a02804701ab2cc8f8dd4631a3ef67c8d9bb2c66d30debce"
+      },
+      {
+        "name": "generation_config.json",
+        "size_bytes": 214,
+        "mtime_ns": 1788880712028966900,
+        "sha256": "b8eb74d15e0a56623d00ccd14950a4bb87fabbf84b5cc030dcc904b899fb1eb5"
+      },
+      {
+        "name": "model-00001-of-00007.safetensors",
+        "size_bytes": 3216489680,
+        "mtime_ns": 1788881128857866500
+      },
+      {
+        "name": "model-00002-of-00007.safetensors",
+        "size_bytes": 3190151576,
+        "mtime_ns": 1788881340158783500
+      },
+      {
+        "name": "model-00003-of-00007.safetensors",
+        "size_bytes": 3219130488,
+        "mtime_ns": 1788881302620976500
+      },
+      {
+        "name": "model-00004-of-00007.safetensors",
+        "size_bytes": 3216860120,
+        "mtime_ns": 1788881490928006400
+      },
+      {
+        "name": "model-00005-of-00007.safetensors",
+        "size_bytes": 770164464,
+        "mtime_ns": 1788881079736116900
+      },
+      {
+        "name": "model-00006-of-00007.safetensors",
+        "size_bytes": 2542807272,
+        "mtime_ns": 1788881161509699700
+      },
+      {
+        "name": "model-00007-of-00007.safetensors",
+        "size_bytes": 2542796896,
+        "mtime_ns": 1788881205540474500
+      },
+      {
+        "name": "model.safetensors.index.json",
+        "size_bytes": 192181,
+        "mtime_ns": 1788880712899962600,
+        "sha256": "adf387dee183d109e95cdc4d4988fcd966de326861ff4d66876692170f1e03ad"
+      },
+      {
+        "name": "model_extra_tensors.safetensors",
+        "size_bytes": 298305576,
+        "mtime_ns": 1788880934810851900
+      },
+      {
+        "name": "preprocessor_config.json",
+        "size_bytes": 443,
+        "mtime_ns": 1788880935378849000,
+        "sha256": "3a159dfec9978a186a72ba085e0ad6a050f3968d8b364218d7bd13f5c89381f2"
+      },
+      {
+        "name": "processor_config.json",
+        "size_bytes": 1191,
+        "mtime_ns": 1788880936010845800,
+        "sha256": "d89ef49ce9cd37fbf510158e13c1ef063d9286411c1ec9049932dbe0487143b1"
+      },
+      {
+        "name": "quantization_config.json",
+        "size_bytes": 11142,
+        "mtime_ns": 1788880937080840400,
+        "sha256": "7ca7c7290d50e6155120067e2fe7a31ef2913158b1b07441f95b451bcec6db94"
+      },
+      {
+        "name": "tokenizer.json",
+        "size_bytes": 19989325,
+        "mtime_ns": 1788880949044780000,
+        "sha256": "06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523"
+      },
+      {
+        "name": "tokenizer_config.json",
+        "size_bytes": 1165,
+        "mtime_ns": 1788880950503772600,
+        "sha256": "792fa3f0cb88b111e54ef3134c873531008c4df471d108da17903426e308aa7b"
+      }
+    ],
+    "model_total_bytes": 18698400496,
+    "docker_image": "vllm/vllm-openai:v0.27.1",
+    "docker_image_id": "sha256:0a51ea5b4ae2dc5d81890e5173f54203d2a3ae0cfffe51b8fd2afd4391bfd967",
+    "docker_image_bytes": 9110698465,
+    "effective_model_dir_override": "/media/cristian/Disco local/Models/llamacpp/club-3090",
+    "effective_compose_defaults": {
+      "TP": 2,
+      "MAX_MODEL_LEN": 262144,
+      "MAX_NUM_SEQS": 8,
+      "MAX_NUM_BATCHED_TOKENS": 8192,
+      "GPU_MEMORY_UTILIZATION": 0.9,
+      "SPEC_N": 4,
+      "W4A8": 1,
+      "BIND_HOST": "127.0.0.1",
+      "PORT": 18113,
+      "sampler_override": {
+        "ENABLE_THINKING": "true",
+        "TEMP": "0.6",
+        "TOP_P": "0.95",
+        "TOP_K": "20",
+        "MIN_P": "0.0",
+        "PRESENCE_PENALTY": "0.0"
+      }
+    },
+    "isolation_overlay": "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-34/work/sol-isolated.compose.yml",
+    "isolation_overlay_sha256": null,
+    "model_shard_sha256": [
+      {
+        "path": "/media/cristian/Disco local/Models/llamacpp/club-3090/qwen3.8-27b-autoround-int4/model-00001-of-00007.safetensors",
+        "size_bytes": 3216489680,
+        "sha256": "83c0adb0f1141142a25c5f7937a09272fef2baee7d6b07afe60a076feffe3b66"
+      },
+      {
+        "path": "/media/cristian/Disco local/Models/llamacpp/club-3090/qwen3.8-27b-autoround-int4/model-00002-of-00007.safetensors",
+        "size_bytes": 3190151576,
+        "sha256": "6c86c3917cd228d5699cb1435d9216e2baf281582ba4282a98638163605be7ec"
+      },
+      {
+        "path": "/media/cristian/Disco local/Models/llamacpp/club-3090/qwen3.8-27b-autoround-int4/model-00003-of-00007.safetensors",
+        "size_bytes": 3219130488,
+        "sha256": "bfb9613b3f6ba3d0c5b3efa74f92cc14ec5c9266b341a79bf6b45247a5857770"
+      },
+      {
+        "path": "/media/cristian/Disco local/Models/llamacpp/club-3090/qwen3.8-27b-autoround-int4/model-00004-of-00007.safetensors",
+        "size_bytes": 3216860120,
+        "sha256": "8e9fbd476aa3055c3c0a886298f9beb93c5275c748c533835746f6648f6dae55"
+      },
+      {
+        "path": "/media/cristian/Disco local/Models/llamacpp/club-3090/qwen3.8-27b-autoround-int4/model-00005-of-00007.safetensors",
+        "size_bytes": 770164464,
+        "sha256": "f0cd639621eb26410d96b8c073344ae008f646572a9c4713326ff43d406cf276"
+      },
+      {
+        "path": "/media/cristian/Disco local/Models/llamacpp/club-3090/qwen3.8-27b-autoround-int4/model-00006-of-00007.safetensors",
+        "size_bytes": 2542807272,
+        "sha256": "55a14ee79d3e5a65a8731d89426f4df477e8bdc7daa7976d41254d8afb9432f0"
+      },
+      {
+        "path": "/media/cristian/Disco local/Models/llamacpp/club-3090/qwen3.8-27b-autoround-int4/model-00007-of-00007.safetensors",
+        "size_bytes": 2542796896,
+        "sha256": "6866cf8adcccc4cc6a00e74bc025f1a774fb52103b70f2674d0288272951a733"
+      }
+    ]
+  },
+  "candidate": {
+    "path": "/media/cristian/HDD extra/Modelos-eval/Q-20261022-VF-ITERATION-32/models/qwen3_8_27b.ninfer",
+    "bytes": 18982458624,
+    "mtime_ns": 1792656947300881100,
+    "sha256_previous_receipt": "7f2a0086a071ee932c66106e1552d118a85cfec8ddef13c67a54cd64abb39706",
+    "sha256_verified_previous": "Q32 model-download-verification.json; matching size/mtime rechecked Q34",
+    "runtime": "/media/cristian/HDD extra/Modelos-eval/Q-20261022-VF-ITERATION-32/runtime/extracted/ninfer-rtx3090-linux-x64-0.16.0-rtx3090/ninfer-serve",
+    "runtime_bytes": 776595632,
+    "runtime_mtime_ns": 1791997821000000000,
+    "sha256_actual_q34": "7f2a0086a071ee932c66106e1552d118a85cfec8ddef13c67a54cd64abb39706",
+    "sha256_match_q32_receipt": true,
+    "hash_verified_at_utc": "2026-10-22T12:24:00Z"
+  },
+  "hardware": {
+    "gpus": [
+      {
+        "index": "0",
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_total": "24576 MiB",
+        "memory_used": "712 MiB",
+        "utilization": "21 %",
+        "temperature": "45"
+      },
+      {
+        "index": "1",
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_total": "24576 MiB",
+        "memory_used": "108 MiB",
+        "utilization": "22 %",
+        "temperature": "26"
+      }
+    ],
+    "memory_available_bytes": 121638371328,
+    "swap_free_bytes": 3651186688,
+    "root_free_bytes": 11984543744,
+    "model_volume_free_bytes": 94460506112,
+    "hdd_extra_free_bytes": 125736845312,
+    "docker_root_free_bytes": 11984543744
+  },
+  "safety": {
+    "inference_servers_found": "none in process/listener/docker checks at 2026-10-22T12:16Z",
+    "gui_preserved": true,
+    "production_config_edited": false,
+    "model_weights_modified": false,
+    "gpu_used": false
+  }
+}

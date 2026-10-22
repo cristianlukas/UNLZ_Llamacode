@@ -1,0 +1,11 @@
+{
+  "at_utc": "2026-10-22T12:48:13Z",
+  "profile": "ninfer",
+  "inference_processes": [],
+  "cuda_compute_apps": [],
+  "meminfo": {
+    "MemAvailable": 121601118208,
+    "SwapFree": 3661922304
+  },
+  "gpu_temp_c": 59
+}

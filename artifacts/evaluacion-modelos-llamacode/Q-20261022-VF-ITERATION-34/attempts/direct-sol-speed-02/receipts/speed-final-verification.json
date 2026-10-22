@@ -1,0 +1,179 @@
+{
+  "at_utc": "2026-10-22T12:48:13Z",
+  "final": {
+    "status": "completed",
+    "finished_at_utc": "2026-10-22T12:48:13Z",
+    "campaign_seconds": 577.988844973006,
+    "startup_seconds": {
+      "SOL": 141.90806820100988,
+      "NInfer v3": 175.68727906199638
+    },
+    "startup_delta_ninfer_minus_sol_seconds": 33.779210860986495,
+    "mean_request_saving_sol_minus_ninfer_seconds": 0.8007466089969967,
+    "approx_break_even_requests": 42.18464428253756,
+    "measurements": 30,
+    "summary": [
+      {
+        "cell": "fresh_generation",
+        "target_prompt_tokens": 1024,
+        "profiles": {
+          "SOL": {
+            "prompt_tokens": 1121,
+            "completion_tokens": 256,
+            "e2e_client_seconds": 3.2558156169834547,
+            "repetitions": 3,
+            "ttft_seconds": 0.5301542282104492,
+            "server_e2e_seconds": 3.254178047180176,
+            "effective_prefill_tps_approx": 2114.479033363494,
+            "decode_tps_from_tpot_histogram": 92.38016835310356
+          },
+          "NInfer v3": {
+            "prompt_tokens": 1121,
+            "completion_tokens": 256,
+            "e2e_client_seconds": 3.302317504014354,
+            "repetitions": 3,
+            "prefill_tps": 2089.6668437067465,
+            "decode_tps": 92.75839355765937,
+            "ttft_seconds": 0.53850432,
+            "server_e2e_seconds": 3.30061328
+          }
+        },
+        "ninfer_speedup_fraction_vs_SOL": -0.01408159178345847
+      },
+      {
+        "cell": "fresh_generation",
+        "target_prompt_tokens": 8192,
+        "profiles": {
+          "SOL": {
+            "prompt_tokens": 8233,
+            "completion_tokens": 256,
+            "e2e_client_seconds": 6.190851532999659,
+            "repetitions": 3,
+            "ttft_seconds": 3.7155327796936035,
+            "server_e2e_seconds": 6.18915867805481,
+            "effective_prefill_tps_approx": 2217.17866278099,
+            "decode_tps_from_tpot_histogram": 34.89095947740888
+          },
+          "NInfer v3": {
+            "prompt_tokens": 8233,
+            "completion_tokens": 256,
+            "e2e_client_seconds": 5.65056251801434,
+            "repetitions": 3,
+            "prefill_tps": 2272.125110709759,
+            "decode_tps": 126.33619220769337,
+            "ttft_seconds": 3.622089119,
+            "server_e2e_seconds": 5.648841793000001
+          }
+        },
+        "ninfer_speedup_fraction_vs_SOL": 0.09561685465169978
+      },
+      {
+        "cell": "fresh_generation",
+        "target_prompt_tokens": 24576,
+        "profiles": {
+          "SOL": {
+            "prompt_tokens": 24465,
+            "completion_tokens": 256,
+            "e2e_client_seconds": 14.638102611002978,
+            "repetitions": 3,
+            "ttft_seconds": 12.073212146759033,
+            "server_e2e_seconds": 14.636133432388306,
+            "effective_prefill_tps_approx": 2028.2092041738335,
+            "decode_tps_from_tpot_histogram": 90.12866875891345
+          },
+          "NInfer v3": {
+            "prompt_tokens": 24465,
+            "completion_tokens": 256,
+            "e2e_client_seconds": 13.456978057016386,
+            "repetitions": 3,
+            "prefill_tps": 2132.5685980636545,
+            "decode_tps": 129.8485712657216,
+            "ttft_seconds": 11.481232390999999,
+            "server_e2e_seconds": 13.453097667
+          }
+        },
+        "ninfer_speedup_fraction_vs_SOL": 0.08777041539209174
+      },
+      {
+        "cell": "prompt_copy",
+        "target_prompt_tokens": 2048,
+        "profiles": {
+          "SOL": {
+            "prompt_tokens": 1858,
+            "completion_tokens": 256,
+            "e2e_client_seconds": 3.0005794530152343,
+            "repetitions": 3,
+            "ttft_seconds": 0.8503932952880859,
+            "server_e2e_seconds": 2.9986701011657715,
+            "effective_prefill_tps_approx": 2204.7201471809485,
+            "decode_tps_from_tpot_histogram": 118.69532638730769
+          },
+          "NInfer v3": {
+            "prompt_tokens": 1858,
+            "completion_tokens": 256,
+            "e2e_client_seconds": 2.1692272539949045,
+            "repetitions": 3,
+            "prefill_tps": 2330.973021913565,
+            "decode_tps": 192.4979212348751,
+            "ttft_seconds": 0.795245634,
+            "server_e2e_seconds": 2.167552184
+          }
+        },
+        "ninfer_speedup_fraction_vs_SOL": 0.38324808868655436
+      },
+      {
+        "cell": "prompt_copy",
+        "target_prompt_tokens": 24576,
+        "profiles": {
+          "SOL": {
+            "prompt_tokens": 24293,
+            "completion_tokens": 256,
+            "e2e_client_seconds": 14.125663910002913,
+            "repetitions": 3,
+            "ttft_seconds": 11.85517954826355,
+            "server_e2e_seconds": 14.123665809631348,
+            "effective_prefill_tps_approx": 2045.7728603226717,
+            "decode_tps_from_tpot_histogram": 113.79731259246847
+          },
+          "NInfer v3": {
+            "prompt_tokens": 24293,
+            "completion_tokens": 256,
+            "e2e_client_seconds": 12.628194745979272,
+            "repetitions": 3,
+            "prefill_tps": 2138.7776746361574,
+            "decode_tps": 173.03068876216116,
+            "ttft_seconds": 11.357661967999999,
+            "server_e2e_seconds": 12.626099131
+          }
+        },
+        "ninfer_speedup_fraction_vs_SOL": 0.1185814120027271
+      }
+    ],
+    "ninfer_cells_at_least_10pct_faster_vs_SOL": 2,
+    "speed_gate_passed": true,
+    "quality_gate_passed": false,
+    "prompt_token_mismatches": [],
+    "adoption_recommendation": "Do not adopt for agents with tools: Q32 quality/security failures remain blocking. Speed result applies only to the current SOL vs NInfer profile pair and synthetic workload."
+  },
+  "postflight_inference_servers": [],
+  "docker_containers": [],
+  "cuda_compute_apps_observed": [],
+  "gpu_snapshot": [
+    {
+      "index": 0,
+      "temperature_c": 55,
+      "memory_used_mib": 644,
+      "utilization_pct": 18
+    },
+    {
+      "index": 1,
+      "temperature_c": 59,
+      "memory_used_mib": 108,
+      "utilization_pct": 7
+    }
+  ],
+  "meminfo": {
+    "MemAvailable": 121581174784,
+    "SwapFree": 3661922304
+  }
+}

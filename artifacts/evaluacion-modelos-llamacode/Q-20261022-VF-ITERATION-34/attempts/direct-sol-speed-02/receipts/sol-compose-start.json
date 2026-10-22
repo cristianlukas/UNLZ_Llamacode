@@ -1,0 +1,8 @@
+{
+  "at_utc": "2026-10-22T12:38:36Z",
+  "returncode": 0,
+  "stdout": "",
+  "stderr": " Network q34-sol-speed_default  Creating\n Network q34-sol-speed_default  Created\n Container q34-sol-speed  Creating\n Container q34-sol-speed  Created\n Container q34-sol-speed  Starting\n Container q34-sol-speed  Started\n",
+  "project": "q34-sol-speed",
+  "container": "q34-sol-speed"
+}

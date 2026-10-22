@@ -1,0 +1,19 @@
+{
+  "lock_owned": true,
+  "ports_free": [
+    18113,
+    18132
+  ],
+  "inference_processes_detected": [],
+  "docker_inference_containers_detected": [],
+  "cuda_compute_apps_observed": [],
+  "gpus": [
+    "0, NVIDIA GeForce RTX 3090, 24576, 730, 10, 45",
+    "1, NVIDIA GeForce RTX 3090, 24576, 108, 17, 26"
+  ],
+  "mem_available_bytes": 121560268800,
+  "swap_free_bytes": 3651198976,
+  "docker_free_bytes": 11984502784,
+  "thresholds_passed": true,
+  "at_utc": "2026-10-22T12:27:46Z"
+}

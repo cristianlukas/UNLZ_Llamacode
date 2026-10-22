@@ -1,0 +1,27 @@
+{
+  "at_utc": "2026-10-22T12:53:07Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "status": "completed_and_verified",
+  "writes": [
+    {
+      "tab": "Evaluaciones LlamaCode",
+      "range": "A264:J265",
+      "records": [
+        "Q-20261022-VF-ITERATION-33",
+        "Q-20261022-VF-ITERATION-34"
+      ]
+    },
+    {
+      "tab": "Accionables",
+      "range": "A48:N48",
+      "record_id": "vf-q32-qwen38-27b-ninfer-imatrix-20261022"
+    },
+    {
+      "tab": "Inventario de modelos",
+      "range": "A9:R9",
+      "model": "Qwen3.8-27B NInfer-3090"
+    }
+  ],
+  "verification": "Read back all updated ranges; confirmed exact values and row formatting (top aligned, wrapped).",
+  "visual_browser": "Not used; connector readback and cell formatting metadata used."
+}

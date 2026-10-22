@@ -1,0 +1,145 @@
+{
+  "task_id": "Q-20261022-VF-ITERATION-34",
+  "registered_at_utc": "2026-10-22T12:20:00Z",
+  "lock_token": "4bb67f14-f9a8-4c64-971a-58ddfd497ab3",
+  "phase": "P2-direct-SOL-speed-A-B",
+  "question": "Does NInfer Qwen3.8-27B v3 retain a measured speed advantage over the exact current SOL launch profile?",
+  "profiles": {
+    "control": "SOL Frozenlock AutoRound INT4/W4A8=1 · vLLM0.27.1 · TP2 · MTP4 · max-model-len262144 · max-num-seqs8 · max-batched-tokens8192 · GPU memory utilization 0.90",
+    "candidate": "NInfer0.16.0-rtx3090 Qwen3.8-27B imatrix-v3 · GPU1 · ctx32768 · DFlash2+ngram"
+  },
+  "workload": {
+    "cells": [
+      {
+        "kind": "fresh_generation",
+        "target_prompt_tokens": 1024
+      },
+      {
+        "kind": "fresh_generation",
+        "target_prompt_tokens": 8192
+      },
+      {
+        "kind": "fresh_generation",
+        "target_prompt_tokens": 24576
+      },
+      {
+        "kind": "prompt_copy",
+        "target_prompt_tokens": 2048
+      },
+      {
+        "kind": "prompt_copy",
+        "target_prompt_tokens": 24576
+      }
+    ],
+    "repetitions": 3,
+    "output_tokens_max": 256,
+    "warmup_excluded": 1,
+    "order_seed": 32103,
+    "prompt_seed": 4000,
+    "same_prompts_and_order": true,
+    "max_actual_prompt_tokens": 30000,
+    "max_pair_delta_percent": 1
+  },
+  "metrics": [
+    "startup_seconds",
+    "prompt_tokens",
+    "completion_tokens",
+    "client_e2e_seconds",
+    "server_ttft_seconds",
+    "server_prefill_tps_if_per_request",
+    "server_decode_tps_if_per_request",
+    "ram",
+    "vram",
+    "gpu_temperature",
+    "oom",
+    "http_errors"
+  ],
+  "gate": {
+    "speed_claim": "at least 10% lower median E2E in >=2/5 matched cells and zero errors/OOM",
+    "quality_adoption": "remains rejected by Q32 quality/security results; no agent adoption even if speed gate passes",
+    "break_even": "include startup-time amortization"
+  },
+  "resource_rules": {
+    "single_inference_server_at_a_time": true,
+    "stop_only_owned_server": true,
+    "abort_on_foreign_inference_server": true,
+    "host_ram_min_bytes": 32212254720,
+    "swap_min_bytes": 1073741824,
+    "temp_max_c": 80,
+    "startup_timeout_minutes": 30
+  },
+  "implementation": "Use Q32 exact deterministic prompt generator and sampling. SOL runs through a copied Compose project with only loopback port/container name isolated; NInfer uses its pinned model/runtime on GPU1. No product config, server or weights touched.",
+  "status": "completed",
+  "control_sampler_override": {
+    "ENABLE_THINKING": "true",
+    "TEMP": "0.6",
+    "TOP_P": "0.95",
+    "TOP_K": "20",
+    "MIN_P": "0.0",
+    "PRESENCE_PENALTY": "0.0"
+  },
+  "sol_isolation": {
+    "compose_project": "q34-sol-speed",
+    "container_name": "q34-sol-speed",
+    "host_bind": "127.0.0.1",
+    "host_port": 18113,
+    "overlay": "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-34/work/sol-isolated.compose.yml",
+    "resource_caps": {
+      "memory_reservation": "86g",
+      "memory_limit": "96g",
+      "memory_swap_limit_total": "97g"
+    }
+  },
+  "runner": {
+    "path": "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-34/scripts/run_direct_speed.py",
+    "sha256": "9e786903ab6360eeec3640aa6445eb48fafdd73c97ff5729842292f425ecd912",
+    "syntax_check": "python3 -m py_compile passed",
+    "prompt_helper": "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-32/scripts/run_ninfer_speed.py",
+    "prompt_helper_sha256": "160dc3385d0f6dd542a8b511a38306307d692c9fed938696494e15bc8cf0941f",
+    "attempt_directory_env": "Q34_ATTEMPT_NAME=direct-sol-speed-02 (prevents overwriting failed attempt 01)"
+  },
+  "amendments": [
+    {
+      "at_utc": "2026-10-22T12:34:00Z",
+      "attempt01": "SOL reached /v1/models after 232.9s; first 8-token warmup returned HTTP500 EngineCore failure before measured requests; no OOM/restart; owned container cleaned and no inference server remains",
+      "attempt02": "one diagnostic request only, minimal body with reasoning_effort=medium; capture container logs before cleanup; if it fails, no third startup; if it passes, remove redundant sampling fields from SOL requests and run matrix once",
+      "status": "diagnostic_completed_root_cause_unconfirmed",
+      "diagnostic_result": {
+        "at_utc": "2026-10-22T12:34Z",
+        "startup_seconds": 141.9903616020165,
+        "http_status": 200,
+        "elapsed_seconds": 1.0190428880159743,
+        "completion_tokens": 8,
+        "finish_reason": "length",
+        "container_running_after_request": true,
+        "oom_killed": false,
+        "foreign_inference_servers_after_cleanup": 0,
+        "engine_log_sha256": "40df0873da0855aa776658d098766c692a22dd1e943ac9003d40f865a39976cd",
+        "diagnostic_interpretation": "endpoint accepted a minimal request and stayed running; output budget was consumed by reasoning; log contains TritonBundler missing-cubin warnings, but the first HTTP500 root cause was not reproduced or confirmed"
+      }
+    },
+    {
+      "at_utc": "2026-10-22T12:38:00Z",
+      "id": "Q34-A3",
+      "basis": "A2 received HTTP200 with server-side sampler and remained healthy; the prior failing request included redundant sampling overrides. Root cause remains unproven, so the matched matrix is the one allowed discriminator.",
+      "change": "run the preregistered 5-cell × 3-repetition direct comparison once, using a fresh attempt directory; omit request-level sampling fields only for SOL because its compose profile already fixes identical sampler values; retain NInfer request parameters, prompts, order, output cap, gates, profiles, and metrics unchanged; capture SOL container logs before cleanup on success or failure",
+      "attempt_directory": "attempts/direct-sol-speed-02",
+      "stop_rule": "one measured matrix only; any HTTP/runtime error, token mismatch, OOM, or resource gate aborts the comparison and no third SOL startup is allowed",
+      "status": "completed_once_no_errors_or_mismatches",
+      "outcome": {
+        "measurements": 30,
+        "matched_prompt_pairs": 15,
+        "errors": 0,
+        "oom": 0,
+        "speed_gate_passed": true,
+        "cells_at_least_10pct_faster": 2,
+        "startup_sol_seconds": 141.90806820100988,
+        "startup_ninfer_seconds": 175.68727906199638,
+        "break_even_requests_estimate": 42.18464428253756,
+        "adoption": "do not adopt for tool agents; Q32 quality/security gate remains failed"
+      }
+    }
+  ],
+  "completed_at_utc": "2026-10-22T12:48:13Z",
+  "final_result": "RESULTS.md; attempts/direct-sol-speed-02/receipts/speed-results.json; attempts/direct-sol-speed-02/receipts/speed-final-verification.json"
+}

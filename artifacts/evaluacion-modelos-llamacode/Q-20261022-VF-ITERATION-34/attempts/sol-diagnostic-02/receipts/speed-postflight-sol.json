@@ -1,0 +1,25 @@
+{
+  "at_utc": "2026-10-22T12:37:05Z",
+  "stage": "after-sol-stop",
+  "mem_available_bytes": 121192005632,
+  "swap_free_bytes": 3662831616,
+  "gpus": [
+    {
+      "index": 0,
+      "temperature_c": 58,
+      "memory_used_mib": 645,
+      "utilization_pct": 100
+    },
+    {
+      "index": 1,
+      "temperature_c": 41,
+      "memory_used_mib": 108,
+      "utilization_pct": 5
+    }
+  ],
+  "cuda_compute_apps_observed": [],
+  "foreign_inference_processes": [],
+  "foreign_inference_containers": [],
+  "docker_free_bytes": 11982602240,
+  "docker_device": 66312
+}

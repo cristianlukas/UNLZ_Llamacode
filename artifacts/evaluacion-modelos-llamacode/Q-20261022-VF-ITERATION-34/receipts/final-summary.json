@@ -1,0 +1,43 @@
+{
+  "task_id": "Q-20261022-VF-ITERATION-34",
+  "status": "completed",
+  "completed_at_utc": "2026-10-22T12:48:13Z",
+  "preregistration": "receipts/preregistration.json",
+  "results": "RESULTS.md",
+  "speed_results": "attempts/direct-sol-speed-02/receipts/speed-results.json",
+  "final_verification": "attempts/direct-sol-speed-02/receipts/speed-final-verification.json",
+  "direct_speed_gate_passed": true,
+  "at_least_10pct_wins": 2,
+  "measurements": 30,
+  "startup_seconds": {
+    "SOL": 141.90806820100988,
+    "NInfer v3": 175.68727906199638
+  },
+  "startup_delta_ninfer_minus_sol_seconds": 33.779210860986495,
+  "approx_break_even_requests": 42.18464428253756,
+  "median_speedup_by_cell": {
+    "fresh_generation:1024": -0.01408159178345847,
+    "fresh_generation:8192": 0.09561685465169978,
+    "fresh_generation:24576": 0.08777041539209174,
+    "prompt_copy:2048": 0.38324808868655436,
+    "prompt_copy:24576": 0.1185814120027271
+  },
+  "quality_gate_passed": false,
+  "decision": "keep SOL for tool agents; no adoption; optional isolated no-tool pilot only if workload is <=32K, prompt-copy-dominant and sufficiently persistent, after a workload-specific quality holdout",
+  "production_changed": false,
+  "model_files_deleted": false,
+  "postflight_inference_servers": [],
+  "postflight_docker_containers": [],
+  "postflight_mem_available_bytes": 121581174784,
+  "postflight_swap_free_bytes": 3661922304,
+  "google_sheet_sync": {
+    "status": "verified",
+    "at_utc": "2026-10-22T12:53:07Z",
+    "rows": {
+      "Evaluaciones LlamaCode": "264–265 (Q33/Q34)",
+      "Accionables": "48 (Qwen27 P2)",
+      "Inventario de modelos": "9 (Qwen3.8-27B NInfer-3090)"
+    },
+    "readback": "exact values and top/wrap style verified"
+  }
+}

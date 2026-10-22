@@ -1,0 +1,14 @@
+{
+  "at_utc": "2026-10-22T12:27:00Z",
+  "runner": "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-34/scripts/run_direct_speed.py",
+  "runner_sha256": "9e786903ab6360eeec3640aa6445eb48fafdd73c97ff5729842292f425ecd912",
+  "prompt_helper_sha256": "160dc3385d0f6dd542a8b511a38306307d692c9fed938696494e15bc8cf0941f",
+  "syntax_check_passed": true,
+  "compose_config_passed": true,
+  "only_loopback_port": true,
+  "candidate_hash_matches_Q32": true,
+  "SOL_shard_hashes_verified": 7,
+  "gpu_used": false,
+  "amendment_A3_py_compile": "python3 -m py_compile passed before matrix execution",
+  "attempt_directory": "attempts/direct-sol-speed-02"
+}

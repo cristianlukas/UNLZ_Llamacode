@@ -1,0 +1,29 @@
+{
+  "at_utc": "2026-10-22T12:38:35Z",
+  "stage": "preflight-sol",
+  "mem_available_bytes": 121434320896,
+  "swap_free_bytes": 3662991360,
+  "gpus": [
+    {
+      "index": 0,
+      "temperature_c": 50,
+      "memory_used_mib": 646,
+      "utilization_pct": 14
+    },
+    {
+      "index": 1,
+      "temperature_c": 30,
+      "memory_used_mib": 108,
+      "utilization_pct": 22
+    }
+  ],
+  "cuda_compute_apps_observed": [],
+  "foreign_inference_processes": [],
+  "foreign_inference_containers": [],
+  "docker_free_bytes": 11982135296,
+  "docker_device": 66312,
+  "control": "SOL current compose profile",
+  "compose_sha256": "2df4e44e1e1b268da80690a0812ac1b60768d60b643096ce8473110f88b7b76a",
+  "image_id": "sha256:0a51ea5b4ae2dc5d81890e5173f54203d2a3ae0cfffe51b8fd2afd4391bfd967",
+  "gate_passed": true
+}

@@ -1,0 +1,15 @@
+{
+  "at_utc": "2026-10-22T12:48:13Z",
+  "backup": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/actionables.json.bak.20261022-q34",
+  "file": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/actionables.json",
+  "updated_id": "vf-q32-qwen38-27b-ninfer-imatrix-20261022",
+  "test_summary": "Q34 direct speed vs SOL, gate 2/5, no agent adoption",
+  "sheet_sync_pending": false,
+  "preserved_other_records": true,
+  "sheet_synced_at_utc": "2026-10-22T12:53:07Z",
+  "google_sheet_rows": {
+    "Evaluaciones LlamaCode": "264–265 (Q33/Q34)",
+    "Accionables": "48 (Qwen27 P2)",
+    "Inventario de modelos": "9 (Qwen3.8-27B NInfer-3090)"
+  }
+}

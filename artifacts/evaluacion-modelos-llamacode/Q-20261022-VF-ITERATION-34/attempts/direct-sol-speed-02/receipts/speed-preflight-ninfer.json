@@ -1,0 +1,29 @@
+{
+  "at_utc": "2026-10-22T12:43:12Z",
+  "stage": "preflight-ninfer",
+  "mem_available_bytes": 121515933696,
+  "swap_free_bytes": 3663618048,
+  "gpus": [
+    {
+      "index": 0,
+      "temperature_c": 67,
+      "memory_used_mib": 666,
+      "utilization_pct": 9
+    },
+    {
+      "index": 1,
+      "temperature_c": 58,
+      "memory_used_mib": 108,
+      "utilization_pct": 6
+    }
+  ],
+  "cuda_compute_apps_observed": [],
+  "foreign_inference_processes": [],
+  "foreign_inference_containers": [],
+  "docker_free_bytes": 11981713408,
+  "docker_device": 66312,
+  "model_sha256": "7f2a0086a071ee932c66106e1552d118a85cfec8ddef13c67a54cd64abb39706",
+  "runtime_version": "ninfer-serve 0.16.0-rtx3090",
+  "gpu_scope": "physical GPU1",
+  "gate_passed": true
+}
