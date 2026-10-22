@@ -1,0 +1,24 @@
+{
+  "taskId": "Q-20261022-VF-ITERATION-40",
+  "lockToken": "d13b29f0-bd2a-4c3c-88a7-133937f5d95d",
+  "checkedAtUtc": "2026-10-22T17:09:42Z",
+  "host": {
+    "kernel": "Linux 3090 7.0.0-38-generic x86_64",
+    "os": "Ubuntu 24.04.5 LTS",
+    "nativeWindowsRunnerAvailable": false,
+    "probes": ["powershell.exe", "pwsh", "cmd.exe", "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe", "/mnt/c/Windows/System32/cmd.exe"]
+  },
+  "inferenceServerDetected": false,
+  "recognizedInferenceProcessSearch": "No matching process found",
+  "tcpListeners": [
+    {"address": "127.0.0.1:631", "classification": "printing service"},
+    {"address": "127.0.0.1:6742", "process": "OpenRGB", "classification": "not inference"},
+    {"address": "127.0.0.1:47413", "process": "artcraft-launch", "classification": "not identified as inference"},
+    {"address": "127.0.0.1:38873", "classification": "not identified as inference"},
+    {"address": "127.0.0.53:53", "classification": "DNS"}
+  ],
+  "nvidiaComputeApps": [{"pid": 5493, "process": "/tmp/.mount_artcraidHHJL/usr/bin/artcraft-launcher", "usedMemoryMiB": 205, "terminated": false}],
+  "workPerformed": "Read-only host/process/server detection; no benchmark, inference, build, download, or GPU workload",
+  "artifactsChanged": false,
+  "decision": "C39-02 remains pending until this Codex session has native Windows runtime access"
+}
