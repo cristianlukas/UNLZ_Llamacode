@@ -1,0 +1,36 @@
+{
+  "task_id": "Q-20261023-VF-ITERATION-55",
+  "screen": "A3 focused screen only",
+  "arm": "baseline llama.cpp MTP2",
+  "seed": 45,
+  "checkpoint_only": true,
+  "scenario": {
+    "scenario_id": "TC-70",
+    "status": "fail",
+    "points": 0,
+    "max_points": 2,
+    "duration_seconds": 642.89,
+    "server_stop_observation": "llama.cpp log: task 48309 stopped with n_tokens=16383, truncated=1",
+    "failure_kind": "reasoning_truncated suspected/observed from server truncation; await completed seed JSON for evaluator-level failure_kind",
+    "final_seed_score": null
+  },
+  "next_scenario": "TC-74 started after TC-70; currently running",
+  "progress_at_capture": {
+    "updated_at_utc": "2026-10-23T12:52:23Z",
+    "stage": "baseline seed 45",
+    "seed_attempts": [
+      {
+        "arm": "baseline",
+        "seed": 44,
+        "status": "valid"
+      },
+      {
+        "arm": "baseline",
+        "seed": 45,
+        "status": "running"
+      }
+    ]
+  },
+  "decision": "Partial checkpoint only. Do not calculate seed score, claim runtime superiority, or change preregistered parameters. Continue serially through the remaining scenarios; baseline seed44 already shows the same token-ceiling failure pattern.",
+  "captured_at_utc": "2026-10-23T12:52:52.566758+00:00"
+}

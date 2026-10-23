@@ -1,0 +1,23 @@
+{
+  "task_id": "Q-20261023-VF-ITERATION-55",
+  "attempt": 1,
+  "service_unit": "q55-qwen38-matched-43-45.service",
+  "invocation_id": "08c9baac98244d0bac70ddbb66a10923",
+  "started_at_utc": "2026-10-23T09:57:57Z",
+  "ended_at_utc": "2026-10-23T09:59:05Z",
+  "status": "feasibility_failed_before_full_suite",
+  "smoke_seed": 42,
+  "arm": "baseline",
+  "error": "baseline smoke/startup: RuntimeError: HTTP 500 http://127.0.0.1:56231/v1/chat/completions: {\"error\":{\"code\":500,\"message\":\"The model produced output that does not match the expected peg-native format\",\"type\":\"server_error\"}}",
+  "cleanup": {
+    "arm": "baseline",
+    "stopped_at_utc": "2026-10-23T09:59:05Z",
+    "exit_code": 0,
+    "signals": [
+      "SIGTERM"
+    ],
+    "process_and_port_absent": true
+  },
+  "runner_before_amendment_sha256": "c96e724755f1d9b29771f727599c6f6200c16170ac215378d29acdd999245b63",
+  "planned_change": "Use smoke seed43, which matches the first preregistered matrix seed and avoids the known seed42 PEG failure path. No suite was run; no score produced."
+}

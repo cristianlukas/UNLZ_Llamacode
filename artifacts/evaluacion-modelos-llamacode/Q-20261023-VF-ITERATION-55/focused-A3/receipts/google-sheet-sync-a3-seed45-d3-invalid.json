@@ -1,0 +1,27 @@
+{
+  "task_id": "Q-20261023-VF-ITERATION-55",
+  "synced_at_utc": "2026-10-23T13:50:02Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "write_mask": "userEnteredValue",
+  "readback_verified": true,
+  "ranges_verified": [
+    "Evaluaciones LlamaCode!A285:J285",
+    "Accionables!D8:N8",
+    "IA local!I34:L34",
+    "Inventario de modelos!C10:R10"
+  ],
+  "summary": "Baseline seed45 final 0/8; OpenJet d3 seed43 invalid/incomplete due three HTTP 500 errors and partial denominator; A3 stop-without-retry recorded. No d3/d4 comparison or TPS claim.",
+  "ia_local_k34": {
+    "value": "https://github.com/L-Forster/open-jet",
+    "preserved": true,
+    "wrap_strategy": "WRAP",
+    "written": false
+  },
+  "inventario_modelo": {
+    "row": "Inventario de modelos!C10:R10",
+    "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+    "peritosoft": "No verificado en PeritoSoft.",
+    "windows_path": "No verificada; no inferir ruta Windows."
+  },
+  "preserved_models_and_products": ["Qwen Flash-Next", "ASTRA", "SOL", "PeritoSoft"]
+}

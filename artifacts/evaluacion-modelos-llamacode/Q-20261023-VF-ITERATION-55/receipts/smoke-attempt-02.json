@@ -1,0 +1,27 @@
+{
+  "task_id": "Q-20261023-VF-ITERATION-55",
+  "attempt": 2,
+  "service_unit": "q55-qwen38-matched-a1.service",
+  "invocation_id": "950624a8052f4d02b5c0a3e470d7c3e3",
+  "started_at_utc": "2026-10-23T10:00:58Z",
+  "ended_at_utc": "2026-10-23T10:02:07Z",
+  "status": "feasibility_failed_before_full_suite",
+  "smoke_seed": 43,
+  "arm": "baseline",
+  "http_status": 200,
+  "finish_reason": "length",
+  "completion_tokens": 1024,
+  "error": "No structured tool_call before max_tokens=1024; response ended with finish_reason=length.",
+  "cleanup": {
+    "arm": "baseline",
+    "stopped_at_utc": "2026-10-23T10:02:07Z",
+    "exit_code": 0,
+    "signals": [
+      "SIGTERM"
+    ],
+    "process_and_port_absent": true
+  },
+  "runner_before_amendment_sha256": "d76ba4699e88d36104becccf60e41bb15b27350841e13a456776ddecb2fbf778",
+  "full_suites_started": false,
+  "score_produced": false
+}

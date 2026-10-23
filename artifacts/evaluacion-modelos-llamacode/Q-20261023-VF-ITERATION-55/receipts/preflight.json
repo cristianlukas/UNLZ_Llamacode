@@ -1,0 +1,63 @@
+{
+  "at_utc": "2026-10-23T10:04:53Z",
+  "stage": "Q55 controller start",
+  "lock": {
+    "token": "d3542157-5398-49fd-9056-f896cb17dd63",
+    "worker": "Q55 Qwen3.8 matched baseline/OpenJet d3/d4 quality matrix",
+    "host": "3090",
+    "claimed_at_utc": "2026-10-23T09:54:49.145169+00:00",
+    "task_id": "Q-20261023-VF-ITERATION-55"
+  },
+  "model_stat": {
+    "device": 2049,
+    "inode": 154599,
+    "size": 17106775008,
+    "mode": 436,
+    "mtime_ns": 1792695258869303300,
+    "ctime_ns": 1792695277224194500
+  },
+  "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+  "runtime_commits": {
+    "openjet": "72ba4a7e587ed0cda1312e3384e415962eaa0db3",
+    "baseline": "39eab74a05d3e68ac822b6dc6cd78c90cb985c19",
+    "tool_eval_bench": "0a1ba68c7709f429298bc92417a9e003f61de4e3"
+  },
+  "tool_eval_version": "tool-eval-bench 2.8.0",
+  "artifact_sha256": {
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-47/work/open-jet/llama.cpp/build/bin/llama-server": "f98afb99f5008e7da9532c9012e5ca32e052021d0038324c56eb11f01205fd5b",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-47/work/open-jet/megakernel/server/mk_server.py": "dcf29de24fc5e77182c00237062dbaab4e1fdc927c7faa6b5edb0c8de554841e",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-47/work/open-jet/megakernel/libqwen38mk.so": "581354c9306d10a1c7231c40b7baf97fa1598e726209e5a761abafc333dc3545",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-47/work/open-jet/megakernel/draft_vocab_32k.bin": "cad444c6a5e571479eb1dec71768c760c76f7c65f0ecfe00c860dca231fc9d24"
+  },
+  "memory": {
+    "MemAvailable": 123314102272,
+    "SwapFree": 8589615104
+  },
+  "gpu0": {
+    "name": "NVIDIA GeForce RTX 3090",
+    "memory_total_mib": 24576,
+    "memory_used_mib": 1082,
+    "memory_free_mib": 23039,
+    "temperature_c": 48,
+    "compute_apps": [
+      "4874, /tmp/.mount_artcrakPPfIC/usr/bin/artcraft-launcher, 205 MiB"
+    ]
+  },
+  "cgroup_path": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/q55-qwen38-matched-a2.service",
+  "cgroup": {
+    "memory.high": 92341796864,
+    "memory.max": 103079215104,
+    "memory.swap.max": 1073741824,
+    "memory.current": 18526208,
+    "memory.events": {
+      "low": 0,
+      "high": 0,
+      "max": 0,
+      "oom": 0,
+      "oom_kill": 0,
+      "oom_group_kill": 0,
+      "sock_throttled": 0
+    }
+  },
+  "external_inference_servers": []
+}

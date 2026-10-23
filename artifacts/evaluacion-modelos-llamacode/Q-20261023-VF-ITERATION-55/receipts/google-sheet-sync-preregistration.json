@@ -1,0 +1,24 @@
+{
+  "task_id": "Q-20261023-VF-ITERATION-55",
+  "synced_at_utc": "2026-10-23T09:57:27Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "write_mask": "userEnteredValue",
+  "readback_verified": true,
+  "ranges": [
+    {
+      "range": "Evaluaciones LlamaCode!A285:J285",
+      "purpose": "Q55 preregistration",
+      "readback_verified": true
+    },
+    {
+      "range": "Accionables!D8:N8",
+      "purpose": "active high-priority test and decision gates",
+      "readback_verified": true
+    },
+    {
+      "range": "IA local!A34:O34",
+      "purpose": "Qwen3.8-27B inventory status",
+      "readback_verified": true
+    }
+  ]
+}

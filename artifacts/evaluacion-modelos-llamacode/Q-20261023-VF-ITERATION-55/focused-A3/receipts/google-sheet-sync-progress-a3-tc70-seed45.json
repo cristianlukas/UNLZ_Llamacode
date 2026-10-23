@@ -1,0 +1,46 @@
+{
+  "task_id": "Q-20261023-VF-ITERATION-55",
+  "recorded_at_utc": "2026-10-23T12:54:04Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_url": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "writes": [
+    {
+      "sheet": "Evaluaciones LlamaCode",
+      "range": "C285:I285",
+      "purpose": "Actualizar checkpoint seed45: TC-70 fail/0 por truncamiento a 16.383 tokens; TC-74 en curso; sin score agregado."
+    },
+    {
+      "sheet": "Accionables",
+      "range": "D8:N8",
+      "purpose": "Registrar resultado parcial TC-70, siguiente paso, evidencia, interpretación limitada y timestamps."
+    },
+    {
+      "sheet": "IA local",
+      "range": "I34:L34",
+      "purpose": "Reflejar el estado actual del screening Qwen3.8-27B; K34 no se escribió."
+    },
+    {
+      "sheet": "Inventario de modelos",
+      "range": "C10:R10",
+      "purpose": "Actualizar progreso de la copia Q47 ya inventariada, sin modificar identidad/fingerprint/rutas."
+    }
+  ],
+  "readback": {
+    "matched": true,
+    "ranges": [
+      "Evaluaciones LlamaCode!C285:I285",
+      "Accionables!D8:N8",
+      "IA local!I34:L34",
+      "IA local!K34",
+      "Inventario de modelos!C10:R10"
+    ],
+    "ia_local_k34_link": "https://github.com/L-Forster/open-jet",
+    "wrap_preserved": [
+      "IA local!I34",
+      "IA local!L34",
+      "Inventario de modelos!C10:R10"
+    ],
+    "state_after_write": "Baseline seed44 complete 0/8; baseline seed45 TC-70 fail/0 in 642.89 s with n_tokens=16383/truncated=1; TC-74 active; no seed45 aggregate score."
+  },
+  "rendering": "Native cell readback confirmed values and wrapping. The rich hyperlink in IA local!K34 was verified and excluded from writes."
+}

@@ -1,0 +1,33 @@
+{
+  "task_id": "Q-20261023-VF-ITERATION-55",
+  "screen": "A3 focused screen only",
+  "arm": "baseline llama.cpp MTP2",
+  "seed": 45,
+  "checkpoint_only": true,
+  "scenario": {
+    "scenario_id": "TC-84",
+    "status": "fail",
+    "points": 0,
+    "max_points": 2,
+    "duration_seconds": 891.2,
+    "server_task_id": 75639,
+    "server_stop_observation": "llama.cpp task 75639 ended with n_tokens=16383, truncated=1",
+    "failure_kind": "server truncation observed; evaluator-level failure_kind awaits completed seed JSON",
+    "final_seed_score": null
+  },
+  "seed45_progress": {
+    "TC-70": {"status": "fail", "points": 0, "max_points": 2, "duration_seconds": 642.89, "server_task_id": 48309, "n_tokens": 16383, "truncated": 1},
+    "TC-74": {"status": "fail", "points": 0, "max_points": 2, "duration_seconds": 1265.49, "server_task_id": 74670, "n_tokens": 6945, "truncated": 0, "failure_kind": "pending completed seed JSON"},
+    "TC-84": {"status": "fail", "points": 0, "max_points": 2, "duration_seconds": 891.2, "server_task_id": 75639, "n_tokens": 16383, "truncated": 1},
+    "TC-92": {"status": "running"}
+  },
+  "progress_at_capture": {"updated_at_utc": "2026-10-23T13:27:26Z", "stage": "baseline seed 45"},
+  "resources": {
+    "service": "q55-qwen38-focused-a3.service",
+    "service_state": "active",
+    "memory_peak_bytes_observed": 9721556992,
+    "memory_events": {"high": 0, "max": 0, "oom": 0, "oom_kill": 0},
+    "gpu": "RTX 3090, serial invocation"
+  },
+  "decision": "Partial checkpoint only. Do not calculate seed45 aggregate score or alter preregistered settings. Server truncation is observed for TC-84 but the evaluator-level failure_kind awaits final JSON. Continue TC-92 serially; inspect completed seed output before diagnosis or recommendation."
+}

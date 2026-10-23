@@ -1,0 +1,27 @@
+{
+  "task_id": "Q-20261023-VF-ITERATION-55",
+  "recorded_at_utc": "2026-10-23T13:14:04Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "writes": [
+    {"sheet": "Evaluaciones LlamaCode", "range": "C285:I285", "purpose": "Actualizar TC-74 fail/0, aclarar server trunc=0 y causa pendiente del JSON, y marcar TC-84 activo."},
+    {"sheet": "Accionables", "range": "D8:N8", "purpose": "Actualizar checkpoint, próximo paso, evidencia y recomendación del accionable Q55."},
+    {"sheet": "IA local", "range": "I34", "purpose": "Actualizar estado del screening; K34 se excluyó de la escritura."},
+    {"sheet": "IA local", "range": "L34", "purpose": "Actualizar siguiente paso sin tocar el rich link K34."},
+    {"sheet": "Inventario de modelos", "range": "C10:R10", "purpose": "Actualizar estado, benchmark, tiempos, fecha, fuentes y recomendación del GGUF Q47 ya inventariado; identidad y rutas preservadas."}
+  ],
+  "readback": {
+    "matched": true,
+    "ranges": [
+      "Evaluaciones LlamaCode!C285:I285",
+      "Accionables!D8:N8",
+      "IA local!I34:L34",
+      "IA local!K34",
+      "Inventario de modelos!C10:R10"
+    ],
+    "ia_local_k34_hyperlink": "https://github.com/L-Forster/open-jet",
+    "wrap_preserved": true,
+    "inventory_model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+    "state_after_write": "Baseline seed44 0/8; seed45 TC-70 and TC-74 fail/0; TC-84 active; seed45 aggregate pending. TC-74's last server request ended with 6945 tokens and truncated=0, but evaluator cause awaits final seed JSON."
+  },
+  "rendering": "Native cell readback confirmed values and WRAP. IA local K34 rich hyperlink was confirmed and not written."
+}

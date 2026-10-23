@@ -1,0 +1,49 @@
+{
+  "task_id": "Q-20261023-VF-ITERATION-55",
+  "recorded_at_utc": "2026-10-23T12:46:24Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_url": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "writes": [
+    {
+      "sheet": "Evaluaciones LlamaCode",
+      "range": "C285:I285",
+      "purpose": "Actualizar estado y resultado validado de A3 baseline seed44; mantiene scope, fecha, prueba, source y lock."
+    },
+    {
+      "sheet": "Accionables",
+      "range": "D8:N8",
+      "purpose": "Actualizar estado, siguiente paso, resultado, evidencia, decisión y timestamps del accionable OpenJet."
+    },
+    {
+      "sheet": "IA local",
+      "range": "I34:L34",
+      "purpose": "Actualizar avance y próximo paso Qwen3.8-27B; K34 no se escribió."
+    },
+    {
+      "sheet": "Inventario de modelos",
+      "range": "A10:R10",
+      "purpose": "Agregar copia GGUF Q47 con fingerprint distinto a la fila Qwen Q29 existente; primer registro vacío, sin insertar filas."
+    }
+  ],
+  "readback": {
+    "matched": true,
+    "ranges": [
+      "Evaluaciones LlamaCode!C285:I285",
+      "Accionables!D8:N8",
+      "IA local!I34:L34",
+      "IA local!K34",
+      "Inventario de modelos!A10:R10"
+    ],
+    "ia_local_k34_link": "https://github.com/L-Forster/open-jet",
+    "wrapping": {
+      "IA local!I34": "WRAP",
+      "IA local!L34": "WRAP",
+      "Inventario de modelos!A10:R10": "WRAP"
+    },
+    "inventory_row10_model": "Qwen3.8-27B Q4_K_M (Q47 OpenJet copy)",
+    "inventory_row10_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+    "inventory_row10_size_bytes": 17106775008,
+    "state_after_write": "baseline seed44 complete 0/8; baseline seed45 running serially"
+  },
+  "rendering": "Native cell readback confirmed values and wrap formatting. The browser UI was not used for visual rendering; no formatting or row-height changes were made."
+}

@@ -1,0 +1,25 @@
+{
+  "task_id": "Q-20261023-VF-ITERATION-55",
+  "synced_at_utc": "2026-10-23T10:04:14Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "amendment": "A2: reuse Q50 3/3 exact-hash smoke receipts and Q54 TC-70; no new smoke request",
+  "write_mask": "userEnteredValue",
+  "readback_verified": true,
+  "ranges": [
+    {
+      "range": "Evaluaciones LlamaCode!A285:J285",
+      "purpose": "Q55 A2 preregistration and failures",
+      "readback_verified": true
+    },
+    {
+      "range": "Accionables!D8:N8",
+      "purpose": "A2 reusing validated smoke evidence",
+      "readback_verified": true
+    },
+    {
+      "range": "IA local!A34:O34",
+      "purpose": "Qwen3.8-27B inventory and Q55 attempt status",
+      "readback_verified": true
+    }
+  ]
+}

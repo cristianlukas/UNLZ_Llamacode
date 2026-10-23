@@ -1,0 +1,28 @@
+{
+  "task_id": "Q-20261023-VF-ITERATION-55",
+  "recorded_at_utc": "2026-10-23T13:28:06Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "writes": [
+    {"sheet": "Evaluaciones LlamaCode", "range": "C285", "purpose": "Marcar TC-70/74/84 fallidos y TC-92 activo."},
+    {"sheet": "Evaluaciones LlamaCode", "range": "G285:I285", "purpose": "Registrar resultados parciales de TC-84 y el siguiente paso."},
+    {"sheet": "Accionables", "range": "D8:N8", "purpose": "Actualizar el progreso A3, evidencia, interpretación y timestamps."},
+    {"sheet": "IA local", "range": "I34", "purpose": "Actualizar estado del candidato sin tocar K34."},
+    {"sheet": "IA local", "range": "L34", "purpose": "Actualizar el siguiente paso sin cambiar el rich link."},
+    {"sheet": "Inventario de modelos", "range": "C10:R10", "purpose": "Actualizar el benchmark y tiempo parcial manteniendo fingerprint, rutas y datos de TPS."}
+  ],
+  "readback": {
+    "matched": true,
+    "ranges": [
+      "Evaluaciones LlamaCode!C285:I285",
+      "Accionables!D8:N8",
+      "IA local!I34:L34",
+      "IA local!K34",
+      "Inventario de modelos!C10:R10"
+    ],
+    "ia_local_k34_hyperlink": "https://github.com/L-Forster/open-jet",
+    "wrap_preserved": true,
+    "inventory_model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+    "state_after_write": "Baseline seed44 0/8; baseline seed45 TC-70/74/84 fail/0; TC-92 active. TC-70 and TC-84 server truncation observed; TC-74's last server request ended truncated=0 and evaluator cause remains pending."
+  },
+  "rendering": "Native cell readback confirmed values and WRAP; rich hyperlink IA local!K34 was preserved and not written."
+}

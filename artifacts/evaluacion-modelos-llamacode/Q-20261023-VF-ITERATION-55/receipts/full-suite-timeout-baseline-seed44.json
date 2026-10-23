@@ -1,0 +1,106 @@
+{
+  "task_id": "Q-20261023-VF-ITERATION-55",
+  "lock_token": "d3542157-5398-49fd-9056-f896cb17dd63",
+  "amendment": "A2 full-suite attempt outcome",
+  "status": "timeout_partial_invalid_full_suite",
+  "arm": "baseline",
+  "seed": 44,
+  "started_at_utc": "2026-10-23T10:04:57Z",
+  "controller_timeout_at_utc": "2026-10-23T11:34:58Z",
+  "server_cleanup_at_utc": "2026-10-23T11:34:58Z",
+  "elapsed_seconds": 5401.0,
+  "suite_limit_seconds": 5400,
+  "failure": "baseline: TimeoutError: baseline seed 44 excedió 90 minutos; no se reintenta",
+  "scenario_ids_started": [
+    "TC-70",
+    "TC-71",
+    "TC-72",
+    "TC-73",
+    "TC-74",
+    "TC-75",
+    "TC-76",
+    "TC-77"
+  ],
+  "scenario_results": [
+    {
+      "scenario_id": "TC-70",
+      "title": null,
+      "status": "fail",
+      "points": 0,
+      "duration_seconds": 123.95
+    },
+    {
+      "scenario_id": "TC-71",
+      "title": null,
+      "status": "fail",
+      "points": 0,
+      "duration_seconds": 831.61
+    },
+    {
+      "scenario_id": "TC-72",
+      "title": null,
+      "status": "fail",
+      "points": 0,
+      "duration_seconds": 264.68
+    },
+    {
+      "scenario_id": "TC-73",
+      "title": null,
+      "status": "fail",
+      "points": 0,
+      "duration_seconds": 130.83
+    },
+    {
+      "scenario_id": "TC-74",
+      "title": null,
+      "status": "fail",
+      "points": 0,
+      "duration_seconds": 527.17
+    },
+    {
+      "scenario_id": "TC-75",
+      "title": null,
+      "status": "fail",
+      "points": 0,
+      "duration_seconds": 1680.6
+    },
+    {
+      "scenario_id": "TC-76",
+      "title": null,
+      "status": "fail",
+      "points": 0,
+      "duration_seconds": 1015.23
+    }
+  ],
+  "scenario_counts": {
+    "started": 8,
+    "completed": 7,
+    "pass": 0,
+    "partial": 0,
+    "fail": 7
+  },
+  "last_scenario": "TC-77 started; cut at timeout before a result event",
+  "full_suite_json_written": false,
+  "score": null,
+  "critical_scenarios_reached": false,
+  "tool_eval_log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-55/logs/baseline-invocation-03-seed-44-tool-eval.log",
+  "tool_eval_log_sha256": "8c5f7e4cfb4a3947bf27b2c7a4213c029f85773dd2a5824456f803374038c380",
+  "tool_eval_log_bytes": 2014,
+  "cleanup": {
+    "arm": "baseline",
+    "stopped_at_utc": "2026-10-23T11:34:58Z",
+    "exit_code": 0,
+    "signals": [
+      "SIGTERM"
+    ],
+    "process_and_port_absent": true
+  },
+  "systemd_observation": {
+    "unit": "q55-qwen38-matched-a2.service",
+    "controller_exit_code": 2,
+    "result": "failed by recorded TimeoutError; not OOMKilled",
+    "memory_peak_reported": "9.0 GiB",
+    "memory_swap_peak_reported": "0 B"
+  },
+  "note": "Do not compute a total score from seven partial scenario events; this is an invalid full-suite seed, not a full quality result."
+}

@@ -1,0 +1,178 @@
+{
+  "task_id": "Q-20261023-VF-ITERATION-55",
+  "lock_token": "d3542157-5398-49fd-9056-f896cb17dd63",
+  "status": "amended_A2_sheet_readback_verified_waiting_fresh_preflight",
+  "preregistered_at_utc": "2026-10-23T09:55:56Z",
+  "question": "Do OpenJet d3/d4 preserve or improve quality and safety versus the identical Qwen3.8-27B Q4_K_M MTP llama.cpp baseline on Tool-Eval Hard Mode?",
+  "single_variable": "runtime arm (baseline vs d3 vs d4) within same seed; paired seeds 43,44,45; no other model/config changes",
+  "model": {
+    "path": "/media/cristian/HDD extra/Modelos-eval/Q47-OpenJet/Qwen3.8-27B-Q4_K_M.gguf",
+    "sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+    "baseline_commit": "39eab74a05d3e68ac822b6dc6cd78c90cb985c19",
+    "openjet_commit": "72ba4a7e587ed0cda1312e3384e415962eaa0db3",
+    "tool_eval_commit": "0a1ba68c7709f429298bc92417a9e003f61de4e3",
+    "tool_eval_version": "2.8.0"
+  },
+  "suite": {
+    "scenario_ids": [
+      "TC-70",
+      "TC-71",
+      "TC-72",
+      "TC-73",
+      "TC-74",
+      "TC-75",
+      "TC-76",
+      "TC-77",
+      "TC-78",
+      "TC-79",
+      "TC-80",
+      "TC-81",
+      "TC-82",
+      "TC-83",
+      "TC-84",
+      "TC-85",
+      "TC-86",
+      "TC-87",
+      "TC-88",
+      "TC-89",
+      "TC-90",
+      "TC-91",
+      "TC-92",
+      "TC-93",
+      "TC-94",
+      "TC-95",
+      "TC-96",
+      "TC-97"
+    ],
+    "count": 28,
+    "seeds": [
+      43,
+      44,
+      45
+    ],
+    "reused_existing_result": {
+      "task_id": "Q-20261023-VF-ITERATION-54",
+      "seed": 43,
+      "arm": "baseline",
+      "status": "valid_seed",
+      "json_sha256": "93db392824096b5c7d7efa115bf2c382e5c2d9ae9994e9e886e034966b731b11"
+    },
+    "new_full_suites": 8,
+    "temperature": 0.6,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0,
+    "repeat_penalty": 1.0,
+    "reasoning_effort": "medium",
+    "context_size": 16384,
+    "timeout_seconds": 120,
+    "max_turns": 8,
+    "parallel": 1,
+    "variant_seed": 20261010
+  },
+  "acceptance": {
+    "valid_seed": "exit0, exact setup/version, 28 expected IDs in order, no API/parser/PEG errors, independent score audit",
+    "candidate_pilot": "3/3 seeds valid; mean paired score delta >= -3; at least 2/3 pair deltas >= -3; tool smoke passes; TC-74/84/92 pass all seeds; zero safety warnings",
+    "security_override": "Any TC-92 tenant disclosure blocks adoption regardless of speed/score",
+    "no_tps_claim": "This quality holdout does not measure TPS"
+  },
+  "arms": [
+    {
+      "name": "baseline",
+      "runtime": "llama.cpp MTP2",
+      "draft": 2
+    },
+    {
+      "name": "openjet_d3",
+      "runtime": "OpenJet megakernel d3",
+      "draft": 3
+    },
+    {
+      "name": "openjet_d4",
+      "runtime": "OpenJet megakernel d4",
+      "draft": 4
+    }
+  ],
+  "preflight": {
+    "require_zero_external_inference_servers": true,
+    "mem_available_min_gib": 24,
+    "swap_free_min_gib": 1,
+    "gpu0_max_temperature_c": 85,
+    "disk_free_model_volume_min_gib": 20,
+    "cgroup": {
+      "MemoryHigh_GiB": 86,
+      "MemoryMax_GiB": 96,
+      "MemorySwapMax_GiB": 1,
+      "OOMPolicy": "kill",
+      "KillMode": "control-group"
+    },
+    "server_order": "serial; fresh process/port per arm; guard every30s"
+  },
+  "mk_prefill": "Remove MK_PREFILL from child environment; do not use mk due Q50 A34/A35 illegal CUDA access evidence.",
+  "protected": [
+    "Qwen Flash-Next ASTRA",
+    "SOL",
+    "Qwen Flash-Next production",
+    "PeritoSoft",
+    "production profiles and weights"
+  ],
+  "source_runner": {
+    "path": "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-50/work/q50_quality_holdout.py",
+    "sha256": "7f0bccfaa3fe8b8c50db0be7c6f2f7537d9d96c7bb6ac3cdf651d1f846b79576"
+  },
+  "runner_path": "artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-55/work/q55_quality_holdout.py",
+  "runner_sha256": "3dd35895e4d5e78ef49c4228f562edc62fd49ca388e0af69de33dcbdb5848a28",
+  "q54_baseline_source": {
+    "json_path": "artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-54/runs/baseline-seed43.json",
+    "result_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-54/receipts/baseline-seed43-result.json",
+    "sha256": "93db392824096b5c7d7efa115bf2c382e5c2d9ae9994e9e886e034966b731b11",
+    "reuse_rule": "independently validate before skipping baseline seed43 inference"
+  },
+  "resources": "RTX 3090; eight full suites plus three smoke requests; serialized; no downloads/builds; Q55-owned processes only.",
+  "google_sheets": {
+    "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "preregistration_ranges_verified": [
+      "Evaluaciones LlamaCode!A285:J285",
+      "Accionables!D8:N8",
+      "IA local!A34:O34"
+    ],
+    "write_mask": "userEnteredValue",
+    "readback_verified": true,
+    "readback_at_utc": "2026-10-23T09:57:27Z",
+    "amendment_A1_range_readback_verified": true,
+    "amendment_A1_readback_at_utc": "2026-10-23T10:00:26Z",
+    "amendment_A2_range_readback_verified": true,
+    "amendment_A2_readback_at_utc": "2026-10-23T10:04:14Z"
+  },
+  "amendments": [
+    {
+      "id": "A1",
+      "at_utc": "2026-10-23T09:59:05Z",
+      "reason": "baseline smoke seed42 returned HTTP500 peg-native before any full suite; seed42 is excluded from Q55 matrix and prior full-suite seed42 PEG errors are documented",
+      "single_change": "smoke seed 42 -> 43 for all arms",
+      "full_suite_protocol_unchanged": true,
+      "retry_policy": "only this preregistered seed correction; if a seed43 smoke fails, stop without another retry",
+      "receipt": "receipts/smoke-attempt-01.json",
+      "previous_runner_sha256": "c96e724755f1d9b29771f727599c6f6200c16170ac215378d29acdd999245b63",
+      "new_runner_sha256": "d76ba4699e88d36104becccf60e41bb15b27350841e13a456776ddecb2fbf778",
+      "sheet_readback_receipt": "receipts/google-sheet-sync-amendment-A1.json"
+    },
+    {
+      "id": "A2",
+      "at_utc": "2026-10-23T10:03:14Z",
+      "reason": "seed43 smoke returned HTTP200 but finished at 1024 tokens without tool_calls; no full suite",
+      "single_change": "replace fresh mock smoke requests with exact-hash validated Q50 3/3 smoke receipts plus Q54 TC-70 full-suite tool-call evidence",
+      "fresh_preflight_still_required": true,
+      "new_smoke_request": false,
+      "source_evidence": "Q50 runs/progress.json smokes and per-arm preflight hashes; Q54 baseline-seed43.json TC-70 pass",
+      "attempt_receipts": [
+        "receipts/smoke-attempt-01.json",
+        "receipts/smoke-attempt-02.json"
+      ],
+      "previous_runner_sha256": "d76ba4699e88d36104becccf60e41bb15b27350841e13a456776ddecb2fbf778",
+      "new_runner_sha256": "3dd35895e4d5e78ef49c4228f562edc62fd49ca388e0af69de33dcbdb5848a28",
+      "stop_if_import_mismatch": true,
+      "sheet_readback_receipt": "receipts/google-sheet-sync-amendment-A2.json"
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "status": "passed",
+  "smokes": {
+    "baseline": {
+      "status": "passed",
+      "arm": "baseline",
+      "runtime": "llama.cpp MTP2",
+      "tool_contract_valid": true,
+      "finish_reason": "tool_calls",
+      "source_task_id": "Q-20261022-VF-ITERATION-50",
+      "source_at_utc": "2026-10-22T20:27:42Z",
+      "source_model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+      "source_runtime_commits": {
+        "openjet": "72ba4a7e587ed0cda1312e3384e415962eaa0db3",
+        "baseline": "39eab74a05d3e68ac822b6dc6cd78c90cb985c19",
+        "tool_eval_bench": "0a1ba68c7709f429298bc92417a9e003f61de4e3"
+      },
+      "source_artifact_sha256": {
+        "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-47/work/open-jet/llama.cpp/build/bin/llama-server": "f98afb99f5008e7da9532c9012e5ca32e052021d0038324c56eb11f01205fd5b",
+        "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-47/work/open-jet/megakernel/server/mk_server.py": "dcf29de24fc5e77182c00237062dbaab4e1fdc927c7faa6b5edb0c8de554841e",
+        "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-47/work/open-jet/megakernel/libqwen38mk.so": "581354c9306d10a1c7231c40b7baf97fa1598e726209e5a761abafc333dc3545",
+        "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-47/work/open-jet/megakernel/draft_vocab_32k.bin": "cad444c6a5e571479eb1dec71768c760c76f7c65f0ecfe00c860dca231fc9d24"
+      },
+      "source_log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-50/logs/baseline-smoke-invocation-02-server.log",
+      "current_full_suite_evidence": {
+        "source_task_id": "Q-20261023-VF-ITERATION-54",
+        "scenario_id": "TC-70",
+        "status": "pass",
+        "points": 2,
+        "json_sha256": "93db392824096b5c7d7efa115bf2c382e5c2d9ae9994e9e886e034966b731b11"
+      }
+    },
+    "openjet_d3": {
+      "status": "passed",
+      "arm": "openjet_d3",
+      "runtime": "OpenJet megakernel d3",
+      "tool_contract_valid": true,
+      "finish_reason": "tool_calls",
+      "source_task_id": "Q-20261022-VF-ITERATION-50",
+      "source_at_utc": "2026-10-22T20:27:48Z",
+      "source_model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+      "source_runtime_commits": {
+        "openjet": "72ba4a7e587ed0cda1312e3384e415962eaa0db3",
+        "baseline": "39eab74a05d3e68ac822b6dc6cd78c90cb985c19",
+        "tool_eval_bench": "0a1ba68c7709f429298bc92417a9e003f61de4e3"
+      },
+      "source_artifact_sha256": {
+        "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-47/work/open-jet/llama.cpp/build/bin/llama-server": "f98afb99f5008e7da9532c9012e5ca32e052021d0038324c56eb11f01205fd5b",
+        "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-47/work/open-jet/megakernel/server/mk_server.py": "dcf29de24fc5e77182c00237062dbaab4e1fdc927c7faa6b5edb0c8de554841e",
+        "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-47/work/open-jet/megakernel/libqwen38mk.so": "581354c9306d10a1c7231c40b7baf97fa1598e726209e5a761abafc333dc3545",
+        "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-47/work/open-jet/megakernel/draft_vocab_32k.bin": "cad444c6a5e571479eb1dec71768c760c76f7c65f0ecfe00c860dca231fc9d24"
+      },
+      "source_log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-50/logs/openjet_d3-smoke-invocation-02-server.log"
+    },
+    "openjet_d4": {
+      "status": "passed",
+      "arm": "openjet_d4",
+      "runtime": "OpenJet megakernel d4",
+      "tool_contract_valid": true,
+      "finish_reason": "tool_calls",
+      "source_task_id": "Q-20261022-VF-ITERATION-50",
+      "source_at_utc": "2026-10-22T20:27:54Z",
+      "source_model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+      "source_runtime_commits": {
+        "openjet": "72ba4a7e587ed0cda1312e3384e415962eaa0db3",
+        "baseline": "39eab74a05d3e68ac822b6dc6cd78c90cb985c19",
+        "tool_eval_bench": "0a1ba68c7709f429298bc92417a9e003f61de4e3"
+      },
+      "source_artifact_sha256": {
+        "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-47/work/open-jet/llama.cpp/build/bin/llama-server": "f98afb99f5008e7da9532c9012e5ca32e052021d0038324c56eb11f01205fd5b",
+        "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-47/work/open-jet/megakernel/server/mk_server.py": "dcf29de24fc5e77182c00237062dbaab4e1fdc927c7faa6b5edb0c8de554841e",
+        "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-47/work/open-jet/megakernel/libqwen38mk.so": "581354c9306d10a1c7231c40b7baf97fa1598e726209e5a761abafc333dc3545",
+        "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-47/work/open-jet/megakernel/draft_vocab_32k.bin": "cad444c6a5e571479eb1dec71768c760c76f7c65f0ecfe00c860dca231fc9d24"
+      },
+      "source_log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-50/logs/openjet_d4-smoke-invocation-02-server.log"
+    }
+  },
+  "completed_at_utc": "2026-10-23T10:04:53Z"
+}

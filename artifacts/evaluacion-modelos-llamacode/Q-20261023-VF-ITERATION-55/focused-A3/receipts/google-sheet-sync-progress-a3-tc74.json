@@ -1,0 +1,31 @@
+{
+  "task_id": "Q-20261023-VF-ITERATION-55",
+  "amendment": "A3-progress-TC-74",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "updated_at_utc": "2026-10-23T12:18:37Z",
+  "readback_verified": true,
+  "ranges_verified": [
+    "Evaluaciones LlamaCode!C285:C285",
+    "Accionables!D8:N8",
+    "IA local!E34:E34",
+    "IA local!I34:L34",
+    "IA local!K34"
+  ],
+  "write_mask": "userEnteredValue",
+  "scenarios": [
+    {"seed": 44, "id": "TC-70", "status": "fail", "points": 0, "duration_seconds": 1041.04},
+    {"seed": 44, "id": "TC-74", "status": "fail", "points": 0, "duration_seconds": 820.04},
+    {"seed": 44, "id": "TC-84", "status": "running"}
+  ],
+  "aggregate_seed_score": null,
+  "hyperlink_preserved": "https://github.com/L-Forster/open-jet",
+  "wrap_format_preserved": true,
+  "service": "q55-qwen38-focused-a3.service",
+  "readback_note": "El seed sigue activo en TC-84; no se reportó score agregado.",
+  "sheet_status_values": {
+    "Evaluaciones LlamaCode!C285": "Activa · A3 baseline seed44: TC-70/74 fail (0/0 pts; 1041/820 s); TC-84 en curso; seed sin score agregado.",
+    "Accionables!D8": "A3 baseline seed44: TC-70 y TC-74 fallaron (0 puntos; 1041/820 s); TC-84 está corriendo. Seed aún incompleta.",
+    "IA local!E34": "Q55 A3 baseline44: TC-70 fail (0, 1041 s); TC-74 fail (0, 820 s); TC-84 corriendo. No score agregado.",
+    "IA local!I34": "A3 baseline seed44: TC-70/74 fail; TC-84 activo. Seed sin score todavía. Preflight pasó, guardas limpios."
+  }
+}

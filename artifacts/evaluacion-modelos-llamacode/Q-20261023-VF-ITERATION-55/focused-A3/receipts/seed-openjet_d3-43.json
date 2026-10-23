@@ -1,0 +1,22 @@
+{
+  "valid": false,
+  "scope": "focused_screen_only",
+  "arm": "openjet_d3",
+  "runtime": "OpenJet megakernel d3",
+  "seed": 43,
+  "exit_code": 0,
+  "json_path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-55/focused-A3/runs/openjet_d3/seed-43.json",
+  "json_sha256": "a27b42ec57b3f4aaad4c88d6a03565174db40d3e589e06fbad9058f300b6b4e8",
+  "tool_eval_log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-55/focused-A3/logs/openjet_d3-seed-43-tool-eval.log",
+  "timing": {
+    "started_at_utc": "2026-10-23T13:45:30Z",
+    "ended_at_utc": "2026-10-23T13:46:11Z",
+    "duration_seconds": 40.09,
+    "log_path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-55/focused-A3/logs/openjet_d3-seed-43-tool-eval.log",
+    "log_sha256": "15d187272efd3ab13c8731c781d6eba12027496895b0a372761d016c0d8f6b9d"
+  },
+  "validation": {
+    "valid": false,
+    "reason": "auditoría de puntos del subset no coincide con 8 máximos"
+  }
+}

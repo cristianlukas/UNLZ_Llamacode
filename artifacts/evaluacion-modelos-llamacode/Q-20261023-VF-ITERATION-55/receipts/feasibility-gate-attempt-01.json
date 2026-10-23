@@ -1,0 +1,16 @@
+{
+  "status": "failed",
+  "failure": "baseline smoke/startup: RuntimeError: HTTP 500 http://127.0.0.1:56231/v1/chat/completions: {\"error\":{\"code\":500,\"message\":\"The model produced output that does not match the expected peg-native format\",\"type\":\"server_error\"}}",
+  "smokes": {},
+  "cleanup": [
+    {
+      "arm": "baseline",
+      "stopped_at_utc": "2026-10-23T09:59:05Z",
+      "exit_code": 0,
+      "signals": [
+        "SIGTERM"
+      ],
+      "process_and_port_absent": true
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "verified_ranges": [
+    "Evaluaciones LlamaCode!A284:J284",
+    "Accionables!D8:N8"
+  ],
+  "write_mask": "userEnteredValue",
+  "readback_verified": true,
+  "readback_at_utc": "2026-10-23T09:37:15Z"
+}

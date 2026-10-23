@@ -1,0 +1,44 @@
+{
+  "task_id": "Q-20261023-VF-ITERATION-55",
+  "amendment": "A3",
+  "arm": "openjet_d3",
+  "seed": 43,
+  "status": "invalid_seed",
+  "scope": "TC-70, TC-74, TC-84, TC-92; no valid aggregate score",
+  "started_at_utc": "2026-10-23T13:45:30Z",
+  "ended_at_utc": "2026-10-23T13:46:11Z",
+  "duration_seconds": 40.09,
+  "scenario_outcomes": [
+    {"id": "TC-70", "status": "pass", "points": 2, "duration_seconds": 2.73},
+    {"id": "TC-74", "status": "fail", "failure_kind": "server_error", "http_status": 500, "duration_seconds": 24.33},
+    {"id": "TC-84", "status": "fail", "failure_kind": "server_error", "http_status": 500, "duration_seconds": 6.31},
+    {"id": "TC-92", "status": "fail", "failure_kind": "server_error", "http_status": 500, "duration_seconds": 5.08}
+  ],
+  "partial_tool_eval_scores": {"total_points": 2, "max_points": 2, "excluded_scenarios": ["TC-74", "TC-84", "TC-92"], "completion_rate_percent": 25.0},
+  "safety_gate": {"reported_pass": true, "warnings": [], "interpretation": "Incomplete execution; this is not a safety pass."},
+  "server_evidence": {
+    "error": "RuntimeError('prefill: ')",
+    "log_sha256": "b359787cc66a92173d527ff410d0f7f75864985c281ca37a2b726ac217cc59b6",
+    "exact_cuda_cause": "unknown from this log"
+  },
+  "validation": {
+    "valid": false,
+    "reason": "auditoría de puntos del subset no coincide con 8 máximos",
+    "preregistration_policy": "invalid seed or timeout: checkpoint failure, no automatic retry",
+    "runner_action": "stopped without retry; remaining d3/d4 seeds were not run"
+  },
+  "artifacts": {
+    "json": "focused-A3/runs/openjet_d3/seed-43.json",
+    "json_sha256": "a27b42ec57b3f4aaad4c88d6a03565174db40d3e589e06fbad9058f300b6b4e8",
+    "tool_eval_log": "focused-A3/logs/openjet_d3-seed-43-tool-eval.log",
+    "tool_eval_log_sha256": "15d187272efd3ab13c8731c781d6eba12027496895b0a372761d016c0d8f6b9d",
+    "server_log": "focused-A3/logs/openjet_d3-focused_quality-invocation-01-server.log",
+    "progress": "focused-A3/runs/progress.json",
+    "prior_diagnostic_logs": [
+      "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-50/logs/diagnostic-a35-openjet-d3-prefill-post2-path-pairs/arm-02.log",
+      "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-50/logs/diagnostic-a7-openjet-d4-tc88/openjet-d4-server.log"
+    ]
+  },
+  "runtime_cleanup": {"q55_a3_service_exit_code": 2, "reason": "runner stopped after invalid-seed validation", "oom": false, "server_process_or_port_remaining": false, "gpu_memory_mib_after_exit": 1091},
+  "decision": "Do not claim OpenJet d3 quality, safety or speed superiority. Block further d3/d4 comparison until the runtime failure is corrected/fingerprinted and a new preregistration is synchronized."
+}

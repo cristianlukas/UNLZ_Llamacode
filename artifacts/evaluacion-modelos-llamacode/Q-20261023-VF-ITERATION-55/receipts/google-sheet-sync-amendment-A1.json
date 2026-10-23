@@ -1,0 +1,25 @@
+{
+  "task_id": "Q-20261023-VF-ITERATION-55",
+  "synced_at_utc": "2026-10-23T10:00:26Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "amendment": "A1: smoke seed42 -> 43",
+  "write_mask": "userEnteredValue",
+  "readback_verified": true,
+  "ranges": [
+    {
+      "range": "Evaluaciones LlamaCode!A285:J285",
+      "purpose": "Q55 amendment result and next attempt",
+      "readback_verified": true
+    },
+    {
+      "range": "Accionables!D8:N8",
+      "purpose": "amendment and stop condition",
+      "readback_verified": true
+    },
+    {
+      "range": "IA local!A34:O34",
+      "purpose": "Qwen3.8-27B inventory attempt status",
+      "readback_verified": true
+    }
+  ]
+}
