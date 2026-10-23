@@ -1,0 +1,48 @@
+{
+  "task_id": "Q-20261023-VF-ITERATION-64",
+  "lock_token": "6cb3dfb8-8b77-428d-9847-388210fdebda",
+  "checked_at_utc": "2026-10-23T16:51:20Z",
+  "boot_time_utc_local": "2026-10-22 22:26:57",
+  "kernel": "7.0.0-38-generic",
+  "loaded_module_version": "610.57.04",
+  "modinfo_version": "615.71.09",
+  "nvml_version": "615.71",
+  "nvidia_smi_exit_code": 18,
+  "reboot_required_marker_present": true,
+  "inference_process_matches": [],
+  "listeners": [
+    {
+      "address": "127.0.0.1:47413",
+      "process": "artcraft-launch",
+      "classification": "not an inference server"
+    },
+    {
+      "address": "127.0.0.1:35751",
+      "process": "unresolved from ss output",
+      "classification": "not identified as inference"
+    },
+    {
+      "address": "127.0.0.54:53",
+      "process": "system DNS stub",
+      "classification": "not an inference server"
+    },
+    {
+      "address": "127.0.0.1:631",
+      "process": "CUPS",
+      "classification": "not an inference server"
+    },
+    {
+      "address": "127.0.0.1:6742",
+      "process": "OpenRGB",
+      "classification": "not an inference server"
+    }
+  ],
+  "inference_server_started": false,
+  "requests_sent": 0,
+  "benchmark_started": false,
+  "gpu_work_started": false,
+  "q56_staging_hashes_rechecked": false,
+  "gate": "BLOCKED: Ubuntu boot predates NVIDIA update; loaded module and NVML/modinfo differ; nvidia-smi exit 18.",
+  "next_action": "User reboots Ubuntu after the completed NVIDIA update. Then rerun the fresh Q56 preflight; only if module/NVML align and no inference server is active, run the preregistered durable canary and six serial requests.",
+  "preservation": "No production models, ASTRA, SOL, Flash-Next production weights, PeritoSoft, staged files, or original quarantine files were changed."
+}

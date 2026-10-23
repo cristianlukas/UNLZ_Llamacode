@@ -14,3 +14,8 @@ Recheck posterior al update (2026-10-23T14:39Z): `nvidia-smi` sigue en exit 18 (
 
 
 Google Sheets actualizado y leído de vuelta 2026-10-23T14:44:35Z: `Evaluaciones LlamaCode` C286 y G286:J286, `Accionables` D3/H3/K3/N3 e `Inventario de modelos` C11/R11. Se corrigió el destino J286, que por encabezado es `WORK_QUEUE.md · fuente canónica`; el progreso quedó en G286 y la condición en H286. Sólo se modificó `userEnteredValue`; `IA local!K34`, formato, validaciones y otras pestañas no se tocaron. Recibo `receipts/google-sheet-sync-post-update-driver-check.json`.
+
+
+## Q64 recheck — 2026-10-23T16:51:20Z
+
+Ubuntu seguía arrancado antes del update (`2026-10-22 22:26:57`); módulo activo `610.57.04` vs NVML/modinfo `615.71.09`; `nvidia-smi` exit 18; marcador de reinicio presente. No se encontró inference server y no se iniciaron server/requests/GPU. Q56 continúa bloqueada hasta reiniciar Ubuntu. Detalle: `artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-64/RESULTS.md`.
