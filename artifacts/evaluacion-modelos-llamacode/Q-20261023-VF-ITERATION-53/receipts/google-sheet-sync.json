@@ -1,0 +1,15 @@
+{
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet": "Evaluaciones LlamaCode",
+  "range": "A283:J283",
+  "write_mask": "userEnteredValue",
+  "readback_verified": true,
+  "readback_at_utc": "2026-10-23T09:31:13Z",
+  "updated_ranges": [
+    "Evaluaciones LlamaCode!A283:J283",
+    "Accionables!I49:N49"
+  ],
+  "additional_write_mask": "userEnteredValue",
+  "additional_readback_verified": true,
+  "preserved_actionable_status": "Pending \u00b7 Codex sigue en Linux; C39-01 listo; ejecutar desde sesi\u00f3n Windows nativa"
+}

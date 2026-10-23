@@ -1,0 +1,79 @@
+{
+  "task_id": "Q-20261023-VF-ITERATION-53",
+  "lock_token": "9312f9bb-0d31-420c-9ecd-001ae59594f8",
+  "finished_at_utc": "2026-10-23T09:31:13.612562Z",
+  "result": "preflight_complete_windows_executor_unavailable",
+  "platform": {
+    "uname": "Linux 7.0.0-38-generic x86_64",
+    "cwd": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode",
+    "native_windows": false
+  },
+  "windows_tools": {
+    "pwsh": null,
+    "powershell.exe": null,
+    "cmd.exe": null,
+    "wine": "/usr/bin/wine",
+    "wine_accepted_as_native_windows": false
+  },
+  "inference_detection": {
+    "process_names_checked": [
+      "llama-server",
+      "vllm",
+      "sglang",
+      "lmstudio",
+      "ollama",
+      "mlx",
+      "ninfer",
+      "strata",
+      "openjet"
+    ],
+    "matching_processes": [],
+    "common_listeners_checked": [
+      8080,
+      8000,
+      8768,
+      1234,
+      5000,
+      5001,
+      3000,
+      8090,
+      9090
+    ],
+    "matching_listeners": [],
+    "gpu_compute_processes": [
+      {
+        "pid": 4874,
+        "process": "/tmp/.mount_artcrakPPfIC/usr/bin/artcraft-launcher",
+        "memory_mib": 205,
+        "classification": "desktop app; preserved"
+      }
+    ]
+  },
+  "actions": {
+    "build": false,
+    "benchmark": false,
+    "download": false,
+    "inference": false,
+    "gpu_test": false,
+    "processes_terminated": []
+  },
+  "decision": "C39-02 and native Windows Job Object validation remain pending. Do not use Wine as a substitute. Resume only when this executor itself runs natively on Windows.",
+  "protected_assets_unchanged": [
+    "Qwen Flash-Next ASTRA",
+    "SOL",
+    "PeritoSoft",
+    "production profiles and model weights"
+  ],
+  "google_sheets": {
+    "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "sheet": "Evaluaciones LlamaCode",
+    "range": "A283:J283",
+    "write_mask": "userEnteredValue",
+    "readback_verified": true,
+    "readback_at_utc": "2026-10-23T09:31:13.612562Z",
+    "updated_ranges": [
+      "Evaluaciones LlamaCode!A283:J283",
+      "Accionables!I49:N49"
+    ]
+  }
+}
