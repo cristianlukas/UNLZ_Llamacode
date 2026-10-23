@@ -197,6 +197,15 @@ set(CORE_SOURCES
     src/core/tuner/AutoTuner.cpp
     src/core/tuner/TunerEngine.cpp
     src/core/tuner/TunerWorker.cpp
+    src/core/studia/StudiaIndex.cpp
+    src/core/studia/StudiaTexto.cpp
+    src/core/studia/StudiaPlot.cpp
+    src/core/studia/StudiaEmbed.cpp
+    src/core/studia/StudiaEmbedServer.cpp
+    src/core/studia/StudiaHerramientas.cpp
+    src/core/studia/StudiaPrompt.cpp
+    src/core/studia/StudiaSessionStore.cpp
+    src/core/studia/StudiaController.cpp
 )
 
 set(HEADERS
@@ -309,6 +318,15 @@ set(HEADERS
     src/core/tuner/AutoTuner.h
     src/core/tuner/TunerEngine.h
     src/core/tuner/TunerWorker.h
+    src/core/studia/StudiaIndex.h
+    src/core/studia/StudiaTexto.h
+    src/core/studia/StudiaPlot.h
+    src/core/studia/StudiaEmbed.h
+    src/core/studia/StudiaEmbedServer.h
+    src/core/studia/StudiaHerramientas.h
+    src/core/studia/StudiaPrompt.h
+    src/core/studia/StudiaSessionStore.h
+    src/core/studia/StudiaController.h
 )
 
 # ── Libreria core compartida (app + tests) ──
@@ -333,6 +351,7 @@ configure_file(src/LlamaCodeVersion.h.in ${CMAKE_CURRENT_BINARY_DIR}/generated/L
 target_include_directories(llamacode_core PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/generated)
 target_compile_definitions(llamacode_core PRIVATE
     LC_BUNDLED_SKILLS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets/skills"
+    LC_STUDIA_TOOLS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tools/studia"
     "$<$<CONFIG:Debug>:LC_BUILD_CHANNEL=\"debug\">"
     "$<$<NOT:$<CONFIG:Debug>>:LC_BUILD_CHANNEL=\"prod\">")
 target_link_libraries(llamacode_core PUBLIC
@@ -487,6 +506,7 @@ qt_add_qml_module(LlamaCode
         qml/components/LcScrollBar.qml
         qml/components/OpencodeConfigDialog.qml
         qml/components/MermaidPreviewDialog.qml
+        qml/components/StudiaTemas.qml
         qml/pages/AgentPage.qml
         qml/pages/AgentsPage.qml
         qml/pages/TasksPage.qml
@@ -497,6 +517,7 @@ qt_add_qml_module(LlamaCode
         qml/pages/DataLabPage.qml
         qml/pages/CharlaPage.qml
         qml/pages/DownloadsPage.qml
+        qml/pages/StudiaPage.qml
         qml/pages/SettingsPage.qml
     RESOURCES
         assets/best_bolt.svg
@@ -823,9 +844,9 @@ if (BUILD_TESTS)
         DEPENDS qml/pages/SettingsPage.qml
         COMMENT "Staging SettingsPage.qml text for tst_settings_tabs")
     list(APPEND _lc_qml_harness_copies "${LC_QML_HARNESS_DIR}/SettingsPage.qml.txt")
-    # tst_page_contracts lee AgentPage/ChatPage como TEXTO (headers Flow, botón
-    # Iniciar agente, tarjeta de computer use).
-    foreach(_page AgentPage ChatPage)
+    # tst_page_contracts lee AgentPage/ChatPage/StudiaPage como TEXTO (headers
+    # Flow, botón Iniciar agente, tarjeta de computer use, arranque de StudIA).
+    foreach(_page AgentPage ChatPage StudiaPage)
         add_custom_command(
             OUTPUT "${LC_QML_HARNESS_DIR}/${_page}.qml.txt"
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -835,6 +856,16 @@ if (BUILD_TESTS)
             COMMENT "Staging ${_page}.qml text for tst_page_contracts")
         list(APPEND _lc_qml_harness_copies "${LC_QML_HARNESS_DIR}/${_page}.qml.txt")
     endforeach()
+
+    # Y Main.qml: StudIA tiene que estar en el índice que le da NavBar.
+    add_custom_command(
+        OUTPUT "${LC_QML_HARNESS_DIR}/Main.qml.txt"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${CMAKE_CURRENT_SOURCE_DIR}/qml/Main.qml"
+                "${LC_QML_HARNESS_DIR}/Main.qml.txt"
+        DEPENDS qml/Main.qml
+        COMMENT "Staging Main.qml text for tst_page_contracts")
+    list(APPEND _lc_qml_harness_copies "${LC_QML_HARNESS_DIR}/Main.qml.txt")
 
     add_custom_target(qml_harness ALL DEPENDS ${_lc_qml_harness_copies})
 
@@ -1054,4 +1085,23 @@ if (BUILD_TESTS)
     endif()
     target_include_directories(qa_auxiliary_concurrency PRIVATE src tests)
     target_link_libraries(qa_auxiliary_concurrency PRIVATE llamacode_core)
+    add_lc_test(test_studia             tests/test_studia.cpp)
+
+    # Ingestor de StudIA: es Python (usa markitdown/pypdf), asi que su suite es
+    # unittest y se engancha a ctest como un test mas. Si no hay Python en el
+    # sistema, no se registra (el resto de la suite sigue corriendo).
+    find_package(Python3 COMPONENTS Interpreter QUIET)
+    if (Python3_Interpreter_FOUND)
+        add_test(NAME test_studia_ingest
+                 COMMAND ${Python3_EXECUTABLE}
+                         ${CMAKE_CURRENT_SOURCE_DIR}/tools/studia/test_ingest.py)
+        add_test(NAME test_studia_vectorizar
+                 COMMAND ${Python3_EXECUTABLE}
+                         ${CMAKE_CURRENT_SOURCE_DIR}/tools/studia/test_vectorizar.py)
+        add_test(NAME test_studia_graficar
+                 COMMAND ${Python3_EXECUTABLE}
+                         ${CMAKE_CURRENT_SOURCE_DIR}/tools/studia/test_graficar.py)
+    else()
+        message(STATUS "Python3 no encontrado: se omite test_studia_ingest")
+    endif()
 endif()

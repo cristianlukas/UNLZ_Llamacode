@@ -111,6 +111,11 @@ for p in platforms/libqoffscreen.so platforms/libqwayland-generic.so "${extra_di
     [ -e "$appdir/usr/plugins/$p" ] || { echo "Qt plugin missing from the package: $p" >&2; exit 1; }
 done
 cp "$out/llamacode.png" "$appdir/llamacode.png"
+# StudIA's Python helpers: the app looks for them in <exe dir>/tools/studia
+# (StudiaHerramientas::rutaScript). Tests and Windows .bat stay out.
+mkdir -p "$appdir/usr/bin/tools/studia"
+find "$root/tools/studia" -maxdepth 1 -type f ! -name 'test_*' ! -name '*.bat' ! -name '*.ps1' \
+    -exec cp {} "$appdir/usr/bin/tools/studia/" \;
 
 # Newest glibc symbol version any bundled ELF needs: update-binary.sh refuses
 # to install on an older system (it would not start) instead of breaking it.

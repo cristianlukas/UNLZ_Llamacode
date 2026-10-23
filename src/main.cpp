@@ -2,6 +2,7 @@
 #include "LlamaCodeVersion.h"
 #include "core/ControlApi.h"
 #include "core/MermaidRenderer.h"
+#include "core/studia/StudiaController.h"
 #include "ThemeProvider.h"
 #include "TrayController.h"
 #include "core/tasks/AutomationStore.h"
@@ -360,6 +361,9 @@ int main(int argc, char *argv[])
         controller.setDevMode(false);
     ThemeProvider theme;
     MermaidRenderer mermaid;
+    // StudIA: modulo propio (indice documental + asistente de estudio). No
+    // depende de AppController; la URL del server se la pasa QML.
+    StudiaController studia;
     QString trayIconResource = trayIconSource;
     if (trayIconResource.startsWith(QStringLiteral("qrc:/")))
         trayIconResource = QStringLiteral(":") + trayIconResource.mid(4);
@@ -501,6 +505,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("Theme", &theme);
     engine.rootContext()->setContextProperty("Mermaid", &mermaid);
     engine.rootContext()->setContextProperty("Tray", &tray);
+    engine.rootContext()->setContextProperty("Studia", &studia);
     engine.rootContext()->setContextProperty("AppIconSource", appIconSource);
     engine.rootContext()->setContextProperty("TrayIconSource", trayIconSource);
     engine.rootContext()->setContextProperty("StartedWithWindows", startedWithWindows);

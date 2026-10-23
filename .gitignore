@@ -94,6 +94,8 @@ tuner_selftest.exe
 # Build trees de sesiones paralelas (worktree/agentes) y bytecode del SDK
 /build_core_codex/
 /build_tests_autoprompt/
+
+# Python bytecode (tools/studia y demas scripts)
 __pycache__/
 /.playwright-cli
 
@@ -111,3 +113,4 @@ artifacts/**/profile-backup/
 *.sqlite-wal
 *.db-shm
 *.db-wal
+*.pyc

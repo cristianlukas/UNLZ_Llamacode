@@ -67,6 +67,13 @@ $deployFlag = @(if ($Config -eq 'Release') { '--release' })
 if ($LASTEXITCODE -ne 0) { throw "windeployqt failed ($LASTEXITCODE)" }
 $labs = Join-Path $QtDir 'qml\Qt\labs\settings'
 if (Test-Path $labs) { Copy-Item -Recurse -Force $labs (Join-Path $stage 'qml\Qt\labs\settings') }
+# StudIA's Python helpers (ingest/graficar/ocr...): the app looks for them in
+# <exe dir>\tools\studia (StudiaHerramientas::rutaScript). Tests stay out.
+$studiaDst = Join-Path $stage 'tools\studia'
+New-Item -ItemType Directory -Force -Path $studiaDst | Out-Null
+Get-ChildItem (Join-Path $root 'tools\studia') -File |
+    Where-Object { $_.Name -notlike 'test_*' } |
+    ForEach-Object { Copy-Item $_.FullName $studiaDst }
 # windeployqt drops the 25 MB vc_redist installer; the DLLs go app-local instead.
 Remove-Item -Force (Join-Path $stage 'vc_redist*.exe') -ErrorAction SilentlyContinue
 

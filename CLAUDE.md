@@ -16,6 +16,12 @@ Reglas:
   corrieron sobre tu fuente y el resultado no vale. Volvé a correrlo.
 - Un executable por subsistema (QtTest = 1 `QTEST_MAIN` por binario).
 
+Las herramientas de StudIA son Python (ingestor, vectorizador, graficador), así
+que sus suites son `unittest` y se enganchan a `ctest` como `test_studia_ingest`,
+`test_studia_vectorizar` y `test_studia_graficar`. Si no hay Python en el
+sistema, CMake omite esos tests y el resto sigue corriendo; los que además
+necesitan numpy/matplotlib se saltean solos con `skipUnless`.
+
 ### Convenciones de tests
 - Aislamiento de disco: `QStandardPaths::setTestModeEnabled(true)` redirige
   AppData/AppLocalData a una ubicación de test (registries, catalog, chat_raw,
@@ -72,7 +78,7 @@ Reglas:
 | Tools de computer use (validación previa al input, portapapeles, rechazo de tipeo sin ventana elegida) | `tests/test_agent_tools.cpp` |
 | Computer use: preguntar modo / Super Agente directo / "segundo plano" sin mouse ni teclado (gate del turno, tools filtradas y rechazadas) + razonamiento oculto con Pensar apagado (contar y cortar una vez) | `tests/test_agent_wire.cpp`, `tests/test_agent_tools.cpp`, `tests/test_automation.cpp`, `tests/test_appcontroller.cpp` |
 | NavBar (fila de Configuración centrada, con y sin botón de update) | `tests/qml/tst_navbar.qml` (ctest `qml_navbar`) |
-| Contratos de UI de AgentPage/ChatPage reales (headers Flow con reserva de botones de ventana, "Iniciar agente" centrado, tarjeta de computer use) | `tests/qml/tst_page_contracts.qml` (ctest `qml_page_contracts`) |
+| Contratos de UI de AgentPage/ChatPage/StudiaPage reales (headers Flow con reserva de botones de ventana, "Iniciar agente" centrado, tarjeta de computer use, StudIA en su índice de Main.qml + arranque perezoso) | `tests/qml/tst_page_contracts.qml` (ctest `qml_page_contracts`) |
 | `desktop_launch` devuelve el id de la ventana que abrió (`pickLaunchedWindow`, `waitForLaunchedWindow`; diálogo de error ≠ app) | `tests/test_automation.cpp` |
 | Modo texto conserva `chat_template_kwargs`/`reasoning_budget` + diagnóstico de respuesta vacía | `tests/test_agent_wire.cpp` |
 | `scripts/update-binary.ps1` (swap, hash, rollback automático y `-Rollback`, limpieza de `.failed`, attestation con `gh` falso, `LC_REQUIRE_ATTESTATION`) contra zips falsos | `tests/test_update_binary_ps.ps1` (ctest `update_binary_ps`, Windows) |
@@ -84,12 +90,32 @@ Reglas:
 | LcColorRow + LcColorPicker (editor de tema, lado QML) | `tests/qml/tst_color_picker.qml` |
 | LcSpinBox + LcRadioButton (controles con tema; contraste texto/fondo) | `tests/qml/tst_lc_controls.qml` |
 | SetupWizardPolicy.js (asistente inicial: una sola recomendación, paso 3 real) | `tests/qml/tst_setup_wizard_policy.qml` |
+| StudiaIndex, StudiaPrompt, StudiaSessionStore, StudiaController (+ integración: servidor de embeddings sólo al abrir la pestaña, puerto ≠ whisper de Charla, `python3` en Linux) | `tests/test_studia.cpp` |
+| Ingestor de StudIA (Python) | `tools/studia/test_ingest.py` |
+| Vectorizador de StudIA (Python) | `tools/studia/test_vectorizar.py` |
+| Graficador de StudIA (Python) | `tools/studia/test_graficar.py` |
 
 Los componentes QML sin C++ se testean con el runtime `qml` en offscreen
 (`add_test(qml_color_picker ...)`): los archivos reales se copian a
 `build_tests/qml_harness/` junto a stubs de `Theme`/`App` (que en el app son
 context properties de C++). Un archivo QML resuelve los nombres sin calificar en
 SU directorio, por eso conviven copiados en vez de importarse.
+
+### Prompts: verificar contra el modelo, no contra el texto
+Los tests de C++ comprueban que la instrucción esté en el prompt; no dicen nada
+sobre si el modelo la cumple. Para eso está `tools/studia/probar_modos.py`, que
+manda los prompts reales al servidor y revisa el formato que vuelve. No se
+engancha a `ctest` porque necesita un llama-server vivo.
+
+    tests.bat Release                 # vuelca los prompts a %TEMP%
+    python tools/studia/probar_modos.py "Redes" "modelo OSI capas" "el modelo OSI"
+
+Al tocar los modos con formato estricto (autoevaluación, flashcards, plan),
+correrlo sobre 3 o 4 materias distintas antes de dar el cambio por bueno. Dos
+cosas se descubrieron así y conviene no volver a intentarlas: el formato puesto
+sólo en el prompt de sistema se ignora —va al final del mensaje de usuario— y
+pedir una estructura global ("primero las 10 preguntas, después las 10
+respuestas") no la sostiene; los pares `P:`/`R:` sí.
 
 ### Pendiente de cobertura
 Stub HTTP ya disponible: `SseStubServer` en `tests/test_backends_net.cpp` cubre

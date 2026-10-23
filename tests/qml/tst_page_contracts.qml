@@ -6,7 +6,10 @@ import QtQuick
 //  - los headers son Flow (los controles bajan de fila en vez de quedar bajo
 //    los botones de minimizar/maximizar/cerrar) y reservan su ancho;
 //  - con el agente detenido hay un botón "Iniciar agente" centrado;
-//  - la tarjeta de computer use ofrece segundo plano / controlar la PC / cancelar.
+//  - la tarjeta de computer use ofrece segundo plano / controlar la PC / cancelar;
+//  - StudIA: su barra no queda bajo los botones de ventana, levanta el servidor
+//    de embeddings recién al abrirse, y Main.qml la carga en el índice que le
+//    da NavBar (la 16.ª entrada; Configuración pasa a ser la 17.ª).
 QtObject {
     property int fails: 0
 
@@ -66,6 +69,20 @@ QtObject {
         check(cu.indexOf("App.answerComputerUseChoice(\"background\")") > 0, "opción En segundo plano")
         check(cu.indexOf("App.answerComputerUseChoice(\"foreground\")") > 0, "opción Controlando mi PC")
         check(cu.indexOf("App.answerComputerUseChoice(\"cancel\")") > 0, "opción Cancelar")
+
+        const studia = read("StudiaPage.qml.txt")
+        check(studia.length > 5000, "se leyó StudiaPage")
+        const barra = block(studia, "// ── Barra superior ──")
+        check(barra.indexOf("rightMargin: 16 + root.windowControlsReserve") > 0,
+              "StudIA: la barra reserva el ancho de los botones de ventana")
+        check(studia.indexOf("Component.onCompleted: Studia.activar()") > 0,
+              "StudIA: el servidor de embeddings arranca al abrir la pestaña")
+
+        const main = read("Main.qml.txt")
+        check(main.indexOf("currentIndex === 15; asynchronous: true; source: \"pages/StudiaPage.qml\"") > 0,
+              "Main.qml: StudiaPage en el índice 15")
+        check(main.indexOf("currentIndex === 16; asynchronous: true; source: \"pages/SettingsPage.qml\"") > 0,
+              "Main.qml: Configuración pasa al índice 16")
 
         console.log(fails === 0 ? "ALL PASS" : ("FAIL count=" + fails))
         Qt.exit(fails === 0 ? 0 : 1)
