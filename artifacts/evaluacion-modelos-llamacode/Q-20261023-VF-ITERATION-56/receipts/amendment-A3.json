@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "parentExperimentTaskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
+  "amendment": "A3",
+  "preregisteredAtUtc": "2026-10-23T21:30:24.728332+00:00",
+  "trigger": "Attempt 1 exited in a local runner guard before spawning Strata; zero model loads and zero requests.",
+  "soleChange": "Make Q56 isolated server log path absolute at the already preregistered Q56 receipts/strata-format-ab.log location, then update config and runner SHA pins.",
+  "oldLog": "artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-56/receipts/strata-format-ab.log",
+  "newLog": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-56/receipts/strata-format-ab.log",
+  "oldConfigSha256": "da5de1b920a66a03a25766bdbb1222d276005e2dbfdb9a00b737fb9a0b6e16b7",
+  "newConfigSha256": "77aaa3396206ee05ee3cb4177e8c7f313d7ad9ecac72f10e1b66d031297a335d",
+  "oldRunnerSha256": "f2ec1b294a7962d782d8e9b3a36b40cfe2e088021d24129a92b76592a229fee0",
+  "newRunnerSha256": "fcf9c4666e055edf96d5a13990a84198838b79cad0fc4d3ad79935b1d9a5fa5f",
+  "unchanged": [
+    "model weights and fingerprints",
+    "runtime and sampling",
+    "700000 context / YaRN ×4 from 262144 / KV int8",
+    "three fixtures, answer keys, schemas, seeds, six request order and response_format factor",
+    "thresholds, abort guards, no retry after any request"
+  ],
+  "verificationBeforeNextServerStart": [
+    "py_compile",
+    "CPU config matching and guard checks",
+    "fresh Q56 preflight",
+    "Sheet update/readback",
+    "durable systemd service with same cgroup limits"
+  ],
+  "gpuStarted": false,
+  "requestsSent": 0
+}

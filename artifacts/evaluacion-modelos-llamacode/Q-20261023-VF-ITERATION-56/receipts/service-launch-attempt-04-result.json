@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "parentExperimentTaskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
+  "attempt": 4,
+  "atUtc": "2026-10-23T21:40:17.781702+00:00",
+  "unit": "q56-s55-jsonschema.service",
+  "unitState": {
+    "Result": "exit-code",
+    "ExecMainStatus": "1",
+    "ActiveState": "failed",
+    "SubState": "failed",
+    "InvocationID": "20cae4a5109f450fb143b378bba3a9b9"
+  },
+  "error": "RuntimeError: isolated config changed beyond its preregistered name/log fields",
+  "failureLocation": "runner main config guard before server Popen",
+  "diagnosis": "The guard still expected the original strata-format-ab.log path after A5 preregistered the per-attempt path strata-format-ab-attempt-04.log.",
+  "modelLoaded": false,
+  "serverStarted": false,
+  "gpuStartedByAttempt": false,
+  "benchmarkPromptRequestsSent": 0,
+  "resultFileCreated": false,
+  "priorAttemptFilesPreserved": true,
+  "journalTail": "q56-s55-jsonschema.service: Main process exited, code=exited, status=1/FAILURE\nq56-s55-jsonschema.service: Failed with result 'exit-code'.\nStarted q56-s55-jsonschema.service - /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-56/work/run_700k_json_schema_ab.py.\nTraceback (most recent call last):\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-56/work/run_700k_json_schema_ab.py\", line 663, in <module>\n    raise SystemExit(main())\n                     ^^^^^^\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-56/work/run_700k_json_schema_ab.py\", line 418, in main\n    raise RuntimeError('isolated config changed beyond its preregistered name/log fields')\nRuntimeError: isolated config changed beyond its preregistered name/log fields\nq56-s55-jsonschema.service: Main process exited, code=exited, status=1/FAILURE\nq56-s55-jsonschema.service: Failed with result 'exit-code'.\n"
+}

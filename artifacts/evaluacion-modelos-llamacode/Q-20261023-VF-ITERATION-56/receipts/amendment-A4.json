@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "parentExperimentTaskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
+  "amendment": "A4",
+  "preregisteredAtUtc": "2026-10-23T21:34:35.399667+00:00",
+  "trigger": "Attempt 2 loaded the model and reached READY, then aborted before the first chat-completions request because tree_cmdlines is exposed by the S55 wrapper module but not the nested base helper module.",
+  "soleChange": "Retain the S55 wrapper module returned by load_source55_module and call its existing tree_cmdlines(server.pid) helper; leave the base helper calls unchanged.",
+  "oldRunnerSha256": "fcf9c4666e055edf96d5a13990a84198838b79cad0fc4d3ad79935b1d9a5fa5f",
+  "newRunnerSha256": "fc35f909b04ca359dc8be2a5025e84aeabe81f62fe8b8e2bb845c92861145ea1",
+  "unchanged": [
+    "Qwen3.8 Flash-Next IQ3_XXS weights/fingerprints",
+    "Strata v0.1.41, sampling, 700000 context / YaRN ×4 / KV int8",
+    "fixtures, answer keys, JSON schemas, seeds, six-request order and response_format factor",
+    "thresholds, abort guards and no retry after any benchmark prompt request"
+  ],
+  "verificationBeforeNextModelLoad": [
+    "py_compile",
+    "AST/API helper compatibility checks",
+    "fresh preflight",
+    "Sheet update/readback",
+    "same transient user service cgroup limits"
+  ],
+  "priorAttempt2Outcome": {
+    "modelLoaded": true,
+    "reachedReady": true,
+    "loadSeconds": 40.936,
+    "benchmarkPromptRequestsSent": 0,
+    "serverStoppedCleanly": {
+      "returnCode": 0,
+      "forcedKill": false
+    },
+    "oomKills": 0
+  },
+  "gpuStarted": false,
+  "benchmarkRequestsSent": 0
+}

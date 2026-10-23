@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "parentExperimentTaskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
+  "attempt": 2,
+  "verifiedAtUtc": "2026-10-23T21:34:35.399667+00:00",
+  "unit": "q56-s55-jsonschema.service",
+  "unitInvocationId": "ef17860eea9243519818e874fc196719",
+  "status": "aborted_or_error",
+  "serverReachedReady": true,
+  "modelLoaded": true,
+  "loadSeconds": 40.936,
+  "benchmarkPromptRequestsSent": 0,
+  "readinessEndpoint": "GET /v1/models polled until model READY; no chat-completions generation request occurred.",
+  "error": "AttributeError: module 'iq3xxs_context262k_runner' has no attribute 'tree_cmdlines'",
+  "errorSource": "Q56 called base.tree_cmdlines although tree_cmdlines is a function on the imported S55 wrapper module, not on its base helper module.",
+  "cleanup": {
+    "serverStop": {
+      "returnCode": 0,
+      "forcedKill": false
+    },
+    "remainingInferenceProcesses": [],
+    "remainingKnownListeners": [],
+    "port8352Free": true
+  },
+  "postflight": {
+    "memAvailableBytes": 123271450624,
+    "swapUsedBytes": 0,
+    "oomKills": 0,
+    "psiMemory": {
+      "some": {
+        "avg10": 0.29,
+        "avg60": 0.06,
+        "avg300": 0.01
+      },
+      "full": {
+        "avg10": 0.29,
+        "avg60": 0.06,
+        "avg300": 0.01
+      }
+    },
+    "gpus": [
+      "0, NVIDIA GeForce RTX 3090, 876, 24576, 100",
+      "1, NVIDIA GeForce RTX 3090, 110, 24576, 61"
+    ],
+    "cgroupPeakBytes": 72900000000
+  },
+  "gpuStarted": true,
+  "benchmarkRequestsStarted": false,
+  "testStatus": "aborted before first benchmark prompt; no inferential result"
+}

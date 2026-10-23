@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "parentExperimentTaskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
+  "verifiedAtUtc": "2026-10-23T21:38:15.658994+00:00",
+  "test": "CPU tokenizer validation under system Python",
+  "interpreter": "/usr/bin/python3",
+  "status": "failed-before-GPU",
+  "error": "ModuleNotFoundError: No module named regex",
+  "cause": "strata_tokenizer.py imports regex; no system package was installed.",
+  "modelLoaded": false,
+  "gpuStarted": false,
+  "benchmarkPromptRequestsSent": 0
+}

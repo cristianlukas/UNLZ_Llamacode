@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "parentExperimentTaskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
+  "attempt": 5,
+  "preparedAtUtc": "2026-10-23T21:40:17.781702+00:00",
+  "unit": "q56-s55-jsonschema.service",
+  "manager": "systemd --user",
+  "command": [
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-56/work/run_700k_json_schema_ab.py"
+  ],
+  "properties": {
+    "unit": "q56-s55-jsonschema.service",
+    "manager": "systemd --user",
+    "memoryHigh": "86G",
+    "memoryMax": "96G",
+    "memorySwapMax": "1G",
+    "oomPolicy": "kill",
+    "restart": "no",
+    "runtimeMax": "4h",
+    "slice": "background.slice"
+  },
+  "runnerSha256": "ff72df01a8be81e7ba8bf8e249f3ee4efb5274af33e2fdda50269fbefafe63da",
+  "configSha256": "78a5c2791a0637f579d4e562735cf8eaf2a3f205acb735594ac9f9c1afd07407",
+  "resultPath": "receipts/700k-json-schema-ab-attempt-04.json",
+  "wrapperLogPath": "receipts/strata-format-ab-wrapper-attempt-04.log",
+  "serverLogPath": "receipts/strata-format-ab-attempt-04.log",
+  "preservesPriorAttemptResults": true,
+  "priorAttemptsBenchmarkPromptsSent": 0,
+  "gpuStarted": false,
+  "requestsStarted": false,
+  "status": "prepared-before-launch",
+  "wrapperInterpreter": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python",
+  "wrapperInterpreterVersion": "Python 3.12.3; regex 2026.9.10",
+  "amendment": "A7",
+  "freshPreflightAtUtc": "2026-10-23T21:41:32.207308+00:00",
+  "freshPreflightSha256": "19705180dc2b8d14c3262eebefd249d5d1e9978d6d97423a9ec5ae9c5425386e",
+  "freshPreflightPassed": true,
+  "priorAttempt04Result": "receipts/service-launch-attempt-04-result.json"
+}

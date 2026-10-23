@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "parentExperimentTaskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
+  "unit": "q56-cgroup-canary-20261023.service",
+  "startedAtUtc": "2026-10-23T21:28:10Z",
+  "verifiedAtUtc": "2026-10-23T21:28:14.196192+00:00",
+  "properties": {
+    "Slice": "background.slice",
+    "MemoryAccounting": "yes",
+    "MemoryHighBytes": 92341796864,
+    "MemoryMaxBytes": 103079215104,
+    "MemorySwapMaxBytes": 1073741824,
+    "OOMPolicy": "kill",
+    "Restart": "no",
+    "RuntimeMaxUSec": 45000000
+  },
+  "effectiveCgroup": {
+    "path": "/user.slice/user-1000.slice/user@1000.service/background.slice/q56-cgroup-canary-20261023.service",
+    "memory.high": 92341796864,
+    "memory.max": 103079215104,
+    "memory.swap.max": 1073741824,
+    "memory.events": "oom 0; oom_kill 0; oom_group_kill 0"
+  },
+  "command": [
+    "/usr/bin/sleep",
+    "45"
+  ],
+  "startedAsTransientUserService": true,
+  "gpuStarted": false,
+  "modelLoaded": false,
+  "networkRequests": 0,
+  "passed": true,
+  "cleanup": {
+    "stopCommand": "systemctl --user stop q56-cgroup-canary-20261023.service",
+    "loadState": "not-found",
+    "activeState": "inactive",
+    "subState": "dead",
+    "result": "success"
+  }
+}

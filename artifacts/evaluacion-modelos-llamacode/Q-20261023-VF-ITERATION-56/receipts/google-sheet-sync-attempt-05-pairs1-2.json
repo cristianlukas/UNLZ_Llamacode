@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "parentExperimentTaskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
+  "updatedAtUtc": "2026-10-23T22:00:40Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "rangesWritten": [
+    "Evaluaciones LlamaCode!C286",
+    "Evaluaciones LlamaCode!G286:J286",
+    "Accionables!D3",
+    "Accionables!G3:K3",
+    "Accionables!M3:N3"
+  ],
+  "readbackVerified": true,
+  "completedPairs": 2,
+  "completedRequests": 4,
+  "pairResults": {
+    "pair1": {
+      "plain": {
+        "valid": true,
+        "exactFacts": 5,
+        "prefillTps": 2586.2,
+        "decodeTps": 98.5,
+        "totalSeconds": 264.528
+      },
+      "json_schema": {
+        "valid": true,
+        "exactFacts": 5,
+        "prefillTps": 2535.3,
+        "decodeTps": 101.8,
+        "totalSeconds": 269.84
+      }
+    },
+    "pair2": {
+      "plain": {
+        "valid": true,
+        "exactFacts": 5,
+        "prefillTps": 2530.1,
+        "decodeTps": 107.3,
+        "totalSeconds": 270.226
+      },
+      "json_schema": {
+        "valid": true,
+        "exactFacts": 5,
+        "prefillTps": 2529.3,
+        "decodeTps": 103.0,
+        "totalSeconds": 270.463
+      }
+    }
+  },
+  "currentRun": "pair3 plain in progress",
+  "conclusion": "Both completed pairs tie at 5/5 exact. Runtime differences are small and not a quality recommendation. json_schema is client prompt guidance/validation, not constrained decoding.",
+  "preserved": [
+    "Accionables!F3 use-case text",
+    "existing wrapped/top format"
+  ]
+}

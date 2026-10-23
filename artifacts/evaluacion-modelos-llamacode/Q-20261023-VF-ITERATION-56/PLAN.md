@@ -1,9 +1,9 @@
 # Q56 — JSON Schema con retrieval a ~680K cargado desde SSD
 
-- **Estado:** bloqueada antes de inferencia; staging A1 completado y 11/11 SHA-256 verificados; el preflight fresco no pudo consultar las GPU por mismatch NVML/kernel de NVIDIA en Linux.
+- **Estado final:** completada bajo Q68. Gate candidato de JSON crudo aprobado 3/3 en este fixture; recuperación semántica posthoc 15/15 en ambos modos tras quitar sólo una cerca Markdown del control. Sin cambio de producción/contexto.
 - **Task:** `Q-20261023-VF-ITERATION-56`.
 - **Experiment ID:** `VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED`.
-- **Lock token:** `3f628b9f-27c2-4675-a960-1350fc7f44d6`.
+- **Token original de Q56:** `3f628b9f-27c2-4675-a960-1350fc7f44d6` (expiró al liberarse el turno anterior). **Ejecución final Q68:** `0bbd4847-1a31-436c-a45e-785a230d9c8f`.
 - **Objetivo:** decidir si `response_format=json_schema` permite combinar la recuperación exacta ya observada a ~680K con salida JSON cruda para ISTA Qwen3.8-Flash-Next IQ3_XXS / Strata v0.1.41.
 
 ## Motivo de reapertura
@@ -56,3 +56,81 @@ H1: en los tres fixtures ya usados, el brazo `json_schema` devuelve todos los va
 - **Reanudación:** completar la reparación de paquetes NVIDIA en Linux y reiniciar para que la biblioteca NVML y el módulo activo queden en la misma versión; después correr el preflight fresco completo. No iniciar servidor ni requests GPU antes de que todos los gates pasen. El staging temporal se conserva para reanudar y la cuarentena no se modifica.
 
 - Usuario confirmó que hubo una actualización del sistema; se repitió `nvidia-smi` a 2026-10-23T14:35:50Z y el mismatch 615.71/610.57 persistió. El bloqueo requiere terminar la configuración Linux y reiniciar para alinear el módulo activo, no un cambio en Windows.
+
+
+## Enmienda A2 · reanudación y guardas del runner
+
+- Registrada 2026-10-23T21:25:36.122246+00:00. El reboot posterior al update cargó NVIDIA 615.71.09; NVML/módulo coinciden y `nvidia-smi` responde. Codex es 26.1016.61520 ejecutándose desde `/usr/lib/chatgpt/ChatGPT`; el listener ajeno observado antes (35751) ya no existe.
+- Auditoría CPU-only encontró tres defectos de preflight: token embebido de Q56 ya liberado; `EXPECTED_CONFIG_SHA` 04ca… no coincide con el archivo A1 (SHA actual exacto en `receipts/preregistration.json`); y comparación literal de args/tokenizer que rechazaría las rutas A1 trasladadas al SSD C:.
+- El runner ahora permite diferencias sólo en `--pack`, `--native`, `--ple-gguf` bajo el staging registrado y `tokenizer == pack/tokenizer`; todos los otros argumentos y claves de config se comparan con S55. También fija el hash del config fuente S55. Se actualizan token/hash del runner en el preregistro.
+- **No cambia** experimento/factor/fixtures/seeds/orden/seis requests/umbrales/criterio. No hubo servidor, requests ni workload GPU durante esta enmienda. Se exige prueba CPU del validador y readback del Sheet antes del canario y preflight fresco.
+
+
+## Confirmación A2 en Google Sheets · 2026-10-23T21:27:33.085233+00:00
+
+El readback vivo de `Evaluaciones LlamaCode!C286:J286`, `Accionables!D3:N3` e `Inventario de modelos!C11:R11` contiene la enmienda A2, el estado post-reinicio, el guard A2 y el siguiente paso. No hizo falta modificar celdas en esta comprobación. Recibo: `receipts/google-sheet-sync-amendment-A2.json`. Se marca la preregistración como leída de vuelta antes del canario.
+
+
+## Canario systemd aprobado · 2026-10-23T21:28:14.196192+00:00
+
+El canario `q56-cgroup-canary-20261023.service` pasó: transient user service dentro de `background.slice`, cgroup v2 efectivo con `memory.high=92341796864`, `memory.max=103079215104`, `memory.swap.max=1073741824`, `OOMPolicy=kill`, `Restart=no`; contadores OOM en cero. Se detuvo y el manager lo recolectó (`LoadState=not-found`, inactivo). No cargó modelo ni usó GPU/red. Recibo: `receipts/q56-service-canary.json`.
+
+
+## Preflight y Sheet antes del servicio · 2026-10-23T21:29:20.134580+00:00
+
+El preflight vigente pasó 17/17. El estado se actualizó y leyó de vuelta en las tres filas relevantes del Sheet; recibo `receipts/google-sheet-sync-preflight-A2.json`. El recibo de lanzamiento `receipts/service-launch.json` congela comando, runner y propiedades systemd. No se han iniciado modelo ni solicitudes.
+
+
+## Enmienda A3 · guard de ruta de log antes de cargar modelo · 2026-10-23T21:30:24.728332+00:00
+
+El primer servicio Q56 falló en la validación local previa a `Popen`: `model_name` coincidía, pero el `log` configurado era relativo y el runner exige la ruta aislada absoluta en `receipts/strata-format-ab.log`. No se inició Strata ni se cargó modelo, no se usó GPU por Q56 ni se envió ninguna solicitud. El recibo `receipts/service-launch-attempt-01.json` conserva el intento. A3 cambia únicamente ese log a `/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-56/receipts/strata-format-ab.log` y actualiza los hashes de config/runner; todo el diseño del experimento permanece congelado. Deben pasar py_compile, validaciones CPU, preflight fresco y readback del Sheet antes del nuevo servicio. Registro A3: `receipts/amendment-A3.json`.
+
+
+## A3 validada y sincronizada · 2026-10-23T21:31:47.610843+00:00
+
+`py_compile` y las siete validaciones CPU pasan; el preflight A3 volvió a pasar 17/17 inmediatamente antes de continuar. El readback de A3 de Evaluaciones, Accionables e Inventario está en `receipts/google-sheet-sync-amendment-A3.json`; la preregistración ya no está pendiente. El intento 1 fue un fallo de guard sin cargar modelo ni request. El intento 2 reutiliza el mismo servicio transitorio y límites verificados.
+
+
+## Ajuste operativo del intento 2 · 2026-10-23T21:32:19.571660+00:00
+
+Tras `reset-failed`, systemd recolectó el unit viejo; `systemctl start` devolvió `Unit not found` y no ejecutó el proceso. A3 no cambia. Se recreará el mismo unit transitorio con `systemd-run` y las mismas propiedades verificadas. Sin modelo, GPU por Q56 ni solicitudes. Recibo: `receipts/service-launch-attempt-02-adjustment.json`.
+
+
+## Enmienda A4 · helper `tree_cmdlines` · 2026-10-23T21:34:35.399667+00:00
+
+El intento 2 cargó el modelo y alcanzó READY en 40.936 s; antes del primer prompt de benchmark, el runner llamó `tree_cmdlines` sobre el módulo helper equivocado. La función existe en el wrapper S55 importado, no en su módulo base. Strata se detuvo limpiamente, OOM=0, sin prompts de evaluación. A4 retiene el wrapper S55 y llama su función existente; cambia solo la observabilidad del árbol del proceso. Recibos: `receipts/service-launch-attempt-02-result.json` y `receipts/amendment-A4.json`.
+
+
+## A4 Sheet readback y preparación del intento 3 · 2026-10-23T21:35:46.864889+00:00
+
+Readback verificado en Evaluaciones, Accionables e Inventario; recibo `receipts/google-sheet-sync-amendment-A4.json`. El intento 2 llegó a READY pero se detuvo antes de un prompt. El intento 3 solo recupera la matriz de seis prompts aún no ejecutada, con diseño sin cambios y el helper A4; preregistro `receipts/service-launch-attempt-03-preregistration.json`. Se exige preflight fresco antes de la carga.
+
+
+## Enmienda A5 · conservar recibos y logs de cada intento · 2026-10-23T21:36:57.780302+00:00
+
+El intento 3 fue rechazado por la protección de no sobrescribir: el resultado de error del intento 2 se conserva en `receipts/700k-json-schema-ab-result.json`. No se inició servidor ni se usó GPU. A5 fija rutas únicas para el intento 4: `receipts/700k-json-schema-ab-attempt-04.json`, `receipts/strata-format-ab-wrapper-attempt-04.log` y `/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-56/receipts/strata-format-ab-attempt-04.log`. Solo cambia trazabilidad/rutas de log, y hashes de config/runner; modelo, contexto, prompts, seeds, orden y factor siguen congelados. Antes de la carga se validará tokenizer en CPU, helper, preflight y readback.
+
+
+## Enmienda A6 · wrapper en el Python del entorno Strata · 2026-10-23T21:38:15.658994+00:00
+
+A5 detectó en CPU que `/usr/bin/python3` no tiene `regex`, dependencia de `strata_tokenizer.py`. El venv fijado de Strata es Python 3.12.3 con `regex` 2026.9.10; cargó el tokenizer, igualó los cuatro hashes de S55 y reprodujo los tres conteos de tokens. A6 cambia solo el intérprete del wrapper del unit al Python de ese venv; el servidor ya usaba ese mismo Python. No se instala nada ni cambia el host. Antes de carga: readback Sheet A6 y preflight fresco. Recibos: `amendment-A6.json`, `a5-cpu-validation-system-python.json`, `a6-cpu-validation-venv.json`.
+
+
+## A6 Sheet readback · 2026-10-23T21:39:13.775596+00:00
+
+Se leyó de vuelta el estado A6 en las tres filas del Sheet, incluyendo el intento 3 sin carga y el wrapper en venv. Recibo `receipts/google-sheet-sync-amendment-A6.json`. La preregistración está sincronizada antes del cuarto inicio.
+
+
+## Enmienda A7 · guard de log por intento · 2026-10-23T21:40:17.781702+00:00
+
+El intento 4 fue abortado antes de `Popen`: el guard de config todavía esperaba el nombre de log original, mientras A5 ya había preregistrado `strata-format-ab-attempt-04.log`. No se cargó modelo ni se usó GPU; 0 prompts. A7 alinea únicamente ese literal del guard y actualiza el hash del runner. El intento 5 se preregistra con rutas A5 e intérprete A6. Recibos: `service-launch-attempt-04-result.json`, `amendment-A7.json`, `service-launch-attempt-05-preregistration.json`.
+
+
+## A7 validada y sincronizada · 2026-10-23T21:41:29.939590+00:00
+
+Prestart audit CPU 15/15; preflight actual 17/17; readback A7 verificado en las tres filas del Sheet. Recibos `a7-prestart-cpu-audit.json`, `preflight.json` y `google-sheet-sync-amendment-A7.json`. Sin modelo/GPU desde el fallo pre-Popen del intento 4.
+
+
+## Cierre final
+
+Las seis solicitudes se completaron en orden serial. El gate es sólo de formato/consumibilidad JSON en tres fixtures sintéticos ya usados (~680K). No es holdout ni prueba de superioridad de calidad o throughput. La respuesta del control que falló al parser estricto se recupera íntegra al remover una única cerca exterior; el cliente recomendado debe validar esquema después de parsing. No modificar defaults ni producción. Resultado: `receipts/final-result.json`; auditoría posthoc: `receipts/posthoc-json-fence-audit.json`.

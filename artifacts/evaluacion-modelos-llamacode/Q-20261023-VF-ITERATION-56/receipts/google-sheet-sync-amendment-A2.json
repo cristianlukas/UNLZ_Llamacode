@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "parentExperimentTaskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
+  "verifiedAtUtc": "2026-10-23T21:27:33.085233+00:00",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "rangesReadBack": [
+    "'Evaluaciones LlamaCode'!C286:J286",
+    "Accionables!D3:N3",
+    "'Inventario de modelos'!C11:R11"
+  ],
+  "readbackVerified": true,
+  "readbackSummary": {
+    "evaluationRow": "En curso post-reinicio; A2/CPU 4-of-4 and next step durable canary + fresh preflight; no model requests yet.",
+    "actionableRow": "In progress; six serial paired requests unchanged; no model result.",
+    "inventoryRow": "Candidate only; production and PeritoSoft consumer remain unverified; paths, S55 baseline throughput/scores/times, hashes, and current Q56 status are present."
+  },
+  "preregistrationAmendmentA2": {
+    "lockToken": "0bbd4847-1a31-436c-a45e-785a230d9c8f",
+    "runnerSha256": "f2ec1b294a7962d782d8e9b3a36b40cfe2e088021d24129a92b76592a229fee0",
+    "configSha256": "da5de1b920a66a03a25766bdbb1222d276005e2dbfdb9a00b737fb9a0b6e16b7",
+    "source55ConfigSha256": "2ba75fce1b8cd9d5c00fe1880052bb1f802e92546b480a9f5d5df0eccf15b42a",
+    "a2SheetTextObserved": true
+  },
+  "hashes": {
+    "preregistrationSha256BeforeReceiptUpdate": "32bb13aaaa3094d584472bcbb9024c8ddd484c7b63bd40eac149b87c7a2071cc",
+    "planSha256": "d0f537b2857f188843e43a4038b5a9ab611670dd1a1ab67046df424d090f79c8",
+    "runnerSha256": "f2ec1b294a7962d782d8e9b3a36b40cfe2e088021d24129a92b76592a229fee0",
+    "configSha256": "da5de1b920a66a03a25766bdbb1222d276005e2dbfdb9a00b737fb9a0b6e16b7"
+  },
+  "gpuStarted": false,
+  "note": "Values were read back from the live spreadsheet. No cell edits were needed in this verification; the row values already reflected amendment A2."
+}

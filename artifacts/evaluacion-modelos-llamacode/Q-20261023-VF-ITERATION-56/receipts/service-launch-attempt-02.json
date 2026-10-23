@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "parentExperimentTaskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD",
+  "verifiedAtUtc": "2026-10-23T21:33:32.243007+00:00",
+  "attempt": 2,
+  "unit": {
+    "Restart": "no",
+    "RuntimeMaxUSec": "4h",
+    "Result": "exit-code",
+    "OOMPolicy": "kill",
+    "ExecMainPID": "35177",
+    "Slice": "background.slice",
+    "ControlGroup": "",
+    "MemoryHigh": "92341796864",
+    "MemoryMax": "103079215104",
+    "MemorySwapMax": "1073741824",
+    "ActiveState": "failed",
+    "SubState": "failed",
+    "InvocationID": "ef17860eea9243519818e874fc196719"
+  },
+  "runner": {
+    "status": "aborted_or_error",
+    "serverPid": 35183,
+    "serverStartedAtUtc": "2026-10-23T21:32:48.860253+00:00",
+    "readyAtUtc": "2026-10-23T21:33:29.796628+00:00",
+    "completedRequests": 0,
+    "error": "AttributeError: module 'iq3xxs_context262k_runner' has no attribute 'tree_cmdlines'"
+  },
+  "host": {
+    "nvidiaSmi": [
+      "0, 876 MiB, 23299 MiB, 12 %",
+      "1, 110 MiB, 24068 MiB, 22 %"
+    ],
+    "memAvailableBytes": 125196873728,
+    "psiMemory": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.0
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.0
+      }
+    },
+    "externalInferenceProcesses": [],
+    "knownModelListenersBeforeStart": []
+  },
+  "freshPreflightAtUtc": "2026-10-23T21:32:37.629748+00:00",
+  "preflightSha256": "06104a5766170c808d5198423b825c376bb4e4a88e2cb13489aa633b3c830639",
+  "cgroupVerified": true,
+  "modelStatus": "loading",
+  "requestsSent": 0,
+  "passed": false
+}

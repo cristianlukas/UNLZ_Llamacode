@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "parentExperimentTaskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
+  "amendment": "A5",
+  "preregisteredAtUtc": "2026-10-23T21:36:57.780302+00:00",
+  "trigger": "Attempt 3 stopped at the intentional no-overwrite guard because attempt 2 left a preserved failed-result receipt at the canonical path.",
+  "soleChange": "Give attempt 4 a unique result JSON path, wrapper log path and Strata log path; update only corresponding runner/config SHA pins. Keep all prior attempt receipts/logs intact.",
+  "priorReceiptPath": "receipts/700k-json-schema-ab-result.json",
+  "newReceiptPath": "receipts/700k-json-schema-ab-attempt-04.json",
+  "newWrapperLogPath": "receipts/strata-format-ab-wrapper-attempt-04.log",
+  "newServerLogPath": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-56/receipts/strata-format-ab-attempt-04.log",
+  "oldRunnerSha256": "fc35f909b04ca359dc8be2a5025e84aeabe81f62fe8b8e2bb845c92861145ea1",
+  "newRunnerSha256": "596ca0adc6c528ed3be86bb7bf9e8c84e2626f129c365334a6f0009f61dc91e4",
+  "oldConfigSha256": "77aaa3396206ee05ee3cb4177e8c7f313d7ad9ecac72f10e1b66d031297a335d",
+  "newConfigSha256": "78a5c2791a0637f579d4e562735cf8eaf2a3f205acb735594ac9f9c1afd07407",
+  "unchanged": [
+    "model weights and fingerprints",
+    "Strata runtime and sampling",
+    "700000 context / YaRN ×4 / KV int8",
+    "fixtures, schemas, answer key, seeds, six-request order and response_format factor",
+    "resource gates and no retry after any benchmark prompt"
+  ],
+  "verificationBeforeNextLoad": [
+    "py_compile",
+    "AST and API helper binding checks",
+    "CPU tokenizer load and exact hash match against S55",
+    "fresh preflight",
+    "Sheet readback",
+    "transient systemd service with the same memory limits"
+  ],
+  "gpuStarted": false,
+  "benchmarkPromptRequestsSent": 0
+}

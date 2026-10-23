@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "parentExperimentTaskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
+  "attempt": 2,
+  "preparedAtUtc": "2026-10-23T21:31:03.721236+00:00",
+  "unit": "q56-s55-jsonschema.service",
+  "manager": "systemd --user",
+  "startMethod": "create a fresh transient user service with systemd-run; use the same unit name and exact preregistered resource properties after the previous failed transient unit was garbage-collected.",
+  "execStart": [
+    "/usr/bin/python3",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-56/work/run_700k_json_schema_ab.py"
+  ],
+  "properties": {
+    "unit": "q56-s55-jsonschema.service",
+    "manager": "systemd --user",
+    "memoryHigh": "86G",
+    "memoryMax": "96G",
+    "memorySwapMax": "1G",
+    "oomPolicy": "kill",
+    "restart": "no",
+    "runtimeMax": "4h",
+    "slice": "background.slice"
+  },
+  "runnerSha256": "fcf9c4666e055edf96d5a13990a84198838b79cad0fc4d3ad79935b1d9a5fa5f",
+  "configSha256": "77aaa3396206ee05ee3cb4177e8c7f313d7ad9ecac72f10e1b66d031297a335d",
+  "prerequisites": {
+    "A3CpuChecksPassed": true,
+    "freshPreflightRequired": true,
+    "sheetReadbackRequired": true
+  },
+  "gpuStarted": false,
+  "modelLoaded": false,
+  "requestsStarted": false,
+  "status": "prepared_before_attempt_02",
+  "attempt02AdjustmentAtUtc": "2026-10-23T21:32:19.571660+00:00",
+  "reason": "systemctl --user reset-failed succeeded, but then systemctl start returned Unit not found; no service was launched. A fresh systemd-run recreates the previously canary-verified unit.",
+  "freshPreflightAtUtc": "2026-10-23T21:32:37.629748+00:00",
+  "freshPreflightSha256": "06104a5766170c808d5198423b825c376bb4e4a88e2cb13489aa633b3c830639",
+  "freshPreflightPassed": true
+}

@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "parentExperimentTaskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
+  "preparedAtUtc": "2026-10-23T21:29:20.134580+00:00",
+  "unit": "q56-s55-jsonschema.service",
+  "manager": "systemd --user",
+  "noBlock": true,
+  "command": [
+    "/usr/bin/python3",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-56/work/run_700k_json_schema_ab.py"
+  ],
+  "properties": {
+    "Slice": "background.slice",
+    "MemoryAccounting": "yes",
+    "MemoryHigh": "86G",
+    "MemoryMax": "96G",
+    "MemorySwapMax": "1G",
+    "OOMPolicy": "kill",
+    "Restart": "no",
+    "RuntimeMaxSec": "4h"
+  },
+  "preflight": {
+    "path": "receipts/preflight.json",
+    "sha256": "30c26dd71a8924daeecebac0e7f7e2b95aba78f7d53a371b262a4ed94a3d0f9e",
+    "passed": true
+  },
+  "runnerSha256": "f2ec1b294a7962d782d8e9b3a36b40cfe2e088021d24129a92b76592a229fee0",
+  "gpuStarted": false,
+  "requestsStarted": false,
+  "modelLoaded": false,
+  "status": "attempt_04_aborted_pre_model_guard; attempt_05_preregistered",
+  "attempt01Receipt": "receipts/service-launch-attempt-01.json",
+  "attempt02Preregistration": "receipts/service-launch-attempt-02-preregistration.json",
+  "a3SheetReadbackReceipt": "receipts/google-sheet-sync-amendment-A3.json",
+  "a3PreflightSha256": "d5728430cd471a78c5eb3cf986ee6373064ff0be4adeec70239c03b921cddba4",
+  "a3CpuValidationSha256": "50f81475a7299826e28d341fa2a6ee270fccb9787cc5de9a7f899d771021ce1e",
+  "activeAttemptReceipt": "receipts/service-launch-attempt-02.json",
+  "invocationId": "ef17860eea9243519818e874fc196719",
+  "serviceStartedAtUtc": "2026-10-23T21:32:48.858292+00:00",
+  "serverPid": 35183,
+  "attempt02ResultReceipt": "receipts/service-launch-attempt-02-result.json",
+  "attempt03Preregistration": "A4 helper-binding fix",
+  "attempt03Receipt": "receipts/service-launch-attempt-03-result.json",
+  "attempt04Preregistration": "receipts/service-launch-attempt-04-preregistration.json",
+  "latestSheetSyncReceipt": "receipts/google-sheet-sync-amendment-A6.json",
+  "attempt04Receipt": "receipts/service-launch-attempt-04-result.json",
+  "attempt05Preregistration": "receipts/service-launch-attempt-05-preregistration.json"
+}

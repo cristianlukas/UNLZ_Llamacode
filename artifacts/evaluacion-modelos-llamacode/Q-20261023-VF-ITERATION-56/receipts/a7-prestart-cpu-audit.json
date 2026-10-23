@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "parentExperimentTaskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
+  "amendment": "A7",
+  "verifiedAtUtc": "2026-10-23T21:40:53.384534+00:00",
+  "checks": {
+    "lockTokenMatches": true,
+    "runnerShaMatchesPrereg": true,
+    "configShaMatchesPrereg": true,
+    "schemaShaMatchesPin": true,
+    "allPinnedSource55ReceiptsMatch": true,
+    "candidateAliasAndA5LogPath": true,
+    "configMatchesS55ExceptRegisteredPathsAndLog": true,
+    "requiredRuntimeAssetPathsExist": true,
+    "runtimeEngineAndServerHashesMatch": true,
+    "modelShardsSizeAndMtimeMatchS55": true,
+    "allThreeFixtureHashesAndAnswerKeysMatch": true,
+    "contextFlagsExact": true,
+    "wrapperBaseHelperCallsExist": true,
+    "attempt04OutputAndLogsAreUniqueAndAbsent": true,
+    "requestOrderAndCountUnchanged": true
+  },
+  "passed": true,
+  "runnerSha256": "ff72df01a8be81e7ba8bf8e249f3ee4efb5274af33e2fdda50269fbefafe63da",
+  "configSha256": "78a5c2791a0637f579d4e562735cf8eaf2a3f205acb735594ac9f9c1afd07407",
+  "tokenizerReference": "receipts/a6-cpu-validation-venv.json",
+  "modelLoaded": false,
+  "gpuStarted": false,
+  "benchmarkPromptRequestsSent": 0
+}

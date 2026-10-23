@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "parentExperimentTaskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
+  "updatedAtUtc": "2026-10-23T21:51:53Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "rangesWritten": [
+    "Evaluaciones LlamaCode!C286",
+    "Evaluaciones LlamaCode!G286:H286",
+    "Evaluaciones LlamaCode!I286:J286",
+    "Accionables!D3",
+    "Accionables!G3:J3",
+    "Accionables!K3",
+    "Accionables!M3:N3"
+  ],
+  "readbackVerified": true,
+  "pair1": {
+    "plain": {
+      "httpStatus": 200,
+      "valid": true,
+      "exactFacts": 5,
+      "totalFacts": 5,
+      "promptTokens": 680006,
+      "prefillTokensPerSecond": 2586.2,
+      "decodeTokensPerSecond": 98.5,
+      "totalSeconds": 264.528
+    },
+    "json_schema": {
+      "httpStatus": 200,
+      "valid": true,
+      "exactFacts": 5,
+      "totalFacts": 5,
+      "promptTokens": 680217,
+      "prefillTokensPerSecond": 2535.3,
+      "decodeTokensPerSecond": 101.8,
+      "totalSeconds": 269.84
+    },
+    "observation": "Quality tie on the first matched fixture; JSON Schema +5.312 s total. This mode is prompt-level JSON guidance plus client validation, not constrained decoding. No aggregate recommendation from one pair."
+  },
+  "runState": {
+    "completed": 2,
+    "planned": 6,
+    "pair2": "json_schema in progress"
+  },
+  "preserved": [
+    "Accionables!F3 use-case text",
+    "existing wrapped/top formats"
+  ],
+  "resultPath": "Q56/receipts/700k-json-schema-ab-attempt-04.json (attempt 5; run records 1–2)",
+  "syncReceipt": "Q56/receipts/google-sheet-sync-attempt-05-pair1-plain.json"
+}

@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "parentExperimentTaskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
+  "attempt": 3,
+  "preparedAtUtc": "2026-10-23T21:35:46.864889+00:00",
+  "unit": "q56-s55-jsonschema.service",
+  "manager": "systemd --user",
+  "command": [
+    "/usr/bin/python3",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-56/work/run_700k_json_schema_ab.py"
+  ],
+  "properties": {
+    "unit": "q56-s55-jsonschema.service",
+    "manager": "systemd --user",
+    "memoryHigh": "86G",
+    "memoryMax": "96G",
+    "memorySwapMax": "1G",
+    "oomPolicy": "kill",
+    "restart": "no",
+    "runtimeMax": "4h",
+    "slice": "background.slice"
+  },
+  "runnerSha256": "fc35f909b04ca359dc8be2a5025e84aeabe81f62fe8b8e2bb845c92861145ea1",
+  "configSha256": "77aaa3396206ee05ee3cb4177e8c7f313d7ad9ecac72f10e1b66d031297a335d",
+  "priorAttempts": {
+    "attempt01BenchmarkPromptsSent": 0,
+    "attempt02ReachedReady": true,
+    "attempt02BenchmarkPromptsSent": 0,
+    "attempt02CleanServerStop": true
+  },
+  "unchangedDesign": {
+    "requests": 6,
+    "pairs": 3,
+    "order": [
+      "plain",
+      "json_schema",
+      "json_schema",
+      "plain",
+      "plain",
+      "json_schema"
+    ],
+    "onlyVariable": "response_format"
+  },
+  "preconditions": [
+    "A4 CPU 8/8",
+    "fresh preflight 17/17 immediately before launch",
+    "A4 Sheet readback verified",
+    "no inference/listener external",
+    "server only in transient durable systemd unit"
+  ],
+  "gpuStarted": false,
+  "requestsStarted": false,
+  "status": "prepared-before-fresh-preflight",
+  "freshPreflightAtUtc": "2026-10-23T21:35:50.510438+00:00",
+  "freshPreflightSha256": "b0963d23ed24c9463118a9c1a090b3c2fb0fabc5d832fe9e2035c703c4728b0b",
+  "freshPreflightPassed": true
+}

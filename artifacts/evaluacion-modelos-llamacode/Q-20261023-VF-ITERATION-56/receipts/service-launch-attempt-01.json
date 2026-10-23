@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "parentExperimentTaskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
+  "attempt": 1,
+  "atUtc": "2026-10-23T21:30:24.728332+00:00",
+  "unit": "q56-s55-jsonschema.service",
+  "unitStatus": {
+    "activeState": "failed",
+    "subState": "failed",
+    "result": "exit-code",
+    "execMainStatus": 1,
+    "exitCode": "1/FAILURE",
+    "slice": "background.slice",
+    "memoryHighBytes": 92341796864,
+    "memoryMaxBytes": 103079215104,
+    "memorySwapMaxBytes": 1073741824
+  },
+  "failure": "RuntimeError: isolated config changed beyond its preregistered name/log fields",
+  "failureLocation": "run_700k_json_schema_ab.py:418; guard before server subprocess start",
+  "diagnosis": {
+    "modelNameMatches": true,
+    "configLogObserved": "artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-56/receipts/strata-format-ab.log",
+    "expectedIsolatedLog": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-56/receipts/strata-format-ab.log",
+    "cause": "The pinned candidate config used a relative log path while runner expected the Q56 receipt path. The static A2 preflight did not validate this guard."
+  },
+  "serverStarted": false,
+  "modelLoaded": false,
+  "requestsSent": 0,
+  "gpuStartedByQ56": false,
+  "externalInferenceProcesses": [],
+  "knownInferenceListeners": [],
+  "port8352Free": true,
+  "nvidiaSmiAtObservation": [
+    "0, NVIDIA GeForce RTX 3090, 895 MiB used, 23279 MiB free, 19% util",
+    "1, NVIDIA GeForce RTX 3090, 110 MiB used, 24068 MiB free, 28% util"
+  ],
+  "otherComputeAppObserved": [
+    "/tmp/.mount_artcraIDgFiN/usr/bin/artcraft-launcher; 205 MiB; not an inference process"
+  ],
+  "nextAmendment": "A3 changes only isolated log path to the absolute Q56 receipt path and repins config SHA; no model/request experiment occurred."
+}

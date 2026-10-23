@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "parentExperimentTaskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
+  "amendment": "A6",
+  "verifiedAtUtc": "2026-10-23T21:38:15.658994+00:00",
+  "checks": {
+    "venvPythonAvailable": true,
+    "venvRegexAvailable": true,
+    "tokenizerHashesMatchS55": true,
+    "allThreeRuntimePromptCountsMatchS55": true,
+    "attempt04ResultPathAbsent": true,
+    "attempt04WrapperLogAbsent": true
+  },
+  "passed": true,
+  "pythonVersion": "3.12.3",
+  "regexVersion": "2026.9.10",
+  "tokenizerHashesMatchS55": true,
+  "tokenCounts": [
+    {
+      "prompt": "prompt-01.txt",
+      "observed": 679995,
+      "expected": 679995
+    },
+    {
+      "prompt": "prompt-02.txt",
+      "observed": 679998,
+      "expected": 679998
+    },
+    {
+      "prompt": "prompt-03.txt",
+      "observed": 679963,
+      "expected": 679963
+    }
+  ],
+  "runnerSha256": "596ca0adc6c528ed3be86bb7bf9e8c84e2626f129c365334a6f0009f61dc91e4",
+  "configSha256": "78a5c2791a0637f579d4e562735cf8eaf2a3f205acb735594ac9f9c1afd07407",
+  "modelLoaded": false,
+  "gpuStarted": false,
+  "benchmarkPromptRequestsSent": 0
+}

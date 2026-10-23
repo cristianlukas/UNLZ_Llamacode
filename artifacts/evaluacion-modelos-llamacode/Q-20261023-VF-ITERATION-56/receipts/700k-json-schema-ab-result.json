@@ -1,0 +1,188 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-56",
+  "batchId": "VF-20261019-01",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD",
+  "status": "aborted_or_error",
+  "lockToken": "0bbd4847-1a31-436c-a45e-785a230d9c8f",
+  "startedAtUtc": "2026-10-23T21:32:48.858292+00:00",
+  "context": {
+    "maxContext": 700000,
+    "originalContext": 262144,
+    "ropeScaling": "yarn",
+    "ropeScale": 4,
+    "kv": "int8"
+  },
+  "model": "qwen3.8-flash-next-iq3_xxs-context700k",
+  "modelShards": [
+    {
+      "role": "native_model_shard_1_of_2",
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Models/LlamaCode-Q56-IQ3XXS-Temp/models/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+      "bytes": 47039860096,
+      "mtimeNs": 1791584445242231600,
+      "sha256": "219ea929900dfa9ef091f3aa473fdba6874b65fcb36526d7d851ac9e95856d15",
+      "sourcePath": "/media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/models/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+      "verifiedBy": "size+mtime against prior SHA-256 receipt; model remains in quarantine"
+    },
+    {
+      "role": "native_model_shard_2_of_2",
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Models/LlamaCode-Q56-IQ3XXS-Temp/models/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf",
+      "bytes": 28800138432,
+      "mtimeNs": 1791583486391713600,
+      "sha256": "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113",
+      "sourcePath": "/media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/models/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf",
+      "verifiedBy": "size+mtime against prior SHA-256 receipt; model remains in quarantine"
+    }
+  ],
+  "configPath": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-56/receipts/source55-format-ab-strata-config.json",
+  "configSha256": "77aaa3396206ee05ee3cb4177e8c7f313d7ad9ecac72f10e1b66d031297a335d",
+  "schemaPath": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-56/schemas/response-schemas.json",
+  "schemaSha256": "2b6f5d7f2119d05e4aea87d2175bc8d63fff2e79b62e8584d4f6c82eec7cac06",
+  "runtime": {
+    "enginePath": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata",
+    "engineSha256": "770ecf303a4c6271654339c639392ecb455de3a999bf5d2e8dbc73c879103602",
+    "serverScript": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py",
+    "serverScriptSha256": "017efa1f4e76d72396738555d13eb1f9898d1c1c12730cf046d9b267b29987e5",
+    "serverPython": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python"
+  },
+  "structuredOutputSupport": {
+    "mode": "json_schema prompt + response validation, not constrained decoding",
+    "runtimeJsonschemaInstalled": false,
+    "runtimeScope": "object-only validation; exact schema checked by this runner"
+  },
+  "resourcePolicy": {
+    "guiAllowed": true,
+    "otherNonInferenceProcessesDoNotBlock": true,
+    "inferenceProcessesBeforeStart": [],
+    "knownInferenceListenersBeforeStart": [],
+    "preflight": {
+      "atUtc": "2026-10-23T21:32:48.787667+00:00",
+      "memAvailableBytes": 125144494080,
+      "swapUsedBytes": 0,
+      "oomKills": 0,
+      "psiMemory": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        }
+      },
+      "gpus": [
+        "0, NVIDIA GeForce RTX 3090, 904, 24576, 23",
+        "1, NVIDIA GeForce RTX 3090, 110, 24576, 28"
+      ],
+      "compute_apps": [
+        "4405, /tmp/.mount_artcraIDgFiN/usr/bin/artcraft-launcher, 205"
+      ]
+    },
+    "minimumAvailableBytes": 42949672960,
+    "abortAvailableBytes": 34359738368,
+    "memoryPsiAbort": {
+      "someAvg10": 40.0,
+      "fullAvg10": 25.0,
+      "samples": 4
+    },
+    "minimumGpuFreeMiBPer3090BeforeStart": 12288
+  },
+  "network": {
+    "bindHost": "127.0.0.1",
+    "port": 8352,
+    "externalCalls": 0,
+    "fixture": "synthetic only"
+  },
+  "design": {
+    "pairs": 3,
+    "requests": 6,
+    "order": [
+      "plain",
+      "json_schema",
+      "json_schema",
+      "plain",
+      "plain",
+      "json_schema"
+    ],
+    "seeds": [
+      2026101956,
+      2026101957,
+      2026101958
+    ],
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "top_k": 20,
+    "reasoning_effort": "none",
+    "enable_thinking": false,
+    "max_tokens": 768,
+    "cache_prompt": false,
+    "onlyVariable": "response_format"
+  },
+  "source55BaselineReceiptSha256": "fb5db28dad359cb848dd1708586c0236ac8ff9e6e3a53ce870231e3dbae7622c",
+  "source55PosthocAuditSha256": "351efd29931e56a495e83c34207671a1a15a36a38cd6bc31dabc006b17901c3e",
+  "source55PriorStatus": "stopped_after_first_invalid_run",
+  "source55PriorRawJsonValidCount": 2,
+  "source55PriorContentExactCount": 15,
+  "source55PriorContentTotal": 15,
+  "fixtures": {
+    "manifestSha256": "3d2918163fdc0162f7ce6154b0490fedd9986ad67cbf85f3b100ae650d077267",
+    "answerKeySha256": "c6a53577e2de4436d390628797834a9ad129de911bd7633854499414706c18ca",
+    "promptStored": false,
+    "runs": []
+  },
+  "serverCommand": [
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python",
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py",
+    "--engine",
+    "strata",
+    "--config",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-56/receipts/source55-format-ab-strata-config.json",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "8352",
+    "--gpu",
+    "0,1"
+  ],
+  "noProductionChanges": true,
+  "serverPid": 35183,
+  "serverStartedAtUtc": "2026-10-23T21:32:48.860253+00:00",
+  "readyAtUtc": "2026-10-23T21:33:29.796628+00:00",
+  "loadSeconds": 40.936,
+  "error": "AttributeError: module 'iq3xxs_context262k_runner' has no attribute 'tree_cmdlines'",
+  "stoppedAtUtc": "2026-10-23T21:33:29.796645+00:00",
+  "afterStop": {
+    "returnCode": 0,
+    "forcedKill": false
+  },
+  "postflight": {
+    "atUtc": "2026-10-23T21:33:31.111526+00:00",
+    "memAvailableBytes": 123271450624,
+    "swapUsedBytes": 0,
+    "oomKills": 0,
+    "psiMemory": {
+      "some": {
+        "avg10": 0.29,
+        "avg60": 0.06,
+        "avg300": 0.01
+      },
+      "full": {
+        "avg10": 0.29,
+        "avg60": 0.06,
+        "avg300": 0.01
+      }
+    },
+    "gpus": [
+      "0, NVIDIA GeForce RTX 3090, 876, 24576, 100",
+      "1, NVIDIA GeForce RTX 3090, 110, 24576, 61"
+    ],
+    "compute_apps": [
+      "4405, /tmp/.mount_artcraIDgFiN/usr/bin/artcraft-launcher, 205"
+    ]
+  },
+  "remainingInferenceProcesses": [],
+  "remainingKnownListeners": [],
+  "port8352Free": true
+}

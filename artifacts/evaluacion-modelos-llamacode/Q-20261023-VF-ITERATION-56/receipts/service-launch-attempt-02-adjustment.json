@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "parentExperimentTaskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
+  "atUtc": "2026-10-23T21:32:19.571660+00:00",
+  "attempt": 2,
+  "observation": "The previously failed transient unit was garbage-collected after reset-failed; systemctl start returned Unit not found. No model, server, GPU workload, or request started.",
+  "adjustment": "Create a fresh transient systemd --user unit with the same name and exact canary-verified cgroup properties; runner and experiment remain unchanged.",
+  "gpuStarted": false,
+  "requestsSent": 0
+}

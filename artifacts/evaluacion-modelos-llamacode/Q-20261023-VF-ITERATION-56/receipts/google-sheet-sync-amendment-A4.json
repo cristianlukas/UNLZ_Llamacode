@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "parentExperimentTaskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
+  "amendment": "A4",
+  "verifiedAtUtc": "2026-10-23T21:35:46.864889+00:00",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "rangesReadBack": [
+    "'Evaluaciones LlamaCode'!C286:J286",
+    "Accionables!D3:N3",
+    "'Inventario de modelos'!C11:R11"
+  ],
+  "readbackVerified": true,
+  "readbackSummary": {
+    "evaluation": "Attempt 2 reached READY in 40.9s but hit a helper AttributeError before any benchmark prompt; A4, 8/8 CPU and preflight 17/17 passed.",
+    "actionable": "No quality result; 0/6 benchmark prompts; attempt 3 is the next step.",
+    "inventory": "Candidate remains evaluation-only; S55 baseline numbers are preserved; no production/PeritoSoft change."
+  },
+  "cpuValidationSha256": "d137ae1e6a58ee91dc45af03a2fbd542a2cb85b5fdcff086828e3381fb7977f7",
+  "preflightSha256": "78a9c8b6de7695e77f9711852743339956f2a00962f21eaac83cce155556545f",
+  "preregistrationPending": false,
+  "gpuStarted": false,
+  "benchmarkRequestsStarted": false
+}

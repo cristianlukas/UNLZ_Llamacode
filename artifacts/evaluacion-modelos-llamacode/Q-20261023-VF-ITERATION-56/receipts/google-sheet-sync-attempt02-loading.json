@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "parentExperimentTaskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD",
+  "verifiedAtUtc": "2026-10-23T21:33:32.243007+00:00",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "rangesReadBack": [
+    "'Evaluaciones LlamaCode'!C286:J286",
+    "Accionables!D3:N3",
+    "'Inventario de modelos'!C11:R11"
+  ],
+  "readbackVerified": true,
+  "status": "attempt 02 active, loading, zero requests; cgroup limits verified",
+  "attemptReceiptSha256": "4558fad0694870a820989136a199b88f7debede0dbff9d6e43d584f7d207098b",
+  "gpuStarted": true,
+  "requestsStarted": false
+}

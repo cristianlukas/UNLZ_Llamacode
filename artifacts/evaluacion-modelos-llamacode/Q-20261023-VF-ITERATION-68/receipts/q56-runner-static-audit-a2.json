@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "observedAtUtc": "2026-10-23T21:25:36.122246+00:00",
+  "gpuStarted": false,
+  "requestsSent": 0,
+  "findings": [
+    {
+      "issue": "runner lock token remained the released Q56 token",
+      "before": "3f628b9f-27c2-4675-a960-1350fc7f44d6",
+      "correctedTo": "0bbd4847-1a31-436c-a45e-785a230d9c8f"
+    },
+    {
+      "issue": "runner config SHA stale",
+      "expectedBefore": "04ca2f58414dc17e649e25f87cbef5fdcc59c1c7be2feeb8cc5414e840d54711",
+      "actual": "da5de1b920a66a03a25766bdbb1222d276005e2dbfdb9a00b737fb9a0b6e16b7",
+      "correctedTo": "da5de1b920a66a03a25766bdbb1222d276005e2dbfdb9a00b737fb9a0b6e16b7"
+    },
+    {
+      "issue": "runner compared staged A1 paths and tokenizer literally to S55",
+      "correctedTo": "only the three registered asset args under staging root and tokenizer at pack/tokenizer may differ; all other args/config fields must match; S55 config now SHA pinned"
+    }
+  ],
+  "runnerSha256": "f2ec1b294a7962d782d8e9b3a36b40cfe2e088021d24129a92b76592a229fee0",
+  "source55ConfigSha256": "2ba75fce1b8cd9d5c00fe1880052bb1f802e92546b480a9f5d5df0eccf15b42a",
+  "configSha256": "da5de1b920a66a03a25766bdbb1222d276005e2dbfdb9a00b737fb9a0b6e16b7",
+  "designChanged": false
+}

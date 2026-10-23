@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "parentExperimentTaskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
+  "preregisteredAtUtc": "2026-10-23T21:27:51.871330+00:00",
+  "purpose": "Verify user transient systemd service isolation and Q56 cgroup memory properties without loading a model or making network/GPU requests.",
+  "unit": "q56-cgroup-canary-20261023.service",
+  "command": [
+    "/usr/bin/sleep",
+    "45"
+  ],
+  "properties": {
+    "Slice": "background.slice",
+    "MemoryAccounting": "yes",
+    "MemoryHigh": "86G",
+    "MemoryMax": "96G",
+    "MemorySwapMax": "1G",
+    "OOMPolicy": "kill",
+    "Restart": "no",
+    "RuntimeMaxSec": "45s",
+    "CollectMode": "inactive-or-failed"
+  },
+  "passCriteria": [
+    "unit starts as transient user service",
+    "ControlGroup is below background.slice",
+    "effective cgroup memory.high corresponds to 86 GiB",
+    "memory.max corresponds to 96 GiB",
+    "memory.swap.max corresponds to 1 GiB",
+    "unit is stopped after property inspection"
+  ],
+  "stopCriteria": [
+    "any requested property is rejected or differs",
+    "service escapes background.slice",
+    "canary remains running after explicit stop"
+  ],
+  "gpuStarted": false,
+  "modelLoaded": false,
+  "networkRequests": 0
+}

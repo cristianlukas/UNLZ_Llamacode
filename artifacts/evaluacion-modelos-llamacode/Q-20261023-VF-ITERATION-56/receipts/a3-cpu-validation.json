@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "parentExperimentTaskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
+  "verifiedAtUtc": "2026-10-23T21:31:03.721236+00:00",
+  "amendment": "A3",
+  "checks": {
+    "py_compile": true,
+    "runnerConfigShaPinMatches": true,
+    "runnerShaPinMatchesPrereg": true,
+    "absoluteIsolatedLogPath": true,
+    "configMatchesS55ExceptRegisteredStagingAndLog": true,
+    "rejectModelAliasDrift": true,
+    "rejectContextDrift": true
+  },
+  "passed": true,
+  "runnerSha256": "fcf9c4666e055edf96d5a13990a84198838b79cad0fc4d3ad79935b1d9a5fa5f",
+  "configSha256": "77aaa3396206ee05ee3cb4177e8c7f313d7ad9ecac72f10e1b66d031297a335d",
+  "gpuStarted": false,
+  "modelLoaded": false,
+  "requestsSent": 0,
+  "note": "Seven focused CPU checks: py_compile plus six runner/config guard assertions; all passed."
+}

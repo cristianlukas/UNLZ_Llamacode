@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "parentExperimentTaskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
+  "verifiedAtUtc": "2026-10-23T21:29:20.134580+00:00",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "rangesReadBack": [
+    "'Evaluaciones LlamaCode'!C286:J286",
+    "Accionables!D3:N3",
+    "'Inventario de modelos'!C11:R11"
+  ],
+  "readbackVerified": true,
+  "readbackSummary": {
+    "evaluation": "Q56 A2 and canary pass; fresh preflight passed; durable service launch is next.",
+    "actionable": "In progress; six serial requests pending; no model result.",
+    "inventory": "Candidate only, not production or PeritoSoft; S55 baseline preserved."
+  },
+  "latestPreflight": {
+    "path": "receipts/preflight.json",
+    "sha256": "30c26dd71a8924daeecebac0e7f7e2b95aba78f7d53a371b262a4ed94a3d0f9e",
+    "passed": true,
+    "atUtc": "2026-10-23T21:28:45.550795+00:00"
+  },
+  "gpuStarted": false,
+  "requestsStarted": false,
+  "note": "Only current Q56 status cells were changed; no historical benchmark values or production inventory rows were changed."
+}

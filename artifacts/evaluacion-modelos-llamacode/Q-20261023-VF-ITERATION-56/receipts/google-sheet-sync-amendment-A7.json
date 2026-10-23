@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "parentExperimentTaskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
+  "amendment": "A7",
+  "verifiedAtUtc": "2026-10-23T21:41:29.939590+00:00",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "rangesReadBack": [
+    "'Evaluaciones LlamaCode'!C286:J286",
+    "Accionables!D3:N3",
+    "'Inventario de modelos'!C11:R11"
+  ],
+  "readbackVerified": true,
+  "readbackSummary": {
+    "evaluation": "Attempt 4 guard aborted before model/GPU; A7, prestart CPU 15/15, preflight 17/17.",
+    "actionable": "0/6 benchmark prompts; S55 baseline facts and Q18/attempt context preserved; next attempt 5 durable.",
+    "inventory": "Candidate only, production and PeritoSoft unchanged; S55 metrics retained."
+  },
+  "prestartAuditSha256": "a3ac9279c9cdb94b8574c12f5d9fe77d8dde10e8687a1407703632a1f026b96f",
+  "preflightSha256": "e1bb141b1b22cd741bd24e963227fc5c2c315162fa7a57ec975a20edaa95957a",
+  "preflightAtUtc": "2026-10-23T21:40:53.500286+00:00",
+  "preregistrationPending": false,
+  "gpuStarted": false,
+  "benchmarkPromptRequestsStarted": false
+}

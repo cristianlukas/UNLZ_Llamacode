@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "parentExperimentTaskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
+  "attempt": 3,
+  "atUtc": "2026-10-23T21:36:57.780302+00:00",
+  "unit": "q56-s55-jsonschema.service",
+  "unitState": {
+    "Result": "exit-code",
+    "ExecMainStatus": "1",
+    "ActiveState": "failed",
+    "SubState": "failed",
+    "InvocationID": "33c68000daeb4cbeaa3c3b6bf76cb831"
+  },
+  "error": "RuntimeError: refusing to overwrite existing result: receipts/700k-json-schema-ab-result.json",
+  "failureLocation": "runner main guard before preflight/start-server path; no model launched",
+  "resultFilePreserved": "receipts/700k-json-schema-ab-result.json",
+  "modelLoaded": false,
+  "serverStarted": false,
+  "benchmarkPromptRequestsSent": 0,
+  "gpuStartedByAttempt": false,
+  "journalTail": "q56-s55-jsonschema.service: Failed with result 'exit-code'.\nq56-s55-jsonschema.service: Consumed 26.326s CPU time, 72.9G memory peak, 0B memory swap peak.\nStarted q56-s55-jsonschema.service - /usr/bin/python3 /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-56/work/run_700k_json_schema_ab.py.\nTraceback (most recent call last):\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-56/work/run_700k_json_schema_ab.py\", line 663, in <module>\n    raise SystemExit(main())\n                     ^^^^^^\n  File \"/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-56/work/run_700k_json_schema_ab.py\", line 387, in main\n    raise RuntimeError(f'refusing to overwrite existing result: {RESULT}')\nRuntimeError: refusing to overwrite existing result: /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-56/receipts/700k-json-schema-ab-result.json\nq56-s55-jsonschema.service: Main process exited, code=exited, status=1/FAILURE\nq56-s55-jsonschema.service: Failed with result 'exit-code'.\n"
+}

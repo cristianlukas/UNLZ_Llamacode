@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "parentExperimentTaskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
+  "amendment": "A4",
+  "verifiedAtUtc": "2026-10-23T21:34:55.540786+00:00",
+  "checks": {
+    "py_compile": true,
+    "runnerShaMatchesPrereg": true,
+    "configShaMatchesPrereg": true,
+    "allBaseHelperCallsExist": true,
+    "treeCmdlinesOnS55Wrapper": true,
+    "treeHelperReturnsCurrentPid": true,
+    "runnerUsesWrapperHelper": true,
+    "requestOrderAndCountUnchanged": true
+  },
+  "passed": true,
+  "runnerSha256": "fc35f909b04ca359dc8be2a5025e84aeabe81f62fe8b8e2bb845c92861145ea1",
+  "configSha256": "77aaa3396206ee05ee3cb4177e8c7f313d7ad9ecac72f10e1b66d031297a335d",
+  "gpuStarted": false,
+  "benchmarkPromptRequestsSent": 0
+}

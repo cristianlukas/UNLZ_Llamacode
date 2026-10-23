@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "parentExperimentTaskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
+  "updatedAtUtc": "2026-10-23T21:47:00Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "rangesWritten": [
+    "Evaluaciones LlamaCode!C286",
+    "Evaluaciones LlamaCode!G286:H286",
+    "Accionables!D3",
+    "Accionables!G3:I3",
+    "Accionables!K3",
+    "Accionables!M3:N3"
+  ],
+  "valuesReadBack": {
+    "Evaluaciones LlamaCode!C286": "En curso · intento 5; 1/6 respuestas completas (plain 5/5 exactas); JSON Schema del par 1 en curso.",
+    "Evaluaciones LlamaCode!G286": "Par 1 / plain completado: 5/5 hechos exactos, HTTP 200, salida JSON parseada y esquema de claves exacto. Prompt 680.006 tokens; prefill 2.586 tok/s, decode 98,5 tok/s, total 264,53 s. Sin swap ni OOM. El control json_schema del mismo prompt está en curso; no concluir superioridad.",
+    "Evaluaciones LlamaCode!H286": "Esperar la respuesta json_schema del mismo fixture; seguir después con los otros dos pares en el orden preregistrado, una sola pasada y sin retries.",
+    "Accionables!D3": "En curso · par 1 plain = 5/5 exacto; JSON Schema del mismo fixture en curso.",
+    "Accionables!F3": "Flujos de extracción/retrieval largos que requieren consumir una respuesta JSON",
+    "Accionables!G3": "Primer control terminado: HTTP 200, parseable, 5/5 facts exactos y claves exactas; 680.006 prompt tokens, prefill 2.586 tok/s, decode 98,5 tok/s, total 264,53 s. El run JSON Schema emparejado está activo.",
+    "Accionables!H3": "Comparar el JSON Schema del mismo fixture y continuar los pares 2 y 3, serialmente. No reintentar.",
+    "Accionables!I3": "1/6 respuestas completadas; control plain del par 1 recuperó 5/5; falta su pareja JSON Schema. Sin conclusión comparativa todavía.",
+    "Accionables!K3": "Attempt 5 active; pair 1 plain: exact 5/5, prefill 2,586 tok/s, decode 98.5 tok/s, total 264.53 s; paired JSON Schema request in progress.",
+    "Accionables!M3": "2026-10-23T21:47:00Z",
+    "Accionables!N3": "2026-10-23T21:47:00Z"
+  },
+  "verifiedReadback": true,
+  "formatPreservation": {
+    "Accionables!D3:N3": "existing wrap/top formatting retained",
+    "Accionables!F3": "use-case text restored and preserved"
+  },
+  "qualityResultConclusion": "none; one plain arm request completed, paired JSON Schema and other four requests pending",
+  "benchmarkPromptsCompleted": 1
+}

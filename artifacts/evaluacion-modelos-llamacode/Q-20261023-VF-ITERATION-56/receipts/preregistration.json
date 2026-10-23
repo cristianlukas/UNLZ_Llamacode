@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "taskId": "Q-20261023-VF-ITERATION-56",
   "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
-  "lockToken": "3f628b9f-27c2-4675-a960-1350fc7f44d6",
+  "lockToken": "0bbd4847-1a31-436c-a45e-785a230d9c8f",
   "registeredAtUtc": "2026-10-23T13:58:32Z",
   "hypothesis": "Reusing the same fixtures at the same context/model/runtime, adding response_format=json_schema yields 3/3 exact bare JSON responses; previous schema run sent 0 requests because HDD loader exceeded PSI guard.",
   "design": {
@@ -46,7 +46,7 @@
     "runtime": "Strata v0.1.41",
     "engineSha256": "770ecf303a4c6271654339c639392ecb455de3a999bf5d2e8dbc73c879103602",
     "serverSha256": "017efa1f4e76d72396738555d13eb1f9898d1c1c12730cf046d9b267b29987e5",
-    "configSha256": "da5de1b920a66a03a25766bdbb1222d276005e2dbfdb9a00b737fb9a0b6e16b7",
+    "configSha256": "78a5c2791a0637f579d4e562735cf8eaf2a3f205acb735594ac9f9c1afd07407",
     "schemaSha256": "2b6f5d7f2119d05e4aea87d2175bc8d63fff2e79b62e8584d4f6c82eec7cac06",
     "modelShardsSha256": [
       "219ea929900dfa9ef091f3aa473fdba6874b65fcb36526d7d851ac9e95856d15",
@@ -75,9 +75,10 @@
     "stageScriptSha256": "8fd1b2ba5ee2d728a61297c753e365b0a0dfcd381f26662eee94bb5b835db9fc",
     "preflightScriptSha256": "78a0979537b51395fc6dbfe6dd3b9e8975a90d2a8ce32611a6c0f77087b7bad2",
     "projectedFreeBytesAfterStaging": 47978680246,
-    "modelShardsVerifiedAgainstS55BeforeStaging": true
+    "modelShardsVerifiedAgainstS55BeforeStaging": true,
+    "source55ConfigSha256": "2ba75fce1b8cd9d5c00fe1880052bb1f802e92546b480a9f5d5df0eccf15b42a"
   },
-  "runnerSha256": "a26d3833ad4f7e1e9f0c57ee22eb796fe977773ac49ddffb714389f551686915",
+  "runnerSha256": "ff72df01a8be81e7ba8bf8e249f3ee4efb5274af33e2fdda50269fbefafe63da",
   "service": {
     "unit": "q56-s55-jsonschema.service",
     "manager": "systemd --user",
@@ -100,9 +101,91 @@
       "assetStageScriptSha256": "8fd1b2ba5ee2d728a61297c753e365b0a0dfcd381f26662eee94bb5b835db9fc",
       "freeBytesBeforeStaging": 125366657024,
       "projectedFreeBytesAfterStaging": 47978680246
+    },
+    {
+      "id": "A2",
+      "atUtc": "2026-10-23T21:25:36.122246+00:00",
+      "reason": "Before resuming, static review found the A1 runner would abort before loading: it pinned a stale Q56 config hash (04ca… while the staged config hashes to the preregistered da5…), compared the intentionally staged pack/shard/tokenizer paths literally against S55, and still enforced the prior released Q56 lock token. A2 updates only these validity checks and the current exclusive lock identity; the six-request order, prompts, seeds, model, context, response_format factor, thresholds and adoption rule remain unchanged.",
+      "changes": {
+        "lockToken": "0bbd4847-1a31-436c-a45e-785a230d9c8f",
+        "runnerSha256": "f2ec1b294a7962d782d8e9b3a36b40cfe2e088021d24129a92b76592a229fee0",
+        "q56ConfigSha256": "da5de1b920a66a03a25766bdbb1222d276005e2dbfdb9a00b737fb9a0b6e16b7",
+        "source55ConfigSha256": "2ba75fce1b8cd9d5c00fe1880052bb1f802e92546b480a9f5d5df0eccf15b42a",
+        "assetPathPolicy": "only --pack, --native, --ple-gguf under the registered temporary SSD staging root and tokenizer at pack/tokenizer may differ from pinned S55 config; every other arg/config key must match"
+      },
+      "designChanged": false,
+      "gpuStarted": false,
+      "requestsSent": 0,
+      "requiresSheetReadbackBeforePreflight": true
+    },
+    {
+      "id": "A3",
+      "atUtc": "2026-10-23T21:30:24.728332+00:00",
+      "reason": "Attempt 1 exited in a local runner guard before spawning Strata; zero model loads and zero requests. Make Q56 isolated server log path absolute at the already preregistered Q56 receipts/strata-format-ab.log location, then update config and runner SHA pins.",
+      "changes": {
+        "configLog": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-56/receipts/strata-format-ab.log",
+        "configSha256": "77aaa3396206ee05ee3cb4177e8c7f313d7ad9ecac72f10e1b66d031297a335d",
+        "runnerSha256": "fcf9c4666e055edf96d5a13990a84198838b79cad0fc4d3ad79935b1d9a5fa5f"
+      },
+      "inferenceStarted": false,
+      "requestsSent": 0
+    },
+    {
+      "id": "A4",
+      "atUtc": "2026-10-23T21:34:35.399667+00:00",
+      "reason": "Attempt 2 loaded the model and reached READY, then aborted before the first chat-completions request because tree_cmdlines is exposed by the S55 wrapper module but not the nested base helper module. Retain the S55 wrapper module returned by load_source55_module and call its existing tree_cmdlines(server.pid) helper; leave the base helper calls unchanged.",
+      "changes": {
+        "runnerSha256": "fc35f909b04ca359dc8be2a5025e84aeabe81f62fe8b8e2bb845c92861145ea1"
+      },
+      "inferenceStarted": false,
+      "benchmarkPromptRequestsSent": 0,
+      "modelLoadReachedReady": true
+    },
+    {
+      "id": "A5",
+      "atUtc": "2026-10-23T21:36:57.780302+00:00",
+      "reason": "Attempt 3 stopped at the intentional no-overwrite guard because attempt 2 left a preserved failed-result receipt at the canonical path. Give attempt 4 a unique result JSON path, wrapper log path and Strata log path; update only corresponding runner/config SHA pins. Keep all prior attempt receipts/logs intact.",
+      "changes": {
+        "resultPath": "receipts/700k-json-schema-ab-attempt-04.json",
+        "wrapperLog": "receipts/strata-format-ab-wrapper-attempt-04.log",
+        "serverLog": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-56/receipts/strata-format-ab-attempt-04.log",
+        "runnerSha256": "596ca0adc6c528ed3be86bb7bf9e8c84e2626f129c365334a6f0009f61dc91e4",
+        "configSha256": "78a5c2791a0637f579d4e562735cf8eaf2a3f205acb735594ac9f9c1afd07407"
+      },
+      "priorResultPreserved": true,
+      "inferenceStarted": false,
+      "benchmarkPromptRequestsSent": 0
+    },
+    {
+      "id": "A6",
+      "atUtc": "2026-10-23T21:38:15.658994+00:00",
+      "reason": "CPU tokenizer check with /usr/bin/python3 failed because regex is unavailable; pinned Strata venv has regex and passed tokenizer hash/token-count checks. Run the Python test wrapper with the pinned Strata venv interpreter; it continues to launch the exact same pinned Strata server/runtime and model config. No package install or system Python change.",
+      "changes": {
+        "wrapperInterpreter": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python"
+      },
+      "inferenceStarted": false,
+      "benchmarkPromptRequestsSent": 0
+    },
+    {
+      "id": "A7",
+      "atUtc": "2026-10-23T21:40:17.781702+00:00",
+      "reason": "Attempt 4 stopped at the pre-Popen config guard because the hard-coded server log expectation still used the old shared filename after A5 introduced an attempt-specific log path. Align the runner guard to the already preregistered attempt-04 server log path; no config/model change.",
+      "changes": {
+        "expectedServerLog": "receipts/strata-format-ab-attempt-04.log",
+        "runnerSha256": "ff72df01a8be81e7ba8bf8e249f3ee4efb5274af33e2fdda50269fbefafe63da"
+      },
+      "modelLoaded": false,
+      "benchmarkPromptRequestsSent": 0
     }
   ],
   "gpuStarted": false,
   "sheetPreregistrationPending": false,
-  "sheetPreregistrationReadbackAtUtc": "2026-10-23T14:20:17Z"
+  "sheetPreregistrationReadbackAtUtc": "2026-10-23T21:41:29.939590+00:00",
+  "sheetPreregistrationReceipt": "receipts/google-sheet-sync-amendment-A7.json",
+  "sheetPreregistrationReadbackVerified": true,
+  "latestSheetSyncReceipt": "receipts/google-sheet-sync-amendment-A7.json",
+  "latestSheetSyncReadbackAtUtc": "2026-10-23T21:41:29.939590+00:00",
+  "latestSheetSyncReadbackVerified": true,
+  "lastUpdatedAtUtc": "2026-10-23T21:40:17.781702+00:00",
+  "nextLaunchAttempt": 5
 }

@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "parentExperimentTaskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
+  "amendment": "A7",
+  "preregisteredAtUtc": "2026-10-23T21:40:17.781702+00:00",
+  "trigger": "Attempt 4 stopped at the pre-Popen config guard because the hard-coded server log expectation still used the old shared filename after A5 introduced an attempt-specific log path.",
+  "soleChange": "Align the runner guard to the already preregistered attempt-04 server log path; no config/model change.",
+  "oldExpectedLog": "receipts/strata-format-ab.log",
+  "newExpectedLog": "receipts/strata-format-ab-attempt-04.log",
+  "oldRunnerSha256": "596ca0adc6c528ed3be86bb7bf9e8c84e2626f129c365334a6f0009f61dc91e4",
+  "newRunnerSha256": "ff72df01a8be81e7ba8bf8e249f3ee4efb5274af33e2fdda50269fbefafe63da",
+  "unchanged": [
+    "attempt-04 output paths from A5",
+    "venv wrapper interpreter from A6",
+    "all model/runtime/context/sampling/fixture/schema/seed/request-order values",
+    "memory, PSI, OOM, GPU and no-retry guard thresholds"
+  ],
+  "verificationBeforeNextLoad": [
+    "full CPU pre-server static guard audit through all checks before Popen",
+    "CPU tokenizer hashes/token counts already matched S55",
+    "fresh preflight 17/17",
+    "Sheet readback A7",
+    "same transient systemd cgroup"
+  ],
+  "gpuStarted": false,
+  "benchmarkPromptRequestsSent": 0
+}

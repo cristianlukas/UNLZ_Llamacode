@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "parentExperimentTaskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
+  "amendment": "A3",
+  "verifiedAtUtc": "2026-10-23T21:31:47.610843+00:00",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "rangesReadBack": [
+    "'Evaluaciones LlamaCode'!C286:J286",
+    "Accionables!D3:N3",
+    "'Inventario de modelos'!C11:R11"
+  ],
+  "readbackVerified": true,
+  "readbackSummary": {
+    "evaluation": "Attempt 1 aborted before model; A3 log-path correction; CPU 7/7 and preflight 17/17 pass; attempt 2 next.",
+    "actionable": "Attempt 1 0 requests; A3 references updated; retry/service start only after A3 validation and readback.",
+    "inventory": "Model is evaluation-only; no production or PeritoSoft assignment; source S55 results preserved."
+  },
+  "preregistration": {
+    "pending": false,
+    "lockToken": "0bbd4847-1a31-436c-a45e-785a230d9c8f",
+    "runnerSha256": "fcf9c4666e055edf96d5a13990a84198838b79cad0fc4d3ad79935b1d9a5fa5f",
+    "configSha256": "77aaa3396206ee05ee3cb4177e8c7f313d7ad9ecac72f10e1b66d031297a335d"
+  },
+  "hashes": {
+    "preflightSha256": "d5728430cd471a78c5eb3cf986ee6373064ff0be4adeec70239c03b921cddba4",
+    "cpuValidationSha256": "50f81475a7299826e28d341fa2a6ee270fccb9787cc5de9a7f899d771021ce1e",
+    "amendmentA3Sha256": "e7efb01f9e0aa7d55ad1ef2830b28365ceff298fe83716936bef3e0e131bfe8a",
+    "preregistrationSha256BeforeReceiptWrite": "a6155286acd2a9a74a12d5cf36253c66e9ddd4d5f099fc3ac1a99cd823442100"
+  },
+  "gpuStarted": false,
+  "requestsStarted": false
+}

@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "observedAtUtc": "2026-10-23T21:25:36.122246+00:00",
+  "bootTime": "2026-10-23 18:17:11",
+  "nvidia": {
+    "moduleVersion": "615.71.09",
+    "nvmlVersion": "615.71.09",
+    "nvidiaSmiExitCode": 0,
+    "rebootRequired": false,
+    "gpuRows": [
+      {
+        "index": 0,
+        "memoryTotalMiB": 24576,
+        "memoryUsedMiB": 1081,
+        "memoryFreeMiB": 23094,
+        "temperatureC": 47,
+        "utilizationPercent": 17
+      },
+      {
+        "index": 1,
+        "memoryTotalMiB": 24576,
+        "memoryUsedMiB": 108,
+        "memoryFreeMiB": 24070,
+        "temperatureC": 28,
+        "utilizationPercent": 33
+      }
+    ]
+  },
+  "codex": {
+    "pid": 7127,
+    "version": "26.1016.61520",
+    "exe": "/usr/lib/chatgpt/ChatGPT",
+    "exeDeleted": false,
+    "started": "2026-10-23 18:18:12",
+    "crashpadFilesAfterCurrentBoot": false
+  },
+  "resources": {
+    "memAvailableKiB": 121820628,
+    "memAvailableGiB": 116.18,
+    "swapFreeKiB": 8388604,
+    "psiSomeAvg10": 0.0,
+    "psiFullAvg10": 0.0,
+    "stageFreeBytes": 47971672064,
+    "stageMinimumFreeBytes": 42949672960
+  },
+  "inferenceProcesses": [],
+  "listeners": [
+    {
+      "port": 8352,
+      "listening": false
+    },
+    {
+      "port": 35751,
+      "listening": false
+    }
+  ],
+  "workloadStarted": false,
+  "requestsSent": 0,
+  "benchmarkStarted": false,
+  "gpuWorkloadStarted": false,
+  "screenshotInterpretation": "LinuxGameHub Flatpak NVML missing, not a Codex crash report; extension 615.71.09 installed and library resolved inside sandbox.",
+  "userDirection": "User said they will handle LinuxGameHub; no further interaction with that app."
+}

@@ -1,0 +1,14 @@
+{
+  "verified": true,
+  "readAtUtc": "2026-10-23T22:13:00Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "ranges": {
+    "Evaluaciones LlamaCode!C286:J286": "Final Q56 6/6 and posthoc interpretation read back.",
+    "Accionables!D3:N3": "Completed status, scoped recommendation, evidence paths, timestamps; F3 use-case preserved.",
+    "Inventario de modelos!A2": "Updated summary read back.",
+    "Inventario de modelos!C11:R11": "Q56 status, separate S55/Q56 metrics, result and evidence fields read back; other model identity, paths, bytes, context, hardware, PeritoSoft and SHA cells preserved."
+  },
+  "writeFields": "userEnteredValue only; formatting and validation metadata were preserved.",
+  "otherTabs": "IA local was inspected for an existing matching Q56 execution row; none exists. No new idea/source row was inserted.",
+  "finalRecommendation": "Use response_format with client-side schema validation only when raw JSON is required for this synthetic retrieval flow; no quality/speed superiority and no production/default/context change."
+}

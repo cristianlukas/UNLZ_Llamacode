@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "parentExperimentTaskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
+  "amendment": "A6",
+  "preregisteredAtUtc": "2026-10-23T21:38:15.658994+00:00",
+  "trigger": "CPU tokenizer check with /usr/bin/python3 failed because regex is unavailable; pinned Strata venv has regex and passed tokenizer hash/token-count checks.",
+  "soleChange": "Run the Python test wrapper with the pinned Strata venv interpreter; it continues to launch the exact same pinned Strata server/runtime and model config. No package install or system Python change.",
+  "wrapperInterpreter": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python",
+  "wrapperInterpreterVersion": "Python 3.12.3; regex 2026.9.10",
+  "newServiceCommand": [
+    "systemd-run",
+    "--user",
+    "--no-block",
+    "--unit=q56-s55-jsonschema",
+    "--slice=background.slice",
+    "--property=MemoryAccounting=yes",
+    "--property=MemoryHigh=86G",
+    "--property=MemoryMax=96G",
+    "--property=MemorySwapMax=1G",
+    "--property=OOMPolicy=kill",
+    "--property=Restart=no",
+    "--property=RuntimeMaxSec=4h",
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-56/work/run_700k_json_schema_ab.py"
+  ],
+  "sameModelServerPython": true,
+  "unchanged": [
+    "model weights/runtime/config/sampling",
+    "700000 context and YaRN/KV flags",
+    "three fixtures, hashes, schemas and answer keys",
+    "seeds, six-request order and response_format factor",
+    "result/log paths from A5",
+    "resource limits and abort guards"
+  ],
+  "verification": [
+    "CPU tokenizer hash/token counts from pinned venv match S55",
+    "fresh Q56 preflight",
+    "A6 Sheet readback",
+    "only then launch transient durable service"
+  ],
+  "gpuStarted": false,
+  "benchmarkPromptRequestsSent": 0
+}

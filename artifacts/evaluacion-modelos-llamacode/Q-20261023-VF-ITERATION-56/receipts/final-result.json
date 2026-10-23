@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-56",
+  "executionTaskId": "Q-20261023-VF-ITERATION-68",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD",
+  "status": "completed_candidate_gate_pass",
+  "candidateGatePass": true,
+  "completedAtUtc": "2026-10-23T22:09:03.664368+00:00",
+  "sourceReceipt": "receipts/700k-json-schema-ab-attempt-04.json",
+  "posthocAudit": "receipts/posthoc-json-fence-audit.json",
+  "lockToken": "0bbd4847-1a31-436c-a45e-785a230d9c8f",
+  "context": {
+    "maxContext": 700000,
+    "originalContext": 262144,
+    "ropeScaling": "yarn",
+    "ropeScale": 4,
+    "kv": "int8"
+  },
+  "requests": 6,
+  "pairs": 3,
+  "loadSeconds": 25.573,
+  "arms": {
+    "plain": {
+      "strictRawJsonValid": 2,
+      "requests": 3,
+      "exactFactsStrict": 10,
+      "mean": {
+        "prefillTokensPerSecond": 2548.63,
+        "decodeTokensPerSecond": 104.27,
+        "elapsedSeconds": 268.361
+      }
+    },
+    "responseFormatJsonSchema": {
+      "strictRawJsonValid": 3,
+      "requests": 3,
+      "exactFacts": 15,
+      "mean": {
+        "prefillTokensPerSecond": 2530.47,
+        "decodeTokensPerSecond": 102.37,
+        "elapsedSeconds": 270.338
+      }
+    }
+  },
+  "posthoc": {
+    "plainPair3AfterRemovingOuterMarkdownFence": "valid JSON, exact 5/5 facts",
+    "plainSemanticExact": "15/15 facts across all prompts after this normalization",
+    "jsonSchemaSemanticExact": "15/15 facts"
+  },
+  "recommendation": "For a consumer requiring raw JSON, use the tested response_format request only with client-side schema validation; alternatively strip one well-formed outer Markdown JSON fence and validate. Keep this scoped to this synthetic retrieval flow. No production/default/context change.",
+  "resourceClosure": {
+    "serviceReturnCode": 0,
+    "forcedKill": false,
+    "remainingInferenceProcesses": [],
+    "remainingKnownListeners": [],
+    "port8352Free": true,
+    "memAvailableBytes": 124009934848,
+    "swapUsedBytes": 0,
+    "oomKills": 0,
+    "psiSomeAvg10": 0.0,
+    "psiFullAvg10": 0.0
+  },
+  "noProductionChanges": true
+}

@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-56",
+  "executionTaskId": "Q-20261023-VF-ITERATION-68",
+  "createdAtUtc": "2026-10-23T22:13:00Z",
+  "sourceReceipt": "receipts/700k-json-schema-ab-attempt-04.json",
+  "sourceReceiptSha256": "8880bf4381b55acbe81917f23d5e1b1a8cbb9c24eef63b35e60786456072681d",
+  "run": {
+    "pair": 3,
+    "mode": "plain",
+    "httpStatus": 200,
+    "finishReason": "stop",
+    "bodyTokensRuntimeOffline": 679963,
+    "strictJsonParse": false,
+    "strictParseError": "JSONDecodeError: Expecting value: line 1 column 1 (char 0)",
+    "rawTextSha256": "be8652a851d59c3ecafa6212f3814b82b02028ff89ffd55551804133688f7cfa",
+    "rawTextBytes": 216,
+    "outerMarkdownJsonFenceObserved": true,
+    "normalization": "trim whitespace; remove exactly one leading ```json fence and one trailing ``` fence; no other text repair",
+    "normalizedTextSha256": "65e34f96674f9b4be773532150d7c9c301d5e665e90b4aba8ffa0d4d6a4930e4",
+    "normalizedJsonParse": true,
+    "exactKeys": true,
+    "exactValuesByKey": {
+      "ORBIT-31-1261": true,
+      "ORBIT-32-1152": true,
+      "ORBIT-33-9493": true,
+      "ORBIT-34-6482": true,
+      "ORBIT-35-5920": true
+    },
+    "exactFacts": 5,
+    "expectedFacts": 5
+  },
+  "aggregate": {
+    "strictRawJsonParseability": {
+      "plain": "2/3",
+      "responseFormatJsonSchema": "3/3"
+    },
+    "semanticExactAfterFenceNormalization": {
+      "plain": "3/3 prompts; 15/15 facts",
+      "responseFormatJsonSchema": "3/3 prompts; 15/15 facts"
+    },
+    "means": {
+      "plain": {
+        "prefillTokensPerSecond": 2548.63,
+        "decodeTokensPerSecond": 104.27,
+        "elapsedSeconds": 268.361
+      },
+      "responseFormatJsonSchema": {
+        "prefillTokensPerSecond": 2530.47,
+        "decodeTokensPerSecond": 102.37,
+        "elapsedSeconds": 270.338
+      }
+    },
+    "schemaMinusPlainElapsedSeconds": 1.977,
+    "schemaMinusPlainElapsedPercent": 0.74
+  },
+  "interpretation": "The only strict-parse failure was an outer Markdown code fence; after removing only that fence, the JSON parses and all five fixture values are exact. This does not show a semantic retrieval advantage. The response_format path passed the preregistered strict raw JSON candidate gate on the three reused synthetic prompts.",
+  "limitations": [
+    "three previously used synthetic prompts; not an independent holdout",
+    "response_format is prompt guidance plus validation, not constrained decoding",
+    "no product code, production profile, model default, context default, ASTRA, SOL, or PeritoSoft change",
+    "small n; timing deltas are descriptive only"
+  ],
+  "candidateGatePass": true
+}

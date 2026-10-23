@@ -26,11 +26,12 @@ SOURCE55_AUDIT = SOURCE55 / 'receipts/source-55-posthoc-audit.json'
 SOURCE55_MODEL_FINGERPRINTS = SOURCE55 / 'receipts/source-55-model-fingerprints.json'
 CONFIG = TASK / 'receipts/source55-format-ab-strata-config.json'
 SCHEMAS = TASK / 'schemas/response-schemas.json'
-RESULT = TASK / 'receipts/700k-json-schema-ab-result.json'
-WRAPPER_LOG = TASK / 'receipts/strata-format-ab-wrapper.log'
-TOKEN = '3f628b9f-27c2-4675-a960-1350fc7f44d6'
+RESULT = TASK / 'receipts/700k-json-schema-ab-attempt-04.json'
+WRAPPER_LOG = TASK / 'receipts/strata-format-ab-wrapper-attempt-04.log'
+TOKEN = '0bbd4847-1a31-436c-a45e-785a230d9c8f'
 MODEL = 'qwen3.8-flash-next-iq3_xxs-context700k'
 PORT = 8352
+STAGING_ROOT = pathlib.Path('/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Models/LlamaCode-Q56-IQ3XXS-Temp').resolve()
 ENDPOINT = f'http://127.0.0.1:{PORT}/v1/chat/completions'
 TIMEOUT_S = 1800
 MIN_AVAILABLE = 40 * 1024**3
@@ -39,10 +40,11 @@ HIGH_PSI_SOME = 40.0
 HIGH_PSI_FULL = 25.0
 HIGH_PSI_SAMPLES = 4
 MIN_GPU_FREE_MIB = 12 * 1024
-EXPECTED_CONFIG_SHA = '04ca2f58414dc17e649e25f87cbef5fdcc59c1c7be2feeb8cc5414e840d54711'
+EXPECTED_CONFIG_SHA = '78a5c2791a0637f579d4e562735cf8eaf2a3f205acb735594ac9f9c1afd07407'
 EXPECTED_SCHEMA_SHA = '2b6f5d7f2119d05e4aea87d2175bc8d63fff2e79b62e8584d4f6c82eec7cac06'
 EXPECTED_SOURCE55_RESULT_SHA = 'fb5db28dad359cb848dd1708586c0236ac8ff9e6e3a53ce870231e3dbae7622c'
 EXPECTED_SOURCE55_AUDIT_SHA = '351efd29931e56a495e83c34207671a1a15a36a38cd6bc31dabc006b17901c3e'
+EXPECTED_SOURCE55_CONFIG_SHA = '2ba75fce1b8cd9d5c00fe1880052bb1f802e92546b480a9f5d5df0eccf15b42a'
 EXPECTED_SOURCE55_RUNNER_SHA = '1d14479ddd1148b18cc665bd3c229907f5fe3bfe9ffee0acbb50bb05df986f93'
 EXPECTED_MODEL_FINGERPRINTS_SHA = 'a3949ae5b44f98fa5a61ca005cd8fa91ffb838778a9073de2869faee95d5dfcb'
 EXPECTED_MANIFEST_SHA = '3d2918163fdc0162f7ce6154b0490fedd9986ad67cbf85f3b100ae650d077267'
@@ -165,6 +167,48 @@ def score_response(text: str, expected: dict) -> dict:
     return {'parsed': parsed, 'parseError': parse_error, 'exactByKey': exact_by_key,
             'exactMatchCount': sum(exact_by_key.values()), 'schemaKeysExact': exact_keys,
             'schemaValuesAreStrings': string_values}
+
+
+def staged_config_matches_s55(cfg: dict, source_cfg: dict) -> bool:
+    """Allow only the preregistered SSD staging paths and isolated log to differ."""
+    if any(cfg.get(key) != source_cfg.get(key) for key in ('model_name', 'exe', 'cwd')):
+        return False
+    for key in (set(cfg) | set(source_cfg)) - {'args', 'tokenizer', 'log'}:
+        if cfg.get(key) != source_cfg.get(key):
+            return False
+    candidate_args = list(cfg.get('args', []))
+    source_args = list(source_cfg.get('args', []))
+    if len(candidate_args) != len(source_args):
+        return False
+    staged_relatives = {
+        '--pack': pathlib.Path('strata-data/packs/iq3_xxs'),
+        '--native': pathlib.Path('models/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf'),
+        '--ple-gguf': pathlib.Path('models/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf'),
+    }
+    pack_candidate = None
+    pack_source = None
+    for flag, relative in staged_relatives.items():
+        if candidate_args.count(flag) != 1 or source_args.count(flag) != 1:
+            return False
+        ci, si = candidate_args.index(flag), source_args.index(flag)
+        if ci != si or ci + 1 >= len(candidate_args) or si + 1 >= len(source_args):
+            return False
+        candidate_path = pathlib.Path(candidate_args[ci + 1]).resolve()
+        try:
+            candidate_relative = candidate_path.relative_to(STAGING_ROOT)
+        except ValueError:
+            return False
+        if candidate_relative != relative:
+            return False
+        if flag == '--pack':
+            pack_candidate = candidate_path
+            pack_source = pathlib.Path(source_args[si + 1]).resolve()
+        candidate_args[ci + 1] = f'<staged:{flag}>'
+        source_args[si + 1] = f'<staged:{flag}>'
+    if candidate_args != source_args or pack_candidate is None or pack_source is None:
+        return False
+    return (pathlib.Path(cfg.get('tokenizer', '')).resolve() == pack_candidate / 'tokenizer'
+            and pathlib.Path(source_cfg.get('tokenizer', '')).resolve() == pack_source / 'tokenizer')
 
 
 def structured_api_probe() -> dict:
@@ -333,7 +377,7 @@ def load_source55_module():
     module.TOKEN = TOKEN
     module.CONFIG = CONFIG
     module.RECEIPT = RESULT
-    module.SERVER_LOG = TASK / 'receipts/strata-format-ab-wrapper.log'
+    module.SERVER_LOG = WRAPPER_LOG
     module.MODEL = MODEL
     return module
 
@@ -351,6 +395,8 @@ def main() -> int:
         raise RuntimeError('source55 baseline receipt changed after preregistration')
     if sha256(SOURCE55_AUDIT) != EXPECTED_SOURCE55_AUDIT_SHA:
         raise RuntimeError('source55 posthoc content audit changed after preregistration')
+    if sha256(SOURCE55/'receipts/source-55-strata-config.json') != EXPECTED_SOURCE55_CONFIG_SHA:
+        raise RuntimeError('source55 runtime config changed after preregistration')
     if sha256(SOURCE55_RUNNER) != EXPECTED_SOURCE55_RUNNER_SHA:
         raise RuntimeError('source55 runner helpers changed after preregistration')
     if sha256(SOURCE55_MODEL_FINGERPRINTS) != EXPECTED_MODEL_FINGERPRINTS_SHA:
@@ -368,7 +414,7 @@ def main() -> int:
         raise RuntimeError('source55 prompt manifest changed after preregistration')
     if sha256(SOURCE55/'fixtures/source-55/answer-key.json') != EXPECTED_ANSWER_KEY_SHA:
         raise RuntimeError('source55 answer key changed after preregistration')
-    if cfg.get('model_name') != MODEL or cfg.get('log') != str(TASK / 'receipts/strata-format-ab.log'):
+    if cfg.get('model_name') != MODEL or cfg.get('log') != str(TASK / 'receipts/strata-format-ab-attempt-04.log'):
         raise RuntimeError('isolated config changed beyond its preregistered name/log fields')
     engine_path = pathlib.Path(cfg['exe'])
     server_root = pathlib.Path(cfg['cwd'])
@@ -376,8 +422,8 @@ def main() -> int:
     server_script = server_root / 'serve/server.py'
     tokenizer_module = server_root / 'tools/strata_tokenizer.py'
     cfg_args = cfg['args']
-    if cfg_args != source55_cfg.get('args') or cfg.get('exe') != source55_cfg.get('exe') or cfg.get('cwd') != source55_cfg.get('cwd') or cfg.get('tokenizer') != source55_cfg.get('tokenizer'):
-        raise RuntimeError('Q56 must use the exact runtime/model/tokenizer SSD paths already validated by S55')
+    if not staged_config_matches_s55(cfg, source55_cfg):
+        raise RuntimeError('Q56 config differs from S55 beyond the preregistered temporary SSD staging paths')
     def option_path(name: str) -> pathlib.Path:
         try:
             return pathlib.Path(cfg_args[cfg_args.index(name) + 1])
@@ -416,7 +462,8 @@ def main() -> int:
         if sorted(schema_by_prompt[fixture['file']]['required']) != sorted(answer_key[fixture['file']]):
             raise RuntimeError(f'schema keys differ from prompt fact-key list: {fixture["file"]}')
 
-    base = load_source55_module().load_base_runner()
+    s55_helpers = load_source55_module()
+    base = s55_helpers.load_base_runner()
     base.ABORT_AVAILABLE = ABORT_AVAILABLE
     active = inference_processes()
     listening = listeners()
@@ -534,7 +581,7 @@ def main() -> int:
             raise TimeoutError('pinned Strata model did not become READY within 30 minutes')
         result['readyAtUtc']=utcnow()
         result['loadSeconds']=round(time.monotonic()-start,3)
-        result['processTreeAtReady']=base.tree_cmdlines(server.pid)
+        result['processTreeAtReady']=s55_helpers.tree_cmdlines(server.pid)
         result['statusEndpoint']=structured_api_probe()
         result['status']='ready'
         tokenizer,tokenizer_dir=base.load_tokenizer(cfg['tokenizer'],server_root/'tools/strata_tokenizer.py')

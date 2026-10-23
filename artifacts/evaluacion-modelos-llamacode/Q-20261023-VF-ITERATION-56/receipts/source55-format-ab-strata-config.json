@@ -37,7 +37,7 @@
   "cwd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source",
   "tokenizer": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Models/LlamaCode-Q56-IQ3XXS-Temp/strata-data/packs/iq3_xxs/tokenizer",
   "model_name": "qwen3.8-flash-next-iq3_xxs-context700k",
-  "log": "artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-56/receipts/strata-format-ab.log",
+  "log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-56/receipts/strata-format-ab-attempt-04.log",
   "lib_dirs": [
     "/usr/local/cuda-12.8/bin",
     "/usr/local/cuda-12.8/lib64"

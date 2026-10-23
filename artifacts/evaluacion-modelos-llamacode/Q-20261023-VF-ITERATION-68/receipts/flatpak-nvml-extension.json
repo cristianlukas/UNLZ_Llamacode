@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "observedAtUtc": "2026-10-23T21:25:36.122246+00:00",
+  "appId": "io.github.guideahon.LinuxGameHub",
+  "appRuntime": "org.gnome.Platform/x86_64/49",
+  "before": [
+    "host NVML 615.71.09 available",
+    "sandbox had no libnvidia-ml.so",
+    "only Flatpak NVIDIA GL extension 610-57-04 installed"
+  ],
+  "action": "installed user extension org.freedesktop.Platform.GL.nvidia-615-71-09//1.4 from flathub",
+  "after": [
+    "sandbox exposes /usr/lib/x86_64-linux-gnu/GL/nvidia-615-71-09/lib/libnvidia-ml.so.1",
+    "ldconfig resolves libnvidia-ml.so.1 in sandbox"
+  ],
+  "appLaunchedForVerification": false,
+  "furtherActions": "none after user said they will handle LinuxGameHub"
+}

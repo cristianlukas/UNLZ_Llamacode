@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-68",
+  "parentExperimentTaskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
+  "amendment": "A6",
+  "verifiedAtUtc": "2026-10-23T21:39:13.775596+00:00",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "rangesReadBack": [
+    "'Evaluaciones LlamaCode'!C286:J286",
+    "Accionables!D3:N3",
+    "'Inventario de modelos'!C11:R11"
+  ],
+  "readbackVerified": true,
+  "readbackSummary": {
+    "evaluation": "Attempt 3 stopped at no-overwrite guard, no model/GPU; A5 unique outputs, A6 venv wrapper, CPU validation and preflight 17/17 pass.",
+    "actionable": "No quality outcome, 0/6 benchmark prompts; next is attempt 4 with venv interpreter.",
+    "inventory": "Candidate only; prior S55 metrics and production/PeritoSoft status unchanged."
+  },
+  "hashes": {
+    "a6CpuValidationSha256": "66cd2bfcf9716c75e0858e40dfa897cb3d1733b96027c377dba37cdbb1a6a1ad",
+    "preflightSha256": "5b4c39d711db7e6756587d567f15c8b9057de1fe298120cb87c267269b2f1153",
+    "runnerSha256": "596ca0adc6c528ed3be86bb7bf9e8c84e2626f129c365334a6f0009f61dc91e4",
+    "configSha256": "78a5c2791a0637f579d4e562735cf8eaf2a3f205acb735594ac9f9c1afd07407"
+  },
+  "preregistrationPending": false,
+  "gpuStarted": false,
+  "benchmarkPromptRequestsStarted": false
+}
