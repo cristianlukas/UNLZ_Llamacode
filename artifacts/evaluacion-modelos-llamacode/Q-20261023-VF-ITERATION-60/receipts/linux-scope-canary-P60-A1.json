@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-60",
+  "attempt": "P60-A1",
+  "preregisteredIn": "PLAN.md \u00a7Prerregistro de \u00e1rbol de procesos \u2014 P60-A1",
+  "unit": "llamacode-eval-2903009-4b829bf8.scope",
+  "systemdOomd": "active",
+  "parentPid": 2903013,
+  "childPid": 2903014,
+  "sameTransientScope": true,
+  "scopeProperties": {
+    "Slice": "background.slice",
+    "OOMPolicy": "kill",
+    "KillMode": "control-group",
+    "ManagedOOMMemoryPressure": "kill",
+    "ManagedOOMSwap": "kill",
+    "MemoryHigh": "infinity",
+    "MemoryMax": "infinity",
+    "MemorySwapMax": "infinity"
+  },
+  "oomScoreAdj": {
+    "parent": 900,
+    "child": 900
+  },
+  "postStopStates": {
+    "parent": "gone",
+    "child": "gone"
+  },
+  "result": "PASS",
+  "modelOrGpuStarted": false,
+  "requestsSent": 0,
+  "memoryCapsApplied": false,
+  "unitTests": "python3 -m unittest tests.test_linux_eval_scope -v \u2014 4/4 PASS",
+  "scopeAudit": "tools/meter_system_profiles.py uses D:/ paths, llama-server.exe, and C:/ log path; it is a Windows-target script and cannot be tested as a native Linux path.",
+  "nextCondition": "Use a native Windows session to add/verify Job Object process-tree cleanup for Windows evaluation launchers; no global P0 close until those tests pass.",
+  "recordedAtUtc": "2026-10-23T14:56:00Z"
+}
