@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-65",
+  "lockToken": "655894f6-d78a-4263-9779-32d83ba84697",
+  "capturedAtUtc": "2026-10-23T20:35:39Z",
+  "scope": "read-only Codex/Electron process, Crashpad, journal, package and driver follow-up",
+  "app": {
+    "installedPackage": "chatgpt 26.1016.61520",
+    "aptUpgradeLocal": "2026-10-23 11:31:22–11:33:29 -03:00",
+    "previousPackage": "26.930.51102",
+    "mainProcess": {
+      "pid": 7630,
+      "startedLocal": "2026-10-22 22:28:00 -03:00",
+      "exe": "/usr/lib/chatgpt/ChatGPT (deleted)",
+      "inode": 5899627,
+      "sizeBytes": 319425760
+    },
+    "installedExe": {
+      "path": "/usr/lib/chatgpt/ChatGPT",
+      "inode": 5898276,
+      "sizeBytes": 322870496
+    },
+    "newRendererPids": [
+      {
+        "pid": 3470384,
+        "startedLocal": "2026-10-23 17:34:23 -03:00"
+      },
+      {
+        "pid": 3470385,
+        "startedLocal": "2026-10-23 17:34:23 -03:00"
+      }
+    ],
+    "newCodexExecServer": {
+      "pid": 3470773,
+      "startedLocal": "2026-10-23 17:34:27 -03:00"
+    }
+  },
+  "crashEvidence": {
+    "newCrashpadRecordAfterReportedClose": false,
+    "latestCrashpadProcessType": "gpu-process",
+    "latestCrashpadAtLocal": "2026-10-23 08:47:17 -03:00",
+    "minidumpPresent": false,
+    "coredumpctlAvailable": false,
+    "correlatableCodexOomSegfaultOrKillInJournal": false,
+    "interpretation": "Main Electron process remained alive; renderer/exec-server PIDs were newer. Consistent with renderer/UI recreation, but incident process and cause are unproven."
+  },
+  "host": {
+    "bootStartedLocal": "2026-10-22 22:26:57",
+    "nvidiaSmiExitCode": 18,
+    "nvidiaSmiError": "Driver/library version mismatch; NVML 615.71, loaded module 610.57.04",
+    "inferenceServersFound": false,
+    "listeners": {
+      "artcraft": [
+        47413
+      ],
+      "unattributed": [
+        35751
+      ],
+      "dns": [
+        53
+      ],
+      "cups": [
+        631
+      ],
+      "openrgb": [
+        6742
+      ]
+    },
+    "memorySnapshotAfterReport": {
+      "memAvailableGiB": 110,
+      "swapUsedKiB": 692,
+      "psiAvg10_60_300": "0.00; this is not an incident-time measurement"
+    }
+  },
+  "decision": "Fully quit and relaunch Codex; verify the new main process started after the package upgrade and its /proc/<pid>/exe is not deleted. If it recurs after relaunch, capture Crashpad/minidump at the event time. Reboot Ubuntu and confirm driver/NVML alignment before Q56.",
+  "changedMemoryOrContextPolicy": false,
+  "systemConfigurationChanged": false,
+  "inferenceBenchmarkOrGpuWorkloadStarted": false,
+  "nvidiaSmiDiagnosticQueryOnly": true
+}
