@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-67",
+  "lockToken": "80fe7643-2f89-4942-8b9a-0a5e2924726e",
+  "capturedAtUtc": "2026-10-23T20:41:54Z",
+  "scope": "read-only post-Q66 boot, process, listener and NVIDIA preflight",
+  "bootStartedLocal": "2026-10-22 22:26:57",
+  "codex": {
+    "mainPid": 7630,
+    "mainExe": "/usr/lib/chatgpt/ChatGPT (deleted)",
+    "fullRelaunchObserved": false
+  },
+  "inferenceProcessesMatched": [],
+  "listeners": {
+    "artcraft": [
+      47413
+    ],
+    "unattributed": [
+      35751
+    ],
+    "dns": [
+      53
+    ],
+    "cups": [
+      631
+    ],
+    "openrgb": [
+      6742
+    ]
+  },
+  "unattributedListener35751": {
+    "inode": "26094",
+    "ownerFoundByProcScan": false,
+    "ownerFoundByLsof": false,
+    "ownerFoundByFuser": false,
+    "classifiedAsInference": false
+  },
+  "nvidia": {
+    "loadedModule": "610.57.04",
+    "nvml": "615.71",
+    "nvidiaSmiExitCode": 18,
+    "rebootRequiredMarkerPresent": true
+  },
+  "q56Decision": "blocked before server/request/GPU; preregistration and staging unchanged",
+  "nvidiaSmiDiagnosticOnly": true,
+  "buildDownloadBenchmarkOrInferenceStarted": false,
+  "modelsProfilesOrProductionDataChanged": false,
+  "nextSteps": [
+    "Restart Ubuntu after the NVIDIA update",
+    "Open Codex fresh and verify process executable is not deleted",
+    "Resolve listener 35751 and confirm no foreign inference server",
+    "Run fresh Q56 preflight; proceed only if all preregistered guards pass"
+  ]
+}
