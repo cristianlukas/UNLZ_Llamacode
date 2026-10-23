@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-51",
+  "recordedAtUtc": "2026-10-23T01:52:13.514561Z",
+  "host": {
+    "platform": "Linux Ubuntu",
+    "windowsNativeAvailable": false,
+    "pwsh": false,
+    "cmdExe": false,
+    "mntC": false
+  },
+  "rcoCoder": {
+    "testedRevision": "bba88856f8c3c0c9e40e45f82d05e228b814ac43",
+    "testedScreen": "0/8 vs ASTRA control 1/8; transport 8/8 both",
+    "currentMainFileCount": 13,
+    "testedSnapshotIdenticalToCurrentMain": true,
+    "shard1Sha256": "bfa3644db4adfff072fc946c20994f2909d2cf89879d83f80a4c811d4016c211",
+    "shard2Sha256": "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113",
+    "redownloadOrRerun": false
+  },
+  "swiftFlashNext": {
+    "repo": "ukisai/Swift-1.5-Qwen3.8-Flash-Next-GSQ-RCO-GGUF",
+    "tier": "IQ2_XS",
+    "totalBytes": 68152166976,
+    "unsplitSha256": "eb0dcf3c752d4b282eacc902e09200c1ac1fd974b4466e43f8a07699311f6580",
+    "shard1Sha256": "ca3b302d3d1eb6eddce3ea4acc79854e6cc5fdc0583e374a6a8b6bb67327743b",
+    "shard2Sha256": "e4996a6de18fd49c58d9a0040fcfd73787db6407c51973f29884bee7b14c9dbb",
+    "strataRelease": "0.2.2",
+    "engineVersion": "0.1.47",
+    "testEnabled": false,
+    "blocker": "user confirmation of commercial-license eligibility"
+  },
+  "workPerformed": [
+    "read-only HF API tree comparison for tested revision vs main",
+    "official Strata and UkisAI docs reviewed",
+    "prereg plan drafted"
+  ],
+  "downloads": 0,
+  "inferenceRequests": 0,
+  "builds": 0,
+  "gpuUsed": false,
+  "sources": [
+    "https://huggingface.co/ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-Coder-GGUF",
+    "https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-Flash-Next-GSQ-RCO-GGUF",
+    "https://github.com/Niko1221/Strata/releases/tag/v0.2.2",
+    "https://github.com/Niko1221/Strata/blob/main/docs/MODELS.md",
+    "https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-Flash-Next-GSQ-RCO-GGUF/blob/main/LICENSE"
+  ]
+}

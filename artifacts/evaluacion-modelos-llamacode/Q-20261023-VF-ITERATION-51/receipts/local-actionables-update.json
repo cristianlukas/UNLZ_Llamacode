@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "recordedAtUtc": "2026-10-23T01:53:14.058013Z",
+  "path": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/actionables.json",
+  "backup": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/actionables.json.bak.q51-20261023T015314Z",
+  "beforeSha256": "1d6bbb32c675c318a0472ea1ec90929b1635626f222d3ba465cdcff905a168a9",
+  "afterSha256": "546707f2b4cc2c69a43b8be483a9da1be94f36b78866235240ef09f10516b3c0",
+  "beforeCount": 22,
+  "afterCount": 23,
+  "changedIds": [
+    "vf-priority-rco-coder-20261022",
+    "vf-swift15-qwen38-20261019"
+  ],
+  "addedId": "vf-swift15-flashnext-iq2xs-ab-20261023",
+  "reason": "Q51 verified public artifact identity and discovered a supported Swift Flash-Next IQ2_XS candidate; license gate remains unresolved."
+}
