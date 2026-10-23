@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-59",
+  "lockToken": "88b44000-aceb-4699-ae46-ee48c8d6d5fa",
+  "completedAtUtc": "2026-10-23T14:52:53.296751+00:00",
+  "intakeAudit": {
+    "batchId": "VF-20261019-01",
+    "inboxPath": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/inbox.json",
+    "entryCount": 58,
+    "entriesMissingStatusOrAnalysis": [],
+    "topLevelStatusCounts": {
+      "Analizado": 45,
+      "Bloqueada": 4,
+      "Duplicada": 1,
+      "Sin prueba aplicable": 2,
+      "Revisado · sin prueba local nueva aplicable": 1,
+      "Revisado · sin prueba local aplicable": 1,
+      "Analizado · Prueba ejecutada; 15/15 hechos exactos a ~680K, gate estricto JSON 2/3; no pasa": 1,
+      "Analizado · Screen cerrado sin score tras cuatro fallos de arranque; no reintentar": 1,
+      "Analizado · Smoke S57 completado; ASTRA IQ2_XS activó contexto efectivo 1M": 1,
+      "Migrado y verificado": 1
+    },
+    "analysisStatusCounts": {
+      "Analizado · screen directo completado; harness E2E pendiente": 1,
+      "Analizado · sin prueba nueva aplicable; screen textual existente": 1,
+      "Bloqueado · hardware/runtime y espacio no compatibles": 1,
+      "Candidato condicional · bloqueado por artefacto/runtime RTX 5080": 1,
+      "Sin prueba local aplicable · tuner específico de HIP/ROCm": 1,
+      "Bloqueada · almacenamiento SSD y runtime local": 1,
+      "Screen completado · gate de reemplazo no superado": 1,
+      "Revisión completada · sin prueba local aplicable": 2,
+      "Bloqueado · falta el par local Flash-Next/DFlash2 y runtime SGLang con patch": 1,
+      "Revisión completada · sin benchmark local; candidato de port PolyStrata identificado": 1,
+      "Analizado · bloqueado por almacenamiento y compatibilidad exacta": 1,
+      "Analizado · idea aplicable bloqueada por aislamiento": 1,
+      "Analizado · contexto cubierto; flag requiere runtime 0.1.42+": 1,
+      "Analizado · metodología útil; no requiere una suite nueva ahora": 1,
+      "Accionable · filtro de capacidad con margen": 1,
+      "Sin prueba local aplicable · receta para hardware menor": 1,
+      "Duplicado · crosspost revisado del #14; sin prueba nueva": 1,
+      "Analizado · NVFP4 requiere Blackwell; incompatible con RTX 3090": 1,
+      "Accionable · A/B híbrido preregistrado, pendiente de endpoint/costo/límite de datos": 1,
+      "Accionable condicional · candidato para el A/B híbrido #20; versión y acceso externo por confirmar": 1,
+      "Sin prueba local aplicable · fork específico ROCm/RDNA4; pruebas CUDA de contexto ya existen": 1,
+      "Evaluación completada · screen negativo; no promoción": 1,
+      "Accionable condicionado · candidato para A/B existente, sin prueba nueva": 1,
+      "Sin prueba adicional para la decisión local actual": 1,
+      "Bloqueada · falta evidencia GPU verificable y un target compatible": 1,
+      "Duplicada · mismo post y cuerpo que #22": 1,
+      "Bloqueada · comparativa frontier requiere fixture, gasto y frontera de datos": 1,
+      "Sin prueba aplicable": 2,
+      "Bloqueada": 2,
+      "A/B completado; bundle adaptativo no promovido · P0 seguridad": 1,
+      "Revisado · sin prueba local aplicable": 1,
+      "Screen completado; gate de rendimiento no pasa; conservar pipeline-windows=0": 1,
+      "Bloqueado · revalidación pública sin evidencia atribuible": 1,
+      "Sin prueba local aplicable; link de Threads no verificable": 1,
+      "Sin prueba local adicional; relacionado con el A/B preregistrado #35": 1,
+      "Bloqueado antes de benchmark; requiere fixture experto de dominio": 1,
+      "Sin prueba local nueva aplicable": 2,
+      "A/B completado; gate no pasa; conservar control": 1,
+      "Sin prueba local aplicable a los perfiles actuales": 1,
+      "Screen completado; gate no pasa; Maya eliminada tras autorización explícita; ASTRA preservado": 1,
+      "Sin prueba aplicable al perfil general; reabrir sólo para un uso especialista Python con fixture reproducible.": 1,
+      "No aplica": 1,
+      "Bloqueada: fuente primaria no accesible": 1,
+      "Bloqueada: share no accesible": 1,
+      "Evaluado; P4 parser 6/6 en holdout sintético; conservar candidato OCR aislado para integración opt-in; share de Threads sin verificar": 1,
+      "Sin prueba local nueva; usar sólo como shortlist": 1,
+      "Bloqueado antes de descargar; formato MTP no compatible con Strata 0.1.41": 1,
+      "Analizado · hipótesis de contexto ya validada por evidencia local existente": 1,
+      "Revisado · sin prueba nueva; Q2_0 local ya no pasa el gate de coding": 1,
+      "Revisado · runtime de velocidad, sin ganancia demostrada para el perfil productivo": 1,
+      "Prueba ejecutada; 15/15 hechos exactos a ~680K, gate estricto JSON 2/3; no pasa": 1,
+      "Screen cerrado sin score tras cuatro fallos de arranque; no reintentar": 1,
+      "Smoke S57 completado; ASTRA IQ2_XS activó contexto efectivo 1M": 1,
+      "Migrado y verificado · 157 registros únicos; 12 accionables": 1
+    },
+    "conclusion": "All 58 inbox records have a top-level status and a detailed analysis.status. No source entry is unprocessed; actionable or externally blocked items remain in the separate actionables list."
+  },
+  "actionablesSheetReconciliation": {
+    "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "title": "Listado de Juegos",
+    "sheet": "Accionables",
+    "localActionableCount": 23,
+    "sheetUsedRows": "1:53",
+    "currentLocalIdsPreviouslyAbsent": [
+      {
+        "id": "vf-q44-eg2-retrieval-holdout-20261022",
+        "row": 43,
+        "legacyId": "Q-20261010-EMBEDDINGGEMMA2-EVAL",
+        "repair": "Added canonical local ID alongside historical Q-ID."
+      },
+      {
+        "id": "vf-q32-flashnext-ninfer-linux-gate-20261022",
+        "row": 49,
+        "legacyId": "Q-20261022-VF-ITERATION-32-FLASHNEXT-LINUX",
+        "repair": "Added canonical local ID alongside historical Q-ID."
+      },
+      {
+        "id": "vf-q32-qwen38-27b-ninfer-imatrix-20261022",
+        "row": 50,
+        "legacyId": "Q-20261022-VF-ITERATION-32-QWEN27-NINFER",
+        "repair": "Added canonical local ID alongside historical Q-ID; filled columns D:N from the local actionable record because those cells were empty."
+      }
+    ],
+    "readback": "Exact values verified for B43, B49, B50 and D50:N50. Updated filter range to rows 1:53 and columns A:N; API readback confirms the last used row 53 is inside the filter.",
+    "updatedRanges": [
+      "Accionables!B43",
+      "Accionables!B49:B50",
+      "Accionables!D50:N50",
+      "Accionables basic filter A1:N53"
+    ],
+    "writePolicy": "userEnteredValue only for cell changes; no formatting, validation, formulas, links, or other tabs modified.",
+    "visualCheck": "CUA had no active browser tabs or app surfaces; visual render could not be inspected. API metadata confirms wrapped cell formatting on populated fields; visual QA remains unverified."
+  },
+  "execution": {
+    "gpuUsed": false,
+    "inferenceServerStarted": false,
+    "requestsSent": 0,
+    "modelDownloads": 0,
+    "builds": 0
+  },
+  "remainingExternalConditions": [
+    "Q56 requires an Ubuntu reboot after the NVIDIA update and a fresh passing preflight; active kernel module remains 610.57.04 while NVML is 615.71.09.",
+    "Flash-Next NInfer C39-02 and Windows worker Job Object coverage require a native Windows session; Wine does not satisfy this gate.",
+    "Swift model downloads/tests remain blocked pending commercial eligibility confirmation under Swift Open License v1.0."
+  ]
+}

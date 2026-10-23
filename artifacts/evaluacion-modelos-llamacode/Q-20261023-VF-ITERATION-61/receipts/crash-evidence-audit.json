@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-61",
+  "lockToken": "57f4b70c-b33f-4c99-8c9f-2784a8d8ef9e",
+  "observedAtUtc": "2026-10-23T15:00:12Z",
+  "scope": "read-only local crashpad and journal metadata",
+  "coredumpctlAvailable": false,
+  "crashpad": {
+    "database": "/home/cristian/.config/Codex/Crash Reports",
+    "records": [
+      {
+        "captureKind": "crash",
+        "processType": "gpu-process",
+        "observedAtLocal": "2026-10-22T22:20:53-03:00",
+        "minidumpPresent": false
+      },
+      {
+        "captureKind": "dump_without_crashing",
+        "processType": "gpu-process",
+        "observedAtLocal": "2026-10-22T22:39:46-03:00",
+        "minidumpPresent": false
+      },
+      {
+        "captureKind": "dump_without_crashing",
+        "processType": "gpu-process",
+        "observedAtLocal": "2026-10-23T08:47:17-03:00",
+        "minidumpPresent": false
+      }
+    ],
+    "pendingDatabaseFiles": 45,
+    "fileTypes": {
+      "json": 43,
+      "meta": 2,
+      "minidump": 0
+    },
+    "mainProcessAliveAtRecheck": true
+  },
+  "journals": {
+    "systemdOomd": "service start only; no matching kill event",
+    "kernelOomOrSegfault": "no matching OOM kill, segfault, or general-protection event found this boot",
+    "nvidia": [
+      "One Xid 31/MMU fault for python3 at 2026-10-22 22:36:11-03:00; origin not identified.",
+      "Repeated API mismatch entries at 2026-10-23 11:52-03:00 and later: userspace 615.71.09, loaded module 610.57.04."
+    ]
+  },
+  "decision": "Prioritize reboot after driver update and verify module/NVML alignment. No evidence supports lowering memory or context. Do not claim this explains every Codex closure.",
+  "gpuOrInferenceStarted": false,
+  "configurationChanged": false
+}

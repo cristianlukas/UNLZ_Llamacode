@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-56",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "verifiedAtUtc": "2026-10-23T14:20:17Z",
+  "writeMode": "userEnteredValue-only; no formatting, notes, filters, or formulas touched",
+  "ranges": [
+    "'Evaluaciones LlamaCode'!C286/F286/I286:J286",
+    "Accionables!D3/H3:K3/M3:N3",
+    "'Inventario de modelos'!C11/E11:F11/R11/A2"
+  ],
+  "readbackVerified": true,
+  "gpuStarted": false,
+  "requestsSent": 0,
+  "preregistrationSha256": "00d99a61c93b8a96666f8d2f11b87c1175c406bd4a1e9b03b861d80094931387"
+}

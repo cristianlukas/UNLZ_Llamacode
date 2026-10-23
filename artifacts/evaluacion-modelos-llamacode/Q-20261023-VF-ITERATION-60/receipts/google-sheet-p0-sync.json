@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-60",
+  "actionableId": "vf-q35-codex-crash-isolation-20261022",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet": "Accionables",
+  "range": "A2:N2",
+  "readbackAtUtc": "2026-10-23T14:56:00Z",
+  "updatedRanges": [
+    "Accionables!D2",
+    "Accionables!H2:K2",
+    "Accionables!M2:N2"
+  ],
+  "writeFields": "userEnteredValue only",
+  "valuesMatched": true,
+  "formatting": "Existing WRAP retained; no validation/formula/hyperlink changes.",
+  "visualCheck": "CUA had no open tabs/app surfaces; API metadata confirms wrap. Native rendered visual review unavailable.",
+  "gpuOrModelWork": false
+}

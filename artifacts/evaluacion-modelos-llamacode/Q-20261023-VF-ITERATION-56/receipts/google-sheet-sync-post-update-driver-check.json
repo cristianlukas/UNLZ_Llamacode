@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-56",
+  "checkId": "Q-20261023-VF-ITERATION-57-sheet-sync",
+  "syncedAtUtc": "2026-10-23T14:44:35Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheetTitle": "Listado de Juegos",
+  "tabs": {
+    "Evaluaciones LlamaCode": 1945218181,
+    "Accionables": 1393124532,
+    "Inventario de modelos": 2026102061
+  },
+  "writes": [
+    {
+      "range": "'Evaluaciones LlamaCode'!C286",
+      "purpose": "Correct blocked state: packages configured, loaded module stale until post-update reboot"
+    },
+    {
+      "range": "'Evaluaciones LlamaCode'!G286",
+      "purpose": "Add exact diagnosis and no-inference outcome to result/decision"
+    },
+    {
+      "range": "'Evaluaciones LlamaCode'!H286",
+      "purpose": "Set precise reboot and fresh-preflight condition"
+    },
+    {
+      "range": "'Evaluaciones LlamaCode'!I286",
+      "purpose": "Add new receipt path"
+    },
+    {
+      "range": "'Evaluaciones LlamaCode'!J286",
+      "purpose": "Restore canonical WORK_QUEUE.md source reference after correcting prior misalignment"
+    },
+    {
+      "range": "Accionables!D3",
+      "purpose": "Refresh blocked status"
+    },
+    {
+      "range": "Accionables!H3",
+      "purpose": "Refresh precise resume condition"
+    },
+    {
+      "range": "Accionables!K3",
+      "purpose": "Record post-update diagnostic evidence"
+    },
+    {
+      "range": "Accionables!N3",
+      "purpose": "Set reconciled timestamp"
+    },
+    {
+      "range": "'Inventario de modelos'!C11",
+      "purpose": "Clarify evaluation-only state and reboot block"
+    },
+    {
+      "range": "'Inventario de modelos'!R11",
+      "purpose": "Record package/module chronology and resume condition"
+    }
+  ],
+  "readback": {
+    "status": "passed",
+    "cells": "All target values read back exactly; J286 contains WORK_QUEUE.md · Q56 · lock 3f628b9f-27c2-4675-a960-1350fc7f44d6.",
+    "details": "All target values read back exactly after the final content-only write. H286 retains the preregistered 3/3 schema acceptance gate plus the post-update reboot blocker. J286 restored to WORK_QUEUE.md canonical source pointer after correcting prior misalignment. C286 browser formula-bar visual check passed."
+  },
+  "formatting": "Content-only userEnteredValue writes; existing formatting preserved. No row/column resizing, validation changes, formulas, or hyperlinks changed. IA local!K34 untouched.",
+  "visualVerification": "Anonymous in-app browser viewer showed the Evaluaciones LlamaCode table with C286 selected and updated status in the formula bar; no layout edits.",
+  "readbackAtUtc": "2026-10-23T14:44:35Z"
+}

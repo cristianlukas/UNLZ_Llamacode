@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-58",
+  "parentTaskId": "Q-20261023-VF-ITERATION-56",
+  "lockToken": "5f4006e3-828e-4c7d-af50-dfc4ff287230",
+  "checkedAtUtc": "2026-10-23T14:47:36Z",
+  "status": "recheck_complete_parent_blocked_pending_post_update_reboot",
+  "system": {
+    "kernel": "7.0.0-38-generic",
+    "bootTimeUtc": "2026-10-22T22:26:57Z",
+    "loadedKernelModule": "610.57.04",
+    "onDiskModule": "615.71.09",
+    "nvml": "615.71.09",
+    "nvidiaSmiExitCode": 18,
+    "nvidiaSmiError": "Failed to initialize NVML: Driver/library version mismatch; NVML library version 615.71"
+  },
+  "inferencePrecheck": {
+    "processMatches": [],
+    "evaluationListeners": [],
+    "portsChecked": [
+      8350,
+      8351,
+      8352,
+      8353,
+      8354,
+      46363,
+      8000,
+      8080,
+      11434,
+      1234
+    ]
+  },
+  "gpuWorkStarted": false,
+  "inferenceServerStarted": false,
+  "requestsSent": 0,
+  "decision": "Do not run GPU tests until a post-update reboot loads 615.71.09 and nvidia-smi succeeds with the same version.",
+  "rebootPerformedByAgent": false,
+  "parentAssetsPreserved": true
+}

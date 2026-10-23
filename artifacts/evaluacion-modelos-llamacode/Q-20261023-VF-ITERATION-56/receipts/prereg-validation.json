@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-56",
+  "amendment": "A1 temporary C: NVMe staging",
+  "validatedAtUtc": "2026-10-23T14:35:50Z",
+  "checks": {
+    "sourceShardSha256MatchesS55": [
+      true,
+      true
+    ],
+    "sourcePackFingerprintCreated": true,
+    "sourceManifestSha256": "30b67fbf5898d9fe6589a6f724fcd24b6003cab54a4feeb6c2b432344d049925",
+    "sourceManifestSha256MatchesPrereg": true,
+    "stageScriptPyCompile": true,
+    "preflightScriptPyCompile": true,
+    "runnerPyCompile": true,
+    "stageDryRunPassed": true,
+    "copyNotStarted": false,
+    "gpuStarted": false,
+    "requestsSent": 0,
+    "sheetPreregistrationPending": false,
+    "sheetA1PreregistrationReadbackVerified": true,
+    "stagingCompleted": true,
+    "stagedAssetsVerified": true,
+    "stagedFileCount": 11,
+    "sourcePreserved": true,
+    "sheetStagingResultReadbackVerified": true,
+    "sheetStagingAndBlockedStatusReadbackAtUtc": "2026-10-23T14:35:24Z",
+    "preflightAttempted": true,
+    "preflightPassed": false,
+    "preflightBlockedBeforeServerStart": true,
+    "nvidiaSmiExitCode": 18,
+    "nvidiaKernelLibraryMismatch": true,
+    "userReportedSystemUpdate": true,
+    "nvidiaMismatchPersistsOnFollowup": true
+  },
+  "diskBudgetBytes": {
+    "freeBefore": 125366657024,
+    "stageBytes": 77387976778,
+    "projectedFreeAfter": 47978680246,
+    "minimumFreeAfter": 42949672960,
+    "freeAfterStaging": 47978659840
+  },
+  "sha256": {
+    "preregistration": "00d99a61c93b8a96666f8d2f11b87c1175c406bd4a1e9b03b861d80094931387",
+    "config": "da5de1b920a66a03a25766bdbb1222d276005e2dbfdb9a00b737fb9a0b6e16b7",
+    "sourceFingerprint": "30b67fbf5898d9fe6589a6f724fcd24b6003cab54a4feeb6c2b432344d049925",
+    "stageScript": "8fd1b2ba5ee2d728a61297c753e365b0a0dfcd381f26662eee94bb5b835db9fc",
+    "preflightScript": "78a0979537b51395fc6dbfe6dd3b9e8975a90d2a8ce32611a6c0f77087b7bad2",
+    "runner": "a26d3833ad4f7e1e9f0c57ee22eb796fe977773ac49ddffb714389f551686915",
+    "stagedAssetsReceipt": "f2077f396424d5e451b69fe33ffdb1734e9cb6b87c399c8a8adfc67cfe0807b5",
+    "preflightAttemptReceipt": "9f584cd7e1c7a946d0877f31ed7e9c701c0f460bfd0a6edfd3af88eb774ed390",
+    "sheetSyncReceipt": "fd7242044bd4cedd99cc084b6d9121ebb19e7a5eeb94f8aab5ce953a05c6283d"
+  },
+  "sheetReadbackAtUtc": "2026-10-23T14:20:17Z",
+  "sheetReadbackRanges": [
+    "'Evaluaciones LlamaCode'!C286/F286/I286:J286",
+    "Accionables!D3/H3:K3/M3:N3",
+    "'Inventario de modelos'!C11/E11:F11/R11/A2"
+  ],
+  "sheetSyncReceipt": "receipts/google-sheet-sync-amendment-A1.json"
+}

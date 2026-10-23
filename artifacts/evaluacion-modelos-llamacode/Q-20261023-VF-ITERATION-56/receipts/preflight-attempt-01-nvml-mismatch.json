@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
+  "attemptedAtUtc": "2026-10-23T14:32:00Z",
+  "status": "blocked_before_server_start",
+  "preflightEntrypoint": "work/q56_preflight.py",
+  "invocationNote": "The entrypoint has no --help parser and immediately executes the preflight; it failed while taking its GPU snapshot before writing receipts/preflight.json.",
+  "gpuWorkStarted": false,
+  "inferenceServerStarted": false,
+  "requestsSent": 0,
+  "stagedAssetsReceipt": "receipts/staged-assets.json",
+  "stagedAssetsReceiptSha256": "f2077f396424d5e451b69fe33ffdb1734e9cb6b87c399c8a8adfc67cfe0807b5",
+  "stagedAssetsVerified": true,
+  "sourcePreserved": true,
+  "freeAfterStagingBytes": 47978659840,
+  "nvidiaSmi": {
+    "exitCode": 18,
+    "stderr": "Failed to initialize NVML: Driver/library version mismatch\nNVML library version: 615.71",
+    "runtimeLibrary": "libnvidia-ml.so.615.71.09"
+  },
+  "driverVersions": {
+    "loadedKernelModule": "610.57.04",
+    "onDiskModuleSelectedByModinfo": "615.71.09",
+    "nvmlUserspace": "615.71.09"
+  },
+  "packageState": {
+    "nvidia-dkms-615-open": "iF (half-configured)",
+    "nvidia-driver-615-open": "iU (unpacked)",
+    "nvidia-utils-615": "iU (unpacked)",
+    "libnvidia-compute-610": "iU (transitional package)"
+  },
+  "inferenceServerDetection": {
+    "processMatches": [],
+    "q56Port8352Free": true,
+    "note": "Independent read-only /proc process scan and ss port check; GUI ArtCraft/OpenRGB remain running, none identified as an inference server."
+  },
+  "resumeCondition": "Repair/complete the Linux NVIDIA package transaction, reboot so loaded kernel module and userspace libraries match, then rerun the fresh Q56 preflight. Do not start inference or issue GPU requests until every preflight gate passes.",
+  "noSystemRepairPerformed": true,
+  "userReportedSystemUpdate": true,
+  "followupChecks": [
+    {
+      "atUtc": "2026-10-23T14:35:50Z",
+      "command": "nvidia-smi",
+      "exitCode": 18,
+      "stderr": "Failed to initialize NVML: Driver/library version mismatch\nNVML library version: 615.71",
+      "resolved": false
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-56",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "verifiedAtUtc": "2026-10-23T14:35:24Z",
+  "writeMode": "userEnteredValue-only; no formatting, notes, formulas, hyperlinks, or WRAP settings changed",
+  "stageResultRanges": [
+    "'Evaluaciones LlamaCode'!C286/F286/I286:J286",
+    "Accionables!D3/H3/K3/M3:N3",
+    "'Inventario de modelos'!C11/N11/R11/A2"
+  ],
+  "blockedStatusRanges": [
+    "'Evaluaciones LlamaCode'!C286/J286",
+    "Accionables!D3/H3/K3/M3:N3",
+    "'Inventario de modelos'!C11/N11/R11/A2"
+  ],
+  "readbackVerified": true,
+  "readbackAtUtc": "2026-10-23T14:35:24Z",
+  "stageReceiptSha256": "f2077f396424d5e451b69fe33ffdb1734e9cb6b87c399c8a8adfc67cfe0807b5",
+  "preflightAttemptReceipt": "receipts/preflight-attempt-01-nvml-mismatch.json",
+  "gpuWorkStarted": false,
+  "requestsSent": 0
+}
