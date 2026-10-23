@@ -1,0 +1,86 @@
+{
+  "prompt-01.txt": {
+    "type": "object",
+    "properties": {
+      "ORBIT-11-1798": {
+        "type": "string"
+      },
+      "ORBIT-12-6147": {
+        "type": "string"
+      },
+      "ORBIT-13-2630": {
+        "type": "string"
+      },
+      "ORBIT-14-8446": {
+        "type": "string"
+      },
+      "ORBIT-15-7805": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "ORBIT-11-1798",
+      "ORBIT-12-6147",
+      "ORBIT-13-2630",
+      "ORBIT-14-8446",
+      "ORBIT-15-7805"
+    ],
+    "additionalProperties": false
+  },
+  "prompt-02.txt": {
+    "type": "object",
+    "properties": {
+      "ORBIT-21-5572": {
+        "type": "string"
+      },
+      "ORBIT-22-1182": {
+        "type": "string"
+      },
+      "ORBIT-23-8230": {
+        "type": "string"
+      },
+      "ORBIT-24-4017": {
+        "type": "string"
+      },
+      "ORBIT-25-4732": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "ORBIT-21-5572",
+      "ORBIT-22-1182",
+      "ORBIT-23-8230",
+      "ORBIT-24-4017",
+      "ORBIT-25-4732"
+    ],
+    "additionalProperties": false
+  },
+  "prompt-03.txt": {
+    "type": "object",
+    "properties": {
+      "ORBIT-31-1261": {
+        "type": "string"
+      },
+      "ORBIT-32-1152": {
+        "type": "string"
+      },
+      "ORBIT-33-9493": {
+        "type": "string"
+      },
+      "ORBIT-34-6482": {
+        "type": "string"
+      },
+      "ORBIT-35-5920": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "ORBIT-31-1261",
+      "ORBIT-32-1152",
+      "ORBIT-33-9493",
+      "ORBIT-34-6482",
+      "ORBIT-35-5920"
+    ],
+    "additionalProperties": false
+  }
+}

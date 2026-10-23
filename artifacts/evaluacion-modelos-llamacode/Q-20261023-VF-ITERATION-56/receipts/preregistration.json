@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
+  "lockToken": "3f628b9f-27c2-4675-a960-1350fc7f44d6",
+  "registeredAtUtc": "2026-10-23T13:58:32Z",
+  "hypothesis": "Reusing the same fixtures at the same context/model/runtime, adding response_format=json_schema yields 3/3 exact bare JSON responses; previous schema run sent 0 requests because HDD loader exceeded PSI guard.",
+  "design": {
+    "requests": 6,
+    "pairs": 3,
+    "order": [
+      "plain",
+      "json_schema",
+      "json_schema",
+      "plain",
+      "plain",
+      "json_schema"
+    ],
+    "promptSeeds": [
+      2026101956,
+      2026101957,
+      2026101958
+    ],
+    "onlyVariable": "response_format",
+    "fixturesIndependentHoldout": false
+  },
+  "thresholds": {
+    "candidateValidRuns": 3,
+    "exactFacts": 15,
+    "promptTokensRange": [
+      679000,
+      699000
+    ],
+    "http": 200,
+    "finishReason": "stop",
+    "minMemAvailableGiB": 40,
+    "preflightPsiSomeAvg10BelowPercent": 10,
+    "preflightPsiFullAvg10BelowPercent": 1,
+    "minGpuFreeMiBEach": 12288,
+    "abortMemAvailableGiB": 32,
+    "psiAbortSomeAvg10Percent": 40,
+    "psiAbortFullAvg10Percent": 25,
+    "psiAbortConsecutiveSamples": 4
+  },
+  "modelAndRuntime": {
+    "runtime": "Strata v0.1.41",
+    "engineSha256": "770ecf303a4c6271654339c639392ecb455de3a999bf5d2e8dbc73c879103602",
+    "serverSha256": "017efa1f4e76d72396738555d13eb1f9898d1c1c12730cf046d9b267b29987e5",
+    "configSha256": "da5de1b920a66a03a25766bdbb1222d276005e2dbfdb9a00b737fb9a0b6e16b7",
+    "schemaSha256": "2b6f5d7f2119d05e4aea87d2175bc8d63fff2e79b62e8584d4f6c82eec7cac06",
+    "modelShardsSha256": [
+      "219ea929900dfa9ef091f3aa473fdba6874b65fcb36526d7d851ac9e95856d15",
+      "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113"
+    ],
+    "configArgsEquivalentToS55ExceptStagedAssetPaths": true,
+    "storageMethod": "copy exact HDD-quarantine shards and IQ3_XXS pack to temporary SSD C: staging; preserve source; SHA-256 source and destination; MTP remains on SSD D:",
+    "sourceRootHdd": "/media/cristian/HDD extra/Models/LlamaCode-quarantine/2026-10-20/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009",
+    "stagingRootLinux": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Models/LlamaCode-Q56-IQ3XXS-Temp",
+    "stagingRootWindows": "C:\\Users\\cristian\\Models\\LlamaCode-Q56-IQ3XXS-Temp",
+    "sourceBytesExpected": 77387976778,
+    "minimumFreeBytesAfterStaging": 42949672960,
+    "freeBytesBeforeStaging": 125366657024,
+    "modelShardPathsLinux": [
+      "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Models/LlamaCode-Q56-IQ3XXS-Temp/models/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+      "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Models/LlamaCode-Q56-IQ3XXS-Temp/models/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf"
+    ],
+    "packBytesExpected": 1547978250,
+    "modelShardExpectedBytes": [
+      47039860096,
+      28800138432
+    ],
+    "stagingCopyReceipt": "receipts/staged-assets.json",
+    "sourceManifestSha256": "30b67fbf5898d9fe6589a6f724fcd24b6003cab54a4feeb6c2b432344d049925",
+    "sourcePackTreeSha256": "93931a1af30d2293d7b57139d8891462e1ad6de1452439d652264c4e61518def",
+    "stageScriptSha256": "8fd1b2ba5ee2d728a61297c753e365b0a0dfcd381f26662eee94bb5b835db9fc",
+    "preflightScriptSha256": "78a0979537b51395fc6dbfe6dd3b9e8975a90d2a8ce32611a6c0f77087b7bad2",
+    "projectedFreeBytesAfterStaging": 47978680246,
+    "modelShardsVerifiedAgainstS55BeforeStaging": true
+  },
+  "runnerSha256": "a26d3833ad4f7e1e9f0c57ee22eb796fe977773ac49ddffb714389f551686915",
+  "service": {
+    "unit": "q56-s55-jsonschema.service",
+    "manager": "systemd --user",
+    "memoryHigh": "86G",
+    "memoryMax": "96G",
+    "memorySwapMax": "1G",
+    "oomPolicy": "kill",
+    "restart": "no",
+    "runtimeMax": "4h",
+    "slice": "background.slice"
+  },
+  "amendmentHistory": [
+    {
+      "id": "A1",
+      "atUtc": "2026-10-23T14:18:55Z",
+      "reason": "Original D: SSD shard and IQ3_XXS pack paths are absent; direct HDD loading was already stopped in Q18 at PSI some/full 43.11%. Stage the exact candidate assets to a temporary C: NVMe directory and preserve the HDD originals, with SHA-256 verification and a 40 GiB post-copy free-space floor.",
+      "inferenceStarted": false,
+      "sourceModelShardsVerifiedAgainstS55": true,
+      "sourcePackTreeSha256": "93931a1af30d2293d7b57139d8891462e1ad6de1452439d652264c4e61518def",
+      "assetStageScriptSha256": "8fd1b2ba5ee2d728a61297c753e365b0a0dfcd381f26662eee94bb5b835db9fc",
+      "freeBytesBeforeStaging": 125366657024,
+      "projectedFreeBytesAfterStaging": 47978680246
+    }
+  ],
+  "gpuStarted": false,
+  "sheetPreregistrationPending": false,
+  "sheetPreregistrationReadbackAtUtc": "2026-10-23T14:20:17Z"
+}

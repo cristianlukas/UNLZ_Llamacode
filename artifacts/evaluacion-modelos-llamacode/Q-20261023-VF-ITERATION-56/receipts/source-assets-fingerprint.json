@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD-C-STAGED",
+  "verifiedAtUtc": "2026-10-23T14:18:40.729572+00:00",
+  "method": "model shard hashes from complete sha256sum read immediately before this fingerprint; source stat matched S55; SHA-256 each pack file before staging",
+  "sourceRootHdd": "/media/cristian/HDD extra/Models/LlamaCode-quarantine/2026-10-20/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009",
+  "modelShardSha256MatchS55": true,
+  "packTreeSha256": "93931a1af30d2293d7b57139d8891462e1ad6de1452439d652264c4e61518def",
+  "packFileCount": 9,
+  "files": [
+    {
+      "kind": "model-shard",
+      "sourcePath": "/media/cristian/HDD extra/Models/LlamaCode-quarantine/2026-10-20/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/models/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+      "relativeTarget": "models/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+      "bytes": 47039860096,
+      "sourceMtimeNs": 1791584445242231600,
+      "sourceSha256": "219ea929900dfa9ef091f3aa473fdba6874b65fcb36526d7d851ac9e95856d15",
+      "expectedSha256": "219ea929900dfa9ef091f3aa473fdba6874b65fcb36526d7d851ac9e95856d15"
+    },
+    {
+      "kind": "model-shard",
+      "sourcePath": "/media/cristian/HDD extra/Models/LlamaCode-quarantine/2026-10-20/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/models/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf",
+      "relativeTarget": "models/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf",
+      "bytes": 28800138432,
+      "sourceMtimeNs": 1791583486391713600,
+      "sourceSha256": "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113",
+      "expectedSha256": "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113"
+    },
+    {
+      "kind": "pack-file",
+      "sourcePath": "/media/cristian/HDD extra/Models/LlamaCode-quarantine/2026-10-20/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/packs/iq3_xxs/conversions.json",
+      "relativeTarget": "strata-data/packs/iq3_xxs/conversions.json",
+      "bytes": 310,
+      "sourceMtimeNs": 1791584612245927000,
+      "sourceSha256": "68beec784ea64aeecace591b33debb8ba331a9ad257a3e1b68c5c701dd22b267",
+      "expectedSha256": "68beec784ea64aeecace591b33debb8ba331a9ad257a3e1b68c5c701dd22b267"
+    },
+    {
+      "kind": "pack-file",
+      "sourcePath": "/media/cristian/HDD extra/Models/LlamaCode-quarantine/2026-10-20/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/packs/iq3_xxs/dense.bin",
+      "relativeTarget": "strata-data/packs/iq3_xxs/dense.bin",
+      "bytes": 1538035200,
+      "sourceMtimeNs": 1791584612244927000,
+      "sourceSha256": "d2af3d8331e5c7a1985d1d589747230f9d56719a6d33c7cddc9ee6b81cde6b13",
+      "expectedSha256": "d2af3d8331e5c7a1985d1d589747230f9d56719a6d33c7cddc9ee6b81cde6b13"
+    },
+    {
+      "kind": "pack-file",
+      "sourcePath": "/media/cristian/HDD extra/Models/LlamaCode-quarantine/2026-10-20/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/packs/iq3_xxs/index.txt",
+      "relativeTarget": "strata-data/packs/iq3_xxs/index.txt",
+      "bytes": 93687,
+      "sourceMtimeNs": 1791584612245927000,
+      "sourceSha256": "1afe12b36cd2d13bf122b741fa0e81e1f751319cc3c451e54ba75524d825f148",
+      "expectedSha256": "1afe12b36cd2d13bf122b741fa0e81e1f751319cc3c451e54ba75524d825f148"
+    },
+    {
+      "kind": "pack-file",
+      "sourcePath": "/media/cristian/HDD extra/Models/LlamaCode-quarantine/2026-10-20/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/packs/iq3_xxs/native_experts.txt",
+      "relativeTarget": "strata-data/packs/iq3_xxs/native_experts.txt",
+      "bytes": 3296,
+      "sourceMtimeNs": 1791584612681921200,
+      "sourceSha256": "ae28cf7a2a1c9063c4b55d6c8cf86d4d079dcddcf597f9e8697c9157d462c0ee",
+      "expectedSha256": "ae28cf7a2a1c9063c4b55d6c8cf86d4d079dcddcf597f9e8697c9157d462c0ee"
+    },
+    {
+      "kind": "pack-file",
+      "sourcePath": "/media/cristian/HDD extra/Models/LlamaCode-quarantine/2026-10-20/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/packs/iq3_xxs/tokenizer/chat_template.jinja",
+      "relativeTarget": "strata-data/packs/iq3_xxs/tokenizer/chat_template.jinja",
+      "bytes": 9993,
+      "sourceMtimeNs": 1791584612663921400,
+      "sourceSha256": "12827f24b742ea4e80cdc12dbcf9622227056b9f797252a3149263d4f9aaadce",
+      "expectedSha256": "12827f24b742ea4e80cdc12dbcf9622227056b9f797252a3149263d4f9aaadce"
+    },
+    {
+      "kind": "pack-file",
+      "sourcePath": "/media/cristian/HDD extra/Models/LlamaCode-quarantine/2026-10-20/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/packs/iq3_xxs/tokenizer/merges.txt",
+      "relativeTarget": "strata-data/packs/iq3_xxs/tokenizer/merges.txt",
+      "bytes": 3353258,
+      "sourceMtimeNs": 1791584612569922700,
+      "sourceSha256": "4ba698529766c7a2f5052083ea10cdf2485577f5237a332ee291054eb11e3332",
+      "expectedSha256": "4ba698529766c7a2f5052083ea10cdf2485577f5237a332ee291054eb11e3332"
+    },
+    {
+      "kind": "pack-file",
+      "sourcePath": "/media/cristian/HDD extra/Models/LlamaCode-quarantine/2026-10-20/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/packs/iq3_xxs/tokenizer/token_type.json",
+      "relativeTarget": "strata-data/packs/iq3_xxs/tokenizer/token_type.json",
+      "bytes": 744960,
+      "sourceMtimeNs": 1791584612575922600,
+      "sourceSha256": "5088c8c298fc06af8382ddb3b76c888703ac2634e82263b97eedcc2ad202738b",
+      "expectedSha256": "5088c8c298fc06af8382ddb3b76c888703ac2634e82263b97eedcc2ad202738b"
+    },
+    {
+      "kind": "pack-file",
+      "sourcePath": "/media/cristian/HDD extra/Models/LlamaCode-quarantine/2026-10-20/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/packs/iq3_xxs/tokenizer/tokenizer.json",
+      "relativeTarget": "strata-data/packs/iq3_xxs/tokenizer/tokenizer.json",
+      "bytes": 541,
+      "sourceMtimeNs": 1791584612575922600,
+      "sourceSha256": "c0bd435efbc6c3b28964b47999afe16c4ad268c7c7c4e8cb3af410796a6f30bf",
+      "expectedSha256": "c0bd435efbc6c3b28964b47999afe16c4ad268c7c7c4e8cb3af410796a6f30bf"
+    },
+    {
+      "kind": "pack-file",
+      "sourcePath": "/media/cristian/HDD extra/Models/LlamaCode-quarantine/2026-10-20/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/packs/iq3_xxs/tokenizer/vocab.json",
+      "relativeTarget": "strata-data/packs/iq3_xxs/tokenizer/vocab.json",
+      "bytes": 5737005,
+      "sourceMtimeNs": 1791584612516923400,
+      "sourceSha256": "4ba64f0332abcfb0b600b7df1537d1e836e68009d5fb7cdb77339738dc6365c4",
+      "expectedSha256": "4ba64f0332abcfb0b600b7df1537d1e836e68009d5fb7cdb77339738dc6365c4"
+    }
+  ],
+  "totalBytes": 77387976778
+}

@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-56",
+  "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD",
+  "verifiedAtUtc": "2026-10-23T14:02:41Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheetUrl": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "ranges": [
+    "Evaluaciones LlamaCode!A286:J286",
+    "Accionables!D3:N3",
+    "Inventario de modelos!A11:R11",
+    "Inventario de modelos!A2"
+  ],
+  "readbackVerified": true,
+  "writeFieldMask": "userEnteredValue",
+  "copyPasteFormats": [
+    "Evaluaciones LlamaCode A285:J285 → A286:J286",
+    "Inventario de modelos A10:R10 → A11:R11"
+  ],
+  "preserved": [
+    "ASTRA/SOL/Flash-Next production records",
+    "PeritoSoft consumer unverified",
+    "Windows path unverified",
+    "no profile or weight changes"
+  ],
+  "hashes": {
+    "preregistrationSha256": "5278b352a4c3e543d26e7f4abc2fc5e23f8e3a2f831ff24005f6bee54c755f91",
+    "planSha256": "219f30d9864b2e23e57129ad535b4267eed20f9ce0c1325cbd11de071a582f9b",
+    "runnerSha256": "a26d3833ad4f7e1e9f0c57ee22eb796fe977773ac49ddffb714389f551686915",
+    "configSha256": "04ca2f58414dc17e649e25f87cbef5fdcc59c1c7be2feeb8cc5414e840d54711"
+  },
+  "gpuStarted": false,
+  "lockToken": "3f628b9f-27c2-4675-a960-1350fc7f44d6"
+}
