@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-63",
+  "recordedAtUtc": "2026-10-23T16:44:40Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheetTitle": "Listado de Juegos",
+  "sheetName": "Accionables",
+  "sheetId": 1393124532,
+  "ranges": [
+    "A10:N10",
+    "A53:N53"
+  ],
+  "updatedCells": "D,H:K,M:N for rows 10 and 53; userEnteredValue only",
+  "readbackVerified": true,
+  "formattingVerified": "All target cells read back with wrapStrategy=WRAP and verticalAlignment=TOP; no formats or validation changed.",
+  "conclusion": "Both Swift entries now show exact license conditions and remain blocked from download/adoption until user eligibility and intended use are confirmed."
+}

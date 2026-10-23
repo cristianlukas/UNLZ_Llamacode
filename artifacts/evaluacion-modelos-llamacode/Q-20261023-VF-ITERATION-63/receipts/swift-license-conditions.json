@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-63",
+  "recordedAtUtc": "2026-10-23T16:44:40Z",
+  "lockToken": "Q63-swift-license-driver-recheck-2026-10-23",
+  "scope": "Revalidación del driver post-update y aclaración documental de condiciones de licencia para los candidatos Swift 1.5.",
+  "swift": {
+    "license": "Swift Open License v1.0",
+    "thresholdUsd": 1000000,
+    "thresholdDefinition": "gross revenue at or above US$1,000,000 during most recently completed fiscal year, aggregated across controlling, controlled, or commonly controlled entities",
+    "commercialUseAtOrAboveThreshold": "not licensed under this license; separate Swift Enterprise License may be obtained",
+    "entityEligibilityConfirmed": false,
+    "weightsDownloaded": false
+  },
+  "qwenBase": {
+    "license": "Qwen Community License 1.0",
+    "condition": "If licensee or affiliate conducts a Model-as-a-Service or AI Work Assistant business, separate Qwen license is required before commercial use",
+    "internalUseException": "applies only where the model, outputs, and underlying capabilities are not made available to third parties",
+    "deploymentClassificationConfirmed": false
+  },
+  "sources": [
+    "https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-Flash-Next-GSQ-RCO-GGUF/blob/main/LICENSE",
+    "https://huggingface.co/Qwen/Qwen3.8-Flash-Next/blob/main/LICENSE"
+  ],
+  "limitations": "Operational license summary, not legal advice; no conclusion on entity eligibility or intended deployment."
+}
