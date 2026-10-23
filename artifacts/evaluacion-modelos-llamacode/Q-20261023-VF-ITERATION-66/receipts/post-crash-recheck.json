@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-66",
+  "lockToken": "6d6aa2b1-8731-4086-bf7d-392fe3a59309",
+  "capturedAtUtc": "2026-10-23T20:39:40Z",
+  "scope": "CPU-only post-crash and NVIDIA driver gate recheck",
+  "inference": {
+    "processMatches": [],
+    "listeners": {
+      "artcraft": [
+        47413
+      ],
+      "unattributed": [
+        35751
+      ],
+      "dns": [
+        53
+      ],
+      "cups": [
+        631
+      ],
+      "openrgb": [
+        6742
+      ]
+    },
+    "inferenceServerFound": false
+  },
+  "codex": {
+    "mainPid": 7630,
+    "mainStartedLocal": "2026-10-22 22:28:00 -03:00",
+    "exe": "/usr/lib/chatgpt/ChatGPT (deleted)",
+    "fullRelaunchObserved": false,
+    "renderersRecentButMainUnchanged": true
+  },
+  "driver": {
+    "bootStartedLocal": "2026-10-22 22:26:57",
+    "loadedModule": "610.57.04",
+    "nvml": "615.71",
+    "nvidiaSmiExitCode": 18,
+    "rebootRequiredMarkerPresent": true
+  },
+  "decision": "Q56 remains blocked. The app was not fully relaunched and Ubuntu was not rebooted after the update.",
+  "q56ServerRequestsBenchmarkOrGpuStarted": false,
+  "modelsProfilesMemoryContextChanged": false,
+  "nextSteps": [
+    "Quit Codex fully and relaunch; verify fresh main PID and non-deleted exe",
+    "Restart Ubuntu after update; align loaded NVIDIA module and NVML; require successful nvidia-smi",
+    "Run fresh Q56 preflight and proceed only if every gate passes"
+  ]
+}
