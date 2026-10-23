@@ -1,6 +1,6 @@
 # Q64 — resultado del preflight post-update
 
-**Cierre UTC:** 2026-10-23T16:51:20Z
+**Cierre UTC:** 2026-10-23T16:53:09Z
 **Estado:** Bloqueada antes de inferencia; se conserva Q56 como siguiente test de modelo.
 
 El equipo no reinició después de la actualización: `uptime -s` informó `2026-10-22 22:26:57`, kernel `7.0.0-38-generic`. El módulo cargado sigue en `610.57.04`; `modinfo` indica `615.71.09`; NVML indica `615.71` y `nvidia-smi` devolvió exit 18 por `Driver/library version mismatch`. Sigue presente `/var/run/reboot-required`.
