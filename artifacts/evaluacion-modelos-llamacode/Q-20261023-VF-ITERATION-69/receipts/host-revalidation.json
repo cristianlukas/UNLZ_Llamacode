@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261023-VF-ITERATION-69",
+  "checkedAtUtc": "2026-10-23T22:22:24Z",
+  "purpose": "Read-only check before selecting the next model test; no inference or test was started.",
+  "inferenceProcessScan": {
+    "matches": [],
+    "method": "Scanned /proc comm+cmdline for llama-server/llama.cpp/Strata/ASTRA/vLLM/Ollama/sglang/TGI/Aphrodite/LM Studio/LocalAI; excluded the scanning shell/python utilities."
+  },
+  "listeningSockets": [
+    {
+      "address": "127.0.0.1:6742",
+      "process": "OpenRGB",
+      "classification": "local hardware GUI, not inference"
+    },
+    {
+      "address": "127.0.0.1:631",
+      "process": "CUPS",
+      "classification": "printing service"
+    },
+    {
+      "address": "127.0.0.1:47413",
+      "process": "artcraft-launch PID 4405",
+      "classification": "user GUI/launcher, not inference"
+    },
+    {
+      "address": "127.0.0.1:42539",
+      "process": "containerd service (previously attributed)",
+      "classification": "container runtime, not inference"
+    },
+    {
+      "address": "127.0.0.54:53 and 127.0.0.53:53",
+      "process": "local DNS stub",
+      "classification": "system service"
+    },
+    {
+      "address": "[::1]:631",
+      "process": "CUPS",
+      "classification": "printing service"
+    }
+  ],
+  "knownInferencePorts8350_8352_8768": "No listener appeared on these ports in the full ss -ltnp snapshot.",
+  "nvidia": {
+    "nvmlDriverVersion": "615.71.09",
+    "loadedKernelModuleVersion": "615.71.09",
+    "gpus": [
+      {
+        "name": "NVIDIA GeForce RTX 3090",
+        "memoryUsedMiB": 930,
+        "memoryTotalMiB": 24576,
+        "utilizationPercent": 16
+      },
+      {
+        "name": "NVIDIA GeForce RTX 3090",
+        "memoryUsedMiB": 110,
+        "memoryTotalMiB": 24576,
+        "utilizationPercent": 33
+      }
+    ],
+    "computeApplications": [
+      {
+        "pid": 4405,
+        "process": "/tmp/.mount_artcraIDgFiN/usr/bin/artcraft-launcher",
+        "memoryMiB": 205,
+        "classification": "GUI; left running"
+      }
+    ]
+  },
+  "memory": {
+    "memAvailableKiB": 121467568,
+    "swapFreeKiB": 8388604,
+    "swapTotalKiB": 8388604,
+    "memoryPressureSomeAvg10": 0.0,
+    "memoryPressureFullAvg10": 0.0
+  },
+  "actionsTaken": {
+    "inferenceServersStopped": 0,
+    "otherProcessesKilled": 0,
+    "modelRequests": 0,
+    "benchmarkStarted": false,
+    "gpuWorkloadStarted": false
+  },
+  "selection": "No immediate model inference test is eligible: Swift remains blocked by unconfirmed license eligibility; Windows-native tests require that host; OpenJet lacks a compatible runtime/model and valid baseline. Q56 is already complete."
+}

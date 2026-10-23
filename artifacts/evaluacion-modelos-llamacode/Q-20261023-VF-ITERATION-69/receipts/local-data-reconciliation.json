@@ -1,0 +1,51 @@
+{
+  "taskId": "Q-20261023-VF-ITERATION-69",
+  "updatedAtUtc": "2026-10-23T22:34:22Z",
+  "sourceFilesBefore": {
+    "inbox.json": {
+      "sha256": "56134323be1e34ec61729d6e8e258eb7d39e8ab560d96cb09e2d9adedd45126b",
+      "bytes": 146851
+    },
+    "actionables.json": {
+      "sha256": "6b45cda57e6471e65da66c079d34a2943d16b75b882ae6be64124d7b112f998c",
+      "bytes": 48830
+    }
+  },
+  "sourceFilesAfter": {
+    "inbox.json": {
+      "sha256": "6d480439500190c23e8c6ae97a5cbd22cf790fc873d5cb11f090e3accf69ce00",
+      "bytes": 149824,
+      "records": 58
+    },
+    "actionables.json": {
+      "sha256": "98a32b33c61a8d098c13a6bdf697f42e36c9f8e3c73ac602df0d7320e2f8388b",
+      "bytes": 51089,
+      "records": 24
+    }
+  },
+  "snapshots": {
+    "inbox.json": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-69/receipts/source-snapshots/inbox.json.before-q69.json",
+    "actionables.json": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-69/receipts/source-snapshots/actionables.json.before-q69.json"
+  },
+  "changes": {
+    "inbox": "Source #55 upgraded from stale pre-Q56 strict gate to final Q56/Q68 result; previous screen retained in execution.priorScreen.",
+    "actionables": "Added a dedicated Q56 actionable row; refreshed Swift license blocker to remove stale NVIDIA driver mismatch while retaining the unconfirmed-license gate; corrected Q56 source label to VF-20261019-01."
+  },
+  "counts": {
+    "inbox": 58,
+    "actionables": 24
+  },
+  "sheetSyncPending": false,
+  "sheetReconciliation": {
+    "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "tab": "Accionables",
+    "range": "A1:N54",
+    "recoveryRevisionId": "712",
+    "historicalExactComparedCells": 644,
+    "historicalMismatches": 0,
+    "q56Row": "Accionables!A54:N54",
+    "q69AuditRow": "'Evaluaciones LlamaCode'!A290:J290",
+    "readbackVerified": true,
+    "receipt": "receipts/sheet-reconciliation.json"
+  }
+}

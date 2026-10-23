@@ -1,0 +1,58 @@
+{
+  "taskId": "Q-20261023-VF-ITERATION-69",
+  "verifiedAtUtc": "2026-10-23T22:34:22Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "tabs": {
+    "Accionables": {
+      "sheetId": 1393124532,
+      "verifiedRange": "A1:N104",
+      "header": "A1:N1",
+      "usedRange": "A1:N54",
+      "dataRows": 53,
+      "recoveryRevisionId": "712",
+      "historicalRows": "A4:N49",
+      "historicalCellCountCompared": 644,
+      "historicalMismatchCount": 0,
+      "expectedHistoricalRows": "Revision 712 exact values; every cell matched current formattedValue/userEnteredValue.",
+      "reconciledRows": {
+        "2": "vf-q35-codex-crash-isolation-20261022",
+        "3": "vf-q35-flashnext-context-1m-20261022",
+        "49": "vf-q32-flashnext-ninfer-linux-gate-20261022 · Q-20261022-VF-ITERATION-32-FLASHNEXT-LINUX",
+        "50": "vf-q32-qwen38-27b-ninfer-imatrix-20261022 · Q-20261022-VF-ITERATION-32-QWEN27-NINFER",
+        "51": "Q-20261022-VF-ITERATION-41",
+        "52": "Q-20261022-VF-ITERATION-42",
+        "53": "vf-swift15-flashnext-iq2xs-ab-20261023",
+        "54": "vf-q56-json-raw-consumption-20261023"
+      },
+      "tailNonemptyRowsAfter54": 0,
+      "filterRange": "A1:N54",
+      "visualCheck": "The authenticated browser UI was unavailable (no browser tabs in CUA state). Cell values, formatting fields, and row styling were checked through Sheets API; data rows are plain text, no chips or validations on the verified rows."
+    },
+    "Evaluaciones LlamaCode": {
+      "sheetId": 1945218181,
+      "appendedRange": "A290:J290",
+      "id": "Q-20261023-VF-ITERATION-69",
+      "readbackExact": true,
+      "dataValidationCount": 0,
+      "chipCount": 0,
+      "format": "Plain text; matches adjacent row cells' default userEnteredFormat."
+    }
+  },
+  "incident": {
+    "description": "The first updateCells write omitted an end bound and cleared cells after its starting range in Accionables.",
+    "recovery": "Restored A4:N49 from Drive revision 712; independently restored Q35, Q32 27B, Q41, Q42, Swift, and Q56 rows from their canonical records/receipts.",
+    "verification": "Exact cell comparison for 644 historical cells: 0 mismatches; IDs/statuses on the task-specific rows were read back; rows 55–104 are empty; no other tabs were written by Q69.",
+    "userWasInformed": true
+  },
+  "modelTestStarted": false,
+  "gpuWorkloadStarted": false,
+  "protectedAssets": [
+    "ASTRA",
+    "SOL",
+    "Qwen Flash-Next production",
+    "PeritoSoft",
+    "protected model weights"
+  ],
+  "linuxGameHub": "Not touched; user is handling it."
+}
