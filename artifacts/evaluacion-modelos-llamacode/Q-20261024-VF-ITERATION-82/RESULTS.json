@@ -1,0 +1,20 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-82",
+  "status": "closed_cpu_audit_no_new_gpu_test_unlocked",
+  "timestampUtc": "2026-10-24T13:30:18Z",
+  "gpuOrInferenceStarted": false,
+  "findings": {
+    "openjetQwen38": "Q71 d4 speed candidate gate passed; d7 gate failed; Q74 behavioral gate 7/12 with TC-74 0/3 and TC-84 1/3; no agent adoption.",
+    "swift15": "Q72 Swift and ASTRA both 1/8; no quality pass or defensible speed superiority.",
+    "mtp": "Q81 off 2/13 with incomplete coverage; on 4/13 and hard-timeout at 1801.104 s, no valid aggregate score or comparable TPS/TTFT.",
+    "context": "Q35/Q37 three-seed synthetic 1M test found no demonstrated gain over complete 131K cases; keep 131K default. S57 smoke verifies startup only."
+  },
+  "nextTest": {
+    "id": "Flash-Next NInfer C39-02",
+    "status": "blocked",
+    "condition": "Native Windows session with verified runtime/profile and a fresh preflight. Current host is Linux x86_64 without pwsh, PowerShell or cmd.exe."
+  },
+  "processAudit": "No llama-server, vLLM, NInfer, OpenJet or PeritoSoft process found; nothing stopped.",
+  "sheet": "Evaluaciones LlamaCode!C304:J304",
+  "localData": "Reconciled the three stale actionables and VF-20261019-01 sequence 54; backups and SHA-256 values are in receipts/local-reconciliation.json."
+}

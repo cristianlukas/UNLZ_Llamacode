@@ -1,0 +1,18 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-82",
+  "timestampUtc": "2026-10-24T13:30:18Z",
+  "hostPlatform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.39",
+  "inferenceProcessMatches": [],
+  "result": "No llama-server, vLLM, NInfer, OpenJet or PeritoSoft process found at read-only audit time.",
+  "snapshots": {
+    "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-82/receipts/actionables-pre-sync.json": {
+      "bytes": 52212,
+      "sha256": "c97e031081c248a0cb9ed7611125ae10b4c450cc7bbc068e1a84b78dd89dd8c3"
+    },
+    "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-82/receipts/inbox-pre-sync.json": {
+      "bytes": 151197,
+      "sha256": "54a20e7fc23987e691ac3d199cdb2d2b35c412d4bcd1038fa8ec8a706e624482"
+    }
+  },
+  "gpuOrInferenceStarted": false
+}

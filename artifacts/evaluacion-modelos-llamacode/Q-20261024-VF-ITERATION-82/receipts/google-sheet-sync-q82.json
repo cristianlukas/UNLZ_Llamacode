@@ -1,0 +1,19 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-82",
+  "timestampUtc": "2026-10-24T13:30:18Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "range": "Evaluaciones LlamaCode!C304:J304",
+  "preflightRead": "C304:J304 was empty; row 303 was Q81 and wrapped. Headers C:J were confirmed before writing.",
+  "write": {
+    "status": "Reconciliación Q82 · revisión cerrada; sin test nuevo habilitado",
+    "date": "2026-10-24",
+    "topic": "Auditoría de accionables Flash-Next/Qwen3.8-27B/Swift/MTP y selección del siguiente experimento",
+    "source": "Q71/Q72/Q74/Q81 + WORK_QUEUE.md + inbox/actionables locales",
+    "result": "Qwen3.8-27B OpenJet d4 pasa sólo el speed gate candidate-only; d7 no. Q74 conducta 7/12 (TC-74 0/3, TC-84 1/3). Swift Q72 y ASTRA empatan 1/8; sin superioridad. MTP Q81: off 2/13; on 4/13 y timeout a 1.801,104 s, sin score comparable. ASTRA 1M ya tiene matriz sintética de 3 seeds; no cambia default.",
+    "nextStep": "No se lanzó GPU: NInfer requiere sesión Windows nativa (este host es Linux); MTP necesita paquete corregido y preregistro nuevo; OpenJet requiere cambio material de modelo/runtime/orquestador para justificar otra prueba. Reabrir cuando se cumpla una condición concreta.",
+    "evidence": "Q71/RESULTS.md + benchmark-analysis-01.json + benchmark-draftdepth-analysis-01.json; Q72/RESULTS.md; Q74/RESULTS.md + RESULTS.json; Q81/RESULTS.md; Q82/RESULTS.md y receipts.",
+    "queue": "WORK_QUEUE.md Q82 · cierre de auditoría CPU. PeritoSoft y servidores de inferencia no aparecieron en el inventario de procesos; no se terminó ningún proceso."
+  },
+  "readback": "All eight written values matched exactly; wrapStrategy was WRAP in each cell.",
+  "userEnteredValuesOnly": true
+}

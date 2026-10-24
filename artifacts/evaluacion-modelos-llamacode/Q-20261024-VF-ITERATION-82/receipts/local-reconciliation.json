@@ -1,0 +1,28 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-82",
+  "timestampUtc": "2026-10-24T13:30:18Z",
+  "modifiedRecords": {
+    "actionables": [
+      "vf-openjet-megakernel-20261019",
+      "vf-swift15-flashnext-iq2xs-ab-20261023",
+      "vf-priority-mtp-q4-20261022"
+    ],
+    "inbox": [
+      "batch VF-20261019-01 sequence 54"
+    ]
+  },
+  "snapshots": {
+    "actionables": {
+      "beforeSha256": "c97e031081c248a0cb9ed7611125ae10b4c450cc7bbc068e1a84b78dd89dd8c3",
+      "afterSha256": "8208efdd7caf60cc30a6a4b0e8283bc4e4500510837b359d3cdddff31a241e83",
+      "backup": "actionables-pre-sync.json"
+    },
+    "inbox": {
+      "beforeSha256": "54a20e7fc23987e691ac3d199cdb2d2b35c412d4bcd1038fa8ec8a706e624482",
+      "afterSha256": "ce00c2be7d889f9622a9cfa84ef373ef027a6da50261bdfa08ab47fb78c0f558",
+      "backup": "inbox-pre-sync.json"
+    }
+  },
+  "schemaPreserved": true,
+  "decision": "All prior candidate results now visible in the local app; no new inference test was enabled by PeritoSoft closure alone on this Linux host."
+}
