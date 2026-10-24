@@ -1,0 +1,79 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-83",
+  "reviewedAtUtc": "2026-10-24T13:50:46Z",
+  "mode": "CPU/read-only",
+  "execution": {
+    "gpuUsed": false,
+    "inference": false,
+    "build": false,
+    "download": false,
+    "modelDeleted": false,
+    "driverChanged": false,
+    "processesTerminated": false
+  },
+  "diskFreeBytes": {
+    "root": 10272423936,
+    "discoLocal": 23472803840,
+    "hddExtra": 30465982464
+  },
+  "dockerRootDir": "/var/lib/docker",
+  "claims": [
+    {
+      "candidate": "HyperQwen",
+      "primary": "https://github.com/syv-ai/HyperQwen/blob/main/docs/multi-gpu.md; https://github.com/syv-ai/HyperQwen/issues/40; https://github.com/ultimaterex/HyperQwen",
+      "claim": "127 tok/s single-stream; ~1035 tok/s aggregate at 64; TP=2; controlled/community 2×RTX 3090 A/B reports +16–35% decode C1–C8 (DFlash2 C1 127.4→161.6 tok/s); ~9.5 GB image + ~20 GB prepared model",
+      "decision": "Relevant candidate for this dual-3090/128 GB host. Primary local A/B should be TP=2 vs ASTRA/SOL; TP=1 vs TP=2 is secondary efficiency analysis. Blocked by safe storage capacity; not downloaded. No P2P driver changes."
+    },
+    {
+      "candidate": "MoMoE",
+      "primary": "https://github.com/aflin/momoe",
+      "claim": "Qwen3.8 Flash-Next uses Strata engine; own CUDA engine targets other model families",
+      "decision": "No separate Flash-Next engine comparison enabled."
+    },
+    {
+      "candidate": "Project Maya",
+      "primary": "https://github.com/mw00/project-maya",
+      "claim": "Maya-S24: 53 tok/s decode and 885 tok/s prefill on another 2x RTX 3090/128 GB host; model about 94.7 GB",
+      "decision": "Complementary model family; not a matched Qwen/ASTRA comparison and cannot fit current storage."
+    },
+    {
+      "candidate": "Geezuz",
+      "primary": "https://github.com/ohgeebtw/geezuz-qwen3.8-27b-dual-gpu",
+      "claim": "190 tok/s Q4 single request and 622 tok/s aggregate at 8 requests; test host used NVIDIA open driver with P2P patch",
+      "decision": "No driver change; outside current host test scope."
+    },
+    {
+      "candidate": "NVIDIA OpenShell",
+      "primary": "https://github.com/NVIDIA/OpenShell",
+      "claim": "Sandbox policies for filesystem, process, network and credentials",
+      "decision": "Potential containment layer; does not supply the trusted tenant principal/authz contract missing in Q78."
+    }
+  ],
+  "localFindings": {
+    "q76": "94/94 Linux Release tests plus loopback regressions passed; implemented.",
+    "q77": "Inconclusive for deferred dispatch: 0/3 model runs emitted a deferred batch; no rerun warranted on same fixture.",
+    "q78": "Cross-tenant test requires a real authenticated principal and resource-authorization backend."
+  },
+  "appActionables": {
+    "path": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/actionables.json",
+    "sha256Before": "8208efdd7caf60cc30a6a4b0e8283bc4e4500510837b359d3cdddff31a241e83",
+    "sha256After": "2227e995251b594fa54acfb560ba2daf5da1ef9ae5ee8b1ae7757b1652dee8a9",
+    "backup": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/actionables.json.bak.q83-hyperqwen-review",
+    "newActionableId": "vf-hyperqwen-qwen38-27b-dual3090-20261024",
+    "updatedAtUtc": "2026-10-24T13:56:11Z",
+    "sheetSync": "Verified by exact-cell readback; see receipts/google-sheet-sync-q83-dual-gpu-correction.json."
+  },
+  "amendedAtUtc": "2026-10-24T13:56:11Z",
+  "hardwareCorrection": {
+    "userConfirmed": "2×RTX 3090 + 128 GB RAM",
+    "supersedes": "Single-RTX-3090 primary test design",
+    "primary": "HyperQwen TP=2 on both RTX 3090s vs current production ASTRA/SOL, same frozen LlamaCode suite and quality/E2E metrics",
+    "secondary": "HyperQwen TP=1 vs TP=2, same model/runtime, to quantify value of freeing one GPU",
+    "concurrency": "C64 only as separate matched workload; do not compare aggregate C64 throughput with single-request latency",
+    "externalEvidence": [
+      "https://github.com/syv-ai/HyperQwen/blob/main/docs/multi-gpu.md",
+      "https://github.com/syv-ai/HyperQwen/issues/40"
+    ],
+    "publishedClaim": "TP=2; community A/B on 2×RTX 3090 without NVLink reports +16–35% decode C1–C8, DFlash2 C1 127.4→161.6 tok/s. Not local evidence; no driver/P2P modification."
+  }
+}
