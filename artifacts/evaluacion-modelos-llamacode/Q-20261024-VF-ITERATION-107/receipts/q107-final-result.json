@@ -1,0 +1,22 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-107",
+  "lockToken": "307e2ed3-6036-4a52-852b-d4f481e21ee0",
+  "capturedAtUtc": "2026-10-24T23:36:12Z",
+  "status": "pass_closed",
+  "cause": "The test invocation injected empty LLAMACODE_Q77_SERVER_URL and LLAMACODE_Q102_SERVER_URL variables. update-binary.sh checks variable-name presence, so it wrote launcher.env and the test expected the other branch.",
+  "verification": {
+    "directTest": "PASS",
+    "isolatedCTest": "1/1 PASS",
+    "fullLinuxRelease": "95/95 PASS",
+    "codeChanges": false
+  },
+  "resources": {
+    "gpu": false,
+    "model": false,
+    "inferenceServer": false,
+    "network": "none",
+    "cudaVisibleDevices": "empty",
+    "endpointVariables": "unset"
+  },
+  "next": "Model claims requested by the user are already resolved or externally blocked in the current priority queue. The remaining P2.1 tenant test needs a concrete backend/API fixture; do not promote Qwen tools before it."
+}

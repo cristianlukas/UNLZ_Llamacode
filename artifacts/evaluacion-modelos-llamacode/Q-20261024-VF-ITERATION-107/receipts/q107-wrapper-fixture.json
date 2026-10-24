@@ -1,0 +1,42 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-107",
+  "lockToken": "307e2ed3-6036-4a52-852b-d4f481e21ee0",
+  "capturedAtUtc": "2026-10-24T23:30:57.300726+00:00",
+  "experiment": "amendment01 minimal wrapper-without-launcher.env fixture",
+  "command": [
+    "bash",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/scripts/update-binary.sh",
+    "--asset-url",
+    "/tmp/q107-wrapper-x49wab9b/v2.tar.gz",
+    "--sha256-url",
+    "/tmp/q107-wrapper-x49wab9b/v2.tar.gz.sha256",
+    "--install-dir",
+    "/tmp/q107-wrapper-x49wab9b/opt/S2",
+    "--no-launch",
+    "--no-pause"
+  ],
+  "exitCode": 0,
+  "stdout": "\n\u001b[35m=== LlamaCode update (precompiled binary) ===\u001b[0m\nVersion : (unknown) (prod)\nInstall : /tmp/q107-wrapper-x49wab9b/opt/S2\nSource  : /tmp/q107-wrapper-x49wab9b/v2.tar.gz\n\n\u001b[36m[*] Downloading...\u001b[0m\n\u001b[32m[OK] SHA-256 verified (5e0c9ff6138f156196d9a62c8a65d7249027ff9f2277822d69c39ec96860333c)\u001b[0m\n\u001b[36m[*] Extracting...\u001b[0m\n\u001b[32m[OK] Installed: /tmp/q107-wrapper-x49wab9b/opt/S2/usr/bin/LlamaCode\u001b[0m\n\u001b[32m[OK] Launcher environment saved: /tmp/q107-wrapper-x49wab9b/config/llamacode/launcher.env\u001b[0m\n\u001b[36m[*] Previous menu entry saved as /tmp/q107-wrapper-x49wab9b/data/applications/llamacode.desktop.bak\u001b[0m\n\u001b[32m[OK] Menu entry: /tmp/q107-wrapper-x49wab9b/data/applications/llamacode.desktop\u001b[0m\n\u001b[32m[OK] Now points to the new install: /tmp/q107-wrapper-x49wab9b/config/autostart/llamacode.desktop\u001b[0m\n\n\u001b[32m[OK] Update complete.\u001b[0m\n",
+  "before": {
+    "menu": "[Desktop Entry]\nExec=/tmp/q107-wrapper-x49wab9b/bin3/llamacode %U\n",
+    "autostart": "[Desktop Entry]\nExec=/tmp/q107-wrapper-x49wab9b/bin3/llamacode --startup\n"
+  },
+  "after": {
+    "menu": "[Desktop Entry]\nType=Application\nName=LlamaCode\nComment=UNLZ LlamaCode\nExec=\"/tmp/q107-wrapper-x49wab9b/opt/S2/llamacode\"\nPath=/tmp/q107-wrapper-x49wab9b/opt/S2/usr/bin\nIcon=/tmp/q107-wrapper-x49wab9b/opt/S2/llamacode.png\nTerminal=false\nCategories=Development;\n",
+    "autostart": "[Desktop Entry]\nExec=\"/tmp/q107-wrapper-x49wab9b/opt/S2/llamacode\" --startup\n"
+  },
+  "observations": {
+    "warningFound": false,
+    "menuUnchanged": false,
+    "autostartUnchanged": false,
+    "launcherEnvExists": true,
+    "installedLauncherExists": true
+  },
+  "resources": {
+    "gpu": false,
+    "model": false,
+    "server": false,
+    "network": "none",
+    "fixture": "temporary directory deleted on exit"
+  }
+}

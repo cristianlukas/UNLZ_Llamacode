@@ -1,0 +1,55 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-106",
+  "lockToken": "cb78d8ff-dcf8-460a-936f-62f50f0fb848",
+  "capturedAtUtc": "2026-10-24T23:21:31Z",
+  "status": "preregistered",
+  "memoryGuardReview": {
+    "astraDefault1m": {
+      "source": "Q14/Q35 historical live inference",
+      "processTreeRssGiB": 51.14,
+      "minMemAvailableGiB": 55.728,
+      "requests": "10/10 exact",
+      "oom": 0
+    },
+    "sol": {
+      "source": "Q34 historical dual RTX 3090 TP=2",
+      "completed": true,
+      "oom": 0,
+      "continuousPsiAvailable": false
+    },
+    "q103HighRssCpuSmoke": {
+      "rssGiB": 56.013,
+      "holdSeconds": 12,
+      "minMemAvailableGiB": 53.386,
+      "maxPsiAvg10Pct": 0.36,
+      "warnings": 0,
+      "hardStops": 0,
+      "oomDelta": 0
+    },
+    "decision": "RSS/occupancy alone is not a stop input; retain Q102 thresholds; this guard does not monitor VRAM or predict every application/kernel crash."
+  },
+  "experiment": {
+    "question": "Does the current LlamaAgentBackend defer a later read_file/task in a mixed tool batch until after the first tool result and a new completion, while preserving task-only fan-out?",
+    "tests": [
+      "toolBatchRequiresReplan_onlyTaskBatchesFanOut",
+      "nativeToolBatchReplansAfterFirstResult",
+      "nativeMixedTaskBatchDoesNotDispatchLaterTaskEarly"
+    ],
+    "fixture": "temporary synthetic files plus an HTTP fake bound to loopback on an ephemeral port",
+    "run": "CUDA_VISIBLE_DEVICES= LLAMACODE_Q77_SERVER_URL= LLAMACODE_Q102_SERVER_URL= LC_JOBS=2 ./scripts/tests-linux.sh Release; then run the focused test_agent_wire cases",
+    "passCriteria": "Linux Release build and full CTest pass; all three focused test cases pass; Q77 live endpoint remains opt-in/skipped.",
+    "resources": {
+      "gpu": false,
+      "inferenceServer": false,
+      "model": false,
+      "network": "loopback fake server only",
+      "memoryCapsChanged": false,
+      "productionProfilesChanged": false
+    },
+    "limits": [
+      "does not test backend tenant authorization",
+      "does not test real reservation or notification APIs",
+      "does not change Qwen adoption gates"
+    ]
+  }
+}

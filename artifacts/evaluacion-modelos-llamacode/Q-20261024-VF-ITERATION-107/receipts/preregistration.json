@@ -1,0 +1,77 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-107",
+  "lockToken": "307e2ed3-6036-4a52-852b-d4f481e21ee0",
+  "capturedAtUtc": "2026-10-24T23:29:15.857525+00:00",
+  "status": "closed_pass",
+  "question": "Are the two update_binary_sh wrapper-without-launcher.env assertions reproducible in isolated script and isolated CTest runs?",
+  "runs": [
+    {
+      "kind": "direct-script",
+      "command": "bash /home/cristian/.cache/llamacode/source/tests/test_update_binary_sh.sh",
+      "count": 1
+    },
+    {
+      "kind": "isolated-ctest",
+      "command": "ctest --test-dir /home/cristian/.cache/llamacode/build_tests_linux -R '^update_binary_sh$' --output-on-failure",
+      "count": 1
+    }
+  ],
+  "resources": {
+    "cpuOnly": true,
+    "gpu": false,
+    "inference": false,
+    "server": false,
+    "network": "none",
+    "build": false,
+    "host": "2x RTX 3090 +128 GB RAM"
+  },
+  "decisionRules": [
+    "If both pass, do not edit; classify Q106 suite failure as unreproduced/flaky and register next full-suite gate separately.",
+    "If either fails, preserve logs and identify exact failed condition before any fix."
+  ],
+  "sourceCodeChanges": false,
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "evaluationRange": "Evaluaciones LlamaCode!A327:J327",
+  "actionableRange": "Accionables!D7:D7,H7:K7,M7:N7",
+  "readbackVerified": true,
+  "readbackNote": "Values verified via get_spreadsheet_cells before both test invocations; WRAP retained.",
+  "amendment01": {
+    "capturedAtUtc": "2026-10-24T23:30:45Z",
+    "trigger": "both preregistered isolated runs failed with the same two assertions",
+    "experiment": "Recreate only the wrapper-without-launcher.env case in a fresh temp directory; capture updater stdout and desktop/autostart before and after; make no repository edits.",
+    "decisionRules": [
+      "Fixture passes: inspect test isolation/environment mismatch; no immediate production fix.",
+      "Fixture fails: identify the exact updater behavior and propose a separately preregistered narrow fix."
+    ],
+    "resources": {
+      "cpuOnly": true,
+      "gpu": false,
+      "inference": false,
+      "server": false,
+      "network": "none",
+      "build": false
+    }
+  },
+  "amendment02": {
+    "capturedAtUtc": "2026-10-24T23:32:03Z",
+    "cause": "The Q106/Q107 test runner explicitly injected empty LLAMACODE_Q77_SERVER_URL and LLAMACODE_Q102_SERVER_URL names. update-binary.sh checks env-name presence, so it created launcher.env. No LLAMACODE_* names existed in the outer environment.",
+    "runs": [
+      "direct shell test with both LLAMACODE endpoint vars absent",
+      "isolated CTest test with both vars absent",
+      "full scripts/tests-linux.sh Release with both vars absent"
+    ],
+    "decisionRules": [
+      "If all pass, correct Q106 result: false failure caused by the test-runner environment; no code change.",
+      "If a run fails, preserve the log and diagnose before editing."
+    ],
+    "resources": {
+      "cpuOnly": true,
+      "gpu": false,
+      "inference": false,
+      "server": false,
+      "network": "none",
+      "codeChanges": false
+    }
+  },
+  "finalResult": "Direct script PASS; isolated CTest 1/1 PASS; full Linux Release 95/95 PASS with LLAMACODE endpoints absent."
+}

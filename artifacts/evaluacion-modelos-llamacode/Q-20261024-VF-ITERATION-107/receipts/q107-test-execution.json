@@ -1,0 +1,79 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-107",
+  "lockToken": "307e2ed3-6036-4a52-852b-d4f481e21ee0",
+  "capturedAtUtc": "2026-10-24T23:30:06.796472+00:00",
+  "runs": [
+    {
+      "name": "direct-script",
+      "command": [
+        "bash",
+        "/home/cristian/.cache/llamacode/source/tests/test_update_binary_sh.sh"
+      ],
+      "cwd": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode",
+      "startedAtUtc": "2026-10-24T23:29:59.085901+00:00",
+      "exitCode": 1,
+      "log": "direct-script.log",
+      "outputTail": [
+        "  PASS estado previo al rollback manual: v3 con alive en .prev",
+        "  PASS --rollback sale 0",
+        "  PASS --rollback deja la anterior y guarda la que saco en .failed",
+        "  PASS --rollback reescribe el lanzador si la anterior no lo tenia",
+        "  PASS sin .prev, --rollback falla claro y no toca nada",
+        "  PASS release firmada: verifica la procedencia con gh",
+        "  PASS verifica contra el workflow de releases del repo",
+        "  PASS sin attestation valida: no instala",
+        "  PASS sin attestation valida: la instalacion queda intacta",
+        "  PASS releases anteriores a la firma no se verifican",
+        "  PASS sin gh logueado: avisa y sigue (el hash igual se verifica)",
+        "  PASS LC_REQUIRE_ATTESTATION exige la firma sin version",
+        "  PASS LC_REQUIRE_ATTESTATION sin gh logueado: no instala (no cae al hash solo)",
+        "  PASS el script copiado a TMP se borra al terminar",
+        "  PASS tambien se borra si el update falla",
+        "  PASS el script del repo (otro nombre) nunca se borra",
+        "  PASS package-linux.sh fija linuxdeploy y su plugin Qt con SHA-256",
+        "2 FALLAS"
+      ]
+    },
+    {
+      "name": "isolated-ctest",
+      "command": [
+        "ctest",
+        "--test-dir",
+        "/home/cristian/.cache/llamacode/build_tests_linux",
+        "-R",
+        "^update_binary_sh$",
+        "--output-on-failure"
+      ],
+      "cwd": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode",
+      "startedAtUtc": "2026-10-24T23:30:02.952128+00:00",
+      "exitCode": 8,
+      "log": "isolated-ctest.log",
+      "outputTail": [
+        "  PASS releases anteriores a la firma no se verifican",
+        "  PASS sin gh logueado: avisa y sigue (el hash igual se verifica)",
+        "  PASS LC_REQUIRE_ATTESTATION exige la firma sin version",
+        "  PASS LC_REQUIRE_ATTESTATION sin gh logueado: no instala (no cae al hash solo)",
+        "  PASS el script copiado a TMP se borra al terminar",
+        "  PASS tambien se borra si el update falla",
+        "  PASS el script del repo (otro nombre) nunca se borra",
+        "  PASS package-linux.sh fija linuxdeploy y su plugin Qt con SHA-256",
+        "2 FALLAS",
+        "",
+        "",
+        "0% tests passed, 1 tests failed out of 1",
+        "",
+        "Total Test time (real) =   3.84 sec",
+        "",
+        "The following tests FAILED:",
+        "\t 77 - update_binary_sh (Failed)",
+        "Errors while running CTest"
+      ]
+    }
+  ],
+  "resources": {
+    "cudaVisibleDevices": "empty",
+    "model": false,
+    "inferenceServer": false,
+    "gpu": false
+  }
+}

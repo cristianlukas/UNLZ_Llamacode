@@ -1,0 +1,16 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-107",
+  "capturedAtUtc": "2026-10-24T23:36:12Z",
+  "testsChildProcessesStopped": true,
+  "inferenceStarted": false,
+  "computeAppsAtPostflight": [
+    {
+      "pid": 3952271,
+      "name": "artcraft-launcher",
+      "gpu": "GPU0",
+      "memoryMiB": 207
+    }
+  ],
+  "gpuChangedByTask": false,
+  "externalProcessesStopped": false
+}

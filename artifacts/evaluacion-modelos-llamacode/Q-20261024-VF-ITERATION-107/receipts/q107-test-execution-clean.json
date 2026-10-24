@@ -1,0 +1,91 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-107",
+  "lockToken": "307e2ed3-6036-4a52-852b-d4f481e21ee0",
+  "capturedAtUtc": "2026-10-24T23:34:40.891192+00:00",
+  "amendment": "02; LLAMACODE endpoint variables absent, not empty",
+  "runs": [
+    {
+      "name": "direct-clean",
+      "command": [
+        "bash",
+        "/home/cristian/.cache/llamacode/source/tests/test_update_binary_sh.sh"
+      ],
+      "startedAtUtc": "2026-10-24T23:32:23.038242+00:00",
+      "exitCode": 0,
+      "log": "direct-clean.log",
+      "outputTail": [
+        "  PASS sin .prev, --rollback falla claro y no toca nada",
+        "  PASS release firmada: verifica la procedencia con gh",
+        "  PASS verifica contra el workflow de releases del repo",
+        "  PASS sin attestation valida: no instala",
+        "  PASS sin attestation valida: la instalacion queda intacta",
+        "  PASS releases anteriores a la firma no se verifican",
+        "  PASS sin gh logueado: avisa y sigue (el hash igual se verifica)",
+        "  PASS LC_REQUIRE_ATTESTATION exige la firma sin version",
+        "  PASS LC_REQUIRE_ATTESTATION sin gh logueado: no instala (no cae al hash solo)",
+        "  PASS el script copiado a TMP se borra al terminar",
+        "  PASS tambien se borra si el update falla",
+        "  PASS el script del repo (otro nombre) nunca se borra",
+        "  PASS package-linux.sh fija linuxdeploy y su plugin Qt con SHA-256",
+        "TODO OK"
+      ]
+    },
+    {
+      "name": "ctest-isolated-clean",
+      "command": [
+        "ctest",
+        "--test-dir",
+        "/home/cristian/.cache/llamacode/build_tests_linux",
+        "-R",
+        "^update_binary_sh$",
+        "--output-on-failure"
+      ],
+      "startedAtUtc": "2026-10-24T23:32:26.905711+00:00",
+      "exitCode": 0,
+      "log": "ctest-isolated-clean.log",
+      "outputTail": [
+        "Internal ctest changing into directory: /home/cristian/.cache/llamacode/build_tests_linux",
+        "Test project /media/cristian/Disco local/LlamaCode-cache/build_tests_linux",
+        "    Start 77: update_binary_sh",
+        "1/1 Test #77: update_binary_sh .................   Passed    3.83 sec",
+        "",
+        "100% tests passed, 0 tests failed out of 1",
+        "",
+        "Total Test time (real) =   3.83 sec"
+      ]
+    },
+    {
+      "name": "full-linux-release-clean",
+      "command": [
+        "./scripts/tests-linux.sh",
+        "Release"
+      ],
+      "startedAtUtc": "2026-10-24T23:32:30.737808+00:00",
+      "exitCode": 0,
+      "log": "full-linux-release-clean.log",
+      "outputTail": [
+        "90/95 Test #91: qa_background_calc_offscreen_guard ...   Passed    0.00 sec",
+        "      Start 67: test_gateway",
+        "91/95 Test #67: test_gateway .........................   Passed    0.01 sec",
+        "      Start 88: qa_ocr_probe_help",
+        "92/95 Test #88: qa_ocr_probe_help ....................   Passed    0.00 sec",
+        "      Start 89: qa_ocr_probe_offscreen_guard",
+        "93/95 Test #89: qa_ocr_probe_offscreen_guard .........   Passed    0.00 sec",
+        "      Start 20: test_secret_store",
+        "94/95 Test #20: test_secret_store ....................   Passed    0.01 sec",
+        "95/95 Test #41: test_agent_tools .....................   Passed  112.55 sec",
+        "",
+        "100% tests passed, 0 tests failed out of 95",
+        "",
+        "Total Test time (real) = 112.55 sec"
+      ]
+    }
+  ],
+  "resources": {
+    "cudaVisibleDevices": "empty",
+    "endpointVariables": "unset",
+    "model": false,
+    "inferenceServer": false,
+    "gpu": false
+  }
+}

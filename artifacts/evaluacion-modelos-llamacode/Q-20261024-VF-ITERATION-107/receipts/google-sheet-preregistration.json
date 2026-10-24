@@ -1,0 +1,10 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-107",
+  "lockToken": "307e2ed3-6036-4a52-852b-d4f481e21ee0",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "evaluationRange": "Evaluaciones LlamaCode!A327:J327",
+  "actionableRange": "Accionables!D7:D7,H7:K7,M7:N7",
+  "preregisteredBeforeExecution": true,
+  "readback": "Exact preregistration verified before execution; WRAP retained.",
+  "capturedAtUtc": "2026-10-24T23:29:15.857525+00:00"
+}

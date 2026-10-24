@@ -1,0 +1,8 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-107",
+  "lockToken": "307e2ed3-6036-4a52-852b-d4f481e21ee0",
+  "capturedAtUtc": "2026-10-24T23:30:45Z",
+  "trigger": "same two failures reproduced by direct and CTest isolated runs",
+  "experiment": "minimal temporary package/wrapper/menu/autostart fixture; inspect output and before/after contents; no repo edits",
+  "preRegisteredBeforeExecution": true
+}

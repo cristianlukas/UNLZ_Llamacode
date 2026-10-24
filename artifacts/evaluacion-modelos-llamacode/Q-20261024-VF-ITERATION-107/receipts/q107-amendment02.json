@@ -1,0 +1,14 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-107",
+  "lockToken": "307e2ed3-6036-4a52-852b-d4f481e21ee0",
+  "capturedAtUtc": "2026-10-24T23:32:03Z",
+  "cause": "The Q106/Q107 test runner explicitly injected empty LLAMACODE_Q77_SERVER_URL and LLAMACODE_Q102_SERVER_URL names. update-binary.sh checks env-name presence, so it created launcher.env. No LLAMACODE_* names existed in the outer environment.",
+  "runs": [
+    "direct shell test with both LLAMACODE endpoint vars absent",
+    "isolated CTest test with both vars absent",
+    "full scripts/tests-linux.sh Release with both vars absent"
+  ],
+  "preregisteredBeforeExecution": true,
+  "readbackVerified": true,
+  "readbackNote": "Exact amendment02 values verified via get_spreadsheet_cells before reruns; WRAP retained."
+}

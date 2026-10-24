@@ -1,0 +1,78 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-106",
+  "lockToken": "cb78d8ff-dcf8-460a-936f-62f50f0fb848",
+  "capturedAtUtc": "2026-10-24T23:28:23Z",
+  "status": "pass_after_environment_correction_in_q107",
+  "linuxReleaseSuite": {
+    "command": "CUDA_VISIBLE_DEVICES= LLAMACODE_Q77_SERVER_URL= LLAMACODE_Q102_SERVER_URL= LC_JOBS=2 ./scripts/tests-linux.sh Release",
+    "passed": 94,
+    "total": 95,
+    "failedTest": "update_binary_sh",
+    "failedAssertions": [
+      "wrapper sin launcher.env: la entrada del menu queda igual",
+      "wrapper sin launcher.env: avisa y no toca el autostart"
+    ],
+    "log": "/home/cristian/.cache/llamacode/build_tests_linux/Testing/Temporary/LastTest.log"
+  },
+  "focusedQtCases": {
+    "binary": "/home/cristian/.cache/llamacode/build_tests_linux/test_agent_wire",
+    "cases": [
+      "toolBatchRequiresReplan_onlyTaskBatchesFanOut",
+      "nativeToolBatchReplansAfterFirstResult",
+      "nativeMixedTaskBatchDoesNotDispatchLaterTaskEarly"
+    ],
+    "passed": 3,
+    "failed": 0
+  },
+  "memoryGuardReview": {
+    "astraDefault1m": {
+      "requestsExact": "10/10",
+      "processTreeRssGiB": 51.14,
+      "minMemAvailableGiB": 55.728,
+      "oom": 0
+    },
+    "solQ34": {
+      "completed": true,
+      "tensorParallel": 2,
+      "gpus": "2x RTX 3090",
+      "oom": 0,
+      "continuousPsiAvailable": false
+    },
+    "q103": {
+      "rssGiB": 56.013,
+      "holdSeconds": 12,
+      "minMemAvailableGiB": 53.386,
+      "maxPsiAvg10Pct": 0.36,
+      "warnings": 0,
+      "hardStops": 0,
+      "oomDelta": 0
+    },
+    "decision": "Retain Q102 host-pressure thresholds; RSS alone is not pressure; detector does not monitor VRAM or predict every crash."
+  },
+  "resources": {
+    "host": "2x RTX 3090 + 128 GB RAM",
+    "gpuUsedByTests": false,
+    "modelLoaded": false,
+    "inferenceServerStarted": false,
+    "cudaVisibleDevices": "empty",
+    "memoryCapsChanged": false,
+    "sourceFilesChanged": false,
+    "postflightComputeApp": "ArtCraft PID 3952271, 207 MiB GPU0",
+    "gpuQueryMiBUtil": [
+      "GPU0 1068 MiB, 19%",
+      "GPU1 110 MiB, 28%"
+    ],
+    "externalProcessesStopped": false
+  },
+  "next": "Q107 CPU-only diagnosis of unrelated update_binary_sh failure after separate preregistration.",
+  "runnerEnvironmentNote": "Initial Q106 command injected empty LLAMACODE_Q77_SERVER_URL and LLAMACODE_Q102_SERVER_URL variables; updater checks variable-name presence. Q107 reran the full Linux Release suite with these variables absent and got 95/95.",
+  "correctedRerun": {
+    "taskId": "Q-20261024-VF-ITERATION-107",
+    "scriptExitCode": 0,
+    "ctestPassed": 95,
+    "ctestTotal": 95,
+    "focusedUpdaterDirectExitCode": 0,
+    "focusedUpdaterCtestExitCode": 0,
+    "log": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-107/receipts/full-linux-release-clean.log"
+  }
+}
