@@ -1,0 +1,26 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-105",
+  "status": "complete-diagnostic-inconclusive-on-component-attribution",
+  "completedAtUtc": "2026-10-24T23:15:15Z",
+  "preregistrationReceipt": "receipts/q105-preregistration.json",
+  "sheetPreregistration": "receipts/google-sheet-sync-q105-prereg.json",
+  "forensicReceipt": "receipts/q105-forensic-check.json",
+  "logInventory": "receipts/q105-q100-log-inventory.json",
+  "cpuRegressionReceipt": "receipts/q105-cpu-regressions.json",
+  "checks": 34,
+  "serialFinalCorrect": "3/3",
+  "parallelFinalCorrect": "1/3",
+  "parallelWrongFinalSeeds": [
+    5051,
+    5053
+  ],
+  "taskCardOutputs": "All six runs contain the two expected distinct markers; in both wrong parallel seeds, task-card output order is ALPHA then BETA, while the parent final mapping is reversed.",
+  "componentAttribution": "Not conclusive. Receipts and collector discard stable task/tool-call correlation IDs. Evidence locates mismatch after task outputs at parent final composition, but cannot establish whether model synthesis or an upstream scheduler association caused it.",
+  "decision": "Do not adopt parallel2; retain ASTRA DEFAULT 1M serial default and preserve SOL. No production code/profile/model changes. No HyperQwen rerun; Q101 gate remains.",
+  "nextGate": "Only reconsider parallel2 after a newly preregistered diagnostic captures stable task-call IDs through request, task result and final answer; any model run must keep the exact mapping gate.",
+  "serverUsed": false,
+  "modelUsed": false,
+  "gpuUsed": false,
+  "networkUsed": false,
+  "productionChanges": false
+}

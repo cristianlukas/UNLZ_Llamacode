@@ -1,0 +1,11 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-105",
+  "attempt": 1,
+  "status": "harness-error-before-analysis",
+  "failure": "El cálculo de ROOT apuntaba al directorio padre del checkout (parents[5] en vez de parents[4]); los archivos Q100 no se abrieron.",
+  "checksRun": 0,
+  "gpuUsed": false,
+  "serverUsed": false,
+  "networkUsed": false,
+  "amendment": "Corregir sólo la profundidad de ROOT; protocolo, entradas, assertions y criterios permanecen idénticos."
+}

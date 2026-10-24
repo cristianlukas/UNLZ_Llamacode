@@ -1,0 +1,223 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-105",
+  "sourceTask": "Q-20261024-VF-ITERATION-100",
+  "status": "pass-diagnostic-inconclusive-on-component-attribution",
+  "checksPassed": 34,
+  "checksFailed": 0,
+  "serialFinalCorrect": "3/3",
+  "parallelFinalCorrect": "1/3",
+  "parallelWrongFinalSeeds": [
+    5051,
+    5053
+  ],
+  "taskCardMarkerOrderByRun": {
+    "serial-5051": [
+      "ALPHA",
+      "BETA"
+    ],
+    "parallel2-5051": [
+      "ALPHA",
+      "BETA"
+    ],
+    "parallel2-5052": [
+      "ALPHA",
+      "BETA"
+    ],
+    "serial-5052": [
+      "ALPHA",
+      "BETA"
+    ],
+    "serial-5053": [
+      "ALPHA",
+      "BETA"
+    ],
+    "parallel2-5053": [
+      "ALPHA",
+      "BETA"
+    ]
+  },
+  "taskCardsHaveStableCorrelationIds": false,
+  "interpretation": "En dos semillas parallel2 los dos resultados de task contienen los marcadores correctos, mientras el texto final invierte las etiquetas. Esto apunta al ensamblado/respuesta final del padre, pero el recibo no persiste IDs de llamada/tarea para atribuirlo definitivamente al scheduler o al modelo. No hay defecto de dispatch reproducido ni base para adoptar parallel2.",
+  "memory": {
+    "gpuUsed": false,
+    "serverUsed": false,
+    "networkUsed": false
+  },
+  "evidence": [
+    "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-100/runs/attempt-05-complete-label-mapping-issue/live-probe-result.json",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-100/runs/attempt-05-complete-label-mapping-issue/rescored-result.json",
+    "tests/test_q100_subagent_probe.cpp"
+  ],
+  "checks": [
+    {
+      "name": "six-runs-present",
+      "passed": true,
+      "detail": "count=6"
+    },
+    {
+      "name": "two-task-cards-serial-5051",
+      "passed": true,
+      "detail": "count=2"
+    },
+    {
+      "name": "one-marker-serial-5051-0",
+      "passed": true,
+      "detail": "alpha=True, beta=False"
+    },
+    {
+      "name": "one-marker-serial-5051-1",
+      "passed": true,
+      "detail": "alpha=False, beta=True"
+    },
+    {
+      "name": "both-distinct-markers-serial-5051",
+      "passed": true,
+      "detail": "order=['ALPHA', 'BETA']"
+    },
+    {
+      "name": "two-task-cards-parallel2-5051",
+      "passed": true,
+      "detail": "count=2"
+    },
+    {
+      "name": "one-marker-parallel2-5051-0",
+      "passed": true,
+      "detail": "alpha=True, beta=False"
+    },
+    {
+      "name": "one-marker-parallel2-5051-1",
+      "passed": true,
+      "detail": "alpha=False, beta=True"
+    },
+    {
+      "name": "both-distinct-markers-parallel2-5051",
+      "passed": true,
+      "detail": "order=['ALPHA', 'BETA']"
+    },
+    {
+      "name": "two-task-cards-parallel2-5052",
+      "passed": true,
+      "detail": "count=2"
+    },
+    {
+      "name": "one-marker-parallel2-5052-0",
+      "passed": true,
+      "detail": "alpha=True, beta=False"
+    },
+    {
+      "name": "one-marker-parallel2-5052-1",
+      "passed": true,
+      "detail": "alpha=False, beta=True"
+    },
+    {
+      "name": "both-distinct-markers-parallel2-5052",
+      "passed": true,
+      "detail": "order=['ALPHA', 'BETA']"
+    },
+    {
+      "name": "two-task-cards-serial-5052",
+      "passed": true,
+      "detail": "count=2"
+    },
+    {
+      "name": "one-marker-serial-5052-0",
+      "passed": true,
+      "detail": "alpha=True, beta=False"
+    },
+    {
+      "name": "one-marker-serial-5052-1",
+      "passed": true,
+      "detail": "alpha=False, beta=True"
+    },
+    {
+      "name": "both-distinct-markers-serial-5052",
+      "passed": true,
+      "detail": "order=['ALPHA', 'BETA']"
+    },
+    {
+      "name": "two-task-cards-serial-5053",
+      "passed": true,
+      "detail": "count=2"
+    },
+    {
+      "name": "one-marker-serial-5053-0",
+      "passed": true,
+      "detail": "alpha=True, beta=False"
+    },
+    {
+      "name": "one-marker-serial-5053-1",
+      "passed": true,
+      "detail": "alpha=False, beta=True"
+    },
+    {
+      "name": "both-distinct-markers-serial-5053",
+      "passed": true,
+      "detail": "order=['ALPHA', 'BETA']"
+    },
+    {
+      "name": "two-task-cards-parallel2-5053",
+      "passed": true,
+      "detail": "count=2"
+    },
+    {
+      "name": "one-marker-parallel2-5053-0",
+      "passed": true,
+      "detail": "alpha=True, beta=False"
+    },
+    {
+      "name": "one-marker-parallel2-5053-1",
+      "passed": true,
+      "detail": "alpha=False, beta=True"
+    },
+    {
+      "name": "both-distinct-markers-parallel2-5053",
+      "passed": true,
+      "detail": "order=['ALPHA', 'BETA']"
+    },
+    {
+      "name": "serial-final-3-of-3",
+      "passed": true,
+      "detail": "correct=3/3"
+    },
+    {
+      "name": "parallel-final-1-of-3",
+      "passed": true,
+      "detail": "correct=1/3"
+    },
+    {
+      "name": "parallel-wrong-seeds",
+      "passed": true,
+      "detail": "observed=[('parallel2', 5051), ('parallel2', 5053)]"
+    },
+    {
+      "name": "wrong-final-has-correct-task-markers-parallel2-5051",
+      "passed": true,
+      "detail": "task-card marker order=['ALPHA', 'BETA']; final mapping is reversed"
+    },
+    {
+      "name": "wrong-final-has-correct-task-markers-parallel2-5053",
+      "passed": true,
+      "detail": "task-card marker order=['ALPHA', 'BETA']; final mapping is reversed"
+    },
+    {
+      "name": "task-card-identities-not-persisted",
+      "passed": true,
+      "detail": "persisted fields=['ok', 'output', 'toolTrace']"
+    },
+    {
+      "name": "cpp-collector-discards-correlation-identifiers",
+      "passed": true,
+      "detail": "task card projection stores only ok, output and toolTrace"
+    },
+    {
+      "name": "scorer-reads-final-assistant-answer",
+      "passed": true,
+      "detail": "correctness is evaluated on the final assistant text, not by reordering task-card outputs"
+    },
+    {
+      "name": "one-million-profile-keeps-serial-default",
+      "passed": true,
+      "detail": "ASTRA production 1M context remains serial by default"
+    }
+  ]
+}

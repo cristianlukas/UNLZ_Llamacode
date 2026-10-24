@@ -1,0 +1,15 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-105",
+  "registeredAtUtc": "2026-10-24T23:10:27Z",
+  "ownerToken": "ca6de9d4-24aa-446d-8804-523534f16ccc",
+  "status": "preregistered",
+  "question": "Q100 parallel2 mapping reversal: scheduler/subagent cross-talk or harness/scorer attribution?",
+  "scope": "CPU-only existing Q100 seeds 5051-5053; then synthetic scorer fixtures with stable IDs/order changes; no server/model/network/GPU/production edits.",
+  "criteria": {
+    "defect": "Only if persisted IDs and a regression demonstrate an incorrect LlamaCode scheduler/scorer association.",
+    "otherwise": "inconclusive if required identities are absent; keep parallel2 and HyperQwen gated."
+  },
+  "resultsRange": "Evaluaciones LlamaCode!A325:J325",
+  "actionableRange": "Accionables!A16:N16",
+  "artifacts": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-105/PLAN.md"
+}

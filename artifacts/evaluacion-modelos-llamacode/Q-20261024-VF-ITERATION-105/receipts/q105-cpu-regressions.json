@@ -1,0 +1,20 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-105",
+  "command": "env -u LLAMACODE_Q100_SERVER_URL CUDA_VISIBLE_DEVICES= /home/cristian/.cache/llamacode/build_tests_linux/test_q100_subagent_probe",
+  "binarySha256": "63961a4ce07ff85d7f7a1d421996e99f739d7a467f99659f5a977c4ad0d17dbd",
+  "testSource": "tests/test_q100_subagent_probe.cpp",
+  "testFunctions": [
+    "productionOneMillionContextStaysSerial",
+    "exactMarkerLabelsAcceptCorrectOrder",
+    "exactMarkerLabelsRejectSwappedOrder",
+    "exactMarkerLabelsRejectMissingValue",
+    "exactMarkerLabelsRejectCorrectReasoningWithWrongFinalAnswer"
+  ],
+  "passed": 7,
+  "failed": 0,
+  "skipped": 1,
+  "skip": "realBackendSubagentFanoutProbe skipped because opt-in endpoint was unset; no server/model/GPU/network used.",
+  "gpuUsed": false,
+  "serverUsed": false,
+  "networkUsed": false
+}

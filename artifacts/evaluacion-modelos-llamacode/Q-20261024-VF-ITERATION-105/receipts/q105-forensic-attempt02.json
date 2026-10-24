@@ -1,0 +1,11 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-105",
+  "attempt": 2,
+  "status": "harness-schema-error-before-final-reconciliation",
+  "failure": "El raw live probe contiene las muestras pero finalLabelMappingCorrect vive en el artefacto rescored; el script leyó el campo del documento equivocado.",
+  "partialChecksCompleted": 9,
+  "gpuUsed": false,
+  "serverUsed": false,
+  "networkUsed": false,
+  "amendment": "Unir raw y rescored por clave estable (seed, policy); no cambiar entradas, asserts ni criterios."
+}

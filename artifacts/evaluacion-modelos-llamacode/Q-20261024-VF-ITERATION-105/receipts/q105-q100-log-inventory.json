@@ -1,0 +1,237 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-105",
+  "source": "Q100 attempt05 live-probe.log",
+  "records": [
+    {
+      "seed": 5051,
+      "policy": "serial",
+      "runKeys": [
+        "acceptedTasks",
+        "alphaMarkerReturned",
+        "betaMarkerReturned",
+        "elapsedMs",
+        "exactFinal",
+        "finalText",
+        "firstBatchTaskCalls",
+        "gitWorktreeListRead",
+        "maxBusySubagentCards",
+        "policy",
+        "qualityPassed",
+        "remainingWorktreeCount",
+        "seed",
+        "started",
+        "taskCalls",
+        "taskCards",
+        "turnFinished",
+        "unexpectedParentTools",
+        "unexpectedSubagentTools"
+      ],
+      "taskCardKeys": [
+        [
+          "ok",
+          "output",
+          "toolTrace"
+        ],
+        [
+          "ok",
+          "output",
+          "toolTrace"
+        ]
+      ],
+      "taskCardCount": 2
+    },
+    {
+      "seed": 5051,
+      "policy": "parallel2",
+      "runKeys": [
+        "acceptedTasks",
+        "alphaMarkerReturned",
+        "betaMarkerReturned",
+        "elapsedMs",
+        "exactFinal",
+        "finalText",
+        "firstBatchTaskCalls",
+        "gitWorktreeListRead",
+        "maxBusySubagentCards",
+        "policy",
+        "qualityPassed",
+        "remainingWorktreeCount",
+        "seed",
+        "started",
+        "taskCalls",
+        "taskCards",
+        "turnFinished",
+        "unexpectedParentTools",
+        "unexpectedSubagentTools"
+      ],
+      "taskCardKeys": [
+        [
+          "ok",
+          "output",
+          "toolTrace"
+        ],
+        [
+          "ok",
+          "output",
+          "toolTrace"
+        ]
+      ],
+      "taskCardCount": 2
+    },
+    {
+      "seed": 5052,
+      "policy": "parallel2",
+      "runKeys": [
+        "acceptedTasks",
+        "alphaMarkerReturned",
+        "betaMarkerReturned",
+        "elapsedMs",
+        "exactFinal",
+        "finalText",
+        "firstBatchTaskCalls",
+        "gitWorktreeListRead",
+        "maxBusySubagentCards",
+        "policy",
+        "qualityPassed",
+        "remainingWorktreeCount",
+        "seed",
+        "started",
+        "taskCalls",
+        "taskCards",
+        "turnFinished",
+        "unexpectedParentTools",
+        "unexpectedSubagentTools"
+      ],
+      "taskCardKeys": [
+        [
+          "ok",
+          "output",
+          "toolTrace"
+        ],
+        [
+          "ok",
+          "output",
+          "toolTrace"
+        ]
+      ],
+      "taskCardCount": 2
+    },
+    {
+      "seed": 5052,
+      "policy": "serial",
+      "runKeys": [
+        "acceptedTasks",
+        "alphaMarkerReturned",
+        "betaMarkerReturned",
+        "elapsedMs",
+        "exactFinal",
+        "finalText",
+        "firstBatchTaskCalls",
+        "gitWorktreeListRead",
+        "maxBusySubagentCards",
+        "policy",
+        "qualityPassed",
+        "remainingWorktreeCount",
+        "seed",
+        "started",
+        "taskCalls",
+        "taskCards",
+        "turnFinished",
+        "unexpectedParentTools",
+        "unexpectedSubagentTools"
+      ],
+      "taskCardKeys": [
+        [
+          "ok",
+          "output",
+          "toolTrace"
+        ],
+        [
+          "ok",
+          "output",
+          "toolTrace"
+        ]
+      ],
+      "taskCardCount": 2
+    },
+    {
+      "seed": 5053,
+      "policy": "serial",
+      "runKeys": [
+        "acceptedTasks",
+        "alphaMarkerReturned",
+        "betaMarkerReturned",
+        "elapsedMs",
+        "exactFinal",
+        "finalText",
+        "firstBatchTaskCalls",
+        "gitWorktreeListRead",
+        "maxBusySubagentCards",
+        "policy",
+        "qualityPassed",
+        "remainingWorktreeCount",
+        "seed",
+        "started",
+        "taskCalls",
+        "taskCards",
+        "turnFinished",
+        "unexpectedParentTools",
+        "unexpectedSubagentTools"
+      ],
+      "taskCardKeys": [
+        [
+          "ok",
+          "output",
+          "toolTrace"
+        ],
+        [
+          "ok",
+          "output",
+          "toolTrace"
+        ]
+      ],
+      "taskCardCount": 2
+    },
+    {
+      "seed": 5053,
+      "policy": "parallel2",
+      "runKeys": [
+        "acceptedTasks",
+        "alphaMarkerReturned",
+        "betaMarkerReturned",
+        "elapsedMs",
+        "exactFinal",
+        "finalText",
+        "firstBatchTaskCalls",
+        "gitWorktreeListRead",
+        "maxBusySubagentCards",
+        "policy",
+        "qualityPassed",
+        "remainingWorktreeCount",
+        "seed",
+        "started",
+        "taskCalls",
+        "taskCards",
+        "turnFinished",
+        "unexpectedParentTools",
+        "unexpectedSubagentTools"
+      ],
+      "taskCardKeys": [
+        [
+          "ok",
+          "output",
+          "toolTrace"
+        ],
+        [
+          "ok",
+          "output",
+          "toolTrace"
+        ]
+      ],
+      "taskCardCount": 2
+    }
+  ],
+  "recordCount": 6,
+  "correlationFieldsPersisted": false,
+  "note": "Se guardan únicamente claves/cantidades; no se copian prompts ni respuestas textuales."
+}
