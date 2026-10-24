@@ -1,0 +1,13 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-109",
+  "recordedAtUtc": "2026-10-24T23:57:03Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet": "Evaluaciones LlamaCode",
+  "range": "A329:J329",
+  "cells": 10,
+  "write": "Q109 integration preregistration before test",
+  "readback": "exact",
+  "wrap": "10/10 WRAP",
+  "firstReadbackAttempt": "400 invalid field mask included dataValidation under effectiveFormat; no write retry; corrected to valid CellData field mask and readback succeeded",
+  "testStarted": false
+}

@@ -1,0 +1,84 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-109",
+  "recordedAtUtc": "2026-10-24T23:57:44Z",
+  "status": "pass",
+  "baseline": {
+    "memAvailableGiB": 109.84251403808594,
+    "memoryPsiAvg10Pct": {
+      "some": 0.0,
+      "full": 0.0
+    },
+    "oomKill": 0
+  },
+  "baselineWarningOnly": false,
+  "normalSamples": [
+    {
+      "index": 1,
+      "reason": null,
+      "severeStreak": 0,
+      "warning": false,
+      "candidateAlive": true,
+      "memAvailableGiB": 109.843,
+      "memoryPsiAvg10Pct": {
+        "some": 0.0,
+        "full": 0.0
+      },
+      "oomKill": 0
+    },
+    {
+      "index": 2,
+      "reason": null,
+      "severeStreak": 0,
+      "warning": false,
+      "candidateAlive": true,
+      "memAvailableGiB": 109.77,
+      "memoryPsiAvg10Pct": {
+        "some": 0.0,
+        "full": 0.0
+      },
+      "oomKill": 0
+    },
+    {
+      "index": 3,
+      "reason": null,
+      "severeStreak": 0,
+      "warning": false,
+      "candidateAlive": true,
+      "memAvailableGiB": 109.691,
+      "memoryPsiAvg10Pct": {
+        "some": 0.0,
+        "full": 0.0
+      },
+      "oomKill": 0
+    }
+  ],
+  "missingTelemetry": {
+    "reason": "memory telemetry unavailable: cannot read MemAvailable: [Errno 2] No such file or directory: '/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-109/runs/live-guard-integration-01/intentionally-missing-procfs/meminfo'",
+    "severeStreak": 0,
+    "warning": false
+  },
+  "missingCandidateExitCode": -15,
+  "unrelatedControlAliveBeforeCleanup": true,
+  "finalSample": {
+    "memAvailableGiB": 109.69005966186523,
+    "memoryPsiAvg10Pct": {
+      "some": 0.0,
+      "full": 0.0
+    },
+    "oomKill": 0
+  },
+  "checks": {
+    "baseSampleValidAndNoStop": true,
+    "threeLiveReadsContinue": true,
+    "missingTelemetryFailsClosed": true,
+    "missingTelemetryWritesReason": true,
+    "onlyDesignatedCandidateStopped": true,
+    "normalCandidateHasNoStopFile": true,
+    "noGlobalOomIncrement": true,
+    "completeFinalProcSample": true
+  },
+  "modelOrServerStarted": false,
+  "gpuUsed": false,
+  "memoryAllocationGiB": 0,
+  "foreignProcessSignaled": false
+}

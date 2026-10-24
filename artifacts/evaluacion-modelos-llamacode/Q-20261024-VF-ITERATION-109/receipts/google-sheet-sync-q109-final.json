@@ -1,0 +1,29 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-109",
+  "recordedAtUtc": "2026-10-24T23:58:31Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "writes": [
+    {
+      "sheet": "Evaluaciones LlamaCode",
+      "range": "A329:J329",
+      "cells": 10,
+      "readback": "exact",
+      "wrap": "10/10 WRAP",
+      "status": "Cerrada · 8/8 PASS"
+    }
+  ],
+  "readbackSummary": {
+    "validProcSamples": 3,
+    "baselineMemAvailableGiB": 109.843,
+    "finalMemAvailableGiB": 109.69,
+    "psiSomeFullPct": 0.0,
+    "oomBaselineAndFinal": 0,
+    "missingTelemetry": "explicit reason written; designated candidate exited -15",
+    "unrelatedControlAlive": true,
+    "memoryAllocationGiB": 0,
+    "gpuUsed": false,
+    "inferenceStarted": false
+  },
+  "visualVerification": "API CellData readback confirms all 10 target cells retain WRAP; no Google-rendered browser session was used.",
+  "firstReadbackIssue": "A read-only call used an invalid field mask (dataValidation nested under effectiveFormat); corrected CellData mask returned all values and WRAP; no retry or duplicate write."
+}

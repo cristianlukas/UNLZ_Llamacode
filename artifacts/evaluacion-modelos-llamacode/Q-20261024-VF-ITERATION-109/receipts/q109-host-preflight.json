@@ -1,0 +1,21 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-109",
+  "capturedAtUtc": "2026-10-24T23:56:20Z",
+  "status": "pass_for_low_risk_live_integration",
+  "memTotalGiB": 123.5,
+  "memAvailableGiB": 110.0,
+  "memoryPsiAvg10Pct": {
+    "some": 0.0,
+    "full": 0.0
+  },
+  "oomKill": 0,
+  "overcommitMemory": 0,
+  "overcommitRatio": 50,
+  "commitLimitGiB": 69.8,
+  "committedAsGiB": 41.2,
+  "commitHeadroomGiB": 28.6,
+  "currentCgroupMemoryMax": "max",
+  "highRssAllocationDecision": "skip_duplicate_high_rss_load; Q103 already reached 56.013 GiB RSS and this host currently has <30 GiB commit headroom",
+  "inferenceOrGpuServerRequired": false,
+  "gpuUsed": false
+}

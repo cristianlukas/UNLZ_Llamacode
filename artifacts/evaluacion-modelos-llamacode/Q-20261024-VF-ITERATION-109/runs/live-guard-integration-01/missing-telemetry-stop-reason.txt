@@ -1,0 +1,1 @@
+memory telemetry unavailable: cannot read MemAvailable: [Errno 2] No such file or directory: '/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-109/runs/live-guard-integration-01/intentionally-missing-procfs/meminfo'
