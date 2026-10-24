@@ -1,0 +1,29 @@
+{
+  "observedAtUtc": "2026-10-24T19:37:43Z",
+  "service": "llamacode-q97-bcb-20261024.service",
+  "serviceResult": "success",
+  "activeState": "inactive",
+  "subState": "dead",
+  "ports8363and18789": "free",
+  "llamaServerProcesses": 0,
+  "memAvailableKiB": 115825188,
+  "swapFreeKiB": 5783212,
+  "memoryPsi": "some avg10=0.00 avg60=0.00 avg300=0.50; full avg10=0.00 avg60=0.00 avg300=0.50",
+  "globalOomKill": 0,
+  "gpus": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "usedMiB": 1064,
+      "totalMiB": 24576
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "usedMiB": 110,
+      "totalMiB": 24576
+    }
+  ],
+  "unrelatedComputeApp": "ArtCraft launcher PID 3952271, 207 MiB on GPU0; preserved; port 47413 belongs to it, not an inference server.",
+  "desktopAndPersistentHostSettings": "untouched"
+}

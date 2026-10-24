@@ -1,0 +1,118 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-97",
+  "closedAtUtc": "2026-10-24T19:37:43Z",
+  "experiment": "Matched BCB-Hard-8 screen, seed 4242, Swift 1.5 Qwen3.8-27B IQ2_XS llama.cpp/no-MTP vs ASTRA Flash-Next IQ2_XS Strata/MTP4; ctx8192; serial arms; each on both RTX 3090 and 128 GB RAM; no memory caps.",
+  "results": {
+    "astra": {
+      "score": 2,
+      "runs": 8,
+      "transportOk": 8,
+      "sandboxErrors": 0,
+      "noFinalContent": 0,
+      "meanPrefillTokS": 366.3625,
+      "meanDecodeTokS": 121.6125,
+      "meanPromptMs": 824.8000000000001,
+      "meanDecodeMs": 19578.45,
+      "meanWallMs": 20407.4125,
+      "totalWallMs": 163259.3,
+      "passedCaseIds": [
+        "BigCodeBench/870",
+        "BigCodeBench/310"
+      ],
+      "failedCaseIds": [
+        "BigCodeBench/509",
+        "BigCodeBench/857",
+        "BigCodeBench/800",
+        "BigCodeBench/123",
+        "BigCodeBench/952",
+        "BigCodeBench/492"
+      ]
+    },
+    "swift": {
+      "score": 2,
+      "runs": 8,
+      "transportOk": 8,
+      "sandboxErrors": 0,
+      "noFinalContent": 0,
+      "meanPrefillTokS": 538.5534437207223,
+      "meanDecodeTokS": 48.33603697365407,
+      "meanPromptMs": 381.31725,
+      "meanDecodeMs": 49733.469,
+      "meanWallMs": 50232.61875,
+      "totalWallMs": 401860.95,
+      "passedCaseIds": [
+        "BigCodeBench/870",
+        "BigCodeBench/310"
+      ],
+      "failedCaseIds": [
+        "BigCodeBench/509",
+        "BigCodeBench/857",
+        "BigCodeBench/800",
+        "BigCodeBench/123",
+        "BigCodeBench/952",
+        "BigCodeBench/492"
+      ]
+    }
+  },
+  "screenGate": {
+    "swiftMinimumPasses": 3,
+    "requiredPassDeltaVsAstra": 2,
+    "transportRequired": 8,
+    "sandboxErrorsRequired": 0,
+    "actualSwiftPasses": 2,
+    "actualAstraPasses": 2,
+    "passed": false,
+    "reason": "Swift scored 2/8, equal to ASTRA; screen gate not met."
+  },
+  "memorySamples": {
+    "samples": 928,
+    "memAvailableMinGiB": 71.864,
+    "globalPsiSomeAvg10PeakPct": 34.72,
+    "globalPsiFullAvg10PeakPct": 34.72,
+    "cgroupPsiSomeAvg10PeakPct": 81.53,
+    "cgroupPsiFullAvg10PeakPct": 81.53,
+    "warningSamples": 64,
+    "globalOomKillMax": 0,
+    "cgroupOomKillMax": 0
+  },
+  "cleanup": {
+    "observedAtUtc": "2026-10-24T19:37:43Z",
+    "service": "llamacode-q97-bcb-20261024.service",
+    "serviceResult": "success",
+    "activeState": "inactive",
+    "subState": "dead",
+    "ports8363and18789": "free",
+    "llamaServerProcesses": 0,
+    "memAvailableKiB": 115825188,
+    "swapFreeKiB": 5783212,
+    "memoryPsi": "some avg10=0.00 avg60=0.00 avg300=0.50; full avg10=0.00 avg60=0.00 avg300=0.50",
+    "globalOomKill": 0,
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3090",
+        "usedMiB": 1064,
+        "totalMiB": 24576
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA GeForce RTX 3090",
+        "usedMiB": 110,
+        "totalMiB": 24576
+      }
+    ],
+    "unrelatedComputeApp": "ArtCraft launcher PID 3952271, 207 MiB on GPU0; preserved; port 47413 belongs to it, not an inference server.",
+    "desktopAndPersistentHostSettings": "untouched"
+  },
+  "interpretation": "Both arms passed the same two tasks and failed the same six. Swift was descriptively faster on prefill but much slower on decode and end-to-end task time in this one-seed screen; no adoption or general superiority claim.",
+  "evidence": [
+    "runs/astra/bcb8-result.json",
+    "runs/swift/bcb8-result.json",
+    "runs/state.json",
+    "runs/host-samples.jsonl",
+    "receipts/q97-static-validation.json",
+    "receipts/q97-host-preflight.json",
+    "receipts/q97-fingerprint-prelaunch.json"
+  ],
+  "googleSheets": "Final row317, Actionables rows 2 and 10, and Inventory rows 7 and 14 will be updated and read back."
+}

@@ -1,0 +1,19 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-97",
+  "recordedAtUtc": "2026-10-24T19:19:04Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "updatedRanges": ["Evaluaciones LlamaCode!A317:J317", "Accionables!A10:M10"],
+  "readback": {
+    "valuesVerified": true,
+    "wrapStrategy": "WRAP",
+    "hostPreflight": "PASS",
+    "inferenceProcesses": 0,
+    "computeApps": 0,
+    "candidatePorts": {"8363": "free", "18789": "free"},
+    "gpus": ["RTX 3090", "RTX 3090"],
+    "memAvailableGiB": 110.705,
+    "psiSomeFullAvg10Pct": [0.0, 0.0],
+    "globalOomKill": 0
+  },
+  "resourceUse": {"gpuQueryReadOnly": true, "model": false, "inference": false, "request": false}
+}

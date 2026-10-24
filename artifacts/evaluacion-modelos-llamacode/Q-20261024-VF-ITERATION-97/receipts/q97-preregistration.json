@@ -1,0 +1,161 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-97",
+  "lockToken": "vf97-swift-astra-bcb8-apparmor-chatgpt-20261024-191553",
+  "recordedAtUtc": "2026-10-24T19:15:53Z",
+  "experimentId": "VF-20261019-01-S51-SWIFT27B-VS-ASTRA-BCB8-SCREEN-Q97",
+  "status": "preregistered_before_cpu_validation_and_model_gpu_use",
+  "question": "Does the installed standard Swift 1.5 Qwen3.8-27B IQ2_XS profile pass a fixed coding screen materially better than the configured ASTRA Flash-Next IQ2_XS profile on both RTX 3090 GPUs with 128 GB RAM, tested serially?",
+  "hardware": {
+    "gpus": [
+      "GPU0 NVIDIA GeForce RTX 3090 24GB",
+      "GPU1 NVIDIA GeForce RTX 3090 24GB"
+    ],
+    "ram": "128 GB host RAM, available to both arms without MemoryMax/MemoryHigh caps",
+    "gpuMode": "Both GPUs are mandatory for each arm; no single-GPU arm.",
+    "concurrency": "One model server and one request at a time; ASTRA completes and cleans up before Swift starts."
+  },
+  "comparison": {
+    "parentTask": "Q-20261024-VF-ITERATION-91",
+    "fixture": {
+      "path": "artifacts/bigcodebench-hard-ubuntu-8.json",
+      "sha256": "11279cde14113fc8527f141c53e14cb5ccf0dba65749081a4f914408e391c268",
+      "tasks": 8
+    },
+    "runner": {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-89/scripts/q89_run_bcb.py",
+      "sha256": "0760f48da5f1804d8605960b7ff913308182f911a35a906313b864a9cff9bf7f"
+    },
+    "control": {
+      "name": "ASTRA configured default · Qwen3.8 Flash-Next IQ2_XS",
+      "liveConfig": "/home/cristian/.config/LlamaCode/astra-iq2xs-strata.json",
+      "liveConfigSha256": "b4a55b263ad8bf1df809afb76603c23d55c1471c2e7cac6997e979bd3ad5e38f",
+      "testConfig": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-97/configs/astra-q97-short-context.json",
+      "testConfigSha256": "d674ed6157061ba04bbd2714f7962f73fc50754221cf16091108ef4f6bfdc18b",
+      "runtime": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata",
+      "runtimeVersion": "0.1.41",
+      "runtimeSha256": "770ecf303a4c6271654339c639392ecb455de3a999bf5d2e8dbc73c879103602",
+      "gpu": [
+        0,
+        1
+      ],
+      "layerSplit": "auto",
+      "mtp": "original MTP, spec=4, spec-min-p=.70",
+      "port": 8363,
+      "modelName": "q97-astra-flash-next-iq2_xs"
+    },
+    "candidate": {
+      "name": "Swift 1.5 Qwen3.8-27B IQ2_XS standard GGUF, no MTP",
+      "model": "/media/cristian/HDD extra/Modelos-eval/Q87-Swift15-Qwen38-27B/models/Swift-1.5-Qwen3.8-27B-GSQ-RCO-IQ2_XS.gguf",
+      "bytes": 8422841632,
+      "sha256": "714c509c3fc496ea4abc409097658df7cd218bc966f78e1459fc1649758a9de8",
+      "runtime": "/media/cristian/Disco local/LlamaCode-cache/embeddinggemma2-eval/runtime/llama-b11554/llama-server",
+      "runtimeCommit": "966baae76",
+      "runtimeSha256": "fe8a7d6073d3e3a276193fcaec162cbf280d2572ad2016c9100fd924be19c6ed",
+      "gpu": [
+        0,
+        1
+      ],
+      "tensorSplit": "1,1",
+      "port": 18789,
+      "modelName": "q97-swift-qwen38-27b"
+    },
+    "matchedParameters": {
+      "context": 8192,
+      "seed": 4242,
+      "temperature": 0.6,
+      "topP": 0.95,
+      "topK": 20,
+      "minP": 0.0,
+      "repeatPenalty": 1.0,
+      "presencePenalty": 0.0,
+      "reasoning": "on",
+      "reasoningBudgetTokens": 2048,
+      "maxOutputTokens": 6144,
+      "grader": "Q72 pinned bubblewrap/seccomp; deny network; 45 s timeout"
+    },
+    "order": [
+      "ASTRA control, 8 tasks",
+      "verified cleanup",
+      "Swift candidate, 8 tasks"
+    ],
+    "noRetries": true
+  },
+  "supervisor": {
+    "type": "transient systemd user service with AppArmorProfile=chatgpt; no persistent unit or autostart",
+    "runtimeMaxSec": 10800,
+    "killMode": "control-group",
+    "nice": 10,
+    "cpuWeight": 20,
+    "ioSchedulingClass": "best-effort",
+    "ioSchedulingPriority": 7,
+    "ioWeight": 25,
+    "memoryMax": "infinity",
+    "memoryHigh": "infinity",
+    "memorySwapMax": "infinity",
+    "persistentSystemChanges": false,
+    "reason": "Q94 replayed Q91/Q93 against ASTRA historical Q14 guard: the Q91/Q93 full>=20% ×30s threshold stopped at 51–52% PSI despite 92–101 GiB available and zero OOM, while the previously used full>=60% or some>=80% ×15s guard would not stop the captured samples. Moderate PSI is therefore a warning; severe PSI retains a hard stop. No host memory caps or persistent settings.",
+    "apparmorProfile": "chatgpt (pre-existing profile; no host policy change; Q96 no-op smoke 2/2)"
+  },
+  "gates": {
+    "preflight": "Both GPUs visible and are RTX 3090; target ports free; no external inference server; MemAvailable >=32 GiB; baseline global memory PSI some/full avg10 <5%; no new cgroup memory OOM events.",
+    "duringRun": [
+      "MemAvailable <32 GiB (hard stop)",
+      "any global or service-cgroup OOM/oom_kill increment (hard stop)",
+      "global memory PSI full avg10 >=60% for 15 consecutive 1-second samples (severe stop)",
+      "global memory PSI some avg10 >=80% for 15 consecutive 1-second samples (severe stop)",
+      "global memory PSI full avg10 >=20% or some avg10 >=70% for 30 consecutive samples is a warning only; record and continue while hard gates pass",
+      "service-cgroup memory PSI is sampled independently and recorded; it is diagnostic, not a stop gate until calibrated against a matched run",
+      "server, transport, sandbox or cleanup failure",
+      "owned model process not visible on both GPU0 and GPU1 after readiness",
+      "systemd transient service exits or reaches RuntimeMaxSec"
+    ],
+    "candidateToRepeat": "Swift >=3/8 and >=2 more passes than ASTRA, transport 8/8 per arm, sandboxErrors=0.",
+    "speed": "No speed claim. New balanced >=3-seed preregistration required; quality non-inferior and >=10% median correct-result E2E improvement.",
+    "memoryPressurePolicy": {
+      "moderateWarning": "global some>=70% or full>=20% for 30 consecutive 1-second samples; do not abort",
+      "severeStop": "global full>=60% or some>=80% for 15 consecutive 1-second samples",
+      "cgroupPsi": "sample full/some avg10 and log; no gate until separately calibrated",
+      "hardStops": "MemAvailable<32 GiB; global oom_kill or service-cgroup oom/oom_kill increments"
+    }
+  },
+  "limitations": [
+    "Profile-level comparison; runtime, MTP/speculation and templates differ.",
+    "Both profiles run at context 8192; this does not measure 1M or 262144-token context.",
+    "A stop gate produces N/D, not 0/8."
+  ],
+  "artifacts": {
+    "plan": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-97/PLAN.md",
+    "supervisor": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-97/scripts/q97_supervised_bcb.py",
+    "supervisorSha256": "663a2762ba8e5433b566c1fa2dbbe692cd8d4272619361c477a339da52c6904a",
+    "astraTestConfigSha256": "d674ed6157061ba04bbd2714f7962f73fc50754221cf16091108ef4f6bfdc18b",
+    "state": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-97/runs/state.json",
+    "pressureGateUnitTestSha256": "3b4bcfbf4cd3151f8cc746d3f87478a29976a69f88d3c1700bfa2967374b1e58"
+  },
+  "amendments": [
+    {
+      "id": "q96-bwrap-appArmor-route",
+      "source": "Q-20261024-VF-ITERATION-96",
+      "change": "Run the transient user service with AppArmorProfile=chatgpt, the already-existing caller profile. Q96 validated both Bubblewrap no-op shapes in that service context.",
+      "modelProtocolChanged": false,
+      "persistentSystemChanges": false
+    }
+  ],
+  "calibrationBasis": {
+    "priorTasks": [
+      "Q-20261014-ISTA-CONTEXT-SWEEP",
+      "Q-20261022-VF-ITERATION-35",
+      "Q-20261024-VF-ITERATION-91",
+      "Q-20261024-VF-ITERATION-93",
+      "Q-20261024-VF-ITERATION-94"
+    ],
+    "observed": "Q14 and Q35 completed ASTRA 1M with about 51 GiB RSS and at least 55.64 GiB available. Q91/Q93 reached global PSI full avg10 51.48%/52.34%, MemAvailable minima 101.014/92.073 GiB, OOM=0, and were stopped by full>=20% for 30s.",
+    "change": "Keep hard MemAvailable<32 GiB and any OOM. Treat PSI full>=20% or some>=70% sustained as a warning, and stop only at full>=60% or some>=80% for 15 consecutive 1s samples, reproducing Q14 calibration. Record both global and service-cgroup PSI.",
+    "interpretation": "PSI reports memory stalls; by itself it is not a crash predictor. The diagnostic cgroup PSI has no stop threshold yet because Q14/Q35 receipts do not provide a matching service-cgroup series."
+  },
+  "preflight": {
+    "hardwareAndExactHashesVerifiedCpuOnly": false,
+    "currentRunPreflightPending": true,
+    "reason": "Q97 must verify current file fingerprints and host state before any model is loaded."
+  },
+  "noInferenceOrGpuBeforePreregis": true
+}

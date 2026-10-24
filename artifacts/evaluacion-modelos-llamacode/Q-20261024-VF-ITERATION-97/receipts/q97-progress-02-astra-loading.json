@@ -1,0 +1,22 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-97",
+  "recordedAtUtc": "2026-10-24T19:22:45Z",
+  "unit": "llamacode-q97-bcb-20261024.service",
+  "supervisorState": "running_arm / ASTRA starting",
+  "assetHashes": "9/9 SHA-256 match",
+  "memory": {
+    "minimumMemAvailableGiB": 99.634,
+    "peakGlobalPsiAvg10Pct": {"some": 27.51, "full": 27.51},
+    "peakCgroupPsiAvg10Pct": 68.84,
+    "globalOomKill": 0,
+    "cgroupOomKill": 0,
+    "moderatePsiWarning": "not yet triggered; sustained threshold duration not reached in the recorded samples"
+  },
+  "gpu": [
+    {"index": 0, "name": "RTX 3090", "usedMiB": 5810, "totalMiB": 24576},
+    {"index": 1, "name": "RTX 3090", "usedMiB": 3578, "totalMiB": 24576}
+  ],
+  "modelReady": false,
+  "requestsSent": false,
+  "decision": "Continue ASTRA loading; current PSI is moderate and below the severe stop thresholds. No OOM or MemAvailable hard stop."
+}

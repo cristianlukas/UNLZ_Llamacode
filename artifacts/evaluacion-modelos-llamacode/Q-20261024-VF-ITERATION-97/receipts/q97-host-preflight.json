@@ -1,0 +1,35 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-97",
+  "checkedAtUtc": "2026-10-24T19:19:04Z",
+  "gpuQuery": {
+    "returnCode": 0,
+    "stdout": "0, NVIDIA GeForce RTX 3090, GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6, 812, 24576\n1, NVIDIA GeForce RTX 3090, GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049, 110, 24576",
+    "stderr": ""
+  },
+  "gpuComputeApps": {
+    "returnCode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "gpuTopologyConfirmed": true,
+  "inferenceProcesses": [],
+  "candidatePortsListening": {
+    "8363": false,
+    "18789": false
+  },
+  "memory": {
+    "memAvailableGiB": 110.705
+  },
+  "memoryPsiAvg10Pct": {
+    "some": 0.0,
+    "full": 0.0
+  },
+  "oomCounters": {
+    "oom_kill": 0
+  },
+  "preflightPassed": true,
+  "decision": "PASS; no external inference process/listener, both RTX 3090 visible, memory and baseline PSI gates pass.",
+  "desktopModified": false,
+  "modelLoaded": false,
+  "requestSent": false
+}

@@ -1,0 +1,15 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-97",
+  "syncedAtUtc": "2026-10-24T19:42:27Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "readback": {
+    "Evaluaciones LlamaCode!C317:J317": "PASS · Q97 complete; ASTRA=Swift 2/8; gate not reached; cleanup PASS",
+    "Accionables!D2:M2": "PASS · Q97 detector calibration appended; P0 remains partial because Windows Job Objects and other entrypoints are pending",
+    "Accionables!D10:K10": "PASS · Swift screen closed without pass; recommendation is no adoption/repeat absent material change",
+    "Inventario de modelos!C7:R7": "PASS · Swift speed/score/time updated; Windows/Linux paths, weight and fingerprint retained",
+    "Inventario de modelos!C14:R14": "PASS · ASTRA control speed/score/time updated; production context/profile and paths retained",
+    "wrapStrategy": "WRAP preserved for 8 eval cells, 18 actionables cells, 32 inventory cells"
+  },
+  "result": "Both model entries completed 8/8 transport; score tie 2/8; Swift screen gate not reached.",
+  "memory": "Moderate PSI warning continued without abort; ASTRA completed with no OOM/crash; historical 1M ASTRA and SOL evidence is distinguished in Q97 RESULTS.md and q97-memory-guard-review.json."
+}

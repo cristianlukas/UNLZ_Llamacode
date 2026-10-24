@@ -1,0 +1,49 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-97",
+  "checkedAtUtc": "2026-10-24T19:18:31Z",
+  "gpuQuery": {
+    "returnCode": 0,
+    "stdout": "0, NVIDIA GeForce RTX 3090, GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6, 856, 24576\n1, NVIDIA GeForce RTX 3090, GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049, 110, 24576",
+    "stderr": ""
+  },
+  "gpuComputeApps": {
+    "returnCode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "gpuTopologyConfirmed": true,
+  "inferenceProcesses": [
+    {
+      "pid": 3936902,
+      "comm": "bash",
+      "cmdline": [
+        "/bin/bash",
+        "-c",
+        "python3 - <<'PY'\nimport json, os, socket, subprocess, time\nfrom pathlib import Path\nout=Path(\"artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-97/receipts/q97-host-preflight.json\")\ndef run(args):\n    p=subprocess.run(args,capture_output=True,text=True,timeout=20)\n    return {\"returnCode\":p.returncode,\"stdout\":p.stdout.strip(),\"stderr\":p.stderr.strip()}\ndef parse_psi():\n    vals={}\n    for line in Path(\"/proc/pressure/memory\").read_text().splitlines():\n        bits=line.split()\n        if bits[0] in (\"some\",\"full\"):\n            vals[bits[0]]={k:float(v) for k,v in (x.split(\"=\") for x in bits[1:] if x.startswith(\"avg10=\"))}\n            if \"avg10\" in vals[bits[0]]: vals[bits[0]][\"avg10\"]=vals[bits[0]].pop(\"avg10\")\n    return vals\ndef proc_inference():\n    found=[]\n    patterns=(\"llama-server\",\"llama_server\",\"vllm\",\"serve/server.py\",\"strata\")\n    me=os.getpid()\n    for p in Path(\"/proc\").iterdir():\n        if not p.name.isdigit() or int(p.name)==me: continue\n        try:\n            raw=(p/\"cmdline\").read_bytes().split(b\"\\0\")\n            argv=[x.decode(errors=\"replace\") for x in raw if x]\n            if not argv: continue\n            base=Path(argv[0]).name.lower()\n            full=\" \".join(argv).lower()\n            if base in (\"llama-server\",\"llama-server.exe\",\"vllm\") or any(s in full for s in patterns):\n                found.append({\"pid\":int(p.name),\"comm\":Path(\"/proc/\"+p.name+\"/comm\").read_text().strip(),\"cmdline\":argv})\n        except (OSError,PermissionError):\n            continue\n    return found\ngpu=run([\"nvidia-smi\",\"--query-gpu=index,name,uuid,memory.used,memory.total\",\"--format=csv,noheader,nounits\"])\napps=run([\"nvidia-smi\",\"--query-compute-apps=gpu_uuid,pid,process_name,used_memory\",\"--format=csv,noheader,nounits\"])\nlisteners={}\nfor port in (8363,18789):\n    s=socket.socket(); s.settimeout(.5)\n    try: listeners[str(port)]=(s.connect_ex((\"127.0.0.1\",port))==0)\n    finally: s.close()\nmem={}\nfor line in Path(\"/proc/meminfo\").read_text().splitlines():\n    if line.startswith(\"MemAvailable:\"): mem[\"memAvailableGiB\"]=round(int(line.split()[1])*1024/1024**3,3)\nvm={}\nfor line in Path(\"/proc/vmstat\").read_text().splitlines():\n    if line.split()[0] in (\"oom_kill\",\"oom_kill_process\"): vm[line.split()[0]]=int(line.split()[1])\nprocs=proc_inference()\ngpu_lines=[x.strip() for x in gpu[\"stdout\"].splitlines() if x.strip()]\ngpu_ok=gpu[\"returnCode\"]==0 and len(gpu_lines)==2 and all(\"3090\" in x.lower() for x in gpu_lines)\npsi=parse_psi()\npsi_ok=all(psi.get(k,{}).get(\"avg10\",999)<5.0 for k in (\"some\",\"full\"))\npassed=gpu_ok and not procs and not any(listeners.values()) and mem.get(\"memAvailableGiB\",0)>=32 and psi_ok\nresult={\n \"taskId\":\"Q-20261024-VF-ITERATION-97\",\n \"checkedAtUtc\":time.strftime(\"%Y-%m-%dT%H:%M:%SZ\",time.gmtime()),\n \"gpuQuery\":gpu,\"gpuComputeApps\":apps,\"gpuTopologyConfirmed\":gpu_ok,\n \"inferenceProcesses\":procs,\"candidatePortsListening\":listeners,\n \"memory\":mem,\"memoryPsiAvg10Pct\":psi,\"oomCounters\":vm,\n \"preflightPassed\":passed,\n \"decision\":\"PASS; no external inference process/listener, both RTX 3090 visible, memory and baseline PSI gates pass.\" if passed else \"BLOCK; inspect failed preflight fields before starting any model.\",\n \"desktopModified\":False,\"modelLoaded\":False,\"requestSent\":False\n}\nout.write_text(json.dumps(result,ensure_ascii=False,indent=2)+\"\\n\")\nprint(json.dumps(result,ensure_ascii=False,indent=2))\nraise SystemExit(0 if passed else 2)\nPY"
+      ]
+    }
+  ],
+  "candidatePortsListening": {
+    "8363": false,
+    "18789": false
+  },
+  "memory": {
+    "memAvailableGiB": 110.768
+  },
+  "memoryPsiAvg10Pct": {
+    "some": {
+      "avg10": 0.0
+    },
+    "full": {
+      "avg10": 0.0
+    }
+  },
+  "oomCounters": {
+    "oom_kill": 0
+  },
+  "preflightPassed": false,
+  "decision": "BLOCK; inspect failed preflight fields before starting any model.",
+  "desktopModified": false,
+  "modelLoaded": false,
+  "requestSent": false
+}

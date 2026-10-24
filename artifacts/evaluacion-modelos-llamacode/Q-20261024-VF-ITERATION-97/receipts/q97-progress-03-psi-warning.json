@@ -1,0 +1,24 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-97",
+  "recordedAtUtc": "2026-10-24T19:23:54Z",
+  "unit": "llamacode-q97-bcb-20261024.service",
+  "supervisorState": "running_arm / ASTRA loading",
+  "detector": {
+    "moderatePsiWarning": true,
+    "warningObservedAtUtc": "2026-10-24T19:23:54Z",
+    "globalPsiAvg10PeakPct": {"some": 27.51, "full": 27.51},
+    "cgroupPsiAvg10Pct": {"some": 71.01, "full": 71.01},
+    "minimumMemAvailableGiB": 84.257,
+    "globalOomKill": 0,
+    "cgroupOomKill": 0,
+    "severePsiStopReached": false,
+    "decision": "warning; continue model loading"
+  },
+  "gpu": [
+    {"index": 0, "name": "RTX 3090", "usedMiB": 5901, "totalMiB": 24576},
+    {"index": 1, "name": "RTX 3090", "usedMiB": 3578, "totalMiB": 24576}
+  ],
+  "modelReady": false,
+  "requestsSent": false,
+  "conclusion": "The moderate PSI detector warned without aborting; no OOM or hard MemAvailable threshold was reached."
+}

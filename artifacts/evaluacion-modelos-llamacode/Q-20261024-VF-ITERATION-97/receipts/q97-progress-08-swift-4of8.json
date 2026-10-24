@@ -1,0 +1,33 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-97",
+  "observedAtUtc": "2026-10-24T19:32:40Z",
+  "stage": "swift_requests_4of8",
+  "astraScore": "2/8",
+  "swiftProgress": {
+    "completed": 4,
+    "total": 8,
+    "passed": 2,
+    "failed": 2
+  },
+  "resourceSample": {
+    "memAvailableGiB": 106.959,
+    "globalPsiAvg10Pct": {
+      "some": 0.0,
+      "full": 0.0
+    },
+    "globalOomKill": 0,
+    "cgroupOomKill": 0,
+    "stage": "swift_requests"
+  },
+  "detector": "No memory pressure alert in Swift arm. ASTRA warning/continue/completion evidence preserved in q97-progress-07.",
+  "sheetReadback": {
+    "Evaluaciones LlamaCode!C317:J317": "PASS",
+    "Accionables!D10:J10": "PASS"
+  },
+  "evidence": [
+    "runs/swift/runner.log",
+    "runs/host-samples.jsonl",
+    "runs/astra/bcb8-result.json"
+  ],
+  "next": "Complete the four remaining Swift cases; finalize comparison only after cleanup."
+}

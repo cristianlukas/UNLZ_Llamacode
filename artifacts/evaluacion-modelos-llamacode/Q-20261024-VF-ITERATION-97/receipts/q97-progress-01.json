@@ -1,0 +1,19 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-97",
+  "recordedAtUtc": "2026-10-24T19:21:37Z",
+  "unit": "llamacode-q97-bcb-20261024.service",
+  "unitState": "active/running",
+  "supervisorState": "verifying_model_fingerprints",
+  "currentAsset": "ASTRA shard 2 SHA-256",
+  "previousLargeAsset": "Swift IQ2_XS GGUF; hash stage completed",
+  "modelLoaded": false,
+  "requestSent": false,
+  "resources": {
+    "gpu0": "RTX 3090 · ~0.9 GiB baseline",
+    "gpu1": "RTX 3090 · 0.11 GiB baseline",
+    "memAvailableGiB": "~111",
+    "psiSomeFullAvg10Pct": [0.0, 0.0],
+    "oomKill": 0
+  },
+  "sheetReadback": {"range": "Evaluaciones LlamaCode!C317:I317", "verified": true}
+}

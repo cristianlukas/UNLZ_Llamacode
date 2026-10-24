@@ -1,0 +1,37 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-97",
+  "observedAtUtc": "2026-10-24T19:27:32Z",
+  "stage": "astra_requests",
+  "arm": "astra",
+  "requestProgress": {
+    "completed": 6,
+    "total": 8,
+    "passed": 2,
+    "failed": 4,
+    "pending": 2
+  },
+  "dualGpu": {
+    "gpu0UsedMiB": 23843,
+    "gpu1UsedMiB": 19806,
+    "bothOwned": true
+  },
+  "memory": {
+    "memAvailableMinGiB": 71.864,
+    "globalPsiAvg10PeakPct": 34.72,
+    "warningSamples": 64,
+    "latestGlobalPsiAvg10Pct": 0.05,
+    "globalOomKill": 0,
+    "cgroupOomKill": 0
+  },
+  "interpretation": "PSI warning fired during loading, then recovered while requests continued; no memory gate abort, OOM, crash, or inference result attributable to pressure.",
+  "sheetReadback": {
+    "Evaluaciones LlamaCode!C317:J317": "PASS",
+    "Accionables!D10:J10": "PASS"
+  },
+  "evidence": [
+    "runs/state.json",
+    "runs/astra/runner.log",
+    "runs/host-samples.jsonl"
+  ],
+  "next": "Finish ASTRA 8/8, cleanup owned processes, then run Swift serially on both GPUs."
+}

@@ -1,0 +1,31 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-97",
+  "startedAtUtc": "2026-10-24T19:19:45Z",
+  "unit": "llamacode-q97-bcb-20261024.service",
+  "invocationId": "7cd08f8f46f74a3fbdcfaceab360af83",
+  "properties": {
+    "activeState": "active",
+    "subState": "running",
+    "runtimeMax": "3h",
+    "killMode": "control-group",
+    "nice": 10,
+    "cpuWeight": 20,
+    "ioWeight": 25,
+    "ioSchedulingClass": "best-effort (2)",
+    "ioSchedulingPriority": 7,
+    "memoryMax": "infinity",
+    "memoryHigh": "infinity",
+    "memorySwapMax": "infinity",
+    "apparmorProfile": "chatgpt"
+  },
+  "supervisorState": {
+    "status": "verifying_model_fingerprints",
+    "modelLoaded": false,
+    "requestSent": false,
+    "memAvailableBaselineGiB": 110.835,
+    "memoryPsiBaselinePct": {"some": 0.0, "full": 0.0},
+    "gpu0": "RTX 3090",
+    "gpu1": "RTX 3090"
+  },
+  "decision": "PASS; the only child is the sequential Swift SHA-256 check. All small fingerprints match and the supervisor is holding before any model server or request."
+}

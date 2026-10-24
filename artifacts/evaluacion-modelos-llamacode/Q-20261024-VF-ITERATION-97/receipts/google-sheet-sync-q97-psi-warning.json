@@ -1,0 +1,16 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-97",
+  "recordedAtUtc": "2026-10-24T19:23:54Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "updatedRanges": ["Evaluaciones LlamaCode!C317:I317", "Accionables!D10:M10"],
+  "readback": {
+    "valuesVerified": true,
+    "wrapStrategy": "WRAP",
+    "moderatePsiWarning": true,
+    "memAvailableMinimumGiB": 84.257,
+    "globalPsiPeakPct": 27.51,
+    "cgroupPsiPct": 71.01,
+    "globalAndCgroupOomKill": 0,
+    "decision": "continue ASTRA loading; severe stop not reached"
+  }
+}

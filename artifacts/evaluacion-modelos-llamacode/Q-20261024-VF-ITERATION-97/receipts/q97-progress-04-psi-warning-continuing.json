@@ -1,0 +1,22 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-97",
+  "recordedAtUtc": "2026-10-24T19:24:58Z",
+  "unit": "llamacode-q97-bcb-20261024.service",
+  "status": "ASTRA loading",
+  "globalMemoryPsiWarning": true,
+  "memory": {
+    "minAvailableGiB": 74.311,
+    "peakGlobalPsiAvg10Pct": 34.72,
+    "peakServiceCgroupPsiAvg10Pct": 81.53,
+    "globalOomKill": 0,
+    "cgroupOomKill": 0,
+    "severeGlobalPsiStopReached": false
+  },
+  "gpus": [
+    {"index": 0, "name": "RTX 3090", "usedMiB": 5831},
+    {"index": 1, "name": "RTX 3090", "usedMiB": 3644}
+  ],
+  "modelReady": false,
+  "requestsSent": false,
+  "sheetReadback": {"range": "Evaluaciones LlamaCode!C317:I317", "verified": true}
+}

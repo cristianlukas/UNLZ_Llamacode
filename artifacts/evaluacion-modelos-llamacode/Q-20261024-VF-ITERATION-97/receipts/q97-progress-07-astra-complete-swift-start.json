@@ -1,0 +1,41 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-97",
+  "observedAtUtc": "2026-10-24T19:29:20Z",
+  "stage": "astra_complete_swift_started",
+  "astra": {
+    "score": "2/8",
+    "transport": "8/8",
+    "sandboxErrors": 0,
+    "noFinalContent": 0,
+    "meanPrefillTokS": 366.363,
+    "meanDecodeTokS": 121.612,
+    "meanTaskWallSeconds": 20.407,
+    "cleanup": "server stopped; port free; no inference server process detected"
+  },
+  "memoryGuard": {
+    "memAvailableMinGiB": 71.864,
+    "globalPsiAvg10PeakPct": 34.72,
+    "warningSamples": 64,
+    "latestGlobalPsiAvg10Pct": 0.0,
+    "globalOomKill": 0,
+    "cgroupOomKill": 0,
+    "action": "warning only; no stop; ASTRA completed"
+  },
+  "swift": {
+    "status": "healthy_dual_gpu",
+    "gpu0UsedMiB": 5872,
+    "gpu1UsedMiB": 4856,
+    "stage": "requests starting"
+  },
+  "sheetReadback": {
+    "Evaluaciones LlamaCode!C317:J317": "PASS",
+    "Accionables!D10:J10": "PASS"
+  },
+  "evidence": [
+    "runs/astra/bcb8-result.json",
+    "runs/state.json",
+    "runs/host-samples.jsonl",
+    "runs/astra/runner.log"
+  ],
+  "interpretation": "This seed shows the PSI alert is an early stall signal, not a crash predictor: it warned on pressure, recovered, and the full ASTRA arm completed with high available RAM and no OOM. ASTRA quality screen is 2/8; Swift comparison remains pending."
+}

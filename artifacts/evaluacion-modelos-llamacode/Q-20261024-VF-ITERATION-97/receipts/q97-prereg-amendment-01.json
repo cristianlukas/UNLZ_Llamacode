@@ -1,0 +1,8 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-97",
+  "recordedAtUtc": "2026-10-24T19:18:50Z",
+  "amendment": 1,
+  "reason": "The first read-only host preflight falsely matched its own parent bash command because the inline heredoc contained the detector patterns. GPU query, ports, memory and PSI fields passed; no model or inference process was found by GPU compute-app enumeration.",
+  "change": "Rerun the identical host preflight while excluding the current process ancestry from command-line scanning. Do not change the Q97 inference supervisor or model protocol.",
+  "resources": {"gpuQueryReadOnly": true, "model": false, "request": false, "persistentSystemChanges": false}
+}

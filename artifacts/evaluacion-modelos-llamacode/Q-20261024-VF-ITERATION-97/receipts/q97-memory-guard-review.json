@@ -1,0 +1,90 @@
+{
+  "observedAtUtc": "2026-10-24T19:37:43Z",
+  "currentPolicy": {
+    "moderateWarning": "global memory PSI full avg10 >=20% for 30 consecutive 1s samples OR some avg10 >=70% for 30 consecutive samples",
+    "severeStop": "global memory PSI full avg10 >=60% for 15 consecutive samples OR some avg10 >=80% for 15 consecutive samples",
+    "hardStops": [
+      "MemAvailable <32 GiB",
+      "any increase in global or task cgroup oom/oom_kill"
+    ],
+    "cgroupPsi": "diagnostic only"
+  },
+  "currentRun": {
+    "samples": 928,
+    "memAvailableMinGiB": 71.864,
+    "globalPsiSomeAvg10PeakPct": 34.72,
+    "globalPsiFullAvg10PeakPct": 34.72,
+    "cgroupPsiSomeAvg10PeakPct": 81.53,
+    "cgroupPsiFullAvg10PeakPct": 81.53,
+    "warningSamples": 64,
+    "globalOomKillMax": 0,
+    "cgroupOomKillMax": 0
+  },
+  "historicalEvidence": [
+    {
+      "id": "Q14 ASTRA DEFAULT 1.048.576",
+      "processTreeRssGiB": 51.14,
+      "minMemAvailableGiB": 55.64,
+      "oomKill": 0,
+      "outcome": "probe completed; 48 pages pswpout; PSI series did not reach final historical gate"
+    },
+    {
+      "id": "Q35 ASTRA Flash-Next 1M, 3 seeds",
+      "processTreeRssGiB": 51.15,
+      "minMemAvailableGiB": [
+        64.98,
+        65.06
+      ],
+      "completedSeeds": "3/3",
+      "semanticResult": "8/8 on all complete responses after preregistered regrade",
+      "swapBytes": 0,
+      "oomKill": 0,
+      "meanRequestSecondsAt1M": 434.82,
+      "outcome": "completed without monitor abort"
+    },
+    {
+      "id": "Q16 interactive ASTRA",
+      "minMemAvailableGiB": 52.7,
+      "globalPsiSomePeakPct": 37.2,
+      "oomKill": 0,
+      "outcome": "interactive sessions completed normally"
+    },
+    {
+      "id": "Q34 SOL vLLM TP2",
+      "gpus": "both RTX 3090",
+      "minMemAvailableAtReadyGiB": 103.4,
+      "vramMiBPerWorkerApprox": 20400,
+      "oomKill": 0,
+      "outcome": "speed A/B completed and cleanly stopped; no per-second PSI, so not a PSI calibration sample"
+    },
+    {
+      "id": "Q95 ASTRA load",
+      "globalPsiPeakPct": 46.27,
+      "minMemAvailableGiB": 80.89,
+      "oomKill": 0,
+      "outcome": "ASTRA became ready; later grader blocked by sandbox, not pressure"
+    }
+  ],
+  "oldGateDiagnosis": [
+    {
+      "id": "Q91",
+      "globalPsiFullPeakPct": 51.48,
+      "minMemAvailableGiB": 101.014,
+      "oomKill": 0,
+      "outcome": "old full>=20% x30s threshold stopped before readiness; no evidence of crash/OOM"
+    },
+    {
+      "id": "Q93",
+      "globalPsiFullPeakPct": 52.34,
+      "minMemAvailableGiB": 92.073,
+      "oomKill": 0,
+      "outcome": "same overly-sensitive old gate stopped; captured reclaim/allocstall, so PSI indicated stalls but did not establish impending crash"
+    }
+  ],
+  "conclusion": "The user was right that success under substantial memory use must be part of calibration. PSI is a stall-pressure signal, not a crash predictor. Q91/Q93 termination threshold was too sensitive; Q95/Q97 distinguish moderate warnings from severe/hard stops. In Q97 PSI peaked at 34.72%, triggered 64 warning samples, recovered, and ASTRA completed all requests without OOM or crash. This Q97 benchmark used ctx8192; the 1M evidence is historical and model/profile-specific.",
+  "evidence": [
+    "../Q-20261024-VF-ITERATION-94/RESULTS.md",
+    "../Q-20261022-VF-ITERATION-35/RESULTS.md",
+    "../Q-20261024-VF-ITERATION-97/RESULTS.md"
+  ]
+}

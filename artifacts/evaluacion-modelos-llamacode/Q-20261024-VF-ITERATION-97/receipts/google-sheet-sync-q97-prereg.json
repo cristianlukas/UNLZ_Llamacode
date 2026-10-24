@@ -1,0 +1,14 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-97",
+  "recordedAtUtc": "2026-10-24T19:17:24Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "updatedRanges": ["Evaluaciones LlamaCode!A317:J317", "Accionables!A10:M10"],
+  "readback": {
+    "valuesVerified": true,
+    "status": "Activa · preregistrada; CPU-only PASS; huellas completas y preflight pendientes",
+    "gpuConfiguration": "both RTX 3090 + 128 GB RAM per arm, serial",
+    "apparmorProfile": "chatgpt",
+    "wrapStrategy": "WRAP"
+  },
+  "resourceUse": {"gpu": false, "model": false, "request": false}
+}
