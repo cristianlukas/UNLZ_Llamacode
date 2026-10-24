@@ -1,0 +1,37 @@
+{
+  "task_id": "Q-20261024-VF-ITERATION-81",
+  "written_at_utc": "2026-10-24T12:59:23Z",
+  "readback_at_utc": "2026-10-24T12:59:23Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "ranges": {
+    "Evaluaciones LlamaCode!C303:J303": {
+      "sheet_id": 1945218181,
+      "readback": "exact",
+      "values": [
+        "MTP-on repair 2/3 · prefill del turno 2.560/3.072",
+        "2026-10-24",
+        "Qwen3.8-Flash-Next · corregir lifecycle del watchdog y revalidar TaskFlow MTP-off/on",
+        "Q81; MTP-on propio PID 3060719; benchmarkRunning=true",
+        "MTP-off: calidad 2/13 sin timeout, 21.19 avg TPS, TTFT 150.8 s, 952.522 s; coverage incompleto, no adoptar. MTP-on 2026-10-24T12:59:23Z: reparación 2/3, prefill del turno 2.560/3.072; sin score/TPS/TTFT final. Guard: cero externos/PeritoSoft, OOM=0, MemAvailable 120.0 GB, SwapFree 6.4 GB; GPU0 5.625 MiB, GPU1 20.196 MiB.",
+        "Continuar hasta hard deadline 13:17:32Z; runner max-wait 13:18:32Z y gracia 60s. Al finalizar, registrar aceptación/cobertura y cleanup.",
+        "Q81/PLAN.md; receipts/taskflow-mtp-on-progress-08.json; receipts/resource-watch-mtp-on.jsonl; runs/taskflow-mtp-on.events.jsonl; resultado MTP-off",
+        "Q81 lock `33790bf7-e3ab-4a2f-bb08-40e7f1fdac1d`; reparación 2/3 activa. No hay servidores externos ni procesos PeritoSoft."
+      ]
+    },
+    "Accionables!H32:N32": {
+      "sheet_id": 1393124532,
+      "readback": "exact",
+      "values": [
+        "Q81: concluir MTP-on TaskFlow ULTRA y registrar aceptación; no adoptar sin comparación válida.",
+        "Repair 2/3 activo: prefill 2.560/3.072 a 12:59:23Z. Sin score/TPS/TTFT final; OOM=0, ~120.0 GB disponibles, cero servidores externos/PeritoSoft.",
+        "Q81/PLAN.md; receipts/taskflow-mtp-on-progress-08.json; receipts/resource-watch-mtp-on.jsonl; runs/taskflow-mtp-on.events.jsonl; MTP-off final",
+        "Continuar hasta el límite original 13:17:32Z (runner 13:18:32Z); cancelar/limpiar según el runner y cerrar postflight.",
+        "2026-10-24T11:58:02Z",
+        "2026-10-24T12:59:23Z",
+        "2026-10-24T12:59:23Z"
+      ]
+    }
+  },
+  "formatting": "Only userEnteredValue updated; existing WRAP formatting preserved.",
+  "post_write_readback": "Exact for both ranges."
+}

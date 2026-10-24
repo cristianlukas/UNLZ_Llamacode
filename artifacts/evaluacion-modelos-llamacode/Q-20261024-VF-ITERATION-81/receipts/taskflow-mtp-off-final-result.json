@@ -1,0 +1,184 @@
+{
+  "task_id": "Q-20261024-VF-ITERATION-81",
+  "arm": "TaskFlow ULTRA MTP-off",
+  "profile_id": "q4-mtp-off-taskflow-20261013",
+  "profile_fingerprint": "e9c5c527e30744049cff955f0489c36cd08a8777b9bf87422f0f768c3d42cf23",
+  "suite_id": "qwen38_taskflow_ultra_ast_vs_sol_20261006",
+  "result_id": "88012a94-6efb-4403-95b6-21ac1e43e549",
+  "completed_at_utc": "2026-10-24T12:36:09.431000+00:00",
+  "benchmark_completed": true,
+  "runner_timed_out": false,
+  "cancel_confirmed": null,
+  "timed_out": false,
+  "failure_kind": "quality",
+  "failure_stage": "acceptance",
+  "failure_message": "Fallaron criterios de aceptacion.",
+  "final_score": 2,
+  "final_total": 13,
+  "quality_score": 2,
+  "quality_total": 13,
+  "first_attempt_score": 0,
+  "first_attempt_total": 13,
+  "repair_attempts": 3,
+  "passed_after_repair": false,
+  "acceptance": {
+    "passed": 2,
+    "failed": 11,
+    "total": 13,
+    "failed_checks": [
+      {
+        "name": "taskflow_ultra/storage.py",
+        "type": "file",
+        "passed": false,
+        "exitCode": null,
+        "timedOut": null,
+        "output_first_line": "Archivo esperado no encontrado."
+      },
+      {
+        "name": "taskflow_ultra/service.py",
+        "type": "file",
+        "passed": false,
+        "exitCode": null,
+        "timedOut": null,
+        "output_first_line": "Archivo esperado no encontrado."
+      },
+      {
+        "name": "taskflow_ultra/scheduler.py",
+        "type": "file",
+        "passed": false,
+        "exitCode": null,
+        "timedOut": null,
+        "output_first_line": "Archivo esperado no encontrado."
+      },
+      {
+        "name": "taskflow_ultra/query.py",
+        "type": "file",
+        "passed": false,
+        "exitCode": null,
+        "timedOut": null,
+        "output_first_line": "Archivo esperado no encontrado."
+      },
+      {
+        "name": "taskflow_ultra/reports.py",
+        "type": "file",
+        "passed": false,
+        "exitCode": null,
+        "timedOut": null,
+        "output_first_line": "Archivo esperado no encontrado."
+      },
+      {
+        "name": "taskflow_ultra/cli.py",
+        "type": "file",
+        "passed": false,
+        "exitCode": null,
+        "timedOut": null,
+        "output_first_line": "Archivo esperado no encontrado."
+      },
+      {
+        "name": "taskflow_ultra/main.py",
+        "type": "file",
+        "passed": false,
+        "exitCode": null,
+        "timedOut": null,
+        "output_first_line": "Archivo esperado no encontrado."
+      },
+      {
+        "name": "tests/test_taskflow_ultra.py",
+        "type": "file",
+        "passed": false,
+        "exitCode": null,
+        "timedOut": null,
+        "output_first_line": "Archivo esperado no encontrado."
+      },
+      {
+        "name": "compile_package",
+        "type": "command",
+        "passed": false,
+        "exitCode": 1,
+        "timedOut": false,
+        "output_first_line": "[Errno 2] No such file or directory: 'taskflow_ultra/storage.py'"
+      },
+      {
+        "name": "unit_tests",
+        "type": "command",
+        "passed": false,
+        "exitCode": 1,
+        "timedOut": false,
+        "output_first_line": "Traceback (most recent call last):"
+      },
+      {
+        "name": "self_test",
+        "type": "command",
+        "passed": false,
+        "exitCode": 1,
+        "timedOut": false,
+        "output_first_line": "Traceback (most recent call last):"
+      }
+    ]
+  },
+  "timing_seconds": {
+    "total": 952.522,
+    "generation": 317.671,
+    "non_generation": 634.8510000000001,
+    "time_to_first_attempt": 462.197,
+    "first_evaluable": 463.051,
+    "first_tool_call": 611.506,
+    "first_write": 611.545
+  },
+  "throughput": {
+    "avg_tps": 21.18580418912849,
+    "avg_ttft_ms": 150823.5,
+    "prompt_tps": null,
+    "decode_tps": null
+  },
+  "tool_calls": 2,
+  "tool_call_success_rate_pct": 100,
+  "gpu_telemetry": {
+    "vram_gpu0_mb": 5529,
+    "vram_gpu1_mb": 16142,
+    "total_vram_mb": 21671,
+    "scope": "device-total",
+    "placement": "gpu1-heavy"
+  },
+  "ram_telemetry": {
+    "ram_mb": 0,
+    "ram_total_mb": 0,
+    "ram_free_mb": 0,
+    "note": "all reported zero; treat RAM measurement as unavailable"
+  },
+  "agent_files": [
+    "solution_taskflow_ultra_advanced_project.py",
+    "taskflow_ultra/models.py",
+    "taskflow_ultra/__init__.py",
+    "taskflow_ultra/__pycache__/models.cpython-312.pyc",
+    "taskflow_ultra/__pycache__/__init__.cpython-312.pyc"
+  ],
+  "coverage": {
+    "benchmarkEligible": true,
+    "coverageState": "incomplete",
+    "hasBlockedStage": false,
+    "hasInfrastructureOrTimeout": false,
+    "healthCodes": [],
+    "healthMessages": [],
+    "nextStage": "he0",
+    "pendingStages": [
+      "he0",
+      "he20",
+      "bcb"
+    ],
+    "profileConfigFingerprint": "e9c5c527e30744049cff955f0489c36cd08a8777b9bf87422f0f768c3d42cf23",
+    "profileId": "q4-mtp-off-taskflow-20261013",
+    "profileName": "4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192",
+    "retired": false,
+    "stageStates": {
+      "bcb": "pending",
+      "he0": "pending",
+      "he20": "pending"
+    }
+  },
+  "interpretation": "This arm completed without a timeout, but the agent failed the task quality gate after three repair attempts (2/13 acceptance checks). It is not a successful TaskFlow result and does not support superiority/adoption. The exact custom prompt produced an incomplete coverage state with other harness stages pending; do not call the result a full-suite score.",
+  "source_run_file": "runs/taskflow-mtp-off.json",
+  "runner_events": "runs/taskflow-mtp-off.events.jsonl",
+  "resource_watch": "receipts/resource-watch-mtp-off.jsonl",
+  "cleanup_status": "pending: agent still reported running; server stopped."
+}

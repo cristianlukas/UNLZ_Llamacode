@@ -1,0 +1,17 @@
+{
+  "task_id": "Q-20261024-VF-ITERATION-81",
+  "timestamp_utc": "2026-10-24T12:00:00Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_title": "Listado de Juegos",
+  "tabs": {
+    "Evaluaciones LlamaCode": {"sheet_id": 1945218181, "ranges": ["C302:J303"], "readback": "exact"},
+    "Accionables": {"sheet_id": 1393124532, "ranges": ["H32:N32"], "readback": "exact"}
+  },
+  "changes": [
+    "Added Q80 closed root-cause diagnosis to Evaluaciones LlamaCode row 302.",
+    "Added Q81 active preregistration and CPU-before-GPU gates to Evaluaciones LlamaCode row 303.",
+    "Updated Accionables row 32 with the Q81 timeout lifecycle test and active lock status.",
+    "Preserved source-row wrap formatting. Restored/preserved Accionables created timestamp 2026-10-24T11:58:02Z; updated Actualizado and Reconciliado UTC to 12:00Z."
+  ],
+  "visual_check": "Native CUA browser is on Google sign-in; verified exact values and WRAP formatting via Sheets API. No sheet-wide layout/style changes."
+}

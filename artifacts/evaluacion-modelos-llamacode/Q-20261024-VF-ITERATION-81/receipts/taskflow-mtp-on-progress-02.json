@@ -1,0 +1,34 @@
+{
+  "task_id": "Q-20261024-VF-ITERATION-81",
+  "at_utc": "2026-10-24T12:50:01Z",
+  "profile_id": "q4-mtp-on-taskflow-20261013",
+  "profile_fingerprint": "b39dcfa4f912aee2ae973d28f25ac04f81e5ba1c0dbaaa2e0a7e5641e38d3d27",
+  "suite_id": "qwen38_taskflow_ultra_ast_vs_sol_20261006",
+  "benchmark_status": "[1/1] 2_EVAL · Q4 llama.cpp mtp-on · taskflow R8192 — agente: prompt 1/1...",
+  "benchmark_progress_property": 0,
+  "slot": {
+    "id": 0,
+    "is_processing": true,
+    "n_ctx": 32768,
+    "n_prompt_tokens": 17573,
+    "n_prompt_tokens_processed": 17061,
+    "n_prompt_tokens_cache": 0,
+    "n_decoded": 0,
+    "n_remain": 6279,
+    "speculative": true
+  },
+  "final_tps_available": false,
+  "final_ttft_available": false,
+  "resource_sample": {
+    "at_utc": "2026-10-24T12:50:01Z",
+    "mem_available_bytes": 122003066880,
+    "swap_free_bytes": 6403162112,
+    "oom_kill_count": 0,
+    "external_inference_servers": 0,
+    "peritosoft_processes": 0,
+    "breaches": [],
+    "gpu0_used_mib": 5602,
+    "gpu1_used_mib": 20164,
+    "llama_server_pid": 3060719
+  }
+}

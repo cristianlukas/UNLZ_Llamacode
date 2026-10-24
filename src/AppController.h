@@ -1611,6 +1611,7 @@ public:
     static bool benchmarkTurnBusyForTest(const QString &message);
     static bool benchmarkRepairStagnationCheckForTest(bool agentBusy,
                                                        bool workspaceChanged);
+    static bool benchmarkHardTimeoutRemainsArmedForRepair(bool repairScheduled);
     static bool benchmarkRepairToolMayMutateForTest(const QString &toolName);
     static bool benchmarkRepairInspectionLoopForTest(bool agentBusy,
                                                        bool workspaceChanged,

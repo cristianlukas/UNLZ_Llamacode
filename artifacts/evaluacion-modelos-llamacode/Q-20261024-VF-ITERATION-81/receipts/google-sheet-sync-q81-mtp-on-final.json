@@ -1,0 +1,37 @@
+{
+  "task_id": "Q-20261024-VF-ITERATION-81",
+  "written_at_utc": "2026-10-24T13:18:52Z",
+  "readback_at_utc": "2026-10-24T13:18:52Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "ranges": {
+    "Evaluaciones LlamaCode!C303:J303": {
+      "sheet_id": 1945218181,
+      "readback": "exact",
+      "values": [
+        "MTP-on hard-timeout 1.801.104 s · 4/13 checks · sin score EVAL",
+        "2026-10-24",
+        "Qwen3.8-Flash-Next · corregir lifecycle del watchdog y revalidar TaskFlow MTP-off/on",
+        "Q81 MTP-on; resultado a2c036a9; timeout interno del harness; runnerTimedOut=false; servicios Q81 detenidos",
+        "MTP-off: sin timeout, 2/13 checks, 21.1858 TPS, TTFT 150.8235 s, 952.522 s; coverage incompleto. MTP-on 2026-10-24T13:17:33.765Z: hard-timeout a 1.801,104 s, 4/13 checks pasaron y 9 fallaron; agregado 0/0 por timeout, sin TPS/TTFT válidos; 5/5 tool calls exitosos; generación 378.002 s, no-generación 1.423.102 s; VRAM 5.717+20.200 MiB, RAM no disponible; coverage HE0/HE20/BCB pendiente.",
+        "No adoptar MTP-on ni declarar superioridad. Mantener producción sin cambios. Un re-test requiere corregir primero el paquete generado (service.py ausente; compile/unit/self-test fallidos) y preregistrar nueva corrida; Q81 no autoriza más GPU.",
+        "Q81/PLAN.md; receipts/taskflow-mtp-on-final-result.json; runs/taskflow-mtp-on.json; runs/taskflow-mtp-on.events.jsonl; receipts/resource-watch-mtp-on.jsonl; resultado MTP-off",
+        "Q81 cerrado y servicios/puertos propios detenidos; cero servidores externos/PeritoSoft. Lock Q81 se libera al terminar la documentación final."
+      ]
+    },
+    "Accionables!H32:N32": {
+      "sheet_id": 1393124532,
+      "readback": "exact",
+      "values": [
+        "Q81 cerrado: no adoptar MTP-on; conservar el setup productivo actual.",
+        "MTP-on alcanzó hard-timeout a 1.801.104 s; 4/13 checks pasaron, 9 fallaron; 5/5 tool calls completados; score agregado 0/0 por timeout; sin TPS/TTFT final y coverage incompleto. MTP-off también quedó en 2/13, por lo que no hay conclusión de superioridad.",
+        "Q81/PLAN.md; receipts/taskflow-mtp-on-final-result.json; runs/taskflow-mtp-on.json; MTP-off final",
+        "Reabrir solo si cambia materialmente la suite/runtime o se corrige el paquete generado que falló; preregistrar antes de reservar GPU.",
+        "2026-10-24T11:58:02Z",
+        "2026-10-24T13:18:52Z",
+        "2026-10-24T13:18:52Z"
+      ]
+    }
+  },
+  "formatting": "Only userEnteredValue updated; existing WRAP formatting preserved.",
+  "post_write_readback": "Exact for both ranges."
+}

@@ -1,0 +1,41 @@
+{
+  "task_id": "Q-20261024-VF-ITERATION-81",
+  "at_utc": "2026-10-24T13:02:31Z",
+  "profile_id": "q4-mtp-on-taskflow-20261013",
+  "profile_fingerprint": "b39dcfa4f912aee2ae973d28f25ac04f81e5ba1c0dbaaa2e0a7e5641e38d3d27",
+  "suite_id": "qwen38_taskflow_ultra_ast_vs_sol_20261006",
+  "benchmark_running": true,
+  "benchmark_status": "[1/1] 2_EVAL · Q4 llama.cpp mtp-on · taskflow R8192 — reparando fallos 2/3...",
+  "phase": "repair 2/3",
+  "slot": {
+    "id": 0,
+    "is_processing": true,
+    "n_ctx": 32768,
+    "n_prompt_tokens": 5569,
+    "n_prompt_tokens_processed": 5057,
+    "n_prompt_tokens_cache": 0,
+    "speculative": true
+  },
+  "final_score_available": false,
+  "final_tps_available": false,
+  "final_ttft_available": false,
+  "resource_sample_at_utc": "2026-10-24T13:02:30Z",
+  "resource_sample": {
+    "mem_available_bytes": 119711416320,
+    "swap_free_bytes": 6403289088,
+    "oom_kill_count": 0,
+    "external_inference_servers": 0,
+    "peritosoft_processes": 0,
+    "gpu0_used_mib": 5642,
+    "gpu1_used_mib": 20196,
+    "llama_server_pid": 3060719,
+    "breaches": []
+  },
+  "deadline_utc": "2026-10-24T13:17:32Z",
+  "runner_max_wait_utc": "2026-10-24T13:18:32Z",
+  "runner_unit": "q81-mtp-on-runner.service",
+  "resource_guard_unit": "q81-resource-guard.service",
+  "app_unit": "q81-flashnext-app.service",
+  "events": "runs/taskflow-mtp-on.events.jsonl",
+  "resource_watch": "receipts/resource-watch-mtp-on.jsonl"
+}

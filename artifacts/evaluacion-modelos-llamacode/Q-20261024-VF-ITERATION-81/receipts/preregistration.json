@@ -1,0 +1,45 @@
+{
+  "task_id": "Q-20261024-VF-ITERATION-81",
+  "lock_token": "33790bf7-e3ab-4a2f-bb08-40e7f1fdac1d",
+  "registered_at_utc": "2026-10-24T11:58:02Z",
+  "objective": "Fix the benchmark pass hard wall timeout so the original deadline remains active through all repair turns; add CPU regression coverage; make the isolated TaskFlow runner cancel at max-wait; validate Linux build/tests; only then rerun TaskFlow ULTRA MTP-off then MTP-on serially on the Q79-pinned Qwen3.8-Flash-Next eval profiles.",
+  "hypothesis": "finalize() destroys the pass-level hard timeout before scheduling repair, leaving active repair turns without the intended app-level wall-clock deadline; the Q79 runner recorded max-wait but required an external cancellation call.",
+  "scope": {
+    "code_files": ["src/AppController.cpp", "src/AppController.h", "tests/test_appcontroller.cpp"],
+    "docs": ["README.md", "docs/benchmark-levels-runbook.md"],
+    "test_runner": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-81/scripts/run_taskflow.py",
+    "gpu_comparison": "TaskFlow ULTRA only; MTP-off then MTP-on, serially, copied from Q79 pins"
+  },
+  "frozen_comparison": {
+    "suite": "qwen38_taskflow_ultra_ast_vs_sol_20261006",
+    "suite_sha256": "f04febb440208d5bf74c01e84d78f5127e57c164fabece2acbfb346215dc0c17",
+    "mtp_off_profile": "q4-mtp-off-taskflow-20261013",
+    "mtp_on_profile": "q4-mtp-on-taskflow-20261013",
+    "hard_timeout_sec": 1800,
+    "finalizer_grace_sec": 60,
+    "max_wait_sec": 1860,
+    "order": ["MTP-off", "cleanup_and_readback", "fresh_preflight", "MTP-on"],
+    "excluded": ["BCB8 rerun", "profile or sampling changes", "productive ASTRA/SOL", "model file deletion or movement"]
+  },
+  "methods": [
+    "Use a pure policy helper in production to decide whether a scheduled repair keeps the pass hard timeout armed; test retry and terminal outcomes in the existing CPU Qt suite.",
+    "Copy Q79 TaskFlow runner into Q81, preserving fingerprints and timeout settings; add API cancellation at max-wait and bounded finalization/owned-service cleanup.",
+    "Run ./scripts/build-linux.sh Debug and ./scripts/tests-linux.sh Release; record exact outputs, exit codes, source and binary SHA-256.",
+    "Only after CPU gates and sheet readback, perform a fresh host/model/preflight fingerprint gate and execute each TaskFlow arm serially."
+  ],
+  "success_criteria": [
+    "Hard timeout covers initial turn and every repair from one unchanged start timestamp; retries do not reset or remove it.",
+    "Regression verifies that repair keeps the timer and terminal finalization stops it.",
+    "Runner sends cancelBenchmark at 1860 seconds and verifies benchmarkRunning=false within a finite finalization grace; Q81-only process cleanup is verified.",
+    "Linux Debug build and Linux Release test suite exit 0.",
+    "Each GPU arm is fingerprint-matched, full-coverage, safely finalized and postflight-clean; incomplete arm gets no comparative score."
+  ],
+  "stop_conditions": [
+    "Lock ownership changed.",
+    "CPU test or build gate fails.",
+    "Sheet readback, artifact fingerprint, profile, suite, model path or binary check differs.",
+    "External inference server or PeritoSoft is active and cannot be safely distinguished/closed; resource guard fails; OOM changes; or service cleanup is incomplete.",
+    "1800-second inference timeout or 1860-second runner max-wait; then cancel, bounded finalization, stop only Q81-owned service if required, record incomplete, no score."
+  ],
+  "no_adoption_rule": "No model/profile/productive default change from Q79 or one Q81 matched pair. ASTRA/SOL, GUI, existing weights and profiles are preserved."
+}

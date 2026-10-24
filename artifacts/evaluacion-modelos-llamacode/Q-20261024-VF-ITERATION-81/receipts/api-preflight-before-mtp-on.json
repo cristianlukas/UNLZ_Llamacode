@@ -1,0 +1,38 @@
+{
+  "task_id": "Q-20261024-VF-ITERATION-81",
+  "at_utc": "2026-10-24T12:46:19Z",
+  "app_unit": "q81-flashnext-app.service",
+  "api_health": {
+    "status": 200,
+    "ok": true,
+    "port": 18129
+  },
+  "state_before_probe": {
+    "serverState": "stopped",
+    "agentRunning": false,
+    "benchmarkRunning": false
+  },
+  "runner_equivalent_profile_gate": {
+    "probe_suite_id": "__preflight_missing_suite__",
+    "probe_response_ok": true,
+    "profile_id": "q4-mtp-on-taskflow-20261013",
+    "profile_ready": true,
+    "profile_config_fingerprint": "b39dcfa4f912aee2ae973d28f25ac04f81e5ba1c0dbaaa2e0a7e5641e38d3d27",
+    "expected_profile_config_fingerprint": "b39dcfa4f912aee2ae973d28f25ac04f81e5ba1c0dbaaa2e0a7e5641e38d3d27",
+    "agent_profile": "agent-maximo"
+  },
+  "suite": {
+    "id": "qwen38_taskflow_ultra_ast_vs_sol_20261006",
+    "sha256": "f04febb440208d5bf74c01e84d78f5127e57c164fabece2acbfb346215dc0c17",
+    "prompt_count": 1
+  },
+  "state_after_probe": {
+    "serverState": "stopped",
+    "agentRunning": false,
+    "benchmarkRunning": false
+  },
+  "model_loads_before_gate_completion": 0,
+  "model_requests_before_gate_completion": 0,
+  "diagnostic_note": "An earlier read-only coverage query before the runner-equivalent agent-profile probe showed the unselected-session fingerprint bf3515...; the runner's own probe selects agent-maximo and then the live fingerprint exactly matches the Q79 pin. This was not a runner launch or model-load attempt.",
+  "action": "Ready to start only the preregistered MTP-on TaskFlow ULTRA run, after starting the Q81 resource guard."
+}

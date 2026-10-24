@@ -1,0 +1,36 @@
+{
+  "task_id": "Q-20261024-VF-ITERATION-81",
+  "written_at_utc": "2026-10-24T12:19:25Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "ranges": {
+    "Evaluaciones LlamaCode!C303:J303": {
+      "sheet_id": 1945218181,
+      "readback": "exact",
+      "values": [
+        "Activa · servicio Q81 aislado listo; perfil/suite confirmados, MTP-off por iniciar",
+        "2026-10-24",
+        "Qwen3.8-Flash-Next · corregir lifecycle del watchdog y revalidar TaskFlow MTP-off/on",
+        "Q81; suite TaskFlow ULTRA y perfiles MTP de Q79; causa diagnosticada en Q80",
+        "CPU/build/tests, 19/19 hashes y preflight final PASS. App Q81 healthy en localhost:18129; serverState=stopped, agentRunning=false, benchmarkRunning=false. Ambos perfiles (mtp-off/on) ready y suite TaskFlow presente. Aún no se inició inferencia.",
+        "Arrancar el watcher de recursos y el runner MTP-off como unidades user-systemd independientes; su deadline es 1800 s y el runner cancela al max-wait 1860 s. El segundo brazo espera cleanup y nuevo preflight.",
+        "Q81/PLAN.md; receipts/cpu-validation.json; receipts/artifact-hash-q81-prelaunch-final.json; receipts/preflight-final-before-mtp-off.json; receipts/api-preflight-before-mtp-off.json; scripts/run_taskflow.py",
+        "Q81 activa bajo lock 33790bf7-e3ab-4a2f-bb08-40e7f1fdac1d. Pesos, perfiles productivos ASTRA/SOL y GUI preservados; no PeritoSoft."
+      ]
+    },
+    "Accionables!H32:N32": {
+      "sheet_id": 1393124532,
+      "readback": "exact",
+      "values": [
+        "Q81: mantener un único watchdog de pared con deadline original durante todos los retries; regresión CPU verifica retry/terminal. Runner cancela y espera cleanup al max-wait.",
+        "Build Debug PASS; Linux Release 94/94, runner CPU 3/3, fingerprints 19/19, preflight host y API PASS. Servicio Q81 healthy, server stopped, ambos perfiles ready, suite exacta disponible; MTP-off por iniciar.",
+        "Q80/RESULTS.md; Q81/PLAN.md; receipts/cpu-validation.json; receipts/artifact-hash-q81-prelaunch-final.json; receipts/preflight-final-before-mtp-off.json; receipts/api-preflight-before-mtp-off.json; scripts/run_taskflow.py",
+        "Servicio aislado y sin modelo. Iniciar watcher y runner MTP-off; MTP-on sólo después de cleanup, readback y nuevo preflight.",
+        "2026-10-24T11:58:02Z",
+        "2026-10-24T12:19:25Z",
+        "2026-10-24T12:19:25Z"
+      ]
+    }
+  },
+  "formatting": "Update only changed userEnteredValue; existing WRAP formatting preserved.",
+  "post_write_readback": "Exact for both requested ranges."
+}

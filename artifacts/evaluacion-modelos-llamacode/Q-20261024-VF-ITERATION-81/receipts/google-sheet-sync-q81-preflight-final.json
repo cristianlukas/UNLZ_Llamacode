@@ -1,0 +1,37 @@
+{
+  "task_id": "Q-20261024-VF-ITERATION-81",
+  "written_at_utc": "2026-10-24T12:17:13Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_title": "Listado de Juegos",
+  "ranges": {
+    "Evaluaciones LlamaCode!C303:J303": {
+      "sheet_id": 1945218181,
+      "readback": "exact",
+      "values": [
+        "Activa · CPU gates, 19/19 fingerprints y preflight final aprobados",
+        "2026-10-24",
+        "Qwen3.8-Flash-Next · corregir lifecycle del watchdog y revalidar TaskFlow MTP-off/on",
+        "Q81; suite TaskFlow ULTRA y perfiles MTP de Q79; causa diagnosticada en Q80",
+        "Fix C++ aprobado; build Debug PASS; tests Linux Release 94/94 PASS; runner CPU 3/3 PASS; hashes 19/19 PASS. Preflight 12:17Z: cero inference servers/PeritoSoft, MemAvailable 124.0 GB, SwapFree 6.4 GB, OOM=0. Dos RTX 3090; desktop ArtCraft aparece sólo en telemetría (GPU util 13%/62%, 205 MiB), permitido por instrucción del usuario. Sin inferencia antes de este punto.",
+        "Readback exacto completado. Iniciar sólo MTP-off en servicio Q81 aislado; al terminar, cancelar/descargar/stop y comprobar puertos/procesos antes de un nuevo preflight para MTP-on.",
+        "Q80/RESULTS.md + source-audit-repair-timeout.json; Q81/PLAN.md + receipts/cpu-validation.json + receipts/artifact-hash-q81-prelaunch-final.json + receipts/preflight-final-before-mtp-off.json + receipts/google-sheet-sync-q81-preflight-final.json",
+        "Q81 activa bajo lock 33790bf7-e3ab-4a2f-bb08-40e7f1fdac1d. ASTRA/SOL productivo, pesos y perfiles preservados; no se detectó PeritoSoft. El usuario autorizó continuar con GUI encendida."
+      ]
+    },
+    "Accionables!H32:N32": {
+      "sheet_id": 1393124532,
+      "readback": "exact",
+      "values": [
+        "Q81: mantener un único watchdog de pared con deadline original durante todos los retries; regresión CPU verifica retry/terminal. Runner cancela y espera cleanup al max-wait.",
+        "Build Debug PASS; Linux Release 94/94, runner CPU 3/3, hashes 19/19 y preflight final PASS. Sin inference servers ni PeritoSoft; OOM=0. ArtCraft GUI aparece sólo como telemetría, permitido por usuario.",
+        "Q80/RESULTS.md; Q81/PLAN.md; receipts/cpu-validation.json; receipts/artifact-hash-q81-prelaunch-final.json; receipts/preflight-final-before-mtp-off.json; scripts/run_taskflow.py",
+        "Q81 activa; comenzar MTP-off aislado. MTP-on sólo después de cleanup, readback y nuevo preflight.",
+        "2026-10-24T11:58:02Z",
+        "2026-10-24T12:17:13Z",
+        "2026-10-24T12:17:13Z"
+      ]
+    }
+  },
+  "formatting": "Only userEnteredValue was updated; existing cell formats, including WRAP, were not modified.",
+  "post_write_readback": "Exact for both ranges."
+}

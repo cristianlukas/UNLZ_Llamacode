@@ -1,0 +1,40 @@
+{
+  "task_id": "Q-20261024-VF-ITERATION-81",
+  "lock_token": "33790bf7-e3ab-4a2f-bb08-40e7f1fdac1d",
+  "initial_preflight": {
+    "at_utc": "2026-10-24T12:40:41Z",
+    "status": "blocked_before_inference",
+    "reason": "The resource guard's default output path under Disco local/Modelos-eval/Q-20261024-VF-ITERATION-81/runs did not exist.",
+    "peritosoft_processes": 0,
+    "external_inference_servers": 0,
+    "oom_kill_count": 0,
+    "receipt": "receipts/preflight-final-before-mtp-on.json"
+  },
+  "change": {
+    "file": "scripts/q81_resource_guard.py",
+    "old_default": "/media/cristian/Disco local/Modelos-eval/Q-20261024-VF-ITERATION-81/runs",
+    "new_default": "<Q81 task directory>/runs",
+    "reason": "The isolated task already stores its result artifacts in this existing directory; disk telemetry must check the actual output volume."
+  },
+  "cpu_test": {
+    "at_utc": "2026-10-24T12:41:21Z",
+    "passed": 13,
+    "total": 13
+  },
+  "corrected_preflight": {
+    "at_utc": "2026-10-24T12:41:24Z",
+    "status": "passed",
+    "mem_available_bytes": 123928969216,
+    "swap_free_bytes": 6402879488,
+    "oom_kill_count": 0,
+    "external_inference_servers": 0,
+    "peritosoft_processes": 0,
+    "model_free_bytes": 23472803840,
+    "output_free_bytes": 38479351808,
+    "gpu_count": 2,
+    "gpu_models": ["NVIDIA GeForce RTX 3090", "NVIDIA GeForce RTX 3090"],
+    "gui_compute_telemetry": "ArtCraft, about 205 MiB; allowed and not classified as an inference server",
+    "receipt": "receipts/preflight-final-before-mtp-on-corrected.json"
+  },
+  "inference_started_during_recovery": false
+}

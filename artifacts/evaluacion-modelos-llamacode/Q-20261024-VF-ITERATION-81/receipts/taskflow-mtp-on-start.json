@@ -1,0 +1,46 @@
+{
+  "task_id": "Q-20261024-VF-ITERATION-81",
+  "started_at_utc": "2026-10-24T12:47:32Z",
+  "profile_id": "q4-mtp-on-taskflow-20261013",
+  "profile_fingerprint": "b39dcfa4f912aee2ae973d28f25ac04f81e5ba1c0dbaaa2e0a7e5641e38d3d27",
+  "suite_id": "qwen38_taskflow_ultra_ast_vs_sol_20261006",
+  "suite_sha256": "f04febb440208d5bf74c01e84d78f5127e57c164fabece2acbfb346215dc0c17",
+  "prompt_count": 1,
+  "hard_timeout_seconds": 1800,
+  "runner_max_wait_seconds": 1860,
+  "cancel_grace_seconds": 60,
+  "deadline_utc": "2026-10-24T13:17:32Z",
+  "runner_max_wait_utc": "2026-10-24T13:18:32Z",
+  "units": {
+    "app": "q81-flashnext-app.service",
+    "resource_guard": "q81-resource-guard.service",
+    "runner": "q81-mtp-on-runner.service"
+  },
+  "pids_at_2026_10_24T12_47_50Z": {
+    "app": 3054086,
+    "resource_guard": 3060314,
+    "runner": 3060706,
+    "llama_server": 3060719
+  },
+  "state_at_2026_10_24T12_47_50Z": {
+    "server_state": "running",
+    "agent_running": true,
+    "benchmark_running": true,
+    "benchmark_status": "[1/1] 2_EVAL · Q4 llama.cpp mtp-on · taskflow R8192 — agente: prompt 1/1...",
+    "benchmark_progress": 0
+  },
+  "resource_sample": {
+    "at_utc": "2026-10-24T12:47:50Z",
+    "mem_available_bytes": 122204729344,
+    "swap_free_bytes": 6402895872,
+    "oom_kill_count": 0,
+    "external_inference_servers": 0,
+    "peritosoft_processes": 0,
+    "breaches": [],
+    "gpu0_used_mib": 5568,
+    "gpu1_used_mib": 20096,
+    "owned_llama_server_pid": 3060719,
+    "gui_telemetry": "ArtCraft remains open and is telemetry only."
+  },
+  "model_load_or_request_before_fingerprint_gate": false
+}

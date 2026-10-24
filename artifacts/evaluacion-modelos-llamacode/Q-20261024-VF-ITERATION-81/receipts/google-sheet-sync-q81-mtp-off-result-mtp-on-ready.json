@@ -1,0 +1,36 @@
+{
+  "task_id": "Q-20261024-VF-ITERATION-81",
+  "written_at_utc": "2026-10-24T12:39:30Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "ranges": {
+    "Evaluaciones LlamaCode!C303:J303": {
+      "sheet_id": 1945218181,
+      "readback": "exact",
+      "values": [
+        "Activa · MTP-off completó con fallo de calidad 2/13; MTP-on preflight aprobado",
+        "2026-10-24",
+        "Qwen3.8-Flash-Next · corregir lifecycle del watchdog y revalidar TaskFlow MTP-off/on",
+        "Q81; misma suite/perfiles Q79; resultado MTP-off completo pero fallido, MTP-on pendiente",
+        "MTP-off: completó sin timeout, pero falló calidad tras 3 reparaciones; 2/13 checks (11 fallos, principalmente 7 archivos + tests/self-test faltantes). 21.19 avg TPS, TTFT 150.8 s, total 952.522 s; 21,671 MiB VRAM device-total; RAM telemetry reporta 0/no disponible. Coverage pipeline incompleto; no adoptar ni proclamar superioridad. Postflight: agente/server y unidades Q81 cerrados, puertos libres, 0 externos/PeritoSoft, OOM=0. Preflight 12:38Z: 123.9 GB MemAvailable, 6.4 GB SwapFree; MTP-on ya puede iniciar tras readback.",
+        "Iniciar MTP-on con fingerprint Q79 `b39dcfa4f912aee2ae973d28f25ac04f81e5ba1c0dbaaa2e0a7e5641e38d3d27`, misma suite y límites. Después cleanup/readback; cerrar comparación como inconclusa si coverage no es comparable.",
+        "Q80/RESULTS.md; Q81/PLAN.md; receipts/taskflow-mtp-off-final-result.json; receipts/preflight-before-mtp-on.json; runs/taskflow-mtp-off.json + events; receipts/resource-watch-mtp-off.jsonl",
+        "Q81 sigue activa bajo lock 33790bf7-e3ab-4a2f-bb08-40e7f1fdac1d. MTP-off runner result=quality failure (not timeout); no score comparison/adoption yet. User GUI and productive ASTRA/SOL preserved."
+      ]
+    },
+    "Accionables!H32:N32": {
+      "sheet_id": 1393124532,
+      "readback": "exact",
+      "values": [
+        "Q81: corregir watchdog y comparar TaskFlow ULTRA Flash-Next MTP-off/on en el mismo harness; runner con cancelación y limpieza limitada.",
+        "MTP-off completó en 952.522 s; calidad 2/13 tras 3 reparaciones (no timeout), avgTPS 21.19, TTFT 150.8 s, VRAM device-total 21,671 MiB; cobertura de pipeline incompleta. MTP-on aún pendiente; no conclusión/adopción.",
+        "Q81/PLAN.md; receipts/taskflow-mtp-off-final-result.json; receipts/preflight-before-mtp-on.json; runs/taskflow-mtp-off.json; runs/taskflow-mtp-off.events.jsonl; receipts/resource-watch-mtp-off.jsonl",
+        "Preflight MTP-on 12:38Z PASS tras parar app/server/agente Q81; 0 externos/PeritoSoft, OOM=0, 123.9 GB MemAvailable. Ejecutar MTP-on con fingerprint exacto; luego cleanup y readback.",
+        "2026-10-24T11:58:02Z",
+        "2026-10-24T12:38:08Z",
+        "2026-10-24T12:38:08Z"
+      ]
+    }
+  },
+  "formatting": "Only userEnteredValue updated in the sheet; WRAP formatting preserved.",
+  "post_write_readback": "Exact for both ranges."
+}

@@ -1,0 +1,53 @@
+{
+  "at_utc": "2026-10-24T12:40:41Z",
+  "memory_bytes": {
+    "MemTotal": 132615852032,
+    "MemAvailable": 124080214016,
+    "SwapTotal": 8589930496,
+    "SwapFree": 6402879488
+  },
+  "vmstat": {
+    "pswpin": 1583698,
+    "pswpout": 2070159,
+    "oom_kill": 0
+  },
+  "memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=8846984\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=8804627\n",
+  "external_inference_servers": [],
+  "peritosoft_process_pids": [],
+  "peritosoft_server_pids": [],
+  "listeners": {
+    "exit_code": 0,
+    "stdout": "State  Recv-Q Send-Q Local Address:Port  Peer Address:PortProcess                                   \nLISTEN 0      10         127.0.0.1:6742       0.0.0.0:*    users:((\"OpenRGB\",pid=17292,fd=4))       \nLISTEN 0      4096       127.0.0.1:631        0.0.0.0:*                                             \nLISTEN 0      128        127.0.0.1:47413      0.0.0.0:*    users:((\"artcraft-launch\",pid=4405,fd=4))\nLISTEN 0      4096       127.0.0.1:42539      0.0.0.0:*                                             \nLISTEN 0      4096      127.0.0.54:53         0.0.0.0:*                                             \nLISTEN 0      4096   127.0.0.53%lo:53         0.0.0.0:*                                             \nLISTEN 0      4096           [::1]:631           [::]:*",
+    "stderr": ""
+  },
+  "gpu": {
+    "gpus": {
+      "exit_code": 0,
+      "stdout": "0, NVIDIA GeForce RTX 3090, 856, 24576, 45, 55, 57.36\n1, NVIDIA GeForce RTX 3090, 110, 24576, 27, 50, 24.92",
+      "stderr": ""
+    },
+    "compute_apps_telemetry_only": {
+      "exit_code": 0,
+      "stdout": "4405, /tmp/.mount_artcraIDgFiN/usr/bin/artcraft-launcher, 205",
+      "stderr": ""
+    }
+  },
+  "disk": {
+    "model": {
+      "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL",
+      "free_bytes": 23472803840,
+      "total_bytes": 1800381919232
+    },
+    "output": {
+      "path": "/media/cristian/Disco local/Modelos-eval/Q-20261024-VF-ITERATION-81/runs",
+      "error": "FileNotFoundError: [Errno 2] No such file or directory: '/media/cristian/Disco local/Modelos-eval/Q-20261024-VF-ITERATION-81/runs'"
+    }
+  },
+  "baseline_swap_used_bytes": 2192027648,
+  "baseline_oom_kill": 0,
+  "breaches": [
+    "model or output disk unavailable/full"
+  ],
+  "peritosoft_stop": null,
+  "gpu_compute_apps_are_telemetry_only": true
+}

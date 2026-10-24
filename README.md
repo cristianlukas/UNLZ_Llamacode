@@ -2064,7 +2064,10 @@ En benchmarks de agente, la reparación BCB espera el `turnFinished` del turno
 correctivo y no considera estancado un backend que todavía está ocupado en
 prefill, herramientas o cierre de stream. El watchdog de reparación sólo actúa
 cuando el backend está libre y no hubo cambios reales en el workspace durante
-180 segundos; el timeout duro de la corrida sigue siendo el límite de seguridad.
+180 segundos. El timeout duro de pared se mide desde el inicio de la pasada e
+incluye el turno inicial y sus reparaciones; el mismo watchdog permanece activo
+durante los retries y sólo se detiene al terminar la pasada. Al vencer, se
+cancela la generación y el finalizador persiste la corrida como incompleta.
 
 Módulo para comparar quants y perfiles de forma sistemática: mide RAM, VRAM, velocidad y calidad relativa con resultados persistidos en tabla.
 

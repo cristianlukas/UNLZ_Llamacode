@@ -1,0 +1,19 @@
+{
+  "task_id": "Q-20261024-VF-ITERATION-81",
+  "written_at_utc": "2026-10-24T12:50:01Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "ranges": {
+    "Evaluaciones LlamaCode!C303:J303": {
+      "sheet_id": 1945218181,
+      "readback": "exact",
+      "values": ["MTP-on prompt 1/1 · prefill 17.061/17.573; decode pendiente", "2026-10-24", "Qwen3.8-Flash-Next · corregir lifecycle del watchdog y revalidar TaskFlow MTP-off/on", "Q81; MTP-on propio PID 3060719; prefill slot 0", "MTP-off completó sin timeout: calidad 2/13 tras 3 reparaciones, 21.19 avg TPS, TTFT 150.8 s, 952.522 s; coverage incompleto, no adoptar. MTP-on 12:50:01Z: 17,061/17,573 tokens de prompt procesados, decode=0; TTFT/TPS final pendientes. Guard: cero externos/PeritoSoft, OOM=0, 122.0 GB MemAvailable, 6.4 GB SwapFree; GPU0 5,602 MiB, GPU1 20,164 MiB.", "Continuar la misma pasada hasta completar o deadline 13:17:32Z; max-wait 13:18:32Z. Monitor cada 10s, sin iniciar otro prompt.", "Q81/PLAN.md; receipts/taskflow-mtp-on-progress-02.json; receipts/resource-watch-mtp-on.jsonl; runs/taskflow-mtp-on.events.jsonl; MTP-off receipt", "Q81 activa bajo lock `33790bf7-e3ab-4a2f-bb08-40e7f1fdac1d`; MTP-on prefill progresa, sin score/TPS final. GUI/ASTRA/SOL preservados."]
+    },
+    "Accionables!H32:N32": {
+      "sheet_id": 1393124532,
+      "readback": "exact",
+      "values": ["Q81: completar TaskFlow ULTRA Flash-Next MTP-on con perfil fijado; comparar sólo con cobertura válida.", "MTP-on prompt 1/1, prefill avanzó a 17.061/17.573 tokens; decode=0 a 12:50:01Z. Sin score/TPS final. OOM=0 y cero externos/PeritoSoft.", "Q81/PLAN.md; receipts/taskflow-mtp-on-progress-02.json; receipts/resource-watch-mtp-on.jsonl; runs/taskflow-mtp-on.events.jsonl; MTP-off final", "Monitorear esta única pasada. Deadline duro 13:17:32Z; cancelación runner 13:18:32Z, luego cleanup y postflight.", "2026-10-24T11:58:02Z", "2026-10-24T12:50:01Z", "2026-10-24T12:50:01Z"]
+    }
+  },
+  "formatting": "Only userEnteredValue updated; WRAP formatting preserved.",
+  "post_write_readback": "Exact for both ranges."
+}

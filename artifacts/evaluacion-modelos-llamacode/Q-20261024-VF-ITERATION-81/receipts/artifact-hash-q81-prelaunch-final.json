@@ -1,0 +1,212 @@
+{
+  "task_id": "Q-20261024-VF-ITERATION-81",
+  "verified_at_utc": "2026-10-24T12:15:59+00:00",
+  "status": "passed",
+  "source_manifest": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-79/receipts/taskflow-mtp-on-hash-verification-E2.json",
+  "prior_attempt_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-81/receipts/artifact-hash-q81-prelaunch.json",
+  "prior_attempt_disposition": "Retained for audit; its model hashes were valid, but the first mapping pass added an extra runtime path segment and used a mis-transcribed CPU receipt app hash. This final receipt corrects both, keeps the same sequential model hashes, and independently rechecks all small/copied artifacts.",
+  "method": "Model and MTP weights hashed sequentially in the prior pass using 16 MiB streaming blocks; no model load or inference request. All other checks recomputed using corrected Q81 paths and 8 MiB streaming SHA-256. launches.json permits only lastUsed differences and was structurally compared to the pinned source after removing that field.",
+  "expected_check_count": 19,
+  "all_match": true,
+  "model_loads_during_hashing": 0,
+  "model_requests_during_hashing": 0,
+  "checks": [
+    {
+      "label": "model_shard",
+      "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf",
+      "expected_sha256": "4448186216b3af4cc558bbce2c3213f01608f8f8b2e5267a9767971dd3ec8082",
+      "expected_size_bytes": 10946624,
+      "source_receipt_expected_sha256": "4448186216b3af4cc558bbce2c3213f01608f8f8b2e5267a9767971dd3ec8082",
+      "special": null,
+      "actual_sha256": "4448186216b3af4cc558bbce2c3213f01608f8f8b2e5267a9767971dd3ec8082",
+      "size_bytes": 10946624,
+      "elapsed_sec": 0.01,
+      "match": true,
+      "size_match": true
+    },
+    {
+      "label": "model_shard",
+      "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+      "expected_sha256": "3f342f1c1580473f1ee94ddd5b28206e8c07a70fa1a366f59d1d6c922919a6c9",
+      "expected_size_bytes": 49859583136,
+      "source_receipt_expected_sha256": "3f342f1c1580473f1ee94ddd5b28206e8c07a70fa1a366f59d1d6c922919a6c9",
+      "special": null,
+      "actual_sha256": "3f342f1c1580473f1ee94ddd5b28206e8c07a70fa1a366f59d1d6c922919a6c9",
+      "size_bytes": 49859583136,
+      "elapsed_sec": 67.65,
+      "match": true,
+      "size_match": true
+    },
+    {
+      "label": "model_shard",
+      "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+      "expected_sha256": "56758f40269cad5cd9b0d3d6fbae0f40f6d5be6de49e4ab392dbe83157d9cbd3",
+      "expected_size_bytes": 49376141504,
+      "source_receipt_expected_sha256": "56758f40269cad5cd9b0d3d6fbae0f40f6d5be6de49e4ab392dbe83157d9cbd3",
+      "special": null,
+      "actual_sha256": "56758f40269cad5cd9b0d3d6fbae0f40f6d5be6de49e4ab392dbe83157d9cbd3",
+      "size_bytes": 49376141504,
+      "elapsed_sec": 22.22,
+      "match": true,
+      "size_match": true
+    },
+    {
+      "label": "model_shard",
+      "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf",
+      "expected_sha256": "753bda48b98ba4f1636134a90a967de1b2d3908a236c026e464777342e53510a",
+      "expected_size_bytes": 12087983520,
+      "source_receipt_expected_sha256": "753bda48b98ba4f1636134a90a967de1b2d3908a236c026e464777342e53510a",
+      "special": null,
+      "actual_sha256": "753bda48b98ba4f1636134a90a967de1b2d3908a236c026e464777342e53510a",
+      "size_bytes": 12087983520,
+      "elapsed_sec": 5.38,
+      "match": true,
+      "size_match": true
+    },
+    {
+      "label": "mtp_sidecar",
+      "path": "/media/cristian/Disco local/Modelos-eval/Q-20261017-LLAMACPP-MTP-CODING-FOLLOWUP/mtp-Qwen3.8-Flash-Next-Q8_0.gguf",
+      "expected_sha256": "58a47d6a216307e9b97172d5bfdc3436a8994b632f5e436b9bb6edf8951da8d1",
+      "expected_size_bytes": 4137429120,
+      "source_receipt_expected_sha256": "58a47d6a216307e9b97172d5bfdc3436a8994b632f5e436b9bb6edf8951da8d1",
+      "special": null,
+      "actual_sha256": "58a47d6a216307e9b97172d5bfdc3436a8994b632f5e436b9bb6edf8951da8d1",
+      "size_bytes": 4137429120,
+      "elapsed_sec": 1.83,
+      "match": true,
+      "size_match": true
+    },
+    {
+      "label": "llama_cpp",
+      "path": "/media/cristian/Disco local/LlamaCode-cache/llama.cpp-spark-native-20261003/build-cuda/bin/llama-server",
+      "expected_sha256": "ab7828696af2694981037b7114d834d310c1c5f24b39ab24267898748334cbb4",
+      "expected_size_bytes": 17888,
+      "source_receipt_expected_sha256": "ab7828696af2694981037b7114d834d310c1c5f24b39ab24267898748334cbb4",
+      "special": null,
+      "actual_sha256": "ab7828696af2694981037b7114d834d310c1c5f24b39ab24267898748334cbb4",
+      "size_bytes": 17888,
+      "elapsed_sec": 0.0,
+      "match": true,
+      "size_match": true
+    },
+    {
+      "label": "app_home",
+      "path": "/home/cristian/.cache/llamacode/build_linux/LlamaCode",
+      "expected_sha256": "25709ce51a64fb71981c2e2620298d4bfeb3e266af7f5d069190d80ec463f84f",
+      "actual_sha256": "25709ce51a64fb71981c2e2620298d4bfeb3e266af7f5d069190d80ec463f84f",
+      "size_bytes": 129949568,
+      "match": true,
+      "expected_size_bytes": 129949568,
+      "match_to_corrected_cpu_receipt": true
+    },
+    {
+      "label": "suite_05c28394-11d0-41fe-a55f-b3cb69db9c15",
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-81/runtime/lch/xdg-data/LlamaCode/LlamaCode/benchmarks/custom/05c28394-11d0-41fe-a55f-b3cb69db9c15.json",
+      "expected_sha256": "42771136b447b7b5619e04a1ea211f663222cd6752ca38d995083b5a4d207574",
+      "actual_sha256": "42771136b447b7b5619e04a1ea211f663222cd6752ca38d995083b5a4d207574",
+      "size_bytes": 35996,
+      "expected_size_bytes": 35996,
+      "match": true
+    },
+    {
+      "label": "suite_qwen38_taskflow_ultra_ast_vs_sol_20261006",
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-81/runtime/lch/xdg-data/LlamaCode/LlamaCode/benchmarks/custom/qwen38_taskflow_ultra_ast_vs_sol_20261006.json",
+      "expected_sha256": "f04febb440208d5bf74c01e84d78f5127e57c164fabece2acbfb346215dc0c17",
+      "actual_sha256": "f04febb440208d5bf74c01e84d78f5127e57c164fabece2acbfb346215dc0c17",
+      "size_bytes": 7834,
+      "expected_size_bytes": 7834,
+      "match": true
+    },
+    {
+      "label": "profile_launches.json",
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-81/runtime/lch/profiles/launches.json",
+      "expected_sha256": "3ead8ff05a1c8d4d1d452506cb9897323e27b51cd599440b4c4f07eb69619b7f",
+      "actual_sha256": "64ff7df5be725b5522ee006c3b7ee61753d67b40ffb8c5ec63b9dd8951e81606",
+      "size_bytes": 15889,
+      "expected_size_bytes": 15877,
+      "match": true,
+      "source_path_for_lastUsed_normalization": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261017-LLAMACPP-MTP-CODING-FOLLOWUP/runtime/lch/profiles/launches.json",
+      "structurally_equal_after_removing_only_lastUsed": true
+    },
+    {
+      "label": "profile_backends.json",
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-81/runtime/lch/profiles/backends.json",
+      "expected_sha256": "1c5cf956e29f7f0a5019e4368feed7290f1c251acaf91ca0957bb935853208d0",
+      "actual_sha256": "1c5cf956e29f7f0a5019e4368feed7290f1c251acaf91ca0957bb935853208d0",
+      "size_bytes": 1442,
+      "expected_size_bytes": 1442,
+      "match": true
+    },
+    {
+      "label": "profile_models.json",
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-81/runtime/lch/profiles/models.json",
+      "expected_sha256": "f1ad8334c886606431e66541310e64bc45753124be8463a4ce05e440fdae7341",
+      "actual_sha256": "f1ad8334c886606431e66541310e64bc45753124be8463a4ce05e440fdae7341",
+      "size_bytes": 1678,
+      "expected_size_bytes": 1678,
+      "match": true
+    },
+    {
+      "label": "profile_runtimes.json",
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-81/runtime/lch/profiles/runtimes.json",
+      "expected_sha256": "725438707b4744e77b79182095ec16ba13630810ed0e90c0473aea15f751a02d",
+      "actual_sha256": "725438707b4744e77b79182095ec16ba13630810ed0e90c0473aea15f751a02d",
+      "size_bytes": 769,
+      "expected_size_bytes": 769,
+      "match": true
+    },
+    {
+      "label": "profile_agent_profiles.json",
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-81/runtime/lch/profiles/agent_profiles.json",
+      "expected_sha256": "3fbbd4c6d76130399b0c79cdf41758669224a91e05b7b216953f0c9728750865",
+      "actual_sha256": "3fbbd4c6d76130399b0c79cdf41758669224a91e05b7b216953f0c9728750865",
+      "size_bytes": 4,
+      "expected_size_bytes": 4,
+      "match": true
+    },
+    {
+      "label": "agent_profiles",
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-81/runtime/lch/profiles/agent_profiles.json",
+      "expected_sha256": "3fbbd4c6d76130399b0c79cdf41758669224a91e05b7b216953f0c9728750865",
+      "actual_sha256": "3fbbd4c6d76130399b0c79cdf41758669224a91e05b7b216953f0c9728750865",
+      "size_bytes": 4,
+      "expected_size_bytes": 4,
+      "match": true
+    },
+    {
+      "label": "harnesses",
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-81/runtime/lch/profiles/harnesses.json",
+      "expected_sha256": "3fbbd4c6d76130399b0c79cdf41758669224a91e05b7b216953f0c9728750865",
+      "actual_sha256": "3fbbd4c6d76130399b0c79cdf41758669224a91e05b7b216953f0c9728750865",
+      "size_bytes": 4,
+      "expected_size_bytes": 4,
+      "match": true
+    },
+    {
+      "label": "script_run_taskflow.py",
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-81/scripts/run_taskflow.py",
+      "expected_sha256": "cc7ee46642f142eaa059d5de12a772459894cf01efd35d702e09dad9540d34b6",
+      "actual_sha256": "cc7ee46642f142eaa059d5de12a772459894cf01efd35d702e09dad9540d34b6",
+      "size_bytes": 8075,
+      "match": true
+    },
+    {
+      "label": "script_start-q81-isolated.sh",
+      "source_label": "script_start-llamacode-isolated.sh",
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-81/scripts/start-q81-isolated.sh",
+      "actual_sha256": "ee30e32fffb193e9f507790f8270e90a10ba39af8caabc998a836a74ef066049",
+      "size_bytes": 568,
+      "match": true,
+      "baseline_sha256_from_prior_q81_preflight": "ee30e32fffb193e9f507790f8270e90a10ba39af8caabc998a836a74ef066049"
+    },
+    {
+      "label": "q81_guard",
+      "source_label": "q79_guard",
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-81/scripts/q81_resource_guard.py",
+      "actual_sha256": "b85e0de4e73ab1cd205405c09a02cb7cd33c98e8173c806e4f3e35dcfdf429d8",
+      "size_bytes": 23282,
+      "match": true,
+      "baseline_sha256_from_prior_q81_preflight": "b85e0de4e73ab1cd205405c09a02cb7cd33c98e8173c806e4f3e35dcfdf429d8"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "task_id": "Q-20261024-VF-ITERATION-81",
+  "written_at_utc": "2026-10-24T12:53:44Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "ranges": {
+    "Evaluaciones LlamaCode!C303:J303": {
+      "sheet_id": 1945218181,
+      "readback": "exact",
+      "values": ["MTP-on prompt 1/1 · decode 5.595/6.279; 684 restantes", "2026-10-24", "Qwen3.8-Flash-Next · corregir lifecycle del watchdog y revalidar TaskFlow MTP-off/on", "Q81; MTP-on propio PID 3060719; decode slot 0 casi finalizado", "MTP-off: calidad 2/13 sin timeout, 21.19 avg TPS, TTFT 150.8 s, total 952.522 s; coverage incompleto, no adoptar. MTP-on 12:53:44Z: 5,595/6,279 tokens decodificados, quedan 684; prompt 18,572/24,166 procesados. Aún sin score/TPS/TTFT final. Guard: 0 externos/PeritoSoft, OOM=0, MemAvailable 121.8 GB, SwapFree 6.4 GB; GPU0 5,628 MiB, GPU1 20,196 MiB.", "Dejar terminar generación, herramientas y aceptación hasta deadline 13:17:32Z; runner cancela a 13:18:32Z. No inferir TPS desde el conteo parcial.", "Q81/PLAN.md; receipts/taskflow-mtp-on-progress-05.json; receipts/resource-watch-mtp-on.jsonl; runs/taskflow-mtp-on.events.jsonl; MTP-off final receipt", "Q81 lock `33790bf7-e3ab-4a2f-bb08-40e7f1fdac1d`; MTP-on sigue en prompt 1/1, sin resultado de calidad. Sin servers ajenos/PeritoSoft; GUI y ASTRA/SOL preservados."]
+    },
+    "Accionables!H32:N32": {
+      "sheet_id": 1393124532,
+      "readback": "exact",
+      "values": ["Q81: completar MTP-on TaskFlow ULTRA y registrar aceptación/calidad; sin adopción anticipada.", "MTP-on: 5,595/6,279 decode tokens (684 restantes), prompt 18,572/24,166 al 12:53:44Z. Aún no score ni throughput final; infraestructura limpia, OOM=0.", "Q81/PLAN.md; receipts/taskflow-mtp-on-progress-05.json; receipts/resource-watch-mtp-on.jsonl; runs/taskflow-mtp-on.events.jsonl", "Esperar cierre del agente, reparaciones/validación si las hace y el resultado final. Timeout 13:17:32Z; runner cancela 13:18:32Z.", "2026-10-24T11:58:02Z", "2026-10-24T12:53:44Z", "2026-10-24T12:53:44Z"]
+    }
+  },
+  "formatting": "Only userEnteredValue updated; WRAP formatting preserved.",
+  "post_write_readback": "Exact for both ranges."
+}

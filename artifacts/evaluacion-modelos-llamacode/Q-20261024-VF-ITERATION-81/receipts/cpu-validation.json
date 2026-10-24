@@ -1,0 +1,43 @@
+{
+  "task_id": "Q-20261024-VF-ITERATION-81",
+  "validated_at_utc": "2026-10-24T12:07:51Z",
+  "build": {
+    "command": "./scripts/build-linux.sh Debug",
+    "exit_code": 0,
+    "native_build_dir": "/home/cristian/.cache/llamacode/build_linux",
+    "binary": "/home/cristian/.cache/llamacode/build_linux/LlamaCode",
+    "binary_sha256": "25709ce51a64fb71981c2e2620298d4bfeb3e266af7f5d069190d80ec463f84f",
+    "previous_q79_binary_sha256": "66cddd8fed3830260f34eda45d33aba523a2fe98ef8612e9eb9eda5c0612fcc0",
+    "source_appcontroller_sha256": "5e15044403a1854bd7fc0eedff5c6dacd2666c678dbaf344cbe28c8314da2a04",
+    "mirror_source_hash_matches": true,
+    "note": "LlamaCode Linux Debug target compiled and updated; only existing CMake/Qt policy and deprecated Qt constructor warnings.",
+    "binary_sha256_recorded_before_correction": "25709ce51a64fb71981c2c2620298d4bfeb3e266af7f5d069190d80ec463f84f",
+    "binary_size_bytes": 129949568,
+    "binary_hash_correction": {
+      "corrected_at_utc": "2026-10-24T12:15:58+00:00",
+      "reason": "The first Q81 receipt transcription differed from sha256sum by one character; the built binary itself was unchanged (mtime 2026-10-24 09:04:19 -0300). Corrected to an independent streaming SHA-256 of the exact Debug executable used by the isolated service.",
+      "verified_sha256": "25709ce51a64fb71981c2e2620298d4bfeb3e266af7f5d069190d80ec463f84f",
+      "verified_size_bytes": 129949568
+    }
+  },
+  "linux_release_tests": {
+    "command": "./scripts/tests-linux.sh Release",
+    "exit_code": 0,
+    "ctest_total": 94,
+    "passed": 94,
+    "failed": 0,
+    "test_appcontroller": "passed"
+  },
+  "runner_cpu_tests": {
+    "command": "python3 -m unittest discover -s artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-81/scripts -p test_run_taskflow.py -v",
+    "exit_code": 0,
+    "tests_total": 3,
+    "passed": 3,
+    "failed": 0,
+    "py_compile_exit_code": 0,
+    "runner_sha256": "cc7ee46642f142eaa059d5de12a772459894cf01efd35d702e09dad9540d34b6",
+    "runner_test_sha256": "03a280a1be8cb9fb6693bb74d1c04c1e25b6a4bfe27c74a6fe699b2d61e895cc",
+    "fingerprint_gate": "exact match required before startAgent/model load"
+  },
+  "gpu_or_model_inference_started": false
+}

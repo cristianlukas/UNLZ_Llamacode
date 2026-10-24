@@ -1,0 +1,36 @@
+{
+  "task_id": "Q-20261024-VF-ITERATION-81",
+  "written_at_utc": "2026-10-24T12:28:34Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "ranges": {
+    "Evaluaciones LlamaCode!C303:J303": {
+      "sheet_id": 1945218181,
+      "readback": "exact",
+      "values": [
+        "Activa · TaskFlow ULTRA MTP-off en repair 2/3; timeout de pared sigue activo",
+        "2026-10-24",
+        "Qwen3.8-Flash-Next · corregir lifecycle del watchdog y revalidar TaskFlow MTP-off/on",
+        "Q81; suite TaskFlow ULTRA y perfiles MTP de Q79; causa diagnosticada en Q80",
+        "MTP-off inició 12:20:16Z y el primer intento terminó; el arnés está en reparación 2/3. Sigue benchmarkRunning=true con watchdog de pared desde el inicio original. Preflight/hash gates ya pasaron; watcher sin breaches, OOM=0. Sin resultado final hasta ahora.",
+        "Continuar hasta completar o alcanzar el hard deadline 1800 s. Runner cancela a max-wait 1860 s. Después capturar resultado/coverage/timings, hacer cleanup y nuevo preflight antes de MTP-on.",
+        "Q81/PLAN.md; receipts/cpu-validation.json; receipts/artifact-hash-q81-prelaunch-final.json; receipts/resource-watch-mtp-off.jsonl; runs/taskflow-mtp-off.events.jsonl; runs/taskflow-mtp-off.json",
+        "Q81 activa bajo lock 33790bf7-e3ab-4a2f-bb08-40e7f1fdac1d. MTP-off está aislado; ASTRA/SOL productivo, pesos y perfiles permanecen intactos. No PeritoSoft."
+      ]
+    },
+    "Accionables!H32:N32": {
+      "sheet_id": 1393124532,
+      "readback": "exact",
+      "values": [
+        "Q81: mantener un único watchdog de pared con deadline original durante todos los retries; regresión CPU verifica retry/terminal. Runner cancela y espera cleanup al max-wait.",
+        "MTP-off en repair 2/3, misma fase de Q79; benchmarkRunning=true y watchdog original sigue activo. Watcher sin breaches/OOM. Todavía sin score.",
+        "Q80/RESULTS.md; Q81/PLAN.md; receipts/cpu-validation.json; receipts/artifact-hash-q81-prelaunch-final.json; receipts/resource-watch-mtp-off.jsonl; runs/taskflow-mtp-off.events.jsonl; runs/taskflow-mtp-off.json",
+        "Dejar terminar o al hard deadline cancelar y documentar como incompleto sin puntaje. No iniciar MTP-on hasta cleanup y preflight fresco.",
+        "2026-10-24T11:58:02Z",
+        "2026-10-24T12:28:34Z",
+        "2026-10-24T12:28:34Z"
+      ]
+    }
+  },
+  "formatting": "Only userEnteredValue updated; WRAP formatting preserved.",
+  "post_write_readback": "Exact for both ranges."
+}

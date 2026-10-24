@@ -1,0 +1,19 @@
+{
+  "task_id": "Q-20261024-VF-ITERATION-81",
+  "written_at_utc": "2026-10-24T12:54:45Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "ranges": {
+    "Evaluaciones LlamaCode!C303:J303": {
+      "sheet_id": 1945218181,
+      "readback": "exact",
+      "values": ["MTP-on en reparación 2/3; watchdog original activo", "2026-10-24", "Qwen3.8-Flash-Next · corregir lifecycle del watchdog y revalidar TaskFlow MTP-off/on", "Q81; MTP-on propio PID 3060719; retry 2/3", "MTP-off: calidad 2/13 sin timeout, 21.19 avg TPS, TTFT 150.8 s, 952.522 s; coverage incompleto, no adoptar. MTP-on a 12:54:45Z: prompt inicial terminó y el arnés entró en reparación 2/3; slot del retry con 4,513/5,025 prompt tokens procesados, aún sin score/TTFT/TPS final. Guard: cero externos/PeritoSoft, OOM=0, MemAvailable 121.1 GB, SwapFree 6.4 GB; GPU0 5,627 MiB, GPU1 20,196 MiB.", "Dejar completar repair2/3 y, si hace falta, 3/3 bajo el deadline único 13:17:32Z; runner cancela a 13:18:32Z. Luego registrar la aceptación y coverage.", "Q81/PLAN.md; receipts/taskflow-mtp-on-progress-06.json; receipts/resource-watch-mtp-on.jsonl; runs/taskflow-mtp-on.events.jsonl; MTP-off final", "Q81 lock `33790bf7-e3ab-4a2f-bb08-40e7f1fdac1d`; MTP-on reparación 2/3; no resultado final todavía. Infraestructura limpia; GUI/ASTRA/SOL preservados."]
+    },
+    "Accionables!H32:N32": {
+      "sheet_id": 1393124532,
+      "readback": "exact",
+      "values": ["Q81: completar MTP-on TaskFlow ULTRA; el arnés está en reparación 2/3, mismo harness.", "El primer prompt terminó; reparación 2/3 activa a 12:54:45Z. Slot del retry: 4,513/5,025 tokens de prompt; no score final. Monitor sin OOM ni servers externos/PeritoSoft.", "Q81/PLAN.md; receipts/taskflow-mtp-on-progress-06.json; receipts/resource-watch-mtp-on.jsonl; runs/taskflow-mtp-on.events.jsonl; MTP-off final", "Esperar resultado final del retry bajo watchdog original. Deadline 13:17:32Z, runner max-wait 13:18:32Z; luego cleanup/postflight.", "2026-10-24T11:58:02Z", "2026-10-24T12:54:45Z", "2026-10-24T12:54:45Z"]
+    }
+  },
+  "formatting": "Only userEnteredValue updated; WRAP formatting preserved.",
+  "post_write_readback": "Exact for both ranges."
+}

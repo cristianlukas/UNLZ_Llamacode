@@ -1,0 +1,37 @@
+{
+  "task_id": "Q-20261024-VF-ITERATION-81",
+  "written_at_utc": "2026-10-24T13:16:38Z",
+  "readback_at_utc": "2026-10-24T13:16:38Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "ranges": {
+    "Evaluaciones LlamaCode!C303:J303": {
+      "sheet_id": 1945218181,
+      "readback": "exact",
+      "values": [
+        "MTP-on repair 2/3 · prompt actual 19.181/19.693 procesados; deadline en 54 s",
+        "2026-10-24",
+        "Qwen3.8-Flash-Next · corregir lifecycle del watchdog y revalidar TaskFlow MTP-off/on",
+        "Q81; MTP-on propio PID 3060719; benchmarkRunning=true",
+        "MTP-off: calidad 2/13 sin timeout, 21.19 avg TPS, TTFT 150.8 s, 952.522 s; coverage incompleto, no adoptar. MTP-on 2026-10-24T13:16:38Z: reparación 2/3, prompt 19.181/19.693 procesados; sin score/TPS/TTFT final. Guard: cero externos/PeritoSoft, OOM=0, MemAvailable 119.7 GB, SwapFree 6.4 GB; GPU0 5.628 MiB, GPU1 20.196 MiB.",
+        "Esperar hard deadline 13:17:32Z; runner max-wait 13:18:32Z y gracia 60s. Verificar cancelación, cleanup, métricas/cobertura, luego cerrar Q81.",
+        "Q81/PLAN.md; receipts/taskflow-mtp-on-progress-22.json; receipts/resource-watch-mtp-on.jsonl; runs/taskflow-mtp-on.events.jsonl; resultado MTP-off",
+        "Q81 lock `33790bf7-e3ab-4a2f-bb08-40e7f1fdac1d`; repair2 sigue activo sin score final; cerrar con hard watchdog si no termina. Sin servidores externos/PeritoSoft."
+      ]
+    },
+    "Accionables!H32:N32": {
+      "sheet_id": 1393124532,
+      "readback": "exact",
+      "values": [
+        "Q81: completar el cierre del MTP-on TaskFlow ULTRA; no adoptar sin resultado comparable.",
+        "Repair 2/3 sigue activo: prompt 19.181/19.693 a 13:16:38Z, sin score/TPS/TTFT. Deadline 13:17:32Z; el runner debe cancelar/limpiar si sigue activo.",
+        "Q81/PLAN.md; receipts/taskflow-mtp-on-progress-22.json; receipts/resource-watch-mtp-on.jsonl; runs/taskflow-mtp-on.events.jsonl; MTP-off final",
+        "Respetar hard deadline; verificar cancelación confirmada dentro de la gracia y postflight antes de cerrar el lock.",
+        "2026-10-24T11:58:02Z",
+        "2026-10-24T13:16:38Z",
+        "2026-10-24T13:16:38Z"
+      ]
+    }
+  },
+  "formatting": "Only userEnteredValue updated; existing WRAP formatting preserved.",
+  "post_write_readback": "Exact for both ranges."
+}

@@ -1,0 +1,36 @@
+{
+  "task_id": "Q-20261024-VF-ITERATION-81",
+  "at_utc": "2026-10-24T12:19:25+00:00",
+  "app_unit": "q81-flashnext-app.service",
+  "unit_show": "MainPID=3003958\nControlGroup=/user.slice/user-1000.slice/user@1000.service/background.slice/q81-flashnext-app.service\nMemoryCurrent=26279936\nActiveState=active\nSubState=running\n",
+  "api_health": {
+    "ok": true,
+    "reqId": "a5aa10d2-2095-4536-b59f-eabb1c169eb7"
+  },
+  "server_state": "stopped",
+  "agent_running": false,
+  "benchmark_running": false,
+  "benchmark_status": "",
+  "launch_profiles": [
+    {
+      "id": "q4-mtp-on-taskflow-20261013",
+      "name": "2_EVAL · Q4 llama.cpp mtp-on · taskflow R8192",
+      "ready": true
+    },
+    {
+      "id": "q4-mtp-off-taskflow-20261013",
+      "name": "4_EVAL · Q4 llama.cpp mtp-off · taskflow R8192",
+      "ready": true
+    }
+  ],
+  "suite": [
+    {
+      "id": "qwen38_taskflow_ultra_ast_vs_sol_20261006",
+      "name": "Qwen3.8 ASTRA IQ3_S calibrado vs SOL · TaskFlow ULTRA E2E",
+      "prompt_count": 1
+    }
+  ],
+  "listeners": "State  Recv-Q Send-Q Local Address:Port  Peer Address:PortProcess                                   \nLISTEN 0      10         127.0.0.1:6742       0.0.0.0:*    users:((\"OpenRGB\",pid=17292,fd=4))       \nLISTEN 0      4096       127.0.0.1:631        0.0.0.0:*                                             \nLISTEN 0      50         127.0.0.1:18129      0.0.0.0:*    users:((\"LlamaCode\",pid=3003958,fd=23))  \nLISTEN 0      128        127.0.0.1:47413      0.0.0.0:*    users:((\"artcraft-launch\",pid=4405,fd=4))\nLISTEN 0      4096       127.0.0.1:42539      0.0.0.0:*                                             \nLISTEN 0      4096      127.0.0.54:53         0.0.0.0:*                                             \nLISTEN 0      4096   127.0.0.53%lo:53         0.0.0.0:*                                             \nLISTEN 0      4096           [::1]:631           [::]:*                                             \n",
+  "inference_started": false,
+  "gates_passed": true
+}

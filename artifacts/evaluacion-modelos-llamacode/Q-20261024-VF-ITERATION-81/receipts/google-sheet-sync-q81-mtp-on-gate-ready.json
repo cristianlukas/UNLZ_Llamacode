@@ -1,0 +1,36 @@
+{
+  "task_id": "Q-20261024-VF-ITERATION-81",
+  "written_at_utc": "2026-10-24T12:46:19Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "ranges": {
+    "Evaluaciones LlamaCode!C303:J303": {
+      "sheet_id": 1945218181,
+      "readback": "exact",
+      "values": [
+        "Activa · MTP-off calidad 2/13; MTP-on host/API/fingerprint gate PASS",
+        "2026-10-24",
+        "Qwen3.8-Flash-Next · corregir lifecycle del watchdog y revalidar TaskFlow MTP-off/on",
+        "Q81; misma suite/perfiles Q79; off completó con fallo de calidad; on autorizado a iniciar",
+        "MTP-off completó sin timeout tras 3 reparaciones: 2/13 checks, 21.19 avg TPS, TTFT 150.8 s, total 952.522 s; coverage incompleto (he0/he20/bcb pendientes), no adoptar. Guard path corregido; self-test 13/13. Preflight host 12:41:24 PASS: cero servidores de inferencia/PeritoSoft, OOM=0, 123.9 GB MemAvailable, 6.4 GB SwapFree, 2 RTX 3090. API 12:46:19: profile gate runner-equivalent confirmó fingerprint exacto MTP-on `b39dcfa4…8d3d27`, suite/1 prompt, sin carga/request.",
+        "Iniciar MTP-on con fingerprint `b39dcfa4f912aee2ae973d28f25ac04f81e5ba1c0dbaaa2e0a7e5641e38d3d27`, misma suite y límites 1800/1860s; monitor Q81 aislado. Cleanup, postflight y readback; no afirmar superioridad si falta cobertura comparable.",
+        "Q80/RESULTS.md; Q81/PLAN.md; receipts/taskflow-mtp-off-final-result.json; receipts/resource-guard-path-fix.json; receipts/preflight-final-before-mtp-on-corrected.json; receipts/api-preflight-before-mtp-on.json; runs/taskflow-mtp-off.json + events",
+        "Q81 activa bajo lock `33790bf7-e3ab-4a2f-bb08-40e7f1fdac1d`. MTP-off falló calidad, no timeout. Guard path corregido. Preflight host y profile fingerprint gate MTP-on PASS; runner aún no inició inferencia. GUI/ASTRA/SOL productivo y modelos intactos."
+      ]
+    },
+    "Accionables!H32:N32": {
+      "sheet_id": 1393124532,
+      "readback": "exact",
+      "values": [
+        "Q81: iniciar TaskFlow ULTRA Flash-Next MTP-on con misma suite y fingerprint fijado; mantener watchdog/cancelación limitados.",
+        "MTP-off: no timeout; calidad 2/13 tras 3 reparaciones (21.19 TPS, TTFT 150.8s, 952.522s), coverage incompleto. Guard path corregido; self-test 13/13. Host y API fingerprint gate MTP-on PASS a 12:46:19Z; aún no hay carga/request.",
+        "Q81/PLAN.md; receipts/taskflow-mtp-off-final-result.json; receipts/resource-guard-path-fix.json; receipts/preflight-final-before-mtp-on-corrected.json; receipts/api-preflight-before-mtp-on.json; runs/taskflow-mtp-off.json/events",
+        "Preflight correcto: 0 servidores externos/PeritoSoft, OOM=0, ~123.9 GB MemAvailable, ~6.4 GB SwapFree; ArtCraft sólo telemetría. Fingerprint MTP-on exacto `b39dcfa4…8d3d27`; iniciar en servicio aislado, luego cleanup/readback.",
+        "2026-10-24T11:58:02Z",
+        "2026-10-24T12:46:19Z",
+        "2026-10-24T12:46:19Z"
+      ]
+    }
+  },
+  "formatting": "Only userEnteredValue updated; WRAP formatting preserved.",
+  "post_write_readback": "Exact for both ranges."
+}

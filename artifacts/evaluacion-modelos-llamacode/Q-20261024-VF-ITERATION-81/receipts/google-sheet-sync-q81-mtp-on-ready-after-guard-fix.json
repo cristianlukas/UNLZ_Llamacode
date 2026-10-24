@@ -1,0 +1,36 @@
+{
+  "task_id": "Q-20261024-VF-ITERATION-81",
+  "written_at_utc": "2026-10-24T12:41:24Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "ranges": {
+    "Evaluaciones LlamaCode!C303:J303": {
+      "sheet_id": 1945218181,
+      "readback": "exact",
+      "values": [
+        "Activa · MTP-off calidad 2/13; MTP-on preflight PASS tras corregir ruta de salida",
+        "2026-10-24",
+        "Qwen3.8-Flash-Next · corregir lifecycle del watchdog y revalidar TaskFlow MTP-off/on",
+        "Q81; misma suite/perfiles Q79; off completó con fallo de calidad; on pendiente de ejecución",
+        "MTP-off completó sin timeout tras 3 reparaciones: 2/13 checks, 21.19 avg TPS, TTFT 150.8 s, total 952.522 s; coverage incompleto (he0/he20/bcb pendientes), no adoptar. El preflight 12:40:41 falló sólo porque el default del guard apuntaba a una carpeta inexistente; corregido al runs/ aislado Q81. Self-test CPU 13/13 PASS. Preflight 12:41:24 PASS: cero servidores de inferencia/PeritoSoft, OOM=0, 123.9 GB MemAvailable, 6.4 GB SwapFree, 2 RTX 3090; ArtCraft es telemetría GUI autorizada.",
+        "Iniciar MTP-on con fingerprint `b39dcfa4f912aee2ae973d28f25ac04f81e5ba1c0dbaaa2e0a7e5641e38d3d27`, misma suite y límite 1800/1860s; monitor Q81 aislado. Cleanup, postflight y readback al terminar; sin claims de superioridad si no hay cobertura comparable.",
+        "Q80/RESULTS.md; Q81/PLAN.md; receipts/taskflow-mtp-off-final-result.json; receipts/preflight-final-before-mtp-on.json (ruta errónea); receipts/preflight-final-before-mtp-on-corrected.json; scripts/q81_resource_guard.py; runs/taskflow-mtp-off.json + events",
+        "Q81 activa bajo lock `33790bf7-e3ab-4a2f-bb08-40e7f1fdac1d`. MTP-off falló calidad, no timeout. El primer preflight MTP-on fue bloqueado por ruta de salida inexistente; arreglado y revalidado. GUI/ASTRA/SOL productivo y modelos intactos."
+      ]
+    },
+    "Accionables!H32:N32": {
+      "sheet_id": 1393124532,
+      "readback": "exact",
+      "values": [
+        "Q81: ejecutar TaskFlow ULTRA Flash-Next MTP-on con misma suite y fingerprint fijado; dejar watchdog único y cancelación limitada.",
+        "MTP-off cerró sin timeout pero calidad 2/13 tras 3 reparaciones (21.19 TPS, TTFT 150.8s, 952.522s); coverage incompleto. Corregido el default erróneo del output path del guard. Self-test 13/13 y preflight MTP-on 12:41:24 PASS; aún no se inició inferencia on.",
+        "Q81/PLAN.md; receipts/taskflow-mtp-off-final-result.json; receipts/preflight-final-before-mtp-on.json; receipts/preflight-final-before-mtp-on-corrected.json; scripts/q81_resource_guard.py; runs/taskflow-mtp-off.json/events",
+        "Preflight correcto: 0 servidores externos/PeritoSoft, OOM=0, ~123.9 GB MemAvailable, ~6.4 GB SwapFree; el listener de ArtCraft sólo telemetría. Ejecutar MTP-on exacto; cleanup/readback después.",
+        "2026-10-24T11:58:02Z",
+        "2026-10-24T12:41:24Z",
+        "2026-10-24T12:41:24Z"
+      ]
+    }
+  },
+  "formatting": "Only userEnteredValue updated; WRAP formatting preserved.",
+  "post_write_readback": "Exact for both ranges."
+}

@@ -1,0 +1,10 @@
+{
+  "task_id": "Q-20261024-VF-ITERATION-81",
+  "timestamp_utc": "2026-10-24T12:00:00Z",
+  "preregistration": "receipts/preregistration.json",
+  "sheet_readback": "receipts/google-sheet-sync-q81-prereg.json",
+  "sheet_status": "passed",
+  "source_changes_started": true,
+  "gpu_or_inference_started": false,
+  "preexisting_dirty_work_preserved": true
+}

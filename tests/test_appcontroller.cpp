@@ -211,6 +211,7 @@ private slots:
     void benchmarkDisablesEarlyAcceptanceForBigCodeBench();
     void benchmarkBusyTurnIsRetryableNotInfrastructure();
     void benchmarkRepairPrefillIsNotStagnation();
+    void benchmarkHardTimeoutSurvivesRepairAndStopsAtTerminal();
     void benchmarkRepairInspectionLoopGuard();
     void benchmarkMemoryPressureIsRecognized();
     void benchmarkUsesMaxVramBeforeReducingPressure();
@@ -2734,6 +2735,12 @@ void AppControllerTests::benchmarkRepairPrefillIsNotStagnation()
     QVERIFY(!AppController::benchmarkRepairStagnationCheckForTest(true, true));
     QVERIFY(!AppController::benchmarkRepairStagnationCheckForTest(false, true));
     QVERIFY(AppController::benchmarkRepairStagnationCheckForTest(false, false));
+}
+
+void AppControllerTests::benchmarkHardTimeoutSurvivesRepairAndStopsAtTerminal()
+{
+    QVERIFY(AppController::benchmarkHardTimeoutRemainsArmedForRepair(true));
+    QVERIFY(!AppController::benchmarkHardTimeoutRemainsArmedForRepair(false));
 }
 
 void AppControllerTests::benchmarkRepairInspectionLoopGuard()

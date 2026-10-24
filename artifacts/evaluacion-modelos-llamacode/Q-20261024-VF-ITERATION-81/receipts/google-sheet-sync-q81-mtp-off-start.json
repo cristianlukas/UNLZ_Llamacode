@@ -1,0 +1,36 @@
+{
+  "task_id": "Q-20261024-VF-ITERATION-81",
+  "written_at_utc": "2026-10-24T12:20:51Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "ranges": {
+    "Evaluaciones LlamaCode!C303:J303": {
+      "sheet_id": 1945218181,
+      "readback": "exact",
+      "values": [
+        "Activa · TaskFlow MTP-off ejecutándose en runner aislado",
+        "2026-10-24",
+        "Qwen3.8-Flash-Next · corregir lifecycle del watchdog y revalidar TaskFlow MTP-off/on",
+        "Q81; suite TaskFlow ULTRA y perfiles MTP de Q79; causa diagnosticada en Q80",
+        "Runner Q81 pasó gate de fingerprint exacto e inició MTP-off a las 12:20:16Z. App/servidor propios de Q81; agente listo; benchmarkRunning=true, prompt 1/1. Watcher activo sin breaches al inicio. Aún no hay score final ni afirmación de superioridad.",
+        "Esperar hasta 1800 s; al terminar capturar cobertura/timings y desmontar Q81. Si vence límite, runner cancela y deja el brazo incompleto sin score. MTP-on requiere cleanup, readback y preflight nuevo.",
+        "Q81/PLAN.md; receipts/cpu-validation.json; receipts/artifact-hash-q81-prelaunch-final.json; receipts/preflight-final-before-mtp-off.json; receipts/api-preflight-before-mtp-off.json; receipts/resource-watch-mtp-off.jsonl; runs/taskflow-mtp-off.events.jsonl",
+        "Q81 activa bajo lock 33790bf7-e3ab-4a2f-bb08-40e7f1fdac1d. ASTRA/SOL productivo, pesos y perfiles preservados; GUI permitida; cero PeritoSoft."
+      ]
+    },
+    "Accionables!H32:N32": {
+      "sheet_id": 1393124532,
+      "readback": "exact",
+      "values": [
+        "Q81: mantener un único watchdog de pared con deadline original durante todos los retries; regresión CPU verifica retry/terminal. Runner cancela y espera cleanup al max-wait.",
+        "TaskFlow ULTRA MTP-off iniciado 12:20:16Z; fingerprint exacto. Agente listo, prompt 1/1 en ejecución. Watcher sin breaches al inicio; ningún score todavía.",
+        "Q80/RESULTS.md; Q81/PLAN.md; receipts/cpu-validation.json; receipts/artifact-hash-q81-prelaunch-final.json; receipts/preflight-final-before-mtp-off.json; receipts/api-preflight-before-mtp-off.json; receipts/resource-watch-mtp-off.jsonl; runs/taskflow-mtp-off.events.jsonl",
+        "MTP-off activo con timeout 1800 s y max-wait 1860 s. Esperar, recolectar el resultado o timeout; cleanup y preflight antes de MTP-on.",
+        "2026-10-24T11:58:02Z",
+        "2026-10-24T12:20:51Z",
+        "2026-10-24T12:20:51Z"
+      ]
+    }
+  },
+  "formatting": "Only userEnteredValue changed; WRAP formatting preserved.",
+  "post_write_readback": "Exact values for both ranges."
+}

@@ -21242,6 +21242,13 @@ bool AppController::benchmarkRepairStagnationCheckForTest(bool agentBusy,
     return !agentBusy && !workspaceChanged;
 }
 
+bool AppController::benchmarkHardTimeoutRemainsArmedForRepair(bool repairScheduled)
+{
+    // A repair is part of the same benchmark pass. Keep its original wall-clock
+    // deadline; only a terminal outcome may stop the pass-level watchdog.
+    return repairScheduled;
+}
+
 bool AppController::benchmarkRepairToolMayMutateForTest(const QString &toolName)
 {
     const QString tool = toolName.trimmed().toLower();
@@ -22042,12 +22049,6 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         *finalize = [=]() {
             if (*finished) return;
             *finished = true;
-
-            if (*hardTimeoutWatchdog) {
-                (*hardTimeoutWatchdog)->stop();
-                (*hardTimeoutWatchdog)->deleteLater();
-                *hardTimeoutWatchdog = nullptr;
-            }
             if (*repairWatchdog) {
                 (*repairWatchdog)->stop();
                 (*repairWatchdog)->deleteLater();
@@ -22298,8 +22299,16 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             // pedo. Sólo los criterios duros (archivos que faltan, comandos que no
             // corren) cuentan como fallo de ejecución.
             const bool acceptanceFailed = benchHardCriteriaFailed(acceptanceRows);
-            if (!canceled && !*timedOut && !*passFailed && !*serverCrashed && acceptanceFailed
-                    && *repairAttempts < maxRepairAttempts) {
+            const bool repairScheduled = !canceled && !*timedOut && !*passFailed
+                && !*serverCrashed && acceptanceFailed
+                && *repairAttempts < maxRepairAttempts;
+            if (!benchmarkHardTimeoutRemainsArmedForRepair(repairScheduled)
+                    && *hardTimeoutWatchdog) {
+                (*hardTimeoutWatchdog)->stop();
+                (*hardTimeoutWatchdog)->deleteLater();
+                *hardTimeoutWatchdog = nullptr;
+            }
+            if (repairScheduled) {
                 (*repairAttempts)++;
                 *finished = false;
                 QVariantList failedRows;

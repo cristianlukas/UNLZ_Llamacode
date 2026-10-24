@@ -1,0 +1,37 @@
+{
+  "task_id": "Q-20261024-VF-ITERATION-81",
+  "written_at_utc": "2026-10-24T12:13:30Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_title": "Listado de Juegos",
+  "ranges": {
+    "Evaluaciones LlamaCode!C303:J303": {
+      "sheet_id": 1945218181,
+      "readback": "exact",
+      "values": [
+        "Activa · CPU gates y preflight de host aprobados; rehash en curso",
+        "2026-10-24",
+        "Qwen3.8-Flash-Next · corregir lifecycle del watchdog y revalidar TaskFlow MTP-off/on",
+        "Q81; suite TaskFlow ULTRA y perfiles MTP de Q79; causa diagnosticada en Q80",
+        "Fix C++ aprobado; build Debug PASS; tests Linux Release 94/94 PASS; runner CPU 3/3 PASS. Preflight 12:11Z: 0 inference servers/PeritoSoft, 123.9 GB MemAvailable, 6.4 GB SwapFree, OOM=0. Hash streaming de 19 entradas iniciado, sin inferencia.",
+        "Completar fingerprints de modelos, suite, perfiles y runtime; confirmar readback. Si todo coincide, instancia Q81 aislada y TaskFlow MTP-off; cleanup y nuevo preflight antes de MTP-on.",
+        "Q80/RESULTS.md + source-audit-repair-timeout.json; Q81/PLAN.md + receipts/cpu-validation.json + receipts/preflight-before-service.json + receipts/artifact-hash-q81-prelaunch.json",
+        "Q81 activa bajo lock 33790bf7-e3ab-4a2f-bb08-40e7f1fdac1d. ASTRA/SOL productivo y GUI preservados; usuario autorizó cerrar PeritoSoft si aparece. No se detectó PeritoSoft."
+      ]
+    },
+    "Accionables!H32:N32": {
+      "sheet_id": 1393124532,
+      "readback": "exact",
+      "values": [
+        "Q81: mantener un único watchdog de pared con deadline original durante todos los retries; regresión CPU verifica retry/terminal. Runner cancela y espera cleanup al max-wait.",
+        "Build Debug PASS; Linux Release 94/94 y runner CPU 3/3 PASS. Preflight 12:11Z limpio: 0 inference servers/PeritoSoft, OOM=0. Fingerprints streaming en curso; aún sin inferencia.",
+        "Q80/RESULTS.md; Q81/PLAN.md; receipts/cpu-validation.json; receipts/preflight-before-service.json; receipts/artifact-hash-q81-prelaunch.json; scripts/run_taskflow.py",
+        "Activa bajo lock Q81; terminar hashes y readback, luego ejecutar serial MTP-off → cleanup → preflight → MTP-on si pasan los gates.",
+        "2026-10-24T11:58:02Z",
+        "2026-10-24T12:13:30Z",
+        "2026-10-24T12:13:30Z"
+      ]
+    }
+  },
+  "formatting": "Only userEnteredValue was updated; prior WRAP formatting was preserved.",
+  "post_write_readback": "Exact for both ranges."
+}
