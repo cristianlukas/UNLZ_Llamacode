@@ -1,0 +1,25 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "attempt": 7,
+  "observedAtUtc": "2026-10-24T16:09:54Z",
+  "phase": "launcher_only",
+  "status": "failed_before_server_start",
+  "systemdUnit": "q85-hyperqwen-attempt-07.service",
+  "composeReadbackPassed": true,
+  "resolvedEnvironment": {
+    "GPU_UTIL": "0.91",
+    "KV_MEM": "3000000000",
+    "GPU_COUNT": "2",
+    "EXTRA_ARGS": "--tensor-parallel-size 2"
+  },
+  "failure": "The config gate passed, but its exec tried to run the preregistered runner directly although that file was not executable; systemd exited 126.",
+  "serverStarted": false,
+  "gpuInferenceStarted": false,
+  "apiRequestsSent": false,
+  "toolEvalStarted": false,
+  "candidateCleanup": "No candidate container was started; unit is inactive and no service/port was left running.",
+  "treatmentChanged": false,
+  "repair": "Invoke the pinned runner explicitly as /usr/bin/bash <runner-path>.",
+  "correctedGuardPath": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-85/runner/run_q85_attempt07_with_config_gate.sh",
+  "correctedGuardSha256": "6919d4d461ca90b86aee195596af0e539f2c307968b5a7828e1098d8b00c6b48"
+}

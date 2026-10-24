@@ -1,0 +1,44 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "attempt": 8,
+  "capturedAtUtc": "2026-10-24T16:17:52Z",
+  "status": "pass",
+  "lockOwned": true,
+  "preregistrationValidated": true,
+  "scriptHashesMatch": true,
+  "storageAvailableBytes": {
+    "/": 10179710976,
+    "/var/lib/containerd": 19767672832,
+    "/media/cristian/HDD extra": 35352948736
+  },
+  "runningDockerContainers": [],
+  "matchedInferenceProcesses": [],
+  "candidatePort18142Free": true,
+  "gpuComputeApplications": "",
+  "gpus": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memoryTotalMiB": 24576,
+      "memoryUsedMiB": 1123,
+      "memoryFreeMiB": 23052,
+      "temperatureC": 48,
+      "utilizationPercent": 19
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memoryTotalMiB": 24576,
+      "memoryUsedMiB": 110,
+      "memoryFreeMiB": 24068,
+      "temperatureC": 28,
+      "utilizationPercent": 17
+    }
+  ],
+  "hostMemAvailableBytes": 115999358976,
+  "apiEnvMode": "0o600",
+  "guiLeftOpen": true,
+  "minimumFreeVRAMMiBPerGPU": 22000,
+  "serverStarted": false,
+  "gpuInferenceStarted": false
+}

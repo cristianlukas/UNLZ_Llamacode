@@ -1,0 +1,50 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "startedAtUtc": "2026-10-24T15:50:28Z",
+  "candidateEndpoint": "http://127.0.0.1:18142",
+  "apiKeyRecorded": false,
+  "protocol": {
+    "temperature": 0.6,
+    "topP": 0.95,
+    "topK": 20,
+    "minP": 0.0,
+    "seed": 42,
+    "toolChoiceMode": "named",
+    "enableThinking": false,
+    "toolChoiceSequence": [
+      "read_file",
+      "write_file",
+      "none"
+    ],
+    "parallelToolCalls": false,
+    "expectedToolSequence": [
+      "read_file",
+      "write_file"
+    ],
+    "fixtureSha256": "72e104733ce4d825eae8998b516025aa2c278284e1d875bddb05e9b7b8f48063",
+    "filesystemScope": "unique temporary directory under the Q85 HDD temp folder"
+  },
+  "calls": [],
+  "status": "fail",
+  "modelId": "qwen3.8-27b",
+  "modelsEndpointMs": 10.3,
+  "responseSummaries": [
+    {
+      "stage": "read_file",
+      "latencyMs": 7296.88,
+      "finishReason": "length",
+      "contentCharCount": 0,
+      "toolCallCount": 1,
+      "toolNames": [
+        "read_file"
+      ],
+      "usage": {
+        "promptTokens": 438,
+        "completionTokens": 256,
+        "totalTokens": 694
+      }
+    }
+  ],
+  "failure": "RuntimeError: read_file requested a path outside the canary contract",
+  "completedAtUtc": "2026-10-24T15:50:35Z"
+}

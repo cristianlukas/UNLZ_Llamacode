@@ -1,0 +1,90 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "startedAtUtc": "2026-10-24T16:25:54Z",
+  "candidateEndpoint": "http://127.0.0.1:18142",
+  "apiKeyRecorded": false,
+  "protocol": {
+    "temperature": 0.6,
+    "topP": 0.95,
+    "topK": 20,
+    "minP": 0.0,
+    "seed": 42,
+    "toolChoiceMode": "named",
+    "enableThinking": false,
+    "fixturePathEnum": true,
+    "explicitPathSchemaPrompt": true,
+    "toolMaxTokens": 512,
+    "toolChoiceSequence": [
+      "read_file",
+      "write_file",
+      "none"
+    ],
+    "parallelToolCalls": false,
+    "expectedToolSequence": [
+      "read_file",
+      "write_file"
+    ],
+    "fixtureSha256": "72e104733ce4d825eae8998b516025aa2c278284e1d875bddb05e9b7b8f48063",
+    "filesystemScope": "unique temporary directory under the Q85 HDD temp folder"
+  },
+  "calls": [
+    {
+      "expected": "read_file",
+      "latencyMs": 1214.26,
+      "promptTokens": 489,
+      "completionTokens": 26,
+      "totalTokens": 515
+    }
+  ],
+  "status": "fail",
+  "modelId": "qwen3.8-27b",
+  "modelsEndpointMs": 10.3,
+  "responseSummaries": [
+    {
+      "stage": "read_file",
+      "latencyMs": 1214.26,
+      "finishReason": "stop",
+      "contentCharCount": 0,
+      "toolCallCount": 1,
+      "toolNames": [
+        "read_file"
+      ],
+      "usage": {
+        "promptTokens": 489,
+        "completionTokens": 26,
+        "totalTokens": 515
+      }
+    },
+    {
+      "stage": "write_file",
+      "latencyMs": 12855.82,
+      "finishReason": "length",
+      "contentCharCount": 0,
+      "toolCallCount": 1,
+      "toolNames": [
+        "write_file"
+      ],
+      "usage": {
+        "promptTokens": 561,
+        "completionTokens": 512,
+        "totalTokens": 1073
+      }
+    }
+  ],
+  "argumentValidationSummaries": [
+    {
+      "stage": "read_file",
+      "pathIsString": true,
+      "pathMatchesContract": true
+    },
+    {
+      "stage": "write_file",
+      "pathIsString": true,
+      "pathMatchesContract": false,
+      "contentIsString": false,
+      "contentMatchesFixture": false
+    }
+  ],
+  "failure": "RuntimeError: write_file arguments violated the canary contract",
+  "completedAtUtc": "2026-10-24T16:26:08Z"
+}

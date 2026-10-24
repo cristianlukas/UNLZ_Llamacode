@@ -1,0 +1,93 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "attempt": 6,
+  "preregisteredAtUtc": "2026-10-24T15:56:31Z",
+  "status": "preregistered_pending",
+  "purpose": "Diagnose the attempt-5 path-argument mismatch by constraining each named tool path parameter to its one fixture-safe path; validate whether the pinned TP=2 server can complete the same read→write loop.",
+  "candidate": {
+    "sourceCommit": "ce9615c4f2309be727407918a6c979bd67968069",
+    "imageDigest": "sha256:0acd4b9625473e51c9bab56406c30814bc0d0d7e0a38deb408c62664b5a77669",
+    "baseModelRevision": "1f05c441c4e64ae0549de44fa9ea5a6d43610314",
+    "drafterRevision": "4d30ec736ffc6b8688dc2ae2b502d9b48bdec279",
+    "tensorParallelSize": 2,
+    "gpuCount": 2,
+    "context": 65536,
+    "maxSequences": 8,
+    "gpuUtilization": 0.93,
+    "kvMemoryPinBytesPerWorker": 3000000000,
+    "speculativeMethod": "dflash2",
+    "draftTokens": 7
+  },
+  "controlledDifferenceFromAttempt05": "Add JSON Schema enum constraints path=[source.txt] for read_file and path=[result.txt] for write_file. Keep named tool selection, thinking disabled, model, TP=2, KV pin, GPU utilization, context, DFlash2, fixture, sampling, seed, request order and token limits unchanged. Client-side receipt adds only boolean/type summaries and stores no raw arguments.",
+  "toolCallSequence": [
+    {
+      "stage": "read",
+      "toolChoice": {
+        "type": "function",
+        "function": {
+          "name": "read_file"
+        }
+      },
+      "maxTokens": 256,
+      "pathEnum": [
+        "source.txt"
+      ]
+    },
+    {
+      "stage": "write",
+      "toolChoice": {
+        "type": "function",
+        "function": {
+          "name": "write_file"
+        }
+      },
+      "maxTokens": 256,
+      "pathEnum": [
+        "result.txt"
+      ]
+    },
+    {
+      "stage": "final",
+      "toolChoice": "none",
+      "maxTokens": 128
+    }
+  ],
+  "protocol": {
+    "toolChoiceMode": "named",
+    "enableThinking": false,
+    "fixturePathEnum": true,
+    "temperature": 0.6,
+    "topP": 0.95,
+    "topK": 20,
+    "minP": 0.0,
+    "seed": 42,
+    "parallelToolCalls": false,
+    "fixtureSha256": "72e104733ce4d825eae8998b516025aa2c278284e1d875bddb05e9b7b8f48063"
+  },
+  "passCriteria": [
+    "health and /v1/models succeed",
+    "exactly one read_file call with valid call id and pathMatchesContract=true",
+    "exactly one write_file call with valid call id, pathMatchesContract=true and contentMatchesFixture=true",
+    "nonempty final answer without extra tool call",
+    "result bytes match fixture",
+    "service stopped and port 18142 free"
+  ],
+  "privacy": "Receipt stores only safe response metadata and booleans. Do not persist raw generated paths, tool arguments, response text, API key, or fixture content.",
+  "interpretationLimit": "A pass validates this named, enum-constrained tool loop only. It does not validate automatic tool selection, real LlamaCode integration, benchmark quality/speed, or adoption; run a separate auto-mode canary before Tool-Eval.",
+  "failurePolicy": "One run only; no automatic retry and no Tool-Eval. Analyze before any next configuration change.",
+  "scripts": {
+    "runner/q85_tool_canary.py": "sha256:08e63592c79ba460089e485e823299474bc4223ed82f3d3d37825050d286ad40",
+    "runner/run_q85_tp2_canary.sh": "sha256:911950d0291c27dd8385d2acd6435ed2ce49557775941c84270ce09fa3ed6056"
+  },
+  "staticChecks": {
+    "pythonAstParse": "pass",
+    "fixturePathEnumSchema": "pass",
+    "safeArgumentSummary": "pass",
+    "bashN": "pass",
+    "validatedAtUtc": "2026-10-24T15:56:31Z"
+  },
+  "preflightRequiredImmediatelyBeforeStart": true,
+  "apiKeyRecorded": false,
+  "serverStarted": false,
+  "gpuInferenceStarted": false
+}

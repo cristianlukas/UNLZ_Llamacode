@@ -1,0 +1,57 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "attempt": 3,
+  "preregisteredAtUtc": "2026-10-24T15:38:37Z",
+  "status": "preregistered_pending",
+  "purpose": "One TP=2 startup/tool-canary attempt after removing the observed non-inference GPU memory holder; retain the previously preregistered HyperQwen profile.",
+  "candidate": {
+    "sourceCommit": "ce9615c4f2309be727407918a6c979bd67968069",
+    "imageDigest": "sha256:0acd4b9625473e51c9bab56406c30814bc0d0d7e0a38deb408c62664b5a77669",
+    "baseModelRevision": "1f05c441c4e64ae0549de44fa9ea5a6d43610314",
+    "drafterRevision": "4d30ec736ffc6b8688dc2ae2b502d9b48bdec279",
+    "tensorParallelSize": 2,
+    "gpuCount": 2,
+    "context": 65536,
+    "maxSequences": 8,
+    "gpuUtilization": 0.93,
+    "kvMemoryPinBytesPerWorker": 3000000000,
+    "speculativeMethod": "dflash2",
+    "draftTokens": 7
+  },
+  "controlledDifferenceFromAttempt02": "No model-serving argument changes. The hidden non-inference artcraft-launcher process (209 MiB on GPU0) was terminated with the user's authorization after vLLM missed its 0.93 memory admission target by approximately 41 MiB. The runner was fixed to observe exited Compose containers and capture their logs.",
+  "sampling": {
+    "temperature": 0.6,
+    "topP": 0.95,
+    "topK": 20,
+    "minP": 0.0,
+    "seed": 42,
+    "toolChoice": "auto",
+    "parallelToolCalls": false,
+    "runs": 1,
+    "retries": 0
+  },
+  "passCriteria": [
+    "server health succeeds and startup log records KV pool size for both TP ranks",
+    "the canary calls read_file then write_file with exact allowlisted paths and call IDs",
+    "result bytes exactly match the fixed fixture and the final response is non-empty",
+    "redacted mode-0600 startup logs are saved before Compose cleanup",
+    "the candidate service is stopped and port 18142 is free after exit"
+  ],
+  "failurePolicy": "Exactly one startup/canary attempt; no Tool-Eval or automatic retry after failure. Analyze any failure before planning another run.",
+  "composeOverrideSha256": "70fb2a3ac22e1b00fbccb9c4a3bd557fd96e51e373d586738d71b73d5017d7d0",
+  "scripts": {
+    "runner/q85_tool_canary.py": "sha256:4e4f11a835e7f51ca7bf5ca540e2fb35453e8f299e8a97780780d01ba5ecf27c",
+    "runner/run_q85_tp2_canary.sh": "sha256:911950d0291c27dd8385d2acd6435ed2ce49557775941c84270ce09fa3ed6056"
+  },
+  "staticChecks": {
+    "pythonAstParse": "pass",
+    "bashN": "pass",
+    "systemdRunComposeReadback": "pass",
+    "composeValues": {"GPU_COUNT": "2", "EXTRA_ARGS": "--tensor-parallel-size 2", "GPU_UTIL": "0.93", "KV_MEM": "3000000000"},
+    "exitedContainerDetection": "pass by code review; runner now queries Compose with --all"
+  },
+  "preflightRequiredImmediatelyBeforeStart": true,
+  "apiKeyRecorded": false,
+  "serverStarted": false,
+  "gpuInferenceStarted": false
+}

@@ -1,0 +1,52 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "attempt": 1,
+  "startedAtUtc": "2026-10-24T15:16:16Z",
+  "stoppedAtUtc": "2026-10-24T15:20:26Z",
+  "status": "fail_startup_cuda_oom",
+  "candidate": {
+    "sourceCommit": "ce9615c4f2309be727407918a6c979bd67968069",
+    "imageDigest": "sha256:0acd4b9625473e51c9bab56406c30814bc0d0d7e0a38deb408c62664b5a77669",
+    "tensorParallelSize": 2,
+    "gpuCount": 2,
+    "context": 65536,
+    "maxSequences": 8,
+    "gpuUtilization": 0.93,
+    "kvMemoryPin": null,
+    "speculativeMethod": "dflash2",
+    "draftTokens": 7
+  },
+  "startup": {
+    "containerStarted": true,
+    "healthy": false,
+    "canaryRequestsIssued": false,
+    "toolSequence": [],
+    "toolEvalStarted": false,
+    "failureObservedAtUtc": "2026-10-24T15:19:58Z",
+    "failure": "EngineCore reported worker RuntimeError: CUDA error: out of memory; worker process died during startup/warmup.",
+    "healthWrapperDetectedWorkerFailure": false,
+    "manualStopAndCleanup": "systemd --user stopped only q85-hyperqwen-canary.service; wrapper printed Q85_CANDIDATE_SERVER_STOPPED; container removed by its Compose down cleanup; port 18142 free afterward."
+  },
+  "telemetryAfterFailureBeforeStop": {
+    "gpus": [
+      {"index": 0, "memoryUsedMiB": 1281, "temperatureC": 55, "powerW": 97.59},
+      {"index": 1, "memoryUsedMiB": 22980, "temperatureC": 46, "powerW": 146.61}
+    ],
+    "ramAvailableGiBApprox": 104,
+    "temperatureAbortThresholdC": 85,
+    "temperatureGatePassed": true
+  },
+  "diagnosticEvidence": [
+    "Container startup log said TP=2 was sizing KV from GPU_UTIL=0.93 because KV_MEM was unset.",
+    "The boot log warned hybrid KV group padding could waste up to 60% of cache memory.",
+    "Pinned HyperQwen docs state TP>1 skips the single-card KV pin by default and recommend fixing KV_MEM before measuring; this is a plausible, not proven, contributor.",
+    "The GPU memory asymmetry and missing full traceback prevent assigning a definitive root cause to the KV pool or to one worker/rank."
+  ],
+  "logRetention": {
+    "fullContainerLogPersisted": false,
+    "reason": "The first runner removed the Compose container before saving its logs; only a sampled tail and journal status remain in the interactive run history.",
+    "correctiveChange": "Runner now detects worker/CUDA OOM from recent logs and writes a redacted, mode-0600 log receipt before Compose cleanup."
+  },
+  "decision": "Canary failed before inference. No quality, correctness, TPS, or adoption claim. Tool-Eval remains blocked until a newly preregistered startup and canary attempt passes.",
+  "apiKeyRecorded": false
+}

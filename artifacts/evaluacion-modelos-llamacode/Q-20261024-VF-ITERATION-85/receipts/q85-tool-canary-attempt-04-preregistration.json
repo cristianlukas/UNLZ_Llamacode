@@ -1,0 +1,53 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "attempt": 4,
+  "preregisteredAtUtc": "2026-10-24T15:44:13Z",
+  "status": "preregistered_pending",
+  "purpose": "Diagnose whether the pinned TP=2 server/parser can complete a structured tool loop when the API names each function explicitly, after the single auto-choice attempt returned no tool call.",
+  "candidate": {
+    "sourceCommit": "ce9615c4f2309be727407918a6c979bd67968069",
+    "imageDigest": "sha256:0acd4b9625473e51c9bab56406c30814bc0d0d7e0a38deb408c62664b5a77669",
+    "baseModelRevision": "1f05c441c4e64ae0549de44fa9ea5a6d43610314",
+    "drafterRevision": "4d30ec736ffc6b8688dc2ae2b502d9b48bdec279",
+    "tensorParallelSize": 2,
+    "gpuCount": 2,
+    "context": 65536,
+    "maxSequences": 8,
+    "gpuUtilization": 0.93,
+    "kvMemoryPinBytesPerWorker": 3000000000,
+    "speculativeMethod": "dflash2",
+    "draftTokens": 7
+  },
+  "diagnosticDifference": "Only the canary API request mode changes: named function tool_choice for read_file and write_file, then tool_choice=none for the final response. Server/model arguments, fixture, sampling, seed and TP=2 are unchanged.",
+  "toolCallSequence": [
+    {"stage": "read", "toolChoice": {"type": "function", "function": {"name": "read_file"}}},
+    {"stage": "write", "toolChoice": {"type": "function", "function": {"name": "write_file"}}},
+    {"stage": "final", "toolChoice": "none"}
+  ],
+  "sampling": {"temperature": 0.6, "topP": 0.95, "topK": 20, "minP": 0.0, "seed": 42, "parallelToolCalls": false},
+  "passCriteria": [
+    "read_file named call has an ID and requests exactly source.txt",
+    "write_file named call has an ID, requests exactly result.txt, and carries the exact source bytes",
+    "final none-mode completion is non-empty and has no tool call",
+    "result bytes equal the fixture and API key/raw generated text are not stored",
+    "service is stopped, logs are redacted mode 0600, and port 18142 is free"
+  ],
+  "interpretationLimit": "A pass proves the named-function server/parser path for this fixture, not spontaneous tool selection under auto. A failure blocks the current server profile from Tool-Eval. No adoption claim follows either way.",
+  "failurePolicy": "One diagnostic run, no automatic retry and no Tool-Eval. Analyze the receipt/log before planning another change.",
+  "documentationSource": "https://docs.vllm.ai/en/latest/features/tool_calling/",
+  "scripts": {
+    "runner/q85_tool_canary.py": "sha256:40a75800088bcebc2fdacc1b1d96811192af6bc816fbcd53cd259c95874d6247",
+    "runner/run_q85_tp2_canary.sh": "sha256:911950d0291c27dd8385d2acd6435ed2ce49557775941c84270ce09fa3ed6056"
+  },
+  "staticChecks": {
+    "pythonAstParse": "pass",
+    "namedToolChoiceHelper": "pass",
+    "bashN": "pass",
+    "systemdNamedModePropagation": "pass",
+    "systemdValidatedAtUtc": "2026-10-24T15:45:04Z"
+  },
+  "preflightRequiredImmediatelyBeforeStart": true,
+  "apiKeyRecorded": false,
+  "serverStarted": false,
+  "gpuInferenceStarted": false
+}

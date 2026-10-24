@@ -1,0 +1,31 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "syncedAtUtc": "2026-10-24T16:16:52Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "status": "write_and_readback_pass",
+  "updatedRanges": {
+    "Accionables": [
+      "D55",
+      "H55:K55",
+      "N55"
+    ],
+    "IA local": [
+      "G39",
+      "I39",
+      "L39"
+    ],
+    "Evaluaciones LlamaCode": [
+      "C306",
+      "G306:J306"
+    ],
+    "Inventario de modelos": [
+      "C13",
+      "M13:O13",
+      "R13"
+    ]
+  },
+  "readbackVerified": true,
+  "valuesSummarized": "Attempt 7 used TP=2 on both RTX 3090; health passed, named read_file path failed enum at 256 completion tokens, no fixture read/write or Tool-Eval, no comparative score/TPS; cleanup passed; attempt 8 token-cap diagnostic pending preregistration.",
+  "formattingChanged": false,
+  "visualCheck": "Google browser requires sign-in; verified exact values through Sheets API."
+}

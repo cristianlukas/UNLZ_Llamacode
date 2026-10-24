@@ -1,0 +1,67 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "attempt": 7,
+  "completedAtUtc": "2026-10-24T16:11:29Z",
+  "status": "canary_failed_named_tool_argument_outside_enum",
+  "candidate": {
+    "sourceCommit": "ce9615c4f2309be727407918a6c979bd67968069",
+    "imageDigest": "sha256:0acd4b9625473e51c9bab56406c30814bc0d0d7e0a38deb408c62664b5a77669",
+    "baseModelRevision": "1f05c441c4e64ae0549de44fa9ea5a6d43610314",
+    "drafterRevision": "4d30ec736ffc6b8688dc2ae2b502d9b48bdec279",
+    "tensorParallelSize": 2,
+    "gpuCount": 2,
+    "hostMemoryBytes": 137438953472,
+    "context": 65536,
+    "gpuUtilization": 0.91,
+    "kvMemoryPinBytesPerWorker": 3000000000,
+    "speculativeMethod": "dflash2",
+    "draftTokens": 7
+  },
+  "startup": {
+    "serverHealthPassed": true,
+    "modelsEndpointPassed": true,
+    "coldStartupSecondsApprox": 72,
+    "bothRTX3090AllocatedDuringLoad": true,
+    "serviceStopped": true,
+    "candidatePort18142Free": true
+  },
+  "canary": {
+    "status": "fail",
+    "mode": "named",
+    "thinkingEnabled": false,
+    "fixturePathEnum": true,
+    "apiRequestSent": true,
+    "toolName": "read_file",
+    "toolCallCount": 1,
+    "argumentSummary": {
+      "pathIsString": true,
+      "pathMatchesEnum": false
+    },
+    "finishReason": "length",
+    "completionTokens": 256,
+    "latencyMs": 6881.33,
+    "sourceFixtureRead": false,
+    "destinationFixtureWritten": false,
+    "toolEvalStarted": false,
+    "qualityOrSpeedBenchmarkStarted": false,
+    "rawArgumentsOrResponseStored": false
+  },
+  "preflightReceipt": "receipts/q85-tool-canary-attempt-07-preflight-2.json",
+  "composeReadbackReceipt": "receipts/q85-attempt07-compose-readback.json",
+  "canaryReceipt": "receipts/q85-tool-canary-20261024T161122Z.json",
+  "bootLog": {
+    "path": "receipts/q85-server-boot-20261024T161129Z.log",
+    "sha256": "460804e5b411265d79bab1ab6d0fd8c6cd2dfee1de81eb7b85594ee33ea3108f",
+    "bytes": 40670,
+    "mode": "0o600"
+  },
+  "postflight": {
+    "runningDockerContainers": [],
+    "candidatePort18142Free": true,
+    "gpuMemoryReturnedToDesktopBaseline": true
+  },
+  "interpretation": "A single named read call violated the allowlisted path despite enum and server log tool_strict_level=parameter. The result blocks Tool-Eval and adoption but is not a comparative quality or speed result and does not establish general inferiority. Finish reason length at 256 tokens leaves truncation as a plausible diagnostic factor.",
+  "nextDecision": "Preregister one isolated follow-up varying only max_tokens from 256 to 512, retaining TP=2, enum, strict server profile, seed, sampling, KV pin and GPU_UTIL. If path still violates the contract, stop tool-loop retries and classify this runtime/model protocol as blocked for agent adoption; keep raw arguments out of receipts.",
+  "apiKeyRecorded": false,
+  "guiLeftOpen": true
+}

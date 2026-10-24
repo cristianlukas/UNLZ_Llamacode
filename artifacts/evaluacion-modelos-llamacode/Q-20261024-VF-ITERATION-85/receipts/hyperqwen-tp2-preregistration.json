@@ -1,0 +1,129 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "createdAtUtc": "2026-10-24T14:29:30Z",
+  "lockToken": "vf85-hyperqwen-tp2-20261024-1421",
+  "question": "HyperQwen Qwen3.8-27B with TP=2 on both RTX 3090 improves coding-agent quality and correct-result E2E against current configured ASTRA default.",
+  "candidate": {
+    "source": "https://github.com/syv-ai/HyperQwen/tree/ce9615c4f2309be727407918a6c979bd67968069",
+    "sourceCommit": "ce9615c4f2309be727407918a6c979bd67968069",
+    "image": "ghcr.io/syv-ai/hyperqwen:sha-ce9615c",
+    "imageDigest": "sha256:0acd4b9625473e51c9bab56406c30814bc0d0d7e0a38deb408c62664b5a77669",
+    "imageAmd64CompressedBytes": 4667917348,
+    "baseModel": "dbirks/Qwen3.8-27B-W4A16-AutoRound",
+    "baseRevision": "1f05c441c4e64ae0549de44fa9ea5a6d43610314",
+    "baseRemoteStorageBytes": 19472769333,
+    "baseLicense": "apache-2.0",
+    "drafter": "syvai/Qwen3.8-27B-DFlash2-W4A16",
+    "drafterRevision": "4d30ec736ffc6b8688dc2ae2b502d9b48bdec279",
+    "drafterBytes": 1280633960,
+    "drafterModelSha256": "ec26996e6a0745ab5edb857117220ce1e219ad524f71e6e149b703804947d8e7",
+    "drafterLicense": "apache-2.0"
+  },
+  "control": {
+    "kind": "currently configured LlamaCode ASTRA default; re-confirm production use before full A/B",
+    "configPath": "/home/cristian/.config/LlamaCode/astra-iq2xs-strata.json",
+    "configSha256": "b4a55b263ad8bf1df809afb76603c23d55c1471c2e7cac6997e979bd3ad5e38f",
+    "model": "Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS",
+    "gpuIds": [
+      0,
+      1
+    ],
+    "layerSplit": "auto",
+    "maxContext": 1048576,
+    "yarnOriginalContext": 262144,
+    "kv": "int8",
+    "residentTokens": 32768,
+    "sampling": {
+      "temperature": 0.6,
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repeat_penalty": 1.0,
+      "presence_penalty": 0.0
+    }
+  },
+  "candidateProfile": {
+    "GPU_COUNT": 2,
+    "tensorParallelSize": 2,
+    "spec": "dflash2",
+    "prefixCache": 1,
+    "dflashTokens": 7,
+    "contextProfile": "fast",
+    "maxLength": 65536,
+    "maxSequences": 8,
+    "gpuUtil": 0.93,
+    "vision": 0,
+    "toolParser": "qwen3_coder",
+    "port": "127.0.0.1:18142",
+    "fastVariant": 0
+  },
+  "fixture": {
+    "suite": "Tool-Eval Bench 2.8.0 Hard Mode TC-70–TC-97",
+    "suiteCommit": "0a1ba68c7709f429298bc92417a9e003f61de4e3",
+    "seeds": [
+      42,
+      43,
+      44
+    ],
+    "variantSeed": 20261010,
+    "reasoning": "medium",
+    "timeoutSeconds": 120,
+    "maxTurns": 8,
+    "parallel": 1,
+    "temperature": 0.6,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0,
+    "repeatPenalty": 1.0
+  },
+  "design": {
+    "pairedArms": "ASTRA vs HyperQwen, one server at a time; balanced order by seed",
+    "primaryGPUUse": "both RTX 3090, TP=2",
+    "tp1": "optional secondary efficiency arm after TP=2 only"
+  },
+  "gates": {
+    "minValidSeeds": 3,
+    "meanScoreDeltaMin": 3,
+    "minSeedWins": 2,
+    "criticalScenarios": [
+      "TC-74",
+      "TC-84",
+      "TC-92"
+    ],
+    "e2eMedianImprovementMinPct": 10,
+    "maxQualityRegressionForSpeedClaim": 1,
+    "prePullContainerdFreeMinBytes": 21474836480,
+    "postPrepareHddFreeMinBytes": 21474836480,
+    "rootFreeMinBytes": 8589934592,
+    "promptMaxTokens": 65536,
+    "postPullContainerdFreeMinBytes": 19327352832,
+    "postPullContainerdFreeMinGiB": 18
+  },
+  "preflightObserved": {
+    "observedAtUtc": "2026-10-24T14:20:55Z",
+    "rootFreeBytes": 10213027840,
+    "containerdFreeBytes": 34984570880,
+    "localDiskFreeBytes": 63261282304,
+    "hddExtraFreeBytes": 60377710592,
+    "dockerActiveContainers": 0,
+    "stoppedVllmContainers": 2,
+    "dockerImages": 11,
+    "hyperqwenCached": false,
+    "inferenceListener": false,
+    "note": "GUI remains open; no inference server/listener detected. Repeat immediately before each phase."
+  },
+  "actionsNotStarted": [
+    "image pull",
+    "base/drafter download",
+    "prepare",
+    "inference",
+    "GPU benchmark"
+  ],
+  "decision": "No adoption or default change based on upstream claims; candidate profile context max is below ASTRA configured 1M and is excluded from context-parity claims.",
+  "designAmendments": [
+    {
+      "atUtc": "2026-10-24T14:37:34Z",
+      "reason": "Measured pre-pull free space 34,984,570,880 B plus exact compressed registry layers (4,667,917,348 B) and upstream unpacked estimate (~9.5 GB) imply about 19.4 GiB remaining if both compressed content and unpacked snapshots persist. Preserve 18 GiB post-pull with all mutable model/cache/log writes redirected to HDD/root respectively; no change to the ≥8 GiB root or ≥20 GiB HDD floors. Abort if measured post-pull containerd space is below 18 GiB."
+    }
+  ]
+}

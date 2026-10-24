@@ -1,0 +1,26 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "attempt": 9,
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "updatedAtUtc": "2026-10-24T16:30:45Z",
+  "status": "success_readback_verified",
+  "rangesWritten": [
+    "'Evaluaciones LlamaCode'!C306:J306",
+    "'Accionables'!D55:N55",
+    "'IA local'!G39:L39",
+    "'Inventario de modelos'!C13:R13"
+  ],
+  "content": "Intento 9 dual GPU y resultado de canario fallido; conclusión de no adopción/ningún resultado comparable; condición de reanudación tras cambio material de parser/runtime.",
+  "readback": {
+    "allRangesExact": true,
+    "fieldMask": "userEnteredValue,formattedValue,userEnteredFormat,dataValidation",
+    "wrappedCellsPreserved": {
+      "Evaluaciones LlamaCode": 8,
+      "IA local": 6,
+      "Inventario de modelos": 16
+    },
+    "Accionables": "Cell formatting fields were not returned on the existing target row; values read back exactly; no formatting fields were written."
+  },
+  "inventoryNoChange": "Windows path remains unverified; Linux HDD paths, size, no consumer and pinned revisions retained; no prefill/decode TPS or quality score claimed.",
+  "visualQuality": "Value-only updates preserved prior formatting via userEnteredValue field mask. Google Sheets cell metadata readback confirmed WRAP on the evaluation, IA local and inventory ranges. No table-wide styling or resize."
+}

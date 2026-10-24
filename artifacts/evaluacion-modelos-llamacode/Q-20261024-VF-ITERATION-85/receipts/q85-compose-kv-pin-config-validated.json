@@ -1,0 +1,38 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "validatedAtUtc": "2026-10-24T15:25:30Z",
+  "composeOverride": "/media/cristian/HDD extra/Modelos-eval/Q85-HyperQwen/HyperQwen/compose.q85.yaml",
+  "composeOverrideSha256": "70fb2a3ac22e1b00fbccb9c4a3bd557fd96e51e373d586738d71b73d5017d7d0",
+  "service": "single",
+  "effectiveEnvironmentReadback": {
+    "GPU_COUNT": "2",
+    "EXTRA_ARGS": "--tensor-parallel-size 2",
+    "GPU_UTIL": "0.93",
+    "KV_MEM": "3000000000",
+    "MAX_LEN": "65536",
+    "MAX_SEQS": "8",
+    "CTX": "fast",
+    "SPEC": "dflash2",
+    "DFLASH_TOKENS": "7"
+  },
+  "composeConfigQuiet": "pass",
+  "systemdRunPropagation": {
+    "validatedAtUtc": "2026-10-24T15:33:19Z",
+    "status": "pass",
+    "effectiveEnvironmentReadback": {
+      "GPU_COUNT": "2",
+      "EXTRA_ARGS": "--tensor-parallel-size 2",
+      "KV_MEM": "3000000000"
+    },
+    "serverStarted": false,
+    "gpuInferenceStarted": false
+  },
+  "modelAssets": {
+    "base": "/media/cristian/HDD extra/Modelos-eval/Q85-HyperQwen/models/Qwen3.8-27B-W4A16-AutoRound",
+    "drafter": "/media/cristian/HDD extra/Modelos-eval/Q85-HyperQwen/models/Qwen3.8-27B-DFlash2-W4A16",
+    "apiKeyValueRecorded": false,
+    "apiKeyFileMode": "0600"
+  },
+  "serverStarted": false,
+  "gpuInferenceStarted": false
+}

@@ -1,0 +1,14 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "syncedAtUtc": "2026-10-24T15:58:14Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "tabs": {
+    "Accionables": "D55, H55:K55, M55:N55",
+    "IA local": "G39, I39, L39",
+    "Inventario de modelos": "C13, J13:K13, M13:O13, R13",
+    "Evaluaciones LlamaCode": "C306, G306:J306"
+  },
+  "verifiedByReadback": true,
+  "readbackNotes": "All requested Q85 fields were read back exactly after the batch update. Row 55 still shows TP=2 as the primary arm, no score/TPS, attempt 5 path mismatch, and attempt 6 path-enum preregistration. The existing cell styles were not changed.",
+  "currentState": "attempt 5 failed after one named read_file tool call with an invalid path; attempt 6 is preregistered; no Tool-Eval, no benchmark score, no adoption. Preserve ASTRA/SOL/Flash-Next and PeritoSoft."
+}

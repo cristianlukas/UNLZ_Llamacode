@@ -1,0 +1,13 @@
+{
+  "observedAtUtc": "2026-10-24T14:20:55Z",
+  "rootFreeBytes": 10213027840,
+  "containerdFreeBytes": 34984570880,
+  "localDiskFreeBytes": 63261282304,
+  "hddExtraFreeBytes": 60377710592,
+  "dockerActiveContainers": 0,
+  "stoppedVllmContainers": 2,
+  "dockerImages": 11,
+  "hyperqwenCached": false,
+  "inferenceListener": false,
+  "note": "GUI remains open; no inference server/listener detected. Repeat immediately before each phase."
+}

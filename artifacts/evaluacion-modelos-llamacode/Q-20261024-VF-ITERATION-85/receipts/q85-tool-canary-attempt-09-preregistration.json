@@ -1,0 +1,70 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "attempt": 9,
+  "preregisteredAtUtc": "2026-10-24T16:22:11Z",
+  "status": "completed_fail_write_file_arguments_truncated",
+  "purpose": "Test whether prompting the exact path strings resolves the named tool argument mismatch after a 512-token completion ended normally but violated the enum.",
+  "candidate": {
+    "sourceCommit": "ce9615c4f2309be727407918a6c979bd67968069",
+    "imageDigest": "sha256:0acd4b9625473e51c9bab56406c30814bc0d0d7e0a38deb408c62664b5a77669",
+    "baseModelRevision": "1f05c441c4e64ae0549de44fa9ea5a6d43610314",
+    "drafterRevision": "4d30ec736ffc6b8688dc2ae2b502d9b48bdec279",
+    "tensorParallelSize": 2,
+    "gpuCount": 2,
+    "hostMemoryBytes": 137438953472,
+    "context": 65536,
+    "gpuUtilization": 0.91,
+    "kvMemoryPinBytesPerWorker": 3000000000,
+    "speculativeMethod": "dflash2",
+    "draftTokens": 7
+  },
+  "controlledDifferenceFromAttempt08": "Only add one system-prompt sentence explicitly naming exact allowed paths for read_file and write_file and disallowing prefixes/extra characters. Keep token cap 512, TP=2, both RTX 3090s, GPU_UTIL=.91, KV pin, DFlash2, fixture, enums, named choices, thinking-off, sampling, seed and final cap unchanged.",
+  "protocol": {
+    "toolChoiceMode": "named",
+    "enableThinking": false,
+    "fixturePathEnum": true,
+    "explicitPathSchemaPrompt": true,
+    "toolMaxTokens": 512,
+    "finalMaxTokens": 128,
+    "temperature": 0.6,
+    "topP": 0.95,
+    "topK": 20,
+    "minP": 0.0,
+    "seed": 42,
+    "parallelToolCalls": false,
+    "fixtureSha256": "72e104733ce4d825eae8998b516025aa2c278284e1d875bddb05e9b7b8f48063"
+  },
+  "passCriteria": [
+    "health and /v1/models succeed",
+    "exactly one read_file call with pathMatchesContract=true",
+    "exactly one write_file call with pathMatchesContract=true and contentMatchesFixture=true",
+    "nonempty final answer and output bytes equal fixture",
+    "service stopped and port 18142 free"
+  ],
+  "interpretationLimit": "One prompt-alignment canary only; does not validate auto tool selection, LlamaCode integration, comparative speed/quality or adoption.",
+  "failurePolicy": "One run only. If path remains invalid, stop tool-loop canaries and block agent adoption pending material parser/runtime change; no Tool-Eval.",
+  "preflightRequiredImmediatelyBeforeStart": true,
+  "composeReadbackRequired": {
+    "GPU_UTIL": "0.91",
+    "KV_MEM": "3000000000",
+    "GPU_COUNT": "2",
+    "EXTRA_ARGS": "--tensor-parallel-size 2"
+  },
+  "scripts": {
+    "runner/q85_tool_canary.py": "sha256:9e4a9e656870a79f40d182985bf015ea6ecaf307d5d33e351d3b42895bdbf517",
+    "runner/run_q85_attempt09_with_config_gate.sh": "sha256:b75654779d2e85e0c61595ca61db173483fa95d6de8892d1ddc338f3754b2935",
+    "runner/run_q85_tp2_canary.sh": "sha256:911950d0291c27dd8385d2acd6435ed2ce49557775941c84270ce09fa3ed6056"
+  },
+  "staticChecks": {
+    "pythonAstParse": "pass",
+    "bashN": "pass"
+  },
+  "serverStarted": true,
+  "gpuInferenceStarted": true,
+  "preflightReceipt": "receipts/q85-tool-canary-attempt-09-preflight.json",
+  "preflightStatus": "pass",
+  "preflightAtUtc": "2026-10-24T16:24:42Z",
+  "resultReceipt": "receipts/q85-tool-canary-attempt-09-result.json",
+  "completedAtUtc": "2026-10-24T16:26:08Z",
+  "cleanupStatus": "pass"
+}

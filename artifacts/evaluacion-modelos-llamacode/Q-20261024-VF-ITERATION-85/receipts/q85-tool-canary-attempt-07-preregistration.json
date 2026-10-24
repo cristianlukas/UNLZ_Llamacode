@@ -1,0 +1,59 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "attempt": 7,
+  "preregisteredAtUtc": "2026-10-24T16:03:47Z",
+  "status": "preregistered_pending",
+  "purpose": "Repeat the path-enum named-tool canary after the attempt-6 memory-admission rejection, lowering the memory fraction slightly to leave reliable space for the active desktop compositor on GPU0.",
+  "candidate": {
+    "sourceCommit": "ce9615c4f2309be727407918a6c979bd67968069",
+    "imageDigest": "sha256:0acd4b9625473e51c9bab56406c30814bc0d0d7e0a38deb408c62664b5a77669",
+    "baseModelRevision": "1f05c441c4e64ae0549de44fa9ea5a6d43610314",
+    "drafterRevision": "4d30ec736ffc6b8688dc2ae2b502d9b48bdec279",
+    "tensorParallelSize": 2,
+    "gpuCount": 2,
+    "context": 65536,
+    "maxSequences": 8,
+    "gpuUtilization": 0.91,
+    "kvMemoryPinBytesPerWorker": 3000000000,
+    "speculativeMethod": "dflash2",
+    "draftTokens": 7
+  },
+  "controlledDifferenceFromAttempt06": "Only change GPU_UTIL from 0.93 to 0.91 via a systemd-run environment override for the Compose process. Do not edit the pinned model, Compose file or .env. Keep TP=2, KV_MEM=3000000000 bytes/worker, DFlash2, context, sequence limit, path enum, named tool choice, thinking-off, fixture, sampling, seed, token limits and one-run policy unchanged.",
+  "admissionEvidence": "Attempt 6 failed before health: GPU0 free 21.86/23.61 GiB versus 21.95 GiB requested at 0.93 (about 92 MiB short). At 0.91 the expected request is approximately 21.49 GiB, leaving about 0.37 GiB at that observed free-memory level. Recheck immediately before startup; if the fresh preflight or vLLM admission fails, stop without another automatic retry.",
+  "protocol": {
+    "toolChoiceMode": "named",
+    "enableThinking": false,
+    "fixturePathEnum": true,
+    "temperature": 0.6,
+    "topP": 0.95,
+    "topK": 20,
+    "minP": 0.0,
+    "seed": 42,
+    "parallelToolCalls": false,
+    "fixtureSha256": "72e104733ce4d825eae8998b516025aa2c278284e1d875bddb05e9b7b8f48063"
+  },
+  "passCriteria": [
+    "health and /v1/models succeed",
+    "exactly one read_file call with valid call id and pathMatchesContract=true",
+    "exactly one write_file call with valid call id, pathMatchesContract=true and contentMatchesFixture=true",
+    "nonempty final answer without extra tool call",
+    "result bytes match fixture",
+    "service stopped and port 18142 free"
+  ],
+  "interpretationLimit": "A pass validates a named, enum-constrained tool loop at GPU_UTIL=0.91 only. It does not validate auto selection, real LlamaCode integration, comparative speed/quality, or adoption; the later A/B must use this effective setting consistently and must preserve TP=2.",
+  "failurePolicy": "One run only, no automatic retry and no Tool-Eval. If startup admission still fails, review GPU desktop processes and configuration before deciding on any further action.",
+  "scripts": {
+    "runner/q85_tool_canary.py": "sha256:08e63592c79ba460089e485e823299474bc4223ed82f3d3d37825050d286ad40",
+    "runner/run_q85_tp2_canary.sh": "sha256:911950d0291c27dd8385d2acd6435ed2ce49557775941c84270ce09fa3ed6056"
+  },
+  "preflightRequiredImmediatelyBeforeStart": true,
+  "apiKeyRecorded": false,
+  "serverStarted": true,
+  "gpuInferenceStarted": true,
+  "executionStatus": "completed_fail",
+  "executedAtUtc": "2026-10-24T16:11:22Z",
+  "completedAtUtc": "2026-10-24T16:11:29Z",
+  "resultReceipt": "receipts/q85-tool-canary-attempt-07-result.json",
+  "preflightReceipt": "receipts/q85-tool-canary-attempt-07-preflight-2.json",
+  "apiRequestsSent": true
+}

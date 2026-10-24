@@ -1,0 +1,45 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "observedAtUtc": "2026-10-24T14:37:34Z",
+  "lockToken": "vf85-hyperqwen-tp2-20261024-1421",
+  "sourceCheckout": {
+    "path": "/media/cristian/HDD extra/Modelos-eval/Q85-HyperQwen/HyperQwen",
+    "commit": "ce9615c4f2309be727407918a6c979bd67968069"
+  },
+  "compose": {
+    "configQuietPass": true,
+    "override": "/media/cristian/HDD extra/Modelos-eval/Q85-HyperQwen/HyperQwen/compose.q85.yaml",
+    "overrideSha256": "8bd031534f9e39918c0a1bf4b460c956453f29dc05e8ddc18d1145bd6d383d8c",
+    "envFileMode": "0600",
+    "services": [
+      "prepare",
+      "single"
+    ],
+    "image": "ghcr.io/syv-ai/hyperqwen@sha256:0acd4b9625473e51c9bab56406c30814bc0d0d7e0a38deb408c62664b5a77669",
+    "pullPolicy": "always",
+    "pullNotStarted": true,
+    "buildPresentButNeverInvoked": true,
+    "containerRestart": "no",
+    "gpuDeviceCount": 2,
+    "tensorParallelSize": 2,
+    "candidatePort": "127.0.0.1:18142",
+    "modelsPath": "/media/cristian/HDD extra/Modelos-eval/Q85-HyperQwen/models",
+    "cachePath": "/media/cristian/HDD extra/Modelos-eval/Q85-HyperQwen/cache",
+    "mutableDataOnHdd": true,
+    "containerLogsMaxBytes": 209715200
+  },
+  "prePullPreflight": {
+    "dockerRootDir": "/var/lib/docker",
+    "dockerStorageDriver": "overlayfs",
+    "containerdMount": "/var/lib/containerd",
+    "rootFreeBytes": 10205401088,
+    "containerdFreeBytes": 34984570880,
+    "hddExtraFreeBytes": 60347752448,
+    "activeContainers": 0,
+    "stoppedVllmContainers": 2,
+    "listenersOnCandidatePort": false,
+    "inferenceListener": false,
+    "guiPreserved": true
+  },
+  "decision": "CPU-only source/Compose validation passed. Image pull has not started. Q85 amended only the post-pull containerd floor to 18 GiB based on compressed+unpacked image storage; root and HDD floors remain unchanged. No inference, build, model download, or GPU use."
+}

@@ -1,0 +1,130 @@
+{
+  "retrievedAtUtc": "2026-10-24T14:50:00Z",
+  "source": "https://huggingface.co/api/models/{repo}/revision/{revision}?blobs=true",
+  "models": [
+    {
+      "repo": "dbirks/Qwen3.8-27B-W4A16-AutoRound",
+      "revision": "1f05c441c4e64ae0549de44fa9ea5a6d43610314",
+      "license": "apache-2.0",
+      "files": [
+        {
+          "path": ".gitattributes",
+          "sizeBytes": 1570,
+          "sha256": null
+        },
+        {
+          "path": "README.md",
+          "sizeBytes": 7566,
+          "sha256": null
+        },
+        {
+          "path": "chat_template.jinja",
+          "sizeBytes": 8952,
+          "sha256": null
+        },
+        {
+          "path": "config.json",
+          "sizeBytes": 15587,
+          "sha256": null
+        },
+        {
+          "path": "generation_config.json",
+          "sizeBytes": 219,
+          "sha256": null
+        },
+        {
+          "path": "model-00001-of-00007.safetensors",
+          "sizeBytes": 3211003472,
+          "sha256": "6b2adc4f1b93386eedd033a62c63221bf85e789c09ada8ff43939c55e9f06250"
+        },
+        {
+          "path": "model-00002-of-00007.safetensors",
+          "sizeBytes": 3195027104,
+          "sha256": "a223fa487834749a14d86d558af9a4d5799b79be9bc28bdefa43eed055d10578"
+        },
+        {
+          "path": "model-00003-of-00007.safetensors",
+          "sizeBytes": 3195027104,
+          "sha256": "8719567ac822768ac61872894604d3a4d13f2edbd22c9bd3c4680ebc83e24ca5"
+        },
+        {
+          "path": "model-00004-of-00007.safetensors",
+          "sizeBytes": 3217442568,
+          "sha256": "8faf8d4a57c69b9b96e27c4eabf1ba0caadd3d48344d6f65df17f30da2a7e6e3"
+        },
+        {
+          "path": "model-00005-of-00007.safetensors",
+          "sizeBytes": 699275200,
+          "sha256": "0994bb8d91c07ceefc4bfffd3a7b7fd110cc9bd3ce865bdcb2821abf02a02fab"
+        },
+        {
+          "path": "model-00006-of-00007.safetensors",
+          "sizeBytes": 2542807272,
+          "sha256": "55a14ee79d3e5a65a8731d89426f4df477e8bdc7daa7976d41254d8afb9432f0"
+        },
+        {
+          "path": "model-00007-of-00007.safetensors",
+          "sizeBytes": 2542796896,
+          "sha256": "6866cf8adcccc4cc6a00e74bc025f1a774fb52103b70f2674d0288272951a733"
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "sizeBytes": 198290,
+          "sha256": null
+        },
+        {
+          "path": "model_extra_tensors.safetensors",
+          "sizeBytes": 849400392,
+          "sha256": "1d8268aa85ace093a561e3e7b63b9d390dac1cd55a90cd55b5ec509c3c9da9fe"
+        },
+        {
+          "path": "processor_config.json",
+          "sizeBytes": 1191,
+          "sha256": null
+        },
+        {
+          "path": "quantization_config.json",
+          "sizeBytes": 11112,
+          "sha256": null
+        },
+        {
+          "path": "tokenizer.json",
+          "sizeBytes": 19989325,
+          "sha256": "06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523"
+        },
+        {
+          "path": "tokenizer_config.json",
+          "sizeBytes": 1166,
+          "sha256": null
+        }
+      ]
+    },
+    {
+      "repo": "syvai/Qwen3.8-27B-DFlash2-W4A16",
+      "revision": "4d30ec736ffc6b8688dc2ae2b502d9b48bdec279",
+      "license": "apache-2.0",
+      "files": [
+        {
+          "path": ".gitattributes",
+          "sizeBytes": 1519,
+          "sha256": null
+        },
+        {
+          "path": "README.md",
+          "sizeBytes": 2621,
+          "sha256": null
+        },
+        {
+          "path": "config.json",
+          "sizeBytes": 2264,
+          "sha256": null
+        },
+        {
+          "path": "model.safetensors",
+          "sizeBytes": 1280633960,
+          "sha256": "ec26996e6a0745ab5edb857117220ce1e219ad524f71e6e149b703804947d8e7"
+        }
+      ]
+    }
+  ]
+}

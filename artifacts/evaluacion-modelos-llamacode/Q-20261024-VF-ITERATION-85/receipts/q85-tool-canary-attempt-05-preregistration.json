@@ -1,0 +1,61 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "attempt": 5,
+  "preregisteredAtUtc": "2026-10-24T15:48:32Z",
+  "status": "preregistered_pending",
+  "purpose": "Test whether the Qwen3.8 template's default xhigh thinking exhausts the 256-token tool-call budget before a named tool call can be emitted.",
+  "candidate": {
+    "sourceCommit": "ce9615c4f2309be727407918a6c979bd67968069",
+    "imageDigest": "sha256:0acd4b9625473e51c9bab56406c30814bc0d0d7e0a38deb408c62664b5a77669",
+    "baseModelRevision": "1f05c441c4e64ae0549de44fa9ea5a6d43610314",
+    "drafterRevision": "4d30ec736ffc6b8688dc2ae2b502d9b48bdec279",
+    "tensorParallelSize": 2,
+    "gpuCount": 2,
+    "context": 65536,
+    "maxSequences": 8,
+    "gpuUtilization": 0.93,
+    "kvMemoryPinBytesPerWorker": 3000000000,
+    "speculativeMethod": "dflash2",
+    "draftTokens": 7
+  },
+  "controlledDifferenceFromAttempt04": "Only add chat_template_kwargs={enable_thinking:false} to the same named read_file/write_file requests and final none-mode request. Keep model, TP, context, KV, GPU_UTIL, DFlash2, fixture, sampling, seed and max_tokens unchanged.",
+  "chatTemplateEvidence": {
+    "source": "/media/cristian/HDD extra/Modelos-eval/Q85-HyperQwen/models/Qwen3.8-27B-W4A16-AutoRound/chat_template.jinja",
+    "finding": "When enable_thinking is undefined/true and reasoning_effort is omitted, the template injects xhigh instructions and begins assistant generation with <think>.",
+    "serverVersion": "vLLM 0.31.0",
+    "apiParameter": "chat_template_kwargs",
+    "officialDocumentation": "https://docs.vllm.ai/en/v0.31.0/api/vllm/entrypoints/openai/chat_completion/protocol/"
+  },
+  "toolCallSequence": [
+    {"stage": "read", "toolChoice": {"type": "function", "function": {"name": "read_file"}}, "maxTokens": 256},
+    {"stage": "write", "toolChoice": {"type": "function", "function": {"name": "write_file"}}, "maxTokens": 256},
+    {"stage": "final", "toolChoice": "none", "maxTokens": 128}
+  ],
+  "chatTemplateKwargs": {"enable_thinking": false},
+  "sampling": {"temperature": 0.6, "topP": 0.95, "topK": 20, "minP": 0.0, "seed": 42, "parallelToolCalls": false},
+  "passCriteria": [
+    "read_file named call has an ID and requests exactly source.txt",
+    "write_file named call has an ID, requests exactly result.txt, and carries the fixture bytes",
+    "final none-mode completion is non-empty and contains no tool call",
+    "result bytes equal fixture; only response metadata is saved",
+    "service is stopped, logs are redacted mode 0600, and port 18142 is free"
+  ],
+  "interpretationLimit": "A pass shows this named tool loop works with thinking disabled; it does not prove auto selection with default reasoning. Tool-Eval and adoption remain blocked pending a real auto-mode test.",
+  "failurePolicy": "One run only, no automatic retry and no Tool-Eval. Analyze failure before planning another change.",
+  "scripts": {
+    "runner/q85_tool_canary.py": "sha256:f04e42ceeceae0a0b89099660aa11aa188c5b9a08e3b1b6fdee10f0b02681c46",
+    "runner/run_q85_tp2_canary.sh": "sha256:911950d0291c27dd8385d2acd6435ed2ce49557775941c84270ce09fa3ed6056"
+  },
+  "staticChecks": {
+    "pythonAstParse": "pass",
+    "namedChoiceAndThinkingOffHelper": "pass",
+    "bashN": "pass",
+    "systemdThinkingOffPropagation": "pass",
+    "composeTp2KvReadback": "pass",
+    "validatedAtUtc": "2026-10-24T15:49:01Z"
+  },
+  "preflightRequiredImmediatelyBeforeStart": true,
+  "apiKeyRecorded": false,
+  "serverStarted": false,
+  "gpuInferenceStarted": false
+}

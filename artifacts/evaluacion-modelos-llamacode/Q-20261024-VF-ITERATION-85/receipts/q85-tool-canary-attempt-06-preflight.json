@@ -1,0 +1,65 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "attempt": 6,
+  "capturedAtUtc": "2026-10-24T15:59:50Z",
+  "status": "pass",
+  "lock": {
+    "taskId": "Q-20261024-VF-ITERATION-85",
+    "token": "vf85-hyperqwen-tp2-20261024-1421",
+    "verified": true
+  },
+  "checks": {
+    "lockOwned": true,
+    "zeroInferenceProcesses": true,
+    "zeroInferenceListeners": true,
+    "candidatePortFree": true,
+    "zeroRunningDockerContainers": true,
+    "composeConfigValid": true,
+    "apiEnvMode0600": true,
+    "twoRTX3090Visible": true,
+    "gpuMemoryAdmissionMargin": true,
+    "temperaturesBelow85C": true,
+    "rootStorageFloor": true,
+    "containerdStorageFloor": true,
+    "hddStorageFloor": true
+  },
+  "hardware": {
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memoryUsedMiB": 1411,
+        "memoryFreeMiB": 22764,
+        "temperatureC": 45,
+        "utilizationPercent": 26
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memoryUsedMiB": 110,
+        "memoryFreeMiB": 24068,
+        "temperatureC": 27,
+        "utilizationPercent": 27
+      }
+    ],
+    "hostMemory": {
+      "totalBytes": 132615852032,
+      "usedBytes": 16844156928,
+      "availableBytes": 115771695104
+    },
+    "nvidiaComputeApplications": []
+  },
+  "desktopProcessesUsingGraphicsOnly": "nvidia-smi showed Xorg, compiz, Codex, Brave GPU and WhatsApp Electron GPU contexts; no CUDA compute application was registered. GUI left open.",
+  "storageAvailableBytes": {
+    "/": 10192347136,
+    "/var/lib/containerd": 19767672832,
+    "/media/cristian/HDD extra": 35352956928
+  },
+  "dockerRunningContainers": [],
+  "candidatePort18142Free": true,
+  "matchedInferenceProcesses": [],
+  "composeConfigExitCode": 0,
+  "composeConfigStderr": "",
+  "apiEnvFileMode": "0o600",
+  "nextAction": "Do not start unless status=pass; wrapper repeats lock/storage/inference checks immediately before container start."
+}

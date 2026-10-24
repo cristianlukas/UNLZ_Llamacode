@@ -1,0 +1,36 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "attempt": 4,
+  "preregistration": "receipts/q85-tool-canary-attempt-04-preregistration.json",
+  "completedAtUtc": "2026-10-24T15:47:06Z",
+  "status": "server_healthy_named_tool_truncated",
+  "candidate": {
+    "tensorParallelSize": 2,
+    "gpuCount": 2,
+    "gpuUtilization": 0.93,
+    "kvMemoryPinBytesPerWorker": 3000000000,
+    "speculativeMethod": "dflash2",
+    "maxToolTokens": 256
+  },
+  "server": {"healthSucceeded": true, "modelsEndpointSucceeded": true, "modelId": "qwen3.8-27b", "candidateServiceStopped": true, "candidatePort18142Free": true},
+  "canary": {
+    "status": "fail",
+    "toolChoiceMode": "named",
+    "requestedFunction": "read_file",
+    "enableThinking": null,
+    "promptTokens": 474,
+    "completionTokens": 256,
+    "totalTokens": 730,
+    "elapsedMs": 7364.57,
+    "finishReason": "length",
+    "toolCallCount": 0,
+    "rawResponseStored": false,
+    "toolEvalStarted": false
+  },
+  "templateFinding": "Local chat_template.jinja defaults enable_thinking to true and injects xhigh reasoning instructions when reasoning_effort is omitted; generation begins with an open <think> block. The 256-token limit likely truncated before a call, but that cause is not yet proven.",
+  "receipts": {
+    "canary": {"path": "receipts/q85-tool-canary-20261024T154635Z.json", "sha256": "d4f5769064d57da2dea9f97e20f9683ab2c744e62d14f378a89b6a722072f152"},
+    "serverLog": {"path": "receipts/q85-server-boot-20261024T154643Z.log", "sha256": "9043fd64eb1231c43a670f0c4bafb3f7573381650370fe3816ed98eb3803d8d7", "mode": "0600", "apiKeyRedacted": true}
+  },
+  "adoptionDecision": "No adoption and no Tool-Eval. A second mode also hit the token limit; the template default is a testable explanation, not a confirmed root cause."
+}

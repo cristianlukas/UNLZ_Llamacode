@@ -1,0 +1,66 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "attempt": 6,
+  "preregistration": "receipts/q85-tool-canary-attempt-06-preregistration.json",
+  "preflight": "receipts/q85-tool-canary-attempt-06-preflight.json",
+  "completedAtUtc": "2026-10-24T16:01:08Z",
+  "status": "startup_gpu_memory_admission_failed_with_config_deviation",
+  "candidate": {
+    "sourceCommit": "ce9615c4f2309be727407918a6c979bd67968069",
+    "imageDigest": "sha256:0acd4b9625473e51c9bab56406c30814bc0d0d7e0a38deb408c62664b5a77669",
+    "baseModelRevision": "1f05c441c4e64ae0549de44fa9ea5a6d43610314",
+    "drafterRevision": "4d30ec736ffc6b8688dc2ae2b502d9b48bdec279",
+    "tensorParallelSize": 2,
+    "gpuCount": 2,
+    "context": 65536,
+    "maxSequences": 8,
+    "gpuUtilization": 0.93,
+    "kvMemoryPinBytesPerWorker": null,
+    "speculativeMethod": "dflash2",
+    "draftTokens": 7
+  },
+  "server": {
+    "containerStarted": true,
+    "healthSucceeded": false,
+    "modelsEndpointSucceeded": false,
+    "candidateServiceStopped": true,
+    "candidatePort18142Free": true
+  },
+  "canary": {
+    "status": "not_started",
+    "apiRequestsSent": false,
+    "toolEvalStarted": false
+  },
+  "rootCause": {
+    "device": "cuda:0",
+    "freeGiBAtStartup": 21.86,
+    "totalGiB": 23.61,
+    "gpuUtilization": 0.93,
+    "requestedGiB": 21.95,
+    "shortfallGiB": 0.09,
+    "shortfallMiBApprox": 92
+  },
+  "preflightVsStartup": "Preflight passed at 22,764 MiB free on GPU0; by worker admission, vLLM observed only 21.86 GiB free. This identifies a transient host-display VRAM fluctuation as an admission-margin problem; it is not a canary or model-quality outcome.",
+  "cleanup": "Wrapper captured the redacted log and ran Compose down; at 2026-10-24T16:01:50Z no active Docker containers or port 18142 listener remained.",
+  "receipts": {
+    "serverLog": {
+      "path": "receipts/q85-server-boot-20261024T160108Z.log",
+      "sha256": "3260b002130417ec75d1a3d71754761bca66ed468a7d38af11e734d92caad82d",
+      "mode": "0600",
+      "apiKeyRedacted": true
+    }
+  },
+  "apiKeyRecorded": false,
+  "intendedProfile": {
+    "kvMemoryPinBytesPerWorker": 3000000000,
+    "gpuUtilization": 0.93
+  },
+  "configurationDeviation": {
+    "kvMemoryPinExpectedBytesPerWorker": 3000000000,
+    "kvMemoryPinEffectiveBytesPerWorker": null,
+    "evidence": "The systemd-run invocation did not set KV_MEM; a post-run docker compose config readback with the same base files resolved single.environment.KV_MEM to empty. The 3 GB pin was not effective in the attempt-6 container.",
+    "effect": "Attempt 6 is not a valid run of the preregistered KV-pinned profile. It failed worker memory admission before health and sent no inference request; do not attribute the failure solely to desktop VRAM fluctuation."
+  },
+  "receiptCorrectionAtUtc": "2026-10-24T16:06:29Z",
+  "amendmentReceipt": "receipts/q85-tool-canary-attempt-07-preregistration-amendment-01.json"
+}

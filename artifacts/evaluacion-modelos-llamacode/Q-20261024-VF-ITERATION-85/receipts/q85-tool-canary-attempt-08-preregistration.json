@@ -1,0 +1,70 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "attempt": 8,
+  "preregisteredAtUtc": "2026-10-24T16:16:52Z",
+  "status": "preregistered_pending",
+  "purpose": "Determine whether the attempt-7 path-enum mismatch was caused by the 256-token generation cap truncating the named tool-call output.",
+  "candidate": {
+    "sourceCommit": "ce9615c4f2309be727407918a6c979bd67968069",
+    "imageDigest": "sha256:0acd4b9625473e51c9bab56406c30814bc0d0d7e0a38deb408c62664b5a77669",
+    "baseModelRevision": "1f05c441c4e64ae0549de44fa9ea5a6d43610314",
+    "drafterRevision": "4d30ec736ffc6b8688dc2ae2b502d9b48bdec279",
+    "tensorParallelSize": 2,
+    "gpuCount": 2,
+    "hostMemoryBytes": 137438953472,
+    "context": 65536,
+    "gpuUtilization": 0.91,
+    "kvMemoryPinBytesPerWorker": 3000000000,
+    "speculativeMethod": "dflash2",
+    "draftTokens": 7
+  },
+  "controlledDifferenceFromAttempt07": "Only increase max_tokens for both named tool stages from 256 to 512. Keep model, TP=2 across both GPUs, KV pin, GPU_UTIL, DFlash2, fixture, path enums, named choices, thinking-off, temperature, top-p, top-k, min-p, seed, final-answer token cap and all other settings unchanged.",
+  "protocol": {
+    "toolChoiceMode": "named",
+    "enableThinking": false,
+    "fixturePathEnum": true,
+    "toolMaxTokens": 512,
+    "finalMaxTokens": 128,
+    "temperature": 0.6,
+    "topP": 0.95,
+    "topK": 20,
+    "minP": 0.0,
+    "seed": 42,
+    "parallelToolCalls": false,
+    "fixtureSha256": "72e104733ce4d825eae8998b516025aa2c278284e1d875bddb05e9b7b8f48063"
+  },
+  "passCriteria": [
+    "health and /v1/models succeed",
+    "exactly one read_file call with pathMatchesContract=true",
+    "exactly one write_file call with pathMatchesContract=true and contentMatchesFixture=true",
+    "nonempty final answer and output bytes equal fixture",
+    "service stopped and port 18142 free"
+  ],
+  "interpretationLimit": "A pass tests only the named, enum-constrained tool loop at 512 token cap. It does not validate auto tool selection, LlamaCode integration, comparative speed/quality, or adoption.",
+  "failurePolicy": "One run only, no automatic retry. If the contract still fails, classify the candidate tool loop as blocked and do not run Tool-Eval; analyze before any different runtime change.",
+  "preflightRequiredImmediatelyBeforeStart": true,
+  "composeReadbackRequired": {
+    "GPU_UTIL": "0.91",
+    "KV_MEM": "3000000000",
+    "GPU_COUNT": "2",
+    "EXTRA_ARGS": "--tensor-parallel-size 2"
+  },
+  "scripts": {
+    "runner/q85_tool_canary.py": "sha256:378ec45eeed16a393c863f19f8d94754881f2600e4669e4c95215d8232b2c91e",
+    "runner/run_q85_attempt08_with_config_gate.sh": "sha256:168654da609f25f7bcd5bdde9061c0ffa42737f8f54455774026ab943532bd57",
+    "runner/run_q85_tp2_canary.sh": "sha256:911950d0291c27dd8385d2acd6435ed2ce49557775941c84270ce09fa3ed6056"
+  },
+  "staticChecks": {
+    "pythonAstParse": "pass",
+    "bashN": "pass",
+    "checkedAtUtc": "2026-10-24T16:17:32Z"
+  },
+  "serverStarted": true,
+  "gpuInferenceStarted": true,
+  "executionStatus": "completed_fail",
+  "executedAtUtc": "2026-10-24T16:19:04Z",
+  "completedAtUtc": "2026-10-24T16:19:12Z",
+  "preflightReceipt": "receipts/q85-tool-canary-attempt-08-preflight.json",
+  "resultReceipt": "receipts/q85-tool-canary-attempt-08-result.json",
+  "apiRequestsSent": true
+}

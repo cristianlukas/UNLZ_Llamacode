@@ -1,0 +1,27 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "startedAtUtc": "2026-10-24T15:40:50Z",
+  "candidateEndpoint": "http://127.0.0.1:18142",
+  "apiKeyRecorded": false,
+  "protocol": {
+    "temperature": 0.6,
+    "topP": 0.95,
+    "topK": 20,
+    "minP": 0.0,
+    "seed": 42,
+    "toolChoice": "auto",
+    "parallelToolCalls": false,
+    "expectedToolSequence": [
+      "read_file",
+      "write_file"
+    ],
+    "fixtureSha256": "72e104733ce4d825eae8998b516025aa2c278284e1d875bddb05e9b7b8f48063",
+    "filesystemScope": "unique temporary directory under the Q85 HDD temp folder"
+  },
+  "calls": [],
+  "status": "fail",
+  "modelId": "qwen3.8-27b",
+  "modelsEndpointMs": 10.47,
+  "failure": "RuntimeError: expected exactly one read_file tool call",
+  "completedAtUtc": "2026-10-24T15:40:57Z"
+}

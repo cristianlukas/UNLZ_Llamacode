@@ -1,0 +1,40 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "observedAtUtc": "2026-10-24T15:15:39Z",
+  "lock": {
+    "taskId": "Q-20261024-VF-ITERATION-85",
+    "token": "vf85-hyperqwen-tp2-20261024-1421",
+    "matches": true
+  },
+  "storage": {
+    "/": {"availableBytes": 10203824128, "minimumBytes": 8589934592, "pass": true},
+    "/var/lib/containerd": {"availableBytes": 19767672832, "minimumBytes": 19327352832, "pass": true},
+    "/media/cristian/HDD extra": {"availableBytes": 35933433856, "minimumBytes": 21474836480, "pass": true}
+  },
+  "inferenceServerGate": {
+    "dockerContainers": [],
+    "matchingHostProcesses": [],
+    "port18142Listening": false,
+    "pass": true,
+    "diagnosticNote": "The first inline process scan matched its own shell command text. The corrected scan excluded only its own shell parent and found no external inference processes; no process was killed."
+  },
+  "hardware": {
+    "ramAvailableBytes": 115327574016,
+    "gpus": [
+      {"index": 0, "name": "NVIDIA GeForce RTX 3090", "memoryTotalMiB": 24576, "memoryUsedMiB": 1249, "temperatureC": 46, "powerW": 96.72},
+      {"index": 1, "name": "NVIDIA GeForce RTX 3090", "memoryTotalMiB": 24576, "memoryUsedMiB": 110, "temperatureC": 26, "powerW": 28.64}
+    ],
+    "gpuTopology": "GPU0↔GPU1 PHB; both visible, no driver or topology change"
+  },
+  "candidate": {
+    "imageId": "sha256:0acd4b9625473e51c9bab56406c30814bc0d0d7e0a38deb408c62664b5a77669",
+    "imageDigestMatches": true,
+    "composeConfig": "pass",
+    "envFileMode": "0600",
+    "apiKeyRecorded": false,
+    "systemdUserManager": "available"
+  },
+  "inferenceStarted": false,
+  "gpuInferenceStarted": false,
+  "decision": "All immediate canary-start gates pass. The durable wrapper will repeat lock, storage, and no-inference-server checks immediately before starting the TP=2 service."
+}

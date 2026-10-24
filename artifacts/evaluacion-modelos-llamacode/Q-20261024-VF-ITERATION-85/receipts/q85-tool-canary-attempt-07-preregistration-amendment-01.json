@@ -1,0 +1,45 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "attempt": 7,
+  "amendment": 1,
+  "amendedAtUtc": "2026-10-24T16:06:29Z",
+  "status": "amended_before_execution",
+  "amends": "receipts/q85-tool-canary-attempt-07-preregistration.json",
+  "trigger": "Audit found attempt 6 did not receive KV_MEM=3000000000 through its transient systemd unit. Compose config readback resolved KV_MEM to empty. Attempt 6 therefore deviated from its preregistered KV-pinned profile and did not evaluate the tool schema.",
+  "attempt06Interpretation": "The worker admission rejection at GPU_UTIL=0.93 is real, but the run is a startup/configuration failure. Do not treat it as a valid run of the pinned profile or as evidence about the canary/model.",
+  "executionRequirements": {
+    "systemdEnvironment": {
+      "GPU_UTIL": "0.91",
+      "KV_MEM": "3000000000",
+      "Q85_CANARY_TOOL_CHOICE_MODE": "named",
+      "Q85_CANARY_ENABLE_THINKING": "false",
+      "Q85_CANARY_FIXTURE_PATH_ENUM": "true"
+    },
+    "composeOverlay": "compose.q85.yaml explicitly maps GPU_UTIL from ${GPU_UTIL:-0.93} into the single service environment; it already maps KV_MEM from ${KV_MEM:-}. Do not edit the pinned upstream files or .env.",
+    "composeResolvedReadbackMustEqual": {
+      "GPU_UTIL": "0.91",
+      "KV_MEM": "3000000000"
+    },
+    "composeOverlayHashBeforeGpu": "19f7eeda73463e794ec853708d1fa4fe60a165c39c049583977b9fd77a8967b6"
+  },
+  "controlledTreatment": "Relative to the intended Q85 KV-pinned profile, GPU_UTIL=0.91 remains the only experimental treatment change. Explicitly passing KV_MEM=3000000000 restores the preregistered constant after the prior invocation deviation.",
+  "decisionRule": "Do not start a GPU server unless the immediate compose readback shows both GPU_UTIL=0.91 and KV_MEM=3000000000, the fresh preflight passes, and no inference server/listener is active. One run only; no Tool-Eval until the canary and a separate auto-mode canary pass.",
+  "apiKeyRecorded": false,
+  "serverStarted": false,
+  "gpuInferenceStarted": false,
+  "composeReadback": {
+    "receipt": "receipts/q85-attempt07-compose-readback.json",
+    "capturedAtUtc": "2026-10-24T16:08:36Z",
+    "status": "pass",
+    "resolvedEnvironment": {
+      "GPU_UTIL": "0.91",
+      "KV_MEM": "3000000000",
+      "GPU_COUNT": "2",
+      "EXTRA_ARGS": "--tensor-parallel-size 2",
+      "MAX_LEN": "65536",
+      "MAX_SEQS": "8"
+    },
+    "composeOverlaySha256": "19f7eeda73463e794ec853708d1fa4fe60a165c39c049583977b9fd77a8967b6",
+    "guardedRunnerSha256": "0e062973c5bc3106bb83f55b45ed26519ad2c0ec97b0a137c3ff9d612e6911d1"
+  }
+}

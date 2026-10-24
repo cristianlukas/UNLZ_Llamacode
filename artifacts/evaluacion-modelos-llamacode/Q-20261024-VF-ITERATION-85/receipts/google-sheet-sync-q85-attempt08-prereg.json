@@ -1,0 +1,29 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "syncedAtUtc": "2026-10-24T16:17:32Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "status": "write_and_readback_pass",
+  "updatedRanges": {
+    "Accionables": [
+      "D55",
+      "H55:K55",
+      "N55"
+    ],
+    "IA local": [
+      "G39",
+      "L39"
+    ],
+    "Evaluaciones LlamaCode": [
+      "C306",
+      "H306:I306"
+    ],
+    "Inventario de modelos": [
+      "C13",
+      "N13:O13"
+    ]
+  },
+  "readbackVerified": true,
+  "valuesSummarized": "Attempt 7 dual-GPU canary failure and cleanup; attempt 8 max_tokens 512 one-factor diagnostic marked preregistered/pending.",
+  "formattingChanged": false,
+  "visualCheck": "Browser sign-in screen; exact values verified via Sheets API."
+}

@@ -1,0 +1,31 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "attempt": 7,
+  "capturedAtUtc": "2026-10-24T16:08:36Z",
+  "phase": "cpu_only_systemd_compose_readback",
+  "status": "pass",
+  "systemdTransientEnvironment": {
+    "GPU_UTIL": "0.91",
+    "KV_MEM": "3000000000"
+  },
+  "resolvedComposeEnvironment": {
+    "GPU_UTIL": "0.91",
+    "KV_MEM": "3000000000",
+    "GPU_COUNT": "2",
+    "EXTRA_ARGS": "--tensor-parallel-size 2",
+    "MAX_LEN": "65536",
+    "MAX_SEQS": "8"
+  },
+  "sourceCommit": "ce9615c4f2309be727407918a6c979bd67968069",
+  "imageDigest": "sha256:0acd4b9625473e51c9bab56406c30814bc0d0d7e0a38deb408c62664b5a77669",
+  "composeOverlayPath": "/media/cristian/HDD extra/Modelos-eval/Q85-HyperQwen/HyperQwen/compose.q85.yaml",
+  "composeOverlaySha256": "19f7eeda73463e794ec853708d1fa4fe60a165c39c049583977b9fd77a8967b6",
+  "guardedRunnerPath": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-85/runner/run_q85_attempt07_with_config_gate.sh",
+  "guardedRunnerSha256": "6919d4d461ca90b86aee195596af0e539f2c307968b5a7828e1098d8b00c6b48",
+  "secretsEmitted": false,
+  "serverStarted": false,
+  "gpuInferenceStarted": false,
+  "decision": "Resolved unit values match the amendment; eligible to proceed only after a fresh immediate dual-GPU/resource preflight.",
+  "originalGuardSha256": "0e062973c5bc3106bb83f55b45ed26519ad2c0ec97b0a137c3ff9d612e6911d1",
+  "launcherCorrectionAtUtc": "2026-10-24T16:09:54Z"
+}

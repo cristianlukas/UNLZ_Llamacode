@@ -1,0 +1,47 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "attempt": 3,
+  "preregistration": "receipts/q85-tool-canary-attempt-03-preregistration.json",
+  "completedAtUtc": "2026-10-24T15:42:47Z",
+  "status": "server_healthy_auto_tool_selection_failed",
+  "candidate": {
+    "tensorParallelSize": 2,
+    "gpuCount": 2,
+    "gpuUtilization": 0.93,
+    "kvMemoryPinBytesPerWorker": 3000000000,
+    "context": 65536,
+    "maxSequences": 8,
+    "speculativeMethod": "dflash2",
+    "draftTokens": 7
+  },
+  "server": {
+    "healthSucceeded": true,
+    "modelsEndpointSucceeded": true,
+    "modelId": "qwen3.8-27b",
+    "tensorParallelSize": 2,
+    "candidateServiceStopped": true,
+    "candidatePort18142Free": true
+  },
+  "canary": {
+    "status": "fail",
+    "toolChoice": "auto",
+    "promptTokens": 474,
+    "completionTokens": 256,
+    "elapsedMs": 7340,
+    "finishReason": "length",
+    "toolCallCount": 0,
+    "expectedNextTool": "read_file",
+    "rawResponseStored": false,
+    "resultFileWritten": false,
+    "toolEvalStarted": false
+  },
+  "resourceSamples": {
+    "duringCanary": {"gpu0UsedMiB": 14036, "gpu1UsedMiB": 13152, "gpu0TempC": 57, "gpu1TempC": 44, "ramAvailableBytes": 109096542208},
+    "afterCleanup": {"gpu0UsedMiB": 993, "gpu1UsedMiB": 110, "gpu0TempC": 50, "gpu1TempC": 28}
+  },
+  "receipts": {
+    "canary": {"path": "receipts/q85-tool-canary-20261024T154050Z.json", "sha256": "a54c684f007275d3538a92f1d6953801276eeca866b65c1b7ccd951543868fc4"},
+    "serverLog": {"path": "receipts/q85-server-boot-20261024T154057Z.log", "sha256": "b4f9d159fd1816d487bb7466c6b94af6d163f649a4be10b80381eebc08e8707e", "mode": "0600", "apiKeyRedacted": true}
+  },
+  "adoptionDecision": "No adoption and no Tool-Eval. This only establishes that this single request under auto did not produce a tool call; it does not measure overall coding quality or performance."
+}

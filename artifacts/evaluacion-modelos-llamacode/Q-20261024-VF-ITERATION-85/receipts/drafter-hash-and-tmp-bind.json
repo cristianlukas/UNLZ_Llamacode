@@ -1,0 +1,16 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "verifiedAtUtc": "2026-10-24T14:57:51Z",
+  "repo": "syvai/Qwen3.8-27B-DFlash2-W4A16",
+  "revision": "4d30ec736ffc6b8688dc2ae2b502d9b48bdec279",
+  "file": {
+    "path": "model.safetensors",
+    "sizeBytes": 1280633960,
+    "sha256": "ec26996e6a0745ab5edb857117220ce1e219ad524f71e6e149b703804947d8e7",
+    "expectedSha256": "ec26996e6a0745ab5edb857117220ce1e219ad524f71e6e149b703804947d8e7",
+    "matchesHub": true
+  },
+  "composeTmpBindValidated": true,
+  "composeOverrideSha256": "67403309ae24ddc29cbdeee2655be7df50d603b8bc4decb0b5d39433590d676d",
+  "result": "drafter hash verified; /tmp bound to HDD for prepare and inference container"
+}

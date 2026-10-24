@@ -1,0 +1,109 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "attempt": 9,
+  "completedAtUtc": "2026-10-24T16:26:08Z",
+  "status": "canary_failed_write_file_arguments_truncated",
+  "candidate": {
+    "sourceCommit": "ce9615c4f2309be727407918a6c979bd67968069",
+    "imageDigest": "sha256:0acd4b9625473e51c9bab56406c30814bc0d0d7e0a38deb408c62664b5a77669",
+    "baseModelRevision": "1f05c441c4e64ae0549de44fa9ea5a6d43610314",
+    "drafterRevision": "4d30ec736ffc6b8688dc2ae2b502d9b48bdec279",
+    "tensorParallelSize": 2,
+    "gpuCount": 2,
+    "hostMemoryBytes": 137438953472,
+    "context": 65536,
+    "gpuUtilization": 0.91,
+    "kvMemoryPinBytesPerWorker": 3000000000,
+    "speculativeMethod": "dflash2",
+    "draftTokens": 7
+  },
+  "protocol": {
+    "temperature": 0.6,
+    "topP": 0.95,
+    "topK": 20,
+    "minP": 0.0,
+    "seed": 42,
+    "toolChoiceMode": "named",
+    "enableThinking": false,
+    "fixturePathEnum": true,
+    "explicitPathSchemaPrompt": true,
+    "toolMaxTokens": 512,
+    "toolChoiceSequence": [
+      "read_file",
+      "write_file",
+      "none"
+    ],
+    "parallelToolCalls": false,
+    "expectedToolSequence": [
+      "read_file",
+      "write_file"
+    ],
+    "fixtureSha256": "72e104733ce4d825eae8998b516025aa2c278284e1d875bddb05e9b7b8f48063",
+    "filesystemScope": "unique temporary directory under the Q85 HDD temp folder"
+  },
+  "startup": {
+    "serverHealthPassed": true,
+    "modelsEndpointPassed": true,
+    "bothRTX3090Used": true,
+    "worldSize": 2,
+    "serverStopped": true,
+    "candidatePort18142Free": true
+  },
+  "canary": {
+    "status": "fail",
+    "mode": "named",
+    "explicitPathSchemaPrompt": true,
+    "toolMaxTokens": 512,
+    "readFile": {
+      "promptTokens": 489,
+      "completionTokens": 26,
+      "latencyMs": 1214.26,
+      "finishReason": "stop",
+      "pathMatchesContract": true
+    },
+    "writeFile": {
+      "promptTokens": 561,
+      "completionTokens": 512,
+      "latencyMs": 12855.82,
+      "finishReason": "length",
+      "pathMatchesContract": false,
+      "contentIsString": false,
+      "contentMatchesFixture": false
+    },
+    "fixtureReadThenWriteComplete": false,
+    "rawArgumentsOrResponseStored": false,
+    "toolEvalStarted": false,
+    "qualityOrSpeedBenchmarkStarted": false
+  },
+  "preflightReceipt": "receipts/q85-tool-canary-attempt-09-preflight.json",
+  "canaryReceipt": "q85-tool-canary-20261024T162554Z.json",
+  "canaryReceiptSha256": "36ad57604a6d5296eda9daed31975e6446e05a79f0076d61a5d7eb4a6a094a35",
+  "bootLog": {
+    "path": "q85-server-boot-20261024T162608Z.log",
+    "sha256": "14ebc0f8236e5f8daa3eeb6167a6ab5043d9c48733197bc098d2fc354f909649",
+    "bytes": 42025,
+    "mode": "0o600"
+  },
+  "postflight": {
+    "activeDockerContainers": [],
+    "candidatePort18142Free": true,
+    "systemdUnitInactive": true,
+    "gpuBaseline": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memoryUsedMiB": 1051,
+        "temperatureC": 49
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memoryUsedMiB": 110,
+        "temperatureC": 28
+      }
+    ],
+    "guiLeftOpen": true
+  },
+  "interpretation": "Prompt alignment fixed the read_file path in this single TP=2 canary. The write_file response exhausted its 512-token cap with an invalid path and non-string content, so the workflow did not complete. This is a tool-contract/canary failure, not a comparative quality/speed result. Per the preregistered failure policy, stop this tool-loop and do not run auto mode or Tool-Eval until a material parser/runtime change. No adoption.",
+  "recordedAtUtc": "2026-10-24T16:29:03Z"
+}

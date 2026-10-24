@@ -1,0 +1,71 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "attempt": 2,
+  "preregisteredAtUtc": "2026-10-24T15:25:30Z",
+  "status": "preregistered_pending",
+  "purpose": "Retry the startup/tool canary after the TP=2 unpinned-KV startup OOM, with one controlled memory-profile change.",
+  "candidate": {
+    "sourceCommit": "ce9615c4f2309be727407918a6c979bd67968069",
+    "imageDigest": "sha256:0acd4b9625473e51c9bab56406c30814bc0d0d7e0a38deb408c62664b5a77669",
+    "baseModelRevision": "1f05c441c4e64ae0549de44fa9ea5a6d43610314",
+    "drafterRevision": "4d30ec736ffc6b8688dc2ae2b502d9b48bdec279",
+    "tensorParallelSize": 2,
+    "gpuCount": 2,
+    "context": 65536,
+    "maxSequences": 8,
+    "gpuUtilization": 0.93,
+    "kvMemoryPinBytesPerWorker": 3000000000,
+    "speculativeMethod": "dflash2",
+    "draftTokens": 7
+  },
+  "controlledDifferenceFromAttempt01": "KV_MEM is now explicitly mapped through the local Compose override and pinned to 3000000000 bytes per TP worker. Model, image, TP, context, concurrency, GPU_UTIL, drafter, and sampling remain unchanged.",
+  "rationale": [
+    "Attempt 1's startup log said TP=2 was sizing the KV pool from GPU_UTIL=0.93 because KV_MEM was unset; it then failed with a CUDA OOM before health.",
+    "The pinned source's multi-GPU guide says TP>1 skips the single-card pin by default, recommends reading the real pool and pinning before measurements, and a separate 3090 diagnostic example uses a 3 GB pin with a larger drafter.",
+    "The local override previously did not map KV_MEM into the container. docker compose config now confirms the explicit 3000000000-byte value reaches the single service."
+  ],
+  "sampling": {
+    "temperature": 0.6,
+    "topP": 0.95,
+    "topK": 20,
+    "minP": 0.0,
+    "seed": 42,
+    "toolChoice": "auto",
+    "parallelToolCalls": false,
+    "runs": 1,
+    "retries": 0
+  },
+  "passCriteria": [
+    "server health succeeds and the startup log records KV pool size for both TP ranks",
+    "the canary calls read_file then write_file with exact allowlisted paths and call IDs",
+    "result bytes exactly match the fixed fixture and the final response is non-empty",
+    "redacted mode-0600 startup logs are saved before Compose cleanup",
+    "the candidate service is stopped and port 18142 is free after exit"
+  ],
+  "failurePolicy": "No Tool-Eval or automatic retry on failure; keep the full redacted log receipt and investigate before changing another variable.",
+  "composeOverrideSha256": "70fb2a3ac22e1b00fbccb9c4a3bd557fd96e51e373d586738d71b73d5017d7d0",
+  "scripts": {
+    "runner/q85_tool_canary.py": "sha256:4e4f11a835e7f51ca7bf5ca540e2fb35453e8f299e8a97780780d01ba5ecf27c",
+    "runner/run_q85_tp2_canary.sh": "sha256:b0ff13ab4afe1074b7fcb4ab41ebd9dbf33029f603e6a95df2ed177469b383b2"
+  },
+  "staticChecks": {
+    "pythonAstParse": "pass",
+    "bashN": "pass",
+    "composeKVOverrideReadback": "pass",
+    "systemdRunKvMemPropagation": "pass",
+    "systemdRunComposeWorkingDirectory": "pass"
+  },
+  "validationUpdate": {
+    "recordedAtUtc": "2026-10-24T15:33:19Z",
+    "effectiveReadback": {
+      "KV_MEM": "3000000000",
+      "EXTRA_ARGS": "--tensor-parallel-size 2",
+      "GPU_COUNT": "2"
+    },
+    "execution": "CPU-only docker compose config under a transient user-systemd unit; no server, inference, or GPU compute was started.",
+    "initialInvocationIssue": "An earlier read-only check used bash -lc, which reset the working directory to /home/cristian and failed before Compose. The corrected unit used the explicit HyperQwen WorkingDirectory and passed; no service was started by the failed invocation."
+  },
+  "apiKeyRecorded": false,
+  "inferenceStarted": false,
+  "gpuInferenceStarted": false
+}

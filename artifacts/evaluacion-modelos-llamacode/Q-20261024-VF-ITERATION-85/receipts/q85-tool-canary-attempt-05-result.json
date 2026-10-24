@@ -1,0 +1,65 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "attempt": 5,
+  "preregistration": "receipts/q85-tool-canary-attempt-05-preregistration.json",
+  "completedAtUtc": "2026-10-24T15:50:35Z",
+  "status": "server_healthy_named_read_path_mismatch",
+  "candidate": {
+    "sourceCommit": "ce9615c4f2309be727407918a6c979bd67968069",
+    "imageDigest": "sha256:0acd4b9625473e51c9bab56406c30814bc0d0d7e0a38deb408c62664b5a77669",
+    "baseModelRevision": "1f05c441c4e64ae0549de44fa9ea5a6d43610314",
+    "drafterRevision": "4d30ec736ffc6b8688dc2ae2b502d9b48bdec279",
+    "tensorParallelSize": 2,
+    "gpuCount": 2,
+    "context": 65536,
+    "maxSequences": 8,
+    "gpuUtilization": 0.93,
+    "kvMemoryPinBytesPerWorker": 3000000000,
+    "speculativeMethod": "dflash2",
+    "draftTokens": 7
+  },
+  "server": {
+    "healthSucceeded": true,
+    "modelsEndpointSucceeded": true,
+    "modelId": "qwen3.8-27b",
+    "candidateServiceStopped": true,
+    "candidatePort18142Free": true
+  },
+  "canary": {
+    "status": "fail",
+    "toolChoiceMode": "named",
+    "requestedFunction": "read_file",
+    "enableThinking": false,
+    "promptTokens": 438,
+    "completionTokens": 256,
+    "totalTokens": 694,
+    "elapsedMs": 7296.88,
+    "finishReason": "length",
+    "toolCallCount": 1,
+    "toolNames": [
+      "read_file"
+    ],
+    "pathMatchesCanaryContract": false,
+    "rawArgumentStored": false,
+    "rawResponseStored": false,
+    "fixtureRead": false,
+    "writeStageReached": false,
+    "toolEvalStarted": false
+  },
+  "failure": "The named read_file call was emitted, but its path did not equal the only allowed path source.txt. The generated value was deliberately not recorded.",
+  "interpretation": "Thinking-off changed the outcome from zero tool calls to one named call, but the call was unusable. This is a canary failure, not a quality or speed result and not evidence of model inferiority.",
+  "receipts": {
+    "canary": {
+      "path": "receipts/q85-tool-canary-20261024T155028Z.json",
+      "sha256": "61d1b83b27faf1f7862e0eea06c716c4748f8d7ab1751e16f2adba690988018c"
+    },
+    "serverLog": {
+      "path": "receipts/q85-server-boot-20261024T155035Z.log",
+      "sha256": "2e431bdeafc679b5c6265f785bda14239559e2f3cb2994f4c8ccbb16db80adb8",
+      "mode": "0600",
+      "apiKeyRedacted": true
+    }
+  },
+  "apiKeyRecorded": false,
+  "toolEvalStarted": false
+}

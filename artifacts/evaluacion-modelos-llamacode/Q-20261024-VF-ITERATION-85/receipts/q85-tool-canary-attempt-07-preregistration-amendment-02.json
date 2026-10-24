@@ -1,0 +1,22 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "attempt": 7,
+  "amendment": 2,
+  "amendedAtUtc": "2026-10-24T16:09:54Z",
+  "status": "launcher-correction-before-canary",
+  "amends": "receipts/q85-tool-canary-attempt-07-preregistration.json",
+  "reason": "Attempt-7 config gate passed but systemd could not execute the non-executable preregistered runner directly (exit 126); server startup and GPU inference never began.",
+  "controlledTreatment": "No change to the registered experiment. This only changes process invocation to /usr/bin/bash <runner-path>.",
+  "composeEnvironmentStillRequired": {
+    "GPU_UTIL": "0.91",
+    "KV_MEM": "3000000000",
+    "GPU_COUNT": "2",
+    "EXTRA_ARGS": "--tensor-parallel-size 2"
+  },
+  "correctedGuardSha256": "6919d4d461ca90b86aee195596af0e539f2c307968b5a7828e1098d8b00c6b48",
+  "failureReceipt": "receipts/q85-attempt07-launcher-failure.json",
+  "serverStarted": false,
+  "gpuInferenceStarted": false,
+  "apiRequestsSent": false,
+  "retryPolicy": "The same single preregistered canary remains pending; re-read lock/docs, repeat fresh preflight and exact config gate before one server run."
+}

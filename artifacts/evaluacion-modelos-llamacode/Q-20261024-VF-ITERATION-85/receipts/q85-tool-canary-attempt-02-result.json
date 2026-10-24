@@ -1,0 +1,59 @@
+{
+  "task": "Q-20261024-VF-ITERATION-85",
+  "attempt": 2,
+  "preregistration": "receipts/q85-tool-canary-attempt-02-preregistration.json",
+  "completedAtUtc": "2026-10-24T15:38:37Z",
+  "status": "startup_failed_before_health",
+  "candidate": {
+    "tensorParallelSize": 2,
+    "gpuCount": 2,
+    "gpuUtilization": 0.93,
+    "kvMemoryPinBytesPerWorker": 3000000000,
+    "context": 65536,
+    "maxSequences": 8,
+    "speculativeMethod": "dflash2",
+    "draftTokens": 7
+  },
+  "container": {
+    "id": "5b469147b8278d6ec464c928ffc827e2f03fdd703c933a2974e9c53a6554cd0e",
+    "status": "exited",
+    "exitCode": 1,
+    "oomKilled": false,
+    "startedAtUtc": "2026-10-24T15:34:02.145796891Z",
+    "finishedAtUtc": "2026-10-24T15:35:01.536080282Z"
+  },
+  "failure": {
+    "class": "vLLM startup memory-admission check",
+    "rootCause": "Worker rejected initialization because cuda:0 had 21.91 GiB free while GPU_UTIL=0.93 requested 21.95 GiB.",
+    "deficitGiB": 0.04,
+    "approxDeficitMiB": 41,
+    "cudaOom": false,
+    "kvPinPropagation": "pass; effective arguments included kv_cache_memory_bytes=3000000000",
+    "healthSucceeded": false,
+    "canaryRequestsSent": 0,
+    "toolEvalStarted": false,
+    "generatedTokens": 0
+  },
+  "wrapperDefect": "docker compose ps -q omitted the exited single-service container, so the health loop kept waiting. Runner was stopped after the exited state was confirmed. Detection and log capture now use docker compose ps --all -q.",
+  "log": {
+    "path": "receipts/q85-server-boot-attempt02-20261024T153555Z.log",
+    "sha256": "9c180220dd66302a565daa740010507c2a1c468e3fa454dfa55be8eff5e77f83",
+    "bytes": 31986,
+    "lines": 299,
+    "mode": "0600",
+    "apiKeyRedacted": true
+  },
+  "resources": {
+    "before": {"gpu0UsedMiB": 1247, "gpu1UsedMiB": 110, "ramAvailableBytes": 115200180224},
+    "afterCleanup": {"gpu0UsedMiB": 1002, "gpu1UsedMiB": 110},
+    "unrelatedDesktopProcess": {
+      "name": "artcraft-launcher",
+      "gpuMemoryReportedMiB": 209,
+      "action": "SIGTERM after explicit user authorization; approx 232 MiB freed by nvidia-smi samples",
+      "inferenceServer": false
+    },
+    "candidateServiceStopped": true,
+    "candidatePort18142Free": true
+  },
+  "adoptionDecision": "No adoption claim. Startup failure only; no quality or performance measurements."
+}
