@@ -1,0 +1,75 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-108",
+  "recordedAtUtc": "2026-10-24T23:51:45Z",
+  "status": "PASS_CPU_ONLY",
+  "checks": [
+    "PASS legacy missing-PSI fail-open reproduced; Q108 rejects it PASS",
+    "PASS missing/malformed/out-of-range PSI rejected PASS",
+    "PASS valid PSI parsed exactly PASS",
+    "PASS procfs fixture and one live host sample parse; missing PSI fails closed PASS",
+    "PASS missing/malformed/duplicated OOM counter rejected PASS",
+    "PASS ASTRA DEFAULT 1M control: 51.14 GiB RSS, 55.728 GiB available -> continue PASS",
+    "PASS SOL Q34 TP=2 success/no-OOM documented; PSI limitation preserved PASS",
+    "PASS Q100 moderate PSI warns only and does not stop PASS",
+    "PASS floor/OOM/severe-PSI 14→15/recovery boundaries preserved PASS",
+    "PASS incomplete or invalid sample rejected explicitly PASS",
+    "PASS non-memory pressure cannot be misrouted as memory stop PASS",
+    "PASS fail-closed action signals only the explicit candidate PID PASS",
+    "PASS Q97/Q100/Q102/Q103 historical success receipts consistent PASS",
+    "PASS Strata Q99 action reconciled to Q100/Q105 no-adoption result PASS",
+    "PASS exclusive Q108 lock valid PASS"
+  ],
+  "passed": 15,
+  "total": 15,
+  "summary": "15/15 PASS",
+  "monitorCore": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-108/runner/q108_guard_core.py",
+  "monitorCoreSha256": "832c6661692fa9c6e45d209be5c4201a1ad796bfe66bec92cf947151e6988b4b",
+  "testScript": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-108/runner/test_q108_guard_audit.py",
+  "testScriptSha256": "218050d08a66bcf92e3010e1b842af8818607c2439f6302853f7e96cb01e8d31",
+  "sheetSyncReceipt": "receipts/google-sheet-sync-q108-final.json",
+  "preflight": {
+    "knownInferenceServer": false,
+    "gpuComputeApps": [
+      "ArtCraft 207 MiB (preserved)"
+    ],
+    "modelOrServerStarted": false,
+    "gpuUsed": false
+  },
+  "liveProcfsSample": {
+    "sample": {
+      "memAvailableGiB": 110.04164123535156,
+      "memoryPsiAvg10Pct": {
+        "some": 0.0,
+        "full": 0.0
+      },
+      "oomKill": 0
+    },
+    "decision": {
+      "stopReason": null,
+      "severeStreak": 0,
+      "warning": false
+    }
+  },
+  "findings": {
+    "historicalControls": "ASTRA DEFAULT 1M completed; SOL Q34 dual RTX 3090 completed without OOM, with no continuous PSI series.",
+    "oldFalsePositive": "Q91/Q93 earlier PSI hard-stop was overly sensitive: moderate PSI caused abort with >92 GiB available and OOM=0; evidence is reclaim/stalls, not crash/OOM.",
+    "currentPolicy": "RSS alone does not stop. Current hard stops remain MemAvailable <32 GiB, a new OOM kill, or severe global memory PSI for 15 consecutive one-second samples; moderate PSI warns.",
+    "telemetryGap": "Q102/Q103 copies defaulted missing PSI and missing oom_kill to zero. Q108 reproduced it and tested a strict candidate core that rejects absent/malformed/duplicate/non-finite/out-of-range telemetry, reads live procfs and signals only the candidate PID on errors.",
+    "strataQueue": "Q99 follow-up enabled integration; Q100 E2E completed; Q105 CPU forensics completed. parallel2 no-go, attribution inconclusive. Local and Sheet actionable reconciled."
+  },
+  "limitations": [
+    "CPU-only offline audit; no model/server/GPU run.",
+    "SOL Q34 has success/no-OOM evidence but lacks per-second PSI and is not a PSI calibration sample.",
+    "Q108 strict core is an evaluation-runner candidate; historical Q102/Q103 monitor copies and production runtime were not modified.",
+    "Parser/decision logic was tested with fixtures and one real procfs sample; full integration into a model evaluation launcher remains the next eligible run.",
+    "The detector guards a candidate run; it does not predict/prevent all Codex GUI, NVIDIA driver, or kernel crashes."
+  ],
+  "modelOrServerStarted": false,
+  "gpuUsed": false,
+  "memoryPressureArtificiallyCreated": false,
+  "productionProfilesChanged": false,
+  "auditHarnessCorrections": [
+    "Assertion first expected a wrong language string; fixed to structured Q97 evidence.",
+    "After Q99 reconciliation, expected stale state was changed to completed no-adoption state. Final run 15/15."
+  ]
+}

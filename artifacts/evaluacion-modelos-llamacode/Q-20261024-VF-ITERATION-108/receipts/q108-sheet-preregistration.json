@@ -1,0 +1,21 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-108",
+  "lockToken": "19dc403c-9b1f-4f4f-8227-b38b24edcdb1",
+  "sheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheetTab": "Evaluaciones LlamaCode",
+  "row": "A328:J328",
+  "preregistrationReadback": "PASS",
+  "preTestAmendment": "Amendment01 preregistered before tests: reject missing/malformed PSI/OOM telemetry rather than treating it as zero.",
+  "recordedAtUtc": "2026-10-24T23:45:29Z",
+  "readbackValueCount": 10,
+  "strayRowsAfterCorrection": "A329:A338 verified blank",
+  "modelInferenceStarted": false,
+  "gpuUsed": false,
+  "amendment02": {
+    "scope": "one read-only /proc/meminfo, /proc/pressure/memory, /proc/vmstat sample plus missing-file fixture",
+    "sheetReadback": "PASS; Evaluaciones LlamaCode!B328:H328 and C328 confirmed before execution",
+    "executedAtUtc": "2026-10-24T23:51:45Z",
+    "gpuUsed": false,
+    "modelOrServerStarted": false
+  }
+}

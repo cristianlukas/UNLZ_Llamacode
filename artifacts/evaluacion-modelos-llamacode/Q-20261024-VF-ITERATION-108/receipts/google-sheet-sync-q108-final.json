@@ -1,0 +1,40 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-108",
+  "recordedAtUtc": "2026-10-24T23:51:45Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "writes": [
+    {
+      "sheet": "Evaluaciones LlamaCode",
+      "range": "A328:J328",
+      "cells": 10,
+      "readback": "exact",
+      "wrap": "10/10 WRAP",
+      "status": "Cerrada · auditoría 15/15 PASS CPU-only"
+    },
+    {
+      "sheet": "Accionables",
+      "range": "A12:N12",
+      "cells": 14,
+      "readback": "exact",
+      "wrap": "14/14 WRAP",
+      "status": "Completado · Q99/Q100/Q105 no-adopción"
+    }
+  ],
+  "modelOrServerStarted": false,
+  "gpuUsed": false,
+  "verifiedAtUtc": "2026-10-24T23:53:44Z",
+  "finalReadback": {
+    "Evaluaciones LlamaCode!A328:J328": {
+      "cells": 10,
+      "exact": true,
+      "wrap": "10/10 WRAP",
+      "liveSample": "MemAvailable 110.042 GiB; PSI some/full 0.00%; oom_kill 0; continue"
+    },
+    "Accionables!A12:N12": {
+      "cells": 14,
+      "exact": true,
+      "wrap": "14/14 WRAP",
+      "decision": "Q99/Q100/Q105 completed; parallel2 no adoption"
+    }
+  }
+}
