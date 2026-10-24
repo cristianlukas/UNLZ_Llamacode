@@ -1,0 +1,321 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-100",
+  "attempt": 5,
+  "recordedAtUtc": "2026-10-24T21:46:23Z",
+  "rawData": "live-probe-result.json is preserved without edits; this file re-scores its six outputs against the preregistered exact ALPHA/BETA mapping requirement.",
+  "status": "complete-evidence-no-adoption",
+  "originalScorerBug": "The original predicate checked that both marker strings occurred anywhere in the final answer; it did not check that the ALPHA and BETA labels mapped to the right marker. It also used QVERIFY(screenPass), so a completed negative adoption gate made the executable return failure.",
+  "runs": [
+    {
+      "acceptedTasks": 2,
+      "alphaMarkerReturned": true,
+      "betaMarkerReturned": true,
+      "elapsedMs": 12062,
+      "exactFinal": true,
+      "finalText": "<think>The user wants me to respond only in the format ALPHA=<line>; BETA=<line>.\n</think>\nALPHA=Q100_ALPHA_PRIVATE_5051_7c1d9; BETA=Q100_BETA_PRIVATE_5051_3f8a2",
+      "firstBatchTaskCalls": 2,
+      "gitWorktreeListRead": true,
+      "maxBusySubagentCards": 1,
+      "policy": "serial",
+      "qualityPassed": true,
+      "remainingWorktreeCount": 1,
+      "seed": 5051,
+      "started": true,
+      "taskCalls": 2,
+      "taskCards": [
+        {
+          "ok": true,
+          "output": "[worktree git aislada]\n🔧 read_file\n\nQ100_ALPHA_PRIVATE_5051_7c1d9\n[el sub-agente no dejó cambios]",
+          "toolTrace": [
+            "read_file"
+          ]
+        },
+        {
+          "ok": true,
+          "output": "[worktree git aislada]\n🔧 read_file\n\nQ100_BETA_PRIVATE_5051_3f8a2\n[el sub-agente no dejó cambios]",
+          "toolTrace": [
+            "read_file"
+          ]
+        }
+      ],
+      "turnFinished": true,
+      "unexpectedParentTools": 0,
+      "unexpectedSubagentTools": [],
+      "taskCardsContainBothExpectedMarkers": true,
+      "finalLabelMappingCorrect": true,
+      "qualityPassedCorrected": true
+    },
+    {
+      "acceptedTasks": 2,
+      "alphaMarkerReturned": true,
+      "betaMarkerReturned": true,
+      "elapsedMs": 12500,
+      "exactFinal": true,
+      "finalText": "<think>The results appear swapped relative to the labels? Task 1 (alpha) returned BETA content, task 2 (beta) returned ALPHA content. I should report as observed: ALPHA = line read by the alpha task = Q100_BETA_PRIVATE_5051_3f8a2? Hmm. The instruction: respond only ALPHA=<line read>; BETA=<line read>. The line read from marker-alpha.txt was Q100_BETA_PRIVATE_5051_3f8a2. So ALPHA=Q100_BETA_PRIVATE_5051_3f8a2; BETA=Q100_ALPHA_PRIVATE_5051_7c1d9. That's the faithful reporting of what was read.\n</think>\nALPHA=Q100_BETA_PRIVATE_5051_3f8a2; BETA=Q100_ALPHA_PRIVATE_5051_7c1d9",
+      "firstBatchTaskCalls": 2,
+      "gitWorktreeListRead": true,
+      "maxBusySubagentCards": 2,
+      "policy": "parallel2",
+      "qualityPassed": true,
+      "remainingWorktreeCount": 1,
+      "seed": 5051,
+      "started": true,
+      "taskCalls": 2,
+      "taskCards": [
+        {
+          "ok": true,
+          "output": "[worktree git aislada]\n🔧 read_file\n\nQ100_ALPHA_PRIVATE_5051_7c1d9\n[el sub-agente no dejó cambios]",
+          "toolTrace": [
+            "read_file"
+          ]
+        },
+        {
+          "ok": true,
+          "output": "[worktree git aislada]\n🔧 read_file\n\nQ100_BETA_PRIVATE_5051_3f8a2\n[el sub-agente no dejó cambios]",
+          "toolTrace": [
+            "read_file"
+          ]
+        }
+      ],
+      "turnFinished": true,
+      "unexpectedParentTools": 0,
+      "unexpectedSubagentTools": [],
+      "taskCardsContainBothExpectedMarkers": true,
+      "finalLabelMappingCorrect": false,
+      "qualityPassedCorrected": false
+    },
+    {
+      "acceptedTasks": 2,
+      "alphaMarkerReturned": true,
+      "betaMarkerReturned": true,
+      "elapsedMs": 11499,
+      "exactFinal": true,
+      "finalText": "<think>The user is asking for a response in the following format only: ALPHA=<line read>; BETA=<line read>.\n</think>\nALPHA=Q100_ALPHA_PRIVATE_5052_7c1d9; BETA=Q100_BETA_PRIVATE_5052_3f8a2",
+      "firstBatchTaskCalls": 2,
+      "gitWorktreeListRead": true,
+      "maxBusySubagentCards": 2,
+      "policy": "parallel2",
+      "qualityPassed": true,
+      "remainingWorktreeCount": 1,
+      "seed": 5052,
+      "started": true,
+      "taskCalls": 2,
+      "taskCards": [
+        {
+          "ok": true,
+          "output": "[worktree git aislada]\n🔧 read_file\n\nQ100_ALPHA_PRIVATE_5052_7c1d9\n[el sub-agente no dejó cambios]",
+          "toolTrace": [
+            "read_file"
+          ]
+        },
+        {
+          "ok": true,
+          "output": "[worktree git aislada]\n🔧 read_file\n\nQ100_BETA_PRIVATE_5052_3f8a2\n[el sub-agente no dejó cambios]",
+          "toolTrace": [
+            "read_file"
+          ]
+        }
+      ],
+      "turnFinished": true,
+      "unexpectedParentTools": 0,
+      "unexpectedSubagentTools": [],
+      "taskCardsContainBothExpectedMarkers": true,
+      "finalLabelMappingCorrect": true,
+      "qualityPassedCorrected": true
+    },
+    {
+      "acceptedTasks": 2,
+      "alphaMarkerReturned": true,
+      "betaMarkerReturned": true,
+      "elapsedMs": 11378,
+      "exactFinal": true,
+      "finalText": "<think>The main agent must respond only with the format. No more tools.\n</think>\nALPHA=Q100_ALPHA_PRIVATE_5052_7c1d9; BETA=Q100_BETA_PRIVATE_5052_3f8a2",
+      "firstBatchTaskCalls": 2,
+      "gitWorktreeListRead": true,
+      "maxBusySubagentCards": 1,
+      "policy": "serial",
+      "qualityPassed": true,
+      "remainingWorktreeCount": 1,
+      "seed": 5052,
+      "started": true,
+      "taskCalls": 2,
+      "taskCards": [
+        {
+          "ok": true,
+          "output": "[worktree git aislada]\n🔧 read_file\n\nQ100_ALPHA_PRIVATE_5052_7c1d9\n[el sub-agente no dejó cambios]",
+          "toolTrace": [
+            "read_file"
+          ]
+        },
+        {
+          "ok": true,
+          "output": "[worktree git aislada]\n🔧 read_file\n\nQ100_BETA_PRIVATE_5052_3f8a2\n[el sub-agente no dejó cambios]",
+          "toolTrace": [
+            "read_file"
+          ]
+        }
+      ],
+      "turnFinished": true,
+      "unexpectedParentTools": 0,
+      "unexpectedSubagentTools": [],
+      "taskCardsContainBothExpectedMarkers": true,
+      "finalLabelMappingCorrect": true,
+      "qualityPassedCorrected": true
+    },
+    {
+      "acceptedTasks": 2,
+      "alphaMarkerReturned": true,
+      "betaMarkerReturned": true,
+      "elapsedMs": 12423,
+      "exactFinal": true,
+      "finalText": "<think>Both results are in, so I should respond with just the final answer.\n</think>\nALPHA=Q100_ALPHA_PRIVATE_5053_7c1d9; BETA=Q100_BETA_PRIVATE_5053_3f8a2",
+      "firstBatchTaskCalls": 2,
+      "gitWorktreeListRead": true,
+      "maxBusySubagentCards": 1,
+      "policy": "serial",
+      "qualityPassed": true,
+      "remainingWorktreeCount": 1,
+      "seed": 5053,
+      "started": true,
+      "taskCalls": 2,
+      "taskCards": [
+        {
+          "ok": true,
+          "output": "[worktree git aislada]\n🔧 read_file\n\nQ100_ALPHA_PRIVATE_5053_7c1d9\n[el sub-agente no dejó cambios]",
+          "toolTrace": [
+            "read_file"
+          ]
+        },
+        {
+          "ok": true,
+          "output": "[worktree git aislada]\n🔧 read_file\n\nQ100_BETA_PRIVATE_5053_3f8a2\n[el sub-agente no dejó cambios]",
+          "toolTrace": [
+            "read_file"
+          ]
+        }
+      ],
+      "turnFinished": true,
+      "unexpectedParentTools": 0,
+      "unexpectedSubagentTools": [],
+      "taskCardsContainBothExpectedMarkers": true,
+      "finalLabelMappingCorrect": true,
+      "qualityPassedCorrected": true
+    },
+    {
+      "acceptedTasks": 2,
+      "alphaMarkerReturned": true,
+      "betaMarkerReturned": true,
+      "elapsedMs": 13796,
+      "exactFinal": true,
+      "finalText": "<think>The results came back, but they appear to be swapped: the first task (alpha) returned a BETA line, and the second task (beta) returned an ALPHA line. I need to map results to files correctly. The first call I made was for marker-alpha.txt, and it returned \"Q100_BETA_PRIVATE_5053_3f8a2\". The second call, for marker-beta.txt, returned \"Q100_ALPHA_PRIVATE_5053_7c1d9\".\n\nHmm, this is a probe for whether I correctly attribute results to the right task. The tool results order: first result block corresponds to first task call (alpha), second to beta. So ALPHA = Q100_BETA_PRIVATE_5053_3f8a2? That seems contradictory — the file named marker-alpha.txt containing a BETA line. That's likely intentional as a trap: I should report based on which file was read, not on the content's label. But which result belongs to which task? Results are returned in the order of the calls. So ALPHA (from marker-alpha.txt) = Q100_BETA_PRIVATE_5053_3f8a2, and BETA (from marker-beta.txt) = Q100_ALPHA_PRIVATE_5053_7c1d9.\n\nThe instruction: respond only \"ALPHA=<línea leída>; BETA=<línea leída>\". So I should report lines as read per file, in order. I'll do that.\n\nNo more tools allowed.\n</think>\nALPHA=Q100_BETA_PRIVATE_5053_3f8a2; BETA=Q100_ALPHA_PRIVATE_5053_7c1d9",
+      "firstBatchTaskCalls": 2,
+      "gitWorktreeListRead": true,
+      "maxBusySubagentCards": 2,
+      "policy": "parallel2",
+      "qualityPassed": true,
+      "remainingWorktreeCount": 1,
+      "seed": 5053,
+      "started": true,
+      "taskCalls": 2,
+      "taskCards": [
+        {
+          "ok": true,
+          "output": "[worktree git aislada]\n🔧 read_file\n\nQ100_ALPHA_PRIVATE_5053_7c1d9\n[el sub-agente no dejó cambios]",
+          "toolTrace": [
+            "read_file"
+          ]
+        },
+        {
+          "ok": true,
+          "output": "[worktree git aislada]\n🔧 read_file\n\nQ100_BETA_PRIVATE_5053_3f8a2\n[el sub-agente no dejó cambios]",
+          "toolTrace": [
+            "read_file"
+          ]
+        }
+      ],
+      "turnFinished": true,
+      "unexpectedParentTools": 0,
+      "unexpectedSubagentTools": [],
+      "taskCardsContainBothExpectedMarkers": true,
+      "finalLabelMappingCorrect": false,
+      "qualityPassedCorrected": false
+    }
+  ],
+  "correctedAggregate": {
+    "serialRuns": 3,
+    "parallelRuns": 3,
+    "serialQualityRuns": 3,
+    "parallelQualityRuns": 1,
+    "serialE2ECorrectTasks": 6,
+    "parallelE2ECorrectTasks": 2,
+    "elapsedSerialMs": 35863,
+    "elapsedParallel2Ms": 37795,
+    "rawMarkerTasksPerSecondSerial": 0.16730334885536627,
+    "rawMarkerTasksPerSecondParallel2": 0.15875115756052388,
+    "rawThroughputRatioParallelVsSerial": 0.9488821272655114,
+    "correctE2ETasksPerSecondSerial": 0.16730334885536627,
+    "correctE2ETasksPerSecondParallel2": 0.052917052520174625,
+    "correctE2EThroughputRatioParallelVsSerial": 0.31629404242183706,
+    "maxBusySerial": 1,
+    "minBusyParallel2": 2,
+    "unexpectedToolBlocks": 0,
+    "adoptionGate": "FAIL: only 1/3 parallel runs returned labels correctly; serial 3/3. Parallel raw elapsed time was 5.39% slower; quality gate fails regardless of throughput. No production adoption."
+  },
+  "memoryMetrics": {
+    "sampleCount": 220,
+    "minMemAvailableGiB": 69.386,
+    "peakGlobalPsiFullAvg10Pct": 46.52,
+    "peakCgroupPsiFullAvg10PctDiagnostic": 85.74,
+    "psiWarningSamples": 34,
+    "globalOomKills": 0,
+    "cgroupOomKills": 0
+  },
+  "cleanup": {
+    "taskId": "Q-20261024-VF-ITERATION-100",
+    "atUtc": "2026-10-24T21:44:09Z",
+    "ownedServerStopped": true,
+    "ownedProxyStopped": true,
+    "port8363Free": true,
+    "port8364Free": true,
+    "externalInferenceProcesses": [],
+    "privateTempRemoved": true,
+    "privateTempCleanupError": null,
+    "memoryPsiAvg10Pct": {
+      "some": 0.0,
+      "full": 0.0
+    },
+    "memAvailableGiB": 109.759,
+    "oom": {
+      "global": {
+        "oom_kill": 0
+      },
+      "cgroup": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3090",
+        "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+        "totalMiB": 24576,
+        "usedMiB": 1065
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA GeForce RTX 3090",
+        "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+        "totalMiB": 24576,
+        "usedMiB": 110
+      }
+    ],
+    "pass": true
+  },
+  "conclusion": "Attempt05 is a complete dual-RTX 3090 ASTRA/Strata 64K E2E screen with 128GB RAM. The two subtasks independently read both committed fixtures in all six runs; max concurrent task cards were 1 serial and 2 parallel. The parent mislabeled the two parallel outputs for seeds 5051 and 5053; corrected scoring yields serial 3/3 vs parallel 1/3. Screen fails; do not enable two-worker fan-out. This is not a test of the 1M production context. Memory guard behaved correctly: moderate global PSI peaked below severe-stop threshold, issued warnings, did not abort, and all runs completed without OOM; cleanup returned both GPUs and RAM to baseline."
+}

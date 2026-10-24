@@ -1,0 +1,61 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-100",
+  "recordedAtUtc": "2026-10-24T21:56:15Z",
+  "status": "PASS_Q100_OWNED_RESOURCES_CLEAN",
+  "q100Units": [],
+  "portsInUse": {
+    "8363": false,
+    "8364": false,
+    "18789": false
+  },
+  "inferenceProcessCheck": "No Q100 inference server or proxy in user systemd; expected Q100 ports have no listener.",
+  "otherGpuComputeApps": [
+    "3952271, /tmp/.mount_artcragmccCd/usr/bin/artcraft-launcher, 207 MiB"
+  ],
+  "gpuSnapshot": [
+    "0, NVIDIA GeForce RTX 3090, 1097 MiB, 24576 MiB, 23 %",
+    "1, NVIDIA GeForce RTX 3090, 110 MiB, 24576 MiB, 34 %"
+  ],
+  "memAvailableGiB": 110.124,
+  "psi": {
+    "memory": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.54,
+        "total": 505497356.0
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.54,
+        "total": 504965919.0
+      }
+    },
+    "io": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 0.02,
+        "avg300": 0.29,
+        "total": 2004354125.0
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 0.02,
+        "avg300": 0.28,
+        "total": 1947294350.0
+      }
+    }
+  },
+  "oomCountersAtAttempt05Cleanup": "global and task cgroup oom/oom_kill deltas 0 per q100-cleanup-postflight.json",
+  "guiOrOtherApps": "ArtCraft is the only reported compute app (207 MiB at the Q100 cleanup receipt; current GPU snapshot may show it); preserved.",
+  "lockBeforeRelease": {
+    "task_id": "Q-20261024-VF-ITERATION-100",
+    "owner": "Codex",
+    "token": "fa90d45b-84a6-4679-9771-bad06cdb16a5",
+    "acquired_at": "2026-10-24T20:52:49Z",
+    "objective": "Screen the real LlamaCode LlamaAgentBackend task/subagent fan-out against ASTRA Flash-Next Strata parallel:2, serial vs two workers, with both RTX 3090 GPUs and 128GB RAM; use only synthetic fixtures in disposable git worktrees, preserve the calibrated memory guard, and make no production change."
+  },
+  "lockReleased": true,
+  "lockReleasedAtUtc": "2026-10-24T21:56:15Z"
+}

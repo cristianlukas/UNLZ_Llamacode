@@ -1,0 +1,36 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-100",
+  "amendment": "Q100-RUN05-SCORER-006",
+  "recordedAtUtc": "2026-10-24T21:52:48Z",
+  "status": "PASS",
+  "command": "CUDA_VISIBLE_DEVICES= LC_JOBS=2 ./scripts/tests-linux.sh Release",
+  "exitCode": 0,
+  "build": {
+    "status": "PASS",
+    "testTarget": "test_q100_subagent_probe rebuilt",
+    "testBinarySha256": "63961a4ce07ff85d7f7a1d421996e99f739d7a467f99659f5a977c4ad0d17dbd",
+    "testSourceSha256": "41fb0009f51a53a8d106d897f53d7a7eba896fb9bb770a3904e729d2e8ebe210",
+    "gpuVisible": false,
+    "inferenceServer": false,
+    "modelLoad": false
+  },
+  "ctest": {
+    "total": 95,
+    "passed": 95,
+    "failed": 0,
+    "elapsedSeconds": 112.43
+  },
+  "q100Target": {
+    "passed": 7,
+    "failed": 0,
+    "skipped": 1,
+    "skipReason": "opt-in live probe not enabled because LLAMACODE_Q100_SERVER_URL was unset; the six-run live dataset already exists in attempt 05."
+  },
+  "scorerRegressions": [
+    "correct final mapping accepted",
+    "swapped labels rejected",
+    "missing value rejected",
+    "correct reasoning followed by wrong final answer rejected"
+  ],
+  "notes": "This was the Linux Release test harness, not a production app build. Production ASTRA/SOL profiles and model files were not changed."
+}

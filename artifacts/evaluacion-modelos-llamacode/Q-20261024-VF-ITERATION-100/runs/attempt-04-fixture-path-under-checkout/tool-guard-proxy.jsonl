@@ -1,0 +1,26 @@
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:32:07Z", "blockedToolCall": false, "observedToolNames": ["task", "task"], "responseBytes": 82978, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:32:09Z", "blockedToolCall": false, "observedToolNames": ["read_file"], "responseBytes": 6922, "role": "subagent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:32:10Z", "blockedToolCall": false, "observedToolNames": [], "responseBytes": 5430, "role": "subagent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:32:13Z", "blockedToolCall": false, "observedToolNames": ["read_file"], "responseBytes": 6147, "role": "subagent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:32:14Z", "blockedToolCall": false, "observedToolNames": [], "responseBytes": 9582, "role": "subagent", "upstreamStatus": 200}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:32:17Z", "blockedToolCall": false, "observedToolNames": [], "responseBytes": 23593, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:32:21Z", "blockedToolCall": false, "observedToolNames": ["task", "task"], "responseBytes": 48949, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:32:25Z", "blockedToolCall": false, "observedToolNames": ["read_file"], "responseBytes": 8187, "role": "subagent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:32:25Z", "blockedToolCall": false, "observedToolNames": ["read_file"], "responseBytes": 7936, "role": "subagent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:32:28Z", "blockedToolCall": false, "observedToolNames": [], "responseBytes": 23915, "role": "subagent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:32:29Z", "blockedToolCall": false, "observedToolNames": [], "responseBytes": 25957, "role": "subagent", "upstreamStatus": 200}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:32:32Z", "blockedToolCall": false, "observedToolNames": [], "responseBytes": 17353, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:32:36Z", "blockedToolCall": false, "observedToolNames": ["task", "task"], "responseBytes": 45660, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:32:40Z", "blockedToolCall": false, "observedToolNames": ["read_file"], "responseBytes": 9452, "role": "subagent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:32:40Z", "blockedToolCall": false, "observedToolNames": ["read_file"], "responseBytes": 11503, "role": "subagent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:32:43Z", "blockedToolCall": false, "observedToolNames": [], "responseBytes": 18017, "role": "subagent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:32:43Z", "blockedToolCall": false, "observedToolNames": [], "responseBytes": 22262, "role": "subagent", "upstreamStatus": 200}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:32:48Z", "blockedToolCall": false, "observedToolNames": [], "responseBytes": 35480, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:32:52Z", "blockedToolCall": false, "observedToolNames": ["task", "task"], "responseBytes": 47519, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:32:54Z", "blockedToolCall": false, "observedToolNames": ["read_file"], "responseBytes": 8200, "role": "subagent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:32:55Z", "blockedToolCall": false, "observedToolNames": [], "responseBytes": 20862, "role": "subagent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:32:57Z", "blockedToolCall": false, "observedToolNames": ["read_file"], "responseBytes": 9456, "role": "subagent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:32:59Z", "blockedToolCall": false, "observedToolNames": [], "responseBytes": 23022, "role": "subagent", "upstreamStatus": 200}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:33:03Z", "blockedToolCall": false, "observedToolNames": [], "responseBytes": 32223, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:33:07Z", "blockedToolCall": false, "observedToolNames": ["task", "task"], "responseBytes": 45956, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:33:09Z", "blockedToolCall": false, "observedToolNames": ["read_file"], "responseBytes": 8711, "role": "subagent", "upstreamStatus": 200}

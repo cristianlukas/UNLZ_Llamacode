@@ -1,0 +1,45 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-100",
+  "recordedAtUtc": "2026-10-24T21:04:51Z",
+  "command": "./scripts/tests-linux.sh Release",
+  "execution": {
+    "unit": "llamacode-q100-cpu-tests-20261024.service",
+    "uncappedMemory": true,
+    "inferenceServer": false,
+    "gpuUse": false
+  },
+  "summary": {
+    "ctestTotal": 95,
+    "passed": 93,
+    "failed": 2,
+    "exitCode": 8,
+    "q100Target": "PASS; live slot skipped because LLAMACODE_Q100_SERVER_URL was unset",
+    "q100ToolGuardOfflineTests": "4/4 PASS"
+  },
+  "unrelatedFailures": [
+    {
+      "test": "test_harness_worker_protocol",
+      "failingCases": [
+        "strongSandboxStartsWithWorkspaceUnderTmpfs",
+        "strongSandboxCanHideHostUserData",
+        "strongSandboxCanApplyOptionalCgroupLimits"
+      ],
+      "reason": "bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted; this runtime does not permit the sandbox network namespace setup."
+    },
+    {
+      "test": "test_tray",
+      "failingCases": [
+        "menuTextStartsNearLeftEdge(Windows)",
+        "menuTextStartsNearLeftEdge(Fusion)"
+      ],
+      "reason": "Measured icon/text gap was 34 px while the test threshold is <=24 px."
+    }
+  ],
+  "q100Evidence": {
+    "testSourceSha256": "64c615bcfc6af2ed510dcec416bb8d02f470e50d5919b6568a1dcaa6adc9f5c3",
+    "testBinarySha256": "a05a8f323268e2620475692424def4715e6db991682c8e57eaa80cff20fd754a",
+    "toolGuardProxySha256": "be95ac35ac3da6f3756f50d78c6e596bbecbb0abd7f451da138c52efd10a4d3e",
+    "toolGuardProxyTestsSha256": "1e1bccf0ea199e67c51695a119e79b991f9be2f456769d1cf544933a27c6128d",
+    "liveInferenceAllowedAfterThisGate": true
+  }
+}

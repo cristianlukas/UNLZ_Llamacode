@@ -1,0 +1,88 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-100",
+  "experimentId": "VF-20261019-01-S1-ASTRA-LLAMACODE-SUBAGENT-FANOUT-Q100",
+  "recordedAtUtc": "2026-10-24T21:52:48Z",
+  "status": "completed-no-adoption",
+  "scope": {
+    "model": "ASTRA Qwen3.8 Flash-Next IQ2_XS / Strata 0.1.41 MTP4",
+    "hardware": "2×RTX 3090 +128 GB RAM, uncapped",
+    "contextTokens": 65536,
+    "serverSlots": 2,
+    "policies": [
+      "serial one subagent",
+      "parallel two subagents"
+    ],
+    "seeds": [
+      5051,
+      5052,
+      5053
+    ],
+    "workload": "two synthetic read-only marker tasks per seed in isolated Git worktrees"
+  },
+  "result": {
+    "serial": {
+      "runsCorrect": 3,
+      "runs": 3,
+      "correctTasks": 6,
+      "tasks": 6,
+      "elapsedMs": 35863,
+      "correctTasksPerSecond": 0.16730334885536627
+    },
+    "parallel2": {
+      "runsCorrect": 1,
+      "runs": 3,
+      "correctTasks": 2,
+      "tasks": 6,
+      "elapsedMs": 37795,
+      "correctTasksPerSecond": 0.052917052520174625,
+      "mislabelledSeeds": [
+        5051,
+        5053
+      ]
+    },
+    "rawMarkerTaskThroughputRatioParallelVsSerial": 0.9488821272655114,
+    "correctE2EThroughputRatioParallelVsSerial": 0.31629404242183706,
+    "maxBusyObserved": {
+      "serial": 1,
+      "parallel2": 2
+    },
+    "unexpectedToolBlocks": 0
+  },
+  "decision": "Do not adopt two-worker fan-out for this ASTRA configuration. Keep exact-label workloads serial until a material change fixes and revalidates final-answer association. The subagents returned the assigned markers, while two parallel parent answers swapped ALPHA/BETA labels. Raw marker task throughput was 5.11% lower in parallel, and correctly completed E2E task throughput was 68.37% lower.",
+  "memoryGuard": {
+    "samples": 220,
+    "windowUtc": [
+      "2026-10-24T21:40:25Z",
+      "2026-10-24T21:44:07Z"
+    ],
+    "minMemAvailableGiB": 69.386,
+    "peakGlobalPsiFullAvg10Pct": 46.52,
+    "warningSamples": 34,
+    "globalOomKills": 0,
+    "cgroupOomKills": 0,
+    "guardAborted": false,
+    "allSixRunsCompleted": true,
+    "cleanupPass": true
+  },
+  "memoryConclusion": "Observed behavior matches policy: PSI moderate enough to warn, but global full below the 60% severe threshold, available memory above the 32 GiB hard floor, and OOM counters unchanged, so the guard continued. CPU replays confirm warning-only moderate PSI, 15-consecutive-sample severe stop, recovery reset, and historical Q91/Q93 trace behavior. Historical ASTRA DEFAULT 1M Q14/Q35 and SOL dual-GPU Q34 remain intact; Q100 itself ran at 64K, not 1M.",
+  "validation": {
+    "linuxReleaseCtest": "95/95 PASS",
+    "q100CppTarget": "7 PASS, 0 FAIL, 1 opt-in live slot skipped",
+    "memoryGuardCpuReplays": "10/10 PASS",
+    "gpuRerunAfterScorerFix": false
+  },
+  "limitations": [
+    "Small synthetic workload and three seeds; result is specific to this model/runtime/prompt/configuration, not a universal claim about all fan-out.",
+    "Q100 used 64K context; it does not repeat the 1M context workload.",
+    "No production app build or profile change was made."
+  ],
+  "artifacts": [
+    "RESULTS.md",
+    "runs/attempt-05-complete-label-mapping-issue/rescored-result.json",
+    "receipts/q100-amendment-006-validation.json",
+    "receipts/q100-memory-guard-revalidation.json",
+    "receipts/q100-cleanup-postflight.json"
+  ],
+  "finalCleanupPostflight": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-100/receipts/q100-final-cleanup-postflight.json",
+  "lockReleasedAtUtc": "2026-10-24T21:56:15Z"
+}

@@ -1,0 +1,157 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-100",
+  "experimentId": "VF-20261019-01-S1-ASTRA-LLAMACODE-SUBAGENT-FANOUT-Q100",
+  "status": "failed",
+  "startedAtUtc": "2026-10-24T21:06:08Z",
+  "memoryLimits": {
+    "memory.max": "max",
+    "memory.high": "max",
+    "memory.swap.max": "max"
+  },
+  "ownedProcesses": [],
+  "smallFingerprints": {
+    "testSource": "64c615bcfc6af2ed510dcec416bb8d02f470e50d5919b6568a1dcaa6adc9f5c3",
+    "testBinary": "a05a8f323268e2620475692424def4715e6db991682c8e57eaa80cff20fd754a",
+    "serverConfig": "6ae85cf75a6496d069a2f6a6637b61db988a2f49a301b739b414c5a979506ab9",
+    "strataRuntime": "770ecf303a4c6271654339c639392ecb455de3a999bf5d2e8dbc73c879103602",
+    "toolGuardProxy": "be95ac35ac3da6f3756f50d78c6e596bbecbb0abd7f451da138c52efd10a4d3e",
+    "toolGuardProxyTests": "1e1bccf0ea199e67c51695a119e79b991f9be2f456769d1cf544933a27c6128d",
+    "supervisor": "5b59377378428b9270634249a5b81103e2b021b7ef6a0fba52de43fa3f17a9e5",
+    "memoryGuard": "663a2762ba8e5433b566c1fa2dbbe692cd8d4272619361c477a339da52c6904a"
+  },
+  "gpuBaseline": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+      "totalMiB": 24576,
+      "usedMiB": 1066
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+      "totalMiB": 24576,
+      "usedMiB": 110
+    }
+  ],
+  "baselineMemAvailableGiB": 110.443,
+  "baselinePsi": {
+    "some": 0.0,
+    "full": 0.0
+  },
+  "serverCommand": [
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python",
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py",
+    "--engine",
+    "strata",
+    "--config",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-99/configs/astra-q99-parallel2-short-context.json",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "8363",
+    "--gpu",
+    "0,1"
+  ],
+  "serverPid": 333709,
+  "totalSlots": 2,
+  "slots": [
+    {
+      "id": 0,
+      "n_ctx": 8192,
+      "is_processing": false,
+      "n_prompt_tokens": 0
+    },
+    {
+      "id": 1,
+      "n_ctx": 8192,
+      "is_processing": false,
+      "n_prompt_tokens": 0
+    }
+  ],
+  "dualGpuAllocation": {
+    "ownedComputeProcessOnBothGpus": {
+      "0": true,
+      "1": true
+    },
+    "memoryDeltaMiB": {
+      "0": 22531,
+      "1": 20594
+    },
+    "computeApps": [
+      {
+        "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+        "pid": 3952271,
+        "usedMiB": 207
+      },
+      {
+        "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+        "pid": 333776,
+        "usedMiB": 22454
+      },
+      {
+        "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+        "pid": 333776,
+        "usedMiB": 20518
+      }
+    ],
+    "ownedPids": [
+      333709,
+      333776
+    ]
+  },
+  "probePid": 340598,
+  "probeCommand": [
+    "/home/cristian/.cache/llamacode/build_tests_linux/test_q100_subagent_probe",
+    "realBackendSubagentFanoutProbe"
+  ],
+  "proxyPid": 340504,
+  "failure": "GateStop: Q100 probe exited with -15",
+  "cleanup": {
+    "taskId": "Q-20261024-VF-ITERATION-100",
+    "atUtc": "2026-10-24T21:10:40Z",
+    "ownedServerStopped": true,
+    "ownedProxyStopped": true,
+    "port8363Free": true,
+    "port8364Free": true,
+    "externalInferenceProcesses": [],
+    "memoryPsiAvg10Pct": {
+      "some": 0.0,
+      "full": 0.0
+    },
+    "memAvailableGiB": 110.03,
+    "oom": {
+      "global": {
+        "oom_kill": 0
+      },
+      "cgroup": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3090",
+        "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+        "totalMiB": 24576,
+        "usedMiB": 1064
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA GeForce RTX 3090",
+        "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+        "totalMiB": 24576,
+        "usedMiB": 110
+      }
+    ],
+    "pass": true
+  },
+  "finishedAtUtc": "2026-10-24T21:10:40Z"
+}

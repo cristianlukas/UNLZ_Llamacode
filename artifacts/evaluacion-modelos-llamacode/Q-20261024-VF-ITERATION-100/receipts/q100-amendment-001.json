@@ -1,0 +1,51 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-100",
+  "lockToken": "fa90d45b-84a6-4679-9771-bad06cdb16a5",
+  "recordedAtUtc": "2026-10-24T21:04:51Z",
+  "status": "prelaunch-gate-complete-live-test-pending",
+  "amendment": "Clarify context scope, pin corrected probe and runtime inputs, and add a loopback proxy that restricts model tool calls before dispatch.",
+  "interpretation": {
+    "liveContextTokens": 8192,
+    "productionAstraContextTokens": 1048576,
+    "productionAstraSubagentLimitWithoutExplicitBudget": 1,
+    "candidateSubagentContextBudgetTokens": 8192,
+    "candidateLimitWithTwoServerSlots": 2,
+    "restriction": "An 8K live screen cannot establish 1M-context quality, KV footprint, or production safety; it only screens LlamaAgentBackend fan-out mechanics at 8K. The 1M assertion is unit-only and no production profile is changed."
+  },
+  "correctedImplementation": {
+    "fixtureFileClose": "Close both marker fixtures explicitly after writes; QFile::close returns void and cannot participate in a boolean chain.",
+    "gitWorktreeList": "Include QProcess for observing cleanup after the backend has completed.",
+    "toolGuard": "Proxy exposes task only to the parent and read_file only to subagents. It buffers each upstream SSE response and rejects unexpected tool names before forwarding any result to LlamaCode.",
+    "temporaryWorkspace": "Supervisor sets TMPDIR/TMP/TEMP to the Q100 task-local disposable directory so Git worktrees cannot collide with other /tmp worktrees.",
+    "testSourceSha256": "64c615bcfc6af2ed510dcec416bb8d02f470e50d5919b6568a1dcaa6adc9f5c3",
+    "cmakeSha256": "3d68ad614da1fd358c27a0ec46e964de15cea27645d80956f9b7dfd632042986",
+    "serverConfig": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-99/configs/astra-q99-parallel2-short-context.json",
+    "serverConfigSha256": "6ae85cf75a6496d069a2f6a6637b61db988a2f49a301b739b414c5a979506ab9"
+  },
+  "runtimeFingerprints": {
+    "cmake": "3d68ad614da1fd358c27a0ec46e964de15cea27645d80956f9b7dfd632042986",
+    "testSource": "64c615bcfc6af2ed510dcec416bb8d02f470e50d5919b6568a1dcaa6adc9f5c3",
+    "testBinary": "a05a8f323268e2620475692424def4715e6db991682c8e57eaa80cff20fd754a",
+    "serverConfig": "6ae85cf75a6496d069a2f6a6637b61db988a2f49a301b739b414c5a979506ab9",
+    "strataRuntime": "770ecf303a4c6271654339c639392ecb455de3a999bf5d2e8dbc73c879103602",
+    "toolGuardProxy": "be95ac35ac3da6f3756f50d78c6e596bbecbb0abd7f451da138c52efd10a4d3e",
+    "toolGuardProxyTests": "1e1bccf0ea199e67c51695a119e79b991f9be2f456769d1cf544933a27c6128d",
+    "supervisor": "5b59377378428b9270634249a5b81103e2b021b7ef6a0fba52de43fa3f17a9e5",
+    "memoryGuard": "663a2762ba8e5433b566c1fa2dbbe692cd8d4272619361c477a339da52c6904a"
+  },
+  "cpuGateResult": {
+    "command": "./scripts/tests-linux.sh Release",
+    "testTarget": "test_q100_subagent_probe PASS; live case skipped because no server URL was supplied.",
+    "fullSuite": "93/95 passed; 2 environment-sensitive existing tests failed.",
+    "failures": [
+      "test_harness_worker_protocol: bwrap failed RTM_NEWADDR for loopback with Operation not permitted in this runtime.",
+      "test_tray: observed 34 px gap exceeds its 24 px layout threshold in both Windows and Fusion style cases."
+    ],
+    "q100ToolFilter": "4/4 offline tests passed; unexpected tool names are rejected before LlamaCode receives the response."
+  },
+  "prelaunchGate": {
+    "cpuOnlyBuildAndTest": "Completed; Q100 target passed. The two unrelated suite failures are recorded above.",
+    "gpuOrInferenceAllowedBeforeGate": false,
+    "productionChanges": false
+  }
+}

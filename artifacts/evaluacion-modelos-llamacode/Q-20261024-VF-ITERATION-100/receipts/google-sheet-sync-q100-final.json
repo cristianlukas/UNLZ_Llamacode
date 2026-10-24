@@ -1,0 +1,41 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-100",
+  "recordedAtUtc": "2026-10-24T21:52:48Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "status": "write-and-readback-verified",
+  "writes": {
+    "Evaluaciones LlamaCode!C320": "corrected six-run outcome/no-adoption summary",
+    "Evaluaciones LlamaCode!G320": "memory/guard evidence and historical 1M/SOL note",
+    "Evaluaciones LlamaCode!H320": "corrected serial vs parallel quality and throughput",
+    "Evaluaciones LlamaCode!I320": "result and validation artifacts",
+    "Accionables!D13": "completed/no-adoption state",
+    "Accionables!I13": "corrected result and memory metrics",
+    "Accionables!J13": "artifact references",
+    "Accionables!K13": "failed adoption gate/keep serial",
+    "Accionables!M13": "2026-10-24T21:52:48Z"
+  },
+  "readback": {
+    "Evaluaciones LlamaCode!C320:I320": [
+      "Attempt05 completado: 3/3 seeds correctas en serial frente a 1/3 en parallel2. No adoptar dos workers; paralelo falla calidad y es 5,11% más lento en throughput bruto.",
+      "2026-10-24",
+      "Tareas sintéticas de coding · coordinación de subagentes",
+      "VF-20261019 · #1 · claim de concurrencia Strata; continuación Q98/Q99",
+      "2×RTX 3090 +128 GB sin caps. En las 220 muestras Q100 (contexto 65.536), MemAvailable mín. 69,386 GiB; PSI full global pico 46,52% con 34 avisos; OOM global/cgroup=0. La guarda avisó y continuó; las seis corridas terminaron y cleanup pasó. ASTRA DEFAULT 1M Q14/Q35 y SOL dual Q34 permanecen como evidencia previa intacta.",
+      "Serial: 3/3 seeds y 6/6 tareas E2E correctas (35.863 s). Parallel2: 1/3 seeds y 2/6 tareas correctas (37.795 s); ALPHA/BETA se invirtieron en seeds 5051 y 5053, aunque las herramientas devolvieron los marcadores asignados. Throughput bruto paralelo/serial 0,9489; throughput E2E correcto 0,3163. Dos slots observados; 0 herramientas no pedidas.",
+      "Q100/RESULTS.md; runs/attempt-05-complete-label-mapping-issue/rescored-result.json; receipts/q100-amendment-006-validation.json; receipts/q100-memory-guard-revalidation.json; receipts/q100-final-result.json; receipts/q100-cleanup-postflight.json."
+    ],
+    "Accionables!D13:M13": [
+      "Completado · no adoptar parallel2. El scorer se corrigió para exigir el mapeo exacto en la respuesta final; suite Linux 95/95 PASS y PSI/replay 10/10 PASS.",
+      "Medir el fan-out real de subagentes en LlamaCode",
+      "Coding/agentes · tareas correctas por segundo",
+      "VF-20261019 · #1 · Strata concurrencia; Q98/Q99",
+      "LlamaAgentBackend real sobre ASTRA/Strata parallel2, contexto 65536 por el max_tokens heredado de 32768; compare límites 1 vs 2 subagentes, 3 semillas alternadas, dos tareas sintéticas read-only en worktrees Git. Ambas RTX 3090 +128 GB, sin caps. TMPDIR único Q100 y GIT_CEILING_DIRECTORIES para inicializar un repo fixture aislado; abortar después del primer run que falle calidad.",
+      "Attempt05 (seeds 5051–5053): serial 3/3 seeds, 6/6 tareas correctas; parallel2 1/3 seeds, 2/6 correctas. En 5051 y 5053 el parent invirtió ALPHA/BETA pese a que cada subagente devolvió su archivo asignado. Throughput bruto parallel/serial=0,9489; tareas E2E correctas/s ratio=0,3163. MemAvailable mín. 69,386 GiB; PSI full global pico 46,52% (34 avisos); OOM=0; el detector dejó completar las seis corridas. Cleanup PASS.",
+      "Q100/RESULTS.md; runs/attempt-05-complete-label-mapping-issue/rescored-result.json; receipts/q100-amendment-006-validation.json; receipts/q100-memory-guard-revalidation.json; receipts/q100-final-result.json; receipts/q100-cleanup-postflight.json.",
+      "Gate no aprobado: noAccuracyLoss y ≥10% tareas correctas/s fallan. Mantener serial en este flujo; no adopción ni nueva corrida GPU habilitada por estos datos. Q100 usó 65.536 tokens; no repitió la prueba 1M.",
+      "2026-10-24T21:52:48Z",
+      "2026-10-24T21:52:48Z"
+    ]
+  },
+  "formatting": "No format, row order, or wrap settings changed."
+}

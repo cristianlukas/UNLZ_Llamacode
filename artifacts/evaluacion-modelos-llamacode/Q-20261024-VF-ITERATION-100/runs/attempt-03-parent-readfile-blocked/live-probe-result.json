@@ -1,0 +1,10 @@
+{
+    "contextTokens": 65536,
+    "experimentId": "VF-20261019-01-S1-ASTRA-LLAMACODE-SUBAGENT-FANOUT-Q100",
+    "runs": [
+    ],
+    "serverBaseUrl": "http://127.0.0.1:8364",
+    "serverSlots": 2,
+    "taskId": "Q-20261024-VF-ITERATION-100"
+}
+

@@ -1,0 +1,30 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-100",
+  "attempt": 4,
+  "atUtc": "2026-10-24T21:37:35Z",
+  "service": "llamacode-q100-live-screen-64k-run04-20261024.service",
+  "serviceState": "inactive/dead",
+  "execMainStatus": 0,
+  "ownedProcessesRemaining": [],
+  "ports8363_8364_18789Free": true,
+  "gpusAfterCleanup": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "usedMiB": 1085
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "usedMiB": 110
+    }
+  ],
+  "memAvailableGiB": 109.997,
+  "globalPsiAvg10Pct": {
+    "some": 0.0,
+    "full": 0.0
+  },
+  "globalOomKillCounter": 0,
+  "pass": true,
+  "attemptOutcome": "invalid harness-fixture setup after four partial runs; not a model or memory failure."
+}

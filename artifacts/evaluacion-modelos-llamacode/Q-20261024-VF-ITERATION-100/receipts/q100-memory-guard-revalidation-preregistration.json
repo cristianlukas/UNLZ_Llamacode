@@ -1,0 +1,27 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-100",
+  "experimentId": "Q100-MEMORY-GUARD-CPU-REPLAY-01",
+  "status": "preregistered-before-execution",
+  "recordedAtUtc": "2026-10-24T21:51:49Z",
+  "scope": "CPU-only regression/replay of the already calibrated PSI policy; no GPU, model load, server, requests, host changes or memory-pressure injection.",
+  "tests": [
+    {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-95/scripts/test_q95_pressure_gate.py",
+      "sha256": "3b4bcfbf4cd3151f8cc746d3f87478a29976a69f88d3c1700bfa2967374b1e58",
+      "command": "CUDA_VISIBLE_DEVICES= python3 /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-95/scripts/test_q95_pressure_gate.py"
+    },
+    {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-98/scripts/test_q98_guard_replay.py",
+      "sha256": "43fa0ea3c50970dda0df839e2e1a1ca128351076518fd96358939d35c8919c44",
+      "command": "CUDA_VISIBLE_DEVICES= python3 /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-98/scripts/test_q98_guard_replay.py"
+    }
+  ],
+  "expected": [
+    "moderate PSI warns and does not stop",
+    "severe PSI stops only after 15 consecutive samples",
+    "recovery resets the severe streak",
+    "recorded Q91/Q93 traces warn as applicable and do not stop",
+    "ASTRA 1M / SOL historical successful signals do not trip hard-stop thresholds"
+  ],
+  "decision": "Use together with actual Q100 host samples and historical successful load receipts; do not infer a crash from moderate PSI alone."
+}

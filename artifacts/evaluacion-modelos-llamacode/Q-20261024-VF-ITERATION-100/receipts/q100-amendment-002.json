@@ -1,0 +1,43 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-100",
+  "lockToken": "fa90d45b-84a6-4679-9771-bad06cdb16a5",
+  "recordedAtUtc": "2026-10-24T21:16:02Z",
+  "status": "amended-preregistered-live-rerun-pending",
+  "amendment": "Change only the Q100 experimental context after attempt 01 demonstrated a request-budget mismatch; archive attempt 01, align endpoint/backend/subagent contexts, then repeat on both GPUs.",
+  "reason": {
+    "attempt01": "Strata context=8192 rejected the real SubAgentRunner request max_tokens=32768 with HTTP 400 before any tool executed. The test was invalid, not a model or memory failure.",
+    "decision": "Do not run the remaining seeds at 8K. Use an isolated 64K server config and set both parent ctxOverride and subagentContextTokens to 65536 so the pinned 32768-token output reserve fits."
+  },
+  "amendedDesign": {
+    "serverConfig": "configs/astra-q100-parallel2-64k.json",
+    "serverContextTokens": 65536,
+    "agentContextTokens": 65536,
+    "subagentContextTokens": 65536,
+    "maxOutputTokens": 32768,
+    "serverSlots": 2,
+    "gpus": [
+      0,
+      1
+    ],
+    "ram": "128GB uncapped",
+    "productionProfileChanges": false,
+    "attempt01Archive": "runs/attempt-01-invalid-context/",
+    "runPolicy": "This 64K fanout screen only evaluates backend coordination; it is not an ASTRA DEFAULT 1M soak or KV-memory test."
+  },
+  "runtimeFingerprints": {
+    "testSource": "155f8a4ff79e32b45440b08278f1b656d1c2c550989dc3d655b935c287462544",
+    "testBinary": "d1a017912d176f4e5c633ff0394988b3358f19eba46f5c30f92c005e12efd9ed",
+    "serverConfig": "9662a37d8179c0cdc0f27289244588b98246927907f7548cfaf630cd23b245ca",
+    "strataRuntime": "770ecf303a4c6271654339c639392ecb455de3a999bf5d2e8dbc73c879103602",
+    "toolGuardProxy": "be95ac35ac3da6f3756f50d78c6e596bbecbb0abd7f451da138c52efd10a4d3e",
+    "toolGuardProxyTests": "1e1bccf0ea199e67c51695a119e79b991f9be2f456769d1cf544933a27c6128d",
+    "supervisor": "b7e9e4a88342e8fe4884d1520b97620cb61c910be19c3545de722d501c6619bc",
+    "memoryGuard": "663a2762ba8e5433b566c1fa2dbbe692cd8d4272619361c477a339da52c6904a"
+  },
+  "cpuGateResult": {
+    "command": "./scripts/tests-linux.sh Release",
+    "result": "95/95 passed, exit 0; Q100 opt-in live case skipped without LLAMACODE_Q100_SERVER_URL.",
+    "additional": "Supervisor syntax and proxy offline suite remain pinned; no production C++ behavior changed."
+  },
+  "liveResult": null
+}

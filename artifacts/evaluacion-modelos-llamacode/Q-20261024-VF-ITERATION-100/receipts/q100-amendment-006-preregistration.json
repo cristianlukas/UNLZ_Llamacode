@@ -1,0 +1,24 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-100",
+  "amendment": "Q100-RUN05-SCORER-006",
+  "status": "preregistered-before-CPU-validation",
+  "recordedAtUtc": "2026-10-24T21:48:23Z",
+  "finding": "Attempt 05 scorer accepted both markers anywhere and did not validate their label mapping; it also treated a completed negative adoption gate as a test process failure.",
+  "correction": "Score only the final answer after the last </think> marker; require an anchored exact ALPHA=<expected>; BETA=<expected> mapping. Keep completion of all six preregistered runs distinct from the adoption decision.",
+  "regressions": [
+    "correct mapping accepted",
+    "swapped mapping rejected",
+    "missing marker value rejected",
+    "correct mapping in reasoning with wrong final mapping rejected"
+  ],
+  "validation": {
+    "command": "./scripts/tests-linux.sh Release",
+    "scope": "Linux Release test suite; CPU-only; no inference server, GPU request, model load or benchmark; full suite may report unrelated environment-dependent failures",
+    "liveGpuRerun": false
+  },
+  "preValidationFingerprints": {
+    "testSourceSha256": "41fb0009f51a53a8d106d897f53d7a7eba896fb9bb770a3904e729d2e8ebe210",
+    "testBinaryBeforeBuildSha256": "ae51b9f6a0aac2885ee021c2db66406f36332c3487fc1eecde1c5091de5cf810"
+  },
+  "decisionRule": "No adoption unless the correctly scored results meet the preregistered quality and throughput gates. Existing corrected attempt 05 already fails those gates; this change validates scorer behavior only and does not justify another GPU run."
+}

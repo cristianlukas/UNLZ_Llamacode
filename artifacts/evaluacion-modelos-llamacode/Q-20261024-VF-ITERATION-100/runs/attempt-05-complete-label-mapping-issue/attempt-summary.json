@@ -1,0 +1,23 @@
+{
+  "attempt": 5,
+  "status": "complete-live-screen-no-adoption-after-corrected-scoring",
+  "runs": 6,
+  "serialCorrect": "3/3",
+  "parallelCorrect": "1/3",
+  "parallelWrongLabelSeeds": [
+    5051,
+    5053
+  ],
+  "rawThroughputRatioParallelVsSerial": 0.9488821272655114,
+  "memoryMetrics": {
+    "sampleCount": 220,
+    "minMemAvailableGiB": 69.386,
+    "peakGlobalPsiFullAvg10Pct": 46.52,
+    "peakCgroupPsiFullAvg10PctDiagnostic": 85.74,
+    "psiWarningSamples": 34,
+    "globalOomKills": 0,
+    "cgroupOomKills": 0
+  },
+  "cleanupPass": true,
+  "scorerBug": "initial predicate checked only that both markers appeared, not correct ALPHA/BETA assignment; corrected offline and fixed in C++ test."
+}

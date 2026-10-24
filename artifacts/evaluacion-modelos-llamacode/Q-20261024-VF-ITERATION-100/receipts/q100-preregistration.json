@@ -1,0 +1,79 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-100",
+  "lockToken": "fa90d45b-84a6-4679-9771-bad06cdb16a5",
+  "recordedAtUtc": "2026-10-24T20:54:15Z",
+  "status": "preregistered",
+  "experimentId": "VF-20261019-01-S1-ASTRA-LLAMACODE-SUBAGENT-FANOUT-Q100",
+  "question": "Does LlamaAgentBackend real task/subagent fan-out preserve correctness and improve accepted synthetic task throughput at two workers vs one with the same ASTRA/Strata parallel:2 server?",
+  "hardware": {
+    "gpus": [
+      "GPU0 NVIDIA GeForce RTX 3090 24GB",
+      "GPU1 NVIDIA GeForce RTX 3090 24GB"
+    ],
+    "ram": "128GB uncapped",
+    "bothGpusRequired": true
+  },
+  "model": {
+    "name": "ASTRA Qwen3.8 Flash-Next IQ2_XS",
+    "runtime": "Strata 0.1.41 / MTP4 / KV int8",
+    "config": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-99/configs/astra-q99-parallel2-short-context.json",
+    "serverSlots": 2,
+    "contextTokens": 8192,
+    "sampling": {
+      "temperature": 0.6,
+      "topP": 0.95,
+      "topK": 20,
+      "minP": 0.0,
+      "repeatPenalty": 1.0,
+      "presencePenalty": 0.0
+    }
+  },
+  "comparison": {
+    "executor": "real LlamaAgentBackend from this repository, external loopback endpoint",
+    "policies": [
+      "backend subagent limit 1",
+      "backend subagent limit 2"
+    ],
+    "seeds": [
+      5051,
+      5052,
+      5053
+    ],
+    "pairedTasks": 2,
+    "taskPayload": "read one assigned temporary marker file with read_file; no edits; return its exact marker",
+    "orderBySeed": {
+      "5051": "serial then parallel2",
+      "5052": "parallel2 then serial",
+      "5053": "serial then parallel2"
+    },
+    "cwd": "unique disposable temporary Git repository per arm; subagent worktrees in task-private TMPDIR"
+  },
+  "decisionGate": {
+    "allSixSubtasksCorrectPerPolicy": true,
+    "firstToolBatchHasExactlyTwoTaskCalls": true,
+    "unexpectedTools": 0,
+    "serialMaximumBusySubagents": 1,
+    "parallelMaximumBusySubagents": 2,
+    "noPerSeedAccuracyLoss": true,
+    "aggregateAcceptedTasksPerSecondImprovementAtLeast": 0.1,
+    "productionAdoption": false
+  },
+  "memoryGuard": {
+    "warning": "global PSI full avg10 >=20% or some >=70% for 30 samples: warn only",
+    "severeStop": "global PSI full >=60% or some >=80% for 15 consecutive 1s samples",
+    "hardStops": [
+      "MemAvailable <32 GiB",
+      "any increase in global or cgroup oom/oom_kill counters"
+    ],
+    "cgroupPsi": "diagnostic only",
+    "calibration": "ASTRA DEFAULT 1M Q14/Q35 and SOL TP2 Q34 successful; Q97/Q98/Q99 completed despite moderate global PSI warnings, >71 GiB minimum MemAvailable, OOM=0."
+  },
+  "safety": {
+    "externalInferenceServer": "abort before request; never kill external",
+    "productionProfiles": "ASTRA and SOL unchanged",
+    "gui": "preserve",
+    "fixtureData": "synthetic only; isolated disposable temp repo/worktrees",
+    "unit": "transient user systemd with lower CPU/I/O priority and uncapped memory; no Codex UI dependency"
+  },
+  "result": null
+}

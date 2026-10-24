@@ -1,0 +1,51 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-100",
+  "verifiedAtUtc": "2026-10-24T20:54:54Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "readbackVerified": true,
+  "ranges": {
+    "'Evaluaciones LlamaCode'!A320:J320": {
+      "verified": true,
+      "values": [
+        "Q100 · ASTRA/Strata LlamaCode task fan-out",
+        "E2E LlamaAgentBackend · subagentes 1 vs 2 workers",
+        "Preregistrada · probe opt-in; sin cambios de producción",
+        "2026-10-24",
+        "Tareas sintéticas de coding · coordinación de subagentes",
+        "VF-20261019 · #1 · claim de concurrencia Strata; continuación Q98/Q99",
+        "Pendiente: screen con el LlamaAgentBackend real y ASTRA/Strata. Aún sin resultado ni claim de mejora. No adoptar parallel:2 en el perfil.",
+        "CPU validation + tests-linux.sh Release; luego 3 seeds con 1 vs 2 subagentes en ambas RTX 3090 +128 GB. Si exactitud se preserva y throughput sube ≥10%, abrir decisión operacional separada.",
+        "Q100/PLAN.md; receipts/q100-preregistration.json; probe de LlamaAgentBackend opt-in; Q99 final + cleanup",
+        "WORK_QUEUE.md · Q-20261024-VF-ITERATION-100"
+      ]
+    },
+    "'Accionables'!A13:M13": {
+      "verified": true,
+      "values": [
+        "Próxima prueba",
+        "vf-astra-llamacode-subagent-fanout-q100",
+        "01 · P1 · ASTRA/subagentes",
+        "Preregistrada · test opt-in; build y gates CPU pendientes",
+        "Medir el fan-out real de subagentes en LlamaCode",
+        "Coding/agentes · tareas correctas por segundo",
+        "VF-20261019 · #1 · Strata concurrencia; Q98/Q99",
+        "Q100: ejecutar LlamaAgentBackend contra ASTRA/Strata con el mismo par de tareas sintéticas read-only, serial vs límite 2, semillas 5051–5053 y orden alternado. Ambas RTX 3090 +128 GB, contexto 8192, server parallel2; carpeta Git/worktrees temporales.",
+        "Q99 en endpoint directo: repeatability gate PASS, ambos modos 6/24; concurrente +13.17% aceptadas/s; 24/24 transportes, 0 sandbox/noFinal. MemAvailable mínima 72.269 GiB, PSI full 46.81% aviso, OOM=0. Falta confirmar efecto en scheduler real de LlamaCode.",
+        "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-100/PLAN.md; receipts/q100-preregistration.json; test opt-in y supervisor por crear",
+        "Gate: 6/6 correctas por política; 2 task calls en primer batch; 0 herramientas no pedidas; busy=1 serial y 2 paralelo por seed; sin pérdida de exactitud y ≥10% tareas correctas/s. Aun pasando, no adoptar sin decisión separada.",
+        "2026-10-24T20:54:15Z",
+        "2026-10-24T20:54:15Z"
+      ]
+    }
+  },
+  "formatReadback": "Evaluaciones row retains WRAP; Accionables row retains verticalAlignment TOP and WRAP.",
+  "localReconciliation": {
+    "actionablesJson": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/actionables.json",
+    "inboxJson": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/inbox.json",
+    "backups": [
+      "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/actionables.json.bak.q100-prereg-20261024T2055Z",
+      "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/inbox.json.bak.q100-prereg-20261024T2055Z"
+    ]
+  }
+}

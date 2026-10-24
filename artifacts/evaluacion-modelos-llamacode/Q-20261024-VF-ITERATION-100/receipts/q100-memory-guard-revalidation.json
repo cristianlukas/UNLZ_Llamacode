@@ -1,0 +1,36 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-100",
+  "experimentId": "Q100-MEMORY-GUARD-CPU-REPLAY-01",
+  "recordedAtUtc": "2026-10-24T21:52:48Z",
+  "status": "PASS_CPU_ONLY",
+  "tests": [
+    {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-95/scripts/test_q95_pressure_gate.py",
+      "sha256": "3b4bcfbf4cd3151f8cc746d3f87478a29976a69f88d3c1700bfa2967374b1e58",
+      "result": "5/5 PASS"
+    },
+    {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-98/scripts/test_q98_guard_replay.py",
+      "sha256": "43fa0ea3c50970dda0df839e2e1a1ca128351076518fd96358939d35c8919c44",
+      "result": "5/5 PASS"
+    }
+  ],
+  "total": "10/10 PASS",
+  "liveAttempt05": {
+    "samples": 220,
+    "windowUtc": [
+      "2026-10-24T21:40:25Z",
+      "2026-10-24T21:44:07Z"
+    ],
+    "minMemAvailableGiB": 69.386,
+    "peakGlobalPsiFullAvg10Pct": 46.52,
+    "warningSamples": 34,
+    "globalOomKills": 0,
+    "cgroupOomKills": 0,
+    "guardAborted": false,
+    "allSixRunsCompleted": true,
+    "cleanupPass": true
+  },
+  "interpretation": "Observed behavior matches policy: PSI moderate enough to warn, but global full below the 60% severe threshold, available memory above the 32 GiB hard floor, and OOM counters unchanged, so the guard continued. CPU replays confirm warning-only moderate PSI, 15-consecutive-sample severe stop, recovery reset, and historical Q91/Q93 trace behavior. Historical ASTRA DEFAULT 1M Q14/Q35 and SOL dual-GPU Q34 remain intact; Q100 itself ran at 64K, not 1M.",
+  "limits": "This validates the configured guard behavior and observed Q100 run; it does not guarantee stability under every memory workload."
+}

@@ -1,0 +1,39 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-100",
+  "lockToken": "fa90d45b-84a6-4679-9771-bad06cdb16a5",
+  "recordedAtUtc": "2026-10-24T21:18:46Z",
+  "status": "amended-preregistered-live-rerun-pending",
+  "amendment": "Correct the Q100-only server log path after attempt 02 exited before model load; preserve attempt evidence and rerun the already-amended 64K design.",
+  "reason": {
+    "attempt02": "Strata exited before health because it resolved the run log relative to its own cwd. No model was loaded and no inference request was sent. Cleanup passed.",
+    "correction": "The Q100-only JSON config now uses an absolute log path under the Q100 task artifact directory. No model flags, context, production profiles, or source behavior changed."
+  },
+  "amendedDesign": {
+    "serverConfig": "configs/astra-q100-parallel2-64k.json",
+    "contextTokens": 65536,
+    "maxOutputTokens": 32768,
+    "gpus": [
+      0,
+      1
+    ],
+    "ram": "128GB uncapped",
+    "productionChanges": false,
+    "attempt01Archive": "runs/attempt-01-invalid-context/",
+    "attempt02Archive": "runs/attempt-02-relative-log-path/"
+  },
+  "runtimeFingerprints": {
+    "testSource": "155f8a4ff79e32b45440b08278f1b656d1c2c550989dc3d655b935c287462544",
+    "testBinary": "d1a017912d176f4e5c633ff0394988b3358f19eba46f5c30f92c005e12efd9ed",
+    "serverConfig": "77be85eac486c1bd7a2b9a841dfea2c5f89f1d215c655aed4a3731ef4a3aace9",
+    "strataRuntime": "770ecf303a4c6271654339c639392ecb455de3a999bf5d2e8dbc73c879103602",
+    "toolGuardProxy": "be95ac35ac3da6f3756f50d78c6e596bbecbb0abd7f451da138c52efd10a4d3e",
+    "toolGuardProxyTests": "1e1bccf0ea199e67c51695a119e79b991f9be2f456769d1cf544933a27c6128d",
+    "supervisor": "fdfebceb44cfe1e7b71a79fadc4c74b5e8b4dff23e571d4e3a45879eeefb868d",
+    "memoryGuard": "663a2762ba8e5433b566c1fa2dbbe692cd8d4272619361c477a339da52c6904a"
+  },
+  "cpuGateResult": {
+    "command": "./scripts/tests-linux.sh Release",
+    "result": "95/95 PASS, exit 0; Q100 live case is opt-in and skipped without endpoint."
+  },
+  "liveResult": null
+}

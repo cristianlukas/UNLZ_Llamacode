@@ -1,0 +1,57 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-100",
+  "lockToken": "fa90d45b-84a6-4679-9771-bad06cdb16a5",
+  "recordedAtUtc": "2026-10-24T21:38:37Z",
+  "status": "amended-preregistered-live-rerun-pending",
+  "amendment": "Keep Q100 at 64K and both RTX 3090; allocate a unique task-owned TMPDIR within the task artifact and set GIT_CEILING_DIRECTORIES to the checkout root so the nested temporary project initializes its own Git repository and its worktrees inherit committed fixtures. Stop after the first completed quality-failed run because the all-runs preregistered gate is then unreachable. Remove the task-owned temporary root in supervisor cleanup.",
+  "attempt04": {
+    "status": "invalid-harness-fixture-path-not-model-or-memory-failure",
+    "completedPartialRuns": 4,
+    "allPartialRunsFailedFixtureReads": true,
+    "rootCause": "TMPDIR was beneath checkout and Git ascended to the parent repository; subagent worktrees branched from checkout HEAD rather than a fixture commit.",
+    "memoryMetrics": {
+      "sampleCount": 241,
+      "minMemAvailableGiB": 69.533,
+      "peakGlobalPsiFullAvg10Pct": 46.41,
+      "peakCgroupPsiFullAvg10PctDiagnostic": 88.47,
+      "globalOomKills": 0,
+      "cgroupOomKills": 0
+    },
+    "cleanup": "PASS after stopping only the owned transient service; no server/proxy/listener remained, GPUs returned to 1085/110 MiB, MemAvailable 109.997 GiB, global PSI 0."
+  },
+  "attempt05Design": {
+    "contextTokens": 65536,
+    "parentTool": "task only",
+    "subagentTool": "read_file only, once per subtask",
+    "gitCeilingDirectories": "checkout root",
+    "tempRoot": "unique directory under Q100 runs; cleaned after all owned processes stop",
+    "earlyStop": "first completed run that fails quality or has an execution error",
+    "gpus": [
+      0,
+      1
+    ],
+    "ram": "128 GB, uncapped",
+    "productionChanges": false
+  },
+  "cpuValidation": {
+    "pyCompile": "PASS",
+    "supervisorRegressionTests": "5/5 PASS",
+    "memoryGuardStateTests": "4/4 PASS",
+    "toolProxyTests": "4/4 PASS",
+    "total": "13/13 PASS",
+    "lastLinuxSuite": "95/95 PASS after latest C++ probe-source change; production code unchanged by this amendment"
+  },
+  "runtimeFingerprints": {
+    "testSource": "ac9c1bb796b59531501c6cde540354b6e5b834777e225dfc737c81c15611d4e0",
+    "testBinary": "ae51b9f6a0aac2885ee021c2db66406f36332c3487fc1eecde1c5091de5cf810",
+    "serverConfig": "77be85eac486c1bd7a2b9a841dfea2c5f89f1d215c655aed4a3731ef4a3aace9",
+    "strataRuntime": "770ecf303a4c6271654339c639392ecb455de3a999bf5d2e8dbc73c879103602",
+    "toolGuardProxy": "be95ac35ac3da6f3756f50d78c6e596bbecbb0abd7f451da138c52efd10a4d3e",
+    "toolGuardProxyTests": "1e1bccf0ea199e67c51695a119e79b991f9be2f456769d1cf544933a27c6128d",
+    "toolGuardState": "7c3ffb01525f45423d8a3a8bf46635d32dbaf121fcfe273bec195691714f20db",
+    "toolGuardStateTests": "b6c03835a24d25721e42b59c1b307020ee8bb7ec2b09bdd53dbec186a7894c67",
+    "supervisor": "60c7d71debdfe4724b531d450ff6ab26db634f2b9f8f84d7f9ea2300ce024079",
+    "supervisorTests": "618b6f07ec63056697d40bdcf18d3c32e28f4b9c0c8ba1b6e9436837aabbdf45",
+    "memoryGuard": "663a2762ba8e5433b566c1fa2dbbe692cd8d4272619361c477a339da52c6904a"
+  }
+}

@@ -1,0 +1,19 @@
+{
+    "claims": [
+        {
+            "agentId": "llamacode-agent",
+            "branch": "",
+            "createdAt": 1792876900625,
+            "expiresAt": 1792877800625,
+            "goal": "Delegá exactamente dos subtareas independientes con dos llamadas a `task` en el mismo mensaje. La primera debe leer marker-alpha.txt con read_file y devolver la única línea exacta del archivo; la segunda debe hacer lo mismo con marker-beta.txt. Cada subagente sólo puede usar read_file; no uses shell, web, edición, escritura ni otras herramientas, y no alteres los archivos. Esperá ambos resultados. Respondé ALPHA=<línea leída>; BETA=<línea leída>.",
+            "heartbeatAt": 1792876900625,
+            "id": "be3902ac-4d4b-4bd5-af36-ad7389340bed",
+            "paths": [
+            ],
+            "sessionId": "fc66ae10-10f8-490d-89a2-4b162fbf80dc",
+            "status": "active",
+            "worktree": ""
+        }
+    ],
+    "schemaVersion": 1
+}

@@ -1,0 +1,45 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-100",
+  "atUtc": "2026-10-24T21:23:02Z",
+  "ownedServerStopped": true,
+  "ownedProxyStopped": true,
+  "port8363Free": true,
+  "port8364Free": true,
+  "externalInferenceProcesses": [],
+  "memoryPsiAvg10Pct": {
+    "some": 0.0,
+    "full": 0.0
+  },
+  "memAvailableGiB": 109.986,
+  "oom": {
+    "global": {
+      "oom_kill": 0
+    },
+    "cgroup": {
+      "low": 0,
+      "high": 0,
+      "max": 0,
+      "oom": 0,
+      "oom_kill": 0,
+      "oom_group_kill": 0,
+      "sock_throttled": 0
+    }
+  },
+  "gpus": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+      "totalMiB": 24576,
+      "usedMiB": 1089
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+      "totalMiB": 24576,
+      "usedMiB": 110
+    }
+  ],
+  "pass": true
+}

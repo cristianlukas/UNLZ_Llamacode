@@ -1,0 +1,54 @@
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:09:21Z", "blockedToolCall": false, "observedToolNames": ["task", "task"], "responseBytes": 63646, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:09:22Z", "blockedToolCall": false, "observedToolNames": [], "responseBytes": 309, "role": "subagent", "upstreamStatus": 400}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:09:23Z", "blockedToolCall": false, "observedToolNames": [], "responseBytes": 309, "role": "subagent", "upstreamStatus": 400}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:09:27Z", "blockedToolCall": false, "observedToolNames": [], "responseBytes": 90484, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:09:31Z", "blockedToolCall": false, "observedToolNames": ["task", "task"], "responseBytes": 45758, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:09:32Z", "blockedToolCall": false, "observedToolNames": [], "responseBytes": 309, "role": "subagent", "upstreamStatus": 400}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:09:32Z", "blockedToolCall": false, "observedToolNames": [], "responseBytes": 309, "role": "subagent", "upstreamStatus": 400}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:09:36Z", "blockedToolCall": false, "observedToolNames": ["task", "task"], "responseBytes": 74512, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:09:37Z", "blockedToolCall": false, "observedToolNames": [], "responseBytes": 309, "role": "subagent", "upstreamStatus": 400}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:09:37Z", "blockedToolCall": false, "observedToolNames": [], "responseBytes": 309, "role": "subagent", "upstreamStatus": 400}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:09:39Z", "blockedToolCall": false, "observedToolNames": [], "responseBytes": 41601, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:09:43Z", "blockedToolCall": false, "observedToolNames": ["task", "task"], "responseBytes": 43199, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:09:44Z", "blockedToolCall": false, "observedToolNames": [], "responseBytes": 309, "role": "subagent", "upstreamStatus": 400}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:09:44Z", "blockedToolCall": false, "observedToolNames": [], "responseBytes": 309, "role": "subagent", "upstreamStatus": 400}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:09:47Z", "blockedToolCall": false, "observedToolNames": ["task", "task"], "responseBytes": 61528, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:09:49Z", "blockedToolCall": false, "observedToolNames": [], "responseBytes": 309, "role": "subagent", "upstreamStatus": 400}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:09:49Z", "blockedToolCall": false, "observedToolNames": [], "responseBytes": 309, "role": "subagent", "upstreamStatus": 400}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:09:50Z", "blockedToolCall": true, "observedToolNames": ["read_file", "read_file"], "responseBytes": 14447, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:09:51Z", "blockedToolCall": true, "observedToolNames": ["read_file", "read_file"], "responseBytes": 14429, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:09:53Z", "blockedToolCall": true, "observedToolNames": ["read_file", "read_file"], "responseBytes": 14429, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:09:56Z", "blockedToolCall": true, "observedToolNames": ["read_file", "read_file"], "responseBytes": 14429, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:10:01Z", "blockedToolCall": true, "observedToolNames": ["read_file", "read_file"], "responseBytes": 14429, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:10:07Z", "blockedToolCall": true, "observedToolNames": ["read_file", "read_file"], "responseBytes": 14429, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:10:13Z", "blockedToolCall": true, "observedToolNames": ["read_file", "read_file"], "responseBytes": 14427, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:10:19Z", "blockedToolCall": true, "observedToolNames": ["read_file", "read_file"], "responseBytes": 14429, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:10:25Z", "blockedToolCall": true, "observedToolNames": ["read_file", "read_file"], "responseBytes": 14429, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:10:31Z", "blockedToolCall": true, "observedToolNames": ["read_file", "read_file"], "responseBytes": 14429, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:10:37Z", "blockedToolCall": true, "observedToolNames": ["read_file", "read_file"], "responseBytes": 14429, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:21:44Z", "blockedToolCall": false, "observedToolNames": ["task", "task"], "responseBytes": 47424, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:21:46Z", "blockedToolCall": false, "observedToolNames": ["read_file"], "responseBytes": 5642, "role": "subagent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:21:47Z", "blockedToolCall": false, "observedToolNames": ["read_file"], "responseBytes": 13778, "role": "subagent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:21:49Z", "blockedToolCall": false, "observedToolNames": ["read_file"], "responseBytes": 15604, "role": "subagent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:21:50Z", "blockedToolCall": false, "observedToolNames": ["read_file"], "responseBytes": 12012, "role": "subagent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:21:51Z", "blockedToolCall": false, "observedToolNames": ["read_file", "read_file"], "responseBytes": 14346, "role": "subagent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:21:53Z", "blockedToolCall": false, "observedToolNames": ["read_file", "read_file"], "responseBytes": 18558, "role": "subagent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:21:54Z", "blockedToolCall": false, "observedToolNames": ["read_file", "read_file"], "responseBytes": 18912, "role": "subagent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:21:56Z", "blockedToolCall": false, "observedToolNames": ["read_file", "read_file"], "responseBytes": 29718, "role": "subagent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:21:57Z", "blockedToolCall": false, "observedToolNames": ["read_file"], "responseBytes": 10409, "role": "subagent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:21:58Z", "blockedToolCall": false, "observedToolNames": ["read_file"], "responseBytes": 8960, "role": "subagent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:22:00Z", "blockedToolCall": false, "observedToolNames": [], "responseBytes": 25443, "role": "subagent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:22:03Z", "blockedToolCall": false, "observedToolNames": ["read_file"], "responseBytes": 5388, "role": "subagent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:22:04Z", "blockedToolCall": false, "observedToolNames": ["read_file"], "responseBytes": 15363, "role": "subagent", "upstreamStatus": 200}
+{"allowedTools": ["read_file"], "atUtc": "2026-10-24T21:22:05Z", "blockedToolCall": false, "observedToolNames": [], "responseBytes": 21500, "role": "subagent", "upstreamStatus": 200}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:22:10Z", "blockedToolCall": true, "observedToolNames": ["read_file", "read_file"], "responseBytes": 39943, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:22:12Z", "blockedToolCall": true, "observedToolNames": ["read_file", "read_file"], "responseBytes": 31010, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:22:14Z", "blockedToolCall": true, "observedToolNames": ["read_file", "read_file"], "responseBytes": 31010, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:22:18Z", "blockedToolCall": true, "observedToolNames": ["read_file", "read_file"], "responseBytes": 31010, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:22:23Z", "blockedToolCall": true, "observedToolNames": ["read_file", "read_file"], "responseBytes": 31009, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:22:29Z", "blockedToolCall": true, "observedToolNames": ["read_file", "read_file"], "responseBytes": 31010, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:22:35Z", "blockedToolCall": true, "observedToolNames": ["read_file", "read_file"], "responseBytes": 31010, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:22:41Z", "blockedToolCall": true, "observedToolNames": ["read_file", "read_file"], "responseBytes": 31010, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:22:48Z", "blockedToolCall": true, "observedToolNames": ["read_file", "read_file"], "responseBytes": 31010, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:22:54Z", "blockedToolCall": true, "observedToolNames": ["read_file", "read_file"], "responseBytes": 31010, "role": "parent", "upstreamStatus": 200}
+{"allowedTools": ["task"], "atUtc": "2026-10-24T21:23:00Z", "blockedToolCall": true, "observedToolNames": ["read_file", "read_file"], "responseBytes": 31010, "role": "parent", "upstreamStatus": 200}

@@ -1,0 +1,105 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-100",
+  "experimentId": "VF-20261019-01-S1-ASTRA-LLAMACODE-SUBAGENT-FANOUT-Q100",
+  "status": "failed",
+  "startedAtUtc": "2026-10-24T21:16:28Z",
+  "memoryLimits": {
+    "memory.max": "max",
+    "memory.high": "max",
+    "memory.swap.max": "max"
+  },
+  "ownedProcesses": [],
+  "smallFingerprints": {
+    "testSource": "155f8a4ff79e32b45440b08278f1b656d1c2c550989dc3d655b935c287462544",
+    "testBinary": "d1a017912d176f4e5c633ff0394988b3358f19eba46f5c30f92c005e12efd9ed",
+    "serverConfig": "9662a37d8179c0cdc0f27289244588b98246927907f7548cfaf630cd23b245ca",
+    "strataRuntime": "770ecf303a4c6271654339c639392ecb455de3a999bf5d2e8dbc73c879103602",
+    "toolGuardProxy": "be95ac35ac3da6f3756f50d78c6e596bbecbb0abd7f451da138c52efd10a4d3e",
+    "toolGuardProxyTests": "1e1bccf0ea199e67c51695a119e79b991f9be2f456769d1cf544933a27c6128d",
+    "supervisor": "b7e9e4a88342e8fe4884d1520b97620cb61c910be19c3545de722d501c6619bc",
+    "memoryGuard": "663a2762ba8e5433b566c1fa2dbbe692cd8d4272619361c477a339da52c6904a"
+  },
+  "gpuBaseline": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+      "totalMiB": 24576,
+      "usedMiB": 1067
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+      "totalMiB": 24576,
+      "usedMiB": 110
+    }
+  ],
+  "baselineMemAvailableGiB": 110.321,
+  "baselinePsi": {
+    "some": 0.0,
+    "full": 0.0
+  },
+  "serverCommand": [
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python",
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py",
+    "--engine",
+    "strata",
+    "--config",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-100/configs/astra-q100-parallel2-64k.json",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "8363",
+    "--gpu",
+    "0,1"
+  ],
+  "serverPid": 625604,
+  "failure": "GateStop: owned process exited before health (exit=1)",
+  "cleanup": {
+    "taskId": "Q-20261024-VF-ITERATION-100",
+    "atUtc": "2026-10-24T21:17:46Z",
+    "ownedServerStopped": true,
+    "ownedProxyStopped": true,
+    "port8363Free": true,
+    "port8364Free": true,
+    "externalInferenceProcesses": [],
+    "memoryPsiAvg10Pct": {
+      "some": 0.0,
+      "full": 0.0
+    },
+    "memAvailableGiB": 109.966,
+    "oom": {
+      "global": {
+        "oom_kill": 0
+      },
+      "cgroup": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3090",
+        "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+        "totalMiB": 24576,
+        "usedMiB": 1067
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA GeForce RTX 3090",
+        "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+        "totalMiB": 24576,
+        "usedMiB": 110
+      }
+    ],
+    "pass": true
+  },
+  "finishedAtUtc": "2026-10-24T21:17:46Z"
+}

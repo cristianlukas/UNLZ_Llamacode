@@ -1,0 +1,24 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-100",
+  "lockToken": "fa90d45b-84a6-4679-9771-bad06cdb16a5",
+  "amendment": "Q100-RUN05-SCORER-006",
+  "recordedAtUtc": "2026-10-24T21:52:48Z",
+  "status": "validated; six-run result remains no-adoption",
+  "description": "Require an anchored exact ALPHA/BETA mapping in the final answer after the last </think>; distinguish a completed negative adoption screen from a failed test process.",
+  "runtimeFingerprints": {
+    "testSource": "41fb0009f51a53a8d106d897f53d7a7eba896fb9bb770a3904e729d2e8ebe210",
+    "testBinary": "63961a4ce07ff85d7f7a1d421996e99f739d7a467f99659f5a977c4ad0d17dbd",
+    "serverConfig": "77be85eac486c1bd7a2b9a841dfea2c5f89f1d215c655aed4a3731ef4a3aace9",
+    "strataRuntime": "770ecf303a4c6271654339c639392ecb455de3a999bf5d2e8dbc73c879103602",
+    "toolGuardProxy": "be95ac35ac3da6f3756f50d78c6e596bbecbb0abd7f451da138c52efd10a4d3e",
+    "toolGuardProxyTests": "1e1bccf0ea199e67c51695a119e79b991f9be2f456769d1cf544933a27c6128d",
+    "toolGuardState": "7c3ffb01525f45423d8a3a8bf46635d32dbaf121fcfe273bec195691714f20db",
+    "toolGuardStateTests": "b6c03835a24d25721e42b59c1b307020ee8bb7ec2b09bdd53dbec186a7894c67",
+    "supervisor": "2f8f45e0ac55a597e4029112ca89848dbab40392753a45910bbba1a3f6830cc2",
+    "supervisorTests": "618b6f07ec63056697d40bdcf18d3c32e28f4b9c0c8ba1b6e9436837aabbdf45",
+    "memoryGuard": "663a2762ba8e5433b566c1fa2dbbe692cd8d4272619361c477a339da52c6904a"
+  },
+  "validationReceipt": "receipts/q100-amendment-006-validation.json",
+  "cpuOnly": true,
+  "gpuRerun": false
+}

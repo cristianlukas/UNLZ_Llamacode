@@ -1,0 +1,46 @@
+{
+  "attempt": 4,
+  "status": "invalid-harness-fixture-path",
+  "startedAtUtc": "2026-10-24T21:29:05Z",
+  "completedRuns": 4,
+  "runs": [
+    [
+      5051,
+      "serial",
+      0,
+      false
+    ],
+    [
+      5051,
+      "parallel2",
+      0,
+      false
+    ],
+    [
+      5052,
+      "parallel2",
+      0,
+      false
+    ],
+    [
+      5052,
+      "serial",
+      0,
+      false
+    ]
+  ],
+  "cause": "Supervisor set TMPDIR to a directory inside the repository checkout. QTemporaryDir therefore created its source project beneath the parent Git worktree; createWorktree detected that parent repo and based subagent worktrees at HEAD, excluding the untracked marker fixtures. Both subagent read_file calls were valid/allowed but could not find the fixture files.",
+  "memory": "MemAvailable remained about 69-73 GiB, global PSI recovered to near zero during active requests, OOM counters stayed zero; both RTX 3090 were used.",
+  "cleanup": "PASS after stopping only the owned transient; no inference process or listener remained, both GPUs returned to baseline, and OOM remained zero.",
+  "next": "Use a unique task-owned TMPDIR plus GIT_CEILING_DIRECTORIES=checkout root so Git initializes a nested fixture repository; stop on first completed quality failure; preregister and repeat the same dual-GPU screen.",
+  "memoryMetrics": {
+    "sampleCount": 241,
+    "minMemAvailableGiB": 69.533,
+    "peakGlobalPsiFullAvg10Pct": 46.41,
+    "peakCgroupPsiFullAvg10PctDiagnostic": 88.47,
+    "warningSamples": 53,
+    "globalOomKills": 0,
+    "cgroupOomKills": 0
+  },
+  "rootCause": "TMPDIR was set beneath the checkout. createWorktree therefore detected the parent repository, built worktrees from its HEAD, and omitted the untracked synthetic marker files. The test prompt/tool path itself was not blocked."
+}
