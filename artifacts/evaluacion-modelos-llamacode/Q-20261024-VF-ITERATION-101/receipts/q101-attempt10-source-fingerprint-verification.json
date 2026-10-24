@@ -1,0 +1,182 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-101",
+  "capturedAtUtc": "2026-10-24T22:16:55Z",
+  "status": "pass",
+  "lockOwned": true,
+  "method": "read-only source fingerprint check; preserved .bak* files are used only for HyperQwen's three documented in-place rewrites; prepared shard reads are delegated to a root-in-container read-only check because prepare outputs are root-owned",
+  "rawModelRevision": "1f05c441c4e64ae0549de44fa9ea5a6d43610314",
+  "rawSourceChecks": [
+    {
+      "pinnedFile": "model-00001-of-00007.safetensors",
+      "sourcePath": "/media/cristian/HDD extra/Modelos-eval/Q85-HyperQwen/models/Qwen3.8-27B-W4A16-AutoRound/model-00001-of-00007.safetensors",
+      "sourceSizeBytes": 3211003472,
+      "sourceSha256": "6b2adc4f1b93386eedd033a62c63221bf85e789c09ada8ff43939c55e9f06250",
+      "matchesPinnedRawSource": true
+    },
+    {
+      "pinnedFile": "model-00002-of-00007.safetensors",
+      "sourcePath": "/media/cristian/HDD extra/Modelos-eval/Q85-HyperQwen/models/Qwen3.8-27B-W4A16-AutoRound/model-00002-of-00007.safetensors",
+      "sourceSizeBytes": 3195027104,
+      "sourceSha256": "a223fa487834749a14d86d558af9a4d5799b79be9bc28bdefa43eed055d10578",
+      "matchesPinnedRawSource": true
+    },
+    {
+      "pinnedFile": "model-00003-of-00007.safetensors",
+      "sourcePath": "/media/cristian/HDD extra/Modelos-eval/Q85-HyperQwen/models/Qwen3.8-27B-W4A16-AutoRound/model-00003-of-00007.safetensors",
+      "sourceSizeBytes": 3195027104,
+      "sourceSha256": "8719567ac822768ac61872894604d3a4d13f2edbd22c9bd3c4680ebc83e24ca5",
+      "matchesPinnedRawSource": true
+    },
+    {
+      "pinnedFile": "model-00004-of-00007.safetensors",
+      "sourcePath": "/media/cristian/HDD extra/Modelos-eval/Q85-HyperQwen/models/Qwen3.8-27B-W4A16-AutoRound/model-00004-of-00007.safetensors",
+      "sourceSizeBytes": 3217442568,
+      "sourceSha256": "8faf8d4a57c69b9b96e27c4eabf1ba0caadd3d48344d6f65df17f30da2a7e6e3",
+      "matchesPinnedRawSource": true
+    },
+    {
+      "pinnedFile": "model-00005-of-00007.safetensors",
+      "sourcePath": "/media/cristian/HDD extra/Modelos-eval/Q85-HyperQwen/models/Qwen3.8-27B-W4A16-AutoRound/model-00005-of-00007.safetensors",
+      "sourceSizeBytes": 699275200,
+      "sourceSha256": "0994bb8d91c07ceefc4bfffd3a7b7fd110cc9bd3ce865bdcb2821abf02a02fab",
+      "matchesPinnedRawSource": true
+    },
+    {
+      "pinnedFile": "model-00006-of-00007.safetensors",
+      "sourcePath": "/media/cristian/HDD extra/Modelos-eval/Q85-HyperQwen/models/Qwen3.8-27B-W4A16-AutoRound/model-00006-of-00007.safetensors.bak_embed",
+      "sourceSizeBytes": 2542807272,
+      "sourceSha256": "55a14ee79d3e5a65a8731d89426f4df477e8bdc7daa7976d41254d8afb9432f0",
+      "matchesPinnedRawSource": true,
+      "preparedPath": "/media/cristian/HDD extra/Modelos-eval/Q85-HyperQwen/models/Qwen3.8-27B-W4A16-AutoRound/model-00006-of-00007.safetensors",
+      "preparedSizeBytes": 1291274752,
+      "preparedModeOctal": "0o600",
+      "preparedReadableByHostUser": false,
+      "preparedMtimeUtc": "2026-10-24T14:59:49.705004Z"
+    },
+    {
+      "pinnedFile": "model-00007-of-00007.safetensors",
+      "sourcePath": "/media/cristian/HDD extra/Modelos-eval/Q85-HyperQwen/models/Qwen3.8-27B-W4A16-AutoRound/model-00007-of-00007.safetensors.bak",
+      "sourceSizeBytes": 2542796896,
+      "sourceSha256": "6866cf8adcccc4cc6a00e74bc025f1a774fb52103b70f2674d0288272951a733",
+      "matchesPinnedRawSource": true,
+      "preparedPath": "/media/cristian/HDD extra/Modelos-eval/Q85-HyperQwen/models/Qwen3.8-27B-W4A16-AutoRound/model-00007-of-00007.safetensors",
+      "preparedSizeBytes": 1291264320,
+      "preparedModeOctal": "0o600",
+      "preparedReadableByHostUser": false,
+      "preparedMtimeUtc": "2026-10-24T14:58:45.814696Z"
+    },
+    {
+      "pinnedFile": "model_extra_tensors.safetensors",
+      "sourcePath": "/media/cristian/HDD extra/Modelos-eval/Q85-HyperQwen/models/Qwen3.8-27B-W4A16-AutoRound/model_extra_tensors.safetensors.bak-mtp",
+      "sourceSizeBytes": 849400392,
+      "sourceSha256": "1d8268aa85ace093a561e3e7b63b9d390dac1cd55a90cd55b5ec509c3c9da9fe",
+      "matchesPinnedRawSource": true,
+      "preparedPath": "/media/cristian/HDD extra/Modelos-eval/Q85-HyperQwen/models/Qwen3.8-27B-W4A16-AutoRound/model_extra_tensors.safetensors",
+      "preparedSizeBytes": 644356792,
+      "preparedModeOctal": "0o600",
+      "preparedReadableByHostUser": false,
+      "preparedMtimeUtc": "2026-10-24T15:00:29.620608Z"
+    },
+    {
+      "pinnedFile": "tokenizer.json",
+      "sourcePath": "/media/cristian/HDD extra/Modelos-eval/Q85-HyperQwen/models/Qwen3.8-27B-W4A16-AutoRound/tokenizer.json",
+      "sourceSizeBytes": 19989325,
+      "sourceSha256": "06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523",
+      "matchesPinnedRawSource": true
+    }
+  ],
+  "q85PostPrepareVerificationReceipt": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-85/receipts/q85-dual-gpu-runtime-preflight.json",
+  "priorPostPrepareVerification": "verify: OK (0 failures)",
+  "preparedCheckpointStructuralVerification": {
+    "status": "pass",
+    "containerUser": 0,
+    "network": "none",
+    "rootFilesystem": "read-only",
+    "gpuDevicesPassed": false,
+    "prepareRun": false,
+    "quantMethod": "compressed-tensors",
+    "requiredPackedKeysPresent": [
+      "lm_head.weight_packed",
+      "model.language_model.embed_tokens.weight_packed",
+      "mtp.layers.0.mlp.down_proj.weight_packed",
+      "mtp.draft_lm_head.weight_packed"
+    ],
+    "allIndexKeysPresentInHeaders": true,
+    "allTensorOffsetsWithinFiles": true,
+    "latestModelShardMtimeUtc": "2026-10-24T15:00:35.360553Z",
+    "unchangedSinceQ85Verification": true,
+    "modelShards": [
+      {
+        "path": "/models/model-00001-of-00007.safetensors",
+        "sizeBytes": 3211003472,
+        "modeOctal": "0o664",
+        "headerTensorCount": 428,
+        "sha256": null
+      },
+      {
+        "path": "/models/model-00002-of-00007.safetensors",
+        "sizeBytes": 3195027104,
+        "modeOctal": "0o664",
+        "headerTensorCount": 415,
+        "sha256": null
+      },
+      {
+        "path": "/models/model-00003-of-00007.safetensors",
+        "sizeBytes": 3195027104,
+        "modeOctal": "0o664",
+        "headerTensorCount": 415,
+        "sha256": null
+      },
+      {
+        "path": "/models/model-00004-of-00007.safetensors",
+        "sizeBytes": 3217442568,
+        "modeOctal": "0o664",
+        "headerTensorCount": 481,
+        "sha256": null
+      },
+      {
+        "path": "/models/model-00005-of-00007.safetensors",
+        "sizeBytes": 699275200,
+        "modeOctal": "0o664",
+        "headerTensorCount": 242,
+        "sha256": null
+      },
+      {
+        "path": "/models/model-00006-of-00007.safetensors",
+        "sizeBytes": 1291274752,
+        "modeOctal": "0o600",
+        "headerTensorCount": 5,
+        "sha256": "b2e0854ed3be3141ed79f4204f7aa8e616da626d4662017117330490747c2036"
+      },
+      {
+        "path": "/models/model-00007-of-00007.safetensors",
+        "sizeBytes": 1291264320,
+        "modeOctal": "0o600",
+        "headerTensorCount": 4,
+        "sha256": "ce55d80ec123bac872f2ff27eb39b2c11d50ede0b0e272656738b628b7f496a9"
+      },
+      {
+        "path": "/models/model_extra_tensors.safetensors",
+        "sizeBytes": 644356792,
+        "modeOctal": "0o600",
+        "headerTensorCount": 35,
+        "sha256": "e565c3067489d0836375a0e7671d488b83c4fe03afdd37e55957320a326ac39b"
+      }
+    ],
+    "draftVocabIdsBytes": 329426,
+    "drafter": {
+      "path": "/drafter/model.safetensors",
+      "sizeBytes": 1280633960,
+      "sha256": "ec26996e6a0745ab5edb857117220ce1e219ad524f71e6e149b703804947d8e7",
+      "matchesPinned": true
+    }
+  },
+  "drafter": {
+    "path": "/media/cristian/HDD extra/Modelos-eval/Q85-HyperQwen/models/Qwen3.8-27B-DFlash2-W4A16/model.safetensors",
+    "sizeBytes": 1280633960,
+    "sha256": "ec26996e6a0745ab5edb857117220ce1e219ad524f71e6e149b703804947d8e7",
+    "matchesPinned": true
+  },
+  "gpuInferenceStarted": false,
+  "modelFilesModified": false
+}

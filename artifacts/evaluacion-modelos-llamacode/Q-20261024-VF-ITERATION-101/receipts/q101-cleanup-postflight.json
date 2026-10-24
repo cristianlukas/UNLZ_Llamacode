@@ -1,0 +1,43 @@
+{
+  "task": "Q-20261024-VF-ITERATION-101",
+  "recordedAtUtc": "2026-10-24T22:27:39Z",
+  "status": "PASS",
+  "systemdUnit": {
+    "name": "q101-hyperqwen-attempt-10.service",
+    "activeState": "inactive",
+    "subState": "dead",
+    "result": "success"
+  },
+  "candidateContainerPresent": false,
+  "listener18142Present": false,
+  "temporaryCanaryDirectoryPresent": false,
+  "memory": {
+    "memAvailableGiB": 109.7,
+    "memoryPsiFullAvg60Pct": 0.02,
+    "globalOomKillDelta": 0
+  },
+  "gpu": {
+    "gpu0UsedMiB": 1068,
+    "gpu1UsedMiB": 110,
+    "computeProcesses": [
+      {
+        "name": "artcraft-launcher",
+        "gpu": 0,
+        "usedMiB": 207
+      }
+    ],
+    "q101ContainerProcessPresent": false
+  },
+  "preserved": [
+    "ASTRA DEFAULT 1M",
+    "SOL",
+    "Flash-Next productivo",
+    "PeritoSoft",
+    "Codex desktop",
+    "ArtCraft"
+  ],
+  "evidence": [
+    "../runs/host-samples.jsonl",
+    "q101-tool-canary-20261024T222317Z.json"
+  ]
+}

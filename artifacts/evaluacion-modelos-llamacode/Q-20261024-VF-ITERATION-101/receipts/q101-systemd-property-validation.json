@@ -1,0 +1,37 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-101",
+  "capturedAtUtc": "2026-10-24T22:21:47Z",
+  "firstInvocation": {
+    "result": "rejected before unit creation",
+    "reason": "Unknown assignment: IOClass=best-effort",
+    "serverOrInferenceStarted": false,
+    "gpuUsed": false
+  },
+  "correction": {
+    "property": "IOSchedulingClass=best-effort",
+    "priorityProperty": "IOSchedulingPriority=7",
+    "documentation": "/usr/share/man/man5/systemd.exec.5.gz"
+  },
+  "cpuOnlySmoke": {
+    "unit": "q101-property-smoke.service",
+    "result": "success",
+    "exitCode": 0,
+    "propertiesValidated": [
+      "AppArmorProfile=chatgpt",
+      "KillMode=control-group",
+      "RuntimeMaxSec=1800",
+      "TimeoutStopSec=45",
+      "Nice=10",
+      "CPUWeight=20",
+      "IOWeight=25",
+      "IOSchedulingClass=best-effort",
+      "IOSchedulingPriority=7",
+      "MemoryMax=infinity",
+      "MemoryHigh=infinity",
+      "MemorySwapMax=infinity"
+    ],
+    "gpuInferenceStarted": false
+  },
+  "correctedLauncher": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-101/runner/start_q101_attempt10.sh",
+  "controlledCanaryParametersChanged": false
+}

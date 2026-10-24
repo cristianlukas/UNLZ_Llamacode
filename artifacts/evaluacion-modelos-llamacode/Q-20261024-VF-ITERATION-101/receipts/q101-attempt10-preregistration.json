@@ -1,0 +1,80 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-101",
+  "experimentId": "qwen38-hyperqwen-write-file-output-cap-attempt10",
+  "attempt": 10,
+  "preregisteredAtUtc": "2026-10-24T22:07:29Z",
+  "lockToken": "f5f2021d-5cbf-4ae2-a0c9-878f53871914",
+  "question": "Does raising only the write_file completion cap from 512 to 1024 tokens let the pinned HyperQwen Qwen3.8-27B TP=2 canary emit valid path/content arguments and complete the exact read\u2192write fixture?",
+  "candidate": {
+    "sourceCommit": "ce9615c4f2309be727407918a6c979bd67968069",
+    "imageDigest": "sha256:0acd4b9625473e51c9bab56406c30814bc0d0d7e0a38deb408c62664b5a77669",
+    "baseModelRevision": "1f05c441c4e64ae0549de44fa9ea5a6d43610314",
+    "drafterRevision": "4d30ec736ffc6b8688dc2ae2b502d9b48bdec279",
+    "tensorParallelSize": 2,
+    "gpuCount": 2,
+    "gpuNames": [
+      "NVIDIA GeForce RTX 3090",
+      "NVIDIA GeForce RTX 3090"
+    ],
+    "hostMemoryBytes": 137438953472,
+    "context": 65536,
+    "gpuUtilization": 0.91,
+    "kvMemoryPinBytesPerWorker": 3000000000,
+    "speculativeMethod": "dflash2",
+    "draftTokens": 7
+  },
+  "controlledDifferenceFromAttempt09": "Only write_file max_tokens changes from 512 to 1024. read_file stays 512 and final response stays 128. Keep model/image/revisions, TP=2, both 3090, context, KV pin, DFlash2, path enum, named choices, explicit path prompt, thinking-off, fixture bytes/hash, sampling, seed, tools, sequence and one-run policy unchanged.",
+  "protocol": {
+    "toolChoiceMode": "named",
+    "enableThinking": false,
+    "fixturePathEnum": true,
+    "explicitPathSchemaPrompt": true,
+    "readFileMaxTokens": 512,
+    "writeFileMaxTokens": 1024,
+    "finalMaxTokens": 128,
+    "temperature": 0.6,
+    "topP": 0.95,
+    "topK": 20,
+    "minP": 0.0,
+    "seed": 42,
+    "parallelToolCalls": false,
+    "toolSequence": [
+      "read_file",
+      "write_file",
+      "final"
+    ],
+    "fixtureText": "Q85-CANARY-READ-THEN-WRITE-314159",
+    "fixtureSha256": "72e104733ce4d825eae8998b516025aa2c278284e1d875bddb05e9b7b8f48063",
+    "filesystemScope": "unique temporary fixture directory on HDD extra under Q85 candidate tmp root; no persistent writes"
+  },
+  "passCriteria": [
+    "health and /v1/models succeed",
+    "read_file emits one valid exact path call",
+    "write_file emits one valid exact path and string content equal to fixture",
+    "nonempty final answer and output bytes exactly equal fixture",
+    "owned service stopped, port 18142 free, GPUs return to near-baseline"
+  ],
+  "failurePolicy": "One canary only. If the tool contract fails or write_file still truncates/returns malformed arguments, stop this loop, run no Tool-Eval and no A/B; record no adoption. A pass only opens a separately preregistered next test; this canary alone is not comparative quality/speed evidence and cannot change production defaults.",
+  "resourcePolicy": {
+    "gpus": "both RTX 3090 together, TP=2; require >=22000 MiB free per GPU before launch",
+    "hostMemory": "128 GB installed; no imposed memory/swap caps; hard stop only if MemAvailable<32 GiB, OOM kill counter increments, or global memory PSI full>=60% or some>=80% for 15 consecutive 1-second samples",
+    "pressureInterpretation": "moderate PSI is warn-only; calibrated against successful ASTRA DEFAULT 1M and SOL TP=2 history",
+    "gui": "leave Codex/desktop and unrelated compute apps untouched",
+    "priority": "systemd transient Nice=10 CPUWeight=20 IOWeight=25 best-effort IOPriority=7"
+  },
+  "staticValidation": {
+    "pyCompile": "pass",
+    "bashN": "pass",
+    "memoryGuardSelfTests": "6/6 pass",
+    "controlledDifference": "write_file max_tokens 512\u21921024 only; fixture/hash, read=512 and final=128 verified"
+  },
+  "preflightRequiredImmediatelyBeforeStart": true,
+  "sheet": {
+    "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "evaluationRange": "Evaluaciones LlamaCode!A321:J321",
+    "actionablesRange": "Accionables!A14:N14",
+    "status": "preregister before preflight and inference"
+  },
+  "serverStarted": false,
+  "gpuInferenceStarted": false
+}

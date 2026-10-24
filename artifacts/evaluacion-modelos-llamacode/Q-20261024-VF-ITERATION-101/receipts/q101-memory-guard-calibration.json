@@ -1,0 +1,47 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-101",
+  "capturedAtUtc": "2026-10-24T22:18:28Z",
+  "historicalEvidence": [
+    {
+      "task": "Q-20261014-ISTA-NEEDLE-HAYSTACK",
+      "profile": "ASTRA DEFAULT / Flash-Next IQ2_XS / Strata",
+      "contextTokens": 1048576,
+      "exactFacts": "10/10",
+      "peakProcessTreeRssGiB": 51.14,
+      "minimumMemAvailableGiB": 55.728,
+      "memoryPsiSomeFullAvg10Pct": 0,
+      "swapOutPages": 0,
+      "monitorAbort": null,
+      "evidence": "artifacts/evaluacion-modelos-llamacode/Q-20261014-ISTA-NEEDLE-HAYSTACK/receipts/runs/1048576/receipt.json"
+    },
+    {
+      "task": "Q-20261024-VF-ITERATION-97",
+      "psiFullPeakPct": 34.72,
+      "minimumMemAvailableGiB": 71.864,
+      "globalOomKills": 0,
+      "result": "ASTRA arm completed; moderate PSI warning recovered without abort",
+      "evidence": "WORK_QUEUE.md progress entries 2235 and 2237; artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-97/receipts/q97-progress-06-astra-6of8.json"
+    },
+    {
+      "task": "Q-20261024-VF-ITERATION-100",
+      "psiFullPeakPct": 46.52,
+      "minimumMemAvailableGiB": 69.386,
+      "globalOomKills": 0,
+      "result": "all six benchmark tasks completed; cleanup passed",
+      "evidence": "WORK_QUEUE.md progress entries 2264 and 2265; artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-100/RESULTS.md"
+    }
+  ],
+  "guardUnderReview": {
+    "moderatePsi": "warning only",
+    "hardMemAvailableFloorGiB": 32,
+    "distanceBelowHistoricalSuccessfulOneMillionTokenMinimumGiB": 23.728,
+    "severePsiStop": "memory PSI full >=60% or some >=80% for 15 consecutive 1-second samples",
+    "oomStop": "stop on a new global oom_kill",
+    "memoryCgroupMax": "infinity",
+    "memoryHigh": "infinity",
+    "memorySwapMax": "infinity",
+    "hostSwapModified": false
+  },
+  "staticGuardTests": {"passed": 6, "failed": 0},
+  "assessment": "The 32 GiB safety floor was not reached by the documented successful 1M ASTRA run (minimum MemAvailable 55.73 GiB), leaving 23.73 GiB below that observed minimum. Moderate PSI alone did not interrupt Q97 or Q100. This supports the current guard for the present Q101 canary; it does not claim every future workload is safe under every memory condition."
+}

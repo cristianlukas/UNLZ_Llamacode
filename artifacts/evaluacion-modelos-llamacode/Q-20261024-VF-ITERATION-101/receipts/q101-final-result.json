@@ -1,0 +1,99 @@
+{
+  "task": "Q-20261024-VF-ITERATION-101",
+  "attempt": 10,
+  "startedAtUtc": "2026-10-24T22:23:17Z",
+  "completedAtUtc": "2026-10-24T22:23:32Z",
+  "recordedAtUtc": "2026-10-24T22:27:39Z",
+  "status": "fail_contract_before_write_file",
+  "candidate": "HyperQwen Qwen3.8-27B W4A16 TP=2, both RTX 3090",
+  "hypothesis": "Increasing write_file.max_tokens from 512 to 1024 resolves the previous write_file truncation.",
+  "result": "Inconclusive for that hypothesis: the canary failed earlier in read_file because the returned path did not match its contract. No write_file call occurred.",
+  "canary": {
+    "modelsEndpointMs": 11.05,
+    "responseSummaries": [
+      {
+        "stage": "read_file",
+        "latencyMs": 14245.67,
+        "finishReason": "stop",
+        "contentCharCount": 0,
+        "toolCallCount": 1,
+        "toolNames": [
+          "read_file"
+        ],
+        "usage": {
+          "promptTokens": 489,
+          "completionTokens": 507,
+          "totalTokens": 996
+        }
+      }
+    ],
+    "argumentValidationSummaries": [
+      {
+        "stage": "read_file",
+        "pathIsString": true,
+        "pathMatchesContract": false
+      }
+    ],
+    "failure": "RuntimeError: read_file requested a path outside the canary contract",
+    "actualInvalidPathRecorded": false,
+    "fixtureRead": false,
+    "fixtureWritten": false,
+    "persistentFileCreated": false,
+    "toolEvalRun": false,
+    "abRun": false,
+    "protocol": {
+      "temperature": 0.6,
+      "topP": 0.95,
+      "topK": 20,
+      "minP": 0.0,
+      "seed": 42,
+      "toolChoiceMode": "named",
+      "enableThinking": false,
+      "fixturePathEnum": true,
+      "explicitPathSchemaPrompt": true,
+      "toolReadMaxTokens": 512,
+      "toolWriteMaxTokens": 1024,
+      "toolChoiceSequence": [
+        "read_file",
+        "write_file",
+        "none"
+      ],
+      "parallelToolCalls": false,
+      "expectedToolSequence": [
+        "read_file",
+        "write_file"
+      ],
+      "fixtureSha256": "72e104733ce4d825eae8998b516025aa2c278284e1d875bddb05e9b7b8f48063",
+      "filesystemScope": "unique temporary directory under the Q85 candidate HDD temp folder; no persistent files"
+    }
+  },
+  "memoryGuard": {
+    "sampleCount": 96,
+    "fromUtc": "2026-10-24T22:21:56Z",
+    "toUtc": "2026-10-24T22:23:31Z",
+    "memAvailableMinGiB": 102.201,
+    "memAvailableMaxGiB": 109.948,
+    "memoryPsiSomeAvg10PctPeak": 1.08,
+    "memoryPsiFullAvg10PctPeak": 1.08,
+    "ioPsiFullAvg10PctPeak": 21.37,
+    "warningSamples": 0,
+    "maxSevereStreakSamples": 0,
+    "oomKillMax": 0,
+    "guardAbort": false,
+    "memoryCapsApplied": false
+  },
+  "historicalCalibration": {
+    "astraContextTokens": 1048576,
+    "astraExactFacts": "10/10",
+    "processTreeRssPeakGiB": 51.14,
+    "memAvailableMinGiB": 55.73,
+    "memoryPsi": 0,
+    "swapOut": 0,
+    "guardAborted": false,
+    "guardFloorGiB": 32,
+    "marginBelowHistoricalMinimumGiB": 23.73
+  },
+  "cleanup": "PASS: transient unit inactive/dead; owned Docker container absent; listener :18142 absent; no q101 temporary fixture directory; only ArtCraft compute process remained (207 MiB on GPU0).",
+  "postflight": "MemAvailable 109.7 GiB; memory PSI full avg60=0.02%; global OOM unchanged at 0. ASTRA DEFAULT 1M, SOL, Flash-Next, PeritoSoft, Codex desktop and ArtCraft preserved.",
+  "decision": "Do not adopt HyperQwen or change productive profiles. Stop its tool-evaluation loop until a material parser/runtime change and a separate preregistered test. No A/B or Tool-Eval."
+}

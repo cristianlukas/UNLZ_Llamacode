@@ -1,0 +1,32 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-101",
+  "validatedAtUtc": "2026-10-24T22:08:49Z",
+  "status": "pass",
+  "pythonCompile": "pass",
+  "bashSyntax": "pass",
+  "memoryGuardSelfTests": {
+    "passed": 6,
+    "failed": 0,
+    "cases": [
+      "moderate PSI warns only",
+      "severe requires 15 consecutive samples",
+      "recovery resets severe streak",
+      "MemAvailable floor stops",
+      "OOM kill counter increase stops"
+    ]
+  },
+  "controlledCapAudit": {
+    "readFileMaxTokens": 512,
+    "writeFileMaxTokens": 1024,
+    "finalMaxTokens": 128,
+    "fixtureSha256": "72e104733ce4d825eae8998b516025aa2c278284e1d875bddb05e9b7b8f48063",
+    "fixtureUnchangedFromQ85Attempt09": true,
+    "onlyWriteFileCapDiffers": true
+  },
+  "preflightSafety": {
+    "pinnedImageOnly": "pass; preflight verifies local image, launcher uses --pull never",
+    "productionProfiles": "untouched",
+    "memoryCgroupLimits": "will be set infinity and verified after transient starts",
+    "gpuInferenceStarted": false
+  }
+}

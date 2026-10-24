@@ -1,0 +1,23 @@
+{
+  "task": "Q-20261024-VF-ITERATION-101",
+  "recordedAtUtc": "2026-10-24T22:28:19Z",
+  "status": "PASS",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "ranges": [
+    "Evaluaciones LlamaCode!A321:J321",
+    "Accionables!A14:N14"
+  ],
+  "readbackVerified": true,
+  "wrapFormattingPreserved": true,
+  "rowHeightPreserved": true,
+  "dataValidationPresent": false,
+  "changes": [
+    "Evaluaciones LlamaCode!C321,H321,I321: Q101 final fail-before-write result, guard metrics, and artifact references.",
+    "Accionables!D14,G14,I14,J14,M14,N14: closed status, outcome, postflight, references and timestamps."
+  ],
+  "readbackSummary": {
+    "q101": "canario falló en read_file; no alcanzó write_file; guard no abortó; cleanup PASS",
+    "actionable": "HyperQwen tools bloqueado hasta cambio material parser/runtime y preregistro nuevo"
+  },
+  "formatCheck": "get_spreadsheet_cells confirmó wrapStrategy=WRAP en celdas de texto y conservó metadata/row heights; no se reestilizó la hoja."
+}

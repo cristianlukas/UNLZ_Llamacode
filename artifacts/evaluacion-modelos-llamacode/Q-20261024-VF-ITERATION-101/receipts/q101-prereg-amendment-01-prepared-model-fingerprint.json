@@ -1,0 +1,31 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-101",
+  "amendment": 1,
+  "capturedAtUtc": "2026-10-24T22:12:45Z",
+  "reason": "The first host preflight rejected model-00006 because it compared the prepared live shard with the pre-prepare Hugging Face fingerprint. The pinned HyperQwen prepare workflow intentionally rewrites lm_head, embed_tokens, and MTP weights in place and retains original .bak* files.",
+  "evidence": {
+    "pinnedSource": "Q85-HyperQwen/HyperQwen/docker/prepare.sh and prepare/README.md state that quant_lm_head.py, quant_embed.py, and quant_mtp.py rewrite the model on CPU and preserve originals as .bak*.",
+    "priorSourceHashes": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-85/receipts/base-model-hash-verification.json, captured before prepare.",
+    "postPrepareVerification": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-85/receipts/q85-dual-gpu-runtime-preflight.json records prepare success and verify: OK (0 failures).",
+    "observedBackupSizes": {
+      "model-00006-of-00007.safetensors.bak_embed": 2542807272,
+      "model-00007-of-00007.safetensors.bak": 2542796896
+    },
+    "noInferenceStarted": true,
+    "noModelFileModifiedByQ101": true
+  },
+  "validationMethodAmendment": {
+    "originalSourceFiles": "Require expected SHA-256 on the five untouched current source files and on preserved .bak* originals for the three transformed files.",
+    "preparedCheckpoint": "Read-only structural validation of config, index, safetensors headers and data bounds; require packed lm_head, embed_tokens, MTP and draft-head tensors; require no remaining prepare steps.",
+    "drafter": "Require the pinned DFlash2 SHA-256.",
+    "noPrepareOrRestore": true
+  },
+  "runtimeExperimentUnchanged": {
+    "onlyVariable": "write_file.max_tokens",
+    "old": 512,
+    "new": 1024,
+    "toolEvalEnabled": false,
+    "productionProfilesTouched": false
+  },
+  "status": "amendment preregistered; verification pending"
+}

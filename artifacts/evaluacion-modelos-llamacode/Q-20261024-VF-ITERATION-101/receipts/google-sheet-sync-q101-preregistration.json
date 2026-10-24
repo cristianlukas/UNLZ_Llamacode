@@ -1,0 +1,18 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-101",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "status": "pass",
+  "updatedAtUtc": "2026-10-24T22:09:00Z",
+  "updatedRanges": {
+    "Evaluaciones LlamaCode!A321:J321": "preregistration; previous Q100 row preserved",
+    "Accionables!A14:N14": "active HyperQwen action; previous rows preserved"
+  },
+  "readback": {
+    "evaluationRow321": "all 10 values exact; wrap formatting retained",
+    "actionablesRow14": "all 14 values exact; wrap/vertical top retained",
+    "dataValidations": 0,
+    "formulas": 0,
+    "chips": 0
+  },
+  "preregistrationBeforeGPU": true
+}

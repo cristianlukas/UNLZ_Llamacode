@@ -1,0 +1,29 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-101",
+  "validatedAtUtc": "2026-10-24T22:18:28Z",
+  "amendment": 1,
+  "status": "pass",
+  "pythonCompile": "pass for host preflight and both read-only fingerprint verifiers",
+  "rawAndPreparedCheckpointVerification": "pass; 9 pinned source files plus DFlash2 match, all three preserved originals match published SHA-256, prepared safetensors structure and required keys pass",
+  "preparedVerifierIsolation": {"pinnedImage": "pass", "network": "none", "rootFilesystem": "read-only", "modelMounts": "read-only", "gpuDevicePassed": false, "prepareRun": false},
+  "freshHostPreflight": {
+    "status": "pass",
+    "inferenceServers": 0,
+    "activeDockerContainers": 0,
+    "protectedPortsFree": [18142, 8363, 8364, 18789],
+    "gpus": [
+      {"index": 0, "name": "NVIDIA GeForce RTX 3090", "freeMiB": 23109, "temperatureC": 49},
+      {"index": 1, "name": "NVIDIA GeForce RTX 3090", "freeMiB": 24068, "temperatureC": 27}
+    ],
+    "artCraftPreservedMiB": 207,
+    "memAvailableGiB": 110.0,
+    "memoryPsiAvg10Pct": {"some": 0.0, "full": 0.0},
+    "ioPsiAvg10Pct": {"some": 0.0, "full": 0.0},
+    "globalOomKillBaseline": 0,
+    "storageFloorsPass": true,
+    "cgroupMemoryAndSwapCaps": "none planned; infinity/infinity/infinity must be read back after transient service launch",
+    "guiLeftOpen": true
+  },
+  "gpuInferenceStarted": false,
+  "next": "Start the single preregistered Q101 write_file token-cap canary on both RTX 3090s; no Tool-Eval or A/B in this task."
+}
