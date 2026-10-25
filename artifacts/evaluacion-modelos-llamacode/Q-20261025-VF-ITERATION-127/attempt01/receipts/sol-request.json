@@ -1,0 +1,9 @@
+{
+  "httpStatus": 200,
+  "promptTokens": 24319,
+  "completionTokens": 256,
+  "finishReason": "length",
+  "e2eSeconds": 14.953195850001066,
+  "responseId": "chatcmpl-802e71bb2ee45ac6",
+  "promptSha256": "632aaa00ad7976c7d1b0334d033c5c28d1dc3f319dbe5cdb8faf381ceab63536"
+}

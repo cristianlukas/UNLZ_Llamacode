@@ -1,0 +1,25 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-127",
+  "status": "PASS",
+  "attempt01ComposeDownReturnCode": 0,
+  "attempt01RunnerPortBindCheck": "false positive due to TIME_WAIT",
+  "inspectionAtUtc": "2026-10-25T05:11:06Z",
+  "inspection": {
+    "listeningSocketsOn18117": 0,
+    "timeWaitSocketsOn18117": 2,
+    "q127ContainerPresent": false,
+    "q127InferenceProcessPresent": false
+  },
+  "runnerPortCheckCorrection": {
+    "method": "ss -H -ltn sport = :PORT",
+    "runnerSha256": "33c83ccb34fd8e865de51ef9120a3b30814f6722e416375fbf5cacb5fa13d6cb",
+    "q121VerifyOnly": "PASS",
+    "cpuRegression": "PASS",
+    "controlledListenerDetected": true,
+    "q127PortListenerAbsent": true,
+    "q127ContainerAbsent": true,
+    "inferenceProcesses": []
+  },
+  "modelInferenceRerun": false,
+  "otherProcessesKilled": false
+}

@@ -1,0 +1,129 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-127",
+  "registeredAtUtc": "2026-10-25T05:12:54Z",
+  "question": "Capture actual host RAM, global PSI, cgroup and VRAM telemetry during one existing SOL TP=2 smoke, then compare behavior with ASTRA DEFAULT 1M's successful high-RSS trace.",
+  "scope": "One deterministic ~24K-token prompt-copy request; telemetry validation only. No A/B, throughput claim, synthetic memory pressure, production profile change, model deletion, app/server termination outside this unique Q127 container, or Codex crash attribution.",
+  "host": "dual RTX 3090, 128 GiB RAM",
+  "frozenProfile": {
+    "model": "Qwen3.8-27B Frozenlock AutoRound INT4/W4A8",
+    "engine": "vLLM v0.27.1",
+    "tensorParallel": 2,
+    "maxModelLen": 262144,
+    "gpuMemoryUtilization": 0.9,
+    "maxNumSeqs": 8,
+    "maxNumBatchedTokens": 8192,
+    "speculativeN": 4,
+    "w4a8": 1,
+    "thinking": true,
+    "sampling": {
+      "temperature": 0.6,
+      "topP": 0.95,
+      "topK": 20,
+      "minP": 0.0,
+      "presencePenalty": 0.0
+    },
+    "maxOutputTokens": 256
+  },
+  "isolation": {
+    "composeProject": "q127-sol-memory",
+    "container": "q127-sol-memory",
+    "bindAddress": "127.0.0.1",
+    "port": 18117,
+    "cgroupMemoryLimit": "96g",
+    "cgroupMemorySwapLimit": "97g"
+  },
+  "guard": {
+    "name": "AMD05 candidate; not production-integrated",
+    "runnerSha256": "33c83ccb34fd8e865de51ef9120a3b30814f6722e416375fbf5cacb5fa13d6cb",
+    "guardSha256": "b4d42302e7d405abd5c59df5aa86bb7de6ef3bb91aef487b49acbebd1d24270e",
+    "coreSha256": "832c6661692fa9c6e45d209be5c4201a1ad796bfe66bec92cf947151e6988b4b",
+    "psiHelperSha256": "d2c66a548c694edaad36f019ad4b499334a7f4d965f900e8d21279b06231b3db",
+    "rules": [
+      "Immediate stop if host MemAvailable <32 GiB or global oom_kill increases",
+      "Stop after 15 consecutive 1-second samples with (global PSI full avg10 >=60% OR some avg10 >=80%) AND MemAvailable <48 GiB",
+      "Do not stop based on RSS alone",
+      "Stop only the Q127 container on new cgroup OOM/OOM-kill, cgroup swap increase >4 MiB, telemetry failure, or foreign inference server detection"
+    ]
+  },
+  "preflightGates": [
+    "Q127 exclusive WORK_QUEUE.lock ownership",
+    "Q121 pinned runner/AMD05 verify-only pass",
+    "No active inference process/container and no pre-existing listener on 18117",
+    "Both physical GPU indexes 0 and 1 visible; each <80 C",
+    "MemAvailable >=80 GiB; SwapFree >=1 GiB",
+    "Docker root free >=8 GiB",
+    "Exact SHA-256 match for Q34 compose, override, and seven SOL model shards",
+    "Isolated compose config validates"
+  ],
+  "procedure": [
+    "python syntax validation of runner and pinned guard dependencies",
+    "Q121 verify-only with the pinned runner and AMD05 hashes",
+    "Run the runner once only if every gate passes",
+    "Make exactly one prompt-copy request; require HTTP 200 and 20,000-30,000 reported prompt tokens",
+    "Collect 1 Hz host MemAvailable/SwapFree/PSI/OOM, container cgroup RSS/current/peak/events/swap, and per-GPU VRAM/temperature",
+    "Stop only q127-sol-memory; verify its container is absent and `ss -H -ltn sport = :18117` reports no listener (TIME_WAIT does not count)."
+  ],
+  "decisionCriteria": {
+    "pass": "Q121 passes, the single request returns HTTP 200 with prompt token count in range, trace is nonempty, AMD05 does not abort, no new OOM/cgroup swap, and cleanup confirms the Q127 container is absent and TCP port 18117 has no listening socket. TIME_WAIT is not a listener.",
+    "blocked": "Any preflight gate fails; do not start model and do not retry in this iteration.",
+    "fail": "A started attempt misses its request/telemetry/cleanup criterion; preserve logs and do not retry.",
+    "interpretationLimit": "One SOL trace can validate the monitor and describe this workload; it cannot prove severe-pressure sensitivity, establish a model winner, justify production integration, or identify why Codex closed. A high RSS with healthy MemAvailable and no sustained global PSI must not be labeled harmful pressure."
+  },
+  "sourceEvidence": [
+    "Q118 ASTRA DEFAULT 1M actual trace: 1,001,463 tokens, max RSS 51.306 GiB, min MemAvailable 58.698 GiB, host PSI some peak 53.61%, no stop/OOM/swap; replay 12/12",
+    "Q34 SOL TP=2: 30/30 speed requests completed without OOM; no continuous PSI trace",
+    "Q126 AMD05 CPU boundary regression: 4/4 checks passed; candidate only, not integrated"
+  ],
+  "artifactPins": {
+    "composeSha256": "2df4e44e1e1b268da80690a0812ac1b60768d60b643096ce8473110f88b7b76a",
+    "composeOverrideSha256": "e547197d1b283e5c8b684d35e1b348bb91bbba3a327183a14b0d4a6083c36a50",
+    "isolationOverlaySha256": "3385938d959c1d23e7ce14376628c3797e76b4e05b341a0eb4d914aa1f3b346e",
+    "solShardSha256": [
+      "83c0adb0f1141142a25c5f7937a09272fef2baee7d6b07afe60a076feffe3b66",
+      "6c86c3917cd228d5699cb1435d9216e2baf281582ba4282a98638163605be7ec",
+      "bfb9613b3f6ba3d0c5b3efa74f92cc14ec5c9266b341a79bf6b45247a5857770",
+      "8e9fbd476aa3055c3c0a886298f9beb93c5275c748c533835746f6648f6dae55",
+      "f0cd639621eb26410d96b8c073344ae008f646572a9c4713326ff43d406cf276",
+      "55a14ee79d3e5a65a8731d89426f4df477e8bdc7daa7976d41254d8afb9432f0",
+      "6866cf8adcccc4cc6a00e74bc025f1a774fb52103b70f2674d0288272951a733"
+    ]
+  },
+  "amendments": [
+    {
+      "id": "A01",
+      "registeredAtUtc": "2026-10-25T05:05:06Z",
+      "reason": "Tighten isolation and fail-closed telemetry before the first model start.",
+      "changes": [
+        "Preflight refuses any existing Q127 compose-project container, including stopped containers, so this run cannot reuse or clean up a prior container.",
+        "Require cgroup memory.current, memory.peak, memory.swap.current and memory.events with oom/oom_kill counters.",
+        "Abort only the Q127 container if the first cgroup sample is already OOM/swapped, if required cgroup telemetry disappears, or if the previously monitored cgroup vanishes."
+      ],
+      "runnerSha256": "e5064ae1bc528cad0838fa78c22d728b10a8fe45f8ae7b7954f2cef90c66496c",
+      "guardSha256Unchanged": "b4d42302e7d405abd5c59df5aa86bb7de6ef3bb91aef487b49acbebd1d24270e"
+    },
+    {
+      "id": "A02",
+      "registeredAtUtc": "2026-10-25T05:11:44Z",
+      "reason": "Attempt01 completed the model request and compose down, but its bind-based port-free check treated two TIME_WAIT connections as a live listener. Read-only inspection found no LISTEN socket, no Q127 container, and no Q127/inference process.",
+      "changes": [
+        "Use `ss -H -ltn sport = :PORT` to test for a listening socket instead of bind(), which can fail while a closed connection remains in TIME_WAIT.",
+        "Run a CPU-only regression against the real Q127 TIME_WAIT state and a controlled loopback listener on a separate test port.",
+        "Do not rerun SOL inference; reconcile cleanup only after the listener regression, container absence, and process checks pass."
+      ],
+      "runnerSha256": "33c83ccb34fd8e865de51ef9120a3b30814f6722e416375fbf5cacb5fa13d6cb",
+      "modelInferenceRerun": false
+    },
+    {
+      "id": "A03",
+      "registeredAtUtc": "2026-10-25T05:12:54Z",
+      "reason": "The A02 regression harness loaded run_sol_trace.py with importlib but omitted the script directory from sys.path; the failure occurred before port checks, while Q121 had already shown the normal launcher can import the guard.",
+      "changes": [
+        "Correct only the CPU regression harness import path by adding the runner script directory to sys.path before module execution.",
+        "Repeat the already-preregistered port semantic check: real Q127 port accepts TIME_WAIT/no LISTEN; a controlled listener on a separate loopback port is rejected; after close the port is accepted.",
+        "No runner source, model request, inference server, or GPU change/retry."
+      ],
+      "runnerSha256Unchanged": "33c83ccb34fd8e865de51ef9120a3b30814f6722e416375fbf5cacb5fa13d6cb",
+      "modelInferenceRerun": false
+    }
+  ]
+}

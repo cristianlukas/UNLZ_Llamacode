@@ -1,0 +1,12 @@
+{
+  "id": "A02",
+  "registeredAtUtc": "2026-10-25T05:11:44Z",
+  "reason": "Attempt01 completed the model request and compose down, but its bind-based port-free check treated two TIME_WAIT connections as a live listener. Read-only inspection found no LISTEN socket, no Q127 container, and no Q127/inference process.",
+  "changes": [
+    "Use `ss -H -ltn sport = :PORT` to test for a listening socket instead of bind(), which can fail while a closed connection remains in TIME_WAIT.",
+    "Run a CPU-only regression against the real Q127 TIME_WAIT state and a controlled loopback listener on a separate test port.",
+    "Do not rerun SOL inference; reconcile cleanup only after the listener regression, container absence, and process checks pass."
+  ],
+  "runnerSha256": "33c83ccb34fd8e865de51ef9120a3b30814f6722e416375fbf5cacb5fa13d6cb",
+  "modelInferenceRerun": false
+}

@@ -1,0 +1,8 @@
+services:
+  vllm-qwen38-27b-dual-fast:
+    container_name: q127-sol-memory
+    restart: "no"
+    ports: !override
+      - "127.0.0.1:18117:8000"
+    mem_limit: 96g
+    memswap_limit: 97g

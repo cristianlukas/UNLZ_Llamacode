@@ -1,0 +1,14 @@
+{
+  "atUtc": "2026-10-25T05:14:58Z",
+  "path": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/actionables.json",
+  "backup": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/Q-20261025-VF-ITERATION-127/receipts/prechange-actionables.json",
+  "beforeSha256": "c4e8244c66683b20ec93e9e34dbed63eb3627e265e66231515a4465bbc9e3df9",
+  "afterSha256": "0003997b68c326d89e4583ba3dc17ba9f80a11d6cca8d7e1715fe473b3096bf1",
+  "updatedIds": [
+    "vf-q35-codex-crash-isolation-20261022",
+    "q119-memory-pressure-composite-streak"
+  ],
+  "recordsChanged": 2,
+  "totalRecords": 29,
+  "preservedAllOtherRecords": true
+}

@@ -1,0 +1,11 @@
+{
+  "atUtc": "2026-10-25T05:12:54Z",
+  "attempt": "A02 regression harness try01",
+  "status": "BLOCKED_BEFORE_PORT_CHECK",
+  "errorType": "ModuleNotFoundError",
+  "error": "The ad hoc importlib loader did not add the runner scripts directory to sys.path, so q117_pressure_guard_attempt05 was not importable in the test harness.",
+  "runnerChanged": false,
+  "inferenceRerun": false,
+  "gpuUsed": false,
+  "interpretation": "Harness setup defect, not a Q127 runner launch failure; Q121 verify-only passed for the same runner hash."
+}

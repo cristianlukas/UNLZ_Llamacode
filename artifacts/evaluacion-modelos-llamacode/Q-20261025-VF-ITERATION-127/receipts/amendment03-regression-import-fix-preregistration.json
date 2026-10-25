@@ -1,0 +1,12 @@
+{
+  "id": "A03",
+  "registeredAtUtc": "2026-10-25T05:12:54Z",
+  "reason": "The A02 regression harness loaded run_sol_trace.py with importlib but omitted the script directory from sys.path; the failure occurred before port checks, while Q121 had already shown the normal launcher can import the guard.",
+  "changes": [
+    "Correct only the CPU regression harness import path by adding the runner script directory to sys.path before module execution.",
+    "Repeat the already-preregistered port semantic check: real Q127 port accepts TIME_WAIT/no LISTEN; a controlled listener on a separate loopback port is rejected; after close the port is accepted.",
+    "No runner source, model request, inference server, or GPU change/retry."
+  ],
+  "runnerSha256Unchanged": "33c83ccb34fd8e865de51ef9120a3b30814f6722e416375fbf5cacb5fa13d6cb",
+  "modelInferenceRerun": false
+}

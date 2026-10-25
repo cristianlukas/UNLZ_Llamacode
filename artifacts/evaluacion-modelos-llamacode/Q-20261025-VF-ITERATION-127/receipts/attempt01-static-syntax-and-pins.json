@@ -1,0 +1,19 @@
+{
+  "status": "PASS",
+  "lockVerified": true,
+  "compiledFiles": [
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-127/scripts/run_sol_trace.py",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-127/scripts/q117_pressure_guard_attempt05.py",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-127/guard_sources/q108_guard_core.py",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-127/guard_sources/q116_composite_psi.py"
+  ],
+  "sha256": {
+    "run_sol_trace.py": "e5064ae1bc528cad0838fa78c22d728b10a8fe45f8ae7b7954f2cef90c66496c",
+    "q117_pressure_guard_attempt05.py": "b4d42302e7d405abd5c59df5aa86bb7de6ef3bb91aef487b49acbebd1d24270e",
+    "q108_guard_core.py": "832c6661692fa9c6e45d209be5c4201a1ad796bfe66bec92cf947151e6988b4b",
+    "q116_composite_psi.py": "d2c66a548c694edaad36f019ad4b499334a7f4d965f900e8d21279b06231b3db"
+  },
+  "isolationOverlaySha256": "3385938d959c1d23e7ce14376628c3797e76b4e05b341a0eb4d914aa1f3b346e",
+  "gpuOrInferenceStarted": false,
+  "atUtc": "2026-10-25T05:06:07Z"
+}

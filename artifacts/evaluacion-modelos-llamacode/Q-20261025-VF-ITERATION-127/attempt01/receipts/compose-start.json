@@ -1,0 +1,7 @@
+{
+  "returncode": 0,
+  "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderrSha256": "9745e6f6691c971d57a667b20af108b751aff1b5fadd8856c6c0086048025883",
+  "project": "q127-sol-memory",
+  "container": "q127-sol-memory"
+}

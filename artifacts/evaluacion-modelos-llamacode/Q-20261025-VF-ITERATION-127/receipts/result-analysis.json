@@ -1,0 +1,45 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-127",
+  "status": "PASS_WITH_CLEANUP_RECONCILIATION",
+  "atUtc": "2026-10-25T05:14:23Z",
+  "modelRequest": {
+    "httpStatus": 200,
+    "promptTokens": 24319,
+    "completionTokens": 256,
+    "finishReason": "length",
+    "e2eSeconds": 14.953195850001066,
+    "responseId": "chatcmpl-802e71bb2ee45ac6",
+    "promptSha256": "632aaa00ad7976c7d1b0334d033c5c28d1dc3f319dbe5cdb8faf381ceab63536"
+  },
+  "sampleCount": 157,
+  "minMemAvailableGiB": 99.97299194335938,
+  "maxSwapFreeGiB": 4.372650146484375,
+  "maxHostPsiAvg10Pct": {
+    "some": 0.9,
+    "full": 0.9
+  },
+  "maxProcessTreeRssGiB": 12.421401977539062,
+  "maxCgroupMemoryGiB": 15.577442169189453,
+  "maxCgroupSwapMiB": 0.0,
+  "maxGpuMemoryUsedMiBByIndex": {
+    "0": 24080,
+    "1": 23972
+  },
+  "maxGpuTemperatureC": 63,
+  "warningSamples": 0,
+  "amd05AbortSamples": 0,
+  "oomKillDelta": 0,
+  "composeDownReturnCode": 0,
+  "cleanup": {
+    "q127ContainerAbsent": true,
+    "listeningSocketsOn18117": "",
+    "q127InferenceProcesses": [],
+    "listenerRegression": "PASS",
+    "timeWaitWasObservedImmediatelyAfterAttempt01": true
+  },
+  "initialRunnerSummary": "FAILED only because bind-based check classified TIME_WAIT as occupied; see attempt01 final-summary and cleanup-reconciliation receipt.",
+  "modelInferenceRerun": false,
+  "productionProfilesChanged": false,
+  "otherProcessesKilled": false,
+  "interpretation": "The monitored SOL workload had high GPU VRAM use but abundant host MemAvailable, low global PSI, zero cgroup swap/OOM, and no AMD05 abort. This supports treating RSS/VRAM usage separately from host memory pressure; it does not test the severe-plus-low-headroom stop condition."
+}

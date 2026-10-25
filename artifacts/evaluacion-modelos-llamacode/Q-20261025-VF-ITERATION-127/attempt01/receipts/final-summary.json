@@ -1,0 +1,29 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-127",
+  "status": "FAILED",
+  "error": {
+    "type": "CleanupError",
+    "message": "Q127 loopback port remained occupied"
+  },
+  "monitor": {
+    "sampleCount": 157,
+    "minMemAvailableGiB": 99.97299194335938,
+    "maxHostPsiSomeAvg10Pct": 0.9,
+    "maxHostPsiFullAvg10Pct": 0.9,
+    "maxProcessTreeRssGiB": 12.421401977539062,
+    "maxCgroupMemoryGiB": 15.577442169189453,
+    "maxCgroupSwapMiB": 0.0,
+    "maxGpuMemoryUsedMiBByIndex": {
+      "0": 24080,
+      "1": 23972
+    },
+    "maxGpuTemperatureC": 63,
+    "oomKillStart": 0,
+    "oomKillEnd": 0,
+    "warnings": 0,
+    "abortReason": null
+  },
+  "atUtc": "2026-10-25T05:10:51Z",
+  "noProductionProfileChanged": true,
+  "otherGpuProcessesKilled": false
+}

@@ -1,0 +1,11 @@
+{
+  "atUtc": "2026-10-25T05:06:07Z",
+  "status": "PASS",
+  "verifyOnly": true,
+  "runnerSha256": "e5064ae1bc528cad0838fa78c22d728b10a8fe45f8ae7b7954f2cef90c66496c",
+  "guardSha256": "b4d42302e7d405abd5c59df5aa86bb7de6ef3bb91aef487b49acbebd1d24270e",
+  "guardModule": "q117_pressure_guard_attempt05",
+  "preimportedFromPinnedPath": true,
+  "monitorStartsBeforeServer": true,
+  "gpuOrInferenceStarted": false
+}

@@ -1,0 +1,17 @@
+{
+  "atUtc": "2026-10-25T05:13:27Z",
+  "status": "PASS",
+  "lockVerified": true,
+  "inferenceRerun": false,
+  "gpuUsed": false,
+  "q127Port": 18117,
+  "q127ListenSocketAbsent": true,
+  "q127TimeWaitStillPresentAtRegression": false,
+  "timeWaitObservationAtRegression": [],
+  "controlledListenerTestPort": 35319,
+  "controlledListenerDetected": true,
+  "portAcceptedAfterControlledListenerClosed": true,
+  "q127ContainerAbsent": true,
+  "inferenceProcesses": [],
+  "semantics": "Only LISTEN sockets block Q127 port readiness; TIME_WAIT is not a server."
+}

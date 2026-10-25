@@ -1,0 +1,44 @@
+{
+  "atUtc": "2026-10-25T05:08:03Z",
+  "host": {
+    "MemTotal": 132615852032,
+    "MemAvailable": 118144348160,
+    "SwapFree": 4694204416
+  },
+  "psi": {
+    "some": 0.0,
+    "full": 0.0
+  },
+  "gpus": [
+    {
+      "index": 0,
+      "temperatureC": 45,
+      "memoryUsedMiB": 957,
+      "memoryTotalMiB": 24576,
+      "utilizationPct": 20
+    },
+    {
+      "index": 1,
+      "temperatureC": 26,
+      "memoryUsedMiB": 110,
+      "memoryTotalMiB": 24576,
+      "utilizationPct": 20
+    }
+  ],
+  "activeInferenceProcesses": [],
+  "activeInferenceContainers": [],
+  "dockerFreeBytes": 10451505152,
+  "solModelShardHashes": {
+    "model-00001-of-00007.safetensors": "83c0adb0f1141142a25c5f7937a09272fef2baee7d6b07afe60a076feffe3b66",
+    "model-00002-of-00007.safetensors": "6c86c3917cd228d5699cb1435d9216e2baf281582ba4282a98638163605be7ec",
+    "model-00003-of-00007.safetensors": "bfb9613b3f6ba3d0c5b3efa74f92cc14ec5c9266b341a79bf6b45247a5857770",
+    "model-00004-of-00007.safetensors": "8e9fbd476aa3055c3c0a886298f9beb93c5275c748c533835746f6648f6dae55",
+    "model-00005-of-00007.safetensors": "f0cd639621eb26410d96b8c073344ae008f646572a9c4713326ff43d406cf276",
+    "model-00006-of-00007.safetensors": "55a14ee79d3e5a65a8731d89426f4df477e8bdc7daa7976d41254d8afb9432f0",
+    "model-00007-of-00007.safetensors": "6866cf8adcccc4cc6a00e74bc025f1a774fb52103b70f2674d0288272951a733"
+  },
+  "composeBaseSha256": "2df4e44e1e1b268da80690a0812ac1b60768d60b643096ce8473110f88b7b76a",
+  "composeOverrideSha256": "e547197d1b283e5c8b684d35e1b348bb91bbba3a327183a14b0d4a6083c36a50",
+  "isolationOverlaySha256": "3385938d959c1d23e7ce14376628c3797e76b4e05b341a0eb4d914aa1f3b346e",
+  "gatePassed": true
+}
