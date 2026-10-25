@@ -1,0 +1,108 @@
+{
+  "checked_at_utc": "2026-10-25T01:12:16Z",
+  "external_inference_servers": [],
+  "port": 8350,
+  "process_cgroup": "/background.slice/llamacode-q117-context-1048576-seed-2026103-a03.service",
+  "cgroup_memory": {
+    "process_cgroup": "/background.slice/llamacode-q117-context-1048576-seed-2026103-a03.service",
+    "run": {
+      "path": "/sys/fs/cgroup/background.slice/llamacode-q117-context-1048576-seed-2026103-a03.service",
+      "memory_current_bytes": 15728640,
+      "memory_swap_current_bytes": 0,
+      "memory_max_bytes": 100306071552,
+      "memory_high_bytes": 91716136960,
+      "memory_swap_max_bytes": 4294967296,
+      "memory_oom_group": 1,
+      "memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      },
+      "psi": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        }
+      }
+    },
+    "user_manager": {
+      "path": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service",
+      "memory_current_bytes": 103405092864,
+      "memory_swap_current_bytes": 2217009152,
+      "memory_max_bytes": "max",
+      "memory_high_bytes": "max",
+      "memory_swap_max_bytes": "max",
+      "memory_oom_group": 0,
+      "memory_events": {
+        "low": 0,
+        "high": 538,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 862
+      },
+      "psi": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        }
+      }
+    }
+  },
+  "effective_worker_limits": {
+    "memory_high_bytes": 91716136960,
+    "memory_max_bytes": 100306071552,
+    "memory_swap_max_bytes": 4294967296,
+    "oom_group": 1,
+    "oom_score_adjust": 900
+  },
+  "mem_available_gib": 109.406,
+  "swap_free_gib": 5.475,
+  "psi": {
+    "some": {
+      "avg10": 0.0,
+      "avg60": 0.0,
+      "avg300": 1.04
+    },
+    "full": {
+      "avg10": 0.0,
+      "avg60": 0.0,
+      "avg300": 1.04
+    }
+  },
+  "results_free_gib": 35.758,
+  "gpus": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 1008,
+      "memory_total_mib": 24576,
+      "utilization_percent": 21
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 110,
+      "memory_total_mib": 24576,
+      "utilization_percent": 38
+    }
+  ],
+  "decision": "pass"
+}

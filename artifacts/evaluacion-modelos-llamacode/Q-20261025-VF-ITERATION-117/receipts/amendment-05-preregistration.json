@@ -1,0 +1,72 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-117",
+  "amendment": "AMD05",
+  "registeredAtUtc": "2026-10-25T01:26:44Z",
+  "authorization": "User explicitly asked to review the memory pressure detector against successful ASTRA DEFAULT 1M and SOL dual-3090 history and continue tests.",
+  "question": "Can the Q117-only candidate guard complete the same ASTRA DEFAULT 1,048,576-token holdout on both RTX 3090s +128 GiB without treating high RSS or global PSI alone as a memory failure?",
+  "amd04Finding": {
+    "classification": "candidate guard false positive during model loading; no inference request was sent",
+    "memAvailableMinimumGiB": 77.06543731689453,
+    "peakProcessTreeRssGiB": 33.85079574584961,
+    "peakGlobalPsiAvg10Pct": 63.11,
+    "globalOomKillDelta": 0,
+    "workerSwapDeltaBytes": 0,
+    "workerManagedOOMMemoryPressure": "auto",
+    "gpuDeltasMiB": {
+      "RTX3090-0": 5847,
+      "RTX3090-1": 4682
+    },
+    "monitorSamples": 309,
+    "rawReceiptSha256": "b5b0d75d6fd34054c4c0591226c2f64e83f63ad266d24cd3ce8c0acf48c43790",
+    "monitorJsonlSha256": "08d56d1a6e25e2147cf58c9b369288c49b816757d74172f9750f51d1c1958332"
+  },
+  "historicalControls": {
+    "astraDefault1MMinMemAvailableGiB": 55.64,
+    "astraDefault1MRssGiB": 51.14,
+    "astraFlashNext1MMinMemAvailableGiB": 64.98,
+    "solQ34": "dual RTX 3090 TP=2 completed without OOM; no continuous PSI series; do not rerun"
+  },
+  "plannedCandidateRule": {
+    "severeGlobalPsi": "full avg10 >=60% OR some avg10 >=80%",
+    "pressureHardStop": "only when severe global PSI and MemAvailable <48 GiB coincide for 15 consecutive samples",
+    "thresholdRationale": "48 GiB is 7.64 GiB below the historical ASTRA DEFAULT 1M minimum successful MemAvailable (55.64 GiB); it preserves headroom before the existing immediate <32 GiB stop while allowing high-PSI loading when substantial host memory remains.",
+    "unchangedImmediateStops": [
+      "MemAvailable <32 GiB",
+      "global oom_kill counter increase",
+      "required telemetry missing/invalid",
+      "worker cgroup OOM counter increase",
+      "worker cgroup swap growth >4 MiB"
+    ],
+    "diagnosticOnly": [
+      "worker cgroup PSI",
+      "RSS by itself"
+    ],
+    "warning": "global PSI moderate warning cadence unchanged (sample 30); warnings do not abort"
+  },
+  "scope": {
+    "oneLiveAttempt": "AMD05 only; one identical ASTRA DEFAULT 1M recovery request, both RTX 3090s +128 GiB, same Q35 fixture/model/config/seed, no quality or adoption claim",
+    "systemd": "transient system-manager worker uses ManagedOOMMemoryPressure=auto, verifies effective property before server launch; retains MemoryHigh/Max/SwapMax and OOMPolicy=kill",
+    "logging": "append+flush per-sample JSONL; capture cgroup/global OOM, available RAM, PSI, RSS and per-GPU memory",
+    "stopAfter": "If AMD05 fails preflight/CPU gate, do not start model. If the one live request aborts before response, register result and stop; no further live retry without fresh preregistration and user authorization.",
+    "noChanges": "Do not modify production guard, ASTRA/SOL configs, persistent systemd policies, RAM/swap, or either GPU setup."
+  },
+  "baselineSha256": {
+    "q117PressureGuardBeforeAMD05": "189f51268b140d424549baf9408d37c8956cd457107fac5e249eab314b015898",
+    "amd04Runner": "9caa83c41071056eda3b2f680146ad68c56374a535ddab7cb20baa278a27abec",
+    "amd04Supervisor": "58764596ff2a47d01d8a8ecaa6ea1f323e53f9961ec2900ca49b7982e813c3d4",
+    "amd04Isolation": "2bec9ccec0f08656981bbf32f63a809a84ba11018f330faeee5502a2daac7165",
+    "amd04Config": "3eaafc161175bbb5ea56bbc464d24afda6fea55a8d7e45e3e76a2b4e6ed41b5c"
+  },
+  "predeclaredCPUChecks": [
+    "severe PSI with 77 GiB available continues for 30 samples",
+    "severe PSI with 55.64 GiB available continues for 30 samples",
+    "severe PSI with 47.99 GiB available stops exactly on sample 15",
+    "a severe high-memory streak does not carry into later low-memory samples",
+    "MemAvailable below 32 GiB stops immediately",
+    "global OOM increase, invalid telemetry, worker cgroup OOM and >4 MiB cgroup swap still stop",
+    "moderate warning remains advisory at its existing cadence",
+    "worker cgroup PSI remains diagnostic only",
+    "effective transient oomd policy must read back as auto before server startup"
+  ],
+  "liveGate": "Run CPU regression, syntax/compile and independent asset/config hashes; then fresh preflight requires >=80 GiB MemAvailable, low PSI/OOM, no external inference server, both 3090s available, free port and output volume; verify worker policy before Strata starts."
+}

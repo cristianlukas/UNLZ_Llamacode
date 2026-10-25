@@ -1,0 +1,104 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-117",
+  "status": "pass",
+  "checksPassed": 13,
+  "checksTotal": 13,
+  "modelOrServerStarted": false,
+  "gpuUsed": false,
+  "networkUsed": false,
+  "artificialMemoryGiB": 0,
+  "productionChanged": false,
+  "cases": [
+    {
+      "name": "ASTRA 1M historical RSS 51.14 GiB / MemAvailable 55.64 GiB continues; PSI moderate warns at 30",
+      "expectedStop": null,
+      "expectedWarnings": [
+        30
+      ],
+      "stopSample": null,
+      "stopReason": null,
+      "warningSamples": [
+        30
+      ],
+      "passed": true
+    },
+    {
+      "name": "stable global full=60% stops at sample 15",
+      "expectedStop": 15,
+      "expectedWarnings": [],
+      "stopSample": 15,
+      "stopReason": "global memory PSI full avg10 >=60% OR some avg10 >=80% for 15 consecutive samples",
+      "warningSamples": [],
+      "passed": true
+    },
+    {
+      "name": "stable global some=80% stops at sample 15",
+      "expectedStop": 15,
+      "expectedWarnings": [],
+      "stopSample": 15,
+      "stopReason": "global memory PSI full avg10 >=60% OR some avg10 >=80% for 15 consecutive samples",
+      "warningSamples": [],
+      "passed": true
+    },
+    {
+      "name": "composite severe OR alternation stops at sample 15",
+      "expectedStop": 15,
+      "expectedWarnings": [],
+      "stopSample": 15,
+      "stopReason": "global memory PSI full avg10 >=60% OR some avg10 >=80% for 15 consecutive samples",
+      "warningSamples": [],
+      "passed": true
+    },
+    {
+      "name": "normal sample resets composite severe streak",
+      "expectedStop": 30,
+      "expectedWarnings": [],
+      "stopSample": 30,
+      "stopReason": "global memory PSI full avg10 >=60% OR some avg10 >=80% for 15 consecutive samples",
+      "warningSamples": [],
+      "passed": true
+    },
+    {
+      "name": "MemAvailable below 32 GiB stops immediately",
+      "expectedStop": 1,
+      "expectedWarnings": [],
+      "stopSample": 1,
+      "stopReason": "MemAvailable <32 GiB",
+      "warningSamples": [],
+      "passed": true
+    },
+    {
+      "name": "new global oom_kill stops immediately",
+      "expectedStop": 1,
+      "expectedWarnings": [],
+      "stopSample": 1,
+      "stopReason": "global oom_kill counter increased",
+      "warningSamples": [],
+      "passed": true
+    },
+    {
+      "name": "missing PSI telemetry fails closed",
+      "passed": true
+    },
+    {
+      "name": "Monitor worker-cgroup decision path: cgroup-only PSI 81.53% is diagnostic, not a stop",
+      "passed": true
+    },
+    {
+      "name": "worker cgroup OOM increase remains a hard stop",
+      "passed": true
+    },
+    {
+      "name": "worker cgroup swap increase >4 MiB remains a hard stop",
+      "passed": true
+    },
+    {
+      "name": "missing worker cgroup telemetry fails closed",
+      "passed": true
+    },
+    {
+      "name": "Monitor.sample uses the tested cgroup decision helper with no stale run_psi_stop reference",
+      "passed": true
+    }
+  ]
+}

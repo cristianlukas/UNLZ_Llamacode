@@ -1,0 +1,7 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-117",
+  "lockToken": "6db3418d-c2cb-400b-a11a-8a328e01a11f",
+  "status": "preflight_or_supervisor_failure",
+  "error": "RuntimeError: worker returned 1 without a result receipt",
+  "completedAtUtc": "2026-10-25T01:13:05.310731+00:00"
+}

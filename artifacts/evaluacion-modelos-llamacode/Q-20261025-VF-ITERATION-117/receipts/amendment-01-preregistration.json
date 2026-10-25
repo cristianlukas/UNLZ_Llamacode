@@ -1,0 +1,35 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-117",
+  "amendmentId": "Q117-AMD-01",
+  "lockToken": "6db3418d-c2cb-400b-a11a-8a328e01a11f",
+  "registeredAtUtc": "2026-10-25T01:02:55.265504+00:00",
+  "status": "preregistered_before_cpu_retry",
+  "trigger": "Q117 CPU attempt01 failed 1 assertion: Q108 immediate warning boolean was ORed with Q116 cadence warning, causing moderate PSI to warn immediately instead of at sample30.",
+  "attempt01": {
+    "checksPassed": 7,
+    "checksTotal": 8,
+    "modelOrServerStarted": false,
+    "gpuUsed": false,
+    "networkUsed": false,
+    "artificialMemoryGiB": 0,
+    "evidence": "receipts/q117-cpu-guard-attempt01.json"
+  },
+  "change": "Only q117_pressure_guard.evaluate now uses the Q116 candidate cadence warning; Q108 still validates telemetry and supplies immediate MemAvailable/OOM stops. No threshold, workload, model config, or stop condition changed.",
+  "changedSourceSha256": {
+    "scripts/q117_pressure_guard.py": "296a0fc5887dd9ab0b66fb766dcb0b88a245ee765cc093572bd04ccd7f1300b3",
+    "PLAN.md": "f38c5791be12aa377259a730e8d90537d3eea3d5bc50b1454745b92a75715b29"
+  },
+  "allRegisteredSourcesSha256": {
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/PLAN.md": "f38c5791be12aa377259a730e8d90537d3eea3d5bc50b1454745b92a75715b29",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/scripts/q117_pressure_guard.py": "296a0fc5887dd9ab0b66fb766dcb0b88a245ee765cc093572bd04ccd7f1300b3",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/scripts/test_q117_pressure_guard.py": "b759e05bb20ca5161cbd426c9392be9f54017667ae17c0dcbf1a6d933d435a69",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/scripts/run_context_holdout.py": "277d369156209f95aa836124e4a8afa00e0ddabf9d0502935c24e7975e7ff4d1",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/scripts/resource_isolation.py": "4be05930cb5ba3f643777c4d6d2ea78b01d91382edae79d5e78fe123e123ffbf",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/scripts/q117_supervisor.py": "e5647b4368c194b7a3ee77eb6f5ca303146f1be34121e309b602ea43df5a260f",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/scripts/start_q117_supervisor.sh": "c1875454b9bf974385684499942e4a72ae8eefa3c15aeafeb6d2d3ab6174eecc",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/guard_sources/q108_guard_core.py": "832c6661692fa9c6e45d209be5c4201a1ad796bfe66bec92cf947151e6988b4b",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/guard_sources/q116_composite_psi.py": "d2c66a548c694edaad36f019ad4b499334a7f4d965f900e8d21279b06231b3db",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/configs/astra-default-1m-seed-2026103.json": "f45aaccb3498c818430f05889e9d38fa3efb2ec7246d8b095835e3a89e12da2e"
+  },
+  "retryGate": "Re-run identical eight CPU checks once; only proceed to model preflight if 8/8 PASS and source hashes/lock remain exact."
+}

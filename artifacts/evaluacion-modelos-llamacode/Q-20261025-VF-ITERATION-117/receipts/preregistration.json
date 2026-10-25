@@ -1,0 +1,99 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-117",
+  "experimentId": "Q117-A1-ASTRA-DEFAULT-1M-GUARD",
+  "lockToken": "6db3418d-c2cb-400b-a11a-8a328e01a11f",
+  "registeredAtUtc": "2026-10-25T01:01:39.113507+00:00",
+  "status": "preregistered_before_cpu_or_model_tests",
+  "question": "Does the fail-closed candidate guard allow the historical ASTRA DEFAULT 1M high-RSS success while stopping only on sustained host/worker pressure, OOM, low MemAvailable, or invalid required telemetry?",
+  "candidate": {
+    "model": "ASTRA DEFAULT Qwen3.8 Flash-Next GSQ-RCO IQ2_XS",
+    "runtime": "Strata 0.1.41",
+    "contextTokens": 1048576,
+    "gpuIndices": [
+      0,
+      1
+    ],
+    "hostRamGiB": 128,
+    "configPath": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/configs/astra-default-1m-seed-2026103.json",
+    "configSha256": "f45aaccb3498c818430f05889e9d38fa3efb2ec7246d8b095835e3a89e12da2e",
+    "sourceFixture": "Q35 fixtures/1048576/2026103",
+    "fixtureSha256": {
+      "probe-prompt.txt": "2e093788765472cc73235f769f87f498dc8ea29ab055d6bbb3b27bb8c05b085d",
+      "probe-expected.json": "368175353544f4ee49267e4a7c4145268674d4d864ce0cf910aa952d18c59a9e",
+      "probe-metadata.json": "e688ae9f3b36f1fe31189e978d6d1d4d874b0a33879b1d00285795492feab255"
+    },
+    "modelAssetIdentitySource": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-97/receipts/q97-fingerprint-prelaunch.json",
+    "modelAssetSha256PreviouslyVerified": {
+      "swift": "714c509c3fc496ea4abc409097658df7cd218bc966f78e1459fc1649758a9de8",
+      "astra-shard-1": "92cee27ae5bbadcd732416a0f7a7f0acc092399dbbe8f5a5efa707c2ec0a49d7",
+      "astra-shard-2": "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113",
+      "astra-pack": "d2af3d8331e5c7a1985d1d589747230f9d56719a6d33c7cddc9ee6b81cde6b13",
+      "astra-expert-profile": "8f59b4aa8873209dff11c11e37bcda9529a1335b724a1afeea37bf6388975baf",
+      "mtp-dense": "c724dc0b0822ada5d2977bf5bde821605feabaa64ea2e0045b67ca656329070a",
+      "mtp-dense-txt": "991456cf4eb266eb8a888c349e548d11bc640f5dbd9149439aa9786af0f732fd",
+      "mtp-draft-vocab": "b1e1d3a7a9e4bf862dcd5923ce661fb59bbd07907e594df5cf86a62ac235cb91",
+      "mtp-experts": "09398406be61f1f54c93861f449e48b8df0bfccbc9ec9b2b7636775a6ea9244f"
+    }
+  },
+  "guard": {
+    "strictTelemetrySource": "Q108 candidate core, copied byte-for-byte",
+    "compositeSevereSource": "Q116 candidate helper, copied byte-for-byte",
+    "samples": "1 second",
+    "warn": "global PSI full>=20% OR some>=70% for 30 consecutive samples; warning only",
+    "stop": [
+      "MemAvailable <32 GiB",
+      "global oom_kill increase",
+      "missing/invalid MemAvailable, PSI some/full, or oom_kill telemetry",
+      "global PSI full>=60% OR some>=80% for 15 consecutive samples",
+      "worker cgroup PSI full>=60% OR some>=80% for 15 consecutive samples",
+      "worker cgroup oom/oom_kill increase",
+      "worker cgroup swap-current delta >4 MiB"
+    ],
+    "rss": "record only; no cutoff for RSS alone"
+  },
+  "runs": {
+    "cpuRegressionChecks": 8,
+    "liveInferenceRequests": 1,
+    "requestPurpose": "guard validation only; do not interpret quality score for model adoption",
+    "serialization": "one isolated request; no other inference process",
+    "isolation": "system-manager background.slice supervisor and worker; worker cgroup MemoryHigh/Max calculated from fresh host availability retaining 16 GiB, MemorySwapMax<=4 GiB; OOMPolicy=kill; KillMode=control-group"
+  },
+  "preflightRequirements": [
+    "no external inference server/listener on 8350",
+    "MemAvailable>=80 GiB",
+    "SwapFree>=1 GiB",
+    "PSI below severe gate",
+    ">=23000 MiB free on each RTX 3090",
+    ">=5 GiB free on results volume",
+    "pinned runtime/model assets unchanged by size/device/inode/mtimeNs from Q97 SHA-verified fingerprint",
+    "worker system cgroup outside user@1000.service; effective limits verified",
+    "lock token valid"
+  ],
+  "decisionGate": "Pass only if the 1M request completes without guard abort, required telemetry remains valid, minimum MemAvailable >=32 GiB, global/cgroup OOM and worker swap do not increase, and both GPUs show worker memory delta. Otherwise preserve failure/abort as infrastructure evidence and do not retry without diagnosing the cause.",
+  "scopeExclusions": [
+    "No SOL benchmark rerun: Q34 is retained as dual-3090 no-OOM historical control; no continuous PSI exists there and repeating it does not answer this host-RAM guard question.",
+    "No model/profile/context/driver/swap/systemd persistent setting or production integration changes.",
+    "Do not stop ArtCraft/GUI; guard may terminate only its own worker process group."
+  ],
+  "sourceSha256": {
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/scripts/q117_pressure_guard.py": "505fc01afb6ac8a74e672bb2e86bead197cfa985f5e2c28de4c0ee4c555d79a1",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/scripts/test_q117_pressure_guard.py": "b759e05bb20ca5161cbd426c9392be9f54017667ae17c0dcbf1a6d933d435a69",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/scripts/run_context_holdout.py": "277d369156209f95aa836124e4a8afa00e0ddabf9d0502935c24e7975e7ff4d1",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/scripts/resource_isolation.py": "4be05930cb5ba3f643777c4d6d2ea78b01d91382edae79d5e78fe123e123ffbf",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/scripts/q117_supervisor.py": "e5647b4368c194b7a3ee77eb6f5ca303146f1be34121e309b602ea43df5a260f",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/scripts/start_q117_supervisor.sh": "c1875454b9bf974385684499942e4a72ae8eefa3c15aeafeb6d2d3ab6174eecc",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/guard_sources/q108_guard_core.py": "832c6661692fa9c6e45d209be5c4201a1ad796bfe66bec92cf947151e6988b4b",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/guard_sources/q116_composite_psi.py": "d2c66a548c694edaad36f019ad4b499334a7f4d965f900e8d21279b06231b3db",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/configs/astra-default-1m-seed-2026103.json": "f45aaccb3498c818430f05889e9d38fa3efb2ec7246d8b095835e3a89e12da2e",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/PLAN.md": "b636f14f59bd7f3e22b5b58f26f9b074e72e0306cdafcc8802512c02a82ee5a3"
+  },
+  "historicalEvidence": {
+    "Q14_Q97_ASTRA_DEFAULT_1M_RSS_GiB": 51.14,
+    "Q14_Q97_ASTRA_DEFAULT_1M_minMemAvailable_GiB": 55.64,
+    "Q35_Q37_ASTRA_FLASHNEXT_1M_minMemAvailable_GiB": [
+      64.98,
+      65.06
+    ],
+    "Q34_SOL_dual3090_noOOM": true
+  }
+}

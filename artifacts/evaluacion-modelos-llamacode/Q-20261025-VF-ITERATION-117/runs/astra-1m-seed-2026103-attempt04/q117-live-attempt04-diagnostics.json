@@ -1,0 +1,26 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-117",
+  "amendment": "AMD04 result",
+  "completedAtUtc": "2026-10-25T01:24:33Z",
+  "classification": "candidate guard false positive during load; no inference request sent",
+  "requestSent": false,
+  "modelLoaded": false,
+  "workerReturnCode": -15,
+  "memAvailableMinimumGiB": 77.06543731689453,
+  "peakProcessTreeRssGiB": 33.85079574584961,
+  "maxGlobalPsiAvg10Pct": 63.11,
+  "globalOomKillDelta": 0,
+  "workerCgroupOomDelta": 0,
+  "workerCgroupSwapDeltaBytes": 0,
+  "systemdOomdPolicy": "auto",
+  "systemdOomdKillObserved": false,
+  "gpuDeltaMiB": {
+    "0": 5847,
+    "1": 4682
+  },
+  "samples": 309,
+  "guardAbortReason": "global memory PSI full avg10 >=60% OR some avg10 >=80% for 15 consecutive samples",
+  "interpretation": "The severe-PSI-only hard stop triggered while the host still had substantial available RAM; this does not establish ASTRA capacity failure and does not invalidate prior ASTRA 1M or SOL results.",
+  "receipt": "runs/astra-1m-seed-2026103-attempt04/receipt.json",
+  "monitor": "runs/astra-1m-seed-2026103-attempt04/memory-monitor.jsonl"
+}

@@ -1,0 +1,93 @@
+{
+  "task": "Q-20261025-VF-ITERATION-117",
+  "suite": "Q117 guarded one-request ASTRA 1M memory-monitor validation; quality not used for adoption",
+  "profile": "ASTRA DEFAULT / ISTA IQ2_XS / Strata",
+  "context_limit": 1048576,
+  "classification": "invalid infrastructure",
+  "quality_score": null,
+  "strict_output_valid": null,
+  "duplicate_json_keys": [],
+  "unexpected_output_keys": null,
+  "exact_matches": null,
+  "expected": {
+    "case-6103-01": "MX-6130",
+    "case-6103-02": "7.625 units",
+    "case-6103-03": "SEAL-P3-806",
+    "case-6103-04": "AR-2026-7D31",
+    "case-6103-05": "2026-10-11",
+    "case-6103-06": "PKG-72-LA",
+    "case-6103-07": "node-42",
+    "case-6103-08": "sha256:8c9e2a71"
+  },
+  "parsed_answer": null,
+  "raw_answer": "",
+  "finish_reason": null,
+  "fact_positions": null,
+  "completed_at_utc": "2026-10-25T01:07:38Z",
+  "server_command": [
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python",
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py",
+    "--engine",
+    "strata",
+    "--config",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/configs/astra-default-1m-seed-2026103-attempt02.json",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "8350"
+  ],
+  "server_exit_code": -15,
+  "config_sha256": "3eaafc161175bbb5ea56bbc464d24afda6fea55a8d7e45e3e76a2b4e6ed41b5c",
+  "prompt_sha256": "2e093788765472cc73235f769f87f498dc8ea29ab055d6bbb3b27bb8c05b085d",
+  "prompt_text_tokens": 1001451,
+  "prompt_bytes": 2715131,
+  "minimum_prompt_tokens_95pct": 996148,
+  "health": null,
+  "request_sha256": null,
+  "request_sent": false,
+  "model_loaded": false,
+  "request_max_tokens": 768,
+  "sampling": {
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "top_k": 20,
+    "seed": 2026103,
+    "thinking": false,
+    "cache_prompt": false
+  },
+  "request_started_utc": null,
+  "request_elapsed_seconds": null,
+  "transport_error": "required memory telemetry unavailable/invalid: NameError: name 'run_psi_stop' is not defined",
+  "http_status": null,
+  "response": null,
+  "usage": {},
+  "timings": {},
+  "prefill_tokens_per_second": null,
+  "decode_tokens_per_second": null,
+  "ttft_engine_seconds": null,
+  "peak_process_tree_rss_bytes": 0,
+  "min_system_mem_available_bytes": 0,
+  "gpu_memory": {},
+  "swap_delta_pages": {
+    "pswpin": 0,
+    "pswpout": 0
+  },
+  "run_cgroup_memory_swap_delta_bytes": null,
+  "monitor_abort_reason": "required memory telemetry unavailable/invalid: NameError: name 'run_psi_stop' is not defined",
+  "monitor_sample_count": 2,
+  "monitor_samples": [
+    {
+      "utc": "2026-10-25T01:07:38Z",
+      "monotonic": 100227.160874855,
+      "monitor_error": "required memory telemetry unavailable/invalid: NameError: name 'run_psi_stop' is not defined"
+    },
+    {
+      "utc": "2026-10-25T01:07:38Z",
+      "monotonic": 100227.177729054,
+      "monitor_error": "required memory telemetry unavailable/invalid: NameError: name 'run_psi_stop' is not defined"
+    }
+  ],
+  "server_log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/runs/astra-1m-seed-2026103-attempt02/server.log",
+  "engine_log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/runs/astra-1m-seed-2026103-attempt02/engine.log",
+  "total_server_session_seconds": 0.01734017899434548
+}

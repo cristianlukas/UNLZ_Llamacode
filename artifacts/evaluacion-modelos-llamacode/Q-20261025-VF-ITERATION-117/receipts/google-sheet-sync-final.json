@@ -1,0 +1,24 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-117",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "updatedAtUtc": "2026-10-25T01:48:23Z",
+  "verifiedRanges": [
+    {
+      "sheet": "Evaluaciones LlamaCode",
+      "range": "A338:J338",
+      "result": "AMD05 memory result and AMD05-R1 semantic regrade 8/8 are documented; strict JSON 0/8 is labeled as a format diagnostic because the prompt did not request JSON.",
+      "cellsReadBack": 10,
+      "wrap": "WRAP"
+    },
+    {
+      "sheet": "Accionables",
+      "range": "D2:N2",
+      "result": "Q117 memory candidate, AMD04 false-positive context, AMD05 metrics, semantic regrade and evidence paths are reconciled; M2:N2 timestamps refreshed.",
+      "cellsReadBack": 11,
+      "wrap": "WRAP"
+    }
+  ],
+  "formattingChanged": false,
+  "apiReadbackVerified": true,
+  "note": "Both RTX 3090 and 128 GiB host configuration are recorded. Product guard, ASTRA and SOL profiles were not changed."
+}

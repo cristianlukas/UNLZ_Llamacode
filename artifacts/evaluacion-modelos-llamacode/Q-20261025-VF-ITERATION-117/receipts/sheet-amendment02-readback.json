@@ -1,0 +1,22 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-117",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "range": "Evaluaciones LlamaCode!A338:J338",
+  "status": "amendment_02_readback_verified_before_cpu_retry",
+  "readbackValues": [
+    "Q117-A1 · ASTRA DEFAULT 1M bajo guard estricto",
+    "AMD02 preregistrada: live attempt01 se detuvo antes del request por PSI cgroup 85,29% aunque host tenía 93,71 GiB disponibles, PSI global pico 57,6%, OOM=0 y swap worker=0. Q114 deja cgroup PSI como diagnóstico; se elimina sólo ese hard-stop y se agrega test 9.",
+    "Enmienda AMD02 · CPU 9/9 y un único retry live pendientes",
+    "2026-10-25",
+    "¿ASTRA DEFAULT 1M completa sin falso stop por RSS y se detiene sólo por presión global real, OOM, worker swap o telemetría inválida?",
+    "ASTRA DEFAULT / Strata 0.1.41 · dual RTX 3090 +128 GiB · fixture Q35 1048576/2026103 · una request retry, serial y aislada del scope Codex",
+    "Live attempt01 fue infraestructura inválida y no envió request. Sin OOM global/cgroup ni swap worker; RSS sólo 16,28 GiB. Resultado preservado, no cuenta como calidad.",
+    "AMD02: correr CPU suite 9/9 y preflight nuevo. Si pasan, permitir un único retry en output aislado; si no completa, cerrar como bloqueado sin tercer intento.",
+    "Q117/PLAN.md; receipts/q117-live-attempt01-summary.json; receipts/q117-live-attempt01-runner-receipt.json; receipts/amendment-02-preregistration.json; scripts/q117_pressure_guard.py",
+    "WORK_QUEUE.md · Q-20261025-VF-ITERATION-117 · lock 6db3418d-c2cb-400b-a11a-8a328e01a11f"
+  ],
+  "verifiedFormatting": {
+    "wrappedText": true,
+    "verticalAlignment": "TOP"
+  }
+}

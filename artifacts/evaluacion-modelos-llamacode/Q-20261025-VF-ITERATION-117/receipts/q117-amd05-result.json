@@ -1,0 +1,116 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-117",
+  "amendment": "AMD05 result",
+  "recordedAtUtc": "2026-10-25T01:43:00Z",
+  "status": "memory_guard_pass; semantic holdout 8/8; strict JSON parser score retained as non-applicable format diagnostic",
+  "request": {
+    "httpStatus": 200,
+    "requestSent": true,
+    "contextRequested": 1048576,
+    "promptTokens": 1001463,
+    "completionTokens": 90,
+    "elapsedSeconds": 442.44831888399494,
+    "prefillTokensPerSecond": 2270.9,
+    "decodeTokensPerSecond": 82.0,
+    "ttftEngineSeconds": 440.99359999999996
+  },
+  "memory": {
+    "sampleCount": 707,
+    "peakProcessTreeRssGiB": 51.30559158325195,
+    "minMemAvailableGiB": 58.69769287109375,
+    "peakGlobalPsiAvg10Pct": 53.61,
+    "monitorAbortReason": null,
+    "globalOomBaseline": 0,
+    "globalOomFinal": 0,
+    "workerOomFinal": {
+      "low": 0,
+      "high": 0,
+      "max": 0,
+      "oom": 0,
+      "oom_kill": 0,
+      "oom_group_kill": 0,
+      "sock_throttled": 0
+    },
+    "workerSwapPeakBytes": 0,
+    "workerCgroupMemoryPeakGiB": 84.29965209960938,
+    "gpuPeakDeltaMiB": {
+      "0": 22831,
+      "1": 22372
+    }
+  },
+  "gate": {
+    "memoryGuardPass": true,
+    "bothRtx3090Used": true,
+    "effectiveWorkerManagedOOMMemoryPressure": {
+      "unit": "llamacode-q117-context-1048576-seed-2026103-a05.service",
+      "ManagedOOMMemoryPressure": "auto",
+      "ManagedOOMMemoryPressureLimit": "0"
+    },
+    "systemdUnitInactiveAfterCompletion": true,
+    "port8350FreeAfterCompletion": true,
+    "noInferenceServerOrWorkerRemaining": true,
+    "effectiveWorkerCgroupLimits": {
+      "memory_high_bytes": 93135044608,
+      "memory_max_bytes": 101724979200,
+      "memory_swap_max_bytes": 3611189248,
+      "oom_group": 1,
+      "oom_score_adjust": 900
+    },
+    "workerPreflightMemAvailableGiB": 110.744,
+    "workerPreflightPsi": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 0.25,
+        "avg300": 11.97
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 0.25,
+        "avg300": 11.97
+      }
+    }
+  },
+  "strictQuality": {
+    "classification": "valid quality",
+    "parsedAnswer": null,
+    "strictOutputValid": false,
+    "registeredExactMatchScore": {
+      "correct": 0,
+      "total": 8,
+      "percent": 0.0
+    },
+    "literalExpectedStringsInRawResponse": {
+      "case-6103-01": true,
+      "case-6103-02": true,
+      "case-6103-03": true,
+      "case-6103-04": true,
+      "case-6103-05": true,
+      "case-6103-06": true,
+      "case-6103-07": true,
+      "case-6103-08": true
+    },
+    "literalCount": 8,
+    "interpretation": "Original JSON exact-match score is 0/8 because the answer is numbered plain text. The frozen prompt requests eight numbered answers and does not require JSON; Q37 previously audited this same fixture. AMD05-R1 reused the pinned Q37 semantic regrader and obtained 8/8 in prompt order. Preserve both scores; the strict JSON result is not a retrieval-quality failure.",
+    "literalExpectedStringsInRawResponseInOrder": false
+  },
+  "receiptSha256": "b43f669a0f8b4791ef95f7f1dd84025024a05438924f1e27da760384ba98478f",
+  "monitorSha256": "fb369806324110e6bb20a2a2a681af3cdf9b36583a6e1ccfc02b9e0eba1d6dd1",
+  "summarySha256": "891d3531c89524dd9e08ddba8682002e63c8fc15b339a56781513a28f29046ae",
+  "evidence": {
+    "runReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/runs/astra-1m-seed-2026103-attempt05/receipt.json",
+    "monitorJsonl": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/runs/astra-1m-seed-2026103-attempt05/memory-monitor.jsonl",
+    "finalSummary": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/receipts/q117-final-summary-attempt05.json",
+    "preflight": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/receipts/q117-preflight-attempt05.json",
+    "cpuTests": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/receipts/q117-amd05-cpu-tests.json",
+    "semanticRegrade": "receipts/q117-amd05-semantic-regrade.json"
+  },
+  "semanticRegrade": {
+    "receipt": "receipts/q117-amd05-semantic-regrade.json",
+    "method": "numbered_requests_in_prompt_order",
+    "correct": 8,
+    "total": 8,
+    "percent": 100.0,
+    "ambiguities": 0,
+    "additionalInference": false
+  }
+}

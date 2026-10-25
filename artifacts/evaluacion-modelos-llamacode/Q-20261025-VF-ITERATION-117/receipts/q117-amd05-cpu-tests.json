@@ -1,0 +1,96 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-117",
+  "amendment": "AMD05",
+  "status": "pass",
+  "checksPassed": 21,
+  "checksTotal": 21,
+  "modelOrServerStarted": false,
+  "gpuUsed": false,
+  "networkUsed": false,
+  "cases": [
+    {
+      "name": "historical ASTRA 1M high RSS and moderate PSI continue; warning remains advisory at sample 30",
+      "passed": true
+    },
+    {
+      "name": "AMD04-like severe global PSI at 77 GiB available does not stop",
+      "passed": true
+    },
+    {
+      "name": "severe global PSI at the successful ASTRA 1M memory floor continues",
+      "passed": true
+    },
+    {
+      "name": "severe PSI with MemAvailable below 48 GiB does not stop before 15 samples",
+      "passed": true
+    },
+    {
+      "name": "severe PSI plus MemAvailable below 48 GiB stops exactly at sample 15",
+      "passed": true
+    },
+    {
+      "name": "high-memory severe streak does not carry across a normal sample into low headroom",
+      "passed": true
+    },
+    {
+      "name": "MemAvailable below 32 GiB remains an immediate hard stop",
+      "passed": true
+    },
+    {
+      "name": "global oom_kill increase remains an immediate hard stop",
+      "passed": true
+    },
+    {
+      "name": "required global telemetry still fails closed",
+      "passed": true
+    },
+    {
+      "name": "high worker-cgroup PSI remains diagnostic without host low-headroom conjunction",
+      "passed": true
+    },
+    {
+      "name": "worker cgroup OOM remains a hard stop",
+      "passed": true
+    },
+    {
+      "name": "worker cgroup swap growth above 4 MiB remains a hard stop",
+      "passed": true
+    },
+    {
+      "name": "missing worker cgroup telemetry still fails closed",
+      "passed": true
+    },
+    {
+      "name": "AMD05 opts out of systemd-oomd PSI kill enrollment",
+      "passed": true
+    },
+    {
+      "name": "AMD05 preserves cgroup memory/swap hard caps and kernel OOM containment",
+      "passed": true
+    },
+    {
+      "name": "worker preflight accepts effective ManagedOOMMemoryPressure=auto",
+      "passed": true
+    },
+    {
+      "name": "worker preflight fails closed if oomd PSI kill is re-enabled",
+      "passed": true
+    },
+    {
+      "name": "monitor appends and flushes each JSONL sample immediately",
+      "passed": true
+    },
+    {
+      "name": "AMD05 uses the tested oomd verifier before server startup and flushes monitor samples",
+      "passed": true
+    },
+    {
+      "name": "AMD05 runner imports the separate PSI-plus-headroom guard",
+      "passed": true
+    },
+    {
+      "name": "AMD05 oomd verifier binds to the AMD05 unit prefix and requires a service suffix",
+      "passed": true
+    }
+  ]
+}

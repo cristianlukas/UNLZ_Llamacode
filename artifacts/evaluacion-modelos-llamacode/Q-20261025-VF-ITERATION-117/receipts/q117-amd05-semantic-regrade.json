@@ -1,0 +1,60 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-117",
+  "amendment": "AMD05-R1 result",
+  "recordedAtUtc": "2026-10-25T01:47:00Z",
+  "status": "pass",
+  "checks": {
+    "http200": true,
+    "finishedStop": true,
+    "receiptExpectedMatchesFrozenFixture": true,
+    "promptHashMatchesReceiptAndMetadata": true,
+    "hasEightNumberedRequests": true,
+    "promptDoesNotRequestJson": true
+  },
+  "promptSha256": "2e093788765472cc73235f769f87f498dc8ea29ab055d6bbb3b27bb8c05b085d",
+  "expectedCanonicalSha256": "bda50a0c24d9a7bbb37c2b379f3fea465c68f2849a027f9cbcada228216e9fa4",
+  "semanticRegraderSha256": "6b1471de5ebe378acaaec307adb7b42dfac16f44468dd048112102ff0e639b51",
+  "inputReceiptSha256": "b43f669a0f8b4791ef95f7f1dd84025024a05438924f1e27da760384ba98478f",
+  "requestSha256": "90a223c92550570b8ae47a05677c33db2833f4a1d388f379a6c4fc9359803fc9",
+  "originalFormatGrade": {
+    "strictOutputValid": false,
+    "jsonExactMatchScore": {
+      "correct": 0,
+      "total": 8,
+      "percent": 0.0
+    },
+    "interpretation": "format diagnostic only; prompt and request did not require JSON"
+  },
+  "semanticScore": {
+    "method": "numbered_requests_in_prompt_order",
+    "answers_extracted": {
+      "case-6103-01": "MX-6130",
+      "case-6103-02": "7.625 units",
+      "case-6103-03": "SEAL-P3-806",
+      "case-6103-04": "AR-2026-7D31",
+      "case-6103-05": "2026-10-11",
+      "case-6103-06": "PKG-72-LA",
+      "case-6103-07": "node-42",
+      "case-6103-08": "sha256:8c9e2a71"
+    },
+    "correct": 8,
+    "total": 8,
+    "percent": 100.0,
+    "matches": {
+      "case-6103-01": true,
+      "case-6103-02": true,
+      "case-6103-03": true,
+      "case-6103-04": true,
+      "case-6103-05": true,
+      "case-6103-06": true,
+      "case-6103-07": true,
+      "case-6103-08": true
+    },
+    "unresolved_case_ids": [],
+    "unanswered_case_ids": []
+  },
+  "modelRequestMade": false,
+  "gpuUsed": false,
+  "networkUsed": false,
+  "summary": "Completed numbered response exactly answers all 8 numbered prompt requests in order. Preserve original JSON-grader score separately; Q35/Q37 had already established this prompt format is not JSON-only."
+}

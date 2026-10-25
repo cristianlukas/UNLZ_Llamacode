@@ -1,0 +1,8 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-117",
+  "lockToken": "6db3418d-c2cb-400b-a11a-8a328e01a11f",
+  "status": "preflight_invocation_false_positive",
+  "attempt": "AMD02 preflight invocation 01",
+  "reason": "The shell command text contained the inference module markers used by process discovery, so the running diagnostic shell matched itself. No model or service was started; all Q117 units were inactive. The clean preflight invocation passed with no external servers.",
+  "cleanPreflightReceipt": "receipts/q117-preflight-attempt02.json"
+}

@@ -1,0 +1,28 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-117",
+  "lockToken": "6db3418d-c2cb-400b-a11a-8a328e01a11f",
+  "completedAtUtc": "2026-10-25T01:07:38.842729+00:00",
+  "status": "memory_guard_not_passed",
+  "model": "ASTRA DEFAULT Qwen3.8 Flash-Next GSQ-RCO IQ2_XS / Strata 0.1.41",
+  "context": 1048576,
+  "both3090Used": false,
+  "requestSent": false,
+  "httpStatus": null,
+  "monitorAbortReason": "required memory telemetry unavailable/invalid: NameError: name 'run_psi_stop' is not defined",
+  "monitorValid": false,
+  "sampleCount": 2,
+  "minMemAvailableGiB": null,
+  "peakProcessTreeRssGiB": null,
+  "gpuMemory": {},
+  "runCgroupSwapDeltaBytes": null,
+  "oomAndPressureEvidence": {
+    "globalOomBaseline": null,
+    "globalOomFinal": null,
+    "peakPsiFullAvg10Pct": 0,
+    "peakPsiSomeAvg10Pct": 0
+  },
+  "qualityResultNotUsedForAdoption": null,
+  "workerReturnCode": 2,
+  "guardPass": false,
+  "evidence": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/runs/astra-1m-seed-2026103-attempt02/receipt.json"
+}

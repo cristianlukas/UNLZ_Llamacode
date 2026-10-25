@@ -1,0 +1,21 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-117",
+  "amendment": "AMD05-R1 semantic regrade",
+  "registeredAtUtc": "2026-10-25T01:45:41Z",
+  "reason": "The original Q117 parser marked the numbered response 0/8 because it only accepts JSON. Q37 already audited this exact Q35 fixture/prompt and established that the prompt numbers eight requests and does not require JSON or set response_format; its preregistered semantic method must be reused so we do not mislabel retrieval as a format failure.",
+  "scope": "Offline CPU-only regrade of the already completed AMD05 receipt. No model/server/GPU/network/request; preserve receipt.json and its original strict-output fields unchanged. Use the existing Q37 semantic_score implementation, pinned by SHA-256, and compare the ordered numbered response to probe-expected.json only.",
+  "inputs": {
+    "attempt05Receipt": "runs/astra-1m-seed-2026103-attempt05/receipt.json",
+    "promptPath": "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/fixtures/1048576/2026103/probe-prompt.txt",
+    "promptSha256": "2e093788765472cc73235f769f87f498dc8ea29ab055d6bbb3b27bb8c05b085d",
+    "responsePromptSha256": "2e093788765472cc73235f769f87f498dc8ea29ab055d6bbb3b27bb8c05b085d",
+    "requestSha256": "90a223c92550570b8ae47a05677c33db2833f4a1d388f379a6c4fc9359803fc9",
+    "expectedPath": "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/fixtures/1048576/2026103/probe-expected.json",
+    "expectedSha256": "368175353544f4ee49267e4a7c4145268674d4d864ce0cf910aa952d18c59a9e",
+    "semanticRegrader": "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-37/scripts/q35_semantic_regrade.py",
+    "semanticRegraderSha256": "6b1471de5ebe378acaaec307adb7b42dfac16f44468dd048112102ff0e639b51"
+  },
+  "method": "Reuse Q37 semantic_score: complete numbered list maps 1..8 to the numbered questions; exact equality only; unresolved/ambiguous items do not receive credit. Report original strict JSON result separately; do not overwrite it.",
+  "acceptance": "If the receipt has HTTP 200, finish_reason stop, prompt SHA matches fixture, and all eight numbered answer lines exactly match the expected values in prompt order, report completed semantic 8/8. This is a post-hoc semantic regrade, not a new inference test.",
+  "decisionRule": "Do not infer adoption or compare speed/quality from one seed. Memory guard result remains separate; semantic regrade only corrects the interpretation of the existing functional holdout."
+}

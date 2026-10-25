@@ -1,0 +1,39 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-117",
+  "lockToken": "6db3418d-c2cb-400b-a11a-8a328e01a11f",
+  "completedAtUtc": "2026-10-25T01:04:19.077716+00:00",
+  "status": "memory_guard_not_passed",
+  "model": "ASTRA DEFAULT Qwen3.8 Flash-Next GSQ-RCO IQ2_XS / Strata 0.1.41",
+  "context": 1048576,
+  "both3090Used": true,
+  "requestSent": false,
+  "httpStatus": null,
+  "monitorAbortReason": "worker cgroup PSI severe OR persisted for 15 samples",
+  "monitorValid": true,
+  "sampleCount": 38,
+  "minMemAvailableGiB": 93.7108039855957,
+  "peakProcessTreeRssGiB": 16.28226089477539,
+  "gpuMemory": {
+    "0": {
+      "baseline_mib": 990,
+      "peak_total_used_mib": 6834,
+      "peak_delta_mib": 5844
+    },
+    "1": {
+      "baseline_mib": 110,
+      "peak_total_used_mib": 4792,
+      "peak_delta_mib": 4682
+    }
+  },
+  "runCgroupSwapDeltaBytes": 0,
+  "oomAndPressureEvidence": {
+    "globalOomBaseline": 0,
+    "globalOomFinal": 0,
+    "peakPsiFullAvg10Pct": 57.6,
+    "peakPsiSomeAvg10Pct": 57.6
+  },
+  "qualityResultNotUsedForAdoption": null,
+  "workerReturnCode": 2,
+  "guardPass": false,
+  "evidence": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/runs/astra-1m-seed-2026103/receipt.json"
+}

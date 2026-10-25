@@ -1,0 +1,47 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-117",
+  "amendmentId": "Q117-AMD-02",
+  "lockToken": "6db3418d-c2cb-400b-a11a-8a328e01a11f",
+  "registeredAtUtc": "2026-10-25T01:06:28.425939+00:00",
+  "status": "preregistered_before_cpu_retry_and_single_live_retry",
+  "trigger": "Live attempt01 ended before request because the Q117 wrapper treated worker-cgroup PSI>=60/80 for 15 samples as a hard stop. At stop, MemAvailable=93.71 GiB, global PSI peak=57.60%, worker cgroup PSI peak=85.29%, global OOM=0, worker cgroup OOM=0, worker swap delta=0, RSS=16.28 GiB. Q114/Q97 evidence keeps cgroup PSI diagnostic rather than an independent hard stop.",
+  "attempt01": {
+    "status": "memory_guard_not_passed",
+    "requestSent": false,
+    "monitorAbortReason": "worker cgroup PSI severe OR persisted for 15 samples",
+    "sampleCount": 38,
+    "minMemAvailableGiB": 93.7108039855957,
+    "peakProcessTreeRssGiB": 16.28226089477539,
+    "peakGlobalPsiFullAvg10Pct": 57.6,
+    "peakCgroupPsiFullAvg10Pct": 85.29,
+    "globalOom": 0,
+    "workerOom": 0,
+    "workerSwapDeltaBytes": 0,
+    "both3090Used": true,
+    "evidence": "receipts/q117-live-attempt01-runner-receipt.json"
+  },
+  "change": "Remove worker-cgroup PSI as a hard-stop input; keep collecting it and record a severeDiagnostic flag. Continue fail-closed on required telemetry, immediate stop on MemAvailable<32 GiB/global OOM increase, stop on global composite PSI severe for 15 samples, and stop on worker cgroup OOM or worker swap delta >4 MiB. Add CPU assertion that cgroup-only PSI 81.53% does not stop with healthy host. Move the one authorized retry to a new output/config path; all inference args/fixture/thresholds and model remain unchanged.",
+  "retry": {
+    "cpuRegressionChecks": 9,
+    "liveInferenceRequests": 1,
+    "context": 1048576,
+    "fixture": "Q35 fixtures/1048576/2026103 (same prompt; guard-only validation)",
+    "newOutput": "runs/astra-1m-seed-2026103-attempt02",
+    "newConfig": "configs/astra-default-1m-seed-2026103-attempt02.json",
+    "unit": "llamacode-q117-context-1048576-seed-2026103-a02",
+    "noFurtherRetry": "If this retry fails, stop and preserve blocker; no third launch under Q117."
+  },
+  "preRetryGate": "Register amendment and read back Evaluaciones LlamaCode row338; verify all amended source/config hashes, lock, zero residual servers/units/port, CPU suite 9/9, and a fresh preflight. No inference starts if any gate fails.",
+  "allRegisteredSourcesSha256": {
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/PLAN.md": "f8c84698a45da12005a4ced62414ee918a47d995652680c9d81d06a5a613ab78",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/scripts/q117_pressure_guard.py": "69ccc65063b940a65f91196c6a1a4fe1e87805f04ba2d27de68bb96b3aee840a",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/scripts/test_q117_pressure_guard.py": "3bee1c0c32e902767ce7e7c09183034c460646693536b58a3edec3a7ef55238d",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/scripts/run_context_holdout.py": "91776f26b16d032452eb44c45f570ee9c385e242982deb16be67149ac0d870d1",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/scripts/resource_isolation.py": "4be05930cb5ba3f643777c4d6d2ea78b01d91382edae79d5e78fe123e123ffbf",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/scripts/q117_supervisor.py": "c43c4e00f24b7d4210a9806db3084356a19b6fbd0578d874b4b5d04558f9537d",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/scripts/start_q117_supervisor.sh": "c1875454b9bf974385684499942e4a72ae8eefa3c15aeafeb6d2d3ab6174eecc",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/guard_sources/q108_guard_core.py": "832c6661692fa9c6e45d209be5c4201a1ad796bfe66bec92cf947151e6988b4b",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/guard_sources/q116_composite_psi.py": "d2c66a548c694edaad36f019ad4b499334a7f4d965f900e8d21279b06231b3db",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/configs/astra-default-1m-seed-2026103-attempt02.json": "3eaafc161175bbb5ea56bbc464d24afda6fea55a8d7e45e3e76a2b4e6ed41b5c"
+  }
+}

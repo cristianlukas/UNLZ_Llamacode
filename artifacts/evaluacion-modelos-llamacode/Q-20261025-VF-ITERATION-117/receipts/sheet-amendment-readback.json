@@ -1,0 +1,22 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-117",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "range": "Evaluaciones LlamaCode!A338:J338",
+  "status": "amendment_01_readback_verified_before_retry",
+  "readbackValues": [
+    "Q117-A1 · ASTRA DEFAULT 1M bajo guard estricto",
+    "Preregistro Q117-AMD-01: el intento CPU 01 fue 7/8; se corrige solo la cadencia del warning moderado (Q116 sample30), sin cambiar stops, workload ni gate de inferencia.",
+    "Enmienda preregistrada · retry CPU pendiente",
+    "2026-10-25",
+    "¿ASTRA DEFAULT 1M completa sin falso stop por RSS y se detiene sólo por presión real (MemAvailable, OOM, PSI severa compuesta) o telemetría inválida?",
+    "ASTRA DEFAULT / Strata 0.1.41 · dual RTX 3090 +128 GiB · fixture Q35 1048576/2026103 · una request, serial y aislada del scope Codex",
+    "Intento CPU01: 7/8; encontró warning PSI moderado instantáneo en el adaptador. Sin inference/GPU/server. Corrección en amendment-01-preregistration.json; no es defecto del guard Q97 ni modelo.",
+    "Retry CPU 8/8 antes de preflight ASTRA. El modelo no se ejecuta si falla; condiciones y aislamiento siguen los preregistros.",
+    "Q117/PLAN.md; receipts/preregistration.json; receipts/q117-cpu-guard-attempt01.json; receipts/amendment-01-preregistration.json; scripts/q117_pressure_guard.py",
+    "WORK_QUEUE.md · Q-20261025-VF-ITERATION-117 · lock 6db3418d-c2cb-400b-a11a-8a328e01a11f"
+  ],
+  "verifiedFormatting": {
+    "wrappedText": true,
+    "verticalAlignment": "TOP"
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-117",
+  "amendment": "AMD04",
+  "registeredAtUtc": "2026-10-25T01:15:30Z",
+  "authorization": "User explicitly asked to verify the memory-pressure detector and continue testing, noting successful high-memory ASTRA DEFAULT 1M and SOL dual-GPU runs.",
+  "reason": "AMD03 never reached a model response. systemd-oomd killed the worker because its transient service was explicitly marked ManagedOOMMemoryPressure=kill: worker-cgroup PSI avg10 was 92.35% for >20 seconds at 16.4 GiB reported cgroup use. The kernel oom_kill counter remained 0. The last nearby (not time-aligned) host snapshot was MemAvailable 93.48 GiB and global PSI some/full 58.61%; this is external per-cgroup oomd policy, not the Q117 host guard and not an ASTRA capacity result.",
+  "systemdEvidence": {
+    "version": "systemd 255 (255.4-1ubuntu8.18)",
+    "localManual": "systemd.resource-control states ManagedOOMMemoryPressure=kill makes the unit a candidate for systemd-oomd; auto is the default and is not enrolled as a candidate.",
+    "backgroundSlice": "ManagedOOMMemoryPressure=auto; ManagedOOMSwap=auto",
+    "workerOomdLog": "runs/astra-1m-seed-2026103-attempt03/systemd-oomd.log",
+    "workerLog": "runs/astra-1m-seed-2026103-attempt03/server.log",
+    "diagnostics": "runs/astra-1m-seed-2026103-attempt03/q117-live-attempt03-diagnostics.json"
+  },
+  "plannedChange": "In Q117-only AMD04 transient unit, set ManagedOOMMemoryPressure=auto and omit ManagedOOMMemoryPressureLimit; keep the host/global guard, worker cgroup OOM/OOMPolicy=kill, MemoryHigh, MemoryMax, MemorySwapMax, lock checks, both GPUs and all model/profile settings unchanged. Verify the effective systemd property inside the worker before Strata starts. Add append-and-flush JSONL host/cgroup telemetry per monitor sample so an external SIGKILL cannot erase the observations. This is a task-local experiment; no persistent systemd or product change.",
+  "implementationSha256BeforeLiveLaunch": {
+    "scripts/resource_isolation_attempt04.py": "2bec9ccec0f08656981bbf32f63a809a84ba11018f330faeee5502a2daac7165",
+    "scripts/run_context_holdout_attempt04.py": "9caa83c41071056eda3b2f680146ad68c56374a535ddab7cb20baa278a27abec",
+    "scripts/q117_supervisor_attempt04.py": "58764596ff2a47d01d8a8ecaa6ea1f323e53f9961ec2900ca49b7982e813c3d4",
+    "scripts/start_q117_supervisor_attempt04.sh": "1b3ba0a7085d545c0d573e239f6c380c1afed8bccc1781659b81c7aae3d95bdb",
+    "scripts/test_q117_attempt04_cpu.py": "2a1f7dca08ea9371b38abbfefaa5bdb0882966479d9b8bc0ce444317dd012810",
+    "configs/astra-default-1m-seed-2026103-attempt04.json": "3eaafc161175bbb5ea56bbc464d24afda6fea55a8d7e45e3e76a2b4e6ed41b5c"
+  },
+  "preLiveChecks": {
+    "compileAndShellSyntax": "PASS",
+    "amd04PolicyAndTelemetryTests": "PASS 6/6",
+    "q117PressureGuardRegression": "PASS 13/13",
+    "testReceipts": {
+      "receipts/q117-amd04-cpu-tests.json": "f5ce048e3bf82f43f8c5f883885a068ec913de7c2a776a23985238b8826a4bfd",
+      "receipts/q117-cpu-guard-tests.json": "17216a4b047ad56203e48ec9bf4d1b65b1dcfe81acae2e76e4786e1f241205d4"
+    },
+    "modelOrServerStarted": false,
+    "gpuUsed": false,
+    "configIdentity": "SHA-256 identical to the frozen Q35 config"
+  },
+  "freshParentPreflight": {
+    "checkedAtUtc": "2026-10-25T01:18:45.439060+00:00",
+    "decision": "PASS",
+    "memAvailableGiB": 109.674,
+    "globalPsiAvg10Pct": {"some": 0.0, "full": 0.0},
+    "globalOomKill": 0,
+    "swapFreeGiB": 5.466,
+    "workerMemoryHighGiB": 85.68,
+    "workerMemoryMaxGiB": 93.68,
+    "workerSwapMaxGiB": 4.0,
+    "workerManagedOOMMemoryPressure": "auto",
+    "gpuFreeMiB": {"RTX3090-0": 23600, "RTX3090-1": 24466},
+    "inferenceServers": [],
+    "port8350Bindable": true,
+    "resultsVolumeFreeGiB": 35.75,
+    "pinnedAssetsMatch": true,
+    "configSha256": "3eaafc161175bbb5ea56bbc464d24afda6fea55a8d7e45e3e76a2b4e6ed41b5c",
+    "receiptSha256": "11d561896c9bc9eee664fee7fc51ba839ac08139d43f0fbc7ae789abb86ef105",
+    "effectiveWorkerPolicyReadback": "Will be checked inside the transient worker preflight before Strata starts; fail closed unless auto/0."
+  },
+  "experiment": {
+    "kind": "one guarded ASTRA DEFAULT 1.048.576-token request; no quality/adoption benchmark",
+    "model": "ASTRA DEFAULT Qwen3.8 Flash-Next GSQ-RCO IQ2_XS / Strata 0.1.41",
+    "hardware": "dual RTX 3090 +128 GiB RAM; one serial evaluation in system-manager background.slice",
+    "workload": "exact Q35 1048576/2026103 fixture, model assets and config, seed 2026103",
+    "oomdPolicy": "ManagedOOMMemoryPressure=auto; no 80% per-worker PSI kill rule",
+    "retainedContainment": [
+      "Worker MemoryHigh/MemoryMax dynamically computed from current MemAvailable with 16 GiB host reserve.",
+      "Worker MemorySwapMax <=4 GiB and candidate OOMPolicy=kill / KillMode=control-group.",
+      "Host MemAvailable hard stop below 32 GiB; global oom_kill increase hard stop; global PSI full>=60% OR some>=80% for 15 consecutive samples hard stop.",
+      "Worker cgroup OOM or >4 MiB worker swap delta hard stop; worker cgroup PSI diagnostic only.",
+      "Missing or malformed required telemetry fails closed; RSS alone is diagnostic and cannot stop the run."
+    ],
+    "startGate": "CPU regression suite passes; exact config/assets unchanged; fresh preflight MemAvailable>=80 GiB, SwapFree>=1 GiB, no external inference server, port bindable, each 3090 >=23000 MiB free, disk>=5 GiB, host PSI below severe threshold; worker policy reads back as ManagedOOMMemoryPressure=auto before Strata launches.",
+    "success": "Exactly one request sent, HTTP 200, monitor samples remain available, both GPUs show positive memory deltas, min MemAvailable>=32 GiB, no global/worker OOM increase, worker swap delta<=4 MiB, and no systemd-oomd kill. Historical 51.14 GiB ASTRA RSS should be tolerated if pressure remains below the registered host guard; no assertion that RSS must reach exactly that value.",
+    "abort": "Do not launch unless all CPU checks and fresh preflight pass. If AMD04 stops before the request for any reason, record it and stop; no further live retry is preregistered.",
+    "cleanup": "Both transient units inactive, port 8350 free, no task-owned inference process or compute allocation left; leave unrelated applications untouched."
+  },
+  "spreadsheetTarget": "Evaluaciones LlamaCode!A338:J338",
+  "statusBeforeExecution": "PREREGISTERED; AMD04 policy/telemetry tests 6/6, original guard regression 13/13 PASS, and fresh parent preflight PASS; effective worker property still must read back auto/0 before model launch",
+  "productionChanges": false
+}

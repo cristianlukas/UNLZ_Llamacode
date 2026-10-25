@@ -1,0 +1,94 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-117",
+  "amendment": "AMD03",
+  "registeredAtUtc": "2026-10-25T01:09:44Z",
+  "authorization": "User explicitly asked to review the pressure detector and continue testing after being reminded that ASTRA DEFAULT 1M and SOL had completed successfully at high memory use.",
+  "reason": "AMD02 live attempt aborted before model load/request because Monitor.sample referenced undefined run_psi_stop. This is an invalid harness result, not evidence against ASTRA or the detector thresholds.",
+  "historicalControls": {
+    "astraDefault1m": "Q14/Q97/Q102/Q103: completed; about 51.14 GiB RSS and 55.64-55.728 GiB minimum MemAvailable.",
+    "astraFlashNext1m": "Q35: 3/3 responses completed; MemAvailable minimum about 64.98-65.06 GiB.",
+    "solDual3090": "Q34: TP=2 completed with both RTX 3090 and no OOM; about 103.4 GiB MemAvailable at readiness. No continuous PSI series; it remains a historical resource control and will not be rerun."
+  },
+  "plannedCodeChange": "Refactor Q117 worker-cgroup OOM/swap stop logic into a named helper called by Monitor.sample; retain cgroup PSI as validated diagnostic-only evidence; remove the stale undefined run_psi_stop branch. Add CPU regression coverage for the exact monitor decision path and cgroup PSI diagnostic behavior. Do not alter thresholds, model, prompt, config, assets, production code, RAM/swap configuration, or SOL.",
+  "baselineSha256": {
+    "scripts/run_context_holdout.py": "91776f26b16d032452eb44c45f570ee9c385e242982deb16be67149ac0d870d1",
+    "scripts/q117_pressure_guard.py": "69ccc65063b940a65f91196c6a1a4fe1e87805f04ba2d27de68bb96b3aee840a",
+    "scripts/test_q117_pressure_guard.py": "3bee1c0c32e902767ce7e7c09183034c460646693536b58a3edec3a7ef55238d",
+    "configs/astra-default-1m-seed-2026103-attempt02.json": "3eaafc161175bbb5ea56bbc464d24afda6fea55a8d7e45e3e76a2b4e6ed41b5c"
+  },
+  "implementationSha256BeforeLiveLaunch": {
+    "scripts/run_context_holdout.py": "8974394e77d7f46a876ead92d69bdf4bfb0ec67d2cf574a2f61331377dbd53e7",
+    "scripts/q117_pressure_guard.py": "189f51268b140d424549baf9408d37c8956cd457107fac5e249eab314b015898",
+    "scripts/test_q117_pressure_guard.py": "1e2a05fd1ff2b3c7eed15267d81982cb9f6b33db095839b974b066fa7495936c",
+    "scripts/q117_supervisor_attempt03.py": "e44ac042fa49195a1e7ada384c8644313035c9ab02c1f7df89df697cbb0ff0ba",
+    "scripts/start_q117_supervisor_attempt03.sh": "65f4aca8021b270e932437d23702d85defbf4fe3275a35acebc41e9dc2be4fc5",
+    "configs/astra-default-1m-seed-2026103-attempt03.json": "3eaafc161175bbb5ea56bbc464d24afda6fea55a8d7e45e3e76a2b4e6ed41b5c"
+  },
+  "preLiveChecks": {
+    "pythonCompile": "PASS for monitor, guard, CPU regression, and attempt03 supervisor",
+    "cpuGuardRegression": "PASS 13/13; includes historical ASTRA 51.14 GiB RSS continuing at 55.64 GiB MemAvailable, cgroup PSI 81.53% diagnostic-only, cgroup OOM/swap hard stops, missing telemetry fail-closed, and Monitor.sample source regression",
+    "configIdentity": "PASS; attempt03 JSON SHA-256 exactly matches the original Q35 config file hash"
+  },
+  "freshPreflight": {
+    "checkedAtUtc": "2026-10-25T01:11:40.182488+00:00",
+    "decision": "PASS",
+    "memAvailableGiB": 109.478,
+    "globalPsiAvg10Pct": {"some": 0.0, "full": 0.0},
+    "globalOomKill": 0,
+    "swapFreeGiB": 5.474,
+    "workerMemoryHighGiB": 85.5,
+    "workerMemoryMaxGiB": 93.45,
+    "workerSwapMaxGiB": 4.0,
+    "gpuFreeMiB": {"RTX3090-0": 23601, "RTX3090-1": 24466},
+    "inferenceServers": [],
+    "port8350Bindable": true,
+    "resultsVolumeFreeGiB": 35.76,
+    "pinnedAssetsMatch": true,
+    "configSha256": "3eaafc161175bbb5ea56bbc464d24afda6fea55a8d7e45e3e76a2b4e6ed41b5c",
+    "receiptSha256": "c84ff7d220ad28921bf4bf70bf815790f3b5b7720f8b12b230de5393dca3ae4e"
+  },
+  "preLiveReceiptSha256": {
+    "receipts/q117-cpu-guard-tests.json": "17216a4b047ad56203e48ec9bf4d1b65b1dcfe81acae2e76e4786e1f241205d4"
+  },
+  "experiment": {
+    "kind": "single guarded 1M ASTRA request; attempt03 is the first attempt expected to reach the model request; no repeated quality or adoption claim",
+    "model": "ASTRA DEFAULT Qwen3.8 Flash-Next GSQ-RCO IQ2_XS / Strata 0.1.41",
+    "contextTokens": 1048576,
+    "promptFixture": "Q35 fixture 1048576/2026103, exact SHA-pinned assets and config; seed 2026103",
+    "hardware": "both RTX 3090 plus 128 GiB host RAM; one evaluation serially, isolated in system-manager background.slice; user GUI may remain open",
+    "startGate": "Fresh clean preflight: MemAvailable >=80 GiB, SwapFree >=1 GiB, each RTX 3090 >=23000 MiB free, disk >=5 GiB, no external inference server, port 8350 bindable, pinned assets/runtime/config and lock unchanged, valid telemetry.",
+    "hardStops": [
+      "Fail closed if required host telemetry is missing, malformed, or out of range.",
+      "Stop candidate if host MemAvailable <32 GiB.",
+      "Stop candidate if global oom_kill increases.",
+      "Stop candidate if global memory PSI full avg10 >=60% OR some avg10 >=80% for 15 consecutive one-second samples.",
+      "Stop candidate if worker cgroup oom or oom_kill increases.",
+      "Stop candidate if worker cgroup memory.swap.current rises by >4 MiB from baseline."
+    ],
+    "diagnosticOnly": [
+      "Process RSS, including approximately 51 GiB historical ASTRA RSS, is not a stop condition.",
+      "Worker cgroup PSI is recorded and validated as diagnostic evidence, not a hard-stop input; host/global PSI drives pressure stops."
+    ],
+    "passCriteria": "Request sent once, HTTP 200, valid monitoring samples, min MemAvailable >=32 GiB, positive memory deltas on both GPUs, no OOM counter increase, worker swap delta <=4 MiB, no monitor abort. Quality output remains descriptive and is not used to adopt or change a model.",
+    "abortCriteria": "No request is sent unless CPU regression suite passes and fresh preflight passes. If this attempt aborts before a request for any reason, no further live retry is authorized by AMD03; record exact failure and stop.",
+    "cleanup": "Worker and supervisor systemd units must be inactive, port 8350 free, no task-owned inference server/GPU process resident. Do not terminate unrelated ArtCraft or other processes."
+  },
+  "spreadsheetTarget": "Evaluaciones LlamaCode!A338:J338",
+  "statusBeforeExecution": "Executed; AMD03 CPU suite and preflight passed, but systemd-oomd killed the worker before model health/request. This is an external isolation-policy outcome, not a valid ASTRA completion or host-guard result.",
+  "observedOutcome": {
+    "classification": "systemd-oomd-kill-before-model-ready; no inference request and no model-loaded receipt",
+    "systemdOomdWorkerPsiAvg10Pct": 92.35,
+    "systemdOomdThresholdPct": 80,
+    "systemdOomdDurationSeconds": 20,
+    "systemdOomdWorkerMemoryGiB": 16.4,
+    "workerCgroupPeakGiB": 18.0,
+    "globalOomKillCounter": 0,
+    "nearbyHostSnapshotNotTimeAligned": {"memAvailableGiB": 93.48, "psiSomeAvg10Pct": 58.61, "psiFullAvg10Pct": 58.61},
+    "conclusion": "The transient worker explicitly opted into ManagedOOMMemoryPressure=kill; systemd-oomd killed on worker-cgroup pressure. The host guard did not issue this stop. See attempt03 OOMD journal and diagnostic receipt."
+  },
+  "postExecutionEvidence": {
+    "runs/astra-1m-seed-2026103-attempt03/systemd-oomd.log": "0f4337c62d80eb51d5a78b6b438cc586c09ee94a3a3c7c5d680a03eb9f848c96",
+    "runs/astra-1m-seed-2026103-attempt03/q117-live-attempt03-diagnostics.json": "a6befd068c140ca16bd4ef4d63ea9f53f780385a5cc78f6b35ecfd42f5fe9bc3"
+  },
+  "productionChanges": false
+}

@@ -1,0 +1,12 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-117",
+  "amendment": "AMD05-C1 CPU harness correction",
+  "registeredAtUtc": "2026-10-25T01:28:20Z",
+  "reason": "AMD05 CPU suite reported 20/21. Its last check searched for the literal substring a05.service, while the production verifier intentionally validates the a05 unit prefix and .service suffix in separate predicates. The verifier implementation itself uses the correct AMD05 prefix.",
+  "scope": "Change only that test assertion to match the verifier contract; do not change candidate guard, runtime, model configuration, thresholds, fixtures, or the predeclared CPU scenarios. Re-run the same CPU-only suite and syntax checks; no GPU/model/server.",
+  "failedRunReceipt": "receipts/q117-amd05-cpu-tests.json",
+  "baselineTestSha256": "ab556f77a1ca3f354b981f6b1bdb1489425c21af620a93967ba3ec1c35060da4",
+  "runnerSha256": "24435c412cc791d47687199fb7ab765c7a52aed6b189ac4598eea8dd9d8822b1",
+  "expectedCorrection": "assert worker prefix contains seed-2026103-a05 and verifier source calls endswith(\".service\") separately; include negative a04 check.",
+  "liveGateUnchanged": "No live test unless amended CPU suite passes and fresh preflight meets AMD05 preregistration."
+}

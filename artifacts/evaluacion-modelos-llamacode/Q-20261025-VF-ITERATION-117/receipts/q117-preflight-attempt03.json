@@ -1,0 +1,217 @@
+{
+  "checkedAtUtc": "2026-10-25T01:12:16.399265+00:00",
+  "lockToken": "6db3418d-c2cb-400b-a11a-8a328e01a11f",
+  "taskId": "Q-20261025-VF-ITERATION-117",
+  "inferenceServers": [],
+  "port8350Bindable": true,
+  "memory": {
+    "memAvailableGiB": 109.41730880737305,
+    "memoryPsiAvg10Pct": {
+      "some": 0.0,
+      "full": 0.0
+    },
+    "oomKill": 0
+  },
+  "swapFreeBytes": 5878972416,
+  "workerLimits": {
+    "mem_total_bytes": 132615852032,
+    "mem_available_bytes": 117485940736,
+    "memory_high_bytes": 91716136960,
+    "memory_max_bytes": 100306071552,
+    "memory_swap_max_bytes": 4294967296,
+    "oom_score_adjust": 900,
+    "oom_policy": "kill",
+    "kill_mode": "control-group",
+    "managed_oom_memory_pressure": "kill",
+    "managed_oom_memory_pressure_limit": "80%"
+  },
+  "resultsVolumeFreeBytes": 38395240448,
+  "gpus": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 1002,
+      "memory_total_mib": 24576,
+      "utilization_percent": 21
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 110,
+      "memory_total_mib": 24576,
+      "utilization_percent": 38
+    }
+  ],
+  "pinnedAssets": [
+    {
+      "name": "swift",
+      "path": "/media/cristian/HDD extra/Modelos-eval/Q87-Swift15-Qwen38-27B/models/Swift-1.5-Qwen3.8-27B-GSQ-RCO-IQ2_XS.gguf",
+      "expected": {
+        "bytes": 8422841632,
+        "device": 2049,
+        "inode": 214156,
+        "mtimeNs": 1792860640969461700
+      },
+      "actual": {
+        "bytes": 8422841632,
+        "device": 2049,
+        "inode": 214156,
+        "mtimeNs": 1792860640969461700
+      },
+      "sha256PreviouslyVerified": "714c509c3fc496ea4abc409097658df7cd218bc966f78e1459fc1649758a9de8",
+      "matches": true
+    },
+    {
+      "name": "astra-shard-1",
+      "path": "/media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS-00001-of-00002.gguf",
+      "expected": {
+        "bytes": 39225954592,
+        "device": 66306,
+        "inode": 342238,
+        "mtimeNs": 1791824778113101000
+      },
+      "actual": {
+        "bytes": 39225954592,
+        "device": 66306,
+        "inode": 342238,
+        "mtimeNs": 1791824778113101000
+      },
+      "sha256PreviouslyVerified": "92cee27ae5bbadcd732416a0f7a7f0acc092399dbbe8f5a5efa707c2ec0a49d7",
+      "matches": true
+    },
+    {
+      "name": "astra-shard-2",
+      "path": "/media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS-00002-of-00002.gguf",
+      "expected": {
+        "bytes": 28800138432,
+        "device": 66306,
+        "inode": 335090,
+        "mtimeNs": 1791823874746058600
+      },
+      "actual": {
+        "bytes": 28800138432,
+        "device": 66306,
+        "inode": 335090,
+        "mtimeNs": 1791823874746058600
+      },
+      "sha256PreviouslyVerified": "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113",
+      "matches": true
+    },
+    {
+      "name": "astra-pack",
+      "path": "/media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/strata-data/packs/iq2_xs/dense.bin",
+      "expected": {
+        "bytes": 1538035200,
+        "device": 66306,
+        "inode": 600796,
+        "mtimeNs": 1791825245927681200
+      },
+      "actual": {
+        "bytes": 1538035200,
+        "device": 66306,
+        "inode": 600796,
+        "mtimeNs": 1791825245927681200
+      },
+      "sha256PreviouslyVerified": "d2af3d8331e5c7a1985d1d589747230f9d56719a6d33c7cddc9ee6b81cde6b13",
+      "matches": true
+    },
+    {
+      "name": "astra-expert-profile",
+      "path": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/data/expert-profile.bin",
+      "expected": {
+        "bytes": 196632,
+        "device": 66307,
+        "inode": 1852624,
+        "mtimeNs": 1791582163915637102
+      },
+      "actual": {
+        "bytes": 196632,
+        "device": 66307,
+        "inode": 1852624,
+        "mtimeNs": 1791582163915637102
+      },
+      "sha256PreviouslyVerified": "8f59b4aa8873209dff11c11e37bcda9529a1335b724a1afeea37bf6388975baf",
+      "matches": true
+    },
+    {
+      "name": "mtp-dense",
+      "path": "/media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/mtp/rt/dense.bin",
+      "expected": {
+        "bytes": 116099072,
+        "device": 66306,
+        "inode": 265216,
+        "mtimeNs": 1791302326546571000
+      },
+      "actual": {
+        "bytes": 116099072,
+        "device": 66306,
+        "inode": 265216,
+        "mtimeNs": 1791302326546571000
+      },
+      "sha256PreviouslyVerified": "c724dc0b0822ada5d2977bf5bde821605feabaa64ea2e0045b67ca656329070a",
+      "matches": true
+    },
+    {
+      "name": "mtp-dense-txt",
+      "path": "/media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/mtp/rt/dense.txt",
+      "expected": {
+        "bytes": 1851,
+        "device": 66306,
+        "inode": 273246,
+        "mtimeNs": 1791302326547570900
+      },
+      "actual": {
+        "bytes": 1851,
+        "device": 66306,
+        "inode": 273246,
+        "mtimeNs": 1791302326547570900
+      },
+      "sha256PreviouslyVerified": "991456cf4eb266eb8a888c349e548d11bc640f5dbd9149439aa9786af0f732fd",
+      "matches": true
+    },
+    {
+      "name": "mtp-draft-vocab",
+      "path": "/media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/mtp/rt/draft_vocab.bin",
+      "expected": {
+        "bytes": 425196,
+        "device": 66306,
+        "inode": 299128,
+        "mtimeNs": 1791302326577568700
+      },
+      "actual": {
+        "bytes": 425196,
+        "device": 66306,
+        "inode": 299128,
+        "mtimeNs": 1791302326577568700
+      },
+      "sha256PreviouslyVerified": "b1e1d3a7a9e4bf862dcd5923ce661fb59bbd07907e594df5cf86a62ac235cb91",
+      "matches": true
+    },
+    {
+      "name": "mtp-experts",
+      "path": "/media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/mtp/rt/experts.bin",
+      "expected": {
+        "bytes": 707788800,
+        "device": 66306,
+        "inode": 251825,
+        "mtimeNs": 1791302325935617300
+      },
+      "actual": {
+        "bytes": 707788800,
+        "device": 66306,
+        "inode": 251825,
+        "mtimeNs": 1791302325935617300
+      },
+      "sha256PreviouslyVerified": "09398406be61f1f54c93861f449e48b8df0bfccbc9ec9b2b7636775a6ea9244f",
+      "matches": true
+    }
+  ],
+  "fixtureSha256": {
+    "probe-prompt.txt": "2e093788765472cc73235f769f87f498dc8ea29ab055d6bbb3b27bb8c05b085d",
+    "probe-expected.json": "368175353544f4ee49267e4a7c4145268674d4d864ce0cf910aa952d18c59a9e",
+    "probe-metadata.json": "e688ae9f3b36f1fe31189e978d6d1d4d874b0a33879b1d00285795492feab255"
+  },
+  "configSha256": "3eaafc161175bbb5ea56bbc464d24afda6fea55a8d7e45e3e76a2b4e6ed41b5c",
+  "runtimePath": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata",
+  "decision": "pass"
+}

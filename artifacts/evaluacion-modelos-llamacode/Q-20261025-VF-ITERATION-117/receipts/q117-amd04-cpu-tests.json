@@ -1,0 +1,36 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-117",
+  "amendment": "AMD04",
+  "status": "pass",
+  "checksPassed": 6,
+  "checksTotal": 6,
+  "modelOrServerStarted": false,
+  "gpuUsed": false,
+  "networkUsed": false,
+  "cases": [
+    {
+      "name": "AMD04 opts out of systemd-oomd PSI kill enrollment",
+      "passed": true
+    },
+    {
+      "name": "AMD04 preserves cgroup memory/swap hard caps and kernel OOM containment",
+      "passed": true
+    },
+    {
+      "name": "worker preflight accepts effective ManagedOOMMemoryPressure=auto",
+      "passed": true
+    },
+    {
+      "name": "worker preflight fails closed if oomd PSI kill is re-enabled",
+      "passed": true
+    },
+    {
+      "name": "monitor appends and flushes each JSONL sample immediately",
+      "passed": true
+    },
+    {
+      "name": "AMD04 uses the tested oomd verifier before server startup and flushes monitor samples",
+      "passed": true
+    }
+  ]
+}

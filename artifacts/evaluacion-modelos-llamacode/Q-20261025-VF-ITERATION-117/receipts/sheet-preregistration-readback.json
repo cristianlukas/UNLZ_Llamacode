@@ -1,0 +1,24 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-117",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheetTitle": "Evaluaciones LlamaCode",
+  "range": "A338:J338",
+  "status": "readback_verified_before_tests",
+  "readbackValues": [
+    "Q117-A1 · ASTRA DEFAULT 1M bajo guard estricto",
+    "Preregistro: una request ASTRA DEFAULT 1.048.576 tokens en ambas RTX 3090 bajo supervisor fail-closed; validar que RSS alto no cause stop y que la guarda reaccione a presión sostenida/telemetría inválida.",
+    "Preregistrada · CPU guard checks y preflight pendientes",
+    "2026-10-25",
+    "¿ASTRA DEFAULT 1M completa sin falso stop por RSS y se detiene sólo por presión real (MemAvailable, OOM, PSI severa compuesta) o telemetría inválida?",
+    "ASTRA DEFAULT / Strata 0.1.41 · dual RTX 3090 +128 GiB · fixture Q35 1048576/2026103 · una request, serial y aislada del scope Codex",
+    "Pasa si request HTTP 200 termina, el guard no aborta, RSS alto sólo se registra, MemAvailable no baja de 32 GiB, OOM/worker swap no aumentan, telemetría válida y ambas GPU muestran uso del worker. No es un resultado de calidad/adopción.",
+    "No correr si MemAvailable<80 GiB, SwapFree<1 GiB, PSI severa, <23.000 MiB libres por GPU, <5 GiB en volumen, server externo, hash/identidad alterados o cgroup fuera de background.slice. SOL Q34 dual no se repite: es control histórico no calibrado para PSI.",
+    "Q117/PLAN.md; Q117/receipts/preregistration.json; Q117/scripts/q117_pressure_guard.py; Q117/scripts/run_context_holdout.py; Q108 fail-closed + Q116 composite PSI candidates",
+    "WORK_QUEUE.md · Q-20261025-VF-ITERATION-117 · lock 6db3418d-c2cb-400b-a11a-8a328e01a11f"
+  ],
+  "verifiedFormatting": {
+    "wrappedText": true,
+    "verticalAlignment": "TOP"
+  },
+  "readbackCall": "google_drive_get_spreadsheet_cells"
+}

@@ -1,0 +1,23 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-117",
+  "amendment": "AMD05 pre-live implementation gate",
+  "recordedAtUtc": "2026-10-25T01:30:00Z",
+  "status": "cpu_pass_preflight_pending",
+  "amd05CpuChecks": "21/21",
+  "pyCompileAndShellSyntax": "PASS",
+  "modelServerStarted": false,
+  "gpuUsed": false,
+  "configSha256": "3eaafc161175bbb5ea56bbc464d24afda6fea55a8d7e45e3e76a2b4e6ed41b5c",
+  "configMatchesAMD04Bytes": true,
+  "implementationSha256": {
+    "scripts/q117_pressure_guard_attempt05.py": "b4d42302e7d405abd5c59df5aa86bb7de6ef3bb91aef487b49acbebd1d24270e",
+    "scripts/run_context_holdout_attempt05.py": "24435c412cc791d47687199fb7ab765c7a52aed6b189ac4598eea8dd9d8822b1",
+    "scripts/q117_supervisor_attempt05.py": "b9a3d4397f7d61832b0370b68f2ce267966c5f620db5f140248c4b96e6a35ff8",
+    "scripts/resource_isolation_attempt05.py": "2bec9ccec0f08656981bbf32f63a809a84ba11018f330faeee5502a2daac7165",
+    "scripts/start_q117_supervisor_attempt05.sh": "eeaede47bf4a8074780d3af12ebc42c072d21e3b8d991079a6d3692aa5035fa5",
+    "scripts/test_q117_attempt05_cpu.py": "956f2ad4944c54ae82e91ff1366b56b2a93f818476b541774a5c17cde2ccdcfc",
+    "configs/astra-default-1m-seed-2026103-attempt05.json": "3eaafc161175bbb5ea56bbc464d24afda6fea55a8d7e45e3e76a2b4e6ed41b5c",
+    "receipts/q117-amd05-cpu-tests.json": "11bac5f56b236147926f71a752d4f554c6caa214bddb2c4e3e6471b13d111143"
+  },
+  "next": "Fresh supervisor preflight; no server/GPU/model until every gate passes."
+}
