@@ -1,0 +1,13 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-114",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "range": "'Evaluaciones LlamaCode'!A335:J335",
+  "status": "preregistration_amendment_readback_pass",
+  "wrapVerified": "10/10",
+  "amendment01Verified": true,
+  "statusCell": "Preregistrada con enmienda 01 · replay de 30 muestras pendiente",
+  "noAdjacentCellsChanged": true,
+  "verifiedBeforeReplay": true,
+  "exactProviderTimestampCaptured": false,
+  "readBackStatus": "preregistration amendment row A335:J335 read back with 10/10 WRAP before the amended replay"
+}

@@ -1,0 +1,34 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-114",
+  "experimentId": "Q114-A1",
+  "status": "completed_pass",
+  "completedAtUtc": "2026-10-25T00:36:40Z",
+  "checksPassed": 2,
+  "checksTotal": 2,
+  "checks": [
+    "cgroup PSI 81.53% alone across 30 samples with global PSI 0 remains diagnostic, no warning/stop",
+    "global PSI 34.72% warns at sample 30; no hard stop despite cgroup PSI 81.53%"
+  ],
+  "historicalQ97PeaksCrossChecked": {
+    "cgroupPsiFullPeakPct": 81.53,
+    "globalPsiFullPeakPct": 34.72,
+    "memAvailableMinGiB": 71.864,
+    "oomKillMax": 0,
+    "peaksAssumedSimultaneous": false
+  },
+  "resources": {
+    "gpuUsed": false,
+    "twoRtx3090Fixture": true,
+    "modelOrServerStarted": false,
+    "largeMemoryAllocationGiB": 0,
+    "productionChanged": false
+  },
+  "attempt01": "2/2 on its narrow cases; cgroup-only case sampled once and was superseded as insufficient cadence coverage",
+  "amendment01": "Expanded cgroup-only case to 30 samples with global PSI=0 before rerun",
+  "conclusion": "High cgroup PSI is logged diagnostically; global PSI drives moderate warning and hard-stop cadence in the active Q97 guard.",
+  "limitations": [
+    "Fixture replay, not live pressure or model inference.",
+    "Historical peaks are not assumed simultaneous.",
+    "Does not identify the cause of Codex desktop closure."
+  ]
+}

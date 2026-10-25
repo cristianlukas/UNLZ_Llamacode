@@ -1,0 +1,40 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-114",
+  "experimentId": "Q114-A1",
+  "token": "1d72ff558d30406c80c6dc7ce33e5a26",
+  "preregisteredAtUtc": "2026-10-25T00:34:53.119601+00:00",
+  "status": "preregistered_before_replay",
+  "scope": "CPU-only replay of actual Q97 gates; Q100 delegation verified from source. Distinguish cgroup PSI diagnostic from global gate, calibrate moderate global warning at 30 samples.",
+  "sourceSha256": {
+    "q97": "663a2762ba8e5433b566c1fa2dbbe692cd8d4272619361c477a339da52c6904a",
+    "q100": "2f8f45e0ac55a597e4029112ca89848dbab40392753a45910bbba1a3f6830cc2",
+    "q97Review": "0943d64134fb4afe6d4b1948d960fd9e98c395ba2f6c46f7626bbdaf09ff11b2"
+  },
+  "checks": [
+    "Across 30 samples with global PSI=0, cgroup PSI 81.53% is recorded but causes no warning or stop; MemAvailable 71.864 GiB/OOM 0.",
+    "Across 30 samples, global moderate PSI warns only at sample30; no hard stop; high cgroup PSI remains diagnostic.",
+    "Historical Q97 cgroup/global peak values read and cross-checked without assuming simultaneous peaks."
+  ],
+  "limits": [
+    "Fixture replay, not a live memory-pressure or model run.",
+    "Does not reproduce the exact time-alignment of historical cgroup/global PSI peaks.",
+    "Does not diagnose Codex desktop/driver crash."
+  ],
+  "resourcePolicy": {
+    "gpuUsed": false,
+    "twoGpuFixture": true,
+    "serverOrModelStarted": false,
+    "largeMemoryAllocation": false,
+    "buildOrNetwork": false
+  },
+  "runnerSha256": "077c9441ed637b91ee416193718c926e4acd1c87ea84e8766b4d9a518bca8fbf",
+  "amendments": [
+    {
+      "id": "Q114-A1-amendment-01",
+      "atUtc": "2026-10-25T00:36:00Z",
+      "reason": "Attempt 1 passed 2/2 but its cgroup-only scenario sampled only once, which could not rule out a 30-sample cgroup warning. Expand this case to 30 consecutive samples with global PSI exactly zero, cgroup PSI 81.53%, MemAvailable 71.864 GiB and OOM=0.",
+      "testChange": "Assert all 30 checks continue without warning or stop; second case continues to test the global PSI warning at sample 30."
+    }
+  ],
+  "metadataNote": "Amendment time was normalized to the UTC minute before the second replay; the sheet readback was verified before replay, but its exact provider timestamp was not captured."
+}

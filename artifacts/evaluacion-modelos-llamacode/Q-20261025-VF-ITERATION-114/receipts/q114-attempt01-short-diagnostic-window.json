@@ -1,0 +1,32 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-114",
+  "experimentId": "Q114-A1",
+  "status": "pass",
+  "checksPassed": 2,
+  "checksTotal": 2,
+  "checks": [
+    {
+      "name": "81.53% cgroup PSI is recorded but does not stop or warn by itself",
+      "passed": true
+    },
+    {
+      "name": "moderate global PSI warns at sample 30 while cgroup PSI stays diagnostic and hard-stop remains clear",
+      "passed": true
+    }
+  ],
+  "sourceSha256": {
+    "q97": "663a2762ba8e5433b566c1fa2dbbe692cd8d4272619361c477a339da52c6904a",
+    "q100": "2f8f45e0ac55a597e4029112ca89848dbab40392753a45910bbba1a3f6830cc2",
+    "q97Review": "0943d64134fb4afe6d4b1948d960fd9e98c395ba2f6c46f7626bbdaf09ff11b2"
+  },
+  "historicalQ97PeaksCrossChecked": true,
+  "historicalPeaksAreNotAssumedSimultaneous": true,
+  "gpuUsed": false,
+  "gpuSnapshotMockedTwoRtx3090": true,
+  "modelOrServerStarted": false,
+  "networkUsed": false,
+  "buildRun": false,
+  "artificialMemoryGiB": 0,
+  "productionChanged": false,
+  "coverageNote": "Attempt 1 passed 2/2 for the tested inputs, but its cgroup-only case used one sample; this did not exercise the 30-sample warning window. Superseded by preregistered amendment 01 and a 30-sample cgroup-only replay."
+}
