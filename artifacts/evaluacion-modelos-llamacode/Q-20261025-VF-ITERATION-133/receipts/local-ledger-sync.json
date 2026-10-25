@@ -1,0 +1,17 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-133",
+  "readbackAtUtc": "2026-10-25T06:28:46Z",
+  "sourceFile": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/actionables.json",
+  "backupFile": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/backups/actionables.q133-prechange-20261025T062846Z.json",
+  "sha256BeforeQ133": "943b9ce6e3b454ec70840aabc65123bd193a28866b105ab46bed1f7e8caa25ef",
+  "sha256AfterQ133": "2e1944744bff1d1772eab08f754110f13ec3a893183e37fcd1df63ff26dfe486",
+  "rowCount": 29,
+  "changedIds": [
+    "q119-memory-pressure-composite-streak"
+  ],
+  "q119Status": "Q119 gate cerrado · Q121/AMD05 validado en evaluación real Q127; candidato/no integrado; presión crítica real no observada.",
+  "q119Decision": "El gate model-backed del wrapper ya está satisfecho: Q127 verificó el runner/guard exactos con Q121 y completó una solicitud SOL TP=2 en ambas RTX 3090 (157 muestras; sin aborto/OOM/swap). Q126 validó la alternancia PSI sintética 4/4. No repetir esas pruebas ni crear presión artificial. AMD05 permanece candidato; Q97/Q100 históricos y el producto no se modifican. Conservar ASTRA, SOL, Flash-Next, default 131K y PeritoSoft. No hay evidencia que atribuya los cierres de Codex a memoria. La sensibilidad real a PSI severa + MemAvailable <48 GiB queda sin observar; reabrir sólo ante traza/incidente real o una decisión explícita de cambiar el supervisor.",
+  "q119NextAction": "No queda una prueba Linux habilitada para Q119. Mantener AMD05 sin integrar; reabrir con telemetría real de presión severa o decisión explícita de cambiar el supervisor. Windows Job Objects y NInfer/Flash-Next requieren sesión Windows nativa.",
+  "q119UpdatedAtUtc": "2026-10-25T06:28:46Z",
+  "jsonParse": "PASS"
+}

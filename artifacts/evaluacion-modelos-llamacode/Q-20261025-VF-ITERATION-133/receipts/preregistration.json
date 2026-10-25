@@ -1,0 +1,29 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-133",
+  "registeredAtUtc": "2026-10-25T06:28:10Z",
+  "lockToken": "q133-q119-q127-reconcile-762ec32d59a1",
+  "question": "Does Q119 still lack a model-backed evaluation of the exact Q121/AMD05 wrapper?",
+  "evidencePins": {
+    "q121": "8/8 CPU checks and verify-only PASS; no child launched",
+    "q126": "4/4 CPU boundary/alternating PSI checks for AMD05",
+    "q127": "actual dual-3090 SOL request through exact Q121/AMD05 gate; 157 telemetry samples; no abort/OOM/swap",
+    "q131": "separate Q4/262K run used inline OR transition; supporting evidence only, not proof of Q121 wrapper"
+  },
+  "scope": "CPU/docs/Sheets reconciliation only. No inference, build, GPU, stress load, profile change, or product integration.",
+  "writeSet": [
+    "external data/actionables.json: q119 status, decision, nextAction, reconciliation evidence, artifacts, updated timestamp",
+    "Google Sheet Accionables!D18,H18:K18,M18:N18",
+    "WORK_QUEUE.md",
+    "docs/evaluacion-modelos-llamacode.md",
+    "Q133 plan/results/receipts"
+  ],
+  "acceptance": [
+    "Q119 states Q127 satisfies model-backed wrapper gate",
+    "AMD05 remains candidate-only; Q97/Q100 and product unchanged",
+    "preserve ASTRA/SOL/Flash-Next/PeritoSoft and 131K default",
+    "sheet readback matches, neighbor rows/formats unchanged",
+    "JSON parses and git diff --check passes",
+    "commit/push to origin/main after verifying guideahon; release exact Q133 lock"
+  ],
+  "noNewBenchmark": "Q127 already meets the model-backed gate; repeating it would not change the decision."
+}

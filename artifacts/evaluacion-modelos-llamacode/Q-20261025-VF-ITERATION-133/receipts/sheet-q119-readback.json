@@ -1,0 +1,29 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-133",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheetName": "Accionables",
+  "sheetId": 1393124532,
+  "range": "Accionables!A17:N19",
+  "targetRange": "Accionables!D18,H18:K18,M18:N18",
+  "readbackAtUtc": "2026-10-25T06:28:46Z",
+  "targetId": "q119-memory-pressure-composite-streak",
+  "readback": {
+    "status": "Q119 gates de campaña cerrados · Q127 confirmó Q121/AMD05 en SOL dual-3090; candidato/no integrado; presión crítica real no observada.",
+    "detail": "Q121: preflight del wrapper AMD05 8/8 CPU + verify-only PASS. Q126: borde PSI alternante sintético 4/4. Q127: verificación Q121 del runner/guard exactos antes del worker; SOL TP=2 real en 2×RTX 3090, 157 muestras, sin abort/OOM/swap. Q131: guard OR inline en Q4/262K, sin falso corte. Ninguna corrida real alcanzó PSI severa con MemAvailable bajo.",
+    "decision": "El gate model-backed de Q119 ya está satisfecho por Q127. No repetir esas pruebas ni crear presión artificial. AMD05 sigue candidato; Q97/Q100 históricos y producto sin cambios. Conservar ASTRA, SOL, Flash-Next, default 131K y PeritoSoft. No hay evidencia que atribuya los cierres de Codex a memoria. No queda test Linux habilitado hasta una traza real de presión crítica o una decisión explícita de cambiar el supervisor; gates Windows esperan sesión nativa.",
+    "artifacts": "Q-20261025-VF-ITERATION-121/receipts/q121-test-run.json; Q-20261025-VF-ITERATION-126/RESULTS.md; Q-20261025-VF-ITERATION-127/RESULTS.md; Q-20261025-VF-ITERATION-127/receipts/q121-verify-only.json; Q-20261025-VF-ITERATION-131/RESULTS.md; Q-20261025-VF-ITERATION-133/RESULTS.md",
+    "evidence": "Q127 ejercitó realmente Q121/AMD05 con SOL dual-3090 (157 muestras; no abort/OOM/swap) y pasó el runner/guard fijados. Q126 valida alternancia sintética 4/4. Q131 mostró carga Flash-Next Q4/262K con RSS 93.13 GiB, MemAvailable mín. 60.80 GiB, PSI some/full 8.05%/7.54%, OOM 0 y sin aborto; usó un controlador OR inline. No hay presión severa real observada ni diagnóstico causal del cierre de Codex.",
+    "updatedUtc": "2026-10-25T06:28:46Z",
+    "reconciledUtc": "2026-10-25T06:28:46Z"
+  },
+  "neighborRows": {
+    "row17Id": "vf-ocr-unlimited-20261019",
+    "row19Id": "Q-20261025-VF-ITERATION-131"
+  },
+  "formatValidation": {
+    "wrapTopCells": 42,
+    "expectedCells": 42,
+    "neighborRowsPreserved": true
+  },
+  "result": "PASS: exact Q119 target values read back; neighbor IDs and all 42 WRAP/TOP formats preserved; no row/column insertion or formatting write."
+}

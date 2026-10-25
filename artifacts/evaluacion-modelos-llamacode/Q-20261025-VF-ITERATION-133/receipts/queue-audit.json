@@ -1,0 +1,52 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-133",
+  "auditedAtUtc": "2026-10-25T06:30:22Z",
+  "source": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data",
+  "actionables": {
+    "total": 29,
+    "q119Status": "closed for currently justified Linux campaign gates",
+    "otherOpenConditions": [
+      "Windows Job Objects/entrypoints and NInfer Flash-Next require Windows native Codex session (user deferred).",
+      "P2.1 requires a trusted authenticated tenant principal and real resource policy before a tenant fixture.",
+      "Harness² requires a concrete workflow and fixed holdout.",
+      "HyperQwen remains blocked because Q101 did not prove a LlamaCode parser/runtime defect.",
+      "Other entries are complete/resolved or have no repeatable new test enabled."
+    ]
+  },
+  "inbox": {
+    "total": 58,
+    "statusCounts": {
+      "Analizado": 42,
+      "Bloqueada": 4,
+      "Sin prueba aplicable": 2,
+      "Duplicada": 1,
+      "Revisado · sin prueba local nueva aplicable": 1,
+      "Revisado · sin prueba local aplicable": 1,
+      "Analizado · Q100 guard and parallel2": 1,
+      "Analizado · Q97 guard and Swift": 1,
+      "Cerrado · d4 candidate-only": 1,
+      "Analizado · Q56 JSON": 1,
+      "Analizado · screen closed after startup failures": 1,
+      "Analizado · S57 context results": 1,
+      "Migrado y verificado": 1
+    },
+    "blockedSequences": [
+      26,
+      28,
+      31,
+      32
+    ],
+    "blockedReasons": [
+      "source/claim provenance or hardware transferability unresolved",
+      "source/claim not ready for a local test",
+      "CUDA/SM86 and storage incompatibility",
+      "Instagram primary content inaccessible"
+    ]
+  },
+  "runtimeProbe": {
+    "processRegexMatches": 0,
+    "evaluationPortListeners": 0,
+    "inferenceLaunched": false
+  },
+  "conclusion": "No other currently runnable Linux test in the local queue was found that could change a decision without an external condition or a material new artifact. This is a queue status, not proof that the entire VF goal is complete."
+}
