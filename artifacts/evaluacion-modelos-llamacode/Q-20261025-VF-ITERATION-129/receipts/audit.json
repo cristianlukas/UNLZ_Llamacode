@@ -1,0 +1,52 @@
+{
+  "task": "Q-20261025-VF-ITERATION-129",
+  "lockToken": "q129-ninfer-linux-flashnext-screen-4198f5f9239762bd389e",
+  "status": "completed_static_audit_model_screen_blocked",
+  "modelBackedTestExecuted": false,
+  "reason": "NInfer v0.16.1 Linux release exists for other profiles, but Qwen3.8-Flash-Next is documented as a Windows preview; Linux and distinct-GPU support are not qualified for this profile.",
+  "hardwareTarget": {
+    "gpus": "2x NVIDIA RTX 3090 24 GiB",
+    "hostRamGiB": 128,
+    "singleGpuSubstituteUsed": false
+  },
+  "memoryEvidence": {
+    "astraDefault1m": {
+      "source": "Q117 live / Q118 AMD05 replay / Q128 Q97 counterfactual replay",
+      "promptTokens": 1001463,
+      "rssMaxGiB": 51.306,
+      "minMemAvailableGiB": 58.698,
+      "maxHostPsiAvg10Pct": 53.61,
+      "stopCount": 0,
+      "oomCount": 0,
+      "swapWorkerBytes": 0,
+      "gpusUsed": 2
+    },
+    "sol": {
+      "source": "Q34 historical 30/30 and Q127 live telemetry",
+      "q127PromptTokens": 24319,
+      "q127TreeRssGiB": 12.421,
+      "q127MinMemAvailableGiB": 99.973,
+      "q127PeakVramMiB": [24080,23972],
+      "stopCount": 0,
+      "oomCount": 0,
+      "gpusUsed": 2,
+      "limitation": "Q127 is not a replay of SOL's historical high-memory workload; Q34 has no continuous PSI trace."
+    }
+  },
+  "guardFinding": {
+    "rssOrVramAloneStops": false,
+    "amd05IntegratedIntoProduct": false,
+    "legacyQ97AlternatingSeverePsiGap": true,
+    "candidateRegression": "Q126 4/4; Q116-A2 5/5"
+  },
+  "hostPreflight": {
+    "inferenceProcessOrListener": false,
+    "gpuProcesses": ["ArtCraft, 207 MiB on GPU0; preserved"],
+    "serversKilled": 0
+  },
+  "sources": [
+    "https://github.com/ashalliants/ninfer-3090/releases",
+    "https://github.com/Don-Chad/ninfer-3090/blob/master/docs/serving.md",
+    "https://github.com/Don-Chad/ninfer-3090"
+  ]
+}
