@@ -1,0 +1,9 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-116",
+  "ownerToken": "3fb0fad6-c440-44f6-aa16-11437b46ebee",
+  "verifiedAtUtc": "2026-10-25T00:53:02Z",
+  "lockWorker": "Q-20261025-VF-ITERATION-116 PSI mixed-severe streak audit",
+  "lockFile": "WORK_QUEUE.lock",
+  "state": "release_authorized_after_final_commit",
+  "note": "Receipt persisted while this task still owns the exclusive lock; the lock is removed immediately after committing and pushing this receipt."
+}
