@@ -1,0 +1,11 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-115",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "readBackAtUtc": "2026-10-25T00:39:10Z",
+  "status": "readback_pass",
+  "ranges": [
+    {"range":"'Evaluaciones LlamaCode'!A336:J336","cells":10,"wrapVerified":10,"status":"Completada · replay CPU 2/2 PASS","containsFinal":"full 20.00% y some 70.00% avisan sólo en sample30"},
+    {"range":"Accionables!A2:N2","cells":14,"wrapVerified":14,"actionId":"vf-q35-codex-crash-isolation-20261022","containsQ115":"Q115 2/2 PASS","createdAtPreserved":true}
+  ],
+  "writeMethod":"Bounded updateCells with explicit end coordinates and full-row readback."
+}

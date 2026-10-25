@@ -1,0 +1,31 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-115",
+  "experimentId": "Q115-A1",
+  "status": "pass",
+  "checksPassed": 2,
+  "checksTotal": 2,
+  "checks": [
+    {
+      "name": "global PSI full exactly 20% warns at sample 30; 19.99% does not",
+      "passed": true
+    },
+    {
+      "name": "global PSI some exactly 70% warns at sample 30; 69.99% does not",
+      "passed": true
+    }
+  ],
+  "sourceSha256": {
+    "q97": "663a2762ba8e5433b566c1fa2dbbe692cd8d4272619361c477a339da52c6904a",
+    "q100": "2f8f45e0ac55a597e4029112ca89848dbab40392753a45910bbba1a3f6830cc2",
+    "q97Review": "0943d64134fb4afe6d4b1948d960fd9e98c395ba2f6c46f7626bbdaf09ff11b2"
+  },
+  "policyReceiptCrossChecked": true,
+  "gpuUsed": false,
+  "twoRtx3090Fixture": true,
+  "modelOrServerStarted": false,
+  "networkUsed": false,
+  "buildRun": false,
+  "artificialMemoryGiB": 0,
+  "productionChanged": false,
+  "completedAtUtc": "2026-10-25T00:39:10Z"
+}

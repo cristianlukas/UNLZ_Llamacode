@@ -1,0 +1,32 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-115",
+  "experimentId": "Q115-A1",
+  "status": "completed_pass",
+  "completedAtUtc": "2026-10-25T00:39:10Z",
+  "checksPassed": 2,
+  "checksTotal": 2,
+  "thresholds": {
+    "full_warning": {
+      "thresholdPct": 20.0,
+      "cadenceSamples": 30,
+      "exactThresholdWarned": true,
+      "belowThreshold19_99Warned": false
+    },
+    "some_warning": {
+      "thresholdPct": 70.0,
+      "cadenceSamples": 30,
+      "exactThresholdWarned": true,
+      "belowThreshold69_99Warned": false
+    }
+  },
+  "severeStopTriggered": false,
+  "resources": {
+    "gpuUsed": false,
+    "twoRtx3090Fixture": true,
+    "modelOrServerStarted": false,
+    "largeMemoryAllocationGiB": 0,
+    "productionChanged": false
+  },
+  "interpretation": "Both inclusive global PSI moderate-warning boundaries in the active Q97 guard work at sample 30; just-below fixtures remain un-warned after 30 samples. These warnings do not stop the campaign.",
+  "nextModelTests": "No new model A/B is enabled in this Linux executor until listed external gates change; any subsequent A/B keeps the user host profile of dual RTX 3090 and 128 GiB."
+}
