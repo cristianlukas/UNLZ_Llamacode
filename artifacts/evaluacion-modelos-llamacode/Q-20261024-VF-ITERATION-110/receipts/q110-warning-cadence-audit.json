@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261024-VF-ITERATION-110",
+  "amendment": 1,
+  "recordedAtUtc": "2026-10-25T00:09:40Z",
+  "status": "pass",
+  "checksPassed": 6,
+  "checksTotal": 6,
+  "gpuUsed": false,
+  "modelOrServerStarted": false,
+  "memoryAllocationGiB": 0,
+  "productionChanged": false,
+  "q108CoreChanged": false,
+  "checks": [
+    {
+      "name": "Q108 one-sample moderate warning difference reproduced",
+      "passed": true
+    },
+    {
+      "name": "moderate PSI warning begins exactly at 30 consecutive samples",
+      "passed": true
+    },
+    {
+      "name": "PSI recovery resets the consecutive warning counter",
+      "passed": true
+    },
+    {
+      "name": "severe PSI hard stop remains 15 samples and takes precedence",
+      "passed": true
+    },
+    {
+      "name": "ASTRA 1M high-RSS / healthy PSI control continues",
+      "passed": true
+    },
+    {
+      "name": "missing PSI still fails closed in unchanged Q108 core",
+      "passed": true
+    }
+  ]
+}

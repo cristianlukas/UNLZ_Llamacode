@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261024-VF-ITERATION-110",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "updatedAtUtc": "2026-10-25T00:09:51Z",
+  "verifiedRanges": {
+    "Accionables!A2:N2": {"readback": true, "identityRestored": true, "all14Wrap": true, "driverGateCorrected": true, "q110AndA1EvidencePresent": true},
+    "Evaluaciones LlamaCode!A330:J330": {"readback": true, "all10Wrap": true, "result": "9/9 PASS"},
+    "Evaluaciones LlamaCode!A331:J331": {"readback": true, "all10Wrap": true, "result": "6/6 PASS"}
+  },
+  "writeCorrection": {
+    "occurred": true,
+    "issue": "The first updateCells request included empty objects for unchanged cells and temporarily cleared A2:C2.",
+    "repair": "Restored A2='Recomendación actualizada', B2='vf-q35-codex-crash-isolation-20261022', C2='P0 · estabilidad de harness' with a bounded write to A2:C2.",
+    "verification": "Read back A2:N2; identity, edited values, empty cells E:G/L, and WRAP formatting all match the intended final state."
+  },
+  "noModelOrGpuTest": true
+}

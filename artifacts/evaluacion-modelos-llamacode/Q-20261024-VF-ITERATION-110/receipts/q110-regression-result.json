@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261024-VF-ITERATION-110",
+  "recordedAtUtc": "2026-10-25T00:05:32Z",
+  "status": "pass",
+  "checksPassed": 9,
+  "checksTotal": 9,
+  "gpuUsed": false,
+  "modelOrServerStarted": false,
+  "memoryAllocationGiB": 0,
+  "foreignProcessSignals": 0,
+  "checks": [
+    {
+      "name": "Q110 exclusive lock is still owned",
+      "passed": true
+    },
+    {
+      "name": "ASTRA 1M high RSS (51.14 GiB) with 55.728 GiB available continues",
+      "passed": true
+    },
+    {
+      "name": "SOL Q34 TP=2 completed on dual 3090 without OOM; PSI caveat preserved",
+      "passed": true
+    },
+    {
+      "name": "Q97 ASTRA moderate PSI (34.72%) warns but continues",
+      "passed": true
+    },
+    {
+      "name": "Q100 six runs completed under moderate PSI; guard warns without stop",
+      "passed": true
+    },
+    {
+      "name": "hard-stop floor/OOM/severe-PSI boundaries and recovery remain intact",
+      "passed": true
+    },
+    {
+      "name": "missing/malformed PSI and OOM telemetry fails closed",
+      "passed": true
+    },
+    {
+      "name": "missing live telemetry signals only explicit candidate PID",
+      "passed": true
+    },
+    {
+      "name": "live /proc metrics are complete and do not cross a hard stop",
+      "passed": true
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261024-VF-ITERATION-110",
+  "capturedAtUtc": "2026-10-25T00:06:03Z",
+  "host": "3090",
+  "platform": "Linux 3090 7.0.0-38-generic #38~24.04.4-Ubuntu SMP PREEMPT_DYNAMIC Mon Sep 14 16:37:11 UTC 2 x86_64 x86_64 x86_64 GNU/Linux",
+  "nvidiaSmi": {
+    "argv": [
+      "nvidia-smi",
+      "--query-gpu=index,name,driver_version,memory.total,memory.used,utilization.gpu",
+      "--format=csv,noheader"
+    ],
+    "returnCode": 0,
+    "stdout": "0, NVIDIA GeForce RTX 3090, 615.71.09, 24576 MiB, 1393 MiB, 20 %\n1, NVIDIA GeForce RTX 3090, 615.71.09, 24576 MiB, 110 MiB, 33 %",
+    "stderr": ""
+  },
+  "nvidiaComputeApps": [
+    {
+      "pid": "3952271",
+      "processName": "/tmp/.mount_artcragmccCd/usr/bin/artcraft-launcher",
+      "usedGpuMemory": "207 MiB"
+    }
+  ],
+  "nvidiaComputeAppsCommand": {
+    "argv": [
+      "nvidia-smi",
+      "--query-compute-apps=pid,process_name,used_gpu_memory",
+      "--format=csv,noheader"
+    ],
+    "returnCode": 0,
+    "stdout": "3952271, /tmp/.mount_artcragmccCd/usr/bin/artcraft-launcher, 207 MiB",
+    "stderr": ""
+  },
+  "nvidiaProcDriverVersion": "NVRM version: NVIDIA UNIX Open Kernel Module for x86_64  615.71.09  Release Build  (dvs-builder@U22-I3-F05-2-4)  Fri Sep  4 22:33:33 UTC 2026\nGCC version:  gcc version 13.3.0 (Ubuntu 13.3.0-6ubuntu2~24.04.1)",
+  "nvidiaModuleVersion": "615.71.09",
+  "meminfoBytes": {
+    "MemTotal": 132615852032,
+    "MemAvailable": 114149216256,
+    "SwapTotal": 8589930496,
+    "SwapFree": 6037970944
+  },
+  "memAvailableGiB": 106.31,
+  "memoryPsiAvg10Pct": {
+    "some": {
+      "avg10": 0.0,
+      "avg60": 0.0,
+      "avg300": 0.0
+    },
+    "full": {
+      "avg10": 0.0,
+      "avg60": 0.0,
+      "avg300": 0.0
+    }
+  },
+  "globalOomKill": 0,
+  "inferenceProcessMatches": [],
+  "listenerScan": {
+    "argv": [
+      "ss",
+      "-ltnp"
+    ],
+    "returnCode": 0,
+    "stdout": "State  Recv-Q Send-Q Local Address:Port  Peer Address:PortProcess                                      \nLISTEN 0      10         127.0.0.1:6742       0.0.0.0:*    users:((\"OpenRGB\",pid=17292,fd=4))          \nLISTEN 0      4096       127.0.0.1:631        0.0.0.0:*                                                \nLISTEN 0      128        127.0.0.1:47413      0.0.0.0:*    users:((\"artcraft-launch\",pid=3952271,fd=4))\nLISTEN 0      4096       127.0.0.1:42539      0.0.0.0:*                                                \nLISTEN 0      4096      127.0.0.54:53         0.0.0.0:*                                                \nLISTEN 0      4096   127.0.0.53%lo:53         0.0.0.0:*                                                \nLISTEN 0      4096           [::1]:631           [::]:*",
+    "stderr": ""
+  },
+  "knownInferencePortMatches": [],
+  "knownInferenceServerActive": false,
+  "windowsNativeTools": {
+    "powershell.exe": false,
+    "pwsh": false,
+    "powershell": false,
+    "cmd.exe": false,
+    "cmd": false
+  },
+  "modelOrServerStarted": false,
+  "gpuWorkloadStarted": false,
+  "foreignProcessesSignaled": 0,
+  "notes": "nvidia-smi was queried read-only. The listed ArtCraft process is preserved and is not identified as an inference server by process/port scan."
+}

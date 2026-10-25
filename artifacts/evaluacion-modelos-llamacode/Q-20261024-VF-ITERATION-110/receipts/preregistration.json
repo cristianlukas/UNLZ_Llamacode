@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261024-VF-ITERATION-110",
+  "lockToken": "549f3a3b-673a-4d3a-9046-1122a67c04a2",
+  "registeredAtUtc": "2026-10-25T00:04:21Z",
+  "question": "Confirm the memory-pressure guard does not mistake high RSS or moderate PSI for an abort, honoring the user's successful ASTRA 1M and SOL runs.",
+  "tests": [
+    {
+      "id": "Q110-T1",
+      "action": "Run a focused Q110 CPU-only regression over the unchanged Q108 candidate core, retaining only memory-detector checks relevant to ASTRA/SOL, PSI, boundaries, telemetry and signal scope.",
+      "expected": "ASTRA high-RSS control and moderate PSI continue; hard stops remain MemAvailable <32 GiB, OOM increase, or severe global PSI for 15 consecutive samples; missing telemetry fails closed and signals only the candidate PID. Q110 runner owns a current-lock assertion instead of reusing Q108's lock-pinned suite.",
+      "gpu": false,
+      "model": false,
+      "memoryAllocationGiB": 0
+    },
+    {
+      "id": "Q110-T2",
+      "action": "Read one live /proc sample through the Q108 core and record the decision without launching or signaling a candidate.",
+      "expected": "Valid host metrics; continue unless a registered hard-stop condition is actually present.",
+      "gpu": false,
+      "model": false,
+      "memoryAllocationGiB": 0
+    },
+    {
+      "id": "Q110-T3",
+      "action": "Read-only scan for inference processes/listeners and nvidia-smi compute applications.",
+      "expected": "No model/server started or process stopped; GUI/ArtCraft is not classified as inference.",
+      "gpu": false,
+      "model": false,
+      "foreignProcessSignals": 0
+    }
+  ],
+  "executionAmendment": {
+    "recordedAtUtc": "2026-10-25T00:07:26Z",
+    "reason": "The original Q108 audit runner is pinned to Q108's lock token and includes an unrelated external actionable check; it cannot be rerun as Q110 without violating its ownership assumption.",
+    "actualRunner": "runner/q110_detector_recheck.py",
+    "actualCheckCount": 9,
+    "transparency": "The focused runner was prepared before execution, but the Sheet/preregistration wording still said 15 checks until this correction. Results report the actual 9/9 and do not claim a 15/15 rerun."
+  },
+  "noModelBenchmark": "Model candidates remain blocked by external gates; do not run a substitute or incompatible test.",
+  "protected": ["ASTRA Flash-Next", "SOL", "PeritoSoft", "production weights and profiles"],
+  "core": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-108/runner/q108_guard_core.py",
+  "regression": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-108/runner/test_q108_guard_audit.py"
+}

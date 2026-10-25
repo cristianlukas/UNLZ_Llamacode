@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261024-VF-ITERATION-110",
+  "amendment": 1,
+  "recordedAtUtc": "2026-10-25T00:08:46Z",
+  "question": "Does the candidate Q108 core preserve Q97's 30-second warning persistence, and can a separate wrapper reproduce it without changing hard stops?",
+  "observation": "Q108 evaluate_sample reports warning on the first threshold-crossing sample; Q97 calibrated policy requires 30 consecutive 1-second samples. This affects warning cadence, not hard-stop decisions.",
+  "testPlan": [
+    "Moderate PSI samples 1-29: no warning; sample 30: warning.",
+    "Recovery below warning threshold resets the consecutive-sample counter.",
+    "Severe PSI hard stop remains at sample 15, independent of warning cadence.",
+    "ASTRA 1M high-RSS control with healthy PSI remains continue/no-warning.",
+    "Missing telemetry continues to fail closed through the unchanged Q108 parser/core."
+  ],
+  "implementation": "Create a Q110-only candidate wrapper over the unchanged Q108 core; do not alter production or Q108 artifacts.",
+  "resources": {"gpu": false, "modelOrServer": false, "artificialRamGiB": 0, "foreignProcessSignals": 0},
+  "gates": "Run only the CPU synthetic policy regression; no model inference or memory allocation."
+}

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261024-VF-ITERATION-110",
+  "lockToken": "549f3a3b-673a-4d3a-9046-1122a67c04a2",
+  "closedAtUtc": "2026-10-25T00:10:15Z",
+  "status": "completed-local-tests-pass; model queue waits for external gates",
+  "tests": {"focusedCoreRegression": "9/9 PASS", "warningCadenceAmendment": "6/6 PASS"},
+  "memoryPolicy": {"highRssIsStopSignal": false, "moderatePsi": "warning only after 30 consecutive 1-second samples in Q110 candidate wrapper", "hardStops": ["MemAvailable <32 GiB", "new OOM kill", "global PSI full >=60% or some >=80% for 15 consecutive samples"]},
+  "currentHost": {"memAvailableGiB": 106.31, "memoryPsiAvg10Pct": {"some": 0.0, "full": 0.0}, "globalOomKill": 0, "moduleVersion": "615.71.09", "nvmlDriverVersion": "615.71.09", "inferenceServer": false},
+  "resourceUse": {"modelOrServerStarted": false, "gpuWorkloadStarted": false, "artificialMemoryAllocationGiB": 0, "foreignProcessesSignaled": 0},
+  "productionChanged": false,
+  "modelTestsEligible": false,
+  "modelBlockers": ["Windows-native C39-02 and Job Objects/PowerShell entrypoint checks", "other lot candidates remain blocked by their recorded runtime, artifact, backend/fixture, or primary-source gates"],
+  "sheetRanges": ["Accionables!A2:N2", "Evaluaciones LlamaCode!A330:J330", "Evaluaciones LlamaCode!A331:J331"],
+  "nextAction": "Reopen only when a recorded external gate changes; integrate the Q110 warning wrapper only through a separately preregistered eligible launcher, not as a global Codex memory limit."
+}
