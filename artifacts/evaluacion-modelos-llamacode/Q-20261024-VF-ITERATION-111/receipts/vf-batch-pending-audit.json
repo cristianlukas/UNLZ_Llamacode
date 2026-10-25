@@ -1,0 +1,68 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-111",
+  "capturedAtUtc": "2026-10-25T00:18:54Z",
+  "batchId": "VF-20261019-01",
+  "inboxCount": 58,
+  "inboxAllBatchId": true,
+  "inboxAllHaveAnalysis": true,
+  "actionablesCount": 28,
+  "nonTerminalActionables": [
+    {
+      "index": 2,
+      "id": "vf-q35-codex-crash-isolation-20261022",
+      "title": "P0 · Limitar por cgroup todos los workers de evaluación local",
+      "status": "Implementada parcialmente · scope Linux y canario padre/hijo aprobados; Windows Job Objects pendientes",
+      "nextOrGate": "Q37 aisló el supervisor/worker Q35; Q41 integró tools/kv_cache_ab.py y sus matrices dependientes en background.slice; Q42 integró scripts/run-astra-strata.sh. Canarios Linux verificaron lifecycle y OOM. Q38 aún enumera tools/meter_system_profiles.py y ocho entrypoints PowerShell sin Job Object visible. Q60 P60-A1 revalidó la ruta Linux con un padre Python y un hijo sleep: ambos entraron en background.slice, heredaron oom_score_adj=900 y terminaron al detener el scope; MemoryHigh/MemoryMax/MemorySwapMax=infinity. `tools/meter_system_profiles.py` usa `D:/.../llama-server.exe` y `C:/...`, por lo que su ruta pendiente requiere Windows nativo. Q61 auditó Crashpad/journal: un `crash` ptype=gpu-process, dos `dump_without_crashing` sin minidumps; no se halló OOM/oomd kill correlacionable. El kernel registra API mismatch NVIDIA userspace 615.71.09 vs módulo 610.57.04 tras el update; no se atribuyen todos los cierres. Q97: transient AppArmorProfile=chatgpt aisló la campaña completa en servicio fuera del proceso de Codex; ASTRA/Swift dual-3090 completaron 8/8 requests cada uno, cleanup inactive/dead, Codex/GUI intactos. El monitor registró PSI de presión sin abortar por nivel moderado; no hubo OOM/crash. La calibración Q94/Q95 deja PSI moderado como warning y sólo severidad sostenida, MemAvailable<32 GiB u OOM como stop. Q111 auditó 8/8 la ruta real: q97_supervised_bcb aplica warning moderado desde 30 muestras y stop severo desde 15; Q100 importa ese helper. Q97/Q100 completaron bajo PSI moderada sin OOM/aborto."
+    },
+    {
+      "index": 3,
+      "id": "vf-q32-flashnext-ninfer-linux-gate-20261022",
+      "title": "P1 · Flash-Next NInfer v0.16.1 Windows preview: comparación emparejada",
+      "status": "Pendiente · requiere sesión de Codex con Windows nativo; C39-01 está listo",
+      "nextOrGate": "C39-01 conversión y validación NInfer v3 completas. C39-02 compara NInfer v0.16.1 con Strata en serie en Windows, contexto ≤32K, con calidad, prefill/TTFT/decode/E2E y estabilidad."
+    },
+    {
+      "index": 9,
+      "id": "vf-qwen-tool-safety-gates-20261022",
+      "title": "P2.1 · Reforzar orden de tools y aislamiento tenant",
+      "status": "P2.1 abierto · Q106/Q107 harness PASS (95/95); falta fixture de autorización tenant",
+      "nextOrGate": "Q106 replanificación de tools 3/3 PASS. Q107 repitió test updater directo PASS, CTest 1/1 y suite Linux Release 95/95. Primer 94/95 fue por variables LLAMACODE Q77/Q102 exportadas vacías en el runner, no por defecto del producto."
+    },
+    {
+      "index": 15,
+      "id": "f23604a1-ff2e-4d28-9e09-2b5cf01d9b69",
+      "title": "Auditar Harness² antes de cualquier experimento de auto-modificación",
+      "status": "Bloqueado · falta workflow concreto y holdout sintético fijo",
+      "nextOrGate": "Canarios técnicos completados: namespace/egress aislado, endpoint local Responses API HTTP 200, suite 5/5 y demo 2/2. No equivalen a una prueba de calidad."
+    },
+    {
+      "index": 20,
+      "id": "vf-order-validation-20261019",
+      "title": "Añadir fixture de coding para pedidos ambiguos y validación",
+      "status": "Bloqueado · falta caption/transcripción primaria",
+      "nextOrGate": "Usar una tarea de repositorio aislada que implemente un parser tipado más un validador determinista de pedido. Casos ocultos: 6 empanadas vs 6 docenas, cantidades/unidades, producto inválido, sustitución, totales y zonas. Comparar pass rate, regresiones y tiempo total entre modelos contra el mismo baseline/harness."
+    },
+    {
+      "index": 21,
+      "id": "vf-ocr-unlimited-20261019",
+      "title": "Probar OCR local para PDFs escaneados",
+      "status": "Pausado · screen sintético completo; integración opt-in pendiente",
+      "nextOrGate": "Screen P1–P4 completado en fixtures sintéticos; parser P4 6/6, tablas 24/24 y columnas 8/8 en orden. No integrado: opt-in Data Lab/product decision y documentación real autorizada siguen pendientes."
+    },
+    {
+      "index": 26,
+      "id": "vf-hyperqwen-qwen38-27b-dual3090-20261024",
+      "title": "HyperQwen · Qwen3.8-27B en 2×RTX 3090 (TP=2)",
+      "status": "Bloqueado · gate Q101: Q104 no demostró defecto parser/runtime",
+      "nextOrGate": "A/B principal TP=2 en 2×RTX 3090/128 GB. Intento 7 GPU_UTIL=.91 + KV_MEM=3GB/worker, compose guard PASS, health PASS (~72 s). Canario named: read_file 1 call/453 prompt/256 completion/6.881 s/finish_reason=length, path fuera de enum; fixture no leído/escrito. No Tool-Eval, score ni TPS. Attempts 1–6 permanecen en recibos; intento 6 tuvo KV_MEM omitido, no contó como perfil preregistrado. Intento 8 preregistrado como diagnóstico de truncación con max_tokens 512 como única variable; mantiene TP=2 en ambas RTX 3090. Intento 8: 512 tokens, finish_reason=stop a 309 completion; path enum aún falla. Intento 9 propuesto: prompt explicita rutas exactas, una sola diferencia. Intento 9 TP=2 ambas RTX 3090: prompt explícito hace que read_file respete el path (489/26 tokens, 1.214 s); write_file se trunca a 512 tokens (561/512, 12.856 s), path inválido y content no-string. Fixture no escrito; sin Tool-Eval ni A/B. Cleanup PASS. Según preregistro, detener loop hasta cambio material del parser/runtime. Q101 preregistra intento 10: sólo write_file max_tokens 512→1024; read_file=512 y final=128. Sin Tool-Eval ni A/B salvo nuevo preregistro tras canario válido. Enmienda01: el hash mismatch era un falso positivo porque HyperQwen prepare reescribe tres shards y los originales están en .bak*; los nueve originales y DFlash2 verifican SHA pinned y la estructura preparada pasa en contenedor read-only sin red/GPU. Revisión de guard: ASTRA 1M completó 10/10 con RSS 51.14 GiB y MemAvailable mínima 55.73 GiB; PSI moderada 34.72%/46.52% en Q97/Q100 sólo avisó y ambas tareas completaron. Hard floor 32 GiB deja 23.73 GiB debajo del mínimo histórico; sin caps de RAM/swap. Canario aún no iniciado. Q101 intento 10: servidor healthy en TP=2; read_file generó 1 llamada, pero pathMatchesContract=false (489 prompt/507 completion tokens, 14.246 s, finish_reason=stop). No se llamó write_file ni se escribió fixture; la hipótesis sobre aumentar el límite de write_file queda inconclusa. Guard: 96 muestras, MemAvailable mín. 102.201 GiB, PSI memoria pico 1.08%, sin avisos/racha severa/OOM; PSI I/O full 21.37% separada. Cleanup PASS; sin Tool-Eval/A-B. Q102 guard audit: CPU replay 19/19; live anonymous RSS 48.013 GiB held 12 s, 12 samples, MemAvailable minimum 61.682 GiB, memory PSI peak 1.97%, zero warnings/stops/OOM; cgroup RAM/swap uncapped; server/model/GPU not started. Host/assets TP=2 preflight PASS. HyperQwen canary not repeated because Q101 requires a material parser/runtime change; Q102 changed only harness."
+    }
+  ],
+  "conclusion": "No model benchmark is currently eligible without satisfying its listed gate. P2.1 is the next candidate for a local fixture audit; Windows-only tests require Windows-native session; OCR integration needs explicit product/real-document fixture; HyperQwen needs material parser/runtime change.",
+  "safety": {
+    "astraFlashNextPreserved": true,
+    "solPreserved": true,
+    "peritoSoftModelsPreserved": true,
+    "noModelServerStarted": true,
+    "noGpuUsed": true
+  }
+}

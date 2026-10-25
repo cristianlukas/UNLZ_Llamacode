@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261024-VF-ITERATION-111",
+  "experimentId": "Q111-A1",
+  "recordedAtUtc": "2026-10-25T00:17:33Z",
+  "status": "pass",
+  "checksPassed": 8,
+  "checksTotal": 8,
+  "gpuUsed": false,
+  "modelOrServerStarted": false,
+  "buildRun": false,
+  "downloadRun": false,
+  "artificialMemoryGiB": 0,
+  "productionChanged": false,
+  "sourceSha256": {
+    "q97Launcher": "663a2762ba8e5433b566c1fa2dbbe692cd8d4272619361c477a339da52c6904a",
+    "q100Launcher": "2f8f45e0ac55a597e4029112ca89848dbab40392753a45910bbba1a3f6830cc2",
+    "q108Core": "832c6661692fa9c6e45d209be5c4201a1ad796bfe66bec92cf947151e6988b4b",
+    "q110Wrapper": "300186563c6715a4e2901d4cd0863a59fc52eb38a010cc06dc83bf7a23ac4f87"
+  },
+  "checks": [
+    {
+      "name": "Q97 actual launcher: moderate full PSI warns at sample 30",
+      "passed": true
+    },
+    {
+      "name": "Q97 actual launcher: recovery resets consecutive PSI warnings",
+      "passed": true
+    },
+    {
+      "name": "Q97 actual launcher: full PSI hard stop boundary is sample 15",
+      "passed": true
+    },
+    {
+      "name": "Q97 actual launcher: some PSI hard stop boundary is sample 15",
+      "passed": true
+    },
+    {
+      "name": "Q100 active supervisor delegates monitored gate to Q97",
+      "passed": true
+    },
+    {
+      "name": "Q108/Q110 candidate warning distinction matches the audited code",
+      "passed": true
+    },
+    {
+      "name": "Q97/Q100 actual runs completed through moderate PSI without OOM or guard abort",
+      "passed": true
+    },
+    {
+      "name": "exclusive lock and preregistered code fingerprints remained valid",
+      "passed": true
+    }
+  ]
+}

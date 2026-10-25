@@ -1,0 +1,15 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-111",
+  "experimentId": "Q111-A1",
+  "recordedAtUtc": "2026-10-25T00:17:13Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet": "Evaluaciones LlamaCode",
+  "range": "A332:J332",
+  "status": "pass",
+  "purpose": "preregistration readback before CPU test",
+  "cellsVerified": 10,
+  "wrapStrategy": "WRAP",
+  "valuesMatch": true,
+  "validationRulesPresent": false,
+  "testNotStartedAtReadback": true
+}

@@ -1,0 +1,29 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-111",
+  "experimentId": "Q111-A1",
+  "preregisteredAtUtc": "2026-10-25T00:16:08Z",
+  "status": "preregistered_before_test",
+  "scope": "CPU-only regression/static integration audit of actual Q97/Q100 memory guard; candidate Q108/Q110 comparison",
+  "noModel": true,
+  "noInferenceServer": true,
+  "noGPU": true,
+  "noBuild": true,
+  "noDownload": true,
+  "noArtificialMemory": true,
+  "checks": {
+    "moderateWarningSample29": false,
+    "moderateWarningSample30": true,
+    "moderateRecoveryResets": true,
+    "severeFullStopsAt15": true,
+    "severeSomeStopsAt15": true,
+    "q100DelegatesToQ97Guard": true,
+    "q108Q110CandidateBoundaryExplicit": true
+  },
+  "sha256": {
+    "q97Launcher": "663a2762ba8e5433b566c1fa2dbbe692cd8d4272619361c477a339da52c6904a",
+    "q100Launcher": "2f8f45e0ac55a597e4029112ca89848dbab40392753a45910bbba1a3f6830cc2",
+    "q108Core": "832c6661692fa9c6e45d209be5c4201a1ad796bfe66bec92cf947151e6988b4b",
+    "q110Wrapper": "300186563c6715a4e2901d4cd0863a59fc52eb38a010cc06dc83bf7a23ac4f87"
+  },
+  "plan": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-111/PLAN.md"
+}

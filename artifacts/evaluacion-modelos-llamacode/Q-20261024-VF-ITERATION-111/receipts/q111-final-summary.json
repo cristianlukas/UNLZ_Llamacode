@@ -1,0 +1,21 @@
+{
+  "taskId": "Q-20261024-VF-ITERATION-111",
+  "closedAtUtc": "2026-10-25T00:20:09Z",
+  "status": "completed",
+  "experimentId": "Q111-A1",
+  "checksPassed": 8,
+  "checksTotal": 8,
+  "hostPreflight": "pass",
+  "modelOrServerStarted": false,
+  "gpuUsed": false,
+  "buildRun": false,
+  "downloadRun": false,
+  "nextEligibleReview": "P2.1 tenant authorization: inspect backend route and build a local CPU fixture only if a concrete tenant context can be exercised; otherwise record a precise blocker.",
+  "protectedModels": [
+    "Qwen Flash-Next ASTRA",
+    "SOL",
+    "PeritoSoft models"
+  ],
+  "spreadsheetSync": "pass: Evaluaciones LlamaCode!A332:J332 and Accionables!A2:N2 read back; WRAP preserved",
+  "memoryDetectorConclusion": "Q97/Q100 guard uses host pressure (MemAvailable, PSI, OOM), not RSS alone. ASTRA 1M and Q103 56.013 GiB CPU RSS smoke completed above the MemAvailable floor with no stop/OOM; SOL Q34 TP=2 completed without OOM but has no continuous PSI series. No thresholds, memory limits, or production profiles changed."
+}
