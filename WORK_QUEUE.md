@@ -2463,3 +2463,13 @@ Preflight concluido: este Codex continúa en Ubuntu 24.04; no están disponibles
 - 2026-10-25T15:17:12Z — Q135 attempt-01 alcanzó `model loaded` y `listening` con el control Qwen3.8 en 18104, pero el runner falló al serializar `PosixPath` antes de enviar solicitudes al harness. El servidor de prueba propio (PID 1087440) se detuvo explícitamente con SIGTERM; luego se verificó PID/puerto ausentes y GPU sin ese proceso. Cero escenarios Tool-Eval/inferencia; el control sí pasó un smoke de carga, no cuenta como resultado A/B. Enmienda preregistrada para corregir serialización/cleanup y conservar este intento en carpeta aparte. Evidencia Q135 `receipts/attempt05-runner-serialization-failure-and-cleanup.json`; enmienda `receipts/amendment-01-attempt02-runner-fix-preregistration.json`.
 
 - 2026-10-25T18:28:37Z — `Resultados` ampliada de 12 a 15 registros: ASTRA Q35 131K/1M y SOL Q127 memoria. Leídas de vuelta la configuración, métricas, notas de comparabilidad y N/D; filtro ampliado a A1:AF16. No se ejecutó inferencia nueva ni se alteró producción.
+
+
+## Q136 — Auditoría histórica de Resultados (completa)
+
+- Inicio UTC: 2026-10-25T18:35:16.841575+00:00
+- Lock O_EXCL: `q136-sheet-results-audit-42c5fe563c1d40ee`
+- Alcance: leer todas las pestañas del workbook y resultados/recibos locales; añadir sólo filas históricas únicas, con comparabilidad y lagunas señaladas.
+- Sin ejecución de modelo, inferencia, servidor, build, descarga ni GPU.
+- Plan: `artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-136/PLAN.md`.
+- 2026-10-25T18:47:22Z — Auditoría completa. Se revisaron las 18 pestañas del libro y se indexaron 191 informes locales; 12 filas respaldadas por seis cohortes históricas se añadieron a `Resultados!A17:AF28`, con configuraciones, scores/semillas, seguridad, TPS cuando está medido y N/D explícitos. Las 12 filas se leyeron de vuelta y se verificaron IDs, anchura de 32 columnas y formato. Se mantuvieron separados los harnesses v2.7/v2.8 y se señaló la discrepancia de temperatura del informe R9700. Recibo exacto: `artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-136/receipts/sheet-migration.json`; informe: `.../RESULTS.md`. Sin benchmark, inferencia, descarga, build ni GPU.
