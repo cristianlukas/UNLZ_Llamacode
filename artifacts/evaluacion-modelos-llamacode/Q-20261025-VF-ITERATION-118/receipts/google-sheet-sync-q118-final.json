@@ -1,0 +1,62 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-118",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "updatedAtUtc": "2026-10-25T02:04:34Z",
+  "readback": {
+    "Evaluaciones LlamaCode!A339:J339": {
+      "matchesExpected": true,
+      "wrap": "WRAP",
+      "rowPixelSize": 160,
+      "values": [
+        "Q118 · ASTRA 1M real-trace replay / revalidación",
+        "Control de memoria",
+        "Cerrada · CPU/offline 12/12; sin GPU",
+        "2026-10-25",
+        "Detector Q117 AMD05: replay de la traza real ASTRA DEFAULT 1M",
+        "ASTRA DEFAULT / Strata 0.1.41 · dual RTX 3090 + 128 GiB; SOL Q34 control histórico",
+        "PASS 12/12. 707 muestras; RSS máximo 51,306 GiB; MemAvailable mínimo 58,698 GiB; PSI global máx 53,61%; sin hard-stop, OOM ni swap. 233 muestras de PSI severa del cgroup worker fueron diagnósticas.",
+        "AMD05 exige PSI global severa + MemAvailable <48 GiB durante 15 muestras; el replay no alcanzó esa conjunción. SOL Q34 no conserva PSI continua. AMD05 sigue candidate-only/no integrado y no atribuye cierres de Codex. El runner importó q117_pressure_guard_attempt05.py; q117_pressure_guard.py es un helper hermano anterior, no el usado en AMD05.",
+        "Q118/RESULTS.md; receipts/q118-amd05-live-trace-replay-preregistration.json; receipts/q118-amd05-live-trace-replay.json; receipts/q118-source-revalidation.json; scripts/replay_q117_amd05_real_trace.py",
+        "Q118 · WORK_QUEUE.md; datos de app reconciliados; no se abrió otra prueba porque Qwen Flash-Next NInfer requiere Windows nativo y los otros gates siguen bloqueados por condiciones externas."
+      ],
+      "canonicalValuesSha256": "b734a9171906f614cf1a15b496b4bc429fad99de9d412c33906933ee7bcb061d"
+    },
+    "Accionables!A2:N2": {
+      "updatedCells": [
+        "D2",
+        "E2",
+        "F2",
+        "G2",
+        "I2",
+        "J2",
+        "K2",
+        "M2",
+        "N2"
+      ],
+      "updatedValues": {
+        "D2": "Implementada parcialmente · replay Q118 12/12 sobre ASTRA 1M; AMD05 sigue candidato/no integrado. Windows Job Objects pendientes.",
+        "E2": "P0 · guard de workers Linux/Windows y diagnóstico de cierres de Codex",
+        "F2": "Workers de evaluación local; la causa del cierre de Codex main sigue sin atribución.",
+        "G2": "Q35–Q118, incluidos Q97 y Q108–Q117; replay Q118 de traza AMD05.",
+        "I2": "Q118 replay 12/12: 707 muestras de ASTRA 1M; RSS máx 51,306 GiB, MemAvailable mín 58,698 GiB, PSI global máx 53,61%; no hard-stop/OOM/swap. El helper attempt05 importado por el runner deja continuar pese a RSS alto cuando el host conserva headroom. 233 muestras de PSI cgroup severa fueron diagnósticas. SOL Q34 confirma fin sin OOM, no umbral PSI. El evento real severo + <48 GiB no ocurrió; el detector candidate-only no está integrado y no explica por sí solo cierres de Codex.",
+        "J2": "Q118/RESULTS.md; Q118/PLAN.md; receipts/q118-amd05-live-trace-replay-preregistration.json; receipts/q118-amd05-live-trace-replay.json; receipts/q118-source-revalidation.json; scripts/replay_q117_amd05_real_trace.py",
+        "K2": "App local: inbox 58/58 con resultado; actionables P0 actualizado. Q118 prueba CPU/offline únicamente. No cambia ASTRA/SOL/contexto/RAM/swap ni el guard productivo. Qwen Flash-Next NInfer sigue esperando Windows nativo.",
+        "M2": "2026-10-25T02:04:34Z",
+        "N2": "2026-10-25T02:04:34Z"
+      },
+      "wrap": "WRAP",
+      "preserved": "A2:C2, H2, L2"
+    }
+  },
+  "appData": {
+    "inbox": "data/inbox.json",
+    "inboxItems": 58,
+    "allHaveStatus": true,
+    "backups": [
+      "data/backups/inbox.q118-prechange.20261025T020301Z.json",
+      "data/backups/actionables.q118-prechange.20261025T020301Z.json"
+    ]
+  },
+  "validationSource": "Google Drive connector batch-update response followed by get_spreadsheet_range and get_spreadsheet_cells readback.",
+  "result": "PASS"
+}

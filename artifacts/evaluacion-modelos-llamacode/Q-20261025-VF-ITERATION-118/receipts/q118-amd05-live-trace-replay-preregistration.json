@@ -1,0 +1,54 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-118",
+  "amendment": "AMD05-LIVE-TRACE-REPLAY",
+  "registeredAtUtc": "2026-10-25T01:57:33Z",
+  "question": "Does the candidate pressure detector continue through the actual successful ASTRA DEFAULT 1M high-RSS trace, using the exact AMD05 transition functions?",
+  "hypothesis": "The detector will not stop solely due to the observed ~51.31 GiB RSS. The actual 707-sample trace will remain below the candidate severe PSI + low MemAvailable conjunction and have no OOM/swap hard stop.",
+  "inputs": [
+    {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/runs/astra-1m-seed-2026103-attempt05/memory-monitor.jsonl",
+      "sha256": "fb369806324110e6bb20a2a2a681af3cdf9b36583a6e1ccfc02b9e0eba1d6dd1"
+    },
+    {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/scripts/q117_pressure_guard_attempt05.py",
+      "sha256": "b4d42302e7d405abd5c59df5aa86bb7de6ef3bb91aef487b49acbebd1d24270e"
+    },
+    {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/scripts/run_context_holdout_attempt05.py",
+      "sha256": "24435c412cc791d47687199fb7ab765c7a52aed6b189ac4598eea8dd9d8822b1"
+    },
+    {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-118/scripts/replay_q117_amd05_real_trace.py",
+      "sha256": "a4d33c612e2a9049621e2886271689aac6b0525a779f9f9939066a64d2d9f484"
+    },
+    {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/guard_sources/q116_composite_psi.py",
+      "sha256": "d2c66a548c694edaad36f019ad4b499334a7f4d965f900e8d21279b06231b3db"
+    },
+    {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/guard_sources/q108_guard_core.py",
+      "sha256": "832c6661692fa9c6e45d209be5c4201a1ad796bfe66bec92cf947151e6988b4b"
+    }
+  ],
+  "method": "First confirm the exact AMD05 runner imports q117_pressure_guard_attempt05.evaluate (the generic q117_pressure_guard.py is an older non-AMD05 sibling and is not used). CPU-only replay the persisted host MemAvailable, global PSI some/full avg10, and OOM counters in order through the exact AMD05 evaluate() transition. Preserve counters between samples. RSS is reported diagnostically and is not injected into any stop criterion. Read the SOL Q34 report only as a historical execution/no-OOM control; it lacks continuous PSI and will not be replayed or rerun.",
+  "passCriteria": {
+    "samples": 707,
+    "stopReason": null,
+    "oomIncrease": false,
+    "minMemAvailableGiBMatchesReceipt": true,
+    "maxProcessTreeRssGiBMatchesReceipt": true,
+    "sourceFingerprintsMatch": true
+  },
+  "correction": {
+    "attempt01": "Stopped before evaluating any trace sample: script looked for q117['run'], but the historical result receipt stores the metrics under q117['memory']. No receipt was written and no model/GPU/memory resources were used.",
+    "retry": "Read the documented q117['memory'] object; script SHA-256 pinned above before retry.",
+    "recordedAtUtc": "2026-10-25T01:59:48Z"
+  },
+  "safety": {
+    "modelOrServerStarted": false,
+    "gpuUsed": false,
+    "artificialMemoryGiB": 0,
+    "productionProfilesOrModelsChanged": false,
+    "systemRamOrSwapChanged": false
+  }
+}

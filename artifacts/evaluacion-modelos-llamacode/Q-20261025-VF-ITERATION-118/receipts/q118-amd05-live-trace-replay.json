@@ -1,0 +1,59 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-118",
+  "amendment": "AMD05-LIVE-TRACE-REPLAY",
+  "status": "pass",
+  "checks": {
+    "inputFingerprintsMatchPreregistration": true,
+    "liveRunnerImportedAttempt05NotGenericSibling": true,
+    "traceHashMatchesQ117ResultReceipt": true,
+    "sampleCountMatchesReceipt": true,
+    "minimumMemAvailableMatchesReceipt": true,
+    "maximumRssMatchesReceipt": true,
+    "maximumHostPsiMatchesReceipt": true,
+    "globalGuardNeverStopped": true,
+    "workerOomOrSwapGuardNeverStopped": true,
+    "globalOomCounterNeverIncreased": true,
+    "successfulRunHadNoGuardAbort": true,
+    "successfulRunHadNoWorkerSwapDelta": true
+  },
+  "checksPassed": 12,
+  "checksTotal": 12,
+  "sourceFingerprints": {
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/runs/astra-1m-seed-2026103-attempt05/memory-monitor.jsonl": "fb369806324110e6bb20a2a2a681af3cdf9b36583a6e1ccfc02b9e0eba1d6dd1",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/scripts/q117_pressure_guard_attempt05.py": "b4d42302e7d405abd5c59df5aa86bb7de6ef3bb91aef487b49acbebd1d24270e",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/scripts/run_context_holdout_attempt05.py": "24435c412cc791d47687199fb7ab765c7a52aed6b189ac4598eea8dd9d8822b1"
+  },
+  "trace": {
+    "path": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/runs/astra-1m-seed-2026103-attempt05/memory-monitor.jsonl",
+    "sha256": "fb369806324110e6bb20a2a2a681af3cdf9b36583a6e1ccfc02b9e0eba1d6dd1",
+    "samples": 707,
+    "minMemAvailableGiB": 58.69769287109375,
+    "maxProcessTreeRssGiB": 51.30559158325195,
+    "maxHostPsiAvg10Pct": {
+      "some": 53.61,
+      "full": 53.61
+    },
+    "maxWorkerCgroupPsiAvg10Pct": {
+      "some": 94.77,
+      "full": 94.77
+    },
+    "firstAndLastGlobalOomKill": [
+      0,
+      0
+    ],
+    "firstModerateWarningSample": 46,
+    "warningSamples": 216,
+    "globalStops": [],
+    "workerStops": [],
+    "workerCgroupSeverePsiWasDiagnosticAtSamples": 233,
+    "firstWorkerCgroupSeverePsiSample": 23
+  },
+  "runtime": {
+    "modelOrServerStarted": false,
+    "gpuUsed": false,
+    "networkUsed": false,
+    "artificialMemoryGiB": 0,
+    "productionChanged": false,
+    "sourceTraceModified": false
+  }
+}

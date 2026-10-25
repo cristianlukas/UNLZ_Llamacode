@@ -1,0 +1,50 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-118",
+  "recordedAtUtc": "2026-10-25T02:01:46Z",
+  "scope": "Read-only revalidation of blocked source entries VF-20261019-01 #26/#28/#31/#32 against currently accessible primary source material.",
+  "items": [
+    {
+      "batchSequence": 26,
+      "status": "Bloqueada",
+      "source": "https://www.reddit.com/r/LocalLLM/s/DhHfKckfdN",
+      "primaryEvidence": [
+        "https://github.com/ceceli33/titan-cognitive-core-v3/blob/main/MAM_LOG1_QWEN_72B.log",
+        "https://github.com/ceceli33/titan-cognitive-core-v3/blob/main/MAM_full_QWEN_72B.py"
+      ],
+      "finding": "The post and MAM_LOG1 report a physical Qwen2.5-72B/CUT3 session on one A100-80GB: 30,031 positions, 11/11 trials, 17/17 mechanical checks, 8/8 append hashes, peak GPU 57.664 GiB. The current MAM_full_QWEN_72B.py separately labels its v1.5 demo unreleased and says it was not GPU-executed by its author, while identifying 709.log as an earlier run; thus code-to-run provenance remains unresolved. The log names the physical status PASS_PHYSICAL_UNSCORED_SEMANTICS and does not provide a robust semantic-quality result.",
+      "localDecision": "No local test: this is architecture-specific internal-state injection for Qwen2.5-72B on A100, not a native context-window extension or a transferable CUT3 cartridge for Qwen3.8 Flash-Next/Strata. Local ASTRA 1M capacity is already measured separately.",
+      "reopenWhen": "Primary provenance is resolved and a testable hypothesis targets the local architecture with a fresh holdout plus text/RAG/cartidge controls."
+    },
+    {
+      "batchSequence": 28,
+      "status": "Bloqueada",
+      "source": "https://www.reddit.com/r/LocalLLM/comments/1x85v8g/unsloth_qwen_38_flash_next_is_insane_can_be/",
+      "finding": "The post remains a single subjective Flutter-to-SwiftUI migration anecdote (~60 min local Q4_K_XL versus ~50 min Opus 5.5 xhigh). Its edit says local Qwen did about 90% of another personal app and SOL 6.1 polished the rest/fixed a race condition. No repository snapshot, full prompt, diff, acceptance tests, hashes or comparable independent grading is attached.",
+      "localDecision": "No frontier API call or local rerun; the local Q4/Flash-Next suite is already screened, and this post does not provide a reusable fixture.",
+      "reopenWhen": "An authorized same-fixture comparison, independent acceptance tests, fixed time/retry policy, data boundary and explicit account/key reference and spending cap are provided."
+    },
+    {
+      "batchSequence": 31,
+      "status": "Bloqueada",
+      "source": "https://www.reddit.com/r/LocalLLM/s/2RU8b0mOaO",
+      "primaryEvidence": ["https://github.com/vincalkr/DS41Engine"],
+      "finding": "Current repository README is Linux ROCm/HIP 7.14, RX 7900 XT/XTX gfx1100, 128-GiB-class RAM, and approximately 570 GB NVMe for model plus Engram assets. No CUDA/SM86 RTX 3090 route is documented.",
+      "localDecision": "No clone/download/build: incompatible GPU backend and storage requirement; no changed claim makes a local test applicable.",
+      "reopenWhen": "Explicit tested CUDA/SM86 support, exact compatible artifact, and a passing storage preflight."
+    },
+    {
+      "batchSequence": 32,
+      "status": "Bloqueada",
+      "source": "https://www.instagram.com/reel/DefpbUKlMxh/",
+      "finding": "Direct public fetch remains throttled; exact-ID search did not recover an attributable caption, transcript or mirror.",
+      "localDecision": "No test can be extracted from unverified content.",
+      "reopenWhen": "User supplies an attributable transcript/caption/capture or accessible mirror and it contains a concrete technical claim."
+    }
+  ],
+  "verification": {
+    "primarySourcesOpened": true,
+    "noDownloadsBuildsOrModelExecution": true,
+    "allFourSourceStatusesRemainBlocked": true,
+    "screenedForApplicableLocalTest": true
+  }
+}
