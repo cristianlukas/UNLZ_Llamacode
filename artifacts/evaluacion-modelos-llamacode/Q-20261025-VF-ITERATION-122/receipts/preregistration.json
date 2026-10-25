@@ -1,0 +1,50 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-122",
+  "preregisteredAtUtc": "2026-10-25T02:56:01Z",
+  "question": "Do the current LlamaAgentBackend mixed-tool batch-replan changes pass the complete Linux Release test gate while task-only fan-out remains valid?",
+  "scope": "Validate existing working-tree C++ changes without editing them; compile and run scripts/tests-linux.sh Release.",
+  "command": [
+    "env",
+    "-u",
+    "LLAMACODE_Q77_SERVER_URL",
+    "-u",
+    "LLAMACODE_Q102_SERVER_URL",
+    "LC_JOBS=4",
+    "./scripts/tests-linux.sh",
+    "Release"
+  ],
+  "baselineSha256": {
+    "src/core/agent/LlamaAgentBackend.cpp": "d2ef9a49387a05d8352647dd8cfc14c053623cfbe24274fd756aa35784bb4071",
+    "src/core/agent/LlamaAgentBackend.h": "29b0764343787de378c2ff774deb9177924008e97cf636688b53697f31ca4eab",
+    "tests/test_agent_wire.cpp": "cab4163c10275c2a3b1aeb6b183a531ee8eace1e61fe18a732e1765579043c44",
+    "scripts/tests-linux.sh": "a342faa577999198c708698fce15774db676a938f93e7517f8e342a7af57ccc4"
+  },
+  "hostPreflight": {
+    "platform": "Linux x86_64, Ubuntu 24.04 family, kernel 7.0.0-38-generic",
+    "host": "3090",
+    "memoryAvailableGiB": 111,
+    "buildCacheFreeGiB": 59,
+    "qt": "6.8.3 present",
+    "cmake": "present",
+    "ninja": "present",
+    "inferenceProcesses": 0,
+    "q77EndpointConfigured": false,
+    "q102EndpointConfigured": false
+  },
+  "acceptance": [
+    "Linux Release build and CTest finish with exit code 0.",
+    "Tool-batch replan regression cases pass; task-only task fan-out remains valid.",
+    "Qwen opt-in live canary stays skipped because its endpoint variables are removed explicitly."
+  ],
+  "resources": {
+    "cpu": true,
+    "disk": true,
+    "gpu": false,
+    "model": false,
+    "inferenceServer": false,
+    "network": false,
+    "artificialMemory": false,
+    "productiveProfilesChanged": false
+  },
+  "limitation": "This is not an authenticated-principal or tenant-policy test. P2.1 remains blocked for cross-tenant side-effect tests until a real trusted identity and policy exist."
+}

@@ -1,0 +1,13 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-122",
+  "updatedAtUtc": "2026-10-25T03:01:07Z",
+  "path": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/actionables.json",
+  "backup": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/actionables.json.bak.q122-20261025T030107Z",
+  "sha256Before": "760eff60ae9993bc604393d2ecd8579f758618c9193b67edb888260aefb4b8e4",
+  "sha256After": "7a2399fb894a014ffe0bdc772091d344a407dc2db5561a73a309185a49bdb5e0",
+  "itemId": "vf-qwen-tool-safety-gates-20261022",
+  "previousStatus": "P2.1 abierto · bloqueado: no existe principal autenticado/policy tenant en el contrato MCP local",
+  "status": "P2.1 abierto · replanificación de tools validada en Linux Release 95/95; test tenant bloqueado por falta de principal autenticado/policy confiable",
+  "nextAction": "Definir e implementar principal confiable propagado host→server y policy real por recurso antes de cualquier fixture cross-tenant o adopción de tools. Luego probar mismo-tenant permitido y cross-tenant read/write denegado antes del efecto.",
+  "jsonParse": "PASS"
+}

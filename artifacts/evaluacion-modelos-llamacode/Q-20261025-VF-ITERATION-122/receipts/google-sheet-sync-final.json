@@ -1,0 +1,24 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-122",
+  "status": "PASS",
+  "verifiedAtUtc": "2026-10-25T03:03:11Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "tabs": [
+    {"title": "Evaluaciones LlamaCode", "sheetId": 1945218181, "range": "A343:J343", "rowStatus": "Completa · Linux Release 95/95 PASS; tres regresiones de replanteo/fan-out PASS; Qwen Q77 live opt-in omitido"},
+    {"title": "Accionables", "sheetId": 1393124532, "range": "A7:N7", "itemId": "vf-qwen-tool-safety-gates-20261022", "state": "Abierto · orden/replanificación validada en Linux Release 95/95; fixture tenant bloqueado por falta de principal autenticado/policy confiable"}
+  ],
+  "readback": {
+    "evaluationStatus": "Completa · Linux Release 95/95 PASS; tres regresiones de replanteo/fan-out PASS; Qwen Q77 live opt-in omitido",
+    "evaluationResult": "Build Release PASS; CTest 95/95 (0 fallas). test_agent_wire 78 PASS/1 SKIP; test_agent_tools 55 PASS/6 SKIP. nativeToolBatchReplansAfterFirstResult y nativeMixedTaskBatchDoesNotDispatchLaterTaskEarly PASS. Sin modelo, inference server, GPU, red externa ni RAM artificial.",
+    "actionableResultIncludesQ122": true,
+    "actionableDecisionKeepsTenantGateOpen": true,
+    "updatedAtUtc": "2026-10-25T03:03:11Z",
+    "reconciledAtUtc": "2026-10-25T03:03:11Z",
+    "allCellsWrapped": true,
+    "dataValidation": "none on edited cells",
+    "actionableRowPixelHeight": 160
+  },
+  "visualVerification": "Best-effort API verification: values, WRAP formatting, and row height read back. The in-app browser was at Google sign-in, so no authenticated rendered-sheet inspection was available.",
+  "preservedUnrelatedCells": true
+}

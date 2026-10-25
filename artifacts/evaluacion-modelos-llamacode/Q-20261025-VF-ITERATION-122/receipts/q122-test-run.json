@@ -1,0 +1,63 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-122",
+  "status": "PASS",
+  "completedAtUtc": "2026-10-25T03:00:17Z",
+  "command": "env -u LLAMACODE_Q77_SERVER_URL -u LLAMACODE_Q102_SERVER_URL LC_JOBS=4 ./scripts/tests-linux.sh Release",
+  "build": {
+    "status": "PASS",
+    "configuration": "Release",
+    "buildDirectory": "/home/cristian/.cache/llamacode/build_tests_linux",
+    "sourceMirror": "/home/cristian/.cache/llamacode/source",
+    "qt": "6.8.3",
+    "jobs": 4
+  },
+  "ctest": {
+    "passed": 95,
+    "total": 95,
+    "failed": 0,
+    "summary": "100% tests passed, 0 tests failed out of 95",
+    "totalSeconds": 112.27
+  },
+  "focusedQtResults": {
+    "test_agent_wire": {
+      "passed": 78,
+      "failed": 0,
+      "skipped": 1,
+      "newBatchReplanTests": {
+        "toolBatchRequiresReplan_onlyTaskBatchesFanOut": "PASS",
+        "nativeToolBatchReplansAfterFirstResult": "PASS",
+        "nativeMixedTaskBatchDoesNotDispatchLaterTaskEarly": "PASS"
+      },
+      "qwenQ77NativeDispatcherProbe": "SKIP: opt-in endpoint was explicitly unset"
+    },
+    "test_agent_tools": {
+      "passed": 55,
+      "failed": 0,
+      "skipped": 6,
+      "durationSeconds": 112.257,
+      "skipCategories": ["Q44 opt-in fixture/endpoint absent", "Windows-only UI Automation" ]
+    }
+  },
+  "resourceUse": {
+    "cpuBuildAndTests": true,
+    "loopbackFixtureSockets": true,
+    "externalNetwork": false,
+    "modelStarted": false,
+    "inferenceServerStarted": false,
+    "inferenceProcessesPreflight": 0,
+    "inferenceProcessesPostflight": 0,
+    "gpuUsed": false,
+    "artificialMemoryGiB": 0,
+    "productiveProfilesChanged": false
+  },
+  "validatedWorkingTreeFilesSha256": {
+    "src/core/agent/LlamaAgentBackend.cpp": "d2ef9a49387a05d8352647dd8cfc14c053623cfbe24274fd756aa35784bb4071",
+    "src/core/agent/LlamaAgentBackend.h": "29b0764343787de378c2ff774deb9177924008e97cf636688b53697f31ca4eab",
+    "tests/test_agent_wire.cpp": "cab4163c10275c2a3b1aeb6b183a531ee8eace1e61fe18a732e1765579043c44"
+  },
+  "limitations": [
+    "This confirms tool ordering/replanning regressions only. It does not validate an authenticated principal or tenant policy.",
+    "The pre-existing C++ changes were not edited or staged by Q122."
+  ],
+  "log": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-122/runs/tests-linux-release.log"
+}

@@ -1,0 +1,23 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-122",
+  "verifiedAtUtc": "2026-10-25T02:56:01Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "range": "Evaluaciones LlamaCode!A343:J343",
+  "readback": "PASS",
+  "cellCount": 10,
+  "wrapCount": 10,
+  "values": [
+    "Q122 · regresiones Linux para replanteo de tandas de tools",
+    "Activa · build/test Linux Release preregistrado",
+    "Validar cambios actuales de LlamaAgentBackend: las tandas mixtas deben esperar el primer resultado y replantear; tandas sólo task conservan fan-out.",
+    "2026-10-25",
+    "P2.1 · orden de tools dependientes",
+    "Q105 mapping de subagentes; Q112 tenant auth sigue bloqueado por falta de principal/policy confiable.",
+    "Gate completo scripts/tests-linux.sh Release; nuevas regresiones de replanificación y fan-out pasan.",
+    "env -u LLAMACODE_Q77_SERVER_URL -u LLAMACODE_Q102_SERVER_URL LC_JOBS=4 ./scripts/tests-linux.sh Release",
+    "CPU, build y tests offscreen. Sin modelo, inference server, GPU, red externa ni RAM artificial. Endpoint Qwen opt-in deshabilitado explícitamente.",
+    "Q-20261025-VF-ITERATION-122/PLAN.md; receipts/preregistration.json; baseline SHA-256 fijados antes del gate."
+  ],
+  "rowHeightPxRequested": 130,
+  "formatting": "All ten cells returned userEnteredFormat.wrapStrategy=WRAP."
+}
