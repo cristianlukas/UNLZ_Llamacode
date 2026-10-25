@@ -1,0 +1,39 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-112",
+  "recordedAtUtc": "2026-10-25T00:24:00Z",
+  "status": "pass",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "ranges": [
+    {
+      "range": "Evaluaciones LlamaCode!A333:J333",
+      "cellsVerified": 10,
+      "valuesMatch": true,
+      "wrapStrategy": "WRAP",
+      "status": "blocked · principal/policy contract missing"
+    },
+    {
+      "range": "Accionables!A7:N7",
+      "cellsVerified": 14,
+      "valuesMatch": true,
+      "wrapStrategy": "WRAP",
+      "status": "P2.1 remains open with precise prerequisite"
+    },
+    {
+      "range": "Evaluaciones LlamaCode!A332:J332",
+      "cellsVerified": 10,
+      "valuesMatch": true,
+      "wrapStrategy": "WRAP",
+      "status": "Q111 prereg fields restored and final result preserved"
+    },
+    {
+      "range": "Accionables!A2:N2",
+      "cellsVerified": 14,
+      "valuesMatch": true,
+      "wrapStrategy": "WRAP",
+      "status": "Q111 crash-isolation action preserved with creator timestamp restored"
+    }
+  ],
+  "notes": "Cell writes were followed by a full-row readback. Adjacent preregistration/action metadata inadvertently cleared by an earlier unbounded updateCells call was restored from its verified pre-write values; all four ranges now read back with expected values and WRAP.",
+  "behaviorTestRun": false,
+  "productionChanged": false
+}

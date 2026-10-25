@@ -1,0 +1,21 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-112",
+  "experimentId": "Q112-A1",
+  "closedAtUtc": "2026-10-25T00:24:00Z",
+  "status": "blocked_by_missing_authenticated_identity_contract",
+  "staticChecksPassed": 6,
+  "staticChecksTotal": 6,
+  "behaviorTestRun": false,
+  "buildRun": false,
+  "modelOrServerStarted": false,
+  "gpuUsed": false,
+  "productionChanged": false,
+  "spreadsheetSync": "pass: prereg Evaluaciones LlamaCode!A333:J333; final Q112 row and Accionables!A7:N7 read back with WRAP",
+  "blockingCondition": "No trusted principal reaches the MCP tools/call dispatcher and no resource-scoped tenant policy is enforced in this local route.",
+  "nextStep": "Define authenticated principal propagation and server/resource authorization; then add a two-tenant integration test. Until then, keep P2.1 open and do not fabricate a fixture.",
+  "protectedModels": [
+    "Qwen Flash-Next ASTRA",
+    "SOL",
+    "PeritoSoft models"
+  ]
+}

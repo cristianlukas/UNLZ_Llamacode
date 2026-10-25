@@ -1,0 +1,39 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-112",
+  "experimentId": "Q112-A1",
+  "recordedAtUtc": "2026-10-25T00:24:00Z",
+  "status": "blocked_by_missing_authenticated_identity_contract",
+  "checksPassed": 6,
+  "checksTotal": 6,
+  "checks": {
+    "AgentSession has no principal/tenant field": true,
+    "MCP tools/call has no principal/tenant in params or _meta": true,
+    "MCP dispatch has no principal/tenant authorization check": true,
+    "MCP request includes tool name and arguments": true,
+    "MCP _meta is limited to idempotency/correlation": true,
+    "preregistered file fingerprints unchanged": true
+  },
+  "sourceSha256": {
+    "AgentTypes.h": "6caddb3cf7e23f269454a53c52023673ad467fa47ff081395de0ce7023ebbb29",
+    "McpClient.cpp": "619f01e8c5910771b218c9d14d7a55fa9413239f208ec800def9b0035f97a034",
+    "AgentToolRunner.cpp": "3dca8b97bb75ebd053a6e6cefefb24690b856326978c1e9dc4bcc37c2d78c3fb",
+    "AgentToolRunner.h": "74a43d9c15832dc8d41dd0f3390a4ea88626a4e6185a0d056085a5f56f8f695b",
+    "test_agent_tools.cpp": "379c0d5b5b91caa98b0656ed254bc3553862256a42092506a25dd06d4e41dd50",
+    "test_tool_execution_safety.cpp": "158611fa0465468d880e3e43bd8cfc7d957eb920e57184338d47ffb810234550",
+    "test_agent_wire.cpp": "cab4163c10275c2a3b1aeb6b183a531ee8eace1e61fe18a732e1765579043c44"
+  },
+  "historicalCrossCheck": "Q78 static audit independently recorded the same missing principal/tenant contract on the MCP path.",
+  "observations": [
+    "AgentSession exposes session/project/parent fields, not a trusted authenticated principal.",
+    "McpClient tools/call sends name and model-provided arguments; _meta contains idempotency and correlation only.",
+    "AgentToolRunner dispatch resolves server/tool and safety annotations/ledger, then invokes callTool; no resource-scoped tenant authorization is checked in this path.",
+    "The server may independently authorize; that behavior is outside this client path and remains unverified."
+  ],
+  "behaviorTestRun": false,
+  "buildRun": false,
+  "modelOrServerStarted": false,
+  "gpuUsed": false,
+  "networkUsed": false,
+  "productionChanged": false,
+  "decision": "Do not fabricate a tenant principal or cross-tenant denial fixture. P2.1 remains blocked until a trusted host/server identity and resource authorization contract is defined and propagated."
+}

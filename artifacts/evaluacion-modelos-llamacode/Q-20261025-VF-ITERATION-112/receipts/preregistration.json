@@ -1,0 +1,32 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-112",
+  "experimentId": "Q112-A1",
+  "preregisteredAtUtc": "2026-10-25T00:23:05Z",
+  "status": "preregistered_before_final_static_audit",
+  "scope": "CPU/read-only feasibility audit of the trusted principal and tenant authorization contract in current MCP dispatch",
+  "files": {
+    "AgentTypes.h": "6caddb3cf7e23f269454a53c52023673ad467fa47ff081395de0ce7023ebbb29",
+    "McpClient.cpp": "619f01e8c5910771b218c9d14d7a55fa9413239f208ec800def9b0035f97a034",
+    "AgentToolRunner.cpp": "3dca8b97bb75ebd053a6e6cefefb24690b856326978c1e9dc4bcc37c2d78c3fb",
+    "AgentToolRunner.h": "74a43d9c15832dc8d41dd0f3390a4ea88626a4e6185a0d056085a5f56f8f695b",
+    "test_agent_tools.cpp": "379c0d5b5b91caa98b0656ed254bc3553862256a42092506a25dd06d4e41dd50",
+    "test_tool_execution_safety.cpp": "158611fa0465468d880e3e43bd8cfc7d957eb920e57184338d47ffb810234550",
+    "test_agent_wire.cpp": "cab4163c10275c2a3b1aeb6b183a531ee8eace1e61fe18a732e1765579043c44"
+  },
+  "checks": [
+    "AgentSession carries trusted authenticated principal/tenant, or does not",
+    "MCP tools/call transmits trusted principal/tenant separately from model arguments",
+    "AgentToolRunner enforces resource/tenant authorization before side effects, or does not",
+    "targeted tests exercise same-tenant allow and cross-tenant deny before side effect, or do not"
+  ],
+  "decisionRule": "If any required identity/policy element is absent, do not fabricate a two-tenant fixture; record the exact prerequisite and leave P2.1 blocked.",
+  "prohibited": [
+    "production source edits",
+    "build",
+    "test suite",
+    "model/server/inference",
+    "GPU",
+    "network",
+    "side effects"
+  ]
+}
