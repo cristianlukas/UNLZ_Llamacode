@@ -1,0 +1,12 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-125",
+  "observedAtUtc": "2026-10-25T04:44:18Z",
+  "firstBatchAttempt": "rejected",
+  "error": "HTTP 400 INVALID_ARGUMENT: evaluation updateCells had 11 values for range A:J, attempted column K beyond last requested column J.",
+  "preRetryReadback": [
+    "Accionables!A5:D6 showed original A:C and blank D",
+    "Evaluaciones LlamaCode!A346:J346 remained empty"
+  ],
+  "interpretation": "No partial edit was observed; corrected the evaluation row to exactly A:J, then resubmitted the batch and verified all target ranges.",
+  "correctedBatch": "successful; see sheet-readback.json"
+}

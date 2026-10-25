@@ -1,0 +1,59 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-125",
+  "token": "1acfac09-d9d6-4d54-ab99-972408fb2e60",
+  "registeredAtUtc": "2026-10-25T04:42:13.026843+00:00",
+  "kind": "read-only evidence audit + bounded Google Sheets/data reconciliation",
+  "noInference": true,
+  "noBuild": true,
+  "noGpu": true,
+  "noArtificialMemoryPressure": true,
+  "sourceHashesSha256": {
+    "WORK_QUEUE.md": "8978152476128d906cddf7753c5a48e485df0f7b779332d836b5081664c2ce7a",
+    "inbox.json": "91afeba15c8709ac0fe4d11050e1e641f7315184bbf42148467b5aaef06c235b",
+    "actionables.json": "2accc25e8295bde73f55811a2f4d34245de497a3e4fd4823292ca3c5d3b4ecaa",
+    "Q116_RESULTS.md": "5c416a93d7078048f89f2ec4893a5243628999853f4ad6df6b2142ee86906d65",
+    "Q117_RESULTS.md": "1250722e5796988d8b31189cd924269d4c73006290127fef1b0475bf4ff79ea1",
+    "Q118_RESULTS.md": "ba617b0156a72539ec08f8c1c24e18da4dfdd190eb2dfcb5860eb9e302197d98",
+    "Q121_RESULTS.md": "6e0fa9816a1d0d174fa34efc444e9d4b8b5e3f4141a77ca380763e7bb18c18e4"
+  },
+  "sheet": {
+    "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "sheet": "Accionables",
+    "targetRows": [
+      5,
+      6,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "columns": "A:N",
+    "preserve": [
+      "IDs and priority columns B:C",
+      "all existing cell formats; update only userEnteredValue"
+    ],
+    "readbackRequired": true,
+    "note": "Bounded scan A1:D104 showed 11 populated actionable records with blank status/result columns D:N; update all of them, including row 12/14/16 discovered outside the initial subset."
+  },
+  "localDataEdits": {
+    "path": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/inbox.json",
+    "items": [
+      56,
+      57,
+      58
+    ],
+    "backup": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-125/receipts/prechange/inbox.json",
+    "purpose": "Correct stale applicability/status wording only; preserve prior experiment receipts and 58-entry count."
+  },
+  "duplicateTestReview": {
+    "Q116": "already covers legacy Q97 alternation + candidate semantics",
+    "Q117": "21/21 CPU + real ASTRA 1M under AMD05",
+    "Q118": "12/12 replay of 707 real samples",
+    "decision": "do not repeat without new signal or changed implementation"
+  }
+}

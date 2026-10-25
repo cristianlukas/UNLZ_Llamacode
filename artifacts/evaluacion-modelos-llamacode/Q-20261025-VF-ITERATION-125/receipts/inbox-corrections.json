@@ -1,0 +1,45 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-125",
+  "checkedAtUtc": "2026-10-25T04:47:44Z",
+  "file": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/inbox.json",
+  "beforeSha256": "91afeba15c8709ac0fe4d11050e1e641f7315184bbf42148467b5aaef06c235b",
+  "afterSha256": "a38dfea971a45e74a7e3a8b45d6fcb9aa530fd5c1cbb943592e2cd1ba3d0df42",
+  "entryCount": 58,
+  "correctedItems": [
+    {
+      "sequence": 56,
+      "id": "6a9aeb90-e455-45b9-9e7c-978977ae2a18",
+      "fields": [
+        "analysis.applicability",
+        "analysis.nextAction"
+      ]
+    },
+    {
+      "sequence": 57,
+      "id": "2bcadb12-6778-4188-a446-0c3324a1c4f8",
+      "fields": [
+        "analysis.applicability",
+        "analysis.nextAction"
+      ]
+    },
+    {
+      "sequence": 58,
+      "id": "c2c3cadd-e9a0-4ceb-9cdb-fb3ddf87b81e",
+      "fields": [
+        "analysis.status",
+        "analysis.applicability",
+        "analysis.nextAction"
+      ]
+    }
+  ],
+  "backup": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-125/receipts/prechange/inbox.json",
+  "basis": [
+    "Q-20261020-VF-20261019-01/receipts/source-56-attempt04-run-exit.json",
+    "Q-20261020-VF-20261019-01/receipts/source-56-attempt04-preregistration.json",
+    "Q-20261020-VF-20261019-01/receipts/source-55-review.json",
+    "Q-20261020-VF-20261019-01/receipts/source-57-smoke-attempt02.json",
+    "Q-20261020-VF-20261019-01/receipts/source-58-sheet-import.json"
+  ],
+  "newFileHashVerifiedAfterWrite": true,
+  "afterSha256Verified": "a38dfea971a45e74a7e3a8b45d6fcb9aa530fd5c1cbb943592e2cd1ba3d0df42"
+}

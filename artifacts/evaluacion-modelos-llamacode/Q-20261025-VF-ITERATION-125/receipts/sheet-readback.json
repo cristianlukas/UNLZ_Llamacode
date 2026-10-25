@@ -1,0 +1,347 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-125",
+  "checkedAtUtc": "2026-10-25T04:44:18Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "readBack": true,
+  "rows": {
+    "5": {
+      "values": [
+        "Prueba cerrada",
+        "205314e0-15b2-4871-9784-9c2e08ecd516",
+        "01 · P1",
+        "Resuelto sin pase · timeout a 1800 s; no repetir esta invocación",
+        "P1 · Flash-Next UD-IQ4_XS · Q30 cerrado sin pase",
+        "Coding/agentes · candidato Flash-Next",
+        "VF-20261019 #4/#8/#15/#25/#28/#30/#53/#56 · Q30",
+        "Una tarea BCB/765; maxTokens 2400 frente a 1200. No correr BCB8 completo tras este resultado.",
+        "copied_files=0 (esperados 2/1/2), sin respuesta final a 1800 s; sin score/throughput comparable. No adoptar. Reabrir sólo ante cambio material del harness/protocolo y preregistro matched.",
+        "Q-20261022-VF-ITERATION-30/RESULTS.md; receipts/final-summary.json; attempts/flashnext-bcb2-outputcap-01/receipts/benchmark-final.json; benchmark-invocation.json; owned-process-cleanup.json",
+        "Conciliado con actionables locales. Se conserva el resultado sin pase y se actualiza el estado previo incompleto del Sheet; ASTRA/SOL/Flash-Next productivo/PeritoSoft intactos.",
+        "2026-10-19T18:30:00-03:00",
+        "2026-10-22T07:07:21Z",
+        "2026-10-25T04:44:18Z"
+      ],
+      "wrapStrategies": [
+        "WRAP"
+      ]
+    },
+    "6": {
+      "values": [
+        "Prueba cerrada",
+        "vf-priority-qwen38-27b-20261022",
+        "02 · P2",
+        "Resuelto · 3 seeds; no adoptar por gates de calidad/seguridad",
+        "P2 · Qwen3.8-27B Q4_K_M: 3 seeds completas",
+        "Coding/agentes · candidato a perfil local",
+        "VF-20261019 #8/#30/#53/#54 · Q29 Hard Mode 2.8.0",
+        "28 casos × seeds 42/43/44; screen de perfil completo a 32K single-GPU; no rerun sin cambio material de runtime/seguridad.",
+        "77/84/80, media 80.33 ±2.87; +2.35 vs ASTRA 77.98 (<margen prereg +3), gana 2/3. TC-74/TC-84 fallan 3/3; TC-92 cross-tenant filtra 2/3; safety-capped. No demuestra mejora aislada de pesos/velocidad ni 131K.",
+        "Q-20261022-VF-ITERATION-29/RESULTS.md; runs/hardmode-seed-42.json; runs/hardmode-seed-43.json; runs/hardmode-seed-44.json",
+        "Conciliado con acción local vf-priority-qwen38-27b-20261022; el registro pasa de “Próxima prueba” a cerrado/no adoptar. Mantener ASTRA/SOL/Flash-Next productivo/PeritoSoft.",
+        "2026-10-22T01:10:23Z",
+        "2026-10-22T06:00:34Z",
+        "2026-10-25T04:44:18Z"
+      ],
+      "wrapStrategies": [
+        "WRAP"
+      ]
+    },
+    "8": {
+      "values": [
+        "Recomendación actualizada",
+        "vf-openjet-megakernel-20261019",
+        "02.2 · P2.2",
+        "Evaluado · d4 conserva señal de velocidad; d7 y conducta no habilitan adopción en agentes",
+        "P2.2 · OpenJet/Qwen3.8-27B: d4 candidate-only",
+        "Runtime CUDA · coding/agentes",
+        "VF-20261019 #54 · OpenJet issue #22 · fork qwen38-perf",
+        "Q71 d4-vs-upstream 18 pares/36 runs; Q71 d4-vs-d7 18 pares/36; Q74 conducta 12/12 técnicamente válida.",
+        "d4 pasa sólo speed gate candidato; d7 no alcanza mejora ≥10% en todas las celdas ni MAD≤10%. Q74 7/12 aprobadas; TC-74 0/3 y TC-84 1/3. No adoptar para agentes; no repetir mismas huellas.",
+        "Q-20261022-VF-ITERATION-71/RESULTS.md; Q-20261022-VF-ITERATION-74/RESULTS.md; artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-50/RESULTS.md",
+        "Conciliado con actionables vf-openjet-megakernel-20261019. La evidencia de velocidad no sustituye la batería conductual; no hay prueba nueva hasta cambio material.",
+        "2026-10-19T21:04:00Z",
+        "2026-10-24T13:30:18Z",
+        "2026-10-25T04:44:18Z"
+      ],
+      "wrapStrategies": [
+        "WRAP"
+      ]
+    },
+    "9": {
+      "values": [
+        "Prueba cerrada",
+        "vf-priority-rco-coder-20261022",
+        "03 · P3",
+        "Resuelto · RCO IQ1_M 0/8 frente a ASTRA 1/8; no avanzar",
+        "P3 · RCO Coder IQ1_M: conservar el control hasta revisión nueva",
+        "Coding/agentes · quant candidata",
+        "VF-20261019 #7 · ISTA-DASLab Qwen3.8 Flash-Next GSQ-RCO Coder · Q51",
+        "Screen BCB-Hard-8; revalidación de los 13 archivos oficiales main y comparación de dos shards contra snapshot medido.",
+        "BCB-Hard-8 candidato 0/8 vs ASTRA IQ2_XS 1/8; transporte 8/8 en ambos. Los pesos oficiales ya son idénticos a los probados. No re-descargar ni repetir; reabrir sólo con pesos/quant/runtime/harness distinto.",
+        "Q-20261022-VF-ITERATION-51/RESULTS.md; Q-20261020-VF-20261019-01/receipts/source-07-model-fingerprints.json",
+        "Conciliado con actionables vf-priority-rco-coder-20261022. Sin evidencia de claim superior en coding; ASTRA/SOL/Flash-Next productivo/PeritoSoft intactos.",
+        "2026-10-22T01:10:23Z",
+        "2026-10-23T01:53:14.058013Z",
+        "2026-10-25T04:44:18Z"
+      ],
+      "wrapStrategies": [
+        "WRAP"
+      ]
+    },
+    "10": {
+      "values": [
+        "Prueba cerrada",
+        "vf-swift15-qwen38-20261019",
+        "02 · P2 · Qwen3.8-27B/Swift",
+        "Resuelto sin pase · Q97 Swift 2/8 empató ASTRA 2/8; no adoptar ni repetir mismo screen",
+        "P2 · Swift 1.5 Qwen3.8-27B · perfil llama.cpp sin MTP vs ASTRA",
+        "Coding/agentes · candidato modelo",
+        "VF-20261019 #51 · Q97 final BCB-Hard-8 seed4242 · tarjeta oficial UkisAI",
+        "Comparación serial; una semilla; gate follow-up preregistrado Swift ≥3/8 y ≥2 casos más que ASTRA.",
+        "Empate 2/8, mismos casos; transporte 8/8 y sandboxErrors=0. Prefill Swift/ASTRA 538.55/366.36 tok/s; decode 48.34/121.61; E2E 50.233/20.407 s. Prefill mayor no compensa decode ni E2E 2.46× más lento.",
+        "Q-20261024-VF-ITERATION-97/RESULTS.md; Q-20261024-VF-ITERATION-97/receipts/q97-final-result.json; Q-20261024-VF-ITERATION-86/RESULTS.md",
+        "Conciliado con vf-swift15-qwen38-20261019; gate no cumplido. Reabrir sólo ante cambio material de pesos/runtime/sampling/workload o claim primario.",
+        "2026-10-21T03:56:06Z",
+        "2026-10-24T19:37:43Z",
+        "2026-10-25T04:44:18Z"
+      ],
+      "wrapStrategies": [
+        "WRAP"
+      ]
+    },
+    "11": {
+      "values": [
+        "Prueba cerrada",
+        "vf-strata-concurrency-q98",
+        "01 · P1 · Strata/concurrencia",
+        "Q98 screen completo · pasa gate de seguimiento; no es adopción",
+        "ASTRA/Strata parallel2 · screen de admisión Q98",
+        "Rendimiento/concurrencia · tareas aceptadas por segundo",
+        "VF-20261019 #1 · docs/strata-reddit-followup-20261004.md #3 · Q98",
+        "ASTRA Flash-Next IQ2_XS/Strata 0.1.41 MTP4, ctx8192, BCB-Hard-8, seed4242; serial vs parejas concurrentes en ambas RTX 3090.",
+        "Serial 2/8 y parallel2 2/8; transporte 8/8 ambos, errores sandbox/sin respuesta 0. Throughput 0.012788 vs 0.014248 aceptadas/s (+11.42%); screen de una seed habilitó Q99, no promoción.",
+        "Q-20261024-VF-ITERATION-98/RESULTS.md; runs/admission-screen-result.json; receipts/q98-cleanup-postflight.json",
+        "Q98 cerrado y limpio: OOM=0, MemAvailable mín 72.422 GiB; alerta PSI moderada/cgroup diagnóstica sin detener. Sirvió de admisión al follow-up Q99.",
+        "2026-10-24T20:11:08Z",
+        "2026-10-24T20:19:56Z",
+        "2026-10-25T04:44:18Z"
+      ],
+      "wrapStrategies": [
+        "WRAP"
+      ]
+    },
+    "12": {
+      "values": [
+        "Prueba cerrada",
+        "f318d34d-eefc-4d16-b77d-98b1977d0698",
+        "01 · P1 · Strata/concurrencia",
+        "Q99 repetibilidad y Q100 E2E completos; parallel2 no adoptado; Q105 forensics inconclusos",
+        "Repeatability + integración E2E ASTRA/Strata con dos slots",
+        "Rendimiento/concurrencia · fan-out",
+        "Q98/Q99/Q100/Q105 · BCB-Hard-8 · ASTRA/Strata · 2×RTX 3090 +128 GB",
+        "Q99: 3 seeds; serial vs parallel2. Q100: 3 seeds through LlamaAgentBackend. Q105: CPU forensics.",
+        "Q99: ambos 6/24 aceptadas; parallel2 +13.17% accepted/s, 24/24 transporte, PSI moderada warning, OOM=0. Q100: serial 6/6 exactas (3/3 seeds); parallel2 2/6 exactas (1/3), etiquetas invertidas en 5051/5053; throughput bruto parallel2 5.11% menor. Q105 34/34; sin IDs estables no se atribuye la inversión. No adoptar parallel2; mantener ASTRA/SOL y fan-out serial.",
+        "Q-20261024-VF-ITERATION-99/RESULTS.md; Q-20261024-VF-ITERATION-100/RESULTS.md; Q-20261024-VF-ITERATION-105/RESULTS.md; Q-20261024-VF-ITERATION-108/RESULTS.md",
+        "Conciliado con actionables f318d34d-eefc-4d16-b77d-98b1977d0698. La fila era sólo ID/prioridad; se completa resumen y evidencia.",
+        "2026-10-24T20:23:09Z",
+        "2026-10-24T20:49:09Z",
+        "2026-10-25T04:44:18Z"
+      ],
+      "wrapStrategies": [
+        "WRAP"
+      ]
+    },
+    "13": {
+      "values": [
+        "Prueba cerrada",
+        "vf-astra-llamacode-subagent-fanout-q100",
+        "01 · P1 · ASTRA/subagentes",
+        "Completado · Q100 E2E; no adoptar parallel2",
+        "Medir fan-out real de subagentes en LlamaCode",
+        "Coding/agentes · tareas correctas/s",
+        "VF-20261019 #1 · Q100 fan-out E2E · semillas 5051–5053",
+        "LlamaAgentBackend real; workers 1 vs 2; contexto65.536; ambas RTX 3090 +128 GB; tareas read-only sintéticas en worktrees.",
+        "Serial 3/3 seeds y 6/6 tareas exactas; parallel2 1/3 seeds y 2/6, etiquetas finales invertidas en 5051/5053. Throughput bruto paralelo 5.11% menor y throughput correcto E2E 68.37% menor. Q105 confirma task-card markers correctos pero faltan IDs de correlación estables.",
+        "Q-20261024-VF-ITERATION-100/RESULTS.md; Q-20261024-VF-ITERATION-105/RESULTS.md; receipts/q100-final-result.json; receipts/google-sheet-sync-q100-final.json",
+        "Conciliado con local actionables 594c0291-ed08-46b5-bae6-d3a83189cd05. No repetir GPU por el mismo resultado; mantener fan-out serial.",
+        "2026-10-24T20:54:54Z",
+        "2026-10-24T23:15:15Z",
+        "2026-10-25T04:44:18Z"
+      ],
+      "wrapStrategies": [
+        "WRAP"
+      ]
+    },
+    "14": {
+      "values": [
+        "Prueba cerrada",
+        "vf-hyperqwen-qwen38-27b-dual3090-20261024",
+        "01 · P1 · Qwen3.8-27B/HyperQwen dual-GPU",
+        "Pruebas completadas; sin evidencia para adoptar. Canario follow-up bloqueado por gate Q101/Q104.",
+        "HyperQwen · Qwen3.8-27B en 2×RTX 3090 (TP=2)",
+        "Coding/agentes · calidad y E2E; perfil principal TP=2 dual-GPU",
+        "Q85/Q101–Q104 · HyperQwen commit ce9615c4f2309be727407918a6c979bd67968069",
+        "Canarios TP=2 iterados bajo preregistro; auditoría de assets/guard; Q102/Q103 memoria CPU; Q104 auditoría read-only del dispatcher.",
+        "No Tool-Eval/score/TPS: read_file devolvió path inválido y no se leyó/escribió fixture. Q102 replay de guard 19/19; Q103 RSS CPU 56.013 GiB por 12 s con 53.386 GiB disponibles, PSI pico0.36%, sin aviso/stop/OOM; Q104 11/11 confirma que Q101 fue HTTP directo a vLLM y no atravesó dispatcher LlamaCode. No hay defecto parser/runtime demostrado ni comparación adopción.",
+        "Q85/RESULTS.md; Q-20261024-VF-ITERATION-102/RESULTS.md; Q-20261024-VF-ITERATION-103/RESULTS.md; Q-20261024-VF-ITERATION-104/RESULTS.md; receipts/q104-final-result.json",
+        "No repetir canario ni adoptar sin un cambio material parser/runtime con regresión (o revisión explícita del gate); un futuro test de dispatcher debe pasar por ruta nativa y conservar argumento acotado/redactado. ASTRA/SOL/Flash-Next/PeritoSoft sin cambios.",
+        "2026-10-24T13:50:46Z",
+        "2026-10-24T23:08:03Z",
+        "2026-10-25T04:44:18Z"
+      ],
+      "wrapStrategies": [
+        "WRAP"
+      ]
+    },
+    "15": {
+      "values": [
+        "Bloqueada · gate Q101",
+        "vf-hyperqwen-q102-native-dispatcher-20261024",
+        "01 · P1 · Qwen3.8-27B/HyperQwen dual GPU",
+        "Bloqueada · Q104 confirma que Q101 no pasó por LlamaCode; no se demostró bug del dispatcher.",
+        "HyperQwen Q102/Q104 · auditoría del dispatcher nativo y memoria",
+        "Coding/agentes · runtime, tools y selección de perfil dual-3090",
+        "Q85/Q101–Q104 · gate de cambio material parser/runtime",
+        "Q102: replay guard CPU 19/19; Q103: smoke CPU RSS alto; Q104: trazar ruta de tool canary y validar harness, sin modelo/GPU.",
+        "Q101 `read_file.path` no coincidió con contrato, valor crudo no conservado; el request fue directo a vLLM, `calls=[]`, sin operación de tool/fixture. Q104 11/11 fixtures; no defecto del dispatcher. Sin calidad/velocidad ni base para adopción. Q102/Q103 son pruebas de guard, no carga de modelo.",
+        "Q-20261024-VF-ITERATION-102/RESULTS.md; Q-20261024-VF-ITERATION-103/RESULTS.md; Q-20261024-VF-ITERATION-104/RESULTS.md; receipts/q104-final-result.json",
+        "Reabrir sólo con cambio material del parser/runtime y regresión reproducible o revisión explícita del gate; test futuro por el dispatcher nativo. Sin nuevo experimento habilitado hoy.",
+        "2026-10-24",
+        "2026-10-24",
+        "2026-10-25T04:44:18Z"
+      ],
+      "wrapStrategies": [
+        "WRAP"
+      ]
+    },
+    "16": {
+      "values": [
+        "Prueba cerrada",
+        "Q-20261024-VF-ITERATION-105",
+        "P1 · ASTRA/Strata · scheduler/subagentes",
+        "Completo · 34/34 forensics; atribución de componente inconclusa",
+        "Diagnóstico de mapping de subagentes ASTRA/Strata · Q105",
+        "Coding/agentes · asociación exacta de tareas",
+        "Q100 fan-out E2E · seeds 5051–5053",
+        "Reconciliar task cards, respuesta final y scorer; regresiones sintéticas de etiquetas y orden.",
+        "Las task cards conservan ALPHA/BETA, pero la respuesta final las invirtió en seeds 5051/5053. Falta correlación estable para atribuirlo a scheduler/modelo/harness. No adoptar parallel2 ni repetir GPU por el mismo resultado; serial correcto 3/3.",
+        "Q-20261024-VF-ITERATION-105/RESULTS.md; receipts/q105-final-result.json; receipts/q105-forensic-check.json; receipts/q105-q100-log-inventory.json; receipts/q105-cpu-regressions.json",
+        "Conciliado con resultados Q100; no causa inferida sin IDs de task-call persistidos en una nueva prueba.",
+        "2026-10-24T23:10:27Z",
+        "2026-10-24T23:15:15Z",
+        "2026-10-25T04:44:18Z"
+      ],
+      "wrapStrategies": [
+        "WRAP"
+      ]
+    }
+  },
+  "sentinels": {
+    "17": {
+      "values": [
+        "Prueba/seguimiento",
+        "vf-ocr-unlimited-20261019",
+        "Alta",
+        "Completa · Q124 no integra Unlimited-OCR Q49; ambos gates fallaron",
+        "Probar OCR local para PDFs escaneados",
+        "Extracción documental / OCR",
+        "VF-20261019 · #49 · Baidu Unlimited-OCR; Q119/Q123/Q124",
+        "A18 completó XFUND 12/12 en 6+6 seriales sobre las dos RTX 3090. A19 corrigió sólo el postproceso offline y verificó 12/12 IDs/hashes; A20 regresión 6/6. Sin repetir inferencia.",
+        "Q124 no integra Q49: CER 0.339435 vs 0.229119 (+48.15% peor), 4/12 wins; recall 0.9353 vs 0.8468. Memoria: Q117 ASTRA 1M bajo AMD05, RSS 51.306 GiB, MemAvailable mín. 58.698, PSI 53.61% host/94.77% cgroup, 216 avisos y 0 stops/OOM/swap; Q118 replay 12/12. A18 OCR fue liviano, no estrés. AMD05 candidato/no integrado; cierre de Codex no atribuido.",
+        "Q124/RESULTS.md; comparison-q124-offline.json; receipts/attempt15-a19-synthetic-regression.json; receipts/attempt16-a19-offline-comparison.json; memory-monitor-a18-xfund-screen.jsonl.",
+        "No repetir Q49 ni integrar. Reabrir sólo ante pesos/claim primario nuevos; si se prioriza OCR de PDF, evaluar por separado fallback opt-in Poppler+Tesseract con holdout real autorizado.",
+        "2026-10-19T21:00:00Z",
+        "2026-10-25T04:33:32Z",
+        "2026-10-25T04:33:32Z"
+      ],
+      "wrapStrategies": [
+        "WRAP"
+      ]
+    },
+    "18": {
+      "values": [
+        "Prueba/seguimiento",
+        "q119-memory-pressure-composite-streak",
+        "Alta",
+        "Preflight AMD05 verificado · CPU 8/8; la próxima evaluación elegible debe invocarlo por hash antes de inferencia",
+        "Fijar el guard antes de futuras evaluaciones",
+        "Fiabilidad y protección de benchmarks locales",
+        "Q116/Q117/Q118 · auditoría Q119/Q120/Q121",
+        "Q121 wrapper: SHA-256 de runner/guard; import AMD05; Monitor.start antes de Popen; preimport. Regresiones CPU 8/8, CLI verify-only PASS. Rechazos bloquean antes del proceso; el camino feliz despacha un runner con subprocess.run mockeado.",
+        "Q117 ASTRA DEFAULT 1M real bajo AMD05 (707 muestras; ambas RTX 3090): RSS 51,306 GiB, MemAvailable mínima 58,698 GiB, PSI avg10 máx. 53,61% host/94,77% cgroup; 216 warnings moderados pero 0 stops/OOM/swap. Con MemAvailable >48 GiB, AMD05 no detuvo por RSS/PSI aislados; replay offline Q118 pasó 12/12. SOL Q34 dual-3090 acabó sin OOM, pero no guardó PSI continua. AMD05 sigue candidato/no integrado; el gap de PSI alternante del guard histórico Q97/Q100 permanece.",
+        "AMD05 conserva el caso ASTRA de RSS alto con headroom; Q97/Q100 históricos mantienen el gap PSI alternante y no se reescriben. No cambiar RAM/swap/contexto ni parar por RSS. No atribuye cierres de Codex.",
+        "Q-20261025-VF-ITERATION-117/receipts/q117-amd05-cpu-tests.json; Q-20261025-VF-ITERATION-118/receipts/q118-amd05-live-trace-replay.json; Q-20261025-VF-ITERATION-121/RESULTS.md; receipts/q121-test-run.json",
+        "Q121 prueba el preflight en runner AMD05 validado, no la siguiente corrida real. Su primer uso model-backed sigue pendiente cuando haya un candidato desbloqueado.",
+        "2026-10-25T04:33:32Z",
+        "2026-10-25T04:33:32Z"
+      ],
+      "wrapStrategies": [
+        "WRAP"
+      ]
+    }
+  },
+  "evaluationRows": {
+    "345": {
+      "values": [
+        "Q124 · XFUND es.val OCR real vs Tesseract",
+        "A14 screen stopped before Popen on undefined run_dir (not pressure). A18 changed cache references to RUN_DIR; 10/10 hash/compile/Q121 PASS. Preflight-only a18 PASS: MemAvailable 110.40 GiB, PSI/OOM 0, cgroup 20.94 MiB, no inference.",
+        "Completa · A18 12/12; A19 offline PASS; no integrar Q49",
+        "2026-10-25",
+        "Tesseract spa+eng PSM6 · Unlimited-OCR Q49 congelado",
+        "VF-20261019 #49 · XFUND v1.0 · CC BY-NC-SA 4.0",
+        "Q49: mean CER 0.339435 vs Tesseract 0.229119 (48.15% mayor); 4/12 wins, aunque recall de palabras 0.9353 vs 0.8468. Falla ambos gates de avance. AMD05 A18: 141 muestras, min MemAvailable 108.184 GiB, cgroup máx 1.789 GiB, PSI/OOM/swap 0 y sin abort.",
+        "ASTRA DEFAULT 1M real bajo AMD05: RSS 51,306 GiB; MemAvailable mínima 58,698 GiB; PSI avg10 máxima 53,61% host y 94,77% cgroup; 216 warnings moderados, 0 stops/OOM/swap. Con headroom >48 GiB el guard no corta por RSS/PSI aislados; replay Q118 12/12. SOL Q34 dual 3090 terminó sin OOM pero no tiene PSI continua. El screen OCR A18 fue liviano (108,184 GiB disponibles), no estrés severo. AMD05 sigue candidato, no integrado; Codex crash no atribuido.",
+        "Q124/RESULTS.md; outputs/a18-xfund-screen/comparison-q124-offline.json; receipts/attempt15-a19-synthetic-regression.json; receipts/attempt16-a19-offline-comparison.json; receipts/sheet-q124-final-readback.json.",
+        "Q124 cerrada en WORK_QUEUE.md. Nuevo test sólo si hay pesos/claim OCR nuevos o una propuesta opt-in distinta; resto de gates vigentes requieren Windows nativo o principal/policy tenant."
+      ],
+      "wrapStrategies": [
+        "WRAP"
+      ]
+    },
+    "346": {
+      "values": [
+        "Q125 · detector de presión frente a ASTRA 1M/SOL · auditoría de evidencias",
+        "Auditoría read-only Q116–Q121; no se repitió inferencia ni fixture porque las pruebas existentes ya cubren el comportamiento relevante.",
+        "Cerrada · RSS alto con headroom no detuvo ASTRA; limitaciones de guard registradas; AMD05 sigue candidato/no integrado.",
+        "2026-10-25",
+        "¿El guard evita falsos cortes por RAM/RSS alto respetando las ejecuciones exitosas de ASTRA DEFAULT 1M y SOL, y qué falta validar antes de confiar en la detección de presión?",
+        "Host dual RTX 3090 +128 GiB. ASTRA DEFAULT 1M Q117 real; SOL Q34 dual finalizado sin OOM pero sin PSI continua.",
+        "Contrastar Q97/Q100 real helper, Q116 alternancia, AMD05 exacto en Q117 y replay real Q118 (707 muestras), Q120 auditoría y Q121 wrapper.",
+        "ASTRA: 1.001.463 tokens, HTTP 200, RSS máx51.306 GiB, MemAvailable mín58.698 GiB, PSI host máx53.61%, 0 stop/OOM/swap; Q118 replay 12/12. AMD05 no corta por RSS alto con headroom. La conjunción PSI severa+<48 GiB no ocurrió en live; CPU fixtures la cubren. Q116 demuestra que el helper Q97/Q100 histórico no acumula la racha OR si alternan full/some; candidate Q116-A2 corrige en CPU pero no está integrado. SOL terminó sin OOM; no permite calibrar PSI.",
+        "Conservar ASTRA/SOL/contexto/RAM/swap y no atribuir cierres de Codex. Antes de usar un guard, distinguir candidato AMD05 del histórico Q97/Q100; usar Q121 por hashes en una próxima evaluación elegible. La prueba model-backed siguiente no tiene gate local abierto; Flash-Next NInfer/C39 requiere Windows, tenant auth principal/policy real, HyperQwen cambio parser/runtime material.",
+        "Q116/RESULTS.md; Q117/RESULTS.md; Q118/RESULTS.md; Q120/RESULTS.md; Q121/RESULTS.md; receipts/q117-amd05-result.json; q118-amd05-live-trace-replay.json"
+      ],
+      "wrapStrategies": [
+        "WRAP"
+      ]
+    },
+    "347": {
+      "values": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "wrapStrategies": [
+        "WRAP"
+      ]
+    }
+  },
+  "formatCheck": {
+    "targetRowsAllWrap": true,
+    "updatedCellsFieldMask": "userEnteredValue",
+    "preservedIdsAndPriorities": true
+  },
+  "assertions": {
+    "targetRowsPresent": true,
+    "identifiersIntact": true,
+    "q125Recorded": true,
+    "neighborRowsPreserved": true
+  }
+}
