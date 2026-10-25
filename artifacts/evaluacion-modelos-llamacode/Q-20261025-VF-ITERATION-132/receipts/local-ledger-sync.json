@@ -1,0 +1,28 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-132",
+  "readAtUtc": "2026-10-25T06:22:48.683449Z",
+  "inbox": {
+    "path": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/inbox.json",
+    "items": 58,
+    "updatedBatchSequence": 57,
+    "backup": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/backups/inbox.q132-prechange-20261025T062248Z.json",
+    "backupSha256": "a38dfea971a45e74a7e3a8b45d6fcb9aa530fd5c1cbb943592e2cd1ba3d0df42",
+    "currentSha256": "f3bf863872c90ef475adacb9a972b2e65e4c82a12d190ef9e8e642e7bc8540f6",
+    "otherEntriesUnchanged": true
+  },
+  "actionables": {
+    "path": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/actionables.json",
+    "items": 29,
+    "updatedId": "q119-memory-pressure-composite-streak",
+    "backup": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/backups/actionables.q132-prechange-20261025T062248Z.json",
+    "backupSha256": "4f9a8e6e1f814a015198e680d05450c4d43bd108e244f8bc8b29354a6490f614",
+    "currentSha256": "943b9ce6e3b454ec70840aabc65123bd193a28866b105ab46bed1f7e8caa25ef",
+    "otherEntriesUnchanged": true
+  },
+  "validation": {
+    "bothJsonParse": true,
+    "onlyTargetRecordsChanged": true,
+    "backupsCreatedBeforeAtomicReplace": true,
+    "noInferenceBuildOrGpu": true
+  }
+}

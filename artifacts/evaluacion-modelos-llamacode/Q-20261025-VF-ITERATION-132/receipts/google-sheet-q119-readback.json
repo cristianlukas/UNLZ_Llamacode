@@ -1,0 +1,69 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-132",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet": "Accionables",
+  "targetRange": "A18:N18",
+  "readAtUtc": "2026-10-25T06:23:53Z",
+  "readback": "PASS",
+  "header": [
+    "Tipo",
+    "ID / Q-ID",
+    "Prioridad",
+    "Estado en app",
+    "Título",
+    "Uso afectado",
+    "Fuente de origen",
+    "Qué probar / detalle",
+    "Resultado / decisión",
+    "Artefactos / recibos",
+    "Evidencia de reconciliación",
+    "Creado",
+    "Actualizado",
+    "Reconciliado UTC"
+  ],
+  "beforeRow": [
+    "Prueba/seguimiento",
+    "q119-memory-pressure-composite-streak",
+    "Alta",
+    "AMD05 candidate-only; Q117 ASTRA DEFAULT 1M dual-3090 completó con RSS 51,306 GiB, MemAvailable mín. 58,698 GiB y cero stops/OOM/swap. Q126 pasó 4/4 fronteras alternantes; Q127 confirmó SOL dual-GPU sin abort.",
+    "Fijar el guard antes de futuras evaluaciones",
+    "Fiabilidad y protección de benchmarks locales",
+    "Q116/Q117/Q118/Q121/Q126/Q127/Q128/Q129 · auditoría de memoria y topología.",
+    "Q121 wrapper: SHA-256 de runner/guard; import AMD05; Monitor.start antes de Popen; preimport. Regresiones CPU 8/8, CLI verify-only PASS. Rechazos bloquean antes del proceso; el camino feliz despacha un runner con subprocess.run mockeado.",
+    "Q127 SOL dual-3090: 24.080/23.972 MiB de VRAM, RSS 12,421 GiB, MemAvailable mín. 99,973 GiB, 0 abort/OOM/swap. Q128 Q97 replay de ASTRA 1M 11/11; Q118 AMD05 replay 12/12. VRAM alta no equivale a presión de RAM del host. Q97 legacy no acumula PSI severa alternada; AMD05 candidate pasó esa frontera en Q126.",
+    "No detener por RSS/VRAM solos ni reducir RAM/swap/contexto. AMD05 sigue sin integrar; Q97/Q100 mantiene el hueco alternante. Ningún resultado atribuye cierres de Codex.",
+    "Q-20261025-VF-ITERATION-116/RESULTS.md; Q117/RESULTS.md; Q126/RESULTS.md; Q127/RESULTS.md; Q128/RESULTS.md; Q129/RESULTS.md; receipts/audit.json.",
+    "Invocar Q121 por hash antes de cualquier nueva evaluación elegible. NInfer Flash-Next queda bloqueado hasta runtime Linux dual-GPU validado o executor Windows nativo.",
+    "2026-10-25T05:41:08Z",
+    "2026-10-25T05:41:08Z"
+  ],
+  "afterRow": [
+    "Prueba/seguimiento",
+    "q119-memory-pressure-composite-streak",
+    "Alta",
+    "Evidencia reconciliada hasta Q131; sin falso stop con RSS alto y headroom; AMD05 candidate-only; gap PSI alternante Q97/Q100 permanece.",
+    "Fijar el guard antes de futuras evaluaciones",
+    "Fiabilidad y protección de benchmarks locales",
+    "Q116/Q117/Q118/Q121/Q126/Q127/Q128/Q129 · auditoría de memoria y topología.",
+    "Q121 wrapper validado en CPU (hashes/import/Monitor→Popen/preimport; 8/8 y verify-only PASS). Q117/Q118 replays de ASTRA 1M: 707 muestras, 12/12 AMD05; Q126 bordes alternantes 4/4; Q127 SOL dual-3090, 157 muestras, sin abort/OOM; Q128 Q97 replay ASTRA, 11/11. Q131: Q4 Flash-Next/Strata, 258029 prompt tokens, contexto 262144, 10/10 claves sintéticas en 2×RTX3090; RSS árbol 93.13 GiB, MemAvailable mínima 60.80 GiB, PSI some/full máx. 8.05%/7.54%, OOM 0 y sin abortar. Una sola solicitud; no es quality suite ni causa de crash de Codex.",
+    "Los casos medidos completaron con headroom y el guard no cortó por RSS/VRAM altos. Conservar ASTRA/SOL y 131K default; Q4/262K es capacidad bajo demanda para este holdout. Q97/Q100 mantiene gap de PSI severa alternada; AMD05 sigue candidate-only. Sin atribución de cierres de Codex.",
+    "Q-20261025-VF-ITERATION-116/RESULTS.md; Q117/RESULTS.md; Q126/RESULTS.md; Q127/RESULTS.md; Q128/RESULTS.md; Q129/RESULTS.md; Q-20261025-VF-ITERATION-131/RESULTS.md; Q131 receipts/q131-memory-guard-replay.json, context262k-attempt-01.json, postflight-verification.json.",
+    "Q131 agregó una solicitud sintética Q4/262K y replay offline de ASTRA/SOL; RSS árbol máx. 93.13 GiB con 60.80 GiB disponibles mín.; PSI some/full máx. 8.05%/7.54%; OOM=0; sin aborto. Q131 guard de worker y replay offline, no detector de Codex/GUI/driver. No reejecutó ASTRA/SOL ni cambió perfil. Q97/Q100 alternancia severa queda abierta; AMD05 no integrado.",
+    "2026-10-25T02:36:00Z",
+    "2026-10-25T06:23:53Z",
+    "2026-10-25T06:23:53Z"
+  ],
+  "neighboringRowsUnchanged": {
+    "row17": true,
+    "row19": true
+  },
+  "formatting": {
+    "range": "A17:N19",
+    "cellCount": 42,
+    "allWrap": true,
+    "allVerticalTop": true
+  },
+  "correction": "The previous Q119 row had decision/next-action text under artifact/timestamp headers. The row was re-aligned to the visible sheet header; no neighboring rows were changed.",
+  "writeScope": "D18 and H18:N18 only; userEnteredValue fields only; formats preserved.",
+  "pass": true
+}
