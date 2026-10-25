@@ -1,0 +1,171 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-116",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "readAtUtc": "2026-10-25T00:51:10Z",
+  "readbackExact": true,
+  "validatedRanges": [
+    "Evaluaciones LlamaCode!A337:J337",
+    "Accionables!A2:N2"
+  ],
+  "allReadCellsWrapped": true,
+  "noValidationAdded": true,
+  "ranges": [
+    {
+      "sheet": "Evaluaciones LlamaCode",
+      "startRowIndex": 336,
+      "values": [
+        {
+          "column": 1,
+          "display": "Q116-A1/A2 · PSI severa alternada y detector de memoria",
+          "wrap": "WRAP",
+          "hasValidation": false
+        },
+        {
+          "column": 2,
+          "display": "Q116-A1: guard Q97 real: full=60 y some=80 estables paran en sample15, pero 15 muestras alternando ambas señales no paran por contadores separados. Q116-A2 candidato OR compuesto 5/5 PASS, no integrado. El hard stop no usa RSS. ASTRA/SOL y perfiles intactos.",
+          "wrap": "WRAP",
+          "hasValidation": false
+        },
+        {
+          "column": 3,
+          "display": "Cerrada · discrepancia semántica observada; candidato compuesto 5/5 (no integrado)",
+          "wrap": "WRAP",
+          "hasValidation": false
+        },
+        {
+          "column": 4,
+          "display": "2026-10-25",
+          "wrap": "WRAP",
+          "hasValidation": false
+        },
+        {
+          "column": 5,
+          "display": "¿El guard severo sostiene la racha documentada full>=60% OR some>=80% durante 15 muestras si alternan las señales, y el guard de memoria corta sólo por presión real?",
+          "wrap": "WRAP",
+          "hasValidation": false
+        },
+        {
+          "column": 6,
+          "display": "Replay CPU-only del helper Q97 y helper candidato; las dos RTX 3090 fueron fixtures. ASTRA DEFAULT/Flash-Next 1M, SOL y PeritoSoft intactos.",
+          "wrap": "WRAP",
+          "hasValidation": false
+        },
+        {
+          "column": 7,
+          "display": "Política escrita: PSI global full>=60% o some>=80% durante 15 muestras; PSI moderada full>=20% o some>=70% advierte tras 30.",
+          "wrap": "WRAP",
+          "hasValidation": false
+        },
+        {
+          "column": 8,
+          "display": "Q97 no dispara el OR compuesto alternado; candidato compuesto detiene en sample15, resetea tras normal y preserva warning moderado. ASTRA DEFAULT 1M completó con ~51.14 GiB RSS y 55.64–55.728 GiB disponibles; Flash-Next 1M 3/3 con 64.98–65.06 GiB disponibles; SOL Q34 TP=2 dual-3090 sin OOM, sin PSI continua. No hay corte por RSS ni atribución del crash Codex.",
+          "wrap": "WRAP",
+          "hasValidation": false
+        },
+        {
+          "column": 9,
+          "display": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-116/RESULTS.md; PLAN.md; runner/test_q116_mixed_severe_psi.py; candidate/q116_composite_psi.py; runner/test_q116_composite_psi_candidate.py; receipts/q116-mixed-severe-psi.json; receipts/q116-composite-candidate.json; receipts/q116-final-summary.json",
+          "wrap": "WRAP",
+          "hasValidation": false
+        },
+        {
+          "column": 10,
+          "display": "WORK_QUEUE.md · Q-20261025-VF-ITERATION-116 · lock 3fb0fad6-c440-44f6-aa16-11437b46ebee",
+          "wrap": "WRAP",
+          "hasValidation": false
+        }
+      ]
+    },
+    {
+      "sheet": "Accionables",
+      "startRowIndex": 1,
+      "values": [
+        {
+          "column": 1,
+          "display": "Recomendación actualizada",
+          "wrap": "WRAP",
+          "hasValidation": false
+        },
+        {
+          "column": 2,
+          "display": "vf-q35-codex-crash-isolation-20261022",
+          "wrap": "WRAP",
+          "hasValidation": false
+        },
+        {
+          "column": 3,
+          "display": "P0 · estabilidad de harness",
+          "wrap": "WRAP",
+          "hasValidation": false
+        },
+        {
+          "column": 4,
+          "display": "Implementada parcialmente · guard Linux mide presión, no RSS; Q116 encontró diferencia en PSI severa alternada; candidato 5/5 sin integrar; Windows Job Objects y entrypoints pendientes",
+          "wrap": "WRAP",
+          "hasValidation": false
+        },
+        {
+          "column": 5,
+          "display": "",
+          "wrap": "WRAP",
+          "hasValidation": false
+        },
+        {
+          "column": 6,
+          "display": "",
+          "wrap": "WRAP",
+          "hasValidation": false
+        },
+        {
+          "column": 7,
+          "display": "",
+          "wrap": "WRAP",
+          "hasValidation": false
+        },
+        {
+          "column": 8,
+          "display": "Q37 aisló el supervisor/worker Q35; Q41 integró tools/kv_cache_ab.py y sus matrices dependientes en background.slice; Q42 integró scripts/run-astra-strata.sh. Canarios Linux verificaron lifecycle y OOM. Q38 aún enumera tools/meter_system_profiles.py y ocho entrypoints PowerShell sin Job Object visible. Q60 P60-A1 revalidó la ruta Linux con padre Python e hijo sleep: ambos quedaron en background.slice, heredaron oom_score_adj=900 y terminaron al detener el scope; MemoryHigh/MemoryMax/MemorySwapMax=infinity. Q61 revisó los registros: hay un Crashpad crash del subproceso GPU de Codex (2026-10-22 22:20-03:00), dos dump_without_crashing GPU-process y sin minidumps; no hay registro correlacionable de OOM o crash del proceso principal. El kernel registró mismatch NVIDIA 615.71.09/610.57.04 tras el update. Q65: tras el cierre reportado, el proceso principal PID 7630 seguía vivo desde 2026-10-22 22:28-03:00 con /usr/lib/chatgpt/ChatGPT (deleted), inode 5899627; el ejecutable instalado ya es otro inode 5898276. Se renovaron renderers y codex exec-server a las 17:34-03:00. No se creó un dump nuevo. Q66 (2026-10-23T20:39:40Z): recheck confirma que PID 7630 sigue vivo desde 22/10 y /proc/7630/exe continúa como ChatGPT (deleted); no hubo Quit/relaunch completo. Ubuntu sigue en boot 22/10 22:26:57. Q67 (2026-10-23T20:41:54-03:00): tercer recheck confirma que Ubuntu no reinició; boot 22/10 22:26:57, y Codex main PID 7630 sigue con `/usr/lib/chatgpt/ChatGPT (deleted)`. No inference process; listener 35751 sigue sin owner resuelto.\n\nQ97 calibrated guard: ASTRA/Swift completaron 8/8 requests cada uno en servicio transient AppArmorProfile=chatgpt, ambas 3090 y sin caps RAM; ASTRA alcanzó PSI global 34,72% (64 warnings) y completó; mínimo MemAvailable 71,864 GiB, OOM 0.\n\nQ68 post-reinicio (2026-10-23): boot posterior a la actualización; módulo/NVML 615.71.09 alineados, nvidia-smi exit 0. Q110 (2026-10-25): driver vuelve a coincidir; no hay servidor/listener de inferencia; MemAvailable 106.31 GiB, PSI some/full 0%, OOM 0. ArtCraft 207 MiB es un proceso ajeno preservado, no inferencia.\n\nQ116-A1 revisó el helper activo Q97: full=60 y some=80 estables detienen en sample15, pero alternar la condición OR severa durante 15 samples no detiene porque hay contadores separados. Q116-A2 helper candidato OR compuesto: 5/5 PASS (controles estables, alternancia, reset y warning moderado sample30). CPU-only; candidato no integrado.",
+          "wrap": "WRAP",
+          "hasValidation": false
+        },
+        {
+          "column": 9,
+          "display": "Q111 confirma que la política usada por Q97/Q100 mide presión sostenida del host (MemAvailable, PSI y OOM), no RSS ni porcentaje ocupado. Alta ocupación por sí sola no dispara el guard: ASTRA 1M (RSS 51,14 GiB; MemAvailable mín. 55,728 GiB) completó; Q103 llegó a 56,013 GiB RSS con >53 GiB disponibles y sin stop/OOM. SOL Q34 TP=2 completó sin OOM, aunque no hay serie PSI de esa corrida. Se mantienen intactos ASTRA/SOL y RAM/contexto/swap. La causa del cierre de Codex sigue sin atribución; Q61 vio un crash separado del subproceso GPU, sin OOM correlacionable. Q113 confirma por replay del guard real Q97 (7/7): RSS no es entrada/umbral; ASTRA 1M histórico ~51,14 GiB RSS con MemAvailable 55,728 GiB continúa. No reducir RAM, contexto o swap ni cambiar ASTRA/SOL/Flash-Next. Crash de Codex sigue sin atribución; el guard no monitorea en general la app/driver. Q114 2/2 con caso cgroup-only de 30 samples: cgroup PSI 81,53% y PSI global 0%, MemAvailable 71,864 GiB/OOM0 no avisan ni detienen. PSI global 34,72% sostenida avisa en sample30, sin hard-stop. Q97 picos cgroup/global 81,53/34,72 se reportan separados, sin afirmar simultaneidad. Esto respalda la calibración del monitor de campañas; no atribuye el crash del escritorio. Q115 2/2 PASS: PSI global full=20%/some=70% exact warns at sample30; 19,99%/69,99% does not warn. No hard stop at moderate levels. Q113/Q114/Q115 together verify MemAvailable/PSI/OOM/cgroup diagnostic/PSI cadence. No change to ASTRA/SOL/RAM/context. No inference/GPU; Codex desktop crash cause remains open.\n\nQ116 confirma que la guarda no corta por RSS: ASTRA DEFAULT 1M completó con ~51,14 GiB RSS y 55,64–55,728 GiB disponibles; ASTRA Flash-Next 1M completó 3/3 con 64,98–65,06 GiB disponibles; SOL Q34 TP=2 finalizó dual-3090 sin OOM, aunque no hay serie PSI continua. No reducir memoria/contexto ni modificar ASTRA/SOL. Diferencia: política severa documentada OR compuesto vs helper histórico por-métrica; usar un supervisor versionado corregido en próximas campañas o aclarar persistencia por métrica. No atribuye el cierre de Codex.",
+          "wrap": "WRAP",
+          "hasValidation": false
+        },
+        {
+          "column": 10,
+          "display": "Q111/RESULTS.md; Q111/receipts/q111-integration-audit.json; Q102/RESULTS.md; Q103/RESULTS.md; Q97/RESULTS.md; Q100/RESULTS.md; Q61/receipts/crash-evidence-audit.json; Q113/RESULTS.md; Q113/runner/test_q113_active_guard.py; Q113/receipts/q113-active-guard-audit.json; Q113/receipts/q113-final-summary.json; Q114/RESULTS.md; Q114/runner/test_q114_cgroup_psi_diagnostic.py; Q114/receipts/q114-cgroup-psi-replay.json; Q114/receipts/q114-final-summary.json; Q114/receipts/q114-attempt01-short-diagnostic-window.json; Q115/RESULTS.md; Q115/runner/test_q115_warning_thresholds.py; Q115/receipts/q115-warning-boundaries.json; Q115/receipts/q115-final-summary.json\n\nartifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-116/RESULTS.md; PLAN.md; runner/test_q116_mixed_severe_psi.py; candidate/q116_composite_psi.py; runner/test_q116_composite_psi_candidate.py; receipts/q116-mixed-severe-psi.json; receipts/q116-composite-candidate.json; receipts/q116-final-summary.json",
+          "wrap": "WRAP",
+          "hasValidation": false
+        },
+        {
+          "column": 11,
+          "display": "Q111: 8/8 límites de transición PASS; Q97 ASTRA 1M completó con PSI moderada y OOM=0; Q100 completó 6/6 con PSI full pico 46,52%, OOM=0 y guardAborted=false. Q102 comprobó guard con 48 GiB RSS; Q103 con 56,013 GiB RSS. Esos smokes no reproducen el perfil GPU/KV/concurrencia; SOL carece de PSI continua. Umbrales sin cambio. Q113 7/7 PASS de límites y reset. Intento 1 se detuvo en el preflight del runner antes de escenarios (0 checks); las ocho fuentes preregistradas coincidían, se corrigió el comparador y el segundo replay pasó. CPU-only, sin inferencia, GPU ni RAM artificial. SOL dual finalizó sin OOM, pero no tiene PSI continua. Pendiente P0: Windows Job Objects y entrypoints nativos; demás pruebas dependen de prerequisitos externos. Q114 replay enmendado 2/2 PASS. Intento 1 pasó 2/2, pero un caso cgroup-only de una muestra no cubría la cadencia 30; enmienda leída de vuelta, segundo replay usó 30 muestras global=0 y pasó. Readback Evaluaciones A335:J335; dual 3090 sólo como fixture, sin uso de GPU. Q115 exact warning boundaries 2/2 PASS; values at limits warn at 30, just-below values do not, no hard-stop. Readback Eval row336 and Accionables row2. CPU-only, dual3090 fixture.\n\nQ116-A1: helper Q97 real; la alternancia severa OR no para en sample15 por contadores separados, mientras cada señal estable sí para. Q116-A2 candidato OR compuesto 5/5 PASS; no integrado. ASTRA/SOL exitosos siguen intactos. No server/model/GPU/build/network/RAM artificial; crash Codex sin atribución.",
+          "wrap": "WRAP",
+          "hasValidation": false
+        },
+        {
+          "column": 12,
+          "display": "2026-10-25T00:09:51Z",
+          "wrap": "WRAP",
+          "hasValidation": false
+        },
+        {
+          "column": 13,
+          "display": "2026-10-25T00:50:00Z",
+          "wrap": "WRAP",
+          "hasValidation": false
+        },
+        {
+          "column": 14,
+          "display": "2026-10-25T00:50:00Z",
+          "wrap": "WRAP",
+          "hasValidation": false
+        }
+      ]
+    }
+  ],
+  "notes": "Q116 result and actionable reconciliation verified after write. ASTRA/SOL evidence, PSI semantics, candidate-only status, and pending Windows Job Objects are documented."
+}

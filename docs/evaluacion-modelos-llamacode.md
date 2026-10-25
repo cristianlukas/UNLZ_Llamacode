@@ -1031,3 +1031,12 @@ Q114-A1, replay enmendado 2/2 PASS: PSI cgroup full/some=81,53% durante 30 muest
 ## Q115 · Límites exactos del warning de PSI moderada · 2026-10-25
 
 Q115-A1 pasa 2/2: en el guard Q97 activo, PSI global full=20,00% y some=70,00% generan warning en la muestra 30; 19,99% y 69,99% no advierten tras 30 muestras. Las cuatro condiciones no activan hard-stop. CPU fixtures; dos RTX 3090 sólo simuladas. Junto con Q113 (RSS/MemAvailable, OOM y stop severo) y Q114 (cgroup PSI sólo diagnóstica), quedan comprobadas las ramas de presión del guard Q97/Q100. Sin cambios a thresholds, RAM/swap/contexto ni ASTRA/SOL/Flash-Next; el crash de Codex continúa sin causa probada. No se lanzó modelo ni GPU. Sheets readback PASS Evaluaciones LlamaCode!A336:J336 y Accionables!A2:N2. Resultados `../artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-115/RESULTS.md`.
+
+
+## Q116 · Semántica de PSI severa alternada · 2026-10-25
+
+La revisión confirmó que la guarda de campaña no corta por RSS alto ni por RAM ocupada: ASTRA DEFAULT 1M Q14 completó con ~51,14 GiB de RSS y 55,64–55,728 GiB disponibles; ASTRA Flash-Next 1M Q35 completó 3/3 con 64,98–65,06 GiB disponibles; SOL Q34 TP=2 finalizó en las dos RTX 3090 sin OOM, aunque no registró PSI continua. Esto respalda conservar esos perfiles y sus contextos.
+
+Q116-A1 encontró una diferencia de semántica: el helper histórico Q97 detiene en 15 muestras cuando `full>=60%` o `some>=80%` permanece severo por separado, pero no cuando la condición OR compuesta es verdadera durante 15 muestras alternando entre ambas señales. Q116-A2 probó un helper candidato independiente con racha OR compuesta y pasó 5/5, conservando warning moderado sample30, reset de recuperación y hard-stop sample15. No se modificaron Q97/Q100 ni el producto. Para futuras campañas, integrar esta política en una versión nueva del supervisor o aclarar explícitamente que la persistencia es por métrica. La prueba fue CPU-only; no atribuye los cierres de Codex ni altera ASTRA, SOL, Flash-Next, RAM o swap.
+
+Resultados y trazas: `../artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-116/RESULTS.md`.

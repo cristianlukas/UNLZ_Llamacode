@@ -1,0 +1,61 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-116",
+  "closedAtUtc": "2026-10-25T00:51:10Z",
+  "status": "complete",
+  "tests": {
+    "Q116-A1": "historical Q97 helper observed; stable severe inputs stop at sample 15; alternating composite OR does not stop",
+    "Q116-A2": "candidate composite helper 5/5 PASS"
+  },
+  "historicalMemoryEvidence": {
+    "ASTRA_DEFAULT_1M": "completed; RSS 51.14 GiB; minimum MemAvailable 55.64 GiB (Q97/Q98) and 55.728 GiB (Q101 calibration)",
+    "ASTRA_FlashNext_1M": "3/3 completed; minimum MemAvailable 64.98–65.06 GiB",
+    "SOL_Q34": "TP=2 dual RTX 3090 completed without OOM; no continuous PSI series"
+  },
+  "decision": "Guard does not stop based on RSS alone. Historical Q97 severe-PSI implementation uses separate per-metric streaks, which differs from the documented composite OR streak. Candidate is not integrated; for future campaigns version the supervisor with composite streak or clarify policy. No production change and no Codex crash attribution.",
+  "resources": {
+    "gpuUsed": false,
+    "inferenceServerStarted": false,
+    "modelStarted": false,
+    "buildRun": false,
+    "networkUsed": false,
+    "artificialMemoryGiB": 0,
+    "twoRtx3090RepresentedOnlyAsFixtures": true
+  },
+  "protectedAssets": [
+    "ASTRA DEFAULT 1M",
+    "ASTRA Flash-Next ASTRA",
+    "SOL",
+    "PeritoSoft",
+    "RAM",
+    "swap",
+    "production profiles"
+  ],
+  "sheetReadbackPending": false,
+  "sourceHashes": {
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-116/RESULTS.md": "5c416a93d7078048f89f2ec4893a5243628999853f4ad6df6b2142ee86906d65",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-116/PLAN.md": "4b722653977528f3c9acca05422b1376c96e145ec8d99d440d010840f5618e3e",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-116/candidate/q116_composite_psi.py": "d2c66a548c694edaad36f019ad4b499334a7f4d965f900e8d21279b06231b3db",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-116/runner/test_q116_mixed_severe_psi.py": "7db54ae3c299deaf3e661d59d76d3d58f220d6b6884d4a43bdcb0f38ad0c0b01",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-116/runner/test_q116_composite_psi_candidate.py": "b952d5352b5b5856e809def38536f6b07ddddfa799324063ad51f76f9d8cd409",
+    "receipts/google-sheet-final-readback.json": "66ce7c85d0cd5da77c09b9425a2ae506c5768745f5d0dce955abafc9607fd16f"
+  },
+  "sheetReadback": {
+    "receipt": "receipts/google-sheet-final-readback.json",
+    "exact": true,
+    "ranges": [
+      "Evaluaciones LlamaCode!A337:J337",
+      "Accionables!A2:N2"
+    ],
+    "wrapPreserved": true
+  },
+  "rerunAfterReconciliation": {
+    "Q116-A1": "4 cases replayed; stable metrics stop at sample15; alternating composite OR does not stop",
+    "Q116-A2": "5/5 PASS"
+  },
+  "verification": {
+    "q116A1Replay": "4 cases; expected historical behavior reproduced",
+    "q116A2Replay": "5/5 PASS",
+    "sheetReadback": "exact; WRAP preserved; no validation added",
+    "jsonReceipts": "parse successfully"
+  }
+}

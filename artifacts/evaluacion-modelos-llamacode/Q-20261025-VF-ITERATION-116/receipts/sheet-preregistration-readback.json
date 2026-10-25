@@ -1,0 +1,22 @@
+{
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet": "Evaluaciones LlamaCode",
+  "range": "A337:J337",
+  "sheetId": 1945218181,
+  "values": [
+    "Q116-A1 · PSI severa alternada full/some",
+    "Preregistro CPU-only: replayar 15 muestras donde full>=60% OR some>=80% permanece verdadero alternando dimensiones; controles estables y reset tras muestra normal.",
+    "Preregistro · pendiente",
+    "2026-10-25",
+    "Determinar si el hard-stop mantiene una racha compuesta OR o contadores separados por métrica.",
+    "Guard real Q97 · fixture CPU · RTX 3090 dual sólo representadas; ASTRA/SOL/PeritoSoft intactos",
+    "Política documentada: PSI global full>=60% o some>=80% por 15 muestras consecutivas.",
+    "Predicción por definición OR compuesta: parar en la muestra 15 cuando alguna señal sea severa en cada muestra; registrar la semántica efectiva antes de recomendar cambios.",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-116/PLAN.md; runner/test_q116_mixed_severe_psi.py; receipts/preregistration.json",
+    "WORK_QUEUE.md · Q-20261025-VF-ITERATION-116 · lock 3fb0fad6-c440-44f6-aa16-11437b46ebee"
+  ],
+  "readbackExact": true,
+  "wrapCells": 10,
+  "validationCells": 0,
+  "readbackAtUtc": "2026-10-25T00:45:00.951716+00:00"
+}

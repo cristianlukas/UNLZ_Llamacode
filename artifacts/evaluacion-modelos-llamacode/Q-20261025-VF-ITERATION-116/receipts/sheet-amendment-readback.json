@@ -1,0 +1,13 @@
+{
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet": "Evaluaciones LlamaCode",
+  "range": "B337:C337",
+  "readbackExact": true,
+  "values": [
+    "Enmienda 01 preregistrada antes del retry: intento01 abortó al final por una aserción propia que esperaba ambas rachas separadas en 1; la muestra 15 era full. Se conservan las mismas series y se corrige sólo la expectativa a contador de la última señal.",
+    "Enmienda 01 preregistrada · replay pendiente"
+  ],
+  "wrapCells": 2,
+  "validationCells": 0,
+  "readbackAtUtc": "2026-10-25T00:45:54.657174+00:00"
+}

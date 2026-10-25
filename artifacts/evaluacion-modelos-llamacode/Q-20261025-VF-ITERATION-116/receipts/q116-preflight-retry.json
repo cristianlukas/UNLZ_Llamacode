@@ -1,0 +1,12 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-116",
+  "attempt": "02",
+  "preflightAtUtc": "2026-10-25T00:45:54.657053+00:00",
+  "lockTokenVerified": true,
+  "inferenceProcessMatches": [],
+  "knownPortListeners": [],
+  "peritoSoftProcessMatches": [],
+  "gpuUsed": false,
+  "modelOrServerStarted": false,
+  "artificialMemoryGiB": 0
+}

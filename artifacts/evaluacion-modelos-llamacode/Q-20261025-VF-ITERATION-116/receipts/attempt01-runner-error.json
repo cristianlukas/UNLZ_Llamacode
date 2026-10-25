@@ -1,0 +1,9 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-116",
+  "attempt": "01",
+  "status": "invalid_runner_assertion",
+  "atUtc": "2026-10-25T00:45:35.391235+00:00",
+  "error": "AssertionError: cases[2].finalCounts.severe_some80 == 1",
+  "effect": "Los cuatro casos y las transiciones fixture se calcularon en memoria, pero el runner no escribió resultado porque asumió que ambas rachas separadas debían terminar en 1; la muestra 15 era full, por lo que severe_some80 debía ser 0. No modelo/servidor/GPU/build/red/RAM artificial.",
+  "conclusion": "Ninguna; no interpretar este intento como PASS/FAIL del detector."
+}

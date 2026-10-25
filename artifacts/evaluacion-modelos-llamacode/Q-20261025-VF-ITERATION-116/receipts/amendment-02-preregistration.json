@@ -1,0 +1,16 @@
+{
+  "id": "Q116-A2-amendment-02",
+  "atUtc": "2026-10-25T00:47:25.687432+00:00",
+  "reason": "Q116-A1 mostró que el helper histórico mantiene rachas severas separadas por métrica y no se detiene si la condición OR compuesta permanece verdadera durante 15 muestras alternando full/some.",
+  "scope": "Crear y probar un helper candidato versionado separado, sin editar Q97 ni integrar cambios en producción.",
+  "candidatePolicy": "Mantener warning full>=20% o some>=70% durante30 muestras; hard-stop compuesto si full>=60% OR some>=80% en 15 muestras consecutivas; cualquier muestra con ambas debajo resetea la racha compuesta.",
+  "checks": [
+    "full=60 estable detiene sample15",
+    "some=80 estable detiene sample15",
+    "alternancia full=60/some=80 detiene sample15",
+    "14 alternadas + normal +14 no detiene antes de sample15 de la nueva racha",
+    "full=46.52 durante30 produce warning en sample30 y no hard-stop"
+  ],
+  "expected": "5/5 PASS en helper candidato; sin cambiar helper histórico, umbrales, perfiles ni conclusiones anteriores.",
+  "preregisteredBeforeCandidateTest": true
+}

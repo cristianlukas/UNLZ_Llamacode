@@ -1,0 +1,70 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-116",
+  "experimentId": "Q116-A1",
+  "status": "candidate_hashes_preregistered_before_run",
+  "claimedAtUtc": "2026-10-25T00:42:24.739246+00:00",
+  "lockToken": "3fb0fad6-c440-44f6-aa16-11437b46ebee",
+  "scope": "Replay actual Q97 PSI transition helper for mixed severe signal sequences; CPU fixtures only.",
+  "sourceSha256": {
+    "q97": "663a2762ba8e5433b566c1fa2dbbe692cd8d4272619361c477a339da52c6904a",
+    "runner": "7db54ae3c299deaf3e661d59d76d3d58f220d6b6884d4a43bdcb0f38ad0c0b01",
+    "plan": "4b722653977528f3c9acca05422b1376c96e145ec8d99d440d010840f5618e3e"
+  },
+  "checks": [
+    "steady global PSI full=60% stops at sample15",
+    "steady global PSI some=80% stops at sample15",
+    "alternating global full=60% / some=80% for 15 samples records whether the composite OR condition stops",
+    "14 alternating severe samples + one normal +14 alternating severe samples does not stop before a new 15-sample run"
+  ],
+  "acceptanceInterpretation": "Report active per-metric behavior against the queue wording “full>=60% OR some>=80% for 15 consecutive samples”; any composite-OR discrepancy is a finding, not grounds for retroactively changing historical Q97 or production policy.",
+  "resources": {
+    "gpu": "none",
+    "models": "none",
+    "inferenceServer": "none",
+    "artificialMemoryGiB": 0,
+    "build": false,
+    "network": false,
+    "hardwareFixture": [
+      "RTX 3090 fixture 0",
+      "RTX 3090 fixture 1"
+    ]
+  },
+  "protectedAssets": [
+    "ASTRA DEFAULT 1M",
+    "SOL",
+    "Qwen Flash-Next ASTRA",
+    "Qwen Flash-Next SOL",
+    "PeritoSoft models"
+  ],
+  "amendments": [
+    {
+      "id": "Q116-A1-amendment-01",
+      "atUtc": "2026-10-25T00:45:35.391235+00:00",
+      "reason": "La aserción final del caso alternado exigía incorrectamente que ambos contadores separados valieran 1; la muestra 15 es full y el helper resetea severe_some80 a 0.",
+      "testChange": "Mantener exactamente las mismas cuatro series; sustituir esa aserción por límites <=1 durante toda la alternancia y validar el contador de la última señal. Sin cambiar entradas, umbrales ni semántica evaluada.",
+      "previousRunnerSha256": "b18e562cbfcc13762520f97a06663fb160bbcb82bb1411eeccb7c36a23b1a1fa",
+      "updatedRunnerSha256": "7db54ae3c299deaf3e661d59d76d3d58f220d6b6884d4a43bdcb0f38ad0c0b01",
+      "preregisteredBeforeRetry": true
+    },
+    {
+      "id": "Q116-A2-amendment-02",
+      "atUtc": "2026-10-25T00:47:25.687432+00:00",
+      "reason": "Q116-A1 mostró que el helper histórico mantiene rachas severas separadas por métrica y no se detiene si la condición OR compuesta permanece verdadera durante 15 muestras alternando full/some.",
+      "scope": "Crear y probar un helper candidato versionado separado, sin editar Q97 ni integrar cambios en producción.",
+      "candidatePolicy": "Mantener warning full>=20% o some>=70% durante30 muestras; hard-stop compuesto si full>=60% OR some>=80% en 15 muestras consecutivas; cualquier muestra con ambas debajo resetea la racha compuesta.",
+      "checks": [
+        "full=60 estable detiene sample15",
+        "some=80 estable detiene sample15",
+        "alternancia full=60/some=80 detiene sample15",
+        "14 alternadas + normal +14 no detiene antes de sample15 de la nueva racha",
+        "full=46.52 durante30 produce warning en sample30 y no hard-stop"
+      ],
+      "expected": "5/5 PASS en helper candidato; sin cambiar helper histórico, umbrales, perfiles ni conclusiones anteriores.",
+      "preregisteredBeforeCandidateTest": true
+    }
+  ],
+  "candidateSourcesSha256": {
+    "helper": "d2c66a548c694edaad36f019ad4b499334a7f4d965f900e8d21279b06231b3db",
+    "runner": "b952d5352b5b5856e809def38536f6b07ddddfa799324063ad51f76f9d8cd409"
+  }
+}

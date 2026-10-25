@@ -1,0 +1,9 @@
+{
+  "id": "Q116-A1-amendment-01",
+  "atUtc": "2026-10-25T00:45:35.391235+00:00",
+  "reason": "La aserción final del caso alternado exigía incorrectamente que ambos contadores separados valieran 1; la muestra 15 es full y el helper resetea severe_some80 a 0.",
+  "testChange": "Mantener exactamente las mismas cuatro series; sustituir esa aserción por límites <=1 durante toda la alternancia y validar el contador de la última señal. Sin cambiar entradas, umbrales ni semántica evaluada.",
+  "previousRunnerSha256": "b18e562cbfcc13762520f97a06663fb160bbcb82bb1411eeccb7c36a23b1a1fa",
+  "updatedRunnerSha256": "7db54ae3c299deaf3e661d59d76d3d58f220d6b6884d4a43bdcb0f38ad0c0b01",
+  "preregisteredBeforeRetry": true
+}

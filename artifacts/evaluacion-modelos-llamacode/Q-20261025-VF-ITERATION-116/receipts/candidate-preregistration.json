@@ -1,0 +1,10 @@
+{
+  "id": "Q116-A2-source-fingerprints",
+  "atUtc": "2026-10-25T00:47:47.775031+00:00",
+  "sourceSha256": {
+    "helper": "d2c66a548c694edaad36f019ad4b499334a7f4d965f900e8d21279b06231b3db",
+    "runner": "b952d5352b5b5856e809def38536f6b07ddddfa799324063ad51f76f9d8cd409"
+  },
+  "planSha256": "4b722653977528f3c9acca05422b1376c96e145ec8d99d440d010840f5618e3e",
+  "verifiedBeforeRun": true
+}

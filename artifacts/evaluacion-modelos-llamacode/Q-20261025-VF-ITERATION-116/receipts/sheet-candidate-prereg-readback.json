@@ -1,0 +1,13 @@
+{
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet": "Evaluaciones LlamaCode",
+  "range": "B337:C337",
+  "values": [
+    "Enmiendas 01–02 preregistradas. Q116-A1 observó rachas severas separadas y ausencia de stop al alternar full/some; Q116-A2 probará un helper candidato versionado con contador OR compuesto, mismas fronteras/cadencia y reset. No se modifica Q97 ni producción.",
+    "Candidato preregistrado · replay pendiente"
+  ],
+  "readbackExact": true,
+  "wrapCells": 2,
+  "validationCells": 0,
+  "readbackAtUtc": "2026-10-25T00:48:02.762177+00:00"
+}
