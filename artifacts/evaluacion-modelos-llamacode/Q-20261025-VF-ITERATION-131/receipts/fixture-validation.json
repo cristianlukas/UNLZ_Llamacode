@@ -1,0 +1,83 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-131",
+  "result": "PASS",
+  "modelInference": false,
+  "gpuUse": false,
+  "promptStored": false,
+  "fixtureSha256": "ed7ab60524a9357ed7cd7c5f7a3d02b38c6996c468ddf5129f50998562789f63",
+  "configSha256": "62462ab0c11da0fbbfaa0f777c3c29b98ca3efb2dce4f74a649e1c6e9734b17d",
+  "promptSha256": "cadcd69020499e3d6b0f05fde463a46ebf4e7d459a2705d73187761397b7eec8",
+  "tokenizerContentTokens": 257977,
+  "keyPositions": [
+    {
+      "key": "K01",
+      "targetFraction": 0.05,
+      "actualFraction": 0.049926931470634976,
+      "prefixTokens": 12880
+    },
+    {
+      "key": "K02",
+      "targetFraction": 0.15000000000000002,
+      "actualFraction": 0.14991258910678085,
+      "prefixTokens": 38674
+    },
+    {
+      "key": "K03",
+      "targetFraction": 0.25,
+      "actualFraction": 0.24989824674292668,
+      "prefixTokens": 64468
+    },
+    {
+      "key": "K04",
+      "targetFraction": 0.35000000000000003,
+      "actualFraction": 0.34988778069362775,
+      "prefixTokens": 90263
+    },
+    {
+      "key": "K05",
+      "targetFraction": 0.45,
+      "actualFraction": 0.4498734383297736,
+      "prefixTokens": 116057
+    },
+    {
+      "key": "K06",
+      "targetFraction": 0.55,
+      "actualFraction": 0.5498590959659194,
+      "prefixTokens": 141851
+    },
+    {
+      "key": "K07",
+      "targetFraction": 0.6500000000000001,
+      "actualFraction": 0.6498408772875102,
+      "prefixTokens": 167644
+    },
+    {
+      "key": "K08",
+      "targetFraction": 0.7500000000000001,
+      "actualFraction": 0.749826534923656,
+      "prefixTokens": 193438
+    },
+    {
+      "key": "K09",
+      "targetFraction": 0.8500000000000001,
+      "actualFraction": 0.8498083162452467,
+      "prefixTokens": 219231
+    },
+    {
+      "key": "K10",
+      "targetFraction": 0.9500000000000001,
+      "actualFraction": 0.9497900975668373,
+      "prefixTokens": 245024
+    }
+  ],
+  "valueOccurrencesExactlyOnce": true,
+  "scorerCasesPassed": 6,
+  "cases": [
+    "exact 10/10 JSON",
+    "fenced JSON exact 10/10",
+    "one wrong value",
+    "missing key",
+    "usage outside range",
+    "invalid JSON"
+  ]
+}

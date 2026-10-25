@@ -1,0 +1,29 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-130",
+  "recordedAtUtc": "2026-10-25T05:54:02Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "verifiedRanges": {
+    "Evaluaciones LlamaCode!A39:J41": {
+      "row39": "Q-20261016-FLASHNEXT-FOLLOWUP; complete three pairs; no promotion",
+      "row40": "Q-20261016-FLASHNEXT-RESUME; superseded; no pair pending",
+      "row41": "Q-20261016-FLASHNEXT-RESUME2; single-key screen gap recorded; Q131 pending",
+      "wrapPreserved": true
+    },
+    "Evaluaciones LlamaCode!A351:J351": {
+      "recordId": "Q-20261025-VF-ITERATION-130",
+      "status": "Completa · recibos consistentes; gap de preregistro Q4 confirmado",
+      "rowValuesVerified": true,
+      "wrapPreserved": true
+    }
+  },
+  "changes": [
+    "The interim 2-of-3-pairs status was marked superseded by the completed six-run campaign.",
+    "The original Q4 context request recovered one key, not the ten required by its preregistration.",
+    "Q130 audit result was recorded in row 351."
+  ],
+  "untouched": [
+    "Accionables memory guard row remains unchanged because it already records ASTRA 1M, SOL, Q97 PSI alternation, and AMD05 candidate status.",
+    "Q131 row 352 remains reserved for the next task after it is preregistered."
+  ]
+}

@@ -1,0 +1,126 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-130",
+  "kind": "offline-receipt-consistency-audit",
+  "result": "PASS_WITH_ONE_PREREGISTRATION_GAP",
+  "newModelOrGpuRun": false,
+  "serverSpeed": {
+    "campaignComplete": true,
+    "validSamples": 96,
+    "runs": [
+      {
+        "runId": "pair01-A-order01",
+        "samples": 16,
+        "hashesValid": true,
+        "dual3090CommandAndTelemetry": true,
+        "portFree": true,
+        "configHashValid": true
+      },
+      {
+        "runId": "pair01-B-order02",
+        "samples": 16,
+        "hashesValid": true,
+        "dual3090CommandAndTelemetry": true,
+        "portFree": true,
+        "configHashValid": true
+      },
+      {
+        "runId": "pair02-B-order01",
+        "samples": 16,
+        "hashesValid": true,
+        "dual3090CommandAndTelemetry": true,
+        "portFree": true,
+        "configHashValid": true
+      },
+      {
+        "runId": "pair02-A-order02",
+        "samples": 16,
+        "hashesValid": true,
+        "dual3090CommandAndTelemetry": true,
+        "portFree": true,
+        "configHashValid": true
+      },
+      {
+        "runId": "pair03-A-order01",
+        "samples": 16,
+        "hashesValid": true,
+        "dual3090CommandAndTelemetry": true,
+        "portFree": true,
+        "configHashValid": true
+      },
+      {
+        "runId": "pair03-B-order02",
+        "samples": 16,
+        "hashesValid": true,
+        "dual3090CommandAndTelemetry": true,
+        "portFree": true,
+        "configHashValid": true
+      }
+    ],
+    "pairs": [
+      {
+        "pair": 1,
+        "matched": 16,
+        "deltaBMinusA": {
+          "decodeTps": -1.7437499999999915,
+          "promptTps": -17.625,
+          "ttftMs": 790.1567500000001,
+          "elapsedMs": 872.6394375000004
+        }
+      },
+      {
+        "pair": 2,
+        "matched": 16,
+        "deltaBMinusA": {
+          "decodeTps": 5.0625,
+          "promptTps": 5.0625,
+          "ttftMs": -88.19781249999983,
+          "elapsedMs": -259.9180000000001
+        }
+      },
+      {
+        "pair": 3,
+        "matched": 16,
+        "deltaBMinusA": {
+          "decodeTps": 4.287499999999994,
+          "promptTps": 8.237500000000011,
+          "ttftMs": -135.65499999999975,
+          "elapsedMs": -296.9006250000002
+        }
+      }
+    ],
+    "trimPromotion": false
+  },
+  "context262k": {
+    "completed": true,
+    "context": 262144,
+    "contentTokens": 258046,
+    "exactSingleKey": true,
+    "actualValueCount": 1,
+    "originalPrerecordedValueCount": 10,
+    "originalMultiValueCriterionMet": false,
+    "followupRequired": true
+  },
+  "vision": {
+    "transportComplete": true,
+    "exactFields": 9,
+    "totalFields": 11,
+    "rawResponseWasFencedJson": true,
+    "storedParserHadError": true,
+    "noPromotion": true
+  },
+  "computerUsage": {
+    "astraBaseReplicate2": "3/3",
+    "q4BaseReplicate2": "1/3"
+  },
+  "postflight": {
+    "taskPortsFree": true,
+    "inferenceIdle": true,
+    "oomKill": 0
+  },
+  "findings": [
+    "Pair 3 already exists complete in the original campaign; do not repeat it.",
+    "Q4 262K prior smoke retrieved one key, while its preregistered acceptance asked for ten distinct values.",
+    "Q4 vision raw fenced JSON reparses to 9/11 exact fields; the saved parser field is null, but transport completed.",
+    "All recorded model arms used both RTX 3090 and 128 GiB host configuration; no one-GPU substitute was used."
+  ]
+}

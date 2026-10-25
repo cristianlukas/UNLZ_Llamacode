@@ -1,0 +1,11 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-131",
+  "amendment": "02",
+  "createdUtc": "2026-10-25T06:05:51Z",
+  "reason": "The first read-only snapshot was launched through a heredoc shell; the process detector reported that bash probe as a server. It did not launch or stop a server and is not an authorization result.",
+  "change": "Use a standalone, hash-pinned read-only preflight script so the shell command line contains only its own neutral filename. The production runner remains unchanged.",
+  "preflightScript": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-131/scripts/q131_preflight_snapshot.py",
+  "sha256": "9ea5a9c3082c631712081b477a4b83fe071639cbd604f307b556b194ec4be2e4",
+  "gate": "Capture both 3090s, MemAvailable, PSI, OOM, swap, compute-app telemetry, process/container/listener detections. If any inference server other than a clearly identified PeritoSoft server is present, block; do not stop it. If PeritoSoft is present, runner may stop only that identified server under prior user authorization.",
+  "noModelOrGpuCompute": true
+}

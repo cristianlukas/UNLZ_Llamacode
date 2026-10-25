@@ -1,0 +1,35 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-131",
+  "kind": "cpu_offline_memory_guard_validation",
+  "result": "PASS",
+  "newMemoryPressure": false,
+  "modelInference": false,
+  "historicalTraceReplays": {
+    "ASTRA_DEFAULT_1M_Q117": {
+      "samples": 707,
+      "firstStop": null,
+      "finalLowMemStreak": 0,
+      "finalSeverePsiStreak": 0,
+      "noFalseStop": true
+    },
+    "SOL_TP2_Q127": {
+      "samples": 157,
+      "firstStop": null,
+      "finalLowMemStreak": 0,
+      "finalSeverePsiStreak": 0,
+      "noFalseStop": true
+    }
+  },
+  "highRssCase": {
+    "rssGiB": 51.3056,
+    "memAvailableGiB": 58.6977,
+    "moderateGlobalPsiPct": 53.61,
+    "guardStopped": false
+  },
+  "syntheticInMemoryEdges": {
+    "alternatingSomeFullSevereStopsAtSample": 15,
+    "lowMemStopsAtSample": 15,
+    "oomStopsImmediately": true
+  },
+  "interpretation": "RSS/VRAM usage alone is not a stop condition; the tested Q131 guard continued both successful traces. This does not claim a general Codex crash detector."
+}

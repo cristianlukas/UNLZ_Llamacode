@@ -1,0 +1,171 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-131",
+  "status": "PRE_REGISTERED_BEFORE_SYSTEMD_SMOKE_OR_MODEL_PREFLIGHT",
+  "createdUtc": "2026-10-25T06:03:09Z",
+  "scope": "One Qwen3.8 Flash-Next UD-Q4_K_XL retrieval request at 262144 context, ten unique needles, dual RTX 3090 only.",
+  "memoryDetector": {
+    "historicalReplayReceipt": "receipts/q131-memory-guard-replay.json",
+    "status": "PASS",
+    "ASTRA_Q117_samples": 707,
+    "SOL_Q127_samples": 157,
+    "highRssNoStop": true,
+    "syntheticAlternatingSevereStopSample": 15,
+    "syntheticLowAvailableStopSample": 15,
+    "syntheticOomImmediateStop": true
+  },
+  "model": {
+    "repo": "unsloth/Qwen3.8-Flash-Next-GGUF",
+    "revision": "38bb39ee97821de2c9009abb7e93950eec396e66",
+    "quant": "UD-Q4_K_XL",
+    "totalBytes": 111334654784,
+    "shards": [
+      {
+        "name": "Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf",
+        "sha256": "4448186216b3af4cc558bbce2c3213f01608f8f8b2e5267a9767971dd3ec8082",
+        "verifiedUpstreamReceipt": "Q-20261010-FLASHNEXT-Q4-P100-POST/receipts/manifest.json",
+        "doneMarker": "sha256 4448186216b3af4cc558bbce2c3213f01608f8f8b2e5267a9767971dd3ec8082",
+        "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf",
+        "bytes": 10946624,
+        "mtime_ns": 1791062049874260800
+      },
+      {
+        "name": "Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+        "sha256": "3f342f1c1580473f1ee94ddd5b28206e8c07a70fa1a366f59d1d6c922919a6c9",
+        "verifiedUpstreamReceipt": "Q-20261010-FLASHNEXT-Q4-P100-POST/receipts/manifest.json",
+        "doneMarker": "sha256 3f342f1c1580473f1ee94ddd5b28206e8c07a70fa1a366f59d1d6c922919a6c9",
+        "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf",
+        "bytes": 49859583136,
+        "mtime_ns": 1791067840704545600
+      },
+      {
+        "name": "Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+        "sha256": "56758f40269cad5cd9b0d3d6fbae0f40f6d5be6de49e4ab392dbe83157d9cbd3",
+        "verifiedUpstreamReceipt": "Q-20261010-FLASHNEXT-Q4-P100-POST/receipts/manifest.json",
+        "doneMarker": "sha256 56758f40269cad5cd9b0d3d6fbae0f40f6d5be6de49e4ab392dbe83157d9cbd3",
+        "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf",
+        "bytes": 49376141504,
+        "mtime_ns": 1791067857000087600
+      },
+      {
+        "name": "Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf",
+        "sha256": "753bda48b98ba4f1636134a90a967de1b2d3908a236c026e464777342e53510a",
+        "verifiedUpstreamReceipt": "Q-20261010-FLASHNEXT-Q4-P100-POST/receipts/manifest.json",
+        "doneMarker": "sha256 753bda48b98ba4f1636134a90a967de1b2d3908a236c026e464777342e53510a",
+        "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf",
+        "bytes": 12087983520,
+        "mtime_ns": 1791063842783960100
+      }
+    ],
+    "currentMetadataAndCompletionMarkersMatchPriorVerifiedHashes": true
+  },
+  "runtime": {
+    "repository": "Niko1221/Strata",
+    "version": "0.1.41",
+    "commit": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
+    "engineSha256": "770ecf303a4c6271654339c639392ecb455de3a999bf5d2e8dbc73c879103602",
+    "serverPySha256": "017efa1f4e76d72396738555d13eb1f9898d1c1c12730cf046d9b267b29987e5",
+    "files": [
+      {
+        "path": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata",
+        "bytes": 64029336,
+        "mtime_ns": 1791584611456937599
+      },
+      {
+        "path": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py",
+        "bytes": 347960,
+        "mtime_ns": 1791582163936898714
+      },
+      {
+        "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/packs/unsloth-ud-q4_k_xl/dense.bin",
+        "bytes": 1485688320,
+        "mtime_ns": 1791068152225436500
+      },
+      {
+        "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/packs/unsloth-ud-q4_k_xl/index.txt",
+        "bytes": 93560,
+        "mtime_ns": 1791068152227436300
+      },
+      {
+        "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/packs/unsloth-ud-q4_k_xl/conversions.json",
+        "bytes": 167871,
+        "mtime_ns": 1791068152228436300
+      },
+      {
+        "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/packs/unsloth-ud-q4_k_xl/compat-bf16.json",
+        "bytes": 21112,
+        "mtime_ns": 1791068152228436300
+      },
+      {
+        "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/packs/unsloth-ud-q4_k_xl/tokenizer/tokenizer.json",
+        "bytes": 541,
+        "mtime_ns": 1791068152568415600
+      },
+      {
+        "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/packs/unsloth-ud-q4_k_xl/tokenizer/vocab.json",
+        "bytes": 5737005,
+        "mtime_ns": 1791068152514418900
+      },
+      {
+        "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/packs/unsloth-ud-q4_k_xl/tokenizer/merges.txt",
+        "bytes": 3353258,
+        "mtime_ns": 1791068152562416000
+      },
+      {
+        "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/Strata-0.1.35/data/expert-profile.bin",
+        "bytes": 196632,
+        "mtime_ns": 1790927061000000000
+      },
+      {
+        "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/mtp/rt/dense.bin",
+        "bytes": 116099072,
+        "mtime_ns": 1790965862765590300
+      },
+      {
+        "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/mtp/rt/experts.bin",
+        "bytes": 707788800,
+        "mtime_ns": 1790965862298591800
+      },
+      {
+        "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/mtp/rt/draft_vocab.bin",
+        "bytes": 425196,
+        "mtime_ns": 1790965862794590200
+      }
+    ]
+  },
+  "fixture": {
+    "tokens": 257977,
+    "fixtureSha256": "ed7ab60524a9357ed7cd7c5f7a3d02b38c6996c468ddf5129f50998562789f63",
+    "promptSha256": "cadcd69020499e3d6b0f05fde463a46ebf4e7d459a2705d73187761397b7eec8",
+    "configSha256": "62462ab0c11da0fbbfaa0f777c3c29b98ca3efb2dce4f74a649e1c6e9734b17d",
+    "fixtureValidationReceipt": "receipts/fixture-validation.json"
+  },
+  "systemd": {
+    "unit": "llamacode-q131-q4-ten-keys-20261025",
+    "plannedProperties": {
+      "RuntimeMaxSec": "4200s",
+      "KillMode": "control-group",
+      "OOMPolicy": "stop",
+      "MemoryMax": "infinity",
+      "MemoryHigh": "infinity",
+      "MemorySwapMax": "infinity",
+      "CPUWeight": "50",
+      "IOWeight": "100",
+      "PrivateNetwork": "yes"
+    },
+    "smokeTest": "harmless short-lived /usr/bin/true or /usr/bin/sleep; must read back all effective values before model preflight"
+  },
+  "runGates": [
+    "Google Sheets Q131 rows preregistered and exact readback",
+    "systemd transient properties smoke test passes",
+    "both RTX 3090 visible and task-owned inference port 8350 free",
+    "no unrelated inference server; only user-authorized clearly identified PeritoSoft server may be stopped",
+    "MemAvailable>=32GiB; record PSI, OOM, swap and GUI; GUI stays open",
+    "one request only; no retry; stop own unit only at preregistered thresholds"
+  ],
+  "passCriterion": "exact JSON K01-K10 with all ten values and usage.prompt_tokens in range; no result from a single GPU accepted.",
+  "limitations": [
+    "one synthetic request is not a general quality or adoption claim",
+    "no inference can establish Codex app crash causality",
+    "RSS/VRAM alone do not trigger guard stop"
+  ]
+}

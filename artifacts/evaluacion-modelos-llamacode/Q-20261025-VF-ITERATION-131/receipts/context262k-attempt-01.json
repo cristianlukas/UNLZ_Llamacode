@@ -1,0 +1,154 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-131",
+  "status": "completed",
+  "model": "Qwen3.8 Flash-Next UD-Q4_K_XL",
+  "runtime": "Strata local 0.1.41 / CUDA 12.8",
+  "targetContext": 262144,
+  "targetContentTokens": 258000,
+  "localTokenizerContentTokens": 257977,
+  "minimumContentTokens": 257000,
+  "maximumContentTokens": 259000,
+  "promptSha256": "cadcd69020499e3d6b0f05fde463a46ebf4e7d459a2705d73187761397b7eec8",
+  "promptStored": false,
+  "fixtureSha256": "ed7ab60524a9357ed7cd7c5f7a3d02b38c6996c468ddf5129f50998562789f63",
+  "configSha256": "62462ab0c11da0fbbfaa0f777c3c29b98ca3efb2dce4f74a649e1c6e9734b17d",
+  "tokenizerHashes": {
+    "tokenizer.json": "c0bd435efbc6c3b28964b47999afe16c4ad268c7c7c4e8cb3af410796a6f30bf",
+    "vocab.json": "4ba64f0332abcfb0b600b7df1537d1e836e68009d5fb7cdb77339738dc6365c4",
+    "merges.txt": "4ba698529766c7a2f5052083ea10cdf2485577f5237a332ee291054eb11e3332",
+    "token_type.json": "5088c8c298fc06af8382ddb3b76c888703ac2634e82263b97eedcc2ad202738b"
+  },
+  "keys": {
+    "K01": "LC-K01-3CF4189720DA3F68",
+    "K02": "LC-K02-8EE125CA67423423",
+    "K03": "LC-K03-1E0859F213CF5A9F",
+    "K04": "LC-K04-B27EC3C6106B1B91",
+    "K05": "LC-K05-5E4CB83C0A7FA175",
+    "K06": "LC-K06-EAC6C8ED0D3D7B5C",
+    "K07": "LC-K07-CB4F504D6BE2F364",
+    "K08": "LC-K08-E08C91D71C16BBDC",
+    "K09": "LC-K09-E8504CB9CB57E504",
+    "K10": "LC-K10-0D338896E7A0B27B"
+  },
+  "keyPositions": [
+    {
+      "key": "K01",
+      "targetFraction": 0.05,
+      "actualFraction": 0.049926931470634976,
+      "prefixTokens": 12880
+    },
+    {
+      "key": "K02",
+      "targetFraction": 0.15000000000000002,
+      "actualFraction": 0.14991258910678085,
+      "prefixTokens": 38674
+    },
+    {
+      "key": "K03",
+      "targetFraction": 0.25,
+      "actualFraction": 0.24989824674292668,
+      "prefixTokens": 64468
+    },
+    {
+      "key": "K04",
+      "targetFraction": 0.35000000000000003,
+      "actualFraction": 0.34988778069362775,
+      "prefixTokens": 90263
+    },
+    {
+      "key": "K05",
+      "targetFraction": 0.45,
+      "actualFraction": 0.4498734383297736,
+      "prefixTokens": 116057
+    },
+    {
+      "key": "K06",
+      "targetFraction": 0.55,
+      "actualFraction": 0.5498590959659194,
+      "prefixTokens": 141851
+    },
+    {
+      "key": "K07",
+      "targetFraction": 0.6500000000000001,
+      "actualFraction": 0.6498408772875102,
+      "prefixTokens": 167644
+    },
+    {
+      "key": "K08",
+      "targetFraction": 0.7500000000000001,
+      "actualFraction": 0.749826534923656,
+      "prefixTokens": 193438
+    },
+    {
+      "key": "K09",
+      "targetFraction": 0.8500000000000001,
+      "actualFraction": 0.8498083162452467,
+      "prefixTokens": 219231
+    },
+    {
+      "key": "K10",
+      "targetFraction": 0.9500000000000001,
+      "actualFraction": 0.9497900975668373,
+      "prefixTokens": 245024
+    }
+  ],
+  "sampling": {
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "top_k": 1,
+    "seed": 4242,
+    "max_tokens": 512,
+    "reasoning_budget_tokens": 32
+  },
+  "requestCount": 1,
+  "retryCount": 0,
+  "httpStatus": 200,
+  "answer": "{\n  \"K01\": \"LC-K01-3CF4189720DA3F68\",\n  \"K02\": \"LC-K02-8EE125CA67423423\",\n  \"K03\": \"LC-K03-1E0859F213CF5A9F\",\n  \"K04\": \"LC-K04-B27EC3C6106B1B91\",\n  \"K05\": \"LC-K05-5E4CB83C0A7FA175\",\n  \"K06\": \"LC-K06-EAC6C8ED0D3D7B5C\",\n  \"K07\": \"LC-K07-CB4F504D6BE2F364\",\n  \"K08\": \"LC-K08-E08C91D71C16BBDC\",\n  \"K09\": \"LC-K09-E8504CB9CB57E504\",\n  \"K10\": \"LC-K10-0D338896E7A0B27B\"\n}",
+  "parsedAnswer": {
+    "K01": "LC-K01-3CF4189720DA3F68",
+    "K02": "LC-K02-8EE125CA67423423",
+    "K03": "LC-K03-1E0859F213CF5A9F",
+    "K04": "LC-K04-B27EC3C6106B1B91",
+    "K05": "LC-K05-5E4CB83C0A7FA175",
+    "K06": "LC-K06-EAC6C8ED0D3D7B5C",
+    "K07": "LC-K07-CB4F504D6BE2F364",
+    "K08": "LC-K08-E08C91D71C16BBDC",
+    "K09": "LC-K09-E8504CB9CB57E504",
+    "K10": "LC-K10-0D338896E7A0B27B"
+  },
+  "parseError": null,
+  "exactFields": 10,
+  "expectedFields": 10,
+  "exactKeySet": true,
+  "usagePromptTokensInRange": true,
+  "usage": {
+    "prompt_tokens": 258029,
+    "completion_tokens": 334,
+    "total_tokens": 258363,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 258029,
+    "prompt_ms": 137419.8,
+    "prompt_per_token_ms": 0.533,
+    "prompt_per_second": 1877.7,
+    "predicted_n": 334,
+    "predicted_ms": 6287.8,
+    "predicted_per_token_ms": 19.898,
+    "predicted_per_second": 50.3,
+    "draft_n": 247,
+    "draft_n_accepted": 222
+  },
+  "lastPromptProgress": {
+    "total": 258029,
+    "cache": 0,
+    "processed": 253952,
+    "time_ms": 132405
+  },
+  "screenPass": true,
+  "elapsedSeconds": 143.83648138999706,
+  "elapsedTotalSeconds": 143.8364849070058
+}

@@ -1,0 +1,54 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-131",
+  "mode": "context262k",
+  "attempt": 1,
+  "atUtc": "2026-10-25T06:06:52.427583+00:00",
+  "state": {
+    "atUtc": "2026-10-25T06:06:52.387830+00:00",
+    "mem": {
+      "MemAvailable": 117122531328,
+      "SwapTotal": 8589930496,
+      "SwapFree": 4697391104
+    },
+    "vmstat": {
+      "pswpin": 1759830,
+      "pswpout": 2648796,
+      "oom_kill": 0
+    },
+    "psi": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.0
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.0
+      }
+    },
+    "computeApps": [
+      "3952271, /tmp/.mount_artcragmccCd/usr/bin/artcraft-launcher, 207 MiB"
+    ],
+    "gpuUsage": [
+      "NVIDIA GeForce RTX 3090, 973, 24576, 15",
+      "NVIDIA GeForce RTX 3090, 110, 24576, 34"
+    ],
+    "processTreeRssBytes": null,
+    "gpuQueryError": null,
+    "inferenceServers": []
+  },
+  "port": 8350,
+  "inferenceServersBeforeAuthorizedStop": [],
+  "authorizedPeritoSoftStops": [],
+  "thresholds": {
+    "MemAvailableGiB": 32,
+    "runtimeMemAvailableAbortGiB": 20,
+    "runtimePsiSomeAvg10Abort": 80.0,
+    "runtimePsiFullAvg10Abort": 60.0,
+    "runtimeAbortSamples": 15,
+    "swapFreeIsTelemetryOnly": true
+  },
+  "errors": [],
+  "oomKillBaseline": 0
+}

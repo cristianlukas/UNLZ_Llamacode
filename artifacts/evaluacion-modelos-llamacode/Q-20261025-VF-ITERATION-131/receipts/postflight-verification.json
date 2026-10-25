@@ -1,0 +1,45 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-131",
+  "verifiedUtc": "2026-10-25T06:13:28Z",
+  "controllerReported": {
+    "status": "completed",
+    "serverStopped": true,
+    "portFreeAfterCleanup": true,
+    "inferenceServers": [],
+    "oomAfter": 0,
+    "memAvailableAfterGiB": 109.68972396850586,
+    "gpuUsageAfter": [
+      "NVIDIA GeForce RTX 3090, 986, 24576, 0",
+      "NVIDIA GeForce RTX 3090, 110, 24576, 0"
+    ]
+  },
+  "liveChecks": {
+    "taskPids": {
+      "runner": {
+        "pid": 3547582,
+        "procEntryExists": false,
+        "comm": null,
+        "cmdline": null
+      },
+      "server": {
+        "pid": 3547601,
+        "procEntryExists": false,
+        "comm": null,
+        "cmdline": null
+      },
+      "engine": {
+        "pid": 3547618,
+        "procEntryExists": false,
+        "comm": null,
+        "cmdline": null
+      }
+    },
+    "port8350Free": true,
+    "activeQ131Units": [],
+    "computeApps": [
+      "3952271, /tmp/.mount_artcragmccCd/usr/bin/artcraft-launcher, 207 MiB"
+    ]
+  },
+  "guiProcessPreserved": true,
+  "result": "PASS"
+}

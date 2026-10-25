@@ -1,0 +1,24 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-131",
+  "result": "PASS",
+  "createdUtc": "2026-10-25T06:04:53Z",
+  "unit": "llamacode-q131-systemd-smoke-a02-20261025.service",
+  "testProcess": "/usr/bin/sleep 8 only; no inference/runtime/GPU compute",
+  "readback": {
+    "RuntimeMaxUSec": "1h 10min",
+    "KillMode": "control-group",
+    "OOMPolicy": "stop",
+    "MemoryMax": "infinity",
+    "MemoryHigh": "infinity",
+    "MemorySwapMax": "infinity",
+    "CPUWeight": "50",
+    "IOWeight": "100",
+    "PrivateNetwork": "yes"
+  },
+  "processGroupCleanup": "The smoke unit was explicitly stopped; readback showed LoadState=not-found, ActiveState=inactive, SubState=dead.",
+  "preflightEligible": true,
+  "notes": [
+    "First smoke candidate collided with an already-unloaded unit name; inspection showed LoadState=not-found, no process, and no action taken. Unique smoke A01 then passed with 30 s; A02 verified exact planned 4200 s runtime and all remaining properties.",
+    "systemd --user manager reports degraded but is reachable; four failed legacy units were listed, none was active and none was modified."
+  ]
+}

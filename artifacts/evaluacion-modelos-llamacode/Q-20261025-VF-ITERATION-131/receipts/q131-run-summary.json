@@ -1,0 +1,76 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-131",
+  "result": "PASS",
+  "recordedUtc": "2026-10-25T06:13:56Z",
+  "claimBoundary": "One synthetic ten-needle retrieval request at 262144 context. This is not a general code-quality benchmark, statistical performance comparison, adoption decision, or Codex-crash diagnosis.",
+  "request": {
+    "model": "Qwen3.8 Flash-Next UD-Q4_K_XL",
+    "runtime": "Strata local 0.1.41 / CUDA 12.8",
+    "contextTokens": 262144,
+    "contentTokens": 257977,
+    "apiPromptTokens": 258029,
+    "completionTokens": 334,
+    "httpStatus": 200,
+    "requests": 1,
+    "retries": 0,
+    "exactNeedles": "10/10",
+    "exactKeySet": true,
+    "usageInRange": true,
+    "screenPass": true,
+    "promptSha256": "cadcd69020499e3d6b0f05fde463a46ebf4e7d459a2705d73187761397b7eec8",
+    "fixtureSha256": "ed7ab60524a9357ed7cd7c5f7a3d02b38c6996c468ddf5129f50998562789f63",
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 258029,
+      "prompt_ms": 137419.8,
+      "prompt_per_token_ms": 0.533,
+      "prompt_per_second": 1877.7,
+      "predicted_n": 334,
+      "predicted_ms": 6287.8,
+      "predicted_per_token_ms": 19.898,
+      "predicted_per_second": 50.3,
+      "draft_n": 247,
+      "draft_n_accepted": 222
+    },
+    "requestElapsedSeconds": 143.83648138999706
+  },
+  "resourceMonitor": {
+    "samples": 245,
+    "minimumMemAvailableGiB": 60.80156707763672,
+    "maximumProcessTreeRssGiB": 93.13067626953125,
+    "maximumSystemdMemoryPeakBytesObserved": 100530450432,
+    "maximumSystemdMemoryPeakGiBObserved": 93.62627792358398,
+    "maximumGlobalPsiSomeAvg10Pct": 8.05,
+    "maximumGlobalPsiFullAvg10Pct": 7.54,
+    "oomKillBaseline": 0,
+    "oomKillPostflight": 0,
+    "swapFreeGiBAtPreflight": 4.374786376953125,
+    "swapFreeGiBMinimumObserved": 3.781658172607422,
+    "swapFreeGiBPostflight": 3.7852401733398438,
+    "pswpoutDeltaPagesPreflightToPostflight": 173336,
+    "gpu": [
+      {
+        "gpu": 0,
+        "maxMemoryMiB": 22540,
+        "maxUtilizationPct": 100,
+        "samples": 245
+      },
+      {
+        "gpu": 1,
+        "maxMemoryMiB": 22764,
+        "maxUtilizationPct": 100,
+        "samples": 245
+      }
+    ],
+    "advisories": 0,
+    "guardAbortReasons": []
+  },
+  "cleanup": {
+    "serverStopped": true,
+    "port8350Free": true,
+    "inferenceServersAfter": [],
+    "postflightReceipt": "postflight-verification.json",
+    "guiArtCraftPreserved": true
+  },
+  "memoryGuardConclusion": "PASS for the Q131 worker guard on this run and the two historical success traces: high RSS/VRAM/swap alone did not abort; memory headroom, PSI and OOM governed the decision. Legacy Q97/Q100 alternating-severe-PSI gap remains separate; AMD05 is still candidate-only. No evidence attributes Codex app closure to this guard."
+}

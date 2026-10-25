@@ -1,0 +1,13 @@
+f53174059b262ed342b82e143af62056081948ef5e5f1903a1a70eeb73fa4a23  /media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/packs/unsloth-ud-q4_k_xl/dense.bin
+cfc07e91c4d9b8e8c999fd1f70fa364e584748e70fa377b30e0fc85426f52711  /media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/packs/unsloth-ud-q4_k_xl/index.txt
+722a102cb500b9097d1890cffebf142904fa6534c209ac44c6445f0aec3d0cc4  /media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/packs/unsloth-ud-q4_k_xl/conversions.json
+2dd23dc0c9aed7fbcb2fdc91c2b03c07fd38c54499c6c0e15792ce1bc2370f96  /media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/packs/unsloth-ud-q4_k_xl/compat-bf16.json
+c0bd435efbc6c3b28964b47999afe16c4ad268c7c7c4e8cb3af410796a6f30bf  /media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/packs/unsloth-ud-q4_k_xl/tokenizer/tokenizer.json
+4ba64f0332abcfb0b600b7df1537d1e836e68009d5fb7cdb77339738dc6365c4  /media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/packs/unsloth-ud-q4_k_xl/tokenizer/vocab.json
+4ba698529766c7a2f5052083ea10cdf2485577f5237a332ee291054eb11e3332  /media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/packs/unsloth-ud-q4_k_xl/tokenizer/merges.txt
+5088c8c298fc06af8382ddb3b76c888703ac2634e82263b97eedcc2ad202738b  /media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/packs/unsloth-ud-q4_k_xl/tokenizer/token_type.json
+12827f24b742ea4e80cdc12dbcf9622227056b9f797252a3149263d4f9aaadce  /media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/packs/unsloth-ud-q4_k_xl/tokenizer/chat_template.jinja
+8f59b4aa8873209dff11c11e37bcda9529a1335b724a1afeea37bf6388975baf  /media/cristian/Disco local/Strata-UD-Q4-review-20261003/Strata-0.1.35/data/expert-profile.bin
+c724dc0b0822ada5d2977bf5bde821605feabaa64ea2e0045b67ca656329070a  /media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/mtp/rt/dense.bin
+09398406be61f1f54c93861f449e48b8df0bfccbc9ec9b2b7636775a6ea9244f  /media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/mtp/rt/experts.bin
+b1e1d3a7a9e4bf862dcd5923ce661fb59bbd07907e594df5cf86a62ac235cb91  /media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/mtp/rt/draft_vocab.bin

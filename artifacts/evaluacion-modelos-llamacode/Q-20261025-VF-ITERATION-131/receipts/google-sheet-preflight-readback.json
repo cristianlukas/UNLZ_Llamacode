@@ -1,0 +1,17 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-131",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "readback": "PASS",
+  "readAtUtc": "2026-10-25T06:06:52Z",
+  "cells": {
+    "Evaluaciones LlamaCode!C352": "Prerregistrada — preflight aprobado",
+    "Evaluaciones LlamaCode!H352": "Preflight limpio PASS: 109,11 GiB disponibles, PSI=0, OOM=0, dos RTX 3090 visibles, ningún inference server; GUI ArtCraft queda abierta. Siguiente: una sola solicitud Q4/262K en unidad systemd, ambas GPU.",
+    "Evaluaciones LlamaCode!I352": "Trazas ASTRA 1M y SOL Q127 sin falsos cortes; guard sintético activa en muestra 15. Captura limpia receipts/preflight-review-clean.json, falso positivo inicial documentado, sin servidor ni GPU compute.",
+    "Accionables!D19": "En curso — preflight PASS; una solicitud por iniciar",
+    "Accionables!I19": "Preflight limpio PASS. La consulta Q4/262K queda lista para ejecutarse; no sustituye ASTRA/SOL ni autoriza elevar el contexto por defecto. Guard replay offline pasó ambas trazas exitosas sin falso stop.",
+    "Accionables!J19": "Q131 PLAN.md; receipts/preregistration.json; receipts/preflight-review-clean.json; receipts/systemd-smoke.json; receipts/asset-verification.json",
+    "Accionables!K19": "109,11 GiB disponibles; PSI=0; OOM=0; dos RTX 3090, sin inference servers. ArtCraft abierto (207 MiB), preservado. Resultado del Q4/262K todavía pendiente."
+  },
+  "format": "WRAP preserved in all touched cells; Accionables verticalAlignment TOP",
+  "neighboringCellsChanged": false
+}

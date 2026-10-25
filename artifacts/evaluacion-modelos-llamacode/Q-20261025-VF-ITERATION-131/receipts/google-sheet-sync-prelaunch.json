@@ -1,0 +1,46 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-131",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "title": "Listado",
+  "readback": "PASS",
+  "ranges": {
+    "'Evaluaciones LlamaCode'!A352:J352": {
+      "sheetId": 1945218181,
+      "values": [
+        "Q-20261025-VF-ITERATION-131",
+        "Screen de recuperación de contexto",
+        "Prerregistrada",
+        "2026-10-25",
+        "Qwen3.8 Flash-Next UD-Q4_K_XL · 262144 · diez claves",
+        "Usuario; auditoría Q130 del intento Q4 anterior; trazas ASTRA Q117 y SOL Q127",
+        "Pendiente: una solicitud de 257K–259K tokens con diez claves; el único pase es recuperar las diez exactamente y validar usage.prompt_tokens. Observaciones de prefill/decode/tiempo total, no benchmark estadístico.",
+        "Fixture y guard validados en CPU. Falta smoke test systemd, preflight y ejecución dual RTX 3090. Sin fallback de una GPU; detener sólo el grupo Q131 ante umbrales preregistrados.",
+        "Q131 replay del guard: ASTRA 1M 707/707 muestras y SOL dual 157/157 sin falso corte pese a RSS 51,31 GiB y MemAvailable mínima 58,70 GiB; umbrales sintéticos detectados en muestra 15. No atribuye los cierres de Codex.",
+        "WORK_QUEUE.md Q131; artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-131/PLAN.md y receipts/preregistration.json"
+      ],
+      "format": "WRAP for all 10 cells"
+    },
+    "Accionables!A19:N19": {
+      "sheetId": 1393124532,
+      "values": [
+        "Prueba priorizada",
+        "Q-20261025-VF-ITERATION-131",
+        "Alta",
+        "En curso — preregistrada",
+        "Validar recuperación de Qwen3.8 Flash-Next Q4 a 262K y guard de memoria en dual 3090",
+        "Contexto largo; evaluación de Flash-Next; memoria del host",
+        "Revisión del intento Q4 anterior (Q130), trazas de ASTRA 1M Q117/SOL Q127 y pedido del usuario",
+        "Una solicitud de 257K–259K tokens con diez claves sintéticas en posiciones 5%–95%, seed 4242, ambas RTX 3090 y host de 128 GiB. Guard: sólo OOM nuevo, MemAvailable <20 GiB 15 s, o PSI some≥80/full≥60 por 15 s; RSS/VRAM altos por sí solos no cortan. Sin cambios productivos.",
+        "Pendiente de ejecutar tras preflight. Resultado decidirá sólo si este runtime Q4 recupera el holdout de diez claves a 262K; no generaliza calidad ni autoriza elevar el contexto por defecto. Guard replay offline pasó ambas trazas exitosas sin falsos cortes.",
+        "Q131 PLAN.md; receipts/q131-memory-guard-replay.json; receipts/fixture-validation.json; receipts/preregistration.json",
+        "Trazas históricas: ASTRA DEFAULT 1M completó con RSS 51,31 GiB y 58,70 GiB disponibles mínimo; SOL Q127 completó con 2×3090. La guarda continuó ambas; los bordes severos/low-memory/OOM sintéticos activan como se preregistró.",
+        "2026-10-25",
+        "2026-10-25",
+        "2026-10-25T00:00:00-03:00"
+      ],
+      "format": "WRAP and verticalAlignment TOP for all 14 cells"
+    }
+  },
+  "neighboringCellsChanged": false,
+  "productionSettingsChanged": false
+}

@@ -1,0 +1,55 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-131",
+  "kind": "read_only_prelaunch_snapshot",
+  "atUtc": "2026-10-25T06:05:03.007336+00:00",
+  "state": {
+    "atUtc": "2026-10-25T06:05:02.964723+00:00",
+    "mem": {
+      "MemAvailable": 117168115712,
+      "SwapTotal": 8589930496,
+      "SwapFree": 4697391104
+    },
+    "vmstat": {
+      "pswpin": 1759828,
+      "pswpout": 2648796,
+      "oom_kill": 0
+    },
+    "psi": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.0
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.0
+      }
+    },
+    "computeApps": [
+      "3952271, /tmp/.mount_artcragmccCd/usr/bin/artcraft-launcher, 207 MiB"
+    ],
+    "gpuUsage": [
+      "NVIDIA GeForce RTX 3090, 960, 24576, 14",
+      "NVIDIA GeForce RTX 3090, 110, 24576, 23"
+    ],
+    "processTreeRssBytes": null,
+    "gpuQueryError": null,
+    "inferenceServers": [
+      {
+        "pid": 3544196,
+        "comm": "bash",
+        "argv": "/bin/bash -c python3 - <<'PY'\nimport importlib.util,json,subprocess\nfrom pathlib import Path\nscript=Path('artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-131/scripts/run_q4_screen.py').resolve()\nspec=importlib.util.spec_from_file_location('q131_runner',script); mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)\ns=mod.state(include_servers=True)\nerrors=mod.start_errors(s,mod.PORT)\nreceipt={'taskId':'Q-20261025-VF-ITERATION-131','kind':'read_only_prelaunch_snaps"
+      }
+    ]
+  },
+  "startErrors": [
+    "inference server/container/listener active; refusing a second server"
+  ],
+  "oomKillBaseline": 0,
+  "authorizedPeritoSoftStopExecuted": false,
+  "serverNotStarted": true,
+  "gpuComputeStarted": false,
+  "managerState": "degraded",
+  "result": "BLOCKED"
+}

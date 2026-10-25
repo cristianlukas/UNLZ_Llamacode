@@ -1,0 +1,47 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-131",
+  "kind": "read_only_prelaunch_snapshot",
+  "atUtc": "2026-10-25T06:06:15.776226+00:00",
+  "state": {
+    "atUtc": "2026-10-25T06:06:15.729378+00:00",
+    "mem": {
+      "MemAvailable": 117158944768,
+      "SwapTotal": 8589930496,
+      "SwapFree": 4697391104
+    },
+    "vmstat": {
+      "pswpin": 1759830,
+      "pswpout": 2648796,
+      "oom_kill": 0
+    },
+    "psi": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.0
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.0
+      }
+    },
+    "computeApps": [
+      "3952271, /tmp/.mount_artcragmccCd/usr/bin/artcraft-launcher, 207 MiB"
+    ],
+    "gpuUsage": [
+      "NVIDIA GeForce RTX 3090, 984, 24576, 16",
+      "NVIDIA GeForce RTX 3090, 110, 24576, 23"
+    ],
+    "processTreeRssBytes": null,
+    "gpuQueryError": null,
+    "inferenceServers": []
+  },
+  "startErrors": [],
+  "oomKillBaseline": 0,
+  "authorizedPeritoSoftStopExecuted": false,
+  "serverNotStarted": true,
+  "gpuComputeStarted": false,
+  "managerState": "degraded",
+  "result": "PASS"
+}

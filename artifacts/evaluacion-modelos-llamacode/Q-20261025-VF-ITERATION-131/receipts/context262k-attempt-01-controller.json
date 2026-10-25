@@ -1,0 +1,240 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-131",
+  "mode": "context262k",
+  "attempt": 1,
+  "configPath": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-131/receipts/configs/context262k-q4-q131.json",
+  "configSha256": "62462ab0c11da0fbbfaa0f777c3c29b98ca3efb2dce4f74a649e1c6e9734b17d",
+  "preflight": {
+    "taskId": "Q-20261025-VF-ITERATION-131",
+    "mode": "context262k",
+    "attempt": 1,
+    "atUtc": "2026-10-25T06:06:52.427583+00:00",
+    "state": {
+      "atUtc": "2026-10-25T06:06:52.387830+00:00",
+      "mem": {
+        "MemAvailable": 117122531328,
+        "SwapTotal": 8589930496,
+        "SwapFree": 4697391104
+      },
+      "vmstat": {
+        "pswpin": 1759830,
+        "pswpout": 2648796,
+        "oom_kill": 0
+      },
+      "psi": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0
+        }
+      },
+      "computeApps": [
+        "3952271, /tmp/.mount_artcragmccCd/usr/bin/artcraft-launcher, 207 MiB"
+      ],
+      "gpuUsage": [
+        "NVIDIA GeForce RTX 3090, 973, 24576, 15",
+        "NVIDIA GeForce RTX 3090, 110, 24576, 34"
+      ],
+      "processTreeRssBytes": null,
+      "gpuQueryError": null,
+      "inferenceServers": []
+    },
+    "port": 8350,
+    "inferenceServersBeforeAuthorizedStop": [],
+    "authorizedPeritoSoftStops": [],
+    "thresholds": {
+      "MemAvailableGiB": 32,
+      "runtimeMemAvailableAbortGiB": 20,
+      "runtimePsiSomeAvg10Abort": 80.0,
+      "runtimePsiFullAvg10Abort": 60.0,
+      "runtimeAbortSamples": 15,
+      "swapFreeIsTelemetryOnly": true
+    },
+    "errors": [],
+    "oomKillBaseline": 0
+  },
+  "engineCommand": [
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python",
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py",
+    "--engine",
+    "strata",
+    "--config",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-131/receipts/configs/context262k-q4-q131.json",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "8350",
+    "--gpu",
+    "0,1"
+  ],
+  "engineLog": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-131/receipts/logs/context262k-attempt-01.server-console.log",
+  "monitorLog": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-131/receipts/logs/context262k-attempt-01.resource-monitor.jsonl",
+  "childReceipt": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-131/receipts/context262k-attempt-01.json",
+  "status": "completed",
+  "serverPid": 3547601,
+  "startedAtUtc": "2026-10-25T06:06:52.430510+00:00",
+  "health": {
+    "status": "ok",
+    "max_context": 262144,
+    "model": "qwen3.8-flash-next-unsloth-ud-q4_k_xl",
+    "images": false,
+    "api_key": false,
+    "loaded": true,
+    "service": "strata"
+  },
+  "apiReadyAtUtc": "2026-10-25T06:08:48.489446+00:00",
+  "childCommand": [
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-131/scripts/probe_q4_262k_ten_keys.py",
+    "--tokenizer-dir",
+    "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/packs/unsloth-ud-q4_k_xl/tokenizer",
+    "--tokenizer-module",
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/tools/strata_tokenizer.py",
+    "--config",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-131/receipts/configs/context262k-q4-q131.json",
+    "--fixture",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-131/receipts/fixtures/ten-keys-seed-4242.json",
+    "--endpoint",
+    "http://127.0.0.1:8350/v1/chat/completions",
+    "--out",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-131/receipts/context262k-attempt-01.json"
+  ],
+  "childExitCode": 0,
+  "postflight": {
+    "atUtc": "2026-10-25T06:11:17.480499+00:00",
+    "mem": {
+      "MemAvailable": 117778444288,
+      "SwapTotal": 8589930496,
+      "SwapFree": 4064370688
+    },
+    "vmstat": {
+      "pswpin": 1762704,
+      "pswpout": 2822132,
+      "oom_kill": 0
+    },
+    "psi": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 0.2,
+        "avg300": 0.35
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 0.19,
+        "avg300": 0.34
+      }
+    },
+    "computeApps": [
+      "3952271, /tmp/.mount_artcragmccCd/usr/bin/artcraft-launcher, 207 MiB"
+    ],
+    "gpuUsage": [
+      "NVIDIA GeForce RTX 3090, 986, 24576, 0",
+      "NVIDIA GeForce RTX 3090, 110, 24576, 0"
+    ],
+    "processTreeRssBytes": null,
+    "gpuQueryError": null,
+    "inferenceServers": []
+  },
+  "serverStopped": true,
+  "portFreeAfterCleanup": true,
+  "abortReasons": [],
+  "finishedAtUtc": "2026-10-25T06:11:17.555844+00:00",
+  "quality": {
+    "status": "completed",
+    "localTokenizerContentTokens": 257977,
+    "keyPositions": [
+      {
+        "key": "K01",
+        "targetFraction": 0.05,
+        "actualFraction": 0.049926931470634976,
+        "prefixTokens": 12880
+      },
+      {
+        "key": "K02",
+        "targetFraction": 0.15000000000000002,
+        "actualFraction": 0.14991258910678085,
+        "prefixTokens": 38674
+      },
+      {
+        "key": "K03",
+        "targetFraction": 0.25,
+        "actualFraction": 0.24989824674292668,
+        "prefixTokens": 64468
+      },
+      {
+        "key": "K04",
+        "targetFraction": 0.35000000000000003,
+        "actualFraction": 0.34988778069362775,
+        "prefixTokens": 90263
+      },
+      {
+        "key": "K05",
+        "targetFraction": 0.45,
+        "actualFraction": 0.4498734383297736,
+        "prefixTokens": 116057
+      },
+      {
+        "key": "K06",
+        "targetFraction": 0.55,
+        "actualFraction": 0.5498590959659194,
+        "prefixTokens": 141851
+      },
+      {
+        "key": "K07",
+        "targetFraction": 0.6500000000000001,
+        "actualFraction": 0.6498408772875102,
+        "prefixTokens": 167644
+      },
+      {
+        "key": "K08",
+        "targetFraction": 0.7500000000000001,
+        "actualFraction": 0.749826534923656,
+        "prefixTokens": 193438
+      },
+      {
+        "key": "K09",
+        "targetFraction": 0.8500000000000001,
+        "actualFraction": 0.8498083162452467,
+        "prefixTokens": 219231
+      },
+      {
+        "key": "K10",
+        "targetFraction": 0.9500000000000001,
+        "actualFraction": 0.9497900975668373,
+        "prefixTokens": 245024
+      }
+    ],
+    "exactFields": 10,
+    "expectedFields": 10,
+    "exactKeySet": true,
+    "screenPass": true,
+    "usage": {
+      "prompt_tokens": 258029,
+      "completion_tokens": 334,
+      "total_tokens": 258363,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 258029,
+      "prompt_ms": 137419.8,
+      "prompt_per_token_ms": 0.533,
+      "prompt_per_second": 1877.7,
+      "predicted_n": 334,
+      "predicted_ms": 6287.8,
+      "predicted_per_token_ms": 19.898,
+      "predicted_per_second": 50.3,
+      "draft_n": 247,
+      "draft_n_accepted": 222
+    },
+    "elapsedSeconds": 143.83648138999706,
+    "error": null
+  }
+}

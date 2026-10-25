@@ -1,0 +1,104 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-131",
+  "status": "PASS",
+  "verifiedUtc": "2026-10-25T06:04:06Z",
+  "scriptAndConfigPins": {
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-131/scripts/probe_q4_262k_ten_keys.py": "e84f7f13f80f164d6aed7d3011218a1a46f560e990d92b0f75ad5fd7c63e6ebc",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-131/scripts/run_q4_screen.py": "850631c2f680852d938ca649e1858307a4f4331a93d49cf98aa97c6ad0a636a2",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-131/scripts/validate_q131_fixture.py": "402c3d3244c2b2e431c52ac0fa22870cbfc64d658f0414588165dbdbf5a89306",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-131/scripts/verify_memory_guard.py": "fa70d91f2026007ca7acf35185b9ad7af089c0bcce20b4d5d7ceedb473dd5518",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-131/receipts/configs/context262k-q4-q131.json": "62462ab0c11da0fbbfaa0f777c3c29b98ca3efb2dce4f74a649e1c6e9734b17d",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-131/receipts/fixtures/ten-keys-seed-4242.json": "ed7ab60524a9357ed7cd7c5f7a3d02b38c6996c468ddf5129f50998562789f63"
+  },
+  "scriptPinChecks": {
+    "probe_q4_262k_ten_keys.py": true,
+    "run_q4_screen.py": true,
+    "validate_q131_fixture.py": true,
+    "verify_memory_guard.py": true,
+    "context262k-q4-q131.json": true,
+    "ten-keys-seed-4242.json": true
+  },
+  "assetSha256": [
+    {
+      "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/packs/unsloth-ud-q4_k_xl/dense.bin",
+      "sha256": "f53174059b262ed342b82e143af62056081948ef5e5f1903a1a70eeb73fa4a23",
+      "bytes": 1485688320,
+      "mtimeNs": 1791068152225436500
+    },
+    {
+      "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/packs/unsloth-ud-q4_k_xl/index.txt",
+      "sha256": "cfc07e91c4d9b8e8c999fd1f70fa364e584748e70fa377b30e0fc85426f52711",
+      "bytes": 93560,
+      "mtimeNs": 1791068152227436300
+    },
+    {
+      "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/packs/unsloth-ud-q4_k_xl/conversions.json",
+      "sha256": "722a102cb500b9097d1890cffebf142904fa6534c209ac44c6445f0aec3d0cc4",
+      "bytes": 167871,
+      "mtimeNs": 1791068152228436300
+    },
+    {
+      "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/packs/unsloth-ud-q4_k_xl/compat-bf16.json",
+      "sha256": "2dd23dc0c9aed7fbcb2fdc91c2b03c07fd38c54499c6c0e15792ce1bc2370f96",
+      "bytes": 21112,
+      "mtimeNs": 1791068152228436300
+    },
+    {
+      "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/packs/unsloth-ud-q4_k_xl/tokenizer/tokenizer.json",
+      "sha256": "c0bd435efbc6c3b28964b47999afe16c4ad268c7c7c4e8cb3af410796a6f30bf",
+      "bytes": 541,
+      "mtimeNs": 1791068152568415600
+    },
+    {
+      "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/packs/unsloth-ud-q4_k_xl/tokenizer/vocab.json",
+      "sha256": "4ba64f0332abcfb0b600b7df1537d1e836e68009d5fb7cdb77339738dc6365c4",
+      "bytes": 5737005,
+      "mtimeNs": 1791068152514418900
+    },
+    {
+      "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/packs/unsloth-ud-q4_k_xl/tokenizer/merges.txt",
+      "sha256": "4ba698529766c7a2f5052083ea10cdf2485577f5237a332ee291054eb11e3332",
+      "bytes": 3353258,
+      "mtimeNs": 1791068152562416000
+    },
+    {
+      "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/packs/unsloth-ud-q4_k_xl/tokenizer/token_type.json",
+      "sha256": "5088c8c298fc06af8382ddb3b76c888703ac2634e82263b97eedcc2ad202738b",
+      "bytes": 744960,
+      "mtimeNs": 1791068152568415600
+    },
+    {
+      "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/packs/unsloth-ud-q4_k_xl/tokenizer/chat_template.jinja",
+      "sha256": "12827f24b742ea4e80cdc12dbcf9622227056b9f797252a3149263d4f9aaadce",
+      "bytes": 9993,
+      "mtimeNs": 1791068152653410400
+    },
+    {
+      "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/Strata-0.1.35/data/expert-profile.bin",
+      "sha256": "8f59b4aa8873209dff11c11e37bcda9529a1335b724a1afeea37bf6388975baf",
+      "bytes": 196632,
+      "mtimeNs": 1790927061000000000
+    },
+    {
+      "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/mtp/rt/dense.bin",
+      "sha256": "c724dc0b0822ada5d2977bf5bde821605feabaa64ea2e0045b67ca656329070a",
+      "bytes": 116099072,
+      "mtimeNs": 1790965862765590300
+    },
+    {
+      "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/mtp/rt/experts.bin",
+      "sha256": "09398406be61f1f54c93861f449e48b8df0bfccbc9ec9b2b7636775a6ea9244f",
+      "bytes": 707788800,
+      "mtimeNs": 1790965862298591800
+    },
+    {
+      "path": "/media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/mtp/rt/draft_vocab.bin",
+      "sha256": "b1e1d3a7a9e4bf862dcd5923ce661fb59bbd07907e594df5cf86a62ac235cb91",
+      "bytes": 425196,
+      "mtimeNs": 1790965862794590200
+    }
+  ],
+  "q4ShardIdentity": "four model shard hashes previously verified in Q10 manifest; current sizes, mtimes, and .done markers match those fingerprints",
+  "inferenceStarted": false,
+  "gpuComputeStarted": false
+}

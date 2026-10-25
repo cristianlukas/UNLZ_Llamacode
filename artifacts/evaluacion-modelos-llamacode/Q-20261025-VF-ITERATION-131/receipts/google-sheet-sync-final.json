@@ -1,0 +1,116 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-131",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "readAtUtc": "2026-10-25T06:17:31Z",
+  "readback": "PASS",
+  "comparedRangeCount": 6,
+  "comparedValueCount": 47,
+  "rangeComparisons": [
+    {
+      "range": "'Inventario de modelos'!A2",
+      "expected": 1,
+      "actual": 1,
+      "pass": true
+    },
+    {
+      "range": "'Inventario de modelos'!C8:R8",
+      "expected": 16,
+      "actual": 16,
+      "pass": true
+    },
+    {
+      "range": "'Inventario de modelos'!C14",
+      "expected": 1,
+      "actual": 1,
+      "pass": true
+    },
+    {
+      "range": "'Inventario de modelos'!N14:R14",
+      "expected": 5,
+      "actual": 5,
+      "pass": true
+    },
+    {
+      "range": "'Evaluaciones LlamaCode'!A352:J352",
+      "expected": 10,
+      "actual": 10,
+      "pass": true
+    },
+    {
+      "range": "'Accionables'!A19:N19",
+      "expected": 14,
+      "actual": 14,
+      "pass": true
+    }
+  ],
+  "formatCheck": {
+    "cells": 47,
+    "wrapped": 47,
+    "top": 36,
+    "middle": 1,
+    "allWrapped": true,
+    "expectedAlignment": true
+  },
+  "ranges": {
+    "'Inventario de modelos'!A2": [
+      "Actualizado 2026-10-25T06:13:59Z. Q131: Qwen3.8 Flash-Next UD-Q4_K_XL recuperó 10/10 claves sintéticas con 258.029 tokens de prompt / contexto 262.144 en 2×RTX3090 + 128 GiB. Una sola solicitud: prefill 1.877,7 tok/s; decode 50,3 tok/s; total 143,84 s. RSS árbol máx 93,13 GiB; MemAvailable mín 60,80 GiB; PSI máx 8,05%/7,54%; OOM 0; sin abortar. No promover contexto por defecto; ASTRA/SOL intactos; causa del crash de Codex sigue desconocida."
+    ],
+    "'Inventario de modelos'!C8:R8": [
+      "Q131: local evaluation only; model files present on Linux. Screen 262K PASS 10/10 synthetic keys. No production promotion.",
+      "Not observed as a production consumer; PeritoSoft closed per user. Q131 ran as an isolated local Strata server.",
+      "Not verified. No Windows path inferred from the Linux mount.",
+      "Model shards: /media/cristian/Disco local/Strata-UD-Q4-review-20261003/models/unsloth-UD-Q4_K_XL/; pack: /media/cristian/Disco local/Strata-UD-Q4-review-20261003/data/packs/unsloth-ud-q4_k_xl; runtime: /home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata",
+      "111334654784",
+      "Q131 single 258029-token prompt at 262144 context: 1877.7 tok/s prefill, 137.420 s; one-request diagnostic, not suite average.",
+      "Q131 334 generated tokens: 50.3 tok/s decode; one-request diagnostic, not suite average.",
+      "Synthetic long-context retrieval holdout seed4242: 10/10 keys exact at ~5%-95% positions; JSON and usage valid. Not code quality or general-recall score.",
+      "143.836 s request total (137.420 s prefill + 6.288 s decode); server load + cleanup ~265.1 s end-to-end operational lifecycle, not model speed score.",
+      "262144 configured; 257977 content tokens; API reports 258029 prompt tokens.",
+      "2×RTX 3090 24GB, 128 GiB host; Strata 0.1.41 / CUDA 12.8; Q4 UD-Q4_K_XL; layer split 18/30; KV int8; speculative setting 4; both physical GPUs; no memory cap.",
+      "2026-10-25T06:13:59Z",
+      "Q-20261025-VF-ITERATION-131/RESULTS.md; receipts/q131-run-summary.json; context262k-attempt-01.json; controller.json; resource-monitor.jsonl; postflight-verification.json",
+      "No PeritoSoft usage observed; Q131 was local and isolated. User stated PeritoSoft closed.",
+      "HF unsloth/Qwen3.8-Flash-Next-GGUF rev 38bb39ee97821de2c9009abb7e93950eec396e66; four GGUF shard SHA-256s in Q10 manifest; config SHA-256 62462ab0c11da0fbbfaa0f777c3c29b98ca3efb2dce4f74a649e1c6e9734b17d.",
+      "Q131 screen passed 10/10 at 262K. Process-tree RSS peak 93.13 GiB; host MemAvailable min 60.80 GiB; global PSI some/full max 8.05%/7.54%; OOM 0; guard continued. Not enough to raise production default or infer general quality. Preserve ASTRA and SOL productively."
+    ],
+    "'Inventario de modelos'!C14": [
+      "ASTRA control Q97: BCB-Hard-8 2/8. Q131 replay sobre ASTRA DEFAULT 1M: 707/707 muestras aceptadas, sin falso corte por RSS alto; la corrida live Q117 llegó a 51,306 GiB RSS y 58,698 GiB MemAvailable mínimo. Q98 estado previo se conserva."
+    ],
+    "'Inventario de modelos'!N14:R14": [
+      "2026-10-25T06:13:59Z",
+      "Q97 final; Q98 PLAN/receipts/q98-host-preflight.json; Q131 receipts/q131-memory-guard-replay.json y RESULTS.md.",
+      "Usuario confirmó PeritoSoft cerrado; consumo operativo no verificado.",
+      "Shard1 92cee27a…; shard2 316b46f3…; pack d2af3d83…; config b4a55b26….",
+      "Q131 replay es análisis offline, no re-ejecutó ASTRA ni alteró el perfil 1M; 707/707 muestras continuaron pese a alto RSS con headroom. ASTRA/SOL productivos intactos."
+    ],
+    "'Evaluaciones LlamaCode'!A352:J352": [
+      "Q-20261025-VF-ITERATION-131",
+      "Screen de recuperación de contexto",
+      "Completada · PASS 10/10",
+      "2026-10-25",
+      "Qwen3.8 Flash-Next UD-Q4_K_XL · Strata 0.1.41 · 262144",
+      "Usuario; auditoría Q130 del intento Q4 anterior; replay ASTRA Q117 y SOL Q127",
+      "Una petición, 258029 prompt tokens, 334 salida, JSON exacto 10/10 claves; prefill 1877.7 tok/s (137.420 s), decode 50.3 tok/s (6.288 s), request 143.836 s. HTTP 200, cero retry.",
+      "Carga alta completada sin falso stop: RSS árbol máx 93.13 GiB; systemd peak observado 93.63 GiB; MemAvailable mín 60.80 GiB; PSI some/full máx 8.05%/7.54%; OOM 0→0; swapFree 4.37→3.79 GiB como telemetría. Cleanup PASS, 109.69 GiB libres luego.",
+      "Replay guard Q131: ASTRA 1M 707/707 y SOL dual 157/157 muestras sin falso corte; claves y usage válidos. Screen sintético de una sola corrida: no es benchmark de calidad general ni justifica subir el default. Q97/Q100 alternancia severa sigue siendo un gap distinto; AMD05 candidate-only. Crash de Codex sin causa atribuida.",
+      "WORK_QUEUE.md Q131; artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-131/RESULTS.md y receipts/"
+    ],
+    "'Accionables'!A19:N19": [
+      "Resultado / decisión",
+      "Q-20261025-VF-ITERATION-131",
+      "Alta",
+      "Completa — PASS 10/10; sin cambio de default",
+      "Q4 Flash-Next recupera 10 claves exactas a 262K en 2×3090",
+      "Contexto largo; evaluación Flash-Next; memoria del host",
+      "Revisión Q130 del intento anterior, guard replay ASTRA Q117/SOL Q127 y pedido del usuario",
+      "Una sola solicitud de 257977 content tokens, usage 258029, contexto 262144; diez needles en 5–95%, seed4242. 2×RTX3090, RAM128GiB, Strata0.1.41. Prefill/decode/tiempo total registrados. Sin límites de memoria.",
+      "PASS para este holdout: 10/10. Mantener 131K por defecto en perfiles productivos; Q4/262K queda demostrado como capacidad bajo demanda, no como superioridad de calidad ni adopción general. Reabrir con workload real/múltiples muestras si se decide cambio.",
+      "Q131 RESULTS.md; receipts/q131-run-summary.json; context262k-attempt-01.json; controller.json; resource-monitor.jsonl; postflight-verification.json",
+      "Durante la carga: RSS árbol 93.13 GiB, MemAvailable mínima 60.80 GiB, PSI some/full 8.05%/7.54%, OOM cero; guard siguió. ASTRA/SOL productivos intactos. El histórico Q97/Q100 aún tiene el caso alternante; no atribuye cierres de Codex.",
+      "2026-10-25",
+      "2026-10-25",
+      "2026-10-25T06:13:59Z"
+    ]
+  },
+  "note": "Final readback used six separate bounded ranges. An earlier malformed multi-range read was rejected without writing; retry succeeded. Only the listed cell ranges were in scope. ASTRA row entry is an offline replay, not a rerun or model-setting change."
+}
