@@ -1,0 +1,78 @@
+{
+  "amendment": "Q134-A1",
+  "createdAtUtc": "2026-10-25T14:33:23.458844+00:00",
+  "purpose": "Pin the exact offline trace-audit runner and all six existing Q41 TaskFlow result/event input pairs before execution.",
+  "runner": {
+    "path": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-134/scripts/audit_q41_tool_calls.py",
+    "sha256": "7e5aee0706909916d4cff7bcd546f1687cc8437a6e0a843695e69af69d989054",
+    "command": "python3 artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-134/scripts/audit_q41_tool_calls.py"
+  },
+  "inputs": [
+    {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source41/control/seed-4242/taskflow.json",
+      "sha256": "59f103dae1e9c66f43b746ffc8654356617794b4c90414f4c2b4ce40e7223c09",
+      "bytes": 123357
+    },
+    {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source41/control/seed-4242/taskflow.events.jsonl",
+      "sha256": "09bc6ab74cd7070a550cd3eebde3375dcbac0cbb75ec74a8b922f5569c37db32",
+      "bytes": 13854
+    },
+    {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source41/control/seed-4243/taskflow.json",
+      "sha256": "097fc7f482d71e2f4f7c4c1da424284f2763fdd72311b243a9f2f30ae81b98ad",
+      "bytes": 159024
+    },
+    {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source41/control/seed-4243/taskflow.events.jsonl",
+      "sha256": "cac174344e62697628cb4598570e3d545ee7a8a8963f2923b2deb8f10a0c9068",
+      "bytes": 5558
+    },
+    {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source41/control/seed-4244/taskflow.json",
+      "sha256": "7ffe03d3dcbe060bf360657d40b6697a7c339ced1bada097e1608127a543a5fa",
+      "bytes": 164660
+    },
+    {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source41/control/seed-4244/taskflow.events.jsonl",
+      "sha256": "5ef318199f154d56599cb63d2db47f456d8c17e1a0b2fc0ad93d196540bfa0ce",
+      "bytes": 9157
+    },
+    {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source41/candidate/seed-4242/taskflow.json",
+      "sha256": "85cdb43ead90a429328957d944e40c94978d79d3a227ad173f03821885f1d43e",
+      "bytes": 135265
+    },
+    {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source41/candidate/seed-4242/taskflow.events.jsonl",
+      "sha256": "c9723d15a9655a58918e95a7f18a4076a48ec2fd78cdc419415683d44413968a",
+      "bytes": 9511
+    },
+    {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source41/candidate/seed-4243/taskflow.json",
+      "sha256": "47f160ca4f91f8d41caa33595b3b3a90b28db3be7887a3f706cc3663bc3cb266",
+      "bytes": 150119
+    },
+    {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source41/candidate/seed-4243/taskflow.events.jsonl",
+      "sha256": "be6969be80d5f42809fd552d59f1f84f47323036875604eb59a2eadee08a9c09",
+      "bytes": 6250
+    },
+    {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source41/candidate/seed-4244/taskflow.json",
+      "sha256": "2a7fc354cf08166c7d420839a6d67d3195cdebedee5606cd1f2d5901400e2af6",
+      "bytes": 175307
+    },
+    {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source41/candidate/seed-4244/taskflow.events.jsonl",
+      "sha256": "9ef706b8845678a44da70db3eff53ff60840851d125020c0eedc56ca760abe6b",
+      "bytes": 4528
+    }
+  ],
+  "output": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-134/receipts/q134-q41-offline-tooltrace-audit.json",
+  "successCriteria": [
+    "All six seeds per arm parse without mutation of sources.",
+    "Report reveals whether raw output, parser/syntax classification, finish_reason and semantic outcome fields exist; no raw conversation values are copied into report.",
+    "If fields are absent, mark failure attribution unresolved; do not extrapolate ASTRA/Strata IQ2_XS to Reddit IQ3_S/Basalt."
+  ]
+}

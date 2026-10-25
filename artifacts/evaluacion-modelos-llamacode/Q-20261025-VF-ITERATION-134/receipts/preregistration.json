@@ -1,0 +1,128 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-134",
+  "status": "preregistered_offline_audit",
+  "createdAtUtc": "2026-10-25T14:32:30.846469+00:00",
+  "sourceRange": "Google Sheets 'IA local' rows 54–58; five new entries; deduped against local inbox 58/58 by URL/title.",
+  "hypothesis": "The new items do not establish a new adoption-worthy speed or quality result for the current dual-RTX-3090 + 128-GiB system. An offline classification of the existing ASTRA/Strata TaskFlow traces may tell whether recorded tool-call failures are syntactic/parser, semantic, or unclassifiable; it must not be generalized to the Reddit IQ3_S/Basalt result.",
+  "procedure": [
+    "Review primary sources and local records for each of rows 54–58; identify tested model/runtime/quant/hardware and exact release deltas.",
+    "Offline-only audit of the six existing Q41 TaskFlow event logs: count documented tool outcomes and determine whether raw assistant/tool-call payload, finish reason, parser error, and semantic result are recorded. Classify only when raw evidence supports it.",
+    "Do not download, build, launch an inference server, invoke models, use GPU, or create memory pressure. No new performance/quality score will be claimed.",
+    "If the available records do not expose enough raw output, mark the attribution unresolved and list the concrete condition for a future test."
+  ],
+  "acceptanceCriteria": [
+    "All five Sheet entries receive an evidence-backed disposition: actionable, no applicable test, duplicate/prior result, or blocked by a specific external condition.",
+    "Existing records are referenced by stable artifact path and SHA-256; no test is considered newly executed unless this audit runs it.",
+    "No inference/GPU/benchmark/build/download is executed; ASTRA, SOL, Flash-Next and PeritoSoft are unchanged.",
+    "A future test is recommended only if its result could change adoption or user workflow; any such test stays pending until its prerequisites are satisfied and separately preregistered."
+  ],
+  "plannedRun": {
+    "id": "Q134-OFFLINE-Q41-TOOL-OUTCOME-AUDIT",
+    "type": "offline_evidence_audit",
+    "gpu": false,
+    "inference": false,
+    "build": false,
+    "download": false,
+    "target": "Q41 ASTRA IQ2_XS / Strata TaskFlow traces only",
+    "notEquivalentTo": "Reddit IQ3_S QFN on Basalt vs Qwen3.8-27B NVFP4 on NInfer",
+    "runnerSha256": "a7a4cbbc20be444c4f98ef08953eff091a6dbdb390378a83470f95c1c6a76a4c",
+    "inputCount": 12
+  },
+  "sourceReview": [
+    {
+      "sheetRow": 54,
+      "title": "Basalt / xyehya decode-perf-test — 5080 QFN",
+      "plannedDisposition": "No test on local RTX 3090: primary repo requires Blackwell SM120/CUDA 13; external speeds cannot transfer to Ampere."
+    },
+    {
+      "sheetRow": 55,
+      "title": "Hugging Face Speech-to-Speech — voz local en tiempo real",
+      "plannedDisposition": "No new stack test: current LlamaCode Charla already exposes Parakeet, Whisper, Qwen3-TTS, multi-GPU voice selection, barge-in, and latency metrics; no measured superiority/rioplatense claim."
+    },
+    {
+      "sheetRow": 56,
+      "title": "NInfer-3090 — CUDA SM86 27B/Qwen3.6/FlashNext",
+      "plannedDisposition": "No rerun of Qwen3.8-27B speed/quality already covered in Q32/Q34; v0.16.2 does not change serving without S3; Flash-Next remains Windows preview; security blockers persist."
+    },
+    {
+      "sheetRow": 57,
+      "title": "QFN 3bit Basalt vs 27B 4bit: fallas de tool calls",
+      "plannedDisposition": "No matched GPU test: anecdote changes model, quant and engine; exact Basalt route requires SM120. Offline audit only checks if existing local QFN/Strata traces have raw failure attribution."
+    },
+    {
+      "sheetRow": 58,
+      "title": "Ingeniería inversa con Qwen27B + Ghidra/REA + Pi",
+      "plannedDisposition": "No benchmark absent target binary, known reference behavior, and regression oracle; conditional R36S/PortMaster pilot only."
+    }
+  ],
+  "inputFingerprints": {
+    "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-32/RESULTS.md": {
+      "sha256": "694618632ea38eeea761f36262dacb6e6ea92c365cb66483f59b9a98d3b5b3f2",
+      "bytes": 7401
+    },
+    "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-32/receipts/server-invocation.json": {
+      "sha256": "a601cad764e2ea8bc8d47fefa54abf36f1581abec0aa67fe3dd6c2be25355722",
+      "bytes": 1509
+    },
+    "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-34/RESULTS.md": {
+      "sha256": "f75ba6c7597614c39dc0f47285c831322a0d7d004848371177bea0aa7e1a02be",
+      "bytes": 5342
+    },
+    "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source41/final-ab-close.json": {
+      "sha256": "02f9790a701bd866d3b735555e330fc6b51f53078785e4dca9de064689bd7156",
+      "bytes": 18740
+    },
+    "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source41/candidate/seed-4242/taskflow.events.jsonl": {
+      "sha256": "c9723d15a9655a58918e95a7f18a4076a48ec2fd78cdc419415683d44413968a",
+      "bytes": 9511
+    },
+    "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source41/candidate/seed-4243/taskflow.events.jsonl": {
+      "sha256": "be6969be80d5f42809fd552d59f1f84f47323036875604eb59a2eadee08a9c09",
+      "bytes": 6250
+    },
+    "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source41/candidate/seed-4244/taskflow.events.jsonl": {
+      "sha256": "9ef706b8845678a44da70db3eff53ff60840851d125020c0eedc56ca760abe6b",
+      "bytes": 4528
+    },
+    "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source41/control/seed-4242/taskflow.events.jsonl": {
+      "sha256": "09bc6ab74cd7070a550cd3eebde3375dcbac0cbb75ec74a8b922f5569c37db32",
+      "bytes": 13854
+    },
+    "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source41/control/seed-4243/taskflow.events.jsonl": {
+      "sha256": "cac174344e62697628cb4598570e3d545ee7a8a8963f2923b2deb8f10a0c9068",
+      "bytes": 5558
+    },
+    "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source41/control/seed-4244/taskflow.events.jsonl": {
+      "sha256": "5ef318199f154d56599cb63d2db47f456d8c17e1a0b2fc0ad93d196540bfa0ce",
+      "bytes": 9157
+    },
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-129/RESULTS.md": {
+      "sha256": "92402cecd9ec5d500bf78ddc91b0e261fb08196d0ae83823d4973486d6a6a17c",
+      "bytes": 3962
+    },
+    "docs/voice-streaming.md": {
+      "sha256": "3b0210ea7bc703a00f339ed4447f27e304066ea4bfa56c05e14ae69f1fcd6f03",
+      "bytes": 3044
+    }
+  },
+  "invariants": [
+    "Keep production ASTRA/SOL unchanged.",
+    "Do not delete or mutate model files.",
+    "Do not terminate GUI/ArtCraft or other unrelated processes.",
+    "Do not treat anecdotal/runtime-confounded claims as a model-level result."
+  ],
+  "amendments": [
+    {
+      "id": "Q134-A1",
+      "path": "receipts/amendment-01-offline-audit-runner-preregistration.json",
+      "runnerSha256": "7e5aee0706909916d4cff7bcd546f1687cc8437a6e0a843695e69af69d989054",
+      "inputCount": 12
+    },
+    {
+      "id": "Q134-A2",
+      "path": "receipts/amendment-02-counter-aggregation-correction.json",
+      "runnerSha256": "a7a4cbbc20be444c4f98ef08953eff091a6dbdb390378a83470f95c1c6a76a4c",
+      "preservedAttempt01": true
+    }
+  ]
+}

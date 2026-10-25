@@ -1,0 +1,79 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-134",
+  "completedAtUtc": "2026-10-25T14:39:09Z",
+  "result": "Five new Sheet rows were classified; no new model benchmark was justified; offline Q41 audit cannot classify tool-call failures as malformed output vs semantic/runtime behavior.",
+  "noModelServerBuildDownloadOrGpu": true,
+  "preserved": [
+    "ASTRA",
+    "SOL",
+    "Flash-Next production profiles and weights",
+    "PeritoSoft unchanged"
+  ],
+  "sheetReadback": {
+    "ranges": [
+      "IA local!I54:I58",
+      "IA local!K57:L58",
+      "Inventario de modelos!A9:R10",
+      "Accionables!A21:N23",
+      "Evaluaciones LlamaCode!A352:J354"
+    ],
+    "verified": true,
+    "wrapPreserved": true,
+    "neighborRowA10RestoredUnchanged": true,
+    "niferInventoryTarget": "Inventario de modelos!A9:R9",
+    "q47Neighbor": "Inventario de modelos!A10:R10 preserved (A/B original; C:R blank)"
+  },
+  "sheetWriteRecovery": {
+    "firstBatch": "Rejected atomically: invalid row-shape for one-column ranges; no cells changed.",
+    "adjacentInventoryRow": "An initial row offset placed values in adjacent Q47 row10; cleared C:R only and verified A/B unchanged and C:R blank; NInfer row9 then read back with all expected values."
+  },
+  "appData": {
+    "inboxCount": 63,
+    "inboxAddedSequences": [
+      59,
+      60,
+      61,
+      62,
+      63
+    ],
+    "actionablesCount": 30,
+    "actionableAdded": "vf-qwen-ghidra-open-fixture-20261025",
+    "backup": "data/backups/q134-before-sync-20261025T143909Z"
+  },
+  "sha256": {
+    "inbox": "fbc1ceb2bdafc489b8b9dc6c533ed5c0d26c8fece6b1e734a746fb08c50c9883",
+    "actionables": "f237d459bd1bff8045927ea8c51fb3fea9feda477d62990b432f9014cf0b158c",
+    "audit": "35eb549bf6b8ad55e63d33ffd8927eaeae7407ad0ffabfac188d83e337a024b4",
+    "dispositions": "fd0451a92a14212cc4eba05cf889b40bd54aaa570ce5658d04f54405fc591472",
+    "runner": "a7a4cbbc20be444c4f98ef08953eff091a6dbdb390378a83470f95c1c6a76a4c"
+  },
+  "sourceDispositions": [
+    {
+      "row": 54,
+      "status": "no_applicable_test",
+      "reason": "Basalt requires Blackwell SM120/CUDA13; host is dual RTX3090 SM86."
+    },
+    {
+      "row": 55,
+      "status": "no_immediate_test",
+      "reason": "Overlaps current Charla components; no defined Rioplatense holdout or comparative result."
+    },
+    {
+      "row": 56,
+      "status": "prior_tests_sufficient",
+      "reason": "Q32/Q34 cover Qwen3.8-27B NInfer for current decision; v0.16.2 no serving change without S3; no response_format used."
+    },
+    {
+      "row": 57,
+      "status": "not_reproducible",
+      "reason": "Model/quant/runtime/config confounded; Q41 logs lack raw/error/finish reason; Basalt incompatible with SM86."
+    },
+    {
+      "row": 58,
+      "status": "blocked_by_external_fixture",
+      "reason": "Needs authorized own/open target and expected behavior/tests/CRC."
+    }
+  ],
+  "canonical": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-134/RESULTS.md",
+  "closedAtUtc": "2026-10-25T14:42:30Z"
+}

@@ -1,0 +1,428 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-134",
+  "audit": "Q41 ASTRA IQ2_XS / Strata existing TaskFlow receipts only",
+  "offlineOnly": true,
+  "noModelOrEndpointCalls": true,
+  "arms": {
+    "ASTRA_control_presence0": {
+      "results": [
+        {
+          "seed": "4242",
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source41/control/seed-4242/taskflow.json",
+          "loadErrorType": null,
+          "outcomeCounterFieldOccurrencesOnly": {
+            "toolcalls": 35,
+            "invalidcalls": 2
+          },
+          "nestedCounterValuesNotSummed": true,
+          "rawOutputFieldNamesPresent": [],
+          "errorClassificationFieldNamesPresent": [],
+          "semanticOutcomeFieldNamesPresent": [
+            "expectedcalls",
+            "invalidcalls",
+            "matchedexpectedcalls",
+            "missingexpectedcalls",
+            "nulltestpassed",
+            "pass",
+            "passed",
+            "passedafterrepair",
+            "passes",
+            "passestotal",
+            "qualityscore",
+            "qualitytotal",
+            "qualityvsbaselinepctpoints",
+            "toolcallquality",
+            "unexpectedcalls"
+          ],
+          "finishReasonFieldNamesPresent": [],
+          "keyNameCounts": {
+            "expectedcalls": 2,
+            "invalidcalls": 2,
+            "matchedexpectedcalls": 2,
+            "missingexpectedcalls": 2,
+            "nulltestpassed": 34,
+            "pass": 35,
+            "passed": 26,
+            "passedafterrepair": 35,
+            "passes": 11,
+            "passestotal": 35,
+            "qualityscore": 35,
+            "qualitytotal": 35,
+            "qualityvsbaselinepctpoints": 35,
+            "toolcallquality": 35,
+            "unexpectedcalls": 2
+          }
+        },
+        {
+          "seed": "4243",
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source41/control/seed-4243/taskflow.json",
+          "loadErrorType": null,
+          "outcomeCounterFieldOccurrencesOnly": {
+            "toolcalls": 38,
+            "invalidcalls": 5
+          },
+          "nestedCounterValuesNotSummed": true,
+          "rawOutputFieldNamesPresent": [],
+          "errorClassificationFieldNamesPresent": [],
+          "semanticOutcomeFieldNamesPresent": [
+            "expectedcalls",
+            "invalidcalls",
+            "matchedexpectedcalls",
+            "missingexpectedcalls",
+            "nulltestpassed",
+            "pass",
+            "passed",
+            "passedafterrepair",
+            "passes",
+            "passestotal",
+            "qualityscore",
+            "qualitytotal",
+            "qualityvsbaselinepctpoints",
+            "toolcallquality",
+            "unexpectedcalls"
+          ],
+          "finishReasonFieldNamesPresent": [],
+          "keyNameCounts": {
+            "expectedcalls": 5,
+            "invalidcalls": 5,
+            "matchedexpectedcalls": 5,
+            "missingexpectedcalls": 5,
+            "nulltestpassed": 37,
+            "pass": 38,
+            "passed": 65,
+            "passedafterrepair": 38,
+            "passes": 11,
+            "passestotal": 38,
+            "qualityscore": 38,
+            "qualitytotal": 38,
+            "qualityvsbaselinepctpoints": 38,
+            "toolcallquality": 38,
+            "unexpectedcalls": 5
+          }
+        },
+        {
+          "seed": "4244",
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source41/control/seed-4244/taskflow.json",
+          "loadErrorType": null,
+          "outcomeCounterFieldOccurrencesOnly": {
+            "toolcalls": 39,
+            "invalidcalls": 6
+          },
+          "nestedCounterValuesNotSummed": true,
+          "rawOutputFieldNamesPresent": [],
+          "errorClassificationFieldNamesPresent": [],
+          "semanticOutcomeFieldNamesPresent": [
+            "expectedcalls",
+            "invalidcalls",
+            "matchedexpectedcalls",
+            "missingexpectedcalls",
+            "nulltestpassed",
+            "pass",
+            "passed",
+            "passedafterrepair",
+            "passes",
+            "passestotal",
+            "qualityscore",
+            "qualitytotal",
+            "qualityvsbaselinepctpoints",
+            "toolcallquality",
+            "unexpectedcalls"
+          ],
+          "finishReasonFieldNamesPresent": [],
+          "keyNameCounts": {
+            "expectedcalls": 6,
+            "invalidcalls": 6,
+            "matchedexpectedcalls": 6,
+            "missingexpectedcalls": 6,
+            "nulltestpassed": 38,
+            "pass": 39,
+            "passed": 78,
+            "passedafterrepair": 39,
+            "passes": 11,
+            "passestotal": 39,
+            "qualityscore": 39,
+            "qualitytotal": 39,
+            "qualityvsbaselinepctpoints": 39,
+            "toolcallquality": 39,
+            "unexpectedcalls": 6
+          }
+        }
+      ],
+      "events": [
+        {
+          "seed": "4242",
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source41/control/seed-4242/taskflow.events.jsonl",
+          "lines": 74,
+          "validJsonEvents": 74,
+          "malformedLines": 0,
+          "eventNameCounts": {
+            "agent_ready": 3,
+            "benchmark_complete": 2,
+            "benchmark_poll": 54,
+            "benchmark_start": 3,
+            "preflight": 3,
+            "set_approval": 3,
+            "set_thinking": 3,
+            "start_agent": 3
+          },
+          "rawOutputFieldNamesPresent": [],
+          "errorClassificationFieldNamesPresent": [],
+          "semanticOutcomeFieldNamesPresent": [],
+          "finishReasonFieldNamesPresent": []
+        },
+        {
+          "seed": "4243",
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source41/control/seed-4243/taskflow.events.jsonl",
+          "lines": 30,
+          "validJsonEvents": 30,
+          "malformedLines": 0,
+          "eventNameCounts": {
+            "agent_ready": 1,
+            "benchmark_complete": 1,
+            "benchmark_poll": 23,
+            "benchmark_start": 1,
+            "preflight": 1,
+            "set_approval": 1,
+            "set_thinking": 1,
+            "start_agent": 1
+          },
+          "rawOutputFieldNamesPresent": [],
+          "errorClassificationFieldNamesPresent": [],
+          "semanticOutcomeFieldNamesPresent": [],
+          "finishReasonFieldNamesPresent": []
+        },
+        {
+          "seed": "4244",
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source41/control/seed-4244/taskflow.events.jsonl",
+          "lines": 49,
+          "validJsonEvents": 49,
+          "malformedLines": 0,
+          "eventNameCounts": {
+            "agent_ready": 2,
+            "benchmark_complete": 1,
+            "benchmark_poll": 36,
+            "benchmark_start": 2,
+            "preflight": 2,
+            "set_approval": 2,
+            "set_thinking": 2,
+            "start_agent": 2
+          },
+          "rawOutputFieldNamesPresent": [],
+          "errorClassificationFieldNamesPresent": [],
+          "semanticOutcomeFieldNamesPresent": [],
+          "finishReasonFieldNamesPresent": []
+        }
+      ]
+    },
+    "ASTRA_candidate_presence1": {
+      "results": [
+        {
+          "seed": "4242",
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source41/candidate/seed-4242/taskflow.json",
+          "loadErrorType": null,
+          "outcomeCounterFieldOccurrencesOnly": {
+            "toolcalls": 36,
+            "invalidcalls": 3
+          },
+          "nestedCounterValuesNotSummed": true,
+          "rawOutputFieldNamesPresent": [],
+          "errorClassificationFieldNamesPresent": [],
+          "semanticOutcomeFieldNamesPresent": [
+            "expectedcalls",
+            "invalidcalls",
+            "matchedexpectedcalls",
+            "missingexpectedcalls",
+            "nulltestpassed",
+            "pass",
+            "passed",
+            "passedafterrepair",
+            "passes",
+            "passestotal",
+            "qualityscore",
+            "qualitytotal",
+            "qualityvsbaselinepctpoints",
+            "toolcallquality",
+            "unexpectedcalls"
+          ],
+          "finishReasonFieldNamesPresent": [],
+          "keyNameCounts": {
+            "expectedcalls": 3,
+            "invalidcalls": 3,
+            "matchedexpectedcalls": 3,
+            "missingexpectedcalls": 3,
+            "nulltestpassed": 35,
+            "pass": 36,
+            "passed": 39,
+            "passedafterrepair": 36,
+            "passes": 11,
+            "passestotal": 36,
+            "qualityscore": 36,
+            "qualitytotal": 36,
+            "qualityvsbaselinepctpoints": 36,
+            "toolcallquality": 36,
+            "unexpectedcalls": 3
+          }
+        },
+        {
+          "seed": "4243",
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source41/candidate/seed-4243/taskflow.json",
+          "loadErrorType": null,
+          "outcomeCounterFieldOccurrencesOnly": {
+            "toolcalls": 37,
+            "invalidcalls": 4
+          },
+          "nestedCounterValuesNotSummed": true,
+          "rawOutputFieldNamesPresent": [],
+          "errorClassificationFieldNamesPresent": [],
+          "semanticOutcomeFieldNamesPresent": [
+            "expectedcalls",
+            "invalidcalls",
+            "matchedexpectedcalls",
+            "missingexpectedcalls",
+            "nulltestpassed",
+            "pass",
+            "passed",
+            "passedafterrepair",
+            "passes",
+            "passestotal",
+            "qualityscore",
+            "qualitytotal",
+            "qualityvsbaselinepctpoints",
+            "toolcallquality",
+            "unexpectedcalls"
+          ],
+          "finishReasonFieldNamesPresent": [],
+          "keyNameCounts": {
+            "expectedcalls": 4,
+            "invalidcalls": 4,
+            "matchedexpectedcalls": 4,
+            "missingexpectedcalls": 4,
+            "nulltestpassed": 36,
+            "pass": 37,
+            "passed": 52,
+            "passedafterrepair": 37,
+            "passes": 11,
+            "passestotal": 37,
+            "qualityscore": 37,
+            "qualitytotal": 37,
+            "qualityvsbaselinepctpoints": 37,
+            "toolcallquality": 37,
+            "unexpectedcalls": 4
+          }
+        },
+        {
+          "seed": "4244",
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source41/candidate/seed-4244/taskflow.json",
+          "loadErrorType": null,
+          "outcomeCounterFieldOccurrencesOnly": {
+            "toolcalls": 40,
+            "invalidcalls": 7
+          },
+          "nestedCounterValuesNotSummed": true,
+          "rawOutputFieldNamesPresent": [],
+          "errorClassificationFieldNamesPresent": [],
+          "semanticOutcomeFieldNamesPresent": [
+            "expectedcalls",
+            "invalidcalls",
+            "matchedexpectedcalls",
+            "missingexpectedcalls",
+            "nulltestpassed",
+            "pass",
+            "passed",
+            "passedafterrepair",
+            "passes",
+            "passestotal",
+            "qualityscore",
+            "qualitytotal",
+            "qualityvsbaselinepctpoints",
+            "toolcallquality",
+            "unexpectedcalls"
+          ],
+          "finishReasonFieldNamesPresent": [],
+          "keyNameCounts": {
+            "expectedcalls": 7,
+            "invalidcalls": 7,
+            "matchedexpectedcalls": 7,
+            "missingexpectedcalls": 7,
+            "nulltestpassed": 39,
+            "pass": 40,
+            "passed": 91,
+            "passedafterrepair": 40,
+            "passes": 11,
+            "passestotal": 40,
+            "qualityscore": 40,
+            "qualitytotal": 40,
+            "qualityvsbaselinepctpoints": 40,
+            "toolcallquality": 40,
+            "unexpectedcalls": 7
+          }
+        }
+      ],
+      "events": [
+        {
+          "seed": "4242",
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source41/candidate/seed-4242/taskflow.events.jsonl",
+          "lines": 51,
+          "validJsonEvents": 51,
+          "malformedLines": 0,
+          "eventNameCounts": {
+            "agent_ready": 2,
+            "benchmark_complete": 1,
+            "benchmark_poll": 38,
+            "benchmark_start": 2,
+            "preflight": 2,
+            "set_approval": 2,
+            "set_thinking": 2,
+            "start_agent": 2
+          },
+          "rawOutputFieldNamesPresent": [],
+          "errorClassificationFieldNamesPresent": [],
+          "semanticOutcomeFieldNamesPresent": [],
+          "finishReasonFieldNamesPresent": []
+        },
+        {
+          "seed": "4243",
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source41/candidate/seed-4243/taskflow.events.jsonl",
+          "lines": 34,
+          "validJsonEvents": 34,
+          "malformedLines": 0,
+          "eventNameCounts": {
+            "agent_ready": 1,
+            "benchmark_complete": 1,
+            "benchmark_poll": 27,
+            "benchmark_start": 1,
+            "preflight": 1,
+            "set_approval": 1,
+            "set_thinking": 1,
+            "start_agent": 1
+          },
+          "rawOutputFieldNamesPresent": [],
+          "errorClassificationFieldNamesPresent": [],
+          "semanticOutcomeFieldNamesPresent": [],
+          "finishReasonFieldNamesPresent": []
+        },
+        {
+          "seed": "4244",
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source41/candidate/seed-4244/taskflow.events.jsonl",
+          "lines": 24,
+          "validJsonEvents": 24,
+          "malformedLines": 0,
+          "eventNameCounts": {
+            "agent_ready": 1,
+            "benchmark_complete": 1,
+            "benchmark_poll": 17,
+            "benchmark_start": 1,
+            "preflight": 1,
+            "set_approval": 1,
+            "set_thinking": 1,
+            "start_agent": 1
+          },
+          "rawOutputFieldNamesPresent": [],
+          "errorClassificationFieldNamesPresent": [],
+          "semanticOutcomeFieldNamesPresent": [],
+          "finishReasonFieldNamesPresent": []
+        }
+      ]
+    }
+  }
+}

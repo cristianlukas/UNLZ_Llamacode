@@ -1,0 +1,61 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-134",
+  "completedAtUtc": "2026-10-25T14:39:09Z",
+  "sourceRows": [
+    54,
+    55,
+    56,
+    57,
+    58
+  ],
+  "newInboxCount": 63,
+  "addedSequences": [
+    59,
+    60,
+    61,
+    62,
+    63
+  ],
+  "actionablesCount": 30,
+  "offlineAudit": "receipts/q134-q41-offline-tooltrace-audit.json",
+  "sheetRanges": [
+    "IA local!I54:I58",
+    "IA local!K57:K58",
+    "IA local!L54:L58",
+    "Inventario de modelos!A9:R9",
+    "Evaluaciones LlamaCode!A353:J353",
+    "Accionables!A23:N23"
+  ],
+  "dispositions": [
+    {
+      "row": 54,
+      "status": "no_applicable_test",
+      "reason": "Basalt requires Blackwell SM120/CUDA13; host is dual RTX3090 SM86."
+    },
+    {
+      "row": 55,
+      "status": "no_immediate_test",
+      "reason": "Overlaps current Charla components; no defined Rioplatense holdout or comparative result."
+    },
+    {
+      "row": 56,
+      "status": "prior_tests_sufficient",
+      "reason": "Q32/Q34 cover Qwen3.8-27B NInfer for current decision; v0.16.2 no serving change without S3; no response_format used."
+    },
+    {
+      "row": 57,
+      "status": "not_reproducible",
+      "reason": "Model/quant/runtime/config confounded; Q41 logs lack raw/error/finish reason; Basalt incompatible with SM86."
+    },
+    {
+      "row": 58,
+      "status": "blocked_by_external_fixture",
+      "reason": "Needs authorized own/open target and expected behavior/tests/CRC."
+    }
+  ],
+  "invariants": [
+    "No model/server/download/build/GPU",
+    "Do not modify ASTRA/SOL/Flash-Next profiles or weights",
+    "Do not infer superiority from incompatible anecdotal measurements"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "amendment": "Q134-A2",
+  "createdAtUtc": "2026-10-25T14:34:12.309958+00:00",
+  "reason": "The first recursive audit reported nested counter sums that could double count repeated snapshots and treated generic 'response' as a raw tool payload. Neither is a valid causal classification.",
+  "correction": "Preserve attempt01 output; the final extractor reports only counter-field occurrence counts (never sums) and treats only tool-specific/raw/message field names as evidence of a raw tool payload. Generic final 'response' is not classified as tool output.",
+  "supersedesRunnerSha256": "7e5aee0706909916d4cff7bcd546f1687cc8437a6e0a843695e69af69d989054",
+  "runner": {
+    "path": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-134/scripts/audit_q41_tool_calls.py",
+    "sha256": "a7a4cbbc20be444c4f98ef08953eff091a6dbdb390378a83470f95c1c6a76a4c",
+    "command": "python3 artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-134/scripts/audit_q41_tool_calls.py"
+  },
+  "inputs": "Same six existing Q41 TaskFlow result/event pairs preregistered in Q134-A1; no new files, inference, or GPU.",
+  "output": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-134/receipts/q134-q41-offline-tooltrace-audit.json",
+  "expectedUse": "Determine field availability only. If tool-payload/error-classification/finish-reason fields are absent, no attribution or QFN IQ3_S/Basalt inference is allowed."
+}
