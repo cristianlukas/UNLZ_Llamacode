@@ -1,0 +1,13 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-121",
+  "sheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "range": "Evaluaciones LlamaCode!G342:I342",
+  "readbackAtUtc": "2026-10-25T02:49:22.633383+00:00",
+  "matchesAmendment01": true,
+  "wrapVerified": true,
+  "values": [
+    "Intento 01: 7/7 PASS. Amendment 01 añade despacho válido mockeado; suite final prevista: 8 casos.",
+    "8 CPU: acepta y despacha exactamente runner/hash aprobados; bloquea selección inválida antes de cualquier subprocess.",
+    "Intento 01 no inició runner/modelo. Intento 02 todavía no ejecutado; no GPU."
+  ]
+}

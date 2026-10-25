@@ -1,0 +1,14 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-121",
+  "amendment": "01",
+  "createdAtUtc": "2026-10-25T02:49:12.051814+00:00",
+  "reason": "Add explicit happy-path dispatch coverage so both accepted and rejected preflight outcomes are tested before any runner can launch.",
+  "addedCheck": "A valid pinned selection dispatches only the preregistered runner with sys.executable, exact arguments, and runner-parent cwd; subprocess.run is mocked.",
+  "runnerWillExecute": false,
+  "modelOrServerWillStart": false,
+  "gpuWillBeUsed": false,
+  "testsPath": "tests/python/test_evaluation_guard_preflight.py",
+  "testsSha256": "f18a4a72999647d127acab58ad3225c14a481518bab13d4269c3288c9e386408",
+  "plannedTotalChecks": 8,
+  "sheetPreregistration": "Evaluaciones LlamaCode!A342:J342 amendment to be read back before rerun."
+}

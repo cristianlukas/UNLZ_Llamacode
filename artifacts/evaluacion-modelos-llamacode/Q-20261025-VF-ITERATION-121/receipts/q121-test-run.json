@@ -1,0 +1,61 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-121",
+  "status": "PASS",
+  "lockToken": "85657a21-b8a1-43eb-acee-86093877447c",
+  "completedAtUtc": "2026-10-25T02:50:05.247714+00:00",
+  "attempt01": {
+    "checksPassed": 7,
+    "checksTotal": 7,
+    "durationSeconds": 0.009,
+    "preregistered": true,
+    "modelOrRunnerStarted": false
+  },
+  "amendment01": {
+    "preregisteredBeforeAttempt02": true,
+    "sheetReadback": "Evaluaciones LlamaCode!G342:I342"
+  },
+  "attempt02": {
+    "checksPassed": 8,
+    "checksTotal": 8,
+    "durationSeconds": 0.015,
+    "modelOrRunnerStarted": false,
+    "subprocessRunMocked": true
+  },
+  "cliVerifyOnly": {
+    "status": "PASS",
+    "runnerSha256": "24435c412cc791d47687199fb7ab765c7a52aed6b189ac4598eea8dd9d8822b1",
+    "guardSha256": "b4d42302e7d405abd5c59df5aa86bb7de6ef3bb91aef487b49acbebd1d24270e",
+    "guardPreimportedFromPinnedPath": true,
+    "runnerLaunched": false
+  },
+  "gitDiffCheck": "PASS",
+  "resourceUse": {
+    "modelStarted": false,
+    "inferenceServerStarted": false,
+    "gpuUsed": false,
+    "buildRun": false,
+    "networkUsed": false,
+    "childProcessLaunched": false,
+    "artificialMemoryGiB": 0,
+    "productionChanged": false
+  },
+  "hashes": {
+    "tool": {
+      "path": "tools/evaluation_guard_preflight.py",
+      "sha256": "d09f0d092afb6d79b00b877f68d585854301952eb166d91893087e2e278205b2"
+    },
+    "tests": {
+      "path": "tests/python/test_evaluation_guard_preflight.py",
+      "sha256": "f18a4a72999647d127acab58ad3225c14a481518bab13d4269c3288c9e386408"
+    },
+    "runner": {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/scripts/run_context_holdout_attempt05.py",
+      "sha256": "24435c412cc791d47687199fb7ab765c7a52aed6b189ac4598eea8dd9d8822b1"
+    },
+    "guard": {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/scripts/q117_pressure_guard_attempt05.py",
+      "sha256": "b4d42302e7d405abd5c59df5aa86bb7de6ef3bb91aef487b49acbebd1d24270e"
+    }
+  },
+  "decision": "AMD05 preflight wrapper is validated for future Linux evaluations. It must still be explicitly used by a future eligible run; this does not integrate or alter the product or historical Q97/Q100."
+}

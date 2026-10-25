@@ -1,0 +1,49 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-121",
+  "experimentId": "evaluation-guard-selection-preflight",
+  "status": "preregistered-before-tests",
+  "lockToken": "85657a21-b8a1-43eb-acee-86093877447c",
+  "preregisteredAtUtc": "2026-10-25T02:48:15.271662+00:00",
+  "scope": {
+    "cpuOnly": true,
+    "modelStarted": false,
+    "inferenceServerStarted": false,
+    "gpuUsed": false,
+    "buildRun": false,
+    "networkUsed": false,
+    "artificialMemoryGiB": 0,
+    "productBehaviorChanged": false
+  },
+  "hashes": {
+    "preflightTool": {
+      "path": "tools/evaluation_guard_preflight.py",
+      "sha256": "d09f0d092afb6d79b00b877f68d585854301952eb166d91893087e2e278205b2"
+    },
+    "regressionTests": {
+      "path": "tests/python/test_evaluation_guard_preflight.py",
+      "sha256": "95b4ae863e1f8e8d29c260d21bbc475054df1334d9b8d221d1d90967e2eb4672"
+    },
+    "plan": {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-121/PLAN.md",
+      "sha256": "81ab4c9378d124b5c36368c1b25c72824845c6acebc89f46711551233f8140e4"
+    },
+    "runner": {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/scripts/run_context_holdout_attempt05.py",
+      "sha256": "24435c412cc791d47687199fb7ab765c7a52aed6b189ac4598eea8dd9d8822b1"
+    },
+    "guard": {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/scripts/q117_pressure_guard_attempt05.py",
+      "sha256": "b4d42302e7d405abd5c59df5aa86bb7de6ef3bb91aef487b49acbebd1d24270e"
+    }
+  },
+  "expectedChecks": [
+    "exact Q117 runner + AMD05 helper accepted and helper preimported from the pinned path",
+    "changed runner hash rejected",
+    "changed guard hash rejected",
+    "legacy Q97 runner/guard rejected",
+    "runner without exact AMD05 import rejected",
+    "server Popen before monitor.start rejected",
+    "invalid selection rejected before subprocess.run is called"
+  ],
+  "passCriterion": "All 7 CPU regression tests pass; no child runner launches on invalid selection."
+}

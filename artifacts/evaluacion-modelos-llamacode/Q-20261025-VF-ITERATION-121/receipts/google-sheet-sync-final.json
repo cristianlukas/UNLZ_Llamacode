@@ -1,0 +1,58 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-121",
+  "verifiedAtUtc": "2026-10-25T02:52:14Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "ranges": [
+    {
+      "range": "Evaluaciones LlamaCode!A342:J342",
+      "readback": "PASS",
+      "cellCount": 10,
+      "wrapCount": 10,
+      "values": [
+        "Q121 · preflight del guard AMD05 antes del runner",
+        "Cerrada · 8/8 CPU PASS; CLI verify-only PASS",
+        "Wrapper valida SHA-256 del runner/AMD05, import exacto, orden monitor→Popen e importa el guard antes del proceso.",
+        "2026-10-25",
+        "Fijar el guard antes de futuras evaluaciones",
+        "Q120; guard AMD05 Q117/Q118; prioridad modelo Qwen/Flash-Next",
+        "Intento01 7/7; enmienda preregistrada; intento02 8/8, 0,015 s; rechazo no ejecuta hijo; despacho feliz mockeado.",
+        "Próxima evaluación Linux: ejecutar mediante wrapper con ambos hashes preregistrados. Hash cambiado o Q97 bloquean antes del proceso.",
+        "Sin modelo, inference server, GPU, build, red, hijo real o memoria artificial. No cambia producto, Q97/Q100 histórico, ASTRA, SOL ni PeritoSoft.",
+        "Q-20261025-VF-ITERATION-121/RESULTS.md; receipts/q121-test-run.json; receipts/preregistration.json"
+      ]
+    },
+    {
+      "range": "Accionables!A18:N18",
+      "readback": "PASS",
+      "cellCount": 14,
+      "wrapCount": 14,
+      "values": [
+        "Prueba/seguimiento",
+        "q119-memory-pressure-composite-streak",
+        "Alta",
+        "Preflight AMD05 verificado · CPU 8/8; la próxima evaluación elegible debe invocarlo por hash antes de inferencia",
+        "Fijar el guard antes de futuras evaluaciones",
+        "Fiabilidad y protección de benchmarks locales",
+        "Q116/Q117/Q118 · auditoría Q119/Q120/Q121",
+        "Q121 wrapper: SHA-256 de runner/guard; import AMD05; Monitor.start antes de Popen; preimport. Regresiones CPU 8/8, CLI verify-only PASS. Rechazos bloquean antes del proceso; el camino feliz despacha un runner con subprocess.run mockeado.",
+        "Antes de la próxima evaluación model-backed elegible, preregistrar ambos hashes e invocar tools/evaluation_guard_preflight.py con el mismo intérprete Python. Si cambia algún hash, detener antes de inferencia.",
+        "AMD05 conserva el caso ASTRA de RSS alto con headroom; Q97/Q100 históricos mantienen el gap PSI alternante y no se reescriben. No cambiar RAM/swap/contexto ni parar por RSS. No atribuye cierres de Codex.",
+        "Q-20261025-VF-ITERATION-117/receipts/q117-amd05-cpu-tests.json; Q-20261025-VF-ITERATION-118/receipts/q118-amd05-live-trace-replay.json; Q-20261025-VF-ITERATION-121/RESULTS.md; receipts/q121-test-run.json",
+        "Q121 prueba el preflight en runner AMD05 validado, no la siguiente corrida real. Su primer uso model-backed sigue pendiente cuando haya un candidato desbloqueado.",
+        "2026-10-25T02:49:30Z",
+        "2026-10-25T02:49:30Z"
+      ]
+    }
+  ],
+  "formatting": {
+    "allCellsWrap": true,
+    "rowHeightsPx": {
+      "Evaluaciones LlamaCode!342": 110,
+      "Accionables!18": 100
+    }
+  },
+  "limitations": [
+    "Readback confirms the current Sheet cells and cell wrapping. Q121 did not run a model, launch an inference server, or validate the next model-backed invocation.",
+    "The app was not opened for visual inspection in this receipt."
+  ]
+}

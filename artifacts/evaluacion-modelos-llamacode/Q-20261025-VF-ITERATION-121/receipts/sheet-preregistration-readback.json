@@ -1,0 +1,21 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-121",
+  "sheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet": "Evaluaciones LlamaCode",
+  "range": "A342:J342",
+  "readbackAtUtc": "2026-10-25T02:48:37.683357+00:00",
+  "preregistrationVerified": true,
+  "allCellsWrap": true,
+  "values": [
+    "Q121 · preflight del guard AMD05 antes del runner",
+    "Preregistrada · CPU-only; pruebas aún no ejecutadas",
+    "Wrapper comprueba hashes exactos, import AMD05 y orden monitor→Popen; guard se preimporta antes del runner.",
+    "2026-10-25",
+    "Fijar el guard antes de futuras evaluaciones",
+    "Q120; guard AMD05 Q117/Q118; objetivo Qwen/Flash-Next de la cola",
+    "7 regresiones CPU preregistradas contra hashes fijados del runner Q117 y helper AMD05.",
+    "Debe aceptar el par aprobado y bloquear hash modificado, guard Q97, import ausente y Popen antes del monitor.",
+    "Aún no se ejecutó; no iniciar modelo/GPU. Rechazo debe impedir subprocess.run.",
+    "Q-20261025-VF-ITERATION-121/PLAN.md; receipts/preregistration.json"
+  ]
+}
