@@ -1,0 +1,8 @@
+FORMULARIO DE ENSAYO DOCUMENTAL
+Referencia: OCR-PDF-5231
+
+Laboratorio: UNLZ-LAB-07
+
+Valido hasta: 25/10/2026
+
+Muestra sintetica para validar OCR local.

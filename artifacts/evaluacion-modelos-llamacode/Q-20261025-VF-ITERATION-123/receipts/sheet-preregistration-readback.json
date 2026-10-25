@@ -1,0 +1,15 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-123",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "tab": "Evaluaciones LlamaCode",
+  "range": "A344:J344",
+  "preregisteredBeforeExecution": true,
+  "rowStatus": "Activa · preregistrada · CPU-only",
+  "runnerSha256": "6c35907a63bcae9f9d829600ac4db0e16d2c2f52bbd5761b21b1212799e1aee1",
+  "readbackCells": 10,
+  "wrappedCells": 10,
+  "dataValidation": "none",
+  "rowHeightPx": 160,
+  "adjacentQ122RowPreserved": true,
+  "visualVerification": "API readback confirmed values and WRAP. Browser is signed out; no rendered native view available."
+}

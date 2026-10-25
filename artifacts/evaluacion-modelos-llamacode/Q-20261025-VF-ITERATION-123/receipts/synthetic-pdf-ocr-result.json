@@ -1,0 +1,41 @@
+{
+  "status": "PASS",
+  "pageCount": 1,
+  "pdfHasSelectableText": false,
+  "pdfTextChars": 0,
+  "expectedSentinels": {
+    "reference": "OCRPDF5231",
+    "lab_id": "UNLZLAB07",
+    "date": "25102026"
+  },
+  "matchedSentinels": {
+    "reference": true,
+    "lab_id": true,
+    "date": true
+  },
+  "ocrSeconds": 0.343,
+  "tesseractVersion": "tesseract 5.3.4",
+  "languages": [
+    "spa",
+    "eng"
+  ],
+  "psm": 6,
+  "sha256": {
+    "synthetic-scan.jpg": "91860173957a7924ba10431893edd0cb0ea06d8697c47d302139fd63268f8d32",
+    "synthetic-scan.pdf": "95685e3181d80437d639fa70bb20a58885d9ed2eef3cbadb151572bbb46378d8",
+    "rendered-page.png": "a906529e9665ebfaaf75c21dd80f23ada82f329425f7ea43ef4d045b2a85e215",
+    "ocr.txt": "991d6d6285b7dfba8ea9b193ed37c375410512496ac1208b907c32309ee5c397"
+  },
+  "ocrText": "FORMULARIO DE ENSAYO DOCUMENTAL\nReferencia: OCR-PDF-5231\n\nLaboratorio: UNLZ-LAB-07\n\nValido hasta: 25/10/2026\n\nMuestra sintetica para validar OCR local.\n",
+  "stderr": {
+    "pdftoppm": "",
+    "tesseract": ""
+  },
+  "taskId": "Q-20261025-VF-ITERATION-123",
+  "syntheticOnly": true,
+  "applicationIntegration": "NOT_TESTED; DocumentExtractor has no scanned-PDF OCR fallback",
+  "runnerSha256": "6c35907a63bcae9f9d829600ac4db0e16d2c2f52bbd5761b21b1212799e1aee1",
+  "pdfTextExtractCommand": "pdftotext synthetic-scan.pdf -",
+  "renderCommand": "pdftoppm -f 1 -l 1 -singlefile -r 220 -png synthetic-scan.pdf rendered-page",
+  "ocrCommand": "tesseract rendered-page.png stdout -l spa+eng --psm 6"
+}

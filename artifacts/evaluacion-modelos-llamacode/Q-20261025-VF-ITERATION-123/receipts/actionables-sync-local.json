@@ -1,0 +1,11 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-123",
+  "updatedAtUtc": "2026-10-25T03:08:49Z",
+  "path": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/actionables.json",
+  "backup": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/backups/actionables.q123-prechange-2.20261025T030849Z.json",
+  "sha256Before": "9c4047333317f792872670c98dcec90c97bbbb66dcc9d08a912c19324fbbc304",
+  "sha256After": "850207907eac1cd833e486cb7ce0d2a6f53cc46720280ecbc471bb783b36045d",
+  "itemId": "vf-ocr-unlimited-20261019",
+  "status": "Evaluado · PDF sintético raster-only 3/3 PASS; DocumentExtractor sin fallback OCR; holdout real/autorizado pendiente",
+  "jsonParse": "PASS"
+}

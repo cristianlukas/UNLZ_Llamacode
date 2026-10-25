@@ -1,0 +1,15 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-123",
+  "status": "PASS",
+  "completedAtUtc": "2026-10-25T03:07:25Z",
+  "modelStarted": false,
+  "inferenceServerStarted": false,
+  "gpuUsed": false,
+  "networkUsed": false,
+  "userDocumentsUsed": false,
+  "productiveCodeChanged": false,
+  "productiveProfilesOrModelsChanged": false,
+  "memoryOrSwapChanged": false,
+  "test": "synthetic one-page image-only PDF; Poppler render + Tesseract spa+eng",
+  "result": "3/3 sentinels recovered; 0.343 s"
+}

@@ -1,0 +1,33 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-123",
+  "status": "PASS",
+  "verifiedAtUtc": "2026-10-25T03:08:49Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "ranges": [
+    {
+      "tab": "Evaluaciones LlamaCode",
+      "sheetId": 1945218181,
+      "range": "A344:J344",
+      "status": "Completa · OCR sintético de PDF 3/3 PASS; OCR integrado y holdout real siguen pendientes"
+    },
+    {
+      "tab": "Accionables",
+      "sheetId": 1393124532,
+      "range": "A17:N17",
+      "id": "vf-ocr-unlimited-20261019",
+      "status": "Evaluado · PDF sintético raster-only 3/3 PASS; DocumentExtractor sin fallback OCR; holdout real/autorizado pendiente"
+    }
+  ],
+  "readback": {
+    "evaluationCells": 10,
+    "actionableCells": 14,
+    "allEditedCellsWrapped": true,
+    "dataValidation": "none on edited cells",
+    "evaluationRowHeightPx": 160,
+    "preservedAdjacentQ122Row": true,
+    "explicitlyNotTested": "Baidu Unlimited-OCR model"
+  },
+  "visualVerification": "API readback confirmed values and WRAP; browser signed out, so no authenticated rendered view was available.",
+  "preservedUnrelatedCells": true
+}

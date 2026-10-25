@@ -1,0 +1,48 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-123",
+  "status": "preregistered",
+  "preregisteredAtUtc": "2026-10-25T03:05:43Z",
+  "lockToken": "002afa31-c885-49ba-99b1-e2d24bcb8066",
+  "hypothesis": "The installed Poppler+Tesseract Spanish/English CPU stack can recover three synthetic sentinels from a one-page image-only PDF after rasterization.",
+  "scope": "CPU-only. No user documents, model inference, GPU, network, build, production OCR integration, model/profile/RAM/swap changes.",
+  "environment": {
+    "tesseract": "5.3.4",
+    "languages": [
+      "eng",
+      "osd",
+      "spa"
+    ],
+    "pdftoppm": "26.05.0",
+    "pdftotext": "available",
+    "Pillow": true,
+    "font": "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+  },
+  "fixture": {
+    "page": "A4 1654x2339; synthetic Spanish text; 0.25 degree rotation; JPEG quality 88 embedded as image in one-page PDF",
+    "sentinels": [
+      "OCR-PDF-5231",
+      "UNLZ-LAB-07",
+      "25/10/2026"
+    ],
+    "mustBeImageOnly": true
+  },
+  "procedure": [
+    "Generate synthetic scan PDF with Pillow.",
+    "Require pdfinfo to report one page and pdftotext to return no selectable text.",
+    "Rasterize page 1 at 220 dpi using pdftoppm.",
+    "Run tesseract -l spa+eng --psm 6 on raster image.",
+    "Require all three punctuation-normalized sentinels; save text, outputs, timings, hashes and result JSON."
+  ],
+  "acceptance": "PASS only if one page, no selectable PDF text, successful rasterization, and all three sentinels recovered. A PASS proves only dependency/fixture viability; real-document and LlamaCode-integrated extraction remain unvalidated.",
+  "command": "python3 artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-123/scripts.py artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-123/runs/synthetic-scan-01",
+  "runner": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-123/scripts.py",
+  "runnerSha256": "6c35907a63bcae9f9d829600ac4db0e16d2c2f52bbd5761b21b1212799e1aee1",
+  "plan": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-123/PLAN.md",
+  "expectedOutputs": [
+    "runs/synthetic-scan-01/synthetic-scan.jpg",
+    "runs/synthetic-scan-01/synthetic-scan.pdf",
+    "runs/synthetic-scan-01/rendered-page.png",
+    "runs/synthetic-scan-01/ocr.txt",
+    "runs/synthetic-scan-01/result.json"
+  ]
+}
