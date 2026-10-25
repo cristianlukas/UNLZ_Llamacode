@@ -1,0 +1,21 @@
+{
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet": "Evaluaciones LlamaCode",
+  "range": "A340:J340",
+  "readbackAtUtc": "2026-10-25T02:16:28.281473+00:00",
+  "status": "verified_exact_values_and_wrap",
+  "values": [
+    "Q119 · memory guard review + OCR sidecar smoke",
+    "Prerregistro · CPU/QtTest",
+    "Prerregistrado · sin inferencia ni GPU",
+    "2026-10-25",
+    "S49 P5 · sidecar Markdown sintético → DataLabStore",
+    "Q49 P4 form fixture SHA-256 e5b6b53eb0a14d67df5e954c1428df77c143d469ba100fd54e4accdabaafc3ae; detector audit Q118 receipts 12/12",
+    "Gate: extrae 1 sidecar, prompt conserva IDs, fake loopback devuelve JSON válido, estado valid y job borrado",
+    "Detector: ASTRA 1M Q118 real-trace replay 12/12, RSS 51.306 GiB con MemAvailable 58.698 GiB, sin stop/OOM/swap; SOL Q34 acabó sin OOM pero sin PSI continua. AMD05 candidato, no integrado. Smoke OCR no prueba OCR automático de PDF ni documentos reales.",
+    "Q119/PLAN.md; receipts/q119-preregistration.json; receipts/q119-memory-detector-review.json; tests/test_datalab.cpp SHA-256 776633a064ac05ddb4ed3a34197277a558ca3292408f41777205eb8d272e20bf; tests/test_datalab.h SHA-256 f51fb983397c11d8ccb22bf6ae977d609f0150120b7dbf9f72c090408e298d97",
+    "Q119 active under WORK_QUEUE.lock token 46289c40-dc45-4f14-aa9d-6680f21d7684; test gate ./scripts/tests-linux.sh Release"
+  ],
+  "adjacentPreserved": "A339:J339 remains Q118 unchanged",
+  "format": "All ten target cells report wrapStrategy=WRAP"
+}

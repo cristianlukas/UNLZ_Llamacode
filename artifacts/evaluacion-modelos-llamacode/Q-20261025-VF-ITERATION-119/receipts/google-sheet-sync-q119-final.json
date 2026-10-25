@@ -1,0 +1,34 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-119",
+  "recordedAtUtc": "2026-10-25T02:35:02Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "writes": [
+    {
+      "range": "Evaluaciones LlamaCode!A340:J340",
+      "rowTitle": "Q119 · auditoría del detector + smoke OCR sidecar",
+      "status": "Cerrada · CPU/QtTest",
+      "readback": "Exact values confirmed; all 10 cells WRAP; adjacent Q118 row 339 unchanged."
+    },
+    {
+      "range": "Accionables!A17:N17",
+      "id": "vf-ocr-unlimited-20261019",
+      "status": "Evaluado · sidecar sintético P4 PASS; OCR automático de PDF y validación real/autorizada pendientes",
+      "readback": "Exact values confirmed; all 14 cells WRAP; adjacent Q105 row 16 unchanged."
+    },
+    {
+      "range": "Accionables!A18:N18",
+      "id": "q119-memory-pressure-composite-streak",
+      "status": "Pendiente · candidato de supervisor; integración y fixtures combinados faltan",
+      "readback": "Exact values confirmed; all 14 cells WRAP. New actionable tracks Q116/Q119 active-guard gap without changing production thresholds."
+    }
+  ],
+  "decisionSummary": "The Q49 P4 Markdown sidecar DataLab smoke is complete; action remains isolated pending opt-in plus authorized real-document holdout. Memory detector evidence and known Q116 alternating-PSI false-negative were recorded without changing thresholds or production.",
+  "sourceArtifacts": {
+    "results": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-119/RESULTS.md",
+    "testRun": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-119/receipts/q119-test-run.json",
+    "memoryDetectorReview": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-119/receipts/q119-memory-detector-review.json",
+    "localActionablesBackup": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/backups/actionables.q119-prechange.20261025T023414Z.json",
+    "localActionablesMemoryGapBackup": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/backups/actionables.q119-memory-gap-prechange.20261025T023600Z.json"
+  }
+}

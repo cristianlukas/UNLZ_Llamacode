@@ -1,0 +1,53 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-119",
+  "review": "user-requested memory-pressure-detector audit",
+  "status": "reviewed-read-only",
+  "scope": "No new inference, GPU, server, artificial memory allocation, threshold change, or product integration.",
+  "findings": {
+    "astra_default_1m": "Q118 replayed 707 real AMD05 samples: RSS max 51.305591583 GiB; MemAvailable min 58.697692871 GiB; host PSI max 53.61%; no guard stop, OOM, or worker swap.",
+    "sol": "Q34 TP=2 dual RTX 3090 completed without OOM; continuous PSI was not recorded, so it cannot calibrate a temporal threshold.",
+    "rss": "The AMD05 guard does not stop solely on RSS. It has immediate MemAvailable <32 GiB and OOM stops; its candidate severe-pressure stop requires global severe PSI plus MemAvailable <48 GiB for 15 consecutive samples. Worker cgroup PSI is diagnostic.",
+    "integration": "AMD05 is candidate-only and not integrated into Q97/Q100 or production; Q97/Q100 are harness-level guards that use host MemAvailable/PSI/OOM, not RSS alone.",
+    "known_gap": "Q116 found that the active Q97/Q100 helper keeps independent streak counters for severe PSI full and some. If full>=60% and some>=80% alternate while the OR condition is true on every sample, the 15-sample stop does not fire. Q116-A2 composite-streak helper passed 5/5 but is candidate-only, not integrated.",
+    "limits": "The successful ASTRA trace did not exercise the severe-PSI-plus-low-headroom stop. SOL has no continuous PSI trace. This review does not explain Codex/GUI crashes and does not prove behavior under every low-headroom/severe-pressure profile."
+  },
+  "existing_tests": {
+    "q117_amd05_cpu": "21/21",
+    "rerun": "not repeated; exact receipt/hash replay already exists",
+    "q118_astra_replay": "12/12"
+  },
+  "sources": {
+    "q118_results": {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-118/RESULTS.md",
+      "sha256": "ba617b0156a72539ec08f8c1c24e18da4dfdd190eb2dfcb5860eb9e302197d98"
+    },
+    "q118_replay": {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-118/receipts/q118-amd05-live-trace-replay.json",
+      "sha256": "68769dca479da3d40e48873a77fefb3852f449fcc4f700b56de30a414de0e160"
+    },
+    "amd05_guard": {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/scripts/q117_pressure_guard_attempt05.py",
+      "sha256": "b4d42302e7d405abd5c59df5aa86bb7de6ef3bb91aef487b49acbebd1d24270e"
+    },
+    "amd05_runner": {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/scripts/run_context_holdout_attempt05.py",
+      "sha256": "24435c412cc791d47687199fb7ab765c7a52aed6b189ac4598eea8dd9d8822b1"
+    },
+    "amd05_cpu_result": {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/receipts/q117-amd05-cpu-tests.json",
+      "sha256": "11bac5f56b236147926f71a752d4f554c6caa214bddb2c4e3e6471b13d111143"
+    },
+    "q111_summary": {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-111/receipts/q111-final-summary.json",
+      "sha256": "e6cd6642248b271fdd940d8797b1806f3d20b5bd54c393fef0018049cddd22a0"
+    },
+    "q116_active_guard_gap": {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-116/RESULTS.md",
+      "sha256": "5c416a93d7078048f89f2ec4893a5243628999853f4ad6df6b2142ee86906d65"
+    },
+    "q116_composite_candidate": {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-116/receipts/q116-composite-candidate.json",
+      "sha256": "0bba9cc1e8d4a471050b473cf47fc5befbfb2a642868e306f58a3107b5750f6d"
+    }
+  }
+}

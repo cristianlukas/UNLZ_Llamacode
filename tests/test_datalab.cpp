@@ -1,4 +1,5 @@
 #include <QtTest>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QStandardPaths>
@@ -20,8 +21,10 @@ class DataLabFakeLlm : public QTcpServer
 public:
     enum class Mode { Valid, RetryThenValid, InvalidThenValid };
 
-    explicit DataLabFakeLlm(Mode mode = Mode::Valid, QObject *parent = nullptr)
-        : QTcpServer(parent), m_mode(mode)
+    explicit DataLabFakeLlm(Mode mode = Mode::Valid,
+                            QByteArray validContent = R"({"cliente":"ACME"})",
+                            QObject *parent = nullptr)
+        : QTcpServer(parent), m_mode(mode), m_validContent(validContent)
     {
         connect(this, &QTcpServer::newConnection, this, [this]() {
             QTcpSocket *socket = nextPendingConnection();
@@ -29,7 +32,15 @@ public:
                 socket->readAll();
                 const int request = ++m_requests;
                 QByteArray status = "HTTP/1.1 200 OK";
-                QByteArray body = R"({"choices":[{"message":{"content":"{\"cliente\":\"ACME\"}"}}]})";
+                QJsonObject message;
+                message.insert(QStringLiteral("content"), QString::fromUtf8(m_validContent));
+                QJsonObject choice;
+                choice.insert(QStringLiteral("message"), message);
+                QJsonArray choices;
+                choices.append(choice);
+                QJsonObject responseObject;
+                responseObject.insert(QStringLiteral("choices"), choices);
+                QByteArray body = QJsonDocument(responseObject).toJson(QJsonDocument::Compact);
                 if (m_mode == Mode::RetryThenValid && request == 1) {
                     status = "HTTP/1.1 500 Internal Server Error";
                     body = R"({"error":"temporary"})";
@@ -48,6 +59,7 @@ public:
 
 private:
     Mode m_mode;
+    QByteArray m_validContent;
     int m_requests = 0;
 };
 
@@ -185,6 +197,71 @@ void DataLabTests::headlessFakeLlmExtraction()
     const QVariantMap savedDoc = store.job(jobId).value("documents").toList().first().toMap();
     QVERIFY(savedDoc.value("validation").toMap().value("evidence").toMap()
                 .value("cliente").toMap().value("matched").toBool());
+    QVERIFY(store.deleteJob(jobId));
+}
+
+void DataLabTests::ocrMarkdownSidecarFlowsThroughDataLab()
+{
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+
+    QString ocrText = QStringLiteral(
+        "SYNTHETIC HOLDOUT FORM\n"
+        "Reference: FORM-8821-Z\n"
+        "Customer: LAB-CEDAR-07\n"
+        "Date: 2026-10-21\n"
+        "Amount: 7,905.40\n");
+    const QString fixturePath = qEnvironmentVariable("LLAMACODE_OCR_SIDECAR_FIXTURE");
+    if (!fixturePath.isEmpty()) {
+        QFile fixture(fixturePath);
+        QVERIFY2(fixture.open(QIODevice::ReadOnly), qPrintable(fixture.errorString()));
+        ocrText = QString::fromUtf8(fixture.readAll());
+    }
+    QVERIFY(ocrText.contains(QStringLiteral("FORM-8821-Z")));
+    QVERIFY(ocrText.contains(QStringLiteral("LAB-CEDAR-07")));
+
+    QFile source(dir.filePath(QStringLiteral("ocr-sidecar.md")));
+    QVERIFY(source.open(QIODevice::WriteOnly));
+    QCOMPARE(source.write(ocrText.toUtf8()), ocrText.toUtf8().size());
+    source.close();
+
+    const QVariantMap schema{{"fields", QVariantMap{
+        {"reference", QVariantMap{{"type", "string"}, {"required", true}}},
+        {"customer_id", QVariantMap{{"type", "string"}, {"required", true}}}
+    }}};
+    const QString schemaJson = QString::fromUtf8(QJsonDocument(QJsonObject::fromVariantMap(schema)).toJson());
+    DataLabStore store;
+    const QString jobId = store.createJob("OCR sidecar", schemaJson, {source.fileName()});
+    QVERIFY(!jobId.isEmpty());
+
+    const QVariantMap processed = store.processJob(jobId);
+    QVERIFY(processed.value("ok").toBool());
+    QCOMPARE(processed.value("extracted").toInt(), 1);
+    const QVariantMap document = store.job(jobId).value("documents").toList().first().toMap();
+    QCOMPARE(document.value("status").toString(), QStringLiteral("extracted"));
+    QVERIFY(document.value("text").toString().contains(QStringLiteral("LAB-CEDAR-07")));
+
+    const QString documentId = document.value("id").toString();
+    const QString prompt = store.extractionPrompt(jobId, documentId);
+    QVERIFY(prompt.contains(QStringLiteral("FORM-8821-Z")));
+    QVERIFY(prompt.contains(QStringLiteral("LAB-CEDAR-07")));
+
+    DataLabFakeLlm server(DataLabFakeLlm::Mode::Valid,
+        R"({"reference":"FORM-8821-Z","customer_id":"LAB-CEDAR-07"})");
+    QVERIFY(server.listen(QHostAddress::LocalHost));
+    QSignalSpy finished(&store, &DataLabStore::extractionFinished);
+    store.runExtraction(jobId, documentId,
+                        QStringLiteral("http://127.0.0.1:%1").arg(server.serverPort()),
+                        QStringLiteral("fake"));
+    QVERIFY(finished.wait(3000));
+    QCOMPARE(finished.at(0).at(2).toBool(), true);
+    QCOMPARE(server.requests(), 1);
+
+    const QVariantMap validated = store.job(jobId).value("documents").toList().first().toMap();
+    QCOMPARE(validated.value("status").toString(), QStringLiteral("valid"));
+    const QVariantMap record = validated.value("validation").toMap().value("record").toMap();
+    QCOMPARE(record.value("reference").toString(), QStringLiteral("FORM-8821-Z"));
+    QCOMPARE(record.value("customer_id").toString(), QStringLiteral("LAB-CEDAR-07"));
     QVERIFY(store.deleteJob(jobId));
 }
 

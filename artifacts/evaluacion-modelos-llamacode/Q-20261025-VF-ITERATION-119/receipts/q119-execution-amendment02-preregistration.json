@@ -1,0 +1,25 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-119",
+  "amendment": "execution-retry-02",
+  "recordedAtUtc": "2026-10-25T02:19:09.909207+00:00",
+  "status": "preregistered-before-valid-retry",
+  "previousDeviation": {
+    "command": "./scripts/tests-linux.sh --help",
+    "actualBehavior": "script has no help mode; treated --help as Release configuration and started cmake build using default 32 jobs",
+    "disposition": "terminated only that invocation process tree before any test started; post-check found zero remaining build children",
+    "inferenceServerStarted": false,
+    "gpuUsed": false,
+    "memoryLimitApplied": false,
+    "peakRssMeasured": false
+  },
+  "retry": {
+    "command": "LC_JOBS=1 ./scripts/tests-linux.sh Release",
+    "parallelJobs": 1,
+    "expectedGate": "full Linux Release CTest suite after successful compile",
+    "inferenceServer": false,
+    "gpu": false,
+    "artificialMemoryAllocation": false
+  },
+  "testSourceSha256": "c4778e03fa0cf696a3ee187c768bf01f1194225047cf8e2d9de2a496c3ea9901",
+  "testHeaderSha256": "f51fb983397c11d8ccb22bf6ae977d609f0150120b7dbf9f72c090408e298d97"
+}

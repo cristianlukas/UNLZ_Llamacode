@@ -1,0 +1,25 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-119",
+  "amendment": "build-retry-01",
+  "recordedAtUtc": "2026-10-25T02:17:55.153315+00:00",
+  "status": "preregistered-before-retry",
+  "priorAttempt": {
+    "command": "LC_JOBS=1 ./scripts/tests-linux.sh Release",
+    "result": "CMake configure and MOC succeeded; compilation failed before any test started",
+    "error": "QJsonObject response conflicted with QByteArray response; QTcpSocket::write received wrong type"
+  },
+  "change": "Renamed only QJsonObject local to responseObject; response body and test logic unchanged.",
+  "sourceHashes": {
+    "tests/test_datalab.cpp": "c4778e03fa0cf696a3ee187c768bf01f1194225047cf8e2d9de2a496c3ea9901",
+    "tests/test_datalab.h": "f51fb983397c11d8ccb22bf6ae977d609f0150120b7dbf9f72c090408e298d97",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-119/inputs/p4-form-sidecar.md": "e5b6b53eb0a14d67df5e954c1428df77c143d469ba100fd54e4accdabaafc3ae"
+  },
+  "retry": {
+    "command": "LC_JOBS=1 ./scripts/tests-linux.sh Release",
+    "parallelJobs": 1,
+    "inferenceServer": false,
+    "gpu": false,
+    "modelWeightsLoaded": false,
+    "artificialMemoryAllocation": false
+  }
+}

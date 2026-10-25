@@ -1,0 +1,14 @@
+{
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet": "Evaluaciones LlamaCode",
+  "range": "A340:J340",
+  "readbackRange": "C340:J340",
+  "readbackAtUtc": "2026-10-25T02:18:12.055333+00:00",
+  "status": "verified_amendment01_before_retry",
+  "cells": {
+    "C340": "Amendment01 preregistrada · retry serial pendiente; primer build falló antes de tests",
+    "I340": "Q119/PLAN.md; receipts/q119-preregistration.json; receipts/q119-memory-detector-review.json; receipts/q119-build-amendment01-preregistration.json; test_datalab.cpp SHA-256 c4778e03fa0cf696a3ee187c768bf01f1194225047cf8e2d9de2a496c3ea9901; test_datalab.h SHA-256 f51fb983397c11d8ccb22bf6ae977d609f0150120b7dbf9f72c090408e298d97",
+    "J340": "Build attempt01 failed during compilation before tests due to duplicate local name; renamed JSON object only. Retry preregistered: LC_JOBS=1 ./scripts/tests-linux.sh Release. Q119 lock 46289c40-dc45-4f14-aa9d-6680f21d7684."
+  },
+  "format": "A340:J340 all wrapStrategy=WRAP"
+}

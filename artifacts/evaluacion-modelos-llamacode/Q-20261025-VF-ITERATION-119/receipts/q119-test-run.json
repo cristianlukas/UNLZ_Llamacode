@@ -1,0 +1,55 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-119",
+  "status": "completed-with-limitations",
+  "recordedAtUtc": "2026-10-25T02:32:42Z",
+  "lockToken": "46289c40-dc45-4f14-aa9d-6680f21d7684",
+  "tests": {
+    "linuxReleaseGate": {
+      "command": "LC_JOBS=1 ./scripts/tests-linux.sh Release",
+      "result": "pass",
+      "passed": 95,
+      "failed": 0,
+      "note": "The new test used its inline synthetic fallback because LLAMACODE_OCR_SIDECAR_FIXTURE was not set. This run is not counted as validation of Q49 fixture provenance."
+    },
+    "exactP4FixtureSmoke": {
+      "command": "LLAMACODE_OCR_SIDECAR_FIXTURE='/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-119/inputs/p4-form-sidecar.md' QT_QPA_PLATFORM=offscreen QT_ASSUME_STDERR_HAS_CONSOLE=1 ctest --test-dir /home/cristian/.cache/llamacode/build_tests_linux --output-on-failure --parallel 1 -R '^test_datalab$'",
+      "result": "pass",
+      "passed": 1,
+      "failed": 0,
+      "elapsedSeconds": 0.34,
+      "fixtureSha256": "e5b6b53eb0a14d67df5e954c1428df77c143d469ba100fd54e4accdabaafc3ae",
+      "testSourceSha256": {
+        "tests/test_datalab.cpp": "c4778e03fa0cf696a3ee187c768bf01f1194225047cf8e2d9de2a496c3ea9901",
+        "tests/test_datalab.h": "f51fb983397c11d8ccb22bf6ae977d609f0150120b7dbf9f72c090408e298d97"
+      }
+    }
+  },
+  "scope": {
+    "modelInference": false,
+    "inferenceServerStarted": false,
+    "gpuWorkloadStarted": false,
+    "artcraftPreserved": true,
+    "artcraftReportedGpuMemoryMiB": 207,
+    "artificialMemoryAllocation": false,
+    "productCodeChanged": false,
+    "testedChange": "QtTest fake loopback flow for an exact synthetic OCR Markdown sidecar through DataLab extraction and schema validation"
+  },
+  "postflight": {
+    "observedAtUtc": "2026-10-25T02:32:42Z",
+    "memAvailableGiB": 110,
+    "swapUsedGiB": 3.6,
+    "inferenceBuildOrTestProcessesRemaining": false,
+    "inferenceListenersRemaining": false,
+    "artcraftProcessPreserved": true
+  },
+  "executionIncidents": [
+    "Initial compile attempt failed before tests because a fixture identifier was duplicated; a test-only rename fixed it.",
+    "An accidental tests-linux.sh --help invocation started a 32-job build because the script has no help mode. Its exact process tree was stopped before tests; no inference/GPU workload or artificial RAM allocation occurred. Peak RSS was not measured for that short attempt.",
+    "The full Release gate was rerun serially (LC_JOBS=1); the exact fixture smoke was then run separately with its source path set."
+  ],
+  "limitations": [
+    "Does not test automatic OCR of image-only PDFs or real/legal documents.",
+    "Does not change production extraction, models, profiles, memory thresholds, swap, or Codex GUI behavior.",
+    "The memory-pressure audit confirms high RSS alone did not stop the cited successful ASTRA trace. It does not validate every severe-pressure condition or explain Codex crashes; Q116's alternating PSI false-negative in the active Q97/Q100 per-metric streak logic remains known, and the composite-streak helper is not integrated."
+  ]
+}

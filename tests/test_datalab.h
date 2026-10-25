@@ -13,6 +13,7 @@ private slots:
     void modelResponseParsing();
     void routingAndArbitration();
     void headlessFakeLlmExtraction();
+    void ocrMarkdownSidecarFlowsThroughDataLab();
     void headlessRetryAndRepair();
     void benchmarkScoring();
 };

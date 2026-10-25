@@ -1,0 +1,36 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-119",
+  "experimentId": "S49-P5-DATALAB-OCR-SIDECAR-SMOKE",
+  "recordedAtUtc": "2026-10-25T02:13:35.751232+00:00",
+  "lockToken": "46289c40-dc45-4f14-aa9d-6680f21d7684",
+  "scope": "CPU/QtTest only; existing synthetic Q49 P4 parser output is consumed through a temporary Markdown sidecar; no model inference, GPU, external server, user files or production edits.",
+  "source": {
+    "path": "/media/cristian/Disco local/LlamaCode-eval/source49-unlimited-ocr/work/p4/unlimitedocr-p4-parser-attempt01.json",
+    "sha256": "a8e689262407335d974650fe3d4b465b7b3271405238cfc00529ae926797fb7c",
+    "sourceReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-49-p4-final-result.json"
+  },
+  "fixture": {
+    "path": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-119/inputs/p4-form-sidecar.md",
+    "sha256": "e5b6b53eb0a14d67df5e954c1428df77c143d469ba100fd54e4accdabaafc3ae",
+    "containsRequiredSyntheticIds": true
+  },
+  "testSources": {
+    "tests/test_datalab.cpp": "776633a064ac05ddb4ed3a34197277a558ca3292408f41777205eb8d272e20bf",
+    "tests/test_datalab.h": "f51fb983397c11d8ccb22bf6ae977d609f0150120b7dbf9f72c090408e298d97"
+  },
+  "testName": "ocrMarkdownSidecarFlowsThroughDataLab",
+  "gate": [
+    "DataLabStore extracts one .md sidecar",
+    "extractionPrompt carries both synthetic identifiers and schema",
+    "loopback fake model returns exact schema record",
+    "DataLab status becomes valid",
+    "temporary job is deleted"
+  ],
+  "buildGate": "./scripts/tests-linux.sh Release",
+  "limitations": [
+    "Does not test automatic OCR of image-only PDF in DocumentExtractor",
+    "Does not establish real-document/legal readiness",
+    "No model quality regrade"
+  ],
+  "status": "preregistered-before-build-or-test"
+}

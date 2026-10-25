@@ -1,0 +1,19 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-119",
+  "amendment": "fixture-provenance-03",
+  "recordedAtUtc": "2026-10-25T02:30:07.690464+00:00",
+  "status": "preregistered-before-fixture-specific-test",
+  "observation": "Linux Release suite passed 95/95, but LLAMACODE_OCR_SIDECAR_FIXTURE was not set; test used the inline synthetic fallback. Do not count that run as validation of Q49 P4 artifact provenance.",
+  "fixture": {
+    "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-119/inputs/p4-form-sidecar.md",
+    "sha256": "e5b6b53eb0a14d67df5e954c1428df77c143d469ba100fd54e4accdabaafc3ae"
+  },
+  "testSources": {
+    "tests/test_datalab.cpp": "c4778e03fa0cf696a3ee187c768bf01f1194225047cf8e2d9de2a496c3ea9901",
+    "tests/test_datalab.h": "f51fb983397c11d8ccb22bf6ae977d609f0150120b7dbf9f72c090408e298d97"
+  },
+  "retry": {
+    "command": "LLAMACODE_OCR_SIDECAR_FIXTURE='/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-119/inputs/p4-form-sidecar.md' QT_QPA_PLATFORM=offscreen QT_ASSUME_STDERR_HAS_CONSOLE=1 ctest --test-dir /home/cristian/.cache/llamacode/build_tests_linux --output-on-failure --parallel 1 -R '^test_datalab$'",
+    "scope": "test_datalab only; no rebuild; no inference/GPU; reads only the synthetic P4 fixture"
+  }
+}
