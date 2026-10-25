@@ -1,0 +1,13 @@
+{
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet": "Accionables",
+  "ranges": [
+    "D2",
+    "I2:K2",
+    "M2:N2"
+  ],
+  "readback": "PASS",
+  "valuesMatch": true,
+  "wrapStrategy": "WRAP",
+  "result": "Q126 evidence appended; existing P0 action remains partially implemented; candidate AMD05 is not represented as integrated."
+}

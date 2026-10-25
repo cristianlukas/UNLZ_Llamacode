@@ -1,0 +1,17 @@
+{
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet": "Evaluaciones LlamaCode",
+  "range": "A347:J347",
+  "readback": "PASS",
+  "fields": [
+    "userEnteredValue",
+    "effectiveValue",
+    "formattedValue",
+    "dataValidation",
+    "userEnteredFormat"
+  ],
+  "allTenValuesMatched": true,
+  "wrapStrategy": "WRAP",
+  "existingRow346Q125Preserved": true,
+  "row348BlankPreserved": true
+}

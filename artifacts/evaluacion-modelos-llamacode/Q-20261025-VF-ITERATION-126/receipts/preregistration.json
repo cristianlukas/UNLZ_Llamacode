@@ -1,0 +1,24 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-126",
+  "status": "completed",
+  "createdAt": "2026-10-25T04:52:19Z",
+  "experiment": "AMD05 alternating PSI under low-headroom boundary regression",
+  "scope": "CPU-only deterministic fixtures; no model, inference server, CUDA, GPU, artificial memory pressure, build, or production changes",
+  "sourcePins": {
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/scripts/q117_pressure_guard_attempt05.py": "b4d42302e7d405abd5c59df5aa86bb7de6ef3bb91aef487b49acbebd1d24270e",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/guard_sources/q108_guard_core.py": "832c6661692fa9c6e45d209be5c4201a1ad796bfe66bec92cf947151e6988b4b"
+  },
+  "cases": [
+    {"id":"A","input":"15 alternating samples: full=60% or some=80%; MemAvailable=47.99 GiB","expected":"no stop before sample 15; stop at sample 15"},
+    {"id":"B","input":"30 alternating severe samples; MemAvailable=48.00 GiB","expected":"no PSI/headroom stop"},
+    {"id":"C","input":"14 alternating severe low-headroom samples; one normal sample; 15 alternating severe low-headroom samples","expected":"streak resets; stop at global sample 30"}
+  ],
+  "decisionRule": "PASS only on exact expected stop indexes/reasons and unchanged pinned hashes; otherwise halt future model runners pending diagnosis.",
+  "result": {
+    "status": "PASS",
+    "passedCases": 4,
+    "totalCases": 4,
+    "receipt": "receipts/cpu-boundary-regression.json"
+  },
+  "limits": ["synthetic fixture only", "does not establish a real host pressure event", "AMD05 remains candidate-only and not integrated into Q97/Q100 or product" ]
+}

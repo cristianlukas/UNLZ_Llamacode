@@ -1,0 +1,43 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-126",
+  "mode": "CPU-only synthetic fixture; no /proc reads, model, server, CUDA, GPU or memory allocation",
+  "sourcePins": {
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/scripts/q117_pressure_guard_attempt05.py": "b4d42302e7d405abd5c59df5aa86bb7de6ef3bb91aef487b49acbebd1d24270e",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/guard_sources/q108_guard_core.py": "832c6661692fa9c6e45d209be5c4201a1ad796bfe66bec92cf947151e6988b4b"
+  },
+  "cases": [
+    {
+      "id": "A-before-boundary",
+      "passed": true,
+      "expectedStopSample": null,
+      "stopSample": null,
+      "stopReason": null,
+      "warning": null
+    },
+    {
+      "id": "A-at-boundary",
+      "passed": true,
+      "expectedStopSample": 15,
+      "stopSample": 15,
+      "stopReason": "global memory PSI severe while MemAvailable <48 GiB for 15 consecutive 1-second samples",
+      "warning": false
+    },
+    {
+      "id": "B-strict-48GiB-boundary",
+      "passed": true,
+      "expectedStopSample": null,
+      "stopSample": null,
+      "stopReason": null,
+      "warning": null
+    },
+    {
+      "id": "C-normal-sample-resets-low-headroom-streak",
+      "passed": true,
+      "expectedStopSample": 30,
+      "stopSample": 30,
+      "stopReason": "global memory PSI severe while MemAvailable <48 GiB for 15 consecutive 1-second samples",
+      "warning": false
+    }
+  ],
+  "passed": true
+}

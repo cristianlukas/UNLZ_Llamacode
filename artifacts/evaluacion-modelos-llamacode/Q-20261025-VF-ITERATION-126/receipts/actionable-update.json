@@ -1,0 +1,14 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-126",
+  "updated": "data/actionables.json",
+  "backup": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-126/receipts/prechange-actionables.json",
+  "entryId": "vf-q35-codex-crash-isolation-20261022",
+  "fieldsUpdated": [
+    "test",
+    "decision",
+    "artifacts",
+    "updatedAtUtc"
+  ],
+  "newStatus": "candidate regression passes; integration and real critical-pressure observation still pending",
+  "updatedAtUtc": "2026-10-25T04:54:08Z"
+}

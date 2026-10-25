@@ -1,0 +1,30 @@
+{
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "url": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "evaluation": {
+    "sheet": "Evaluaciones LlamaCode",
+    "range": "A347:J347",
+    "readback": "PASS",
+    "allTenValuesMatched": true,
+    "wrapStrategy": "WRAP",
+    "adjacentQ125Row346Preserved": true,
+    "row348BlankPreserved": true
+  },
+  "actionable": {
+    "sheet": "Accionables",
+    "ranges": [
+      "D2",
+      "I2:K2",
+      "M2:N2"
+    ],
+    "readback": "PASS",
+    "amd05RemainsCandidateOnly": true,
+    "wrapStrategy": "WRAP",
+    "valuesMatch": [
+      "Q126 4/4 synthetic regression",
+      "not integrated into Q97/Q100 or product",
+      "Windows Job Objects still pending"
+    ]
+  },
+  "visualVerification": "Connector metadata confirms WRAP and existing formatting. CUA browser was not used because the current Google tab is at sign-in; no cell clipping/layout change was introduced."
+}
