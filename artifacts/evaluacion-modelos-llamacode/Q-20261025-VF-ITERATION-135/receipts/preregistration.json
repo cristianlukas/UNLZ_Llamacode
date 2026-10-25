@@ -1,0 +1,152 @@
+{
+  "task": "Q-20261025-VF-ITERATION-135",
+  "lock_token": "q135-sheet-items-59-64-473b366bf0734c94adc5ec2a39e6eb68",
+  "registered_at_utc": "2026-10-25T15:01:17Z",
+  "scope": "IA local rows 59–64, with a dual-RTX3090 paired A/B only for JetBrains blend if exact download/runtime gates pass.",
+  "sources": [
+    {
+      "row": 59,
+      "id": "q135-sheet-59-jetbrains-blend",
+      "status": "actionable_preregistered",
+      "primary": [
+        "https://junie.jetbrains.com/blog/junie-local-smarter-faster/",
+        "https://huggingface.co/JetBrains/Qwen3.8-3.6-27B-blend",
+        "https://huggingface.co/JetBrains/Qwen3.8-3.6-27B-blend-GGUF"
+      ],
+      "finding": "JetBrains reports 37/100 vs 39/100 tasks and 279K vs 935K output tokens over 30 shared tasks; four-run LCB average 85.47% vs 83.29% at similar output cost. Author evidence only; local A/B can change whether to continue candidate screening."
+    },
+    {
+      "row": 60,
+      "id": "q135-sheet-60-promethevs-deepseek41",
+      "status": "blocked_storage_platform",
+      "primary": [
+        "https://github.com/Magnvs7/Promethevs/releases/tag/v0.2",
+        "https://github.com/Magnvs7/Promethevs/blob/main/PROMETHEVS_report_0.1.md"
+      ],
+      "finding": "PROMETHEVS 0.2 is released; requires Windows, 64GB RAM, 12GB NVIDIA, ~1.1TB free NVMe, 475GiB download and ~4h store build; actual comparison remains one machine/one model/three prompts vs original weights. Current host Linux and model volumes only 59GB and 26GB free."
+    },
+    {
+      "row": 61,
+      "id": "q135-sheet-61-gyro-coder-large",
+      "status": "blocked_storage_runtime",
+      "primary": [
+        "https://huggingface.co/agentionai/Qwen3.8-Flash-Next-Gyro-Coder-GGUF"
+      ],
+      "finding": "Gyro-Coder-L targets 32GB card, 27.54GiB GPU weights and 78.2GiB file; official card says Strata support coming and stock llama.cpp cannot load. Current storage is insufficient once N-gram/table is included."
+    },
+    {
+      "row": 62,
+      "id": "q135-sheet-62-qfn-nvfp4-blackwell",
+      "status": "no_applicable_test_hardware",
+      "primary": [
+        "https://github.com/jesdga95/basalt",
+        "https://developer.nvidia.com/cuda/gpus?target_arch=x86_64&target_os=Linux"
+      ],
+      "finding": "Basalt explicitly requires Blackwell compute capability 12.0/CUDA 13; NVIDIA lists RTX 3090 as 8.6. Its NVFP4 benchmark is not portable to this Ampere host."
+    },
+    {
+      "row": 63,
+      "id": "q135-sheet-63-qfn-huihui-v2",
+      "status": "blocked_storage_not_duplicate",
+      "primary": [
+        "https://eth-lab.com/en/2026/10/strata-huihui-v2-ud-iq4-xs-vram-ram-pagefile-disk-en/"
+      ],
+      "finding": "Published system is RTX5060Ti 16GB/64GB/Strata 0.1.47, 3-run medians; model 87.25GB and PLE 26.82GB. Current volumes 59GB and 26GB free cannot hold the artifacts; local Q26 Unsloth QFN is a different weight revision."
+    },
+    {
+      "row": 64,
+      "id": "q135-sheet-64-strata-qwen36-35b",
+      "status": "blocked_dual_gpu_runtime",
+      "primary": [
+        "https://github.com/Niko1221/Strata/releases",
+        "https://github.com/Niko1221/Strata/issues/3294",
+        "https://huggingface.co/Qwen/Qwen3.6-35B-A3B"
+      ],
+      "finding": "Strata lists Qwen3.6-35B-A3B support, but the qwen35 path runs on GPU0 only; current issue asks for multi-GPU layer split and is still open. A one-GPU test would not answer the requested dual-3090 comparison."
+    }
+  ],
+  "experiment": {
+    "id": "q135-jetbrains-blend-vs-qwen38-base-dual3090-hardmode",
+    "status": "attempt02_preregistered_after_runner_failure_before_benchmark",
+    "candidate": {
+      "repo": "JetBrains/Qwen3.8-3.6-27B-blend-GGUF",
+      "revision": "d9c54de0a7d89d34fa4f07c482e35b86a12923f6",
+      "file": "Qwen3.8-3.6-27B-blend-Q4_K_M.gguf",
+      "size_bytes": 16810715104,
+      "sha256_expected": "5f54ded85a78f11ad7a1c02d17564a268238ac8afe9b3d94fb0b614e473006a1",
+      "license": "Apache-2.0",
+      "isolated_path": "/media/cristian/Disco local/Modelos-eval/Q135-jetbrains-blend/"
+    },
+    "control": {
+      "path": "/media/cristian/Disco local/Models/llamacpp/Qwen3.8-27B-GGUF-Q4_K_M/Qwen3.8-27B-Q4_K_M.gguf",
+      "size_bytes": 18973870528,
+      "sha256": "c600de0300ae8a0eb3a6c0b8b5561b8b96f16bd2c863c2a66c42de29d391a747"
+    },
+    "hardware": "2x RTX 3090, CUDA_VISIBLE_DEVICES=0,1, --split-mode layer --tensor-split 1,1; one server/seed serially; verify both GPUs receive layers.",
+    "runtime": {
+      "name": "llama.cpp server b11554",
+      "commit": "966baae76",
+      "sha256": "fe8a7d6073d3e3a276193fcaec162cbf280d2572ad2016c9100fd924be19c6ed",
+      "template": "assets/chat-templates/qwen38-tools-fixed.jinja",
+      "template_sha256": "03c3e852d2c349ce306ed9ecd870c83487bf123918843387b179ead1fcce93af"
+    },
+    "suite": {
+      "name": "Tool-Eval Bench 2.8.0 Hard Mode",
+      "commit": "0a1ba68c7709f429298bc92417a9e003f61de4e3",
+      "scenarios": "TC-70–TC-97 (28)",
+      "seeds": [
+        42,
+        43,
+        44
+      ],
+      "variant_seed": 20261010,
+      "temperature": 0.6,
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0,
+      "repeat_penalty": 1,
+      "context_tokens": 32768,
+      "reasoning": "medium",
+      "timeout_seconds": 120,
+      "max_turns": 8,
+      "parallel": 1
+    },
+    "paired_order": [
+      "seed42: control then blend",
+      "seed43: blend then control",
+      "seed44: control then blend"
+    ],
+    "both_arms": {
+      "MTP": "off",
+      "KV": "q4_0",
+      "batch": 512,
+      "ubatch": 512,
+      "flash_attention": true,
+      "tool_template": "fixed Qwen38 tools template"
+    },
+    "metrics": [
+      "score/validity per seed",
+      "pass/partial/fail",
+      "TC-74/84/92 and all critical safety cases",
+      "output tokens",
+      "per-task E2E on correctly completed tasks",
+      "wall time per seed"
+    ],
+    "continue_gate": "all six runs valid; blend mean score >= control mean - 2.0; no new failure on critical safety scenarios passed by control; and either median E2E of paired correct tasks improves >=15% or output tokens on those same tasks decrease >=20%. A pass only authorizes a larger holdout, never production adoption.",
+    "host_preflight": [
+      "check lock token; candidate and control hashes; exact repo/runtime/template/suite hashes; destination free space >=25 GiB; inference-server scan; port 18104 free; inspect both GPU compute processes, free VRAM and temperatures; preserve GUI; no external server or conflicting model test."
+    ],
+    "resource_policy": "No memory cgroup limits or system RAM/swap caps. Observe MemAvailable/PSI/swap/OOM. Stop only on OOM/CUDA allocation error, server loss, host MemAvailable below 2 GiB for two consecutive samples, or either RTX 3090 >=85 C. Never touch ASTRA/SOL/production or PeritoSoft.",
+    "no_build_or_auto_retry": true,
+    "latest_attempt": "attempt-02",
+    "amendments": [
+      {
+        "id": "amendment-01-attempt02-runner-fix-preregistration.json",
+        "reason": "attempt-01 started the control server and then failed before any Tool-Eval request because a Path value was not JSON serializable; the owned server was stopped and verified absent.",
+        "scope": "Only serialize Path values safely, guarantee cleanup around all post-Popen operations, and isolate outputs in attempts/attempt-02. Models, hashes, dual-GPU config, seeds, scenarios, metrics, thresholds and resource policy are unchanged.",
+        "retry_classification": "Manually preregistered continuation after an evaluation-runner setup failure; not a model/runtime-load retry. Any runtime/load or benchmark-cell failure stops without retry."
+      }
+    ]
+  },
+  "updated_at_utc": "2026-10-25T15:18:49Z"
+}

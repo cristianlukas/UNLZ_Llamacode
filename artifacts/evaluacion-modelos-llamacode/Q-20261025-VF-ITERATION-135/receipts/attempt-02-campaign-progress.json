@@ -1,0 +1,44 @@
+{
+  "updated_at_utc": "2026-10-25T18:19:07Z",
+  "completed": [
+    {
+      "sequence_index": 1,
+      "seed": 42,
+      "model": "control",
+      "status": "complete"
+    },
+    {
+      "sequence_index": 2,
+      "seed": 42,
+      "model": "blend",
+      "status": "complete"
+    },
+    {
+      "sequence_index": 3,
+      "seed": 43,
+      "model": "blend",
+      "status": "complete"
+    },
+    {
+      "sequence_index": 4,
+      "seed": 43,
+      "model": "control",
+      "status": "complete"
+    },
+    {
+      "sequence_index": 5,
+      "seed": 44,
+      "model": "control",
+      "status": "complete"
+    },
+    {
+      "sequence_index": 6,
+      "seed": 44,
+      "model": "blend",
+      "status": "complete"
+    }
+  ],
+  "status": "completed_gate_failed_no_adoption",
+  "audit_summary": "All six preregistered cells completed. Paired aggregation and critical safety cases audited; candidate does not meet continuation gate.",
+  "aggregate_ref": "attempt-02-benchmark-final.json"
+}

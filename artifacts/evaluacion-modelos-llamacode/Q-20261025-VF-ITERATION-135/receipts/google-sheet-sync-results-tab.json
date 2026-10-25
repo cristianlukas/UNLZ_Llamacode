@@ -1,0 +1,72 @@
+{
+  "task": "Q-20261025-VF-ITERATION-135",
+  "synced_at_utc": "2026-10-25T18:29:24Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_url": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "tab": {
+    "title": "Resultados",
+    "sheet_id": 1972251122,
+    "rows_including_header": 16,
+    "columns": 32,
+    "frozen_rows": 1,
+    "frozen_columns": 4,
+    "basic_filter": "setBasicFilter over A1:AF16",
+    "header_wrap": true,
+    "data_wrap": true,
+    "header_fill": "light gray",
+    "historical_rows_added": [
+      {
+        "row": 14,
+        "id": "Q35-ASTRA-131K",
+        "source": "Q-20261022-VF-ITERATION-35 / Q-20261022-VF-ITERATION-37",
+        "scope": "3 context-retrieval seeds; 2 complete 8/8 and 1 partial 6/8 at max_tokens=768"
+      },
+      {
+        "row": 15,
+        "id": "Q35-ASTRA-1M",
+        "source": "Q-20261022-VF-ITERATION-35 / Q-20261022-VF-ITERATION-37",
+        "scope": "3 complete 8/8 responses after ~1.001M-token prompts"
+      },
+      {
+        "row": 16,
+        "id": "Q127-SOL-24K-MEMORY",
+        "source": "Q-20261025-VF-ITERATION-127",
+        "scope": "one 24,319-token prompt-copy plus 157 RAM/PSI/VRAM samples; quality and separate TPS not measured",
+        "configuration_caveat": "Resolved Q34 compose sets REASONING_EFFORT=medium in environment and reasoning_effort=low in default template kwargs; effective precedence was not determined by prompt-copy."
+      }
+    ]
+  },
+  "readback": {
+    "status": "verified",
+    "ranges": [
+      "Resultados!A1:AF16",
+      "Resultados!T14:T15",
+      "Resultados!AB14:AB15",
+      "Resultados!X16:X16",
+      "IA local!I59:L59",
+      "Evaluaciones LlamaCode!A354:J354",
+      "Accionables!A24:N24",
+      "Inventario de modelos!A15:R15"
+    ],
+    "checks": [
+      "15 result records read back with cohort, full configuration/evidence and decision fields",
+      "Q135 control and blend scores, TPS and exploratory quality/session values read back",
+      "Q35 ASTRA 131K and 1M rows include exact context profile, Strata args, three-seed semantic score, prefill/decode, E2E/session time and RAM/VRAM; 131K partial response is explicitly marked",
+      "Q35 quality/session ratio uses mean semantic score divided by mean total server session seconds, consistent with the column note; per-cell notes state scope and limitations",
+      "Q127 SOL row distinguishes memory telemetry from quality/throughput; quality, prefill TPS, decode TPS, and quality/speed are N/D; one-request E2E is marked non-generalizable",
+      "Windows model paths remain N/D where no verified path was recorded; no path inferred",
+      "PeritoSoft consumers not inferred from closed application",
+      "New result rows have wrapped Arial 10 formatting and expanded row height",
+      "Q127 resolved-compose reasoning-effort conflict (medium environment vs low template kwarg) is surfaced in the row and should be reconciled before behavioral A/B."
+    ]
+  },
+  "comparability_note": "Scores are comparable only inside the same cohort; Q35 quality/session values are exploratory and include an explicitly marked partial 131K response; Q127 is memory telemetry only. No global rank is implied.",
+  "preserved": [
+    "ASTRA",
+    "SOL",
+    "productive Flash-Next",
+    "other Inventory rows",
+    "IA local rows 60–64"
+  ],
+  "local_result": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-135/RESULTS.md"
+}

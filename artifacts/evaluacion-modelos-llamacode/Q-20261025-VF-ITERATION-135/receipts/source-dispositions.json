@@ -1,0 +1,69 @@
+{
+  "task": "Q-20261025-VF-ITERATION-135",
+  "reviewed_at_utc": "2026-10-25T18:19:07Z",
+  "sources": [
+    {
+      "row": 59,
+      "id": "q135-sheet-59-jetbrains-blend",
+      "status": "completed_gate_failed_no_adoption",
+      "primary": [
+        "https://junie.jetbrains.com/blog/junie-local-smarter-faster/",
+        "https://huggingface.co/JetBrains/Qwen3.8-3.6-27B-blend",
+        "https://huggingface.co/JetBrains/Qwen3.8-3.6-27B-blend-GGUF"
+      ],
+      "finding": "Local dual-RTX3090 Tool-Eval A/B completed: blend78/100 (77/80/77) vs control83/100 (79/84/86); TC-80 fails3/3 and TC-82 partial/warning3/3. Median correct-task E2E +9.03% faster but below15%; paired tokens +0.33%. No adoption.",
+      "test": "Q135 attempt-02 completed all 6 cells; no repeat of same review. See RESULTS.md and attempt-02-benchmark-final.json.",
+      "decision": "No adoption; retain current profiles. Reopen only for a material new revision/runtime/harness/workload.",
+      "evidence": "RESULTS.md; attempts/attempt-02/runs; receipts/attempt-02-benchmark-final.json"
+    },
+    {
+      "row": 60,
+      "id": "q135-sheet-60-promethevs-deepseek41",
+      "status": "blocked_storage_platform",
+      "primary": [
+        "https://github.com/Magnvs7/Promethevs/releases/tag/v0.2",
+        "https://github.com/Magnvs7/Promethevs/blob/main/PROMETHEVS_report_0.1.md"
+      ],
+      "finding": "PROMETHEVS 0.2 is released; requires Windows, 64GB RAM, 12GB NVIDIA, ~1.1TB free NVMe, 475GiB download and ~4h store build; actual comparison remains one machine/one model/three prompts vs original weights. Current host Linux and model volumes only 59GB and 26GB free."
+    },
+    {
+      "row": 61,
+      "id": "q135-sheet-61-gyro-coder-large",
+      "status": "blocked_storage_runtime",
+      "primary": [
+        "https://huggingface.co/agentionai/Qwen3.8-Flash-Next-Gyro-Coder-GGUF"
+      ],
+      "finding": "Gyro-Coder-L targets 32GB card, 27.54GiB GPU weights and 78.2GiB file; official card says Strata support coming and stock llama.cpp cannot load. Current storage is insufficient once N-gram/table is included."
+    },
+    {
+      "row": 62,
+      "id": "q135-sheet-62-qfn-nvfp4-blackwell",
+      "status": "no_applicable_test_hardware",
+      "primary": [
+        "https://github.com/jesdga95/basalt",
+        "https://developer.nvidia.com/cuda/gpus?target_arch=x86_64&target_os=Linux"
+      ],
+      "finding": "Basalt explicitly requires Blackwell compute capability 12.0/CUDA 13; NVIDIA lists RTX 3090 as 8.6. Its NVFP4 benchmark is not portable to this Ampere host."
+    },
+    {
+      "row": 63,
+      "id": "q135-sheet-63-qfn-huihui-v2",
+      "status": "blocked_storage_not_duplicate",
+      "primary": [
+        "https://eth-lab.com/en/2026/10/strata-huihui-v2-ud-iq4-xs-vram-ram-pagefile-disk-en/"
+      ],
+      "finding": "Published system is RTX5060Ti 16GB/64GB/Strata 0.1.47, 3-run medians; model 87.25GB and PLE 26.82GB. Current volumes 59GB and 26GB free cannot hold the artifacts; local Q26 Unsloth QFN is a different weight revision."
+    },
+    {
+      "row": 64,
+      "id": "q135-sheet-64-strata-qwen36-35b",
+      "status": "blocked_dual_gpu_runtime",
+      "primary": [
+        "https://github.com/Niko1221/Strata/releases",
+        "https://github.com/Niko1221/Strata/issues/3294",
+        "https://huggingface.co/Qwen/Qwen3.6-35B-A3B"
+      ],
+      "finding": "Strata lists Qwen3.6-35B-A3B support, but the qwen35 path runs on GPU0 only; current issue asks for multi-GPU layer split and is still open. A one-GPU test would not answer the requested dual-3090 comparison."
+    }
+  ]
+}
