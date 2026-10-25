@@ -1,0 +1,27 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-113",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "readBackAtUtc": "2026-10-25T00:31:00Z",
+  "status": "readback_pass",
+  "ranges": [
+    {
+      "range": "'Evaluaciones LlamaCode'!A334:J334",
+      "cells": 10,
+      "wrapVerified": 10,
+      "statusCell": "Completada · replay CPU 7/7 PASS; guard real Q97",
+      "resultContains": "7/7 PASS",
+      "adjacentCellsPreserved": true
+    },
+    {
+      "range": "Accionables!A2:N2",
+      "cells": 14,
+      "wrapVerified": 14,
+      "idCell": "vf-q35-codex-crash-isolation-20261022",
+      "decisionContains": "Q113 confirma",
+      "updatedAt": "2026-10-25T00:31:00Z",
+      "createdAtPreserved": true,
+      "adjacentCellsPreserved": true
+    }
+  ],
+  "writeMethod": "Bounded updateCells ranges with explicit endRowIndex/endColumnIndex; read back full target rows and WRAP."
+}

@@ -1,0 +1,30 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-113",
+  "experimentId": "Q113-A1",
+  "status": "completed_pass",
+  "completedAtUtc": "2026-10-25T00:31:00Z",
+  "checksPassed": 7,
+  "checksTotal": 7,
+  "primaryFinding": "The active Q97 guard has no RSS-based abort gate; it continues at ASTRA 1M historical MemAvailable 55.728 GiB despite ~51.14 GiB RSS, warns on sustained moderate PSI, and stops only on configured low MemAvailable/new OOM/severe sustained global PSI gates.",
+  "historicalControls": {
+    "ASTRA_DEFAULT_1M": "10/10; process-tree RSS max 51.14 GiB; MemAvailable minimum 55.728 GiB; OOM 0",
+    "SOL_Q34": "dual RTX 3090 TP=2 completed without OOM; PSI time series unavailable"
+  },
+  "testMode": {
+    "cpuOnly": true,
+    "gpuUsed": false,
+    "gpuSnapshotMocked": true,
+    "modelOrServerStarted": false,
+    "buildRun": false,
+    "networkUsed": false,
+    "artificialMemoryAllocationGiB": 0,
+    "productionChanges": false
+  },
+  "limitations": [
+    "Fixture replay is not a live 1M model run or a VRAM/KV/concurrency stress test.",
+    "SOL has no continuous PSI series and cannot calibrate PSI thresholds.",
+    "This guard is not a general Codex desktop/driver crash detector; root cause of the app closure remains unproven."
+  ],
+  "runnerIncident": "Attempt 1 stopped in source-fingerprint preflight before scenarios because of a comparison-shape bug in the Q113 runner; all eight sources matched. Amendment 02 fixed full-map comparison; attempt 2 passed 7/7.",
+  "nextQueueEligibility": "No further model benchmark is eligible in this Linux turn until an external gate changes (Windows-native Job Objects/entrypoints, trusted tenant principal/policy, or another explicitly satisfied preregistered dependency). Do not replace those with incompatible tests."
+}

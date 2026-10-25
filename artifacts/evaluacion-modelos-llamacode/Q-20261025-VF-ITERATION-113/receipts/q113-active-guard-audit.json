@@ -1,0 +1,55 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-113",
+  "experimentId": "Q113-A1",
+  "status": "pass",
+  "checksPassed": 7,
+  "checksTotal": 7,
+  "checks": [
+    {
+      "name": "actual Q97 guard continues at ASTRA 1M recorded MemAvailable despite 51.14 GiB RSS metadata",
+      "passed": true
+    },
+    {
+      "name": "actual Q97 policy warns on sustained Q100 moderate PSI without stopping",
+      "passed": true
+    },
+    {
+      "name": "actual Q97 hard stop is strict below 32 GiB, equality continues",
+      "passed": true
+    },
+    {
+      "name": "actual Q97 hard stop detects global and service-cgroup OOM counters",
+      "passed": true
+    },
+    {
+      "name": "actual Q97 severe PSI stops at sample 15, not 14",
+      "passed": true
+    },
+    {
+      "name": "actual Q97 recovery resets severe streak and some>=80% stops at 15",
+      "passed": true
+    },
+    {
+      "name": "SOL TP=2 history is retained as no-OOM control, not a PSI series",
+      "passed": true
+    }
+  ],
+  "sourceSha256": {
+    "q97": "663a2762ba8e5433b566c1fa2dbbe692cd8d4272619361c477a339da52c6904a",
+    "q100": "2f8f45e0ac55a597e4029112ca89848dbab40392753a45910bbba1a3f6830cc2",
+    "q102Replay": "071a8b3eb084937a305729eecd138ef47d9c96b86421dfda1224b5452ca1144f",
+    "q102ReplayTests": "7df65d705781c366dd74ebd7133091f99530cf96864deb846ae87a415b330a1c",
+    "q108Candidate": "832c6661692fa9c6e45d209be5c4201a1ad796bfe66bec92cf947151e6988b4b",
+    "q110Candidate": "300186563c6715a4e2901d4cd0863a59fc52eb38a010cc06dc83bf7a23ac4f87",
+    "q97Review": "0943d64134fb4afe6d4b1948d960fd9e98c395ba2f6c46f7626bbdaf09ff11b2",
+    "q102Result": "430b5687a426bbe4dbf898b72d6ac1458581813ceeb7e704f04559f6024317be"
+  },
+  "gpuUsed": false,
+  "gpuSnapshotMocked": true,
+  "modelOrServerStarted": false,
+  "networkUsed": false,
+  "buildRun": false,
+  "artificialMemoryGiB": 0,
+  "largeMemoryAllocation": false,
+  "productionChanged": false
+}

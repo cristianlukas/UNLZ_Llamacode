@@ -1,0 +1,11 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-113",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "range": "'Evaluaciones LlamaCode'!A334:J334",
+  "readBackAtUtc": "2026-10-25T00:32:00Z",
+  "status": "verified_before_replay",
+  "wrapVerified": "10/10 cells WRAP",
+  "amendment": "Q113-A1-amendment-01 read back in B334; C334 shows preregistered with amendment pending replay.",
+  "notes": "Bounded update to B334:C334 only; entire A334:J334 read back; no adjacent cells changed.",
+  "amendment02Readback": "B334/C334 verified with Amendment 02 and replay pending"
+}

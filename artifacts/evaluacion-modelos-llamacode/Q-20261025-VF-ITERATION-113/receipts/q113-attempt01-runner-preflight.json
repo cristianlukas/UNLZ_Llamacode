@@ -1,0 +1,12 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-113",
+  "attempt": "Q113-A1 invocation 1",
+  "status": "aborted_before_scenarios",
+  "startedAtUtc": "2026-10-25T00:30:00Z",
+  "reason": "Runner bug: compared q97/q100 hashes with all eight provenance hashes, so this shape mismatch was reported as a source-change guard. Direct hash audit subsequently confirmed all eight recorded source hashes match.",
+  "checksExecuted": 0,
+  "gpuUsed": false,
+  "modelOrServerStarted": false,
+  "largeMemoryAllocation": false,
+  "productionChanged": false
+}

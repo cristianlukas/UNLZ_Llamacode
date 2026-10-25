@@ -1,0 +1,53 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-113",
+  "experimentId": "Q113-A1",
+  "preregisteredAtUtc": "2026-10-25T00:27:30Z",
+  "status": "preregistered_before_replay",
+  "scope": "Replay CPU-only of the actual Q97 guard functions used by Q97 and delegated to from Q100; candidate-only Q102/Q108/Q110 kept separate.",
+  "sourceSha256": {
+    "q97": "663a2762ba8e5433b566c1fa2dbbe692cd8d4272619361c477a339da52c6904a",
+    "q100": "2f8f45e0ac55a597e4029112ca89848dbab40392753a45910bbba1a3f6830cc2",
+    "q102Replay": "071a8b3eb084937a305729eecd138ef47d9c96b86421dfda1224b5452ca1144f",
+    "q102ReplayTests": "7df65d705781c366dd74ebd7133091f99530cf96864deb846ae87a415b330a1c",
+    "q108Candidate": "832c6661692fa9c6e45d209be5c4201a1ad796bfe66bec92cf947151e6988b4b",
+    "q110Candidate": "300186563c6715a4e2901d4cd0863a59fc52eb38a010cc06dc83bf7a23ac4f87",
+    "q97Review": "0943d64134fb4afe6d4b1948d960fd9e98c395ba2f6c46f7626bbdaf09ff11b2",
+    "q102Result": "430b5687a426bbe4dbf898b72d6ac1458581813ceeb7e704f04559f6024317be"
+  },
+  "runnerSha256": "2a9ae592e708673ee8818e1b7116470def22b000730ba091f72787e8db339a40",
+  "checks": [
+    "ASTRA 1M historical MemAvailable 55.728 GiB continues; RSS is not an input",
+    "Q100 moderate PSI full 46.52% warns only after sustained streak",
+    "MemAvailable 32.0 GiB continues; 31.99 GiB stops",
+    "global and cgroup OOM counters stop",
+    "severe PSI full>=60/some>=80 stop at 15 samples",
+    "recovery resets consecutive severe streak",
+    "SOL dual TP=2 remains a no-OOM historical control without PSI series",
+    "Read and assert exact ASTRA 1M historical receipt fields (51.14 GiB RSS, 55.728 GiB MemAvailable, 10/10, OOM 0) before replaying guard at that recorded availability; cross-check Q97 Q14 receipt."
+  ],
+  "noGpu": true,
+  "gpuSnapshot": "mocked",
+  "noModelOrServer": true,
+  "noNetwork": true,
+  "noBuild": true,
+  "noLargeMemoryAllocation": true,
+  "noProductionChanges": true,
+  "historicalReceipts": {
+    "Q97": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-97/receipts/q97-memory-guard-review.json",
+    "ASTRA_SOL_Q102": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-102/receipts/q102-final-result.json"
+  },
+  "amendments": [
+    {
+      "id": "Q113-A1-amendment-01",
+      "atUtc": "2026-10-25T00:29:00Z",
+      "reason": "Strengthen the ASTRA high-RSS control so the runner reads and asserts the historical receipt fields instead of relying only on hard-coded fixture values. No additional workload or resource use.",
+      "testChange": "Before replay, assert Q102 ASTRA DEFAULT 1M says RSS tree max 51.14 GiB, MemAvailable min 55.728 GiB, 10/10 and OOM 0; assert Q97 Q14 historical row RSS 51.14 GiB, minimum available 55.64 GiB and OOM=0."
+    },
+    {
+      "id": "Q113-A1-amendment-02",
+      "atUtc": "2026-10-25T00:31:00Z",
+      "reason": "First runner invocation stopped before any scenario because the preflight compared the two active source hashes against the entire eight-file provenance map. The Q97/Q100 source hashes themselves matched. Corrected the preflight to validate all eight preregistered fingerprints individually.",
+      "testChange": "No scenario logic or thresholds changed; all provenance hashes are now checked as a full map before the replay."
+    }
+  ]
+}

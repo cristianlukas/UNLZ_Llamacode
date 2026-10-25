@@ -1,6 +1,6 @@
 # Evaluación continua de modelos y harness de LlamaCode
 
-Registro acumulativo. Actualizado: 2026-10-22. La evidencia se conserva en los
+Registro acumulativo. Actualizado: 2026-10-25. La evidencia se conserva en los
 informes por campaña y en `artifacts/evaluacion-modelos-llamacode/<TASK-ID>/`.
 Los resultados históricos no se reemplazan; una recomendación nueva debe
 referir su evidencia y sus límites.
@@ -1012,3 +1012,12 @@ Q111 comprobó el guard realmente usado en las campañas duales Q97/Q100 (8/8 PA
 ## Q112 · viabilidad del fixture de autorización tenant · 2026-10-25
 
 Q112 revalidó con hashes preregistrados el contrato MCP actual (6/6 checks estáticos PASS) y confirmó el bloqueo ya observado en Q78: `AgentSession` no representa principal autenticado; `McpClient::callTool` no lo transmite; el dispatcher local no aplica autorización tenant/recurso. No se ejecutó fixture de comportamiento porque cualquier prueba cross-tenant requeriría inventar identidad o policy. El servidor MCP puede autorizar independientemente, pero esa capa no fue inspeccionada. P2.1 sigue abierto hasta que un host confiable propague principal no falsificable y exista policy por recurso; entonces corresponde probar allow same-tenant y denegación cross-tenant anterior al efecto. Qwen/ASTRA/SOL no se modifican. Sheets readback PASS en Evaluaciones LlamaCode!A333:J333 y Accionables!A7:N7; recibo `../artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-112/receipts/google-sheet-sync-q112-final.json`.
+
+
+## Q113 · Replay completo del guard activo de memoria · 2026-10-25
+
+Q113-A1 reproduce con fixtures CPU los gates activos de Q97 (delegados desde Q100) y pasa 7/7. El runner primero leyó recibos históricos: ASTRA DEFAULT 1M completó 10/10 con ~51,14 GiB de RSS, 55,728 GiB de MemAvailable y OOM=0; Q97 Q14 también registra 51,14 GiB RSS, 55,64 GiB disponibles y OOM=0. El guard continúa con la muestra de 55,728 GiB: no incluye RSS como señal ni criterio de parada.
+
+El replay confirma warning de PSI moderada sostenida a los 30 samples; MemAvailable exactamente 32 GiB continúa y 31,99 detiene; los incrementos OOM global/cgroup detienen; PSI global full≥60% o some≥80% detiene en el sample 15; la recuperación reinicia la racha. SOL Q34 TP=2 en las dos 3090 terminó sin OOM, pero no registró PSI continua y no sirve para calibrar ese umbral. No se hicieron nuevas cargas de modelo, GPU ni RAM artificial. No se cambia guard, RAM/swap/contexto ni perfiles.
+
+La primera invocación de Q113 se abortó en el preflight del runner, antes de ejecutar escenarios, por un defecto de comparación (dos fingerprints activos contra un manifiesto de ocho). La auditoría confirmó que todas las fuentes coincidían; se corrigió la comparación en enmienda preregistrada y el segundo replay pasó 7/7. La prueba valida las transiciones con fixtures, no reproduce VRAM/KV/concurrencia y no atribuye por sí sola el cierre de Codex: la causa continúa abierta. SOL tampoco ofrece serie PSI continua. Google Sheets readback PASS: `Evaluaciones LlamaCode!A334:J334` y `Accionables!A2:N2`, WRAP. Resultados y límite: `../artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-113/RESULTS.md`.
