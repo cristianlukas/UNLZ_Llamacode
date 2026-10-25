@@ -5173,6 +5173,7 @@
         "favorite": false,
         "alias": "ASTRA",
         "displayName": "ASTRA DEFAULT · ISTA IQ2_XS · Strata · 1M YaRN ×4",
+        "contextPresets": [131072, 1048576],
         "minVramGb": 12,
         "backend": {
             "kind": "cloud",

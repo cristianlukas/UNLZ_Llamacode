@@ -23,6 +23,15 @@ struct Contract {
 
 Contract fromMcpTool(const QString &name, const QString &description,
                      const QJsonObject &annotations);
+// Principal material is minted by the host from the OS account and canonical
+// workspace; it is never accepted from model arguments or MCP responses.
+QJsonObject localPrincipal(const QString &homePath, const QString &workspacePath);
+// Enforces the host-side resource boundary declared by a tool. Tenant and
+// arbitrary-resource access fail closed until an authenticated policy provider
+// is configured; workspace resources must exactly match the active workspace.
+QString resourceAuthorizationError(const QJsonObject &annotations,
+                                   const QJsonObject &arguments,
+                                   const QJsonObject &principal);
 // changed_paths coordina mutaciones del workspace, no cualquier efecto externo.
 // MCP browser actions remain subject to approval, but only require paths when
 // the call actually names a workspace output file.

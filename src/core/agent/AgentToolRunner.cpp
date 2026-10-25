@@ -1126,6 +1126,10 @@ void AgentToolRunner::setSessionId(const QString &sessionId)
     m_desktopLease.maxActions = 500;
     m_desktopLease.expiresAt = QDateTime::currentMSecsSinceEpoch() + 30 * 60 * 1000;
 }
+void AgentToolRunner::setTrustedPrincipal(const QJsonObject &principal)
+{
+    m_trustedPrincipal = principal;
+}
 void AgentToolRunner::setMailAccounts(const QVariantList &accounts) { m_mailAccounts = accounts; }
 void AgentToolRunner::setWebProviders(const QVariantList &providers) { m_webProviders = providers; }
 void AgentToolRunner::setPortableSkillPolicy(const QStringList &include,
@@ -1556,6 +1560,7 @@ void AgentToolRunner::initServers(const QVariantList &cfg, const QString &cwd)
         if (name.isEmpty() || cmd.isEmpty()) continue;
 
         auto *c = new McpClient(name);   // sin parent: vive en este hilo worker
+        c->setTrustedPrincipal(m_trustedPrincipal);
         connect(c, &McpClient::logAppended, this, &AgentToolRunner::logAppended);
         if (c->start(cmd, cwd)) m_mcp.append(c);
         else delete c;

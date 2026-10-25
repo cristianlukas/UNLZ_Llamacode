@@ -1,15 +1,23 @@
 #include "McpClient.h"
+#include "ToolExecutionSafety.h"
 
 #include <QElapsedTimer>
 #include <QFileInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QProcess>
+#include <QProcessEnvironment>
+#include <utility>
 
 McpClient::McpClient(const QString &serverName, QObject *parent)
     : QObject(parent), m_serverName(serverName) {}
 
 McpClient::~McpClient() { shutdown(); }
+
+void McpClient::setTrustedPrincipal(const QJsonObject &principal)
+{
+    m_principal = principal;
+}
 
 bool McpClient::start(const QString &command, const QString &cwd)
 {
@@ -18,6 +26,16 @@ bool McpClient::start(const QString &command, const QString &cwd)
     if (!cwd.isEmpty() && QFileInfo(cwd).isDir())
         m_proc->setWorkingDirectory(cwd);
     m_proc->setProcessChannelMode(QProcess::SeparateChannels); // stderr no contamina stdout
+    if (!m_principal.isEmpty()) {
+        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+        env.insert(QStringLiteral("LLAMACODE_PRINCIPAL_ISSUER"),
+                   m_principal.value(QStringLiteral("issuer")).toString());
+        env.insert(QStringLiteral("LLAMACODE_PRINCIPAL_SUBJECT_ID"),
+                   m_principal.value(QStringLiteral("subjectId")).toString());
+        env.insert(QStringLiteral("LLAMACODE_PRINCIPAL_WORKSPACE_ID"),
+                   m_principal.value(QStringLiteral("workspaceId")).toString());
+        m_proc->setProcessEnvironment(env);
+    }
 
 #ifdef Q_OS_WIN
     // cmd /c resuelve PATH y .cmd/.bat (npx, uvx, etc.).
@@ -128,6 +146,24 @@ QString McpClient::callTool(const QString &toolName, const QJsonObject &args, bo
     if (ok) *ok = false;
     if (!m_ready) return QStringLiteral("[mcp:%1] server no disponible]").arg(m_serverName);
 
+    const ToolDef *definition = nullptr;
+    for (const ToolDef &tool : std::as_const(m_tools)) {
+        if (tool.name == toolName) { definition = &tool; break; }
+    }
+    if (!definition) {
+        const QString denial = QStringLiteral("El servidor no anunció la definición de esta tool; acceso denegado.");
+        emit logAppended(QStringLiteral("[mcp:%1] acceso denegado para %2: %3\n")
+                             .arg(m_serverName, toolName, denial));
+        return QStringLiteral("[mcp authorization denied: %1]").arg(denial);
+    }
+    const QString denial = ToolExecutionSafety::resourceAuthorizationError(
+        definition->annotations, args, m_principal);
+    if (!denial.isEmpty()) {
+        emit logAppended(QStringLiteral("[mcp:%1] acceso denegado para %2: %3\n")
+                             .arg(m_serverName, toolName, denial));
+        return QStringLiteral("[mcp authorization denied: %1]").arg(denial);
+    }
+
     QJsonObject params{
         {QStringLiteral("name"), toolName},
         {QStringLiteral("arguments"), args}
@@ -137,6 +173,8 @@ QString McpClient::callTool(const QString &toolName, const QJsonObject &args, bo
         meta[QStringLiteral("io.llamacode/idempotencyKey")] = idempotencyKey;
     if (!correlationId.isEmpty())
         meta[QStringLiteral("io.llamacode/correlationId")] = correlationId;
+    if (!m_principal.isEmpty())
+        meta[QStringLiteral("io.llamacode/principal")] = m_principal;
     if (!meta.isEmpty()) params[QStringLiteral("_meta")] = meta;
     const QJsonObject resp = request(QStringLiteral("tools/call"), params, 120000);
 

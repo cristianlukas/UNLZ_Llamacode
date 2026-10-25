@@ -1,6 +1,8 @@
 #include <QtTest>
 #include <QDir>
+#include <QElapsedTimer>
 #include <QFile>
+#include <QFileInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -9,6 +11,7 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QTemporaryDir>
+#include <QUrl>
 #include "core/agent/LlamaAgentBackend.h"
 #include "core/agent/SubAgentRunner.h"
 #include "core/automation/DesktopComputerUse.h"
@@ -47,6 +50,10 @@ private slots:
     void nativeSessionForkPersistsTreeMetadata();
     void midConversationNoteRole_neverSystem();
     void mergeToolCallDelta_assemblesAcrossChunks();
+    void toolBatchRequiresReplan_onlyTaskBatchesFanOut();
+    void nativeToolBatchReplansAfterFirstResult();
+    void nativeMixedTaskBatchDoesNotDispatchLaterTaskEarly();
+    void qwenQ77NativeDispatcherProbe();
     void nativeToolSchemasOverflowPicksTextProtocol();
     void desktopRequestEscalatesToolsOnCodingProfile();
     void mergeToolCallDelta_parallelCallsByIndex();
@@ -999,6 +1006,129 @@ private:
     }
 };
 
+// Emite dos llamadas nativas de lectura en una sola respuesta. La segunda
+// completion inspecciona el transcript: el primer resultado debe ser real y el
+// segundo debe indicar que se difirió para volver a planificar.
+class FakeDependentToolBatchServer : public QTcpServer
+{
+public:
+    explicit FakeDependentToolBatchServer(bool secondCallIsTask = false)
+        : m_secondCallIsTask(secondCallIsTask) {}
+
+    int completionRequests = 0;
+    bool secondSawFirstResult = false;
+    bool secondSawDeferredCall = false;
+
+protected:
+    void incomingConnection(qintptr socketDescriptor) override
+    {
+        auto *sock = new QTcpSocket(this);
+        sock->setSocketDescriptor(socketDescriptor);
+        auto *buf = new QByteArray;
+        auto *handled = new bool(false);
+        connect(sock, &QTcpSocket::readyRead, this, [this, sock, buf, handled]() {
+            if (*handled) return;
+            buf->append(sock->readAll());
+            const int headerEnd = buf->indexOf("\r\n\r\n");
+            if (headerEnd < 0) return;
+            const QByteArray headers = buf->left(headerEnd);
+            int contentLength = 0;
+            for (const QByteArray &line : headers.split('\n')) {
+                const QByteArray trimmed = line.trimmed();
+                if (trimmed.toLower().startsWith("content-length:"))
+                    contentLength = trimmed.mid(15).trimmed().toInt();
+            }
+            if (buf->size() < headerEnd + 4 + contentLength) return;
+            *handled = true;
+
+            const QByteArray firstLine = headers.split('\n').value(0).trimmed();
+            if (firstLine.startsWith("GET /props")) {
+                const QByteArray json = QByteArrayLiteral(
+                    "{\"n_ctx\":4096,\"supports_tool_calls\":true}");
+                writeRaw(sock, QByteArrayLiteral(
+                    "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: ")
+                    + QByteArray::number(json.size())
+                    + QByteArrayLiteral("\r\nConnection: close\r\n\r\n") + json);
+                return;
+            }
+
+            const QByteArray body = buf->mid(headerEnd + 4, contentLength);
+            const QJsonObject request = QJsonDocument::fromJson(body).object();
+            ++completionRequests;
+            if (completionRequests == 1) {
+                QJsonArray calls;
+                calls.append(QJsonObject{
+                    {QStringLiteral("index"), 0},
+                    {QStringLiteral("id"), QStringLiteral("call-first")},
+                    {QStringLiteral("type"), QStringLiteral("function")},
+                    {QStringLiteral("function"), QJsonObject{
+                        {QStringLiteral("name"), QStringLiteral("read_file")},
+                        {QStringLiteral("arguments"), QStringLiteral("{\"path\":\"first.txt\"}")}}}});
+                calls.append(QJsonObject{
+                    {QStringLiteral("index"), 1},
+                    {QStringLiteral("id"), QStringLiteral("call-second")},
+                    {QStringLiteral("type"), QStringLiteral("function")},
+                    {QStringLiteral("function"), QJsonObject{
+                        {QStringLiteral("name"), m_secondCallIsTask
+                             ? QStringLiteral("task") : QStringLiteral("read_file")},
+                        {QStringLiteral("arguments"), m_secondCallIsTask
+                             ? QStringLiteral("{}")
+                             : QStringLiteral("{\"path\":\"second.txt\"}")}}}});
+                QJsonObject delta{{QStringLiteral("tool_calls"), calls}};
+                writeSse(sock, QJsonObject{{QStringLiteral("choices"), QJsonArray{
+                    QJsonObject{{QStringLiteral("delta"), delta},
+                                {QStringLiteral("finish_reason"), QStringLiteral("tool_calls")}}}}});
+                return;
+            }
+
+            const QJsonArray messages = request.value(QStringLiteral("messages")).toArray();
+            for (const QJsonValue &value : messages) {
+                const QJsonObject message = value.toObject();
+                if (message.value(QStringLiteral("role")).toString() != QLatin1String("tool"))
+                    continue;
+                const QString id = message.value(QStringLiteral("tool_call_id")).toString();
+                const QString content = message.value(QStringLiteral("content")).toString();
+                if (id == QLatin1String("call-first"))
+                    secondSawFirstResult = content.contains(QStringLiteral("FIRST_RESULT_MARKER"));
+                if (id == QLatin1String("call-second"))
+                    secondSawDeferredCall = content.contains(QStringLiteral("omitida"))
+                        && content.contains(QStringLiteral("replanificar"));
+            }
+            QJsonObject finalDelta{{QStringLiteral("content"),
+                                   QStringLiteral("replanificación verificada")}};
+            writeSse(sock, QJsonObject{{QStringLiteral("choices"), QJsonArray{
+                QJsonObject{{QStringLiteral("delta"), finalDelta},
+                            {QStringLiteral("finish_reason"), QStringLiteral("stop")}}}}});
+        });
+        connect(sock, &QTcpSocket::disconnected, this, [sock, buf, handled]() {
+            delete buf;
+            delete handled;
+            sock->deleteLater();
+        });
+    }
+
+private:
+    bool m_secondCallIsTask = false;
+
+    static void writeSse(QTcpSocket *sock, const QJsonObject &chunk)
+    {
+        const QByteArray payload = QByteArrayLiteral("data: ")
+            + QJsonDocument(chunk).toJson(QJsonDocument::Compact)
+            + QByteArrayLiteral("\n\ndata: [DONE]\n\n");
+        writeRaw(sock, QByteArrayLiteral(
+            "HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nContent-Length: ")
+            + QByteArray::number(payload.size())
+            + QByteArrayLiteral("\r\nConnection: close\r\n\r\n") + payload);
+    }
+
+    static void writeRaw(QTcpSocket *sock, const QByteArray &data)
+    {
+        sock->write(data);
+        sock->flush();
+        sock->disconnectFromHost();
+    }
+};
+
 class FakeTextOnlyServer : public QTcpServer
 {
 public:
@@ -1159,6 +1289,367 @@ void AgentWireTests::thirdIdenticalToolCallReplansWithoutExecuting()
     QCOMPARE(executedReads, 2);
     QVERIFY(sawReplannedFinal);
     backend.stop();
+}
+
+void AgentWireTests::nativeToolBatchReplansAfterFirstResult()
+{
+    QTemporaryDir cwd;
+    QVERIFY(cwd.isValid());
+    QFile first(cwd.path() + QStringLiteral("/first.txt"));
+    QVERIFY(first.open(QIODevice::WriteOnly));
+    first.write("FIRST_RESULT_MARKER");
+    first.close();
+    QFile second(cwd.path() + QStringLiteral("/second.txt"));
+    QVERIFY(second.open(QIODevice::WriteOnly));
+    second.write("SECOND_SHOULD_NOT_EXECUTE");
+    second.close();
+
+    FakeDependentToolBatchServer server;
+    QVERIFY(server.listen(QHostAddress::LocalHost, 0));
+    AgentContext ctx;
+    ctx.adapter = QStringLiteral("llamaagent");
+    ctx.cwd = cwd.path();
+    ctx.serverBaseUrl = QStringLiteral("http://127.0.0.1:%1").arg(server.serverPort());
+    ctx.modelId = QStringLiteral("dependency-test");
+    ctx.ctxOverride = 4096;
+
+    LlamaAgentBackend backend;
+    backend.setEphemeralSessions(true);
+    backend.setApprovalPolicy(QStringLiteral("auto"));
+    backend.start(ctx);
+    QSignalSpy finished(&backend, &LlamaAgentBackend::turnFinished);
+    backend.sendMessage(QStringLiteral("Leé first.txt y luego decidí si necesitás second.txt."));
+
+    QTRY_COMPARE_WITH_TIMEOUT(finished.count(), 1, 10000);
+    QCOMPARE(server.completionRequests, 2);
+    QVERIFY(server.secondSawFirstResult);
+    QVERIFY(server.secondSawDeferredCall);
+
+    int readCards = 0;
+    for (const QVariant &value : backend.messages()) {
+        const QVariantMap message = value.toMap();
+        if (message.value(QStringLiteral("role")).toString() == QLatin1String("toolcall")
+            && message.value(QStringLiteral("name")).toString()
+                == QLatin1String("read_file")) {
+            ++readCards;
+            const QString content = message.value(QStringLiteral("content")).toString();
+            const QString output = message.value(QStringLiteral("output")).toString();
+            QVERIFY(!content.contains(QStringLiteral("SECOND_SHOULD_NOT_EXECUTE")));
+            QVERIFY(!output.contains(QStringLiteral("SECOND_SHOULD_NOT_EXECUTE")));
+        }
+    }
+    QCOMPARE(readCards, 2);
+    backend.stop();
+}
+
+void AgentWireTests::nativeMixedTaskBatchDoesNotDispatchLaterTaskEarly()
+{
+    QTemporaryDir cwd;
+    QVERIFY(cwd.isValid());
+    QFile first(cwd.path() + QStringLiteral("/first.txt"));
+    QVERIFY(first.open(QIODevice::WriteOnly));
+    first.write("FIRST_RESULT_MARKER");
+    first.close();
+    QFile second(cwd.path() + QStringLiteral("/second.txt"));
+    QVERIFY(second.open(QIODevice::WriteOnly));
+    second.write("SECOND_SHOULD_NOT_EXECUTE");
+    second.close();
+
+    FakeDependentToolBatchServer server(true);
+    QVERIFY(server.listen(QHostAddress::LocalHost, 0));
+    AgentContext ctx;
+    ctx.adapter = QStringLiteral("llamaagent");
+    ctx.cwd = cwd.path();
+    ctx.serverBaseUrl = QStringLiteral("http://127.0.0.1:%1").arg(server.serverPort());
+    ctx.modelId = QStringLiteral("mixed-task-dependency-test");
+    ctx.ctxOverride = 4096;
+
+    LlamaAgentBackend backend;
+    backend.setEphemeralSessions(true);
+    backend.setApprovalPolicy(QStringLiteral("auto"));
+    backend.start(ctx);
+    QSignalSpy finished(&backend, &LlamaAgentBackend::turnFinished);
+    backend.sendMessage(QStringLiteral("Leé first.txt; después reevaluá si hace falta una task."));
+
+    QTRY_COMPARE_WITH_TIMEOUT(finished.count(), 1, 10000);
+    QCOMPARE(server.completionRequests, 2);
+    QVERIFY(server.secondSawFirstResult);
+    QVERIFY(server.secondSawDeferredCall);
+    backend.stop();
+}
+
+void AgentWireTests::qwenQ77NativeDispatcherProbe()
+{
+    const QString q102BaseUrl = qEnvironmentVariable("LLAMACODE_Q102_SERVER_URL").trimmed();
+    const bool q102Mode = !q102BaseUrl.isEmpty();
+    const QString baseUrl = q102Mode
+        ? q102BaseUrl
+        : qEnvironmentVariable("LLAMACODE_Q77_SERVER_URL").trimmed();
+    if (baseUrl.isEmpty())
+        QSKIP("Q77 is opt-in; set LLAMACODE_Q77_SERVER_URL to the pinned loopback Qwen endpoint.");
+
+    const QUrl endpoint(baseUrl, QUrl::StrictMode);
+    QVERIFY2(endpoint.isValid(), qPrintable(QStringLiteral("invalid endpoint: %1").arg(baseUrl)));
+    QVERIFY2(endpoint.scheme() == QLatin1String("http"), "Q77 accepts only a loopback HTTP endpoint.");
+    QVERIFY2(endpoint.host() == QLatin1String("127.0.0.1")
+                 || endpoint.host() == QLatin1String("localhost"),
+             "Q77 must not send the test prompt outside this host.");
+    QVERIFY2(endpoint.port(-1) > 0, "Q77 endpoint must include an explicit local port.");
+    QVERIFY2(endpoint.path().isEmpty() || endpoint.path() == QLatin1String("/"),
+             "Provide the server base URL without an API path.");
+
+    QStringList seeds{QStringLiteral("43"), QStringLiteral("44"), QStringLiteral("45")};
+    const QString seedOnly = qEnvironmentVariable(q102Mode
+        ? "LLAMACODE_Q102_SEED_ONLY" : "LLAMACODE_Q77_SEED_ONLY").trimmed();
+    if (!seedOnly.isEmpty()) {
+        if (!seeds.contains(seedOnly))
+            QFAIL("LLAMACODE_Q77_SEED_ONLY must be one of the preregistered seeds 43, 44 or 45.");
+        seeds = {seedOnly};
+    }
+    int dispatcherExercised = 0;
+    for (const QString &seedText : seeds) {
+        const int seed = seedText.toInt();
+        QTemporaryDir cwd;
+        QVERIFY(cwd.isValid());
+
+        QFile notes(cwd.filePath(QStringLiteral("notes.txt")));
+        QVERIFY(notes.open(QIODevice::WriteOnly | QIODevice::Truncate));
+        QCOMPARE(notes.write("STATUS=ok"), qint64(9));
+        notes.close();
+        QVERIFY(!QFileInfo::exists(cwd.filePath(QStringLiteral("final.txt"))));
+
+        AgentContext ctx;
+        ctx.adapter = QStringLiteral("llamaagent");
+        ctx.cwd = cwd.path();
+        ctx.serverBaseUrl = baseUrl;
+        ctx.modelId = q102Mode
+            ? qEnvironmentVariable("LLAMACODE_Q102_MODEL_ID", "qwen3.8-27b-q4km").trimmed()
+            : QStringLiteral("qwen3.8-27b-q4km");
+        if (q102Mode)
+            ctx.apiKey = qEnvironmentVariable("LLAMACODE_Q102_API_KEY");
+        ctx.ctxOverride = 16384;
+        ctx.externalEndpoint = true;
+
+        LlamaAgentBackend backend;
+        backend.setEphemeralSessions(true);
+        backend.setMcpToolsEnabled(false);
+        backend.setPrivacyModeEnabled(true);
+        backend.setApprovalPolicy(QStringLiteral("auto"));
+        backend.setDeterministicSeed(seed);
+        backend.setAgentTuning(QString(), 0.6);
+        backend.setThinkingEnabled(true);
+        backend.setReasoningPolicy(QStringLiteral("medium"), -1);
+
+        QStringList disabledTools;
+        for (const QVariant &entry : LlamaAgentBackend::toolCatalog()) {
+            const QString name = entry.toMap().value(QStringLiteral("name")).toString();
+            if (name != QLatin1String("read_file") && name != QLatin1String("write_file"))
+                disabledTools << name;
+        }
+        disabledTools << QStringLiteral("mcp_search_tools") << QStringLiteral("mcp_call_tool");
+        backend.setDisabledTools(disabledTools);
+        backend.start(ctx);
+
+        QSignalSpy finished(&backend, &LlamaAgentBackend::turnFinished);
+        QElapsedTimer timer;
+        timer.start();
+        backend.sendMessage(QStringLiteral(
+            "Usá solo las herramientas disponibles. Primero leé notes.txt. Si y solo si "
+            "después de recibir el resultado real dice exactamente STATUS=ok, escribí "
+            "final.txt con el único contenido DONE-ok. No escribas antes de terminar la "
+            "lectura; no cambies notes.txt. Al final respondé DONE."));
+        QTRY_COMPARE_WITH_TIMEOUT(finished.count(), 1, 1800000);
+        const qint64 elapsedMs = timer.elapsed();
+
+        const QJsonArray api = backend.apiMessagesForTest();
+        const QVariantList cards = backend.messages();
+        QJsonArray firstBatch;
+        int firstBatchIndex = -1;
+        for (int i = 0; i < api.size(); ++i) {
+            const QJsonObject item = api.at(i).toObject();
+            const QJsonArray calls = item.value(QStringLiteral("tool_calls")).toArray();
+            if (item.value(QStringLiteral("role")).toString() == QLatin1String("assistant")
+                && !calls.isEmpty()) {
+                firstBatch = calls;
+                firstBatchIndex = i;
+                break;
+            }
+        }
+        QStringList firstBatchNames;
+        QString deferredWriteId;
+        for (const QJsonValue &value : firstBatch) {
+            const QJsonObject call = value.toObject();
+            const QString name = call.value(QStringLiteral("function")).toObject()
+                                     .value(QStringLiteral("name")).toString();
+            firstBatchNames << name;
+            if (name == QLatin1String("write_file"))
+                deferredWriteId = call.value(QStringLiteral("id")).toString();
+        }
+
+        bool omissionSeen = false;
+        bool omittedDeferredWriteSeen = false;
+        bool unexpectedTool = false;
+        bool toolPathsConfined = true;
+        QJsonArray toolPathTrace;
+        const QString notesFixturePath = QDir::cleanPath(cwd.filePath(QStringLiteral("notes.txt")));
+        const QString finalFixturePath = QDir::cleanPath(cwd.filePath(QStringLiteral("final.txt")));
+        const QStringList allowedReadPaths{notesFixturePath, finalFixturePath};
+        int assistantDecisionMessages = 0;
+        const QString omissionMarker = QStringLiteral(
+            "[omitida: la respuesta agrupó varias herramientas.");
+        for (const QJsonValue &value : api) {
+            const QJsonObject item = value.toObject();
+            if (item.value(QStringLiteral("role")).toString() == QLatin1String("assistant")) {
+                ++assistantDecisionMessages;
+                for (const QJsonValue &callValue : item.value(QStringLiteral("tool_calls")).toArray()) {
+                    const QJsonObject call = callValue.toObject();
+                    const QJsonObject function = call.value(QStringLiteral("function")).toObject();
+                    const QString name = function.value(QStringLiteral("name")).toString();
+                    if (name != QLatin1String("read_file") && name != QLatin1String("write_file")) {
+                        unexpectedTool = true;
+                        continue;
+                    }
+                    QJsonParseError parseError;
+                    const QString rawArguments = function.value(QStringLiteral("arguments")).toString();
+                    const QJsonDocument arguments = QJsonDocument::fromJson(rawArguments.toUtf8(),
+                                                                              &parseError);
+                    const QString path = arguments.object().value(QStringLiteral("path")).toString();
+                    const QString resolvedPath = QDir::isAbsolutePath(path)
+                        ? QDir::cleanPath(path)
+                        : QDir(cwd.path()).absoluteFilePath(path);
+                    const QStringList allowedPaths = name == QLatin1String("read_file")
+                        ? allowedReadPaths : QStringList{finalFixturePath};
+                    toolPathTrace.append(QJsonObject{
+                        {QStringLiteral("tool"), name},
+                        {QStringLiteral("requested_path"), path},
+                        {QStringLiteral("resolved_path"), QDir::cleanPath(resolvedPath)},
+                        {QStringLiteral("allowed_fixture_paths"), QJsonArray::fromStringList(allowedPaths)},
+                        {QStringLiteral("arguments_parse_error"), parseError.errorString()}
+                    });
+                    if (parseError.error != QJsonParseError::NoError || path.isEmpty()
+                        || !allowedPaths.contains(QDir::cleanPath(resolvedPath)))
+                        toolPathsConfined = false;
+                }
+            }
+            if (item.value(QStringLiteral("role")).toString() != QLatin1String("tool"))
+                continue;
+            const QString content = item.value(QStringLiteral("content")).toString();
+            if (!content.contains(omissionMarker))
+                continue;
+            omissionSeen = true;
+            if (!deferredWriteId.isEmpty()
+                && item.value(QStringLiteral("tool_call_id")).toString() == deferredWriteId)
+                omittedDeferredWriteSeen = true;
+        }
+
+        int firstReadCard = -1;
+        int omittedWriteCard = -1;
+        int successfulWriteCard = -1;
+        QJsonArray toolCardTrace;
+        for (int i = 0; i < cards.size(); ++i) {
+            const QVariantMap card = cards.at(i).toMap();
+            if (card.value(QStringLiteral("role")).toString() != QLatin1String("toolcall"))
+                continue;
+            const QString name = card.value(QStringLiteral("name")).toString();
+            if (name != QLatin1String("read_file") && name != QLatin1String("write_file")) {
+                unexpectedTool = true;
+                continue;
+            }
+            if (name == QLatin1String("read_file") && firstReadCard < 0)
+                firstReadCard = i;
+            const QString output = card.value(QStringLiteral("output")).toString();
+            toolCardTrace.append(QJsonObject{
+                {QStringLiteral("index"), i},
+                {QStringLiteral("name"), name},
+                {QStringLiteral("kind"), card.value(QStringLiteral("kind")).toString()},
+                {QStringLiteral("ok"), card.value(QStringLiteral("ok")).toBool()},
+                {QStringLiteral("omission_marker"), output.contains(omissionMarker)},
+                {QStringLiteral("output_length"), output.size()}
+            });
+            if (name == QLatin1String("write_file") && output.contains(omissionMarker))
+                omittedWriteCard = i;
+            if (name == QLatin1String("write_file")
+                && card.value(QStringLiteral("ok")).toBool()
+                && successfulWriteCard < 0)
+                successfulWriteCard = i;
+        }
+
+        QString reissuedWriteId;
+        for (int i = qMax(0, firstBatchIndex + 1); i < api.size(); ++i) {
+            const QJsonObject item = api.at(i).toObject();
+            if (item.value(QStringLiteral("role")).toString() != QLatin1String("assistant"))
+                continue;
+            for (const QJsonValue &value : item.value(QStringLiteral("tool_calls")).toArray()) {
+                const QJsonObject call = value.toObject();
+                if (call.value(QStringLiteral("function")).toObject()
+                        .value(QStringLiteral("name")).toString() == QLatin1String("write_file"))
+                    reissuedWriteId = call.value(QStringLiteral("id")).toString();
+            }
+        }
+
+        QFile finalFile(cwd.filePath(QStringLiteral("final.txt")));
+        QVERIFY2(finalFile.open(QIODevice::ReadOnly), "Qwen did not create final.txt.");
+        const QByteArray finalContent = finalFile.readAll();
+        finalFile.close();
+        QVERIFY(notes.open(QIODevice::ReadOnly));
+        const QByteArray notesContent = notes.readAll();
+        notes.close();
+        backend.stop();
+
+        const bool batchHasReadAndWrite = firstBatchNames.contains(QStringLiteral("read_file"))
+            && firstBatchNames.contains(QStringLiteral("write_file"));
+        const bool firstBatchReadFirst = !firstBatchNames.isEmpty()
+            && firstBatchNames.first() == QLatin1String("read_file");
+        const bool exercisedThisSeed = firstBatch.size() >= 2 && batchHasReadAndWrite
+            && firstBatchReadFirst && omittedDeferredWriteSeen;
+        if (exercisedThisSeed)
+            ++dispatcherExercised;
+
+        const QJsonObject runResult{
+            {QStringLiteral("seed"), seed},
+            {QStringLiteral("turn_finished"), finished.count() == 1},
+            {QStringLiteral("elapsed_ms"), elapsedMs},
+            {QStringLiteral("assistant_decision_messages"), assistantDecisionMessages},
+            {QStringLiteral("first_batch_names"), QJsonArray::fromStringList(firstBatchNames)},
+            {QStringLiteral("first_batch_read_first"), firstBatchReadFirst},
+            {QStringLiteral("omission_seen"), omissionSeen},
+            {QStringLiteral("deferred_write_omitted"), omittedDeferredWriteSeen},
+            {QStringLiteral("reissued_write_id"), reissuedWriteId},
+            {QStringLiteral("read_card_index"), firstReadCard},
+            {QStringLiteral("omitted_write_card_index"), omittedWriteCard},
+            {QStringLiteral("successful_write_card_index"), successfulWriteCard},
+            {QStringLiteral("unexpected_tool_request_or_card"), unexpectedTool},
+            {QStringLiteral("tool_paths_confined"), toolPathsConfined},
+            {QStringLiteral("tool_path_trace"), toolPathTrace},
+            {QStringLiteral("tool_card_trace"), toolCardTrace},
+            {QStringLiteral("final_file_exact"), finalContent == QByteArrayLiteral("DONE-ok")},
+            {QStringLiteral("source_file_unchanged"), notesContent == QByteArrayLiteral("STATUS=ok")},
+            {QStringLiteral("dispatcher_exercised"), exercisedThisSeed}
+        };
+        qInfo().noquote() << (q102Mode ? "Q102_SEED_RESULT " : "Q77_SEED_RESULT ")
+                          << QString::fromUtf8(QJsonDocument(runResult).toJson(QJsonDocument::Compact));
+
+        QVERIFY2(!unexpectedTool, "Q77 executed a tool outside its temporary file sandbox.");
+        QVERIFY2(toolPathsConfined,
+                 "A tool path was outside its fixture allowlist (reads may use notes.txt/final.txt; writes may use only final.txt).");
+        QVERIFY2(firstBatchReadFirst || firstBatch.isEmpty() || !firstBatchNames.contains(QStringLiteral("write_file")),
+                 "Qwen placed write_file before read_file in its first batch.");
+        QVERIFY2(firstReadCard >= 0, "The dispatcher did not execute read_file.");
+        QVERIFY2(successfulWriteCard > firstReadCard,
+                 "write_file must succeed only after the real read_file result is visible.");
+        QVERIFY2(finalContent == QByteArrayLiteral("DONE-ok"), "final.txt content differs from DONE-ok.");
+        QVERIFY2(notesContent == QByteArrayLiteral("STATUS=ok"), "Qwen changed the source fixture.");
+        if (omittedDeferredWriteSeen) {
+            QVERIFY(firstReadCard >= 0);
+            QVERIFY(omittedWriteCard > firstReadCard);
+            QVERIFY(successfulWriteCard > omittedWriteCard);
+            QVERIFY(!reissuedWriteId.isEmpty());
+            QVERIFY(reissuedWriteId != deferredWriteId);
+        }
+    }
+
+    if (!q102Mode && dispatcherExercised < 2)
+        QSKIP("Q77 completed safely, but fewer than 2/3 seeds exercised a deferred multi-tool write; dispatcher result is inconclusive.");
 }
 
 // Regresión: si llama-server se reinicia con un stream en vuelo, stop() debe
@@ -1576,6 +2067,22 @@ void AgentWireTests::mergeToolCallDelta_parallelCallsByIndex()
     QCOMPARE(acc.value(0).value(QStringLiteral("arguments")).toString(), QStringLiteral("{\"q\":1}"));
     QCOMPARE(acc.value(1).value(QStringLiteral("name")).toString(), QStringLiteral("list_dir"));
     QCOMPARE(acc.value(1).value(QStringLiteral("arguments")).toString(), QStringLiteral("{\"p\":2}"));
+}
+
+void AgentWireTests::toolBatchRequiresReplan_onlyTaskBatchesFanOut()
+{
+    const auto call = [](const QString &name) {
+        return QJsonObject{{QStringLiteral("function"), QJsonObject{
+            {QStringLiteral("name"), name}}}};
+    };
+    QVERIFY(!LlamaAgentBackend::toolBatchRequiresReplan(
+        QJsonArray{call(QStringLiteral("read_file"))}));
+    QVERIFY(!LlamaAgentBackend::toolBatchRequiresReplan(
+        QJsonArray{call(QStringLiteral("task")), call(QStringLiteral("task"))}));
+    QVERIFY(LlamaAgentBackend::toolBatchRequiresReplan(
+        QJsonArray{call(QStringLiteral("task")), call(QStringLiteral("read_file"))}));
+    QVERIFY(LlamaAgentBackend::toolBatchRequiresReplan(
+        QJsonArray{call(QStringLiteral("read_file")), call(QStringLiteral("read_file"))}));
 }
 
 // visibleAnswer: con Pensar OFF quita <think>…</think>, PERO si el modelo metió

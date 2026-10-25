@@ -871,6 +871,11 @@ public:
     Q_INVOKABLE int systemProfileMinimumBinaryBuild(const QString &launchId) const;
     Q_INVOKABLE QVariantList systemProfileContextPresets(const QString &launchId) const;
     Q_INVOKABLE QString createSystemProfileContextVariant(const QString &launchId, int ctx);
+    // Huella por perfil y suite para no volver a ejecutar en GPU una campaña ya
+    // completada con los mismos inputs efectivos.
+    static QString benchmarkEvaluationFingerprintForTest(
+        const QString &profileConfigFingerprint, const QString &mode,
+        const QString &target, int passes, int timeoutSec, const QJsonArray &tasks);
     static int llamaCppBuildNumber(const QString &text);
     // Test seam para la huella del workspace del benchmark: los eventos internos
     // del agente no cuentan como progreso de una reparación.

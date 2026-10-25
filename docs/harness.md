@@ -219,6 +219,13 @@ Puntos que importan:
 - **Streaming SSE**. Los `tool_calls` llegan fragmentados por `index`;
   `mergeToolCallDelta()` (pura, testeada) mergea `id`/`name` y concatena
   `arguments` hasta el final del stream.
+- **Replanificación de tandas normales**. Si una respuesta agrupa dos o más
+  herramientas y alguna no es `task`, se ejecuta sólo la primera llamada y se
+  devuelve un resultado explícito de omisión para las demás; después el modelo
+  recibe el resultado real y decide qué hacer. Las tandas compuestas sólo por
+  `task` conservan su fan-out paralelo. Esto evita ejecutar argumentos antiguos
+  después de que una herramienta cambie la evidencia y añade una completion para
+  continuar esas tandas normales.
 - **Watchdog de inactividad de stream**, no de duración total: `m_streamIdleTimer`
   se reinicia con cada frame SSE. Configurable con `LLAMACODE_STREAM_IDLE_TIMEOUT`
   (segundos, default 3600). Un prefill lento y legítimo no se mata; un stream
@@ -828,3 +835,24 @@ la configuración histórica.
 - **Presets de sistema en código** (`systemPresets()`), no JSON bundleado. Se
   revisará sólo si aparece la necesidad de agregar un preset fuera de una release;
   hoy el costo (cargador + validación + fallback) no se paga solo.
+# Identidad y límites de autorización para MCP
+
+El host genera un principal local a partir de la cuenta del sistema y el
+workspace canónico; sólo propaga hashes estables (`issuer`, `subjectId` y
+`workspaceId`) al proceso MCP iniciado por LlamaCode y en `_meta` de las
+llamadas. El modelo no puede proporcionar ni reemplazar esos valores.
+
+Una tool puede declarar
+`annotations.llamacode.authorization = {"scope":"workspace",
+"resourceParameter":"workspace_id"}`. En ese caso, LlamaCode permite la
+llamada sólo si el argumento identifica exactamente el workspace activo y el
+principal local está presente. Los selectores `tenant`, `tenant_id`,
+`organization_id` y `org_id` se rechazan; los alcances `tenant` y `resource`
+fallan cerrados porque todavía no existe un proveedor de identidad de tenant ni
+una política confiable que conceda recursos concretos.
+
+La propagación por entorno y `_meta` aporta contexto, no una credencial
+criptográfica: un servidor MCP que controla su propio proceso puede ignorarla.
+Por eso, antes de habilitar acciones entre tenants, el servidor que protege los
+datos también debe autenticar el principal y aplicar la autorización por recurso.
+La aprobación humana y las anotaciones declarativas no sustituyen esa política.

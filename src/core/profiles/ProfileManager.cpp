@@ -239,6 +239,17 @@ bool ProfileManager::setBackendCloud(const QString &id, const QString &kind,
     return ok;
 }
 
+bool ProfileManager::setBackendManagedServer(const QString &id,
+                                              const QJsonObject &managedServer)
+{
+    BackendProfile p = m_backends.findById(id);
+    if (p.id.isEmpty() || p.system) return false;
+    p.managedServer = managedServer;
+    const bool ok = m_backends.update(p);
+    if (ok) save();
+    return ok;
+}
+
 // ---- ModelProfile ----
 
 QString ProfileManager::addModelProfile(const QString &name, const QString &modelId,

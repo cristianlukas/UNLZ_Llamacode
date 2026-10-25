@@ -177,6 +177,25 @@ Antes de comparar una candidata con un perfil existente, registrar y conservar:
 7. Ejecución: fecha/hora, timeout, cantidad de pasadas, seed si aplica y
    identificador de la corrida.
 
+### No repetir campañas idénticas
+
+Cada perfil y suite genera una huella de evaluación que incluye la configuración
+efectiva, identidad/tamaño/fecha de los archivos de modelo y runtime, configuración
+del servidor administrado, agente/harness, workload completo (prompts y criterios),
+modo, target, timeout y cantidad de pasadas. LlamaCode omite una evaluación cuya
+huella ya terminó correctamente. Cambiar sólo la etiqueta o el nombre de la corrida
+no habilita una reproducción.
+
+Una corrida cancelada o con error de transporte/carga queda reintentable. Una
+decisión ya cerrada se vuelve a abrir cuando cambie materialmente el modelo,
+runtime, harness, workload o protocolo; el cambio queda en la huella y el registro
+de corrida. Esto evita consumir GPU para reproducir la misma evidencia y conserva
+los recibos de los intentos anteriores.
+
+Los manifiestos históricos anteriores a esta regla no se reescriben. Siguen siendo
+evidencia de referencia, pero la deduplicación automática sólo aplica a campañas
+que guardan `evaluationStates` en `metadata.json`.
+
 No se deben comparar TPS, tiempo o calidad de suites distintas. Tampoco se
 deben comparar filas tomadas con un harness diferente sin marcar el cambio.
 

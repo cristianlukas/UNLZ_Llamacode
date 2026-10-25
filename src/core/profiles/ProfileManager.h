@@ -1,6 +1,7 @@
 #pragma once
 #include <QSet>
 #include <QHash>
+#include <QJsonObject>
 #include "ProfileTypes.h"
 #include <QObject>
 #include <QAbstractListModel>
@@ -113,6 +114,8 @@ public:
     Q_INVOKABLE bool setBackendCloud(const QString &id, const QString &kind,
                                      const QString &baseUrl, const QString &keyRef,
                                      const QString &model, int ctx);
+    Q_INVOKABLE bool setBackendManagedServer(const QString &id,
+                                             const QJsonObject &managedServer);
 
     // ModelProfile
     Q_INVOKABLE QString addModelProfile(const QString &name, const QString &modelId,

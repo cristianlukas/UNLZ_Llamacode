@@ -25,6 +25,7 @@ public:
     ~McpClient() override;
 
     // Lanza el server y hace el handshake + tools/list. true si quedó listo.
+    void setTrustedPrincipal(const QJsonObject &principal);
     bool start(const QString &command, const QString &cwd);
     void shutdown();
 
@@ -50,4 +51,5 @@ private:
     bool m_ready = false;
     int m_id = 0;
     QList<ToolDef> m_tools;
+    QJsonObject m_principal;
 };

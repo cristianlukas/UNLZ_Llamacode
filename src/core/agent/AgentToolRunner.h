@@ -58,6 +58,7 @@ public slots:
     void setLivePreviewEnabled(bool enabled);
     // Sesión activa del agente: la tool recent_actions filtra el event-log por ella.
     void setSessionId(const QString &sessionId);
+    void setTrustedPrincipal(const QJsonObject &principal);
     // Identificador de punta a punta del turno actual (Task/agente/tools/reintentos).
     void setCorrelationId(const QString &correlationId);
     // Cuentas de correo (con password ya resuelto) para email_send/list/read.
@@ -178,6 +179,7 @@ private:
     QString m_auxiliaryBearer;
     bool m_livePreviewEnabled = false;
     QString m_sessionId;           // sesión activa (filtro de recent_actions)
+    QJsonObject m_trustedPrincipal; // creado por el host; nunca viene del modelo
     // Última ventana que el AGENTE eligió (desktop_focus, o un clic/hover con
     // scope_kind=window). desktop_type/desktop_key sólo teclean ahí.
     QString m_agentFocusedWindow;

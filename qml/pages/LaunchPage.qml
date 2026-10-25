@@ -812,6 +812,42 @@ Item {
                     }
                 }
 
+                RowLayout {
+                    Layout.fillWidth: true
+                    visible: !App.serverRunning && !App.serverStopping
+                             && launchCombo.currentValue !== undefined
+                             && App.systemProfileContextPresets(launchCombo.currentValue).length > 0
+                    spacing: 8
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: "Contexto alternativo bajo demanda"
+                        color: Theme.textMuted
+                        font.pixelSize: 12
+                        wrapMode: Text.Wrap
+                    }
+
+                    LcButton {
+                        readonly property int nextContext: {
+                            const choices = App.systemProfileContextPresets(launchCombo.currentValue)
+                            return choices.length > 0 ? Number(choices[0]) : 0
+                        }
+                        text: nextContext >= 1000000
+                              ? "Crear perfil 1M"
+                              : "Crear perfil %1K".arg(Math.round(nextContext / 1000))
+                        secondary: true
+                        enabled: nextContext > 0 && !App.serverRunning && !App.serverStopping
+                        onClicked: {
+                            const id = App.createSystemProfileContextVariant(
+                                launchCombo.currentValue, nextContext)
+                            if (id) {
+                                launchCombo.refreshMenu()
+                                launchCombo.selectLaunchProfile(id)
+                            }
+                        }
+                    }
+                }
+
                 // Dentro de un ColumnLayout `height:` se ignora (el layout usa el
                 // implicitHeight, 0 en un Rectangle): el recuadro colapsaba y
                 // "Binario:" se pisaba con "Vista previa del comando".

@@ -24,6 +24,8 @@ private slots:
     void desktopActionRepeatSignatureIgnoresOnlySnapshotId();
     void canonicalHashIgnoresObjectKeyOrder();
     void idempotencyIsScopedByCorrelation();
+    void localPrincipalIsBoundToWorkspace();
+    void resourceAuthorizationFailsClosed();
 };
 
 void ToolExecutionSafetyTests::unknownIsConservative()
@@ -439,6 +441,51 @@ void ToolExecutionSafetyTests::idempotencyIsScopedByCorrelation()
     const QString one = ToolExecutionSafety::idempotencyKey(QStringLiteral("run-1"), hash);
     QCOMPARE(one, ToolExecutionSafety::idempotencyKey(QStringLiteral("run-1"), hash));
     QVERIFY(one != ToolExecutionSafety::idempotencyKey(QStringLiteral("run-2"), hash));
+}
+
+void ToolExecutionSafetyTests::localPrincipalIsBoundToWorkspace()
+{
+    const QJsonObject one = ToolExecutionSafety::localPrincipal(
+        QStringLiteral("/home/alice"), QStringLiteral("/work/project-a"));
+    const QJsonObject same = ToolExecutionSafety::localPrincipal(
+        QStringLiteral("/home/alice"), QStringLiteral("/work/project-a"));
+    const QJsonObject otherWorkspace = ToolExecutionSafety::localPrincipal(
+        QStringLiteral("/home/alice"), QStringLiteral("/work/project-b"));
+    QVERIFY(!one.isEmpty());
+    QCOMPARE(one.value(QStringLiteral("issuer")).toString(),
+             QStringLiteral("io.llamacode.local"));
+    QCOMPARE(one.value(QStringLiteral("subjectId")), same.value(QStringLiteral("subjectId")));
+    QCOMPARE(one.value(QStringLiteral("workspaceId")), same.value(QStringLiteral("workspaceId")));
+    QVERIFY(one.value(QStringLiteral("workspaceId")).toString()
+            != otherWorkspace.value(QStringLiteral("workspaceId")).toString());
+    QVERIFY(!one.value(QStringLiteral("subjectId")).toString().contains(QStringLiteral("alice")));
+}
+
+void ToolExecutionSafetyTests::resourceAuthorizationFailsClosed()
+{
+    const QJsonObject principal = ToolExecutionSafety::localPrincipal(
+        QStringLiteral("/home/alice"), QStringLiteral("/work/project-a"));
+    const QString workspaceId = principal.value(QStringLiteral("workspaceId")).toString();
+    const QJsonObject workspaceAnnotations{{QStringLiteral("llamacode"), QJsonObject{
+        {QStringLiteral("authorization"), QJsonObject{
+             {QStringLiteral("scope"), QStringLiteral("workspace")},
+             {QStringLiteral("resourceParameter"), QStringLiteral("workspace_id")}}}}}};
+    QVERIFY(ToolExecutionSafety::resourceAuthorizationError(
+        workspaceAnnotations, {{QStringLiteral("workspace_id"), workspaceId}}, principal).isEmpty());
+    QVERIFY(!ToolExecutionSafety::resourceAuthorizationError(
+        workspaceAnnotations, {{QStringLiteral("workspace_id"), QStringLiteral("other-workspace")}},
+        principal).isEmpty());
+    QVERIFY(!ToolExecutionSafety::resourceAuthorizationError(
+        workspaceAnnotations, {{QStringLiteral("workspace_id"), workspaceId}}, {}).isEmpty());
+
+    const QJsonObject tenantAnnotations{{QStringLiteral("llamacode"), QJsonObject{
+        {QStringLiteral("authorization"), QJsonObject{
+             {QStringLiteral("scope"), QStringLiteral("tenant")}}}}}};
+    QVERIFY(!ToolExecutionSafety::resourceAuthorizationError(
+        tenantAnnotations, {{QStringLiteral("record_id"), QStringLiteral("42")}}, principal).isEmpty());
+    QVERIFY(!ToolExecutionSafety::resourceAuthorizationError(
+        {}, {{QStringLiteral("filter"), QJsonObject{
+                 {QStringLiteral("tenant_id"), QStringLiteral("other-tenant")}}}}, principal).isEmpty());
 }
 
 QTEST_MAIN(ToolExecutionSafetyTests)

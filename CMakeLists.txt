@@ -105,6 +105,7 @@ set(CORE_SOURCES
     src/core/profiles/HarnessSpec.cpp
     src/core/profiles/HarnessEngine.cpp
     src/core/profiles/ProfileTypes.cpp
+    src/core/profiles/AstraStrataConfig.cpp
     src/core/profiles/ProfileManager.cpp
     src/core/profiles/PortablePaths.cpp
     src/core/profiles/EffectiveProfileBuilder.cpp
@@ -238,6 +239,7 @@ set(HEADERS
     src/core/integrations/OpenCodeIntegration.h
     src/core/integrations/ClaudeDesktopIntegration.h
     src/core/profiles/ProfileTypes.h
+    src/core/profiles/AstraStrataConfig.h
     src/core/profiles/ProfileManager.h
     src/core/profiles/EffectiveProfileBuilder.h
     src/core/profiles/ProfileHealthChecker.h
@@ -716,6 +718,7 @@ if (BUILD_TESTS)
     add_lc_test(test_managed_agent_runs tests/test_managed_agent_runs.cpp)
     add_lc_test(test_backends_net       tests/test_backends_net.cpp)
     add_lc_test(test_appcontroller      tests/test_appcontroller.cpp)
+    add_lc_test(test_astra_strata_config tests/test_astra_strata_config.cpp)
     add_lc_test(test_mermaid            tests/test_mermaid.cpp)
     add_lc_test(test_mail               tests/test_mail.cpp)
     add_lc_test(test_voice              tests/test_voice.cpp)

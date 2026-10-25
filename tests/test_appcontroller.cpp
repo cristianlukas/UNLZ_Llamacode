@@ -220,6 +220,7 @@ private slots:
     void benchmarkGateAcceptsValidHe20QualityResult();
     void benchmarkCoverageClassifiesStages();
     void benchmarkFingerprintIncludesThinkingPolicy();
+    void identicalBenchmarkCampaignsHaveStableFingerprint();
     void benchmarkCustomStageClassification();
     void benchmarkRankingAggregatesLatestStages();
     void benchmarkDocumentRowsParseScores();
@@ -287,6 +288,7 @@ private slots:
     void computerUseSandwichRemainsExperimentalAndOptIn();
     void systemProfileBinaryPinReadsBundle();
     void systemProfilesBundleCacheSeesRewrites();
+    void astraFlashNextOffers131KWithoutChangingOneMProfile();
     void gpuQueriesRunAsyncAndNotify();
     void systemProfileMinimumBuildSelectsNewestCompatible();
     void cpuSystemProfileRequiresCpuBinary();
@@ -2942,6 +2944,33 @@ void AppControllerTests::benchmarkFingerprintIncludesThinkingPolicy()
              "Thinking policy must invalidate benchmark stage coverage.");
 }
 
+void AppControllerTests::identicalBenchmarkCampaignsHaveStableFingerprint()
+{
+    const QJsonArray tasks{
+        QJsonObject{{QStringLiteral("id"), QStringLiteral("coding-1")},
+                    {QStringLiteral("prompt"), QStringLiteral("implement parser")},
+                    {QStringLiteral("maxTokens"), 256}}
+    };
+    const QString first = AppController::benchmarkEvaluationFingerprintForTest(
+        QStringLiteral("profile-fp-a"), QStringLiteral("complete"),
+        QStringLiteral("agent"), 2, 900, tasks);
+    QCOMPARE(first, AppController::benchmarkEvaluationFingerprintForTest(
+        QStringLiteral("profile-fp-a"), QStringLiteral("complete"),
+        QStringLiteral("agent"), 2, 900, tasks));
+    QVERIFY(first != AppController::benchmarkEvaluationFingerprintForTest(
+        QStringLiteral("profile-fp-b"), QStringLiteral("complete"),
+        QStringLiteral("agent"), 2, 900, tasks));
+    QVERIFY(first != AppController::benchmarkEvaluationFingerprintForTest(
+        QStringLiteral("profile-fp-a"), QStringLiteral("complete"),
+        QStringLiteral("agent"), 2, 900,
+        QJsonArray{QJsonObject{{QStringLiteral("id"), QStringLiteral("coding-1")},
+                              {QStringLiteral("prompt"), QStringLiteral("different workload")},
+                              {QStringLiteral("maxTokens"), 256}}}));
+    QVERIFY(first != AppController::benchmarkEvaluationFingerprintForTest(
+        QStringLiteral("profile-fp-a"), QStringLiteral("complete"),
+        QStringLiteral("agent"), 3, 900, tasks));
+}
+
 void AppControllerTests::benchmarkCustomStageClassification()
 {
     QCOMPARE(AppController::customBenchmarkStageForTest(
@@ -3825,6 +3854,20 @@ void AppControllerTests::systemProfilesBundleCacheSeesRewrites()
     QCOMPARE(app.systemProfileBinaryPin(QStringLiteral("cached")), QStringLiteral("b2222"));
 
     qunsetenv("LLAMACODE_SYSTEM_PROFILES");
+}
+
+void AppControllerTests::astraFlashNextOffers131KWithoutChangingOneMProfile()
+{
+    AppController app;
+    const QVariantList choices = app.systemProfileContextPresets(
+        QStringLiteral("sys-astra-iq2xs-default"));
+    QCOMPARE(choices, QVariantList{131072});
+    const QVariantMap source = app.profileManager()->getLaunchProfile(
+        QStringLiteral("sys-astra-iq2xs-default"));
+    QVERIFY(!source.isEmpty());
+    const QVariantMap backend = app.profileManager()->getBackend(
+        source.value(QStringLiteral("backendProfileId")).toString());
+    QCOMPARE(backend.value(QStringLiteral("cloudCtx")).toInt(), 1048576);
 }
 
 // Ajustes pide inventario y power limit al abrirse: la consulta (nvidia-smi)

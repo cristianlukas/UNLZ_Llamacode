@@ -429,6 +429,10 @@ public:
     // llegan; arguments se concatena chunk a chunk. PURA → unit-testeable.
     static void mergeToolCallDelta(QHash<int, QJsonObject> &acc,
                                    const QJsonArray &deltaToolCalls);
+    // Sólo las tandas compuestas exclusivamente por task conservan el fan-out.
+    // Las demás se replanifican tras el primer resultado para no ejecutar
+    // argumentos preparados antes de observar la evidencia intermedia.
+    static bool toolBatchRequiresReplan(const QJsonArray &toolCalls);
 
     // Arma el mensaje user multimodal con las capturas observadas por las tools
     // (data-URIs ya codificadas). Devuelve un QJsonObject role=user con content =
@@ -594,6 +598,7 @@ private:
     void postCompletionRequest(QJsonObject payload, CompletionMode mode);
     QJsonObject buildTextToolPayload(const QJsonObject &nativePayload) const;
     void processPendingCalls();     // procesa m_pendingCalls (approval/exec)
+    void resetPendingBatchReplan();
     void flushPendingPhaseControl();
     void finishTurn(const QString &finalText, bool persistFinalToApi = true,
                     const QString &terminalStatus = QStringLiteral("completed"));
@@ -948,6 +953,9 @@ private:
     QJsonArray m_transcriptMessages;
     QJsonArray m_apiMessages;
     QJsonArray m_pendingCalls;      // tool_calls restantes del turno actual
+    QString m_pendingBatchFirstCallId;
+    bool m_pendingBatchRequiresReplan = false;
+    bool m_pendingBatchFirstResultSeen = false;
     QSet<QString> m_alwaysAllowed;  // kinds aprobados con "Siempre"
 
     // Robustez (Etapa 7)

@@ -1,6 +1,8 @@
 #include "ToolExecutionSafety.h"
 
 #include <QCryptographicHash>
+#include <QDir>
+#include <QFileInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonValue>
@@ -56,6 +58,88 @@ QString foldDesktopVerificationText(const QString &text)
 } // namespace
 
 namespace ToolExecutionSafety {
+
+namespace {
+
+QString stablePathIdentity(const QString &path)
+{
+    const QFileInfo info(path);
+    const QString canonical = info.canonicalFilePath();
+    const QString normalized = QDir::cleanPath(
+        canonical.isEmpty() ? info.absoluteFilePath() : canonical);
+    return QString::fromLatin1(QCryptographicHash::hash(
+        normalized.toUtf8(), QCryptographicHash::Sha256).toHex());
+}
+
+bool containsTenantSelector(const QJsonValue &value)
+{
+    if (value.isObject()) {
+        const QJsonObject object = value.toObject();
+        for (auto it = object.constBegin(); it != object.constEnd(); ++it) {
+            QString key = it.key().toLower();
+            key.remove(QLatin1Char('_'));
+            key.remove(QLatin1Char('-'));
+            if (key == QLatin1String("tenant") || key == QLatin1String("tenantid")
+                || key == QLatin1String("organizationid") || key == QLatin1String("orgid"))
+                return true;
+            if (containsTenantSelector(it.value())) return true;
+        }
+    } else if (value.isArray()) {
+        for (const QJsonValue &entry : value.toArray())
+            if (containsTenantSelector(entry)) return true;
+    }
+    return false;
+}
+
+} // namespace
+
+QJsonObject localPrincipal(const QString &homePath, const QString &workspacePath)
+{
+    if (homePath.trimmed().isEmpty() || workspacePath.trimmed().isEmpty()) return {};
+    const QString subject = stablePathIdentity(homePath);
+    const QString workspace = stablePathIdentity(workspacePath);
+    if (subject.isEmpty() || workspace.isEmpty()) return {};
+    return {{QStringLiteral("issuer"), QStringLiteral("io.llamacode.local")},
+            {QStringLiteral("subjectId"), subject},
+            {QStringLiteral("workspaceId"), workspace}};
+}
+
+QString resourceAuthorizationError(const QJsonObject &annotations,
+                                   const QJsonObject &arguments,
+                                   const QJsonObject &principal)
+{
+    const QJsonObject llamacode = annotations.value(QStringLiteral("llamacode")).toObject();
+    const QJsonValue authorizationValue = llamacode.value(QStringLiteral("authorization"));
+    const QJsonObject authorization = authorizationValue.toObject();
+    const QString scope = authorization.value(QStringLiteral("scope")).toString().trimmed();
+    if (containsTenantSelector(arguments))
+        return QStringLiteral("La tool envió un selector de tenant/organización; la ruta está bloqueada hasta configurar una identidad y política de tenant confiables.");
+    if (authorizationValue.isUndefined()) return {};
+    if (!authorizationValue.isObject() || scope.isEmpty())
+        return QStringLiteral("La tool declara una política de autorización inválida; acceso denegado.");
+    if (scope == QLatin1String("public")) return {};
+    if (scope == QLatin1String("tenant"))
+        return QStringLiteral("Acceso cross-tenant bloqueado: no hay principal de tenant ni política por recurso verificada por el servidor.");
+    if (scope == QLatin1String("resource"))
+        return QStringLiteral("Acceso al recurso bloqueado: no hay una concesión confiable para este recurso.");
+    if (scope != QLatin1String("workspace"))
+        return QStringLiteral("La tool declara un alcance de autorización desconocido; acceso denegado.");
+
+    if (principal.value(QStringLiteral("issuer")).toString()
+            != QLatin1String("io.llamacode.local")
+        || principal.value(QStringLiteral("subjectId")).toString().isEmpty()
+        || principal.value(QStringLiteral("workspaceId")).toString().isEmpty())
+        return QStringLiteral("La tool requiere identidad local confiable; acceso denegado.");
+    const QString resourceParameter = authorization.value(
+        QStringLiteral("resourceParameter")).toString().trimmed();
+    if (resourceParameter.isEmpty())
+        return QStringLiteral("La política workspace no declara resourceParameter; acceso denegado.");
+    const QString requestedResource = arguments.value(resourceParameter).toString();
+    if (requestedResource.isEmpty()
+        || requestedResource != principal.value(QStringLiteral("workspaceId")).toString())
+        return QStringLiteral("El recurso solicitado no coincide con el workspace autorizado; acceso denegado.");
+    return {};
+}
 
 Contract fromMcpTool(const QString &name, const QString &description,
                      const QJsonObject &annotations)

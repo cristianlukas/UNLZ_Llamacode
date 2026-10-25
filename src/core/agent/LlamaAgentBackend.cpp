@@ -634,6 +634,8 @@ void LlamaAgentBackend::start(const AgentContext &ctx)
     if (!m_ephemeralSessions)
         loadFromDisk();     // recupera sesiones previas; activa la primera
     ensureSession();        // si no había ninguna, crea una
+    const QJsonObject trustedPrincipal = ToolExecutionSafety::localPrincipal(
+        QDir::homePath(), m_cwd);
     configureDurableRunStore();
     emit agentLifecycleEvent(AgentLifecycle::sessionStart(
         m_sessionId, m_cwd, m_correlationId, m_harnessProfileId,
@@ -679,6 +681,8 @@ void LlamaAgentBackend::start(const AgentContext &ctx)
                               Q_ARG(QString, m_auxiliaryBearer));
     QMetaObject::invokeMethod(m_worker, "setSessionId", Qt::QueuedConnection,
                               Q_ARG(QString, m_sessionId));
+    QMetaObject::invokeMethod(m_worker, "setTrustedPrincipal", Qt::QueuedConnection,
+                              Q_ARG(QJsonObject, trustedPrincipal));
     QMetaObject::invokeMethod(m_worker, "setTeacherConfig", Qt::QueuedConnection,
                               Q_ARG(QString, m_teacherUrl), Q_ARG(QString, m_teacherModel),
                               Q_ARG(QString, m_teacherKey));
@@ -1324,6 +1328,7 @@ void LlamaAgentBackend::stop()
         r->deleteLater();
     }
     m_pendingCalls = {};
+    resetPendingBatchReplan();
     m_awaitId.clear();
     m_awaitCall = {};
     m_execCallId.clear();
@@ -1381,6 +1386,7 @@ void LlamaAgentBackend::cancelGeneration()
         r->deleteLater();
     }
     m_pendingCalls = {};
+    resetPendingBatchReplan();
     m_awaitId.clear();
     setTyping(false);
     m_curAsstIdx = -1;
@@ -3178,6 +3184,7 @@ void LlamaAgentBackend::interruptForSteer()
     // Reparar tool_calls colgados ANTES de limpiar el estado pendiente.
     repairDanglingToolCalls();
     m_pendingCalls = {};
+    resetPendingBatchReplan();
     m_awaitId.clear();
     m_awaitCall = {};
     m_execCallId.clear();   // ignora resultado tardío de una tool en vuelo
@@ -3532,7 +3539,7 @@ void LlamaAgentBackend::runCompletion()
         {QStringLiteral("tools"), availableTools},
         {QStringLiteral("tool_choice"), toolChoice},
         // Habilitado para que el modelo pueda lanzar varias `task` en paralelo.
-        // El loop serializa los tools normales igual (uno por onToolExecuted).
+        // Las tandas mixtas/normales se replantean después del primer resultado.
         {QStringLiteral("parallel_tool_calls"), !requireDesktopObservation},
         // Parsear tool calls del lado server puede devolver 500 si el modelo
         // emite argumentos JSON parciales durante el streaming. Lo manejamos
@@ -3870,6 +3877,18 @@ void LlamaAgentBackend::mergeToolCallDelta(QHash<int, QJsonObject> &acc,
                 + fn.value(QStringLiteral("arguments")).toString();
         acc.insert(idx, a);
     }
+}
+
+bool LlamaAgentBackend::toolBatchRequiresReplan(const QJsonArray &toolCalls)
+{
+    if (toolCalls.size() < 2) return false;
+    for (const QJsonValue &value : toolCalls) {
+        const QString name = value.toObject()
+                                 .value(QStringLiteral("function")).toObject()
+                                 .value(QStringLiteral("name")).toString();
+        if (name != QLatin1String("task")) return true;
+    }
+    return false;
 }
 
 // Une los deltas incrementales de tool_calls (patrón OpenAI streaming): por
@@ -4462,7 +4481,20 @@ void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
             {QStringLiteral("tool_calls"), toolCalls}});
     }
     m_pendingCalls = toolCalls;
+    resetPendingBatchReplan();
+    if (toolBatchRequiresReplan(toolCalls)) {
+        m_pendingBatchRequiresReplan = true;
+        m_pendingBatchFirstCallId = toolCalls.first().toObject()
+                                        .value(QStringLiteral("id")).toString();
+    }
     processPendingCalls();
+}
+
+void LlamaAgentBackend::resetPendingBatchReplan()
+{
+    m_pendingBatchFirstCallId.clear();
+    m_pendingBatchRequiresReplan = false;
+    m_pendingBatchFirstResultSeen = false;
 }
 
 void LlamaAgentBackend::processPendingCalls()
@@ -4470,7 +4502,35 @@ void LlamaAgentBackend::processPendingCalls()
     if (m_executionPaused) return;
     if (subsActive()) return;   // esperando que terminen los sub-agentes
 
+    // No ejecutar el resto de una respuesta multi-tool con el plan que el modelo
+    // escribió antes de ver el primer resultado. Completar el contrato tool_call →
+    // tool_result de las llamadas omitidas y pedir una decisión nueva con evidencia.
+    if (m_pendingBatchRequiresReplan && m_pendingBatchFirstResultSeen) {
+        const QJsonArray deferred = m_pendingCalls;
+        m_pendingCalls = {};
+        resetPendingBatchReplan();
+        for (const QJsonValue &value : deferred) {
+            const QJsonObject call = value.toObject();
+            const QString id = call.value(QStringLiteral("id")).toString();
+            const QJsonObject fn = call.value(QStringLiteral("function")).toObject();
+            const QString name = fn.value(QStringLiteral("name")).toString();
+            const QString note = QStringLiteral(
+                "[omitida: la respuesta agrupó varias herramientas. Se detuvo la tanda "
+                "después del primer resultado para replanificar con evidencia actualizada; "
+                "volvé a pedir esta acción sólo si sigue siendo necesaria.]");
+            AgentEventLog::append(m_cwd, m_sessionId,
+                                  QStringLiteral("rejected_alternative"),
+                                  QJsonObject{{QStringLiteral("tool"), name},
+                                              {QStringLiteral("toolCallId"), id},
+                                              {QStringLiteral("reason"),
+                                               QStringLiteral("batch_replan_after_result")}});
+            appendToolCard(name, toolKind(name), false, QString(), note);
+            appendToolResult(id, name, note, false);
+        }
+    }
+
     if (m_pendingCalls.isEmpty()) {
+        resetPendingBatchReplan();
         // Todas las tools resueltas. Si alguna devolvió una captura, inyectarla
         // ahora como mensaje user multimodal (después de TODOS los tool_results,
         // para no romper el contrato OpenAI tool_call→tool_result).
@@ -4504,13 +4564,19 @@ void LlamaAgentBackend::processPendingCalls()
     // ── Subagents: extraer TODAS las tool_calls `task` y lanzarlas en paralelo.
     {
         QJsonArray taskCalls, rest;
+        int callIndex = 0;
         for (const QJsonValue &v : std::as_const(m_pendingCalls)) {
+            const QString name = v.toObject().value(QStringLiteral("function")).toObject()
+                                     .value(QStringLiteral("name")).toString();
             if (!m_privacyModeEnabled
-                && v.toObject().value(QStringLiteral("function")).toObject()
-                       .value(QStringLiteral("name")).toString() == QLatin1String("task"))
+                && name == QLatin1String("task")
+                // Fan-out is safe only for task-only batches. For a mixed batch,
+                // preserve original order and dispatch at most its first task.
+                && (!m_pendingBatchRequiresReplan || callIndex == 0))
                 taskCalls.append(v);
             else
                 rest.append(v);
+            ++callIndex;
         }
         if (!taskCalls.isEmpty()) {
             for (const QJsonValue &v : std::as_const(taskCalls)) {
@@ -5932,6 +5998,7 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
                              QStringLiteral("[omitida: replanteo obligatorio antes de continuar]"));
         }
         m_pendingCalls = {};
+        resetPendingBatchReplan();
     }
 
     // Captura visual (desktop_observe / screenshots): si el server tiene visión,
@@ -6382,6 +6449,9 @@ void LlamaAgentBackend::appendToolResult(const QString &id, const QString &name,
                                          const QString &content, bool ok, bool isWrite,
                                          bool externalWrite, const QStringList &paths)
 {
+    if (m_pendingBatchRequiresReplan && !m_pendingBatchFirstCallId.isEmpty()
+        && id == m_pendingBatchFirstCallId)
+        m_pendingBatchFirstResultSeen = true;
     emitToolLifecycleFinish(id, name, ok, isWrite, externalWrite, content, paths);
     if (m_textToolFallback) {
         const QString compact = budgetTextToolOutput(name, content);
@@ -7215,6 +7285,7 @@ void LlamaAgentBackend::finishTurn(const QString &finalText, bool persistFinalTo
                      finalText.left(4096));
     m_curAsstIdx = -1;
     m_pendingCalls = {};
+    resetPendingBatchReplan();
     m_awaitId.clear();
     m_awaitCall = {};
     m_execCallId.clear();

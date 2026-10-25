@@ -1,6 +1,7 @@
 #include "AppController.h"
 #include "core/OllamaImporter.h"
 #include "core/profiles/ProfileHealthChecker.h"
+#include "core/profiles/AstraStrataConfig.h"
 #include "core/profiles/ManagedServerCapabilities.h"
 #include "core/profiles/MtpDetection.h"
 #include "core/profiles/SystemProfileVariants.h"
@@ -16616,13 +16617,36 @@ QString AppController::duplicateLaunchProfile(const QString &launchId)
 QVariantList AppController::systemProfileContextPresets(const QString &launchId) const
 {
     QVariantList out;
-    for (const QJsonValue &v : readSystemProfilesBundle()) {
-        const QJsonObject entry = v.toObject();
-        if (entry.value(QStringLiteral("id")).toString() != launchId) continue;
-        for (const QJsonValue &ctx : entry.value(QStringLiteral("contextPresets")).toArray())
-            out << ctx.toInt();
-        break;
+    QVariantList configured;
+    const QVariantMap launch = m_profiles.getLaunchProfile(launchId);
+    if (launch.isEmpty()) return out;
+    const QVariantMap backend = m_profiles.getBackend(
+        launch.value(QStringLiteral("backendProfileId")).toString());
+    const QJsonObject managed = QJsonObject::fromVariantMap(
+        backend.value(QStringLiteral("managedServer")).toMap());
+    const QVariantList persisted = managed.value(QStringLiteral("contextPresets")).toArray()
+                                       .toVariantList();
+    if (!persisted.isEmpty()) {
+        configured = persisted;
+    } else {
+        for (const QJsonValue &v : readSystemProfilesBundle()) {
+            const QJsonObject entry = v.toObject();
+            if (entry.value(QStringLiteral("id")).toString() != launchId) continue;
+            for (const QJsonValue &ctx : entry.value(QStringLiteral("contextPresets")).toArray())
+                configured.append(ctx.toInt());
+            break;
+        }
     }
+
+    int currentContext = backend.value(QStringLiteral("cloudCtx")).toInt();
+    if (currentContext <= 0) {
+        const QVariantMap runtime = m_profiles.getRuntimePreset(
+            launch.value(QStringLiteral("runtimePresetId")).toString());
+        currentContext = runtime.value(QStringLiteral("ctx")).toInt();
+    }
+    for (const QVariant &ctx : std::as_const(configured))
+        if (ctx.toInt() > 0 && ctx.toInt() != currentContext)
+            out.append(ctx.toInt());
     return out;
 }
 
@@ -16630,20 +16654,153 @@ QString AppController::createSystemProfileContextVariant(const QString &launchId
 {
     const QVariantList presets = systemProfileContextPresets(launchId);
     if (!presets.contains(ctx)) return {};
-    const QString copyId = duplicateLaunchProfile(launchId);   // hornea el binario resuelto
+    const QVariantMap sourceLaunch = m_profiles.getLaunchProfile(launchId);
+    if (sourceLaunch.isEmpty()) return {};
+    const QVariantMap sourceBackend = m_profiles.getBackend(
+        sourceLaunch.value(QStringLiteral("backendProfileId")).toString());
+    const QJsonObject sourceManaged = QJsonObject::fromVariantMap(
+        sourceBackend.value(QStringLiteral("managedServer")).toMap());
+    const bool astra = sourceManaged.value(QStringLiteral("type")).toString()
+        == QLatin1String("astra-strata");
+
+    // Prepare and validate Strata's actual server JSON before creating any
+    // profiles. A RuntimePreset alone cannot change --max-context for ASTRA.
+    QJsonObject astraConfig;
+    QString astraConfigPath;
+    if (astra) {
+        const QVariantMap setup = resolveAstraStrataSetup(launchId, false);
+        if (!setup.value(QStringLiteral("ready")).toBool()) {
+            emit serverError(setup.value(QStringLiteral("error")).toString());
+            return {};
+        }
+        astraConfigPath = setup.value(QStringLiteral("config")).toString();
+        QFile configFile(astraConfigPath);
+        if (!configFile.open(QIODevice::ReadOnly)) {
+            emit serverError(QStringLiteral("No se pudo leer el JSON actual de Strata."));
+            return {};
+        }
+        const QJsonDocument sourceDoc = QJsonDocument::fromJson(configFile.readAll());
+        if (!sourceDoc.isObject()) {
+            emit serverError(QStringLiteral("El JSON actual de Strata no es válido."));
+            return {};
+        }
+        QString error;
+        astraConfig = AstraStrataConfig::withMaxContext(sourceDoc.object(), ctx, &error);
+        if (astraConfig.isEmpty()) {
+            emit serverError(error);
+            return {};
+        }
+    }
+
+    const QString rootId = sourceManaged.value(QStringLiteral("contextVariantOf"))
+                               .toString(launchId);
+    // Reuse an existing variant (including the original system profile) rather
+    // than creating a duplicate profile and another copy of the Strata config.
+    for (const QVariant &value : m_profiles.launchProfilesForMenu()) {
+        const QVariantMap item = value.toMap();
+        const QString candidateId = item.value(QStringLiteral("id")).toString();
+        if (candidateId == launchId) continue;
+        const QVariantMap candidate = m_profiles.getLaunchProfile(candidateId);
+        const QVariantMap candidateBackend = m_profiles.getBackend(
+            candidate.value(QStringLiteral("backendProfileId")).toString());
+        const QJsonObject candidateManaged = QJsonObject::fromVariantMap(
+            candidateBackend.value(QStringLiteral("managedServer")).toMap());
+        const QString candidateRoot = candidateManaged.value(
+            QStringLiteral("contextVariantOf")).toString(candidateId);
+        if (candidateRoot != rootId) continue;
+        const int candidateContext = candidateBackend.value(QStringLiteral("cloudCtx")).toInt();
+        if (candidateContext == ctx) return candidateId;
+    }
+
+    const QString copyId = duplicateLaunchProfile(launchId); // fija los artefactos resueltos
     if (copyId.isEmpty()) return {};
-    const QVariantMap launch = m_profiles.getLaunchProfile(copyId);
-    const QString runtimeId = launch.value(QStringLiteral("runtimePresetId")).toString();
+    const QVariantMap copy = m_profiles.getLaunchProfile(copyId);
+    const QString runtimeId = copy.value(QStringLiteral("runtimePresetId")).toString();
     QVariantMap runtime = m_profiles.getRuntimePreset(runtimeId);
+    const QString contextLabel = ctx >= 1000000
+        ? QStringLiteral("1M") : QStringLiteral("%1K").arg(qRound(ctx / 1000.0));
+    const QString profileName = astra
+        ? QStringLiteral("ASTRA Flash-Next · %1%2")
+              .arg(contextLabel, ctx == 131072 ? QStringLiteral(" normal") : QString())
+        : QStringLiteral("ULTRA-Q · %1 ctx").arg(contextLabel);
     runtime[QStringLiteral("ctx")] = ctx;
-    runtime[QStringLiteral("name")] = QStringLiteral("ULTRA-Q · %1k ctx")
-        .arg(qRound(ctx / 1024.0));
-    if (!m_profiles.updateRuntimePreset(runtime)) return {};
-    QVariantMap update = launch;
-    update[QStringLiteral("name")] = QStringLiteral("ULTRA-Q · %1k ctx")
-        .arg(qRound(ctx / 1024.0));
-    m_profiles.updateLaunchProfile(update);
-    return copyId;
+    runtime[QStringLiteral("name")] = profileName;
+    bool ok = !runtime.value(QStringLiteral("id")).toString().isEmpty()
+        && m_profiles.updateRuntimePreset(runtime);
+
+    QString configSetting;
+    QString variantConfigPath;
+    if (ok && astra) {
+        const QString dataDir = QStandardPaths::writableLocation(
+            QStandardPaths::AppLocalDataLocation);
+        const QString configDir = QDir(dataDir).filePath(QStringLiteral("astra/context-variants"));
+        if (!QDir().mkpath(configDir)) {
+            ok = false;
+        } else {
+            variantConfigPath = QDir(configDir).filePath(copyId + QStringLiteral(".json"));
+            QSaveFile output(variantConfigPath);
+            ok = output.open(QIODevice::WriteOnly)
+                && output.write(QJsonDocument(astraConfig).toJson(QJsonDocument::Indented)) > 0
+                && output.commit();
+        }
+        if (ok) {
+            configSetting = QStringLiteral("astra/configFile/context-%1").arg(copyId);
+            writeSetting(configSetting, variantConfigPath);
+            QJsonObject managed = sourceManaged;
+            managed.insert(QStringLiteral("configSetting"), configSetting);
+            managed.insert(QStringLiteral("contextVariantOf"), rootId);
+            managed.insert(QStringLiteral("contextTokens"), ctx);
+            QJsonArray contextChoices;
+            for (const QVariant &choice : std::as_const(presets))
+                contextChoices.append(choice.toInt());
+            int sourceContext = sourceBackend.value(QStringLiteral("cloudCtx")).toInt();
+            if (sourceContext <= 0) {
+                sourceContext = m_profiles.getRuntimePreset(
+                    sourceLaunch.value(QStringLiteral("runtimePresetId")).toString())
+                    .value(QStringLiteral("ctx")).toInt();
+            }
+            if (sourceContext > 0) contextChoices.append(sourceContext);
+            contextChoices.append(ctx);
+            // Preserve the ordered, unique choice list for switching between
+            // the ordinary 131K profile and the explicit 1M profile.
+            QJsonArray uniqueChoices;
+            QSet<int> seenContexts;
+            for (const QJsonValue &choice : std::as_const(contextChoices)) {
+                const int value = choice.toInt();
+                if (value > 0 && !seenContexts.contains(value)) {
+                    seenContexts.insert(value);
+                    uniqueChoices.append(value);
+                }
+            }
+            managed.insert(QStringLiteral("contextPresets"), uniqueChoices);
+            const QString backendId = copy.value(QStringLiteral("backendProfileId")).toString();
+            ok = m_profiles.setBackendCloud(backendId,
+                    sourceBackend.value(QStringLiteral("kind")).toString(),
+                    sourceBackend.value(QStringLiteral("cloudBaseUrl")).toString(),
+                    sourceBackend.value(QStringLiteral("cloudKeyRef")).toString(),
+                    sourceBackend.value(QStringLiteral("cloudModel")).toString(), ctx)
+                && m_profiles.setBackendManagedServer(backendId, managed);
+        }
+    }
+
+    QVariantMap update = m_profiles.getLaunchProfile(copyId);
+    update[QStringLiteral("name")] = profileName;
+    if (astra) update[QStringLiteral("alias")] = QStringLiteral("ASTRA %1").arg(contextLabel);
+    if (ok) ok = m_profiles.updateLaunchProfile(update);
+    if (ok) return copyId;
+
+    // Roll back only the newly created variant and its private config.
+    if (!configSetting.isEmpty()) {
+        QSettings settings;
+        settings.remove(configSetting);
+    }
+    if (!variantConfigPath.isEmpty()) QFile::remove(variantConfigPath);
+    m_profiles.removeLaunchProfile(copyId);
+    m_profiles.removeBackend(copy.value(QStringLiteral("backendProfileId")).toString());
+    m_profiles.removeModelProfile(copy.value(QStringLiteral("modelProfileId")).toString());
+    m_profiles.removeRuntimePreset(runtimeId);
+    emit serverError(QStringLiteral("No se pudo guardar el perfil de contexto alternativo."));
+    return {};
 }
 
 int AppController::llamaCppBuildNumber(const QString &text)
@@ -20255,14 +20412,6 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
     if (m_catalog.count() == 0)
         m_catalog.reload();
 
-    m_benchmarkRunning  = true;
-    m_benchmarkCanceled = false;
-    m_benchmarkProgress = 0;
-    m_benchmarkStatus   = "Iniciando...";
-    emit benchmarkRunningChanged();
-    emit benchmarkProgressChanged();
-    emit benchmarkStatusChanged();
-
     loadBenchmarkResults();
 
     const bool isCustom = !customTasks.isEmpty();
@@ -20274,7 +20423,81 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                                             ? buildCustomBenchTasks(customTasks)
                                             : buildBenchTasks(mode);
     passes = qMax(1, passes);
-    const int totalSteps = profileIds.size() * tasks.size() * passes;
+    if (tasks.isEmpty()) return;
+
+    QJsonArray taskFingerprintPayload;
+    for (const BenchTaskDef &task : tasks) {
+        QJsonObject value{
+            {QStringLiteral("id"), task.id},
+            {QStringLiteral("category"), task.category},
+            {QStringLiteral("isSpeed"), task.isSpeed},
+            {QStringLiteral("maxTokens"), task.maxTokens},
+            {QStringLiteral("prompt"), task.prompt}
+        };
+        if (!task.acceptance.isEmpty())
+            value[QStringLiteral("acceptance")] = QJsonObject::fromVariantMap(task.acceptance);
+        taskFingerprintPayload.append(value);
+    }
+
+    // Only a fully completed, non-infrastructure run suppresses an identical
+    // evaluation. Interrupted or transport-failed runs remain retryable.
+    QSet<QString> completedEvaluations;
+    const QDir existingRuns(benchmarkRunsDir());
+    for (const QString &folder : existingRuns.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+        QFile metadata(existingRuns.filePath(folder + QStringLiteral("/metadata.json")));
+        if (!metadata.open(QIODevice::ReadOnly)) continue;
+        const QJsonObject states = QJsonDocument::fromJson(metadata.readAll()).object()
+                                       .value(QStringLiteral("evaluationStates")).toObject();
+        for (const QJsonValue &stateValue : states) {
+            const QJsonObject state = stateValue.toObject();
+            if (state.value(QStringLiteral("status")).toString() == QLatin1String("completed"))
+                completedEvaluations.insert(state.value(QStringLiteral("fingerprint")).toString());
+        }
+    }
+    QStringList runProfileIds;
+    QStringList skippedProfiles;
+    QMap<QString, QString> evaluationFingerprints;
+    QSet<QString> scheduledEvaluations;
+    for (const QString &profileId : profileIds) {
+        const QString fingerprint = benchmarkEvaluationFingerprintForTest(
+            benchmarkProfileConfigFingerprint(profileId), mode, target, passes,
+            m_benchHardTimeoutSec, taskFingerprintPayload);
+        evaluationFingerprints.insert(profileId, fingerprint);
+        if (completedEvaluations.contains(fingerprint)
+            || scheduledEvaluations.contains(fingerprint)) {
+            skippedProfiles.append(profileId);
+        } else {
+            scheduledEvaluations.insert(fingerprint);
+            runProfileIds.append(profileId);
+        }
+    }
+    if (runProfileIds.isEmpty()) {
+        m_benchmarkProgress = 100;
+        m_benchmarkStatus = QStringLiteral(
+            "Omitido: todas las evaluaciones seleccionadas ya tienen una corrida completa con la misma configuración, harness y workload.");
+        appendServerEvent(QStringLiteral("lifecycle"), m_benchmarkStatus);
+        emit benchmarkProgressChanged();
+        emit benchmarkStatusChanged();
+        return;
+    }
+    if (!skippedProfiles.isEmpty()) {
+        appendServerEvent(QStringLiteral("lifecycle"),
+            QStringLiteral("Benchmark: se omiten %1 perfil(es) con una evaluación idéntica ya completada; continúan %2.")
+                .arg(skippedProfiles.size()).arg(runProfileIds.size()));
+    }
+
+    m_benchmarkRunning  = true;
+    m_benchmarkCanceled = false;
+    m_benchmarkProgress = 0;
+    m_benchmarkStatus   = skippedProfiles.isEmpty()
+        ? QStringLiteral("Iniciando...")
+        : QStringLiteral("Iniciando; se omiten %1 corridas idénticas ya completadas...")
+              .arg(skippedProfiles.size());
+    emit benchmarkRunningChanged();
+    emit benchmarkProgressChanged();
+    emit benchmarkStatusChanged();
+
+    const int totalSteps = runProfileIds.size() * tasks.size() * passes;
 
     // ── Isolated run folder: benchmark/<label>_<timestamp>/ ───────────────────
     auto sanitize = [](QString s) {
@@ -20306,15 +20529,22 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
         meta["startedAt"]  = QDateTime::currentDateTime().toString(Qt::ISODate);
         meta["timestamp"]  = (double)QDateTime::currentMSecsSinceEpoch();
         QJsonArray profArr;
-        for (const QString &pid : profileIds) {
+        QJsonObject evaluationStates;
+        for (const QString &pid : runProfileIds) {
             const QVariantMap pd = m_profiles.getLaunchProfile(pid);
             QJsonObject po;
             po["profileId"]   = pid;
             po["profileName"] = pd.value("name").toString();
             po["profileConfigFingerprint"] = benchmarkProfileConfigFingerprint(pid);
             profArr.append(po);
+            evaluationStates[pid] = QJsonObject{
+                {QStringLiteral("fingerprint"), evaluationFingerprints.value(pid)},
+                {QStringLiteral("status"), QStringLiteral("pending")}
+            };
         }
         meta["profiles"] = profArr;
+        meta["evaluationStates"] = evaluationStates;
+        meta["runStatus"] = QStringLiteral("running");
         QJsonArray taskArr;
         for (const BenchTaskDef &t : tasks) {
             QJsonObject to;
@@ -20335,11 +20565,62 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
     }
     const auto runDirShared = std::make_shared<QString>(runDir);
     auto stepsDone = std::make_shared<int>(0);
+    auto updateRunMetadata = [runDirShared](const QString &profileId,
+                                            const QString &profileStatus,
+                                            const QString &runStatus) {
+        const QString path = QDir(*runDirShared).filePath(QStringLiteral("metadata.json"));
+        QFile input(path);
+        if (!input.open(QIODevice::ReadOnly)) return;
+        QJsonObject meta = QJsonDocument::fromJson(input.readAll()).object();
+        input.close();
+        if (!profileId.isEmpty()) {
+            QJsonObject states = meta.value(QStringLiteral("evaluationStates")).toObject();
+            QJsonObject state = states.value(profileId).toObject();
+            state[QStringLiteral("status")] = profileStatus;
+            states[profileId] = state;
+            meta[QStringLiteral("evaluationStates")] = states;
+        }
+        if (!runStatus.isEmpty()) {
+            meta[QStringLiteral("runStatus")] = runStatus;
+            meta[QStringLiteral("finishedAt")] = QDateTime::currentDateTime().toString(Qt::ISODate);
+        }
+        QSaveFile output(path);
+        if (output.open(QIODevice::WriteOnly)) {
+            output.write(QJsonDocument(meta).toJson(QJsonDocument::Indented));
+            output.commit();
+        }
+    };
+    auto markProfileOutcome = [this, runDirShared, updateRunMetadata](const QString &profileId) {
+        if (m_benchmarkCanceled) {
+            updateRunMetadata(profileId, QStringLiteral("interrupted"), QString());
+            return;
+        }
+        bool infrastructureFailure = false;
+        for (const QVariant &value : std::as_const(m_benchmarkResults)) {
+            const QVariantMap row = value.toMap();
+            if (row.value(QStringLiteral("profileId")).toString() != profileId
+                || row.value(QStringLiteral("runDir")).toString() != *runDirShared)
+                continue;
+            if (row.value(QStringLiteral("failed")).toBool()
+                || row.value(QStringLiteral("invalid")).toBool()
+                || row.value(QStringLiteral("timedOut")).toBool()
+                || row.value(QStringLiteral("failureKind")).toString() == QLatin1String("infra")
+                || row.value(QStringLiteral("failureKind")).toString() == QLatin1String("timeout")
+                || row.value(QStringLiteral("failureKind")).toString() == QLatin1String("blocked")) {
+                infrastructureFailure = true;
+                break;
+            }
+        }
+        updateRunMetadata(profileId, infrastructureFailure
+            ? QStringLiteral("infrastructure_failure") : QStringLiteral("completed"), QString());
+    };
 
     // Recursive per-profile sequence
     auto processNext = std::make_shared<std::function<void(int)>>();
     *processNext = [=](int idx) {
-        if (m_benchmarkCanceled || idx >= profileIds.size()) {
+        if (m_benchmarkCanceled || idx >= runProfileIds.size()) {
+            updateRunMetadata(QString(), QString(), m_benchmarkCanceled
+                ? QStringLiteral("cancelled") : QStringLiteral("completed"));
             m_benchmarkRunning  = false;
             m_benchmarkMemoryAttempt = -1;
             m_benchmarkEffectiveArgs.clear();
@@ -20365,10 +20646,10 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
         // Punto de reanudación en disco ANTES de tocar el perfil: si la app se
         // cae acá (un crash del proceso no se puede atrapar desde adentro), al
         // volver a arrancar sabemos qué faltaba y no se pierde la serie entera.
-        saveBenchmarkResumePoint(profileIds.mid(idx), mode, passes, target,
+        saveBenchmarkResumePoint(runProfileIds.mid(idx), mode, passes, target,
                                  m_benchmarkAgentProfileId, *runDirShared, runLabel);
 
-        const QString profileId   = profileIds.at(idx);
+        const QString profileId   = runProfileIds.at(idx);
         const QVariantMap profData = m_profiles.getLaunchProfile(profileId);
         const QString profNameRaw = profData.value("name").toString();
         const QString profName    = profNameRaw.isEmpty() ? profileId : profNameRaw;
@@ -20425,7 +20706,7 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
             }
             const qint64 loadStartMs = QDateTime::currentMSecsSinceEpoch();
             m_benchmarkStatus = QString("[%1/%2] %3 — %4")
-                .arg(idx + 1).arg(profileIds.size()).arg(profName)
+                .arg(idx + 1).arg(runProfileIds.size()).arg(profName)
                 .arg(reuse ? QStringLiteral("reusando el servidor ya cargado...")
                            : QStringLiteral("iniciando servidor..."));
             emit benchmarkStatusChanged();
@@ -20440,7 +20721,11 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                 startServer(profileId);
             }
             if (!serverRunning()) {
-                if (m_benchmarkCanceled) { (*processNext)(idx + 1); return; }
+                if (m_benchmarkCanceled) {
+                    markProfileOutcome(profileId);
+                    (*processNext)(idx + 1);
+                    return;
+                }
                 const QString startDetail = benchmarkServerLogTail();
                 if (m_benchmarkMemoryAdaptive && benchmarkLogIndicatesOutOfMemoryForTest(startDetail)
                     && m_benchmarkMemoryAttempt < kBenchmarkMaxMemoryAttempts) {
@@ -20448,7 +20733,7 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                     m_benchmarkStatus =
                         QString("[%1/%2] %3 — OOM al cargar; bajando presión de VRAM "
                                 "(intento %4/%5)...")
-                            .arg(idx + 1).arg(profileIds.size()).arg(profName)
+                            .arg(idx + 1).arg(runProfileIds.size()).arg(profName)
                             .arg(m_benchmarkMemoryAttempt).arg(kBenchmarkMaxMemoryAttempts);
                     emit benchmarkStatusChanged();
                     appendServerEvent(
@@ -20476,7 +20761,7 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                     *boundaryCleaned = false;
                     m_benchmarkStatus =
                         QString("[%1/%2] %3 — no arrancó; limpiando y reintentando (%4/%5)...")
-                            .arg(idx + 1).arg(profileIds.size()).arg(profName)
+                            .arg(idx + 1).arg(runProfileIds.size()).arg(profName)
                             .arg(*startAttempts).arg(kMaxStartRetries);
                     emit benchmarkStatusChanged();
                     // Reload the model catalog in case it failed to load (transient
@@ -20507,6 +20792,7 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                 (*stepsDone) += tasks.size() * passes;
                 m_benchmarkProgress = qMin(99, (*stepsDone * 100) / qMax(1, totalSteps));
                 emit benchmarkProgressChanged();
+                markProfileOutcome(profileId);
                 (*processNext)(idx + 1);
                 return;
             }
@@ -20514,7 +20800,7 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
 
             // Large models (big ctx + mlock + no-mmap) can take minutes to load
             // on a cold cache; 150 × 2s = 5 min before giving up.
-            const QString loadPrefix = QString("[%1/%2] %3").arg(idx+1).arg(profileIds.size()).arg(profName);
+            const QString loadPrefix = QString("[%1/%2] %3").arg(idx+1).arg(runProfileIds.size()).arg(profName);
             benchmarkWaitServerReady(150, 150, url, loadPrefix, [=](bool ready) {
                 if (!ready || m_benchmarkCanceled) {
                     if (!m_benchmarkCanceled) {
@@ -20525,7 +20811,7 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                             m_benchmarkStatus =
                                 QString("[%1/%2] %3 — OOM durante la carga; "
                                         "bajando presión de VRAM (intento %4/%5)...")
-                                    .arg(idx + 1).arg(profileIds.size()).arg(profName)
+                                    .arg(idx + 1).arg(runProfileIds.size()).arg(profName)
                                     .arg(m_benchmarkMemoryAttempt).arg(kBenchmarkMaxMemoryAttempts);
                             emit benchmarkStatusChanged();
                             appendServerEvent(
@@ -20557,6 +20843,7 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                         emit benchmarkProgressChanged();
                         stopServer();
                     }
+                    markProfileOutcome(profileId);
                     (*processNext)(idx + 1);
                     return;
                 }
@@ -20574,7 +20861,7 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                             benchmarkTaskArtifactNameForTest(t.id);
                         agentTasks.append(tm);
                     }
-                    runAgentBenchmark(profileId, profName, idx, profileIds.size(),
+                    runAgentBenchmark(profileId, profName, idx, runProfileIds.size(),
                                       agentTasks, passes, mode, runLabel, *runDirShared,
                                       [=]() {
                                           // El progreso sólo avanzaba por los caminos
@@ -20586,6 +20873,7 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                                           emit benchmarkProgressChanged();
                                           stopServer();
                                           benchmarkWaitServerStopped(10000, [=]() {
+                                              markProfileOutcome(profileId);
                                               (*processNext)(idx + 1);
                                           });
                                       });
@@ -20593,7 +20881,7 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                 }
 
                 // Warm-up request (discard result)
-                m_benchmarkStatus = QString("[%1/%2] %3 — calentando...").arg(idx+1).arg(profileIds.size()).arg(profName);
+                m_benchmarkStatus = QString("[%1/%2] %3 — calentando...").arg(idx+1).arg(runProfileIds.size()).arg(profName);
                 emit benchmarkStatusChanged();
 
                 benchmarkRequest(url, "Say hi.", 32, true, [=](QVariantMap) {
@@ -20734,7 +21022,7 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                                     taskResults->clear();
                                     *passStartMs = QDateTime::currentMSecsSinceEpoch();
                                     m_benchmarkStatus = QString("[%1/%2] %3 — pasada %4/%5...")
-                                        .arg(idx+1).arg(profileIds.size()).arg(profName)
+                                        .arg(idx+1).arg(runProfileIds.size()).arg(profName)
                                         .arg(*passNo).arg(passes);
                                     emit benchmarkStatusChanged();
                                     (*runTask)(0);
@@ -20743,6 +21031,7 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
 
                                 stopServer();
                                 benchmarkWaitServerStopped(10000, [=]() {
+                                    markProfileOutcome(profileId);
                                     (*processNext)(idx + 1);
                                 });
                             });
@@ -20751,7 +21040,7 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
 
                         const BenchTaskDef &task = tasks.at(ti);
                         m_benchmarkStatus = QString("[%1/%2] %3 — %4...")
-                            .arg(idx+1).arg(profileIds.size()).arg(profName).arg(task.id);
+                            .arg(idx+1).arg(runProfileIds.size()).arg(profName).arg(task.id);
                         emit benchmarkStatusChanged();
 
                         // Stream every benchmark task so llama-server idleness is observable.
@@ -21628,12 +21917,64 @@ QVariantList AppController::benchmarkCoverage() const
 QString AppController::benchmarkProfileConfigFingerprint(const QString &profileId)
 {
     if (profileId.trimmed().isEmpty()) return {};
-    const EffectiveProfile effective = EffectiveProfileBuilder::build(buildContext(profileId));
+    const EffectiveProfileBuilder::Context context = buildContext(profileId);
+    const EffectiveProfile effective = EffectiveProfileBuilder::build(context);
     QJsonObject payload;
-    payload[QStringLiteral("profileId")] = profileId;
     payload[QStringLiteral("binaryPath")] = effective.binaryPath;
     payload[QStringLiteral("valid")] = effective.isValid();
     payload[QStringLiteral("args")] = QJsonArray::fromStringList(effective.effectiveArgs);
+
+    auto assetIdentity = [](const QString &path, const QString &knownSha256 = QString()) {
+        QJsonObject asset;
+        if (path.trimmed().isEmpty()) return asset;
+        const QFileInfo info(path);
+        asset[QStringLiteral("path")] = QDir::cleanPath(info.absoluteFilePath());
+        asset[QStringLiteral("exists")] = info.exists();
+        if (info.exists()) {
+            asset[QStringLiteral("size")] = static_cast<double>(info.size());
+            asset[QStringLiteral("mtimeUtc")] = info.lastModified().toUTC().toString(Qt::ISODateWithMs);
+        }
+        if (!knownSha256.trimmed().isEmpty())
+            asset[QStringLiteral("sha256")] = knownSha256.trimmed().toLower();
+        return asset;
+    };
+    payload[QStringLiteral("binaryAsset")] = assetIdentity(effective.binaryPath);
+    payload[QStringLiteral("modelAsset")] = assetIdentity(
+        context.catalogModel.absolutePath, context.catalogModel.sha256);
+    payload[QStringLiteral("mmprojAsset")] = assetIdentity(
+        context.mmprojModel.absolutePath, context.mmprojModel.sha256);
+    payload[QStringLiteral("draftAsset")] = assetIdentity(
+        context.draftModel.absolutePath, context.draftModel.sha256);
+    payload[QStringLiteral("backendKind")] = context.backend.kind;
+    payload[QStringLiteral("backendUrl")] = context.backend.cloudBaseUrl;
+    payload[QStringLiteral("backendModel")] = context.backend.cloudModel;
+    payload[QStringLiteral("backendContext")] = context.backend.cloudCtx;
+    const QJsonObject managed = context.backend.managedServer;
+    payload[QStringLiteral("managedServerType")] = managed.value(QStringLiteral("type"));
+    payload[QStringLiteral("managedExpectedModel")]
+        = managed.value(QStringLiteral("expectedModelName"));
+    const QString configSetting = managed.value(QStringLiteral("configSetting")).toString();
+    const QString configPath = !configSetting.isEmpty()
+        ? readSetting(configSetting).toString()
+        : managed.value(QStringLiteral("configFile")).toString();
+    if (!configPath.isEmpty()) {
+        QFile configFile(configPath);
+        if (configFile.open(QIODevice::ReadOnly)) {
+            const QJsonDocument configDoc = QJsonDocument::fromJson(configFile.readAll());
+            configFile.seek(0);
+            payload[QStringLiteral("managedConfigSha256")] = QString::fromLatin1(
+                QCryptographicHash::hash(configFile.readAll(), QCryptographicHash::Sha256).toHex());
+            QJsonObject referencedAssets;
+            const QJsonArray managedArgs = configDoc.object().value(QStringLiteral("args")).toArray();
+            for (const QJsonValue &value : managedArgs) {
+                const QString candidate = value.toString();
+                if (QDir::isAbsolutePath(candidate) && QFileInfo::exists(candidate))
+                    referencedAssets[QDir::cleanPath(candidate)] = assetIdentity(candidate);
+            }
+            payload[QStringLiteral("managedReferencedAssets")] = referencedAssets;
+        }
+        payload[QStringLiteral("managedConfigAsset")] = assetIdentity(configPath);
+    }
     QJsonObject env;
     for (auto it = effective.effectiveEnv.cbegin(); it != effective.effectiveEnv.cend(); ++it)
         env[it.key()] = it.value();
@@ -21652,6 +21993,23 @@ QString AppController::benchmarkProfileConfigFingerprint(const QString &profileI
         HarnessEngine::fingerprint(m_profiles.resolveHarnessSpec(agent));
     payload[QStringLiteral("benchmarkAgentPromptRevision")] =
         QString::fromLatin1(kBenchmarkAgentPromptRevision);
+    return QString::fromLatin1(QCryptographicHash::hash(
+        QJsonDocument(payload).toJson(QJsonDocument::Compact),
+        QCryptographicHash::Sha256).toHex());
+}
+
+QString AppController::benchmarkEvaluationFingerprintForTest(
+    const QString &profileConfigFingerprint, const QString &mode,
+    const QString &target, int passes, int timeoutSec, const QJsonArray &tasks)
+{
+    QJsonObject payload{
+        {QStringLiteral("profileConfigFingerprint"), profileConfigFingerprint},
+        {QStringLiteral("mode"), mode},
+        {QStringLiteral("target"), target},
+        {QStringLiteral("passes"), qMax(1, passes)},
+        {QStringLiteral("timeoutSec"), qMax(0, timeoutSec)},
+        {QStringLiteral("tasks"), tasks}
+    };
     return QString::fromLatin1(QCryptographicHash::hash(
         QJsonDocument(payload).toJson(QJsonDocument::Compact),
         QCryptographicHash::Sha256).toHex());
