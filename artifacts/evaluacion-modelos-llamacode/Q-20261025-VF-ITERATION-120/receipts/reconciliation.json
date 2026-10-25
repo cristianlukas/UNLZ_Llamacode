@@ -1,0 +1,51 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-120",
+  "status": "closed-no-retest-existing-evidence-sufficient",
+  "lockToken": "e84d0d6d-b773-4416-89e2-1c223d8d3c91",
+  "newTestsRun": false,
+  "reasonNoRerun": "The proposed composite-PSI-plus-headroom candidate is already covered by the pinned AMD05 CPU suite and an exact replay of the real ASTRA DEFAULT 1M trace.",
+  "evidence": {
+    "q97HistoricalGuard": {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-97/scripts/q97_supervised_bcb.py",
+      "sha256": "663a2762ba8e5433b566c1fa2dbbe692cd8d4272619361c477a339da52c6904a",
+      "behavior": "Independent per-metric severe PSI streaks; Q116 documents alternating OR false-negative."
+    },
+    "amd05Candidate": {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/scripts/q117_pressure_guard_attempt05.py",
+      "sha256": "b4d42302e7d405abd5c59df5aa86bb7de6ef3bb91aef487b49acbebd1d24270e",
+      "behavior": "Composite severe PSI OR + MemAvailable below 48 GiB for 15 samples; immediate OOM and below-32-GiB stops retained."
+    },
+    "amd05CpuSuite": {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/receipts/q117-amd05-cpu-tests.json",
+      "sha256": "11bac5f56b236147926f71a752d4f554c6caa214bddb2c4e3e6471b13d111143",
+      "checksPassed": 21,
+      "checksTotal": 21
+    },
+    "astraLiveTrace": {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/runs/astra-1m-seed-2026103-attempt05/memory-monitor.jsonl",
+      "sha256": "fb369806324110e6bb20a2a2a681af3cdf9b36583a6e1ccfc02b9e0eba1d6dd1",
+      "samples": 707,
+      "maxRssGiB": 51.30559158325195,
+      "minMemAvailableGiB": 58.69769287109375,
+      "globalPsiMaxPct": 53.61,
+      "stopOomSwap": false
+    },
+    "astraExactReplay": {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-118/receipts/q118-amd05-live-trace-replay.json",
+      "sha256": "68769dca479da3d40e48873a77fefb3852f449fcc4f700b56de30a414de0e160",
+      "checksPassed": 12,
+      "checksTotal": 12,
+      "sameCandidateModule": true
+    },
+    "solHistorical": "SOL Q34 TP=2 completed on dual RTX 3090 without OOM; no continuous PSI trace exists."
+  },
+  "decision": "AMD05 correctly allowed the cited ASTRA high-RSS/high-headroom run. Q97/Q100 historical helper still has its separate alternating-PSI gap. Do not rewrite historical runs; verify a future run selects AMD05 or its successor before GPU/inference startup.",
+  "runtime": {
+    "modelOrServerStarted": false,
+    "gpuUsed": false,
+    "buildRun": false,
+    "networkUsed": false,
+    "artificialMemoryGiB": 0,
+    "productionChanged": false
+  }
+}

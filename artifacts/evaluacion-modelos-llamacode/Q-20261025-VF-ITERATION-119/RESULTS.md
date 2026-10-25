@@ -35,6 +35,8 @@ Se conservaron las incidencias: el primer intento de compilación falló antes d
 
 Se registró el seguimiento del guard como `q119-memory-pressure-composite-streak` en los accionables locales y en `Accionables!A18:N18`. Antes del próximo benchmark debe validarse un supervisor versionado que combine el OR severo y el headroom, manteniendo el caso de ASTRA con headroom como control. El helper candidate-only existente no sustituye esa integración/prueba combinada.
 
+**Aclaración Q120:** la combinación ya se implementó en el candidato AMD05 de Q117 y la suite de ese helper pasó 21/21; Q118 reprodujo la traza real ASTRA con AMD05 y pasó 12/12. No se necesita otra fixture/replay idéntico. Lo pendiente es fijar por hash que la próxima corrida nueva use ese guard o sucesor. El falso negativo alternante sigue aplicando a la implementación histórica Q97/Q100, no a la lógica compuesta AMD05.
+
 ## Evidencia
 
 - Prerregistro y alcance: `PLAN.md`, `receipts/q119-preregistration.json`, enmiendas 01–03.

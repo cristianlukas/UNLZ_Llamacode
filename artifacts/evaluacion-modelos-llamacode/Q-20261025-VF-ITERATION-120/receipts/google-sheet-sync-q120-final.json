@@ -1,0 +1,30 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-120",
+  "recordedAtUtc": "2026-10-25T02:40:05Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "writes": [
+    {
+      "range": "Evaluaciones LlamaCode!A341:J341",
+      "status": "Cerrada · auditoría read-only; sin test duplicado",
+      "readback": "Exact values confirmed; all 10 cells WRAP."
+    },
+    {
+      "range": "Evaluaciones LlamaCode!C340:J340",
+      "status": "Q119 reconciled with Q120 evidence distinction",
+      "readback": "Exact amended values confirmed; all 8 cells WRAP; A340:B340 and D340:G340 preserved."
+    },
+    {
+      "range": "Accionables!A18:N18",
+      "id": "q119-memory-pressure-composite-streak",
+      "status": "Validado candidate-only · AMD05 CPU 21/21 + ASTRA replay 12/12; selección/integración del runner futuro pendiente",
+      "readback": "Exact amended values confirmed; all 14 cells WRAP; A18:N18 remains same actionable ID."
+    }
+  ],
+  "localActionablesBackup": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/backups/actionables.q120-prechange.20261025T023912Z.json",
+  "decision": "AMD05 was already the tested combined severe-PSI-plus-headroom candidate and correctly replayed successful ASTRA 1M. The remaining distinction is historical Q97/Q100 behavior versus guard selection in a future new runner; no repeat test was justified.",
+  "sourceArtifacts": {
+    "results": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-120/RESULTS.md",
+    "reconciliation": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-120/receipts/reconciliation.json"
+  }
+}
