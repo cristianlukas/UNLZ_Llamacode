@@ -1,0 +1,36 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-128",
+  "recordedAtUtc": "2026-10-25T05:25:05Z",
+  "status": "PASS",
+  "checksPassed": 11,
+  "checksTotal": 11,
+  "measurementScope": "Q97 exact historical transition replayed counterfactually over the successful Q117 ASTRA DEFAULT 1M telemetry; the original live Q117 run used AMD05.",
+  "traceFacts": {
+    "sampleCount": 707,
+    "maxProcessTreeRssGiB": 51.30559158325195,
+    "minMemAvailableGiB": 58.69769287109375,
+    "maxHostPsiAvg10Pct": {
+      "some": 53.61,
+      "full": 53.61
+    },
+    "q97AdvisoryWarningSamples": 216,
+    "q97PsiStops": 0,
+    "hardStops": 0,
+    "globalOomKillStartEnd": [
+      0,
+      0
+    ],
+    "workerOomFinal": {
+      "low": 0,
+      "high": 0,
+      "max": 0,
+      "oom": 0,
+      "oom_kill": 0,
+      "oom_group_kill": 0,
+      "sock_throttled": 0
+    },
+    "workerCgroupSwapPeakBytes": 0,
+    "hostPsWOutDeltaPagesAtFinalSample": 695
+  },
+  "interpretation": "RSS alone did not stop Q97; PSI warnings remained advisory. The trace had no PSI-severe streak or MemAvailable<32 GiB hard stop. The small recorded host pswpout delta (695 pages) is distinct from worker-cgroup swap, which stayed zero; Q97 does not hard-stop on host pswpout. Q97/Q100 alternating-PSI counter gap remains a separate known behavior and was not exercised by this trace. SOL Q34 lacks PSI history, so cannot be replayed."
+}

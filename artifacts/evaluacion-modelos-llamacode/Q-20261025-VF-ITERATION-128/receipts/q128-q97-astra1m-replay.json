@@ -1,0 +1,65 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-128",
+  "status": "PASS",
+  "checks": {
+    "fingerprintsMatch": true,
+    "exactQ97TransitionWiring": true,
+    "sampleCountMatchesQ117": true,
+    "minMemAvailableMatchesQ117": true,
+    "maxProcessTreeRssMatchesQ117": true,
+    "maxHostPsiMatchesQ117": true,
+    "noQ97PsiStop": true,
+    "noHardStop": true,
+    "globalOomRemainedZero": true,
+    "workerOomAndSwapRemainedZero": true,
+    "priorAMD05ReplayPass": true
+  },
+  "checksPassed": 11,
+  "checksTotal": 11,
+  "inputFingerprints": {
+    "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-97/scripts/q97_supervised_bcb.py": "663a2762ba8e5433b566c1fa2dbbe692cd8d4272619361c477a339da52c6904a",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/runs/astra-1m-seed-2026103-attempt05/memory-monitor.jsonl": "fb369806324110e6bb20a2a2a681af3cdf9b36583a6e1ccfc02b9e0eba1d6dd1",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/receipts/q117-amd05-result.json": "7735a41285f36344bcac2278c39666e96e44f3e06890949bfd94bf5fbb37c5ee",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/scripts/q117_pressure_guard_attempt05.py": "b4d42302e7d405abd5c59df5aa86bb7de6ef3bb91aef487b49acbebd1d24270e",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-118/receipts/q118-amd05-live-trace-replay.json": "68769dca479da3d40e48873a77fefb3852f449fcc4f700b56de30a414de0e160"
+  },
+  "trace": {
+    "samples": 707,
+    "minMemAvailableGiB": 58.69769287109375,
+    "maxProcessTreeRssGiB": 51.30559158325195,
+    "maxHostPsiAvg10Pct": {
+      "some": 53.61,
+      "full": 53.61
+    },
+    "warningSamples": 216,
+    "firstWarningSample": 46,
+    "q97PsiStops": [],
+    "hardStops": [],
+    "firstAndLastGlobalOomKill": [
+      0,
+      0
+    ],
+    "workerOomEventsFinal": {
+      "low": 0,
+      "high": 0,
+      "max": 0,
+      "oom": 0,
+      "oom_kill": 0,
+      "oom_group_kill": 0,
+      "sock_throttled": 0
+    },
+    "workerSwapPeakBytes": 0
+  },
+  "interpretation": {
+    "rssWasNotAPressureSignal": true,
+    "Q97WouldContinueThroughThisASTRA1MTrace": true,
+    "AMD05PriorReplay": "PASS 12/12 in Q118; comparator only, not re-executed",
+    "SOLQ34": "completed on dual RTX 3090 without OOM; no continuous PSI trace, not replayable"
+  },
+  "scopeLimits": [
+    "Offline replay only; Q117 live run used AMD05, so this is a counterfactual Q97 replay, not a Q97 live run.",
+    "No actual severe PSI plus low-headroom event was observed.",
+    "SOL Q34 has no continuous PSI series.",
+    "This does not attribute Codex crashes or change any guard/profile/model/context/RAM/swap setting."
+  ]
+}

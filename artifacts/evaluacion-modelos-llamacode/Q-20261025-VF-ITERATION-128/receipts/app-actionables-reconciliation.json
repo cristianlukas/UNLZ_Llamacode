@@ -1,0 +1,12 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-128",
+  "verifiedAtUtc": "2026-10-25T05:26:15Z",
+  "path": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/actionables.json",
+  "itemCount": 29,
+  "updatedIds": [
+    "vf-q35-codex-crash-isolation-20261022",
+    "q119-memory-pressure-composite-streak"
+  ],
+  "jsonLoads": true,
+  "backupPath": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/Q-20261025-VF-ITERATION-128/receipts/prechange-actionables.json"
+}

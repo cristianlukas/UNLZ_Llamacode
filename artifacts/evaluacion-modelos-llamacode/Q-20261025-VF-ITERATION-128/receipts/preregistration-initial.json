@@ -1,0 +1,51 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-128",
+  "registeredAtUtc": "2026-10-25T05:21:34Z",
+  "question": "Does the exact historical Q97 guard stop or abort on the persisted, successful ASTRA DEFAULT 1M telemetry trace, independent of the already-completed AMD05 replay?",
+  "hypothesis": "Q97 will not stop on this 707-sample trace: maximum global PSI is below the severe thresholds, minimum MemAvailable remains above 32 GiB, OOM counters do not rise, and RSS is not an input to the stop rule. It may emit advisory warnings.",
+  "inputs": [
+    {
+      "name": "q97_guard",
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-97/scripts/q97_supervised_bcb.py",
+      "sha256": "663a2762ba8e5433b566c1fa2dbbe692cd8d4272619361c477a339da52c6904a"
+    },
+    {
+      "name": "astra_1m_trace",
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/runs/astra-1m-seed-2026103-attempt05/memory-monitor.jsonl",
+      "sha256": "fb369806324110e6bb20a2a2a681af3cdf9b36583a6e1ccfc02b9e0eba1d6dd1"
+    },
+    {
+      "name": "astra_run_receipt",
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/runs/astra-1m-seed-2026103-attempt05/receipt.json",
+      "sha256": "b43f669a0f8b4791ef95f7f1dd84025024a05438924f1e27da760384ba98478f"
+    },
+    {
+      "name": "amd05_guard_comparator",
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/scripts/q117_pressure_guard_attempt05.py",
+      "sha256": "b4d42302e7d405abd5c59df5aa86bb7de6ef3bb91aef487b49acbebd1d24270e"
+    },
+    {
+      "name": "amd05_q118_replay",
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-118/receipts/q118-amd05-live-trace-replay.json",
+      "sha256": "68769dca479da3d40e48873a77fefb3852f449fcc4f700b56de30a414de0e160"
+    }
+  ],
+  "method": "After verifying all pinned hashes, load only q97_supervised_bcb.py as a Python module (its run() executes only under __main__). Replay the trace in order through its exact pressure_gate_transition() function with persistent counters, and separately evaluate the same hard-stop rules used by record_sample(): MemAvailable <32 GiB and global/cgroup OOM increments. Compare row count and extrema against the Q117 receipt and the already-recorded Q118 AMD05 replay. Do not replay SOL: Q34 has no continuous PSI telemetry.",
+  "passCriteria": {
+    "inputFingerprintsMatch": true,
+    "sampleCount": 707,
+    "q97HardStops": 0,
+    "q97SeverePsiStops": 0,
+    "globalOomIncrease": false,
+    "minMemAvailableGiBMatchesQ117": true,
+    "maxProcessTreeRssGiBMatchesQ117": true,
+    "maxHostPsiMatchesQ117": true
+  },
+  "scopeLimits": [
+    "Offline CPU/file replay only; no model, inference server, GPU, build, network or artificial memory.",
+    "Does not test severe PSI plus low-headroom sensitivity in a real run.",
+    "Does not calibrate SOL Q34 PSI because that trace lacks continuous samples.",
+    "Does not attribute Codex crashes or change production guards, profiles, RAM, swap or context."
+  ],
+  "status": "preregistered_pending_execution"
+}

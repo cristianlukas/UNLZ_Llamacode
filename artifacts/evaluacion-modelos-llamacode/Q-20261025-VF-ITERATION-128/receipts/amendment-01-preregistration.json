@@ -1,0 +1,12 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-128",
+  "amendment": "01-pin-summary-receipt",
+  "recordedAtUtc": "2026-10-25T05:23:21Z",
+  "reason": "The first preregistration pinned the per-request receipt although the replay uses the Q117 summary metrics receipt. Before execution, switch to the exact summary receipt that supplies the expected sample count, memory extrema, PSI maximum, OOM and swap values. The hypothesis and method are unchanged.",
+  "replacedInput": "Q117 attempt05 per-request receipt; not read by the replay.",
+  "newInput": {
+    "path": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/receipts/q117-amd05-result.json",
+    "sha256": "7735a41285f36344bcac2278c39666e96e44f3e06890949bfd94bf5fbb37c5ee"
+  },
+  "testStillNotRun": true
+}

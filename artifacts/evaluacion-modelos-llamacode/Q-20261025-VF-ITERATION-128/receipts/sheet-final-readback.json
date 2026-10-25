@@ -1,0 +1,37 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-128",
+  "recordedAtUtc": "2026-10-25T05:26:15Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "ranges": {
+    "Evaluaciones LlamaCode!A349:J349": [
+      "Q128 · Guard Q97 sobre ASTRA 1M · resultado",
+      "Replay CPU/offline contrafactual sobre la traza real de 1.001.463 tokens; la corrida original usó AMD05.",
+      "Completada · 11/11 PASS; Q97 no habría cortado por RSS alto",
+      "2026-10-25",
+      "¿Habría parado el helper histórico Q97 en la traza ASTRA DEFAULT 1M exitosa por RSS alto?",
+      "Guard Q97 SHA 663a2762…; Q117 ASTRA trace attempt05 (707 muestras, SHA fb369806…); Q118 AMD05 replay 12/12 como comparador ya existente.",
+      "Q97 replay: 11/11. RSS máx 51,3056 GiB; MemAvailable mín 58,6977 GiB; PSI global máx 53,61%; 216 avisos desde sample46; cero stops PSI, MemAvailable<32 GiB u OOM. Worker cgroup OOM/swap 0; host pswpout final +695 páginas.",
+      "RSS alto aislado no detuvo Q97 en esta traza. El gap Q97/Q100 de PSI severa alternada no fue ejercitado. SOL Q34 no tiene PSI continua; Q127 fue carga normal, no replay de SOL de memoria alta. No atribuye cierres de Codex ni cambia guard/perfiles.",
+      "Q-20261025-VF-ITERATION-128/RESULTS.md; PLAN.md; receipts/preregistration.json; amendment-01-preregistration.json; q128-q97-astra1m-replay.json; result-analysis.json; Q117 trace/result receipt; Q118 AMD05 replay",
+      "WORK_QUEUE.md · fuente canónica"
+    ],
+    "Accionables!D2": "Implementada parcialmente · Q127 SOL TP=2 normal + Q128 Q97 replay de ASTRA 1M sin falso corte por RSS; AMD05 candidate-only/no integrado. Windows Job Objects pendientes.",
+    "Accionables!G2": "Q35–Q128; Q118/Q126/Q127/Q128 · Q128 hizo replay contrafactual del Q97 exacto sobre ASTRA DEFAULT 1M.",
+    "Accionables!I2:K2": [
+      "Q127 SOL TP=2: 157 muestras, MemAvailable mín 99,973 GiB, PSI máx 0,9%, RSS árbol 12,421 GiB, cgroup 15,577 GiB, VRAM 24.080/23.972 MiB, OOM/worker-swap=0; AMD05 sin abort. Q128 reprodujo el guard Q97 sobre 707 muestras ASTRA 1M: 11/11 PASS; RSS máx 51,3056 GiB, MemAvailable mín 58,6977 GiB, PSI máx 53,61%, 216 avisos, cero stop/OOM. Confirma que RSS alto aislado no corta. No ejercita el gap de PSI severa alternada ni presión real severa+headroom bajo. SOL Q34 no conserva PSI continua. AMD05 sigue candidate-only y la causa del cierre de Codex sigue sin atribución.",
+      "Q118/RESULTS.md; Q118/PLAN.md; receipts/q118-amd05-live-trace-replay-preregistration.json; receipts/q118-amd05-live-trace-replay.json; Q126/RESULTS.md; Q126/receipts/cpu-boundary-regression.json; Q127/RESULTS.md; Q127/receipts/result-analysis.json; Q128/RESULTS.md; Q128/PLAN.md; Q128/receipts/q128-q97-astra1m-replay.json; Q128/receipts/result-analysis.json; Q128/scripts/replay_q97_astra1m_trace.py",
+      "Q128 sincronizado y leído de vuelta en Evaluaciones LlamaCode!A349:J349 y Accionables!D2, G2, I2:K2, M2:N2; 10/10 WRAP en registro y fila Q127 intacta. Q127 y Q128 no cambian thresholds/perfiles; Windows Job Objects siguen pendientes."
+    ],
+    "Accionables!M2:N2": [
+      "2026-10-25T05:25:27Z",
+      "2026-10-25T05:25:27Z"
+    ]
+  },
+  "verification": {
+    "q127NeighborRowPreserved": true,
+    "evaluationRowWrapAll10": true,
+    "actionableEditedCellsWrapAll": true,
+    "readbackMatchesWrittenValues": true
+  }
+}
