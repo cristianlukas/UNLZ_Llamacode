@@ -1,0 +1,47 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-124",
+  "recordedAtUtc": "2026-10-25T04:33:32Z",
+  "status": "evidence-audited",
+  "question": "Does the memory-pressure guard incorrectly stop ASTRA DEFAULT 1M or dual-3090 SOL merely because RSS is high?",
+  "evidence": {
+    "astraQ117": {
+      "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/receipts/q117-amd05-result.json",
+      "samples": 707,
+      "bothRtx3090Used": true,
+      "peakProcessTreeRssGiB": 51.30559158325195,
+      "minMemAvailableGiB": 58.69769287109375,
+      "maxGlobalPsiAvg10Pct": 53.61,
+      "maxWorkerCgroupPsiAvg10Pct": 94.77,
+      "moderateWarningSamples": 216,
+      "globalStops": 0,
+      "workerStops": 0,
+      "oomKillDelta": 0,
+      "workerSwapPeakBytes": 0,
+      "requestCompleted": true
+    },
+    "astraReplayQ118": {
+      "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-118/receipts/q118-amd05-live-trace-replay.json",
+      "checksPassed": 12,
+      "checksTotal": 12
+    },
+    "solQ34": {
+      "bothRtx3090RunCompleted": true,
+      "oom": false,
+      "continuousPsiTraceAvailable": false
+    },
+    "q124OcrScreen": {
+      "minMemAvailableGiB": 108.18439865112305,
+      "samples": 141,
+      "interpretation": "light load; not a severe-pressure test"
+    }
+  },
+  "conclusion": "AMD05 candidate behaved as intended on the successful real ASTRA 1M high-RSS/high-PSI run: it warned but did not stop while MemAvailable stayed above 48 GiB. This supports avoiding an RSS-only stop. It does not prove behavior under critical headroom below 48 GiB, and does not repair the known historical Q97/Q100 alternating-PSI gap. AMD05 remains unintegrated; SOL Q34 confirms no OOM but has no continuous PSI evidence.",
+  "newStressTestRun": false,
+  "modelInferenceThisAudit": false,
+  "productionGuardChanged": false,
+  "artifacts": {
+    "resultsSha256": "d46df8fb3fb26afdebffaf2cb4e40d54c13d8cfcc1203b756ce303b7e5ca7589",
+    "localActionablesSha256": "2accc25e8295bde73f55811a2f4d34245de497a3e4fd4823292ca3c5d3b4ecaa",
+    "actionablesBackup": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/actionables.before-q124-memory-audit-final-20261025T043332Z.json"
+  }
+}

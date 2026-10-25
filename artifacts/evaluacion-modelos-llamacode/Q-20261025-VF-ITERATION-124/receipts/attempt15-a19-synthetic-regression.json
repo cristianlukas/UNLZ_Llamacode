@@ -1,0 +1,25 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-124",
+  "amendment": "A19-offline-score-reconciliation",
+  "subamendment": "A20-float-test-tolerance",
+  "recordedAtUtc": "2026-10-25T04:28:56Z",
+  "command": "python3 -m unittest -v test_q124_offline_compare.py",
+  "runner": "runner/test_q124_offline_compare.py",
+  "runnerSha256": "ea373d6848414400f9b220f650e5c3816ea873367cbbe6c13beff6733b355dc9",
+  "comparatorSha256": "996d6937fb1be93058a23668228d6cd62a837091806413f8dc0b018e3b048273",
+  "testCount": 6,
+  "passed": 6,
+  "failed": 0,
+  "status": "PASS",
+  "cases": [
+    "joins per-page worker timings by frozen ID without recalculating CER",
+    "rejects missing GPU sample ID",
+    "rejects missing worker page",
+    "rejects duplicate worker page ID",
+    "rejects candidate/output hash mismatch",
+    "rejects missing page timing"
+  ],
+  "inferenceRerun": false,
+  "gpuCompute": false,
+  "productionChanges": false
+}

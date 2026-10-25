@@ -1,0 +1,29 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-124",
+  "recordedAtUtc": "2026-10-25T04:33:32Z",
+  "title": "Listado",
+  "rangesRead": [
+    "Evaluaciones LlamaCode!A344:A345",
+    "Evaluaciones LlamaCode!H345:H345",
+    "Accionables!A17:A18",
+    "Accionables!I17:N18"
+  ],
+  "status": "PASS",
+  "updatedCellsReadBack": {
+    "Evaluaciones LlamaCode!H345": "ASTRA 1M AMD05 PSI/headroom evidence; candidate-only conclusion",
+    "Accionables!I17": "Q124 no-integrate OCR metrics plus ASTRA AMD05 memory evidence",
+    "Accionables!I18": "ASTRA 1M high-RSS run, Q118 replay, SOL dual-GPU limitation, Q97/Q100 gap",
+    "Accionables!M17:N18": "2026-10-25T04:33:32Z"
+  },
+  "formatting": "All returned cells reported WRAP; value-only updates preserved formatting.",
+  "sentinels": {
+    "Evaluaciones LlamaCode!A344": "Q123 unchanged",
+    "Evaluaciones LlamaCode!A345": "Q124 unchanged",
+    "Accionables!A17": "row type unchanged",
+    "Accionables!A18": "row type unchanged",
+    "Accionables!M17:N18": "2026-10-25T04:33:32Z"
+  },
+  "previousQ124ResultCellsReadBack": true,
+  "spreadsheetIdOmittedFromRepository": true,
+  "workbookTitle": "Listado (Google Sheet proporcionado por el usuario)"
+}

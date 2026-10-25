@@ -1,0 +1,57 @@
+{
+  "taskId": "Q-20261025-VF-ITERATION-124",
+  "amendment": "A19-offline-score-reconciliation",
+  "recordedAtUtc": "2026-10-25T04:28:56Z",
+  "command": "python3 runner/q124_offline_compare.py --baseline <pinned Tesseract baseline> --candidate outputs/a18-xfund-screen/model-q124.json --guard-receipt outputs/a18-xfund-screen/receipts/guarded-inference-a18-xfund-screen.json --manifest <pinned XFUND manifest> --output-dir outputs/a18-xfund-screen/model-outputs --attempt-dir outputs/a18-xfund-screen --attempt a18-xfund-screen --out outputs/a18-xfund-screen/comparison-q124-offline.json",
+  "comparatorSha256": "996d6937fb1be93058a23668228d6cd62a837091806413f8dc0b018e3b048273",
+  "outputSha256": "81576152535f472874f3ac2ab88c45afee36cf381011aa2001fafd7cbb6a762c",
+  "inputPinsVerified": true,
+  "inputs": {
+    "baselineSha256": "241919a906d0111347e1f29f66098f00c5d3a1217460be3f44e41b715ea2f161",
+    "candidateReportSha256": "3ef47f4f8ff13e49368cec6bdf4dd0077648c0c3e2da4fb2704b308f80257b1e",
+    "guardReceiptSha256": "31f82da9a2a5860a9af1ac85498866170a07b93680ca7fb6e59616d04c50a11f",
+    "workerGpu0ReceiptSha256": "5079efe2eed3bcba4e21d77f2cf17c1bee3bcb5c6d0e8abcb8ccd015d16628be",
+    "workerGpu1ReceiptSha256": "0afa75ab8ca3facbaa6a49d66a77c7fb6e6f5c804033e091319e406d74c456c4",
+    "manifestSha256": "ea86894d6bfec138b7f8ff4eaab258f33ac81a834ad22db462c8a6a018c38c03"
+  },
+  "comparison": {
+    "status": "completed",
+    "pages": 12,
+    "baselineMeanCer": 0.22911907465334994,
+    "baselineMedianCer": 0.21963233898463358,
+    "baselineMeanWordRecall": 0.8468278674148267,
+    "baselineMeanSeconds": 1.0409630338350933,
+    "candidateMeanCer": 0.3394353348326089,
+    "candidateMedianCer": 0.31002350262568396,
+    "candidateMeanWordRecall": 0.9352667382411632,
+    "candidateMeanSeconds": 11.40835885425137,
+    "relativeMeanCerReduction": -0.4814800354189805,
+    "pairedPageWins": 4,
+    "decision": "do-not-integrate"
+  },
+  "memoryGuard": {
+    "monitorSamples": 141,
+    "minimumMemAvailableGiB": 108.18439865112305,
+    "maximumAttemptCgroupGiB": 1.7892990112304688,
+    "maximumGlobalPsiAvg10SomePct": 0.0,
+    "maximumGlobalPsiAvg10FullPct": 0.0,
+    "maximumAttemptCgroupSwapBytes": 0,
+    "maximumAttemptCgroupOomKill": 0,
+    "guardAbortReason": null,
+    "systemdUnitAfterRun": "inactive",
+    "interpretation": "This screen caused no memory-pressure signal and no false abort. It is not a severe-memory-pressure stress test."
+  },
+  "execution": {
+    "serialPhysicalGpuRuns": [0, 1],
+    "pagesPerGpu": 6,
+    "gpuInferenceRerunForScoring": false,
+    "productionChanges": false,
+    "rawOcrTextUploadedToSheet": false
+  },
+  "decisionRule": "Advance only with relative CER reduction >=15% and >=8/12 paired wins; both failed.",
+  "limitations": [
+    "A 12-page screen is a small sample, but the preregistered rule explicitly rejects integration when both gates fail.",
+    "Tesseract CPU time and model GPU inference time are reported descriptively, not as a hardware-normalized speed comparison.",
+    "Word recall is higher for the candidate, but its character error rate is materially worse on this sample."
+  ]
+}
