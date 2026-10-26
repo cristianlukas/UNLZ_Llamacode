@@ -2596,3 +2596,13 @@ Preflight concluido: este Codex continúa en Ubuntu 24.04; no están disponibles
 - **Recibos:** `artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-145/RESULTS.md`, `receipts/google-sheet-sync.json`, `receipts/sheet-rows.json`; plan en `PLAN.md`.
 - **Recursos:** sin benchmark, inferencia, build, descarga, servidor ni GPU. ASTRA, SOL, Flash-Next productivo y perfiles no se tocaron.
 - **Lock:** token propio verificado; liberar al completar el cierre local y remoto.
+
+## Q146 · auditoría adicional de resultados históricos y sincronización de Resultados · 2026-10-26
+
+- **Subtarea de conciliación completada bajo el lock Q146 vigente** `2242863e-c78e-4fa9-9649-c1d1541f3919`.
+- **Alcance:** revisar las 18 pestañas del workbook “Listado”, cotejar la pestaña `Resultados` con resultados locales antiguos y anexar solo perfiles sin ID previo y con fuente local identificable.
+- **Resultado:** se añadieron 56 filas en `Resultados!A291:AF346`: Mica, MiMo y control Qwen3.5-9B, Opti-27B, Laya, LFM2.5-VL DSpark, Qwen3.8 throughput y nueve finalistas HumanEval, Flash-Next IQ1_S, NInfer Qwen3.6-35B, ExLlamaV3 Flash-Next, BeeLlama KVarN5/KVarN4 y Ling 3.0 Tiny.
+- **Criterios:** perfiles de suites distintas permanecen en cohortes distintas; pruebas parciales y fallidas quedan rotuladas; BCB contaminado de MiMo y el ítem parcial IQ1_S no se promueven a scores completos; datos ausentes se anotan N/D; no se calculó un ranking global ni una métrica sintética de calidad/velocidad.
+- **Verificación:** 289 IDs anteriores + 56 nuevos = 345 únicos; readback exacto de 1.792 celdas, 0 diferencias; 0 fórmulas, chips o validaciones; WRAP/TOP/Arial 10 y freeze panes (1 fila, 4 columnas) preservados. Ninguna otra pestaña se modificó.
+- **Recibos:** `artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-146/RESULTS.md`, `PLAN.md`, `receipts/sheet-rows.json`, `receipts/google-sheet-sync.json`.
+- **Recursos:** sin benchmark, inferencia, descarga, build, servidor ni GPU. Esta migración documental no cierra ni cambia los gates de pruebas pendientes de VF; el lock Q146 sigue reservado para la continuación de la tarea activa.
