@@ -1,0 +1,118 @@
+{
+  "task": "Q144",
+  "completed_utc": "2026-10-26 07:08:22 UTC",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_url": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "tab": "Resultados",
+  "sheet_id": 1972251122,
+  "append_range": "A237:AF268",
+  "columns": 32,
+  "appended_rows": 32,
+  "ids_added": [
+    "HIST-ASTRASOL-FIXED-TASKFLOW-ASTRA",
+    "HIST-ASTRASOL-FIXED-TASKFLOW-SOL",
+    "HIST-ASTRASOL-FIXED-LEDGER-ASTRA",
+    "HIST-ASTRASOL-FIXED-LEDGER-SOL",
+    "HIST-QWEN38-Q4-MODE-SMOKE-AR",
+    "HIST-QWEN38-Q4-MODE-SMOKE-NGRAM",
+    "HIST-QWEN38-Q4-MODE-SMOKE-MTP4",
+    "HIST-FLASHNEXT-Q4-CONTEXT-STARTUP-PROBE",
+    "HIST-QWEN38-Q4-CONTEXT-STARTUP-PROBE",
+    "HIST-MTPSWEEP-Q38-N02",
+    "HIST-MTPSWEEP-Q38-N03",
+    "HIST-MTPSWEEP-Q38-N04",
+    "HIST-MTPSWEEP-Q38-N05",
+    "HIST-MTPSWEEP-Q38-N06",
+    "HIST-MTPSWEEP-Q38-N07",
+    "HIST-MTPSWEEP-Q38-N08",
+    "HIST-MTPSWEEP-Q36-N02",
+    "HIST-MTPSWEEP-Q36-N03",
+    "HIST-MTPSWEEP-Q36-N04",
+    "HIST-MTPSWEEP-Q36-N05",
+    "HIST-MTPSWEEP-Q36-N06",
+    "HIST-MTPSWEEP-Q36-N07",
+    "HIST-MTPSWEEP-Q36-N08",
+    "HIST-QWEN38-TEMPLATE-SAFEV2",
+    "HIST-FLASHNEXT-ABLATION-PCIE00-SPEC050",
+    "HIST-FLASHNEXT-ABLATION-PCIE25-SPEC070",
+    "HIST-AURA-MULTISITE-QWEN35-9B",
+    "HIST-AURA-TRANSITION-STATEONLY",
+    "HIST-AURA-TRANSITION-TRANSITIONMODEL",
+    "HIST-FLASHNEXT-LAZY-OFF",
+    "HIST-FLASHNEXT-LAZY-ON",
+    "HIST-FLASHNEXT-LAZY-ON-DIRECT"
+  ],
+  "prior_unique_data_ids": 235,
+  "final_unique_data_ids": 267,
+  "duplicate_ids_in_payload": [],
+  "collisions_with_prior_ids": [],
+  "readback": {
+    "range": "Resultados!A237:AF268",
+    "rows": 32,
+    "cells_compared": 1024,
+    "mismatches": 0
+  },
+  "format": {
+    "spot_check_ranges": [
+      "Resultados!A237:AF238",
+      "Resultados!A267:AF268"
+    ],
+    "font": "Arial 10",
+    "wrap": "WRAP",
+    "vertical_alignment": "TOP",
+    "frozen_rows": 1,
+    "frozen_columns": 4
+  },
+  "source_artifacts": [
+    {
+      "path": "/media/cristian/Disco local/LlamaCode-cache/source/artifacts/qwen38-astra-sol-retest-20261006/report.md",
+      "sha256": "00f778875da1a4dd79140e1893bfa0c9defa0e063783f5a7c36a0595b0cbdfb2"
+    },
+    {
+      "path": "/media/cristian/Disco local/LlamaCode-cache/source/artifacts/qwen38-astra-sol-retest-20261006/results.json",
+      "sha256": "35c6dc7c1c51ebc0c7d07d74680426915ccb1ebbb65c7f6a2ba0a53f26026300"
+    },
+    {
+      "path": "/media/cristian/Disco local/LlamaCode-cache/source-post-eval-tests/docs/benchmark-qwen38-qat-dflash2-20260829.md",
+      "sha256": "c84ed4223e1bcd6153ddbc0eb974d0a4c026aadc0a9066cdf0a302774e034009"
+    },
+    {
+      "path": "/media/cristian/Disco local/LlamaCode-cache/source-post-eval-tests/docs/qwen36-vs-qwen38-mtp-sweep-20260814.md",
+      "sha256": "f970655d1355cbcbde2095effc9f5465b6ce32f5441ab0ba8f688756ff23129d"
+    },
+    {
+      "path": "/media/cristian/Disco local/LlamaCode-cache/source-post-eval-tests/docs/qwen38-template-quality-20260814.md",
+      "sha256": "f9c8dced87a9a85560335737fcc1648231f2e0a37309321678c8221ce9aa5216"
+    },
+    {
+      "path": "/media/cristian/Disco local/LlamaCode-cache/source/artifacts/aura-multisite-e2e-20261001/results.json",
+      "sha256": "b7b7f03397dd599ad734fdb0475a82da30773ddcd9f93dd0e677096482cbbca3"
+    },
+    {
+      "path": "/media/cristian/Disco local/LlamaCode-cache/source/artifacts/aura-multisurface-followup-20261001/results.json",
+      "sha256": "515352419241a007fe0f76c5f292ecb9ef125a43042d03be0d90c50ba0eae687"
+    },
+    {
+      "path": "/media/cristian/Disco local/LlamaCode-cache/source/artifacts/flashnext-ablation-20261005/report.md",
+      "sha256": "c6c47022f56e178b12652890ae0771e745e0c410fefaeb3297e8f721c880241a"
+    },
+    {
+      "path": "/media/cristian/Disco local/LlamaCode-cache/source-post-eval-tests/docs/qwen38-flash-next-lazy-mode-20260913.md",
+      "sha256": "ba797f24a11e8462c54dc76f64e3bd3a588aa561963e94b340d693dd483b0847"
+    }
+  ],
+  "exclusions": [
+    "Duplicate fingerprint/profile already represented in Resultados",
+    "Invalid/incomplete output was recorded as non-score or N/D, not a zero quality score",
+    "Startup-only probes were not labeled as semantic long-context results",
+    "No unreported throughput metric was derived"
+  ],
+  "resources": {
+    "build": false,
+    "inference": false,
+    "benchmark": false,
+    "download": false,
+    "gpu": false
+  },
+  "payload_file": "receipts/sheet-rows.json"
+}

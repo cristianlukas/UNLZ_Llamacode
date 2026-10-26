@@ -2571,3 +2571,17 @@ Preflight concluido: este Codex continúa en Ubuntu 24.04; no están disponibles
 - **Recibos:** `artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-142/RESULTS.md`, `receipts/google-sheet-sync.json` y payload `receipts/sheet-rows.json`.
 - **Plan:** `artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-142/PLAN.md`.
 - **Lock:** liberado después de validar el recibo y confirmar el token propio.
+
+
+| Q-20261026-VF-ITERATION-143 | Bloqueada · preflight sin descarga; el almacenamiento disponible no permite ensamblar el candidato completo de forma segura | Screen de primera shard de GSQ-RCO Coder | Usuario; inicio 2026-10-26T06:45:47Z | Candidate preflight indicó que no hay volumen con espacio suficiente para completar el artefacto; no se descargó ni se reservó GPU | Reanudar solo tras liberar almacenamiento suficiente o identificar un volumen de destino con espacio para el modelo completo y staging | `artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-143/` (preflight previo) |
+
+## Q144 · auditar resultados locales históricos y completar `Resultados` en Google Sheets · 2026-10-26
+
+- **Estado:** Completada bajo lock exclusivo; token `b31da4ce-5133-4721-b766-b42c797de907`.
+- **Alcance:** comparar informes/recibos locales con los datos de las 18 pestañas; agregar a `Resultados` únicamente ejecuciones locales con métricas verificables y fingerprint/cohorte identificable.
+- **Criterios:** no duplicar pruebas ya cubiertas; separar fallos de infraestructura de calidad; indicar límites de n, outputs truncados y resultados no comparables; no derivar TPS no reportado.
+- **Recursos:** solo lectura de archivos/Sheet y escritura documental; sin build, inferencia, benchmark, descarga, servidor ni GPU.
+- **Resultado:** añadidas 32 filas append-only en `Resultados!A237:AF268`, incluyendo retests ASTRA/SOL TaskFlow y Ledger, smoke Qwen3.8-27B en tres modos, dos probes de startup/contexto, sweeps MTP Qwen3.6/Qwen3.8, template safe-v2, dos ablaciones Flash-Next y resultados AURA/lazy-mode. Se excluyeron duplicados ya representados y perfiles repetidos. Las fallas previas a una entrega válida figuran como no puntuables; muestras pequeñas y métricas no medidas quedan explícitas.
+- **Verificación:** readback exacto de 1.024 celdas, cero diferencias; 32 IDs nuevos, sin duplicados ni colisiones contra los 235 IDs anteriores (267 IDs de datos al cierre). Se conservaron Arial 10, WRAP/TOP y panes congelados (1 fila, 4 columnas). No se modificaron otras pestañas.
+- **Recibos:** `artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-144/RESULTS.md`, `receipts/google-sheet-sync.json` y `receipts/sheet-rows.json`; plan en `PLAN.md`.
+- **Sin build, inferencia, benchmark ni GPU.** Lock liberado después de guardar y verificar los recibos y confirmar el token propio.
