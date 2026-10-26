@@ -2595,4 +2595,4 @@ Preflight concluido: este Codex continúa en Ubuntu 24.04; no están disponibles
 - **Verificación:** 267 IDs previos + 22 IDs nuevos = 289 IDs de datos únicos; readback exacto de 704 celdas, cero diferencias. Se conservaron WRAP/TOP/Arial 10 y panes congelados (1 fila, 4 columnas). Sin otras pestañas modificadas.
 - **Recibos:** `artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-145/RESULTS.md`, `receipts/google-sheet-sync.json`, `receipts/sheet-rows.json`; plan en `PLAN.md`.
 - **Recursos:** sin benchmark, inferencia, build, descarga, servidor ni GPU. ASTRA, SOL, Flash-Next productivo y perfiles no se tocaron.
-- **Lock:** liberar después de validar recibos y verificar que el token siga siendo propio.
+- **Lock:** token propio verificado; liberar al completar el cierre local y remoto.
