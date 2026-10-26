@@ -2585,3 +2585,14 @@ Preflight concluido: este Codex continúa en Ubuntu 24.04; no están disponibles
 - **Verificación:** readback exacto de 1.024 celdas, cero diferencias; 32 IDs nuevos, sin duplicados ni colisiones contra los 235 IDs anteriores (267 IDs de datos al cierre). Se conservaron Arial 10, WRAP/TOP y panes congelados (1 fila, 4 columnas). No se modificaron otras pestañas.
 - **Recibos:** `artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-144/RESULTS.md`, `receipts/google-sheet-sync.json` y `receipts/sheet-rows.json`; plan en `PLAN.md`.
 - **Sin build, inferencia, benchmark ni GPU.** Lock liberado después de guardar y verificar los recibos y confirmar el token propio.
+
+## Q145 · auditar más resultados locales antiguos y anexarlos a `Resultados` · 2026-10-26
+
+- **Estado:** completada bajo lock exclusivo Q145, token `e512ef48-0f23-4aa8-b528-fc3ea1ce0123`.
+- **Alcance:** revisión de las 18 pestañas del workbook “Listado” y de resultados locales antiguos fuera del ledger principal; deduplicación por ID, revisión, quant, suite, fingerprint y recibo.
+- **Resultado:** se agregaron 22 filas append-only a `Resultados!A269:AF290`: Swift Genesis, RCO Coder IQ1_M de revisión anterior, QwFN-hybrid, tres perfiles/probes Strata, cuatro browser planner probes, dos smoke visuales y nueve diagnósticos de velocidad DeepSeek. Tests sintéticos, muestras pequeñas, fallos y límites de comparación quedaron descritos; N/D cuando la fuente no mide el dato.
+- **Exclusiones:** pruebas de aplicación sin modelo; Strata 5090 de terceros; dos fallos DeepSeek previos a generación; contexto DeepSeek sin recibo local verificable. Resultados ya cubiertos en filas existentes no se duplicaron.
+- **Verificación:** 267 IDs previos + 22 IDs nuevos = 289 IDs de datos únicos; readback exacto de 704 celdas, cero diferencias. Se conservaron WRAP/TOP/Arial 10 y panes congelados (1 fila, 4 columnas). Sin otras pestañas modificadas.
+- **Recibos:** `artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-145/RESULTS.md`, `receipts/google-sheet-sync.json`, `receipts/sheet-rows.json`; plan en `PLAN.md`.
+- **Recursos:** sin benchmark, inferencia, build, descarga, servidor ni GPU. ASTRA, SOL, Flash-Next productivo y perfiles no se tocaron.
+- **Lock:** liberar después de validar recibos y verificar que el token siga siendo propio.
