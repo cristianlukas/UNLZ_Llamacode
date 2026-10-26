@@ -1,0 +1,86 @@
+{
+  "taskId": "Q-20261026-VF-ITERATION-138",
+  "status": "attempt03 failed before API_READY/model load due configured Strata log parent; attempt04 preregistered with config-log-parent fix",
+  "lockToken": "q138-re-fixture-bda789bf8eb8993f45f6bdc7",
+  "preregisteredAtUtc": "2026-10-26T02:25:21.833078+00:00",
+  "sourceActionable": "vf-qwen-ghidra-open-fixture-20261025",
+  "decisionQuestion": "Does local Qwen3.8-27B add reverse-engineering value over the ASTRA Flash-Next profile on a legal, reproducible binary fixture?",
+  "fixture": {
+    "origin": "Original synthetic C source authored for this test; no third-party firmware or binaries.",
+    "oracle": "Exact outputs computed from independently exercised fixture inputs; 12 scored questions, 3 recorded seeds per profile."
+  },
+  "ghidra": {
+    "version": "12.2",
+    "releaseTag": "Ghidra_12.2_build",
+    "asset": "ghidra_12.2_PUBLIC_20261016.zip",
+    "sizeBytes": 569712708,
+    "sha256": "2c2cd776db3c1f6a097ba418922378ac3649cadd5e844a6f5f088ae628a7be67",
+    "source": "https://github.com/NationalSecurityAgency/ghidra/releases/tag/Ghidra_12.2_build",
+    "destination": "/media/cristian/Disco local/Tools/Ghidra-12.2"
+  },
+  "profiles": [
+    {
+      "name": "Qwen3.8-27B Q4_K_M",
+      "model": "/media/cristian/Disco local/Models/llamacpp/Qwen3.8-27B-GGUF-Q4_K_M/Qwen3.8-27B-Q4_K_M.gguf",
+      "sha256": "c600de0300ae8a0eb3a6c0b8b5561b8b96f16bd2c863c2a66c42de29d391a747",
+      "engine": "existing llama.cpp b11554; two RTX 3090, layer split 1,1"
+    },
+    {
+      "name": "Qwen3.8 Flash-Next ASTRA IQ2_XS control",
+      "model": "/media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/",
+      "engine": "existing Strata runtime; two RTX 3090"
+    }
+  ],
+  "execution": {
+    "workload": "Same Ghidra decompilation, 12 exact-answer questions, 3 seeds/profile, serial order, one inference server at a time.",
+    "sampling": "temperature 0.6; top_p 0.95; top_k 20; min_p 0; repeat_penalty 1",
+    "decisionGate": "Qwen27B pilot signal only if mean exact accuracy exceeds ASTRA by >=10 percentage points, with no critical regression and median E2E <=1.25x ASTRA; otherwise no promotion.",
+    "memory": "Q121/AMD05 or verified equivalent out-of-process cgroup guard; no synthetic pressure; abort only owned worker.",
+    "productionInvariant": "Do not modify or delete ASTRA, SOL, Flash-Next, or any PeritoSoft model/profile."
+  },
+  "gates": [
+    "Only test-owned inference server processes/ports may be present.",
+    "Both target GGUFs and declared hashes/revisions are verified before use.",
+    "Fixture executable passes all oracle vectors before Ghidra or inference.",
+    "Ghidra asset checksum and free-space floor pass before extraction.",
+    "No model calls unless the exact guarded worker preflight passes."
+  ],
+  "amendments": [
+    {
+      "id": 1,
+      "receipt": "receipts/oracle-amendment-01.json",
+      "modelCallsBeforeAmendment": 0,
+      "purpose": "Correct Q11/Q12 answer options using the compiled fixture oracle before any Ghidra or model execution."
+    },
+    {
+      "id": 1,
+      "receipt": "receipts/amendment-01-runtime-and-prompt-correction.json",
+      "modelCallsBeforeAmendment": 0,
+      "purpose": "Pin complete runtimes/profiles, correct prompts to include the Ghidra corpus, and isolate the campaign in an uncapped user-systemd worker."
+    },
+    {
+      "id": 2,
+      "receipt": "receipts/amendment-02-attempt02-log-directory-fix.json",
+      "modelCallsBeforeAmendment": 0,
+      "purpose": "Fix the missing Strata log parent after attempt01 exited before model load/request; preserve attempt01 and write a single explicit corrected run to attempt02."
+    },
+    {
+      "id": 3,
+      "receipt": "receipts/amendment-03-launch-path.json",
+      "modelCallsBeforeAmendment": 0,
+      "purpose": "Correct systemd-run working-directory/path resolution; one runner invocation only, reusing A02 output because no runner/server/model process started."
+    },
+    {
+      "id": 4,
+      "receipt": "receipts/amendment-04-runner-prereg-name-fix.json",
+      "modelCallsBeforeAmendment": 0,
+      "purpose": "Fix undefined prereg variable in artifact preflight, preserve attempt02, add static regression and execute one isolated attempt03 with unique outputs."
+    },
+    {
+      "id": 5,
+      "receipt": "receipts/amendment-05-astra-config-log-parent.json",
+      "modelCallsBeforeAmendment": 0,
+      "purpose": "Create and verify the exact configured Strata engine-log directory before server start; preserve attempt03 and use unique attempt04 outputs."
+    }
+  ]
+}

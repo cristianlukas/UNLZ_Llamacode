@@ -1,0 +1,6 @@
+{
+  "id": "q138-amendment-04-project-parent",
+  "createdAtUtc": "2026-10-26T02:36:50.832879+00:00",
+  "change": "Create /tmp/q138-ghidra-project explicitly before invoking the same headless command; require it to be empty/no prior project and preserve all other args unchanged. This addresses the exact reported pre-import failure.",
+  "gate": "Ghidra imports fixture and writes decompilation output; no inference/model/GPU."
+}

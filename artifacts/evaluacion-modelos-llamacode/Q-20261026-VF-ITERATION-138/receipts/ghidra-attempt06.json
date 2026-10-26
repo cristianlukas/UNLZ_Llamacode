@@ -1,0 +1,9 @@
+{
+  "id": "ghidra-attempt06",
+  "createdAtUtc": "2026-10-26T02:39:06.664451+00:00",
+  "status": "SCRIPT_COMPILE_FAILED",
+  "cause": "Ghidra found a duplicate public ExportDecomp class because the backup ExportDecomp.attempt01.java was kept in the scriptPath directory. Headless import itself completed; script output is not accepted and prior output remained unchanged.",
+  "log": "artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/receipts/ghidra-headless-attempt06.log",
+  "inference": false,
+  "gpu": false
+}

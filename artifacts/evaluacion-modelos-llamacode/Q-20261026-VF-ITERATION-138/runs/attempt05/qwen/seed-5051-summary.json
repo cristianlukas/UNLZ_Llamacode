@@ -1,0 +1,7 @@
+{
+  "profile": "Qwen3.8-27B Q4_K_M candidate",
+  "seed": 5051,
+  "correct": 10,
+  "total": 12,
+  "accuracy": 0.8333333333333334
+}

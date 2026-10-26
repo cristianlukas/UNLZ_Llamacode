@@ -1,0 +1,7 @@
+{
+  "id": "q138-amendment-08-memoryblock-filter",
+  "createdAtUtc": "2026-10-26T02:39:52.406155+00:00",
+  "reason": "Attempt07 compiled and ran, but AddressSpace.isExternalSpace() did not exclude the 8 PLT wrappers; Ghidra reports them as EXTERNAL memory blocks. javap confirms MemoryBlock.isExternalBlock().",
+  "change": "Filter functions only when getMemory().getBlock(entryPoint) is non-null and isExternalBlock() is true. Run once in a new project, with the backup .java kept outside scriptPath. If the corpus still includes those 8 warning addresses, do not keep changing Ghidra script; use raw output plus a preregistered deterministic prompt-corpus filter keyed to exact external-warning addresses.",
+  "gate": "All four oracle-target behavior functions remain; external-space/decompiler error wrappers are absent from model input. Raw Ghidra output remains archived."
+}

@@ -1,0 +1,13 @@
+{
+  "taskId": "Q-20261026-VF-ITERATION-138",
+  "amendment": 1,
+  "timestampUtc": "2026-10-26T02:31:00Z",
+  "reason": "Fixture oracle exposed two authored-choice defects before any Ghidra or model call: Q11 correct transform value is 0x31 (choice A), and Q12 CRC is 0x9426, which was missing from the original choices.",
+  "changes": {
+    "Q11": "answer corrected from C to A; choice values unchanged.",
+    "Q12": "choice B corrected from 0x1e7c to 0x9426; answer remains B."
+  },
+  "modelCallsBeforeAmendment": 0,
+  "inferenceServersStarted": 0,
+  "productionChanged": false
+}

@@ -1,0 +1,4 @@
+9407b1edfa8bd695c485a5b182228da878ee8957344db3e50038be6e79300295  artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/fixtures/rev_fixture.c
+1c87342f0927824e6a10397cbc97c644e81c8150229c31e42707db42a054cd78  artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/fixtures/rev_fixture.bin
+51745c2699a7f2b7b2377ca59498126c38a62332c97b3d29133323f55fc6544d  artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/fixtures/ExportDecomp.java
+e788441fccaf754514a0ce9dc67f1f07fab9833ed067b418437e534bac56a4a0  artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/fixtures/questions.json

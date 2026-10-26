@@ -1,0 +1,91 @@
+{
+  "taskId": "Q-20261026-VF-ITERATION-138",
+  "amendment": "A03",
+  "registeredAtUtc": "2026-10-26T04:00:00Z",
+  "status": "preregistered_before_corrected_attempt02_runner_execution",
+  "launchFailure": {
+    "systemdInvocation": "attempt02 launch #1",
+    "status": "launcher_could_not_open_relative_script_path",
+    "workingDirectory": "/home/cristian",
+    "requestedRelativeScript": "artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/scripts/run_q138_ab.py",
+    "actualResolution": "/home/cristian/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/scripts/run_q138_ab.py",
+    "pythonRunnerStarted": false,
+    "inferenceServerStarted": false,
+    "modelLoaded": false,
+    "requestsSent": 0,
+    "gpuInferenceStarted": false,
+    "journalEvidence": "journalctl --user -u llamacode-q138-profile-ab.service: Python could not open the relative script path; systemd unit exited status 2/INVALIDARGUMENT.",
+    "progressReceiptWritten": false,
+    "finalReceiptWritten": false
+  },
+  "correction": {
+    "change": "Use absolute script path and explicit repository WorkingDirectory for systemd-run.",
+    "runnerPath": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/scripts/run_q138_ab.py",
+    "workingDirectory": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode",
+    "noRunnerOrModelConfigurationChanged": true,
+    "reuseA02CampaignOutput": true,
+    "reason": "The A02 campaign runner never executed, so runs/attempt02 and its dedicated receipts are still empty and available."
+  },
+  "attemptPolicy": {
+    "nextOperation": "Attempt02 is preserved as failed before server/model/request. A04 preregisters one new runner execution with the undefined guard-pin variable fixed and unique attempt03 outputs.",
+    "ifCorrectedRunnerStartsServerAndFails": "Preserve evidence and do not launch another Q138 campaign.",
+    "automaticRetry": false,
+    "ifAttempt03FailsAfterServerStart": "Preserve evidence and do not launch another Q138 campaign."
+  },
+  "preserved": {
+    "modelsAndProfiles": "unchanged from A02",
+    "contextSamplingSeedsPromptsAndScorer": "unchanged from A02",
+    "workerMemoryCaps": "none",
+    "productionProfiles": "unchanged",
+    "guiProcessesTerminated": false
+  },
+  "runner": {
+    "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/scripts/run_q138_ab.py",
+    "sha256": "a852e6e7d0ec44e8ff07c9eb74ee947e6dcfb083f9d68623eeb86eff24070657"
+  },
+  "staticVerifier": {
+    "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/scripts/verify_q138_ab.py",
+    "sha256": "74df85f128be9b6e797d45cac0e943687ecdf903776260d694482166ede682fe"
+  },
+  "preInferenceValidation": {
+    "command": "python3 /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/scripts/verify_q138_ab.py",
+    "expected": "PASS before corrected runner launch; validates A02 preregistration and complete campaign configuration without model inference.",
+    "campaignLaunchCommand": "systemd-run --user --collect --unit=llamacode-q138-profile-ab --working-directory=/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode --slice=background.slice --property=Type=exec --property=KillMode=control-group --property=OOMPolicy=kill --property=MemoryAccounting=yes --property=Restart=no /usr/bin/python3 /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/scripts/run_q138_ab.py --run"
+  },
+  "outcomeAfterRegistration": {
+    "correctedInvocationStartedRunner": true,
+    "status": "preflight_validation_failed_before_server_start",
+    "error": {
+      "type": "NameError",
+      "message": "name 'prereg' is not defined"
+    },
+    "completedRequests": 0,
+    "expectedRequests": 72,
+    "inferenceServerStarted": false,
+    "modelLoaded": false,
+    "gpuInferenceStarted": false,
+    "preflightReceiptWritten": false,
+    "progressReceipt": "receipts/campaign-attempt02-progress.json",
+    "finalReceipt": "receipts/campaign-attempt02-final.json",
+    "hostAfterCleanup": {
+      "MemAvailableGiB": 110.3,
+      "memoryPsiAvg10": 0.0,
+      "workerUnit": "inactive",
+      "ports18138And18139": "free",
+      "noOwnedServerProcess": true
+    },
+    "evidence": "campaign-attempt02-final.json, campaign-attempt02-progress.json, systemd user journal.",
+    "attempt03": {
+      "status": "strata_wrapper_failed_before_API_READY_or_model_load",
+      "completedRequests": 0,
+      "expectedRequests": 72,
+      "apiReady": false,
+      "modelLoaded": false,
+      "gpuInferenceStarted": false,
+      "cause": "The pinned Strata config directs engine logging to runs/astra-control/strata-engine.log; only runs/attempt03/logs existed.",
+      "preflight": "PASS; both RTX 3090, 113.05 GiB MemAvailable, PSI avg10 0, no external server, ports free, cgroup uncapped.",
+      "cleanup": "Service inactive, ports 18138/18139 free, GPU VRAM returned to baseline.",
+      "receipt": "receipts/campaign-attempt03-final.json"
+    }
+  }
+}

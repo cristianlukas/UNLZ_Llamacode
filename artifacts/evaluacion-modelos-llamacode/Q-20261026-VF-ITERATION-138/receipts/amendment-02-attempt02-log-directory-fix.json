@@ -1,0 +1,84 @@
+{
+  "taskId": "Q-20261026-VF-ITERATION-138",
+  "amendment": "A02",
+  "registeredAtUtc": "2026-10-26T03:58:38Z",
+  "status": "preregistered_before_attempt02",
+  "attempt01": {
+    "status": "infrastructure_failure_before_model_load_or_request",
+    "completedRequests": 0,
+    "expectedRequests": 72,
+    "cause": "Strata server process failed to open its configured log because runs/astra-control did not exist.",
+    "modelLoaded": false,
+    "requestSent": false,
+    "gpuInferenceStarted": false,
+    "preservedReceipts": [
+      "receipts/campaign-attempt01-final.json",
+      "receipts/campaign-attempt01-progress.json",
+      "receipts/preflight-attempt01.json"
+    ],
+    "rawLog": "runs/attempt01/logs/astra-strata.log"
+  },
+  "correction": {
+    "runnerChange": "Create the configured server-log parent directory before Popen for either profile.",
+    "attemptRoot": "runs/attempt02",
+    "responseFile": "runs/attempt02/responses.jsonl",
+    "progressReceipt": "receipts/campaign-attempt02-progress.json",
+    "finalReceipt": "receipts/campaign-attempt02-final.json",
+    "preflightReceipt": "receipts/preflight-attempt02.json",
+    "profileConfig": "No change to model/runtime/config/sampling/context/GPU split or request schedule."
+  },
+  "unchanged": {
+    "models": [
+      "ASTRA Flash-Next IQ2_XS",
+      "Qwen3.8-27B Q4_K_M"
+    ],
+    "contexts": {
+      "ASTRA": 1048576,
+      "Qwen": 32768
+    },
+    "gpus": [
+      0,
+      1
+    ],
+    "sampling": {
+      "temperature": 0.6,
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repeat_penalty": 1.0,
+      "presence_penalty": 0.0
+    },
+    "seeds": [
+      4242,
+      5051,
+      6061
+    ],
+    "questions": 12,
+    "maxOutputTokens": 1024,
+    "workerMemoryCaps": {
+      "MemoryHigh": null,
+      "MemoryMax": null,
+      "MemorySwapMax": null
+    },
+    "decisionGate": "Qwen pilot signal only if mean exact accuracy exceeds ASTRA by >=10 percentage points, no critical regression, and median end-to-end latency <=1.25x ASTRA. Otherwise do not promote either profile."
+  },
+  "attemptPolicy": "No automatic retry. This is one explicit, separately preregistered attempt after reviewing the pre-request infrastructure failure. If attempt02 fails after server start, preserve it and do not retry in Q138.",
+  "launch": "Same detached systemd user service, background.slice, KillMode=control-group, OOMPolicy=kill, memory accounting enabled; no memory/swap caps; server blocks remain serialized; ASTRA completes and cleans up before Qwen starts.",
+  "modelCallsBeforeAmendment": 0,
+  "onlyOwnedServerProcessMayBeStopped": true,
+  "noGUIOrUnrelatedProcessTerminated": true,
+  "runner": {
+    "path": "artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/scripts/run_q138_ab.py",
+    "sha256": "a852e6e7d0ec44e8ff07c9eb74ee947e6dcfb083f9d68623eeb86eff24070657"
+  },
+  "staticVerifier": {
+    "path": "artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/scripts/verify_q138_ab.py",
+    "sha256": "74df85f128be9b6e797d45cac0e943687ecdf903776260d694482166ede682fe"
+  },
+  "preInferenceValidation": {
+    "cpuOnlyCommand": "python3 artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/scripts/verify_q138_ab.py",
+    "expected": "PASS; validates corrected runner hash, output isolation, log-parent creation, exact prompts, scorer, serial profile schedule and monitor order; no inference.",
+    "campaignLaunchCommand": "systemd-run --user --collect --unit=llamacode-q138-profile-ab --slice=background.slice --property=Type=exec --property=KillMode=control-group --property=OOMPolicy=kill --property=MemoryAccounting=yes --property=Restart=no /usr/bin/python3 artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/scripts/run_q138_ab.py --run",
+    "attemptPolicy": "One explicit attempt02 only; do not rerun if it fails after server start."
+  }
+}

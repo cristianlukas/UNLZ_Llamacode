@@ -1,0 +1,7 @@
+{
+  "id": "q138-amendment-05-filter-external-stubs",
+  "createdAtUtc": "2026-10-26T02:37:59.916287+00:00",
+  "change": "Before generating the model prompt corpus, update the owned Ghidra post-script to skip Function.isExternal() entries so unresolved imported libc/PLT stubs are omitted. Keep all fixture functions and scoring unchanged. Re-run headless analysis in a fresh /tmp project and record output hash.",
+  "reason": "Attempt04 successfully decompiled the fixture but emitted external PLT entries that failed pcode at 8 unresolved stub addresses; these are not fixture functions and should not be included in model context.",
+  "gate": "The final corpus contains the synthetic fixture\u2019s actual functions only and the output includes the four target behaviors (classify, state transition, byte transform, CRC); no inference/GPU."
+}

@@ -1,0 +1,13 @@
+{
+  "taskId": "Q-20261026-VF-ITERATION-138",
+  "attempt": "attempt04",
+  "status": "FAILED",
+  "atUtc": "2026-10-26T04:25:36Z",
+  "completedRequests": 0,
+  "expectedRequests": 72,
+  "finalReceipt": "receipts/campaign-attempt04-final.json",
+  "error": {
+    "type": "TimeoutError",
+    "message": "server did not become healthy on 127.0.0.1:18139"
+  }
+}

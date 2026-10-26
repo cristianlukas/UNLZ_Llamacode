@@ -1,0 +1,7 @@
+{
+  "id": "q138-amendment-06-address-space-filter",
+  "createdAtUtc": "2026-10-26T02:38:38.222318+00:00",
+  "priorAttempt": "Attempt05 added Function.isExternal(), but output and hash were unchanged; the external stub functions are not marked external by that predicate. Ghidra API javap confirms AddressSpace.isExternalSpace().",
+  "change": "Replace the ineffective filter with function.getEntryPoint().getAddressSpace().isExternalSpace(); rerun import/script into a fresh temp project and preserve both outputs/hashes. Do not change fixture/questions/scoring.",
+  "gate": "Expect eight external-space stubs omitted; all four target behavior functions remain present; no decomp pcode warnings for external addresses; no model/GPU."
+}

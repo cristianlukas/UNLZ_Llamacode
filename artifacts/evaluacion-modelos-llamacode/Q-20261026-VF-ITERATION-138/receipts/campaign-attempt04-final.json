@@ -1,0 +1,20 @@
+{
+  "taskId": "Q-20261026-VF-ITERATION-138",
+  "status": "FAILED",
+  "error": {
+    "type": "TimeoutError",
+    "message": "server did not become healthy on 127.0.0.1:18139"
+  },
+  "completedRequests": 0,
+  "expectedRequests": 72,
+  "profileResults": [],
+  "monitor": {
+    "samples": 865,
+    "abortReason": null
+  },
+  "noHostMemoryOrSwapCaps": true,
+  "noGUIProcessesTerminated": true,
+  "noProductionProfilesChanged": true,
+  "preflightReceipt": "receipts/preflight-attempt04.json",
+  "atUtc": "2026-10-26T04:25:36Z"
+}

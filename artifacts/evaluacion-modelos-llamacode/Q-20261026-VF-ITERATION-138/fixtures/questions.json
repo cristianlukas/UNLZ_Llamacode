@@ -1,0 +1,19 @@
+{
+  "fixture": "Q138 original synthetic protocol decoder",
+  "scoring": "Return only the selected option code; exact match is one point. The hidden oracle was separately exercised against the compiled fixture binary.",
+  "questions": [
+    {"id":"Q1","target":"classify_command","prompt":"For opcode 0x10, length 64, flags 0x00, what integer result is returned? Choose A=-4, B=-2, C=16, D=17.","answer":"C"},
+    {"id":"Q2","target":"classify_command","prompt":"For opcode 0x10, length 65, flags 0x00, what integer result is returned? Choose A=-2, B=-1, C=16, D=17.","answer":"A"},
+    {"id":"Q3","target":"classify_command","prompt":"For opcode 0x10, length 0, flags 0x01, what integer result is returned? Choose A=-1, B=0, C=16, D=17.","answer":"D"},
+    {"id":"Q4","target":"classify_command","prompt":"For opcode 0x20, length 2, flags 0x01, what integer result is returned? Choose A=-4, B=-3, C=32, D=33.","answer":"D"},
+    {"id":"Q5","target":"classify_command","prompt":"For opcode 0x20, length 1, flags 0x00, what integer result is returned? Choose A=-4, B=-3, C=32, D=33.","answer":"B"},
+    {"id":"Q6","target":"classify_command","prompt":"For opcode 0x20, length 120, flags 0x03, what integer result is returned? Choose A=-4, B=-3, C=34, D=35.","answer":"A"},
+    {"id":"Q7","target":"classify_command","prompt":"For opcode 0x30, length 10, flags 0x00, what integer result is returned? Choose A=-3, B=-2, C=-1, D=48.","answer":"C"},
+    {"id":"Q8","target":"next_state","prompt":"For state 1 and event 3, what next state is returned? Choose A=-1, B=0, C=1, D=2.","answer":"B"},
+    {"id":"Q9","target":"next_state","prompt":"For state 2 and event 4, what next state is returned? Choose A=-1, B=0, C=1, D=2.","answer":"B"},
+    {"id":"Q10","target":"next_state","prompt":"For state 0 and event 2, what next state is returned? Choose A=-1, B=0, C=1, D=2.","answer":"A"},
+    {"id":"Q11","target":"transform_byte","prompt":"What is transform_byte(0x41, 0)? Choose A=0x31, B=0x57, C=0x68, D=0x7f.","answer":"A","optionValues":["0x31","0x57","0x68","0x7f"]},
+    {"id":"Q12","target":"packet_crc16","prompt":"What is packet_crc16 for the two bytes 01 02? Choose A=0x0000, B=0x9426, C=0x6d3a, D=0x9b64.","answer":"B","optionValues":["0x0000","0x9426","0x6d3a","0x9b64"]}
+  ],
+  "seedIds": [4242, 5051, 6061]
+}

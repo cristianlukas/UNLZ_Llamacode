@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "kind": "cpu_only_runner_and_preregistration_validation",
+  "modelInferenceStarted": false,
+  "gpuInferenceStarted": false,
+  "questionCount": 12,
+  "decompilationCharacters": 9082,
+  "requestsPerProfile": 36,
+  "profilesSerialized": true,
+  "strictExactScorer": true,
+  "monitorStartsBeforeInferenceServer": true,
+  "noWorkerMemoryCaps": true,
+  "runnerSha256": "7ed81b3a11dfd30cea90a7b67a1082ee5c148e2abdeec92e73297256871d6502",
+  "attribution": "A pilot of these two complete inference profiles on the fixed synthetic Ghidra corpus; not general model quality."
+}

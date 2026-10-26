@@ -1,0 +1,404 @@
+{
+  "taskId": "Q-20261026-VF-ITERATION-138",
+  "amendment": "A06",
+  "registeredAtUtc": "2026-10-26T04:29:07Z",
+  "status": "preregistered_before_attempt05",
+  "priorAttempt": {
+    "attempt": "attempt04",
+    "status": "failed_startup_timeout_before_API_READY",
+    "requests": {
+      "completed": 0,
+      "expected": 72
+    },
+    "startupTimeoutSeconds": 900,
+    "memory": {
+      "workerPeakGiB": 46.7,
+      "hostMemAvailableMinimumGiB": 59.1,
+      "workerSwapDeltaBytes": 0,
+      "oomKills": 0
+    },
+    "workerPsi": {
+      "severeDiagnosticObserved": true,
+      "hardStop": false
+    },
+    "evidence": "runs/attempt04/resource-monitor.jsonl; runs/attempt04/logs/astra-strata.log; receipts/campaign-attempt04-final.json"
+  },
+  "historicalControl": {
+    "taskId": "Q-20261025-VF-ITERATION-117",
+    "sameAstraRuntimeModelAndArguments": true,
+    "expertLoadReportedGiB": 33.02,
+    "expertLoadSeconds": 282,
+    "requestElapsedSeconds": 442.448,
+    "peakRssGiB": 51.306,
+    "minimumMemAvailableGiB": 58.698,
+    "workerSwapDeltaBytes": 0,
+    "oomKills": 0,
+    "semanticRecovery": "8/8 after preregistered semantic regrade",
+    "evidence": "Q-20261025-VF-ITERATION-117/RESULTS.md; runs/astra-1m-seed-2026103-attempt05/server.log; runs/astra-1m-seed-2026103-attempt05/receipt.json"
+  },
+  "hypothesis": "The 900-second failure is a startup-latency/cold-file-cache difference, not a memory crash. Cold cache is plausible but unconfirmed; attempt04 showed ongoing startup, while the successful prior 1M run used essentially the same profile with no OOM or worker swap.",
+  "correction": {
+    "code": "Raise the runner startup-health timeout from 900 to 1800 seconds for both serial profiles and include the last 5000 log characters in timeout diagnostics. Keep the model/profile/config, workload, ordering, sampling, memory policy and hard-stop criteria unchanged.",
+    "staticRegression": "CPU-only verifier must assert the 1800-second startup deadline, diagnostic tail inclusion, attempt05 output/preflight isolation, unchanged profiles, and no MemoryHigh/MemoryMax/MemorySwapMax.",
+    "attempt": "attempt05",
+    "uniqueOutputs": [
+      "runs/attempt05/",
+      "receipts/preflight-attempt05.json",
+      "receipts/campaign-attempt05-progress.json",
+      "receipts/campaign-attempt05-final.json"
+    ],
+    "attempt04Preserved": true,
+    "stopPolicy": "At 1800 seconds, stop only the test-owned server cgroup/process group and preserve diagnostic logs. The existing monitor may stop only on its actual hard-stop/OOM conditions; severe PSI alone remains diagnostic."
+  },
+  "unchanged": {
+    "models": [
+      "ASTRA Flash-Next IQ2_XS",
+      "Qwen3.8-27B Q4_K_M"
+    ],
+    "contexts": {
+      "ASTRA": 1048576,
+      "Qwen": 32768
+    },
+    "gpus": [
+      0,
+      1
+    ],
+    "requests": 72,
+    "workerMemoryCaps": {
+      "MemoryHigh": null,
+      "MemoryMax": null,
+      "MemorySwapMax": null
+    },
+    "productionProfiles": "unchanged",
+    "guiProcessesTerminated": false
+  },
+  "campaignLaunchCommand": "systemd-run --user --collect --unit=llamacode-q138-profile-ab --working-directory=/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode --slice=background.slice --property=Type=exec --property=KillMode=control-group --property=OOMPolicy=kill --property=MemoryAccounting=yes --property=Restart=no /usr/bin/python3 /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/scripts/run_q138_ab.py --run --attempt attempt05",
+  "runner": {
+    "path": "artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/scripts/run_q138_ab.py",
+    "sha256": "7ed81b3a11dfd30cea90a7b67a1082ee5c148e2abdeec92e73297256871d6502"
+  },
+  "staticVerifier": {
+    "path": "artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/scripts/verify_q138_ab.py",
+    "sha256": "956ed35cea9dd3ac0f942e5f5f889918f2104c191dfe2b0c4efd9f71bb6d0c1f"
+  },
+  "staticValidation": {
+    "atUtc": "2026-10-26T04:30:00Z",
+    "status": "PASS",
+    "command": "python3 scripts/verify_q138_ab.py; python3 -m py_compile scripts/run_q138_ab.py scripts/verify_q138_ab.py; git diff --check",
+    "modelInferenceStarted": false,
+    "gpuInferenceStarted": false,
+    "runnerSha256": "7ed81b3a11dfd30cea90a7b67a1082ee5c148e2abdeec92e73297256871d6502",
+    "staticVerifierSha256": "956ed35cea9dd3ac0f942e5f5f889918f2104c191dfe2b0c4efd9f71bb6d0c1f",
+    "checks": [
+      "1800-second startup timeout",
+      "5000-character timeout log tail",
+      "attempt05 output isolation",
+      "model/profile pins",
+      "serial 72-request schedule",
+      "no memory caps",
+      "no GUI termination"
+    ]
+  },
+  "preflightAttempt01": {
+    "atUtc": "2026-10-26T04:30:45Z",
+    "status": "failed_before_GPU_inventory_or_inference",
+    "cause": "The amendment receipt stored task-relative script paths while verify_artifacts resolves pins from repository root; the CPU artifact check rejected the missing path before GPU telemetry or server launch.",
+    "completedRequests": 0,
+    "modelInferenceStarted": false,
+    "gpuInferenceStarted": false,
+    "correctionPreregistered": "Change only the two receipt paths to repository-relative task paths; keep the same source hashes, runner, verifier, profiles, workload and attempt05 outputs. Re-run the static verifier and preflight before any model process."
+  },
+  "preflightAttempt02": {
+    "atUtc": "2026-10-26T04:34:00Z",
+    "status": "failed_expected_worker_slice_gate_before_GPU_or_model",
+    "cause": "The standalone --preflight-only command ran outside background.slice and verify_uncapped_cgroup correctly rejected it. No inference/GPU model server started.",
+    "correction": "Launch the preregistered attempt05 under the existing user systemd unit in background.slice; run_campaign executes the same preflight before any model server and writes preflight-attempt05.json only after gates pass.",
+    "diagnosticLog": "receipts/preflight-attempt05-foreground-only.log"
+  },
+  "campaignAttempt05Outcome": {
+    "atUtc": "2026-10-26T05:05:26Z",
+    "status": "PASS",
+    "serviceInvocationId": "e6431ccad3224c368638fa9e314e067f",
+    "completedRequests": 72,
+    "expectedRequests": 72,
+    "profiles": {
+      "ASTRA Flash-Next IQ2_XS productive control": {
+        "n": 36,
+        "correct": 22,
+        "accuracy": 0.6111111111111112,
+        "latencyMedianS": 8.118474058996071,
+        "latencyP95NearestRankS": 10.813619955006288,
+        "requestTimeSumS": 299.4862053010438,
+        "prefillMedianTokS": 1543.8000000000002,
+        "decodeMedianTokS": 139.10000000000002,
+        "completionTokensTotal": 27309,
+        "startupS": 495.3194751649862,
+        "cleanStop": true,
+        "perSeed": {
+          "4242": 8,
+          "5051": 7,
+          "6061": 7
+        }
+      },
+      "Qwen3.8-27B Q4_K_M candidate": {
+        "n": 36,
+        "correct": 31,
+        "accuracy": 0.8611111111111112,
+        "latencyMedianS": 23.06461170100374,
+        "latencyP95NearestRankS": 32.37168477999512,
+        "requestTimeSumS": 807.7105827809719,
+        "prefillMedianTokS": 1547.603629017446,
+        "decodeMedianTokS": 34.622066108160325,
+        "completionTokensTotal": 24570,
+        "startupS": 33.02959024600568,
+        "cleanStop": true,
+        "perSeed": {
+          "4242": 10,
+          "5051": 10,
+          "6061": 11
+        }
+      }
+    },
+    "paired": {
+      "pairs": 36,
+      "qwenWins": 11,
+      "qwenLosses": 2,
+      "ties": 23,
+      "accuracyDeltaPercentagePoints": 25.0,
+      "medianPerPairLatencyRatioQwenOverAstra": 2.7109682656963168,
+      "meanPerPairLatencyRatioQwenOverAstra": 2.770657352572489,
+      "nearestRankP95PerPairLatencyRatioQwenOverAstra": 4.9418652188168295,
+      "correctAnswersPerRequestSecond": {
+        "astra": 0.07345914306098199,
+        "qwen": 0.038380083981648556,
+        "qwenOverAstra": 0.5224684413999683
+      },
+      "qwenWinsByCase": [
+        {
+          "questionId": "Q3",
+          "seed": 5051,
+          "astraExact": false,
+          "qwenExact": true,
+          "latencyRatioQwenOverAstra": 1.0588179619642353
+        },
+        {
+          "questionId": "Q6",
+          "seed": 6061,
+          "astraExact": false,
+          "qwenExact": true,
+          "latencyRatioQwenOverAstra": 1.9953579673878734
+        },
+        {
+          "questionId": "Q7",
+          "seed": 4242,
+          "astraExact": false,
+          "qwenExact": true,
+          "latencyRatioQwenOverAstra": 1.6253527383959496
+        },
+        {
+          "questionId": "Q8",
+          "seed": 5051,
+          "astraExact": false,
+          "qwenExact": true,
+          "latencyRatioQwenOverAstra": 2.6975523197928135
+        },
+        {
+          "questionId": "Q8",
+          "seed": 6061,
+          "astraExact": false,
+          "qwenExact": true,
+          "latencyRatioQwenOverAstra": 2.1093394443230484
+        },
+        {
+          "questionId": "Q9",
+          "seed": 5051,
+          "astraExact": false,
+          "qwenExact": true,
+          "latencyRatioQwenOverAstra": 2.7243842115998205
+        },
+        {
+          "questionId": "Q10",
+          "seed": 4242,
+          "astraExact": false,
+          "qwenExact": true,
+          "latencyRatioQwenOverAstra": 2.4861301235923046
+        },
+        {
+          "questionId": "Q10",
+          "seed": 5051,
+          "astraExact": false,
+          "qwenExact": true,
+          "latencyRatioQwenOverAstra": 2.2275398678014064
+        },
+        {
+          "questionId": "Q10",
+          "seed": 6061,
+          "astraExact": false,
+          "qwenExact": true,
+          "latencyRatioQwenOverAstra": 2.5247174854892585
+        },
+        {
+          "questionId": "Q11",
+          "seed": 4242,
+          "astraExact": false,
+          "qwenExact": true,
+          "latencyRatioQwenOverAstra": 2.5563369062606984
+        },
+        {
+          "questionId": "Q11",
+          "seed": 6061,
+          "astraExact": false,
+          "qwenExact": true,
+          "latencyRatioQwenOverAstra": 2.2588085595396072
+        }
+      ],
+      "qwenLossesByCase": [
+        {
+          "questionId": "Q4",
+          "seed": 4242,
+          "astraExact": true,
+          "qwenExact": false,
+          "latencyRatioQwenOverAstra": 4.9418652188168295
+        },
+        {
+          "questionId": "Q7",
+          "seed": 5051,
+          "astraExact": true,
+          "qwenExact": false,
+          "latencyRatioQwenOverAstra": 4.047459327299856
+        }
+      ],
+      "perQuestion": [
+        {
+          "questionId": "Q1",
+          "target": "classify_command",
+          "astraCorrect": 3,
+          "qwenCorrect": 3
+        },
+        {
+          "questionId": "Q2",
+          "target": "classify_command",
+          "astraCorrect": 3,
+          "qwenCorrect": 3
+        },
+        {
+          "questionId": "Q3",
+          "target": "classify_command",
+          "astraCorrect": 2,
+          "qwenCorrect": 3
+        },
+        {
+          "questionId": "Q4",
+          "target": "classify_command",
+          "astraCorrect": 3,
+          "qwenCorrect": 2
+        },
+        {
+          "questionId": "Q5",
+          "target": "classify_command",
+          "astraCorrect": 3,
+          "qwenCorrect": 3
+        },
+        {
+          "questionId": "Q6",
+          "target": "classify_command",
+          "astraCorrect": 2,
+          "qwenCorrect": 3
+        },
+        {
+          "questionId": "Q7",
+          "target": "classify_command",
+          "astraCorrect": 2,
+          "qwenCorrect": 2
+        },
+        {
+          "questionId": "Q8",
+          "target": "next_state",
+          "astraCorrect": 1,
+          "qwenCorrect": 3
+        },
+        {
+          "questionId": "Q9",
+          "target": "next_state",
+          "astraCorrect": 2,
+          "qwenCorrect": 3
+        },
+        {
+          "questionId": "Q10",
+          "target": "next_state",
+          "astraCorrect": 0,
+          "qwenCorrect": 3
+        },
+        {
+          "questionId": "Q11",
+          "target": "transform_byte",
+          "astraCorrect": 1,
+          "qwenCorrect": 3
+        },
+        {
+          "questionId": "Q12",
+          "target": "packet_crc16",
+          "astraCorrect": 0,
+          "qwenCorrect": 0
+        }
+      ]
+    },
+    "decisionGate": {
+      "accuracyGainAtLeast10pp": true,
+      "noCriticalRegression": "not assessable: this corpus has no safety/criticality labels or security questions",
+      "medianE2ELatencyRatioQwenOverAstra": 2.841003313356144,
+      "latencyLimit": 1.25,
+      "latencyPass": false,
+      "result": "DO_NOT_PROMOTE; Qwen passes the narrow accuracy signal but fails the latency gate and critical safety is unmeasured."
+    },
+    "memory": {
+      "preflightMemAvailableGiB": 106.59054946899414,
+      "astraMemAvailableBeforeGiB": 106.58087921142578,
+      "qwenMemAvailableBeforeGiB": 110.4106559753418,
+      "qwenSwapFreeBeforeBytes": 33972224,
+      "monitor": {
+        "samples": 1587,
+        "minHostMemAvailableGiB": 59.015499114990234,
+        "maxWorkerCgroupMemoryGiB": 83.6647834777832,
+        "maxWorkerCgroupSwapBytes": 0,
+        "workerOomKillCountMax": 0,
+        "maxWorkerPsiSomeAvg10Pct": 95.23,
+        "maxWorkerPsiFullAvg10Pct": 95.23,
+        "hardStopEver": false,
+        "gpuPeakUsedMiB": {
+          "0": 23867,
+          "1": 22492
+        },
+        "gpuMaxTempC": {
+          "0": 71,
+          "1": 74
+        }
+      },
+      "hostSwapAtClose": {
+        "totalBytes": 8589930496,
+        "freeBytes": 68689920,
+        "usedBytes": 8521240576,
+        "sourceAttribution": "not collected; do not attribute to the model worker"
+      },
+      "workerCgroupSwap": "0 throughout observed samples; OOM count 0; no configured memory/swap caps",
+      "interpretation": "High worker/cgroup RAM usage did not trigger a hard stop or OOM. Host swap was nearly full at Qwen startup and close while MemAvailable stayed high; system-wide swap attribution is unknown and warrants separate diagnostic if needed."
+    },
+    "campaign": {
+      "startedAtUtc": "2026-10-26T04:35:37Z",
+      "completedAtUtc": "2026-10-26T05:02:58Z",
+      "astraStartupS": 495.3194751649862,
+      "qwenStartupS": 33.02959024600568,
+      "astraRequestTimeS": 299.4862053010438,
+      "qwenRequestTimeS": 807.7105827809719,
+      "astraStartupPlusRequestsS": 794.80568046603,
+      "qwenStartupPlusRequestsS": 840.7401730269776,
+      "requestsCompleted": 72,
+      "workerCaps": false,
+      "guiProcessesTerminated": false,
+      "productionProfilesChanged": false,
+      "cleanStops": true
+    },
+    "analysisReceipt": "receipts/ab-analysis-attempt05.json",
+    "resultReport": "RESULTS.md"
+  }
+}

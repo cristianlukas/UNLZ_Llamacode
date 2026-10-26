@@ -1,0 +1,10 @@
+{
+  "id": "ghidra-attempt03",
+  "createdAtUtc": "2026-10-26T02:36:50.832787+00:00",
+  "result": "FAILED_BEFORE_IMPORT",
+  "exitCode": 1,
+  "cause": "Ghidra headless reported Directory not found: /tmp/q138-ghidra-project. Parent was intentionally required absent but launcher does not create it.",
+  "log": "ghidra-headless-attempt03.log",
+  "inference": false,
+  "gpu": false
+}

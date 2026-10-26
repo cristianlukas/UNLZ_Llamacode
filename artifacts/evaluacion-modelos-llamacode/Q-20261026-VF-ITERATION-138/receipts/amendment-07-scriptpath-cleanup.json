@@ -1,0 +1,6 @@
+{
+  "id": "q138-amendment-07-move-script-backup",
+  "createdAtUtc": "2026-10-26T02:39:06.665543+00:00",
+  "change": "Move ExportDecomp.attempt01.java from Ghidra scriptPath into Q138 receipts, leaving one public ExportDecomp.java file in scriptPath. Re-run the same import/decompilation in a fresh temp project.",
+  "gate": "Script compiles, output omits external address-space entries, target functions remain, and output hash is updated; no inference/GPU."
+}

@@ -1,0 +1,12 @@
+{
+  "taskId": "Q-20261026-VF-ITERATION-138",
+  "status": "FAILED",
+  "atUtc": "2026-10-26T03:57:48Z",
+  "completedRequests": 0,
+  "expectedRequests": 72,
+  "finalReceipt": "receipts/campaign-final.json",
+  "error": {
+    "type": "RuntimeError",
+    "message": "inference server exited during startup (1): [strata] layer split: card order 1,0 (the faster card last; \"gpu_order\": \"as_given\" keeps 0,1, #1352)\n[strata] layer split: card order 1,0 (the faster card last; \"gpu_order\": \"as_given\" keeps 0,1, #1352)\n[strata] sampling defaults from the config: temperature=0.6, top_p=0.95, top_k=20, min_p=0.0, repetition_penalty=1.0, presence_penalty=0.0\nloading the model (the first start takes a minute or two) ...\n[strata] layer split across GPUs [0, 1] (auto)\nTraceback (most recent call last):\n  File \"/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py\", line 5895, in <module>\n    sys.exit(main())\n             ^^^^^^\n  File \"/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py\", line 5720, in main\n    engine = StrataEngine(exe, engine_args(cfg) + (effort_end or []), cwd=cfg.get(\"cwd\"), log=cfg.get(\"log\"),\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py\", line 628, in __init__\n    self.log = open(log, \"a\", encoding=\"utf-8\") if log else subprocess.DEVNULL\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nFileNotFoundError: [Errno 2] No such file or directory: '/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/runs/astra-control/strata-engine.log'\n"
+  }
+}

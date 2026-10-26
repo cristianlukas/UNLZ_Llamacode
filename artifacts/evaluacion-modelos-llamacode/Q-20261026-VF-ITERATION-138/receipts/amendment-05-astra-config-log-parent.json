@@ -1,0 +1,77 @@
+{
+  "taskId": "Q-20261026-VF-ITERATION-138",
+  "amendment": "A05",
+  "registeredAtUtc": "2026-10-26T04:08:00Z",
+  "status": "preregistered_before_attempt04",
+  "attempt03Outcome": {
+    "status": "startup_failure_before_API_READY_or_model_load",
+    "completedRequests": 0,
+    "expectedRequests": 72,
+    "modelLoaded": false,
+    "inferenceServerReady": false,
+    "gpuInferenceStarted": false,
+    "cause": "Pinned config engine log parent runs/astra-control was not created; separate campaign output parent was created instead."
+  },
+  "correction": {
+    "code": "Before starting the ASTRA wrapper, read the already-hash-verified resolved profile config, resolve its configured engine log path, assert that it remains inside the Q138 task directory, and create exactly that configured parent. Do not alter the config or profile hashes.",
+    "staticRegression": "CPU verifier invokes the helper and asserts the configured engine-log parent exists inside Q138; it also asserts the helper is called before Popen.",
+    "attempt": "attempt04",
+    "uniqueOutputs": [
+      "runs/attempt04/",
+      "receipts/preflight-attempt04.json",
+      "receipts/campaign-attempt04-progress.json",
+      "receipts/campaign-attempt04-final.json"
+    ],
+    "attempt03Preserved": true
+  },
+  "unchanged": {
+    "models": [
+      "ASTRA Flash-Next IQ2_XS",
+      "Qwen3.8-27B Q4_K_M"
+    ],
+    "contexts": {
+      "ASTRA": 1048576,
+      "Qwen": 32768
+    },
+    "gpus": [
+      0,
+      1
+    ],
+    "sampling": {
+      "temperature": 0.6,
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repeat_penalty": 1.0,
+      "presence_penalty": 0.0
+    },
+    "seeds": [
+      4242,
+      5051,
+      6061
+    ],
+    "questions": 12,
+    "maxOutputTokens": 1024,
+    "workerMemoryCaps": {
+      "MemoryHigh": null,
+      "MemoryMax": null,
+      "MemorySwapMax": null
+    },
+    "decisionGate": "Qwen pilot signal only if mean exact accuracy exceeds ASTRA by >=10 percentage points, no critical regression, and median E2E <=1.25x ASTRA.",
+    "productionProfiles": "unchanged"
+  },
+  "attemptPolicy": "One explicit attempt04 after CPU-only validation. No automatic retry. Preserve all outputs; any further evidence-based corrective run must have a new amendment before execution.",
+  "preInferenceValidation": {
+    "command": "python3 /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/scripts/verify_q138_ab.py",
+    "expected": "PASS; AST05 pin variable regression, configured log-parent creation regression, attempt04 output isolation, identical prompts/scorer/serial order, uncapped worker. No model inference.",
+    "campaignLaunchCommand": "systemd-run --user --collect --unit=llamacode-q138-profile-ab --working-directory=/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode --slice=background.slice --property=Type=exec --property=KillMode=control-group --property=OOMPolicy=kill --property=MemoryAccounting=yes --property=Restart=no /usr/bin/python3 /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/scripts/run_q138_ab.py --run --attempt attempt04"
+  },
+  "runner": {
+    "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/scripts/run_q138_ab.py",
+    "sha256": "93f90ec05abe240a205e040414708f8f8cc646770eb0fb28c45459da704da720"
+  },
+  "staticVerifier": {
+    "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/scripts/verify_q138_ab.py",
+    "sha256": "c17645ebfa9ef3e47d349bea881e001f4a2de4dddbd18809966faf7e23e9e497"
+  }
+}

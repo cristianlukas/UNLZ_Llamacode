@@ -1,0 +1,100 @@
+{
+  "taskId": "Q-20261026-VF-ITERATION-138",
+  "status": "PASS",
+  "error": null,
+  "completedRequests": 72,
+  "expectedRequests": 72,
+  "profileResults": [
+    {
+      "profile": "ASTRA Flash-Next IQ2_XS productive control",
+      "modelId": "qwen3.8-flash-next-iq2_xs",
+      "startupSeconds": 495.3194751649862,
+      "before": {
+        "meminfo": {
+          "MemTotal": 132615852032,
+          "MemAvailable": 114440347648,
+          "SwapTotal": 8589930496,
+          "SwapFree": 4187951104
+        },
+        "gpus": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 3090",
+            "temperatureC": 43,
+            "memoryUsedMiB": 1156,
+            "memoryTotalMiB": 24576,
+            "utilizationPct": 20,
+            "memoryFreeMiB": 23420
+          },
+          {
+            "index": 1,
+            "name": "NVIDIA GeForce RTX 3090",
+            "temperatureC": 25,
+            "memoryUsedMiB": 110,
+            "memoryTotalMiB": 24576,
+            "utilizationPct": 23,
+            "memoryFreeMiB": 24466
+          }
+        ],
+        "atUtc": "2026-10-26T04:35:37Z"
+      },
+      "stop": {
+        "pid": 2528944,
+        "exitCode": 0,
+        "processGroupAlive": false,
+        "listenersAfterStop": {},
+        "clean": true
+      }
+    },
+    {
+      "profile": "Qwen3.8-27B Q4_K_M candidate",
+      "modelId": "q138-qwen27b",
+      "startupSeconds": 33.02959024600568,
+      "before": {
+        "meminfo": {
+          "MemTotal": 132615852032,
+          "MemAvailable": 118552539136,
+          "SwapTotal": 8589930496,
+          "SwapFree": 33972224
+        },
+        "gpus": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 3090",
+            "temperatureC": 66,
+            "memoryUsedMiB": 1153,
+            "memoryTotalMiB": 24576,
+            "utilizationPct": 10,
+            "memoryFreeMiB": 23423
+          },
+          {
+            "index": 1,
+            "name": "NVIDIA GeForce RTX 3090",
+            "temperatureC": 57,
+            "memoryUsedMiB": 110,
+            "memoryTotalMiB": 24576,
+            "utilizationPct": 4,
+            "memoryFreeMiB": 24466
+          }
+        ],
+        "atUtc": "2026-10-26T04:48:55Z"
+      },
+      "stop": {
+        "pid": 2581923,
+        "exitCode": 0,
+        "processGroupAlive": false,
+        "listenersAfterStop": {},
+        "clean": true
+      }
+    }
+  ],
+  "monitor": {
+    "samples": 1587,
+    "abortReason": null
+  },
+  "noHostMemoryOrSwapCaps": true,
+  "noGUIProcessesTerminated": true,
+  "noProductionProfilesChanged": true,
+  "preflightReceipt": "receipts/preflight-attempt05.json",
+  "atUtc": "2026-10-26T05:02:58Z"
+}

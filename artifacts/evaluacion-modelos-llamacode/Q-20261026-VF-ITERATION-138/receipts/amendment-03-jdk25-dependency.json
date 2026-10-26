@@ -1,0 +1,11 @@
+{
+  "id": "q138-amendment-03-jdk25-dependency",
+  "createdAtUtc": "2026-10-26T02:35:45.638232+00:00",
+  "evidence": "Ghidra 12.2 official GettingStarted.md says Java 25 64-bit JDK; LaunchSupport rejected installed OpenJDK 21 before import. Official Ghidra note: https://github.com/NationalSecurityAgency/ghidra/blob/master/Ghidra/Configurations/Public_Release/src/global/docs/WhatsNew.md",
+  "change": "Use official Eclipse Temurin 25.0.5+8 x64 Linux JDK release asset only. Download 141341188 bytes to Disco local/Tools, verify SHA256 68982529869257d0ee6b824ec5aa270ff8b118bb438670da0b97ebdab178d7fb against GitHub Adoptium release API and sidecar; extract only after exact size/hash pass. Configure Ghidra JAVA_HOME_OVERRIDE to extracted JDK. Retry same headless import once.",
+  "asset": "https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.5%2B8/OpenJDK25U-jdk_x64_linux_hotspot_25.0.5_8.tar.gz",
+  "expectedSizeBytes": 141341188,
+  "expectedSha256": "68982529869257d0ee6b824ec5aa270ff8b118bb438670da0b97ebdab178d7fb",
+  "sidecar": "https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.5%2B8/OpenJDK25U-jdk_x64_linux_hotspot_25.0.5_8.tar.gz.sha256.txt",
+  "limit": "No apt/system-wide install, no model download, no inference/GPU use during this dependency gate. Abort extraction on mismatch or insufficient storage."
+}

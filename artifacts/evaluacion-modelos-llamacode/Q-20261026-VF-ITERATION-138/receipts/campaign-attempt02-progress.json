@@ -1,0 +1,13 @@
+{
+  "taskId": "Q-20261026-VF-ITERATION-138",
+  "attempt": "attempt02",
+  "status": "FAILED",
+  "atUtc": "2026-10-26T04:02:51Z",
+  "completedRequests": 0,
+  "expectedRequests": 72,
+  "finalReceipt": "receipts/campaign-final.json",
+  "error": {
+    "type": "NameError",
+    "message": "name 'prereg' is not defined"
+  }
+}

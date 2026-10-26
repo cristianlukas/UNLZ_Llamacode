@@ -1,0 +1,10 @@
+{
+  "taskId": "Q-20261026-VF-ITERATION-138",
+  "attempt": "attempt05",
+  "status": "PASS",
+  "atUtc": "2026-10-26T05:02:58Z",
+  "completedRequests": 72,
+  "expectedRequests": 72,
+  "finalReceipt": "receipts/campaign-attempt05-final.json",
+  "error": null
+}

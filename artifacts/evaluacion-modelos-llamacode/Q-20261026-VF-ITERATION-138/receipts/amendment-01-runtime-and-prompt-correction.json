@@ -1,0 +1,326 @@
+{
+  "taskId": "Q-20261026-VF-ITERATION-138",
+  "amendment": "A01",
+  "registeredAtUtc": "2026-10-26T03:44:10Z",
+  "status": "preregistered_before_inference",
+  "modelCallsBeforeAmendment": 0,
+  "reason": "The original 12 prompts omitted the decompilation, so they tested arithmetic rather than reverse engineering. The runner will supply the pinned Ghidra corpus to every unchanged question before asking for one exact option letter.",
+  "prompt": {
+    "decompilationPath": "artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/fixtures/ghidra-decompilation.c",
+    "decompilationSha256": "fd64ae63b1e0add2a1f842e349a6cfc54a8f3b841e69a1a34bd9af190337cadd",
+    "questionSetPath": "artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/fixtures/questions.json",
+    "questionSetSha256": "ba2bc6b96cf20aa04334927efe2bd113e8385379ed1f495ec6b813c785b61cfe",
+    "assembly": "Same decompilation corpus plus one question, for both profiles; request seed does not alter prompt text; answer only A, B, C, or D; strict exact single-letter scoring."
+  },
+  "profiles": [
+    {
+      "name": "ASTRA Flash-Next IQ2_XS productive control",
+      "engine": "Strata 0.1.41, commit fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
+      "enginePath": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata",
+      "engineSha256": "770ecf303a4c6271654339c639392ecb455de3a999bf5d2e8dbc73c879103602",
+      "serverPath": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py",
+      "serverSha256": "017efa1f4e76d72396738555d13eb1f9898d1c1c12730cf046d9b267b29987e5",
+      "modelPaths": [
+        "/media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS-00001-of-00002.gguf",
+        "/media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS-00002-of-00002.gguf"
+      ],
+      "modelSha256": [
+        "92cee27ae5bbadcd732416a0f7a7f0acc092399dbbe8f5a5efa707c2ec0a49d7",
+        "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113"
+      ],
+      "strataPack": "/media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/strata-data/packs/iq2_xs",
+      "strataPackManifestSha256": "27701fec3423719c23ee88c93ffae0f5f5c60ad29b6e46b7589fa9df5f20c880",
+      "expertProfile": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/data/expert-profile.bin",
+      "expertProfileSha256": "8f59b4aa8873209dff11c11e37bcda9529a1335b724a1afeea37bf6388975baf",
+      "mtp": {
+        "path": "/media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/mtp/rt",
+        "manifestSha256": "77cbf37be386ef28e496dc161ed07c4e5ce677cb495261c343c4fd2acf3bbae8",
+        "mode": "4-token speculative decoding"
+      },
+      "mtpManifestSha256": "77cbf37be386ef28e496dc161ed07c4e5ce677cb495261c343c4fd2acf3bbae8",
+      "configSourcePath": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-117/configs/astra-default-1m-seed-2026103-attempt05.json",
+      "configSourceSha256": "3eaafc161175bbb5ea56bbc464d24afda6fea55a8d7e45e3e76a2b4e6ed41b5c",
+      "resolvedConfigPath": "artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/receipts/configs/astra-iq2xs-re-1m.json",
+      "resolvedConfigSha256": "7ca521655fcb8e01f57049754f1497c440b347aa065080937d9fddcc2f537c08",
+      "contextTokens": 1048576,
+      "ropeScaling": "YaRN factor 4, original context 262144",
+      "kv": "int8",
+      "kvResidentTokens": 32768,
+      "sampling": {
+        "temperature": 0.6,
+        "top_p": 0.95,
+        "top_k": 20,
+        "min_p": 0.0,
+        "repeat_penalty": 1.0,
+        "presence_penalty": 0.0
+      },
+      "host": "127.0.0.1",
+      "port": 18139,
+      "gpus": [
+        0,
+        1
+      ],
+      "serverCommand": [
+        "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python",
+        "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py",
+        "--engine",
+        "strata",
+        "--config",
+        "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/receipts/configs/astra-iq2xs-re-1m.json",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "18139"
+      ],
+      "environment": {
+        "CUDA_VISIBLE_DEVICES": "0,1",
+        "STRATA_PREFILL_CPU_SHARE": "0",
+        "LD_LIBRARY_PATH": "/usr/local/cuda-12.8/lib64"
+      },
+      "engineArgs": [
+        "--pack",
+        "/media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/strata-data/packs/iq2_xs",
+        "--native",
+        "/media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS-00001-of-00002.gguf",
+        "--ple-gguf",
+        "/media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS-00002-of-00002.gguf",
+        "--expert-profile",
+        "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/data/expert-profile.bin",
+        "--expert-cache",
+        "auto",
+        "--prefill",
+        "auto",
+        "--spec",
+        "4",
+        "--spec-min-p",
+        "0.70",
+        "--mtp",
+        "/media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/mtp/rt",
+        "--max-context",
+        "1048576",
+        "--kv",
+        "int8",
+        "--kv-resident",
+        "32768",
+        "--pcie-frac",
+        "0.00",
+        "--rope-scaling",
+        "yarn",
+        "--rope-scale",
+        "4",
+        "--yarn-orig-ctx",
+        "262144"
+      ],
+      "cwd": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source",
+      "serverCommandSha256": "f03bb4402df66a92e6fb61a565176b8606506da326a37f26aed897fda38328b0"
+    },
+    {
+      "name": "Qwen3.8-27B Q4_K_M candidate",
+      "engine": "llama.cpp server b11554, commit 966baae76",
+      "enginePath": "/media/cristian/Disco local/LlamaCode-cache/embeddinggemma2-eval/runtime/llama-b11554/llama-server",
+      "engineSha256": "fe8a7d6073d3e3a276193fcaec162cbf280d2572ad2016c9100fd924be19c6ed",
+      "modelPath": "/media/cristian/Disco local/Models/llamacpp/Qwen3.8-27B-GGUF-Q4_K_M/Qwen3.8-27B-Q4_K_M.gguf",
+      "modelSha256": "c600de0300ae8a0eb3a6c0b8b5561b8b96f16bd2c863c2a66c42de29d391a747",
+      "chatTemplatePath": "assets/chat-templates/qwen38-tools-fixed.jinja",
+      "chatTemplateSha256": "03c3e852d2c349ce306ed9ecd870c83487bf123918843387b179ead1fcce93af",
+      "contextTokens": 32768,
+      "batch": 512,
+      "ubatch": 512,
+      "kv": "q4_0",
+      "flashAttention": true,
+      "gpuLayers": 999,
+      "tensorSplit": "1,1",
+      "reasoningEffort": "medium",
+      "reasoningBudgetTokens": 1024,
+      "sampling": {
+        "temperature": 0.6,
+        "top_p": 0.95,
+        "top_k": 20,
+        "min_p": 0.0,
+        "repeat_penalty": 1.0,
+        "presence_penalty": 0.0
+      },
+      "host": "127.0.0.1",
+      "port": 18138,
+      "gpus": [
+        0,
+        1
+      ],
+      "serverArgs": [
+        "--model",
+        "/media/cristian/Disco local/Models/llamacpp/Qwen3.8-27B-GGUF-Q4_K_M/Qwen3.8-27B-Q4_K_M.gguf",
+        "--alias",
+        "q138-qwen27b",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "18138",
+        "--n-gpu-layers",
+        "999",
+        "--split-mode",
+        "layer",
+        "--tensor-split",
+        "1,1",
+        "--ctx-size",
+        "32768",
+        "--batch-size",
+        "512",
+        "--ubatch-size",
+        "512",
+        "--threads",
+        "8",
+        "--cache-type-k",
+        "q4_0",
+        "--cache-type-v",
+        "q4_0",
+        "--flash-attn",
+        "on",
+        "--jinja",
+        "--chat-template-file",
+        "assets/chat-templates/qwen38-tools-fixed.jinja",
+        "--reasoning-effort",
+        "medium",
+        "--reasoning-budget",
+        "1024",
+        "--n-predict",
+        "1024",
+        "--spec-type",
+        "none",
+        "--temp",
+        "0.6",
+        "--top-p",
+        "0.95",
+        "--top-k",
+        "20",
+        "--min-p",
+        "0",
+        "--repeat-penalty",
+        "1",
+        "--presence-penalty",
+        "0"
+      ],
+      "environment": {
+        "CUDA_VISIBLE_DEVICES": "0,1",
+        "LD_LIBRARY_PATH": "/usr/local/cuda-12.8/lib64"
+      }
+    }
+  ],
+  "workload": {
+    "questions": 12,
+    "seeds": [
+      4242,
+      5051,
+      6061
+    ],
+    "requestsPerProfile": 36,
+    "samePromptOrderAcrossProfiles": true,
+    "serialProfiles": [
+      "ASTRA control",
+      "Qwen candidate"
+    ],
+    "maximumOutputTokens": 1024,
+    "noAutomaticRetry": true,
+    "requestBodyDefaults": {
+      "max_tokens": 1024,
+      "cache_prompt": false,
+      "temperature": 0.6,
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repeat_penalty": 1.0,
+      "presence_penalty": 0.0
+    },
+    "questionOrder": [
+      "Q1",
+      "Q2",
+      "Q3",
+      "Q4",
+      "Q5",
+      "Q6",
+      "Q7",
+      "Q8",
+      "Q9",
+      "Q10",
+      "Q11",
+      "Q12"
+    ],
+    "executionOrder": "ASTRA control completes the 36 request block first, then Qwen candidate; each seed uses Q1-Q12. The single pilot treats block-order performance as descriptive."
+  },
+  "metrics": [
+    "strict exact-match correctness",
+    "raw response",
+    "prompt/completion token counts",
+    "request wall latency",
+    "engine-reported prefill/decode tokens per second or N/D",
+    "startup duration",
+    "server logs",
+    "host MemAvailable/SwapFree/PSI/OOM",
+    "worker cgroup current/peak/swap/events",
+    "per-GPU VRAM/utilization/temperature"
+  ],
+  "worker": {
+    "unit": "llamacode-q138-profile-ab.service",
+    "slice": "background.slice",
+    "manager": "systemd user manager",
+    "properties": [
+      "Type=exec",
+      "KillMode=control-group",
+      "OOMPolicy=kill",
+      "MemoryAccounting=yes",
+      "Restart=no"
+    ],
+    "memoryLimits": {
+      "MemoryHigh": null,
+      "MemoryMax": null,
+      "MemorySwapMax": null
+    },
+    "purpose": "Keep the experiment and receipts independent from the Codex parent process while preserving the host memory available to the workload.",
+    "launchMethod": "systemd-run --user --collect --unit=llamacode-q138-profile-ab --slice=background.slice; detached from the Codex client, with durable per-response checkpoints."
+  },
+  "guard": {
+    "kind": "Q121/AMD05-derived independent Python telemetry monitor in the Q138 user service; no synthetic pressure",
+    "source": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-127/scripts/q117_pressure_guard_attempt05.py",
+    "sha256": "b4d42302e7d405abd5c59df5aa86bb7de6ef3bb91aef487b49acbebd1d24270e",
+    "coreSha256": "832c6661692fa9c6e45d209be5c4201a1ad796bfe66bec92cf947151e6988b4b",
+    "psiHelperSha256": "d2c66a548c694edaad36f019ad4b499334a7f4d965f900e8d21279b06231b3db",
+    "onlyStopOwnedServerProcessGroup": true
+  },
+  "preflight": {
+    "noExistingInferenceServerOrContainer": true,
+    "ports": [
+      18138,
+      18139
+    ],
+    "bothGpusRequired": [
+      0,
+      1
+    ],
+    "maximumGpuTemperatureC": 80,
+    "minimumFreeVRAMGiBPerGpu": 20,
+    "minimumMemAvailableGiB": 88,
+    "minimumSwapFreeGiB": 1,
+    "mustHaveValidGlobalAndCgroupTelemetry": true,
+    "noHostMemoryOrSwapCaps": true,
+    "noGUIProcessTermination": true,
+    "noDownloadsOrBuilds": true
+  },
+  "decisionGate": "Qwen pilot signal only if mean exact accuracy exceeds ASTRA by >=10 percentage points, no critical regression, and median end-to-end latency <=1.25x ASTRA. Otherwise do not promote either profile.",
+  "comparisonCaveat": "Different full inference stacks and context settings; small synthetic fixture can only rank these exact profiles on this reverse-engineering probe, not general model quality.",
+  "productionInvariant": "No ASTRA, SOL or Flash-Next model/profile/weight is modified, deleted, replaced or promoted.",
+  "runner": {
+    "path": "artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/scripts/run_q138_ab.py",
+    "sha256": "63234c1d94ef09ed9fd9c87a564c720eb044e9745be0d43b1cb73cdc3763b1bd"
+  },
+  "staticVerifier": {
+    "path": "artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/scripts/verify_q138_ab.py",
+    "sha256": "290e443a63998b0a43586bb5e2ef521d34cbc1d6d9738dcec91380d2489d8c45"
+  },
+  "preInferenceValidation": {
+    "cpuOnlyCommand": "python3 artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/scripts/verify_q138_ab.py",
+    "expected": "PASS; fixture validation, contextual prompts, strict scorer, profile pins, serial schedule and monitor-before-server ordering; no GPU/model calls",
+    "campaignLaunchCommand": "systemd-run --user --collect --unit=llamacode-q138-profile-ab --slice=background.slice --property=Type=exec --property=KillMode=control-group --property=OOMPolicy=kill --property=MemoryAccounting=yes --property=Restart=no /usr/bin/python3 artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/scripts/run_q138_ab.py --run",
+    "launchBehavior": "The detached service performs all preflight gates and writes receipts before starting ASTRA. It proceeds to Qwen only after ASTRA completes and cleans up; no retry after failure.",
+    "isolatedPreflightCommand": "systemd-run --user --wait --collect --unit=llamacode-q138-preflight --slice=background.slice --property=Type=exec --property=KillMode=control-group --property=OOMPolicy=kill --property=MemoryAccounting=yes --property=Restart=no /usr/bin/python3 artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/scripts/run_q138_ab.py --preflight-only",
+    "isolatedPreflightExpected": "PASS; exact current model/runtime/guard and fixture hashes, no active inference process, both target ports free, RAM/PSI/VRAM gates pass, worker cgroup has no memory or swap caps; model inference remains false."
+  }
+}

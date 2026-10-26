@@ -1,0 +1,15 @@
+{
+  "id": "ghidra-attempt04",
+  "createdAtUtc": "2026-10-26T02:37:59.914992+00:00",
+  "status": "PASS_WITH_EXTERNAL_STUB_WARNINGS",
+  "ghidraVersion": "12.2",
+  "javaVersion": "Temurin 25.0.5+8",
+  "input": "/tmp/q138-rev-fixture",
+  "output": "artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/fixtures/ghidra-decompilation.c",
+  "outputBytes": 11262,
+  "outputSha256": "7ee147cfc8bff2181a93ab71e8d21bcaad3563949be6266416ecc992ae319461",
+  "log": "artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/receipts/ghidra-headless-attempt04.log",
+  "logHasImportSucceeded": true,
+  "functionHeaders": 30,
+  "warnings": "8 unresolved external PLT/library stubs caused pcode warnings; core fixture functions decompiled successfully. Filter external functions from final prompt corpus."
+}

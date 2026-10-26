@@ -1,0 +1,120 @@
+{
+  "atUtc": "2026-10-26T04:06:29Z",
+  "gatePassed": true,
+  "taskId": "Q-20261026-VF-ITERATION-138",
+  "lockToken": "q138-re-fixture-bda789bf8eb8993f45f6bdc7",
+  "fixtureQuestionCount": 12,
+  "decompilationSha256": "fd64ae63b1e0add2a1f842e349a6cfc54a8f3b841e69a1a34bd9af190337cadd",
+  "sourceCharacters": 9082,
+  "artifactPins": {
+    "astraPack": {
+      "sha256": "27701fec3423719c23ee88c93ffae0f5f5c60ad29b6e46b7589fa9df5f20c880",
+      "files": 9,
+      "bytes": 1547978240
+    },
+    "astraMtp": {
+      "sha256": "77cbf37be386ef28e496dc161ed07c4e5ce677cb495261c343c4fd2acf3bbae8",
+      "files": 4,
+      "bytes": 824314919
+    },
+    "allModelRuntimeAndPromptPinsMatched": true
+  },
+  "runtimeHelp": {
+    "llamaHelpExit": 0,
+    "requiredSamplerFlagsPresent": true
+  },
+  "externalInferenceServers": {
+    "processes": [],
+    "containers": []
+  },
+  "taskPorts": {
+    "18138": "free",
+    "18139": "free"
+  },
+  "meminfo": {
+    "MemTotal": 132615852032,
+    "MemAvailable": 113049108480,
+    "SwapTotal": 8589930496,
+    "SwapFree": 5428404224
+  },
+  "memoryPsi": {
+    "some": {
+      "avg10": 0.0,
+      "avg60": 0.0,
+      "avg300": 0.0
+    },
+    "full": {
+      "avg10": 0.0,
+      "avg60": 0.0,
+      "avg300": 0.0
+    }
+  },
+  "gpus": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "temperatureC": 43,
+      "memoryUsedMiB": 1161,
+      "memoryTotalMiB": 24576,
+      "utilizationPct": 20,
+      "memoryFreeMiB": 23415
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "temperatureC": 25,
+      "memoryUsedMiB": 110,
+      "memoryTotalMiB": 24576,
+      "utilizationPct": 37,
+      "memoryFreeMiB": 24466
+    }
+  ],
+  "workerIsolation": {
+    "workerCgroup": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/background.slice/llamacode-q138-profile-ab.service",
+    "ancestorLimits": [
+      {
+        "path": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/background.slice/llamacode-q138-profile-ab.service",
+        "limits": {
+          "memory.max": "max",
+          "memory.high": "max",
+          "memory.swap.max": "max"
+        }
+      },
+      {
+        "path": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/background.slice",
+        "limits": {
+          "memory.max": "max",
+          "memory.high": "max",
+          "memory.swap.max": "max"
+        }
+      },
+      {
+        "path": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service",
+        "limits": {
+          "memory.max": "max",
+          "memory.high": "max",
+          "memory.swap.max": "max"
+        }
+      },
+      {
+        "path": "/sys/fs/cgroup/user.slice/user-1000.slice",
+        "limits": {
+          "memory.max": "max",
+          "memory.high": "max",
+          "memory.swap.max": "max"
+        }
+      },
+      {
+        "path": "/sys/fs/cgroup/user.slice",
+        "limits": {
+          "memory.max": "max",
+          "memory.high": "max",
+          "memory.swap.max": "max"
+        }
+      }
+    ],
+    "noFiniteMemoryOrSwapCaps": true
+  },
+  "noHostMemoryOrSwapCaps": true,
+  "guiProcessesTerminated": false
+}

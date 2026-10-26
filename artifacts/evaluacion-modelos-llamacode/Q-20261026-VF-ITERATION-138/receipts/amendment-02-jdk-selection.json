@@ -1,0 +1,10 @@
+{
+  "id": "q138-amendment-02-jdk-path",
+  "createdAtUtc": "2026-10-26T02:34:31.977529+00:00",
+  "reason": "Ghidra 12.2 headless attempt 01 exited before import because LaunchSupport had no saved JDK and stdin was non-interactive. System JDK 21 is installed and present, but Ghidra had not persisted the path.",
+  "change": "Set only the verified Ghidra support/launch.properties JAVA_HOME_OVERRIDE to /usr/lib/jvm/java-21-openjdk-amd64; preserve a byte-identical backup in receipts. Retry the same headless decompilation once. No changes to fixture, script, model configs, inference parameters, or scoring.",
+  "gate": "Require LaunchSupport to select Java 21, analyzeHeadless exit 0, expected fixture entry points exported, no inference/server/GPU use. If this fails, stop and record concrete blocker.",
+  "backup": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/receipts/launch.properties.before-java-home-override",
+  "backupSha256": "75eeeeccbdb73b96b55b3e57f7bb19d6b9619a8e3b4cf046d71feb9516a4f05c",
+  "launchPropertiesSha256": "abd364937e955a7e51f39ce87dd779d8e21a1b3b0b9de969da641f811de34b0e"
+}

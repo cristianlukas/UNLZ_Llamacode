@@ -1,0 +1,93 @@
+{
+  "taskId": "Q-20261026-VF-ITERATION-138",
+  "amendment": "A04",
+  "registeredAtUtc": "2026-10-26T04:04:00Z",
+  "status": "preregistered_before_attempt03",
+  "attempt02Outcome": {
+    "status": "failed_before_preflight_receipt_server_or_model",
+    "errorType": "NameError",
+    "message": "name 'prereg' is not defined",
+    "completedRequests": 0,
+    "expectedRequests": 72,
+    "modelLoaded": false,
+    "inferenceServerStarted": false,
+    "gpuInferenceStarted": false,
+    "artifactsPreserved": [
+      "receipts/campaign-attempt02-progress.json",
+      "receipts/campaign-attempt02-final.json"
+    ]
+  },
+  "rootCause": "verify_artifacts() was refactored to profile_prereg/pin_prereg but retained prereg[...] references for AMD05 guard hashes; NameError occurred before preflight receipt and before server startup.",
+  "correction": {
+    "code": "Read AMD05 hashes from profile_prereg[\"guard\"] in verify_artifacts().",
+    "regression": "CPU static verifier asserts verify_artifacts has no unresolved prereg name and pins the exact attempt03 output/receipt paths.",
+    "attempt": "attempt03",
+    "uniqueOutputs": [
+      "runs/attempt03/",
+      "receipts/preflight-attempt03.json",
+      "receipts/campaign-attempt03-progress.json",
+      "receipts/campaign-attempt03-final.json"
+    ],
+    "attempt02Preserved": true
+  },
+  "unchanged": {
+    "models": [
+      "ASTRA Flash-Next IQ2_XS",
+      "Qwen3.8-27B Q4_K_M"
+    ],
+    "contexts": {
+      "ASTRA": 1048576,
+      "Qwen": 32768
+    },
+    "gpus": [
+      0,
+      1
+    ],
+    "sampling": {
+      "temperature": 0.6,
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repeat_penalty": 1.0,
+      "presence_penalty": 0.0
+    },
+    "seeds": [
+      4242,
+      5051,
+      6061
+    ],
+    "questions": 12,
+    "maxOutputTokens": 1024,
+    "workerMemoryCaps": {
+      "MemoryHigh": null,
+      "MemoryMax": null,
+      "MemorySwapMax": null
+    },
+    "decisionGate": "Qwen pilot signal only if mean exact accuracy exceeds ASTRA by >=10 percentage points, no critical regression, and median E2E <=1.25x ASTRA.",
+    "productionProfiles": "unchanged"
+  },
+  "attemptPolicy": "Attempt03 wrapper started but the inference API never became READY and no model loaded. The prior stop condition applies to a serving/model-loaded campaign; A05 registers one fresh attempt04 with unique outputs and the exact configured log-parent fix. No automatic retry; preserve any attempt04 outputs and preregister evidence-based corrections before another run.",
+  "preInferenceValidation": {
+    "command": "python3 /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/scripts/verify_q138_ab.py",
+    "expected": "PASS, including explicit regression for the unresolved prereg NameError and unique attempt03 paths; no model inference.",
+    "campaignLaunchCommand": "systemd-run --user --collect --unit=llamacode-q138-profile-ab --working-directory=/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode --slice=background.slice --property=Type=exec --property=KillMode=control-group --property=OOMPolicy=kill --property=MemoryAccounting=yes --property=Restart=no /usr/bin/python3 /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/scripts/run_q138_ab.py --run --attempt attempt03"
+  },
+  "runner": {
+    "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/scripts/run_q138_ab.py",
+    "sha256": "38be13f319c9c66a29ff0a79db88711795f66ea7427bca96701276606cde3f91"
+  },
+  "staticVerifier": {
+    "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/scripts/verify_q138_ab.py",
+    "sha256": "a919216f0dad38cfb430c8fa31f00ae8ec5d1d4d307351e74149d62b5c0da004"
+  },
+  "attempt03Outcome": {
+    "status": "failed_before_API_READY_or_model_load",
+    "completedRequests": 0,
+    "expectedRequests": 72,
+    "modelLoaded": false,
+    "inferenceServerReady": false,
+    "gpuInferenceStarted": false,
+    "cause": "The pinned Strata config engine-log parent did not exist.",
+    "receipt": "receipts/campaign-attempt03-final.json"
+  }
+}

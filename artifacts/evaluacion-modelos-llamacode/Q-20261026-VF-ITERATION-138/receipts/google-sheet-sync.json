@@ -1,0 +1,94 @@
+{
+  "taskId": "Q-20261026-VF-ITERATION-138",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheetTitle": "Listado",
+  "syncedAtUtc": "2026-10-26T05:13:05Z",
+  "status": "written_and_read_back",
+  "historicalAudit": {
+    "readRange": "Resultados!A1:AF180",
+    "lastHistoricalResultBeforeQ138": 176,
+    "q138DuplicateFound": false,
+    "priorLocalResultMigration": "Historical model-comparison rows through Results 167:176 were already present; Q138 was absent and has now been appended."
+  },
+  "writes": [
+    {
+      "range": "Resultados!A177:AF178",
+      "readBack": true,
+      "rows": [
+        {
+          "id": "Q138-ASTRA-FLASHNEXT-IQ2XS-GHIDRA",
+          "accuracy": "22/36 (61.11%)",
+          "medianRequestLatencySeconds": 8.118,
+          "p95NearestRankSeconds": 10.814,
+          "startupSeconds": 495.319,
+          "prefillMedianTokensPerSecond": 1543.8,
+          "decodeMedianTokensPerSecond": 139.1
+        },
+        {
+          "id": "Q138-QWEN38-27B-Q4KM-GHIDRA",
+          "accuracy": "31/36 (86.11%)",
+          "accuracyDeltaPercentagePoints": 25,
+          "medianRequestLatencySeconds": 23.065,
+          "p95NearestRankSeconds": 32.372,
+          "startupSeconds": 33.03,
+          "prefillMedianTokensPerSecond": 1547.6,
+          "decodeMedianTokensPerSecond": 34.622
+        }
+      ]
+    },
+    {
+      "range": "Inventario de modelos!A2:A2, A5:R5, A14:R14",
+      "readBack": true,
+      "updatedModels": [
+        "Qwen3.8-27B (Alibaba)",
+        "ASTRA · Qwen3.8 Flash-Next ISTA-DASLab GSQ-RCO"
+      ],
+      "fields": [
+        "status",
+        "prefill",
+        "decode",
+        "bench score",
+        "total timing",
+        "context",
+        "runtime/configuration",
+        "updated UTC",
+        "evidence",
+        "decision",
+        "inventory summary"
+      ]
+    },
+    {
+      "range": "Accionables!A23:N23",
+      "readBack": true,
+      "id": "vf-qwen-ghidra-open-fixture-20261025",
+      "status": "Completed; Qwen27B not promoted as ASTRA replacement"
+    },
+    {
+      "range": "Evaluaciones LlamaCode!A355:J355",
+      "readBack": true,
+      "id": "Q-20261026-VF-ITERATION-138",
+      "status": "Completed; 72/72 requests; accuracy gate passes narrowly and latency gate fails"
+    }
+  ],
+  "decision": {
+    "qwenMedianLatencyRatioOverAstra": 2.841,
+    "preregisteredLatencyLimit": 1.25,
+    "recommendation": "Do not promote Qwen as a replacement. Keep ASTRA and SOL productive profiles unchanged. Qwen remains experimental quality-first only pending a broader holdout and explicit criticality/safety cases.",
+    "limitations": [
+      "Synthetic Ghidra fixture; 12 questions × 3 seeds",
+      "Single campaign, fixed ASTRA-then-Qwen order",
+      "No safety/criticality questions; that gate is not assessable",
+      "High global host swap at close was not attributable to the worker"
+    ]
+  },
+  "cleanup": {
+    "userSystemdUnit": "llamacode-q138-profile-ab.service",
+    "unitState": "inactive",
+    "ports18138And18139": "no listeners",
+    "inferenceServers": "none found (pgrep matched only its own probe shell)",
+    "workerOom": 0,
+    "workerSwapBytes": 0,
+    "cleanStops": true
+  },
+  "localEvidence": "artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/RESULTS.md; receipts/ab-analysis-attempt05.json; receipts/campaign-attempt05-final.json; receipts/amendment-01-runtime-and-prompt-correction.json"
+}
