@@ -1,0 +1,12 @@
+{
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "readback_at_utc": "2026-10-26T20:19:21Z",
+  "ranges": {
+    "Evaluaciones LlamaCode!C357": "Modelo descargándose · 2/3 shards parciales; Strata Control 0.1.51 + Qwen engine 0.1.50 verificados",
+    "Accionables!D26": "Modelo descargándose · runtime verificado; sin inferencia aún",
+    "Inventario de modelos!C18": "Descarga del modelo en curso a D; 2/3 shards parciales. Strata Control 0.1.51 + Qwen engine 0.1.50 verificados; modelo sin SHA, pack/PLE N/D.",
+    "IA local!E63": "Modelo descargándose en D; 2/3 shards parciales. Runtime Control 0.1.51 + Qwen engine 0.1.50 con SHA verificada.",
+    "IA local!I63": "Runtime aislado, verificado; sin servidor. Gate Q116-A2: warning full≥20% OR some≥70% ×30 muestras de 10 s; stop full≥60% OR some≥80% ×15. MemAvailable/RSS/swap solos no detienen. Siguientes gates: hashes del modelo, pack y smoke dual-GPU."
+  },
+  "verified": "All five values read back exactly; WRAP/TOP retained on existing wrapped cells; no other ranges changed."
+}

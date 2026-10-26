@@ -1,0 +1,2320 @@
+[
+  {
+    "id": "7fd303e9-24fe-4785-9c68-7116dc561ea5",
+    "title": "r/LocalLLaMA · KV4yV8C8d5",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLaMA/s/KV4yV8C8d5",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado · Q100 no adopta parallel2; Q111 8/8 confirma guard Q97/Q100 (warning PSI 30 muestras, stop severo 15); sin OOM/aborto.",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 1,
+    "analysis": {
+      "status": "Q100 E2E completado sin adopción; Q111 verificó la integración efectiva del guard; sin una prueba de modelo nueva aplicable a esta fuente.",
+      "finding": "Afirma gran throughput agregado Qwen en cuatro Radeon, con varias sesiones.",
+      "test": "Q98: medir BCB-Hard-8 con el perfil ASTRA productivo en dos RTX 3090 +128 GB, mismo servidor Strata con 2 slots; solicitudes seriales vs parejas simultáneas. Registrar resultado aceptado, E2E, transporte, errores sandbox, slots y memoria. El ensayo anterior de 96 tokens no mide calidad. No prueba delegación/subagentes.",
+      "applicability": "Transferible sólo la pregunta de concurrencia; AMD/ROCm no replica en 3090.",
+      "historyCheck": "Cotejo confirmado: docs/strata-reddit-followup-20261004.md ya contiene esta prueba como próxima campaña #3 (serial vs dos tareas simultáneas, incluyendo subagentes/harness). No hace falta repetir ni crear una segunda prueba; añadir referencia al lote VF-20261019-01 para trazabilidad. Q98 reabre una pregunta distinta y preregistrada: tareas BCB aceptadas en el perfil ASTRA con servidor de dos slots. No duplicar el screen directo truncado.",
+      "priority": "Alta · claim de concurrencia Strata, condicionado a mejora de tareas aceptadas",
+      "reviewedAt": "2026-10-19",
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "status": "Screen de servidor completado; sin ganancia de throughput demostrada",
+        "result": "20 pares balanceados: serial 48.45 tok/s, p50/p95 1.912/2.552 s; dos solicitudes simultáneas 48.01 tok/s, 2.702/4.589 s. 40/40 HTTP 200 por condición y cero errores.",
+        "limitation": "Las 80 generaciones medidas más 2 warmups terminaron por límite de 96 tokens mientras el modelo seguía pensando; no produjeron respuesta final. Es throughput de servidor, no calidad ni una comparación E2E del harness/subagentes.",
+        "decision": "Mantener admisión serial y configuración de un slot; no promover concurrencia con este screen.",
+        "next": "Medir dos tareas completas en el harness sólo si una decisión operativa depende de permitir solapamiento; el efecto de subagentes sigue sin probarse.",
+        "artifacts": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/RESULTS.md"
+      },
+      "followUp": {
+        "taskId": "Q-20261024-VF-ITERATION-98",
+        "status": "Q98 screen PASS (+11.42% accepted/s); Q99 3-seed repeatability follow-up preregistered and active.",
+        "plan": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-98/PLAN.md",
+        "gate": "Dos slots observados; transporte 8/8; sandbox/noFinal 0; aceptaciones concurrentes >= seriales; >=10% más tareas aceptadas/s para habilitar 3 seeds.",
+        "hostPreflight": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-98/receipts/q98-host-preflight.json",
+        "result": "Screen Q98: serial 2/8 (0.012788 tareas aceptadas/s) vs concurrente 2/8 (0.014248/s, +11.42%); transporte 8/8 por modo, sandbox/noFinal=0, 2 slots simultáneos verificados. El gate habilita follow-up de 3 semillas; una seed no justifica adopción. MemAvailable mínima 72.422 GiB, PSI global full máximo 43.55% sólo produjo advertencia; OOM=0, cleanup PASS. El primer intento fue fallo del harness (variable que ocultaba concurrent.futures), ya corregido y con regresión CPU 1/1 PASS; no fue un fallo de memoria/modelo.",
+        "runnerAmendment": "Attempt-01 harness UnboundLocalError corregido; regresión CPU 1/1 PASS; primer intento preservado en runs/attempt-01.",
+        "resultArtifacts": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-98/RESULTS.md; runs/admission-screen-result.json; runs/host-samples.jsonl; receipts/q98-cleanup-postflight.json",
+        "repeatabilityFollowUp": {
+          "taskId": "Q-20261024-VF-ITERATION-99",
+          "status": "Completado · repeatability gate PASS; no adopción productiva.",
+          "seeds": [
+            4243,
+            4244,
+            4245
+          ],
+          "plan": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-99/PLAN.md",
+          "prelaunchState": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-99/receipts/q99-prelaunch-state.json",
+          "result": "Q99 completó seeds 4243–4245: serial 6/24 (0.012482 tareas aceptadas/s), concurrente 6/24 (0.014126/s, +13.17%); ambos 24/24 transporte, sandbox/noFinal=0, 2 slots observados por seed. MemAvailable mínima 72.269 GiB; PSI full global 46.81% fue warning, cgroup PSI 88.91% diagnóstico, OOM=0; cleanup PASS. Repeatability gate PASS; no adopción productiva. Siguiente: screen E2E del scheduler/subagentes.",
+          "resultArtifacts": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-99/PLAN.md; RESULTS.md; runs/three-seed-followup-result.json; runs/host-samples.jsonl; receipts/q99-final-result.json; receipts/q99-cleanup-postflight.json; receipts/google-sheet-sync-q99-final.json",
+          "next": "Preregister and run an end-to-end LlamaCode scheduler/subagent screen using equivalent serial and two-worker workloads; keep ASTRA/SOL production unchanged.",
+          "memory": {
+            "memAvailableMinGiB": 72.269,
+            "globalPsiFullPeakPct": 46.81,
+            "cgroupPsiFullPeakPctDiagnostic": 88.91,
+            "oomKillDelta": 0,
+            "moderatePsiWarningOnly": true,
+            "completed": true
+          },
+          "cleanup": "PASS · servidor propio detenido; port 8363 libre; MemAvailable 110.040 GiB; GPUs casi baseline."
+        },
+        "integratedScreen": {
+          "taskId": "Q-20261024-VF-ITERATION-100",
+          "status": "Completado · attempt05 con re-score corregido; no adoptar parallel2. Suite Linux 95/95 PASS; PSI/replay 10/10 PASS.",
+          "plan": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-100/PLAN.md",
+          "preregistration": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-100/receipts/q100-preregistration.json",
+          "comparison": "LlamaAgentBackend real; ASTRA/Strata parallel2 a 64K por max_tokens=32768; 1 vs 2 subagentes, 3 semillas; ambas RTX 3090 +128 GB, RAM sin caps. TMPDIR único de Q100 y GIT_CEILING_DIRECTORIES=raíz checkout para repo fixture independiente.",
+          "gate": "6/6 subtasks per policy; exact two-task first batch; no unexpected tools; max active subagents 1 vs 2; no per-seed accuracy loss; ≥10% weighted correct-task throughput improvement; no production adoption automatically.",
+          "attempt04": "Cuatro pares parciales con read_file sin fixture debido a que Git ascendía al checkout principal. MemAvailable mín. 69.533 GiB; PSI global full máx. 46.41%, cgroup 88.47% diagnóstico; OOM=0. Guard sólo avisó; cleanup volvió a 109.997 GiB y PSI 0. Archive attempt-04-fixture-path-under-checkout/.",
+          "amendment005": "CPU py_compile y guards 13/13 PASS; regresión real Git init/commit/worktree demuestra que el fixture se incluye; el supervisor corta en el primer run de calidad fallido y limpia el tmp propio.",
+          "next": "E2E screen con ambas RTX 3090, 128 GB, 64K, tres semillas y 1 vs 2 subagentes; detener al primer gate de calidad fallido; conservar ASTRA DEFAULT 1M/SOL.",
+          "hostPreflight": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-100/receipts/q100-attempt05-host-preflight.json",
+          "seed5051": "Serial 2/2 correctas, 12.062 s, maxBusy=1; paralelo2 2/2, 12.500 s, maxBusy=2; ambos marcadores exactos, first batch 2 task calls, proxy bloqueos=0.",
+          "memoryDuringAttempt05": "Ambas 3090; MemAvailable mín. observada hasta seed5051 69.638 GiB; PSI global full peak ~43% transitorio y luego 0.68%; OOM=0; detector avisó y siguió.",
+          "result": "ASTRA/Strata, 2×RTX 3090 +128 GB, contexto 65.536, seeds 5051–5053: serial 3/3 seeds (6/6 tareas E2E correctas); parallel2 1/3 (2/6), respuestas ALPHA/BETA invertidas en 5051/5053. Throughput bruto ratio 0,9489; E2E correcto ratio 0,3163. No adopción.",
+          "decision": "Mantener un subagente para este flujo hasta que la síntesis paralela preserve asociación de resultados y supere los gates de calidad y velocidad. Los subagentes devolvieron los marcadores correctos; el parent intercambió etiquetas en 2/3 seeds. No tocar perfiles ASTRA DEFAULT 1M ni SOL.",
+          "memory": {
+            "sampleCount": 220,
+            "minMemAvailableGiB": 69.386,
+            "globalPsiFullPeakPct": 46.52,
+            "globalPsiWarningSamples": 34,
+            "oomKillDelta": 0,
+            "guardAborted": false,
+            "allSixRunsCompleted": true,
+            "cleanupPass": true
+          },
+          "validation": {
+            "linuxReleaseCtest": "95/95 PASS",
+            "q100CppTest": "7 passed, 0 failed, 1 opt-in live slot skipped",
+            "pressureGateAndHistoricalReplay": "10/10 PASS, CPU-only"
+          },
+          "resultArtifacts": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-100/RESULTS.md; runs/attempt-05-complete-label-mapping-issue/rescored-result.json; receipts/q100-final-result.json; receipts/q100-amendment-006-validation.json; receipts/q100-memory-guard-revalidation.json; receipts/q100-cleanup-postflight.json",
+          "reconciledAtUtc": "2026-10-24T21:52:48Z"
+        }
+      },
+      "revalidatedAtUtc": "2026-10-24T21:52:48Z",
+      "latestGuardAudit": {
+        "taskId": "Q-20261024-VF-ITERATION-111",
+        "status": "8/8 PASS",
+        "finding": "Q100 delega al helper Q97; warning moderate persistente 30 muestras y hard stop severo 15; Q97/Q100 completaron sus corridas moderadas sin OOM/aborto.",
+        "result": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-111/RESULTS.md"
+      }
+    },
+    "revalidatedAtUtc": "2026-10-25T00:18:54Z"
+  },
+  {
+    "id": "f81dcdf0-a2bc-4435-9654-1b0508372452",
+    "title": "r/LocalLLaMA · blGmgyW5hN",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLaMA/s/blGmgyW5hN",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 2,
+    "analysis": {
+      "status": "Analizado · sin prueba nueva aplicable; screen textual existente",
+      "finding": "DigUp ya publica builds beta de Linux/Windows además de macOS; la propuesta antigua de Linux fue sustituida por el port oficial. README actual describe embeddings compartidos y chunking por página/pasaje/ventana/fotograma. LlamaCode ya tiene hybrid_search y una evaluación textual local de EmbeddingGemma 2.",
+      "test": "No instalar DigUp ni repetir el screen textual. Si se decide producto de búsqueda multimodal, diseñar un holdout separado de imágenes/audio/video; esa modalidad no está medida en la prueba de código existente.",
+      "applicability": "Referencia de producto/arquitectura, no reemplazo directo del harness de modelos. EG2 textual queda candidata provisional; la ventana del embedder es 8K y DigUp controla longitud segmentando el material.",
+      "historyCheck": "Q-20261010-EMBEDDINGGEMMA2-EVAL midió 519 chunks/21 consultas: EG2 directo nDCG@5 0,6594 vs BM25 0,4588; faltan holdout y E2E. Repositorio primario: https://github.com/ARahim3/DigUp; issue Linux #5 cerrado tras beta oficial: https://github.com/ARahim3/DigUp/issues/5; model card: https://huggingface.co/google/embeddinggemma-2.",
+      "priority": "Baja",
+      "reviewedAt": "2026-10-19",
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "status": "Sin prueba nueva aplicable",
+        "decision": "Conservar el screen textual EG2 como candidato provisional. Sólo abrir prueba multimodal si esa capacidad pasa a ser una decisión de producto.",
+        "artifacts": "artifacts/evaluacion-modelos-llamacode/Q-20261010-EMBEDDINGGEMMA2-EVAL/RESULTS.md; artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/RESULTS.md"
+      }
+    }
+  },
+  {
+    "id": "a8bcad8d-a7bd-431f-ae73-f96edfdc405c",
+    "title": "r/LocalLLM · kk0C5MZjoH",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLM/s/kk0C5MZjoH",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 3,
+    "analysis": {
+      "status": "Bloqueado · hardware/runtime y espacio no compatibles",
+      "finding": "DS41Engine corre DeepSeek-V4.1-Flash GSQ en RX 7900 XTX gfx1100/ROCm. La receta declara 355 GB de artefactos y ~570 GB de espacio libre pico; velocidad/tuning son de ese host.",
+      "test": "No descargar, compilar ni intentar portar a CUDA en esta evaluación: no daría una comparación del mismo runtime/modelo y no cambiaría una decisión para la máquina actual.",
+      "applicability": "La máquina local tiene 2×RTX 3090/CUDA; no tiene GPU ROCm ni modelo/engine exactos. El volumen local de modelos tiene 83.598.733.312 B libres.",
+      "historyCheck": "docs/deepseek-v41-flash-feasibility.md y docs/deepseek-v41-flash-audit-20260914.md ya documentan incompatibilidad del runtime/modelo. Fuente primaria: https://github.com/vincalkr/DS41Engine.",
+      "priority": "Baja",
+      "reviewedAt": "2026-10-19",
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "status": "Bloqueado por condición externa",
+        "condition": "Proveer hardware AMD gfx1100 con ROCm o un port CUDA y artefactos compatibles; además disponer del espacio de descarga declarado por el upstream.",
+        "decision": "Usar la auditoría local existente; sin inferencia local."
+      }
+    }
+  },
+  {
+    "id": "870e960b-1834-4475-a47d-648a87c90875",
+    "title": "r/LocalLLM · ylz0YpOSAD",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLM/s/ylz0YpOSAD",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 4,
+    "analysis": {
+      "status": "Candidato condicional · bloqueado por artefacto/runtime RTX 5080",
+      "finding": "El post relata una única tarea de código sin fixture/logs. La fuente primaria fija el NInfer v1.5 a RTX 5080/SM120, 131K/Q4-KV/MTP3; artifact SHA-256 c4a7e9ab…",
+      "test": "Si aparece una versión NInfer explícitamente compatible con RTX 3090/SM86, comparar el perfil contra ASTRA en el mismo holdout de coding/harness/semillas, empezando por HE0 y continuando a HE20 sólo si pasa. No usar TPS del v1.5 como evidencia de coding.",
+      "applicability": "LlamaCode registra sys-ninfer3090-qwen38, pero corresponde a otro repo/artefacto histórico, no disponible en el volumen local. El profile table informa BCB 3/8 para la variante local; no es una comparación del artifact RTX5080.",
+      "historyCheck": "La evaluación local Q-20261009-STRATA-QWEN38-27B-AB ya comparó Flash-Next IQ2_XS y Qwen3.8-27B Q4 en Hard Mode (77,98/77,38) con fingerprints propios; no ejecutó el artifact NInfer v1.5. Fuentes primarias: https://huggingface.co/ninfer-5080/Qwen3.8-27B-RTX5080 y https://github.com/toddballinger/ninfer-5080.",
+      "priority": "Alta",
+      "reviewedAt": "2026-10-19",
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "status": "Bloqueado por condición de compatibilidad externa",
+        "condition": "Proveer artifact/runtime NInfer validado para RTX 3090/SM86, o evidencia upstream de compatibilidad del artifact RTX5080 en SM86.",
+        "decision": "No descargar ni probar el artifact actualmente dirigido a RTX5080/Blackwell en el host de dos RTX3090; el post no demuestra calidad superior."
+      }
+    }
+  },
+  {
+    "id": "cc517c7c-84c0-42c2-8274-ee311a0f9df4",
+    "title": "r/LocalLLM · r41gtoLNKS",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLM/s/r41gtoLNKS",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 5,
+    "analysis": {
+      "status": "Sin prueba local aplicable · tuner específico de HIP/ROCm",
+      "finding": "El post informa que el prefill superó 2.100 tok/s con más frecuencia tras ajustar hipBLASLt en dos RX 7900 XTX/gfx1100; el decode fue similar y el autor dijo que sólo cambiaron 3 de 43 filas. Es un resultado de tuning de backend, no de calidad.",
+      "test": "No ejecutar el tuner HIP ni importar esa tabla. La CMake upstream y el checkout local Strata 0.1.41 definen tune_hipblaslt sólo bajo STRATA_ENABLE_HIP; el checkout no tiene tuner CUDA equivalente.",
+      "applicability": "El host de evaluación usa RTX 3090/CUDA. Las tablas hipBLASLt dependen de GPU gfx y versión de ROCm/hipBLASLt.",
+      "historyCheck": "Validado en fuente primaria y checkout local. Reabrir sólo al usar ROCm/gfx1100 compatible o cuando upstream añada ruta de tuning CUDA.",
+      "priority": "Baja",
+      "reviewedAt": "2026-10-20T03:57:02Z",
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "status": "Sin prueba local aplicable",
+        "decision": "No importar una tabla gfx1100 ni ejecutar HIP en el perfil CUDA."
+      },
+      "sources": [
+        {
+          "label": "Post fuente",
+          "url": "https://www.reddit.com/r/LocalLLM/s/r41gtoLNKS"
+        },
+        {
+          "label": "CMake upstream de Strata",
+          "url": "https://github.com/Niko1221/Strata/blob/main/CMakeLists.txt"
+        }
+      ]
+    }
+  },
+  {
+    "id": "69097c21-c53f-4386-a09a-1fd55be6a4d3",
+    "title": "r/LocalLLM · SzI47oFs8r",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLM/s/SzI47oFs8r",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 6,
+    "analysis": {
+      "status": "Bloqueada · almacenamiento SSD y runtime local",
+      "finding": "La guía de Unsloth ofrece DeepSeek-V4.1-Flash-1017 con contexto 1M. El 1-bit UD-IQ1_S ocupa 233,0 GB y depende de una tabla Engram de 110,6 GB; el 88,2% citado es top-1 agreement en long17k, no éxito en coding.",
+      "test": "No descargar, compilar ni inferir: el NVMe tiene 78 GiB libres, por debajo de la tabla Engram indicada para SSD; el HDD extra tiene 220 GiB libres, casi sin margen para el pack. La ruta llama.cpp recomendada está en PR #30817 Draft; el runtime habitual Strata no soporta esta arquitectura en el checkout local.",
+      "applicability": "Equipo actual: 123 GiB RAM, 2×RTX 3090 24 GiB; no se localizaron pesos DeepSeek-V4.1-Flash-1017/UD-IQ1 en el árbol inspeccionado. Requiere almacenamiento y runtime compatibles antes de valorar el 1M.",
+      "historyCheck": "El modelo oficial declara context_window 1M. Reabrir cuando haya espacio SSD para Engram y el pack completo, más runtime compatible validado. Si se habilita, comparar recuperación de hechos a 256K/512K/1M y medir exactitud, latencia, memoria; luego evaluar coding contra el productivo con el mismo harness.",
+      "priority": "Media · candidato condicional de contexto/coding",
+      "reviewedAt": "2026-10-20T03:57:02Z",
+      "sources": [
+        {
+          "label": "Post de r/unsloth",
+          "url": "https://www.reddit.com/r/unsloth/comments/1xa0xph/run_deepseek_v41flash1017_locally/"
+        },
+        {
+          "label": "Modelo oficial DeepSeek",
+          "url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017"
+        },
+        {
+          "label": "Guía y requisitos Unsloth",
+          "url": "https://unsloth.ai/docs/models/deepseek-v4.1-flash"
+        },
+        {
+          "label": "GGUF Unsloth",
+          "url": "https://huggingface.co/unsloth/DeepSeek-V4.1-Flash-1017-GGUF"
+        },
+        {
+          "label": "PR llama.cpp #30817",
+          "url": "https://github.com/ggml-org/llama.cpp/pull/30817"
+        }
+      ],
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "status": "Bloqueada antes de inferencia",
+        "decision": "No descargar ni construir; reabrir con SSD suficiente y runtime compatible."
+      }
+    }
+  },
+  {
+    "id": "beb63a02-3a7c-4741-b16f-888f9cab8744",
+    "title": "r/LocalLLaMA · 4qZ3GqV9vS",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLaMA/s/4qZ3GqV9vS",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 7,
+    "analysis": {
+      "status": "Screen completado · gate de reemplazo no superado",
+      "finding": "La actualización de ISTA-DASLab reemplaza el primer shard del Coder IQ1_M y conserva el shard n-gram. El publicador reporta SWE-bench Verified 79,20 y LiveCodeBench v6 87,43 a xhigh; antes se midió 2/8 BCB-Hard-8 en otra revisión.",
+      "test": "Preregistrado BCB-Hard-8 emparejado: candidato actual IQ1_M vs ASTRA DEFAULT IQ2_XS, una corrida por brazo, mismo Strata y opciones, MTP apagado. Sólo autoriza una evaluación extensa si el candidato supera al control por ≥2/8 con 8/8 transportes.",
+      "applicability": "Posible candidato de coding sobre hardware local dual RTX 3090. La ficha lo describe como English-only; el screen de prompts ingleses no evalúa instrucciones en español ni calidad general.",
+      "historyCheck": "No es duplicado del screen IQ1_M anterior: revisión previa 5348543e…; main actual bba88856… sustituye el primer shard (SHA-256 nuevo bfa3644d…) y mantiene el shard 2 (316b46f3…). Reutilizar la auditoría vieja y ejecutar sólo el screen preregistrado.",
+      "priority": "Media · filtro de candidato de coding",
+      "reviewedAt": "2026-10-20T04:08:38.769825+00:00",
+      "sources": [
+        {
+          "label": "Post fuente",
+          "url": "https://www.reddit.com/r/LocalLLaMA/comments/1x9yvgw/istadaslabqwen38flashnextgsqrcocodergguf_updated/"
+        },
+        {
+          "label": "Tarjeta oficial ISTA-DASLab",
+          "url": "https://huggingface.co/ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-Coder-GGUF"
+        },
+        {
+          "label": "SHA y archivos pinneados",
+          "url": "https://huggingface.co/ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-Coder-GGUF/tree/bba88856f8c3c0c9e40e45f82d05e228b814ac43/IQ1_M"
+        },
+        {
+          "label": "Fuente primaria Strata",
+          "url": "https://github.com/Niko1221/Strata"
+        }
+      ],
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "status": "Control 1/8 vs Coder IQ1_M 0/8 (8/8 transporte); gate >=3/8 no superado; no promoción ni pruebas extensas; recursos detenidos y postflight limpio",
+        "plan": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/PLAN-source-07.md",
+        "target": "NVMe modelos /Models/FlashNext-Coder-IQ1M-VF-20261020",
+        "preflight": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-07-preflight-before-download.json",
+        "downloadReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-07-download-verified.json",
+        "candidateSetupReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-07-candidate-setup.json",
+        "preflightReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-07-preflight.json",
+        "startFailureReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-07-control-start-attempt-01.json",
+        "configCorrectionReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-07-config-correction.json",
+        "preflightRetryReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-07-preflight-retry-02.json",
+        "runnerSha256": "cce594f30922cfe4e00a74b14d328b136dcc096cdb1c22d5ee25b328a057e95e",
+        "runnerPreflightReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-07-runner-preflight.json",
+        "controlResult": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/results/source-07-control-bcb.json",
+        "controlReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-07-control-run.json",
+        "candidatePreflightReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-07-candidate-preflight.json",
+        "candidateStartReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-07-candidate-start.json",
+        "resultReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-07-screen-result.json",
+        "resultReport": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/RESULTS.md"
+      }
+    }
+  },
+  {
+    "id": "b61102ab-bcee-4b1c-91fb-e5ecee0e58c0",
+    "title": "r/LocalLLaMA · qwen3827b_and_flashnext_on_consumer_hardware",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLaMA/comments/1x9tzf1/qwen3827b_and_flashnext_on_consumer_hardware/",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "formatNote": "En el mensaje original el enlace quedó pegado al timestamp de WhatsApp; se guardó el destino visible del markdown.",
+    "batchSequence": 8,
+    "analysis": {
+      "status": "Revisión completada · sin prueba local aplicable",
+      "finding": "La tabla y replay agente se midieron en 2×RTX 5070 Ti/SM120; el runtime capy-flash pide SM120 y no está instalado en el host RTX3090/SM86. Los perfiles de calidad relevantes ya tienen suites locales.",
+      "test": "No ejecutar en el host actual; reabrir con hardware SM120 o build/artifact Ampere validado y una decisión concreta sobre tiempo de trayectoria.",
+      "applicability": "El método de medir tiempo total, aprobaciones, reparaciones y tokens es útil; los valores de hardware y costo EU no se transfieren.",
+      "historyCheck": "Sin replay capy local exacto. Hay suites locales previas para IQ2_XS, ASTRA IQ3_S y Qwen3.8-27B AutoRound; no repetirlas como si fueran la trayectoria capy.",
+      "priority": "Baja · no accionable en hardware disponible",
+      "reviewedAt": "2026-10-20T05:00:21Z",
+      "sources": [
+        {
+          "label": "Post fuente",
+          "url": "https://www.reddit.com/r/LocalLLaMA/comments/1x9tzf1/qwen3827b_and_flashnext_on_consumer_hardware/"
+        },
+        {
+          "label": "README primario capy-flash",
+          "url": "https://github.com/ValerioDolci/capy-flash"
+        }
+      ],
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "status": "Sin prueba aplicable por incompatibilidad SM120 vs RTX3090 SM86; evidencia local ya cubre perfiles viables",
+        "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-08-review.json"
+      }
+    }
+  },
+  {
+    "id": "2f0a2fdf-6014-4d85-ba14-932cd5ccdfc2",
+    "title": "r/LocalLLaMA · PcRqTfiKRg",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLaMA/s/PcRqTfiKRg",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 9,
+    "analysis": {
+      "status": "Bloqueado · falta el par local Flash-Next/DFlash2 y runtime SGLang con patch",
+      "finding": "La ficha primaria evalúa el drafter BF16 0,6B con target Flash-Next-FP8 en SGLang/GB300 TP1 y requiere commit más patch de captura. Los comentarios RTX 3090 son ExLlama/target quant/tabla n-gram diferentes; no transfieren una mejora al perfil local.",
+      "test": "No ejecutar inferencia ni descargar/compilar otro runtime: falta el target/drafter Flash-Next compatible. Reabrir después de tener el par exacto y SGLang con el patch, validar carga/API en RTX 3090 y preregistrar el A/B MTP-vs-DFlash2 pareado.",
+      "applicability": "DFlash2 local está probado para Qwen3.8-27B base, no para Flash-Next. Los perfiles Flash-Next disponibles usan MTP/Strata/llama.cpp.",
+      "historyCheck": "No es duplicado de #7 (Coder IQ1_M actualizado) ni #8 (capy/tabla y replay de consumo). La línea #7 comparte Flash-Next pero no el drafter DFlash2.",
+      "priority": "Media · bloqueado por artefacto/runtime exactos",
+      "reviewedAt": "2026-10-20T05:03:40Z",
+      "sources": [
+        {
+          "label": "Post fuente",
+          "url": "https://www.reddit.com/r/LocalLLaMA/comments/1x9rq3r/incoaiqwen38flashnextdflash2/"
+        },
+        {
+          "label": "Tarjeta oficial y receta SGLang",
+          "url": "https://huggingface.co/incoai/Qwen3.8-Flash-Next-DFlash2"
+        },
+        {
+          "label": "Auditoría local Flash-Next/MTP",
+          "url": "docs/qwen38-flash-next-mtp-release-audit-20260914.md"
+        },
+        {
+          "label": "Auditoría local DFlash2 Qwen3.8-27B",
+          "url": "docs/qwen38-gsq-rco-dflash2-q2-audit-20260918.md"
+        }
+      ],
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "status": "Bloqueado: no hay target Flash-Next + drafter DFlash2 + SGLang con patch en la instalación local; no hubo inferencia ni descarga/build.",
+        "blockedUntil": "Tener un target Flash-Next y drafter DFlash2 exactos, además de un runtime SGLang con el patch de captura oficial que pase carga/API en RTX 3090. Recién entonces preregistrar un screen pareado de calidad/latencia MTP contra DFlash2 con el mismo target y harness.",
+        "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-09-review.json",
+        "resultReport": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/RESULTS.md"
+      }
+    }
+  },
+  {
+    "id": "e1a942a9-9f09-4e32-9637-f14c636a8b6f",
+    "title": "r/LowEndLocalAI · ft4m5qiTLH",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LowEndLocalAI/s/ft4m5qiTLH",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 10,
+    "analysis": {
+      "status": "Revisión completada · sin benchmark local; candidato de port PolyStrata identificado",
+      "finding": "PolyStrata #16 explica que cada arquitectura necesita port propio y descarta familias que caben en VRAM. Bolt es el candidato de soporte más útil de los cuatro por MoE grande; el host 2x3090 SM86 no está en la compatibilidad oficial Ada/Blackwell. Super-VL BF16 requiere 4xH100/2xGB200; Mellum2 no aprovecha PolyStrata; MiMo Flash MOPD 309B no tiene GGUF/local exacto.",
+      "test": "Sin descarga ni inferencia. Reabrir test sólo con port nemotron_h_moe validado en Ampere, pesos GGUF completos y espacio suficiente; primero smoke y después A/B agentivo si la carga responde.",
+      "applicability": "Accionable como candidato para priorizar soporte PolyStrata (Nemotron 3.5 Bolt), no como reemplazo local probado. El artículo es una consulta de soporte.",
+      "historyCheck": "No duplicado de MiMo-V2.6-Distill-Qwen-9B local; ese es un distilled 9B distinto del Flash-MOPD 309B.",
+      "priority": "Baja · revisión de soporte; Bolt es candidato condicionado",
+      "reviewedAt": "2026-10-20T05:06:18Z",
+      "sources": [
+        {
+          "label": "Post fuente",
+          "url": "https://www.reddit.com/r/LowEndLocalAI/comments/1x7cmhb/additional-models-on-polystrata/"
+        },
+        {
+          "label": "Issue primario PolyStrata #16",
+          "url": "https://github.com/VecSzn/PolyStrata/issues/16"
+        },
+        {
+          "label": "Nemotron 3.5 Bolt GGUF",
+          "url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB-GGUF"
+        },
+        {
+          "label": "Nemotron 3.5 Super-VL",
+          "url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16"
+        },
+        {
+          "label": "Mellum2.1",
+          "url": "https://huggingface.co/JetBrains/Mellum2.1-12B-A2.5B-Thinking"
+        },
+        {
+          "label": "MiMo V2.6 Flash MOPD",
+          "url": "https://huggingface.co/XiaomiMiMo/MiMo-V2.6-Flash-MOPD"
+        }
+      ],
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "status": "Revisión de compatibilidad completa; no se descargó, compiló ni midió inferencia.",
+        "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-10-review.json",
+        "resultReport": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/RESULTS.md",
+        "reopenWhen": "A PolyStrata build supporting nemotron_h_moe and a validated Ampere/SM86 runtime path are available, with exact Bolt GGUF plus auxiliary files present on storage with adequate margin. Then preregister a bounded compatibility/load screen followed by a coding-agent A/B only if the server is stable and the result can affect profile choice."
+      }
+    }
+  },
+  {
+    "id": "9df562a3-4237-453d-866c-7f28974b216e",
+    "title": "r/LocalLLM · QubBZWmtXV",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLM/s/QubBZWmtXV",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 11,
+    "analysis": {
+      "status": "Revisión completada · sin prueba local aplicable",
+      "finding": "Los 189 resultados son KLD/perplejidad, no calidad agentiva. La tabla cruda para Q4_K_M da KLD q8_0/q8_0 0,008847, q5_1/q5_1 0,009371, mixed q8_0/q4_0 0,009873 y q4_0/q8_0 0,010067; el headline sólo justifica una preferencia condicionada, no una regla universal.",
+      "test": "No correr ahora: QWEN38-Q8 exacto está retirado/sin pesos locales, SOL usa otro engine/precisión, y los fallos 64K/131K eran SIGABRT en fused CUDA RMS norm sin causalidad KV demostrada. Reabrir si vuelve el artifact exacto para decidir memoria/contexto, comparando KV en el mismo modelo/backend con KLD/NLL y retrieval/coding guardrail.",
+      "applicability": "Método potencialmente útil para comparar KV en un GGUF activo. No transferir q5_1 al perfil SOL ni otros modelos.",
+      "historyCheck": "Sin duplicado local exacto del experimento 21×9. Historial QWEN38-Q8 está asociado a un artifact retirado; context IQ3_XXS/ASTRA usa perfiles diferentes.",
+      "priority": "Baja · método de referencia, sin test local actual",
+      "reviewedAt": "2026-10-20T05:07:12Z",
+      "sources": [
+        {
+          "label": "Post fuente",
+          "url": "https://www.reddit.com/r/LocalLLM/comments/1x6fttm/i_tested_qwen38_27b_kld_for_21_models_at_9/"
+        },
+        {
+          "label": "Datos crudos del autor",
+          "url": "https://pastebin.com/TixNsaby"
+        },
+        {
+          "label": "Matriz local de perfiles",
+          "url": "docs/profile-validation-matrix-20260914.md"
+        },
+        {
+          "label": "Actualización local",
+          "url": "docs/profile-validation-update-20260915.md"
+        }
+      ],
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "status": "Sin inferencia ni descarga; no hay artifact activo para una prueba KV que pueda cambiar la decisión actual.",
+        "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-11-review.json",
+        "resultReport": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/RESULTS.md",
+        "reopenWhen": "Restore or nominate the exact Qwen3.8-27B GGUF as a live candidate for a specific context/memory decision. Then preregister the same artifact and backend at a fixed context, comparing current KV against a memory-saving quant with KLD/NLL plus retrieval/coding guardrails; repeat only if the result can change profile choice."
+      }
+    }
+  },
+  {
+    "id": "4a4cedb2-a144-4247-8ba4-c26df6d66ebd",
+    "title": "r/LocalLLM · 0ZNOTgGDWN",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLM/s/0ZNOTgGDWN",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 12,
+    "analysis": {
+      "status": "Analizado · bloqueado por almacenamiento y compatibilidad exacta",
+      "finding": "El quant GSQ de DeepSeek-V4.1-Flash-1017 se sirve con Xolotl, KV FP4 y contexto anunciado 512K. El paquete completo supera el espacio local; la medición primaria del artefacto es en RTX PRO 5000 72GB y no demuestra carga de esta cuantización en RTX 3090.",
+      "test": "No descargar, compilar ni inferir. Reabrir con espacio rápido suficiente para pesos, sidecar, rank, Engram y recombinación, y ruta de Xolotl/Ampere documentada; luego smoke y retrieval escalonado hasta 512K antes de un A/B de coding.",
+      "applicability": "Bloqueada para prueba local. Puede ser referencia de contexto largo, pero el resultado no es transferible al perfil productivo ni a los contextos probados en otros modelos.",
+      "historyCheck": "Relacionada pero no duplicada con #6: comparte familia/base 1017, pero cambia quant, runtime y condición de contexto. Sin pesos/runtime locales exactos.",
+      "priority": "Baja mientras no se resuelvan almacenamiento y soporte.",
+      "reviewedAt": "2026-10-20",
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "status": "Bloqueada antes de descarga/build/inferencia",
+        "finding": "HF lista 90+73 GiB en chunks, sidecar 5.3 GiB y dos Engram de 95 GiB cada uno, aunque llama al quant 153 GiB. Los volúmenes consultados tienen 24 GB y 131 GB libres; no hay artefacto ni Xolotl local.",
+        "decision": "No hacer test ni sugerir reemplazo. 512K es una capacidad anunciada; los resultados publicados no prueban recuperación/calidad a ese contexto y son de otro hardware.",
+        "reopenWhen": "Espacio rápido suficiente, artefactos exactos y compatibilidad documentada para RTX 3090/Ampere; después preregistrar smoke y retrieval a long context.",
+        "artifacts": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/RESULTS.md; artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-12-review.json"
+      }
+    }
+  },
+  {
+    "id": "14b3e837-ca3b-4bec-9064-23ea73abb661",
+    "title": "r/machinelearningnews · QdYoEhCciZ",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/machinelearningnews/s/QdYoEhCciZ",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 13,
+    "analysis": {
+      "status": "Analizado · idea aplicable bloqueada por aislamiento",
+      "finding": "Harness² ajusta 8 componentes del harness con los pesos fijos y reporta mejoras en benchmarks públicos con Gemini/GLM; no prueba mejora en LlamaCode. La configuración publicada deja egress abierto y Codex sin sandbox; el repo advierte que puede filtrar rúbricas públicas.",
+      "test": "No ejecutar benchmarks públicos ni demo offline como proxy de utilidad. Reabrir con endpoint local Responses API validado, copia descartable, holdout sintético/no público, secretos falsos y firewall host-level que permita sólo inferencia local y niegue egress exterior; preregistrar piloto y grading independiente.",
+      "applicability": "Idea posible para optimizar prompts/tools/memoria del harness, pero no hay integración ni endpoint local comprobado. LlamaCode tiene sandbox opt-in, sin egress por host; no envuelve automáticamente el Codex CLI de Harness².",
+      "historyCheck": "No hay corrida Harness² en historial local; no duplicada. Los benchmarks existentes de LlamaCode son otros harnesses/fixtures y no sustituyen la prueba.",
+      "priority": "Baja hasta definir qué componente de LlamaCode se quiere mejorar y cumplir las condiciones de aislamiento.",
+      "reviewedAt": "2026-10-20",
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "status": "Bloqueada antes de llamadas al modelo",
+        "finding": "La guía oficial confirma egress sin restricción, Codex sin sandbox y posibilidad de descargar rúbricas públicas. El repo local sólo ofrece red todo/nada para workers; no hay firewall por host ni integración Harness².",
+        "decision": "No instalar ni lanzar modelo/dataset. El demo determinista no cambia decisión de calidad. Mantener como candidata a piloto local aislado.",
+        "reopenWhen": "Commit fijado, endpoint local compatible, copia de trabajo descartable, holdout no público y egress firewall host-level que sólo permita el endpoint local.",
+        "artifacts": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/RESULTS.md; artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-13-review.json"
+      }
+    }
+  },
+  {
+    "id": "fd23ad26-42fe-4722-a0aa-8e138d9aae5f",
+    "title": "r/LocalLLM · Ycr6z6binI",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLM/s/Ycr6z6binI",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 14,
+    "analysis": {
+      "status": "Analizado · contexto cubierto; flag requiere runtime 0.1.42+",
+      "finding": "El post usa Strata 0.1.45 y recomienda STRATA_ROUTE_TAIL_SKIP=0 para Unsloth IQ4_XS. El PR oficial confirma que el flag se incorporó en 0.1.42 y puede cambiar salidas; la evaluación local equivalente fue 0.1.41.",
+      "test": "No repetir contexto: #57 ya midió IQ3_XXS nativo 262K 3/3 y ASTRA IQ2 1M sintético 10/10 en una corrida. No aplicar variable a 0.1.41. Si se decide migrar runtime, tras reparar/fijar un fixture corto preregistrar A/B skip=7 vs 0 con score y guarda de calidad.",
+      "applicability": "La hipótesis de RAM/quant ya está representada por el perfil IQ4_XS local, pero el post es una RTX4090 con Strata0.1.45 y sus scores no se transfieren. Su flag no es compatible con el runtime local registrado.",
+      "historyCheck": "Contexto cubierto por batch #57; el test local IQ4_XS HE20 20/20 y los timeouts BCB/ADV/TaskFlow se conservan en Q-20261019-STRATA-UDIQ4XS-REMAINING. No hay A/B local del flag.",
+      "priority": "Baja hasta que se decida actualizar Strata y se corrija el fixture de coding.",
+      "reviewedAt": "2026-10-20",
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "status": "Revisión cerrada sin prueba nueva para el runtime actual",
+        "finding": "Strata PR #1668 dice que route-tail skip entró en 0.1.42; el perfil local registrado es 0.1.41. Contexto ya tiene cobertura independiente y no se extrapola a IQ4_XS.",
+        "result": "No se repitió inferencia. En Q-20261019-STRATA-UDIQ4XS-REMAINING, HE20 fue 20/20 pero BCB8 dos veces expiró y ADV/TaskFlow no cerraron; no hay gate local de coding completo.",
+        "decision": "No aplicar un flag ausente del runtime actual. Si se adopta 0.1.42+, A/B 7 versus 0 sólo con fixture válido y guardas.",
+        "artifacts": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/RESULTS.md; artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-14-review.json"
+      }
+    }
+  },
+  {
+    "id": "c36331c0-f00b-4070-af24-5c3a1a6597a7",
+    "title": "r/LocalLLaMA · hxoiXYALH1",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLaMA/s/hxoiXYALH1",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 15,
+    "analysis": {
+      "status": "Analizado · metodología útil; no requiere una suite nueva ahora",
+      "finding": "El core10-v1.3 del autor son diez tareas privadas × tres corridas con hidden tests. Pass-all-3 compara al modelo/harness/esfuerzo como configuración; muestra diferencias de harness/tokens, pero no ranking general del modelo.",
+      "test": "No replicar tareas no publicadas ni hacer llamadas API pagas. Mantener Hard Mode local 28×3 y sus gates. Si una decisión futura no está cubierta, crear holdout privacy-safe de diez tareas y validadores oracle/no-op/near-miss/alternativa correcta, luego tres corridas pareadas.",
+      "applicability": "Metodología transferible; resultados de DeepSeek-V4.1-Flash-1017/Pi/DeepSeek Harness no se transfieren al host. No está el dataset privado ni el modelo API exacto.",
+      "historyCheck": "Q-20261010-STRATA-QUANTS-89TASKS ya ofrece 28 escenarios × 3 semillas, además de suites específicas. No es el mismo dataset, pero evita duplicar comparación local sin una pregunta distinta. Recordar gates TC-92/TC-74.",
+      "priority": "Baja hasta identificar una decisión local sin holdout representativo.",
+      "reviewedAt": "2026-10-20",
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "status": "Revisión cerrada sin nueva corrida",
+        "finding": "Leaderboard/guía confirman 10 tareas privadas, tres corridas y validadores ocultos; la guía recomienda aislamiento y validar los checks con casos positivos/negativos.",
+        "decision": "Reutilizar evidencia local 28×3 en vez de repetir. El dataset externo no está disponible y usar sesiones privadas requeriría curación y aislamiento; no hay decisión nueva de modelo/harness que justifique crear ahora otro holdout.",
+        "artifacts": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/RESULTS.md; artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-15-review.json"
+      }
+    }
+  },
+  {
+    "id": "d4482f9e-99ab-4458-a345-0c4af4521d60",
+    "title": "r/LocalLLM · JHp4lIQPgl",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLM/s/JHp4lIQPgl",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 16,
+    "analysis": {
+      "status": "Accionable · filtro de capacidad con margen",
+      "finding": "StudioTV desglosa pesos/KV/estado/reserva, y reporta gaps medianos propios frente a 133 lanzamientos; su velocidad tiene ±30–50% estimado. En Qwen3.8-27B, la tabla dice 15,4 GiB para Q4_K_M mientras la sección de archivo exacto dice 17,7 GiB; el GGUF local verificado es 17,67 GiB.",
+      "test": "No hacer nueva carga: el único registro local casi comparable usa Qwen3.8-27B Q4_K_M con llama.cpp 0.4.1-dev, 131.072 tokens y 1 slot, pero no guarda VRAM pico durante residencia. La comparación actual sólo valida tamaño de archivo, no capacidad total ni velocidad.",
+      "applicability": "Sirve para shortlist y preflight con margen. Para decidir un ajuste estrecho de GPU/almacenamiento, comparar 2–3 perfiles equivalentes con pico de VRAM, RAM, KV y velocidad medidos por separado.",
+      "historyCheck": "No hay duplicado exacto entre las 57 entradas ni fuente previa StudioTV en este lote. El manifiesto local fija el GGUF Q4_K_M de 17,67 GiB; el postflight histórico mide sólo VRAM después del apagado.",
+      "priority": "Baja",
+      "reviewedAt": "2026-10-20",
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "status": "Revisión documental y cruce local de tamaño; sin test de GPU",
+        "result": "El tamaño local 17,67 GiB coincide con el renglón GGUF exacto de 17,7 GiB, y supera el resumen Q4_K_M de 15,4 GiB en 2,27 GiB (14,7%). La telemetría no registra pico de memoria residente, por lo que no se completa calibración de 2–3 perfiles.",
+        "decision": "Conservar como filtro aproximado; usar tamaño exacto del quant y verificar la carga real con nvidia-smi. No usar velocidad estimada como ranking.",
+        "artifacts": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/RESULTS.md; artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-16-review.json"
+      }
+    }
+  },
+  {
+    "id": "85336f5c-df5a-4fa2-816f-fb09bc9d4764",
+    "title": "r/LocalLLaMA · nYhLddJbtX",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLaMA/s/nYhLddJbtX",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 17,
+    "analysis": {
+      "status": "Sin prueba local aplicable · receta para hardware menor",
+      "finding": "El post usa Qwen3.8-Flash-Next IQ3_S abliterated y un Strata custom `unify` sobre una RTX 4070 Super 12GB + 30,4 GiB RAM/NVMe, a 131K. Localmente sólo hay el IQ3_S stock y el host tiene 2×RTX 3090/123 GiB RAM; contexto 1M YaRN está ya configurado en ASTRA IQ2_XS.",
+      "test": "No descargar/build/benchmark en este host: la receta está dirigida a un tier de memoria menor y no cambia la decisión local. El score de autor es perfil propio; su A/B `unify` vs `orca-port` no es upstream vs fork sin cambios.",
+      "applicability": "Sólo si se necesita ejecutar Flash-Next con 12GB VRAM/30GB RAM y NVMe. La variante SC117 quita los rechazos de seguridad y no conviene promoverla para agentes/usuarios finales sin una capa de control propia.",
+      "historyCheck": "No hay duplicado exacto. Relacionada con #8 (capy/Strata replay), #14 (IQ4_XS y route-tail) y #57 (contexto), pero no comparte artefacto, pregunta experimental ni setup.",
+      "priority": "Baja",
+      "reviewedAt": "2026-10-20",
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "status": "Revisión de fuentes y evidencia local completa; sin benchmark",
+        "result": "El IQ3_S local es el GGUF stock ISTA, medido con Strata 0.1.41 en 28×3; no es la variante SC117 ni el fork unify. Los números del post no se transfieren.",
+        "decision": "Sin prueba local aplicable actualmente; reabrir sólo por una necesidad low-VRAM concreta o una decisión de runtime A/B con stock IQ3_S y preregistro.",
+        "artifacts": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/RESULTS.md; artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-17-review.json"
+      }
+    }
+  },
+  {
+    "id": "83843407-04b3-4814-a125-a3110ffc8e5f",
+    "title": "r/LocalLLaMA · kTaCaaXWEY",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLaMA/s/kTaCaaXWEY",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 18,
+    "analysis": {
+      "status": "Duplicado · crosspost revisado del #14; sin prueba nueva",
+      "finding": "El shortlink resuelve a /r/LocalLLaMA/comments/1x8l18e/; coincide por autor, título y cuerpo sustantivo con el post #14 /r/LocalLLM/comments/1x8utw2/. Declara 262K nativos, pero sólo muestra retrieval con needle a 36K y 136K.",
+      "test": "No se repite ni abre un benchmark por el crosspost. El resultado de contexto es un reclamo de configuración y no una prueba recuperada a 262K; el pedido #57 ya se resolvió por perfil y la IQ4_XS local no está promovida. Si IQ4_XS pasa a ser candidato real de despliegue largo, reabrir con un holdout local a 262K.",
+      "applicability": "Qwen3.8-Flash-Next declara 262.144 tokens nativos y extensión hasta 1M. La evidencia local de 262K de IQ3_XXS no se transfiere a UD-IQ4_XS; el perfil local de IQ4_XS fue probado a 32.768 en Strata 0.1.41.",
+      "historyCheck": "Crosspost de #14, no un post idéntico por ID. El hilo añade comentarios sobre defaults de sampling, pero el perfil local envía sampling explícito; no cambia la decisión. El route-tail skip ya fue revisado en #14.",
+      "priority": "Ninguna como entrada separada; seguimiento condicional sólo si IQ4_XS se selecciona para despliegue a 262K.",
+      "reviewedAt": "2026-10-20",
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "status": "Duplicada/crosspost; cerrada sin nueva inferencia",
+        "duplicateOfSequence": 14,
+        "resolvedUrl": "https://www.reddit.com/r/LocalLLaMA/comments/1x8l18e/32gb_to_64gb_of_ram_took_qwen38flashnext_from_iq2/",
+        "sourceUrlSha256": "05ac81a07dfa0867be68b4ba8f50997eafe35bda0a00b51e86303e3707cc6975",
+        "decision": "No crear un test por duplicado. No recomendar 262K operativos para IQ4_XS hasta una prueba local del quant; el resultado del lote no cambia los defaults ni el perfil actual.",
+        "artifacts": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/RESULTS.md; artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-18-review.json"
+      }
+    }
+  },
+  {
+    "id": "a2e78bf5-6e9e-47ea-bf02-6dc6e9cb2708",
+    "title": "r/Qwen_AI · 2qmGCVziZA",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/Qwen_AI/s/2qmGCVziZA",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 19,
+    "analysis": {
+      "status": "Analizado · NVFP4 requiere Blackwell; incompatible con RTX 3090",
+      "finding": "QUASAR publica Qwen3.8-27B NVFP4 W4A4 de 19,7 GB y reporta 90,9 GPQA-D frente a 91,4 BF16; no mide coding/tool-use de LlamaCode. También enumera otros modelos/formats, pero no son equivalentes al Qwen NVFP4.",
+      "test": "No descargar, convertir ni probar NVFP4 en las RTX 3090: la tarjeta oficial exige FP4 en Blackwell/SM100+ y el host es SM86. No usar un Qwen GGUF distinto como sustituto del candidato. Un test de Gemma/Muse/Qwen3.5 requeriría una decisión distinta y una ruta compatible.",
+      "applicability": "Incompatibilidad determinista de hardware para el artefacto exacto. No hay evidencia local de mejora en coding/agentes y no cambia la decisión de modelo actual.",
+      "historyCheck": "El enlace resuelve a /r/Qwen_AI/comments/1x7897s/; no es duplicado de otras entradas. Las variantes de Qwen que existen localmente son artefactos diferentes.",
+      "priority": "Sin prueba local aplicable mientras se use RTX 3090.",
+      "reviewedAt": "2026-10-20",
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "status": "Revisión primaria y local completa; bloqueada antes de descarga/inferencia por compatibilidad de GPU",
+        "result": "RTX 3090 local SM86; NVFP4 publicado requiere Blackwell compute capability 10.0+. No hay candidato compatible que permita medir esta afirmación.",
+        "decision": "No test; no extrapolar KL/GPQA a coding ni a otro quant.",
+        "sourceUrlSha256": "26c484b3faa1981beb328c0d5e2810ebce20577377d8669b788542bea4725114",
+        "artifacts": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/RESULTS.md; artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-19-review.json"
+      }
+    }
+  },
+  {
+    "id": "0e650169-04fa-4c3f-87a8-7146440184b5",
+    "title": "r/LocalLLM · YH2URg93f8",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLM/s/YH2URg93f8",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 20,
+    "analysis": {
+      "status": "Accionable · A/B híbrido preregistrado, pendiente de endpoint/costo/límite de datos",
+      "finding": "El hilo propone frontier para plan/revisión y modelo local para ejecución, pero da experiencias anecdóticas y contrapuestas; no aporta suite, hidden tests, coste o latencia comparables. LlamaCode ya ofrece backend cloud y escalamiento manual/automático.",
+      "test": "Preregistro VF-20261019-01-S20-ROUTE-AB: seis mini-repos sintéticos, brazo local-only frente a plan frontier + ejecución local + revisión frontier; una ejecución pareada por tarea y orden aleatorio. Medir aceptación/tests, revisión, intentos, tokens/costo, latencia y campos enviados. Sólo continuar con proveedor/modelo, keyRef, límite de gasto y frontera de datos configurados.",
+      "applicability": "Puede decidir si el enrutamiento híbrido ahorra iteraciones/token del frontier sin bajar la calidad aceptada. Privacy mode bloquea escalamiento, pero no es aislamiento de red; el piloto debe ser aislado y sintético.",
+      "historyCheck": "No duplicado exacto. #13 trata Harness² y tuning automático del harness; es relacionado en metodología, no en hipótesis/experimento.",
+      "priority": "Media; experimento listo pero bloqueado por configuración externa y política de datos.",
+      "reviewedAt": "2026-10-20",
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "status": "Preregistrada; bloqueada antes de llamadas externas",
+        "result": "Sin provider calls, egress, datos del repo transmitidos ni gasto.",
+        "decision": "Esperar selección de proveedor/modelo y keyRef, techo de gasto y autorización explícita de datos; al reabrir usar sólo repos sintéticos.",
+        "sourceUrlSha256": "c3c4b702f9659f4f2184f90a031d08b6c9f430705679612891b36b21e084ab4a",
+        "experimentId": "VF-20261019-01-S20-ROUTE-AB",
+        "artifacts": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/RESULTS.md; artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-20-review.json"
+      }
+    }
+  },
+  {
+    "id": "99e58043-97c0-4efa-8731-2f3910a3e4d9",
+    "title": "r/opencodeCLI · nGGBETi8qu",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/opencodeCLI/s/nGGBETi8qu",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 21,
+    "analysis": {
+      "status": "Accionable condicional · candidato para el A/B híbrido #20; versión y acceso externo por confirmar",
+      "finding": "El post es una pregunta de disponibilidad, no una evaluación: no presenta protocolo ni resultados reproducibles. DeepSeek confirma oficialmente que V4.1 Flash se actualizó a 1017 y que la API usa deepseek-flash. OpenCode Go lista DeepSeek V4.1 Flash con ID opencode-go/deepseek-v4.1-flash, pero no documenta que ese alias resuelva específicamente a 1017.",
+      "test": "Reutilizar VF-20261019-01-S20-ROUTE-AB con tareas sintéticas y brazo local-only frente a OpenCode Go + DeepSeek, sólo después de confirmar el modelo/versión efectivos, una keyRef autorizada, el costo máximo y el límite de datos. Actualizar el preregistro para fijar proveedor/ID antes de cualquier llamada.",
+      "applicability": "Candidato cloud para comparar el flujo híbrido; no prueba que una versión local supere el perfil productivo ni que 1017 sea mejor en LlamaCode.",
+      "historyCheck": "Relacionado con #12 (mismo modelo/revisión, pero ese ítem trata del artefacto local bloqueado) y #20 (routing híbrido genérico); no son duplicados ni justifican otra suite.",
+      "priority": "Media condicional; no comprar ni llamar API sólo por el post."
+    },
+    "review": {
+      "reviewedAtUtc": "2026-10-20T05:27:37Z",
+      "decision": "candidate_for_existing_hybrid_ab_pending_version_access_budget_and_data_boundary",
+      "sourcePermalink": "https://www.reddit.com/r/opencodeCLI/comments/1x88v51/deepseek_v41_flash_1017/",
+      "sourceUrlSha256": "a17f1d0da33b50b93629bf30d46c66d471ca6c0df30702259f2b54fe99f739b3",
+      "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-21-review.json"
+    }
+  },
+  {
+    "id": "f245b976-7143-48ad-97c6-b6e32d731224",
+    "title": "r/LocalLLaMA · 5nOpha7BED",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLaMA/s/5nOpha7BED",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 22,
+    "analysis": {
+      "status": "Sin prueba local aplicable · fork específico ROCm/RDNA4; pruebas CUDA de contexto ya existen",
+      "finding": "El autor describe Qwen3.8-27B IQ4_XS con KV Q8/Q4 y un fork ROCm/HIP optimizado para RDNA4 en RX 9070 XT. Sus propios números bajan a 9,5 tok/s target-only y 31,1 tok/s con MTP a 262K; 80+ tok/s es sólo para 1–4K. No presenta passkey/NIAH ni evaluación de calidad.",
+      "test": "No descargar ni compilar el port ROCm en el host CUDA. La suite de contexto #57 ya distingue resultados por quant/modelo y la matriz local tiene un antecedente CUDA de KV streaming hasta 131K; ninguna cifra AMD se transfiere a RTX 3090.",
+      "applicability": "La optimización y sus resultados pertenecen a RDNA4/ROCm; no son un candidato ejecutable en las RTX 3090/CUDA del host.",
+      "historyCheck": "Relacionado pero distinto del antecedente local CUDA de agosto; la fuente #27 está marcada preliminarmente como duplicado de #22 y se confirmará al procesarla en orden.",
+      "priority": "Ninguna para el hardware actual."
+    },
+    "review": {
+      "reviewedAtUtc": "2026-10-20T05:30:25Z",
+      "decision": "no_local_test_applicable_rocm_rdna4_hardware_mismatch",
+      "sourcePermalink": "https://www.reddit.com/r/LocalLLaMA/comments/1x89ptz/qwen_27b_iq4_xs_q8q4_kv_at_full_262k_context_on_a/",
+      "sourceUrlSha256": "16f6888581d345a2b01f8ab579cf1d080089cc80706bb19d44f058fcb5c516ff",
+      "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-22-review.json"
+    }
+  },
+  {
+    "id": "377ecf13-b589-454e-aca2-e46a78a91e9d",
+    "title": "r/LocalLLaMA · nvP8ty2Fq6",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLaMA/s/nvP8ty2Fq6",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 23,
+    "analysis": {
+      "status": "Evaluación completada · screen negativo; no promoción",
+      "finding": "S23 completó un único par de semillas: FP8 2/8 frente a stock 0/8; transporte 8/8 en ambos; decode mediano FP8 124,60 vs 144,25 tok/s (-13,6%) y prefill 319,25 vs 328,35. Señal temprana mixta, sin gate final ni promoción. Durante el entorno de prueba systemd-oomd terminó procesos de Chromium por presión de memoria; no hay evidencia de que Codex fuera la víctima. La PLE FP8 pesa ~51,2 GB y la prueba se pausa hasta una estrategia de memoria segura.",
+      "test": "Un par de semillas completado: FP8 2/8 vs stock 0/8; transporte 8/8; decode -13,6%. Completar las dos semillas preregistradas sólo después de un plan seguro para el pico de memoria (~51,2 GB) y preflight fresco; sin promoción con 1/3 pares.",
+      "applicability": "Potencial para ASTRA · Strata IQ3_S/Qwen3.8 Flash Next; no transferir al IQ2_XS, IQ4_XS ni a Qwen 27B dense.",
+      "historyCheck": "No duplicado del #11 (KV-cache/KLD mide otro tensor) ni de #14/#18 (contexto/route-tail); mismos modelo/engine pero distinta intervención y pregunta. El PLE FP8 no está localmente.",
+      "priority": "Media, con gate estricto por el tamaño ~51.2 GB de la PLE.",
+      "execution": {
+        "taskId": "Q-20261021-VF-ITERATION-20",
+        "experimentId": "VF-20261019-01-S23-PLE-FP8-AB",
+        "status": "completed_negative_screen_no_promotion",
+        "result": "Tres pares: stock 3/24 y FP8 3/24; el mismo caso pasó en las tres semillas; FP8 ganó 0/3 pares. 48/48 transportes, sin abortos/OOM. Decode mediano 126.75 vs 125.90 tok/s; diferencia dentro de margen.",
+        "decision": "Mantener PLE stock; no repetir el A/B ni promover FP8. Qwen Flash-Next ASTRA/SOL y producción intactos.",
+        "artifacts": "artifacts/evaluacion-modelos-llamacode/Q-20261021-VF-ITERATION-20/RESULTS.md; receipts/source23-mmap-fp8-ab-result.json; receipts/google-sheet-update-result.json"
+      },
+      "reviewedAt": "2026-10-21"
+    },
+    "review": {
+      "reviewedAtUtc": "2026-10-20T05:33:38Z",
+      "decision": "partial_run_paused_after_host_memory_pressure",
+      "sourcePermalink": "https://www.reddit.com/r/LocalLLaMA/comments/1x8am0i/why_not_run_qwen_38_flash_next_with_the_full/",
+      "sourceUrlSha256": "4a2295dc636d4ae0e2938646390df2e46ba56bb8c27fc1e940c3f4bd6508125d",
+      "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-23-review.json"
+    }
+  },
+  {
+    "id": "1c4f22d7-a3ec-4b71-9fc5-256ca0427b2d",
+    "title": "r/LocalLLaMA · koN0khvRFp",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLaMA/s/koN0khvRFp",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 24,
+    "analysis": {
+      "status": "Accionable condicionado · candidato para A/B existente, sin prueba nueva",
+      "finding": "AI-Leaderboard.dev muestra 77,5 puntos para DeepSeek V4.1 Flash 1017 y 59,7 para Qwen3.8 Flash Next en su vista actual. Es un compuesto de 12 benchmarks con pesos publicados y CWLE para imputar benchmarks sin dato; el ranking no mide el harness local. El autor indica que el export JSON incluye fuentes, pero no se auditó la cobertura observada/imputada de la fila 1017.",
+      "test": "No crear otro benchmark. Mantener 1017 sólo como candidato para reutilizar VF-20261019-01-S20-ROUTE-AB, preregistrado a partir de #20 y relacionado con disponibilidad/API #21. El A/B sintético sigue bloqueado hasta fijar proveedor/ID y versión, keyRef, techo de gasto y frontera de datos.",
+      "applicability": "La clasificación ayuda a priorizar candidatos; no es evidencia de superioridad contra ASTRA/Qwen en LlamaCode ni justifica reemplazo. Tampoco resuelve el bloqueo local de hardware/runtime registrado en #12.",
+      "historyCheck": "No duplicado exacto. #21 trata disponibilidad del API/OpenCode Go; #24 evalúa la procedencia y alcance del ranking. Ambos alimentan el único A/B #20.",
+      "priority": "Baja · señal de priorización, sin prueba nueva ejecutable.",
+      "reviewedAt": "2026-10-20",
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "status": "Revisión documental completada; sin nueva corrida",
+        "result": "No hubo API calls, gasto, descarga, uso de GPU ni transmisión de código. El A/B S20 conserva sus bloqueos externos.",
+        "decision": "No inferir superioridad ni cambiar el modelo productivo. Si se habilita S20, conservar el resultado de 1017 aparte y evaluar con los repos sintéticos y métricas preregistrados.",
+        "artifacts": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/RESULTS.md; artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-24-review.json"
+      }
+    }
+  },
+  {
+    "id": "381d3480-b888-4781-83a9-06aae309ea00",
+    "title": "r/LocalLLaMA · jpRaIL93Yk",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLaMA/s/jpRaIL93Yk",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 25,
+    "analysis": {
+      "status": "Sin prueba adicional para la decisión local actual",
+      "finding": "El post compara Q3_XXS/Q3_S/Q4_XS con temp 1 y temp 0 en Tetris de navegador, tres ejecuciones por celda. Muestra baja n y recomienda medir tiempo total/tokens; el brazo temp 0 también elimina top-p/top-k/penalties, así que no aísla temperatura. El autor advierte que la calidad no mejora y la muestra no permite concluir.",
+      "test": "No repetir IQ2_XS: el A/B local Q-20261014-STRATA-IQ2XXS-SAMPLING ya comparó 0,1/0,6/1 con el resto constante, tres seeds de TaskFlow y un coding smoke, sin diferencia entre brazos. No extrapolar a Q3_XXS/Q3_S/Q4_XS. Si uno se vuelve candidato a reemplazo, fijar el quant exacto y preregistrar temperatura-only con el mismo harness y métricas de calidad, tokens, herramientas y tiempo total.",
+      "applicability": "Para el IQ2_XS local, la prueba LlamaCode más directa ya encontró 0/13 TaskFlow y 0/6 coding en todos los brazos con el mismo loop; sin evidencia para cambiar sampling. El post no valida el harness local ni compara tareas multiarchivo reales.",
+      "historyCheck": "Relacionado, no duplicado exacto: misma hipótesis de sampling que Q-20261014-STRATA-IQ2XXS-SAMPLING, pero el post usa otra rejilla de quant y un Tetris de navegador. El estudio local conserva control de parámetros y semillas para IQ2_XS; no transfiere a los quants del post.",
+      "priority": "Baja · no hay decisión abierta sobre los quants exactos del post.",
+      "reviewedAt": "2026-10-20",
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "status": "Revisión documental completada; sin inferencia nueva",
+        "result": "No se descargó, construyó ni usó GPU. Se reutiliza como evidencia el A/B local de sampling IQ2_XS.",
+        "decision": "Mantener los parámetros actuales para IQ2_XS; no repetir su A/B. Reabrir sólo si se selecciona un quant diferente como candidato y sampling es una decisión pendiente.",
+        "artifacts": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/RESULTS.md; artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-25-review.json"
+      }
+    }
+  },
+  {
+    "id": "d0e945c6-8b99-470f-8e1f-9a584ea318b9",
+    "title": "r/LocalLLM · DhHfKckfdN",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLM/s/DhHfKckfdN",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Bloqueada",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 26,
+    "analysis": {
+      "status": "Revalidada · evidencia física A100 reportada; procedencia y transferibilidad sin resolver",
+      "finding": "El Reddit y MAM_LOG1 registran una sesión física Qwen2.5-72B/CUT3 en una A100-80GB: 30.031 posiciones, 11/11 trials, 17/17 checks mecánicos, 8/8 hashes de append y pico 57,66 GiB. La demo MAM_full_QWEN_72B.py, en cambio, se etiqueta v1.5 no publicada/no validada y dice que su demo no fue ejecutada en GPU, separando 709.log como corrida anterior. La atribución entre script y log queda inconsistente; el log reporta estado PASS_PHYSICAL_UNSCORED_SEMANTICS, sin score semántico robusto.",
+      "test": "No ejecutar replicación local: no hay evidencia GPU verificable para la variante 72B, el script exige un A100-80GB y Qwen2.5-72B, y el perfil local activo usa Qwen3.8-Flash-Next/Strata en 2×RTX 3090. Los cartuchos son memoria KV/activaciones modeloespecífica; no son una prueba de ampliar la ventana nativa. La ficha oficial de Qwen2.5-72B ya declara 131.072 tokens de contexto, muy por encima de los ~30K cartuchos del post.",
+      "applicability": "No cambia el límite de contexto local ya cubierto por la fuente #57 ni justifica sustituir el MemoryStore/GraphStore/context_scout o el flujo RAG. La técnica sólo sería pertinente como investigación aparte de memoria interna por arquitectura.",
+      "historyCheck": "Sin duplicado exacto en las fuentes #1–#25. Tema relacionado, no duplicado, con el grafo/memoria/RAG existentes y con la revisión general de ventana #57. El script Qwen72B no coincide con la evidencia principal publicada del repositorio, que corresponde a Mistral-7B y Qwen2.5-7B.",
+      "priority": "Baja · investigación futura",
+      "reviewedAt": "2026-10-25",
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "status": "Bloqueada antes de prueba",
+        "result": "No se descargó código/modelo, no se instaló dependencias, no se construyó ni se usó GPU. La afirmación de corrida física Qwen2.5-72B no quedó corroborada: el propio script dice CPU simulation only y A100 80GB requerido. Tampoco mide superar el límite oficial de 131.072 tokens.",
+        "decision": "No cambiar perfiles, contexto ni memoria/RAG por este post. Mantener como pista de investigación no validada; ninguna prueba local puede cambiar una decisión actual.",
+        "reopenCondition": "Reabrir sólo si aparece un run reproducible con hashes de engine/modelo y ejecución real en GPU, y si existe una decisión concreta de adoptar cartuchos para un modelo local compatible. Entonces preregistrar un holdout de hechos sintéticos/recientes no vistos con controles sin memoria, texto conjunto, RAG y cartucho; mantener el mismo contexto y medir exactitud, contaminación, tiempo total, coste de creación/almacenamiento y fallos de append. No trasladar CUT3 ni cartuchos entre arquitecturas.",
+        "artifacts": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/RESULTS.md"
+      },
+      "revalidatedAtUtc": "2026-10-25T02:03:01Z",
+      "currentRevalidation": {
+        "status": "Revalidada · evidencia física A100 reportada; procedencia y transferibilidad sin resolver",
+        "finding": "El Reddit y MAM_LOG1 registran una sesión física Qwen2.5-72B/CUT3 en una A100-80GB: 30.031 posiciones, 11/11 trials, 17/17 checks mecánicos, 8/8 hashes de append y pico 57,66 GiB. La demo MAM_full_QWEN_72B.py, en cambio, se etiqueta v1.5 no publicada/no validada y dice que su demo no fue ejecutada en GPU, separando 709.log como corrida anterior. La atribución entre script y log queda inconsistente; el log reporta estado PASS_PHYSICAL_UNSCORED_SEMANTICS, sin score semántico robusto.",
+        "nextStep": "No ejecutar localmente: CUT3 es memoria interna específica de Qwen2.5-72B/A100, no extensión de ventana nativa ni artefacto transferible a Qwen3.8 Flash-Next/Strata. Reabrir sólo cuando la fuente primaria resuelva procedencia y exista hipótesis compatible con arquitectura local y holdout nuevo con controles de texto/RAG/cartucho.",
+        "sources": [
+          "https://www.reddit.com/r/LocalLLM/comments/1x872ux/we_completely_bypassed_rag_and_context/",
+          "https://github.com/ceceli33/titan-cognitive-core-v3/blob/main/MAM_LOG1_QWEN_72B.log",
+          "https://github.com/ceceli33/titan-cognitive-core-v3/blob/main/MAM_full_QWEN_72B.py"
+        ],
+        "revalidatedAtUtc": "2026-10-25T02:03:01Z",
+        "testDecision": "Sin descarga, build, GPU ni inferencia local. La evidencia física mecánica del A100 mejora la anterior lectura, pero no cambia la decisión local ni la extensión de contexto de Flash-Next."
+      },
+      "revalidationReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-118/receipts/q118-source-revalidation.json"
+    }
+  },
+  {
+    "id": "83416b38-51af-4296-8fc3-44045f063206",
+    "title": "r/LocalLLM · DVN2rn7npw",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLM/s/DVN2rn7npw",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Duplicada",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 27,
+    "analysis": {
+      "status": "Duplicada · mismo post y cuerpo que #22",
+      "finding": "El enlace de r/LocalLLM resuelve a una copia del post de r/LocalLLaMA #22: mismo autor bottlestreet3d, mismo título y mismo cuerpo, incluida la receta y la tabla de rendimiento. Cambian subreddit/ID y la conversación asociada; los comentarios reabiertos no presentan una medición nueva pertinente para el host local.",
+      "test": "Consolidar con #22; no repetir el benchmark ni contabilizarlo dos veces. El material es ROCm/HIP para RX 9070 XT/RDNA4; no es ejecutable en el host CUDA/RTX 3090.",
+      "applicability": "Duplicada. El post no añade un candidato de modelo o configuración para el host actual.",
+      "historyCheck": "Duplicado confirmado por comparación del cuerpo canónico de los dos enlaces. No duplicado del antecedente CUDA local: ese es otro fork, backend y hardware.",
+      "priority": "Ninguna",
+      "reviewedAt": "2026-10-20",
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "status": "Duplicada",
+        "duplicateOfSequence": 22,
+        "decision": "No crear prueba ni volver a contar métricas; conservar #22 como registro de análisis técnico y este recibo como evidencia de la URL duplicada."
+      }
+    }
+  },
+  {
+    "id": "08497466-766b-4b42-b94c-04e45195885b",
+    "title": "r/LocalLLM · E1cyNSt8r5",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLM/s/E1cyNSt8r5",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Bloqueada",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 28,
+    "analysis": {
+      "status": "Revalidada · relato accesible, comparación sin fixture verificable",
+      "finding": "El post accesible describe una migración Flutter→SwiftUI: ~60 min con Qwen3.8 Flash-Next Q4_K_XL en Strix Halo versus ~50 min con Opus 5.5 xhigh. La edición agrega que Qwen hizo cerca del 90% de otra app personal y que SOL 6.1 pulió el resto y corrigió una race condition. No adjunta repo, diff, prompt completo, hashes, tests independientes ni criterio de aceptación.",
+      "test": "No repetir la suite local: el Qwen3.8 Flash-Next UD-Q4_K_XL ya tiene Hard Mode local 28 tareas × 3 semillas y se comparó con el IQ2_XS actual en la misma suite/seeds. Q4 obtuvo 77,38/100 y ~65,3 tok/s; IQ2_XS 77,98/100 y ~154,19 tok/s. La suite usa tools simuladas y no reproduce migración real ni establece paridad con Opus. No llamar Claude ni enviar código: faltan fixture controlado, keyRef/cuenta, techo de gasto y política de datos.",
+      "applicability": "Candidato Q4_K_XL ya screenado localmente; la anécdota no respalda reemplazar el modelo productivo. Una comparación Qwen-vs-Opus sobre la misma migración podría cambiar una decisión sólo si se define un repo/fixture autorizado con tests independientes y un presupuesto explícito.",
+      "historyCheck": "No es duplicado exacto de #1–#27. Es tema relacionado pero distinto del routing local/frontier #20; #20 sigue bloqueado y su benchmark sintético no reproduce la migración ni debe alterarse sin registrar una nueva pregunta.",
+      "priority": "Baja · comparación opcional condicionada",
+      "reviewedAt": "2026-10-25",
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "status": "Sin nueva prueba local; A/B frontier bloqueado",
+        "result": "Se revisaron el post, fichas oficiales y el historial local de perfiles Q4_K_XL/IQ2_XS. No se hizo API call, no se usó código de producción ni se descargó/compiló modelo.",
+        "decision": "No inferir que Q4_K_XL iguala o supera Opus 5.5. Mantener el perfil productivo; el candidato Q4 ya quedó ligeramente por debajo del IQ2_XS en Hard Mode local y a menos de la mitad de velocidad, con las limitaciones de suite descritas.",
+        "reopenCondition": "Sólo con un repo de migración sintético o snapshot autorizado y sanitizado, tests/aceptación independientes, versión exacta del Q4 local y Claude Code/Opus 5.5 fijados, misma suite/permisos/tiempo/reintentos y keyRef con techo de gasto explícito. Ejecutar corridas pareadas y registrar tests, aceptación, herramientas/reparaciones, tiempo y costo; no enviar el repo productivo.",
+        "artifacts": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/RESULTS.md"
+      },
+      "revalidatedAtUtc": "2026-10-25T02:03:01Z",
+      "currentRevalidation": {
+        "status": "Revalidada · relato accesible, comparación sin fixture verificable",
+        "finding": "El post accesible describe una migración Flutter→SwiftUI: ~60 min con Qwen3.8 Flash-Next Q4_K_XL en Strix Halo versus ~50 min con Opus 5.5 xhigh. La edición agrega que Qwen hizo cerca del 90% de otra app personal y que SOL 6.1 pulió el resto y corrigió una race condition. No adjunta repo, diff, prompt completo, hashes, tests independientes ni criterio de aceptación.",
+        "nextStep": "No llamar API frontier ni repetir la suite local. Reabrir con fixture autorizado y reproducible, aceptación independiente, condiciones de ejecución alineadas, frontera de datos y cuenta/keyRef con tope de gasto explícito.",
+        "sources": [
+          "https://www.reddit.com/r/LocalLLM/comments/1x85v8g/unsloth_qwen_38_flash_next_is_insane_can_be/"
+        ],
+        "revalidatedAtUtc": "2026-10-25T02:03:01Z",
+        "testDecision": "No se ejecutó código ni modelo; el relato no es una comparación reproducible y la suite local equivalente ya está cerrada."
+      },
+      "revalidationReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-118/receipts/q118-source-revalidation.json"
+    }
+  },
+  {
+    "id": "5bcc4d95-76eb-4496-9d0a-507e65721a0f",
+    "title": "r/LocalLLaMA · 9oHe5jafs9",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLaMA/s/9oHe5jafs9",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Sin prueba aplicable",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 29,
+    "analysis": {
+      "status": "Sin prueba aplicable",
+      "finding": "La ficha oficial de DeepSeek-V4.1-Flash-1017 declara 1M de contexto; el comentario sobre lectura de archivos/secrets es anecdótico y no fija revisión, harness ni evidencia reproducible. LlamaCode ya documenta que Privacy Mode no es aislamiento del SO ni restringe run_shell/harnesses externos; no confiar en una instrucción del modelo para proteger secretos.",
+      "test": "No ejecutar una prueba de prompt con otro modelo: no caracterizaría 1017. Para reabrir, usar revisión/runtime exactos (o endpoint autorizado) y workspace descartable con señuelos sintéticos, sin secretos reales ni red pública; probar enforcement de filesystem/tools.",
+      "applicability": "Principio de seguridad ya reflejado en README y relacionado con los fallos locales TC-92/TC-74. La ficha upstream y el pedido general de contexto se relacionan con #12/#57, pero el quant Xolotl de #12 es un artefacto distinto y sus límites no se transfieren automáticamente.",
+      "historyCheck": "No es duplicado exacto de #12/#21/#24. Repite parte de la ficha oficial; añade un reporte comunitario no verificable sobre seguridad. No acredita retrieval/calidad a 1M ni comportamiento de lectura de secretos.",
+      "priority": "Baja; reabrir sólo si se habilita este checkpoint o se decide validar una frontera de filesystem/tool concreta.",
+      "reviewedAt": "2026-10-20"
+    }
+  },
+  {
+    "id": "a049456b-6119-453b-93fc-d6b154809d23",
+    "title": "r/LocalLLaMA · ocIkzMhLtT",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLaMA/s/ocIkzMhLtT",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Sin prueba aplicable",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 30,
+    "analysis": {
+      "status": "Sin prueba aplicable",
+      "finding": "El autor compara Qwen3.8 Flash-Next UD-Q4_K_XL con Qwen3.8-27B Q8 en dos tareas de Tetris y 4×RTX 3090. Reporta que Flash-Next no entregó un ejecutable jugable en una corrida de Strata de 4 h; la 27B dejó dos fallos en el primer prompt y los corrigió en el segundo. Es una muestra de un autor, con límites de tiempo distintos y sin artefactos/logs verificables. La discusión atribuye el resultado al muestreo greedy, pero el autor dijo haber cambiado a parámetros Qwen antes de correr.",
+      "test": "No repetir ahora: Hard Mode 28×3 ya compara perfiles locales incluyendo Flash-Next Q4, ASTRA IQ2_XS y Qwen3.8-27B AutoRound INT4; el exacto Qwen 27B Q8 del post no está instalado. El test de temperatura local #25 ya cubre el perfil actual con parámetros controlados.",
+      "applicability": "Sirve como recordatorio de medir finalización, tests y tiempo total de tarea, no sólo tok/s; esa metodología ya está aplicada en Hard Mode y los informes de tareas locales.",
+      "historyCheck": "No duplicado exacto. Relacionado con #25 (Tetris/muestreo), #28 (Flash-Next Q4 y comparación local) y los resultados de Q-20261010-STRATA-QUANTS-89TASKS; los fixtures y brazos no son idénticos.",
+      "priority": "Baja; reabrir sólo si se abre una decisión concreta entre el perfil actual y un Qwen 27B Q8 compatible.",
+      "reviewedAt": "2026-10-20"
+    }
+  },
+  {
+    "id": "2e574781-7787-4f64-82ee-e066838e53b1",
+    "title": "r/LocalLLM · 2RU8b0mOaO",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLM/s/2RU8b0mOaO",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Bloqueada",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 31,
+    "analysis": {
+      "status": "Revalidada · sigue incompatible con CUDA/SM86 y almacenamiento local",
+      "finding": "El README actual de DS41Engine especifica Linux ROCm/HIP 7.14, RX7900 XT/XTX gfx1100, RAM de clase 128 GiB y cerca de 570 GB NVMe para pesos/tablas Engram/encoder. No documenta backend CUDA/RTX 3090 SM86.",
+      "test": "No clonar, descargar, compilar ni ejecutar: no hay ruta CUDA/SM86 validada y el espacio libre actual es 25,187,364,864 B en NVMe, 140,084,998,144 B en el otro volumen y 15,193,993,216 B en raíz.",
+      "applicability": "No aplicable al host actual. Las cifras de throughput del autor pertenecen a su RX7900XTX/ROCm y sus pesos/Engram completos.",
+      "historyCheck": "No duplicado exacto de #12 (cuantización/runtime Xolotl distintos) ni #22 (port streaming ROCm de Qwen). Relacionado por el modelo DeepSeek V4.1 y el límite de compatibilidad AMD vs CUDA.",
+      "priority": "Baja; reabrir con port CUDA/SM86 explícitamente soportado y probado, y almacenamiento suficiente para el set completo y su pico de descarga.",
+      "reviewedAt": "2026-10-25",
+      "revalidatedAtUtc": "2026-10-25T02:03:01Z",
+      "currentRevalidation": {
+        "status": "Revalidada · sigue incompatible con CUDA/SM86 y almacenamiento local",
+        "finding": "El README actual de DS41Engine especifica Linux ROCm/HIP 7.14, RX7900 XT/XTX gfx1100, RAM de clase 128 GiB y cerca de 570 GB NVMe para pesos/tablas Engram/encoder. No documenta backend CUDA/RTX 3090 SM86.",
+        "nextStep": "No clonar/descargar/build. Reabrir sólo con soporte CUDA/SM86 probado, artefacto exacto y espacio suficiente en el almacenamiento medido al momento del preflight.",
+        "sources": [
+          "https://github.com/vincalkr/DS41Engine"
+        ],
+        "revalidatedAtUtc": "2026-10-25T02:03:01Z",
+        "testDecision": "Incompatible con host CUDA actual; no se ha descargado ni construido el repositorio."
+      },
+      "revalidationReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-118/receipts/q118-source-revalidation.json"
+    }
+  },
+  {
+    "id": "a90ad194-79ce-44e1-9666-c7f48810d51d",
+    "title": "Instagram · DefpbUKlMxh",
+    "kind": "url",
+    "content": "https://www.instagram.com/reel/DefpbUKlMxh/?exln=MWxvcXlzNXZocDgybQ==",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Bloqueada",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 32,
+    "analysis": {
+      "status": "Revalidada · fuente primaria continúa inaccesible; no hay claim comprobable",
+      "finding": "La apertura directa del Reel fue throttled por Instagram; la búsqueda exacta no recuperó caption, transcripción ni mirror atribuible. La descripción recibida no basta para derivar un benchmark.",
+      "test": "No corresponde derivar benchmark del resumen previo sin poder contrastar el contenido. Para reabrir, aportar transcripción/captura del reel o un mirror accesible; si contiene una afirmación de modelo/runtime, extraerla y contrastar fuente primaria antes de proponer test.",
+      "applicability": "No verificable por ahora; no se identificó una prueba técnica reproducible a partir del registro guardado.",
+      "historyCheck": "El registro previo describe contenido promocional sin modelo, código ni resultado. Esta revisión no pudo recuperar el reel para confirmar si hay contenido técnico adicional.",
+      "priority": "Baja; pendiente únicamente de contenido accesible.",
+      "reviewedAt": "2026-10-25",
+      "revalidatedAtUtc": "2026-10-25T02:03:01Z",
+      "currentRevalidation": {
+        "status": "Revalidada · fuente primaria continúa inaccesible; no hay claim comprobable",
+        "finding": "La apertura directa del Reel fue throttled por Instagram; la búsqueda exacta no recuperó caption, transcripción ni mirror atribuible. La descripción recibida no basta para derivar un benchmark.",
+        "nextStep": "Esperar caption/transcripción/captura legible o mirror atribuible; extraer un claim técnico y contrastarlo con fuente primaria antes de diseñar una prueba.",
+        "sources": [
+          "https://www.instagram.com/reel/DefpbUKlMxh/"
+        ],
+        "revalidatedAtUtc": "2026-10-25T02:03:01Z",
+        "testDecision": "No se descargó media ni se ejecutó prueba; no hay afirmación verificable disponible."
+      },
+      "revalidationReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-118/receipts/q118-source-revalidation.json"
+    }
+  },
+  {
+    "id": "4b6ab649-9966-42f7-a9f0-72d5d1198ab8",
+    "title": "r/LocalLLM · 5ZPTlkT9Mt",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLM/s/5ZPTlkT9Mt",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 33,
+    "analysis": {
+      "status": "A/B completado; bundle adaptativo no promovido · P0 seguridad",
+      "finding": "Seis brazos (3 seeds × 28 casos): control media 78,33; candidato 82,33; 10 victorias, 4 pérdidas y 70 empates pareados. Mejora mediana de duración 0,489% (gate ≥5% no pasa); promedio indica +1,172% de tiempo. TC-92 falla en las seeds candidatas 43/44.",
+      "test": "A/B preregistrado sólo para tier adaptativo en ASTRA IQ2_XS productivo: perfil actual vs --adapt-every 1 --adapt-swaps 160 --adapt-decay 0.97, mismo Strata 0.1.41, context 1M, quant, sampler, MTP, Hard Mode 28 tareas ×3 seeds, órdenes pareados alternados. Umbral: ≥5% de mejora en velocidad/tiempo total, sin pérdida >1 tarea y sin nuevos fallos de seguridad.",
+      "applicability": "Alta: hardware CPU local es Ryzen 9 9950X3D 16-core, el mismo modelo reportado; GPU/Strata y workload difieren. Ya existe tuning de workers 15/10/8 en IQ3_S/Strata 0.1.35 con <3%; no se repite ese factor. El tier adaptativo no tiene A/B local equivalente en IQ2_XS.",
+      "historyCheck": "No duplicado. Relacionado con #25 (sampling IQ2_XS), y los resultados locales Hard Mode/contexto/Strata; el benchmark externo no es agente LlamaCode ni el mismo hardware/runtime.",
+      "priority": "Alta para screen técnico; no cambiar perfil hasta completar A/B y respetar gates de seguridad.",
+      "reviewedAt": "2026-10-20",
+      "nextAction": "No promover ni cambiar el perfil. Corregir TC-92 antes de procesar datos entre tenants; no volver a correr este bundle.",
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "status": "Completado",
+        "result": "Seis brazos (3 seeds × 28 casos): control media 78,33; candidato 82,33; 10 victorias, 4 pérdidas y 70 empates pareados. Mejora mediana de duración 0,489% (gate ≥5% no pasa); promedio indica +1,172% de tiempo. TC-92 falla en las seeds candidatas 43/44.",
+        "decision": "No promover ni cambiar el perfil. Corregir TC-92 antes de procesar datos entre tenants; no volver a correr este bundle.",
+        "artifacts": "Q-20261020-VF-20261019-01/RESULTS.md; receipts/source-33-final-analysis.json; receipts/source33-control-seed-42.json; receipts/source33-candidate-seed-44.json",
+        "resourceUse": {}
+      }
+    }
+  },
+  {
+    "id": "1cf732ce-e3e2-464a-9fc2-2f0288837d04",
+    "title": "r/LocalLLM · ewgWTAA8Bt",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLM/s/ewgWTAA8Bt",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 34,
+    "analysis": {
+      "status": "Revisado · sin prueba local aplicable",
+      "finding": "El post mide Qwen3.8-Flash-Next NVFP4 GPTQ frente a Unsloth UD-Q4_K_XL en una RTX 5090/Strata 0.1.42-nvfp4.2: NVFP4 ofrece mayor velocidad en esa RTX 50, pero el autor eligió su mejor sesión de cuatro; su único screening de calidad favorece UD-Q4_K_XL por 73/82 contra 70/82. No es evidencia de superioridad general ni de coding agent.",
+      "test": "No descargar el pack ni iniciar A/B local en este lote. Strata documenta que las RTX anteriores a la serie 50 ejecutan NVFP4 por W4A8 y que UD-IQ4_XS es más rápida en ese hardware; la aceleración publicada no se transfiere a RTX 3090. Una comparación local sólo tendría sentido ante una decisión concreta de calidad y con el artefacto exacto fijado.",
+      "applicability": "El host tiene 2×RTX 3090 SM86 y Strata 0.1.41; el pack oficial requiere Strata 0.1.44 o posterior y ocupa aproximadamente 128 GB. El volumen dedicado a modelos tiene 25,19 GB libres; el volumen del workspace tiene 140,08 GB y apenas dejaría ~12 GB tras el pack, sin margen operativo amplio.",
+      "historyCheck": "No es duplicado exacto de #19 (QUASAR NVFP4 W4A4 con requisito Blackwell) ni de los ensayos locales Q-20261005-STRATA-NVFP4 (checkpoint OrcaRouter ModelOpt y fork/runtime distintos). La prueba local previa de NVFP4 tuvo problemas de prefill y no debe atribuirse a este checkpoint GPTQ.",
+      "priority": "Baja para el host local; el resultado de velocidad depende de Blackwell y la muestra de calidad favorece el Q4.",
+      "reviewedAt": "2026-10-20T05:57:48Z",
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "status": "Sin prueba local aplicable; no se descargó, compiló ni usó GPU",
+        "result": "La ventaja medida es de RTX 5090; en SM86 el camino soportado es W4A8 y la documentación de Strata indica que UD-IQ4_XS es más rápida. El pequeño conjunto de calidad dio 70/82 a NVFP4 y 73/82 a UD-Q4_K_XL, una sola pasada.",
+        "decision": "No instalar el pack de ~128 GB ni repetir un benchmark que no cambiaría el perfil actual. No extrapolar el dato Blackwell a RTX 3090 ni el screening al uso agentivo.",
+        "reopenCondition": "Reabrir sólo si se decide evaluar calidad de este checkpoint exacto en SM86, se fija su revisión/hashes, hay Strata 0.1.44+ aislado y almacenamiento dedicado con margen suficiente; preregistrar comparación pareada contra el perfil productivo.",
+        "sourceUrlSha256": "7fdce86e0cd7ec3156caea9f7654387c15fd8f0f44ae6fd0b8a737a924d4bdd6",
+        "artifacts": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/RESULTS.md; artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-34-review.json"
+      }
+    }
+  },
+  {
+    "id": "a3c2b493-a34b-4052-8c80-f508ac8f7839",
+    "title": "r/LocalLLaMA · jJlK35vROd",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLaMA/s/jJlK35vROd",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 35,
+    "analysis": {
+      "status": "Screen completado; gate de rendimiento no pasa; conservar pipeline-windows=0",
+      "finding": "El post combina cuatro cambios sobre 2 RTX 3060 y Qwen Flash-Next IQ3_S: pool-workers (+10%), trim-stage-weights (+8%), pipeline-windows=6 (~15%) y orden de GPU (~15%). No permite atribuir el aumento conjunto ni presenta A/B de calidad. El tracker oficial limita valores mayores a pipeline-windows 2 y prueba estabilidad en un split Turing. En el host local hay 2 RTX 3090, Strata 0.1.41 y perfil ASTRA IQ2_XS con MTP/layer split. Ya se midieron pool-workers (<3%), PCIe y trim (sin dirección estable). Sólo pipeline-windows 0 vs 2 puede cambiar la decisión.",
+      "test": "Preregistro S35B ejecutado con cache=0: 18/18 requests válidos. Gate de mejora >=5% a 32K y 128K no pasa; mantener pipeline-windows=0, no hacer Hard Mode ni repetir sin hipótesis nueva.",
+      "applicability": "Tuning de rendimiento local multi-GPU; no importar porcentajes ni reordenar GPUs del sistema de dos RTX 3060.",
+      "historyCheck": "Revisé el post completo y contrasté claims con Strata issue #1143 y docs MULTI_GPU. #1143 prueba pipeline-windows 2 en 2x RTX 2080 Ti con estabilidad en 16 pares intercalados, no demuestra ganancia de velocidad en este workload; la guía actual dice NVIDIA opt-in y documenta coste de VRAM/cache. La evidencia local en docs/strata-post-evaluation-20261003.md y Q-20261016-FLASHNEXT-RESUME2/RESULTS.md evita repetir workers/PCIe/trim. No es duplicado exacto de #33, que estudia ajuste adaptativo, ni de los posts previos de tuning Strata. Reabrir sólo tras liberar GPU1 y pasar preflight.",
+      "sourceVerification": "Post abierto y comparado con tracker y documentación primaria upstream. No se halló fingerprint/URL duplicada en fuentes #1–#34.",
+      "reviewedAt": "2026-10-20",
+      "priority": "Media",
+      "preregistration": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/PLAN-source-35.md",
+      "outcome": "completed_screen_no_pass",
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "experimentId": "VF-20261019-01-S35B-PIPELINE-AB-CACHEOFF",
+        "status": "completed_screen_no_pass",
+        "validRequests": 18,
+        "allHttp200": true,
+        "allCacheZero": true,
+        "result": "Medianas pareadas: 32K +1,35% en latencia total; 128K -0,22%; decode TPS -14,21% y -15,22%. Gate preregistrado de >=5% no pasa. No se ejecutó Hard Mode; mantener pipeline-windows=0 y no repetir sin hipótesis nueva.",
+        "evidence": "RESULTS.md lines 443-447; receipts/source-35-final-analysis.json"
+      }
+    }
+  },
+  {
+    "id": "b0c72cb6-aaf2-4bc4-985f-cabed824456c",
+    "title": "Instagram · DeehKGtuth5",
+    "kind": "url",
+    "content": "https://www.instagram.com/reel/DeehKGtuth5/?psln=eG5xaTdpeWxpbDg0",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 36,
+    "analysis": {
+      "status": "Bloqueado · revalidación pública sin evidencia atribuible",
+      "finding": "La URL del Reel, la URL limpia, la variante /p/ y el endpoint oEmbed oficial fueron throttled. La búsqueda exacta del shortcode no halló una copia atribuible. La nota de recepción atribuye un caso de pedidos de empanadas por WhatsApp y confusión entre seis unidades y seis docenas, pero no se pudo validar con evidencia primaria.",
+      "test": "No crear ni ejecutar un fixture específico mientras el contenido permanezca sin verificar. Si una transcripción/caption/captura accesible confirma un problema de interpretación de pedidos, considerar un fixture separado con parser tipado y validador determinista para cantidades/unidades, producto inválido, sustituciones, subtotal/total y zona de entrega; luego comparar modelos con tests ocultos y tiempo total.",
+      "applicability": "Caso potencial para coding/agentes; no evidencia para añadir WhatsApp, Raspberry Pi u otra función al producto.",
+      "historyCheck": "El fixture local assets/benchmarks/custom/one_shotting_bakery_ecommerce_v1.json ya evalúa construir un ecommerce con checkout a WhatsApp. No cubre explícitamente empanadas/docenas, sustituciones ni validación determinista de subtotal/zona. Es distinto del Reel #32, cuyo shortcode es DefpbUKlMxh; no hay duplicado exacto.",
+      "sourceVerification": "2026-10-21: URL de Reel throttled; búsqueda exacta del shortcode vacía; sin caption/transcripción/mirror atribuible. No se creó fixture.",
+      "reviewedAt": "2026-10-21",
+      "priority": "Media",
+      "outcome": "blocked_source_unverifiable",
+      "execution": {
+        "taskId": "Q-20261021-VF-ITERATION-21",
+        "status": "blocked_source_unverifiable",
+        "result": "Apertura pública throttled y búsqueda exacta vacía; no test de modelo/fixture.",
+        "artifacts": "artifacts/evaluacion-modelos-llamacode/Q-20261021-VF-ITERATION-21/RESULTS.md; receipts/source36-primary-retrieval-result.json"
+      },
+      "revalidatedAtUtc": "2026-10-22T16:26:07Z",
+      "currentRevalidation": {
+        "status": "Bloqueado · falta evidencia primaria atribuible",
+        "finding": "Revalidada en Q38: no se consiguió caption, transcripción ni mirror atribuible; no validar aún la nota de pedidos/unidades.",
+        "nextStep": "No crear fixture hasta recibir evidencia primaria del Reel."
+      },
+      "revalidationReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-38/receipts/source-revalidation.json"
+    }
+  },
+  {
+    "id": "7de462d7-7d39-4d19-a928-1cb1503fb942",
+    "title": "Threads · BAi5MWvd9B",
+    "kind": "url",
+    "content": "https://www.threads.com/share/BAi5MWvd9B/",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 37,
+    "analysis": {
+      "status": "Sin prueba local aplicable; link de Threads no verificable",
+      "finding": "El enlace de Threads no abrió y la búsqueda exacta del ID no encontró una copia atribuible. La nota previa de recepción menciona Cloudflare Quick Tunnels, pero no se atribuye al post sin verificarlo. La documentación oficial confirma que Quick Tunnels exponen un servicio HTTP local en una URL temporal; por defecto cualquiera que tenga la URL puede acceder, --allowed-mail añade autenticación por correo y el acceso termina al detener cloudflared.",
+      "test": "No hay test runtime ni evaluación de modelos: la búsqueda de cloudflared, trycloudflare, Quick Tunnel, ngrok y localtunnel en src/, qml/, tests/ y docs/ no encontró integración. No se abrió un túnel. Si se incorpora la función en el futuro, probar en un servidor descartable acceso autorizado/rechazo anónimo, rutas mínimas, cierre al cancelar y exclusión de endpoints de ejecución/código.",
+      "applicability": "Idea posible para compartir previews o recibir webhooks, fuera de las funciones actuales de evaluación de modelos.",
+      "historyCheck": "No hay match del share ID ni de términos de Cloudflare en las fuentes previas #1–#36; no se identificó duplicado exacto. El resumen previo de recepción no sustituye la verificación del post.",
+      "sourceVerification": "Threads devolvió Internal Error; la búsqueda exacta del share ID y site query no encontró resultados. Cloudflare Quick Tunnels docs y el changelog oficial se usaron sólo para verificar el mecanismo, no el contenido del post.",
+      "reviewedAt": "2026-10-20",
+      "priority": "Baja",
+      "outcome": "no_local_test_applicable_source_unverified"
+    }
+  },
+  {
+    "id": "28f58d27-44b0-4dc1-8dfd-975ea503842c",
+    "title": "r/LocalLLM · DQknIe9pSJ",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLM/s/DQknIe9pSJ",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 38,
+    "analysis": {
+      "status": "Sin prueba local adicional; relacionado con el A/B preregistrado #35",
+      "finding": "El post describe Strata 0.1.44.1, Qwen3.8-Flash-Next ISTA IQ3_XXS, Tesla P40 + GTX 1080, 48 GB RAM y max-context 262144. Combina MTP/spec, KV int8, resident-experts, trim-stage-weights, adapt-async, suffix-draft, pipeline-windows 2 y variables de entorno. Reporta decode de 30–40 a 40–60+ tok/s respecto de Strata 0.1.42, sin aislar versión y cambios ni medir calidad. No reporta una prueba de retrieval a 262K.",
+      "test": "No repetir comparación de IQ3_XXS: existe A/B local en 2x RTX 3090 y Strata 0.1.41 que cerró 45/51 vs 51/51 criterios finales; la diferencia de decode de 3,7% quedó dentro de rangos solapados. La prueba de contexto 0 vs 2 para pipeline-windows ya está preregistrada como VF-20261019-01-S35-PIPELINE-AB. No combinar el resto de flags ni actualizar el runtime a partir de esta corrida anecdótica.",
+      "applicability": "Referencia de configuración para GPUs mixtas y RAM limitada; no transferir layer split, flags agrupados ni estimación de velocidad al perfil ASTRA local.",
+      "historyCheck": "No es duplicado del post #35: título, autor y hardware difieren, aunque ambos incluyen pipeline-windows 2. Reutiliza sólo ese flag en la prueba preregistrada #35. La evidencia local de retrieval IQ3_XXS cerca de 255K ya recuperó 3/3; ASTRA 1M está documentado como contexto configurado, no como validación general de calidad.",
+      "sourceVerification": "Post abierto y configuración revisada. La release oficial de Strata 0.1.44.1 confirma la versión citada; sus notas no atribuyen el salto de rendimiento del post a un cambio específico.",
+      "reviewedAt": "2026-10-20",
+      "priority": "Baja",
+      "relatedExperiment": "VF-20261019-01-S35-PIPELINE-AB",
+      "outcome": "review_complete_no_new_test_related_to_source35"
+    }
+  },
+  {
+    "id": "32da2f25-47d7-42f7-8c21-eaffc678f788",
+    "title": "r/LocalLLM · ToJWnyuSM2",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLM/s/ToJWnyuSM2",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 39,
+    "analysis": {
+      "status": "Bloqueado antes de benchmark; requiere fixture experto de dominio",
+      "finding": "El post pide un modelo local general para tareas no relacionadas con programación, en especial impuestos, derecho, finanzas, investigación con herramientas y redacción. El ejemplo es calcular ingresos mensuales de 10 ETH mediante Lido CSM. Las respuestas del hilo discrepan y la pregunta no especifica si los 10 ETH son stake del usuario o bond/colateral de un operador. Comentarios sugieren OrcaSAQ-2-Cyber-27B o Gemma 4 sin comparación controlada.",
+      "test": "No ejecutar un benchmark de consejos financieros con un único caso del foro. Desbloquear sólo con una suite congelada y revisada por una persona experta del dominio, que defina supuestos, fuentes, fecha de corte y oráculo. El screening debería medir detección de ambigüedad, petición de datos faltantes, citas verificables y cálculo reproducible frente al modelo productivo y un candidato fijado; no basta para recomendar el mejor modelo general ni para validar asesoramiento profesional.",
+      "applicability": "Tarea potencial de investigación no-coding con herramientas; no coincide con la suite de coding/agentes ni existe fixture financiero Lido local.",
+      "historyCheck": "No se encontró fixture local dedicado a Lido, staking, impuestos, derecho o consejos financieros. El hilo no es duplicado exacto de #1–#38. La documentación primaria de Lido confirma que la recompensa CSM incluye recompensa de operador y rebase de bond y depende de parámetros/circunstancias; una cifra mensual no es estable sin fijar inputs.",
+      "sourceVerification": "Post y comentarios abiertos. Contraste con documentación primaria vigente de Lido CSM Rewards y Accounting. Las sugerencias de OrcaSAQ-2-Cyber-27B y Gemma 4 son opiniones del hilo y no evidencia de calidad.",
+      "reviewedAt": "2026-10-20",
+      "priority": "Media",
+      "outcome": "blocked_high_stakes_domain_eval_requires_expert_approved_fixture"
+    }
+  },
+  {
+    "id": "40bdbfda-f0aa-400e-924c-b502ded075ff",
+    "title": "r/LocalLLM · awVfSQ0lUq",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLM/s/awVfSQ0lUq",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Revisado · sin prueba local nueva aplicable",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 40,
+    "analysis": {
+      "status": "Sin prueba local nueva aplicable",
+      "finding": "El autor reporta que Qwen3.8-Flash-Next GSQ-RCO IQ1_M consumió más de 200K tokens con una compactación sin terminar una tarea Plymouth, en Strata/HIP modificado para RX 6600M no soportada. Los comentarios discrepan.",
+      "test": "No repetir un benchmark ni abrir una corrida de modelo: no hay fixture reproducible y la fuente no corresponde al perfil productivo. Los tests locales existentes cubren tres copias textuales largas y llamadas idénticas a herramientas, no análisis no repetitivo a través de compactaciones.",
+      "applicability": "Baja; no es el IQ2_XS productivo ni la revisión Coder IQ1_M del screen #7.",
+      "historyCheck": "No duplicada. Relacionada con #7 por familia IQ1_M; #7 evalúa un checkpoint Coder distinto y BCB-Hard-8.",
+      "priority": "Baja",
+      "reviewedAt": "2026-10-20T06:11:44Z",
+      "sources": [
+        {
+          "label": "Post y comentarios originales",
+          "url": "https://www.reddit.com/r/LocalLLM/comments/1x5m9pn/got_qwen38flashnextgsqrcoiq1_m_running_on_8gb/"
+        },
+        {
+          "label": "Evidencia local del screen #7",
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/RESULTS.md"
+        },
+        {
+          "label": "Guardas de repetición del agente",
+          "path": "src/core/agent/LlamaAgentBackend.cpp"
+        },
+        {
+          "label": "Pruebas de guardas",
+          "path": "tests/test_agent_wire.cpp"
+        }
+      ],
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "status": "No test run; no download/build/API/GPU use.",
+        "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-40-review.json",
+        "resumeWhen": "A supported local setup reproduces the issue with a pinned checkpoint and frozen task/scoring oracle."
+      }
+    }
+  },
+  {
+    "id": "a196b61a-0837-405a-b5c1-529be0be9bf8",
+    "title": "r/LocalLLaMA · J5amhGFSDu",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLaMA/s/J5amhGFSDu",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 41,
+    "analysis": {
+      "status": "A/B completado; gate no pasa; conservar control",
+      "finding": "39/39 finales en ambos brazos; primera pasada 32/39 candidato vs 33/39 control; mediana de suite +14,08%; fallos de tools 3 vs 1, redundantes 7 vs 7. 111/111 trazas candidatas p=1 y 102 controles sin override. Gate fallido.",
+      "test": "No repetir el A/B de temperatura, que ya dio los mismos loops con 0.1/0.6/1.0. Se preregistró un factor nuevo: presence_penalty 0 vs 1.0, mismos IQ2_XS/Strata 0.1.41/1M, TaskFlow ULTRA y 3 seeds pareadas.",
+      "applicability": "Alta para el loop reproducido en el perfil ASTRA actual; los reportes de calidad del engine y velocidad no son comparables por mezclar modelos/cuants.",
+      "historyCheck": "No duplicada. Relacionada con #25 (sampling/temp) y #40 (loops), pero añade una variable no probada localmente: presence_penalty.",
+      "priority": "Media · A/B de sampling",
+      "reviewedAt": "2026-10-20T06:15:21Z",
+      "sources": [
+        {
+          "label": "Post y comentarios de r/LocalLLaMA",
+          "url": "https://www.reddit.com/r/LocalLLaMA/comments/1x5cdht/real_downsides_of_strata/"
+        },
+        {
+          "label": "Ficha oficial Qwen",
+          "url": "https://huggingface.co/Qwen/Qwen3.8-Flash-Next"
+        },
+        {
+          "label": "PR Strata #1274",
+          "url": "https://github.com/Niko1221/Strata/pull/1274"
+        },
+        {
+          "label": "A/B local de temperatura",
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261014-STRATA-IQ2XXS-SAMPLING/RESULTS.md"
+        }
+      ],
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "status": "Completado",
+        "experimentId": "VF-20261019-01-S41-PRESENCE-AB",
+        "plan": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/PLAN-source-41.md",
+        "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-41-review.json",
+        "preregistration": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-41-prereg.json",
+        "result": "39/39 finales en ambos brazos; primera pasada 32/39 candidato vs 33/39 control; mediana de suite +14,08%; fallos de tools 3 vs 1, redundantes 7 vs 7. 111/111 trazas candidatas p=1 y 102 controles sin override. Gate fallido.",
+        "decision": "Mantener presence_penalty=0.0. No promover ni repetir este A/B; reabrir sólo con hipótesis o métrica nueva.",
+        "artifacts": "Q-20261020-VF-20261019-01/RESULTS.md; receipts/source41/final-ab-close.json; receipts/source41/pair-seed-4243-close.json",
+        "resourceUse": {}
+      },
+      "nextAction": "Mantener presence_penalty=0.0. No promover ni repetir este A/B; reabrir sólo con hipótesis o métrica nueva."
+    }
+  },
+  {
+    "id": "a7cf13ee-564b-48de-ba26-55184cd13324",
+    "title": "r/LocalLLM · Jn8JBhjjQn",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLM/s/Jn8JBhjjQn",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Revisado · sin prueba local aplicable",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 42,
+    "analysis": {
+      "status": "Sin prueba local aplicable a los perfiles actuales",
+      "finding": "prefix-head reemplaza la cabeza de salida, reporta menos KL en head swaps y hasta 2.4x en Gemma 3 270M CPU; no publica evaluación downstream de coding/agente.",
+      "test": "No probar en el perfil productivo. La implementación visible es un runtime mínimo CPU para Gemma3 270M más scripts de swap/KL; no hay integración local de la arquitectura.",
+      "applicability": "Investigación de arquitectura y eficiencia CPU para un modelo minúsculo; no candidata para ASTRA IQ2_XS/Strata en las dos RTX 3090.",
+      "historyCheck": "No duplicada ni relacionada con un experimento local previo del mismo método.",
+      "priority": "Baja",
+      "reviewedAt": "2026-10-20T06:17:16Z",
+      "sources": [
+        {
+          "label": "Post y comentarios originales",
+          "url": "https://www.reddit.com/r/LocalLLM/comments/1x1yv01/sorting_the_vocabulary_by_spelling_makes_gemma_3/"
+        },
+        {
+          "label": "Repositorio, código y resultados",
+          "url": "https://github.com/lucasrgt/prefix-head"
+        },
+        {
+          "label": "Registro archivado",
+          "url": "https://doi.org/10.5281/zenodo.23271285"
+        }
+      ],
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "status": "Sin descarga, build, requests ni GPU.",
+        "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-42-review.json",
+        "resumeWhen": "Se abre una decisión de producto para un modelo CPU-first pequeño o una integración de output head y se define un holdout downstream de coding/agente."
+      }
+    }
+  },
+  {
+    "id": "78c738c9-d750-4dd5-9447-8a698d8b067a",
+    "title": "r/LocalLLM · dqss6PMmGQ",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLM/s/dqss6PMmGQ",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 43,
+    "analysis": {
+      "status": "Screen completado; gate no pasa; Maya eliminada tras autorización explícita; ASTRA preservado",
+      "finding": "Tres pares BCB-Hard-8, 32K, 24/24 transportes por brazo: Maya-S24 5/24 y ASTRA/Qwen 5/24; wins/losses/ties 3/3/18. Mediana 6053,1 ms vs 2343,0 ms (2,58×). No hubo ventaja de calidad observada y Maya fue más lenta.",
+      "test": "A/B escalonado GLM-5.3-Flash Maya-S24 frente a ASTRA Qwen3.8-Flash-Next IQ2_XS: BCB-Hard-8 x 3 seeds, luego Hard Mode 28x3 sólo si pasa el gate.",
+      "applicability": "Maya no se promueve para coding local (igual score y 2.58x más lenta en el screen); no se localizó uso PeritoSoft. Tras autorización del usuario se retiraron los pesos/pack del HDD extra y se conservaron metadatos/recibos. Qwen Flash-Next ASTRA y SOL permanecen intactos.",
+      "historyCheck": "No duplicada. #13 menciona GLM al evaluar Harness²; la auditoría GLM del 14/09 cubría otra cuantización/ruta.",
+      "priority": "Alta",
+      "experimentId": "VF-20261019-01-S43-GLM-MAYA-S24-AB",
+      "reviewedAt": "2026-10-21",
+      "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-43-review.json",
+      "plan": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/PLAN-source-43.md",
+      "nextAction": "No re-descargar salvo una nueva decisión de producto; ASTRA continúa como default. Maya weights/pack eliminados (95,645,587,264 B); la evidencia S43 y hash/manifest quedan preservados.",
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "status": "completed_no_promotion_weights_deleted_by_user_authorization",
+        "result": "Tres pares BCB-Hard-8: Maya-S24 5/24, ASTRA/Qwen 5/24; wins/losses/ties 3/3/18; mediana wall/task 6053.055ms vs 2343.04ms (2.5834x). Maya no ganó calidad y fue más lenta. Los tres GGUF shards y pack/dense.bin fueron eliminados del HDD extra por autorización del usuario; se liberaron 95,645,597,696 B netos de espacio según df.",
+        "decision": "Cerrar sin promoción; no repetir ni descargar nuevamente salvo una nueva decisión concreta. Mantener ASTRA como default.",
+        "artifacts": "Q-20261020-VF-20261019-01/RESULTS.md; PLAN-source-43.md; receipts/source43/final-screen-summary.json; receipts/storage-cleanup/maya-s24-quarantine-transfer.json; Q-20261021-VF-RECONCILE-PENDING/receipts/maya-s24-weight-cleanup.json",
+        "resourceUse": {},
+        "deletedModelBytes": 95645587264,
+        "freeSpaceDeltaBytes": 95645597696,
+        "peritoSoftExactMatches": 0,
+        "protectedModelsUntouched": [
+          "Qwen Flash-Next ASTRA",
+          "SOL"
+        ]
+      }
+    }
+  },
+  {
+    "id": "16a31f06-933d-4d9c-96e2-d94f156d193d",
+    "title": "r/LocalLLM · vaOhkXlA0M",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLM/s/vaOhkXlA0M",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 44,
+    "analysis": {
+      "status": "Sin prueba aplicable al perfil general; reabrir sólo para un uso especialista Python con fixture reproducible.",
+      "finding": "REAP144 Coder reporta 48/48 intentos Q4/Q3 en su evaluación propia, pero no compara Qwen. La tarjeta upstream limita el modelo a coding Python y advierte errores/loops fuera del dominio incluso en Q8.",
+      "test": "No correr contra el perfil productivo C++/QML. Si se define un flujo Python-only y hay tareas representativas reproducibles, hacer screening pareado de 5–6 tareas contra ASTRA con mismo harness; sandbox desechable sin red ni secretos.",
+      "applicability": "No es candidato a reemplazo general. Podría ser perfil especialista Python; no hay fixture ni caso de uso local confirmado.",
+      "historyCheck": "No duplicada. Relacionada con #43 por familia GLM, pero checkpoint, quant/calibración y decisión distintos. Búsqueda local exacta no encontró peso/perfil/fixture REAP144.",
+      "priority": "Baja; condicional a un caso Python-only.",
+      "reviewedAt": "2026-10-20T06:27:59Z",
+      "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-44-review.json"
+    }
+  },
+  {
+    "id": "f9b057e5-142e-4c74-a415-c888e0ba8bca",
+    "title": "r/virtualreality · m5f4MTHxWi",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/virtualreality/s/m5f4MTHxWi",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 45,
+    "analysis": {
+      "status": "No aplica",
+      "finding": "Reseña de un mod VR de Max Payne 2 con comentarios sobre PSVR2, gatillos adaptativos y ajustes; no trata IA ni LlamaCode.",
+      "test": "No crear prueba en esta cola.",
+      "applicability": "Fuera de alcance.",
+      "historyCheck": "No duplicada dentro del lote; material ajeno al área de evaluación.",
+      "priority": "Ninguna",
+      "reviewedAt": "2026-10-20T06:28:23Z",
+      "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-45-review.json"
+    }
+  },
+  {
+    "id": "07e3d1ea-d77d-41c6-a27c-190107a5e04c",
+    "title": "r/LocalLLaMA · YSr44hoY58",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLaMA/s/YSr44hoY58",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 46,
+    "analysis": {
+      "status": "Sin prueba local nueva aplicable",
+      "finding": "El post informa +8% chat/+4,2% coding con N+2 en un Mac M5 con streaming SSD. El README del fork actual publica otros porcentajes (12%/16%) frente a su guess por defecto y lo limita a Apple Silicon/Metal; no hay CUDA ni mejora de calidad (18/20 igual al control).",
+      "test": "No repetir ahora: auditorías locales ya cubrieron lookahead/caché MoE y las limitaciones SSD; el fork es Metal-only. Reabrir con port CUDA/SM86 y decisión de SSD-offload, con A/B pareado de guesser off/on, exactitud y lecturas, luego contexto/performance/BCB.",
+      "applicability": "Conceptualmente relacionada con Flash-Next, pero no aplicable al Strata/CUDA productivo actual.",
+      "historyCheck": "No duplicada en lote. Relacionada con las auditorías locales Slotstream y SSD/lazy-mode; distinta implementación/guesser.",
+      "priority": "Baja; condicionada a port CUDA y decisión SSD-offload.",
+      "reviewedAt": "2026-10-20T06:29:10Z",
+      "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-46-review.json"
+    }
+  },
+  {
+    "id": "fe93c5cb-83b1-4db3-9275-2dd60ba6fe8b",
+    "title": "Threads · BAlJ4iWIw4",
+    "kind": "url",
+    "content": "https://www.threads.com/share/BAlJ4iWIw4/",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 47,
+    "analysis": {
+      "status": "Bloqueada: fuente primaria no accesible",
+      "finding": "Threads no fue accesible y la búsqueda exacta del ID no encontró copia. El apunte preliminar del inbox menciona KytyPS5, pero no se verificó.",
+      "test": "No derivar prueba sin contenido verificable. Si una captura/transcripción confirma que trata sólo de emulación VR, marcar fuera de alcance.",
+      "applicability": "Indeterminada hasta poder leer el contenido; no asumir la extracción preliminar como evidencia.",
+      "historyCheck": "No duplicada comprobada. #37 es otro share no accesible y con tema preliminar distinto (Cloudflare).",
+      "priority": "Pendiente de evidencia",
+      "reviewedAt": "2026-10-20T06:29:43Z",
+      "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-47-review.json"
+    }
+  },
+  {
+    "id": "6fc1e95a-61cb-4e6e-abcf-fd6c432271b6",
+    "title": "Threads · BAC2WEIiyE",
+    "kind": "url",
+    "content": "https://www.threads.com/share/BAC2WEIiyE/",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 48,
+    "analysis": {
+      "status": "Bloqueada: share no accesible",
+      "finding": "Threads no fue accesible y la búsqueda exacta del ID + Plexo no encontró copia atribuible. La nota preliminar del inbox menciona un gestor de descargas, pero no se pudo confirmar.",
+      "test": "No proponer prueba a partir de la nota sola. Reabrir con captura/transcripción/mirror; si confirma un descargador, sólo evaluar si surge una necesidad concreta de integridad/reanudación en la descarga de modelos.",
+      "applicability": "No se puede establecer sin leer la fuente primaria.",
+      "historyCheck": "Duplicidad indeterminada por falta de contenido verificable.",
+      "priority": "Pendiente de evidencia",
+      "reviewedAt": "2026-10-20T06:30:02Z",
+      "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-48-review.json"
+    }
+  },
+  {
+    "id": "bf616f61-43cc-44eb-87ba-0dc11f8328f1",
+    "title": "Threads · BATVtOlrkc",
+    "kind": "url",
+    "content": "https://www.threads.com/share/BATVtOlrkc/",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 49,
+    "analysis": {
+      "status": "Evaluado; P4 parser 6/6 en holdout sintético; conservar candidato OCR aislado para integración opt-in; share de Threads sin verificar",
+      "finding": "P4 confirmó valor incremental limitado en el holdout sintético: el parser recuperó tabla 24/24 y orden de columnas 8/8; Tesseract dio 0/24 y falló el orden. El share BATVtOlrkc no fue verificable, por lo que no se le atribuyen estas afirmaciones.",
+      "test": "P1-P4 completados en entorno aislado: P4 sintético 6/6 con parser preregistrado; CER limpio0/degradado0,00758, formulario6/6, tabla24/24, dos columnas8/8 y listado multipágina correcto. Tesseract 5.3.4 iguala texto/formularios/listado y falla tablas/orden. Próximo: sólo preregistrar prueba opt-in Data Lab, sin tocar app ni producción.",
+      "applicability": "OCR estructurado para documentos escaneados en Data Lab; especialista, no sustituye modelos generales productivos. Retener aislado tras P4; no promover. Proteger Qwen Flash-Next ASTRA/SOL y modelos PeritoSoft.",
+      "historyCheck": "No duplicada. Existe OCR para escritorio, pero no para extracción de documentos; ningún registro previo de Unlimited-OCR en la cola.",
+      "priority": "Media; OCR especialista para Data Lab, pendiente integración opt-in y validación real/autorizada.",
+      "reviewedAt": "2026-10-20T20:53:17Z",
+      "experimentId": "VF-20261019-01-S49-UNLIMITEDOCR-DATALAB-SCREEN",
+      "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-49-review.json",
+      "plan": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/PLAN-source-49.md",
+      "testReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-49-p4-final-result.json",
+      "sheetUpdateReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/google-sheet-s49-update.json"
+    }
+  },
+  {
+    "id": "ab4f383a-7e88-47cf-ba6e-9c582159a779",
+    "title": "r/LocalLLaMA · p2sNwgx245",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLaMA/s/p2sNwgx245",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 50,
+    "analysis": {
+      "status": "Sin prueba local nueva; usar sólo como shortlist",
+      "finding": "Whatmodel.sh combina muchos benchmarks con un modelo latente de un factor. README actual: 22.192 resultados, 574 benchmarks, 880 modelos; post decía 19.731. El autor reconoce que scores son mayormente FP, RAM estimada para contexto modesto y Strata aún no modelado al publicar el hilo.",
+      "test": "No correr el leaderboard. Si aparece un candidato concreto, verificar quant/revisión/runtime/licencia y ejecutar suites locales; comparar score de tarea y tiempo total.",
+      "applicability": "Filtro de descubrimiento/capacidad, no reemplaza pruebas agentivas/coding ni el preflight real de Strata.",
+      "historyCheck": "No duplicada. Relacionada con #24, otro índice compuesto con metodología distinta.",
+      "priority": "Baja",
+      "reviewedAt": "2026-10-20T06:32:55Z",
+      "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-50-review.json"
+    }
+  },
+  {
+    "id": "f9889740-11d6-4fc4-a957-3f7162b0e9b3",
+    "title": "r/LocalLLM · rdxMXJHuEQ",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLM/s/rdxMXJHuEQ",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado · Q97 gate Swift no alcanzado; Q111 8/8 confirma guard dual-3090 con PSI moderada sin aborto/OOM.",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 51,
+    "analysis": {
+      "status": "Q97 completo: Swift 1.5 y ASTRA empataron 2/8, mismo par aprobado; no pasó el gate",
+      "finding": "El artículo Hashnode vinculado desde Reddit responde 403. El hilo reporta un solo ejercicio estadístico con ruido y afirma una mejora de tiempo al usar Swift 1.5, pero no prueba coding general. La ficha primaria de UkisAI reporta, con BF16 y cinco seeds, LiveCodeBench v6 81,71% vs 76,76% base y Terminal-Bench 2.1 72,13% vs 69,21%; publica además GSQ-RCO IQ2_XS de 8,42 GB (8,77 GB con MTP). Es un candidato local de coding, no una superioridad demostrada en la cuantización/harness de LlamaCode. Q87 confirma carga del GGUF estándar en ambas RTX 3090, pero el canario de 64 tokens devolvió texto repetido/corrupto y finish_reason=length; no acredita calidad/velocidad. Q97 evaluó el GGUF estándar exacto ya usado en Q87/Q88: Swift obtuvo 2/8 y ASTRA 2/8, mismos dos casos; Swift fue 2.46× más lento E2E en una semilla.",
+      "test": "Q97 ya ejecutó el screen BCB-Hard-8 emparejado con seed 4242, contexto 8192 y ambas RTX 3090 +128 GB por brazo serial; no repetir el mismo SHA/harness.",
+      "applicability": "Hipótesis directa para un perfil local de coding/agentes: el model card oficial incluye LiveCodeBench y Terminal-Bench. Los resultados BF16 del fabricante no transfieren al quant GSQ-RCO ni a LlamaCode; debe decidir el screen local. La comparación no aísla fine-tuning de quant/runtime.",
+      "historyCheck": "No hay duplicado exacto en las 57 entradas. #25 trata temperatura en otra tarea/quant; #30 compara otros checkpoints Qwen en Tetris; #43 evalúa GLM Maya. Localmente ASTRA IQ2_XS obtuvo HE20 20/20 tras una reparación, BCB8 8/8 y Hard Mode 77,98/100; TC-92 filtró tenants en las tres semillas. El informe de compactación local usa Qwen3.5 4B/9B y cubre otra hipótesis. El pedido de contexto es #57.",
+      "priority": "Alta · Qwen3.8-27B/Swift; prueba local completada, gate no alcanzado",
+      "reviewedAt": "2026-10-24T17:08:11Z",
+      "experimentId": "VF-20261019-01-S51-SWIFT15-QWEN38-CODING-AB",
+      "plan": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/PLAN-source-51.md",
+      "sourceReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-51-review.json",
+      "preregReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-51-prereg.json",
+      "resourceUse": {
+        "downloaded": true,
+        "built": false,
+        "gpuSeconds": 4,
+        "gpuSecondsEstimate": true,
+        "modelRequests": 1
+      },
+      "outcome": "both_arms_exact_smoke; no_quality_or_benchmark_claim",
+      "execution": {
+        "taskId": "Q-20261024-VF-ITERATION-97",
+        "status": "Completado; sin pase de adopción",
+        "result": "Swift 2/8 vs ASTRA 2/8; mismos IDs aprobados 870 y 310; transporte 8/8 por brazo; sandboxErrors=0/noFinal=0. Prefill Swift/ASTRA 538.55/366.36 tok/s; decode 48.34/121.61 tok/s; E2E medio 50.233/20.407 s/tarea (una semilla).",
+        "decision": "No adoptar ni repetir igual. No hay mejora de calidad; Swift fue 2.46× más lento E2E en este screen.",
+        "next": "Sólo reabrir ante cambio material de pesos, runtime, sampling o workload. El hash Swift 714c509c3fc496ea4abc409097658df7cd218bc966f78e1459fc1649758a9de8 es el mismo artefacto Q87/Q88/Q97.",
+        "artifacts": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-97/RESULTS.md; receipts/q97-final-result.json; runs/astra/bcb8-result.json; runs/swift/bcb8-result.json"
+      },
+      "latestRevalidation": {
+        "taskId": "Q-20261024-VF-ITERATION-87",
+        "reviewedAt": "2026-10-24T16:55:50Z",
+        "finding": "Q87 cargó el GGUF estándar en ambas RTX 3090 con tensor-split 1,1 (VRAM 5681/4710 MiB frente a 1056/110 MiB previos; ambas llegaron a ~98–99% durante la respuesta). El canario único no devolvió SWIFT27B_READY: salida repetida/corrupta y finish_reason=length al límite de 64 tokens. TTFT 520.65 ms y total 1696.93 ms son sólo telemetría de una solicitud inválida, no benchmark. Servidor terminó con código 0, puerto 18787 libre y no quedaron procesos de inferencia. GGUF metadata reports n_ctx=262144; Q87 loaded at 8192 only, so context expansion remains untested.",
+        "decision": "No model adoption or broad quality/speed conclusion. Further diagnostic requires a separate preregistration; both GPU participation and clean process cleanup were verified.",
+        "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-87/receipts/swift27b-no-mtp-canary-run.json",
+        "resourceUse": {
+          "downloaded": true,
+          "built": false,
+          "gpuSeconds": 4,
+          "gpuSecondsEstimate": true,
+          "modelRequests": 1
+        }
+      },
+      "activeTask": {
+        "taskId": "Q-20261024-VF-ITERATION-88",
+        "experimentId": "VF-20261019-01-S51-SWIFT27B-OUTPUT-DIAGNOSTIC",
+        "status": "completed",
+        "completedAtUtc": "2026-10-24T17:08:11Z",
+        "preregReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-88/receipts/swift27b-output-diagnostic-prereg.json",
+        "executionReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-88/receipts/swift27b-output-diagnostic-run.json",
+        "sheetSyncReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-88/receipts/google-sheet-sync-q88-final.json",
+        "resourceUse": {
+          "downloaded": false,
+          "built": false,
+          "gpuSecondsDirectMeasured": null,
+          "gpuSecondsEstimate": 4.65472,
+          "modelRequests": 2
+        }
+      },
+      "priorStatusBeforeQ87": "Revalidado: preregistro Strata/MTP4 incompatible; ruta estándar llama.cpp requiere A/B separado",
+      "decision": "No adoptar aún. Próximo paso: nueva prereg de calidad emparejada contra ASTRA con ambas RTX 3090/128 GB; verificar fixture/runtime/fingerprint del control. Contexto real probado 8192; 262144 sigue siendo sólo metadata.",
+      "latestExecution": {
+        "taskId": "Q-20261024-VF-ITERATION-88",
+        "experimentId": "VF-20261019-01-S51-SWIFT27B-OUTPUT-DIAGNOSTIC",
+        "status": "both_arms_exact_smoke",
+        "downloaded": true,
+        "built": false,
+        "gpuSeconds": null,
+        "gpuSecondsEstimate": 4.65472,
+        "gpuSecondsEstimateMethod": "Approximate two-GPU wall time summed across two serial arms; not device-counter measurement.",
+        "modelRequests": 2,
+        "profile": "2x RTX 3090, 128 GB RAM, tensor split 1,1, context 8192, KV q8_0, llama.cpp b11554/966baae76",
+        "armA": {
+          "response": "SWIFT27B_READY",
+          "finishReason": "stop",
+          "ttftMs": 334.52,
+          "e2eMs": 1162.57,
+          "prefillTokPerSec": 192.22,
+          "decodeTokPerSec": 55.54
+        },
+        "armB": {
+          "response": "SWIFT27B_READY",
+          "finishReason": "stop",
+          "ttftMs": 331.99,
+          "e2eMs": 1164.79,
+          "prefillTokPerSec": 193.67,
+          "decodeTokPerSec": 55.24
+        },
+        "result": "Q88 pasó el contrato exacto en ambos brazos con 2×RTX 3090 y tensor-split 1,1. Cada brazo devolvió SWIFT27B_READY / finish_reason=stop. TTFT 334.52/331.99 ms; E2E 1162.57/1164.79 ms; PP 192.22/193.67 tok/s; decode 55.54/55.24 tok/s. Son datos de un prompt diagnóstico por brazo, no benchmark. Ningún resultado de calidad, superioridad o contexto extendido.",
+        "evidence": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-88/RESULTS.md; artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-88/receipts/swift27b-output-diagnostic-run.json"
+      },
+      "revalidatedAtUtc": "2026-10-25T00:18:54Z",
+      "latestGuardAudit": {
+        "taskId": "Q-20261024-VF-ITERATION-111",
+        "status": "8/8 PASS",
+        "finding": "Q97 fue el guard real: 30 muestras para warning moderado, 15 para stop severo; corrida ASTRA completó bajo PSI moderada.",
+        "result": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-111/RESULTS.md"
+      }
+    }
+  },
+  {
+    "id": "7328368d-9daa-42cd-aeed-acda27474b8c",
+    "title": "r/Qwen_AI · W9BDKtP9M3",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/Qwen_AI/s/W9BDKtP9M3",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 52,
+    "analysis": {
+      "status": "Analizado · hipótesis de contexto ya validada por evidencia local existente",
+      "finding": "El post confirma el quant ISTA IQ3_XXS, RTX 5090 Mobile 24GB, Strata y 262K configurado; sus cifras 2500–3000 tok/s prefill y 100–130 decode son autorreportadas y no transferibles. Qwen oficial declara 262144 nativos y extensión hasta 1M.",
+      "test": "No repetir. Se reutiliza el screen local ya ejecutado: tres prompts de 255005 tokens API, facts en posiciones variadas y 3/3 exactos en cada corrida (9/9), Strata 0.1.41 y 2×RTX3090. No es prueba de 1M ni de coding. No copiar sugerencias de comentarios sobre draft-vocab/chunk.",
+      "applicability": "La capacidad de recuperación sintética cerca de 262K está validada para ISTA IQ3_XXS/Strata 0.1.41 en el host local; no confirma velocidad equivalente a 5090 Mobile ni una ventana ampliada para otros quants.",
+      "historyCheck": "El recibo existente forma parte del análisis local del pedido de contexto (#57); se comparte la evidencia y no se duplica inferencia. docs/qwen38-flashnext-iq3xxs-strata-ab-20261009.md registra que una sonda única a chunk 32768 bajó decode y elevó TTFT; no concluye sobre 8K/16K.",
+      "priority": "Resultado resuelto; sin test nuevo. Tuning sólo si aparece cuello de botella medido y se conoce la mezcla de idiomas.",
+      "reviewedAt": "2026-10-20T06:38:55Z",
+      "existingArtifact": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/iq3xxs-context262k-multifact.json",
+      "sourceReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-52-review.json",
+      "resourceUse": {
+        "newDownload": false,
+        "newBuild": false,
+        "newGpuSeconds": 0,
+        "newModelRequests": 0
+      }
+    }
+  },
+  {
+    "id": "7477e850-5ba6-4443-bb76-6e0f232afc2e",
+    "title": "r/LocalLLaMA · ICWx9hBUnb",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLaMA/s/ICWx9hBUnb",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 53,
+    "analysis": {
+      "status": "Revisado · sin prueba nueva; Q2_0 local ya no pasa el gate de coding",
+      "finding": "El hilo reúne opiniones contradictorias sin artefactos ni harness común. ISTA publica Q2_0, IQ2_XS e IQ3_XXS como quants distintos. El Q2_0 local dio 1/8 en BCB-Hard-8 dos veces; UD-Q2_K_XL dio 8/8 en una evaluación diferente y no es intercambiable.",
+      "test": "No repetir Q2_0/BCB ni el resultado de UD-Q2_K_XL. Si sigue abierta una decisión entre hashes exactos disponibles, preregistrar un screen apareado con el mismo harness y holdout no contaminado, midiendo calidad final, tools/schema, reparaciones y tiempo hasta aceptación.",
+      "applicability": "El resultado existente de Q2_0 no sustenta reemplazo. Diferentes quants y runtimes no establecen un ganador universal.",
+      "historyCheck": "Revisados docs/strata-qwen38-evaluation-20260930.md, artifacts/strata-evaluation-20260929/bcb8.json, artifacts/qwen38-q2-vs-sol-20260923.json y auditorías de calidad Flash-Next/27B.",
+      "priority": "Baja",
+      "reviewedAt": "2026-10-19",
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "status": "Sin prueba nueva aplicable",
+        "decision": "No promover Q2_0 a partir de esta fuente; no inferir Q2_0 desde UD-Q2_K_XL.",
+        "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-53-review.json"
+      }
+    }
+  },
+  {
+    "id": "72e1c64a-6d72-43e8-b713-c454df0e395c",
+    "title": "r/LocalLLaMA · OpenJet megakernel para Qwen3.8-27B",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLaMA/s/JrVG19fONx",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Cerrado · d4 pasa speed screen candidate-only; d7 y conducta no habilitan adopción",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 54,
+    "analysis": {
+      "status": "Cerrado · velocidad d4 reproducida; gate d7 y conducta sin pase para adopción",
+      "finding": "Q71 encontró ventaja de velocidad candidate-only para qwen38-perf d4 frente al control matched en 18 pares y tres workloads; d7 no alcanzó su umbral. Q74 cerró la batería de conducta con 7/12 aprobadas: TC-74 0/3 y TC-84 1/3. El pase TC-92 3/3 usa fixture sintética y no prueba autorización real.",
+      "test": "Q71: 36/36 runs y 18/18 pares válidos d4-vs-upstream; el gate candidate-only de velocidad pasó. Q71 d4-vs-d7: 36/36 válidos; d7 no pasó el gate. Q74: 12/12 ejecuciones técnicamente válidas, 7/12 conductuales aprobadas, sin medición de TPS/calidad general. No se repite la huella.",
+      "applicability": "No adoptar qwen38-perf para agentes. La señal de velocidad d4 queda como candidata separada; los fallos de llamadas dependientes/notificación bloquean el uso con tools. No hay otro test que cambie esta decisión sin cambio material de modelo, runtime u orquestador/backend.",
+      "historyCheck": "Q71/RESULTS.md y benchmark-analysis-01.json (d4); Q71/RESULTS.md y benchmark-draftdepth-analysis-01.json (d4 vs d7); Q-20261024-VF-ITERATION-74/RESULTS.md y RESULTS.json (conducta).",
+      "priority": "Media-alta · Qwen3.8-27B con comparación local de runtime pendiente; no se permite inferir adopción desde el reporte externo.",
+      "reviewedAt": "2026-10-23",
+      "resolvedUrl": "https://www.reddit.com/r/LocalLLaMA/comments/1x37q7b/update_qwen_38_27b_140_toks_on_single_rtx_3090/",
+      "execution": {
+        "taskId": "Q-20261024-VF-ITERATION-82",
+        "sourceExecutions": [
+          "Q-20261023-VF-ITERATION-71",
+          "Q-20261024-VF-ITERATION-74"
+        ],
+        "status": "reconciled_no_new_test_unlocked",
+        "result": "d4 pasa sólo velocidad candidate-only; d7 no pasa; Q74 conducta 7/12; no adopción para agentes.",
+        "decision": "No repetir huella ni lanzar nueva inferencia sin cambio material y preregistro.",
+        "pending": null,
+        "artifacts": "Q71/RESULTS.md; Q74/RESULTS.md; Q82/RESULTS.md"
+      },
+      "revalidation": {
+        "taskId": "Q-20261022-VF-ITERATION-33",
+        "checkedAtUtc": "2026-10-22T12:14:00.489890Z",
+        "status": "Bloqueado antes de inferencia; cuatro intentos anteriores ya probaron el mismo SHA",
+        "finding": "La instrucción del usuario habilitó explícitamente evaluar Qwen3.8-27B single-RTX3090. En el host actual no hay inference servers y hay CUDA 12.0; el GGUF local conserva tamaño/mtime del SHA fijado, declara 64 bloques y el kernel OpenJet fijado exige 65. El upstream master sigue en el commit probado; no apareció un GGUF Q4_K_M+MTP compatible en los roots conocidos.",
+        "decision": "No repetir el gate, no compilar ni modificar kernel; sin requests del candidato y sin claim de velocidad local. Reabrir ante modelo 65-block compatible o soporte explícito del SHA actual. Mantener los fallos de seguridad TC-74/84/92 como barrera independiente de adopción.",
+        "evidence": "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-33/receipts/preflight.json; receipts/openjet-gate.json; ../Q-20261021-VF-FINISH-PENDING/receipts/openjet-speed-attempt-04-blocked-dimensions-20261021.json"
+      },
+      "q70Followup": {
+        "taskId": "Q-20261023-VF-ITERATION-70",
+        "checkedAtUtc": "2026-10-23T22:42:00Z",
+        "status": "Claim nuevo accionable; no se ejecutó benchmark",
+        "finding": "El log Q55 A3 presenta tres RuntimeError(prefill) vacíos sin CUDA/OOM; el código disponible no identifica causa ni habilita una corrección. OpenJet issue #22 enlaza la rama qwen38-perf con resultados de velocidad publicados.",
+        "nextGate": "Resolver commit SHA completo, auditar licencia/source/model SHA, preregistrar comparación y correr fresh preflight bajo nuevo lock antes de descarga/build/GPU.",
+        "evidence": "artifacts/evaluacion-modelos-llamacode/Q-20261023-VF-ITERATION-70/RESULTS.md; receipts/openjet-q55-prefill-log-audit.json; receipts/upstream-claim-review.json",
+        "sheetReadback": "Accionables!A8:N8; Inventario de modelos!A10:R10; Evaluaciones LlamaCode!A291:J291; Accionables!A55:N55 quedó sin datos."
+      },
+      "nextAction": "Sin prueba nueva habilitada. Reabrir únicamente tras cambio material de modelo/runtime/orquestador/backend o nuevo workload representativo con preregistro."
+    },
+    "reviewedAt": "2026-10-24"
+  },
+  {
+    "id": "04e72a9e-0b8a-4190-b1d9-fd4f184ed61a",
+    "title": "r/LocalLLM · uq5CcakCMv",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLM/s/uq5CcakCMv",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado · Q56 gate candidato JSON crudo 3/3; sin mejora semántica/velocidad ni cambio productivo",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 55,
+    "analysis": {
+      "status": "Analizado · Q56 gate candidato JSON crudo 3/3; sin mejora semántica/velocidad ni cambio productivo",
+      "finding": "La publicación reporta 700K configurados y ~512K usados (73,1%) en IQ3_XXS/Strata/RTX5090; no es un holdout de retrieval. Q56 verificó tres fixtures sintéticos de ~680K en el host local. response_format pasó el gate de JSON crudo 3/3; tras normalizar una única cerca Markdown exterior, ambos brazos recuperaron 15/15 hechos. Esto valida sólo el fixture y el contrato de formato.",
+      "test": "Q56 ejecutó 6 requests seriales (3 pares) a ~680K: response_format=json_schema, JSON crudo exacto 3/3 y 15/15 hechos; plain estricto 2/3 y 10/15 bajo el parser crudo. El tercer plain contenía una sola cerca Markdown exterior; al quitar sólo esa cerca, JSON válido y 5/5 valores exactos, quedando 15/15 semánticos en ambos brazos. Medias plain 2548,62/104,27 tok/s y 268,361 s; schema 2530,47/102,37 tok/s y 270,338 s (+0,74%, n=3 descriptivo). Sin ventaja semántica ni de velocidad. response_format es guía de prompt + validación, no decodificación restringida.",
+      "applicability": "La decisión ahora es de consumo de formato para este modelo/runtime y fixtures sintéticos: si un consumidor necesita JSON crudo, usar response_format junto con validación de esquema; alternativamente retirar sólo una cerca Markdown exterior bien formada y validar. No demuestra retrieval general a 700K/1M ni justifica ampliar el contexto productivo. No repetir sin una fuente/holdout o un consumidor nuevo.",
+      "historyCheck": "El screen S55 original (2/3 JSON crudo; 15/15 hechos antes del gate) queda preservado en execution.priorScreen y en el snapshot Q69. Q56/Q68 cerró la hipótesis sin borrar el fallo histórico: la diferencia era una cerca Markdown exterior. Contrastar sólo con el mismo IQ3_XXS/runtime/contexto; no transferir resultados IQ2_XS, ASTRA ni SOL.",
+      "priority": "Media-alta para la solicitud de ventana de contexto",
+      "reviewedAt": "2026-10-23",
+      "execution": {
+        "taskId": "Q-20261023-VF-ITERATION-56",
+        "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-JSON-SCHEMA-AB-SSD",
+        "status": "completed_candidate_gate_pass",
+        "configuredMaxContext": 700000,
+        "runs": 6,
+        "apiPromptTokens": [
+          680006,
+          680217,
+          680220,
+          680009,
+          679974,
+          680185
+        ],
+        "exactFacts": {
+          "plainStrictRawJson": 10,
+          "plainAfterSingleOuterFenceNormalization": 15,
+          "jsonSchema": 15
+        },
+        "factsTotal": 15,
+        "strictBareJsonRuns": {
+          "plain": 2,
+          "json_schema": 3
+        },
+        "strictBareJsonRunsTotal": {
+          "plain": 3,
+          "json_schema": 3
+        },
+        "allFinishReasonStop": true,
+        "ooms": 0,
+        "memoryAvailableFloorGiB": 58.52,
+        "result": "Gate candidato de formato raw JSON: response_format 3/3; plain estricto 2/3 por una cerca Markdown exterior. Tras retirar únicamente esa cerca, ambos brazos son 15/15 hechos exactos. No hay ventaja semántica ni de velocidad; no cambia contexto/default/productivo.",
+        "evidence": "Q56/RESULTS.md; receipts/final-result.json; receipts/posthoc-json-fence-audit.json; receipts/700k-json-schema-ab-attempt-04.json",
+        "priorScreen": {
+          "taskId": "Q-20261020-VF-20261019-01",
+          "experimentId": "VF-20261019-01-S55-IQ3XXS-YARN700K-RETRIEVAL",
+          "status": "completed_screen_gate_failed",
+          "configuredMaxContext": 700000,
+          "runs": 3,
+          "apiPromptTokens": [
+            680006,
+            680009,
+            679974
+          ],
+          "exactFacts": 15,
+          "factsTotal": 15,
+          "strictBareJsonRuns": 2,
+          "strictBareJsonRunsTotal": 3,
+          "allFinishReasonStop": true,
+          "result": "Los tres prompts recuperaron sus cinco hechos (15/15 exactos). El tercero envolvió el JSON en una cerca Markdown; incumplió el contrato raw-JSON, por lo que sólo 2/3 ejecuciones son válidas para el gate preregistrado. No declarar el screen aprobado ni repetir sin nueva hipótesis.",
+          "evidence": "RESULTS.md lines 47-53, 749; receipts/source-55-retrieval700k.json; receipts/source-55-posthoc-audit.json"
+        },
+        "executionTaskId": "Q-20261023-VF-ITERATION-68",
+        "pairs": 3,
+        "bodyTokensRuntimeOffline": [
+          679995,
+          679995,
+          679998,
+          679998,
+          679963,
+          679963
+        ],
+        "requestOrder": [
+          "plain",
+          "json_schema",
+          "json_schema",
+          "plain",
+          "plain",
+          "json_schema"
+        ],
+        "means": {
+          "plain": {
+            "prefillTokensPerSecond": 2548.62,
+            "decodeTokensPerSecond": 104.27,
+            "elapsedSeconds": 268.361
+          },
+          "json_schema": {
+            "prefillTokensPerSecond": 2530.47,
+            "decodeTokensPerSecond": 102.37,
+            "elapsedSeconds": 270.338
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "6a9aeb90-e455-45b9-9e7c-978977ae2a18",
+    "title": "r/LocalLLM · 8aiTgFt5uS",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLM/s/8aiTgFt5uS",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado · Screen cerrado sin score tras cuatro fallos de arranque; no reintentar",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 56,
+    "analysis": {
+      "status": "Screen cerrado sin score tras cuatro fallos de arranque; no reintentar",
+      "finding": "El post compara recetas distintas en RTX5090: MMLU-Pro 12/14 empatado, basic 12/12, counting 0/1 para los tres; needle exacta ~248346 tokens para IQ3_S y UD-IQ4_XS, no coding y no generación sostenida a 240K. El resultado de velocidad no se transfiere a RTX3090.",
+      "test": "Screen cerrado tras cuatro intentos de arranque: cero respuestas válidas y ningún score. El intento final no llegó a READY; es un bloqueo de startup/I/O, no un fallo de calidad. No se reintenta según preregistro.",
+      "applicability": "S56 se cerró sin score: intentos 1–3 no produjeron respuesta válida y el intento 4 finalizó antes de READY mientras Strata estaba en estado D durante lectura de pesos; no se envió ninguna petición. El preregistro de S56 prohíbe más intentos de arranque. La evidencia local previa de esta cuantización llega a 117.825 tokens (7/7); ~248K no está validado. Reabrir sólo si cambia materialmente el problema de I/O/runtime y se registra un experimento nuevo antes de cargar GPU.",
+      "historyCheck": "Revisados docs/qwen38-flashnext-iq3xxs-strata-20261009.md, Q-20261014-IQ2XS-MISSING-MODALITIES/RESULTS.md y Q-20261019-STRATA-UDIQ4XS-REMAINING/RESULTS.md. IQ3XXS vs ASTRA ya evaluados en coding; Q4XS tiene resultado parcial con timeouts no reportables.",
+      "priority": "Media-alta para contexto; sin score de calidad nuevo",
+      "reviewedAt": "2026-10-19",
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "experimentId": "VF-20261019-01-S56-UDIQ4XS-NATIVE262K-RETRIEVAL",
+        "status": "closed_no_score_after_four_startup_attempts",
+        "attempts": 4,
+        "validResponses": 0,
+        "score": null,
+        "result": "Intentos 01/02 sin requests; intento 03 confirmó configuración y envió 247.474 tokens, pero el lector SSE expiró antes de recibir contenido; intento 04 no llegó a READY tras ~545 s en espera de I/O. Sin respuesta válida ni score. Infraestructura/arranque, no fallo de calidad del modelo; preregistro prohíbe reintentos.",
+        "evidence": "RESULTS.md line 661; receipts/source-56-attempt04-run-exit.json"
+      },
+      "nextAction": "Bloqueada para repetición: conservar el no-retry de S56. Habilitador concreto: causa de arranque/I-O corregida o runtime/pesos distintos, seguido de un preregistro nuevo para retrieval nativo ≤262144."
+    }
+  },
+  {
+    "id": "2bcadb12-6778-4188-a446-0c3324a1c4f8",
+    "title": "Pedido general · ampliar ventana de contexto",
+    "kind": "text",
+    "content": "Revisar si se puede aumentar la ventana de contexto de los modelos. Asociado al lote de enlaces Vector Fields Technologies del 19/10/2026.",
+    "receivedAt": "2026-10-19T18:13:58-03:00",
+    "status": "Analizado · S57 ASTRA IQ2_XS activó 1M; Q131 Q4 Flash-Next dual-3090 recuperó 10/10 a 262K; sin cambio de default.",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026",
+    "batchSequence": 57,
+    "analysis": {
+      "status": "S57 smoke de activación ASTRA IQ2_XS a 1M; follow-up Q131 Q4 Flash-Next a 262K PASS 10/10 sintético; no ampliar defaults.",
+      "finding": "ASTRA IQ2_XS inició con max_context efectivo 1.048.576 (origen 262.144, YaRN ×4) y respondió 19 tokens con HTTP 200/stop; no se repitió NIAH 1M.\n\nQ131 (2026-10-25): guard replay offline sobre ASTRA DEFAULT 1M Q117 (707/707) y SOL Q127 (157/157) sin falso stop. En una solicitud Q4 Flash-Next/Strata a contexto 262144, el holdout sintético recuperó 10/10 claves: 258029 prompt tokens, RSS de árbol 93.13 GiB, MemAvailable mínima 60.80 GiB, PSI some/full máximas 8.05%/7.54%, OOM 0 y sin abortar. Es una muestra de alta carga con headroom, no valida PSI severa alternada en el guard histórico ni diagnostica cierres de Codex.",
+      "test": "Smoke preregistrado completado en el intento 02: ASTRA IQ2_XS, max_context 1.048.576, origen 262.144, YaRN×4; endpoint/modelo esperado y generación corta de 19 tokens con HTTP 200/stop. No repetir NIAH 1M ni extrapolar a otros perfiles.\n\nQ131 (2026-10-25): guard replay offline sobre ASTRA DEFAULT 1M Q117 (707/707) y SOL Q127 (157/157) sin falso stop. En una solicitud Q4 Flash-Next/Strata a contexto 262144, el holdout sintético recuperó 10/10 claves: 258029 prompt tokens, RSS de árbol 93.13 GiB, MemAvailable mínima 60.80 GiB, PSI some/full máximas 8.05%/7.54%, OOM 0 y sin abortar. Es una muestra de alta carga con headroom, no valida PSI severa alternada en el guard histórico ni diagnostica cierres de Codex.",
+      "applicability": "Por perfil: ASTRA IQ2_XS: S57 confirmó max_context efectivo 1.048.576 (262.144 × YaRN 4) y 19 tokens HTTP 200/stop; no prueba retrieval largo ni calidad a 1M. IQ3_XXS: S55 probó tres prompts sintéticos de ~680K y recuperó 15/15 hechos tras normalizar una cerca exterior, pero sólo 2/3 fueron JSON crudo; no generalizar. UD-IQ4_XS: S56 terminó sin score antes de READY, con no-retry preregistrado; ~248K no validado (la evidencia previa es 117.825 tokens/7 hechos). SOL/QWEN35-A3B 262K; TERRA 64K según inventario. No elevar defaults globales. Q131 añade evidencia sólo para Qwen3.8 Flash-Next UD-Q4_K_XL/Strata a 262K en una solicitud sintética y dos RTX 3090; no valida calidad general, otros quants ni adopción. Mantener 131K como default productivo.",
+      "historyCheck": "Revisados docs/evaluacion-modelos-llamacode.md, Q-20261014-ASTRA-YARN-1M, Q-20261014-ISTA-NEEDLE-HAYSTACK, el resultado IQ3_XXS/262K de este lote y docs/profile-use-case-stars-20260908.md. La matriz de perfiles ya dice ASTRA 1M configurado; la anotación anterior que la marcaba a 131K quedó obsoleta. El archivo de config guardada no prueba por sí mismo que una instancia activa ya haya reiniciado.",
+      "priority": "Alta",
+      "reviewedAt": "2026-10-20",
+      "execution": {
+        "taskId": "Q-20261020-VF-20261019-01",
+        "experimentId": "VF-20261019-01-S57-ASTRA-1M-ACTIVATION-SMOKE",
+        "status": "passed",
+        "profileContext": 1048576,
+        "originalContext": 262144,
+        "ropeScaling": "yarn",
+        "ropeScale": 4,
+        "responseTokens": 19,
+        "httpStatus": 200,
+        "finishReason": "stop",
+        "result": "La configuración de 1M queda verificada al arranque y en una generación corta. Esto no es un retrieval largo ni validación de calidad a 1M; conservar límites por perfil y no elevar defaults globales.",
+        "evidence": "RESULTS.md lines 747-749; receipts/source-57-smoke-attempt02.json"
+      },
+      "nextAction": "Mantener límites por perfil. No repetir S56 mientras rija su no-retry; nuevo test ~248K sólo con causa de startup/I-O corregida y preregistro nuevo. S57 no habilita retrieval/calidad 1M.",
+      "revalidatedAtUtc": "2026-10-25T06:22:48.683449Z",
+      "followups": [
+        {
+          "taskId": "Q-20261025-VF-ITERATION-131",
+          "status": "completed · PASS 10/10 synthetic retrieval keys",
+          "model": "Qwen3.8 Flash-Next UD-Q4_K_XL / Strata 0.1.41",
+          "hardware": "2×RTX 3090 + 128 GiB RAM",
+          "contextTokens": 262144,
+          "promptTokens": 258029,
+          "result": "10/10 exact keys; prefill 1877.7 tok/s; decode 50.3 tok/s; request 143.836 s. RSS tree peak 93.13 GiB; MemAvailable min 60.80 GiB; global PSI some/full max 8.05%/7.54%; OOM 0; no abort.",
+          "decision": "Capacity under demand demonstrated for this synthetic request only; retain 131K product default and ASTRA/SOL unchanged; no Codex-crash attribution.",
+          "artifacts": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-131/RESULTS.md; artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-131/receipts/context262k-attempt-01.json; artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-131/receipts/q131-run-summary.json"
+        }
+      ]
+    },
+    "execution": {
+      "taskId": "Q-20261020-VF-20261019-01",
+      "experimentId": "VF-20261019-01-S57-ASTRA-1M-ACTIVATION-SMOKE",
+      "status": "passed",
+      "result": "ASTRA IQ2_XS inició con max_context efectivo 1.048.576 (origen 262.144, YaRN×4) y respondió 19 tokens con HTTP 200/stop; smoke de activación, no retrieval largo ni prueba de calidad a 1M.",
+      "decision": "Conservar límites por perfil; no elevar defaults globales ni extrapolar a otros quants.",
+      "artifacts": "Q-20261020-VF-20261019-01/RESULTS.md; receipts/source-57-smoke-attempt02.json",
+      "pending": null
+    },
+    "reviewedAt": "2026-10-21",
+    "revalidatedAtUtc": "2026-10-25T06:22:48.683449Z"
+  },
+  {
+    "id": "c2c3cadd-e9a0-4ceb-9cdb-fb3ddf87b81e",
+    "title": "Google Sheets · historial y depósito de pruebas",
+    "kind": "url",
+    "content": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit?gid=212274250#gid=212274250",
+    "receivedAt": "2026-10-20T03:51:34-03:00",
+    "status": "Migrado y verificado",
+    "batchId": "VF-20261019-01",
+    "batchLabel": "Vector Fields Technologies · 19/10/2026 + fuente complementaria",
+    "batchSequence": 58,
+    "analysis": {
+      "status": "Migrado y verificado (Q21) · snapshot: 149 IDs únicos de evaluación y 12 accionables",
+      "finding": "El workbook conserva la pestaña IA local y documenta 53 registros de inventario (20 C, 28 D, 3 presentes en HDD extra, 1 modelo retirado del HDD y 1 referencia histórica sin pesos; 51 assets/modelos presentes), incluyendo rutas, consumidores, bytes, TPS, benches, tiempos, contexto, runtime y sidecars. Evaluaciones LlamaCode contiene 149 IDs únicos: 58 fuentes, historial/experimentos y 12 accionables. La letra Windows de HDD extra no quedó verificada; no se inventó. Se retiraron de HDD extra 95,645,587,264 B de Maya-S24 tras gate fallido y autorización; Qwen ASTRA/SOL y PeritoSoft no se tocaron.",
+      "test": "Migración/verificación de datos sin GPU: anexar 12 accionables, reconciliar S55/S56/S57 y S43, actualizar inventario y lectura posterior de 149 IDs. Mantener IA local intacta; registrar la ruta Windows de HDD como no verificada.",
+      "applicability": "La migración fue escrita y verificada en Q21: 12 accionables anexados a Evaluaciones LlamaCode!A139:I150 y lectura de vuelta de 149 IDs únicos; el inventario de 53 filas y sus ocho celdas de contexto se verificaron entonces, con IA local preservada. Esos conteos son el snapshot histórico de Q21, no el total actual: el workbook recibió iteraciones posteriores hasta Q124 y continuó actualizándose. Las cuatro propuestas de esta fuente se clasificaron duplicadas de referencias existentes. No queda una escritura de migración pendiente.",
+      "priority": "Alta",
+      "reviewedAt": "2026-10-21",
+      "accessReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-58-sheet-refresh-20261020T141315Z.json",
+      "nextAction": "No repetir la migración ni inferir los conteos actuales a partir del snapshot Q21. Seguir sincronizando cada nuevo resultado/prueba en la pestaña correspondiente con lectura de vuelta.",
+      "execution": {
+        "taskId": "Q-20261021-VF-ITERATION-21",
+        "status": "migration_and_latest_iterations_verified",
+        "sheet": "Evaluaciones LlamaCode",
+        "appendedRange": "A139:I150",
+        "newActionableRecords": 12,
+        "uniqueRecordCount": 149,
+        "modelInventoryRows": 53,
+        "modelInventoryUpdatedRange": "Inventario de modelos!J5:P8",
+        "originalSheetPreserved": "IA local!A1:O12",
+        "windowsHddLetter": "unverified; intentionally not inferred",
+        "evidence": "RESULTS.md; receipts/google-sheet-actionables-append-final.json; receipts/model-inventory-context-refresh.json",
+        "pending": null,
+        "verification": {
+          "evaluationRecords": 149,
+          "uniqueIds": 149,
+          "inventoryRows": 53,
+          "actionableIdsAppended": 12,
+          "inventoryCellsUpdated": 8
+        },
+        "artifacts": "Q-20261021-VF-ITERATION-20/receipts/google-sheet-update-result.json; Q-20261021-VF-ITERATION-21/receipts/google-sheet-update-result.json",
+        "verifiedAtUtc": "2026-10-21T00:37:24Z",
+        "modelInventoryRowsPresent": 51,
+        "modelInventoryRowsRetired": 1,
+        "historicalNoWeights": 1,
+        "storageFreedBytes": 95645587264,
+        "storageFreedNetBytes": 95645597696,
+        "result": "Añadidas y verificadas las iteraciones Q20 (fila 168) y Q21 (fila 169) en Evaluaciones LlamaCode; summary C2/E2 sincronizados. La campaña sigue incompleta y hay bloqueos externos concretos."
+      }
+    },
+    "execution": {
+      "taskId": "Q-20261021-VF-RECONCILE-PENDING",
+      "status": "migration_and_inventory_update_verified",
+      "result": "Se anexaron 12 accionables en Evaluaciones LlamaCode!A139:I150, se verificaron 149 IDs únicos, se actualizó el inventario de 53 registros y se reflejó la limpieza Maya-S24; IA local quedó intacta.",
+      "decision": "Las fuentes pendientes conservan sus bloqueos/pausas concretas; no elevar defaults ni promover suites parciales.",
+      "artifacts": "Q-20261021-VF-RECONCILE-PENDING/RESULTS.md; receipts/google-sheet-actionables-append-final.json; receipts/model-inventory-context-refresh.json; receipts/maya-s24-weight-cleanup.json",
+      "verifiedAtUtc": "2026-10-21T00:41:20Z",
+      "pending": null
+    }
+  },
+  {
+    "id": "q134-sheet-54-basalt-sm120",
+    "title": "Basalt / xyehya decode-perf-test — RTX 5080 QFN",
+    "kind": "url",
+    "content": "https://github.com/xyehya/basalt/tree/decode-perf-test",
+    "receivedAt": "2026-10-25T14:39:09Z",
+    "status": "Cerrado · sin prueba aplicable en RTX 3090",
+    "batchId": "VF-20261025-IA-LOCAL-54-58",
+    "batchLabel": "Google Sheet IA local · filas 54–58 · 2026-10-25",
+    "batchSequence": 59,
+    "analysis": {
+      "status": "Sin prueba aplicable en el host dual RTX 3090.",
+      "finding": "El upstream Basalt exige NVIDIA Blackwell SM120 y CUDA 13; las RTX 3090 son Ampere SM86. Los resultados de RTX 5080/Intel 285K no se transfieren al hardware local. No instalar ni compilar un runtime incompatible.",
+      "test": "Revisión de requisitos primarios y límite de compatibilidad; no build ni benchmark. Reabrir únicamente si publican soporte explícito SM86/RTX 3090 o si se habilita otro host.",
+      "applicability": "Cerrado para este host; la metodología de medición de CPU/prompt-cache puede inspirar futuros protocolos, pero no predice TPS de las 3090."
+    }
+  },
+  {
+    "id": "q134-sheet-55-hf-speech-to-speech",
+    "title": "Hugging Face Speech-to-Speech — voz local en tiempo real",
+    "kind": "url",
+    "content": "https://github.com/huggingface/speech-to-speech",
+    "receivedAt": "2026-10-25T14:39:09Z",
+    "status": "Sin ventaja demostrada · no test inmediato",
+    "batchId": "VF-20261025-IA-LOCAL-54-58",
+    "batchLabel": "Google Sheet IA local · filas 54–58 · 2026-10-25",
+    "batchSequence": 60,
+    "analysis": {
+      "status": "No hay prueba comparativa aplicable sin un problema/holdout de voz definido.",
+      "finding": "El proyecto oficial propone una cascada VAD→Parakeet TDT→Qwen3.5-4B→Qwen3-TTS y publica referencias de BigBench Audio. El repo de LlamaCode ya integra Parakeet/Whisper, Qwen3-TTS y otros TTS, streaming, interrupción y mediciones de latencia; no se encontró evidencia de mejora en español rioplatense ni ventaja sobre Charla.",
+      "test": "No instalar ni ejecutar ahora. Si aparece un caso concreto, fijar audios rioplatenses autorizados y medir WER/CER, latencia micrófono→primer audio, turn-end, interrupción y tasa de tarea con ambos pipelines bajo la misma carga.",
+      "applicability": "Sin prueba inmediata; no justifica reemplazar ni duplicar Charla."
+    }
+  },
+  {
+    "id": "q134-sheet-56-ninfer-release-check",
+    "title": "NInfer-3090 — Qwen3.8-27B / Flash-Next y cambios recientes",
+    "kind": "url",
+    "content": "https://github.com/ashalliants/ninfer-3090",
+    "receivedAt": "2026-10-25T14:39:09Z",
+    "status": "Q32/Q34 ya evaluaron el caso relevante · no repetir",
+    "batchId": "VF-20261025-IA-LOCAL-54-58",
+    "batchLabel": "Google Sheet IA local · filas 54–58 · 2026-10-25",
+    "batchSequence": 61,
+    "analysis": {
+      "status": "Revisado contra releases y resultados locales; sin benchmark nuevo.",
+      "finding": "Qwen3.8-27B NInfer v3 ya se midió en Q32 y contra SOL en Q34. Q32 obtuvo 78/100 frente a 80.33/100 y falló gates TC-74, TC-84 y TC-92. Q34 superó el 10% E2E en 2/5 celdas, pero el perfil usa NInfer GPU1/32K frente a SOL TP2/262K y no es comparación aislada. NInfer v0.16.2 no cambia serving sin S3; v0.16.1 ajustó salida JSON restringida, que Q32 no utiliza (`response_format`/`json_schema` ausentes). Flash-Next continúa preview Windows; no está calificado en Linux dual-3090.",
+      "test": "No repetir Q32/Q34. Reabrir sólo por cambio material de modelo/runtime/harness, un uso concreto sin tools, y tras superar gates de calidad y seguridad; Flash-Next requiere primero plataforma/runtime soportados.",
+      "applicability": "Mantener SOL/Astra/productivo; candidato sin adopción. Actualizar inventario existente fila NInfer con evidencia y huellas actuales, no duplicar modelo."
+    }
+  },
+  {
+    "id": "q134-sheet-57-qfn-toolcall-anecdote",
+    "title": "QFN IQ3_S Basalt vs Qwen3.8-27B 4bit — anécdotas de tool calls",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLaMA/comments/1xaos52/qwen38flashnext_vs_qwen3827b_tool_calling_issues/",
+    "receivedAt": "2026-10-25T14:39:09Z",
+    "status": "No reproducible · variables confundidas",
+    "batchId": "VF-20261025-IA-LOCAL-54-58",
+    "batchLabel": "Google Sheet IA local · filas 54–58 · 2026-10-25",
+    "batchSequence": 62,
+    "analysis": {
+      "status": "No se afirma que IQ3_S sea inferior; la comparación del post no identifica causalidad.",
+      "finding": "El reporte cambia a la vez familia/modelo, quant (QFN IQ3_S vs 27B NVFP4), runtime (Basalt vs NInfer) y configuración. Basalt exige SM120, fuera de las RTX 3090. Auditoría offline de las seis trazas Q41: eventos JSONL parseables, pero ningún campo de salida raw, clasificación de error ni `finish_reason`; los resultados guardan contadores semánticos, no permiten separar parser/formato de comportamiento. Q41 es ASTRA IQ2_XS/Strata y no replica el post.",
+      "test": "No hay prueba válida con el artefacto/runtime exacto disponible. Un futuro A/B sólo sirve si fija mismo modelo/base, runtime, prompt/template, parser y sampler variando una sola quant, registra payload raw y finish_reason y compara el mismo holdout.",
+      "applicability": "La anécdota queda como señal para diseñar logging/harness; no es ranking ni criterio para borrar/adoptar pesos."
+    }
+  },
+  {
+    "id": "q134-sheet-58-qwen-ghidra-fixture",
+    "title": "Qwen27B + Ghidra/REA — preparar fixture reproducible para R36S/PortMaster",
+    "kind": "url",
+    "content": "https://www.reddit.com/r/LocalLLaMA/comments/1xeipmm/small_model_good_for_reverse_engineering_that_can/",
+    "receivedAt": "2026-10-25T14:39:09Z",
+    "status": "Analizado · Q138 completó el piloto sintético; no adopción; target R36S real aún no evaluado.",
+    "batchId": "VF-20261025-IA-LOCAL-54-58",
+    "batchLabel": "Google Sheet IA local · filas 54–58 · 2026-10-25",
+    "batchSequence": 63,
+    "analysis": {
+      "status": "Q138 cerrada · evaluación sintética completada; no promoción ni validación de un binario real R36S/PortMaster.",
+      "finding": "El fixture C sintético propio/Ghidra pasó el oráculo; Qwen obtuvo más respuestas exactas que ASTRA en esta cohorte, pero fue 2,84× más lento por solicitud y no se incluyeron casos críticos/safety. El resultado no establece superioridad general ni valida un binario R36S/PortMaster.",
+      "test": "Condición para habilitar piloto: fixture propio o licencia abierta, SHA del binario, plataforma/inputs, comportamiento esperado o fuente de referencia autorizada, tests/CRC y revisión humana. Entonces comparar workflow y corrección, no sólo TPS.",
+      "applicability": "Accionable condicional: preparar/seleccionar fixture verificable antes de invocar modelos. No descargar ni descompilar material de terceros sin base autorizada.",
+      "execution": {
+        "taskId": "Q-20261026-VF-ITERATION-138",
+        "status": "Completada · 31/36 Qwen vs 22/36 ASTRA; gate E2E fallido.",
+        "decision": "No promover Qwen27B como reemplazo. Q138 cerró el piloto sintético; reabrir para un caso R36S/PortMaster sólo con target propio/abierto, SHA, inputs y oráculo autorizado (tests/CRC/revisión humana). Mantener ASTRA/SOL/Flash-Next productivo y modelos PeritoSoft intactos.",
+        "condition": "El piloto sintético Q138 está completo. Para decidir sobre R36S/PortMaster aún falta un binario propio o con licencia abierta y un oráculo de comportamiento verificable.",
+        "preservation": "No modificar ni eliminar ASTRA, SOL, Flash-Next ni modelos PeritoSoft.",
+        "result": "Qwen3.8-27B: 31/36 (86,11%) vs ASTRA Flash-Next IQ2_XS: 22/36 (61,11%), +25 pp; mediana E2E 23,065 s vs 8,118 s (2,84×, gate ≤1,25× fallido); decode 34,6 vs 139,1 tok/s. Fixture C sintético propio; 12 preguntas ×3 semillas; safety no evaluado.",
+        "artifacts": "artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-138/RESULTS.md; receipts/campaign-attempt05-final.json; receipts/ab-analysis-attempt05.json; artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-140/RESULTS.md",
+        "reconciledAt": "2026-10-26T05:36:54.925905+00:00"
+      },
+      "reviewedAt": "2026-10-26T05:36:54.925905+00:00"
+    }
+  },
+  {
+    "id": "q135-sheet-59-jetbrains-blend",
+    "title": "JetBrains Qwen3.8-3.6-27B-blend: A/B local dual-3090",
+    "kind": "url",
+    "content": "https://huggingface.co/JetBrains/Qwen3.8-3.6-27B-blend",
+    "receivedAt": "2026-10-25T15:01:59Z",
+    "status": "Completada · gate fallido; no adoptar",
+    "batchId": "VF-20261025-IA-LOCAL-59-64",
+    "batchLabel": "Google Sheet IA local · filas 59–64 · Q135",
+    "batchSequence": 64,
+    "analysis": {
+      "status": "Completada · A/B local 3 semillas; no adoptar",
+      "finding": "A/B dual-RTX3090: blend78/100 vs control83/100. Blend falla TC-80 3/3 y queda parcial con advertencia TC-82 3/3; mejora TC-74/TC-92. Mediana E2E en 53 pares aprobados por ambos:17,43 vs19,16 s (9,03%, debajo del gate15%); tokens +0,33%. No adoptar.",
+      "test": "Intento02 completó las seis celdas preregistradas de Tool-Eval 2.8 Hard Mode, 28 casos×seeds42/43/44. No repetir esta revisión/quant.",
+      "applicability": "La velocidad de decode sube descriptivamente, pero calidad crítica/gate no pasa. Reabrir sólo por modelo/revisión, runtime, harness o workload materialmente nuevo.",
+      "reviewedAt": "2026-10-25T18:19:07Z",
+      "resultRef": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-135/RESULTS.md"
+    }
+  },
+  {
+    "id": "q135-sheet-60-promethevs-deepseek41",
+    "title": "PROMETHEVS 0.2 · DeepSeek V4.1 Flash original",
+    "kind": "url",
+    "content": "https://github.com/Magnvs7/Promethevs/releases/tag/v0.2",
+    "receivedAt": "2026-10-25T15:01:59Z",
+    "status": "Bloqueada · almacenamiento/plataforma",
+    "batchId": "VF-20261025-IA-LOCAL-59-64",
+    "batchLabel": "Google Sheet IA local · filas 59–64 · Q135",
+    "batchSequence": 65,
+    "analysis": {
+      "status": "Bloqueada · almacenamiento/plataforma",
+      "finding": "Engine 0.2 is now released; requires Windows, 64GB RAM, 12GB NVIDIA and about 1.1TB free NVMe; current model volumes have only 59GB and 26GB free. Author evidence uses one machine/model/three prompts vs original weights.",
+      "test": "No download/build. Reconsider only when a Windows test host has ≥1.1TB free NVMe and an independently reproducible decision-changing quality/speed fixture.",
+      "applicability": "No safe local test with current disk/platform; prior report status “engine unavailable” is stale."
+    }
+  },
+  {
+    "id": "q135-sheet-61-gyro-coder-large",
+    "title": "Gyro-Coder-L / Qwen3.8 Flash-Next coder",
+    "kind": "url",
+    "content": "https://huggingface.co/agentionai/Qwen3.8-Flash-Next-Gyro-Coder-GGUF",
+    "receivedAt": "2026-10-25T15:01:59Z",
+    "status": "Bloqueada · runtime NVIDIA Vulkan sin dispositivos enumerables",
+    "batchId": "VF-20261025-IA-LOCAL-59-64",
+    "batchLabel": "Google Sheet IA local · filas 59–64 · Q135",
+    "batchSequence": 66,
+    "analysis": {
+      "status": "Q152 bloqueada · runtime custom no enumera las 2 RTX 3090; sin descarga ni benchmark",
+      "finding": "El host y NVML dentro de Docker ven ambas RTX 3090, pero el runtime llama-server --list-devices informa (none) y Vulkan falla al crear vkCreateInstance incluso con ICD NVIDIA, libXext, /dev/dri y libvulkan del host montados. No se descargó el GGUF; no es un resultado de calidad.",
+      "test": "Reanudar el screen Q152 únicamente cuando una imagen/invocación corregida enumere ambas RTX 3090 y soporte exacto TQ3_0 v1.1; después cargar smoke y BCB-Hard-8 preregistrado. No usar CPU ni fallback de una sola GPU.",
+      "applicability": "Two 24GB cards are not a substitute for one 32GB card without the specific split/runtime; the sheet’s “32GB VRAM” claim is stale/misleading.",
+      "reviewedAt": "2026-10-26T19:14:26Z",
+      "sources": [
+        {
+          "label": "Tarjeta oficial y archivo v1.1",
+          "url": "https://huggingface.co/agentionai/Qwen3.8-Flash-Next-Gyro-Coder-GGUF"
+        },
+        {
+          "label": "Soporte manual Strata Gyro-Coder TQ2 (no aplica al TQ3-L)",
+          "url": "https://github.com/Niko1221/Strata/issues/3640"
+        },
+        {
+          "label": "Catálogo oficial Strata",
+          "url": "https://github.com/Niko1221/Strata"
+        }
+      ],
+      "execution": {
+        "taskId": "Q-20261026-VF-ITERATION-152",
+        "status": "Prerregistrada; sin pull, descarga de pesos, build, inference o GPU aún.",
+        "plan": "artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-152/PLAN.md",
+        "preregistration": "artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-152/receipts/preregistration.json",
+        "gate": "Runtime dual-GPU verificado; candidato ≥4/8, transport 8/8, zero sandbox errors; después preregistrar tres semillas + seguridad."
+      }
+    },
+    "execution": {
+      "status": "Bloqueada en runtime; Docker image quitada tras preflight; sin modelo, inferencia, benchmark ni GPU compute.",
+      "sheet": "Evaluaciones LlamaCode!A356:J356; Accionables!A25:N25; Inventario de modelos!A17:R17",
+      "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-152/receipts/runtime-preflight.json"
+    }
+  },
+  {
+    "id": "q135-sheet-62-qfn-nvfp4-blackwell",
+    "title": "QFN NVFP4 benchmark · Basalt/Infernix/capy/Strata/NInfer",
+    "kind": "url",
+    "content": "https://github.com/jesdga95/basalt",
+    "receivedAt": "2026-10-25T15:01:59Z",
+    "status": "Sin prueba aplicable · hardware",
+    "batchId": "VF-20261025-IA-LOCAL-59-64",
+    "batchLabel": "Google Sheet IA local · filas 59–64 · Q135",
+    "batchSequence": 67,
+    "analysis": {
+      "status": "Sin prueba aplicable · hardware",
+      "finding": "Basalt requires Blackwell sm_120/CUDA 13; NVIDIA lists RTX 3090 as sm_86. Published NVFP4 comparison cannot be transferred to Ampere.",
+      "test": "No build/download on the RTX 3090 host. Use this only as a kernel lead if a comparable sm_86 implementation and same-model fixture appears.",
+      "applicability": "Not evidence that one runtime/quant is faster on the current GPUs."
+    }
+  },
+  {
+    "id": "q135-sheet-63-qfn-huihui-v2",
+    "title": "Qwen3.8 Flash-Next Huihui v2 UD-IQ4_XS · Strata",
+    "kind": "url",
+    "content": "https://eth-lab.com/en/2026/10/strata-huihui-v2-ud-iq4-xs-vram-ram-pagefile-disk-en/",
+    "receivedAt": "2026-10-25T15:01:59Z",
+    "status": "Bloqueada · espacio; variante no duplicada",
+    "batchId": "VF-20261025-IA-LOCAL-59-64",
+    "batchLabel": "Google Sheet IA local · filas 59–64 · Q135",
+    "batchSequence": 68,
+    "analysis": {
+      "status": "Bloqueada · espacio; variante no duplicada",
+      "finding": "The report measures a 5060 Ti/64GB/Strata 0.1.47, three runs; model is 87.25GB plus a 26.82GB PLE table. Available model volumes are 59GB and 26GB. Local Q26 Unsloth QFN is a different weight revision.",
+      "test": "No download. Re-open when a single suitable model volume can hold model+PLE and a matched dual-3090 harness is available.",
+      "applicability": "External TPS do not map to the dual-3090 setup; keep the different local QFN inventory record unchanged."
+    }
+  },
+  {
+    "id": "q135-sheet-64-strata-qwen36-35b",
+    "title": "Strata support · Qwen3.6-35B-A3B",
+    "kind": "url",
+    "content": "https://github.com/Niko1221/Strata",
+    "receivedAt": "2026-10-25T15:01:59Z",
+    "status": "Bloqueada · falta runtime dual-GPU",
+    "batchId": "VF-20261025-IA-LOCAL-59-64",
+    "batchLabel": "Google Sheet IA local · filas 59–64 · Q135",
+    "batchSequence": 69,
+    "analysis": {
+      "status": "Bloqueada · falta runtime dual-GPU",
+      "finding": "Strata supports Qwen3.6-35B-A3B but its qwen35 path currently uses one GPU; upstream issue #3294 remains open asking for a layer split.",
+      "test": "Do not benchmark with one 3090 as a proxy. Re-open when Strata or another vetted engine supports the model on both RTX 3090s, and a local exact quant is available.",
+      "applicability": "A single-GPU result would not answer the dual-GPU question the user prioritized."
+    }
+  }
+]

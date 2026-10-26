@@ -1,0 +1,38 @@
+{
+  "recorded_at_utc": "2026-10-26T20:25:44Z",
+  "task": "Q153",
+  "lock_token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+  "updates": [
+    {
+      "path": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/inbox.json",
+      "sha256_before": "62d9ce73bb3aff1901f5377db1a0b8d98c481c6f735eb3f362f77b9f448d4040",
+      "sha256_after": "8cc78a90315b25ebd19539648699f2d0b44f700ff795e5d426e4a196f59c5c49",
+      "item_id": "q135-sheet-63-qfn-huihui-v2",
+      "previous": {
+        "status": "Descarga en curso · shards parciales en D; hashes aún no validados",
+        "updatedAt": "2026-10-26T20:10:47Z",
+        "analysis": {
+          "status": "Descarga en curso · shards parciales en D; hashes aún no validados",
+          "finding": "La fila 63 describe una variante Huihui v2 distinta de Q26 Unsloth. D tiene 500 GB libres; el reporte externo no permite inferir TPS/calidad en 2×3090. El checkpoint está etiquetado abliterated/uncensored, por eso seguridad es un gate temprano. Descarga del checkpoint fijado iniciada en D; dos shards muestran progreso parcial. Se usa el gate Q116-A2 (5/5 fixtures), sin corte autónomo por MemAvailable/RSS/swap.",
+          "test": "Q153 preregistrada. Descargar solo los 3 shards fijados a D y verificar SHA; empacar con pesos propios; comprobar Strata 0.1.50 en ambas 3090. Comparar throughput 4K/16K/32K y Tool-Eval TC-70–97 con ASTRA, contexto32K/MTP off, seeds42/43/44. Safety violation que el control evita detiene el brazo candidato. La descarga continúa; no hay runtime, pack, inferencia ni GPU todavía.",
+          "applicability": "Puede cambiar la decisión de adoptar un perfil Flash-Next distinto. No es comparación sólo de quant: fine-tune/runtime también difieren. No modificar ASTRA/SOL/PeritoSoft.",
+          "preregisteredTask": "Q-20261026-VF-ITERATION-153"
+        }
+      },
+      "status_after": "Descarga en curso · runtime verificado; shard 1/3 validado; shards 2–3 parciales"
+    },
+    {
+      "path": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/actionables.json",
+      "sha256_before": "ca2b7506608fd675c7d003fc73feb47ed127d1de7832b9be272118120086ef5a",
+      "sha256_after": "bd0a439a809282766fef8964abb83305bcdccff58ed89b45193ecb7ec7fcfa40",
+      "item_id": "vf-huihui-v2-q153-20261026",
+      "previous": {
+        "status": "Descarga en curso · shards parciales en D; hashes aún no validados",
+        "updatedAt": "2026-10-26T20:10:47Z",
+        "nextAction": "Completar descarga a D; verificar tamaños/SHA; luego fijar Control 0.1.51 + Qwen engine 0.1.50 aislados, comprobar pack/API y ambas 3090. No iniciar inferencia hasta pasar ambos GPU smoke.",
+        "reconciliationEvidence": "Q153/PLAN.md; receipts/preregistration.json; receipts/google-sheet-prereg.json; Q116-A2 memory guard; download log"
+      },
+      "status_after": "Descarga en curso · runtime verificado; shard 1/3 validado; shards 2–3 parciales"
+    }
+  ]
+}

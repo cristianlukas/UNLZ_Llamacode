@@ -1,0 +1,23 @@
+{
+  "created_utc": "2026-10-26T19:53:46Z",
+  "files": {
+    "WORK_QUEUE.md": {
+      "source": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/WORK_QUEUE.md",
+      "backup": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-153/receipts/prewrite-snapshot/WORK_QUEUE.md",
+      "bytes": 956178,
+      "sha256": "ea20d99ad67279ca7df4276460425201ef386b7bb8dfb314a81e20fc231a4909"
+    },
+    "inbox.json": {
+      "source": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/inbox.json",
+      "backup": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-153/receipts/prewrite-snapshot/inbox.json",
+      "bytes": 183341,
+      "sha256": "5ed99a936a5cd73a96f1856e73f8d1ec219b4a42765df35445a996654e775648"
+    },
+    "actionables.json": {
+      "source": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/actionables.json",
+      "backup": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-153/receipts/prewrite-snapshot/actionables.json",
+      "bytes": 100342,
+      "sha256": "ada6ba3470eb3d994b2d9dc62bea1c151995b46393df2af0186d6d3685a839fd"
+    }
+  }
+}

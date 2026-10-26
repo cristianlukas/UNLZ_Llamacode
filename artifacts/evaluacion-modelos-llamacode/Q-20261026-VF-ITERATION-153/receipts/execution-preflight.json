@@ -1,0 +1,79 @@
+{
+  "recorded_at_utc": "2026-10-26 19:55:20 UTC",
+  "lock": {
+    "task": "Q146 resume justified VF-20261019-01 tests",
+    "token": "2242863e-c78e-4fa9-9649-c1d1541f3919"
+  },
+  "inference_server_processes": [],
+  "docker_containers": [],
+  "tcp_listeners": [
+    {
+      "address": "127.0.0.1:6742",
+      "process": "OpenRGB"
+    },
+    {
+      "address": "127.0.0.1:631",
+      "process": "CUPS"
+    },
+    {
+      "address": "127.0.0.1:47413",
+      "process": "artcraft-launch"
+    },
+    {
+      "address": "127.0.0.1:42539",
+      "process": "unresolved local service"
+    },
+    {
+      "address": "127.0.0.54:53",
+      "process": "system DNS"
+    },
+    {
+      "address": "127.0.0.53:53",
+      "process": "system DNS"
+    },
+    {
+      "address": "[::1]:631",
+      "process": "CUPS"
+    }
+  ],
+  "server_check": "No llama-server/llama.cpp/Strata/NInfer/vLLM/Ollama service processes; no model API listener; docker ps empty.",
+  "gpus": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_total_mib": 24576,
+      "memory_used_mib": 1071,
+      "utilization_percent": 11,
+      "temperature_c": 42
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_total_mib": 24576,
+      "memory_used_mib": 110,
+      "utilization_percent": 19,
+      "temperature_c": 27
+    }
+  ],
+  "memory": {
+    "total_bytes": 132615852032,
+    "available_bytes": 113939988480,
+    "swap_total_bytes": 8589930496,
+    "swap_used_bytes": 4414611456,
+    "psi_some_avg10": 0.0,
+    "psi_some_avg60": 0.0,
+    "psi_some_avg300": 0.0,
+    "psi_full_avg10": 0.0,
+    "psi_full_avg60": 0.0,
+    "psi_full_avg300": 0.0,
+    "interpretation": "No sustained memory pressure at baseline; existing swap use is not itself a stop condition."
+  },
+  "disk": {
+    "D_path": "/media/cristian/Disco local",
+    "free_bytes": 500149567488,
+    "target": "/media/cristian/Disco local/Models-eval/Q153-huihui-v2/",
+    "root_free_bytes": 9475125248,
+    "decision": "D exceeds the preregistered 180 GiB requirement. All download/cache/temp/output paths stay on D; no staging on root."
+  },
+  "scope": "Pre-download/pre-runtime baseline only. Re-run server/GPU/disk/memory preflight immediately before starting inference. GUI/ArtCraft was not terminated."
+}

@@ -1,0 +1,106 @@
+{
+  "status": "written_and_read_back_verified",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_url": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "written_at_utc": "2026-10-26 19:55:20 UTC",
+  "reconciled_at_utc": "2026-10-26 19:56:09 UTC",
+  "ranges": [
+    {
+      "tab": "Evaluaciones LlamaCode",
+      "sheetId": 1945218181,
+      "range": "A357:J357",
+      "cells": 10,
+      "readback_match": true
+    },
+    {
+      "tab": "Accionables",
+      "sheetId": 1393124532,
+      "range": "A26:N26",
+      "cells": 14,
+      "readback_match": true
+    },
+    {
+      "tab": "Inventario de modelos",
+      "sheetId": 2026102061,
+      "range": "A18:R18",
+      "cells": 18,
+      "readback_match": true
+    },
+    {
+      "tab": "IA local",
+      "sheetId": 212274250,
+      "range": "A63:O63",
+      "cells": 15,
+      "readback_match": true
+    }
+  ],
+  "format_check": "All target cells retained WRAP/TOP where previously set; no data validation or formula cells were overwritten; field mask userEnteredValue only.",
+  "rows": {
+    "Evaluaciones LlamaCode!A357:J357": [
+      "Q-20261026-VF-ITERATION-153",
+      "Prerregistro · comparativa de perfil",
+      "Preregistrada · artefactos pendientes",
+      "2026-10-26",
+      "Huihui v2 Qwen3.8 Flash-Next UD-IQ4_XS vs ASTRA RCO IQ2_XS",
+      "HF huihui-ai repo @ 411f1f7349c9711e6f75aa8d20e1612eb3a4d55; Strata v0.2.6 / Qwen engine 0.1.50",
+      "Pendiente; aún sin descarga ni inferencia. No hay score local.",
+      "Descargar a D tras readback; ambos perfiles 2×RTX 3090, 128 GiB, 32K, MTP off. Throughput 4K/16K/32K ×3 y Tool-Eval TC-70–97 ×3 seeds; gate de seguridad.",
+      "Q153/PLAN.md; receipts/preregistration.json; receipts/source-review.json",
+      "WORK_QUEUE.md · Q153"
+    ],
+    "Accionables!A26:N26": [
+      "Evaluación preregistrada",
+      "vf-huihui-v2-q153-20261026",
+      "Alta · Flash-Next calidad/velocidad",
+      "Preregistrado · artefactos pendientes",
+      "Huihui v2 UD-IQ4_XS vs ASTRA RCO IQ2_XS en 2×RTX 3090",
+      "Codificación/agentes; evaluar calidad, seguridad y tiempo total; no cambiar defaults automáticamente.",
+      "Inbox #68 · IA local fila63 · HF + reporte comunitario",
+      "Strata v0.2.6/Qwen engine 0.1.50; 2×3090 +128 GiB; 32K; MTP off; throughput 4K/16K/32K ×3; Tool-Eval 28 escenarios ×3 seeds. Safety violation del candidato que el control evita detiene la campaña.",
+      "Pendiente. Gate: calidad ≥ control−2, cero regresiones críticas de seguridad y ≥15% mejor E2E o ≥20% menos tokens en tareas correctas.",
+      "Q153/PLAN.md; receipts/preregistration.json; source-review.json",
+      "Preflight inicial 2026-10-26 19:55:20 UTC: D 500.1 GB libres; sin servidor/listener/container de inferencia; ambas 3090 visibles. Readback de Sheet pendiente.",
+      "2026-10-26 19:55:20 UTC",
+      "2026-10-26 19:55:20 UTC",
+      ""
+    ],
+    "Inventario de modelos!A18:R18": [
+      "Qwen3.8 Flash-Next Huihui v2",
+      "UD-IQ4_XS · Strata Qwen engine 0.1.50",
+      "No local; preregistrado en D. Shards 93,682,584,224 bytes (87.25 GiB); pack/PLE aún N/D.",
+      "Sin consumidor configurado localizado; evaluación aislada; PeritoSoft cerrado por el usuario.",
+      "Sin artefacto Windows",
+      "/media/cristian/Disco local/Models-eval/Q153-huihui-v2/ (destino planeado, aún no existe)",
+      "93,682,584,224 bytes (solo shards; pack/PLE aparte)",
+      "N/D local; medir 4K/16K/32K ×3; el valor externo es de otra máquina.",
+      "N/D local; medir con salida de 256 tokens; el valor externo no es dual-3090.",
+      "N/D; no hay score de calidad/herramientas local.",
+      "N/D; benchmark pendiente.",
+      "32,768 (Tool-Eval); throughput 4K/16K/32K",
+      "2×RTX 3090 + 128 GiB; Strata v0.2.6/Qwen 0.1.50; MTP off; sampling .6/.95/20/0; serie.",
+      "2026-10-26 19:55:20 UTC",
+      "Q153/PLAN.md y receipts/preregistration.json; HF revision y hashes fijados.",
+      "No se encontró referencia/uso actual; PeritoSoft cerrado por usuario.",
+      "HF huihui-ai/Huihui-Qwen3.8-Flash-Next-abliterated-v2-GGUF@411f1f7349c9711e6f75aa8d20e1612eb3a4d55d; hashes por shard en Q153 preregistration.",
+      "Fine-tune etiquetado abliterated/uncensored. Safety gate primero; no promover ni tocar ASTRA/SOL/MTP/PeritoSoft."
+    ],
+    "IA local!A63:O63": [
+      "QFN Huihui v2 UD-IQ4_XS vs ASTRA RCO IQ2_XS",
+      "Evaluación local comparativa preregistrada",
+      "2×RTX 3090 + 128 GB RAM; Linux",
+      "Probar sólo si Strata enumera ambas 3090 y asigna memoria a cada una; no single-GPU.",
+      "Preregistrado; pesos aún no locales; D tiene espacio para modelo+PLE.",
+      "Fine-tune Flash-Next etiquetado uncensored; medir si ofrece mejor calidad/seguridad/tiempo que ASTRA.",
+      "HF revision fijada; Strata 0.2.6/Qwen 0.1.50; PLE desde pesos propios; MTP off; throughput y Tool-Eval.",
+      "HF repo y reporte eth-lab; protocolo completo Q153/PLAN.md.",
+      "Pendiente de descarga, hashes, pack y smoke dual-GPU.",
+      "Alta · test aislado sujeto a gates",
+      "https://huggingface.co/huihui-ai/Huihui-Qwen3.8-Flash-Next-abliterated-v2-GGUF",
+      "Tras registrar: descargar a D, validar 3 SHA, empaquetar y hacer smoke en ambas GPU; seguridad antes de completar las 3 seeds.",
+      "Evaluaciones LlamaCode",
+      "Resultados, historial, cola y evidencia",
+      "Sin uso de PeritoSoft encontrado; evaluación aislada."
+    ]
+  },
+  "preflight_summary": "D had 500,149,567,488 bytes free; no inference server process/listener/container; both RTX 3090 visible. Detailed baseline in execution-preflight.json."
+}

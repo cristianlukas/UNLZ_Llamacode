@@ -1,0 +1,19 @@
+{
+  "recorded_at_utc": "2026-10-26T20:34:07Z",
+  "task": "Q153",
+  "source": "Huihui v2 UD-IQ4_XS shard 1/3; local read-only GGUF header inspection",
+  "header": {
+    "general.architecture": "qwen4exp",
+    "general.name": "Qwen3.8 Flash Next",
+    "general.quantization_version": 2,
+    "general.file_type": 30,
+    "split.count": 3,
+    "split.no": 0,
+    "split.tensors.count": 1224,
+    "shard_1_tensor_count": 0,
+    "data_start": 10946624
+  },
+  "consistency": "Header identifies the expected Qwen3.8 Flash Next split GGUF; shard 1 is metadata-only. Remaining tensor shards must still complete and pass size/SHA verification.",
+  "inference_or_gpu": false,
+  "status": "partial artifact identity verified"
+}

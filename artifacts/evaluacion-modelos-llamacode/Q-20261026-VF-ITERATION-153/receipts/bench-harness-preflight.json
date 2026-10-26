@@ -1,0 +1,16 @@
+{
+  "recorded_at_utc": "2026-10-26T20:25:44Z",
+  "task": "Q153",
+  "runner": "/home/cristian/.cache/codex-tool-eval-bench-v2.8.0/.venv/bin/tool-eval-bench",
+  "runner_version": "2.8.0",
+  "runner_commit": "0a1ba68c7709f429298bc92417a9e003f61de4e3",
+  "invocation": "tool-eval-bench run --backend strata --model huihui-v2-ud-iq4-xs --hardmode-only --context-size 32768 --temperature 0.6 --top-p 0.95 --top-k 20 --min-p 0 --repeat-penalty 1.0 --seed 42 --variant-seed 20261010 --timeout 120 --max-turns 8 --parallel 1 --dry-run --json",
+  "result": {
+    "event": "dry_run",
+    "total_scenarios": 28,
+    "categories": {"P": {"label": "Hard Mode", "count": 28}},
+    "scenario_ids": ["TC-70", "TC-71", "TC-72", "TC-73", "TC-74", "TC-75", "TC-76", "TC-77", "TC-78", "TC-79", "TC-80", "TC-81", "TC-82", "TC-83", "TC-84", "TC-85", "TC-86", "TC-87", "TC-88", "TC-89", "TC-90", "TC-91", "TC-92", "TC-93", "TC-94", "TC-95", "TC-96", "TC-97"]
+  },
+  "effects": "No server discovery/request, database run or model inference; no build or GPU use. Harness selection only.",
+  "status": "pass"
+}

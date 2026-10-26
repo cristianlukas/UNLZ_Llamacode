@@ -1,0 +1,40 @@
+{
+  "amendment": "Q153 memory guard and download status",
+  "at_utc": "2026-10-26T20:10:47Z",
+  "lock_token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+  "q116_a2_fixture_status": "5/5 passed; CPU-only synthetic fixtures",
+  "memory_policy": "No artificial RAM/swap caps; never stop on MemAvailable, RSS, or swap usage alone. Use the Q116-A2 composite global PSI candidate: warning when full avg10 >=20% OR some avg10 >=70% for 30 consecutive 10-second samples; hard stop when full avg10 >=60% OR some avg10 >=80% for 15 consecutive 10-second samples; reset the severe composite streak only when both are below threshold. Also stop on confirmed OOM, CUDA/runtime/server failure, or any GPU >=85C. Log MemAvailable, PSI, swap, OOM, VRAM and temperatures.",
+  "strata_release": "v0.2.6; Control 0.1.51; Qwen engine 0.1.50",
+  "download_status": "in progress; no complete shard hash validated",
+  "repaired_preexisting_invalid_literal_suffix": {
+    "preregistration.json": true,
+    "inbox.json": true,
+    "actionables.json": true
+  },
+  "hashes": {
+    "preregistration.json": [
+      "cf9c5c8c9f9507fdcde5c780a2eaf76c56da4ea88348bfa7e0bb7a77df5f81d6",
+      "17108c10743017c3aafe053a7a8ba0e92d05a8a8c5037c229907401a0bbf51ab"
+    ],
+    "PLAN.md": [
+      "4c8f5185a707bc77c5feb49655fe9078f8adda7b3c0144f13437a779b89720d1",
+      "8253b91ac05b8036bfde66e412a3d2650ad84dff446c4cde17385f853da86ee7"
+    ],
+    "RESULTS.md": [
+      "203e4d32881cf5a576f7c44fb2e4fbbb5146f39b7b6faddbbcac9591c99334d4",
+      "84ed9b390529b948dfea831dfa017e87340617a4a211532165fe8e3ef67f8ee5"
+    ],
+    "WORK_QUEUE.md": [
+      "5f744943b73c309de5c7cc18dd39dba500997cd7c867879e5c240aba8ee64768",
+      "e7e8470da11d2ae59d69d58dd64fd46b13d55730f45e674f9f71b3d3facd3565"
+    ],
+    "inbox.json": [
+      "bbaf34a7594c0276c397ec1f0ca846ba8609e5aaed6066066066b233dd495a6d",
+      "62d9ce73bb3aff1901f5377db1a0b8d98c481c6f735eb3f362f77b9f448d4040"
+    ],
+    "actionables.json": [
+      "7ce8d487488b0108f94f5e20e396d88c0da20abf0d312f554a5b1aa2a28cf08d",
+      "ca2b7506608fd675c7d003fc73feb47ed127d1de7832b9be272118120086ef5a"
+    ]
+  }
+}

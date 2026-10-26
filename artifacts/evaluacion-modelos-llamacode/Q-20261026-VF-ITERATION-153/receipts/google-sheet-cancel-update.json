@@ -1,0 +1,54 @@
+{
+  "task": "Q153 Google Sheet cancellation/cleanup status",
+  "status": "written_and_read_back_verified",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_url": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "updated_at_utc": "2026-10-26 20:51 UTC",
+  "ranges": [
+    {
+      "tab": "Evaluaciones LlamaCode",
+      "range": "B357:C357; G357:I357",
+      "cells": 5,
+      "readback_match": true
+    },
+    {
+      "tab": "Accionables",
+      "range": "A26:D26; H26:K26; M26:N26",
+      "cells": 10,
+      "readback_match": true
+    },
+    {
+      "tab": "Inventario de modelos",
+      "range": "C18:D18; F18:L18; N18:R18",
+      "cells": 14,
+      "readback_match": true
+    },
+    {
+      "tab": "IA local",
+      "range": "B63:B63; E63:J63; L63:L63; N63:O63",
+      "cells": 10,
+      "readback_match": true
+    },
+    {
+      "tab": "Accionables",
+      "range": "K26; M26:N26",
+      "cells": 3,
+      "readback_match": true
+    },
+    {
+      "tab": "Inventario de modelos",
+      "range": "N18",
+      "cells": 1,
+      "readback_match": true
+    }
+  ],
+  "total_cells": 43,
+  "format_check": "All target formatting retained; changed cells retained effective wrap and vertical alignment; only userEnteredValue was written.",
+  "result_policy": "No row added to Resultados because no model inference/benchmark result exists.",
+  "readback_match": true,
+  "final_readback": {
+    "process_closure_note_matches": true,
+    "timestamps_match": "2026-10-26 20:51 UTC",
+    "effective_wrap_vertical_alignment_preserved": true
+  }
+}

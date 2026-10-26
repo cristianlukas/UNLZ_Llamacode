@@ -1,0 +1,28 @@
+{
+  "recorded_at_utc": "2026-10-26T20:25:44Z",
+  "task": "Q153 Huihui v2 Flash-Next UD-IQ4_XS vs ASTRA RCO IQ2_XS",
+  "first_shard": {
+    "path": "/media/cristian/Disco local/Models-eval/Q153-huihui-v2/model/unsloth-UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00001-of-00003.gguf",
+    "expected_bytes": 10946624,
+    "observed_bytes": 10946624,
+    "expected_sha256": "5ce89370720f8bf90890f439361282104c1aa1482d4013bb9a50923e758e71a4",
+    "observed_sha256": "5ce89370720f8bf90890f439361282104c1aa1482d4013bb9a50923e758e71a4",
+    "status": "verified"
+  },
+  "pack_tool": {
+    "path": "/media/cristian/Disco local/Models-eval/Q153-huihui-v2/runtime/control-0.1.51/tools/iq_pack.py",
+    "help_invocation": "python3 tools/iq_pack.py --help",
+    "compat_bf16_required_for_small_iq4_xs_projections": true,
+    "experts_bin": "omit; engine reads experts from the source GGUF shards"
+  },
+  "gguf_py": {
+    "path": "/home/cristian/.cache/strata-llamacpp-3cf03257-20261004/gguf-py",
+    "expected_commit": "3cf03257f219afbe7334045ff7c6a06ac68c627d",
+    "observed_commit": "3cf03257f219afbe7334045ff7c6a06ac68c627d",
+    "working_tree_clean": true,
+    "imports": ["gguf", "gguf.quants", "GGMLQuantizationType.IQ4_XS", "GGMLQuantizationType.BF16"],
+    "status": "verified"
+  },
+  "remaining_shards": "2 and 3 still downloading; no local SHA verification yet",
+  "model_pack_server_inference_benchmark_build_gpu": "none"
+}

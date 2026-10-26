@@ -1,0 +1,61 @@
+{
+  "verified_at_utc": "2026-10-26T20:17:58Z",
+  "artifacts": [
+    {
+      "filename": "strata-control-0.1.51-linux-x86_64.tar.gz",
+      "bytes": 98941030,
+      "sha256": "39c06025f9d090802f9700a6ce271f7c4da767f48028d7389e0ddc47f6baa9c2",
+      "members": 7427,
+      "expanded_bytes": 332812452
+    },
+    {
+      "filename": "strata-engine-0.1.50-linux-x86_64-cuda-cuda13.tar.gz",
+      "bytes": 606728514,
+      "sha256": "90c601dc1060af48aaccf85062975a11c4ae25690ec242e3bc93e99457c9380b",
+      "members": 9,
+      "expanded_bytes": 971674122
+    }
+  ],
+  "extraction": [
+    {
+      "directory": "/media/cristian/Disco local/Models-eval/Q153-huihui-v2/runtime/control-0.1.51",
+      "root_entries": [
+        ".gitignore",
+        "BUNDLE.json",
+        "COMMIT",
+        "README.txt",
+        "VERSION",
+        "bench",
+        "bin",
+        "data",
+        "docs",
+        "python",
+        "ref",
+        "requirements-monitor.txt",
+        "requirements.txt",
+        "serve",
+        "setup.py",
+        "strata.py",
+        "strata_cli",
+        "strata_control",
+        "tools"
+      ]
+    },
+    {
+      "directory": "/media/cristian/Disco local/Models-eval/Q153-huihui-v2/runtime/engine-0.1.50",
+      "root_entries": [
+        "BUILD.json",
+        "SYSTEM-LIBS.txt",
+        "engine-component.json",
+        "libcublas.so.13",
+        "libcublasLt.so.13",
+        "libcudart.so.13",
+        "libstrata_kq.so",
+        "strata",
+        "strata-vision"
+      ]
+    }
+  ],
+  "gpu_used": false,
+  "server_started": false
+}

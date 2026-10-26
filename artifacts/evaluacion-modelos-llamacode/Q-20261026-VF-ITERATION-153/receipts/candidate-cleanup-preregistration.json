@@ -1,0 +1,115 @@
+{
+  "task": "Q153 candidate cancellation and cleanup",
+  "created_utc": "2026-10-26T20:44:29.257935+00:00",
+  "lock_token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+  "reason": "User directed removal of all listed variants except SOL and ASTRA RCO IQ2_XS; the newly downloaded Huihui v2 UD-IQ4_XS is the same listed family/quantization and was not yet used for inference.",
+  "candidate": {
+    "repo": "huihui-ai/Huihui-Qwen3.8-Flash-Next-abliterated-v2-GGUF",
+    "revision": "411f1f7349c9711e6f75aa8d20e1612eb3a4d55d",
+    "path": "/media/cristian/Disco local/Models-eval/Q153-huihui-v2/model",
+    "files": [
+      {
+        "path": "/media/cristian/Disco local/Models-eval/Q153-huihui-v2/model/.cache/huggingface/.gitignore",
+        "size_bytes": 1,
+        "inode": 1059986,
+        "nlink": 1
+      },
+      {
+        "path": "/media/cristian/Disco local/Models-eval/Q153-huihui-v2/model/.cache/huggingface/CACHEDIR.TAG",
+        "size_bytes": 191,
+        "inode": 865413,
+        "nlink": 1
+      },
+      {
+        "path": "/media/cristian/Disco local/Models-eval/Q153-huihui-v2/model/.cache/huggingface/download/unsloth-UD-IQ4_XS/CiuBeTFdyIomXPGHetkCKqZxv-A=.f8aa8bd7ba134b3b7fe4fc95b9131fc8f6678ace374a0fa6e632225031665995.9ec95c94.incomplete",
+        "size_bytes": 39966922701,
+        "inode": 298512,
+        "nlink": 1
+      },
+      {
+        "path": "/media/cristian/Disco local/Models-eval/Q153-huihui-v2/model/.cache/huggingface/download/unsloth-UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00001-of-00003.gguf.lock",
+        "size_bytes": 0,
+        "inode": 251209,
+        "nlink": 1
+      },
+      {
+        "path": "/media/cristian/Disco local/Models-eval/Q153-huihui-v2/model/.cache/huggingface/download/unsloth-UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00001-of-00003.gguf.metadata",
+        "size_bytes": 125,
+        "inode": 280473,
+        "nlink": 1
+      },
+      {
+        "path": "/media/cristian/Disco local/Models-eval/Q153-huihui-v2/model/.cache/huggingface/download/unsloth-UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00002-of-00003.gguf.lock",
+        "size_bytes": 0,
+        "inode": 131347,
+        "nlink": 1
+      },
+      {
+        "path": "/media/cristian/Disco local/Models-eval/Q153-huihui-v2/model/.cache/huggingface/download/unsloth-UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00002-of-00003.gguf.metadata",
+        "size_bytes": 125,
+        "inode": 278551,
+        "nlink": 1
+      },
+      {
+        "path": "/media/cristian/Disco local/Models-eval/Q153-huihui-v2/model/.cache/huggingface/download/unsloth-UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00003-of-00003.gguf.lock",
+        "size_bytes": 0,
+        "inode": 293949,
+        "nlink": 1
+      },
+      {
+        "path": "/media/cristian/Disco local/Models-eval/Q153-huihui-v2/model/.cache/huggingface/trees/411f1f7349c9711e6f75aa8d20e1612eb3a4d55d.json",
+        "size_bytes": 13973,
+        "inode": 859259,
+        "nlink": 1
+      },
+      {
+        "path": "/media/cristian/Disco local/Models-eval/Q153-huihui-v2/model/unsloth-UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00001-of-00003.gguf",
+        "size_bytes": 10946624,
+        "inode": 255568,
+        "nlink": 1
+      },
+      {
+        "path": "/media/cristian/Disco local/Models-eval/Q153-huihui-v2/model/unsloth-UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00002-of-00003.gguf",
+        "size_bytes": 49835229856,
+        "inode": 170371,
+        "nlink": 1
+      }
+    ],
+    "total_file_bytes": 89813113596
+  },
+  "processes_to_stop_by_exact_identity": [
+    {
+      "pid": 4098489,
+      "expected": "hf download huihui-ai/Huihui-Qwen3.8-Flash-Next-abliterated-v2-GGUF",
+      "reason": "candidate downloader"
+    },
+    {
+      "pid": 4146111,
+      "expected": "peritosoft-app",
+      "reason": "PeritoSoft app, user previously authorized stopping it if found active"
+    },
+    {
+      "pid": 4158108,
+      "expected": "peritosoft-app",
+      "reason": "PeritoSoft app, user previously authorized stopping it if found active"
+    },
+    {
+      "pid": 4146450,
+      "expected": "llama-server -m /media/cristian/Disco local/Models/llamacpp/Qwen3.5-9B/Qwen3.5-9B-Q4_K_M.gguf",
+      "reason": "server child of PeritoSoft PID 4146111"
+    }
+  ],
+  "preflight": {
+    "candidate_server_or_open_fd": false,
+    "candidate_inference_started": false,
+    "candidate_nlink_all_one": true,
+    "disco_d_free_before_bytes": 408281440256
+  },
+  "preserve": [
+    "/media/cristian/Disco local/Models/llamacpp/club-3090/qwen3.8-27b-autoround-int4 (SOL)",
+    "/media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012 (ASTRA RCO IQ2_XS)",
+    "/media/cristian/Disco local/Models-eval/Q153-huihui-v2/runtime",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-153"
+  ],
+  "status": "preregistered"
+}
