@@ -2538,4 +2538,15 @@ Preflight concluido: este Codex continúa en Ubuntu 24.04; no están disponibles
 - **Objetivo:** revisar las 18 pestañas del Google Sheet y los informes/recibos locales para encontrar resultados de modelos/harness que falten en `Resultados`, verificar fingerprints/duplicados y migrar sólo filas con evidencia suficiente.
 - **Cierre:** se auditaron 202 informes locales y el workbook completo; `Resultados` tenía 177 filas de datos. Se añadieron 15 registros en `Resultados!A179:AF193`: Q29 como control faltante de Q32; ASTRA/SOL TaskFlow ULTRA del 2026-10-08; y Q6–Q16 Harness² sintéticos, marcados como evidencia del harness, no calidad general del modelo. Se preservó el formato WRAP/Arial 10 y la lectura de vuelta coincidió en las 480 celdas; sin chips ni validaciones. Q19 se excluyó por fingerprint/fixture repetidos y supersedidos por Q56. Las métricas no informadas quedaron como N/D; no se ejecutaron benchmarks, build ni GPU.
 - **Recibo:** `artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-139/RESULTS.md` y `receipts/google-sheet-sync.json`.
-- **Lock:** liberar sólo el lock de Q139 después de guardar el recibo.
+- **Lock:** liberado tras guardar el recibo y verificar el token de Q139; reconciliación confirmada en Q140.
+
+## Q140 · Conciliar pendientes ya cubiertos por Q135/Q138 · 2026-10-26
+
+- **Estado:** reconciliación documental y del Sheet completada bajo lock exclusivo `b367b3f067c6bbb5c8d670c9487f5f11`; readback y recibos validados.
+- **Hallazgo:** la sugerencia de comparar JetBrains Qwen3.8-3.6-27B-blend seguía como “NO ejecutada”, pero es el mismo candidato/revisión/quant ya evaluado en Q135 a 32K con tres semillas. Gate fallido: 78 vs 83/100, regresión TC-80 3/3, mejora E2E 9,03% frente al umbral 15%; no repetir ni extender a 64K/128K sin hipótesis/caso nuevo.
+- **Hallazgo:** el ítem batch #63/IA local fila58 y el accionable Qwen27B/Ghidra seguían describiendo Q138 como preregistrado. Q138 terminó en fixture C sintético: Qwen 31/36 vs ASTRA 22/36, pero latencia E2E 2,84× y gate ≤1,25× fallido; no valida un binario real R36S/PortMaster y no promueve Qwen27B.
+- **Sin experimento nuevo:** los pendientes restantes requieren estado externo: host Windows nativo (Job Objects y NInfer preview); contrato de principal autenticado/policy tenant; proveedor/modelo, keyRef, tope de gasto y frontera de datos para A/B híbrido; o target R36S propio/abierto con oráculo verificable. Se conservan como pendientes/bloqueados y no se inventan credenciales, fixtures ni evidencia.
+- **Sin build, inferencia, benchmark ni GPU.** ASTRA, SOL, Flash-Next productivo y modelos PeritoSoft permanecen intactos.
+- **Verificación:** Sheet `Accionables!D20:N20` e `IA local!I58:L58` leído de vuelta; 15 celdas coinciden y conservan `WRAP`/`TOP`. Inbox local (69 entradas) y `data/actionables.json` reconciliados; recibos Q140 registran hashes antes/después y copia previa del archivo de accionables.
+- **Recibos:** `artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-140/RESULTS.md` y `receipts/reconciliation.json`.
+- **Lock:** liberado tras verificar recibo, sincronización y token propio.

@@ -1,0 +1,51 @@
+{
+  "taskId": "Q-20261026-VF-ITERATION-140",
+  "status": "complete_reconciliation_pending_external_gates",
+  "createdAtUtc": "2026-10-26T05:35:36.333509+00:00",
+  "completedAtUtc": "2026-10-26T05:39:06Z",
+  "lockToken": "b367b3f067c6bbb5c8d670c9487f5f11",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "updates": [
+    {
+      "range": "Accionables!D20:N20",
+      "recordId": "eval-junie-blend-27b-3090-20261025",
+      "reconciliation": "Matched to Q135 exact JetBrains Qwen3.8-3.6-27B-blend Q4_K_M vs Qwen3.8-27B Q4_K_M A/B, 3 seeds, 32K; no repeat or 64K/128K extension justified after quality gate failed.",
+      "readbackExact": true,
+      "cellCount": 11,
+      "formatReadback": "WRAP/TOP"
+    },
+    {
+      "range": "IA local!I58:L58",
+      "recordId": "q134-sheet-58-qwen-ghidra-fixture",
+      "reconciliation": "Q138 completed with a synthetic C/Ghidra fixture; it does not validate a real R36S/PortMaster binary.",
+      "readbackExact": true,
+      "updatedCellCount": 2,
+      "cellCount": 4,
+      "formatReadback": "WRAP/TOP"
+    }
+  ],
+  "localInbox": {
+    "path": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/inbox.json",
+    "entries": 69,
+    "updatedSequence": 63,
+    "updatedId": "q134-sheet-58-qwen-ghidra-fixture",
+    "beforeSha256": "d7f5c1c5f7e9cdf4ef7d740ac8e6ceb39fd3b342b7baa789701bcaae451e3124",
+    "afterSha256": "1dbb56049822fa23e3e9320b7e47adc5425a20cbca1ee42041115ac5365f3215"
+  },
+  "localActionables": {
+    "path": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/actionables.json",
+    "entries": 31,
+    "updatedId": "vf-qwen-ghidra-open-fixture-20261025",
+    "beforeSha256": "7a549dbe1849e800b784937b77c155d21c69732247922aa212e301705f458f0e",
+    "afterSha256": "e97a979ab4cc29d3f63f15e512627074978079b883e9611da70aae67af712a1a",
+    "backup": "data/actionables.json.bak.q140-20261026T0537Z"
+  },
+  "noBuildBenchmarkInferenceOrGpu": true,
+  "preserved": ["Qwen Flash-Next ASTRA", "SOL", "PeritoSoft models"],
+  "remainingExternalGates": [
+    "Windows native session for Job Objects and NInfer Windows preview; user previously asked to keep these pending.",
+    "Trusted authenticated principal and resource policy for tenant authorization tests.",
+    "Provider/model ID, authorized key reference, spend cap and data boundary for VF-20261019 sources #20/#21 hybrid route A/B.",
+    "Owned or openly licensed real R36S/PortMaster binary plus reproducible behavior oracle for a domain-specific reverse-engineering test."
+  ]
+}
