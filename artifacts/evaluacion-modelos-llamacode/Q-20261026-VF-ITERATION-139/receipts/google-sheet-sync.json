@@ -1,0 +1,48 @@
+{
+  "taskId": "Q-20261026-VF-ITERATION-139",
+  "status": "complete",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "sheetTitle": "Resultados",
+  "sheetId": 1972251122,
+  "rowsWritten": "A179:AF193",
+  "rowCountBefore": 177,
+  "rowCountAfter": 192,
+  "gridRowCountAfter": 195,
+  "columnCount": 32,
+  "recordIds": [
+    "ASTRA-TASKFLOW-20261008-R8192-3REPAIR",
+    "SOL-TASKFLOW-20261008-R8192-3REPAIR",
+    "Q06-H2-ASTRA-PILOT",
+    "Q07-H2-ASTRA-TRIAGE-V2",
+    "Q08-H2-ASTRA-TRIAGE-V3",
+    "Q09-H2-ASTRA-TRIAGE-V4",
+    "Q10-H2-REASONING-NONE",
+    "Q10-H2-REASONING-LOW",
+    "Q11-H2-LOW-2200",
+    "Q12-H2-COMPACT-PROMPT",
+    "Q13-H2-STATUS-EVIDENCE-TAXONOMY",
+    "Q14-H2-SEQUENCE-TAXONOMY",
+    "Q15-H2-STATUS-BOUNDARIES",
+    "Q16-H2-STATUS-HOLDOUT",
+    "Q29-QWEN38-27B-Q4KM-BASELINE"
+  ],
+  "readback": {
+    "exactCellMatch": true,
+    "cellsVerified": 480,
+    "mismatchCount": 0,
+    "allIdsMatch": true,
+    "format": "Arial 10; WRAP; vertical TOP",
+    "dataValidationCount": 0,
+    "chipCount": 0,
+    "visualVerification": "No browser tabs were available in the current CUA session; native cell-format readback verified the copied style."
+  },
+  "audit": {
+    "spreadsheetTabsReviewed": 18,
+    "localResultsMarkdownScanned": 202,
+    "historicalResultsRowsBefore": 177,
+    "excludedDuplicate": "Q19 exact experimental fingerprint/sources superseded by Q56; not an independent result",
+    "noBenchmarksOrGpuUsed": true
+  },
+  "completedAtUtc": "2026-10-26T05:26:52.393115+00:00"
+}
