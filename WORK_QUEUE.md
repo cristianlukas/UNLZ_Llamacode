@@ -2550,3 +2550,13 @@ Preflight concluido: este Codex continúa en Ubuntu 24.04; no están disponibles
 - **Verificación:** Sheet `Accionables!D20:N20` e `IA local!I58:L58` leído de vuelta; 15 celdas coinciden y conservan `WRAP`/`TOP`. Inbox local (69 entradas) y `data/actionables.json` reconciliados; recibos Q140 registran hashes antes/después y copia previa del archivo de accionables.
 - **Recibos:** `artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-140/RESULTS.md` y `receipts/reconciliation.json`.
 - **Lock:** liberado tras verificar recibo, sincronización y token propio.
+
+## Q141 · Auditar resultados locales antiguos contra el workbook y completar Resultados · 2026-10-26
+
+- **Estado:** completado bajo lock exclusivo; se cotejaron informes locales y pestañas IA, y se añadieron 32 filas históricas con evidencia local a `Resultados!A194:AF225`.
+- **Reglas:** preservar ASTRA/SOL/Flash-Next productivos y usos PeritoSoft; no ejecutar pruebas, inferencia, build ni GPU para esta migración documental; registrar N/D donde no exista métrica; verificar readback exacto.
+- **Resultado:** además se actualizaron las fichas de inventario para ASTRA IQ2_XS, ASTRA IQ3_S y Flash-Next UD-Q4_K_XL, y se añadió Ekbasis como modelo local evaluado con Windows N/D. El inventario local comprendió 195 archivos `RESULTS.md`; se revisaron las cinco pestañas de IA relevantes. Q19 se excluyó por fixture/fingerprint ya representados por Q56; resultados inválidos, sin score o solo documentales no se convirtieron en filas de rendimiento.
+- **Verificación:** lectura de vuelta exacta en 1.024 celdas, sin diferencias; WRAP/TOP/Arial 10 conservados en Resultados; freeze panes preservados. Inventario row23, tres notas de modelo y resumen leídos de vuelta sin diferencias.
+- **Sin build, inferencia, benchmark ni GPU.** ASTRA, SOL, Flash-Next productivo y PeritoSoft permanecen intactos.
+- **Recibos:** `artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-141/RESULTS.md` y `receipts/google-sheet-sync.json`.
+- **Lock:** liberado tras guardar los recibos, completar el registro y verificar el token propio.

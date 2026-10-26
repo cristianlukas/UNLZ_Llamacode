@@ -1,0 +1,88 @@
+{
+  "task": "Q141",
+  "completed_utc": "2026-10-26T06:04:52Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_url": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "sheets": {
+    "Resultados": {
+      "sheet_id": 1972251122,
+      "range_written": "A194:AF225",
+      "records_before": 192,
+      "records_added": 32,
+      "records_after": 224,
+      "grid_rows_after": 225,
+      "ids": [
+        "Q35-ASTRA-262K",
+        "Q35-ASTRA-524K",
+        "Q14-NIAH-131K",
+        "Q14-NIAH-262K",
+        "Q14-NIAH-524K",
+        "Q14-NIAH-1M",
+        "Q14-CONTEXT-PERF-131K",
+        "Q14-CONTEXT-PERF-262K",
+        "Q14-CONTEXT-PERF-524K",
+        "Q14-CONTEXT-PERF-1M",
+        "Q09-COMPACTION-CACHE-OFF",
+        "Q09-COMPACTION-CACHE-ON",
+        "Q14-SAMPLING-T01",
+        "Q14-SAMPLING-T06",
+        "Q14-SAMPLING-T10",
+        "Q14-R9700-Q4-TASKFLOW",
+        "Q130-TRIM-STAGE-WEIGHTS-OFF",
+        "Q130-TRIM-STAGE-WEIGHTS-ON",
+        "Q09-EKBASIS-TEXT-SAFETY",
+        "Q15-EKBASIS-VISION-CONTEXT",
+        "Q09-MUSE-TEXT-ASTRA-IQ3S",
+        "Q09-MUSE-TEXT-ASTRA-IQ3S-MUSE",
+        "Q09-MUSE-TEXT-Q4-UDQ4KXL",
+        "Q09-MUSE-TEXT-Q4-UDQ4KXL-MUSE",
+        "Q13-MUSE-CU-ASTRA-BASE",
+        "Q13-MUSE-CU-ASTRA-OVERLAY",
+        "Q13-MUSE-CU-Q4-BASE",
+        "Q13-MUSE-CU-Q4-OVERLAY",
+        "Q16-MUSE-CU-ASTRA-BASE",
+        "Q16-MUSE-CU-ASTRA-OVERLAY",
+        "Q16-MUSE-CU-Q4-OVERLAY",
+        "Q16-MUSE-CU-Q4-BASE"
+      ],
+      "readback": {
+        "range": "A194:AF225",
+        "cells_checked": 1024,
+        "mismatches": 0,
+        "wrap": true,
+        "vertical_alignment": "TOP",
+        "font": "Arial 10",
+        "frozen_rows": 1,
+        "frozen_columns": 4
+      }
+    },
+    "Inventario de modelos": {
+      "sheet_id": 2026102061,
+      "existing_model_rows_updated": [8, 14, 21],
+      "new_model_row": 23,
+      "new_model": "caiovicentino1/Ekbasis-27B-INT4",
+      "windows_path": "N/D",
+      "linux_evaluation_store": "/media/cristian/Disco local/Models/evaluations/ekbasis-27b-int4",
+      "readback_mismatches": 0,
+      "frozen_rows": 3
+    }
+  },
+  "local_audit": {
+    "results_markdown_files_indexed": 195,
+    "relevant_workbook_tabs_reviewed": [
+      "IA local",
+      "Evaluaciones LlamaCode",
+      "Accionables",
+      "Inventario de modelos",
+      "Resultados"
+    ],
+    "tests_or_inference_run": false,
+    "build_run": false,
+    "gpu_used": false,
+    "deduplication_notes": [
+      "Existing Q10 Frontier, Saluki, MTP, and R9700 rows were already present and were not duplicated.",
+      "Q19 was excluded as the same fixture/fingerprint already represented by Q56.",
+      "Documentary-only audits and invalid or unscored attempts were not converted into model performance rows."
+    ]
+  }
+}
