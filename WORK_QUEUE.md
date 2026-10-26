@@ -2606,3 +2606,44 @@ Preflight concluido: este Codex continúa en Ubuntu 24.04; no están disponibles
 - **Verificación:** 289 IDs anteriores + 56 nuevos = 345 únicos; readback exacto de 1.792 celdas, 0 diferencias; 0 fórmulas, chips o validaciones; WRAP/TOP/Arial 10 y freeze panes (1 fila, 4 columnas) preservados. Ninguna otra pestaña se modificó.
 - **Recibos:** `artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-146/RESULTS.md`, `PLAN.md`, `receipts/sheet-rows.json`, `receipts/google-sheet-sync.json`.
 - **Recursos:** sin benchmark, inferencia, descarga, build, servidor ni GPU. Esta migración documental no cierra ni cambia los gates de pruebas pendientes de VF; el lock Q146 sigue reservado para la continuación de la tarea activa.
+
+## Q147 · verificar y recuperar el recibo local de las filas Q26/Q31/Q45/Q47/Q49 · 2026-10-26
+
+- Las 9 filas ya estaban presentes en Resultados!A347:AF355; esta auditoría no repitió la escritura.
+- Readback: 288 celdas; 9 IDs distintos; Arial 10, WRAP/TOP en las 288; cero fórmulas, validaciones o chips; panes congelados intactos.
+- Snapshot remoto recuperado en artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-147/receipts/sheet-rows.json; fuente de filas Q26, Q31, Q45, Q47 y Q49.
+- Sin inferencia, benchmark, build, descarga, servidor o GPU.
+
+## Q148 · cotejo integral de Resultados con el workbook y los informes locales · 2026-10-26
+
+- Se leyeron las 18 pestañas del workbook Listado y se revisaron 200 RESULTS.md locales; Resultados tiene 354 IDs de datos, todos únicos.
+- Q138, Q124, Q127, Q74, Q99/Q100 y Q117 ya tienen filas. Las nueve filas de Q147 también están presentes y documentadas localmente.
+- No se anexaron filas nuevas: los demás candidatos revisados son preflights sin score, auditorías/pruebas de app, fallos previos a respuesta válida, replays CPU, duplicados o cohortes ya cubiertas. La exclusión y cobertura están en artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-148/RESULTS.md y receipts/workbook-tabs.json.
+- Cotejo documental únicamente; ASTRA, SOL, Flash-Next productivo y modelos PeritoSoft no se tocaron; sin inferencia/benchmark/build/GPU.
+
+## Q149 · revalidar el gate MCP tenant P2.1 en el código actual · 2026-10-26
+
+- **Estado:** auditoría estática completada; el test de comportamiento sigue bloqueado por falta de principal propagado y policy confiable del servidor.
+- **Hallazgo:** existe `localPrincipal` y `setTrustedPrincipal`, pero la búsqueda global no encontró un call site del producto que conecte el host con `AgentToolRunner`; el reenvío interno hacia `McpClient` no basta. El guard local permite solo workspace exacto y deniega `tenant`/`resource`; las pruebas actuales ejercitan ese helper, no una llamada MCP con side effect ni la autorización del backend.
+- **Siguiente gate:** conectar una identidad autenticada del host y una policy real por recurso; después probar same-tenant allow y cross-tenant read/write deny antes del side effect, con estado/auditoría verificados. No aceptar identidad desde argumentos o prompt del modelo, ni confundir `_meta`/variables de entorno con autenticación del servidor.
+- **Recibo:** `artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-149/RESULTS.md`.
+- **Recursos:** sin tests, build, servidor, inferencia, benchmark, descarga ni GPU; ASTRA/SOL/Flash-Next productivo/PeritoSoft intactos.
+
+## Q150 · liberar el GGUF Swift 1.5 no adoptado tras verificar PeritoSoft · 2026-10-26
+
+- **Estado:** completado bajo el lock vigente del lote VF.
+- **Prerregistro:** `artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-150/PLAN.md`.
+- **Candidato único:** Swift 1.5 Qwen3.8-27B IQ2_XS, Q97. Gate fallido frente a ASTRA (empate de 2/8, mismo holdout aprobado; 2,46× más lento E2E, decode 2,51× menor); archivo de evaluación de 8.422.841.632 bytes en HDD extra.
+- **Condiciones:** hash fijado y link count 1; comprobar que no tenga referencia/configuración de PeritoSoft ni proceso activo; conservar los recibos y no tocar otros modelos.
+- **Resultado:** retirado solo el GGUF fijado por hash; HDD extra pasó de 26.930.081.792 a 35.352.924.160 bytes libres (+8.422.842.368). Nombre/ruta/hash exactos no aparecieron en configuración PeritoSoft; no había proceso consumidor ni hard links adicionales. Readback de `Inventario de modelos!A7:R7` confirmó estado retirado, ruta previa histórica, SHA, métricas y formato Arial 10/WRAP/TOP en las 18 celdas.
+- **Recibos:** `artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-150/RESULTS.md` y `receipts/storage-cleanup-swift-q87.json`.
+- **Preservación:** no se tocó ASTRA, SOL, otros perfiles Flash-Next, PeritoSoft, configuraciones ni evidencia histórica.
+
+
+## Q151 · retirar variantes de modelos no elegidas · 2026-10-26
+
+- **Estado:** completada bajo lock vigente `2242863e-c78e-4fa9-9649-c1d1541f3919`.
+- Se retiraron 20 variantes de la lista indicada por el usuario, 139 archivos/enlaces, 861.385.845.611 bytes en C, D y HDD extra; no hubo errores.
+- Se preservaron SOL Qwen3.8-27B AutoRound INT4/W4A8, ASTRA Flash-Next RCO IQ2_XS y el MTP compartido. Resultados y recibos históricos permanecen.
+- Las pestañas `Modelos locales por peso` e `Inventario de modelos` del Google Sheet se actualizaron; 20/20 filas retiradas muestran 0 bytes y ASTRA/SOL conservan sus valores. El manifiesto contiene rutas, tamaños e inodos exactos y registra el preflight.
+- Sin inferencia, benchmark, build ni GPU. Recibos en `artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-151/`.
