@@ -1,0 +1,35 @@
+{
+  "recorded_utc": "2026-10-26T23:13:34.327Z",
+  "cells": [
+    {
+      "sequence_index": 1,
+      "seed": 42,
+      "arm": "control"
+    },
+    {
+      "sequence_index": 2,
+      "seed": 42,
+      "arm": "candidate"
+    },
+    {
+      "sequence_index": 3,
+      "seed": 43,
+      "arm": "candidate"
+    },
+    {
+      "sequence_index": 4,
+      "seed": 43,
+      "arm": "control"
+    },
+    {
+      "sequence_index": 5,
+      "seed": 44,
+      "arm": "control"
+    },
+    {
+      "sequence_index": 6,
+      "seed": 44,
+      "arm": "candidate"
+    }
+  ]
+}

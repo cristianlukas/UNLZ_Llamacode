@@ -1,0 +1,38 @@
+{
+  "iteration": "Q154",
+  "kind": "fresh-preflight-before-control-smoke-02",
+  "timestamp_utc": "2026-10-26T22:15:25.557314+00:00",
+  "lock": {
+    "task": "Q146 resume justified VF-20261019-01 tests",
+    "token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+    "verified_from": "WORK_QUEUE.lock"
+  },
+  "peritosoft_or_llama_server_processes": [],
+  "other_matching_processes": [
+    "959412    2875 artcraft-launch /tmp/.mount_artcraPGcaAc/usr/bin/artcraft-launcher",
+    " 959445    2875 artcraft-launch /home/cristian/Descargas/artcraft-launcher-0.3.2-linux-x86_64.AppImage",
+    "3952277    2875 artcraft-launch /home/cristian/Descargas/artcraft-launcher-0.3.2-linux-x86_64.AppImage"
+  ],
+  "target_port_listeners": [],
+  "ports_checked": [
+    8033,
+    32100,
+    32101,
+    8350,
+    8354
+  ],
+  "gpu": [
+    "0, NVIDIA GeForce RTX 3090, 1088 MiB, 23087 MiB, 38 %",
+    "1, NVIDIA GeForce RTX 3090, 110 MiB, 24068 MiB, 17 %"
+  ],
+  "memory": {
+    "MemAvailable": "115315228 kB",
+    "SwapFree": "4090640 kB"
+  },
+  "memory_psi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=1567739145\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=1566589768",
+  "d_volume_free_bytes": 402891898880,
+  "artcraft_gui_left_running": true,
+  "actions_taken": [],
+  "decision": "PASS: no PeritoSoft/llama-server/Strata serve processes; target ports free; both RTX 3090 visible. ArtCraft GUI remains running. Proceed with ASTRA control smoke only.",
+  "scanner_note": "Initial broad text scan matched its own shell/Python source and CUA helper arguments containing the repository path. Those are excluded; the executable-name scan found only ArtCraft GUI processes. No PeritoSoft, llama-server, or Strata serve process."
+}

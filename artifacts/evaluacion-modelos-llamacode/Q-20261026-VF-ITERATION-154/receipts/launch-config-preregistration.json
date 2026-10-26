@@ -1,0 +1,55 @@
+{
+  "iteration": "Q154",
+  "registered_utc": "2026-10-26T22:07:41Z",
+  "purpose": "Freeze candidate and control launch profiles before server startup or inference.",
+  "engine": "/media/cristian/Disco local/Models-eval/Q153-huihui-v2/runtime/components/engine/0.1.50-linux-x86_64-cuda-cuda13/strata",
+  "engine_version": "Qwen engine 0.1.50 bundled with Strata v0.2.6; Control wrapper 0.1.51",
+  "hardware": [
+    0,
+    1
+  ],
+  "gpus_asked": true,
+  "layer_split": "auto",
+  "port": 8350,
+  "context": 32768,
+  "kv": "int8",
+  "kv_resident": 32768,
+  "mtp": "off (no --mtp path or speculation flags)",
+  "max_new": 256,
+  "prefill": "auto",
+  "expert_cache": "auto",
+  "expert_profile": "/media/cristian/Disco local/Models-eval/Q154-huihui-v2/profile/neutral-expert-profile.bin",
+  "sampling": {
+    "temperature": 0.6,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0,
+    "repetition_penalty": 1.0,
+    "presence_penalty": 0.0
+  },
+  "environment": {
+    "STRATA_PREFILL_CPU_SHARE": "0"
+  },
+  "candidate_config": "configs/huihui-v2-32k.json",
+  "control_config": "configs/astra-rco-iq2xs-32k.json",
+  "candidate_ple_gguf": "/media/cristian/Disco local/Models-eval/Q154-huihui-v2/model/unsloth-UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00002-of-00003.gguf",
+  "control_ple_gguf": "/media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS-00002-of-00002.gguf",
+  "comparability": "same runtime, serving wrapper, GPU pair, context, KV policy, prefill/cache policy, sampling, port and max generation. The quant/fine-tune is the intended profile difference. No 1-GPU fallback.",
+  "gates": "First run strata serve --plan --offline for both. Before actual start, re-read WORK_QUEUE/lock and check for PeritoSoft/inference servers and ports. Server startup must allocate >=1 GiB on each card; otherwise stop without score.",
+  "explicit_gpu_flag": "--gpu 0,1 is added to both engine argv; serve-plan will be checked to prove no default/single-GPU fallback.",
+  "serve_plan_validation": {
+    "captured_utc": "2026-10-26T22:13:12Z",
+    "candidate_exit_code": 0,
+    "control_exit_code": 0,
+    "both_offline_plan_only": true,
+    "both_engine_argv_include": [
+      "--gpu",
+      "0,1",
+      "--expert-profile",
+      "/media/cristian/Disco local/Models-eval/Q154-huihui-v2/profile/neutral-expert-profile.bin"
+    ],
+    "both_use_same_engine": true,
+    "no_server_or_model_started": true
+  },
+  "expert_profile_policy": "Identical neutral 48x512 all-expert rank for both arms; generated with --no-base without traces after smoke 01 demonstrated dual-GPU layer split requires --expert-profile. Not workload-calibrated."
+}

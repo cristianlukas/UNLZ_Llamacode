@@ -1,0 +1,19 @@
+{
+  "iteration": "Q154",
+  "kind": "matched-VRAM-reserve-amendment",
+  "timestamp_utc": "2026-10-26T22:20:22.167012+00:00",
+  "trigger": "ASTRA control smoke 04 reached ready and answered, but engine logged only 466 MiB VRAM free at idle and warned that low VRAM can cause paging/stalls. A request also logged 480 MiB free (<512 MiB).",
+  "source": "pinned source43-project-maya/src/program/generate.cpp:5756-5757 recommends adding --vram-reserve-mib (default reserve + 512 - observed free); default is 700 MiB at line 240. The observed condition recommends 732 MiB, rounded to 768 MiB.",
+  "change": "Add --vram-reserve-mib 768 identically to both ASTRA control and Huihui candidate configs. No host RAM cap; no context reduction.",
+  "matched_protocol": {
+    "GPU": "0,1",
+    "context": 32768,
+    "prefill": 8192,
+    "spec": 4,
+    "spec_min_p": 0.5,
+    "MTP": "off",
+    "expert_profile_sha256": "b3e62120218cd96d175a0547530158869177dd2164b22b40f32bea7d7e85fb8c",
+    "vram_reserve_mib": 768
+  },
+  "decision_boundary": "Re-run control smoke under the amended final comparison configuration; if start/API succeeds and both cards retain >=1 GiB model allocation, proceed to candidate smoke. Both arms use the exact same reserve."
+}

@@ -1,0 +1,36 @@
+{
+  "iteration": "Q154",
+  "amendment": "throughput 32K-context endpoint feasibility",
+  "recorded_utc": "2026-10-26T22:40:25.415435+00:00",
+  "trigger": "The preregistered 32768 prompt tokens plus 256 requested output tokens exceeds the shared 32768-token context and could be truncated/rejected.",
+  "preserved": {
+    "context_tokens": 32768,
+    "target_output_tokens": 256,
+    "prompt_sizes_repetitions": 3,
+    "runtime_gpu_pair_sampling_cache_policy": "unchanged"
+  },
+  "change": {
+    "rendered_prompt_tokens": [
+      4096,
+      16384,
+      32512
+    ],
+    "labels": [
+      "4K prompt",
+      "16K prompt",
+      "32K window endpoint"
+    ],
+    "context_budget": "32512 exact prompt tokens + 256 output-token cap = 32768 total",
+    "token_count_method": "Pinned Strata Control 0.1.51 tokenizer and ChatTemplate; count the full rendered OpenAI chat prompt, including template tokens. Each size has three deterministic matched prompts, with a unique leading nonce per repetition to avoid prompt/conversation cache reuse.",
+    "validity": "API usage.prompt_tokens must equal the fixture target; cached_tokens and engine cache_n must be zero. Otherwise mark the cell invalid and rerun once with a new nonce, keeping the same target."
+  },
+  "tokenizer_parity": {
+    "same_across_control_and_candidate": true,
+    "chat_template_sha256": "12827f24b742ea4e80cdc12dbcf9622227056b9f797252a3149263d4f9aaadce",
+    "merges_sha256": "4ba698529766c7a2f5052083ea10cdf2485577f5237a332ee291054eb11e3332",
+    "token_type_sha256": "5088c8c298fc06af8382ddb3b76c888703ac2634e82263b97eedcc2ad202738b",
+    "vocab_sha256": "4ba64f0332abcfb0b600b7df1537d1e836e68009d5fb7cdb77339738dc6365c4",
+    "tokenizer_json_sha256_differs": "Tokenizer metadata wrapper differs; actual vocab, merges, token types, and chat template match byte-for-byte."
+  },
+  "next": "Generate and hash all nine token-exact requests offline; run a warmup and the scored requests on each profile, serially; record load, prefill/decode, TTFT/E2E, usage and memory. No quality claim from this screen."
+}

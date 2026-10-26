@@ -1,0 +1,63 @@
+{
+  "iteration": "Q154",
+  "amendment": "Tool-Eval detached-engine ownership check and isolated retry attempt 02",
+  "recorded_utc": "2026-10-26T23:13:21.140800+00:00",
+  "trigger": "Attempt 01 loaded the ASTRA control on both GPUs but its server monitor classified Strata Control 0.1.51 detached Qwen engine PID 228364 as external because that engine uses its own process group.",
+  "attempt_01": {
+    "runner_sha256": "5ae64fe59a2087aa126fd5c8cd9818775b88e58ecd8b404b992137c43b30f68e",
+    "status": "infrastructure abort before a scored Tool-Eval scenario",
+    "control_server_pid": 228227,
+    "detached_engine_pid": 228364,
+    "profile_match": "engine argv matched the exact pinned Qwen engine executable, --pack, --native, --ple-gguf and --expert-profile for ASTRA control",
+    "tool_eval_log": "KeyboardInterrupt during Python ssl import; no result.json, no completed scenario, no quality score",
+    "cleanup_receipt": "runs/tool-eval/campaign/seed-42-control/cleanup.json",
+    "cleanup": "SIGINT exit 130; port 8350 free; no inference processes remaining; OOM count unchanged; GPU memory returned to 1066/110 MiB"
+  },
+  "correction": {
+    "change": "Recognize only a detached engine whose executable and four model/profile arguments exactly match the active Q154 arm; keep the control server PID group owned and reject every other matching server process. Require at least one exact engine PID after readiness; after cleanup require zero servers and a free port.",
+    "safety_gates_changed": false,
+    "resource_gates_changed": false,
+    "tool_eval_suite_or_sampling_changed": false,
+    "no_automatic_retry": true,
+    "new_attempt": "02",
+    "output_root": "runs/tool-eval/campaign-02/"
+  },
+  "validation": {
+    "py_compile": "PASS",
+    "tool_eval_dry_run_receipt": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-154/receipts/tool-eval-dry-run-attempt-02.json",
+    "dry_run_exit_code": 0,
+    "dry_run_scenarios": 28,
+    "dry_run_scenario_ids": [
+      "TC-70",
+      "TC-71",
+      "TC-72",
+      "TC-73",
+      "TC-74",
+      "TC-75",
+      "TC-76",
+      "TC-77",
+      "TC-78",
+      "TC-79",
+      "TC-80",
+      "TC-81",
+      "TC-82",
+      "TC-83",
+      "TC-84",
+      "TC-85",
+      "TC-86",
+      "TC-87",
+      "TC-88",
+      "TC-89",
+      "TC-90",
+      "TC-91",
+      "TC-92",
+      "TC-93",
+      "TC-94",
+      "TC-95",
+      "TC-96",
+      "TC-97"
+    ],
+    "updated_runner_sha256": "cae0d74c41469a830f77f26dcf1b48568c19a9019db6faf181661e6ae1bdd974"
+  },
+  "next_step": "Rerun the complete preregistered seed schedule as an explicitly named attempt 02; preserve attempt 01 evidence and do not reuse its directory."
+}

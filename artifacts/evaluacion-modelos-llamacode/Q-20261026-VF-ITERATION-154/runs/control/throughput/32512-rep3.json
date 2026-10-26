@@ -1,0 +1,89 @@
+{
+  "size": 32512,
+  "replicate": 3,
+  "recorded_utc": "2026-10-26T22:56:23.938Z",
+  "attempts": [
+    {
+      "attempt": 1,
+      "request": "inputs/throughput/control/32512-rep3.json",
+      "http_status": 200,
+      "wall_s": 11.6913,
+      "body": {
+        "id": "chatcmpl-9400fdafa6e947d4a148f0ff",
+        "object": "chat.completion",
+        "created": 1793055372,
+        "model": "q154-astra-rco-iq2-xs",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": null,
+              "reasoning_content": "We need answer user's request. User provided a long string starting \"e835579a601fe343 Q154 throughput fixture; window=32512; replicate=3; variant=0.\nlatency assertion performance buffer generation audit request, request system shard task audit nonce performance, useful throughput reproducible pair prompt. latency harness, audit token agent policy template memory module, policy policy profile prompt evaluation local vector, generation graph shard. response harness route compile, agent quality document document module quality performance, candidate performance sequence workspace safety deterministic control, system. metric nonce code response artifact audit, buffer inference result response compile output output, expert engine model template document expert. profile, document control latency pair request deterministic useful, workspace generation workspace nonce graph assertion prompt, boundary reproducible expert monitor. pair performance monitor, template evaluation nonce engine cache compile useful, nonce buffer assertion useful integration request request, shard request. harness tokenizer output nonce document, buffer deterministic workspace boundary monitor token boundary, model monitor policy generation layer tokenizer request. prompt safety useful engine template deterministic performance, validation decode control profile local compile framework, task input code performance module. route generation, monitor result module fixture module local workspace, engine"
+            },
+            "finish_reason": "length"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 32512,
+          "completion_tokens": 248,
+          "total_tokens": 32760,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 32512,
+          "prompt_ms": 10554.4,
+          "prompt_per_token_ms": 0.325,
+          "prompt_per_second": 3080.4,
+          "predicted_n": 248,
+          "predicted_ms": 1123.3,
+          "predicted_per_token_ms": 4.529,
+          "predicted_per_second": 220.8,
+          "draft_n": 180,
+          "draft_n_accepted": 171
+        }
+      },
+      "server_history_latest": {
+        "id": "6971f8835302",
+        "projection": null,
+        "time": 1793055372.255989,
+        "duration_s": 11.7,
+        "finish": "length",
+        "prompt_tokens": 32512,
+        "reused": 0,
+        "output_tokens": 248,
+        "first_engine_token_s": 10.567,
+        "prompt_total": 32512,
+        "prompt_read": 32512,
+        "reasoning_recoveries": 0,
+        "reasoning_repeat_coverage": 0.0,
+        "engine_generated": 248,
+        "prompt_ms": 10554.4,
+        "decode_ms": 1123.3,
+        "decode_tok_s": 220.8,
+        "hit_rate": null,
+        "pcie_share": null,
+        "ram_blobs": 0,
+        "file_blobs": 0,
+        "file_mb": 0,
+        "drafts_offered": 180,
+        "drafts_accepted": 171
+      },
+      "valid": true
+    }
+  ],
+  "ttft_s": 10.567,
+  "prefill_tok_s": 3080.4,
+  "prefill_ms": 10554.4,
+  "decode_tok_s": 220.8,
+  "decode_ms": 1123.3,
+  "prompt_tokens": 32512,
+  "cached_tokens": 0,
+  "completion_tokens": 248,
+  "finish_reason": "length",
+  "e2e_wall_s": 11.6913,
+  "valid": true
+}

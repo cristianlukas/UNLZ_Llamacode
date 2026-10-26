@@ -1,0 +1,17 @@
+{
+  "iteration": "Q154",
+  "registered_utc": "2026-10-26T22:13:12Z",
+  "trigger": "First control smoke aborted before model load: Strata requires --expert-profile when auto layer-splitting over multiple GPUs.",
+  "source_evidence": "Pinned source43-project-maya/src/program/generate.cpp:3408-3411; runtime engine.log recorded the same requirement.",
+  "decision": "Generate a deterministic neutral expert profile with the pinned make_profile.py --no-base --out <Q154 path>; this ranks all 48x512 expert pairs in the script-defined interleaved order. Attach the exact same profile file to both candidate and control.",
+  "fairness": "Avoid giving the known ASTRA profile only to control or inventing a candidate-specific profile. Both arms use identical profile bytes/cache priority, expert-cache auto, prefill auto, dual GPUs and all prior fixed settings.",
+  "limitation": "The profile is not calibrated to either workload. Results are a matched neutral-cache screen; any candidate pass still requires an independent representative-workload holdout and no default promotion.",
+  "next_steps": [
+    "Generate profile and record SHA/size/header/entry count.",
+    "Add --expert-profile <shared-profile> to both configs.",
+    "Run offline serve-plan for both.",
+    "Repeat fresh process/ports/GPU/memory preflight.",
+    "Retry ASTRA smoke; if pass, stop and verify cleanup, then smoke Huihui."
+  ],
+  "no_change": "No benchmark metric, safety gate, context, model weights, sampling, or adoption threshold changed."
+}

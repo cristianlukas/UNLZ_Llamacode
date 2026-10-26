@@ -1,0 +1,35 @@
+{
+  "iteration": "Q154",
+  "generated_utc": "2026-10-26T22:13:12Z",
+  "source_script": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/runtime/source43-project-maya/tools/make_profile.py",
+  "command": [
+    "<Strata private Python>",
+    "make_profile.py",
+    "--no-base",
+    "--out",
+    "/media/cristian/Disco local/Models-eval/Q154-huihui-v2/profile/neutral-expert-profile.bin"
+  ],
+  "input_traces": [],
+  "policy": "Uniform deterministic ranking over all 48 layers \u00d7 512 experts. This exact same file is passed to control ASTRA and Huihui candidate to remove model-specific cache-ranking asymmetry. It is not workload-calibrated.",
+  "path": "/media/cristian/Disco local/Models-eval/Q154-huihui-v2/profile/neutral-expert-profile.bin",
+  "bytes": 196632,
+  "sha256": "b3e62120218cd96d175a0547530158869177dd2164b22b40f32bea7d7e85fb8c",
+  "header": {
+    "magic": "STRP",
+    "version": 1,
+    "layers": 48,
+    "experts_per_layer": 512,
+    "ranked_slots": 24576,
+    "entry_count": 24576
+  },
+  "roundtrip_verified": true,
+  "candidate_plan_exit_code": 0,
+  "control_plan_exit_code": 0,
+  "both_engine_argv_include": [
+    "--gpu",
+    "0,1",
+    "--expert-profile",
+    "/media/cristian/Disco local/Models-eval/Q154-huihui-v2/profile/neutral-expert-profile.bin"
+  ],
+  "limitations": "Results are a matched neutral-cache screen only; no per-model profile tuning. Any candidate pass is not adoption evidence without an independent representative-workload holdout."
+}

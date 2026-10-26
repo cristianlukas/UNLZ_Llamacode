@@ -1,0 +1,32 @@
+{
+  "iteration": "Q154",
+  "attempt": "ASTRA control smoke 01",
+  "started_utc": "2026-10-26T22:11:46.115661Z",
+  "ended_utc": "2026-10-26T22:11:47.994000Z",
+  "command": [
+    "/media/cristian/Disco local/Models-eval/Q153-huihui-v2/runtime/control-0.1.51/bin/strata",
+    "serve",
+    "--profile",
+    "configs/astra-rco-iq2xs-32k.json",
+    "--engine",
+    "strata",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "8350",
+    "--parallel",
+    "1",
+    "--offline",
+    "--ready-file",
+    "runs/control/smoke-01-instance.json",
+    "--output",
+    "jsonl"
+  ],
+  "control_event_pid": 123885,
+  "exit_code": 6,
+  "result": "EngineDied during startup; no ready file, no API, no generated tokens. nvidia-smi after failure showed only the preexisting ArtCraft GUI; no server process or model allocation remained.",
+  "root_cause": "engine.log: layer split across GPUs needs --expert-profile. The model did not load because neither arm had an expert cache profile in its launch arguments.",
+  "memory_diagnostics": "memory guard allowed startup: limit 123.5 GiB; current 13.9 GiB; available 109.6 GiB; floor 2.5 GiB. This was not a memory-pressure or 128-GiB capacity failure.",
+  "gpu_diagnostics_after": "GPU0 1090 MiB, GPU1 110 MiB; no inference compute process.",
+  "correction": "Preregister identical neutral 48x512 expert profile for both arms using the pinned make_profile.py --no-base with no traces. Use same profile path and ranking; repeat plan validation before smoke."
+}

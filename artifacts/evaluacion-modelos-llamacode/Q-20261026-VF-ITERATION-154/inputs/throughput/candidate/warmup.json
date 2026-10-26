@@ -1,0 +1,12 @@
+{
+  "model": "q154-huihui-v2-ud-iq4-xs",
+  "messages": [
+    {
+      "role": "user",
+      "content": "d58ae6175d753c06 Q154 throughput warmup. Reply with OK and no explanation."
+    }
+  ],
+  "temperature": 0.0,
+  "max_tokens": 32,
+  "stream": false
+}

@@ -1,0 +1,51 @@
+{
+  "recorded_utc": "2026-10-26T23:25:14.965Z",
+  "arm": "candidate",
+  "seed": 43,
+  "lock_token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+  "external_servers": [],
+  "gpus": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 1044,
+      "memory_free_mib": 23131,
+      "temperature_c": 66,
+      "utilization_percent": 5
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 110,
+      "memory_free_mib": 24068,
+      "temperature_c": 55,
+      "utilization_percent": 4
+    }
+  ],
+  "memory": {
+    "meminfo_kib": {
+      "MemAvailable": 115703112,
+      "SwapFree": 3369372
+    },
+    "psi_memory_percent": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.03
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.03
+      }
+    },
+    "vmstat_pages": {
+      "pswpin": 2324374,
+      "pswpout": 4511330,
+      "oom_kill": 0
+    }
+  },
+  "port_free": true,
+  "config": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-154/configs/huihui-v2-32k.json",
+  "config_sha256": "3f4f4e14ed6c57af61f961a8e6f93133f47192d40226d6fd9e48d7f4fea4a4d3"
+}

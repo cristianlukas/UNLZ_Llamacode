@@ -1,0 +1,89 @@
+{
+  "size": 4096,
+  "replicate": 1,
+  "recorded_utc": "2026-10-26T22:54:47.502Z",
+  "attempts": [
+    {
+      "attempt": 1,
+      "request": "inputs/throughput/control/4096-rep1.json",
+      "http_status": 200,
+      "wall_s": 12.7949,
+      "body": {
+        "id": "chatcmpl-17af5feb758d4960898a50a0",
+        "object": "chat.completion",
+        "created": 1793055274,
+        "model": "q154-astra-rco-iq2-xs",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": null,
+              "reasoning_content": "We need answer user's request. User provided a long string starting \"e135743d4084d56f Q154 throughput fixture; window=4096; replicate=1; variant=0.\" Then many words. Likely wants something? Need infer task. Could be a prompt injection? Maybe they expect output? Need analyze. The content seems random tokens, maybe a benchmark fixture. Could be asking to process? No explicit question. Need respond likely with something? We need satisfy. Could be from evaluation harness expecting exact output? Need identify pattern.\n\nUser message: \"e135743d4084d56f Q154 throughput fixture; window=4096; replicate=1; variant=0.\nframework sample buffer engine agent cache agent, profile document useful audit control code memory, document input input deterministic device. evaluation local, inference trace boundary deterministic graph template cache, device template latency sample inference latency device, input inference graph. runtime monitor candidate policy, graph profile shard document sample audit tokenizer, generation metric compile request sample throughput evaluation, template. prompt memory assertion output layer decode, integration compile agent prompt document harness throughput, policy deterministic pair assertion useful deterministic."
+            },
+            "finish_reason": "length"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 4096,
+          "completion_tokens": 256,
+          "total_tokens": 4352,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 4096,
+          "prompt_ms": 11018.6,
+          "prompt_per_token_ms": 2.69,
+          "prompt_per_second": 371.7,
+          "predicted_n": 256,
+          "predicted_ms": 1772.7,
+          "predicted_per_token_ms": 6.925,
+          "predicted_per_second": 144.4,
+          "draft_n": 132,
+          "draft_n_accepted": 122
+        }
+      },
+      "server_history_latest": {
+        "id": "303a6cd1dd80",
+        "projection": null,
+        "time": 1793055274.709317,
+        "duration_s": 12.8,
+        "finish": "length",
+        "prompt_tokens": 4096,
+        "reused": 0,
+        "output_tokens": 256,
+        "first_engine_token_s": 11.029,
+        "prompt_total": 4096,
+        "prompt_read": 4096,
+        "reasoning_recoveries": 0,
+        "reasoning_repeat_coverage": 0.0,
+        "engine_generated": 256,
+        "prompt_ms": 11018.6,
+        "decode_ms": 1772.7,
+        "decode_tok_s": 144.4,
+        "hit_rate": null,
+        "pcie_share": null,
+        "ram_blobs": 0,
+        "file_blobs": 0,
+        "file_mb": 0,
+        "drafts_offered": 132,
+        "drafts_accepted": 122
+      },
+      "valid": true
+    }
+  ],
+  "ttft_s": 11.029,
+  "prefill_tok_s": 371.7,
+  "prefill_ms": 11018.6,
+  "decode_tok_s": 144.4,
+  "decode_ms": 1772.7,
+  "prompt_tokens": 4096,
+  "cached_tokens": 0,
+  "completion_tokens": 256,
+  "finish_reason": "length",
+  "e2e_wall_s": 12.7949,
+  "valid": true
+}

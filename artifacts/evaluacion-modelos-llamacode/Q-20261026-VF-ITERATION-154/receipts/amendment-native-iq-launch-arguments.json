@@ -1,0 +1,25 @@
+{
+  "iteration": "Q154",
+  "kind": "preregistered-native-IQ-launch-amendment",
+  "timestamp_utc": "2026-10-26T22:17:08.713377+00:00",
+  "trigger": "ASTRA smoke 02 reached the engine with shared neutral profile but exited 6 before loading: native IQ pack validation requires --spec >=2 and a positive --prefill chunk.",
+  "source_evidence": {
+    "engine_source": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/runtime/source43-project-maya/src/program/generate.cpp:3620-3624",
+    "engine_rule": "native pack requires --native preset, --spec T (T >= 2), and --prefill CHUNK; prefill_chunk must be positive for multi-token prompts.",
+    "engine_help": "same source lines 427-430: native prefill auto is capped at 8192; explicit chunk avoids zero/auto resolution.",
+    "historical_default": "pinned Strata setup uses --spec 4 and --spec-min-p 0.5 for non-MTP profiles."
+  },
+  "matched_settings": {
+    "--spec": "4",
+    "--spec-min-p": "0.5",
+    "--prefill": "8192",
+    "--max-context": "32768",
+    "--kv": "int8",
+    "--kv-resident": "32768",
+    "MTP": "off; no --mtp draft directory",
+    "GPUs": "0,1",
+    "profile_sha256": "b3e62120218cd96d175a0547530158869177dd2164b22b40f32bea7d7e85fb8c"
+  },
+  "reason": "Use the pinned setup defaults for spec count/threshold and the engine documented maximum native prefill chunk (8192). Explicitly identical on ASTRA and Huihui. This is a launch correctness amendment, not performance tuning; no model-specific option.",
+  "decision_boundary": "No score until both profiles launch and generate; benchmark settings remain 32K context and same dual-GPU neutral profile."
+}

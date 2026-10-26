@@ -1,0 +1,48 @@
+{
+  "recorded_utc": "2026-10-26T22:56:28.740Z",
+  "sigint_exit_code": 130,
+  "port_free": true,
+  "remaining_inference_processes": [],
+  "gpu_after": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 1058,
+      "memory_free_mib": 23117,
+      "temperature_c": 58,
+      "utilization_percent": 17
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 110,
+      "memory_free_mib": 24068,
+      "temperature_c": 47,
+      "utilization_percent": 8
+    }
+  ],
+  "memory_after": {
+    "meminfo_kib": {
+      "MemAvailable": 116017544,
+      "SwapFree": 3368688
+    },
+    "psi_memory_percent": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 0.05,
+        "avg300": 0.06
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 0.05,
+        "avg300": 0.06
+      }
+    },
+    "vmstat_pages": {
+      "pswpin": 2324291,
+      "pswpout": 4511323,
+      "oom_kill": 0
+    }
+  },
+  "ready_file_removed": true
+}

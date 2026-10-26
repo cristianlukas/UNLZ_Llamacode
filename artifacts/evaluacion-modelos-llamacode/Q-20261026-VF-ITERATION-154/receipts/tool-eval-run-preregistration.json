@@ -1,0 +1,213 @@
+{
+  "iteration": "Q154",
+  "recorded_utc": "2026-10-26T23:09:59.674031+00:00",
+  "status": "preregistered_before_tool-eval_inference",
+  "question": "Does Huihui v2 match ASTRA quality/safety and improve task-level E2E or output tokens under the same dual-3090 Strata profile?",
+  "runner": {
+    "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-154/scripts/run_tool_eval_campaign.py",
+    "sha256": "5ae64fe59a2087aa126fd5c8cd9818775b88e58ecd8b404b992137c43b30f68e",
+    "syntax_check": "python3 -m py_compile PASS",
+    "resume_policy": "resume only after fully completed cells; refuse to rerun partial cells"
+  },
+  "tool_eval": {
+    "path": "/home/cristian/.cache/codex-tool-eval-bench-v2.8.0/.venv/bin/tool-eval-bench",
+    "sha256": "31e3c8f5fa9140738cde4e1cecc909f5335cf928a90fbdd062ec7935e0526472",
+    "version": "2.8.0",
+    "repository": "/home/cristian/.cache/codex-tool-eval-bench-v2.8.0",
+    "commit": "0a1ba68c7709f429298bc92417a9e003f61de4e3",
+    "dataset_version": "2.8.0",
+    "scenario_ids": [
+      "TC-70",
+      "TC-71",
+      "TC-72",
+      "TC-73",
+      "TC-74",
+      "TC-75",
+      "TC-76",
+      "TC-77",
+      "TC-78",
+      "TC-79",
+      "TC-80",
+      "TC-81",
+      "TC-82",
+      "TC-83",
+      "TC-84",
+      "TC-85",
+      "TC-86",
+      "TC-87",
+      "TC-88",
+      "TC-89",
+      "TC-90",
+      "TC-91",
+      "TC-92",
+      "TC-93",
+      "TC-94",
+      "TC-95",
+      "TC-96",
+      "TC-97"
+    ],
+    "scenario_count": 28,
+    "dry_run_receipt": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-154/receipts/tool-eval-dry-run.json",
+    "dry_run_sha256": "885e3696381e77cfbf2486e154a517531a5329e0e2dad4bfcd25a98488ed5802",
+    "dry_run_exit_code": 0,
+    "dry_run_selected_scenarios": 28
+  },
+  "profiles": {
+    "control": {
+      "config_path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-154/configs/astra-rco-iq2xs-32k.json",
+      "config_sha256": "ca5a5abee7c7760028a107091c8d7d7f59b19d48e39cbfe90b4748caa0b38e79",
+      "model_name": "q154-astra-rco-iq2-xs",
+      "engine_path": "/media/cristian/Disco local/Models-eval/Q153-huihui-v2/runtime/components/engine/0.1.50-linux-x86_64-cuda-cuda13/strata",
+      "engine_sha256": "ae49d5da81b9b65d50af1108c4b3f8b289ee198d9992d66268b7e885cf1a4776",
+      "sampling": {
+        "temperature": 0.6,
+        "top_p": 0.95,
+        "top_k": 20,
+        "min_p": 0.0,
+        "repetition_penalty": 1.0,
+        "presence_penalty": 0.0
+      },
+      "gpu": [
+        0,
+        1
+      ],
+      "context_tokens": 32768
+    },
+    "candidate": {
+      "config_path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-154/configs/huihui-v2-32k.json",
+      "config_sha256": "3f4f4e14ed6c57af61f961a8e6f93133f47192d40226d6fd9e48d7f4fea4a4d3",
+      "model_name": "q154-huihui-v2-ud-iq4-xs",
+      "engine_path": "/media/cristian/Disco local/Models-eval/Q153-huihui-v2/runtime/components/engine/0.1.50-linux-x86_64-cuda-cuda13/strata",
+      "engine_sha256": "ae49d5da81b9b65d50af1108c4b3f8b289ee198d9992d66268b7e885cf1a4776",
+      "sampling": {
+        "temperature": 0.6,
+        "top_p": 0.95,
+        "top_k": 20,
+        "min_p": 0.0,
+        "repetition_penalty": 1.0,
+        "presence_penalty": 0.0
+      },
+      "gpu": [
+        0,
+        1
+      ],
+      "context_tokens": 32768
+    }
+  },
+  "server": {
+    "binary": "/media/cristian/Disco local/Models-eval/Q153-huihui-v2/runtime/control-0.1.51/bin/strata",
+    "sha256": "db6d4177cb7b16137c0b8d0c1ad80bc84f7d7fbe34b05a637fcd3a7f29619423",
+    "control_release": "Strata v0.2.6 / Control 0.1.51; Qwen engine 0.1.50",
+    "endpoint": "http://127.0.0.1:8350/v1",
+    "gpu_pair": [
+      "RTX 3090 0",
+      "RTX 3090 1"
+    ],
+    "one_server_at_a_time": true,
+    "required_allocation_mib_per_card": 1024,
+    "context_tokens": 32768,
+    "mtp": "off",
+    "kv": "int8"
+  },
+  "schedule": [
+    {
+      "index": 1,
+      "seed": 42,
+      "arm": "control"
+    },
+    {
+      "index": 2,
+      "seed": 42,
+      "arm": "candidate"
+    },
+    {
+      "index": 3,
+      "seed": 43,
+      "arm": "candidate"
+    },
+    {
+      "index": 4,
+      "seed": 43,
+      "arm": "control"
+    },
+    {
+      "index": 5,
+      "seed": 44,
+      "arm": "control"
+    },
+    {
+      "index": 6,
+      "seed": 44,
+      "arm": "candidate"
+    }
+  ],
+  "command_template": [
+    "/home/cristian/.cache/codex-tool-eval-bench-v2.8.0/.venv/bin/tool-eval-bench",
+    "run",
+    "--backend",
+    "strata",
+    "--format",
+    "openai",
+    "--base-url",
+    "http://127.0.0.1:8350/v1",
+    "--model",
+    "<profile model_name>",
+    "--temperature",
+    "0.6",
+    "--top-p",
+    "0.95",
+    "--top-k",
+    "20",
+    "--min-p",
+    "0",
+    "--repeat-penalty",
+    "1",
+    "--seed",
+    "<42|43|44>",
+    "--variant-seed",
+    "20261010",
+    "--hardmode-only",
+    "--timeout",
+    "120",
+    "--max-turns",
+    "8",
+    "--parallel",
+    "1",
+    "--context-size",
+    "32768",
+    "--backend-kwargs",
+    "{\"reasoning_effort\":\"medium\"}",
+    "--label",
+    "Q154-<arm>-seed-<seed>",
+    "--fail-on-safety",
+    "--json-file",
+    "<cell>/result.json",
+    "--output-dir",
+    "<cell>/reports",
+    "--no-live"
+  ],
+  "metrics_and_gates": {
+    "quality": "candidate mean final_score >= control mean final_score - 2 points",
+    "safety": "compare per-seed Tool-Eval safety warning scenario IDs; if candidate has a warning absent from its paired control, stop the remaining campaign and mark no-go",
+    "speed": "only if quality/safety pass: >=15% lower median scenario duration on paired scenarios passed by both arms OR >=20% fewer output tokens on those same paired successful tasks",
+    "adoption": "a pass only allows a separate coding holdout; no default change"
+  },
+  "resource_guards": {
+    "lock_token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+    "no_peritosoft_or_external_inference_server_at_preflight": true,
+    "gui_use_allowed": true,
+    "no_ram_or_swap_caps": true,
+    "memory_psi_hard_stop": "full avg10 >=60% OR some avg10 >=80% for 15 consecutive 10-second samples",
+    "oom": "stop on host oom_kill counter increase",
+    "gpu_temperature": "stop at >=85C",
+    "cleanup": "SIGINT owned server group, verify port 8350 and no remaining inference processes before next profile"
+  },
+  "isolation": {
+    "network": "model endpoint loopback only; proxy variables removed for the evaluator",
+    "tool_effects": "Tool-Eval scenario tools are deterministic local mocks; send_email/calendar/write actions do not call external accounts/services",
+    "database": "run from each cell working directory so SQLite is isolated at <cell>/data/benchmarks.sqlite",
+    "outputs": "runs/tool-eval/campaign/seed-<seed>-<arm>/; never overwrite existing cell evidence"
+  },
+  "preflight_action": "PeritoSoft and its llama servers were absent at the current process/listener scan; no process was killed. ArtCraft GUI was left intact.",
+  "limitations": "Tool-Eval is an agentic task/safety screen; it is not a general intelligence score. Score is cohort-specific to Tool-Eval 2.8.0, TC-70..97, this sampling and this runtime."
+}

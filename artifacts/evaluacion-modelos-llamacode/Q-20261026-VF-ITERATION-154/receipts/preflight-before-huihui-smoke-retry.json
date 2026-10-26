@@ -1,0 +1,26 @@
+{
+  "iteration": "Q154",
+  "kind": "fresh-preflight-before-Huihui-smoke-retry",
+  "timestamp_utc": "2026-10-26T22:28:06.466424+00:00",
+  "PeritoSoft_or_inference_processes": [],
+  "other_app_processes": [
+    "959412    2875 artcraft-launch /tmp/.mount_artcraPGcaAc/usr/bin/artcraft-launcher",
+    " 959445    2875 artcraft-launch /home/cristian/Descargas/artcraft-launcher-0.3.2-linux-x86_64.AppImage",
+    "3952277    2875 artcraft-launch /home/cristian/Descargas/artcraft-launcher-0.3.2-linux-x86_64.AppImage"
+  ],
+  "target_listeners": [],
+  "gpu": [
+    "0, NVIDIA GeForce RTX 3090, 1062 MiB, 23113 MiB, 42 %",
+    "1, NVIDIA GeForce RTX 3090, 110 MiB, 24068 MiB, 45 %"
+  ],
+  "memory": {
+    "MemAvailable": "115406740 kB",
+    "SwapFree": "4090696 kB"
+  },
+  "memory_psi": "some avg10=0.00 avg60=0.00 avg300=0.03 total=1569193746\nfull avg10=0.00 avg60=0.00 avg300=0.03 total=1568037650",
+  "D_free_bytes": 402943987712,
+  "ArtCraft_left_running": true,
+  "actions_taken": [],
+  "decision": "PASS",
+  "correction": "Candidate pack regenerated with Control 0.1.51; split layer14 has comma-delimited shard roles; both serve plans pass. Start Huihui alone with --vram-reserve-mib 768."
+}

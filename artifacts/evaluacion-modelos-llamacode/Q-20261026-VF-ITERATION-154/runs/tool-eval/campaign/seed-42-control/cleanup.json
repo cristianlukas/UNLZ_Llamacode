@@ -1,0 +1,49 @@
+{
+  "recorded_utc": "2026-10-26T23:11:01.721Z",
+  "sigint_exit_code": 130,
+  "port_free": true,
+  "remaining_inference_processes": [],
+  "gpu_after": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 1066,
+      "memory_free_mib": 23109,
+      "temperature_c": 46,
+      "utilization_percent": 9
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 110,
+      "memory_free_mib": 24068,
+      "temperature_c": 33,
+      "utilization_percent": 4
+    }
+  ],
+  "memory_after": {
+    "meminfo_kib": {
+      "MemAvailable": 115471988,
+      "SwapFree": 3369236
+    },
+    "psi_memory_percent": {
+      "some": {
+        "avg10": 0.08,
+        "avg60": 0.15,
+        "avg300": 0.04
+      },
+      "full": {
+        "avg10": 0.08,
+        "avg60": 0.15,
+        "avg300": 0.04
+      }
+    },
+    "vmstat_pages": {
+      "pswpin": 2324343,
+      "pswpout": 4511330,
+      "oom_kill": 0
+    }
+  },
+  "ready_file_removed": true,
+  "failure": "RuntimeError: unexpected inference server appeared: [{\"pid\": 228364, \"pgrp\": 228364, \"argv\": [\"/media/cristian/Disco local/Models-eval/Q153-huihui-v2/runtime/components/engine/0.1.50-linux-x86_64-cuda-cuda13/strata\", \"--serve\", \"--gpu\", \"0,1\", \"--pack\", \"/media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/strata-data/packs/iq2_xs\", \"--native\", \"/media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS-00001-of-00002.gguf\", \"--ple-gguf\", \"/media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS-00002-of-00002.gguf\", \"--expert-profile\", \"/media/cristian/Disco local/Models-eval/Q154-huihui-v2/profile/neutral-expert-profile.bin\"]}]"
+}

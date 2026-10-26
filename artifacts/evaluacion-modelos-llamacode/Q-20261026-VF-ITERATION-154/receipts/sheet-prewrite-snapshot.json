@@ -1,0 +1,1209 @@
+[
+  {
+    "sheet": "IA local",
+    "cells": [
+      {
+        "v": {
+          "stringValue": "Qwen3.8 Flash-Next Huihui v2 UD-IQ4_XS vs ASTRA RCO IQ2_XS (Q154)"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "Qwen3.8 Flash-Next Huihui v2 UD-IQ4_XS vs ASTRA RCO IQ2_XS (Q154)",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Candidata abliterated/uncensored; screen dual-GPU preregistrado"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "Candidata abliterated/uncensored; screen dual-GPU preregistrado",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "2×RTX 3090 + 128 GB RAM; Linux"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "2×RTX 3090 + 128 GB RAM; Linux",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Exige asignación >=1 GiB en ambas 3090; no single-GPU fallback."
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "Exige asignación >=1 GiB en ambas 3090; no single-GPU fallback.",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Pack/model load y smoke funcional dual-3090 PASS tras repack; ahora detenido. No hay benchmark ni score."
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "Pack/model load y smoke funcional dual-3090 PASS tras repack; ahora detenido. No hay benchmark ni score.",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Fine-tune Qwen3.8 Flash-Next; test aislado de coding/agentes, calidad, seguridad y E2E."
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "Fine-tune Qwen3.8 Flash-Next; test aislado de coding/agentes, calidad, seguridad y E2E.",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Tool-Eval 2.8.0 TC-70–97 × seeds42/43/44; throughput 4K/16K/32K ×3; safety violation candidate-only detiene."
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "Tool-Eval 2.8.0 TC-70–97 × seeds42/43/44; throughput 4K/16K/32K ×3; safety violation candidate-only detiene.",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "HF repo/commit fijados; Q153 prereg base, Q154 plan y source review."
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "HF repo/commit fijados; Q153 prereg base, Q154 plan y source review.",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Q154: ASTRA y Huihui smoke funcional PASS; HTTP200 y marcador exacto. Throughput/Tool-Eval pendientes; no score de calidad."
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "Q154: ASTRA y Huihui smoke funcional PASS; HTTP200 y marcador exacto. Throughput/Tool-Eval pendientes; no score de calidad.",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Alta · candidata Flash-Next con safety gate"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "Alta · candidata Flash-Next con safety gate",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "https://huggingface.co/huihui-ai/Huihui-Qwen3.8-Flash-Next-abliterated-v2-GGUF"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP",
+          "textFormat": {
+            "link": {
+              "uri": "https://huggingface.co/huihui-ai/Huihui-Qwen3.8-Flash-Next-abliterated-v2-GGUF"
+            }
+          }
+        },
+        "display": "https://huggingface.co/huihui-ai/Huihui-Qwen3.8-Flash-Next-abliterated-v2-GGUF",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Ejecutar throughput 4K/16K/32K ×3 por brazo, en serie; luego Tool-Eval TC-70–97 × seeds42/43/44 con safety abort."
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "Ejecutar throughput 4K/16K/32K ×3 por brazo, en serie; luego Tool-Eval TC-70–97 × seeds42/43/44 con safety abort.",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Evaluaciones LlamaCode"
+        },
+        "fmt": null,
+        "display": "Evaluaciones LlamaCode",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Q154/PLAN.md; RESULTS.md; receipts/candidate-smoke-02.json; runs/candidate/smoke-02-request.json; smoke-02-response.json; engine.log."
+        },
+        "fmt": null,
+        "display": "Q154/PLAN.md; RESULTS.md; receipts/candidate-smoke-02.json; runs/candidate/smoke-02-request.json; smoke-02-response.json; engine.log.",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "No PeritoSoft consumer/process; evaluación loopback aislada y ya limpiada."
+        },
+        "fmt": null,
+        "display": "No PeritoSoft consumer/process; evaluación loopback aislada y ya limpiada.",
+        "note": null,
+        "validation": null
+      }
+    ]
+  },
+  {
+    "sheet": "Evaluaciones LlamaCode",
+    "cells": [
+      {
+        "v": {
+          "stringValue": "Q-20261026-VF-ITERATION-154"
+        },
+        "fmt": {
+          "wrapStrategy": "WRAP"
+        },
+        "display": "Q-20261026-VF-ITERATION-154",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "A/B preregistrado · reanudación Q153"
+        },
+        "fmt": {
+          "wrapStrategy": "WRAP"
+        },
+        "display": "A/B preregistrado · reanudación Q153",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Smoke funcional PASS en ASTRA/Huihui dual-3090; sin score de calidad/throughput aún."
+        },
+        "fmt": {
+          "wrapStrategy": "WRAP"
+        },
+        "display": "Smoke funcional PASS en ASTRA/Huihui dual-3090; sin score de calidad/throughput aún.",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "2026-10-26"
+        },
+        "fmt": {
+          "wrapStrategy": "WRAP"
+        },
+        "display": "2026-10-26",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Huihui v2 Qwen3.8 Flash-Next UD-IQ4_XS vs ASTRA RCO IQ2_XS · dual RTX 3090"
+        },
+        "fmt": {
+          "wrapStrategy": "WRAP"
+        },
+        "display": "Huihui v2 Qwen3.8 Flash-Next UD-IQ4_XS vs ASTRA RCO IQ2_XS · dual RTX 3090",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "HF pinned revision 411f1f7349c9711e6f75aa8d20e1612eb3a4d55d; Qwen Community License metadata; protocolo Q153 heredado"
+        },
+        "fmt": {
+          "wrapStrategy": "WRAP"
+        },
+        "display": "HF pinned revision 411f1f7349c9711e6f75aa8d20e1612eb3a4d55d; Qwen Community License metadata; protocolo Q153 heredado",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Huihui HTTP 200; marcador exacto; finish=stop. Telemetría de smoke corto (70,9/75,5 tok/s) no comparable; packer corrigió layer14."
+        },
+        "fmt": {
+          "wrapStrategy": "WRAP"
+        },
+        "display": "Huihui HTTP 200; marcador exacto; finish=stop. Telemetría de smoke corto (70,9/75,5 tok/s) no comparable; packer corrigió layer14.",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Siguiente: throughput 4K/16K/32K ×3 por brazo, serial; luego Tool-Eval TC-70–97 × seeds42/43/44, con safety abort."
+        },
+        "fmt": {
+          "wrapStrategy": "WRAP"
+        },
+        "display": "Siguiente: throughput 4K/16K/32K ×3 por brazo, serial; luego Tool-Eval TC-70–97 × seeds42/43/44, con safety abort.",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Q154/PLAN.md; RESULTS.md; receipts/candidate-smoke-02.json; runs/candidate/smoke-02-request.json y smoke-02-response.json; runs/candidate/engine.log."
+        },
+        "fmt": {
+          "wrapStrategy": "WRAP"
+        },
+        "display": "Q154/PLAN.md; RESULTS.md; receipts/candidate-smoke-02.json; runs/candidate/smoke-02-request.json y smoke-02-response.json; runs/candidate/engine.log.",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "WORK_QUEUE.md · Q154"
+        },
+        "fmt": {
+          "wrapStrategy": "WRAP"
+        },
+        "display": "WORK_QUEUE.md · Q154",
+        "note": null,
+        "validation": null
+      }
+    ]
+  },
+  {
+    "sheet": "Inventario de modelos",
+    "cells": [
+      {
+        "v": {
+          "stringValue": "Qwen3.8 Flash-Next Huihui v2"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "Qwen3.8 Flash-Next Huihui v2",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "UD-IQ4_XS · Strata Qwen engine 0.1.50"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "UD-IQ4_XS · Strata Qwen engine 0.1.50",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Pack revisado; dual-GPU model load y smoke funcional PASS. Modelo temporal sigue en Q154; sin score de calidad/throughput."
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "Pack revisado; dual-GPU model load y smoke funcional PASS. Modelo temporal sigue en Q154; sin score de calidad/throughput.",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "No consumidor PeritoSoft; servidor de evaluación cerrado tras smoke; sin uso persistente."
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "No consumidor PeritoSoft; servidor de evaluación cerrado tras smoke; sin uso persistente.",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Sin artefacto Windows"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "Sin artefacto Windows",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "/media/cristian/Disco local/Models-eval/Q154-huihui-v2/model"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "/media/cristian/Disco local/Models-eval/Q154-huihui-v2/model",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "93.682.584.224"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "93.682.584.224",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "N/D · no ejecutado"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "N/D · no ejecutado",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "N/D · no ejecutado"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "N/D · no ejecutado",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "N/D · no ejecutado"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "N/D · no ejecutado",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "N/D · no ejecutado"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "N/D · no ejecutado",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "32.768 tokens para screening; sin prueba a 262K en esta iteración"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "32.768 tokens para screening; sin prueba a 262K en esta iteración",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "2×RTX 3090, explícito --gpu 0,1; 128 GiB; Strata 0.2.6/Qwen0.1.50; 32K; MTP off; KV int8/residente32K; prefill/cache auto; serial."
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "2×RTX 3090, explícito --gpu 0,1; 128 GiB; Strata 0.2.6/Qwen0.1.50; 32K; MTP off; KV int8/residente32K; prefill/cache auto; serial.",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "2026-10-26T22:36:21.004Z"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "2026-10-26T22:36:21.004Z",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Q154/PLAN.md; RESULTS.md; receipts/candidate-smoke-02.json; runs/candidate/smoke-02-request.json, smoke-02-response.json."
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "Q154/PLAN.md; RESULTS.md; receipts/candidate-smoke-02.json; runs/candidate/smoke-02-request.json, smoke-02-response.json.",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "No se localizó uso en PeritoSoft; la app estaba cerrada por usuario."
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "No se localizó uso en PeritoSoft; la app estaba cerrada por usuario.",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Hugging Face revision 411f1f7349c9711e6f75aa8d20e1612eb3a4d55d; los 3 hashes están verificados localmente en Q154/receipts/download-and-hash.json."
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "Hugging Face revision 411f1f7349c9711e6f75aa8d20e1612eb3a4d55d; los 3 hashes están verificados localmente en Q154/receipts/download-and-hash.json.",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "SHA-256/pack/tokenizer PASS; dual-3090 smoke funcional PASS y servidor apagado. No usuario PeritoSoft; Q153 sigue cancelada; Q154 todavía sin medición comparable."
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "SHA-256/pack/tokenizer PASS; dual-3090 smoke funcional PASS y servidor apagado. No usuario PeritoSoft; Q153 sigue cancelada; Q154 todavía sin medición comparable.",
+        "note": null,
+        "validation": null
+      }
+    ]
+  },
+  {
+    "sheet": "Accionables",
+    "cells": [
+      {
+        "v": {
+          "stringValue": "A/B candidato Flash-Next"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "A/B candidato Flash-Next",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "vf-huihui-v2-q154-20261026"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "vf-huihui-v2-q154-20261026",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Alta · safety-gated"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "Alta · safety-gated",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "ASTRA + Huihui smoke funcional PASS en dual-3090; throughput y Tool-Eval pendientes."
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "ASTRA + Huihui smoke funcional PASS en dual-3090; throughput y Tool-Eval pendientes.",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Huihui v2 UD-IQ4_XS vs ASTRA RCO IQ2_XS en dual RTX 3090"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "Huihui v2 UD-IQ4_XS vs ASTRA RCO IQ2_XS en dual RTX 3090",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Coding/agentes; medir seguridad, calidad y tiempo total; sin cambio productivo automático."
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "Coding/agentes; medir seguridad, calidad y tiempo total; sin cambio productivo automático.",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Inbox #68 / Q153 cancelada; nueva autorización explícita del usuario 2026-10-26; HF commit fijado"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "Inbox #68 / Q153 cancelada; nueva autorización explícita del usuario 2026-10-26; HF commit fijado",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Preflight actual: cero PeritoSoft/inference servers; ArtCraft intacto. ASTRA smoke control PASS; Huihui smoke 02 PASS, HTTP200 y marcador exacto. Durante carga PSI se recuperó y RAM volvió al baseline."
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "Preflight actual: cero PeritoSoft/inference servers; ArtCraft intacto. ASTRA smoke control PASS; Huihui smoke 02 PASS, HTTP200 y marcador exacto. Durante carga PSI se recuperó y RAM volvió al baseline.",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Smoke funcional solamente; sin score de calidad ni comparación de throughput. No cambiar perfil productivo."
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "Smoke funcional solamente; sin score de calidad ni comparación de throughput. No cambiar perfil productivo.",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Ejecutar throughput 4K/16K/32K ×3 por brazo, serial; después Tool-Eval TC-70–97 × semillas42/43/44. Detener candidato ante violación de seguridad exclusiva."
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "Ejecutar throughput 4K/16K/32K ×3 por brazo, serial; después Tool-Eval TC-70–97 × semillas42/43/44. Detener candidato ante violación de seguridad exclusiva.",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Q154/PLAN.md; RESULTS.md; receipts/candidate-smoke-02.json; smoke request/response y engine.log."
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "Q154/PLAN.md; RESULTS.md; receipts/candidate-smoke-02.json; smoke request/response y engine.log.",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "22:10Z: cero procesos PeritoSoft/llama-server/inference; puertos 8033/32100/32101/8350/8354 libres; ArtCraft GUI intacta."
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "22:10Z: cero procesos PeritoSoft/llama-server/inference; puertos 8033/32100/32101/8350/8354 libres; ArtCraft GUI intacta.",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "2026-10-26T22:36:21.004Z"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "2026-10-26T22:36:21.004Z",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "2026-10-26T22:36:21.004Z"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP"
+        },
+        "display": "2026-10-26T22:36:21.004Z",
+        "note": null,
+        "validation": null
+      }
+    ]
+  },
+  {
+    "sheet": "Resultados",
+    "cells": [
+      {
+        "v": {
+          "stringValue": "Q49-LLAMACPP-SSE-HOLDOUT"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP",
+          "textFormat": {
+            "fontFamily": "Arial",
+            "fontSize": 10
+          }
+        },
+        "display": "Q49-LLAMACPP-SSE-HOLDOUT",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Q49 · llama.cpp SSE functional holdout · independiente de la matriz de velocidad Q47"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP",
+          "textFormat": {
+            "fontFamily": "Arial",
+            "fontSize": 10
+          }
+        },
+        "display": "Q49 · llama.cpp SSE functional holdout · independiente de la matriz de velocidad Q47",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Qwen3.8-27B Q4_K_M MTP · llama.cpp SSE baseline"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP",
+          "textFormat": {
+            "fontFamily": "Arial",
+            "fontSize": 10
+          }
+        },
+        "display": "Qwen3.8-27B Q4_K_M MTP · llama.cpp SSE baseline",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "GGUF SHA 7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP",
+          "textFormat": {
+            "fontFamily": "Arial",
+            "fontSize": 10
+          }
+        },
+        "display": "GGUF SHA 7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Funcionalidad aprobada 21/21 en el holdout; sólo valida este baseline/protocolo"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP",
+          "textFormat": {
+            "fontFamily": "Arial",
+            "fontSize": 10
+          }
+        },
+        "display": "Funcionalidad aprobada 21/21 en el holdout; sólo valida este baseline/protocolo",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Prueba de compatibilidad de stream; no mide calidad ni velocidad"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP",
+          "textFormat": {
+            "fontFamily": "Arial",
+            "fontSize": 10
+          }
+        },
+        "display": "Prueba de compatibilidad de stream; no mide calidad ni velocidad",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "/media/cristian/Disco local/Models/llamacpp/Qwen3.8-27B-GGUF-Q4_K_M/Qwen3.8-27B-Q4_K_M.gguf"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP",
+          "textFormat": {
+            "fontFamily": "Arial",
+            "fontSize": 10
+          }
+        },
+        "display": "/media/cristian/Disco local/Models/llamacpp/Qwen3.8-27B-GGUF-Q4_K_M/Qwen3.8-27B-Q4_K_M.gguf",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "No verificada"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP",
+          "textFormat": {
+            "fontFamily": "Arial",
+            "fontSize": 10
+          }
+        },
+        "display": "No verificada",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Holdout funcional con prompts congelados; 3 rondas y warmup aparte"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP",
+          "textFormat": {
+            "fontFamily": "Arial",
+            "fontSize": 10
+          }
+        },
+        "display": "Holdout funcional con prompts congelados; 3 rondas y warmup aparte",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "RTX 3090 GPU0; serial; tres servidores loopback separados"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP",
+          "textFormat": {
+            "fontFamily": "Arial",
+            "fontSize": 10
+          }
+        },
+        "display": "RTX 3090 GPU0; serial; tres servidores loopback separados",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "llama.cpp 39eab74a05d3e68ac822b6dc6cd78c90cb985c19; MTP max2; /v1/completions SSE"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP",
+          "textFormat": {
+            "fontFamily": "Arial",
+            "fontSize": 10
+          }
+        },
+        "display": "llama.cpp 39eab74a05d3e68ac822b6dc6cd78c90cb985c19; MTP max2; /v1/completions SSE",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "7 prompts congelados × 3 semillas 1001/1002/1003; un warmup por ronda; ctx16K"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP",
+          "textFormat": {
+            "fontFamily": "Arial",
+            "fontSize": 10
+          }
+        },
+        "display": "7 prompts congelados × 3 semillas 1001/1002/1003; un warmup por ronda; ctx16K",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "21 requests scored + 3 warmups; mismo hash de prompt en cada uno"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP",
+          "textFormat": {
+            "fontFamily": "Arial",
+            "fontSize": 10
+          }
+        },
+        "display": "21 requests scored + 3 warmups; mismo hash de prompt en cada uno",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "16384"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP",
+          "textFormat": {
+            "fontFamily": "Arial",
+            "fontSize": 10
+          }
+        },
+        "display": "16384",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "N/D en el holdout funcional; tokens/hash de prompt congelados"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP",
+          "textFormat": {
+            "fontFamily": "Arial",
+            "fontSize": 10
+          }
+        },
+        "display": "N/D en el holdout funcional; tokens/hash de prompt congelados",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "MTP max2; otros parámetros conservados en prerregistro"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP",
+          "textFormat": {
+            "fontFamily": "Arial",
+            "fontSize": 10
+          }
+        },
+        "display": "MTP max2; otros parámetros conservados en prerregistro",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "SSE stream; gates de [DONE], finish reason, HTTP200 y telemetría"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP",
+          "textFormat": {
+            "fontFamily": "Arial",
+            "fontSize": 10
+          }
+        },
+        "display": "SSE stream; gates de [DONE], finish reason, HTTP200 y telemetría",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Ctx16K; MTP max2; GPU0; servidores loopback seriales; ver preregistration y receipts para CLI completo."
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP",
+          "textFormat": {
+            "fontFamily": "Arial",
+            "fontSize": 10
+          }
+        },
+        "display": "Ctx16K; MTP max2; GPU0; servidores loopback seriales; ver preregistration y receipts para CLI completo.",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "HTTP200; prompt/hash exacto; output acotado; telemetry válida; [DONE]; finish reason válido; cero errores funcionales."
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP",
+          "textFormat": {
+            "fontFamily": "Arial",
+            "fontSize": 10
+          }
+        },
+        "display": "HTTP200; prompt/hash exacto; output acotado; telemetry válida; [DONE]; finish reason válido; cero errores funcionales.",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "N/D; sin grader de calidad"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP",
+          "textFormat": {
+            "fontFamily": "Arial",
+            "fontSize": 10
+          }
+        },
+        "display": "N/D; sin grader de calidad",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "7/7 por ronda; 21/21 pass; warmups limpios; hashes de prompt verificados."
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP",
+          "textFormat": {
+            "fontFamily": "Arial",
+            "fontSize": 10
+          }
+        },
+        "display": "7/7 por ronda; 21/21 pass; warmups limpios; hashes de prompt verificados.",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "21/21 requests pasan gates; cero errores funcionales en este holdout."
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP",
+          "textFormat": {
+            "fontFamily": "Arial",
+            "fontSize": 10
+          }
+        },
+        "display": "21/21 requests pasan gates; cero errores funcionales en este holdout.",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "N/D; no safety benchmark"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP",
+          "textFormat": {
+            "fontFamily": "Arial",
+            "fontSize": 10
+          }
+        },
+        "display": "N/D; no safety benchmark",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "N/D; se reporta validación funcional, no duración comparable por solicitud."
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP",
+          "textFormat": {
+            "fontFamily": "Arial",
+            "fontSize": 10
+          }
+        },
+        "display": "N/D; se reporta validación funcional, no duración comparable por solicitud.",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "N/D"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP",
+          "textFormat": {
+            "fontFamily": "Arial",
+            "fontSize": 10
+          }
+        },
+        "display": "N/D",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "N/D"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP",
+          "textFormat": {
+            "fontFamily": "Arial",
+            "fontSize": 10
+          }
+        },
+        "display": "N/D",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "N/D"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP",
+          "textFormat": {
+            "fontFamily": "Arial",
+            "fontSize": 10
+          }
+        },
+        "display": "N/D",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Funcionalidad solamente; no inferir calidad/TPS. Q47 error no reproducido en Q48 (5/5) ni Q49 (21/21), pero causa original no identificada."
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP",
+          "textFormat": {
+            "fontFamily": "Arial",
+            "fontSize": 10
+          }
+        },
+        "display": "Funcionalidad solamente; no inferir calidad/TPS. Q47 error no reproducido en Q48 (5/5) ni Q49 (21/21), pero causa original no identificada.",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "N/D en resumen Q49"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP",
+          "textFormat": {
+            "fontFamily": "Arial",
+            "fontSize": 10
+          }
+        },
+        "display": "N/D en resumen Q49",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "Cero errores funcionales en 21 solicitudes y tres warmups; puertos loopback efímeros evitaron colisión fija."
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP",
+          "textFormat": {
+            "fontFamily": "Arial",
+            "fontSize": 10
+          }
+        },
+        "display": "Cero errores funcionales en 21 solicitudes y tres warmups; puertos loopback efímeros evitaron colisión fija.",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "No valida OpenJet ni reemplazo de runtime; no cambia perfiles productivos."
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP",
+          "textFormat": {
+            "fontFamily": "Arial",
+            "fontSize": 10
+          }
+        },
+        "display": "No valida OpenJet ni reemplazo de runtime; no cambia perfiles productivos.",
+        "note": null,
+        "validation": null
+      },
+      {
+        "v": {
+          "stringValue": "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-49/RESULTS.md; receipts/preregistration.json; receipts/attempt-03/"
+        },
+        "fmt": {
+          "verticalAlignment": "TOP",
+          "wrapStrategy": "WRAP",
+          "textFormat": {
+            "fontFamily": "Arial",
+            "fontSize": 10
+          }
+        },
+        "display": "artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-49/RESULTS.md; receipts/preregistration.json; receipts/attempt-03/",
+        "note": null,
+        "validation": null
+      }
+    ]
+  }
+]

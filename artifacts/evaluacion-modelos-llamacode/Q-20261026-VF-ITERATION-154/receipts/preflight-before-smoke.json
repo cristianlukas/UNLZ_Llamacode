@@ -1,0 +1,51 @@
+{
+  "captured_utc": "2026-10-26T22:10:54Z",
+  "lock": {
+    "task": "Q146 resume justified VF-20261019 tests",
+    "token": "2242863e-c78e-4fa9-9649-c1d1541f3919"
+  },
+  "peritosoft_app_processes": 0,
+  "peritosoft_llama_server_processes": 0,
+  "other_inference_processes": 0,
+  "ports_listening": {
+    "8033": false,
+    "32100": false,
+    "32101": false,
+    "8350": false,
+    "8354": false
+  },
+  "terminated_processes": [],
+  "gui_processes_left_running": [
+    {
+      "pid": 959412,
+      "name": "artcraft-launcher",
+      "gpu_memory_mib": 207,
+      "classification": "GUI; user said GUI does not block tests"
+    }
+  ],
+  "gpus": [
+    {
+      "index": 0,
+      "model": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 1081,
+      "memory_total_mib": 24576,
+      "utilization_percent": 32,
+      "temperature_c": 39
+    },
+    {
+      "index": 1,
+      "model": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 110,
+      "memory_total_mib": 24576,
+      "utilization_percent": 38,
+      "temperature_c": 26
+    }
+  ],
+  "D_free_bytes": 402892419072,
+  "minimum_free_bytes": 193273528320,
+  "memavailable_kib": 115283316,
+  "swap_free_kib": 4090608,
+  "memory_psi": "some avg10=0.00; full avg10=0.00",
+  "io_psi": "some avg10=0.11; full avg10=0.11",
+  "decision": "PASS: nothing belonging to PeritoSoft or an inference server was running, so nothing was terminated. Both RTX 3090 visible; D and memory headroom are sufficient. Start only the preregistered control smoke, one server at a time."
+}

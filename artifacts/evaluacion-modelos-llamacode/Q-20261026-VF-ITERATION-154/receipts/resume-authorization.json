@@ -1,0 +1,9 @@
+{
+  "iteration": "Q154",
+  "resumes": "Q153, which remains a distinct cancelled-before-inference historical record",
+  "user_instruction": "podés matar la app de peritosoft y sus llamaservers, tenés mi autorización, luego continuá tus pruebas",
+  "received_local_time": "2026-10-26",
+  "authorization_effect": "New explicit instruction permits a fresh temporary test despite Q153 no-resume status. No prior score is implied.",
+  "preexisting_models": "SOL and ASTRA Flash-Next RCO IQ2_XS remain the only retained production model profiles; candidate weights are temporary until the evaluation decision.",
+  "decision_owner": "User; no automatic promotion."
+}

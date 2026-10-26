@@ -1,0 +1,21 @@
+{
+  "iteration": "Q154",
+  "kind": "preregistered-pack-writer-compatibility-correction",
+  "timestamp_utc": "2026-10-26T22:26:30.248955+00:00",
+  "candidate_smoke": "Huihui startup aborted before weights/API/tokens; no model VRAM remained.",
+  "observed_error": "native_experts.txt layer 14 shard column rejected because it contained three whitespace-separated shard names; the engine requires one name or comma-separated gate,up,down.",
+  "root_cause": "The pack was generated with source43-project-maya/tools/iq_pack.py, which joins per-role shard filenames with spaces. The pinned Control 0.1.51 tools/iq_pack.py writes the expected comma-delimited form. Same model revision/shards, no weight conversion change.",
+  "old_manifest_sha256": "0afa45e40be3a9512c89e14e75b2fcebcba6b0245e695cf359571dd992d61592",
+  "archived_manifest": "receipts/candidate-native-experts-v4-whitespace-before-fix.txt",
+  "correction": "Re-run pinned Control 0.1.51 tools/iq_pack.py --compat-bf16 using exact shard1 and same Q154 pack directory; inspect native_experts.txt line14 for comma-separated role names and verify all shard references and source hashes before retry.",
+  "preservation": "Only Q154 candidate pack is rewritten. No production ASTRA/SOL files/configs, PeritoSoft, or original GGUF shards are changed.",
+  "validation_gates": [
+    "packer exit 0",
+    "native_experts.txt uses comma-delimited per-role names",
+    "each referenced shard exists",
+    "index/pack size checks pass",
+    "offline plan passes",
+    "fresh process/GPU preflight before retry"
+  ],
+  "decision_boundary": "No score or candidate quality finding until the corrected pack starts and returns a valid API smoke."
+}

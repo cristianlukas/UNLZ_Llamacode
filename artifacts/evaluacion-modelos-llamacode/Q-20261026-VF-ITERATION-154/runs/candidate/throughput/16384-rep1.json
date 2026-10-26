@@ -1,0 +1,89 @@
+{
+  "size": 16384,
+  "replicate": 1,
+  "recorded_utc": "2026-10-26T22:59:03.893Z",
+  "attempts": [
+    {
+      "attempt": 1,
+      "request": "inputs/throughput/candidate/16384-rep1.json",
+      "http_status": 200,
+      "wall_s": 8.0223,
+      "body": {
+        "id": "chatcmpl-c369936e2f7d497eabc6aa27",
+        "object": "chat.completion",
+        "created": 1793055535,
+        "model": "q154-huihui-v2-ud-iq4-xs",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": null,
+              "reasoning_content": "We need answer user's request. User provided a huge string: \"315738b7fc6d853f Q154 throughput fixture; window=16384; replicate=1; variant=0.\nmetric pair memory code module fixture layer, workspace input evaluation candidate boundary reproducible output, output profile assertion expert vector. framework framework, output evaluation result reproducible boundary template pair, harness request policy audit layer control evaluation, expert fixture integration. template buffer audit fixture, artifact document pair artifact control useful compile, profile sample workspace vector safety decode document, validation. performance framework input sequence evaluation boundary, buffer validation code generation monitor compile layer, nonce artifact workspace quality route template. policy, sequence evaluation control tokenizer agent workspace prompt, document template template monitor layer throughput pair, sample input metric sequence. metric engine artifact, audit metric route evaluation metric document boundary, document system request input pair tokenizer quality, metric trace. response fixture tokenizer audit document, sample useful template fixture output reproducible trace, token model useful control latency layer result. latency useful channel code model integration response, control system quality trace shard audit module, device profile tokenizer model generation. generation response, document task integration local vector harness channel, vector engine useful model workspace policy latency, repro"
+            },
+            "finish_reason": "length"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 16384,
+          "completion_tokens": 256,
+          "total_tokens": 16640,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 16384,
+          "prompt_ms": 6705.9,
+          "prompt_per_token_ms": 0.409,
+          "prompt_per_second": 2443.2,
+          "predicted_n": 256,
+          "predicted_ms": 1308.7,
+          "predicted_per_token_ms": 5.112,
+          "predicted_per_second": 195.6,
+          "draft_n": 202,
+          "draft_n_accepted": 202
+        }
+      },
+      "server_history_latest": {
+        "id": "015f28061fb1",
+        "projection": null,
+        "time": 1793055535.8752656,
+        "duration_s": 8.0,
+        "finish": "length",
+        "prompt_tokens": 16384,
+        "reused": 0,
+        "output_tokens": 256,
+        "first_engine_token_s": 6.72,
+        "prompt_total": 16384,
+        "prompt_read": 16384,
+        "reasoning_recoveries": 0,
+        "reasoning_repeat_coverage": 0.0,
+        "engine_generated": 256,
+        "prompt_ms": 6705.9,
+        "decode_ms": 1308.7,
+        "decode_tok_s": 195.6,
+        "hit_rate": 0.986,
+        "pcie_share": 0.001,
+        "ram_blobs": 0,
+        "file_blobs": 0,
+        "file_mb": 0,
+        "drafts_offered": 202,
+        "drafts_accepted": 202
+      },
+      "valid": true
+    }
+  ],
+  "ttft_s": 6.72,
+  "prefill_tok_s": 2443.2,
+  "prefill_ms": 6705.9,
+  "decode_tok_s": 195.6,
+  "decode_ms": 1308.7,
+  "prompt_tokens": 16384,
+  "cached_tokens": 0,
+  "completion_tokens": 256,
+  "finish_reason": "length",
+  "e2e_wall_s": 8.0223,
+  "valid": true
+}

@@ -1,0 +1,51 @@
+{
+  "recorded_utc": "2026-10-26T23:13:34.327Z",
+  "arm": "control",
+  "seed": 42,
+  "lock_token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+  "external_servers": [],
+  "gpus": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 1068,
+      "memory_free_mib": 23107,
+      "temperature_c": 43,
+      "utilization_percent": 9
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 110,
+      "memory_free_mib": 24068,
+      "temperature_c": 27,
+      "utilization_percent": 19
+    }
+  ],
+  "memory": {
+    "meminfo_kib": {
+      "MemAvailable": 115963740,
+      "SwapFree": 3369268
+    },
+    "psi_memory_percent": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.0
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.0
+      }
+    },
+    "vmstat_pages": {
+      "pswpin": 2324350,
+      "pswpout": 4511330,
+      "oom_kill": 0
+    }
+  },
+  "port_free": true,
+  "config": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-154/configs/astra-rco-iq2xs-32k.json",
+  "config_sha256": "ca5a5abee7c7760028a107091c8d7d7f59b19d48e39cbfe90b4748caa0b38e79"
+}

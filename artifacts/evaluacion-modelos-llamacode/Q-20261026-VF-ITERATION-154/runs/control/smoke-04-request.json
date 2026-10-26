@@ -1,0 +1,11 @@
+{
+  "model": "q154-astra-rco-iq2-xs",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Return exactly this token sequence and nothing else: Q154-ASTRA-SMOKE-OK"
+    }
+  ],
+  "max_tokens": 16,
+  "stream": false
+}

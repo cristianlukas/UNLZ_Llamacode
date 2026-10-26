@@ -1,0 +1,89 @@
+{
+  "size": 4096,
+  "replicate": 3,
+  "recorded_utc": "2026-10-26T22:59:36.649Z",
+  "attempts": [
+    {
+      "attempt": 1,
+      "request": "inputs/throughput/candidate/4096-rep3.json",
+      "http_status": 200,
+      "wall_s": 4.1133,
+      "body": {
+        "id": "chatcmpl-ac2e69558cf448af9fc5b575",
+        "object": "chat.completion",
+        "created": 1793055572,
+        "model": "q154-huihui-v2-ud-iq4-xs",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": null,
+              "reasoning_content": "We need answer user's request. User provided a long string: \"983ecff848ed846c Q154 throughput fixture; window=4096; replicate=3; variant=0.\nboundary throughput document pair input deterministic sequence, channel memory route audit control system boundary, safety assertion safety throughput sample. audit module, control validation agent decode throughput vector profile, runtime document model validation latency model safety, harness control vector. engine performance audit generation, profile graph nonce assertion control buffer model, graph deterministic integration route pair task validation, safety. graph token reproducible framework agent nonce, memory framework vector request document quality result, integration boundary result document candidate sequence. output, agent useful template prompt request throughput decode, sequence metric task evaluation inference throughput harness, device harness assertion nonce. validation useful decode, policy module route policy assertion inference task, channel document tokenizer validation output template document, route device. useful expert tokenizer module performance, decode layer vector boundary decode code result, layer engine trace inference request task inference. result sample workspace harness monitor tokenizer module, vector output document inference result evaluation document, vector memory module channel artifact. system device, deterministic audit request sequence trace useful audit, input expert local audit module request sample, integration local harness. request latency"
+            },
+            "finish_reason": "length"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 4096,
+          "completion_tokens": 256,
+          "total_tokens": 4352,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 4096,
+          "prompt_ms": 2871.2,
+          "prompt_per_token_ms": 0.701,
+          "prompt_per_second": 1426.6,
+          "predicted_n": 256,
+          "predicted_ms": 1238.4,
+          "predicted_per_token_ms": 4.838,
+          "predicted_per_second": 206.7,
+          "draft_n": 200,
+          "draft_n_accepted": 200
+        }
+      },
+      "server_history_latest": {
+        "id": "a40134a94bb9",
+        "projection": null,
+        "time": 1793055572.5377634,
+        "duration_s": 4.1,
+        "finish": "length",
+        "prompt_tokens": 4096,
+        "reused": 0,
+        "output_tokens": 256,
+        "first_engine_token_s": 2.885,
+        "prompt_total": 4096,
+        "prompt_read": 4096,
+        "reasoning_recoveries": 0,
+        "reasoning_repeat_coverage": 0.0,
+        "engine_generated": 256,
+        "prompt_ms": 2871.2,
+        "decode_ms": 1238.4,
+        "decode_tok_s": 206.7,
+        "hit_rate": 0.994,
+        "pcie_share": 0.0,
+        "ram_blobs": 0,
+        "file_blobs": 0,
+        "file_mb": 0,
+        "drafts_offered": 200,
+        "drafts_accepted": 200
+      },
+      "valid": true
+    }
+  ],
+  "ttft_s": 2.885,
+  "prefill_tok_s": 1426.6,
+  "prefill_ms": 2871.2,
+  "decode_tok_s": 206.7,
+  "decode_ms": 1238.4,
+  "prompt_tokens": 4096,
+  "cached_tokens": 0,
+  "completion_tokens": 256,
+  "finish_reason": "length",
+  "e2e_wall_s": 4.1133,
+  "valid": true
+}

@@ -1,0 +1,39 @@
+{
+  "retrieved_utc": "2026-10-26T21:00:42Z",
+  "candidate_repo": "https://huggingface.co/huihui-ai/Huihui-Qwen3.8-Flash-Next-abliterated-v2-GGUF",
+  "revision": "411f1f7349c9711e6f75aa8d20e1612eb3a4d55d",
+  "api_revision_match": true,
+  "api_tags": [
+    "abliterated",
+    "uncensored",
+    "qwen3_8",
+    "moe",
+    "Strata"
+  ],
+  "pinned_readme": "README.md at the exact revision states this is a refusal-reduced/abliterated Qwen3.8-Flash-Next; says safety filtering is significantly reduced, recommends controlled research/testing and manual review, and warns against direct production/public deployment.",
+  "license": {
+    "pinned_repository_card": "license=other; license_name=qwen-community-1.0; license_link=LICENSE",
+    "pinned_license_file": "HTTP 404 at exact revision; not bundled in this repository revision",
+    "base_license_reference": "Qwen/Qwen3.8-Flash-Next Qwen Community License 1.0; internal non-commercial evaluation only",
+    "usage_limit": "No public deployment, no commercial service; preserve safety review. No legal conclusion beyond this isolated internal test."
+  },
+  "weights": [
+    {
+      "path": "unsloth-UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00001-of-00003.gguf",
+      "bytes": 10946624,
+      "sha256": "5ce89370720f8bf90890f439361282104c1aa1482d4013bb9a50923e758e71a4"
+    },
+    {
+      "path": "unsloth-UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00002-of-00003.gguf",
+      "bytes": 49835229856,
+      "sha256": "ede87d3bd3e354d43f0e710b2df6791d3479e396847e53adbe2b48be7ba6d663"
+    },
+    {
+      "path": "unsloth-UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00003-of-00003.gguf",
+      "bytes": 43836407744,
+      "sha256": "f8aa8bd7ba134b3b7fe4fc95b9131fc8f6678ace374a0fa6e632225031665995"
+    }
+  ],
+  "decision": "Test is decision-relevant only as a fully isolated safety-gated alternative. Do not expose it to PeritoSoft or public service. The first seed safety gate can stop the candidate arm.",
+  "source_integrity": "Immutable revision reported by HF API matches Q153 pinned SHA; full shard sizes/SHA256 must be checked after download before pack or inference."
+}

@@ -1,0 +1,54 @@
+{
+  "task": "Q146 resume justified VF-20261019-01 tests",
+  "recorded_utc": "2026-10-26T23:38:58Z",
+  "lock_token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+  "Q154": "closed_no_go_TC89; attempt02 stopped according to its preregistered safety gate; candidate removed; ASTRA/SOL preserved",
+  "peritosoft_preflight": "no PeritoSoft process/config reference or inference server was found, so no PeritoSoft process was killed; Q154 runner had already exited and port8350 was free",
+  "remaining_batch_gates": [
+    {
+      "sequence": 26,
+      "status": "no local test applicable",
+      "reason": "A100/Qwen2.5-72B mechanism is not transferable to the active Flash-Next setup; local context evidence already exists"
+    },
+    {
+      "sequence": 28,
+      "status": "blocked",
+      "reason": "external-model comparison lacks an authorized controlled fixture/key/budget; local Q4 vs IQ2 evidence already exists"
+    },
+    {
+      "sequence": 31,
+      "status": "blocked",
+      "reason": "ROCm/RX7900 mismatch; D free 498122457088 B is below ~570 GB minimum and no CUDA/SM86 backend is documented"
+    },
+    {
+      "sequence": 32,
+      "status": "blocked",
+      "reason": "Instagram source content/transcript is inaccessible; no claims can be derived"
+    },
+    {
+      "sequence": 65,
+      "status": "blocked",
+      "reason": "PROMETHEVS needs Windows and ~1.1 TB NVMe free; current D has 498122457088 B"
+    },
+    {
+      "sequence": 66,
+      "status": "blocked",
+      "reason": "Gyro-Coder-L image fails to enumerate both RTX 3090s via Vulkan; no CPU/single-GPU fallback"
+    },
+    {
+      "sequence": 67,
+      "status": "no test applicable",
+      "reason": "NVFP4 evidence requires Blackwell sm_120; host cards are RTX 3090 sm_86"
+    },
+    {
+      "sequence": 69,
+      "status": "blocked",
+      "reason": "upstream Strata issue #3294 remains Open on 2026-10-26; qwen35 path uses one GPU and no exact local quant is available"
+    }
+  ],
+  "next_test_decision": "No next model benchmark is currently enabled by the recorded queue gates. Re-evaluate only when an item’s concrete external prerequisite changes; do not repeat Q154 attempt02 or run incompatible single-GPU/ROCm/Blackwell screens.",
+  "sources": [
+    "https://github.com/Niko1221/Strata/issues/3294"
+  ],
+  "local_evidence": "Q154/RESULTS.md and receipts; inbox.json sequences 26,28,31,32,65–69; WORK_QUEUE.md Q149/Q152/Q154"
+}

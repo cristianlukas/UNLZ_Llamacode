@@ -1,0 +1,22 @@
+{
+  "iteration": "Q154",
+  "attempt": "ASTRA control smoke 04 request",
+  "timestamp_utc": "2026-10-26T22:19:03.681525+00:00",
+  "http_status": 200,
+  "elapsed_seconds": 0.6071361250360496,
+  "model": "q154-astra-rco-iq2-xs",
+  "content": null,
+  "usage": {
+    "prompt_tokens": 73,
+    "completion_tokens": 16,
+    "total_tokens": 89,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "finish_reason": "length",
+  "request_path": "runs/control/smoke-04-request.json",
+  "response_path": "runs/control/smoke-04-response.json",
+  "result": "FAIL",
+  "scope": "Single benign functionality smoke; not a benchmark or quality score."
+}

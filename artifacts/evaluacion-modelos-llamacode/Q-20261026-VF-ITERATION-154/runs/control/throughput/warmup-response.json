@@ -1,0 +1,42 @@
+{
+  "http_status": 200,
+  "wall_s": 0.8626866129925475,
+  "body": {
+    "id": "chatcmpl-577a50da876d4076a8afbcd4",
+    "object": "chat.completion",
+    "created": 1793055273,
+    "model": "q154-astra-rco-iq2-xs",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": null,
+          "reasoning_content": "We need to respond to user: \"d58ae6175d753c06 Q154 throughput warmup. Reply"
+        },
+        "finish_reason": "length"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 82,
+      "completion_tokens": 32,
+      "total_tokens": 114,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 82,
+      "prompt_ms": 610.7,
+      "prompt_per_token_ms": 7.448,
+      "prompt_per_second": 134.3,
+      "predicted_n": 32,
+      "predicted_ms": 249.7,
+      "predicted_per_token_ms": 7.803,
+      "predicted_per_second": 128.2,
+      "draft_n": 17,
+      "draft_n_accepted": 17
+    }
+  }
+}

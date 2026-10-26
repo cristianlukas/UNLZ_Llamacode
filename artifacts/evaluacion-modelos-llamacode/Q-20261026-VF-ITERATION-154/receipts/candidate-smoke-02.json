@@ -1,0 +1,73 @@
+{
+  "iteration": "Q154",
+  "attempt": "candidate-smoke-02",
+  "recorded_utc": "2026-10-26T22:35:37.967511+00:00",
+  "status": "PASS_FUNCTIONAL_SMOKE",
+  "model": "q154-huihui-v2-ud-iq4-xs",
+  "revision": "411f1f7349c9711e6f75aa8d20e1612eb3a4d55d",
+  "runtime": "Strata v0.2.6 / Control 0.1.51 / Qwen engine 0.1.50",
+  "hardware": "2x RTX 3090; explicit --gpu 0,1; dual-GPU layer split 0-24 / 25-47",
+  "config": "configs/huihui-v2-32k.json; context 32768; KV int8/resident 32768; MTP off; spec 4; prefill 8192; VRAM reserve 768 MiB; sampling matches ASTRA control",
+  "request": {
+    "path": "runs/candidate/smoke-02-request.json",
+    "max_tokens": 128,
+    "prompt_tokens": 74,
+    "cached_prompt_tokens": 0
+  },
+  "response": {
+    "path": "runs/candidate/smoke-02-response.json",
+    "http_status": 200,
+    "content_exact": "Q154-HUIHUI-SMOKE-OK",
+    "finish_reason": "stop",
+    "completion_tokens_including_reasoning": 57,
+    "prompt_ms": 1044.1,
+    "prefill_tok_s_single_short_smoke": 70.9,
+    "decode_ms": 754.9,
+    "decode_tok_s_single_short_smoke": 75.5,
+    "e2e_wall_s": 2,
+    "reasoning_field_present": true
+  },
+  "limits": [
+    "Functional one-request smoke only; no quality score, throughput comparison, or adoption evidence.",
+    "The short prompt is not representative of the preregistered 4K/16K/32K throughput campaign.",
+    "Prefill/decode values are smoke telemetry only and must not be compared with historical measurements."
+  ],
+  "memory_gpu": {
+    "expert_arena_loaded_gib": 55.43,
+    "model_allocation_mib_approx": {
+      "gpu0": 22689,
+      "gpu1": 23540
+    },
+    "free_vram_idle_mib": {
+      "gpu0": 513,
+      "gpu1": 609
+    },
+    "memavailable_peak_kib": 115406740,
+    "memavailable_during_load_min_kib": 52039732,
+    "memavailable_post_cleanup_kib": 115343360,
+    "swap_free_pre_kib": 4090696,
+    "swap_free_during_load_kib": 3389492,
+    "memory_psi_full_avg10_peak_percent": 20.1,
+    "memory_psi_full_avg10_recovered_percent": 0.25,
+    "pressure_gate": "No 30 consecutive 10-second samples at warning threshold and no hard-stop threshold; no OOM, server failure, or sustained pressure."
+  },
+  "cleanup": {
+    "signal": "SIGINT",
+    "drained": true,
+    "pending_requests": 0,
+    "exit_code": 130,
+    "port_8350_closed": true,
+    "inference_processes_remaining": false,
+    "gpu_post_mib": {
+      "gpu0_used": 1058,
+      "gpu1_used": 110
+    },
+    "memavailable_post_kib": 115343360
+  },
+  "peritosoft": {
+    "found_before": false,
+    "terminated": [],
+    "found_after": false,
+    "artcraft_left_running": true
+  }
+}

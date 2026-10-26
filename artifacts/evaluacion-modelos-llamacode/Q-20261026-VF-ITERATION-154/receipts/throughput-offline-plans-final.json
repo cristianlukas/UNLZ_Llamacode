@@ -1,0 +1,19 @@
+{
+  "recorded_utc": "2026-10-26T22:53:24Z",
+  "offline_plan_only": true,
+  "models_started": false,
+  "plans": {
+    "control": {
+      "exit_code": 0,
+      "ok": true,
+      "gpu_args": "0,1",
+      "pass": true
+    },
+    "candidate": {
+      "exit_code": 0,
+      "ok": true,
+      "gpu_args": "0,1",
+      "pass": true
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "updated_utc": "2026-10-26T22:37:08.544543+00:00",
+  "reason": "Document successful functional smokes and remaining gates; do not add a Resultados row for smoke telemetry.",
+  "ranges": {
+    "Evaluaciones LlamaCode": [
+      "C358:C358",
+      "G358:I358"
+    ],
+    "Accionables": [
+      "D27:D27",
+      "H27:K27",
+      "M27:N27"
+    ],
+    "Inventario de modelos": [
+      "C18:D18",
+      "N18:O18",
+      "R18:R18"
+    ],
+    "IA local": [
+      "E63:E63",
+      "I63:I63",
+      "L63:L63",
+      "N63:O63"
+    ]
+  },
+  "cell_count": 25,
+  "readback": {
+    "mismatches": 0,
+    "format": "Existing WRAP/TOP formatting preserved on all updated populated cells; no validation or formulas on target cells.",
+    "status": "Verified exact functional smoke status, next gates, local receipt references, and UTC timestamps.",
+    "Resultados": "No row added; smoke is functional only and does not support a quality score."
+  },
+  "visual_check": "Content-only edits; existing formats were re-read through Sheets API. No width, row height, filter, freeze, formula, or other-tab structure changed."
+}

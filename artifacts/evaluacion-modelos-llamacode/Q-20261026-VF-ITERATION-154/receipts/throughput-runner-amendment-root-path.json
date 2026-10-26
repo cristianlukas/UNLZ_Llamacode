@@ -1,0 +1,11 @@
+{
+  "iteration": "Q154",
+  "recorded_utc": "2026-10-26T22:53:24Z",
+  "status": "PREREGISTERED_RUNNER_CORRECTION_BEFORE_INFERENCE",
+  "prior_runner_sha256": "00aaf533bc415fa4a6ad14a8a8dadbfa64ebf698cc07886c13c8ef344f6711e8",
+  "corrected_runner_sha256": "8b3dbe2043d4512bd854d032098572149af496a2399ccce505dbb53903535643",
+  "change": "Correct the computed repository root from artifacts/ to the checkout root so the runner can verify WORK_QUEUE.lock.",
+  "trigger": "The first runner invocation failed while resolving WORK_QUEUE.lock, before process scan, model/server start, or any GPU allocation/request.",
+  "validation": "python3 -m py_compile passed; no inference server or GPU workload started during the failed attempt.",
+  "receipt": "receipts/throughput-runner-preregistration.json"
+}

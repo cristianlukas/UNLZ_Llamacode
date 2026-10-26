@@ -1,0 +1,106 @@
+{
+  "recorded_utc": "2026-10-26T23:19:00.471Z",
+  "pid": 244307,
+  "load_s": 54.039,
+  "ready": {
+    "api_state": "ready",
+    "api_url": "http://127.0.0.1:8350",
+    "bound_host": "127.0.0.1",
+    "bound_port": 8350,
+    "created_at": 1793056738.3020852,
+    "instance_id": "4020b0909b234d99a531113e16a9c06e",
+    "model_id": "q154-huihui-v2-ud-iq4-xs",
+    "model_state": "ready",
+    "pid": 244307,
+    "schema_version": 1
+  },
+  "models": {
+    "object": "list",
+    "data": [
+      {
+        "id": "q154-huihui-v2-ud-iq4-xs",
+        "object": "model",
+        "status": {
+          "value": "loaded"
+        },
+        "meta": {
+          "n_ctx": 32768
+        },
+        "architecture": {
+          "input_modalities": [
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ]
+        }
+      }
+    ]
+  },
+  "gpu_before": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 1062,
+      "memory_free_mib": 23113,
+      "temperature_c": 64,
+      "utilization_percent": 16
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 110,
+      "memory_free_mib": 24068,
+      "temperature_c": 55,
+      "utilization_percent": 8
+    }
+  ],
+  "gpu_loaded": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 23632,
+      "memory_free_mib": 543,
+      "temperature_c": 59,
+      "utilization_percent": 9
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 23568,
+      "memory_free_mib": 610,
+      "temperature_c": 46,
+      "utilization_percent": 5
+    }
+  ],
+  "gpu_delta_mib": [
+    22570,
+    23458
+  ],
+  "memory_before": {
+    "meminfo_kib": {
+      "MemAvailable": 115539568,
+      "SwapFree": 3369324
+    },
+    "psi_memory_percent": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.0
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 0.0,
+        "avg300": 0.0
+      }
+    },
+    "vmstat_pages": {
+      "pswpin": 2324361,
+      "pswpout": 4511330,
+      "oom_kill": 0
+    }
+  },
+  "owned_engine_pids": [
+    244412
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "recorded_utc": "2026-10-26T22:54:33.841Z",
+  "load_s": 54.03753732901532,
+  "ready": {
+    "api_state": "ready",
+    "api_url": "http://127.0.0.1:8350",
+    "bound_host": "127.0.0.1",
+    "bound_port": 8350,
+    "created_at": 1793055272.0330036,
+    "instance_id": "7e24f48a07874de482c4ce19d02307a4",
+    "model_id": "q154-astra-rco-iq2-xs",
+    "model_state": "ready",
+    "pid": 197106,
+    "schema_version": 1
+  },
+  "models": {
+    "object": "list",
+    "data": [
+      {
+        "id": "q154-astra-rco-iq2-xs",
+        "object": "model",
+        "status": {
+          "value": "loaded"
+        },
+        "meta": {
+          "n_ctx": 32768
+        },
+        "architecture": {
+          "input_modalities": [
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ]
+        }
+      }
+    ]
+  },
+  "gpu_before": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 1071,
+      "memory_free_mib": 23104,
+      "temperature_c": 40,
+      "utilization_percent": 60
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 110,
+      "memory_free_mib": 24068,
+      "temperature_c": 26,
+      "utilization_percent": 28
+    }
+  ],
+  "gpu_loaded": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 23082,
+      "memory_free_mib": 1093,
+      "temperature_c": 46,
+      "utilization_percent": 7
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 20156,
+      "memory_free_mib": 4022,
+      "temperature_c": 32,
+      "utilization_percent": 4
+    }
+  ],
+  "gpu_allocation_delta_mib": [
+    22011,
+    20046
+  ]
+}

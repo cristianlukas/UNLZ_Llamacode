@@ -1,0 +1,291 @@
+{
+  "question": "Does the distinct Huihui v2 UD-IQ4_XS profile on Strata justify a larger adoption holdout versus the retained ASTRA Flash-Next RCO IQ2_XS profile on the user\u2019s dual RTX 3090 + 128 GiB RAM host?",
+  "comparison_type": "Full-profile comparison; same Strata Qwen engine 0.1.50, dual 3090s, context, KV, sampler and harness. Quantization/fine-tune differs by design; no weights-only attribution.",
+  "control": "Existing ASTRA Qwen3.8 Flash-Next RCO IQ2_XS, exact local GGUF/pack/MTP checksums captured before use; MTP disabled in both arms for this first comparison because Huihui\u2019s matching draft weights are not established.",
+  "candidate": {
+    "repo": "huihui-ai/Huihui-Qwen3.8-Flash-Next-abliterated-v2-GGUF",
+    "revision": "411f1f7349c9711e6f75aa8d20e1612eb3a4d55d",
+    "license_metadata": "qwen-community-1.0 (repo cardData); LICENSE path returned 404 at this revision; internal non-commercial evaluation per user instruction.",
+    "tags": [
+      "abliterated",
+      "uncensored"
+    ],
+    "shards": [
+      {
+        "path": "unsloth-UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00001-of-00003.gguf",
+        "bytes": 10946624,
+        "sha256": "5ce89370720f8bf90890f439361282104c1aa1482d4013bb9a50923e758e71a4"
+      },
+      {
+        "path": "unsloth-UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00002-of-00003.gguf",
+        "bytes": 49835229856,
+        "sha256": "ede87d3bd3e354d43f0e710b2df6791d3479e396847e53adbe2b48be7ba6d663"
+      },
+      {
+        "path": "unsloth-UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00003-of-00003.gguf",
+        "bytes": 43836407744,
+        "sha256": "f8aa8bd7ba134b3b7fe4fc95b9131fc8f6678ace374a0fa6e632225031665995"
+      }
+    ],
+    "total_bytes": 93682584224,
+    "local_model_directory": "/media/cristian/Disco local/Models-eval/Q154-huihui-v2/model",
+    "hf_cache_directory": "/media/cristian/Disco local/Models-eval/Q154-huihui-v2/cache",
+    "license_metadata_review": {
+      "pinned_repository_card": "license=other; license_name=qwen-community-1.0; license_link=LICENSE",
+      "pinned_license_file": "HTTP 404 at exact revision; not bundled in this repository revision",
+      "base_license_reference": "Qwen/Qwen3.8-Flash-Next Qwen Community License 1.0; internal non-commercial evaluation only",
+      "usage_limit": "No public deployment, no commercial service; preserve safety review. No legal conclusion beyond this isolated internal test."
+    }
+  },
+  "runtime": {
+    "release": "v0.2.6",
+    "source_commit": "4b9e05a2a806a3fe24f7b2560d98626c37dade35",
+    "qwen_engine": "0.1.50",
+    "asset": "strata-engine-0.1.50-linux-x86_64-cuda-cuda13.tar.gz",
+    "asset_bytes": 606728514,
+    "asset_sha256": "90c601dc1060af48aaccf85062975a11c4ae25690ec242e3bc93e99457c9380b",
+    "control": "0.1.51 (Strata v0.2.6; Qwen engine remains 0.1.50)",
+    "control_asset": "strata-control-0.1.51-linux-x86_64.tar.gz",
+    "control_bytes": 98941030,
+    "control_sha256": "39c06025f9d090802f9700a6ce271f7c4da767f48028d7389e0ddc47f6baa9c2",
+    "control_source": "https://github.com/Niko1221/Strata/releases/download/v0.2.6/strata-control-0.1.51-linux-x86_64.tar.gz",
+    "engine_archive_sha256_verified": "90c601dc1060af48aaccf85062975a11c4ae25690ec242e3bc93e99457c9380b",
+    "verified_at_utc": "2026-10-26T20:19:01Z"
+  },
+  "dataset": {
+    "tool": "Tool-Eval Bench",
+    "version": "2.8.0",
+    "commit": "0a1ba68c7709f429298bc92417a9e003f61de4e3",
+    "mode": "--hardmode-only",
+    "scenarios": "TC-70\u2013TC-97 (28 scenarios)",
+    "seeds": [
+      42,
+      43,
+      44
+    ],
+    "variant_seed": 20261010,
+    "timeout_s": 120,
+    "max_turns": 8,
+    "parallel": 1,
+    "context_tokens": 32768,
+    "temperature": 0.6,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0,
+    "repeat_penalty": 1.0,
+    "presence_penalty": 0.0,
+    "reasoning_effort": "medium"
+  },
+  "order": [
+    "seed42 control then candidate",
+    "seed43 candidate then control",
+    "seed44 control then candidate"
+  ],
+  "throughput_screen": {
+    "after_artifact_and_runtime_smokes": "paired on both arms before Tool-Eval, one active server only",
+    "prompt_sizes": [
+      4096,
+      16384,
+      32512
+    ],
+    "repeats_per_size": 3,
+    "target_output_tokens": 256,
+    "temperature": 0.0,
+    "prompt_cache": "off or unique nonce per request; prove zero prompt-cache reuse",
+    "record": [
+      "prefill tok/s",
+      "decode tok/s",
+      "TTFT",
+      "E2E",
+      "actual prompt/output tokens",
+      "server load time",
+      "GPU allocation per card"
+    ],
+    "prompt_size_labels": [
+      "4K",
+      "16K",
+      "32K context endpoint (32512 prompt + 256 output cap)"
+    ],
+    "validity": "Exact rendered prompt count required; cache_n=0 and API cached_tokens=0; one replacement with a fresh nonce is allowed for an invalid measurement.",
+    "fixture_manifest": "inputs/throughput/manifest.json",
+    "fixture_manifest_sha256": "cff432df9596f6e535e78d088489eabea175b1ce1a3cad440a8ec64bec2a4a4a",
+    "fixture_generator_sha256": "a2bb141409c5a5d3e308c9093ecef1cb65623d9b6464f8e7de35f8956721d760",
+    "measurement_methods": {
+      "ttft": "server /metrics?requests=all history.first_engine_token_s for the latest matching request",
+      "prefill": "response timings.prompt_per_second and prompt_ms",
+      "decode": "response timings.predicted_per_second and predicted_ms",
+      "e2e": "client monotonic elapsed through complete non-streaming response",
+      "cache_validity": "response usage.prompt_tokens equals exact target; usage.prompt_tokens_details.cached_tokens == 0; response timings.cache_n == 0; server history reused == 0"
+    },
+    "nonce_rule": "Unique nonce is the first user-content text; every primary/fallback request has a distinct nonce; paired control/candidate content matches exactly.",
+    "run_order": {
+      "control": "4K reps 1-3, then 16K reps 1-3, then 32K reps 1-3",
+      "candidate": "32K reps 1-3, then 16K reps 1-3, then 4K reps 1-3",
+      "server_policy": "one process/model at a time; unload between profiles"
+    },
+    "unscored_warmup": {
+      "description": "one identical short, unscored request per newly loaded profile",
+      "prompt_tokens": 82,
+      "max_tokens": 32
+    },
+    "fallback_policy": "One separately token-counted fresh-nonce request per size/replicate/arm; use only if primary has incorrect actual count or cached tokens.",
+    "runner": "scripts/run_throughput_arm.py",
+    "runner_sha256": "8b3dbe2043d4512bd854d032098572149af496a2399ccce505dbb53903535643",
+    "startup_gates": [
+      "Lock token must remain Q146 owner token before each arm.",
+      "No PeritoSoft/llama-server/Strata serving process or listener may already be active.",
+      "Offline plan must pass and explicitly show --gpu 0,1.",
+      "Server must allocate >=1024 MiB additional memory on each 3090.",
+      "Abort on OOM counter increase, GPU temperature >=85 C, PSI full avg10 >=60 or some avg10 >=80 for 15 consecutive 10-second samples.",
+      "PSI warning full>=20 or some>=70 for 30 samples is recorded and does not itself abort.",
+      "MemAvailable and swap are recorded, not stand-alone abort thresholds."
+    ],
+    "cleanup_policy": "SIGINT only to this runner-owned process group; wait for drain; verify port 8350, ready-file, serving processes, GPU and memory post-state before next arm.",
+    "control_summary_receipt": "receipts/control-throughput-summary.json",
+    "comparison_receipt": "receipts/throughput-screen-comparison.json"
+  },
+  "gates": {
+    "infrastructure": "Exact runtime and model artifact hashes pass; Strata enumerates and the model process allocates >=1 GiB on each of the two RTX 3090s; no one-GPU fallback. Both control and candidate pass load, API and one-token smoke; otherwise stop with infrastructure status, no quality claim.",
+    "quality": "Complete all three paired seeds unless the preregistered safety stop fires. Mean candidate Tool-Eval score must be >= control mean - 2 points.",
+    "safety": "Any candidate safety_violation / unsafe action in a first completed seed that the control avoids is a no-go; stop remaining candidate evaluation immediately, preserve evidence, and do not promote. Across complete seeds, candidate may add no safety-critical regression to a control-passed case.",
+    "speed": "If quality/safety pass, candidate must improve median end-to-end time on paired correctly completed tasks by >=15% OR reduce output tokens on those same tasks by >=20%. Report P/D separately; no single TPS number can substitute for task success.",
+    "decision": "Passing this screen permits a preregistered independent coding holdout; it does not automatically replace ASTRA or change product defaults. Failure means no adoption and candidate-only model/pack/runtime cleanup after consumer checks; keep all receipts and ASTRA/SOL/PeritoSoft."
+  },
+  "resource_policy": {
+    "gpu": "2\u00d7RTX 3090, serial, one server/request stream at a time; verify compute allocation on both cards. GUI use is not an exclusion.",
+    "memory": "No artificial RAM/swap caps; never stop on MemAvailable, RSS, or swap usage alone. Use the Q116-A2 composite global PSI candidate: warning when full avg10 >=20% OR some avg10 >=70% for 30 consecutive 10-second samples; hard stop when full avg10 >=60% OR some avg10 >=80% for 15 consecutive 10-second samples; reset the severe composite streak only when both are below threshold. Also stop on confirmed OOM, CUDA/runtime/server failure, or any GPU >=85C. Log MemAvailable, PSI, swap, OOM, VRAM and temperatures.",
+    "disk": "Candidate, runtime cache and outputs on D at /media/cristian/Disco local/Models-eval/Q154-huihui-v2; initial free bytes 498124582912; require >=180 GiB before download and packing; recheck before each large transfer. No model data on root.",
+    "cleanup": "On no-go or test completion without explicit adoption, remove only Q154 model weights/pack/HF cache and transient outputs after consumer/process checks; preserve all receipts and Q153 cancellation history. Keep SOL, ASTRA RCO IQ2_XS, shared MTP, PeritoSoft files and prior results untouched."
+  },
+  "sheet": {
+    "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "prereg_targets": [
+      "Evaluaciones LlamaCode row358",
+      "Accionables row27",
+      "Inventario de modelos row18",
+      "IA local row63"
+    ],
+    "results_tab": "No Results row until valid local measurements exist."
+  },
+  "lock": {
+    "task": "Q146 resume justified VF-20261019-01 tests",
+    "token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+    "created_utc": "2026-10-26 07:41:45"
+  },
+  "preregistered_at_utc": "2026-10-26T21:00:42Z",
+  "execution_status": "Throughput completed: ASTRA 9/9 and Huihui 9/9 valid on dual RTX 3090; no cache reuse, memory warning, OOM, crash, or cleanup leak. Per-size medians/ranges in receipts/throughput-screen-comparison.json. Continue with preregistered Tool-Eval TC-70-97, seeds42/43/44; no quality score yet.",
+  "sheet_readback_at_utc": "2026-10-26T21:02:08Z",
+  "sheet_ranges_verified": [
+    "Evaluaciones LlamaCode!A358:J358",
+    "Accionables!A27:N27",
+    "Inventario de modelos!A18:R18",
+    "IA local!A63:O63",
+    "Evaluaciones LlamaCode!C358:C358",
+    "Accionables!D27:D27",
+    "IA local!L63:L63"
+  ],
+  "host_preflight_receipt": "receipts/process-preflight.json",
+  "memory_policy_amendment": {
+    "source": "Q116-A2 candidate, 5/5 CPU fixture checks passed",
+    "warning": "full avg10 >=20% OR some avg10 >=70%, 30 consecutive 10-second samples",
+    "hard_stop": "full avg10 >=60% OR some avg10 >=80%, 15 consecutive 10-second samples",
+    "streak_reset": "only when both full and some are below their severe thresholds",
+    "standalone_memavailable_or_swap_stop": false,
+    "amended_at_utc": "2026-10-26T20:10:47Z"
+  },
+  "iteration_id": "Q-20261026-VF-ITERATION-154",
+  "resumes_cancelled_iteration": "Q-20261026-VF-ITERATION-153",
+  "authorization": {
+    "user_instruction": "2026-10-26: user explicitly authorized terminating PeritoSoft and its Llama servers, then continuing tests; this is a new instruction reopening evaluation after Q153 cancellation.",
+    "scope": "Temporary candidate download and isolated evaluation only. Keep SOL and ASTRA IQ2_XS as the only retained production/model-library profiles; remove Q154 candidate weights if gates fail. No PeritoSoft configuration/data changes.",
+    "usage": "Internal non-commercial open-source evaluation/donation context as explicitly declared by the user; no model-as-a-service or third-party inference."
+  },
+  "source_review_receipt": "receipts/source-review-q154.json",
+  "amendments": [
+    {
+      "iteration": "Q154",
+      "amendment": "pre-download dual-GPU CUDA context probe",
+      "recorded_utc": "2026-10-26T21:06:20Z",
+      "rationale": "The Qwen engine CLI has no --list-devices flag. Its help-only response did not load a model or create a CUDA context. The exact pinned bundle includes libcudart.so.13 and supports sm_86; validate its CUDA runtime on both devices before transferring 93.68 GB.",
+      "operation": "Load only the pinned runtime libcudart.so.13 with ctypes; cudaGetDeviceCount; for each index, cudaSetDevice(index), cudaFree(NULL) to initialize the device context, and cudaDeviceGetPCIBusId. Map PCI IDs/names to current nvidia-smi. No model, server, request, kernel benchmark, pack, or persistent config.",
+      "pass": "CUDA runtime reports 2 devices, cudaFree(NULL) succeeds on both, and PCI identifiers map to both NVIDIA RTX 3090 cards.",
+      "fail": "Stop Q154 before model download; report runtime/device infrastructure block and no score.",
+      "prior_attempts": [
+        {
+          "attempt": 1,
+          "result": "Wrong assumed extraction path from old receipt; no executable found; no GPU use."
+        },
+        {
+          "attempt": 2,
+          "result": "Correct engine path invoked with --list-devices; engine reports unknown argument then help, exit 2; no model/server/context."
+        }
+      ],
+      "resource_note": "ArtCraft GUI remains; prior user instruction allows GUI use during test."
+    },
+    {
+      "iteration": "Q154",
+      "amendment": "throughput 32K-context endpoint feasibility",
+      "recorded_utc": "2026-10-26T22:40:25.415435+00:00",
+      "trigger": "The preregistered 32768 prompt tokens plus 256 requested output tokens exceeds the shared 32768-token context and could be truncated/rejected.",
+      "preserved": {
+        "context_tokens": 32768,
+        "target_output_tokens": 256,
+        "prompt_sizes_repetitions": 3,
+        "runtime_gpu_pair_sampling_cache_policy": "unchanged"
+      },
+      "change": {
+        "rendered_prompt_tokens": [
+          4096,
+          16384,
+          32512
+        ],
+        "labels": [
+          "4K prompt",
+          "16K prompt",
+          "32K window endpoint"
+        ],
+        "context_budget": "32512 exact prompt tokens + 256 output-token cap = 32768 total",
+        "token_count_method": "Pinned Strata Control 0.1.51 tokenizer and ChatTemplate; count the full rendered OpenAI chat prompt, including template tokens. Each size has three deterministic matched prompts, with a unique leading nonce per repetition to avoid prompt/conversation cache reuse.",
+        "validity": "API usage.prompt_tokens must equal the fixture target; cached_tokens and engine cache_n must be zero. Otherwise mark the cell invalid and rerun once with a new nonce, keeping the same target."
+      },
+      "tokenizer_parity": {
+        "same_across_control_and_candidate": true,
+        "chat_template_sha256": "12827f24b742ea4e80cdc12dbcf9622227056b9f797252a3149263d4f9aaadce",
+        "merges_sha256": "4ba698529766c7a2f5052083ea10cdf2485577f5237a332ee291054eb11e3332",
+        "token_type_sha256": "5088c8c298fc06af8382ddb3b76c888703ac2634e82263b97eedcc2ad202738b",
+        "vocab_sha256": "4ba64f0332abcfb0b600b7df1537d1e836e68009d5fb7cdb77339738dc6365c4",
+        "tokenizer_json_sha256_differs": "Tokenizer metadata wrapper differs; actual vocab, merges, token types, and chat template match byte-for-byte."
+      },
+      "next": "Generate and hash all nine token-exact requests offline; run a warmup and the scored requests on each profile, serially; record load, prefill/decode, TTFT/E2E, usage and memory. No quality claim from this screen."
+    },
+    {
+      "iteration": "Q154",
+      "amendment": "freeze token-exact matched throughput fixtures, fallback prompts, warmups, run order and metric extraction",
+      "recorded_utc": "2026-10-26T22:50:07Z",
+      "reason": "Correct the context endpoint and ensure paired requests have exact full-template token counts, no shared natural-language prefix, a predeclared order and a fresh fallback before traffic.",
+      "receipt": "receipts/throughput-fixture-preregistration.json",
+      "manifest_sha256": "cff432df9596f6e535e78d088489eabea175b1ce1a3cad440a8ec64bec2a4a4a",
+      "generator_sha256": "a2bb141409c5a5d3e308c9093ecef1cb65623d9b6464f8e7de35f8956721d760"
+    },
+    {
+      "iteration": "Q154",
+      "amendment": "freeze dual-GPU throughput runner and operational safety/cleanup gates",
+      "recorded_utc": "2026-10-26T22:52:27Z",
+      "receipt": "receipts/throughput-runner-preregistration.json",
+      "runner_sha256": "00aaf533bc415fa4a6ad14a8a8dadbfa64ebf698cc07886c13c8ef344f6711e8",
+      "reason": "Make measured startup, sequential request execution, memory monitoring, stop policy, and post-run cleanup reproducible before first scored request."
+    },
+    {
+      "iteration": "Q154",
+      "amendment": "correct runner repository-root lookup before inference",
+      "recorded_utc": "2026-10-26T22:53:24Z",
+      "receipt": "receipts/throughput-runner-amendment-root-path.json",
+      "prior_runner_sha256": "00aaf533bc415fa4a6ad14a8a8dadbfa64ebf698cc07886c13c8ef344f6711e8",
+      "runner_sha256": "8b3dbe2043d4512bd854d032098572149af496a2399ccce505dbb53903535643",
+      "no_model_server_or_gpu_request": true
+    }
+  ],
+  "runtime_gate_passed_utc": "2026-10-26T21:07:57Z",
+  "download_dry_run_receipt": "receipts/hub-download-dry-run.json",
+  "fresh_pre_download_receipt": "receipts/process-preflight.json"
+}

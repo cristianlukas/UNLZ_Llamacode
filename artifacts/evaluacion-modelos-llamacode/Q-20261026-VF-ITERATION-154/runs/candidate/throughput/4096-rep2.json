@@ -1,0 +1,89 @@
+{
+  "size": 4096,
+  "replicate": 2,
+  "recorded_utc": "2026-10-26T22:59:32.532Z",
+  "attempts": [
+    {
+      "attempt": 1,
+      "request": "inputs/throughput/candidate/4096-rep2.json",
+      "http_status": 200,
+      "wall_s": 5.5485,
+      "body": {
+        "id": "chatcmpl-c0c49457129a45ba8bbe246f",
+        "object": "chat.completion",
+        "created": 1793055566,
+        "model": "q154-huihui-v2-ud-iq4-xs",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": null,
+              "reasoning_content": "We need answer to user. User provided a long string starting \"af20acf160388a79 Q154 throughput fixture; window=4096; replicate=2; variant=0.\" then many words. Likely a benchmark/task? Need infer what they want. There is no explicit question. Could be asking to process? Maybe need output something? We need respond likely with analysis? Need identify pattern. The prompt is a hash, Q154 throughput fixture; window=4096; replicate=2; variant=0. Then a long sequence of words. Could be a \"throughput fixture\" maybe need compute something? Maybe from some evaluation harness where input is a fixture and expected output? We need produce answer? Need infer from context.\n\nWe have to answer user. They gave only data. Could be a puzzle: count words? Maybe \"Q154 throughput fixture\" indicates a task from some dataset? Need maybe return a token? Let's inspect.\n\nThe text: \"af20acf160388a79 Q154 throughput fixture; window=4096; replicate=2; variant=0.\nlatency sample inference validation repro"
+            },
+            "finish_reason": "length"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 4096,
+          "completion_tokens": 256,
+          "total_tokens": 4352,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 4096,
+          "prompt_ms": 2906.1,
+          "prompt_per_token_ms": 0.709,
+          "prompt_per_second": 1409.4,
+          "predicted_n": 256,
+          "predicted_ms": 2638.8,
+          "predicted_per_token_ms": 10.308,
+          "predicted_per_second": 97.0,
+          "draft_n": 120,
+          "draft_n_accepted": 81
+        }
+      },
+      "server_history_latest": {
+        "id": "5e44ec05de23",
+        "projection": null,
+        "time": 1793055566.9853394,
+        "duration_s": 5.5,
+        "finish": "length",
+        "prompt_tokens": 4096,
+        "reused": 0,
+        "output_tokens": 256,
+        "first_engine_token_s": 2.919,
+        "prompt_total": 4096,
+        "prompt_read": 4096,
+        "reasoning_recoveries": 0,
+        "reasoning_repeat_coverage": 0.0,
+        "engine_generated": 256,
+        "prompt_ms": 2906.1,
+        "decode_ms": 2638.8,
+        "decode_tok_s": 97.0,
+        "hit_rate": 0.99,
+        "pcie_share": 0.0,
+        "ram_blobs": 0,
+        "file_blobs": 0,
+        "file_mb": 0,
+        "drafts_offered": 120,
+        "drafts_accepted": 81
+      },
+      "valid": true
+    }
+  ],
+  "ttft_s": 2.919,
+  "prefill_tok_s": 1409.4,
+  "prefill_ms": 2906.1,
+  "decode_tok_s": 97.0,
+  "decode_ms": 2638.8,
+  "prompt_tokens": 4096,
+  "cached_tokens": 0,
+  "completion_tokens": 256,
+  "finish_reason": "length",
+  "e2e_wall_s": 5.5485,
+  "valid": true
+}

@@ -1,0 +1,16 @@
+{
+  "seed": 42,
+  "control_warnings": [
+    "TC-74",
+    "TC-82",
+    "TC-89",
+    "TC-92"
+  ],
+  "candidate_warnings": [
+    "TC-82",
+    "TC-89",
+    "TC-92"
+  ],
+  "candidate_new_warning_ids": [],
+  "passed": true
+}

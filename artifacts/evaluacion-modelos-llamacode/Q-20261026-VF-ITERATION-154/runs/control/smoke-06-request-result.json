@@ -1,0 +1,21 @@
+{
+  "iteration": "Q154",
+  "attempt": "ASTRA control smoke 06 request (final matched VRAM reserve)",
+  "timestamp_utc": "2026-10-26T22:21:25.925775+00:00",
+  "http_status": 200,
+  "elapsed_seconds": 0.7668038930278271,
+  "content": "Q154-ASTRA-SMOKE-OK",
+  "usage": {
+    "prompt_tokens": 73,
+    "completion_tokens": 55,
+    "total_tokens": 128,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "finish_reason": "stop",
+  "result": "PASS",
+  "scope": "Single functionality smoke, not benchmark or quality score.",
+  "request_path": "runs/control/smoke-06-request.json",
+  "response_path": "runs/control/smoke-06-response.json"
+}

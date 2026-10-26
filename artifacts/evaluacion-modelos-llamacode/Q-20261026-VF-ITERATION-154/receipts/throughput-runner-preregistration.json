@@ -1,0 +1,29 @@
+{
+  "iteration": "Q154",
+  "recorded_utc": "2026-10-26T22:52:27Z",
+  "status": "PREREGISTERED_RUNNER_NOT_STARTED",
+  "runner": "scripts/run_throughput_arm.py",
+  "runner_sha256": "00aaf533bc415fa4a6ad14a8a8dadbfa64ebf698cc07886c13c8ef344f6711e8",
+  "scope": "Run exactly one profile at a time on both RTX 3090s; one unscored short warmup and nine scored requests in preregistered order.",
+  "startup": "Pinned Control 0.1.51 strata serve --profile <config> --host 127.0.0.1 --port 8350 --offline --ready-file <private absolute path> --shutdown-timeout 90.",
+  "gates": [
+    "Lock token must remain Q146 owner token before each arm.",
+    "No PeritoSoft/llama-server/Strata serving process or listener may already be active.",
+    "Offline plan must pass and explicitly show --gpu 0,1.",
+    "Server must allocate >=1024 MiB additional memory on each 3090.",
+    "Abort on OOM counter increase, GPU temperature >=85 C, PSI full avg10 >=60 or some avg10 >=80 for 15 consecutive 10-second samples.",
+    "PSI warning full>=20 or some>=70 for 30 samples is recorded and does not itself abort.",
+    "MemAvailable and swap are recorded, not stand-alone abort thresholds."
+  ],
+  "cleanup": "SIGINT only to this runner-owned process group; wait for drain; verify port 8350, ready-file, serving processes, GPU and memory post-state before next arm.",
+  "result_files": "runs/<arm>/throughput/{preflight,offline-plan,ready,warmup-response,memory-samples,progress,summary,cleanup}.json*",
+  "offline_plan_validation": {
+    "control": "PASS",
+    "candidate": "PASS",
+    "both_gpu_args": [
+      "--gpu",
+      "0,1"
+    ],
+    "model_or_server_started": false
+  }
+}

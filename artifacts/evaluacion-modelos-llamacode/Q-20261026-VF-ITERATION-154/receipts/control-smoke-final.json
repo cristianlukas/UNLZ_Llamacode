@@ -1,0 +1,25 @@
+{
+  "iteration": "Q154",
+  "timestamp_utc": "2026-10-26T22:22:04.756580+00:00",
+  "final_control_config": "configs/astra-rco-iq2xs-32k.json",
+  "matched_candidate_config": "configs/huihui-v2-32k.json",
+  "preflight": "receipts/preflight-before-control-smoke-06.json",
+  "ready_file": "runs/control/smoke-06-instance.json",
+  "startup": "PASS on CUDA0 and CUDA1; layers 0-25 / 26-47; 33.02 GiB host expert arena; 13,312 expert cache slots; 100% profiled routed mass cached.",
+  "request": "runs/control/smoke-06-request.json",
+  "response": "runs/control/smoke-06-response.json",
+  "request_result": "runs/control/smoke-06-request-result.json",
+  "http_status": 200,
+  "prompt_tokens": 73,
+  "completion_tokens": 55,
+  "elapsed_seconds": 0.766803893,
+  "exact_marker": "Q154-ASTRA-SMOKE-OK",
+  "finish_reason": "stop",
+  "vram_free_idle_mib": {
+    "gpu0": 1059,
+    "gpu1": 4021
+  },
+  "low_vram_warning": false,
+  "cleanup": "SIGINT; drained with zero pending; server process/port 8350 absent on postflight.",
+  "classification": "Functional smoke only. No quality ranking or benchmark score."
+}

@@ -1,0 +1,73 @@
+{
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "title": "Listado",
+  "readback_utc": "2026-10-26T21:02:08Z",
+  "initial_write": {
+    "ranges": [
+      "Evaluaciones LlamaCode!A358:J358",
+      "Accionables!A27:N27",
+      "Inventario de modelos!A18:R18",
+      "IA local!A63:O63"
+    ],
+    "cell_count": 57,
+    "mismatches": 0,
+    "formats": "WRAP/TOP preserved; HF URL rich link remained on IA local"
+  },
+  "status_update": {
+    "ranges": [
+      "Evaluaciones LlamaCode!C358:C358",
+      "Accionables!D27:D27",
+      "IA local!L63:L63"
+    ],
+    "cell_count": 3,
+    "mismatches": 0
+  },
+  "results_tab": "No row written because no local model measurement exists.",
+  "history": "Q153 cancellation remains in its prior row; Q154 is a separate preregistered iteration.",
+  "download_verification_update": {
+    "updated_utc": "2026-10-26T21:59:32Z",
+    "ranges": [
+      "Evaluaciones LlamaCode!C358:I358",
+      "Accionables!D27:N27",
+      "Inventario de modelos!C18:R18",
+      "IA local!E63:O63"
+    ],
+    "cell_count": 25,
+    "mismatches": 0,
+    "formats": "Only userEnteredValue fields were written; existing formatting and rich link were not changed.",
+    "readback": "Exact status, artifact and hash verification fields matched. No row was added to Resultados because no model measurement exists yet."
+  },
+  "pack_validation_update": {
+    "updated_utc": "2026-10-26T22:09:38Z",
+    "ranges": [
+      "Evaluaciones LlamaCode!C358:I358",
+      "Accionables!D27:N27",
+      "Inventario de modelos!C18:R18",
+      "IA local!E63:O63"
+    ],
+    "cell_count": 21,
+    "mismatches": 0,
+    "formats": "Only userEnteredValue changed; formatting and rich links unchanged.",
+    "readback": "All four requested ranges read back exactly, including N/D metrics and no score; no Results row was added."
+  },
+  "smoke_progress_update": {
+    "updated_utc": "2026-10-26T22:37:08.544543+00:00",
+    "ranges": [
+      "Evaluaciones LlamaCode!C358:C358",
+      "Evaluaciones LlamaCode!G358:I358",
+      "Accionables!D27:D27",
+      "Accionables!H27:K27",
+      "Accionables!M27:N27",
+      "Inventario de modelos!C18:D18",
+      "Inventario de modelos!N18:O18",
+      "Inventario de modelos!R18:R18",
+      "IA local!E63:E63",
+      "IA local!I63:I63",
+      "IA local!L63:L63",
+      "IA local!N63:O63"
+    ],
+    "cell_count": 25,
+    "mismatches": 0,
+    "results_tab": "No row added; smoke remains functional-only with no quality/benchmark claim."
+  }
+}

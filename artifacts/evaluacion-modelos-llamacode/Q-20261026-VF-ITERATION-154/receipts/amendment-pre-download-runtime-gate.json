@@ -1,0 +1,20 @@
+{
+  "iteration": "Q154",
+  "amendment": "pre-download dual-GPU CUDA context probe",
+  "recorded_utc": "2026-10-26T21:06:20Z",
+  "rationale": "The Qwen engine CLI has no --list-devices flag. Its help-only response did not load a model or create a CUDA context. The exact pinned bundle includes libcudart.so.13 and supports sm_86; validate its CUDA runtime on both devices before transferring 93.68 GB.",
+  "operation": "Load only the pinned runtime libcudart.so.13 with ctypes; cudaGetDeviceCount; for each index, cudaSetDevice(index), cudaFree(NULL) to initialize the device context, and cudaDeviceGetPCIBusId. Map PCI IDs/names to current nvidia-smi. No model, server, request, kernel benchmark, pack, or persistent config.",
+  "pass": "CUDA runtime reports 2 devices, cudaFree(NULL) succeeds on both, and PCI identifiers map to both NVIDIA RTX 3090 cards.",
+  "fail": "Stop Q154 before model download; report runtime/device infrastructure block and no score.",
+  "prior_attempts": [
+    {
+      "attempt": 1,
+      "result": "Wrong assumed extraction path from old receipt; no executable found; no GPU use."
+    },
+    {
+      "attempt": 2,
+      "result": "Correct engine path invoked with --list-devices; engine reports unknown argument then help, exit 2; no model/server/context."
+    }
+  ],
+  "resource_note": "ArtCraft GUI remains; prior user instruction allows GUI use during test."
+}

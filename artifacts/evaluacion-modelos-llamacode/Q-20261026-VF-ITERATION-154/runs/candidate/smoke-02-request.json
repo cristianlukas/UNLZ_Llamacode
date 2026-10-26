@@ -1,0 +1,11 @@
+{
+  "model": "q154-huihui-v2-ud-iq4-xs",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Return exactly this token sequence and nothing else: Q154-HUIHUI-SMOKE-OK"
+    }
+  ],
+  "max_tokens": 128,
+  "stream": false
+}

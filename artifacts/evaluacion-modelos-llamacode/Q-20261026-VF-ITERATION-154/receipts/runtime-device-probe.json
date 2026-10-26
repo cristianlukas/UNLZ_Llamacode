@@ -1,0 +1,27 @@
+{
+  "captured_utc": "2026-10-26T21:07:57Z",
+  "library": "/media/cristian/Disco local/Models-eval/Q153-huihui-v2/runtime/components/engine/0.1.50-linux-x86_64-cuda-cuda13/libcudart.so.13",
+  "engine_manifest": "Strata Qwen 0.1.50; arch list includes sm_86; minimum NVIDIA driver 580.65; signed=true; installed runtime-verification usable=true.",
+  "driver": "615.71.09 on both GPUs",
+  "cudaGetDeviceCount": {
+    "status": 0,
+    "count": 2
+  },
+  "devices": [
+    {
+      "cuda_index": 0,
+      "cudaSetDevice": 0,
+      "cudaFree_null": 0,
+      "pci": "0000:01:00.0",
+      "mapped_nvidia_smi": "GPU0 NVIDIA GeForce RTX 3090"
+    },
+    {
+      "cuda_index": 1,
+      "cudaSetDevice": 0,
+      "cudaFree_null": 0,
+      "pci": "0000:03:00.0",
+      "mapped_nvidia_smi": "GPU1 NVIDIA GeForce RTX 3090"
+    }
+  ],
+  "result": "PASS: bundled CUDA 13 runtime created/released contexts on both RTX 3090s. No model weights, inference server or benchmark. Proceed to pinned download after fresh preflight."
+}

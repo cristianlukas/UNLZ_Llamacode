@@ -1,0 +1,26 @@
+{
+  "iteration": "Q154",
+  "kind": "fresh-preflight-before-Huihui-smoke",
+  "timestamp_utc": "2026-10-26T22:21:39.997594+00:00",
+  "PeritoSoft_or_inference_processes": [],
+  "other_app_processes": [
+    "959412    2875 artcraft-launch /tmp/.mount_artcraPGcaAc/usr/bin/artcraft-launcher",
+    " 959445    2875 artcraft-launch /home/cristian/Descargas/artcraft-launcher-0.3.2-linux-x86_64.AppImage",
+    "3952277    2875 artcraft-launch /home/cristian/Descargas/artcraft-launcher-0.3.2-linux-x86_64.AppImage"
+  ],
+  "target_listeners": [],
+  "gpu": [
+    "0, NVIDIA GeForce RTX 3090, 1092 MiB, 23083 MiB, 9 %",
+    "1, NVIDIA GeForce RTX 3090, 110 MiB, 24068 MiB, 11 %"
+  ],
+  "memory": {
+    "MemAvailable": "115240032 kB",
+    "SwapFree": "4090676 kB"
+  },
+  "memory_psi": "some avg10=0.04 avg60=0.32 avg300=0.22 total=1569181556\nfull avg10=0.04 avg60=0.32 avg300=0.22 total=1568025462",
+  "D_free_bytes": 402891739136,
+  "ArtCraft_left_running": true,
+  "actions_taken": [],
+  "decision": "PASS",
+  "next": "Launch Huihui only; 768 MiB VRAM reserve; dual RTX 3090; verify >=1 GiB allocation on each card."
+}

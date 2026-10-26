@@ -1,0 +1,89 @@
+{
+  "size": 16384,
+  "replicate": 3,
+  "recorded_utc": "2026-10-26T22:55:47.215Z",
+  "attempts": [
+    {
+      "attempt": 1,
+      "request": "inputs/throughput/control/16384-rep3.json",
+      "http_status": 200,
+      "wall_s": 8.289,
+      "body": {
+        "id": "chatcmpl-0f9cb758b0a64d41ab048f97",
+        "object": "chat.completion",
+        "created": 1793055338,
+        "model": "q154-astra-rco-iq2-xs",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": null,
+              "reasoning_content": "We need answer user's request. User provided a long string starting \"312b0fcdf87984ae Q154 throughput fixture; window=16384; replicate=3; variant=0.\" then huge word salad. Need infer task? Maybe they expect some output? Could be benchmark prompt? Need respond likely with something? We need analyze. The user likely wants us to process? There is no explicit question. Could be a fixture for throughput, window, replicate, variant. Maybe they expect answer to be deterministic? Need maybe output something like a hash? Let's inspect. It begins with ID, Q154 throughput fixture; window=16384; replicate=3; variant=0. Then trace pair vector candidate tokenizer cache graph, nonce useful useful route input nonce sequence, deterministic performance output expert engine. token reproducible, assertion inference agent task profile generation local, model integration buffer generation generation trace memory, generation monitor expert. layer decode document safety, device throughput boundary boundary memory document monitor, quality workspace input shard candidate fixture throughput, response. task candidate pair performance sequence decode, cache input profile harness pair profile cache, input request useful deterministic prompt cache. input, framework reproducible output memory pair sample"
+            },
+            "finish_reason": "length"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 16384,
+          "completion_tokens": 256,
+          "total_tokens": 16640,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 16384,
+          "prompt_ms": 6651.8,
+          "prompt_per_token_ms": 0.406,
+          "prompt_per_second": 2463.1,
+          "predicted_n": 256,
+          "predicted_ms": 1628.0,
+          "predicted_per_token_ms": 6.359,
+          "predicted_per_second": 157.2,
+          "draft_n": 120,
+          "draft_n_accepted": 111
+        }
+      },
+      "server_history_latest": {
+        "id": "f42eac91bc1c",
+        "projection": null,
+        "time": 1793055338.9313529,
+        "duration_s": 8.3,
+        "finish": "length",
+        "prompt_tokens": 16384,
+        "reused": 0,
+        "output_tokens": 256,
+        "first_engine_token_s": 6.664,
+        "prompt_total": 16384,
+        "prompt_read": 16384,
+        "reasoning_recoveries": 0,
+        "reasoning_repeat_coverage": 0.0,
+        "engine_generated": 256,
+        "prompt_ms": 6651.8,
+        "decode_ms": 1628.0,
+        "decode_tok_s": 157.2,
+        "hit_rate": null,
+        "pcie_share": null,
+        "ram_blobs": 0,
+        "file_blobs": 0,
+        "file_mb": 0,
+        "drafts_offered": 120,
+        "drafts_accepted": 111
+      },
+      "valid": true
+    }
+  ],
+  "ttft_s": 6.664,
+  "prefill_tok_s": 2463.1,
+  "prefill_ms": 6651.8,
+  "decode_tok_s": 157.2,
+  "decode_ms": 1628.0,
+  "prompt_tokens": 16384,
+  "cached_tokens": 0,
+  "completion_tokens": 256,
+  "finish_reason": "length",
+  "e2e_wall_s": 8.289,
+  "valid": true
+}

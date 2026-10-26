@@ -1,0 +1,8 @@
+{
+  "iteration": "Q154",
+  "attempt": "retry CLI validation 02",
+  "ended_utc": "2026-10-26T22:17:57.930817+00:00",
+  "command": "strata serve with a relative --ready-file path",
+  "exit_code": 2,
+  "result": "CLI rejected invocation before engine/server/model/GPU startup: --ready-file must be an absolute path. No model state or score. Corrected to an absolute Q154-private path for the following attempt."
+}

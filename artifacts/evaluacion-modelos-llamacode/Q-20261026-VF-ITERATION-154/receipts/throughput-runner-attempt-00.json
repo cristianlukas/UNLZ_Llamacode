@@ -1,0 +1,13 @@
+{
+  "iteration": "Q154",
+  "recorded_utc": "2026-10-26T22:53:24Z",
+  "status": "ABORTED_PREFLIGHT_NO_INFERENCE",
+  "error": "WORK_QUEUE.lock lookup resolved under artifacts/ because repository parent index was off by one.",
+  "corrected_before_retry": true,
+  "model_started": false,
+  "server_started": false,
+  "gpu_load_started": false,
+  "scored_requests": 0,
+  "prior_runner_sha256": "00aaf533bc415fa4a6ad14a8a8dadbfa64ebf698cc07886c13c8ef344f6711e8",
+  "corrected_runner_sha256": "8b3dbe2043d4512bd854d032098572149af496a2399ccce505dbb53903535643"
+}

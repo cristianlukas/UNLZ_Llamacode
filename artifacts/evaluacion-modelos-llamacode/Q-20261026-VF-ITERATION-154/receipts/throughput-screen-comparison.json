@@ -1,0 +1,418 @@
+{
+  "iteration": "Q154",
+  "recorded_utc": "2026-10-26T23:00:45Z",
+  "status": "THROUGHPUT_COMPLETE_18_OF_18_VALID",
+  "objective": "Matched throughput screen for Huihui v2 UD-IQ4_XS against ASTRA RCO IQ2_XS; no quality or safety-quality score.",
+  "design": "Dual RTX 3090; 128 GiB host; serial separate server loads; shared Strata v0.2.6 / Control0.1.51 / Qwen engine0.1.50; 32K context; MTP off; KV int8; spec4; prefill8192; vram reserve768; temp0 request override; exact prompt counts 4096/16384/32512 + 256 completion cap.",
+  "valid_measurements": {
+    "control": 9,
+    "candidate": 9,
+    "fallbacks_used": {
+      "control": 0,
+      "candidate": 0
+    },
+    "cached_prompt_tokens": 0,
+    "invalid_measurements": 0
+  },
+  "server_load_s": {
+    "control": 54.038,
+    "candidate": 54.037
+  },
+  "dual_gpu_allocation_delta_mib": {
+    "control": [
+      22011,
+      20046
+    ],
+    "candidate": [
+      22591,
+      23458
+    ]
+  },
+  "by_prompt_size": [
+    {
+      "prompt_tokens": 4096,
+      "arms": {
+        "control": {
+          "valid_reps": 3,
+          "metrics": {
+            "prefill_tok_s": {
+              "median": 502.6,
+              "min": 371.7,
+              "max": 578.8
+            },
+            "decode_tok_s": {
+              "median": 144.4,
+              "min": 100.5,
+              "max": 231.8
+            },
+            "ttft_s": {
+              "median": 8.159,
+              "min": 7.089,
+              "max": 11.029
+            },
+            "e2e_wall_s": {
+              "median": 10.7,
+              "min": 8.187,
+              "max": 12.795
+            }
+          },
+          "completion_tokens": [
+            256,
+            256,
+            256
+          ]
+        },
+        "candidate": {
+          "valid_reps": 3,
+          "metrics": {
+            "prefill_tok_s": {
+              "median": 1409.4,
+              "min": 1390.5,
+              "max": 1426.6
+            },
+            "decode_tok_s": {
+              "median": 135.7,
+              "min": 97.0,
+              "max": 206.7
+            },
+            "ttft_s": {
+              "median": 2.919,
+              "min": 2.885,
+              "max": 2.959
+            },
+            "e2e_wall_s": {
+              "median": 4.836,
+              "min": 4.113,
+              "max": 5.548
+            }
+          },
+          "completion_tokens": [
+            256,
+            256,
+            256
+          ]
+        }
+      },
+      "descriptive_delta": {
+        "prefill_tok_s": {
+          "candidate_over_control_ratio": 2.8042,
+          "percent_change": 180.42
+        },
+        "decode_tok_s": {
+          "candidate_over_control_ratio": 0.9398,
+          "percent_change": -6.02
+        },
+        "ttft_s": {
+          "candidate_over_control_ratio": 0.3578,
+          "percent_change": -64.22
+        },
+        "e2e_wall_s": {
+          "candidate_over_control_ratio": 0.452,
+          "percent_change": -54.8
+        }
+      }
+    },
+    {
+      "prompt_tokens": 16384,
+      "arms": {
+        "control": {
+          "valid_reps": 3,
+          "metrics": {
+            "prefill_tok_s": {
+              "median": 2135.4,
+              "min": 810.7,
+              "max": 2463.1
+            },
+            "decode_tok_s": {
+              "median": 123.5,
+              "min": 100.2,
+              "max": 157.2
+            },
+            "ttft_s": {
+              "median": 7.684,
+              "min": 6.664,
+              "max": 20.221
+            },
+            "e2e_wall_s": {
+              "median": 9.753,
+              "min": 8.289,
+              "max": 22.773
+            }
+          },
+          "completion_tokens": [
+            256,
+            256,
+            256
+          ]
+        },
+        "candidate": {
+          "valid_reps": 3,
+          "metrics": {
+            "prefill_tok_s": {
+              "median": 2460.4,
+              "min": 2443.2,
+              "max": 2490.5
+            },
+            "decode_tok_s": {
+              "median": 116.2,
+              "min": 91.7,
+              "max": 195.6
+            },
+            "ttft_s": {
+              "median": 6.673,
+              "min": 6.596,
+              "max": 6.72
+            },
+            "e2e_wall_s": {
+              "median": 8.789,
+              "min": 8.022,
+              "max": 9.457
+            }
+          },
+          "completion_tokens": [
+            256,
+            256,
+            256
+          ]
+        }
+      },
+      "descriptive_delta": {
+        "prefill_tok_s": {
+          "candidate_over_control_ratio": 1.1522,
+          "percent_change": 15.22
+        },
+        "decode_tok_s": {
+          "candidate_over_control_ratio": 0.9409,
+          "percent_change": -5.91
+        },
+        "ttft_s": {
+          "candidate_over_control_ratio": 0.8684,
+          "percent_change": -13.16
+        },
+        "e2e_wall_s": {
+          "candidate_over_control_ratio": 0.9012,
+          "percent_change": -9.88
+        }
+      }
+    },
+    {
+      "prompt_tokens": 32512,
+      "arms": {
+        "control": {
+          "valid_reps": 3,
+          "metrics": {
+            "prefill_tok_s": {
+              "median": 3075.4,
+              "min": 3069.5,
+              "max": 3080.4
+            },
+            "decode_tok_s": {
+              "median": 129.5,
+              "min": 129.2,
+              "max": 220.8
+            },
+            "ttft_s": {
+              "median": 10.584,
+              "min": 10.567,
+              "max": 10.605
+            },
+            "e2e_wall_s": {
+              "median": 12.504,
+              "min": 11.691,
+              "max": 12.52
+            }
+          },
+          "completion_tokens": [
+            248,
+            248,
+            248
+          ]
+        },
+        "candidate": {
+          "valid_reps": 3,
+          "metrics": {
+            "prefill_tok_s": {
+              "median": 2973.8,
+              "min": 2805.7,
+              "max": 3002.2
+            },
+            "decode_tok_s": {
+              "median": 98.9,
+              "min": 76.3,
+              "max": 114.2
+            },
+            "ttft_s": {
+              "median": 10.95,
+              "min": 10.846,
+              "max": 11.605
+            },
+            "e2e_wall_s": {
+              "median": 13.352,
+              "min": 13.121,
+              "max": 14.854
+            }
+          },
+          "completion_tokens": [
+            248,
+            248,
+            248
+          ]
+        }
+      },
+      "descriptive_delta": {
+        "prefill_tok_s": {
+          "candidate_over_control_ratio": 0.967,
+          "percent_change": -3.3
+        },
+        "decode_tok_s": {
+          "candidate_over_control_ratio": 0.7637,
+          "percent_change": -23.63
+        },
+        "ttft_s": {
+          "candidate_over_control_ratio": 1.0346,
+          "percent_change": 3.46
+        },
+        "e2e_wall_s": {
+          "candidate_over_control_ratio": 1.0678,
+          "percent_change": 6.78
+        }
+      }
+    }
+  ],
+  "memory_guard": {
+    "control": {
+      "sample_count": 17,
+      "min_memavailable_kib": 74046552,
+      "psi_full_avg10_max_percent": 0.94,
+      "psi_some_avg10_max_percent": 0.94,
+      "oom_kill_before": 0,
+      "oom_kill_after": 0,
+      "swap_free_pre_kib": 3405676,
+      "swap_free_post_kib": 3368688,
+      "gpu_temperature_max_c": 64
+    },
+    "candidate": {
+      "sample_count": 15,
+      "min_memavailable_kib": 49153320,
+      "psi_full_avg10_max_percent": 2.8,
+      "psi_some_avg10_max_percent": 2.8,
+      "oom_kill_before": 0,
+      "oom_kill_after": 0,
+      "swap_free_pre_kib": 3368692,
+      "swap_free_post_kib": 3369000,
+      "gpu_temperature_max_c": 64
+    },
+    "warning_triggered": false,
+    "hard_stop_triggered": false,
+    "oom_or_crash": false
+  },
+  "cleanup": {
+    "control": {
+      "sigint_exit_code": 130,
+      "port_free": true,
+      "ready_file_removed": true,
+      "remaining_inference_processes": [],
+      "gpu_after": [
+        {
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 1058,
+          "memory_free_mib": 23117,
+          "temperature_c": 58,
+          "utilization_percent": 17
+        },
+        {
+          "index": 1,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 110,
+          "memory_free_mib": 24068,
+          "temperature_c": 47,
+          "utilization_percent": 8
+        }
+      ],
+      "memory_after": {
+        "meminfo_kib": {
+          "MemAvailable": 116017544,
+          "SwapFree": 3368688
+        },
+        "psi_memory_percent": {
+          "some": {
+            "avg10": 0.0,
+            "avg60": 0.05,
+            "avg300": 0.06
+          },
+          "full": {
+            "avg10": 0.0,
+            "avg60": 0.05,
+            "avg300": 0.06
+          }
+        },
+        "vmstat_pages": {
+          "pswpin": 2324291,
+          "pswpout": 4511323,
+          "oom_kill": 0
+        }
+      }
+    },
+    "candidate": {
+      "sigint_exit_code": 130,
+      "port_free": true,
+      "ready_file_removed": true,
+      "remaining_inference_processes": [],
+      "gpu_after": [
+        {
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 1058,
+          "memory_free_mib": 23117,
+          "temperature_c": 61,
+          "utilization_percent": 7
+        },
+        {
+          "index": 1,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 110,
+          "memory_free_mib": 24068,
+          "temperature_c": 48,
+          "utilization_percent": 4
+        }
+      ],
+      "memory_after": {
+        "meminfo_kib": {
+          "MemAvailable": 115979180,
+          "SwapFree": 3369000
+        },
+        "psi_memory_percent": {
+          "some": {
+            "avg10": 0.0,
+            "avg60": 0.14,
+            "avg300": 0.17
+          },
+          "full": {
+            "avg10": 0.0,
+            "avg60": 0.14,
+            "avg300": 0.17
+          }
+        },
+        "vmstat_pages": {
+          "pswpin": 2324294,
+          "pswpout": 4511330,
+          "oom_kill": 0
+        }
+      }
+    }
+  },
+  "interpretation": [
+    "All results are medians of three repeated synthetic prefill requests per size; show ranges. This is throughput only, not model quality.",
+    "Huihui had lower median E2E at 4K and 16K, but 6.8% higher E2E at the 32K endpoint. Decode medians were lower for Huihui at all three sizes.",
+    "The control showed a cold first 16K replicate and higher variability; the candidate was more stable in prefill at 4K/16K. The small n and one cold outlier limit the comparison.",
+    "Proceed to preregistered Tool-Eval because there is a potential short/medium-context latency benefit, but no replacement/adoption decision without matched quality and safety gates.",
+    "Profiles differ in both quantization and fine-tune; this screen cannot attribute changes to either alone."
+  ],
+  "raw_evidence": {
+    "control": "runs/control/throughput/",
+    "candidate": "runs/candidate/throughput/",
+    "fixture_manifest": "inputs/throughput/manifest.json",
+    "pre_registration": "receipts/throughput-fixture-preregistration.json"
+  }
+}

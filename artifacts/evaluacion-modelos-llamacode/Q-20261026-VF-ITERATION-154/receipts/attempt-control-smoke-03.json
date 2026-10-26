@@ -1,0 +1,10 @@
+{
+  "iteration": "Q154",
+  "attempt": "ASTRA control smoke 03",
+  "ended_utc": "2026-10-26T22:17:57.930817+00:00",
+  "command": "strata serve --profile configs/astra-rco-iq2xs-32k.json --engine strata --host 127.0.0.1 --port 8350 --parallel 1 --offline --ready-file <absolute Q154 path> --output jsonl",
+  "exit_code": 6,
+  "result": "EngineDied before model load/API/tokens. After applying shared expert-profile, the engine identified the remaining native-IQ contract.",
+  "root_cause": "Engine stderr: native IQ pack requires --spec T (T >= 2) and --prefill CHUNK. Config omitted --spec and used --prefill auto (resolves to zero for this engine path).",
+  "memory": "Startup guard allowed run; MemAvailable about 109.9 GiB, no OOM; post-failure GPU returned to baseline, no service/listener."
+}

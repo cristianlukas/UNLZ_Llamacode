@@ -1,0 +1,51 @@
+{
+  "iteration": "Q154",
+  "timestamp_utc": "2026-10-26T22:27:40.963299+00:00",
+  "result": "PASS: repack completed with pinned Control 0.1.51 tools/iq_pack.py using same shard revision and --compat-bf16 setting.",
+  "tool": "/media/cristian/Disco local/Models-eval/Q153-huihui-v2/runtime/control-0.1.51/tools/iq_pack.py",
+  "exit_code": 0,
+  "files": {
+    "compat-bf16.json": 21107,
+    "conversions.json": 167312,
+    "dense.bin": 1485688320,
+    "index.txt": 93559,
+    "native_experts.txt": 5803
+  },
+  "native_experts_txt_sha256": "f9a8bdec38ab634fec9a31807cc3284e6497ef24c1afa0d8853127b0537c68db",
+  "split_layer14": {
+    "columns": [
+      "14",
+      "21",
+      "20",
+      "17707827200",
+      "2329600",
+      "49467787936",
+      "54336",
+      "48994187936",
+      "Qwen3.8-Flash-Next-UD-IQ4_XS-00002-of-00003.gguf,Qwen3.8-Flash-Next-UD-IQ4_XS-00003-of-00003.gguf,Qwen3.8-Flash-Next-UD-IQ4_XS-00002-of-00003.gguf"
+    ],
+    "separator": "comma-delimited role shard list",
+    "role_shards": [
+      "Qwen3.8-Flash-Next-UD-IQ4_XS-00002-of-00003.gguf",
+      "Qwen3.8-Flash-Next-UD-IQ4_XS-00003-of-00003.gguf",
+      "Qwen3.8-Flash-Next-UD-IQ4_XS-00002-of-00003.gguf"
+    ]
+  },
+  "conversion_summary": {
+    "index_tensor_count": 1079,
+    "served_natively_count": 303,
+    "conversion_entries": 460,
+    "exact_conversion_count": 264,
+    "rounded_conversion_count": 196,
+    "max_absolute_error": 0.014404296875,
+    "compat_bf16_tensor_count": 195,
+    "compat_bf16_approx_gib": 1.2,
+    "experts_and_PLE": "unchanged raw source bytes per packer output"
+  },
+  "model_shards_unchanged": true,
+  "plan_validation": {
+    "candidate": "PASS",
+    "control": "PASS"
+  },
+  "limitations": "Pack representation is profile-specific; 196 dense/compat tensors are rounded to BF16 with max reported abs error 0.0144. This is part of the actual runnable Huihui profile and must remain disclosed; no model quality score yet."
+}

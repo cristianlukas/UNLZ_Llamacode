@@ -1,0 +1,203 @@
+{
+  "iteration": "Q154",
+  "arm": "control",
+  "model": "ASTRA Qwen3.8 Flash-Next RCO IQ2_XS",
+  "recorded_utc": "2026-10-26T22:57:07Z",
+  "status": "THROUGHPUT_SCREEN_PASS_9_OF_9_VALID",
+  "profile": "configs/astra-rco-iq2xs-32k.json",
+  "runtime": "Strata v0.2.6 / Control 0.1.51 / Qwen engine 0.1.50",
+  "hardware": "2x RTX 3090 dual-GPU, host 128 GiB; context 32768; KV int8/resident32768; MTP off; spec4; native prefill8192; vram reserve768 MiB; deterministic temperature0 request override.",
+  "preregistration_receipt": "receipts/throughput-fixture-preregistration.json",
+  "runner_receipt": "receipts/throughput-runner-preregistration.json",
+  "valid_measurements": 9,
+  "warmup": "one unscored request; PASS",
+  "server_load_s": 54.038,
+  "gpu_allocation_delta_mib": [
+    22011,
+    20046
+  ],
+  "by_prompt_size": [
+    {
+      "prompt_tokens": 4096,
+      "valid_reps": 3,
+      "metrics": {
+        "prefill_tok_s": {
+          "median": 502.6,
+          "min": 371.7,
+          "max": 578.8
+        },
+        "decode_tok_s": {
+          "median": 144.4,
+          "min": 100.5,
+          "max": 231.8
+        },
+        "ttft_s": {
+          "median": 8.159,
+          "min": 7.089,
+          "max": 11.029
+        },
+        "e2e_wall_s": {
+          "median": 10.7,
+          "min": 8.187,
+          "max": 12.795
+        }
+      },
+      "completion_tokens": [
+        256,
+        256,
+        256
+      ],
+      "finish_reason": [
+        "length",
+        "length",
+        "length"
+      ]
+    },
+    {
+      "prompt_tokens": 16384,
+      "valid_reps": 3,
+      "metrics": {
+        "prefill_tok_s": {
+          "median": 2135.4,
+          "min": 810.7,
+          "max": 2463.1
+        },
+        "decode_tok_s": {
+          "median": 123.5,
+          "min": 100.2,
+          "max": 157.2
+        },
+        "ttft_s": {
+          "median": 7.684,
+          "min": 6.664,
+          "max": 20.221
+        },
+        "e2e_wall_s": {
+          "median": 9.753,
+          "min": 8.289,
+          "max": 22.773
+        }
+      },
+      "completion_tokens": [
+        256,
+        256,
+        256
+      ],
+      "finish_reason": [
+        "length",
+        "length",
+        "length"
+      ]
+    },
+    {
+      "prompt_tokens": 32512,
+      "valid_reps": 3,
+      "metrics": {
+        "prefill_tok_s": {
+          "median": 3075.4,
+          "min": 3069.5,
+          "max": 3080.4
+        },
+        "decode_tok_s": {
+          "median": 129.5,
+          "min": 129.2,
+          "max": 220.8
+        },
+        "ttft_s": {
+          "median": 10.584,
+          "min": 10.567,
+          "max": 10.605
+        },
+        "e2e_wall_s": {
+          "median": 12.504,
+          "min": 11.691,
+          "max": 12.52
+        }
+      },
+      "completion_tokens": [
+        248,
+        248,
+        248
+      ],
+      "finish_reason": [
+        "length",
+        "length",
+        "length"
+      ]
+    }
+  ],
+  "memory_guard": {
+    "sample_count": 17,
+    "min_memavailable_kib": 74046552,
+    "psi_full_avg10_max_percent": 0.94,
+    "psi_some_avg10_max_percent": 0.94,
+    "warning_threshold_streak": 0,
+    "hard_stop_streak": 0,
+    "oom_kill_before": 0,
+    "oom_kill_after": 0,
+    "swap_free_before_kib": 3405676,
+    "swap_free_after_kib": 3368688,
+    "gpu_temp_c_max": 64
+  },
+  "cleanup": {
+    "recorded_utc": "2026-10-26T22:56:28.740Z",
+    "sigint_exit_code": 130,
+    "port_free": true,
+    "remaining_inference_processes": [],
+    "gpu_after": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_used_mib": 1058,
+        "memory_free_mib": 23117,
+        "temperature_c": 58,
+        "utilization_percent": 17
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_used_mib": 110,
+        "memory_free_mib": 24068,
+        "temperature_c": 47,
+        "utilization_percent": 8
+      }
+    ],
+    "memory_after": {
+      "meminfo_kib": {
+        "MemAvailable": 116017544,
+        "SwapFree": 3368688
+      },
+      "psi_memory_percent": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.05,
+          "avg300": 0.06
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.05,
+          "avg300": 0.06
+        }
+      },
+      "vmstat_pages": {
+        "pswpin": 2324291,
+        "pswpout": 4511323,
+        "oom_kill": 0
+      }
+    },
+    "ready_file_removed": true
+  },
+  "raw_evidence": {
+    "run_directory": "runs/control/throughput/",
+    "requests": "runs/control/throughput/{4096,16384,32512}-rep{1,2,3}.json",
+    "memory_samples": "runs/control/throughput/memory-samples.jsonl",
+    "server_log": "runs/control/throughput/server.log"
+  },
+  "interpretation": [
+    "Throughput screen only; no quality/tool-safety conclusion.",
+    "Three repeats per prompt size; report medians and ranges, not one run.",
+    "16K replicate1 was a cold outlier; preserve all three values.",
+    "Output stopped at 256 tokens for the 4K/16K requests; the 32K endpoint generated 248 tokens and stopped naturally.",
+    "Control and candidate comparison remains incomplete until Huihui arm passes the same validity checks."
+  ]
+}

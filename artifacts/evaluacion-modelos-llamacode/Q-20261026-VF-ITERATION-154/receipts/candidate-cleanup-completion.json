@@ -1,0 +1,66 @@
+{
+  "iteration": "Q154",
+  "recorded_utc": "2026-10-26T23:36:03Z",
+  "status": "candidate_weights_pack_and_caches_removed; shared neutral profile retained",
+  "authorization": "Q154 preregistration no-go cleanup policy; user also authorized removing non-retained model variants while preserving ASTRA and SOL.",
+  "pre_cleanup": {
+    "candidate_root": "/media/cristian/Disco local/Models-eval/Q154-huihui-v2",
+    "physical_allocated_bytes": 95178670080,
+    "apparent_file_bytes": 95178625616,
+    "filesystem": "/dev/nvme1n1p2",
+    "free_bytes": 402943987712,
+    "model_shard_total_bytes": 93682584224,
+    "model_shards": [
+      {
+        "file": "model/unsloth-UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00001-of-00003.gguf",
+        "bytes": 10946624,
+        "sha256": "5ce89370720f8bf90890f439361282104c1aa1482d4013bb9a50923e758e71a4"
+      },
+      {
+        "file": "model/unsloth-UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00002-of-00003.gguf",
+        "bytes": 49835229856,
+        "sha256": "ede87d3bd3e354d43f0e710b2df6791d3479e396847e53adbe2b48be7ba6d663"
+      },
+      {
+        "file": "model/unsloth-UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00003-of-00003.gguf",
+        "bytes": 43836407744,
+        "sha256": "f8aa8bd7ba134b3b7fe4fc95b9131fc8f6678ace374a0fa6e632225031665995"
+      }
+    ]
+  },
+  "pre_delete_checks": {
+    "all_shard_sizes_and_sha256_rechecked": "PASS",
+    "shard_link_counts": "1 each",
+    "candidate_tree_symlinks": "none",
+    "open_file_handles": "none from lsof +D",
+    "peritosoft_configuration_references": "none found for Q154-huihui-v2",
+    "inference_processes": "none found on Q154 preflight; final listener check port 8350 was empty",
+    "delete_scope": "only isolated /media/cristian/Disco local/Models-eval/Q154-huihui-v2 candidate tree"
+  },
+  "removed": [
+    "model/unsloth-UD-IQ4_XS/ (three verified GGUF shards, 93,682,584,224 bytes)",
+    "model/.cache/huggingface/ (candidate download metadata and lock files)",
+    "cache/hf-home/ (candidate HF/Xet cache)",
+    "pack/huihui-v2-iq4xs/ (candidate-specific packed model and tokenizer)",
+    "candidate-generated ancillary files under the Q154 root"
+  ],
+  "preserved_shared_artifact": {
+    "path": "/media/cristian/Disco local/Models-eval/Q154-huihui-v2/profile/neutral-expert-profile.bin",
+    "bytes": 196632,
+    "sha256": "b3e62120218cd96d175a0547530158869177dd2164b22b40f32bea7d7e85fb8c",
+    "reason": "same deterministic neutral cache profile was used by both ASTRA control and Huihui candidate; required by the archived Q154 control configuration and retained for reproducibility",
+    "recreated_from": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/runtime/source43-project-maya/tools/make_profile.py with --no-base and no input traces; generated hash exactly matches Q154 shared-neutral-profile receipt"
+  },
+  "post_cleanup": {
+    "candidate_weights_pack_cache_exist": false,
+    "shared_neutral_profile_exists_and_hash_matches": true,
+    "directory_physical_allocated_bytes": 200704,
+    "filesystem_free_bytes": 498122457088,
+    "net_free_space_increase_bytes": 95178469376,
+    "astra_and_sol": "preserved; outside deletion scope",
+    "shared_runtime": "preserved; outside deletion scope",
+    "peritosoft_data_and_configuration": "preserved; outside deletion scope",
+    "receipts_and_result_traces": "preserved under Q154 artifacts"
+  },
+  "google_sheet_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-154/receipts/google-sheet-final-sync.json"
+}

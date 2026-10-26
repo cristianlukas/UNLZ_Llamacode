@@ -1,0 +1,56 @@
+{
+  "captured_utc": "2026-10-26T21:07:57Z",
+  "lock": {
+    "task": "Q146 resume justified VF-20261019 tests",
+    "token": "2242863e-c78e-4fa9-9649-c1d1541f3919"
+  },
+  "peritosoft_app_processes": 0,
+  "peritosoft_llama_server_processes": 0,
+  "other_inference_processes": 0,
+  "matching_inference_containers": 0,
+  "target_ports_listening": {
+    "8033": false,
+    "32100": false,
+    "32101": false,
+    "8350": false,
+    "8354": false
+  },
+  "gpu_compute_apps": [
+    {
+      "pid": 959412,
+      "exe": "/tmp/.mount_artcraPGcaAc/usr/bin/artcraft-launcher",
+      "used_memory_mib": 207,
+      "classification": "GUI/non-inference; left running"
+    }
+  ],
+  "gpus": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 1069,
+      "memory_total_mib": 24576,
+      "utilization_percent": 26,
+      "temperature_c": 40,
+      "driver": "615.71.09",
+      "pci": "00000000:01:00.0"
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 110,
+      "memory_total_mib": 24576,
+      "utilization_percent": 17,
+      "temperature_c": 26,
+      "driver": "615.71.09",
+      "pci": "00000000:03:00.0"
+    }
+  ],
+  "memavailable_kib": 115264012,
+  "swap_total_kib": 8388604,
+  "swap_free_kib": 4088424,
+  "psi": "some avg10=0.00; full avg10=0.00",
+  "oom_events": "root cgroup file unavailable",
+  "D_free_bytes": 498124570624,
+  "minimum_free_bytes": 193273528320,
+  "decision": "PASS: no inference server or PeritoSoft; correct ports free; both 3090s visible; disk exceeds 180 GiB minimum; memory PSI 0. ArtCraft GUI is not a server and remains active."
+}

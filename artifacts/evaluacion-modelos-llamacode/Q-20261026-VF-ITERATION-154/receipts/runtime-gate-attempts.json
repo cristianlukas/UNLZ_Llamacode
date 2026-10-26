@@ -1,0 +1,18 @@
+{
+  "recorded_utc": "2026-10-26T21:06:20Z",
+  "attempts": [
+    {
+      "attempt": 1,
+      "result": "Wrong assumed extraction path from old receipt; no executable found; no GPU use."
+    },
+    {
+      "attempt": 2,
+      "result": "Correct engine path invoked with --list-devices; engine reports unknown argument then help, exit 2; no model/server/context."
+    },
+    {
+      "attempt": 3,
+      "captured_utc": "2026-10-26T21:07:57Z",
+      "result": "PASS: exact bundled libcudart 13 returned 2 devices; cudaSetDevice/cudaFree(NULL) succeeded on both; PCI IDs mapped to both RTX 3090."
+    }
+  ]
+}

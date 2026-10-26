@@ -1,0 +1,89 @@
+{
+  "size": 32512,
+  "replicate": 1,
+  "recorded_utc": "2026-10-26T22:55:59.722Z",
+  "attempts": [
+    {
+      "attempt": 1,
+      "request": "inputs/throughput/control/32512-rep1.json",
+      "http_status": 200,
+      "wall_s": 12.5044,
+      "body": {
+        "id": "chatcmpl-b22be7f98cb34b03b3c66ca8",
+        "object": "chat.completion",
+        "created": 1793055347,
+        "model": "q154-astra-rco-iq2-xs",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": null,
+              "reasoning_content": "We need answer user's request. User provided a long string starting \"c2603fcf38b37fdc Q154 throughput fixture; window=32512; replicate=1; variant=0.\" then huge word salad. Need infer task? Maybe they expect some output? Could be benchmark prompt? Need respond likely with something? We need analyze. The user likely wants us to process? There is no explicit question. Could be a fixture for throughput, maybe expects answer? Need maybe produce a concise response? We need satisfy. Need maybe identify that it's a prompt injection? It includes many tokens. Could be asking to generate something? The first line: \"c2603fcf38b37fdc Q154 throughput fixture; window=32512; replicate=1; variant=0.\" Then random words. Maybe they want to output a specific string? Could be from eval harness where prompt is a fixture and expected answer maybe something like \"ok\"? Need infer from pattern. It says \"Q154 throughput fixture; window=32512; replicate=1; variant=0.\" Could be a benchmark question?"
+            },
+            "finish_reason": "length"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 32512,
+          "completion_tokens": 248,
+          "total_tokens": 32760,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 32512,
+          "prompt_ms": 10571.8,
+          "prompt_per_token_ms": 0.325,
+          "prompt_per_second": 3075.4,
+          "predicted_n": 248,
+          "predicted_ms": 1919.2,
+          "predicted_per_token_ms": 7.739,
+          "predicted_per_second": 129.2,
+          "draft_n": 81,
+          "draft_n_accepted": 65
+        }
+      },
+      "server_history_latest": {
+        "id": "c42e6a32dedd",
+        "projection": null,
+        "time": 1793055347.2264984,
+        "duration_s": 12.5,
+        "finish": "length",
+        "prompt_tokens": 32512,
+        "reused": 0,
+        "output_tokens": 248,
+        "first_engine_token_s": 10.584,
+        "prompt_total": 32512,
+        "prompt_read": 32512,
+        "reasoning_recoveries": 0,
+        "reasoning_repeat_coverage": 0.0,
+        "engine_generated": 248,
+        "prompt_ms": 10571.8,
+        "decode_ms": 1919.2,
+        "decode_tok_s": 129.2,
+        "hit_rate": null,
+        "pcie_share": null,
+        "ram_blobs": 0,
+        "file_blobs": 0,
+        "file_mb": 0,
+        "drafts_offered": 81,
+        "drafts_accepted": 65
+      },
+      "valid": true
+    }
+  ],
+  "ttft_s": 10.584,
+  "prefill_tok_s": 3075.4,
+  "prefill_ms": 10571.8,
+  "decode_tok_s": 129.2,
+  "decode_ms": 1919.2,
+  "prompt_tokens": 32512,
+  "cached_tokens": 0,
+  "completion_tokens": 248,
+  "finish_reason": "length",
+  "e2e_wall_s": 12.5044,
+  "valid": true
+}

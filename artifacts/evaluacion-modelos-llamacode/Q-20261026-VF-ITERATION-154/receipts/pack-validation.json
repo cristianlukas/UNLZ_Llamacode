@@ -1,0 +1,76 @@
+{
+  "iteration": "Q154",
+  "captured_utc": "2026-10-26T22:07:41Z",
+  "candidate_pack_exit_code": 0,
+  "initial_pack_attempt": {
+    "interpreter": "/usr/bin/python3",
+    "exit_code": 1,
+    "cause": "strata_tokenizer.py imports regex; system Python lacks it. Packer had already written dense.bin/index/compat-bf16.json before tokenizer subprocess failed. No model server, inference or GPU use.",
+    "recovery": "Re-ran the packer with the preserved Q153 Strata control private Python; regex and numpy were present, so no install was needed. Output files were rewritten in place."
+  },
+  "packer": {
+    "script": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/runtime/source43-project-maya/tools/iq_pack.py",
+    "python": "/media/cristian/Disco local/Models-eval/Q153-huihui-v2/runtime/control-0.1.51/python/bin/python",
+    "flags": [
+      "--compat-bf16"
+    ],
+    "experts_bin": false,
+    "summary": "1079 tensors in index; 302 served natively; 0 in extra.bin; arena 1.43 GiB; 460 small compatibility projections converted to BF16 (1.39 GiB); expert tensors and PLE bytes unchanged."
+  },
+  "pack_directory": "/media/cristian/Disco local/Models-eval/Q154-huihui-v2/pack/huihui-v2-iq4xs",
+  "pack_files": {
+    "compat-bf16.json": 49439,
+    "dense.bin": 1538117120,
+    "index.txt": 93683,
+    "native_experts.txt": 5780,
+    "tokenizer/chat_template.jinja": 9993,
+    "tokenizer/merges.txt": 3353258,
+    "tokenizer/token_type.json": 744960,
+    "tokenizer/tokenizer.json": 566,
+    "tokenizer/vocab.json": 5737005
+  },
+  "gguf_metadata_probe": {
+    "shard_count": 3,
+    "tensor_count": 1224,
+    "per_layer_token_embd.weight": {
+      "shard": "Qwen3.8-Flash-Next-UD-IQ4_XS-00002-of-00003.gguf",
+      "type": "IQ4_NL",
+      "shape": [
+        160,
+        320001536
+      ],
+      "expected_bytes": 28800138240
+    },
+    "token_embd.weight_shard": "Qwen3.8-Flash-Next-UD-IQ4_XS-00002-of-00003.gguf",
+    "output.weight_shard": "Qwen3.8-Flash-Next-UD-IQ4_XS-00002-of-00003.gguf"
+  },
+  "tokenizer_check": {
+    "exit_code": 0,
+    "vocab_size": 248320,
+    "merges": 247587,
+    "pretokenizer": "qwen35",
+    "round_trip_strings": 16,
+    "failures": 0,
+    "required_files_present": true
+  },
+  "serving_plan": {
+    "candidate_plan_exit_code": 0,
+    "control_plan_exit_code": 0,
+    "dry_run_only": true,
+    "offline": true,
+    "host": "127.0.0.1",
+    "port": 8350,
+    "explicit_gpu": "--gpu 0,1 in engine argv for both arms",
+    "context": 32768,
+    "kv": "int8",
+    "kv_resident": 32768,
+    "mtp": "off",
+    "max_new": 256,
+    "runtime": "same pinned Strata Qwen engine 0.1.50 and Control 0.1.51",
+    "profile_config_paths": [
+      "configs/huihui-v2-32k.json",
+      "configs/astra-rco-iq2xs-32k.json"
+    ]
+  },
+  "decision": "PASS for dual-GPU smoke gate; no inference score yet."
+}
