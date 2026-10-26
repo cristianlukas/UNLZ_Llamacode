@@ -1,0 +1,81 @@
+{
+  "taskId": "Q-20261026-VF-ITERATION-142",
+  "status": "completed",
+  "completedLocalDate": "2026-10-26",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit?gid=1972251122#gid=1972251122",
+  "sheetTitle": "Resultados",
+  "sheetId": 1972251122,
+  "write": {
+    "range": "Resultados!A226:AF236",
+    "appendOnly": true,
+    "rows": 11,
+    "columnsPerRow": 32,
+    "cellsWritten": 352,
+    "payloadFile": "receipts/sheet-rows.json",
+    "payloadSha256": "af44984bcd7cb52082159a9fb004cb021b87dbed80ababd3abfe05bda806de41"
+  },
+  "rowIds": [
+    "Q10-P100-UDQ4KXL-LCH1",
+    "Q10-EG2-BM25",
+    "Q10-EG2-RAW",
+    "Q10-EG2-RRF-RAW",
+    "Q10-EG2-CODE-PREFIX",
+    "Q10-EG2-RRF-CODE-PREFIX",
+    "Q15-ANYJEV-RAW",
+    "Q15-ANYJEV-L0",
+    "Q14-IQ3XXS-MODALITIES",
+    "Q15-ASTRA-IQ3S-VISION",
+    "Q19-UDIQ4XS-HE20"
+  ],
+  "validation": {
+    "readbackExact": true,
+    "cellsCompared": 352,
+    "rowWidths": [
+      32,
+      32,
+      32,
+      32,
+      32,
+      32,
+      32,
+      32,
+      32,
+      32,
+      32
+    ],
+    "allIdsUnique": true,
+    "uniqueDataIdsAfter": 235,
+    "gridRowsAfter": 236,
+    "frozenRows": 1,
+    "frozenColumns": 4,
+    "newRowFormat": {
+      "verticalAlignment": "TOP",
+      "wrapStrategy": "WRAP",
+      "fontFamily": "Arial",
+      "fontSize": 10
+    },
+    "newRowFormatCheckedCells": 32
+  },
+  "audit": {
+    "preexistingLocalResultsMdReviewed": 196,
+    "workbookTabsReviewed": 18,
+    "previousUniqueResultIds": 224,
+    "excludedDuplicate": "Q19 JSON Schema fixture/fingerprint already represented by Q56 per Q141",
+    "noInferenceBuildBenchmarkOrGpu": true
+  },
+  "exclusions": [
+    "Scores sin inferencia o suites incompletas no convertidos a resultados de calidad",
+    "Q10 EG2 y Q44 EG2 se mantienen en cohortes distintas",
+    "No se crea ranking global ni score calidad/velocidad entre suites incompatibles",
+    "Rutas Windows no verificadas marcadas N/D"
+  ],
+  "sourceReports": [
+    "Q-20261010-FLASHNEXT-Q4-P100-POST/RESULTS.md",
+    "Q-20261010-EMBEDDINGGEMMA2-EVAL/RESULTS.md",
+    "Q-20261015-ANYJEV-EVAL/RESULTS.md",
+    "Q-20261014-IQ3XXS-MODALITY-FOLLOWUP/RESULTS.md",
+    "Q-20261015-IQ3XXS-REMAINING-SCREENS/RESULTS.md",
+    "Q-20261019-STRATA-UDIQ4XS-REMAINING/RESULTS.md"
+  ]
+}

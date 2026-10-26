@@ -2560,3 +2560,14 @@ Preflight concluido: este Codex continúa en Ubuntu 24.04; no están disponibles
 - **Sin build, inferencia, benchmark ni GPU.** ASTRA, SOL, Flash-Next productivo y PeritoSoft permanecen intactos.
 - **Recibos:** `artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-141/RESULTS.md` y `receipts/google-sheet-sync.json`.
 - **Lock:** liberado tras guardar los recibos, completar el registro y verificar el token propio.
+
+## Q142 · conciliar resultados locales históricos con la pestaña Resultados · 2026-10-26
+
+- **Estado:** completado bajo lock exclusivo O_EXCL `531e66da-9637-49c5-8ef0-225bc314c565`.
+- **Alcance:** auditoría de informes históricos y 18 pestañas; registrar resultados locales omitidos en `Resultados`, sin ejecutar pruebas, inferencia, build ni GPU.
+- **Cobertura:** se revisaron 196 `RESULTS.md` preexistentes; `Resultados` tenía 224 IDs únicos; se inspeccionaron las 18 pestañas y menciones de modelos/rendimiento.
+- **Candidatos:** Flash-Next Q4 P100/LC-H1; screen inicial EmbeddingGemma (BM25 + 4 variantes); AnyJev raw/L0; IQ3_XXS modalidades; ASTRA IQ3_S visual; UD-IQ4_XS HE20. Q19 JSON Schema se omite como duplicado de Q56 según Q141.
+- **Resultado:** añadidas 11 filas append-only en `Resultados!A226:AF236`; lectura de vuelta exacta en 352 celdas, 11 IDs nuevos y 235 IDs únicos en total. Se conservaron WRAP/TOP/Arial 10 y los panes congelados (1 fila, 4 columnas). Cohortes no comparables permanecen separadas; métricas no medidas figuran N/D. No hubo inferencia, benchmark, build ni uso de GPU.
+- **Recibos:** `artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-142/RESULTS.md`, `receipts/google-sheet-sync.json` y payload `receipts/sheet-rows.json`.
+- **Plan:** `artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-142/PLAN.md`.
+- **Lock:** liberado después de validar el recibo y confirmar el token propio.
