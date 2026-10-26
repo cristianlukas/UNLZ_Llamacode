@@ -2473,3 +2473,14 @@ Preflight concluido: este Codex continúa en Ubuntu 24.04; no están disponibles
 - Sin ejecución de modelo, inferencia, servidor, build, descarga ni GPU.
 - Plan: `artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-136/PLAN.md`.
 - 2026-10-25T18:47:22Z — Auditoría completa. Se revisaron las 18 pestañas del libro y se indexaron 191 informes locales; 12 filas respaldadas por seis cohortes históricas se añadieron a `Resultados!A17:AF28`, con configuraciones, scores/semillas, seguridad, TPS cuando está medido y N/D explícitos. Las 12 filas se leyeron de vuelta y se verificaron IDs, anchura de 32 columnas y formato. Se mantuvieron separados los harnesses v2.7/v2.8 y se señaló la discrepancia de temperatura del informe R9700. Recibo exacto: `artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-136/receipts/sheet-migration.json`; informe: `.../RESULTS.md`. Sin benchmark, inferencia, descarga, build ni GPU.
+
+## Q137 — Migración de historial a Resultados (completa)
+
+- Inicio UTC: 2026-10-26T02:22:37.420Z
+- Lock O_EXCL: `q137-historical-results-f48b7fb562c14411`
+- Alcance: auditar las 18 pestañas y resultados históricos locales; añadir perfiles respaldados a `Resultados` sin alterar otras pestañas.
+- 116 filas añadidas en `Resultados!A29:AF144`: 58 filas del ledger de agosto + 58 perfiles de informes locales posteriores. Los perfiles 59–86, explícitamente no iniciados, se excluyeron.
+- Readback completo: 116×32 celdas, 116 IDs únicos, 0 discrepancias; 3.712 celdas comparadas. JSONL exacto SHA-256 `29c12bff5e60480f2110aa7e05aca115b54578899ee69c7142139cf546185e07`. Se preservaron las 27 filas existentes.
+- Separados LC-H1/BCB directo, perfiles de modelo/agente y variantes de runtime; N/D para campos no respaldados; fallos infra/warmup no tratados como calidad cero.
+- Sin inferencia, benchmark, servidor, descarga, build, test ni GPU.
+- Plan: `artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-137/PLAN.md`; resultados y recibos en `artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-137/`.
