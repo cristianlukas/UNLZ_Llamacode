@@ -1,0 +1,42 @@
+{
+  "taskId": "Q151",
+  "status": "completed",
+  "completedAtUtc": "2026-10-26T17:10:34.455984+00:00",
+  "modelGroupsRemoved": 20,
+  "filesAndSymlinksRemoved": 139,
+  "unlinkByteSum": 861385845611,
+  "decimalGB": 861.385846,
+  "storageByVolume": {
+    "C": {
+      "bytesRemoved": 127711119296,
+      "freeBeforeBytes": 27693899776,
+      "freeAfterBytes": 155404980224
+    },
+    "D": {
+      "bytesRemoved": 455775333159,
+      "freeBeforeBytes": 44374118400,
+      "freeAfterBytes": 500149567488
+    },
+    "HDD extra": {
+      "bytesRemoved": 277899393156,
+      "freeBeforeBytes": 35352924160,
+      "freeAfterBytes": 313252384768
+    }
+  },
+  "preservedModels": [
+    "SOL Qwen3.8-27B AutoRound INT4/W4A8",
+    "ASTRA Qwen3.8 Flash-Next RCO IQ2_XS",
+    "MTP shared with ASTRA IQ2_XS"
+  ],
+  "verification": {
+    "allCandidatePathsAbsent": true,
+    "unlinkErrors": 0,
+    "candidateOpenFdsAtPreflight": 0,
+    "resultsAndBenchmarkHistoryPreserved": true,
+    "spreadsheetTabsUpdated": [
+      "Modelos locales por peso",
+      "Inventario de modelos"
+    ]
+  },
+  "resourceUse": "No inference, benchmark, build or GPU use. No inference server was found."
+}
