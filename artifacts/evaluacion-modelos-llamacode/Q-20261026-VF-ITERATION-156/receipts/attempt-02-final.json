@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "experimentId": "VF-20261019-01-Q156-GYRO-M-VS-ASTRA-BCB8-DUAL3090",
+  "taskId": "Q-20261026-VF-ITERATION-156",
+  "attempt": 2,
+  "completedAtUtc": "2026-10-27T01:46:19Z",
+  "status": "complete_no_go_screen_gate_failed",
+  "benchmark": "BigCodeBench-Hard-8",
+  "fixtureSha256": "11279cde14113fc8527f141c53e14cb5ccf0dba65749081a4f914408e391c268",
+  "candidateRevision": "1ada08422e404aca51ab9df665f089f34c419c6b",
+  "candidateBytes": 91965774272,
+  "candidateSha256": "7aa36d15131d255179ab6c87fa9c9f81a0b541fc9e81e959d4c3e29eb20feb5f",
+  "runtime": "Strata Control 0.1.51; CUDA engine 0.1.50; 2x RTX 3090 serial; MTP4 common; ctx/prefill 8192; KV int8; max-new 6144; sampling temp .6 top_p .95 top_k20 min_p0 repeat1 presence0; reasoning on, budget2048",
+  "control": {
+    "model": "q156-astra-rco-iq2-xs",
+    "seed": 4242,
+    "runs": 8,
+    "transportOk": 8,
+    "passed": 2,
+    "sandboxErrors": 0,
+    "noFinalContent": 0,
+    "passedTaskIds": [
+      "BigCodeBench/870",
+      "BigCodeBench/310"
+    ],
+    "medianPrefillTokPerSec": 411.25,
+    "medianDecodeTokPerSec": 159.2,
+    "medianRequestWallMs": 15765.19,
+    "meanRequestWallMs": 16312.09,
+    "totalCompletionTokens": 19397
+  },
+  "candidate": {
+    "model": "q156-gyro-m-tq2-0",
+    "seed": 4242,
+    "runs": 8,
+    "transportOk": 8,
+    "passed": 2,
+    "sandboxErrors": 0,
+    "noFinalContent": 0,
+    "passedTaskIds": [
+      "BigCodeBench/870",
+      "BigCodeBench/310"
+    ],
+    "medianPrefillTokPerSec": 418.8,
+    "medianDecodeTokPerSec": 125.95,
+    "medianRequestWallMs": 19611.82,
+    "meanRequestWallMs": 20327.66,
+    "totalCompletionTokens": 19356
+  },
+  "matchedComparison": {
+    "passedTaskIdsEqual": true,
+    "medianPrefillChangePercent": 1.84,
+    "medianDecodeChangePercent": -20.89,
+    "medianRequestWallChangePercent": 24.4,
+    "qualityScoreDelta": 0
+  },
+  "gate": {
+    "requiredCandidatePasses": 4,
+    "requiredPassAdvantage": 2,
+    "observedCandidatePasses": 2,
+    "observedControlPasses": 2,
+    "passed": false
+  },
+  "interpretation": "Valid one-seed screen only. Gyro-M ties ASTRA at 2/8 on the exact same two tasks, with 8/8 transport and zero grader/sandbox errors on both; candidate median decode is lower and median request wall time is higher. This does not establish broad inferiority or superiority, but fails the preregistered stage gate.",
+  "decision": "Do not adopt Gyro-M; do not run the preregistered three-seed or throughput phases. Keep ASTRA RCO IQ2_XS and SOL unchanged. The candidate was evaluation-only; retire its isolated large GGUF and candidate-only derived pack to reclaim disk, preserving all result receipts.",
+  "cleanup": {
+    "control": "server stopped; port free; no inference server process detected",
+    "candidate": "server stopped; port free; no inference server process detected",
+    "ports": [
+      8363,
+      18789
+    ]
+  },
+  "evidence": [
+    "runs/control/bcb8-result.json",
+    "runs/candidate/bcb8-result.json",
+    "runs/state.json",
+    "receipts/attempt-01-grader-gate-failure.json",
+    "receipts/grader-sandbox-smoke.json",
+    "receipts/preregistration.json",
+    "configs/astra-rco-iq2xs-8k.json",
+    "configs/gyro-m-8k.json"
+  ]
+}

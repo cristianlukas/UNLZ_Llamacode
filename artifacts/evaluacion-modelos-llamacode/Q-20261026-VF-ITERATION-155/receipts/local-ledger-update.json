@@ -1,0 +1,12 @@
+{
+  "inbox.json": {
+    "backup": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-155/receipts/prewrite-snapshot/inbox.json",
+    "sha256Before": "01b567d872882dd6b610d85b2b834b74e7e1f97df9c4cf12002d877d0c098ce3",
+    "sha256After": "0968ffceb313e454ff38e1039af55ed6a3a133877185ddc2227a705611e95be3"
+  },
+  "actionables.json": {
+    "backup": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-155/receipts/prewrite-snapshot/actionables.json",
+    "sha256Before": "f66f5b190cac52570642903e3dafb3da2f9c0873fa4681067938ede1f64be854",
+    "sha256After": "9ade0da239e4823f98deeff2cbcacbdb8ca01aa278aee352e304c110e1067a4a"
+  }
+}

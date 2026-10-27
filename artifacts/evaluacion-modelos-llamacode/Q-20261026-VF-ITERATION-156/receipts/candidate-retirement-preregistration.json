@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261026-VF-ITERATION-156",
+  "createdAtUtc": "2026-10-27T01:46:19Z",
+  "authorization": "User previously authorized reclaiming large model files judged inferior to production, preserving SOL and ASTRA Flash-Next RCO IQ2_XS; PeritoSoft is closed and no consumer was found. This cleanup is limited to the failed, isolated Gyro-M evaluation candidate.",
+  "reason": "Gyro-M failed its preregistered screen gate (2/8 vs ASTRA 2/8; candidate median request wall time +24.4% on this fixture). No additional seeds or throughput are authorized by the failed gate.",
+  "preconditions": {
+    "attempt02Status": "complete",
+    "candidateCleanup": "server stopped; port free; no inference server process detected",
+    "candidateSha256": "7aa36d15131d255179ab6c87fa9c9f81a0b541fc9e81e959d4c3e29eb20feb5f",
+    "candidateBytes": 91965774272,
+    "candidateLinkCount": 1,
+    "noCandidateProcessOrListener": true,
+    "pathIsEvalOnly": true,
+    "ASTRAAndSOLExcluded": true,
+    "sharedMtpRuntimeAndReceiptsExcluded": true,
+    "packFileCount": 11,
+    "packLogicalBytes": 1495844329
+  },
+  "targets": [
+    {
+      "path": "/media/cristian/Disco local/Models-eval/Q156-gyro-m/models/gyro-Gyro-M/Qwen3.8-Flash-Next-Gyro-M-TQ2_0.gguf",
+      "bytes": 91965774272,
+      "sha256": "7aa36d15131d255179ab6c87fa9c9f81a0b541fc9e81e959d4c3e29eb20feb5f",
+      "action": "unlink verified evaluation-only model file",
+      "inode": {
+        "device": 66306,
+        "inode": 304651,
+        "mtimeNs": 1793063127766430100,
+        "linkCount": 1
+      }
+    },
+    {
+      "path": "/media/cristian/Disco local/Models-eval/Q156-gyro-m/data/packs/gyro-gyro-m",
+      "bytes": 1485688320,
+      "sha256OfDenseBin": "e9588a855a18984a01c4202eaa295fb7211b341d49c440b0f203b5c310048954",
+      "action": "remove candidate-only derived Strata pack",
+      "totalLogicalBytes": 1495844329,
+      "fileCount": 11,
+      "denseBinBytes": 1485688320,
+      "allFilesMatchedPreflightFingerprints": true
+    },
+    {
+      "path": "/media/cristian/Disco local/Models-eval/Q156-gyro-m/models/gyro-Gyro-M/Qwen3.8-Flash-Next-Gyro-M-TQ2_0.gguf.done",
+      "bytes": 71,
+      "action": "remove candidate-only download completion marker"
+    }
+  ],
+  "preserve": [
+    "SOL model and profiles",
+    "ASTRA Flash-Next RCO IQ2_XS model and MTP",
+    "Q156 configs, prompts, raw results, logs and receipts",
+    "shared MTP runtime and control neutral profile",
+    "candidate source metadata and fingerprints"
+  ]
+}

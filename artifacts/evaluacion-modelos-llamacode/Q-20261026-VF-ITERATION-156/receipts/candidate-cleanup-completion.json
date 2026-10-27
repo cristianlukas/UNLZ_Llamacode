@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261026-VF-ITERATION-156",
+  "completedAtUtc": "2026-10-27T01:52:36Z",
+  "preregistration": "receipts/candidate-retirement-preregistration.json",
+  "removed": [
+    {
+      "path": "/media/cristian/Disco local/Models-eval/Q156-gyro-m/models/gyro-Gyro-M/Qwen3.8-Flash-Next-Gyro-M-TQ2_0.gguf",
+      "logicalBytes": 91965774272,
+      "sha256": "7aa36d15131d255179ab6c87fa9c9f81a0b541fc9e81e959d4c3e29eb20feb5f",
+      "inode": 304651,
+      "linkCount": 1
+    },
+    {
+      "path": "/media/cristian/Disco local/Models-eval/Q156-gyro-m/models/gyro-Gyro-M/Qwen3.8-Flash-Next-Gyro-M-TQ2_0.gguf.done",
+      "logicalBytes": 71
+    },
+    {
+      "path": "/media/cristian/Disco local/Models-eval/Q156-gyro-m/data/packs/gyro-gyro-m",
+      "fileCount": 11,
+      "logicalBytes": 1495844329,
+      "files": [
+        {
+          "path": "/media/cristian/Disco local/Models-eval/Q156-gyro-m/data/packs/gyro-gyro-m/dense.bin",
+          "bytes": 1485688320,
+          "sha256": "e9588a855a18984a01c4202eaa295fb7211b341d49c440b0f203b5c310048954"
+        },
+        {
+          "path": "/media/cristian/Disco local/Models-eval/Q156-gyro-m/data/packs/gyro-gyro-m/index.txt",
+          "bytes": 93547,
+          "sha256": "c73dbe59d5f2d6751be3f790e9c94149efa6484cfc0d2fa2391ddeb590f9ec28"
+        },
+        {
+          "path": "/media/cristian/Disco local/Models-eval/Q156-gyro-m/data/packs/gyro-gyro-m/native_experts.txt",
+          "bytes": 3454,
+          "sha256": "539406ff662d2189c0fa6061fd8e38fd208cce0944c2d7afb8095956dc2d6368"
+        },
+        {
+          "path": "/media/cristian/Disco local/Models-eval/Q156-gyro-m/data/packs/gyro-gyro-m/compat-bf16.json",
+          "bytes": 38991,
+          "sha256": "8b0cd416d8a4e13fccea4c474a28535bb236e0bd40dea79703b248449d7a85ba"
+        },
+        {
+          "path": "/media/cristian/Disco local/Models-eval/Q156-gyro-m/data/packs/gyro-gyro-m/conversions.json",
+          "bytes": 165322,
+          "sha256": "7bee4aaac1ed60879d11824e4546b2d912292cb065f2b8c7fa645cfc7867c23b"
+        },
+        {
+          "path": "/media/cristian/Disco local/Models-eval/Q156-gyro-m/data/packs/gyro-gyro-m/hadamard.txt",
+          "bytes": 8938,
+          "sha256": "0ac6508d90038f53cb193cc91ae9c06e9352f154861f2777dcdba842be89668d"
+        },
+        {
+          "path": "/media/cristian/Disco local/Models-eval/Q156-gyro-m/data/packs/gyro-gyro-m/tokenizer/chat_template.jinja",
+          "bytes": 9993,
+          "sha256": "12827f24b742ea4e80cdc12dbcf9622227056b9f797252a3149263d4f9aaadce"
+        },
+        {
+          "path": "/media/cristian/Disco local/Models-eval/Q156-gyro-m/data/packs/gyro-gyro-m/tokenizer/merges.txt",
+          "bytes": 3353258,
+          "sha256": "4ba698529766c7a2f5052083ea10cdf2485577f5237a332ee291054eb11e3332"
+        },
+        {
+          "path": "/media/cristian/Disco local/Models-eval/Q156-gyro-m/data/packs/gyro-gyro-m/tokenizer/token_type.json",
+          "bytes": 744960,
+          "sha256": "5088c8c298fc06af8382ddb3b76c888703ac2634e82263b97eedcc2ad202738b"
+        },
+        {
+          "path": "/media/cristian/Disco local/Models-eval/Q156-gyro-m/data/packs/gyro-gyro-m/tokenizer/tokenizer.json",
+          "bytes": 541,
+          "sha256": "c0bd435efbc6c3b28964b47999afe16c4ad268c7c7c4e8cb3af410796a6f30bf"
+        },
+        {
+          "path": "/media/cristian/Disco local/Models-eval/Q156-gyro-m/data/packs/gyro-gyro-m/tokenizer/vocab.json",
+          "bytes": 5737005,
+          "sha256": "4ba64f0332abcfb0b600b7df1537d1e836e68009d5fb7cdb77339738dc6365c4"
+        }
+      ]
+    }
+  ],
+  "preserved": [
+    "ASTRA RCO IQ2_XS control model and pack",
+    "SOL model/profile",
+    "Q156 runtime/control profile/MTP",
+    "all Q156 configs, responses, logs and receipts"
+  ],
+  "consumerReview": {
+    "PeritoSoftProcessOrListener": "none",
+    "Q156InferenceProcessOrListener": "none",
+    "candidateModelWasEvalOnly": true,
+    "linkCount": 1,
+    "repoConfigReferenceOutsideQ156": "not found in readable files"
+  },
+  "diskAvailableBytesBefore": 402681008128,
+  "diskAvailableBytesAfter": 496142651392,
+  "observedDiskAvailableDeltaBytes": 93461643264,
+  "logicalBytesRemoved": 93461618672,
+  "verification": {
+    "candidateModelAbsent": true,
+    "candidateMarkerAbsent": true,
+    "candidatePackAbsent": true,
+    "astraShardStillPresent": true,
+    "sharedMtpStillPresent": true,
+    "runtimeStillPresent": true,
+    "relatedProcessesAndPortsAbsent": true
+  }
+}

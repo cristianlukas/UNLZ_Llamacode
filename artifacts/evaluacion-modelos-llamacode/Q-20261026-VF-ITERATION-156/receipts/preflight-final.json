@@ -1,0 +1,37 @@
+{
+  "atUtc": "2026-10-27T01:11:53Z",
+  "peritoSoftAndInferenceProcesses": [],
+  "relevantListeners": [],
+  "dockerPs": "",
+  "gpuRows": "0, NVIDIA GeForce RTX 3090, GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6, 0 %, 890 MiB, 24576 MiB\n1, NVIDIA GeForce RTX 3090, GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049, 0 %, 110 MiB, 24576 MiB",
+  "computeApps": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6, 959412, /tmp/.mount_artcraPGcaAc/usr/bin/artcraft-launcher, 207 MiB",
+  "meminfo": {
+    "MemAvailable": "115923240 kB",
+    "SwapTotal": "8388604 kB",
+    "SwapFree": "3453584 kB"
+  },
+  "memoryPsi": "some avg10=0.00 avg60=0.01 avg300=0.43 total=1583685904\nfull avg10=0.00 avg60=0.01 avg300=0.43 total=1582479340",
+  "oomKill": {
+    "oom_kill": 0
+  },
+  "cgroupMemory": {
+    "memory.max": "max",
+    "memory.high": "max",
+    "memory.swap.max": "max",
+    "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 875"
+  },
+  "disk": {
+    "/": {
+      "freeBytes": 9462345728,
+      "totalBytes": 195721834496
+    },
+    "/media/cristian/Disco local": {
+      "freeBytes": 402681024512,
+      "totalBytes": 1800381919232
+    }
+  },
+  "terminatedProcesses": [],
+  "unrelatedGuiProcessesLeftRunning": [
+    "artcraft-launcher"
+  ]
+}

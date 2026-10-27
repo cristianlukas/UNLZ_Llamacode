@@ -1,0 +1,36 @@
+{
+  "iteration": "Q157",
+  "checkedLocal": "2026-10-26T22:58:54-03:00",
+  "lock": {
+    "task": "Q146 resume justified VF-20261019-01 tests",
+    "token": "2242863e-c78e-4fa9-9649-c1d1541f3919"
+  },
+  "authorization": "User explicitly authorized stopping the PeritoSoft app and its LlamaServers.",
+  "processScan": {
+    "command": "ps -eo pid,ppid,comm,args --sort=pid filtered for PeritoSoft, llama-server and Strata/Qwen server patterns",
+    "matches": [],
+    "signalsSent": 0
+  },
+  "listeners": [
+    {"address": "127.0.0.1:6742", "process": "OpenRGB", "pid": 17292, "action": "left running"},
+    {"address": "127.0.0.1:631", "process": "CUPS", "action": "left running"},
+    {"address": "127.0.0.1:47413", "process": "artcraft-launch", "pid": 959412, "action": "left running"},
+    {"address": "127.0.0.54:53 / 127.0.0.53:53", "process": "local DNS", "action": "left running"}
+  ],
+  "dockerContainers": [],
+  "gpu": {
+    "driver": "615.71.09",
+    "devices": [
+      {"index": 0, "name": "NVIDIA GeForce RTX 3090", "memoryUsedMiB": 890, "utilizationPct": 0},
+      {"index": 1, "name": "NVIDIA GeForce RTX 3090", "memoryUsedMiB": 110, "utilizationPct": 0}
+    ],
+    "inferenceStarted": false
+  },
+  "nextTestGates": {
+    "Q32_NInfer_FlashNext": "native Windows Codex session required; user previously said to leave gate pending",
+    "Q35_JobObjects": "native Windows session required; Linux scope already passed",
+    "Q119_memory_pressure": "closed absent a new real severe-pressure trace or explicit supervisor-change decision; ASTRA 1M and SOL passed real workloads without false stop/OOM",
+    "Q152_GyroCoderL": "wait for provider runtime that enumerates both RTX 3090; no model download or single-GPU fallback"
+  },
+  "decision": "No eligible model benchmark was started; current remaining gates are external or closed, and Q156 is final no-go. ASTRA RCO IQ2_XS and SOL remain unchanged."
+}

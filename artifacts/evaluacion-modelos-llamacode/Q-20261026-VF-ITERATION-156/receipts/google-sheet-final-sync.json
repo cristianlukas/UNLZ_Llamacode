@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "updatedAtUtc": "2026-10-27T01:52:36Z",
+  "status": "written_and_read_back",
+  "ranges": {
+    "Evaluaciones LlamaCode!A359:J359": {
+      "qId": "Q-20261026-VF-ITERATION-156",
+      "status": "Completada · ASTRA 2/8; Gyro-M 2/8; gate fallido",
+      "result": "Attempt02 válido, mismos IDs 870/310; transporte 8/8; grader0; gate no-go."
+    },
+    "Accionables!A28:N28": {
+      "id": "vf-gyro-m-qwen38flashnext-vs-astra-q156-20261026",
+      "status": "Cerrado · no-go de etapa BCB-Hard-8; mantener ASTRA/SOL",
+      "rowRestoredAndReadBack": true
+    },
+    "Inventario de modelos!A25:R25": {
+      "model": "Qwen3.8 Flash-Next Gyro-M",
+      "currentBytes": 0,
+      "previousBytes": 91965774272,
+      "physicalState": "retirado",
+      "observedFreeSpaceDeltaBytes": 93461643264
+    },
+    "Resultados!A358:AF359": {
+      "rows": [
+        "Q156-BCB8-ASTRA",
+        "Q156-BCB8-GYRO-M"
+      ],
+      "columnsPerRow": 32,
+      "readBack": "full rows populated; one-seed screen labeled; candidate config, metrics, limits and receipts recorded"
+    }
+  },
+  "readbackVerified": true,
+  "formatting": "Existing row formatting preserved by userEnteredValue-only updates; appended Results rows use wrap/top.",
+  "correction": "An earlier unbounded updateCells request cleared neighboring cells. Restored Accionables A28:N28, Evaluaciones A359:J359 and the complete candidate Results A359:AF359 with explicit bounded ranges, then read back all ranges. Rows 360-361 in Evaluaciones were confirmed blank again."
+}

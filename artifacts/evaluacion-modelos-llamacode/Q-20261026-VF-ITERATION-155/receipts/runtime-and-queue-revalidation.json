@@ -1,0 +1,65 @@
+{
+  "taskId": "Q-20261026-VF-ITERATION-155",
+  "umbrellaTask": "Q146 resume justified VF-20261019-01 tests",
+  "lockToken": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+  "checkedAtUtc": "2026-10-26T23:48:20Z",
+  "userRequest": "Terminate PeritoSoft and its LlamaServers if active, then continue the pending evaluation tests.",
+  "shutdown": {
+    "peritosoftProcessFound": false,
+    "llamaServerProcessFound": false,
+    "inferenceListenerFound": false,
+    "runningDockerContainerFound": false,
+    "processesTerminated": [],
+    "unrelatedGuiPreserved": [
+      "artcraft-launcher, loopback port 47413"
+    ],
+    "notes": "The process-list filter's only text match was its own shell command; no matching PeritoSoft/llama-server process existed. Docker ps was empty. No kill signal was sent."
+  },
+  "hostGpuVulkan": {
+    "nvidiaSmiExitCode": 0,
+    "driverVersion": "615.71.09",
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3090",
+        "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+        "memoryTotalMiB": 24576
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA GeForce RTX 3090",
+        "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+        "memoryTotalMiB": 24576
+      }
+    ],
+    "hostVulkanEnumeratedBothNvidiaDevices": true,
+    "gpuComputeUsed": false
+  },
+  "q152RuntimeGate": {
+    "remoteTag": "docker.io/agentionai/agention-llama:server",
+    "remoteDigest": "sha256:ddcba819dfa58332e408aa734d3cde13572331a57683abd3afb1e0a620f543d6",
+    "matchesPreviouslyFailedPinnedDigest": true,
+    "imagePresentLocally": false,
+    "vendorCardStillMarksTq3V11Preview": true,
+    "vendorCardStillSaysStrataSupportComing": true,
+    "strataIssue3640SupportsOnlyDifferentTq2ManualPathForThisComparison": true,
+    "decision": "Blocked: host NVIDIA/Vulkan is healthy, but no corrected pinned runtime for the exact Q152 TQ3_0 v1.1 dual-3090 target is available. Keep the benchmark unstarted.",
+    "reopenCondition": "A corrected/pinned runtime or reproducible invocation must make llama-server --list-devices enumerate both RTX 3090s and then successfully load the exact TQ3_0 v1.1 artifact before the preregistered BCB-Hard-8 screen."
+  },
+  "diskBytesFree": {
+    "C_nvme": 145110867968,
+    "D_nvme": 498122457088,
+    "HddExtra": 313252384768
+  },
+  "otherUnresolvedInboxEntries": [26, 28, 31, 32, 65, 69],
+  "testsRun": [],
+  "downloads": [],
+  "builds": [],
+  "inferenceRequests": 0,
+  "benchmarks": 0,
+  "sources": [
+    "https://huggingface.co/agentionai/Qwen3.8-Flash-Next-Gyro-Coder-GGUF",
+    "https://github.com/Niko1221/Strata/issues/3640",
+    "https://github.com/Niko1221/Strata/issues/3294"
+  ]
+}

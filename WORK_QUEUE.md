@@ -2692,3 +2692,41 @@ Preflight concluido: este Codex continúa en Ubuntu 24.04; no están disponibles
 - **Limpieza:** pesos, pack y cachés Huihui retirados; se conservó el perfil neutral compartido de 196.632 B porque ambas configuraciones de prueba lo necesitan. Recibo `receipts/candidate-cleanup-completion.json`.
 - **Google Sheets:** Q154 se añadió en `Resultados!A356:AF357`; Evaluaciones, Accionables, Inventario e IA local se actualizaron y leyeron de vuelta. Recibo `receipts/google-sheet-final-sync.json`.
 - **Recibos:** `receipts/tool-eval-attempt-02-action-level-safety-stop.json`, `receipts/tool-eval-attempt-02-final.json`, `receipts/candidate-cleanup-completion.json`; resultados y logs por brazo en `runs/tool-eval/campaign-02/`.
+
+## Q155 · revalidar cierre PeritoSoft y gate del runtime Gyro-Coder-L · 2026-10-26
+
+- **Estado:** comprobación completa; Q152 permanece bloqueada antes de descargar el modelo o iniciar inferencia.
+- **Solicitud:** cerrar PeritoSoft y sus LlamaServers si estaban activos, y continuar las pruebas pendientes.
+- **Procesos:** `ps`, listeners y `docker ps` no encontraron procesos/servicios/contenedores de PeritoSoft o `llama-server`; no se envió ninguna señal. `artcraft-launcher` y la GUI de Codex quedaron intactas.
+- **GPU/Vulkan host:** driver 615.71.09; ambas RTX 3090 visibles en `nvidia-smi` y en `vulkaninfo --summary`. El fallo Q152 estaba dentro del contenedor, no en el host.
+- **Gate Q152:** `agentionai/agention-llama:server` todavía resuelve al mismo digest fallido `sha256:ddcba819dfa58332e408aa734d3cde13572331a57683abd3afb1e0a620f543d6`; no hay imagen local. La tarjeta oficial mantiene Gyro-Coder-L TQ3_0 v1.1 como preview y declara que Strata support is coming. Issue Strata #3640 sólo acredita la ruta manual de otra variante TQ2_T, no el target Q152 TQ3_0 dual-3090. No se descargó el GGUF de 83.975.624.672 B ni se inició el benchmark.
+- **Cola VF:** los siete items sin resultado final (#26, #28, #31, #32, #65, #66, #69) siguen con bloqueos externos concretos; ninguno quedó listo. D: 498.122.457.088 B libres frente a 570 GB para #31; C: 145.110.867.968 B y D: 498.122.457.088 B frente a ~1,1 TB + Windows para #65; issue Strata #3294 continúa abierto para #69.
+- **Recursos:** sin build, pull, descarga de modelo, servidor, request de inferencia, benchmark ni kernel GPU. ASTRA, SOL y datos/configuración de PeritoSoft intactos.
+- **Plan de reanudación:** mantener Q152 bloqueada hasta que un runtime corregido y fijado enumere ambas 3090 y cargue el GGUF exacto TQ3_0 v1.1; después ejecutar el screen ya preregistrado. No usar CPU, una sola GPU ni cambiar a TQ2 como sustituto. No hay otra prueba justificada del lote lista en este executor.
+- **Evidencia:** `artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-155/RESULTS.md` y `receipts/runtime-and-queue-revalidation.json`.
+
+## Q156 · Gyro-M Flash-Next vs ASTRA RCO IQ2_XS · BCB-Hard-8 dual RTX 3090 · 2026-10-26
+
+- **Estado final (2026-10-27T01:43:17Z):** completada con no-go de etapa. Attempt02 válido: ASTRA 2/8 y Gyro-M 2/8; ambos 8/8 transporte, grader limpio. Gyro-M no supera el gate de ≥4/8 y ≥2 aciertos de ventaja; no se ejecutan 3 seeds ni throughput. Servidores cerrados y puertos liberados.
+- **Lock:** Q146 umbrella propio `2242863e-c78e-4fa9-9649-c1d1541f3919`.
+- **Candidato:** AgentionAI Gyro-M TQ2_0, revision `1ada08422e404aca51ab9df665f089f34c419c6b`, archivo de 91,965,774,272 B y SHA-256 `7aa36d15131d255179ab6c87fa9c9f81a0b541fc9e81e959d4c3e29eb20feb5f`; instalado solo para Q156 y retirado tras el no-go. No conectar a PeritoSoft ni a perfiles productivos.
+- **Cambio antes de inferencia:** la ayuda del engine confirma `--max-new` limita los tokens generados. Los dos configs tenían 256 mientras que el runner solicita 6,144; ambos configs se cambiaron simétricamente a 6,144 y sus SHA se actualizaron. Los planes offline posteriores pasan sin notas y muestran el valor nuevo. Esto corrige el presupuesto preregistrado; no hubo requests antes de esta enmienda.
+- **Runtime/config:** Strata Control 0.1.51 + CUDA engine 0.1.50, GPUs 0 y 1, ASTRA RCO IQ2_XS de control y Gyro-M candidato, MTP4 del mismo artefacto Qwen, perfil neutral, KV int8, contexto/prefill 8,192, max-new 6,144, sampling conservador; una inferencia a la vez. Planes: `receipts/offline-plans-after-download.json`.
+- **Gate de calidad:** BCB-Hard-8 seed 4242; candidato ≥4/8 y ≥2 aciertos por encima del control reejecutado; 8/8 transportes, cero errores de sandbox, cero respuestas vacías y proceso propio con compute en ambas RTX 3090. Sólo si pasa se preregistran tres semillas y throughput separado. Si falla, no se generaliza inferioridad.
+- **Preflight 2026-10-27T01:11:53Z:** 0 procesos/listeners/contenedores de PeritoSoft o inference server; no se terminó nada. GPUs 0/1 en 0% compute, MemAvailable 115,923,240 kB, PSI some/full avg10 0.00/0.00, cero incremento de OOM y D con 402,681,024,512 B libres. ArtCraft usa 207 MiB gráficos en GPU0 y quedó intacto.
+- **Memoria:** no se fijan límites artificiales. MemAvailable, swap, RSS o PSI moderada no abortan por sí solos; se mantienen únicamente las barreras severas preregistradas.
+- **Recibos:** `artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-156/PLAN.md`, `RESULTS.md`, `receipts/preregistration.json`, `receipts/offline-plans-after-download.json`, `receipts/preflight-final.json`.
+
+- **Resultado comparativo:** aprobaron los mismos dos IDs BCB (`870`, `310`). Medianas por request: prefill ASTRA 411.25 vs Gyro-M 418.80 tok/s (+1.8%); decode 159.20 vs 125.95 tok/s (−20.9%); E2E 15.765 vs 19.612 s (+24.4% más lento en Gyro-M). Screen de ocho casos y una semilla; no generalizar a otras tareas.
+- **Decisión:** no adoptar Gyro-M. Se mantiene ASTRA RCO IQ2_XS y SOL sin cambios. La comparación no justifica las fases amplias preregistradas; se conserva evidencia y configuración.
+- **Limpieza:** usuario autorizó retirar modelos grandes no competitivos, manteniendo SOL/ASTRA; PeritoSoft está cerrado. Gyro-M es eval-only y no tiene consumidor productivo verificado. Preregistración de retiro `receipts/candidate-retirement-preregistration.json`; se retiraron su GGUF de 91,965,774,272 B, marker71 B y pack dedicado de 11 archivos/1,495,844,329 B lógicos; `df` observó +93461643264 B disponibles. Runtime compartido, MTP, ASTRA, SOL, configuración y resultados preservados.
+- **Sheets:** Evaluaciones LlamaCode, Accionables, Inventario de modelos y Resultados actualizados y leídos de vuelta; ambos brazos figuran como screen de una semilla. No mezclar velocidades BCB con benchmarks largos. Recibo `receipts/google-sheet-final-sync.json`.
+- **Recibos finales:** `receipts/attempt-02-final.json`, `receipts/candidate-retirement-preregistration.json`, `receipts/candidate-cleanup-completion.json` y `receipts/google-sheet-final-sync.json`.
+
+## Q157 · recheck PeritoSoft y próximo gate de pruebas · 2026-10-26
+
+- **Estado:** comprobación completada bajo el lock umbrella Q146 (`2242863e-c78e-4fa9-9649-c1d1541f3919`); no se encontraron procesos objetivo y no se envió ninguna señal.
+- **Procesos:** `ps`, listeners y `docker ps` sin PeritoSoft, `llama-server` ni servidor Strata/Qwen. OpenRGB, CUPS, DNS local y `artcraft-launch` quedaron intactos.
+- **Recursos:** ambas RTX 3090 visibles con driver 615.71.09 y 0% de cómputo; no se inició inferencia.
+- **Siguiente trabajo:** Q32/Q35 esperan una sesión Windows nativa; Q152 espera runtime dual-3090 corregido; Q119 no tiene test Linux pendiente sin una traza real de presión severa o una decisión de cambiar el supervisor. Q156 terminó no-go y no se repite. ASTRA RCO IQ2_XS y SOL intactos.
+- **Recibos:** `artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-157/PLAN.md`, `RESULTS.md` y `receipts/peritosoft-and-next-gate-check.json`.
