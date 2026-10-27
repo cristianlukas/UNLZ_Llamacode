@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261027-VF-ITERATION-169",
+  "parentLock": {
+    "task": "Q146 resume justified VF-20261019-01 tests",
+    "token": "2242863e-c78e-4fa9-9649-c1d1541f3919"
+  },
+  "checkedAtUtc": "2026-10-27T15:14:55Z",
+  "source": {
+    "batchId": "VF-20261019-01",
+    "batchSequence": 14,
+    "itemId": "fd23ad26-42fe-4722-a0aa-8e138d9aae5f",
+    "url": "https://www.reddit.com/r/LocalLLM/s/Ycr6z6binI"
+  },
+  "processScan": {
+    "scope": "Linux process names and TCP listeners",
+    "targetProcessesFound": [],
+    "inferenceListenersFound": [],
+    "nonTargetListenersObserved": [
+      "OpenRGB 127.0.0.1:6742",
+      "CUPS 127.0.0.1:631",
+      "artcraft-launch 127.0.0.1:47413",
+      "local DNS"
+    ],
+    "signalsSent": false,
+    "limitation": "This Linux executor cannot enumerate native Windows processes; Q168 records that powershell.exe is unavailable."
+  },
+  "artifactCheck": {
+    "patterns": [
+      "*IQ4*XS*.gguf",
+      "*IQ4*XS*.safetensors"
+    ],
+    "searchedPaths": [
+      "/media/cristian/HDD extra/Models/LlamaCodeEval",
+      "/home/cristian/.cache"
+    ],
+    "matches": [],
+    "limitation": "This filename search covered only the listed paths, not every mounted volume. No download or restoration was attempted."
+  },
+  "runtime": {
+    "path": "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/engine/strata",
+    "version": "0.1.41",
+    "routeTailSkipIntroducedIn": "0.1.42"
+  },
+  "historicalEvidence": {
+    "humanEval20": "20/20 on the earlier IQ4_XS run",
+    "bcb8": "timed out twice on the earlier IQ4_XS run",
+    "advAndTaskFlow": "incomplete; no valid scores",
+    "isNewRun": false
+  },
+  "decision": "No new inference or benchmark: exact UD-IQ4_XS weights were not found in the searched paths, and the available Strata runtime is older than the route-tail-skip feature. Do not substitute IQ2_XS or claim the prior scores were rerun.",
+  "reopenWhen": "Only if the exact UD-IQ4_XS model is deliberately restored and Strata >=0.1.42 is selected. First repair the compact coding fixture; then preregister an interleaved skip=7 vs skip=0 A/B with functional, safety, E2E, and failure metrics.",
+  "googleSheet": {
+    "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "tab": "Evaluaciones LlamaCode",
+    "row": 67,
+    "cellsUpdated": [
+      "C67",
+      "G67",
+      "H67",
+      "I67",
+      "J67"
+    ],
+    "readBackRequired": false,
+    "readbackReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261027-VF-ITERATION-169/receipts/google-sheet-readback.json",
+    "formatCheck": "WRAP/TOP retained on C67, G67, H67, I67; J67 had no explicit format in readback."
+  },
+  "newModelRuns": 0,
+  "gpuUsed": false,
+  "serverStarted": false
+}

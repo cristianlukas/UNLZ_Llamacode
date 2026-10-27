@@ -1,0 +1,35 @@
+{
+  "taskId": "Q-20261027-VF-ITERATION-169",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "tab": "Evaluaciones LlamaCode",
+  "range": "C67:J67",
+  "readAtUtc": "2026-10-27T15:14:55Z",
+  "updatedCells": {
+    "C67": "Revisión cerrada; revalidada 2026-10-27: bloqueada para el runtime/artefacto actual · prioridad baja hasta decisión explícita de restaurar IQ4_XS y actualizar Strata.",
+    "G67": "Resultado histórico: no se repitió inferencia en la revisión original. Q-20261019-STRATA-UDIQ4XS-REMAINING registró HE20 20/20, BCB8 con dos timeouts y ADV/TaskFlow incompletos. Revalidación 2026-10-27: sin nueva inferencia; no se encontró el GGUF/safetensors exacto en las rutas de evaluación/caché inspeccionadas y el Strata disponible es 0.1.41. El flag de la fuente requiere 0.1.42+. No sustituir por IQ2_XS ni atribuir los scores históricos a esta revisión.",
+    "H67": "Reabrir sólo si se decide restaurar el UD-IQ4_XS exacto y actualizar Strata a >=0.1.42. Primero fijar un fixture corto válido; después preregistrar A/B intercalado route-tail skip=7 vs 0 con gates de calidad funcional, seguridad y E2E. No descargar ni cambiar perfiles ahora.",
+    "I67": "Q-20261020-VF-20261019-01/RESULTS.md; Q-20261020-VF-20261019-01/receipts/source-14-review.json; Q-20261027-VF-ITERATION-169/RESULTS.md; Q-20261027-VF-ITERATION-169/receipts/source-14-revalidation.json",
+    "J67": "WORK_QUEUE.md · Q169 (lock paraguas Q146)"
+  },
+  "formatReadback": {
+    "C67": {
+      "wrapStrategy": "WRAP",
+      "verticalAlignment": "TOP"
+    },
+    "G67": {
+      "wrapStrategy": "WRAP",
+      "verticalAlignment": "TOP"
+    },
+    "H67": {
+      "wrapStrategy": "WRAP",
+      "verticalAlignment": "TOP"
+    },
+    "I67": {
+      "wrapStrategy": "WRAP",
+      "verticalAlignment": "TOP"
+    },
+    "J67": "No explicit userEnteredFormat returned."
+  },
+  "readbackMatchedWrittenValues": true,
+  "otherCells": "D67:F67 read back unchanged."
+}

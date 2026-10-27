@@ -2813,3 +2813,13 @@ Preflight concluido: este Codex continúa en Ubuntu 24.04; no están disponibles
 - **Pruebas:** no se inició inferencia. Q167 prohíbe más semillas para ese perfil; PLE FP8 cerró en Q20/Q22 con empate 3/24 y 0/3 pares ganados. Los gates restantes requieren Windows nativo, principal/policy confiables, flujo+holdout sintético para Harness², transcripción primaria, cambio reproducible de parser/runtime o presión crítica observada.
 - **Estado:** no hay prueba de modelo habilitada en este executor. ASTRA Flash-Next, SOL y datos/configuración PeritoSoft permanecen intactos.
 - **Evidencia:** `artifacts/evaluacion-modelos-llamacode/Q-20261027-VF-ITERATION-168/RESULTS.md` y `receipts/peritosoft-process-scan-and-test-gates.json`.
+
+## Q169 · revalidar gate IQ4_XS y cola ejecutable · 2026-10-27
+
+- Lock: se reutilizó Q146 (2242863e-c78e-4fa9-9649-c1d1541f3919).
+- Fuente #14: sin nueva inferencia. El GGUF/safetensors IQ4_XS exacto no aparece en las rutas de evaluación/caché buscadas; el Strata disponible sigue en 0.1.41 y el flag de la fuente requiere 0.1.42+. El resultado IQ4_XS histórico se conserva como histórico, no como corrida actual.
+- Procesos: recheck Linux sin PeritoSoft ni servidores/listeners de inferencia; ninguna señal enviada. El executor no enumera procesos Windows nativos.
+- Próximo gate concreto: sólo reabrir si se restaura deliberadamente el IQ4_XS exacto y se elige Strata >=0.1.42; corregir fixture y preregistrar A/B intercalado skip=7 vs 0 con métricas funcionales, seguridad y E2E. No sustituir por IQ2_XS ni descargar en este pase.
+- Cola general: Q168 conserva las condiciones externas de los demás pendientes; no se identificó una prueba de modelo habilitada en este executor. Sin uso de GPU ni servidor.
+- Sheet: actualizada la fila existente Evaluaciones LlamaCode!C67:J67; no se inventó resultado ni se añadió fila a Resultados.
+- Evidencia: artifacts/evaluacion-modelos-llamacode/Q-20261027-VF-ITERATION-169/RESULTS.md y receipts/source-14-revalidation.json.

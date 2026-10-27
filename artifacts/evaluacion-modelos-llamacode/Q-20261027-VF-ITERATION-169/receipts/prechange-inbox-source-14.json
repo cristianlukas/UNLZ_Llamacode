@@ -1,0 +1,28 @@
+{
+  "id": "fd23ad26-42fe-4722-a0aa-8e138d9aae5f",
+  "title": "r/LocalLLM · Ycr6z6binI",
+  "kind": "url",
+  "content": "https://www.reddit.com/r/LocalLLM/s/Ycr6z6binI",
+  "receivedAt": "2026-10-19T18:13:58-03:00",
+  "status": "Analizado",
+  "batchId": "VF-20261019-01",
+  "batchLabel": "Vector Fields Technologies · 19/10/2026",
+  "batchSequence": 14,
+  "analysis": {
+    "status": "Analizado · contexto cubierto; flag requiere runtime 0.1.42+",
+    "finding": "El post usa Strata 0.1.45 y recomienda STRATA_ROUTE_TAIL_SKIP=0 para Unsloth IQ4_XS. El PR oficial confirma que el flag se incorporó en 0.1.42 y puede cambiar salidas; la evaluación local equivalente fue 0.1.41.",
+    "test": "No repetir contexto: #57 ya midió IQ3_XXS nativo 262K 3/3 y ASTRA IQ2 1M sintético 10/10 en una corrida. No aplicar variable a 0.1.41. Si se decide migrar runtime, tras reparar/fijar un fixture corto preregistrar A/B skip=7 vs 0 con score y guarda de calidad.",
+    "applicability": "La hipótesis de RAM/quant ya está representada por el perfil IQ4_XS local, pero el post es una RTX4090 con Strata0.1.45 y sus scores no se transfieren. Su flag no es compatible con el runtime local registrado.",
+    "historyCheck": "Contexto cubierto por batch #57; el test local IQ4_XS HE20 20/20 y los timeouts BCB/ADV/TaskFlow se conservan en Q-20261019-STRATA-UDIQ4XS-REMAINING. No hay A/B local del flag.",
+    "priority": "Baja hasta que se decida actualizar Strata y se corrija el fixture de coding.",
+    "reviewedAt": "2026-10-20",
+    "execution": {
+      "taskId": "Q-20261020-VF-20261019-01",
+      "status": "Revisión cerrada sin prueba nueva para el runtime actual",
+      "finding": "Strata PR #1668 dice que route-tail skip entró en 0.1.42; el perfil local registrado es 0.1.41. Contexto ya tiene cobertura independiente y no se extrapola a IQ4_XS.",
+      "result": "No se repitió inferencia. En Q-20261019-STRATA-UDIQ4XS-REMAINING, HE20 fue 20/20 pero BCB8 dos veces expiró y ADV/TaskFlow no cerraron; no hay gate local de coding completo.",
+      "decision": "No aplicar un flag ausente del runtime actual. Si se adopta 0.1.42+, A/B 7 versus 0 sólo con fixture válido y guardas.",
+      "artifacts": "artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/RESULTS.md; artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/receipts/source-14-review.json"
+    }
+  }
+}
