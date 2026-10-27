@@ -1,0 +1,80 @@
+{
+  "task": "Q162 · PeritoSoft process check and test-gate audit",
+  "timestamp_utc": "2026-10-27T04:25:08Z",
+  "lock": {
+    "task": "Q146 resume justified VF-20261019-01 tests",
+    "token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+    "reused": true
+  },
+  "user_authorization": "User authorized terminating the PeritoSoft app and its llama-server processes.",
+  "discovery": {
+    "proc_cmdline_scan": {
+      "targets": [
+        "PeritoSoft",
+        "llama-server",
+        "llama_server",
+        "Strata/Qwen inference server"
+      ],
+      "matches": []
+    },
+    "listeners": {
+      "checked_ports": [
+        32100,
+        32101,
+        8033
+      ],
+      "matching_listeners": []
+    },
+    "docker_ps_matching_containers": [],
+    "signals_sent": [],
+    "nvidia_smi": "Both RTX 3090 visible at 0% compute; 890 MiB and 110 MiB reported in use respectively, not treated as inference activity."
+  },
+  "test_gate_audit": {
+    "inference_or_benchmark_started": false,
+    "reason": "No target process needed termination and no pending test is enabled in this Linux executor; every remaining test requires a listed external condition.",
+    "pending_or_reopen_conditions": [
+      {
+        "id": "vf-q35-codex-crash-isolation-20261022",
+        "title": "P0 · Limitar por cgroup todos los workers de evaluación local",
+        "status": "Implementada parcialmente · scope Linux y canario padre/hijo aprobados; Windows Job Objects pendientes"
+      },
+      {
+        "id": "vf-q32-flashnext-ninfer-linux-gate-20261022",
+        "title": "P1 · Flash-Next NInfer v0.16.1 Windows preview: comparación emparejada",
+        "status": "Pendiente · requiere sesión de Codex con Windows nativo; C39-01 está listo"
+      },
+      {
+        "id": "vf-qwen-tool-safety-gates-20261022",
+        "title": "P2.1 · Reforzar orden de tools y aislamiento tenant",
+        "status": "P2.1 abierto · replanificación de tools validada en Linux Release 95/95; test tenant bloqueado por falta de principal autenticado/policy confiable"
+      },
+      {
+        "id": "f23604a1-ff2e-4d28-9e09-2b5cf01d9b69",
+        "title": "Auditar Harness² antes de cualquier experimento de auto-modificación",
+        "status": "Bloqueado · falta workflow concreto y holdout sintético fijo"
+      },
+      {
+        "id": "vf-order-validation-20261019",
+        "title": "Añadir fixture de coding para pedidos ambiguos y validación",
+        "status": "Bloqueado · falta caption/transcripción primaria"
+      },
+      {
+        "id": "vf-hyperqwen-qwen38-27b-dual3090-20261024",
+        "title": "HyperQwen · Qwen3.8-27B en 2×RTX 3090 (TP=2)",
+        "status": "Bloqueado · gate Q101: Q104 no demostró defecto parser/runtime"
+      },
+      {
+        "id": "q119-memory-pressure-composite-streak",
+        "title": "Validar la racha PSI compuesta con headroom en el supervisor de evaluaciones",
+        "status": "Q119 gate cerrado · Q121/AMD05 validado en evaluación real Q127; candidato/no integrado; presión crítica real no observada."
+      }
+    ],
+    "sheet_updated": false,
+    "sheet_update_reason": "No new test result or actionable status changed; avoid writing a duplicate row."
+  },
+  "preserved": [
+    "ASTRA Flash-Next RCO IQ2_XS",
+    "SOL",
+    "PeritoSoft files and configuration"
+  ]
+}
