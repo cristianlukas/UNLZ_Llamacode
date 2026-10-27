@@ -1,0 +1,213 @@
+{
+  "task": "Q171",
+  "status": "partially_complete_two_ai_gates_complete_three_blocked",
+  "closed_utc": "2026-10-27T22:58:14Z",
+  "scope": "AI/model/harness evaluations only; no general app or system tests",
+  "lock": {
+    "task": "Q146 resume justified VF-20261019-01 tests",
+    "token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+    "released": false,
+    "reason": "Umbrella queue lock remains owned by Q146"
+  },
+  "ninfer_vs_strata": {
+    "status": "completed_descriptive_ab",
+    "artifact": "Qwen3.8 Flash-Next RCO IQ2_XS same two GGUF shards",
+    "hardware": "2x RTX 3090 host; common comparison GPU 1 only; serialized; concurrency 1",
+    "runtimes": {
+      "ninfer": "NInfer 0.16.1 Linux preview; CUDA build r1",
+      "strata": "Strata 0.1.52 Linux"
+    },
+    "fixture": "five synthetic prompts, exact criteria; 5 interleaved repetitions per runtime; 25 responses each; seeds 4242-4246",
+    "configuration": {
+      "context_tokens": 8192,
+      "max_output_tokens": 2048,
+      "kv": "int8",
+      "prefix_reuse": false,
+      "sampling": {
+        "temperature": 0.6,
+        "top_p": 0.95,
+        "top_k": 20,
+        "min_p": 0.0,
+        "repetition_penalty": 1.0,
+        "presence_penalty": 0.0
+      },
+      "drafting": "No MTP drafter loaded by either engine; Strata retains mandatory --spec 2 verify window; logs show draft_n=0"
+    },
+    "results": {
+      "ninfer": {
+        "exact_checks": "25/25",
+        "prefill_median_tps": 218.751,
+        "decode_median_tps": 31.986,
+        "ttft_median_seconds": 0.82,
+        "e2e_median_seconds": 8.243,
+        "long_retrieval_1700_tokens_prefill_median_tps": 907.412
+      },
+      "strata": {
+        "exact_checks": "25/25",
+        "prefill_median_tps": 310.3,
+        "decode_median_tps": 90.3,
+        "ttft_median_seconds": 0.432,
+        "e2e_median_seconds": 2.977,
+        "long_retrieval_1700_tokens_prefill_median_tps": 1138.8,
+        "model_load_seconds": 811
+      },
+      "strata_to_ninfer_e2e_speed_ratio": 2.77,
+      "strata_to_ninfer_decode_ratio": 2.82
+    },
+    "caveats": [
+      "Synthetic exact-answer fixture is not general intelligence, coding quality, or safety evidence.",
+      "Strata mandatory --spec 2 verify window without drafter differs from NInfer runtime behavior.",
+      "Strata request start had 501 MiB free VRAM, under engine warning threshold; paging may influence throughput.",
+      "One-GPU result is not a dual-GPU ASTRA/SOL profile comparison. No production promotion."
+    ],
+    "raw_jsonl": "/media/cristian/HDD extra/Modelos-eval/Q-20261027-VF-ITERATION-171/runs/ninfer-strata-paired-v2.jsonl",
+    "raw_jsonl_sha256": "2069c11fe761fb1988bdfd6d3acd0b41750c9c212e3f3ac3deeb8ba91a0ae56e",
+    "preregistration": "artifacts/evaluacion-modelos-llamacode/Q-20261027-VF-ITERATION-171/receipts/inference-preregistration-v2.json",
+    "runtime_configs": "artifacts/evaluacion-modelos-llamacode/Q-20261027-VF-ITERATION-171/receipts/runtime-configs-v2.json"
+  },
+  "harness2": {
+    "status": "completed_three_valid_pairs_synthetic_holdout",
+    "model": "Qwen3.8 Flash-Next ASTRA RCO IQ2_XS",
+    "engine": "Strata 0.1.41 harness production profile",
+    "hardware": "dual RTX 3090",
+    "context_tokens": 1048576,
+    "seed": 4242,
+    "network": "private namespace, loopback only, MCP disabled",
+    "valid_pairs": [
+      {
+        "id": "A",
+        "runtime": "Strata 0.1.41; v4 holdout",
+        "intermedio": {
+          "elapsed_s": 34.413,
+          "tasks": "6/6",
+          "repairs": 0,
+          "tool_calls": 11
+        },
+        "basico": {
+          "elapsed_s": 61.926,
+          "tasks": "6/6",
+          "repairs": 0,
+          "tool_calls": 20
+        },
+        "order": "basico_then_intermedio"
+      },
+      {
+        "id": "B",
+        "runtime": "Strata 0.1.41; v4 holdout",
+        "intermedio": {
+          "elapsed_s": 32.482,
+          "tasks": "6/6",
+          "repairs": 0,
+          "tool_calls": 12
+        },
+        "basico": {
+          "elapsed_s": 38.751,
+          "tasks": "6/6",
+          "repairs": 0,
+          "tool_calls": 17
+        },
+        "order": "intermedio_then_basico"
+      },
+      {
+        "id": "C_final",
+        "runtime": "Strata 0.1.52; fresh v5 corrected holdout",
+        "intermedio": {
+          "elapsed_s": 42.581,
+          "tasks": "6/6",
+          "repairs": 0,
+          "tool_calls": 14
+        },
+        "basico": {
+          "elapsed_s": 134.309,
+          "tasks": "6/6",
+          "repairs": 0,
+          "tool_calls": 25
+        },
+        "order": "intermedio_then_basico"
+      }
+    ],
+    "medians": {
+      "comparable_pairs_A_B": {
+        "intermedio_elapsed_s": 33.4475,
+        "basico_elapsed_s": 50.3385,
+        "intermedio_time_reduction_percent": 33.55,
+        "intermedio_tool_calls_median": 11.5,
+        "basico_tool_calls_median": 18.5
+      },
+      "pair_C_final_separate": {
+        "intermedio_elapsed_s": 42.581,
+        "basico_elapsed_s": 134.309,
+        "intermedio_time_reduction_percent": 68.3
+      }
+    },
+    "intermedio_median_time_reduction_percent": 33.55,
+    "decision": "Intermedio was faster in both compatible Strata 0.1.41 pairs; corrected pair C on Strata 0.1.52 also favored Intermedio but is reported separately and not pooled. Validate on representative coding holdout before default promotion.",
+    "exclusions": [
+      "Original pair C excluded: offer oracle expected an ineligible/non-minimum choice.",
+      "First fresh pair C excluded: policy oracle checked only two keys while prompt required five; correct five-field response was falsely rejected.",
+      "Corrected final pair C generated fresh offers and used exact five-key oracle."
+    ],
+    "caveats": [
+      "Only two comparable v4 pairs under Strata 0.1.41, plus one corrected sensitivity pair under Strata 0.1.52 with fresh values; do not pool medians across runtime/fixture versions.",
+      "Synthetic workflow only; no representative coding holdout or safety suite.",
+      "Order is balanced for A/B; final C runs Intermedio first.",
+      "No prefill/decode TPS comparison was collected for agent profiles."
+    ],
+    "fixture": "artifacts/evaluacion-modelos-llamacode/Q-20261027-VF-ITERATION-171/fixtures/harness2-astra-dual-workflow-holdout-v5-final-c.json",
+    "fixture_sha256": "e875e36289ebe25641e85816bf8cdc4648f0ff892305bf55cca30390d00bf8ef",
+    "controller_sha256": "4343151be15ff7e193296ad7c2b25f7ca4f3d602adebdf6e867254c579137ff1",
+    "summary": "/media/cristian/HDD extra/Modelos-eval/Q-20261027-VF-ITERATION-171/harness2-v5/home/harness2-run-final-c/summary.json",
+    "summary_sha256": "7c40609c6d068e86023935b4f36178d34199c77925fa54cce7cc17e19ad74166",
+    "control_events_sha256": "a68b1436a0c1caf3cffd6d730107556c7ce05e9b2db5d2764f03c9b4e81285f6",
+    "runtime_by_pair": {
+      "A": "Strata 0.1.41; v4 fixture",
+      "B": "Strata 0.1.41; v4 fixture",
+      "C_final": "Strata 0.1.52; corrected v5 fixture with new offer values"
+    }
+  },
+  "blocked_gates": [
+    {
+      "gate": "Qwen/Ghidra target validation",
+      "condition": "No exact target with verifiable source/hash, input, reproducible oracle, and human review."
+    },
+    {
+      "gate": "Ambiguous Instagram Reel request",
+      "condition": "No accessible attributable primary transcription/caption; direct Reel fetch was throttled."
+    },
+    {
+      "gate": "Hybrid external-provider A/B",
+      "condition": "Provider/model/version, authorized local keyRef, spending cap, and data boundary not supplied. No external request or data transfer made."
+    }
+  ],
+  "postflight": {
+    "artificial_memory_cap": false,
+    "available_memory_at_close_kb": 112639832,
+    "memory_psi_avg10": 0,
+    "memory_cgroup_events": {
+      "high": 0,
+      "max": 0,
+      "oom": 0,
+      "oom_kill": 0,
+      "oom_group_kill": 0
+    },
+    "gpu0_used_mib": 1362,
+    "gpu1_used_mib": 110,
+    "gui_left_running": true,
+    "test_strata_server_stopped": true,
+    "isolated_test_llamacode_daemon_stopped": true,
+    "test_processes_services_listeners_remaining": false,
+    "astra_sol_peritosoft_data_changed": false
+  },
+  "google_sheet_sync": {
+    "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "spreadsheet_url": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+    "updated_ranges": [
+      "'Evaluaciones LlamaCode'!A362:J362",
+      "'Resultados'!A364:AF367",
+      "'Accionables'!A46:N47"
+    ],
+    "inventory_changed": false,
+    "verification": "Exact readback confirmed four full result rows, Q171 evaluation summary, and two follow-ups. Arial 10, wrap, top alignment preserved; no validations or formulas overwritten. Results grid extended from 363 to 367 rows.",
+    "visual_check": "Google API metadata/cell formatting reviewed. Browser rendered the sheet in unauthenticated state with a small viewport, so API readback was the available verification."
+  }
+}
