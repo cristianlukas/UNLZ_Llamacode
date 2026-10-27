@@ -2784,3 +2784,11 @@ Preflight concluido: este Codex continúa en Ubuntu 24.04; no están disponibles
 - **Gates verificados:** el release Promethevs v0.2 sigue requiriendo Windows y ~1.1 TB libres en NVMe; los volúmenes NVMe montados suman 649.820.880.896 B libres. Strata issue #3294 sigue abierto, describe Qwen3.6-35B-A3B en una GPU y no hay quant local exacto. Se actualizó la revalidación de esas dos entradas en `inbox.json`; no se descargó ni compiló nada.
 - **No se inició inferencia:** el resto de los pendientes conserva sus condiciones externas de Q32/Q35, tenant authz, Harness², transcripción primaria, HyperQwen Q101/Q104 y Q119 presión crítica real. ASTRA/SOL y modelos/datos de PeritoSoft sin cambios.
 - **Evidencia:** `artifacts/evaluacion-modelos-llamacode/Q-20261027-VF-ITERATION-163/RESULTS.md` y `receipts/queue-sheet-and-gate-audit.json`.
+
+## Q164 · comprobar procesos de PeritoSoft y reanudar pruebas · 2026-10-27
+
+- **Lock:** se reutilizó Q146 (`2242863e-c78e-4fa9-9649-c1d1541f3919`).
+- **Procesos:** no se encontró PeritoSoft, llama-server ni contenedor relacionado; no había proceso autorizado que cerrar. `artcraft-launcher` usaba 207 MiB de GPU y no fue identificado como inferencia, así que quedó intacto.
+- **Pruebas:** no se inició benchmark. Los gates disponibles siguen bloqueados por Windows nativo (C39-02/Q35), principal/policy autenticados (tenant), workflow+holdout (Harness²), transcripción primaria, defecto parser/runtime reproducible (HyperQwen) o presión crítica real (Q119). No se genera presión artificial.
+- **Estado:** ASTRA Flash-Next RCO IQ2_XS, SOL y los datos/modelos PeritoSoft permanecen intactos; no hubo resultado nuevo que sincronizar al Sheet.
+- **Evidencia:** `artifacts/evaluacion-modelos-llamacode/Q-20261027-VF-ITERATION-164/RESULTS.md` y `receipts/process-scan-and-gates.json`.

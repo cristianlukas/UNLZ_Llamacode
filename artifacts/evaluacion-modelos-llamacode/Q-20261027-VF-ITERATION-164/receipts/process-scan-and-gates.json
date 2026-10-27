@@ -1,0 +1,43 @@
+{
+  "task": "Q164 · PeritoSoft/inference process gate and test resumption",
+  "timestamp_utc": "2026-10-27T04:37:32Z",
+  "lock": {
+    "task": "Q146 resume justified VF-20261019-01 tests",
+    "token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+    "reused": true
+  },
+  "process_scan": {
+    "peritosoft_process_found": false,
+    "llama_server_found": false,
+    "inference_listeners_found": false,
+    "related_docker_containers_found": false,
+    "signals_sent": 0,
+    "observed_non_inference_gpu_process": {
+      "name": "artcraft-launcher",
+      "pid": 959412,
+      "reported_gpu_memory_mib": 207,
+      "terminated": false
+    },
+    "reviewed_listener_set": ["OpenRGB", "CUPS", "Artcraft", "local DNS"],
+    "note": "No PeritoSoft or inference server was present to terminate. No action was taken against unrelated GUI processes."
+  },
+  "test_execution": {
+    "model_benchmark_started": false,
+    "reason": "No pending model test has all prerequisites satisfied in this Linux session.",
+    "remaining_gates": {
+      "C39-02 NInfer Flash-Next": "Windows-native Codex session",
+      "Q35 Job Objects": "Windows-native Codex session",
+      "tenant safety": "trusted authenticated principal and authorization policy",
+      "Harness2": "concrete workflow and fixed synthetic holdout",
+      "ambiguous-order validation": "primary caption/transcript",
+      "HyperQwen": "reproducible material parser/runtime defect",
+      "Q119 memory pressure": "real critical-pressure trace; no artificial stress"
+    }
+  },
+  "preserved": [
+    "ASTRA Flash-Next RCO IQ2_XS",
+    "SOL",
+    "all PeritoSoft models and data"
+  ],
+  "sheet_update": "No new model result/actionable; no row added."
+}
