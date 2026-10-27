@@ -1,0 +1,16 @@
+{
+  "cleanedAtUtc": "2026-10-27T02:16:29Z",
+  "path": "/media/cristian/Disco local/llamacode-eval/Q159/src",
+  "sourceBytes": 213319428,
+  "removed": true,
+  "buildDirectoryCreated": false,
+  "modelDownload": false,
+  "reason": "pre-registered exact TQ3_0 format gate failed; no consumer existed",
+  "preserved": [
+    "Q159 plan/results/receipts",
+    "ASTRA",
+    "SOL",
+    "PeritoSoft data and model files/configuration",
+    "ArtCraft GUI"
+  ]
+}

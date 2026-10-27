@@ -1,0 +1,24 @@
+{
+  "taskId": "Q159",
+  "finishedAtUtc": "2026-10-27T02:16:29Z",
+  "sourceCommit": "dc255f2a4b6e4211b555b0c05260b2523281f314",
+  "candidateFile": "Qwen3.8-Flash-Next-Gyro-Coder-L-TQ3_0-v1.1.gguf",
+  "registeredTypeExpected": "TQ3_0",
+  "inspectionCommands": [
+    "rg -n 'TQ3_0|TQ3' src/ggml src/src src/include",
+    "rg -n -i 'tq3|tq2|trellis|qtip|gyro.?coder|gyro' src"
+  ],
+  "presentRelatedTypes": [
+    "TQ2_0",
+    "TQ2_T",
+    "TQK6",
+    "TQK7"
+  ],
+  "exactTQ3_0Support": false,
+  "decision": "Stop before CMake/build/GPU because the exact pinned source lacks the candidate GGUF type/loader. This is not a quality result.",
+  "modelDownloaded": false,
+  "buildStarted": false,
+  "gpuUsed": false,
+  "serverStarted": false,
+  "benchmarkStarted": false
+}

@@ -1,0 +1,11 @@
+{
+  "updatedAtUtc": "2026-10-27T02:16:29Z",
+  "backupActionables": "prechange-actionables.json",
+  "backupInbox": "prechange-inbox.json",
+  "actionableId": "vf-gyro-coder-l-q152-20261026",
+  "inboxId": "q135-sheet-61-gyro-coder-large",
+  "status": "blocked-runtime-and-format",
+  "sheetPending": false,
+  "googleSheetReceipt": "google-sheet-sync.json",
+  "readback": "Accionables row 25 and Evaluaciones LlamaCode row 356 read back exactly with existing Arial 10/wrap/alignment."
+}

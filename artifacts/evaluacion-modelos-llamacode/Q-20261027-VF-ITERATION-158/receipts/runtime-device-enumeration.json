@@ -1,0 +1,44 @@
+{
+  "taskId": "Q158",
+  "finishedAtUtc": "2026-10-27T02:11:55Z",
+  "image": "ghcr.io/agentionai/agention-llama@sha256:0f0547624f92df823ef7bdbfc1e497a3674cebeaaaefb2c59012ba1716799fc6",
+  "platform": "linux/amd64",
+  "imageBytes": 165510028,
+  "command": "docker run --pull=missing --rm --gpus all --network=none -e NVIDIA_DRIVER_CAPABILITIES=all --entrypoint /app/llama-server ghcr.io/agentionai/agention-llama@sha256:0f0547624f92df823ef7bdbfc1e497a3674cebeaaaefb2c59012ba1716799fc6 --list-devices",
+  "exitCode": 0,
+  "stdout": "Available devices:\n  (none)",
+  "expected": "Enumerate both NVIDIA GeForce RTX 3090 devices",
+  "gate": "FAIL · no Vulkan devices enumerated",
+  "modelDownloaded": false,
+  "inferenceRequests": 0,
+  "httpServerStarted": false,
+  "benchmarkStarted": false,
+  "cleanup": {
+    "transientContainer": "auto-removed",
+    "consumersBeforeImageRemoval": 0,
+    "pinnedImageRemoved": true
+  },
+  "preflight": {
+    "peritosoftProcesses": 0,
+    "inferenceProcesses": 0,
+    "runningContainers": 0,
+    "gpuComputePercent": [
+      0,
+      0
+    ]
+  },
+  "postflight": {
+    "inferenceListeners": 0,
+    "runningContainers": 0,
+    "historicalExitedContainers": [
+      "vllm-qwen38-27b-dual-fast",
+      "llamacode-eval-sol-qwen38-20261012"
+    ],
+    "gpuComputePercent": [
+      0,
+      0
+    ],
+    "artcraftPreserved": true
+  },
+  "decision": "Q152 remains blocked; no candidate inference or score. Continue only via preregistered CUDA source-build feasibility test Q159."
+}

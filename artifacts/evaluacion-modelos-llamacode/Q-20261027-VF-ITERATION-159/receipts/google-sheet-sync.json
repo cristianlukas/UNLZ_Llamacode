@@ -1,0 +1,35 @@
+{
+  "syncedAtUtc": "2026-10-27T02:17:30Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "metadataVerified": {
+    "title": "Listado",
+    "Accionables": {
+      "sheetId": 1393124532,
+      "rows": 104,
+      "columns": 14
+    },
+    "Evaluaciones LlamaCode": {
+      "sheetId": 1945218181,
+      "rows": 1000,
+      "columns": 26
+    },
+    "Resultados": {
+      "sheetId": 1972251122,
+      "rows": 359,
+      "columns": 32
+    }
+  },
+  "updatedRanges": [
+    "Accionables!D25",
+    "Accionables!H25:I25",
+    "Accionables!K25",
+    "Accionables!N25",
+    "'Evaluaciones LlamaCode'!C356:D356",
+    "'Evaluaciones LlamaCode'!F356:I356"
+  ],
+  "readback": "All updated values matched exactly.",
+  "formatReadback": "Arial 10 and WRAP preserved; Accionables row vertical TOP and Evaluaciones row vertical BOTTOM preserved; no other cells or tabs changed.",
+  "resultsTab": "No Results row added because Q158/Q159 produced no model score, throughput or quality measurement.",
+  "actionable": "vf-gyro-coder-l-q152-20261026 remains blocked with concrete runtime and format gates.",
+  "receipt": "Q-20261027-VF-ITERATION-159/receipts/google-sheet-sync.json"
+}

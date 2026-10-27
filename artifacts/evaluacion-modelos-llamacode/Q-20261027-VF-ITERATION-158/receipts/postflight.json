@@ -1,0 +1,32 @@
+{
+  "checkedAtUtc": "2026-10-27T02:11:55Z",
+  "peritosoftAndInferenceProcesses": 0,
+  "activeInferenceListeners": 0,
+  "runningContainers": 0,
+  "exitedContainersLeftUntouched": [
+    "vllm-qwen38-27b-dual-fast",
+    "llamacode-eval-sol-qwen38-20261012"
+  ],
+  "imageDigest": "sha256:0f0547624f92df823ef7bdbfc1e497a3674cebeaaaefb2c59012ba1716799fc6",
+  "imagePresent": false,
+  "gpuComputePercent": [
+    0,
+    0
+  ],
+  "gpuMemoryMiB": [
+    890,
+    110
+  ],
+  "artcraftGpuMiB": 207,
+  "freeBytes": {
+    "root": 9446719488,
+    "D_NVMe": 496142651392
+  },
+  "unrelatedListeners": [
+    "OpenRGB:6742",
+    "CUPS:631",
+    "ArtCraft:47413",
+    "DNS:53",
+    "unknown loopback 42539"
+  ]
+}

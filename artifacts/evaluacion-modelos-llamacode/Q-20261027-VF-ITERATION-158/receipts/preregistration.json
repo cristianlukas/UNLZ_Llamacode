@@ -1,0 +1,65 @@
+{
+  "taskId": "Q158",
+  "parentTest": "Q152",
+  "parentGoal": "VF-20261019-01",
+  "status": "not-yet-executed",
+  "preregisteredAtUtc": "2026-10-27T02:10:00Z",
+  "workQueueLockToken": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+  "hypothesis": "The current vendor-published GHCR image plus NVIDIA_DRIVER_CAPABILITIES=all exposes both RTX 3090 Vulkan devices; the prior Docker Hub runtime failure may have been due to an incomplete invocation/older registry artifact.",
+  "sourceEvidence": [
+    {
+      "url": "https://www.agention.ai/models/gyro/",
+      "claim": "Current vendor instructions use ghcr.io/agentionai/agention-llama:server; NVIDIA command includes --gpus all and NVIDIA_DRIVER_CAPABILITIES=all."
+    },
+    {
+      "url": "https://huggingface.co/agentionai/Qwen3.8-Flash-Next-Gyro-Coder-GGUF",
+      "claim": "Official model card specifies vendor llama.cpp build, recommends vendor container for Vulkan, and says Strata support is coming."
+    }
+  ],
+  "image": {
+    "reference": "ghcr.io/agentionai/agention-llama",
+    "tag": "server",
+    "platform": "linux/amd64",
+    "manifestDigest": "sha256:0f0547624f92df823ef7bdbfc1e497a3674cebeaaaefb2c59012ba1716799fc6",
+    "compressedLayerBytes": 166501189
+  },
+  "invocationConstraints": {
+    "gpu": "--gpus all",
+    "environment": {
+      "NVIDIA_DRIVER_CAPABILITIES": "all"
+    },
+    "network": "none",
+    "entrypoint": "/app/llama-server",
+    "arguments": [
+      "--list-devices"
+    ],
+    "mounts": [],
+    "ports": [],
+    "modelDownload": false,
+    "inferenceRequests": false
+  },
+  "passGate": "CLI lists both NVIDIA GeForce RTX 3090 devices.",
+  "failGate": "Any loader failure, no devices, or fewer than both local RTX 3090s; stop without model download and remove only the pinned image if consumer-free.",
+  "hostPreflight": {
+    "peritosoftProcesses": 0,
+    "inferenceServers": 0,
+    "activeContainers": 0,
+    "gpuComputePercent": [
+      0,
+      0
+    ],
+    "gpuMemoryMiB": [
+      890,
+      110
+    ],
+    "artcraftGpuMiB": 207,
+    "rootFreeBytes": 9447530496,
+    "dNvmeFreeBytes": 496142651392
+  },
+  "continuation": "Only after PASS, verify D free space and download the exact Q152 candidate revision/file/hash, then load and run its preregistered dual-3090 BCB-Hard-8 screen.",
+  "preservation": [
+    "ASTRA Flash-Next RCO IQ2_XS",
+    "SOL Qwen3.8-27B",
+    "all PeritoSoft model files/configuration"
+  ]
+}

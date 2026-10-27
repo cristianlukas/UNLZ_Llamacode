@@ -2730,3 +2730,18 @@ Preflight concluido: este Codex continúa en Ubuntu 24.04; no están disponibles
 - **Recursos:** ambas RTX 3090 visibles con driver 615.71.09 y 0% de cómputo; no se inició inferencia.
 - **Siguiente trabajo:** Q32/Q35 esperan una sesión Windows nativa; Q152 espera runtime dual-3090 corregido; Q119 no tiene test Linux pendiente sin una traza real de presión severa o una decisión de cambiar el supervisor. Q156 terminó no-go y no se repite. ASTRA RCO IQ2_XS y SOL intactos.
 - **Recibos:** `artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-157/PLAN.md`, `RESULTS.md` y `receipts/peritosoft-and-next-gate-check.json`.
+
+## Q158 · reintento de runtime Vulkan Gyro-Coder-L con instrucciones oficiales actuales · 2026-10-27
+
+- **Estado final:** gate fallido; la imagen GHCR oficial actual, con `NVIDIA_DRIVER_CAPABILITIES=all`, imprime `Available devices: (none)`. No se descargó el GGUF ni se inició servidor/inferencia/benchmark.
+- **Recurso:** imagen pinned de 165.510.028 B descargada y retirada tras comprobar 0 consumidores. PeritoSoft/llama-server: 0 procesos; los dos contenedores vLLM históricos estaban detenidos y se dejaron intactos. ASTRA, SOL, PeritoSoft, ArtCraft y sus datos permanecen sin cambios.
+- **Postflight:** ambas GPUs 0% compute; sin puertos de inferencia; D/NVMe 496.142.651.392 B libres.
+- **Siguiente ruta:** Q159 preregistra el build CUDA de la fuente oficial fijada para probar un backend distinto del Vulkan que falló.
+- **Preregistro/resultados:** `artifacts/evaluacion-modelos-llamacode/Q-20261027-VF-ITERATION-158/PLAN.md`, `RESULTS.md` y `receipts/`.
+
+## Q159 · preflight del fork CUDA oficial para Gyro-Coder-L · 2026-10-27
+
+- **Estado final:** detenido antes del build; el commit fijado `dc255f2a4b6e4211b555b0c05260b2523281f314` contiene `TQ2_0/TQ2_T/TQK6/TQK7`, pero no registra ni carga `TQ3_0`, el tipo explícito del archivo Q152.
+- **Decisión:** no CMake/build, `--list-devices`, GPU, descarga, servidor, inferencia ni benchmark; no es un resultado de calidad. Q152 sigue bloqueada por compatibilidad exacta de formato/runtime.
+- **Limpieza:** checkout temporal de 213.319.428 B eliminado; no se creó build. ASTRA, SOL, PeritoSoft, ArtCraft y los contenedores vLLM detenidos quedaron intactos.
+- **Recibos:** `artifacts/evaluacion-modelos-llamacode/Q-20261027-VF-ITERATION-159/PLAN.md`, `RESULTS.md` y `receipts/`.

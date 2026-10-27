@@ -1,0 +1,65 @@
+{
+  "taskId": "Q159",
+  "parentTest": "Q152",
+  "parentGoal": "VF-20261019-01",
+  "status": "preregistered-cuda-build-and-device-enumeration",
+  "preregisteredAtUtc": "2026-10-27T02:12:48Z",
+  "workQueueLockToken": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+  "source": {
+    "repository": "https://github.com/agentionai/llama.cpp",
+    "commit": "dc255f2a4b6e4211b555b0c05260b2523281f314",
+    "resolvedBy": "git ls-remote HEAD refs/heads/main"
+  },
+  "officialInstruction": {
+    "url": "https://www.agention.ai/models/gyro/",
+    "claim": "For NVIDIA, build the vendor fork with CUDA toolkit 12.x+; RTX 5090/A6000 results use CUDA."
+  },
+  "environment": {
+    "cudaToolkit": "12.0.140",
+    "cmake": "3.28.3",
+    "ninja": "1.11.1",
+    "architecture": "sm_86 RTX 3090",
+    "rootFreeBytes": 9446719488,
+    "dNvmeFreeBytes": 496142651392
+  },
+  "build": {
+    "buildType": "Release",
+    "generator": "Ninja",
+    "flags": [
+      "-DGGML_CUDA=ON",
+      "-DGGML_VULKAN=OFF",
+      "-DCMAKE_CUDA_ARCHITECTURES=86"
+    ],
+    "target": "llama-server",
+    "jobs": 6,
+    "sourceAndBuildRoot": "/media/cristian/Disco local/llamacode-eval/Q159"
+  },
+  "deviceGate": {
+    "command": "build/bin/llama-server --list-devices",
+    "expected": [
+      "NVIDIA GeForce RTX 3090 GPU0",
+      "NVIDIA GeForce RTX 3090 GPU1"
+    ],
+    "serverStarted": false,
+    "inference": false
+  },
+  "formatGate": "Source must contain TQ3_0 loader/type support before downloading the exact candidate.",
+  "candidateDownloadAfterPassOnly": {
+    "repo": "agentionai/Qwen3.8-Flash-Next-Gyro-Coder-GGUF",
+    "revision": "87d31357f4cfeb8555cf32fc63a707c5fa10ae7a",
+    "file": "Qwen3.8-Flash-Next-Gyro-Coder-L-TQ3_0-v1.1.gguf",
+    "bytes": 83975624672,
+    "sha256": "377d5aa5b473a89b4d0d0c9fbd54fd8fcc46da19c16fc881860577189c1403df"
+  },
+  "stopIf": [
+    "source SHA mismatch",
+    "build fails on current CUDA 12.0 without installing/changing system packages",
+    "either RTX 3090 absent from list-devices",
+    "no TQ3_0 loader support"
+  ],
+  "preservation": [
+    "ASTRA Flash-Next RCO IQ2_XS",
+    "SOL Qwen3.8-27B",
+    "PeritoSoft model files and config"
+  ]
+}
