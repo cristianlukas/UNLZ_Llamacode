@@ -2823,3 +2823,12 @@ Preflight concluido: este Codex continúa en Ubuntu 24.04; no están disponibles
 - Cola general: Q168 conserva las condiciones externas de los demás pendientes; no se identificó una prueba de modelo habilitada en este executor. Sin uso de GPU ni servidor.
 - Sheet: actualizada la fila existente Evaluaciones LlamaCode!C67:J67; no se inventó resultado ni se añadió fila a Resultados.
 - Evidencia: artifacts/evaluacion-modelos-llamacode/Q-20261027-VF-ITERATION-169/RESULTS.md y receipts/source-14-revalidation.json.
+
+## Q170 · auditar pruebas pendientes de inbox/actionables/Sheet · 2026-10-27
+
+- Lock: se reutilizó Q146 (2242863e-c78e-4fa9-9649-c1d1541f3919).
+- Reconciliación: inbox 58 entradas = 57 URLs (56 originales + Sheet) y 1 pedido de texto; 35 IDs de actionables locales están en la pestaña, que contiene 9 registros adicionales, entre ellos un seguimiento R36S no relacionado con pruebas de modelo.
+- Gates pendientes: C39-02/Job Objects Windows; identidad y policy tenant reales; workflow+holdout Harness²; transcripción primaria de la fuente #36; endpoint/keyRef/costo/frontera de datos para #20/#21; traza de presión crítica o cambio de política para Q119; y target R36S/Ghidra con hash, oracle y revisión humana.
+- Cerrados/no repetibles: Swift Q72/Q97 y PLE Q20/Q22 no pasaron sus gates y no se repiten; HyperQwen Q104 no demostró defecto local. El inventario vivo marca UD-IQ4_XS RETIRADO Q151, 0 bytes; no descargarlo.
+- Resultado: ningún benchmark de modelo habilitado en Ubuntu sin incumplir gates o decisiones de retención. Cero GPU/inferencia/descargas; ASTRA RCO IQ2_XS, SOL y modelos/datos PeritoSoft intactos. La fila de fuente #14 sigue actualizada en Q169; no se editaron celdas del Sheet en esta auditoría.
+- Evidencia: artifacts/evaluacion-modelos-llamacode/Q-20261027-VF-ITERATION-170/RESULTS.md y receipts/pending-gates-audit.json.

@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "taskId": "Q-20261027-VF-ITERATION-170",
+  "parentLock": {
+    "task": "Q146 resume justified VF-20261019-01 tests",
+    "token": "2242863e-c78e-4fa9-9649-c1d1541f3919"
+  },
+  "checkedAtUtc": "2026-10-27T15:24:59Z",
+  "sources": {
+    "inbox": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/inbox.json",
+    "localActionables": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/actionables.json",
+    "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk"
+  },
+  "reconciliation": {
+    "batchEntries": 58,
+    "urlEntries": 57,
+    "textEntries": 1,
+    "urlBreakdown": "56 original sources plus the subsequently supplied Google Sheet URL",
+    "localActionables": 35,
+    "sheetActionableIds": 44,
+    "localActionableIdsMissingFromSheet": [],
+    "sheetOnlyIds": 9,
+    "sheetOnlyIncludes": "8 historical/model records plus pending R36S Horizon follow-up, which is not an AI model test"
+  },
+  "tests": {
+    "newTestsRun": 0,
+    "gpuUsed": false,
+    "inferenceServersStarted": false,
+    "remainingModelTestGates": [
+      {
+        "id": "vf-q32-flashnext-ninfer-linux-gate-20261022",
+        "gate": "Native Windows Codex session for NInfer v0.16.1 versus Strata C39-02."
+      },
+      {
+        "id": "vf-q35-codex-crash-isolation-20261022",
+        "gate": "Windows Job Objects and native Windows worker entrypoints; Linux coverage is already recorded."
+      },
+      {
+        "id": "vf-qwen-tool-safety-gates-20261022",
+        "gate": "Trusted host-to-server authenticated principal and real resource authorization policy; do not fabricate a tenant identity."
+      },
+      {
+        "id": "harness2-audit",
+        "gate": "Concrete LlamaCode workflow and fixed synthetic holdout; current canaries only establish isolation/transport, not model quality."
+      },
+      {
+        "id": "vf-order-validation-20261019",
+        "gate": "Attributable primary caption/transcription for source #36 before creating a model comparison fixture."
+      },
+      {
+        "id": "VF-20261019-01-S20-ROUTE-AB",
+        "gate": "Provider/model version, authorized key reference, cost ceiling and data boundary before any external API request."
+      },
+      {
+        "id": "Q119",
+        "gate": "Real critical-pressure trace or explicit supervisor-policy change; no artificial pressure is created."
+      },
+      {
+        "id": "vf-qwen-ghidra-open-fixture-20261025",
+        "gate": "A real/open target with pinned hash, inputs, oracle/tests/CRC and human review; Q138 synthetic pilot is closed."
+      }
+    ],
+    "closedOrNotRepeatable": [
+      "Swift Q72/Q97 quality gates failed; user noncommercial-use statement does not reopen the completed preregistered quality screens.",
+      "PLE FP8 Q20/Q22 completed at 3/24 versus 3/24 with zero pair wins; do not repeat the same fingerprint.",
+      "HyperQwen Q101/Q104 did not demonstrate an LlamaCode parser/runtime defect; no repeat without a material change.",
+      "UD-IQ4_XS is marked RETIRADO Q151 and 0 bytes in current model inventory; no redownload against the user's retention decision."
+    ]
+  },
+  "spreadsheetRead": {
+    "actionablesTabRows": 44,
+    "localActionableIdsAllPresent": true,
+    "pendingRowsStillHaveTheirRecordedGates": true,
+    "noCellsChangedInThisAudit": true,
+    "source14UpdateFromQ169RemainsRecorded": true
+  },
+  "preservation": {
+    "astraFlashNextRcoIq2Xs": "unchanged",
+    "sol": "unchanged",
+    "peritoSoftModelsDataAndConfig": "unchanged"
+  },
+  "outcome": "No justified model benchmark is currently executable in this Linux session without an external prerequisite or violating an existing preregistration/retention decision."
+}
