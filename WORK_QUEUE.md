@@ -2774,3 +2774,13 @@ Preflight concluido: este Codex continúa en Ubuntu 24.04; no están disponibles
 - **Gates pendientes:** Q32 y Job Objects Q35 requieren Windows nativo; tenant safety requiere principal autenticado/policy confiable; Harness² requiere workflow + holdout fijo; validación de pedido requiere caption/transcripción primaria; HyperQwen requiere reproducir defecto parser/runtime; Q119 sólo se reabre ante traza real de presión crítica o cambio explícito del supervisor. No hay una prueba habilitada en este executor.
 - **Acción:** no matar procesos porque no había ninguno; no iniciar un benchmark sustituto ni inferir uso por memoria GPU ocupada. PeritoSoft, sus datos y configuración no se tocaron. No hubo resultado nuevo para sincronizar al Sheet.
 - **Evidencia:** `artifacts/evaluacion-modelos-llamacode/Q-20261027-VF-ITERATION-162/RESULTS.md` y `receipts/peritosoft-stop-and-test-gates.json`.
+
+
+## Q163 · conciliar Accionables y revalidar bloqueos externos · 2026-10-27
+
+- **Estado:** auditoría documental completa bajo el lock Q146 (`2242863e-c78e-4fa9-9649-c1d1541f3919`); no hay un nuevo test de modelo habilitado en Ubuntu.
+- **Sheet:** los 35 IDs locales existen en `Accionables`; hay ocho filas históricas adicionales, de las que sólo el seguimiento R36S está pendiente de un release público y no es una prueba de modelos. La evaluación más reciente sigue siendo Q161, fila 360.
+- **Reparación:** completé `Accionables!A4:N4` con el registro completo Q31 que faltaba. Lectura exacta de vuelta en 14 celdas; formato top/wrap Arial 10 preservado, fila ajustada a 180 px; columnas y otras filas intactas.
+- **Gates verificados:** el release Promethevs v0.2 sigue requiriendo Windows y ~1.1 TB libres en NVMe; los volúmenes NVMe montados suman 649.820.880.896 B libres. Strata issue #3294 sigue abierto, describe Qwen3.6-35B-A3B en una GPU y no hay quant local exacto. Se actualizó la revalidación de esas dos entradas en `inbox.json`; no se descargó ni compiló nada.
+- **No se inició inferencia:** el resto de los pendientes conserva sus condiciones externas de Q32/Q35, tenant authz, Harness², transcripción primaria, HyperQwen Q101/Q104 y Q119 presión crítica real. ASTRA/SOL y modelos/datos de PeritoSoft sin cambios.
+- **Evidencia:** `artifacts/evaluacion-modelos-llamacode/Q-20261027-VF-ITERATION-163/RESULTS.md` y `receipts/queue-sheet-and-gate-audit.json`.

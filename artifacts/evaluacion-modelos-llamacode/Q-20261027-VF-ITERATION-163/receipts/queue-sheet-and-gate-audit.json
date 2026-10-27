@@ -1,0 +1,71 @@
+{
+  "task": "Q163 · sheet reconciliation and external gate revalidation",
+  "timestamp_utc": "2026-10-27T04:33:23Z",
+  "lock": {
+    "task": "Q146 resume justified VF-20261019-01 tests",
+    "token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+    "reused": true
+  },
+  "queue": {
+    "inbox_items": 69,
+    "local_actionables": 35,
+    "sheet_actionables_rows": 43,
+    "all_local_actionable_ids_present_in_sheet": true,
+    "sheet_only_ids": [
+      "vf-strata-concurrency-q98",
+      "vf-astra-llamacode-subagent-fanout-q100",
+      "vf-hyperqwen-q102-native-dispatcher-20261024",
+      "Q-20261024-VF-ITERATION-105",
+      "Q-20261025-VF-ITERATION-131",
+      "eval-junie-blend-27b-3090-20261025",
+      "r36s-horizon-rust-minecraft-20261025",
+      "vf-ninfer-qwen38-27b-sol-review-20261025"
+    ],
+    "sheet_only_pending_non_ai_followup": "r36s-horizon-rust-minecraft-20261025 (await public release; not a model evaluation test)"
+  },
+  "spreadsheet": {
+    "id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "tab": "Accionables",
+    "sheetId": 1393124532,
+    "range_repaired": "A4:N4",
+    "record": "vf-q31-flashnext-python-shim-20261022",
+    "source": "local actionables.json exact Q31 record",
+    "readback_exact": true,
+    "readback_cells": 14,
+    "validation_or_chip_fields": 0,
+    "format_preserved": "Arial 10, top aligned, wrapped; row height set to 180 px to display the longer result; column widths unchanged.",
+    "visual_verification": "Browser UI transport unavailable; best-effort Google Sheets API readback confirmed all cell values and formatting metadata.",
+    "latest_evaluation_row": "Evaluaciones LlamaCode row 360 = Q161; no Q162 row added because Q162 produced no model test result."
+  },
+  "revalidated_external_gates": {
+    "q135_sheet_60_promethevs": {
+      "status": "Bloqueada · Windows/almacenamiento NVMe insuficiente, revalidado 2026-10-27",
+      "finding": "El release oficial v0.2 requiere Windows y alrededor de 1.1 TB libres entre NVMe. El executor sigue en Ubuntu. Espacio libre actual en volúmenes NVMe montados: root 9,407,516,672 B; volumen del checkout /media/cristian/7CFE1E0FFE1DC1F6 145,103,413,248 B; Disco local 495,309,950,976 B; total 649,820,880,896 B. HDD extra aporta 313,252,384,768 B pero no es NVMe y no satisface el requisito.",
+      "nextStep": "No descargar ni construir. Reabrir desde Windows cuando haya ≥1.1 TB libres en NVMe y un fixture de calidad/velocidad reproducible.",
+      "testDecision": "Bloqueada por plataforma y almacenamiento; ninguna prueba iniciada.",
+      "sources": [
+        "https://github.com/Magnvs7/Promethevs/releases/tag/v0.2"
+      ],
+      "revalidatedAtUtc": "2026-10-27T04:33:23Z"
+    },
+    "q135_sheet_64_strata_qwen36_35b": {
+      "status": "Bloqueada · upstream sigue abierto; split dual-GPU no implementado",
+      "finding": "La incidencia oficial Strata #3294 sigue abierta al revalidar el 2026-10-27. El issue describe la ruta Qwen3.6-35B-A3B como single-GPU; no hay split de capas en dos GPUs ni quant exacto disponible localmente.",
+      "nextStep": "No descargar ni ejecutar en una sola GPU. Reabrir cuando el upstream implemente layer split dual-GPU para esta familia y exista un quant exacto local.",
+      "testDecision": "Bloqueada por prerrequisito upstream/modelo; ninguna prueba local habilitada.",
+      "sources": [
+        "https://github.com/Niko1221/Strata/issues/3294"
+      ],
+      "revalidatedAtUtc": "2026-10-27T04:33:23Z"
+    }
+  },
+  "test_execution": {
+    "new_inference_or_benchmark_started": false,
+    "reason": "No pending local AI test has all prerequisites satisfied; remaining tests are gated by native Windows, trusted tenant identity/policy, fixed workflow/holdout, missing primary transcript, a material parser/runtime defect, actual critical-pressure trace, or upstream dual-GPU support/compatible storage."
+  },
+  "preserved": [
+    "ASTRA Flash-Next RCO IQ2_XS",
+    "SOL",
+    "all PeritoSoft models and data"
+  ]
+}
