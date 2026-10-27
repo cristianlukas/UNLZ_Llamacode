@@ -1,0 +1,29 @@
+{
+  "taskId": "Q-20261027-VF-ITERATION-167",
+  "arm": "sol",
+  "result": "SCREEN_INVALID",
+  "observedUtc": "2026-10-27T13:28:34Z",
+  "httpRequests": 8,
+  "transportOk": 8,
+  "passed": 0,
+  "sandboxErrors": 8,
+  "emptyFinals": 0,
+  "runnerExitCode": 2,
+  "serverReady": true,
+  "cleanup": {
+    "composeDownReturnCode": 0,
+    "remainingProjectContainers": [],
+    "portListeners": []
+  },
+  "monitor": {
+    "samples": 342,
+    "minMemAvailableGiB": 98.7338,
+    "maxPSI": 0,
+    "maxCgroupSwapMiB": 0,
+    "oomDelta": 0,
+    "maxGpuTemperatureC": 68,
+    "abortReason": "worker cgroup disappeared or telemetry became unavailable after normal server teardown"
+  },
+  "interpretation": "Invalid grader result; do not compare model quality or start HyperQwen. No raw completion/code persisted. No other processes were killed; no production profile changed.",
+  "next": "Debug only the exact sandbox via a deterministic smoke, then separately adjust monitor shutdown ordering before a preregistered retry."
+}

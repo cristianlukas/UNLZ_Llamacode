@@ -1,0 +1,35 @@
+{
+  "atUtc": "2026-10-27T12:56:56Z",
+  "lock": {
+    "task": "Q146 resume justified VF-20261019-01 tests",
+    "token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+    "created_utc": "2026-10-26 07:41:45"
+  },
+  "peritosoftOrInferenceProcesses": [],
+  "matchingContainers": [],
+  "matchingInferenceListeners": [],
+  "gpuRows": [
+    "0, NVIDIA GeForce RTX 3090, 18, 996, 24576, 40",
+    "1, NVIDIA GeForce RTX 3090, 77, 110, 24576, 26"
+  ],
+  "computeApps": [
+    "959412, /tmp/.mount_artcraPGcaAc/usr/bin/artcraft-launcher, 207"
+  ],
+  "pmonRows": [
+    "# gpu         pid   type     sm    mem    enc    dec    jpg    ofa     fb   ccpm    command ",
+    "# Idx           #    C/G      %      %      %      %      %      %     MB     MB    name ",
+    "    0       2362     G     16      6      -      -      -      -    533      0    Xorg           ",
+    "    0       4020     G      2      0      -      -      -      -     39      0    compiz         ",
+    "    0     370045     G     17      7      -      -      -      -     98      0    Codex --change-",
+    "    0     959412   C+G      -      -      -      -      -      -    207      0    artcraft-launch",
+    "    0    3374402     G      -      -      -      -      -      -     46      0    brave --type=gp",
+    "    1       2362     G      -      -      -      -      -      -     81      0    Xorg"
+  ],
+  "hostMeminfoBytes": {
+    "MemAvailable": 117794967552,
+    "SwapFree": 3605925888
+  },
+  "processScanExit": 0,
+  "listenerScanExit": 0,
+  "dockerScanExit": 0
+}

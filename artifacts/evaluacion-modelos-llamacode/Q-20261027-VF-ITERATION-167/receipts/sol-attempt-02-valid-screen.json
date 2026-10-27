@@ -1,0 +1,41 @@
+{
+  "arm": "sol",
+  "status": "VALID_SCREEN",
+  "fixtureSha256": "11279cde14113fc8527f141c53e14cb5ccf0dba65749081a4f914408e391c268",
+  "seed": 4242,
+  "runs": 8,
+  "transportOk": 8,
+  "passed": 0,
+  "sandboxErrors": 0,
+  "emptyFinals": 0,
+  "passedCaseIds": [],
+  "medianWallMs": 11321.38,
+  "medianPrefillClientProxyTokPerSec": 1316.11,
+  "medianDecodeClientProxyTokPerSec": 113.5,
+  "measurementNote": "Proxy rates from streaming token usage/TTFT, descriptive only; no accepted tasks, therefore no quality-adjusted speed comparison.",
+  "monitor": {
+    "sampleCount": 223,
+    "minMemAvailableGiB": 99.04272842407227,
+    "maxHostPsiSomeAvg10Pct": 0.0,
+    "maxHostPsiFullAvg10Pct": 0.0,
+    "maxProcessTreeRssGiB": 12.593433380126953,
+    "maxCgroupMemoryGiB": 10.812885284423828,
+    "maxCgroupSwapMiB": 0.0,
+    "maxGpuMemoryUsedMiBByIndex": {
+      "0": 22455,
+      "1": 22192
+    },
+    "maxGpuTemperatureC": 67,
+    "oomKillStart": 0,
+    "oomKillEnd": 0,
+    "warnings": 0,
+    "abortReason": null
+  },
+  "cleanup": {
+    "composeDownReturnCode": 0,
+    "remainingProjectContainers": [],
+    "portListeners": []
+  },
+  "resultPath": "runs/sol/bcb8-result.json",
+  "finalSummaryPath": "receipts/sol/final-summary.json"
+}

@@ -1,0 +1,13 @@
+{
+  "taskId": "Q-20261027-VF-ITERATION-167",
+  "observedUtc": "2026-10-27T13:30:14Z",
+  "result": "REPRODUCED",
+  "context": "systemd-user-transient",
+  "gradeStatus": "sandbox_error",
+  "bwrapReturnCode": 1,
+  "bwrapDiagnostic": "bwrap: setting up uid map: Permission denied",
+  "interactiveShellSmoke": "PASS",
+  "modelUsed": false,
+  "gpuUse": false,
+  "resolutionPreregistered": "isolated Docker grading container; no unsandboxed fallback"
+}

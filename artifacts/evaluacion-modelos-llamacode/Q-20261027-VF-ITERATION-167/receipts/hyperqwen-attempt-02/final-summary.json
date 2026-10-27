@@ -1,0 +1,54 @@
+{
+  "taskId": "Q-20261027-VF-ITERATION-167",
+  "arm": "hyperqwen",
+  "status": "FAILED",
+  "error": {
+    "type": "InterruptedError",
+    "message": "Q167 received signal 15; cleaning only Q167 processes"
+  },
+  "cleanup": {
+    "composeDownReturnCode": 0,
+    "remainingProjectContainers": [],
+    "portListeners": []
+  },
+  "monitor": {
+    "sampleCount": 237,
+    "minMemAvailableGiB": 101.12143325805664,
+    "maxHostPsiSomeAvg10Pct": 0.0,
+    "maxHostPsiFullAvg10Pct": 0.0,
+    "maxProcessTreeRssGiB": 9.891754150390625,
+    "maxCgroupMemoryGiB": 10.317878723144531,
+    "maxCgroupSwapMiB": 0.0,
+    "maxGpuMemoryUsedMiBByIndex": {
+      "0": 14566,
+      "1": 13668
+    },
+    "maxGpuTemperatureC": 59,
+    "oomKillStart": 0,
+    "oomKillEnd": 0,
+    "warnings": 0,
+    "abortReason": null
+  },
+  "monitorAbortReason": null,
+  "atUtc": "2026-10-27T14:07:02Z",
+  "noProductionProfileChanged": true,
+  "otherGpuProcessesKilled": false,
+  "postflightGpus": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "temperatureC": 53,
+      "memoryUsedMiB": 1041,
+      "memoryTotalMiB": 24576,
+      "utilizationPct": 14
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "temperatureC": 34,
+      "memoryUsedMiB": 110,
+      "memoryTotalMiB": 24576,
+      "utilizationPct": 6
+    }
+  ]
+}

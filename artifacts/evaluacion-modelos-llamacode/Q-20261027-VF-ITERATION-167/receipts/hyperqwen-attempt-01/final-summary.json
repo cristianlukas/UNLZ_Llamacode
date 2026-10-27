@@ -1,0 +1,54 @@
+{
+  "taskId": "Q-20261027-VF-ITERATION-167",
+  "arm": "hyperqwen",
+  "status": "FAILED",
+  "error": {
+    "type": "RuntimeError",
+    "message": "owned inference container exited before health"
+  },
+  "cleanup": {
+    "composeDownReturnCode": 0,
+    "remainingProjectContainers": [],
+    "portListeners": []
+  },
+  "monitor": {
+    "sampleCount": 111,
+    "minMemAvailableGiB": 104.25221633911133,
+    "maxHostPsiSomeAvg10Pct": 0.0,
+    "maxHostPsiFullAvg10Pct": 0.0,
+    "maxProcessTreeRssGiB": 0.0,
+    "maxCgroupMemoryGiB": 0.0,
+    "maxCgroupSwapMiB": 0.0,
+    "maxGpuMemoryUsedMiBByIndex": {
+      "0": 1040,
+      "1": 110
+    },
+    "maxGpuTemperatureC": 50,
+    "oomKillStart": 0,
+    "oomKillEnd": 0,
+    "warnings": 0,
+    "abortReason": null
+  },
+  "monitorAbortReason": null,
+  "atUtc": "2026-10-27T13:45:31Z",
+  "noProductionProfileChanged": true,
+  "otherGpuProcessesKilled": false,
+  "postflightGpus": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "temperatureC": 46,
+      "memoryUsedMiB": 994,
+      "memoryTotalMiB": 24576,
+      "utilizationPct": 63
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "temperatureC": 28,
+      "memoryUsedMiB": 110,
+      "memoryTotalMiB": 24576,
+      "utilizationPct": 34
+    }
+  ]
+}

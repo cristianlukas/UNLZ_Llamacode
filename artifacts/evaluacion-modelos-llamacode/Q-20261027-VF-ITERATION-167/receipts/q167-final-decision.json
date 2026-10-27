@@ -1,0 +1,598 @@
+{
+  "taskId": "Q-20261027-VF-ITERATION-167",
+  "atUtc": "2026-10-27T14:28:54Z",
+  "decision": "NO_GO_FOR_TESTED_HYPERQWEN_PROFILE",
+  "runnerStatus": "SCREEN_INVALID",
+  "runnerExitCode": 2,
+  "gateOutcome": {
+    "transport": "PASS: 8/8 each",
+    "sandbox": "PASS: 0 errors each",
+    "emptyFinals": "FAIL: HyperQwen 7/8; preregistered limit was 0",
+    "quality": "FAIL: 0/8 passed for both; minimum six matched successful tasks not met",
+    "interpretation": "Runner SCREEN_INVALID is caused by the pre-registered empty-final gate, not a transport, sandbox, startup, or resource failure. The tested HyperQwen profile did not produce usable final code on seven tasks; the one final answer failed its task tests."
+  },
+  "candidateHyperQwen": {
+    "runs": 8,
+    "transportOk": 8,
+    "passed": 0,
+    "sandboxErrors": 0,
+    "emptyFinals": 7,
+    "medianWallSecondsAllTasks": 155.52,
+    "medianPrefillClientProxyTokPerSec": 1273.33,
+    "medianDecodeClientProxyTokPerSec": 39.55,
+    "medianCompletionClientProxyTokPerSec": 39.5,
+    "perTask": [
+      {
+        "id": "BigCodeBench/492",
+        "gradeStatus": "no_final_content",
+        "finishReason": "length",
+        "completionTokens": 6144,
+        "reasoningTokens": 6144,
+        "contentChars": 0,
+        "wallMs": 146445.52
+      },
+      {
+        "id": "BigCodeBench/952",
+        "gradeStatus": "no_final_content",
+        "finishReason": "length",
+        "completionTokens": 6144,
+        "reasoningTokens": 6141,
+        "contentChars": 0,
+        "wallMs": 163045.65
+      },
+      {
+        "id": "BigCodeBench/123",
+        "gradeStatus": "no_final_content",
+        "finishReason": "length",
+        "completionTokens": 6144,
+        "reasoningTokens": 6144,
+        "contentChars": 0,
+        "wallMs": 173925.83
+      },
+      {
+        "id": "BigCodeBench/800",
+        "gradeStatus": "test_failed",
+        "finishReason": "stop",
+        "completionTokens": 835,
+        "reasoningTokens": 548,
+        "contentChars": 1068,
+        "wallMs": 3361.95
+      },
+      {
+        "id": "BigCodeBench/310",
+        "gradeStatus": "no_final_content",
+        "finishReason": "length",
+        "completionTokens": 6144,
+        "reasoningTokens": 6112,
+        "contentChars": 0,
+        "wallMs": 155327.9
+      },
+      {
+        "id": "BigCodeBench/857",
+        "gradeStatus": "no_final_content",
+        "finishReason": "length",
+        "completionTokens": 6144,
+        "reasoningTokens": 6144,
+        "contentChars": 0,
+        "wallMs": 172492.77
+      },
+      {
+        "id": "BigCodeBench/509",
+        "gradeStatus": "no_final_content",
+        "finishReason": "length",
+        "completionTokens": 6144,
+        "reasoningTokens": 6110,
+        "contentChars": 0,
+        "wallMs": 155441.98
+      },
+      {
+        "id": "BigCodeBench/870",
+        "gradeStatus": "no_final_content",
+        "finishReason": "length",
+        "completionTokens": 6144,
+        "reasoningTokens": 6110,
+        "contentChars": 0,
+        "wallMs": 155603.69
+      }
+    ]
+  },
+  "controlSOL": {
+    "runs": 8,
+    "transportOk": 8,
+    "passed": 0,
+    "sandboxErrors": 0,
+    "emptyFinals": 0,
+    "medianWallSecondsAllTasks": 11.32,
+    "medianPrefillClientProxyTokPerSec": 1316.11,
+    "medianDecodeClientProxyTokPerSec": 113.5,
+    "medianCompletionClientProxyTokPerSec": 111.83,
+    "perTask": [
+      {
+        "id": "BigCodeBench/870",
+        "gradeStatus": "test_failed",
+        "finishReason": "stop",
+        "completionTokens": 2263,
+        "reasoningTokens": null,
+        "contentChars": 878,
+        "wallMs": 20384.77
+      },
+      {
+        "id": "BigCodeBench/509",
+        "gradeStatus": "test_failed",
+        "finishReason": "stop",
+        "completionTokens": 2207,
+        "reasoningTokens": null,
+        "contentChars": 1651,
+        "wallMs": 19326.76
+      },
+      {
+        "id": "BigCodeBench/857",
+        "gradeStatus": "test_failed",
+        "finishReason": "stop",
+        "completionTokens": 870,
+        "reasoningTokens": null,
+        "contentChars": 1187,
+        "wallMs": 8010.28
+      },
+      {
+        "id": "BigCodeBench/310",
+        "gradeStatus": "test_failed",
+        "finishReason": "stop",
+        "completionTokens": 825,
+        "reasoningTokens": null,
+        "contentChars": 2240,
+        "wallMs": 7324.19
+      },
+      {
+        "id": "BigCodeBench/800",
+        "gradeStatus": "test_failed",
+        "finishReason": "stop",
+        "completionTokens": 650,
+        "reasoningTokens": null,
+        "contentChars": 992,
+        "wallMs": 5184.83
+      },
+      {
+        "id": "BigCodeBench/123",
+        "gradeStatus": "test_failed",
+        "finishReason": "stop",
+        "completionTokens": 1532,
+        "reasoningTokens": null,
+        "contentChars": 1107,
+        "wallMs": 14246.44
+      },
+      {
+        "id": "BigCodeBench/952",
+        "gradeStatus": "test_failed",
+        "finishReason": "stop",
+        "completionTokens": 1180,
+        "reasoningTokens": null,
+        "contentChars": 836,
+        "wallMs": 11132.13
+      },
+      {
+        "id": "BigCodeBench/492",
+        "gradeStatus": "test_failed",
+        "finishReason": "stop",
+        "completionTokens": 1339,
+        "reasoningTokens": null,
+        "contentChars": 1727,
+        "wallMs": 11510.63
+      }
+    ]
+  },
+  "speedInterpretation": "Client-side proxy medians across all tasks are descriptive only. The preregistered E2E speed gate requires matched successful tasks; there were none, so no paired speed or quality/speed claim is supported. The profiles use different engines, quantization and speculation settings, and HyperQwen spent nearly all output tokens in reasoning on seven items.",
+  "resourceMonitor": {
+    "sampleCount": 1138,
+    "minMemAvailableGiB": 102.09834671020508,
+    "maxHostPsiSomeAvg10Pct": 0.0,
+    "maxHostPsiFullAvg10Pct": 0.0,
+    "maxProcessTreeRssGiB": 8.989551544189453,
+    "maxCgroupMemoryGiB": 6.974700927734375,
+    "maxCgroupSwapMiB": 0.0,
+    "maxGpuMemoryUsedMiBByIndex": {
+      "0": 14055,
+      "1": 13112
+    },
+    "maxGpuTemperatureC": 71,
+    "oomKillStart": 0,
+    "oomKillEnd": 0,
+    "warnings": 0,
+    "abortReason": null
+  },
+  "cleanup": {
+    "composeDownReturnCode": 0,
+    "remainingProjectContainers": [],
+    "portListeners": []
+  },
+  "followUp": "No additional Q167 seed or retry. Preregistered onFail rule closes the screen; this exact profile is not a replacement for SOL.",
+  "evidence": [
+    "PLAN.md",
+    "receipts/preregistration.json",
+    "receipts/hyperqwen/final-summary.json",
+    "receipts/sol/final-summary.json",
+    "runs/hyperqwen/bcb8-result.json",
+    "runs/sol/bcb8-result.json",
+    "runs/hyperqwen/memory-trace.jsonl"
+  ],
+  "candidateCopyCleanup": {
+    "taskId": "Q-20261027-VF-ITERATION-167",
+    "status": "REMOVED_AFTER_NO_GO",
+    "atUtc": "2026-10-27T14:37:43Z",
+    "reason": "The user previously authorized removing nonproductive evaluation models other than SOL, the selected ASTRA Flash-Next profile, and any model used by PeritoSoft. The Q167-only HyperQwen profile failed its preregistered screen; its private weights copy and runtime-only cache/temp are disposable.",
+    "removedPaths": [
+      "/media/cristian/HDD extra/Modelos-eval/Q-20261027-VF-ITERATION-167/models",
+      "/media/cristian/HDD extra/Modelos-eval/Q-20261027-VF-ITERATION-167/cache/hyperqwen",
+      "/media/cristian/HDD extra/Modelos-eval/Q-20261027-VF-ITERATION-167/tmp/hyperqwen"
+    ],
+    "privateModelPayloadBytes": 18045887466,
+    "cacheAndTempFilesRemoved": 6441,
+    "cacheAndTempBytesRemoved": 553956325,
+    "measuredFilesystemAvailableBytesBefore": 288726310912,
+    "measuredFilesystemAvailableBytesAfter": 289297555456,
+    "measuredFilesystemAvailableBytesDelta": 571244544,
+    "rootOwnedFilesRemovedWithinExactQ167Paths": true,
+    "hardlinksOrSymlinksFound": false,
+    "q167ContainersPresentBeforeCleanup": false,
+    "q167ServiceStoppedBeforeCleanup": true,
+    "Q85PreparedSourceModified": false,
+    "productionSOLModified": false,
+    "ASTRAFlashNextModified": false,
+    "PeritoSoftFilesModified": false,
+    "receiptsAndBenchResultsPreserved": true
+  },
+  "q85SourceCleanup": {
+    "taskId": "Q-20261027-VF-ITERATION-167",
+    "status": "REMOVED_AFTER_NO_GO",
+    "atUtc": "2026-10-27T14:41:28Z",
+    "path": "/media/cristian/HDD extra/Modelos-eval/Q85-HyperQwen/models",
+    "filesRemoved": 82,
+    "bytesRemoved": 24412685738,
+    "filesManifest": [
+      {
+        "path": ".prepare.lock",
+        "bytes": 0
+      },
+      {
+        "path": "Qwen3.8-27B-DFlash2-W4A16/.gitattributes",
+        "bytes": 1519
+      },
+      {
+        "path": "Qwen3.8-27B-DFlash2-W4A16/config.json",
+        "bytes": 2264
+      },
+      {
+        "path": "Qwen3.8-27B-DFlash2-W4A16/model.safetensors",
+        "bytes": 1280633960
+      },
+      {
+        "path": "Qwen3.8-27B-DFlash2-W4A16/README.md",
+        "bytes": 2621
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/model.safetensors.index.json.bak-mtp",
+        "bytes": 198612
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/model.safetensors.index.json.bak-quant",
+        "bytes": 198290
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/model_extra_tensors.safetensors",
+        "bytes": 644356792
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/model_extra_tensors.safetensors.bak-draft",
+        "bytes": 431364472
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/model_extra_tensors.safetensors.bak-mtp",
+        "bytes": 849400392
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/mtp_draft_vocab_ids.pt",
+        "bytes": 329426
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/processor_config.json",
+        "bytes": 1191
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/quantization_config.json",
+        "bytes": 11112
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/README.md",
+        "bytes": 7566
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/tokenizer.json",
+        "bytes": 19989325
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/tokenizer_config.json",
+        "bytes": 1166
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.gitattributes",
+        "bytes": 1570
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/chat_template.jinja",
+        "bytes": 9651
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/config.json",
+        "bytes": 17060
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/config.json.bak-mtp",
+        "bytes": 16751
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/config.json.bak-quant",
+        "bytes": 15587
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/generation_config.json",
+        "bytes": 219
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/model-00001-of-00007.safetensors",
+        "bytes": 3211003472
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/model-00002-of-00007.safetensors",
+        "bytes": 3195027104
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/model-00003-of-00007.safetensors",
+        "bytes": 3195027104
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/model-00004-of-00007.safetensors",
+        "bytes": 3217442568
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/model-00005-of-00007.safetensors",
+        "bytes": 699275200
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/model-00006-of-00007.safetensors",
+        "bytes": 1291274752
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/model-00006-of-00007.safetensors.bak_embed",
+        "bytes": 2542807272
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/model-00007-of-00007.safetensors",
+        "bytes": 1291264320
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/model-00007-of-00007.safetensors.bak",
+        "bytes": 2542796896
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/model.safetensors.index.json",
+        "bytes": 200180
+      },
+      {
+        "path": "Qwen3.8-27B-DFlash2-W4A16/.cache/huggingface/.gitignore",
+        "bytes": 1
+      },
+      {
+        "path": "Qwen3.8-27B-DFlash2-W4A16/.cache/huggingface/CACHEDIR.TAG",
+        "bytes": 191
+      },
+      {
+        "path": "Qwen3.8-27B-DFlash2-W4A16/.cache/huggingface/download/.gitattributes.lock",
+        "bytes": 0
+      },
+      {
+        "path": "Qwen3.8-27B-DFlash2-W4A16/.cache/huggingface/download/.gitattributes.metadata",
+        "bytes": 101
+      },
+      {
+        "path": "Qwen3.8-27B-DFlash2-W4A16/.cache/huggingface/download/config.json.lock",
+        "bytes": 0
+      },
+      {
+        "path": "Qwen3.8-27B-DFlash2-W4A16/.cache/huggingface/download/config.json.metadata",
+        "bytes": 100
+      },
+      {
+        "path": "Qwen3.8-27B-DFlash2-W4A16/.cache/huggingface/download/model.safetensors.lock",
+        "bytes": 0
+      },
+      {
+        "path": "Qwen3.8-27B-DFlash2-W4A16/.cache/huggingface/download/model.safetensors.metadata",
+        "bytes": 125
+      },
+      {
+        "path": "Qwen3.8-27B-DFlash2-W4A16/.cache/huggingface/download/README.md.lock",
+        "bytes": 0
+      },
+      {
+        "path": "Qwen3.8-27B-DFlash2-W4A16/.cache/huggingface/download/README.md.metadata",
+        "bytes": 101
+      },
+      {
+        "path": "Qwen3.8-27B-DFlash2-W4A16/.cache/huggingface/trees/4d30ec736ffc6b8688dc2ae2b502d9b48bdec279.json",
+        "bytes": 639
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/.gitignore",
+        "bytes": 1
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/CACHEDIR.TAG",
+        "bytes": 191
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model-00003-of-00007.safetensors.lock",
+        "bytes": 0
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model-00003-of-00007.safetensors.metadata",
+        "bytes": 125
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model-00004-of-00007.safetensors.lock",
+        "bytes": 0
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model-00004-of-00007.safetensors.metadata",
+        "bytes": 125
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model-00005-of-00007.safetensors.lock",
+        "bytes": 0
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model-00005-of-00007.safetensors.metadata",
+        "bytes": 125
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model-00006-of-00007.safetensors.lock",
+        "bytes": 0
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model-00006-of-00007.safetensors.metadata",
+        "bytes": 125
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model-00007-of-00007.safetensors.lock",
+        "bytes": 0
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model-00007-of-00007.safetensors.metadata",
+        "bytes": 124
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model.safetensors.index.json.lock",
+        "bytes": 0
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model.safetensors.index.json.metadata",
+        "bytes": 101
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model_extra_tensors.safetensors.lock",
+        "bytes": 0
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model_extra_tensors.safetensors.metadata",
+        "bytes": 125
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/processor_config.json.lock",
+        "bytes": 0
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/processor_config.json.metadata",
+        "bytes": 100
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/quantization_config.json.lock",
+        "bytes": 0
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/quantization_config.json.metadata",
+        "bytes": 101
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/README.md.lock",
+        "bytes": 0
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/README.md.metadata",
+        "bytes": 101
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/tokenizer.json.lock",
+        "bytes": 0
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/tokenizer.json.metadata",
+        "bytes": 124
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/tokenizer_config.json.lock",
+        "bytes": 0
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/tokenizer_config.json.metadata",
+        "bytes": 100
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/.gitattributes.lock",
+        "bytes": 0
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/.gitattributes.metadata",
+        "bytes": 100
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/chat_template.jinja.lock",
+        "bytes": 0
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/chat_template.jinja.metadata",
+        "bytes": 101
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/config.json.lock",
+        "bytes": 0
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/config.json.metadata",
+        "bytes": 101
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/generation_config.json.lock",
+        "bytes": 0
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/generation_config.json.metadata",
+        "bytes": 101
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model-00001-of-00007.safetensors.lock",
+        "bytes": 0
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model-00001-of-00007.safetensors.metadata",
+        "bytes": 124
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model-00002-of-00007.safetensors.lock",
+        "bytes": 0
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model-00002-of-00007.safetensors.metadata",
+        "bytes": 124
+      },
+      {
+        "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/trees/1f05c441c4e64ae0549de44fa9ea5a6d43610314.json",
+        "bytes": 3847
+      }
+    ],
+    "filesystemAvailableBytesBefore": 289297555456,
+    "filesystemAvailableBytesAfter": 313710329856,
+    "filesystemAvailableBytesDelta": 24412774400,
+    "q85ServiceState": "failed",
+    "q85ContainersPresent": false,
+    "openHandlesFound": false,
+    "hardlinksOrSymlinksFound": false,
+    "reason": "User authorized removing nonproductive local evaluation models outside SOL, the selected ASTRA Flash-Next profile, and any PeritoSoft-used model. The pinned HyperQwen candidate failed the Q85 tool contract and the Q167 direct-code screen; no production or PeritoSoft use was verified. Q85 code, logs, receipts, and hashes remain.",
+    "preserved": [
+      "Q85 artifacts/receipts",
+      "Q167 benchmark results and manifests",
+      "SOL model/profile",
+      "ASTRA Flash-Next model/profile",
+      "PeritoSoft data"
+    ],
+    "noProductionProfileChanged": true
+  }
+}

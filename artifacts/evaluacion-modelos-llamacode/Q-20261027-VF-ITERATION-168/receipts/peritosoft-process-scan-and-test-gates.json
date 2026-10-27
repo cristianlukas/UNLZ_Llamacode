@@ -1,0 +1,32 @@
+{
+  "taskId": "Q-20261027-VF-ITERATION-168",
+  "observedAtUtc": "2026-10-27T14:59:26Z",
+  "lock": {
+    "task": "Q146 resume justified VF-20261019-01 tests",
+    "token": "2242863e-c78e-4fa9-9649-c1d1541f3919"
+  },
+  "scope": "Linux executor process/listener/container scan; no model inference, build, download, GPU reservation, or process termination.",
+  "authorizedPeritoSoftStop": {
+    "processScan": "No matching PeritoSoft, llama-server, llama.cpp, Strata, vLLM, Ollama, or SGLang process was returned by the scoped ps query.",
+    "listeners": "No listener on checked evaluation/app ports 32100, 32101, 8033, 8000, 8080, 18167, 8352, 8354, 8361, or 8768.",
+    "docker": "docker ps returned no running container.",
+    "termination": "No process matched; no signal was sent.",
+    "windowsNativeInspection": "Unavailable: powershell.exe is not installed in this Linux executor; Windows-native processes could not be enumerated."
+  },
+  "testGateAudit": {
+    "q167": "Closed no-go screen; preregistration prohibits additional seeds for this exact HyperQwen profile.",
+    "q20_ple_fp8": "Closed by Q20/Q22: stock 3/24, FP8 3/24, 0/3 paired wins; no more seeds authorized by that experiment.",
+    "q32_ninfer_preview": "Requires native Windows Codex session.",
+    "q35_job_objects": "Windows Job Objects portion requires native Windows.",
+    "tenant_authorization": "Needs trusted authenticated principal and resource policy before an end-to-end test.",
+    "harness_squared": "Requires a concrete LlamaCode workflow and a frozen private synthetic quality holdout; no model-backed run is preregistered.",
+    "source_36_order_validation": "Requires accessible primary caption/transcript.",
+    "hyperqwen_tool_gate": "Reopen only after a material parser/runtime change yields a reproducible defect; Q104 did not prove one.",
+    "q119_memory_guard": "Reopen only on a real critical-pressure trace or explicit supervisor change; no synthetic pressure test."
+  },
+  "decision": "No model test is currently enabled on this Linux executor. Preserve ASTRA Flash-Next, SOL, and PeritoSoft data/configuration. Resume when one named gate changes; do not repeat closed profiles or fabricate a new benchmark.",
+  "files": [
+    "WORK_QUEUE.md",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261027-VF-ITERATION-168/RESULTS.md"
+  ]
+}

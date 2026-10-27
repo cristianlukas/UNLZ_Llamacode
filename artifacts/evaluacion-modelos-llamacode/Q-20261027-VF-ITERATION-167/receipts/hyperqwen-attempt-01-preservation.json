@@ -1,0 +1,65 @@
+{
+  "taskId": "Q-20261027-VF-ITERATION-167",
+  "attempt": "hyperqwen-01",
+  "atUtc": "2026-10-27T14:02:19Z",
+  "status": "PRESERVED_BEFORE_RETRY",
+  "modelRequests": 0,
+  "inferenceReached": false,
+  "files": [
+    {
+      "path": "receipts/hyperqwen-attempt-01/compose-readback.json",
+      "sizeBytes": 1133,
+      "sha256": "b62d397b69d7045056489a6b518aa45c2dd5a4d73720cca14eecdc037d2f194f"
+    },
+    {
+      "path": "receipts/hyperqwen-attempt-01/compose-start.json",
+      "sizeBytes": 194,
+      "sha256": "69786c05e9a46c7f7ab7d21961c9d3d04e6c18c98a1d9e0f4c07adf9a8c029e8"
+    },
+    {
+      "path": "receipts/hyperqwen-attempt-01/compose-stop.json",
+      "sizeBytes": 194,
+      "sha256": "e5168dff14cf52ee9a30ecfa57f54ec5d187886d81bb51a73d81cdc603c9ba36"
+    },
+    {
+      "path": "receipts/hyperqwen-attempt-01/docker-log-capture.json",
+      "sizeBytes": 239,
+      "sha256": "521792055456bba2d78edf1832ecc6327090fdaa0ac0c978fe021d8f54fb53d0"
+    },
+    {
+      "path": "receipts/hyperqwen-attempt-01/final-summary.json",
+      "sizeBytes": 1292,
+      "sha256": "c09c64df6042c8b06ddaac7f22ec58dc873e2f1b5cc45908b4b037a8737a7b4f"
+    },
+    {
+      "path": "receipts/hyperqwen-attempt-01/host-preflight.json",
+      "sizeBytes": 599,
+      "sha256": "587056e38bd01fc45a28c86d682b3c8017676a970a19f1fcb5d7f7bdda6bbd1f"
+    },
+    {
+      "path": "receipts/hyperqwen-attempt-01/prepare-validation.json",
+      "sizeBytes": 735,
+      "sha256": "c084e0e51dd306b5879ae39902b6164a64766ebfc55fd09f2e91f9ae803f360b"
+    },
+    {
+      "path": "receipts/hyperqwen-attempt-01/private-copy-manifest.json",
+      "sizeBytes": 17290,
+      "sha256": "89cc3f1def85709850a88f10029cd6204930d2cb70d00d32560d0e92843b08d3"
+    },
+    {
+      "path": "receipts/hyperqwen-attempt-01/repaired-compose-readback.json",
+      "sizeBytes": 2351,
+      "sha256": "cdce80f7f02883ca439165e2999584b051c0b1a1dc7a7cf8c55874128e4a0d29"
+    },
+    {
+      "path": "logs/hyperqwen-attempt-01/engine-before-cleanup.log",
+      "sizeBytes": 369,
+      "sha256": "f6370a3380688e2d72ae62788c2b689a87d5040370dd5d46ea386926b1f20790"
+    },
+    {
+      "path": "runs/hyperqwen/attempt-01-memory-trace.jsonl",
+      "sizeBytes": 51049,
+      "sha256": "0b2ab89316076f13a20828ff3894f33a9582081bf7f8d9b9a85dcb08267ecd33"
+    }
+  ]
+}

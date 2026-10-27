@@ -1,0 +1,31 @@
+{
+  "taskId": "Q-20261027-VF-ITERATION-167",
+  "arm": "sol",
+  "attempt": 1,
+  "observedUtc": "2026-10-27T13:20:52Z",
+  "result": "REJECTED_BEFORE_SERVER_START",
+  "failure": "Q167 expected SHA-256 for model-00004-of-00007.safetensors was mistyped.",
+  "expectedBeforeCorrection": "8e9fbd476aa3055c3c0a886298f9beb93c5275c748c533835746f664f6dae55",
+  "actualFileSha256": "8e9fbd476aa3055c3c0a886298f9beb93c5275c748c533835746f6648f6dae55",
+  "historicalPinnedSha256Q127": "8e9fbd476aa3055c3c0a886298f9beb93c5275c748c533835746f6648f6dae55",
+  "modelServerStarted": false,
+  "inferenceRequests": 0,
+  "benchmarkStarted": false,
+  "monitorStarted": false,
+  "inferenceGpuUse": false,
+  "gpuSnapshotAfterFailure": [
+    {
+      "index": 0,
+      "memoryUsedMiB": 1008,
+      "utilizationPct": 57
+    },
+    {
+      "index": 1,
+      "memoryUsedMiB": 110,
+      "utilizationPct": 34
+    }
+  ],
+  "interpretation": "Background desktop activity; this attempt did not start an inference server. The actual file matched the historical pinned hash; no model file was changed.",
+  "memoryPeakReportedBySystemd": "11.4G; no swap; hashing/preflight only, no artificial limit applied.",
+  "correction": "Q167 SHA literal corrected and all seven literals compared equal to Q127 pinned manifest."
+}

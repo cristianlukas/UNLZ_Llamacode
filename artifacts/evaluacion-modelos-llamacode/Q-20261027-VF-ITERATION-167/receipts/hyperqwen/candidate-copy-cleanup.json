@@ -1,0 +1,26 @@
+{
+  "taskId": "Q-20261027-VF-ITERATION-167",
+  "status": "REMOVED_AFTER_NO_GO",
+  "atUtc": "2026-10-27T14:37:43Z",
+  "reason": "The user previously authorized removing nonproductive evaluation models other than SOL, the selected ASTRA Flash-Next profile, and any model used by PeritoSoft. The Q167-only HyperQwen profile failed its preregistered screen; its private weights copy and runtime-only cache/temp are disposable.",
+  "removedPaths": [
+    "/media/cristian/HDD extra/Modelos-eval/Q-20261027-VF-ITERATION-167/models",
+    "/media/cristian/HDD extra/Modelos-eval/Q-20261027-VF-ITERATION-167/cache/hyperqwen",
+    "/media/cristian/HDD extra/Modelos-eval/Q-20261027-VF-ITERATION-167/tmp/hyperqwen"
+  ],
+  "privateModelPayloadBytes": 18045887466,
+  "cacheAndTempFilesRemoved": 6441,
+  "cacheAndTempBytesRemoved": 553956325,
+  "measuredFilesystemAvailableBytesBefore": 288726310912,
+  "measuredFilesystemAvailableBytesAfter": 289297555456,
+  "measuredFilesystemAvailableBytesDelta": 571244544,
+  "rootOwnedFilesRemovedWithinExactQ167Paths": true,
+  "hardlinksOrSymlinksFound": false,
+  "q167ContainersPresentBeforeCleanup": false,
+  "q167ServiceStoppedBeforeCleanup": true,
+  "Q85PreparedSourceModified": false,
+  "productionSOLModified": false,
+  "ASTRAFlashNextModified": false,
+  "PeritoSoftFilesModified": false,
+  "receiptsAndBenchResultsPreserved": true
+}

@@ -1,0 +1,51 @@
+{
+  "taskId": "Q-20261027-VF-ITERATION-167",
+  "atUtc": "2026-10-27T14:48:55Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheetTitle": "Listado",
+  "status": "WRITTEN_AND_READ_BACK",
+  "changes": [
+    {
+      "range": "Resultados!A362:AF363",
+      "rows": 2,
+      "description": "Append-only Q167 profiles: tested HyperQwen candidate and SOL control; full config, harness, outcome, limits, metrics and local evidence paths."
+    },
+    {
+      "range": "Evaluaciones LlamaCode!A361:J361",
+      "rows": 1,
+      "description": "Q167 closed no-go summary and preregistered follow-up gate."
+    },
+    {
+      "range": "Accionables!A45:N45",
+      "rows": 1,
+      "description": "Closed recommendation: do not replace SOL with the tested HyperQwen profile."
+    },
+    {
+      "range": "Inventario de modelos!A13:R13",
+      "rows": 1,
+      "description": "HyperQwen status updated to retired/no-go, 0 local bytes; Q167 and Q85 removed copies and historical metrics/evidence referenced."
+    },
+    {
+      "range": "Modelos locales por peso!A18:P18",
+      "rows": 1,
+      "description": "Historical HyperQwen inventory row updated with current zero bytes, Q167 screen metrics, removal state and PeritoSoft check."
+    }
+  ],
+  "readback": {
+    "status": "PASS",
+    "cells": 122,
+    "differences": 0,
+    "confirmedIds": [
+      "Q167-HYPERQWEN-W4A16-DFLASH2-BCB8-SEED4242",
+      "Q167-SOL-AUTOROUND-INT4-W4A8-MTP4-BCB8-SEED4242"
+    ],
+    "confirmedOtherRows": [
+      "Evaluaciones LlamaCode!A361:J361",
+      "Accionables!A45:N45",
+      "Inventario de modelos!A13:R13",
+      "Modelos locales por peso!A18:P18"
+    ],
+    "formatting": "Resultados rows retain Arial 10, WRAP/TOP. Inventory and weight rows retain WRAP/TOP. No formula, data validation, or note changes observed in written ranges."
+  },
+  "scope": "Only the five listed ranges were updated. IA local, production SOL/ASTRA profiles, and PeritoSoft records were not changed."
+}

@@ -1,0 +1,354 @@
+{
+  "taskId": "Q-20261027-VF-ITERATION-167",
+  "status": "REMOVED_AFTER_NO_GO",
+  "atUtc": "2026-10-27T14:41:28Z",
+  "path": "/media/cristian/HDD extra/Modelos-eval/Q85-HyperQwen/models",
+  "filesRemoved": 82,
+  "bytesRemoved": 24412685738,
+  "filesManifest": [
+    {
+      "path": ".prepare.lock",
+      "bytes": 0
+    },
+    {
+      "path": "Qwen3.8-27B-DFlash2-W4A16/.gitattributes",
+      "bytes": 1519
+    },
+    {
+      "path": "Qwen3.8-27B-DFlash2-W4A16/config.json",
+      "bytes": 2264
+    },
+    {
+      "path": "Qwen3.8-27B-DFlash2-W4A16/model.safetensors",
+      "bytes": 1280633960
+    },
+    {
+      "path": "Qwen3.8-27B-DFlash2-W4A16/README.md",
+      "bytes": 2621
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/model.safetensors.index.json.bak-mtp",
+      "bytes": 198612
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/model.safetensors.index.json.bak-quant",
+      "bytes": 198290
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/model_extra_tensors.safetensors",
+      "bytes": 644356792
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/model_extra_tensors.safetensors.bak-draft",
+      "bytes": 431364472
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/model_extra_tensors.safetensors.bak-mtp",
+      "bytes": 849400392
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/mtp_draft_vocab_ids.pt",
+      "bytes": 329426
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/processor_config.json",
+      "bytes": 1191
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/quantization_config.json",
+      "bytes": 11112
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/README.md",
+      "bytes": 7566
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/tokenizer.json",
+      "bytes": 19989325
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/tokenizer_config.json",
+      "bytes": 1166
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.gitattributes",
+      "bytes": 1570
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/chat_template.jinja",
+      "bytes": 9651
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/config.json",
+      "bytes": 17060
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/config.json.bak-mtp",
+      "bytes": 16751
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/config.json.bak-quant",
+      "bytes": 15587
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/generation_config.json",
+      "bytes": 219
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/model-00001-of-00007.safetensors",
+      "bytes": 3211003472
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/model-00002-of-00007.safetensors",
+      "bytes": 3195027104
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/model-00003-of-00007.safetensors",
+      "bytes": 3195027104
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/model-00004-of-00007.safetensors",
+      "bytes": 3217442568
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/model-00005-of-00007.safetensors",
+      "bytes": 699275200
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/model-00006-of-00007.safetensors",
+      "bytes": 1291274752
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/model-00006-of-00007.safetensors.bak_embed",
+      "bytes": 2542807272
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/model-00007-of-00007.safetensors",
+      "bytes": 1291264320
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/model-00007-of-00007.safetensors.bak",
+      "bytes": 2542796896
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/model.safetensors.index.json",
+      "bytes": 200180
+    },
+    {
+      "path": "Qwen3.8-27B-DFlash2-W4A16/.cache/huggingface/.gitignore",
+      "bytes": 1
+    },
+    {
+      "path": "Qwen3.8-27B-DFlash2-W4A16/.cache/huggingface/CACHEDIR.TAG",
+      "bytes": 191
+    },
+    {
+      "path": "Qwen3.8-27B-DFlash2-W4A16/.cache/huggingface/download/.gitattributes.lock",
+      "bytes": 0
+    },
+    {
+      "path": "Qwen3.8-27B-DFlash2-W4A16/.cache/huggingface/download/.gitattributes.metadata",
+      "bytes": 101
+    },
+    {
+      "path": "Qwen3.8-27B-DFlash2-W4A16/.cache/huggingface/download/config.json.lock",
+      "bytes": 0
+    },
+    {
+      "path": "Qwen3.8-27B-DFlash2-W4A16/.cache/huggingface/download/config.json.metadata",
+      "bytes": 100
+    },
+    {
+      "path": "Qwen3.8-27B-DFlash2-W4A16/.cache/huggingface/download/model.safetensors.lock",
+      "bytes": 0
+    },
+    {
+      "path": "Qwen3.8-27B-DFlash2-W4A16/.cache/huggingface/download/model.safetensors.metadata",
+      "bytes": 125
+    },
+    {
+      "path": "Qwen3.8-27B-DFlash2-W4A16/.cache/huggingface/download/README.md.lock",
+      "bytes": 0
+    },
+    {
+      "path": "Qwen3.8-27B-DFlash2-W4A16/.cache/huggingface/download/README.md.metadata",
+      "bytes": 101
+    },
+    {
+      "path": "Qwen3.8-27B-DFlash2-W4A16/.cache/huggingface/trees/4d30ec736ffc6b8688dc2ae2b502d9b48bdec279.json",
+      "bytes": 639
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/.gitignore",
+      "bytes": 1
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/CACHEDIR.TAG",
+      "bytes": 191
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model-00003-of-00007.safetensors.lock",
+      "bytes": 0
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model-00003-of-00007.safetensors.metadata",
+      "bytes": 125
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model-00004-of-00007.safetensors.lock",
+      "bytes": 0
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model-00004-of-00007.safetensors.metadata",
+      "bytes": 125
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model-00005-of-00007.safetensors.lock",
+      "bytes": 0
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model-00005-of-00007.safetensors.metadata",
+      "bytes": 125
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model-00006-of-00007.safetensors.lock",
+      "bytes": 0
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model-00006-of-00007.safetensors.metadata",
+      "bytes": 125
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model-00007-of-00007.safetensors.lock",
+      "bytes": 0
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model-00007-of-00007.safetensors.metadata",
+      "bytes": 124
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model.safetensors.index.json.lock",
+      "bytes": 0
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model.safetensors.index.json.metadata",
+      "bytes": 101
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model_extra_tensors.safetensors.lock",
+      "bytes": 0
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model_extra_tensors.safetensors.metadata",
+      "bytes": 125
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/processor_config.json.lock",
+      "bytes": 0
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/processor_config.json.metadata",
+      "bytes": 100
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/quantization_config.json.lock",
+      "bytes": 0
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/quantization_config.json.metadata",
+      "bytes": 101
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/README.md.lock",
+      "bytes": 0
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/README.md.metadata",
+      "bytes": 101
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/tokenizer.json.lock",
+      "bytes": 0
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/tokenizer.json.metadata",
+      "bytes": 124
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/tokenizer_config.json.lock",
+      "bytes": 0
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/tokenizer_config.json.metadata",
+      "bytes": 100
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/.gitattributes.lock",
+      "bytes": 0
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/.gitattributes.metadata",
+      "bytes": 100
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/chat_template.jinja.lock",
+      "bytes": 0
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/chat_template.jinja.metadata",
+      "bytes": 101
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/config.json.lock",
+      "bytes": 0
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/config.json.metadata",
+      "bytes": 101
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/generation_config.json.lock",
+      "bytes": 0
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/generation_config.json.metadata",
+      "bytes": 101
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model-00001-of-00007.safetensors.lock",
+      "bytes": 0
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model-00001-of-00007.safetensors.metadata",
+      "bytes": 124
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model-00002-of-00007.safetensors.lock",
+      "bytes": 0
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/download/model-00002-of-00007.safetensors.metadata",
+      "bytes": 124
+    },
+    {
+      "path": "Qwen3.8-27B-W4A16-AutoRound/.cache/huggingface/trees/1f05c441c4e64ae0549de44fa9ea5a6d43610314.json",
+      "bytes": 3847
+    }
+  ],
+  "filesystemAvailableBytesBefore": 289297555456,
+  "filesystemAvailableBytesAfter": 313710329856,
+  "filesystemAvailableBytesDelta": 24412774400,
+  "q85ServiceState": "failed",
+  "q85ContainersPresent": false,
+  "openHandlesFound": false,
+  "hardlinksOrSymlinksFound": false,
+  "reason": "User authorized removing nonproductive local evaluation models outside SOL, the selected ASTRA Flash-Next profile, and any PeritoSoft-used model. The pinned HyperQwen candidate failed the Q85 tool contract and the Q167 direct-code screen; no production or PeritoSoft use was verified. Q85 code, logs, receipts, and hashes remain.",
+  "preserved": [
+    "Q85 artifacts/receipts",
+    "Q167 benchmark results and manifests",
+    "SOL model/profile",
+    "ASTRA Flash-Next model/profile",
+    "PeritoSoft data"
+  ],
+  "noProductionProfileChanged": true
+}

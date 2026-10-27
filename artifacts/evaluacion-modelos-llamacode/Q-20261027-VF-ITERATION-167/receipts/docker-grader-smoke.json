@@ -1,0 +1,39 @@
+{
+  "taskId": "Q-20261027-VF-ITERATION-167",
+  "observedUtc": "2026-10-27T13:36:58Z",
+  "result": "PASS",
+  "cases": {
+    "knownPass": {
+      "expected": "passed",
+      "actual": "passed"
+    },
+    "knownFailure": {
+      "expected": "test_failed",
+      "actual": "test_failed"
+    },
+    "bcbFixtureEnvironment": {
+      "expected": "test_failed",
+      "actual": "test_failed"
+    }
+  },
+  "runtime": "systemd --user transient unit; same execution context as Q167 arms",
+  "graderImage": "vllm/vllm-openai@sha256:0a51ea5b4ae2dc5d81890e5173f54203d2a3ae0cfffe51b8fd2afd4391bfd967",
+  "isolation": [
+    "network none",
+    "read-only rootfs",
+    "capabilities dropped",
+    "no-new-privileges",
+    "pids limit 64",
+    "memory 2 GiB",
+    "CPU limit 2",
+    "tmpfs /tmp and /mnt/work",
+    "only temporary task input bind mount",
+    "no GPU"
+  ],
+  "rawCodeOrStdoutPersisted": false,
+  "pythonAstParse": "PASS",
+  "orchestratorSha256": "9d9dcdbb42fe581ff0c5ac4228304bc2a40c95b257c8ce1886ff0905ceaf86c8",
+  "runnerSha256": "b61a77da8834fc14b8e1faff397a6c42b0aae99ea7b2d0b44ec17b49fd5172ea",
+  "residualGraderContainers": [],
+  "q167PortListener": ""
+}

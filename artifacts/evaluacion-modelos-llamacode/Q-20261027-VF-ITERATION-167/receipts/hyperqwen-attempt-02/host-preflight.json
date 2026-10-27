@@ -1,0 +1,29 @@
+{
+  "diskFreeBytes": {
+    "/": 9367891968,
+    "/var/lib/docker": 9367891968,
+    "/media/cristian/HDD extra": 271258943488
+  },
+  "gpus": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "temperatureC": 40,
+      "memoryUsedMiB": 1007,
+      "memoryTotalMiB": 24576,
+      "utilizationPct": 29
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "temperatureC": 26,
+      "memoryUsedMiB": 110,
+      "memoryTotalMiB": 24576,
+      "utilizationPct": 29
+    }
+  ],
+  "hostMemory": {
+    "MemAvailable": 117766991872,
+    "SwapFree": 3608145920
+  }
+}

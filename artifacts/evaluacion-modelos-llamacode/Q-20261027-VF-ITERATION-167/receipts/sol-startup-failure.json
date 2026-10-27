@@ -1,0 +1,23 @@
+{
+  "taskId": "Q-20261027-VF-ITERATION-167",
+  "arm": "sol",
+  "unit": "q167-sol-bcb-screen.service",
+  "observedUtc": "2026-10-27T13:19:00Z",
+  "outcome": "FAILED_BEFORE_SERVER_START",
+  "exitCode": 1,
+  "error": "ModuleNotFoundError: No module named q117_pressure_guard_attempt05",
+  "failureAt": "run_profile.py load_monitor_module; before monitor construction and before compose/server start",
+  "inferenceRequests": 0,
+  "modelServerStarted": false,
+  "modelHashesRead": false,
+  "preflightOrGpuUse": false,
+  "journalExcerpt": "Q167 SOL systemd unit started; Python import failed while loading Q127 monitor; systemd recorded exit-code status=1/FAILURE.",
+  "recovery": "Add Q127/scripts to sys.path before loading the monitor; perform import-only smoke; then fresh process/GPU preflight before retry.",
+  "systemdStateAfterCollection": {
+    "LoadState": "not-found",
+    "ActiveState": "inactive",
+    "SubState": "dead",
+    "Result": "success"
+  },
+  "note": "Result=success is the systemd property after the collected transient unit was removed; journal records the process failure."
+}

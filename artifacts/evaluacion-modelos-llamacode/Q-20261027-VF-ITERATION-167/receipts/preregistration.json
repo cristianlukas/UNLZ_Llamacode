@@ -1,0 +1,391 @@
+{
+  "taskId": "Q-20261027-VF-ITERATION-167",
+  "createdUtc": "2026-10-27T12:42:00Z",
+  "parentLock": {
+    "task": "Q146 resume justified VF-20261019-01 tests",
+    "token": "2242863e-c78e-4fa9-9649-c1d1541f3919"
+  },
+  "question": "Does HyperQwen TP=2 merit a follow-up as a no-tools direct code-generation profile compared with SOL on a fixed BCB-Hard-8 fixture?",
+  "scope": "One-seed profile screen only. Does not evaluate or unblock agent tools, security, long context, production adoption, or general replacement of SOL/ASTRA.",
+  "candidate": {
+    "profile": "HyperQwen Qwen3.8-27B W4A16 + DFlash2",
+    "source": "dbirks/Qwen3.8-27B-W4A16-AutoRound",
+    "revision": "1f05c441c4e64ae0549de44fa9ea5a6d43610314",
+    "drafter": "syvai/Qwen3.8-27B-DFlash2-W4A16",
+    "drafterRevision": "4d30ec736ffc6b8688dc2ae2b502d9b48bdec279",
+    "runtimeCommit": "ce9615c4f2309be727407918a6c979bd67968069",
+    "image": "ghcr.io/syv-ai/hyperqwen@sha256:0acd4b9625473e51c9bab56406c30814bc0d0d7e0a38deb408c62664b5a77669",
+    "hardware": "2x RTX 3090, TP=2, host 128 GiB RAM",
+    "configuration": {
+      "gpuUtil": 0.91,
+      "kvBytesPerWorker": 3000000000,
+      "maxLength": 65536,
+      "maxSequences": 8,
+      "speculation": "DFlash2, 7 draft tokens",
+      "thinking": true
+    }
+  },
+  "control": {
+    "profile": "SOL Qwen3.8-27B Frozenlock AutoRound INT4/W4A8",
+    "runtime": "vLLM v0.27.1",
+    "hardware": "2x RTX 3090, TP=2, host 128 GiB RAM",
+    "configuration": {
+      "maxModelLength": 262144,
+      "gpuMemoryUtilization": 0.9,
+      "maxSequences": 8,
+      "maxBatchedTokens": 8192,
+      "mtpDepth": 4,
+      "w4a8": true,
+      "thinking": true
+    },
+    "composeSha256": "2df4e44e1e1b268da80690a0812ac1b60768d60b643096ce8473110f88b7b76a",
+    "isolationOverlaySourceSha256": "3385938d959c1d23e7ce14376628c3797e76b4e05b341a0eb4d914aa1f3b346e"
+  },
+  "fixture": {
+    "path": "artifacts/bigcodebench-hard-ubuntu-8.json",
+    "sha256": "11279cde14113fc8527f141c53e14cb5ccf0dba65749081a4f914408e391c268",
+    "items": 8
+  },
+  "protocol": {
+    "seed": 4242,
+    "sampling": {
+      "temperature": 0.6,
+      "topP": 0.95,
+      "topK": 20,
+      "minP": 0.0,
+      "repetitionPenalty": 1.0,
+      "presencePenalty": 0.0
+    },
+    "reasoningEffort": "medium",
+    "maxOutputTokens": 6144,
+    "order": {
+      "SOL": "fixture",
+      "HyperQwen": "reverse fixture"
+    },
+    "warmupRequests": 1,
+    "serverConcurrency": 1,
+    "grader": "bubblewrap read-only root + PID namespace + seccomp network deny"
+  },
+  "runner": {
+    "path": "artifacts/evaluacion-modelos-llamacode/Q-20261027-VF-ITERATION-167/scripts/run_bcb_text.py",
+    "sha256": "b61a77da8834fc14b8e1faff397a6c42b0aae99ea7b2d0b44ec17b49fd5172ea",
+    "usesReviewedSandboxHelpers": null,
+    "sandboxHelpersSha256": null,
+    "rawOutputSaved": false,
+    "orchestratorPath": "artifacts/evaluacion-modelos-llamacode/Q-20261027-VF-ITERATION-167/scripts/run_profile.py",
+    "orchestratorSha256": "9d9dcdbb42fe581ff0c5ac4228304bc2a40c95b257c8ce1886ff0905ceaf86c8",
+    "downloadScriptPath": "artifacts/evaluacion-modelos-llamacode/Q-20261027-VF-ITERATION-167/scripts/download_candidate.py",
+    "downloadScriptSha256": "f7c28ca43d42743b5dced458cc14c42d3f37f38e3d27bec3ade06edb8bb8a4b8",
+    "grader": "Pinned Docker sandbox image; no bwrap helper dependency",
+    "graderImage": "vllm/vllm-openai@sha256:0a51ea5b4ae2dc5d81890e5173f54203d2a3ae0cfffe51b8fd2afd4391bfd967"
+  },
+  "decisionGate": {
+    "bothTransport": "8/8",
+    "sandboxErrors": 0,
+    "emptyFinals": 0,
+    "candidatePassFloor": "SOL pass count minus at most one",
+    "matchedSuccessfulTasksMinimum": 6,
+    "e2eSpeedup": "HyperQwen median per-task E2E at least 20% lower on matched successful tasks",
+    "onPass": "Only preregister three-seed confirmation; no automatic adoption",
+    "onFail": "Close no-tools screen and do not spend additional seeds"
+  },
+  "safety": {
+    "memoryGuard": "Reuse Q121 AMD05 monitor as exercised in Q127; do not impose a host or worker memory cap",
+    "noArtificialPressure": true,
+    "noProductionProfileChanges": true,
+    "noToolRequests": true,
+    "generatedCodePersistence": false,
+    "rawModelOutputPersistence": false,
+    "onlyOwnedQ167ContainersMayBeStopped": true
+  },
+  "downloadGate": {
+    "candidateWeightsCurrentlyPresent": true,
+    "candidateWeightsExpectedBytes": 19472769333,
+    "destination": "/media/cristian/HDD extra/Modelos-eval/Q85-HyperQwen/models/Qwen3.8-27B-W4A16-AutoRound",
+    "minHddFreeAfterDownloadBytes": 42949672960,
+    "expectedHashesSource": "Q-20261024-VF-ITERATION-85/receipts/base-model-hash-verification.json",
+    "downloadReceipt": "receipts/download-progress.json",
+    "verifiedFileCount": 9,
+    "verifiedBytes": 19472769333,
+    "downloadUnit": "q167-hyperqwen-download.service",
+    "downloadUnitExitCode": 0
+  },
+  "results": "HYPERQWEN_0_OF_8_SCREEN_CLOSED_NO_FOLLOW_UP",
+  "runtimeArtifacts": {
+    "solComposeOverlay": {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261027-VF-ITERATION-167/work/sol-isolated.compose.yml",
+      "sha256": "0bfd32abb5a0e721f1a7e6d0cc6f756f240ca3d21934dd2467794c0f01a07035"
+    },
+    "hyperqwenComposeOverlay": {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261027-VF-ITERATION-167/work/hyperqwen-isolated.compose.yaml",
+      "sha256": "442dd19b005449d8e7d839348b680713fe5bada4e9211464c313d92e2ff7342a"
+    },
+    "monitorSource": {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-127/scripts/run_sol_trace.py",
+      "sha256": "33c83ccb34fd8e865de51ef9120a3b30814f6722e416375fbf5cacb5fa13d6cb"
+    },
+    "baseModelHashReceipt": {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-85/receipts/base-model-hash-verification.json",
+      "sha256": "d45bc3a2c5c6debc6a745774c53246a92625810f50ad6cfb1c3879e53bd51e67"
+    },
+    "solImage": "vllm/vllm-openai@sha256:0a51ea5b4ae2dc5d81890e5173f54203d2a3ae0cfffe51b8fd2afd4391bfd967",
+    "hyperqwenImage": "ghcr.io/syv-ai/hyperqwen@sha256:0acd4b9625473e51c9bab56406c30814bc0d0d7e0a38deb408c62664b5a77669"
+  },
+  "measurements": {
+    "prefillDecodeThroughput": "Client-side proxies: prompt_tokens/TTFT and (completion_tokens-1)/(wall_time-TTFT); null when usage absent. Not native engine TPS."
+  },
+  "executionDurability": {
+    "runner": "systemd --user transient service per arm",
+    "unitRuntimeMaxSec": 21600,
+    "logs": "systemd journal plus task receipts",
+    "verifiedBy": "q167-durability-probe.service exited successfully",
+    "sigtermCleanup": "SIGTERM/SIGINT handled; only owned child process groups and Q167 Compose are stopped",
+    "ownedProcessGroupSmoke": "receipts/orchestration-smoke.json"
+  },
+  "preExecutionValidation": {
+    "syntaxAstParse": "PASS",
+    "solComposeReadback": "PASS",
+    "hyperqwenComposeReadback": "PASS",
+    "sandboxPassCase": "PASS",
+    "sandboxFailureClassification": "PASS",
+    "modelDownloadStarted": true,
+    "inferenceStarted": false,
+    "modelDownloadCompleted": true,
+    "modelHashesVerified": "9/9",
+    "ownedProcessGroupCleanup": "PASS",
+    "monitorLoaderSmoke": "PASS_IMPORT_ONLY; no GPU or server",
+    "solHashManifestParity": "PASS: 7/7 expected shard hashes equal Q127 pinned manifest",
+    "bcbSandboxSmokeAfterInvalidScreen": "PENDING before any further model inference",
+    "dockerSandboxSmokeSystemd": "PASS: known pass, expected failure, BCB fixture environment",
+    "updatedRunnerAstParse": "PASS"
+  },
+  "amendments": [
+    {
+      "atUtc": "2026-10-27T13:01:51Z",
+      "reason": "Static readback exposed default reasoning=low in SOL and a readback check that looked for launch settings in container environment instead of the resolved command. The test was corrected before any download or inference.",
+      "changes": [
+        "pin SOL vLLM image digest",
+        "set SOL default reasoning_effort=medium to match request payload",
+        "validate actual resolved command flags and container environment",
+        "mount model roots read-only",
+        "redirect both arms caches/temp to Q167-only HDD paths",
+        "remove only Q167 volumes on compose down",
+        "record client-side prefill/decode proxies",
+        "execute each arm through durable user-systemd unit"
+      ],
+      "noDownloadOrInferenceBeforeAmendment": true
+    },
+    {
+      "atUtc": "2026-10-27T13:16:37Z",
+      "reason": "The model was restored and hash verified. Before the first server, the runner was hardened to survive Codex closing and to clean only its own process groups on cancellation or monitor abort.",
+      "changes": [
+        "systemd-run transient user unit",
+        "SIGTERM/SIGINT cleanup handler",
+        "process group cleanup for Compose and BCB child",
+        "5-second monitor polling during startup and BCB, with early owned-server cleanup on AMD05 abort",
+        "client speed proxy fields"
+      ],
+      "noInferenceBeforeAmendment": true
+    },
+    {
+      "atUtc": "2026-10-27T13:19:00Z",
+      "reason": "The first SOL systemd unit exited before any preflight, model request, or server start: dynamic loading of the Q127 monitor did not expose its sibling scripts directory, so q117_pressure_guard_attempt05 could not be imported. Corrected the loader to add Q127/scripts to sys.path before import.",
+      "changes": [
+        "record failed SOL startup before inference",
+        "add Q127 monitor scripts directory to import path",
+        "update orchestrator SHA-256",
+        "run an import-only smoke before retrying the SOL preflight"
+      ],
+      "noInferenceBeforeAmendment": true,
+      "runnerSha256": "faefe1c37bec2b416d259e9cbf3000e49e9fd62102c7f1225d187d954bbf206d",
+      "retryGate": "Do not start SOL until import-only smoke passes and fresh host/server preflight passes."
+    },
+    {
+      "atUtc": "2026-10-27T13:21:52Z",
+      "reason": "The second SOL attempt stopped during local file verification, before starting the monitor, Compose, model server, GPU inference, or benchmark. A typo in the Q167 expected SHA for SOL shard 4 differed from the Q127 and Q85 pinned manifests; the actual local file matches both historical pinned values.",
+      "changes": [
+        "correct shard 4 expected SHA to the Q127/Q85 pinned value",
+        "verify all seven Q167 literals against Q127 manifest (7/7 match)",
+        "update orchestrator SHA-256",
+        "retain a receipt for the rejected preflight"
+      ],
+      "noInferenceBeforeAmendment": true,
+      "runnerSha256": "5353f6d9687940a3e0a134eb9c4b5964063326990cbc56fbeb71e4dd21cbe917",
+      "retryGate": "Retry SOL only after a fresh preflight confirms the seven model shard hashes, both GPUs, host/storage thresholds, and no foreign inference service."
+    },
+    {
+      "atUtc": "2026-10-27T13:29:59Z",
+      "reason": "The SOL control reached health and completed 8/8 HTTP requests, but the screen is invalid: all eight grades were sandbox_error, runner exit 2. The isolated server was cleaned successfully. The monitor only reported worker-cgroup disappearance after its container was intentionally removed during final cleanup; host pressure, swap growth, OOM, and temperature stop gates did not trigger.",
+      "changes": [
+        "record SOL attempt as SCREEN_INVALID and preserve its sanitized run receipt",
+        "run one deterministic no-model bwrap+seccomp smoke using the exact grader sandbox flags and capture only the sandbox diagnostic",
+        "if smoke exposes a runtime restriction, make only a security-preserving sandbox fix; no unsandboxed fallback",
+        "stop the monitor before intentional Compose removal on clean completion to avoid treating normal cgroup teardown as a memory abort",
+        "do not start HyperQwen or rerun the BCB screen until the sandbox smoke passes and a new preflight passes"
+      ],
+      "noModelInferenceDuringDebug": true,
+      "additionalGpuUse": "None planned for the deterministic sandbox smoke; the failed SOL model requests are not reused for quality claims."
+    },
+    {
+      "atUtc": "2026-10-27T13:30:58Z",
+      "reason": "The exact bwrap+seccomp command passed from the interactive shell, but the invalid SOL screen ran inside a durable user-systemd unit. To reproduce the same execution context without another model call, run the grader’s deterministic code smoke inside a transient user-systemd unit.",
+      "changes": [
+        "one static grader call for print(ok) + assert True inside a temporary systemd --user unit",
+        "record only pass/fail and return code; no model, GPU, or network request"
+      ],
+      "noModelInference": true,
+      "noGpuUse": true
+    },
+    {
+      "atUtc": "2026-10-27T13:31:22Z",
+      "reason": "The no-model grader smoke reproduced the same sandbox_error inside systemd. Capture only the sandbox process return code and its bwrap-prefixed diagnostic to identify a runtime policy restriction; do not persist generated code or run inference.",
+      "changes": [
+        "wrap subprocess.run only for the deterministic print/assert smoke",
+        "record bwrap diagnostic text (no model output, no secret-bearing process logs)"
+      ],
+      "noModelInference": true,
+      "noGpuUse": true
+    },
+    {
+      "atUtc": "2026-10-27T13:34:49Z",
+      "reason": "The exact Q167 bwrap grader smoke passes in the interactive shell but reproduces sandbox_error inside systemd --user: bwrap exits 1 with `setting up uid map: Permission denied`. Preserve durable execution and isolation by moving only grading to an ephemeral rootful Docker sandbox; do not disable namespace/seccomp protections or use an unsandboxed fallback. Also stop AMD05 sampling before intentionally removing the server container on normal completion, so expected cgroup teardown is not recorded as a memory failure.",
+      "changes": [
+        "use the same pinned vLLM image digest as a temporary grader runtime",
+        "grader Docker container uses --network=none, --read-only, --cap-drop=ALL, --security-opt=no-new-privileges, user 65534, pids limit 64, memory 2 GiB, CPU limit 2, tmpfs /tmp 512 MiB, and only a per-task temporary workspace bind",
+        "do not pass GPU devices or Docker socket into grader",
+        "persist only exit/status categories; do not persist code, stdout, or stderr from generated solutions",
+        "exclude own q167-grader-* process/container names from the foreign-inference monitor",
+        "close the Q167 memory monitor after runner completion and before intentional Compose teardown, unless a real abort reason was already set",
+        "run deterministic pass and expected-failure grader smokes inside the same user-systemd context before any model retry"
+      ],
+      "noModelInferenceBeforeSmokes": true,
+      "noGpuUseForSmokes": true,
+      "retryGate": "Both grader cases pass classification, source/compose/hash checks pass, fresh host preflight passes; then rerun SOL and only afterward HyperQwen if SOL is valid."
+    },
+    {
+      "atUtc": "2026-10-27T13:43:17Z",
+      "reason": "The valid SOL control scored 0/8 with 8/8 transport, zero sandbox errors, and zero empty finals. The preregistered requirement for at least six jointly solved tasks is structurally impossible with this control, so a paired quality-adjusted speed comparison cannot be produced. Q97 used the identical BCB-Hard-8 fixture SHA and scored ASTRA and Swift 2/8 each (same IDs 870 and 310).",
+      "changes": [
+        "run HyperQwen once on the same fixed fixture/seed as an absolute quality screen, not as a paired speed test",
+        "record client TPS proxies only as descriptive engineering measurements; make no speed-superiority claim because the control has no successful tasks",
+        "if HyperQwen scores at least 2/8 with clean transport/sandbox, propose a separately preregistered paired test on a fixture/control set with solvable shared tasks; do not automatically run additional seeds or adopt",
+        "if HyperQwen scores 0/8 or 1/8, close Q167 without follow-up",
+        "retain no-tools scope; do not change SOL or ASTRA production profiles"
+      ],
+      "historicalReference": "Q-20261024-VF-ITERATION-97/receipts/q97-preregistration.json and q97-final-result.json; same fixture SHA 11279cde14113fc8527f141c53e14cb5ccf0dba65749081a4f914408e391c268; ASTRA/Swift each 2/8, same passed IDs BigCodeBench/870 and /310.",
+      "noInferenceBeforeAmendment": true
+    },
+    {
+      "atUtc": "2026-10-27T13:51:03Z",
+      "reason": "The first HyperQwen attempt did not reach health or send a model request. The preflight inspected only the single service; HyperQwen also runs a CPU prepare dependency and the image entrypoint runs prepare again. The service log shows the read-only single mount rejecting /app/models/.prepare.lock. File timestamps and the one-time backups show the dependency had modified two base shards, model_extra_tensors, config, and index in the shared Q85 evaluation directory. Restore that directory from source-verified originals, then use a private Q167 copy; no further attempt may mount or mutate the shared Q85 tree.",
+      "changes": [
+        "record the first HyperQwen attempt as PREPARE_ORCHESTRATION_FAILURE with zero model requests, zero scored tasks, and no TPS result",
+        "verify every restoration source against the pinned Q85/Hugging Face revision before replacing any shared Q85 file; halt restoration if any hash or size differs",
+        "restore the shared Q85 evaluation model directory to the pinned source files and retain timestamped recovery hashes",
+        "copy the pinned HyperQwen base and DFlash2 folders to a Q167-only model root; verify the copy manifest before Compose",
+        "resolve and verify both Compose services (prepare and single); both must reference only Q167-owned model, cache, and tmp paths; any writes are confined to this disposable Q167 copy",
+        "change the startup monitor to treat Docker created/restarting states as pending and only exited/dead/removing as terminal failure; keep health as the readiness gate",
+        "retry the same single-seed, 8-task HyperQwen absolute screen at most once after recovery and fresh preflight; preserve SOL 0/8 as the control, report HyperQwen TPS only as descriptive, and do not claim paired speed superiority",
+        "on recovery or Compose verification mismatch, stop before GPU/inference and keep Q167 pending with a concrete condition"
+      ],
+      "noModelInferenceBeforeAmendment": true,
+      "noGpuUseForRecovery": true,
+      "retryLimit": 1,
+      "recoverySource": "Q-20261024-VF-ITERATION-85/receipts/base-model-hash-verification.json plus the pinned Hub revision 1f05c441c4e64ae0549de44fa9ea5a6d43610314",
+      "retryGate": "Only after shared-source restoration, private-copy hashes, dual-service Compose readback, static runner validation, zero foreign inference services, and fresh hardware preflight all pass."
+    },
+    {
+      "atUtc": "2026-10-27T13:52:17Z",
+      "reason": "Q85 receipts show that this same pinned model was intentionally prepared on 2026-10-24 and passed verify.sh --no-server before its canary sequence. Therefore, restoring the Q85 directory to raw Hub files would undo its recorded prepared state. The 2026-10-27 changes are the HyperQwen prepare transforms applied to the same pinned revision; preserve the shared Q85 tree in its prepared state, make no further writes there, and run Q167 only from a copied private tree.",
+      "supersedes": "The prior amendment item that proposed restoring the shared Q85 tree to raw pinned Hub files. No restoration was performed.",
+      "changes": [
+        "preserve the shared Q85 prepared model/drafter as an evaluation asset; do not rewrite it or infer it is damaged from the expected prepare transforms",
+        "copy the prepared HyperQwen base and pinned DFlash2 drafter to a Q167-only model root on HDD extra and record per-file sizes and SHA-256 before Compose",
+        "resolve both prepare and single services against only Q167 model/cache/tmp paths; permit idempotent prepare writes only inside the private Q167 copy because the image entrypoint runs prepare for both services",
+        "do not mount the shared Q85 model directory in any Q167 container; stop before GPU if resolved configuration contains the Q85 path",
+        "the one permitted retry remains the same single-seed absolute screen; all Q167 output stays under its task directory"
+      ],
+      "noModelInferenceBeforeAmendment": true,
+      "noGpuUseForCopyOrComposeReadback": true,
+      "retryGate": "Q85 baseline untouched from this point forward; private Q167 tree matches expected prepared model identity; both service mounts resolve only into Q167 storage; server readiness requires health HTTP 200."
+    },
+    {
+      "atUtc": "2026-10-27T14:01:17Z",
+      "reason": "The isolated CPU prepare validation completed successfully from the Q167-only model copy with HF/Transformers offline and FAST_VARIANT=0. It reported model ready, no model payload hashes changed, made no model requests, and had no GPU reservation. Only the expected empty .prepare.lock appeared. Static Python syntax, private manifest file-set verification, and resolved Compose readback for both services pass.",
+      "changes": [
+        "record the first CPU prepare smoke as PASS with zero GPU and zero inference",
+        "add only .prepare.lock as an expected generated runtime file; runner now rejects any other unmanifested files",
+        "pin current run_profile.py and Compose overlay hashes in the preflight receipt",
+        "allow the one preregistered HyperQwen absolute screen retry only after a fresh in-run host/process preflight; no further retries on startup failure"
+      ],
+      "noModelInferenceBeforeAmendment": true,
+      "noGpuUseForPrepareOrStaticChecks": true,
+      "runnerSha256": "08d94e8a99c3a8997d4495dbb63560ef69dd9b94823f1823f7fb5a2c234b55eb",
+      "composeOverlaySha256": "b9146dd7a39bad6e3de2c7c10b7ecfc4765e40ea7ac0e1274f1eefc86caa02ca",
+      "retryGate": "Fresh host preflight must pass; no PeritoSoft/foreign inference server; private model manifest including generated lock file must match; both Compose service readbacks must pass; then one server startup and one 8-task BCB-Hard-8 seed 4242 screen. Startup failure closes Q167 without a second retry."
+    },
+    {
+      "atUtc": "2026-10-27T14:02:33Z",
+      "reason": "Preserved every prior HyperQwen attempt-01 receipt/log/memory trace before any retry, so its startup failure remains independently auditable. The prior attempt made no model request and has no score/throughput result.",
+      "changes": [
+        "copy previous attempt outputs under receipts/hyperqwen-attempt-01 and logs/hyperqwen-attempt-01",
+        "preserve prior memory monitor trace as runs/hyperqwen/attempt-01-memory-trace.jsonl",
+        "permit one retry only, with fresh runtime process/hardware/storage preflight and the already-verified Q167-only checkpoint"
+      ],
+      "noModelInferenceBeforeAmendment": true,
+      "noGpuUseForPreservation": true,
+      "preservationReceipt": "receipts/hyperqwen-attempt-01-preservation.json",
+      "retryLimit": 1
+    },
+    {
+      "atUtc": "2026-10-27T14:07:51Z",
+      "reason": "The private-copy retry loaded the model and initialized the API, but the first health request received a connection reset. The pinned container log shows the API listening on its .env port 18142 while Q167 published host port 18167 to container port 18167. No server-ready receipt, warmup request, or BCB task request occurred. The owned unit was stopped; Compose cleanup returned 0, no containers/listeners remain, and the memory monitor recorded no pressure or OOM.",
+      "supersedes": "The prior amendment statement that any startup failure closes Q167 without another startup attempt. It did not produce a quality-screen request or consume the BCB screen.",
+      "changes": [
+        "preserve the failed startup attempt as hyperqwen-attempt-02 before changing configuration",
+        "set the Q167 single service container PORT explicitly to 18167 so the server listener matches the published mapping and health check",
+        "extend preflight readback to require container PORT=18167 and retain host published/target port checks",
+        "allow exactly one corrected startup for the same preregistered single-seed BCB-Hard-8 quality screen; if this health gate fails, close Q167 with no more starts",
+        "make no model requests until HTTP health returns 200; preserve existing SOL 0/8 result and no speed-superiority claim"
+      ],
+      "noModelInferenceBeforeAmendment": true,
+      "noQualityRequestsInFailedAttempt": true,
+      "cleanupSucceeded": true,
+      "preservationReceipt": "receipts/hyperqwen-attempt-02-preservation.json",
+      "correctedStartupLimit": 1,
+      "retryGate": "Only after static Compose readback resolves both container PORT and mapped target to 18167, private copy hashes match, fresh host/process preflight passes, and no foreign inference service is active."
+    },
+    {
+      "atUtc": "2026-10-27T14:08:44Z",
+      "reason": "The port correction now passes static Compose readback: the container environment PORT, published host port, and container target are all 18167; the prepare service remains CPU-only and both services use only Q167 paths.",
+      "changes": [
+        "record the corrected port readback and syntax check",
+        "run the single remaining startup for the existing BCB-Hard-8 screen; require health HTTP 200 before any model request",
+        "if the port/health gate fails again, stop Q167 without additional starts"
+      ],
+      "noModelInferenceBeforeAmendment": true,
+      "runnerSha256": "475560ae1277cfab722d709735b3e0aabb0137c27cc1da6ccd32ca6d18de6b45",
+      "composeOverlaySha256": "41473859331999e7e291e1831bb33f8946118c86d372577daa727f78690c2cc0",
+      "readbackReceipt": "receipts/hyperqwen/port-repair-readback.json",
+      "correctedStartupLimit": 1,
+      "retryGate": "Fresh in-run preflight, private-copy manifest, and resolved container/mapped PORT=18167 must pass; then one health gate. No BCB request before health 200."
+    },
+    {
+      "atUtc": "2026-10-27T14:28:54Z",
+      "reason": "The corrected HyperQwen service passed HTTP health and completed all eight preregistered BCB-Hard-8 requests, but the model behavior failed the preregistered empty-final and quality gates. The runner exit code 2 is its explicit empty-final gate, not an infrastructure or sandbox failure.",
+      "changes": [
+        "record the full HyperQwen screen as 8/8 transport, 0/8 passes, 0 sandbox errors, and 7/8 empty finals; the only non-empty final failed its task tests",
+        "record SOL control as 8/8 transport, 0/8 passes, 0 sandbox errors, and 0 empty finals; both profiles have fewer than the six matched successful tasks needed for E2E comparison",
+        "classify this exact HyperQwen configuration as no-go; do not run additional seeds under Q167",
+        "retain client prefill/decode values as descriptive proxies only and make no comparative speed or quality/speed claim",
+        "record memory monitor and Q167-only Compose cleanup; leave the GUI and unrelated GPU processes untouched"
+      ],
+      "runnerStatus": "SCREEN_INVALID",
+      "runnerExitCode": 2,
+      "resultReceipt": "receipts/q167-final-decision.json",
+      "preregisteredOnFailApplied": true
+    }
+  ],
+  "updatedUtc": "2026-10-27T14:32:51Z",
+  "finalDecisionReceipt": "receipts/q167-final-decision.json"
+}

@@ -1,0 +1,18 @@
+services:
+  vllm-qwen38-27b-dual-fast:
+    image: vllm/vllm-openai@sha256:0a51ea5b4ae2dc5d81890e5173f54203d2a3ae0cfffe51b8fd2afd4391bfd967
+    container_name: q167-sol-screen
+    restart: "no"
+    ports: !override
+      - "127.0.0.1:18167:8000"
+    volumes:
+      - type: bind
+        source: /media/cristian/Disco local/Models/llamacpp/club-3090
+        target: /root/.cache/huggingface
+        read_only: true
+      - type: bind
+        source: /media/cristian/HDD extra/Modelos-eval/Q-20261027-VF-ITERATION-167/cache/torch_compile
+        target: /root/.cache/vllm/torch_compile_cache
+      - type: bind
+        source: /media/cristian/HDD extra/Modelos-eval/Q-20261027-VF-ITERATION-167/cache/triton
+        target: /root/.triton/cache

@@ -1,0 +1,44 @@
+services:
+  prepare:
+    container_name: q167-hyperqwen-prepare
+    restart: "no"
+    environment:
+      DFLASH2: "1"
+      FAST_VARIANT: "0"
+      HF_HUB_OFFLINE: "1"
+      TRANSFORMERS_OFFLINE: "1"
+    volumes: !override
+      - type: bind
+        source: /media/cristian/HDD extra/Modelos-eval/Q-20261027-VF-ITERATION-167/models
+        target: /app/models
+      - type: bind
+        source: /media/cristian/HDD extra/Modelos-eval/Q-20261027-VF-ITERATION-167/cache/hyperqwen
+        target: /cache
+      - type: bind
+        source: /media/cristian/HDD extra/Modelos-eval/Q-20261027-VF-ITERATION-167/tmp/hyperqwen
+        target: /tmp
+  single:
+    container_name: q167-hyperqwen-screen
+    restart: "no"
+    environment:
+      PREPARE: "0"
+      VERIFY: "1"
+      DFLASH2: "1"
+      DFLASH_TOKENS: "7"
+      FAST_VARIANT: "0"
+      PORT: "18167"
+      HF_HUB_OFFLINE: "1"
+      TRANSFORMERS_OFFLINE: "1"
+    ports: !override
+      - "127.0.0.1:18167:18167"
+    volumes: !override
+      - type: bind
+        source: /media/cristian/HDD extra/Modelos-eval/Q-20261027-VF-ITERATION-167/models
+        target: /app/models
+        read_only: true
+      - type: bind
+        source: /media/cristian/HDD extra/Modelos-eval/Q-20261027-VF-ITERATION-167/cache/hyperqwen
+        target: /cache
+      - type: bind
+        source: /media/cristian/HDD extra/Modelos-eval/Q-20261027-VF-ITERATION-167/tmp/hyperqwen
+        target: /tmp

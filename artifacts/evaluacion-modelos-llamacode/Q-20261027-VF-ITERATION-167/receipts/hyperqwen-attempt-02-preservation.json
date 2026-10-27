@@ -1,0 +1,74 @@
+{
+  "taskId": "Q-20261027-VF-ITERATION-167",
+  "attempt": "hyperqwen-02-startup-port-mismatch",
+  "atUtc": "2026-10-27T14:07:39Z",
+  "status": "PRESERVED_BEFORE_PORT_FIX",
+  "inferenceReached": false,
+  "modelRequests": 0,
+  "runnerFailure": {
+    "type": "InterruptedError",
+    "message": "Q167 received signal 15; cleaning only Q167 processes"
+  },
+  "cleanup": {
+    "composeDownReturnCode": 0,
+    "remainingProjectContainers": [],
+    "portListeners": []
+  },
+  "files": [
+    {
+      "path": "receipts/hyperqwen-attempt-02/compose-readback.json",
+      "sizeBytes": 2233,
+      "sha256": "5d50adf413dc61ab58a64882223e0356c73136a0a971683c3e737f8480d51f95"
+    },
+    {
+      "path": "receipts/hyperqwen-attempt-02/compose-start.json",
+      "sizeBytes": 194,
+      "sha256": "33e57660d098610e3f351ea45048ab5e4ab17136f3575b53b66f6d108f9367df"
+    },
+    {
+      "path": "receipts/hyperqwen-attempt-02/compose-stop.json",
+      "sizeBytes": 194,
+      "sha256": "6336a29e0aed96609ab4dedfedaf14ff17d575eaa6a03dc56d90d4c78052204e"
+    },
+    {
+      "path": "receipts/hyperqwen-attempt-02/docker-log-capture.json",
+      "sizeBytes": 241,
+      "sha256": "d0ec79d99dec8c685faf0cf158fff72e436a01640ee9d9bb1b2ab4e95a363965"
+    },
+    {
+      "path": "receipts/hyperqwen-attempt-02/final-summary.json",
+      "sizeBytes": 1335,
+      "sha256": "2be27c329c3788493a0508726b751cbf555a7230155f3be652d35bc4ed9f3bb8"
+    },
+    {
+      "path": "receipts/hyperqwen-attempt-02/host-preflight.json",
+      "sizeBytes": 600,
+      "sha256": "a07f2ae2925bc97dbcb81110b5f21269f0e3209427398b41e72e946453d3fc95"
+    },
+    {
+      "path": "receipts/hyperqwen-attempt-02/prepare-validation.json",
+      "sizeBytes": 735,
+      "sha256": "c084e0e51dd306b5879ae39902b6164a64766ebfc55fd09f2e91f9ae803f360b"
+    },
+    {
+      "path": "receipts/hyperqwen-attempt-02/private-copy-manifest.json",
+      "sizeBytes": 17290,
+      "sha256": "89cc3f1def85709850a88f10029cd6204930d2cb70d00d32560d0e92843b08d3"
+    },
+    {
+      "path": "receipts/hyperqwen-attempt-02/repaired-compose-readback.json",
+      "sizeBytes": 2351,
+      "sha256": "cdce80f7f02883ca439165e2999584b051c0b1a1dc7a7cf8c55874128e4a0d29"
+    },
+    {
+      "path": "logs/hyperqwen-attempt-02/engine-before-cleanup.log",
+      "sizeBytes": 41620,
+      "sha256": "237df86589774749b80b4e601f766c175899ced87b165a408c3add6bcbd5ad2b"
+    },
+    {
+      "path": "runs/hyperqwen/attempt-02-memory-trace.jsonl",
+      "sizeBytes": 231825,
+      "sha256": "1d26c83eb22f5ed5f3dd7ff163a464e231f4b092ef8477523c7813fb3c5c375a"
+    }
+  ]
+}

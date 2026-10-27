@@ -1,0 +1,87 @@
+{
+  "service": "single",
+  "container": "q167-hyperqwen-screen",
+  "port": [
+    {
+      "mode": "ingress",
+      "host_ip": "127.0.0.1",
+      "target": 18167,
+      "published": "18167",
+      "protocol": "tcp"
+    }
+  ],
+  "selectedEnvironment": {
+    "GPU_COUNT": "2",
+    "GPU_UTIL": "0.91",
+    "KV_MEM": "3000000000",
+    "EXTRA_ARGS": "--tensor-parallel-size 2",
+    "MAX_LEN": "65536",
+    "MAX_SEQS": "8",
+    "SPEC": "dflash2",
+    "DFLASH_TOKENS": "7",
+    "FAST_VARIANT": "0",
+    "HF_HUB_OFFLINE": "1",
+    "TRANSFORMERS_OFFLINE": "1",
+    "PREPARE": "0",
+    "VERIFY": "1",
+    "DFLASH2": "1"
+  },
+  "command": [
+    "single"
+  ],
+  "volumes": [
+    {
+      "type": "bind",
+      "source": "/media/cristian/HDD extra/Modelos-eval/Q-20261027-VF-ITERATION-167/models",
+      "target": "/app/models",
+      "read_only": true
+    },
+    {
+      "type": "bind",
+      "source": "/media/cristian/HDD extra/Modelos-eval/Q-20261027-VF-ITERATION-167/cache/hyperqwen",
+      "target": "/cache"
+    },
+    {
+      "type": "bind",
+      "source": "/media/cristian/HDD extra/Modelos-eval/Q-20261027-VF-ITERATION-167/tmp/hyperqwen",
+      "target": "/tmp"
+    }
+  ],
+  "image": "ghcr.io/syv-ai/hyperqwen@sha256:0acd4b9625473e51c9bab56406c30814bc0d0d7e0a38deb408c62664b5a77669",
+  "prepareService": {
+    "service": "prepare",
+    "container": "q167-hyperqwen-prepare",
+    "command": [
+      "prepare"
+    ],
+    "image": "ghcr.io/syv-ai/hyperqwen@sha256:0acd4b9625473e51c9bab56406c30814bc0d0d7e0a38deb408c62664b5a77669",
+    "selectedEnvironment": {
+      "DFLASH2": "1",
+      "FAST_VARIANT": "0",
+      "HF_HUB_OFFLINE": "1",
+      "TRANSFORMERS_OFFLINE": "1"
+    },
+    "volumes": [
+      {
+        "type": "bind",
+        "source": "/media/cristian/HDD extra/Modelos-eval/Q-20261027-VF-ITERATION-167/models",
+        "target": "/app/models"
+      },
+      {
+        "type": "bind",
+        "source": "/media/cristian/HDD extra/Modelos-eval/Q-20261027-VF-ITERATION-167/cache/hyperqwen",
+        "target": "/cache"
+      },
+      {
+        "type": "bind",
+        "source": "/media/cristian/HDD extra/Modelos-eval/Q-20261027-VF-ITERATION-167/tmp/hyperqwen",
+        "target": "/tmp"
+      }
+    ],
+    "gpuReservation": []
+  },
+  "atUtc": "2026-10-27T14:01:17Z",
+  "result": "PASS",
+  "sharedQ85ModelPathReferenced": false,
+  "modelRequests": 0
+}

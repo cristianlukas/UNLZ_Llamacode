@@ -1,0 +1,20 @@
+{
+  "taskId": "Q-20261027-VF-ITERATION-167",
+  "atUtc": "2026-10-27T14:00:23Z",
+  "result": "PASS",
+  "unit": "q167-hyperqwen-prepare-validation.service",
+  "unitExitStatus": 0,
+  "command": "compose run --pull never --rm --no-deps prepare",
+  "modelState": "prepare: model ready; chat template unchanged; translation already applied",
+  "modelPayloadFilesUnchanged": true,
+  "modelPayloadFileCount": 73,
+  "expectedRuntimeFiles": [
+    ".prepare.lock"
+  ],
+  "gpuRequested": false,
+  "inferenceRequests": 0,
+  "networkAccess": "disabled at Hugging Face/Transformers level; image pull disabled",
+  "composeProject": "q167-hyperqwen-screen",
+  "composeNetworkCreated": "q167-hyperqwen-screen_default",
+  "otherServicesTouched": false
+}

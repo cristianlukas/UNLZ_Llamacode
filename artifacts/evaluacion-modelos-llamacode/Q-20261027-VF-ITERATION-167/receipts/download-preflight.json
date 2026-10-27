@@ -1,0 +1,41 @@
+{
+  "taskId": "Q-20261027-VF-ITERATION-167",
+  "atUtc": "2026-10-27T13:02:37Z",
+  "lockTask": "Q146 resume justified VF-20261019-01 tests",
+  "lockToken": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+  "processes": [],
+  "containers": [],
+  "inferenceListeners": [],
+  "gpus": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "temperatureC": 41,
+      "memoryUsedMiB": 998,
+      "memoryTotalMiB": 24576,
+      "utilizationPct": 26,
+      "freeMiB": 23578
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "temperatureC": 26,
+      "memoryUsedMiB": 110,
+      "memoryTotalMiB": 24576,
+      "utilizationPct": 27,
+      "freeMiB": 24466
+    }
+  ],
+  "hostMemory": {
+    "MemAvailable": 117860507648,
+    "SwapFree": 3605991424
+  },
+  "diskFreeBytes": {
+    "/": 9378693120,
+    "/var/lib/docker": 9378693120,
+    "/media/cristian/HDD extra": 313252384768
+  },
+  "hyperqwenImageId": "sha256:0acd4b9625473e51c9bab56406c30814bc0d0d7e0a38deb408c62664b5a77669",
+  "downloadUnitInitially": "not-found",
+  "gate": "PASS"
+}

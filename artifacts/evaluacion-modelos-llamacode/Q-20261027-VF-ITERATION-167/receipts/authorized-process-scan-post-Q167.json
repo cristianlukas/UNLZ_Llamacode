@@ -1,0 +1,13 @@
+{
+  "taskId": "Q-20261027-VF-ITERATION-167",
+  "atUtc": "2026-10-27T14:48:55Z",
+  "userAuthorization": "The user authorized terminating the PeritoSoft app and its LlamaServers before continuing tests.",
+  "platform": "Ubuntu Linux",
+  "checks": {
+    "processes": "No matching PeritoSoft, llama-server, llamaServer, Strata, Qwen, or vLLM process was present in the process scan.",
+    "listeners": "No listeners were found on the checked PeritoSoft/Q167 service ports 32100, 32101, 8033, 8000, 8080, or 18167.",
+    "containers": "No matching PeritoSoft, LlamaServer, Strata, Qwen, vLLM, or Q167 container was running."
+  },
+  "action": "No signal was sent and no process/container was stopped because no target was running.",
+  "scope": "The scan did not terminate unrelated GUI, GPU, or application processes."
+}
