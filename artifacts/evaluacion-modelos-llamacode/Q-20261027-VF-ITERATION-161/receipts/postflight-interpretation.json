@@ -1,0 +1,37 @@
+{
+  "taskId": "Q161",
+  "recordedAtUtc": "2026-10-27T04:08:56Z",
+  "runReceipt": "receipts/screen-run-20261027T040010Z.json",
+  "screenStatus": "screen_completed",
+  "runnerExitCode": 0,
+  "serverProcessGroup": [
+    {
+      "label": "Q161 candidate llama-server process group",
+      "started": true,
+      "pid": 346465,
+      "pgid": 346465,
+      "signals": [
+        "SIGTERM"
+      ],
+      "exitCode": 0,
+      "processGroupGone": true,
+      "clean": true
+    }
+  ],
+  "port18383Listening": false,
+  "port18383TimeWaitConnectionsObserved": 2,
+  "interpretation": "Supervisor bind probe reports port18383FreeAfterCleanup=false because short-lived TCP TIME-WAIT connections remain; ss -ltnp shows no LISTEN socket and process scan shows no server process.",
+  "resourceSamples": 305,
+  "memAvailableMinBytes": 112553377792,
+  "memAvailableMinGiB": 104.82,
+  "swapFreeMinBytes": 3542659072,
+  "psiSomeAvg10PctMax": 0.0,
+  "psiFullAvg10PctMax": 0.0,
+  "oomKillDeltaGlobalMax": 0,
+  "gpuMemoryPeakMiB": {
+    "GPU0": 15304,
+    "GPU1": 14322
+  },
+  "memoryCapsApplied": false,
+  "postflightGpu": "both RTX 3090 at 0% compute; ArtCraft desktop process 207 MiB on GPU0 remained untouched"
+}

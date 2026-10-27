@@ -1,0 +1,60 @@
+{
+  "taskId": "Q161",
+  "status": "preregistered",
+  "preregisteredAtUtc": "2026-10-27T03:57:40Z",
+  "umbrellaLock": {
+    "task": "Q146 resume justified VF-20261019-01 tests",
+    "token": "2242863e-c78e-4fa9-9649-c1d1541f3919"
+  },
+  "candidate": {
+    "repo": "agentionai/Qwen3.8-Flash-Next-Gyro-Coder-GGUF",
+    "revision": "87d31357f4cfeb8555cf32fc63a707c5fa10ae7a",
+    "filename": "Qwen3.8-Flash-Next-Gyro-Coder-L-TQ3_0-v1.1.gguf",
+    "path": "/media/cristian/Disco local/Models-eval/Q152-GyroCoderL/Qwen3.8-Flash-Next-Gyro-Coder-L-TQ3_0-v1.1.gguf",
+    "bytes": 83975624672,
+    "sha256": "377d5aa5b473a89b4d0d0c9fbd54fd8fcc46da19c16fc881860577189c1403df"
+  },
+  "runtime": {
+    "source": "https://gitlab.com/agentionai-group/llama.cpp",
+    "commit": "9aa51ce4fdd3435a91531ffe16a17414ccc6dc6f",
+    "serverBinary": "/media/cristian/Disco local/Models-eval/Q160-agention-llama-build/bin/llama-server",
+    "gpu": "2x NVIDIA GeForce RTX 3090",
+    "context": 8192,
+    "gpuLayers": 999,
+    "splitMode": "layer",
+    "tensorSplit": "1,1",
+    "fit": "on",
+    "flashAttention": "on",
+    "reasoning": "on"
+  },
+  "experiment": {
+    "benchmark": "BigCodeBench-Hard-8",
+    "fixture": "artifacts/bigcodebench-hard-ubuntu-8.json",
+    "fixtureSha256": "11279cde14113fc8527f141c53e14cb5ccf0dba65749081a4f914408e391c268",
+    "seed": 4242,
+    "serialRequests": true,
+    "maxTokens": 6144,
+    "sampling": {
+      "temperature": 0.6,
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repetition_penalty": 1.0,
+      "presence_penalty": 0.0,
+      "frequency_penalty": 0.0
+    },
+    "chatTemplateThinking": true,
+    "reasoningBudgetTokens": 2048,
+    "onlyDifferenceFromQ152": "Explicitly send reasoning_budget_tokens=2048 in every HTTP request. Q152's swift runner omitted the field."
+  },
+  "gates": {
+    "execution": "8/8 transport; 0 sandbox errors; 0 no-final-content; process owns both GPUs; clean owned-process teardown",
+    "qualityScreen": "at least 4/8 to justify a matched-control follow-up; otherwise stop this profile",
+    "interpretation": "one-seed screen only; Q97 ASTRA 2/8 is a different runtime and is not a matched comparison; no promotion or general inferiority claim"
+  },
+  "resourcePolicy": "No artificial RAM or swap caps. Stop only for server/runner failure, confirmed OOM, sustained severe global memory PSI, unsafe cleanup, or user interruption.",
+  "preservation": "Do not modify ASTRA, SOL, PeritoSoft data/configuration, or unrelated GUI processes. Candidate remains isolated from PeritoSoft.",
+  "q152Evidence": "artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-152/runs/gyro-coder-l-screen-seed-4242-20261027T033641Z/result.json",
+  "runnerSha256": "b4eea9c2f9285c640a5ed1aab58ce5982cb968c3b24c90b4231980a95b33f150",
+  "supervisorSha256": "797090106653238364443bd105197e396e8ab9fe403639b72ad0aab26a2adf3d"
+}

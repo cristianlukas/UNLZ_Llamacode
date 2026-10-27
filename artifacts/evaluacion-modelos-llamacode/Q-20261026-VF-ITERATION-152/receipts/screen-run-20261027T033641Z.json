@@ -1,0 +1,104 @@
+{
+  "taskId": "Q152",
+  "startedAtUtc": "2026-10-27T03:36:41Z",
+  "finishedAtUtc": "2026-10-27T03:50:08Z",
+  "status": "screen_incomplete_or_gate_failed",
+  "error": null,
+  "stopReason": null,
+  "preflight": {
+    "timestampUtc": "2026-10-27T03:36:41Z",
+    "modelPath": "/media/cristian/Disco local/Models-eval/Q152-GyroCoderL/Qwen3.8-Flash-Next-Gyro-Coder-L-TQ3_0-v1.1.gguf",
+    "serverBinary": "/media/cristian/Disco local/Models-eval/Q160-agention-llama-build/bin/llama-server",
+    "port": 18382,
+    "status": "pass",
+    "modelBytes": 83975624672,
+    "modelSha256": "377d5aa5b473a89b4d0d0c9fbd54fd8fcc46da19c16fc881860577189c1403df",
+    "runnerSha256": "0760f48da5f1804d8605960b7ff913308182f911a35a906313b864a9cff9bf7f",
+    "fixtureSha256": "11279cde14113fc8527f141c53e14cb5ccf0dba65749081a4f914408e391c268",
+    "gpuUuids": [
+      "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+      "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049"
+    ],
+    "gpuNames": [
+      "NVIDIA GeForce RTX 3090",
+      "NVIDIA GeForce RTX 3090"
+    ],
+    "computeAppsBefore": [
+      {
+        "pid": "959412",
+        "gpuUuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+        "usedMemoryMiB": "207"
+      }
+    ],
+    "oomKillGlobalBefore": 0,
+    "memAvailableBytes": 116723638272,
+    "swapFreeBytes": 3540267008,
+    "swapTotalBytes": 8589930496,
+    "serverPid": 340697,
+    "serverReady": true,
+    "serverOwnedGpuUuids": [
+      "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+      "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6"
+    ],
+    "serverArguments": [
+      "/media/cristian/Disco local/Models-eval/Q160-agention-llama-build/bin/llama-server",
+      "--model",
+      "/media/cristian/Disco local/Models-eval/Q152-GyroCoderL/Qwen3.8-Flash-Next-Gyro-Coder-L-TQ3_0-v1.1.gguf",
+      "--alias",
+      "Gyro-Coder-L-Q152",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "18382",
+      "--ctx-size",
+      "8192",
+      "--n-gpu-layers",
+      "999",
+      "--split-mode",
+      "layer",
+      "--tensor-split",
+      "1,1",
+      "--fit",
+      "on",
+      "--flash-attn",
+      "on",
+      "--jinja",
+      "--ngram-on-disk",
+      "--reasoning",
+      "on"
+    ]
+  },
+  "runnerExitCode": 2,
+  "resultFile": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-152/runs/gyro-coder-l-screen-seed-4242-20261027T033641Z/result.json",
+  "result": {
+    "benchmark": "BigCodeBench-Hard-8",
+    "seed": 4242,
+    "model": "Gyro-Coder-L-Q152",
+    "runs": 8,
+    "transportOk": 8,
+    "passed": 0,
+    "sandboxErrors": 0,
+    "noFinalContent": 6
+  },
+  "screenGatePass": false,
+  "cleanup": [
+    {
+      "label": "Q152 candidate llama-server process group",
+      "started": true,
+      "pid": 340697,
+      "pgid": 340697,
+      "signals": [
+        "SIGTERM"
+      ],
+      "exitCode": 0,
+      "processGroupGone": true,
+      "clean": true
+    }
+  ],
+  "port18382FreeAfterCleanup": false,
+  "logs": {
+    "server": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-152/runs/gyro-coder-l-screen-seed-4242-20261027T033641Z/server.log",
+    "runner": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-152/runs/gyro-coder-l-screen-seed-4242-20261027T033641Z/runner.log",
+    "resourceSamples": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261026-VF-ITERATION-152/runs/gyro-coder-l-screen-seed-4242-20261027T033641Z/resource-samples.jsonl"
+  }
+}

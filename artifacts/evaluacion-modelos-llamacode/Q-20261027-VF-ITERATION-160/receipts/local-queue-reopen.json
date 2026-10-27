@@ -1,0 +1,53 @@
+{
+  "taskId": "Q160",
+  "updatedAtUtc": "2026-10-27T02:27:23Z",
+  "updates": {
+    "actionables": {
+      "id": "vf-gyro-coder-l-q152-20261026",
+      "status": "Reabierto · Q159 confundió la etiqueta TQ3_0 del nombre con un tipo interno; el fork oficial lista los tipos Gyro reales. Q160: build CUDA y enumeración de ambas RTX 3090 antes de descargar el GGUF.",
+      "test": "La ficha actual aclara que TQ3_0 es una clase de tamaño Hub; el GGUF usa tipos Gyro TQ2_T/TQK6/TQK7/TQP5–7. El fork oficial GitLab main (commit 9aa51ce4fdd3435a91531ffe16a17414ccc6dc6f) incluye qwen4exp y dispatch CUDA para esos tipos. Q160 está preregistrada para validar en checkout, compilar llama-server CUDA SM86 en D y ejecutar solo --list-devices. No se descargó ni se ejecutó el modelo.",
+      "decision": "Sin score local; no es rechazo de calidad. La barrera anterior de formato se basó en interpretar TQ3_0 del filename como tipo GGUF. Reabierto para un gate CUDA exacto; no usar fallback de una GPU o CPU.",
+      "nextAction": "Completar Q160: checkout exacto del fork oficial GitLab, confirmar tipos/arquitectura en el árbol, build CUDA para SM86 en D y exigir que --list-devices enumere las dos 3090. Solo después se descargará el archivo v1.1 fijado y se seguirá Q152.",
+      "updatedAt": "2026-10-27T02:27:23Z"
+    },
+    "inbox": {
+      "id": "q135-sheet-61-gyro-coder-large",
+      "status": "Reabierta · Q159 confundió la clase de tamaño TQ3_0 con el tipo interno; Q160 valida el fork CUDA oficial antes de seguir Q152.",
+      "analysis": {
+        "status": "Reabierta · Q159 confundió la clase de tamaño TQ3_0 con el tipo interno; Q160 valida el fork CUDA oficial antes de seguir Q152.",
+        "finding": "La ficha del publicador indica que TQ3_0 es una clase de tamaño, y que los pesos usan tipos internos Gyro TQ2_T/TQK6/TQK7/TQP5–7. El fork CUDA oficial en GitLab main contiene qwen4exp y dispatch CUDA para esos tipos. Q159 inspeccionó un mirror GitHub y su gate de filename fue demasiado estricto; no constituye incompatibilidad del modelo.",
+        "test": "Q160 preregistra checkout GitLab a commit 9aa51ce4fdd3435a91531ffe16a17414ccc6dc6f, verificación estática local, build CUDA SM86 en D y --list-devices. No descargar modelo hasta enumerar ambas RTX 3090; luego continuar screen Q152 dual-GPU.",
+        "applicability": "Candidato queda abierto para un test local; ninguna conclusión de calidad/velocidad todavía.",
+        "reviewedAt": "2026-10-26T19:14:26Z",
+        "sources": [
+          {
+            "label": "Tarjeta oficial y archivo v1.1",
+            "url": "https://huggingface.co/agentionai/Qwen3.8-Flash-Next-Gyro-Coder-GGUF"
+          },
+          {
+            "label": "Soporte manual Strata Gyro-Coder TQ2 (no aplica al TQ3-L)",
+            "url": "https://github.com/Niko1221/Strata/issues/3640"
+          },
+          {
+            "label": "Catálogo oficial Strata",
+            "url": "https://github.com/Niko1221/Strata"
+          }
+        ],
+        "execution": {
+          "status": "Bloqueada por runtime y formato; no model download, build, GPU compute, inference, HTTP server, benchmark ni quality score.",
+          "Q158": "GHCR official image + NVIDIA_DRIVER_CAPABILITIES=all → Available devices (none); image removed after no-consumer check.",
+          "Q159": "Pinned official CUDA source commit has no TQ3_0; stopped before build.",
+          "artifacts": "artifacts/evaluacion-modelos-llamacode/Q-20261027-VF-ITERATION-158/RESULTS.md; artifacts/evaluacion-modelos-llamacode/Q-20261027-VF-ITERATION-159/RESULTS.md"
+        },
+        "currentRevalidation": {
+          "status": "Reabierto · corregido el gate de nomenclatura",
+          "finding": "La ficha del publicador indica que TQ3_0 es una clase de tamaño, y que los pesos usan tipos internos Gyro TQ2_T/TQK6/TQK7/TQP5–7. El fork CUDA oficial en GitLab main contiene qwen4exp y dispatch CUDA para esos tipos. Q159 inspeccionó un mirror GitHub y su gate de filename fue demasiado estricto; no constituye incompatibilidad del modelo.",
+          "nextStep": "Completar Q160 y comprobar visibilidad/uso de ambas GPU antes de descarga o inferencia.",
+          "testDecision": "Sólo source/build/device enumeration de Q160 está preregistrado; sin modelo ni score.",
+          "revalidatedAtUtc": "2026-10-27T02:27:23Z"
+        }
+      },
+      "updatedAt": "2026-10-27T02:27:23Z"
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "taskId": "Q161",
+  "recordedAtUtc": "2026-10-27T04:09:13Z",
+  "status": "removed",
+  "path": "/media/cristian/Disco local/Models-eval/Q152-GyroCoderL/Qwen3.8-Flash-Next-Gyro-Coder-L-TQ3_0-v1.1.gguf",
+  "bytesRemoved": 83975624672,
+  "inode": 670664,
+  "hardLinkCountBefore": 1,
+  "sha256": "377d5aa5b473a89b4d0d0c9fbd54fd8fcc46da19c16fc881860577189c1403df",
+  "filesystemBeforeAvailableBytes": 411334324224,
+  "filesystemAfterAvailableBytes": 495309950976,
+  "observedAvailableIncreaseBytes": 83975626752,
+  "targetExistsAfter": false,
+  "ASTRA_SOL_modified": false,
+  "PeritoSoft_data_or_config_modified": false,
+  "sharedRuntimeOrMTPModified": false,
+  "historicalEvidencePreserved": true,
+  "reason": "Q152=0/8 for unbounded reasoning and Q161=1/8 after explicitly sending the 2048 reasoning budget; preregistered gate was >=4/8 and no further seeds were justified. This eval-only model had no PeritoSoft/product config consumer."
+}

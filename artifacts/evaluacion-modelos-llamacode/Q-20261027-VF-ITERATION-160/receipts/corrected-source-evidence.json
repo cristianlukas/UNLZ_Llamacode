@@ -1,0 +1,24 @@
+{
+  "taskId": "Q160",
+  "observedAtUtc": "2026-10-27T02:26:41Z",
+  "q159Correction": {
+    "mistakenAssumption": "The TQ3_0 substring in the filename was treated as a mandatory GGUF tensor type.",
+    "authoritativeMeaning": "The model publisher says TQ2_0/TQ3_0 are Hub size labels; Gyro tensors use TQ2_T, TQK6/TQK7, and TQP5–TQP7.",
+    "officialRepo": "GitLab agentionai-group/llama.cpp main",
+    "commit": "9aa51ce4fdd3435a91531ffe16a17414ccc6dc6f",
+    "arch": "qwen4exp appears in src/llama-arch.cpp at this commit.",
+    "cudaTypes": "ggml/src/ggml-cuda/mmq.cu dispatches TQ2_T, TQK6, TQK7, TQP5, TQP6 and TQP7.",
+    "formatSpec": "agentionai-group/agention-gyro defines these internal types and GGUF IDs."
+  },
+  "candidate": {
+    "revision": "87d31357f4cfeb8555cf32fc63a707c5fa10ae7a",
+    "filename": "Qwen3.8-Flash-Next-Gyro-Coder-L-TQ3_0-v1.1.gguf",
+    "headStatus": 200,
+    "contentLength": 83975624672,
+    "preregisteredSha256": "377d5aa5b473a89b4d0d0c9fbd54fd8fcc46da19c16fc881860577189c1403df",
+    "sha256NeedsLocalVerification": true
+  },
+  "localBuildOrGpuUse": false,
+  "modelDownload": false,
+  "modelInference": false
+}

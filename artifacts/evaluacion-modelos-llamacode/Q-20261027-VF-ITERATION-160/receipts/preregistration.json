@@ -1,0 +1,50 @@
+{
+  "taskId": "Q160",
+  "parentGoal": "VF-20261019-01",
+  "status": "runtime-device-enumeration-passed-model-download-authorized-by-preregistration",
+  "preregisteredAtUtc": "2026-10-27T02:26:41Z",
+  "sharedWorkQueueLockToken": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+  "purpose": "Correct the Q159 false-negative gate (TQ3_0 filename class mistaken for an internal tensor type), inspect the vendor GitLab source and test CUDA device enumeration before deciding whether the already-preregistered Q152 candidate screen is feasible.",
+  "evidenceBeforeRun": {
+    "modelCard": "Current public card says TQ2_0/TQ3_0 are Hub size classes; actual Gyro tensor types are TQ2_T, TQK6/TQK7 and TQP5–TQP7. Stock llama.cpp cannot load it; provider fork is required.",
+    "sourceRepo": "https://gitlab.com/agentionai-group/llama.cpp",
+    "sourceCommit": "9aa51ce4fdd3435a91531ffe16a17414ccc6dc6f",
+    "staticChecksFromPublicSource": [
+      "qwen4exp arch exists",
+      "CUDA mmq dispatches TQ2_T,TQK6,TQK7,TQP5,TQP6,TQP7"
+    ],
+    "candidateHead": "200 at preregistered HF revision; 83,975,624,672 bytes; actual SHA must be verified after download."
+  },
+  "sequence": [
+    "Read AGENTS.md, README.md, WORK_QUEUE.md and WORK_QUEUE.lock again; verify the lock token belongs to this VF umbrella.",
+    "Preflight processes/listeners/containers, GPU identity, disk free space and exact candidate presence/hash. Do not stop unrelated processes.",
+    "Shallow clone the vendor GitLab repository and checkout the exact source commit; independently grep actual type names, qwen4exp and CUDA backend paths.",
+    "Only if static checks pass, configure/build llama-server with GGML_CUDA=ON and CUDA arch 86, with source/build on D.",
+    "Run only llama-server --list-devices; require both local RTX 3090s. No model download/server/inference/benchmark in Q160.",
+    "If both devices appear, amend Q152 and proceed sequentially with its exact candidate/checksum, two-GPU load and BCB-Hard-8 screen. Otherwise stop, preserve receipts and clean only Q160-owned build/source."
+  ],
+  "guardrails": {
+    "candidate": "Q152 unchanged: agentionai/Qwen3.8-Flash-Next-Gyro-Coder-GGUF@87d31357f4cfeb8555cf32fc63a707c5fa10ae7a/Qwen3.8-Flash-Next-Gyro-Coder-L-TQ3_0-v1.1.gguf",
+    "candidateBytes": 83975624672,
+    "candidateSha256": "377d5aa5b473a89b4d0d0c9fbd54fd8fcc46da19c16fc881860577189c1403df",
+    "noSingleGpuOrCpuFallback": true,
+    "noModelDownloadBeforeCudaDeviceGate": true,
+    "noHttpServerBeforeStaticBuildAndDeviceGate": true,
+    "preserve": [
+      "ASTRA Flash-Next RCO IQ2_XS",
+      "SOL Qwen3.8-27B",
+      "all PeritoSoft model files/configuration",
+      "ArtCraft GUI"
+    ],
+    "noArtificialMemoryLimits": true,
+    "serialInferenceOnly": true
+  },
+  "expectedFirstOutcome": "Either CUDA server enumerates both RTX 3090s, enabling amended Q152, or the runtime remains blocked before model download.",
+  "webReferences": [
+    "https://huggingface.co/agentionai/Qwen3.8-Flash-Next-Gyro-Coder-GGUF",
+    "https://gitlab.com/api/v4/projects/agentionai-group%2Fllama.cpp/repository/branches/main",
+    "https://gitlab.com/api/v4/projects/agentionai-group%2Fllama.cpp/-/blob/main/src/llama-arch.cpp",
+    "https://gitlab.com/api/v4/projects/agentionai-group%2Fllama.cpp/-/blob/main/ggml/src/ggml-cuda/mmq.cu",
+    "https://gitlab.com/agentionai-group/agention-gyro"
+  ]
+}

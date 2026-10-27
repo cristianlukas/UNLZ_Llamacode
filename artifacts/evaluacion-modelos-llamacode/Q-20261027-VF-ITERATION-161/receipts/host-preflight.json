@@ -1,0 +1,38 @@
+{
+  "taskId": "Q161",
+  "recordedAtUtc": "2026-10-27T04:00:07Z",
+  "status": "pass",
+  "lockToken": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+  "model": {
+    "path": "/media/cristian/Disco local/Models-eval/Q152-GyroCoderL/Qwen3.8-Flash-Next-Gyro-Coder-L-TQ3_0-v1.1.gguf",
+    "bytes": 83975624672,
+    "expectedSha256": "377d5aa5b473a89b4d0d0c9fbd54fd8fcc46da19c16fc881860577189c1403df",
+    "sha256PreviouslyVerifiedAgainstOfficialLfs": true
+  },
+  "server": {
+    "path": "/media/cristian/Disco local/Models-eval/Q160-agention-llama-build/bin/llama-server",
+    "sha256": "aef842c5d82f65c3f03632c8cb85176faf1d56ef0cf489ad7c0ad7de90693376",
+    "gitCommit": "9aa51ce4fdd3435a91531ffe16a17414ccc6dc6f"
+  },
+  "runnerSha256": "b4eea9c2f9285c640a5ed1aab58ce5982cb968c3b24c90b4231980a95b33f150",
+  "supervisorSha256": "797090106653238364443bd105197e396e8ab9fe403639b72ad0aab26a2adf3d",
+  "fixtureSha256": "11279cde14113fc8527f141c53e14cb5ccf0dba65749081a4f914408e391c268",
+  "gpus": [
+    "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6, NVIDIA GeForce RTX 3090, 0, 890, 23285",
+    "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049, NVIDIA GeForce RTX 3090, 0, 110, 24068"
+  ],
+  "computeApplicationsBefore": [
+    "959412, /tmp/.mount_artcraPGcaAc/usr/bin/artcraft-launcher, 207 MiB"
+  ],
+  "targetProcessesBefore": [],
+  "port18383Available": true,
+  "memory": {
+    "MemAvailable": 117242785792,
+    "SwapTotal": 8589930496,
+    "SwapFree": 3542650880
+  },
+  "memoryPsi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=1619419081\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=1618183606\n",
+  "oomKillGlobalBefore": 0,
+  "memoryCapsApplied": false,
+  "decision": "all preflight gates passed; run the preregistered dual-GPU screen"
+}

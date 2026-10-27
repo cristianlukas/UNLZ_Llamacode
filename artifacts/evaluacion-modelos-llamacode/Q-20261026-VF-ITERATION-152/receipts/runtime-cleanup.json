@@ -1,0 +1,11 @@
+{
+  "taskId": "Q152",
+  "verifiedAtUtc": "2026-10-26T19:24:00Z",
+  "imageDigest": "sha256:ddcba819dfa58332e408aa734d3cde13572331a57683abd3afb1e0a620f543d6",
+  "consumerContainersBeforeRemoval": 0,
+  "removed": true,
+  "dockerReportedLayerDeletion": "image config and tag removed; shared layers retained",
+  "filesystemBytesReclaimed": 2396160,
+  "modelDownloaded": false,
+  "ASTRA_SOL_PeritoSoftTouched": false
+}

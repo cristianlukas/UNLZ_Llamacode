@@ -1,0 +1,30 @@
+{
+  "taskId": "Q160",
+  "source": "https://gitlab.com/agentionai-group/llama.cpp",
+  "commit": "9aa51ce4fdd3435a91531ffe16a17414ccc6dc6f",
+  "sourcePath": "/media/cristian/Disco local/Models-eval/Q160-agention-llama.cpp",
+  "buildPath": "/media/cristian/Disco local/Models-eval/Q160-agention-llama-build",
+  "configuration": {
+    "cmakeBuildType": "Release",
+    "GGML_CUDA": true,
+    "CMAKE_CUDA_ARCHITECTURES": "86",
+    "target": "llama-server",
+    "parallelJobs": 16,
+    "nvcc": "12.0.140",
+    "cmake": "3.28.3",
+    "gccDefault": "13.3.0",
+    "cmakeCudaHostCompiler": "GNU 12.4.0"
+  },
+  "configureExitCode": 0,
+  "buildExitCode": 0,
+  "binary": "/media/cristian/Disco local/Models-eval/Q160-agention-llama-build/bin/llama-server",
+  "warnings": [
+    "src/models/qwen4exp.cpp:563 format %d expects int but receives long int",
+    "OpenSSL not found; HTTPS support disabled (local loopback HTTP test remains available)"
+  ],
+  "uiAssets": "downloaded, archive checksum verified, extracted, embedded",
+  "modelDownloaded": false,
+  "inferenceStarted": false,
+  "benchmarkStarted": false,
+  "recordedAtUtc": "2026-10-27T02:32:00Z"
+}

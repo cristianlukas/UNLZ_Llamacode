@@ -1,0 +1,16 @@
+{
+  "taskId": "Q161",
+  "status": "scripts_preregistered",
+  "recordedAtUtc": "2026-10-27T03:57:40Z",
+  "runner": "artifacts/evaluacion-modelos-llamacode/Q-20261027-VF-ITERATION-161/scripts/q161_run_bcb_budgeted.py",
+  "runnerSha256": "b4eea9c2f9285c640a5ed1aab58ce5982cb968c3b24c90b4231980a95b33f150",
+  "supervisor": "artifacts/evaluacion-modelos-llamacode/Q-20261027-VF-ITERATION-161/scripts/q161_supervise_bcb.py",
+  "supervisorSha256": "797090106653238364443bd105197e396e8ab9fe403639b72ad0aab26a2adf3d",
+  "sourceRunner": "Q89 fixed BCB runner; only change is send reasoning_budget_tokens for arm=swift",
+  "supervisorChanges": [
+    "separate port 18383",
+    "Q161 run/receipt identifiers",
+    "pinned Q161 runner SHA-256",
+    "explicit --budget 2048"
+  ]
+}

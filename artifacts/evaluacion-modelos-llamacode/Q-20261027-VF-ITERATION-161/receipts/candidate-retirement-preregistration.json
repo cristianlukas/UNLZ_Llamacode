@@ -1,0 +1,31 @@
+{
+  "taskId": "Q161",
+  "recordedAtUtc": "2026-10-27T04:08:56Z",
+  "status": "preregistered_before_unlink",
+  "authorization": "User previously authorized removing non-ASTRA/non-SOL local models unless used by PeritoSoft; user confirmed PeritoSoft is closed and authorized killing its app/server. This exact model is evaluation-only; no process/config reference found.",
+  "decisionEvidence": "Q152 unbounded reasoning BCB-Hard-8 0/8; Q161 explicit 2048 reasoning budget BCB-Hard-8 1/8 vs preregistered stop gate ≥4/8. No further seeds justified.",
+  "target": {
+    "path": "/media/cristian/Disco local/Models-eval/Q152-GyroCoderL/Qwen3.8-Flash-Next-Gyro-Coder-L-TQ3_0-v1.1.gguf",
+    "bytes": 83975624672,
+    "inode": 670664,
+    "hardLinkCount": 1,
+    "sha256": "377d5aa5b473a89b4d0d0c9fbd54fd8fcc46da19c16fc881860577189c1403df"
+  },
+  "preconditions": {
+    "fileOnlyInEvaluationDirectory": true,
+    "openFileConsumer": "none observed via fuser",
+    "hardLinks": 1,
+    "configurationReferences": "none in profiles/config/configs/data search outside artifacts",
+    "peritoSoftProcess": "none",
+    "llamaServerProcess": "none",
+    "listenPort18383": false
+  },
+  "filesystemBefore": {
+    "device": "/dev/nvme1n1p2",
+    "sizeBytes": 1800381919232,
+    "usedBytes": 1389047595008,
+    "availableBytes": 411334324224,
+    "mount": "/media/cristian/Disco"
+  },
+  "scope": "Remove only the pinned evaluation GGUF; preserve all run data, source receipts, Q160 build/runtime, MTP/shared assets, ASTRA, SOL, PeritoSoft configuration/data and unrelated files."
+}

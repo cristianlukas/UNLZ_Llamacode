@@ -1,0 +1,75 @@
+{
+  "taskId": "Q161",
+  "recordedAtUtc": "2026-10-27T04:13:31Z",
+  "status": "synchronized_and_readback_verified",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheetTitle": "Listado",
+  "updates": [
+    {
+      "sheet": "IA local",
+      "range": "A61:L61",
+      "purpose": "actualizar estado hardware/runtime y no-go Q152/Q161"
+    },
+    {
+      "sheet": "Evaluaciones LlamaCode",
+      "range": "A356:J356",
+      "purpose": "cerrar Q152 con el defecto de request documentado"
+    },
+    {
+      "sheet": "Evaluaciones LlamaCode",
+      "range": "A360:J360",
+      "purpose": "registrar Q161 como retest separado; formato copiado de fila anterior"
+    },
+    {
+      "sheet": "Accionables",
+      "range": "A25:N25",
+      "purpose": "cerrar acción vf-gyro-coder-l-q152-20261026"
+    },
+    {
+      "sheet": "Inventario de modelos",
+      "range": "A17:R17",
+      "purpose": "marcar GGUF retirado, 0 disponible, conservar SHA y resultados"
+    },
+    {
+      "sheet": "Resultados",
+      "range": "A360:AF361",
+      "purpose": "agregar perfiles completos Q152 y Q161, incluidos engine args, harness y métricas"
+    }
+  ],
+  "readback": {
+    "valuesVerified": true,
+    "formatVerified": true,
+    "preservedPriorRow": "Resultados!A359:AF359 remains Q156-BCB8-GYRO-M",
+    "format": "wrap/top alignment and Arial 10 preserved/copied on Results rows",
+    "modelWeightSheet": "Modelos locales por peso search found no Gyro-Coder-L row; no duplicate added"
+  },
+  "processCheck": {
+    "peritoSoftProcesses": 0,
+    "llamaServerProcesses": 0,
+    "targetListeners": 0,
+    "gpuCompute": "0% on both RTX 3090",
+    "action": "No process required termination; no signals sent"
+  },
+  "nextGates": [
+    {
+      "gate": "Q32 NInfer/Flash-Next Windows native",
+      "blockedBy": "Windows native Codex session not available in this executor"
+    },
+    {
+      "gate": "Q35 Windows Job Objects",
+      "blockedBy": "requires Windows native session"
+    },
+    {
+      "gate": "HyperQwen",
+      "blockedBy": "Q101/Q104 did not reproduce a parser/runtime defect"
+    },
+    {
+      "gate": "tenant authorization test",
+      "blockedBy": "needs an authenticated principal and trusted policy"
+    },
+    {
+      "gate": "Q119 critical memory pressure",
+      "blockedBy": "no real critical-pressure trace; prior high-memory 1M ASTRA/SOL runs completed"
+    }
+  ]
+}

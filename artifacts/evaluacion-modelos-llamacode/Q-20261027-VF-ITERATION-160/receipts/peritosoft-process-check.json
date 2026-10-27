@@ -1,0 +1,13 @@
+{
+  "taskId": "Q160",
+  "recordedAtUtc": "2026-10-27T02:32:00Z",
+  "processMatches": [],
+  "inferenceListeners": [],
+  "activeDockerMatches": [],
+  "action": "no-signal-sent; no target service was running",
+  "gpuStateBeforeBuild": [
+    {"index": 0, "name": "NVIDIA GeForce RTX 3090", "computeUtilizationPercent": 0, "memoryUsedMiB": 890},
+    {"index": 1, "name": "NVIDIA GeForce RTX 3090", "computeUtilizationPercent": 0, "memoryUsedMiB": 110}
+  ],
+  "artcraftAndCodexTouched": false
+}

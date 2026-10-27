@@ -1,0 +1,44 @@
+{
+  "taskId": "Q152",
+  "checkedAtUtc": "2026-10-26T19:24:00Z",
+  "dockerImage": {
+    "reference": "docker.io/agentionai/agention-llama@sha256:ddcba819dfa58332e408aa734d3cde13572331a57683abd3afb1e0a620f543d6",
+    "platform": "linux/amd64",
+    "id": "sha256:ddcba819dfa58332e408aa734d3cde13572331a57683abd3afb1e0a620f543d6",
+    "sizeBytes": 169911998,
+    "removed": true,
+    "reason": "runtime did not enumerate NVIDIA Vulkan devices; no container consumers existed"
+  },
+  "host": {
+    "driver": "615.71.09",
+    "nvidiaSmi": [
+      "GPU0 GeForce RTX 3090, 1087 MiB used during idle desktop",
+      "GPU1 GeForce RTX 3090, 110 MiB used"
+    ],
+    "vulkaninfo": "enumerates two RTX 3090 GPUs"
+  },
+  "container": {
+    "nvidiaSmi": "sees both GPUs through NVML",
+    "backendFiles": [
+      "/app/libggml-vulkan.so"
+    ],
+    "serverListDevices": "(none)",
+    "loaderErrors": [
+      "initially libXext.so.6 missing",
+      "after mounting ICD, libXext, /dev/dri and host libvulkan: vk_icdGetInstanceProcAddr could not provide vkCreateInstance; Found no drivers"
+    ]
+  },
+  "freeSpace": {
+    "rootBeforeBytes": 9486487552,
+    "dNvmeBeforeBytes": 500149567488,
+    "modelNotDownloaded": true
+  },
+  "inferenceServersBeforeAfter": "none found; relevant TCP listeners absent",
+  "cleanup": {
+    "runningOrStoppedContainersUsingImage": 0,
+    "imageRemovedByDigest": true,
+    "physicalBytesReclaimed": 2396160,
+    "modelArtifactsRemoved": 0
+  },
+  "decision": "BLOCK: vendor/custom runtime must successfully enumerate both local RTX 3090s; do not substitute CPU or single-GPU path."
+}

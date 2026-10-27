@@ -1,0 +1,14 @@
+{
+  "taskId": "Q160",
+  "command": "/media/cristian/Disco local/Models-eval/Q160-agention-llama-build/bin/llama-server --list-devices",
+  "exitCode": 0,
+  "stdout": [
+    "Available devices:",
+    "CUDA0: NVIDIA GeForce RTX 3090 (24173 MiB, 23020 MiB free)",
+    "CUDA1: NVIDIA GeForce RTX 3090 (24176 MiB, 23803 MiB free)"
+  ],
+  "gate": "pass-both-RTX3090-enumerated",
+  "modelLoaded": false,
+  "inference": false,
+  "recordedAtUtc": "2026-10-27T02:32:00Z"
+}

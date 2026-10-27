@@ -1,0 +1,46 @@
+{
+  "recordedAtUtc": "2026-10-27T02:54:14Z",
+  "authorizedTargetCheck": {
+    "patterns": [
+      "peritosoft",
+      "llama-server",
+      "llama_server"
+    ],
+    "targetProcessMatches": [],
+    "commandSelfMatches": [
+      "the ps/rg shell and rg process contain the search pattern; excluded as self-check artifacts"
+    ],
+    "inferenceListeners": [],
+    "action": "none; no target process was present",
+    "authorizedUserScope": "PeritoSoft app and its llama servers only"
+  },
+  "gpu": {
+    "computePercent": [
+      0,
+      0
+    ],
+    "applicationMemoryMiB": [
+      890,
+      110
+    ]
+  },
+  "memory": {
+    "memAvailableBytes": 112942493696,
+    "swapFreeBytes": 3539460096,
+    "swapTotalBytes": 8589930496,
+    "psiSomeAvg10Pct": 0.0,
+    "psiFullAvg10Pct": 0.0
+  },
+  "download": {
+    "status": "in_progress",
+    "partialBytes": 16593533123,
+    "expectedBytes": 83975624672,
+    "sha256Pending": true
+  },
+  "preserved": [
+    "ASTRA",
+    "SOL",
+    "PeritoSoft models/configuration",
+    "Codex GUI"
+  ]
+}
