@@ -1,6 +1,6 @@
 {
   "taskId": "Q161",
-  "recordedAtUtc": "2026-10-27T04:13:31Z",
+  "recordedAtUtc": "2026-10-27T04:21:30Z",
   "status": "synchronized_and_readback_verified",
   "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
   "spreadsheetTitle": "Listado",
@@ -34,6 +34,11 @@
       "sheet": "Resultados",
       "range": "A360:AF361",
       "purpose": "agregar perfiles completos Q152 y Q161, incluidos engine args, harness y métricas"
+    },
+    {
+      "sheet": "Accionables",
+      "range": "A29:N44",
+      "purpose": "reconciliar 16 IDs del depósito local ausentes en la pestaña, manteniendo sus estados actuales"
     }
   ],
   "readback": {
@@ -41,7 +46,10 @@
     "formatVerified": true,
     "preservedPriorRow": "Resultados!A359:AF359 remains Q156-BCB8-GYRO-M",
     "format": "wrap/top alignment and Arial 10 preserved/copied on Results rows",
-    "modelWeightSheet": "Modelos locales por peso search found no Gyro-Coder-L row; no duplicate added"
+    "modelWeightSheet": "Modelos locales por peso search found no Gyro-Coder-L row; no duplicate added",
+    "missingLocalActionablesAdded": 16,
+    "actionableRowsVerified": "Accionables!A29:N44; IDs and statuses match local actionables.json; WRAP preserved; no existing rows overwritten.",
+    "preexistingRowsPreserved": "Accionables!A1:N28; all prior IDs unchanged."
   },
   "processCheck": {
     "peritoSoftProcesses": 0,
@@ -71,5 +79,23 @@
       "gate": "Q119 critical memory pressure",
       "blockedBy": "no real critical-pressure trace; prior high-memory 1M ASTRA/SOL runs completed"
     }
+  ],
+  "missingActionableIds": [
+    "c63152e0-a9c2-4be0-a995-d56f3cade00c",
+    "vf-q32-flashnext-ninfer-linux-gate-20261022",
+    "vf-q32-qwen38-27b-ninfer-imatrix-20261022",
+    "vf-swift15-flashnext-iq2xs-ab-20261023",
+    "173d7a70-4d58-4a06-873f-32a53dd86bfd",
+    "vf-priority-mtp-q4-20261022",
+    "f23604a1-ff2e-4d28-9e09-2b5cf01d9b69",
+    "eaaeb894-e748-472b-a85f-e138e2c0a614",
+    "e79afff9-3701-42a5-b15b-c8e9d35cbb0d",
+    "vf-order-validation-20261019",
+    "vf-quick-tunnel-review-20261019",
+    "vf-ple-sidecar-20261019",
+    "vf-q44-eg2-retrieval-holdout-20261022",
+    "vf-q56-json-raw-consumption-20261023",
+    "594c0291-ed08-46b5-bae6-d3a83189cd05",
+    "q-20261024-vf-iteration-105"
   ]
 }
