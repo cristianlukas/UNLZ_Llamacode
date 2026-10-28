@@ -1,0 +1,50 @@
+{
+  "task_id": "Q172",
+  "amendment_id": "Q172-DSX-T16-ARENA70-COMPOSITE-MEMORY-GUARD",
+  "registered_at_utc": "2026-10-28T13:28:46Z",
+  "amends": "receipts/prereg-amendment-03-dsx-t16-arena70-retry.json",
+  "status": "registered_before_first_scored_prompt",
+  "reason": "Observed arena70 startup exceeded 10% PSI while MemAvailable stayed >45 GiB, active swap-in/out was negligible (vmstat samples <=59 kB/s), and the server completed fault-in/pinning in 82.7 s; PSI fell to 1.9% afterward. A PSI-only stop falsely labels transient pinning stalls as memory exhaustion.",
+  "observed_evidence": {
+    "host_buffer_fault_in_seconds": 52.0,
+    "arena_allocation_and_pin_seconds": 82.7,
+    "mem_available_after_arena_kib": 46980444,
+    "psi_full_avg10_after_arena_percent": 1.87,
+    "swap_io_kb_per_s_samples": {
+      "si": [
+        27,
+        8,
+        8
+      ],
+      "so": [
+        59,
+        0,
+        0
+      ]
+    },
+    "oom_or_crash": false,
+    "two_rtx3090_in_use": true
+  },
+  "revised_stop_guard": {
+    "stop_immediately_if": "experiment scope receives oom/oomd kill, server crashes, or local GUI/system becomes unresponsive",
+    "stop_if_memavailable": "MemAvailable < 16 GiB continuously for 15 seconds",
+    "stop_if_composite_pressure": "memory PSI full avg10 >=10% for >=30 sec AND either MemAvailable <32 GiB or observed system swap-in/out >=64 MiB/s sustained for >=10 sec",
+    "psi_alone": "record and communicate; do not stop if MemAvailable >=32 GiB, swap-in/out remains below threshold, and system responds"
+  },
+  "unchanged_quality_preregistration": {
+    "candidate": "pinned DeepSeek T16 GGUF SHA 31b3852636237c63b3e42b2403f172e372d36c4ad486e65f5c3920307bcfb3fa",
+    "runtime_commit": "98f1259732f8c3a5f445b25e080daf70fc300967",
+    "gpus": [
+      0,
+      1
+    ],
+    "context_tokens": 131072,
+    "arena_gb": 70,
+    "defer_rank": "off",
+    "engram_fp8": "off",
+    "vision": "off",
+    "suite": "Tool-Eval HM 2.8.0 TC-70..TC-97 seed42 variant 20261010, serial"
+  },
+  "production_changes": false,
+  "gui_terminated": false
+}
