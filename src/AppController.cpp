@@ -163,6 +163,100 @@ struct AstraStrataSetup {
     }
 };
 
+static QVariantMap nativeManagedProcessEffectiveProfile(const BackendProfile &backend,
+                                                        QString *error)
+{
+    const QJsonObject spec = backend.managedServer;
+    auto invalid = [error](const QString &message) {
+        if (error) *error = message;
+        return QVariantMap{{QStringLiteral("isValid"), false},
+                           {QStringLiteral("blockingErrors"), QStringList{message}}};
+    };
+#ifndef Q_OS_LINUX
+    Q_UNUSED(backend);
+    return invalid(QStringLiteral("native-process sólo está disponible en Linux."));
+#else
+    if (spec.value(QStringLiteral("platform")).toString() != QLatin1String("linux"))
+        return invalid(QStringLiteral("El proceso administrado no declara platform=linux."));
+
+    const QUrl endpoint(backend.cloudBaseUrl);
+    const QString endpointHost = endpoint.host().toLower();
+    const QHostAddress endpointAddress(endpointHost);
+    if (!endpoint.isValid() || endpoint.scheme() != QLatin1String("http")
+        || (endpointHost != QLatin1String("localhost") && !endpointAddress.isLoopback()))
+        return invalid(QStringLiteral("native-process sólo admite endpoints HTTP loopback."));
+
+    const int configuredPort = spec.value(QStringLiteral("port")).toInt();
+    const int endpointPort = endpoint.port(backend.port);
+    if (configuredPort < 1024 || configuredPort > 65535
+        || endpointPort != configuredPort || backend.port != configuredPort)
+        return invalid(QStringLiteral("El puerto del endpoint no coincide con managedServer.port."));
+
+    const QString command = spec.value(QStringLiteral("command")).toString().trimmed();
+    const QFileInfo commandInfo(command);
+    if (command.isEmpty() || !commandInfo.isFile() || !commandInfo.isExecutable())
+        return invalid(QStringLiteral("El ejecutable administrado no existe o no es ejecutable: %1")
+                           .arg(command.isEmpty() ? QStringLiteral("(vacío)") : command));
+
+    QStringList args;
+    const QJsonArray argValues = spec.value(QStringLiteral("args")).toArray();
+    for (const QJsonValue &value : argValues) {
+        if (!value.isString() || value.toString().contains(QChar::Null))
+            return invalid(QStringLiteral("managedServer.args debe contener sólo strings válidos."));
+        args.append(value.toString());
+    }
+    if (args.isEmpty())
+        return invalid(QStringLiteral("managedServer.args no puede estar vacío."));
+    const QString configuredHost = spec.value(QStringLiteral("host")).toString().trimmed();
+    const int hostArg = args.indexOf(QStringLiteral("--host"));
+    const int portArg = args.indexOf(QStringLiteral("--port"));
+    if ((configuredHost != QLatin1String("localhost")
+         && !QHostAddress(configuredHost).isLoopback())
+        || endpointHost != configuredHost.toLower()
+        || hostArg < 0 || hostArg + 1 >= args.size()
+        || args.at(hostArg + 1).toLower() != configuredHost.toLower()
+        || portArg < 0 || portArg + 1 >= args.size()
+        || args.at(portArg + 1).toInt() != configuredPort)
+        return invalid(QStringLiteral("El proceso administrado debe escuchar sólo en el endpoint loopback configurado."));
+
+    const QString workingDirectory = spec.value(QStringLiteral("workingDirectory")).toString().trimmed();
+    if (!workingDirectory.isEmpty() && !QFileInfo(workingDirectory).isDir())
+        return invalid(QStringLiteral("El workingDirectory administrado no existe: %1")
+                           .arg(workingDirectory));
+
+    for (const QJsonValue &value : spec.value(QStringLiteral("requiredFiles")).toArray()) {
+        const QString path = value.toString().trimmed();
+        if (!value.isString() || path.isEmpty() || !QFileInfo(path).isFile())
+            return invalid(QStringLiteral("Falta un archivo requerido por el proceso administrado: %1")
+                               .arg(path.isEmpty() ? QStringLiteral("(ruta vacía)") : path));
+    }
+
+    QVariantMap env;
+    static const QRegularExpression envName(QStringLiteral("^[A-Za-z_][A-Za-z0-9_]*$"));
+    const QJsonObject envObject = spec.value(QStringLiteral("env")).toObject();
+    for (auto it = envObject.constBegin(); it != envObject.constEnd(); ++it) {
+        if (!envName.match(it.key()).hasMatch() || !it.value().isString()
+            || it.value().toString().contains(QChar::Null))
+            return invalid(QStringLiteral("managedServer.env contiene una variable inválida: %1")
+                               .arg(it.key()));
+        env.insert(it.key(), it.value().toString());
+    }
+
+    const QString commandLine = QDir::toNativeSeparators(command)
+        + QLatin1Char(' ') + args.join(QLatin1Char(' '));
+    return {{QStringLiteral("launchId"), QString()},
+            {QStringLiteral("isValid"), true},
+            {QStringLiteral("binaryPath"), command},
+            {QStringLiteral("commandLine"), commandLine},
+            {QStringLiteral("effectiveArgs"), args},
+            {QStringLiteral("effectiveEnv"), env},
+            {QStringLiteral("workingDirectory"), workingDirectory},
+            {QStringLiteral("warnings"), QStringList{}},
+            {QStringLiteral("blockingErrors"), QStringList{}},
+            {QStringLiteral("serverHasVision"), false}};
+#endif
+}
+
 static QString resolvedStrataPath(QString path, const QString &base)
 {
     path = path.trimmed();
@@ -2670,22 +2764,42 @@ void AppController::startServerInternal(const QString &launchProfileId, bool rem
     }
 
     if (isCloud && !ctx.backend.managedServer.isEmpty() && !isAstraStrata) {
-        m_profiles.markLaunchUsed(launchProfileId);
-        m_activeLaunchId = launchProfileId;
-        if (rememberAsActive)
-            writeSetting(QStringLiteral("lastLaunchId"), launchProfileId);
-        m_serverReady = false;
-        m_serverStopping = false;
-        m_remoteServerActive = false;
-        setServerState(QStringLiteral("running"));
-        appendServerEvent(QStringLiteral("lifecycle"),
-                          QStringLiteral("Iniciando backend administrado por Compose para %1.").arg(launchProfileId));
-        runManagedCompose(launchProfileId, true);
-        emit activeLaunchIdChanged();
-        return;
-    }
-
-    if (isAstraStrata) {
+        const QString managedType = ctx.backend.managedServer
+                                        .value(QStringLiteral("type")).toString();
+        if (managedType == QLatin1String("docker-compose")) {
+            m_profiles.markLaunchUsed(launchProfileId);
+            m_activeLaunchId = launchProfileId;
+            if (rememberAsActive)
+                writeSetting(QStringLiteral("lastLaunchId"), launchProfileId);
+            m_serverReady = false;
+            m_serverStopping = false;
+            m_remoteServerActive = false;
+            setServerState(QStringLiteral("running"));
+            appendServerEvent(QStringLiteral("lifecycle"),
+                              QStringLiteral("Iniciando backend administrado por Compose para %1.").arg(launchProfileId));
+            runManagedCompose(launchProfileId, true);
+            emit activeLaunchIdChanged();
+            return;
+        }
+        if (managedType == QLatin1String("native-process")) {
+            QString error;
+            m_effectiveProfile = nativeManagedProcessEffectiveProfile(ctx.backend, &error);
+            if (!m_effectiveProfile.value(QStringLiteral("isValid")).toBool()) {
+                appendServerEvent(QStringLiteral("lifecycle"),
+                                  QStringLiteral("Proceso administrado inválido: %1").arg(error));
+                emit serverError(error);
+                setServerState(QStringLiteral("failed"));
+                return;
+            }
+            m_effectiveProfile.insert(QStringLiteral("launchId"), launchProfileId);
+        } else {
+            const QString error = QStringLiteral("Tipo de servidor administrado no soportado: %1")
+                                      .arg(managedType.isEmpty() ? QStringLiteral("(vacío)") : managedType);
+            emit serverError(error);
+            setServerState(QStringLiteral("failed"));
+            return;
+        }
+    } else if (isAstraStrata) {
         const QVariantMap setup = resolveAstraStrataSetup(launchProfileId, true);
         if (!setup.value(QStringLiteral("ready")).toBool()) {
             emit serverError(setup.value(QStringLiteral("error")).toString());
@@ -4062,9 +4176,10 @@ void AppController::stopServer()
     m_proc->terminate();
     const auto stoppingBackend = m_activeLaunchId.isEmpty()
         ? BackendProfile{} : buildContext(m_activeLaunchId).backend;
-    const bool stoppingAstra = stoppingBackend.managedServer
-                                   .value(QStringLiteral("type")).toString()
-                               == QLatin1String("astra-strata");
+    const QString stoppingManagedType = stoppingBackend.managedServer
+                                            .value(QStringLiteral("type")).toString();
+    const bool stoppingLongUnload = stoppingManagedType == QLatin1String("astra-strata")
+        || stoppingManagedType == QLatin1String("native-process");
     // Strata must unload a large CPU/GPU-resident model and stop its engine child.
     m_stopKillTimer = new QTimer(this);
     m_stopKillTimer->setSingleShot(true);
@@ -4073,7 +4188,7 @@ void AppController::stopServer()
         m_stopKillTimer->deleteLater();
         m_stopKillTimer = nullptr;
     });
-    m_stopKillTimer->start(stoppingAstra ? 60000 : 5000);
+    m_stopKillTimer->start(stoppingLongUnload ? 60000 : 5000);
 }
 
 void AppController::computeEffectiveProfile(const QString &launchProfileId)
@@ -17059,6 +17174,12 @@ bool AppController::systemProfileReady(const QString &launchId)
             == QLatin1String("astra-strata"))
         return resolveAstraStrataSetup(launchId, true)
             .value(QStringLiteral("ready")).toBool();
+    if (ctx.backend.managedServer.value(QStringLiteral("type")).toString()
+            == QLatin1String("native-process")) {
+        QString error;
+        return nativeManagedProcessEffectiveProfile(ctx.backend, &error)
+            .value(QStringLiteral("isValid")).toBool();
+    }
     return true;
 }
 

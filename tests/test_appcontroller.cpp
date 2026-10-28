@@ -15,6 +15,7 @@
 #include <QFileInfo>
 #include <QDir>
 #include <QCoreApplication>
+#include <QTcpServer>
 #include <QTimer>
 #include <QSignalSpy>
 #include <QSet>
@@ -227,6 +228,7 @@ private slots:
     void benchmarkUsesOneArtifactPerTask();
     void benchmarkCountsRawGenerationProgressOnce();
     void serverHealthAcceptsRemoteNotFoundResponse();
+    void nativeManagedProcessStartsAndStopsOwnedServer();
     void concurrencyBenchmarkSettingsClampBounds();
     void benchmarkReusesServerAlreadyLoadedWithSameProfile();
     void benchmarkBest25ClassifiesExclusiveSpeedTiers();
@@ -288,7 +290,7 @@ private slots:
     void computerUseSandwichRemainsExperimentalAndOptIn();
     void systemProfileBinaryPinReadsBundle();
     void systemProfilesBundleCacheSeesRewrites();
-    void astraFlashNextOffers131KWithoutChangingOneMProfile();
+    void solFlashNextOffers131KWithoutChangingOneMProfile();
     void gpuQueriesRunAsyncAndNotify();
     void systemProfileMinimumBuildSelectsNewestCompatible();
     void cpuSystemProfileRequiresCpuBinary();
@@ -3182,6 +3184,79 @@ void AppControllerTests::serverHealthAcceptsRemoteNotFoundResponse()
     QVERIFY(!AppController::serverHealthReplyAcceptedForTest(0, true, true));
 }
 
+void AppControllerTests::nativeManagedProcessStartsAndStopsOwnedServer()
+{
+#ifndef Q_OS_LINUX
+    QSKIP("native-process sólo se ejecuta en Linux");
+#else
+    QVERIFY(m_tmp.isValid());
+    QTcpServer portProbe;
+    QVERIFY(portProbe.listen(QHostAddress::LocalHost, 0));
+    const int port = portProbe.serverPort();
+    portProbe.close();
+
+    const QString scriptPath = m_tmp.filePath(QStringLiteral("managed-native-server.py"));
+    QFile script(scriptPath);
+    QVERIFY(script.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text));
+    script.write(
+        "from http.server import BaseHTTPRequestHandler, HTTPServer\n"
+        "import argparse\n"
+        "p = argparse.ArgumentParser()\n"
+        "p.add_argument('--host', required=True)\n"
+        "p.add_argument('--port', required=True, type=int)\n"
+        "a = p.parse_args()\n"
+        "class H(BaseHTTPRequestHandler):\n"
+        "  def do_GET(self):\n"
+        "    self.send_response(200 if self.path == '/health' else 404)\n"
+        "    self.end_headers()\n"
+        "  def log_message(self, *_): pass\n"
+        "HTTPServer((a.host, a.port), H).serve_forever()\n");
+    script.close();
+
+    const QString python = QStandardPaths::findExecutable(QStringLiteral("python3"));
+    QVERIFY2(!python.isEmpty(), "python3 is required for the native-process lifecycle fixture");
+    AppController app;
+    ProfileManager *profiles = app.profileManager();
+    const QString backendId = profiles->addBackend(
+        QStringLiteral("Managed native test"), QString(), QStringLiteral("127.0.0.1"), port);
+    QVERIFY(!backendId.isEmpty());
+    QVERIFY(profiles->setBackendCloud(backendId, QStringLiteral("cloud"),
+                                      QStringLiteral("http://127.0.0.1:%1").arg(port),
+                                      QString(), QStringLiteral("native-test"), 4096));
+    QVERIFY(profiles->setBackendManagedServer(backendId, QJsonObject{
+        {QStringLiteral("type"), QStringLiteral("native-process")},
+        {QStringLiteral("platform"), QStringLiteral("linux")},
+        {QStringLiteral("host"), QStringLiteral("127.0.0.1")},
+        {QStringLiteral("port"), port},
+        {QStringLiteral("command"), python},
+        {QStringLiteral("args"), QJsonArray{scriptPath, QStringLiteral("--host"),
+                                             QStringLiteral("127.0.0.1"), QStringLiteral("--port"),
+                                             QString::number(port)}},
+        {QStringLiteral("workingDirectory"), m_tmp.path()},
+        {QStringLiteral("requiredFiles"), QJsonArray{scriptPath}},
+    }));
+    const QString launchId = profiles->addLaunchProfile(
+        QStringLiteral("Managed native process test"), backendId, QString(), QString());
+    QVERIFY(!launchId.isEmpty());
+    QVERIFY(app.systemProfileReady(launchId));
+
+    QVERIFY(profiles->setBackendCloud(backendId, QStringLiteral("cloud"),
+                                      QStringLiteral("http://0.0.0.0:%1").arg(port),
+                                      QString(), QStringLiteral("native-test"), 4096));
+    QVERIFY(!app.systemProfileReady(launchId));
+    QVERIFY(profiles->setBackendCloud(backendId, QStringLiteral("cloud"),
+                                      QStringLiteral("http://127.0.0.1:%1").arg(port),
+                                      QString(), QStringLiteral("native-test"), 4096));
+
+    app.startServer(launchId);
+    QTRY_VERIFY_WITH_TIMEOUT(app.serverRunning(), 5000);
+    QTRY_VERIFY_WITH_TIMEOUT(app.serverReady(), 15000);
+    app.stopServer();
+    QTRY_VERIFY_WITH_TIMEOUT(!app.serverRunning(), 10000);
+    QVERIFY(!app.serverReady());
+#endif
+}
+
 void AppControllerTests::benchmarkBest25ClassifiesExclusiveSpeedTiers()
 {
     QVariantList rows;
@@ -3856,14 +3931,14 @@ void AppControllerTests::systemProfilesBundleCacheSeesRewrites()
     qunsetenv("LLAMACODE_SYSTEM_PROFILES");
 }
 
-void AppControllerTests::astraFlashNextOffers131KWithoutChangingOneMProfile()
+void AppControllerTests::solFlashNextOffers131KWithoutChangingOneMProfile()
 {
     AppController app;
     const QVariantList choices = app.systemProfileContextPresets(
-        QStringLiteral("sys-astra-iq2xs-default"));
+        QStringLiteral("sys-sol-qwen38-flashnext-iq2xs"));
     QCOMPARE(choices, QVariantList{131072});
     const QVariantMap source = app.profileManager()->getLaunchProfile(
-        QStringLiteral("sys-astra-iq2xs-default"));
+        QStringLiteral("sys-sol-qwen38-flashnext-iq2xs"));
     QVERIFY(!source.isEmpty());
     const QVariantMap backend = app.profileManager()->getBackend(
         source.value(QStringLiteral("backendProfileId")).toString());

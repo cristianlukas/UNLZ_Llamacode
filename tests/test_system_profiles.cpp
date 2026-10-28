@@ -53,6 +53,7 @@ private slots:
     void initTestCase();
 
     void manager_loadsSystemProfiles();
+    void bundleProductionRoleAssignmentsMatchRequestedModels();
     void manager_flashNextProfileIsConservativeBenchmarkCandidate();
     void manager_flashNextQ2ProfileMatchesMeasuredCandidate();
     void manager_ninferProfilesAreBenchmarkCandidates();
@@ -174,6 +175,66 @@ void SystemProfilesTests::manager_loadsSystemProfiles()
     QVERIFY(!m8.value("mmprojId").toString().isEmpty());
     QCOMPARE(m8.value("specType").toString(), QStringLiteral("draft-mtp"));
     QVERIFY(!m8.value("draftModelId").toString().isEmpty());
+}
+
+void SystemProfilesTests::bundleProductionRoleAssignmentsMatchRequestedModels()
+{
+    QFile bundle(bundlePath());
+    QVERIFY(bundle.open(QIODevice::ReadOnly));
+    const QJsonArray systemProfiles = QJsonDocument::fromJson(bundle.readAll()).array();
+    QHash<QString, QJsonObject> byId;
+    for (const QJsonValue &value : systemProfiles) {
+        const QJsonObject profile = value.toObject();
+        byId.insert(profile.value(QStringLiteral("id")).toString(), profile);
+    }
+
+    const QJsonObject astra = byId.value(QStringLiteral("sys-astra-iq2xs-default"));
+    QVERIFY(!astra.isEmpty());
+    QCOMPARE(astra.value(QStringLiteral("alias")).toString(), QStringLiteral("ASTRA"));
+    QCOMPARE(astra.value(QStringLiteral("backend")).toObject()
+                 .value(QStringLiteral("model")).toString(),
+             QStringLiteral("deepseek-v4.1-flash"));
+    QCOMPARE(astra.value(QStringLiteral("backend")).toObject()
+                 .value(QStringLiteral("ctx")).toInt(), 131072);
+    QCOMPARE(astra.value(QStringLiteral("agentProfileId")).toString(), QStringLiteral("agent-chat"));
+    QVERIFY(!astra.value(QStringLiteral("best")).toBool());
+    QCOMPARE(astra.value(QStringLiteral("backend")).toObject()
+                 .value(QStringLiteral("managedServer")).toObject()
+                 .value(QStringLiteral("type")).toString(),
+             QStringLiteral("native-process"));
+
+    const QJsonObject sol = byId.value(QStringLiteral("sys-sol-qwen38-flashnext-iq2xs"));
+    QVERIFY(!sol.isEmpty());
+    QCOMPARE(sol.value(QStringLiteral("alias")).toString(), QStringLiteral("SOL"));
+    QCOMPARE(sol.value(QStringLiteral("backend")).toObject()
+                 .value(QStringLiteral("model")).toString(),
+             QStringLiteral("qwen3.8-flash-next-iq2_xs"));
+    QCOMPARE(sol.value(QStringLiteral("backend")).toObject()
+                 .value(QStringLiteral("managedServer")).toObject()
+                 .value(QStringLiteral("type")).toString(),
+             QStringLiteral("astra-strata"));
+    QVERIFY(sol.value(QStringLiteral("comment")).toString().contains(QStringLiteral("TC-92")));
+
+    QFile launches(QDir::current().absoluteFilePath(QStringLiteral("profiles/launches.json")));
+    QVERIFY2(launches.open(QIODevice::ReadOnly), "falta profiles/launches.json");
+    const QJsonArray launchProfiles = QJsonDocument::fromJson(launches.readAll()).array();
+    QJsonObject terra;
+    int terraAliasCount = 0;
+    bool legacyThinkingCapRenamed = false;
+    for (const QJsonValue &value : launchProfiles) {
+        const QJsonObject profile = value.toObject();
+        if (profile.value(QStringLiteral("alias")).toString() == QLatin1String("TERRA")) {
+            ++terraAliasCount;
+            terra = profile;
+        }
+        if (profile.value(QStringLiteral("id")).toString()
+                == QLatin1String("e0f6b3c9-4d81-40a2-b7e5-9c3f8d1a2647"))
+            legacyThinkingCapRenamed = profile.value(QStringLiteral("alias")).toString()
+                == QLatin1String("TERRA-LEGACY-TC");
+    }
+    QCOMPARE(terraAliasCount, 1);
+    QVERIFY(terra.value(QStringLiteral("name")).toString().contains(QStringLiteral("Qwen3.8 27B")));
+    QVERIFY(legacyThinkingCapRenamed);
 }
 
 void SystemProfilesTests::manager_flashNextProfileIsConservativeBenchmarkCandidate()
@@ -3382,7 +3443,7 @@ void SystemProfilesTests::controller_astraStrataIsListedAndRequiresLocalSetup()
             continue;
         found = true;
         QVERIFY(item.value(QStringLiteral("displayName")).toString().contains(
-            QStringLiteral("ASTRA")));
+            QStringLiteral("SOL")));
         QVERIFY(item.value(QStringLiteral("ready")).toBool());
         break;
     }

@@ -5165,14 +5165,79 @@
     },
     {
         "id": "sys-astra-iq2xs-default",
-        "tier": "ASTRA-Strata",
+        "tier": "ASTRA-DeepSeek",
         "order": 497,
         "extra": true,
         "benchmark": true,
         "best": false,
         "favorite": false,
         "alias": "ASTRA",
-        "displayName": "ASTRA DEFAULT · ISTA IQ2_XS · Strata · 1M YaRN ×4",
+        "displayName": "ASTRA · DeepSeek V4.1 Flash 1017 · DSX T16 · dual 3090",
+        "contextPresets": [131072],
+        "minVramGb": 48,
+        "minRamGb": 120,
+        "backend": {
+            "kind": "cloud",
+            "baseUrl": "http://127.0.0.1:18175",
+            "model": "deepseek-v4.1-flash",
+            "ctx": 131072,
+            "port": 18175,
+            "managedServer": {
+                "type": "native-process",
+                "platform": "linux",
+                "host": "127.0.0.1",
+                "port": 18175,
+                "command": "/usr/bin/python3",
+                "args": [
+                    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/tools/linux_eval_scope.py",
+                    "--run",
+                    "--",
+                    "/usr/bin/env",
+                    "DSX_GPUS=0,1",
+                    "DSX_DEFER=off",
+                    "DSX_ENGRAM_FP8=off",
+                    "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-dsx-T16/build/release/dsx-server",
+                    "--model",
+                    "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-dsx-T16/models/DeepSeek-V4.1-Flash-1017-dsx-t16.gguf",
+                    "--rank",
+                    "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-dsx-T16/models/expert-rank.json",
+                    "--ctx",
+                    "131072",
+                    "--arena-gb",
+                    "70",
+                    "--no-vision",
+                    "--host",
+                    "127.0.0.1",
+                    "--port",
+                    "18175",
+                    "--model-name",
+                    "deepseek-v4.1-flash"
+                ],
+                "workingDirectory": "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-dsx-T16/models",
+                "requiredFiles": [
+                    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/tools/linux_eval_scope.py",
+                    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/tools/linux_eval_scope_exec.py",
+                    "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-dsx-T16/build/release/dsx-server",
+                    "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-dsx-T16/models/DeepSeek-V4.1-Flash-1017-dsx-t16.gguf",
+                    "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-dsx-T16/models/expert-rank.json"
+                ]
+            }
+        },
+        "agentProfileId": "agent-chat",
+        "reasoningEffort": "medium",
+        "reasoningBudget": 8192,
+        "comment": "ASTRA reasignado por pedido del usuario a DeepSeek-V4.1-Flash-1017 DSX T16. Perfil probado en 2×RTX 3090 +128 GiB, contexto 131072, arena70; artefactos fijados por SHA en Q172. En un único screen Tool-Eval seed42 obtuvo 89/100 (50/56) frente a 73/100 (41/56) del control ASTRA Qwen Flash-Next; no se midió TPS ni se repitieron semillas. FALLO CRÍTICO: TC-92 filtró datos de otro tenant en el candidato y también en el control. Por eso queda best=false, contexto limitado a 131K y agente `agent-chat` (sin MCP/integraciones); no usar con datos sensibles ni flujos multi-tenant. Rehabilitar herramientas sólo después de corregir aislamiento y repetir el gate. El proceso se ejecuta en un scope Linux con systemd-oomd; requiere el runtime, sidecar y modelo DSX existentes en D."
+    },
+    {
+        "id": "sys-sol-qwen38-flashnext-iq2xs",
+        "tier": "SOL-Strata",
+        "order": 498,
+        "extra": true,
+        "benchmark": true,
+        "best": false,
+        "favorite": false,
+        "alias": "SOL",
+        "displayName": "SOL · Qwen3.8 Flash-Next RCO IQ2_XS · Strata · 1M YaRN ×4",
         "contextPresets": [131072, 1048576],
         "minVramGb": 12,
         "backend": {
@@ -5192,18 +5257,18 @@
         "agentProfileId": "agent-maximo",
         "reasoningEffort": "medium",
         "reasoningBudget": 8192,
-        "comment": "ASTRA DEFAULT solicitado por el usuario. ISTA-DASLab Qwen3.8-Flash-Next GSQ-RCO IQ2_XS, Strata 0.1.41, 2×RTX 3090, contexto 1048576 con YaRN ×4 desde contexto original 262144, KV int8/resident 32768, MTP4/spec-min-p 0.70, cache de expertos auto y sampling temp 0.6/top-p 0.95/top-k 20/min-p 0/repeat 1/presence 0. El screening de contexto aceptó 996163 tokens; NIAH sintético recuperó 10/10 hechos en una corrida a 1M. Resultado provisional, no es calidad general. Hard Mode v2.8.0: 28 tareas × 3 semillas, 77,98/100 media, 154,19 tok/s media (153,05 mediana), 11:05 total. AVISO DE SEGURIDAD: TC-92 filtró datos de otro tenant en 3/3 semillas; TC-74 también falló 3/3. No usar con datos sensibles o aislamiento entre tenants. La promoción a predeterminado sigue el pedido explícito del usuario; best=false para no presentarlo como recomendación segura general. Config exacta en Ajustes → ASTRA."
+        "comment": "SOL reasignado a Qwen3.8 Flash-Next GSQ-RCO IQ2_XS en Strata 0.1.41, 2×RTX 3090. Conserva el JSON Strata que antes usaba sys-astra-iq2xs-default mediante la misma clave de configuración. Contexto 131K/1M YaRN ×4, KV int8, MTP4 y sampling conservador. Evidencia local: Hard Mode 28 tareas ×3 semillas, media 77,98/100 y 154,19 tok/s; screen de contexto 10/10 hechos sintéticos a 1M en una corrida. TC-92 filtró datos de otro tenant en 3/3 semillas y TC-74 falló 3/3; no usar con datos sensibles o multi-tenant. No es un perfil seguro general ni reemplaza el trabajo pendiente de aislamiento."
     },
     {
         "id": "sys-astra-iq3s-calibrated-hardmode",
-        "tier": "ASTRA-Strata",
+        "tier": "SOL-Strata",
         "order": 498,
         "extra": true,
         "benchmark": true,
         "best": false,
         "favorite": false,
-        "alias": "ASTRA IQ3_S calibrado",
-        "displayName": "[A/B Hard Mode] ASTRA IQ3_S calibrado · Strata · 131K",
+        "alias": "SOL · IQ3_S calibrado",
+        "displayName": "[A/B Hard Mode] SOL · IQ3_S calibrado · Strata · 131K",
         "minVramGb": 12,
         "backend": {
             "kind": "cloud",
@@ -5232,8 +5297,8 @@
         "benchmark": true,
         "best": false,
         "favorite": false,
-        "alias": "Flash-Next Q4",
-        "displayName": "[A/B Hard Mode] Flash-Next Q4 · Strata · 131K",
+        "alias": "SOL · Flash-Next Q4",
+        "displayName": "[A/B Hard Mode] SOL · Flash-Next Q4 · Strata · 131K",
         "minVramGb": 12,
         "backend": {
             "kind": "cloud",
@@ -5252,18 +5317,18 @@
         "agentProfileId": "agent-maximo",
         "reasoningEffort": "medium",
         "reasoningBudget": 8192,
-        "comment": "Perfil de comparación del Hard Mode v2.8.0: 28 tareas × 3 semillas; media observada 77,38/100. Strata 0.1.41, Qwen3.8 Flash-Next UD-Q4_K_XL, contexto 131072, KV int8/resident 32768, spec 4, spec-min-p 0.70, GPUs 0/1, split 18 y sampling temp 0.6/top-p 0.95/top-k 20/min-p 0/repeat 1/presence 0. TPS observado en esa carga: 65,3 de media (64,9 mediana), 27 min 28 s de las corridas. La suite usa herramientas simuladas; no es una recomendación global. Seleccioná el JSON Q4 exacto en Ajustes → ASTRA para que este perfil no reutilice el JSON de IQ3_S."
+        "comment": "Perfil de comparación del Hard Mode v2.8.0: 28 tareas × 3 semillas; media observada 77,38/100. Strata 0.1.41, Qwen3.8 Flash-Next UD-Q4_K_XL, contexto 131072, KV int8/resident 32768, spec 4, spec-min-p 0.70, GPUs 0/1, split 18 y sampling temp 0.6/top-p 0.95/top-k 20/min-p 0/repeat 1/presence 0. TPS observado en esa carga: 65,3 de media (64,9 mediana), 27 min 28 s de las corridas. La suite usa herramientas simuladas; no es una recomendación global. Seleccioná el JSON Q4 exacto en Ajustes → GPU y motores → Motor Strata para que este perfil no reutilice el JSON IQ2_XS de SOL."
     },
     {
         "id": "sys-astra-strata-iq3s",
-        "tier": "ASTRA-Strata",
+        "tier": "SOL-Strata",
         "order": 500,
         "extra": true,
         "benchmark": true,
         "best": false,
         "favorite": false,
-        "alias": "ASTRA Strata",
-        "displayName": "ASTRA · Strata IQ3_S · Qwen3.8 Flash Next",
+        "alias": "SOL · Strata IQ3_S",
+        "displayName": "SOL · Strata IQ3_S · Qwen3.8 Flash Next",
         "minVramGb": 12,
         "backend": {
             "kind": "cloud",
@@ -5279,6 +5344,6 @@
         "agentProfileId": "agent-maximo",
         "reasoningEffort": "medium",
         "reasoningBudget": 8192,
-        "comment": "LlamaCode inicia y detiene el servidor local de Strata como ASTRA. Requiere Strata instalado y configurar su carpeta y archivo de modelo en Ajustes → ASTRA."
+        "comment": "Variante SOL IQ3_S. LlamaCode inicia y detiene el servidor local de Strata. Requiere Strata instalado y configurar su carpeta y archivo de modelo en Ajustes → GPU y motores → Motor Strata."
     }
 ]

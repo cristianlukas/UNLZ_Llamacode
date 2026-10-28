@@ -13565,7 +13565,7 @@
     },
     {
         "agentProfileId": "agent-maximo",
-        "alias": "SOL",
+        "alias": "TERRA",
         "backendProfileId": "359590a9-7cb6-4c34-a9e4-45e45e2a7712",
         "benchmark": true,
         "benchmarkMemoryAdaptive": true,
@@ -13590,7 +13590,7 @@
         },
         "menuOrder": 0,
         "modelProfileId": "f1a6c4d8-9e2b-4a73-b5c1-0d8f6e2a7419",
-        "name": "177_SOL · Qwen3.8 27B · vLLM TP2 P2P MTP4 · 262K",
+        "name": "177_TERRA · Qwen3.8 27B · vLLM TP2 P2P MTP4 · 262K",
         "plannerProfileId": "",
         "platformArgs": {
         },
@@ -13605,7 +13605,7 @@
         "runtimePresetId": "",
         "systemBadge": false,
         "tags": [
-            "SOL",
+            "TERRA",
             "Qwen3.8 27B",
             "Ubuntu",
             "vLLM",
@@ -13794,7 +13794,7 @@
     },
     {
         "agentProfileId": "agent-maximo",
-        "alias": "TERRA",
+        "alias": "TERRA-LEGACY-TC",
         "backendProfileId": "1cd00b04-02bd-41bf-be45-49eb35b0c3cf",
         "benchmark": true,
         "benchmarkMemoryAdaptive": true,
@@ -13819,7 +13819,7 @@
         },
         "menuOrder": 0,
         "modelProfileId": "423c82fd-50c6-4a2d-b7b4-5c2d168dbd1c",
-        "name": "179_TERRA · ThinkingCap Qwen3.6 MTP4 · CUDA · 64K",
+        "name": "179_TERRA-LEGACY-TC · ThinkingCap Qwen3.6 MTP4 · CUDA · 64K",
         "plannerProfileId": "",
         "platformArgs": {
         },
@@ -13833,7 +13833,7 @@
         "runtimePresetId": "12b64031-d497-44ad-af3b-6fd2d451ce91",
         "systemBadge": false,
         "tags": [
-            "TERRA",
+            "TERRA-LEGACY",
             "ThinkingCap",
             "Ubuntu",
             "CUDA",

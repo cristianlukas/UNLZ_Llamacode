@@ -34,7 +34,8 @@ struct BackendProfile {
     int     cloudCtx = 0;      // n_ctx fallback (cloud no expone /props); 0 = default
     // Gestor opcional para endpoints OpenAI-compat locales. Cuando está definido,
     // LlamaCode administra el proceso externo además de consumir su endpoint.
-    // Actualmente admite {type: docker-compose, composeFile, project, service}.
+    // Tipos soportados: docker-compose y native-process. native-process ejecuta
+    // un argv directo (sin shell), con cwd/env/requiredFiles opcionales.
     QJsonObject managedServer;
 
     bool isCloud() const { return kind == QLatin1String("cloud"); }

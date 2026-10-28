@@ -188,7 +188,7 @@ UNLZ_Llamacode es una app nativa (Qt/QML + C++) para orquestar motores locales `
 Principio central:
 - La GUI **no** embebe `llama.cpp`.
 - La GUI **orquesta binarios externos** (`llama-server.exe`, forks MTP, builds CUDA/Vulkan/CPU).
-- La GUI también gestiona ASTRA/Strata como servidor OpenAI-compatible local, con inicio, health-check, logs y parada integrados.
+- La GUI gestiona servidores OpenAI-compatible locales: Strata, Docker Compose y procesos nativos en Linux. Los procesos nativos usan argv sin shell, variables de entorno declaradas y archivos requeridos; sus endpoints deben quedar en loopback. LlamaCode conserva inicio, health-check, logs y parada del proceso.
 - La GUI **compone perfiles** reutilizables sobre binarios, modelos y presets.
 - La GUI **integra harnesses de agente** (opencode) vía HTTP API nativa.
 
@@ -942,6 +942,10 @@ persistencia para que probar Next no altere el historial existente.
   perfil; la política usa `include`/`exclude` y se hereda por fase.
 
 - **Integración HTTP nativa**: comunica con opencode server vía REST + SSE, sin subproceso `opencode run` (elimina conflicto de DB SQLite en Windows)
+- **Tandas de herramientas seguras**: las respuestas con varias tools normales se
+  detienen tras la primera y vuelven al modelo con ese resultado antes de ejecutar
+  otra; las tandas sólo de `task` mantienen su fan-out paralelo. Ver
+  [`docs/harness.md`](docs/harness.md).
 - **Vista Agente**: chat bubbles con streaming en tiempo real
 - **Cola administrable**: mientras el agente trabaja, `Cola (N)` abre los
   mensajes pendientes para previsualizarlos, editarlos, eliminarlos o vaciarlos.
