@@ -1,0 +1,38 @@
+{
+  "task": "Q176 Google Sheets startup result sync",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_title": "Listado",
+  "sheet": "Resultados",
+  "sheet_id": 1972251122,
+  "verified_ranges": [
+    {
+      "range": "Resultados!AG3:AH3",
+      "values": [
+        "N/D · Q176 dual bloqueado; soporte Linux multi-GPU no validado",
+        "N/D · Q176 dual bloqueado; soporte Linux multi-GPU no validado"
+      ],
+      "notes_confirmed": true,
+      "meaning": "NInfer Flash-Next Q173 was GPU1-only; preview Linux has no qualified dual-GPU route. The historical ~330 s startup does not distinguish cold/hot and is not a dual measurement."
+    },
+    {
+      "range": "Resultados!AG27:AH27",
+      "values": ["134.516", "N/D · hot relaunch failed before health: CUDA device-side assert during vLLM KV-cache memory initialization; no host OOM observed with ~104 GiB MemAvailable. See Q176 receipt."],
+      "notes_confirmed": true
+    },
+    {
+      "range": "Resultados!AG37:AH38",
+      "values": [
+        ["2.584", "2.116"],
+        ["2.617", "2.072"]
+      ],
+      "notes_confirmed": true
+    },
+    {
+      "range": "Resultados!AG135:AH135",
+      "values": ["52.115", "18.088"],
+      "notes_confirmed": true
+    }
+  ],
+  "measurement_limits": "All Q176 runs are n=1 per condition and end at readiness, without generation. Page cache was not purged or instrumented; cold means fresh process/model absent from VRAM, hot means a clean relaunch likely using page cache. The NInfer dual cold/hot result is N/D because dual hardware support is unqualified.",
+  "readback_verified": true
+}

@@ -1,0 +1,181 @@
+{
+  "experiment_id": "Q176-QWEN-FLASHNEXT-STRATA-YARN4-1M-COLD-HOT-INIT-01",
+  "started_utc": "2026-10-28T23:01:22+00:00",
+  "config_sha256": "cf5e910f72de441eec9b8bead6af4a24170ba919f62638e0c80b925257497b7e",
+  "runtime_sha256": "770ecf303a4c6271654339c639392ecb455de3a999bf5d2e8dbc73c879103602",
+  "model_shard_sha256": [
+    "92cee27ae5bbadcd732416a0f7a7f0acc092399dbbe8f5a5efa707c2ec0a49d7",
+    "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113"
+  ],
+  "model_shard_stats": [
+    {
+      "path": "/media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS-00001-of-00002.gguf",
+      "size_bytes": 39225954592,
+      "mtime_ns": 1791824778113101000
+    },
+    {
+      "path": "/media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/IQ2_XS/Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS-00002-of-00002.gguf",
+      "size_bytes": 28800138432,
+      "mtime_ns": 1791823874746058600
+    }
+  ],
+  "context_limit": 1048576,
+  "rope_scaling": "YaRN factor4 original context262144",
+  "gpu_topology": "Strata config GPU0+GPU1; require engine compute+VRAM on both",
+  "initial_gpu": {
+    "0": {
+      "used_mib": 1444,
+      "total_mib": 24576,
+      "util_percent": 23
+    },
+    "1": {
+      "used_mib": 108,
+      "total_mib": 24576,
+      "util_percent": 28
+    }
+  },
+  "initial_mem_available_kib": 113556044,
+  "inference_request_sent": false,
+  "runs": [
+    {
+      "label": "cold-process / page-cache uncontrolled",
+      "pid": 1302343,
+      "launch_to_health_seconds": 52.115,
+      "health": {
+        "status": "ok",
+        "max_context": 1048576,
+        "model": "qwen3.8-flash-next-iq2_xs",
+        "images": false,
+        "api_key": false,
+        "loaded": true,
+        "service": "strata"
+      },
+      "owned_processes_at_ready": [
+        1302343,
+        1302426
+      ],
+      "compute_pids_by_gpu": {
+        "0": [
+          1302426
+        ],
+        "1": [
+          1302426
+        ]
+      },
+      "pmon_at_ready": "# gpu         pid   type     sm    mem    enc    dec    jpg    ofa    command \n# Idx           #    C/G      %      %      %      %      %      %    name \n    0       2362     G      2      0      -      -      -      -    Xorg           \n    0       4020     G      4      0      -      -      -      -    compiz         \n    0     210804     G      -      -      -      -      -      -    gnome-software \n    0     296532     G      -      -      -      -      -      -    firmware-update\n    0     878149     G      -      -      -      -      -      -    Codex --change-\n    0    1070062     G      -      -      -      -      -      -    whatsapp-electr\n    0    1237513     G      -      -      -      -      -      -    peri           \n    0    1262675     G      -      -      -      -      -      -    -              \n    0    1302426     C      1      0      -      -      -      -    strata         \n    0    3374402     G      -      -      -      -      -      -    brave --type=gp\n    1       2362     G      5      0      -      -      -      -    Xorg           \n    1    1302426     C      -      -      -      -      -      -    strata         \n",
+      "gpu_baseline": {
+        "0": {
+          "used_mib": 1444,
+          "total_mib": 24576,
+          "util_percent": 23
+        },
+        "1": {
+          "used_mib": 108,
+          "total_mib": 24576,
+          "util_percent": 41
+        }
+      },
+      "gpu_at_ready": {
+        "0": {
+          "used_mib": 23488,
+          "total_mib": 24576,
+          "util_percent": 9
+        },
+        "1": {
+          "used_mib": 23146,
+          "total_mib": 24576,
+          "util_percent": 5
+        }
+      },
+      "mem_available_at_ready_kib": 60514324,
+      "log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-176/logs/qwen-flashnext-strata-1m-cold-init.log",
+      "status": "complete",
+      "server_exit_code": 0,
+      "port_free_after_cleanup": true,
+      "gpu_after_cleanup": {
+        "0": {
+          "used_mib": 1442,
+          "total_mib": 24576,
+          "util_percent": 100
+        },
+        "1": {
+          "used_mib": 108,
+          "total_mib": 24576,
+          "util_percent": 100
+        }
+      },
+      "mem_available_after_cleanup_kib": 113287456
+    },
+    {
+      "label": "hot-likely / fresh process after first load",
+      "pid": 1304057,
+      "launch_to_health_seconds": 18.088,
+      "health": {
+        "status": "ok",
+        "max_context": 1048576,
+        "model": "qwen3.8-flash-next-iq2_xs",
+        "images": false,
+        "api_key": false,
+        "loaded": true,
+        "service": "strata"
+      },
+      "owned_processes_at_ready": [
+        1304057,
+        1304098
+      ],
+      "compute_pids_by_gpu": {
+        "0": [
+          1304098
+        ],
+        "1": [
+          1304098
+        ]
+      },
+      "pmon_at_ready": "# gpu         pid   type     sm    mem    enc    dec    jpg    ofa    command \n# Idx           #    C/G      %      %      %      %      %      %    name \n    0       2362     G     35      1      -      -      -      -    Xorg           \n    0       4020     G      2      0      -      -      -      -    compiz         \n    0     210804     G      -      -      -      -      -      -    gnome-software \n    0     296532     G      -      -      -      -      -      -    firmware-update\n    0     878149     G      -      -      -      -      -      -    Codex --change-\n    0    1070062     G      -      -      -      -      -      -    whatsapp-electr\n    0    1237513     G      -      -      -      -      -      -    peri           \n    0    1262675     G      -      -      -      -      -      -    -              \n    0    1304098     C      6      0      -      -      -      -    strata         \n    0    3374402     G      -      -      -      -      -      -    brave --type=gp\n    1       2362     G      5      0      -      -      -      -    Xorg           \n    1    1304098     C      3      0      -      -      -      -    strata         \n",
+      "gpu_baseline": {
+        "0": {
+          "used_mib": 1499,
+          "total_mib": 24576,
+          "util_percent": 22
+        },
+        "1": {
+          "used_mib": 108,
+          "total_mib": 24576,
+          "util_percent": 9
+        }
+      },
+      "gpu_at_ready": {
+        "0": {
+          "used_mib": 23602,
+          "total_mib": 24576,
+          "util_percent": 20
+        },
+        "1": {
+          "used_mib": 23146,
+          "total_mib": 24576,
+          "util_percent": 11
+        }
+      },
+      "mem_available_at_ready_kib": 60514164,
+      "log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-176/logs/qwen-flashnext-strata-1m-hot-init.log",
+      "status": "complete",
+      "server_exit_code": 0,
+      "port_free_after_cleanup": true,
+      "gpu_after_cleanup": {
+        "0": {
+          "used_mib": 1556,
+          "total_mib": 24576,
+          "util_percent": 100
+        },
+        "1": {
+          "used_mib": 108,
+          "total_mib": 24576,
+          "util_percent": 11
+        }
+      },
+      "mem_available_after_cleanup_kib": 113627504
+    }
+  ],
+  "status": "complete",
+  "finished_utc": "2026-10-28T23:02:37+00:00"
+}

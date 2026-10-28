@@ -1,0 +1,11 @@
+{
+  "amendment_id": "Q176-A02-REUSE-DSX-SHA-VERIFICATION",
+  "registered_utc": "2026-10-28T22:46:20Z",
+  "supersedes": "amendment-01 runner behavior that re-hashed the 251,592,261,632-byte model before each start",
+  "reason": "Attempt 1 completed the full SHA-256 comparison successfully before starting DSX, reading the 251.6 GB model. Re-reading the whole file for the retry would add several minutes and perturb the page cache without improving the pinned artifact identity check.",
+  "verified_model_sha256": "31b3852636237c63b3e42b2403f172e372d36c4ad486e65f5c3920307bcfb3fa",
+  "verification_evidence": "The runner progressed past its full sha(MODEL)==MODEL_SHA preflight and launched the model; this preflight would have raised before launch on a mismatch.",
+  "retry_identity_gate": {"size_bytes": 251592261632, "mtime_ns": 1793190727914386700},
+  "retry_runtime_gate": "Re-hash the much smaller pinned runtime executable on each run.",
+  "runner_sha256_after_amendment": "93d013804c15f2b5d3ec99d35eb3407564aaf07b4ee475d86be04a2004bf1449"
+}

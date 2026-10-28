@@ -1,0 +1,10 @@
+{
+  "amendment_id": "Q176-A01-DSX-COMPUTE-PLACEMENT-GATE",
+  "registered_utc": "2026-10-28T22:45:50Z",
+  "supersedes": "prereg-dsx-t16-cold-hot-init.json: VRAM increase >1 GiB required on each card",
+  "reason": "The first startup log enumerated both RTX 3090s, and nvidia-smi pmon observed the DSX process as a CUDA compute client on GPU0 and GPU1 while VRAM allocation was highly asymmetric. A symmetric VRAM threshold would incorrectly reject this runtime's documented main/aux placement.",
+  "revised_gate": "At readiness, nvidia-smi pmon must report this exact DSX server PID with type C on both GPU indices 0 and 1. Save the pmon output and VRAM snapshots as separate evidence; do not require symmetric VRAM allocation.",
+  "preserved_attempt": "dsx-t16-init-attempt-01-aborted.json",
+  "no_measurement_claimed": "The first process was intentionally stopped before readiness when the invalid memory-allocation gate was discovered. It contributes no cold or hot startup time.",
+  "runner_sha256_after_amendment": "d3a0637afde8b413010a613e33001ed09e9de610aea77504500b7986d316f256"
+}

@@ -1,0 +1,21 @@
+{
+  "experiment_id": "Q176-DSX-T16-DUAL3090-COLD-HOT-INIT-01",
+  "status": "preregistered",
+  "registered_utc": "2026-10-28",
+  "question": "Measure fresh-process readiness for local DeepSeek DSX T16, first process-start and immediate warm-page-cache restart, with both RTX 3090s assigned.",
+  "profile": "DSX/Xolotl Linux; context 131072; arena 70 GiB; no vision; loopback.",
+  "model_sha256": "31b3852636237c63b3e42b2403f172e372d36c4ad486e65f5c3920307bcfb3fa",
+  "runtime_sha256": "bec3b3e59803108b81834227bfb4ba5f722473af34e1ab960510e723fe07ad27",
+  "model_path": "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-dsx-T16/models/DeepSeek-V4.1-Flash-1017-dsx-t16.gguf",
+  "rank_path": "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-dsx-T16/models/expert-rank.json",
+  "runtime_path": "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-dsx-T16/build/release/dsx-server",
+  "argv": ["/usr/bin/env", "DSX_GPUS=0,1", "DSX_DEFER=off", "DSX_ENGRAM_FP8=off", "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-dsx-T16/build/release/dsx-server", "--model", "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-dsx-T16/models/DeepSeek-V4.1-Flash-1017-dsx-t16.gguf", "--rank", "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-dsx-T16/models/expert-rank.json", "--ctx", "131072", "--arena-gb", "70", "--no-vision", "--host", "127.0.0.1", "--port", "18177", "--model-name", "q176-dsx-t16", "--max-tokens", "128", "--temperature", "0.6", "--top-p", "0.95"],
+  "gpu_topology": "GPU0+GPU1; DSX_GPUS=0,1, no single-GPU fallback; each RTX 3090 must gain at least 1 GiB at readiness.",
+  "cold_definition": "Fresh process, no DSX model resident in VRAM. Do not flush global page cache; page-cache state is uncontrolled and likely warm from prior tests.",
+  "hot_definition": "Clean stop then immediate fresh-process restart with identical model/flags; file pages are recently accessed and remain hot only to the extent the OS retains them.",
+  "measurement": "Monotonic Popen-to-healthy GET /health; readiness only, no inference request and no TTFT claim.",
+  "stop_conditions": ["another inference server or compute client appears", "port 18177 occupied", "model/runtime SHA mismatch", "either GPU fails dual-allocation gate", "server error or Xid", "MemAvailable below 32 GiB sustained for 30 seconds", "readiness exceeds 600 seconds"],
+  "resource_policy": "One inference server at a time; do not terminate display/GUI/PeritoSoft processes; cleanup only this experiment's server PID.",
+  "runner": "scripts/measure_dsx_t16_cold_hot_init.py",
+  "runner_sha256": "19f0e3ace20a033c04f621b989ecad3c771533851287a912184097c78fa35835"
+}

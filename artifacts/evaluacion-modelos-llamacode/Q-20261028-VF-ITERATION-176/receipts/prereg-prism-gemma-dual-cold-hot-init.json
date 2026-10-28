@@ -1,0 +1,42 @@
+{
+  "experiment_id": "Q176-PRISM-GEMMA-DUAL-COLD-HOT-INIT-01",
+  "status": "preregistered",
+  "registered_utc": "2026-10-28",
+  "profiles": {
+    "prism": {
+      "model": "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/Bonsai2-Prism-PQ2_0/models/Ternary-Bonsai-2-27B-PQ2_0.gguf",
+      "model_sha256": "3907dc1658db1f78a9826bf8d5bcb8dc65db0d466388937af57f2294fae62ec1",
+      "runtime_sha256": "3ad6c90f0f25fec776be6d70b0bfe3ada0a8bf6a765b53f7a97cf985b0ea560a",
+      "context_tokens": 8448,
+      "gpu": "GPU0+GPU1, layer split 1:1",
+      "q172": "reuse exact existing Q172 score; no new quality run"
+    },
+    "gemma": {
+      "model": "/media/cristian/Disco local/Models/llamacpp/gemma-4-12b-it-qat-q4_0.gguf",
+      "model_sha256": "93567e57a8fe10b23569b9d9ec38cd005deedf71e29477c421a4b83f418a538b",
+      "runtime_sha256": "b760910e1fa0af38d0a9a4589fc011520d408f208b1cc872f13e44ee068d4d1d",
+      "template_sha256": "ae53464bf3be25802b3a5b37def7fd89667067d7577049b3b2d74c4d8de4c6d4",
+      "context_tokens": 8448,
+      "gpu": "GPU0+GPU1, layer split 1:1",
+      "q172": "reuse exact existing Q172 score; no new quality run"
+    }
+  },
+  "measure": "Two clean server launches per profile, Popen-to-healthy GET /health; no generation. First process is VRAM-cold; page cache not purged, and SHA preflight reads model files, so not disk-cold. Second is immediate clean-process relaunch, page cache likely warm but uninstrumented.",
+  "dual_gpu_gate": "same owned process tree must be CUDA compute on GPU0 and GPU1; both cards must gain >1 GiB VRAM before readiness; no single-GPU fallback.",
+  "stop_conditions": [
+    "inference server/container or test port already active",
+    "hash mismatch",
+    "either GPU fails dual compute/allocation gate",
+    "readiness exceeds 600 seconds",
+    "OOM/Xid/runtime fault",
+    "listener not loopback",
+    "cleanup fails"
+  ],
+  "runner": "scripts/measure_llamacpp_dual_cold_hot.py",
+  "runner_sha256": "8579dfb4a666bfaaeb526aed63a26ad1d0051865ac3e461965607f82cee70eb2",
+  "source_profiles": [
+    "Q173 A17 PrismML runner and prereg",
+    "Q173 A18 Gemma runner and prereg"
+  ],
+  "cache_note": "The hash preflight itself reads the model files and therefore warms their page cache. Report process-cold readiness; do not claim cold disk."
+}

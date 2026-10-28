@@ -1,0 +1,15 @@
+{
+  "checkedAtUtc": "2026-10-28T23:29:45Z",
+  "scope": "Current host-to-MCP principal propagation and tenant authorization gates",
+  "findings": [
+    {"file": "src/core/agent/LlamaAgentBackend.cpp", "line": 637, "finding": "Host creates localPrincipal(home,cwd)."},
+    {"file": "src/core/agent/AgentToolRunner.cpp", "line": 1563, "finding": "Trusted principal is passed to each local McpClient."},
+    {"file": "src/core/agent/McpClient.cpp", "line": 159, "finding": "Authorization guard runs before tools/call request."},
+    {"file": "src/core/agent/McpClient.cpp", "line": 177, "finding": "Principal is forwarded in MCP _meta; forwarding alone is not server authentication."},
+    {"file": "src/core/agent/ToolExecutionSafety.cpp", "line": 121, "finding": "scope=tenant is denied until tenant principal and verified server policy exist."},
+    {"file": "tests/test_tool_execution_safety.cpp", "line": 466, "finding": "Existing tests exercise workspace binding and fail-closed helper behavior, not an actual server-side tenant policy or cross-tenant side effect."}
+  ],
+  "decision": "P2.1 remains blocked for same-tenant allow and cross-tenant read/write integration tests. The code change since Q149 corrects the stale claim that no host-to-MCP local principal is propagated; it does not satisfy tenant authentication or authorization.",
+  "testRun": false,
+  "reason": "No real authenticated tenant provider or MCP-server resource policy/fixture is configured."
+}

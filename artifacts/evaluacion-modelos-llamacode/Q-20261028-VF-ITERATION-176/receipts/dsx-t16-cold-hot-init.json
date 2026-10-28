@@ -1,0 +1,169 @@
+{
+  "experiment_id": "Q176-DSX-T16-DUAL3090-COLD-HOT-INIT-01",
+  "started_utc": "2026-10-28T22:46:56+00:00",
+  "model_sha256": "31b3852636237c63b3e42b2403f172e372d36c4ad486e65f5c3920307bcfb3fa",
+  "runtime_sha256": "bec3b3e59803108b81834227bfb4ba5f722473af34e1ab960510e723fe07ad27",
+  "argv": [
+    "/usr/bin/env",
+    "DSX_GPUS=0,1",
+    "DSX_DEFER=off",
+    "DSX_ENGRAM_FP8=off",
+    "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-dsx-T16/build/release/dsx-server",
+    "--model",
+    "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-dsx-T16/models/DeepSeek-V4.1-Flash-1017-dsx-t16.gguf",
+    "--rank",
+    "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-dsx-T16/models/expert-rank.json",
+    "--ctx",
+    "131072",
+    "--arena-gb",
+    "70",
+    "--no-vision",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "18177",
+    "--model-name",
+    "q176-dsx-t16",
+    "--max-tokens",
+    "128",
+    "--temperature",
+    "0.6",
+    "--top-p",
+    "0.95"
+  ],
+  "gpu_topology": "DSX_GPU0+GPU1",
+  "initial_mem_available_kib": 110030152,
+  "initial_gpu": {
+    "0": {
+      "used_mib": 1424,
+      "total_mib": 24576,
+      "util_percent": 8
+    },
+    "1": {
+      "used_mib": 108,
+      "total_mib": 24576,
+      "util_percent": 24
+    }
+  },
+  "inference_request_sent": false,
+  "runs": [
+    {
+      "label": "cold-process / cache-state-uncontrolled",
+      "pid": 1277405,
+      "launch_to_health_seconds": 224.155,
+      "health_body": {
+        "status": "ok",
+        "model": "q176-dsx-t16",
+        "pending": 0
+      },
+      "gpu_baseline": {
+        "0": {
+          "used_mib": 1424,
+          "total_mib": 24576,
+          "util_percent": 8
+        },
+        "1": {
+          "used_mib": 108,
+          "total_mib": 24576,
+          "util_percent": 24
+        }
+      },
+      "gpu_at_readiness": {
+        "0": {
+          "used_mib": 23079,
+          "total_mib": 24576,
+          "util_percent": 20
+        },
+        "1": {
+          "used_mib": 22978,
+          "total_mib": 24576,
+          "util_percent": 26
+        }
+      },
+      "compute_gpu_indices_at_readiness": [
+        0,
+        1
+      ],
+      "pmon_at_readiness": "# gpu         pid   type     sm    mem    enc    dec    jpg    ofa    command \n# Idx           #    C/G      %      %      %      %      %      %    name \n    0       2362     G      4      0      -      -      -      -    Xorg           \n    0       4020     G     30     11      -      -      -      -    compiz         \n    0     210804     G      -      -      -      -      -      -    gnome-software \n    0     296532     G      -      -      -      -      -      -    firmware-update\n    0     878149     G      -      -      -      -      -      -    Codex --change-\n    0    1070062     G      -      -      -      -      -      -    whatsapp-electr\n    0    1237513     G      -      -      -      -      -      -    peri           \n    0    1262675     G      -      -      -      -      -      -    -              \n    0    1277405     C      -      -      -      -      -      -    dsx-server     \n    0    3374402     G      -      -      -      -      -      -    brave --type=gp\n    1       2362     G     16      5      -      -      -      -    Xorg           \n    1    1277405     C      -      -      -      -      -      -    dsx-server     \n",
+      "dual_gpu_gate": true,
+      "mem_available_at_ready_kib": 42127692,
+      "log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-176/logs/dsx-t16-cold-init.log",
+      "status": "complete",
+      "server_exit_code": -2,
+      "port_free_after_cleanup": true,
+      "gpu_after_cleanup": {
+        "0": {
+          "used_mib": 1447,
+          "total_mib": 24576,
+          "util_percent": 0
+        },
+        "1": {
+          "used_mib": 108,
+          "total_mib": 24576,
+          "util_percent": 0
+        }
+      },
+      "mem_available_after_cleanup_kib": 113174076
+    },
+    {
+      "label": "hot-page-cache / fresh-process",
+      "pid": 1283989,
+      "launch_to_health_seconds": 284.167,
+      "health_body": {
+        "status": "ok",
+        "model": "q176-dsx-t16",
+        "pending": 0
+      },
+      "gpu_baseline": {
+        "0": {
+          "used_mib": 1422,
+          "total_mib": 24576,
+          "util_percent": 9
+        },
+        "1": {
+          "used_mib": 108,
+          "total_mib": 24576,
+          "util_percent": 17
+        }
+      },
+      "gpu_at_readiness": {
+        "0": {
+          "used_mib": 23054,
+          "total_mib": 24576,
+          "util_percent": 16
+        },
+        "1": {
+          "used_mib": 22978,
+          "total_mib": 24576,
+          "util_percent": 17
+        }
+      },
+      "compute_gpu_indices_at_readiness": [
+        0,
+        1
+      ],
+      "pmon_at_readiness": "# gpu         pid   type     sm    mem    enc    dec    jpg    ofa    command \n# Idx           #    C/G      %      %      %      %      %      %    name \n    0       2362     G      -      -      -      -      -      -    Xorg           \n    0       4020     G     23      5      -      -      -      -    compiz         \n    0     210804     G      -      -      -      -      -      -    gnome-software \n    0     296532     G      -      -      -      -      -      -    firmware-update\n    0     878149     G      -      -      -      -      -      -    Codex --change-\n    0    1070062     G      -      -      -      -      -      -    whatsapp-electr\n    0    1237513     G      -      -      -      -      -      -    peri           \n    0    1262675     G      -      -      -      -      -      -    -              \n    0    1283989     C      -      -      -      -      -      -    dsx-server     \n    0    3374402     G      -      -      -      -      -      -    brave --type=gp\n    1       2362     G      -      -      -      -      -      -    Xorg           \n    1    1283989     C      -      -      -      -      -      -    dsx-server     \n",
+      "dual_gpu_gate": true,
+      "mem_available_at_ready_kib": 42378480,
+      "log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-176/logs/dsx-t16-hot-init.log",
+      "status": "complete",
+      "server_exit_code": -2,
+      "port_free_after_cleanup": true,
+      "gpu_after_cleanup": {
+        "0": {
+          "used_mib": 1396,
+          "total_mib": 24576,
+          "util_percent": 0
+        },
+        "1": {
+          "used_mib": 108,
+          "total_mib": 24576,
+          "util_percent": 0
+        }
+      },
+      "mem_available_after_cleanup_kib": 113694832
+    }
+  ],
+  "status": "complete",
+  "finished_utc": "2026-10-28T22:55:36+00:00"
+}

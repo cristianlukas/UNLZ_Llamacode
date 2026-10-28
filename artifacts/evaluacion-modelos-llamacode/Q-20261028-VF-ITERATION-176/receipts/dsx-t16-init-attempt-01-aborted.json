@@ -1,0 +1,18 @@
+{
+  "experiment_id": "Q176-DSX-T16-DUAL3090-COLD-HOT-INIT-01",
+  "attempt": 1,
+  "status": "aborted_before_readiness",
+  "started_utc": "2026-10-28T22:44:43Z",
+  "stopped_utc": "2026-10-28T22:45:40Z",
+  "approx_elapsed_seconds": 57,
+  "model_sha256": "31b3852636237c63b3e42b2403f172e372d36c4ad486e65f5c3920307bcfb3fa",
+  "runtime_sha256": "bec3b3e59803108b81834227bfb4ba5f722473af34e1ab960510e723fe07ad27",
+  "initial_mem_available_kib": 110244848,
+  "inference_request_sent": false,
+  "readiness": "not reached; no startup measurement",
+  "diagnostic": "The DSX startup log enumerated GPU0 and GPU1. A live nvidia-smi pmon snapshot showed the owned dsx-server PID as CUDA compute on both GPU indices, but VRAM growth was asymmetric, so the preregistered >1 GiB-per-GPU allocation gate was invalid for this topology.",
+  "server_stop": "SIGINT sent only to the Q176-owned DSX PID after confirming its command line and umbrella lock; process exited -2.",
+  "log": "../logs/dsx-t16-cold-init.log",
+  "postflight": "No inference server remained, port 18177 was free, MemAvailable about 105 GiB; display/GUI processes were left running.",
+  "conclusion": "Protocol attempt only; not evidence of runtime startup failure or a measured cold/hot time. Amendment 01 replaces the VRAM threshold with same-PID CUDA-compute visibility on both devices."
+}

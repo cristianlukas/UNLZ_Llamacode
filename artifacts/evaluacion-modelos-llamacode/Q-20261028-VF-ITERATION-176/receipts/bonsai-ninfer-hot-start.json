@@ -1,0 +1,87 @@
+{
+  "task_id": "Q176-Bonsai-NInfer-hot-init",
+  "registered_profile": "Q174 exact pinned model/runtime/flags",
+  "started_utc": "2026-10-28T22:30:38+00:00",
+  "model_sha256": "cdc4810b0ff17c40d0f62cf214b6e0bcd08346e9eb05ca53371507037793c14a",
+  "binary_sha256": "09145c529015ac7d27ce63214138625927c70c1e89e4291594d74be59bd5f895",
+  "argv": [
+    "/tmp/q174-d/ninfer-build-short/apps/ninfer-serve",
+    "/tmp/q174-d/model/Ternary-Bonsai-2-27B-ninfer-v3.ninfer",
+    "--max-context",
+    "262144",
+    "--kv-capacity",
+    "262144",
+    "--kv-dtype",
+    "rk8v4",
+    "--gdn-state-fp16",
+    "--spec",
+    "dflash2",
+    "--draft-tokens",
+    "5",
+    "--no-prefix-reuse",
+    "--max-concurrency",
+    "1",
+    "--devices",
+    "0,1",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "18574"
+  ],
+  "gpu_topology": "2× RTX 3090; NInfer pipeline stage on each GPU",
+  "cache_condition": "immediately follows Q174 context ladder; model pages were just read; no global page-cache flush; cache warmth is inferred from sequence, not directly instrumented",
+  "cold_vs_hot_definition": "new clean server process, same model absent from VRAM at launch, page cache expected warm",
+  "baseline_gpu": {
+    "0": {
+      "used_mib": 1512,
+      "total_mib": 24576,
+      "util_percent": 18
+    },
+    "1": {
+      "used_mib": 108,
+      "total_mib": 24576,
+      "util_percent": 62
+    }
+  },
+  "mem_available_before_kib": 109063412,
+  "inference_request_sent": false,
+  "readiness": "healthy",
+  "pid": 1247666,
+  "health_body": {
+    "status": "ok",
+    "version": "untagged+3d882fc"
+  },
+  "ready_utc": "2026-10-28T22:30:44+00:00",
+  "launch_to_readiness_seconds": 6.016,
+  "gpu_at_readiness": {
+    "0": {
+      "used_mib": 9956,
+      "total_mib": 24576,
+      "util_percent": 27
+    },
+    "1": {
+      "used_mib": 7892,
+      "total_mib": 24576,
+      "util_percent": 8
+    }
+  },
+  "gpu_dual_gate": true,
+  "log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-176/logs/bonsai-ninfer-hot-start.log",
+  "status": "complete",
+  "server_exit_code": 0,
+  "port_free_after_cleanup": true,
+  "gpu_after_cleanup": {
+    "0": {
+      "used_mib": 1514,
+      "total_mib": 24576,
+      "util_percent": 100
+    },
+    "1": {
+      "used_mib": 108,
+      "total_mib": 24576,
+      "util_percent": 100
+    }
+  },
+  "mem_available_after_kib": 109260148,
+  "finished_utc": "2026-10-28T22:31:14+00:00"
+}

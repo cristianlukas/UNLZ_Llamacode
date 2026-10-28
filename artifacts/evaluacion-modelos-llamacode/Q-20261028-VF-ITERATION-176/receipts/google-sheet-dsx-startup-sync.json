@@ -1,0 +1,13 @@
+{
+  "task_id": "Q176 DSX T16 cold/hot startup sync",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "tab": "Resultados",
+  "updated_ranges": ["AG85:AH85", "AG87:AH87", "AG90:AH91", "AG95:AH95"],
+  "sheet_id": 1972251122,
+  "cold_seconds": 224.155,
+  "hot_seconds": 284.167,
+  "note": "Same profile init copied to each DSX context row. Cold means fresh process with no model in VRAM; page cache was not purged and is uncontrolled. Hot is an immediate fresh-process restart after prior load; cache warmth is inferred, n=1 each, no generation.",
+  "readback": "Google Sheets get_spreadsheet_range confirmed numeric values and row IDs for all five rows; get_spreadsheet_cells confirmed notes in all ten cells.",
+  "filter_range": "unchanged A1:AH407",
+  "verified_utc": "2026-10-28"
+}

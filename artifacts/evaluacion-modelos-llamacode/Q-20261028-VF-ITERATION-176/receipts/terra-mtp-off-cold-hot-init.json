@@ -1,0 +1,303 @@
+{
+  "experiment_id": "Q176-TERRA-MTP-OFF-DUAL-COLD-HOT-INIT-01",
+  "started_utc": "2026-10-28T23:11:10+00:00",
+  "profile": "Qwen3.8-27B AutoRound INT4/W4A8, TP2, MTP off, fp8_e4m3 KV, context262144, max-num-seqs1, sampler .6/.95/20/0/1/0",
+  "gpu": "GPU0+GPU1 RTX3090; TP=2",
+  "requests_sent": false,
+  "page_cache": "No global purge. First run is fresh container/process, not cold disk; second is immediate clean container relaunch.",
+  "runs": [
+    {
+      "label": "cold-process / cache uncontrolled",
+      "launch_to_health_seconds": 134.516,
+      "health": {
+        "status": 200,
+        "body": ""
+      },
+      "container_host_pids": [
+        1320565,
+        1321868,
+        1321869,
+        1321998,
+        1321999
+      ],
+      "compute_pids_by_gpu": {
+        "0": [
+          1321998
+        ],
+        "1": [
+          1321999
+        ]
+      },
+      "pmon": "# gpu         pid   type     sm    mem    enc    dec    jpg    ofa    command \n# Idx           #    C/G      %      %      %      %      %      %    name \n    0       2362     G      6      1      -      -      -      -    Xorg           \n    0       4020     G     13      4      -      -      -      -    compiz         \n    0     210804     G      -      -      -      -      -      -    gnome-software \n    0     296532     G      -      -      -      -      -      -    firmware-update\n    0     878149     G      -      -      -      -      -      -    Codex --change-\n    0    1070062     G      -      -      -      -      -      -    whatsapp-electr\n    0    1237513     G      -      -      -      -      -      -    peri           \n    0    1262675     G      -      -      -      -      -      -    -              \n    0    1321998     C      -      -      -      -      -      -    VLLM::Worker_TP\n    0    3374402     G      -      -      -      -      -      -    brave --type=gp\n    1       2362     G     37     10      -      -      -      -    Xorg           \n    1    1321999     C      -      -      -      -      -      -    VLLM::Worker_TP\n",
+      "gpu_at_ready": {
+        "0": {
+          "used_mib": 22024,
+          "total_mib": 24576
+        },
+        "1": {
+          "used_mib": 20852,
+          "total_mib": 24576
+        }
+      },
+      "docker_top": "PID                 COMMAND\n1320565             vllm\n1321868             python3\n1321869             VLLM::EngineCor\n1321998             VLLM::Worker_TP\n1321999             VLLM::Worker_TP\n",
+      "compose_up_stdout": "",
+      "compose_logs": "gpu memory. Current kv cache memory in use is 9.19 GiB.\nq176-terra-mtp-off-init  | (Worker_TP0 pid=138) INFO 10-28 23:13:03 [gpu_model_runner.py:6924] Graph capturing finished in 1 secs, took 0.44 GiB\nq176-terra-mtp-off-init  | (Worker_TP0 pid=138) INFO 10-28 23:13:03 [gpu_worker.py:726] CUDA graph pool memory: 0.44 GiB (actual), 0.42 GiB (estimated), difference: 0.01 GiB (2.7%).\nq176-terra-mtp-off-init  | (Worker_TP0 pid=138) INFO 10-28 23:13:03 [gpu_worker.py:789] Free memory on device (21.77/23.61 GiB) on startup. Desired GPU memory utilization is (0.9, 21.25 GiB). Actual usage is 9.96 GiB for consumed memory (weights + non-torch), 1.89 GiB for peak activation, and 0.44 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=9468178740` (8.82 GiB) to fit into requested memory, or `--kv-cache-memory=10032070144` (9.34 GiB) to fully utilize gpu memory. Current kv cache memory in use is 9.4 GiB.\nq176-terra-mtp-off-init  | (Worker_TP1 pid=139) INFO 10-28 23:13:04 [jit_monitor.py:79] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.\nq176-terra-mtp-off-init  | (Worker_TP0 pid=138) INFO 10-28 23:13:04 [jit_monitor.py:79] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.\nq176-terra-mtp-off-init  | (EngineCore pid=127) INFO 10-28 23:13:05 [core.py:348] init engine (profile, create kv cache, warmup model) took 20.07 s (compilation: 8.10 s)\nq176-terra-mtp-off-init  | (EngineCore pid=127) [transformers] The `use_fast` parameter is deprecated and will be removed in a future version. Use `backend=\"torchvision\"` instead of `use_fast=True`, or `backend=\"pil\"` instead of `use_fast=False`.\nq176-terra-mtp-off-init  | (EngineCore pid=127) [ERROR] `min_frames` is part of Qwen3VLVideoProcessorInitKwargs, but not documented. Make sure to add it to the docstring of the function in /usr/local/lib/python3.12/dist-packages/transformers/models/qwen3_vl/video_processing_qwen3_vl.py.\nq176-terra-mtp-off-init  | (EngineCore pid=127) [ERROR] `max_frames` is part of Qwen3VLVideoProcessorInitKwargs, but not documented. Make sure to add it to the docstring of the function in /usr/local/lib/python3.12/dist-packages/transformers/models/qwen3_vl/video_processing_qwen3_vl.py.\nq176-terra-mtp-off-init  | (EngineCore pid=127) INFO 10-28 23:13:11 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native'])\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:11 [api_server.py:678] Supported tasks: ['generate']\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:11 [parser_manager.py:37] \"auto\" tool choice has been enabled.\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:12 [hf.py:540] Detected the chat template content format to be 'openai'. You can set `--chat-template-content-format` to override this.\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:22 [base.py:235] Multi-modal warmup completed in 10.196s\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [base.py:235] Readonly multi-modal warmup completed in 0.631s\nq176-terra-mtp-off-init  | (APIServer pid=1) WARNING 10-28 23:13:23 [model.py:1637] Default vLLM sampling parameters have been overridden by the model's `generation_config.json`: `{'temperature': 0.6, 'top_k': 20, 'top_p': 0.95, 'min_p': 0.0}`. If this is not intended, please relaunch vLLM instance with `--generation-config vllm`.\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [api_server.py:682] Starting vLLM server on http://0.0.0.0:8000\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [launcher.py:37] Available routes are:\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [launcher.py:46] Route: /openapi.json, Methods: HEAD, GET\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [launcher.py:46] Route: /docs, Methods: HEAD, GET\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [launcher.py:46] Route: /docs/oauth2-redirect, Methods: HEAD, GET\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [launcher.py:46] Route: /redoc, Methods: HEAD, GET\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [launcher.py:46] Route: /load, Methods: GET\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [launcher.py:46] Route: /version, Methods: GET\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [launcher.py:46] Route: /health, Methods: GET\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [launcher.py:46] Route: /metrics, Methods: GET\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [launcher.py:46] Route: /tokenize, Methods: POST\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [launcher.py:46] Route: /detokenize, Methods: POST\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [launcher.py:46] Route: /v1/models, Methods: GET\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [launcher.py:46] Route: /ping, Methods: GET\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [launcher.py:46] Route: /ping, Methods: POST\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [launcher.py:46] Route: /invocations, Methods: POST\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [launcher.py:46] Route: /v1/chat/completions, Methods: POST\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [launcher.py:46] Route: /v1/chat/completions/batch, Methods: POST\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [launcher.py:46] Route: /v1/responses, Methods: POST\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [launcher.py:46] Route: /v1/responses/{response_id}, Methods: GET\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [launcher.py:46] Route: /v1/responses/{response_id}/cancel, Methods: POST\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [launcher.py:46] Route: /v1/completions, Methods: POST\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [launcher.py:46] Route: /v1/messages, Methods: POST\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [launcher.py:46] Route: /v1/messages/count_tokens, Methods: POST\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [launcher.py:46] Route: /generative_scoring, Methods: POST\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [launcher.py:46] Route: /scale_elastic_ep, Methods: POST\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [launcher.py:46] Route: /is_scaling_elastic_ep, Methods: POST\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [launcher.py:46] Route: /v1/chat/completions/render, Methods: POST\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [launcher.py:46] Route: /v1/completions/render, Methods: POST\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [launcher.py:46] Route: /v1/chat/completions/derender, Methods: POST\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [launcher.py:46] Route: /v1/completions/derender, Methods: POST\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [launcher.py:46] Route: /inference/v1/generate, Methods: POST\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [launcher.py:99] API server: waiting for HTTP server to start\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO:     Started server process [1]\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO:     Waiting for application startup.\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO:     Application startup complete.\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO 10-28 23:13:23 [launcher.py:105] API server: HTTP server started\nq176-terra-mtp-off-init  | (APIServer pid=1) INFO:     172.24.0.1:35202 - \"GET /health HTTP/1.1\" 200 OK\n",
+      "status": "complete",
+      "container_removed": true,
+      "port_free_after_cleanup": true,
+      "gpu_after_cleanup": {
+        "0": {
+          "used_mib": 1459,
+          "total_mib": 24576
+        },
+        "1": {
+          "used_mib": 108,
+          "total_mib": 24576
+        }
+      }
+    }
+  ],
+  "status": "partial",
+  "preflight": {
+    "resolved_compose_sha256": "c614f18b8ff525b559e82fbe845eb94a578a934649d60987ca8662245412b603",
+    "image_id": "sha256:0a51ea5b4ae2dc5d81890e5173f54203d2a3ae0cfffe51b8fd2afd4391bfd967",
+    "model_manifest_sha256": "b9b842e49ccc3f8b3a1459ce218d87884604a36725a46cb64b4741641ed7d231",
+    "resolved_service": {
+      "command": [
+        "--model",
+        "/root/.cache/huggingface/qwen3.8-27b-autoround-int4",
+        "--served-model-name",
+        "qwen3.8-27b",
+        "local",
+        "--quantization",
+        "auto_round",
+        "--dtype",
+        "bfloat16",
+        "--tensor-parallel-size",
+        "2",
+        "--max-model-len",
+        "262144",
+        "--gpu-memory-utilization",
+        "0.90",
+        "--max-num-seqs",
+        "1",
+        "--max-num-batched-tokens",
+        "8192",
+        "--long-prefill-token-threshold",
+        "4096",
+        "--kv-cache-dtype",
+        "fp8_e4m3",
+        "--trust-remote-code",
+        "--enable-prefix-caching",
+        "--enable-chunked-prefill",
+        "--mamba-cache-mode",
+        "align",
+        "--prefix-match-unit",
+        "16",
+        "--reasoning-parser",
+        "qwen3",
+        "--enable-auto-tool-choice",
+        "--tool-call-parser",
+        "qwen3_coder",
+        "--default-chat-template-kwargs",
+        "{\"enable_thinking\": true, \"reasoning_effort\": \"low\"}",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000"
+      ],
+      "container_name": "q176-terra-mtp-off-init",
+      "deploy": {
+        "resources": {
+          "reservations": {
+            "devices": [
+              {
+                "capabilities": [
+                  "gpu"
+                ],
+                "driver": "nvidia",
+                "count": -1
+              }
+            ]
+          }
+        },
+        "placement": {}
+      },
+      "entrypoint": [
+        "bash",
+        "-c",
+        "umask 0002\nset -e\nsource /etc/club3090/detect_nvlink.sh\n# ⚠️ THIS MUST RUN BEFORE install.sh, NOT AFTER. install.sh only hard-FAILS\n# on a patch-apply error when VLLM_MARLIN_INPUT_DTYPE is already set; if we\n# exported it afterwards, a failed patch would downgrade to a WARNING and we\n# would serve a HALF-WIRED int8 config — the exact thing that guard exists\n# to prevent.\nif [ -z \"$${VLLM_MARLIN_INPUT_DTYPE:-}\" ] && [ \"$${W4A8:-1}\" != \"0\" ]; then\n  export VLLM_MARLIN_INPUT_DTYPE=int8\nfi\nbash /etc/club3090/w4a8/install.sh\nbash /etc/club3090/pr48375/install.sh || exit 1\nbash /etc/club3090/gdn-async-order/install.sh || exit 1\nFI_PINQ_LIB_ALL=\"0\" bash /etc/club3090/flashinfer-decode-pin/install.sh || exit 1\necho \"[w4a8] VLLM_MARLIN_INPUT_DTYPE=$${VLLM_MARLIN_INPUT_DTYPE:-<unset -> W4A16>} (W4A8=$${W4A8:-1})\"\nAR=\"\"\n[ \"$${_NVLINK_ENABLED:-0}\" = \"1\" ] || AR=\"--disable-custom-all-reduce\"\n# -- Drafter toggle: the same contract on every club-3090 compose --------\n#   SPEC_N=<n>  drafter depth (this compose defaults to 4); SPEC_N=0 disables\n#   SPEC=off    back-compat alias for SPEC_N=0\n# Turning the drafter off is the documented mitigation for vllm#50021 and must\n# never require editing this file. A non-numeric SPEC_N is a hard error, so a\n# typo can never masquerade as a silent \"drafter off\".\n_spec_n=\"$${SPEC_N:-4}\"\ncase \"$${SPEC:-}\" in off|OFF|Off|false|no|0) _spec_n=0 ;; esac\ncase \"$$_spec_n\" in \"\"|*[!0-9]*)\n  echo \"[spec] SPEC_N='$$_spec_n' is not a non-negative integer.\" >&2\n  echo \"[spec] Fix: SPEC_N=<n> sets depth; SPEC_N=0 (or SPEC=off) disables.\" >&2\n  exit 1 ;;\nesac\nSPEC_ARGS=()\nif [ \"$$_spec_n\" -gt 0 ]; then\n  SPEC_ARGS=(--speculative-config \"{\\\"method\\\":\\\"mtp\\\",\\\"num_speculative_tokens\\\":$$_spec_n}\")\n  echo \"[spec] drafter ON - mtp n=$$_spec_n\" >&2\nelse\n  echo \"[spec] drafter OFF (SPEC_N=0 / SPEC=off) - no speculative decoding\" >&2\nfi\n# -- Async-scheduling toggle: vllm#50021 mitigation (1), keeps the drafter --\nASYNC_ARGS=()\ncase \"$${ASYNC_SCHED:-}\" in off|OFF|Off|false|no|0)\n  ASYNC_ARGS=(--no-async-scheduling)\n  echo \"[async] async scheduling OFF (ASYNC_SCHED=off) - vllm#50021 mitigation, drafter kept\" >&2 ;;\nesac\n# -- Mamba/GDN cache knobs (hybrid-model KV headroom) --\n#   MAMBA_BLOCK_SIZE=<tokens>  checkpoint SSM state every N tokens (align mode; multiple of 8)\n#   MAMBA_CACHE_DTYPE=bfloat16 store conv+ssm state in bf16 instead of fp32\nMAMBA_ARGS=()\nif [ -n \"$${MAMBA_BLOCK_SIZE:-}\" ]; then MAMBA_ARGS+=(--mamba-block-size \"$${MAMBA_BLOCK_SIZE}\"); echo \"[mamba] block size $${MAMBA_BLOCK_SIZE}\" >&2; fi\nif [ -n \"$${MAMBA_CACHE_DTYPE:-}\" ]; then MAMBA_ARGS+=(--mamba-cache-dtype \"$${MAMBA_CACHE_DTYPE}\"); echo \"[mamba] cache dtype $${MAMBA_CACHE_DTYPE}\" >&2; fi\n# -- Sampler follows the reasoning mode ----------------------------------\n# The card publishes TWO sampler rows (see the header); ENABLE_THINKING\n# now selects the row — one variable instead of the four-variable ritual\n# (#1014). `:=` defaults: an explicit TEMP / TOP_P / PRESENCE_PENALTY\n# from .env or shell STILL WINS in both branches. top_k / min_p are\n# identical across the rows and stay mode-independent.\n_temp=\"$${TEMP:-}\"\nif [ \"$${ENABLE_THINKING:-true}\" = \"true\" ]; then\n  : \"$${_temp:=1.0}\" \"$${TOP_P:=0.95}\" \"$${PRESENCE_PENALTY:=0.0}\"\n  echo \"[sampler] thinking row (ENABLE_THINKING=true): temp=$$_temp top_p=$${TOP_P} presence=$${PRESENCE_PENALTY}\" >&2\nelse\n  : \"$${_temp:=0.7}\" \"$${TOP_P:=0.80}\" \"$${PRESENCE_PENALTY:=1.5}\"\n  echo \"[sampler] instruct row (default): temp=$$_temp top_p=$${TOP_P} presence=$${PRESENCE_PENALTY}\" >&2\nfi\nSAMPLER_ARGS=(--override-generation-config \"{\\\"temperature\\\":$$_temp,\\\"top_p\\\":$${TOP_P},\\\"top_k\\\":$${TOP_K:-20},\\\"min_p\\\":$${MIN_P:-0.0},\\\"presence_penalty\\\":$${PRESENCE_PENALTY}}\")\nexec vllm serve $$AR \"$$@\" \"$${SPEC_ARGS[@]}\" \"$${ASYNC_ARGS[@]}\" \"$${MAMBA_ARGS[@]}\" \"$${SAMPLER_ARGS[@]}\"\n",
+        "--"
+      ],
+      "environment": {
+        "ASYNC_SCHED": "",
+        "CUDA_VISIBLE_DEVICES": "0,1",
+        "ENABLE_THINKING": "true",
+        "HF_HUB_OFFLINE": "1",
+        "HUGGING_FACE_HUB_TOKEN": "",
+        "LD_PRELOAD": "/opt/vramfrag.so",
+        "MAMBA_BLOCK_SIZE": "",
+        "MAMBA_CACHE_DTYPE": "",
+        "MIN_P": "0.0",
+        "NCCL_CUMEM_ENABLE": "0",
+        "NCCL_P2P_DISABLE": "1",
+        "NVIDIA_VISIBLE_DEVICES": "all",
+        "NVLINK_MODE": "auto",
+        "OMP_NUM_THREADS": "1",
+        "PRESENCE_PENALTY": "0.0",
+        "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True",
+        "RMTRACE_FALLBACK64K": "1",
+        "RMTRACE_LOG": "/tmp/rmtrace.log",
+        "RMTRACE_NOFORCEALIGN": "1",
+        "SPEC": "",
+        "SPEC_N": "0",
+        "TEMP": "0.6",
+        "TOP_K": "20",
+        "TOP_P": "0.95",
+        "TRANSFORMERS_OFFLINE": "1",
+        "VLLM_MARLIN_INPUT_DTYPE": null,
+        "VLLM_NO_USAGE_STATS": "1",
+        "VLLM_SKIP_P2P_CHECK": null,
+        "VLLM_USE_FLASHINFER_SAMPLER": "0",
+        "VLLM_WORKER_MULTIPROC_METHOD": "spawn",
+        "W4A8": "1"
+      },
+      "image": "vllm/vllm-openai:v0.27.1",
+      "ipc": "host",
+      "networks": {
+        "default": null
+      },
+      "ports": [
+        {
+          "mode": "ingress",
+          "host_ip": "127.0.0.1",
+          "target": 8000,
+          "published": "18475",
+          "protocol": "tcp"
+        }
+      ],
+      "restart": "no",
+      "shm_size": "17179869184",
+      "user": "0:1000",
+      "volumes": [
+        {
+          "type": "bind",
+          "source": "/media/cristian/Disco local/Models/llamacpp/club-3090",
+          "target": "/root/.cache/huggingface",
+          "bind": {
+            "create_host_path": true
+          }
+        },
+        {
+          "type": "bind",
+          "source": "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.6-27b/vllm/patches/w4a8-int8-act",
+          "target": "/etc/club3090/w4a8",
+          "read_only": true,
+          "bind": {
+            "create_host_path": true
+          }
+        },
+        {
+          "type": "bind",
+          "source": "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.6-27b/vllm/patches/vllm-pr48375-mamba-drop-eagle-block",
+          "target": "/etc/club3090/pr48375",
+          "read_only": true,
+          "bind": {
+            "create_host_path": true
+          }
+        },
+        {
+          "type": "bind",
+          "source": "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.6-27b/vllm/patches/vllm-gdn-mtp-async-spec-order",
+          "target": "/etc/club3090/gdn-async-order",
+          "read_only": true,
+          "bind": {
+            "create_host_path": true
+          }
+        },
+        {
+          "type": "bind",
+          "source": "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.8-27b/vllm/patches/vllm-flashinfer-decode-pin",
+          "target": "/etc/club3090/flashinfer-decode-pin",
+          "read_only": true,
+          "bind": {
+            "create_host_path": true
+          }
+        },
+        {
+          "type": "bind",
+          "source": "/home/cristian/.cache/llamacode/club-3090-src/scripts/detect_nvlink.sh",
+          "target": "/etc/club3090/detect_nvlink.sh",
+          "read_only": true,
+          "bind": {
+            "create_host_path": true
+          }
+        },
+        {
+          "type": "bind",
+          "source": "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.8-27b/vllm/patches/qwen38-reasoning-effort-template/chat_template.jinja",
+          "target": "/root/.cache/huggingface/qwen3.8-27b-autoround-int4/chat_template.jinja",
+          "read_only": true,
+          "bind": {
+            "create_host_path": true
+          }
+        },
+        {
+          "type": "bind",
+          "source": "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.8-27b/vllm/cache/torch_compile",
+          "target": "/root/.cache/vllm/torch_compile_cache",
+          "bind": {
+            "create_host_path": true
+          }
+        },
+        {
+          "type": "bind",
+          "source": "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.8-27b/vllm/cache/triton",
+          "target": "/root/.triton/cache",
+          "bind": {
+            "create_host_path": true
+          }
+        },
+        {
+          "type": "bind",
+          "source": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/gpu0-vram-diagnostico/linux/frag64k/rmtrace.so",
+          "target": "/opt/vramfrag.so",
+          "read_only": true,
+          "bind": {
+            "create_host_path": true
+          }
+        }
+      ]
+    },
+    "docker_ps_before": "",
+    "gpu_before": {
+      "0": {
+        "used_mib": 1461,
+        "total_mib": 24576
+      },
+      "1": {
+        "used_mib": 108,
+        "total_mib": 24576
+      }
+    }
+  },
+  "finished_utc": "2026-10-28T23:15:31Z",
+  "hot_attempt": {
+    "status": "failed_before_readiness",
+    "launch_to_health_seconds": null,
+    "observed_utc": "2026-10-28T23:14:33Z",
+    "failure": "vLLM EngineCore failed during KV-cache available-GPU-memory initialization; worker raised CUDA error: device-side assert triggered. No /health=200, so hot init is N/D.",
+    "gpu_observation": "The retry created one VLLM worker on each GPU and allocated >1 GiB on each before the failure; dual routing was active, but no readiness measurement qualifies.",
+    "host_memory_observation": "MemAvailable was about 104 GiB during cold model load; after the failed retry it returned above 113 GiB. No host OOM was observed.",
+    "generation_request_sent": false
+  },
+  "runner_interrupted_after_observed_container_exit": true,
+  "cleanup": {
+    "compose_down_exit_code": 0,
+    "q176_container_removed": true,
+    "q176_network_removed": true,
+    "port_18475_free": true,
+    "remaining_q176_project_containers": [],
+    "other_inference_processes": []
+  }
+}

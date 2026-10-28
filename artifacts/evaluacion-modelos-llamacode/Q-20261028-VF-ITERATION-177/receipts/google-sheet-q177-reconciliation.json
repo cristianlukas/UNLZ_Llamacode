@@ -1,0 +1,33 @@
+{
+  "checkedAtUtc": "2026-10-28T23:29:45Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheetTitle": "Listado",
+  "updates": [
+    {
+      "sheet": "Accionables",
+      "range": "D7:N7",
+      "actionableId": "vf-qwen-tool-safety-gates-20261022",
+      "changes": {
+        "D7": "Abierto · replanificación Linux Release 95/95 validada; principal local ya se propaga a MCP. Fixture tenant sigue bloqueado: falta principal tenant autenticado y policy confiable del servidor.",
+        "H7": "Q106/Q107/Q122: orden/replanificación y regresiones validadas. Q177: localPrincipal(home,cwd) se propaga por AgentToolRunner/McpClient y viaja en _meta; no es identidad tenant autenticada. No fabricar principal/fixture ni inferir autorización server-side.",
+        "I7": "P2.1 permanece fail-closed. ToolExecutionSafety niega scope=tenant y selectores tenant/org; las pruebas existentes cubren binding workspace/helper, no authz MCP server ni efectos cross-tenant. Habilitar mismo-tenant allow y cross-tenant read/write deny sólo cuando exista proveedor trusted + policy de servidor.",
+        "J7": "Q112/Q122 y artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-177/RESULTS.md; receipts/p2.1-current-code-audit.json; receipts/inference-server-preflight.json",
+        "K7": "Reconciliación Q177: LlamaAgentBackend.cpp:637; AgentToolRunner.cpp:1563; McpClient.cpp:159,177; ToolExecutionSafety.cpp:121; tests/test_tool_execution_safety.cpp:466. Ver Q177/receipts/p2.1-current-code-audit.json.",
+        "M7": "2026-10-28T23:29:45Z",
+        "N7": "2026-10-28T23:29:45Z"
+      }
+    },
+    {
+      "sheet": "IA local",
+      "range": "H64:L64",
+      "changes": {
+        "H64": "Docs + issue upstream #3294 (open; revalidado 2026-10-28): qwen36 usa GPU0 y deja GPU1 ociosa; layer split pedido en q36_engine.cu.",
+        "I64": "Bloqueada · issue #3294 sigue Open; no usar prueba single-GPU como sustituto del perfil dual 2×3090.",
+        "J64": "Media",
+        "L64": "Reabrir solo cuando un commit/release fijado implemente y verifique layer split qwen36 y haya quant local exacta; después preregistrar A/B dual-GPU."
+      }
+    }
+  ],
+  "readback": "Verified by reading Accionables!D7:N7 and IA local!H64:L64 after update. The priority cell IA local!J64 remains Media.",
+  "safety": "No model inference, GPU benchmark, download, process termination, or application/profile change was performed in Q177."
+}

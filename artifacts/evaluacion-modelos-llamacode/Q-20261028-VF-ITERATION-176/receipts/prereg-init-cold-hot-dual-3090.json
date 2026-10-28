@@ -1,0 +1,37 @@
+{
+  "task_id": "Q-20261028-VF-ITERATION-176",
+  "registered_utc": "2026-10-28T22:07:00Z",
+  "status": "preregistered; waits for Q174 completion",
+  "umbrella_lock": {
+    "task": "Q146 resume justified VF-20261019-01 tests",
+    "token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+    "reuse_existing_lock": true
+  },
+  "decision_question": "What are reproducible process-cold and page-cache-warm model-server readiness times for the compared profiles, and can Flash-Next NInfer be assigned to both RTX 3090s?",
+  "definitions": {
+    "cold_process_start": "new server process, model absent from VRAM, monotonic launch-to-readiness; no global page-cache flush",
+    "warm_page_cache_start": "clean new server process launched immediately after prior successful load/shutdown with OS file cache warm; launch-to-readiness",
+    "ttft": "record separately; never substitute for initialization"
+  },
+  "profiles": [
+    "DeepSeek DSX T16",
+    "Qwen3.8 Flash-Next RCO IQ2_XS / Strata YaRN x4 context profile",
+    "Qwen3.8 Flash-Next IQ2_XS / NInfer Linux; first verify dual-GPU support",
+    "Qwen3.8-27B AutoRound INT4/W4A8 / TERRA MTP-off",
+    "Ternary Bonsai 2 PQ2_0 / PrismML",
+    "Gemma 4 12B QAT Q4_0 / opti-llama.cpp",
+    "Ternary Bonsai 2 / NInfer-all if Q174 passes"
+  ],
+  "gpu_requirement": "Use GPU0+GPU1 for each new measured profile when that engine supports it. No single-GPU fallback; historical GPU1-only NInfer data remains labeled as such.",
+  "serialization": "One profile/server at a time; begin only after Q174 cleanup.",
+  "context_exclusions": [512000],
+  "no_production_or_peritosoft_changes": true,
+  "stop_conditions": [
+    "Q174 process or inference server remains active",
+    "profile cannot use both GPUs",
+    "runtime/artifact/config/hash mismatch",
+    "OOM, Xid, driver/runtime fault",
+    "server exposes beyond loopback",
+    "readiness is not monotonic/observable or cleanup fails"
+  ]
+}

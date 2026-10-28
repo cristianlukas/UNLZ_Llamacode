@@ -1,0 +1,33 @@
+{
+  "spreadsheet_url": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "sheet": "Resultados",
+  "sheetId": 1972251122,
+  "range": "A403:AH407",
+  "rows": 5,
+  "context_tokens": [
+    8192,
+    32768,
+    65536,
+    131072,
+    261888
+  ],
+  "prefill_tok_s": [
+    2067.286748,
+    1840.588852,
+    1580.262093,
+    1223.907694,
+    857.423579
+  ],
+  "decode_tok_s": [
+    170.89849,
+    167.417791,
+    139.446662,
+    146.606636,
+    162.891944
+  ],
+  "init_cold": "≈4.52 s; log engine-start to listener; process spawn timestamp absent",
+  "init_hot_s": 6.016,
+  "gpu_topology": "GPU0+GPU1 pipeline stages; both allocation gates passed",
+  "readback": "All 5 rows had 34 cells populated, wrap=WRAP, zero data validations/chips, cold/hot values and notes matched. Basic filter expanded to rows 1–407; sorting dimension 25 ascending preserved.",
+  "checked_utc": "2026-10-28T22:33:15+00:00"
+}

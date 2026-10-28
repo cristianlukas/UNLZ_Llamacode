@@ -1,0 +1,30 @@
+{
+  "experiment_id": "Q176-TERRA-MTP-OFF-DUAL-COLD-HOT-INIT-01",
+  "status": "preregistered",
+  "registered_utc": "2026-10-28",
+  "model": "Qwen3.8-27B AutoRound INT4/W4A8",
+  "profile": "TERRA MTP-off; TP=2; KV fp8_e4m3; max-model-len262144; max-num-seqs1; sampler temp.6/top_p.95/top_k20/min_p0/repeat1/presence0",
+  "gpu": "Both RTX 3090s, CUDA_VISIBLE_DEVICES=0,1, TP=2; require same container process on both GPUs plus >1 GiB VRAM increase per card.",
+  "runtime_image": "vllm/vllm-openai:v0.27.1",
+  "runtime_image_id": "sha256:0a51ea5b4ae2dc5d81890e5173f54203d2a3ae0cfffe51b8fd2afd4391bfd967",
+  "model_directory": "/media/cristian/Disco local/Models/llamacpp/club-3090/qwen3.8-27b-autoround-int4",
+  "model_verification_manifest_sha256": "b9b842e49ccc3f8b3a1459ce218d87884604a36725a46cb64b4741641ed7d231",
+  "compose_sha256": "2df4e44e1e1b268da80690a0812ac1b60768d60b643096ce8473110f88b7b76a",
+  "vram_quarantine_override_sha256": "e547197d1b283e5c8b684d35e1b348bb91bbba3a327183a14b0d4a6083c36a50",
+  "loopback_port": 18475,
+  "measure": "Two isolated Docker Compose launches, clean container removal between; timer starts before docker compose up -d --pull never and stops at GET /health=200; no generation request. First process is VRAM-cold; no global page-cache purge. Second relaunch is hot-likely but uninstrumented.",
+  "stop_conditions": [
+    "another inference service/container or test port active",
+    "model verification manifest/image/compose mismatch",
+    "compose config does not bind loopback or TP2",
+    "runtime fails to show same container worker as CUDA compute on both cards",
+    "either GPU VRAM rise <=1 GiB",
+    "readiness >900 seconds",
+    "MemAvailable <20 GiB sustained30 seconds",
+    "Xid/OOM/runtime failure",
+    "cleanup leaves container/port"
+  ],
+  "cleanup": "Only the uniquely named Q176 Docker Compose project/container/network; no volume deletion, no product/PeritoSoft profile change.",
+  "runner": "scripts/measure_terra_cold_hot.py",
+  "runner_sha256": "76f44ed8b50b3f82b10137d136fce7b2584ba3b552304dc384e42449485b93a9"
+}

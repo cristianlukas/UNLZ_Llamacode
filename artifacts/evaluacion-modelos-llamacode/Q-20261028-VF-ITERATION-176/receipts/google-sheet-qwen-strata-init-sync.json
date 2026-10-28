@@ -1,0 +1,14 @@
+{
+  "task": "Q176",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet": "Resultados",
+  "range": "AG135:AH135",
+  "profile_id": "Q14-CONTEXT-PERF-1M",
+  "values": {
+    "cold_init_seconds": 52.115,
+    "hot_init_seconds": 18.088
+  },
+  "notes": "Qwen3.8 Flash-Next RCO IQ2_XS / Strata / YaRN×4 / max-context 1048576 / KV int8; GPU0+GPU1; clean-process Popen-to-healthy-/health; n=1 per condition; page cache uncontrolled; no generation.",
+  "readback": "Confirmed numeric values and cell notes using Google Sheets get_spreadsheet_cells for Resultados!A135:AH135.",
+  "source_receipt": "receipts/qwen-flashnext-strata-1m-init.json"
+}

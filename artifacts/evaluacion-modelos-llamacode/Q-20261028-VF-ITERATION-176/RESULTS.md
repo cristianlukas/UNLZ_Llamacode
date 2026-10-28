@@ -1,0 +1,47 @@
+# Q176 — Inicialización fría/caliente y asignación dual
+
+**Estado:** completado con cobertura condicionada. Se midieron los perfiles con ruta dual verificada en esta sesión. Flash-Next/NInfer queda N/D para init dual porque el preview Linux sólo se había calificado en GPU1 y el soporte con dos tarjetas físicas no está validado.
+
+| Perfil | Init fría | Init caliente | Topología / comprobación |
+|---|---:|---:|---|
+| Ternary Bonsai 2 · NInfer-all | ≈4,52 s desde `starting engine` hasta listener; el timestamp de spawn no quedó capturado | 6,016 s desde `Popen` hasta `GET /health` 200 | GPU0+GPU1; +8.444/+7.784 MiB vs baseline; proceso cerrado, puerto libre |
+| DeepSeek V4.1 Flash-1017 DSX T16 | 224,155 s, `Popen`→`GET /health` 200; proceso nuevo, page cache no purgada y estado no controlado | 284,167 s, mismo cronómetro tras parada limpia y relanzamiento inmediato | GPU0+GPU1; mismo PID observado como CUDA compute en ambas; ≈22 GiB asignados por GPU al readiness |
+| Qwen3.8 Flash-Next RCO IQ2_XS · Strata · YaRN×4 · 1M · KV int8 | 52,115 s, `Popen`→`GET /health` 200; proceso nuevo, page cache no purgada y no controlada | 18,088 s, proceso limpio relanzado tras la primera carga | GPU0+GPU1; mismo proceso engine observado como CUDA compute en ambas; 23.488/23.146 MiB al readiness |
+| Qwen3.8 Flash-Next IQ2_XS · NInfer Linux preview v0.16.1 | N/D en Q176: no se inició con dos GPU porque esa ruta no está calificada | N/D en Q176: no se inició con dos GPU porque esa ruta no está calificada | Q173 usó GPU1 solamente. No convertir el histórico en dual ni atribuirle GPU0. |
+| Ternary Bonsai 2 27B PQ2_0 · PrismML · 8K | 2,584 s, proceso nuevo, page cache no purgada | 2,116 s, proceso limpio relanzado tras carga | GPU0+GPU1, layer split 1:1; mismo PID CUDA en ambas; 5.520/4.334 MiB |
+| Gemma 4 12B IT QAT Q4_0 · opti-llama.cpp · 8K | 2,617 s, proceso nuevo, page cache no purgada | 2,072 s, proceso limpio relanzado tras carga | GPU0+GPU1, layer split 1:1; mismo PID CUDA en ambas; 5.344/4.484 MiB |
+| Qwen3.8-27B AutoRound INT4/W4A8 · TERRA MTP-off · 8K | 134,516 s, `docker compose up`→`GET /health` 200; TP2, GPU0+GPU1 | N/D: segundo proceso falló con `CUDA error: device-side assert triggered` durante inicialización de KV cache, antes de health | Cold usó ambos GPUs; hot también levantó workers en ambos, pero no llegó a readiness. Contenedor de prueba retirado. |
+
+La corrida caliente de Bonsai inició un proceso limpio inmediatamente después de Q174, con el modelo ausente de VRAM y sin vaciar la page cache. La caché caliente se infiere por secuencia y por el acceso completo previo; no se instrumentó directamente. No se envió una solicitud de generación, así que estos tiempos son readiness y no TTFT. El valor frío de Bonsai proviene del log Q174 y no captura el momento exacto de creación del proceso; no es una comparación perfectamente equivalente con la medida caliente.
+
+TERRA-MTP-off cold alcanzó `/health` en 134,516 s con TP2, W4A8 y ambas RTX 3090. El segundo proceso falló antes de readiness durante el cálculo de memoria disponible para KV cache: vLLM registró `CUDA error: device-side assert triggered`. Por eso hot queda N/D, no se interpreta como falta de RAM: había ~104 GiB MemAvailable durante cold y más de 113 GiB tras el fallo; no se observó OOM de host. El contenedor Q176 y su red se quitaron, puerto 18475 libre. Receipt `receipts/terra-mtp-off-cold-hot-init.json`.
+
+PrismML y Gemma se iniciaron con la configuración de 8K de sus ladders (ctx 8.448), runtimes GGUF fijos y `CUDA_VISIBLE_DEVICES=0,1`; ambos procesos se vieron como CUDA compute en GPU0 y GPU1. Prism: 2,584/2,116 s; Gemma: 2,617/2,072 s, primer proceso/relanzamiento. n=1 por condición. No se enviaron prompts. La lectura SHA previa calentó el page cache; no se afirma disco frío ni una comparación causal de cache. Puertos 18178/18179 libres después de cleanup. Receipt `receipts/llamacpp-dual-cold-hot-init.json`; preregistro `receipts/prereg-prism-gemma-dual-cold-hot-init.json`.
+
+Para Qwen Flash-Next/Strata 1M, ambos arranques declararon `max_context=1048576`, modelo correcto y `loaded=true`; el proceso engine apareció como CUDA compute en las dos 3090. Los tiempos fueron 52,115 s en el primer proceso y 18,088 s en el relanzamiento inmediato. Son n=1 por condición. La caché de página no se purgó ni se midió; “caliente” describe el relanzamiento secuencial, no una comparación controlada de caché. No hubo generación, así que no son TTFT ni TPS. Cleanup de ambos procesos exitoso, puerto 8350 libre, MemAvailable posterior ≈113,6 GB. Receipt `receipts/qwen-flashnext-strata-1m-init.json`; logs `logs/qwen-flashnext-strata-1m-{cold,hot}-init.log`.
+
+Para DSX, el primer cronómetro empieza en `Popen` y termina con `/health` saludable. Antes se leyó el GGUF completo para verificar SHA-256, por lo que **“fría” significa proceso/modelo ausente de VRAM, no disco frío**. La segunda medida relanzó un proceso limpio después de la carga y parada del primero; aunque es el caso de page cache más caliente disponible, el sistema no instrumentó qué páginas conservaron residentemente. El hot observado fue 60,012 s más lento que el primero; con n=1 por condición y memoria/swap variables no debe atribuirse causalmente a la caché. No se envió generación ni se midió TTFT. Receipts `dsx-t16-cold-hot-init.json`, `dsx-t16-init-attempt-01-aborted.json`; logs en `logs/dsx-t16-{cold,hot}-init.log`.
+
+No hubo OOM ni Xid. En el peak de carga de DSX el host tuvo unos 40 GiB disponibles y 8 GiB de swap ocupados; tras cleanup volvió a ~108 GiB disponibles. El proceso de prueba cerró con SIGINT, ambos puertos quedaron libres y no se terminó ninguna GUI.
+
+No hubo OOM/Xid; MemAvailable posterior fue 109.260.148 KiB. El servicio escuchó sólo en 127.0.0.1:18574 y cerró con exit 0.
+
+TERRA cold quedó medido, pero hot está bloqueado por un CUDA device-side assert antes de health. PrismML y Gemma están medidos a 8K. Q176 cierra la revisión de Flash-Next/NInfer como condicionada: la documentación local no valida multi-GPU para su preview Linux, así que cold/hot dual quedan N/D. Reabrir con una versión/configuración Linux que documente soporte dual o sesión Windows nativa y un prerregistro específico. No se repetirá TERRA hot sin runtime/corrección distintos preregistrados. 512K sigue excluido; el 1M histórico de Strata se conserva.
+
+## Matriz integrada de velocidad, calidad e inicio
+
+La tabla de Q173–Q175 conserva los contextos, TPS y Q172; esta matriz incorpora las mediciones Q176. Q172 es un screen de conducta/seguridad, no una escala universal de inteligencia. TPS de motores distintos no forman un ranking directo. Init es n=1, Popen o engine-start hasta readiness, sin generación. La caché de disco no se purgó y el preflight leyó los pesos: “fría” significa proceso nuevo/modelo ausente de VRAM. “Caliente” significa relanzamiento limpio probablemente con page cache residente, no instrumentada.
+
+| Perfil | GPUs realmente usadas | Contexto; prefill / decode (tok/s) | Q172 / gates | Init proceso frío / relanzamiento caliente |
+|---|---|---|---|---|
+| DeepSeek V4.1 Flash-1017 DSX T16 · dsx/Xolotl | 2× RTX 3090, GPU0+GPU1 | 8K/32K/64K/128K/256K; P 382,32/600,52/584,21/459,42/324,90; D 30,27/29,14/28,31/26,89/25,34 | 89/100; TC-92 falló | 224,155 / 284,167 s (perfil de inicio a 131K) |
+| SOL · Qwen3.8 Flash-Next RCO IQ2_XS · Strata · YaRN×4 | 2× RTX 3090, GPU0+GPU1 | 131K/262K/1M; P 3265,5/3163,8/2232,9; D 139,1/133,2/85,6. Q14 también tiene un punto histórico 524K, no repetido | 73/100; TC-74/82/92 fallaron. Q35: recuperación sintética 1M 8/8 por semilla, 3 semillas | 52,115 / 18,088 s (max_context 1.048.576) |
+| Qwen3.8 Flash-Next IQ2_XS · NInfer Linux preview | Q173 histórica: 1× RTX 3090, GPU1; Q176 sin intento dual | 8K/32K/64K/128K/256K; P 1789,4/2062,3/2078,0/2041,6/1983,5; D 27,72/29,94/28,63/31,87/28,35 | 77/100; TC-75/82/84/92 fallaron | N/D dual. Q173 registró ≈330 s en GPU1, pero no cold/hot separados ni comparable |
+| TERRA · Qwen3.8-27B AutoRound INT4/W4A8 · MTP-off | 2× RTX 3090, TP=2 | 8K/32K/64K/128K/256K; P 2439,1/2134,2/1814,2/1383,0/949,4; D 55,16/53,83/51,39/47,55/39,62 | 62/100; TC-74/84 fallaron | 134,516 s / N/D: device-side assert antes de health |
+| Ternary Bonsai 2 27B PQ2_0 · PrismML | 2× RTX 3090, GPU0+GPU1, split 1:1 | 8K/32K/64K/128K/256K; P 1226,6/1071,3/874,6/608,3/383,6; D 75,84/65,82/55,09/42,52/28,37 | 75/100; TC-74/84/92 fallaron; TTFT 256K 682,8 s | 2,584 / 2,116 s (contexto 8.448) |
+| Gemma 4 12B IT QAT Q4_0 · opti-llama.cpp | 2× RTX 3090, GPU0+GPU1, split 1:1 | 8K/32K/64K/128K/256K; P 3825,1/3516,8/2890,1/2104,6/1375,5; D 77,63/74,42/69,80/63,64/54,53 | 66/100; TC-85/87/91 fallaron | 2,617 / 2,072 s (contexto 8.448) |
+| Ternary Bonsai 2 · NInfer-all Q174 | 2× RTX 3090, GPU0+GPU1 por etapas de pipeline | 8K/32K/64K/128K/261.888; P 2067,3/1840,6/1580,3/1223,9/857,4; D 170,9/167,4/139,4/146,6/162,9 | Q172 del mismo peso medido en PrismML: 75/100; TC-74/84/92 fallaron; no es score propio del motor | ≈4,52 / 6,016 s; cold aproximado engine-start→listener, hot Popen→health |
+
+La matriz respeta el hardware observado por ejecución. Usar las dos RTX 3090 se cumplió para los perfiles cuya topología dual estaba validada; para Flash-Next/NInfer no se inventó una ejecución dual. La cifra histórica de inicio NInfer es una única medida GPU1 y no reemplaza cold/hot.
+
+Receipt completo: `receipts/bonsai-ninfer-hot-start.json`; preregistro: `receipts/q176-prereg-bonsai-ninfer-hot.json`.

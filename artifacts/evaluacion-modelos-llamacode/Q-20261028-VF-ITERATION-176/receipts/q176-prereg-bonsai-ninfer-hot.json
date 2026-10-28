@@ -1,0 +1,65 @@
+{
+  "task_id": "Q176-Bonsai-NInfer-hot-init",
+  "amendment": "Q176-01",
+  "registered_utc": "2026-10-28T22:30:34+00:00",
+  "status": "registered before launch",
+  "unblocks_after": "Q174 context ladder completed and its server/port/GPU allocation cleaned",
+  "profile": "Ternary Bonsai 2 27B NInfer-all, exact Q174 model/runtime/config",
+  "model_sha256": "cdc4810b0ff17c40d0f62cf214b6e0bcd08346e9eb05ca53371507037793c14a",
+  "binary_sha256": "09145c529015ac7d27ce63214138625927c70c1e89e4291594d74be59bd5f895",
+  "runner_sha256": "6297fcbee5f79a8f527dd22fdeb46e69a47b9a711facc8b5267c701daed01c05",
+  "cache_condition": "immediate fresh process after Q174 context ladder; no drop_caches; page cache warmth inferred from prior full-model reads and sequential run",
+  "server_argv": [
+    "ninfer-serve",
+    "MODEL",
+    "--max-context",
+    "262144",
+    "--kv-capacity",
+    "262144",
+    "--kv-dtype",
+    "rk8v4",
+    "--gdn-state-fp16",
+    "--spec",
+    "dflash2",
+    "--draft-tokens",
+    "5",
+    "--no-prefix-reuse",
+    "--max-concurrency",
+    "1",
+    "--devices",
+    "0,1",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "18574"
+  ],
+  "method": "monotonic process spawn to healthy GET /health; send no inference request; require >1 GiB added GPU memory on each RTX 3090; stop only owned process; verify port/GPU cleanup",
+  "preflight": {
+    "inference_servers": [],
+    "port_18574_free": true,
+    "gpus": [
+      {
+        "index": 0,
+        "memory_used_mib": 1510,
+        "total_mib": 24576,
+        "util_percent": 10
+      },
+      {
+        "index": 1,
+        "memory_used_mib": 108,
+        "total_mib": 24576,
+        "util_percent": 25
+      }
+    ]
+  },
+  "stop_conditions": [
+    "lock token changes",
+    "any non-owned inference server appears",
+    "either GPU misses dual allocation gate",
+    "less than 32 GiB MemAvailable",
+    "server not loopback/healthy",
+    "cleanup fails"
+  ],
+  "single_change": "startup condition only: clean server process after Q174 load leaves page cache warm; model absent from VRAM at launch; all binary/model/flags fixed",
+  "context_512k": "excluded"
+}

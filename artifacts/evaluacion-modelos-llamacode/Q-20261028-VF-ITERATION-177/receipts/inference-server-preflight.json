@@ -1,0 +1,10 @@
+{
+  "checkedAtUtc": "2026-10-28T23:29:45Z",
+  "processScan": "No llama-server, llama.cpp, vLLM, NInfer, Strata, or Xolotl inference process matched the scan.",
+  "listenerScan": "No listener was found on the evaluation ports 8350, 18178, 18179, 18473, 18474, 18475, 18574, or 8768. Observed 32100 (PeritoSoft app) and 3917 (Electron app/test service), neither identified as a model inference endpoint.",
+  "gpuSnapshot": [
+    {"gpu": 0, "name": "NVIDIA GeForce RTX 3090", "memoryUsedMiB": 1482, "utilizationPercent": 16},
+    {"gpu": 1, "name": "NVIDIA GeForce RTX 3090", "memoryUsedMiB": 108, "utilizationPercent": 63}
+  ],
+  "action": "No inference or GPU benchmark started; no process was terminated."
+}

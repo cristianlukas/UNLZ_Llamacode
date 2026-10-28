@@ -1,0 +1,53 @@
+{
+  "experiment_id": "Q176-QWEN-FLASHNEXT-STRATA-YARN4-1M-COLD-HOT-INIT-01",
+  "status": "preregistered",
+  "registered_utc": "2026-10-28",
+  "question": "Measure clean-process readiness of the exact Qwen3.8 Flash-Next RCO IQ2_XS Strata 1M YaRN×4 profile with both RTX 3090s assigned.",
+  "profile": "Strata 0.1.41; max_context 1048576; YaRN factor 4/original context 262144; KV int8; MTP/spec 4; expert-cache auto; dual GPU 0,1.",
+  "context_config_sha256": "cf5e910f72de441eec9b8bead6af4a24170ba919f62638e0c80b925257497b7e",
+  "runtime_sha256": "770ecf303a4c6271654339c639392ecb455de3a999bf5d2e8dbc73c879103602",
+  "model_shard_sha256": [
+    "92cee27ae5bbadcd732416a0f7a7f0acc092399dbbe8f5a5efa707c2ec0a49d7",
+    "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113"
+  ],
+  "model_shard_stat_gate": [
+    {
+      "size_bytes": 39225954592,
+      "mtime_ns": 1791824778113101000
+    },
+    {
+      "size_bytes": 28800138432,
+      "mtime_ns": 1791823874746058600
+    }
+  ],
+  "engine_argv": [
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/.venv/bin/python",
+    "/home/cristian/.cache/strata-flashnext-iq3xxs-eval-20261009/source/serve/server.py",
+    "--engine",
+    "strata",
+    "--config",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261014-ISTA-CONTEXT-SWEEP/receipts/configs/context-1048576.json",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "8350"
+  ],
+  "gpu_topology": "GPU0+GPU1; config requests [0,1], and both GPUs must show this run's model allocation/compute at readiness.",
+  "cold_definition": "First clean process with model absent from VRAM. Do not flush global OS page cache; report cache state as uncontrolled because this boot has earlier model use.",
+  "hot_definition": "Clean stop and immediate new process with identical config after first load; page cache may be partially warm and is not directly instrumented.",
+  "measurement": "Monotonic Popen-to-healthy GET /health for each; readiness only, no prompt or generation, not TTFT.",
+  "stop_conditions": [
+    "another inference server appears",
+    "port 8350 occupied",
+    "config/runtime/hash/stat mismatch",
+    "health max_context/model mismatch",
+    "either GPU lacks dual allocation/compute gate",
+    "MemAvailable below 20 GiB sustained 30 seconds",
+    "Xid or server error",
+    "readiness exceeds 900 seconds"
+  ],
+  "resource_policy": "Sequential only; preserve GUI/PeritoSoft; terminate only the owned process group; no production changes.",
+  "runner": "scripts/measure_qwen_flashnext_strata_1m_init.py",
+  "runner_sha256": "9df20a7470c7812fb0dc1998f581850e5aac41a221c5671ead14d14bc6a03c5e",
+  "dual_gpu_gate_note": "At readiness, the same owned process tree must appear as CUDA compute on both GPU0 and GPU1, and each GPU memory use must rise by >1 GiB from its per-run baseline."
+}

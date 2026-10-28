@@ -1,0 +1,9 @@
+{
+  "checkedAtUtc": "2026-10-28T23:29:45Z",
+  "source": "https://github.com/Niko1221/Strata/issues/3294",
+  "title": "[Engine] Qwen3.6-35B-A3B: layer split across 2 GPUs (single GPU = 58 tok/s vs 95 with llama.cpp -sm layer)",
+  "state": "Open",
+  "primaryEvidence": "Issue body says Strata qwen36 uses GPU0 only, leaves GPU1 idle, and requests layer split in src/qwen35/q36_engine.cu.",
+  "testDecision": "Blocked. Do not substitute a single-GPU run for the requested dual-RTX-3090 test.",
+  "reopenWhen": "A released or pinned upstream commit implements and verifies layer split for qwen36, and an exact local quant is available."
+}

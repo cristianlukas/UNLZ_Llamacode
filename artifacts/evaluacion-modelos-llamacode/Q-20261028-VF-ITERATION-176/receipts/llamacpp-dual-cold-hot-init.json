@@ -1,0 +1,369 @@
+{
+  "task": "Q176 dual-GPU llama.cpp cold/hot readiness",
+  "started_utc": "2026-10-28T23:07:53+00:00",
+  "context_tokens": 8448,
+  "requests_sent": false,
+  "cache_policy": "No global page-cache flush; SHA preflight reads model files, so disk-cold is not claimed.",
+  "profiles": {
+    "prism": {
+      "name": "Ternary Bonsai 2 27B PQ2_0 / PrismML",
+      "model_sha256": "3907dc1658db1f78a9826bf8d5bcb8dc65db0d466388937af57f2294fae62ec1",
+      "server_sha256": "3ad6c90f0f25fec776be6d70b0bfe3ada0a8bf6a765b53f7a97cf985b0ea560a",
+      "runs": [
+        {
+          "profile": "prism",
+          "label": "cold-process",
+          "argv": [
+            "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/Bonsai2-Prism-PQ2_0/runtime/llama-prism-b10826-c9c34bc/llama-server",
+            "--model",
+            "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/Bonsai2-Prism-PQ2_0/models/Ternary-Bonsai-2-27B-PQ2_0.gguf",
+            "--host",
+            "127.0.0.1",
+            "--port",
+            "18178",
+            "--device",
+            "CUDA0,CUDA1",
+            "--split-mode",
+            "layer",
+            "--tensor-split",
+            "1,1",
+            "--gpu-layers",
+            "all",
+            "--ctx-size",
+            "8448",
+            "--parallel",
+            "1",
+            "--flash-attn",
+            "on",
+            "--perf",
+            "--seed",
+            "42"
+          ],
+          "host_pid": 1314337,
+          "process_tree": [
+            1314337
+          ],
+          "launch_to_health_seconds": 2.584,
+          "health": {
+            "status": 200,
+            "body": "{\"status\":\"ok\"}"
+          },
+          "compute_pids_by_gpu": {
+            "0": [
+              1314337
+            ],
+            "1": [
+              1314337
+            ]
+          },
+          "pmon": "# gpu         pid   type     sm    mem    enc    dec    jpg    ofa    command \n# Idx           #    C/G      %      %      %      %      %      %    name \n    0       2362     G     14      0      -      -      -      -    Xorg           \n    0       4020     G      6      1      -      -      -      -    compiz         \n    0     210804     G      -      -      -      -      -      -    gnome-software \n    0     296532     G      -      -      -      -      -      -    firmware-update\n    0     878149     G      -      -      -      -      -      -    Codex --change-\n    0    1070062     G      -      -      -      -      -      -    whatsapp-electr\n    0    1237513     G      -      -      -      -      -      -    peri           \n    0    1262675     G      -      -      -      -      -      -    -              \n    0    1314337     C      -      -      -      -      -      -    llama-server   \n    0    3374402     G      -      -      -      -      -      -    brave --type=gp\n    1       2362     G      4      1      -      -      -      -    Xorg           \n    1    1314337     C     28      0      -      -      -      -    llama-server   \n",
+          "gpu_baseline": {
+            "0": {
+              "used_mib": 1454,
+              "total_mib": 24576
+            },
+            "1": {
+              "used_mib": 108,
+              "total_mib": 24576
+            }
+          },
+          "gpu_at_ready": {
+            "0": {
+              "used_mib": 5520,
+              "total_mib": 24576
+            },
+            "1": {
+              "used_mib": 4334,
+              "total_mib": 24576
+            }
+          },
+          "log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-176/logs/prism-cold-process-init.log",
+          "status": "complete",
+          "exit_code": 0,
+          "port_free_after_cleanup": true,
+          "gpu_after_cleanup": {
+            "0": {
+              "used_mib": 1454,
+              "total_mib": 24576
+            },
+            "1": {
+              "used_mib": 108,
+              "total_mib": 24576
+            }
+          }
+        },
+        {
+          "profile": "prism",
+          "label": "hot-likely",
+          "argv": [
+            "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/Bonsai2-Prism-PQ2_0/runtime/llama-prism-b10826-c9c34bc/llama-server",
+            "--model",
+            "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/Bonsai2-Prism-PQ2_0/models/Ternary-Bonsai-2-27B-PQ2_0.gguf",
+            "--host",
+            "127.0.0.1",
+            "--port",
+            "18178",
+            "--device",
+            "CUDA0,CUDA1",
+            "--split-mode",
+            "layer",
+            "--tensor-split",
+            "1,1",
+            "--gpu-layers",
+            "all",
+            "--ctx-size",
+            "8448",
+            "--parallel",
+            "1",
+            "--flash-attn",
+            "on",
+            "--perf",
+            "--seed",
+            "42"
+          ],
+          "host_pid": 1314558,
+          "process_tree": [
+            1314558
+          ],
+          "launch_to_health_seconds": 2.116,
+          "health": {
+            "status": 200,
+            "body": "{\"status\":\"ok\"}"
+          },
+          "compute_pids_by_gpu": {
+            "0": [
+              1314558
+            ],
+            "1": [
+              1314558
+            ]
+          },
+          "pmon": "# gpu         pid   type     sm    mem    enc    dec    jpg    ofa    command \n# Idx           #    C/G      %      %      %      %      %      %    name \n    0       2362     G     20      1      -      -      -      -    Xorg           \n    0       4020     G      -      -      -      -      -      -    compiz         \n    0     210804     G      -      -      -      -      -      -    gnome-software \n    0     296532     G      -      -      -      -      -      -    firmware-update\n    0     878149     G      -      -      -      -      -      -    Codex --change-\n    0    1070062     G      -      -      -      -      -      -    whatsapp-electr\n    0    1237513     G      -      -      -      -      -      -    peri           \n    0    1262675     G      -      -      -      -      -      -    -              \n    0    1314558     C      8      0      -      -      -      -    llama-server   \n    0    3374402     G      -      -      -      -      -      -    brave --type=gp\n    1       2362     G     17      1      -      -      -      -    Xorg           \n    1    1314558     C     10      0      -      -      -      -    llama-server   \n",
+          "gpu_baseline": {
+            "0": {
+              "used_mib": 1454,
+              "total_mib": 24576
+            },
+            "1": {
+              "used_mib": 108,
+              "total_mib": 24576
+            }
+          },
+          "gpu_at_ready": {
+            "0": {
+              "used_mib": 5521,
+              "total_mib": 24576
+            },
+            "1": {
+              "used_mib": 4334,
+              "total_mib": 24576
+            }
+          },
+          "log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-176/logs/prism-hot-likely-init.log",
+          "status": "complete",
+          "exit_code": 0,
+          "port_free_after_cleanup": true,
+          "gpu_after_cleanup": {
+            "0": {
+              "used_mib": 1454,
+              "total_mib": 24576
+            },
+            "1": {
+              "used_mib": 108,
+              "total_mib": 24576
+            }
+          }
+        }
+      ]
+    },
+    "gemma": {
+      "name": "Gemma 4 12B IT QAT Q4_0 / opti-llama.cpp",
+      "model_sha256": "93567e57a8fe10b23569b9d9ec38cd005deedf71e29477c421a4b83f418a538b",
+      "server_sha256": "b760910e1fa0af38d0a9a4589fc011520d408f208b1cc872f13e44ee068d4d1d",
+      "runs": [
+        {
+          "profile": "gemma",
+          "label": "cold-process",
+          "argv": [
+            "/media/cristian/Disco local/LlamaCode-cache/opti-llama.cpp/build/bin/llama-server",
+            "--model",
+            "/media/cristian/Disco local/Models/llamacpp/gemma-4-12b-it-qat-q4_0.gguf",
+            "--host",
+            "127.0.0.1",
+            "--port",
+            "18179",
+            "--device",
+            "CUDA0,CUDA1",
+            "--split-mode",
+            "layer",
+            "--tensor-split",
+            "1,1",
+            "--gpu-layers",
+            "all",
+            "--ctx-size",
+            "8448",
+            "--parallel",
+            "1",
+            "--flash-attn",
+            "on",
+            "--perf",
+            "--seed",
+            "42",
+            "--no-warmup",
+            "--reasoning",
+            "on",
+            "--reasoning-effort",
+            "medium",
+            "--jinja",
+            "--chat-template-file",
+            "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/runtime/gemma4-q4/gemma4-tools-fixed.jinja"
+          ],
+          "host_pid": 1315166,
+          "process_tree": [
+            1315166
+          ],
+          "launch_to_health_seconds": 2.617,
+          "health": {
+            "status": 200,
+            "body": "{\"status\":\"ok\"}"
+          },
+          "compute_pids_by_gpu": {
+            "0": [
+              1315166
+            ],
+            "1": [
+              1315166
+            ]
+          },
+          "pmon": "# gpu         pid   type     sm    mem    enc    dec    jpg    ofa    command \n# Idx           #    C/G      %      %      %      %      %      %    name \n    0       2362     G      1      0      -      -      -      -    Xorg           \n    0       4020     G      -      -      -      -      -      -    compiz         \n    0     210804     G      -      -      -      -      -      -    gnome-software \n    0     296532     G      -      -      -      -      -      -    firmware-update\n    0     878149     G     10      1      -      -      -      -    Codex --change-\n    0    1070062     G      -      -      -      -      -      -    whatsapp-electr\n    0    1237513     G      -      -      -      -      -      -    peri           \n    0    1262675     G      -      -      -      -      -      -    -              \n    0    1315166     C     13      0      -      -      -      -    llama-server   \n    0    3374402     G      -      -      -      -      -      -    brave --type=gp\n    1       2362     G      6      0      -      -      -      -    Xorg           \n    1    1315166     C     19      0      -      -      -      -    llama-server   \n",
+          "gpu_baseline": {
+            "0": {
+              "used_mib": 1454,
+              "total_mib": 24576
+            },
+            "1": {
+              "used_mib": 108,
+              "total_mib": 24576
+            }
+          },
+          "gpu_at_ready": {
+            "0": {
+              "used_mib": 5344,
+              "total_mib": 24576
+            },
+            "1": {
+              "used_mib": 4484,
+              "total_mib": 24576
+            }
+          },
+          "log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-176/logs/gemma-cold-process-init.log",
+          "status": "complete",
+          "exit_code": 0,
+          "port_free_after_cleanup": true,
+          "gpu_after_cleanup": {
+            "0": {
+              "used_mib": 1492,
+              "total_mib": 24576
+            },
+            "1": {
+              "used_mib": 108,
+              "total_mib": 24576
+            }
+          }
+        },
+        {
+          "profile": "gemma",
+          "label": "hot-likely",
+          "argv": [
+            "/media/cristian/Disco local/LlamaCode-cache/opti-llama.cpp/build/bin/llama-server",
+            "--model",
+            "/media/cristian/Disco local/Models/llamacpp/gemma-4-12b-it-qat-q4_0.gguf",
+            "--host",
+            "127.0.0.1",
+            "--port",
+            "18179",
+            "--device",
+            "CUDA0,CUDA1",
+            "--split-mode",
+            "layer",
+            "--tensor-split",
+            "1,1",
+            "--gpu-layers",
+            "all",
+            "--ctx-size",
+            "8448",
+            "--parallel",
+            "1",
+            "--flash-attn",
+            "on",
+            "--perf",
+            "--seed",
+            "42",
+            "--no-warmup",
+            "--reasoning",
+            "on",
+            "--reasoning-effort",
+            "medium",
+            "--jinja",
+            "--chat-template-file",
+            "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/runtime/gemma4-q4/gemma4-tools-fixed.jinja"
+          ],
+          "host_pid": 1315398,
+          "process_tree": [
+            1315398
+          ],
+          "launch_to_health_seconds": 2.072,
+          "health": {
+            "status": 200,
+            "body": "{\"status\":\"ok\"}"
+          },
+          "compute_pids_by_gpu": {
+            "0": [
+              1315398
+            ],
+            "1": [
+              1315398
+            ]
+          },
+          "pmon": "# gpu         pid   type     sm    mem    enc    dec    jpg    ofa    command \n# Idx           #    C/G      %      %      %      %      %      %    name \n    0       2362     G      -      -      -      -      -      -    Xorg           \n    0       4020     G      0      0      -      -      -      -    compiz         \n    0     210804     G      -      -      -      -      -      -    gnome-software \n    0     296532     G      -      -      -      -      -      -    firmware-update\n    0     878149     G     20      1      -      -      -      -    Codex --change-\n    0    1070062     G      -      -      -      -      -      -    whatsapp-electr\n    0    1237513     G      -      -      -      -      -      -    peri           \n    0    1262675     G      -      -      -      -      -      -    -              \n    0    1315398     C      -      -      -      -      -      -    llama-server   \n    0    3374402     G      -      -      -      -      -      -    brave --type=gp\n    1       2362     G     11      0      -      -      -      -    Xorg           \n    1    1315398     C      8      0      -      -      -      -    llama-server   \n",
+          "gpu_baseline": {
+            "0": {
+              "used_mib": 1491,
+              "total_mib": 24576
+            },
+            "1": {
+              "used_mib": 108,
+              "total_mib": 24576
+            }
+          },
+          "gpu_at_ready": {
+            "0": {
+              "used_mib": 5343,
+              "total_mib": 24576
+            },
+            "1": {
+              "used_mib": 4484,
+              "total_mib": 24576
+            }
+          },
+          "log": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-176/logs/gemma-hot-likely-init.log",
+          "status": "complete",
+          "exit_code": 0,
+          "port_free_after_cleanup": true,
+          "gpu_after_cleanup": {
+            "0": {
+              "used_mib": 1491,
+              "total_mib": 24576
+            },
+            "1": {
+              "used_mib": 108,
+              "total_mib": 24576
+            }
+          }
+        }
+      ]
+    }
+  },
+  "status": "complete",
+  "finished_utc": "2026-10-28T23:08:33+00:00"
+}
