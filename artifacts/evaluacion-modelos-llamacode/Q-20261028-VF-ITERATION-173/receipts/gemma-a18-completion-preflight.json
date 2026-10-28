@@ -1,0 +1,53 @@
+{
+  "task": "Q173 A18 Gemma completion timings preflight",
+  "timestamp_utc": "2026-10-28T20:50:43+00:00",
+  "lock_token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+  "preregistration": "receipts/prereg-amendment-18-gemma4-q4-context-and-q172.json",
+  "model": {
+    "path": "/media/cristian/Disco local/Models/llamacpp/gemma-4-12b-it-qat-q4_0.gguf",
+    "bytes": 6975879296,
+    "sha256": "93567e57a8fe10b23569b9d9ec38cd005deedf71e29477c421a4b83f418a538b",
+    "expected_sha256": "93567e57a8fe10b23569b9d9ec38cd005deedf71e29477c421a4b83f418a538b",
+    "matches_pin": true
+  },
+  "server": {
+    "path": "/media/cristian/Disco local/LlamaCode-cache/opti-llama.cpp/build/bin/llama-server",
+    "bytes": 17888,
+    "sha256": "b760910e1fa0af38d0a9a4589fc011520d408f208b1cc872f13e44ee068d4d1d",
+    "expected_sha256": "b760910e1fa0af38d0a9a4589fc011520d408f208b1cc872f13e44ee068d4d1d",
+    "matches_pin": true
+  },
+  "chat_template": {
+    "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/runtime/gemma4-q4/gemma4-tools-fixed.jinja",
+    "bytes": 18683,
+    "sha256": "ae53464bf3be25802b3a5b37def7fd89667067d7577049b3b2d74c4d8de4c6d4",
+    "expected_sha256": "ae53464bf3be25802b3a5b37def7fd89667067d7577049b3b2d74c4d8de4c6d4",
+    "matches_pin": true
+  },
+  "resource_state": {
+    "timestamp_utc": "2026-10-28T20:50:43+00:00",
+    "MemAvailable_kib": 113017868,
+    "SwapFree_kib": 3367204,
+    "memory_psi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2655400446\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2650929188",
+    "gpu": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_used_mib": 988,
+        "utilization_percent": 16
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_used_mib": 108,
+        "utilization_percent": 27
+      }
+    ],
+    "inference_processes": [],
+    "inference_containers": []
+  },
+  "port": 18179,
+  "port_free": true,
+  "gui_preserved": true,
+  "decision": "PASS"
+}

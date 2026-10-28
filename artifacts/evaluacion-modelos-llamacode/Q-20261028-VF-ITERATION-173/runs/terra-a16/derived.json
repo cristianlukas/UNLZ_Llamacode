@@ -1,0 +1,255 @@
+{
+  "task": "Q173 A16 TERRA-MTP-off context ladder derived results",
+  "preregistration": "receipts/prereg-amendment-16-terra-mtp-off-context-ladder.json",
+  "preflight": "receipts/terra-a16-preflight-20261028T194147Z.json",
+  "readiness_smoke": "receipts/terra-a16-readiness-smoke-20261028T1946Z.json",
+  "profile": {
+    "variant": "TERRA-MTP-off; do not attribute to MTP4",
+    "model": "Qwen3.8-27B AutoRound INT4/W4A8",
+    "runtime": "vLLM 0.27.1",
+    "tensor_parallel": 2,
+    "gpus": "2x RTX 3090",
+    "host_ram_gib": 128,
+    "native_max_context": 262144,
+    "sampler": "temp0.6 top_p0.95 top_k20 min_p0 repetition1 presence0 seed42",
+    "speculative_mtp": false,
+    "prefix_cache": false,
+    "concurrency": 1,
+    "fixture": "llama-benchy 0.4.0 cached Sherlock corpus",
+    "target_output_tokens": 128,
+    "512k": "omitted per user instruction A10"
+  },
+  "coherence_test": "PASS",
+  "summary_by_context": [
+    {
+      "target_prompt_tokens": 8192,
+      "actual_prompt_tokens": 8232,
+      "n": 3,
+      "prefill_tps": 2439.12196565985,
+      "prefill_range_tps": [
+        2425.795486508884,
+        2440.0800342600655
+      ],
+      "decode_tps": 55.15996235290316,
+      "decode_range_tps": [
+        54.99469290198101,
+        55.36702622936474
+      ],
+      "ttft_seconds": 3.3756392569630407,
+      "actual_completion_tokens": [
+        128,
+        126,
+        128
+      ]
+    },
+    {
+      "target_prompt_tokens": 32768,
+      "actual_prompt_tokens": 32810,
+      "n": 1,
+      "prefill_tps": 2134.244820096813,
+      "prefill_range_tps": [
+        2134.244820096813,
+        2134.244820096813
+      ],
+      "decode_tps": 53.82749815876062,
+      "decode_range_tps": [
+        53.82749815876062,
+        53.82749815876062
+      ],
+      "ttft_seconds": 15.375260183995124,
+      "actual_completion_tokens": [
+        128
+      ]
+    },
+    {
+      "target_prompt_tokens": 65536,
+      "actual_prompt_tokens": 65576,
+      "n": 1,
+      "prefill_tps": 1814.2222656615504,
+      "prefill_range_tps": [
+        1814.2222656615504,
+        1814.2222656615504
+      ],
+      "decode_tps": 51.38564212171553,
+      "decode_range_tps": [
+        51.38564212171553,
+        51.38564212171553
+      ],
+      "ttft_seconds": 36.14855471398914,
+      "actual_completion_tokens": [
+        128
+      ]
+    },
+    {
+      "target_prompt_tokens": 131072,
+      "actual_prompt_tokens": 131112,
+      "n": 1,
+      "prefill_tps": 1382.9551086992462,
+      "prefill_range_tps": [
+        1382.9551086992462,
+        1382.9551086992462
+      ],
+      "decode_tps": 47.554104581209266,
+      "decode_range_tps": [
+        47.554104581209266,
+        47.554104581209266
+      ],
+      "ttft_seconds": 94.81141254201066,
+      "actual_completion_tokens": [
+        128
+      ]
+    },
+    {
+      "target_prompt_tokens": 261888,
+      "actual_prompt_tokens": 261928,
+      "n": 1,
+      "prefill_tps": 949.3922412934292,
+      "prefill_range_tps": [
+        949.3922412934292,
+        949.3922412934292
+      ],
+      "decode_tps": 39.62152962106105,
+      "decode_range_tps": [
+        39.62152962106105,
+        39.62152962106105
+      ],
+      "ttft_seconds": 275.8997797219781,
+      "actual_completion_tokens": [
+        126
+      ]
+    }
+  ],
+  "samples": [
+    {
+      "source": "8k-events.jsonl",
+      "target_prompt_tokens": 8192,
+      "actual_prompt_tokens": 8232,
+      "requested_output_tokens": 128,
+      "reported_completion_tokens": 128,
+      "visible_stream_token_events": 128,
+      "ttft_seconds": 3.3756392569630407,
+      "prefill_tps_llama_benchy": 2439.12196565985,
+      "decode_seconds": 2.3094405489973724,
+      "decode_tps_llama_benchy": 54.99469290198101,
+      "total_request_seconds": 5.685079805960413,
+      "error": "",
+      "exact_128_met": true
+    },
+    {
+      "source": "8k-events.jsonl",
+      "target_prompt_tokens": 8192,
+      "actual_prompt_tokens": 8232,
+      "requested_output_tokens": 128,
+      "reported_completion_tokens": 126,
+      "visible_stream_token_events": 126,
+      "ttft_seconds": 3.3743141089798883,
+      "prefill_tps_llama_benchy": 2440.0800342600655,
+      "decode_seconds": 2.266254146990832,
+      "decode_tps_llama_benchy": 55.15996235290316,
+      "total_request_seconds": 5.64056825597072,
+      "error": "",
+      "exact_128_met": false
+    },
+    {
+      "source": "8k-events.jsonl",
+      "target_prompt_tokens": 8192,
+      "actual_prompt_tokens": 8232,
+      "requested_output_tokens": 128,
+      "reported_completion_tokens": 128,
+      "visible_stream_token_events": 128,
+      "ttft_seconds": 3.394180254021194,
+      "prefill_tps_llama_benchy": 2425.795486508884,
+      "decode_seconds": 2.2938790390035138,
+      "decode_tps_llama_benchy": 55.36702622936474,
+      "total_request_seconds": 5.688059293024708,
+      "error": "",
+      "exact_128_met": true
+    },
+    {
+      "source": "contexts-events.jsonl",
+      "target_prompt_tokens": 32768,
+      "actual_prompt_tokens": 32810,
+      "requested_output_tokens": 128,
+      "reported_completion_tokens": 128,
+      "visible_stream_token_events": 128,
+      "ttft_seconds": 15.375260183995124,
+      "prefill_tps_llama_benchy": 2134.244820096813,
+      "decode_seconds": 2.359476784011349,
+      "decode_tps_llama_benchy": 53.82749815876062,
+      "total_request_seconds": 17.734736968006473,
+      "error": "",
+      "exact_128_met": true
+    },
+    {
+      "source": "contexts-events.jsonl",
+      "target_prompt_tokens": 65536,
+      "actual_prompt_tokens": 65576,
+      "requested_output_tokens": 128,
+      "reported_completion_tokens": 128,
+      "visible_stream_token_events": 128,
+      "ttft_seconds": 36.14855471398914,
+      "prefill_tps_llama_benchy": 1814.2222656615504,
+      "decode_seconds": 2.4715851370128803,
+      "decode_tps_llama_benchy": 51.38564212171553,
+      "total_request_seconds": 38.62013985100202,
+      "error": "",
+      "exact_128_met": true
+    },
+    {
+      "source": "contexts-events.jsonl",
+      "target_prompt_tokens": 131072,
+      "actual_prompt_tokens": 131112,
+      "requested_output_tokens": 128,
+      "reported_completion_tokens": 128,
+      "visible_stream_token_events": 128,
+      "ttft_seconds": 94.81141254201066,
+      "prefill_tps_llama_benchy": 1382.9551086992462,
+      "decode_seconds": 2.6496835639700294,
+      "decode_tps_llama_benchy": 47.554104581209266,
+      "total_request_seconds": 97.46109610598069,
+      "error": "",
+      "exact_128_met": true
+    },
+    {
+      "source": "contexts-events.jsonl",
+      "target_prompt_tokens": 261888,
+      "actual_prompt_tokens": 261928,
+      "requested_output_tokens": 128,
+      "reported_completion_tokens": 126,
+      "visible_stream_token_events": 126,
+      "ttft_seconds": 275.8997797219781,
+      "prefill_tps_llama_benchy": 949.3922412934292,
+      "decode_seconds": 3.104500157991424,
+      "decode_tps_llama_benchy": 39.62152962106105,
+      "total_request_seconds": 279.00427987996954,
+      "error": "",
+      "exact_128_met": false
+    }
+  ],
+  "output_length_validation": {
+    "requested_with_exact_tg": true,
+    "result": "PARTIAL: 5/7 requests completed exactly 128 tokens; two returned 126 completion tokens despite --exact-tg. At 256K the visible stream event count was 125 while request_end reported 126. Preserve raw telemetry and report actual lengths, not exact-128 compliance.",
+    "impacted_targets_tokens": [
+      8192,
+      261888
+    ],
+    "decision": "Prefill remains observed. Decode remains exploratory with actual 126\u2013128 output lengths, not a perfectly matched fixed-output cohort. No rerun solely to force exact length: A14 Q172 for this variant already failed safety gates TC-74/84, so a small output-length normalization cannot enable adoption."
+  },
+  "resource_observation": {
+    "memavailable_min_gib_from_25s_samples": null,
+    "memory_psi_some_avg10_max": null,
+    "container_oom": false,
+    "engine_init_seconds": 134.5,
+    "server_log": "logs/terra/a16-server.log",
+    "benchmark_console_log": "runs/terra-a16/contexts-console.log"
+  },
+  "quality_context": "A14 Q172 TERRA-MTP-off 62/100; critical safety failures TC-74/84; not deployable for tool use. No quality seed repeated.",
+  "raw_results": [
+    "runs/terra-a16/8k.json",
+    "runs/terra-a16/8k-events.jsonl",
+    "runs/terra-a16/contexts.json",
+    "runs/terra-a16/contexts-events.jsonl"
+  ],
+  "postflight": "receipts/terra-a16-postflight.json",
+  "decision": "Context ladder completed, not an adoption result or valid direct comparison with SOL/ASTRA. A14 quality safety failures remain blocking."
+}

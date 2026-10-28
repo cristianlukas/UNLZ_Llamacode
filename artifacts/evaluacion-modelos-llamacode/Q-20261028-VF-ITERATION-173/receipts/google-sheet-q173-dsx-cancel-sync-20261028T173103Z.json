@@ -1,0 +1,19 @@
+{
+  "timestamp_utc": "2026-10-28T17:31:03Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet": "Resultados",
+  "changes": [
+    {
+      "range": "Resultados!A378:AF378",
+      "id": "Q173-DSX-T16-CTX-512K-CANCELLED",
+      "status": "Canceled by user before first content token; no valid TTFT or TPS; excluded from performance comparison",
+      "evidence": "37m27s elapsed; 2,247.48s; no request_first_token; the row explicitly marks all performance metrics N/D"
+    },
+    {
+      "range": "Accionables!D51:N51",
+      "status": "Q173 partial updated: DSX 512K canceled; DSX 1M omitted by A08; other profiles remain in progress",
+      "verification": "Read back values matched; WRAP/TOP Arial 10 formatting preserved"
+    }
+  ],
+  "source_receipt": "receipts/prereg-amendment-08-dsx-high-context-user-stop.json"
+}

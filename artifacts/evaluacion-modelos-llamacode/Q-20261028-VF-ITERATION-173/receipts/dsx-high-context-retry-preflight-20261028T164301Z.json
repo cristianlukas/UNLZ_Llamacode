@@ -1,0 +1,11 @@
+{
+  "receipt_type": "q173_clean_high_context_retry_preflight",
+  "captured_at_utc": "2026-10-28T16:43:01Z",
+  "experiment": "Q173-DSX-high-context-no-per-context-warmup retry after previous pending=2 was cleared",
+  "lock": {"task": "Q146 resume justified VF-20261019-01 tests", "token": "2242863e-c78e-4fa9-9649-c1d1541f3919", "ownership": "existing lock belongs to this active goal; preserved"},
+  "model": {"path": "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-dsx-T16/models/DeepSeek-V4.1-Flash-1017-dsx-t16.gguf", "bytes": 251592261632, "sha256": "31b3852636237c63b3e42b2403f172e372d36c4ad486e65f5c3920307bcfb3fa", "sha256_source": "verified Q172 integrity receipt; current exact file size matches"},
+  "runtime": {"path": "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-dsx-T16/build/release/dsx-server", "bytes": 151343040, "sha256": "bec3b3e59803108b81834227bfb4ba5f722473af34e1ab960510e723fe07ad27", "commit": "lxe/dsx@98f1259732f8c3a5f445b25e080daf70fc300967"},
+  "conflict_check": {"inference_processes": [], "ports_18175_18176_18177": "no listeners", "nvidia_compute_app": "ArtCraft GUI only (207 MiB on GPU0); no inference process", "gui_preserved": true},
+  "hardware": {"gpus": ["RTX 3090 24 GiB; 1223 MiB used, 45 C", "RTX 3090 24 GiB; 110 MiB used, 28 C"], "mem_available_bytes": 117988405248, "swap_free_bytes": 42348544, "memory_psi_full_avg10_percent": 0.0},
+  "decision": "PASS; start only the preregistered local DSX evaluation server on loopback port 18177, dual GPU, context 1048576 and arena 70 GB. No production profile, PeritoSoft file, or GUI process will be changed."
+}

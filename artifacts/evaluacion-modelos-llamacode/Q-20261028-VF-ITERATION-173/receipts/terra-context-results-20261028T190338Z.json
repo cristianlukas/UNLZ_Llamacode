@@ -1,0 +1,167 @@
+{
+  "task": "Q173 TERRA AutoRound INT4/W4A8 MTP4 context ladder",
+  "status": "complete",
+  "completed_utc": "2026-10-28T19:03:38Z",
+  "preregistration": "receipts/prereg-amendment-13-terra-context-and-q172.json",
+  "profile": {
+    "alias": "TERRA",
+    "model": "Qwen3.8-27B AutoRound INT4/W4A8 MTP4",
+    "max_model_len": 262144,
+    "tensor_parallel_size": 2,
+    "gpu": "2xRTX 3090",
+    "ram_gib": 128,
+    "runtime": "vLLM 0.27.1",
+    "image_digest": "sha256:0a51ea5b4ae2dc5d81890e5173f54203d2a3ae0cfffe51b8fd2afd4391bfd967",
+    "compose_sha256": "2df4e44e1e1b268da80690a0812ac1b60768d60b643096ce8473110f88b7b76a",
+    "model_manifest_sha256": "b9b842e49ccc3f8b3a1459ce218d87884604a36725a46cb64b4741641ed7d231"
+  },
+  "server": {
+    "container": "q173-terra-context",
+    "endpoint": "http://127.0.0.1:18474/v1",
+    "started_utc": "2026-10-28T18:49:38Z",
+    "api_ready_utc": "2026-10-28T18:53:27Z",
+    "model_id": "qwen3.8-27b",
+    "readiness_http": 200,
+    "unscored_smoke": "First 12-token smoke truncated in reasoning; second unscored request returned TERRA_READY, HTTP 200, 56 completion tokens."
+  },
+  "benchmark": {
+    "tool": "llama-benchy 0.4.0",
+    "tokenizer": "local AutoRound tokenizer directory; server prompt_tokens cross-checked",
+    "protocol": "one short unscored startup health warmup; no per-context warmups; no prefix cache; serial concurrency=1; 128 exact completion tokens; client-observed TTFT and decode duration; 8K n=3; larger contexts n=1",
+    "contexts_requested_tokens": [
+      8192,
+      32768,
+      65536,
+      131072,
+      261888
+    ],
+    "actual_prompt_tokens": [
+      8232,
+      32808,
+      65576,
+      131112,
+      261928
+    ],
+    "omit_512k": true,
+    "omit_1m": "outside 262144 native limit",
+    "metrics": [
+      {
+        "request_id": 0,
+        "run_index": 0,
+        "requested_pp": 8192,
+        "actual_prompt_tokens": 8232,
+        "actual_completion_tokens": 128,
+        "ttft_seconds_client_observed": 3.5124316559522413,
+        "decode_seconds_client_observed": 3.4940328080556355,
+        "prefill_tok_s_client_observed": 2343.6754950234767,
+        "decode_tok_s_client_observed": 36.63388612290382
+      },
+      {
+        "request_id": 1,
+        "run_index": 1,
+        "requested_pp": 8192,
+        "actual_prompt_tokens": 8232,
+        "actual_completion_tokens": 128,
+        "ttft_seconds_client_observed": 3.5141788810142316,
+        "decode_seconds_client_observed": 3.8139027089928277,
+        "prefill_tok_s_client_observed": 2342.510236025365,
+        "decode_tok_s_client_observed": 33.56142245007664
+      },
+      {
+        "request_id": 2,
+        "run_index": 2,
+        "requested_pp": 8192,
+        "actual_prompt_tokens": 8232,
+        "actual_completion_tokens": 128,
+        "ttft_seconds_client_observed": 3.5126722819986753,
+        "decode_seconds_client_observed": 3.590333912987262,
+        "prefill_tok_s_client_observed": 2343.514947917679,
+        "decode_tok_s_client_observed": 35.65128010433444
+      },
+      {
+        "request_id": 0,
+        "run_index": 0,
+        "requested_pp": 32768,
+        "actual_prompt_tokens": 32808,
+        "actual_completion_tokens": 128,
+        "ttft_seconds_client_observed": 15.923604054027237,
+        "decode_seconds_client_observed": 1.3059794739820063,
+        "prefill_tok_s_client_observed": 2060.3375899504695,
+        "decode_tok_s_client_observed": 98.01072876721459
+      },
+      {
+        "request_id": 1,
+        "run_index": 0,
+        "requested_pp": 65536,
+        "actual_prompt_tokens": 65576,
+        "actual_completion_tokens": 128,
+        "ttft_seconds_client_observed": 37.48167894000653,
+        "decode_seconds_client_observed": 1.4238844930077903,
+        "prefill_tok_s_client_observed": 1749.5480953497697,
+        "decode_tok_s_client_observed": 89.89493222839648
+      },
+      {
+        "request_id": 2,
+        "run_index": 0,
+        "requested_pp": 131072,
+        "actual_prompt_tokens": 131112,
+        "actual_completion_tokens": 128,
+        "ttft_seconds_client_observed": 98.0731072340277,
+        "decode_seconds_client_observed": 1.413282360008452,
+        "prefill_tok_s_client_observed": 1336.880248803915,
+        "decode_tok_s_client_observed": 90.56930421125082
+      },
+      {
+        "request_id": 3,
+        "run_index": 0,
+        "requested_pp": 261888,
+        "actual_prompt_tokens": 261928,
+        "actual_completion_tokens": 128,
+        "ttft_seconds_client_observed": 290.948677737033,
+        "decode_seconds_client_observed": 5.318125453952234,
+        "prefill_tok_s_client_observed": 900.2549935516028,
+        "decode_tok_s_client_observed": 24.06863115740813
+      }
+    ],
+    "derivation": "prefill = actual server prompt_tokens / client-observed TTFT; decode = exact completed tokens / client-observed decode_seconds; not engine-native timing"
+  },
+  "resource_observations": {
+    "minimum_mem_available_bytes_observed": 106760097792,
+    "memory_psi": "some/full avg10 remained 0.00",
+    "max_gpu_memory_used_mib_observed": [
+      22756,
+      21866
+    ],
+    "max_gpu_utilization_percent_observed": [
+      100,
+      100
+    ],
+    "max_gpu_temperature_c_observed": [
+      73,
+      69
+    ],
+    "startup_warnings": "CUDA expandable_segments logged 20MiB mapping OOM warnings while only 5–13MiB was free in GPU allocator segments; container remained running, OOMKilled=false, model loaded and all prompts completed. These are allocator-segment warnings, not host RAM OOM."
+  },
+  "postflight": {
+    "utc": "2026-10-28T19:03:38Z",
+    "container_removed": true,
+    "port_18474_closed": true,
+    "mem_available_bytes": 117452959744,
+    "gpu_memory_used_mib": [
+      921,
+      110
+    ],
+    "gui_gpu0_preserved": true,
+    "evaluation_processes_remaining": false,
+    "oom_or_crash": false
+  },
+  "files": {
+    "runs/terra/8k.json": "df8736c9c212c1c757165dec45e42015a722012b447367bf6861e9441e149f1a",
+    "runs/terra/8k-events.jsonl": "7a01152373d8bf54a61ea363cc0790dc3f01ebea7b9e0c54c2ddf7bb18d28087",
+    "runs/terra/8k-derived.json": "167155bb6d698f21b8634de5782a5bd8b564f2153b7f2f03f4b43bab27a49da5",
+    "runs/terra/contexts.json": "bdf604df959e388f8f80381962336fc3d738b7fd6fc3966c6aaad35a86e73a05",
+    "runs/terra/contexts-events.jsonl": "fe6abb3db1160764ec28edc2c7342cc49e9ff8203896f35865da10a3e140a3b0",
+    "runs/terra/contexts-derived.json": "e4b309b96dd50908b8d6ee0b8ffaf3720cb190a08ac3dfaa77ff1033c03aade6",
+    "logs/terra/server-context.log": "b9fc038504a66609910fe0ac77a8c2f39b9a607478345e2a7bf4772cfa3fb94b"
+  }
+}

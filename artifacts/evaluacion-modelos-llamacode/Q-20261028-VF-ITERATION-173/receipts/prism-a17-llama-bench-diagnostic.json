@@ -1,0 +1,33 @@
+{
+  "task": "Q173 A17 PrismML llama-bench diagnostic result",
+  "timestamp_utc": "2026-10-28 20:17:15 UTC",
+  "valid_context_levels_for_requested_prefill_decode": "none",
+  "completed_diagnostic_levels": {
+    "8192": {
+      "repetitions": 3,
+      "dual_gpu": true,
+      "raw_json": "runs/prism-a17/8k.json"
+    },
+    "32768": {
+      "repetitions": 1,
+      "dual_gpu": true,
+      "raw_json": "runs/prism-a17/32k.json"
+    }
+  },
+  "interrupted_level": {
+    "65536": "stopped before completed output, no metric accepted"
+  },
+  "reason": "Pinned llama-bench creates standalone pp/tg records plus one combined p+g aggregate; the combined row does not expose separate prompt and decode phase times for the same request, so it cannot satisfy the user's requested per-context prefill/decode columns without a derived estimate.",
+  "diagnostics": "Both GPU0 and GPU1 allocated ~4.9/4.8 GiB at 8K and ~5.8/5.6 GiB at 32K. No OOM. These raw records remain archived for diagnostics and are not migrated as context-separated TPS.",
+  "cleanup": "Only the owned llama-bench PID 940010 was terminated at 64K; no server/process remained, GPU memory returned to desktop baseline, GUI preserved.",
+  "files": [
+    "runs/prism-a17/8k.json",
+    "runs/prism-a17/32k.json",
+    "logs/prism-a17/8k.log",
+    "logs/prism-a17/32k.log",
+    "logs/prism-a17/8k-resources.log",
+    "logs/prism-a17/32k-resources.log",
+    "logs/prism-a17/64k.log",
+    "logs/prism-a17/64k-resources.log"
+  ]
+}

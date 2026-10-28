@@ -1,0 +1,218 @@
+{
+  "name": "q173-terra-a16",
+  "networks": {
+    "default": {
+      "name": "q173-terra-a16_default",
+      "ipam": {}
+    }
+  },
+  "services": {
+    "vllm-qwen38-27b-dual-fast": {
+      "command": [
+        "--model",
+        "/root/.cache/huggingface/qwen3.8-27b-autoround-int4",
+        "--served-model-name",
+        "qwen3.8-27b",
+        "local",
+        "--quantization",
+        "auto_round",
+        "--dtype",
+        "bfloat16",
+        "--tensor-parallel-size",
+        "2",
+        "--max-model-len",
+        "262144",
+        "--gpu-memory-utilization",
+        "0.90",
+        "--max-num-seqs",
+        "1",
+        "--max-num-batched-tokens",
+        "8192",
+        "--long-prefill-token-threshold",
+        "4096",
+        "--kv-cache-dtype",
+        "fp8_e4m3",
+        "--trust-remote-code",
+        "--enable-prefix-caching",
+        "--enable-chunked-prefill",
+        "--mamba-cache-mode",
+        "align",
+        "--prefix-match-unit",
+        "16",
+        "--reasoning-parser",
+        "qwen3",
+        "--enable-auto-tool-choice",
+        "--tool-call-parser",
+        "qwen3_coder",
+        "--default-chat-template-kwargs",
+        "{\"enable_thinking\": true, \"reasoning_effort\": \"low\"}",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000"
+      ],
+      "container_name": "q173-terra-a16",
+      "deploy": {
+        "resources": {
+          "reservations": {
+            "devices": [
+              {
+                "capabilities": [
+                  "gpu"
+                ],
+                "driver": "nvidia",
+                "count": -1
+              }
+            ]
+          }
+        },
+        "placement": {}
+      },
+      "entrypoint": [
+        "bash",
+        "-c",
+        "umask 0002\nset -e\nsource /etc/club3090/detect_nvlink.sh\n# ⚠️ THIS MUST RUN BEFORE install.sh, NOT AFTER. install.sh only hard-FAILS\n# on a patch-apply error when VLLM_MARLIN_INPUT_DTYPE is already set; if we\n# exported it afterwards, a failed patch would downgrade to a WARNING and we\n# would serve a HALF-WIRED int8 config — the exact thing that guard exists\n# to prevent.\nif [ -z \"$${VLLM_MARLIN_INPUT_DTYPE:-}\" ] \u0026\u0026 [ \"$${W4A8:-1}\" != \"0\" ]; then\n  export VLLM_MARLIN_INPUT_DTYPE=int8\nfi\nbash /etc/club3090/w4a8/install.sh\nbash /etc/club3090/pr48375/install.sh || exit 1\nbash /etc/club3090/gdn-async-order/install.sh || exit 1\nFI_PINQ_LIB_ALL=\"0\" bash /etc/club3090/flashinfer-decode-pin/install.sh || exit 1\necho \"[w4a8] VLLM_MARLIN_INPUT_DTYPE=$${VLLM_MARLIN_INPUT_DTYPE:-\u003cunset -\u003e W4A16\u003e} (W4A8=$${W4A8:-1})\"\nAR=\"\"\n[ \"$${_NVLINK_ENABLED:-0}\" = \"1\" ] || AR=\"--disable-custom-all-reduce\"\n# -- Drafter toggle: the same contract on every club-3090 compose --------\n#   SPEC_N=\u003cn\u003e  drafter depth (this compose defaults to 4); SPEC_N=0 disables\n#   SPEC=off    back-compat alias for SPEC_N=0\n# Turning the drafter off is the documented mitigation for vllm#50021 and must\n# never require editing this file. A non-numeric SPEC_N is a hard error, so a\n# typo can never masquerade as a silent \"drafter off\".\n_spec_n=\"$${SPEC_N:-4}\"\ncase \"$${SPEC:-}\" in off|OFF|Off|false|no|0) _spec_n=0 ;; esac\ncase \"$$_spec_n\" in \"\"|*[!0-9]*)\n  echo \"[spec] SPEC_N='$$_spec_n' is not a non-negative integer.\" \u003e\u00262\n  echo \"[spec] Fix: SPEC_N=\u003cn\u003e sets depth; SPEC_N=0 (or SPEC=off) disables.\" \u003e\u00262\n  exit 1 ;;\nesac\nSPEC_ARGS=()\nif [ \"$$_spec_n\" -gt 0 ]; then\n  SPEC_ARGS=(--speculative-config \"{\\\"method\\\":\\\"mtp\\\",\\\"num_speculative_tokens\\\":$$_spec_n}\")\n  echo \"[spec] drafter ON - mtp n=$$_spec_n\" \u003e\u00262\nelse\n  echo \"[spec] drafter OFF (SPEC_N=0 / SPEC=off) - no speculative decoding\" \u003e\u00262\nfi\n# -- Async-scheduling toggle: vllm#50021 mitigation (1), keeps the drafter --\nASYNC_ARGS=()\ncase \"$${ASYNC_SCHED:-}\" in off|OFF|Off|false|no|0)\n  ASYNC_ARGS=(--no-async-scheduling)\n  echo \"[async] async scheduling OFF (ASYNC_SCHED=off) - vllm#50021 mitigation, drafter kept\" \u003e\u00262 ;;\nesac\n# -- Mamba/GDN cache knobs (hybrid-model KV headroom) --\n#   MAMBA_BLOCK_SIZE=\u003ctokens\u003e  checkpoint SSM state every N tokens (align mode; multiple of 8)\n#   MAMBA_CACHE_DTYPE=bfloat16 store conv+ssm state in bf16 instead of fp32\nMAMBA_ARGS=()\nif [ -n \"$${MAMBA_BLOCK_SIZE:-}\" ]; then MAMBA_ARGS+=(--mamba-block-size \"$${MAMBA_BLOCK_SIZE}\"); echo \"[mamba] block size $${MAMBA_BLOCK_SIZE}\" \u003e\u00262; fi\nif [ -n \"$${MAMBA_CACHE_DTYPE:-}\" ]; then MAMBA_ARGS+=(--mamba-cache-dtype \"$${MAMBA_CACHE_DTYPE}\"); echo \"[mamba] cache dtype $${MAMBA_CACHE_DTYPE}\" \u003e\u00262; fi\n# -- Sampler follows the reasoning mode ----------------------------------\n# The card publishes TWO sampler rows (see the header); ENABLE_THINKING\n# now selects the row — one variable instead of the four-variable ritual\n# (#1014). `:=` defaults: an explicit TEMP / TOP_P / PRESENCE_PENALTY\n# from .env or shell STILL WINS in both branches. top_k / min_p are\n# identical across the rows and stay mode-independent.\n_temp=\"$${TEMP:-}\"\nif [ \"$${ENABLE_THINKING:-true}\" = \"true\" ]; then\n  : \"$${_temp:=1.0}\" \"$${TOP_P:=0.95}\" \"$${PRESENCE_PENALTY:=0.0}\"\n  echo \"[sampler] thinking row (ENABLE_THINKING=true): temp=$$_temp top_p=$${TOP_P} presence=$${PRESENCE_PENALTY}\" \u003e\u00262\nelse\n  : \"$${_temp:=0.7}\" \"$${TOP_P:=0.80}\" \"$${PRESENCE_PENALTY:=1.5}\"\n  echo \"[sampler] instruct row (default): temp=$$_temp top_p=$${TOP_P} presence=$${PRESENCE_PENALTY}\" \u003e\u00262\nfi\nSAMPLER_ARGS=(--override-generation-config \"{\\\"temperature\\\":$$_temp,\\\"top_p\\\":$${TOP_P},\\\"top_k\\\":$${TOP_K:-20},\\\"min_p\\\":$${MIN_P:-0.0},\\\"presence_penalty\\\":$${PRESENCE_PENALTY}}\")\nexec vllm serve $$AR \"$$@\" \"$${SPEC_ARGS[@]}\" \"$${ASYNC_ARGS[@]}\" \"$${MAMBA_ARGS[@]}\" \"$${SAMPLER_ARGS[@]}\"\n",
+        "--"
+      ],
+      "environment": {
+        "ASYNC_SCHED": "",
+        "CUDA_VISIBLE_DEVICES": null,
+        "ENABLE_THINKING": "true",
+        "HF_HUB_OFFLINE": "1",
+        "HUGGING_FACE_HUB_TOKEN": "",
+        "LD_PRELOAD": "/opt/vramfrag.so",
+        "MAMBA_BLOCK_SIZE": "",
+        "MAMBA_CACHE_DTYPE": "",
+        "MIN_P": "0.0",
+        "NCCL_CUMEM_ENABLE": "0",
+        "NCCL_P2P_DISABLE": "1",
+        "NVIDIA_VISIBLE_DEVICES": "all",
+        "NVLINK_MODE": "auto",
+        "OMP_NUM_THREADS": "1",
+        "PRESENCE_PENALTY": "0.0",
+        "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True",
+        "RMTRACE_FALLBACK64K": "1",
+        "RMTRACE_LOG": "/tmp/rmtrace.log",
+        "RMTRACE_NOFORCEALIGN": "1",
+        "SPEC": "",
+        "SPEC_N": "0",
+        "TEMP": "0.6",
+        "TOP_K": "20",
+        "TOP_P": "0.95",
+        "TRANSFORMERS_OFFLINE": "1",
+        "VLLM_MARLIN_INPUT_DTYPE": null,
+        "VLLM_NO_USAGE_STATS": "1",
+        "VLLM_SKIP_P2P_CHECK": null,
+        "VLLM_USE_FLASHINFER_SAMPLER": "0",
+        "VLLM_WORKER_MULTIPROC_METHOD": "spawn",
+        "W4A8": "1"
+      },
+      "image": "vllm/vllm-openai:v0.27.1",
+      "ipc": "host",
+      "networks": {
+        "default": null
+      },
+      "ports": [
+        {
+          "mode": "ingress",
+          "host_ip": "127.0.0.1",
+          "target": 8000,
+          "published": "18474",
+          "protocol": "tcp"
+        }
+      ],
+      "restart": "no",
+      "shm_size": "17179869184",
+      "user": "0:1000",
+      "volumes": [
+        {
+          "type": "bind",
+          "source": "/media/cristian/Disco local/Models/llamacpp/club-3090",
+          "target": "/root/.cache/huggingface",
+          "bind": {
+            "create_host_path": true
+          }
+        },
+        {
+          "type": "bind",
+          "source": "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.6-27b/vllm/patches/w4a8-int8-act",
+          "target": "/etc/club3090/w4a8",
+          "read_only": true,
+          "bind": {
+            "create_host_path": true
+          }
+        },
+        {
+          "type": "bind",
+          "source": "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.6-27b/vllm/patches/vllm-pr48375-mamba-drop-eagle-block",
+          "target": "/etc/club3090/pr48375",
+          "read_only": true,
+          "bind": {
+            "create_host_path": true
+          }
+        },
+        {
+          "type": "bind",
+          "source": "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.6-27b/vllm/patches/vllm-gdn-mtp-async-spec-order",
+          "target": "/etc/club3090/gdn-async-order",
+          "read_only": true,
+          "bind": {
+            "create_host_path": true
+          }
+        },
+        {
+          "type": "bind",
+          "source": "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.8-27b/vllm/patches/vllm-flashinfer-decode-pin",
+          "target": "/etc/club3090/flashinfer-decode-pin",
+          "read_only": true,
+          "bind": {
+            "create_host_path": true
+          }
+        },
+        {
+          "type": "bind",
+          "source": "/home/cristian/.cache/llamacode/club-3090-src/scripts/detect_nvlink.sh",
+          "target": "/etc/club3090/detect_nvlink.sh",
+          "read_only": true,
+          "bind": {
+            "create_host_path": true
+          }
+        },
+        {
+          "type": "bind",
+          "source": "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.8-27b/vllm/patches/qwen38-reasoning-effort-template/chat_template.jinja",
+          "target": "/root/.cache/huggingface/qwen3.8-27b-autoround-int4/chat_template.jinja",
+          "read_only": true,
+          "bind": {
+            "create_host_path": true
+          }
+        },
+        {
+          "type": "bind",
+          "source": "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.8-27b/vllm/cache/torch_compile",
+          "target": "/root/.cache/vllm/torch_compile_cache",
+          "bind": {
+            "create_host_path": true
+          }
+        },
+        {
+          "type": "bind",
+          "source": "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.8-27b/vllm/cache/triton",
+          "target": "/root/.triton/cache",
+          "bind": {
+            "create_host_path": true
+          }
+        },
+        {
+          "type": "bind",
+          "source": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/gpu0-vram-diagnostico/linux/frag64k/rmtrace.so",
+          "target": "/opt/vramfrag.so",
+          "read_only": true,
+          "bind": {
+            "create_host_path": true
+          }
+        }
+      ]
+    }
+  }
+}

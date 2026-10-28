@@ -1,0 +1,230 @@
+{"schema":"llama-benchy-progress.v1","type":"header","ts":1793213714.5597408,"llama_benchy_version":"0.4.0"}
+{"schema":"llama-benchy-progress.v1","type":"latency_measured","ts":1793213714.845507,"latency_s":0.09515821733900036,"mode":"generation"}
+{"schema":"llama-benchy-progress.v1","type":"request_start","ts":1793213714.853955,"request_id":0,"model":"qwen3.8-27b","base_url":"http://127.0.0.1:18474/v1","prompt_size":32768,"response_size":128,"context_size":0,"concurrency":1,"run_index":0,"target_label":""}
+{"schema":"llama-benchy-progress.v1","type":"request_first_response","ts":1793213730.777544,"request_id":0,"ttfr_s":15.92226743500214}
+{"schema":"llama-benchy-progress.v1","type":"request_first_token","ts":1793213730.777782,"request_id":0,"ttft_s":15.923604054027237}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213730.7778044,"request_id":0,"count":1,"snippet":"The"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213730.8043623,"request_id":0,"count":3,"snippet":" user has shared"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213730.8408592,"request_id":0,"count":5,"snippet":" a very long excerpt from"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213730.8791919,"request_id":0,"count":1,"snippet":" Arthur"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213730.9167705,"request_id":0,"count":4,"snippet":" Conan Doyle's works"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213730.9542055,"request_id":0,"count":3,"snippet":", specifically containing"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213730.9931743,"request_id":0,"count":3,"snippet":" three stories:"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213731.0312827,"request_id":0,"count":5,"snippet":"\n\n1. \"The"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213731.0703573,"request_id":0,"count":5,"snippet":" Adventure of the Speck"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213731.1097627,"request_id":0,"count":5,"snippet":"led Band\" (the"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213731.1482327,"request_id":0,"count":1,"snippet":" bulk"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213731.1872325,"request_id":0,"count":5,"snippet":" of the text)\n"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213731.2270248,"request_id":0,"count":5,"snippet":"2. \"The Adventure"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213731.2649193,"request_id":0,"count":5,"snippet":" of the Engineer's Thumb"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213731.304536,"request_id":0,"count":2,"snippet":"\"\n"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213731.3424678,"request_id":0,"count":5,"snippet":"3. \"The Adventure"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213731.380546,"request_id":0,"count":5,"snippet":" of the Noble Bachelor\""}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213731.419214,"request_id":0,"count":4,"snippet":"\n\nThe text ends"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213731.4574342,"request_id":0,"count":1,"snippet":" mid"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213731.4952168,"request_id":0,"count":3,"snippet":"-sentence in"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213731.5319183,"request_id":0,"count":1,"snippet":" \""}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213731.568034,"request_id":0,"count":2,"snippet":"The Adventure"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213731.604506,"request_id":0,"count":5,"snippet":" of the Noble Bachelor\""}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213731.6408477,"request_id":0,"count":2,"snippet":" with what"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213731.6767356,"request_id":0,"count":5,"snippet":" appears to be a fragment"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213731.7131152,"request_id":0,"count":1,"snippet":":"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213731.7481647,"request_id":0,"count":5,"snippet":" \"ca108"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213731.786615,"request_id":0,"count":5,"snippet":"956-daa"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213731.823418,"request_id":0,"count":5,"snippet":"4-4c4"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213731.8602083,"request_id":0,"count":5,"snippet":"f-935"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213731.8970325,"request_id":0,"count":5,"snippet":"8-f02e"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213731.9347475,"request_id":0,"count":5,"snippet":"97425"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213731.9710588,"request_id":0,"count":3,"snippet":"a5b"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213732.00755,"request_id":0,"count":2,"snippet":"\" which"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213732.0454743,"request_id":0,"count":4,"snippet":" looks like a UUID"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213732.0835235,"request_id":0,"count":2,"snippet":" or some"}
+{"schema":"llama-benchy-progress.v1","type":"request_end","ts":1793213732.0836513,"request_id":0,"total_tokens":128,"prompt_tokens":32808,"decode_seconds":1.3059794739820063,"error":""}
+{"schema":"llama-benchy-progress.v1","type":"request_start","ts":1793213732.0970318,"request_id":1,"model":"qwen3.8-27b","base_url":"http://127.0.0.1:18474/v1","prompt_size":65536,"response_size":128,"context_size":0,"concurrency":1,"run_index":0,"target_label":""}
+{"schema":"llama-benchy-progress.v1","type":"request_first_response","ts":1793213769.5787632,"request_id":1,"ttfr_s":37.479561930987984}
+{"schema":"llama-benchy-progress.v1","type":"request_first_token","ts":1793213769.5791037,"request_id":1,"ttft_s":37.48167894000653}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213769.5791245,"request_id":1,"count":1,"snippet":"The"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213769.6013458,"request_id":1,"count":5,"snippet":" user has provided a very"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213769.6394296,"request_id":1,"count":2,"snippet":" long passage"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213769.6774662,"request_id":1,"count":2,"snippet":" from Arthur"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213769.7162573,"request_id":1,"count":5,"snippet":" Conan Doyle's \"The"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213769.754365,"request_id":1,"count":3,"snippet":" Adventures of Sherlock"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213769.792607,"request_id":1,"count":5,"snippet":" Holmes\" - specifically it"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213769.830715,"request_id":1,"count":1,"snippet":" appears"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213769.870234,"request_id":1,"count":3,"snippet":" to be a"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213769.9106214,"request_id":1,"count":2,"snippet":" continuous excerpt"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213769.9486067,"request_id":1,"count":1,"snippet":" containing"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213769.9877038,"request_id":1,"count":3,"snippet":" multiple stories:"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213770.026235,"request_id":1,"count":1,"snippet":" The"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213770.0655336,"request_id":1,"count":5,"snippet":" Red-Headed League"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213770.104627,"request_id":1,"count":2,"snippet":", A"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213770.1431062,"request_id":1,"count":5,"snippet":" Case of Identity, The"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213770.1824203,"request_id":1,"count":5,"snippet":" Boscombe Valley Mystery,"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213770.2221189,"request_id":1,"count":5,"snippet":" The Five Orange Pips"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213770.2611632,"request_id":1,"count":3,"snippet":", The Man"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213770.3006563,"request_id":1,"count":5,"snippet":" with the Twisted Lip"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213770.3386066,"request_id":1,"count":5,"snippet":", The Adventure of the"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213770.3771574,"request_id":1,"count":5,"snippet":" Blue Carbuncle,"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213770.4148111,"request_id":1,"count":2,"snippet":" and the"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213770.4532921,"request_id":1,"count":5,"snippet":" beginning of The Adventure of"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213770.4929843,"request_id":1,"count":5,"snippet":" the Speckled Band"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213770.5307827,"request_id":1,"count":4,"snippet":".\n\nThe passage"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213770.569509,"request_id":1,"count":2,"snippet":" ends mid"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213770.6086972,"request_id":1,"count":3,"snippet":"-sentence in"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213770.6473198,"request_id":1,"count":2,"snippet":" the Spe"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213770.6868515,"request_id":1,"count":5,"snippet":"ckled Band story,"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213770.724078,"request_id":1,"count":2,"snippet":" with what"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213770.7622087,"request_id":1,"count":5,"snippet":" appears to be a UUID"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213770.8019135,"request_id":1,"count":2,"snippet":" or some"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213770.8408942,"request_id":1,"count":4,"snippet":" kind of identifier at"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213770.880049,"request_id":1,"count":2,"snippet":" the very"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213770.9190555,"request_id":1,"count":5,"snippet":" end: \"5de"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213770.9594872,"request_id":1,"count":5,"snippet":"87826"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213771.0026588,"request_id":1,"count":1,"snippet":"-d"}
+{"schema":"llama-benchy-progress.v1","type":"request_end","ts":1793213771.0027587,"request_id":1,"total_tokens":128,"prompt_tokens":65576,"decode_seconds":1.4238844930077903,"error":""}
+{"schema":"llama-benchy-progress.v1","type":"request_start","ts":1793213771.021473,"request_id":2,"model":"qwen3.8-27b","base_url":"http://127.0.0.1:18474/v1","prompt_size":131072,"response_size":128,"context_size":0,"concurrency":1,"run_index":0,"target_label":""}
+{"schema":"llama-benchy-progress.v1","type":"request_first_response","ts":1793213869.0946112,"request_id":2,"ttfr_s":98.06684792804299}
+{"schema":"llama-benchy-progress.v1","type":"request_first_token","ts":1793213869.0953805,"request_id":2,"ttft_s":98.0731072340277}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213869.0954328,"request_id":2,"count":1,"snippet":"The"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213869.1033247,"request_id":2,"count":3,"snippet":" user has past"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213869.14896,"request_id":2,"count":5,"snippet":"ed a very long excerpt"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213869.194157,"request_id":2,"count":2,"snippet":" from Arthur"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213869.2400982,"request_id":2,"count":5,"snippet":" Conan Doyle's \"The"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213869.2847173,"request_id":2,"count":3,"snippet":" Adventures of Sherlock"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213869.3283122,"request_id":2,"count":4,"snippet":" Holmes\" \u2014 it"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213869.3727174,"request_id":2,"count":2,"snippet":" includes The"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213869.4190574,"request_id":2,"count":1,"snippet":" Adventure"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213869.463185,"request_id":2,"count":3,"snippet":" of the Spe"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213869.5085292,"request_id":2,"count":5,"snippet":"ckled Band, The"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213869.5533733,"request_id":2,"count":1,"snippet":" Adventure"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213869.5968263,"request_id":2,"count":5,"snippet":" of the Engineer's Thumb"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213869.642022,"request_id":2,"count":5,"snippet":", The Adventure of the"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213869.684397,"request_id":2,"count":5,"snippet":" Noble Bachelor, The Adventure"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213869.726182,"request_id":2,"count":5,"snippet":" of the Beryl Coron"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213869.7696762,"request_id":2,"count":3,"snippet":"et, and"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213869.813977,"request_id":2,"count":5,"snippet":" the beginning of The Adventure"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213869.8571577,"request_id":2,"count":4,"snippet":" of the Copper Bee"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213869.9004452,"request_id":2,"count":3,"snippet":"ches. The"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213869.9431012,"request_id":2,"count":5,"snippet":" text ends mid-sentence"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213869.9854426,"request_id":2,"count":3,"snippet":" in the Copper"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213870.027794,"request_id":2,"count":5,"snippet":" Beeches story, with"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213870.0716798,"request_id":2,"count":1,"snippet":" what"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213870.1148605,"request_id":2,"count":5,"snippet":" appears to be a UUID"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213870.1579692,"request_id":2,"count":1,"snippet":" appended"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213870.20338,"request_id":2,"count":5,"snippet":" at the end: \""}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213870.248244,"request_id":2,"count":4,"snippet":"6771"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213870.2908974,"request_id":2,"count":5,"snippet":"047f-"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213870.333697,"request_id":2,"count":5,"snippet":"318e-"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213870.3772702,"request_id":2,"count":5,"snippet":"43f1-"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213870.4200745,"request_id":2,"count":5,"snippet":"8577-"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213870.4627352,"request_id":2,"count":5,"snippet":"ec7570"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793213870.5079293,"request_id":2,"count":4,"snippet":"6cd58"}
+{"schema":"llama-benchy-progress.v1","type":"request_end","ts":1793213870.5080323,"request_id":2,"total_tokens":128,"prompt_tokens":131112,"decode_seconds":1.413282360008452,"error":""}
+{"schema":"llama-benchy-progress.v1","type":"request_start","ts":1793213870.5435023,"request_id":3,"model":"qwen3.8-27b","base_url":"http://127.0.0.1:18474/v1","prompt_size":261888,"response_size":128,"context_size":0,"concurrency":1,"run_index":0,"target_label":""}
+{"schema":"llama-benchy-progress.v1","type":"request_first_response","ts":1793214161.4922228,"request_id":3,"ttfr_s":290.94039003399666}
+{"schema":"llama-benchy-progress.v1","type":"request_first_token","ts":1793214161.4935074,"request_id":3,"ttft_s":290.948677737033}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214161.493561,"request_id":3,"count":1,"snippet":"\u201c"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214161.4935844,"request_id":3,"count":1,"snippet":"Let"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214161.538796,"request_id":3,"count":2,"snippet":" me say"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214161.5938642,"request_id":3,"count":1,"snippet":" it"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214161.648324,"request_id":3,"count":3,"snippet":" was a small"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214161.7022145,"request_id":3,"count":1,"snippet":" point"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214161.7555678,"request_id":3,"count":1,"snippet":" is"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214161.8094885,"request_id":3,"count":1,"snippet":" that"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214161.8640764,"request_id":3,"count":1,"snippet":" I"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214161.9174387,"request_id":3,"count":1,"snippet":" think"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214161.9722242,"request_id":3,"count":1,"snippet":" I"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214162.022679,"request_id":3,"count":1,"snippet":" shrugged"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214162.0803623,"request_id":3,"count":1,"snippet":" from"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214162.133899,"request_id":3,"count":2,"snippet":" thestory"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214162.1890688,"request_id":3,"count":1,"snippet":"le"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214162.2433357,"request_id":3,"count":1,"snippet":"."}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214162.2973056,"request_id":3,"count":2,"snippet":"\nhe"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214162.3513918,"request_id":3,"count":1,"snippet":" had"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214162.4028683,"request_id":3,"count":2,"snippet":" a of"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214162.4536438,"request_id":3,"count":2,"snippet":" the house"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214162.506173,"request_id":3,"count":1,"snippet":","}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214162.5574093,"request_id":3,"count":1,"snippet":" the"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214162.6095433,"request_id":3,"count":2,"snippet":" same."}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214162.6600544,"request_id":3,"count":2,"snippet":"\nThe"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214162.7124898,"request_id":3,"count":1,"snippet":" desk"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214162.763516,"request_id":3,"count":1,"snippet":" the"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214162.8158886,"request_id":3,"count":2,"snippet":" same person"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214162.867631,"request_id":3,"count":2,"snippet":".\n\n"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214162.919757,"request_id":3,"count":2,"snippet":"\u201cand"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214162.9713595,"request_id":3,"count":2,"snippet":" I believe"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214163.021666,"request_id":3,"count":1,"snippet":" the"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214163.0737886,"request_id":3,"count":1,"snippet":" woman"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214163.1248004,"request_id":3,"count":1,"snippet":" with"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214163.1772327,"request_id":3,"count":2,"snippet":" a woman"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214163.2308788,"request_id":3,"count":1,"snippet":","}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214163.282842,"request_id":3,"count":1,"snippet":" the"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214163.3334477,"request_id":3,"count":1,"snippet":" note"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214163.3857918,"request_id":3,"count":1,"snippet":" was"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214163.437581,"request_id":3,"count":1,"snippet":" a"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214163.491474,"request_id":3,"count":1,"snippet":" small"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214163.5418916,"request_id":3,"count":1,"snippet":" window"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214163.5918589,"request_id":3,"count":1,"snippet":" and"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214163.6441877,"request_id":3,"count":1,"snippet":" a"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214163.6959355,"request_id":3,"count":1,"snippet":"short"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214163.7470655,"request_id":3,"count":1,"snippet":"\n\n"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214163.798221,"request_id":3,"count":1,"snippet":"I"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214163.8499925,"request_id":3,"count":1,"snippet":" am"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214163.9016485,"request_id":3,"count":2,"snippet":" not too"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214163.9541097,"request_id":3,"count":1,"snippet":"\n"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214164.0047235,"request_id":3,"count":1,"snippet":"the"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214164.0562646,"request_id":3,"count":1,"snippet":" spe"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214164.1119835,"request_id":3,"count":1,"snippet":"\n"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214164.1630116,"request_id":3,"count":1,"snippet":"In"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214164.2155046,"request_id":3,"count":1,"snippet":" this"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214164.2672002,"request_id":3,"count":1,"snippet":" scene"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214164.319452,"request_id":3,"count":1,"snippet":"1"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214164.3713863,"request_id":3,"count":1,"snippet":"."}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214164.4222586,"request_id":3,"count":1,"snippet":"\n\n"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214164.4736443,"request_id":3,"count":1,"snippet":"\u201cHe"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214164.5249057,"request_id":3,"count":1,"snippet":" says"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214164.5763211,"request_id":3,"count":1,"snippet":" what"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214164.6276116,"request_id":3,"count":1,"snippet":" he"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214164.681396,"request_id":3,"count":1,"snippet":" took"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214164.7323594,"request_id":3,"count":1,"snippet":" the"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214164.7838516,"request_id":3,"count":1,"snippet":" room"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214164.8346274,"request_id":3,"count":1,"snippet":"'s"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214164.8861547,"request_id":3,"count":1,"snippet":" papers"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214164.9381917,"request_id":3,"count":1,"snippet":" are"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214164.989888,"request_id":3,"count":1,"snippet":" the"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214165.0421638,"request_id":3,"count":2,"snippet":" same type"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214165.0971231,"request_id":3,"count":2,"snippet":" of the"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214165.1498547,"request_id":3,"count":1,"snippet":" speaker"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214165.2038198,"request_id":3,"count":1,"snippet":"'s"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214165.2547185,"request_id":3,"count":1,"snippet":" letter"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214165.30859,"request_id":3,"count":1,"snippet":" to"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214165.3644423,"request_id":3,"count":1,"snippet":" be"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214165.4177659,"request_id":3,"count":1,"snippet":" exposed"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214165.4729378,"request_id":3,"count":1,"snippet":"."}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214165.5294979,"request_id":3,"count":2,"snippet":"\n\nThis"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214165.5836766,"request_id":3,"count":1,"snippet":" was"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214165.6367989,"request_id":3,"count":2,"snippet":" a**"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214165.688879,"request_id":3,"count":1,"snippet":":**"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214165.7414134,"request_id":3,"count":2,"snippet":"\nThe"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214165.7930353,"request_id":3,"count":1,"snippet":" ge"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214165.8461752,"request_id":3,"count":2,"snippet":"ese were"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214165.8974278,"request_id":3,"count":1,"snippet":" not"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214165.95116,"request_id":3,"count":1,"snippet":" be"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214166.0032837,"request_id":3,"count":1,"snippet":"que"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214166.0655818,"request_id":3,"count":1,"snippet":"zed"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214166.118003,"request_id":3,"count":3,"snippet":" by theThe"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214166.1726973,"request_id":3,"count":1,"snippet":" more"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214166.2281332,"request_id":3,"count":1,"snippet":" important"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214166.282819,"request_id":3,"count":1,"snippet":"."}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214166.3368235,"request_id":3,"count":2,"snippet":"\n\n\u201c"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214166.3904917,"request_id":3,"count":1,"snippet":"no"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214166.4410727,"request_id":3,"count":1,"snippet":" way"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214166.4934208,"request_id":3,"count":1,"snippet":"."}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214166.5450938,"request_id":3,"count":1,"snippet":"\n\n"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214166.5955021,"request_id":3,"count":2,"snippet":"\u201cH"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214166.6482937,"request_id":3,"count":1,"snippet":"OM"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214166.7019422,"request_id":3,"count":1,"snippet":"\n"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214166.755408,"request_id":3,"count":1,"snippet":"He"}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1793214166.8104072,"request_id":3,"count":1,"snippet":" was"}
+{"schema":"llama-benchy-progress.v1","type":"request_end","ts":1793214166.8105187,"request_id":3,"total_tokens":128,"prompt_tokens":261928,"decode_seconds":5.318125453952234,"error":""}
+{"schema":"llama-benchy-progress.v1","type":"bench_complete","ts":1793214166.812344,"status":"ok"}

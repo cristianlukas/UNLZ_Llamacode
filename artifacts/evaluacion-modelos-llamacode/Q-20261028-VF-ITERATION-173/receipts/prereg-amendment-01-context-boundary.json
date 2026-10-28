@@ -1,0 +1,9 @@
+{
+  "receipt_type": "preregistration_amendment",
+  "amendment": 1,
+  "created_at_utc": "2026-10-28T15:25:00Z",
+  "reason": "The DSX API declares context as prompt plus generated tokens. A target prompt equal to the full window with 128 generated tokens would exceed the declared limit.",
+  "change": "Preserve target prompt-size bands; at a context boundary cap prompt at declared window minus 128 generated tokens and record the actual tokenized prompt. Smaller target prompts remain unchanged when supported.",
+  "applies_before_first_measurement": true,
+  "does_not_change": ["models", "runtime versions", "quality results", "repeat count", "hardware", "stop conditions"]
+}

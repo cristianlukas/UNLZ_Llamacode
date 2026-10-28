@@ -1,0 +1,43 @@
+{
+  "task": "Q173 A17 Bonsai PrismML native context ladder preflight",
+  "timestamp_utc": "2026-10-28 20:08:58 UTC",
+  "lock_token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+  "preregistration": "receipts/prereg-amendment-17-bonsai-prism-context-ladder.json",
+  "model": {
+    "path": "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/Bonsai2-Prism-PQ2_0/models/Ternary-Bonsai-2-27B-PQ2_0.gguf",
+    "bytes": 7206168928,
+    "sha256": "3907dc1658db1f78a9826bf8d5bcb8dc65db0d466388937af57f2294fae62ec1",
+    "matches_registered_pin": true,
+    "gguf_version": 3,
+    "architecture": "qwen35",
+    "native_context_tokens": 262144
+  },
+  "runtime": {
+    "path": "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/Bonsai2-Prism-PQ2_0/runtime/llama-prism-b10826-c9c34bc/llama-bench",
+    "bytes": 17896,
+    "sha256": "280d0ce5b6404f4dedc9d6357dbdb5706fcbbda9c99b7acb9e85bba84b81c092",
+    "release": "prism-b10826-c9c34bc",
+    "commit": "c9c34bc9c4042c13a31598ebf43461cd0ad8f00d",
+    "devices_found_by_runtime": "CUDA0 and CUDA1; no model was loaded by the help probe"
+  },
+  "resource_preflight": {
+    "containers": [],
+    "inference_process_names": {
+      "llama-server": [],
+      "vllm": [],
+      "ninfer-serve": [],
+      "ollama": []
+    },
+    "nvidia_compute_clients": [],
+    "gpu_status": [
+      "0, NVIDIA GeForce RTX 3090, 840 MiB / 24576 MiB, utilization 31%",
+      "1, NVIDIA GeForce RTX 3090, 108 MiB / 24576 MiB, utilization 17%"
+    ],
+    "MemAvailable_kib": 117357876,
+    "SwapFree_kib": 3332236,
+    "memory_psi": "some avg10=0.00; full avg10=0.00",
+    "disk_free_bytes_on_Disco_local": 211826171904,
+    "gui_preserved": true
+  },
+  "decision": "PASS: exact model/runtime pins match, both RTX 3090s are available, no inference server/compute client is active, 128 GiB host RAM and 197 GiB model-volume space are available. Proceed serially; no download/build."
+}

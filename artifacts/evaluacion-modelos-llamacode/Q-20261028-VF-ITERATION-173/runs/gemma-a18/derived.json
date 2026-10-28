@@ -1,0 +1,1027 @@
+{
+  "task": "Q173 A18 Gemma 4 Q4_0 per-context /completion timings",
+  "updated_utc": "2026-10-28T20:56:07+00:00",
+  "lock_token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+  "model_sha256": "93567e57a8fe10b23569b9d9ec38cd005deedf71e29477c421a4b83f418a538b",
+  "server_sha256": "b760910e1fa0af38d0a9a4589fc011520d408f208b1cc872f13e44ee068d4d1d",
+  "template_sha256": "ae53464bf3be25802b3a5b37def7fd89667067d7577049b3b2d74c4d8de4c6d4",
+  "context_levels_preregistered": {
+    "8192": 3,
+    "32768": 1,
+    "65536": 1,
+    "131072": 1,
+    "261888": 1
+  },
+  "samples": [
+    {
+      "prompt_tokens_target": 8192,
+      "repetitions_preregistered": 3,
+      "server_context_tokens": 8448,
+      "preflight": {
+        "timestamp_utc": "2026-10-28T20:50:43+00:00",
+        "MemAvailable_kib": 113023044,
+        "SwapFree_kib": 3367204,
+        "memory_psi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2655400446\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2650929188",
+        "gpu": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 988,
+            "utilization_percent": 16
+          },
+          {
+            "index": 1,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 108,
+            "utilization_percent": 34
+          }
+        ],
+        "inference_processes": [],
+        "inference_containers": [],
+        "port_free": true
+      },
+      "samples": [
+        {
+          "timestamp_utc": "2026-10-28T20:50:50+00:00",
+          "sample_index": 1,
+          "http_status": 200,
+          "prompt_n": 8192,
+          "cache_n": 0,
+          "prompt_ms": 2101.781,
+          "predicted_n": 128,
+          "predicted_ms": 1630.286,
+          "prefill_tok_s": 3897.6468052570654,
+          "decode_tok_s": 78.51383131548697,
+          "client_wall_s": 3.7453983000013977,
+          "valid": true,
+          "generated_token_ids_returned": 128,
+          "generated_text_sha256": "1449531ca43962534cff97a8159170ded8353b77af73a5e0c897327ea94f2d7f",
+          "truncated": false
+        },
+        {
+          "timestamp_utc": "2026-10-28T20:50:54+00:00",
+          "sample_index": 2,
+          "http_status": 200,
+          "prompt_n": 8192,
+          "cache_n": 0,
+          "prompt_ms": 2148.868,
+          "predicted_n": 128,
+          "predicted_ms": 1655.001,
+          "prefill_tok_s": 3812.239746694539,
+          "decode_tok_s": 77.34134299616737,
+          "client_wall_s": 3.8063096459954977,
+          "valid": true,
+          "generated_token_ids_returned": 128,
+          "generated_text_sha256": "1449531ca43962534cff97a8159170ded8353b77af73a5e0c897327ea94f2d7f",
+          "truncated": false
+        },
+        {
+          "timestamp_utc": "2026-10-28T20:50:58+00:00",
+          "sample_index": 3,
+          "http_status": 200,
+          "prompt_n": 8192,
+          "cache_n": 0,
+          "prompt_ms": 2141.67,
+          "predicted_n": 128,
+          "predicted_ms": 1648.884,
+          "prefill_tok_s": 3825.0524123697865,
+          "decode_tok_s": 77.6282625096732,
+          "client_wall_s": 3.792935347999446,
+          "valid": true,
+          "generated_token_ids_returned": 128,
+          "generated_text_sha256": "1449531ca43962534cff97a8159170ded8353b77af73a5e0c897327ea94f2d7f",
+          "truncated": false
+        }
+      ],
+      "server": {
+        "pid": 1030182,
+        "argv": [
+          "/media/cristian/Disco local/LlamaCode-cache/opti-llama.cpp/build/bin/llama-server",
+          "--model",
+          "/media/cristian/Disco local/Models/llamacpp/gemma-4-12b-it-qat-q4_0.gguf",
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "18179",
+          "--device",
+          "CUDA0,CUDA1",
+          "--split-mode",
+          "layer",
+          "--tensor-split",
+          "1,1",
+          "--gpu-layers",
+          "all",
+          "--ctx-size",
+          "8448",
+          "--parallel",
+          "1",
+          "--flash-attn",
+          "on",
+          "--perf",
+          "--seed",
+          "42",
+          "--no-warmup",
+          "--reasoning",
+          "on",
+          "--reasoning-effort",
+          "medium",
+          "--jinja",
+          "--chat-template-file",
+          "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/runtime/gemma4-q4/gemma4-tools-fixed.jinja"
+        ],
+        "log": "artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/logs/gemma-a18/server-8k.log"
+      },
+      "health": {
+        "http_status": 200,
+        "body": {
+          "status": "ok"
+        },
+        "ready_timestamp_utc": "2026-10-28T20:50:46+00:00"
+      },
+      "unscored_ready_smoke": {
+        "http_status": 200,
+        "prompt_n": 64,
+        "predicted_n": 16,
+        "cache_n": 0
+      },
+      "gpu_allocation_gate": {
+        "passed": true,
+        "gpu": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 4829,
+            "utilization_percent": 57
+          },
+          {
+            "index": 1,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 4498,
+            "utilization_percent": 8
+          }
+        ],
+        "baseline_gpu": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 988,
+            "utilization_percent": 16
+          },
+          {
+            "index": 1,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 108,
+            "utilization_percent": 34
+          }
+        ]
+      },
+      "fixture": {
+        "token_count": 8192,
+        "token_ids_sha256": "ca46602bfe48c98a42b59518e6e72d14ba47341c6b57517acf85e15169cb435b",
+        "token_source": "local pinned server /tokenize; deterministic synthetic text; add_special=false"
+      },
+      "status": "complete",
+      "summary": {
+        "prefill_tok_s_median": 3825.0524123697865,
+        "decode_tok_s_median": 77.6282625096732,
+        "n": 3
+      },
+      "postflight_before_stop": {
+        "timestamp_utc": "2026-10-28T20:50:58+00:00",
+        "MemAvailable_kib": 111484716,
+        "SwapFree_kib": 3367308,
+        "memory_psi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2655402646\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2650931388",
+        "gpu": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 4830,
+            "utilization_percent": 59
+          },
+          {
+            "index": 1,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 4500,
+            "utilization_percent": 53
+          }
+        ],
+        "inference_processes": [
+          {
+            "pid": 1030182,
+            "comm": "llama-server",
+            "cmdline": "/media/cristian/Disco local/LlamaCode-cache/opti-llama.cpp/build/bin/llama-server --model /media/cristian/Disco local/Models/llamacpp/gemma-4-12b-it-qat-q4_0.gguf --host 127.0.0.1 --port 18179 --device CUDA0,CUDA1 --split-mode layer --tensor-split 1,1 --gpu-layers all --ctx-size 8448 --parallel 1 --flash-attn on --perf --seed 42 --no-warmup --reasoning on --reasoning-effort medium --jinja --chat-template-file /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacio"
+          }
+        ],
+        "inference_containers": []
+      },
+      "cleanup": {
+        "owned_server_exit_code": 0,
+        "port_free": true,
+        "resource_state": {
+          "timestamp_utc": "2026-10-28T20:50:58+00:00",
+          "MemAvailable_kib": 112546504,
+          "SwapFree_kib": 3367308,
+          "memory_psi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2655402646\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2650931388",
+          "gpu": [
+            {
+              "index": 0,
+              "name": "NVIDIA GeForce RTX 3090",
+              "memory_used_mib": 961,
+              "utilization_percent": 42
+            },
+            {
+              "index": 1,
+              "name": "NVIDIA GeForce RTX 3090",
+              "memory_used_mib": 108,
+              "utilization_percent": 55
+            }
+          ],
+          "inference_processes": [],
+          "inference_containers": []
+        },
+        "only_owned_server_stopped": true
+      }
+    },
+    {
+      "prompt_tokens_target": 32768,
+      "repetitions_preregistered": 1,
+      "server_context_tokens": 33024,
+      "preflight": {
+        "timestamp_utc": "2026-10-28T20:50:58+00:00",
+        "MemAvailable_kib": 112568928,
+        "SwapFree_kib": 3367308,
+        "memory_psi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2655402646\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2650931388",
+        "gpu": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 962,
+            "utilization_percent": 42
+          },
+          {
+            "index": 1,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 108,
+            "utilization_percent": 55
+          }
+        ],
+        "inference_processes": [],
+        "inference_containers": [],
+        "port_free": true
+      },
+      "samples": [
+        {
+          "timestamp_utc": "2026-10-28T20:51:13+00:00",
+          "sample_index": 1,
+          "http_status": 200,
+          "prompt_n": 32768,
+          "cache_n": 0,
+          "prompt_ms": 9317.543,
+          "predicted_n": 128,
+          "predicted_ms": 1719.862,
+          "prefill_tok_s": 3516.8069522190567,
+          "decode_tok_s": 74.42457592527772,
+          "client_wall_s": 11.056792997987941,
+          "valid": true,
+          "generated_token_ids_returned": 128,
+          "generated_text_sha256": "fc6346212b32efe2dc8ecddde28a8608b0968df62962aacb5ee1ff86e879c5e0",
+          "truncated": false
+        }
+      ],
+      "server": {
+        "pid": 1030992,
+        "argv": [
+          "/media/cristian/Disco local/LlamaCode-cache/opti-llama.cpp/build/bin/llama-server",
+          "--model",
+          "/media/cristian/Disco local/Models/llamacpp/gemma-4-12b-it-qat-q4_0.gguf",
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "18179",
+          "--device",
+          "CUDA0,CUDA1",
+          "--split-mode",
+          "layer",
+          "--tensor-split",
+          "1,1",
+          "--gpu-layers",
+          "all",
+          "--ctx-size",
+          "33024",
+          "--parallel",
+          "1",
+          "--flash-attn",
+          "on",
+          "--perf",
+          "--seed",
+          "42",
+          "--no-warmup",
+          "--reasoning",
+          "on",
+          "--reasoning-effort",
+          "medium",
+          "--jinja",
+          "--chat-template-file",
+          "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/runtime/gemma4-q4/gemma4-tools-fixed.jinja"
+        ],
+        "log": "artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/logs/gemma-a18/server-32k.log"
+      },
+      "health": {
+        "http_status": 200,
+        "body": {
+          "status": "ok"
+        },
+        "ready_timestamp_utc": "2026-10-28T20:51:01+00:00"
+      },
+      "unscored_ready_smoke": {
+        "http_status": 200,
+        "prompt_n": 64,
+        "predicted_n": 16,
+        "cache_n": 0
+      },
+      "gpu_allocation_gate": {
+        "passed": true,
+        "gpu": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 5124,
+            "utilization_percent": 13
+          },
+          {
+            "index": 1,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 4786,
+            "utilization_percent": 26
+          }
+        ],
+        "baseline_gpu": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 962,
+            "utilization_percent": 42
+          },
+          {
+            "index": 1,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 108,
+            "utilization_percent": 55
+          }
+        ]
+      },
+      "fixture": {
+        "token_count": 32768,
+        "token_ids_sha256": "630b7ef7d9dc413cad915c39c0c70384d223653ff274990f893661f6abe6a5cd",
+        "token_source": "local pinned server /tokenize; deterministic synthetic text; add_special=false"
+      },
+      "status": "complete",
+      "summary": {
+        "prefill_tok_s_median": 3516.8069522190567,
+        "decode_tok_s_median": 74.42457592527772,
+        "n": 1
+      },
+      "postflight_before_stop": {
+        "timestamp_utc": "2026-10-28T20:51:13+00:00",
+        "MemAvailable_kib": 111597732,
+        "SwapFree_kib": 3367460,
+        "memory_psi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2655425938\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2650954676",
+        "gpu": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 5115,
+            "utilization_percent": 58
+          },
+          {
+            "index": 1,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 4788,
+            "utilization_percent": 55
+          }
+        ],
+        "inference_processes": [
+          {
+            "pid": 1030992,
+            "comm": "llama-server",
+            "cmdline": "/media/cristian/Disco local/LlamaCode-cache/opti-llama.cpp/build/bin/llama-server --model /media/cristian/Disco local/Models/llamacpp/gemma-4-12b-it-qat-q4_0.gguf --host 127.0.0.1 --port 18179 --device CUDA0,CUDA1 --split-mode layer --tensor-split 1,1 --gpu-layers all --ctx-size 33024 --parallel 1 --flash-attn on --perf --seed 42 --no-warmup --reasoning on --reasoning-effort medium --jinja --chat-template-file /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluaci"
+          }
+        ],
+        "inference_containers": []
+      },
+      "cleanup": {
+        "owned_server_exit_code": 0,
+        "port_free": true,
+        "resource_state": {
+          "timestamp_utc": "2026-10-28T20:51:13+00:00",
+          "MemAvailable_kib": 112984920,
+          "SwapFree_kib": 3367460,
+          "memory_psi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2655425938\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2650954676",
+          "gpu": [
+            {
+              "index": 0,
+              "name": "NVIDIA GeForce RTX 3090",
+              "memory_used_mib": 956,
+              "utilization_percent": 80
+            },
+            {
+              "index": 1,
+              "name": "NVIDIA GeForce RTX 3090",
+              "memory_used_mib": 108,
+              "utilization_percent": 72
+            }
+          ],
+          "inference_processes": [],
+          "inference_containers": []
+        },
+        "only_owned_server_stopped": true
+      }
+    },
+    {
+      "prompt_tokens_target": 65536,
+      "repetitions_preregistered": 1,
+      "server_context_tokens": 65792,
+      "preflight": {
+        "timestamp_utc": "2026-10-28T20:51:13+00:00",
+        "MemAvailable_kib": 112972428,
+        "SwapFree_kib": 3367460,
+        "memory_psi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2655425938\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2650954676",
+        "gpu": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 956,
+            "utilization_percent": 80
+          },
+          {
+            "index": 1,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 108,
+            "utilization_percent": 72
+          }
+        ],
+        "inference_processes": [],
+        "inference_containers": [],
+        "port_free": true
+      },
+      "samples": [
+        {
+          "timestamp_utc": "2026-10-28T20:51:41+00:00",
+          "sample_index": 1,
+          "http_status": 200,
+          "prompt_n": 65536,
+          "cache_n": 0,
+          "prompt_ms": 22676.14,
+          "predicted_n": 128,
+          "predicted_ms": 1833.895,
+          "prefill_tok_s": 2890.0862316073194,
+          "decode_tok_s": 69.79679861715093,
+          "client_wall_s": 24.536065177002456,
+          "valid": true,
+          "generated_token_ids_returned": 128,
+          "generated_text_sha256": "4793199078638317903b5006d4fe9026fb9d6e7408dc1b5503ea74717471b1a0",
+          "truncated": false
+        }
+      ],
+      "server": {
+        "pid": 1031810,
+        "argv": [
+          "/media/cristian/Disco local/LlamaCode-cache/opti-llama.cpp/build/bin/llama-server",
+          "--model",
+          "/media/cristian/Disco local/Models/llamacpp/gemma-4-12b-it-qat-q4_0.gguf",
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "18179",
+          "--device",
+          "CUDA0,CUDA1",
+          "--split-mode",
+          "layer",
+          "--tensor-split",
+          "1,1",
+          "--gpu-layers",
+          "all",
+          "--ctx-size",
+          "65792",
+          "--parallel",
+          "1",
+          "--flash-attn",
+          "on",
+          "--perf",
+          "--seed",
+          "42",
+          "--no-warmup",
+          "--reasoning",
+          "on",
+          "--reasoning-effort",
+          "medium",
+          "--jinja",
+          "--chat-template-file",
+          "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/runtime/gemma4-q4/gemma4-tools-fixed.jinja"
+        ],
+        "log": "artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/logs/gemma-a18/server-64k.log"
+      },
+      "health": {
+        "http_status": 200,
+        "body": {
+          "status": "ok"
+        },
+        "ready_timestamp_utc": "2026-10-28T20:51:16+00:00"
+      },
+      "unscored_ready_smoke": {
+        "http_status": 200,
+        "prompt_n": 64,
+        "predicted_n": 16,
+        "cache_n": 0
+      },
+      "gpu_allocation_gate": {
+        "passed": true,
+        "gpu": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 5514,
+            "utilization_percent": 37
+          },
+          {
+            "index": 1,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 5170,
+            "utilization_percent": 52
+          }
+        ],
+        "baseline_gpu": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 956,
+            "utilization_percent": 80
+          },
+          {
+            "index": 1,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 108,
+            "utilization_percent": 72
+          }
+        ]
+      },
+      "fixture": {
+        "token_count": 65536,
+        "token_ids_sha256": "35d396ebe9294cfe329a3ce813321645b31bdb72f4dd4902fb2e99e8de17e99b",
+        "token_source": "local pinned server /tokenize; deterministic synthetic text; add_special=false"
+      },
+      "status": "complete",
+      "summary": {
+        "prefill_tok_s_median": 2890.0862316073194,
+        "decode_tok_s_median": 69.79679861715093,
+        "n": 1
+      },
+      "postflight_before_stop": {
+        "timestamp_utc": "2026-10-28T20:51:41+00:00",
+        "MemAvailable_kib": 111018864,
+        "SwapFree_kib": 3367660,
+        "memory_psi": "some avg10=0.10 avg60=0.07 avg300=0.01 total=2655510459\nfull avg10=0.10 avg60=0.07 avg300=0.01 total=2651039195",
+        "gpu": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 5582,
+            "utilization_percent": 61
+          },
+          {
+            "index": 1,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 5172,
+            "utilization_percent": 55
+          }
+        ],
+        "inference_processes": [
+          {
+            "pid": 1031810,
+            "comm": "llama-server",
+            "cmdline": "/media/cristian/Disco local/LlamaCode-cache/opti-llama.cpp/build/bin/llama-server --model /media/cristian/Disco local/Models/llamacpp/gemma-4-12b-it-qat-q4_0.gguf --host 127.0.0.1 --port 18179 --device CUDA0,CUDA1 --split-mode layer --tensor-split 1,1 --gpu-layers all --ctx-size 65792 --parallel 1 --flash-attn on --perf --seed 42 --no-warmup --reasoning on --reasoning-effort medium --jinja --chat-template-file /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluaci"
+          }
+        ],
+        "inference_containers": []
+      },
+      "cleanup": {
+        "owned_server_exit_code": 0,
+        "port_free": true,
+        "resource_state": {
+          "timestamp_utc": "2026-10-28T20:51:42+00:00",
+          "MemAvailable_kib": 112258820,
+          "SwapFree_kib": 3367704,
+          "memory_psi": "some avg10=0.10 avg60=0.07 avg300=0.01 total=2655510459\nfull avg10=0.10 avg60=0.07 avg300=0.01 total=2651039195",
+          "gpu": [
+            {
+              "index": 0,
+              "name": "NVIDIA GeForce RTX 3090",
+              "memory_used_mib": 1146,
+              "utilization_percent": 17
+            },
+            {
+              "index": 1,
+              "name": "NVIDIA GeForce RTX 3090",
+              "memory_used_mib": 108,
+              "utilization_percent": 47
+            }
+          ],
+          "inference_processes": [],
+          "inference_containers": []
+        },
+        "only_owned_server_stopped": true
+      }
+    },
+    {
+      "prompt_tokens_target": 131072,
+      "repetitions_preregistered": 1,
+      "server_context_tokens": 131328,
+      "preflight": {
+        "timestamp_utc": "2026-10-28T20:51:42+00:00",
+        "MemAvailable_kib": 112206596,
+        "SwapFree_kib": 3367704,
+        "memory_psi": "some avg10=0.10 avg60=0.07 avg300=0.01 total=2655510459\nfull avg10=0.10 avg60=0.07 avg300=0.01 total=2651039195",
+        "gpu": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 1188,
+            "utilization_percent": 17
+          },
+          {
+            "index": 1,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 108,
+            "utilization_percent": 47
+          }
+        ],
+        "inference_processes": [],
+        "inference_containers": [],
+        "port_free": true
+      },
+      "samples": [
+        {
+          "timestamp_utc": "2026-10-28T20:52:49+00:00",
+          "sample_index": 1,
+          "http_status": 200,
+          "prompt_n": 131072,
+          "cache_n": 0,
+          "prompt_ms": 62277.62,
+          "predicted_n": 128,
+          "predicted_ms": 2011.229,
+          "prefill_tok_s": 2104.640479196218,
+          "decode_tok_s": 63.64267818333963,
+          "client_wall_s": 64.32578554004431,
+          "valid": true,
+          "generated_token_ids_returned": 128,
+          "generated_text_sha256": "20e914fc790a2dcb1b03ff14ee39b8d7e6e1c13c861d5876e8097281c84da330",
+          "truncated": false
+        }
+      ],
+      "server": {
+        "pid": 1033732,
+        "argv": [
+          "/media/cristian/Disco local/LlamaCode-cache/opti-llama.cpp/build/bin/llama-server",
+          "--model",
+          "/media/cristian/Disco local/Models/llamacpp/gemma-4-12b-it-qat-q4_0.gguf",
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "18179",
+          "--device",
+          "CUDA0,CUDA1",
+          "--split-mode",
+          "layer",
+          "--tensor-split",
+          "1,1",
+          "--gpu-layers",
+          "all",
+          "--ctx-size",
+          "131328",
+          "--parallel",
+          "1",
+          "--flash-attn",
+          "on",
+          "--perf",
+          "--seed",
+          "42",
+          "--no-warmup",
+          "--reasoning",
+          "on",
+          "--reasoning-effort",
+          "medium",
+          "--jinja",
+          "--chat-template-file",
+          "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/runtime/gemma4-q4/gemma4-tools-fixed.jinja"
+        ],
+        "log": "artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/logs/gemma-a18/server-128k.log"
+      },
+      "health": {
+        "http_status": 200,
+        "body": {
+          "status": "ok"
+        },
+        "ready_timestamp_utc": "2026-10-28T20:51:45+00:00"
+      },
+      "unscored_ready_smoke": {
+        "http_status": 200,
+        "prompt_n": 64,
+        "predicted_n": 16,
+        "cache_n": 0
+      },
+      "gpu_allocation_gate": {
+        "passed": true,
+        "gpu": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 6456,
+            "utilization_percent": 57
+          },
+          {
+            "index": 1,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 5938,
+            "utilization_percent": 39
+          }
+        ],
+        "baseline_gpu": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 1188,
+            "utilization_percent": 17
+          },
+          {
+            "index": 1,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 108,
+            "utilization_percent": 47
+          }
+        ]
+      },
+      "fixture": {
+        "token_count": 131072,
+        "token_ids_sha256": "b93ae1e58c43f01217487f7348c03eee0c25738472105165bf19b84d7999666c",
+        "token_source": "local pinned server /tokenize; deterministic synthetic text; add_special=false"
+      },
+      "status": "complete",
+      "summary": {
+        "prefill_tok_s_median": 2104.640479196218,
+        "decode_tok_s_median": 63.64267818333963,
+        "n": 1
+      },
+      "postflight_before_stop": {
+        "timestamp_utc": "2026-10-28T20:52:49+00:00",
+        "MemAvailable_kib": 110804816,
+        "SwapFree_kib": 3368084,
+        "memory_psi": "some avg10=0.00 avg60=0.01 avg300=0.00 total=2655515515\nfull avg10=0.00 avg60=0.01 avg300=0.00 total=2651044251",
+        "gpu": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 6379,
+            "utilization_percent": 57
+          },
+          {
+            "index": 1,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 5940,
+            "utilization_percent": 51
+          }
+        ],
+        "inference_processes": [
+          {
+            "pid": 1033732,
+            "comm": "llama-server",
+            "cmdline": "/media/cristian/Disco local/LlamaCode-cache/opti-llama.cpp/build/bin/llama-server --model /media/cristian/Disco local/Models/llamacpp/gemma-4-12b-it-qat-q4_0.gguf --host 127.0.0.1 --port 18179 --device CUDA0,CUDA1 --split-mode layer --tensor-split 1,1 --gpu-layers all --ctx-size 131328 --parallel 1 --flash-attn on --perf --seed 42 --no-warmup --reasoning on --reasoning-effort medium --jinja --chat-template-file /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluac"
+          }
+        ],
+        "inference_containers": []
+      },
+      "cleanup": {
+        "owned_server_exit_code": 0,
+        "port_free": true,
+        "resource_state": {
+          "timestamp_utc": "2026-10-28T20:52:50+00:00",
+          "MemAvailable_kib": 112660056,
+          "SwapFree_kib": 3368084,
+          "memory_psi": "some avg10=0.00 avg60=0.01 avg300=0.00 total=2655515515\nfull avg10=0.00 avg60=0.01 avg300=0.00 total=2651044251",
+          "gpu": [
+            {
+              "index": 0,
+              "name": "NVIDIA GeForce RTX 3090",
+              "memory_used_mib": 1068,
+              "utilization_percent": 16
+            },
+            {
+              "index": 1,
+              "name": "NVIDIA GeForce RTX 3090",
+              "memory_used_mib": 108,
+              "utilization_percent": 8
+            }
+          ],
+          "inference_processes": [],
+          "inference_containers": []
+        },
+        "only_owned_server_stopped": true
+      }
+    },
+    {
+      "prompt_tokens_target": 261888,
+      "repetitions_preregistered": 1,
+      "server_context_tokens": 262144,
+      "preflight": {
+        "timestamp_utc": "2026-10-28T20:52:50+00:00",
+        "MemAvailable_kib": 112663912,
+        "SwapFree_kib": 3368084,
+        "memory_psi": "some avg10=0.00 avg60=0.01 avg300=0.00 total=2655515515\nfull avg10=0.00 avg60=0.01 avg300=0.00 total=2651044251",
+        "gpu": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 1068,
+            "utilization_percent": 16
+          },
+          {
+            "index": 1,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 108,
+            "utilization_percent": 8
+          }
+        ],
+        "inference_processes": [],
+        "inference_containers": [],
+        "port_free": true
+      },
+      "samples": [
+        {
+          "timestamp_utc": "2026-10-28T20:56:06+00:00",
+          "sample_index": 1,
+          "http_status": 200,
+          "prompt_n": 261888,
+          "cache_n": 0,
+          "prompt_ms": 190392.432,
+          "predicted_n": 128,
+          "predicted_ms": 2347.533,
+          "prefill_tok_s": 1375.5168587793446,
+          "decode_tok_s": 54.525325096601414,
+          "client_wall_s": 192.80155163398013,
+          "valid": true,
+          "generated_token_ids_returned": 128,
+          "generated_text_sha256": "824e367370f8ba02de0f426616f925c8df0cfac880174e6f1d2b9a69c477421e",
+          "truncated": false
+        }
+      ],
+      "server": {
+        "pid": 1037659,
+        "argv": [
+          "/media/cristian/Disco local/LlamaCode-cache/opti-llama.cpp/build/bin/llama-server",
+          "--model",
+          "/media/cristian/Disco local/Models/llamacpp/gemma-4-12b-it-qat-q4_0.gguf",
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "18179",
+          "--device",
+          "CUDA0,CUDA1",
+          "--split-mode",
+          "layer",
+          "--tensor-split",
+          "1,1",
+          "--gpu-layers",
+          "all",
+          "--ctx-size",
+          "262144",
+          "--parallel",
+          "1",
+          "--flash-attn",
+          "on",
+          "--perf",
+          "--seed",
+          "42",
+          "--no-warmup",
+          "--reasoning",
+          "on",
+          "--reasoning-effort",
+          "medium",
+          "--jinja",
+          "--chat-template-file",
+          "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/runtime/gemma4-q4/gemma4-tools-fixed.jinja"
+        ],
+        "log": "artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/logs/gemma-a18/server-256k.log"
+      },
+      "health": {
+        "http_status": 200,
+        "body": {
+          "status": "ok"
+        },
+        "ready_timestamp_utc": "2026-10-28T20:52:53+00:00"
+      },
+      "unscored_ready_smoke": {
+        "http_status": 200,
+        "prompt_n": 64,
+        "predicted_n": 16,
+        "cache_n": 0
+      },
+      "gpu_allocation_gate": {
+        "passed": true,
+        "gpu": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 7761,
+            "utilization_percent": 58
+          },
+          {
+            "index": 1,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 7472,
+            "utilization_percent": 9
+          }
+        ],
+        "baseline_gpu": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 1068,
+            "utilization_percent": 16
+          },
+          {
+            "index": 1,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 108,
+            "utilization_percent": 8
+          }
+        ]
+      },
+      "fixture": {
+        "token_count": 261888,
+        "token_ids_sha256": "e53982aa4e2b095f99ae136cec43b60f8d41a2b6c5479baa863c7f30f7a81a10",
+        "token_source": "local pinned server /tokenize; deterministic synthetic text; add_special=false"
+      },
+      "status": "complete",
+      "summary": {
+        "prefill_tok_s_median": 1375.5168587793446,
+        "decode_tok_s_median": 54.525325096601414,
+        "n": 1
+      },
+      "postflight_before_stop": {
+        "timestamp_utc": "2026-10-28T20:56:06+00:00",
+        "MemAvailable_kib": 110411304,
+        "SwapFree_kib": 3369340,
+        "memory_psi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2655527571\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2651056305",
+        "gpu": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 7875,
+            "utilization_percent": 61
+          },
+          {
+            "index": 1,
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 7474,
+            "utilization_percent": 52
+          }
+        ],
+        "inference_processes": [
+          {
+            "pid": 1037659,
+            "comm": "llama-server",
+            "cmdline": "/media/cristian/Disco local/LlamaCode-cache/opti-llama.cpp/build/bin/llama-server --model /media/cristian/Disco local/Models/llamacpp/gemma-4-12b-it-qat-q4_0.gguf --host 127.0.0.1 --port 18179 --device CUDA0,CUDA1 --split-mode layer --tensor-split 1,1 --gpu-layers all --ctx-size 262144 --parallel 1 --flash-attn on --perf --seed 42 --no-warmup --reasoning on --reasoning-effort medium --jinja --chat-template-file /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluac"
+          }
+        ],
+        "inference_containers": []
+      },
+      "cleanup": {
+        "owned_server_exit_code": 0,
+        "port_free": true,
+        "resource_state": {
+          "timestamp_utc": "2026-10-28T20:56:07+00:00",
+          "MemAvailable_kib": 112832324,
+          "SwapFree_kib": 3369348,
+          "memory_psi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2655527571\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2651056305",
+          "gpu": [
+            {
+              "index": 0,
+              "name": "NVIDIA GeForce RTX 3090",
+              "memory_used_mib": 1032,
+              "utilization_percent": 34
+            },
+            {
+              "index": 1,
+              "name": "NVIDIA GeForce RTX 3090",
+              "memory_used_mib": 108,
+              "utilization_percent": 35
+            }
+          ],
+          "inference_processes": [],
+          "inference_containers": []
+        },
+        "only_owned_server_stopped": true
+      }
+    }
+  ],
+  "excluded_attempts": []
+}

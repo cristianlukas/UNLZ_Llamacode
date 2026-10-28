@@ -1,0 +1,59 @@
+{
+  "receipt_type": "q173_llama_benchy_event_derived_metrics",
+  "source_events": "artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/runs/terra/8k-events.jsonl",
+  "source_events_sha256": "7a01152373d8bf54a61ea363cc0790dc3f01ebea7b9e0c54c2ddf7bb18d28087",
+  "derivation": {
+    "prefill_tok_s": "server prompt_tokens / request_first_token.ttft_s",
+    "decode_tok_s": "request_end.total_tokens / request_end.decode_seconds",
+    "interpretation": "client-observed streaming latency, not engine-internal kernel timing"
+  },
+  "requests": [
+    {
+      "request_id": 0,
+      "run_index": 0,
+      "requested_pp": 8192,
+      "actual_prompt_tokens": 8232,
+      "actual_completion_tokens": 128,
+      "ttft_seconds_client_observed": 3.5124316559522413,
+      "decode_seconds_client_observed": 3.4940328080556355,
+      "prefill_tok_s_client_observed": 2343.6754950234767,
+      "decode_tok_s_client_observed": 36.63388612290382
+    },
+    {
+      "request_id": 1,
+      "run_index": 1,
+      "requested_pp": 8192,
+      "actual_prompt_tokens": 8232,
+      "actual_completion_tokens": 128,
+      "ttft_seconds_client_observed": 3.5141788810142316,
+      "decode_seconds_client_observed": 3.8139027089928277,
+      "prefill_tok_s_client_observed": 2342.510236025365,
+      "decode_tok_s_client_observed": 33.56142245007664
+    },
+    {
+      "request_id": 2,
+      "run_index": 2,
+      "requested_pp": 8192,
+      "actual_prompt_tokens": 8232,
+      "actual_completion_tokens": 128,
+      "ttft_seconds_client_observed": 3.5126722819986753,
+      "decode_seconds_client_observed": 3.590333912987262,
+      "prefill_tok_s_client_observed": 2343.514947917679,
+      "decode_tok_s_client_observed": 35.65128010433444
+    }
+  ],
+  "summary": {
+    "prefill_tok_s_client_observed": {
+      "n": 3,
+      "median": 2343.514947917679,
+      "min": 2342.510236025365,
+      "max": 2343.6754950234767
+    },
+    "decode_tok_s_client_observed": {
+      "n": 3,
+      "median": 35.65128010433444,
+      "min": 33.56142245007664,
+      "max": 36.63388612290382
+    }
+  }
+}

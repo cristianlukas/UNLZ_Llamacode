@@ -1,0 +1,25 @@
+{
+  "receipt_type": "q173_primary_benchmark_launch",
+  "captured_at_utc": "2026-10-28T15:43:10Z",
+  "profile": "DeepSeek V4.1 Flash-1017 DSX T16 / dsx-server",
+  "context_window_tokens": 1048576,
+  "model_sha256": "31b3852636237c63b3e42b2403f172e372d36c4ad486e65f5c3920307bcfb3fa",
+  "runtime_sha256": "bec3b3e59803108b81834227bfb4ba5f722473af34e1ab960510e723fe07ad27",
+  "server_context_length_reported": 1048576,
+  "benchmark_argv": [
+    "/home/cristian/.cache/q173-llama-benchy-0.4.0/bin/llama-benchy",
+    "--base-url", "http://127.0.0.1:18177/v1", "--model", "q173-dsx-t16",
+    "--tokenizer", "/home/cristian/.cache/q173-tokenizers/deepseek-v41-flash-1017/tokenizer.json",
+    "--pp", "8192", "32768", "65536", "131072", "262144", "524288", "1048418",
+    "--tg", "128", "--depth", "0", "--concurrency", "1", "--runs", "1",
+    "--latency-mode", "generation", "--no-cache", "--skip-coherence", "--no-adapt-prompt", "--format", "json",
+    "--save-result", "artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/dsx-1m-context-sweep-raw.json",
+    "--emit-progress", "artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/dsx-1m-context-sweep-events.jsonl"
+  ],
+  "fixture": "llama-benchy default pinned Sherlock Holmes corpus, 142813 tokens. The package repeats tokens if a target exceeds corpus length; prefix cache is disabled. The ~1M point therefore uses repeated, not unique, body text, plus the 30-token template overhead observed in the Q173 8K pilot.",
+  "context_window_boundary": "prompt target 1048418 + observed template overhead 30 + completion 128 = 1048576",
+  "repetitions": "one measured request per context size, each with llama-benchy warmup",
+  "preflight": "2026-10-28T15:38:46Z PASS; no external inference server; both RTX 3090s; MemAvailable 118342901760 B before model load",
+  "stop_conditions": ["OOM/crash", "MemAvailable below 32 GiB sustained"],
+  "notes": ["prefill/decode rates derive from JSONL request_first_token and request_end events; they are client-observed, not engine-internal timing", "server remains local-only; preserve GUI"]
+}

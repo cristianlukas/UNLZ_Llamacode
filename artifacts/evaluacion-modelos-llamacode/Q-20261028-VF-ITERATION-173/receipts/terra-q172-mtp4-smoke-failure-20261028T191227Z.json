@@ -1,0 +1,49 @@
+{
+  "task": "Q173 TERRA Q172 MTP4 readiness-smoke failure",
+  "captured_utc": "2026-10-28T19:12:27Z",
+  "preregistration": "receipts/prereg-amendment-13-terra-context-and-q172.json",
+  "classification": "runtime failure; no Q172 score; original MTP4 quality run blocked before harness started",
+  "request": {
+    "endpoint": "http://127.0.0.1:18474/v1/chat/completions",
+    "served_model": "qwen3.8-27b",
+    "prompt_tokens": 27,
+    "max_tokens": 64,
+    "temperature": 0.6,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0,
+    "repetition_penalty": 1.0,
+    "seed": 42,
+    "reasoning_effort": "medium",
+    "http_status": 500
+  },
+  "engine": {
+    "vllm": "0.27.1",
+    "TP": 2,
+    "PP": 1,
+    "max_model_len": 32768,
+    "max_num_seqs": 1,
+    "MTP_num_speculative_tokens": 4,
+    "exception": "CUDA device-side assert: ScatterGatherKernel.cu:203 scatter gather index out of bounds; fatal vLLM EngineCore while sample_tokens -> _update_states_after_model_execute. Scheduler recorded num_spec_tokens_to_schedule=4."
+  },
+  "kernel_log": "NVRM Xid 43 on PCI 0000:01:00.0 (GPU0), same worker PID, at 2026-10-28T19:12:21Z. NVIDIA describes Xid43 as a software-induced application fault; GPU remains healthy in typical cases. This is consistent with the app-side CUDA assertion, not a host-RAM/OOM event.",
+  "resources": {
+    "container_oom_killed": false,
+    "container_status": "exited",
+    "postflight_gpu_memory_mib": [
+      921,
+      110
+    ],
+    "mem_available_bytes": 117528489984,
+    "memory_psi_avg10": "0.00",
+    "port_18474_closed": true,
+    "both_gpus_still_visible": true
+  },
+  "evidence": {
+    "server_log": "artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/logs/terra/q172-failed-engine.log",
+    "server_log_sha256": "b1b88ae15e3f3429fdcd55a2d4cfcfcf299f0feee47eb49d6cf210db04c732fb",
+    "kernel_event": "journalctl kernel log at 2026-10-28T19:12:21Z",
+    "existing_user_container": "stale exited vllm-qwen38-27b-dual-fast preserved untouched"
+  },
+  "diagnosis": "Specific to variable-length generation/sample-token path with MTP enabled; the prior exact-128-token throughput ladder completed. Likely runtime/MTP sampler defect, not evidence of host RAM pressure. Hardware involvement cannot be ruled out solely from this trace."
+}

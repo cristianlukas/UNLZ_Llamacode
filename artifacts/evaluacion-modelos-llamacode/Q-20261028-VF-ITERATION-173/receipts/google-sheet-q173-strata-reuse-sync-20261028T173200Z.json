@@ -1,0 +1,8 @@
+{
+  "timestamp_utc": "2026-10-28T17:32:00Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "range": "Accionables!D51:N51",
+  "result": "Q173 action row updated to reuse exact-pinned Strata Q14 context results and Q172 quality; five profiles remain",
+  "existing_result_rows": "Resultados rows 200–203 already contain Q14 Strata context 131K/262K/524K/1M",
+  "verification": "Read back values matched; WRAP/TOP Arial 10 formatting preserved"
+}

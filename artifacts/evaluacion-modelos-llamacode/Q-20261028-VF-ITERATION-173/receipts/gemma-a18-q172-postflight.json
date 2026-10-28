@@ -1,0 +1,37 @@
+{
+  "task": "Q173 A18 Gemma Q172 Hard Mode seed42 postflight",
+  "timestamp_utc": "2026-10-28T21:08:18+00:00",
+  "lock_token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+  "status": "complete",
+  "error": null,
+  "tool_eval_exit_code": 2,
+  "result_json_exists": true,
+  "result_json": "artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/runs/gemma-a18/q172-seed42.json",
+  "inference_processes": [],
+  "inference_containers": [],
+  "port_free": true,
+  "resource_state": {
+    "timestamp_utc": "2026-10-28T21:08:18+00:00",
+    "MemAvailable_kib": 111634968,
+    "SwapFree_kib": 3381584,
+    "memory_psi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2655540630\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2651069359",
+    "gpu": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_used_mib": 1128,
+        "utilization_percent": 18
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_used_mib": 108,
+        "utilization_percent": 10
+      }
+    ],
+    "inference_processes": [],
+    "inference_containers": []
+  },
+  "gui_preserved": true,
+  "decision": "PASS"
+}

@@ -1,0 +1,22 @@
+{
+  "receipt_type": "q173_launch_preregistration",
+  "profile": "DeepSeek V4.1 Flash-1017 DSX T16 / dsx-server",
+  "context_tokens": 131072,
+  "captured_at_utc": "2026-10-28T15:21:00Z",
+  "model_sha256": "31b3852636237c63b3e42b2403f172e372d36c4ad486e65f5c3920307bcfb3fa",
+  "runtime_sha256": "bec3b3e59803108b81834227bfb4ba5f722473af34e1ab960510e723fe07ad27",
+  "server_argv": [
+    "/usr/bin/env", "DSX_GPUS=0,1", "DSX_DEFER=off", "DSX_ENGRAM_FP8=off",
+    "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-dsx-T16/build/release/dsx-server",
+    "--model", "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-dsx-T16/models/DeepSeek-V4.1-Flash-1017-dsx-t16.gguf",
+    "--rank", "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-dsx-T16/models/expert-rank.json",
+    "--ctx", "131072", "--arena-gb", "70", "--no-vision", "--host", "127.0.0.1", "--port", "18177",
+    "--model-name", "q173-dsx-t16", "--max-tokens", "128", "--temperature", "0.6", "--top-p", "0.95"
+  ],
+  "bench_argv_template": [
+    "tool-eval-bench", "bench", "--model", "q173-dsx-t16", "--backend", "openai", "--base-url", "http://127.0.0.1:18177/v1", "--format", "openai", "--perf-only",
+    "--pp", "8192", "--tg", "128", "--depth", "0", "--concurrency", "1", "--benchy-runs", "3", "--benchy-latency-mode", "generation", "--no-live"
+  ],
+  "stop_conditions": ["server fails readiness", "OOM/crash", "MemAvailable below 32 GiB sustained as specified in Q173"],
+  "resource_policy": "One benchmarked inference profile at a time; no unrelated GUI or app processes stopped."
+}

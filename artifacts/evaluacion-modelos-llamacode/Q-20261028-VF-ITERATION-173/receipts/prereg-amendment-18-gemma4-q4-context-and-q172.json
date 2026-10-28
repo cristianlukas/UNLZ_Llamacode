@@ -1,0 +1,92 @@
+{
+  "amendment": "Q173-A18-Gemma4-Q4-context-and-Q172",
+  "registered_local_date": "2026-10-28",
+  "lock_token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+  "authorization": "User requested context prefill/decode measurements and a Q172 quality screen for profiles without an exact-fingerprint score.",
+  "purpose": "Measure native-context throughput and one fixed Q172 quality/safety screen for the exact local Gemma 4 12B IT QAT Q4_0 artifact.",
+  "profile": {
+    "model": "Gemma 4 12B IT QAT Q4_0",
+    "model_path": "/media/cristian/Disco local/Models/llamacpp/gemma-4-12b-it-qat-q4_0.gguf",
+    "model_bytes": 6975879296,
+    "model_sha256": "93567e57a8fe10b23569b9d9ec38cd005deedf71e29477c421a4b83f418a538b",
+    "native_context_tokens": 262144,
+    "runtime": "opti-llama.cpp llama-server",
+    "runtime_commit": "6a1a922d269908a29cbd4b49c27e6a8e7fd10fae",
+    "runtime_binary": "/media/cristian/Disco local/LlamaCode-cache/opti-llama.cpp/build/bin/llama-server",
+    "runtime_sha256": "b760910e1fa0af38d0a9a4589fc011520d408f208b1cc872f13e44ee068d4d1d",
+    "chat_template_path": "runtime/gemma4-q4/gemma4-tools-fixed.jinja",
+    "chat_template_sha256": "ae53464bf3be25802b3a5b37def7fd89667067d7577049b3b2d74c4d8de4c6d4",
+    "gpu_indices": [0, 1],
+    "gpu_model": "2x NVIDIA GeForce RTX 3090",
+    "split_mode": "layer",
+    "tensor_split": "1,1",
+    "gpu_layers": "all",
+    "flash_attention": "on",
+    "parallel_slots": 1,
+    "reasoning": "on",
+    "reasoning_effort": "medium",
+    "prefix_cache": false,
+    "sampling": {
+      "temperature": 0.6,
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repeat_penalty": 1.0,
+      "presence_penalty": 0.0,
+      "seed": 42,
+      "reasoning_effort": "medium"
+    }
+  },
+  "context_ladder": {
+    "prompt_tokens_and_repetitions": {
+      "8192": 3,
+      "32768": 1,
+      "65536": 1,
+      "131072": 1,
+      "261888": 1
+    },
+    "generated_tokens": 128,
+    "measurement": "Local /tokenize IDs sent as a raw token-array prompt to /completion; prefill=prompt_n/prompt_ms; decode=predicted_n/predicted_ms from the same response.",
+    "acceptance_gate": "Require HTTP 200, exact prompt token count, cache_n=0, exactly 128 generated tokens, and positive prompt_ms and predicted_ms. If the pinned runtime does not expose these fields, stop before accepting measurements and preregister a new method.",
+    "warmup": "One short unscored readiness smoke per server launch; server warmup disabled; no per-context warmup.",
+    "execution": "Serial; both GPUs must show >1 GiB additional allocation over the preflight baseline before sending the measured prompt.",
+    "omit_512k": "User explicitly discarded 512K as too slow; no new request at 524288 tokens.",
+    "omit_1m": "Outside the native 262144-token context of this artifact."
+  },
+  "quality_screen": {
+    "suite": "Tool-Eval Hard Mode 2.8.0",
+    "source_commit": "0a1ba68c7709f429298bc92417a9e003f61de4e3",
+    "scenarios": "TC-70..TC-97",
+    "scenario_count": 28,
+    "seed": 42,
+    "variant_seed": 20261010,
+    "context_tokens": 131072,
+    "max_output_tokens": 16384,
+    "max_turns": 8,
+    "timeout_seconds": 120,
+    "trials": 1,
+    "parallel": 1,
+    "warmup": false,
+    "fail_on_safety": true,
+    "backend": "llamacpp",
+    "wire_format": "openai",
+    "endpoint": "http://127.0.0.1:18179/v1",
+    "chat_template_kwargs": "reasoning_effort=medium; template thinking enabled through server reasoning=on",
+    "score_scope": "One absolute quality/safety screen only; no throughput claim and no additional seeds if a critical safety failure occurs.",
+    "unscored_readiness_smoke": "Before Tool-Eval, send one local OpenAI-compatible chat-completion request with a synthetic calculator tool definition; require HTTP 200 and a valid choices/message response. This smoke is not scored and does not replace TC-70..TC-97.",
+    "score_history_check": "No exact-fingerprint Q172 score was found for model SHA-256 93567e57a8fe10b23569b9d9ec38cd005deedf71e29477c421a4b83f418a538b. Scores for other Gemma quantizations are not attributed to this artifact."
+  },
+  "preflight_gates": [
+    "Recompute and match model, runtime, and template SHA-256 immediately before starting.",
+    "No external inference server/process or inference container may be active; port 18179 must be free.",
+    "Record both RTX 3090 baselines and memory PSI; preserve the desktop GUI.",
+    "Stop only the owned Q173 process after each measured context; verify listener and process cleanup before continuing.",
+    "Do not start a measured request if readiness smoke lacks required timings or if both-GPU allocation gate fails."
+  ],
+  "output_paths": {
+    "run_data": "runs/gemma-a18/derived.json",
+    "events": "runs/gemma-a18/events.jsonl",
+    "logs": "logs/gemma-a18/",
+    "receipts": "receipts/gemma-a18-*"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "receipt_type": "q173_launch_preregistration",
+  "profile": "DeepSeek V4.1 Flash-1017 DSX T16 / dsx-server",
+  "captured_at_utc": "2026-10-28T15:38:46Z",
+  "context_window_tokens": 1048576,
+  "context_support_source": "deepseek-ai/DeepSeek-V4.1-Flash-1017 config.json; max_position_embeddings=1048576; DSX model README describes full 1M context",
+  "model_sha256": "31b3852636237c63b3e42b2403f172e372d36c4ad486e65f5c3920307bcfb3fa",
+  "runtime_sha256": "bec3b3e59803108b81834227bfb4ba5f722473af34e1ab960510e723fe07ad27",
+  "server_argv": [
+    "/usr/bin/env", "DSX_GPUS=0,1", "DSX_DEFER=off", "DSX_ENGRAM_FP8=off",
+    "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-dsx-T16/build/release/dsx-server",
+    "--model", "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-dsx-T16/models/DeepSeek-V4.1-Flash-1017-dsx-t16.gguf",
+    "--rank", "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-dsx-T16/models/expert-rank.json",
+    "--ctx", "1048576", "--arena-gb", "70", "--no-vision", "--host", "127.0.0.1", "--port", "18177",
+    "--model-name", "q173-dsx-t16", "--max-tokens", "128", "--temperature", "0.6", "--top-p", "0.95"
+  ],
+  "benchy_measurement_plan": {
+    "tool": "llama-benchy 0.4.0",
+    "tokenizer": "/home/cristian/.cache/q173-tokenizers/deepseek-v41-flash-1017/tokenizer.json",
+    "tokenizer_sha256": "c90dfa01249db1be4245780a052ede752e1361c612ac6d08e2bdada7d599476b",
+    "prompt_targets": [8192, 32768, 65536, 131072, 262144, 524288, 1048418],
+    "generation_tokens": 128,
+    "higher_context_repetitions": 1,
+    "warmup": true,
+    "prefix_cache": false,
+    "corpus_note": "llama-benchy repeats its pinned source corpus as needed to construct prompts beyond the corpus length; report this for 1M fixture interpretation",
+    "primary_metrics": "JSONL request_first_token and request_end timings; client-observed rates"
+  },
+  "preflight": {
+    "inference_processes": [],
+    "port_18177_listeners": [],
+    "mem_available_bytes": 118342901760,
+    "swap_free_bytes": 19001344,
+    "gpus": ["NVIDIA RTX 3090 0", "NVIDIA RTX 3090 1"],
+    "decision": "PASS"
+  }
+}

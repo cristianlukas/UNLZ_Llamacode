@@ -1,0 +1,47 @@
+{
+  "task": "Q173 A16 Google Sheets sync for TERRA-MTP-off context ladder",
+  "verified_at_utc": "2026-10-28 20:03:43 UTC",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet": "Resultados",
+  "written_ranges": [
+    "Resultados!A385:AF390",
+    "Accionables!D51:N51"
+  ],
+  "row_ids": [
+    "Q173-TERRA-MTPOFF-CTX-8K",
+    "Q173-TERRA-MTPOFF-CTX-32K",
+    "Q173-TERRA-MTPOFF-CTX-64K",
+    "Q173-TERRA-MTPOFF-CTX-128K",
+    "Q173-TERRA-MTPOFF-CTX-256K",
+    "Q173-TERRA-MTPOFF-CTX-512K-OMITTED"
+  ],
+  "readback_verified": true,
+  "format_verified": {
+    "wrapStrategy": "WRAP",
+    "verticalAlignment": "TOP",
+    "columns": 32
+  },
+  "key_values_verified": {
+    "prefill_tps": [
+      2439.12196565985,
+      2134.244820096813,
+      1814.2222656615504,
+      1382.9551086992462,
+      949.3922412934292
+    ],
+    "decode_tps": [
+      55.15996235290316,
+      53.82749815876062,
+      51.38564212171553,
+      47.554104581209266,
+      39.62152962106105
+    ],
+    "context_512k": "omitted by user; no request; N/D"
+  },
+  "caveats": [
+    "TERRA quality Q172 is separately measured: 62/100 with TC-74/84 safety failures.",
+    "Two of seven speed requests returned 126 rather than 128 tokens.",
+    "Server prefix caching was enabled while llama-benchy used --no-cache; treat rates as exploratory, not a direct ranking.",
+    "256K TTFT was 275.9 s."
+  ]
+}\n

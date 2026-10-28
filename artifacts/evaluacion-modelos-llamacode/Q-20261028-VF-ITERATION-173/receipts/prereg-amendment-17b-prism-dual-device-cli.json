@@ -1,0 +1,24 @@
+{
+  "amendment": "Q173-A17b-PrismML-dual-device-selection-and-pp-tg-flag",
+  "registered_utc": "2026-10-28 20:12:46 UTC",
+  "amends": [
+    "receipts/prereg-amendment-17-bonsai-prism-context-ladder.json",
+    "receipts/prereg-amendment-17a-prism-bench-cli-correction.json"
+  ],
+  "reason": "Binary help exposes combined prompt/generation only as -pg (no --pg alias). The explicit --n-prompt/--n-gen retry loaded only GPU0 with comma-separated device/split fields; it was stopped before a completed sample.",
+  "correction": "Use documented -pg <pp,tg> and slash-separated CUDA0/CUDA1 and tensor split 1/1 syntax. Add automatic stop if both GPUs do not show model allocations by 45 seconds.",
+  "corrected_argv_pattern": "llama-bench --model <verified GGUF> --device CUDA0/CUDA1 --split-mode layer --tensor-split 1/1 --n-gpu-layers 99 --flash-attn on --batch-size 2048 --ubatch-size 512 --threads 16 -pg <prompt_tokens>,128 --repetitions <3 for 8192, otherwise 1> --no-warmup --output json",
+  "allocation_gate": {
+    "must_show_both_gpus": true,
+    "minimum_used_memory_mib_each": 1000,
+    "allow_model_load_seconds": 45,
+    "failure_action": "stop only this llama-bench PID; mark level invalid and stop ladder"
+  },
+  "invalid_attempts": [
+    "A17 initial: --pg long spelling rejected before model load, zero samples.",
+    "A17a: --n-prompt/--n-gen with comma device/split fields; only GPU0 allocated, stopped at 8K before a completed record; no metrics accepted."
+  ],
+  "preserved": [
+    "Model/runtime pins; context ladder through 261888; serial execution; no 512K; reuse Q172 only; no quality rerun."
+  ]
+}

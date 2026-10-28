@@ -1,0 +1,35 @@
+{
+  "task": "Sync Q173 Flash-Next NInfer context ladder and Q172 quality result to Google Sheets",
+  "completed_utc": "2026-10-28T18:40:42Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_title": "Listado",
+  "writes": {
+    "Resultados!A379:AF383": [
+      "Q173-NINFER-CTX-8K",
+      "Q173-NINFER-CTX-32K",
+      "Q173-NINFER-CTX-64K",
+      "Q173-NINFER-CTX-128K",
+      "Q173-NINFER-CTX-256K"
+    ],
+    "Resultados!A384:AF384": "Q173-NINFER-Q172-SEED42",
+    "Accionables!D51:N51": "Updated status, next steps, result summary, evidence, progress, and timestamp"
+  },
+  "readback": {
+    "metadata_resultados_grid_rows": 384,
+    "result_rows_match_written_ids_and_metrics": true,
+    "actionable_row_matches_q173_ninfer_completion": true,
+    "format": "New result rows use WRAP text; top-aligned Arial 10; row heights auto-resized. Existing rows were preserved."
+  },
+  "important_values": {
+    "context_prompt_tokens": [8244, 32819, 65588, 131124, 261940],
+    "prefill_tps": [1789.4, 2062.3, 2078.0, 2041.6, 1983.5],
+    "decode_tps": [27.72, 29.94, 28.63, 31.87, 28.35],
+    "quality": "77/100; 43/56; 19 pass, 5 partial, 4 fail; TC-75/82/84/92 failed; TC-92 tenant disclosure"
+  },
+  "source_receipts": [
+    "receipts/ninfer-q173-postflight-20261028T183712Z.json",
+    "receipts/prereg-amendment-09-flashnext-ninfer-linux-preview.json",
+    "receipts/prereg-amendment-11-ninfer-tokenizer-correction.json",
+    "receipts/prereg-amendment-12-ninfer-q172-131k.json"
+  ]
+}

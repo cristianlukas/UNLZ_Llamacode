@@ -1,0 +1,68 @@
+{
+  "amendment": "Q173-A16-TERRA-MTP-off-corrected-context-ladder",
+  "registered_utc": "2026-10-28T19:37:32Z",
+  "reason": "A15 MTP4 at temperature .6 reproduced a CUDA scatter/gather index assertion before any benchmark sample. The same checkpoint completed the A14 Q172 diagnostic with SPEC_N=0. Measure the disabled-drafter variant to obtain usable context-dependent throughput without attributing it to MTP4.",
+  "question": "What are the client-observed prefill/decode rates and TTFT for the same TERRA checkpoint at 8K–256K when MTP is disabled and the registered sampler is used?",
+  "single_change_from_A15": "Set SPEC_N=0; keep weights, image digest, W4A8, BF16, dual-GPU TP=2, fp8 KV, native max context, max sequences, tokenizer, prompt fixture, sampler, output length, cache policy, and serial order fixed.",
+  "profile": {
+    "alias": "TERRA-MTP-off",
+    "speculative_mtp": 0,
+    "model": "Qwen3.8-27B AutoRound INT4/W4A8",
+    "runtime": "vLLM 0.27.1",
+    "tensor_parallel": 2,
+    "gpus": "2xRTX 3090",
+    "ram_gib": 128,
+    "max_model_len": 262144,
+    "max_num_seqs": 1,
+    "kv_cache_dtype": "fp8_e4m3",
+    "temperature": 0.6,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0,
+    "repetition_penalty": 1.0,
+    "presence_penalty": 0.0,
+    "seed": 42,
+    "thinking": true,
+    "contexts_tokens": [
+      8192,
+      32768,
+      65536,
+      131072,
+      261888
+    ],
+    "runs_by_context": {
+      "8192": 3,
+      "32768": 1,
+      "65536": 1,
+      "131072": 1,
+      "261888": 1
+    },
+    "output_tokens": 128,
+    "exact_output": true,
+    "prefix_cache": false,
+    "per_context_warmup": false,
+    "run_serially": true,
+    "omit_524288": "User instruction A10: no new 512K points; historical Strata Q14 retained as historical evidence only",
+    "omit_1048576": "outside this profile native limit",
+    "measurement": "Client-observed TTFT and decode duration; prefill = actual prompt_tokens / TTFT, decode = exact completed tokens / decode duration. Report separate from MTP4 and other runtimes.",
+    "stop_conditions": [
+      "CUDA assert or runtime crash",
+      "OOM/OOM-kill",
+      "MemAvailable below 32 GiB sustained",
+      "context rejection or truncation",
+      "weight/runtime/tokenizer mismatch"
+    ]
+  },
+  "method": "Before the ladder, make one short unscored readiness request with the same .6 sampler. If it fails, do not launch the ladder. Then run 8K×3 and 32K/64K/128K/261888×1, exact 128 output tokens, no cache, no per-context warmups, serially; retain raw JSONL, result JSON and derivation.",
+  "quality_context": "Reuse A14 Q172 TERRA-MTP-off result 62/100 with safety failures TC-74/84. No additional quality seeds; this is speed/context only and cannot establish adoption suitability.",
+  "interpretation": "Report as TERRA-MTP-off. Do not combine with or attribute the rates to MTP4, Q34, SOL, ASTRA, or other runtimes. Higher-context n=1 remains exploratory.",
+  "output_files": [
+    "runs/terra-a16/8k.json",
+    "runs/terra-a16/8k-events.jsonl",
+    "runs/terra-a16/contexts.json",
+    "runs/terra-a16/contexts-events.jsonl",
+    "runs/terra-a16/derived.json",
+    "receipts/terra-a16-postflight.json"
+  ],
+  "no_download_or_build": true
+}

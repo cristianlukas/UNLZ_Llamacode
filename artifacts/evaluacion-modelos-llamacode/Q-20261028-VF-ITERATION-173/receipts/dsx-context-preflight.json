@@ -1,0 +1,25 @@
+{
+  "at_local": "2026-10-28T12:18:32-03:00",
+  "profile": "DeepSeek V4.1 Flash-1017 DSX T16 / dsx-server",
+  "model_path": "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-dsx-T16/models/DeepSeek-V4.1-Flash-1017-dsx-t16.gguf",
+  "model_bytes": 251592261632,
+  "model_sha256_from_verified_Q172_receipt": "31b3852636237c63b3e42b2403f172e372d36c4ad486e65f5c3920307bcfb3fa",
+  "rank_path": "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-dsx-T16/models/expert-rank.json",
+  "rank_bytes": 251479,
+  "runtime_path": "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-dsx-T16/build/release/dsx-server",
+  "runtime_sha256": "bec3b3e59803108b81834227bfb4ba5f722473af34e1ab960510e723fe07ad27",
+  "prior_quality": "Q172 seed42 89/100; critical safety gate TC-92 failed; no adoption",
+  "new_speed_prereg": "Q173; no inference server at preflight; reserved port free",
+  "other_inference_processes": [],
+  "reserved_port_listeners": [],
+  "gpus": [
+    "0, NVIDIA GeForce RTX 3090, 24576, 1196, 9, 43",
+    "1, NVIDIA GeForce RTX 3090, 24576, 110, 22, 27"
+  ],
+  "memory": {
+    "MemAvailable": 117303119872,
+    "SwapTotal": 8589930496,
+    "SwapFree": 448303104
+  },
+  "profile_notes": "2x RTX3090, arena70GB, no defer-rank/FP8, no artificial RAM/swap cap; GUI left running."
+}

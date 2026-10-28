@@ -1,0 +1,52 @@
+{
+  "amendment": "Q173-A17c-Bonsai-PrismML-same-request-stage-timings",
+  "registered_utc": "2026-10-28 20:17:15 UTC",
+  "amends": [
+    "receipts/prereg-amendment-17-bonsai-prism-context-ladder.json",
+    "receipts/prereg-amendment-17a-prism-bench-cli-correction.json",
+    "receipts/prereg-amendment-17b-prism-dual-device-cli.json"
+  ],
+  "reason": "The successful dual-GPU llama-bench output does not report context-specific prompt_ms and predicted_ms separately from the combined p+g run; do not derive decode TPS by subtracting unrelated runs.",
+  "method": "Use the already pinned PrismML llama-server and its local POST /completion endpoint. The endpoint accepts token ID arrays for prompt, reports timings.prompt_n/cache_n/prompt_ms/predicted_n/predicted_ms, and supports cache_prompt=false. Derive prefill TPS = prompt_n/(prompt_ms/1000), decode TPS = predicted_n/(predicted_ms/1000), both from the same request. Record client wall time separately.",
+  "native_context_tokens": 262144,
+  "levels": {
+    "8192": 3,
+    "32768": 1,
+    "65536": 1,
+    "131072": 1,
+    "261888": 1
+  },
+  "per_level_server_context": "round prompt_tokens + 128 completion capacity up to the next 256-token boundary; 256K profile set to native 262144.",
+  "profile": {
+    "model": "Ternary Bonsai 2 27B PQ2_0 exact GGUF pin from A17",
+    "gpus": "both RTX 3090",
+    "devices": "CUDA0,CUDA1",
+    "split_mode": "layer",
+    "tensor_split": "1,1",
+    "gpu_layers": "all",
+    "flash_attention": "on",
+    "parallel": 1,
+    "sampling": "temperature .6, top_p .95, top_k 20, min_p 0, repeat 1, presence 0, seed 42",
+    "n_predict": 128,
+    "cache_prompt": false
+  },
+  "prompt": "Deterministic varied synthetic prose tokenized by the running pinned server /tokenize route, then tiled as token IDs to exactly the requested prompt count; raw token array sent to /completion. No chat template. Each request records cache_n; valid result requires cache_n=0 and prompt_n equals requested count.",
+  "readiness": "Before each level, fresh zero-server preflight, start only the scoped localhost server, verify /health, tokenize fixture, send an unscored READY smoke, and confirm both GPUs have >1 GiB allocations. Run the registered samples serially, then stop only the owned server.",
+  "stop_conditions": [
+    "any external inference server found before level",
+    "model or runtime pin mismatch",
+    "one GPU lacks model allocation within 45s",
+    "prompt cache_n nonzero or prompt count mismatch",
+    "context rejection, OOM, crash, or MemAvailable below 32 GiB for four consecutive 15s samples",
+    "native context limit exceeded"
+  ],
+  "quality_reference": "Reuse Q172 PrismML 75/100; critical TC-74/84/92 failures. No quality rerun and no adoption.",
+  "omit_512k": "User instruction: discard 512K; no request.",
+  "official_api_reference": "https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md",
+  "outputs": [
+    "runs/prism-a17-completion/derived.json",
+    "runs/prism-a17-completion/events.jsonl",
+    "receipts/prism-a17-completion-preflight.json",
+    "receipts/prism-a17-completion-postflight.json"
+  ]
+}

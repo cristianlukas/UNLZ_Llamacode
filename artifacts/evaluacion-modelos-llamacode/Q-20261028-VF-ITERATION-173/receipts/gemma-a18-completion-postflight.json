@@ -1,0 +1,40 @@
+{
+  "task": "Q173 A18 Gemma completion timings postflight",
+  "timestamp_utc": "2026-10-28T20:56:07+00:00",
+  "lock_token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+  "contexts_completed": [
+    8192,
+    32768,
+    65536,
+    131072,
+    261888
+  ],
+  "context_512k": "not run per user instruction: discarded as too slow",
+  "failure": null,
+  "resource_state": {
+    "timestamp_utc": "2026-10-28T20:56:07+00:00",
+    "MemAvailable_kib": 112821664,
+    "SwapFree_kib": 3369348,
+    "memory_psi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2655527571\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2651056305",
+    "gpu": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_used_mib": 1031,
+        "utilization_percent": 34
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_used_mib": 108,
+        "utilization_percent": 35
+      }
+    ],
+    "inference_processes": [],
+    "inference_containers": []
+  },
+  "port_free": true,
+  "no_inference_processes_remaining": true,
+  "gui_preserved": true,
+  "decision": "PASS"
+}

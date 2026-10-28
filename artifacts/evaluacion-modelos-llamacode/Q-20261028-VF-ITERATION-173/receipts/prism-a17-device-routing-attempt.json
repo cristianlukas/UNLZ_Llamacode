@@ -1,0 +1,23 @@
+{
+  "task": "Q173 A17 PrismML dual-GPU routing attempt",
+  "timestamp_utc": "2026-10-28 20:12:46 UTC",
+  "model_loaded": true,
+  "prompt_context_test_started": 8192,
+  "completed_valid_samples": 0,
+  "observed_gpu_memory_mib": {
+    "gpu0_peak_approx": 8907,
+    "gpu1_approx": 111
+  },
+  "result": "Invalid for registered dual-GPU experiment: llama-bench used only GPU0. Owned PID 932228 terminated; no other process stopped. No accepted JSON result.",
+  "host_state_after_stop": {
+    "inference_servers": [],
+    "compute_clients": [],
+    "MemAvailable_kib": 116591928,
+    "memory_psi_some_avg10": 0.0
+  },
+  "logs": [
+    "logs/prism-a17/8k.log",
+    "logs/prism-a17/8k-resources.log",
+    "logs/prism-a17/progress.log"
+  ]
+}

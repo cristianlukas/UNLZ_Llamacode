@@ -1,0 +1,7 @@
+GPU0 NVIDIA GeForce RTX 3090: 25.3 GB, host link 13.3 GB/s
+GPU1 NVIDIA GeForce RTX 3090: 25.4 GB, host link 13.3 GB/s (main)
+aux GPUs keep fixed expert sets: their RAM copies need ~22 GB more arena than --arena-gb 70 (DSX_AUX_ADAPTIVE=1 swaps anyway)
+experts resident: GPU1 700 (5.9 GB), GPU0 2589 (21.9 GB, static, streams prefill experts, 13.3 GB/s link)
+host buffer: 70.0 GB faulted in, 18.0 s waiting on memory pressure
+arena: 70.0 GB allocated and pinned in 36.3 s
+arena: 8204 experts, 70.0 GB in 81 s; 4567 left in the file

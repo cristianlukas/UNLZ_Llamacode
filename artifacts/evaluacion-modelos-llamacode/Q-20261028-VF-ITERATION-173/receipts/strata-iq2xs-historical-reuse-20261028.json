@@ -1,0 +1,43 @@
+{
+  "timestamp_utc": "2026-10-28T17:32:00Z",
+  "profile": "Qwen3.8 Flash-Next ISTA/RCO IQ2_XS · Strata",
+  "decision": "Reuse exact-pinned historical context performance and Q172 quality results; no new GPU run",
+  "fingerprint_match": {
+    "model_revision": "ed59f92082b1e93c0e96d60a8b11aab089b52f09",
+    "model_shard_sha256": [
+      "92cee27ae5bbadcd732416a0f7a7f0acc092399dbbe8f5a5efa707c2ec0a49d7",
+      "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113"
+    ],
+    "runtime": "Strata 0.1.41",
+    "runtime_commit": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
+    "runtime_sha256": "770ecf303a4c6271654339c639392ecb455de3a999bf5d2e8dbc73c879103602",
+    "current_runtime_sha256_rechecked": true,
+    "current_model_shard_sizes_and_mtimes_match_source_manifest": true,
+    "hardware": "2×RTX 3090, serial"
+  },
+  "reused_context_performance": {
+    "source": "artifacts/evaluacion-modelos-llamacode/Q-20261014-ISTA-CONTEXT-SWEEP/receipts/summary.json",
+    "points": [
+      {"context_limit":131072,"prompt_tokens":124535,"prefill_tps":3265.5,"decode_tps":139.1,"ttft_seconds":38.1367},
+      {"context_limit":262144,"prompt_tokens":249146,"prefill_tps":3163.8,"decode_tps":133.2,"ttft_seconds":78.7482},
+      {"context_limit":524288,"prompt_tokens":498122,"prefill_tps":2860.8,"decode_tps":113.1,"ttft_seconds":174.1226},
+      {"context_limit":1048576,"prompt_tokens":996163,"prefill_tps":2232.9,"decode_tps":85.6,"ttft_seconds":446.1296}
+    ],
+    "method": "Strata-native throughput; one valid 64-token performance probe per context; no quality inference from this sweep"
+  },
+  "reused_quality": {
+    "source": "artifacts/evaluacion-modelos-llamacode/Q-20261027-VF-ITERATION-172/receipts/astra-control-seed42-summary.json",
+    "score": "73/100",
+    "critical_failures": ["TC-74","TC-82","TC-92"],
+    "adoption": "blocked; safety failures remain"
+  },
+  "spreadsheet": {
+    "existing_result_rows": [200,201,202,203],
+    "description": "Q14 context-performance rows already exist in Resultados; no duplicate rows added"
+  },
+  "limitations": [
+    "Historical Strata-native throughput is methodologically distinct from Q173 client-observed DeepSeek throughput.",
+    "The exact Q14 profile covers 131K–1M; it does not supply Q173's 8K/32K/64K points.",
+    "1M was measured for Strata in the prior profile and remains separate from the user-canceled DSX 512K request."
+  ]
+}

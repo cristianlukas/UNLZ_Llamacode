@@ -1,0 +1,20 @@
+{
+  "task": "Q173 Flash-Next NInfer context ladder attempt 01",
+  "status": "invalid; excluded from Results and comparisons",
+  "reason": "llama-benchy could not parse the Strata pack's custom tokenizer.json, fell back to GPT-2, and generated the wrong prompt token targets. The saved pp_throughput fields are nonsensical because the stream omitted token_ids.",
+  "raw_result": "runs/ninfer/invalid-tokenizer-attempt01/8k.json",
+  "raw_events": "runs/ninfer/invalid-tokenizer-attempt01/8k-events.jsonl",
+  "server_log": "logs/ninfer/server.log",
+  "requested_target": 8192,
+  "actual_server_prompt_tokens_diagnostic_only": [7531, 7616, 7334],
+  "server_completed": true,
+  "server_shutdown": "clean transient-unit stop; exit 0; port 18473 closed",
+  "postflight": {
+    "MemAvailable_bytes": 117961310208,
+    "memory_psi_full_avg10_percent": 0.0,
+    "gpu1_used_mib": 110,
+    "oom_or_crash": false,
+    "gui_processes": "preserved"
+  },
+  "correction": "Use the validated local Qwen3.6 tokenizer snapshot under prereg-amendment-11-ninfer-tokenizer-correction.json."
+}

@@ -1,0 +1,13 @@
+{
+  "receipt_type": "q173_benchmark_launch",
+  "experiment": "DSX T16 512K and 1M context throughput retry after clearing stale pending queue",
+  "captured_at_utc": "2026-10-28T16:47:29Z",
+  "preregistration": "receipts/prereg-amendment-07-warmup-economy.json and receipts/dsx-high-context-no-warmup-launch.json",
+  "server": {"pid": 541529, "model": "q173-dsx-t16", "endpoint": "http://127.0.0.1:18177/v1", "health": {"http": 200, "status": "ok", "pending": 0}, "ctx": 1048576, "arena_gb": 70, "gpus": [0, 1]},
+  "warmup": {"at_utc": "2026-10-28T16:47:15Z", "http": 200, "ttft_seconds": 6.108361, "prompt_tokens": 36, "completion_tokens": 8, "finish_reason": "length", "visible_content": "", "reasoning_content": "We need answer exactly WARM. Need", "note": "Short unscored warmup; reasoning consumed max_tokens=8. Server remains healthy with pending=0."},
+  "measurement": {"contexts_prompt_tokens": [524288, 1048418], "max_completion_tokens": 128, "runs_per_context": 1, "concurrency": 1, "per_context_warmup": false, "prefix_cache": false, "latency_mode": "generation", "prefill": "actual server prompt_tokens / request_first_token.ttft_s", "decode": "completion tokens / request_end.decode_seconds", "corpus": "Sherlock 142813 tokens, repeated beyond corpus length; throughput fixture only"},
+  "command_argv": ["/home/cristian/.cache/q173-llama-benchy-0.4.0/bin/llama-benchy", "--base-url", "http://127.0.0.1:18177/v1", "--model", "q173-dsx-t16", "--tokenizer", "/home/cristian/.cache/q173-tokenizers/deepseek-v41-flash-1017/tokenizer.json", "--pp", "524288", "1048418", "--tg", "128", "--depth", "0", "--concurrency", "1", "--runs", "1", "--latency-mode", "generation", "--no-cache", "--skip-coherence", "--no-adapt-prompt", "--no-warmup", "--format", "json", "--save-result", "artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/dsx-high-context-retry-raw.json", "--emit-progress", "artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/dsx-high-context-retry-events.jsonl"],
+  "preflight": {"other_inference_servers": [], "gui_gpu_process": "ArtCraft only, 207 MiB GPU0; left running", "MemAvailable_bytes": 44625403904, "swap_free_bytes": 3547136, "memory_psi_full_avg10_percent": 0.0, "gpus_mib_used": [23087, 23000]},
+  "stop_conditions": ["OOM/crash", "MemAvailable below 32 GiB sustained"],
+  "interpretation": "One n=1 exploratory sample per context; not a paired quality/speed comparison or adoption result. Existing Q172 score 89/100 remains separate and TC-92 still fails."
+}

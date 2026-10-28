@@ -1,0 +1,45 @@
+{
+  "task": "Q173 A17c PrismML completion timings preflight",
+  "timestamp_utc": "2026-10-28T20:21:38+00:00",
+  "lock_token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+  "preregistration": "receipts/prereg-amendment-17c-prism-server-timings.json",
+  "model": {
+    "path": "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/Bonsai2-Prism-PQ2_0/models/Ternary-Bonsai-2-27B-PQ2_0.gguf",
+    "bytes": 7206168928,
+    "sha256": "3907dc1658db1f78a9826bf8d5bcb8dc65db0d466388937af57f2294fae62ec1",
+    "expected_sha256": "3907dc1658db1f78a9826bf8d5bcb8dc65db0d466388937af57f2294fae62ec1",
+    "matches_pin": true
+  },
+  "server": {
+    "path": "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/Bonsai2-Prism-PQ2_0/runtime/llama-prism-b10826-c9c34bc/llama-server",
+    "bytes": 17896,
+    "sha256": "3ad6c90f0f25fec776be6d70b0bfe3ada0a8bf6a765b53f7a97cf985b0ea560a",
+    "expected_sha256": "3ad6c90f0f25fec776be6d70b0bfe3ada0a8bf6a765b53f7a97cf985b0ea560a",
+    "matches_pin": true
+  },
+  "resource_state": {
+    "MemAvailable_kib": 117258004,
+    "SwapFree_kib": 3334780,
+    "memory_psi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2655249857\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2650778677",
+    "gpu": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_used_mib": 849,
+        "utilization_percent": 6
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_used_mib": 108,
+        "utilization_percent": 17
+      }
+    ],
+    "inference_processes": [],
+    "inference_containers": []
+  },
+  "port": 18177,
+  "port_free": true,
+  "gui_preserved": true,
+  "decision": "PASS"
+}

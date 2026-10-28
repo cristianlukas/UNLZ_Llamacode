@@ -1,0 +1,60 @@
+{
+  "task": "Q173 Flash-Next NInfer Linux exploratory context ladder, tokenizer-corrected attempt",
+  "launch_registered_utc": "2026-10-28T17:57:52Z",
+  "preregistration": [
+    "receipts/prereg-amendment-09-flashnext-ninfer-linux-preview.json",
+    "receipts/prereg-amendment-10-omit-512k-all-profiles.json",
+    "receipts/prereg-amendment-11-ninfer-tokenizer-correction.json",
+    "receipts/ninfer-flashnext-retry-preflight-20261028T175752Z.json"
+  ],
+  "server": {
+    "planned_unit": "q173-ninfer-flashnext.service",
+    "runtime": "NInfer Linux preview v0.16.1",
+    "model": "q173-flashnext-ninfer",
+    "endpoint": "http://127.0.0.1:18473/v1",
+    "model_context": 262144,
+    "devices": [1],
+    "kv_dtype": "int8",
+    "max_concurrency": 1,
+    "prefix_reuse": false,
+    "ngram_draft_tokens": 0,
+    "no_expert_state": true,
+    "sampling": {"temperature": 0.6, "top_p": 0.95, "top_k": 20, "min_p": 0.0, "presence_penalty": 0.0, "seed": 42},
+    "log": "artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/logs/ninfer/server-tokenizer-corrected.log"
+  },
+  "benchmark": {
+    "tool": "llama-benchy 0.4.0",
+    "tokenizer": "/home/cristian/.cache/huggingface/hub/models--Qwen--Qwen3.6-27B/snapshots/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9",
+    "fixture": "cached Sherlock Holmes corpus; 144480 tokens with validated Qwen tokenizer; no network download",
+    "protocol": "128 exact completion tokens; no prefix cache; concurrency 1; no context warmups; runtime performs one short unscored warmup on startup; actual NInfer prompt_tokens cross-checked against the requested target",
+    "contexts": [8192, 32768, 65536, 131072, 261888],
+    "omit_512k": true,
+    "repetitions": {"8192": 3, "all_larger_points": 1},
+    "extra_body": "repetition_penalty=1.0,presence_penalty=0.0,seed=42",
+    "commands": [
+      [
+        "/home/cristian/.cache/q173-llama-benchy-0.4.0/bin/llama-benchy",
+        "--base-url", "http://127.0.0.1:18473/v1", "--model", "q173-flashnext-ninfer",
+        "--tokenizer", "/home/cristian/.cache/huggingface/hub/models--Qwen--Qwen3.6-27B/snapshots/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9",
+        "--pp", "8192", "--tg", "128", "--exact-tg", "--depth", "0", "--concurrency", "1", "--runs", "3",
+        "--latency-mode", "generation", "--no-cache", "--skip-coherence", "--no-adapt-prompt", "--no-warmup",
+        "--extra-body", "repetition_penalty=1.0,presence_penalty=0.0,seed=42", "--format", "json",
+        "--save-result", "artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/runs/ninfer/8k-tokenizer-corrected.json",
+        "--emit-progress", "artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/runs/ninfer/8k-tokenizer-corrected-events.jsonl"
+      ],
+      [
+        "/home/cristian/.cache/q173-llama-benchy-0.4.0/bin/llama-benchy",
+        "--base-url", "http://127.0.0.1:18473/v1", "--model", "q173-flashnext-ninfer",
+        "--tokenizer", "/home/cristian/.cache/huggingface/hub/models--Qwen--Qwen3.6-27B/snapshots/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9",
+        "--pp", "32768", "65536", "131072", "261888", "--tg", "128", "--exact-tg", "--depth", "0", "--concurrency", "1", "--runs", "1",
+        "--latency-mode", "generation", "--no-cache", "--skip-coherence", "--no-adapt-prompt", "--no-warmup",
+        "--extra-body", "repetition_penalty=1.0,presence_penalty=0.0,seed=42", "--format", "json",
+        "--save-result", "artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/runs/ninfer/contexts-tokenizer-corrected.json",
+        "--emit-progress", "artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/runs/ninfer/contexts-tokenizer-corrected-events.jsonl"
+      ]
+    ],
+    "rate_rule": "Use server prompt_tokens/TTFT and exact completion_tokens/decode_seconds; llama-benchy events retained as client observations, not engine-native timings.",
+    "stop_conditions": ["OOM/OOM-kill", "process crash", "MemAvailable <32 GiB sustained", "context rejection/truncation", "model/runtime/tokenizer mismatch"]
+  },
+  "quality": {"pending_after_ladder": "Tool-Eval Hard Mode 2.8.0 TC-70..TC-97 seed42 at 131072; absolute screen only"}
+}

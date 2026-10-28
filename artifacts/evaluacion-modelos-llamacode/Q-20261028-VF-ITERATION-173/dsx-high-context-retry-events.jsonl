@@ -1,0 +1,5 @@
+{"schema":"llama-benchy-progress.v1","type":"header","ts":1793206067.5859044,"llama_benchy_version":"0.4.0"}
+{"schema":"llama-benchy-progress.v1","type":"latency_measured","ts":1793206069.437136,"latency_s":0.0016710606481259067,"mode":"generation"}
+{"schema":"llama-benchy-progress.v1","type":"request_start","ts":1793206069.5123665,"request_id":0,"model":"q173-dsx-t16","base_url":"http://127.0.0.1:18177/v1","prompt_size":524288,"response_size":128,"context_size":0,"concurrency":1,"run_index":0,"target_label":""}
+{"schema":"llama-benchy-progress.v1","type":"request_first_response","ts":1793206069.9375553,"request_id":0,"ttfr_s":0.4250135740148835}
+{"schema":"llama-benchy-progress.v1","type":"bench_complete","ts":1793208316.991969,"status":"error"}

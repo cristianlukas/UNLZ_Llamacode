@@ -1,0 +1,39 @@
+{
+  "task": "Q173 A16 TERRA-MTP-off unscored readiness smoke",
+  "timestamp_utc": "2026-10-28T19:46:05.516867+00:00",
+  "preregistration": "receipts/prereg-amendment-16-terra-mtp-off-context-ladder.json",
+  "preflight": "receipts/terra-a16-preflight-20261028T194147Z.json",
+  "server_container": "q173-terra-a16",
+  "model": "qwen3.8-27b",
+  "endpoint": "http://127.0.0.1:18474/v1/chat/completions",
+  "server_config": {
+    "engine": "vLLM 0.27.1",
+    "tensor_parallel": 2,
+    "max_model_len": 262144,
+    "speculative_mtp": false,
+    "sampler": {
+      "temperature": 0.6,
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repetition_penalty": 1.0,
+      "presence_penalty": 0.0,
+      "seed": 42
+    }
+  },
+  "request": {
+    "prompt": "Reply with exactly READY.",
+    "max_tokens": 64,
+    "reasoning_effort": "medium"
+  },
+  "response": {
+    "http_status": 200,
+    "elapsed_seconds": 0.841783,
+    "prompt_tokens": 45,
+    "completion_tokens": 25,
+    "finish_reason": "stop",
+    "text": "READY."
+  },
+  "score": null,
+  "decision": "Readiness smoke passed; proceed with preregistered speed/context ladder only."
+}

@@ -1,0 +1,119 @@
+{
+  "task": "Q173 TERRA Q172 seed42 preflight",
+  "captured_utc": "2026-10-28T19:05:57Z",
+  "preregistration": "receipts/prereg-amendment-13-terra-context-and-q172.json",
+  "model_manifest_sha256": "b9b842e49ccc3f8b3a1459ce218d87884604a36725a46cb64b4741641ed7d231",
+  "weights": [
+    {
+      "file": "model-00001-of-00007.safetensors",
+      "expected_sha256": "83c0adb0f1141142a25c5f7937a09272fef2baee7d6b07afe60a076feffe3b66",
+      "actual_sha256": "83c0adb0f1141142a25c5f7937a09272fef2baee7d6b07afe60a076feffe3b66",
+      "size_expected": 3216489680,
+      "size_actual": 3216489680,
+      "match": true
+    },
+    {
+      "file": "model-00002-of-00007.safetensors",
+      "expected_sha256": "6c86c3917cd228d5699cb1435d9216e2baf281582ba4282a98638163605be7ec",
+      "actual_sha256": "6c86c3917cd228d5699cb1435d9216e2baf281582ba4282a98638163605be7ec",
+      "size_expected": 3190151576,
+      "size_actual": 3190151576,
+      "match": true
+    },
+    {
+      "file": "model-00003-of-00007.safetensors",
+      "expected_sha256": "bfb9613b3f6ba3d0c5b3efa74f92cc14ec5c9266b341a79bf6b45247a5857770",
+      "actual_sha256": "bfb9613b3f6ba3d0c5b3efa74f92cc14ec5c9266b341a79bf6b45247a5857770",
+      "size_expected": 3219130488,
+      "size_actual": 3219130488,
+      "match": true
+    },
+    {
+      "file": "model-00004-of-00007.safetensors",
+      "expected_sha256": "8e9fbd476aa3055c3c0a886298f9beb93c5275c748c533835746f6648f6dae55",
+      "actual_sha256": "8e9fbd476aa3055c3c0a886298f9beb93c5275c748c533835746f6648f6dae55",
+      "size_expected": 3216860120,
+      "size_actual": 3216860120,
+      "match": true
+    },
+    {
+      "file": "model-00005-of-00007.safetensors",
+      "expected_sha256": "f0cd639621eb26410d96b8c073344ae008f646572a9c4713326ff43d406cf276",
+      "actual_sha256": "f0cd639621eb26410d96b8c073344ae008f646572a9c4713326ff43d406cf276",
+      "size_expected": 770164464,
+      "size_actual": 770164464,
+      "match": true
+    },
+    {
+      "file": "model-00006-of-00007.safetensors",
+      "expected_sha256": "55a14ee79d3e5a65a8731d89426f4df477e8bdc7daa7976d41254d8afb9432f0",
+      "actual_sha256": "55a14ee79d3e5a65a8731d89426f4df477e8bdc7daa7976d41254d8afb9432f0",
+      "size_expected": 2542807272,
+      "size_actual": 2542807272,
+      "match": true
+    },
+    {
+      "file": "model-00007-of-00007.safetensors",
+      "expected_sha256": "6866cf8adcccc4cc6a00e74bc025f1a774fb52103b70f2674d0288272951a733",
+      "actual_sha256": "6866cf8adcccc4cc6a00e74bc025f1a774fb52103b70f2674d0288272951a733",
+      "size_expected": 2542796896,
+      "size_actual": 2542796896,
+      "match": true
+    },
+    {
+      "file": "model_extra_tensors.safetensors",
+      "expected_sha256": "94102b67c6b84e65dbb9bae37c00bd88ac1a43ff577ce65fd8842d231c7e89de",
+      "actual_sha256": "94102b67c6b84e65dbb9bae37c00bd88ac1a43ff577ce65fd8842d231c7e89de",
+      "size_expected": 298305576,
+      "size_actual": 298305576,
+      "match": true
+    }
+  ],
+  "host": {
+    "gpu": [
+      "0, NVIDIA GeForce RTX 3090, GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6, 920 MiB, 23255 MiB, 29 %, 49",
+      "1, NVIDIA GeForce RTX 3090, GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049, 110 MiB, 24068 MiB, 22 %, 33"
+    ],
+    "memory_available_bytes": 117482979328,
+    "swap_free_bytes": 282001408,
+    "memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2655242100\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2650770943\n",
+    "docker_containers": [],
+    "inference_or_eval_processes": [],
+    "relevant_port_listeners": []
+  },
+  "resolved_compose": {
+    "service": "vllm-qwen38-27b-dual-fast",
+    "image": "vllm/vllm-openai:v0.27.1",
+    "image_digest": "sha256:0a51ea5b4ae2dc5d81890e5173f54203d2a3ae0cfffe51b8fd2afd4391bfd967",
+    "ports": [
+      {
+        "mode": "ingress",
+        "host_ip": "127.0.0.1",
+        "target": 8000,
+        "published": "18474",
+        "protocol": "tcp"
+      }
+    ],
+    "restart": "no",
+    "max_model_len": "32768",
+    "model_bind": "local model directory; offline env; no pull/build",
+    "command_excerpt": [
+      "--served-model-name",
+      "qwen3.8-27b",
+      "--tensor-parallel-size",
+      "2",
+      "--max-model-len",
+      "32768"
+    ],
+    "evaluation_container_name": "q173-terra-q172",
+    "additional_name_override": "artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/receipts/terra-q172-container-name.override.yml",
+    "additional_name_override_sha256": "65c1b5a25852a170e5e87557c5e198287d212dbd8a087f7536ae57c59763a9eb"
+  },
+  "decision": "PASS",
+  "name_conflict_handling": {
+    "attempted_container_name": "vllm-qwen38-27b-dual-fast",
+    "existing_container_id": "78d139cb20739afbd6ebc6e162304867e8d24ba5983063ac42be1d0f30b93366",
+    "existing_container_status": "exited since 2026-10-14; exited code 137; no ports published",
+    "action": "preserved untouched; added only a unique container name override for the evaluation clone"
+  }
+}

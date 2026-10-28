@@ -1,0 +1,31 @@
+{
+  "task": "Q173 A16 TERRA-MTP-off postflight",
+  "timestamp_utc": "2026-10-28T19:58:06.164015+00:00",
+  "preflight": "receipts/terra-a16-preflight-20261028T194147Z.json",
+  "server_container": "q173-terra-a16",
+  "benchmark_process_exit_code": 0,
+  "requests_completed": 7,
+  "contexts_measured": [
+    8192,
+    32768,
+    65536,
+    131072,
+    261888
+  ],
+  "context_512k": "not run per user instruction A10",
+  "container_removed": true,
+  "target_ports_listening": [],
+  "inference_or_benchmark_processes_remaining": [],
+  "meminfo_after_cleanup": {
+    "MemAvailable": 117284776,
+    "SwapFree": 3329708
+  },
+  "memory_pressure_after_cleanup": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2655249857\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2650778677",
+  "gpu_after_cleanup": [
+    "0, 859 MiB, 24576 MiB, 27 %",
+    "1, 108 MiB, 24576 MiB, 17 %"
+  ],
+  "desktop_preserved": true,
+  "cleanup": "Only the q173-terra-a16 evaluation container/network removed; user-owned compose, overrides, model files, stale service container, GUI and product profiles preserved.",
+  "result": "PASS cleanup; no OOM/crash. TERRA-MTP-off measurements complete, with noted exact-output deviation."
+}

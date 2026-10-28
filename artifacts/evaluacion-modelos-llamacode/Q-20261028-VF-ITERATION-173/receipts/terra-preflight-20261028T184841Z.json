@@ -1,0 +1,66 @@
+{
+  "task": "Q173 TERRA context/Q172 preflight",
+  "captured_utc": "2026-10-28T18:48:41Z",
+  "inference_server_scan": {
+    "matching_host_processes": [],
+    "docker_containers": [],
+    "port_18473_listening": false,
+    "port_18474_listening": false,
+    "production_port_8113_listening": false,
+    "result": "No inference server or container was active before this profile."
+  },
+  "host_resources": {
+    "memory_available_kib": 114859840,
+    "swap_free_kib": 264636,
+    "memory_pressure": {
+      "some_avg10": 0.0,
+      "full_avg10": 0.0
+    },
+    "gpu0": {
+      "model": "NVIDIA GeForce RTX 3090",
+      "utilization_percent": 32,
+      "memory_used_mib": 913,
+      "temperature_c": 43,
+      "note": "Graphical desktop remains active."
+    },
+    "gpu1": {
+      "model": "NVIDIA GeForce RTX 3090",
+      "utilization_percent": 23,
+      "memory_used_mib": 110,
+      "temperature_c": 28
+    },
+    "topology": "GPU0-GPU1=PHB, both cards on same CPU/NUMA node; no NVLink reported.",
+    "disk_free": {
+      "disco_local_nvme": "201 GiB",
+      "hdd_extra": "65 GiB"
+    }
+  },
+  "resolved_isolated_compose": {
+    "project_name": "q173-terra-context",
+    "container_name": "q173-terra-context",
+    "image": "vllm/vllm-openai:v0.27.1",
+    "image_digest": "sha256:0a51ea5b4ae2dc5d81890e5173f54203d2a3ae0cfffe51b8fd2afd4391bfd967",
+    "host_bind": "127.0.0.1:18474 -> container 8000",
+    "restart_policy": "no",
+    "model_mount": "/media/cristian/Disco local/Models/llamacpp/club-3090 -> /root/.cache/huggingface",
+    "container_model": "/root/.cache/huggingface/qwen3.8-27b-autoround-int4",
+    "max_model_len": 262144,
+    "max_num_seqs": 1,
+    "tensor_parallel_size": 2,
+    "W4A8": 1,
+    "MTP_depth": 4,
+    "kv_cache": "fp8_e4m3",
+    "NCCL_P2P_DISABLE": "1",
+    "gpu_visibility": "all GPUs; this clone runs TP=2 across both RTX 3090",
+    "offline_mode": true,
+    "environment_sampling": "ENABLE_THINKING=true; temp .6; top-p .95; top-k 20; min-p 0; presence 0",
+    "GPU0_quarantine_overlay": "LD_PRELOAD rmtrace.so; 64-KiB fallback enabled; SHA-256 e547197d1b283e5c8b684d35e1b348bb91bbba3a327183a14b0d4a6083c36a50",
+    "compose_config_exit_code": 0
+  },
+  "model_integrity": {
+    "manifest": "/media/cristian/Disco local/Models/llamacpp/club-3090/qwen3.8-27b-autoround-int4/.setup-verified.tsv",
+    "manifest_sha256": "b9b842e49ccc3f8b3a1459ce218d87884604a36725a46cb64b4741641ed7d231",
+    "sha256_check": "8/8 model weight files matched the SHA-256 manifest; all entries OK."
+  },
+  "decision": "Preflight passes. Start only the preregistered evaluation container; preserve the GUI and all other processes."
+}

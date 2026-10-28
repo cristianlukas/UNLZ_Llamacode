@@ -1,0 +1,44 @@
+{
+  "task": "Q173 TERRA Q172 seed42 corrected preflight",
+  "captured_utc": "2026-10-28T19:08:25Z",
+  "preregistration": "receipts/prereg-amendment-13-terra-context-and-q172.json",
+  "prior_integrity_preflight": "receipts/terra-q172-preflight-20261028T1903Z.json",
+  "corrected_compose": {
+    "container_name": "q173-terra-q172",
+    "image": "vllm/vllm-openai:v0.27.1",
+    "image_digest": "sha256:0a51ea5b4ae2dc5d81890e5173f54203d2a3ae0cfffe51b8fd2afd4391bfd967",
+    "ports": [
+      {
+        "mode": "ingress",
+        "host_ip": "127.0.0.1",
+        "target": 8000,
+        "published": "18474",
+        "protocol": "tcp"
+      }
+    ],
+    "args": {
+      "--served-model-name": "qwen3.8-27b",
+      "--max-model-len": "32768",
+      "--max-num-seqs": "1",
+      "--max-num-batched-tokens": "8192",
+      "--tensor-parallel-size": "2"
+    },
+    "name_override_sha256": "65c1b5a25852a170e5e87557c5e198287d212dbd8a087f7536ae57c59763a9eb",
+    "offline": true,
+    "pull_or_build": false
+  },
+  "host": {
+    "mem_available_bytes": 117547102208,
+    "swap_free_bytes": 284315648,
+    "memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2655242223\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2650771066\n",
+    "gpu": [
+      "0, NVIDIA GeForce RTX 3090, GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6, 918 MiB, 23257 MiB, 21 %, 49",
+      "1, NVIDIA GeForce RTX 3090, GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049, 110 MiB, 24068 MiB, 34 %, 32"
+    ],
+    "active_containers": [],
+    "active_eval_processes": [],
+    "relevant_listeners": []
+  },
+  "earlier_non_scored_startup_attempt": "Stopped before any Q172 request after startup logs revealed inherited max-num-seqs=8; corrected to preregistered 1. The unique evaluation container name avoids a stale exited container; that container is preserved.",
+  "decision": "PASS"
+}

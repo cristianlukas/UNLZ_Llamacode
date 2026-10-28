@@ -1,0 +1,88 @@
+{
+  "task": "Q173 TERRA MTP-off Q172 diagnostic preflight",
+  "captured_utc": "2026-10-28T19:16:08Z",
+  "preregistration": "receipts/prereg-amendment-14-terra-q172-spec-off.json",
+  "weights": [
+    {
+      "file": "model-00001-of-00007.safetensors",
+      "sha256_ok": true,
+      "size_ok": true
+    },
+    {
+      "file": "model-00002-of-00007.safetensors",
+      "sha256_ok": true,
+      "size_ok": true
+    },
+    {
+      "file": "model-00003-of-00007.safetensors",
+      "sha256_ok": true,
+      "size_ok": true
+    },
+    {
+      "file": "model-00004-of-00007.safetensors",
+      "sha256_ok": true,
+      "size_ok": true
+    },
+    {
+      "file": "model-00005-of-00007.safetensors",
+      "sha256_ok": true,
+      "size_ok": true
+    },
+    {
+      "file": "model-00006-of-00007.safetensors",
+      "sha256_ok": true,
+      "size_ok": true
+    },
+    {
+      "file": "model-00007-of-00007.safetensors",
+      "sha256_ok": true,
+      "size_ok": true
+    },
+    {
+      "file": "model_extra_tensors.safetensors",
+      "sha256_ok": true,
+      "size_ok": true
+    }
+  ],
+  "host": {
+    "mem_available_bytes": 117409484800,
+    "swap_free_bytes": 286703616,
+    "memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2655242742\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2650771584\n",
+    "gpu": [
+      "0, 00000000:01:00.0, NVIDIA GeForce RTX 3090, 918 MiB, 23257 MiB, 24 %, 46",
+      "1, 00000000:03:00.0, NVIDIA GeForce RTX 3090, 110 MiB, 24068 MiB, 33 %, 29"
+    ],
+    "active_containers": [],
+    "inference_processes": [],
+    "listeners": [],
+    "recent_prior_event": "one Xid43 at 19:12:21Z on GPU0 during prior vLLM MTP4 sample-token CUDA assert; no new Xid after teardown, both GPUs remain visible"
+  },
+  "compose": {
+    "container_name": "q173-terra-q172",
+    "port": [
+      {
+        "mode": "ingress",
+        "host_ip": "127.0.0.1",
+        "target": 8000,
+        "published": "18474",
+        "protocol": "tcp"
+      }
+    ],
+    "args": {
+      "--served-model-name": "qwen3.8-27b",
+      "--max-model-len": "32768",
+      "--max-num-seqs": "1",
+      "--tensor-parallel-size": "2"
+    },
+    "SPEC_N": "0",
+    "TEMP": "0.6",
+    "speculative_config_present_in_resolved_command": false,
+    "model_context": "32768",
+    "max_num_seqs": "1",
+    "tensor_parallel_size": "2",
+    "image_digest": "sha256:0a51ea5b4ae2dc5d81890e5173f54203d2a3ae0cfffe51b8fd2afd4391bfd967",
+    "offline_no_pull_or_build": true,
+    "override_sha256": "65c1b5a25852a170e5e87557c5e198287d212dbd8a087f7536ae57c59763a9eb"
+  },
+  "decision": "PASS"
+}

@@ -1,0 +1,10 @@
+{
+  "amendment": "Q173-A10-omit-512K-all-profiles",
+  "registered_utc": "2026-10-28T17:41:13Z",
+  "authorization": "User instruction: discard 512K because it is too slow",
+  "scope": "All new Q173 context-ladder runs across all seven profiles",
+  "change": "Do not start any new 524288-token prompt benchmark. Keep other preregistered supported context targets. DeepSeek 1M remains omitted under A08; other profiles may still test 1M only when their exact runtime/model declares and reaches that native context.",
+  "evidence": "The DSX 512K request ran for 37m27s without a content token and was canceled by the user. That attempt has no valid TTFT or TPS.",
+  "historical_data": "Do not delete or relabel historical 512K measurements. Strata Q14 524288 remains archived as an earlier, distinct measurement; no fresh Strata 512K run will be made.",
+  "reporting": "Mark 512K as omitted by user direction for profiles without a fresh run; retain the DSX row as cancelled after timeout/no first token. Never populate a TPS value from this decision."
+}

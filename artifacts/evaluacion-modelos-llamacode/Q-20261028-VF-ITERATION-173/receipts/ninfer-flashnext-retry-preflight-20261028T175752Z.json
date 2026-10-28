@@ -1,0 +1,39 @@
+{
+  "task": "Q173 Flash-Next NInfer Linux exploratory retry after tokenizer correction",
+  "captured_utc": "2026-10-28T17:57:52Z",
+  "gate": "pass; no inference server active and no model loaded",
+  "previous_unit": {
+    "name": "q173-ninfer-flashnext.service",
+    "state": "inactive/dead",
+    "result": "success",
+    "port_18473": "free"
+  },
+  "inference_process_scan": "No NInfer, llama-server, vLLM, Ollama or SGLang process; no listener at port 18473.",
+  "host": {
+    "mem_total_bytes": 132615852032,
+    "mem_available_bytes": 117538304000,
+    "swap_total_bytes": 8589930496,
+    "swap_used_bytes": 8561238016,
+    "swap_free_bytes": 28692480,
+    "memory_psi_some_avg10_percent": 0.0,
+    "memory_psi_full_avg10_percent": 0.0,
+    "free_bytes": {
+      "repo_volume": 142629023744,
+      "disco_local": 215383875584,
+      "hdd_extra": 69500141568
+    }
+  },
+  "gpus": [
+    {"index": 0, "model": "RTX 3090", "used_mib": 1171, "compute_process": "ArtCraft desktop; preserved"},
+    {"index": 1, "model": "RTX 3090", "used_mib": 110, "compute_process": "none; selected for NInfer"}
+  ],
+  "inputs": {
+    "NInfer model artifact and ngram cache": "same pinned Q171 size/inode/mtime; prior SHA-256 values remain in A09 and Q171 validation receipt",
+    "NInfer runtime SHA-256": "59e5f3e21246ac9f4bd871943e1e1348fbcb7ad6b3d2d32d046b5d4595bb3bac",
+    "benchmark tokenizer": "/home/cristian/.cache/huggingface/hub/models--Qwen--Qwen3.6-27B/snapshots/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9",
+    "tokenizer JSON SHA-256": "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42",
+    "tokenizer_config JSON SHA-256": "5186f0defcd7f232382c7f0aebcd2252d073bb921ab240e407b7ae8745d2b29b",
+    "cached_corpus_tokens": 144480
+  },
+  "policy": "Use transient system-manager unit as cristian with LimitMEMLOCK=infinity; single GPU1; preserve GUI and all unrelated processes; stop own service only on registered guard."
+}

@@ -1,0 +1,3 @@
+services:
+  vllm-qwen38-27b-dual-fast:
+    container_name: q173-terra-q172

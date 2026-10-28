@@ -1,0 +1,36 @@
+{
+  "task": "Q173 A17c PrismML completion timings postflight",
+  "timestamp_utc": "2026-10-28T20:22:07+00:00",
+  "lock_token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+  "contexts_completed": [
+    8192
+  ],
+  "context_512k": "not run per user instruction",
+  "failure": "RuntimeError: Preflight bloqueado antes de 32k: server externo o puerto ocupado",
+  "resource_state": {
+    "timestamp_utc": "2026-10-28T20:22:07+00:00",
+    "MemAvailable_kib": 117084492,
+    "SwapFree_kib": 3334992,
+    "memory_psi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2655249857\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2650778677",
+    "gpu": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_used_mib": 839,
+        "utilization_percent": 56
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_used_mib": 108,
+        "utilization_percent": 58
+      }
+    ],
+    "inference_processes": [],
+    "inference_containers": []
+  },
+  "port_free": false,
+  "no_inference_processes_remaining": true,
+  "gui_preserved": true,
+  "decision": "CHECK"
+}

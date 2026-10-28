@@ -1,0 +1,14 @@
+{
+  "amendment": "Q173-A15-TERRA-context-sampler-correction",
+  "registered_utc": "2026-10-28T19:15:35Z",
+  "reason": "Review found the first TERRA context ladder omitted explicit temperature=0.6 in llama-benchy requests; server generation_config defaulted temperature=1.0. Preserve attempt01 as exploratory and do not mix it into preregistered decode-rate results.",
+  "change": "Repeat the same MTP4 context ladder with explicit client extra-body temperature=0.6; top_p=0.95, top_k=20, min_p=0.0, repetition_penalty=1.0, presence_penalty=0.0, seed=42 remain fixed. Use the local tokenizer, exact output128, no prefix cache, no per-context warmup, serial requests, 8K n=3 and 32K/64K/128K/261888 n=1. 512K/1M remain excluded.",
+  "interpretation": "The first ladder remains archived for audit; its prefill timings are descriptive, but its decode rates do not satisfy the registered sampler. The corrected attempt is the canonical speed ladder; report all rates client-observed, and high-context n=1 as exploratory.",
+  "stop_conditions": [
+    "CUDA assert or runtime crash",
+    "OOM/OOM-kill",
+    "MemAvailable <32 GiB sustained",
+    "context rejection/truncation",
+    "weight/runtime/tokenizer mismatch"
+  ]
+}

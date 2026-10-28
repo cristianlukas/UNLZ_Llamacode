@@ -1,0 +1,19 @@
+{
+  "amendment": "Q173-A17a-Bonsai-PrismML-explicit-llama-bench-flags",
+  "registered_utc": "2026-10-28 20:10:01 UTC",
+  "amends": "receipts/prereg-amendment-17-bonsai-prism-context-ladder.json",
+  "reason": "The pinned llama-bench build rejects --pg with the provided pp,tg pair before model load.",
+  "single_change": "Use its documented explicit --n-prompt P --n-gen 128 flags; retain all devices, split, batches, repetitions, no-warmup, context order, outputs, and stop gates.",
+  "corrected_argv_pattern": "llama-bench --model <verified GGUF> --device CUDA0,CUDA1 --split-mode layer --tensor-split 1,1 --n-gpu-layers 99 --flash-attn on --batch-size 2048 --ubatch-size 512 --threads 16 --n-prompt <prompt_tokens> --n-gen 128 --repetitions <3 for 8192, otherwise 1> --no-warmup --output json",
+  "attempt01": {
+    "result": "invalid CLI argument before model load; no model load, no benchmark samples, no compute clients",
+    "receipt": "receipts/prism-a17-cli-parse-attempt.json"
+  },
+  "not_changed": [
+    "model/runtime pins",
+    "dual-GPU layout",
+    "context ladder through 261888",
+    "no 512K",
+    "no quality rerun"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "attempt": "Q173-NInfer-Q172-startup-01-user-manager",
+  "utc": "2026-10-28T18:12:05Z",
+  "outcome": "failed_before_inference",
+  "unit": "q173-ninfer-flashnext-q172.service",
+  "runtime_sha256": "59e5f3e21246ac9f4bd871943e1e1348fbcb7ad6b3d2d32d046b5d4595bb3bac",
+  "error": "User service inherited RLIMIT_MEMLOCK 15.4 GiB; model requires pinning 33.3 GiB; NInfer exited during startup in 495 ms.",
+  "scored_requests": 0,
+  "postflight": {
+    "unit_active": false,
+    "port_18473_open": false,
+    "gpu1_model_memory_mib": 110,
+    "other_compute_process": "ArtCraft GUI on GPU0 only",
+    "mem_available_kib": 114660096,
+    "oom_or_crash": false
+  },
+  "correction": "Use a transient system unit with User=cristian and LimitMEMLOCK=infinity; no model/runtime/config change other than the already preregistered 131072 context and 16384 output cap."
+}

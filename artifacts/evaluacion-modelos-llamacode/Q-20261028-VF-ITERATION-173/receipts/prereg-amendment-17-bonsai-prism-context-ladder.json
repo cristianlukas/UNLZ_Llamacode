@@ -1,0 +1,67 @@
+{
+  "amendment": "Q173-A17-Bonsai-PrismML-native-context-throughput",
+  "registered_utc": "2026-10-28 20:07:31 UTC",
+  "question": "What are native llama.cpp prompt-processing and generation rates for the exact Ternary Bonsai 2 27B PQ2_0 GGUF at 8K through the largest prompt that fits its native 262144-token window?",
+  "decision_context": "PrismML Bonsai already has Q172 75/100 with critical safety failures TC-74/84/92; do not repeat quality or consider adoption. This test only characterizes speed/context.",
+  "model": {
+    "name": "Ternary Bonsai 2 27B PQ2_0 GGUF",
+    "revision": "b072e1d3b35a0a630cece372c2127528e0994386",
+    "path": "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/Bonsai2-Prism-PQ2_0/models/Ternary-Bonsai-2-27B-PQ2_0.gguf",
+    "bytes": 7206168928,
+    "sha256": "3907dc1658db1f78a9826bf8d5bcb8dc65db0d466388937af57f2294fae62ec1",
+    "native_context_tokens": 262144,
+    "metadata_read": "GGUF v3 metadata parsed locally: qwen35.context_length=262144"
+  },
+  "runtime": {
+    "name": "PrismML llama.cpp",
+    "release": "prism-b10826-c9c34bc",
+    "commit": "c9c34bc9c4042c13a31598ebf43461cd0ad8f00d",
+    "binary": "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/Bonsai2-Prism-PQ2_0/runtime/llama-prism-b10826-c9c34bc/llama-bench",
+    "archive_sha256": "e4345c9fed6452701fd511f9837726f39a45bc95fe103b8cae55360562eadf7f"
+  },
+  "profile": {
+    "hardware": "2x RTX 3090, 128 GiB RAM",
+    "devices": "CUDA0,CUDA1",
+    "split_mode": "layer",
+    "tensor_split": "1,1",
+    "gpu_layers": "all (-ngl 99)",
+    "flash_attention": "on",
+    "parallel_slots": 1,
+    "batch_size": 2048,
+    "ubatch_size": 512,
+    "threads": 16,
+    "kv_cache": "f16 default",
+    "output_tokens": 128,
+    "contexts": {
+      "8192": 3,
+      "32768": 1,
+      "65536": 1,
+      "131072": 1,
+      "261888": 1
+    },
+    "omit_524288": "User instruction: discard 512K as too slow; no request will be issued."
+  },
+  "method": {
+    "harness": "pinned PrismML llama-bench; native runtime measurement",
+    "runs": "one context per process, serial; 8K x3, all larger levels x1; no warmup; JSON stdout saved verbatim",
+    "argv_pattern": "llama-bench --model <verified GGUF> --device CUDA0,CUDA1 --split-mode layer --tensor-split 1,1 --n-gpu-layers 99 --flash-attn on --batch-size 2048 --ubatch-size 512 --threads 16 --pg <prompt_tokens>,128 --repetitions <3 for 8192, otherwise 1> --no-warmup --output json",
+    "measurements": "Use native llama-bench pp and tg results. Do not merge with client-observed llama-benchy/vLLM/NInfer cohorts. No quality/quality-speed composite from this run."
+  },
+  "stop_conditions": [
+    "model or runtime hash mismatch",
+    "native context metadata does not match the registered maximum",
+    "prompt plus 128 generation exceeds 262144",
+    "OOM, runtime crash, or output indicates only one GPU was selected",
+    "any existing external inference server or non-GUI compute process"
+  ],
+  "quality_reference": "Q172 Bonsai PrismML seed42: 75/100, 42/56; critical failures TC-74, TC-84, TC-92; no further quality seed.",
+  "outputs": [
+    "runs/prism-a17/8k.json",
+    "runs/prism-a17/32k.json",
+    "runs/prism-a17/64k.json",
+    "runs/prism-a17/128k.json",
+    "runs/prism-a17/256k.json",
+    "receipts/prism-a17-preflight.json",
+    "receipts/prism-a17-postflight.json"
+  ]
+}

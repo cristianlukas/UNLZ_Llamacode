@@ -1,0 +1,67 @@
+{
+  "amendment": "Q173-A09-FlashNext-NInfer-Linux-preview",
+  "registered_utc": "2026-10-28T17:38:44Z",
+  "authorization": "User request to measure context throughput and run Q172 only for profiles missing that quality screen",
+  "profile": {
+    "model": "Qwen3.8 Flash-Next ISTA/RCO IQ2_XS converted qwen4exp NInfer v3 artifact",
+    "model_revision": "ed59f92082b1e93c0e96d60a8b11aab089b52f09",
+    "model_shards_sha256": [
+      "92cee27ae5bbadcd732416a0f7a7f0acc092399dbbe8f5a5efa707c2ec0a49d7",
+      "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113"
+    ],
+    "ninfer_artifact_sha256": [
+      "6c3dd0a8a730566b3cda9b6c563a8a345d1986f930be409a0dca8bd2a9887584",
+      "a089cb07a49c18b8eb942e89c4e3676f0b03adf0fdbd141dc8f5d4cf5418de1f"
+    ],
+    "ngram_cache_sha256": "0478dd2f62a4d02b5cf3ab64d69229bd88dd95366498ad7c72828f95b99135b6",
+    "artifact_context_max": 262144,
+    "runtime": "NInfer Linux preview v0.16.1; source revision 8d509aefc3b27738627ac9c6eeec01e0ada089e4; executable SHA-256 59e5f3e21246ac9f4bd871943e1e1348fbcb7ad6b3d2d32d046b5d4595bb3bac"
+  },
+  "support_caveat": "The project's model card labels Flash-Next a Windows preview. Q171 demonstrated an exploratory Linux single-GPU route on this exact artifact. The local README says distinct physical GPUs have not been requalified with the current context engine. Use the previously exercised GPU1-only configuration; do not label it dual-GPU or promote it as supported.",
+  "speed_protocol": {
+    "method": "llama-benchy 0.4.0 client-observed streaming; same Qwen tokenizer; no prefix reuse; one short unscored warmup per runtime; no warmup per context",
+    "prompt_targets": [8192,32768,65536,131072,261888],
+    "prompt_targets_rationale": "Exact 8K/32K/64K/128K targets; 261888 leaves 256 token positions for template/output overhead inside the artifact's 262144-token native maximum. 512K/1M are unsupported by this exact artifact and will not be attempted.",
+    "repetitions": "three at 8K; one each at 32K, 64K, 128K, and 261888; no automatic retries",
+    "completion_cap": 128,
+    "server": {
+      "bind": "127.0.0.1",
+      "port": 18473,
+      "max_context": 262144,
+      "max_concurrency": 1,
+      "kv_dtype": "int8",
+      "devices": [1],
+      "prefix_reuse": false,
+      "ngram_drafting": 0,
+      "persistent_expert_state": false
+    },
+    "sampling": {
+      "temperature": 0.6,
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repetition_penalty": 1.0,
+      "presence_penalty": 0.0
+    },
+    "report": "Actual prompt token count, TTFT, client-observed prefill/decode, total latency, RSS/MemAvailable, per-GPU VRAM/temp, runtime and artifact hashes. Do not pool with Q171's 8K fixture or Strata-native rates."
+  },
+  "quality_protocol": {
+    "test": "Q172 Tool-Eval Hard Mode 2.8.0, TC-70..TC-97, seed 42",
+    "context": 131072,
+    "repetitions": 1,
+    "purpose": "absolute quality/safety screen only; no speed ranking against dual-GPU ASTRA/SOL",
+    "critical_failure": "stop this profile's quality testing after the seed42 screen; no extra seed"
+  },
+  "resource_guards": {
+    "serial": true,
+    "fresh_inference_server_scan_before_start": true,
+    "preserve_gui": true,
+    "no_changes_to_productive_profiles_or_model_files": true,
+    "stop_on": ["OOM/OOM-kill", "process crash", "MemAvailable below 32 GiB sustained", "model/runtime/hash mismatch", "context truncation or unsupported-context error"],
+    "PSI": "record only; not an independent stop condition"
+  },
+  "prior_evidence": {
+    "Q171": "Same model artifacts/cache and Linux v0.16.1 preview, one GPU; 25/25 synthetic checks, medians 218.751 prefill and 31.986 decode tok/s on short prompts. This is an earlier separate cohort, not the Q173 speed ladder.",
+    "Q172_quality": "No exact NInfer Flash-Next Q172 score found; Q173 seed42 remains pending."
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "task": "Q173 A18 unscored Gemma tool readiness smoke",
+  "timestamp_utc": "2026-10-28T20:59:31+00:00",
+  "readiness": {
+    "health": {
+      "status": "ok"
+    },
+    "model_ids": [
+      "gemma-4-12b-it-qat-q4_0-q173-a18"
+    ],
+    "ready_utc": "2026-10-28T20:59:30+00:00",
+    "gpu_allocation_gate": {
+      "passed": true,
+      "baseline_memory_mib": {
+        "0": 980,
+        "1": 108
+      },
+      "current_gpu": [
+        {
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 6280,
+          "utilization_percent": 17
+        },
+        {
+          "index": 1,
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 5920,
+          "utilization_percent": 7
+        }
+      ]
+    }
+  },
+  "http_status": 200,
+  "model": "gemma-4-12b-it-qat-q4_0-q173-a18",
+  "choice_count": 1,
+  "assistant_message_present": true,
+  "tool_call_count": 1,
+  "finish_reason": "tool_calls",
+  "unscored": true,
+  "passed": true
+}

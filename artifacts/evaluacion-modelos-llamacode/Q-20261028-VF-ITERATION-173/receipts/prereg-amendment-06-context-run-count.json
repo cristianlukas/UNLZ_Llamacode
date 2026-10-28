@@ -1,0 +1,8 @@
+{
+  "receipt_type": "preregistration_amendment",
+  "amendment": 6,
+  "created_at_utc": "2026-10-28T15:36:30Z",
+  "reason": "The first DSX 8K point required a long model start and three repetitions, confirming that three measurements at every size across seven large profiles would take many hours.",
+  "change": "Use three measurements at 8K per profile for a stability baseline; use one exploratory measured request per higher context level, with llama-benchy warmup. Repeat a high-context point if it errors or deviates by more than 15% from the surrounding trend. Never use n=1 alone to claim superiority.",
+  "applies_before_remaining_measurements": true
+}

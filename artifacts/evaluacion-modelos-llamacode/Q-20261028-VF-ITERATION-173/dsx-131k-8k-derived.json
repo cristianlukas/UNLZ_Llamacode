@@ -1,0 +1,59 @@
+{
+  "receipt_type": "q173_llama_benchy_event_derived_metrics",
+  "source_events": "artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/dsx-131k-8k-events.jsonl",
+  "source_events_sha256": "f52f2d153012ab64a24cc00e674cffc6a73e9012a01650efacdfc409328dc430",
+  "derivation": {
+    "prefill_tok_s": "server prompt_tokens / request_first_token.ttft_s",
+    "decode_tok_s": "request_end.total_tokens / request_end.decode_seconds",
+    "interpretation": "client-observed streaming latency, not engine-internal kernel timing"
+  },
+  "requests": [
+    {
+      "request_id": 0,
+      "run_index": 1,
+      "requested_pp": 8192,
+      "actual_prompt_tokens": 8222,
+      "actual_completion_tokens": 128,
+      "ttft_seconds_client_observed": 15.7704174760147,
+      "decode_seconds_client_observed": 3.9499185499735177,
+      "prefill_tok_s_client_observed": 521.3558875346754,
+      "decode_tok_s_client_observed": 32.405731505744136
+    },
+    {
+      "request_id": 1,
+      "run_index": 2,
+      "requested_pp": 8192,
+      "actual_prompt_tokens": 8222,
+      "actual_completion_tokens": 128,
+      "ttft_seconds_client_observed": 15.852410392020829,
+      "decode_seconds_client_observed": 4.097683178028092,
+      "prefill_tok_s_client_observed": 518.6592951276654,
+      "decode_tok_s_client_observed": 31.237163645627874
+    },
+    {
+      "request_id": 2,
+      "run_index": 3,
+      "requested_pp": 8192,
+      "actual_prompt_tokens": 8222,
+      "actual_completion_tokens": 128,
+      "ttft_seconds_client_observed": 27.588719879975542,
+      "decode_seconds_client_observed": 4.719609750027303,
+      "prefill_tok_s_client_observed": 298.0203516426181,
+      "decode_tok_s_client_observed": 27.120886424827717
+    }
+  ],
+  "summary": {
+    "prefill_tok_s_client_observed": {
+      "n": 3,
+      "median": 518.6592951276654,
+      "min": 298.0203516426181,
+      "max": 521.3558875346754
+    },
+    "decode_tok_s_client_observed": {
+      "n": 3,
+      "median": 31.237163645627874,
+      "min": 27.120886424827717,
+      "max": 32.405731505744136
+    }
+  }
+}

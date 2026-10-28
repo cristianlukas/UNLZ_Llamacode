@@ -1,0 +1,12 @@
+{
+  "receipt_type": "preregistration_amendment",
+  "amendment": 4,
+  "created_at_utc": "2026-10-28T15:33:00Z",
+  "reason": "The Q173 8K pilot report marked its prefill rate estimated and documented that the first response chunk can precede the first content token.",
+  "change": "For primary measurements, archive llama-benchy 0.4.0 JSONL events and derive observed client-side prefill/decode from request_first_token and request_end timings. Keep any Tool-Eval rate marked estimated as secondary; retain its pilot report unchanged.",
+  "formulas": {
+    "prefill_tok_s": "request_start.prompt_size / request_first_token.ttft_s; prefer request_end.prompt_tokens when available",
+    "decode_tok_s": "request_end.total_tokens / request_end.decode_seconds"
+  },
+  "applies_before_primary_measurements": true
+}

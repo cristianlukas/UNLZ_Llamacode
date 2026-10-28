@@ -1,0 +1,17 @@
+{
+  "amendment": "Q173-A14-TERRA-Q172-speculative-off-diagnostic",
+  "registered_utc": "2026-10-28T19:15:35Z",
+  "reason": "The preregistered TERRA MTP4 Q172 readiness prompt failed before the harness with a CUDA scatter/gather index assertion in vLLM sample_tokens. Do not repeat the MTP4 quality screen.",
+  "question": "Does the same AutoRound checkpoint complete the Q172 quality/safety screen when the speculative MTP path is disabled?",
+  "single_change": "Set SPEC_N=0 in the existing compose runtime, disabling only speculative MTP. Keep weights, vLLM image/patches, TP=2, W4A8, BF16, fp8 KV, context=32768, max-num-seqs=1, tool-eval suite, seeds, sampler and test protocol unchanged.",
+  "method": "Same seed42 Tool-Eval Hard Mode v2.8.0 TC-70..TC-97, one trial, serial, max turns8, timeout120, no harness warmup, fail-on-safety. First run one unscored readiness smoke with the same sampling and medium reasoning effort. If the smoke errors, do not start the harness. If the screen finds a critical safety failure, finish only the current screen; no extra seeds.",
+  "interpretation": "This is a diagnostic TERRA-MTP-off variant and cannot be reported as a quality result for the preregistered MTP4 profile or compared to its MTP4 throughput ladder. Report the MTP4 Q172 attempt as blocked/no score.",
+  "stop_conditions": [
+    "CUDA assert or other runtime error",
+    "OOM/OOM-kill",
+    "MemAvailable <32 GiB sustained",
+    "context rejection/truncation",
+    "weight/runtime hash mismatch"
+  ],
+  "compose_support": "The local compose launcher documents SPEC_N=0 as the supported way to disable the drafter; no compose source file will be edited."
+}

@@ -1,0 +1,46 @@
+{
+  "task": "Q173 TERRA A15 MTP4 corrected-sampler smoke failure",
+  "registered_utc": "2026-10-28T19:37:32Z",
+  "preregistration": "receipts/prereg-amendment-15-terra-context-sampler-correction.json",
+  "preflight": "receipts/terra-a15-preflight-20261028T193249Z.json",
+  "model": "Qwen3.8-27B AutoRound INT4/W4A8",
+  "runtime": {
+    "engine": "vLLM 0.27.1",
+    "speculative_mtp": 4,
+    "max_model_len": 262144,
+    "tensor_parallel": 2
+  },
+  "request": {
+    "prompt": "Reply with exactly READY.",
+    "temperature": 0.6,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0,
+    "repetition_penalty": 1.0,
+    "presence_penalty": 0.0,
+    "seed": 42,
+    "max_tokens": 64,
+    "reasoning_effort": "medium"
+  },
+  "response": {
+    "http_status": 500,
+    "elapsed_seconds": 1.182347,
+    "error": "EngineCore encountered an issue"
+  },
+  "root_cause": "Repeated `ScatterGatherKernel.cu:203` assertion: `idx_dim >= 0 && idx_dim < index_size` failed while scheduling 4 speculative tokens; Worker_TP0 raised CUDA device-side assert, EngineCore fatal error. This matches the prior MTP4 readiness failure. No A15 ladder request was sent.",
+  "oom_killed": false,
+  "host_mem_available_after_cleanup_kib": 114754496,
+  "memory_psi_avg10": 0.0,
+  "gpu_memory_used_mib_after_cleanup": [
+    922,
+    110
+  ],
+  "cleanup": {
+    "container_removed": true,
+    "endpoint_18474_closed": true,
+    "eval_processes_absent": true,
+    "gui_preserved": true
+  },
+  "server_log": "logs/terra/a15-mtp4-server.log",
+  "decision": "A15 stop condition applied. MTP4 context ladder blocked before measurement; no prefill/decode score."
+}

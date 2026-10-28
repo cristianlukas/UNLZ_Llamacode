@@ -1,0 +1,42 @@
+{
+  "task": "Q173 A18 Gemma Q172 Hard Mode seed42 preflight",
+  "timestamp_utc": "2026-10-28T20:59:27+00:00",
+  "lock_token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+  "preregistration": "receipts/prereg-amendment-18-gemma4-q4-context-and-q172.json",
+  "hashes": {
+    "model_sha256": "93567e57a8fe10b23569b9d9ec38cd005deedf71e29477c421a4b83f418a538b",
+    "server_sha256": "b760910e1fa0af38d0a9a4589fc011520d408f208b1cc872f13e44ee068d4d1d",
+    "template_sha256": "ae53464bf3be25802b3a5b37def7fd89667067d7577049b3b2d74c4d8de4c6d4",
+    "tool_eval_source_commit": "0a1ba68c7709f429298bc92417a9e003f61de4e3"
+  },
+  "model_path": "/media/cristian/Disco local/Models/llamacpp/gemma-4-12b-it-qat-q4_0.gguf",
+  "runtime_path": "/media/cristian/Disco local/LlamaCode-cache/opti-llama.cpp/build/bin/llama-server",
+  "template_path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/runtime/gemma4-q4/gemma4-tools-fixed.jinja",
+  "tool_eval_path": "/home/cristian/.cache/codex-tool-eval-bench-v2.8.0/.venv/bin/tool-eval-bench",
+  "context_tokens": 131072,
+  "resource_state": {
+    "timestamp_utc": "2026-10-28T20:59:24+00:00",
+    "MemAvailable_kib": 112974320,
+    "SwapFree_kib": 3370108,
+    "memory_psi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2655527571\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2651056305",
+    "gpu": [
+      {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_used_mib": 980,
+        "utilization_percent": 24
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_used_mib": 108,
+        "utilization_percent": 29
+      }
+    ],
+    "inference_processes": [],
+    "inference_containers": []
+  },
+  "port_free": true,
+  "decision": "PASS",
+  "gui_preserved": true
+}

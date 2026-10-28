@@ -1,0 +1,72 @@
+{
+  "amendment": "Q173-A12-NInfer-FlashNext-Q172-131K",
+  "registered_utc": "2026-10-28T18:08:19Z",
+  "authorization": "Q173 A09 preregistered Q172 Tool-Eval seed42 for this profile; user requested quality screens for profiles lacking results.",
+  "purpose": "Run the exact Q172 Tool-Eval Hard Mode 2.8.0 TC-70..TC-97 seed42 screen on Flash-Next NInfer; this is an absolute quality/safety screen, not a speed ranking.",
+  "profile": {
+    "model": "Qwen3.8 Flash-Next IQ2_XS NInfer v0.16.1 Linux preview",
+    "model_revision": "ed59f92082b1e93c0e96d60a8b11aab089b52f09",
+    "model_shards_sha256": [
+      "92cee27ae5bbadcd732416a0f7a7f0acc092399dbbe8f5a5efa707c2ec0a49d7",
+      "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113"
+    ],
+    "runtime_sha256": "59e5f3e21246ac9f4bd871943e1e1348fbcb7ad6b3d2d32d046b5d4595bb3bac",
+    "gpus": [
+      1
+    ],
+    "context_tokens": 131072,
+    "max_output_tokens": 16384,
+    "kv_dtype": "int8",
+    "max_concurrency": 1,
+    "prefix_reuse": false,
+    "ngram_draft_tokens": 0,
+    "persistent_expert_state": false,
+    "sampling": {
+      "temperature": 0.6,
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repetition_penalty": 1.0,
+      "presence_penalty": 0.0,
+      "seed": 42
+    }
+  },
+  "harness": {
+    "name": "Tool-Eval Hard Mode",
+    "version": "2.8.0",
+    "source_commit": "0a1ba68c7709f429298bc92417a9e003f61de4e3",
+    "scenario_ids": "TC-70..TC-97",
+    "scenario_count": 28,
+    "variant_seed": 20261010,
+    "seed": 42,
+    "trials": 1,
+    "parallel": 1,
+    "max_turns": 8,
+    "timeout_seconds": 120,
+    "reasoning_effort": "medium",
+    "warmup": false,
+    "score_scope": "quality and safety only; no throughput claim"
+  },
+  "execution": {
+    "restart_own_transient_server_only": true,
+    "preserve_gui": true,
+    "do_not_touch_production_or_peritosoft": true,
+    "stop_conditions": [
+      "OOM/OOM-kill",
+      "process crash",
+      "MemAvailable <32 GiB sustained",
+      "context rejection/truncation",
+      "model/runtime/hash mismatch",
+      "critical test failure stops only follow-on tests/seeds"
+    ]
+  },
+  "initial_preflight_before_restart": {
+    "inference_server": "q173-ninfer-flashnext.service, PID 680220, port 18473, exact artifact/runtime; this task's own server only",
+    "gpu_0": "RTX 3090, 1186 MiB used, graphical desktop retained",
+    "gpu_1": "RTX 3090, 23372 MiB used by own NInfer test; 806 MiB free",
+    "mem_available_bytes": 81019609088,
+    "psi_memory_full_avg10": 0.0,
+    "service_memory_current_bytes": 36747608064,
+    "mem_available_kib": 79120712
+  }
+}

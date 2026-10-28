@@ -1,0 +1,10 @@
+{
+  "receipt_type": "preregistration_amendment",
+  "amendment": 3,
+  "created_at_utc": "2026-10-28T15:28:00Z",
+  "reason": "The pinned DSX package embeds its tokenizer in the GGUF, but llama-benchy builds exact-length prompts from tokenizer.json; the tokenizer file is not present as a separate local artifact.",
+  "change": "Fetch only tokenizer.json from the official DeepSeek-V4.1-Flash-1017 Hugging Face repository at the pinned model revision 1bae0e1; do not download any model weight files. Verify and record the file SHA-256 before use.",
+  "source": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017",
+  "revision": "1bae0e1",
+  "applies_before_first_measurement": true
+}

@@ -1,0 +1,12 @@
+{
+  "task": "Q173 TERRA MTP-off readiness smoke",
+  "preregistration": "receipts/prereg-amendment-14-terra-q172-spec-off.json",
+  "container": "q173-terra-q172",
+  "endpoint": "http://127.0.0.1:18474/v1/chat/completions",
+  "model": "qwen3.8-27b",
+  "server_config": {"vllm": "0.27.1", "tensor_parallel": 2, "max_model_len": 32768, "max_num_seqs": 1, "speculative_mtp": false},
+  "request": {"prompt": "Reply with exactly READY.", "temperature": 0.6, "top_p": 0.95, "top_k": 20, "min_p": 0.0, "repetition_penalty": 1.0, "presence_penalty": 0.0, "seed": 42, "max_tokens": 64, "reasoning_effort": "medium"},
+  "response": {"http_status": 200, "elapsed_seconds": 1.025442, "prompt_tokens": 15, "completion_tokens": 38, "finish_reason": "stop", "text": "READY"},
+  "score": null,
+  "decision": "Readiness smoke passed; authorized to proceed with the preregistered Q172 TERRA-MTP-off screen."
+}

@@ -1,0 +1,87 @@
+{
+  "amendment": "Q173-A13-TERRA-context-ladder-and-Q172",
+  "registered_utc": "2026-10-28T18:44:54Z",
+  "authorization": "User requested prefill/decode context measurements for all listed profiles and Q172 quality screens for profiles without an exact result. User explicitly removed 512K from new tests.",
+  "profile": {
+    "alias": "TERRA",
+    "profile_id": "1e2053f3-95b6-429d-ac00-57d90dc70c58",
+    "backend_profile_id": "92abdb6f-4104-4c7e-8753-14fa7bcdbef3",
+    "model": "Qwen3.8-27B AutoRound INT4/W4A8, built-in MTP4",
+    "model_path": "/media/cristian/Disco local/Models/llamacpp/club-3090/qwen3.8-27b-autoround-int4",
+    "model_manifest": "/media/cristian/Disco local/Models/llamacpp/club-3090/qwen3.8-27b-autoround-int4/.setup-verified.tsv",
+    "model_manifest_sha256": "b9b842e49ccc3f8b3a1459ce218d87884604a36725a46cb64b4741641ed7d231",
+    "model_manifest_verification": "All seven model safetensors shards and model_extra_tensors.safetensors matched the manifest SHA-256 and file sizes; every entry returned OK.",
+    "shards_sha256": [
+      "83c0adb0f1141142a25c5f7937a09272fef2baee7d6b07afe60a076feffe3b66",
+      "6c86c3917cd228d5699cb1435d9216e2baf281582ba4282a98638163605be7ec",
+      "bfb9613b3f6ba3d0c5b3efa74f92cc14ec5c9266b341a79bf6b45247a5857770",
+      "8e9fbd476aa3055c3c0a886298f9beb93c5275c748c533835746f6648f6dae55",
+      "f0cd639621eb26410d96b8c073344ae008f646572a9c4713326ff43d406cf276",
+      "55a14ee79d3e5a65a8731d89426f4df477e8bdc7daa7976d41254d8afb9432f0",
+      "6866cf8adcccc4cc6a00e74bc025f1a774fb52103b70f2674d0288272951a733",
+      "94102b67c6b84e65dbb9bae37c00bd88ac1a43ff577ce65fd8842d231c7e89de"
+    ],
+    "upstream_source_revision": "main in local setup manifest; content identity is the verified SHA-256 set above, not a pinned upstream commit.",
+    "compose": "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.8-27b/vllm/compose/dual/autoround-int4/mtp.yml",
+    "compose_sha256": "2df4e44e1e1b268da80690a0812ac1b60768d60b643096ce8473110f88b7b76a",
+    "compose_repo_commit": "18ce8af4215e9ecad05cf5f7255c840582193397",
+    "compose_worktree_changes_preserved": [
+      "The existing user change sets restart default to no and served-model-name to qwen3.8-27b local; neither was reverted.",
+      "The existing untracked GPU0 VRAM quarantine override is used only for this isolated evaluation clone and is preserved."
+    ],
+    "image": "vllm/vllm-openai:v0.27.1",
+    "image_digest": "sha256:0a51ea5b4ae2dc5d81890e5173f54203d2a3ae0cfffe51b8fd2afd4391bfd967",
+    "gpu_quarantine_override": "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.8-27b/vllm/compose/dual/autoround-int4/vram-quarantine.override.yml",
+    "gpu_quarantine_override_sha256": "e547197d1b283e5c8b684d35e1b348bb91bbba3a327183a14b0d4a6083c36a50",
+    "rmtrace_sha256": "380549caa28d13abf4169b02462556315c7629ed1d5f05c51907e3f6699a9f27",
+    "chat_template_sha256": "cf3dd9a3575f2989fa3b2d7ea0668a16ee0cd21ecfa18aff348fbf6d852e469c"
+  },
+  "host": {
+    "gpu_topology": "2×RTX 3090 24 GiB",
+    "ram": "128 GiB",
+    "storage": "model on Disco local NVMe; no model download or image pull planned",
+    "application": "LlamaCode GUI stays open; test service is a distinct local-only Docker container and port 18474",
+    "stop_conditions": ["OOM/OOM-kill", "process crash", "MemAvailable below 32 GiB sustained", "context rejection/truncation", "model/runtime/hash mismatch"],
+    "serial": true,
+    "production_and_peritosoft_unchanged": true
+  },
+  "throughput_protocol": {
+    "runtime_profile": "vLLM TP=2, W4A8=1, MTP4, BF16, fp8_e4m3 KV, Mamba cache align, prefix caching on, long-prefill threshold 4096, max-num-batched-tokens 8192; max-num-seqs=1 for serialized single-request measurement.",
+    "evaluation_overrides": "Separate container name, loopback bind 127.0.0.1, host port 18474, max model len 262144, max sequences 1, temp 0.6, top-p 0.95, top-k 20, min-p 0, repeat penalty 1, presence penalty 0, reasoning effort medium. Keep dual-GPU TP=2 and MTP4; no production profile edited.",
+    "contexts": [8192, 32768, 65536, 131072, 261888],
+    "omit_512k": true,
+    "omit_1m": "Profile maximum is 262144; unsupported and outside the requested experiment.",
+    "samples": "3 runs at 8K, one at each larger point; 128 exact completion tokens; one unscored startup warmup per runtime, no per-context warmup; one request at a time.",
+    "tokenizer": "The model's local AutoRound tokenizer directory; verify target count against vLLM prompt_tokens, including template tokens.",
+    "metrics": "Record actual prompt tokens, client-observed TTFT, prefill=prompt_tokens/TTFT, decode=completion_tokens/decode_seconds, end-to-end latency, vLLM stats, RAM, PSI, per-GPU VRAM/util/temp and errors. Report single-run levels as exploratory; do not mix with TERRA Q34 E2E rates or vLLM-native values without method labels."
+  },
+  "quality_protocol": {
+    "suite": "Tool-Eval Hard Mode 2.8.0, TC-70..TC-97, source commit 0a1ba68c7709f429298bc92417a9e003f61de4e3",
+    "seed": 42,
+    "variant_seed": 20261010,
+    "trials": 1,
+    "parallel": 1,
+    "max_turns": 8,
+    "timeout_seconds": 120,
+    "context": 32768,
+    "max_output_tokens": 16384,
+    "temperature": 0.6,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0,
+    "repeat_penalty": 1,
+    "presence_penalty": 0,
+    "reasoning_effort": "medium",
+    "warmup": "One unscored startup health prompt; no harness warmup, to match the Q173 NInfer screen method.",
+    "gate": "An observed critical safety failure ends follow-on seeds for this profile; finish only the already-started screen. No model adoption from one seed."
+  },
+  "execution_order": [
+    "Run a fresh no-inference-server/GPU/RAM preflight; verify Compose resolves to the pinned local image and the exact local model mount.",
+    "Start only the isolated speed-test clone on loopback:18474 with max-model-len 262144 and max-num-seqs 1.",
+    "Run the preregistered 8K×3, 32K, 64K, 128K and 261888 single measurements serially.",
+    "Stop and verify removal of the speed-test container, port and model VRAM before starting quality phase.",
+    "Start the same profile clone at max-model-len 32768, max-num-seqs 1, and run one Q172 seed42 screen.",
+    "Stop and verify cleanup; record local receipts and synchronize Google Sheet Resultados/Accionables."
+  ],
+  "no_download_or_image_pull": true
+}

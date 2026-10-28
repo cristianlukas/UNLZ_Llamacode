@@ -1,0 +1,36 @@
+{
+  "created_utc": "2026-10-28T16:35:32Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_url": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "tabs": {
+    "Resultados": 1972251122,
+    "Accionables": 1393124532
+  },
+  "writes": [
+    {
+      "range": "Resultados!A373:AF377",
+      "content": "Five DeepSeek DSX T16 client-observed speed/context rows for requested prompts 8K, 32K, 64K, 128K, 256K. Each contains context window, actual server-counted prompt tokens, TTFT, derived prefill/decode, quality seed42 as a separate cohort, model/runtime hashes, paths, hardware, arguments, safety gate, limitations, cleanup, and local receipts.",
+      "format": "Copied row 372 format only; auto-resized rows 373-377; retained wrap/top/Arial10.",
+      "verification": "Readback exact: 5 rows × 32 columns, expected prompt contexts and TPS values, zero validations/chips/formulas, wrap preserved. Results sheet rowCount became 377."
+    },
+    {
+      "range": "Accionables!A48:N48",
+      "content": "Updated Q172 DeepSeek actionable to reflect Q172 quality safety gate plus partial Q173 speed results and outstanding 512K/1M/other profiles; refreshed evidence and reconciliation timestamps.",
+      "verification": "Readback matched. No formulas, validations, or chips. Existing row format retained."
+    },
+    {
+      "range": "Accionables!A51:N51",
+      "content": "Added the active Q173 campaign actionable covering the seven profiles, the three missing Q172 scores, the Bonsai NInfer blocker, DSX context progress, and safety gates.",
+      "format": "Copied row 50 format only; auto-resized row 51; retained wrap/top/Arial10.",
+      "verification": "Readback exact across 14 columns; zero validations/chips/formulas; row values and wrap verified."
+    },
+    {
+      "range": "Accionables!F48",
+      "content": "Removed stale instruction that speed must not be measured; replaced with Q173 evaluation state and the still-failed TC-92 adoption gate.",
+      "verification": "Read back together with row 48; exact value matches."
+    }
+  ],
+  "important_separation": "The Q172 DSX 89/100 quality score and Q173 throughput samples are not a paired quality/speed measurement. The TC-92 critical safety failure remains visible and blocks adoption.",
+  "no_change": ["Inventario de modelos", "production profiles", "PeritoSoft model files", "GUI"],
+  "pending": ["DeepSeek DSX 512K and 1M speed points", "remaining Q173 profile measurements", "Q172 seed42 for NInfer Flash-Next, TERRA, and Gemma when runtime preflights pass"]
+}

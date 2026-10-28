@@ -1,0 +1,20 @@
+{
+  "task": "Q173 A17b Bonsai PrismML dual-GPU context ladder preflight",
+  "timestamp_utc": "2026-10-28 20:13:04 UTC",
+  "lock_token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+  "preregistration": "receipts/prereg-amendment-17b-prism-dual-device-cli.json",
+  "model_sha256": "3907dc1658db1f78a9826bf8d5bcb8dc65db0d466388937af57f2294fae62ec1",
+  "runtime_llama_bench_sha256": "280d0ce5b6404f4dedc9d6357dbdb5706fcbbda9c99b7acb9e85bba84b81c092",
+  "runner_sha256": "f039ff38a5040b5b79e8376448ab81b69b99608216570505e98decddd18059a7",
+  "inference_servers": [],
+  "containers": [],
+  "compute_clients": [],
+  "gpu_status": [
+    "0, 840 MiB/24576 MiB, utilization 9% (desktop graphics remains)",
+    "1, 108 MiB/24576 MiB, utilization 17%"
+  ],
+  "MemAvailable_kib": 117363904,
+  "SwapFree_kib": 3332972,
+  "memory_psi_some_avg10": 0.0,
+  "result": "PASS: lock held by this task; no inference/compute process; both 3090s available; no download/build; both-GPU allocation gate enabled. Proceed with A17b serial ladder."
+}

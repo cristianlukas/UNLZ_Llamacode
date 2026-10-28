@@ -1,0 +1,14 @@
+{
+  "receipt_type": "preregistration_amendment",
+  "amendment": 2,
+  "created_at_utc": "2026-10-28T15:26:00Z",
+  "reason": "The pinned Tool-Eval v2.8.0 install exposes the bench command but llama-benchy is an optional external dependency and is absent on this host.",
+  "change": "Use llama-benchy 0.4.0 from PyPI in a dedicated cache virtual environment, verify its wheel SHA-256 against PyPI metadata, and record installed dependency versions. Do not modify the Tool-Eval venv or repository runtime dependencies.",
+  "source": "https://pypi.org/project/llama-benchy/0.4.0/",
+  "wheel": {
+    "filename": "llama_benchy-0.4.0-py3-none-any.whl",
+    "sha256": "9d380f97bd5ef39b03ed2f319f1ee3bdf5c983463f6ce1479f432e90db079410"
+  },
+  "environment": "/home/cristian/.cache/q173-llama-benchy-0.4.0",
+  "applies_before_first_measurement": true
+}

@@ -1,0 +1,21 @@
+{
+  "amendment": "Q173-A07-context-warmup-cost",
+  "created_utc": "2026-10-28T16:20:00Z",
+  "status": "registered-before-applying-to-future-context-points",
+  "observation": {
+    "profile": "DeepSeek V4.1 Flash-1017 DSX T16",
+    "context_tokens": 262144,
+    "per_context_warmup_minutes_observed": 13.5,
+    "basis": "The next measured request started 13m31s after the prior request_end; llama-benchy emits no per-context warmup events. The host stayed healthy and the server remained active.",
+    "reason": "A separate full-length warmup at every context doubles expensive prefill work and makes the seven-profile campaign disproportionately long without adding an independent measured replicate."
+  },
+  "protocol_change": {
+    "keep_completed_points": "Retain all completed DSX points through 262144 tokens, including their per-context warmup; label that method explicitly.",
+    "future_points": "For DSX points at 524288 and 1048418 tokens, and all remaining model profiles, issue one unscored short warmup after server readiness, then measure each requested context once with per-context warmup disabled.",
+    "measurement": "Continue deriving client-observed prefill from actual prompt_tokens / request_first_token.ttft_s and decode from completion_tokens / request_end.decode_seconds; report wall-clock context preparation separately.",
+    "cache": "Keep prefix/prompt cache disabled. No concurrent model servers or GPU tests.",
+    "comparability": "Mark the warmup method per point. Rates remain exploratory n=1; points with different warmup treatment are not used for a direct superiority claim."
+  },
+  "decision_gate": "If a context size errors, exceeds the preregistered memory guard, or cannot return within the client's one-hour request timeout, record the exact blocker and continue at the next supported point without claiming a rate.",
+  "authorized_by": "This is an efficiency amendment to the user's requested IA evaluation campaign; it does not change model files, production profiles, PeritoSoft, or quality scoring."
+}

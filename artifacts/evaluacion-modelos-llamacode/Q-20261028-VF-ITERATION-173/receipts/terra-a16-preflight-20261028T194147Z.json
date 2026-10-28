@@ -1,0 +1,133 @@
+{
+  "task": "Q173 A16 TERRA-MTP-off context-ladder preflight",
+  "timestamp_utc": "2026-10-28T19:41:47.080727+00:00",
+  "lock_token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+  "preregistration": "receipts/prereg-amendment-16-terra-mtp-off-context-ladder.json",
+  "model": "Qwen3.8-27B AutoRound INT4/W4A8",
+  "model_directory": "/media/cristian/Disco local/Models/llamacpp/club-3090/qwen3.8-27b-autoround-int4",
+  "manifest_sha256": "b9b842e49ccc3f8b3a1459ce218d87884604a36725a46cb64b4741641ed7d231",
+  "all_8_weight_files_match_manifest": true,
+  "weight_files": [
+    {
+      "file": "model-00001-of-00007.safetensors",
+      "size": 3216489680,
+      "manifest_sha256": "83c0adb0f1141142a25c5f7937a09272fef2baee7d6b07afe60a076feffe3b66",
+      "mtime_ns": 1788881128857866500
+    },
+    {
+      "file": "model-00002-of-00007.safetensors",
+      "size": 3190151576,
+      "manifest_sha256": "6c86c3917cd228d5699cb1435d9216e2baf281582ba4282a98638163605be7ec",
+      "mtime_ns": 1788881340158783500
+    },
+    {
+      "file": "model-00003-of-00007.safetensors",
+      "size": 3219130488,
+      "manifest_sha256": "bfb9613b3f6ba3d0c5b3efa74f92cc14ec5c9266b341a79bf6b45247a5857770",
+      "mtime_ns": 1788881302620976500
+    },
+    {
+      "file": "model-00004-of-00007.safetensors",
+      "size": 3216860120,
+      "manifest_sha256": "8e9fbd476aa3055c3c0a886298f9beb93c5275c748c533835746f6648f6dae55",
+      "mtime_ns": 1788881490928006400
+    },
+    {
+      "file": "model-00005-of-00007.safetensors",
+      "size": 770164464,
+      "manifest_sha256": "f0cd639621eb26410d96b8c073344ae008f646572a9c4713326ff43d406cf276",
+      "mtime_ns": 1788881079736116900
+    },
+    {
+      "file": "model-00006-of-00007.safetensors",
+      "size": 2542807272,
+      "manifest_sha256": "55a14ee79d3e5a65a8731d89426f4df477e8bdc7daa7976d41254d8afb9432f0",
+      "mtime_ns": 1788881161509699700
+    },
+    {
+      "file": "model-00007-of-00007.safetensors",
+      "size": 2542796896,
+      "manifest_sha256": "6866cf8adcccc4cc6a00e74bc025f1a774fb52103b70f2674d0288272951a733",
+      "mtime_ns": 1788881205540474500
+    },
+    {
+      "file": "model_extra_tensors.safetensors",
+      "size": 298305576,
+      "manifest_sha256": "94102b67c6b84e65dbb9bae37c00bd88ac1a43ff577ce65fd8842d231c7e89de",
+      "mtime_ns": 1788880934810851900
+    }
+  ],
+  "compose_and_readonly_input_hashes": {
+    "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.8-27b/vllm/compose/dual/autoround-int4/mtp.yml": {
+      "sha256": "2df4e44e1e1b268da80690a0812ac1b60768d60b643096ce8473110f88b7b76a",
+      "expected_sha256": "2df4e44e1e1b268da80690a0812ac1b60768d60b643096ce8473110f88b7b76a",
+      "match": true
+    },
+    "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.8-27b/vllm/compose/dual/autoround-int4/vram-quarantine.override.yml": {
+      "sha256": "e547197d1b283e5c8b684d35e1b348bb91bbba3a327183a14b0d4a6083c36a50",
+      "expected_sha256": "e547197d1b283e5c8b684d35e1b348bb91bbba3a327183a14b0d4a6083c36a50",
+      "match": true
+    },
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/gpu0-vram-diagnostico/linux/frag64k/rmtrace.so": {
+      "sha256": "380549caa28d13abf4169b02462556315c7629ed1d5f05c51907e3f6699a9f27",
+      "expected_sha256": "380549caa28d13abf4169b02462556315c7629ed1d5f05c51907e3f6699a9f27",
+      "match": true
+    },
+    "/home/cristian/.cache/llamacode/club-3090-src/models/qwen3.8-27b/vllm/patches/qwen38-reasoning-effort-template/chat_template.jinja": {
+      "sha256": "cf3dd9a3575f2989fa3b2d7ea0668a16ee0cd21ecfa18aff348fbf6d852e469c",
+      "expected_sha256": "cf3dd9a3575f2989fa3b2d7ea0668a16ee0cd21ecfa18aff348fbf6d852e469c",
+      "match": true
+    }
+  },
+  "resolved_compose_sha256": "79f0f46fb7afafaedf9fc02f0faa923eb6baad3eeb5b791ae098c724825e4bff",
+  "runtime_image_id": "sha256:0a51ea5b4ae2dc5d81890e5173f54203d2a3ae0cfffe51b8fd2afd4391bfd967",
+  "runtime_image_matches_registered_digest": true,
+  "profile": {
+    "variant": "TERRA-MTP-off",
+    "SPEC_N": 0,
+    "TP": 2,
+    "GPU": "2x RTX 3090",
+    "max_model_len": 262144,
+    "max_num_seqs": 1,
+    "sampler": {
+      "temperature": 0.6,
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "presence_penalty": 0.0
+    },
+    "contexts_tokens": [
+      8192,
+      32768,
+      65536,
+      131072,
+      261888
+    ],
+    "runs_by_context": {
+      "8192": 3,
+      "32768": 1,
+      "65536": 1,
+      "131072": 1,
+      "261888": 1
+    },
+    "output_tokens_exact": 128,
+    "512k": "omitted by user instruction A10"
+  },
+  "resource_preflight": {
+    "running_docker_containers": [],
+    "nvidia_compute_processes": [],
+    "inference_or_benchmark_processes": [],
+    "target_ports_listening": [],
+    "memory_kib": {
+      "MemAvailable": 114768348,
+      "SwapFree": 286824
+    },
+    "memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2655245385\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2650774226",
+    "gpu_status": [
+      "0, NVIDIA GeForce RTX 3090, 916 MiB, 24576 MiB, 54 %, 44",
+      "1, NVIDIA GeForce RTX 3090, 110 MiB, 24576 MiB, 22 %, 29"
+    ],
+    "graphics_processes_preserved": true
+  },
+  "result": "PASS; isolated eval service may start. No build or image pull; smoke must pass before ladder."
+}

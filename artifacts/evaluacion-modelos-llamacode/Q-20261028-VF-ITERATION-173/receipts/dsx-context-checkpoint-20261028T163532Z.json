@@ -1,0 +1,52 @@
+{
+  "experiment": "Q173 DeepSeek DSX T16 context sweep checkpoint",
+  "created_utc": "2026-10-28T16:35:32Z",
+  "model_sha256": "31b3852636237c63b3e42b2403f172e372d36c4ad486e65f5c3920307bcfb3fa",
+  "server_context": 1048576,
+  "runtime": "dsx-server lxe/dsx@98f1259732f8c3a5f445b25e080daf70fc300967",
+  "arena_gb": 70,
+  "gpus": ["RTX 3090", "RTX 3090"],
+  "completed_measurements": [
+    {"requested_prompt_tokens":8192,"actual_prompt_tokens":8222,"ttft_s":21.505747899005655,"prefill_tok_s":382.32,"decode_s":4.229002041975036,"decode_tok_s":30.27,"warmup":"per-context"},
+    {"requested_prompt_tokens":32768,"actual_prompt_tokens":32798,"ttft_s":54.61632162402384,"prefill_tok_s":600.52,"decode_s":4.392546291986946,"decode_tok_s":29.14,"warmup":"per-context"},
+    {"requested_prompt_tokens":65536,"actual_prompt_tokens":65566,"ttft_s":112.22933458001353,"prefill_tok_s":584.21,"decode_s":4.521811897982843,"decode_tok_s":28.31,"warmup":"per-context"},
+    {"requested_prompt_tokens":131072,"actual_prompt_tokens":131102,"ttft_s":285.36141801800113,"prefill_tok_s":459.42,"decode_s":4.760755645984318,"decode_tok_s":26.89,"warmup":"per-context"},
+    {"requested_prompt_tokens":262144,"actual_prompt_tokens":262174,"ttft_s":806.9391079560155,"prefill_tok_s":324.90,"decode_s":5.0504191479994915,"decode_tok_s":25.34,"warmup":"per-context"}
+  ],
+  "unmeasured": [524288, 1048418],
+  "partial_sweep": {
+    "event_file": "dsx-1m-context-sweep-events.jsonl",
+    "raw_file": "dsx-1m-context-sweep-raw.json",
+    "status": "interrupted after the completed 262144-token measurement, before a measurement at 524288 tokens",
+    "reason": "A per-context warmup took about 13.5 minutes at 262144 tokens. The next warmup was canceled as a pre-registered efficiency amendment was adopted. No incomplete run is represented as a result.",
+    "benchy_exit_code": 1,
+    "memory_guard_triggered": false,
+    "oom_or_crash": false
+  },
+  "high_context_no_warmup_attempt": {
+    "event_file": "dsx-high-context-no-warmup-events.jsonl",
+    "status": "no measured point",
+    "reason": "The server health endpoint reported pending=2 while the client was still in its initial latency check and had emitted no request_start. Both benchmark client and evaluation server were stopped to clear the queue before a clean retry.",
+    "pre_stop_api_http": 200,
+    "pending_requests": 2
+  },
+  "postflight": {
+    "evaluation_server_processes": 0,
+    "llama_benchy_processes": 0,
+    "port_18177_open": false,
+    "mem_available_kib": 115062036,
+    "swap_free_kib": 32452,
+    "memory_psi_full_avg10_percent": 0.0,
+    "gpu0_used_mib": 1189,
+    "gpu1_used_mib": 110,
+    "gui_preserved": true,
+    "production_profiles_untouched": true,
+    "PeritoSoft_files_untouched": true
+  },
+  "measurement_limitations": [
+    "Each completed context point is one run; descriptive only.",
+    "Prefill is client-observed prompt token count divided by time-to-first-token, not internal engine telemetry.",
+    "The 142813-token Sherlock corpus is repeated above its length; this is a synthetic throughput fixture, not long-context retrieval quality.",
+    "The 8K point at window 1048576 is separate from the earlier 8K pilot at window 131072 (three-run median)."
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "amendment": "Q173-A17d-PrismML-listening-port-check-and-resume",
+  "registered_utc": "2026-10-28T20:23:00Z",
+  "amends": [
+    "receipts/prereg-amendment-17c-prism-server-timings.json"
+  ],
+  "reason": "The 8K measurements completed and the owned server exited with code 0, but Python bind() treated recently closed TIME_WAIT sockets as an occupied port. ss showed no listening socket, no inference process/container remained, and no 32K request was sent.",
+  "change": "Port readiness now checks listening sockets with ss and falls back to connect_ex; the resumed run uses loopback port 18178. Existing valid 8K samples are retained, the pre-inference 32K false block is preserved under excluded_attempts, and execution resumes at 32K.",
+  "unchanged_experimental_variables": [
+    "model GGUF and SHA-256",
+    "PrismML server binary and SHA-256",
+    "both RTX 3090, CUDA0/CUDA1 layer split 1:1",
+    "per-level server context and prompt fixture method",
+    "sampling, 128 output tokens, cache_prompt=false",
+    "serial context ladder 8K/32K/64K/128K/261888",
+    "no 512K and no repeated Q172 quality screen"
+  ],
+  "outputs": [
+    "runs/prism-a17-completion/derived.json",
+    "receipts/prism-a17-completion-preflight.json",
+    "receipts/prism-a17-completion-postflight.json",
+    "receipts/prism-a17c-attempt01-preflight.json",
+    "receipts/prism-a17c-attempt01-postflight.json"
+  ]
+}

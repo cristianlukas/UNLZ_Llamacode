@@ -1,0 +1,76 @@
+{
+  "task": "Q173 Flash-Next NInfer Linux exploratory context and Q172 screen",
+  "captured_utc": "2026-10-28T17:43:12Z",
+  "gate": "pass; no model server started at capture",
+  "inference_server_scan": {
+    "result": "none",
+    "port_18473": "free",
+    "scanner_note": "The first /proc scan matched its own shell because the search string contained server names; the scanner shell was excluded. No NInfer/llama-server/vLLM/Ollama/SGLang/Strata process or listener was found."
+  },
+  "host": {
+    "mem_total_bytes": 132615852032,
+    "mem_available_bytes": 118069075968,
+    "swap_total_bytes": 8589930496,
+    "swap_used_bytes": 8570306560,
+    "swap_free_bytes": 19623936,
+    "memory_psi_some_avg10_percent": 0.0,
+    "memory_psi_full_avg10_percent": 0.0,
+    "free_bytes": {
+      "repo_volume": 142629122048,
+      "disco_local": 215383875584,
+      "hdd_extra": 69500141568
+    }
+  },
+  "gpus": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "used_mib": 1171,
+      "compute_process": "ArtCraft on desktop GPU; preserved"
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "used_mib": 110,
+      "compute_process": "none; Xorg has a graphics/display context only",
+      "selected_for_ninfer": true
+    }
+  ],
+  "inputs": {
+    "model_shard_1": {
+      "path": "/media/cristian/HDD extra/Modelos-eval/Q-20261027-VF-ITERATION-171/artifact/qwen4exp.ninfer",
+      "bytes": 32000000000,
+      "mtime_epoch": 1793121858,
+      "sha256": "6c3dd0a8a730566b3cda9b6c563a8a345d1986f930be409a0dca8bd2a9887584"
+    },
+    "model_shard_2": {
+      "path": "/media/cristian/HDD extra/Modelos-eval/Q-20261027-VF-ITERATION-171/artifact/qwen4exp.ninfer.part-0001",
+      "bytes": 7225180928,
+      "mtime_epoch": 1793121943,
+      "sha256": "a089cb07a49c18b8eb942e89c4e3676f0b03adf0fdbd141dc8f5d4cf5418de1f"
+    },
+    "ngram_cache": {
+      "path": "/media/cristian/Disco local/Modelos-eval/Q39-NInfer-v0.16.1-FlashNext-IQ2XS/qwen4exp.ninfer.ngram",
+      "bytes": 29127258112,
+      "mtime_epoch": 1792688074,
+      "sha256": "0478dd2f62a4d02b5cf3ab64d69229bd88dd95366498ad7c72828f95b99135b6"
+    },
+    "runtime": {
+      "path": "/media/cristian/Disco local/LlamaCode-cache/Q171-ninfer-build-r1/apps/ninfer-serve",
+      "bytes": 785914304,
+      "mtime_epoch": 1793121423,
+      "sha256_reverified_utc": "2026-10-28T17:38:00Z",
+      "sha256": "59e5f3e21246ac9f4bd871943e1e1348fbcb7ad6b3d2d32d046b5d4595bb3bac"
+    },
+    "tokenizer": "/media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/strata-data/packs/iq2_xs/tokenizer",
+    "sha256_provenance": "Prior Q171 hashes retained; current artifact/cache sizes, inode and mtimes match the pinned Q171 files. Runtime SHA-256 was freshly verified in this activation."
+  },
+  "launcher": {
+    "system_manager_transient": true,
+    "sudo_noninteractive_available": true,
+    "user": "cristian",
+    "limit_memlock": "infinity, transient unit only",
+    "persistent_system_changes": false
+  },
+  "guard_decision": "Pass. MemAvailable is 118.07 GB and memory PSI is 0%; near-full swap is recorded but does not show active pressure. Do not kill desktop/GUI processes."
+}

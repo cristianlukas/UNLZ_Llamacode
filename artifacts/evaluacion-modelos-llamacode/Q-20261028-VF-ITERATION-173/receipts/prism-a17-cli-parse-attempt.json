@@ -1,0 +1,9 @@
+{
+  "task": "Q173 A17 PrismML llama-bench CLI parse attempt",
+  "timestamp_utc": "2026-10-28 20:10:01 UTC",
+  "argv_error": "llama-bench rejected --pg before model load: invalid parameter for argument --pg",
+  "model_loaded": false,
+  "benchmark_samples": 0,
+  "gpu_compute_clients_after_attempt": [],
+  "decision": "Discard attempt; no metrics. CUDA backend was enumerated by binary startup, but no model was loaded and no inference work was dispatched."
+}

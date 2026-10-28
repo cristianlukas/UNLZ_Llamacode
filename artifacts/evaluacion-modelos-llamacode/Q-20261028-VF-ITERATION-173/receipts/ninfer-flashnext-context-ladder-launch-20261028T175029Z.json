@@ -1,0 +1,86 @@
+{
+  "task": "Q173 Flash-Next NInfer Linux exploratory context ladder",
+  "launch_registered_utc": "2026-10-28T17:50:29Z",
+  "preregistration": [
+    "receipts/prereg-amendment-09-flashnext-ninfer-linux-preview.json",
+    "receipts/prereg-amendment-10-omit-512k-all-profiles.json",
+    "receipts/ninfer-flashnext-preflight-20261028T174312Z.json"
+  ],
+  "server": {
+    "unit": "q173-ninfer-flashnext.service",
+    "pid": 651550,
+    "runtime": "NInfer Linux preview v0.16.1",
+    "api": "http://127.0.0.1:18473/v1",
+    "model_id": "q173-flashnext-ninfer",
+    "health": "HTTP 200; context_length 262144",
+    "devices": [1],
+    "max_context": 262144,
+    "max_concurrency": 1,
+    "kv_dtype": "int8",
+    "prefix_reuse": false,
+    "ngram_draft_tokens": 0,
+    "persistent_expert_state": false,
+    "sampling_defaults": {
+      "temperature": 0.6,
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "presence_penalty": 0.0,
+      "seed": 42
+    },
+    "log": "artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/logs/ninfer/server.log"
+  },
+  "startup": {
+    "weights_ready_seconds": 330.2,
+    "weights_loaded": "36.5 GiB",
+    "hdd_read_rate": "113.7 MiB/s",
+    "unscored_runtime_warmup": "one internal request, 53 prompt tokens / 4 generated tokens; 1.3 s; logged by NInfer before listener readiness",
+    "postload_mem_available_bytes": 81387380736,
+    "memory_psi_full_avg10_percent": 0.0,
+    "gpu1_used_mib": 23476,
+    "gpu1_free_mib": 702
+  },
+  "benchmark": {
+    "tool": "llama-benchy 0.4.0",
+    "tokenizer": "/media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/strata-data/packs/iq2_xs/tokenizer",
+    "fixture": "llama-benchy default Sherlock Holmes text, 142813-token corpus repeated as needed; same fixture family as Q173 DSX; throughput only, not retrieval quality",
+    "completion_tokens": 128,
+    "exact_completion_length": true,
+    "concurrency": 1,
+    "prefix_cache": false,
+    "warmup": "already performed by NInfer during runtime startup; benchmark client uses --no-warmup",
+    "sampling_extra_body": "repetition_penalty=1.0,presence_penalty=0.0,seed=42",
+    "prompt_targets": [8192, 32768, 65536, 131072, 261888],
+    "512k": "omitted per A10",
+    "commands": [
+      [
+        "/home/cristian/.cache/q173-llama-benchy-0.4.0/bin/llama-benchy",
+        "--base-url", "http://127.0.0.1:18473/v1", "--model", "q173-flashnext-ninfer",
+        "--tokenizer", "/media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/strata-data/packs/iq2_xs/tokenizer",
+        "--pp", "8192", "--tg", "128", "--exact-tg", "--depth", "0", "--concurrency", "1", "--runs", "3",
+        "--latency-mode", "generation", "--no-cache", "--skip-coherence", "--no-adapt-prompt", "--no-warmup",
+        "--extra-body", "repetition_penalty=1.0,presence_penalty=0.0,seed=42", "--format", "json",
+        "--save-result", "artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/runs/ninfer/8k.json",
+        "--emit-progress", "artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/runs/ninfer/8k-events.jsonl"
+      ],
+      [
+        "/home/cristian/.cache/q173-llama-benchy-0.4.0/bin/llama-benchy",
+        "--base-url", "http://127.0.0.1:18473/v1", "--model", "q173-flashnext-ninfer",
+        "--tokenizer", "/media/cristian/Disco local/Models/FlashNext-IQ2XS-ISTA-Strata-eval-20261012/strata-data/packs/iq2_xs/tokenizer",
+        "--pp", "32768", "65536", "131072", "261888", "--tg", "128", "--exact-tg", "--depth", "0", "--concurrency", "1", "--runs", "1",
+        "--latency-mode", "generation", "--no-cache", "--skip-coherence", "--no-adapt-prompt", "--no-warmup",
+        "--extra-body", "repetition_penalty=1.0,presence_penalty=0.0,seed=42", "--format", "json",
+        "--save-result", "artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/runs/ninfer/contexts.json",
+        "--emit-progress", "artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/runs/ninfer/contexts-events.jsonl"
+      ]
+    ],
+    "rates": "client-observed: actual prompt_tokens / first-token TTFT; exact completion tokens / decode_seconds; retain raw events and report n=3 at 8K, n=1 at larger contexts",
+    "stop_conditions": ["OOM/OOM-kill", "process crash", "MemAvailable <32 GiB sustained", "context rejection/truncation", "model/runtime mismatch"]
+  },
+  "quality": {
+    "status": "pending after context ladder",
+    "suite": "Tool-Eval Hard Mode 2.8.0 TC-70..TC-97 seed 42",
+    "context": 131072,
+    "absolute quality/safety screen only; not a speed comparison"
+  }
+}

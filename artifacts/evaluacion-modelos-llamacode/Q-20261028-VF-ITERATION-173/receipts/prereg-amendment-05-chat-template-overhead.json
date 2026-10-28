@@ -1,0 +1,10 @@
+{
+  "receipt_type": "preregistration_amendment",
+  "amendment": 5,
+  "created_at_utc": "2026-10-28T15:35:30Z",
+  "reason": "The first DSX benchmark shows 8,222 server-counted prompt tokens for llama-benchy target --pp 8192, a 30-token chat-template overhead.",
+  "change": "At each context-window boundary account for actual server-counted prompt tokens, output cap, and the per-profile chat-template overhead observed in a lower-context request. Reduce --pp accordingly; record both requested --pp and actual server usage.prompt_tokens. If an observed template overhead changes, recompute the boundary before sending the edge-size request.",
+  "boundary_formula": "requested_pp <= max_context - generation_cap - observed_template_overhead",
+  "observed_dsx_template_overhead_tokens_at_pp8192": 30,
+  "applies_before_boundary_measurements": true
+}

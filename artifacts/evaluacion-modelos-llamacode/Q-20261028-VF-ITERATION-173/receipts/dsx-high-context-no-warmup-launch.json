@@ -1,0 +1,52 @@
+{
+  "experiment": "Q173-DSX-high-context-no-per-point-warmup",
+  "created_utc": "2026-10-28T16:21:00Z",
+  "amendment": "receipts/prereg-amendment-07-warmup-economy.json",
+  "status": "pre-registered; launch follows",
+  "model": {
+    "path": "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-dsx-T16/models/DeepSeek-V4.1-Flash-1017-dsx-t16.gguf",
+    "sha256": "31b3852636237c63b3e42b2403f172e372d36c4ad486e65f5c3920307bcfb3fa",
+    "runtime": "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-dsx-T16/build/release/dsx-server",
+    "server_context": 1048576,
+    "arena_gb": 70,
+    "gpus": [0, 1],
+    "endpoint": "http://127.0.0.1:18177/v1",
+    "preflight": {
+      "lock": "Q146 resume justified VF-20261019-01 / 2242863e-c78e-4fa9-9649-c1d1541f3919",
+      "other_inference_servers": "none",
+      "api_health": 200,
+      "mem_available_bytes": 43946160128,
+      "psi_memory_full_avg10_percent": 0.05,
+      "gpu0": "RTX 3090, 23091 MiB used, 69 C, 71% util",
+      "gpu1": "RTX 3090, 23002 MiB used, 66 C, 92% util",
+      "gui_preserved": true,
+      "production_profiles_untouched": true
+    }
+  },
+  "measurements": {
+    "contexts": [524288, 1048418],
+    "completion_tokens": 128,
+    "concurrency": 1,
+    "measured_runs_per_context": 1,
+    "per_context_warmup": false,
+    "prior_model_warmup": "The same server completed measured prompt requests at 8K, 32K, 64K, 128K, and 256K; no context/prefix cache is enabled.",
+    "prefix_cache": false,
+    "sampling": {"temperature": 0.6, "top_p": 0.95},
+    "prefill_rate_source": "actual server prompt_tokens / request_first_token.ttft_s",
+    "decode_rate_source": "completion token count / request_end.decode_seconds",
+    "guard": "stop on OOM, crash, or MemAvailable below 32 GiB sustained; inspect PSI, never apply artificial memory caps",
+    "max_client_request_timeout_s": 3600,
+    "corpus_caveat": "llama-benchy Sherlock corpus has 142813 tokens and is repeated to reach targets above that; this measures throughput on a synthetic repeated-context fixture, not retrieval quality."
+  },
+  "command_argv": [
+    "/home/cristian/.cache/q173-llama-benchy-0.4.0/bin/llama-benchy",
+    "--base-url", "http://127.0.0.1:18177/v1",
+    "--model", "q173-dsx-t16",
+    "--tokenizer", "/home/cristian/.cache/q173-tokenizers/deepseek-v41-flash-1017/tokenizer.json",
+    "--pp", "524288", "1048418",
+    "--tg", "128", "--depth", "0", "--concurrency", "1", "--runs", "1",
+    "--latency-mode", "generation", "--no-cache", "--skip-coherence", "--no-adapt-prompt", "--no-warmup", "--format", "json",
+    "--save-result", "artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/dsx-high-context-no-warmup-raw.json",
+    "--emit-progress", "artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-173/dsx-high-context-no-warmup-events.jsonl"
+  ]
+}

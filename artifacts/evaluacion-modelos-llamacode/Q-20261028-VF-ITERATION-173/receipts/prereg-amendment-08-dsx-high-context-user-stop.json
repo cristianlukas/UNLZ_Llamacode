@@ -1,0 +1,23 @@
+{
+  "amendment": "Q173-A08-DSX-high-context-stop",
+  "created_utc": "2026-10-28T17:25:55Z",
+  "authorized_by": "user direction in active conversation",
+  "decision": "Cancel the in-flight DSX T16 512K request; do not attempt DSX T16 1M in this campaign. Continue context measurements for the other requested profiles at their supported sizes and continue Q172 only for profiles still missing that score.",
+  "basis": {
+    "model": "DeepSeek V4.1 Flash-1017 DSX T16, dsx-server, dual RTX 3090, 128 GiB RAM, arena 70 GB",
+    "prompt_target_tokens": 524288,
+    "request_started_utc": "2026-10-28T16:47:49Z",
+    "user_cancelled_utc": "2026-10-28T17:25:16Z",
+    "elapsed_seconds": 2247.48,
+    "observed": "No content-bearing request_first_token event had arrived by cancellation. GPU compute remained active, endpoint health stayed 200/pending=1, MemAvailable stayed about 43 GiB and memory PSI was near zero.",
+    "interpretation": "The user's latency judgment is a practical scope decision; this interrupted request supplies no measured TTFT, prefill TPS, or decode TPS. Omitting 1M for this DSX profile is an explicit inference from the 512K time cost, not a measured 1M result."
+  },
+  "cleanup": {
+    "client_pid": 549310,
+    "server_pid": 541529,
+    "signals": "SIGINT sent only to the Q173 llama-benchy client and its DSX evaluation server after user requested cancellation",
+    "postflight": "Both processes and port 18177 exited; MemAvailable returned to 117.95 GB; GPU memory returned to desktop baseline; ArtCraft GUI remained running; no OOM/crash observed."
+  },
+  "preserved": ["Completed DSX 8K–256K samples", "Q172 DSX quality score 89/100 with TC-92 failure", "All other Q173 profiles and their supported context targets"],
+  "artifacts": ["dsx-high-context-retry-events.jsonl", "receipts/dsx-high-context-clean-retry-launch-20261028T164729Z.json", "receipts/dsx-high-context-retry-preflight-20261028T164301Z.json"]
+}
