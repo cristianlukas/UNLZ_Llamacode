@@ -1,0 +1,27 @@
+{
+  "amendment": "Q179-A01-FlashNext-NInferAll-dual-Q172-A01",
+  "registered_utc": "2026-10-29T01:10:52Z",
+  "status": "superseded_before_inference_by_amendment_02",
+  "parent_preregistration": "receipts/prereg-q179-ninfer-all-dual-q172.json",
+  "runner": {
+    "path": "scripts/run_q179_q172.py",
+    "sha256": "ec16ccb490212f587f9de31d5f5f8355d0c009f79d6865cd6f0aa28e37819da4",
+    "static_syntax": "python3 -m py_compile PASS",
+    "result_gate": "status=completed and total_scenarios=28"
+  },
+  "superseded_reason": "The initial runner used max_context/kv_capacity 131072, while Q178 A05 used 262144. The mismatch was detected during the hash preflight; no model server or benchmark request had started. See amendment 02.",
+  "isolation": {
+    "command_prefix": ["systemd-run", "--user", "--scope", "--slice=background.slice"],
+    "probe": "transient scope probe returned success; no process or GPU workload was launched",
+    "memory_limit": "none",
+    "gui_preserved": true
+  },
+  "tool_eval_cli": {
+    "version": "2.8.0",
+    "run_help_confirmed_required_flags": true
+  },
+  "lock": {
+    "task": "Q146 resume justified VF-20261019-01 tests",
+    "token": "2242863e-c78e-4fa9-9649-c1d1541f3919"
+  }
+}

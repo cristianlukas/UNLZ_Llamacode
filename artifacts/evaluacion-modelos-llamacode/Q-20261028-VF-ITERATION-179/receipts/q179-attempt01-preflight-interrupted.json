@@ -1,0 +1,22 @@
+{
+  "task": "Q179-A01 Flash-Next NInfer-all dual Q172",
+  "timestamp_utc": "2026-10-29T01:16:45Z",
+  "attempt": 1,
+  "status": "interrupted_during_artifact_hash_preflight_before_model_load",
+  "initial_runner_sha256": "ec16ccb490212f587f9de31d5f5f8355d0c009f79d6865cd6f0aa28e37819da4",
+  "reason": "A profile audit found max_context/kv_capacity 131072 did not match Q178 A05's 262144. The exact Q179 runner process received SIGINT while hashing pinned local artifacts; it had not launched an inference server, Tool-Eval, or benchmark request.",
+  "observed_at_interrupt": {
+    "artifact_read_bytes_from_proc_io": 20819894272,
+    "MemAvailable_kib": 113492364,
+    "model_server_started_by_attempt": false,
+    "tool_eval_started": false,
+    "gpu_compute_by_attempt": false
+  },
+  "post_interrupt": {
+    "q179_port_18480_free": true,
+    "q179_server_process_remaining": false,
+    "owned_server_cleanup_needed": false
+  },
+  "next_blocker": "A separate llama-server Qwen3.5-9B process on GPU0 was discovered after the interruption (PID 1579055, port 8033, scope app-com.anthropic.Claude-3228104.scope). It is not PeritoSoft and was not stopped. Q179 preflight must pass again after it exits or an explicit user instruction authorizes stopping that exact server.",
+  "lock_token": "2242863e-c78e-4fa9-9649-c1d1541f3919"
+}

@@ -1,0 +1,45 @@
+{
+  "task": "Q179 Flash-Next IQ2_XS/RCO dual Q172",
+  "status": "blocked_before_tool_eval",
+  "lock_token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+  "preregistration": "receipts/prereg-amendment-02-context-and-runner.json",
+  "attempt": {
+    "timestamp_utc": "2026-10-29T01:30:27Z",
+    "preflight": "PASS; profile capacity 262144; model/runtime/tool-eval hashes pinned; no foreign server visible at initial scan",
+    "own_server_pid": 1613177,
+    "own_server_status": "started, then stopped by runner with SIGINT (returncode -2) after readiness gate detected a foreign server",
+    "foreign_server": {
+      "pid": 1613312,
+      "model": "Qwen3.5-9B-Q4_K_M",
+      "owner_process": "PeritoSoft server.js",
+      "port": 8033,
+      "gpu": 0
+    },
+    "tool_eval_exit_code": null,
+    "result_exists": false,
+    "scenario_requests_started": false,
+    "decision": "No Q172 quality result; do not inherit Q173 preview/GPU1 score 77/100"
+  },
+  "stop_and_respawn_observation": {
+    "timestamp_utc": "2026-10-29T01:34:48Z",
+    "authorized_signal": "SIGTERM sent to PeritoSoft root PID 1612664; its prior process tree exited",
+    "respawn": {
+      "scope": "app-com.anthropic.Claude-3228104.scope",
+      "root_pid": 1619920,
+      "server_js_pid": 1619977,
+      "qwen_servers": [
+        {"pid": 1620449, "port": 8033, "gpu": 0, "model": "Qwen3.5-9B-Q4_K_M"},
+        {"pid": 1620620, "port": 8081, "gpu": 1, "model": "Qwen3.5-9B-Q4_K_M"}
+      ],
+      "gpu_memory_mib": {"gpu0": 7313, "gpu1": 6524},
+      "claude_scope_tasks": 426,
+      "claude_scope_memory_gib": 7.9
+    },
+    "action": "Do not stop the whole Claude scope without explicit authorization. Await user to close PeritoSoft at its supervisor or authorize stopping the scope."
+  },
+  "comparison_kept": {
+    "historical_preview": "Q171/Q173 single RTX 3090 GPU1 retained; Q173 Q172 77/100 and TC-75/82/84/92 failures apply only to preview",
+    "dual_speed": "Q178 A05 dual RTX 3090 performance ladder remains complete and visible in Results!A408:AH412",
+    "dual_quality": "Q179 pending; no score for the NInfer-all v3 dual profile"
+  }
+}

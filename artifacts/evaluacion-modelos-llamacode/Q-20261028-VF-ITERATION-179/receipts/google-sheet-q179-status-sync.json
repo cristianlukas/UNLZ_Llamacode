@@ -1,0 +1,69 @@
+{
+  "timestamp_utc": "2026-10-29T01:38:54Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_url": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "writes": [
+    {
+      "sheet": "Resultados",
+      "range": "E408:E412",
+      "purpose": "Mark Q178 dual ladder complete and Q179 Q172 blocked by auto-restarted PeritoSoft servers."
+    },
+    {
+      "sheet": "Resultados",
+      "range": "T408:T412",
+      "purpose": "Keep dual quality N/D; identify Q173 77/100 and failures as historical preview-only evidence."
+    },
+    {
+      "sheet": "Resultados",
+      "range": "AD408:AD412",
+      "purpose": "Record Q179 runner cleanup, PeritoSoft restart, active server PIDs, and no OOM/Xid finding."
+    },
+    {
+      "sheet": "Resultados",
+      "range": "AF408:AF412",
+      "purpose": "Add local Q179 blocked receipt while retaining Q173 and Q178 evidence."
+    },
+    {
+      "sheet": "Accionables",
+      "range": "D30,D30:H30,I30:K30,M30:N30",
+      "purpose": "Reconcile status, protocol, recommendation, receipts, restart evidence, and timestamps."
+    },
+    {
+      "sheet": "Resultados",
+      "range": "rows 408:412",
+      "pixel_size": 130,
+      "purpose": "Show wrapped status/evidence cells without changing data columns or historical rows."
+    },
+    {
+      "sheet": "Accionables",
+      "range": "row 30",
+      "pixel_size": 180,
+      "purpose": "Show the wrapped long test and gate details."
+    },
+    {
+      "sheet": "Accionables",
+      "range": "J30",
+      "purpose": "Correct the historical Q173 row references after a live row search; no historical result rows were modified."
+    }
+  ],
+  "readback": {
+    "verified": true,
+    "results_cells": [
+      "E408:E412",
+      "T408:T412",
+      "AD408:AD412",
+      "AF408:AF412"
+    ],
+    "actionables_cells": [
+      "D30:N30"
+    ],
+    "wrap_top_alignment_preserved": true,
+    "row_heights_px": {
+      "Resultados 408:412": 130,
+      "Accionables 30": 180
+    },
+    "historical_preview_row": "Resultados!A3:AH4, A6:AH7, A9:AH9 (Q173 speed) and A281:AH281 (Q173 Q172); all retained. A379:AF384 is another cohort and was not edited.",
+    "dual_speed_values": "Q178 A05 values in Y:Z unchanged",
+    "quality": "Q179 Tool-Eval did not start; no dual score recorded"
+  }
+}

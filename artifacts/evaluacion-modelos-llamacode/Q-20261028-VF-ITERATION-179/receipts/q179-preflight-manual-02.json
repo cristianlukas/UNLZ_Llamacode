@@ -1,0 +1,33 @@
+{
+  "task": "Q179 A02 clean preflight before dual Q172",
+  "timestamp_utc": "2026-10-29T01:21:38Z",
+  "lock": {
+    "task": "Q146 resume justified VF-20261019-01 tests",
+    "token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+    "created_utc": "2026-10-26 07:41:45"
+  },
+  "decision": "PASS",
+  "inference_processes": [],
+  "inference_containers": [],
+  "port18480_free": true,
+  "MemAvailable_kib": 114424700,
+  "gpus": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+      "memory_used_mib": 942,
+      "memory_total_mib": 24576
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+      "memory_used_mib": 108,
+      "memory_total_mib": 24576
+    }
+  ],
+  "compute_apps": [],
+  "peritosoft_app_tree_absent": true,
+  "gui_preserved": true
+}

@@ -1,0 +1,84 @@
+{
+  "task_id": "Q179-A01-FlashNext-NInferAll-dual-Q172",
+  "registered_utc": "2026-10-29T01:08:39.733Z",
+  "status": "preregistered_before_gpu",
+  "lock": {
+    "task": "Q146 resume justified VF-20261019-01 tests",
+    "token": "2242863e-c78e-4fa9-9649-c1d1541f3919"
+  },
+  "purpose": "Assign a distinct quality and safety result to the new Q178 A05 dual-GPU NInfer-all v3 profile. Do not inherit the historical Q173 preview/GPU1 score.",
+  "identity": {
+    "model": "Qwen3.8 Flash-Next RCO IQ2_XS",
+    "source_gguf_sha256": [
+      "92cee27ae5bbadcd732416a0f7a7f0acc092399dbbe8f5a5efa707c2ec0a49d7",
+      "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113"
+    ],
+    "text_artifact_sha256": "c599a10d696118a8235c953dda3fb45ef55b8c40356f4c688787cef116b8053d",
+    "text_part_sha256": "fa72b1f0f2d57615500a6c3568a8e8583cf1b403b2be617fa67e864c890314a2",
+    "ngram_artifact_sha256": "2a3c7868c550171376785ff393ceff26d5b43ed7c9d2c341838582ff1f625656",
+    "runtime_commit": "3d882fc116941d9233c40bf30f4d66dbaa3d24bd",
+    "runtime_sha256": "09145c529015ac7d27ce63214138625927c70c1e89e4291594d74be59bd5f895"
+  },
+  "profile": {
+    "gpus": [0, 1],
+    "topology": "NInfer-all pipeline; one stage per RTX 3090; not tensor parallel",
+    "expert_residency": "device",
+    "max_context": 262144,
+    "kv_capacity": 262144,
+    "kv_dtype": "int8",
+    "kv_resident_positions": 32768,
+    "kv_overflow": "sparse KV streamed from pinned host memory",
+    "ngram_draft_tokens": 0,
+    "max_concurrency": 1,
+    "endpoint": "http://127.0.0.1:18480/v1"
+  },
+  "harness": {
+    "name": "Tool-Eval Hard Mode",
+    "version": "2.8.0",
+    "source_commit": "0a1ba68c7709f429298bc92417a9e003f61de4e3",
+    "scenario_ids": "TC-70..TC-97",
+    "scenario_count": 28,
+    "variant_seed": 20261010,
+    "seed": 42,
+    "trials": 1,
+    "parallel": 1,
+    "max_turns": 8,
+    "timeout_seconds": 120,
+    "reasoning_effort": "medium",
+    "warmup": false,
+    "score_scope": "quality and safety only; no throughput claim"
+  },
+  "sampling": {
+    "temperature": 0.6,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0,
+    "repetition_penalty": 1.0,
+    "presence_penalty": 0.0,
+    "seed": 42
+  },
+  "tool_eval": {
+    "path": "/home/cristian/.cache/codex-tool-eval-bench-v2.8.0/.venv/bin/tool-eval-bench",
+    "version": "2.8.0",
+    "sha256": "31e3c8f5fa9140738cde4e1cecc909f5335cf928a90fbdd062ec7935e0526472",
+    "backend": "ninfer",
+    "max_output_tokens": 16384
+  },
+  "safety": {
+    "preserve_gui": true,
+    "preserve_astra_sol_peritosoft": true,
+    "kill_only_owned_test_processes": true,
+    "memory_floor_kib": 33554432,
+    "monitor_seconds": 15,
+    "consecutive_low_memory_samples_to_stop": 4,
+    "critical_safety_failure_policy": "finish the current seed42 screen; do not start extra seeds"
+  },
+  "outputs": {
+    "result": "runs/q172-seed42.json",
+    "preflight": "receipts/q179-preflight.json",
+    "launch": "receipts/q179-launch.json",
+    "postflight": "receipts/q179-postflight.json",
+    "tool_log": "logs/q172-tool-eval.log",
+    "server_log": "logs/ninfer-all-q172-server.log"
+  }
+}

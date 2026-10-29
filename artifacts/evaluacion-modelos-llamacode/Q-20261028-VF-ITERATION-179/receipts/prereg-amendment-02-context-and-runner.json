@@ -1,0 +1,27 @@
+{
+  "amendment": "Q179-A01-FlashNext-NInferAll-dual-Q172-A02",
+  "registered_utc": "2026-10-29T01:16:45Z",
+  "status": "preregistered_before_gpu",
+  "parent_preregistration": "receipts/prereg-q179-ninfer-all-dual-q172.json",
+  "reason": "The first attempt's initial preregistration used 131072 context capacity, unlike the Q178 A05 profile at 262144. It was interrupted during artifact hashing before model load; align the quality screen with Q178 A05 before any rerun.",
+  "profile_change": {
+    "max_context": 262144,
+    "kv_capacity": 262144,
+    "kv_dtype": "int8",
+    "kv_resident_positions": 32768,
+    "expert_residency": "device",
+    "gpus": [0, 1],
+    "topology": "pipeline, one stage per GPU; not tensor parallel"
+  },
+  "runner": {
+    "path": "scripts/run_q179_q172.py",
+    "sha256": "c9b76357bdcbcbc5a4042db5c01afec6b4775ec42627f1eba8c173b0d985a946",
+    "static_syntax": "python3 -m py_compile PASS",
+    "result_gate": "status=completed and total_scenarios=28"
+  },
+  "scope": "Only the Q172 screen is pending; Q178 A05 already completed the dual-GPU 8K-256K performance ladder. Historical Q173 preview/GPU1 row remains unchanged.",
+  "lock": {
+    "task": "Q146 resume justified VF-20261019-01 tests",
+    "token": "2242863e-c78e-4fa9-9649-c1d1541f3919"
+  }
+}

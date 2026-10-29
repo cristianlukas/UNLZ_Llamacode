@@ -1,0 +1,57 @@
+{
+  "task": "Q179-A02-FlashNext-NInferAll-dual-Q172-pretool-block",
+  "timestamp_utc": "2026-10-29T01:45:58Z",
+  "status": "blocked_before_inference",
+  "preregistration": "receipts/prereg-q179-ninfer-all-dual-q172.json",
+  "amendment": "receipts/prereg-amendment-02-context-and-runner.json",
+  "lock": {
+    "task": "Q146 resume justified VF-20261019-01 tests",
+    "token": "2242863e-c78e-4fa9-9649-c1d1541f3919"
+  },
+  "actions": {
+    "terminated_only_authorized_peritosoft_app_and_server_processes": true,
+    "peritosoft_restarted_before_ninfer_launch": true,
+    "claude_session_terminated": false,
+    "model_files_modified": false
+  },
+  "preflight": {
+    "resource_and_hash_checks": "PASS",
+    "inference_servers_at_preflight": [],
+    "gpu_profile": [0, 1],
+    "max_context": 262144,
+    "memory_floor_kib": 33554432
+  },
+  "blocking_inference_servers": [
+    {
+      "pid": 1644027,
+      "model": "Qwen3.5-9B-Q4_K_M",
+      "host": "127.0.0.1",
+      "port": 8033,
+      "gpu": 0
+    },
+    {
+      "pid": 1644225,
+      "model": "Qwen3.5-9B-Q4_K_M",
+      "host": "127.0.0.1",
+      "port": 8081,
+      "gpu": 1
+    }
+  ],
+  "execution": {
+    "ninfer_server_pid": null,
+    "tool_eval_pid": null,
+    "tool_eval_exit_code": null,
+    "q172_result_exists": false,
+    "prompts_sent": false,
+    "decision": "Do not retry until the process supervising PeritoSoft stops relaunching inference servers."
+  },
+  "evidence": [
+    "receipts/q179-preflight.json",
+    "receipts/q179-launch.json",
+    "receipts/q179-postflight.json"
+  ],
+  "comparison_preserved": {
+    "historical_single_gpu_q173": "Q172 77/100, TC-75/82/84/92 failed; GPU1 only",
+    "dual_gpu_q178_a05": "8K-261888 performance ladder complete; Q172 remains N/D"
+  }
+}
