@@ -1,0 +1,11 @@
+{
+  "attempt": 2,
+  "timestamp_local": "2026-10-29T04:43:58-03:00",
+  "result": "aborted_before_model_inference",
+  "reason": "The unit mounted the Q171 config instead of the preregistered Q181 copy; Strata could not create its configured log at /run/q171/home/logs/astra-strata.log.",
+  "dual_cuda_probe": "pass",
+  "gpu_inference_started": false,
+  "ports_opened": [],
+  "remediation": "Bind /run/q181/v5-config to /opt/q181/astra-config.json; assert the in-service log path is under Q181 before the next launch.",
+  "data_or_model_changed": false
+}

@@ -1,0 +1,17 @@
+{
+  "attempt": 4,
+  "started_utc": "2026-10-29T08:02:25Z",
+  "status_at_2026-10-29T08:03:36Z": "engine initializing; no benchmark requests",
+  "service": "q181-harness.service",
+  "STRATA_ENGINE_READY_S": 1200,
+  "dual_cuda_probe": "pass",
+  "model_id": "qwen3.8-flash-next-iq2_xs",
+  "gpu_topology": "CUDA_VISIBLE_DEVICES=0,1; RTX 3090 pair",
+  "host_MemAvailable_bytes": 83066691584,
+  "cgroup_memory_display": "34.1 GiB",
+  "cgroup_oom_events": 0,
+  "model_server_ready": false,
+  "LlamaCode_started": false,
+  "benchmark_prompts_started": 0,
+  "note": "This is the sole active Q181 attempt. The preliminary no-server, port, compute-app and dual-GPU checks passed before the preflight script's memory-key error; the test was not duplicated."
+}

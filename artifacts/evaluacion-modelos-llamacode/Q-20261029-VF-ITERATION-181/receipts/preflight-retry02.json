@@ -1,0 +1,16 @@
+{
+  "checked_utc": "2026-10-29T07:44:59.123820+00:00",
+  "status": "PASS",
+  "lock_token": "90a9c598-8b51-4627-9f7f-6d272ab9e8af",
+  "inference_process_candidates": [],
+  "busy_ports": [],
+  "compute_apps": "",
+  "gpu": [
+    "0, NVIDIA GeForce RTX 3090, 740, 23435, 15",
+    "1, NVIDIA GeForce RTX 3090, 108, 24070, 34"
+  ],
+  "memory": {
+    "MemAvailable_bytes": 116318187520
+  },
+  "q181_config_log": "/run/q181/home/logs/astra-strata.log"
+}

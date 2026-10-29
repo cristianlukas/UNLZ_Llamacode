@@ -1,0 +1,394 @@
+{
+  "task": "Q181-Harness2-coding-holdout",
+  "status": "completed",
+  "completed_utc": "2026-10-29T08:43:43Z",
+  "question": "Comparar agent-basico y agent-intermedio en un holdout fijo de coding sobre un único modelo/runtime.",
+  "protocol": {
+    "fixture_id": "agent_efficiency_e2e_v1",
+    "fixture_sha256": "37c5907fa9220f56446c2ea8b3ed402d475b88aaa1d15fbceffe1960fd0b3f01",
+    "passes_per_profile": 3,
+    "task_executions_per_profile": 9,
+    "task_executions_total": 18,
+    "comparison_rows": 6,
+    "order": [
+      {
+        "pass": 1,
+        "benchmark_id": "q181_agent_efficiency_v1_pass_01",
+        "agent_order": [
+          "ce949c6a-d38c-49df-8a13-18a8cb49907b",
+          "8c898045-d1e1-4754-9ce4-b71a639cc160"
+        ],
+        "prompt_ids": [
+          "python_parser_regression",
+          "typescript_localization",
+          "cpp_safe_refactor"
+        ]
+      },
+      {
+        "pass": 2,
+        "benchmark_id": "q181_agent_efficiency_v1_pass_02",
+        "agent_order": [
+          "8c898045-d1e1-4754-9ce4-b71a639cc160",
+          "ce949c6a-d38c-49df-8a13-18a8cb49907b"
+        ],
+        "prompt_ids": [
+          "python_parser_regression",
+          "typescript_localization",
+          "cpp_safe_refactor"
+        ]
+      },
+      {
+        "pass": 3,
+        "benchmark_id": "q181_agent_efficiency_v1_pass_03",
+        "agent_order": [
+          "ce949c6a-d38c-49df-8a13-18a8cb49907b",
+          "8c898045-d1e1-4754-9ce4-b71a639cc160"
+        ],
+        "prompt_ids": [
+          "python_parser_regression",
+          "typescript_localization",
+          "cpp_safe_refactor"
+        ]
+      }
+    ],
+    "amendment": "Amendment 02: conserva pass 1 y reanuda passes 2–3 con IDs metadata únicos; prompts, aceptación, permisos y configuración no cambian.",
+    "same_tasks": [
+      "parser Python",
+      "localización JS/TS",
+      "refactor seguro de estadísticas C++"
+    ],
+    "model": "qwen3.8-flash-next-iq2_xs",
+    "model_profile_id": "83230930-2646-4e5e-9078-aa108a883d3b",
+    "agent_profile_ids": [
+      "ce949c6a-d38c-49df-8a13-18a8cb49907b",
+      "8c898045-d1e1-4754-9ce4-b71a639cc160"
+    ],
+    "launch_profile_id": "ea7f0e2c-8cd4-413e-a2fc-5315fc5f8adb",
+    "context_tokens": 1048576,
+    "mcp_enabled": false,
+    "privacy_mode": true,
+    "external_network": "systemd PrivateNetwork; loopback only",
+    "gpu_selection": "CUDA_VISIBLE_DEVICES=0,1; Strata ASTRA dual RTX 3090",
+    "runtime_config_sha256": "1884f0a320f18aff51ad1589380f0be2f2cbfe16729105fbc3c86839c31f59f0",
+    "engine_args": [
+      "--expert-cache auto",
+      "--prefill auto",
+      "--spec 4",
+      "--spec-min-p 0.70",
+      "--mtp /opt/mtp/rt",
+      "--max-context 1048576",
+      "--kv int8",
+      "--kv-resident 32768",
+      "--pcie-frac 0.00",
+      "--rope-scaling yarn",
+      "--rope-scale 4",
+      "--yarn-orig-ctx 262144",
+      "--layer-split auto"
+    ]
+  },
+  "aggregate": {
+    "comparison_balanced": true,
+    "profiles": [
+      {
+        "agentVariant": "baseline",
+        "comparisonTimeMetric": "timeToFirstAttempt",
+        "failedRuns": 1,
+        "fullyAcceptedRuns": 2,
+        "honeyEnabled": false,
+        "medianAddedLines": 581.5,
+        "medianColdFirstAttemptSec": 76.773,
+        "medianElapsedSec": 86.613,
+        "medianFilesChanged": 12,
+        "medianFirstAttemptSec": 76.773,
+        "medianQualityPct": 100,
+        "medianRemovedLines": 0,
+        "medianRepairAttempts": 1,
+        "medianToolCalls": 27.5,
+        "medianToolF1Pct": 0,
+        "medianToolRedundantCalls": 8,
+        "medianToolSuccessRatePct": 87.87878787878788,
+        "medianWarmFirstAttemptSec": 0,
+        "outcomeSpread": true,
+        "profileId": "8c898045-d1e1-4754-9ce4-b71a639cc160",
+        "profileName": "Intermedio (copia)",
+        "qualityRangePctPoints": 0,
+        "runs": 3,
+        "stabilityRatePct": 66.66666666666667,
+        "successRatePct": 66.66666666666667,
+        "successfulRuns": 2
+      },
+      {
+        "agentVariant": "baseline",
+        "comparisonTimeMetric": "timeToFirstAttempt",
+        "failedRuns": 0,
+        "fullyAcceptedRuns": 3,
+        "honeyEnabled": false,
+        "medianAddedLines": 662,
+        "medianColdFirstAttemptSec": 69.761,
+        "medianElapsedSec": 76.726,
+        "medianFilesChanged": 13,
+        "medianFirstAttemptSec": 69.761,
+        "medianQualityPct": 100,
+        "medianRemovedLines": 0,
+        "medianRepairAttempts": 0,
+        "medianToolCalls": 30,
+        "medianToolF1Pct": 0,
+        "medianToolRedundantCalls": 2,
+        "medianToolSuccessRatePct": 94.44444444444444,
+        "medianWarmFirstAttemptSec": 0,
+        "outcomeSpread": false,
+        "profileId": "ce949c6a-d38c-49df-8a13-18a8cb49907b",
+        "profileName": "Básico (copia)",
+        "qualityRangePctPoints": 0,
+        "runs": 3,
+        "stabilityRatePct": 100,
+        "successRatePct": 100,
+        "successfulRuns": 3
+      }
+    ],
+    "basic_vs_intermedio_median_elapsed_improvement_pct": 11.42,
+    "basic_vs_intermedio_median_first_attempt_improvement_pct": 9.13,
+    "decision_rule": "Recommend Intermedio only if accepted tasks are not lower, no critical regressions occur, and median E2E improves >=10% or repairs decrease.",
+    "decision_rule_evaluated": {
+      "intermedio_acceptance_not_lower": false,
+      "intermedio_no_critical_regressions": false,
+      "intermedio_median_e2e_improves_10pct_or_repairs_decrease": false
+    },
+    "recommendation": "No promover agent-intermedio. Para este holdout, agent-basico completó 3/3 pasadas; agent-intermedio completó 2/3 y una pasada terminó 10/11. Básico tuvo mediana E2E 76.726 s frente a 86.613 s (11.42% menor), mediana de reparaciones 0 frente a 1, y menor redundancia de herramientas. Mantener la recomendación acotada a esta configuración/holdout; no cambiar perfiles productivos automáticamente."
+  },
+  "runs": [
+    {
+      "pass": 1,
+      "profile_id": "ce949c6a-d38c-49df-8a13-18a8cb49907b",
+      "profile_name": "Básico (copia)",
+      "final_acceptance": {
+        "passed": 11,
+        "total": 11
+      },
+      "first_attempt_acceptance": {
+        "passed": 11,
+        "total": 11
+      },
+      "elapsed_seconds": 76.726,
+      "first_attempt_seconds": 76.423,
+      "repair_attempts": 0,
+      "tool_calls": 32,
+      "tool_success_rate_pct": 78.125,
+      "redundant_tool_calls": 11,
+      "avg_generation_tps": 183.41932001376898,
+      "avg_ttft_ms": 378,
+      "failed": false,
+      "failure_kind": "none",
+      "failed_acceptance": [],
+      "source": {
+        "directory": "Q181_coding_holdout_pass_1_20261029_052012",
+        "file": "1_Q181_Harness2_dual_RTX_3090_c115b571-1166-48c9-b6bc-97654f6e58ad.json",
+        "sha256": "2f02ff851911e71a0c6468ec88aa483010214b5dfb99347f1e795ff684521945"
+      }
+    },
+    {
+      "pass": 1,
+      "profile_id": "8c898045-d1e1-4754-9ce4-b71a639cc160",
+      "profile_name": "Intermedio (copia)",
+      "final_acceptance": {
+        "passed": 11,
+        "total": 11
+      },
+      "first_attempt_acceptance": {
+        "passed": 11,
+        "total": 11
+      },
+      "elapsed_seconds": 68.071,
+      "first_attempt_seconds": 67.77,
+      "repair_attempts": 0,
+      "tool_calls": 33,
+      "tool_success_rate_pct": 75.75757575757575,
+      "redundant_tool_calls": 14,
+      "avg_generation_tps": 191.60481404063762,
+      "avg_ttft_ms": 0,
+      "failed": false,
+      "failure_kind": "none",
+      "failed_acceptance": [],
+      "source": {
+        "directory": "Q181_coding_holdout_pass_1_20261029_052149",
+        "file": "1_Q181_Harness2_dual_RTX_3090_bd73450f-d4df-4d17-982d-a2483e22b65a.json",
+        "sha256": "a4640afc12b0f968f84b28fe4bf99074fa3bdace055e0df00c652f9b8da07f2f"
+      }
+    },
+    {
+      "pass": 2,
+      "profile_id": "8c898045-d1e1-4754-9ce4-b71a639cc160",
+      "profile_name": "Intermedio (copia)",
+      "final_acceptance": {
+        "passed": 11,
+        "total": 11
+      },
+      "first_attempt_acceptance": {
+        "passed": 10,
+        "total": 11
+      },
+      "elapsed_seconds": 105.155,
+      "first_attempt_seconds": 85.776,
+      "repair_attempts": 2,
+      "tool_calls": 22,
+      "tool_success_rate_pct": 100,
+      "redundant_tool_calls": 2,
+      "avg_generation_tps": 123.32316989166664,
+      "avg_ttft_ms": 241,
+      "failed": false,
+      "failure_kind": "none",
+      "failed_acceptance": [],
+      "source": {
+        "directory": "Q181_coding_holdout_pass_2_20261029_053611",
+        "file": "1_Q181_Harness2_dual_RTX_3090_0af042e6-77ad-43c2-9779-8000f4fe4031.json",
+        "sha256": "4056d4a36ab918590656164f5fafb4142e86507fc90b7e4439a49e771f33d9bf"
+      }
+    },
+    {
+      "pass": 2,
+      "profile_id": "ce949c6a-d38c-49df-8a13-18a8cb49907b",
+      "profile_name": "Básico (copia)",
+      "final_acceptance": {
+        "passed": 11,
+        "total": 11
+      },
+      "first_attempt_acceptance": {
+        "passed": 11,
+        "total": 11
+      },
+      "elapsed_seconds": 60.638,
+      "first_attempt_seconds": 60.336999999999996,
+      "repair_attempts": 0,
+      "tool_calls": 18,
+      "tool_success_rate_pct": 94.44444444444444,
+      "redundant_tool_calls": 0,
+      "avg_generation_tps": 147.09024093278273,
+      "avg_ttft_ms": 183.5,
+      "failed": false,
+      "failure_kind": "none",
+      "failed_acceptance": [],
+      "source": {
+        "directory": "Q181_coding_holdout_pass_2_20261029_053817",
+        "file": "1_Q181_Harness2_dual_RTX_3090_e77a6ea0-921f-4543-805f-3a0c1b7a1632.json",
+        "sha256": "1b85e961cf696787642d73d406a1c1732fec95508f25bc58decdf73bed5cb18b"
+      }
+    },
+    {
+      "pass": 3,
+      "profile_id": "ce949c6a-d38c-49df-8a13-18a8cb49907b",
+      "profile_name": "Básico (copia)",
+      "final_acceptance": {
+        "passed": 11,
+        "total": 11
+      },
+      "first_attempt_acceptance": {
+        "passed": 10,
+        "total": 11
+      },
+      "elapsed_seconds": 94.903,
+      "first_attempt_seconds": 69.761,
+      "repair_attempts": 2,
+      "tool_calls": 30,
+      "tool_success_rate_pct": 100,
+      "redundant_tool_calls": 2,
+      "avg_generation_tps": 105.9119339185457,
+      "avg_ttft_ms": 188.33333333333334,
+      "failed": false,
+      "failure_kind": "none",
+      "failed_acceptance": [],
+      "source": {
+        "directory": "Q181_coding_holdout_pass_3_20261029_053938",
+        "file": "1_Q181_Harness2_dual_RTX_3090_74af90db-8380-434e-a521-5a879b75c162.json",
+        "sha256": "f5fa9be08f2439fee290fcbc005ea6fa56a450579c32de3f0d3352c84e3b32ff"
+      }
+    },
+    {
+      "pass": 3,
+      "profile_id": "8c898045-d1e1-4754-9ce4-b71a639cc160",
+      "profile_name": "Intermedio (copia)",
+      "final_acceptance": {
+        "passed": 10,
+        "total": 11
+      },
+      "first_attempt_acceptance": {
+        "passed": 10,
+        "total": 11
+      },
+      "elapsed_seconds": 110.194,
+      "first_attempt_seconds": 64.773,
+      "repair_attempts": 3,
+      "tool_calls": 44,
+      "tool_success_rate_pct": 88.63636363636364,
+      "redundant_tool_calls": 13,
+      "avg_generation_tps": 164.15257944677296,
+      "avg_ttft_ms": 388.5,
+      "failed": true,
+      "failure_kind": "quality",
+      "failed_acceptance": [
+        {
+          "command": "python test_stats.py",
+          "exitCode": 1,
+          "name": "tests",
+          "output": "....F....\n======================================================================\nFAIL: test_negative_and_signed_tokens (__main__.TestStats.test_negative_and_signed_tokens)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/run/q181/home/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Q181_coding_holdout_pass_3_20261029_054134/1_Q181_Harness2_dual_RTX_3090__ws/test_stats.py\", line 51, in test_negative_and_signed_tokens\n    self.assertEqual(out[\"min\"], -3)\nAssertionError: -43 != -3\n\n----------------------------------------------------------------------\nRan 9 tests in 1.211s\n\nFAILED (failures=1)",
+          "passed": false,
+          "taskId": "cpp_safe_refactor_q181_repeat_03",
+          "timedOut": false,
+          "timeoutMs": 60000,
+          "type": "command"
+        }
+      ],
+      "source": {
+        "directory": "Q181_coding_holdout_pass_3_20261029_054134",
+        "file": "1_Q181_Harness2_dual_RTX_3090_217a0752-dc1e-4630-95f0-30fd3622aa86.json",
+        "sha256": "e463960e6329d9b64a751868187eb4034a269fc75a21044bb5fa31a99951bed3"
+      }
+    }
+  ],
+  "startup_and_cleanup": {
+    "attempt": 5,
+    "started_utc": "2026-10-29T08:32:56Z",
+    "ready_utc": "2026-10-29T08:36:10Z",
+    "engine_readiness_seconds": 194,
+    "completed_utc": "2026-10-29T08:43:43Z",
+    "service": "q181-harness.service",
+    "postflight_service_state": "inactive",
+    "evaluation_ports_18473_18877": "free",
+    "compute_apps_after_stop": 0,
+    "cgroup_memory_peak_gb": 82.5,
+    "minimum_host_memavailable_gb_observed": 62.8,
+    "oom_events": 0,
+    "oom_kill_events": 0,
+    "xid": false,
+    "memory_cap": "none; no artificial RAM/swap cap was applied"
+  },
+  "attempt_history": [
+    {
+      "attempt": 1,
+      "outcome": "aborted before inference: CHDIR/setup issue"
+    },
+    {
+      "attempt": 2,
+      "outcome": "aborted before engine: isolated config/log bind mismatch"
+    },
+    {
+      "attempt": 3,
+      "outcome": "engine readiness window 900 s elapsed before READY; zero prompts; no OOM"
+    },
+    {
+      "attempt": 4,
+      "outcome": "READY in 1054 s; pass 1 valid; runner mishandled app duplicate-suppression status; no OOM/crash"
+    },
+    {
+      "attempt": 5,
+      "outcome": "completed all six balanced profile/pass runs; service cleanup succeeded"
+    }
+  ],
+  "evidence": {
+    "summary_path": "/media/cristian/HDD extra/Modelos-eval/Q-20261029-VF-ITERATION-181/home/harness2-run/summary.json",
+    "summary_sha256": "d62d4be05fb895102cc8283f6cf0f530cfea945da38cf86ca71b05761b615971",
+    "control_events_path": "/media/cristian/HDD extra/Modelos-eval/Q-20261029-VF-ITERATION-181/home/harness2-run/control-events.jsonl",
+    "control_events_sha256": "c1f08ab28205b089b393313176d080990cb6f299da1890a829d9e6f8e01751ec",
+    "runs_root": "/media/cristian/HDD extra/Modelos-eval/Q-20261029-VF-ITERATION-181/home/.qttest/share/LlamaCode/LlamaCode/benchmark-runs",
+    "repo_artifacts": "artifacts/evaluacion-modelos-llamacode/Q-20261029-VF-ITERATION-181/"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "task": "Q181-Harness2-coding-holdout",
+  "amendment": 2,
+  "created_utc": "2026-10-29T08:30:00Z",
+  "trigger": {
+    "attempt_04_ready_seconds": 1054,
+    "completed_runs": {
+      "agent-basico": {"pass": 1, "elapsed_seconds": 76.726, "accepted": "11/11", "status": "completed"},
+      "agent-intermedio": {"pass": 1, "elapsed_seconds": 68.071, "accepted": "11/11", "status": "completed"}
+    },
+    "failure": "On the first Intermedio repetition, LlamaCode correctly suppressed the already-completed identical workload. The external runner treated the app's explicit skipped status as an error and exited nonzero; systemd then cleaned up the isolated app and model. OOM counters were zero. This was a runner/protocol mismatch, not an app crash or memory failure."
+  },
+  "change": {
+    "resume_only_passes": [2, 3],
+    "reuse_existing_profiles_and_pass_1_records": true,
+    "task_metadata_ids": "Append _q181_repeat_02 or _q181_repeat_03 to the fixture task IDs so each registered repetition has a distinct app evaluation fingerprint.",
+    "comparison_start_epoch_ms": 1793262010000,
+    "order": ["basic,intermediate", "intermediate,basic", "basic,intermediate"]
+  },
+  "unchanged": [
+    "fixture bytes and SHA-256 37c5907fa9220f56446c2ea8b3ed402d475b88aaa1d15fbceffe1960fd0b3f01",
+    "every prompt string, acceptance file/command, category, speed flag and token limit",
+    "agent profiles, harness specification, permissions, tools and sampling",
+    "model weights, server binary/arguments, YaRN x4, context 1048576, KV int8 and dual RTX 3090 placement",
+    "random seed policy and decision rule"
+  ],
+  "rationale": "App evaluation fingerprints include task IDs and deliberately suppress identical completed evaluations. Unique IDs are metadata labels for repeated runs; the model receives the exact same prompts and deterministic acceptance oracles. Pass 1 is preserved and passes 2–3 resume against the same isolated profiles.",
+  "resource_policy": "One Q181 systemd service only, both GPUs in series, no artificial RAM/swap cap; preserve the preregistered OOM/Xid, port, isolation and 1200-second readiness gates.",
+  "maximum_additional_startup_attempts": 1,
+  "stop_if": ["profile/config/hash mismatch", "duplicate guard still suppresses a pass", "OOM/Xid/crash", "non-loopback listener", "readiness exceeds 1200 seconds"]
+}

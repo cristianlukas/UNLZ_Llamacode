@@ -1,0 +1,11 @@
+{
+  "attempt": 1,
+  "timestamp_local": "2026-10-29T04:42:48-03:00",
+  "result": "blocked_before_inference",
+  "systemd_exit": "200/CHDIR",
+  "cause": "WorkingDirectory pointed at a symlink directly into /media; systemd denied chdir before the test process started.",
+  "gpu_inference_started": false,
+  "ports_opened": [],
+  "remediation": "Replaced the self-symlink paths with real root-owned /run mountpoints and separate v1-* source aliases, matching the previously working Q171 systemd layout.",
+  "data_or_model_changed": false
+}

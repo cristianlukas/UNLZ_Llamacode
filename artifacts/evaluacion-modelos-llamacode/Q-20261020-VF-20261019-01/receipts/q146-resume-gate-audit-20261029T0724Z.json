@@ -52,7 +52,6 @@
   },
   "remaining_external_conditions": [
     "Trusted principal identity and per-resource authorization before any cross-tenant retest.",
-    "A concrete Harness² workflow and frozen quality holdout.",
     "Primary transcript/caption for the ambiguous social-media fixture.",
     "Windows-native host, required NVMe free space, and fixture for PROMETHEVS.",
     "Primary source evidence or compatible hardware for the remaining blocked social claims.",
@@ -65,9 +64,30 @@
     "verified_ranges": [
       "Evaluaciones LlamaCode!H363",
       "Evaluaciones LlamaCode!C364:J364",
-      "Evaluaciones LlamaCode!A366:J367"
+      "Evaluaciones LlamaCode!A366:J367",
+      "Accionables!A47:N47"
     ],
     "format_verified": "Arial 10, WRAP, TOP on the appended Q179/Q180 rows."
   },
-  "decision": "No additional AI benchmark is enabled by the current evidence. Keep Q146 open for the external gates and release its lock after verifying ownership."
+  "decision": "Q181 Harness² holdout completed; no additional AI benchmark is enabled by the current evidence. Q146 remains blocked only by the listed external gates. Release the current Q146 lock after verifying its token.",
+  "continuations": [
+    {
+      "timestamp_utc": "2026-10-29T08:50:00Z",
+      "lock_token": "90a9c598-8b51-4627-9f7f-6d272ab9e8af",
+      "user_update": "User confirmed they had stopped the Qwen3.5-9B inference server; Q181 preflight then found no inference candidates, and no Qwen/PeritoSoft process was terminated by this run.",
+      "test": "Q181 Harness² coding holdout",
+      "result": "Three balanced passes completed: Básico 3/3, Intermedio 2/3; Basic median E2E 76.726 s, Intermedio 86.613 s; no-go to promote Intermedio.",
+      "evidence": "artifacts/evaluacion-modelos-llamacode/Q-20261029-VF-ITERATION-181/RESULTS.md and receipts/results.json",
+      "sheet_readback_verified": "Accionables!A47:N47",
+      "remaining_external_conditions": [
+        "Trusted principal identity and per-resource authorization before any cross-tenant retest.",
+        "Primary transcript/caption for the ambiguous social-media fixture.",
+        "Windows-native host, required NVMe free space, and fixture for PROMETHEVS.",
+        "Primary source evidence or compatible hardware for the remaining blocked social claims.",
+        "A corrected/fixed Xolotl runtime or identified null caller before retrying that exact DeepSeek profile."
+      ],
+      "next_status": "No test is presently enabled without changing an external prerequisite; retain as blocked pending those prerequisites.",
+      "sheet_format_verified": "Arial 10, WRAP, TOP on Accionables!A47:N47; update changed only userEnteredValue."
+    }
+  ]
 }

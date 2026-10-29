@@ -1,0 +1,30 @@
+{
+  "attempt": 4,
+  "service": "q181-harness.service",
+  "started_utc": "2026-10-29T08:02:25Z",
+  "ready_utc": "2026-10-29T08:19:59Z",
+  "engine_ready_seconds": 1054,
+  "stopped_utc": "2026-10-29T08:25:18Z",
+  "exit": {"systemd_result": "exit-code", "status": 1, "cause": "controller raised on the app's duplicate-evaluation skip status"},
+  "model": "qwen3.8-flash-next-iq2_xs",
+  "context_tokens": 1048576,
+  "gpu": "CUDA_VISIBLE_DEVICES=0,1; both RTX 3090s",
+  "strata": {"expert_load": "33.02 GiB at 1.53 GiB/s", "gpu_expert_cache": "12,800 experts / 16.91 GiB VRAM", "endpoint": "127.0.0.1:18473", "readiness": "passed"},
+  "llamacode": {"startup": "passed in about 2 seconds", "control_endpoint": "127.0.0.1:18877", "privacy_mode": true, "external_network": "systemd PrivateNetwork", "MCP": false},
+  "completed_runs": [
+    {"pass": 1, "agent": "agent-basico", "elapsed_seconds": 76.726, "accepted": "11/11", "critical_regression": false},
+    {"pass": 1, "agent": "agent-intermedio", "elapsed_seconds": 68.071, "accepted": "11/11", "critical_regression": false}
+  ],
+  "failed_next_action": "Pass 2 Intermedio was skipped because LlamaCode's completed-evaluation fingerprint found the same configuration, harness and exact task payload. The runner treated this expected duplicate guard as an exception instead of varying the repeat metadata task IDs.",
+  "system_health": {"cgroup_memory_peak": "81.1 GiB", "cgroup_swap_peak": "582.9 MiB", "minimum_observed_MemAvailable": "about 63.3 GB", "minimum_observed_SwapFree": "about 161 MB", "oom_events": 0, "oom_kill_events": 0, "xid": false},
+  "cleanup": "systemd stopped only the isolated Q181 app/model cgroup; listener ports 18473/18877 and GPUs returned idle. No other process was killed.",
+  "evidence": [
+    "home/harness2-run/control-events.jsonl",
+    "home/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Q181_coding_holdout_pass_1_20261029_052012/metadata.json",
+    "home/.qttest/share/LlamaCode/LlamaCode/benchmark-runs/Q181_coding_holdout_pass_1_20261029_052149/metadata.json",
+    "home/logs/astra-strata.log",
+    "home/logs/astra-server.log",
+    "home/logs/llamacode.log",
+    "systemd journal q181-harness.service"
+  ]
+}

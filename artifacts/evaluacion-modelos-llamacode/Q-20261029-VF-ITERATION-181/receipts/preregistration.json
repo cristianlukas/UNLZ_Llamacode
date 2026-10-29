@@ -1,0 +1,56 @@
+{
+  "task": "Q181-Harness2-coding-holdout",
+  "status": "preregistered",
+  "created_utc": "2026-10-29T07:36:00Z",
+  "parent_actionable": "Q171-HARNESS2-REPR-HOLDOUT",
+  "fixture": {
+    "path": "assets/benchmarks/custom/agent_efficiency_e2e_v1.json",
+    "sha256": "37c5907fa9220f56446c2ea8b3ed402d475b88aaa1d15fbceffe1960fd0b3f01",
+    "prompt_ids": ["python_parser_regression", "typescript_localization", "cpp_safe_refactor"],
+    "acceptance": "fixture commands/files unchanged; exact command aliases supplied only inside the isolated service"
+  },
+  "profiles": ["agent-basico", "agent-intermedio"],
+  "model": "Qwen3.8 Flash-Next RCO IQ2_XS ASTRA",
+  "runtime": "Q171 Harness2 v5; Strata ASTRA production config; context 1048576; YaRN x4; KV int8; GPUs 0,1",
+  "runtime_config": {
+    "source": "artifacts/evaluacion-modelos-llamacode/Q-20261027-VF-ITERATION-171/configs/astra-iq2xs-dual-1m-harness2-v5.json",
+    "source_sha256": "c0a63f0ba0e0710e978c84e60c229c7380b4c994dc5cb0e92b46e35151eb2529",
+    "q181_copy": "artifacts/evaluacion-modelos-llamacode/Q-20261029-VF-ITERATION-181/configs/astra-iq2xs-dual-1m-q181.json",
+    "q181_copy_sha256": "1884f0a320f18aff51ad1589380f0be2f2cbfe16729105fbc3c86839c31f59f0",
+    "only_change": "redirect log output from /run/q171 to /run/q181"
+  },
+  "passes_per_profile": 3,
+  "startup_readiness_timeout_seconds": 1200,
+  "startup_timeout_amendment": {
+    "environment": "STRATA_ENGINE_READY_S=1200 (Q181 service only)",
+    "reason": "The first full Q181 load remained active through the 900-second default and stopped without READY or benchmark requests; RAM remained available and OOM counters stayed at zero.",
+    "measurement_protocol_changed": false
+  },
+  "order": ["basic,intermediate", "intermediate,basic", "basic,intermediate"],
+  "task_executions_per_profile": 9,
+  "task_executions_total": 18,
+  "sampling": {"temperature": 0.6, "source": "cloned system profile; all other protocol settings preserved"},
+  "isolation": {
+    "MCP": false,
+    "privacy_mode": true,
+    "filesystem_scope": "project",
+    "destructive_actions_require_confirmation": true,
+    "external_network": "systemd PrivateNetwork; loopback backend only",
+    "workspace": "fresh task workspaces under Q181 sandbox"
+  },
+  "decision_rule": "Recommend Intermedio only if accepted tasks are not lower, no critical regressions occur, and median E2E improves by at least 10% or repairs decrease.",
+  "stop_conditions": ["foreign inference server", "port conflict", "hash/config mismatch", "missing GPU0 or GPU1", "Xid/OOM/crash", "non-loopback listener", "MemAvailable below 32 GiB for four consecutive 15 s samples", "no engine READY within amended 1200-second startup window"],
+  "preflight_snapshot": {
+    "inference_candidates": [],
+    "evaluation_ports": "18473/18877 free",
+    "gpu0": "RTX 3090; 751 MiB used, 23424 MiB free; GUI only, no compute PID",
+    "gpu1": "RTX 3090; 108 MiB used, 24070 MiB free; no compute PID",
+    "MemAvailable_bytes": 116435525632,
+    "D_free_bytes": 145357176832,
+    "HDD_extra_free_bytes": 30838861824
+  },
+  "no_retest_decisions": {
+    "Q171_NInfer_Strata_margin_replica": "Superseded for current adoption decision by Q178 NInfer-all dual measurements and Q179 Q172 security failure; preserve historical single-GPU result, do not rerun preview v0.16.1.",
+    "Q173_Q176": "Results superseded stale pending statuses; reconcile after readback."
+  }
+}

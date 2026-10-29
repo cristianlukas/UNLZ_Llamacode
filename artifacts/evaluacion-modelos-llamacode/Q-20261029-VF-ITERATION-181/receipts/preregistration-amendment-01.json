@@ -1,0 +1,21 @@
+{
+  "task": "Q181-Harness2-coding-holdout",
+  "amendment": 1,
+  "created_utc": "2026-10-29T08:00:56Z",
+  "trigger": "Attempt 3 reached the Strata server's 900-second ENGINE_READY_S timeout without READY; it remained CPU-active with 31.5 GiB peak cgroup memory and no OOM, then cleaned up without any prompt request.",
+  "change": {
+    "STRATA_ENGINE_READY_S": 1200,
+    "supervisor_readiness_loop_seconds": 1200
+  },
+  "unchanged": [
+    "model weights and hashes",
+    "Strata engine binary and arguments",
+    "GPU topology 0,1",
+    "context, YaRN, KV and sampling configuration",
+    "fixture, prompts, acceptance commands and decision rule",
+    "profile order and three-pass protocol"
+  ],
+  "reason": "A prior matching Q171 startup reached READY after 791 seconds; a 900-second limit was insufficient in this cold start. Extending only the readiness tolerance preserves the measured protocol while allowing the already-requested test to proceed.",
+  "maximum_attempts_after_amendment": 1,
+  "stop_if_still_not_ready": true
+}

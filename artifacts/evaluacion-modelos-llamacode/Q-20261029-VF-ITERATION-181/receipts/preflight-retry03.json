@@ -1,0 +1,21 @@
+{
+  "checked_utc": "2026-10-29T08:02:25Z",
+  "status": "partial_before_start; post-start memory gate verified",
+  "lock_token": "90a9c598-8b51-4627-9f7f-6d272ab9e8af",
+  "checks_passed_before_start": [
+    "no unrelated inference process candidates",
+    "ports 8033, 8081, 18473 and 18877 were free",
+    "no CUDA compute applications",
+    "two RTX 3090s visible",
+    "Q181 unit carried STRATA_ENGINE_READY_S=1200"
+  ],
+  "preflight_script_error": "A Python key lookup used MemAvailable: instead of MemAvailable and raised KeyError after the process/port/GPU checks. The enclosing shell did not use set -e and continued to systemctl start; therefore the test started without the memory value written to this receipt.",
+  "last_prestart_memory_observation": {
+    "checked_local": "2026-10-29T05:00:01-03:00, immediately after attempt 3 cleanup",
+    "MemAvailable_bytes": 116709023744
+  },
+  "early_runtime_memory_observation_utc": "2026-10-29T08:03:36Z",
+  "early_runtime_MemAvailable_bytes": 83066691584,
+  "service": "q181-harness.service, the intended single Q181 run; not an orphan",
+  "prompts_started_at_observation": 0
+}

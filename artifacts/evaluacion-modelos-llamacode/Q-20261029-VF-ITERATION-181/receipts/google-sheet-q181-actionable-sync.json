@@ -1,0 +1,21 @@
+{
+  "timestamp_utc": "2026-10-29T08:48:36Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet": "Accionables",
+  "range": "A47:N47",
+  "action": "updated_values_preserving_format",
+  "readback_verified": true,
+  "format_verified": {
+    "fontFamily": "Arial",
+    "fontSize": 10,
+    "wrapStrategy": "WRAP",
+    "verticalAlignment": "TOP"
+  },
+  "result": "Q181 final status and decision synchronized; not promote agent-intermedio.",
+  "fields_updated": [
+    "A47:N47 values"
+  ],
+  "fields_preserved": [
+    "cell format"
+  ]
+}

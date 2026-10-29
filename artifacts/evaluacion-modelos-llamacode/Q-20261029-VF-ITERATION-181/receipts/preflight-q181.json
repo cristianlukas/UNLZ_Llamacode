@@ -1,0 +1,60 @@
+{
+  "task": "Q181-Harness2-coding-holdout",
+  "checked_utc": "2026-10-29T07:42:30.201290+00:00",
+  "lock_token": "90a9c598-8b51-4627-9f7f-6d272ab9e8af",
+  "status": "PASS",
+  "inference_process_candidates": [],
+  "compute_apps": "",
+  "listeners_checked_ports": [
+    8033,
+    8081,
+    18473,
+    18877
+  ],
+  "busy_checked_ports": [],
+  "gpu": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 745,
+      "memory_free_mib": 23430,
+      "utilization_percent": 62
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 108,
+      "memory_free_mib": 24070,
+      "utilization_percent": 28
+    }
+  ],
+  "memory_bytes": {
+    "MemAvailable": 116328370176,
+    "SwapFree": 1892806656
+  },
+  "model_files": [
+    {
+      "path": "/run/q171/v5-modelroot/IQ2_XS/Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS-00001-of-00002.gguf",
+      "size_bytes": 39225954592,
+      "done_marker": true
+    },
+    {
+      "path": "/run/q171/v5-modelroot/IQ2_XS/Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS-00002-of-00002.gguf",
+      "size_bytes": 28800138432,
+      "done_marker": true
+    }
+  ],
+  "free_bytes": {
+    "Disco local": 145357176832,
+    "HDD extra": 30838861824
+  },
+  "sha256": {
+    "assets/benchmarks/custom/agent_efficiency_e2e_v1.json": "37c5907fa9220f56446c2ea8b3ed402d475b88aaa1d15fbceffe1960fd0b3f01",
+    "/home/cristian/.cache/llamacode/build_linux/LlamaCode": "5282f58cb9f47ea15bc1b09c4c98b7ee069511fc6bc5641ec76f6c5070969b30",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261027-VF-ITERATION-171/scripts/run_harness2_control_v5.py": "d23ff4efb1ea9a86a18b53ea5908cf2d9c6409d6797e2b49bce04b6e9ad48fa4",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261029-VF-ITERATION-181/scripts/run_q181_coding_holdout.py": "b43707fde2715a3cd4198a1f554e7c42cc063b31ef7e007c207dbee6a09bba44",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261029-VF-ITERATION-181/configs/astra-iq2xs-dual-1m-q181.json": "1884f0a320f18aff51ad1589380f0be2f2cbfe16729105fbc3c86839c31f59f0"
+  },
+  "unit_verify": "",
+  "config_only_log_path_diff": true
+}

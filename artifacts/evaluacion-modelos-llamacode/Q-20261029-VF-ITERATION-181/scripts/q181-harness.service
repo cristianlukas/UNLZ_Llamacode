@@ -1,0 +1,79 @@
+[Unit]
+Description=Q181 Harness2 representative coding holdout on ASTRA dual RTX 3090
+
+[Service]
+Type=exec
+User=cristian
+Group=cristian
+WorkingDirectory=/run/q181/workspace
+UMask=0077
+PrivateUsers=yes
+PrivateNetwork=yes
+PrivateIPC=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=tmpfs
+ProtectProc=invisible
+NoNewPrivileges=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+LimitMEMLOCK=infinity
+DevicePolicy=closed
+DeviceAllow=/dev/nvidiactl rw
+DeviceAllow=/dev/nvidia-uvm rw
+DeviceAllow=/dev/nvidia-uvm-tools rw
+DeviceAllow=/dev/nvidia0 rw
+DeviceAllow=/dev/nvidia1 rw
+InaccessiblePaths=/media /mnt /root /var/lib /var/log /var/cache /var/tmp /srv /run/user
+BindReadOnlyPaths=/run/q171/v4-app:/opt/llamacode/LlamaCode
+BindReadOnlyPaths=/run/q171/v4-qt:/opt/qt
+BindReadOnlyPaths=/run/q171/v5-strata:/opt/strata
+BindReadOnlyPaths=/run/q171/v5-modelroot:/opt/model
+BindReadOnlyPaths=/run/q171/v5-mtp:/opt/mtp
+BindReadOnlyPaths=/run/q171/v4-probe:/opt/q181/probe_cuda_dual_device
+BindReadOnlyPaths=/run/q181/v5-config:/opt/q181/astra-config.json
+BindReadOnlyPaths=/run/q181/fixture.json:/opt/q181/agent_efficiency_e2e_v1.json
+BindReadOnlyPaths=/run/q181/run_q181_coding_holdout.py:/opt/q181/run_q181_coding_holdout.py
+BindReadOnlyPaths=/run/q181/run_harness2_control_v5.py:/opt/q181/run_harness2_control_v5.py
+BindReadOnlyPaths=/run/q181/run_harness2_isolated.sh:/opt/q181/run_harness2_isolated.sh
+BindReadOnlyPaths=/run/q181/bin:/opt/q181/bin
+BindReadOnlyPaths=/home/cristian/.cache/codex-runtimes/codex-primary-runtime/dependencies/node:/opt/q181/node-runtime
+BindPaths=/run/q181/v1-home:/run/q181/home
+BindPaths=/run/q181/v1-workspace:/run/q181/workspace
+BindPaths=/run/q181/v1-deliverables:/run/q181/deliverables
+Environment=HOME=/run/q181/home
+Environment=USER=cristian
+Environment=LOGNAME=cristian
+Environment=PATH=/opt/q181/bin:/usr/bin:/bin:/usr/local/cuda-12.8/bin
+Environment=LD_LIBRARY_PATH=/opt/qt/lib:/usr/local/cuda-12.8/lib64:/usr/local/cuda-12.8/bin
+Environment=STRATA_ROOT=/opt/strata
+Environment=STRATA_PREFILL_CPU_SHARE=0
+Environment=STRATA_ENGINE_READY_S=1200
+Environment=QT_QPA_PLATFORM=offscreen
+Environment=QT_PLUGIN_PATH=/opt/qt/plugins
+Environment=QT_QPA_PLATFORM_PLUGIN_PATH=/opt/qt/plugins/platforms
+Environment=QML2_IMPORT_PATH=/opt/qt/qml
+Environment=LANG=C.UTF-8
+Environment=LC_ALL=C.UTF-8
+Environment=XDG_DATA_HOME=/run/q181/home/.local/share
+Environment=XDG_CONFIG_HOME=/run/q181/home/.config
+Environment=XDG_CACHE_HOME=/run/q181/home/.cache
+Environment=XDG_STATE_HOME=/run/q181/home/.local/state
+Environment=LLAMACODE_TEST_MODE=1
+Environment=LLAMACODE_CONTROL_PORT=18877
+Environment=LLAMACODE_PROFILES_DIR=/run/q181/home/profiles
+Environment=LLAMACODE_MODELS_DIR=/run/q181/home/models
+Environment=LLAMACODE_RUN_HISTORY_DIR=/run/q181/home/run-history
+Environment=LLAMACODE_AGENT_DATA_DIR=/run/q181/workspace/agent-data
+Environment=LLAMACODE_DELIVERABLES_DIR=/run/q181/deliverables
+Environment=Q171_CONTROL_URL=http://127.0.0.1:18877
+Environment=Q171_MODEL_URL=http://127.0.0.1:18473
+Environment=Q171_FIXTURE=/opt/q181/agent_efficiency_e2e_v1.json
+Environment=CUDA_DEVICE_ORDER=PCI_BUS_ID
+Environment=CUDA_VISIBLE_DEVICES=0,1
+ExecStart=/usr/bin/bash /opt/q181/run_harness2_isolated.sh
+KillMode=control-group
+TimeoutStopSec=60
+OOMPolicy=stop

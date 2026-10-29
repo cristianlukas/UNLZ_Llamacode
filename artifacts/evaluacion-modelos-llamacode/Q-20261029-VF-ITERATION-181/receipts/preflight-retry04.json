@@ -1,0 +1,21 @@
+{
+  "captured_utc": "2026-10-29T08:32:32Z",
+  "intended_attempt": 5,
+  "status": "PASS; ready to start one corrected Q181 resume",
+  "service_previous_state": "failed and inactive; no Q181 process remains",
+  "inference_candidates": [],
+  "evaluation_ports": {"18473": "free", "18877": "free", "8033": "free"},
+  "gpu": [
+    {"index": 0, "model": "RTX 3090", "free_MiB": 23431, "compute_apps": 0, "display_reservation_noted": true},
+    {"index": 1, "model": "RTX 3090", "free_MiB": 24070, "compute_apps": 0}
+  ],
+  "MemAvailable_bytes": 119391354880,
+  "SwapFree_bytes": 747966464,
+  "HDD_extra_free_bytes": 30836011008,
+  "repo_volume_free_bytes": 121918963712,
+  "fixture_sha256": "37c5907fa9220f56446c2ea8b3ed402d475b88aaa1d15fbceffe1960fd0b3f01",
+  "config_sha256": "1884f0a320f18aff51ad1589380f0be2f2cbfe16729105fbc3c86839c31f59f0",
+  "resume_runner_sha256": "c33ea35df73c208e23d3e238e58fb30329dc4c2478905299786b728a246a9afd",
+  "resume_profile_guard": "same persisted agent, launch, model and backend IDs as pass 1; runtime and loopback endpoint are verified in the runner before any benchmark call",
+  "memory_policy": "No artificial RAM/swap limit; keep the existing OOM/Xid, isolation and readiness gates."
+}

@@ -1,0 +1,40 @@
+{
+  "attempt": 5,
+  "service": "q181-harness.service",
+  "started_utc": "2026-10-29T08:32:56Z",
+  "ready_utc": "2026-10-29T08:36:10Z",
+  "engine_ready_seconds": 194,
+  "completed_utc": "2026-10-29T08:43:43Z",
+  "result": {
+    "systemd_state_after_cleanup": "inactive",
+    "systemd_exit_status": 0,
+    "summary_valid": true,
+    "comparison_rows": 6,
+    "runs_per_profile": {
+      "8c898045-d1e1-4754-9ce4-b71a639cc160": 3,
+      "ce949c6a-d38c-49df-8a13-18a8cb49907b": 3
+    }
+  },
+  "model": "qwen3.8-flash-next-iq2_xs",
+  "context_tokens": 1048576,
+  "gpu": "CUDA_VISIBLE_DEVICES=0,1; Strata ASTRA dual RTX 3090",
+  "memory": {
+    "cgroup_peak_gb": 82.5,
+    "minimum_observed_memavailable_gb": 62.8,
+    "artificial_cap": false,
+    "oom_events": 0,
+    "oom_kill_events": 0,
+    "xid": false
+  },
+  "postflight": {
+    "ports_18473_18877": "free",
+    "compute_apps": 0,
+    "inference_service": "stopped"
+  },
+  "decision": "agent-basico 3/3 accepted; agent-intermedio 2/3 accepted; no recommendation to promote Intermedio.",
+  "evidence": {
+    "summary_path": "/media/cristian/HDD extra/Modelos-eval/Q-20261029-VF-ITERATION-181/home/harness2-run/summary.json",
+    "summary_sha256": "d62d4be05fb895102cc8283f6cf0f530cfea945da38cf86ca71b05761b615971",
+    "events_sha256": "c1f08ab28205b089b393313176d080990cb6f299da1890a829d9e6f8e01751ec"
+  }
+}
