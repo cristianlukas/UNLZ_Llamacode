@@ -1,0 +1,718 @@
+{
+  "task_id": "Q178-A05-Qwen-FlashNext-NInfer-all-device-dual3090",
+  "started_utc": "2026-10-29T00:35:57+00:00",
+  "status": "complete",
+  "runtime_sha256": "09145c529015ac7d27ce63214138625927c70c1e89e4291594d74be59bd5f895",
+  "runtime_commit": "3d882fc116941d9233c40bf30f4d66dbaa3d24bd",
+  "model_sha256": "c599a10d696118a8235c953dda3fb45ef55b8c40356f4c688787cef116b8053d",
+  "part_sha256": "fa72b1f0f2d57615500a6c3568a8e8583cf1b403b2be617fa67e864c890314a2",
+  "ngram_sha256": "2a3c7868c550171376785ff393ceff26d5b43ed7c9d2c341838582ff1f625656",
+  "model": "Qwen3.8 Flash-Next RCO IQ2_XS; A03 NInfer v3 reconversion",
+  "gpu_topology": "NInfer-all device-resident experts; one pipeline stage on each of GPU0 and GPU1; KV resident on GPU through 32K then streamed to host; not tensor-parallel",
+  "baseline": {
+    "timestamp_utc": "2026-10-29T00:35:57+00:00",
+    "runtime": {
+      "path": "/tmp/q174-d/ninfer-build-short/apps/ninfer-serve",
+      "sha256": "09145c529015ac7d27ce63214138625927c70c1e89e4291594d74be59bd5f895",
+      "commit": "3d882fc116941d9233c40bf30f4d66dbaa3d24bd"
+    },
+    "benchmark_client": {
+      "path": "/home/cristian/.cache/q173-llama-benchy-0.4.0/bin/llama-benchy",
+      "sha256": "e8a892fe937d5ae1b6a43c31e8cb286ce4774f70396f62ab71008c9ddb0a01a1",
+      "version": "0.4.0"
+    },
+    "model_artifacts": [
+      {
+        "path": "/media/cristian/HDD extra/Modelos-eval/Q-20261028-VF-ITERATION-178/reconverted-v3/text/qwen4exp.ninfer",
+        "bytes": 32000000000,
+        "inode": 224838,
+        "mtime_epoch_s": 1793233048,
+        "sha256": "c599a10d696118a8235c953dda3fb45ef55b8c40356f4c688787cef116b8053d",
+        "sha_validation": "full SHA-256 computed after conversion; stat identity rechecked before load"
+      },
+      {
+        "path": "/media/cristian/HDD extra/Modelos-eval/Q-20261028-VF-ITERATION-178/reconverted-v3/text/qwen4exp.ninfer.part-0001",
+        "bytes": 6640145152,
+        "inode": 224839,
+        "mtime_epoch_s": 1793233113,
+        "sha256": "fa72b1f0f2d57615500a6c3568a8e8583cf1b403b2be617fa67e864c890314a2",
+        "sha_validation": "full SHA-256 computed after conversion; stat identity rechecked before load"
+      },
+      {
+        "path": "/media/cristian/Disco local/Modelos-eval/Q-20261028-VF-ITERATION-178/reconverted-v3/ngram/qwen4exp-ngram.ninfer",
+        "bytes": 28800142336,
+        "inode": 1264332,
+        "mtime_epoch_s": 1793233170,
+        "sha256": "2a3c7868c550171376785ff393ceff26d5b43ed7c9d2c341838582ff1f625656",
+        "sha_validation": "full SHA-256 computed after conversion; stat identity rechecked before load"
+      }
+    ],
+    "tokenizer": {
+      "path": "/home/cristian/.cache/huggingface/hub/models--Qwen--Qwen3.6-27B/snapshots/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9",
+      "tokenizer_json_sha256": "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42",
+      "tokenizer_config_sha256": "5186f0defcd7f232382c7f0aebcd2252d073bb921ab240e407b7ae8745d2b29b"
+    },
+    "port_free": true,
+    "inference_servers": [],
+    "resources": {
+      "timestamp_utc": "2026-10-29T00:35:57+00:00",
+      "mem_available_kib": 112201236,
+      "memory_psi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2714119687\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2708442313",
+      "gpus": {
+        "0": {
+          "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+          "name": "NVIDIA GeForce RTX 3090",
+          "used_mib": 1214,
+          "total_mib": 24576,
+          "util_percent": 17
+        },
+        "1": {
+          "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+          "name": "NVIDIA GeForce RTX 3090",
+          "used_mib": 108,
+          "total_mib": 24576,
+          "util_percent": 27
+        }
+      },
+      "compute_pids_by_gpu": {
+        "0": [],
+        "1": []
+      }
+    },
+    "cache_note": "SHA-256 was computed before this test; process-cold init is not cold-disk init and page cache was not purged."
+  },
+  "max_context": 262144,
+  "context_levels": [
+    [
+      8192,
+      3
+    ],
+    [
+      32768,
+      1
+    ],
+    [
+      65536,
+      1
+    ],
+    [
+      131072,
+      1
+    ],
+    [
+      261888,
+      1
+    ]
+  ],
+  "output_tokens": 128,
+  "sampling": {
+    "temperature": 0.6,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0,
+    "repetition_penalty": 1.0,
+    "presence_penalty": 0.0,
+    "seed": 42
+  },
+  "initialization_runs": [
+    {
+      "label": "process-cold-page-cache-uncontrolled",
+      "pid": 1479048,
+      "started_utc": "2026-10-29T00:35:57+00:00",
+      "argv": [
+        "/tmp/q174-d/ninfer-build-short/apps/ninfer-serve",
+        "/media/cristian/HDD extra/Modelos-eval/Q-20261028-VF-ITERATION-178/reconverted-v3/text/qwen4exp.ninfer",
+        "--model-id",
+        "q178-flashnext-ninfer-all-device-dual",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "18478",
+        "--no-webui",
+        "--max-context",
+        "262144",
+        "--max-concurrency",
+        "1",
+        "--devices",
+        "0,1",
+        "--kv-capacity",
+        "262144",
+        "--kv-dtype",
+        "int8",
+        "--kv-resident",
+        "32768",
+        "--expert-residency",
+        "device",
+        "--ngram-table",
+        "/media/cristian/Disco local/Modelos-eval/Q-20261028-VF-ITERATION-178/reconverted-v3/ngram/qwen4exp-ngram.ninfer",
+        "--ngram-residency",
+        "disk",
+        "--ngram-io",
+        "buffered",
+        "--no-prefix-reuse",
+        "--spec",
+        "none",
+        "--ngram-draft-tokens",
+        "0",
+        "--default-max-tokens",
+        "128",
+        "--temperature",
+        "0.6",
+        "--top-p",
+        "0.95",
+        "--top-k",
+        "20",
+        "--min-p",
+        "0.0",
+        "--presence-penalty",
+        "0.0",
+        "--seed",
+        "42"
+      ],
+      "log": "logs/ninfer-device-dual-process-cold-page-cache-uncontrolled.log",
+      "status": "ready",
+      "ready_utc": "2026-10-29T00:40:45+00:00",
+      "ready_seconds": 287.783,
+      "health": {
+        "status": "ok",
+        "version": "untagged+3d882fc"
+      },
+      "models_http": 200,
+      "model_ids": [
+        "q178-flashnext-ninfer-all-device-dual"
+      ],
+      "resources_at_ready": {
+        "timestamp_utc": "2026-10-29T00:40:45+00:00",
+        "mem_available_kib": 107626248,
+        "memory_psi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2714127830\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2708450414",
+        "gpus": {
+          "0": {
+            "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+            "name": "NVIDIA GeForce RTX 3090",
+            "used_mib": 20856,
+            "total_mib": 24576,
+            "util_percent": 14
+          },
+          "1": {
+            "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+            "name": "NVIDIA GeForce RTX 3090",
+            "used_mib": 20838,
+            "total_mib": 24576,
+            "util_percent": 8
+          }
+        },
+        "compute_pids_by_gpu": {
+          "0": [
+            1479048
+          ],
+          "1": [
+            1479048
+          ]
+        }
+      },
+      "cleanup": {
+        "pid": 1479048,
+        "stopped": true,
+        "returncode": 0,
+        "port_free": true
+      }
+    },
+    {
+      "label": "immediate-hot-likely-relaunch",
+      "pid": 1501043,
+      "started_utc": "2026-10-29T00:41:16+00:00",
+      "argv": [
+        "/tmp/q174-d/ninfer-build-short/apps/ninfer-serve",
+        "/media/cristian/HDD extra/Modelos-eval/Q-20261028-VF-ITERATION-178/reconverted-v3/text/qwen4exp.ninfer",
+        "--model-id",
+        "q178-flashnext-ninfer-all-device-dual",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "18478",
+        "--no-webui",
+        "--max-context",
+        "262144",
+        "--max-concurrency",
+        "1",
+        "--devices",
+        "0,1",
+        "--kv-capacity",
+        "262144",
+        "--kv-dtype",
+        "int8",
+        "--kv-resident",
+        "32768",
+        "--expert-residency",
+        "device",
+        "--ngram-table",
+        "/media/cristian/Disco local/Modelos-eval/Q-20261028-VF-ITERATION-178/reconverted-v3/ngram/qwen4exp-ngram.ninfer",
+        "--ngram-residency",
+        "disk",
+        "--ngram-io",
+        "buffered",
+        "--no-prefix-reuse",
+        "--spec",
+        "none",
+        "--ngram-draft-tokens",
+        "0",
+        "--default-max-tokens",
+        "128",
+        "--temperature",
+        "0.6",
+        "--top-p",
+        "0.95",
+        "--top-k",
+        "20",
+        "--min-p",
+        "0.0",
+        "--presence-penalty",
+        "0.0",
+        "--seed",
+        "42"
+      ],
+      "log": "logs/ninfer-device-dual-immediate-hot-likely-relaunch.log",
+      "status": "ready",
+      "ready_utc": "2026-10-29T00:46:04+00:00",
+      "ready_seconds": 287.917,
+      "health": {
+        "status": "ok",
+        "version": "untagged+3d882fc"
+      },
+      "models_http": 200,
+      "model_ids": [
+        "q178-flashnext-ninfer-all-device-dual"
+      ],
+      "resources_at_ready": {
+        "timestamp_utc": "2026-10-29T00:46:04+00:00",
+        "mem_available_kib": 107366768,
+        "memory_psi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2714130263\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2708452847",
+        "gpus": {
+          "0": {
+            "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+            "name": "NVIDIA GeForce RTX 3090",
+            "used_mib": 20853,
+            "total_mib": 24576,
+            "util_percent": 6
+          },
+          "1": {
+            "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+            "name": "NVIDIA GeForce RTX 3090",
+            "used_mib": 20838,
+            "total_mib": 24576,
+            "util_percent": 4
+          }
+        },
+        "compute_pids_by_gpu": {
+          "0": [
+            1501043
+          ],
+          "1": [
+            1501043
+          ]
+        }
+      },
+      "cleanup_note": "will be stopped after serial ladder"
+    }
+  ],
+  "benchmark_runs": [
+    {
+      "label": "ninfer-device-dual-8k",
+      "argv": [
+        "/home/cristian/.cache/q173-llama-benchy-0.4.0/bin/llama-benchy",
+        "--base-url",
+        "http://127.0.0.1:18478/v1",
+        "--model",
+        "q178-flashnext-ninfer-all-device-dual",
+        "--tokenizer",
+        "/home/cristian/.cache/huggingface/hub/models--Qwen--Qwen3.6-27B/snapshots/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9",
+        "--pp",
+        "8192",
+        "--tg",
+        "128",
+        "--exact-tg",
+        "--depth",
+        "0",
+        "--concurrency",
+        "1",
+        "--runs",
+        "3",
+        "--latency-mode",
+        "generation",
+        "--no-cache",
+        "--skip-coherence",
+        "--no-adapt-prompt",
+        "--no-warmup",
+        "--extra-body",
+        "repetition_penalty=1.0,presence_penalty=0.0,seed=42",
+        "--format",
+        "json",
+        "--exit-on-first-fail",
+        "--save-result",
+        "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-178/runs/ninfer-device-dual-8k.json",
+        "--emit-progress",
+        "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-178/runs/ninfer-device-dual-8k-events.jsonl"
+      ],
+      "log": "logs/ninfer-device-dual-8k.log",
+      "result_json": "runs/ninfer-device-dual-8k.json",
+      "progress_jsonl": "runs/ninfer-device-dual-8k-events.jsonl",
+      "exit_code": 0,
+      "elapsed_seconds": 20.271,
+      "gpu_resources_before": {
+        "timestamp_utc": "2026-10-29T00:46:04+00:00",
+        "mem_available_kib": 107361888,
+        "memory_psi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2714130263\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2708452847",
+        "gpus": {
+          "0": {
+            "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+            "name": "NVIDIA GeForce RTX 3090",
+            "used_mib": 20853,
+            "total_mib": 24576,
+            "util_percent": 6
+          },
+          "1": {
+            "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+            "name": "NVIDIA GeForce RTX 3090",
+            "used_mib": 20838,
+            "total_mib": 24576,
+            "util_percent": 4
+          }
+        },
+        "compute_pids_by_gpu": {
+          "0": [
+            1501043
+          ],
+          "1": [
+            1501043
+          ]
+        }
+      },
+      "event_summary": {
+        "events_sha256": "b014b308c8e09c938a53546be806c1fd0812b42ff5d86e522d8dd38ac9a38852",
+        "requests": [
+          {
+            "request_id": 0,
+            "run_index": 0,
+            "requested_prompt_tokens": 8192,
+            "actual_prompt_tokens": 8244,
+            "actual_completion_tokens": 128,
+            "ttft_seconds_client_observed": 3.8541643770295195,
+            "decode_seconds_client_observed": 1.3617475139908493,
+            "prefill_tok_s_client_observed": 2138.9850544863925,
+            "decode_tok_s_client_observed": 93.99686702924294
+          },
+          {
+            "request_id": 1,
+            "run_index": 1,
+            "requested_prompt_tokens": 8192,
+            "actual_prompt_tokens": 8244,
+            "actual_completion_tokens": 128,
+            "ttft_seconds_client_observed": 3.7724003749899566,
+            "decode_seconds_client_observed": 1.3530888549867086,
+            "prefill_tok_s_client_observed": 2185.3459814752428,
+            "decode_tok_s_client_observed": 94.59836989142693
+          },
+          {
+            "request_id": 2,
+            "run_index": 2,
+            "requested_prompt_tokens": 8192,
+            "actual_prompt_tokens": 8244,
+            "actual_completion_tokens": 128,
+            "ttft_seconds_client_observed": 3.8045532039832324,
+            "decode_seconds_client_observed": 1.3433201709995046,
+            "prefill_tok_s_client_observed": 2166.8773067409925,
+            "decode_tok_s_client_observed": 95.28629344169
+          }
+        ]
+      },
+      "context_summary": [
+        {
+          "requested_prompt_tokens": 8192,
+          "repetitions": 3,
+          "prefill_tok_s_median": 2166.8773067409925,
+          "decode_tok_s_median": 94.59836989142693,
+          "ttft_seconds_median": 3.8045532039832324,
+          "samples": [
+            {
+              "request_id": 0,
+              "run_index": 0,
+              "requested_prompt_tokens": 8192,
+              "actual_prompt_tokens": 8244,
+              "actual_completion_tokens": 128,
+              "ttft_seconds_client_observed": 3.8541643770295195,
+              "decode_seconds_client_observed": 1.3617475139908493,
+              "prefill_tok_s_client_observed": 2138.9850544863925,
+              "decode_tok_s_client_observed": 93.99686702924294
+            },
+            {
+              "request_id": 1,
+              "run_index": 1,
+              "requested_prompt_tokens": 8192,
+              "actual_prompt_tokens": 8244,
+              "actual_completion_tokens": 128,
+              "ttft_seconds_client_observed": 3.7724003749899566,
+              "decode_seconds_client_observed": 1.3530888549867086,
+              "prefill_tok_s_client_observed": 2185.3459814752428,
+              "decode_tok_s_client_observed": 94.59836989142693
+            },
+            {
+              "request_id": 2,
+              "run_index": 2,
+              "requested_prompt_tokens": 8192,
+              "actual_prompt_tokens": 8244,
+              "actual_completion_tokens": 128,
+              "ttft_seconds_client_observed": 3.8045532039832324,
+              "decode_seconds_client_observed": 1.3433201709995046,
+              "prefill_tok_s_client_observed": 2166.8773067409925,
+              "decode_tok_s_client_observed": 95.28629344169
+            }
+          ]
+        }
+      ],
+      "method_note": "client-observed rates; prefill=actual prompt tokens/TTFT, decode=exact output tokens/decode seconds"
+    },
+    {
+      "label": "ninfer-device-dual-contexts",
+      "argv": [
+        "/home/cristian/.cache/q173-llama-benchy-0.4.0/bin/llama-benchy",
+        "--base-url",
+        "http://127.0.0.1:18478/v1",
+        "--model",
+        "q178-flashnext-ninfer-all-device-dual",
+        "--tokenizer",
+        "/home/cristian/.cache/huggingface/hub/models--Qwen--Qwen3.6-27B/snapshots/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9",
+        "--pp",
+        "32768",
+        "65536",
+        "131072",
+        "261888",
+        "--tg",
+        "128",
+        "--exact-tg",
+        "--depth",
+        "0",
+        "--concurrency",
+        "1",
+        "--runs",
+        "1",
+        "--latency-mode",
+        "generation",
+        "--no-cache",
+        "--skip-coherence",
+        "--no-adapt-prompt",
+        "--no-warmup",
+        "--extra-body",
+        "repetition_penalty=1.0,presence_penalty=0.0,seed=42",
+        "--format",
+        "json",
+        "--exit-on-first-fail",
+        "--save-result",
+        "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-178/runs/ninfer-device-dual-contexts.json",
+        "--emit-progress",
+        "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-178/runs/ninfer-device-dual-contexts-events.jsonl"
+      ],
+      "log": "logs/ninfer-device-dual-contexts.log",
+      "result_json": "runs/ninfer-device-dual-contexts.json",
+      "progress_jsonl": "runs/ninfer-device-dual-contexts-events.jsonl",
+      "exit_code": 0,
+      "elapsed_seconds": 268.319,
+      "gpu_resources_before": {
+        "timestamp_utc": "2026-10-29T00:46:24+00:00",
+        "mem_available_kib": 107233460,
+        "memory_psi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2714136072\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2708458655",
+        "gpus": {
+          "0": {
+            "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+            "name": "NVIDIA GeForce RTX 3090",
+            "used_mib": 20853,
+            "total_mib": 24576,
+            "util_percent": 7
+          },
+          "1": {
+            "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+            "name": "NVIDIA GeForce RTX 3090",
+            "used_mib": 20838,
+            "total_mib": 24576,
+            "util_percent": 4
+          }
+        },
+        "compute_pids_by_gpu": {
+          "0": [
+            1501043
+          ],
+          "1": [
+            1501043
+          ]
+        }
+      },
+      "event_summary": {
+        "events_sha256": "d845139a3c3d1ecf986c3e0b665ffe56755a12d87333507c79b06b6a4660b200",
+        "requests": [
+          {
+            "request_id": 0,
+            "run_index": 0,
+            "requested_prompt_tokens": 32768,
+            "actual_prompt_tokens": 32821,
+            "actual_completion_tokens": 128,
+            "ttft_seconds_client_observed": 14.515470440965146,
+            "decode_seconds_client_observed": 1.3906578620080836,
+            "prefill_tok_s_client_observed": 2261.1048076935567,
+            "decode_tok_s_client_observed": 92.04276874771371
+          },
+          {
+            "request_id": 1,
+            "run_index": 0,
+            "requested_prompt_tokens": 65536,
+            "actual_prompt_tokens": 65588,
+            "actual_completion_tokens": 128,
+            "ttft_seconds_client_observed": 29.686199765012134,
+            "decode_seconds_client_observed": 1.4146502279909328,
+            "prefill_tok_s_client_observed": 2209.376764933765,
+            "decode_tok_s_client_observed": 90.48173001872263
+          },
+          {
+            "request_id": 2,
+            "run_index": 0,
+            "requested_prompt_tokens": 131072,
+            "actual_prompt_tokens": 131124,
+            "actual_completion_tokens": 128,
+            "ttft_seconds_client_observed": 63.879390665038954,
+            "decode_seconds_client_observed": 1.541228123998735,
+            "prefill_tok_s_client_observed": 2052.680819821343,
+            "decode_tok_s_client_observed": 83.0506516244347
+          },
+          {
+            "request_id": 3,
+            "run_index": 0,
+            "requested_prompt_tokens": 261888,
+            "actual_prompt_tokens": 261940,
+            "actual_completion_tokens": 128,
+            "ttft_seconds_client_observed": 150.23045009898487,
+            "decode_seconds_client_observed": 1.6757215120014735,
+            "prefill_tok_s_client_observed": 1743.5879332546176,
+            "decode_tok_s_client_observed": 76.38500734356357
+          }
+        ]
+      },
+      "context_summary": [
+        {
+          "requested_prompt_tokens": 32768,
+          "repetitions": 1,
+          "prefill_tok_s_median": 2261.1048076935567,
+          "decode_tok_s_median": 92.04276874771371,
+          "ttft_seconds_median": 14.515470440965146,
+          "samples": [
+            {
+              "request_id": 0,
+              "run_index": 0,
+              "requested_prompt_tokens": 32768,
+              "actual_prompt_tokens": 32821,
+              "actual_completion_tokens": 128,
+              "ttft_seconds_client_observed": 14.515470440965146,
+              "decode_seconds_client_observed": 1.3906578620080836,
+              "prefill_tok_s_client_observed": 2261.1048076935567,
+              "decode_tok_s_client_observed": 92.04276874771371
+            }
+          ]
+        },
+        {
+          "requested_prompt_tokens": 65536,
+          "repetitions": 1,
+          "prefill_tok_s_median": 2209.376764933765,
+          "decode_tok_s_median": 90.48173001872263,
+          "ttft_seconds_median": 29.686199765012134,
+          "samples": [
+            {
+              "request_id": 1,
+              "run_index": 0,
+              "requested_prompt_tokens": 65536,
+              "actual_prompt_tokens": 65588,
+              "actual_completion_tokens": 128,
+              "ttft_seconds_client_observed": 29.686199765012134,
+              "decode_seconds_client_observed": 1.4146502279909328,
+              "prefill_tok_s_client_observed": 2209.376764933765,
+              "decode_tok_s_client_observed": 90.48173001872263
+            }
+          ]
+        },
+        {
+          "requested_prompt_tokens": 131072,
+          "repetitions": 1,
+          "prefill_tok_s_median": 2052.680819821343,
+          "decode_tok_s_median": 83.0506516244347,
+          "ttft_seconds_median": 63.879390665038954,
+          "samples": [
+            {
+              "request_id": 2,
+              "run_index": 0,
+              "requested_prompt_tokens": 131072,
+              "actual_prompt_tokens": 131124,
+              "actual_completion_tokens": 128,
+              "ttft_seconds_client_observed": 63.879390665038954,
+              "decode_seconds_client_observed": 1.541228123998735,
+              "prefill_tok_s_client_observed": 2052.680819821343,
+              "decode_tok_s_client_observed": 83.0506516244347
+            }
+          ]
+        },
+        {
+          "requested_prompt_tokens": 261888,
+          "repetitions": 1,
+          "prefill_tok_s_median": 1743.5879332546176,
+          "decode_tok_s_median": 76.38500734356357,
+          "ttft_seconds_median": 150.23045009898487,
+          "samples": [
+            {
+              "request_id": 3,
+              "run_index": 0,
+              "requested_prompt_tokens": 261888,
+              "actual_prompt_tokens": 261940,
+              "actual_completion_tokens": 128,
+              "ttft_seconds_client_observed": 150.23045009898487,
+              "decode_seconds_client_observed": 1.6757215120014735,
+              "prefill_tok_s_client_observed": 1743.5879332546176,
+              "decode_tok_s_client_observed": 76.38500734356357
+            }
+          ]
+        }
+      ],
+      "method_note": "client-observed rates; prefill=actual prompt tokens/TTFT, decode=exact output tokens/decode seconds"
+    }
+  ],
+  "quality_note": "Q172 77/100 belongs to historical Q173 NInfer preview v0.16.1 on GPU1; not rerun or attributed to this runtime.",
+  "cache_note": "SHA-256 was computed before this test; process-cold init is not cold-disk init and page cache was not purged.",
+  "final_cleanup": {
+    "pid": 1501043,
+    "stopped": true,
+    "returncode": 0,
+    "port_free": true
+  },
+  "finished_utc": "2026-10-29T00:51:24+00:00",
+  "postflight": {
+    "timestamp_utc": "2026-10-29T00:51:24+00:00",
+    "mem_available_kib": 112296708,
+    "memory_psi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2714268678\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2708591246",
+    "gpus": {
+      "0": {
+        "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+        "name": "NVIDIA GeForce RTX 3090",
+        "used_mib": 1183,
+        "total_mib": 24576,
+        "util_percent": 100
+      },
+      "1": {
+        "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+        "name": "NVIDIA GeForce RTX 3090",
+        "used_mib": 108,
+        "total_mib": 24576,
+        "util_percent": 100
+      }
+    },
+    "compute_pids_by_gpu": {
+      "0": [],
+      "1": []
+    }
+  },
+  "port_free_after_cleanup": true,
+  "remaining_inference_servers": []
+}

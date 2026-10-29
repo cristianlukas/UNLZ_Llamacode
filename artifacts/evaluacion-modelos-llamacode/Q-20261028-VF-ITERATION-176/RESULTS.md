@@ -2,6 +2,8 @@
 
 **Estado:** completado con cobertura condicionada. Se midieron los perfiles con ruta dual verificada en esta sesión. Flash-Next/NInfer queda N/D para init dual porque el preview Linux sólo se había calificado en GPU1 y el soporte con dos tarjetas físicas no está validado.
 
+**Nota posterior Q178:** lo anterior describe el estado al cierre de Q176. Q178 A05 calificó en Linux una configuración dual distinta (NInfer-all v3, expertos residentes en GPU y KV sparse host). Sus resultados se agregan como una fila nueva en `Q-20261028-VF-ITERATION-178/RESULTS.md`; la fila histórica Q171/Q173 de una sola GPU permanece sin cambios y el Q172 histórico no se transfiere al motor nuevo.
+
 | Perfil | Init fría | Init caliente | Topología / comprobación |
 |---|---:|---:|---|
 | Ternary Bonsai 2 · NInfer-all | ≈4,52 s desde `starting engine` hasta listener; el timestamp de spawn no quedó capturado | 6,016 s desde `Popen` hasta `GET /health` 200 | GPU0+GPU1; +8.444/+7.784 MiB vs baseline; proceso cerrado, puerto libre |

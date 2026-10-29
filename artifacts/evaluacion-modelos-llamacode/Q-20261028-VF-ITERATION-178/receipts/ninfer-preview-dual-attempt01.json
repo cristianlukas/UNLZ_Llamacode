@@ -1,0 +1,23 @@
+{
+  "task_id": "Q178-A02-Q173-NInfer-preview-same-runtime-dual-3090",
+  "status": "failed_before_model_load",
+  "started_utc": "2026-10-29T00:09:23Z",
+  "finished_utc": "2026-10-29T00:09:24Z",
+  "runtime": "NInfer Linux preview v0.16.1",
+  "runtime_sha256": "59e5f3e21246ac9f4bd871943e1e1348fbcb7ad6b3d2d32d046b5d4595bb3bac",
+  "artifact_sha256": [
+    "6c3dd0a8a730566b3cda9b6c563a8a345d1986f930be409a0dca8bd2a9887584",
+    "a089cb07a49c18b8eb942e89c4e3676f0b03adf0fdbd141dc8f5d4cf5418de1f"
+  ],
+  "requested_devices": [0, 1],
+  "exit_code": 1,
+  "error": "FATAL server failed during startup | Qwen3.8-Flash-Next: runs on one GPU: pass a single id to --devices",
+  "stage": "engine startup, 193 ms; before weights or CUDA allocation",
+  "gpu_compute_pids_after": {"0": [], "1": []},
+  "port_18479_free_after": true,
+  "remaining_inference_servers": [],
+  "mem_available_kib_after": 111056860,
+  "source_weights_or_artifacts_modified": false,
+  "log": "logs/ninfer-preview-dual-cold-process.log",
+  "runner_result": "runs/ninfer-preview-dual-context-ladder.json"
+}

@@ -1,0 +1,72 @@
+{
+  "timestamp_utc": "2026-10-29T00:32:24+00:00",
+  "runtime": {
+    "path": "/tmp/q174-d/ninfer-build-short/apps/ninfer-serve",
+    "sha256": "09145c529015ac7d27ce63214138625927c70c1e89e4291594d74be59bd5f895",
+    "commit": "3d882fc116941d9233c40bf30f4d66dbaa3d24bd"
+  },
+  "benchmark_client": {
+    "path": "/home/cristian/.cache/q173-llama-benchy-0.4.0/bin/llama-benchy",
+    "sha256": "e8a892fe937d5ae1b6a43c31e8cb286ce4774f70396f62ab71008c9ddb0a01a1",
+    "version": "0.4.0"
+  },
+  "model_artifacts": [
+    {
+      "path": "/media/cristian/HDD extra/Modelos-eval/Q-20261028-VF-ITERATION-178/reconverted-v3/text/qwen4exp.ninfer",
+      "bytes": 32000000000,
+      "inode": 224838,
+      "mtime_epoch_s": 1793233048,
+      "sha256": "c599a10d696118a8235c953dda3fb45ef55b8c40356f4c688787cef116b8053d",
+      "sha_validation": "full SHA-256 computed after conversion; stat identity rechecked before load"
+    },
+    {
+      "path": "/media/cristian/HDD extra/Modelos-eval/Q-20261028-VF-ITERATION-178/reconverted-v3/text/qwen4exp.ninfer.part-0001",
+      "bytes": 6640145152,
+      "inode": 224839,
+      "mtime_epoch_s": 1793233113,
+      "sha256": "fa72b1f0f2d57615500a6c3568a8e8583cf1b403b2be617fa67e864c890314a2",
+      "sha_validation": "full SHA-256 computed after conversion; stat identity rechecked before load"
+    },
+    {
+      "path": "/media/cristian/Disco local/Modelos-eval/Q-20261028-VF-ITERATION-178/reconverted-v3/ngram/qwen4exp-ngram.ninfer",
+      "bytes": 28800142336,
+      "inode": 1264332,
+      "mtime_epoch_s": 1793233170,
+      "sha256": "2a3c7868c550171376785ff393ceff26d5b43ed7c9d2c341838582ff1f625656",
+      "sha_validation": "full SHA-256 computed after conversion; stat identity rechecked before load"
+    }
+  ],
+  "tokenizer": {
+    "path": "/home/cristian/.cache/huggingface/hub/models--Qwen--Qwen3.6-27B/snapshots/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9",
+    "tokenizer_json_sha256": "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42",
+    "tokenizer_config_sha256": "5186f0defcd7f232382c7f0aebcd2252d073bb921ab240e407b7ae8745d2b29b"
+  },
+  "port_free": true,
+  "inference_servers": [],
+  "resources": {
+    "timestamp_utc": "2026-10-29T00:32:24+00:00",
+    "mem_available_kib": 112303768,
+    "memory_psi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2714035251\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2708357920",
+    "gpus": {
+      "0": {
+        "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+        "name": "NVIDIA GeForce RTX 3090",
+        "used_mib": 1204,
+        "total_mib": 24576,
+        "util_percent": 9
+      },
+      "1": {
+        "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+        "name": "NVIDIA GeForce RTX 3090",
+        "used_mib": 108,
+        "total_mib": 24576,
+        "util_percent": 23
+      }
+    },
+    "compute_pids_by_gpu": {
+      "0": [],
+      "1": []
+    }
+  },
+  "cache_note": "SHA-256 was computed before this test; process-cold init is not cold-disk init and page cache was not purged."
+}

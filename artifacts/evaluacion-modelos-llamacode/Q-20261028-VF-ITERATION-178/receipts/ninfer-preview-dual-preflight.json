@@ -1,0 +1,70 @@
+{
+  "task": "Q178 A02 fresh preflight",
+  "timestamp_utc": "2026-10-29T00:09:23+00:00",
+  "lock_token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+  "files": [
+    {
+      "path": "/media/cristian/Disco local/LlamaCode-cache/Q171-ninfer-build-r1/apps/ninfer-serve",
+      "bytes": 785914304,
+      "mtime_epoch": 1793121423,
+      "sha256": "59e5f3e21246ac9f4bd871943e1e1348fbcb7ad6b3d2d32d046b5d4595bb3bac",
+      "validation": "fresh SHA"
+    },
+    {
+      "path": "/media/cristian/HDD extra/Modelos-eval/Q-20261027-VF-ITERATION-171/artifact/qwen4exp.ninfer",
+      "bytes": 32000000000,
+      "mtime_epoch": 1793121858,
+      "sha256": "6c3dd0a8a730566b3cda9b6c563a8a345d1986f930be409a0dca8bd2a9887584",
+      "validation": "exact SHA inherited from Q171/Q173; size+mtime rechecked"
+    },
+    {
+      "path": "/media/cristian/HDD extra/Modelos-eval/Q-20261027-VF-ITERATION-171/artifact/qwen4exp.ninfer.part-0001",
+      "bytes": 7225180928,
+      "mtime_epoch": 1793121943,
+      "sha256": "a089cb07a49c18b8eb942e89c4e3676f0b03adf0fdbd141dc8f5d4cf5418de1f",
+      "validation": "exact SHA inherited from Q171/Q173; size+mtime rechecked"
+    },
+    {
+      "path": "/media/cristian/Disco local/Modelos-eval/Q39-NInfer-v0.16.1-FlashNext-IQ2XS/qwen4exp.ninfer.ngram",
+      "bytes": 29127258112,
+      "mtime_epoch": 1792688074,
+      "sha256": "0478dd2f62a4d02b5cf3ab64d69229bd88dd95366498ad7c72828f95b99135b6",
+      "validation": "exact SHA inherited from Q171/Q173; size+mtime rechecked"
+    }
+  ],
+  "llama_benchy": {
+    "path": "/home/cristian/.cache/q173-llama-benchy-0.4.0/bin/llama-benchy",
+    "version": "llama-benchy 0.4.0",
+    "sha256": "e8a892fe937d5ae1b6a43c31e8cb286ce4774f70396f62ab71008c9ddb0a01a1",
+    "prior_sha": null
+  },
+  "tokenizer_path": "/home/cristian/.cache/huggingface/hub/models--Qwen--Qwen3.6-27B/snapshots/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9",
+  "tokenizer_dir_exists": true,
+  "port_free": true,
+  "inference_servers": [],
+  "resources": {
+    "timestamp_utc": "2026-10-29T00:09:23+00:00",
+    "mem_available_kib": 111051580,
+    "memory_psi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2712988444\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2707315888\n",
+    "gpus": {
+      "0": {
+        "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+        "name": "NVIDIA GeForce RTX 3090",
+        "used_mib": 1432,
+        "total_mib": 24576,
+        "util_percent": 63
+      },
+      "1": {
+        "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+        "name": "NVIDIA GeForce RTX 3090",
+        "used_mib": 108,
+        "total_mib": 24576,
+        "util_percent": 15
+      }
+    },
+    "compute_pids_by_gpu": {
+      "0": [],
+      "1": []
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "task_id": "Q178-amendment-01-v3-reconversion",
+  "status": "ready_for_cpu_conversion",
+  "venv": "/media/cristian/Disco local/Modelos-eval/Q-20261028-VF-ITERATION-178/tooling/cpu-converter-venv",
+  "python": "3.12.3",
+  "torch": "2.14.1+cpu",
+  "torch_cuda_available": false,
+  "numpy": "2.5.3",
+  "safetensors": "0.8.0",
+  "gguf": "0.19.0",
+  "tqdm": "4.70.1",
+  "pip_index": "https://download.pytorch.org/whl/cpu",
+  "pip_cache": "/media/cristian/Disco local/Modelos-eval/Q-20261028-VF-ITERATION-178/tooling/pip-cache",
+  "temp_dir": "/media/cristian/Disco local/Modelos-eval/Q-20261028-VF-ITERATION-178/tooling/tmp",
+  "note": "Isolated CPU conversion environment; no model conversion or GPU use has started."
+}

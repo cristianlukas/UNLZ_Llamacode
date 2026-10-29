@@ -1,0 +1,110 @@
+{
+  "task_id": "Q178-A02-Q173-NInfer-preview-same-runtime-dual-3090",
+  "registered_utc": "2026-10-29T00:04:32Z",
+  "status": "preregistered",
+  "lock": {
+    "task": "Q146 resume justified VF-20261019-01 tests",
+    "token": "2242863e-c78e-4fa9-9649-c1d1541f3919"
+  },
+  "user_direction": "Keep the historical one-GPU Q171/Q173 row and repeat the same NInfer Flash-Next IQ2_XS test on both RTX 3090s; append a separate row.",
+  "comparison": {
+    "historical_control": "Q173 NInfer Linux preview v0.16.1, --device 1, exact same model and n-gram artifacts",
+    "new_topology": "same runtime and artifacts, --devices 0,1; pipeline stages, not tensor parallel",
+    "intentional_factor_change": "GPU topology only",
+    "preserve_historical_row": true,
+    "append_new_row": true
+  },
+  "pins": {
+    "runtime": {
+      "path": "/media/cristian/Disco local/LlamaCode-cache/Q171-ninfer-build-r1/apps/ninfer-serve",
+      "version": "NInfer Linux preview v0.16.1",
+      "sha256": "59e5f3e21246ac9f4bd871943e1e1348fbcb7ad6b3d2d32d046b5d4595bb3bac"
+    },
+    "model": {
+      "path": "/media/cristian/HDD extra/Modelos-eval/Q-20261027-VF-ITERATION-171/artifact/qwen4exp.ninfer",
+      "bytes": 32000000000,
+      "sha256": "6c3dd0a8a730566b3cda9b6c563a8a345d1986f930be409a0dca8bd2a9887584",
+      "part_path": "/media/cristian/HDD extra/Modelos-eval/Q-20261027-VF-ITERATION-171/artifact/qwen4exp.ninfer.part-0001",
+      "part_bytes": 7225180928,
+      "part_sha256": "a089cb07a49c18b8eb942e89c4e3676f0b03adf0fdbd141dc8f5d4cf5418de1f"
+    },
+    "ngram": {
+      "path": "/media/cristian/Disco local/Modelos-eval/Q39-NInfer-v0.16.1-FlashNext-IQ2XS/qwen4exp.ninfer.ngram",
+      "bytes": 29127258112,
+      "sha256": "0478dd2f62a4d02b5cf3ab64d69229bd88dd95366498ad7c72828f95b99135b6"
+    },
+    "benchmark_client": {
+      "path": "/home/cristian/.cache/q173-llama-benchy-0.4.0/bin/llama-benchy",
+      "version": "0.4.0",
+      "sha256": "e8a892fe937d5ae1b6a43c31e8cb286ce4774f70396f62ab71008c9ddb0a01a1"
+    },
+    "runner": {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-178/scripts/run_q178_ninfer_preview_dual.py",
+      "sha256": "118069411e6bee1e7ff422b10bef5974862dd4c5a750eb6ce6836bf884c1b81e"
+    },
+    "tokenizer": {
+      "path": "/home/cristian/.cache/huggingface/hub/models--Qwen--Qwen3.6-27B/snapshots/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9",
+      "provenance": "same tokenizer as Q173; validate directory and key files in preflight"
+    }
+  },
+  "server": {
+    "bind": "127.0.0.1",
+    "port": 18479,
+    "model_id": "q178-flashnext-ninfer-dual",
+    "max_context": 262144,
+    "kv_capacity": 262144,
+    "kv_dtype": "int8",
+    "max_concurrency": 1,
+    "devices": [0, 1],
+    "cuda_visible_devices": "0,1",
+    "prefix_reuse": false,
+    "ngram_draft_tokens": 0,
+    "expert_state": false,
+    "max_output_tokens": 128,
+    "sampling": {
+      "temperature": 0.6,
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repetition_penalty": 1.0,
+      "presence_penalty": 0.0,
+      "seed": 42
+    },
+    "exact_runtime_cli_verified": true,
+    "dual_gpu_gate": "same inference PID must appear as CUDA compute on GPU0 and GPU1; no single-GPU fallback"
+  },
+  "initialization": {
+    "cold_process": "Popen to HTTP 200 from /v1/models with model absent from VRAM; disk cache not purged",
+    "hot_likely": "stop cleanly then immediate Popen to /v1/models; page cache likely warm, not instrumented",
+    "generation_during_timer": false,
+    "repetitions": 1
+  },
+  "context_ladder": {
+    "method": "reuse Q173 llama-benchy 0.4.0 client, Qwen tokenizer, cached Sherlock fixture and server-reported timings",
+    "targets": [8192, 32768, 65536, 131072, 261888],
+    "repetitions": {"8192": 3, "32768": 1, "65536": 1, "131072": 1, "261888": 1},
+    "output_tokens": 128,
+    "new_512k": false,
+    "new_1m": false,
+    "outputs": "runs/ninfer-preview-dual-context-ladder.json and events JSONL"
+  },
+  "quality": {
+    "rerun_q172": false,
+    "historical_score": "Q173 seed42 77/100; TC-75/82/84/92 failed, including critical TC-92 tenant-isolation leak",
+    "attribution": "historical GPU1-only score; do not label as dual-run score"
+  },
+  "stop_conditions": [
+    "foreign inference server detected",
+    "same PID not compute on both GPUs at readiness and before requests",
+    "MemAvailable below 32 GiB for four consecutive 15-second samples",
+    "OOM, Xid, process crash, hash mismatch, context/token-count mismatch",
+    "port 18479 occupied or listener not loopback",
+    "cleanup does not close owned process and port"
+  ],
+  "data_preservation": {
+    "do_not_modify_production_profiles": true,
+    "do_not_modify_qwen_strata_1m": true,
+    "do_not_modify_peritosoft": true,
+    "preserve_q173_single_gpu_sheet_and_local_rows": true
+  }
+}

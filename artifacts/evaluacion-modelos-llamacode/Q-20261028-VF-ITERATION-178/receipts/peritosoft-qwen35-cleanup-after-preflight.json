@@ -1,0 +1,19 @@
+{
+  "task": "Q178-A04 unblock registered dual-GPU test",
+  "timestamp_utc": "2026-10-29T00:31:00Z",
+  "authorization": "Prior user instruction explicitly authorized stopping PeritoSoft and its model servers when found active.",
+  "identity_check": "The active llama-server PID 1442687 was a child of PID 1410862, which was a child of the PeritoSoft Electron app PID 1410776.",
+  "signals": [
+    {"pid": 1410776, "identity": "PeritoSoft app", "signal": "SIGTERM"},
+    {"pid": 1410862, "identity": "PeritoSoft app server.js process", "signal": "SIGTERM"},
+    {"pid": 1442687, "identity": "LlamaCode llama-server serving Qwen3.5-9B on 127.0.0.1:8033", "signal": "SIGTERM"}
+  ],
+  "after": {
+    "all_three_pids_exited": true,
+    "port_8033_free": true,
+    "inference_compute_apps": [],
+    "desktop_supervisor_service_touched": false,
+    "codex_brave_and_unrelated_apps_touched": false,
+    "q178_model_loaded": false
+  }
+}

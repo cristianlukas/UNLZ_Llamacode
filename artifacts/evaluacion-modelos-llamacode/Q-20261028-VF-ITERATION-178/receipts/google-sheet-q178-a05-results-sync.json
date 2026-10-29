@@ -1,0 +1,29 @@
+{
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "tab": "Resultados",
+  "sheet_id": 1972251122,
+  "operation": "append five per-context records for Q178 A05; preserve Q171/Q173 single-GPU rows",
+  "range_written": "Resultados!A408:AH412",
+  "columns": 34,
+  "rows": [
+    {"row": 408, "id": "Q178-NINFER-DUAL-CTX-8K", "context_tokens": 8192, "prefill_tok_s": 2166.8773067409925, "decode_tok_s": 94.59836989142693, "init_process_s": 287.783, "init_immediate_relaunch_s": 287.917},
+    {"row": 409, "id": "Q178-NINFER-DUAL-CTX-32K", "context_tokens": 32768, "prefill_tok_s": 2261.1048076935567, "decode_tok_s": 92.04276874771371, "init_process_s": 287.783, "init_immediate_relaunch_s": 287.917},
+    {"row": 410, "id": "Q178-NINFER-DUAL-CTX-64K", "context_tokens": 65536, "prefill_tok_s": 2209.376764933765, "decode_tok_s": 90.48173001872263, "init_process_s": 287.783, "init_immediate_relaunch_s": 287.917},
+    {"row": 411, "id": "Q178-NINFER-DUAL-CTX-128K", "context_tokens": 131072, "prefill_tok_s": 2052.680819821343, "decode_tok_s": 83.0506516244347, "init_process_s": 287.783, "init_immediate_relaunch_s": 287.917},
+    {"row": 412, "id": "Q178-NINFER-DUAL-CTX-256K", "context_tokens": 261888, "prefill_tok_s": 1743.5879332546176, "decode_tok_s": 76.38500734356357, "init_process_s": 287.783, "init_immediate_relaunch_s": 287.917}
+  ],
+  "readback": {
+    "range": "Resultados!A408:AH412",
+    "rows_returned": 5,
+    "width_each": 34,
+    "values_verified": true,
+    "grid_row_count_after": 412,
+    "format": "A407:AH407 style baseline copied as top-aligned, wrapped Arial 10"
+  },
+  "historical_preservation": {
+    "Q171_Q173_single_gpu_rows": "unchanged; all writes were appended after previous last row 407",
+    "historical_q172": "left as Q173 preview/GPU1 evidence; explicitly not attributed to Q178 A05"
+  },
+  "result_source": "artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-178/RESULTS.md",
+  "quality_note": "Q172 was not repeated for the new NInfer-all v3 dual profile."
+}

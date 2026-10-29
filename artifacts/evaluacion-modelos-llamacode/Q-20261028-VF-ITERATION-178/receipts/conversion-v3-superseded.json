@@ -1,0 +1,17 @@
+{
+  "task_id": "Q178-A01-cpu-conversion-v3",
+  "status": "superseded_and_interrupted_before_artifact_output",
+  "finished_utc": "2026-10-29T00:04:32Z",
+  "progress_at_interrupt": {
+    "tensor_groups_reported": 89,
+    "total_tensor_groups": 1027
+  },
+  "reason": "User requested a direct one-GPU versus dual-GPU repeat without deleting the historical row. The exact Q173 NInfer preview v0.16.1 binary exposes --devices, so the same-runtime comparison is more decision-relevant than converting to a different runtime.",
+  "interruption": "SIGINT sent only to the Q178-owned CPU conversion process",
+  "converter_process_after_interrupt": "exited",
+  "new_model_artifact_files_found": [],
+  "gguf_sources_modified": false,
+  "q171_artifact_or_ngram_modified": false,
+  "gpu_compute_used": false,
+  "partial_source_config": "reconverted-v3/source-config retained as small derived audit input; not used in the dual repeat"
+}

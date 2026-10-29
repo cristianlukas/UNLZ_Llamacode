@@ -1,0 +1,49 @@
+{
+  "task_id": "Q178-A05-Qwen-FlashNext-NInfer-all-device-dual3090",
+  "status": "complete",
+  "result_source": "runs/ninfer-device-dual-context-ladder.json",
+  "runtime": "NInfer-all Q174 v3",
+  "runtime_commit": "3d882fc116941d9233c40bf30f4d66dbaa3d24bd",
+  "model": "Qwen3.8 Flash-Next RCO IQ2_XS; same GGUF source weights as Q173, converted to NInfer v3",
+  "gpu_topology": "2x RTX 3090, GPU0+GPU1; one pipeline stage per GPU; not tensor parallel",
+  "memory_profile": "expert-residency=device; KV int8; resident through 32768 positions; sparse KV beyond that in host RAM; n-gram table on disk; prefix reuse/speculation disabled",
+  "context_ladder": [
+    {"requested_context_tokens": 8192, "actual_prompt_tokens": 8244, "repetitions": 3, "prefill_tok_s_median": 2166.8773067409925, "decode_tok_s_median": 94.59836989142693, "ttft_s_median": 3.8045532039832324},
+    {"requested_context_tokens": 32768, "actual_prompt_tokens": 32821, "repetitions": 1, "prefill_tok_s": 2261.1048076935567, "decode_tok_s": 92.04276874771371, "ttft_s": 14.515470440965146},
+    {"requested_context_tokens": 65536, "actual_prompt_tokens": 65588, "repetitions": 1, "prefill_tok_s": 2209.376764933765, "decode_tok_s": 90.48173001872263, "ttft_s": 29.686199765012134},
+    {"requested_context_tokens": 131072, "actual_prompt_tokens": 131124, "repetitions": 1, "prefill_tok_s": 2052.680819821343, "decode_tok_s": 83.0506516244347, "ttft_s": 63.879390665038954},
+    {"requested_context_tokens": 261888, "actual_prompt_tokens": 261940, "repetitions": 1, "prefill_tok_s": 1743.5879332546176, "decode_tok_s": 76.38500734356357, "ttft_s": 150.23045009898487}
+  ],
+  "output_tokens_exact": 128,
+  "initialization": {
+    "process_initial_s": 287.783,
+    "immediate_relaunch_s": 287.917,
+    "interpretation": "Page cache was not purged/instrumented. Label as process initial and immediate relaunch, not controlled disk-cold/disk-hot. Both startup loads read the 36 GiB artifact at about 130 MiB/s."
+  },
+  "quality": {
+    "q178_q172": "not run",
+    "do_not_inherit": "Q173 preview/GPU1 Q172 77/100 and TC-75/82/84/92 failures are historical and not scores for this runtime. Q171 25/25 exact synthetic checks are not general quality."
+  },
+  "status_notes": [
+    "A02 same NInfer v0.16.1 rejected Flash-Next multi-GPU before loading (runs on one GPU).",
+    "A04 disk-expert dual attempt aborted before readiness with cudaErrorInvalidResourceHandle; no OOM/Xid.",
+    "A05 device-resident experts completed the ladder successfully; this changes runtime, artifact format and residency versus Q173 and does not isolate GPU count."
+  ],
+  "postflight": {
+    "timestamp_utc": "2026-10-29T00:51:24+00:00",
+    "mem_available_kib": 112296708,
+    "memory_psi_pressure": false,
+    "compute_pids_by_gpu": {"0": [], "1": []},
+    "own_server_returncode": 0,
+    "port_18478_free": true,
+    "remaining_inference_servers": [],
+    "oom_or_xid": false
+  },
+  "evidence": {
+    "ladder_json": "runs/ninfer-device-dual-context-ladder.json",
+    "8k_events": "runs/ninfer-device-dual-8k-events.jsonl",
+    "context_events": "runs/ninfer-device-dual-contexts-events.jsonl",
+    "preregistration": "receipts/prereg-amendment-05-device-residency.json",
+    "report": "RESULTS.md"
+  }
+}

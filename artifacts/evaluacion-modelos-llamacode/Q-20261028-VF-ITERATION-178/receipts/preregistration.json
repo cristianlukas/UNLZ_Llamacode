@@ -1,0 +1,61 @@
+{
+  "task_id": "Q178-Qwen-FlashNext-NInfer-all-dual3090-context",
+  "parent_queue_lock": "Q146 resume justified VF-20261019-01 tests",
+  "lock_token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+  "status": "preregistered",
+  "runner": "artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-178/scripts/run_ninfer_flashnext_dual.py",
+  "runner_sha256": "5a2a356cf317700a37ed179c0a6545b1ab2c876580b27db89c8ea4bc209dd272",
+  "static_validation": "Python syntax and preregistration JSON parse passed; no model/GPU started",
+  "objective": "Qualify the exact existing Flash-Next IQ2_XS NInfer artifact on the pinned NInfer-all Linux build using both RTX 3090s, then measure its native-context ladder if startup and smoke gates pass.",
+  "runtime": {
+    "source_commit": "3d882fc116941d9233c40bf30f4d66dbaa3d24bd",
+    "version": "untagged+3d882fc",
+    "binary": "/tmp/q174-d/ninfer-build-short/apps/ninfer-serve",
+    "sha256": "09145c529015ac7d27ce63214138625927c70c1e89e4291594d74be59bd5f895"
+  },
+  "model": {
+    "name": "Qwen3.8 Flash-Next RCO IQ2_XS NInfer artifact qwen4exp",
+    "artifact": "/media/cristian/HDD extra/Modelos-eval/Q-20261027-VF-ITERATION-171/artifact/qwen4exp.ninfer",
+    "size_bytes": 32000000000,
+    "sha256": "6c3dd0a8a730566b3cda9b6c563a8a345d1986f930be409a0dca8bd2a9887584",
+    "part_0001_size_bytes": 7225180928,
+    "part_0001_sha256": "a089cb07a49c18b8eb942e89c4e3676f0b03adf0fdbd141dc8f5d4cf5418de1f",
+    "ngram_table": "/media/cristian/Disco local/Modelos-eval/Q39-NInfer-v0.16.1-FlashNext-IQ2XS/qwen4exp.ninfer.ngram",
+    "ngram_sha256": "0478dd2f62a4d02b5cf3ab64d69229bd88dd95366498ad7c72828f95b99135b6",
+    "native_context_tokens": 262144
+  },
+  "gpu_topology": "GPU0+GPU1; one NInfer pipeline stage per RTX 3090 via --devices 0,1; not tensor-parallel",
+  "server": {
+    "host": "127.0.0.1",
+    "port": 18478,
+    "max_context": 262144,
+    "max_concurrency": 1,
+    "kv_dtype": "int8",
+    "expert_residency": "disk",
+    "expert_cache_mib": "auto (must resolve nonzero for Flash-Next disk)",
+    "ngram_residency": "disk",
+    "speculation": "none; ngram draft tokens 0",
+    "prefix_reuse": false
+  },
+  "initialization": {
+    "runs": ["fresh-process/model absent from VRAM", "clean immediate relaunch after first load"],
+    "metric": "Popen-to-healthy /health",
+    "page_cache": "not purged or directly measured; do not claim disk-cold or causal warm-cache effect",
+    "generation_during_timing": false
+  },
+  "context_ladder": {
+    "enabled_only_after_smoke": true,
+    "prompt_tokens": [8192, 32768, 65536, 131072, 261888],
+    "repetitions": {"8192": 3, "larger": 1},
+    "output_tokens": 128,
+    "cache_prompt": false,
+    "sampling": {"temperature": 0.6, "top_p": 0.95, "top_k": 20, "min_p": 0.0, "repeat_penalty": 1.0, "presence_penalty": 0.0, "seed": 42},
+    "fixture": "deterministic text, tokenized by the exact server /tokenize endpoint; actual prompt_tokens must match",
+    "omit_512k": "user explicitly discarded new 512K runs; retain historical Strata Q14 524288 point",
+    "omit_1m": "this test is a native 262144-token NInfer dual qualification; existing Qwen Flash-Next YaRN×4/1M Strata evidence remains separate"
+  },
+  "quality_scope": "No new Q172 in this throughput experiment. The exact model artifact previously scored 77/100 on Q173 NInfer preview v0.16.1 and failed TC-75/82/84/92; that prior profile-specific result remains a safety warning and is not relabeled as a Q178 score.",
+  "stop_conditions": ["model/runtime/hash mismatch", "any other inference server", "either GPU missing or server PID absent from either GPU", "OOM/OOM-kill", "Xid/driver failure", "crash", "MemAvailable below 32 GiB for four consecutive 15-second samples", "HTTP/error or context rejection", "wrong prompt/output token count", "prefix cache nonzero", "listener not loopback", "cleanup/port release failure"],
+  "preregistered_utc": "2026-10-28T23:45:31Z"
+}
+

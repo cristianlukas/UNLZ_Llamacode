@@ -1,0 +1,60 @@
+{
+  "timestamp_utc": "2026-10-28T23:45:45+00:00",
+  "files": [
+    {
+      "path": "/tmp/q174-d/ninfer-build-short/apps/ninfer-serve",
+      "bytes": 772446032,
+      "mtime_ns": 1793224787155028400,
+      "sha256": "09145c529015ac7d27ce63214138625927c70c1e89e4291594d74be59bd5f895",
+      "validation": "SHA-256 recomputed"
+    },
+    {
+      "path": "/media/cristian/HDD extra/Modelos-eval/Q-20261027-VF-ITERATION-171/artifact/qwen4exp.ninfer",
+      "bytes": 32000000000,
+      "mtime_ns": 1793121858567011000,
+      "sha256": "6c3dd0a8a730566b3cda9b6c563a8a345d1986f930be409a0dca8bd2a9887584",
+      "validation": "size+mtime read-only; exact SHA inherited from Q171 receipt"
+    },
+    {
+      "path": "/media/cristian/HDD extra/Modelos-eval/Q-20261027-VF-ITERATION-171/artifact/qwen4exp.ninfer.part-0001",
+      "bytes": 7225180928,
+      "mtime_ns": 1793121943615096000,
+      "sha256": "a089cb07a49c18b8eb942e89c4e3676f0b03adf0fdbd141dc8f5d4cf5418de1f",
+      "validation": "size+mtime read-only; exact SHA inherited from Q171 receipt"
+    },
+    {
+      "path": "/media/cristian/Disco local/Modelos-eval/Q39-NInfer-v0.16.1-FlashNext-IQ2XS/qwen4exp.ninfer.ngram",
+      "bytes": 29127258112,
+      "mtime_ns": 1792688074506448600,
+      "sha256": "0478dd2f62a4d02b5cf3ab64d69229bd88dd95366498ad7c72828f95b99135b6",
+      "validation": "size+mtime read-only; exact SHA inherited from Q171 receipt"
+    }
+  ],
+  "runtime_version": "untagged+3d882fc",
+  "runtime_commit": "3d882fc116941d9233c40bf30f4d66dbaa3d24bd",
+  "port_free": true,
+  "inference_servers": [],
+  "resources": {
+    "timestamp_utc": "2026-10-28T23:45:45+00:00",
+    "mem_available_kib": 113777908,
+    "memory_psi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2712910926\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2707238745",
+    "gpus": {
+      "0": {
+        "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+        "used_mib": 1057,
+        "total_mib": 24576,
+        "util_percent": 19
+      },
+      "1": {
+        "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+        "used_mib": 108,
+        "total_mib": 24576,
+        "util_percent": 34
+      }
+    },
+    "compute_pids_by_gpu": {
+      "0": [],
+      "1": []
+    }
+  }
+}
