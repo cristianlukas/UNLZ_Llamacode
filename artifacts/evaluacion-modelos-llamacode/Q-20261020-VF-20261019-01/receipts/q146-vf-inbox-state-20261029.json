@@ -1,0 +1,24 @@
+{
+  "timestamp_utc": "2026-10-29T07:01:20Z",
+  "task": "Q146 resume justified VF-20261019-01 tests",
+  "lock_token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+  "batch_id": "VF-20261019-01",
+  "inbox_entries": 69,
+  "all_entries_have_status_and_analysis_outcome": true,
+  "unclassified_entry_numbers": [],
+  "latest_completed_test": "Q180 Qwen3.6-35B-A3B UD-Q4_K_XL on 2x RTX 3090 with llama.cpp layer split; Q172 0/100 in 3 seeds; 8K-256K ladder + init measured; no promotion for agents.",
+  "google_sheets_readback": [
+    "Resultados!A413:AH417",
+    "Accionables!D53:N53",
+    "IA local!G64:L64"
+  ],
+  "remaining_external_gates": [
+    "Qwen tool tenant-isolation behavior: trusted host-to-server identity and per-resource authorization policy must be implemented before a cross-tenant side-effect fixture.",
+    "Harness²: concrete workflow and frozen synthetic holdout are not supplied.",
+    "Ambiguous-order validation: primary caption/transcript is missing.",
+    "HyperQwen: Q104 did not establish a LlamaCode parser/runtime defect; reopen only after a material runtime/parser change or gate review.",
+    "PROMETHEVS DeepSeek: requires Windows host and at least 1.1 TB NVMe free plus a reproducible fixture.",
+    "Several social sources remain blocked by inaccessible primary content or incompatible hardware/runtime; details remain attached to individual inbox entries."
+  ],
+  "decision": "All entries have a result; no additional model benchmark in this batch has an enabled fixture and compatible runtime without changing an external prerequisite. Remaining gates stay recorded as blocked; no non-AI/system tests started."
+}

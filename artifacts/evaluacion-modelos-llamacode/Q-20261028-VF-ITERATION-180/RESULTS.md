@@ -92,3 +92,8 @@ No combinar un score Q172 con tok/s como un índice calidad/velocidad: son instr
 Postflight 06:54:46Z: summary `completed`, lista de procesos de servidor vacía, puerto 18481 libre, MemAvailable 112.823.568 KiB (~107,6 GiB), sin compute PID de Q180 en las GPU. La lectura mostró util=100% en ambas sin compute PID listado; se conserva como telemetría no atribuida, no como evidencia de un inference server. Temperatura no registrada.
 
 Fuentes: `runs/q180-summary.json`; `runs/q172-seed42.json`, `runs/q172-seed43.json`, `runs/q172-seed44.json`; `runs/context-8192.json` y `runs/context-{32768,65536,131072,261888}.json`; `receipts/q180-launch.json`; `receipts/q180-postflight.json`; `receipts/preregistration.json`.
+
+
+### Documentación cruzada del cierre — 2026-10-29T07:01Z
+
+La fila correspondiente de `IA local` (G64:L64) quedó actualizada con Q180 y se leyó de vuelta; la evidencia completa de velocidad/calidad está en `Resultados!A413:AH417`, y la recomendación final quedó en `Accionables!A53:N53`. Recibos: `receipts/google-sheet-q180-ialocal-sync.json` y `receipts/google-sheet-q180-results-sync.json`.

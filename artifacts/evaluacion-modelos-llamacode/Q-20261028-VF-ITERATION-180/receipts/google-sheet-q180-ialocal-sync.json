@@ -1,0 +1,14 @@
+{
+  "timestamp_utc": "2026-10-29T07:01:20Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet": "IA local",
+  "range": "G64:L64",
+  "readback_verified": true,
+  "model_row": "Strata Qwen3.6-35B-A3B: soporte desde 0.2.x",
+  "readback": [
+    "Q180 A03 completado en llama.cpp dual-3090; Q172 0/100 en seeds42/43/44 (28/28 fallos por reasoning ceiling 16.384 sin tool call/respuesta); safety gate PASS sin warnings. Ladder 8K–261.888: P 8700.30/8170.13/7143.66/5391.61/3614.07; D 143.22/129.80/114.76/99.43/74.69 tok/s. Init 5.194/5.138 s. No adoptar para agentes.",
+    "Strata docs oficiales + HF SC117/Qwen3.6-35B + issue upstream #3294 (abierto). Validación local del modelo/cuanti con llama.cpp: Q180/RESULTS.md, receipts/q180-final-review.json y Google Sheet Resultados!A413:AH417. Q180 no valida la implementación de Strata.",
+    "Q180 A03 cerrado. Qwen3.6-35B-A3B UD-Q4_K_XL en 2×RTX 3090 con llama.cpp layer split logró buenas tasas de fixture pero Q172 fue 0/100 en tres semillas; no promover a coding/agentes. El safety gate del harness pasó sin warnings."
+  ],
+  "decision": "No adopt; the test was a llama.cpp model/profile test, not a validation of Strata dual-Qwen3.6 support."
+}
