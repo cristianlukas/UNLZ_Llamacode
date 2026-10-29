@@ -1,0 +1,38 @@
+{
+  "decision": "PASS",
+  "timestamp_utc": "2026-10-29T03:07:20+00:00",
+  "lock_token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+  "model_sha256": "55983c5a75a1ab969824077b3bb3de4146e82a9234072b48ad4e8f92ad3fe9f1",
+  "llama_cpp_commit": "2e0d86bebc210947680e8f0d67daa79f3260c106",
+  "server_version": "",
+  "tool_sha256": "31e3c8f5fa9140738cde4e1cecc909f5335cf928a90fbdd062ec7935e0526472",
+  "benchy_sha256": "e8a892fe937d5ae1b6a43c31e8cb286ce4774f70396f62ab71008c9ddb0a01a1",
+  "D_free_bytes": 145357176832,
+  "baseline": {
+    "timestamp_utc": "2026-10-29T03:07:20+00:00",
+    "mem_available_kib": 113376652,
+    "memory_psi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2716322163\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2710633397\n",
+    "gpus": {
+      "0": {
+        "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+        "name": "NVIDIA GeForce RTX 3090",
+        "used_mib": 969,
+        "total_mib": 24576,
+        "util_percent": 8
+      },
+      "1": {
+        "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+        "name": "NVIDIA GeForce RTX 3090",
+        "used_mib": 108,
+        "total_mib": 24576,
+        "util_percent": 17
+      }
+    },
+    "compute_by_gpu": {
+      "0": [],
+      "1": []
+    }
+  },
+  "inference_servers": [],
+  "port_free": true
+}

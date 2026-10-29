@@ -1,0 +1,23 @@
+{
+  "timestamp_utc": "2026-10-29T03:40:02+00:00",
+  "authorization": "User explicitly authorized stopping PeritoSoft app and its llama servers.",
+  "matched_app_processes": [
+    {
+      "pid": 1648135,
+      "exe": "/home/cristian/Documentos/ChatGPT/peritosoft/peritosoft-linux-build/dist-electron-linux-v8/linux-unpacked/peritosoft-app"
+    },
+    {
+      "pid": 1648200,
+      "exe": "/home/cristian/Documentos/ChatGPT/peritosoft/peritosoft-linux-build/dist-electron-linux-v8/linux-unpacked/peritosoft-app .../resources/app/server.js"
+    }
+  ],
+  "matched_inference_process": {
+    "pid": 1853455,
+    "comm": "llama-server",
+    "port": 8033,
+    "model": "Qwen3.5-9B-Q4_K_M"
+  },
+  "action": "SIGTERM sent only to PIDs 1648135, 1648200, 1853455; no unrelated processes touched.",
+  "verification": "All three PIDs exited; port 8033 had no listener; GPU0 returned to 737 MiB use and GPU1 to 108 MiB immediately after stop.",
+  "status": "terminated_and_verified"
+}

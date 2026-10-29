@@ -1,0 +1,27 @@
+{
+  "attempt": "Q180 build A01",
+  "timestamp_utc": "2026-10-29T03:03:45Z",
+  "repository": "https://github.com/ggml-org/llama.cpp",
+  "source_commit": "2e0d86bebc210947680e8f0d67daa79f3260c106",
+  "build_dir": "/media/cristian/Disco local/Modelos-eval/Q-20261028-VF-ITERATION-180/llama-build-cu128",
+  "configure": ["-DGGML_CUDA=ON", "-DCMAKE_CUDA_ARCHITECTURES=86", "-DCUDAToolkit_ROOT=/usr/local/cuda-12.8", "-DCMAKE_BUILD_TYPE=Release"],
+  "target": "llama-server",
+  "build_exit_code": 0,
+  "server_version": "0.8.0-dev (build 1, commit 2e0d86b)",
+  "server_path": "/media/cristian/Disco local/Modelos-eval/Q-20261028-VF-ITERATION-180/llama-build-cu128/bin/llama-server",
+  "server_bytes": 17888,
+  "server_sha256": "0f25065d4c5e304000b38c6e1d288b483aac0a1c8936f3bfdc130b5d44d15ae5",
+  "cuda_backend_sha256": "ac72c28b3bacd9c678d6c8707c8ae5413f7efabfd81050e16a038cb19573480b",
+  "nvcc": "/usr/local/cuda-12.8/bin/nvcc",
+  "nvcc_version": "12.8.93",
+  "cmake_found_toolkit": "/usr/local/cuda-12.8/targets/x86_64-linux/include CUDA 12.8.93",
+  "cuda_runtime_libraries": [
+    "/usr/local/cuda-12.8/lib64/libcudart.so.12",
+    "/usr/local/cuda-12.8/lib64/libcublas.so.12",
+    "/usr/local/cuda-12.8/lib64/libcublasLt.so.12"
+  ],
+  "ui_asset_stamp": "ggml-org/llama-ui|b1c0eb12945e483f36f6f70f41825b844b0986799454c2984b53e7410472a346d8",
+  "verified_cli_options": ["--model", "--ctx-size", "--gpu-layers", "--split-mode", "--tensor-split", "--parallel", "--flash-attn", "--jinja", "--batch-size", "--ubatch-size", "--temp", "--top-p", "--top-k", "--min-p", "--repeat-penalty", "--presence-penalty", "--host", "--port", "--reasoning-effort"],
+  "verification": "PASS; server --version/--help, ldd, hashes; no model load or inference",
+  "gpu_used_for_build": false
+}

@@ -1,0 +1,31 @@
+{
+  "timestamp_utc": "2026-10-29T06:54:46+00:00",
+  "summary_status": "completed",
+  "server_processes": [],
+  "port_free": true,
+  "resources": {
+    "timestamp_utc": "2026-10-29T06:54:46+00:00",
+    "mem_available_kib": 112823568,
+    "memory_psi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2716462027\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2710773129\n",
+    "gpus": {
+      "0": {
+        "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+        "name": "NVIDIA GeForce RTX 3090",
+        "used_mib": 797,
+        "total_mib": 24576,
+        "util_percent": 100
+      },
+      "1": {
+        "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+        "name": "NVIDIA GeForce RTX 3090",
+        "used_mib": 108,
+        "total_mib": 24576,
+        "util_percent": 100
+      }
+    },
+    "compute_by_gpu": {
+      "0": [],
+      "1": []
+    }
+  }
+}

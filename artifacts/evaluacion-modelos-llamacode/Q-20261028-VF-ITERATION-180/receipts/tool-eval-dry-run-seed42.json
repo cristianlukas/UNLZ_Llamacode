@@ -1,0 +1,17 @@
+{
+  "task": "Q180 Tool-Eval dry-run seed42 configuration validation",
+  "timestamp_utc": "2026-10-29T03:06:10Z",
+  "harness": "tool-eval-bench 2.8.0",
+  "scenario_ids": ["TC-70", "TC-71", "TC-72", "TC-73", "TC-74", "TC-75", "TC-76", "TC-77", "TC-78", "TC-79", "TC-80", "TC-81", "TC-82", "TC-83", "TC-84", "TC-85", "TC-86", "TC-87", "TC-88", "TC-89", "TC-90", "TC-91", "TC-92", "TC-93", "TC-94", "TC-95", "TC-96", "TC-97"],
+  "total_scenarios": 28,
+  "variant_seed": 20261010,
+  "random_seed": 42,
+  "temperature": 0.6,
+  "top_p": 0.95,
+  "top_k": 20,
+  "min_p": 0.0,
+  "reasoning_effort": "medium",
+  "dry_run": true,
+  "requests_sent": 0,
+  "gpu_used": false
+}

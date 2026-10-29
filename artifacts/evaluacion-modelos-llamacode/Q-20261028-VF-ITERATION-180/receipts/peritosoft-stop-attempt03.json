@@ -1,0 +1,27 @@
+{
+  "timestamp_utc": "2026-10-29T03:49:31+00:00",
+  "authorization": "Prior explicit user authorization to stop PeritoSoft app and its llama servers.",
+  "app": {
+    "pid": 1876290,
+    "executable": "/home/cristian/Documentos/ChatGPT/peritosoft/peritosoft-linux-build/app/node_modules/electron/dist/electron",
+    "cwd": "/home/cristian/Documentos/ChatGPT/peritosoft/peritosoft-linux-build/app",
+    "scope": "app-com.anthropic.Claude-3228104.scope"
+  },
+  "servers": [
+    {
+      "pid": 1876666,
+      "port": 8033,
+      "model": "Qwen3.5-9B-Q4_K_M",
+      "cgroup": "app-com.anthropic.Claude-3228104.scope"
+    },
+    {
+      "pid": 1876874,
+      "port": 8081,
+      "model": "Qwen3.5-9B-Q4_K_M",
+      "cgroup": "app-com.anthropic.Claude-3228104.scope"
+    }
+  ],
+  "action": "SIGTERM only to PeritoSoft app PID 1876290 and its Qwen3.5 llama-server PIDs 1876666/1876874; Claude scope left running.",
+  "verification": "All three PIDs exited; inference_processes returned []; ports 8033, 8081, and 18481 had no listener.",
+  "status": "terminated_and_verified"
+}

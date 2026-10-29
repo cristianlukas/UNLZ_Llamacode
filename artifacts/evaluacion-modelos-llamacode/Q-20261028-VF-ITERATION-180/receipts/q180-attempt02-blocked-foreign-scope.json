@@ -1,0 +1,82 @@
+{
+  "timestamp_utc": "2026-10-29T03:44:17+00:00",
+  "attempt": "02",
+  "status": "blocked_before_valid_Q172",
+  "summary_status": "failed",
+  "summary_error": "RuntimeError: Inference server ajeno detectado; no se lo detiene: [{\"pid\": 1865927, \"comm\": \"bash\", \"cmdline\": \"/bin/bash -c source /home/cristian/.claude/shell-snapshots/snapshot-bash-1793235785060-dqauci.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\\\builtin unalias -- 'unsetenv'; \\\\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'for p in \\\"/finanzas?refresh=1\\\" / / \\\"/finanzas?refresh=1\\\" /; do curl -s -o /dev/null -w \\\"$p %{http_code} %{time_total}s\\\\n\\\" --max-time 200 \\\"http://127.0.0.1:3917$p\\\"; done; ps -eo pid,ppid,etime,args | grep llama-server | grep -v grep | cut -c1-100' < /dev/null && pwd -P >| /tmp/claude-9cb6-cwd \"}]",
+  "quality": {},
+  "throughput": {},
+  "smoke": {
+    "status": "passed",
+    "result": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/runs/smoke-pp32-tg16.json"
+  },
+  "init": {
+    "initial_process_to_health_s": 5.194
+  },
+  "observed_foreign_scope": "app-com.anthropic.Claude-3228104.scope",
+  "observed_peritosoft_servers": [
+    {
+      "pid": 1866405,
+      "port": 8033,
+      "model": "Qwen3.5-9B-Q4_K_M"
+    },
+    {
+      "pid": 1866747,
+      "port": 8081,
+      "model": "Qwen3.5-9B-Q4_K_M"
+    }
+  ],
+  "observed_app_parent": {
+    "pid": 1864667,
+    "command": "node_modules/electron/dist/electron server.js"
+  },
+  "scenario_start_seen": true,
+  "note": "Preflight passed and Q180 server loaded dual GPU; no Q172 scenario completed when the guard saw a foreign server. The foreign tree exited between subsequent diagnostic reads; this agent did not kill the Claude scope or its processes.",
+  "archived_files": [
+    {
+      "file": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/runs/attempt02-peritosoft-restart/q180-summary.json",
+      "bytes": 3552,
+      "sha256": "06da5da48db8d21b30f89ad2628faa4eeb3da5718c4af7e16132028edb093cce"
+    },
+    {
+      "file": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/runs/attempt02-peritosoft-restart/q172-seed42.log",
+      "bytes": 7942,
+      "sha256": "36f26a60c0f5f441e60ec2bc4c8f82f657b0f8fe549432c84b8d0d1608b9143a"
+    },
+    {
+      "file": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/runs/attempt02-peritosoft-restart/llama-server.log",
+      "bytes": 89723,
+      "sha256": "f1abae0e2deb4960ecc0ca8fd9323df015fec77b66e0bb9d69f880a95cbd4a1e"
+    },
+    {
+      "file": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/runs/attempt02-peritosoft-restart/smoke.log",
+      "bytes": 929,
+      "sha256": "eee11c88b32bfd4b4d26e4cd884eebe85e70317f7c04811bc9df09e2ca3b49a7"
+    },
+    {
+      "file": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/runs/attempt02-peritosoft-restart/smoke-pp32-tg16.json",
+      "bytes": 1896,
+      "sha256": "b2cb2499ffdc47bbe64690b6f8084a1344ae84dbbe62d5bc64e61451258627ff"
+    },
+    {
+      "file": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/runs/attempt02-peritosoft-restart/smoke-events.jsonl",
+      "bytes": 3295,
+      "sha256": "a109ba060a21d015e7489fb4a19a42c0c311078a9c31cc694f03b3284eb00599"
+    },
+    {
+      "file": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/runs/attempt02-peritosoft-restart/q180-preflight.json",
+      "bytes": 1289,
+      "sha256": "584dc54be000a7c90530e44ae9a21f3af49b25d07083e3091225ec62afde0f71"
+    },
+    {
+      "file": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/runs/attempt02-peritosoft-restart/q180-launch.json",
+      "bytes": 3737,
+      "sha256": "b8707594480dd69f2ad06051b19faf30bcff68832616f4dfbaff53f8d16b633a"
+    },
+    {
+      "file": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/runs/attempt02-peritosoft-restart/q180-postflight.json",
+      "bytes": 1508,
+      "sha256": "82419d635af32427ccfce6199a78f722d935485afc142bc42135705676f214c5"
+    }
+  ]
+}

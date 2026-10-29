@@ -1,0 +1,18 @@
+{
+  "timestamp_utc": "2026-10-29T06:52:48Z",
+  "task": "Q180 Qwen3.6-35B-A3B dual-RTX3090 screen",
+  "attempt": "clean rerun A03 after stopping PeritoSoft",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet": "Accionables",
+  "range": "Accionables!D53:I53",
+  "verified_row": [
+    "Q172 cerrado · 0/100 en seeds 42/43/44; ladder activa",
+    "Qwen3.6-35B-A3B · screen dual RTX 3090 con llama.cpp",
+    "TERRA-tier coding/agentes; perfil experimental, sin sustitución automática de SOL/ASTRA",
+    "VF-20261025 IA local filas 59–64 · Strata #3294 · Q180",
+    "Q172 seeds42/43/44: 28/28 cada uno, 0/100 (0/56; 28 fallos) por techo de 16.384 tokens de razonamiento sin tool call/respuesta (~114–115 s/caso). Safety gate PASS en las 3, warnings vacíos. Dual RTX 3090, lock Q146. Ladder de contexto en curso (131.072 tokens); cold/hot init pendientes.",
+    "Q172 muestra fallo funcional consistente de tool-use/responsividad (0/100) en tres semillas. El harness no reporta gate crítico de seguridad: PASS, sin warnings. Mantener experimental; no promover como perfil de coding/agentes ni sustituto de SOL/ASTRA. Cerrar ladder e init antes de concluir."
+  ],
+  "local_receipt": "This receipt records connector readback after write; Results tab remains unchanged until full profile closure.",
+  "readback_verified": true
+}

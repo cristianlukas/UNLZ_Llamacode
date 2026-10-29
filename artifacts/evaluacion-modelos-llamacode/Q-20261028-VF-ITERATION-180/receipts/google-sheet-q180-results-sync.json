@@ -1,0 +1,50 @@
+{
+  "timestamp_utc": "2026-10-29T06:55:25Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "resultados": {
+    "sheet_id": 1972251122,
+    "range": "A413:AH417",
+    "rows": [
+      "Q180-UDQ4-8K",
+      "Q180-UDQ4-32K",
+      "Q180-UDQ4-64K",
+      "Q180-UDQ4-128K",
+      "Q180-UDQ4-256K"
+    ],
+    "columns_per_row": 34,
+    "readback_verified": true,
+    "metrics": {
+      "prefill_tok_s": [
+        "8700.30 ± 329.21 (n=3)",
+        "8170.13 (n=1)",
+        "7143.66 (n=1)",
+        "5391.61 (n=1)",
+        "3614.07 (n=1)"
+      ],
+      "decode_tok_s": [
+        "143.22 ± 1.50 (n=3)",
+        "129.80 (n=1)",
+        "114.76 (n=1)",
+        "99.43 (n=1)",
+        "74.69 (n=1)"
+      ],
+      "e2e_ttft_s": [
+        "1.041",
+        "4.092",
+        "9.301",
+        "24.497",
+        "72.782"
+      ],
+      "init_initial_s": 5.194,
+      "init_immediate_relaunch_s": 5.138
+    }
+  },
+  "accionables": {
+    "sheet_id": 1393124532,
+    "range": "D53:N53",
+    "readback_verified": true,
+    "status": "Completo · Q172 0/100 ×3; ladder e init medidos",
+    "server_status": "Q180 finalizado; puerto 18481 libre en postflight"
+  },
+  "decision": "Do not promote for coding/agents with this configuration; keep SOL/ASTRA as references. No paired superiority claim."
+}

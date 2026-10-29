@@ -1,0 +1,37 @@
+{
+  "timestamp_utc": "2026-10-29T03:42:42+00:00",
+  "summary_status": "failed",
+  "server_processes": [
+    {
+      "pid": 1865927,
+      "comm": "bash",
+      "cmdline": "/bin/bash -c source /home/cristian/.claude/shell-snapshots/snapshot-bash-1793235785060-dqauci.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'for p in \"/finanzas?refresh=1\" / / \"/finanzas?refresh=1\" /; do curl -s -o /dev/null -w \"$p %{http_code} %{time_total}s\\n\" --max-time 200 \"http://127.0.0.1:3917$p\"; done; ps -eo pid,ppid,etime,args | grep llama-server | grep -v grep | cut -c1-100' < /dev/null && pwd -P >| /tmp/claude-9cb6-cwd "
+    }
+  ],
+  "port_free": true,
+  "resources": {
+    "timestamp_utc": "2026-10-29T03:42:43+00:00",
+    "mem_available_kib": 113456848,
+    "memory_psi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2716351267\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2710662476\n",
+    "gpus": {
+      "0": {
+        "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+        "name": "NVIDIA GeForce RTX 3090",
+        "used_mib": 735,
+        "total_mib": 24576,
+        "util_percent": 100
+      },
+      "1": {
+        "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+        "name": "NVIDIA GeForce RTX 3090",
+        "used_mib": 108,
+        "total_mib": 24576,
+        "util_percent": 100
+      }
+    },
+    "compute_by_gpu": {
+      "0": [],
+      "1": []
+    }
+  }
+}

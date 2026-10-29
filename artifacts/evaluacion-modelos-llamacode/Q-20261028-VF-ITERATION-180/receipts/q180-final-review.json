@@ -1,0 +1,137 @@
+{
+  "task": "Q180 Qwen3.6-35B-A3B dual-RTX3090 screen",
+  "status": "completed",
+  "finished_utc": "2026-10-29T06:54:46+00:00",
+  "lock_token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+  "model": {
+    "name": "Qwen3.6-35B-A3B UD-Q4_K_XL",
+    "path": "/media/cristian/Disco local/Modelos-eval/Q-20261028-VF-ITERATION-180/models/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf",
+    "sha256": "55983c5a75a1ab969824077b3bb3de4146e82a9234072b48ad4e8f92ad3fe9f1"
+  },
+  "profile": {
+    "gpus": "2×RTX 3090 GPU0+GPU1",
+    "split": "layer; tensor-split 1,1",
+    "max_context": 262144,
+    "llama_cpp_commit": "2e0d86bebc210947680e8f0d67daa79f3260c106",
+    "host_mem_gib": 128
+  },
+  "quality": {
+    "42": {
+      "status": "completed",
+      "scenarios": 28,
+      "score": 0,
+      "points": 0,
+      "max_points": 56,
+      "safety_gate_passed": true,
+      "safety_warnings": [],
+      "tool_exit_code": 0
+    },
+    "43": {
+      "status": "completed",
+      "scenarios": 28,
+      "score": 0,
+      "points": 0,
+      "max_points": 56,
+      "safety_gate_passed": true,
+      "safety_warnings": [],
+      "tool_exit_code": 0
+    },
+    "44": {
+      "status": "completed",
+      "scenarios": 28,
+      "score": 0,
+      "points": 0,
+      "max_points": 56,
+      "safety_gate_passed": true,
+      "safety_warnings": [],
+      "tool_exit_code": 0
+    }
+  },
+  "throughput": {
+    "8192": {
+      "prompt_tokens": 8192,
+      "prefill_tok_s_mean": 8700.300912055996,
+      "prefill_std": 329.2105712326116,
+      "prefill_runs": [
+        9153.910867709812,
+        8382.677949139344,
+        8564.31391931883
+      ],
+      "decode_tok_s_mean": 143.22366858192643,
+      "decode_std": 1.496137683787384,
+      "decode_runs": [
+        145.32943821478105,
+        141.99205871609763,
+        142.34950881490067
+      ],
+      "ttft_e2e_ms": 1041.4575126681787,
+      "response_tokens": 128
+    },
+    "32768": {
+      "prompt_tokens": 32768,
+      "prefill_tok_s_mean": 8170.133999665125,
+      "prefill_std": 0.0,
+      "prefill_runs": [
+        8170.133999665125
+      ],
+      "decode_tok_s_mean": 129.79549009772134,
+      "decode_std": 0.0,
+      "decode_runs": [
+        129.79549009772134
+      ],
+      "ttft_e2e_ms": 4092.1555010136217,
+      "response_tokens": 128
+    },
+    "65536": {
+      "prompt_tokens": 65536,
+      "prefill_tok_s_mean": 7143.655939058381,
+      "prefill_std": 0.0,
+      "prefill_runs": [
+        7143.655939058381
+      ],
+      "decode_tok_s_mean": 114.75771553206833,
+      "decode_std": 0.0,
+      "decode_runs": [
+        114.75771553206833
+      ],
+      "ttft_e2e_ms": 9300.805801991373,
+      "response_tokens": 128
+    },
+    "131072": {
+      "prompt_tokens": 131072,
+      "prefill_tok_s_mean": 5391.607642023918,
+      "prefill_std": 0.0,
+      "prefill_runs": [
+        5391.607642023918
+      ],
+      "decode_tok_s_mean": 99.43299672453746,
+      "decode_std": 0.0,
+      "decode_runs": [
+        99.43299672453746
+      ],
+      "ttft_e2e_ms": 24497.299981012475,
+      "response_tokens": 128
+    },
+    "261888": {
+      "prompt_tokens": 261888,
+      "prefill_tok_s_mean": 3614.0743450110353,
+      "prefill_std": 0.0,
+      "prefill_runs": [
+        3614.0743450110353
+      ],
+      "decode_tok_s_mean": 74.6913843594373,
+      "decode_std": 0.0,
+      "decode_runs": [
+        74.6913843594373
+      ],
+      "ttft_e2e_ms": 72782.22990699578,
+      "response_tokens": 128
+    }
+  },
+  "init": {
+    "initial_process_to_health_s": 5.194,
+    "immediate_relaunch_to_health_s": 5.138
+  },
+  "postflight_file": "receipts/q180-postflight.json",
+  "decision": "Do not promote for coding/agents under tested configuration: Q172 is 0/100 across three seeds. Keep speed data as exploratory only; no superiority claim versus SOL/ASTRA."
+}

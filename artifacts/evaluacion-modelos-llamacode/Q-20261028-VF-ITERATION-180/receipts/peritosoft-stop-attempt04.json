@@ -1,0 +1,17 @@
+{
+  "timestamp_utc": "2026-10-29T04:01:29Z",
+  "action": "SIGTERM only to the identified PeritoSoft app server, its Qwen inference servers, and associated job runner",
+  "pids": [
+    1896418,
+    1896705,
+    1895925,
+    1895877
+  ],
+  "authorization": "Explicit prior user authorization to stop PeritoSoft app and llama servers",
+  "verification_after_2s": {
+    "ports_8033_8081_free": true,
+    "nvidia_compute_apps": [],
+    "qwen_model_servers_remaining": false
+  },
+  "remaining_related_workers": "Six electron job_runner.js processes remain under the external Claude scope; the scope itself was not terminated. It can relaunch PeritoSoft."
+}

@@ -1,0 +1,16 @@
+{
+  "amendment": "A03",
+  "timestamp_utc": "2026-10-29T03:40:02+00:00",
+  "status": "preregistered_before_attempt02_inference",
+  "purpose": "Repeat exact Q172 seed42 cohort after attempt01 was contaminated by PeritoSoft inference starting on GPU0 and causing connection failures in TC-84..TC-97; attempt01 is preserved.",
+  "change": "No model, quant, tokenizer, runtime, server flags, sampling, Tool-Eval version, scenario set, seed, timeout, max-turn, or parallelism changes.",
+  "model_sha256": "55983c5a75a1ab969824077b3bb3de4146e82a9234072b48ad4e8f92ad3fe9f1",
+  "server_sha256": "0f25065d4c5e304000b38c6e1d288b483aac0a1c8936f3bfdc130b5d44d15ae5",
+  "runner_sha256": "f2958906063306e18bbb5ce553d49afe4e24d9d3eff8bd2cba15e467605111b1",
+  "protocol": "Q172 v2.8.0 TC-70..TC-97, seed42; timeout120s, max-turns8, parallel1; temp0.6/top-p0.95/top-k20/min-p0/repeat1/presence0; reasoning_effort medium; same dual RTX3090 262144-context server.",
+  "guard": "Preflight requires no foreign inference server or CUDA compute PID, both RTX3090, port 18481 free, D free >=55GB, MemAvailable >=32GiB. If a foreign inference server appears, Q180 stops and records a block. PeritoSoft app/server termination is covered by prior explicit user authorization.",
+  "seeds": "Seeds43/44 only if seed42 completes all 28 and safety gate passes, per original preregistration.",
+  "attempt01_receipt": "receipts/q180-attempt01-preserved.json",
+  "outputs": "Attempt01 files copied to runs/attempt01-peritosoft-interference/ before canonical outputs are refreshed.",
+  "decision_rule": "Treat seed42 Q172 as valid only if all scenarios complete without external connection errors. Continue the context ladder despite quality/safety failure if the server remains healthy and isolated."
+}

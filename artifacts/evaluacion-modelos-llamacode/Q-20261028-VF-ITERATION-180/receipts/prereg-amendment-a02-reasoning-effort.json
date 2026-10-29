@@ -1,0 +1,11 @@
+{
+  "amendment": "Q180 A02 reasoning effort CLI pin",
+  "timestamp_utc": "2026-10-29T03:04:00Z",
+  "reason": "The built llama-server CLI supports --reasoning-effort; make the already-preregistered medium setting explicit in the server argv as well as in Tool-Eval's per-request payload.",
+  "decision_changing_scope": "realizes an existing preregistered setting; no fixture, model, seed, GPU topology, context, sampling, score gate, or benchmark point changed",
+  "server_cli_option": "--reasoning-effort medium",
+  "tool_eval_payload_field": "reasoning_effort=medium",
+  "runner_path": "scripts/run_q180.py",
+  "runner_sha256": "f2958906063306e18bbb5ce553d49afe4e24d9d3eff8bd2cba15e467605111b1",
+  "gpu_used_for_amendment": false
+}

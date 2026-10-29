@@ -1,0 +1,92 @@
+{
+  "timestamp_utc": "2026-10-29T04:07:38Z",
+  "task": "Q180 Qwen3.6-35B-A3B dual RTX 3090 screen",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_title": "Listado",
+  "sheet": "Accionables",
+  "sheet_id": 1393124532,
+  "range": "A53:N53",
+  "action": "append one reconciled blocked test row",
+  "before_state": {
+    "last_used_row": 52,
+    "Q180_search_matches": 0,
+    "sheet_headers": [
+      "Tipo",
+      "ID / Q-ID",
+      "Prioridad",
+      "Estado en app",
+      "Título",
+      "Uso afectado",
+      "Fuente de origen",
+      "Qué probar / detalle",
+      "Resultado / decisión",
+      "Artefactos / recibos",
+      "Evidencia de reconciliación",
+      "Creado",
+      "Actualizado",
+      "Reconciliado UTC"
+    ]
+  },
+  "write": {
+    "requests": [
+      "copyPaste PASTE_FORMAT A52:N52 -> A53:N53",
+      "updateCells userEnteredValue A53:N53"
+    ],
+    "values": [
+      "Seguimiento de prueba",
+      "vf-qwen36-35b-a3b-dual3090-q180",
+      "Media-alta · Qwen3.6/A3B · calidad/velocidad",
+      "Bloqueado · Q172 seed42 inválido; supervisor PeritoSoft mata/reinicia llama-server",
+      "Qwen3.6-35B-A3B · screen dual RTX 3090 con llama.cpp",
+      "TERRA-tier coding/agentes; perfil experimental, sin sustitución automática de SOL/ASTRA",
+      "VF-20261025 IA local filas 59–64 · Strata #3294 · Q180",
+      "Build CUDA 12.8/SM86 verificado; dual readiness y smoke PASS. Attempt03 Q172 2.8.0 seed42: TC-70–73 timeouts reales; el servidor propio salió con rc=0; TC-74–97 errores de conexión. Pendientes: repetir seed42, seeds43/44 sólo según gate, ladder 8K–256K e init cold/hot, tras resolver el supervisor y pasar un preflight fresco.",
+      "No hay score de calidad, velocidad ni init válido; el 0/100 es inválido. No promover ni inferir superioridad. Mantener ASTRA, SOL y los archivos de modelos PeritoSoft intactos.",
+      "Q180/PLAN.md; Q180/RESULTS.md; Q180/runs/attempt03-peritosoft-takeover/; receipts/q180-attempt03-peritosoft-takeover.json; receipts/q180-autorestart-process-identification.json",
+      "Claude Bash PID 1895866/PPID 1554132 sigue activo en app-com.anthropic.Claude-3228104.scope; su bucle hace ps|grep llama-server|xargs kill antes de relanzar PeritoSoft. Causa probable, señal exacta no auditada. Último preflight: 8033/8081/18481 libres; sin procesos CUDA de cómputo.",
+      "2026-10-29",
+      "2026-10-29T04:06:19Z",
+      "2026-10-29T04:06:19Z"
+    ]
+  },
+  "readback": {
+    "all_14_values_match": true,
+    "format": "Arial 10, vertical TOP, WRAP for all 14 cells",
+    "data_validation": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "notes": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "other_sheets_modified": false,
+  "resultados_tab_updated": false,
+  "reason": "Attempt03 has no valid quality, speed, or init measurement; adding fake values to Resultados would mislead.",
+  "visual_check": "Google API CellData style readback passed. Browser canvas was signed-out, so rendered row height/clipping could not be visually inspected; no login was attempted."
+}

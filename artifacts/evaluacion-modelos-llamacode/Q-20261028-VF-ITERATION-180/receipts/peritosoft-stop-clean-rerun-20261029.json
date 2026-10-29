@@ -1,0 +1,68 @@
+{
+  "timestamp_utc": "2026-10-29T04:18:17Z",
+  "task": "Q180 clean rerun preflight",
+  "action": "SIGTERM only the PeritoSoft desktop server and exact model-serving processes, then terminate detached PeritoSoft job_runner workers",
+  "authorized_by": "User had previously explicitly authorized stopping the PeritoSoft app and its llama servers.",
+  "processes_stopped": [
+    {
+      "pid": 1913977,
+      "role": "PeritoSoft Electron main app"
+    },
+    {
+      "pid": 1914034,
+      "role": "PeritoSoft server.js"
+    },
+    {
+      "pid": 1914096,
+      "role": "PeritoSoft child job_runner"
+    },
+    {
+      "pid": 1915141,
+      "role": "PeritoSoft Qwen3.5-9B llama-server, 127.0.0.1:8033"
+    },
+    {
+      "pid": 1915316,
+      "role": "PeritoSoft Qwen3.5-9B llama-server, 127.0.0.1:8081"
+    },
+    {
+      "pid": 1860011,
+      "role": "PeritoSoft detached job_runner"
+    },
+    {
+      "pid": 1864700,
+      "role": "PeritoSoft detached job_runner"
+    },
+    {
+      "pid": 1867901,
+      "role": "PeritoSoft detached job_runner"
+    },
+    {
+      "pid": 1869593,
+      "role": "PeritoSoft detached job_runner"
+    },
+    {
+      "pid": 1873429,
+      "role": "PeritoSoft detached job_runner"
+    },
+    {
+      "pid": 1876336,
+      "role": "PeritoSoft detached job_runner"
+    },
+    {
+      "pid": 1907525,
+      "role": "PeritoSoft detached job_runner"
+    },
+    {
+      "pid": 1909611,
+      "role": "PeritoSoft detached job_runner"
+    }
+  ],
+  "verification": {
+    "peritosoft_processes_remaining": [],
+    "port_8033": "free",
+    "port_8081": "free",
+    "port_18481": "owned by Q180 PID 1918272",
+    "claude_scope": "not terminated"
+  },
+  "scope": "No unrelated processes or Claude scope were terminated."
+}

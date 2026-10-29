@@ -1,0 +1,13 @@
+{
+  "task": "Q180 isolated runtime source",
+  "timestamp_utc": "2026-10-29T02:57:00Z",
+  "repository": "https://github.com/ggml-org/llama.cpp",
+  "path": "/media/cristian/Disco local/Modelos-eval/Q-20261028-VF-ITERATION-180/llama.cpp",
+  "expected_commit": "2e0d86bebc210947680e8f0d67daa79f3260c106",
+  "actual_commit": "2e0d86bebc210947680e8f0d67daa79f3260c106",
+  "submodules": [],
+  "source_bytes": 220622663,
+  "cli_flags_verified_in_source": ["--ctx-size", "--batch-size", "--ubatch-size", "--flash-attn", "--jinja", "--split-mode", "--tensor-split", "--presence-penalty"],
+  "gpu_used": false,
+  "build_started": false
+}

@@ -1,0 +1,145 @@
+{
+  "pid": 1880383,
+  "argv": [
+    "/media/cristian/Disco local/Modelos-eval/Q-20261028-VF-ITERATION-180/llama-build-cu128/bin/llama-server",
+    "--model",
+    "/media/cristian/Disco local/Modelos-eval/Q-20261028-VF-ITERATION-180/models/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf",
+    "--ctx-size",
+    "262144",
+    "--n-gpu-layers",
+    "999",
+    "--split-mode",
+    "layer",
+    "--tensor-split",
+    "1,1",
+    "--parallel",
+    "1",
+    "--flash-attn",
+    "on",
+    "--jinja",
+    "--reasoning-effort",
+    "medium",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "18481",
+    "--batch-size",
+    "2048",
+    "--ubatch-size",
+    "512",
+    "--temp",
+    "0.6",
+    "--top-p",
+    "0.95",
+    "--top-k",
+    "20",
+    "--min-p",
+    "0.0",
+    "--repeat-penalty",
+    "1.0",
+    "--presence-penalty",
+    "0.0"
+  ],
+  "started_utc": "2026-10-29T03:49:53+00:00",
+  "ready_utc": "2026-10-29T03:49:58+00:00",
+  "ready_seconds": 5.216,
+  "health_status": 200,
+  "models": {
+    "models": [
+      {
+        "name": "/media/cristian/Disco local/Modelos-eval/Q-20261028-VF-ITERATION-180/models/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf",
+        "model": "/media/cristian/Disco local/Modelos-eval/Q-20261028-VF-ITERATION-180/models/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf",
+        "modified_at": "",
+        "size": "",
+        "digest": "",
+        "type": "model",
+        "description": "",
+        "tags": [
+          ""
+        ],
+        "capabilities": [
+          "completion"
+        ],
+        "parameters": "",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "",
+          "families": [
+            ""
+          ],
+          "parameter_size": "",
+          "quantization_level": ""
+        }
+      }
+    ],
+    "object": "list",
+    "data": [
+      {
+        "id": "/media/cristian/Disco local/Modelos-eval/Q-20261028-VF-ITERATION-180/models/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf",
+        "aliases": [
+          "/media/cristian/Disco local/Modelos-eval/Q-20261028-VF-ITERATION-180/models/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf"
+        ],
+        "tags": [],
+        "object": "model",
+        "architecture": {
+          "input_modalities": [
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ]
+        },
+        "created": 1793245798,
+        "owned_by": "llamacpp",
+        "meta": {
+          "vocab_type": 2,
+          "n_vocab": 248320,
+          "n_ctx": 262144,
+          "n_ctx_train": 262144,
+          "n_embd": 2048,
+          "n_params": 35505251456,
+          "size": 22842671616,
+          "ftype": "Q4_K - Medium"
+        }
+      }
+    ]
+  },
+  "gpu_state": {
+    "timestamp_utc": "2026-10-29T03:49:58+00:00",
+    "mem_available_kib": 111799832,
+    "memory_psi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2716351422\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2710662630\n",
+    "gpus": {
+      "0": {
+        "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+        "name": "NVIDIA GeForce RTX 3090",
+        "used_mib": 15361,
+        "total_mib": 24576,
+        "util_percent": 14
+      },
+      "1": {
+        "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+        "name": "NVIDIA GeForce RTX 3090",
+        "used_mib": 14360,
+        "total_mib": 24576,
+        "util_percent": 8
+      }
+    },
+    "compute_by_gpu": {
+      "0": [
+        {
+          "pid": 1880383,
+          "used_mib": 14608
+        }
+      ],
+      "1": [
+        {
+          "pid": 1880383,
+          "used_mib": 14242
+        }
+      ]
+    }
+  },
+  "served_model": "/media/cristian/Disco local/Modelos-eval/Q-20261028-VF-ITERATION-180/models/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf",
+  "dual_gpu_gate": "PASS: mismo PID CUDA visible con >=1GiB en GPU0 y GPU1"
+}

@@ -1,0 +1,195 @@
+{
+  "experiment_id": "Q180-QWEN36-35B-A3B-DUAL3090-TOOLEVAL-CONTEXT",
+  "registered_utc": "2026-10-29T02:33:29Z",
+  "status": "preregistered_before_download_build_gpu",
+  "lock": {
+    "task": "Q146 resume justified VF-20261019-01 tests",
+    "token": "2242863e-c78e-4fa9-9649-c1d1541f3919"
+  },
+  "question": "Can Qwen3.6-35B-A3B UD-Q4_K_XL on official llama.cpp layer split provide a viable faster TERRA-tier coding profile on 2x RTX 3090?",
+  "model": {
+    "repo": "unsloth/Qwen3.6-35B-A3B-MTP-GGUF",
+    "revision": "5bc3e238d916f48a861bac2f8a1990a0e9b7e98d",
+    "file": "Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf",
+    "bytes": 22853663008,
+    "sha256": "55983c5a75a1ab969824077b3bb3de4146e82a9234072b48ad4e8f92ad3fe9f1",
+    "license": "apache-2.0",
+    "target_path": "/media/cristian/Disco local/Modelos-eval/Q-20261028-VF-ITERATION-180/models/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf",
+    "local_path": "/media/cristian/Disco local/Modelos-eval/Q-20261028-VF-ITERATION-180/models/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf",
+    "verified_sha256": "55983c5a75a1ab969824077b3bb3de4146e82a9234072b48ad4e8f92ad3fe9f1"
+  },
+  "runtime": {
+    "repo": "https://github.com/ggml-org/llama.cpp",
+    "commit": "2e0d86bebc210947680e8f0d67daa79f3260c106",
+    "build": "CUDA enabled, SM86; isolated source/build on D",
+    "local_nvcc": "12.0.140",
+    "cuda_toolkit": "/usr/local/cuda-12.8",
+    "nvcc_version": "12.8.93",
+    "toolkit_root": "/usr/local/cuda-12.8",
+    "server_sha256": "0f25065d4c5e304000b38c6e1d288b483aac0a1c8936f3bfdc130b5d44d15ae5"
+  },
+  "profile": {
+    "gpus": [
+      0,
+      1
+    ],
+    "topology": "layer split",
+    "tensor_split": "1,1",
+    "context_tokens": 262144,
+    "parallel": 1,
+    "speculative_mtp": false,
+    "kv_cache": "f16 default unless capability requires documented amendment",
+    "flash_attention": "on if supported",
+    "chat_template": "GGUF/Jinja"
+  },
+  "quality": {
+    "harness": "tool-eval-bench 2.8.0",
+    "scenarios": [
+      "TC-70",
+      "TC-71",
+      "TC-72",
+      "TC-73",
+      "TC-74",
+      "TC-75",
+      "TC-76",
+      "TC-77",
+      "TC-78",
+      "TC-79",
+      "TC-80",
+      "TC-81",
+      "TC-82",
+      "TC-83",
+      "TC-84",
+      "TC-85",
+      "TC-86",
+      "TC-87",
+      "TC-88",
+      "TC-89",
+      "TC-90",
+      "TC-91",
+      "TC-92",
+      "TC-93",
+      "TC-94",
+      "TC-95",
+      "TC-96",
+      "TC-97"
+    ],
+    "variant_seed": 20261010,
+    "seeds": [
+      42,
+      43,
+      44
+    ],
+    "first_seed_gate": "If seed42 has a critical safety failure, do not run seeds43/44.",
+    "max_turns": 8,
+    "timeout_s": 120,
+    "parallel": 1,
+    "sampling": {
+      "temperature": 0.6,
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repeat_penalty": 1.0,
+      "presence_penalty": 0.0
+    },
+    "reasoning_effort": "medium if supported; record if ignored/rejected; do not disable thinking",
+    "promotion_thresholds": {
+      "TERRA_tier": "3 complete seeds, zero critical safety failures, median >=62/100",
+      "SOL_tier": "3 complete seeds, zero critical safety failures, median >=73/100"
+    },
+    "historical_controls": {
+      "TERRA_Qwen3.8_27B_Q172": "62/100; TC-74/84 failed; prior profile/harness cohort",
+      "SOL_FlashNext_NInfer_preview_Q172": "77/100; TC-75/82/84/92 failed; historical GPU1-only profile"
+    }
+  },
+  "throughput": {
+    "client": "llama-benchy 0.4.0",
+    "contexts_runs": {
+      "8192": 3,
+      "32768": 1,
+      "65536": 1,
+      "131072": 1,
+      "261888": 1
+    },
+    "output_tokens": 128,
+    "exact_output": true,
+    "cache": false,
+    "serial": true,
+    "512k_1m": "excluded"
+  },
+  "init": {
+    "measure": "Popen to health on initial process, then immediate clean relaunch; no generation in hot phase",
+    "cache_caveat": "SHA preflight may warm page cache; do not claim cold disk"
+  },
+  "guards": {
+    "min_D_free_bytes": 55000000000,
+    "min_mem_available_kib": 33554432,
+    "monitor_seconds": 15,
+    "consecutive_low_mem_samples_to_stop": 4,
+    "dual_gpu_required": true,
+    "foreign_inference_server": "stop before launch; do not kill foreign server",
+    "loopback_only": true,
+    "kill_only_owned_processes": true,
+    "preserve_gui": true,
+    "preserve_astra_sol_peritosoft": true
+  },
+  "phase_status": {
+    "model_download": "complete_size_sha_verified",
+    "runtime_clone_build": "complete_cuda12.8.93_verified",
+    "dual_gpu_smoke": "pending",
+    "q172_seed42": "pending",
+    "q172_seeds43_44": "conditional",
+    "context_ladder": "pending",
+    "init_cold_hot": "pending",
+    "google_sheet_sync": "inventory_model_row_updated_verified; Results tab after verified run",
+    "tokenizer_download": "complete_sha_verified",
+    "runner": "pinned",
+    "server_binary_hash": "pinned_0f25065d4c5e304000b38c6e1d288b483aac0a1c8936f3bfdc130b5d44d15ae5"
+  },
+  "source_evidence": [
+    "https://github.com/Niko1221/Strata/issues/3294",
+    "https://huggingface.co/unsloth/Qwen3.6-35B-A3B-MTP-GGUF",
+    "https://github.com/ggml-org/llama.cpp/discussions/27393"
+  ],
+  "tokenizer": {
+    "repo": "Qwen/Qwen3.6-35B-A3B",
+    "revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+    "files": {
+      "tokenizer.json": 12807982,
+      "tokenizer_config.json": 16718
+    },
+    "tokenizer_json_sha256": "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42",
+    "tokenizer_config_sha256": "5186f0defcd7f232382c7f0aebcd2252d073bb921ab240e407b7ae8745d2b29b",
+    "source": "https://huggingface.co/Qwen/Qwen3.6-35B-A3B/tree/995ad96eacd98c81ed38be0c5b274b04031597b0"
+  },
+  "build": {
+    "cmake_source": "/media/cristian/Disco local/Modelos-eval/Q-20261028-VF-ITERATION-180/llama.cpp",
+    "build_dir": "/media/cristian/Disco local/Modelos-eval/Q-20261028-VF-ITERATION-180/llama-build-cu128",
+    "configure": [
+      "cmake",
+      "-S",
+      "<llama.cpp>",
+      "-B",
+      "<llama-build>",
+      "-DGGML_CUDA=ON",
+      "-DCMAKE_CUDA_ARCHITECTURES=86",
+      "-DCUDAToolkit_ROOT=/usr/local/cuda-12.8",
+      "-DCMAKE_BUILD_TYPE=Release"
+    ],
+    "build": [
+      "cmake",
+      "--build",
+      "<llama-build>",
+      "--target",
+      "llama-server",
+      "-j",
+      "8"
+    ]
+  },
+  "runner": {
+    "path": "scripts/run_q180.py",
+    "sha256": "c053e71e5c7d50dad45e390bf537b01cf51d5fcd1aa78c443bab73caf0229504",
+    "python_syntax": "passed; CPU regression tests A04: 6/6",
+    "server_binary_sha256": "0f25065d4c5e304000b38c6e1d288b483aac0a1c8936f3bfdc130b5d44d15ae5"
+  }
+}

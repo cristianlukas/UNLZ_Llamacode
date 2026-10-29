@@ -1,0 +1,19 @@
+{
+  "amendment": "Q180 A01 CUDA toolkit pin",
+  "timestamp_utc": "2026-10-29T02:58:00Z",
+  "reason": "Build attempt 01 resolved nvcc 12.8.93 but FindCUDAToolkit 12.0.140; avoid mixed CUDA toolkit paths before producing a test runtime.",
+  "decision_changing_scope": "build toolchain selection only; model, test fixture, runtime source commit, GPU split, sampling, context ladder and quality gates unchanged",
+  "cuda_toolkit_root": "/usr/local/cuda-12.8",
+  "nvcc": "/usr/local/cuda-12.8/bin/nvcc",
+  "nvcc_version": "12.8.93",
+  "build_dir": "/media/cristian/Disco local/Modelos-eval/Q-20261028-VF-ITERATION-180/llama-build-cu128",
+  "configure_arguments": [
+    "-DGGML_CUDA=ON",
+    "-DCMAKE_CUDA_ARCHITECTURES=86",
+    "-DCUDAToolkit_ROOT=/usr/local/cuda-12.8",
+    "-DCMAKE_BUILD_TYPE=Release"
+  ],
+  "runner_binary_path": "/media/cristian/Disco local/Modelos-eval/Q-20261028-VF-ITERATION-180/llama-build-cu128/bin/llama-server",
+  "runner_sha256": "213075d036d6b373c253c1ba4055a606851cc3d9d90595751edc1e2a190cbdac",
+  "gpu_used_for_amendment": false
+}

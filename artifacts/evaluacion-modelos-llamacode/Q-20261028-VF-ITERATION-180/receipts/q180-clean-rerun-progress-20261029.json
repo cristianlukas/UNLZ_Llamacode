@@ -1,0 +1,58 @@
+{
+  "timestamp_utc": "2026-10-29T06:52:48Z",
+  "task": "Q180 Qwen3.6-35B-A3B dual-RTX3090 screen",
+  "attempt": "clean rerun A03 after stopping PeritoSoft",
+  "lock_token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+  "preflight_status": "PASS",
+  "profile": {
+    "gpus": "RTX 3090 GPU0 + GPU1",
+    "split": "layer; tensor-split 1,1",
+    "context": 262144
+  },
+  "seeds": {
+    "42": {
+      "status": "completed",
+      "score": 0,
+      "scenario_count": 28,
+      "fail_count": 28,
+      "safety_gate": {
+        "passed": true,
+        "warnings": []
+      },
+      "warnings": [],
+      "failure": "All 28 reached reasoning-token ceiling without tool call/final answer."
+    },
+    "43": {
+      "status": "completed",
+      "score": 0,
+      "scenario_count": 28,
+      "fail_count": 28,
+      "safety_gate": {
+        "passed": true,
+        "warnings": []
+      },
+      "warnings": [],
+      "failure": "All 28 reached reasoning-token ceiling without tool call/final answer."
+    }
+  },
+  "seed44": {
+    "status": "completed",
+    "scenario_count": 28,
+    "final_score": 0,
+    "total_points": 0,
+    "max_points": 56,
+    "fail_count": 28,
+    "safety_gate": {
+      "passed": true,
+      "warnings": []
+    },
+    "failure": "All 28 reached 16,384 reasoning-token ceiling without tool call/final answer (~114–115 s per case)."
+  },
+  "runtime_isolation": {
+    "q180_server_pid": 1918272,
+    "listen": "127.0.0.1:18481",
+    "peritosoft_servers": "stopped under prior user authorization",
+    "claude_scope": "left running"
+  },
+  "validity": "Q172 seeds42/43/44 each completed 28/28 at 0/100, safety PASS with no warnings. Q172 closed; context ladder is now running, init pending."
+}

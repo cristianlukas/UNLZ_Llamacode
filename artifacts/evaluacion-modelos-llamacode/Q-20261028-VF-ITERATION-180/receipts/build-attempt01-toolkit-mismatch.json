@@ -1,0 +1,15 @@
+{
+  "attempt": "Q180 build attempt 01",
+  "timestamp_utc": "2026-10-29T02:57:50Z",
+  "source_commit": "2e0d86bebc210947680e8f0d67daa79f3260c106",
+  "nvcc": "/usr/local/cuda-12.8/bin/nvcc",
+  "nvcc_version": "12.8.93",
+  "cmake_found_toolkit": "/usr/include CUDA 12.0.140",
+  "termination": "intentional SIGINT by owning task before any server binary or model load",
+  "exit_code": 130,
+  "last_reported_build_progress_percent": 30,
+  "server_binary_created": false,
+  "gpu_inference_used": false,
+  "log_on_D": "/media/cristian/Disco local/Modelos-eval/Q-20261028-VF-ITERATION-180/logs/build.log",
+  "amendment": "CUDAToolkit_ROOT=/usr/local/cuda-12.8; clean build dir llama-build-cu128; runner points only to that build output"
+}

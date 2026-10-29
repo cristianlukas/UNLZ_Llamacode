@@ -1,0 +1,21 @@
+{
+  "amendment": "A04",
+  "timestamp_utc": "2026-10-29T03:45:45+00:00",
+  "status": "preregistered_before_guard_edit_and_cpu_regression",
+  "purpose": "Fix a confirmed false positive in Q180 inference_processes: the prior substring scan classifies a bash command containing grep llama-server as an active inference server. Preserve positive identification of actual inference processes.",
+  "planned_change": "Parse /proc argv and match the process comm/executable to known inference binaries; recognize known Python server modules only when the executable is Python. Do not match shell command text, grep/find commands, or arbitrary application prompts.",
+  "regression_cases": [
+    "bash -c ... grep llama-server ... => not an inference server",
+    "real llama-server executable/comm => inference server",
+    "python -m vllm.entrypoints.openai.api_server => inference server",
+    "unrelated electron/browser command => not an inference server"
+  ],
+  "safety_invariant": "This amendment narrows only false-positive shell-text matching; it does not bypass positive detections for actual llama-server PIDs. Dual-GPU preflight and runtime checks still abort on any foreign inference process or CUDA compute PID.",
+  "tests": "CPU-only standard-library unittest; no model request, build, network, or GPU.",
+  "blocked_external_state": "At preregistration time, PeritoSoft Qwen3.5-9B llama-servers PID 1870175 on 8033 and PID 1870341 on 8081 are active in a Claude-owned scope. Do not run Q180 inference until the foreign servers are absent.",
+  "runner_sha256": "c053e71e5c7d50dad45e390bf537b01cf51d5fcd1aa78c443bab73caf0229504",
+  "cpu_tests": {
+    "command": "python3 artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/tests/test_inference_process_filter.py",
+    "result": "6 tests passed"
+  }
+}

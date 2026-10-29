@@ -1,0 +1,15 @@
+{
+  "task": "Q180 inventory sync",
+  "timestamp_utc": "2026-10-29T02:54:43Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_url": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "sheet_name": "Inventario de modelos",
+  "range": "A19:R19",
+  "sheet_id": 2026102061,
+  "operation": "updated existing Qwen3.6-35B-A3B row; no duplicate row added",
+  "readback": "PASS: all 18 values match; userEnteredFormat remains top-aligned and wrapped like adjacent rows",
+  "visual_check": "API-level layout/style verification only; no column widths or row geometry changed",
+  "model_bytes": 22853663008,
+  "model_sha256": "55983c5a75a1ab969824077b3bb3de4146e82a9234072b48ad4e8f92ad3fe9f1",
+  "quality_or_speed_results": "N/D; Q180 build and test pending"
+}

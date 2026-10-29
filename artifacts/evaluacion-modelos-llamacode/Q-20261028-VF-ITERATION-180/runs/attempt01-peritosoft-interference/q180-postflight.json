@@ -1,0 +1,42 @@
+{
+  "timestamp_utc": "2026-10-29T03:35:56+00:00",
+  "summary_status": "failed",
+  "server_processes": [
+    {
+      "pid": 1853455,
+      "comm": "llama-server",
+      "cmdline": "/home/cristian/.local/share/LlamaCode/LlamaCode/linux-runtime/cuda-flashnext-2x3090/llama-server -m /media/cristian/Disco local/Models/llamacpp/Qwen3.5-9B/Qwen3.5-9B-Q4_K_M.gguf --alias qwen3.5-9b-q4_k_m --host 127.0.0.1 --port 8033 -c 32768 --batch-size 512 --ubatch-size 512 -ngl 999 --flash-attn auto --parallel 2 "
+    }
+  ],
+  "port_free": true,
+  "resources": {
+    "timestamp_utc": "2026-10-29T03:35:56+00:00",
+    "mem_available_kib": 112378608,
+    "memory_psi": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2716351227\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2710662441\n",
+    "gpus": {
+      "0": {
+        "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+        "name": "NVIDIA GeForce RTX 3090",
+        "used_mib": 7311,
+        "total_mib": 24576,
+        "util_percent": 100
+      },
+      "1": {
+        "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+        "name": "NVIDIA GeForce RTX 3090",
+        "used_mib": 108,
+        "total_mib": 24576,
+        "util_percent": 100
+      }
+    },
+    "compute_by_gpu": {
+      "0": [
+        {
+          "pid": 1853455,
+          "used_mib": 6408
+        }
+      ],
+      "1": []
+    }
+  }
+}

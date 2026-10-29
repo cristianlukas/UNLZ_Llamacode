@@ -1,0 +1,95 @@
+{
+  "task": "Q180 Qwen3.6-35B-A3B dual RTX 3090 screen",
+  "attempt": 3,
+  "timestamp_utc": "2026-10-29T04:01:29Z",
+  "status": "invalid_interrupted_by_foreign_inference_server",
+  "lock": {
+    "task": "Q146 resume justified VF-20261019-01 tests",
+    "token": "2242863e-c78e-4fa9-9649-c1d1541f3919"
+  },
+  "model_sha256": "55983c5a75a1ab969824077b3bb3de4146e82a9234072b48ad4e8f92ad3fe9f1",
+  "runner_sha256": "c053e71e5c7d50dad45e390bf537b01cf51d5fcd1aa78c443bab73caf0229504",
+  "q172": {
+    "seed": 42,
+    "tool_eval_version": "2.8.0",
+    "scenario_count": 28,
+    "tool_report_status": "completed",
+    "reported_score": 0,
+    "scenario_status_counts": {
+      "fail": 28
+    },
+    "validity": "INVALID: TC-70..TC-73 were genuine model timeouts; TC-74..TC-97 failed from connection loss after the Q180 server exited rc=0. This is not a valid model quality/safety score."
+  },
+  "q180_runner": {
+    "status": "failed",
+    "error": "llama-server terminated during the test, rc=0",
+    "own_server_exit_utc": "2026-10-29T03:58:43+00:00"
+  },
+  "valid_metrics": {
+    "quality": null,
+    "throughput": null,
+    "init_cold": null,
+    "init_hot": null
+  },
+  "preflight_and_smoke": "dual GPU readiness and smoke passed before Q172; preserve only as setup evidence",
+  "foreign_server": {
+    "model": "Qwen3.5-9B-Q4_K_M",
+    "ports": [
+      8033,
+      8081
+    ],
+    "processes": [
+      1896418,
+      1896705
+    ],
+    "supervisor_scope": "app-com.anthropic.Claude-3228104.scope"
+  },
+  "sheet": "No Results row update: no valid model result was produced; existing inventory row remains unchanged.",
+  "archive": "artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/runs/attempt03-peritosoft-takeover",
+  "files": {
+    "receipts/q180-preflight.json": {
+      "sha256": "9131947639066ced49ff3bf84589e7c18ed532bcf4b343d692d90003868f38af",
+      "bytes": 1289
+    },
+    "receipts/q180-launch.json": {
+      "sha256": "b680c8d51053f8d78001985a5ed7d4b83cb72f6fddedc0654a2d788e9c012c53",
+      "bytes": 3737
+    },
+    "receipts/q180-postflight.json": {
+      "sha256": "ac50d89e595aa0766fb3643568ec1840575bc77897b1bed0a8c94e678ad92aed",
+      "bytes": 861
+    },
+    "runs/q180-summary.json": {
+      "sha256": "e37406258dad2fd097e0d66e3d88261ad24aac9884225a908eb8c2cce4dbb1ae",
+      "bytes": 2896
+    },
+    "runs/smoke-pp32-tg16.json": {
+      "sha256": "03f0919aecd08d578629bdd8cfef4552c36eee805680201f6b3fa0a038997a58",
+      "bytes": 1896
+    },
+    "runs/smoke-events.jsonl": {
+      "sha256": "f07efe9abc36f0d44eebeaf0c13eed162cc83d1cd8ba171b521bf6dada917bc2",
+      "bytes": 3301
+    },
+    "runs/q172-seed42.json": {
+      "sha256": "f398ef58dc7ef791bd5a1337adfa23084ecab23ea8e6a06f560743281db988c8",
+      "bytes": 99200
+    },
+    "runs/reports/2026/10/2026-10-29T03-50-13.801796Z_dc39805c--q180-qwen36-llama.cpp-dual-q172-seed42.md": {
+      "sha256": "d57633bbef0d8a004ebd4159a6861f8e31bae285672f3831dcee53b017d39462",
+      "bytes": 89034
+    },
+    "logs/smoke.log": {
+      "sha256": "aa44fcf0f62aaa5df83dc8b36a57262a2f51450c2b0574f0315590ec79dc7431",
+      "bytes": 929
+    },
+    "logs/llama-server.log": {
+      "sha256": "68ae0acc332adf3a40da2889f464676b07948d17330cd4c7b5d37dc34ed529fb",
+      "bytes": 118623
+    },
+    "logs/q172-seed42.log": {
+      "sha256": "8a87c2af0131454768f550b60a9d823e045a05afd920578244890c537397cf2e",
+      "bytes": 7951
+    }
+  }
+}

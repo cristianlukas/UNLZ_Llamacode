@@ -1,0 +1,108 @@
+{
+  "recorded_utc": "2026-10-29T03:40:02+00:00",
+  "attempt": "attempt01 preserved; attempt02 preregistered",
+  "reason": "PeritoSoft inference server appeared during Q172; report excluded TC-84..TC-97 after connection failures, and run_q180 aborted before throughput.",
+  "evidence": {
+    "foreign_server_pid": 1853455,
+    "parent_app_pids": [
+      1648135,
+      1648200
+    ],
+    "port": 8033,
+    "server_command": "/home/cristian/.local/share/LlamaCode/LlamaCode/linux-runtime/cuda-flashnext-2x3090/llama-server -m /media/cristian/Disco local/Models/llamacpp/Qwen3.5-9B/Qwen3.5-9B-Q4_K_M.gguf --alias qwen3.5-9b-q4_k_m --host 127.0.0.1 --port 8033 -c 32768 --batch-size 512 --ubatch-size 512 -ngl 999 --flash-attn auto --parallel 2",
+    "ancestry": "systemd --user -> peritosoft-app 1648135 -> peritosoft-app/server.js 1648200 -> llama-server 1853455",
+    "q172_status": "completed",
+    "q172_final_score": 0,
+    "q172_total_scenarios": 28,
+    "q172_completion_rate": null,
+    "excluded_scenarios": [
+      "TC-84",
+      "TC-85",
+      "TC-86",
+      "TC-87",
+      "TC-88",
+      "TC-89",
+      "TC-90",
+      "TC-91",
+      "TC-92",
+      "TC-93",
+      "TC-94",
+      "TC-95",
+      "TC-96",
+      "TC-97"
+    ],
+    "safety_gate": {
+      "passed": true,
+      "warnings": []
+    },
+    "report": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/runs/reports/2026/10/2026-10-29T03-07-41.182316Z_ff059dab--q180-qwen36-llama.cpp-dual-q172-seed42.md"
+  },
+  "preserved_files": [
+    {
+      "source": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/runs/q172-seed42.json",
+      "archive": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/runs/attempt01-peritosoft-interference/q172-seed42.json",
+      "bytes": 271641,
+      "sha256": "595f53c368770347e308ef9ed2c4407ef75cce5bb72a0ca8c889171f4cf339b4"
+    },
+    {
+      "source": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/runs/q180-summary.json",
+      "archive": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/runs/attempt01-peritosoft-interference/q180-summary.json",
+      "bytes": 3379,
+      "sha256": "0f614b5651036c57ae1f2f74fcce6f415e6e5bb5ee0583ba9014f75db3e1d94c"
+    },
+    {
+      "source": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/logs/q172-seed42.log",
+      "archive": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/runs/attempt01-peritosoft-interference/q172-seed42.log",
+      "bytes": 7974,
+      "sha256": "94b7288ef5c6ef05dc238baddea0f28134526a759d3e3445bae095565c2ea8ae"
+    },
+    {
+      "source": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/logs/llama-server.log",
+      "archive": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/runs/attempt01-peritosoft-interference/llama-server.log",
+      "bytes": 80997,
+      "sha256": "438b1de52a6b85ca04e69c8062f939e4992afca8260f284fa14aebff6b5d4e2d"
+    },
+    {
+      "source": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/logs/smoke.log",
+      "archive": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/runs/attempt01-peritosoft-interference/smoke.log",
+      "bytes": 929,
+      "sha256": "6c688d7f082fc684a2a90cee70511400ad4048ac24caeb2156bb73d64ffcd33c"
+    },
+    {
+      "source": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/runs/smoke-pp32-tg16.json",
+      "archive": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/runs/attempt01-peritosoft-interference/smoke-pp32-tg16.json",
+      "bytes": 1891,
+      "sha256": "dde8244cb1c2d208c0128d98bba7d0c82be7386e7229616377745b13dcc29ade"
+    },
+    {
+      "source": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/runs/smoke-events.jsonl",
+      "archive": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/runs/attempt01-peritosoft-interference/smoke-events.jsonl",
+      "bytes": 3298,
+      "sha256": "e2c6b1cd95fa5a6bdae091ebc6a3b3e754a56e281336218752899fbccf37912e"
+    },
+    {
+      "source": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/receipts/q180-launch.json",
+      "archive": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/runs/attempt01-peritosoft-interference/q180-launch.json",
+      "bytes": 3736,
+      "sha256": "7213f0a7daa4f37156a293123f90ab04af229162ddc21cc27a12f39a2ed1bea2"
+    },
+    {
+      "source": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/receipts/q180-postflight.json",
+      "archive": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/runs/attempt01-peritosoft-interference/q180-postflight.json",
+      "bytes": 1348,
+      "sha256": "f9293f28946c7787ec505caf2142c4a0d8b754b5ec8a80d2ea577f3f15c7eee8"
+    },
+    {
+      "source": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/receipts/q180-preflight.json",
+      "archive": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/runs/attempt01-peritosoft-interference/q180-preflight.json",
+      "bytes": 1288,
+      "sha256": "036369f1399c26d97e045272a7a0da8e7edf3f5f3124970aee4755ac161e31c7"
+    },
+    {
+      "source": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/runs/reports/2026/10/2026-10-29T03-07-41.182316Z_ff059dab--q180-qwen36-llama.cpp-dual-q172-seed42.md",
+      "archive": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/runs/attempt01-peritosoft-interference/tool-eval-report.md",
+      "bytes": 257540,
+      "sha256": "3f8daf975a94a89bee86732b1e7062878ef0a940df4c09e951217aaa9373483a"
+    }
+  ]
+}

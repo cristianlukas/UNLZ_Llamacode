@@ -1,0 +1,24 @@
+{
+  "timestamp_utc": "2026-10-29T04:03:34Z",
+  "finding": "A live Claude task shell repeatedly kills every process named llama-server, then restarts PeritoSoft; this is a direct conflict with isolated model evaluation and a strong likely explanation for the Q180 server exiting rc=0.",
+  "observed_process": {
+    "pid": 1895866,
+    "ppid": 1554132,
+    "state": "Ss",
+    "command_summary": "bash in peritosoft app directory; loop runs ps -eo pid,ppid,args | grep llama-server | grep -v grep | awk ... | xargs -r kill, then launches Electron server.js; repeats background AI validation"
+  },
+  "supervisor": {
+    "pid": 1554132,
+    "executable": "Claude Code",
+    "scope": "app-com.anthropic.Claude-3228104.scope",
+    "scope_state": "active/running"
+  },
+  "caveat": "No signal audit was available, so the active kill-all loop is strongly correlated but not proven to be the exact signal that ended the Q180 server.",
+  "current_gpu_gate": {
+    "ports_8033_8081_18481_free": true,
+    "nvidia_compute_apps": [],
+    "supervisor_still_active": true
+  },
+  "authorization_boundary": "No Claude shell or scope terminated. Ask user before stopping the exact shell PID 1895866; do not terminate the full Claude scope.",
+  "next_action": "After user stops/authorizes termination of the looping shell, re-read AGENTS.md, README.md, WORK_QUEUE.md and lock; verify the shell and all inference servers remain absent; then preregister a fresh Q172 seed42 retry."
+}

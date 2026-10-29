@@ -1,0 +1,11 @@
+{
+  "timestamp_utc": "2026-10-29T03:46:49+00:00",
+  "status": "PASS",
+  "runner_sha256": "c053e71e5c7d50dad45e390bf537b01cf51d5fcd1aa78c443bab73caf0229504",
+  "test_sha256": "e6d209b6590d885889be5b8ec37833b743f26d4c96b24eb3cc940ee9a292ca8d",
+  "command": "python3 artifacts/evaluacion-modelos-llamacode/Q-20261028-VF-ITERATION-180/tests/test_inference_process_filter.py",
+  "cases": 6,
+  "stdout": "......\\n----------------------------------------------------------------------\\nRan 6 tests in 0.000s\\n\\nOK",
+  "live_detector_sample": [],
+  "scope": "CPU only; no GPU, network, model inference, or build"
+}

@@ -1,0 +1,25 @@
+{
+  "task": "Q180 preflight before model inference",
+  "timestamp_utc": "2026-10-29T03:06:10Z",
+  "decision": "PASS",
+  "lock_token": "2242863e-c78e-4fa9-9649-c1d1541f3919",
+  "model_sha256": "55983c5a75a1ab969824077b3bb3de4146e82a9234072b48ad4e8f92ad3fe9f1",
+  "server_sha256": "0f25065d4c5e304000b38c6e1d288b483aac0a1c8936f3bfdc130b5d44d15ae5",
+  "runner_sha256": "f2958906063306e18bbb5ce553d49afe4e24d9d3eff8bd2cba15e467605111b1",
+  "tokenizer_sha256": "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42",
+  "tool_eval_sha256": "31e3c8f5fa914073cde4e1cecc909f5335cf928a90fbdd062ec7935e0526472",
+  "benchy_sha256": "e8a892fe937d5ae1b6a43c31e8cb286ce4774f70396f62ab71008c9ddb0a01a1",
+  "runtime_commit": "2e0d86bebc210947680e8f0d67daa79f3260c106",
+  "gpus": [
+    {"index": 0, "name": "NVIDIA GeForce RTX 3090", "memory_used_mib": 969, "compute_processes": []},
+    {"index": 1, "name": "NVIDIA GeForce RTX 3090", "memory_used_mib": 108, "compute_processes": []}
+  ],
+  "desktop_gpu_activity": "Visible utilization/memory only; no CUDA compute PID or inference server. Preserved GUI per user instruction.",
+  "mem_available_kib": 113570772,
+  "memory_psi": "avg10=0.00 for some/full",
+  "D_free_bytes": 145357176832,
+  "inference_servers": [],
+  "port_127_0_0_1_18481_free": true,
+  "server_version_capture": "runner --version stdout field was empty; direct terminal invocation/version recorded in build-success-a01.json",
+  "model_load_or_inference": false
+}
