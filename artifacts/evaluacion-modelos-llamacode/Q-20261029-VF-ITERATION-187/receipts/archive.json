@@ -1,0 +1,44 @@
+{
+  "task": "Q-20261029-VF-ITERATION-187",
+  "completed_at_utc": "2026-10-29T13:06:52Z",
+  "operation": "verified copy to HDD; removed NVMe source only after size and SHA-256 matched",
+  "source_nvme": "/media/cristian/Disco local/Modelos-eval/Q-20261028-VF-ITERATION-180/models/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf",
+  "archive_hdd": "/media/cristian/HDD extra/Modelos-eval/archived-unused/Q-20261028-VF-ITERATION-180/models/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf",
+  "bytes": 22853663008,
+  "sha256": "55983c5a75a1ab969824077b3bb3de4146e82a9234072b48ad4e8f92ad3fe9f1",
+  "peritosoft_audit": {
+    "active_db": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/AppData/Roaming/peritosoft-app/runtime/perito.db",
+    "selected_llamacpp_model": "C:\\Users\\cristian\\Models\\llamacpp\\Qwen3.5-9B\\Qwen3.5-9B-Q4_K_M.gguf",
+    "selected_vlm_model": "D:\\Models\\llamacpp\\gemma-4-12b-it-qat-q4_0.gguf",
+    "configured_model_root": "/media/cristian/Disco local/Models/llamacpp",
+    "q180_location_was_outside_model_root": true,
+    "q180_configured_or_open_handles": false,
+    "llama_server_seen": false
+  },
+  "prior_test_evidence": "Q180 Q172 Tool-Eval 0/100 in seeds 42,43,44; 28/28 cases per seed exhausted 16384 reasoning tokens without a final answer/tool call; safety gate passed.",
+  "storage": {
+    "d_nvme_before_free_bytes": 145357176832,
+    "d_nvme_after_free_bytes": 168210841600,
+    "d_nvme_bytes_freed": 22853664768,
+    "c_nvme_after_free_bytes": 121911541760,
+    "hdd_before_free_bytes": 30834577408,
+    "hdd_after_free_bytes": 7980912640,
+    "combined_nvme_after_free_bytes": 290122383360,
+    "q182_threshold_bytes": 300000000000,
+    "q182_still_short_by_bytes": 9877616640,
+    "hdd_excluded_from_gate": true
+  },
+  "decision": "Archive, not delete. Preserve historic test evidence; do not promote for coding/agents with this configuration. ASTRA/SOL/Flash-Next and PeritoSoft-configured models untouched.",
+  "no_inference_or_gpu": true,
+  "sheet_sync": {
+    "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "updated_at_utc": "2026-10-29T13:08:43Z",
+    "verified_ranges": [
+      "'Inventario de modelos'!C19,D19,F19,N19,O19,P19,R19",
+      "'Modelos locales por peso'!G81,H81,N81,O81,P81",
+      "'IA local'!E77,H77,I77,L77",
+      "'Accionables'!J49,K49,M49,N49"
+    ],
+    "readback": "Values match the archive state and updated Q182 free-space gate. All inspected cells retained Arial 10, WRAP, TOP; no data validation was present in target cells."
+  }
+}

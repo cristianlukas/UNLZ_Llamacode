@@ -3270,3 +3270,10 @@ No se encontró una prueba local de IA habilitada sin satisfacer una condición 
 - Se agregó el gate NInfer Flash-Next Linux dual: el preview publicado es Windows/1×RTX 3090; no se localizó calificación Flash-Next Linux dual/TP2. No hubo descarga, build ni inferencia.
 - Inbox VF-20261019-01: 70 materiales. `actionables.json`: 40 entradas. `Accionables` filas 35, 50 y 54 corregidas/agregadas; lectura posterior verificada, con Arial 10/WRAP/TOP. Se conservaron filas Q182/Q173/Q176/Q180.
 - No había prueba de modelo habilitada en esta iteración; sin uso de GPU, inferencia, build, llamadas API ni cambios a ASTRA/SOL/PeritoSoft. Recibos: `artifacts/evaluacion-modelos-llamacode/Q-20261029-VF-ITERATION-183/`.
+
+## Q187 · Archivo reversible del modelo Q180 con uso PeritoSoft descartado · 2026-10-29
+
+| Q-20261029-VF-ITERATION-187 | Completa | Archivar el GGUF Q180 fallido fuera del NVMe tras auditar PeritoSoft; actualizar inventario | Usuario; inicio 2026-10-29T12:56:21.116250+00:00; token `q187-archive-q180-failed-unused-model-1e2f90` | Q180 0/100 en tres semillas; PeritoSoft apunta a Qwen3.5-9B/Gemma 4 12B y raíz `Models/llamacpp`; Q180 está en `Modelos-eval` fuera de la raíz configurada | Copia verificada HDD→retirar origen NVMe; sin GPU/inferencia; preservar ASTRA/SOL/PeritoSoft; hoja Inventario de modelos fila 19; Q182 aún exige ≥300 GB NVMe y runtime dual validado |
+
+
+- 2026-10-29T13:06:52Z — Q187 completada: PeritoSoft DB viva configuraba Qwen3.5-9B/Gemma4-12B y raíz `Models/llamacpp`; Q180 estaba fuera de esa raíz y sin handle. Q180 (0/100×3) se archivó en HDD tras verificar tamaño/SHA y se retiró de D: +22,853,664,768 B. Sheets actualizado y verificado: Inventario de modelos fila19, Modelos locales por peso fila81, IA local fila77, Accionables fila49. Q182 queda bloqueado: NVMe combinados 290,122,383,360 B, déficit 9,877,616,640 B, y Xolotl dual sin smoke 3/3 válido. Sin prueba nueva, GPU, build ni descarga. RESULTS/recibo: `artifacts/evaluacion-modelos-llamacode/Q-20261029-VF-ITERATION-187/`.

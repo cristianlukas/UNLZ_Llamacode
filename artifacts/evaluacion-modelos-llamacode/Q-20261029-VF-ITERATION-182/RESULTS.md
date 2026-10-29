@@ -25,3 +25,7 @@ No hay una nueva inferencia habilitada ahora. El siguiente test queda condiciona
 - Se agregó el candidato como material #70 en `data/inbox.json`, con estado bloqueado y condiciones concretas; se corrigió en #69 una instrucción vieja que pedía detener servidores globalmente y repetir Q180, que ya está completo.
 - `IA local!E75/I75/L75` ahora refleja el resultado final de DSX T16. Se añadió el registro ISTA/Xolotl en `IA local!A77:O77` y el accionable bloqueado en `Accionables!A49:N49`.
 - Readback confirma valores, enlace a la documentación de Xolotl y formato Arial 10, WRAP y TOP. Detalle en `receipts/google-sheet-q182-sync.json`.
+
+## Q187 storage recheck — 2026-10-29T13:06:52Z
+
+Q187 verificó que el GGUF Qwen3.6-35B-A3B UD-Q4_K_XL de Q180 no está configurado en PeritoSoft, lo copió al HDD y comparó tamaño (22.853.663.008 B) y SHA-256 antes de retirar el original de D. Se liberaron 22,853,664,768 B en D. El espacio libre combinado de los dos NVMe ahora es **290,122,383,360 B**; todavía faltan **9,877,616,640 B** para el gate de 300.000.000.000 B. El HDD extra sigue excluido. Xolotl dual no está calificado; Q182 continúa bloqueado, sin descarga/build/inferencia/GPU. Evidencia: `artifacts/evaluacion-modelos-llamacode/Q-20261029-VF-ITERATION-187/receipts/archive.json` y la fila actualizada de Accionables.

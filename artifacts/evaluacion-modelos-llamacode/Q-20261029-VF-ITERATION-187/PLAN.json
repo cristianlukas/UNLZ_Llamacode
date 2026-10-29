@@ -1,0 +1,33 @@
+{
+  "id": "Q-20261029-VF-ITERATION-187",
+  "title": "Archivar en HDD el GGUF Q180 con resultado funcional nulo, tras verificar que PeritoSoft no lo referencia",
+  "state": "complete",
+  "started_utc": "2026-10-29T12:56:21.116250+00:00",
+  "token": "q187-archive-q180-failed-unused-model-1e2f90",
+  "source": "/media/cristian/Disco local/Modelos-eval/Q-20261028-VF-ITERATION-180/models/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf",
+  "destination": "/media/cristian/HDD extra/Modelos-eval/archived-unused/Q-20261028-VF-ITERATION-180/models/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf",
+  "bytes": 22853663008,
+  "sha256": "55983c5a75a1ab969824077b3bb3de4146e82a9234072b48ad4e8f92ad3fe9f1",
+  "rationale": [
+    "Q180 Tool-Eval Q172 completado con seeds 42/43/44: 0/100 en cada una; 28 casos por seed agotaron 16,384 tokens sin respuesta/herramienta.",
+    "Configuración viva de PeritoSoft apunta al modelo Qwen3.5-9B en llamacpp_model_path y a Gemma 4 12B en rutas VLM; su PERITOSOFT_LLAMACPP_MODEL_ROOT es /media/cristian/Disco local/Models/llamacpp. Q180 vive fuera de esa raíz, bajo Modelos-eval, no aparece en las rutas configuradas y no hay proceso llama-server activo.",
+    "Archivo fuera de los perfiles protegidos ASTRA/SOL y Flash-Next productivo. Se moverá de forma verificable al HDD, no se borrará."
+  ],
+  "constraints": [
+    "No GPU, build, benchmark, model inference, or PeritoSoft shutdown.",
+    "Copy to HDD, verify exact size and SHA-256, then remove NVMe source; source remains recoverable from HDD.",
+    "Update Google Sheet Inventario de modelos row 19 Linux path, physical state, PeritoSoft usage, and archive note; preserve all other cells and formatting.",
+    "Q182 remains blocked if combined NVMe free bytes stay below 300,000,000,000 or dual Xolotl runtime correctness is unqualified."
+  ],
+  "completed_at_utc": "2026-10-29T13:06:52Z",
+  "result": {
+    "archived": true,
+    "source_removed_after_verified_copy": true,
+    "destination": "/media/cristian/HDD extra/Modelos-eval/archived-unused/Q-20261028-VF-ITERATION-180/models/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf",
+    "sha256_verified": "55983c5a75a1ab969824077b3bb3de4146e82a9234072b48ad4e8f92ad3fe9f1",
+    "bytes_freed_on_d_nvme": 22853664768,
+    "q182_enabled": false,
+    "q182_remaining_storage_shortfall_bytes": 9877616640,
+    "no_gpu_inference_or_model_tests": true
+  }
+}
