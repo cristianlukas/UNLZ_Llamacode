@@ -1,0 +1,46 @@
+{
+  "task": "Q182-Xolotl-ISTA-GSQ-IQ2XS-Dual3090-GateReview",
+  "timestamp_utc": "2026-10-29T09:38:42Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_url": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "writes": [
+    {
+      "range": "IA local!E75",
+      "purpose": "Replace stale in-progress download status with completed Q172/Q173 result and variant distinction."
+    },
+    {
+      "range": "IA local!I75",
+      "purpose": "Record no-go for tool use due to TC-92 tenant disclosure and no matched speed conclusion."
+    },
+    {
+      "range": "IA local!L75",
+      "purpose": "Prevent duplicate T16 run and separate the ISTA/Xolotl candidate gate."
+    },
+    {
+      "range": "IA local!A77:O77",
+      "purpose": "Add the distinct ISTA GSQ-RCO IQ2_XS/Xolotl Linux candidate and exact reopening conditions."
+    },
+    {
+      "range": "Accionables!A49:N49",
+      "purpose": "Add a blocked, evidence-linked action with NVMe and dual-runtime gates."
+    }
+  ],
+  "readback": {
+    "verified": true,
+    "values": {
+      "IA local!E75": "Q172/Q173 completados para T16 local; no es el GGUF nazeshinjite ds4 Q2 del post. Q172: 89/100 en una semilla (ASTRA 73/100); TC-92 reveló filtración entre tenants. Q173 midió 8K–256K; 1M no se midió.",
+      "IA local!I75": "Q172/Q173 completados; T16 no-go para tools mientras falle el gate TC-92. No hay comparación de velocidad emparejada que demuestre superioridad frente a ASTRA/SOL. ASTRA y SOL siguen como referencias productivas.",
+      "IA local!L75": "No repetir T16 con los mismos hashes. Reabrir sólo si se corrige el aislamiento tenant y se preregistra una comparación pareada. El candidato ISTA IQ2_XS/Xolotl tiene gates separados en fila 77; no atribuirle el claim del Reddit Q2."
+    },
+    "new_candidate_row": "IA local!A77:O77",
+    "new_actionable_row": "Accionables!A49:N49",
+    "format": "Readback confirms Arial 10, WRAP, TOP on all populated cells; IA local K77 link points to Xolotl DeepSeek docs."
+  },
+  "test_execution": {
+    "download_started": false,
+    "build_started": false,
+    "inference_started": false,
+    "gpu_used": false,
+    "reason": "267.3 GB combined NVMe free is below the ~274 GB component estimate and 300 GB operational gate; prior local Xolotl dual run failed before first token."
+  }
+}

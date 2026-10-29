@@ -1,0 +1,60 @@
+{
+  "task": "Q182-Xolotl-ISTA-GSQ-IQ2XS-Dual3090-GateReview",
+  "timestamp_utc": "2026-10-29T09:36:11Z",
+  "status": "review_complete_test_blocked_before_download",
+  "lock": "Q182-xolotl-deepseek1017-linux-gate",
+  "test_execution": {
+    "download_started": false,
+    "build_started": false,
+    "gpu_inference_started": false,
+    "reason": "Current combined NVMe free space is below the 274 GB payload requirement, and the prior dual-Xolotl run on this host failed before its first token."
+  },
+  "host_state": {
+    "gpu": "2x RTX 3090",
+    "ram_gib": 128,
+    "nvme_d_free_bytes": 145357176832,
+    "nvme_checkout_free_bytes": 121917898752,
+    "nvme_total_free_bytes": 267275075584,
+    "hdd_extra_free_bytes": 30834577408,
+    "hdd_counts_as_nvme": false,
+    "inference_server_found": false,
+    "nvidia_compute_apps": []
+  },
+  "candidate": {
+    "runtime": "Xolotl Linux / CUDA; ISTA-DASLab GSQ-RCO IQ2_XS",
+    "estimated_components_gb": {
+      "model": 155,
+      "engram": 111,
+      "dspark_drafter": 8,
+      "total": 274
+    },
+    "minimum_free_nvme_before_reopening_gb": 300,
+    "not_equivalent_to": "nazeshinjite ds4 Q2 / Delta / Reddit 41 tok/s claim"
+  },
+  "previous_evidence": {
+    "deepseek_t16_q172": "89/100 vs ASTRA 73/100, one seed; TC-92 cross-tenant disclosure; no speed comparison",
+    "flashnext_dual_q179": "80/100, 45/56; TC-92 cross-tenant disclosure; no-go",
+    "xolotl_xq_dual_local": "SIGSEGV before first token; runtime failure, not model quality",
+    "upstream_dual_reports": "2x RTX 5060 Ti produced incorrect answers in 0/3 simple checks after patches; 4x RTX 3090 segfaulted at first prompt; no later fix located"
+  },
+  "sources": [
+    "https://github.com/Indras-Mirror/Xolotl",
+    "https://github.com/Indras-Mirror/Xolotl/blob/main/docs/DEEPSEEK_V41.md",
+    "https://github.com/Indras-Mirror/Xolotl/issues/2",
+    "https://github.com/Niko1221/Strata/blob/main/docs/DEEPSEEK41.md",
+    "https://huggingface.co/ISTA-DASLab/DeepSeek-V4.1-Flash-1017-GSQ-RCO-GGUF"
+  ],
+  "sheet_ranges": [
+    "IA local!E75,I75,L75",
+    "IA local!A77:O77",
+    "Accionables!A49:N49"
+  ],
+  "sheet_sync_receipt": "receipts/google-sheet-q182-sync.json",
+  "sheet_readback_verified": true,
+  "queue": {
+    "inbox_path": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/inbox.json",
+    "inbox_entries_after_sync": 70,
+    "new_entry": "q182-xolotl-ista-gsq-iq2xs-dual3090-gate",
+    "stale_qwen36_rerun_instruction_corrected": true
+  }
+}
