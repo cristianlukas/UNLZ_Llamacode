@@ -1,0 +1,59 @@
+{
+  "taskId": "Q-20261029-VF-ITERATION-183",
+  "timestampUtc": "2026-10-29T09:52:37Z",
+  "status": "complete",
+  "operation": "Reconciled Harness², consolidated S20 and added current NInfer compatibility gate; no model tests or GPU use.",
+  "localData": {
+    "inbox.json": {
+      "path": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/inbox.json",
+      "sha256": "307a822cb2fc9a82d867f7e7f9fc8b31be4cf3d832a64d8d201b4f3d1f9b5281",
+      "count": 70
+    },
+    "actionables.json": {
+      "path": "/home/cristian/.codex/visualizations/2026/10/19/01a155f2-b702-76d3-a5dd-7d2b85aa5043/cola-evaluaciones-ia/data/actionables.json",
+      "sha256": "72a2e218839aed8888be3b7932dcae28a4efb23caf50687252e122bc9a30fb64",
+      "count": 40
+    }
+  },
+  "backups": [
+    "data/backups/inbox.before-q183-ninfer-and-hybrid-revalidation-20261029T0949Z.json",
+    "data/backups/actionables.before-q183-reconcile-20261029T0945Z.json",
+    "data/backups/inbox.before-q183-final-reconciliation-20261029T0952Z.json",
+    "data/backups/actionables.before-q183-final-reconciliation-20261029T0952Z.json"
+  ],
+  "sheet": {
+    "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "tab": "Accionables",
+    "verifiedRanges": [
+      "A35:N35",
+      "A49:N50",
+      "A52:N54"
+    ],
+    "changes": [
+      "row 35 Harness² is partial; Q181 is related evidence only",
+      "row 50 S20 hybrid A/B blocked by provider/keyRef/budget/data boundary",
+      "row 54 NInfer Flash-Next Linux dual compatibility gate"
+    ],
+    "format": "Arial 10, WRAP, TOP verified on modified rows",
+    "preservedRows": [
+      "49 Q182",
+      "51 Q173 matrix",
+      "52 Q176 init",
+      "53 Q180"
+    ]
+  },
+  "sources": [
+    "https://github.com/Don-Chad/ninfer-3090",
+    "https://github.com/ashalliants/ninfer-3090/releases"
+  ],
+  "blockers": [
+    "S20 provider/model/version, keyRef, spend cap and data/egress boundary",
+    "Harness² exact integration/commit, local endpoint, disposable copy, hidden holdout, fake secrets and host egress block",
+    "NInfer explicit Flash-Next Linux dual qualification and exact artifact",
+    "Q182 Xolotl/ISTA requires >=300 GB fast NVMe and corrected dual runtime"
+  ],
+  "noGpu": true,
+  "noInference": true,
+  "noBuild": true,
+  "noProviderCalls": true
+}
