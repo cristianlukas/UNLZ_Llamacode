@@ -263,6 +263,8 @@ struct LaunchProfile {
     // Posición fija opcional en el dropdown LANZAR. 1 es el primero; 0 deja
     // el perfil en el orden operativo habitual (BEST/favoritos/último usado).
     int     menuOrder = 0;
+    // Calidad Q172 exacta del perfil (0–100); -1 indica que no hay medición.
+    double  q172Quality = -1.0;
     bool    benchmark = false; // candidato pendiente para la cola de benchmark
     // El runner adapta VRAM por defecto; los perfiles de validación exacta pueden
     // desactivarlo para que HE/BCB midan exactamente la receta declarada.

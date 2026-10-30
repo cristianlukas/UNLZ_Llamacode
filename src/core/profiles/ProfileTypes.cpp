@@ -1,6 +1,7 @@
 #include "ProfileTypes.h"
 #include <QJsonArray>
 #include <QUuid>
+#include <cmath>
 
 // ---- helpers ----
 static QMap<QString, QString> mapFromJson(const QJsonObject &obj) {
@@ -681,6 +682,8 @@ QJsonObject LaunchProfile::toJson() const {
     o["tags"] = QJsonArray::fromStringList(tags);
     o["lastUsed"] = static_cast<double>(lastUsed);
     o["menuOrder"] = menuOrder;
+    if (std::isfinite(q172Quality) && q172Quality >= 0.0 && q172Quality <= 100.0)
+        o["q172Quality"] = q172Quality;
     o["systemBadge"] = systemBadge;
     o["deprecated"] = deprecated;
     o["backendProfileId"] = backendProfileId;
@@ -715,6 +718,9 @@ LaunchProfile LaunchProfile::fromJson(const QJsonObject &o) {
         if (v.isString() && !v.toString().trimmed().isEmpty()) p.tags.append(v.toString().trimmed());
     p.lastUsed = static_cast<qint64>(o["lastUsed"].toDouble(0));
     p.menuOrder = qMax(0, o["menuOrder"].toInt(0));
+    p.q172Quality = o["q172Quality"].toDouble(-1.0);
+    if (!std::isfinite(p.q172Quality) || p.q172Quality < 0.0 || p.q172Quality > 100.0)
+        p.q172Quality = -1.0;
     p.benchmark = o["benchmark"].toBool(false);
     p.benchmarkMemoryAdaptive = o["benchmarkMemoryAdaptive"].toBool(true);
     p.systemBadge = o["systemBadge"].toBool(false);

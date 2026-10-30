@@ -190,6 +190,7 @@ void SystemProfilesTests::bundleProductionRoleAssignmentsMatchRequestedModels()
 
     const QJsonObject astra = byId.value(QStringLiteral("sys-astra-iq2xs-default"));
     QVERIFY(!astra.isEmpty());
+    QCOMPARE(astra.value(QStringLiteral("q172Quality")).toDouble(), 89.0);
     QCOMPARE(astra.value(QStringLiteral("alias")).toString(), QStringLiteral("ASTRA"));
     QCOMPARE(astra.value(QStringLiteral("backend")).toObject()
                  .value(QStringLiteral("model")).toString(),
@@ -205,6 +206,7 @@ void SystemProfilesTests::bundleProductionRoleAssignmentsMatchRequestedModels()
 
     const QJsonObject sol = byId.value(QStringLiteral("sys-sol-qwen38-flashnext-iq2xs"));
     QVERIFY(!sol.isEmpty());
+    QCOMPARE(sol.value(QStringLiteral("q172Quality")).toDouble(), 73.0);
     QCOMPARE(sol.value(QStringLiteral("alias")).toString(), QStringLiteral("SOL"));
     QCOMPARE(sol.value(QStringLiteral("backend")).toObject()
                  .value(QStringLiteral("model")).toString(),
@@ -214,6 +216,10 @@ void SystemProfilesTests::bundleProductionRoleAssignmentsMatchRequestedModels()
                  .value(QStringLiteral("type")).toString(),
              QStringLiteral("astra-strata"));
     QVERIFY(sol.value(QStringLiteral("comment")).toString().contains(QStringLiteral("TC-92")));
+    QCOMPARE(byId.value(QStringLiteral("sys-vram-8-qwen-agent"))
+                 .value(QStringLiteral("q172Quality")).toDouble(), 69.0);
+    QCOMPARE(byId.value(QStringLiteral("sys-vram-4-gemma"))
+                 .value(QStringLiteral("q172Quality")).toDouble(), 52.0);
 
     QFile launches(QDir::current().absoluteFilePath(QStringLiteral("profiles/launches.json")));
     QVERIFY2(launches.open(QIODevice::ReadOnly), "falta profiles/launches.json");

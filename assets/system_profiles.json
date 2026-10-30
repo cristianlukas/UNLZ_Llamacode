@@ -3036,6 +3036,7 @@
   },
   {
     "id": "sys-vram-8-qwen-agent",
+    "q172Quality": 69,
     "tier": "8GB-QwenAgent",
     "order": 6,
     "showcaseGroup": "vram8",
@@ -3151,6 +3152,7 @@
   },
   {
     "id": "sys-vram-4-gemma",
+    "q172Quality": 52,
     "tier": "4GB-Gemma",
     "displayName": "[general] 4GB · Gemma 4 E4B Heretic QAT",
     "minVramGb": 4,
@@ -5165,6 +5167,7 @@
     },
     {
         "id": "sys-astra-iq2xs-default",
+        "q172Quality": 89,
         "tier": "ASTRA-DeepSeek",
         "order": 497,
         "extra": true,
@@ -5230,6 +5233,7 @@
     },
     {
         "id": "sys-sol-qwen38-flashnext-iq2xs",
+        "q172Quality": 73,
         "tier": "SOL-Strata",
         "order": 498,
         "extra": true,

@@ -18,6 +18,7 @@
 #include <QJsonObject>
 #include <QSet>
 #include <algorithm>
+#include <cmath>
 
 // Launch profile display names carry a stable, non-repeating incremental id as a
 // "<n>_" prefix. The number never changes for an existing profile and is never
@@ -32,6 +33,51 @@ int seqOf(const QString &name) {
 }
 QString stripSeq(const QString &name) {
     return QString(name).remove(kSeqPrefix);
+}
+
+bool hasQ172Quality(const LaunchProfile &profile)
+{
+    return std::isfinite(profile.q172Quality)
+        && profile.q172Quality >= 0.0 && profile.q172Quality <= 100.0;
+}
+
+QJsonObject launchProfileQualityConfig(const LaunchProfile &profile)
+{
+    QJsonObject comparable = profile.toJson();
+    for (const QString &field : {
+             QStringLiteral("id"), QStringLiteral("name"), QStringLiteral("alias"),
+             QStringLiteral("best"), QStringLiteral("favorite"), QStringLiteral("benchmark"),
+             QStringLiteral("benchmarkMemoryAdaptive"), QStringLiteral("tags"),
+             QStringLiteral("lastUsed"), QStringLiteral("menuOrder"),
+             QStringLiteral("q172Quality"), QStringLiteral("systemBadge"),
+             QStringLiteral("deprecated")})
+        comparable.remove(field);
+    return comparable;
+}
+
+bool launchProfileLess(const LaunchProfile &a, const LaunchProfile &b)
+{
+    const bool aScored = hasQ172Quality(a);
+    const bool bScored = hasQ172Quality(b);
+    if (aScored != bScored) return aScored;
+    if (aScored && a.q172Quality != b.q172Quality)
+        return a.q172Quality > b.q172Quality;
+    if (a.menuOrder != b.menuOrder) {
+        if (a.menuOrder == 0) return false;
+        if (b.menuOrder == 0) return true;
+        return a.menuOrder < b.menuOrder;
+    }
+    if (a.best != b.best) return a.best;
+    if (a.favorite != b.favorite) return a.favorite;
+    if (a.lastUsed != b.lastUsed) return a.lastUsed > b.lastUsed;
+    return seqOf(a.name) < seqOf(b.name);
+}
+
+QString withQ172Score(const QString &displayName, const LaunchProfile &profile)
+{
+    if (!hasQ172Quality(profile)) return displayName;
+    return displayName + QStringLiteral(" · Q172 %1/100")
+        .arg(QString::number(profile.q172Quality, 'g', 4));
 }
 
 bool isCuratedBestName(const LaunchProfile &profile)
@@ -488,6 +534,7 @@ bool ProfileManager::updateLaunchProfile(const QVariantMap &data)
         emit errorOccurred(QStringLiteral("Perfil de sistema: solo lectura (duplicalo para editar)."));
         return false;
     }
+    const QJsonObject qualityConfigBefore = launchProfileQualityConfig(p);
     // Preserve this profile's stable incremental id even if the edited name
     // drops or changes the "<n>_" prefix.
     int seq = seqOf(p.name);
@@ -512,6 +559,12 @@ bool ProfileManager::updateLaunchProfile(const QVariantMap &data)
     if (data.contains("benchmark")) p.benchmark = data.value("benchmark").toBool();
     if (data.contains("benchmarkMemoryAdaptive"))
         p.benchmarkMemoryAdaptive = data.value("benchmarkMemoryAdaptive").toBool();
+    if (data.contains("q172Quality")) {
+        bool ok = false;
+        const double score = data.value("q172Quality").toDouble(&ok);
+        p.q172Quality = ok && std::isfinite(score) && score >= 0.0 && score <= 100.0
+            ? score : -1.0;
+    }
     if (data.contains("systemBadge")) p.systemBadge = data.value("systemBadge").toBool();
     if (data.contains("deprecated")) p.deprecated = data.value("deprecated").toBool();
     if (data.contains("reasoningEffort"))
@@ -580,6 +633,9 @@ bool ProfileManager::updateLaunchProfile(const QVariantMap &data)
     }
     if (data.contains("browserAutomation"))
         p.browserAutomation = data.value("browserAutomation").toString();
+    if (!data.contains("q172Quality")
+        && qualityConfigBefore != launchProfileQualityConfig(p))
+        p.q172Quality = -1.0;
     bool ok = m_launches.update(p);
     if (ok) { save(); emit launchesChanged(); }
     return ok;
@@ -622,6 +678,7 @@ QVariantMap ProfileManager::getLaunchProfile(const QString &id) const
             {"benchmarkMemoryAdaptive", p.benchmarkMemoryAdaptive},
             {"tags", p.tags}, {"lastUsed", p.lastUsed},
             {"menuOrder", p.menuOrder},
+            {"q172Quality", p.q172Quality},
             {"deprecated", p.deprecated}, {"systemBadge", p.systemBadge},
             {"system", p.system},
             {"displayName", displayName},
@@ -708,24 +765,12 @@ void ProfileManager::markLaunchUsed(const QString &id)
     if (m_launches.update(p)) { save(); emit launchesChanged(); }
 }
 
-// Lista de perfiles de lanzamiento para dropdowns: BEST primero (rayo), luego
-// favoritos (estrella), y finalmente por id incremental.
-// luego por id incremental; displayName = "alias - name" si hay alias.
+// Perfiles con Q172 primero, de mayor a menor; sin score van al final. Dentro
+// de empates y N/D se conserva el orden operativo existente.
 QVariantList ProfileManager::launchProfilesForMenu() const
 {
     QList<LaunchProfile> items = m_launches.m_items;
-    std::stable_sort(items.begin(), items.end(),
-        [](const LaunchProfile &a, const LaunchProfile &b) {
-            if (a.menuOrder != b.menuOrder) {
-                if (a.menuOrder == 0) return false;
-                if (b.menuOrder == 0) return true;
-                return a.menuOrder < b.menuOrder;
-            }
-            if (a.best != b.best) return a.best;                 // BEST arriba
-            if (a.favorite != b.favorite) return a.favorite;     // favoritos arriba
-            if (a.lastUsed != b.lastUsed) return a.lastUsed > b.lastUsed;
-            return seqOf(a.name) < seqOf(b.name);                // luego por nº incremental
-        });
+    std::stable_sort(items.begin(), items.end(), launchProfileLess);
     QVariantList out;
     for (const auto &p : items) {
         if (p.deprecated) continue;
@@ -738,16 +783,18 @@ QVariantList ProfileManager::launchProfilesForMenu() const
         if (p.systemBadge) mark += QStringLiteral("⚙ ");
         if (p.favorite) mark += QStringLiteral("★ ");
         if (p.benchmark) mark += QStringLiteral("🏆 ");
+        const QString displayName = withQ172Score(mark + base, p);
         out.append(QVariantMap{
             {"id", p.id}, {"name", p.name}, {"alias", p.alias},
             {"best", p.best}, {"favorite", p.favorite}, {"benchmark", p.benchmark},
+            {"q172Quality", p.q172Quality},
             {"tags", p.tags}, {"lastUsed", p.lastUsed},
             {"menuOrder", p.menuOrder},
             {"deprecated", p.deprecated}, {"systemBadge", p.systemBadge},
             {"system", p.system},
             // displayName lleva el marcador (⚙ sistema / ★ favorito) para verlo en
             // el dropdown y el texto seleccionado; si hay alias va junto al nombre.
-            {"displayName", mark + base}});
+            {"displayName", displayName}});
     }
     return out;
 }
@@ -756,18 +803,7 @@ QVariantList ProfileManager::launchProfilesForProfilesPage(const QString &query)
 {
     QList<LaunchProfile> items = m_launches.m_items;
     const QString needle = query.trimmed().toCaseFolded();
-    std::stable_sort(items.begin(), items.end(),
-        [](const LaunchProfile &a, const LaunchProfile &b) {
-            if (a.menuOrder != b.menuOrder) {
-                if (a.menuOrder == 0) return false;
-                if (b.menuOrder == 0) return true;
-                return a.menuOrder < b.menuOrder;
-            }
-            if (a.best != b.best) return a.best;
-            if (a.favorite != b.favorite) return a.favorite;
-            if (a.lastUsed != b.lastUsed) return a.lastUsed > b.lastUsed;
-            return seqOf(a.name) < seqOf(b.name);
-        });
+    std::stable_sort(items.begin(), items.end(), launchProfileLess);
     QVariantList out;
     for (const auto &p : items) {
         const QString base = p.alias.isEmpty()
@@ -786,14 +822,16 @@ QVariantList ProfileManager::launchProfilesForProfilesPage(const QString &query)
         if (p.favorite) mark += QStringLiteral("★ ");
         if (p.benchmark) mark += QStringLiteral("🏆 ");
         if (p.deprecated) mark += QStringLiteral("⚠ ");
+        const QString displayName = withQ172Score(mark + base, p);
         out.append(QVariantMap{
             {"id", p.id}, {"name", p.name}, {"alias", p.alias},
             {"best", p.best}, {"favorite", p.favorite}, {"benchmark", p.benchmark},
+            {"q172Quality", p.q172Quality},
             {"tags", p.tags}, {"lastUsed", p.lastUsed},
             {"menuOrder", p.menuOrder},
             {"deprecated", p.deprecated}, {"systemBadge", p.systemBadge},
             {"system", p.system},
-            {"displayName", mark + base}});
+            {"displayName", displayName}});
     }
     return out;
 }
@@ -1674,6 +1712,9 @@ void ProfileManager::loadSystemProfiles()
             QStringLiteral("sys-vram-2-gemma"), QStringLiteral("sys-vram-0")
         };
         lp.systemBadge = baseSystemIds.contains(id);
+        lp.q172Quality = o.value(QStringLiteral("q172Quality")).toDouble(-1.0);
+        if (!std::isfinite(lp.q172Quality) || lp.q172Quality < 0.0 || lp.q172Quality > 100.0)
+            lp.q172Quality = -1.0;
         // Alias operativo explícito (incluidas variantes de benchmark); si no
         // existe, conservar el fallback histórico de VRAM (ej. "12GB").
         lp.alias = o.value(QStringLiteral("alias")).toString().trimmed();

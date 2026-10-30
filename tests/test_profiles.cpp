@@ -47,6 +47,7 @@ private slots:
     void manager_addModelProfile();
     void manager_favoriteAndAlias();
     void manager_menuOrderPrecedesRecentUsage();
+    void manager_q172QualityOrdersProfilesAndInvalidatesOnConfigChange();
     void manager_benchmarkQueue();
     void manager_profileSearchFiltersNameAliasAndId();
     void manager_tagsAndLastUsed();
@@ -190,6 +191,7 @@ void ProfilesTests::launchProfile_jsonRoundTrip()
     l.browserAutomation = "on";
     l.tags = QStringList{"coding", "local"};
     l.lastUsed = 123456789;
+    l.q172Quality = 89.0;
     l.plannerProfileId = "planner-maxq";
     l.hybridMode = "sequential";
     const LaunchProfile r = LaunchProfile::fromJson(l.toJson());
@@ -217,6 +219,7 @@ void ProfilesTests::launchProfile_jsonRoundTrip()
     QCOMPARE(r.tags, l.tags);
     QCOMPARE(r.lastUsed, l.lastUsed);
     QCOMPARE(r.menuOrder, l.menuOrder);
+    QCOMPARE(r.q172Quality, l.q172Quality);
     // Default (campo ausente) → 0 = sin override.
     LaunchProfile empty;
     QCOMPARE(LaunchProfile::fromJson(empty.toJson()).powerLimitW, 0);
@@ -225,6 +228,7 @@ void ProfilesTests::launchProfile_jsonRoundTrip()
              QStringLiteral("inherit"));
     QCOMPARE(LaunchProfile::fromJson(QJsonObject{}).hybridMode,
              QStringLiteral("off"));
+    QCOMPARE(LaunchProfile::fromJson(QJsonObject{}).q172Quality, -1.0);
 }
 
 void ProfilesTests::strataVisionCapabilityRequiresConfiguredExistingAssets()
@@ -488,6 +492,57 @@ void ProfilesTests::manager_menuOrderPrecedesRecentUsage()
     QVERIFY(pos(first) < pos(second));
     QCOMPARE(pm.getLaunchProfile(first).value("menuOrder").toInt(), 1);
     QCOMPARE(pm.getLaunchProfile(second).value("menuOrder").toInt(), 2);
+}
+
+void ProfilesTests::manager_q172QualityOrdersProfilesAndInvalidatesOnConfigChange()
+{
+    ProfileManager pm;
+    const QString high = pm.addLaunchProfile(QStringLiteral("High"), "b", "m", "r");
+    const QString middle = pm.addLaunchProfile(QStringLiteral("Middle"), "b", "m", "r");
+    const QString low = pm.addLaunchProfile(QStringLiteral("Low"), "b", "m", "r");
+    const QString unscored = pm.addLaunchProfile(QStringLiteral("Unscored"), "b", "m", "r");
+    QVERIFY(!high.isEmpty());
+    QVERIFY(!middle.isEmpty());
+    QVERIFY(!low.isEmpty());
+    QVERIFY(!unscored.isEmpty());
+
+    QVERIFY(pm.updateLaunchProfile(QVariantMap{{"id", high}, {"q172Quality", 99.0}}));
+    QVERIFY(pm.updateLaunchProfile(QVariantMap{{"id", middle}, {"q172Quality", 75.5}}));
+    QVERIFY(pm.updateLaunchProfile(QVariantMap{{"id", low}, {"q172Quality", 25.0},
+                                               {"menuOrder", 1}, {"best", true},
+                                               {"favorite", true}}));
+    QVERIFY(pm.updateLaunchProfile(QVariantMap{{"id", unscored}, {"menuOrder", 2},
+                                               {"best", true}, {"favorite", true}}));
+
+    const auto assertQ172Order = [&](const QVariantList &items) {
+        const auto pos = [&](const QString &id) {
+            for (int i = 0; i < items.size(); ++i)
+                if (items.at(i).toMap().value("id").toString() == id) return i;
+            return static_cast<int>(items.size());
+        };
+        QVERIFY(pos(high) < pos(middle));
+        QVERIFY(pos(middle) < pos(low));
+        QVERIFY(pos(low) < pos(unscored));
+
+        const auto lowRow = std::find_if(items.cbegin(), items.cend(), [&](const QVariant &v) {
+            return v.toMap().value("id").toString() == low;
+        });
+        QVERIFY(lowRow != items.cend());
+        QCOMPARE(lowRow->toMap().value("q172Quality").toDouble(), 25.0);
+        QVERIFY(lowRow->toMap().value("displayName").toString().contains("Q172 25/100"));
+
+        bool sawUnscored = false;
+        for (const QVariant &item : items) {
+            const double score = item.toMap().value("q172Quality").toDouble();
+            if (score < 0.0) sawUnscored = true;
+            else QVERIFY(!sawUnscored);
+        }
+    };
+    assertQ172Order(pm.launchProfilesForMenu());
+    assertQ172Order(pm.launchProfilesForProfilesPage(QString()));
+
+    QVERIFY(pm.updateLaunchProfile(QVariantMap{{"id", high}, {"modelProfileId", "edited-model"}}));
+    QCOMPARE(pm.getLaunchProfile(high).value("q172Quality").toDouble(), -1.0);
 }
 
 void ProfilesTests::manager_benchmarkQueue()

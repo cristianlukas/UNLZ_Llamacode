@@ -57,6 +57,7 @@ Item {
     property bool launchFavorite: false   // favorito del perfil de lanzamiento
     property bool launchBenchmark: false // candidato pendiente para benchmark
     property bool launchDeprecated: false // visible sólo en esta página administrativa
+    property real launchQ172Quality: -1   // -1 = sin resultado Q172 verificado
     property bool smokeTestRunning: false
     // Política: siempre LlamaAgent. Sin selector de harness; sin "none"/"opencode".
     property string harnessAdapter: "llamaagent"
@@ -421,6 +422,9 @@ Item {
         root.launchFavorite = (lp.favorite === true)
         root.launchBenchmark = (lp.benchmark === true)
         root.launchDeprecated = (lp.deprecated === true)
+        root.launchQ172Quality = Number(lp.q172Quality ?? -1)
+        launchQ172Field.text = root.launchQ172Quality >= 0
+            ? String(root.launchQ172Quality) : ""
         profileAliasField.text = lp.alias ?? ""
         profileTagsField.text = (lp.tags ?? []).join(", ")
         powerLimitField.text = ((lp.powerLimitW ?? 0) > 0) ? (lp.powerLimitW).toString() : ""
@@ -707,6 +711,12 @@ Item {
         })
 
         console.log("[saveAll] updateLaunchProfile result:", lpOk)
+        if (lpOk) {
+            const savedLaunch = App.profileManager.getLaunchProfile(selectedLaunchId)
+            root.launchQ172Quality = Number(savedLaunch.q172Quality ?? -1)
+            launchQ172Field.text = root.launchQ172Quality >= 0
+                ? String(root.launchQ172Quality) : ""
+        }
         App.profileManager.saveProfiles()   // fuerza write a disco
 
         if (!lpOk) App.serverError("No se pudo guardar Launch Profile.")
@@ -997,6 +1007,49 @@ Item {
                                 App.profileManager.setLaunchTags(selectedLaunchId,
                                     text.split(",").map(function(tag) { return tag.trim() }).filter(function(tag) { return tag.length > 0 }))
                         }
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+                            Text {
+                                text: "Calidad Q172 (0–100)"
+                                color: Theme.textSecondary
+                                font.pixelSize: 13
+                            }
+                            LcTextField {
+                                id: launchQ172Field
+                                Layout.preferredWidth: 140
+                                placeholderText: "N/D"
+                                enabled: selectedLaunchId.length > 0 && !selectedIsSystem
+                                ToolTip.visible: hovered
+                                ToolTip.text: "Puntaje exacto del perfil; vacío = sin medición. Un cambio de configuración lo invalida."
+                                onEditingFinished: {
+                                    if (selectedLaunchId.length === 0 || selectedIsSystem) return
+                                    const raw = text.trim().replace(",", ".")
+                                    let score = -1
+                                    if (raw.length > 0) {
+                                        score = Number(raw)
+                                        if (!isFinite(score) || score < 0 || score > 100) {
+                                            text = root.launchQ172Quality >= 0
+                                                ? String(root.launchQ172Quality) : ""
+                                            return
+                                        }
+                                    }
+                                    if (App.profileManager.updateLaunchProfile({
+                                        "id": selectedLaunchId,
+                                        "q172Quality": score
+                                    })) {
+                                        root.launchQ172Quality = score
+                                        text = score >= 0 ? String(score) : ""
+                                    }
+                                }
+                            }
+                            Text {
+                                text: "Sin puntaje: al final"
+                                color: Theme.textSecondary
+                                font.pixelSize: 12
+                            }
                         }
 
                         Flow {
