@@ -19,7 +19,9 @@ ComboBox {
         color: Theme.theme === "oled" ? "white" : Theme.textPrimary
         font.pixelSize: 13
         leftPadding: 10
-        rightPadding: control.indicator ? control.indicator.width + 4 : 10
+        // El estilo ya descuenta el indicador en el rightPadding del control;
+        // sumarlo otra vez acá dejaba "IMAP" en "I…" en un combo de 110 px.
+        rightPadding: 4
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight

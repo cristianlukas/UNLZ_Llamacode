@@ -128,7 +128,7 @@ ColumnLayout {
                 Text { text: "Proveedor"; color: Theme.textSecondary; font.pixelSize: 12 }
                 LcComboBox {
                     id: maProvider
-                    Layout.preferredWidth: 160
+                    Layout.preferredWidth: 200
                     model: [
                         { label: "Auto (por dominio)", value: "auto" },
                         { label: "Gmail",   value: "gmail" },

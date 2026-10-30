@@ -11,6 +11,7 @@ Rectangle {
     property string title: ""
     property string subtitle: ""
     property alias actionLabel: actionBtn.text
+    property alias actionEnabled: actionBtn.enabled
     property string action2Label: ""
     signal actionClicked()
     signal action2Clicked()

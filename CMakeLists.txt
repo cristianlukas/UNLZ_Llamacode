@@ -490,6 +490,7 @@ qt_add_qml_module(LlamaCode
         qml/components/BenchmarkScore.js
         qml/components/MonitorFormat.js
         qml/components/LcSparkline.qml
+        qml/components/LcSlider.qml
         qml/components/PageHeader.qml
         qml/components/CommandPreview.qml
         qml/components/ToolSupportBanner.qml
@@ -768,6 +769,7 @@ if (BUILD_TESTS)
         tests/qml/LcTextField.qml
         tests/qml/tst_color_picker.qml
         tests/qml/tst_lc_controls.qml
+        tests/qml/tst_lc_widgets.qml
         tests/qml/tst_settings_tabs.qml
         qml/components/SettingsTabsPolicy.js
         tests/qml/tst_navigation_policy.qml
@@ -824,6 +826,7 @@ if (BUILD_TESTS)
         qml/components/LcCheckBox.qml
         qml/components/LcSpinBox.qml
         qml/components/LcRadioButton.qml
+        qml/components/LcSlider.qml
         tests/qml/PageHeader.qml
     )
     add_custom_command(
@@ -834,6 +837,18 @@ if (BUILD_TESTS)
         DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/tests/qml/module_qmldir"
         COMMENT "Staging qmldir for the QML harness module")
     list(APPEND _lc_qml_harness_copies "${LC_QML_HARNESS_MODULE_DIR}/qmldir")
+    # LcButton / LcComboBox reales con otro nombre: los originales los ocupan
+    # stubs que usan otros tests (tst_lc_widgets).
+    foreach(_real LcButton LcComboBox)
+        add_custom_command(
+            OUTPUT "${LC_QML_HARNESS_MODULE_DIR}/Real${_real}.qml"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    "${CMAKE_CURRENT_SOURCE_DIR}/qml/components/${_real}.qml"
+                    "${LC_QML_HARNESS_MODULE_DIR}/Real${_real}.qml"
+            DEPENDS qml/components/${_real}.qml
+            COMMENT "Staging real ${_real}.qml for tst_lc_widgets")
+        list(APPEND _lc_qml_harness_copies "${LC_QML_HARNESS_MODULE_DIR}/Real${_real}.qml")
+    endforeach()
     foreach(_src ${LC_QML_HARNESS_MODULE_SOURCES})
         get_filename_component(_name "${_src}" NAME)
         add_custom_command(
@@ -857,7 +872,7 @@ if (BUILD_TESTS)
     list(APPEND _lc_qml_harness_copies "${LC_QML_HARNESS_DIR}/SettingsPage.qml.txt")
     # tst_page_contracts lee AgentPage/ChatPage/StudiaPage como TEXTO (headers
     # Flow, botón Iniciar agente, tarjeta de computer use, arranque de StudIA).
-    foreach(_page AgentPage ChatPage StudiaPage MonitorPage)
+    foreach(_page AgentPage ChatPage StudiaPage MonitorPage BenchmarkPage BinariesPage AgentsPage)
         add_custom_command(
             OUTPUT "${LC_QML_HARNESS_DIR}/${_page}.qml.txt"
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -952,6 +967,12 @@ if (BUILD_TESTS)
              COMMAND "${_lc_qt_bin}/qml" -I "${LC_QML_HARNESS_DIR}"
                      "${LC_QML_HARNESS_DIR}/tst_monitor_format.qml")
     set_tests_properties(qml_monitor_format PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1"
+        FAIL_REGULAR_EXPRESSION "FAIL |ReferenceError|TypeError|Unable to assign")
+    add_test(NAME qml_lc_widgets
+             COMMAND "${_lc_qt_bin}/qml" -I "${LC_QML_HARNESS_DIR}"
+                     "${LC_QML_HARNESS_DIR}/tst_lc_widgets.qml")
+    set_tests_properties(qml_lc_widgets PROPERTIES
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1"
         FAIL_REGULAR_EXPRESSION "FAIL |ReferenceError|TypeError|Unable to assign")
     add_test(NAME qml_navbar

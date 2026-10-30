@@ -866,7 +866,7 @@ Item {
 
                         Repeater {
                             model: [
-                                [App.l("launch.binary"),  App.effectiveProfile.binaryPath?.split(/[/\\]/).pop() ?? "—"],
+                                [App.l("launch.binary"),  String(App.effectiveProfile.binaryPath || "").split(/[/\\]/).pop() || "ninguno (servidor externo)"],
                                 [App.l("launch.valid"),   App.effectiveProfile.isValid ? App.l("launch.yes") : App.l("launch.no")],
                             ]
                             delegate: Row {

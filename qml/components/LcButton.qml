@@ -47,6 +47,10 @@ Button {
         }
     }
 
+    // Sin esto un botón deshabilitado se veía igual que uno activo: "Guardar"
+    // o "Eliminar" de un perfil de sistema parecían usables y no hacían nada.
+    opacity: enabled ? 1.0 : 0.38
+
     implicitHeight: 34
     implicitWidth: contentItem.implicitWidth + 24
     padding: 0

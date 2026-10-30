@@ -863,7 +863,7 @@ Item {
                                         editable: true
                                         onValueModified: App.gatewayPort = value
                                     }
-                                    Text { text: "keep hot"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    Text { text: "Modelos en caliente"; color: Theme.textSecondary; font.pixelSize: 12 }
                                     LcSpinBox {
                                         from: 1; to: 8
                                         value: App.gatewayKeepN
@@ -1323,7 +1323,7 @@ Item {
                                         RowLayout {
                                             Layout.fillWidth: true
                                             spacing: 10
-                                            Slider {
+                                            LcSlider {
                                                 id: plSlider
                                                 Layout.fillWidth: true
                                                 from: modelData.minW
@@ -1891,7 +1891,7 @@ Item {
                 Layout.fillWidth: true
                 spacing: 8
                 Text { text: "Contraste"; color: Theme.textPrimary; font.pixelSize: 13 }
-                Slider {
+                LcSlider {
                     id: contrastSlider
                     Layout.fillWidth: true
                     from: 0; to: 100; stepSize: 1

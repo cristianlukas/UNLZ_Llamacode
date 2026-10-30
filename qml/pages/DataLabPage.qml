@@ -224,7 +224,8 @@ Item {
                             ? JSON.stringify(root.selectedJob, null, 2)
                         : "El job guarda el esquema, los documentos, la extracción, la validación y la evidencia."
                     color: Theme.textSecondary
-                    font.family: "Consolas"
+                    // JSON del job en monoespaciada; el texto de ayuda, en la del resto de la app.
+                    font.family: root.selectedJobId.length > 0 ? Theme.codeFont : Theme.uiFont
                     font.pixelSize: 12
                     wrapMode: Text.WrapAnywhere
                     verticalAlignment: Text.AlignTop

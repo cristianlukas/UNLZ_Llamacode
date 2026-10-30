@@ -22,7 +22,7 @@ Item {
     property var columnFilters: ({})
     // Anchos redimensionables por columna del historial.
     property var colW: ({
-        profile: 200, target: 58, agentProfile: 96, benchmark: 100, thinking: 58, score: 60, firstAttemptScore: 58,
+        profile: 200, target: 58, agentProfile: 96, benchmark: 100, thinking: 58, score: 74, firstAttemptScore: 58,
         finalScore: 58, qpm: 68, repairAttempts: 52, timeToFirstAttempt: 62, totalTime: 62,
         passedAfterRepair: 68, tps: 60, ttft: 60, nonGeneration: 78, firstTool: 78, firstWrite: 78, firstEvaluable: 82, seconds: 70, ram: 60, vram: 60, vramGpu0: 66, vramGpu1: 66, date: 118
     })
@@ -367,9 +367,11 @@ Item {
         proBenchmarkIds = a
     }
 
-    Component {
-        id: sortableHeader
-        Item {
+    // Inline component, no Component + Loader: la página se carga asíncrona y
+    // los Loader heredan esa incubación, que se frena cuando la ventana no
+    // repinta. Los encabezados aparecían de a uno (de "Fixes" en adelante
+    // faltaban) mientras las filas ya estaban completas.
+    component SortableHeader: Item {
             id: hdr
             property string title: ""
             property string column: ""
@@ -523,7 +525,6 @@ Item {
                 }
             }
         }
-    }
 
     Component.onCompleted: {
         // Se precargan después del primer pintado desde AppController. Esta
@@ -1577,21 +1578,21 @@ Item {
                             LcButton {
                                 Layout.fillWidth: true
                                 Layout.minimumWidth: 0
-                                text: "Best 25"
+                                text: "Mejores 25"
                                 secondary: true
                                 onClicked: best25Popup.open()
                             }
                             LcButton {
                                 Layout.fillWidth: true
                                 Layout.minimumWidth: 0
-                                text: "Best modelos · speed"
+                                text: "Mejores modelos · velocidad"
                                 secondary: true
                                 onClicked: bestModelosSpeedPopup.open()
                             }
                             LcButton {
                                 Layout.fillWidth: true
                                 Layout.minimumWidth: 0
-                                text: "Best modelos · quality"
+                                text: "Mejores modelos · calidad"
                                 secondary: true
                                 onClicked: bestModelosQualityPopup.open()
                             }
@@ -1607,31 +1608,31 @@ Item {
                         RowLayout {
                             anchors { fill: parent; leftMargin: 12; rightMargin: 12 }
                             spacing: 0
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("profile"); onLoaded: { item.title = "Perfil"; item.column = "profile"; item.fill = true } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("target"); onLoaded: { item.title = "Modo"; item.column = "target" } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("agentProfile"); onLoaded: { item.title = "Nivel"; item.column = "agentProfile" } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("benchmark"); onLoaded: { item.title = "Benchmark"; item.column = "benchmark" } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("thinking"); onLoaded: { item.title = "Think"; item.column = "thinking" } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("score"); onLoaded: { item.title = "Score"; item.column = "score" } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("firstAttemptScore"); onLoaded: { item.title = "First"; item.column = "firstAttemptScore" } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("finalScore"); onLoaded: { item.title = "Final"; item.column = "finalScore" } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("qpm"); onLoaded: { item.title = "QPM"; item.column = "qpm" } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("repairAttempts"); onLoaded: { item.title = "Fixes"; item.column = "repairAttempts" } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("timeToFirstAttempt"); onLoaded: { item.title = "T First"; item.column = "timeToFirstAttempt" } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("totalTime"); onLoaded: { item.title = "T Total"; item.column = "totalTime" } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("passedAfterRepair"); onLoaded: { item.title = "Repaired"; item.column = "passedAfterRepair" } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("tps"); onLoaded: { item.title = "TPS"; item.column = "tps" } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("ttft"); onLoaded: { item.title = "TTFT"; item.column = "ttft" } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("nonGeneration"); onLoaded: { item.title = "T No Gen."; item.column = "nonGeneration" } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("firstTool"); onLoaded: { item.title = "1ª Tool"; item.column = "firstTool" } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("firstWrite"); onLoaded: { item.title = "1ª Escritura"; item.column = "firstWrite" } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("firstEvaluable"); onLoaded: { item.title = "1ª Evaluable"; item.column = "firstEvaluable" } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("seconds"); onLoaded: { item.title = "Segundos"; item.column = "seconds" } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("ram"); onLoaded: { item.title = "RAM"; item.column = "ram" } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("vram"); onLoaded: { item.title = "VRAM"; item.column = "vram" } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("vramGpu0"); onLoaded: { item.title = "VRAM G0"; item.column = "vramGpu0" } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("vramGpu1"); onLoaded: { item.title = "VRAM G1"; item.column = "vramGpu1" } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("date"); onLoaded: { item.title = "Fecha"; item.column = "date" } }
+                            SortableHeader { column: "profile"; title: "Perfil"; fill: true }
+                            SortableHeader { column: "target"; title: "Modo" }
+                            SortableHeader { column: "agentProfile"; title: "Nivel" }
+                            SortableHeader { column: "benchmark"; title: "Benchmark" }
+                            SortableHeader { column: "thinking"; title: "Think" }
+                            SortableHeader { column: "score"; title: "Score" }
+                            SortableHeader { column: "firstAttemptScore"; title: "First" }
+                            SortableHeader { column: "finalScore"; title: "Final" }
+                            SortableHeader { column: "qpm"; title: "QPM" }
+                            SortableHeader { column: "repairAttempts"; title: "Fixes" }
+                            SortableHeader { column: "timeToFirstAttempt"; title: "T First" }
+                            SortableHeader { column: "totalTime"; title: "T Total" }
+                            SortableHeader { column: "passedAfterRepair"; title: "Repaired" }
+                            SortableHeader { column: "tps"; title: "TPS" }
+                            SortableHeader { column: "ttft"; title: "TTFT" }
+                            SortableHeader { column: "nonGeneration"; title: "T No Gen." }
+                            SortableHeader { column: "firstTool"; title: "1ª Tool" }
+                            SortableHeader { column: "firstWrite"; title: "1ª Escritura" }
+                            SortableHeader { column: "firstEvaluable"; title: "1ª Evaluable" }
+                            SortableHeader { column: "seconds"; title: "Segundos" }
+                            SortableHeader { column: "ram"; title: "RAM" }
+                            SortableHeader { column: "vram"; title: "VRAM" }
+                            SortableHeader { column: "vramGpu0"; title: "VRAM G0" }
+                            SortableHeader { column: "vramGpu1"; title: "VRAM G1" }
+                            SortableHeader { column: "date"; title: "Fecha" }
                             Item { Layout.fillWidth: true; height: 30 }
                             Item { Layout.preferredWidth: 34; height: 30 }
                         }
@@ -1993,9 +1994,11 @@ Item {
                                     }
                                     LcButton {
                                         anchors { verticalCenter: parent.verticalCenter; right: parent.right }
-                                        width: BenchmarkScore.runStatus(modelData) === "timeout" ? 66
-                                              : BenchmarkScore.runStatus(modelData) === "infrastructure" ? 54
-                                              : 68
+                                        // Nunca más ancho que la celda: pisaba el "On" de Think.
+                                        width: Math.min(parent.width - 2,
+                                                        BenchmarkScore.runStatus(modelData) === "timeout" ? 66
+                                                        : BenchmarkScore.runStatus(modelData) === "infrastructure" ? 54
+                                                        : 68)
                                         height: 24
                                         text: BenchmarkScore.statusLabel(modelData)
                                         danger: true

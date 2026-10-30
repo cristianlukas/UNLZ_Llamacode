@@ -11,3 +11,6 @@ LcCheckBox 1.0 LcCheckBox.qml
 LcSpinBox 1.0 LcSpinBox.qml
 LcRadioButton 1.0 LcRadioButton.qml
 PageHeader 1.0 PageHeader.qml
+LcSlider 1.0 LcSlider.qml
+RealLcButton 1.0 RealLcButton.qml
+RealLcComboBox 1.0 RealLcComboBox.qml

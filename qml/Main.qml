@@ -814,7 +814,7 @@ ApplicationWindow {
                             }
                         }
                         LcButton {
-                            text: "Rescan"
+                            text: "Reescanear"
                             secondary: true
                             onClicked: App.rescanHardware()
                         }

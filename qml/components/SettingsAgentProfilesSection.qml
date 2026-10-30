@@ -473,15 +473,16 @@ ColumnLayout {
                 }
                 Text { text: "Descripción"; color: Theme.textSecondary; font.pixelSize: 12 }
                 LcTextField { id: styleDescriptionField; Layout.fillWidth: true; placeholderText: "Para qué conviene usarlo" }
-                Text { text: "Ficha"; color: Theme.textSecondary; font.pixelSize: 12 }
-                TextArea { id: styleCardField; Layout.fillWidth: true; Layout.minimumHeight: 72; wrapMode: TextArea.Wrap; color: Theme.textPrimary; placeholderText: "Tono, ritmo, vocabulario, preferencias y cosas a evitar" }
-                Text { text: "Muestras"; color: Theme.textSecondary; font.pixelSize: 12 }
-                TextArea { id: styleExamplesField; Layout.fillWidth: true; Layout.minimumHeight: 100; wrapMode: TextArea.Wrap; color: Theme.textPrimary; placeholderText: "Pegá una o más muestras. Separalas con --- EJEMPLO ---. Se usan sólo como referencia y quedan locales." }
+                Text { text: "Ficha"; color: Theme.textSecondary; font.pixelSize: 12; Layout.alignment: Qt.AlignTop; Layout.topMargin: 8 }
+                TextArea { id: styleCardField; Layout.fillWidth: true; Layout.minimumHeight: 72; wrapMode: TextArea.Wrap; color: Theme.textPrimary; placeholderText: "Tono, ritmo, vocabulario, preferencias y cosas a evitar"; placeholderTextColor: Theme.textMuted; background: Rectangle { radius: 6; color: Theme.inputBg; border.color: parent.activeFocus ? Theme.inputBorderFocus : Theme.inputBorderColor } }
+                Text { text: "Muestras"; color: Theme.textSecondary; font.pixelSize: 12; Layout.alignment: Qt.AlignTop; Layout.topMargin: 8 }
+                TextArea { id: styleExamplesField; Layout.fillWidth: true; Layout.minimumHeight: 100; wrapMode: TextArea.Wrap; color: Theme.textPrimary; placeholderText: "Pegá una o más muestras. Separalas con --- EJEMPLO ---. Se usan sólo como referencia y quedan locales."; placeholderTextColor: Theme.textMuted; background: Rectangle { radius: 6; color: Theme.inputBg; border.color: parent.activeFocus ? Theme.inputBorderFocus : Theme.inputBorderColor } }
             }
             TextArea {
                 id: styleJsonField; Layout.fillWidth: true; Layout.minimumHeight: 70
                 wrapMode: TextArea.WrapAnywhere; color: Theme.textPrimary
                 placeholderText: "JSON para importar/exportar (queda local)"
+                placeholderTextColor: Theme.textMuted; background: Rectangle { radius: 6; color: Theme.inputBg; border.color: parent.activeFocus ? Theme.inputBorderFocus : Theme.inputBorderColor }
             }
             RowLayout {
                 Layout.fillWidth: true; spacing: 8

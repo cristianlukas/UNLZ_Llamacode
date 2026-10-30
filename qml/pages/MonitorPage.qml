@@ -198,6 +198,7 @@ Item {
         title: "Monitor"
         subtitle: "El modelo, su contexto y esta máquina, en vivo."
         actionLabel: root.copied ? "Copiado ✓" : "Copiar reporte"
+        actionEnabled: root.hasData
         onActionClicked: {
             App.copyMonitorReport()
             root.copied = true

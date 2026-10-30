@@ -6,6 +6,21 @@ import QtQuick
 // — si divergen, el que manda es el C++ (tests/test_theme.cpp lo fija).
 QtObject {
     property string accent: "#89b4fa"
+    // Tipografía (DataLabPage) y LcButton / LcSlider reales (tst_lc_widgets).
+    property string uiFont: "Sans Serif"
+    property string codeFont: "Monospace"
+    property string accentPressed: "#5b87d6"
+    property string btnPrimaryBg: "#89b4fa"
+    property string btnPrimaryHover: "#a6c8ff"
+    property string btnPrimaryPrs: "#5b87d6"
+    property string btnPrimaryText: "#11111b"
+    property string btnSecondaryBg: "#313244"
+    property string btnSecondaryHov: "#45475a"
+    property string btnSecondaryText: "#cdd6f4"
+    property string btnDangerBg: "#f38ba8"
+    property string btnDangerHov: "#f5a3b8"
+    property string btnDangerPrs: "#d9667f"
+    property string btnDangerText: "#11111b"
     property string baseBg: "#1e1e2e"
     property color surfaceBg: "#181825"
     property color highlight: "#313244"

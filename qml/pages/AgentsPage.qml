@@ -6,12 +6,6 @@ import LlamaCode 1.0
 
 Item {
     id: root
-    // Los botones de ventana flotan arriba a la derecha (Main.qml, sin barra de
-    // título): esta página no usa PageHeader, así que les reserva el ancho ella.
-    readonly property int windowControlsReserve: {
-        const w = root.Window.window
-        return (w && w.windowControlsWidth !== undefined) ? w.windowControlsWidth : 0
-    }
     property string selectedId: ""
     property var edit: ({})
     property var revisionRows: []
@@ -70,11 +64,18 @@ Item {
         if (id) selectAgent(id)
     }
 
+    // Mismo encabezado que el resto de las secciones: título, arrastre de la
+    // ventana y el ancho de los botones de ventana ya reservado.
+    PageHeader {
+        id: pageHeader
+        anchors { left: parent.left; right: parent.right; top: parent.top }
+        title: "Agentes"
+        subtitle: "Identidades reutilizables: instrucciones, perfiles, skills y triggers"
+    }
+
     RowLayout {
-        anchors.fill: parent
+        anchors { left: parent.left; right: parent.right; top: pageHeader.bottom; bottom: parent.bottom }
         anchors.margins: 18
-        // Debajo de los botones de ventana (32 px) que flotan arriba a la derecha.
-        anchors.topMargin: root.windowControlsReserve > 0 ? 40 : 18
         spacing: 14
 
         Rectangle {
@@ -189,7 +190,7 @@ Item {
                         onClicked: root.saveAgent()
                     }
                     LcButton {
-                        text: App.activeAgentDefinitionId === selectedId ? "Activo" : "Activar"
+                        text: selectedId.length > 0 && App.activeAgentDefinitionId === selectedId ? "Activo" : "Activar"
                         enabled: selectedId.length > 0 && App.activeAgentDefinitionId !== selectedId
                         onClicked: App.activateAgentDefinition(selectedId)
                     }

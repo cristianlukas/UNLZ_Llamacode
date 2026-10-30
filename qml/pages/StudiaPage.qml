@@ -491,7 +491,7 @@ Item {
                             id: herrTxt
                             anchors { fill: parent; margins: 8 }
                             text: {
-                                let s = "⚠ Faltan " + avisoHerr.faltan.length
+                                let s = (avisoHerr.faltan.length === 1 ? "⚠ Falta " : "⚠ Faltan ") + avisoHerr.faltan.length
                                       + (avisoHerr.faltan.length === 1
                                          ? " herramienta: " : " herramientas: ")
                                 const nombres = []

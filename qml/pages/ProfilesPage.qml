@@ -1563,36 +1563,38 @@ Item {
                         columns: 4; rowSpacing: 8; columnSpacing: 10
 
                         Text { text: "alias"; color: Theme.textSecondary; font.pixelSize: 12 }
-                        LcTextField { id: aliasField; Layout.fillWidth: true }
+                        LcTextField { id: aliasField; Layout.fillWidth: true; Layout.preferredWidth: 100 }
                         Text { text: "n-predict"; color: Theme.textSecondary; font.pixelSize: 12 }
-                        LcTextField { id: nPredictField; Layout.fillWidth: true; inputMethodHints: Qt.ImhDigitsOnly }
-                        Text { text: "cache-type-v"; color: Theme.textSecondary; font.pixelSize: 12 }
-                        LcTextField { id: cacheTypeVField; Layout.fillWidth: true }
+                        LcTextField { id: nPredictField; Layout.fillWidth: true; Layout.preferredWidth: 100; inputMethodHints: Qt.ImhDigitsOnly }
+                        Text { text: "cache-type-v"; color: Theme.textSecondary; font.pixelSize: 12; visible: cacheTypeVField.visible }
+                        LcTextField { id: cacheTypeVField; Layout.fillWidth: true; Layout.preferredWidth: 100; visible: !backendGrid.cloud || text.length > 0 }
                         Text { text: "temp"; color: Theme.textSecondary; font.pixelSize: 12 }
-                        LcTextField { id: tempField; Layout.fillWidth: true }
+                        LcTextField { id: tempField; Layout.fillWidth: true; Layout.preferredWidth: 100 }
                         Text { text: "top-p"; color: Theme.textSecondary; font.pixelSize: 12 }
-                        LcTextField { id: topPField; Layout.fillWidth: true }
+                        LcTextField { id: topPField; Layout.fillWidth: true; Layout.preferredWidth: 100 }
                         Text { text: "top-k"; color: Theme.textSecondary; font.pixelSize: 12 }
-                        LcTextField { id: topKField; Layout.fillWidth: true; inputMethodHints: Qt.ImhDigitsOnly }
+                        LcTextField { id: topKField; Layout.fillWidth: true; Layout.preferredWidth: 100; inputMethodHints: Qt.ImhDigitsOnly }
                         Text { text: "repeat-penalty"; color: Theme.textSecondary; font.pixelSize: 12 }
-                        LcTextField { id: repeatPenaltyField; Layout.fillWidth: true }
+                        LcTextField { id: repeatPenaltyField; Layout.fillWidth: true; Layout.preferredWidth: 100 }
                         Text { text: "presence-penalty"; color: Theme.textSecondary; font.pixelSize: 12 }
-                        LcTextField { id: presencePenaltyField; Layout.fillWidth: true }
-                        Text { text: "cache-ram"; color: Theme.textSecondary; font.pixelSize: 12 }
-                        LcTextField { id: cacheRamField; Layout.fillWidth: true; inputMethodHints: Qt.ImhDigitsOnly }
-                        Text { text: "cache-reuse"; color: Theme.textSecondary; font.pixelSize: 12 }
-                        LcTextField { id: cacheReuseField; Layout.fillWidth: true; inputMethodHints: Qt.ImhDigitsOnly }
-                        Text { text: "power-limit (W)"; color: Theme.textSecondary; font.pixelSize: 12 }
+                        LcTextField { id: presencePenaltyField; Layout.fillWidth: true; Layout.preferredWidth: 100 }
+                        Text { text: "cache-ram"; color: Theme.textSecondary; font.pixelSize: 12; visible: cacheRamField.visible }
+                        LcTextField { id: cacheRamField; Layout.fillWidth: true; Layout.preferredWidth: 100; inputMethodHints: Qt.ImhDigitsOnly; visible: !backendGrid.cloud || text.length > 0 }
+                        Text { text: "cache-reuse"; color: Theme.textSecondary; font.pixelSize: 12; visible: cacheReuseField.visible }
+                        LcTextField { id: cacheReuseField; Layout.fillWidth: true; Layout.preferredWidth: 100; inputMethodHints: Qt.ImhDigitsOnly; visible: !backendGrid.cloud || text.length > 0 }
+                        Text { text: "power-limit (W)"; color: Theme.textSecondary; font.pixelSize: 12; visible: powerLimitField.visible }
                         LcTextField {
                             id: powerLimitField
-                            Layout.fillWidth: true
+                            Layout.fillWidth: true; Layout.preferredWidth: 100
+                            // Perfil cloud: la GPU no es nuestra; no hay a qué ponerle límite.
+                            visible: !backendGrid.cloud || text.length > 0
                             inputMethodHints: Qt.ImhDigitsOnly
                             placeholderText: "0 = global"
                         }
                         Text { text: "browser MCP"; color: Theme.textSecondary; font.pixelSize: 12 }
                         LcComboBox {
                             id: browserAutoCombo
-                            Layout.fillWidth: true
+                            Layout.fillWidth: true; Layout.preferredWidth: 100
                             // value = "inherit" | "on" | "off"
                             textRole: "label"
                             valueRole: "value"
@@ -1693,6 +1695,8 @@ Item {
                 // ─────────────────────────────────────────────────────────────
                 Rectangle {
                     Layout.fillWidth: true
+                    // Args de llama-server: un perfil cloud no lanza ninguno.
+                    visible: !backendGrid.cloud || manualExtraArgsArea.text.trim().length > 0
                     color: Theme.surfaceBg
                     border.color: Theme.borderColor
                     radius: 8

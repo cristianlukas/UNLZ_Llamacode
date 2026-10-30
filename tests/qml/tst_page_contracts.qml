@@ -94,6 +94,29 @@ QtObject {
         check(monitor.indexOf("PageHeader {") > 0,
               "Monitor: usa PageHeader (reserva el ancho de los botones de ventana)")
 
+        check(monitor.indexOf("actionEnabled: root.hasData") > 0,
+              "Monitor: Copiar reporte deshabilitado sin datos")
+
+        // Benchmark: la página carga asíncrona y los Loader de encabezado se
+        // creaban de a uno (faltaban de "Fixes" en adelante). Inline component.
+        const bench = read("BenchmarkPage.qml.txt")
+        check(bench.indexOf("sourceComponent: sortableHeader") < 0,
+              "Benchmark: encabezados sin Loader")
+        check((bench.match(/SortableHeader \{ column: /g) || []).length === 25,
+              "Benchmark: los 25 encabezados son SortableHeader")
+
+        // Binarios: el build MTP sólo existe para Windows.
+        const bins = read("BinariesPage.qml.txt")
+        check(bins.indexOf("visible: Qt.platform.os === \"windows\"") > 0,
+              "Binarios: Instalar build MTP sólo en Windows")
+        check(bins.indexOf("elide: Text.ElideRight") > 0, "Binarios: nombres largos recortados")
+
+        // Agentes: mismo encabezado que el resto (título + arrastre + botones de ventana).
+        const agents = read("AgentsPage.qml.txt")
+        check(agents.indexOf("PageHeader {") > 0, "Agentes: usa PageHeader")
+        check(agents.indexOf("selectedId.length > 0 && App.activeAgentDefinitionId === selectedId") > 0,
+              "Agentes: un agente sin guardar no figura como Activo")
+
         console.log(fails === 0 ? "ALL PASS" : ("FAIL count=" + fails))
         Qt.exit(fails === 0 ? 0 : 1)
     }

@@ -113,6 +113,11 @@ Item {
         LcButton {
             text: App.installingOfficialBinary ? "Descargando…" : "Instalar build MTP (NVIDIA · beellama)"
             secondary: true
+            // El build sólo existe para Windows: en Linux era un botón suelto,
+            // pegado al borde, que descargaba algo inutilizable.
+            visible: Qt.platform.os === "windows"
+            Layout.leftMargin: 16
+            Layout.topMargin: 8
             enabled: !App.installingOfficialBinary
             onClicked: App.installMtpBinary()
         }
@@ -284,7 +289,7 @@ Item {
 
             ListView {
                 id: listView
-                Layout.preferredWidth: 280
+                Layout.preferredWidth: 360
                 Layout.fillHeight: true
                 clip: true
                 model: App.binaryRegistry
@@ -308,7 +313,13 @@ Item {
                                 font.pixelSize: 10
                                 color: pathValid ? Theme.successText : Theme.errorText
                             }
-                            Text { text: name; font.pixelSize: 14; font.bold: true; color: Theme.textPrimary }
+                            // Recortado al ancho de la lista: los nombres largos se metían
+                            // bajo la barra de scroll. El nombre completo va en el tooltip.
+                            Text {
+                                text: name; font.pixelSize: 14; font.bold: true; color: Theme.textPrimary
+                                width: listView.width - 56
+                                elide: Text.ElideRight
+                            }
                         }
                         Text {
                             text: backend.toUpperCase() + " · " + flavor
@@ -317,6 +328,9 @@ Item {
                         }
                     }
                     onClicked: listView.currentIndex = index
+                    ToolTip.visible: hovered
+                    ToolTip.delay: 600
+                    ToolTip.text: name
                 }
 
                 Rectangle { anchors.right: parent.right; width: 1; height: parent.height; color: Theme.borderColor }

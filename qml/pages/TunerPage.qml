@@ -280,7 +280,7 @@ Item {
                                 color: Theme.textPrimary
                                 font.pixelSize: 12
                             }
-                            Slider {
+                            LcSlider {
                                 id: ppSlider
                                 Layout.fillWidth: true
                                 from: 0; to: 1; stepSize: 0.05

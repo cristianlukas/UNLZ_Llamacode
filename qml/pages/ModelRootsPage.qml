@@ -252,7 +252,7 @@ Item {
                         }
                     }
                     LcButton {
-                        text: "Rescan"
+                        text: "Reescanear"
                         secondary: true
                         onClicked: App.rescanHardware()
                     }
@@ -325,7 +325,7 @@ Item {
                                     Layout.bottomMargin: 6
                                     spacing: 6
                                     LcButton {
-                                        text: "Download"
+                                        text: "Descargar"
                                         Layout.preferredHeight: 34
                                         enabled: item.downloadable ?? true
                                         onClicked: App.downloadRecommendedModel(item.repo ?? "", item.fileName ?? "")
@@ -872,7 +872,7 @@ Item {
                             }
 
                             LcButton {
-                                text: "Download"
+                                text: "Descargar"
                                 Layout.preferredHeight: 34
                                 enabled: item.downloadable ?? true
                                 onClicked: App.downloadRecommendedModel(item.repo ?? "", item.fileName ?? "")
