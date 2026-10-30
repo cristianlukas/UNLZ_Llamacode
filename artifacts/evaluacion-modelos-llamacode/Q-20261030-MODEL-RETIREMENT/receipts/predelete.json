@@ -1,0 +1,91 @@
+{
+  "task_id": "Q192",
+  "status": "completed",
+  "utc": "2026-10-30T15:10:56Z",
+  "lock_token": "cleanup-dominance-c119a3effc49",
+  "authorization": "Explicit user instruction in current turn",
+  "targets": [
+    {
+      "sheet_row": 20,
+      "path": "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/Bonsai2-Prism-PQ2_0/models/Ternary-Bonsai-2-27B-PQ2_0.gguf",
+      "bytes": 7206168928,
+      "sha256": "3907dc1658db1f78a9826bf8d5bcb8dc65db0d466388937af57f2294fae62ec1",
+      "hardlinks": 1,
+      "dominance": {
+        "prefill": 832.88,
+        "decode": 53.53,
+        "q172": 75,
+        "superseded_by_sheet_row": 17
+      }
+    },
+    {
+      "sheet_row": 27,
+      "path": "/media/cristian/HDD extra/Modelos-eval/archived-unused/Q-20261028-VF-ITERATION-180/models/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf",
+      "bytes": 22853663008,
+      "sha256": "55983c5a75a1ab969824077b3bb3de4146e82a9234072b48ad4e8f92ad3fe9f1",
+      "hardlinks": 1,
+      "dominance": {
+        "prefill": 6426.38248180769,
+        "decode": 114.16644287368877,
+        "q172": 0,
+        "superseded_by_sheet_row": 26
+      }
+    }
+  ],
+  "preserved": [
+    {
+      "sheet_row": 23,
+      "reason": "PeritoSoft benchmark fixtures reference the exact Gemma 4 12B QAT artifact path."
+    },
+    {
+      "sheet_row": 24,
+      "reason": "Linked by active local LlamaCode launch profile TERRA; deleting would break that profile."
+    }
+  ],
+  "process_check": "No llama-server process; fuser found no open handles on either target.",
+  "disk_free_bytes_before": {
+    "Disco local": 7413547008,
+    "HDD extra": 5792980992
+  },
+  "finished_utc": "2026-10-30T15:13:19Z",
+  "deleted": [
+    {
+      "sheet_row": 20,
+      "path": "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/Bonsai2-Prism-PQ2_0/models/Ternary-Bonsai-2-27B-PQ2_0.gguf",
+      "bytes": 7206168928,
+      "sha256": "3907dc1658db1f78a9826bf8d5bcb8dc65db0d466388937af57f2294fae62ec1",
+      "verified_absent_after_delete": true
+    },
+    {
+      "sheet_row": 27,
+      "path": "/media/cristian/HDD extra/Modelos-eval/archived-unused/Q-20261028-VF-ITERATION-180/models/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf",
+      "bytes": 22853663008,
+      "sha256": "55983c5a75a1ab969824077b3bb3de4146e82a9234072b48ad4e8f92ad3fe9f1",
+      "verified_absent_after_delete": true
+    }
+  ],
+  "sheet_sync": {
+    "tab": "Modelos locales por peso",
+    "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "verified_rows": [
+      20,
+      23,
+      24,
+      27
+    ],
+    "verified_fields": [
+      "status",
+      "path",
+      "weight",
+      "dominance hyperlink",
+      "retention reason"
+    ],
+    "format_preserved": true
+  },
+  "disk_free_bytes_after": {
+    "Disco local": 14619717632,
+    "HDD extra": 28646645760
+  },
+  "bytes_freed": 30059831936,
+  "gpu_or_inference_used": false
+}
