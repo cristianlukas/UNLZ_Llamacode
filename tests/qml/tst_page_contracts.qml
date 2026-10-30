@@ -128,6 +128,17 @@ QtObject {
         check(agent.indexOf("\"Segoe UI\"") < 0 && chat.indexOf("\"Segoe UI\"") < 0,
               "Chat/Agente: sin fuentes de Windows fijas")
 
+        // Investigación: el resultado de la última corrida (p. ej. informe rechazado por
+        // la auditoría) se muestra; antes quedaba escondido en researchStatus.
+        const research = read("ResearchPage.qml.txt")
+        check(research.indexOf("id: lastResearchCard") > 0, "Investigación: muestra el resultado de la última corrida")
+        check(research.indexOf("visible: !App.researchRunning && status.length > 0") > 0,
+              "Investigación: la tarjeta aparece al terminar, no durante la corrida")
+
+        // Lanzar: columna acotada y centrada con la ventana maximizada.
+        const launch = read("LaunchPage.qml.txt")
+        check(launch.indexOf("Layout.maximumWidth: 1100") > 0, "Lanzar: columna acotada")
+
         console.log(fails === 0 ? "ALL PASS" : ("FAIL count=" + fails))
         Qt.exit(fails === 0 ? 0 : 1)
     }

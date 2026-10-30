@@ -268,6 +268,32 @@ Item {
                         }
                     }
 
+                    // Resultado de la última corrida. Si el informe no pasaba la
+                    // auditoría (o fallaba) el motivo quedaba sólo en researchStatus y
+                    // la página seguía diciendo "listos para investigar".
+                    Rectangle {
+                        id: lastResearchCard
+                        readonly property string status: App.researchStatus || ""
+                        readonly property bool failed: /no super|no fue guardado|no se pudo|error|fall|cancel/i.test(status)
+                        Layout.fillWidth: true
+                        visible: !App.researchRunning && status.length > 0
+                        implicitHeight: lastResearchText.implicitHeight + 16
+                        radius: 6
+                        color: Theme.inputBg
+                        border.color: failed ? Theme.warnText : Theme.borderColor
+                        Text {
+                            id: lastResearchText
+                            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 8 }
+                            text: (lastResearchCard.failed ? "Última investigación sin reporte: " : "Última investigación: ")
+                                  + lastResearchCard.status
+                            color: lastResearchCard.failed ? Theme.warnText : Theme.textSecondary
+                            font.pixelSize: 11
+                            wrapMode: Text.WordWrap
+                            maximumLineCount: 8
+                            elide: Text.ElideRight
+                        }
+                    }
+
                     Item { Layout.fillHeight: true }
 
                     RowLayout {

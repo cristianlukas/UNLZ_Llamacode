@@ -875,7 +875,7 @@ if (BUILD_TESTS)
     list(APPEND _lc_qml_harness_copies "${LC_QML_HARNESS_DIR}/SettingsPage.qml.txt")
     # tst_page_contracts lee AgentPage/ChatPage/StudiaPage como TEXTO (headers
     # Flow, botón Iniciar agente, tarjeta de computer use, arranque de StudIA).
-    foreach(_page AgentPage ChatPage StudiaPage MonitorPage BenchmarkPage BinariesPage AgentsPage)
+    foreach(_page AgentPage ChatPage StudiaPage MonitorPage BenchmarkPage BinariesPage AgentsPage ResearchPage LaunchPage)
         add_custom_command(
             OUTPUT "${LC_QML_HARNESS_DIR}/${_page}.qml.txt"
             COMMAND ${CMAKE_COMMAND} -E copy_if_different

@@ -639,15 +639,19 @@ Item {
             Layout.fillHeight: true
             spacing: 0
 
+            // Con la ventana maximizada los botones medían ~1800 px: columna
+            // acotada y centrada (espaciadores a los lados), como el Monitor.
+            Item { Layout.fillWidth: true; Layout.preferredWidth: 0 }
+
             ColumnLayout {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+                Layout.preferredWidth: 1100
+                Layout.maximumWidth: 1100
                 Layout.topMargin: 20
                 Layout.leftMargin: 20
                 Layout.rightMargin: 20
                 spacing: 16
-
-                Text { text: (App.langV, App.l("launch.profile")); color: Theme.textMuted; font.pixelSize: 12 }
 
                 LcButton {
                     text: "Usar un servidor LAN"
@@ -656,6 +660,9 @@ Item {
                     Layout.preferredHeight: 44
                     onClicked: lanDialog.open()
                 }
+
+                // El rótulo va pegado a su combo (antes lo separaba el botón LAN).
+                Text { text: (App.langV, App.l("launch.profile")); color: Theme.textMuted; font.pixelSize: 12 }
 
                 LcComboBox {
                     id: launchCombo
@@ -1403,6 +1410,8 @@ Item {
 
                 Item { Layout.fillHeight: true }
             }
+
+            Item { Layout.fillWidth: true; Layout.preferredWidth: 0 }
         }
 
         Rectangle {
