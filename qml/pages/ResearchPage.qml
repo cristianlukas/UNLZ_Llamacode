@@ -14,10 +14,10 @@ Item {
         App.serverRunning && App.serverReady && App.agentRunning && !App.agentStarting
 
     function modeLabel(mode) {
-        if (mode === "product") return "Product"
-        if (mode === "compare") return "Compare"
-        if (mode === "howto") return "How-to"
-        if (mode === "factcheck") return "Fact-check"
+        if (mode === "product") return "Producto"
+        if (mode === "compare") return "Comparar"
+        if (mode === "howto") return "Cómo hacer"
+        if (mode === "factcheck") return "Verificar"
         return "Auto"
     }
 
@@ -170,10 +170,10 @@ Item {
                         Repeater {
                             model: [
                                 { key: "auto", label: "Auto" },
-                                { key: "product", label: "Product" },
-                                { key: "compare", label: "Compare" },
-                                { key: "howto", label: "How-to" },
-                                { key: "factcheck", label: "Fact-check" }
+                                { key: "product", label: "Producto" },
+                                { key: "compare", label: "Comparar" },
+                                { key: "howto", label: "Cómo hacer" },
+                                { key: "factcheck", label: "Verificar" }
                             ]
                             delegate: Rectangle {
                                 height: 30
@@ -276,7 +276,7 @@ Item {
 
                         LcButton {
                             Layout.fillWidth: true
-                            text: App.researchRunning ? "Cancelar" : "Start"
+                            text: App.researchRunning ? "Cancelar" : "Investigar"
                             danger: App.researchRunning
                             enabled: App.researchRunning
                                 || (root.researchBackendReady && topicInput.text.trim().length > 0)
@@ -471,7 +471,7 @@ Item {
                             ? root.selectedReportText
                             : "Seleccioná un reporte para previsualizarlo."
                         color: root.selectedReportText.length > 0 ? Theme.textPrimary : Theme.textMuted
-                        font { family: "Segoe UI"; pixelSize: 13 }
+                        font.pixelSize: 13
                         wrapMode: TextEdit.WrapAtWordBoundaryOrAnywhere
                         readOnly: true
                         selectByMouse: true

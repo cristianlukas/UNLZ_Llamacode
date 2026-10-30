@@ -77,6 +77,7 @@
 #include "core/eval/EvalSuite.h"
 #include "core/eval/BenchmarkPack.h"
 #include "core/ServerBenchmarkMetrics.h"
+#include "core/MarkdownRender.h"
 #include "core/GGUFScanner.h"
 #include "core/tasks/WorkflowVisualModel.h"
 #include "core/tasks/SchedulerDaemonRegistration.h"
@@ -3251,6 +3252,16 @@ void AppController::startHealthPolling()
     m_healthPollTimer->start();
 }
 
+void AppController::noteAgentLaunchStarted(const QString &launchProfileId)
+{
+    // Arrancar "servidor + agente" con un perfil es elegirlo para el Agente. Si
+    // no, preferredAgentLaunchId() seguía devolviendo la última elección hecha
+    // en la pestaña Agente (p. ej. un perfil cloud) y el encabezado mostraba
+    // ese modelo mientras el agente hablaba con el servidor recién lanzado.
+    if (!launchProfileId.isEmpty())
+        writeSetting(QStringLiteral("lastAgentLaunchId"), launchProfileId);
+}
+
 void AppController::startServerAndAgent(const QString &launchProfileId)
 {
     const auto ctx = buildContext(launchProfileId);
@@ -3258,6 +3269,8 @@ void AppController::startServerAndAgent(const QString &launchProfileId)
     const bool hasAgent = !adapter.isEmpty()
                           && adapter != QLatin1String("none")
                           && adapter != QLatin1String("raw");
+    if (hasAgent)
+        noteAgentLaunchStarted(launchProfileId);
 
     // Un perfil cloud sin gestor conecta directamente el agente al endpoint.
     if (ctx.backend.isCloud() && ctx.backend.managedServer.isEmpty()) {
@@ -4001,6 +4014,11 @@ void AppController::publishMonitor()
     m[QStringLiteral("requests")] = m_monitor.recentRequests(100);
     m_monitorState = m;
     emit monitorChanged();
+}
+
+QString AppController::renderMarkdown(const QString &markdown, const QString &codeFont) const
+{
+    return MarkdownRender::toHtml(markdown, codeFont);
 }
 
 QString AppController::monitorReport() const

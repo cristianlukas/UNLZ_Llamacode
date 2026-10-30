@@ -744,6 +744,12 @@ Item {
                                         font.pixelSize: 11; color: Theme.textMuted
                                     }
                                     Text { text: sizeLabel; font.pixelSize: 11; color: Theme.textMuted }
+                                    // Explica el gris: el archivo ya no está (root desconectado o borrado).
+                                    Text {
+                                        visible: !isAvailable
+                                        text: "· no está en disco"
+                                        font.pixelSize: 11; color: Theme.warnText
+                                    }
                                     Text {
                                         visible: trainedContext > 0
                                         text: (architecture || "GGUF") + " · ctx entrenado "

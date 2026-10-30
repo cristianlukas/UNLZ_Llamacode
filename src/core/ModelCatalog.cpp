@@ -1,4 +1,5 @@
 #include "ModelCatalog.h"
+#include <algorithm>
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QSqlError>
@@ -550,6 +551,10 @@ void ModelCatalog::rebuildVisible()
         if (matchesFilter(m))
             m_visible.append(&m);
     }
+    // Lo que está en disco primero: los archivos de un root desconectado (en
+    // gris) quedaban mezclados arriba de la lista "Instalados".
+    std::stable_partition(m_visible.begin(), m_visible.end(),
+                          [](const CatalogModel *m) { return m->isAvailable; });
 }
 
 void ModelCatalog::loadManualCompatibility()

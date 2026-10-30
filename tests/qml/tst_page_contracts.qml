@@ -117,6 +117,16 @@ QtObject {
         check(agents.indexOf("selectedId.length > 0 && App.activeAgentDefinitionId === selectedId") > 0,
               "Agentes: un agente sin guardar no figura como Activo")
 
+        // Respuestas del modelo: razonamiento plegado y markdown seguro (App.renderMarkdown,
+        // sin TextEdit.MarkdownText, que cargaría HTML/imágenes remotas).
+        check(agent.indexOf("function splitThink(") > 0, "Agente: separa el <think> de la respuesta")
+        check(agent.indexOf("App.renderMarkdown(") > 0, "Agente: respuesta en markdown")
+        check(chat.indexOf("App.renderMarkdown(") > 0, "Chat: respuesta en markdown")
+        check(agent.indexOf("MarkdownText") < 0 && chat.indexOf("MarkdownText") < 0,
+              "Chat/Agente: nunca TextEdit.MarkdownText (HTML crudo / imágenes remotas)")
+        check(agent.indexOf("\"Segoe UI\"") < 0 && chat.indexOf("\"Segoe UI\"") < 0,
+              "Chat/Agente: sin fuentes de Windows fijas")
+
         console.log(fails === 0 ? "ALL PASS" : ("FAIL count=" + fails))
         Qt.exit(fails === 0 ? 0 : 1)
     }

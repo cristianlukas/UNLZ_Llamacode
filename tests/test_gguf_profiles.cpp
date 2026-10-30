@@ -23,6 +23,32 @@ class CoreTests : public QObject
     Q_OBJECT
 
 private slots:
+    // El comando real de "192_Opti layer MTP3" repetía flags (runtime + extraArgs):
+    // llama-server avisaba "specified multiple times" y la vista previa mostraba
+    // valores que no se usaban. Gana el último, igual que en llama.cpp.
+    void collapseRepeatedFlagsKeepsTheLastValue()
+    {
+        const QStringList in = {
+            "--host", "127.0.0.1", "--ctx-size", "32768", "--batch-size", "256",
+            "--ubatch-size", "256", "--n-gpu-layers", "14", "--flash-attn", "on",
+            "--cont-batching", "--cache-type-k", "q4_0", "-ot", "blk.0=CPU",
+            "--gpu-layers", "40", "--batch-size", "256", "--ubatch-size", "128",
+            "--flash-attn", "auto", "--cache-type-k", "q8_0", "-ot", "blk.1=CPU",
+            "--cont-batching", "--temp", "-1", "--temp", "0.6", "--jinja"};
+        const QStringList out = EffectiveProfileBuilder::collapseRepeatedFlags(in);
+        const QStringList expected = {
+            "--host", "127.0.0.1", "--ctx-size", "32768", "--cont-batching", "-ot", "blk.0=CPU",
+            "--gpu-layers", "40", "--batch-size", "256", "--ubatch-size", "128",
+            "--flash-attn", "auto", "--cache-type-k", "q8_0", "-ot", "blk.1=CPU",
+            "--temp", "0.6", "--jinja"};
+        QCOMPARE(out, expected);
+        // Sin repetidos, no cambia nada (ni el orden).
+        QCOMPARE(EffectiveProfileBuilder::collapseRepeatedFlags(expected), expected);
+        // -fa sin valor (builds viejos) no se come el flag siguiente.
+        QCOMPARE(EffectiveProfileBuilder::collapseRepeatedFlags({"-fa", "--jinja", "-fa"}),
+                 QStringList({"--jinja", "-fa"}));
+    }
+
     void mtpDraftFailureFallsBackWithoutDraft();
 
     // ── GGUFScanner::inferFamily ──

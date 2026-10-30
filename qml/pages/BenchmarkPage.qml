@@ -2336,7 +2336,7 @@ Item {
                                                 leftPadding: 24
                                                 text: modelData.output ?? ""
                                                 color: modelData.passed ? Theme.textMuted : Theme.errorText
-                                                font.family: "Consolas"
+                                                font.family: Theme.codeFont
                                                 font.pixelSize: 10
                                                 wrapMode: Text.Wrap
                                                 maximumLineCount: 4
@@ -2410,7 +2410,7 @@ Item {
                         wrapMode: TextArea.Wrap
                         text: root.failureRow.failureDetail ?? ""
                         color: Theme.textSecondary
-                        font.family: "Consolas"
+                        font.family: Theme.codeFont
                         font.pixelSize: 11
                         background: null
                         selectByMouse: true

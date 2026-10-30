@@ -383,6 +383,9 @@ public:
     QVariantMap monitor() const { return m_monitorState; }
     // Texto plano del Monitor (para pegar en un issue o chat).
     Q_INVOKABLE QString monitorReport() const;
+    // Markdown de una respuesta → HTML seguro (sin HTML crudo ni imágenes
+    // remotas) para Chat y Agente. Ver MarkdownRender.
+    Q_INVOKABLE QString renderMarkdown(const QString &markdown, const QString &codeFont = QString()) const;
     Q_INVOKABLE void copyMonitorReport();
     QString serverLog()      const { return m_log; }
     QString activeLaunchId() const { return m_activeLaunchId; }
@@ -939,6 +942,7 @@ public:
     void triggerPendingAgentForTest() { maybeStartPendingAgentOnReady(); }
     bool agentStartingFlagForTest() const { return m_agentStarting; }
     QString pendingAutoAgentForTest() const { return m_pendingAutoAgentLaunchId; }
+    void noteAgentLaunchStarted(const QString &launchProfileId);
     static QString composeHybridExecutionPromptForTest(const QString &request,
                                                         const QString &plan);
     static QVariantMap parseHybridPlanForTest(const QString &text, QString *error = nullptr);

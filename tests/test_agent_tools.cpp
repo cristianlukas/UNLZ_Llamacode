@@ -7,6 +7,7 @@
 //   - run_shell async (echo trivial).
 
 #include <QtTest>
+#include <QElapsedTimer>
 #include "core/automation/DesktopAutomationBackend.h"
 #include "core/automation/DesktopComputerUse.h"
 #include <QTemporaryDir>
@@ -1495,8 +1496,13 @@ void AgentToolsTests::desktopControls_invalidWindowErrorsCleanly()
     QVERIFY(w.value("result").toString().startsWith(QStringLiteral("[desktop_wait_for:")));
 
     // desktop_assert: un texto inexistente con timeout corto → FAIL limpio, ok=false.
+    // Y respeta el timeout: en Linux recorría el árbol AT-SPI entero una vez por
+    // ventana y tardaba minutos (este test llegaba al límite de 300 s de QtTest).
+    QElapsedTimer assertClock;
+    assertClock.start();
     QVariantMap a = call("desktop_assert",
                          {{"expect_text", "texto-que-no-existe-zzz"}, {"timeout_ms", 200}});
+    QVERIFY2(assertClock.elapsed() < 15000, qPrintable(QString::number(assertClock.elapsed())));
     QVERIFY(!a.value("ok").toBool());
     QVERIFY(a.value("result").toString().startsWith(QStringLiteral("[desktop_assert: FAIL")));
 

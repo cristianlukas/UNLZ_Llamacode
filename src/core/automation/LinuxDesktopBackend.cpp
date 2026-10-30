@@ -45,6 +45,7 @@ QStringList LinuxDesktopBackend::buildScrollArgs(int delta, bool horizontal)
 #include "FuzzyMatch.h"
 
 #include <QCoreApplication>
+#include <QDeadlineTimer>
 #include <QElapsedTimer>
 #include <QProcess>
 #include <QProcessEnvironment>
@@ -291,7 +292,8 @@ bool refFromId(const QString &id, AtspiRef *ref)
     return true;
 }
 
-QVariantList atspiControlsFor(const QRect &window, const QString &query, int max)
+QVariantList atspiControlsFor(const QRect &window, const QString &query, int max,
+                              const QDeadlineTimer &deadline = QDeadlineTimer(QDeadlineTimer::Forever))
 {
     QVariantList out;
     const QString address = atspiAddress();
@@ -303,7 +305,7 @@ QVariantList atspiControlsFor(const QRect &window, const QString &query, int max
     QList<AtspiRef> queue = roots;
     const QString needle = query.trimmed().toLower();
     int visited = 0;
-    while (!queue.isEmpty() && out.size() < max && visited++ < 2500) {
+    while (!queue.isEmpty() && out.size() < max && visited++ < 2500 && !deadline.hasExpired()) {
         const AtspiRef ref = queue.takeFirst();
         const QString role = atspiMethodString(address, ref,
                                                 QStringLiteral("org.a11y.atspi.Accessible.GetRoleName"));
@@ -545,14 +547,25 @@ bool LinuxDesktopBackend::moveCursor(const QPoint &physical)
 }
 
 QVariantList LinuxDesktopBackend::controls(const QString &windowTargetId, const QString &query,
-                                           int max, QString *error)
+                                           int max, QString *error, int budgetMs)
 {
     if (max <= 0) max = 120;
     if (max > 400) max = 400;
     const QRect window = targetBounds(QStringLiteral("window"), windowTargetId);
     if (!window.isValid()) { if (error) *error = QStringLiteral("Ventana no encontrada."); return {}; }
     if (atspiAddress().isEmpty()) { if (error) *error = QStringLiteral("AT-SPI no está disponible; iniciá at-spi2-registryd."); return {}; }
-    return atspiControlsFor(window, query, max);
+    return atspiControlsFor(window, query, max,
+                            budgetMs < 0 ? QDeadlineTimer(QDeadlineTimer::Forever) : QDeadlineTimer(budgetMs));
+}
+
+QVariantList LinuxDesktopBackend::controlsOnDesktop(const QString &query, int max, int budgetMs)
+{
+    if (atspiAddress().isEmpty()) return {};
+    QRect desktop;
+    for (QScreen *s : QGuiApplication::screens()) desktop |= s->geometry();
+    if (!desktop.isValid()) desktop = QRect(0, 0, 1 << 16, 1 << 16);
+    return atspiControlsFor(desktop, query, qBound(1, max, 400),
+                            budgetMs < 0 ? QDeadlineTimer(QDeadlineTimer::Forever) : QDeadlineTimer(budgetMs));
 }
 
 bool LinuxDesktopBackend::clickElement(const QString &windowTargetId, const QString &controlId,
@@ -660,7 +673,8 @@ bool LinuxDesktopBackend::clickEx(const QString &, const QString &, double, doub
                                   int, const QStringList &, QString *, QVariantMap *) { return false; }
 QPoint LinuxDesktopBackend::cursorPos() { return {}; }
 bool LinuxDesktopBackend::moveCursor(const QPoint &) { return false; }
-QVariantList LinuxDesktopBackend::controls(const QString &, const QString &, int, QString *) { return {}; }
+QVariantList LinuxDesktopBackend::controls(const QString &, const QString &, int, QString *, int) { return {}; }
+QVariantList LinuxDesktopBackend::controlsOnDesktop(const QString &, int, int) { return {}; }
 bool LinuxDesktopBackend::clickElement(const QString &, const QString &, bool, QString *, QVariantMap *) { return false; }
 bool LinuxDesktopBackend::controlAction(const QString &, const QString &, const QString &, const QString &, QString *, QVariantMap *) { return false; }
 QVariantMap LinuxDesktopBackend::controlAtPoint(const QPoint &) { return {}; }

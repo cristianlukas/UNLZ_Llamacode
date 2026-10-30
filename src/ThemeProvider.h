@@ -109,7 +109,18 @@ public:
     QString currentCustomId() const;
 
     QString uiFont()   const { return m_uiFont; }
-    QString codeFont() const { return m_codeFont.isEmpty() ? QStringLiteral("Consolas,monospace") : m_codeFont; }
+    // Qt no interpreta "A,B" como lista de alternativas: con "Consolas,monospace"
+    // el código salía en la fuente proporcional en Linux. Una familia por SO.
+    QString codeFont() const { return m_codeFont.isEmpty() ? defaultCodeFont() : m_codeFont; }
+    static QString defaultCodeFont() {
+#ifdef Q_OS_WIN
+        return QStringLiteral("Consolas");
+#elif defined(Q_OS_MACOS)
+        return QStringLiteral("Menlo");
+#else
+        return QStringLiteral("monospace");
+#endif
+    }
     bool sidebarTranslucent() const { return m_sidebarTranslucent; }
 
     // CRUD de temas custom (llamados desde QML).

@@ -50,13 +50,19 @@ void ServerMonitor::finalize(int slotId, const SlotTrack &t, qint64 endMs)
     r[QStringLiteral("at")] = QDateTime::currentMSecsSinceEpoch();
     r[QStringLiteral("slot")] = slotId;
     r[QStringLiteral("task")] = t.taskId;
-    r[QStringLiteral("prompt")] = t.prompt;
+    r[QStringLiteral("prompt")] = t.promptOnly();
     r[QStringLiteral("reused")] = t.cached;
     r[QStringLiteral("prefill")] = t.processed;
     r[QStringLiteral("output")] = t.decoded;
     r[QStringLiteral("decodeTps")] = decodeTps;
+    r[QStringLiteral("prefillTps")] = -1.0;
+    r[QStringLiteral("draftAcceptance")] = -1.0;
     r[QStringLiteral("tookMs")] = t.seenRunning ? double(end - t.firstMs) : -1.0;
-    r[QStringLiteral("contextPct")] = t.nCtx > 0 ? (t.prompt + t.decoded) * 100.0 / t.nCtx : 0.0;
+    r[QStringLiteral("nCtx")] = t.nCtx;
+    r[QStringLiteral("contextPct")] = t.nCtx > 0 ? t.used() * 100.0 / t.nCtx : 0.0;
+    // El log puede haber llegado antes que el poll que vio terminar la tarea.
+    if (m_timings.contains(t.taskId))
+        mergeTiming(r, m_timings.take(t.taskId));
     m_requests.append(r);
     if (m_requests.size() > kMaxRequests)
         m_requests.remove(0, m_requests.size() - kMaxRequests);
@@ -117,12 +123,16 @@ void ServerMonitor::ingestSlots(const QJsonArray &slotList, qint64 nowMs)
                 if (processed > t.processed) prefill += (processed - t.processed) * 1000.0 / dt;
             }
             const bool ended = t.processing && !isProc;
-            t.prompt = prompt; t.cached = cached; t.processed = processed;
+            // Al soltar el slot, llama.cpp pone en 0 el prefill y lo generado:
+            // dentro de una misma tarea los contadores no retroceden.
+            t.prompt = qMax(t.prompt, prompt);
+            t.cached = qMax(t.cached, cached);
+            t.processed = qMax(t.processed, processed);
             if (isProc && decoded > 0 && t.decodeStartMs < 0) {
                 t.decodeStartMs = nowMs;
                 t.decodeStartTokens = decoded;
             }
-            t.decoded = decoded;
+            t.decoded = qMax(t.decoded, decoded);
             if (ended && !baseline)
                 finalize(id, t, nowMs);
             if (isProc) t.seenRunning = true;
@@ -156,19 +166,8 @@ void ServerMonitor::ingestSlots(const QJsonArray &slotList, qint64 nowMs)
     push(m_history[QStringLiteral("decode")], decode);
     push(m_history[QStringLiteral("prefill")], prefill);
 
-    m_context.clear();
-    if (ctxSlot >= 0) {
-        const SlotTrack &t = m_slots.value(ctxSlot);
-        const int used = t.prompt + t.decoded;
-        m_context[QStringLiteral("slot")] = ctxSlot;
-        m_context[QStringLiteral("active")] = ctxActive;
-        m_context[QStringLiteral("nCtx")] = t.nCtx;
-        m_context[QStringLiteral("prompt")] = t.prompt;
-        m_context[QStringLiteral("written")] = t.decoded;
-        m_context[QStringLiteral("cached")] = t.cached;
-        m_context[QStringLiteral("used")] = used;
-        m_context[QStringLiteral("pct")] = t.nCtx > 0 ? used * 100.0 / t.nCtx : 0.0;
-    }
+    m_ctxSlot = ctxSlot;
+    m_ctxActive = ctxActive;
     m_lastIngestMs = nowMs;
 }
 
@@ -229,6 +228,7 @@ void ServerMonitor::ingestServerLog(const QString &text)
     const QString complete = m_logTail.left(lastNl);
     m_logTail = m_logTail.mid(lastNl + 1);
     for (const QString &line : complete.split(QLatin1Char('\n'))) {
+        parseTimingLine(line);
         if (!line.contains(QLatin1String("buffer size"))) continue;
         const QVariantMap b = parseBufferLine(line);
         if (b.isEmpty()) continue;
@@ -236,6 +236,103 @@ void ServerMonitor::ingestServerLog(const QString &text)
         const QString kind = b.value(QStringLiteral("kind")).toString();
         dev[kind] = dev.value(kind).toDouble() + b.value(QStringLiteral("mib")).toDouble();
     }
+}
+
+void ServerMonitor::parseTimingLine(const QString &line)
+{
+    // llama-server, al terminar cada tarea:
+    //   slot print_timing: id  0 | task 9 | prompt eval time = 1226.79 ms / 3491 tokens (…, 2845.64 tokens per second)
+    //          eval time = 1470.70 ms /  229 tokens (…, 155.03 tokens per second)
+    //         total time = 2697.49 ms / 3720 tokens
+    //   draft acceptance = 0.41830 ( 128 accepted / 306 generated), mean len = 2.25
+    // Según la versión, las líneas siguientes repiten "task N |" o no: se
+    // atribuyen a la última tarea nombrada.
+    static const QRegularExpression taskRe(QStringLiteral("\\btask (\\d+) \\|"));
+    static const QRegularExpression promptRe(QStringLiteral(
+        "prompt eval time =\\s*([0-9.]+) ms /\\s*(\\d+) tokens.*?([0-9.]+) tokens per second"));
+    static const QRegularExpression evalRe(QStringLiteral(
+        "(?<!prompt )eval time =\\s*([0-9.]+) ms /\\s*(\\d+) tokens.*?([0-9.]+) tokens per second"));
+    static const QRegularExpression totalRe(QStringLiteral("total time =\\s*([0-9.]+) ms"));
+    static const QRegularExpression draftRe(QStringLiteral("draft acceptance =\\s*([0-9.]+)"));
+    const bool timing = line.contains(QLatin1String("print_timing"))
+                     || line.contains(QLatin1String(" time ="))
+                     || line.contains(QLatin1String("draft acceptance"));
+    if (!timing) return;
+    const auto tm = taskRe.match(line);
+    if (tm.hasMatch() && line.contains(QLatin1String("print_timing")))
+        m_timingTask = tm.captured(1).toInt();
+    if (m_timingTask < 0) return;
+    QVariantMap &t = m_timings[m_timingTask];
+    bool changed = false;
+    if (const auto m = promptRe.match(line); m.hasMatch()) {
+        t[QStringLiteral("prefill")] = m.captured(2).toInt();
+        t[QStringLiteral("prefillTps")] = m.captured(3).toDouble();
+        changed = true;
+    } else if (const auto e = evalRe.match(line); e.hasMatch()) {
+        t[QStringLiteral("output")] = e.captured(2).toInt();
+        t[QStringLiteral("decodeTps")] = e.captured(3).toDouble();
+        changed = true;
+    }
+    if (const auto m = totalRe.match(line); m.hasMatch()) {
+        t[QStringLiteral("tookMs")] = m.captured(1).toDouble();
+        changed = true;
+    }
+    if (const auto m = draftRe.match(line); m.hasMatch()) {
+        t[QStringLiteral("draftAcceptance")] = m.captured(1).toDouble() * 100.0;
+        changed = true;
+    }
+    if (changed) applyTiming(m_timingTask);
+}
+
+void ServerMonitor::mergeTiming(QVariantMap &r, const QVariantMap &timing)
+{
+    for (auto it = timing.constBegin(); it != timing.constEnd(); ++it)
+        r[it.key()] = it.value();
+    // Prompt = lo leído ahora + lo que vino de la caché.
+    if (timing.contains(QStringLiteral("prefill")))
+        r[QStringLiteral("prompt")] = timing.value(QStringLiteral("prefill")).toInt()
+                                    + r.value(QStringLiteral("reused")).toInt();
+    const int nCtx = r.value(QStringLiteral("nCtx")).toInt();
+    if (nCtx > 0)
+        r[QStringLiteral("contextPct")] = (r.value(QStringLiteral("prompt")).toInt()
+                                           + r.value(QStringLiteral("output")).toInt()) * 100.0 / nCtx;
+}
+
+void ServerMonitor::applyTiming(int task)
+{
+    const QVariantMap timing = m_timings.value(task);
+    const double tps = timing.value(QStringLiteral("decodeTps"), -1.0).toDouble();
+    const double ptps = timing.value(QStringLiteral("prefillTps"), -1.0).toDouble();
+    // El pico real de una tarea (el muestreo de /slots a 1 Hz lo subestima).
+    if (tps > m_peakDecode) {
+        m_peakDecode = tps;
+        m_peakDecodeAt = QDateTime::currentMSecsSinceEpoch();
+    }
+    // Un request de menos de un segundo no cae en ningún poll: sin esto el
+    // gráfico quedaba plano aunque el server estuviera respondiendo.
+    auto bump = [this](const QString &key, double v) {
+        QVector<double> &h = m_history[key];
+        if (v <= 0) return;
+        if (h.isEmpty()) push(h, v);
+        else if (h.last() < v) h.last() = v;
+    };
+    bump(QStringLiteral("decode"), tps);
+    bump(QStringLiteral("prefill"), ptps);
+    // El slot que corrió esta tarea también se entera (contexto "Escrito").
+    for (auto it = m_slots.begin(); it != m_slots.end(); ++it) {
+        if (it->taskId != task) continue;
+        it->processed = qMax(it->processed, timing.value(QStringLiteral("prefill")).toInt());
+        it->decoded = qMax(it->decoded, timing.value(QStringLiteral("output")).toInt());
+    }
+    for (int i = m_requests.size() - 1; i >= 0 && i >= m_requests.size() - 50; --i) {
+        if (m_requests[i].value(QStringLiteral("task")).toInt() != task) continue;
+        mergeTiming(m_requests[i], timing);
+        m_timings.remove(task);
+        return;
+    }
+    // Sin request todavía: queda pendiente para finalize(). Acota la memoria
+    // por si el monitor no estaba mirando esas tareas.
+    if (m_timings.size() > 64) m_timings.erase(m_timings.begin());
 }
 
 void ServerMonitor::ingestHardware(const QVariantMap &sample)
@@ -261,7 +358,22 @@ QVariantMap ServerMonitor::snapshot() const
     s[QStringLiteral("deferred")] = m_deferred;
     s[QStringLiteral("speculative")] = m_speculative;
     s[QStringLiteral("slots")] = int(m_slots.size());
-    s[QStringLiteral("context")] = m_context;
+    // El contexto se arma al pedirlo: los tiempos del log pueden completar
+    // (prefill / salida) una tarea que /slots vio sólo ya terminada.
+    QVariantMap ctx;
+    if (m_ctxSlot >= 0) {
+        const SlotTrack t = m_slots.value(m_ctxSlot);
+        const int used = t.used();
+        ctx[QStringLiteral("slot")] = m_ctxSlot;
+        ctx[QStringLiteral("active")] = m_ctxActive;
+        ctx[QStringLiteral("nCtx")] = t.nCtx;
+        ctx[QStringLiteral("prompt")] = t.promptOnly();
+        ctx[QStringLiteral("written")] = t.decoded;
+        ctx[QStringLiteral("cached")] = t.cached;
+        ctx[QStringLiteral("used")] = used;
+        ctx[QStringLiteral("pct")] = t.nCtx > 0 ? used * 100.0 / t.nCtx : 0.0;
+    }
+    s[QStringLiteral("context")] = ctx;
 
     // Reutilización de caché sobre los requests vistos: cuánto prompt no hubo
     // que volver a leer.
@@ -271,6 +383,15 @@ QVariantMap ServerMonitor::snapshot() const
         reused += r.value(QStringLiteral("reused")).toDouble();
     }
     s[QStringLiteral("cacheReusePct")] = prompt > 0 ? reused * 100.0 / prompt : -1.0;
+
+    // Aceptación del draft (MTP / speculative) en los últimos requests que la informan.
+    double acc = 0;
+    int accN = 0;
+    for (int i = m_requests.size() - 1; i >= 0 && accN < 20; --i) {
+        const double a = m_requests.at(i).value(QStringLiteral("draftAcceptance"), -1.0).toDouble();
+        if (a >= 0) { acc += a; ++accN; }
+    }
+    s[QStringLiteral("draftAcceptancePct")] = accN > 0 ? acc / accN : -1.0;
 
     QVariantMap buffers;
     for (auto it = m_buffers.constBegin(); it != m_buffers.constEnd(); ++it)
@@ -468,9 +589,11 @@ QString ServerMonitor::report(const QVariantMap &snapshot, const QVariantMap &se
                .arg(fmt1(snapshot.value(QStringLiteral("decodeTps")).toDouble()),
                     fmt1(snapshot.value(QStringLiteral("prefillTps")).toDouble()),
                     fmt1(snapshot.value(QStringLiteral("peakDecodeTps")).toDouble()));
+    const double acc = snapshot.value(QStringLiteral("draftAcceptancePct"), -1.0).toDouble();
     out << QStringLiteral("Requests vistos: %1 · Especulación: %2")
                .arg(snapshot.value(QStringLiteral("requestsServed")).toInt())
-               .arg(snapshot.value(QStringLiteral("speculative")).toBool()
+               .arg(acc >= 0 ? fmt1(acc) + QStringLiteral("% del draft aceptado")
+                    : snapshot.value(QStringLiteral("speculative")).toBool()
                         ? QStringLiteral("sí") : QStringLiteral("no"));
     const QVariantMap ctx = snapshot.value(QStringLiteral("context")).toMap();
     if (!ctx.isEmpty())

@@ -44,6 +44,7 @@ private slots:
     void persistsAcrossReload();
     void reconcileRoot_marksMissingUnavailable();
     void reconcileRoot_emptyScanKeepsCatalog();
+    void visibleListShowsAvailableFirst();
     void stableId_assignedAndPersisted();
     void stableId_survivesMovingTheFile();
     void stableId_distinctFilesGetDistinctAnchors();
@@ -162,6 +163,21 @@ void CatalogTests::reconcileRoot_marksMissingUnavailable()
     // Vuelve a aparecer en un scan posterior → disponible otra vez.
     c.reconcileRoot("rootA", QSet<QString>{QStringLiteral("a1"), QStringLiteral("a2")});
     QVERIFY(c.findById("a2").isAvailable);
+}
+
+// "Instalados" mostraba arriba archivos que ya no están en disco (en gris)
+// mezclados con los usables: los disponibles van primero, en su orden.
+void CatalogTests::visibleListShowsAvailableFirst()
+{
+    ModelCatalog c;
+    c.addBatch({mk("a1", "rootA", "qwen"), mk("a2", "rootA", "qwen"),
+                mk("a3", "rootA", "qwen")});
+    c.reconcileRoot("rootA", QSet<QString>{QStringLiteral("a1"), QStringLiteral("a3")});
+    QCOMPARE(c.rowCount(), 3);
+    QCOMPARE(c.getAt(0).value("id").toString(), QStringLiteral("a1"));
+    QCOMPARE(c.getAt(1).value("id").toString(), QStringLiteral("a3"));
+    QCOMPARE(c.getAt(2).value("id").toString(), QStringLiteral("a2"));
+    QVERIFY(!c.getAt(2).value("isAvailable").toBool());
 }
 
 // Un scan que no devuelve nada es un root offline o un fallo, no un root vacío:

@@ -85,6 +85,7 @@ set(CORE_SOURCES
     src/core/PerformanceMatrix.cpp
     src/core/ServerBenchmarkMetrics.cpp
     src/core/ServerMonitor.cpp
+    src/core/MarkdownRender.cpp
     src/core/ModelRoot.cpp
     src/core/ModelRootRegistry.cpp
     src/core/CatalogModel.cpp
@@ -223,6 +224,7 @@ set(HEADERS
     src/core/PerformanceMatrix.h
     src/core/ServerBenchmarkMetrics.h
     src/core/ServerMonitor.h
+    src/core/MarkdownRender.h
     src/core/ModelRoot.h
     src/core/ModelRootRegistry.h
     src/core/CatalogModel.h
@@ -703,6 +705,7 @@ if (BUILD_TESTS)
      add_lc_test(test_tuner              tests/test_tuner.cpp)
      add_lc_test(test_server_benchmark_metrics tests/test_server_benchmark_metrics.cpp)
      add_lc_test(test_server_monitor     tests/test_server_monitor.cpp)
+     add_lc_test(test_markdown_render    tests/test_markdown_render.cpp)
      add_lc_test(test_long_context_probe tests/test_long_context_probe.cpp
                 tests/long_context_probe.cpp)
     add_lc_test(test_hardware_diagnostics tests/test_hardware_diagnostics.cpp)

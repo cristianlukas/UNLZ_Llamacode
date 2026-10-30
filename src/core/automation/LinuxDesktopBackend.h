@@ -51,8 +51,14 @@ public:
     static QPoint cursorPos();
     static bool moveCursor(const QPoint &physical);
 
+    // budgetMs < 0 = sin límite. Cada nodo AT-SPI cuesta varios subprocesos:
+    // con apps grandes abiertas (Chrome) un recorrido completo lleva minutos, y
+    // desktop_assert / desktop_wait_for tienen que respetar su timeout.
     static QVariantList controls(const QString &windowTargetId, const QString &query,
-                                 int max, QString *error = nullptr);
+                                 int max, QString *error = nullptr, int budgetMs = -1);
+    // Un solo recorrido sobre todo el escritorio (antes desktop_assert sin
+    // ventana repetía el árbol completo una vez por cada ventana).
+    static QVariantList controlsOnDesktop(const QString &query, int max, int budgetMs);
     static bool clickElement(const QString &windowTargetId, const QString &controlId,
                              bool allowFuzzy, QString *error, QVariantMap *trace);
     static bool controlAction(const QString &windowTargetId, const QString &controlId,

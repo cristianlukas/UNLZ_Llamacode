@@ -1107,7 +1107,7 @@ ApplicationWindow {
                     wrapMode: TextArea.WrapAnywhere
                     text: App.officialBinaryInstallLog
                     color: Theme.textPrimary
-                    font.family: "Consolas"
+                    font.family: Theme.codeFont
                     font.pixelSize: 12
                     background: Rectangle { color: Theme.inputBg; radius: 6 }
                 }

@@ -1265,13 +1265,17 @@ Item {
                                             id: segText
                                             visible: !isBlock
                                             width: parent.width
-                                            text: isBlock ? "" : modelData.text
+                                            // Respuesta terminada: markdown renderizado (tablas,
+                                            // código, negritas). Antes salía crudo con | y ```.
+                                            readonly property bool rich: !delegateRoot.isUser && !delegateRoot.isTyping
+                                            textFormat: rich ? TextEdit.RichText : TextEdit.PlainText
+                                            text: isBlock ? "" : (rich ? App.renderMarkdown(modelData.text, Theme.codeFont)
+                                                                       : modelData.text)
                                             color: {
                                                 if (delegateRoot.isTyping && delegateRoot.content.length === 0)
                                                     return Theme.textMuted
                                                 return delegateRoot.isUser ? Theme.chatUserText : Theme.chatAsstText
                                             }
-                                            font.family: "Segoe UI"
                                             font.pixelSize: 13
                                             font.italic: delegateRoot.isTyping && delegateRoot.content.length === 0
                                             wrapMode: TextEdit.WrapAtWordBoundaryOrAnywhere
@@ -1357,7 +1361,6 @@ Item {
                                     width: parent.width
                                     wrapMode: TextArea.WrapAtWordBoundaryOrAnywhere
                                     color: Theme.chatAsstText
-                                    font.family: "Segoe UI"
                                     font.pixelSize: 13
                                     background: Rectangle {
                                         color: Theme.surfaceBg; radius: 6

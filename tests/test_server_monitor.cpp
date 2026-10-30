@@ -249,6 +249,78 @@ private slots:
         QVERIFY(text.contains("Contexto: 3020 / 8192"));
     }
 
+    void keepsCountersWhenTheSlotIsReleased()
+    {
+        // llama.cpp reciente: n_prompt_tokens crece con lo generado y, al
+        // soltar el slot, processed/decoded vuelven a 0 (medido contra un
+        // llama-server real: 37 de prompt, 372 generados → 410 al terminar).
+        ServerMonitor m;
+        m.ingestSlots({slot(0, 1, false, 5, 5, 0, 1)}, 0);
+        m.ingestSlots({slot(0, 2, true, 186, 37, 0, 146)}, 1000);
+        QCOMPARE(m.snapshot().value("context").toMap().value("prompt").toInt(), 37);
+        QCOMPARE(m.snapshot().value("context").toMap().value("used").toInt(), 186);
+        m.ingestSlots({slot(0, 2, true, 378, 37, 0, 338)}, 2000);
+        m.ingestSlots({slot(0, 2, false, 410, 0, 0, 0)}, 3000);
+        const QVariantMap r = m.recentRequests().first().toMap();
+        QCOMPARE(r.value("prompt").toInt(), 37);
+        QCOMPARE(r.value("prefill").toInt(), 37);
+        QCOMPARE(r.value("output").toInt(), 338);
+        const QVariantMap ctx = m.snapshot().value("context").toMap();
+        QCOMPARE(ctx.value("written").toInt(), 338);
+        QCOMPARE(ctx.value("used").toInt(), 410);
+    }
+
+    void printTimingGivesExactRequestNumbers_logAfterPoll()
+    {
+        ServerMonitor m;
+        m.ingestSlots({slot(0, 1, false, 1, 1, 0, 1)}, 0);
+        m.ingestSlots({slot(0, 9, true, 3600, 0, 0, 100)}, 1000);
+        m.ingestSlots({slot(0, 9, false, 3721, 0, 0, 0)}, 2000);
+        // Formato del build con prefijo en cada línea.
+        m.ingestServerLog(
+            "0.19.130.713 I slot print_timing: id  0 | task 9 | prompt eval time =    1226.79 ms /  3491 tokens (    0.35 ms per token,  2845.64 tokens per second)\n"
+            "0.19.130.716 I slot print_timing: id  0 | task 9 |        eval time =    1470.70 ms /   229 tokens (    6.45 ms per token,   155.03 tokens per second)\n"
+            "0.19.130.716 I slot print_timing: id  0 | task 9 |       total time =    2697.49 ms /  3720 tokens\n"
+            "0.19.130.722 I slot print_timing: id  0 | task 9 | draft acceptance = 0.41830 (  128 accepted /   306 generated), mean len =  2.25\n");
+        const QVariantMap r = m.recentRequests().first().toMap();
+        QCOMPARE(r.value("prefill").toInt(), 3491);
+        QCOMPARE(r.value("prompt").toInt(), 3491);
+        QCOMPARE(r.value("output").toInt(), 229);
+        QCOMPARE(r.value("decodeTps").toDouble(), 155.03);
+        QCOMPARE(r.value("prefillTps").toDouble(), 2845.64);
+        QCOMPARE(r.value("tookMs").toDouble(), 2697.49);
+        QCOMPARE(r.value("draftAcceptance").toDouble(), 41.83);
+        const QVariantMap s = m.snapshot();
+        // El contexto del slot y el gráfico también toman los tiempos del log.
+        QCOMPARE(s.value("context").toMap().value("written").toInt(), 229);
+        QCOMPARE(s.value("history").toMap().value("decode").toList().last().toDouble(), 155.03);
+        QCOMPARE(s.value("peakDecodeTps").toDouble(), 155.03);
+        QCOMPARE(s.value("draftAcceptancePct").toDouble(), 41.83);
+    }
+
+    void printTimingBeforeThePoll_mainlineFormat()
+    {
+        // Mainline: sólo la primera línea nombra la tarea; el log llega antes
+        // que el poll que ve terminar la tarea.
+        ServerMonitor m;
+        m.ingestSlots({slot(0, 1, false, 1, 1, 0, 1)}, 0);
+        m.ingestSlots({slot(0, 4, true, 500, 100, 400, 0)}, 1000);
+        m.ingestServerLog(
+            "slot print_timing: id  0 | task 4 | \n"
+            "prompt eval time =     100.00 ms /   100 tokens (    1.00 ms per token,  1000.00 tokens per second)\n"
+            "       eval time =    2000.00 ms /    80 tokens (   25.00 ms per token,    40.00 tokens per second)\n"
+            "      total time =    2100.00 ms /   180 tokens\n");
+        QVERIFY(m.recentRequests().isEmpty());
+        m.ingestSlots({slot(0, 4, false, 580, 0, 0, 0)}, 3000);
+        const QVariantMap r = m.recentRequests().first().toMap();
+        QCOMPARE(r.value("output").toInt(), 80);
+        QCOMPARE(r.value("reused").toInt(), 400);
+        QCOMPARE(r.value("prompt").toInt(), 500);
+        QCOMPARE(r.value("decodeTps").toDouble(), 40.0);
+        QCOMPARE(r.value("tookMs").toDouble(), 2100.0);
+        QCOMPARE(r.value("draftAcceptance").toDouble(), -1.0);
+    }
+
     void resetClearsEverything()
     {
         ServerMonitor m;

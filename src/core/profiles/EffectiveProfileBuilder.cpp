@@ -6,6 +6,8 @@
 #include <QFile>
 #include <QStandardPaths>
 #include <QRegularExpression>
+#include <QHash>
+#include <QSet>
 
 namespace {
 struct SamplingFlag {
@@ -357,6 +359,7 @@ EffectiveProfile EffectiveProfileBuilder::build(const Context &ctx)
 
     applyReasoningControl(ctx, args, result.warnings);
     applySamplingPolicy(ctx, args, result.warnings);
+    args = collapseRepeatedFlags(args);
 
     result.effectiveArgs = args;
     result.effectiveEnv = env;
@@ -365,6 +368,79 @@ EffectiveProfile EffectiveProfileBuilder::build(const Context &ctx)
                          .arg(ctx.binary.path, args.join(' '));
 
     return result;
+}
+
+QStringList EffectiveProfileBuilder::collapseRepeatedFlags(const QStringList &args)
+{
+    static const QList<QStringList> scalarGroups = {
+        {QStringLiteral("-b"), QStringLiteral("--batch-size")},
+        {QStringLiteral("-ub"), QStringLiteral("--ubatch-size")},
+        {QStringLiteral("-fa"), QStringLiteral("--flash-attn")},
+        {QStringLiteral("-ctk"), QStringLiteral("--cache-type-k")},
+        {QStringLiteral("-ctv"), QStringLiteral("--cache-type-v")},
+        {QStringLiteral("-ngl"), QStringLiteral("--n-gpu-layers"), QStringLiteral("--gpu-layers")},
+        {QStringLiteral("-c"), QStringLiteral("--ctx-size")},
+        {QStringLiteral("-t"), QStringLiteral("--threads")},
+        {QStringLiteral("-tb"), QStringLiteral("--threads-batch")},
+        {QStringLiteral("-np"), QStringLiteral("--parallel")},
+        {QStringLiteral("-sm"), QStringLiteral("--split-mode")},
+        {QStringLiteral("-ts"), QStringLiteral("--tensor-split")},
+        {QStringLiteral("-mg"), QStringLiteral("--main-gpu")},
+        {QStringLiteral("-ncmoe"), QStringLiteral("--n-cpu-moe")},
+        {QStringLiteral("--temp")}, {QStringLiteral("--top-p")}, {QStringLiteral("--top-k")},
+        {QStringLiteral("--min-p")}, {QStringLiteral("--repeat-penalty")},
+        {QStringLiteral("--presence-penalty")}, {QStringLiteral("--port")},
+        {QStringLiteral("--host")}, {QStringLiteral("--spec-type")},
+        {QStringLiteral("--spec-draft-n-max")}, {QStringLiteral("--spec-draft-n-min")},
+        {QStringLiteral("--cache-ram")}, {QStringLiteral("--cache-reuse")},
+        {QStringLiteral("--reasoning")}, {QStringLiteral("--reasoning-budget")},
+    };
+    static const QStringList booleanFlags = {
+        QStringLiteral("--cont-batching"), QStringLiteral("--jinja"), QStringLiteral("--metrics"),
+        QStringLiteral("--no-warmup"), QStringLiteral("--no-context-shift"),
+        QStringLiteral("--no-mmap"), QStringLiteral("--mlock"),
+    };
+    auto groupOf = [](const QString &flag) -> int {
+        for (int g = 0; g < scalarGroups.size(); ++g)
+            if (scalarGroups.at(g).contains(flag)) return g;
+        return -1;
+    };
+    // Un valor es el token siguiente si no es otro flag (un número negativo sí es valor).
+    auto takesValue = [&args](int i) {
+        if (i + 1 >= args.size()) return false;
+        const QString &next = args.at(i + 1);
+        if (!next.startsWith(u'-')) return true;
+        bool num = false;
+        next.toDouble(&num);
+        return num;
+    };
+    QHash<int, int> lastIndex;          // grupo → posición de su última aparición
+    for (int i = 0; i < args.size(); ++i) {
+        const int g = args.at(i).startsWith(u'-') ? groupOf(args.at(i)) : -1;
+        if (g >= 0) lastIndex[g] = i;
+        if (g >= 0 && takesValue(i)) ++i;
+    }
+    QStringList out;
+    QSet<QString> seenBool;
+    for (int i = 0; i < args.size(); ++i) {
+        const QString &a = args.at(i);
+        const int g = a.startsWith(u'-') ? groupOf(a) : -1;
+        if (g >= 0) {
+            const bool hasValue = takesValue(i);
+            if (lastIndex.value(g) == i) {
+                out << a;
+                if (hasValue) out << args.at(i + 1);
+            }
+            if (hasValue) ++i;
+            continue;
+        }
+        if (booleanFlags.contains(a)) {
+            if (seenBool.contains(a)) continue;
+            seenBool.insert(a);
+        }
+        out << a;
+    }
+    return out;
 }
 
 void EffectiveProfileBuilder::applyReasoningControl(const Context &ctx,

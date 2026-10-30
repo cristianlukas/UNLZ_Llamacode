@@ -82,13 +82,24 @@ private:
     struct SlotTrack {
         int taskId = -1;
         bool processing = false;
+        // prompt = n_prompt_tokens crudo: en llama.cpp reciente crece con lo
+        // generado (al soltar el slot vale prompt + salida).
         int prompt = 0, cached = 0, processed = 0, decoded = 0, nCtx = 0;
+        // Prompt sin lo generado: procesado + reusado si /slots lo informa.
+        int promptOnly() const {
+            return processed + cached > 0 ? processed + cached : qMax(0, prompt - decoded);
+        }
+        int used() const { return qMax(prompt, promptOnly() + decoded); }
         qint64 firstMs = 0, lastMs = 0;
         qint64 decodeStartMs = -1;
         int decodeStartTokens = 0;
         bool seenRunning = false;
     };
     void finalize(int slotId, const SlotTrack &t, qint64 endMs);
+    // Tiempos exactos de una tarea, de las líneas print_timing del log.
+    void parseTimingLine(const QString &line);
+    void applyTiming(int task);
+    static void mergeTiming(QVariantMap &request, const QVariantMap &timing);
     static void push(QVector<double> &series, double v);
 
     bool m_primed = false;
@@ -100,10 +111,13 @@ private:
     qint64 m_peakDecodeAt = 0;            // ms epoch
     qint64 m_lastIngestMs = -1;
     bool m_speculative = false;
-    QVariantMap m_context;
+    int m_ctxSlot = -1;
+    bool m_ctxActive = false;
     QString m_state = QStringLiteral("idle");
     double m_deferred = -1;
     QString m_logTail;
     QMap<QString, QVariantMap> m_buffers; // device → {model,kv,compute,output} MiB
+    QHash<int, QVariantMap> m_timings;    // task → tiempos aún sin request
+    int m_timingTask = -1;                // última tarea nombrada en print_timing
     QMap<QString, QVector<double>> m_history;
 };

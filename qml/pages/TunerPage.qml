@@ -571,7 +571,7 @@ Item {
                             Layout.fillWidth: true
                             text: "Flags: " + (root.result.bestArgs || "—")
                             color: Theme.textSecondary
-                            font { pixelSize: 12; family: "Consolas" }
+                            font { pixelSize: 12; family: Theme.codeFont }
                             wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                         }
 
@@ -715,7 +715,7 @@ Item {
                                         Layout.fillWidth: true
                                         text: modelData.summary || ""
                                         color: Theme.textMuted
-                                        font { pixelSize: 11; family: "Consolas" }
+                                        font { pixelSize: 11; family: Theme.codeFont }
                                         elide: Text.ElideRight
                                     }
                                 }

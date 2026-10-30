@@ -314,8 +314,12 @@ Item {
                         }
                         BigStat {
                             Layout.fillWidth: true
-                            caption: "Especulación"; size: 20
-                            value: root.m.speculative ? "Activa" : "Off"
+                            // Con MTP/draft, lo que importa es cuánto del borrador se acepta.
+                            readonly property bool hasAcc: (root.m.draftAcceptancePct ?? -1) >= 0
+                            caption: hasAcc ? "Draft aceptado" : "Especulación"; size: 20
+                            value: hasAcc ? root.n(root.m.draftAcceptancePct, 1)
+                                          : (root.m.speculative ? "Activa" : "Off")
+                            unit: hasAcc ? "%" : ""
                         }
                     }
                 }
@@ -518,7 +522,8 @@ Item {
                     wrapMode: Text.WordWrap
                     color: Theme.textMuted
                     font.pixelSize: 11
-                    text: "Pesos, KV y activaciones salen del log de carga de llama-server: aparecen cuando el servidor lo lanza LlamaCode."
+                    text: "Pesos, KV y activaciones salen del log de carga de llama-server. Este build no los informa "
+                        + "con la verbosidad por defecto, así que todo lo del servidor figura como «CUDA y resto»."
                 }
             }
 
@@ -621,14 +626,16 @@ Item {
                     { title: "Estado", w: 80, left: true },
                     { title: "Prompt", w: 70 }, { title: "Reusado", w: 70 },
                     { title: "Prefill", w: 70 }, { title: "Salida", w: 70 },
-                    { title: "Decode", w: 70 }, { title: "Contexto", w: 70 },
-                    { title: "Duró", w: 70 }
+                    { title: "Decode", w: 70 }, { title: "Draft", w: 70 },
+                    { title: "Contexto", w: 70 }, { title: "Duró", w: 70 }
                 ]
                 function cellsFor(r) {
                     return [
                         Qt.formatTime(new Date(r.at), "HH:mm:ss"), "Listo",
                         root.i(r.prompt), root.i(r.reused), root.i(r.prefill), root.i(r.output),
-                        root.n(r.decodeTps, 1), root.n(r.contextPct, 1) + " %",
+                        root.n(r.decodeTps, 1),
+                        (r.draftAcceptance ?? -1) >= 0 ? root.n(r.draftAcceptance, 0) + " %" : "—",
+                        root.n(r.contextPct, 1) + " %",
                         Fmt.seconds(r.tookMs, root.dp)
                     ]
                 }
@@ -674,7 +681,7 @@ Item {
                                 model: reqCard.cols
                                 Text {
                                     required property var modelData
-                                    width: modelData.w * Math.max(1, reqTable.width / 650)
+                                    width: modelData.w * Math.max(1, reqTable.width / 720)
                                     height: 32
                                     verticalAlignment: Text.AlignVCenter
                                     horizontalAlignment: modelData.left ? Text.AlignLeft : Text.AlignRight
@@ -699,7 +706,7 @@ Item {
                                         Item {
                                             required property int index
                                             readonly property var col: reqCard.cols[index]
-                                            width: col.w * Math.max(1, reqTable.width / 650)
+                                            width: col.w * Math.max(1, reqTable.width / 720)
                                             height: 38
                                             Rectangle {
                                                 visible: index === 1
@@ -737,8 +744,8 @@ Item {
                     wrapMode: Text.WordWrap
                     color: Theme.textDim
                     font.pixelSize: 11
-                    text: "Leído de /slots cada segundo: la duración y el decode de cada request son aproximados (±1 s). "
-                        + "Todos los clientes cuentan: chat, agente, gateway LAN y apps externas."
+                    text: "Prefill, salida, decode, draft y duración salen del log de llama-server (exactos); "
+                        + "lo demás, de /slots cada segundo. Todos los clientes cuentan: chat, agente, gateway LAN y apps externas."
                 }
             }
         }

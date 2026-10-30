@@ -1913,6 +1913,12 @@ void AppControllerTests::preferredAgentLaunchSelection()
     QCOMPARE(app.preferredAgentLaunchId(), agentId);
     app.writeSetting(QStringLiteral("lastAgentLaunchId"), QStringLiteral("missing-profile"));
     QCOMPARE(app.preferredAgentLaunchId(), swappedId);
+
+    // "Iniciar servidor + agente" con otro perfil pasa a ser la elección del
+    // Agente: el encabezado no puede quedar mostrando el modelo anterior.
+    app.writeSetting(QStringLiteral("lastAgentLaunchId"), agentId);
+    app.noteAgentLaunchStarted(swappedId);
+    QCOMPARE(app.preferredAgentLaunchId(), swappedId);
 }
 
 void AppControllerTests::remoteBackendEnablesServerDependentUi()

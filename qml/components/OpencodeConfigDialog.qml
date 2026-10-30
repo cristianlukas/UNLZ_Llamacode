@@ -80,7 +80,7 @@ Dialog {
             id: configPathText
             Layout.fillWidth: true
             Layout.leftMargin: 4
-            color: Theme.textMuted; font { pixelSize: 11; family: "Consolas" }
+            color: Theme.textMuted; font { pixelSize: 11; family: Theme.codeFont }
             elide: Text.ElideMiddle
         }
         Text {
@@ -127,7 +127,7 @@ Dialog {
                         id: configArea
                         wrapMode: TextArea.NoWrap
                         color: Theme.textPrimary
-                        font.family: "Consolas"
+                        font.family: Theme.codeFont
                         background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
                     }
                 }
@@ -171,7 +171,7 @@ Dialog {
                                         Text { text: modelData.name; color: Theme.textPrimary; font { pixelSize: 13; bold: true } }
                                         Text {
                                             text: (modelData.type === "remote" ? (modelData.url ?? "") : (modelData.command ?? ""))
-                                            color: Theme.textMuted; font { pixelSize: 11; family: "Consolas" }
+                                            color: Theme.textMuted; font { pixelSize: 11; family: Theme.codeFont }
                                             Layout.fillWidth: true; elide: Text.ElideRight
                                         }
                                     }
@@ -313,7 +313,7 @@ Dialog {
                         TextArea {
                             id: cmdBody
                             wrapMode: TextArea.Wrap
-                            color: Theme.textPrimary; font.family: "Consolas"
+                            color: Theme.textPrimary; font.family: Theme.codeFont
                             placeholderText: "Contenido del comando (markdown). El cuerpo es el prompt; $ARGUMENTS para args."
                             background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
                         }

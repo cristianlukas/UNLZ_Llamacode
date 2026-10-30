@@ -1236,7 +1236,7 @@ Item {
                             id: workflowJsonField
                             wrapMode: TextArea.NoWrap
                             color: Theme.textPrimary
-                            font.family: "Consolas"
+                            font.family: Theme.codeFont
                             placeholderText: '{"schemaVersion":1,"entry":"explore","steps":{"explore":{"type":"agent","prompt":"Explorá","next":"done"},"done":{"type":"finish"}}}'
                             background: Rectangle { radius: 6; color: Theme.inputBg; border.color: Theme.inputBorderColor }
                         }
@@ -1641,7 +1641,7 @@ Item {
                                 readOnly: true
                                 wrapMode: TextArea.Wrap
                                 color: Theme.textSecondary
-                                font { family: "Consolas"; pixelSize: 12 }
+                                font { family: Theme.codeFont; pixelSize: 12 }
                                 background: null
                             }
                         }
@@ -2075,7 +2075,7 @@ Item {
                         selectByMouse: true
                         wrapMode: TextArea.Wrap
                         color: Theme.textPrimary
-                        font.family: "Consolas"
+                        font.family: Theme.codeFont
                         font.pixelSize: 11
                         background: Rectangle {
                             radius: 6
@@ -2608,7 +2608,7 @@ Item {
                                             text: modelData.n + ". " + modelData.tool
                                             color: Theme.textPrimary
                                             font.pixelSize: 11
-                                            font.family: "Consolas"
+                                            font.family: Theme.codeFont
                                         }
                                         Text {
                                             text: modelData.summary || ""
@@ -2716,7 +2716,7 @@ Item {
                             selectByMouse: true
                             wrapMode: TextArea.Wrap
                             color: Theme.textPrimary
-                            font.family: "Consolas"
+                            font.family: Theme.codeFont
                             font.pixelSize: 11
                             background: Rectangle {
                                 radius: 6; color: Theme.inputBg; border.color: Theme.inputBorderColor
@@ -2893,7 +2893,7 @@ Item {
                                       + " · estados " + JSON.stringify(modelData.statuses || [])
                                       + " · ×" + (modelData.count || 1)
                                 color: Theme.textSecondary
-                                font { family: "Consolas"; pixelSize: 10 }
+                                font { family: Theme.codeFont; pixelSize: 10 }
                                 wrapMode: Text.Wrap
                             }
                         }

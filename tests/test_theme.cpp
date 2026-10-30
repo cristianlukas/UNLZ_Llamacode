@@ -4,6 +4,8 @@
 #include <QtTest>
 #include <QGuiApplication>
 #include <QColor>
+#include <QFont>
+#include <QFontInfo>
 #include <cmath>
 #include <QStandardPaths>
 #include <QSettings>
@@ -13,6 +15,16 @@ class ThemeTests : public QObject
 {
     Q_OBJECT
 private slots:
+    // La fuente de código por defecto tiene que ser UNA familia que resuelva a
+    // monoespaciada en este SO ("Consolas,monospace" no es una lista para Qt).
+    void defaultCodeFontIsMonospaceHere()
+    {
+        const QString fam = ThemeProvider::defaultCodeFont();
+        QVERIFY(!fam.contains(QLatin1Char(',')));
+        QFont f(fam);
+        f.setStyleHint(QFont::TypeWriter);
+        QVERIFY2(QFontInfo(f).fixedPitch(), qPrintable(QFontInfo(f).family()));
+    }
     void initTestCase();
     void builtinThemesSwitch();
     void customThemeRoundTrips();

@@ -22,6 +22,14 @@ public:
 
     static EffectiveProfile build(const Context &ctx);
 
+    // Deja una sola aparición de cada flag escalar conocido (con sus alias:
+    // -ngl / --n-gpu-layers / --gpu-layers). Gana la ÚLTIMA, como en
+    // llama-server, así que el comando efectivo no cambia; sólo deja de repetir
+    // flags (llama.cpp avisa "specified multiple times") y la vista previa
+    // muestra el valor que de verdad se usa. Los flags repetibles (-ot, --lora,
+    // --override-kv…) no se tocan.
+    static QStringList collapseRepeatedFlags(const QStringList &args);
+
 private:
     static void applyBackend(const BackendProfile &bp,
                              QStringList &args, QMap<QString, QString> &env,

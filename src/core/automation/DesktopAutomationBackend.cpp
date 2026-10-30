@@ -2518,6 +2518,9 @@ QVariantMap DesktopAutomationBackend::assertCondition(const QString &windowTarge
     const QString needle = want.toLower();
     QElapsedTimer clock;
     clock.start();
+    // Cada búsqueda AT-SPI respeta lo que queda del timeout: antes una sola
+    // pasada podía tardar minutos aunque timeout_ms fuera 200.
+    auto remaining = [&]() { return qMax(1, budget - int(clock.elapsed())); };
     do {
         QStringList ids;
         if (!windowTargetId.trimmed().isEmpty()) ids << windowTargetId.trimmed();
@@ -2527,10 +2530,16 @@ QVariantMap DesktopAutomationBackend::assertCondition(const QString &windowTarge
                 if (w.toMap().value(QStringLiteral("label")).toString().toLower().contains(title))
                     ids << w.toMap().value(QStringLiteral("id")).toString();
         } else {
-            for (const QVariant &w : windows()) ids << w.toMap().value(QStringLiteral("id")).toString();
+            // Sin ventana: un solo recorrido por todo el escritorio.
+            for (const QVariant &c : LinuxDesktopBackend::controlsOnDesktop(want, 400, remaining())) {
+                if (c.toMap().value(QStringLiteral("name")).toString().toLower().contains(needle))
+                    return {{QStringLiteral("pass"), true}, {QStringLiteral("elapsedMs"), int(clock.elapsed())},
+                            {QStringLiteral("detail"), QStringLiteral("Texto \"%1\" presente.").arg(want.left(80))}};
+            }
         }
         for (const QString &id : ids) {
-            for (const QVariant &c : controls(id, want, 400, nullptr)) {
+            if (clock.elapsed() >= budget) break;
+            for (const QVariant &c : LinuxDesktopBackend::controls(id, want, 400, nullptr, remaining())) {
                 if (c.toMap().value(QStringLiteral("name")).toString().toLower().contains(needle))
                     return {{QStringLiteral("pass"), true}, {QStringLiteral("elapsedMs"), int(clock.elapsed())},
                             {QStringLiteral("windowId"), id},

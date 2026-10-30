@@ -1033,6 +1033,30 @@ Item {
         return (v / 1000).toFixed(2) + "s"
     }
 
+    // Razonamiento del modelo: el backend lo manda envuelto en <think>…</think>
+    // para que la UI lo muestre aparte. Mientras llega por streaming el bloque
+    // puede estar abierto todavía (sin </think>).
+    property var thinkExpanded: ({})
+    function splitThink(text) {
+        const t = String(text ?? "")
+        let think = "", body = t, open = false
+        const re = /<think>([\s\S]*?)<\/think>/g
+        let m
+        while ((m = re.exec(t)) !== null) {
+            const part = (m[1] ?? "").trim()
+            if (part.length > 0) think += (think.length > 0 ? "\n\n" : "") + part
+        }
+        body = t.replace(/<think>[\s\S]*?<\/think>/g, "")
+        const unclosed = body.indexOf("<think>")
+        if (unclosed >= 0) {
+            const part = body.slice(unclosed + 7).trim()
+            if (part.length > 0) think += (think.length > 0 ? "\n\n" : "") + part
+            body = body.slice(0, unclosed)
+            open = true
+        }
+        return { think: think, body: body.trim(), open: open }
+    }
+
     function formatMeta(modelData) {
         try {
             if (!modelData) return ""
@@ -1375,7 +1399,7 @@ Item {
                 LcComboBox {
                     id: approvalModeCombo
                     visible: resolvedAdapter === "opencode" || resolvedAdapter === "llamaagent"
-                    width: 150
+                    width: 170
                     height: parent.parent.headerRowH
                     model: [
                         { key: "auto",   label: "Aprobar todo" },
@@ -1405,7 +1429,7 @@ Item {
                         text: approvalModeCombo.displayText
                         color: Theme.textPrimary; font.pixelSize: 12
                         leftPadding: 10
-                        rightPadding: approvalModeCombo.indicator ? approvalModeCombo.indicator.width + 4 : 10
+                        rightPadding: 4
                         verticalAlignment: Text.AlignVCenter; elide: Text.ElideRight
                     }
                 }
@@ -1441,7 +1465,7 @@ Item {
                         text: "🤖 " + agentProfileCombo.displayText
                         color: Theme.textPrimary; font.pixelSize: 12
                         leftPadding: 10
-                        rightPadding: agentProfileCombo.indicator ? agentProfileCombo.indicator.width + 4 : 10
+                        rightPadding: 4
                         verticalAlignment: Text.AlignVCenter; elide: Text.ElideRight
                     }
                 }
@@ -2064,6 +2088,10 @@ Item {
                         }
                         readonly property bool isTyping: entry.typing ?? false
                         readonly property string metaLine: root.formatMeta(entry)
+                        readonly property var parts: delegateRoot.isUser ? ({ think: "", body: visibleContent, open: false })
+                                                                         : root.splitThink(visibleContent)
+                        readonly property string thinkKey: String(entry.id ?? index)
+                        readonly property bool thinkOpen: root.thinkExpanded[thinkKey] === true
                         property bool editing: false
 
                         Rectangle {
@@ -2088,23 +2116,76 @@ Item {
                                 anchors { top: parent.top; left: parent.left; right: parent.right; margins: 11 }
                                 spacing: 6
 
+                                // Razonamiento plegado (como en Chat): antes se mostraba crudo,
+                                // con las etiquetas <think>, pegado a la respuesta.
+                                Rectangle {
+                                    visible: !delegateRoot.editing && delegateRoot.parts.think.length > 0
+                                    width: parent.width
+                                    radius: 6
+                                    color: Theme.surfaceBg
+                                    border.color: Theme.borderColor
+                                    implicitHeight: thinkHead.height + (delegateRoot.thinkOpen ? thinkText.implicitHeight + 8 : 0) + 10
+                                    Column {
+                                        anchors { fill: parent; margins: 6 }
+                                        spacing: 6
+                                        Item {
+                                            id: thinkHead
+                                            width: parent.width
+                                            height: 22
+                                            Text {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                text: (delegateRoot.thinkOpen ? "▾ " : "▸ ")
+                                                      + (delegateRoot.parts.open ? "Razonando…" : "Razonamiento")
+                                                color: Theme.textMuted
+                                                font { pixelSize: 12; bold: true }
+                                            }
+                                            MouseArea {
+                                                anchors.fill: parent
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: {
+                                                    const cur = root.thinkExpanded
+                                                    cur[delegateRoot.thinkKey] = !delegateRoot.thinkOpen
+                                                    root.thinkExpanded = cur
+                                                }
+                                            }
+                                        }
+                                        TextEdit {
+                                            id: thinkText
+                                            visible: delegateRoot.thinkOpen
+                                            width: parent.width
+                                            text: delegateRoot.parts.think
+                                            color: Theme.textMuted
+                                            font.pixelSize: 12
+                                            wrapMode: TextEdit.WrapAtWordBoundaryOrAnywhere
+                                            readOnly: true
+                                            selectByMouse: true
+                                        }
+                                    }
+                                }
+
                                 TextEdit {
                                     id: msgText
                                     visible: !delegateRoot.editing
+                                             && (delegateRoot.parts.body.length > 0 || delegateRoot.parts.think.length === 0)
                                     width: parent.width
+                                    // Respuesta terminada: markdown renderizado (tablas, código…).
+                                    readonly property bool rich: !delegateRoot.isUser && !delegateRoot.isTyping
+                                                                 && delegateRoot.parts.body.length > 0
+                                    textFormat: rich ? TextEdit.RichText : TextEdit.PlainText
                                     text: {
+                                        if (rich)
+                                            return App.renderMarkdown(delegateRoot.parts.body, Theme.codeFont)
                                         if (delegateRoot.isTyping && delegateRoot.visibleContent.length === 0)
                                             return (entry.status ?? "Pensando...") + "  "
                                         if (delegateRoot.isTyping)
-                                            return delegateRoot.visibleContent + "▌"
-                                        return delegateRoot.visibleContent
+                                            return delegateRoot.parts.body + "▌"
+                                        return delegateRoot.parts.body
                                     }
                                     color: {
                                         if (delegateRoot.isTyping && delegateRoot.content.length === 0)
                                             return Theme.textMuted
                                         return delegateRoot.isUser ? Theme.chatUserText : Theme.chatAsstText
                                     }
-                                    font.family: "Segoe UI"
                                     font.pixelSize: 13
                                     font.italic: delegateRoot.isTyping && delegateRoot.content.length === 0
                                     wrapMode: TextEdit.WrapAtWordBoundaryOrAnywhere
@@ -2122,7 +2203,6 @@ Item {
                                         width: parent.width
                                         wrapMode: TextArea.WrapAtWordBoundaryOrAnywhere
                                         color: Theme.chatAsstText
-                                        font.family: "Segoe UI"
                                         font.pixelSize: 13
                                         background: Rectangle {
                                             color: Theme.surfaceBg; radius: 6

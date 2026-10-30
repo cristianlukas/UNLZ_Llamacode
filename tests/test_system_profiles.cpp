@@ -1880,6 +1880,9 @@ void SystemProfilesTests::controller_gatewayRebindsWhenBusyPortIsReleased()
     QVERIFY(!app.gatewayRunning());
     QVERIFY(app.gatewayRetryPending());
 
+    // Bajo carga (ctest en paralelo) el primer aviso puede tardar más que un
+    // wait fijo: esperarlo, y recién ahí comprobar que los reintentos no avisan.
+    QTRY_COMPARE_WITH_TIMEOUT(errors.count(), 1, 2000);
     QTest::qWait(150);                 // varios reintentos con el puerto ocupado
     QVERIFY(!app.gatewayRunning());
     QCOMPARE(errors.count(), 1);       // un solo aviso, no uno por reintento

@@ -187,7 +187,7 @@ Item {
                     + "2. Vectorizar el índice una vez:\n"
                     + "     python tools/studia/vectorizar.py --db <ruta> --url http://127.0.0.1:8093"
                 color: Theme.textSecondary
-                font { pixelSize: 11; family: "Consolas" }
+                font { pixelSize: 11; family: Theme.codeFont }
                 wrapMode: Text.WordWrap
             }
 
@@ -1127,7 +1127,7 @@ Item {
                                                                    : "⏳ Generando…\n\n")
                                                                   + modelData.contenido
                                                             color: Theme.textMuted
-                                                            font { pixelSize: 11; family: "Consolas" }
+                                                            font { pixelSize: 11; family: Theme.codeFont }
                                                             wrapMode: Text.WrapAnywhere
                                                         }
                                                     }

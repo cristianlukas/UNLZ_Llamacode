@@ -371,6 +371,21 @@ Item {
 
                     Item { height: 8; width: 1 }
 
+                    // Capacidad del agente: aplica a toda la Charla (no al TTS, donde estaba).
+                    Rectangle {
+                        Layout.leftMargin: 24; Layout.rightMargin: 24; Layout.fillWidth: true
+                        implicitHeight: capabilityText.implicitHeight + 18
+                        radius: 6; color: Theme.inputBg; border.color: Theme.borderColor
+                        property var cap: App.charlaAgentCapability()
+                        Text {
+                            id: capabilityText
+                            anchors.fill: parent; anchors.margins: 9
+                            wrapMode: Text.WordWrap; color: Theme.textSecondary; font.pixelSize: 12
+                            text: "Capacidad del agente: " + (parent.cap.level || "desconocida")
+                                  + " — " + (parent.cap.reason || "")
+                                  + (parent.cap.requireSupervisor ? " · Se escalarán tareas complejas al supervisor." : "")
+                        }
+                    }
                     Text { text: "Motor STT gestionado (la app descarga y lanza)"; color: Theme.textPrimary; Layout.leftMargin: 24; font { pixelSize: 15; bold: true } }
                     GridLayout {
                         columns: 2; columnSpacing: 12; rowSpacing: 8
@@ -564,20 +579,6 @@ Item {
                     }
 
                     Text { text: "Motor TTS (automático o manual)"; color: Theme.textPrimary; Layout.leftMargin: 24; font { pixelSize: 15; bold: true } }
-                    Rectangle {
-                        Layout.leftMargin: 24; Layout.rightMargin: 24; Layout.fillWidth: true
-                        implicitHeight: capabilityText.implicitHeight + 18
-                        radius: 6; color: Theme.inputBg; border.color: Theme.borderColor
-                        property var cap: App.charlaAgentCapability()
-                        Text {
-                            id: capabilityText
-                            anchors.fill: parent; anchors.margins: 9
-                            wrapMode: Text.WordWrap; color: Theme.textSecondary; font.pixelSize: 12
-                            text: "Capacidad del agente: " + (parent.cap.level || "desconocida")
-                                  + " — " + (parent.cap.reason || "")
-                                  + (parent.cap.requireSupervisor ? " · Se escalarán tareas complejas al supervisor." : "")
-                        }
-                    }
                     GridLayout {
                         columns: 2; columnSpacing: 12; rowSpacing: 8
                         Layout.leftMargin: 24; Layout.rightMargin: 24; Layout.fillWidth: true
