@@ -20,6 +20,8 @@ private slots:
         QVERIFY(html.contains("print(&quot;hola&quot;)") || html.contains("print(\"hola\")"));
         QVERIFY(html.contains("font-weight"));
         QVERIFY2(html.contains("border=\"1\"") || html.contains("border-width:1"), qPrintable(html));
+        // El bloque de código no queda pegado a la tabla.
+        QVERIFY2(html.contains("margin-top:8px"), qPrintable(html));
         // La fuente/tamaño del documento no pisa los del TextEdit.
         QVERIFY(!html.contains("<body style="));
     }

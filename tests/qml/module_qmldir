@@ -14,3 +14,4 @@ PageHeader 1.0 PageHeader.qml
 LcSlider 1.0 LcSlider.qml
 RealLcButton 1.0 RealLcButton.qml
 RealLcComboBox 1.0 RealLcComboBox.qml
+RealLcDialog 1.0 RealLcDialog.qml

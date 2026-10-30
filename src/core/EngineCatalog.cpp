@@ -281,8 +281,15 @@ bool EngineCatalog::isVariantCompatible(const EngineVariant &variant,
                                         QString *reason)
 {
     if (!variant.platforms.isEmpty() && !variant.platforms.contains(hw.platform)) {
-        if (reason)
-            *reason = QStringLiteral("Requiere %1").arg(variant.platforms.join(QStringLiteral(" / ")));
+        if (reason) {
+            // Las claves internas van en minúscula ("windows"); el aviso es para personas.
+            QStringList names;
+            for (const QString &p : variant.platforms)
+                names << (p == QLatin1String("windows") ? QStringLiteral("Windows")
+                          : p == QLatin1String("linux") ? QStringLiteral("Linux")
+                          : p == QLatin1String("macos") ? QStringLiteral("macOS") : p);
+            *reason = QStringLiteral("Requiere %1").arg(names.join(QStringLiteral(" / ")));
+        }
         return false;
     }
     if (!variant.gpuVendors.isEmpty() && !variant.gpuVendors.contains(hw.gpuVendor)) {

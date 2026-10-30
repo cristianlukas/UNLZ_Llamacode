@@ -33,12 +33,15 @@ const Lit kLits[] = {
     {"frameBorderInact",   "#2a2d41","#9ca0b0","#1a1a1a"},
 
     {"textPrimary",   "#cdd6f4","#4c4f69","#ffffff"},
-    {"textSecondary", "#a6adc8","#5c5f77","#aaaaaa"},
-    {"textMuted",     "#585b70","#9ca0b0","#555555"},
+    {"textSecondary", "#a6adc8","#4c4f69","#aaaaaa"},
+    // textMuted es el texto de ayuda, subtítulos y placeholders: con la paleta
+    // original quedaba en 1,7–2,8:1 (ilegible en claro). Ahora ≥ 3:1 en campos
+    // y ~4,5:1 sobre el fondo, sin perder distancia con textSecondary.
+    {"textMuted",     "#7f849c","#6c6f85","#808080"},
     {"textDim",       "#45475a","#acb0be","#333333"},
     {"dialogLabel",   "#bac2de","#5c5f77","#cccccc"},
 
-    {"successText", "#a6e3a1","#40a02b","#44ff88"},
+    {"successText", "#a6e3a1","#2f7a20","#44ff88"},
     {"successBg",   "#1a3a1a","#d0f0d0","#001a00"},
     {"errorText",   "#f38ba8","#d20f39","#ff4444"},
     {"errorBg",     "#3a1a1a","#fce2da","#200000"},
@@ -74,7 +77,7 @@ const Lit kLits[] = {
     // La X roja (errorText) desaparece sobre closeHoverBg: en hover va este.
     {"closeHoverFg",   "#1e1e2e","#ffffff","#000000"},
     {"overlayColor",   "#90090b14","#60000000","#90000000"},
-    {"warnText",       "#f9e2af","#df8e1d","#ffcc44"},
+    {"warnText",       "#f9e2af","#a5620e","#ffcc44"},
 };
 
 QColor mix(const QColor &a, const QColor &b, double t) {

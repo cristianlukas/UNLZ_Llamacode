@@ -842,7 +842,7 @@ if (BUILD_TESTS)
     list(APPEND _lc_qml_harness_copies "${LC_QML_HARNESS_MODULE_DIR}/qmldir")
     # LcButton / LcComboBox reales con otro nombre: los originales los ocupan
     # stubs que usan otros tests (tst_lc_widgets).
-    foreach(_real LcButton LcComboBox)
+    foreach(_real LcButton LcComboBox LcDialog)
         add_custom_command(
             OUTPUT "${LC_QML_HARNESS_MODULE_DIR}/Real${_real}.qml"
             COMMAND ${CMAKE_COMMAND} -E copy_if_different

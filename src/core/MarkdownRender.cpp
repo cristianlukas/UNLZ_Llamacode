@@ -32,6 +32,22 @@ QString MarkdownRender::toHtml(const QString &markdown, const QString &codeFont)
         }
     }
 
+    // Bloques de código con aire arriba/abajo: quedaban pegados a la tabla o
+    // al párrafo anterior.
+    for (QTextBlock b = doc.begin(); b.isValid(); b = b.next()) {
+        QTextBlockFormat bf = b.blockFormat();
+        if (!bf.hasProperty(QTextFormat::BlockCodeFence) && !bf.nonBreakableLines()) continue;
+        const bool first = !b.previous().isValid()
+                           || !(b.previous().blockFormat().hasProperty(QTextFormat::BlockCodeFence)
+                                || b.previous().blockFormat().nonBreakableLines());
+        const bool last = !b.next().isValid()
+                          || !(b.next().blockFormat().hasProperty(QTextFormat::BlockCodeFence)
+                               || b.next().blockFormat().nonBreakableLines());
+        if (first) bf.setTopMargin(8);
+        if (last) bf.setBottomMargin(8);
+        QTextCursor(b).setBlockFormat(bf);
+    }
+
     // Tablas legibles: borde fino y algo de aire (las de Qt salen pegadas).
     for (QTextFrame *frame : doc.rootFrame()->childFrames()) {
         if (auto *table = qobject_cast<QTextTable *>(frame)) {

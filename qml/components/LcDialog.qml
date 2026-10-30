@@ -16,7 +16,13 @@ Dialog {
     clip: true
 
     implicitWidth: Math.max(420, implicitContentWidth + leftPadding + rightPadding)
-    implicitHeight: implicitHeaderHeight + implicitContentHeight + implicitFooterHeight + topPadding + bottomPadding
+    // implicitContentHeight no siempre refleja un contentItem ColumnLayout
+    // asignado por el consumidor (quedaba en ~0 y el diálogo cortaba el
+    // formulario: "Agregar directorio" escondía el modo de escaneo).
+    implicitHeight: (header ? header.height : implicitHeaderHeight)
+                    + Math.max(implicitContentHeight, contentItem ? contentItem.implicitHeight : 0)
+                    + (footer ? footer.height : implicitFooterHeight)
+                    + topPadding + bottomPadding
     // Popup no siempre adopta implicitHeight cuando el consumidor fija width.
     // Mantener un alto real evita que header/footer se monten sobre el contenido.
     height: Math.min(parent ? Math.max(180, parent.height - 48) : 720,
@@ -36,7 +42,9 @@ Dialog {
         color: Theme.popupHeaderBg
         height: 56
         radius: 12
-        Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+        border.color: Theme.popupBorderColor
+        border.width: 1
+        Rectangle { anchors.bottom: parent.bottom; x: 1; width: parent.width - 2; height: 12; color: Theme.popupHeaderBg }
         Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.popupHeaderBorder }
         Text {
             anchors { left: parent.left; leftMargin: 22; verticalCenter: parent.verticalCenter }
@@ -50,7 +58,9 @@ Dialog {
         color: Theme.popupHeaderBg
         height: 56
         radius: 12
-        Rectangle { anchors.top: parent.top; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+        border.color: Theme.popupBorderColor
+        border.width: 1
+        Rectangle { anchors.top: parent.top; x: 1; width: parent.width - 2; height: 12; color: Theme.popupHeaderBg }
         Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: Theme.popupHeaderBorder }
         Row {
             anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }

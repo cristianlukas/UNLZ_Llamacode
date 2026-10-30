@@ -7,6 +7,7 @@ class EngineCatalogTests : public QObject
 private slots:
     void catalogIncludesSourceForks();
     void variantCompatibilityReportsReason();
+    void platformReasonUsesReadableNames();
     void versionComparisonHandlesBuildTagsAndSemver();
     void sourceUpdateComparesShortSha();
     void repoNormalizationAndBuildDirAreStable();
@@ -79,6 +80,18 @@ void EngineCatalogTests::variantCompatibilityReportsReason()
     QString reason;
     QVERIFY(!EngineCatalog::isVariantCompatible(beellama.variants.first(), hw, &reason));
     QVERIFY(reason.contains(QStringLiteral("nvidia"), Qt::CaseInsensitive));
+}
+
+// En Linux las tarjetas del catálogo decían "Requiere windows" (la clave interna).
+void EngineCatalogTests::platformReasonUsesReadableNames()
+{
+    EngineVariant v;
+    v.platforms = {QStringLiteral("windows")};
+    HardwareSignals hw;
+    hw.platform = QStringLiteral("linux");
+    QString reason;
+    QVERIFY(!EngineCatalog::isVariantCompatible(v, hw, &reason));
+    QCOMPARE(reason, QStringLiteral("Requiere Windows"));
 }
 
 void EngineCatalogTests::versionComparisonHandlesBuildTagsAndSemver()

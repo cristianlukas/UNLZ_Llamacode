@@ -11,7 +11,7 @@ import LlamaCode 1.0
 //  - el slider nativo era blanco y pintaba el tramo lleno a la derecha.
 ApplicationWindow {
     id: win
-    width: 400; height: 300
+    width: 400; height: 900   // alto de sobra: el diálogo se limita a la ventana
     visible: true
 
     property int fails: 0
@@ -32,6 +32,18 @@ ApplicationWindow {
         LcSlider { id: slider; width: 300; from: 100; to: 375; value: 250 }
     }
 
+    // Formulario de cinco filas como "Agregar directorio": tiene que entrar
+    // entero (antes el diálogo medía ~0 de contenido y cortaba el modo de escaneo).
+    RealLcDialog {
+        id: dlg
+        title: "Agregar directorio"
+        width: 360
+        contentItem: Column {
+            spacing: 12
+            Repeater { model: 5; Rectangle { width: 300; height: 34 } }
+        }
+    }
+
     Timer {
         interval: 200; running: true
         onTriggered: {
@@ -47,6 +59,12 @@ ApplicationWindow {
             check(Math.abs(fill.width - slider.visualPosition * slider.background.width) < 1,
                   "el tramo lleno va de la izquierda hasta la perilla")
             check(Qt.colorEqual(slider.handle.color, Theme.accent), "perilla con el acento (no blanca)")
+
+            dlg.open()
+            const needed = dlg.contentItem.implicitHeight + dlg.header.height + dlg.footer.height
+                           + dlg.topPadding + dlg.bottomPadding
+            check(dlg.contentItem.implicitHeight >= 5 * 34, "el contenido del diálogo informa su alto")
+            check(dlg.height >= needed - 1, "el diálogo no corta su formulario (" + dlg.height + " >= " + needed + ")")
 
             console.log(win.fails === 0 ? "ALL PASS" : ("FAIL count=" + win.fails))
             Qt.exit(win.fails === 0 ? 0 : 1)

@@ -79,10 +79,11 @@ Item {
         id: addDlg
         title: (App.langV, App.l("models.addRoot"))
         width: 560
-        height: 300
+        // Sin alto fijo: con 300 px el selector "Modo de escaneo" quedaba
+        // cortado y no se podía elegir. LcDialog se ajusta al contenido.
 
         onAccepted: {
-            App.rootRegistry.add(pathField.text, labelField.text, scanCombo.currentText, [])
+            App.rootRegistry.add(pathField.text, labelField.text, scanCombo.currentValue, [])
             pathField.text = ""; labelField.text = ""
         }
 
@@ -94,18 +95,24 @@ Item {
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 8
-                LcTextField { id: pathField; Layout.fillWidth: true; placeholderText: "Folder with GGUF files" }
+                LcTextField { id: pathField; Layout.fillWidth: true; placeholderText: "Carpeta con archivos GGUF" }
                 LcButton { text: (App.langV, App.l("common.browse")); secondary: true; onClicked: folderDlg.open() }
             }
 
             Text { text: (App.langV, App.l("models.label")); color: Theme.dialogLabel; font.pixelSize: 12; font.bold: true }
-            LcTextField { id: labelField; Layout.fillWidth: true; placeholderText: "Optional label" }
+            LcTextField { id: labelField; Layout.fillWidth: true; placeholderText: "Nombre para mostrar (opcional)" }
 
             Text { text: (App.langV, App.l("models.scanMode")); color: Theme.dialogLabel; font.pixelSize: 12; font.bold: true }
             LcComboBox {
                 id: scanCombo
                 Layout.fillWidth: true
-                model: ["manual", "startup", "watch"]
+                textRole: "label"
+                valueRole: "value"
+                model: [
+                    { label: "Manual (cuando toques Escanear)", value: "manual" },
+                    { label: "Al iniciar la app", value: "startup" },
+                    { label: "Vigilar la carpeta", value: "watch" }
+                ]
                 background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
                 contentItem: Text { text: scanCombo.displayText; color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
             }
@@ -554,7 +561,13 @@ Item {
                             }
                         }
                         Text { width: rootList.width - 32; text: path; font.pixelSize: 11; color: Theme.textMuted; elide: Text.ElideMiddle }
-                        Text { text: scanMode; font.pixelSize: 10; color: Theme.textMuted }
+                        Text {
+                            text: scanMode === "manual" ? "escaneo manual"
+                                : scanMode === "startup" ? "se escanea al iniciar"
+                                : scanMode === "watch" ? "carpeta vigilada"
+                                : scanMode === "recursive" ? "recursivo" : scanMode
+                            font.pixelSize: 10; color: Theme.textMuted
+                        }
                     }
                     onClicked: { rootList.currentIndex = index; App.modelCatalog.filterRootId = rootId }
                 }

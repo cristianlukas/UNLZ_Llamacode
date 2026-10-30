@@ -17,6 +17,7 @@ class ThemeTests : public QObject
 private slots:
     // La fuente de código por defecto tiene que ser UNA familia que resuelva a
     // monoespaciada en este SO ("Consolas,monospace" no es una lista para Qt).
+    void secondaryTextKeepsReadableContrast();
     void defaultCodeFontIsMonospaceHere()
     {
         const QString fam = ThemeProvider::defaultCodeFont();
@@ -205,6 +206,39 @@ void ThemeTests::closeGlyphVisibleOnHover()
         const double a = lum(t.closeHoverFg()), b = lum(t.closeHoverBg());
         const double ratio = (qMax(a, b) + 0.05) / (qMin(a, b) + 0.05);
         QVERIFY2(ratio >= 3.0, qPrintable(name + QStringLiteral(": contraste ") + QString::number(ratio)));
+    }
+}
+
+// Texto de ayuda y de estado legible en los tres temas: con la paleta original
+// textMuted (placeholders, subtítulos) quedaba en 1,7:1 sobre los campos del
+// tema claro y warnText en 2,3:1 sobre el fondo.
+void ThemeTests::secondaryTextKeepsReadableContrast()
+{
+    auto lum = [](const QString &hex) {
+        const QColor c(hex);
+        auto ch = [](double v) { return v <= 0.03928 ? v / 12.92 : std::pow((v + 0.055) / 1.055, 2.4); };
+        return 0.2126 * ch(c.redF()) + 0.7152 * ch(c.greenF()) + 0.0722 * ch(c.blueF());
+    };
+    auto ratio = [&](const QString &a, const QString &b) {
+        const double x = lum(a), y = lum(b);
+        return (qMax(x, y) + 0.05) / (qMin(x, y) + 0.05);
+    };
+    ThemeProvider t;
+    for (const QString &name : {QStringLiteral("dark"), QStringLiteral("light"), QStringLiteral("oled")}) {
+        t.setTheme(name);
+        const QList<QPair<const char *, QString>> fgs = {
+            {"textMuted", t.textMuted()}, {"textSecondary", t.textSecondary()},
+            {"warnText", t.warnText()}, {"successText", t.successText()}, {"errorText", t.errorText()}};
+        for (const auto &fg : fgs) {
+            for (const QString &bg : {t.baseBg(), t.surfaceBg(), t.inputBg()}) {
+                const double r = ratio(fg.second, bg);
+                QVERIFY2(r >= 3.0, qPrintable(QStringLiteral("%1 %2 sobre %3: %4")
+                                                  .arg(name, QString::fromLatin1(fg.first), bg)
+                                                  .arg(r, 0, 'f', 2)));
+            }
+        }
+        // La jerarquía se mantiene: secundario más marcado que el apagado.
+        QVERIFY(ratio(t.textSecondary(), t.baseBg()) > ratio(t.textMuted(), t.baseBg()));
     }
 }
 

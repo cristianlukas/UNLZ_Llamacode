@@ -254,6 +254,8 @@ Item {
         Overlay.modal: Rectangle { color: Theme.overlayColor }
         header: Rectangle {
             color: Theme.popupHeaderBg; height: 50; radius: 12
+            // Borde propio: el encabezado tapaba el del fondo y en OLED parecía flotar.
+            border.color: Theme.popupBorderColor; border.width: 1
             Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.popupHeaderBorder }
             Text {
                 anchors { left: parent.left; leftMargin: 20; verticalCenter: parent.verticalCenter }
@@ -276,6 +278,7 @@ Item {
         }
         footer: Rectangle {
             color: Theme.popupHeaderBg; height: 50; radius: 12
+            border.color: Theme.popupBorderColor; border.width: 1
             Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: Theme.popupHeaderBorder }
             Row {
                 anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
@@ -319,6 +322,8 @@ Item {
         Overlay.modal: Rectangle { color: Theme.overlayColor }
         header: Rectangle {
             color: Theme.popupHeaderBg; height: 50; radius: 12
+            // Borde propio: el encabezado tapaba el del fondo y en OLED parecía flotar.
+            border.color: Theme.popupBorderColor; border.width: 1
             Rectangle {
                 anchors.bottom: parent.bottom
                 width: parent.width
@@ -350,6 +355,7 @@ Item {
         }
         footer: Rectangle {
             color: Theme.popupHeaderBg; height: 54; radius: 12
+            border.color: Theme.popupBorderColor; border.width: 1
             Rectangle {
                 anchors.top: parent.top
                 width: parent.width
@@ -403,6 +409,8 @@ Item {
         Overlay.modal: Rectangle { color: Theme.overlayColor }
         header: Rectangle {
             color: Theme.popupHeaderBg; height: 52; radius: 12
+            // Borde propio: el encabezado tapaba el del fondo y en OLED parecía flotar.
+            border.color: Theme.popupBorderColor; border.width: 1
             Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.popupHeaderBorder }
             Text {
                 anchors { left: parent.left; leftMargin: 20; verticalCenter: parent.verticalCenter }
@@ -518,6 +526,8 @@ Item {
         Overlay.modal: Rectangle { color: Theme.overlayColor }
         header: Rectangle {
             color: Theme.popupHeaderBg; height: 48; radius: 12
+            // Borde propio: el encabezado tapaba el del fondo y en OLED parecía flotar.
+            border.color: Theme.popupBorderColor; border.width: 1
             Text {
                 anchors { left: parent.left; leftMargin: 18; verticalCenter: parent.verticalCenter }
                 text: "Detalle · " + (nativeRunDetailDialog.runId || "corrida")
@@ -589,6 +599,7 @@ Item {
         }
         footer: Rectangle {
             color: Theme.popupHeaderBg; height: 50; radius: 12
+            border.color: Theme.popupBorderColor; border.width: 1
             RowLayout {
                 anchors {
                     left: parent.left; leftMargin: 14
@@ -652,6 +663,8 @@ Item {
         Overlay.modal: Rectangle { color: Theme.overlayColor }
         header: Rectangle {
             color: Theme.popupHeaderBg; height: 52; radius: 12
+            // Borde propio: el encabezado tapaba el del fondo y en OLED parecía flotar.
+            border.color: Theme.popupBorderColor; border.width: 1
             Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.popupHeaderBorder }
             Text {
                 anchors { left: parent.left; leftMargin: 20; verticalCenter: parent.verticalCenter }
@@ -825,6 +838,7 @@ Item {
         }
         footer: Rectangle {
             color: Theme.popupHeaderBg; height: 50; radius: 12
+            border.color: Theme.popupBorderColor; border.width: 1
             Row {
                 anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
                 LcButton { text: "Cerrar"; secondary: true; onClicked: managedLogDialog.close() }
@@ -859,7 +873,9 @@ Item {
 
         header: Rectangle {
             color: Theme.popupHeaderBg; height: 50; radius: 12
-            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+            // Borde propio: el encabezado tapaba el del fondo y en OLED parecía flotar.
+            border.color: Theme.popupBorderColor; border.width: 1
+            Rectangle { anchors.bottom: parent.bottom; x: 1; width: parent.width - 2; height: 12; color: Theme.popupHeaderBg }
             Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1;  color: Theme.popupHeaderBorder }
             Text {
                 anchors { left: parent.left; leftMargin: 20; verticalCenter: parent.verticalCenter }
@@ -871,7 +887,8 @@ Item {
 
         footer: Rectangle {
             color: Theme.popupHeaderBg; height: 50; radius: 12
-            Rectangle { anchors.top: parent.top; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+            border.color: Theme.popupBorderColor; border.width: 1
+            Rectangle { anchors.top: parent.top; x: 1; width: parent.width - 2; height: 12; color: Theme.popupHeaderBg }
             Rectangle { anchors.top: parent.top; width: parent.width; height: 1;  color: Theme.popupHeaderBorder }
             Row {
                 anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
@@ -927,7 +944,9 @@ Item {
 
         header: Rectangle {
             color: Theme.popupHeaderBg; height: 50; radius: 12
-            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+            // Borde propio: el encabezado tapaba el del fondo y en OLED parecía flotar.
+            border.color: Theme.popupBorderColor; border.width: 1
+            Rectangle { anchors.bottom: parent.bottom; x: 1; width: parent.width - 2; height: 12; color: Theme.popupHeaderBg }
             Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.popupHeaderBorder }
             Text {
                 anchors { left: parent.left; leftMargin: 20; verticalCenter: parent.verticalCenter }
@@ -959,7 +978,8 @@ Item {
 
         footer: Rectangle {
             color: Theme.popupHeaderBg; height: 58; radius: 12
-            Rectangle { anchors.top: parent.top; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+            border.color: Theme.popupBorderColor; border.width: 1
+            Rectangle { anchors.top: parent.top; x: 1; width: parent.width - 2; height: 12; color: Theme.popupHeaderBg }
             Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: Theme.popupHeaderBorder }
             Row {
                 anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
@@ -3676,7 +3696,9 @@ Item {
 
         header: Rectangle {
             color: Theme.popupHeaderBg; height: 50; radius: 12
-            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+            // Borde propio: el encabezado tapaba el del fondo y en OLED parecía flotar.
+            border.color: Theme.popupBorderColor; border.width: 1
+            Rectangle { anchors.bottom: parent.bottom; x: 1; width: parent.width - 2; height: 12; color: Theme.popupHeaderBg }
             Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1;  color: Theme.popupHeaderBorder }
             Text {
                 anchors { left: parent.left; leftMargin: 20; verticalCenter: parent.verticalCenter }
@@ -3688,7 +3710,8 @@ Item {
 
         footer: Rectangle {
             color: Theme.popupHeaderBg; height: 50; radius: 12
-            Rectangle { anchors.top: parent.top; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+            border.color: Theme.popupBorderColor; border.width: 1
+            Rectangle { anchors.top: parent.top; x: 1; width: parent.width - 2; height: 12; color: Theme.popupHeaderBg }
             Rectangle { anchors.top: parent.top; width: parent.width; height: 1;  color: Theme.popupHeaderBorder }
             Row {
                 anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
@@ -3739,7 +3762,9 @@ Item {
 
         header: Rectangle {
             color: Theme.popupHeaderBg; height: 50; radius: 12
-            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+            // Borde propio: el encabezado tapaba el del fondo y en OLED parecía flotar.
+            border.color: Theme.popupBorderColor; border.width: 1
+            Rectangle { anchors.bottom: parent.bottom; x: 1; width: parent.width - 2; height: 12; color: Theme.popupHeaderBg }
             Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1;  color: Theme.popupHeaderBorder }
             Text {
                 anchors { left: parent.left; leftMargin: 20; verticalCenter: parent.verticalCenter }
@@ -3751,7 +3776,8 @@ Item {
 
         footer: Rectangle {
             color: Theme.popupHeaderBg; height: 50; radius: 12
-            Rectangle { anchors.top: parent.top; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+            border.color: Theme.popupBorderColor; border.width: 1
+            Rectangle { anchors.top: parent.top; x: 1; width: parent.width - 2; height: 12; color: Theme.popupHeaderBg }
             Rectangle { anchors.top: parent.top; width: parent.width; height: 1;  color: Theme.popupHeaderBorder }
             Row {
                 anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
@@ -3835,7 +3861,9 @@ Item {
 
         header: Rectangle {
             color: Theme.popupHeaderBg; height: 50; radius: 12
-            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+            // Borde propio: el encabezado tapaba el del fondo y en OLED parecía flotar.
+            border.color: Theme.popupBorderColor; border.width: 1
+            Rectangle { anchors.bottom: parent.bottom; x: 1; width: parent.width - 2; height: 12; color: Theme.popupHeaderBg }
             Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1;  color: Theme.popupHeaderBorder }
             Text {
                 anchors { left: parent.left; leftMargin: 20; verticalCenter: parent.verticalCenter }
@@ -3847,7 +3875,8 @@ Item {
 
         footer: Rectangle {
             color: Theme.popupHeaderBg; height: 50; radius: 12
-            Rectangle { anchors.top: parent.top; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+            border.color: Theme.popupBorderColor; border.width: 1
+            Rectangle { anchors.top: parent.top; x: 1; width: parent.width - 2; height: 12; color: Theme.popupHeaderBg }
             Rectangle { anchors.top: parent.top; width: parent.width; height: 1;  color: Theme.popupHeaderBorder }
             Row {
                 anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
@@ -3900,7 +3929,9 @@ Item {
 
         header: Rectangle {
             color: Theme.popupHeaderBg; height: 56; radius: 12
-            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+            // Borde propio: el encabezado tapaba el del fondo y en OLED parecía flotar.
+            border.color: Theme.popupBorderColor; border.width: 1
+            Rectangle { anchors.bottom: parent.bottom; x: 1; width: parent.width - 2; height: 12; color: Theme.popupHeaderBg }
             Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1;  color: Theme.popupHeaderBorder }
             Column {
                 anchors { left: parent.left; leftMargin: 22; verticalCenter: parent.verticalCenter }
@@ -3912,7 +3943,8 @@ Item {
 
         footer: Rectangle {
             color: Theme.popupHeaderBg; height: 56; radius: 12
-            Rectangle { anchors.top: parent.top; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+            border.color: Theme.popupBorderColor; border.width: 1
+            Rectangle { anchors.top: parent.top; x: 1; width: parent.width - 2; height: 12; color: Theme.popupHeaderBg }
             Rectangle { anchors.top: parent.top; width: parent.width; height: 1;  color: Theme.popupHeaderBorder }
             Row {
                 anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
@@ -4009,7 +4041,9 @@ Item {
         Overlay.modal: Rectangle { color: Theme.overlayColor }
         header: Rectangle {
             color: Theme.popupHeaderBg; height: 58; radius: 12
-            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+            // Borde propio: el encabezado tapaba el del fondo y en OLED parecía flotar.
+            border.color: Theme.popupBorderColor; border.width: 1
+            Rectangle { anchors.bottom: parent.bottom; x: 1; width: parent.width - 2; height: 12; color: Theme.popupHeaderBg }
             Column {
                 anchors { left: parent.left; leftMargin: 22; verticalCenter: parent.verticalCenter }
                 Text { text: "Habilidades portables"; color: Theme.textPrimary; font.pixelSize: 15; font.bold: true }
@@ -4021,6 +4055,7 @@ Item {
         }
         footer: Rectangle {
             color: Theme.popupHeaderBg; height: 54; radius: 12
+            border.color: Theme.popupBorderColor; border.width: 1
             LcButton {
                 anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
                 text: "Cerrar"; secondary: true; onClicked: skillsDialog.close()
@@ -4100,7 +4135,9 @@ Item {
 
         header: Rectangle {
             color: Theme.popupHeaderBg; height: 56; radius: 12
-            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+            // Borde propio: el encabezado tapaba el del fondo y en OLED parecía flotar.
+            border.color: Theme.popupBorderColor; border.width: 1
+            Rectangle { anchors.bottom: parent.bottom; x: 1; width: parent.width - 2; height: 12; color: Theme.popupHeaderBg }
             Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1;  color: Theme.popupHeaderBorder }
             Column {
                 anchors { left: parent.left; leftMargin: 22; verticalCenter: parent.verticalCenter }
@@ -4115,7 +4152,8 @@ Item {
 
         footer: Rectangle {
             color: Theme.popupHeaderBg; height: 56; radius: 12
-            Rectangle { anchors.top: parent.top; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+            border.color: Theme.popupBorderColor; border.width: 1
+            Rectangle { anchors.top: parent.top; x: 1; width: parent.width - 2; height: 12; color: Theme.popupHeaderBg }
             Rectangle { anchors.top: parent.top; width: parent.width; height: 1;  color: Theme.popupHeaderBorder }
             Row {
                 anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }

@@ -12,7 +12,6 @@ Item {
         id: addDlg
         title: (App.langV, App.l("binaries.addBinary"))
         width: 560
-        height: 340
 
         onAccepted: {
             const newId = App.binaryRegistry.add(pathField.text, nameField.text,
@@ -29,12 +28,12 @@ Item {
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 8
-                LcTextField { id: pathField; Layout.fillWidth: true; placeholderText: "Path to llama-server.exe" }
+                LcTextField { id: pathField; Layout.fillWidth: true; placeholderText: Qt.platform.os === "windows" ? "Ruta a llama-server.exe" : "Ruta a llama-server" }
                 LcButton { text: (App.langV, App.l("common.browse")); secondary: true; onClicked: fileDlg.open() }
             }
 
             Text { text: (App.langV, App.l("binaries.name")); color: Theme.dialogLabel; font.pixelSize: 12; font.bold: true }
-            LcTextField { id: nameField; Layout.fillWidth: true; placeholderText: "Optional display name" }
+            LcTextField { id: nameField; Layout.fillWidth: true; placeholderText: "Nombre para mostrar (opcional)" }
 
             RowLayout {
                 Layout.fillWidth: true
@@ -206,7 +205,7 @@ Item {
                                 Layout.fillWidth: true
                                 Text {
                                     Layout.fillWidth: true
-                                    text: sourceBuild ? "Build from source" : (firstVariant.label || "Prebuilt / manual")
+                                    text: sourceBuild ? "Se compila desde el código" : (firstVariant.label || "Binario precompilado / manual")
                                     color: Theme.textMuted
                                     font.pixelSize: 11
                                     elide: Text.ElideRight
