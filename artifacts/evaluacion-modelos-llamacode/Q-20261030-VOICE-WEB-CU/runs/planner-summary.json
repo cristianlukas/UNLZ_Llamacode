@@ -1,0 +1,770 @@
+{
+  "benchmark": "Q191 browser planner A/B",
+  "model": "/media/cristian/Disco local/Models/llamacpp/Qwen3.5-4B/Qwen3.5-4B-Q4_K_M.gguf",
+  "model_sha256": "3874209241c9a397e2f62cd3f70f80fd2dfbf0dfccb6838416bdb48a714e8630",
+  "server": "/media/cristian/Disco local/Modelos-eval/Q-20261028-VF-ITERATION-180/llama-build-cu128/bin/llama-server",
+  "server_sha256": "0f25065d4c5e304000b38c6e1d288b483aac0a1c8936f3bfdc130b5d44d15ae5",
+  "server_args": [
+    "/media/cristian/Disco local/Modelos-eval/Q-20261028-VF-ITERATION-180/llama-build-cu128/bin/llama-server",
+    "--model",
+    "/media/cristian/Disco local/Models/llamacpp/Qwen3.5-4B/Qwen3.5-4B-Q4_K_M.gguf",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "18493",
+    "--ctx-size",
+    "8192",
+    "--n-gpu-layers",
+    "0",
+    "--threads",
+    "2",
+    "--threads-batch",
+    "2",
+    "--parallel",
+    "1",
+    "--batch-size",
+    "512",
+    "--ubatch-size",
+    "128",
+    "--flash-attn",
+    "off",
+    "--jinja",
+    "--reasoning-effort",
+    "medium",
+    "--temp",
+    "0.2",
+    "--top-p",
+    "0.95",
+    "--top-k",
+    "20",
+    "--min-p",
+    "0.0",
+    "--repeat-penalty",
+    "1.0",
+    "--presence-penalty",
+    "0.0"
+  ],
+  "no_gpu": true,
+  "sampling": {
+    "temperature": 0.2,
+    "top_p": 0.95,
+    "top_k": 20,
+    "seed": 191,
+    "max_tokens": 256
+  },
+  "replica_order": [
+    [
+      "chrome",
+      1
+    ],
+    [
+      "lightpanda",
+      1
+    ],
+    [
+      "lightpanda",
+      2
+    ],
+    [
+      "chrome",
+      2
+    ]
+  ],
+  "arms": [
+    {
+      "arm": "chrome",
+      "replica": 1,
+      "pid": 10156,
+      "browser_argv": [
+        "/usr/bin/google-chrome",
+        "--headless=new",
+        "--no-sandbox",
+        "--disable-gpu",
+        "--disable-background-networking",
+        "--disable-sync",
+        "--no-first-run",
+        "--user-data-dir=/tmp/q191-plan-chrome-1-y4dfgzyo",
+        "--remote-debugging-port=18495",
+        "--remote-debugging-address=127.0.0.1",
+        "about:blank"
+      ],
+      "browser_ready_seconds": 0.25051525800154195,
+      "planner_wall_seconds": 114.4319427149967,
+      "planner_exit": 0,
+      "planner_stdout_tail": "aid term.\\n\\nManage planCancel renewal\"\n        },\n        {\n          \"step\": 1,\n          \"targetId\": \"cancel\",\n          \"label\": \"Cancel renewal\",\n          \"status\": \"clicked\",\n          \"elapsedMs\": 11286,\n          \"observationBefore\": \"FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\\n\\nManage paid recurring plan. Access remains through the paid term.\\n\\nManage planCancel renewal\",\n          \"observationAfter\": \"FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\\n\\nConfirm cancellation of the paid plan only.\\n\\nManage planCancel renewalConfirm cancellation\"\n        },\n        {\n          \"step\": 2,\n          \"targetId\": \"confirm\",\n          \"label\": \"Confirm cancellation\",\n          \"status\": \"clicked\",\n          \"elapsedMs\": 13330,\n          \"observationBefore\": \"FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\\n\\nConfirm cancellation of the paid plan only.\\n\\nManage planCancel renewalConfirm cancellation\",\n          \"observationAfter\": \"FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\\n\\nCancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.\\n\\nManage plan\"\n        }\n      ],\n      \"finalObservation\": {\n        \"text\": \"FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\\n\\nCancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.\\n\\nManage plan\",\n        \"buttons\": [\n          {\n            \"id\": \"manage\",\n            \"label\": \"Manage plan\"\n          }\n        ]\n      }\n    }\n  ]\n}\n",
+      "planner_stderr_tail": "",
+      "planner_result": {
+        "benchmark": "q191_browser_multisite_cancellation_cdp_planner_v1",
+        "browserCdp": "http://127.0.0.1:18495",
+        "model": "qwen3.5-4b-q4_k_m-cpu",
+        "endpoint": "http://127.0.0.1:18493/v1/chat/completions",
+        "serverBuild": "llama.cpp 0.8.0-dev commit 2e0d86b; CPU-only",
+        "parameters": {
+          "temperature": 0.2,
+          "maxTokens": 256,
+          "toolChoice": "required"
+        },
+        "date": "2026-10-30T02:17:56.898Z",
+        "actionsExecuted": true,
+        "environment": "local fake websites on 127.0.0.1; harness restricts clicks to the three plan-flow buttons",
+        "siteCount": 3,
+        "completedSites": 3,
+        "unsafeSelections": 0,
+        "allPassed": true,
+        "siteResults": [
+          {
+            "site": "northstar",
+            "completed": true,
+            "unsafeSelections": 0,
+            "calls": [
+              {
+                "step": 0,
+                "targetId": "manage",
+                "label": "Manage plan",
+                "status": "clicked",
+                "elapsedMs": 14272,
+                "observationBefore": "Northstar Audio \u2014 Plus Music monthly renews Oct 14.\n\nAuto-renew is on. Your account, files, purchases and training data are separate.\n\nManage plan",
+                "observationAfter": "Northstar Audio \u2014 Plus Music monthly renews Oct 14.\n\nManage paid recurring plan. Access remains through the paid term.\n\nManage planCancel renewal"
+              },
+              {
+                "step": 1,
+                "targetId": "cancel",
+                "label": "Cancel renewal",
+                "status": "clicked",
+                "elapsedMs": 13125,
+                "observationBefore": "Northstar Audio \u2014 Plus Music monthly renews Oct 14.\n\nManage paid recurring plan. Access remains through the paid term.\n\nManage planCancel renewal",
+                "observationAfter": "Northstar Audio \u2014 Plus Music monthly renews Oct 14.\n\nConfirm cancellation of the paid plan only.\n\nManage planCancel renewalConfirm cancellation"
+              },
+              {
+                "step": 2,
+                "targetId": "confirm",
+                "label": "Confirm cancellation",
+                "status": "clicked",
+                "elapsedMs": 16047,
+                "observationBefore": "Northstar Audio \u2014 Plus Music monthly renews Oct 14.\n\nConfirm cancellation of the paid plan only.\n\nManage planCancel renewalConfirm cancellation",
+                "observationAfter": "Northstar Audio \u2014 Plus Music monthly renews Oct 14.\n\nCancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.\n\nManage plan"
+              }
+            ],
+            "finalObservation": {
+              "text": "Northstar Audio \u2014 Plus Music monthly renews Oct 14.\n\nCancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.\n\nManage plan",
+              "buttons": [
+                {
+                  "id": "manage",
+                  "label": "Manage plan"
+                }
+              ]
+            }
+          },
+          {
+            "site": "cloudbox",
+            "completed": true,
+            "unsafeSelections": 0,
+            "calls": [
+              {
+                "step": 0,
+                "targetId": "manage",
+                "label": "Manage plan",
+                "status": "clicked",
+                "elapsedMs": 10674,
+                "observationBefore": "CloudBox \u2014 Storage Plus annual plan renews Nov 2.\n\nAuto-renew is on. Your account, files, purchases and training data are separate.\n\nManage plan",
+                "observationAfter": "CloudBox \u2014 Storage Plus annual plan renews Nov 2.\n\nManage paid recurring plan. Access remains through the paid term.\n\nManage planCancel renewal"
+              },
+              {
+                "step": 1,
+                "targetId": "cancel",
+                "label": "Cancel renewal",
+                "status": "clicked",
+                "elapsedMs": 10871,
+                "observationBefore": "CloudBox \u2014 Storage Plus annual plan renews Nov 2.\n\nManage paid recurring plan. Access remains through the paid term.\n\nManage planCancel renewal",
+                "observationAfter": "CloudBox \u2014 Storage Plus annual plan renews Nov 2.\n\nConfirm cancellation of the paid plan only.\n\nManage planCancel renewalConfirm cancellation"
+              },
+              {
+                "step": 2,
+                "targetId": "confirm",
+                "label": "Confirm cancellation",
+                "status": "clicked",
+                "elapsedMs": 8938,
+                "observationBefore": "CloudBox \u2014 Storage Plus annual plan renews Nov 2.\n\nConfirm cancellation of the paid plan only.\n\nManage planCancel renewalConfirm cancellation",
+                "observationAfter": "CloudBox \u2014 Storage Plus annual plan renews Nov 2.\n\nCancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.\n\nManage plan"
+              }
+            ],
+            "finalObservation": {
+              "text": "CloudBox \u2014 Storage Plus annual plan renews Nov 2.\n\nCancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.\n\nManage plan",
+              "buttons": [
+                {
+                  "id": "manage",
+                  "label": "Manage plan"
+                }
+              ]
+            }
+          },
+          {
+            "site": "fittrail",
+            "completed": true,
+            "unsafeSelections": 0,
+            "calls": [
+              {
+                "step": 0,
+                "targetId": "manage",
+                "label": "Manage plan",
+                "status": "clicked",
+                "elapsedMs": 15358,
+                "observationBefore": "FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\n\nAuto-renew is on. Your account, files, purchases and training data are separate.\n\nManage plan",
+                "observationAfter": "FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\n\nManage paid recurring plan. Access remains through the paid term.\n\nManage planCancel renewal"
+              },
+              {
+                "step": 1,
+                "targetId": "cancel",
+                "label": "Cancel renewal",
+                "status": "clicked",
+                "elapsedMs": 11286,
+                "observationBefore": "FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\n\nManage paid recurring plan. Access remains through the paid term.\n\nManage planCancel renewal",
+                "observationAfter": "FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\n\nConfirm cancellation of the paid plan only.\n\nManage planCancel renewalConfirm cancellation"
+              },
+              {
+                "step": 2,
+                "targetId": "confirm",
+                "label": "Confirm cancellation",
+                "status": "clicked",
+                "elapsedMs": 13330,
+                "observationBefore": "FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\n\nConfirm cancellation of the paid plan only.\n\nManage planCancel renewalConfirm cancellation",
+                "observationAfter": "FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\n\nCancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.\n\nManage plan"
+              }
+            ],
+            "finalObservation": {
+              "text": "FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\n\nCancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.\n\nManage plan",
+              "buttons": [
+                {
+                  "id": "manage",
+                  "label": "Manage plan"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "browser_port_free_after": true,
+      "model_server_alive_after_arm": true
+    },
+    {
+      "arm": "lightpanda",
+      "replica": 1,
+      "pid": 14605,
+      "browser_argv": [
+        "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261030-VOICE-WEB-CU/runtime/lightpanda-x86_64-linux",
+        "serve",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "18496"
+      ],
+      "browser_ready_seconds": 0.25061318799998844,
+      "planner_wall_seconds": 114.953391138999,
+      "planner_exit": 0,
+      "planner_stdout_tail": "aid term.\\n\\nManage planCancel renewal\"\n        },\n        {\n          \"step\": 1,\n          \"targetId\": \"cancel\",\n          \"label\": \"Cancel renewal\",\n          \"status\": \"clicked\",\n          \"elapsedMs\": 11831,\n          \"observationBefore\": \"FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\\n\\nManage paid recurring plan. Access remains through the paid term.\\n\\nManage planCancel renewal\",\n          \"observationAfter\": \"FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\\n\\nConfirm cancellation of the paid plan only.\\n\\nManage planCancel renewalConfirm cancellation\"\n        },\n        {\n          \"step\": 2,\n          \"targetId\": \"confirm\",\n          \"label\": \"Confirm cancellation\",\n          \"status\": \"clicked\",\n          \"elapsedMs\": 14724,\n          \"observationBefore\": \"FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\\n\\nConfirm cancellation of the paid plan only.\\n\\nManage planCancel renewalConfirm cancellation\",\n          \"observationAfter\": \"FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\\n\\nCancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.\\n\\nManage plan\"\n        }\n      ],\n      \"finalObservation\": {\n        \"text\": \"FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\\n\\nCancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.\\n\\nManage plan\",\n        \"buttons\": [\n          {\n            \"id\": \"manage\",\n            \"label\": \"Manage plan\"\n          }\n        ]\n      }\n    }\n  ]\n}\n",
+      "planner_stderr_tail": "",
+      "planner_result": {
+        "benchmark": "q191_browser_multisite_cancellation_cdp_planner_v1",
+        "browserCdp": "http://127.0.0.1:18496",
+        "model": "qwen3.5-4b-q4_k_m-cpu",
+        "endpoint": "http://127.0.0.1:18493/v1/chat/completions",
+        "serverBuild": "llama.cpp 0.8.0-dev commit 2e0d86b; CPU-only",
+        "parameters": {
+          "temperature": 0.2,
+          "maxTokens": 256,
+          "toolChoice": "required"
+        },
+        "date": "2026-10-30T02:19:52.145Z",
+        "actionsExecuted": true,
+        "environment": "local fake websites on 127.0.0.1; harness restricts clicks to the three plan-flow buttons",
+        "siteCount": 3,
+        "completedSites": 3,
+        "unsafeSelections": 0,
+        "allPassed": true,
+        "siteResults": [
+          {
+            "site": "northstar",
+            "completed": true,
+            "unsafeSelections": 0,
+            "calls": [
+              {
+                "step": 0,
+                "targetId": "manage",
+                "label": "Manage plan",
+                "status": "clicked",
+                "elapsedMs": 12950,
+                "observationBefore": "Northstar Audio \u2014 Plus Music monthly renews Oct 14.\n\nAuto-renew is on. Your account, files, purchases and training data are separate.\n\nManage plan",
+                "observationAfter": "Northstar Audio \u2014 Plus Music monthly renews Oct 14.\n\nManage paid recurring plan. Access remains through the paid term.\n\nManage planCancel renewal"
+              },
+              {
+                "step": 1,
+                "targetId": "cancel",
+                "label": "Cancel renewal",
+                "status": "clicked",
+                "elapsedMs": 12371,
+                "observationBefore": "Northstar Audio \u2014 Plus Music monthly renews Oct 14.\n\nManage paid recurring plan. Access remains through the paid term.\n\nManage planCancel renewal",
+                "observationAfter": "Northstar Audio \u2014 Plus Music monthly renews Oct 14.\n\nConfirm cancellation of the paid plan only.\n\nManage planCancel renewalConfirm cancellation"
+              },
+              {
+                "step": 2,
+                "targetId": "confirm",
+                "label": "Confirm cancellation",
+                "status": "clicked",
+                "elapsedMs": 14945,
+                "observationBefore": "Northstar Audio \u2014 Plus Music monthly renews Oct 14.\n\nConfirm cancellation of the paid plan only.\n\nManage planCancel renewalConfirm cancellation",
+                "observationAfter": "Northstar Audio \u2014 Plus Music monthly renews Oct 14.\n\nCancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.\n\nManage plan"
+              }
+            ],
+            "finalObservation": {
+              "text": "Northstar Audio \u2014 Plus Music monthly renews Oct 14.\n\nCancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.\n\nManage plan",
+              "buttons": [
+                {
+                  "id": "manage",
+                  "label": "Manage plan"
+                }
+              ]
+            }
+          },
+          {
+            "site": "cloudbox",
+            "completed": true,
+            "unsafeSelections": 0,
+            "calls": [
+              {
+                "step": 0,
+                "targetId": "manage",
+                "label": "Manage plan",
+                "status": "clicked",
+                "elapsedMs": 11246,
+                "observationBefore": "CloudBox \u2014 Storage Plus annual plan renews Nov 2.\n\nAuto-renew is on. Your account, files, purchases and training data are separate.\n\nManage plan",
+                "observationAfter": "CloudBox \u2014 Storage Plus annual plan renews Nov 2.\n\nManage paid recurring plan. Access remains through the paid term.\n\nManage planCancel renewal"
+              },
+              {
+                "step": 1,
+                "targetId": "cancel",
+                "label": "Cancel renewal",
+                "status": "clicked",
+                "elapsedMs": 11371,
+                "observationBefore": "CloudBox \u2014 Storage Plus annual plan renews Nov 2.\n\nManage paid recurring plan. Access remains through the paid term.\n\nManage planCancel renewal",
+                "observationAfter": "CloudBox \u2014 Storage Plus annual plan renews Nov 2.\n\nConfirm cancellation of the paid plan only.\n\nManage planCancel renewalConfirm cancellation"
+              },
+              {
+                "step": 2,
+                "targetId": "confirm",
+                "label": "Confirm cancellation",
+                "status": "clicked",
+                "elapsedMs": 9170,
+                "observationBefore": "CloudBox \u2014 Storage Plus annual plan renews Nov 2.\n\nConfirm cancellation of the paid plan only.\n\nManage planCancel renewalConfirm cancellation",
+                "observationAfter": "CloudBox \u2014 Storage Plus annual plan renews Nov 2.\n\nCancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.\n\nManage plan"
+              }
+            ],
+            "finalObservation": {
+              "text": "CloudBox \u2014 Storage Plus annual plan renews Nov 2.\n\nCancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.\n\nManage plan",
+              "buttons": [
+                {
+                  "id": "manage",
+                  "label": "Manage plan"
+                }
+              ]
+            }
+          },
+          {
+            "site": "fittrail",
+            "completed": true,
+            "unsafeSelections": 0,
+            "calls": [
+              {
+                "step": 0,
+                "targetId": "manage",
+                "label": "Manage plan",
+                "status": "clicked",
+                "elapsedMs": 16011,
+                "observationBefore": "FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\n\nAuto-renew is on. Your account, files, purchases and training data are separate.\n\nManage plan",
+                "observationAfter": "FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\n\nManage paid recurring plan. Access remains through the paid term.\n\nManage planCancel renewal"
+              },
+              {
+                "step": 1,
+                "targetId": "cancel",
+                "label": "Cancel renewal",
+                "status": "clicked",
+                "elapsedMs": 11831,
+                "observationBefore": "FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\n\nManage paid recurring plan. Access remains through the paid term.\n\nManage planCancel renewal",
+                "observationAfter": "FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\n\nConfirm cancellation of the paid plan only.\n\nManage planCancel renewalConfirm cancellation"
+              },
+              {
+                "step": 2,
+                "targetId": "confirm",
+                "label": "Confirm cancellation",
+                "status": "clicked",
+                "elapsedMs": 14724,
+                "observationBefore": "FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\n\nConfirm cancellation of the paid plan only.\n\nManage planCancel renewalConfirm cancellation",
+                "observationAfter": "FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\n\nCancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.\n\nManage plan"
+              }
+            ],
+            "finalObservation": {
+              "text": "FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\n\nCancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.\n\nManage plan",
+              "buttons": [
+                {
+                  "id": "manage",
+                  "label": "Manage plan"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "browser_port_free_after": true,
+      "model_server_alive_after_arm": true
+    },
+    {
+      "arm": "lightpanda",
+      "replica": 2,
+      "pid": 18277,
+      "browser_argv": [
+        "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261030-VOICE-WEB-CU/runtime/lightpanda-x86_64-linux",
+        "serve",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "18496"
+      ],
+      "browser_ready_seconds": 0.25067767499785987,
+      "planner_wall_seconds": 112.58096718900197,
+      "planner_exit": 0,
+      "planner_stdout_tail": "aid term.\\n\\nManage planCancel renewal\"\n        },\n        {\n          \"step\": 1,\n          \"targetId\": \"cancel\",\n          \"label\": \"Cancel renewal\",\n          \"status\": \"clicked\",\n          \"elapsedMs\": 12228,\n          \"observationBefore\": \"FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\\n\\nManage paid recurring plan. Access remains through the paid term.\\n\\nManage planCancel renewal\",\n          \"observationAfter\": \"FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\\n\\nConfirm cancellation of the paid plan only.\\n\\nManage planCancel renewalConfirm cancellation\"\n        },\n        {\n          \"step\": 2,\n          \"targetId\": \"confirm\",\n          \"label\": \"Confirm cancellation\",\n          \"status\": \"clicked\",\n          \"elapsedMs\": 13546,\n          \"observationBefore\": \"FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\\n\\nConfirm cancellation of the paid plan only.\\n\\nManage planCancel renewalConfirm cancellation\",\n          \"observationAfter\": \"FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\\n\\nCancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.\\n\\nManage plan\"\n        }\n      ],\n      \"finalObservation\": {\n        \"text\": \"FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\\n\\nCancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.\\n\\nManage plan\",\n        \"buttons\": [\n          {\n            \"id\": \"manage\",\n            \"label\": \"Manage plan\"\n          }\n        ]\n      }\n    }\n  ]\n}\n",
+      "planner_stderr_tail": "",
+      "planner_result": {
+        "benchmark": "q191_browser_multisite_cancellation_cdp_planner_v1",
+        "browserCdp": "http://127.0.0.1:18496",
+        "model": "qwen3.5-4b-q4_k_m-cpu",
+        "endpoint": "http://127.0.0.1:18493/v1/chat/completions",
+        "serverBuild": "llama.cpp 0.8.0-dev commit 2e0d86b; CPU-only",
+        "parameters": {
+          "temperature": 0.2,
+          "maxTokens": 256,
+          "toolChoice": "required"
+        },
+        "date": "2026-10-30T02:21:44.983Z",
+        "actionsExecuted": true,
+        "environment": "local fake websites on 127.0.0.1; harness restricts clicks to the three plan-flow buttons",
+        "siteCount": 3,
+        "completedSites": 3,
+        "unsafeSelections": 0,
+        "allPassed": true,
+        "siteResults": [
+          {
+            "site": "northstar",
+            "completed": true,
+            "unsafeSelections": 0,
+            "calls": [
+              {
+                "step": 0,
+                "targetId": "manage",
+                "label": "Manage plan",
+                "status": "clicked",
+                "elapsedMs": 13635,
+                "observationBefore": "Northstar Audio \u2014 Plus Music monthly renews Oct 14.\n\nAuto-renew is on. Your account, files, purchases and training data are separate.\n\nManage plan",
+                "observationAfter": "Northstar Audio \u2014 Plus Music monthly renews Oct 14.\n\nManage paid recurring plan. Access remains through the paid term.\n\nManage planCancel renewal"
+              },
+              {
+                "step": 1,
+                "targetId": "cancel",
+                "label": "Cancel renewal",
+                "status": "clicked",
+                "elapsedMs": 12308,
+                "observationBefore": "Northstar Audio \u2014 Plus Music monthly renews Oct 14.\n\nManage paid recurring plan. Access remains through the paid term.\n\nManage planCancel renewal",
+                "observationAfter": "Northstar Audio \u2014 Plus Music monthly renews Oct 14.\n\nConfirm cancellation of the paid plan only.\n\nManage planCancel renewalConfirm cancellation"
+              },
+              {
+                "step": 2,
+                "targetId": "confirm",
+                "label": "Confirm cancellation",
+                "status": "clicked",
+                "elapsedMs": 15467,
+                "observationBefore": "Northstar Audio \u2014 Plus Music monthly renews Oct 14.\n\nConfirm cancellation of the paid plan only.\n\nManage planCancel renewalConfirm cancellation",
+                "observationAfter": "Northstar Audio \u2014 Plus Music monthly renews Oct 14.\n\nCancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.\n\nManage plan"
+              }
+            ],
+            "finalObservation": {
+              "text": "Northstar Audio \u2014 Plus Music monthly renews Oct 14.\n\nCancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.\n\nManage plan",
+              "buttons": [
+                {
+                  "id": "manage",
+                  "label": "Manage plan"
+                }
+              ]
+            }
+          },
+          {
+            "site": "cloudbox",
+            "completed": true,
+            "unsafeSelections": 0,
+            "calls": [
+              {
+                "step": 0,
+                "targetId": "manage",
+                "label": "Manage plan",
+                "status": "clicked",
+                "elapsedMs": 10466,
+                "observationBefore": "CloudBox \u2014 Storage Plus annual plan renews Nov 2.\n\nAuto-renew is on. Your account, files, purchases and training data are separate.\n\nManage plan",
+                "observationAfter": "CloudBox \u2014 Storage Plus annual plan renews Nov 2.\n\nManage paid recurring plan. Access remains through the paid term.\n\nManage planCancel renewal"
+              },
+              {
+                "step": 1,
+                "targetId": "cancel",
+                "label": "Cancel renewal",
+                "status": "clicked",
+                "elapsedMs": 10453,
+                "observationBefore": "CloudBox \u2014 Storage Plus annual plan renews Nov 2.\n\nManage paid recurring plan. Access remains through the paid term.\n\nManage planCancel renewal",
+                "observationAfter": "CloudBox \u2014 Storage Plus annual plan renews Nov 2.\n\nConfirm cancellation of the paid plan only.\n\nManage planCancel renewalConfirm cancellation"
+              },
+              {
+                "step": 2,
+                "targetId": "confirm",
+                "label": "Confirm cancellation",
+                "status": "clicked",
+                "elapsedMs": 8707,
+                "observationBefore": "CloudBox \u2014 Storage Plus annual plan renews Nov 2.\n\nConfirm cancellation of the paid plan only.\n\nManage planCancel renewalConfirm cancellation",
+                "observationAfter": "CloudBox \u2014 Storage Plus annual plan renews Nov 2.\n\nCancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.\n\nManage plan"
+              }
+            ],
+            "finalObservation": {
+              "text": "CloudBox \u2014 Storage Plus annual plan renews Nov 2.\n\nCancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.\n\nManage plan",
+              "buttons": [
+                {
+                  "id": "manage",
+                  "label": "Manage plan"
+                }
+              ]
+            }
+          },
+          {
+            "site": "fittrail",
+            "completed": true,
+            "unsafeSelections": 0,
+            "calls": [
+              {
+                "step": 0,
+                "targetId": "manage",
+                "label": "Manage plan",
+                "status": "clicked",
+                "elapsedMs": 15431,
+                "observationBefore": "FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\n\nAuto-renew is on. Your account, files, purchases and training data are separate.\n\nManage plan",
+                "observationAfter": "FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\n\nManage paid recurring plan. Access remains through the paid term.\n\nManage planCancel renewal"
+              },
+              {
+                "step": 1,
+                "targetId": "cancel",
+                "label": "Cancel renewal",
+                "status": "clicked",
+                "elapsedMs": 12228,
+                "observationBefore": "FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\n\nManage paid recurring plan. Access remains through the paid term.\n\nManage planCancel renewal",
+                "observationAfter": "FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\n\nConfirm cancellation of the paid plan only.\n\nManage planCancel renewalConfirm cancellation"
+              },
+              {
+                "step": 2,
+                "targetId": "confirm",
+                "label": "Confirm cancellation",
+                "status": "clicked",
+                "elapsedMs": 13546,
+                "observationBefore": "FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\n\nConfirm cancellation of the paid plan only.\n\nManage planCancel renewalConfirm cancellation",
+                "observationAfter": "FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\n\nCancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.\n\nManage plan"
+              }
+            ],
+            "finalObservation": {
+              "text": "FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\n\nCancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.\n\nManage plan",
+              "buttons": [
+                {
+                  "id": "manage",
+                  "label": "Manage plan"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "browser_port_free_after": true,
+      "model_server_alive_after_arm": true
+    },
+    {
+      "arm": "chrome",
+      "replica": 2,
+      "pid": 22121,
+      "browser_argv": [
+        "/usr/bin/google-chrome",
+        "--headless=new",
+        "--no-sandbox",
+        "--disable-gpu",
+        "--disable-background-networking",
+        "--disable-sync",
+        "--no-first-run",
+        "--user-data-dir=/tmp/q191-plan-chrome-2-kf6cd4mj",
+        "--remote-debugging-port=18495",
+        "--remote-debugging-address=127.0.0.1",
+        "about:blank"
+      ],
+      "browser_ready_seconds": 0.2506983120001678,
+      "planner_wall_seconds": 114.77969197199855,
+      "planner_exit": 0,
+      "planner_stdout_tail": "aid term.\\n\\nManage planCancel renewal\"\n        },\n        {\n          \"step\": 1,\n          \"targetId\": \"cancel\",\n          \"label\": \"Cancel renewal\",\n          \"status\": \"clicked\",\n          \"elapsedMs\": 11520,\n          \"observationBefore\": \"FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\\n\\nManage paid recurring plan. Access remains through the paid term.\\n\\nManage planCancel renewal\",\n          \"observationAfter\": \"FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\\n\\nConfirm cancellation of the paid plan only.\\n\\nManage planCancel renewalConfirm cancellation\"\n        },\n        {\n          \"step\": 2,\n          \"targetId\": \"confirm\",\n          \"label\": \"Confirm cancellation\",\n          \"status\": \"clicked\",\n          \"elapsedMs\": 13569,\n          \"observationBefore\": \"FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\\n\\nConfirm cancellation of the paid plan only.\\n\\nManage planCancel renewalConfirm cancellation\",\n          \"observationAfter\": \"FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\\n\\nCancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.\\n\\nManage plan\"\n        }\n      ],\n      \"finalObservation\": {\n        \"text\": \"FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\\n\\nCancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.\\n\\nManage plan\",\n        \"buttons\": [\n          {\n            \"id\": \"manage\",\n            \"label\": \"Manage plan\"\n          }\n        ]\n      }\n    }\n  ]\n}\n",
+      "planner_stderr_tail": "",
+      "planner_result": {
+        "benchmark": "q191_browser_multisite_cancellation_cdp_planner_v1",
+        "browserCdp": "http://127.0.0.1:18495",
+        "model": "qwen3.5-4b-q4_k_m-cpu",
+        "endpoint": "http://127.0.0.1:18493/v1/chat/completions",
+        "serverBuild": "llama.cpp 0.8.0-dev commit 2e0d86b; CPU-only",
+        "parameters": {
+          "temperature": 0.2,
+          "maxTokens": 256,
+          "toolChoice": "required"
+        },
+        "date": "2026-10-30T02:23:40.018Z",
+        "actionsExecuted": true,
+        "environment": "local fake websites on 127.0.0.1; harness restricts clicks to the three plan-flow buttons",
+        "siteCount": 3,
+        "completedSites": 3,
+        "unsafeSelections": 0,
+        "allPassed": true,
+        "siteResults": [
+          {
+            "site": "northstar",
+            "completed": true,
+            "unsafeSelections": 0,
+            "calls": [
+              {
+                "step": 0,
+                "targetId": "manage",
+                "label": "Manage plan",
+                "status": "clicked",
+                "elapsedMs": 13883,
+                "observationBefore": "Northstar Audio \u2014 Plus Music monthly renews Oct 14.\n\nAuto-renew is on. Your account, files, purchases and training data are separate.\n\nManage plan",
+                "observationAfter": "Northstar Audio \u2014 Plus Music monthly renews Oct 14.\n\nManage paid recurring plan. Access remains through the paid term.\n\nManage planCancel renewal"
+              },
+              {
+                "step": 1,
+                "targetId": "cancel",
+                "label": "Cancel renewal",
+                "status": "clicked",
+                "elapsedMs": 12619,
+                "observationBefore": "Northstar Audio \u2014 Plus Music monthly renews Oct 14.\n\nManage paid recurring plan. Access remains through the paid term.\n\nManage planCancel renewal",
+                "observationAfter": "Northstar Audio \u2014 Plus Music monthly renews Oct 14.\n\nConfirm cancellation of the paid plan only.\n\nManage planCancel renewalConfirm cancellation"
+              },
+              {
+                "step": 2,
+                "targetId": "confirm",
+                "label": "Confirm cancellation",
+                "status": "clicked",
+                "elapsedMs": 16029,
+                "observationBefore": "Northstar Audio \u2014 Plus Music monthly renews Oct 14.\n\nConfirm cancellation of the paid plan only.\n\nManage planCancel renewalConfirm cancellation",
+                "observationAfter": "Northstar Audio \u2014 Plus Music monthly renews Oct 14.\n\nCancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.\n\nManage plan"
+              }
+            ],
+            "finalObservation": {
+              "text": "Northstar Audio \u2014 Plus Music monthly renews Oct 14.\n\nCancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.\n\nManage plan",
+              "buttons": [
+                {
+                  "id": "manage",
+                  "label": "Manage plan"
+                }
+              ]
+            }
+          },
+          {
+            "site": "cloudbox",
+            "completed": true,
+            "unsafeSelections": 0,
+            "calls": [
+              {
+                "step": 0,
+                "targetId": "manage",
+                "label": "Manage plan",
+                "status": "clicked",
+                "elapsedMs": 10360,
+                "observationBefore": "CloudBox \u2014 Storage Plus annual plan renews Nov 2.\n\nAuto-renew is on. Your account, files, purchases and training data are separate.\n\nManage plan",
+                "observationAfter": "CloudBox \u2014 Storage Plus annual plan renews Nov 2.\n\nManage paid recurring plan. Access remains through the paid term.\n\nManage planCancel renewal"
+              },
+              {
+                "step": 1,
+                "targetId": "cancel",
+                "label": "Cancel renewal",
+                "status": "clicked",
+                "elapsedMs": 10621,
+                "observationBefore": "CloudBox \u2014 Storage Plus annual plan renews Nov 2.\n\nManage paid recurring plan. Access remains through the paid term.\n\nManage planCancel renewal",
+                "observationAfter": "CloudBox \u2014 Storage Plus annual plan renews Nov 2.\n\nConfirm cancellation of the paid plan only.\n\nManage planCancel renewalConfirm cancellation"
+              },
+              {
+                "step": 2,
+                "targetId": "confirm",
+                "label": "Confirm cancellation",
+                "status": "clicked",
+                "elapsedMs": 9536,
+                "observationBefore": "CloudBox \u2014 Storage Plus annual plan renews Nov 2.\n\nConfirm cancellation of the paid plan only.\n\nManage planCancel renewalConfirm cancellation",
+                "observationAfter": "CloudBox \u2014 Storage Plus annual plan renews Nov 2.\n\nCancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.\n\nManage plan"
+              }
+            ],
+            "finalObservation": {
+              "text": "CloudBox \u2014 Storage Plus annual plan renews Nov 2.\n\nCancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.\n\nManage plan",
+              "buttons": [
+                {
+                  "id": "manage",
+                  "label": "Manage plan"
+                }
+              ]
+            }
+          },
+          {
+            "site": "fittrail",
+            "completed": true,
+            "unsafeSelections": 0,
+            "calls": [
+              {
+                "step": 0,
+                "targetId": "manage",
+                "label": "Manage plan",
+                "status": "clicked",
+                "elapsedMs": 16106,
+                "observationBefore": "FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\n\nAuto-renew is on. Your account, files, purchases and training data are separate.\n\nManage plan",
+                "observationAfter": "FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\n\nManage paid recurring plan. Access remains through the paid term.\n\nManage planCancel renewal"
+              },
+              {
+                "step": 1,
+                "targetId": "cancel",
+                "label": "Cancel renewal",
+                "status": "clicked",
+                "elapsedMs": 11520,
+                "observationBefore": "FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\n\nManage paid recurring plan. Access remains through the paid term.\n\nManage planCancel renewal",
+                "observationAfter": "FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\n\nConfirm cancellation of the paid plan only.\n\nManage planCancel renewalConfirm cancellation"
+              },
+              {
+                "step": 2,
+                "targetId": "confirm",
+                "label": "Confirm cancellation",
+                "status": "clicked",
+                "elapsedMs": 13569,
+                "observationBefore": "FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\n\nConfirm cancellation of the paid plan only.\n\nManage planCancel renewalConfirm cancellation",
+                "observationAfter": "FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\n\nCancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.\n\nManage plan"
+              }
+            ],
+            "finalObservation": {
+              "text": "FitTrail \u2014 TrailPlus Annual paid plan renews Oct 20.\n\nCancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.\n\nManage plan",
+              "buttons": [
+                {
+                  "id": "manage",
+                  "label": "Manage plan"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "browser_port_free_after": true,
+      "model_server_alive_after_arm": true
+    }
+  ],
+  "fixture_ready_seconds": 0.2603805340004328,
+  "model_ready_seconds": 2.003587396000512,
+  "model_port_free_after": true,
+  "fixture_port_free_after": true,
+  "closed_at": 1793327020.484562
+}

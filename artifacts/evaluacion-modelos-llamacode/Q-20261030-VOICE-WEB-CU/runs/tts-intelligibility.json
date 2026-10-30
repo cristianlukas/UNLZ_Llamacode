@@ -1,0 +1,240 @@
+{
+  "status": "complete",
+  "proxy": "Parakeet TDT v3 Q4 ASR on first-pass TTS WAVs; not MOS",
+  "results": [
+    {
+      "arm": "piper",
+      "row_index": 388,
+      "reference": "se les paga muy bien a las empresas de mensajería por hacer entregas veloces con frecuencia el tiempo es muy importante cuando se trata de documentos comerciales mercadería o repuestos para reparaciones urgentes",
+      "asr_hypothesis": "se les paga muy bien a las empresas de mensajería por hacer entregas celoses con frecuencia el tiempo es muy importante cuando se trata de documentos comerciales mercaderías o repuestos para reparaciones urgentes",
+      "wer_edits": 2,
+      "wer_ref_words": 33,
+      "cer_edits": 3,
+      "cer_ref_chars": 211,
+      "source_wav_sha256": "dd3106aa72a5db4f494937ac450fef9812c4257e3e267a5a675b8838176c8863"
+    },
+    {
+      "arm": "piper",
+      "row_index": 270,
+      "reference": "los puntos de vista que se presentan suelen ser superficiales genéricos y demasiado simplificados en comparación con la información más detallada disponible en otros sitios",
+      "asr_hypothesis": "los puntos de vista que se presentan suelen ser superficiales genéricos y demasiado simplificados en comparación con la información más detallada disponible en otros sitios",
+      "wer_edits": 0,
+      "wer_ref_words": 25,
+      "cer_edits": 0,
+      "cer_ref_chars": 172,
+      "source_wav_sha256": "f7122c8aba3836333a77ed421508307d825b1698ff21cc3c2d3bc7363a62e455"
+    },
+    {
+      "arm": "piper",
+      "row_index": 402,
+      "reference": "gordon johndroe vocero de bush se refirió al compromiso norcoreano como un avance importante hacia el objetivo de alcanzar la desnuclearización constatable de la península de corea",
+      "asr_hypothesis": "doron honduras bosero de bus se refirió al compromiso no coreano como un avance importante hacia el objetivo de alcanzar la desmulearización constatal de la península de corea",
+      "wer_edits": 8,
+      "wer_ref_words": 27,
+      "cer_edits": 15,
+      "cer_ref_chars": 180,
+      "source_wav_sha256": "8e5b2e786bb79df9b961fa4735404f6b2248479f453b199a0a4003ceb1dc1fc7"
+    },
+    {
+      "arm": "piper",
+      "row_index": 283,
+      "reference": "existe un gran número de playas debido a que auckland cuenta con dos puertos las más conocidas se encuentran en tres áreas",
+      "asr_hypothesis": "existen un gran número de playas debido a que aucklán cuenta con dos puertos las más conocidas se encuentran en tres aras",
+      "wer_edits": 3,
+      "wer_ref_words": 22,
+      "cer_edits": 5,
+      "cer_ref_chars": 122,
+      "source_wav_sha256": "cd87c6c111a3114d7bdc4f0a342c933e0bdf735eefe94ff17c1ebbeccd0d1bb1"
+    },
+    {
+      "arm": "piper",
+      "row_index": 262,
+      "reference": "a mí me pareció que eso no tenía sentido definitivamente no fue justo",
+      "asr_hypothesis": "a mí me pareció que eso no tenía sentido definitivamente no fue justo",
+      "wer_edits": 0,
+      "wer_ref_words": 13,
+      "cer_edits": 0,
+      "cer_ref_chars": 69,
+      "source_wav_sha256": "bf691f01d2fcce34874874a72d007c9403681abd8e8af8c803584fdbfdbed2a2"
+    },
+    {
+      "arm": "piper",
+      "row_index": 257,
+      "reference": "el gobierno local advierte a quienes residen en las cercanías de la planta que no salgan de sus hogares mantengan apagados los aires acondicionados y no consuman agua del grifo",
+      "asr_hypothesis": "el gobierno local advierte a quienes residen en las cercanías de la planta que no salvan de sus hogares mantendan apados los aires acondicionados y no consuman agua al grifo",
+      "wer_edits": 4,
+      "wer_ref_words": 30,
+      "cer_edits": 6,
+      "cer_ref_chars": 176,
+      "source_wav_sha256": "9f5c26bf6d8be6d95d45cab7c220e34ec56a4c08fd8844a541e07cb8f9eea70d"
+    },
+    {
+      "arm": "piper",
+      "row_index": 74,
+      "reference": "en el sector norte cordillera sentinel se encuentran los picos más elevados de la antártida el macizo de vinson con una cumbre a 4892 metros en el monte vinson",
+      "asr_hypothesis": "en el sector norte corillera sentinei se encuentran los picos más elevados de la antártida en macizo de binson con una cumbrea 4 892 metros en el monte binson",
+      "wer_edits": 8,
+      "wer_ref_words": 29,
+      "cer_edits": 7,
+      "cer_ref_chars": 159,
+      "source_wav_sha256": "fd0dec90bcbb9c8290291b032ce3aa09958f922baedc46bb5a180acc9a8ebf1d"
+    },
+    {
+      "arm": "piper",
+      "row_index": 395,
+      "reference": "desde 2008 entre los 1400 encuestados en forma previa a las elecciones federales de 2010 hubo un crecimiento del 8 de quienes se oponen a que australia se convierta en república",
+      "asr_hypothesis": "desde dos mil ocho entre los mil cuatrocientos encuestados en forma previa a las elecciones federales de dos mil diez hubo un crecimiento del ocho por ciento de quienes se oponen a que australia se convierta en república",
+      "wer_edits": 11,
+      "wer_ref_words": 31,
+      "cer_edits": 56,
+      "cer_ref_chars": 177,
+      "source_wav_sha256": "13422bb71d0ccb4244be7f6b5d3a6590dc2a377ad8048795f7c86ab2fd18363e"
+    },
+    {
+      "arm": "piper",
+      "row_index": 206,
+      "reference": "sin perjuicio de ello los bosques no son solo manglares sino que poseen algunos de los últimos árboles que quedan de las junglas imponentes que alguna vez cubrieron la llanura de gangetic",
+      "asr_hypothesis": "sin perjuicio de ello los bosques no son solo manglares sino que poseen algunos de los últimos árboles que quedan de las junglas imponentes que alguna vez cubrieron la llanura de banfetic",
+      "wer_edits": 1,
+      "wer_ref_words": 32,
+      "cer_edits": 2,
+      "cer_ref_chars": 187,
+      "source_wav_sha256": "bdbde79364c93076d6f8974b919c2dfdff4a4da28e8d44700c84e7cc6dd364bc"
+    },
+    {
+      "arm": "piper",
+      "row_index": 391,
+      "reference": "pronunciar el italiano es relativamente sencillo dado que la mayor parte de sus palabras suenan igual a como se escriben",
+      "asr_hypothesis": "pronunciar el italiano es relativamente sencillo dado que la mayor parte de sus palabras suenan igual a cómo se escriben",
+      "wer_edits": 1,
+      "wer_ref_words": 20,
+      "cer_edits": 1,
+      "cer_ref_chars": 120,
+      "source_wav_sha256": "6a3c1be3b45ea3ca3e2f4d84eb5742145ddef3c6bb201feaa86c33b6d0f462b6"
+    },
+    {
+      "arm": "kitten",
+      "row_index": 388,
+      "reference": "se les paga muy bien a las empresas de mensajería por hacer entregas veloces con frecuencia el tiempo es muy importante cuando se trata de documentos comerciales mercadería o repuestos para reparaciones urgentes",
+      "asr_hypothesis": "se les paga muy bien a las empresas de mensajería por hacer entregas veloces con frecuencia el tiempo es muy importante cuando se trata de documentos comerciales mercadería o repuestos para reparaciones urgentes",
+      "wer_edits": 0,
+      "wer_ref_words": 33,
+      "cer_edits": 0,
+      "cer_ref_chars": 211,
+      "source_wav_sha256": "46a063eef6feca84c110faf104e433182ac2c3d1b97460ff3c1b20ee43b7554e"
+    },
+    {
+      "arm": "kitten",
+      "row_index": 270,
+      "reference": "los puntos de vista que se presentan suelen ser superficiales genéricos y demasiado simplificados en comparación con la información más detallada disponible en otros sitios",
+      "asr_hypothesis": "los puntos de vista que se presentan suelen ser superficiales genéricos y demasiado simplificados en comparación con la información más detallada disponible en otros sitios",
+      "wer_edits": 0,
+      "wer_ref_words": 25,
+      "cer_edits": 0,
+      "cer_ref_chars": 172,
+      "source_wav_sha256": "caca103b4403a57dc7915392395948eafdba55aa804fbb7761ee03773a97b5b0"
+    },
+    {
+      "arm": "kitten",
+      "row_index": 402,
+      "reference": "gordon johndroe vocero de bush se refirió al compromiso norcoreano como un avance importante hacia el objetivo de alcanzar la desnuclearización constatable de la península de corea",
+      "asr_hypothesis": "gordon johnro vocero de bush se refirió al compromiso norcoreano como un avance importante hacia el objetivo de alcanzar la desnuclearización constatable de la península de corea",
+      "wer_edits": 1,
+      "wer_ref_words": 27,
+      "cer_edits": 2,
+      "cer_ref_chars": 180,
+      "source_wav_sha256": "87a77cfd47dd503f42c75bea987ec417584f40a10e47aacdaff502342ec1a7df"
+    },
+    {
+      "arm": "kitten",
+      "row_index": 283,
+      "reference": "existe un gran número de playas debido a que auckland cuenta con dos puertos las más conocidas se encuentran en tres áreas",
+      "asr_hypothesis": "existe un gran número de playas debido a que auckland cuenta con dos puertos las más conocidas se encuentran en tres áreas",
+      "wer_edits": 0,
+      "wer_ref_words": 22,
+      "cer_edits": 0,
+      "cer_ref_chars": 122,
+      "source_wav_sha256": "1478f72b7b1fcc4bc1dacce43721dfecb037933031301c17ba8af13fed358dfe"
+    },
+    {
+      "arm": "kitten",
+      "row_index": 262,
+      "reference": "a mí me pareció que eso no tenía sentido definitivamente no fue justo",
+      "asr_hypothesis": "a mí me pareció que eso no tenía sentido definitivamente no fue justo",
+      "wer_edits": 0,
+      "wer_ref_words": 13,
+      "cer_edits": 0,
+      "cer_ref_chars": 69,
+      "source_wav_sha256": "9e26b1c8c6a795ca88af2d3e72a9418e5179d5d5a33df8e452a49d673ad3944c"
+    },
+    {
+      "arm": "kitten",
+      "row_index": 257,
+      "reference": "el gobierno local advierte a quienes residen en las cercanías de la planta que no salgan de sus hogares mantengan apagados los aires acondicionados y no consuman agua del grifo",
+      "asr_hypothesis": "el gobierno local advierte a quienes residen en las cercanías de la planta que no salgan de sus hogares mantengan apagados los aires acondicionados y no consuman agua del grifo",
+      "wer_edits": 0,
+      "wer_ref_words": 30,
+      "cer_edits": 0,
+      "cer_ref_chars": 176,
+      "source_wav_sha256": "f0cc9194d7f9b9489a4e0a8ec1014088b27c917d08dec3e7d9351294ea94e3c5"
+    },
+    {
+      "arm": "kitten",
+      "row_index": 74,
+      "reference": "en el sector norte cordillera sentinel se encuentran los picos más elevados de la antártida el macizo de vinson con una cumbre a 4892 metros en el monte vinson",
+      "asr_hypothesis": "in the sector north cordillera sentinel se encuentran los picos más elevados de la antártida el macizo de vinson con una cumbre oferty two meters in the monte vinson",
+      "wer_edits": 8,
+      "wer_ref_words": 29,
+      "cer_edits": 21,
+      "cer_ref_chars": 159,
+      "source_wav_sha256": "e18b111afdf0f1292dd5ede24d3187a4718eb8644ae6addc86dd36731a0733f7"
+    },
+    {
+      "arm": "kitten",
+      "row_index": 395,
+      "reference": "desde 2008 entre los 1400 encuestados en forma previa a las elecciones federales de 2010 hubo un crecimiento del 8 de quienes se oponen a que australia se convierta en república",
+      "asr_hypothesis": "desde two thousand eight entre los fourteen hundred encuestados in forma previa a las elecciones federales de twenty ten hubo un crecimiento del eight per cent de quienes se oponen a que australia se convierta in republica",
+      "wer_edits": 13,
+      "wer_ref_words": 31,
+      "cer_edits": 61,
+      "cer_ref_chars": 177,
+      "source_wav_sha256": "249ae3a4bc1277589f89cd18855323e6e89878f485573b3f1f06eee561b2c112"
+    },
+    {
+      "arm": "kitten",
+      "row_index": 206,
+      "reference": "sin perjuicio de ello los bosques no son solo manglares sino que poseen algunos de los últimos árboles que quedan de las junglas imponentes que alguna vez cubrieron la llanura de gangetic",
+      "asr_hypothesis": "sin perjuicio de ello los bosques no son solo manglares sino que poseen algunos de los últimos árboles que quedan de las junglas imponentes que alguna vez cubrieron la llanura de gangetic",
+      "wer_edits": 0,
+      "wer_ref_words": 32,
+      "cer_edits": 0,
+      "cer_ref_chars": 187,
+      "source_wav_sha256": "d3def3eecbf50ce3af1bc2375d9d5e76fad5661ffd1130bf823b1fb7ffd05da3"
+    },
+    {
+      "arm": "kitten",
+      "row_index": 391,
+      "reference": "pronunciar el italiano es relativamente sencillo dado que la mayor parte de sus palabras suenan igual a como se escriben",
+      "asr_hypothesis": "pronunciar el italiano es relativamente sencillo dado que la mayor parte de sus palabras suenan igual a como se escriben",
+      "wer_edits": 0,
+      "wer_ref_words": 20,
+      "cer_edits": 0,
+      "cer_ref_chars": 120,
+      "source_wav_sha256": "9997b21414aab3f8bccc35ed8f62485e24e259824ca25f2c1ed076921c867845"
+    }
+  ],
+  "arms": {
+    "piper": {
+      "clips": 10,
+      "micro_wer": 0.1450381679389313,
+      "macro_wer": 0.13385501052422633,
+      "micro_cer": 0.06039415130324221
+    },
+    "kitten": {
+      "clips": 10,
+      "micro_wer": 0.08396946564885496,
+      "macro_wer": 0.07322539447122317,
+      "micro_cer": 0.05340114431023522
+    }
+  }
+}

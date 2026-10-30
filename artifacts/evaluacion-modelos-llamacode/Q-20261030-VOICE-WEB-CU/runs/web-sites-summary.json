@@ -1,0 +1,842 @@
+[
+  {
+    "arm": "chrome",
+    "replica": 1,
+    "pid": 1543877,
+    "command": [
+      "/usr/bin/google-chrome",
+      "--headless=new",
+      "--no-sandbox",
+      "--disable-gpu",
+      "--disable-background-networking",
+      "--disable-sync",
+      "--no-first-run",
+      "--user-data-dir=/tmp/q191-sites-chrome-1-qito0g1m",
+      "--remote-debugging-port=18495",
+      "about:blank"
+    ],
+    "output": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261030-VOICE-WEB-CU/runs/sites-chrome-r1.json",
+    "ready_seconds": 0.11060523099877173,
+    "wall_seconds": 12.866866125001252,
+    "client_exit": 0,
+    "client_stderr": "",
+    "client": {
+      "endpoint": "http://127.0.0.1:18495",
+      "startedAt": "2026-10-30T01:36:57.533Z",
+      "pages": [
+        {
+          "url": "https://example.com/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://example.com/",
+          "title": "Example Domain",
+          "bodyLength": 917,
+          "seconds": 0.18571983999936492
+        },
+        {
+          "url": "https://www.wikipedia.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://www.wikipedia.org/",
+          "title": "Wikipedia",
+          "bodyLength": 2022,
+          "seconds": 0.4070649540008162
+        },
+        {
+          "url": "https://www.python.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://www.python.org/",
+          "title": "Welcome to Python.org",
+          "bodyLength": 4059,
+          "seconds": 0.30155326100066304
+        },
+        {
+          "url": "https://docs.python.org/3/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://docs.python.org/3/",
+          "title": "Python 3.15.2 documentation",
+          "bodyLength": 3474,
+          "seconds": 0.28499971899873344
+        },
+        {
+          "url": "https://www.rust-lang.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://rust-lang.org/",
+          "title": "Rust Programming Language",
+          "bodyLength": 3485,
+          "seconds": 0.7129873220001173
+        },
+        {
+          "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
+          "title": "JavaScript | MDN",
+          "bodyLength": 6761,
+          "seconds": 0.4401067509970744
+        },
+        {
+          "url": "https://github.com/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://github.com/",
+          "title": "GitHub \u00b7 Change is constant. GitHub keeps you ahead. \u00b7 GitHub \u00b7 GitHub",
+          "bodyLength": 3359,
+          "seconds": 0.761876435000886
+        },
+        {
+          "url": "https://pypi.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://pypi.org/",
+          "title": "PyPI \u00b7 El \u00cdndice de paquetes de Python",
+          "bodyLength": 1884,
+          "seconds": 0.41675740799837513
+        },
+        {
+          "url": "https://www.npmjs.com/",
+          "passed": false,
+          "status": 403,
+          "finalUrl": "https://www.npmjs.com/?__cf_chl_rt_tk=PQ6NgkdcK.O7IJuTuOwQ7iMaEbCRnNfFxA1hMbRNWas-1793324221-1.0.1.1-rw.Zo1UBoJM7ACugFP7yaaTdBRrU2q8yN5CqbDoZcG4",
+          "title": "Just a moment...",
+          "bodyLength": 0,
+          "seconds": 0.1565244689991232
+        },
+        {
+          "url": "https://huggingface.co/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://huggingface.co/",
+          "title": "Hugging Face \u2013 The AI community building the future.",
+          "bodyLength": 4382,
+          "seconds": 0.5533167089997733
+        },
+        {
+          "url": "https://pytorch.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://pytorch.org/",
+          "title": "PyTorch Foundation - PyTorch",
+          "bodyLength": 8811,
+          "seconds": 2.070314300002792
+        },
+        {
+          "url": "https://arxiv.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://arxiv.org/",
+          "title": "arXiv.org e-Print archive",
+          "bodyLength": 5609,
+          "seconds": 0.21108479400209035
+        },
+        {
+          "url": "https://www.w3.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://www.w3.org/",
+          "title": "W3C",
+          "bodyLength": 4086,
+          "seconds": 0.3335792290017707
+        },
+        {
+          "url": "https://www.sqlite.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://www.sqlite.org/",
+          "title": "SQLite Home Page",
+          "bodyLength": 1161,
+          "seconds": 1.696842983001261
+        },
+        {
+          "url": "https://www.debian.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://www.debian.org/",
+          "title": "Debian -- El sistema operativo universal",
+          "bodyLength": 1997,
+          "seconds": 0.8841871570002695
+        },
+        {
+          "url": "https://www.kernel.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://www.kernel.org/",
+          "title": "The Linux Kernel Archives",
+          "bodyLength": 1449,
+          "seconds": 0.8652963220010861
+        },
+        {
+          "url": "https://www.gnu.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://www.gnu.org/",
+          "title": "El sistema operativo GNU y el movimiento del software libre",
+          "bodyLength": 8521,
+          "seconds": 0.7287069240010169
+        },
+        {
+          "url": "https://stackoverflow.com/",
+          "passed": false,
+          "status": 403,
+          "finalUrl": "https://stackoverflow.com/?__cf_chl_rt_tk=b3hcnWVjn0jXpV7YUHtEqrfSI5t6bX53ZnD8mY9I5Gg-1793324228-1.0.1.1-dN0rUShtiSxiNfUr4n0mXAuxyTdIUzaBdgGmZ63fJSQ",
+          "title": "Just a moment...",
+          "bodyLength": 0,
+          "seconds": 0.14853637000123854
+        },
+        {
+          "url": "https://news.ycombinator.com/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://news.ycombinator.com/",
+          "title": "Hacker News",
+          "bodyLength": 4162,
+          "seconds": 0.9529307919983694
+        },
+        {
+          "url": "https://www.openstreetmap.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://www.openstreetmap.org/",
+          "title": "OpenStreetMap",
+          "bodyLength": 649,
+          "seconds": 0.5237186880003719
+        }
+      ],
+      "finishedAt": "2026-10-30T01:37:10.280Z"
+    },
+    "peak_rss_bytes": 1692598272,
+    "rss_samples": 122,
+    "port_free_after": true
+  },
+  {
+    "arm": "lightpanda",
+    "replica": 1,
+    "pid": 1544965,
+    "command": [
+      "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261030-VOICE-WEB-CU/runtime/lightpanda-x86_64-linux",
+      "serve",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "18496"
+    ],
+    "output": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261030-VOICE-WEB-CU/runs/sites-lightpanda-r1.json",
+    "ready_seconds": 0.1004720000019006,
+    "wall_seconds": 8.237334281002404,
+    "client_exit": 0,
+    "client_stderr": "",
+    "client": {
+      "endpoint": "http://127.0.0.1:18496",
+      "startedAt": "2026-10-30T01:37:10.529Z",
+      "pages": [
+        {
+          "url": "https://example.com/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://example.com/",
+          "title": "Example Domain",
+          "bodyLength": 917,
+          "seconds": 0.0896616649988573
+        },
+        {
+          "url": "https://www.wikipedia.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://www.wikipedia.org/",
+          "title": "Wikipedia",
+          "bodyLength": 1994,
+          "seconds": 0.23386828799993964
+        },
+        {
+          "url": "https://www.python.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://www.python.org/",
+          "title": "Welcome to Python.org",
+          "bodyLength": 6704,
+          "seconds": 0.18611961100032204
+        },
+        {
+          "url": "https://docs.python.org/3/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://docs.python.org/3/",
+          "title": "Python 3.15.2 documentation",
+          "bodyLength": 4464,
+          "seconds": 0.08612680900114356
+        },
+        {
+          "url": "https://www.rust-lang.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://rust-lang.org/",
+          "title": "Rust Programming Language",
+          "bodyLength": 3485,
+          "seconds": 0.1457501949989819
+        },
+        {
+          "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
+          "title": "JavaScript | MDN",
+          "bodyLength": 8423,
+          "seconds": 0.10205075900012162
+        },
+        {
+          "url": "https://github.com/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://github.com/",
+          "title": "GitHub \u00b7 Change is constant. GitHub keeps you ahead. \u00b7 GitHub \u00b7 GitHub",
+          "bodyLength": 7739,
+          "seconds": 0.6494217020008364
+        },
+        {
+          "url": "https://pypi.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://pypi.org/",
+          "title": "PyPI \u00b7 The Python Package Index",
+          "bodyLength": 1891,
+          "seconds": 0.097997861001204
+        },
+        {
+          "url": "https://www.npmjs.com/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://www.npmjs.com/",
+          "title": "npm | Home",
+          "bodyLength": 1283,
+          "seconds": 0.4310394419990189
+        },
+        {
+          "url": "https://huggingface.co/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://huggingface.co/",
+          "title": "Hugging Face \u2013 The AI community building the future.",
+          "bodyLength": 4543,
+          "seconds": 0.38120475499817985
+        },
+        {
+          "url": "https://pytorch.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://pytorch.org/",
+          "title": "PyTorch Foundation - PyTorch",
+          "bodyLength": 6677,
+          "seconds": 1.204502988999593
+        },
+        {
+          "url": "https://arxiv.org/",
+          "passed": false,
+          "status": 403,
+          "finalUrl": "https://arxiv.org/",
+          "title": "403 Forbidden",
+          "bodyLength": 118,
+          "seconds": 0.0856881549989339
+        },
+        {
+          "url": "https://www.w3.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://www.w3.org/",
+          "title": "W3C",
+          "bodyLength": 4084,
+          "seconds": 0.10821808900072938
+        },
+        {
+          "url": "https://www.sqlite.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://www.sqlite.org/",
+          "title": "SQLite Home Page",
+          "bodyLength": 1640,
+          "seconds": 1.0105602410003485
+        },
+        {
+          "url": "https://www.debian.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://www.debian.org/",
+          "title": "Debian -- The Universal Operating System",
+          "bodyLength": 1791,
+          "seconds": 0.5244868980007595
+        },
+        {
+          "url": "https://www.kernel.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://www.kernel.org/",
+          "title": "The Linux Kernel Archives",
+          "bodyLength": 1441,
+          "seconds": 0.06510017300024629
+        },
+        {
+          "url": "https://www.gnu.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://www.gnu.org/",
+          "title": "The GNU Operating System and the Free Software Movement",
+          "bodyLength": 6712,
+          "seconds": 1.0179004040001018
+        },
+        {
+          "url": "https://stackoverflow.com/",
+          "passed": false,
+          "status": 403,
+          "finalUrl": "https://stackoverflow.com/?__cf_chl_rt_tk=GH44M117knDP8mXgLDnp7zH14T61G9cUIyQgTZHleog-1793324237-1.0.1.1-AtQSoRK7YweBPjn.fEzlpOiUnCMckhK3w7JLUBBd1TQ",
+          "title": "Just a moment...",
+          "bodyLength": 0,
+          "seconds": 0.08863814500000444
+        },
+        {
+          "url": "https://news.ycombinator.com/",
+          "passed": false,
+          "status": 503,
+          "finalUrl": "https://news.ycombinator.com/",
+          "title": "Hacker News",
+          "bodyLength": 85,
+          "seconds": 0.6678213180020975
+        },
+        {
+          "url": "https://www.openstreetmap.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://www.openstreetmap.org/",
+          "title": "OpenStreetMap",
+          "bodyLength": 897,
+          "seconds": 0.8970307150011649
+        }
+      ],
+      "finishedAt": "2026-10-30T01:37:18.643Z"
+    },
+    "peak_rss_bytes": 105119744,
+    "rss_samples": 79,
+    "port_free_after": true
+  },
+  {
+    "arm": "lightpanda",
+    "replica": 2,
+    "pid": 1545293,
+    "command": [
+      "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261030-VOICE-WEB-CU/runtime/lightpanda-x86_64-linux",
+      "serve",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "18496"
+    ],
+    "output": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261030-VOICE-WEB-CU/runs/sites-lightpanda-r2.json",
+    "ready_seconds": 0.10044264200041653,
+    "wall_seconds": 7.937901010001951,
+    "client_exit": 0,
+    "client_stderr": "",
+    "client": {
+      "endpoint": "http://127.0.0.1:18496",
+      "startedAt": "2026-10-30T01:37:18.894Z",
+      "pages": [
+        {
+          "url": "https://example.com/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://example.com/",
+          "title": "Example Domain",
+          "bodyLength": 917,
+          "seconds": 0.0826039329986088
+        },
+        {
+          "url": "https://www.wikipedia.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://www.wikipedia.org/",
+          "title": "Wikipedia",
+          "bodyLength": 1994,
+          "seconds": 0.2506785719997424
+        },
+        {
+          "url": "https://www.python.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://www.python.org/",
+          "title": "Welcome to Python.org",
+          "bodyLength": 6739,
+          "seconds": 0.17728609500045422
+        },
+        {
+          "url": "https://docs.python.org/3/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://docs.python.org/3/",
+          "title": "Python 3.15.2 documentation",
+          "bodyLength": 4464,
+          "seconds": 0.08958488799908082
+        },
+        {
+          "url": "https://www.rust-lang.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://rust-lang.org/",
+          "title": "Rust Programming Language",
+          "bodyLength": 3485,
+          "seconds": 0.1193035369979043
+        },
+        {
+          "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
+          "title": "JavaScript | MDN",
+          "bodyLength": 8423,
+          "seconds": 0.11236307599756401
+        },
+        {
+          "url": "https://github.com/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://github.com/",
+          "title": "GitHub \u00b7 Change is constant. GitHub keeps you ahead. \u00b7 GitHub \u00b7 GitHub",
+          "bodyLength": 7866,
+          "seconds": 0.6497056430016528
+        },
+        {
+          "url": "https://pypi.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://pypi.org/",
+          "title": "PyPI \u00b7 The Python Package Index",
+          "bodyLength": 1891,
+          "seconds": 0.09115376000045217
+        },
+        {
+          "url": "https://www.npmjs.com/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://www.npmjs.com/",
+          "title": "npm | Home",
+          "bodyLength": 1283,
+          "seconds": 0.25458332999915
+        },
+        {
+          "url": "https://huggingface.co/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://huggingface.co/",
+          "title": "Hugging Face \u2013 The AI community building the future.",
+          "bodyLength": 4543,
+          "seconds": 0.3616109449976648
+        },
+        {
+          "url": "https://pytorch.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://pytorch.org/",
+          "title": "PyTorch Foundation - PyTorch",
+          "bodyLength": 6677,
+          "seconds": 1.236939173999417
+        },
+        {
+          "url": "https://arxiv.org/",
+          "passed": false,
+          "status": 403,
+          "finalUrl": "https://arxiv.org/",
+          "title": "403 Forbidden",
+          "bodyLength": 117,
+          "seconds": 0.07852043700040667
+        },
+        {
+          "url": "https://www.w3.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://www.w3.org/",
+          "title": "W3C",
+          "bodyLength": 4084,
+          "seconds": 0.10260835999724804
+        },
+        {
+          "url": "https://www.sqlite.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://www.sqlite.org/",
+          "title": "SQLite Home Page",
+          "bodyLength": 1640,
+          "seconds": 1.009385838999151
+        },
+        {
+          "url": "https://www.debian.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://www.debian.org/",
+          "title": "Debian -- The Universal Operating System",
+          "bodyLength": 1791,
+          "seconds": 0.5086399270003312
+        },
+        {
+          "url": "https://www.kernel.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://www.kernel.org/",
+          "title": "The Linux Kernel Archives",
+          "bodyLength": 1441,
+          "seconds": 0.07567037400076515
+        },
+        {
+          "url": "https://www.gnu.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://www.gnu.org/",
+          "title": "The GNU Operating System and the Free Software Movement",
+          "bodyLength": 6712,
+          "seconds": 0.933604721998563
+        },
+        {
+          "url": "https://stackoverflow.com/",
+          "passed": false,
+          "status": 403,
+          "finalUrl": "https://stackoverflow.com/?__cf_chl_rt_tk=QZLRiA2YBnWT59KGhg.ZqAW0kfZUN.iw4Dbbmj__dmw-1793324245-1.0.1.1-omfUK60MABY8yKawxgkkM4zu.iIXLRRSbgLB7O6Bhj0",
+          "title": "Just a moment...",
+          "bodyLength": 0,
+          "seconds": 0.07818821399996523
+        },
+        {
+          "url": "https://news.ycombinator.com/",
+          "passed": false,
+          "status": 503,
+          "finalUrl": "https://news.ycombinator.com/",
+          "title": "Hacker News",
+          "bodyLength": 85,
+          "seconds": 0.6846317790004832
+        },
+        {
+          "url": "https://www.openstreetmap.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://www.openstreetmap.org/",
+          "title": "OpenStreetMap",
+          "bodyLength": 897,
+          "seconds": 0.8583920800010674
+        }
+      ],
+      "finishedAt": "2026-10-30T01:37:26.691Z"
+    },
+    "peak_rss_bytes": 108949504,
+    "rss_samples": 77,
+    "port_free_after": true
+  },
+  {
+    "arm": "chrome",
+    "replica": 2,
+    "pid": 1545630,
+    "command": [
+      "/usr/bin/google-chrome",
+      "--headless=new",
+      "--no-sandbox",
+      "--disable-gpu",
+      "--disable-background-networking",
+      "--disable-sync",
+      "--no-first-run",
+      "--user-data-dir=/tmp/q191-sites-chrome-2-6ey3m90u",
+      "--remote-debugging-port=18495",
+      "about:blank"
+    ],
+    "output": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261030-VOICE-WEB-CU/runs/sites-chrome-r2.json",
+    "ready_seconds": 0.10058655900138547,
+    "wall_seconds": 9.71919449300185,
+    "client_exit": 0,
+    "client_stderr": "",
+    "client": {
+      "endpoint": "http://127.0.0.1:18495",
+      "startedAt": "2026-10-30T01:37:27.106Z",
+      "pages": [
+        {
+          "url": "https://example.com/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://example.com/",
+          "title": "Example Domain",
+          "bodyLength": 917,
+          "seconds": 0.12889580400224077
+        },
+        {
+          "url": "https://www.wikipedia.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://www.wikipedia.org/",
+          "title": "Wikipedia",
+          "bodyLength": 2022,
+          "seconds": 0.3478018999994674
+        },
+        {
+          "url": "https://www.python.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://www.python.org/",
+          "title": "Welcome to Python.org",
+          "bodyLength": 4059,
+          "seconds": 0.2603495520015713
+        },
+        {
+          "url": "https://docs.python.org/3/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://docs.python.org/3/",
+          "title": "Python 3.15.2 documentation",
+          "bodyLength": 3474,
+          "seconds": 0.12474747799933539
+        },
+        {
+          "url": "https://www.rust-lang.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://rust-lang.org/",
+          "title": "Rust Programming Language",
+          "bodyLength": 3485,
+          "seconds": 0.19635277099951054
+        },
+        {
+          "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
+          "title": "JavaScript | MDN",
+          "bodyLength": 6761,
+          "seconds": 0.19344485900001018
+        },
+        {
+          "url": "https://github.com/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://github.com/",
+          "title": "GitHub \u00b7 Change is constant. GitHub keeps you ahead. \u00b7 GitHub \u00b7 GitHub",
+          "bodyLength": 3478,
+          "seconds": 0.7718761790019926
+        },
+        {
+          "url": "https://pypi.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://pypi.org/",
+          "title": "PyPI \u00b7 El \u00cdndice de paquetes de Python",
+          "bodyLength": 1884,
+          "seconds": 0.17091530800098553
+        },
+        {
+          "url": "https://www.npmjs.com/",
+          "passed": false,
+          "status": 403,
+          "finalUrl": "https://www.npmjs.com/?__cf_chl_rt_tk=pnuC5HevajFjwf.z8dYvMNRSBbWXG480hfBb6p.H8WY-1793324249-1.0.1.1-2kr9S_8QGwQUr_1bFI5FdGnnPY6LPObJet0x9naVu7k",
+          "title": "Just a moment...",
+          "bodyLength": 0,
+          "seconds": 0.1261836379999295
+        },
+        {
+          "url": "https://huggingface.co/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://huggingface.co/",
+          "title": "Hugging Face \u2013 The AI community building the future.",
+          "bodyLength": 4382,
+          "seconds": 0.46019214099942474
+        },
+        {
+          "url": "https://pytorch.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://pytorch.org/",
+          "title": "PyTorch Foundation - PyTorch",
+          "bodyLength": 6008,
+          "seconds": 1.1000159450013598
+        },
+        {
+          "url": "https://arxiv.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://arxiv.org/",
+          "title": "arXiv.org e-Print archive",
+          "bodyLength": 5609,
+          "seconds": 0.16430587699869648
+        },
+        {
+          "url": "https://www.w3.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://www.w3.org/",
+          "title": "W3C",
+          "bodyLength": 4086,
+          "seconds": 0.171751593999943
+        },
+        {
+          "url": "https://www.sqlite.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://www.sqlite.org/",
+          "title": "SQLite Home Page",
+          "bodyLength": 1161,
+          "seconds": 1.490302640999289
+        },
+        {
+          "url": "https://www.debian.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://www.debian.org/",
+          "title": "Debian -- El sistema operativo universal",
+          "bodyLength": 1997,
+          "seconds": 0.5805221299997356
+        },
+        {
+          "url": "https://www.kernel.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://www.kernel.org/",
+          "title": "The Linux Kernel Archives",
+          "bodyLength": 1449,
+          "seconds": 0.12245533900204464
+        },
+        {
+          "url": "https://www.gnu.org/",
+          "passed": false,
+          "status": 429,
+          "finalUrl": "https://www.gnu.org/",
+          "title": "",
+          "bodyLength": 17,
+          "seconds": 1.1011860129983688
+        },
+        {
+          "url": "https://stackoverflow.com/",
+          "passed": false,
+          "status": 403,
+          "finalUrl": "https://stackoverflow.com/?__cf_chl_rt_tk=a0oFLqAGqMXFttKZQM9bur5XQe6vqgKkpkY0Pl7YRN8-1793324254-1.0.1.1-BaCJD07xkO4MlPhMHspvBwvn7DMjlipxywRD3Hji56o",
+          "title": "Just a moment...",
+          "bodyLength": 0,
+          "seconds": 0.12467635099892505
+        },
+        {
+          "url": "https://news.ycombinator.com/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://news.ycombinator.com/",
+          "title": "Hacker News",
+          "bodyLength": 4163,
+          "seconds": 0.9484193040007085
+        },
+        {
+          "url": "https://www.openstreetmap.org/",
+          "passed": true,
+          "status": 200,
+          "finalUrl": "https://www.openstreetmap.org/",
+          "title": "OpenStreetMap",
+          "bodyLength": 649,
+          "seconds": 0.9199628610003856
+        }
+      ],
+      "finishedAt": "2026-10-30T01:37:36.701Z"
+    },
+    "peak_rss_bytes": 1701711872,
+    "rss_samples": 93,
+    "port_free_after": true
+  }
+]

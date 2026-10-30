@@ -1,0 +1,15 @@
+{
+  "task": "Q191 INGI-Charla component A/B",
+  "status": "verified",
+  "sheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "cells": [
+    "IA local!L30",
+    "IA local!L55",
+    "Modelos locales por peso!C48:X48",
+    "Modelos locales por peso!C55:X55",
+    "Modelos locales por peso!C59:X59",
+    "Modelos locales por peso!A85:Z86"
+  ],
+  "readback_verified_utc": "2026-10-30",
+  "limitation": "Las celdas de STT/TTS no contienen TPS ni Q172 porque esas métricas no aplican a voz; WER/CER y latencia están en columnas de suite y tiempo."
+}

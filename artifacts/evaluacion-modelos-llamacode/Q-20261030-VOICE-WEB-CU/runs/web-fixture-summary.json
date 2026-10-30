@@ -1,0 +1,302 @@
+[
+  {
+    "arm": "chrome",
+    "replica": 1,
+    "pid": 1540396,
+    "command": [
+      "/usr/bin/google-chrome",
+      "--headless=new",
+      "--no-sandbox",
+      "--disable-gpu",
+      "--disable-background-networking",
+      "--disable-sync",
+      "--no-first-run",
+      "--user-data-dir=/tmp/q191-chrome-1-vi6zldbu",
+      "--remote-debugging-port=18495",
+      "about:blank"
+    ],
+    "browser_start": 1793324145.4505105,
+    "output": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261030-VOICE-WEB-CU/runs/chrome-r1.json",
+    "ready_seconds": 0.7919498749979539,
+    "client_exit": 0,
+    "client_stderr": "",
+    "client_stdout": "",
+    "client": {
+      "endpoint": "http://127.0.0.1:18495",
+      "startedAt": "2026-10-30T01:35:46.601Z",
+      "sites": [
+        {
+          "site": "northstar",
+          "passed": true,
+          "observed": "Cancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.",
+          "seconds": 0.1639800560005824
+        },
+        {
+          "site": "cloudbox",
+          "passed": true,
+          "observed": "Cancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.",
+          "seconds": 0.15977051300069434
+        },
+        {
+          "site": "fittrail",
+          "passed": true,
+          "observed": "Cancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.",
+          "seconds": 0.1636801419990661
+        }
+      ],
+      "finishedAt": "2026-10-30T01:35:47.177Z",
+      "passed": true
+    },
+    "peak_rss_bytes": 1458089984,
+    "rss_samples": 17,
+    "port_free_after": true
+  },
+  {
+    "arm": "lightpanda",
+    "replica": 1,
+    "pid": 1540804,
+    "command": [
+      "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261030-VOICE-WEB-CU/runtime/lightpanda-x86_64-linux",
+      "serve",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "18496"
+    ],
+    "browser_start": 1793324147.2953255,
+    "output": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261030-VOICE-WEB-CU/runs/lightpanda-r1.json",
+    "ready_seconds": 0.10055816600288381,
+    "client_exit": 0,
+    "client_stderr": "",
+    "client_stdout": "",
+    "client": {
+      "endpoint": "http://127.0.0.1:18496",
+      "startedAt": "2026-10-30T01:35:47.516Z",
+      "sites": [
+        {
+          "site": "northstar",
+          "passed": true,
+          "observed": "Cancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.",
+          "seconds": 0.058044056000653654
+        },
+        {
+          "site": "cloudbox",
+          "passed": true,
+          "observed": "Cancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.",
+          "seconds": 0.05206960500072455
+        },
+        {
+          "site": "fittrail",
+          "passed": true,
+          "observed": "Cancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.",
+          "seconds": 0.05031475499708904
+        }
+      ],
+      "finishedAt": "2026-10-30T01:35:47.700Z",
+      "passed": true
+    },
+    "peak_rss_bytes": 32047104,
+    "rss_samples": 4,
+    "port_free_after": true
+  },
+  {
+    "arm": "lightpanda",
+    "replica": 2,
+    "pid": 1540865,
+    "command": [
+      "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261030-VOICE-WEB-CU/runtime/lightpanda-x86_64-linux",
+      "serve",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "18496"
+    ],
+    "browser_start": 1793324147.7274125,
+    "output": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261030-VOICE-WEB-CU/runs/lightpanda-r2.json",
+    "ready_seconds": 0.10062969000136945,
+    "client_exit": 0,
+    "client_stderr": "",
+    "client_stdout": "",
+    "client": {
+      "endpoint": "http://127.0.0.1:18496",
+      "startedAt": "2026-10-30T01:35:47.950Z",
+      "sites": [
+        {
+          "site": "northstar",
+          "passed": true,
+          "observed": "Cancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.",
+          "seconds": 0.0599373459990602
+        },
+        {
+          "site": "cloudbox",
+          "passed": true,
+          "observed": "Cancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.",
+          "seconds": 0.0499894949971349
+        },
+        {
+          "site": "fittrail",
+          "passed": true,
+          "observed": "Cancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.",
+          "seconds": 0.05039126799965743
+        }
+      ],
+      "finishedAt": "2026-10-30T01:35:48.133Z",
+      "passed": true
+    },
+    "peak_rss_bytes": 31973376,
+    "rss_samples": 4,
+    "port_free_after": true
+  },
+  {
+    "arm": "chrome",
+    "replica": 2,
+    "pid": 1540922,
+    "command": [
+      "/usr/bin/google-chrome",
+      "--headless=new",
+      "--no-sandbox",
+      "--disable-gpu",
+      "--disable-background-networking",
+      "--disable-sync",
+      "--no-first-run",
+      "--user-data-dir=/tmp/q191-chrome-2-1st6mbo9",
+      "--remote-debugging-port=18495",
+      "about:blank"
+    ],
+    "browser_start": 1793324148.1566155,
+    "output": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261030-VOICE-WEB-CU/runs/chrome-r2.json",
+    "ready_seconds": 0.10087136199945235,
+    "client_exit": 0,
+    "client_stderr": "",
+    "client_stdout": "",
+    "client": {
+      "endpoint": "http://127.0.0.1:18495",
+      "startedAt": "2026-10-30T01:35:48.380Z",
+      "sites": [
+        {
+          "site": "northstar",
+          "passed": true,
+          "observed": "Cancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.",
+          "seconds": 0.15631608399780816
+        },
+        {
+          "site": "cloudbox",
+          "passed": true,
+          "observed": "Cancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.",
+          "seconds": 0.14795120199778466
+        },
+        {
+          "site": "fittrail",
+          "passed": true,
+          "observed": "Cancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.",
+          "seconds": 0.14771282500078087
+        }
+      ],
+      "finishedAt": "2026-10-30T01:35:48.873Z",
+      "passed": true
+    },
+    "peak_rss_bytes": 1499406336,
+    "rss_samples": 7,
+    "port_free_after": true
+  },
+  {
+    "arm": "chrome",
+    "replica": 3,
+    "pid": 1541216,
+    "command": [
+      "/usr/bin/google-chrome",
+      "--headless=new",
+      "--no-sandbox",
+      "--disable-gpu",
+      "--disable-background-networking",
+      "--disable-sync",
+      "--no-first-run",
+      "--user-data-dir=/tmp/q191-chrome-3-pb20don0",
+      "--remote-debugging-port=18495",
+      "about:blank"
+    ],
+    "browser_start": 1793324148.937777,
+    "output": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261030-VOICE-WEB-CU/runs/chrome-r3.json",
+    "ready_seconds": 0.1024625649988593,
+    "client_exit": 0,
+    "client_stderr": "",
+    "client_stdout": "",
+    "client": {
+      "endpoint": "http://127.0.0.1:18495",
+      "startedAt": "2026-10-30T01:35:49.158Z",
+      "sites": [
+        {
+          "site": "northstar",
+          "passed": true,
+          "observed": "Cancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.",
+          "seconds": 0.14624920999995084
+        },
+        {
+          "site": "cloudbox",
+          "passed": true,
+          "observed": "Cancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.",
+          "seconds": 0.14792495100118686
+        },
+        {
+          "site": "fittrail",
+          "passed": true,
+          "observed": "Cancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.",
+          "seconds": 0.1486604099991382
+        }
+      ],
+      "finishedAt": "2026-10-30T01:35:49.641Z",
+      "passed": true
+    },
+    "peak_rss_bytes": 1497972736,
+    "rss_samples": 7,
+    "port_free_after": true
+  },
+  {
+    "arm": "lightpanda",
+    "replica": 3,
+    "pid": 1541496,
+    "command": [
+      "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261030-VOICE-WEB-CU/runtime/lightpanda-x86_64-linux",
+      "serve",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "18496"
+    ],
+    "browser_start": 1793324149.724001,
+    "output": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261030-VOICE-WEB-CU/runs/lightpanda-r3.json",
+    "ready_seconds": 0.10044071399897803,
+    "client_exit": 0,
+    "client_stderr": "",
+    "client_stdout": "",
+    "client": {
+      "endpoint": "http://127.0.0.1:18496",
+      "startedAt": "2026-10-30T01:35:49.939Z",
+      "sites": [
+        {
+          "site": "northstar",
+          "passed": true,
+          "observed": "Cancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.",
+          "seconds": 0.057229959002143005
+        },
+        {
+          "site": "cloudbox",
+          "passed": true,
+          "observed": "Cancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.",
+          "seconds": 0.048331316000258084
+        },
+        {
+          "site": "fittrail",
+          "passed": true,
+          "observed": "Cancellation confirmed. Auto-renew is off. Account, files, purchases and free plan remain.",
+          "seconds": 0.048265081000863574
+        }
+      ],
+      "finishedAt": "2026-10-30T01:35:50.115Z",
+      "passed": true
+    },
+    "peak_rss_bytes": 32043008,
+    "rss_samples": 4,
+    "port_free_after": true
+  }
+]

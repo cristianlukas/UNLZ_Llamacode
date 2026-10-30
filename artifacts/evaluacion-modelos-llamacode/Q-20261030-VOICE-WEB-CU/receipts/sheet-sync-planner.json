@@ -1,0 +1,16 @@
+{
+  "task": "Q191 browser planner paired A/B",
+  "status": "verified",
+  "sheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "cells": [
+    "Evaluaciones LlamaCode!G368:I368",
+    "Accionables!D57:K57",
+    "Recursos!E120",
+    "Enlaces revisados!J601",
+    "Modelos locales por peso!A87:Z87"
+  ],
+  "readback_verified": true,
+  "model": "Qwen3.5-4B Q4_K_M, CPU-only planner; not a general quality benchmark",
+  "result": "Chrome and Lightpanda each completed 6/6 local fixture tasks over 2 replicas with zero invalid or unsafe choices; E2E wall time was effectively tied.",
+  "readback_verified_utc": "2026-10-30"
+}

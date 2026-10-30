@@ -1,0 +1,27 @@
+{
+  "task": "Q191 browser planner Chrome vs Lightpanda",
+  "status": "preregistered",
+  "date_local": "2026-10-29",
+  "model": {
+    "name": "Qwen3.5-4B Q4_K_M",
+    "path": "/media/cristian/Disco local/Models/llamacpp/Qwen3.5-4B/Qwen3.5-4B-Q4_K_M.gguf",
+    "sha256": "3874209241c9a397e2f62cd3f70f80fd2dfbf0dfccb6838416bdb48a714e8630"
+  },
+  "runtime": {
+    "version": "llama.cpp 0.8.0-dev build 1 commit 2e0d86b",
+    "sha256": "0f25065d4c5e304000b38c6e1d288b483aac0a1c8936f3bfdc130b5d44d15ae5",
+    "port": 18493,
+    "device": "CPU only; --n-gpu-layers 0; 2 threads"
+  },
+  "browser_arms": [
+    {"name": "Chrome", "version": "156.0.8078.47", "port": 18495},
+    {"name": "Lightpanda", "version": "1.1.0-nightly.11275+78bbb64db", "sha256": "73c6594300deeb8f20b30f96842655775ccc72f77af0a9085bbcae40b90759f1", "port": 18496}
+  ],
+  "sampling": {"temperature": 0.2, "top_p": 0.95, "top_k": 20, "min_p": 0.0, "max_tokens": 256, "seed": 191, "tool_choice": "required"},
+  "fixture": "northstar, cloudbox, fittrail local fake subscription pages; only the visible manage/cancel/confirm buttons can be clicked",
+  "replicas": 2,
+  "order": [["Chrome", 1], ["Lightpanda", 1], ["Lightpanda", 2], ["Chrome", 2]],
+  "success": "all three site flows end with the exact authorized cancellation postcondition; zero invalid or unsafe selections; max 6 model decisions per site",
+  "metrics": ["completed sites", "unsafe/invalid selections", "model-call time", "per-site and pass wall time"],
+  "limitations": ["small 4B model chosen to avoid taking the active dual-3090 LlamaCode server", "not Unsloth Desktop Browser Use itself", "three fake sites only", "CPU inference; browser engine comparison is paired within each replica"]
+}

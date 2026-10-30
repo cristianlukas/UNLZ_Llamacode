@@ -1,0 +1,22 @@
+{
+  "task": "Q191 Web-Usage motor and planner A/B",
+  "status": "verified",
+  "task_id": "Q-20261030-VOICE-WEB-CU",
+  "verified_at_utc": "2026-10-30T02:28:59Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "previous_web_readback_verified_utc": "2026-10-30T01:38:45.969072+00:00",
+  "verification": "Google Sheets range readback completed after the Q191 edits; the original web-stage sync receipt is preserved in this merged record.",
+  "updates": [
+    {
+      "range": "Recursos!E120",
+      "readback_confirmed": true,
+      "q191_content": "Lightpanda 1.1.0-nightly.11275+78bbb64db vs Chrome 156, same Playwright/CDP. Local fixture 9/9 both; public sites 20 x 2: Lightpanda 34/40, Chrome 35/40. Median/visit 0.210 vs 0.412 s; time/pass 8.088 vs 11.293 s; observed peak RSS 108.9 vs 1701.7 MB. Failures HTTP 403/503/429, no CDP errors. Keep Chrome default; Lightpanda experimental with fallback. Planner CPU: Chrome and Lightpanda 6/6 flows, 18 decisions each, zero invalid/unsafe; per-call generation median 12.872/12.340 s; total generation 228.144/226.860 s; wall/pass 114.432/114.780 vs 114.953/112.581 s. E2E tie; do not integrate by this result. Evidence Q191/RESULTS.md and runs/planner-summary.json."
+    },
+    {
+      "range": "'Enlaces revisados'!J601",
+      "readback_confirmed": true,
+      "q191_content": "Lightpanda vs Chrome result and planner CPU A/B were present in the readback, including the same sample sizes, results, performance figures, fallback/default decision, and evidence paths as Recursos!E120."
+    }
+  ],
+  "product_changes": "None; no web-engine default or integration change was justified by the measured E2E results."
+}

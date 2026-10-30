@@ -1,0 +1,232 @@
+{
+  "dataset": "google/fleurs",
+  "revision": "70bb2e84b976b7e960aa89f1c648e09c59f894dd",
+  "config": "es_419",
+  "split": "dev",
+  "license": "CC-BY-4.0",
+  "selection": "random.Random(191).sample(range(408),20)",
+  "dev_tsv_sha256": "352b2a5f03f02fe752254fab737f76519963650f4630d2fb63957177aeec927f",
+  "dev_tar_sha256": "94f0f3d9fd89c0496385bf0991f2565410cc489a73dd18cafa0ee0177dc5c815",
+  "clips": [
+    {
+      "row_index": 388,
+      "id": "1541",
+      "filename": "7109939569267971011.wav",
+      "transcription": "Se les paga muy bien a las empresas de mensajería por hacer entregas veloces. Con frecuencia, el tiempo es muy importante cuando se trata de documentos comerciales, mercadería o repuestos para reparaciones urgentes.",
+      "normalized_reference": "se les paga muy bien a las empresas de mensajería por hacer entregas veloces con frecuencia el tiempo es muy importante cuando se trata de documentos comerciales mercadería o repuestos para reparaciones urgentes",
+      "path": "/home/cristian/.cache/q191-fleurs-es419/selected/7109939569267971011-pcm16.wav",
+      "sha256": "e639d49bc308ef080f341dcd2a5913ee8538b416fe901af8b556ba56c1ea8023",
+      "duration_seconds": 12.78,
+      "sample_rate": 16000
+    },
+    {
+      "row_index": 270,
+      "id": "1647",
+      "filename": "12763564625474114867.wav",
+      "transcription": "Los puntos de vista que se presentan suelen ser superficiales, genéricos y demasiado simplificados en comparación con la información más detallada disponible en otros sitios.",
+      "normalized_reference": "los puntos de vista que se presentan suelen ser superficiales genéricos y demasiado simplificados en comparación con la información más detallada disponible en otros sitios",
+      "path": "/home/cristian/.cache/q191-fleurs-es419/selected/12763564625474114867-pcm16.wav",
+      "sha256": "13fbb0508f90adb54d2328910d23b6bf6d56f38d7efd6e2c174fcefc4d6b7748",
+      "duration_seconds": 10.38,
+      "sample_rate": 16000
+    },
+    {
+      "row_index": 402,
+      "id": "1542",
+      "filename": "6697161375605464362.wav",
+      "transcription": "Gordon Johndroe, vocero de Bush, se refirió al compromiso norcoreano como «un avance importante hacia el objetivo de alcanzar la desnuclearización constatable de la península de Corea».",
+      "normalized_reference": "gordon johndroe vocero de bush se refirió al compromiso norcoreano como «un avance importante hacia el objetivo de alcanzar la desnuclearización constatable de la península de corea»",
+      "path": "/home/cristian/.cache/q191-fleurs-es419/selected/6697161375605464362-pcm16.wav",
+      "sha256": "2e28af866eb2ef8a268e70731529753d04058d9c139d5053b64cd12baf0acfe8",
+      "duration_seconds": 15.72,
+      "sample_rate": 16000
+    },
+    {
+      "row_index": 283,
+      "id": "1646",
+      "filename": "15189939036281501366.wav",
+      "transcription": "Existe un gran número de playas, debido a que Auckland cuenta con dos puertos. Las más conocidas se encuentran en tres áreas.",
+      "normalized_reference": "existe un gran número de playas debido a que auckland cuenta con dos puertos las más conocidas se encuentran en tres áreas",
+      "path": "/home/cristian/.cache/q191-fleurs-es419/selected/15189939036281501366-pcm16.wav",
+      "sha256": "36d6fe0b31cb230a19f4b01d1f70565f4eabc562169a2c5e29f5681b1f1d6b1f",
+      "duration_seconds": 9.54,
+      "sample_rate": 16000
+    },
+    {
+      "row_index": 262,
+      "id": "1577",
+      "filename": "9112831776083636504.wav",
+      "transcription": "A mí me pareció que eso no tenía sentido; definitivamente no fue justo.",
+      "normalized_reference": "a mí me pareció que eso no tenía sentido definitivamente no fue justo",
+      "path": "/home/cristian/.cache/q191-fleurs-es419/selected/9112831776083636504-pcm16.wav",
+      "sha256": "8d6de826d338e3cc8b284b75d82e1e2512c398dbff69a5987ba782257bc0cad0",
+      "duration_seconds": 6.24,
+      "sample_rate": 16000
+    },
+    {
+      "row_index": 257,
+      "id": "1536",
+      "filename": "9339556618420255574.wav",
+      "transcription": "El gobierno local advierte a quienes residen en las cercanías de la planta que no salgan de sus hogares, mantengan apagados los aires acondicionados y no consuman agua del grifo.",
+      "normalized_reference": "el gobierno local advierte a quienes residen en las cercanías de la planta que no salgan de sus hogares mantengan apagados los aires acondicionados y no consuman agua del grifo",
+      "path": "/home/cristian/.cache/q191-fleurs-es419/selected/9339556618420255574-pcm16.wav",
+      "sha256": "a4c7e31eafdcbf56480902bd89725d259f1518cc7b71c9d7ec884cfafacb2fcf",
+      "duration_seconds": 12.0,
+      "sample_rate": 16000
+    },
+    {
+      "row_index": 74,
+      "id": "1618",
+      "filename": "16570363743667261750.wav",
+      "transcription": "En el sector norte, cordillera Sentinel, se encuentran los picos más elevados de la Antártida, el Macizo de Vinson, con una cumbre a 4892 metros en el Monte Vinson.",
+      "normalized_reference": "en el sector norte cordillera sentinel se encuentran los picos más elevados de la antártida el macizo de vinson con una cumbre a 4892 metros en el monte vinson",
+      "path": "/home/cristian/.cache/q191-fleurs-es419/selected/16570363743667261750-pcm16.wav",
+      "sha256": "e18f8d1d06c5688d3309145405cfbb091a9633aae3dd5c8f7f450d0a1ea1efcb",
+      "duration_seconds": 13.8,
+      "sample_rate": 16000
+    },
+    {
+      "row_index": 395,
+      "id": "1520",
+      "filename": "7573338294611270642.wav",
+      "transcription": "Desde 2008, entre los 1400 encuestados en forma previa a las elecciones federales de 2010 hubo un crecimiento del 8 % de quienes se oponen a que Australia se convierta en república.",
+      "normalized_reference": "desde 2008 entre los 1400 encuestados en forma previa a las elecciones federales de 2010 hubo un crecimiento del 8 % de quienes se oponen a que australia se convierta en república",
+      "path": "/home/cristian/.cache/q191-fleurs-es419/selected/7573338294611270642-pcm16.wav",
+      "sha256": "1d712336efbd018be04f372ffd5b980ddc5da2fd8b4eb45960576dd8be4de159",
+      "duration_seconds": 15.18,
+      "sample_rate": 16000
+    },
+    {
+      "row_index": 206,
+      "id": "1641",
+      "filename": "2709586772537442969.wav",
+      "transcription": "Sin perjuicio de ello, los bosques no son solo manglares, sino que poseen algunos de los últimos árboles que quedan de las junglas imponentes que alguna vez cubrieron la llanura de Gangetic.",
+      "normalized_reference": "sin perjuicio de ello los bosques no son solo manglares sino que poseen algunos de los últimos árboles que quedan de las junglas imponentes que alguna vez cubrieron la llanura de gangetic",
+      "path": "/home/cristian/.cache/q191-fleurs-es419/selected/2709586772537442969-pcm16.wav",
+      "sha256": "256f34e6add0437905193cf21a609c170ba9a3fad5327d5582e8521dfe6934d4",
+      "duration_seconds": 12.72,
+      "sample_rate": 16000
+    },
+    {
+      "row_index": 391,
+      "id": "1559",
+      "filename": "16515321832816575538.wav",
+      "transcription": "Pronunciar el italiano es relativamente sencillo, dado que la mayor parte de sus palabras suenan igual a como se escriben.",
+      "normalized_reference": "pronunciar el italiano es relativamente sencillo dado que la mayor parte de sus palabras suenan igual a como se escriben",
+      "path": "/home/cristian/.cache/q191-fleurs-es419/selected/16515321832816575538-pcm16.wav",
+      "sha256": "bb9eea2d652acdfc1c260fba2c9b6e3d5fdbcbf6bff50ec583f671122e19d29f",
+      "duration_seconds": 8.58,
+      "sample_rate": 16000
+    },
+    {
+      "row_index": 327,
+      "id": "1606",
+      "filename": "9703951273890374418.wav",
+      "transcription": "Fue destruida y reconstruida por los portugueses con el nombre de Casa Branca, pero en 1755 la abandonaron después del acaecimiento de un terremoto.",
+      "normalized_reference": "fue destruida y reconstruida por los portugueses con el nombre de casa branca pero en 1755 la abandonaron después del acaecimiento de un terremoto",
+      "path": "/home/cristian/.cache/q191-fleurs-es419/selected/9703951273890374418-pcm16.wav",
+      "sha256": "1390d97213152a4b03892349ba81f389d1c2d463f2bcbda58a2aed51b96ed4ed",
+      "duration_seconds": 13.14,
+      "sample_rate": 16000
+    },
+    {
+      "row_index": 357,
+      "id": "1534",
+      "filename": "3412089685058336461.wav",
+      "transcription": "Ello, sumado a que resulta relativamente inaccesible, ha dado a «Tombuctú» una imagen de tierra exótica y lejana.",
+      "normalized_reference": "ello sumado a que resulta relativamente inaccesible ha dado a «tombuctú» una imagen de tierra exótica y lejana",
+      "path": "/home/cristian/.cache/q191-fleurs-es419/selected/3412089685058336461-pcm16.wav",
+      "sha256": "707e67e56d13273c1294c5c6cba7c1d3349bf989d6fa798a1d760298015c509c",
+      "duration_seconds": 10.44,
+      "sample_rate": 16000
+    },
+    {
+      "row_index": 245,
+      "id": "1649",
+      "filename": "15307486077870336096.wav",
+      "transcription": "Fue el emperador de Japón quien organizó las primeras celebraciones de los cerezos, solo para él y otros integrantes de la aristocracia de la Corte Imperial.",
+      "normalized_reference": "fue el emperador de japón quien organizó las primeras celebraciones de los cerezos solo para él y otros integrantes de la aristocracia de la corte imperial",
+      "path": "/home/cristian/.cache/q191-fleurs-es419/selected/15307486077870336096-pcm16.wav",
+      "sha256": "d097d853f1e1671f9c52d716cdd923d6211878e93ccf92f74aca4c2951ff50d7",
+      "duration_seconds": 11.52,
+      "sample_rate": 16000
+    },
+    {
+      "row_index": 29,
+      "id": "1571",
+      "filename": "4914905555570679868.wav",
+      "transcription": "El islam también fue llevado a las tierras por los árabes y se impuso, en buena medida, en las Comores y Mayotte.",
+      "normalized_reference": "el islam también fue llevado a las tierras por los árabes y se impuso en buena medida en las comores y mayotte",
+      "path": "/home/cristian/.cache/q191-fleurs-es419/selected/4914905555570679868-pcm16.wav",
+      "sha256": "30bd75d65a79ac4aca6809ebc8343b1e7708bd68e194319fb07ba314d8a2232e",
+      "duration_seconds": 10.14,
+      "sample_rate": 16000
+    },
+    {
+      "row_index": 315,
+      "id": "1547",
+      "filename": "4522346247754628358.wav",
+      "transcription": "Además, NHK indicó que la central nuclear de Kashiwazaki-Kariwa, en la prefectura de Niigata, estaba operando con normalidad.",
+      "normalized_reference": "además nhk indicó que la central nuclear de kashiwazaki-kariwa en la prefectura de niigata estaba operando con normalidad",
+      "path": "/home/cristian/.cache/q191-fleurs-es419/selected/4522346247754628358-pcm16.wav",
+      "sha256": "3da774099e82d2d625b6b63ca01b6b1761b41e3ac58790e20a2be8f3d0565e1a",
+      "duration_seconds": 9.06,
+      "sample_rate": 16000
+    },
+    {
+      "row_index": 58,
+      "id": "1580",
+      "filename": "10922563909898312695.wav",
+      "transcription": "Los casos registrados de esclerosis múltiple (EM) en EE. UU. ascienden a cerca de 400 000, lo que la hace la enfermedad neurológica más frecuente entre adultos jóvenes y de mediana edad.",
+      "normalized_reference": "los casos registrados de esclerosis múltiple em en ee. uu. ascienden a cerca de 400 000 lo que la hace la enfermedad neurológica más frecuente entre adultos jóvenes y de mediana edad",
+      "path": "/home/cristian/.cache/q191-fleurs-es419/selected/10922563909898312695-pcm16.wav",
+      "sha256": "3f896be030ffeb531770d8e5c02979f80b4871f4e1f60886d28b07e4fa45d606",
+      "duration_seconds": 15.72,
+      "sample_rate": 16000
+    },
+    {
+      "row_index": 24,
+      "id": "1595",
+      "filename": "14406259103844395700.wav",
+      "transcription": "Si bien las bases del budismo tibetano son las enseñanzas de Buda, se extendieron por el sendero del amor Mahayana y numerosas técnicas del yoga de la India.",
+      "normalized_reference": "si bien las bases del budismo tibetano son las enseñanzas de buda se extendieron por el sendero del amor mahayana y numerosas técnicas del yoga de la india",
+      "path": "/home/cristian/.cache/q191-fleurs-es419/selected/14406259103844395700-pcm16.wav",
+      "sha256": "f9dc7833f25e3a4e59143a5a2740f80fb68e0483865806b17c05983a8e7c57c2",
+      "duration_seconds": 11.46,
+      "sample_rate": 16000
+    },
+    {
+      "row_index": 207,
+      "id": "1624",
+      "filename": "16045582993998671546.wav",
+      "transcription": "Los canales navegables internos pueden ser una buena temática para las vacaciones.",
+      "normalized_reference": "los canales navegables internos pueden ser una buena temática para las vacaciones",
+      "path": "/home/cristian/.cache/q191-fleurs-es419/selected/16045582993998671546-pcm16.wav",
+      "sha256": "97a5a5a4dee4dfcf3ec2d9bd267f5c5002a270e0a67f8d292c8bf2f9a662dc7d",
+      "duration_seconds": 6.0,
+      "sample_rate": 16000
+    },
+    {
+      "row_index": 247,
+      "id": "1535",
+      "filename": "17450506468741466015.wav",
+      "transcription": "Emplea tecnología satelital, en contraste con la vieja tecnología de radar terrestre, con el fin de posibilitar que los controladores de tráfico aéreos detecten aeronaves con mayor precisión y proporcionen datos más exactos a los pilotos.",
+      "normalized_reference": "emplea tecnología satelital en contraste con la vieja tecnología de radar terrestre con el fin de posibilitar que los controladores de tráfico aéreos detecten aeronaves con mayor precisión y proporcionen datos más exactos a los pilotos",
+      "path": "/home/cristian/.cache/q191-fleurs-es419/selected/17450506468741466015-pcm16.wav",
+      "sha256": "5527b72e843656fd8ba0bd3e3d56a96d4928473f8273a7b0cc7a2b0a15fbd040",
+      "duration_seconds": 20.4,
+      "sample_rate": 16000
+    },
+    {
+      "row_index": 187,
+      "id": "1601",
+      "filename": "7393156778919832142.wav",
+      "transcription": "Los científicos creen que los ocelotes rastrean y encuentran animales para comer (presas) a través del olfato, oliendo el suelo donde han pasado.",
+      "normalized_reference": "los científicos creen que los ocelotes rastrean y encuentran animales para comer presas a través del olfato oliendo el suelo donde han pasado",
+      "path": "/home/cristian/.cache/q191-fleurs-es419/selected/7393156778919832142-pcm16.wav",
+      "sha256": "daa53c561b02f03e34e38cb0b1057d90346bbde730e8164bf70ca20698e83fcb",
+      "duration_seconds": 12.18,
+      "sample_rate": 16000
+    }
+  ]
+}
