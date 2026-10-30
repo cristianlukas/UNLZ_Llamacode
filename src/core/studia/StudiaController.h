@@ -81,6 +81,19 @@ class StudiaController : public QObject
     // Expuesto para recalibrarlo con otro corpus sin recompilar
     // (ver StudiaIndex::setUmbralAbstencion).
     Q_PROPERTY(double   umbralAbstencion READ umbralAbstencion WRITE setUmbralAbstencion NOTIFY ajustesChanged)
+    // Indexado desde la app: crear el índice de una carpeta o ponerlo al día sin
+    // abrir una consola. progresoIndexado va de 0 a 1 (-1 = todavía sin dato).
+    Q_PROPERTY(bool     indexando        READ indexando        NOTIFY indexadoChanged)
+    Q_PROPERTY(double   progresoIndexado READ progresoIndexado NOTIFY indexadoChanged)
+    Q_PROPERTY(QString  estadoIndexado   READ estadoIndexado   NOTIFY indexadoChanged)
+    // ¿Se puede actualizar el índice abierto? (su carpeta existe en esta PC y
+    // el .db se puede escribir; un índice empaquetado con la app no).
+    Q_PROPERTY(bool     indiceActualizable READ indiceActualizable NOTIFY indiceChanged)
+    // Carpeta de la que salió el índice abierto (la que se actualiza).
+    Q_PROPERTY(QString  carpetaIndexada  READ carpetaIndexada  NOTIFY indiceChanged)
+    // Al abrir StudIA, si la carpeta cambió desde el último indexado, se pone
+    // al día sola. Persistido.
+    Q_PROPERTY(bool     autoActualizar   READ autoActualizar WRITE setAutoActualizar NOTIFY indexadoChanged)
 
 public:
     explicit StudiaController(QObject *parent = nullptr);
@@ -165,10 +178,46 @@ public:
     // arranque de LlamaCode y la mayoría de las sesiones nunca abre StudIA.
     // Idempotente.
     Q_INVOKABLE void activar();
+    // Vuelve a intentar levantar el servidor de embeddings (p. ej. al terminar
+    // de bajar el modelo desde StudIA). No hace nada si ya está activo.
+    Q_INVOKABLE void reintentarSemantica();
+    // Modelo de embeddings que StudIA ofrece descargar con el gestor de LlamaCode.
+    Q_INVOKABLE QVariantMap modeloEmbeddingsSugerido() const
+    {
+        return {{QStringLiteral("repo"), QStringLiteral("gpustack/bge-m3-GGUF")},
+                {QStringLiteral("archivo"), QStringLiteral("bge-m3-Q8_0.gguf")},
+                {QStringLiteral("tamano"), QStringLiteral("≈ 600 MB")}};
+    }
     bool activado() const { return m_activado; }
 
     // Indice
     Q_INVOKABLE bool abrirIndice(const QString &dbPath);
+    // Indexado desde la app (ingest.py + vectorizar.py en segundo plano).
+    Q_INVOKABLE QString elegirCarpetaCorpus();
+    // Crea (o retoma) el índice de una carpeta de materias y lo abre al terminar.
+    Q_INVOKABLE void crearIndice(const QString &carpeta);
+    // Pone al día el índice abierto: lo nuevo entra, lo borrado sale.
+    Q_INVOKABLE void actualizarIndice();
+    bool indexando() const { return m_procIndice != nullptr; }
+    double progresoIndexado() const { return m_progresoIndexado; }
+    QString estadoIndexado() const { return m_estadoIndexado; }
+    bool indiceActualizable() const;
+    QString carpetaIndexada() const { return m_index.corpusRaiz(); }
+    bool autoActualizar() const { return m_autoActualizar; }
+    void setAutoActualizar(bool on);
+
+    // ── Funciones puras (testeables) ─────────────────────────────────────────
+    // Dónde guarda la app el índice de una carpeta: <base>/indices/<nombre>-<hash>.db.
+    // Fuera del corpus (que es de solo lectura) y estable para la misma carpeta.
+    static QString rutaIndiceParaCarpeta(const QString &carpeta, const QString &base);
+    // ¿Hay algo en la carpeta (archivo de un formato que se indexa, o carpeta:
+    // borrar un archivo cambia la fecha de su carpeta) modificado después de
+    // `desde`? Corta al primer cambio y tras `limite` entradas.
+    static bool corpusCambioDesde(const QString &carpeta, const QDateTime &desde,
+                                  int limite = 50000);
+    // Progreso de una línea "  [120/450] ..." del ingestor o el vectorizador
+    // (0..1), o -1 si la línea no lo trae.
+    static double progresoDeLinea(const QString &linea);
     Q_INVOKABLE QString rutaGuardada() const;
     // Indice que viaja con la aplicacion (<appdir>/StudIA/studia.db). "" si no
     // esta. Es lo que permite que quien recibe la app no configure nada.
@@ -267,6 +316,7 @@ signals:
     void textoParcial(int indice, const QString &contenido, const QVariantList &bloques);
     void errorOcurrido(const QString &mensaje);
     void herramientasRevisadas(const QVariantList &herramientas);
+    void indexadoChanged();
 
 private:
     StudiaSesion *sesionActual();
@@ -296,6 +346,13 @@ private:
     void correrIngestor(const QStringList &args, const QString &queHace);
     // Toma el siguiente archivo de la cola de adjuntos, si hay.
     void procesarSiguienteAdjunto();
+    // Pipeline de indexado: etapa "ingesta" (ingest.py) y, si hay servidor de
+    // embeddings, etapa "vectores" (vectorizar.py).
+    void indexar(const QString &carpeta, const QString &db);
+    void correrEtapaIndexado(const QString &etapa);
+    void terminarIndexado(const QString &estado);
+    // Si la carpeta del índice abierto cambió, lo actualiza (escaneo en otro hilo).
+    void revisarCorpusYActualizar();
     // Reparte los k fragmentos entre catedra y bibliografia propia. Si el vector
     // de la consulta no viene vacio, la busqueda es hibrida (lexica + semantica).
     QVector<StudiaFragmento> recuperar(const QString &consulta,
@@ -328,6 +385,15 @@ private:
     QString            m_errorIndice;
     QString            m_ultimoAdjunto;
     QStringList        m_colaAdjuntos;
+    QProcess          *m_procIndice = nullptr;
+    QString            m_etapaIndexado;      // "ingesta" | "vectores"
+    QString            m_carpetaIndexando;
+    QString            m_dbIndexando;
+    QString            m_resumenIngesta;
+    double             m_progresoIndexado = -1.0;
+    QString            m_estadoIndexado;
+    bool               m_autoActualizar = true;
+    bool               m_revisandoCorpus = false;
     QProcess          *m_procAdjunto = nullptr;
     QString            m_materia;
     QString            m_temaId;      // tema abierto dentro de la materia

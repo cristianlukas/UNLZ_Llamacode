@@ -78,6 +78,14 @@ public:
     //  2. El estudiante subio ese documento a proposito, y el corpus de la
     //     catedra ya aporta la garantia de no responder sin evidencia.
     void setExigirEvidencia(bool exigir) { m_exigirEvidencia = exigir; }
+    // ¿Tiene sentido el gate de abstención para un índice de este tamaño? Por
+    // la razón 1 de arriba, BM25 no discrimina en un corpus chico: una carpeta
+    // propia de apuntes (indexada desde la app) se abstenía de TODO, incluso de
+    // lo que el apunte responde textualmente. Por debajo del mínimo, el índice
+    // sólo se abstiene si ningún fragmento coincide y el prompt exige citar.
+    static constexpr int kMinFragmentosParaAbstencion = 2000;
+    static bool debeExigirEvidencia(int totalFragmentos)
+    { return totalFragmentos >= kMinFragmentosParaAbstencion; }
     bool exigirEvidencia() const { return m_exigirEvidencia; }
 
     // ¿Los candidatos alcanzan para responder? Estatica y pura para poder

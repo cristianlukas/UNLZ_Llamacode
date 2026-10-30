@@ -9,7 +9,11 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFutureWatcher>
+#include <QCryptographicHash>
+#include <QDirIterator>
 #include <QHash>
+#include <QProcessEnvironment>
+#include <QRegularExpression>
 #include <QProcess>
 #include <QStandardPaths>
 #include <QJsonArray>
@@ -24,6 +28,7 @@
 #include <QtConcurrent/QtConcurrentRun>
 
 #include <algorithm>
+#include <memory>
 
 namespace {
 
@@ -34,6 +39,7 @@ const char *kClaveEmbed   = "studia/urlEmbeddings";
 // Donde dejo los documentos originales el copiador (installer\copiar_documentos).
 // Puede apuntar a un disco externo: no hace falta que esten en C:.
 const char *kClaveCorpus  = "studia/carpetaDocumentos";
+const char *kClaveAuto    = "studia/autoActualizar";
 
 // Destino por defecto de ese copiador. Es corto a proposito: Windows corta las
 // rutas en 260 caracteres y las carpetas de la facultad son largas. Metiendo el
@@ -85,8 +91,21 @@ StudiaController::StudiaController(QObject *parent) : QObject(parent)
     connect(&m_servidorEmbed, &StudiaEmbedServer::estadoCambiado, this, [this] {
         if (m_servidorEmbed.activo() && m_embed.url().isEmpty())
             m_embed.setUrl(StudiaEmbedServer::url());
+        // Recién ahora se puede vectorizar: si al índice le faltan vectores
+        // (se creó sin servidor, o entraron documentos nuevos) se completan
+        // solos, sin correr vectorizar.py a mano.
+        if (m_servidorEmbed.activo() && m_autoActualizar && !indexando()
+            && indiceActualizable()
+            && m_index.cantidadVectores() < m_index.totalFragmentos()) {
+            m_carpetaIndexando = m_index.corpusRaiz();
+            m_dbIndexando = m_index.rutaDb();
+            m_resumenIngesta.clear();
+            correrEtapaIndexado(QStringLiteral("vectores"));
+        }
         emit ajustesChanged();
+        emit semanticaChanged();
     });
+    m_autoActualizar = QSettings().value(QLatin1String(kClaveAuto), true).toBool();
 
     refrescarIndicePropio();
     const QString guardada = rutaGuardada();
@@ -108,6 +127,260 @@ void StudiaController::activar()
         return;
     m_activado = true;
     m_servidorEmbed.iniciar();
+    revisarCorpusYActualizar();
+}
+
+void StudiaController::reintentarSemantica()
+{
+    if (!m_activado || m_servidorEmbed.activo())
+        return;
+    m_servidorEmbed.iniciar();
+    emit semanticaChanged();
+}
+
+// ── Indexado desde la app ────────────────────────────────────────────────────
+
+QString StudiaController::rutaIndiceParaCarpeta(const QString &carpeta, const QString &base)
+{
+    const QString abs = QDir::cleanPath(QFileInfo(carpeta).absoluteFilePath());
+    QString nombre = QFileInfo(abs).fileName();
+    nombre.replace(QRegularExpression(QStringLiteral("[^A-Za-z0-9_-]+")), QStringLiteral("_"));
+    nombre = nombre.left(40);
+    if (nombre.isEmpty() || nombre == QLatin1String("_"))
+        nombre = QStringLiteral("corpus");
+    const QString hash = QString::fromLatin1(
+        QCryptographicHash::hash(abs.toUtf8(), QCryptographicHash::Sha1).toHex().left(8));
+    return QDir(base).filePath(QStringLiteral("indices/%1-%2.db").arg(nombre, hash));
+}
+
+bool StudiaController::corpusCambioDesde(const QString &carpeta, const QDateTime &desde,
+                                         int limite)
+{
+    static const QStringList ext = {
+        QStringLiteral("pdf"), QStringLiteral("docx"), QStringLiteral("pptx"),
+        QStringLiteral("xlsx"), QStringLiteral("txt"), QStringLiteral("md"),
+        QStringLiteral("ipynb"), QStringLiteral("doc"), QStringLiteral("ppt"),
+        QStringLiteral("xls"), QStringLiteral("rtf"), QStringLiteral("odt")};
+    if (!QFileInfo(carpeta).isDir() || !desde.isValid())
+        return false;
+    QDirIterator it(carpeta, QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot,
+                    QDirIterator::Subdirectories);
+    int vistos = 0;
+    while (it.hasNext() && vistos++ < limite) {
+        it.next();
+        const QFileInfo fi = it.fileInfo();
+        if (fi.lastModified() <= desde)
+            continue;
+        // Una carpeta cambia de fecha cuando se borra o se agrega algo adentro.
+        if (fi.isDir())
+            return true;
+        if (!fi.fileName().startsWith(QLatin1String("~$"))
+            && ext.contains(fi.suffix().toLower()))
+            return true;
+    }
+    return false;
+}
+
+double StudiaController::progresoDeLinea(const QString &linea)
+{
+    static const QRegularExpression re(QStringLiteral("\\[(\\d+)/(\\d+)\\]"));
+    const auto m = re.match(linea);
+    if (!m.hasMatch())
+        return -1.0;
+    const double total = m.captured(2).toDouble();
+    return total > 0 ? qBound(0.0, m.captured(1).toDouble() / total, 1.0) : -1.0;
+}
+
+bool StudiaController::indiceActualizable() const
+{
+    if (!m_index.abierto())
+        return false;
+    const QString raiz = m_index.corpusRaiz();
+    return !raiz.isEmpty() && QFileInfo(raiz).isDir()
+           && QFileInfo(m_index.rutaDb()).isWritable();
+}
+
+void StudiaController::setAutoActualizar(bool on)
+{
+    if (m_autoActualizar == on)
+        return;
+    m_autoActualizar = on;
+    QSettings().setValue(QLatin1String(kClaveAuto), on);
+    emit indexadoChanged();
+}
+
+QString StudiaController::elegirCarpetaCorpus()
+{
+    QWidget *padre = QApplication::activeWindow();
+    return QFileDialog::getExistingDirectory(
+        padre, QStringLiteral("Elegí la carpeta con tus materias"),
+        QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
+}
+
+void StudiaController::crearIndice(const QString &carpeta)
+{
+    if (carpeta.trimmed().isEmpty())
+        return;
+    if (!QFileInfo(carpeta).isDir()) {
+        emit errorOcurrido(QStringLiteral("No existe la carpeta %1").arg(carpeta));
+        return;
+    }
+    const QString base = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+                         + QStringLiteral("/studia");
+    const QString db = rutaIndiceParaCarpeta(carpeta, base);
+    QDir().mkpath(QFileInfo(db).absolutePath());
+    indexar(carpeta, db);
+}
+
+void StudiaController::actualizarIndice()
+{
+    if (!indiceActualizable()) {
+        emit errorOcurrido(QStringLiteral("Este índice no se puede actualizar desde acá: "
+                                          "su carpeta no está en esta PC o el archivo es "
+                                          "de sólo lectura."));
+        return;
+    }
+    indexar(m_index.corpusRaiz(), m_index.rutaDb());
+}
+
+void StudiaController::revisarCorpusYActualizar()
+{
+    if (!m_autoActualizar || !indiceActualizable() || indexando() || m_revisandoCorpus)
+        return;
+    const QString raiz = m_index.corpusRaiz();
+    const QDateTime desde = QFileInfo(m_index.rutaDb()).lastModified();
+    m_revisandoCorpus = true;
+    // Recorrer el corpus puede llevar segundos (miles de archivos en un disco
+    // externo): en otro hilo, para no congelar la pestaña al abrirla.
+    auto *w = new QFutureWatcher<bool>(this);
+    connect(w, &QFutureWatcher<bool>::finished, this, [this, w] {
+        m_revisandoCorpus = false;
+        const bool cambio = w->result();
+        w->deleteLater();
+        if (cambio && !indexando())
+            actualizarIndice();
+    });
+    w->setFuture(QtConcurrent::run([raiz, desde] { return corpusCambioDesde(raiz, desde); }));
+}
+
+void StudiaController::indexar(const QString &carpeta, const QString &db)
+{
+    if (indexando())
+        return;
+    m_carpetaIndexando = carpeta;
+    m_dbIndexando = db;
+    m_resumenIngesta.clear();
+    correrEtapaIndexado(QStringLiteral("ingesta"));
+}
+
+void StudiaController::correrEtapaIndexado(const QString &etapa)
+{
+    const bool ingesta = etapa == QLatin1String("ingesta");
+    const QString script = StudiaHerramientas::rutaScript(
+        ingesta ? QStringLiteral("ingest.py") : QStringLiteral("vectorizar.py"));
+    const QString py = StudiaHerramientas::python();
+    if (script.isEmpty() || py.isEmpty()) {
+        terminarIndexado(script.isEmpty()
+            ? QStringLiteral("No se encontró tools/studia/%1.")
+                  .arg(ingesta ? QStringLiteral("ingest.py") : QStringLiteral("vectorizar.py"))
+            : QStringLiteral("No se encontró Python, necesario para indexar."));
+        return;
+    }
+    QStringList args{script, QStringLiteral("--db"), m_dbIndexando};
+    if (ingesta)
+        args << QStringLiteral("--corpus") << m_carpetaIndexando << QStringLiteral("--podar");
+    else
+        args << QStringLiteral("--url") << urlEmbeddingsEfectiva();
+
+    m_etapaIndexado = etapa;
+    m_progresoIndexado = ingesta ? 0.0 : (m_resumenIngesta.isEmpty() ? 0.0 : 0.8);
+    m_estadoIndexado = ingesta ? QStringLiteral("Buscando documentos…")
+                               : QStringLiteral("Preparando la búsqueda semántica…");
+    m_procIndice = new QProcess(this);
+    m_procIndice->setProcessChannelMode(QProcess::MergedChannels);
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    // Sin esto Python en Windows escribe en cp1252 y con buffer: los acentos
+    // llegaban rotos y el progreso, todo junto al final.
+    env.insert(QStringLiteral("PYTHONIOENCODING"), QStringLiteral("utf-8"));
+    env.insert(QStringLiteral("PYTHONUNBUFFERED"), QStringLiteral("1"));
+    m_procIndice->setProcessEnvironment(env);
+    auto ultima = std::make_shared<QString>();
+    connect(m_procIndice, &QProcess::readyRead, this, [this, ingesta, ultima] {
+        const QStringList lineas = QString::fromUtf8(m_procIndice->readAll())
+                                       .split(QLatin1Char('\n'), Qt::SkipEmptyParts);
+        for (const QString &crudo : lineas) {
+            const QString l = crudo.trimmed();
+            if (l.isEmpty()) continue;
+            *ultima = l;
+            static const QRegularExpression cuenta(QStringLiteral("\\[(\\d+)/(\\d+)\\]"));
+            const double p = progresoDeLinea(l);
+            if (p >= 0) {
+                const auto m = cuenta.match(l);
+                // Con vectores, la ingesta es el 80 % del camino.
+                m_progresoIndexado = ingesta ? p * 0.8 : 0.8 + p * 0.2;
+                m_estadoIndexado = ingesta
+                    ? QStringLiteral("Leyendo documentos: %1 de %2").arg(m.captured(1), m.captured(2))
+                    : QStringLiteral("Preparando la búsqueda semántica: %1 de %2")
+                          .arg(m.captured(1), m.captured(2));
+            } else if (l.startsWith(QLatin1String("Documentos a procesar:"))) {
+                m_estadoIndexado = QStringLiteral("Revisando %1 documentos…")
+                                       .arg(l.section(QLatin1Char(':'), 1).trimmed());
+            } else if (l.startsWith(QLatin1String("ok "))) {
+                m_resumenIngesta = l.section(QLatin1Char(' '), -1);   // "  ok   123"
+            }
+        }
+        emit indexadoChanged();
+    });
+    connect(m_procIndice, &QProcess::finished, this, [this, ingesta, ultima](int code, QProcess::ExitStatus) {
+        m_procIndice->deleteLater();
+        m_procIndice = nullptr;
+        if (ingesta) {
+            if (code != 0) {
+                terminarIndexado(QStringLiteral("No se pudo indexar: %1")
+                                     .arg(ultima->isEmpty() ? QStringLiteral("error desconocido") : *ultima));
+                return;
+            }
+            // Aunque no haya entrado nada nuevo, el índice quedó revisado a esta
+            // hora: si no, el próximo arranque volvería a detectar "cambios".
+            QFile f(m_dbIndexando);
+            if (f.open(QIODevice::ReadWrite))
+                f.setFileTime(QDateTime::currentDateTime(), QFileDevice::FileModificationTime);
+            f.close();
+            abrirIndice(m_dbIndexando);
+            if (m_index.abierto() && !urlEmbeddingsEfectiva().isEmpty()
+                && m_index.cantidadVectores() < m_index.totalFragmentos()) {
+                m_resumenIngesta = QStringLiteral("ok");
+                correrEtapaIndexado(QStringLiteral("vectores"));
+                return;
+            }
+            terminarIndexado(QString());
+            return;
+        }
+        abrirIndice(m_dbIndexando);
+        terminarIndexado(code == 0 ? QString()
+            : QStringLiteral("Índice listo, pero sin búsqueda semántica: %1")
+                  .arg(ultima->isEmpty() ? QStringLiteral("el servidor de embeddings no respondió")
+                                         : *ultima));
+    });
+    m_procIndice->start(py, args);
+    emit indexadoChanged();
+}
+
+void StudiaController::terminarIndexado(const QString &estado)
+{
+    // estadoSemantico depende de la etapa (vectorizando) y de los vectores.
+    emit semanticaChanged();
+    m_progresoIndexado = -1.0;
+    if (!estado.isEmpty()) {
+        m_estadoIndexado = estado;
+    } else {
+        const QVariantMap st = m_index.estadisticas();
+        m_estadoIndexado = QStringLiteral("Índice al día: %1 materias, %2 documentos.")
+            .arg(m_index.materias().size())
+            .arg(st.value(QStringLiteral("documentos")).toInt());
+    }
+    m_etapaIndexado.clear();
+    emit indexadoChanged();
 }
 
 // ── Indice ───────────────────────────────────────────────────────────────────
@@ -191,6 +464,7 @@ bool StudiaController::abrirIndice(const QString &dbPath)
     const bool ok = m_index.abrir(dbPath, &m_errorIndice);
     if (ok) {
         m_errorIndice.clear();
+        m_index.setExigirEvidencia(StudiaIndex::debeExigirEvidencia(m_index.totalFragmentos()));
         QSettings().setValue(QLatin1String(kClaveRuta), dbPath);
         // Si la materia activa no existe en el indice nuevo, se deselecciona:
         // preguntar sin materia valida no tiene sentido.
@@ -700,6 +974,11 @@ QVariantMap StudiaController::estadoSemantico() const
         {QStringLiteral("fragmentos"), m_index.totalFragmentos()},
         {QStringLiteral("dimension"),  m_index.dimensionVectores()},
         {QStringLiteral("activa"),     semanticaActiva()},
+        // Servidor de embeddings que levanta la app: si está, el índice se
+        // vectoriza solo; si no, `motivo` dice por qué (falta el modelo, …).
+        {QStringLiteral("servidorActivo"), m_servidorEmbed.activo()},
+        {QStringLiteral("servidorMotivo"), m_servidorEmbed.motivo()},
+        {QStringLiteral("vectorizando"),   m_etapaIndexado == QLatin1String("vectores")},
     };
 }
 

@@ -29,6 +29,23 @@ Item {
         value: App.serverRunning ? App.serverBaseUrl : ""
     }
 
+    // Perfil con el que se levanta el modelo desde acá: el último que se lanzó
+    // en LlamaCode. StudIA sólo necesita el servidor de chat, no el agente.
+    readonly property string perfilParaIniciar: String(App.readSetting("lastLaunchId", ""))
+    readonly property string nombrePerfilParaIniciar: {
+        if (perfilParaIniciar.length === 0) return ""
+        const lp = App.profileManager.getLaunchProfile(perfilParaIniciar)
+        return (lp && (lp.alias || lp.name)) ? (lp.alias || lp.name) : ""
+    }
+    function crearIndiceDesdeCarpeta() {
+        const carpeta = Studia.elegirCarpetaCorpus()
+        if (carpeta.length > 0) Studia.crearIndice(carpeta)
+    }
+    function abrirIndiceExistente() {
+        const f = Studia.elegirIndice()
+        if (f.length > 0) Studia.abrirIndice(f)
+    }
+
     readonly property bool listoParaPreguntar:
         Studia.indiceListo && Studia.materiaElegida && App.serverRunning
 
@@ -182,12 +199,12 @@ Item {
 
             Text {
                 Layout.fillWidth: true
-                text: "1. Un servidor de embeddings (otro llama-server, en otro puerto):\n"
-                    + "     llama-server -m <modelo-embeddings>.gguf --embeddings --port 8093\n\n"
-                    + "2. Vectorizar el índice una vez:\n"
-                    + "     python tools/studia/vectorizar.py --db <ruta> --url http://127.0.0.1:8093"
+                text: "StudIA levanta sola un servidor de embeddings en la CPU y, cuando "
+                    + "está listo, vectoriza el índice sin que tengas que hacer nada.\n\n"
+                    + "Si preferís usar otro servidor (un llama-server con --embeddings), "
+                    + "poné su URL abajo; el índice se vectoriza al actualizarlo."
                 color: Theme.textSecondary
-                font { pixelSize: 11; family: Theme.codeFont }
+                font.pixelSize: 11
                 wrapMode: Text.WordWrap
             }
 
@@ -266,12 +283,24 @@ Item {
                     }
                 }
 
-                // [4] Estado del servidor
+                // [4] Estado del servidor. Detenido: un clic lo levanta con el
+                // último perfil de LlamaCode (antes había que ir a Lanzar).
                 Rectangle {
+                    id: pillServidor
+                    readonly property bool puedeIniciar: !App.serverRunning && !App.serverStopping
+                                                         && root.perfilParaIniciar.length > 0
                     Layout.preferredWidth: estadoRow.implicitWidth + 18
                     Layout.preferredHeight: 26
                     radius: 13
                     color: App.serverRunning ? Theme.successBg : Theme.errorBg
+                    border.color: pillHover.hovered && puedeIniciar ? Theme.errorText : "transparent"
+                    HoverHandler { id: pillHover; cursorShape: pillServidor.puedeIniciar ? Qt.PointingHandCursor : Qt.ArrowCursor }
+                    TapHandler {
+                        enabled: pillServidor.puedeIniciar
+                        onTapped: App.startServer(root.perfilParaIniciar)
+                    }
+                    ToolTip.visible: pillHover.hovered && puedeIniciar
+                    ToolTip.text: "Iniciar " + (root.nombrePerfilParaIniciar || "el último perfil")
                     Row {
                         id: estadoRow
                         anchors.centerIn: parent
@@ -283,7 +312,9 @@ Item {
                         }
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
-                            text: App.serverRunning ? "Servidor activo" : "Servidor detenido"
+                            text: App.serverRunning
+                                  ? (App.serverReady ? "Servidor activo" : "Cargando modelo…")
+                                  : (pillServidor.puedeIniciar ? "Servidor detenido · Iniciar" : "Servidor detenido")
                             font.pixelSize: 11
                             color: App.serverRunning ? Theme.successText : Theme.errorText
                         }
@@ -425,15 +456,56 @@ Item {
                     }
                 }
 
-                // [2] Base documental + limpiar
+                // [2] Base documental: crear desde una carpeta, abrir uno
+                // existente o ponerlo al día, sin consola ni ingest.py a mano.
                 LcButton {
-                    text: Studia.indiceListo ? "Base documental" : "Abrir índice"
+                    id: botonBase
+                    text: Studia.indexando ? "Indexando…" : (Studia.indiceListo ? "Base documental" : "Crear índice")
                     secondary: Studia.indiceListo
+                    enabled: !Studia.indexando
                     ToolTip.visible: hovered && Studia.indiceListo
                     ToolTip.text: Studia.rutaIndice
-                    onClicked: {
-                        const f = Studia.elegirIndice()
-                        if (f.length > 0) Studia.abrirIndice(f)
+                    onClicked: Studia.indiceListo ? menuBase.open() : root.crearIndiceDesdeCarpeta()
+
+                    Popup {
+                        id: menuBase
+                        y: botonBase.height + 6
+                        x: botonBase.width - width
+                        width: 300
+                        padding: 10
+                        background: Rectangle { color: Theme.surfaceBg; border.color: Theme.borderColor; radius: 8 }
+                        contentItem: ColumnLayout {
+                            spacing: 6
+                            LcButton {
+                                Layout.fillWidth: true
+                                text: "Actualizar índice"
+                                enabled: Studia.indiceActualizable
+                                onClicked: { menuBase.close(); Studia.actualizarIndice() }
+                            }
+                            LcButton {
+                                Layout.fillWidth: true; secondary: true
+                                text: "Crear índice desde otra carpeta…"
+                                onClicked: { menuBase.close(); root.crearIndiceDesdeCarpeta() }
+                            }
+                            LcButton {
+                                Layout.fillWidth: true; secondary: true
+                                text: "Abrir índice existente…"
+                                onClicked: { menuBase.close(); root.abrirIndiceExistente() }
+                            }
+                            LcCheckBox {
+                                text: "Actualizar solo al abrir StudIA"
+                                checked: Studia.autoActualizar
+                                onToggled: Studia.autoActualizar = checked
+                            }
+                            Text {
+                                Layout.fillWidth: true
+                                text: Studia.indiceActualizable
+                                      ? "Carpeta: " + Studia.carpetaIndexada
+                                      : "Este índice no se puede actualizar desde acá (su carpeta no está en esta PC)."
+                                color: Theme.textMuted; font.pixelSize: 11
+                                wrapMode: Text.WrapAnywhere
+                            }
+                        }
                     }
                 }
 
@@ -442,6 +514,48 @@ Item {
                     text: "Limpiar chat"
                     secondary: true
                     onClicked: Studia.limpiar()
+                }
+            }
+        }
+
+        // Progreso del indexado (crear / actualizar) y su resultado. Va acá y no
+        // en un diálogo: se puede seguir estudiando mientras se lee el material.
+        Rectangle {
+            id: franjaIndexado
+            property bool cerrado: false
+            Layout.fillWidth: true
+            visible: Studia.indexando || (Studia.estadoIndexado.length > 0 && !cerrado)
+            Connections {
+                target: Studia
+                function onIndexadoChanged() { if (Studia.indexando) franjaIndexado.cerrado = false }
+            }
+            implicitHeight: 34
+            color: Theme.surfaceBg
+            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.divider }
+            RowLayout {
+                anchors { fill: parent; leftMargin: 24; rightMargin: 16 }
+                spacing: 12
+                Text {
+                    Layout.fillWidth: true
+                    text: Studia.estadoIndexado
+                    color: /^No se pudo|sin búsqueda semántica/.test(Studia.estadoIndexado)
+                           ? Theme.warnText : Theme.textSecondary
+                    font.pixelSize: 12
+                    elide: Text.ElideRight
+                }
+                ProgressBar {
+                    visible: Studia.indexando
+                    Layout.preferredWidth: 240
+                    from: 0; to: 1
+                    indeterminate: Studia.progresoIndexado < 0
+                    value: Math.max(0, Studia.progresoIndexado)
+                }
+                Text {
+                    visible: !Studia.indexando
+                    text: "✕"
+                    color: Theme.textMuted
+                    font.pixelSize: 12
+                    TapHandler { onTapped: franjaIndexado.cerrado = true }
                 }
             }
         }
@@ -536,11 +650,18 @@ Item {
                                     return "🧠 Búsqueda semántica activa — "
                                            + e.vectores + " de " + e.fragmentos
                                            + " fragmentos vectorizados"
-                                if ((e.vectores || 0) === 0)
-                                    return "Búsqueda por palabras. El índice no está "
-                                           + "vectorizado: corré tools/studia/vectorizar.py"
-                                return "Búsqueda por palabras. Falta el servidor de "
-                                       + "embeddings (click para configurarlo)"
+                                // La app vectoriza sola cuando el servidor de embeddings
+                                // está listo: ya no se manda a correr vectorizar.py.
+                                if (e.vectorizando)
+                                    return "Preparando la búsqueda semántica…"
+                                if (e.servidorActivo && (e.vectores || 0) < (e.fragmentos || 0))
+                                    return "Búsqueda por palabras. La semántica se prepara "
+                                           + "al actualizar el índice."
+                                if ((e.servidorMotivo || "").length > 0)
+                                    return "Búsqueda por palabras. Sin servidor de embeddings: "
+                                           + e.servidorMotivo + " (click para configurarlo)"
+                                return "Búsqueda por palabras. Iniciando el servidor de "
+                                       + "embeddings…"
                             }
                             color: Studia.semanticaActiva ? Theme.successText : Theme.textMuted
                             font.pixelSize: 10
@@ -551,6 +672,27 @@ Item {
                             cursorShape: Qt.PointingHandCursor
                             hoverEnabled: true
                             onClicked: dlgEmbed.open()
+                        }
+                    }
+
+                    // Sin modelo de embeddings: se baja con el gestor de descargas de
+                    // LlamaCode y, al terminar, el servidor se levanta y el índice se
+                    // vectoriza solo. Antes había que conseguir el .gguf a mano.
+                    LcButton {
+                        Layout.fillWidth: true
+                        readonly property var sugerido: Studia.modeloEmbeddingsSugerido()
+                        visible: Studia.indiceListo && !Studia.semanticaActiva
+                                 && /^Falta el modelo/.test(Studia.estadoSemantico.servidorMotivo || "")
+                        secondary: true
+                        text: App.modelDownloadRunning ? "Descargando modelo de embeddings…"
+                                                       : "Descargar modelo (" + sugerido.tamano + ")"
+                        enabled: !App.modelDownloadRunning
+                        onClicked: App.downloadRecommendedModel(sugerido.repo, sugerido.archivo)
+                    }
+                    Connections {
+                        target: App
+                        function onModelDownloadChanged() {
+                            if (!App.modelDownloadRunning) Studia.reintentarSemantica()
                         }
                     }
 
@@ -835,11 +977,34 @@ Item {
                                 horizontalAlignment: Text.AlignHCenter
                                 wrapMode: Text.WordWrap
                             }
+                            // Primer uso: elegir la carpeta de materias y listo. Antes
+                            // había que correr tools/studia/ingest.py por consola.
                             Text {
                                 width: parent.width
+                                visible: !Studia.indiceListo
+                                text: Studia.indexando
+                                      ? "Estoy leyendo tus documentos. Podés seguir usando LlamaCode mientras tanto."
+                                      : "Elegí la carpeta donde guardás el material: cada subcarpeta es una "
+                                        + "materia (Física, Álgebra…). Leo los PDF, Word, PowerPoint y apuntes, "
+                                        + "sin modificar nada, y armo el índice para responder citando de dónde "
+                                        + "sale cada cosa."
+                                color: Theme.textMuted
+                                font.pixelSize: 13
+                                horizontalAlignment: Text.AlignHCenter
+                                wrapMode: Text.WordWrap
+                            }
+                            Row {
+                                visible: !Studia.indiceListo && !Studia.indexando
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                spacing: 10
+                                LcButton { text: "Elegir carpeta de materias"; onClicked: root.crearIndiceDesdeCarpeta() }
+                                LcButton { text: "Abrir índice existente"; secondary: true; onClicked: root.abrirIndiceExistente() }
+                            }
+                            Text {
+                                width: parent.width
+                                visible: Studia.indiceListo
                                 text: !Studia.indiceListo
-                                    ? "Abrí el índice documental desde «Abrir índice», arriba a la derecha.\n\n"
-                                      + "Se genera con tools/studia/ingest.py sobre tu carpeta de material."
+                                    ? ""
                                     : (!Studia.materiaElegida
                                        ? "Elegí una materia en el panel de la izquierda.\n\n"
                                          + "Cada materia abre su propia conversación."

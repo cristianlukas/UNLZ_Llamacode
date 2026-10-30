@@ -157,21 +157,36 @@ def sin_acentos(s):
                    if unicodedata.category(c) != 'Mn').lower()
 
 
-def partes_ruta(rel):
-    """De '5A\\10C\\(3_007)Redes_...\\sub\\a.pdf' saca anio, cuatri, codigo,
-    nombre de materia y subruta."""
-    p = rel.split(os.sep)
-    anio   = p[0] if len(p) > 0 else ''
-    cuatri = p[1] if len(p) > 1 else ''
-    carpeta = p[2] if len(p) > 2 else ''
-    sub = os.sep.join(p[3:-1]) if len(p) > 4 else ''
+# Carpeta de año o cuatrimestre del corpus de la UNLZ: "5A", "10C".
+_NIVEL_UNLZ = re.compile(r'^\d+[A-Za-z]$')
+# Materia sin carpeta propia (archivo suelto en la raíz del corpus).
+MATERIA_GENERAL = 'General'
+
+
+def _codigo_y_nombre(carpeta):
     m = re.match(r'^\((\d+_\d+)\)(.*)$', carpeta)
-    if m:
-        cod, nombre = m.group(1), m.group(2)
-    else:
-        cod, nombre = '', carpeta
-    nombre = nombre.replace('_', ' ').strip()
-    return anio, cuatri, cod, nombre, sub
+    cod, nombre = (m.group(1), m.group(2)) if m else ('', carpeta)
+    return cod, nombre.replace('_', ' ').strip()
+
+
+def partes_ruta(rel):
+    """Saca anio, cuatri, codigo, nombre de materia y subruta de la ruta
+    relativa al corpus. Dos formas de carpeta:
+
+      UNLZ   5A\\10C\\(3_007)Redes_...\\sub\\a.pdf   (año / cuatrimestre / materia)
+      plana  Fisica II\\Parciales\\a.pdf            (la primera carpeta es la materia)
+
+    Antes sólo se reconocía la de la UNLZ: con una carpeta común ("Materias/
+    Física/apunte.pdf") todo quedaba con materia vacía y no se podía elegir."""
+    p = rel.split(os.sep)
+    if len(p) >= 4 and _NIVEL_UNLZ.match(p[0]) and _NIVEL_UNLZ.match(p[1]):
+        cod, nombre = _codigo_y_nombre(p[2])
+        sub = os.sep.join(p[3:-1]) if len(p) > 4 else ''
+        return p[0], p[1], cod, nombre, sub
+    if len(p) < 2:
+        return '', '', '', MATERIA_GENERAL, ''
+    cod, nombre = _codigo_y_nombre(p[0])
+    return '', '', cod, nombre or MATERIA_GENERAL, os.sep.join(p[1:-1])
 
 
 def normalizar(t):
@@ -606,6 +621,30 @@ def ingestar_archivo(db_path, archivo, materia):
         return 6
 
 
+def podar(con, corpus):
+    """Saca del indice los documentos del corpus que ya no estan en disco.
+
+    Sin esto un archivo borrado o movido seguia apareciendo como fuente. Solo
+    toca documentos cuya ruta cuelga de `corpus` (la bibliografia propia vive
+    en otro indice) y solo si la carpeta raiz existe: un disco desconectado no
+    puede vaciar el indice."""
+    raiz = os.path.abspath(corpus)
+    if not os.path.isdir(raiz):
+        return 0
+    prefijo = raiz.rstrip(os.sep) + os.sep
+    cur = con.cursor()
+    ausentes = [(i, r) for (i, r) in cur.execute('SELECT id, ruta FROM documentos')
+                if r and os.path.abspath(r).startswith(prefijo)
+                and not os.path.exists(r)]
+    for doc_id, _r in ausentes:
+        cur.execute('DELETE FROM fragmentos_fts WHERE rowid IN '
+                    '(SELECT id FROM fragmentos WHERE doc_id=?)', (doc_id,))
+        cur.execute('DELETE FROM fragmentos WHERE doc_id=?', (doc_id,))
+        cur.execute('DELETE FROM documentos WHERE id=?', (doc_id,))
+    con.commit()
+    return len(ausentes)
+
+
 def quitar_archivo(db_path, ruta):
     """Saca un documento del indice (y sus fragmentos). Lo usa la app cuando el
     estudiante elimina algo de su bibliografia propia. Nunca se aplica al indice
@@ -654,6 +693,9 @@ def main():
                          'linea, con la ruta relativa al corpus. Por defecto '
                          'descartados.txt junto a este script; pasar "" para '
                          'no excluir nada')
+    ap.add_argument('--podar', action='store_true',
+                    help='sacar del indice los documentos del corpus que ya no '
+                         'existen (la app lo usa al actualizar)')
     args = ap.parse_args()
 
     if args.quitar:
@@ -683,11 +725,16 @@ def main():
     print('\nBuscando documentos...', flush=True)
     archivos = listar(args.corpus, args.materia)
     print('Documentos a procesar: %d\n' % len(archivos), flush=True)
+
+    con = abrir_db(args.db, args.limpiar)
+    if args.podar:
+        n = podar(con, args.corpus)
+        print('PODADOS %d' % n, flush=True)
     if not archivos:
+        con.close()
         print('Nada que hacer.')
         return 0
 
-    con = abrir_db(args.db, args.limpiar)
     # Queda registrado de donde salio este indice: es lo que le permite a la app
     # reubicar los documentos si el corpus se movio o viaja con la aplicacion.
     con.execute("INSERT OR REPLACE INTO indice_info(clave, valor) VALUES ('corpus_raiz', ?)",

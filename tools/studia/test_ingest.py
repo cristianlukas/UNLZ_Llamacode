@@ -23,7 +23,7 @@ from ingest import (DIRS_IGNORADOS, EXT_SOPORTADAS, MIN_CHARS_FRAGMENTO,
                     abrir_db, cargar_descartados, extraer_ipynb,
                     extraer_texto_plano, fragmentar, guardar, ingestar_archivo,
                     listar, normalizar, normalizar_rel, pagina_en, partes_ruta,
-                    procesar, quitar_archivo, ruta_ignorada, sin_acentos,
+                    podar, procesar, quitar_archivo, ruta_ignorada, sin_acentos,
                     unir_paginas)
 from ocr import original_ya_procesado
 
@@ -50,10 +50,33 @@ class TestRutas(unittest.TestCase):
         self.assertEqual(cod, '')
         self.assertEqual(materia, 'Ingles')
 
-    def test_ruta_corta_no_rompe(self):
+    def test_archivo_en_la_raiz_va_a_general(self):
+        # Antes el "año" era el nombre del archivo y la materia quedaba vacía.
         anio, cuatri, cod, materia, sub = partes_ruta('suelto.pdf')
-        self.assertEqual(anio, 'suelto.pdf')
-        self.assertEqual((cuatri, cod, sub), ('', '', ''))
+        self.assertEqual((anio, cuatri, cod, sub), ('', '', '', ''))
+        self.assertEqual(materia, 'General')
+
+    def test_carpeta_plana_la_primera_carpeta_es_la_materia(self):
+        # Una carpeta común de materias, sin año/cuatrimestre: antes quedaba
+        # todo sin materia y no se podía elegir en StudIA.
+        rel = os.path.join('Fisica_II', 'Parciales', '2024', 'p1.pdf')
+        anio, cuatri, cod, materia, sub = partes_ruta(rel)
+        self.assertEqual((anio, cuatri, cod), ('', '', ''))
+        self.assertEqual(materia, 'Fisica II')
+        self.assertEqual(sub, os.path.join('Parciales', '2024'))
+        _a, _c, _cod, materia, sub = partes_ruta(os.path.join('Algebra', 'apunte.pdf'))
+        self.assertEqual((materia, sub), ('Algebra', ''))
+
+    def test_carpeta_plana_respeta_el_codigo(self):
+        _a, _c, cod, materia, _s = partes_ruta(os.path.join('(3_007)Redes', 'a.pdf'))
+        self.assertEqual((cod, materia), ('3_007', 'Redes'))
+
+    def test_tres_niveles_sin_patron_de_anio_no_es_unlz(self):
+        rel = os.path.join('Materias', 'Quimica', 'Labs', 'a.pdf')
+        anio, _c, _cod, materia, sub = partes_ruta(rel)
+        self.assertEqual(anio, '')
+        self.assertEqual(materia, 'Materias')
+        self.assertEqual(sub, os.path.join('Quimica', 'Labs'))
 
     def test_detecta_carpetas_de_software(self):
         self.assertTrue(ruta_ignorada(os.path.join('a', 'site-packages', 'x.txt')))
@@ -271,6 +294,58 @@ class TestBaseDeDatos(unittest.TestCase):
         con.close()
         con = abrir_db(self.db, limpiar=True)
         self.assertEqual(con.execute('SELECT COUNT(*) FROM documentos').fetchone()[0], 0)
+        con.close()
+
+
+class TestPodar(unittest.TestCase):
+    """Al actualizar, lo que se borró del corpus tiene que salir del índice."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.corpus = os.path.join(self.tmp.name, 'corpus')
+        os.makedirs(os.path.join(self.corpus, 'Fisica'))
+        self.db = os.path.join(self.tmp.name, 'idx.db')
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def _doc(self, con, ruta, huella):
+        meta = {'ruta': ruta, 'nombre': os.path.basename(ruta), 'anio': '', 'cuatri': '',
+                'materia_cod': '', 'materia': 'Fisica', 'subruta': '', 'ext': '.txt',
+                'bytes': 1, 'huella': huella, 'paginas': 1, 'chars': 50,
+                'estado': 'ok', 'detalle': ''}
+        guardar(con, meta, [(1, 0, 'texto de prueba sobre cinematica ' + huella)])
+        con.commit()
+
+    def test_saca_los_que_ya_no_estan(self):
+        sigue = os.path.join(self.corpus, 'Fisica', 'sigue.txt')
+        borrado = os.path.join(self.corpus, 'Fisica', 'borrado.txt')
+        with open(sigue, 'w') as f:
+            f.write('x')
+        con = abrir_db(self.db)
+        self._doc(con, sigue, 'h1')
+        self._doc(con, borrado, 'h2')
+        self.assertEqual(podar(con, self.corpus), 1)
+        rutas = [r for (r,) in con.execute('SELECT ruta FROM documentos')]
+        self.assertEqual(rutas, [sigue])
+        n = con.execute("SELECT COUNT(*) FROM fragmentos_fts "
+                        "WHERE fragmentos_fts MATCH '\"h2\"'").fetchone()[0]
+        self.assertEqual(n, 0)
+        con.close()
+
+    def test_no_toca_lo_que_esta_fuera_del_corpus(self):
+        con = abrir_db(self.db)
+        self._doc(con, os.path.join(self.tmp.name, 'otro', 'propio.txt'), 'h3')
+        self.assertEqual(podar(con, self.corpus), 0)
+        self.assertEqual(con.execute('SELECT COUNT(*) FROM documentos').fetchone()[0], 1)
+        con.close()
+
+    def test_corpus_desconectado_no_vacia_el_indice(self):
+        con = abrir_db(self.db)
+        self._doc(con, os.path.join(self.corpus, 'Fisica', 'a.txt'), 'h4')
+        shutil.rmtree(self.corpus)
+        self.assertEqual(podar(con, self.corpus), 0)
+        self.assertEqual(con.execute('SELECT COUNT(*) FROM documentos').fetchone()[0], 1)
         con.close()
 
 

@@ -3134,6 +3134,138 @@ private slots:
         QVERIFY(lista.first().toMap().contains(QStringLiteral("presente")));
     }
 
+    // ── Indexado desde la app ──
+
+    // El índice de una carpeta vive fuera de ella (el corpus es de sólo lectura)
+    // y en la misma ruta cada vez, para que "actualizar" retome el mismo .db.
+    void indexado_rutaDelIndiceEsEstableYFueraDelCorpus()
+    {
+        const QString base = QStringLiteral("/datos/app/studia");
+        const QString a = StudiaController::rutaIndiceParaCarpeta(QStringLiteral("/home/u/Materias"), base);
+        QCOMPARE(a, StudiaController::rutaIndiceParaCarpeta(QStringLiteral("/home/u/Materias/"), base));
+        QVERIFY(a.startsWith(base + QStringLiteral("/indices/Materias-")));
+        QVERIFY(a.endsWith(QStringLiteral(".db")));
+        // Mismo nombre de carpeta en otro lugar → otro índice.
+        QVERIFY(a != StudiaController::rutaIndiceParaCarpeta(QStringLiteral("/otro/Materias"), base));
+        // Acentos y espacios no rompen el nombre de archivo.
+        const QString b = StudiaController::rutaIndiceParaCarpeta(QStringLiteral("/home/u/Física II"), base);
+        QVERIFY(!b.contains(QLatin1Char(' ')));
+    }
+
+    void indexado_progresoSaleDeLaLineaDelScript()
+    {
+        QCOMPARE(StudiaController::progresoDeLinea(
+                     QStringLiteral("  [120/480] 3.2 doc/s · faltan ~2 min · 900 fragmentos")), 0.25);
+        QCOMPARE(StudiaController::progresoDeLinea(QStringLiteral("  [30/30] 9 frag/s")), 1.0);
+        QCOMPARE(StudiaController::progresoDeLinea(QStringLiteral("Documentos a procesar: 12")), -1.0);
+        QCOMPARE(StudiaController::progresoDeLinea(QStringLiteral("[0/0]")), -1.0);
+    }
+
+    // Al abrir StudIA se actualiza sólo si hay algo nuevo: un archivo indexable
+    // o una carpeta tocada (borrar un archivo cambia la fecha de su carpeta).
+    void indexado_detectaCambiosEnElCorpus()
+    {
+        QTemporaryDir dir;
+        QVERIFY(dir.isValid());
+        QDir().mkpath(dir.filePath(QStringLiteral("Fisica")));
+        QFile f(dir.filePath(QStringLiteral("Fisica/a.pdf")));
+        QVERIFY(f.open(QIODevice::WriteOnly)); f.write("x"); f.close();
+        const QDateTime despues = QDateTime::currentDateTime().addSecs(60);
+        const QDateTime antes = QDateTime::currentDateTime().addSecs(-3600);
+        QVERIFY(!StudiaController::corpusCambioDesde(dir.path(), despues));
+        QVERIFY(StudiaController::corpusCambioDesde(dir.path(), antes));
+        // Un archivo que no se indexa no cuenta (salvo por su carpeta).
+        QTemporaryDir dir2;
+        QFile g(dir2.filePath(QStringLiteral("notas.exe")));
+        QVERIFY(g.open(QIODevice::WriteOnly)); g.write("x"); g.close();
+        QVERIFY(!StudiaController::corpusCambioDesde(dir2.path(), antes));
+        QVERIFY(!StudiaController::corpusCambioDesde(QStringLiteral("/no/existe"), antes));
+    }
+
+    void indexado_gateDeAbstencionSoloEnCorporaGrandes()
+    {
+        QVERIFY(!StudiaIndex::debeExigirEvidencia(1));
+        QVERIFY(!StudiaIndex::debeExigirEvidencia(StudiaIndex::kMinFragmentosParaAbstencion - 1));
+        QVERIFY(StudiaIndex::debeExigirEvidencia(139000));   // corpus de la PPS
+    }
+
+    // El modelo de embeddings que baja el gestor de LlamaCode tiene que
+    // encontrarse también cuando la biblioteca se movió con LLAMACODE_MODELS_DIR.
+    void indexado_modeloDeEmbeddingsEnLaBibliotecaDeLlamaCode()
+    {
+        if (!StudiaEmbedServer::rutaModelo().isEmpty()
+            && !StudiaEmbedServer::rutaModelo().contains(QStringLiteral("bge-m3-test")))
+            QSKIP("Ya hay un modelo de embeddings instalado: tiene prioridad.");
+        QTemporaryDir lib;
+        QVERIFY(lib.isValid());
+        QFile m(lib.filePath(QStringLiteral("bge-m3-test.gguf")));
+        QVERIFY(m.open(QIODevice::WriteOnly)); m.write("GGUF"); m.close();
+        const QByteArray previo = qgetenv("LLAMACODE_MODELS_DIR");
+        qputenv("LLAMACODE_MODELS_DIR", lib.path().toLocal8Bit());
+        const QString ruta = StudiaEmbedServer::rutaModelo();
+        if (previo.isEmpty()) qunsetenv("LLAMACODE_MODELS_DIR");
+        else qputenv("LLAMACODE_MODELS_DIR", previo);
+        QCOMPARE(QFileInfo(ruta).fileName(), QStringLiteral("bge-m3-test.gguf"));
+    }
+
+    // La UI distingue "falta el modelo" (ofrece bajarlo) de "arrancando" y
+    // "vectorizando": estadoSemantico trae el estado del servidor.
+    void indexado_estadoSemanticoTraeElServidor()
+    {
+        StudiaController c;
+        const QVariantMap e = c.estadoSemantico();
+        QVERIFY(e.contains(QStringLiteral("servidorActivo")));
+        QVERIFY(e.contains(QStringLiteral("servidorMotivo")));
+        QCOMPARE(e.value(QStringLiteral("vectorizando")).toBool(), false);
+        c.reintentarSemantica();          // sin activar(): no levanta nada
+        QVERIFY(!c.estadoSemantico().value(QStringLiteral("servidorActivo")).toBool()
+                || c.urlEmbeddingsEfectiva().length() > 0);
+        const QVariantMap sug = c.modeloEmbeddingsSugerido();
+        QVERIFY(sug.value(QStringLiteral("archivo")).toString().startsWith(QStringLiteral("bge-m3")));
+    }
+
+    // De punta a punta: elegir una carpeta común de materias crea el índice con
+    // el ingestor real, lo abre y las subcarpetas quedan como materias. Antes
+    // había que correr ingest.py por consola y abrir el .db a mano.
+    void integracion_crearIndiceDesdeCarpeta()
+    {
+        if (StudiaHerramientas::python().isEmpty() || StudiaController().rutaIngestor().isEmpty())
+            QSKIP("Sin Python o sin tools/studia/ingest.py");
+        QTemporaryDir corpus;
+        QVERIFY(corpus.isValid());
+        QDir().mkpath(corpus.filePath(QStringLiteral("Fisica/Parciales")));
+        const QByteArray texto = QByteArray(
+            "La cinematica estudia el movimiento de los cuerpos sin atender a sus causas. "
+            "La velocidad media es el cociente entre el desplazamiento y el intervalo de tiempo. ")
+            .repeated(4);
+        QFile a(corpus.filePath(QStringLiteral("Fisica/Parciales/p1.txt")));
+        QVERIFY(a.open(QIODevice::WriteOnly)); a.write(texto); a.close();
+
+        StudiaController c;
+        c.setUrlEmbeddings(QString());        // sin etapa de vectores
+        c.setServerUrl(QString());
+        QSignalSpy spy(&c, &StudiaController::indexadoChanged);
+        c.crearIndice(corpus.path());
+        QVERIFY(c.indexando());
+        QTRY_VERIFY_WITH_TIMEOUT(!c.indexando(), 60000);
+        QVERIFY2(c.indiceListo(), qPrintable(c.estadoIndexado()));
+        QVERIFY(c.materias().contains(QStringLiteral("Fisica")));
+        QVERIFY(c.estadoIndexado().startsWith(QStringLiteral("Índice al día")));
+        QVERIFY(c.indiceActualizable());
+        QVERIFY(spy.count() > 1);
+
+        // Un índice chico no se abstiene de lo que el apunte responde: con el
+        // umbral del corpus grande, "velocidad media" daba "no encontré".
+        c.setMateria(QStringLiteral("Fisica"));
+        QVERIFY(!c.buscar(QStringLiteral("¿Qué es la velocidad media?"), 4).isEmpty());
+
+        // Borrar el archivo y actualizar: sale del índice (--podar).
+        QVERIFY(QFile::remove(corpus.filePath(QStringLiteral("Fisica/Parciales/p1.txt"))));
+        c.actualizarIndice();
+        QTRY_VERIFY_WITH_TIMEOUT(!c.indexando(), 60000);
+        QCOMPARE(c.estadisticas().value(QStringLiteral("documentos")).toInt(), 0);
+    }
+
     // En Ubuntu no hay `python`, sólo `python3`: el ingestor y el detector de
     // herramientas tienen que encontrarlo igual.
     void integracion_pythonSeBuscaTambienComoPython3()

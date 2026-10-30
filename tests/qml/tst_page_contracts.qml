@@ -139,6 +139,20 @@ QtObject {
         const launch = read("LaunchPage.qml.txt")
         check(launch.indexOf("Layout.maximumWidth: 1100") > 0, "Lanzar: columna acotada")
 
+        // StudIA: se indexa desde la app (sin consola) y el servidor se levanta
+        // desde la propia pestaña.
+        check(studia.indexOf("tools/studia/ingest.py sobre") < 0,
+              "StudIA: el primer uso no manda a correr ingest.py a mano")
+        check(studia.indexOf("Studia.crearIndice(carpeta)") > 0, "StudIA: crear índice desde una carpeta")
+        check(studia.indexOf("Studia.actualizarIndice()") > 0, "StudIA: actualizar índice")
+        check(studia.indexOf("App.startServer(root.perfilParaIniciar)") > 0,
+              "StudIA: iniciar el modelo desde la pestaña")
+        check(studia.indexOf("id: franjaIndexado") > 0, "StudIA: progreso del indexado a la vista")
+        check(studia.indexOf("App.downloadRecommendedModel(sugerido.repo, sugerido.archivo)") > 0,
+              "StudIA: baja el modelo de embeddings con el gestor de LlamaCode")
+        check(studia.indexOf("corré tools/studia/vectorizar.py") < 0,
+              "StudIA: no manda a vectorizar a mano")
+
         console.log(fails === 0 ? "ALL PASS" : ("FAIL count=" + fails))
         Qt.exit(fails === 0 ? 0 : 1)
     }

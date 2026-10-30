@@ -59,7 +59,12 @@ QString StudiaEmbedServer::rutaModelo()
 {
     // Primero el que viaja con la app: es el caso del estudiante que la recibe
     // ya armada. Despues el que haya bajado a mano.
+    // LLAMACODE_MODELS_DIR: la biblioteca de modelos de LlamaCode, si se movió.
+    // Es donde deja el archivo "Descargar modelo" de StudIA (gestor de
+    // descargas de la app), igual que la carpeta por defecto de abajo.
+    const QString biblioteca = QString::fromLocal8Bit(qgetenv("LLAMACODE_MODELS_DIR"));
     return primerArchivo({carpetaEmpaquetada() + QStringLiteral("/modelos"),
+                          biblioteca,
                           QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
                               + QStringLiteral("/models"),
                           QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
