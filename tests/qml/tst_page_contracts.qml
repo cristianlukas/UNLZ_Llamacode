@@ -100,6 +100,7 @@ QtObject {
         // Benchmark: la página carga asíncrona y los Loader de encabezado se
         // creaban de a uno (faltaban de "Fixes" en adelante). Inline component.
         const bench = read("BenchmarkPage.qml.txt")
+        check(bench.indexOf("text: \"tabla_") < 0, "Benchmark: títulos sin nombres internos (tabla_best_…)")
         check(bench.indexOf("sourceComponent: sortableHeader") < 0,
               "Benchmark: encabezados sin Loader")
         check((bench.match(/SortableHeader \{ column: /g) || []).length === 25,

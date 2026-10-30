@@ -1654,7 +1654,7 @@ Item {
                             RowLayout {
                                 Layout.fillWidth: true
                                 Text {
-                                    text: "tabla_best_25 · HumanEval (1 ítem)"
+                                    text: "Mejores 25 · HumanEval (1 ítem)"
                                     color: Theme.textPrimary; font.pixelSize: 15; font.bold: true
                                 }
                                 Item { Layout.fillWidth: true }
@@ -1733,7 +1733,7 @@ Item {
                             RowLayout {
                                 Layout.fillWidth: true
                                 Text {
-                                    text: "tabla_best_modelos_speed"
+                                    text: "Mejores modelos · velocidad"
                                     color: Theme.textPrimary; font.pixelSize: 15; font.bold: true
                                 }
                                 Item { Layout.fillWidth: true }
@@ -1810,7 +1810,7 @@ Item {
                             RowLayout {
                                 Layout.fillWidth: true
                                 Text {
-                                    text: "tabla_best_modelos_quality · HumanEval (20 ítems)"
+                                    text: "Mejores modelos · calidad · HumanEval (20 ítems)"
                                     color: Theme.textPrimary; font.pixelSize: 15; font.bold: true
                                 }
                                 Item { Layout.fillWidth: true }
