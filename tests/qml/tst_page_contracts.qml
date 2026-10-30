@@ -81,8 +81,18 @@ QtObject {
         const main = read("Main.qml.txt")
         check(main.indexOf("currentIndex === 15; asynchronous: true; source: \"pages/StudiaPage.qml\"") > 0,
               "Main.qml: StudiaPage en el índice 15")
-        check(main.indexOf("currentIndex === 16; asynchronous: true; source: \"pages/SettingsPage.qml\"") > 0,
-              "Main.qml: Configuración pasa al índice 16")
+        check(main.indexOf("currentIndex === 16; asynchronous: true; source: \"pages/MonitorPage.qml\"") > 0,
+              "Main.qml: Monitor en el índice 16 (la 17.ª entrada de NavBar)")
+        check(main.indexOf("currentIndex === 17; asynchronous: true; source: \"pages/SettingsPage.qml\"") > 0,
+              "Main.qml: Configuración pasa al índice 17")
+
+        // Monitor: todo sale de App.monitor y el reporte se copia desde el header.
+        const monitor = read("MonitorPage.qml.txt")
+        check(monitor.indexOf("import LlamaCode 1.0") > 0, "Monitor: importa el módulo (Lc* desde qml/pages)")
+        check(monitor.indexOf("App.monitor") > 0, "Monitor: lee App.monitor")
+        check(monitor.indexOf("App.copyMonitorReport()") > 0, "Monitor: botón Copiar reporte")
+        check(monitor.indexOf("PageHeader {") > 0,
+              "Monitor: usa PageHeader (reserva el ancho de los botones de ventana)")
 
         console.log(fails === 0 ? "ALL PASS" : ("FAIL count=" + fails))
         Qt.exit(fails === 0 ? 0 : 1)

@@ -62,6 +62,8 @@ necesitan numpy/matplotlib se saltean solos con `skipUnless`.
 | EvalSuite | `tests/test_eval.cpp` |
 | ControlApi | `tests/test_control_api.cpp` |
 | ModelLoadProgress (etapas/% de carga de llama-server desde stderr; estimado por tiempo) | `tests/test_model_load_progress.cpp` |
+| ServerMonitor (pantalla Monitor: `/slots` → velocidad/contexto/requests, buffers por GPU del log de carga, nvidia-smi con telemetría, `/proc` CPU/RAM/disco, reporte) | `tests/test_server_monitor.cpp` |
+| MonitorFormat.js (formato y reparto de barras de GPU/contexto del Monitor) | `tests/qml/tst_monitor_format.qml` (ctest `qml_monitor_format`) |
 | LlmGateway `/llamacode/v1/status` + seguimiento LAN de la carga remota (`remoteLoadFromStatus`) | `tests/test_gateway.cpp` |
 | `modelLoadStatus` de AppController (conectando LAN / carga local / remota) | `tests/test_appcontroller.cpp` |
 | AgentToolRunner (tools nativas) | `tests/test_agent_tools.cpp` |

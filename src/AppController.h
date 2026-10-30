@@ -37,6 +37,7 @@
 #include "core/tuner/TunerWorker.h"
 #include "core/automation/TeachSessionRecorder.h"
 #include "core/data/DataLab.h"
+#include "core/ServerMonitor.h"
 #include <QObject>
 #include <QProcess>
 #include <QTimer>
@@ -130,6 +131,9 @@ class AppController : public QObject
     // mientras el proceso baja, vuelve a cargar el modelo y el agente se reconecta.
     Q_PROPERTY(bool thinkingRestarting READ thinkingRestarting NOTIFY thinkingRestartingChanged)
     Q_PROPERTY(QVariantMap serverStats READ serverStats    NOTIFY serverStatsChanged)
+    // Pantalla Monitor: velocidad, contexto, reparto de VRAM, hardware y
+    // requests recientes (ver ServerMonitor). Se actualiza cada ~1 s con el server corriendo.
+    Q_PROPERTY(QVariantMap monitor     READ monitor        NOTIFY monitorChanged)
     Q_PROPERTY(QString serverLog      READ serverLog       NOTIFY serverLogChanged)
     Q_PROPERTY(QString activeLaunchId READ activeLaunchId  NOTIFY activeLaunchIdChanged)
     Q_PROPERTY(QVariantMap effectiveProfile READ effectiveProfile NOTIFY effectiveProfileChanged)
@@ -376,6 +380,10 @@ public:
     QString serverState()    const { return m_serverState; }
     bool thinkingRestarting() const { return m_thinkingRestarting; }
     QVariantMap serverStats() const { return m_serverStats; }
+    QVariantMap monitor() const { return m_monitorState; }
+    // Texto plano del Monitor (para pegar en un issue o chat).
+    Q_INVOKABLE QString monitorReport() const;
+    Q_INVOKABLE void copyMonitorReport();
     QString serverLog()      const { return m_log; }
     QString activeLaunchId() const { return m_activeLaunchId; }
     QVariantMap effectiveProfile() const { return m_effectiveProfile; }
@@ -1674,6 +1682,7 @@ signals:
     void serverStateChanged();
     void thinkingRestartingChanged();
     void serverStatsChanged();
+    void monitorChanged();
     void serverHasVisionChanged();
     void gitAvailableChanged();
     // El agente pidió subagents pero falta git → la UI ofrece instalarlo.
@@ -2084,6 +2093,25 @@ private:
     void startVramPolling();
     void stopVramPolling();
     void pollServerStats();
+    // Monitor: GET /slots (+ /metrics si el server lo expone), muestra de
+    // CPU/RAM/disco y armado del estado publicado en `monitor`.
+    void pollServerSlots();
+    void pollGpuApps();
+    QVariantMap sampleSystem();
+    void publishMonitor();
+    ServerMonitor m_monitor;
+    QVariantMap m_monitorState;
+    QVariantMap m_systemSample;
+    QElapsedTimer m_monitorClock;
+    QString m_monitorModel;
+    bool m_monitorHasSlots = false;
+    int m_vramPollTick = 0;
+    bool m_slotsInFlight = false;
+    int m_metricsSupport = -1;          // -1 sin probar, 0 no (404), 1 sí
+    QProcess *m_gpuAppsProc = nullptr;
+    QHash<QString, QHash<qint64, double>> m_gpuApps;
+    quint64 m_prevCpuTotal = 0, m_prevCpuIdle = 0, m_prevDiskRead = 0, m_prevDiskWrite = 0;
+    qint64 m_prevSystemMs = -1;
     void maybeRebalanceCharlaGpuPlan();
     // Aplica el power limit configurado al arrancar un server: usa el override del
     // launch profile (powerLimitW>0) o, si no, el global "gpuPowerLimitW". No-op si

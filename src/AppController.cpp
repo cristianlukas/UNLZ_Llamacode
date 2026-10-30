@@ -3034,6 +3034,8 @@ void AppController::startServerInternal(const QString &launchProfileId, bool rem
     // Keep callbacks tied to this exact server process; m_proc may be replaced
     // by a later launch before queued Qt signals from this process are drained.
     const QPointer<QProcess> serverProcess = m_proc;
+    // Monitor nuevo por server: los buffers del log y los requests son de éste.
+    m_monitor.reset();
 
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     for (auto it = envMap.begin(); it != envMap.end(); ++it)
@@ -3060,6 +3062,8 @@ void AppController::startServerInternal(const QString &launchProfileId, bool rem
             m_localLoad.feed(text);
             if (m_localLoad.state() != before) emit modelLoadStatusChanged();
         }
+        if (m_proc == serverProcess)
+            m_monitor.ingestServerLog(text);
         appendServerEvent(QStringLiteral("stderr"), text);
     });
     connect(serverProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
@@ -3751,14 +3755,30 @@ void AppController::stopRemoteLoadPolling()
 void AppController::startVramPolling()
 {
     stopVramPolling();
+    m_monitorClock.start();
+    m_vramPollTick = 0;
+    m_metricsSupport = -1;
+    m_monitorModel.clear();
+    m_monitorHasSlots = false;
+    if (!m_activeLaunchId.isEmpty()) {
+        const auto ctx = buildContext(m_activeLaunchId);
+        m_monitorModel = ctx.launch.alias.isEmpty() ? ctx.launch.name : ctx.launch.alias;
+        m_monitorHasSlots = !ctx.backend.isCloud();
+    }
     m_vramPollTimer = new QTimer(this);
-    m_vramPollTimer->setInterval(2000);
+    // 1 s para /slots (velocidad de decode en vivo); nvidia-smi y /proc van
+    // cada 2 ticks, como antes.
+    m_vramPollTimer->setInterval(1000);
     connect(m_vramPollTimer, &QTimer::timeout, this, [this]() {
         if (!serverRunning()) { stopVramPolling(); return; }
-        pollServerStats();
+        pollServerSlots();
+        if (++m_vramPollTick % 2 == 0) pollServerStats();
+        if (m_vramPollTick % 10 == 1) pollGpuApps();
     });
     m_vramPollTimer->start();
     pollServerStats(); // primera muestra inmediata
+    pollGpuApps();
+    pollServerSlots();
 }
 
 void AppController::stopVramPolling()
@@ -3774,21 +3794,36 @@ void AppController::stopVramPolling()
         m_vramProc->deleteLater();
         m_vramProc = nullptr;
     }
+    if (m_gpuAppsProc) {
+        m_gpuAppsProc->disconnect();
+        m_gpuAppsProc->kill();
+        m_gpuAppsProc->deleteLater();
+        m_gpuAppsProc = nullptr;
+    }
     if (!m_serverStats.isEmpty()) {
         m_serverStats.clear();
         emit serverStatsChanged();
+    }
+    // El Monitor conserva la última foto (requests, picos) hasta el próximo
+    // arranque; sólo deja de estar "en vivo".
+    if (m_monitorState.value(QStringLiteral("live")).toBool()) {
+        m_monitorState[QStringLiteral("live")] = false;
+        m_monitorState[QStringLiteral("state")] = QStringLiteral("stopped");
+        emit monitorChanged();
     }
     if (!m_charlaGpuRebalancePending)
         m_lastLiveGpus.clear();
 }
 
-// Lee VRAM por GPU vía nvidia-smi (async, no bloquea la GUI). Publica m_serverStats:
-//   { gpus: [{index,name,totalMb,usedMb,pct}], totalMb, usedMb, pct }
+// Lee VRAM/telemetría por GPU vía nvidia-smi (async, no bloquea la GUI).
+// Publica m_serverStats: { gpus: [{index,name,totalMb,usedMb,pct,drawW,limitW,
+// uuid,util,tempC,pcieGen,pcieWidth}], totalMb, usedMb, pct, ... }
 void AppController::pollServerStats()
 {
+    m_systemSample = sampleSystem();
     if (m_vramProc) return; // muestra anterior aún en curso; saltear
     const QString nvidiaSmi = QStandardPaths::findExecutable(QStringLiteral("nvidia-smi"));
-    if (nvidiaSmi.isEmpty()) return;
+    if (nvidiaSmi.isEmpty()) { publishMonitor(); return; }
     m_vramProc = new QProcess(this);
     connect(m_vramProc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             this, [this](int, QProcess::ExitStatus) {
@@ -3797,57 +3832,187 @@ void AppController::pollServerStats()
         m_vramProc->deleteLater();
         m_vramProc = nullptr;
 
-        QVariantList gpus;
-        double sumTotal = 0, sumUsed = 0, sumFree = 0, sumDraw = 0, sumLimit = 0;
-        const QStringList lines = text.split('\n', Qt::SkipEmptyParts);
-        for (const QString &line : lines) {
-            const QStringList p = line.split(QLatin1Char(','));
-            if (p.size() < 5) continue;
-            bool iOk = false, tOk = false, uOk = false, fOk = false;
-            const int idx = p.at(0).trimmed().toInt(&iOk);
-            const QString name = p.at(1).trimmed();
-            const double totalMb = p.at(2).trimmed().toDouble(&tOk);
-            const double usedMb  = p.at(3).trimmed().toDouble(&uOk);
-            const double freeMb  = p.at(4).trimmed().toDouble(&fOk);
-            if (!iOk || !tOk || !uOk || !fOk) continue;
-            // power.draw / power.limit pueden venir "[N/A]" en GPUs sin telemetría.
-            const double drawW  = p.size() > 5 ? p.at(5).trimmed().toDouble() : 0.0;
-            const double limitW = p.size() > 6 ? p.at(6).trimmed().toDouble() : 0.0;
-            QVariantMap g;
-            g[QStringLiteral("index")]   = idx;
-            g[QStringLiteral("name")]    = name;
-            g[QStringLiteral("totalMb")] = totalMb;
-            g[QStringLiteral("usedMb")]  = usedMb;
-            g[QStringLiteral("freeMb")]  = qMax(0.0, freeMb);
-            g[QStringLiteral("pct")]     = totalMb > 0 ? (usedMb / totalMb * 100.0) : 0.0;
-            g[QStringLiteral("drawW")]   = drawW;
-            g[QStringLiteral("limitW")]  = limitW;
-            g[QStringLiteral("powerPct")] = limitW > 0 ? (drawW / limitW * 100.0) : 0.0;
-            gpus.append(g);
-            sumTotal += totalMb;
-            sumUsed  += usedMb;
-            sumFree  += qMax(0.0, freeMb);
-            sumDraw  += drawW;
-            sumLimit += limitW;
-        }
-        QVariantMap stats;
-        stats[QStringLiteral("gpus")]    = gpus;
-        stats[QStringLiteral("totalMb")] = sumTotal;
-        stats[QStringLiteral("usedMb")]  = sumUsed;
-        stats[QStringLiteral("freeMb")]  = sumFree;
-        stats[QStringLiteral("pct")]     = sumTotal > 0 ? (sumUsed / sumTotal * 100.0) : 0.0;
-        stats[QStringLiteral("drawW")]   = sumDraw;
-        stats[QStringLiteral("limitW")]  = sumLimit;
-        stats[QStringLiteral("powerPct")] = sumLimit > 0 ? (sumDraw / sumLimit * 100.0) : 0.0;
-        m_serverStats = stats;
-        m_lastLiveGpus = gpus;
+        m_serverStats = ServerMonitor::parseNvidiaSmiGpus(text);
+        m_lastLiveGpus = m_serverStats.value(QStringLiteral("gpus")).toList();
         emit serverStatsChanged();
+        publishMonitor();
         maybeRebalanceCharlaGpuPlan();
     });
     m_vramProc->start(nvidiaSmi,
                       {QStringLiteral("--query-gpu=index,name,memory.total,memory.used,memory.free,"
-                                      "power.draw,power.limit"),
+                                      "power.draw,power.limit,uuid,utilization.gpu,temperature.gpu,"
+                                      "pcie.link.gen.current,pcie.link.width.current"),
                        QStringLiteral("--format=csv,noheader,nounits")});
+}
+
+// Qué procesos ocupan cada GPU: separa "otros programas" de lo del server.
+// En Windows/WDDM nvidia-smi no da la memoria por proceso ([N/A]) y queda vacío.
+void AppController::pollGpuApps()
+{
+    if (m_gpuAppsProc) return;
+    const QString nvidiaSmi = QStandardPaths::findExecutable(QStringLiteral("nvidia-smi"));
+    if (nvidiaSmi.isEmpty()) return;
+    m_gpuAppsProc = new QProcess(this);
+    connect(m_gpuAppsProc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            this, [this](int, QProcess::ExitStatus) {
+        if (!m_gpuAppsProc) return;
+        m_gpuApps = ServerMonitor::parseComputeApps(
+            QString::fromUtf8(m_gpuAppsProc->readAllStandardOutput()));
+        m_gpuAppsProc->deleteLater();
+        m_gpuAppsProc = nullptr;
+    });
+    m_gpuAppsProc->start(nvidiaSmi, {QStringLiteral("--query-compute-apps=pid,gpu_uuid,used_memory"),
+                                     QStringLiteral("--format=csv,noheader,nounits")});
+}
+
+void AppController::pollServerSlots()
+{
+    if (m_slotsInFlight || !m_nam || !m_monitorHasSlots) return; // cloud: sin /slots
+    const QString base = serverBaseUrl();
+    if (base.isEmpty()) return;
+    // Con --api-key, /slots y /metrics la piden (/health no).
+    QByteArray auth;
+    if (m_proc) {
+        const QStringList args = m_proc->arguments();
+        const int k = args.indexOf(QStringLiteral("--api-key"));
+        if (k >= 0 && k + 1 < args.size())
+            auth = "Bearer " + args.at(k + 1).toUtf8();
+    }
+    auto makeRequest = [&](const QString &path) {
+        QNetworkRequest req(QUrl(base + path));
+        req.setTransferTimeout(2000);
+        if (!auth.isEmpty()) req.setRawHeader("Authorization", auth);
+        return req;
+    };
+    m_slotsInFlight = true;
+    QNetworkReply *reply = m_nam->get(makeRequest(QStringLiteral("/slots")));
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        reply->deleteLater();
+        m_slotsInFlight = false;
+        if (reply->error() != QNetworkReply::NoError) return;
+        const QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
+        if (!doc.isArray()) return;
+        m_monitor.ingestSlots(doc.array(), m_monitorClock.elapsed());
+        publishMonitor();
+    });
+    if (m_metricsSupport != 0) {
+        QNetworkReply *metrics = m_nam->get(makeRequest(QStringLiteral("/metrics")));
+        connect(metrics, &QNetworkReply::finished, this, [this, metrics]() {
+            metrics->deleteLater();
+            if (metrics->error() != QNetworkReply::NoError) {
+                // Sin --metrics responde 501/404: no volver a pedirlo.
+                if (metrics->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() > 0)
+                    m_metricsSupport = 0;
+                return;
+            }
+            m_metricsSupport = 1;
+            m_monitor.ingestMetrics(QString::fromUtf8(metrics->readAll()));
+        });
+    }
+}
+
+QVariantMap AppController::sampleSystem()
+{
+    QVariantMap s;
+    const qint64 now = m_monitorClock.isValid() ? m_monitorClock.elapsed() : 0;
+    double cpuPct = -1, ramTotalMb = -1, ramAvailMb = -1, readMBs = -1, writeMBs = -1;
+#ifdef Q_OS_WIN
+    FILETIME idleFt, kernelFt, userFt;
+    if (GetSystemTimes(&idleFt, &kernelFt, &userFt)) {
+        auto u64 = [](const FILETIME &f) {
+            return (quint64(f.dwHighDateTime) << 32) | quint64(f.dwLowDateTime);
+        };
+        // kernel incluye idle.
+        const quint64 total = u64(kernelFt) + u64(userFt);
+        const quint64 idle = u64(idleFt);
+        if (m_prevCpuTotal > 0 && total > m_prevCpuTotal)
+            cpuPct = 100.0 * (1.0 - double(idle - m_prevCpuIdle) / double(total - m_prevCpuTotal));
+        m_prevCpuTotal = total;
+        m_prevCpuIdle = idle;
+    }
+    MEMORYSTATUSEX mem;
+    mem.dwLength = sizeof(mem);
+    if (GlobalMemoryStatusEx(&mem)) {
+        ramTotalMb = double(mem.ullTotalPhys) / (1024.0 * 1024.0);
+        ramAvailMb = double(mem.ullAvailPhys) / (1024.0 * 1024.0);
+    }
+#else
+    auto readProc = [](const char *path) {
+        QFile f(QString::fromLatin1(path));
+        return f.open(QIODevice::ReadOnly) ? QString::fromLatin1(f.readAll()) : QString();
+    };
+    const auto cpu = ServerMonitor::parseProcStatCpu(readProc("/proc/stat"));
+    if (cpu.first > 0) {
+        if (m_prevCpuTotal > 0 && cpu.first > m_prevCpuTotal)
+            cpuPct = 100.0 * (1.0 - double(cpu.second - m_prevCpuIdle)
+                                    / double(cpu.first - m_prevCpuTotal));
+        m_prevCpuTotal = cpu.first;
+        m_prevCpuIdle = cpu.second;
+    }
+    const QVariantMap mem = ServerMonitor::parseMeminfo(readProc("/proc/meminfo"));
+    ramTotalMb = mem.value(QStringLiteral("totalMb")).toDouble();
+    ramAvailMb = mem.value(QStringLiteral("availableMb")).toDouble();
+    const auto disk = ServerMonitor::parseDiskstats(readProc("/proc/diskstats"));
+    if (m_prevSystemMs >= 0 && now > m_prevSystemMs && disk.first >= m_prevDiskRead) {
+        const double secs = (now - m_prevSystemMs) / 1000.0;
+        // diskstats cuenta sectores de 512 bytes, sea cual sea el disco.
+        readMBs = (disk.first - m_prevDiskRead) * 512.0 / (1024.0 * 1024.0) / secs;
+        writeMBs = (disk.second - m_prevDiskWrite) * 512.0 / (1024.0 * 1024.0) / secs;
+    }
+    m_prevDiskRead = disk.first;
+    m_prevDiskWrite = disk.second;
+#endif
+    m_prevSystemMs = now;
+    s[QStringLiteral("cpuPct")] = cpuPct >= 0 ? qBound(0.0, cpuPct, 100.0) : -1.0;
+    s[QStringLiteral("threads")] = QThread::idealThreadCount();
+    s[QStringLiteral("ramTotalGb")] = ramTotalMb > 0 ? ramTotalMb / 1024.0 : -1.0;
+    s[QStringLiteral("ramUsedGb")] = ramTotalMb > 0 && ramAvailMb >= 0
+                                         ? (ramTotalMb - ramAvailMb) / 1024.0 : -1.0;
+    s[QStringLiteral("diskReadMBs")] = readMBs;
+    s[QStringLiteral("diskWriteMBs")] = writeMBs;
+
+    // Series del Monitor: una muestra cada 2 s.
+    m_monitor.ingestHardware({
+        {QStringLiteral("gpuUtil"), m_serverStats.value(QStringLiteral("utilPct"), -1.0)},
+        {QStringLiteral("vramGb"), m_serverStats.isEmpty() ? -1.0
+             : m_serverStats.value(QStringLiteral("usedMb")).toDouble() / 1024.0},
+        {QStringLiteral("powerW"), m_serverStats.isEmpty() ? -1.0
+             : m_serverStats.value(QStringLiteral("drawW")).toDouble()},
+        {QStringLiteral("tempC"), m_serverStats.value(QStringLiteral("maxTempC"), -1.0)},
+        {QStringLiteral("cpu"), s.value(QStringLiteral("cpuPct"))},
+        {QStringLiteral("ramGb"), s.value(QStringLiteral("ramUsedGb"))},
+        {QStringLiteral("diskRead"), readMBs},
+    });
+    return s;
+}
+
+void AppController::publishMonitor()
+{
+    QVariantMap m = m_monitor.snapshot();
+    m[QStringLiteral("live")] = serverRunning();
+    if (!m_monitor.hasSlots() && serverRunning())
+        m[QStringLiteral("state")] = serverReady() ? QStringLiteral("unknown") : QStringLiteral("loading");
+    m[QStringLiteral("model")] = m_monitorModel;
+    const qint64 pid = m_proc ? m_proc->processId() : 0;
+    m[QStringLiteral("gpus")] = ServerMonitor::gpuBreakdown(
+        m_serverStats, m.value(QStringLiteral("buffers")).toMap(), m_gpuApps, pid);
+    m[QStringLiteral("gpuTotals")] = m_serverStats;
+    m[QStringLiteral("system")] = m_systemSample;
+    m[QStringLiteral("requests")] = m_monitor.recentRequests(100);
+    m_monitorState = m;
+    emit monitorChanged();
+}
+
+QString AppController::monitorReport() const
+{
+    return ServerMonitor::report(m_monitorState, m_serverStats, m_systemSample,
+                                 m_monitor.recentRequests(30),
+                                 m_monitorState.value(QStringLiteral("model")).toString());
+}
+
+void AppController::copyMonitorReport()
+{
+    QGuiApplication::clipboard()->setText(monitorReport());
 }
 
 void AppController::maybeRebalanceCharlaGpuPlan()
@@ -14645,6 +14810,7 @@ static const TrEntry k_tr[] = {
     {"nav.charla",    "Ingi Charla",    "Ingi Talk",    "对话",       "Ingi Parler",    "Ingi Parla",     "Ingi Sprechen"},
     {"nav.downloads", "Descargas",      "Downloads",    "下载",       "Téléchargements","Download",       "Downloads"},
     {"nav.studia",    "StudIA",         "StudIA",       "StudIA",     "StudIA",         "StudIA",         "StudIA"},
+    {"nav.monitor",   "Monitor",        "Monitor",      "监控",       "Moniteur",       "Monitor",        "Monitor"},
     {"nav.settings",  "Configuración", "Settings",     "设置",       "Paramètres",     "Impostazioni",   "Einstellungen"},
     // Launch page
     {"launch.title",       "Lanzar",          "Launch",          "启动",       "Lancer",          "Avvia",               "Starten"},

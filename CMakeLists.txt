@@ -84,6 +84,7 @@ set(CORE_SOURCES
     src/core/HardwareDiagnostics.cpp
     src/core/PerformanceMatrix.cpp
     src/core/ServerBenchmarkMetrics.cpp
+    src/core/ServerMonitor.cpp
     src/core/ModelRoot.cpp
     src/core/ModelRootRegistry.cpp
     src/core/CatalogModel.cpp
@@ -221,6 +222,7 @@ set(HEADERS
     src/core/diag/StartupDiagnostics.h
     src/core/PerformanceMatrix.h
     src/core/ServerBenchmarkMetrics.h
+    src/core/ServerMonitor.h
     src/core/ModelRoot.h
     src/core/ModelRootRegistry.h
     src/core/CatalogModel.h
@@ -486,6 +488,8 @@ qt_add_qml_module(LlamaCode
         qml/components/SetupWizardPolicy.js
         qml/components/SettingsTabsPolicy.js
         qml/components/BenchmarkScore.js
+        qml/components/MonitorFormat.js
+        qml/components/LcSparkline.qml
         qml/components/PageHeader.qml
         qml/components/CommandPreview.qml
         qml/components/ToolSupportBanner.qml
@@ -520,6 +524,7 @@ qt_add_qml_module(LlamaCode
         qml/pages/CharlaPage.qml
         qml/pages/DownloadsPage.qml
         qml/pages/StudiaPage.qml
+        qml/pages/MonitorPage.qml
         qml/pages/SettingsPage.qml
     RESOURCES
         assets/best_bolt.svg
@@ -696,6 +701,7 @@ if (BUILD_TESTS)
     add_lc_test(test_context_index      tests/test_context_index.cpp)
      add_lc_test(test_tuner              tests/test_tuner.cpp)
      add_lc_test(test_server_benchmark_metrics tests/test_server_benchmark_metrics.cpp)
+     add_lc_test(test_server_monitor     tests/test_server_monitor.cpp)
      add_lc_test(test_long_context_probe tests/test_long_context_probe.cpp
                 tests/long_context_probe.cpp)
     add_lc_test(test_hardware_diagnostics tests/test_hardware_diagnostics.cpp)
@@ -782,6 +788,8 @@ if (BUILD_TESTS)
         qml/components/NavigationPolicy.js
         qml/components/SetupWizardPolicy.js
         qml/components/BenchmarkScore.js
+        qml/components/MonitorFormat.js
+        tests/qml/tst_monitor_format.qml
         qml/pages/DataLabPage.qml
         qml/components/LcColorPicker.qml
         qml/components/LcColorRow.qml
@@ -849,7 +857,7 @@ if (BUILD_TESTS)
     list(APPEND _lc_qml_harness_copies "${LC_QML_HARNESS_DIR}/SettingsPage.qml.txt")
     # tst_page_contracts lee AgentPage/ChatPage/StudiaPage como TEXTO (headers
     # Flow, botón Iniciar agente, tarjeta de computer use, arranque de StudIA).
-    foreach(_page AgentPage ChatPage StudiaPage)
+    foreach(_page AgentPage ChatPage StudiaPage MonitorPage)
         add_custom_command(
             OUTPUT "${LC_QML_HARNESS_DIR}/${_page}.qml.txt"
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -939,6 +947,13 @@ if (BUILD_TESTS)
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1;QML_XHR_ALLOW_FILE_READ=1"
         FAIL_REGULAR_EXPRESSION "FAIL |ReferenceError|TypeError|Unable to assign")
     # NavBar real: la fila de Configuracion centrada (con y sin boton de update).
+    # MonitorFormat.js: formato y reparto de barras de la pantalla Monitor.
+    add_test(NAME qml_monitor_format
+             COMMAND "${_lc_qt_bin}/qml" -I "${LC_QML_HARNESS_DIR}"
+                     "${LC_QML_HARNESS_DIR}/tst_monitor_format.qml")
+    set_tests_properties(qml_monitor_format PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1"
+        FAIL_REGULAR_EXPRESSION "FAIL |ReferenceError|TypeError|Unable to assign")
     add_test(NAME qml_navbar
              COMMAND "${_lc_qt_bin}/qml" -I "${LC_QML_HARNESS_DIR}"
                      "${LC_QML_HARNESS_DIR}/tst_navbar.qml")

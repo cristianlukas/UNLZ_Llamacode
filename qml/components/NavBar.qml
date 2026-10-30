@@ -37,6 +37,7 @@ Rectangle {
         { key: "nav.downloads", icon: "⬇",   serverOnly: false },
         { key: "agents", label: "Agentes", icon: "🧠", serverOnly: false },
         { key: "nav.studia",    icon: "🎓",  serverOnly: false },
+        { key: "nav.monitor",   icon: "📈",  serverOnly: false },
     ]
 
     // Ajustes va al pie, fuera del Repeater: su índice es el que sigue a la
