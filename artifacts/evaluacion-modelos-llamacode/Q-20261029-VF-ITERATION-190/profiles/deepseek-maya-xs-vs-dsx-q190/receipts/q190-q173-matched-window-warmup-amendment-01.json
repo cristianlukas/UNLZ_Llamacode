@@ -1,0 +1,25 @@
+{
+  "id": "q190-q173-matched-window-warmup-amendment-01",
+  "registered_at_utc": "2026-10-31T14:23:37+00:00",
+  "task_id": "Q-20261031-DEEPSEEK-MAYA-VS-DSX",
+  "reason": "Review of Q173 receipts showed the historical DSX context ladder used per-context warmup at a 1M server window. The initial Q190 no-warmup Maya plan was methodologically mismatched, and a 1M-vs-262144 window would also bias throughput.",
+  "changes": [
+    "Use default llama-benchy warmup once per context for both profiles.",
+    "Rerun DSX and Maya at the same 262144 server context; retain historical 1M-window DSX data as historical only.",
+    "Use common target contexts 32768, 65536, 131072, and 261888 tokens; the last leaves room for 30 template tokens plus 128 exact output tokens.",
+    "Use three measured 32K samples after one per-context warmup for both models; one measured sample at each larger context."
+  ],
+  "tokenizer": {
+    "path": "/home/cristian/.cache/q173-tokenizers/deepseek-v41-flash-1017/tokenizer.json",
+    "revision": "deepseek-ai/DeepSeek-V4.1-Flash-1017@1bae0e1088993b9b82de08f59de5be5a34e42170",
+    "sha256": "c90dfa01249db1be4245780a052ede752e1361c612ac6d08e2bdada7d599476b",
+    "bytes": 6367257,
+    "origin": "existing Q173 official tokenizer artifact; no new download"
+  },
+  "no_results_before_amendment": true,
+  "decision_rule_unchanged": {
+    "delete_Maya_weights_only_if": "matched 3-seed Q172 Maya mean is at least 5 score points below DSX T16; Maya matched-context mean prefill AND decode are both at least 5% lower; and filesystem/reference audit finds no active or PeritoSoft consumer and no unique required capability. Strict dominance required; if mixed/near-tied/uncertain, keep and document why.",
+    "if_condition_met": "delete only the five exact Maya-XS IQ1_S weight shards and their model-only symlinks after path, size, SHA receipt, open-handle, and consumer checks; preserve Maya runtime, project, Q172/Q173 evidence, sheet history, ASTRA DSX T16, SOL, and shared/unrelated artifacts.",
+    "safety": "Both models remain eval-only if their matched Q172 reports any TC-92 isolation failure."
+  }
+}

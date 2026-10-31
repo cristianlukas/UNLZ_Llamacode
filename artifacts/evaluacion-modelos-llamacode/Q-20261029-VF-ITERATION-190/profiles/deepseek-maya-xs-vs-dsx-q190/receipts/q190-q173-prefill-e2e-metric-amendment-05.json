@@ -1,0 +1,44 @@
+{
+  "id": "q190-q173-prefill-e2e-metric-amendment-05",
+  "task_id": "Q-20261031-DEEPSEEK-MAYA-VS-DSX",
+  "registered_at_utc": "2026-10-31T15:08:35Z",
+  "reason": "The completed DSX 32K Q173 result showed raw pp_throughput of 880311 tok/s while first content-token E2E latency was 55.9–148.0 s. Inspection of llama-benchy 0.4.0 source confirms pp_throughput uses est_ppt = first-SSE-chunk time minus a network probe; a role-only SSE chunk can arrive before model prefill completes. The raw metric is therefore invalid for this server response pattern.",
+  "changes": [
+    "Retain all original benchy JSON and event files unchanged.",
+    "For Q190 comparisons, compute per-request effective prefill TPS as request_end.prompt_tokens / request_first_token.ttft_s, i.e. actual prompt tokens divided by request-start-to-first-content-token time.",
+    "Report the mean of per-request rates per context, n, and sample standard deviation. Label it effective end-to-end prefill; it includes client/network overhead and remains comparable between the matched profiles.",
+    "Treat llama-benchy pp_throughput and est_ppt as diagnostic-only where first SSE response is materially earlier than the first content-bearing token; do not use them for the decision or Sheet macro average.",
+    "Apply the calculation to the already completed DSX 32K n=3 using retained progress events, then use the amended runner for remaining DSX and Maya contexts. No repeat is needed for the 32K samples because request token counts and first-content-token times are present in the immutable event trace.",
+    "Decode TPS remains the native Q173 tg_throughput metric, after confirming exact 128-token completion and zero per-request errors."
+  ],
+  "first_result_reprocessed": {
+    "model": "dsx",
+    "context_tokens": 32768,
+    "runs": 3,
+    "actual_prompt_tokens_each": 32798,
+    "first_content_token_elapsed_seconds": [75.31684033999773, 147.99293125400436, 55.89987375700002],
+    "effective_prefill_tps_per_run": [435.46701975205286, 221.61869301519465, 586.7276220081426],
+    "effective_prefill_tps_mean": 414.60444492513005,
+    "effective_prefill_tps_sample_stdev": 183.44636213046334,
+    "decode_tps_per_run": [29.319089501584966, 28.847420271500116, 30.35465540196028],
+    "decode_tps_mean": 29.507055058348453,
+    "e2e_ttft_mean_ms": 93069.88178366737,
+    "raw_pp_throughput_mean_excluded": 880311.0014879837,
+    "raw_est_ppt_ms": [36.61195966075562, 59.65412866741341, 27.439071668292552]
+  },
+  "source_evidence": {
+    "benchmark": "llama-benchy 0.4.0",
+    "source_file": "/home/cristian/.cache/q173-llama-benchy-0.4.0/lib/python3.12/site-packages/llama_benchy/results.py",
+    "lines": "299-315",
+    "progress_source": "/home/cristian/.cache/q173-llama-benchy-0.4.0/lib/python3.12/site-packages/llama_benchy/progress.py",
+    "first_response_semantics": "first chunk of any kind; may be empty/role-only",
+    "first_token_semantics": "first content-bearing token"
+  },
+  "runner": {
+    "path": "artifacts/evaluacion-modelos-llamacode/Q-20261029-VF-ITERATION-190/profiles/deepseek-maya-xs-vs-dsx-q190/scripts/run_matched.py",
+    "sha256": "5d1a15afa7ad8a1c13086a8a270395478435cce7ee43363c4cd15aff06a96f55",
+    "validation": "py_compile passed; helper reprocessed existing DSX 32K trace and reproduced n=3 values above"
+  },
+  "decision_rule_unchanged": true,
+  "lock_token": "fa21acd2-f286-4981-9254-552a027a464f"
+}

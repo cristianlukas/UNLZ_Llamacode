@@ -1,0 +1,344 @@
+{
+  "task_id": "Q-20261031-DEEPSEEK-MAYA-VS-DSX",
+  "status": "completed",
+  "registered_at_utc": "2026-10-31T14:14:45+00:00",
+  "lock_token": "fa21acd2-f286-4981-9254-552a027a464f",
+  "decision_question": "Does Maya-XS offer a quality or throughput advantage over ASTRA DeepSeek DSX T16 sufficient to justify keeping its 276.626 GB model weights?",
+  "models": [
+    {
+      "profile": "DeepSeek V4.1 Flash-1017 Maya-XS IQ1_S",
+      "sheet_row": 30,
+      "runtime": "Project Maya v1.1.37",
+      "runtime_commit": "7ee8f2777c754229605a8c19ca985cbb68540419",
+      "engine_path": "/media/cristian/HDD extra/LlamaCode-evals/Q189-project-maya-v1.1.37/build/maya-ds4",
+      "engine_sha256": "b4d00bcb0dc1b6680158749941601e79f669af6b1ae5c2d28c5feaa0cc72df17",
+      "model_revision": "d1fc01009f21e26157acb6858c315d0365483b72",
+      "model_bytes": 276626308260,
+      "shards_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261029-VF-ITERATION-189/receipts/download-complete.json",
+      "quality_existing_context_262144": {
+        "seeds": [
+          42,
+          43,
+          44
+        ],
+        "scores": [
+          86,
+          79,
+          86
+        ],
+        "mean": 83.6666666667,
+        "critical_TC92_failures": 2
+      }
+    },
+    {
+      "profile": "ASTRA DeepSeek V4.1 Flash-1017 DSX T16",
+      "sheet_row": 29,
+      "runtime": "Xolotl / lxe-dsx pinned commit 98f1259732f8c3a5f445b25e080daf70fc300967",
+      "model_path": "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-dsx-T16/models/DeepSeek-V4.1-Flash-1017-dsx-t16.gguf",
+      "model_bytes": 251592261632,
+      "model_sha256": "31b3852636237c63b3e42b2403f172e372d36c4ad486e65f5c3920307bcfb3fa",
+      "engine_path": "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-dsx-T16/build/release/dsx-server",
+      "engine_sha256": "bec3b3e59803108b81834227bfb4ba5f722473af34e1ab960510e723fe07ad27",
+      "quality_existing_context_131072": {
+        "seed": 42,
+        "score": 89,
+        "critical_TC92_failure": true
+      }
+    }
+  ],
+  "common_hardware": {
+    "gpus": "2x RTX 3090 (GPU0+GPU1)",
+    "ram_gib": 128,
+    "serial": true,
+    "no_other_inference_server": true,
+    "preserve_gui_process": true
+  },
+  "q172_matched": {
+    "suite": "Tool-Eval Hard Mode 2.8.0",
+    "suite_sha256": "31e3c8f5fa9140738cde4e1cecc909f5335cf928a90fbdd062ec7935e0526472",
+    "scenarios": [
+      "TC-70",
+      "TC-71",
+      "TC-72",
+      "TC-73",
+      "TC-74",
+      "TC-75",
+      "TC-76",
+      "TC-77",
+      "TC-78",
+      "TC-79",
+      "TC-80",
+      "TC-81",
+      "TC-82",
+      "TC-83",
+      "TC-84",
+      "TC-85",
+      "TC-86",
+      "TC-87",
+      "TC-88",
+      "TC-89",
+      "TC-90",
+      "TC-91",
+      "TC-92",
+      "TC-93",
+      "TC-94",
+      "TC-95",
+      "TC-96",
+      "TC-97"
+    ],
+    "variant_seed": 20261010,
+    "context_tokens": 131072,
+    "concurrency": 1,
+    "trials": 1,
+    "temperature": 0.6,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0,
+    "repeat_penalty": 1.0,
+    "presence_penalty": 0.0,
+    "reasoning_effort": "medium",
+    "timeout_seconds": 120,
+    "max_turns": 8,
+    "seeds": [
+      42,
+      43,
+      44
+    ],
+    "reuse_existing_dsx_seed42": true,
+    "rerun_maya_all_three_seeds": true,
+    "execution_order": "Q173 matched ladder first. Then Maya seeds42/43/44 at131072, followed by DSX T16 seeds42/43/44 at131072, serially; reuse DSX seed42 only if its recorded backend and request fingerprint equal this preregistration, otherwise rerun all three seeds.",
+    "status": "completed_with_runtime_reasoning_effort_caveat",
+    "backend": "openai",
+    "wire_format": "openai",
+    "backend_parity": "Both profiles use Tool-Eval backend label openai and OpenAI wire format. The backend label is not an engine claim; it keeps request construction and report metadata aligned. Q189 historical Maya scores are retained but excluded from the matched mean.",
+    "completion": {
+      "completed_at_utc": "2026-10-31T18:15:50Z",
+      "scenario_count_per_run": 28,
+      "maya": {
+        "seeds": [
+          42,
+          43,
+          44
+        ],
+        "scores": [
+          88,
+          91,
+          75
+        ],
+        "mean_score": 84.6666666667,
+        "pass_partial_fail": [
+          [
+            23,
+            3,
+            2
+          ],
+          [
+            24,
+            3,
+            1
+          ],
+          [
+            19,
+            4,
+            5
+          ]
+        ],
+        "tc92_failures": 3
+      },
+      "dsx": {
+        "seeds": [
+          42,
+          43,
+          44
+        ],
+        "scores": [
+          89,
+          84,
+          86
+        ],
+        "mean_score": 86.3333333333,
+        "pass_partial_fail": [
+          [
+            23,
+            4,
+            1
+          ],
+          [
+            22,
+            3,
+            3
+          ],
+          [
+            23,
+            2,
+            3
+          ]
+        ],
+        "tc92_failures": 3
+      },
+      "quality_mean_delta_maya_minus_dsx": -1.6666666666,
+      "runtime_configuration_caveat": "Harness argv requested reasoning_effort=medium for both; DSX request logs reported effort=Some(High). Quality means are descriptive, not a clean comparison under equal effective reasoning settings.",
+      "per_seed_receipts": {
+        "maya": [
+          "receipts/q172-maya-seed-42.json",
+          "receipts/q172-maya-seed-43.json",
+          "receipts/q172-maya-seed-44.json"
+        ],
+        "dsx": [
+          "receipts/q172-dsx-seed-42.json",
+          "receipts/q172-dsx-seed-43.json",
+          "receipts/q172-dsx-seed-44.json"
+        ]
+      },
+      "sheet_readback_verified": {
+        "maya_row": 30,
+        "dsx_row": 25
+      }
+    }
+  },
+  "q173_matched": {
+    "benchmark": "llama-benchy 0.4.0",
+    "benchmark_sha256": "e8a892fe937d5ae1b6a43c31e8cb286ce4774f70396f62ab71008c9ddb0a01a1",
+    "contexts_tokens": [
+      32768,
+      65536,
+      131072,
+      261888
+    ],
+    "runs_by_context": {
+      "32768": 3,
+      "65536": 1,
+      "131072": 1,
+      "261888": 1
+    },
+    "response_tokens": 128,
+    "concurrency": 1,
+    "depth": 0,
+    "latency_mode": "generation",
+    "no_cache": true,
+    "skip_coherence": true,
+    "no_adapt_prompt": true,
+    "no_warmup": false,
+    "sampling": "temperature=.6,top_p=.95,top_k=20,min_p=0,repetition_penalty=1,presence_penalty=0,seed=42",
+    "measurement": "Run a new Q190 ladder for both models with the same llama-benchy client, official local DeepSeek tokenizer, 262144 server window, 128 exact output tokens, serial C1, no prefix cache, prompt adaptation off, and per-context warmup. At 32K collect three measured samples after one warmup for each model; at 64K/128K/261888 collect one each. Rerun the full DSX ladder: its old ladder used a 1M server window while Maya supports 262144, and is retained as historical only. Target 261888 leaves room for 30 template tokens plus 128 generated tokens within a 262144 window. Effective prefill for Q190 is actual prompt_tokens divided by request-start-to-first-content-token elapsed seconds, derived per request from progress events; llama-benchy raw pp_throughput/est_ppt is diagnostic only when the initial SSE response is empty or role-only.",
+    "prefill_metric": "Per-request effective prefill TPS = request_end.prompt_tokens / request_first_token.ttft_s. Report the mean of per-request rates per context, plus n and sample SD. This is a conservative end-to-end effective rate and includes small client/network overhead. Do not use benchy pp_throughput when first-response-to-first-content-token is materially delayed; retain that raw field unchanged.",
+    "dsx_additional_runs": {
+      "32768": 2,
+      "reason": "Reuse historical Q173 32K run and add two repeats to match Maya n=3; other common levels use existing registered T16 n=1."
+    },
+    "protocol_version": 4,
+    "status": "completed_before_q172",
+    "warmup": "Default llama-benchy warmup enabled once per context, matching the historical DSX ladder procedure.",
+    "server_max_context_tokens": 262144,
+    "paired_models": [
+      "ASTRA DeepSeek DSX T16",
+      "DeepSeek Maya-XS IQ1_S"
+    ],
+    "tokenizer": {
+      "path": "/home/cristian/.cache/q173-tokenizers/deepseek-v41-flash-1017/tokenizer.json",
+      "revision": "deepseek-ai/DeepSeek-V4.1-Flash-1017@1bae0e1088993b9b82de08f59de5be5a34e42170",
+      "sha256": "c90dfa01249db1be4245780a052ede752e1361c612ac6d08e2bdada7d599476b",
+      "bytes": 6367257,
+      "source": "pre-existing Q173 pinned tokenizer artifact; no new model/tokenizer download"
+    },
+    "old_historical_dsx_ladder": "Q173 historical 1M-window values remain preserved in Q173/RESULTS.md and the Sheet; excluded from the Q190 matched comparison.",
+    "amendment": "q190-q173-matched-window-warmup-amendment-01",
+    "completion": {
+      "completed_at_utc": "2026-10-31T16:32:57Z",
+      "maya_macro_prefill_tps": 949.101213802109,
+      "maya_macro_decode_tps": 36.92210262369239,
+      "aggregation": "equal-weight mean of context-level means for 32K/64K/128K/261888; 32K n=3, others n=1",
+      "maya_contexts_prefill_decode_tps": {
+        "32768": [
+          722.5826831356084,
+          35.6271066811206
+        ],
+        "65536": [
+          1017.07818109896,
+          37.28560406633094
+        ],
+        "131072": [
+          1041.8505375014124,
+          37.303209711177416
+        ],
+        "261888": [
+          1014.8934534724551,
+          37.472490036140606
+        ]
+      },
+      "all_requests_exact_128_tokens": true,
+      "request_errors": 0,
+      "raw_pp_throughput_used": false,
+      "cold_init_seconds": 189.991,
+      "hot_init_seconds": 97.462,
+      "dsx_macro_prefill_tps": 429.1358922,
+      "dsx_macro_decode_tps": 25.3306558,
+      "interpretation": "Q173 matched completed: Maya macro P/D 949.10/36.92 tok/s vs DSX 429.14/25.33; Maya was faster on both metrics at all four contexts. Q172 matched also completed; Maya mean 84.67 vs DSX 86.33, with DSX effective reasoning effort logged as High although the harness requested medium. Both failed TC-92 in 3/3 seeds."
+    }
+  },
+  "safety_gates": {
+    "mem_available_floor_bytes": 17179869184,
+    "low_samples_to_abort": 2,
+    "sample_interval_seconds": 5,
+    "unexpected_inference_server": "Abort by default. One explicit user-authorized SIGTERM may target only the exact Qwen3.5-9B MTP server on 8021 (amendment-03) or the exact LlamaCode whisper-server on 8081 (amendment-04); preserve the GUI and all unrelated services.",
+    "gpu_assignment": "same owned model server must be visible on both RTX3090s; preserve Artcraft GUI process",
+    "disk_free_floor_bytes": 3000000000,
+    "stop_only_owned_service": true
+  },
+  "decision_rule": {
+    "delete_Maya_weights_only_if": "matched 3-seed Q172 Maya mean is at least 5 score points below DSX T16; Maya matched-context mean prefill AND decode are both at least 5% lower; and filesystem/reference audit finds no active or PeritoSoft consumer and no unique required capability. Strict dominance required; if mixed/near-tied/uncertain, keep and document why.",
+    "if_condition_met": "delete only the five exact Maya-XS IQ1_S weight shards and their model-only symlinks after path, size, SHA receipt, open-handle, and consumer checks; preserve Maya runtime, project, Q172/Q173 evidence, sheet history, ASTRA DSX T16, SOL, and shared/unrelated artifacts.",
+    "safety": "Both models remain eval-only if their matched Q172 reports any TC-92 isolation failure.",
+    "observed_outcome": {
+      "maya_mean_q172": 84.6666666667,
+      "dsx_mean_q172": 86.3333333333,
+      "maya_q173_macro_prefill_tps": 949.101213802109,
+      "dsx_q173_macro_prefill_tps": 429.1358922,
+      "maya_q173_macro_decode_tps": 36.92210262369239,
+      "dsx_q173_macro_decode_tps": 25.3306558,
+      "maya_faster_all_four_contexts": true,
+      "tc92_failures": {
+        "maya": "3/3",
+        "dsx": "3/3"
+      },
+      "delete_condition_met": false,
+      "weights_deleted": false,
+      "decision": "Keep Maya-XS weights. The preregistered deletion gate requires a >=5-point Q172 deficit plus >=5% lower prefill and decode; Maya trails by only 1.67 points and is faster on both Q173 metrics. Keep both profiles eval-only pending a TC-92 fix."
+    }
+  },
+  "configs": {
+    "q172-131k": {
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261029-VF-ITERATION-190/profiles/deepseek-maya-xs-vs-dsx-q190/configs/maya-q172-131k.json",
+      "sha256": "65da68edaae294bc243b30cbf646b824b32dd16c4a5045b27cc0500dbaf227e7",
+      "context_tokens": 131072,
+      "port": 18190
+    },
+    "q173-262k": {
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261029-VF-ITERATION-190/profiles/deepseek-maya-xs-vs-dsx-q190/configs/maya-q173-262k.json",
+      "sha256": "9f3c08e41df64e00c08f01a3c963ca2f5a3a9dced4a383e90000d808840fc873",
+      "context_tokens": 262144,
+      "port": 18190
+    }
+  },
+  "runner": {
+    "path": "artifacts/evaluacion-modelos-llamacode/Q-20261029-VF-ITERATION-190/profiles/deepseek-maya-xs-vs-dsx-q190/scripts/run_matched.py",
+    "sha256": "5d1a15afa7ad8a1c13086a8a270395478435cce7ee43363c4cd15aff06a96f55",
+    "py_compile": "passed before first inference",
+    "registered_before_measurements": true
+  },
+  "outputs": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261029-VF-ITERATION-190/profiles/deepseek-maya-xs-vs-dsx-q190",
+  "notes": [
+    "Maya Q189 Q172 at 262144 remains historical and will not be mixed into matched Q172 means.",
+    "Q173 8K omitted; context ladder comparison uses only the four common levels.",
+    "The lock cleanup archived only a stale completed-task runtime copy; the root lock belongs to this active Q190 task and the historical snapshot lock was preserved."
+  ],
+  "amendments": [
+    "q190-q173-matched-window-warmup-amendment-01",
+    "q190-q172-openai-backend-parity-amendment-02",
+    "q190-service-detection-and-user-stop-amendment-03",
+    "q190-whisper-user-stop-amendment-04",
+    "q190-q173-prefill-e2e-metric-amendment-05"
+  ],
+  "preregistration_amendment_note": "Protocol v4 uses one warmup per Q173 context and derives effective prefill TPS from actual prompt token count / first content-bearing token latency in progress events. The first DSX 32K result was reprocessed from its retained raw trace; remaining measurements use the amended runner. Amendments 03 and 04 authorize one exact-PID SIGTERM only for the identified Qwen3.5 MTP and Whisper servers; no measurement begins until all foreign inference servers are absent and the preflight passes.",
+  "completed_at_utc": "2026-10-31T18:15:50Z"
+}

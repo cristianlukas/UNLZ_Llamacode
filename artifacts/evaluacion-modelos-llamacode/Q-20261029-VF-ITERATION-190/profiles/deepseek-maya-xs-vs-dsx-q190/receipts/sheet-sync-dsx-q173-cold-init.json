@@ -1,0 +1,16 @@
+{
+  "task_id": "Q-20261031-DEEPSEEK-MAYA-VS-DSX",
+  "synced_at_utc": "2026-10-31T14:56:26Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet": "Modelos locales por peso",
+  "sheet_id": 2026102751,
+  "updated_ranges": [
+    "X29:X29"
+  ],
+  "readback_verified": true,
+  "values": {
+    "X29": "Q190 Q173 DSX cold start reached readiness in 446.986 s on both RTX 3090s (262144 window). Before launch, file-specific eviction left 0.0% pages resident by mincore; receipt boolean is false because os.posix_fadvise returned null (no exception) and code expects 0. No benchmark requests yet. Qwen 8021 was absent; Whisper 8081 received one user-authorized SIGTERM and exited; preflight found no other inference servers. Matched Q173 pending: 32K n=3, 64K/128K/261888 n=1."
+  },
+  "source_receipt": "receipts/startup-dsx-q173-cold.json",
+  "readback_value_matches": true
+}

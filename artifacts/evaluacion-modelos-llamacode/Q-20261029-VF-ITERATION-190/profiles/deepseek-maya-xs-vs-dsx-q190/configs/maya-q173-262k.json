@@ -1,0 +1,39 @@
+{
+  "exe": "/media/cristian/HDD extra/LlamaCode-evals/Q189-project-maya-v1.1.37/build/maya-ds4",
+  "args": [
+    "--pack",
+    "/media/cristian/7CFE1E0FFE1DC1F6/LlamaCode-evals/Q189/Maya-XS/maya-ds4",
+    "--max-context",
+    "262144",
+    "--tp",
+    "2",
+    "--vision",
+    "off"
+  ],
+  "cwd": "/media/cristian/HDD extra/LlamaCode-evals/Q189-project-maya-v1.1.37",
+  "tokenizer": "/media/cristian/7CFE1E0FFE1DC1F6/LlamaCode-evals/Q189/Maya-XS/maya-ds4/tokenizer",
+  "model_name": "deepseek-v4.1-flash",
+  "gpu": [
+    0,
+    1
+  ],
+  "sampling": {
+    "temperature": 0.6,
+    "top_p": 0.95
+  },
+  "reasoning_effort": "medium",
+  "lib_dirs": [
+    "/usr/local/cuda-12.8/lib64",
+    "/usr/local/cuda-12.8/targets/x86_64-linux/lib"
+  ],
+  "port": 18190,
+  "log": "/media/cristian/HDD extra/LlamaCode-evals/Q190-maya-xs-vs-dsx/q173-262k.log",
+  "installer": {
+    "family": "deepseek",
+    "models_dir": "/media/cristian/HDD extra/LlamaCode-evals/Maya-data/models",
+    "quant": "DeepSeek-V4.1-Flash-1017",
+    "ds4_quant": "maya-xs",
+    "model_dir": "/media/cristian/7CFE1E0FFE1DC1F6/LlamaCode-evals/Q189/Maya-XS",
+    "written": "2026-10-29 14:15"
+  }
+}

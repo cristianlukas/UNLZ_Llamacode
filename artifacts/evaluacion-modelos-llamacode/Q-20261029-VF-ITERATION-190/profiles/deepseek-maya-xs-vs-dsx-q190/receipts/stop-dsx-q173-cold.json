@@ -1,0 +1,35 @@
+{
+  "model": "dsx",
+  "unit": "q190-dsx-q173-cold",
+  "stop_started_utc": "2026-10-31T15:57:26+00:00",
+  "finished_utc": "2026-10-31T15:57:30+00:00",
+  "systemctl_rc": 0,
+  "systemctl_stderr": "",
+  "port_free": true,
+  "remaining_inference_servers": [],
+  "mem_available_kib": 117169048,
+  "gpus": {
+    "0": {
+      "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 1362,
+      "memory_total_mib": 24576,
+      "utilization_percent": 0,
+      "compute": [
+        {
+          "pid": 833718,
+          "used_mib": 207
+        }
+      ]
+    },
+    "1": {
+      "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 108,
+      "memory_total_mib": 24576,
+      "utilization_percent": 0,
+      "compute": []
+    }
+  },
+  "gui_preserved": "Artcraft GUI intentionally untouched"
+}

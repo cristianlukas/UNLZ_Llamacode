@@ -1,0 +1,57 @@
+{
+  "task_id": "Q-20261031-DEEPSEEK-MAYA-VS-DSX",
+  "recorded_at_utc": "2026-10-31T14:29:58Z",
+  "lock_token": "fa21acd2-f286-4981-9254-552a027a464f",
+  "runner": {
+    "path": "scripts/run_matched.py",
+    "sha256": "24f6aa8cb263521d31f2c4598e1bdbbc72a55cd6ee86db0e70481e672fc84092",
+    "py_compile": "PASS",
+    "preflight_false_positive_fix": "Inference detection matches executable names and recognized Python server modules; it does not substring-scan unrelated command lines."
+  },
+  "protocol": {
+    "preregistration_version": 3,
+    "q173_warmup": "one default llama-benchy warmup per context; no --no-warmup flag",
+    "q173_server_context": 262144,
+    "q173_prompt_targets": [32768, 65536, 131072, 261888],
+    "q173_runs": {"32768": 3, "65536": 1, "131072": 1, "261888": 1},
+    "q172_context": 131072,
+    "q172_seeds": [42, 43, 44],
+    "amendments": [
+      "q190-q173-matched-window-warmup-amendment-01",
+      "q190-q172-openai-backend-parity-amendment-02"
+    ]
+  },
+  "tool_hashes": {
+    "llama_benchy_0_4_0": "e8a892fe937d5ae1b6a43c31e8cb286ce4774f70396f62ab71008c9ddb0a01a1",
+    "tool_eval_bench_2_8_0": "31e3c8f5fa9140738cde4e1cecc909f5335cf928a90fbdd062ec7935e0526472",
+    "official_deepseek_tokenizer": "c90dfa01249db1be4245780a052ede752e1361c612ac6d08e2bdada7d599476b"
+  },
+  "preflight": {
+    "maya_at_2026-10-31T14:27:55Z": {
+      "passed": true,
+      "mem_available_kib": 107155320,
+      "inference_servers": [],
+      "port_18190_free": true,
+      "both_rtx3090_present": true,
+      "maya_engine_hash_verified": true,
+      "five_model_shards_and_sizes_match_q189_receipt": true,
+      "per_shard_sha_reverified_this_turn": false
+    },
+    "dsx_at_2026-10-31T14:28:26Z": {
+      "passed": true,
+      "mem_available_kib": 107167296,
+      "inference_servers": [],
+      "port_18192_free": true,
+      "both_rtx3090_present": true,
+      "dsx_engine_hash_verified": true,
+      "model_size_matches_pinned_receipt": true,
+      "full_model_sha_reverified_this_turn": false
+    },
+    "result_volume_free_bytes": 67871305728,
+    "swap_used_bytes": 0,
+    "preserved_gui": "Artcraft GUI left running and untouched; it is not classified as an inference server."
+  },
+  "measurement_status": "No Q173 or Q172 Q190 measurement had started when this receipt was written.",
+  "sequence": "DSX matched Q173 ladder first, stop and postflight; then Maya matched Q173 ladder, stop and postflight; then matched Q172 seeds per preregistration.",
+  "deletion_rule": "Retain Maya unless the preregistered strict dominance rule and use audit both pass."
+}

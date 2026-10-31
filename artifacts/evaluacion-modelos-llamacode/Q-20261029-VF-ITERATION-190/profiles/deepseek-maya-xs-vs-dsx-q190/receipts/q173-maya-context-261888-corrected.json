@@ -1,0 +1,65 @@
+{
+  "task_id": "Q-20261031-DEEPSEEK-MAYA-VS-DSX",
+  "model": "maya",
+  "phase": "q173",
+  "context_tokens": 261888,
+  "runs": 1,
+  "exit_code": 0,
+  "started_utc": "2026-10-31T16:20:23+00:00",
+  "finished_utc": "2026-10-31T16:29:23+00:00",
+  "elapsed_seconds": 539.35,
+  "prefill": {
+    "method": "actual prompt_tokens / request_start-to-first-content-token elapsed seconds; end-to-end effective prefill, includes client/network overhead",
+    "mean_tps": 1014.8934534724551,
+    "sample_stdev_tps": 0.0,
+    "per_run": [
+      {
+        "request_id": 0,
+        "prompt_tokens": 261918,
+        "first_content_token_elapsed_s": 258.0743812110013,
+        "effective_prefill_tps_e2e": 1014.8934534724551
+      }
+    ]
+  },
+  "decode": {
+    "method": "llama-benchy tg_throughput; exact 128 output tokens",
+    "mean_tps": 37.472490036140606,
+    "sample_stdev_tps": 0.0,
+    "per_run_tps": [
+      37.472490036140606
+    ]
+  },
+  "ttft_e2e": {
+    "mean_seconds": 258.0743812110013,
+    "sample_stdev_seconds": 0.0,
+    "per_run_seconds": [
+      258.0743812110013
+    ]
+  },
+  "request_validation": {
+    "expected_output_tokens": 128,
+    "actual_output_tokens": [
+      128
+    ],
+    "errors": [
+      ""
+    ],
+    "prompt_tokens": [
+      261918
+    ]
+  },
+  "warmup_seconds": 275.29699993133545,
+  "raw_pp_throughput": {
+    "mean": 894770.6371918516,
+    "std": 0.0,
+    "values": [
+      894770.6371918516
+    ]
+  },
+  "raw_pp_status": "excluded from decisions; first SSE response can be role-only before first content token",
+  "source_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261029-VF-ITERATION-190/profiles/deepseek-maya-xs-vs-dsx-q190/receipts/q173-maya-context-261888-runs-1.json",
+  "result_path": "/media/cristian/HDD extra/LlamaCode-evals/Q190-maya-xs-vs-dsx/runs/q173/maya/context-261888-runs-1.json",
+  "event_path": "/media/cristian/HDD extra/LlamaCode-evals/Q190-maya-xs-vs-dsx/runs/q173/maya/context-261888-runs-1-events.jsonl",
+  "log_path": "/media/cristian/HDD extra/LlamaCode-evals/Q190-maya-xs-vs-dsx/logs/q173/maya/context-261888-runs-1.log",
+  "lock_token": "fa21acd2-f286-4981-9254-552a027a464f"
+}

@@ -1,0 +1,27 @@
+{
+  "id": "q190-service-detection-and-user-stop-amendment-03",
+  "registered_at_utc": "2026-10-31T14:37:59Z",
+  "task_id": "Q-20261031-DEEPSEEK-MAYA-VS-DSX",
+  "no_measurements_before_amendment": true,
+  "reason": "A Qwen3.5-9B MTP llama-server was auto-launched by the LlamaCode desktop during DSX startup; an active whisper-server also used GPU1 but was not in the original detector allowlist. Q190 must not benchmark concurrently with either server.",
+  "user_instruction": "User authorized stopping only the identified Qwen3.5 MTP server on port 8021, while leaving the GUI active.",
+  "authorized_scope": {
+    "executable": "llama-server",
+    "model_path_suffix": "/Models/llamacpp/Qwen3.5-9B/MTP/Qwen3.5-9B-Q4_K_M.gguf",
+    "port": 8021,
+    "parent": "/home/cristian/.cache/llamacode/build_linux/LlamaCode",
+    "stop_method": "SIGTERM only to the matching server PID; do not stop its parent GUI or unrelated services"
+  },
+  "not_authorized_or_not_stopped": [
+    "LlamaCode GUI PID 22165",
+    "whisper-server PID 1483880",
+    "concurrent Charla smoke process"
+  ],
+  "runner_change": {
+    "path": "scripts/run_matched.py",
+    "sha256_after_change": "f1c2cb7d963c0177f02274ddb014588e295a930a99759664d2219bda47de35c1",
+    "change": "Add whisper-server to SERVER_EXEC_NAMES so a remaining speech inference server blocks Q190 before loading or measurement.",
+    "py_compile": "PASS"
+  },
+  "retry_gate": "Rerun DSX only after Qwen3.5 MTP has stopped and runner preflight confirms no inference servers; the still-running whisper-server is a blocking gate."
+}

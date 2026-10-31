@@ -1,0 +1,88 @@
+{
+  "task_id": "Q-20261031-DEEPSEEK-MAYA-VS-DSX",
+  "model": "maya",
+  "phase": "q173",
+  "context_tokens": 32768,
+  "runs": 3,
+  "exit_code": 0,
+  "started_utc": "2026-10-31T16:08:08+00:00",
+  "finished_utc": "2026-10-31T16:11:49+00:00",
+  "elapsed_seconds": 221.143,
+  "prefill": {
+    "method": "actual prompt_tokens / request_start-to-first-content-token elapsed seconds; end-to-end effective prefill, includes client/network overhead",
+    "mean_tps": 722.5826831356084,
+    "sample_stdev_tps": 190.38817377817617,
+    "per_run": [
+      {
+        "request_id": 0,
+        "prompt_tokens": 32798,
+        "first_content_token_elapsed_s": 53.66380895800103,
+        "effective_prefill_tps_e2e": 611.1754017622703
+      },
+      {
+        "request_id": 1,
+        "prompt_tokens": 32798,
+        "first_content_token_elapsed_s": 53.40342459699605,
+        "effective_prefill_tps_e2e": 614.1553701379086
+      },
+      {
+        "request_id": 2,
+        "prompt_tokens": 32798,
+        "first_content_token_elapsed_s": 34.80199353599892,
+        "effective_prefill_tps_e2e": 942.4172775066462
+      }
+    ]
+  },
+  "decode": {
+    "method": "llama-benchy tg_throughput; exact 128 output tokens/run",
+    "mean_tps": 35.6271066811206,
+    "sample_stdev_tps": 1.547250163527738,
+    "per_run_tps": [
+      33.4446411281834,
+      36.85474944801081,
+      36.581929467167576
+    ]
+  },
+  "ttft_e2e": {
+    "mean_seconds": 47.28974236366533,
+    "sample_stdev_seconds": 8.83081170640717,
+    "per_run_seconds": [
+      53.66380895800103,
+      53.40342459699605,
+      34.80199353599892
+    ]
+  },
+  "request_validation": {
+    "expected_output_tokens": 128,
+    "actual_output_tokens": [
+      128,
+      128,
+      128
+    ],
+    "errors": [
+      "",
+      "",
+      ""
+    ],
+    "prompt_tokens": [
+      32798,
+      32798,
+      32798
+    ]
+  },
+  "raw_pp_throughput": {
+    "mean": 724041.6006207544,
+    "std": 102178.05487893606,
+    "values": [
+      628660.4412566798,
+      677724.9562344358,
+      865739.4043711475
+    ]
+  },
+  "raw_pp_status": "excluded from decisions; first SSE response can be role-only before first content token",
+  "source_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261029-VF-ITERATION-190/profiles/deepseek-maya-xs-vs-dsx-q190/receipts/q173-maya-context-32768-runs-3.json",
+  "result_path": "/media/cristian/HDD extra/LlamaCode-evals/Q190-maya-xs-vs-dsx/runs/q173/maya/context-32768-runs-3.json",
+  "event_path": "/media/cristian/HDD extra/LlamaCode-evals/Q190-maya-xs-vs-dsx/runs/q173/maya/context-32768-runs-3-events.jsonl",
+  "log_path": "/media/cristian/HDD extra/LlamaCode-evals/Q190-maya-xs-vs-dsx/logs/q173/maya/context-32768-runs-3.log",
+  "lock_token": "fa21acd2-f286-4981-9254-552a027a464f"
+}

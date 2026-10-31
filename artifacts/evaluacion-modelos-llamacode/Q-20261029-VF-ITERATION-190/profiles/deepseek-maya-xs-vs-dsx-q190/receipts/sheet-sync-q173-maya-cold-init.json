@@ -1,0 +1,21 @@
+{
+  "task_id": "Q-20261031-DEEPSEEK-MAYA-VS-DSX",
+  "synced_at_utc": "2026-10-31T16:07:17Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet_name": "Modelos locales por peso",
+  "sheet_id": 2026102751,
+  "range_readback": "A30:Z30",
+  "row_key": "DeepSeek V4.1 Flash-1017 Maya-XS IQ1_S · Project Maya Q189",
+  "updated_cells": {
+    "D30": "Pendiente · Q190 Q173 (TTFT/prompt_tokens)",
+    "E30": "Pendiente · Q190 Q173 (tg_throughput)",
+    "H30": "Q190 Q173: prefill efectivo = prompt_tokens/TTFT; 32K n=3, 64K/128K/261888 n=1; 1 warmup/context",
+    "I30": "Q190 Q173: decode nativo tg_throughput, salida exacta de 128 tokens; mismos contextos",
+    "X30": "Q190 in progress. Maya cold init 189.991 s after shard-cache eviction verified by mincore (0% resident), 2×RTX 3090, ctx262144. Q173 ladder pending; then Q172 seeds42/43/44 at131072. Historical Q189 Q172 mean83.67 and TC-92 fail2/3 remain separate. Delete weights only if preregistered dominance and no-consumer gates pass.",
+    "Z30": "Cold 189.991 s (cache eviction verified; 2×RTX3090); hot pending."
+  },
+  "readback_verified": true,
+  "gui_preserved": "No GUI process was targeted; only the evaluation service was started.",
+  "lock_token": "fa21acd2-f286-4981-9254-552a027a464f",
+  "source_receipt": "receipts/startup-maya-q173-cold.json"
+}

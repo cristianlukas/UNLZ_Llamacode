@@ -1,0 +1,44 @@
+{
+  "model": "maya",
+  "unit": "q190-maya-q173-hot",
+  "stop_started_utc": "2026-10-31T16:32:39+00:00",
+  "finished_utc": "2026-10-31T16:32:40+00:00",
+  "systemctl_rc": 0,
+  "systemctl_stderr": "",
+  "port_free": true,
+  "remaining_inference_servers": [],
+  "mem_available_kib": 37764032,
+  "gpus": {
+    "0": {
+      "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 23630,
+      "memory_total_mib": 24576,
+      "utilization_percent": 9,
+      "compute": [
+        {
+          "pid": 833718,
+          "used_mib": 207
+        },
+        {
+          "pid": 1748863,
+          "used_mib": 22438
+        }
+      ]
+    },
+    "1": {
+      "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+      "name": "NVIDIA GeForce RTX 3090",
+      "memory_used_mib": 23620,
+      "memory_total_mib": 24576,
+      "utilization_percent": 33,
+      "compute": [
+        {
+          "pid": 1748863,
+          "used_mib": 23470
+        }
+      ]
+    }
+  },
+  "gui_preserved": "Artcraft GUI intentionally untouched"
+}

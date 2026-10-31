@@ -1,0 +1,44 @@
+{
+ "since": 1793462723.709587,
+ "models": {
+  "maya-q173-262k.json": {
+   "since": 1793462723.7096174,
+   "bands": {
+    "base": {
+     "input": 1048916,
+     "cached": 240,
+     "output": 1300,
+     "requests": 30
+    },
+    "peak": {
+     "input": 0,
+     "cached": 0,
+     "output": 0,
+     "requests": 0
+    }
+   },
+   "model": "deepseek-v4.1-flash",
+   "quant": "Maya-XS"
+  },
+  "maya-q172-131k.json": {
+   "since": 1793464462.180797,
+   "bands": {
+    "base": {
+     "input": 81702,
+     "cached": 374783,
+     "output": 92585,
+     "requests": 335
+    },
+    "peak": {
+     "input": 0,
+     "cached": 0,
+     "output": 0,
+     "requests": 0
+    }
+   },
+   "model": "deepseek-v4.1-flash",
+   "quant": "Maya-XS"
+  }
+ },
+ "prices": {}
+}

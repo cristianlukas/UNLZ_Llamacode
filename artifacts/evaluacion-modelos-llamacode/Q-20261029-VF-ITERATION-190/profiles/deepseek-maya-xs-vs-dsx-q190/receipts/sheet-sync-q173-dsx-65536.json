@@ -1,0 +1,20 @@
+{
+  "task_id": "Q-20261031-DEEPSEEK-MAYA-VS-DSX",
+  "synced_at_utc": "2026-10-31T15:16:49Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet_name": "Modelos locales por peso",
+  "sheet_id": 2026102751,
+  "range_readback": "A29:Z29",
+  "row_key": "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-dsx-T16/models/DeepSeek-V4.1-Flash-1017-dsx-t16.gguf",
+  "updated_cells": {
+    "D29_provisional_macro_prefill_tps_2_of_4_contexts": 475.1674342666372,
+    "E29_provisional_macro_decode_tps_2_of_4_contexts": 29.56423446462647,
+    "H29": "Historical 1M ladder preserved; Q190 matched 32K n=3 and 64K n=1; effective prefill from prompt_tokens / first content-token TTFT; raw pp_throughput excluded.",
+    "I29": "Historical 1M decode ladder preserved; Q190 matched 32K n=3 and 64K n=1; macro over 2/4 contexts is provisional.",
+    "X29": "Q190 DSX 32K/64K complete; provisional macro 2/4 points 475.17/29.56; 128K/261888 + Maya pending.",
+    "Z29": "Cold-ish 446.986 s; mincore 0.0% verified; hot pending."
+  },
+  "readback_verified": true,
+  "gui_preserved": true,
+  "lock_token": "fa21acd2-f286-4981-9254-552a027a464f"
+}

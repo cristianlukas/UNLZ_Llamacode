@@ -1,0 +1,48 @@
+{
+  "task_id": "Q-20261031-DEEPSEEK-MAYA-VS-DSX",
+  "model": "maya",
+  "phase": "q173",
+  "hardware": "2 x RTX 3090, TP2",
+  "runtime": "Project Maya v1.1.37",
+  "window_tokens": 262144,
+  "contexts": [
+    {
+      "context_tokens": 32768,
+      "prefill_tps": 722.5826831356084,
+      "decode_tps": 35.6271066811206,
+      "ttft_seconds": 47.28974236366533,
+      "runs": 3
+    },
+    {
+      "context_tokens": 65536,
+      "prefill_tps": 1017.07818109896,
+      "decode_tps": 37.28560406633094,
+      "ttft_seconds": 64.46505413099658,
+      "runs": 1
+    },
+    {
+      "context_tokens": 131072,
+      "prefill_tps": 1041.8505375014124,
+      "decode_tps": 37.303209711177416,
+      "ttft_seconds": 125.83570798399887,
+      "runs": 1
+    },
+    {
+      "context_tokens": 261888,
+      "prefill_tps": 1014.8934534724551,
+      "decode_tps": 37.472490036140606,
+      "ttft_seconds": 258.0743812110013,
+      "runs": 1,
+      "warmup_seconds": 275.29699993133545
+    }
+  ],
+  "aggregation": "equal-weight arithmetic mean of context-level means; 32K uses n=3, remaining contexts n=1",
+  "macro_prefill_tps": 949.101213802109,
+  "macro_decode_tps": 36.92210262369239,
+  "all_requests_exact_128_tokens": true,
+  "errors": 0,
+  "raw_pp_excluded": true,
+  "cold_init_seconds": 189.991,
+  "hot_init_seconds": "pending",
+  "lock_token": "fa21acd2-f286-4981-9254-552a027a464f"
+}

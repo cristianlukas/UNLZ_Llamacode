@@ -1,0 +1,64 @@
+{
+  "task_id": "Q-20261031-DEEPSEEK-MAYA-VS-DSX",
+  "model": "maya",
+  "phase": "q173",
+  "context_tokens": 131072,
+  "runs": 1,
+  "exit_code": 0,
+  "started_utc": "2026-10-31T16:15:29+00:00",
+  "finished_utc": "2026-10-31T16:19:51+00:00",
+  "elapsed_seconds": 262.303,
+  "prefill": {
+    "method": "actual prompt_tokens / request_start-to-first-content-token elapsed seconds; end-to-end effective prefill, includes client/network overhead",
+    "mean_tps": 1041.8505375014124,
+    "sample_stdev_tps": 0.0,
+    "per_run": [
+      {
+        "request_id": 0,
+        "prompt_tokens": 131102,
+        "first_content_token_elapsed_s": 125.83570798399887,
+        "effective_prefill_tps_e2e": 1041.8505375014124
+      }
+    ]
+  },
+  "decode": {
+    "method": "llama-benchy tg_throughput; exact 128 output tokens",
+    "mean_tps": 37.303209711177416,
+    "sample_stdev_tps": 0.0,
+    "per_run_tps": [
+      37.303209711177416
+    ]
+  },
+  "ttft_e2e": {
+    "mean_seconds": 125.83570798399887,
+    "sample_stdev_seconds": 0.0,
+    "per_run_seconds": [
+      125.83570798399887
+    ]
+  },
+  "request_validation": {
+    "expected_output_tokens": 128,
+    "actual_output_tokens": [
+      128
+    ],
+    "errors": [
+      ""
+    ],
+    "prompt_tokens": [
+      131102
+    ]
+  },
+  "raw_pp_throughput": {
+    "mean": 863728.5299892634,
+    "std": 0.0,
+    "values": [
+      863728.5299892634
+    ]
+  },
+  "raw_pp_status": "excluded from decisions; first SSE response can be role-only before first content token",
+  "source_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261029-VF-ITERATION-190/profiles/deepseek-maya-xs-vs-dsx-q190/receipts/q173-maya-context-131072-runs-1.json",
+  "result_path": "/media/cristian/HDD extra/LlamaCode-evals/Q190-maya-xs-vs-dsx/runs/q173/maya/context-131072-runs-1.json",
+  "event_path": "/media/cristian/HDD extra/LlamaCode-evals/Q190-maya-xs-vs-dsx/runs/q173/maya/context-131072-runs-1-events.jsonl",
+  "log_path": "/media/cristian/HDD extra/LlamaCode-evals/Q190-maya-xs-vs-dsx/logs/q173/maya/context-131072-runs-1.log",
+  "lock_token": "fa21acd2-f286-4981-9254-552a027a464f"
+}

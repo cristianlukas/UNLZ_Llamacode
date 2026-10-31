@@ -1,0 +1,26 @@
+{
+  "task_id": "Q-20261031-DEEPSEEK-MAYA-VS-DSX",
+  "attempt": 1,
+  "at_utc": "2026-10-31T14:36:08Z",
+  "lock_token": "fa21acd2-f286-4981-9254-552a027a464f",
+  "model": "dsx",
+  "phase": "q173-cold-start only; no benchmark request was sent",
+  "runner_receipt": "startup-dsx-q173-cold-attempt1-foreign-server.json",
+  "gate": "Runner detected an external llama-server and stopped only its own DSX systemd unit before API readiness.",
+  "foreign_process_observed": {
+    "pid": 1484154,
+    "parent_pid": 22165,
+    "executable": "llama-server",
+    "model": "Qwen3.5-9B Q4_K_M MTP",
+    "port": 8021,
+    "parent_executable": "/home/cristian/.cache/llamacode/build_linux/LlamaCode",
+    "parent_scope": "app-com.anthropic.Claude-9867.scope"
+  },
+  "resolution": "The external server exited before intervention; its parent GUI was left running. DSX evaluation service was stopped by the runner. No foreign process was killed.",
+  "result": "No Q173 measurement and no model quality result; retry requires a clean preflight.",
+  "sheet": {
+    "range": "Modelos locales por peso!X29",
+    "readback_verified": true,
+    "status_recorded": "Attempt 1 stopped before readiness; retry after clean preflight."
+  }
+}

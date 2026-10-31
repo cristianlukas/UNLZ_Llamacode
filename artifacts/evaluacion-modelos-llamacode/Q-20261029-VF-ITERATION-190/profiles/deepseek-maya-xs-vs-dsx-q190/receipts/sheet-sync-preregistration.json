@@ -1,0 +1,13 @@
+{
+  "task_id": "Q-20261031-DEEPSEEK-MAYA-VS-DSX",
+  "synced_at_utc": "2026-10-31T14:29:58Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet": "Modelos locales por peso",
+  "sheet_id": 2026102751,
+  "updated_ranges": ["X29:X30"],
+  "readback_verified": true,
+  "values": {
+    "X29": "Q190 matched comparison in progress (lock owned). Q173 common 262144 window: 32K n=3; 64K/128K/261888 n=1, one warmup per context; performance pending. Then Q172 seeds 42/43/44 at 131072. Historical Q172 seed42 89/100 and TC-92 fail remain separate; eval-only.",
+    "X30": "Q190 matched comparison in progress (lock owned). Q173 common 262144 window: 32K n=3; 64K/128K/261888 n=1, one warmup per context; performance pending. Then Q172 seeds 42/43/44 at 131072. Historical Q189 mean 83.67/100 at 262K and TC-92 fail 2/3 remain separate. Delete Maya weights only if strict preregistered dominance and no-consumer checks pass."
+  }
+}

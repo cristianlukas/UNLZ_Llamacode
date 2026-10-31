@@ -1,0 +1,22 @@
+{
+  "task_id": "Q-20261031-DEEPSEEK-MAYA-VS-DSX",
+  "synced_at_utc": "2026-10-31T16:12:28Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet_name": "Modelos locales por peso",
+  "sheet_id": 2026102751,
+  "range_readback": "A30:Z30",
+  "row_key": "DeepSeek V4.1 Flash-1017 Maya-XS IQ1_S · Project Maya Q189",
+  "updated_cells": {
+    "D30": "Pendiente · macro tras ladder",
+    "E30": "Pendiente · macro tras ladder",
+    "H30": "Q190 corregido E2E: 32K n=3 media 722.58 tok/s (611.18, 614.16, 942.42); P = prompt_tokens/TTFT. Pendiente 64K/128K/261888.",
+    "I30": "Q190 tg_throughput: 32K n=3 media 35.63 tok/s (33.44, 36.85, 36.58); 128 tokens exactos/run. Pendiente 64K/128K/261888.",
+    "T30": "32K n=3: TTFT E2E medio 47.290 s; 128 tokens/salida; todas las solicitudes sin error.",
+    "X30": "Q190 Q173 Maya 32K n=3 PASS: prefill efectivo E2E 722.58 tok/s; decode 35.63 tok/s; TTFT medio 47.290 s; 3/3 salidas exactas de 128 tokens, sin error. Benchy raw pp≈724,042 excluded (SSE role-only flaw). DSX matched 32K: P414.60/D29.51. Higher-context Maya points pending. Historical Q189 Q172 83.67 and TC-92 fail2/3 separate; no deletion decision yet."
+  },
+  "readback_verified": true,
+  "readback_value_matches": true,
+  "gui_preserved": "No GUI process targeted; Q190 Maya evaluation service remains active.",
+  "lock_token": "fa21acd2-f286-4981-9254-552a027a464f",
+  "source_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261029-VF-ITERATION-190/profiles/deepseek-maya-xs-vs-dsx-q190/receipts/q173-maya-context-32768-corrected.json"
+}

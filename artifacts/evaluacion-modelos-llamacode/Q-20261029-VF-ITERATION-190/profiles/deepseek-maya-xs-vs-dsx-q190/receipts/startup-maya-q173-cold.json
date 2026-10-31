@@ -1,0 +1,1076 @@
+{
+  "model": "maya",
+  "stage": "q173-cold",
+  "unit": "q190-maya-q173-cold",
+  "port": 18190,
+  "start_utc": "2026-10-31T16:02:14+00:00",
+  "command": [
+    "systemd-run",
+    "--user",
+    "--unit=q190-maya-q173-cold",
+    "--property=ManagedOOMPreference=avoid",
+    "--property=Restart=no",
+    "--property=KillMode=control-group",
+    "--property=WorkingDirectory=/media/cristian/HDD extra/LlamaCode-evals/Q189-project-maya-v1.1.37",
+    "--setenv=CUDA_VISIBLE_DEVICES=0,1",
+    "/media/cristian/HDD extra/LlamaCode-evals/Q189-project-maya-v1.1.37/run-maya-ds4.sh",
+    "--config",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261029-VF-ITERATION-190/profiles/deepseek-maya-xs-vs-dsx-q190/configs/maya-q173-262k.json",
+    "--port",
+    "18190",
+    "--plain"
+  ],
+  "launcher_rc": 0,
+  "launcher_stdout": "",
+  "launcher_stderr": "Running as unit: q190-maya-q173-cold.service; invocation ID: 8f9cbe61e3a640578304e92407f34bd2\n",
+  "baseline": {
+    "timestamp_utc": "2026-10-31T16:02:08+00:00",
+    "model": "maya",
+    "assets": {
+      "model": "maya",
+      "verified_engine_sha256": "b4d00bcb0dc1b6680158749941601e79f669af6b1ae5c2d28c5feaa0cc72df17",
+      "shards": [
+        {
+          "path": "/media/cristian/7CFE1E0FFE1DC1F6/LlamaCode-evals/Q189/Maya-XS/DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00001-of-00005.gguf",
+          "bytes": 47781530400,
+          "sha256_pinned": "a0cb7966afd68bc35c46f78018d1fa1d2e4bcbe3c3baf39f60cd1733ed9ad7e5",
+          "sha_reverified": false,
+          "symlink_target": "/media/cristian/7CFE1E0FFE1DC1F6/LlamaCode-evals/Q189/Maya-XS/DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00001-of-00005.gguf"
+        },
+        {
+          "path": "/media/cristian/7CFE1E0FFE1DC1F6/LlamaCode-evals/Q189/Maya-XS/DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00002-of-00005.gguf",
+          "bytes": 47775748128,
+          "sha256_pinned": "ba5afb43adfc667436ebcfbd82d25411fa2843ee7e1d877290611cd60f93cca1",
+          "sha_reverified": false,
+          "symlink_target": "/media/cristian/7CFE1E0FFE1DC1F6/LlamaCode-evals/Q189/Maya-XS/DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00002-of-00005.gguf"
+        },
+        {
+          "path": "/media/cristian/7CFE1E0FFE1DC1F6/LlamaCode-evals/Q189/Maya-XS/DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00003-of-00005.gguf",
+          "bytes": 19784230848,
+          "sha256_pinned": "1482443bb4957c8d2f005ded365445f98558ff05c50674f9ee9a96ddabc122a4",
+          "sha_reverified": false,
+          "symlink_target": "/media/cristian/7CFE1E0FFE1DC1F6/LlamaCode-evals/Q189/Maya-XS/DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00003-of-00005.gguf"
+        },
+        {
+          "path": "/media/cristian/7CFE1E0FFE1DC1F6/LlamaCode-evals/Q189/Maya-XS/DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00004-of-00005.gguf",
+          "bytes": 80641295472,
+          "sha256_pinned": "0d93315942c523d82f6dbc0a6e0e1751548e309f3963f96b82f92e8f9bc52e36",
+          "sha_reverified": false,
+          "symlink_target": "/media/cristian/Disco local/LlamaCode-evals/Q189/Engram-shards/DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00004-of-00005.gguf"
+        },
+        {
+          "path": "/media/cristian/7CFE1E0FFE1DC1F6/LlamaCode-evals/Q189/Maya-XS/DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00005-of-00005.gguf",
+          "bytes": 80643503412,
+          "sha256_pinned": "39bbc8cde8b17604fed9a7ba7fc6bc9c5e72e34733657943ac049b4b9ca2d340",
+          "sha_reverified": false,
+          "symlink_target": "/media/cristian/Disco local/LlamaCode-evals/Q189/Engram-shards/DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00005-of-00005.gguf"
+        }
+      ],
+      "prior_pinned_shard_receipt": "Q189"
+    },
+    "mem_available_kib": 117446020,
+    "memory_psi": "some avg10=0.00 avg60=2.01 avg300=2.07 total=82989988\nfull avg10=0.00 avg60=1.91 avg300=1.97 total=81248273",
+    "gpus": {
+      "0": {
+        "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_used_mib": 1275,
+        "memory_total_mib": 24576,
+        "utilization_percent": 31,
+        "compute": [
+          {
+            "pid": 833718,
+            "used_mib": 207
+          }
+        ]
+      },
+      "1": {
+        "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_used_mib": 108,
+        "memory_total_mib": 24576,
+        "utilization_percent": 22,
+        "compute": []
+      }
+    },
+    "inference_servers": [],
+    "port_free": true,
+    "result_volume_free_bytes": 67870855168,
+    "swap": "/swap.img file 8589930496 6064812032   -1"
+  },
+  "file_cache": {
+    "method": "file-scoped POSIX_FADV_DONTNEED; verified with mincore for each model shard",
+    "files": [
+      {
+        "before": {
+          "path": "/media/cristian/7CFE1E0FFE1DC1F6/LlamaCode-evals/Q189/Maya-XS/DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00001-of-00005.gguf",
+          "bytes": 47781530400,
+          "pages": 11665413,
+          "resident_pages": 0,
+          "resident_percent": 0.0
+        },
+        "posix_fadvise_return": null,
+        "after": {
+          "path": "/media/cristian/7CFE1E0FFE1DC1F6/LlamaCode-evals/Q189/Maya-XS/DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00001-of-00005.gguf",
+          "bytes": 47781530400,
+          "pages": 11665413,
+          "resident_pages": 0,
+          "resident_percent": 0.0
+        }
+      },
+      {
+        "before": {
+          "path": "/media/cristian/7CFE1E0FFE1DC1F6/LlamaCode-evals/Q189/Maya-XS/DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00002-of-00005.gguf",
+          "bytes": 47775748128,
+          "pages": 11664002,
+          "resident_pages": 0,
+          "resident_percent": 0.0
+        },
+        "posix_fadvise_return": null,
+        "after": {
+          "path": "/media/cristian/7CFE1E0FFE1DC1F6/LlamaCode-evals/Q189/Maya-XS/DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00002-of-00005.gguf",
+          "bytes": 47775748128,
+          "pages": 11664002,
+          "resident_pages": 0,
+          "resident_percent": 0.0
+        }
+      },
+      {
+        "before": {
+          "path": "/media/cristian/7CFE1E0FFE1DC1F6/LlamaCode-evals/Q189/Maya-XS/DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00003-of-00005.gguf",
+          "bytes": 19784230848,
+          "pages": 4830135,
+          "resident_pages": 0,
+          "resident_percent": 0.0
+        },
+        "posix_fadvise_return": null,
+        "after": {
+          "path": "/media/cristian/7CFE1E0FFE1DC1F6/LlamaCode-evals/Q189/Maya-XS/DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00003-of-00005.gguf",
+          "bytes": 19784230848,
+          "pages": 4830135,
+          "resident_pages": 0,
+          "resident_percent": 0.0
+        }
+      },
+      {
+        "before": {
+          "path": "/media/cristian/7CFE1E0FFE1DC1F6/LlamaCode-evals/Q189/Maya-XS/DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00004-of-00005.gguf",
+          "bytes": 80641295472,
+          "pages": 19687817,
+          "resident_pages": 0,
+          "resident_percent": 0.0
+        },
+        "posix_fadvise_return": null,
+        "after": {
+          "path": "/media/cristian/7CFE1E0FFE1DC1F6/LlamaCode-evals/Q189/Maya-XS/DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00004-of-00005.gguf",
+          "bytes": 80641295472,
+          "pages": 19687817,
+          "resident_pages": 0,
+          "resident_percent": 0.0
+        }
+      },
+      {
+        "before": {
+          "path": "/media/cristian/7CFE1E0FFE1DC1F6/LlamaCode-evals/Q189/Maya-XS/DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00005-of-00005.gguf",
+          "bytes": 80643503412,
+          "pages": 19688356,
+          "resident_pages": 0,
+          "resident_percent": 0.0
+        },
+        "posix_fadvise_return": null,
+        "after": {
+          "path": "/media/cristian/7CFE1E0FFE1DC1F6/LlamaCode-evals/Q189/Maya-XS/DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00005-of-00005.gguf",
+          "bytes": 80643503412,
+          "pages": 19688356,
+          "resident_pages": 0,
+          "resident_percent": 0.0
+        }
+      }
+    ],
+    "aggregate_resident_percent": 0.0,
+    "coldish_verified": false
+  },
+  "status": "ready",
+  "samples": [
+    {
+      "at_utc": "2026-10-31T16:02:14+00:00",
+      "elapsed_seconds": 0.12,
+      "mem_available_kib": 117454760,
+      "memory_psi": "some avg10=0.00 avg60=1.82 avg300=2.03 total=82989988\nfull avg10=0.00 avg60=1.73 avg300=1.93 total=81248273",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [],
+        "1": []
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:02:19+00:00",
+      "elapsed_seconds": 5.21,
+      "mem_available_kib": 116731556,
+      "memory_psi": "some avg10=0.00 avg60=1.70 avg300=2.00 total=82989992\nfull avg10=0.00 avg60=1.61 avg300=1.90 total=81248277",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:02:24+00:00",
+      "elapsed_seconds": 10.34,
+      "mem_available_kib": 116861500,
+      "memory_psi": "some avg10=0.00 avg60=1.54 avg300=1.96 total=82989994\nfull avg10=0.00 avg60=1.46 avg300=1.86 total=81248279",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:02:29+00:00",
+      "elapsed_seconds": 15.43,
+      "mem_available_kib": 111370616,
+      "memory_psi": "some avg10=0.00 avg60=1.44 avg300=1.93 total=82989994\nfull avg10=0.00 avg60=1.37 avg300=1.83 total=81248279",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:02:34+00:00",
+      "elapsed_seconds": 20.52,
+      "mem_available_kib": 111574972,
+      "memory_psi": "some avg10=0.00 avg60=1.30 avg300=1.89 total=82989994\nfull avg10=0.00 avg60=1.23 avg300=1.79 total=81248279",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:02:40+00:00",
+      "elapsed_seconds": 25.61,
+      "mem_available_kib": 111539420,
+      "memory_psi": "some avg10=0.00 avg60=1.18 avg300=1.85 total=82989994\nfull avg10=0.00 avg60=1.12 avg300=1.76 total=81248279",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:02:45+00:00",
+      "elapsed_seconds": 30.7,
+      "mem_available_kib": 111522180,
+      "memory_psi": "some avg10=0.00 avg60=1.10 avg300=1.83 total=82989994\nfull avg10=0.00 avg60=1.04 avg300=1.73 total=81248279",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:02:50+00:00",
+      "elapsed_seconds": 35.79,
+      "mem_available_kib": 111437460,
+      "memory_psi": "some avg10=0.00 avg60=1.00 avg300=1.79 total=82990048\nfull avg10=0.00 avg60=0.94 avg300=1.70 total=81248331",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:02:55+00:00",
+      "elapsed_seconds": 40.88,
+      "mem_available_kib": 104237908,
+      "memory_psi": "some avg10=0.00 avg60=0.93 avg300=1.76 total=82990187\nfull avg10=0.00 avg60=0.88 avg300=1.67 total=81248445",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:03:00+00:00",
+      "elapsed_seconds": 45.97,
+      "mem_available_kib": 95030700,
+      "memory_psi": "some avg10=0.00 avg60=0.84 avg300=1.73 total=82990187\nfull avg10=0.00 avg60=0.80 avg300=1.64 total=81248445",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:03:05+00:00",
+      "elapsed_seconds": 51.07,
+      "mem_available_kib": 85847168,
+      "memory_psi": "some avg10=0.00 avg60=0.79 avg300=1.70 total=82990187\nfull avg10=0.00 avg60=0.75 avg300=1.62 total=81248445",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:03:10+00:00",
+      "elapsed_seconds": 56.17,
+      "mem_available_kib": 77370740,
+      "memory_psi": "some avg10=0.00 avg60=0.71 avg300=1.67 total=82991295\nfull avg10=0.00 avg60=0.67 avg300=1.58 total=81249554",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:03:15+00:00",
+      "elapsed_seconds": 61.3,
+      "mem_available_kib": 68293492,
+      "memory_psi": "some avg10=0.18 avg60=0.70 avg300=1.65 total=83039629\nfull avg10=0.18 avg60=0.66 avg300=1.57 total=81297794",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:03:20+00:00",
+      "elapsed_seconds": 66.49,
+      "mem_available_kib": 60778700,
+      "memory_psi": "some avg10=4.93 avg60=1.51 avg300=1.80 total=83635347\nfull avg10=4.93 avg60=1.48 avg300=1.72 total=81893184",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:03:26+00:00",
+      "elapsed_seconds": 71.6,
+      "mem_available_kib": 59099564,
+      "memory_psi": "some avg10=24.11 avg60=5.71 avg300=2.69 total=86407656\nfull avg10=24.11 avg60=5.68 avg300=2.61 total=84664667",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:03:31+00:00",
+      "elapsed_seconds": 76.7,
+      "mem_available_kib": 58024684,
+      "memory_psi": "some avg10=37.20 avg60=9.43 avg300=3.52 total=89716084\nfull avg10=37.20 avg60=9.41 avg300=3.44 total=87972464",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:03:36+00:00",
+      "elapsed_seconds": 81.8,
+      "mem_available_kib": 57112384,
+      "memory_psi": "some avg10=50.03 avg60=14.77 avg300=4.79 total=93051457\nfull avg10=50.03 avg60=14.75 avg300=4.71 total=91307041",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:03:41+00:00",
+      "elapsed_seconds": 86.9,
+      "mem_available_kib": 56426708,
+      "memory_psi": "some avg10=52.11 avg60=17.46 avg300=5.49 total=96009662\nfull avg10=52.11 avg60=17.43 avg300=5.41 total=94264433",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:03:46+00:00",
+      "elapsed_seconds": 92.0,
+      "mem_available_kib": 55638160,
+      "memory_psi": "some avg10=52.48 avg60=20.91 avg300=6.48 total=98798723\nfull avg10=52.30 avg60=20.86 avg300=6.40 total=97052687",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:03:51+00:00",
+      "elapsed_seconds": 97.12,
+      "mem_available_kib": 54576196,
+      "memory_psi": "some avg10=57.13 avg60=23.82 avg300=7.29 total=102060509\nfull avg10=57.01 avg60=23.77 avg300=7.21 total=100313962",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:03:56+00:00",
+      "elapsed_seconds": 102.25,
+      "mem_available_kib": 53190692,
+      "memory_psi": "some avg10=56.43 avg60=26.84 avg300=8.28 total=104953490\nfull avg10=56.36 avg60=26.80 avg300=8.20 total=103205884",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:04:01+00:00",
+      "elapsed_seconds": 107.44,
+      "mem_available_kib": 51895800,
+      "memory_psi": "some avg10=57.28 avg60=28.91 avg300=8.97 total=108042807\nfull avg10=57.23 avg60=28.87 avg300=8.89 total=106294326",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:04:07+00:00",
+      "elapsed_seconds": 112.56,
+      "mem_available_kib": 50884232,
+      "memory_psi": "some avg10=58.04 avg60=31.82 avg300=10.00 total=111203896\nfull avg10=58.02 avg60=31.78 avg300=9.92 total=109454724",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:04:12+00:00",
+      "elapsed_seconds": 117.67,
+      "mem_available_kib": 49395036,
+      "memory_psi": "some avg10=58.43 avg60=34.43 avg300=11.01 total=114150335\nfull avg10=58.41 avg60=34.39 avg300=10.93 total=112400058",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:04:17+00:00",
+      "elapsed_seconds": 122.78,
+      "mem_available_kib": 48099116,
+      "memory_psi": "some avg10=57.44 avg60=35.78 avg300=11.61 total=117050542\nfull avg10=57.43 avg60=35.75 avg300=11.54 total=115298827",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:04:22+00:00",
+      "elapsed_seconds": 127.89,
+      "mem_available_kib": 46701240,
+      "memory_psi": "some avg10=58.18 avg60=38.01 avg300=12.59 total=120164114\nfull avg10=58.17 avg60=37.99 avg300=12.51 total=118411520",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:04:27+00:00",
+      "elapsed_seconds": 133.01,
+      "mem_available_kib": 45245384,
+      "memory_psi": "some avg10=58.02 avg60=39.30 avg300=13.20 total=122910401\nfull avg10=57.87 avg60=39.24 avg300=13.12 total=121156886",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:04:32+00:00",
+      "elapsed_seconds": 138.11,
+      "mem_available_kib": 43807464,
+      "memory_psi": "some avg10=55.99 avg60=40.63 avg300=14.02 total=125830315\nfull avg10=55.90 avg60=40.58 avg300=13.94 total=124076328",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:04:37+00:00",
+      "elapsed_seconds": 143.21,
+      "mem_available_kib": 43571824,
+      "memory_psi": "some avg10=57.24 avg60=41.88 avg300=14.65 total=128855542\nfull avg10=57.19 avg60=41.83 avg300=14.57 total=127100577",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:04:42+00:00",
+      "elapsed_seconds": 148.31,
+      "mem_available_kib": 42269524,
+      "memory_psi": "some avg10=58.86 avg60=43.64 avg300=15.58 total=132143058\nfull avg10=58.83 avg60=43.59 avg300=15.51 total=130387433",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:04:47+00:00",
+      "elapsed_seconds": 153.44,
+      "mem_available_kib": 41827052,
+      "memory_psi": "some avg10=62.20 avg60=45.27 avg300=16.31 total=135765075\nfull avg10=62.18 avg60=45.23 avg300=16.23 total=134008940",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:04:53+00:00",
+      "elapsed_seconds": 158.55,
+      "mem_available_kib": 41026232,
+      "memory_psi": "some avg10=63.43 avg60=47.20 avg300=17.31 total=138920131\nfull avg10=63.42 avg60=47.16 avg300=17.24 total=137162511",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:04:58+00:00",
+      "elapsed_seconds": 163.65,
+      "mem_available_kib": 40263908,
+      "memory_psi": "some avg10=56.70 avg60=47.52 avg300=18.00 total=141425662\nfull avg10=56.69 avg60=47.48 avg300=17.93 total=139667199",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:05:03+00:00",
+      "elapsed_seconds": 168.75,
+      "mem_available_kib": 39704352,
+      "memory_psi": "some avg10=43.73 avg60=45.58 avg300=17.99 total=142418628\nfull avg10=43.73 avg60=45.55 avg300=17.92 total=140660085",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:05:08+00:00",
+      "elapsed_seconds": 173.86,
+      "mem_available_kib": 39474436,
+      "memory_psi": "some avg10=38.01 avg60=44.23 avg300=18.26 total=144097830\nfull avg10=38.01 avg60=44.20 avg300=18.20 total=142339227",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:05:13+00:00",
+      "elapsed_seconds": 178.97,
+      "mem_available_kib": 39381380,
+      "memory_psi": "some avg10=31.85 avg60=42.66 avg300=18.29 total=145131943\nfull avg10=31.84 avg60=42.63 avg300=18.22 total=143373277",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:05:19+00:00",
+      "elapsed_seconds": 184.89,
+      "mem_available_kib": 39182668,
+      "memory_psi": "some avg10=27.66 avg60=40.73 avg300=18.37 total=146703089\nfull avg10=27.66 avg60=40.71 avg300=18.30 total=144944241",
+      "unit_active": "active",
+      "api_models": null,
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    },
+    {
+      "at_utc": "2026-10-31T16:05:24+00:00",
+      "elapsed_seconds": 189.99,
+      "mem_available_kib": 37313868,
+      "memory_psi": "some avg10=27.12 avg60=39.47 avg300=18.56 total=147919149\nfull avg10=27.12 avg60=39.45 avg300=18.49 total=146159908",
+      "unit_active": "active",
+      "api_models": {
+        "object": "list",
+        "data": [
+          {
+            "id": "deepseek-v4.1-flash",
+            "object": "model",
+            "status": {
+              "value": "loaded"
+            },
+            "meta": {
+              "n_ctx": 262144
+            },
+            "architecture": {
+              "input_modalities": [
+                "text"
+              ],
+              "output_modalities": [
+                "text"
+              ]
+            }
+          }
+        ]
+      },
+      "service_pids": [
+        1695213,
+        1695246,
+        1695290,
+        1700923
+      ],
+      "service_compute_pids_by_gpu": {
+        "0": [
+          1695290
+        ],
+        "1": [
+          1695290
+        ]
+      },
+      "foreign_servers": []
+    }
+  ],
+  "ready_utc": "2026-10-31T16:05:24+00:00",
+  "seconds_to_ready": 189.991,
+  "served_models": {
+    "object": "list",
+    "data": [
+      {
+        "id": "deepseek-v4.1-flash",
+        "object": "model",
+        "status": {
+          "value": "loaded"
+        },
+        "meta": {
+          "n_ctx": 262144
+        },
+        "architecture": {
+          "input_modalities": [
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ]
+        }
+      }
+    ]
+  },
+  "dual_gpu_gate": "same evaluation service has compute PID(s) on both RTX 3090",
+  "finish_utc": "2026-10-31T16:05:24+00:00"
+}

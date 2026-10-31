@@ -1,0 +1,25 @@
+{
+  "id": "q190-whisper-user-stop-amendment-04",
+  "registered_at_utc": "2026-10-31T14:46:08.453861Z",
+  "task_id": "Q-20261031-DEEPSEEK-MAYA-VS-DSX",
+  "no_measurements_before_amendment": true,
+  "reason": "Q190 requires both RTX 3090s and the only remaining foreign inference service is the LlamaCode Whisper server on GPU1. The user explicitly authorized stopping only Whisper, preserving the GUI.",
+  "user_instruction": "Detener solo Whisper",
+  "authorized_scope": {
+    "executable": "whisper-server",
+    "executable_path": "/media/cristian/Disco local/LlamaCode-cache/whisper-cuda-build/bin/whisper-server",
+    "model_path": "/home/cristian/.local/share/LlamaCode/LlamaCode/voice/whisper-small/ggml-small.bin",
+    "host": "127.0.0.1",
+    "port": 8081,
+    "observed_pid": 1483880,
+    "observed_parent_pid": 3388,
+    "stop_method": "single SIGTERM to PID 1483880 only after exact argv/executable/port identity verification"
+  },
+  "preserve": [
+    "LlamaCode GUI",
+    "all other processes and inference services",
+    "all model files"
+  ],
+  "runner_change": "none; server is stopped externally, then normal Q190 no-inference preflight must pass",
+  "retry_gate": "If Whisper or any other inference server reappears, do not send repeated signals or start Q190; preserve it and record the new gate."
+}

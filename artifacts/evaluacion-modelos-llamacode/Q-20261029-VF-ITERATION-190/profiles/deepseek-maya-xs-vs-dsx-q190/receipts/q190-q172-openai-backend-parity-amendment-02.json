@@ -1,0 +1,65 @@
+{
+  "id": "q190-q172-openai-backend-parity-amendment-02",
+  "registered_at_utc": "2026-10-31T14:24:43+00:00",
+  "reason": "Tool-Eval help confirms --backend is a report label while --format chooses wire format. The existing DSX run used openai/openai and Maya historically used llamacpp/openai. Use the same openai label and wire format for both fresh matched profiles; keep Q189 Maya results historical and do not mix them into Q190.",
+  "prior_metadata": {
+    "Maya": {
+      "backend": null,
+      "wire_format": null
+    },
+    "DSX": {
+      "backend": null,
+      "wire_format": null
+    }
+  },
+  "new_protocol": {
+    "backend": "openai",
+    "format": "openai",
+    "context_tokens": 131072,
+    "seeds": [
+      42,
+      43,
+      44
+    ],
+    "scenarios": [
+      "TC-70",
+      "TC-71",
+      "TC-72",
+      "TC-73",
+      "TC-74",
+      "TC-75",
+      "TC-76",
+      "TC-77",
+      "TC-78",
+      "TC-79",
+      "TC-80",
+      "TC-81",
+      "TC-82",
+      "TC-83",
+      "TC-84",
+      "TC-85",
+      "TC-86",
+      "TC-87",
+      "TC-88",
+      "TC-89",
+      "TC-90",
+      "TC-91",
+      "TC-92",
+      "TC-93",
+      "TC-94",
+      "TC-95",
+      "TC-96",
+      "TC-97"
+    ],
+    "sampling": {
+      "temperature": 0.6,
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repeat_penalty": 1.0,
+      "presence_penalty": 0.0,
+      "reasoning_effort": "medium"
+    }
+  },
+  "no_quality_measurements_started": true
+}

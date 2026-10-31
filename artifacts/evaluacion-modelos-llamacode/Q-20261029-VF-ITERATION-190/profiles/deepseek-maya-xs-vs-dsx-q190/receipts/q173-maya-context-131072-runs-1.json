@@ -1,0 +1,93 @@
+{
+  "task": "Q-20261031-DEEPSEEK-MAYA-VS-DSX",
+  "model": "maya",
+  "phase": "q173",
+  "context_tokens": 131072,
+  "runs": 1,
+  "seed": 42,
+  "started_utc": "2026-10-31T16:15:29+00:00",
+  "finished_utc": "2026-10-31T16:19:51+00:00",
+  "elapsed_seconds": 262.303,
+  "exit_code": 0,
+  "argv": [
+    "/home/cristian/.cache/q173-llama-benchy-0.4.0/bin/llama-benchy",
+    "--base-url",
+    "http://127.0.0.1:18190/v1",
+    "--model",
+    "deepseek-v4.1-flash",
+    "--tokenizer",
+    "/home/cristian/.cache/q173-tokenizers/deepseek-v41-flash-1017/tokenizer.json",
+    "--pp",
+    "131072",
+    "--tg",
+    "128",
+    "--exact-tg",
+    "--depth",
+    "0",
+    "--concurrency",
+    "1",
+    "--runs",
+    "1",
+    "--latency-mode",
+    "generation",
+    "--no-cache",
+    "--skip-coherence",
+    "--no-adapt-prompt",
+    "--extra-body",
+    "temperature=0.6,top_p=0.95,top_k=20,min_p=0.0,repetition_penalty=1.0,presence_penalty=0.0,seed=42",
+    "--format",
+    "json",
+    "--exit-on-first-fail",
+    "--save-result",
+    "/media/cristian/HDD extra/LlamaCode-evals/Q190-maya-xs-vs-dsx/runs/q173/maya/context-131072-runs-1.json",
+    "--emit-progress",
+    "/media/cristian/HDD extra/LlamaCode-evals/Q190-maya-xs-vs-dsx/runs/q173/maya/context-131072-runs-1-events.jsonl"
+  ],
+  "result_path": "/media/cristian/HDD extra/LlamaCode-evals/Q190-maya-xs-vs-dsx/runs/q173/maya/context-131072-runs-1.json",
+  "event_path": "/media/cristian/HDD extra/LlamaCode-evals/Q190-maya-xs-vs-dsx/runs/q173/maya/context-131072-runs-1-events.jsonl",
+  "log_path": "/media/cristian/HDD extra/LlamaCode-evals/Q190-maya-xs-vs-dsx/logs/q173/maya/context-131072-runs-1.log",
+  "summary": [
+    {
+      "prompt_size": 131072,
+      "response_size": 128,
+      "pp_throughput": {
+        "mean": 863728.5299892634,
+        "std": 0.0,
+        "values": [
+          863728.5299892634
+        ]
+      },
+      "tg_throughput": {
+        "mean": 37.303209711177416,
+        "std": 0.0,
+        "values": [
+          37.303209711177416
+        ]
+      },
+      "e2e_ttft": {
+        "mean": 125835.70798399887,
+        "std": 0.0,
+        "values": [
+          125835.70798399887
+        ]
+      },
+      "latency_mode": null,
+      "effective_prefill_tps_e2e": {
+        "method": "actual prompt_tokens / request_start-to-first-content-token elapsed seconds; end-to-end effective prefill, includes client/network overhead",
+        "n": 1,
+        "per_run": [
+          {
+            "request_id": 0,
+            "prompt_tokens": 131102,
+            "first_content_token_elapsed_s": 125.83570798399887,
+            "effective_prefill_tps_e2e": 1041.8505375014124
+          }
+        ],
+        "mean_tps": 1041.8505375014124,
+        "sample_stdev_tps": 0.0
+      },
+      "raw_pp_throughput_status": "diagnostic only; exclude from decisions if first SSE response precedes first content-bearing token"
+    }
+  ],
+  "lock_token": "fa21acd2-f286-4981-9254-552a027a464f"
+}

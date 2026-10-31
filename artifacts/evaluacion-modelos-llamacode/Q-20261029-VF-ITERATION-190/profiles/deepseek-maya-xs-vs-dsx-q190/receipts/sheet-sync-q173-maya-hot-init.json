@@ -1,0 +1,21 @@
+{
+  "task_id": "Q-20261031-DEEPSEEK-MAYA-VS-DSX",
+  "synced_at_utc": "2026-10-31T16:32:28Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet_name": "Modelos locales por peso",
+  "sheet_id": 2026102751,
+  "range_readback": "A30:Z30",
+  "row_key": "DeepSeek V4.1 Flash-1017 Maya-XS IQ1_S · Project Maya Q189",
+  "updated_cells": {
+    "X30": "Q190 Q173 Maya ladder complete: macro P949.10/D36.92 tok/s. 32K 722.58/35.63; 64K 1017.08/37.29; 128K 1041.85/37.30; 261888 1014.89/37.47. All exact128 tokens, no errors. Faster than DSX in all four matched contexts (DSX macro P429.14/D25.33). Hot init 97.462 s; cold 189.991 s. Q172 matched seeds42/43/44 pending. Q189 historical 83.67/100, TC-92 fail2/3 separate. No deletion decision yet.",
+    "Z30": "Cold 189.991 s (shard-cache eviction verified); hot 97.462 s (cache retained); both 2×RTX3090."
+  },
+  "readback_verified": true,
+  "readback_value_matches": true,
+  "gui_preserved": "Q190 service stop/start only; Artcraft GUI untouched.",
+  "lock_token": "fa21acd2-f286-4981-9254-552a027a464f",
+  "source_receipts": [
+    "receipts/stop-maya-q173-cold.json",
+    "receipts/startup-maya-q173-hot.json"
+  ]
+}

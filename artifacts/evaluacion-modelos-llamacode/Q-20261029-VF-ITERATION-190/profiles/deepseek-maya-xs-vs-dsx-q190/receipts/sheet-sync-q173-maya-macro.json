@@ -1,0 +1,23 @@
+{
+  "task_id": "Q-20261031-DEEPSEEK-MAYA-VS-DSX",
+  "synced_at_utc": "2026-10-31T16:30:20Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet_name": "Modelos locales por peso",
+  "sheet_id": 2026102751,
+  "range_readback": "A30:Z30",
+  "row_key": "DeepSeek V4.1 Flash-1017 Maya-XS IQ1_S · Project Maya Q189",
+  "updated_cells": {
+    "D30": 949.101213802109,
+    "E30": 36.92210262369239,
+    "H30": "Q190 Q173 contexts 32K/64K/128K/261888; P efectivo E2E=prompt_tokens/TTFT. P: 722.58 (32K n=3)/1017.08/1041.85/1014.89. Macro simple por contexto=949.10 tok/s.",
+    "I30": "Q190 Q173 tg_throughput: 35.63 (32K n=3)/37.29/37.30/37.47. Macro simple por contexto=36.92 tok/s; 128 tokens exactos por salida.",
+    "T30": "TTFT E2E: 32K n=3 mean47.290s; 64K64.465s; 128K125.836s; 261888 258.074s. Warmup 261888=275.297s; cold init=189.991s.",
+    "X30": "Q190 Q173 Maya complete: P/D 32K 722.58/35.63; 64K 1017.08/37.29; 128K 1041.85/37.30; 261888 1014.89/37.47. Macro equal-weight by context P949.10/D36.92. All outputs exactly128 tokens, no errors. Effective P=prompt_tokens/TTFT; raw benchy pp excluded (SSE role-only flaw). DSX matched macro P429.14/D25.33; Maya faster in all four matched contexts. Q172 matched seeds42/43/44 pending; Q189 historical Q172 83.67 and TC-92 fail2/3 separate. No deletion decision yet.",
+    "Z30": "Cold 189.991 s (cache eviction verified; 2×RTX3090); hot pending."
+  },
+  "readback_verified": true,
+  "readback_value_matches": true,
+  "gui_preserved": "No GUI process targeted; Q190 Maya evaluation service remains active.",
+  "lock_token": "fa21acd2-f286-4981-9254-552a027a464f",
+  "source_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261029-VF-ITERATION-190/profiles/deepseek-maya-xs-vs-dsx-q190/receipts/q173-maya-macro.json"
+}
