@@ -92,7 +92,7 @@ necesitan numpy/matplotlib se saltean solos con `skipUnless`.
 | LcColorRow + LcColorPicker (editor de tema, lado QML) | `tests/qml/tst_color_picker.qml` |
 | LcSpinBox + LcRadioButton (controles con tema; contraste texto/fondo) | `tests/qml/tst_lc_controls.qml` |
 | SetupWizardPolicy.js (asistente inicial: una sola recomendación, paso 3 real) | `tests/qml/tst_setup_wizard_policy.qml` |
-| StudiaIndex, StudiaPrompt, StudiaSessionStore, StudiaController (+ integración: servidor de embeddings sólo al abrir la pestaña, puerto ≠ whisper de Charla, `python3` en Linux; indexado desde la app: crear/actualizar índice de una carpeta con el ingestor real, detección de cambios, gate de abstención sólo en corpus grandes, modelo de embeddings en `LLAMACODE_MODELS_DIR`) | `tests/test_studia.cpp` |
+| StudiaIndex, StudiaPrompt, StudiaSessionStore, StudiaController (+ integración: servidor de embeddings sólo al abrir la pestaña, puerto ≠ whisper de Charla, `python3` en Linux; indexado desde la app: crear/actualizar índice de una carpeta con el ingestor real, detección de cambios, gate de abstención sólo en corpus grandes, modelo de embeddings en `LLAMACODE_MODELS_DIR`; llama-server de Binarios si no hay propio; "activo" recién con `/health` 200; E2E real con `LC_STUDIA_E2E_LLAMA_SERVER` + `LC_STUDIA_E2E_MODELS_DIR`) | `tests/test_studia.cpp` |
 | Ingestor de StudIA (Python; carpetas UNLZ y planas, `--podar`) | `tools/studia/test_ingest.py` |
 | Vectorizador de StudIA (Python) | `tools/studia/test_vectorizar.py` |
 | Graficador de StudIA (Python) | `tools/studia/test_graficar.py` |

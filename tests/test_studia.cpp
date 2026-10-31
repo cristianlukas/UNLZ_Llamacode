@@ -6,6 +6,7 @@
 #include <QSqlQuery>
 #include <QStandardPaths>
 #include <QTcpServer>
+#include <QTcpSocket>
 #include <QTemporaryDir>
 #include <QUrl>
 
@@ -3086,9 +3087,24 @@ private slots:
     {
         // Algo escuchando en el puerto de StudIA hace las veces de un servidor
         // de embeddings ya levantado (activar() lo adopta en vez de lanzar otro).
+        // Contesta /health como llama-server: 503 mientras "carga", después 200.
         QTcpServer falso;
         if (!falso.listen(QHostAddress::LocalHost, StudiaEmbedServer::kPuerto))
             QSKIP("puerto de embeddings ocupado en esta maquina");
+        int pedidosSalud = 0;
+        connect(&falso, &QTcpServer::newConnection, &falso, [&] {
+            while (QTcpSocket *s = falso.nextPendingConnection()) {
+                connect(s, &QTcpSocket::readyRead, s, [&pedidosSalud, s] {
+                    if (!s->readAll().startsWith("GET /health"))
+                        return;
+                    const bool cargando = ++pedidosSalud < 3;
+                    s->write(cargando
+                        ? "HTTP/1.1 503 Service Unavailable\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+                        : "HTTP/1.1 200 OK\r\nContent-Length: 15\r\nConnection: close\r\n\r\n{\"status\":\"ok\"}");
+                    s->disconnectFromHost();
+                });
+            }
+        });
 
         StudiaController c;
         c.setUrlEmbeddings(QString());
@@ -3098,7 +3114,11 @@ private slots:
 
         c.activar();
         QVERIFY(c.activado());
+        // Puerto abierto con el modelo cargando (503) todavía no es "activo".
+        QTRY_VERIFY(pedidosSalud >= 1);
+        QVERIFY(!c.estadoSemantico().value(QStringLiteral("servidorActivo")).toBool());
         QTRY_COMPARE(c.urlEmbeddings(), StudiaEmbedServer::url());
+        QVERIFY(pedidosSalud >= 3);
 
         c.activar();                       // idempotente
         QCOMPARE(c.urlEmbeddings(), StudiaEmbedServer::url());
@@ -3222,6 +3242,74 @@ private slots:
                 || c.urlEmbeddingsEfectiva().length() > 0);
         const QVariantMap sug = c.modeloEmbeddingsSugerido();
         QVERIFY(sug.value(QStringLiteral("archivo")).toString().startsWith(QStringLiteral("bge-m3")));
+    }
+
+    // Sin llama-server propio, StudIA usa uno de los que LlamaCode tiene en
+    // Binarios. Antes decía "Falta llama-server" con varios instalados.
+    void indexado_binarioDeEmbeddingsSaleDeBinarios()
+    {
+        QTemporaryDir dir;
+        QVERIFY(dir.isValid());
+        auto crear = [&](const QString &n) {
+            QFile f(dir.filePath(n)); f.open(QIODevice::WriteOnly); f.write("x"); f.close();
+            return dir.filePath(n);
+        };
+        const QString fork = crear(QStringLiteral("fork-server"));
+        const QString oficial = crear(QStringLiteral("oficial-server"));
+        const QString cpu = crear(QStringLiteral("cpu-server"));
+        using B = StudiaEmbedServer::BinarioRegistrado;
+        QCOMPARE(StudiaEmbedServer::elegirBinarioRegistrado(
+                     {B{fork, QStringLiteral("cuda"), QStringLiteral("qwen38-next")},
+                      B{oficial, QStringLiteral("cuda"), QStringLiteral("official")},
+                      B{cpu, QStringLiteral("cpu"), QStringLiteral("official")}}), cpu);
+        QCOMPARE(StudiaEmbedServer::elegirBinarioRegistrado(
+                     {B{fork, QStringLiteral("cuda"), QStringLiteral("mtp-fork")},
+                      B{oficial, QStringLiteral("cuda"), QStringLiteral("official")}}), oficial);
+        QCOMPARE(StudiaEmbedServer::elegirBinarioRegistrado(
+                     {B{QStringLiteral("/no/existe"), QStringLiteral("cpu"), QString()},
+                      B{fork, QStringLiteral("cuda"), QStringLiteral("mtp-fork")}}), fork);
+        QVERIFY(StudiaEmbedServer::elegirBinarioRegistrado({}).isEmpty());
+
+        // rutaBinario() lo usa cuando no hay uno propio ni en PATH.
+        if (QStandardPaths::findExecutable(QStringLiteral("llama-server")).isEmpty()) {
+            StudiaEmbedServer::setBinariosRegistrados({B{oficial, QStringLiteral("cuda"), QStringLiteral("official")}});
+            QCOMPARE(StudiaEmbedServer::rutaBinario(), oficial);
+            StudiaEmbedServer::setBinariosRegistrados({});
+        }
+    }
+
+    // De punta a punta con el servidor de embeddings REAL (bge-m3 en CPU): al
+    // crear el índice se vectoriza solo y la búsqueda semántica queda activa.
+    // Necesita el modelo (~600 MB), así que corre sólo si se le indica dónde:
+    //   LC_STUDIA_E2E_LLAMA_SERVER=<llama-server>  LC_STUDIA_E2E_MODELS_DIR=<carpeta con bge-m3*.gguf>
+    void integracion_semanticaSeActivaSola()
+    {
+        const QString bin = qEnvironmentVariable("LC_STUDIA_E2E_LLAMA_SERVER");
+        const QString modelos = qEnvironmentVariable("LC_STUDIA_E2E_MODELS_DIR");
+        if (bin.isEmpty() || modelos.isEmpty() || StudiaHerramientas::python().isEmpty())
+            QSKIP("Definí LC_STUDIA_E2E_LLAMA_SERVER y LC_STUDIA_E2E_MODELS_DIR para correrlo.");
+        qputenv("LLAMACODE_MODELS_DIR", modelos.toLocal8Bit());
+        StudiaEmbedServer::setBinariosRegistrados({{bin, QStringLiteral("cuda"), QStringLiteral("official")}});
+
+        QTemporaryDir corpus;
+        QDir().mkpath(corpus.filePath(QStringLiteral("Fisica")));
+        const QByteArray texto = QByteArray(
+            "La segunda ley de Newton dice que la fuerza neta es igual a la masa por la "
+            "aceleracion. El rozamiento se opone al deslizamiento entre superficies. ").repeated(4);
+        QFile a(corpus.filePath(QStringLiteral("Fisica/dinamica.txt")));
+        QVERIFY(a.open(QIODevice::WriteOnly)); a.write(texto); a.close();
+
+        StudiaController c;
+        c.setUrlEmbeddings(QString());
+        c.activar();                                   // levanta el servidor de embeddings
+        QTRY_VERIFY_WITH_TIMEOUT(c.estadoSemantico().value(QStringLiteral("servidorActivo")).toBool(), 120000);
+        c.crearIndice(corpus.path());
+        QTRY_VERIFY_WITH_TIMEOUT(!c.indexando(), 180000);
+        const QVariantMap e = c.estadoSemantico();
+        QVERIFY2(c.semanticaActiva(), qPrintable(c.estadoIndexado()));
+        QCOMPARE(e.value(QStringLiteral("vectores")).toInt(), e.value(QStringLiteral("fragmentos")).toInt());
+        StudiaEmbedServer::setBinariosRegistrados({});
+        qunsetenv("LLAMACODE_MODELS_DIR");
     }
 
     // De punta a punta: elegir una carpeta común de materias crea el índice con

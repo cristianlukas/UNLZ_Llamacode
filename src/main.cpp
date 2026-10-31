@@ -506,6 +506,23 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("Mermaid", &mermaid);
     engine.rootContext()->setContextProperty("Tray", &tray);
     engine.rootContext()->setContextProperty("Studia", &studia);
+    // StudIA levanta su servidor de embeddings con un llama-server; si no trae
+    // uno propio, usa los que LlamaCode tiene en Binarios (y se entera de los
+    // que se agreguen después).
+    auto syncBinariosStudia = [&controller]() {
+        QList<StudiaEmbedServer::BinarioRegistrado> lista;
+        BinaryRegistry *reg = controller.binaryRegistry();
+        for (int i = 0; i < reg->rowCount(); ++i) {
+            const LlamaBinary b = reg->findById(
+                reg->data(reg->index(i, 0), BinaryRegistry::IdRole).toString());
+            if (b.pathValid)
+                lista.append({b.path, b.backend, b.flavor});
+        }
+        StudiaEmbedServer::setBinariosRegistrados(lista);
+    };
+    syncBinariosStudia();
+    QObject::connect(controller.binaryRegistry(), &BinaryRegistry::countChanged,
+                     &studia, syncBinariosStudia);
     engine.rootContext()->setContextProperty("AppIconSource", appIconSource);
     engine.rootContext()->setContextProperty("TrayIconSource", trayIconSource);
     engine.rootContext()->setContextProperty("StartedWithWindows", startedWithWindows);

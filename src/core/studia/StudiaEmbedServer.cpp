@@ -3,16 +3,21 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QFileInfo>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
 #include <QProcess>
 #include <QStandardPaths>
 #include <QTcpSocket>
 #include <QTimer>
 
+#include <functional>
+
 namespace {
 
 // Cuantas veces se pregunta si ya esta listo, y cada cuanto. bge-m3 tarda unos
-// segundos en cargar; mas alla de esto es que algo no anda.
-constexpr int kMaxIntentos = 40;
+// segundos en cargar (mas desde un disco lento); mas alla de esto es que algo
+// no anda.
+constexpr int kMaxIntentos = 120;
 constexpr int kIntervaloMs = 500;
 
 // ¿Hay algo escuchando en ese puerto? Se usa para no levantar un segundo
@@ -73,6 +78,37 @@ QString StudiaEmbedServer::rutaModelo()
                           QStringLiteral("*embed*.gguf")});
 }
 
+namespace {
+QList<StudiaEmbedServer::BinarioRegistrado> &binariosRegistrados()
+{
+    static QList<StudiaEmbedServer::BinarioRegistrado> lista;
+    return lista;
+}
+}  // namespace
+
+void StudiaEmbedServer::setBinariosRegistrados(const QList<BinarioRegistrado> &binarios)
+{
+    binariosRegistrados() = binarios;
+}
+
+QString StudiaEmbedServer::elegirBinarioRegistrado(const QList<BinarioRegistrado> &binarios)
+{
+    auto primero = [&](const std::function<bool(const BinarioRegistrado &)> &ok) {
+        for (const BinarioRegistrado &b : binarios)
+            if (!b.ruta.isEmpty() && QFileInfo(b.ruta).isFile() && ok(b))
+                return b.ruta;
+        return QString();
+    };
+    QString r = primero([](const BinarioRegistrado &b) {
+        return b.backend.compare(QLatin1String("cpu"), Qt::CaseInsensitive) == 0; });
+    if (r.isEmpty())
+        r = primero([](const BinarioRegistrado &b) {
+            return b.variante.compare(QLatin1String("official"), Qt::CaseInsensitive) == 0; });
+    if (r.isEmpty())
+        r = primero([](const BinarioRegistrado &) { return true; });
+    return r;
+}
+
 QString StudiaEmbedServer::rutaBinario()
 {
 #ifdef Q_OS_WIN
@@ -101,6 +137,9 @@ QString StudiaEmbedServer::rutaBinario()
                           + QLatin1Char('/') + exeName;
     if (QFileInfo::exists(local))
         return local;
+    const QString registrado = elegirBinarioRegistrado(binariosRegistrados());
+    if (!registrado.isEmpty())
+        return registrado;
     return QStandardPaths::findExecutable(QStringLiteral("llama-server"));
 }
 
@@ -117,13 +156,16 @@ void StudiaEmbedServer::marcar(bool activo, const QString &motivo)
 
 void StudiaEmbedServer::iniciar()
 {
-    if (m_activo || m_proc)
+    if (m_activo || m_proc || m_externo)
         return;
 
     // Ya hay uno andando (el .bat, o una corrida anterior): se usa ese. Levantar
-    // otro sobre el mismo puerto fallaria y dejaria un proceso zombi.
+    // otro sobre el mismo puerto fallaria y dejaria un proceso zombi. Puede
+    // estar todavia cargando el modelo: se espera a que /health diga 200.
     if (puertoOcupado(kPuerto)) {
-        marcar(true, QString());
+        m_externo = true;
+        m_intentos = 0;
+        comprobarSalud();
         return;
     }
 
@@ -176,24 +218,41 @@ void StudiaEmbedServer::comprobarSalud()
 {
     if (m_activo)
         return;
-    if (!m_proc) {                       // se cayo mientras cargaba
+    if (!m_proc && !m_externo) {         // se cayo mientras cargaba
         marcar(false, m_motivo);
         return;
     }
-    if (puertoOcupado(kPuerto)) {
-        marcar(true, QString());
-        return;
-    }
-    if (++m_intentos >= kMaxIntentos) {
-        marcar(false, QStringLiteral("El servidor de búsqueda semántica tardó demasiado "
-                                     "en arrancar."));
-        return;
-    }
-    QTimer::singleShot(kIntervaloMs, this, &StudiaEmbedServer::comprobarSalud);
+    // llama-server abre el puerto ANTES de cargar el modelo y mientras tanto
+    // contesta 503. Con "puerto abierto = listo" la vectorizacion arrancaba en
+    // esa ventana, fallaba la conexion y el indice quedaba sin semantica.
+    // Async: un servidor en el mismo hilo (los tests) no podria contestar.
+    if (!m_red)
+        m_red = new QNetworkAccessManager(this);
+    QNetworkRequest req(QUrl(url() + QStringLiteral("/health")));
+    req.setTransferTimeout(2000);
+    QNetworkReply *r = m_red->get(req);
+    connect(r, &QNetworkReply::finished, this, [this, r] {
+        r->deleteLater();
+        if (m_activo || (!m_proc && !m_externo))
+            return;
+        if (r->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 200) {
+            m_externo = false;
+            marcar(true, QString());
+            return;
+        }
+        if (++m_intentos >= kMaxIntentos) {
+            m_externo = false;
+            marcar(false, QStringLiteral("El servidor de búsqueda semántica tardó demasiado "
+                                         "en arrancar."));
+            return;
+        }
+        QTimer::singleShot(kIntervaloMs, this, &StudiaEmbedServer::comprobarSalud);
+    });
 }
 
 void StudiaEmbedServer::detener()
 {
+    m_externo = false;
     if (!m_proc)
         return;
     QProcess *p = m_proc;

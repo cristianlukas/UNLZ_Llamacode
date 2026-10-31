@@ -2,6 +2,8 @@
 #include <QObject>
 #include <QString>
 
+class QNetworkAccessManager;
+
 class QProcess;
 
 // Levanta y apaga el servidor de embeddings de StudIA.
@@ -28,6 +30,8 @@ public:
     // Deja el servidor andando. Es idempotente y no bloquea:
     //  - si ya hay uno escuchando en el puerto (lo levanto el estudiante a
     //    mano, o quedo de una corrida anterior), lo usa y no arranca otro;
+    //  - activo() recien cuando GET /health da 200: el puerto se abre antes
+    //    de que el modelo termine de cargar;
     //  - si falta el binario o el modelo, no hace nada y lo explica en motivo().
     void iniciar();
     void detener();
@@ -42,6 +46,16 @@ public:
     // Rutas que se buscan. Vacias si no se encuentran.
     static QString rutaModelo();
     static QString rutaBinario();
+    // Binarios llama-server que LlamaCode ya tiene registrados (Binarios):
+    // ruta, backend y variante. Sin esto, en una PC donde el llama-server vive
+    // en una carpeta de LlamaCode (no en PATH ni junto al exe) la búsqueda
+    // semántica decía "Falta llama-server" aunque hubiera varios instalados.
+    struct BinarioRegistrado { QString ruta, backend, variante; };
+    static void setBinariosRegistrados(const QList<BinarioRegistrado> &binarios);
+    // El que conviene para embeddings: corre con --n-gpu-layers 0, así que
+    // primero uno de CPU; si no, uno oficial (los forks experimentales pueden
+    // no traer --embeddings/--pooling); si no, cualquiera. Sólo los que existen.
+    static QString elegirBinarioRegistrado(const QList<BinarioRegistrado> &binarios);
     // Carpeta de datos de StudIA junto al ejecutable (<appdir>/StudIA).
     static QString carpetaEmpaquetada();
 
@@ -62,4 +76,7 @@ private:
     bool      m_activo = false;
     QString   m_motivo;
     int       m_intentos = 0;
+    // Hay uno ajeno en el puerto y se espera a que termine de cargar.
+    bool      m_externo = false;
+    QNetworkAccessManager *m_red = nullptr;
 };
