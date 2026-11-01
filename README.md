@@ -1772,6 +1772,14 @@ WSL (`9p`, `drvfs` o `v9fs`), los scripts espejan el código en la caché nativa
 antes de invocar CMake/Ninja. Si la caché conserva otra ruta de fuente, se
 reconfigura descartando sólo sus archivos de configuración de CMake.
 
+Ubuntu incluye también `3090 HELPER`, una bandeja independiente que comprueba
+la cuarentena de VRAM de la ASUS, P2P en ambas RTX 3090 y `gpu-unlock` durante
+el boot actual. El icono es verde sólo si pasan las tres verificaciones; el
+menú permite ver/copiar el diagnóstico y relanzar de forma autenticada la
+cuarentena. Se compila como target `lc_3090_helper` y se instala al inicio de
+sesión gráfica con `scripts/install-3090-helper.sh`. Ver
+[`docs/3090-helper-linux.md`](docs/3090-helper-linux.md).
+
 Ver [`docs/ubuntu-port-plan.md`](docs/ubuntu-port-plan.md) para el plan completo
 y la tabla de equivalencias.
 
@@ -2063,6 +2071,8 @@ apaga el agente auto-iniciado.
 
 Los perfiles marcados como **BEST (⚡)** son recomendaciones curadas a partir de
 benchmarks. Se muestran antes que los favoritos en todos los selectores de perfiles.
+
+Después de cada tramo de prueba de modelo —incluidos resultados válidos, fallidos, abortados y checkpoints medibles— sincronizar inmediatamente la fila del perfil en `Modelos locales por peso` y confirmar el cambio con una lectura de vuelta antes de iniciar el siguiente tramo. Cuando corresponda, actualizar también `Resultados` y `Accionables`; mantener vacías las métricas aún pendientes y conservar los resultados históricos identificados por su prueba, sin presentarlos como vigentes.
 
 En benchmarks de agente, la reparación BCB espera el `turnFinished` del turno
 correctivo y no considera estancado un backend que todavía está ocupado en
