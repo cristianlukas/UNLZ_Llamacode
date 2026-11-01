@@ -19,6 +19,7 @@ class AutomationTests : public QObject
 private slots:
     void initTestCase();
     void launchedWindowIsTheNewOne();
+    void linuxLaunchMapsWindowsAliases();
     void windowRebindSelectsLargestWindowFromSameProcess();
     void keyChordNormalizesReversedModifier();
     void keyNameNormalizesLineBreakAsEnter();
@@ -1341,6 +1342,78 @@ void AutomationTests::controlListLimitIsBounded()
     QCOMPARE(DesktopComputerUse::clampControlLimit(12), 12);
     QCOMPARE(DesktopComputerUse::clampControlLimit(400), 80);
     QCOMPARE(DesktopComputerUse::clampControlLimit(0, 16), 16);
+}
+
+void AutomationTests::linuxLaunchMapsWindowsAliases()
+{
+    using DesktopComputerUse::linuxLaunchCandidates;
+    using DesktopComputerUse::linuxLaunchProgram;
+    // "Abrí la calculadora" en Ubuntu: launchAlias da "calc" y el backend Linux
+    // fallaba con "No se encontró el programa: calc".
+    const auto installed = [](const QStringList &names) {
+        return [names](const QString &p) { return names.contains(p); };
+    };
+    QCOMPARE(linuxLaunchProgram(QStringLiteral("calc"), installed({QStringLiteral("gnome-calculator")})),
+             QStringLiteral("gnome-calculator"));
+    // El primero instalado, en orden de preferencia (MATE sin GNOME).
+    QCOMPARE(linuxLaunchProgram(QStringLiteral("calculadora"),
+                                installed({QStringLiteral("galculator"), QStringLiteral("mate-calc")})),
+             QStringLiteral("mate-calc"));
+    QCOMPARE(linuxLaunchProgram(QStringLiteral("calc.exe"), installed({QStringLiteral("kcalc")})),
+             QStringLiteral("kcalc"));
+    // `calc` de apcalc es de consola: aunque esté en el PATH no es candidato.
+    QVERIFY(!linuxLaunchCandidates(QStringLiteral("calc")).contains(QStringLiteral("calc")));
+    QCOMPARE(linuxLaunchProgram(QStringLiteral("notepad"),
+                                installed({QStringLiteral("pluma"), QStringLiteral("xed")})),
+             QStringLiteral("pluma"));
+    QCOMPARE(linuxLaunchProgram(QStringLiteral("explorador de archivos"), installed({QStringLiteral("caja")})),
+             QStringLiteral("caja"));
+    QCOMPARE(linuxLaunchProgram(QStringLiteral("explorer"), installed({QStringLiteral("xdg-open")})),
+             QStringLiteral("xdg-open"));
+    QCOMPARE(linuxLaunchProgram(QStringLiteral("ms-settings:"),
+                                installed({QStringLiteral("mate-control-center")})),
+             QStringLiteral("mate-control-center"));
+    QCOMPARE(linuxLaunchProgram(QStringLiteral("terminal"),
+                                installed({QStringLiteral("x-terminal-emulator"), QStringLiteral("xterm")})),
+             QStringLiteral("x-terminal-emulator"));
+    QCOMPARE(linuxLaunchProgram(QStringLiteral("cmd"), installed({QStringLiteral("konsole")})),
+             QStringLiteral("konsole"));
+    QCOMPARE(linuxLaunchProgram(QStringLiteral("task manager"),
+                                installed({QStringLiteral("mate-system-monitor")})),
+             QStringLiteral("mate-system-monitor"));
+    // Sin equivalente instalado o sin alias: el nombre tal cual (el error lo da el backend).
+    QCOMPARE(linuxLaunchProgram(QStringLiteral("calc"), installed({})), QStringLiteral("calc"));
+    QCOMPARE(linuxLaunchProgram(QStringLiteral(" firefox "), installed({QStringLiteral("firefox")})),
+             QStringLiteral("firefox"));
+    QVERIFY(linuxLaunchCandidates(QStringLiteral("firefox")).isEmpty());
+    QVERIFY(linuxLaunchCandidates(QStringLiteral("/usr/bin/calc")).isEmpty());
+
+    // La ventana de la app Linux se sigue reconociendo como la lanzada.
+    const QVariantList before{winRow(QStringLiteral("a1"), QStringLiteral("LlamaCode"))};
+    QVariantList after = before;
+    after << winRow(QStringLiteral("p2"), QStringLiteral("Sin título 1 - Pluma"), QStringLiteral("pluma,Pluma"), 300, 200)
+          << winRow(QStringLiteral("big"), QStringLiteral("Aviso"), QStringLiteral("x"), 1900, 1000);
+    QVariantMap w = DesktopComputerUse::pickLaunchedWindow(before, after, QStringLiteral("notepad"));
+    QCOMPARE(w.value(QStringLiteral("id")).toString(), QStringLiteral("p2"));
+    QVERIFY(w.value(QStringLiteral("titleMatch")).toBool());
+    after = before;
+    after << winRow(QStringLiteral("m3"), QStringLiteral("Centro de control"), QStringLiteral("x"), 300, 200)
+          << winRow(QStringLiteral("big"), QStringLiteral("Aviso"), QStringLiteral("x"), 1900, 1000);
+    QCOMPARE(DesktopComputerUse::pickLaunchedWindow(before, after, QStringLiteral("configuracion"))
+                 .value(QStringLiteral("id")).toString(), QStringLiteral("m3"));
+
+    // La pista de '=' de la Calculadora también vale si el modelo pidió el
+    // programa Linux por su nombre.
+    const QVariantMap calcWindow = winRow(QStringLiteral("c4"), QStringLiteral("Calculadora"));
+    bool ok = false;
+    for (const QString &app : {QStringLiteral("calculadora"), QStringLiteral("gnome-calculator"),
+                               QStringLiteral("mate-calc")}) {
+        const QString text = DesktopComputerUse::formatLaunchResult(app, calcWindow, false, &ok);
+        QVERIFY(ok);
+        QVERIFY2(text.contains(QStringLiteral("\"3*3=\"")), qPrintable(app));
+    }
+    QVERIFY(!DesktopComputerUse::formatLaunchResult(QStringLiteral("pluma"), calcWindow, false, &ok)
+                 .contains(QStringLiteral("\"3*3=\"")));
 }
 
 void AutomationTests::launchArgumentsSplitQuotedPaths()

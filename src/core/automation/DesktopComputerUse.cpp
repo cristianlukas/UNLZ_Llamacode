@@ -334,6 +334,53 @@ QString launchAlias(const QString &app)
     return it != aliases.constEnd() ? it.value() : app.trimmed();
 }
 
+QStringList linuxLaunchCandidates(const QString &program)
+{
+    QString key = launchAlias(program).toCaseFolded();
+    if (key.endsWith(QLatin1String(".exe"))) key.chop(4);
+    static const QStringList terminals{
+        QStringLiteral("x-terminal-emulator"), QStringLiteral("gnome-terminal"),
+        QStringLiteral("mate-terminal"), QStringLiteral("konsole"),
+        QStringLiteral("xfce4-terminal"), QStringLiteral("xterm")};
+    // Sólo apps con ventana: `calc` existe en Linux, pero es la calculadora de
+    // consola de apcalc y no abre nada que el agente pueda ver.
+    static const QHash<QString, QStringList> programs{
+        {QStringLiteral("calc"), {QStringLiteral("gnome-calculator"), QStringLiteral("mate-calc"),
+                                  QStringLiteral("galculator"), QStringLiteral("kcalc"),
+                                  QStringLiteral("qalculate-gtk")}},
+        {QStringLiteral("notepad"), {QStringLiteral("gnome-text-editor"), QStringLiteral("gedit"),
+                                     QStringLiteral("pluma"), QStringLiteral("xed"),
+                                     QStringLiteral("mousepad"), QStringLiteral("kwrite"),
+                                     QStringLiteral("kate")}},
+        {QStringLiteral("explorer"), {QStringLiteral("nautilus"), QStringLiteral("caja"),
+                                      QStringLiteral("nemo"), QStringLiteral("thunar"),
+                                      QStringLiteral("dolphin"), QStringLiteral("pcmanfm"),
+                                      QStringLiteral("xdg-open")}},
+        {QStringLiteral("ms-settings:"), {QStringLiteral("gnome-control-center"),
+                                          QStringLiteral("mate-control-center"),
+                                          QStringLiteral("cinnamon-settings"),
+                                          QStringLiteral("xfce4-settings-manager"),
+                                          QStringLiteral("systemsettings")}},
+        {QStringLiteral("taskmgr"), {QStringLiteral("gnome-system-monitor"),
+                                     QStringLiteral("mate-system-monitor"),
+                                     QStringLiteral("plasma-systemmonitor"),
+                                     QStringLiteral("xfce4-taskmanager")}},
+        {QStringLiteral("mspaint"), {QStringLiteral("pinta"), QStringLiteral("kolourpaint"),
+                                     QStringLiteral("drawing")}},
+        {QStringLiteral("wt"), terminals},
+        {QStringLiteral("cmd"), terminals},
+    };
+    return programs.value(key);
+}
+
+QString linuxLaunchProgram(const QString &program,
+                           const std::function<bool(const QString &)> &exists)
+{
+    for (const QString &candidate : linuxLaunchCandidates(program))
+        if (exists && exists(candidate)) return candidate;
+    return program.trimmed();
+}
+
 QStringList splitLaunchArguments(const QString &args)
 {
     return QProcess::splitCommand(args.trimmed());
@@ -367,11 +414,19 @@ static QStringList launchTitleHints(const QString &app)
         {QStringLiteral("notepad"), {QStringLiteral("bloc de notas"), QStringLiteral("notepad")}},
         {QStringLiteral("mspaint"), {QStringLiteral("paint")}},
         {QStringLiteral("explorer"), {QStringLiteral("explorador"), QStringLiteral("explorer")}},
-        {QStringLiteral("ms-settings:"), {QStringLiteral("configuracion"), QStringLiteral("settings")}},
-        {QStringLiteral("taskmgr"), {QStringLiteral("administrador de tareas"), QStringLiteral("task manager")}},
+        {QStringLiteral("ms-settings:"), {QStringLiteral("configuracion"), QStringLiteral("settings"),
+                                          QStringLiteral("centro de control"),
+                                          QStringLiteral("control center")}},
+        {QStringLiteral("taskmgr"), {QStringLiteral("administrador de tareas"), QStringLiteral("task manager"),
+                                     QStringLiteral("monitor del sistema"),
+                                     QStringLiteral("system monitor")}},
         {QStringLiteral("wt"), {QStringLiteral("terminal")}},
     };
     hints += titles.value(foldForMatch(alias));
+    // En Linux el título suele llevar el nombre del programa ("Sin título 1 - Pluma").
+    for (const QString &program : linuxLaunchCandidates(alias))
+        if (program != QLatin1String("x-terminal-emulator") && program != QLatin1String("xdg-open"))
+            hints << foldForMatch(program);
     // Ruta a un .exe: el nombre base sin extensión.
     QString base = alias.section(QLatin1Char('/'), -1).section(QLatin1Char('\\'), -1);
     if (base.endsWith(QLatin1String(".exe"), Qt::CaseInsensitive)) base.chop(4);
@@ -523,8 +578,10 @@ QString formatLaunchResult(const QString &app, const QVariantMap &window, bool b
     // La Calculadora no resuelve hasta el '=': el agente tecleaba "3*3", la pantalla
     // quedaba en "3 ×  3" y el modelo informaba "9" sin que existiera.
     QString calcHint;
-    const QString launched = launchAlias(app).toLower();
-    if (launched == QLatin1String("calc") || launched == QLatin1String("calc.exe"))
+    QString launched = launchAlias(app).toLower();
+    if (launched.endsWith(QLatin1String(".exe"))) launched.chop(4);
+    if (launched == QLatin1String("calc")
+        || linuxLaunchCandidates(QStringLiteral("calc")).contains(launched))
         calcHint = background
             ? QStringLiteral(" Calculadora: el resultado aparece recién al accionar el botón "
                              "\"Es igual a\"; leelo después con desktop_read_text.")

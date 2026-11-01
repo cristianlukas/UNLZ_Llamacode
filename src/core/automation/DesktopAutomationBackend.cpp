@@ -1512,7 +1512,11 @@ QVariantList DesktopAutomationBackend::controls(const QString &windowTargetId,
     }
     return out;
 #else
-    return LinuxDesktopBackend::controls(windowTargetId, query, max, error);
+    // Mismo tope que UIA: sin límite, un árbol AT-SPI grande pasaba el watchdog
+    // de 30 s del worker (desktop_observe hace dos recorridos por snapshot).
+    constexpr int kAtspiControlsBudgetMs = 5000;
+    return LinuxDesktopBackend::controls(windowTargetId, query, max, error,
+                                         kAtspiControlsBudgetMs);
 #endif
 }
 

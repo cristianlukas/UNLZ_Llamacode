@@ -76,7 +76,7 @@ necesitan numpy/matplotlib se saltean solos con `skipUnless`.
 | FuzzyMatch (matching difuso de nombres de control) | `tests/test_fuzzy_match.cpp` |
 | OcrTextLocator (ubicar texto OCR en pantalla) | `tests/test_ocr_locator.cpp` |
 | OcrEngine::opaqueForOcr (capturas GDI con alfa 0) + OCR real (se saltea en offscreen) | `tests/test_ocr_locator.cpp` |
-| DesktopComputerUse (formato de desktop_read_text, inferencia de scope, guard de tipeo) | `tests/test_automation.cpp` |
+| DesktopComputerUse (formato de desktop_read_text, inferencia de scope, guard de tipeo, alias de `desktop_launch` → programa Linux instalado: calc→gnome-calculator/mate-calc, notepad→gedit/pluma, etc.) | `tests/test_automation.cpp` |
 | Tools de computer use (validación previa al input, portapapeles, rechazo de tipeo sin ventana elegida) | `tests/test_agent_tools.cpp` |
 | Computer use: preguntar modo / Super Agente directo / "segundo plano" sin mouse ni teclado (gate del turno, tools filtradas y rechazadas) + razonamiento oculto con Pensar apagado (contar y cortar una vez) | `tests/test_agent_wire.cpp`, `tests/test_agent_tools.cpp`, `tests/test_automation.cpp`, `tests/test_appcontroller.cpp` |
 | NavBar (fila de Configuración centrada, con y sin botón de update) | `tests/qml/tst_navbar.qml` (ctest `qml_navbar`) |

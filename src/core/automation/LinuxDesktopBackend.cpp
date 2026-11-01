@@ -42,10 +42,12 @@ QStringList LinuxDesktopBackend::buildScrollArgs(int delta, bool horizontal)
 
 #ifndef Q_OS_WIN
 
+#include "DesktopComputerUse.h"
 #include "FuzzyMatch.h"
 
 #include <QCoreApplication>
 #include <QDeadlineTimer>
+#include <QDir>
 #include <QElapsedTimer>
 #include <QProcess>
 #include <QProcessEnvironment>
@@ -292,8 +294,34 @@ bool refFromId(const QString &id, AtspiRef *ref)
     return true;
 }
 
+qint64 atspiConnectionPid(const QString &address, const QString &dest)
+{
+    const CommandResult r = run(QStringLiteral("gdbus"), {QStringLiteral("call"),
+        QStringLiteral("--address"), address, QStringLiteral("--dest"),
+        QStringLiteral("org.freedesktop.DBus"), QStringLiteral("--object-path"),
+        QStringLiteral("/org/freedesktop/DBus"), QStringLiteral("--method"),
+        QStringLiteral("org.freedesktop.DBus.GetConnectionUnixProcessID"), dest}, 1500);
+    const auto m = QRegularExpression(QStringLiteral("uint32\\s+(\\d+)")).match(r.out);
+    return m.hasMatch() ? m.captured(1).toLongLong() : 0;
+}
+
+qint64 windowPid(const QString &id)
+{
+    if (!isValidX11Id(id) || !has(QStringLiteral("xprop"))) return 0;
+    const CommandResult r = run(QStringLiteral("xprop"), {QStringLiteral("-id"), x11Id(id),
+                                                            QStringLiteral("_NET_WM_PID")});
+    const auto m = QRegularExpression(QStringLiteral("=\\s*(\\d+)")).match(r.out);
+    return m.hasMatch() ? m.captured(1).toLongLong() : 0;
+}
+
+// `pid` > 0 recorre sólo la app dueña de la ventana. Sin ese filtro el BFS
+// bajaba por TODAS las apps (Electron, el navegador: miles de nodos, ~5
+// subprocesos gdbus cada uno): 13 s por recorrido en un escritorio con Brave y
+// dos apps Electron abiertas, y desktop_observe sobre una ventana hace dos;
+// además devolvía controles de otras apps que sólo se solapaban con el rect.
 QVariantList atspiControlsFor(const QRect &window, const QString &query, int max,
-                              const QDeadlineTimer &deadline = QDeadlineTimer(QDeadlineTimer::Forever))
+                              const QDeadlineTimer &deadline = QDeadlineTimer(QDeadlineTimer::Forever),
+                              qint64 pid = 0)
 {
     QVariantList out;
     const QString address = atspiAddress();
@@ -302,7 +330,14 @@ QVariantList atspiControlsFor(const QRect &window, const QString &query, int max
                         QStringLiteral("/org/a11y/atspi/accessible/root")};
     const auto roots = refsFrom(atspiCall(address, root.dest, root.path,
                                            QStringLiteral("org.a11y.atspi.Accessible.GetChildren")).out);
-    QList<AtspiRef> queue = roots;
+    QList<AtspiRef> queue;
+    if (pid > 0) {
+        for (const AtspiRef &app : roots)
+            if (atspiConnectionPid(address, app.dest) == pid) queue << app;
+    }
+    // Sin match (app en sandbox con otro espacio de PIDs, ventana sin
+    // _NET_WM_PID): todas las apps, como antes.
+    if (queue.isEmpty()) queue = roots;
     const QString needle = query.trimmed().toLower();
     int visited = 0;
     while (!queue.isEmpty() && out.size() < max && visited++ < 2500 && !deadline.hasExpired()) {
@@ -311,8 +346,11 @@ QVariantList atspiControlsFor(const QRect &window, const QString &query, int max
                                                 QStringLiteral("org.a11y.atspi.Accessible.GetRoleName"));
         const QString name = atspiProperty(address, ref, QStringLiteral("Name"));
         const QRect rect = atspiExtents(address, ref);
+        // Un nodo con extents válidos fuera de la ventana (otra ventana de la
+        // misma app, otro monitor) no tiene hijos visibles en ella: no se baja.
+        // Sin extents (la raíz de la app, nodos sin Component) se sigue bajando.
+        if (rect.isValid() && !rect.intersects(window)) continue;
         const bool useful = !name.trimmed().isEmpty() && rect.isValid()
-                            && rect.intersects(window)
                             && (needle.isEmpty() || name.toLower().contains(needle));
         if (useful) {
             const QString interfaces = atspiCall(address, ref.dest, ref.path,
@@ -337,7 +375,9 @@ QVariantMap findControl(const QString &windowTargetId, const QString &controlId,
 {
     const QRect window = LinuxDesktopBackend::targetBounds(QStringLiteral("window"), windowTargetId);
     if (!window.isValid()) return {};
-    const QVariantList all = atspiControlsFor(window, QString(), 3000);
+    const QVariantList all = atspiControlsFor(window, QString(), 3000,
+                                              QDeadlineTimer(QDeadlineTimer::Forever),
+                                              windowPid(windowTargetId));
     for (const QVariant &v : all) {
         const QVariantMap row = v.toMap();
         if (row.value(QStringLiteral("controlId")).toString() == controlId) {
@@ -388,9 +428,19 @@ bool LinuxDesktopBackend::launchApp(const QString &app, const QString &args, QSt
 {
     const QString program = app.trimmed();
     if (program.isEmpty()) { if (error) *error = QStringLiteral("Falta el nombre de la app a lanzar."); return false; }
-    QString actual = program;
+    // launchAlias devuelve nombres de Windows (calc, notepad, ms-settings:...).
+    QString actual = DesktopComputerUse::linuxLaunchProgram(program, has);
     QStringList argv = QProcess::splitCommand(args);
-    if (program.contains(QLatin1String("://")) || program.endsWith(QLatin1Char(':'))) {
+    const QStringList candidates = DesktopComputerUse::linuxLaunchCandidates(program);
+    if (!candidates.isEmpty() && !has(actual)) {
+        if (error) *error = QStringLiteral("No se encontró un programa para '%1' (probé: %2).")
+                                .arg(program, candidates.join(QStringLiteral(", ")));
+        return false;
+    }
+    if (actual == QLatin1String("xdg-open") && argv.isEmpty()) {
+        argv << QDir::homePath();
+    } else if (candidates.isEmpty()
+               && (program.contains(QLatin1String("://")) || program.endsWith(QLatin1Char(':')))) {
         actual = QStringLiteral("xdg-open"); argv.prepend(program);
     }
     if (!has(actual)) { if (error) *error = QStringLiteral("No se encontró el programa: %1").arg(actual); return false; }
@@ -555,7 +605,8 @@ QVariantList LinuxDesktopBackend::controls(const QString &windowTargetId, const 
     if (!window.isValid()) { if (error) *error = QStringLiteral("Ventana no encontrada."); return {}; }
     if (atspiAddress().isEmpty()) { if (error) *error = QStringLiteral("AT-SPI no está disponible; iniciá at-spi2-registryd."); return {}; }
     return atspiControlsFor(window, query, max,
-                            budgetMs < 0 ? QDeadlineTimer(QDeadlineTimer::Forever) : QDeadlineTimer(budgetMs));
+                            budgetMs < 0 ? QDeadlineTimer(QDeadlineTimer::Forever) : QDeadlineTimer(budgetMs),
+                            windowPid(windowTargetId));
 }
 
 QVariantList LinuxDesktopBackend::controlsOnDesktop(const QString &query, int max, int budgetMs)

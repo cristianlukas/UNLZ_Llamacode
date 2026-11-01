@@ -9,6 +9,7 @@
 #include <QVariantList>
 #include <QVariantMap>
 
+#include <functional>
 #include <memory>
 
 // Contratos compartidos por la percepción, la ejecución y la auditoría de
@@ -162,6 +163,15 @@ int clampClickCount(int clickCount);
 // diálogo de error (ventana "calculator" de 572x140) y el agente tecleaba ahí.
 // Sin alias conocido devuelve el nombre tal cual.
 QString launchAlias(const QString &app);
+// En Linux, los programas que reemplazan a un nombre de Windows (el de
+// launchAlias: calc, notepad, explorer, ms-settings:, wt...), en orden de
+// preferencia. Vacío si `program` no es uno de esos nombres.
+QStringList linuxLaunchCandidates(const QString &program);
+// El primer candidato de linuxLaunchCandidates que `exists` encuentra en el PATH;
+// sin equivalente instalado (o sin alias), `program` tal cual. Antes Linux
+// buscaba "calc" literal y fallaba con "No se encontró el programa: calc".
+QString linuxLaunchProgram(const QString &program,
+                           const std::function<bool(const QString &)> &exists);
 // Identidad estable de una solicitud de lanzamiento para bloquear sólo
 // repeticiones exactas, sin impedir abrir otro documento en la misma app.
 QString launchTargetIdentity(const QString &app, const QString &args);
