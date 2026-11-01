@@ -406,6 +406,19 @@ void VoiceController::processCapturedChunk(const QByteArray &chunk)
     // Alimentar siempre el VAD adaptativo: aun en testMode/monitorOnly el piso
     // de ruido sigue aprendiendo, así que al volver a escuchar ya está calibrado.
     const VadEngine::Frame vf = m_vad.push(lvl, chunkMs);
+    if (vf.recalibrated && m_cfg.vadAdaptive) {
+        // Lo que venía juntando como "voz" era ruido continuo (el piso estaba
+        // por debajo del fondo real): no se transcribe ni cuenta para el turno.
+        qInfo().noquote() << QStringLiteral("[charla] VAD: ruido de fondo constante; piso recalibrado a %1")
+                                 .arg(m_vad.noiseFloor(), 0, 'f', 4);
+        if (!m_streamingTurn)
+            m_segment = trimLeadingForStt(m_segment, m_sampleRate, kSttPreRollMs);
+        m_segVoice = false;
+        m_segPeak = 0.0;
+        m_segSilenceMs = 0;
+        m_silenceMs = 0;
+        if (!m_vad.sawSpeech()) m_peak = 0.0;
+    }
     // El VAD adaptativo mide contra el ruido de fondo; el legacy contra umbrales
     // fijos de config. Misma decisión (¿este frame es voz?), dos formas de sacarla.
     const bool speech   = m_cfg.vadAdaptive ? vf.speech : (lvl >= m_cfg.vadThreshold);
@@ -601,7 +614,7 @@ void VoiceController::finalizeTurn()
 
 void VoiceController::onSttDone(const QString &text)
 {
-    const QString t = text.trimmed();
+    const QString t = SttEngine::stripNonSpeechTags(text);
     qInfo().noquote() << QStringLiteral("[charla] STT: ok en %1 ms → \"%2\"")
                              .arg(m_tStt.isValid() ? m_tStt.elapsed() : 0)
                              .arg(t.left(80));

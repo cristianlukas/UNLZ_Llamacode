@@ -1,4 +1,5 @@
 #include "SttEngine.h"
+#include <QRegularExpression>
 #include "AudioCodec.h"
 #include <QNetworkRequest>
 #include <QNetworkReply>
@@ -80,6 +81,15 @@ QString SttEngine::parseTranscript(const QByteArray &json)
             return QString();
     }
     return QString();
+}
+
+QString SttEngine::stripNonSpeechTags(const QString &text)
+{
+    static const QRegularExpression tags(
+        QStringLiteral("\\[[^\\]]*\\]|\\([^)]*\\)|\\*[^*]*\\*|[\u266A\u266B\u266C]"));
+    QString out = text;
+    out.remove(tags);
+    return out.simplified();
 }
 
 QByteArray SttEngine::buildStreamingConfig(int sampleRate, const QString &language,

@@ -46,6 +46,10 @@ public:
                                      const QString &model, const QString &language);
     // Extrae el campo "text" de la respuesta JSON de transcripción.
     static QString parseTranscript(const QByteArray &json);
+    // Quita las anotaciones de no-voz que whisper escribe cuando le llega ruido
+    // ("[Música]", "(risas)", "[SILENCIO]", "*ruido*", "♪"). Medido con un mic
+    // ruidoso: sin esto "[Música]" llegaba al agente como pedido del usuario.
+    static QString stripNonSpeechTags(const QString &text);
 
     // ── Protocolo NDJSON v1 (funciones puras) ──
     static QByteArray buildStreamingConfig(int sampleRate, const QString &language,

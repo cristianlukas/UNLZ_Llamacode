@@ -51,6 +51,9 @@ private slots:
     void vadAdaptiveNoiseFloor();
     void vadHysteresisHangover();
     void vadIgnoresIsolatedClick();
+    void vadEscapesFrozenFloorOnConstantNoise();
+    void vadKeepsRealSpeechWithPauses();
+    void sttStripsNonSpeechTags();
     void vadTuningFromConfig();
     void turnDetectorClassify();
     void turnDetectorSilence();
@@ -681,6 +684,64 @@ void TestVoice::vadIgnoresIsolatedClick()
     vad.reset();
     QVERIFY(!vad.speaking());
     QVERIFY(!vad.sawSpeech());
+}
+
+// Medido en vivo con un headset en la entrada analógica (fondo RMS ~0,031 sin
+// hablar): el mic abría con un frame más bajo, el piso quedaba por debajo del
+// ruido real y ese ruido contaba como voz para siempre (el piso no aprende
+// durante la voz). Cada segmento llegaba al tope de 12 s y el turno no cerraba.
+void TestVoice::vadEscapesFrozenFloorOnConstantNoise()
+{
+    VadEngine vad;
+    vad.push(0.0, 20);                       // el primer buffer suele venir en cero
+    const double noise[] = {0.026, 0.031, 0.036, 0.029, 0.040, 0.024, 0.033, 0.030};
+    int recalibratedAtMs = -1;
+    for (int i = 0; i < 500 && recalibratedAtMs < 0; ++i) {   // hasta 10 s
+        const VadEngine::Frame f = vad.push(noise[i % 8], 20);
+        if (f.recalibrated) recalibratedAtMs = (i + 1) * 20;
+    }
+    QVERIFY(recalibratedAtMs > 0);
+    QVERIFY(recalibratedAtMs <= 4200);        // stuckSpeechMs + un par de frames
+    QVERIFY(!vad.speaking());
+    QVERIFY(!vad.sawSpeech());                // el ruido no deja "hubo voz"
+    QVERIFY(vad.noiseFloor() >= 0.02);
+
+    // Con el piso recalibrado el mismo ruido ya no abre voz...
+    for (int i = 0; i < 200; ++i) vad.push(noise[i % 8], 20);
+    QVERIFY(!vad.speaking());
+    QVERIFY(!vad.sawSpeech());
+    // ...y la voz real sí.
+    for (int i = 0; i < 5; ++i) vad.push(0.20, 20);
+    QVERIFY(vad.speaking());
+    QVERIFY(vad.sawSpeech());
+}
+
+// La voz real tiene caídas cerca del piso entre palabras: aunque dure mucho, el
+// escape no la confunde con ruido ni le toca el piso.
+void TestVoice::vadKeepsRealSpeechWithPauses()
+{
+    VadEngine vad;
+    for (int i = 0; i < 50; ++i) vad.push(0.008, 20);
+    const double floorBefore = vad.noiseFloor();
+    bool recalibrated = false;
+    for (int ms = 0; ms < 10000; ms += 400) {
+        for (int i = 0; i < 15; ++i) recalibrated |= vad.push(0.12, 20).recalibrated;   // 300 ms
+        for (int i = 0; i < 5; ++i) recalibrated |= vad.push(0.009, 20).recalibrated;   // 100 ms
+    }
+    QVERIFY(!recalibrated);
+    QVERIFY(vad.speaking());
+    QCOMPARE(vad.noiseFloor(), floorBefore);
+}
+
+void TestVoice::sttStripsNonSpeechTags()
+{
+    QCOMPARE(SttEngine::stripNonSpeechTags(QStringLiteral("[Música]")), QString());
+    QCOMPARE(SttEngine::stripNonSpeechTags(QStringLiteral(" [SILENCIO]\n")), QString());
+    QCOMPARE(SttEngine::stripNonSpeechTags(QStringLiteral("(risas) Hola, ¿cómo estás?")),
+             QStringLiteral("Hola, ¿cómo estás?"));
+    QCOMPARE(SttEngine::stripNonSpeechTags(QStringLiteral("♪ ♪ *ruido*")), QString());
+    QCOMPARE(SttEngine::stripNonSpeechTags(QStringLiteral("Abrí la calculadora y calculá 3 por 3.")),
+             QStringLiteral("Abrí la calculadora y calculá 3 por 3."));
 }
 
 void TestVoice::vadTuningFromConfig()

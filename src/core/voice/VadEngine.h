@@ -1,5 +1,8 @@
 #pragma once
 
+#include <deque>
+#include <utility>
+
 // Detector de voz (VAD) con piso de ruido adaptativo, histéresis y hangover.
 //
 // Reemplaza al VAD de umbral RMS fijo (vadThreshold/vadActivationLevel), que
@@ -38,6 +41,15 @@ struct VadTuning {
     int    hangoverMs = 220;
     // Frames de voz consecutivos exigidos para declarar voz (anti-click).
     int    onsetFrames = 2;
+    // Escape del piso congelado: el piso no aprende durante la voz, así que si
+    // el mic abre con un frame más bajo que el ruido real, ese ruido queda como
+    // "voz" para siempre (medido con un headset en la entrada analógica: fondo
+    // RMS 0,031, segmentos de 12 s sin fin de turno). La voz real cae cerca del
+    // piso entre palabras; el ruido continuo no. Si tras stuckSpeechMs de voz
+    // ningún frame de los últimos minWindowMs bajó del umbral de salida, el piso
+    // pasa a ese mínimo y el tramo deja de contar como voz.
+    int    stuckSpeechMs = 4000;
+    int    minWindowMs   = 2000;
 };
 
 class VadEngine
@@ -52,6 +64,9 @@ public:
         double level  = 0.0;
         double floor  = 0.0;
         double snr    = 0.0;
+        // El tramo de "voz" en curso resultó ser ruido continuo: se recalibró el
+        // piso y el que consume el VAD debe descartar lo acumulado como voz.
+        bool   recalibrated = false;
     };
 
     explicit VadEngine(const VadTuning &t = VadTuning());
@@ -78,4 +93,8 @@ private:
     bool   m_sawSpeech = false;
     int    m_hangMs   = 0;      // hangover restante
     int    m_onsetRun = 0;      // frames consecutivos por encima del umbral on
+    int    m_speechMs = 0;      // duración del tramo de voz en curso
+    bool   m_sawSpeechBeforeRun = false;  // sawSpeech antes de este tramo
+    std::deque<std::pair<double, int>> m_recent;  // (rms, ms) de la ventana
+    int    m_recentMs = 0;
 };
