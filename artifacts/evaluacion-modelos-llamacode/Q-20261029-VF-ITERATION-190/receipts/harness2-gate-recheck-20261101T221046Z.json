@@ -1,0 +1,36 @@
+{
+  "taskId": "Q-20261029-VF-ITERATION-190",
+  "timestampUtc": "2026-11-01T22:10:46Z",
+  "type": "read_only_gate_recheck",
+  "sourceSequence": 13,
+  "sourceUrl": "https://github.com/iamwavecut/ninfer-all/releases/tag/2026-10-26.2",
+  "primarySourceFinding": {
+    "release": "2026-10-26.2",
+    "commit": "3d882fc116941d9233c40bf30f4d66dbaa3d24bd",
+    "assets": "Linux x64 dual CUDA12.9/13.4 split into four parts; single CUDA12.9 SM70/75/80/86/89 split into three parts. Official release lists SHA-256 for every part."
+  },
+  "localEvidence": {
+    "Q181": "Q181/results documents three interleaved passes on a separate public local fixture; it was not the Harness² integration/holdout asked for in source #13.",
+    "Q183": "Q183 explicitly distinguishes Q181 from a real Harness² execution and keeps this item pending on exact integration and isolation requirements.",
+    "modelAssets": "Q179 already qualified the NInfer-all source commit and dual-GPU SOL artifact; no model test is warranted solely to restore a runtime binary.",
+    "processes": "No inference server was present. nvidia-smi listed desktop graphics processes only."
+  },
+  "decision": "No download, build, server, inference, benchmark, or GPU use. The runtime binary is retrievable, but that does not define Harness² integration, endpoint, or a distinct holdout. The earlier VF source #15 review says another holdout would duplicate evidence absent a new local decision.",
+  "nextCondition": "Identify a specific Harness² workflow/commit and a decision that is not covered by Q181/Q172 before preregistering new model work.",
+  "googleSheet": {
+    "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "sheet": "Accionables",
+    "range": "A35:N35",
+    "readBeforeWrite": true,
+    "writePending": false,
+    "readbackVerified": true,
+    "formatVerified": {
+      "fontFamily": "Arial",
+      "fontSize": 10,
+      "wrapStrategy": "WRAP",
+      "verticalAlignment": "TOP"
+    },
+    "verifiedRange": "Accionables!A35:N35"
+  },
+  "backup": "artifacts/evaluacion-modelos-llamacode/Q-20261029-VF-ITERATION-190/backups/harness2-gate-refresh-20261101T221046Z"
+}
