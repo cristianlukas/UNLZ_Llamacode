@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=3090 HELPER
+Comment=Estado de reserva VRAM, NVIDIA P2P y gpu-unlock
+Exec=/usr/local/bin/3090-helper
+Terminal=false
+NoDisplay=false
+StartupNotify=false
+X-GNOME-Autostart-enabled=true

@@ -444,6 +444,33 @@ target_compile_definitions(LlamaCode PRIVATE
     "$<$<CONFIG:Debug>:LC_BUILD_CHANNEL=\"debug\">"
     "$<$<NOT:$<CONFIG:Debug>>:LC_BUILD_CHANNEL=\"prod\">")
 
+# Standalone Ubuntu tray app for the two RTX 3090 boot safeguards. Keep it
+# independent from LlamaCode's QML/runtime so its status indicator survives
+# failures in the main application.
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    include(GNUInstallDirs)
+    add_executable(lc_3090_helper
+        src/linux3090/HealthStatus.cpp
+        src/linux3090/HealthStatus.h
+        src/linux3090/main.cpp
+    )
+    set_target_properties(lc_3090_helper PROPERTIES OUTPUT_NAME "3090-helper")
+    target_link_libraries(lc_3090_helper PRIVATE
+        Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Concurrent)
+    target_compile_definitions(lc_3090_helper PRIVATE
+        LC_3090_HELPER_ADMIN_PATH=\"${CMAKE_INSTALL_FULL_LIBEXECDIR}/3090-helper-admin\")
+    install(TARGETS lc_3090_helper RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
+    install(PROGRAMS scripts/3090-helper-admin
+        DESTINATION "${CMAKE_INSTALL_LIBEXECDIR}")
+    set(LC_3090_HELPER_ADMIN_PATH "${CMAKE_INSTALL_FULL_LIBEXECDIR}/3090-helper-admin")
+    configure_file(
+        packaging/linux/org.llamacode.3090-helper.policy.in
+        "${CMAKE_CURRENT_BINARY_DIR}/org.llamacode.3090-helper.policy"
+        @ONLY)
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/org.llamacode.3090-helper.policy"
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/polkit-1/actions")
+endif()
+
 # Debug es el release candidate que se usa a diario. Mantener los símbolos y
 # asserts de Debug, pero optimizar el código nativo: las opciones MSVC por
 # defecto (/Od + /RTC1) hacen que la GUI y el núcleo sean sensiblemente más
@@ -637,6 +664,30 @@ set_target_properties(LlamaCode PROPERTIES
 if (BUILD_TESTS)
     enable_testing()
     find_package(Qt6 6.4 REQUIRED COMPONENTS Test)
+
+    if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        qt_add_executable(test_3090_helper
+            tests/test_3090_helper.cpp
+            src/linux3090/HealthStatus.cpp
+            src/linux3090/HealthStatus.h
+        )
+        target_include_directories(test_3090_helper PRIVATE src/linux3090)
+        target_link_libraries(test_3090_helper PRIVATE Qt6::Core Qt6::Test)
+        add_test(NAME test_3090_helper COMMAND test_3090_helper)
+        set_tests_properties(test_3090_helper PROPERTIES
+            ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1")
+        find_package(Python3 COMPONENTS Interpreter QUIET)
+        if (Python3_Interpreter_FOUND)
+            add_test(NAME test_3090_helper_polkit
+                COMMAND ${Python3_EXECUTABLE}
+                    ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_3090_helper_polkit.py
+                    ${CMAKE_CURRENT_SOURCE_DIR}/packaging/linux/org.llamacode.3090-helper.policy.in
+                    ${CMAKE_CURRENT_SOURCE_DIR}/scripts/3090-helper-admin
+                    ${CMAKE_CURRENT_SOURCE_DIR}/scripts/install-3090-helper.sh
+                    ${CMAKE_CURRENT_SOURCE_DIR}/packaging/linux/3090-helper.desktop
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/linux3090/main.cpp)
+        endif()
+    endif()
 
     function(add_lc_test name file)
         qt_add_executable(${name} ${file} ${ARGN})

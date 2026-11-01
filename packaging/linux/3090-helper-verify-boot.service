@@ -1,0 +1,12 @@
+[Unit]
+Description=Verificar las protecciones de las dos RTX 3090
+After=multi-user.target systemd-modules-load.service nvidia-persistenced.service vram-quarantine@GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6.service
+Wants=nvidia-persistenced.service vram-quarantine@GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6.service
+
+[Service]
+Type=oneshot
+ExecStart=@PREFIX@/libexec/3090-helper-admin verify-boot
+TimeoutStartSec=45
+
+[Install]
+WantedBy=multi-user.target

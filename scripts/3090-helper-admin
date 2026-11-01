@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+set -u
+
+readonly ASUS_UUID='GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6'
+readonly SERVICE="vram-quarantine@${ASUS_UUID}.service"
+readonly LOG_DIR='/var/log/3090-helper'
+readonly LOG_FILE="${LOG_DIR}/repair.log"
+readonly SCRIPT_DIR="$(/usr/bin/dirname "$(/usr/bin/readlink -f "$0")")"
+readonly HELPER_BIN="${SCRIPT_DIR}/../bin/3090-helper"
+
+if [[ ${EUID:-$(id -u)} -ne 0 ]]; then
+    echo 'Este comando debe ejecutarse mediante pkexec.' >&2
+    exit 77
+fi
+
+case "${1:-}" in
+    repair)
+        install -d -o root -g adm -m 0750 "$LOG_DIR"
+        touch "$LOG_FILE"
+        chown root:adm "$LOG_FILE"
+        chmod 0640 "$LOG_FILE"
+        exec > >(/usr/bin/tee -a "$LOG_FILE") 2>&1
+        echo "===== $(/usr/bin/date --iso-8601=seconds) repair request ====="
+        if /usr/bin/pgrep -af '(^|/)(llama-server|strata-server|ninfer|vllm|ollama)([[:space:]]|$)' >/dev/null; then
+            echo 'ABORTED: hay un servidor de inferencia; no se reinició la reserva VRAM.'
+            /usr/bin/pgrep -af '(^|/)(llama-server|strata-server|ninfer|vllm|ollama)([[:space:]]|$)' || true
+            exit 2
+        fi
+        /usr/bin/systemctl restart "$SERVICE" || {
+            echo "FAIL: no se pudo reiniciar $SERVICE"
+            exit 1
+        }
+        state="/run/vram-quarantine/${ASUS_UUID}.json"
+        for _ in $(/usr/bin/seq 1 20); do
+            if [[ -r "$state" ]] && /usr/bin/python3 -c '
+import json,sys
+s=json.load(open(sys.argv[1]))
+sys.exit(0 if s.get("uuid")=="GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6" and s.get("state")=="protected" and int(s.get("held",0))>0 and s.get("held")==s.get("total") and int(s.get("pending",-1))==0 and s.get("driver")==s.get("built_for") else 1)
+' "$state"; then
+                break
+            fi
+            /usr/bin/sleep 1
+        done
+        if [[ ! -r "$state" ]] || ! /usr/bin/python3 -c '
+import json,sys
+s=json.load(open(sys.argv[1]))
+sys.exit(0 if s.get("uuid")=="GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6" and s.get("state")=="protected" and int(s.get("held",0))>0 and s.get("held")==s.get("total") and int(s.get("pending",-1))==0 and s.get("driver")==s.get("built_for") else 1)
+' "$state"; then
+            echo 'FAIL: la reserva ASUS no quedó completamente protegida.'
+            [[ -r "$state" ]] && /bin/cat "$state"
+            exit 1
+        fi
+        echo 'PASS: reserva VRAM ASUS protegida.'
+        /bin/cat "$state"
+        echo 'Verificando también P2P y gpu-unlock en el boot actual:'
+        if [[ ! -x "$HELPER_BIN" ]]; then
+            echo "FAIL: no se encontró el diagnóstico instalado: $HELPER_BIN"
+            exit 1
+        fi
+        set +e
+        "$HELPER_BIN" --diagnose
+        diagnose_rc=$?
+        set -e
+        if (( diagnose_rc != 0 )); then
+            echo 'FAIL: la reserva ASUS quedó protegida, pero P2P o gpu-unlock no pasan en este boot.'
+            echo 'Ambos se inicializan antes de que NVIDIA tome las GPU; si la configuración persistente está instalada, reiniciar Ubuntu. No se intentó descargar ni recargar el driver.'
+            exit 1
+        fi
+        echo 'PASS: las tres protecciones están activas en este boot.'
+        echo '===== repair check finished ====='
+        ;;
+    verify-boot)
+        install -d -o root -g adm -m 0750 "$LOG_DIR"
+        touch "$LOG_FILE"
+        chown root:adm "$LOG_FILE"
+        chmod 0640 "$LOG_FILE"
+        exec > >(/usr/bin/tee -a "$LOG_FILE") 2>&1
+        echo "===== $(/usr/bin/date --iso-8601=seconds) boot verification ====="
+        if [[ ! -x "$HELPER_BIN" ]]; then
+            echo "FAIL: no se encontró el diagnóstico instalado: $HELPER_BIN"
+            exit 1
+        fi
+        # NVIDIA puede tardar unos segundos en publicar ambas tarjetas en el
+        # primer arranque. Esperar sólo la disponibilidad del driver; no lanzar
+        # inferencia ni tocar procesos de usuario.
+        ready=0
+        for _ in $(/usr/bin/seq 1 30); do
+            if /usr/bin/nvidia-smi --query-gpu=uuid --format=csv,noheader >/dev/null 2>&1; then
+                ready=1
+                break
+            fi
+            /usr/bin/sleep 1
+        done
+        if (( ready == 0 )); then
+            echo 'FAIL: NVIDIA no quedó disponible dentro de 30 segundos.'
+            exit 1
+        fi
+        set +e
+        "$HELPER_BIN" --diagnose
+        diagnose_rc=$?
+        set -e
+        if (( diagnose_rc != 0 )); then
+            echo 'FAIL: una o más protecciones no están activas; revisar el log y el informe de 3090 HELPER.'
+            exit 1
+        fi
+        echo 'PASS: reserva ASUS, P2P bidireccional y gpu-unlock en ambas RTX 3090.'
+        ;;
+    log)
+        if [[ -r "$LOG_FILE" ]]; then
+            /usr/bin/tail -n 500 "$LOG_FILE"
+        fi
+        /usr/bin/journalctl -k -b --no-pager -o short-iso -n 500 \
+            | /usr/bin/grep -Ei 'gpu_unlock|vram-quarantine|NVRM|Xid' || true
+        ;;
+    *)
+        echo 'Uso: 3090-helper-admin {repair|verify-boot|log}' >&2
+        exit 64
+        ;;
+esac
