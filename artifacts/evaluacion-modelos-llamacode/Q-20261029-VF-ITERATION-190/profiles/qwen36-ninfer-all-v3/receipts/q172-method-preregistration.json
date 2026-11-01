@@ -1,0 +1,56 @@
+{
+  "stage": "Q172 runner preregistration and pre-seed synchronization",
+  "status": "PASS",
+  "registered_utc": "2026-11-01T23:37:00Z",
+  "runner_sha256": "090053cc517aa133bd160beec58cc461ebb3672a8e6e973fad30bc19b0cfa92d",
+  "runner_validation": [
+    "py_compile PASS",
+    "--help PASS"
+  ],
+  "first_seed": 42,
+  "seeds": [
+    42,
+    43,
+    44
+  ],
+  "scenarios": [
+    "TC-70",
+    "TC-71",
+    "TC-72",
+    "TC-73",
+    "TC-74",
+    "TC-75",
+    "TC-76",
+    "TC-77",
+    "TC-78",
+    "TC-79",
+    "TC-80",
+    "TC-81",
+    "TC-82",
+    "TC-83",
+    "TC-84",
+    "TC-85",
+    "TC-86",
+    "TC-87",
+    "TC-88",
+    "TC-89",
+    "TC-90",
+    "TC-91",
+    "TC-92",
+    "TC-93",
+    "TC-94",
+    "TC-95",
+    "TC-96",
+    "TC-97"
+  ],
+  "backend": "ninfer",
+  "wire_format": "openai",
+  "base_url": "http://127.0.0.1:18493/v1",
+  "monitor_interval_seconds": 10,
+  "sheet": {
+    "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "accionables_row": 59,
+    "inventory_row": 84,
+    "readback": "PASS"
+  }
+}

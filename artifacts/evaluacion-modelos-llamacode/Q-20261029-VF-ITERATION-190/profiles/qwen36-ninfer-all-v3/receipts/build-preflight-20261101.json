@@ -1,0 +1,15 @@
+{
+  "task": "Q-20261029-VF-ITERATION-190",
+  "timestamp_utc": "2026-11-01T22:47:53.607661+00:00",
+  "stage": "build-preflight",
+  "source_commit": "8bde0c064cb6cb7f7f86710ea4a614e7a821dceb",
+  "release": "2026-11-01.2",
+  "cuda_compiler": "/usr/local/cuda-12.8/bin/nvcc 12.8.93",
+  "cmake_configure": "PASS after selecting CUDA 12.8 and installing nasm from Ubuntu apt",
+  "dependency_fetch": "PASS; FFmpeg 9.0.2 and dav1d 1.5.4 hashes pinned and verified",
+  "first_configure_attempt": "Stopped before build: default /usr/bin/nvcc was 12.0.140; second configure found CUDA 12.8 but reported missing nasm.",
+  "first_build_attempt": "Interrupted after 9/853 build actions because the source archive has no .git metadata; restart will stamp exact pinned commit/release via NINFER_BUILD_ID and NINFER_VERSION.",
+  "gpu_used": false,
+  "build_dir": "/media/cristian/HDD extra/Modelos-eval/Q190-ninfer-all-qwen36-v3/build-cuda128",
+  "tmp_dir": "/media/cristian/HDD extra/Modelos-eval/Q190-ninfer-all-qwen36-v3/tmp"
+}

@@ -1,0 +1,12 @@
+{
+  "timestamp_utc": "2026-11-01T23:28:08Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "updates": [
+    "Accionables!D59",
+    "Accionables!I59:J59",
+    "Modelos locales por peso!U84:X84"
+  ],
+  "readback": "PASS",
+  "status": "Q173 preregistered; cold init not yet started; no Q173 metrics entered",
+  "runner_sha256": "5ff17e7058d2defadb03baba00d572cab2e0443a0dd2f6448f7a4aae4617ca38"
+}

@@ -1,0 +1,52 @@
+{
+  "task_id": "Q-20261029-VF-ITERATION-190",
+  "timestamp_utc": "2026-11-01T13:25:07Z",
+  "operation": "Remove the incomplete DeepSeek V4.1 Flash-1017 FP8 Engram staging artifact",
+  "authorization": "Explicit user request: delete the third incomplete model shown in the screenshot.",
+  "lock": {
+    "path": "WORK_QUEUE.lock",
+    "token": "d4618d1c-b63c-4d9c-b523-bd4b7d0eb4a0",
+    "worker": "Q-20261029-VF-ITERATION-190",
+    "retained": true
+  },
+  "preflight": {
+    "sheet_row": "Modelos locales por peso!21",
+    "sheet_name": "DeepSeek V4.1 Flash-1017 FP8 Engram · staging incompleto (2/48 shards)",
+    "staging_contents_matched_expected_names_and_sizes": true,
+    "sha256_values": "Previously verified and preserved in Q172/receipts/engram-pinned.sha256 and engram-download-progress.json; not reread before unlink.",
+    "active_process_or_open_handle": "None found for the staging paths.",
+    "peritosoft_consumer": "None verified; user previously confirmed PeritoSoft closed.",
+    "extracted_engram_payload": "Already absent from Disco local due to the prior Q172 Xolotl cleanup; its 294-byte index and historical receipts were preserved."
+  },
+  "deleted_path": "/media/cristian/HDD extra/Modelos-eval/Q-20261027-VF-ITERATION-172/FP8-engram-stage",
+  "deleted_files": [
+    {"path": "config.json", "bytes": 3311},
+    {"path": "model-00047-of-00048.safetensors", "bytes": 101535150936, "sha256": "76a05106ece259be83d1bfea0dcb54f23377864ee60fd321690f35e6698a2af5"},
+    {"path": "model-00048-of-00048.safetensors", "bytes": 101537926640, "sha256": "9dc51433e195bc78b5ad846b68643cc0351d3b174e5e4309222d3b7402c83afd"},
+    {"path": "model.safetensors.index.json", "bytes": 7470294},
+    {"path": ".cache/huggingface/ (download lock/metadata and revision cache)", "bytes": 20145}
+  ],
+  "file_bytes_total": 203080571326,
+  "volume": "/media/cristian/HDD extra (NTFS3)",
+  "free_bytes_before": 67867369472,
+  "free_bytes_after": 270947954688,
+  "free_bytes_delta_observed": 203080585216,
+  "google_sheet": {
+    "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "sheet": "Modelos locales por peso",
+    "operation": "Deleted the exact row 21 from the active local-model inventory.",
+    "verification": "Readback search returned 0 matching rows; grid row count changed from 108 to 107."
+  },
+  "preserved": [
+    "ASTRA and SOL model files and profiles",
+    "Maya and DSX evaluation results",
+    "Q172 download/extraction hashes, manifests, receipts, source, logs and historical results",
+    "DeepSeek-Engram model.safetensors.index.json on Disco local"
+  ],
+  "verification": {
+    "staging_directory_absent": true,
+    "sheet_row_absent": true,
+    "inference_or_gpu_used": false
+  },
+  "resume_note": "The staged shards are no longer available locally; reproducing this Engram extraction would require downloading the two pinned shards again."
+}

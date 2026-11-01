@@ -1,0 +1,22 @@
+{
+  "stage": "Q173 initialization timing",
+  "status": "PASS",
+  "cold_ready_seconds": 46.776,
+  "cold_file_cache_eviction_verified": true,
+  "warm_restart_ready_seconds": 44.597,
+  "warm_restart_method": "stopped owned server after ladder and restarted without POSIX_FADV_DONTNEED",
+  "warm_cache_residency_independently_measured": false,
+  "server_stop_receipt": "receipts/server-stop-2026-11-01T233534Z.json",
+  "hot_launch_receipt": "receipts/q173-hot-launch.json",
+  "cold_launch_receipt": "receipts/q173-cold-launch.json",
+  "hot_pid": 3133316,
+  "port_free_after_stop": true,
+  "foreign_servers_after_stop": [],
+  "server_uses_both_gpus": "PASS",
+  "sheet": {
+    "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "inventory_row": 84,
+    "readback": "PASS",
+    "timestamp_utc": "2026-11-01T23:35:23Z"
+  }
+}

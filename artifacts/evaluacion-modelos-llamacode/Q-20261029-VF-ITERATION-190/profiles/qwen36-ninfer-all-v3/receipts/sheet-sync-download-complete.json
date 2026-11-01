@@ -1,0 +1,15 @@
+{
+  "updated_utc": "2026-11-01T22:43:58Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "tab": "Accionables",
+  "sheet_id": 1393124532,
+  "range": "A59:N59",
+  "changed_cells": [
+    "D59",
+    "K59",
+    "M59",
+    "N59"
+  ],
+  "readback": "PASS: artifact revision, exact byte count, SHA-256 and destination returned; next stage is runtime build only",
+  "test_started": false
+}

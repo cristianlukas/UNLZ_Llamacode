@@ -1,0 +1,52 @@
+{
+  "task_id": "Q190-profile-qwen36-ninfer-all-v3-q173-q172",
+  "stage": "q173-smoke",
+  "status": "PASS",
+  "timestamp_utc": "2026-11-01T23:30:21Z",
+  "model_id": "qwen3.6-35b-a3b",
+  "prompt_tokens": 6,
+  "completion_tokens": 16,
+  "elapsed_s": 0.11296414601383731,
+  "server_timings": {
+    "cache_n": 0,
+    "draft_n": 21,
+    "draft_n_accepted": 8,
+    "predicted_ms": 67.373058,
+    "predicted_n": 16,
+    "predicted_per_second": 222.64092569465973,
+    "predicted_per_token_ms": 4.4915372,
+    "prompt_ms": 45.07438,
+    "prompt_n": 6,
+    "prompt_per_second": 133.11331181926408,
+    "prompt_per_token_ms": 7.512396666666667
+  },
+  "preflight": {
+    "timestamp_utc": "2026-11-01T23:30:21Z",
+    "gpu": {
+      "0": {
+        "name": "NVIDIA GeForce RTX 3090",
+        "used_mib": 13329,
+        "temperature_c": 47
+      },
+      "1": {
+        "name": "NVIDIA GeForce RTX 3090",
+        "used_mib": 10846,
+        "temperature_c": 31
+      }
+    },
+    "compute_pid": 3117618,
+    "p2p": "OK both directions",
+    "gpu_unlock": "0000:01:00.0,0000:03:00.0",
+    "asus_quarantine": "1636/1636 frames held, 0 pending",
+    "boot_helper": "PASS",
+    "foreign_inference_servers": []
+  },
+  "sheet_sync": {
+    "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "accionables_row": 59,
+    "inventory_row": 84,
+    "readback": "PASS",
+    "timestamp_utc": "2026-11-01T23:30:21Z"
+  },
+  "interpretation": "Short smoke only. Do not use its P/D numbers as Q173 profile averages."
+}

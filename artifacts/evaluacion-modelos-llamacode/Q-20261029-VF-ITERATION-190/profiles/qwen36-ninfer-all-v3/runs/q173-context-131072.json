@@ -1,0 +1,85 @@
+{
+  "task_id": "Q190-profile-qwen36-ninfer-all-v3-q173-q172",
+  "phase": "q173",
+  "status": "complete",
+  "context_tokens": 131072,
+  "repetitions": 1,
+  "prompt_source": "fixed public local NInfer TTFT text fixtures, lexicographic order; embedded tokenizer token ids; raw completion; no prefix cache",
+  "prefill_effective_mean_tok_s": 4507.70942306713,
+  "decode_server_mean_tok_s": 312.58412774148616,
+  "results": [
+    {
+      "repetition": 1,
+      "prompt_tokens_actual": 131072,
+      "completion_tokens_actual": 128,
+      "ttft_to_first_content_s": 29.077295739,
+      "effective_prefill_tok_s": 4507.70942306713,
+      "decode_server_tok_s": 312.58412774148616,
+      "decode_method": "NInfer predicted_per_second",
+      "server_timings": {
+        "cache_n": 0,
+        "draft_n": 125,
+        "draft_n_accepted": 107,
+        "predicted_ms": 406.29062300000004,
+        "predicted_n": 128,
+        "predicted_per_second": 312.58412774148616,
+        "predicted_per_token_ms": 3.1991387637795277,
+        "prompt_ms": 29060.852673,
+        "prompt_n": 131072,
+        "prompt_per_second": 4510.259952619251,
+        "prompt_per_token_ms": 0.22171671045684815
+      },
+      "finish_reasons": [
+        "length"
+      ],
+      "sse_chunks": 23,
+      "request_elapsed_s": 29.483704553,
+      "error": null,
+      "valid": true
+    }
+  ],
+  "finished_utc": "2026-11-01T23:33:00Z",
+  "preflight": {
+    "timestamp_utc": "2026-11-01T23:32:31Z",
+    "gpu": {
+      "gpus": {
+        "0": {
+          "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+          "name": "NVIDIA GeForce RTX 3090",
+          "used_mib": 13283,
+          "total_mib": 24576,
+          "temperature_c": 57
+        },
+        "1": {
+          "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+          "name": "NVIDIA GeForce RTX 3090",
+          "used_mib": 10846,
+          "total_mib": 24576,
+          "temperature_c": 43
+        }
+      },
+      "compute": {
+        "0": [
+          {
+            "pid": 3117618,
+            "used_mib": 12434
+          }
+        ],
+        "1": [
+          {
+            "pid": 3117618,
+            "used_mib": 10730
+          }
+        ]
+      },
+      "mem_available_kib": 104212456
+    },
+    "p2p": "OK both directions",
+    "gpu_unlock": "0000:01:00.0,0000:03:00.0",
+    "asus_quarantine": "StatusText=0000:01:00.0: 1636/1636 frames held, 0 pending",
+    "boot_helper": "PASS",
+    "foreign_inference_servers": []
+  },
+  "token_corpus_sha256": "cc03d8a7c8c7ed86264f5112fb7f4466b0c954000791db0c3f46d01d70e0064d",
+  "server_model": "qwen3.6-35b-a3b"
+}

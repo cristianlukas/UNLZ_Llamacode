@@ -1,0 +1,50 @@
+{
+  "task_id": "Q190-profile-qwen36-ninfer-all-v3-q173-q172",
+  "stage": "q173-corpus-tokenization",
+  "status": "PASS",
+  "timestamp_utc": "2026-11-01T23:30:57Z",
+  "segments": 161,
+  "token_count": 275627,
+  "token_ids_sha256": "cc03d8a7c8c7ed86264f5112fb7f4466b0c954000791db0c3f46d01d70e0064d",
+  "target_max_context": 261888,
+  "covers_target": true,
+  "request_api": "/tokenize",
+  "gpu_used_for_generation": false,
+  "preflight": {
+    "both_rtx_3090s_present": true,
+    "p2p_bidirectional": "OK",
+    "gpu_unlock_both": true,
+    "asus_quarantine": "1636/1636 frames held, 0 pending",
+    "boot_helper": "PASS",
+    "foreign_inference_servers": []
+  },
+  "fixture_manifest": [
+    {
+      "path": "client_tools_32.json",
+      "sha256": "f10ecf085995464ceb95334ec221c48c0ecd05d48d4b03195eb395d37bf0660f"
+    },
+    {
+      "path": "context_exact.json",
+      "sha256": "946a56a8461593299713f24e1eae2b20482431bfcb5f4da3ad83bc0added753f"
+    },
+    {
+      "path": "context_over.json",
+      "sha256": "b9ddc7bebf507257254903de9d65fc6892166cad0d8990e8818247f16ddf7584"
+    },
+    {
+      "path": "long_64k_independent.json",
+      "sha256": "360f235f326a987e5a7347657731cb49315da5fa18c742f9587db4a8fa459572"
+    },
+    {
+      "path": "long_8k_independent.json",
+      "sha256": "7a9f7d7a8bae3597b7fa755ed7495a00860da378786916439d249b08dc784630"
+    }
+  ],
+  "sheet_sync": {
+    "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "accionables_row": 59,
+    "inventory_row": 84,
+    "readback": "PASS",
+    "timestamp_utc": "2026-11-01T23:30:57Z"
+  }
+}

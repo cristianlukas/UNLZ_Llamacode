@@ -1,0 +1,23 @@
+{
+  "task_id": "Q190-profile-qwen36-ninfer-all-v3-q173-q172",
+  "status": "download complete; hash and size verified",
+  "checked_utc": "2026-11-01T22:43:48Z",
+  "repo": "neroued/Qwen3.6-35B-A3B-NInfer",
+  "revision": "0e575082eeb52f50d0932d46fac40c68b97e49b6",
+  "filename": "qwen3_6_35b_a3b.ninfer",
+  "expected_bytes": 22790484480,
+  "expected_sha256": "3e33297645dc33557751be1a3c407a74ed7c00f34909b5d4e8cfdce91b3dbe84",
+  "local_partial_bytes": 22790484480,
+  "partial_files": [
+    "/media/cristian/Disco local/Modelos-eval/Qwen3.6-35B-A3B-NInfer-all-20261101/.cache/huggingface/download/P1UVZArH9oeqGxmw9IaZM-01xko=.3e33297645dc33557751be1a3c407a74ed7c00f34909b5d4e8cfdce91b3dbe84.ae6b47cf.incomplete"
+  ],
+  "path": "/media/cristian/Disco local/Modelos-eval/Qwen3.6-35B-A3B-NInfer-all-20261101",
+  "runtime_download_tool": "huggingface_hub 1.30.0 hf download; HF_XET_HIGH_PERFORMANCE=1; HF_HOME/TMPDIR redirected to D",
+  "prior_mode": "Default Xet was interrupted after measured ~8 MB/s host ingress; same download path retried with high-performance enabled",
+  "gate": "No inference server or CUDA inference process at start; D and HDD above floors; root above 2 GB floor; Q190 lock verified own",
+  "active_process_pid": 2986024,
+  "test_started": false,
+  "progress_fraction": 1.0,
+  "sheet_readback": "PASS: Accionables!A59:N59 records 18,382,098,451 B (~80.7%); single active partial file",
+  "actual_sha256": "3e33297645dc33557751be1a3c407a74ed7c00f34909b5d4e8cfdce91b3dbe84"
+}

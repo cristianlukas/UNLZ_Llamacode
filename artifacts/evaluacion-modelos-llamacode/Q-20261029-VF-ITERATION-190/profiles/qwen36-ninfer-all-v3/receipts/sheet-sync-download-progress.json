@@ -1,0 +1,16 @@
+{
+  "task_id": "Q190-profile-qwen36-ninfer-all-v3-q173-q172",
+  "updated_utc": "2026-11-01T22:34:55Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "tab": "Accionables",
+  "sheet_id": 1393124532,
+  "range": "A59:N59",
+  "changes": {
+    "D59": "Reabierto · descarga HF fijada en curso; tamaño/hash aún no verificados, no compilar ni cargar",
+    "K59": "HF download en curso: 1.221 GB parciales de 22.790.484.480 B; SHA pendiente. Ruta D/Qwen3.6-35B-A3B-NInfer-all-20261101; Xet high-performance; receipt hf-download-progress.json.",
+    "M59": "2026-11-01T22:34:55Z",
+    "N59": "2026-11-01T22:34:55Z"
+  },
+  "readback": "PASS: A59:N59 returned the exact updated state; E59/I59 and all other cells preserved.",
+  "test_started": false
+}

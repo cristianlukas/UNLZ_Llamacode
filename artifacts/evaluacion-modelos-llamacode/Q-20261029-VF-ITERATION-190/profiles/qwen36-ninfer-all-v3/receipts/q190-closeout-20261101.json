@@ -1,0 +1,39 @@
+{
+  "task_id": "Q-20261029-VF-ITERATION-190",
+  "profile": "Qwen3.6-35B-A3B NInfer-all v3",
+  "status": "complete",
+  "closed_utc": "2026-11-01T23:52:43Z",
+  "evaluation_receipt": "final-summary.json",
+  "postflight_receipt": "postflight.json",
+  "google_sheets": {
+    "status": "updated_and_read_back",
+    "tabs": ["Accionables", "Modelos locales por peso"],
+    "profile_inventory_row": 84,
+    "actionable_row": 59
+  },
+  "owned_process": {
+    "pid": 3133316,
+    "stopped": true,
+    "port_18493_free": true,
+    "foreign_inference_servers": []
+  },
+  "system_gates": {
+    "p2p": "PASS both directions",
+    "gpu_unlock": "PASS on both RTX 3090s",
+    "3090_helper": "PASS",
+    "asus_vram_quarantine": "PASS: 1636/1636 held, 0 pending",
+    "temporary_mount_mnt_q190_removed": true
+  },
+  "separate_user_requested_cleanup": {
+    "artifact": "DeepSeek V4.1 Flash-1017 FP8 Engram staging, 2/48 shards",
+    "receipt": "../../../receipts/remove-fp8-engram-stage-20261101.json",
+    "local_staging_absent": true,
+    "sheet_inventory_row_absent": true
+  },
+  "lock": {
+    "path": "WORK_QUEUE.lock",
+    "token": "d4618d1c-b63c-4d9c-b523-bd4b7d0eb4a0",
+    "worker": "Q-20261029-VF-ITERATION-190",
+    "release_after_this_closeout": true
+  }
+}

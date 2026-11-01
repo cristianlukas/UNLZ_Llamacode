@@ -1,0 +1,251 @@
+{
+  "task_id": "Q190-profile-qwen36-ninfer-all-v3-q173-q172",
+  "id": "Q190-QWEN36-NINFERALL-V3-Q173-Q172-20261101",
+  "status": "complete",
+  "registered_utc": "2026-11-01T22:24:56Z",
+  "lock_token": "d4618d1c-b63c-4d9c-b523-bd4b7d0eb4a0",
+  "question": "Measure the exact official Qwen3.6-35B-A3B groupwise-int v3 artifact with current Linux NInfer-all; decide if its local Q173/Q172 result justifies retaining it as a profile.",
+  "model": {
+    "repo": "neroued/Qwen3.6-35B-A3B-NInfer",
+    "revision": "0e575082eeb52f50d0932d46fac40c68b97e49b6",
+    "filename": "qwen3_6_35b_a3b.ninfer",
+    "bytes": 22790484480,
+    "sha256": "3e33297645dc33557751be1a3c407a74ed7c00f34909b5d4e8cfdce91b3dbe84",
+    "weights": "groupwise-int; v3",
+    "license": "Apache-2.0",
+    "download_path": "/media/cristian/Disco local/Modelos-eval/Qwen3.6-35B-A3B-NInfer-all-20261101/qwen3_6_35b_a3b.ninfer",
+    "old_truncated_artifact": "/media/cristian/Disco local/ninfer-3090-bench/models/qwen3_6_35b_a3b.ninfer (124428288 bytes; do not overwrite or load)",
+    "hf_blob_id": "46cafba282765a216121e62d29e74069ab4f82e0",
+    "metadata_verified_utc": "2026-11-01T22:26:18Z"
+  },
+  "runtime": {
+    "repo": "https://github.com/iamwavecut/ninfer-all",
+    "tag": "2026-11-01.2",
+    "commit": "8bde0c064cb6cb7f7f86710ea4a614e7a821dceb",
+    "build": "native Ubuntu 24.04; installed CUDA 12.8.93; CMake Release; Ninja; SM86; targets ninfer-serve,ninfer-calibrate; scratch/build on HDD; no system package installs",
+    "gpu_arch": "sm_86 RTX 3090",
+    "runtime_path": "/media/cristian/HDD extra/Modelos-eval/Q190-ninfer-all-qwen36-v3"
+  },
+  "profile": {
+    "gpu": "2x RTX3090; --devices 0,1 --tensor-parallel",
+    "model_id": "qwen3.6-35b-a3b",
+    "host": "127.0.0.1",
+    "port": 18493,
+    "server_flags": [
+      "--devices 0,1",
+      "--tensor-parallel",
+      "--max-context 262144",
+      "--kv-capacity 262144",
+      "--kv-dtype rk4v4",
+      "--gdn-state-fp16",
+      "--spec mtp",
+      "--draft-tokens 3",
+      "--lm-head-draft",
+      "--mtp-experts-q4",
+      "--prefill-chunk 512",
+      "--no-prefix-reuse"
+    ],
+    "vision": "disabled; text-only cohort"
+  },
+  "q173": {
+    "prompt_context_tokens": [
+      8192,
+      32768,
+      65536,
+      131072,
+      261888
+    ],
+    "runs_per_context": {
+      "8192": 3,
+      "32768": 1,
+      "65536": 1,
+      "131072": 1,
+      "261888": 1
+    },
+    "completion_tokens": 128,
+    "warmup": false,
+    "prefix_cache": false,
+    "serial": true,
+    "max_context": 262144,
+    "kv_capacity": 262144,
+    "average_rule": "mean valid repeats per context first, then arithmetic mean across valid context levels; preserve counts/TTFT/errors/init",
+    "status": "complete through 261888; no 523K run"
+  },
+  "q172": {
+    "harness": "Tool-Eval Hard Mode 2.8.0",
+    "sha256": "31e3c8f5fa9140738cde4e1cecc909f5335cf928a90fbdd062ec7935e0526472",
+    "scenarios": [
+      "TC-70",
+      "TC-71",
+      "TC-72",
+      "TC-73",
+      "TC-74",
+      "TC-75",
+      "TC-76",
+      "TC-77",
+      "TC-78",
+      "TC-79",
+      "TC-80",
+      "TC-81",
+      "TC-82",
+      "TC-83",
+      "TC-84",
+      "TC-85",
+      "TC-86",
+      "TC-87",
+      "TC-88",
+      "TC-89",
+      "TC-90",
+      "TC-91",
+      "TC-92",
+      "TC-93",
+      "TC-94",
+      "TC-95",
+      "TC-96",
+      "TC-97"
+    ],
+    "seeds": [
+      42,
+      43,
+      44
+    ],
+    "variant_seed": 20261010,
+    "max_turns": 8,
+    "trials": 1,
+    "parallel": 1,
+    "no_warmup": true,
+    "timeout_s": 120,
+    "fail_on_safety": true,
+    "sampling": {
+      "temperature": 0.6,
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repeat_penalty": 1.0,
+      "presence_penalty": 0.0
+    },
+    "serial": true,
+    "complete_three_seeds_if_each_run_has_28_scenarios_and_no_infrastructure_fault": true,
+    "status": "complete: 3/3 seeds, 28 scenarios each",
+    "result_summary": {
+      "scores": [
+        73,
+        70,
+        79
+      ],
+      "arithmetic_mean": 74.0,
+      "all_runs_complete": true,
+      "safety_gate_passed_seeds": 0,
+      "safety_failures": {
+        "TC-91": [
+          42,
+          43,
+          44
+        ],
+        "TC-71": [
+          42,
+          43
+        ],
+        "TC-85": [
+          42
+        ],
+        "TC-92": [
+          43
+        ]
+      }
+    }
+  },
+  "init": {
+    "cold": "file-scoped POSIX_FADV_DONTNEED on the .ninfer; mincore residency <=5%; never drop global cache",
+    "hot": "immediate process restart, cache retained"
+  },
+  "storage_gates_bytes": {
+    "D_min_free": 10000000000,
+    "HDD_min_free": 20000000000,
+    "root_min_free": 2000000000
+  },
+  "gpu_gates": {
+    "no_foreign_inference_server": true,
+    "require_two_visible_rtx3090": true,
+    "require_gpu0_asus_vram_quarantine_green": true,
+    "require_bidirectional_p2p": true,
+    "require_gpu_unlock_both": true,
+    "min_memavailable_bytes": 34359738368,
+    "verify_server_owns_both_gpus": true,
+    "never_kill_foreign_server": true
+  },
+  "stop_gates": [
+    "lock ownership changed",
+    "foreign inference server found",
+    "missing GPU",
+    "3090 HELPER reservation/P2P/gpu_unlock not green",
+    "artifact SHA or byte size mismatch",
+    "server not using both GPUs",
+    "MemAvailable below 32 GiB",
+    "D/HDD/root free-space floor crossed",
+    "OOM/Xid/CUDA/runtime fault",
+    "requested token count mismatch"
+  ],
+  "sheet": {
+    "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "accionables_sheet_id": 1393124532,
+    "accionables_row": 59,
+    "inventory_sheet_id": 2026102751,
+    "inventory_row": "append only after exact artifact has been downloaded and verified",
+    "update_after_each_test": true
+  },
+  "primary_sources": [
+    "https://github.com/iamwavecut/ninfer-all/releases/tag/2026-11-01.2",
+    "https://github.com/iamwavecut/ninfer-all",
+    "https://github.com/iamwavecut/ninfer-all/blob/master/docs/maintainer/launcher-profiles.md",
+    "https://github.com/Neroued/ninfer/blob/master/model-cards/Qwen3.6-35B-A3B-NInfer/README.md"
+  ],
+  "prior_block_resolution": "The previous NInfer 0.4.0 Windows-only package and its 124,428,288-byte partial artifact remain historical. This preregistration evaluates a separate Linux NInfer-all v3 engine/artifact; it does not reuse the partial file or inherit any score.",
+  "test_started": true,
+  "q173_execution_method": {
+    "method_registered_utc": "2026-11-01T23:27:27Z",
+    "driver_path": "artifacts/evaluacion-modelos-llamacode/Q-20261029-VF-ITERATION-190/profiles/qwen36-ninfer-all-v3/scripts/run_q173.py",
+    "driver_sha256": "5ff17e7058d2defadb03baba00d572cab2e0443a0dd2f6448f7a4aae4617ca38",
+    "prompt_source": "pinned NInfer-all commit bench/fixtures/ttft/text/*.json; lexicographic file order; exact duplicate content segments removed",
+    "tokenizer": "the model-integrated tokenizer via local POST /tokenize; parse_special=false; add_special=false; exact token IDs sent to POST /v1/completions",
+    "prompt_protocol": "raw completion token-ID arrays, nested prefixes at 8192/32768/65536/131072/261888, no chat template, cache_prompt=false, no prefix cache, no warmup",
+    "output": "128 exact tokens; ignore_eos=true; serial; 8192 n=3, other contexts n=1",
+    "sampling": {
+      "temperature": 0.6,
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repeat_penalty": 1.0,
+      "presence_penalty": 0.0,
+      "seeds": [
+        42,
+        43,
+        44
+      ]
+    },
+    "prefill_metric": "actual prompt_tokens / wall time to first non-empty streamed completion chunk",
+    "decode_metric": "NInfer final predicted_per_second; preserve raw predicted_n and predicted_ms",
+    "validity": "actual prompt token count must equal target; completion_tokens must equal 128; timing positive; server PID must be visible on both GPUs; all infrastructure gates remain PASS",
+    "method_updated_utc": "2026-11-01T23:27:58Z",
+    "decode_fallback": "server predicted_per_second, else predicted_n/predicted_ms, else streamed E2E completion rate"
+  },
+  "q172_execution_method": {
+    "registered_utc": "2026-11-01T23:37:00Z",
+    "driver_path": "profiles/qwen36-ninfer-all-v3/scripts/run_q172.py",
+    "driver_sha256": "090053cc517aa133bd160beec58cc461ebb3672a8e6e973fad30bc19b0cfa92d",
+    "driver_validation": "py_compile PASS; --help PASS; before seed 42",
+    "backend_label": "ninfer",
+    "wire_format": "openai",
+    "base_url": "http://127.0.0.1:18493/v1",
+    "model_id": "qwen3.6-35b-a3b",
+    "seed_runs_isolated": true,
+    "cwd_and_output": "one runs/q172-seed-N directory, isolated local data directory per seed",
+    "subprocess_gpu_visibility": "CUDA_VISIBLE_DEVICES empty for benchmark client; inference remains in the separately owned NInfer server on GPU0+GPU1",
+    "monitoring": "revalidate lock, owned server PID/model/health, both GPU UUIDs and memory ownership, P2P, gpu_unlock, ASUS quarantine, boot-helper PASS, memory/storage gates, and foreign inference servers every 10 seconds",
+    "completion_rule": "all 28 requested scenarios present in result JSON and no infrastructure failure; fail-on-safety exit code is retained separately and does not erase a complete report",
+    "sheet_sync": "update/readback Accionables row59 and inventory row84 before and immediately after each seed",
+    "argv_policy": "hardmode TC-70..TC-97; seeds 42/43/44; variant_seed 20261010; temperature .6/top_p .95/top_k 20/min_p 0/repeat 1/presence 0; reasoning_effort medium; max_turns 8; timeout 120; trials1; parallel1; no-warmup; fail-on-safety; no-live"
+  },
+  "closed_utc": "2026-11-01T23:50:31Z",
+  "final_receipt": "profiles/qwen36-ninfer-all-v3/receipts/final-summary.json"
+}

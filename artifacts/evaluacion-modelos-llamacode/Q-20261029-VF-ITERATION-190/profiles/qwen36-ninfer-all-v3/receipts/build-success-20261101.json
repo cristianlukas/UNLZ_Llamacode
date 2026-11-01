@@ -1,0 +1,42 @@
+{
+  "task": "Q-20261029-VF-ITERATION-190",
+  "timestamp_utc": "2026-11-01T23:18:35.646451+00:00",
+  "stage": "build-complete",
+  "source_repo": "iamwavecut/ninfer-all",
+  "release": "2026-11-01.2",
+  "source_commit": "8bde0c064cb6cb7f7f86710ea4a614e7a821dceb",
+  "build_environment": {
+    "os": "Ubuntu 24.04",
+    "cmake": "3.28.3",
+    "ninja": "1.11.1",
+    "compiler": "GCC/G++ 13.3.0",
+    "cuda_compiler": "/usr/local/cuda-12.8/bin/nvcc 12.8.93",
+    "architecture": "SM86",
+    "type": "Release",
+    "jobs": 8
+  },
+  "configure": "PASS, source /mnt/q190/src, build /mnt/q190/build-nospace, FFmpeg 9.0.2 and dav1d 1.5.4 pinned SHA-verified",
+  "build": "PASS 601/601 actions, targets ninfer-serve and ninfer-calibrate",
+  "binary_version": "ninfer-serve 2026-11-01.2+8bde0c064cb6cb7f7f86710ea4a614e7a821dceb",
+  "binaries": {
+    "serve": {
+      "path": "/mnt/q190/build-nospace/apps/ninfer-serve",
+      "bytes": 818937856,
+      "sha256": "7d839bb832f79605363f7a5fbe31944123b7cb54c0d980c1e3686865f163fdb1"
+    },
+    "calibrate": {
+      "path": "/mnt/q190/build-nospace/apps/ninfer-calibrate",
+      "bytes": 757875520,
+      "sha256": "f6819c735df91e4fc5b7fd68afd7234c7152812dd805da9b5ab1ce6619ca770b"
+    }
+  },
+  "smoke_checks": {
+    "ninfer_serve_version": "PASS exit 0; exact release and source commit",
+    "ninfer_serve_help": "PASS exit 0; model, device and context arguments present",
+    "ninfer_calibrate_help": "PASS exit 0; route catalog and repeat options present",
+    "ldd": "PASS; no unresolved dynamic libraries"
+  },
+  "warnings": "Non-fatal CUDA unused-symbol/template warnings; no build errors.",
+  "gpu_used": false,
+  "space_alias": "Temporary bind mount /mnt/q190 maps /media/cristian/HDD extra/Modelos-eval/Q190-ninfer-all-qwen36-v3 to avoid FFmpeg configure whitespace limitation; mount kept for subsequent Q190 test steps."
+}

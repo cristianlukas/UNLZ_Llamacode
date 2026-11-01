@@ -1,0 +1,20 @@
+{
+  "task_id": "Q190-profile-qwen36-ninfer-all-v3-q173-q172",
+  "updated_utc": "2026-11-01T22:25:26Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "tab": "Accionables",
+  "sheet_id": 1393124532,
+  "range": "A59:N59",
+  "prewrite": "Row 59 was the blocked Windows-only v0.4.0/truncated artifact actionable, exact existing id vf-qwen36-35b-a3b-ninfer-linux-q190.",
+  "changes": {
+    "D59": "Reopened on NInfer-all Linux/SM86 discovery; preregistered Q173→Q172",
+    "E59": "Qwen3.6-35B-A3B NInfer-all v3 · Q173/Q172 Linux dual",
+    "G59": "New gate 2026-11-01.2/8bde0c0, prior audit remains historical",
+    "H59": "Q173 ladder first on two RTX3090 TP2 then Q172 TC70–97 seeds42/43/44 serial",
+    "I59": "No local results; do not inherit other artifact/runtime scores",
+    "J59": "Q190/profiles/qwen36-ninfer-all-v3 plan/prereg/upstream receipts",
+    "K59": "New v3 artifact/hash and old partial explicitly separated"
+  },
+  "readback": "PASS: A59:N59 returned the new values unchanged; untouched cells F59,L59 retained.",
+  "test_started": false
+}

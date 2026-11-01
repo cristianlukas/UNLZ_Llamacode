@@ -1,0 +1,18 @@
+{
+  "stage": "Q173 context 65536",
+  "run_file": "runs/q173-context-65536.json",
+  "timestamp_utc": "2026-11-01T23:32:16Z",
+  "status": "complete",
+  "repetitions": 1,
+  "prefill_effective_mean_tok_s": 5439.77670452379,
+  "decode_server_mean_tok_s": 199.8937166682441,
+  "context_tokens": 65536,
+  "output_tokens": 128,
+  "prompt_mode": "exact tokenizer IDs from frozen local fixtures; raw completion; no prefix cache",
+  "sheet": {
+    "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "accionables_row": 59,
+    "inventory_row": 84,
+    "readback": "PASS"
+  }
+}

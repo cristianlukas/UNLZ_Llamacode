@@ -1,0 +1,71 @@
+{
+  "task_id": "Q190-profile-qwen36-ninfer-all-v3-q173-q172",
+  "stage": "postflight",
+  "status": "PASS",
+  "timestamp_utc": "2026-11-01T23:50:31Z",
+  "owned_server_stop": {
+    "task_id": "Q190-profile-qwen36-ninfer-all-v3-q173-q172",
+    "stage": "stop-owned-server",
+    "timestamp_utc": "2026-11-01T23:50:13Z",
+    "pid": 3133316,
+    "port_free": true,
+    "gpu_state": {
+      "gpus": {
+        "0": {
+          "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+          "name": "NVIDIA GeForce RTX 3090",
+          "used_mib": 886,
+          "total_mib": 24576,
+          "temperature_c": 58
+        },
+        "1": {
+          "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+          "name": "NVIDIA GeForce RTX 3090",
+          "used_mib": 108,
+          "total_mib": 24576,
+          "temperature_c": 45
+        }
+      },
+      "compute": {
+        "0": [],
+        "1": []
+      },
+      "mem_available_kib": 108247708
+    },
+    "foreign_inference_servers": []
+  },
+  "final_infrastructure_gates": {
+    "timestamp_utc": "2026-11-01T23:50:31Z",
+    "gpu": {
+      "gpus": {
+        "0": {
+          "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+          "name": "NVIDIA GeForce RTX 3090",
+          "used_mib": 885,
+          "total_mib": 24576,
+          "temperature_c": 53
+        },
+        "1": {
+          "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+          "name": "NVIDIA GeForce RTX 3090",
+          "used_mib": 108,
+          "total_mib": 24576,
+          "temperature_c": 39
+        }
+      },
+      "compute": {
+        "0": [],
+        "1": []
+      },
+      "mem_available_kib": 108224256
+    },
+    "p2p": "OK both directions",
+    "gpu_unlock": "0000:01:00.0,0000:03:00.0",
+    "asus_quarantine": "StatusText=0000:01:00.0: 1636/1636 frames held, 0 pending",
+    "boot_helper": "PASS",
+    "foreign_inference_servers": []
+  },
+  "port_18493_free": true,
+  "temporary_bind_mount_mnt_q190_present": false,
+  "notes": "Q190-owned inference server stopped, no foreign inference servers, temporary HDD bind mount unmounted; GPU reservations clear."
+}

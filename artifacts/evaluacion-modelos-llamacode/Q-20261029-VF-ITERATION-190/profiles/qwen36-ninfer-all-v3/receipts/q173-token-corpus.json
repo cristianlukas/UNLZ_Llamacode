@@ -1,0 +1,164 @@
+{
+  "task_id": "Q190-profile-qwen36-ninfer-all-v3-q173-q172",
+  "stage": "q173-corpus-tokenization",
+  "status": "PASS",
+  "timestamp_utc": "2026-11-01T23:30:57Z",
+  "sources": [
+    {
+      "path": "/mnt/q190/src/bench/fixtures/ttft/text/client_tools_32.json",
+      "sha256": "f10ecf085995464ceb95334ec221c48c0ecd05d48d4b03195eb395d37bf0660f",
+      "bytes": 31611
+    },
+    {
+      "path": "/mnt/q190/src/bench/fixtures/ttft/text/context_exact.json",
+      "sha256": "946a56a8461593299713f24e1eae2b20482431bfcb5f4da3ad83bc0added753f",
+      "bytes": 34913
+    },
+    {
+      "path": "/mnt/q190/src/bench/fixtures/ttft/text/context_over.json",
+      "sha256": "b9ddc7bebf507257254903de9d65fc6892166cad0d8990e8818247f16ddf7584",
+      "bytes": 35193
+    },
+    {
+      "path": "/mnt/q190/src/bench/fixtures/ttft/text/long_64k_independent.json",
+      "sha256": "360f235f326a987e5a7347657731cb49315da5fa18c742f9587db4a8fa459572",
+      "bytes": 279039
+    },
+    {
+      "path": "/mnt/q190/src/bench/fixtures/ttft/text/long_8k_independent.json",
+      "sha256": "7a9f7d7a8bae3597b7fa755ed7495a00860da378786916439d249b08dc784630",
+      "bytes": 33048
+    },
+    {
+      "path": "/mnt/q190/src/bench/fixtures/ttft/text/many_image_28_a.json",
+      "sha256": "5a0254ba3747e1bea02a673b86caa83f18a67cd94de6705e4b1868c14f2eb53c",
+      "bytes": 2955
+    },
+    {
+      "path": "/mnt/q190/src/bench/fixtures/ttft/text/many_image_28_b.json",
+      "sha256": "918a574cde3833e5f6db7963f5f9fcc20a5870f712e695fe48e63a762dfc1099",
+      "bytes": 2955
+    },
+    {
+      "path": "/mnt/q190/src/bench/fixtures/ttft/text/many_image_33.json",
+      "sha256": "167434984db287547c09f50180ce579f5e7689352b20f25dc4c5e7352b7dff8c",
+      "bytes": 3432
+    },
+    {
+      "path": "/mnt/q190/src/bench/fixtures/ttft/text/rotation_55k_0.json",
+      "sha256": "b00be51579f76f06bdd4d3641d185bfb43350d71a75858f8eae83ec32492dbe6",
+      "bytes": 238151
+    },
+    {
+      "path": "/mnt/q190/src/bench/fixtures/ttft/text/rotation_55k_1.json",
+      "sha256": "4170d17d17733ca23c9d52449d58232fe72c79356f991577a39f5d8591d8dcb8",
+      "bytes": 238151
+    },
+    {
+      "path": "/mnt/q190/src/bench/fixtures/ttft/text/rotation_55k_2.json",
+      "sha256": "1274f6f889e233189a6b870e03de63b7237ec9c1c407b48c4fc94f95415496d9",
+      "bytes": 238147
+    },
+    {
+      "path": "/mnt/q190/src/bench/fixtures/ttft/text/rotation_55k_3.json",
+      "sha256": "5bfe7c1c610640e785391153f6680e7178c057fdc2026dbbff356f8499e366d1",
+      "bytes": 238151
+    },
+    {
+      "path": "/mnt/q190/src/bench/fixtures/ttft/text/rotation_55k_4.json",
+      "sha256": "23829a48cfe472ce35e79b1b9b9558d05af7ed8fbe58956f894736f459270099",
+      "bytes": 238156
+    },
+    {
+      "path": "/mnt/q190/src/bench/fixtures/ttft/text/rotation_55k_5.json",
+      "sha256": "747ab03b82f70f542b6d45828e4345ecf192139a0043d994cf7ffae522f3cab9",
+      "bytes": 238148
+    },
+    {
+      "path": "/mnt/q190/src/bench/fixtures/ttft/text/state_working_set_a.json",
+      "sha256": "9c265610226e9d56563f30aa69ba5508c44c6181cf34c5bece6bb64ec302401a",
+      "bytes": 8850
+    },
+    {
+      "path": "/mnt/q190/src/bench/fixtures/ttft/text/state_working_set_b.json",
+      "sha256": "16b6851f5f8edbbc6e5756e080cf95ca59ce071c82d49029c6b724b51c576321",
+      "bytes": 8850
+    },
+    {
+      "path": "/mnt/q190/src/bench/fixtures/ttft/text/state_working_set_c.json",
+      "sha256": "3459edcefb104777c94f53feac65cb98cac687c0463af84b7858eeca902d6f13",
+      "bytes": 8850
+    },
+    {
+      "path": "/mnt/q190/src/bench/fixtures/ttft/text/state_working_set_d.json",
+      "sha256": "dda66d2c124bea448f42dd58cc8f35b91837305efc945ebe42a1db2f2c8517bc",
+      "bytes": 8850
+    },
+    {
+      "path": "/mnt/q190/src/bench/fixtures/ttft/text/state_working_set_e.json",
+      "sha256": "31b3a1cbb298414e49aab10023cc0f5933f53a4be0b59d7529106fbeadc6eab9",
+      "bytes": 8850
+    },
+    {
+      "path": "/mnt/q190/src/bench/fixtures/ttft/text/state_working_set_f.json",
+      "sha256": "75cdd4d706492c3ed702e1a0f608478300269fe08767c91c631cf86644514e9e",
+      "bytes": 8850
+    },
+    {
+      "path": "/mnt/q190/src/bench/fixtures/ttft/text/unmarked_common_a.json",
+      "sha256": "1ee4fbadfc9ccfa0271cf242f30a1d8deec7002b5c1e67354d2a977179f5e60d",
+      "bytes": 18756
+    },
+    {
+      "path": "/mnt/q190/src/bench/fixtures/ttft/text/unmarked_common_b.json",
+      "sha256": "f84eb0c439c24b6ba21634e5ca5d3533a3663e201ae48d825cc30e0697459029",
+      "bytes": 18756
+    }
+  ],
+  "segments": 161,
+  "token_count": 275627,
+  "token_ids_sha256": "cc03d8a7c8c7ed86264f5112fb7f4466b0c954000791db0c3f46d01d70e0064d",
+  "request_api": "/tokenize",
+  "gpu_used": false,
+  "infrastructure_preflight": {
+    "timestamp_utc": "2026-11-01T23:30:57Z",
+    "gpu": {
+      "gpus": {
+        "0": {
+          "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+          "name": "NVIDIA GeForce RTX 3090",
+          "used_mib": 13336,
+          "total_mib": 24576,
+          "temperature_c": 49
+        },
+        "1": {
+          "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+          "name": "NVIDIA GeForce RTX 3090",
+          "used_mib": 10846,
+          "total_mib": 24576,
+          "temperature_c": 31
+        }
+      },
+      "compute": {
+        "0": [
+          {
+            "pid": 3117618,
+            "used_mib": 12432
+          }
+        ],
+        "1": [
+          {
+            "pid": 3117618,
+            "used_mib": 10730
+          }
+        ]
+      },
+      "mem_available_kib": 104413596
+    },
+    "p2p": "OK both directions",
+    "gpu_unlock": "0000:01:00.0,0000:03:00.0",
+    "asus_quarantine": "StatusText=0000:01:00.0: 1636/1636 frames held, 0 pending",
+    "boot_helper": "PASS",
+    "foreign_inference_servers": []
+  }
+}

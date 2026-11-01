@@ -1,0 +1,17 @@
+{
+  "task_id": "Q190-profile-qwen36-ninfer-all-v3-q173-q172",
+  "stage": "q173-method-preregistration",
+  "timestamp_utc": "2026-11-01T23:27:58Z",
+  "status": "preregistered-before-inference",
+  "runner_sha256": "5ff17e7058d2defadb03baba00d572cab2e0443a0dd2f6448f7a4aae4617ca38",
+  "runner_py_compile": "PASS",
+  "runner_help": "PASS",
+  "prompt_fixtures": "/mnt/q190/src/bench/fixtures/ttft/text/*.json",
+  "tokenizer": "embedded model tokenizer endpoint; no separate model download",
+  "gpu_used": false,
+  "sheet_sync_readback": {
+    "Accionables!D59": "Build + preflight dual-GPU PASS · NInfer smoke/Q173 en preparación",
+    "Modelos locales por peso!B84": "2 · RTX 3090 GPU0+GPU1 (TP2; preflight verificado)",
+    "Modelos locales por peso!U84": "Q190; NInfer-all v3; dos RTX 3090 TP2; preflight gates PASS; Q173 hasta 261888 pendiente."
+  }
+}

@@ -1,0 +1,154 @@
+{
+  "task_id": "Q190-profile-qwen36-ninfer-all-v3-q173-q172",
+  "stage": "cold-init",
+  "status": "PASS",
+  "started_utc": "2026-11-01T23:28:23Z",
+  "ready_utc": "2026-11-01T23:29:10Z",
+  "ready_seconds": 46.776,
+  "pid": 3117618,
+  "model_id": "qwen3.6-35b-a3b",
+  "health_status": 200,
+  "models": {
+    "data": [
+      {
+        "architecture": {
+          "input_modalities": [
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ]
+        },
+        "context_length": 262144,
+        "context_window": 262144,
+        "created": 1793575749,
+        "id": "qwen3.6-35b-a3b",
+        "max_model_len": 262144,
+        "meta": {
+          "ftype": "bf16+fp32+int32+q4_g64_fp16+q5_g64_fp16+q6_g64_fp16+q8_g32_fp16",
+          "n_ctx": 262144,
+          "n_ctx_train": 262144,
+          "n_embd": 2048,
+          "n_params": 36606295408,
+          "n_vocab": 248320,
+          "size": 22770245536
+        },
+        "modalities": {
+          "vision": false
+        },
+        "object": "model",
+        "owned_by": "ninfer",
+        "status": {
+          "args": [
+            "--model-id",
+            "qwen3.6-35b-a3b",
+            "--devices",
+            "0,1",
+            "--tensor-parallel",
+            "--host",
+            "127.0.0.1",
+            "--port",
+            "18493",
+            "--max-context",
+            "262144",
+            "--kv-capacity",
+            "262144",
+            "--kv-dtype",
+            "rk4v4",
+            "--gdn-state-fp16",
+            "--spec",
+            "mtp",
+            "--draft-tokens",
+            "3",
+            "--lm-head-draft",
+            "--mtp-experts-q4",
+            "--prefill-chunk",
+            "512",
+            "--no-prefix-reuse"
+          ],
+          "value": "loaded"
+        }
+      }
+    ],
+    "object": "list"
+  },
+  "gpu_state": {
+    "gpus": {
+      "0": {
+        "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+        "name": "NVIDIA GeForce RTX 3090",
+        "used_mib": 13277,
+        "total_mib": 24576,
+        "temperature_c": 51
+      },
+      "1": {
+        "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+        "name": "NVIDIA GeForce RTX 3090",
+        "used_mib": 10846,
+        "total_mib": 24576,
+        "temperature_c": 35
+      }
+    },
+    "compute": {
+      "0": [
+        {
+          "pid": 3117618,
+          "used_mib": 12432
+        }
+      ],
+      "1": [
+        {
+          "pid": 3117618,
+          "used_mib": 10730
+        }
+      ]
+    },
+    "mem_available_kib": 104490364
+  },
+  "server_uses_both_gpus": "PASS",
+  "file_eviction": {
+    "method": "POSIX_FADV_DONTNEED on model file only; no global cache drop",
+    "before": {
+      "resident_pages": 5564084,
+      "total_pages": 5564084,
+      "resident_fraction": 1.0
+    },
+    "after": {
+      "resident_pages": 0,
+      "total_pages": 5564084,
+      "resident_fraction": 0.0
+    },
+    "verified": true,
+    "advice_return": null
+  },
+  "argv": [
+    "/mnt/q190/build-nospace/apps/ninfer-serve",
+    "/media/cristian/Disco local/Modelos-eval/Qwen3.6-35B-A3B-NInfer-all-20261101/qwen3_6_35b_a3b.ninfer",
+    "--model-id",
+    "qwen3.6-35b-a3b",
+    "--devices",
+    "0,1",
+    "--tensor-parallel",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "18493",
+    "--max-context",
+    "262144",
+    "--kv-capacity",
+    "262144",
+    "--kv-dtype",
+    "rk4v4",
+    "--gdn-state-fp16",
+    "--spec",
+    "mtp",
+    "--draft-tokens",
+    "3",
+    "--lm-head-draft",
+    "--mtp-experts-q4",
+    "--prefill-chunk",
+    "512",
+    "--no-prefix-reuse"
+  ],
+  "lock_token": "d4618d1c-b63c-4d9c-b523-bd4b7d0eb4a0"
+}

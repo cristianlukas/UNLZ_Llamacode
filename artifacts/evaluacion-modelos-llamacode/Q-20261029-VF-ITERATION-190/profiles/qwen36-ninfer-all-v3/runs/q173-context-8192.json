@@ -1,0 +1,143 @@
+{
+  "task_id": "Q190-profile-qwen36-ninfer-all-v3-q173-q172",
+  "phase": "q173",
+  "status": "complete",
+  "context_tokens": 8192,
+  "repetitions": 3,
+  "prompt_source": "fixed public local NInfer TTFT text fixtures, lexicographic order; embedded tokenizer token ids; raw completion; no prefix cache",
+  "prefill_effective_mean_tok_s": 6520.041435616199,
+  "decode_server_mean_tok_s": 285.75961972240265,
+  "results": [
+    {
+      "repetition": 1,
+      "prompt_tokens_actual": 8192,
+      "completion_tokens_actual": 128,
+      "ttft_to_first_content_s": 1.300307127,
+      "effective_prefill_tok_s": 6300.050065018217,
+      "decode_server_tok_s": 287.7390956970592,
+      "decode_method": "NInfer predicted_per_second",
+      "server_timings": {
+        "cache_n": 0,
+        "draft_n": 134,
+        "draft_n_accepted": 82,
+        "predicted_ms": 441.37206899999995,
+        "predicted_n": 128,
+        "predicted_per_second": 287.7390956970592,
+        "predicted_per_token_ms": 3.475370622047244,
+        "prompt_ms": 1298.841562,
+        "prompt_n": 8192,
+        "prompt_per_second": 6307.158809566951,
+        "prompt_per_token_ms": 0.15854999536132813
+      },
+      "finish_reasons": [
+        "length"
+      ],
+      "sse_chunks": 47,
+      "request_elapsed_s": 1.741726655,
+      "error": null,
+      "valid": true
+    },
+    {
+      "repetition": 2,
+      "prompt_tokens_actual": 8192,
+      "completion_tokens_actual": 128,
+      "ttft_to_first_content_s": 1.229701076,
+      "effective_prefill_tok_s": 6661.781598701309,
+      "decode_server_tok_s": 277.49050288207644,
+      "decode_method": "NInfer predicted_per_second",
+      "server_timings": {
+        "cache_n": 0,
+        "draft_n": 136,
+        "draft_n_accepted": 81,
+        "predicted_ms": 457.67332100000004,
+        "predicted_n": 128,
+        "predicted_per_second": 277.49050288207644,
+        "predicted_per_token_ms": 3.6037269370078744,
+        "prompt_ms": 1227.175906,
+        "prompt_n": 8192,
+        "prompt_per_second": 6675.489601732777,
+        "prompt_per_token_ms": 0.14980174633789062
+      },
+      "finish_reasons": [
+        "length"
+      ],
+      "sse_chunks": 48,
+      "request_elapsed_s": 1.687407258,
+      "error": null,
+      "valid": true
+    },
+    {
+      "repetition": 3,
+      "prompt_tokens_actual": 8192,
+      "completion_tokens_actual": 128,
+      "ttft_to_first_content_s": 1.241533294,
+      "effective_prefill_tok_s": 6598.29264312907,
+      "decode_server_tok_s": 292.04926058807234,
+      "decode_method": "NInfer predicted_per_second",
+      "server_timings": {
+        "cache_n": 0,
+        "draft_n": 125,
+        "draft_n_accepted": 85,
+        "predicted_ms": 434.858146,
+        "predicted_n": 128,
+        "predicted_per_second": 292.04926058807234,
+        "predicted_per_token_ms": 3.4240798897637794,
+        "prompt_ms": 1239.912718,
+        "prompt_n": 8192,
+        "prompt_per_second": 6606.916665242238,
+        "prompt_per_token_ms": 0.15135653295898438
+      },
+      "finish_reasons": [
+        "length"
+      ],
+      "sse_chunks": 45,
+      "request_elapsed_s": 1.676419032,
+      "error": null,
+      "valid": true
+    }
+  ],
+  "finished_utc": "2026-11-01T23:31:22Z",
+  "preflight": {
+    "timestamp_utc": "2026-11-01T23:31:16Z",
+    "gpu": {
+      "gpus": {
+        "0": {
+          "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+          "name": "NVIDIA GeForce RTX 3090",
+          "used_mib": 13336,
+          "total_mib": 24576,
+          "temperature_c": 49
+        },
+        "1": {
+          "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+          "name": "NVIDIA GeForce RTX 3090",
+          "used_mib": 10846,
+          "total_mib": 24576,
+          "temperature_c": 31
+        }
+      },
+      "compute": {
+        "0": [
+          {
+            "pid": 3117618,
+            "used_mib": 12432
+          }
+        ],
+        "1": [
+          {
+            "pid": 3117618,
+            "used_mib": 10730
+          }
+        ]
+      },
+      "mem_available_kib": 104307364
+    },
+    "p2p": "OK both directions",
+    "gpu_unlock": "0000:01:00.0,0000:03:00.0",
+    "asus_quarantine": "StatusText=0000:01:00.0: 1636/1636 frames held, 0 pending",
+    "boot_helper": "PASS",
+    "foreign_inference_servers": []
+  },
+  "token_corpus_sha256": "cc03d8a7c8c7ed86264f5112fb7f4466b0c954000791db0c3f46d01d70e0064d",
+  "server_model": "qwen3.6-35b-a3b"
+}
