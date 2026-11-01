@@ -101,6 +101,7 @@ private slots:
     void builder_rejectsAdaptiveWithoutBinaryCapability();
     void builder_dropsGemmaDraftOnOldBinary();
     void builder_respectsKvCapWithDraft();
+    void builder_quantizesKvCacheAsAPair();
     void builder_appliesQwenCodingSamplingPreset();
     void builder_warnsOnManualQwenSampling();
     void builder_emitsTensorOverrides();
@@ -952,6 +953,43 @@ void CoreTests::builder_respectsKvCapWithDraft()
         for (const QString &w : ep.warnings)
             if (w.contains("aceptación del draft")) warned = true;
         QVERIFY(warned);
+    }
+}
+
+// K cuantizado con V en f16 cae fuera del flash-attention fused de CUDA (medido
+// 8x más lento en prefill): el tipo del runtime va a K y a V, salvo que el
+// perfil fije -ctv a mano o no haya flash-attention (V cuantizado lo exige).
+void CoreTests::builder_quantizesKvCacheAsAPair()
+{
+    auto valueOf = [](const QStringList &args, const QString &flag) {
+        const int i = args.indexOf(flag);
+        return i >= 0 ? args.value(i + 1) : QString();
+    };
+    {
+        auto ctx = makeCtx();
+        ctx.runtime.cacheType = "q4_0";
+        ctx.runtime.flashAttention = true;
+        const QStringList a = EffectiveProfileBuilder::build(ctx).effectiveArgs;
+        QCOMPARE(valueOf(a, "--cache-type-k"), QStringLiteral("q4_0"));
+        QCOMPARE(valueOf(a, "--cache-type-v"), QStringLiteral("q4_0"));
+    }
+    {
+        auto ctx = makeCtx();
+        ctx.runtime.cacheType = "q8_0";
+        ctx.runtime.flashAttention = true;
+        ctx.launch.extraArgs = {"--cache-type-v", "q4_0"};
+        const QStringList a = EffectiveProfileBuilder::build(ctx).effectiveArgs;
+        QCOMPARE(valueOf(a, "--cache-type-k"), QStringLiteral("q8_0"));
+        QCOMPARE(valueOf(a, "--cache-type-v"), QStringLiteral("q4_0"));
+        QCOMPARE(a.count("--cache-type-v"), 1);
+    }
+    {
+        auto ctx = makeCtx();
+        ctx.runtime.cacheType = "q8_0";
+        ctx.runtime.flashAttention = false;
+        const QStringList a = EffectiveProfileBuilder::build(ctx).effectiveArgs;
+        QCOMPARE(valueOf(a, "--cache-type-k"), QStringLiteral("q8_0"));
+        QVERIFY(!a.contains("--cache-type-v"));
     }
 }
 

@@ -160,6 +160,7 @@ public:
 
     // Razonamiento (Qwen3): on por defecto para que el agente piense las tools.
     void setThinkingEnabled(bool enabled);
+    bool thinkingEnabled() const { return m_thinkingEnabled; }
     void setReasoningPolicy(const QString &effort, int budget);
     void setThinkingLeakGuard(bool enabled) { m_thinkingLeakGuard = enabled; }
     void setStablePhasePrefix(bool enabled) { m_stablePhasePrefix = enabled; }

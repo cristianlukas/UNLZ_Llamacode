@@ -18,6 +18,10 @@ private slots:
     void voicePlanFallsBackToSingleGpu();
     void voicePlanRejectsOccupiedVoiceGpu();
     void voicePlanRejectsModelThatDoesNotFit();
+    void voicePlanKeepsFittingModelOnOneGpu();
+    void voicePlanSplitsModelTooBigForOneGpu();
+    void voicePlanServerArgsAvoidTensorSplitWithMtp();
+    void voicePlanSoloPlacementIsStableWithLiveServer();
     void weakPciePrefersLayer();
     void fastPcieAllowsTensor();
     void profileAffinityMatchesDualGpuAndExactName();
@@ -319,6 +323,109 @@ void HardwareDiagnosticsTests::performanceMatrixIsHeadless()
     const QVariantList unknownTopology = PerformanceMatrix::candidates(
         QVariantMap{{QStringLiteral("gpuCount"), 2}}, QStringLiteral("decode"));
     QCOMPARE(unknownTopology.size(), 6);
+}
+
+namespace {
+QVariantMap twoRtx3090(double freeGpu0, double freeGpu1)
+{
+    return {{QStringLiteral("gpus"), QVariantList{
+                 QVariantMap{{QStringLiteral("index"), 0},
+                             {QStringLiteral("name"), QStringLiteral("RTX 3090")},
+                             {QStringLiteral("totalMb"), 24576},
+                             {QStringLiteral("freeMb"), freeGpu0}},
+                 QVariantMap{{QStringLiteral("index"), 1},
+                             {QStringLiteral("name"), QStringLiteral("RTX 3090")},
+                             {QStringLiteral("totalMb"), 24576},
+                             {QStringLiteral("freeMb"), freeGpu1}}}},
+            {QStringLiteral("p2pAvailable"), true}};
+}
+}
+
+void HardwareDiagnosticsTests::voicePlanKeepsFittingModelOnOneGpu()
+{
+    // Escritorio en la GPU 0 (menos libre): la voz va ahí y un 27B Q4 + mmproj
+    // + KV (~21 GB) entra entero en la GPU 1, sin repartirse por PCIe.
+    const QVariantMap plan = HardwareDiagnostics::voiceGpuPlan(
+        twoRtx3090(23400, 24400), 2048.0, 21000.0);
+    QVERIFY(plan.value(QStringLiteral("enabled")).toBool());
+    QCOMPARE(plan.value(QStringLiteral("mode")).toString(),
+             QStringLiteral("voice-and-model-separate"));
+    QCOMPARE(plan.value(QStringLiteral("voiceGpuIndex")).toInt(), 0);
+    QCOMPARE(plan.value(QStringLiteral("modelMainGpu")).toInt(), 1);
+    QCOMPARE(plan.value(QStringLiteral("modelGpuMask")).toString(), QStringLiteral("1"));
+    QCOMPARE(plan.value(QStringLiteral("modelTensorSplit")).toString(), QStringLiteral("0,1"));
+    QCOMPARE(plan.value(QStringLiteral("modelSplitMode")).toString(), QStringLiteral("layer"));
+    QCOMPARE(plan.value(QStringLiteral("modelAvailableMb")).toDouble(), 24400.0);
+    QCOMPARE(plan.value(QStringLiteral("modelFitMarginMb")).toDouble(), 3400.0);
+    QVERIFY(plan.value(QStringLiteral("modelPlacementSafe")).toBool());
+}
+
+void HardwareDiagnosticsTests::voicePlanSplitsModelTooBigForOneGpu()
+{
+    // Sin margen de 1 GB en una sola placa, se mantiene el reparto entre ambas.
+    const QVariantMap plan = HardwareDiagnostics::voiceGpuPlan(
+        twoRtx3090(23400, 24400), 2048.0, 23800.0);
+    QCOMPARE(plan.value(QStringLiteral("modelMainGpu")).toInt(), -1);
+    QCOMPARE(plan.value(QStringLiteral("modelGpuMask")).toString(), QStringLiteral("0,1"));
+    QCOMPARE(plan.value(QStringLiteral("modelSplitMode")).toString(), QStringLiteral("tensor"));
+    QVERIFY(plan.value(QStringLiteral("modelPlacementSafe")).toBool());
+    // Tamaño desconocido: no se puede asegurar que entre en una, se reparte.
+    const QVariantMap unknown = HardwareDiagnostics::voiceGpuPlan(twoRtx3090(23400, 24400));
+    QCOMPARE(unknown.value(QStringLiteral("modelMainGpu")).toInt(), -1);
+    QCOMPARE(unknown.value(QStringLiteral("modelGpuMask")).toString(), QStringLiteral("0,1"));
+}
+
+void HardwareDiagnosticsTests::voicePlanServerArgsAvoidTensorSplitWithMtp()
+{
+    const QVariantMap split = HardwareDiagnostics::voiceGpuPlan(
+        twoRtx3090(23400, 24400), 2048.0, 30000.0);
+    const QString ratio = split.value(QStringLiteral("modelTensorSplit")).toString();
+    QCOMPARE(HardwareDiagnostics::voicePlanServerArgs(split, {QStringLiteral("--jinja")}),
+             (QStringList{QStringLiteral("--split-mode"), QStringLiteral("tensor"),
+                          QStringLiteral("--tensor-split"), ratio}));
+    // MTP + split-mode tensor aborta llama-server (exit 6, medido): pasa a layer.
+    const QStringList mtpArgs{QStringLiteral("--spec-type"), QStringLiteral("draft-mtp"),
+                              QStringLiteral("--spec-draft-n-max"), QStringLiteral("3")};
+    QCOMPARE(HardwareDiagnostics::voicePlanServerArgs(split, mtpArgs),
+             (QStringList{QStringLiteral("--split-mode"), QStringLiteral("layer"),
+                          QStringLiteral("--tensor-split"), ratio}));
+
+    const QVariantMap solo = HardwareDiagnostics::voiceGpuPlan(
+        twoRtx3090(23400, 24400), 2048.0, 7000.0);
+    QCOMPARE(HardwareDiagnostics::voicePlanServerArgs(solo, mtpArgs),
+             (QStringList{QStringLiteral("--split-mode"), QStringLiteral("layer"),
+                          QStringLiteral("--tensor-split"), QStringLiteral("0,1"),
+                          QStringLiteral("--main-gpu"), QStringLiteral("1")}));
+    QVERIFY(HardwareDiagnostics::voicePlanServerArgs(QVariantMap{}, mtpArgs).isEmpty());
+}
+
+void HardwareDiagnosticsTests::voicePlanSoloPlacementIsStableWithLiveServer()
+{
+    // Con el server vivo, AppController devuelve su VRAM a cada GPU según
+    // modelByGpu.modelFreeMb antes de re-planificar. Medido: si la GPU de voz
+    // conservaba su parte, el 9B (entero en la GPU 1) se atribuía a medias, la
+    // GPU 1 pasaba a ser la "débil" y el plan oscilaba relanzando el server.
+    const double modelMb = 7000.0;
+    const QVariantMap first = HardwareDiagnostics::voiceGpuPlan(
+        twoRtx3090(22300, 24400), 2048.0, modelMb);
+    QCOMPARE(first.value(QStringLiteral("modelMainGpu")).toInt(), 1);
+    double capacity = 0.0;
+    for (const QVariant &v : first.value(QStringLiteral("modelByGpu")).toList())
+        capacity += v.toMap().value(QStringLiteral("modelFreeMb")).toDouble();
+    double recovered[2] = {22300, 24400 - modelMb};   // observado con el 9B en la GPU 1
+    for (const QVariant &v : first.value(QStringLiteral("modelByGpu")).toList()) {
+        const QVariantMap gpu = v.toMap();
+        const int index = gpu.value(QStringLiteral("index")).toInt();
+        if (index == 0)
+            QCOMPARE(gpu.value(QStringLiteral("modelFreeMb")).toDouble(), 0.0);
+        recovered[index] += modelMb * gpu.value(QStringLiteral("modelFreeMb")).toDouble() / capacity;
+    }
+    const QVariantMap again = HardwareDiagnostics::voiceGpuPlan(
+        twoRtx3090(recovered[0], recovered[1]), 2048.0, modelMb);
+    QCOMPARE(again.value(QStringLiteral("voiceGpuIndex")).toInt(), 0);
+    QCOMPARE(again.value(QStringLiteral("modelMainGpu")).toInt(), 1);
+    QCOMPARE(again.value(QStringLiteral("modelTensorSplit")).toString(),
+             first.value(QStringLiteral("modelTensorSplit")).toString());
 }
 
 QTEST_MAIN(HardwareDiagnosticsTests)

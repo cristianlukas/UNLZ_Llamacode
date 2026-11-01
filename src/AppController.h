@@ -928,6 +928,8 @@ public:
     void onCharlaAgentLifecycle(const QVariantMap &event);
     void onCharlaAgentRunningChanged(bool running);
     void setCharlaActiveForTest(bool on) { m_charlaActive = on; }
+    bool charlaTuneAppliesToForTest(const QString &launchId) const { return charlaTuneAppliesTo(launchId); }
+    void markCharlaTunedForTest(const QString &launchId) { m_charlaTuneLaunchId = launchId; }
     class VoiceController *voiceForTest() { ensureVoice(); return m_voice; }
     QString charlaLastPromptForTest() const { return m_charlaLastPrompt; }
     QString charlaPendingTranscriptForTest() const { return m_charlaPendingTranscript; }
@@ -1839,6 +1841,9 @@ private:
     void rotateLogIfNeeded(const QString &path) const;
     void appendFileLog(const QString &path, const QString &line) const;
     void finishSmokeTest(bool passed, const QString &output);
+    // ¿Los overrides de voz del tune se aplican a este launch? Toda la sesión de
+    // Charla del perfil tuneado, no sólo el relanzamiento siguiente.
+    bool charlaTuneAppliesTo(const QString &launchId) const;
     QVariantMap voiceGpuPlanForLaunch(const QString &launchId,
                                       const VoiceConfig &config) const;
     QVariantMap voiceGpuPlanForConfig(const VoiceConfig &config) const;
@@ -2191,6 +2196,7 @@ private:
     QString m_pendingVoicePrerequisitesEngine;
     bool m_charlaActive = false;
     bool m_charlaTuneOnNextLaunch = false;  // startServer aplica overrides de voz
+    QString m_charlaTuneLaunchId;           // perfil tuneado durante la sesión de Charla
     bool m_charlaStartAfterRelaunch = false; // arrancar charla al serverReady
     bool m_charlaGpuPlanActive = false;      // auto reparto durante una sesión de voz
     bool m_serverUsesVoiceGpuPlan = false;   // reparto aplicado al server actual

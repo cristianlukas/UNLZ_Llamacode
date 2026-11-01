@@ -29,6 +29,12 @@ public:
     static QVariantMap voiceGpuPlan(const QVariantMap &hardware,
                                     double voiceReserveMb = 2048.0,
                                     double modelRequiredMb = 0.0);
+    // Args de llama-server que aplican el plan de voz sobre los args del perfil:
+    // --split-mode/--tensor-split y, si el LLM entra entero en una GPU, --main-gpu.
+    // Con MTP (--spec-type *mtp*) nunca usa split-mode tensor: llama.cpp aborta
+    // con GGML_BACKEND_SPLIT_AXIS_UNKNOWN al crear el contexto del draft.
+    static QStringList voicePlanServerArgs(const QVariantMap &plan,
+                                           const QStringList &profileArgs);
     static QString hardwareFingerprint(const QVariantMap &hardware);
     static QString recommendedSplitMode(const QVariantMap &hardware);
     // Evalua la afinidad declarativa de un perfil contra el hardware observado.

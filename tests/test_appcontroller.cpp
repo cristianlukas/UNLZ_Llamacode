@@ -303,6 +303,8 @@ private slots:
     void charlaWarmsUpAgentThatStartsWhileListening();
     void ocrStatusAlwaysExplainsItself();
     void agentLevels_contextBudgetLadder();
+    void charlaKeepsAgentThinkingOffWhenProfileReapplies();
+    void charlaTuneHoldsForTheWholeSession();
     void privacyModeHidesAndBlocksNetworkTools();
     void doctorReportsStructureAndIssues();
     void importOllamaModelsIngestsStore();
@@ -3760,6 +3762,49 @@ void AppControllerTests::benchmarkWorkspaceFingerprintIgnoresInternalAgentFiles(
     QVERIFY(AppController::benchmarkWorkspacePathIsInternalForTest(QStringLiteral(".llamacode/agent_events.jsonl")));
     QVERIFY(AppController::benchmarkWorkspacePathIsInternalForTest(QStringLiteral(".llamacode\\agent_events.jsonl")));
     QVERIFY(!AppController::benchmarkWorkspacePathIsInternalForTest(QStringLiteral("solution_BigCodeBench_928.py")));
+}
+
+// sendToAgent re-aplica el perfil de agente en cada turno. Medido en Charla:
+// eso volvía a prender el thinking que Charla apaga y cada frase hablada traía
+// ~40 tokens de <think> antes de la respuesta. Con Charla activa queda apagado.
+void AppControllerTests::charlaKeepsAgentThinkingOffWhenProfileReapplies()
+{
+    AppController app;
+    const bool previous = app.agentThinkingEnabled();
+    app.setAgentThinkingEnabled(true);
+    AgentProfile jarvis;
+    for (const AgentProfile &p : AgentProfile::systemPresets())
+        if (p.id == QLatin1String("agent-jarvis")) jarvis = p;
+    QVERIFY(!jarvis.id.isEmpty());
+
+    LlamaAgentBackend be;
+    app.applyAgentProfileCapsForTest(&be, jarvis);
+    QVERIFY(be.thinkingEnabled());
+
+    app.setCharlaActiveForTest(true);
+    app.applyAgentProfileCapsForTest(&be, jarvis);
+    QVERIFY(!be.thinkingEnabled());
+
+    app.setCharlaActiveForTest(false);
+    app.applyAgentProfileCapsForTest(&be, jarvis);
+    QVERIFY(be.thinkingEnabled());
+    app.setAgentThinkingEnabled(previous);
+}
+
+// El tune de Charla (ctx 32k, ubatch 512…) se pedía para "el próximo launch" y
+// el relanzamiento del reparto multi-GPU que viene después lo perdía: la charla
+// corría con el perfil sin tunear. Vale para todo launch del perfil tuneado
+// hasta stopCharla, y no se filtra a otro perfil.
+void AppControllerTests::charlaTuneHoldsForTheWholeSession()
+{
+    AppController app;
+    QVERIFY(!app.charlaTuneAppliesToForTest(QStringLiteral("sys-qwen38-27b-udq4-131k")));
+    app.markCharlaTunedForTest(QStringLiteral("sys-qwen38-27b-udq4-131k"));
+    QVERIFY(app.charlaTuneAppliesToForTest(QStringLiteral("sys-qwen38-27b-udq4-131k")));
+    QVERIFY(app.charlaTuneAppliesToForTest(QStringLiteral("sys-qwen38-27b-udq4-131k")));
+    QVERIFY(!app.charlaTuneAppliesToForTest(QStringLiteral("sys-vram-8-qwen-agent")));
+    app.stopCharla();
+    QVERIFY(!app.charlaTuneAppliesToForTest(QStringLiteral("sys-qwen38-27b-udq4-131k")));
 }
 
 // Niveles de agente = escalera de presupuesto de contexto. Ejercita los 5 presets

@@ -2923,7 +2923,10 @@ void AppController::startServerInternal(const QString &launchProfileId, bool rem
     }
     // Overrides temporales para Ingi Charla (no persisten en el perfil): se
     // aplican solo en este launch, pedidos vía applyCharlaTuneAndStartCharla.
-    if (m_charlaTuneOnNextLaunch) {
+    // Vale para toda la sesión de Charla de ese perfil: el relanzamiento del
+    // reparto multi-GPU que sigue al del tune lo perdía (medido: volvía a
+    // 131k/ubatch 64 en el server que atendía la charla).
+    if (charlaTuneAppliesTo(launchProfileId)) {
         m_charlaTuneOnNextLaunch = false;
         const auto recs = CharlaTuning::recommend(
             args, m_hardwareSummary.value(QStringLiteral("vramGb")).toDouble());
@@ -5586,13 +5589,10 @@ EffectiveProfileBuilder::Context AppController::buildContext(const QString &laun
         const QVariantMap plan = voiceGpuPlan();
         if (plan.value(QStringLiteral("enabled")).toBool()
             && plan.value(QStringLiteral("modelPlacementSafe")).toBool()) {
-            const QString tensorSplit = plan.value(QStringLiteral("modelTensorSplit")).toString();
-            if (!tensorSplit.isEmpty()) {
-                ctx.launch.extraArgs << QStringLiteral("--split-mode")
-                                     << plan.value(QStringLiteral("modelSplitMode"),
-                                                   QStringLiteral("layer")).toString()
-                                     << QStringLiteral("--tensor-split") << tensorSplit;
-            }
+            QStringList profileArgs = ctx.launch.extraArgs;
+            if (!ctx.model.specType.isEmpty())   // MTP declarado en el perfil de modelo
+                profileArgs << QStringLiteral("--spec-type") << ctx.model.specType;
+            ctx.launch.extraArgs << HardwareDiagnostics::voicePlanServerArgs(plan, profileArgs);
         }
     }
     ctx.harness = m_profiles.resolveHarness(ctx.launch.harnessProfileId);
@@ -7100,7 +7100,10 @@ void AppController::applyAgentProfileCaps(LlamaAgentBackend *cb, const AgentProf
     cb->setComputerUseSandwich(false);
 
     cb->setDirectives(expandDirectiveSentinel(ap.directives));
-    cb->setThinkingEnabled(m_agentThinkingEnabled);
+    // sendToAgent re-aplica el perfil en cada turno: con Charla activa el thinking
+    // tiene que seguir apagado o cada turno hablado razona antes de contestar
+    // (medido: ~40 tokens de <think> por frase, +0,3-0,5 s al primer audio).
+    cb->setThinkingEnabled(m_charlaActive ? false : m_agentThinkingEnabled);
     cb->setThinkingLeakGuard(ap.thinkingLeakGuard);
     cb->setMcpToolsEnabled(ap.mcpEnabled);
     cb->setProgressPolicy(AgentProgressGovernor::Policy{
@@ -27917,12 +27920,19 @@ void AppController::setCharlaAutoTune(bool on)
     writeSetting(QStringLiteral("charlaAutoTune"), on);
 }
 
+bool AppController::charlaTuneAppliesTo(const QString &launchId) const
+{
+    return m_charlaTuneOnNextLaunch
+        || (!m_charlaTuneLaunchId.isEmpty() && m_charlaTuneLaunchId == launchId);
+}
+
 void AppController::applyCharlaTuneAndStartCharla()
 {
     const QString launchId = m_activeLaunchId;
     if (launchId.isEmpty()) { startCharla(); return; }
     qInfo().noquote() << QStringLiteral("[charla] tune: relanzando perfil con mejoras de voz");
     m_charlaTuneOnNextLaunch = true;
+    m_charlaTuneLaunchId = launchId;
     m_charlaStartAfterRelaunch = true;
     const bool withAgent = agentRunning();
     auto startAgain = [this, launchId, withAgent]() {
@@ -27966,6 +27976,7 @@ int AppController::charlaSimulateUtterance(const QString &wavPath)
 void AppController::stopCharla()
 {
     m_charlaActive = false;
+    m_charlaTuneLaunchId.clear();
     // El server puede seguir vivo con el reparto calculado para conservar el KV
     // cache; el próximo arranque manual volverá a la configuración del perfil.
     m_charlaGpuPlanActive = false;

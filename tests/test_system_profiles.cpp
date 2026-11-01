@@ -29,6 +29,7 @@
 #include "core/profiles/ProfileManager.h"
 #include "core/profiles/SystemProfileVariants.h"
 #include "core/profiles/MtpDetection.h"
+#include "core/voice/CharlaTuning.h"
 #include "AppController.h"
 
 // Bundle resuelto relativo al repo (ctest corre con WORKING_DIRECTORY = source dir).
@@ -50,6 +51,7 @@ class SystemProfilesTests : public QObject
 {
     Q_OBJECT
 private slots:
+    void bundle_charlaJarvisProfileIsVoiceReady();
     void initTestCase();
 
     void manager_loadsSystemProfiles();
@@ -2176,6 +2178,38 @@ void SystemProfilesTests::controller_lanActivationRetryUsesSuppliedApiKey()
     for (const QByteArray &poll : statusPolls)
         QVERIFY(poll.toLower().contains("authorization: bearer trusted-test-key"));
     QCOMPARE(activations.size() + statusPolls.size(), requests.size());
+}
+
+// Receta medida para Ingi Charla en 2x RTX 3090: el 27B con el agente JARVIS,
+// STT/TTS propios y args ya ajustados para voz. Si el tune de Charla tuviera algo
+// que cambiar, entrar a Charla relanzaría el server (cold prefill de ~15k tokens).
+void SystemProfilesTests::bundle_charlaJarvisProfileIsVoiceReady()
+{
+    ProfileManager pm;
+    const QString id = QStringLiteral("sys-charla-jarvis-qwen38-27b");
+    const QVariantMap lp = pm.getLaunchProfile(id);
+    QVERIFY(!lp.isEmpty());
+    QCOMPARE(lp.value("agentProfileId").toString(), QStringLiteral("agent-jarvis"));
+
+    const QVariantMap voice = pm.getLaunchVoice(id);
+    QVERIFY(voice.value("enabled").toBool());
+    QCOMPARE(voice.value("sttManagedEngine").toString(), QStringLiteral("whisper-small"));
+    QCOMPARE(voice.value("ttsMode").toString(), QStringLiteral("piper"));
+    QCOMPARE(voice.value("ttsManagedVoice").toString(), QStringLiteral("es_ES-davefx-medium"));
+
+    const QVariantMap rt = pm.getRuntimePreset(lp.value("runtimePresetId").toString());
+    QCOMPARE(rt.value("ctx").toInt(), 32768);
+    QCOMPARE(rt.value("batch").toInt(), 2048);
+    QCOMPARE(rt.value("ubatch").toInt(), 512);
+    const QStringList extra = lp.value("extraArgs").toStringList();
+    QCOMPARE(extra.value(extra.indexOf("--cache-type-v") + 1), QStringLiteral("q4_0"));
+    QCOMPARE(extra.value(extra.indexOf("--reasoning") + 1), QStringLiteral("off"));
+    const QStringList effective = QStringList{"--ctx-size", "32768", "--batch-size", "2048",
+                                              "--ubatch-size", "512"} + extra;
+    QVERIFY(CharlaTuning::recommend(effective, 24.0).isEmpty());
+
+    // Los perfiles de sistema sin bloque "voice" siguen con el default.
+    QVERIFY(!pm.getLaunchVoice(QStringLiteral("sys-qwen38-27b-udq4-131k")).value("enabled").toBool());
 }
 
 void SystemProfilesTests::bundle_ultraQAndHybridAreWiredAndOptIn()

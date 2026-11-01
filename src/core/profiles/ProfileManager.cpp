@@ -1752,6 +1752,10 @@ void ProfileManager::loadSystemProfiles()
                 lp.platformBackendIds.insert(it.key(), value);
         }
         lp.agentProfileId = o.value(QStringLiteral("agentProfileId")).toString();
+        // Perfiles pensados para Ingi Charla traen su STT/TTS: sin esto un perfil
+        // de sistema arrancaba Charla con STT externo en :8081 y TTS "auto".
+        if (o.value(QStringLiteral("voice")).isObject())
+            lp.voice = VoiceConfig::fromJson(o.value(QStringLiteral("voice")).toObject());
         lp.reasoningEffort = o.value(QStringLiteral("reasoningEffort"))
                                  .toString().trimmed().toLower();
         if (lp.reasoningEffort != QLatin1String("low")

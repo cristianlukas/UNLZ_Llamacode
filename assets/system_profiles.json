@@ -3906,6 +3906,20 @@
     ]
   },
   {
+    "id": "sys-charla-jarvis-qwen38-27b",
+    "tier": "24GB-Qwen38-Vision", "order": 161, "extra": true, "best": false, "favorite": true, "autoCompanion": false,
+    "displayName": "[Charla JARVIS] Qwen3.8-27B UD-Q4 · voz + PC + web · 32k",
+    "alias": "CHARLA 27B",
+    "minVramGb": 24, "minRamGb": 32, "cpuOk": false, "folder": "Qwen3.8-27B-GGUF", "agentProfileId": "agent-jarvis", "chatTemplate": "qwen38-tools-fixed.jinja",
+    "model": { "repo": "unsloth/Qwen3.8-27B-GGUF", "file": "Qwen3.8-27B-UD-Q4_K_XL.gguf", "mmprojRepo": "unsloth/Qwen3.8-27B-GGUF", "mmprojFile": "mmproj-BF16.gguf", "quant": "UD-Q4_K_XL" },
+    "runtime": { "ctx": 32768, "gpuLayers": 999, "batch": 2048, "ubatch": 512, "threads": 8, "kv": "q4_0", "flashAttn": true, "mlock": false, "mmap": true, "parallelSlots": 1 },
+    "extraArgs": ["--cache-type-k", "q4_0", "--cache-type-v", "q4_0", "--temp", "0.60", "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0", "--repeat-penalty", "1.0", "--presence-penalty", "0.0", "--no-context-shift", "--metrics", "--no-warmup", "--jinja", "--cache-reuse", "512", "--predict", "1024", "--parallel", "1", "--reasoning", "off"],
+    "mtp": { "enabled": true, "selfContained": true, "args": ["--spec-type", "draft-mtp", "--spec-draft-n-max", "3"] }, "binaryKind": "official", "minimumBinaryBuild": 10331, "contextPresets": [32768, 65536],
+    "vision": true,
+    "voice": { "enabled": true, "sttProvider": "local", "sttMode": "http_batch", "sttManagedEngine": "whisper-small", "sttLanguage": "es", "ttsProvider": "local", "ttsMode": "piper", "ttsManagedVoice": "es_ES-davefx-medium", "ttsAutoConfigure": false, "turnMode": "vad", "smartTurn": true, "bargeIn": true, "autoListen": true },
+    "comment": "Receta medida para Ingi Charla en 2x RTX 3090 (docs/charla-balance-2x3090-20261101.md): el 27B entra entero en una GPU (~18,5-20,5 GB con mmproj y KV q4_0 a 32k) y la otra queda para whisper-small en CUDA (~1 GB, ~35 ms por frase) y auxiliares; piper corre en CPU. Fin de habla → primer audio 0,74-1,08 s en turnos tibios, decode 65-73 tok/s con MTP3. 32k/ubatch 512 ya vienen puestos para que Charla no relance el server por el tune; el agente JARVIS trae tools de PC y web."
+  },
+  {
     "id": "sys-qwen38-27b-q4km-131k",
     "tier": "24GB-Qwen38-Vision", "order": 164, "extra": true, "best": true, "benchmark": true, "autoCompanion": false,
     "displayName": "[experimental 24GB] Qwen3.8-27B Q4_K_M · MTP · visión · 131k",

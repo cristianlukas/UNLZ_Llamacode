@@ -376,6 +376,56 @@ QVariantMap HardwareDiagnostics::voiceGpuPlan(const QVariantMap &hardware,
     result[QStringLiteral("voicePlacementSafe")] = voiceReserveAvailable;
     result[QStringLiteral("modelPlacementSafe")] = voiceReserveAvailable
         && smallestPositiveModelMb > 0.0 && modelFitsCapacity;
+    result[QStringLiteral("modelMainGpu")] = -1;
+
+    // Si el LLM entra entero en una GPU que no es la de voz, se queda ahí. Medido
+    // en 2× RTX 3090: repartir un 9B o un 27B Q4 entre las dos sólo agrega un
+    // cruce de PCIe por token, y split-mode tensor con MTP aborta llama.cpp. La
+    // voz conserva su GPU para ella sola (whisper en CUDA tarda ~35 ms por frase).
+    constexpr double kSoloGpuHeadroomMb = 1024.0;
+    int soloIndex = -1;
+    double soloMb = 0.0;
+    if (modelFitKnown) {
+        for (const GpuMemoryEntry &gpu : std::as_const(gpus)) {
+            if (gpu.index == weakIndex || gpu.modelMb < modelRequiredMb + kSoloGpuHeadroomMb)
+                continue;
+            if (gpu.modelMb > soloMb) {
+                soloIndex = gpu.index;
+                soloMb = gpu.modelMb;
+            }
+        }
+    }
+    if (soloIndex >= 0) {
+        QStringList soloSplit;
+        for (int cudaIndex = 0; cudaIndex <= maxIndex; ++cudaIndex)
+            soloSplit.append(cudaIndex == soloIndex ? QStringLiteral("1") : QStringLiteral("0"));
+        result[QStringLiteral("mode")] = QStringLiteral("voice-and-model-separate");
+        result[QStringLiteral("modelMainGpu")] = soloIndex;
+        result[QStringLiteral("modelGpuMask")] = QString::number(soloIndex);
+        result[QStringLiteral("modelGpuIndices")] = QVariantList{soloIndex};
+        result[QStringLiteral("modelTensorSplit")] = soloSplit.join(QLatin1Char(','));
+        result[QStringLiteral("modelSplitMode")] = QStringLiteral("layer");
+        result[QStringLiteral("modelAvailableMb")] = soloMb;
+        result[QStringLiteral("modelAvailableGb")] = soloMb / 1024.0;
+        result[QStringLiteral("modelFitMarginMb")] = soloMb - modelRequiredMb;
+        // AppController reparte la VRAM del server vivo según modelFreeMb de cada
+        // GPU para recalcular el plan. Si la GPU de voz conservara su parte, el
+        // modelo (que está entero en la otra) se le atribuiría a medias, la otra
+        // parecería la "débil" y el plan oscilaría relanzando el server (medido).
+        QVariantList soloByGpu;
+        for (const QVariant &value : std::as_const(modelByGpu)) {
+            QVariantMap entry = value.toMap();
+            if (entry.value(QStringLiteral("index")).toInt() != soloIndex) {
+                entry[QStringLiteral("modelFreeMb")] = 0.0;
+                entry[QStringLiteral("role")] = entry.value(QStringLiteral("index")).toInt() == weakIndex
+                    ? QStringLiteral("voice") : QStringLiteral("idle");
+            } else {
+                entry[QStringLiteral("role")] = QStringLiteral("model");
+            }
+            soloByGpu.append(entry);
+        }
+        result[QStringLiteral("modelByGpu")] = soloByGpu;
+    }
     result[QStringLiteral("p2pAvailable")] = hardware.value(QStringLiteral("p2pAvailable")).toBool();
     result[QStringLiteral("topologyKnown")] = !topology.isEmpty();
     result[QStringLiteral("reason")] = QStringLiteral(
@@ -387,6 +437,15 @@ QVariantMap HardwareDiagnostics::voiceGpuPlan(const QVariantMap &hardware,
         .arg(QString::number(totalModelMb / 1024.0, 'f', 1))
         .arg(modelMask.join(QLatin1Char(',')))
         .arg(splitMode);
+    if (soloIndex >= 0) {
+        result[QStringLiteral("reason")] = QStringLiteral(
+            "GPU %1 (%2) queda para STT, TTS y auxiliares; el LLM (%3 GB) entra entero "
+            "en la GPU %4 y no se reparte.")
+            .arg(weakIndex)
+            .arg(weak.name.isEmpty() ? QStringLiteral("GPU") : weak.name)
+            .arg(QString::number(modelRequiredMb / 1024.0, 'f', 1))
+            .arg(soloIndex);
+    }
     if (!voiceReserveAvailable) {
         result[QStringLiteral("reason")] = QStringLiteral(
             "Se detectaron dos GPU, pero la GPU reservada para voz sólo tiene %1 MB "
@@ -405,6 +464,27 @@ QVariantMap HardwareDiagnostics::voiceGpuPlan(const QVariantMap &hardware,
             .arg(QString::number(totalModelMb / 1024.0, 'f', 1));
     }
     return result;
+}
+
+QStringList HardwareDiagnostics::voicePlanServerArgs(const QVariantMap &plan,
+                                                     const QStringList &profileArgs)
+{
+    const QString tensorSplit = plan.value(QStringLiteral("modelTensorSplit")).toString();
+    if (tensorSplit.isEmpty())
+        return {};
+    QString splitMode = plan.value(QStringLiteral("modelSplitMode"),
+                                   QStringLiteral("layer")).toString();
+    const int specIndex = profileArgs.lastIndexOf(QStringLiteral("--spec-type"));
+    const bool mtp = specIndex >= 0 && specIndex + 1 < profileArgs.size()
+        && profileArgs.at(specIndex + 1).contains(QLatin1String("mtp"));
+    if (mtp && splitMode == QLatin1String("tensor"))
+        splitMode = QStringLiteral("layer");
+    QStringList args{QStringLiteral("--split-mode"), splitMode,
+                     QStringLiteral("--tensor-split"), tensorSplit};
+    const int mainGpu = plan.value(QStringLiteral("modelMainGpu"), -1).toInt();
+    if (mainGpu >= 0)
+        args << QStringLiteral("--main-gpu") << QString::number(mainGpu);
+    return args;
 }
 
 QString HardwareDiagnostics::hardwareFingerprint(const QVariantMap &hardware)

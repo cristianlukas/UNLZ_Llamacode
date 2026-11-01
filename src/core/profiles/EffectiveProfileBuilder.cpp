@@ -729,6 +729,14 @@ void EffectiveProfileBuilder::applyRuntime(const RuntimePreset &rt,
                 "puede reducir la aceptación del draft.").arg(rt.cacheType));
         }
         addFlag(bin, "--cache-type-k", rt.cacheType, args, warnings);
+        // V con el mismo tipo: K cuantizado con V en f16 no tiene kernel fused de
+        // flash-attention en CUDA y cae a un camino lento. Medido (Qwen3.5-9B,
+        // RTX 3090, prompt de 17k): K q4_0 sólo → prefill 381 tok/s y decode
+        // 29 tok/s; K+V q4_0 → 3.057 y 97 tok/s. V cuantizado exige
+        // flash-attention. Un -ctv explícito en los extraArgs sigue ganando
+        // porque van después y collapseRepeatedFlags conserva el último.
+        if (rt.flashAttention)
+            addFlag(bin, "--cache-type-v", rt.cacheType, args, warnings);
     }
 
     // llama.cpp b10228+ acepta varias reglas separadas por coma en un unico
