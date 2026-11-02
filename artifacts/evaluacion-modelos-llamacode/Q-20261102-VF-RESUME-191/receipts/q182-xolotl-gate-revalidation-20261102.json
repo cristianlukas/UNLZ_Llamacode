@@ -1,0 +1,48 @@
+{
+  "task": "Q-20261102-VF-RESUME-191",
+  "event": "Q182 Xolotl/ISTA gate revalidation",
+  "timestamp_utc": "2026-11-02T01:31:51Z",
+  "source_item_id": "VF-20261019-01#70",
+  "actionable_id": "Q182-XOLOTL-ISTA-IQ2XS-DUAL3090",
+  "result": {
+    "finding": "df -B1 -P a 10,927,116,288 B libres en C y 87,414,194,176 B en D; C+D=98,341,310,464 B, déficit=201,658,689,536 B para el gate de 300,000,000,000 B. HDD extra tiene 264,550,998,016 B pero no cuenta como NVMe del gate. Revisión upstream del issue #2: el reporte del 26/10 en 2×RTX 5060 Ti PHB describe guards locales que quitan dos fallos, pero la salida dual resultó incorrecta 0/3, con una respuesta vacía y deriva a texto roto; `restore()` no fue verificado. Otro reporte en 4×RTX 3090 sigue mostrando SIGSEGV al primer prompt incluso en d4f65068. No hay fix dual upstream validado. La guía mantiene sus métricas principales en 1×RTX 4090.",
+    "decision": "Q182 sigue bloqueado por storage y runtime: hay 201,658,689,536 B menos que el gate NVMe; la evidencia dual disponible contiene salidas incorrectas y SIGSEGV. No inferir ni borrar/cambiar otros perfiles. Reabrir sólo con NVMe suficiente y fix upstream validado con salidas correctas en arquitectura PCIe/PHB comparable.",
+    "gate": {
+      "cNvmeFreeBytes": 10927116288,
+      "dNvmeFreeBytes": 87414194176,
+      "cPlusDBytes": 98341310464,
+      "minimumBytes": 300000000000,
+      "deficitBytes": 201658689536,
+      "hddExtraFreeBytes": 264550998016
+    },
+    "testRun": false,
+    "noTestReason": "Insufficient NVMe storage and no validated dual-runtime fix; published dual case has incorrect output or crash."
+  },
+  "sources": [
+    {
+      "url": "https://github.com/Indras-Mirror/Xolotl/issues/2",
+      "claim": "Newer 2×5060 Ti PHB community report: local guards yielded wrong output 0/3; 4×3090 case still segfaults at first prompt."
+    },
+    {
+      "url": "https://github.com/Indras-Mirror/Xolotl/blob/main/docs/DEEPSEEK_V41.md",
+      "claim": "Primary guide performance data is on one RTX 4090."
+    }
+  ],
+  "hostPreflight": {
+    "diskCommand": "df -B1 -P",
+    "inferenceServerProcessesFound": [],
+    "gpuUsed": false,
+    "downloadStarted": false,
+    "buildStarted": false
+  },
+  "sheetSync": {
+    "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "tab": "Accionables",
+    "range": "D49:K49; M49:N49",
+    "readback": "PASS",
+    "readbackAtUtc": "2026-11-02T01:31:51Z",
+    "wrapStrategyPreserved": true
+  },
+  "lockOwner": "Q-20261102-VF-RESUME-191",
+  "lockRetained": true
+}

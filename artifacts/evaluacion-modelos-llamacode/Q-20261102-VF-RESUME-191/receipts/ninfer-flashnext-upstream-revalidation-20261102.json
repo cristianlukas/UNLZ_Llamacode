@@ -1,0 +1,44 @@
+{
+  "task": "Q-20261102-VF-RESUME-191",
+  "event": "NInfer Flash-Next Linux dual upstream revalidation and Sheet reconciliation",
+  "timestamp_utc": "2026-11-02T01:29:14Z",
+  "source_item_ids": [
+    "q134-sheet-56-ninfer-release-check",
+    "870e960b-1834-4475-a47d-648a87c90875"
+  ],
+  "actionable_id": "VF-NINFER-FLASHNEXT-LINUX-DUAL-COMPAT-20261029",
+  "result": {
+    "finding": "Revalidado 2026-11-02 con upstream oficial: release v0.17.1 ofrece archive Linux y un smoke `run.sh qwen38-27b`; ese smoke sólo valida Qwen3.8-27B, no Flash-Next. README sigue limitando Flash-Next a preview Windows (no construido ni probado en Linux) y deja sin verificar el pipeline Linux entre GPUs distintas. Este host tiene PHB y NVLink inactivo según el recibo de topología Q190. No hay artefacto/versión que habilite Flash-Next dual Linux en este equipo.",
+    "decision": "No descargar, compilar, cargar ni correr GPU para Flash-Next con NInfer en este host. Mantener los resultados Q171/Q173 y el Q172 previo (77/100; TC-92 falló) sin repetición. Reabrir sólo con soporte upstream explícito del artefacto Flash-Next y pipeline Linux dual entre RTX 3090 conectadas por PHB, o con NVLink operativo y una versión exacta; luego hacer smoke de carga/API antes de preregistrar cualquier ladder/calidad.",
+    "existing_results_preserved": [
+      "Q171",
+      "Q172",
+      "Q173"
+    ],
+    "no_test_reason": "No supported Flash-Next Linux dual-GPU artifact exists for this PHB/no-NVLink host; a new run cannot produce a valid comparable decision."
+  },
+  "test_run": false,
+  "download_or_build": false,
+  "gpu_used": false,
+  "sources": [
+    {
+      "url": "https://github.com/ashalliants/ninfer-3090/releases/tag/v0.17.1-rtx3090",
+      "claim": "v0.17.1 Linux archive; documented smoke target Qwen3.8-27B only."
+    },
+    {
+      "url": "https://github.com/ashalliants/ninfer-3090",
+      "claim": "Flash-Next Windows preview; distinct-GPU Linux pipeline unverified."
+    }
+  ],
+  "sheet_sync": {
+    "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "tab": "Accionables",
+    "range": "H54:N54",
+    "readback": "PASS",
+    "readback_at_utc": "2026-11-02T01:29:14Z",
+    "content_only_update": true,
+    "effective_format_fields_read": "textFormat; existing formatting retained"
+  },
+  "lock_owner": "Q-20261102-VF-RESUME-191",
+  "lock_retained": true
+}
