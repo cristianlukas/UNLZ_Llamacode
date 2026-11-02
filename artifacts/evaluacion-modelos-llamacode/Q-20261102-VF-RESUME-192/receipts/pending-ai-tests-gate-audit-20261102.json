@@ -1,0 +1,184 @@
+{
+  "task_id": "Q-20261102-VF-RESUME-192",
+  "timestamp_utc": "2026-11-02T01:59:57Z",
+  "lock": {
+    "token": "7e55942f-26b8-4e2b-991f-8a1e6cd9e3c4",
+    "worker": "Q-20261102-VF-RESUME-192",
+    "host": "3090",
+    "claimed_at_utc": "2026-11-02T01:58:40Z",
+    "resume_of": "VF-20261019-01"
+  },
+  "operation": "Re-audit open AI test gates, live model-metric coverage, and Q182 storage/runtime prerequisites; no benchmark launched.",
+  "inbox_actionable_audit": {
+    "inbox_entries": 71,
+    "actionables": 44,
+    "all_inbox_entries_have_status": true,
+    "unresolved_open_actionable_ids": [
+      "vf-q35-codex-crash-isolation-20261022",
+      "vf-qwen-tool-safety-gates-20261022",
+      "f23604a1-ff2e-4d28-9e09-2b5cf01d9b69",
+      "vf-order-validation-20261019",
+      "vf-huihui-v2-q153-20261026",
+      "Q182-XOLOTL-ISTA-IQ2XS-DUAL3090",
+      "VF-20261019-01-S20-ROUTE-AB",
+      "VF-NINFER-FLASHNEXT-LINUX-DUAL-COMPAT-20261029",
+      "vf-qwen36-35b-a3b-ninfer-linux-q190"
+    ]
+  },
+  "live_inventory_audit": {
+    "sheet": "Modelos locales por peso",
+    "sheetId": 2026102751,
+    "modelRows": 101,
+    "nonRetiredLlmVlmRows": 21,
+    "nonRetiredLlmVlmRowsMissingPrefillDecodeOrQ172": 0,
+    "llmVlmRowsWithMetricGaps": 19,
+    "gapRowsAllMarkedRetired": true,
+    "ranges": [
+      "A1:Z108"
+    ]
+  },
+  "host_preflight": {
+    "diskFreeBytes": {
+      "C_nvme": 10922586112,
+      "D_nvme": 87414194176,
+      "C_plus_D": 98336780288,
+      "required_nvme": 300000000000,
+      "deficit": 201663219712,
+      "hdd_extra": 264550998016
+    },
+    "inferenceServerCandidates": [],
+    "listeningEvaluationPorts": [],
+    "nvidiaComputeApps": [],
+    "gpuStatus": [
+      {
+        "index": 0,
+        "memoryUsedMiB": 820,
+        "memoryTotalMiB": 24576,
+        "utilizationPct": 9
+      },
+      {
+        "index": 1,
+        "memoryUsedMiB": 108,
+        "memoryTotalMiB": 24576,
+        "utilizationPct": 41
+      }
+    ],
+    "note": "No known inference server, evaluated listener, or CUDA compute PID. GPU utilization with tiny memory footprint and no compute app is not treated as model inference."
+  },
+  "upstream": {
+    "issue": "https://github.com/Indras-Mirror/Xolotl/issues/2",
+    "state": "Open; no PR/branch shown",
+    "latestRelevantReportDate": "2026-10-26",
+    "finding": "2×5060 Ti PHB report needed local layer/snapshot guards but gave 0/3 correct answers, one empty output, corrupted drift; restore not exercised. Separate 4×3090 report still reproducibly segfaults on first prompt at d4f65068. No validated dual fix.",
+    "primaryDocs": "https://github.com/Indras-Mirror/Xolotl/blob/main/docs/DEEPSEEK_V41.md",
+    "scope": "Current performance claims/results are single RTX 4090; not transferable to local 2×3090."
+  },
+  "q182_before": {
+    "actionable": {
+      "title": "Evaluar DeepSeek-V4.1-Flash-1017 ISTA IQ2_XS con Xolotl en Linux dual-3090",
+      "source": "VF-20261019 · #70",
+      "useCase": "Evaluación local de modelo y runtime; posible perfil DeepSeek de contexto largo/velocidad",
+      "test": "No descargar/compilar hasta que C+D tenga ≥300,000,000,000 B libres y exista un fix Xolotl dual upstream con smoke funcional en PHB/Ampere comparable, con commit y artefactos exactos. El reporte 2×5060 Ti evitó crashes con guards locales pero tuvo 0/3 salidas correctas y no validó restore; el reporte 4×3090 aún segfaultea. Sin inferencia ni GPU en este host.",
+      "decision": "Q182 sigue bloqueado por storage y runtime: hay 201,658,689,536 B menos que el gate NVMe; la evidencia dual disponible contiene salidas incorrectas y SIGSEGV. No inferir ni borrar/cambiar otros perfiles. Reabrir sólo con NVMe suficiente y fix upstream validado con salidas correctas en arquitectura PCIe/PHB comparable.",
+      "priority": "Media · gate externo",
+      "status": "Bloqueado · runtime dual Xolotl sin calificar y faltan 201.659 GB NVMe combinados C+D",
+      "createdAt": "2026-10-29T09:45:35Z",
+      "id": "Q182-XOLOTL-ISTA-IQ2XS-DUAL3090",
+      "updatedAt": "2026-11-02T01:31:51Z",
+      "reconciledAtUtc": "2026-11-02T01:31:51Z",
+      "reconciliationEvidence": "artifacts/evaluacion-modelos-llamacode/Q-20261102-VF-RESUME-191/receipts/q182-xolotl-gate-revalidation-20261102.json; https://github.com/Indras-Mirror/Xolotl/issues/2; https://github.com/Indras-Mirror/Xolotl/blob/main/docs/DEEPSEEK_V41.md",
+      "currentRevalidation": {
+        "checkedAtUtc": "2026-11-02T01:31:51Z",
+        "cNvmeFreeBytes": 10927116288,
+        "dNvmeFreeBytes": 87414194176,
+        "cPlusDBytes": 98341310464,
+        "requiredBytes": 300000000000,
+        "deficitBytes": 201658689536,
+        "hddExtraFreeBytes": 264550998016,
+        "inferenceServerProcessesFound": [],
+        "runtimeSources": [
+          {
+            "url": "https://github.com/Indras-Mirror/Xolotl/issues/2",
+            "finding": "4×3090 segfault persists; 2×5060 Ti PHB local guards avoid some crashes but produce wrong answers 0/3 and restore remains unverified."
+          },
+          {
+            "url": "https://github.com/Indras-Mirror/Xolotl/blob/main/docs/DEEPSEEK_V41.md",
+            "finding": "Performance evidence described for one RTX 4090, not this dual-3090 target."
+          }
+        ],
+        "testDecision": "No test: storage and runtime gates both fail. No download/build/GPU."
+      }
+    },
+    "inbox": {
+      "id": "q182-xolotl-ista-gsq-iq2xs-dual3090-gate",
+      "title": "DeepSeek-V4.1-Flash-1017 ISTA GSQ-RCO IQ2_XS · Xolotl Linux en dual RTX 3090",
+      "kind": "url",
+      "content": "https://github.com/Indras-Mirror/Xolotl/blob/main/docs/DEEPSEEK_V41.md",
+      "receivedAt": "2026-10-29T09:36:11Z",
+      "status": "Bloqueada antes de descarga · storage NVMe y runtime dual sin calificar",
+      "batchId": "VF-20261019-01",
+      "batchLabel": "Q182 · candidato DeepSeek de fuente Xolotl/ISTA",
+      "batchSequence": 70,
+      "analysis": {
+        "status": "Revalidada 2026-11-02 · bloqueada por espacio NVMe y fallos duales de Xolotl; sin descarga/build/inferencia.",
+        "finding": "df -B1 -P a 10,927,116,288 B libres en C y 87,414,194,176 B en D; C+D=98,341,310,464 B, déficit=201,658,689,536 B para el gate de 300,000,000,000 B. HDD extra tiene 264,550,998,016 B pero no cuenta como NVMe del gate. Revisión upstream del issue #2: el reporte del 26/10 en 2×RTX 5060 Ti PHB describe guards locales que quitan dos fallos, pero la salida dual resultó incorrecta 0/3, con una respuesta vacía y deriva a texto roto; `restore()` no fue verificado. Otro reporte en 4×RTX 3090 sigue mostrando SIGSEGV al primer prompt incluso en d4f65068. No hay fix dual upstream validado. La guía mantiene sus métricas principales en 1×RTX 4090.",
+        "test": "No descargar/compilar hasta que C+D tenga ≥300,000,000,000 B libres y exista un fix Xolotl dual upstream con smoke funcional en PHB/Ampere comparable, con commit y artefactos exactos. El reporte 2×5060 Ti evitó crashes con guards locales pero tuvo 0/3 salidas correctas y no validó restore; el reporte 4×3090 aún segfaultea. Sin inferencia ni GPU en este host.",
+        "applicability": "No transferir los 41 tok/s ni el 91,5% top-1 del post Reddit: se atribuyen a nazeshinjite ds4 Q2 + Delta/Windows y no se midieron localmente. El T16 local puntuó 89/100 en una semilla, pero falló TC-92 cross-tenant; no es adoptable para tools.",
+        "decision": "Q182 sigue bloqueado por storage y runtime: hay 201,658,689,536 B menos que el gate NVMe; la evidencia dual disponible contiene salidas incorrectas y SIGSEGV. No inferir ni borrar/cambiar otros perfiles. Reabrir sólo con NVMe suficiente y fix upstream validado con salidas correctas en arquitectura PCIe/PHB comparable.",
+        "evidence": "artifacts/evaluacion-modelos-llamacode/Q-20261029-VF-ITERATION-182/receipts/q182-gate-revalidation-20261101.json; https://github.com/Indras-Mirror/Xolotl/issues/2; https://github.com/Indras-Mirror/Xolotl/blob/main/docs/DEEPSEEK_V41.md",
+        "updatedAt": "2026-11-02T01:31:51Z",
+        "currentRevalidation": {
+          "checkedAtUtc": "2026-11-02T01:31:51Z",
+          "cNvmeFreeBytes": 10927116288,
+          "dNvmeFreeBytes": 87414194176,
+          "cPlusDBytes": 98341310464,
+          "requiredBytes": 300000000000,
+          "deficitBytes": 201658689536,
+          "hddExtraFreeBytes": 264550998016,
+          "inferenceServerProcessesFound": [],
+          "runtimeSources": [
+            {
+              "url": "https://github.com/Indras-Mirror/Xolotl/issues/2",
+              "finding": "Issue shows a 4×RTX 3090 first-prompt SIGSEGV persists at commit d4f65068; 2×RTX 5060 Ti PHB report used local guards, then produced wrong outputs 0/3, including empty content; restore was not verified. No upstream validated dual fix found."
+            },
+            {
+              "url": "https://github.com/Indras-Mirror/Xolotl/blob/main/docs/DEEPSEEK_V41.md",
+              "finding": "Primary performance/configuration documentation reports one RTX 4090; results do not qualify this host’s dual 3090 path."
+            }
+          ],
+          "testDecision": "No test: NVMe capacity is below gate and dual-runtime correctness is not qualified; no download/build/GPU.",
+          "sourceCommentDate": "2026-10-26"
+        },
+        "revalidatedAtUtc": "2026-11-02T01:31:51Z",
+        "revalidationReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261102-VF-RESUME-191/receipts/q182-xolotl-gate-revalidation-20261102.json"
+      },
+      "preregisteredAt": "2026-10-29T09:38:42Z",
+      "updatedAt": "2026-11-01T01:02:32Z",
+      "revalidatedAtUtc": "2026-10-29T12:46:34Z"
+    }
+  },
+  "testDecision": "Do not run Q182. Both preregistered gates fail: NVMe short by 201,663,219,712 B and no upstream validated split correctness. Other current active LLM/VLM profiles have complete P/D/Q172 fields; incomplete rows are retired. No new inference test is enabled by this audit.",
+  "sheetSync": {
+    "tab": "Accionables",
+    "ranges": [
+      "D49",
+      "H49:K49",
+      "M49:N49"
+    ],
+    "writeTimestampUtc": "2026-11-02T02:07:56Z",
+    "readback": "PASS",
+    "formatReadback": "WRAP/TOP preserved for edited text cells",
+    "status": "Bloqueado · faltan 201.663 GB NVMe C+D y Xolotl dual no calificado",
+    "storageMeasurement": {
+      "checkedAtUtc": "2026-11-02T02:06:47Z",
+      "cNvmeFreeBytes": 10922565632,
+      "dNvmeFreeBytes": 87414194176,
+      "cPlusDBytes": 98336759808,
+      "requiredBytes": 300000000000,
+      "deficitBytes": 201663240192,
+      "hddExtraFreeBytes": 264550998016,
+      "hddCountsTowardGate": false
+    }
+  },
+  "modelCleanupReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261102-VF-RESUME-192/receipts/deepseek-fp8-engram-orphan-manifest-cleanup-20261102.json"
+}

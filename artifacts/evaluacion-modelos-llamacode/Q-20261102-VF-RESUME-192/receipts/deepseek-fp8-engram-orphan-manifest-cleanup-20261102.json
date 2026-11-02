@@ -1,0 +1,56 @@
+{
+  "task_id": "Q-20261102-VF-RESUME-192",
+  "timestamp_utc": "2026-11-02T02:07:32Z",
+  "operation": "Remove the orphaned manifest left by the incomplete DeepSeek V4.1 Flash-1017 FP8 Engram staging artifact",
+  "authorization": "Explicit user request: delete the third incomplete model shown in the screenshot.",
+  "prior_cleanup": "The 2-of-48 staged FP8 shards (203,080,585,216 bytes) were already deleted from HDD extra in Q190; see artifacts/evaluacion-modelos-llamacode/Q-20261029-VF-ITERATION-190/receipts/remove-fp8-engram-stage-20261101.json.",
+  "lock": {
+    "worker": "Q-20261102-VF-RESUME-192",
+    "token": "7e55942f-26b8-4e2b-991f-8a1e6cd9e3c4",
+    "retained": true
+  },
+  "preflight": {
+    "remaining_path": "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-Engram",
+    "entries_before": [
+      {
+        "name": "model.safetensors.index.json",
+        "bytes": 294,
+        "sha256": "2316775a17875a64561d1597cecb59f72c1177eca0524e4ebbacd86e31399d62",
+        "type": "JSON index/manifest, not weight data"
+      }
+    ],
+    "index_metadata_total_size_bytes": 202758032400,
+    "weight_map_values": [
+      "engram.safetensors"
+    ],
+    "shard_files_in_remaining_directory": 0,
+    "active_download_or_inference_process": false,
+    "open_handle": false,
+    "live_sheet_inventory": {
+      "tab": "Modelos locales por peso",
+      "fp8_engram_matches": 0,
+      "deepseek_rows_present": [
+        "ASTRA · DeepSeek V4.1 Flash-1017 DSX T16",
+        "DeepSeek V4.1 Flash-1017 Maya-XS IQ1_S · Project Maya Q189"
+      ]
+    }
+  },
+  "deleted": [
+    {
+      "path": "/media/cristian/Disco local/Modelos-eval/Q-20261027-VF-ITERATION-172/DeepSeek-Engram/model.safetensors.index.json",
+      "bytes": 294,
+      "sha256": "2316775a17875a64561d1597cecb59f72c1177eca0524e4ebbacd86e31399d62"
+    }
+  ],
+  "postflight": {
+    "manifest_absent": true,
+    "directory_absent": true,
+    "logical_bytes_removed_this_pass": 294,
+    "large_model_shards_removed_this_pass": 0,
+    "Q190_large_shard_cleanup_remains_preserved": true,
+    "ASTRA_DSX_T16_preserved": true,
+    "Maya_Q189_preserved": true
+  },
+  "decision": "Removed the only stale 294-byte manifest and its now-empty directory. No FP8 Engram weight shard was present here; the ~203 GB staged payload had already been removed by Q190. The live local-model inventory already excludes the incomplete row, so no inventory row was removed again.",
+  "tests_or_gpu": "None; read-only checks and metadata cleanup only."
+}
