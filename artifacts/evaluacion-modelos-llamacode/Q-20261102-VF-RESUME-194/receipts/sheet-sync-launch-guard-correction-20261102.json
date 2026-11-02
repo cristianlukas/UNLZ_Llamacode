@@ -1,0 +1,10 @@
+{
+  "taskId": "Q-20261102-VF-RESUME-194",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "tab": "Accionables",
+  "range": "D60,H60,J60:L60,N60",
+  "updatedAtUtc": "2026-11-02T12:11:25Z",
+  "readback": "PASS",
+  "format": "Arial 10, WRAP, TOP preserved",
+  "content": "Two false-negative launch-preflight parsers documented as closed before server/request/GPU; corrected matrix parser and current passing gate; next action is only Q193 smoke."
+}

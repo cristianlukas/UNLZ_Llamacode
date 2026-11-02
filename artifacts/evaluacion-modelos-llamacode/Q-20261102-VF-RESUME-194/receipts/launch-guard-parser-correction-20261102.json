@@ -1,0 +1,68 @@
+{
+  "taskId": "Q-20261102-VF-RESUME-194",
+  "checkedAtUtc": "2026-11-02T12:11:25Z",
+  "inferenceProcesses": [],
+  "cudaComputeApps": "",
+  "port18503Free": true,
+  "gpus": [
+    {
+      "index": 0,
+      "pci": "00000000:01:00.0",
+      "name": "NVIDIA GeForce RTX 3090",
+      "total": "24576 MiB",
+      "used": "926 MiB",
+      "utilization": "16 %",
+      "pstate": "P3"
+    },
+    {
+      "index": 1,
+      "pci": "00000000:03:00.0",
+      "name": "NVIDIA GeForce RTX 3090",
+      "total": "24576 MiB",
+      "used": "111 MiB",
+      "utilization": "31 %",
+      "pstate": "P5"
+    }
+  ],
+  "memAvailableBytes": 111614705664,
+  "diskGates": {
+    "root": {
+      "path": "/",
+      "freeBytes": 2194821120,
+      "minimumBytes": 2000000000,
+      "pass": true
+    },
+    "D": {
+      "path": "/media/cristian/Disco local",
+      "freeBytes": 84298133504,
+      "minimumBytes": 10000000000,
+      "pass": true
+    },
+    "HDDExtra": {
+      "path": "/media/cristian/HDD extra",
+      "freeBytes": 262798524416,
+      "minimumBytes": 20000000000,
+      "pass": true
+    }
+  },
+  "asusQuarantineActive": true,
+  "p2pMatrixRows": {
+    "GPU0": [
+      "GPU0",
+      "X",
+      "OK"
+    ],
+    "GPU1": [
+      "GPU1",
+      "OK",
+      "X"
+    ]
+  },
+  "p2pBidirectional": true,
+  "gpuUnlockTargets": true,
+  "bootVerifierResult": "success",
+  "kernelFaultsSinceQ194Start": [],
+  "failedClosedPreflightWrappers": 2,
+  "failureCause": "Both attempts exited before server start/request/GPU use: first searched for nonexistent GPU1 row text; second selected the GPU0 header as row. Parser now selects len>=3 data rows by label.",
+  "result": "all gates PASS; no server launched yet."
+}

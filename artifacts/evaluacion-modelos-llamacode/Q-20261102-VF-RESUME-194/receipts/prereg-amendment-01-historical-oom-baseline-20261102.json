@@ -1,0 +1,10 @@
+{
+  "taskId": "Q-20261102-VF-RESUME-194",
+  "continuationOf": "Q-20261102-VF-RESUME-193",
+  "atUtc": "2026-11-02T12:07:20Z",
+  "amendment": 1,
+  "reason": "Fresh preflight found 14 historical GPU1 NV_ERR_NO_MEMORY messages after the Q193 pause but before Q194 started. The exact journal interval has no process attribution; a GNOME Calculator crash is simultaneous, but causality is unknown. These are treated as a pre-existing baseline only; Q194 aborts on any new Xid/OOM/CUDA fault after its start.",
+  "scope": "This amendment does not change the Q193 model, runtime, direct --devices 0,1 command, request, token limit, or pass criteria. It records the newly discovered baseline and narrows stop-on-fault to faults during Q194 execution.",
+  "evidence": "Q194 receipts/live-preflight-resume-20261102.json; journalctl kernel/service excerpt inspected at 2026-11-02T12:05Z.",
+  "smoke": "Only the existing preregistered 8192-token C1 PONG smoke. Require nonempty valid response and explicit assignment/use of both GPUs by this PID; otherwise stop. Do not start Q173 or Q172."
+}

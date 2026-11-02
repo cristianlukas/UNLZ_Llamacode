@@ -1,0 +1,42 @@
+{
+  "taskId": "Q-20261102-VF-RESUME-194",
+  "checkedAtUtc": "2026-11-02T12:07:56Z",
+  "recheckedBeforeSmoke": true,
+  "servers": {
+    "inferenceProcesses": [],
+    "cudaComputeApps": [],
+    "port18503": "free"
+  },
+  "gpus": [
+    {
+      "index": 0,
+      "pci": "00000000:01:00.0",
+      "memoryUsedMiB": 958,
+      "memoryTotalMiB": 24576
+    },
+    {
+      "index": 1,
+      "pci": "00000000:03:00.0",
+      "memoryUsedMiB": 111,
+      "memoryTotalMiB": 24576
+    }
+  ],
+  "hardware": {
+    "asusQuarantine": "active, 1636/1636 frames held",
+    "p2p": "bidirectional OK",
+    "gpuUnlock": "both PCI targets in cmdline and loaded",
+    "helperBootVerifier": "success"
+  },
+  "memory": {
+    "availableKiB": 108828548
+  },
+  "diskFreeBytes": {
+    "root": 2197565440,
+    "D": 84298379264,
+    "HDDExtra": 262798524416
+  },
+  "rootMarginAbove2GBGate": 197565440,
+  "newKernelFaultsSinceQ194Start": 0,
+  "modelAndRuntimeHashes": "verified in live-preflight-resume-20261102.json",
+  "decision": "All preregistered gates pass; start only the 8K dual-GPU smoke. Historical GPU1 NV_ERR_NO_MEMORY count remains baseline; no new fault since Q194 start."
+}

@@ -1,0 +1,20 @@
+{
+  "taskId": "Q-20261102-VF-RESUME-194",
+  "sheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheetTitle": "Listado",
+  "tab": "Accionables",
+  "tabSheetId": 1393124532,
+  "range": "A60:N60",
+  "updatedUtc": "2026-11-02T12:07:20Z",
+  "readback": "PASS",
+  "changedCells": [
+    "D60",
+    "H60",
+    "J60",
+    "K60",
+    "L60",
+    "N60"
+  ],
+  "preservation": "Arial 10, wrap and top alignment read back unchanged; Q190 row 59 preserved.",
+  "recorded": "Q194 reactivation, refreshed gate facts, historical GPU1 OOM baseline amendment, single 8K smoke as next step."
+}

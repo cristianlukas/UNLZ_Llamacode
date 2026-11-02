@@ -1,0 +1,10 @@
+{
+  "taskId": "Q-20261102-VF-RESUME-194",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "tab": "Accionables",
+  "range": "L60,N60",
+  "updatedAtUtc": "2026-11-02T12:07:56Z",
+  "readback": "PASS",
+  "format": "Arial 10, wrap, top alignment preserved",
+  "preflightSummary": "Fresh immediate pre-smoke gate passed. Historical GPU1 OOM baseline remains explicitly recorded."
+}

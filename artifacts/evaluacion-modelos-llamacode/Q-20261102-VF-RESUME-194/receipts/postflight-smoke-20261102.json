@@ -1,0 +1,17 @@
+{
+  "taskId": "Q-20261102-VF-RESUME-194",
+  "checkedAtUtc": "2026-11-02T12:14:03Z",
+  "serverPid": "545712",
+  "serverStoppedBy": "SIGINT to Q194-owned foreground session",
+  "inferenceProcesses": [],
+  "cudaComputeApps": [],
+  "port18503": "free",
+  "gpuMemoryUsedMiB": [
+    938,
+    111
+  ],
+  "kernelFaultsSinceQ194Start": [],
+  "rootFreeBytes": 2193031168,
+  "gateRootFreeBytes": 2000000000,
+  "status": "clean stop; no active server; no new GPU fault. GPU utilization remained nonzero but compute app list empty and memory returned to GUI baseline."
+}

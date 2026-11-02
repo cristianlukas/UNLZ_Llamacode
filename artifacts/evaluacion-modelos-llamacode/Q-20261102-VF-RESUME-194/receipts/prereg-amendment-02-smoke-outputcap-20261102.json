@@ -1,0 +1,10 @@
+{
+  "taskId": "Q-20261102-VF-RESUME-194",
+  "continuationOf": "Q-20261102-VF-RESUME-193",
+  "amendment": 2,
+  "atUtc": "2026-11-02T12:14:32Z",
+  "reason": "The preregistered smoke request max_tokens=16 was fully consumed by the model reasoning channel (16 reasoning tokens, zero visible content, finish_reason=length), although HTTP 200. The runtime started and loaded both GPUs; request output gate did not pass due to the cap being below the default thinking budget.",
+  "change": "Repeat only the same 8K dual smoke on the same profile/runtime/weights with identical prompt and temperature but request max_tokens=128; preserve default thinking/template. Require visible nonempty content exactly PONG, finish_reason stop, HTTP 200, same PID assigned to both GPU0/GPU1. No Q173/Q172 until PASS.",
+  "abort": "Any new Xid/OOM/CUDA fault, invalid token count, empty content at the new cap, or inability to verify both GPUs stops Q193; preserve the first failed attempt.",
+  "interpretation": "The 375.8 prefill / 355.6 decode values in the 16-token request are a single diagnostic smoke only and are not ladder or average TPS evidence."
+}

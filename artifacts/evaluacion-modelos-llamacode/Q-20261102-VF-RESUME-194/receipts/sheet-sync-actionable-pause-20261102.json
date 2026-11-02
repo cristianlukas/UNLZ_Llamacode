@@ -1,0 +1,15 @@
+{
+  "experiment": "Q194 pause sync to Accionables",
+  "timestamp_utc": "2026-11-02T12:19:21Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet": "Accionables",
+  "range": "D60,H60:L60,N60",
+  "readback": {
+    "D60": "PAUSADO por pedido del usuario. Q194: engine dual listo en ambas 3090, pero el smoke no produjo texto visible; Q173/Q172 siguen sin iniciar.",
+    "H60": "Q194 8K: engine ready 21.7 s; PID 545712 visible en GPU0 11756 MiB y GPU1 10258 MiB; 2 devices. HTTP 200/108 ms; contenido vacío, 16/16 completion tokens reasoning, finish_reason=length. Gate FAIL. No tomar 375.8/355.6 TPS como benchmark. Cero faults nuevos.",
+    "J60": "PAUSADO. Al reanudar, lock exclusivo y preflight fresco; repetir solamente smoke 8K con max_tokens=128 y mismas demás opciones. Exigir PONG visible, HTTP 200, finish_reason=stop y evidencia en ambas GPUs. Si pasa: Q173 hasta 261888 (no 523K), luego Q172 seeds 42/43/44 en serie; sync al Sheet después de cada prueba.",
+    "L60": "Pausado limpio: no inference server/CUDA apps; puerto 18503 libre; VRAM 938/111 MiB; cero faults nuevos. LlamaCode GUI intacta. Último preflight root 2,194,821,120 B (gate 2,000,000,000); mantener temporales/logs en D. Métricas P/D/Q172 e init de Q194 no válidas/N/D; métricas en Modelos locales por peso D:F/Z corresponden solo a Q190.",
+    "N60": "2026-11-02T12:19:21Z"
+  },
+  "format_preserved": "Arial 10, WRAP"
+}

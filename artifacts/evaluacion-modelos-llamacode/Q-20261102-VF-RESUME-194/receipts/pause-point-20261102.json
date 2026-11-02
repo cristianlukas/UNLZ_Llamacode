@@ -1,0 +1,65 @@
+{
+  "task": "VF-20261019-01",
+  "worker": "Q-20261102-VF-RESUME-194",
+  "timestamp_utc": "2026-11-02T12:18:08Z",
+  "state": "paused_by_user",
+  "profile": "Qwen3.6-35B-A3B · NInfer-3090 v0.17.1 Linux · dual pipeline --devices 0,1",
+  "model_artifact": {
+    "path": "/media/cristian/Disco local/Modelos-eval/Qwen3.6-35B-A3B-NInfer-all-20261101/qwen3_6_35b_a3b.ninfer",
+    "bytes": 22790484480,
+    "sha256": "3e33297645dc33557751be1c407a74ed7c00f34909b5d4e8cfdce91b3dbe84"
+  },
+  "runtime": {
+    "path": "/media/cristian/Disco local/Modelos-eval/Qwen3.6-35B-A3B-NInfer-all-20261101/runtime-ninfer-3090-v0.17.1",
+    "binary_version": "0.17.1-rtx3090",
+    "binary_sha256": "ae49d7912564cd1f942fbe6d28b70bdb60dc109a7cbf3d9e61267085f4a4ff9b"
+  },
+  "completed": [
+    "Leídos AGENTS.md, README.md, WORK_QUEUE.md y WORK_QUEUE.lock; Q194 lock propio verificado antes de documentar.",
+    "Preflight confirmó sin inference servers/CUDA compute apps, puerto 18503 libre, LlamaCode GUI intacta, cuarentena ASUS 1636/1636, P2P bidireccional, gpu_unlock en ambas 3090 y sin faults nuevos durante Q194.",
+    "Dos intentos del wrapper se bloquearon antes de arrancar por errores del parser P2P; parser corregido y preflight posterior PASS. No enviaron requests.",
+    "Smoke Q194 cargó el modelo existente sin copiarlo; el mismo PID 545712 fue visible en GPU0 (11756 MiB) y GPU1 (10258 MiB); engine ready en 21.7 s.",
+    "Smoke HTTP 200 en 108 ms; la salida visible quedó vacía porque los 16/16 tokens de generación fueron reasoning y finish_reason=length. Gate de respuesta FAIL.",
+    "Servidor Q194 propio detenido con SIGINT. Postflight: servidor ausente, CUDA compute apps vacías, puerto libre, VRAM 938/111 MiB y cero faults nuevos.",
+    "La hoja Modelos locales por peso fila 33 recibió Runtime/nota Q194 y readback exacto; valores históricos Q190 de prefill/decode/Q172/init permanecen separados e intactos."
+  ],
+  "not_started": [
+    "Q173 ladder de velocidad/contexto (8K×3, 32K, 64K, 128K, 261888; no 523K).",
+    "Q172 Tool-Eval 2.8.0 seeds 42/43/44.",
+    "No hay resultados válidos de prefill/decode/Q172 ni cold/hot para Q194; no reutilizar los 375.8/355.6 tok/s diagnósticos del smoke."
+  ],
+  "pending_preregistered": "Amendment 02: repetir solo smoke 8K, mismo modelo/runtime/flags/prompt/temperatura, max_tokens=128; exigir HTTP 200, contenido PONG visible, finish_reason=stop y evidencia de proceso en ambas GPUs. Abortar si hay respuesta vacía, faults nuevos o falta de evidencia dual. Q173/Q172 solo tras PASS.",
+  "resume_gates": [
+    "Adquirir WORK_QUEUE.lock mediante creación exclusiva; confirmar que no pertenezca a otra tarea.",
+    "Volver a leer AGENTS.md, README.md y WORK_QUEUE.md antes de cualquier benchmark/GPU.",
+    "Repetir preflight: procesos/listeners/compute apps, P2P, gpu_unlock, helper/quarantine, kernel faults, memoria y espacio raíz >= 2,000,000,000 B; mantener logs/tmp/cache en D.",
+    "Verificar hashes del modelo y runtime contra los valores registrados.",
+    "Sincronizar la reanudación con Accionables antes del smoke; después de cada prueba actualizar Accionables y Modelos locales por peso."
+  ],
+  "preservation": "No eliminar ni alterar los pesos existentes, historial Q190, perfiles ASTRA/SOL, modelos PeritoSoft ni el runtime verificado.",
+  "process_state_at_pause": {
+    "inference_server": "stopped",
+    "port_18503": "free",
+    "cuda_compute_apps": [],
+    "gui": "untouched"
+  },
+  "receipts": [
+    "receipts/live-preflight-resume-20261102.json",
+    "receipts/prereg-amendment-01-historical-oom-baseline-20261102.json",
+    "receipts/immediate-preflight-before-smoke-20261102.json",
+    "receipts/launch-guard-parser-correction-20261102.json",
+    "receipts/smoke-8k-20261102.json",
+    "receipts/postflight-smoke-20261102.json",
+    "receipts/prereg-amendment-02-smoke-outputcap-20261102.json",
+    "receipts/sheet-sync-resume-preregistration.json",
+    "receipts/sheet-sync-immediate-preflight-20261102.json",
+    "receipts/sheet-sync-launch-guard-correction-20261102.json",
+    "receipts/sheet-sync-model-inventory-pause-20261102.json",
+    "receipts/sheet-sync-actionable-pause-20261102.json"
+  ],
+  "sheet_sync_actionables": {
+    "receipt": "receipts/sheet-sync-actionable-pause-20261102.json",
+    "timestamp_utc": "2026-11-02T12:19:21Z",
+    "readback": "Accionables!D60,H60:L60,N60 coincide; formato Arial 10/WRAP preservado."
+  }
+}

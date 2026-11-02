@@ -1,0 +1,42 @@
+{
+  "taskId": "Q-20261102-VF-RESUME-194",
+  "test": "Q193 C1 dual 8K smoke",
+  "checkedAtUtc": "2026-11-02T12:13:37Z",
+  "serverPid": "545712",
+  "gpuAppRows": [
+    "545712, /media/cristian/Disco local/Modelos-eval/Qwen3.6-35B-A3B-NInfer-all-20261101/runtime-ninfer-3090-v0.17.1/ninfer-serve, 11756 MiB",
+    "545712, /media/cristian/Disco local/Modelos-eval/Qwen3.6-35B-A3B-NInfer-all-20261101/runtime-ninfer-3090-v0.17.1/ninfer-serve, 10258 MiB"
+  ],
+  "serverLogTail": [
+    "2026-11-02 09:12:31.569  INFO  weights ready | 20.5 GiB | 10.1s | 2.02 GiB/s",
+    "2026-11-02 09:12:31.801  INFO  pinning host context | 8.00 GiB",
+    "2026-11-02 09:12:33.150  INFO  host context pinned | 8.00 GiB | 1.3s",
+    "2026-11-02 09:12:33.316  INFO  CUDA graphs ready | 157 ms",
+    "2026-11-02 09:12:33.325  INFO  engine ready | qwen3.6-35b-a3b | total 21.7s | weights 20.2 GiB | cuda sync spin",
+    "2026-11-02 09:12:33.325  INFO  capacity | KV 8,192 tokens, rk4v4, explicit | pages 128/128 | runtime 474.5 MiB | free 11.2 GiB",
+    "2026-11-02 09:12:33.325  INFO  stages | 2 devices | runtime on further stages 407.1 MiB | KV capacity bound by stage 0",
+    "2026-11-02 09:12:33.325  INFO  context | history on | 1 active + 1 extra device states | host 8.00 GiB",
+    "2026-11-02 09:12:33.325  INFO  media | 16 preprocess workers | cache 1.00 GiB | live 2.00 GiB",
+    "2026-11-02 09:12:33.416  INFO  listening on http://127.0.0.1:18503 | model qwen3.6-35b-a3b | auth disabled",
+    "2026-11-02 09:13:37.541  INFO  req#1 started | openai-chat non-stream | 1 message | max output 16 | thinking template default",
+    "2026-11-02 09:13:37.649  INFO  req#1 done | openai-chat | output limit | prompt 18 | output 16 | cache 0 (0.0%) | TTFT 65.6 ms | total 108 ms | prefill 375.8 tok/s | decode 355.6 tok/s | mtp accepted 11/11 (100.0%)"
+  ],
+  "httpStatus": 200,
+  "elapsedSeconds": 0.118,
+  "content": "",
+  "finishReason": "length",
+  "usage": {
+    "completion_tokens": 16,
+    "completion_tokens_details": {
+      "reasoning_tokens": 16
+    },
+    "prompt_tokens": 18,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 34
+  },
+  "validResponse": false,
+  "exactPong": false,
+  "passed": false
+}

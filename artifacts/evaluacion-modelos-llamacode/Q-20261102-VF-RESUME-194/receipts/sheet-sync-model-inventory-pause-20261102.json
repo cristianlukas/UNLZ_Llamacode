@@ -1,0 +1,16 @@
+{
+  "experiment": "Q194 pause documentation sync",
+  "timestamp_utc": "2026-11-02T12:18:08Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet": "Modelos locales por peso",
+  "range": "C33, X33",
+  "readback": {
+    "C33": "NInfer-all v3 (Q190; datos vigentes en D:F/Z); NInfer-3090 v0.17.1 Linux dual pipeline (Q194; smoke de salida fallido)",
+    "X33": "Q190 conserva sus resultados de ladder/Q172 e init; Q194 es un runtime distinto con los mismos pesos SHA Q190. Q194 smoke 8K dual: engine ready 21.7 s (no cold/hot comparable), PID 545712 en ambas GPU; HTTP 200 pero content vacío, 16/16 tokens de salida fueron reasoning y finish_reason=length. Gate FAIL; no usar 375.8/355.6 tok/s como benchmark. Q173/Q172 no iniciados; server detenido, sin procesos/listener/faults nuevos. Reintento max_tokens=128 preregistrado pero pausado por el usuario. Métricas Q190 permanecen solo como Q190; no se transfieren a Q194."
+  },
+  "format_preserved": {
+    "font": "Arial 10",
+    "wrap": "WRAP"
+  },
+  "metrics_policy": "No se reemplazaron D:F/Z. Los valores de Q190 quedan históricos y los resultados Q194 no producen métricas comparables."
+}
