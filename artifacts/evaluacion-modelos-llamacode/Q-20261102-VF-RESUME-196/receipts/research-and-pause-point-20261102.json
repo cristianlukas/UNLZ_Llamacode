@@ -1,0 +1,46 @@
+{
+  "taskId": "Q-20261102-VF-RESUME-196",
+  "batchId": "VF-20261019-01",
+  "status": "paused_by_user",
+  "recordedAtUtc": "2026-11-02T22:36:35Z",
+  "inferenceStarted": false,
+  "gpuUsed": false,
+  "requestsSent": 0,
+  "buildOrDownloadStarted": false,
+  "modelOrRuntimeModified": false,
+  "processAndPortCheck": {
+    "ninferServe": [],
+    "llamaServer": [],
+    "port18503": "free"
+  },
+  "lockAtPause": {
+    "task": "Q-20261102-VF-RESUME-196",
+    "owner": "Codex",
+    "acquired": "2026-11-02T22:31:36Z",
+    "release": "to be removed as final action after local and Sheets documentation is verified"
+  },
+  "readOnlyFindings": [
+    {
+      "source": "local ninfer-serve --help for v0.17.1-rtx3090",
+      "finding": "CLI exposes --no-thinking, --default-thinking-budget, --reasoning-loop and --reasoning-effort."
+    },
+    {
+      "source": "https://github.com/ashalliants/ninfer-3090/blob/v0.17.1-rtx3090/docs/serving.md",
+      "finding": "Chat Completions documents reasoning_effort=\"none\" to disable thinking and a thinking_budget extension."
+    }
+  ],
+  "interpretation": "Potential explanation for Q195 empty visible content after its output cap was consumed by reasoning; not proven because Q196 sent no request.",
+  "resumeGate": "New preregistration and full live preflight; one Chat Completions 8K smoke using reasoning_effort=none, max_tokens=32; then only on PASS Q173 through 261888 and Q172 under their unchanged normal protocols.",
+  "q190MetricsPreserved": true,
+  "sheetRangesToUpdate": [
+    "Accionables!D60",
+    "Accionables!H60:K60",
+    "Accionables!M60:N60",
+    "'Modelos locales por peso'!C33",
+    "'Modelos locales por peso'!X33"
+  ],
+  "sheetReadBeforeWrite": true,
+  "sheetReadbackAtUtc": "2026-11-02T22:37:28Z",
+  "sheetReadbackStatus": "PASS; values match; Arial 10/WRAP/TOP preserved.",
+  "sheetSyncReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261102-VF-RESUME-196/receipts/sheet-sync-pause-q196-20261102.json"
+}
