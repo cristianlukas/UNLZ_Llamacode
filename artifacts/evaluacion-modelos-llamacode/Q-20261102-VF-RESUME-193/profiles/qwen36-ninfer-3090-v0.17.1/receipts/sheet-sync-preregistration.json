@@ -1,0 +1,17 @@
+{
+  "checkedAtUtc": "2026-11-02T02:23:11Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet": "Accionables",
+  "range": "Accionables!A60:N60",
+  "profileId": "vf-qwen36-35b-a3b-ninfer-3090-v0171-q193",
+  "readback": "PASS",
+  "checks": {
+    "all14CellsMatchPreregistration": true,
+    "Arial10": true,
+    "wrap": "WRAP",
+    "verticalAlignment": "TOP",
+    "unexpectedValidation": false,
+    "unexpectedChips": false,
+    "Q190Row59Preserved": true
+  }
+}

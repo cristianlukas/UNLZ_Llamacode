@@ -1,0 +1,9 @@
+{
+  "amendment": 1,
+  "atUtc": "2026-11-02T02:30:00Z",
+  "reason": "README recommends unpacking the runtime beside the model; HDD extraction progressed at about 3 MB/s and would bias cold startup. The 2,356,558,649-byte runtime can be placed on D without violating the 10 GB floor.",
+  "downloadedArchiveRemainsOn": "HDD extra",
+  "runtimeExtractionMovesTo": "Disco local D beside the already-present model",
+  "modelWeightsDuplicated": false,
+  "testPlanChanges": "No change to engine, hardware, model, argv, contexts, or quality suite. Only extraction location changes before the test starts."
+}

@@ -1,0 +1,19 @@
+{
+  "taskId": "Q-20261102-VF-RESUME-193",
+  "amendment": 2,
+  "atUtc": "2026-11-02T02:35:44Z",
+  "reason": "The release run.sh exposes only one device for Qwen3.6 and rejects NINFER_DEVICES because that environment switch belongs to the Windows Flash-Next profile. The installed ninfer-serve 0.17.1 CLI explicitly accepts --devices N,M,...; use the direct server CLI rather than misapplying the Flash-Next launcher profile.",
+  "verifiedCLI": "ninfer-serve --help lists --devices N,M,..., --stage-layers, max-context, KV, MTP3, vision, and cuBLAS flags; run.sh qwen36 profile defaults are recorded from the bundled script.",
+  "smokeArgs": "ninfer-serve MODEL --host 127.0.0.1 --port 18503 --devices 0,1 --max-concurrency 1 --max-context 8192 --kv-capacity 8192 --kv-dtype rk4v4 --spec mtp --draft-tokens 3 --lm-head-draft --mtp-experts-q4 --gdn-state-fp16 --prefill-cublas --prefill-chunk 4096 --vision --vision-residency overlay --host-context-mib 8192 --min-p 0.03 --presence-penalty 0.5",
+  "ladderArgumentChange": "Replace 8192 with the preregistered context and KV capacity per Q173 point; max concurrency remains 1. Do not exceed 261888.",
+  "smokeRequest": {
+    "endpoint": "http://127.0.0.1:18503/v1/chat/completions",
+    "prompt": "Respond exactly PONG and nothing else.",
+    "temperature": 0,
+    "maxTokens": 16
+  },
+  "stopGate": "Need valid nonempty response and explicit log evidence that both GPU0 and GPU1 receive stages and are used by the Q193 PID; stop on any fault. No smoke request has been sent yet.",
+  "upstreamCaveat": "The tagged upstream README says distinct-device pipeline support in the current context engine is unverified; smoke is the gate, not an assumption of support.",
+  "modelWeightsCopied": false,
+  "inferenceOrGPUStarted": false
+}

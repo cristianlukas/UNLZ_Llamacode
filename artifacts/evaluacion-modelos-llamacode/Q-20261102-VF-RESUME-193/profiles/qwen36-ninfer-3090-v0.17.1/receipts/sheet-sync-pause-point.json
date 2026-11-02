@@ -1,0 +1,14 @@
+{
+  "taskId": "Q-20261102-VF-RESUME-193",
+  "checkedAtUtc": "2026-11-02T02:39:13Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet": "Accionables",
+  "sheetId": 1393124532,
+  "range": "Accionables!A60:N60",
+  "readback": "PASS",
+  "pauseAndResumeState": "PASS",
+  "Q190Row59Preserved": true,
+  "format": {"font": "Arial 10", "wrap": "WRAP", "verticalAlignment": "TOP"},
+  "validationOrChipsChanged": false,
+  "resultMetricsAdded": false
+}

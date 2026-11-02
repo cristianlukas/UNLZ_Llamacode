@@ -1,0 +1,26 @@
+{
+  "taskId": "Q-20261102-VF-RESUME-193",
+  "checkedAtUtc": "2026-11-02T02:36:49Z",
+  "inferenceStarted": false,
+  "requestSent": false,
+  "lock": {
+    "token": "79560ffb-bcb3-4728-a919-515166fe4e6c",
+    "worker": "Q-20261102-VF-RESUME-193",
+    "stateAtCheck": "owned by this task"
+  },
+  "servers": {"matchingProcesses": [], "computeApps": [], "evaluationPort18503": "free"},
+  "gpus": [
+    {"index": 0, "pci": "00000000:01:00.0", "model": "NVIDIA GeForce RTX 3090", "memoryUsedMiB": 957, "memoryTotalMiB": 24576},
+    {"index": 1, "pci": "00000000:03:00.0", "model": "NVIDIA GeForce RTX 3090", "memoryUsedMiB": 108, "memoryTotalMiB": 24576}
+  ],
+  "asusQuarantine": {"service": "vram-quarantine@GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6.service", "active": true, "heldFrames": 1636, "totalFrames": 1636, "pending": 0, "failed": 0, "pci": "0000:01:00.0"},
+  "bootVerifier": {"service": "3090-helper-verify-boot.service", "activeState": "inactive (oneshot completed)", "result": "success", "exitStatus": 0, "journalSaysAllThreeProtectionsPass": true},
+  "p2p": {"gpu0ToGpu1": "OK", "gpu1ToGpu0": "OK"},
+  "gpuUnlock": {"moduleLoaded": true, "cmdlineTargets": ["0000:01:00.0", "0000:03:00.0"]},
+  "memoryAvailableKiB": 98687992,
+  "freeBytes": {"root": 2277285888, "D": 85057601536, "HDDExtra": 262798548992},
+  "rootMarginBytesAbovePreregesteredFloor": 277285888,
+  "xidOomCudaFaultSinceQ193Start": [],
+  "gateDecision": "All preregistered hardware/process/disk minima pass at this timestamp. Root free space is only 277,285,888 B above the 2,000,000,000-B floor, so recheck immediately on resume.",
+  "userPause": {"receivedAtApproxUtc": "2026-11-02T02:37:39Z", "action": "Do not launch inference; document this state and release only the Q193 lock."}
+}
