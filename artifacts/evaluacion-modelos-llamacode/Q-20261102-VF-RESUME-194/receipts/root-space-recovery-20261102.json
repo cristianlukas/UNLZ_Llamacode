@@ -1,0 +1,32 @@
+{
+  "taskId": "Q-20261102-VF-RESUME-195",
+  "completedAtUtc": "2026-11-02T21:17:13Z",
+  "destination": "/media/cristian/Disco local/Modelos-eval/Q195-system-space-recovery-20261102",
+  "journal": {
+    "sourceArchivedFilesSHACompared": 84,
+    "shaMismatches": 0,
+    "wholeTarSha256": "a4c562b45ff625be8f1b481cf437bec21f7696cbf3ccd912177c64d1d02985e7",
+    "validJournalFilesVerified": 81,
+    "failedJournalFiles": 3,
+    "failedFilesPreservedRaw": [
+      "system@00065cf7509cd0da-80416b681314ace1.journal~",
+      "user-1000@00065cf76bd5d59f-006ab4383d72afbe.journal~",
+      "user-1000@00065e6eb7e96b2c-72e99ec89759acae.journal~"
+    ],
+    "fullOriginalArchiveRetained": true,
+    "vacuumSizeBytes": 268435456,
+    "journalVacuumFreed": "715.7M"
+  },
+  "aptArchives": {
+    "sourceFilesSHACompared": 67,
+    "shaMismatches": 0,
+    "aptCleanFreed": "cached package archives (copied and hash verified on D)",
+    "remainingArchiveBytes": 86016
+  },
+  "rootFreeBytesAfter": 2375163904,
+  "rootGateBytes": 2000000000,
+  "DFreeBytesAfter": "re-read below before inference",
+  "modelWeightsModified": false,
+  "inferenceStarted": false,
+  "testReadyNext": "Repeat all live gates after recovery; only then run Q194 preregistered retry 8K max_tokens=128."
+}

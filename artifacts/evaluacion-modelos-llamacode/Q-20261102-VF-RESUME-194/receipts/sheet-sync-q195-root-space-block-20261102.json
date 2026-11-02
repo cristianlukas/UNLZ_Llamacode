@@ -1,0 +1,11 @@
+{
+  "taskId": "Q-20261102-VF-RESUME-195",
+  "timestamp_utc": "2026-11-02T21:09:38Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "ranges": [
+    "Accionables!D60,H60:J60,K60,L60,N60",
+    "'Modelos locales por peso'!C33,X33"
+  ],
+  "readback": "Readback matched Q195 root-space block and prereg recovery plan; Q190 metrics remain unchanged. Arial 10 and WRAP preserved.",
+  "no_model_metrics_written": true
+}

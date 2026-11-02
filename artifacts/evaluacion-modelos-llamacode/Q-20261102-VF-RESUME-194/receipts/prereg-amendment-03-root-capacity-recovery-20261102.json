@@ -1,0 +1,29 @@
+{
+  "taskId": "Q-20261102-VF-RESUME-195",
+  "continuationOf": "VF-20261019-01 / Q194",
+  "timestamp_utc": "2026-11-02T21:09:01Z",
+  "status": "preflight gate blocked; no model server launched",
+  "finding": {
+    "root_free_bytes": 830148608,
+    "required_root_free_bytes": 2000000000,
+    "shortfall_bytes": 1169851392,
+    "D_free_bytes": 84298031104,
+    "available_ram_bytes": 115217698816,
+    "available_ram_bytes_observation": "free -b"
+  },
+  "servers": {
+    "inference_processes": [],
+    "cuda_compute_apps": [],
+    "port_18503": "free"
+  },
+  "blocker": "The Q194 resume gate requires at least 2,000,000,000 bytes free on root. Current root free space is 830,148,608 bytes. Do not run the preregistered retry until the gate passes.",
+  "recovery_plan": [
+    "Do not delete model weights or alter application/system package installations.",
+    "Copy archived systemd journal files to the ample D volume, verify file counts, sizes and SHA-256 hashes, then vacuum only root journal archive while retaining a verified D copy.",
+    "Copy apt cached package archives to D and verify checksums; run apt clean only after confirming no package manager is active. Cached packages remain recoverable from D.",
+    "Recheck root free space and system journal health. If root remains below 2 GB, stop and preserve pause rather than lower the preregistered gate."
+  ],
+  "test_resume": "Only after fresh gates pass, execute the single preregistered Q194 8K smoke retry with max_tokens=128; require visible PONG, HTTP 200, finish_reason=stop, and same server PID on both GPUs. Q173/Q172 remain blocked until smoke passes.",
+  "source_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261102-VF-RESUME-194/receipts/pause-point-20261102.json",
+  "proposed_backup_root": "/media/cristian/Disco local/Modelos-eval/Q195-system-space-recovery-20261102"
+}

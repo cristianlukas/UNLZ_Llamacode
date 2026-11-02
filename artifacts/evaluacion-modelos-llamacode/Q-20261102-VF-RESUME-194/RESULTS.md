@@ -20,3 +20,14 @@ Q173 y Q172 no empezaron. Sigue preregistrado un único reintento del smoke 8K c
 Al reanudar: reclamar lock exclusivo; releer AGENTS/README/WORK_QUEUE; verificar hash de modelo/runtime, servidores, P2P, unlock, helper/quarantine, faults de kernel, memoria y discos (raíz >= 2 GB); mantener temporales y logs en D; actualizar ambas pestañas del Sheet después de cada prueba.
 
 Los archivos de pesos y los resultados históricos Q190/Q193 permanecen intactos. Detalle reproducible: `receipts/pause-point-20261102.json`, `receipts/sheet-sync-actionable-pause-20261102.json` y `receipts/lock-release-20261102.json`.
+
+
+## Q195 reanudación y recuperación del gate de espacio (2026-11-02T21:17:13Z)
+
+La primera reanudación se bloqueó correctamente antes del modelo: `/` tenía 830,148,608 B libres, bajo el gate preregistrado de 2,000,000,000 B. Se preservó en D el journal archivado y la caché apt. Se compararon por SHA-256 84 archivos de journal y 67 apt archives, sin discrepancias. `journalctl --verify` aprobó 81 journals; tres archivos históricos `.journal~` devolvieron `Bad message`, se conservaron intactos en `journal-corrupt-preserved/` y el tar completo de los 84 archivos permanece. `apt-get clean` y vacuum de journals archivados (256 MiB) liberaron espacio; root ahora tiene 2,375,163,904 B libres. No se tocaron modelos, logs del experimento en D ni aplicaciones. Todavía falta repetir el preflight completo; el retry no se inició durante el gate bloqueado. Detalle y hashes: `artifacts/evaluacion-modelos-llamacode/Q-20261102-VF-RESUME-194/receipts/root-space-recovery-20261102.json` y el directorio en D indicado arriba.
+
+## Q195 retry smoke max_tokens=128 — FAIL (2026-11-02T21:25Z)
+
+NInfer 0.17.1 cargó el fingerprint Q190 y el log confirmó pipeline de 2 devices, engine ready a 21,0 s. El único request preregistrado devolvió HTTP 200 en 0,461 s, pero `message.content` quedó vacío: los 128 tokens de salida fueron reasoning y `finish_reason=length`. El gate de PONG visible no pasó. Prefill 396,6 y decode 331,3 tok/s son cifras del smoke de 18 tokens y no se promueven a ladder ni promedio. El servidor propio se cerró con SIGINT; postflight: no proceso/listener/compute app, sin faults nuevos, GUI intacta. Q173 y Q172 siguen pendientes y bloqueados. La enmienda 02 permitía un solo reintento, ya consumido; cualquier nueva prueba requiere preregistro nuevo y preflight. Q190 métricas, pesos y runtime permanecen sin cambios.
+
+Receipt: `receipts/smoke-retry-max128-q195-20261102.json`.

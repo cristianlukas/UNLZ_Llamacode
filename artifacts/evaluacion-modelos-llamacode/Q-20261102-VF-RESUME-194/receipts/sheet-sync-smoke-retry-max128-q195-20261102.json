@@ -1,0 +1,17 @@
+{
+  "taskId": "Q-20261102-VF-RESUME-195",
+  "syncedAtUtc": "2026-11-02T21:27:34Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "writes": [
+    {
+      "range": "Accionables!D60,H60,J60,K60,L60,N60",
+      "purpose": "record Q195 retry failure, postflight, blocked next steps, evidence refs, updated timestamp"
+    },
+    {
+      "range": "Modelos locales por peso!C33,X33",
+      "purpose": "record runtime-specific smoke failure while preserving Q190 metrics in D:F/Z"
+    }
+  ],
+  "readback": "Exact requested cells match; Arial 10, WRAP, TOP preserved in Accionables; WRAP preserved in model inventory.",
+  "status": "PASS"
+}

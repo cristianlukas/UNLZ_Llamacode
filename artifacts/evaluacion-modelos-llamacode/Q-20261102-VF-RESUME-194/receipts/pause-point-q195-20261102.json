@@ -1,0 +1,16 @@
+{
+  "taskId": "Q-20261102-VF-RESUME-195",
+  "closedAtUtc": "2026-11-02T21:27:34Z",
+  "status": "paused at failed preregistered gate; no test remains running",
+  "lastTest": "8K dual NInfer 0.17.1 smoke with max_tokens=128 failed: visible content empty, 128 reasoning tokens, finish_reason=length.",
+  "serverState": {
+    "process": "absent",
+    "port18503": "free",
+    "cudaComputeApps": [],
+    "gui": "left running"
+  },
+  "nextAllowedWork": "Do not start Q173/Q172. A new attempt needs a new preregistration with a justified change to reasoning/output handling and a fresh full preflight.",
+  "preserve": "Q190 benchmark values and all model/runtime weights unchanged.",
+  "evidence": "receipts/smoke-retry-max128-q195-20261102.json",
+  "sheetSync": "receipts/sheet-sync-smoke-retry-max128-q195-20261102.json"
+}

@@ -1,0 +1,7 @@
+{
+  "taskId": "Q-20261102-VF-RESUME-195",
+  "releasedAtUtc": "2026-11-02T21:27:34Z",
+  "releasedToken": "Q-20261102-VF-RESUME-195-20261102T1221Z",
+  "reason": "smoke gate failed; no test process/listener/compute remains; Q173/Q172 blocked by preregistration",
+  "resumeFrom": "artifacts/evaluacion-modelos-llamacode/Q-20261102-VF-RESUME-194/receipts/pause-point-q195-20261102.json"
+}

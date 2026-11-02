@@ -1,0 +1,36 @@
+{
+  "taskId": "Q-20261102-VF-RESUME-195",
+  "checkedAtUtc": "2026-11-02T21:09:38Z",
+  "lock": "Q-20261102-VF-RESUME-195-20261102T1221Z (exclusive; owned)",
+  "inferenceProcesses": [],
+  "cudaComputeApps": [],
+  "port18503": "free",
+  "gpus": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memoryUsedMiB": 860,
+      "memoryFreeMiB": 23315,
+      "utilizationPercent": 20
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 3090",
+      "memoryUsedMiB": 108,
+      "memoryFreeMiB": 24070,
+      "utilizationPercent": 46
+    }
+  ],
+  "memoryAvailableBytes": 115217698816,
+  "diskFreeBytes": {
+    "root": 830148608,
+    "D": 84298031104,
+    "HDDExtra": 262798524416
+  },
+  "rootDiskGateBytes": 2000000000,
+  "rootDiskShortfallBytes": 1169851392,
+  "vramQuarantine": "active (service active; current frame count not re-read in Q195)",
+  "gpuUnlockAndP2P": "not re-read in Q195; must revalidate after recovery before inference",
+  "newKernelFaultsSinceLock": "no matching NVRM Xid/CUDA/no-memory lines observed in query",
+  "decision": "BLOCKED: no model server started; perform verified disk cache/log preservation and recovery, then repeat all gates."
+}

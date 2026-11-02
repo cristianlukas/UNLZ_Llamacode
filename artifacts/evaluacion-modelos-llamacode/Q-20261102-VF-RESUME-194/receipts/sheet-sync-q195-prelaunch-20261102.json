@@ -1,0 +1,12 @@
+{
+  "taskId": "Q-20261102-VF-RESUME-195",
+  "timestamp_utc": "2026-11-02T21:19:46Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "ranges": [
+    "Accionables!D60,H60:I60,J60:L60,N60",
+    "'Modelos locales por peso'!C33,X33"
+  ],
+  "readback": "PASS; exact values confirmed; Arial 10/WRAP retained. No Q195 inference request was sent before sync.",
+  "enabledTest": "Only amendment-02 8K smoke retry, max_tokens=128.",
+  "preflightReceipt": "receipts/preflight-retry-before-smoke-q195-20261102.json"
+}
