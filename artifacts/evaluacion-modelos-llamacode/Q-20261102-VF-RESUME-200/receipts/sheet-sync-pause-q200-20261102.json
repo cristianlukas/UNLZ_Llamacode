@@ -1,0 +1,17 @@
+{
+  "task_id": "Q-20261102-VF-RESUME-200",
+  "timestamp_utc": "2026-11-02T23:10:32Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "tab": "Accionables",
+  "range": "D60:N60",
+  "changes": {
+    "D60": "Marked PAUSADO by user; no test started in Q200.",
+    "I60": "Retained Q197 smoke PASS and documented Q173/Q172 pending.",
+    "J60": "Added Q200 pause checkpoint and Q197 smoke receipt paths.",
+    "K60": "Recorded read-only Q200 preflight and FP8 Engram cleanup reconciliation.",
+    "M60:N60": "Updated UTC timestamps."
+  },
+  "readback": "Exact values verified after write; formatting remains Arial 10, WRAP, TOP.",
+  "untouched": "No model speed, quality or initialization metrics were written; Modelos locales por peso Q190 performance cells were not changed.",
+  "fp8_engram_inventory_check": "Search in Modelos locales por peso and Resultados returned zero matches."
+}

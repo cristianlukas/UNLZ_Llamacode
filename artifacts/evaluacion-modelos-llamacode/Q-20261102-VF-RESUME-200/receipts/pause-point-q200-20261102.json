@@ -1,0 +1,60 @@
+{
+  "task_id": "Q-20261102-VF-RESUME-200",
+  "batch": "VF-20261019-01",
+  "timestamp_utc": "2026-11-02T23:08:33Z",
+  "status": "paused_by_user",
+  "inference_or_benchmark_started_this_iteration": false,
+  "lock": {
+    "path": "WORK_QUEUE.lock",
+    "owner": "Codex",
+    "task": "Q-20261102-VF-RESUME-200",
+    "acquired": "2026-11-02T23:02:45Z",
+    "release_after": "documentation and Sheets readback",
+    "release_status": "own lock verified; release is the final operation after the pause receipt"
+  },
+  "live_check": {
+    "inference_server_processes": [],
+    "cuda_compute_processes": [],
+    "port_18503_listener": false,
+    "gpu0": "RTX 3090; 882 MiB observed; utilization 34%",
+    "gpu1": "RTX 3090; 108 MiB observed; utilization 40%",
+    "mem_available_bytes": 114493566976,
+    "free_space_bytes": {
+      "/": 2338971648,
+      "Disco D": 81195552768,
+      "HDD extra": 262798524416
+    },
+    "asus_faulty_vram_quarantine": "1636/1636 frames reserved; failed=0; pending=0",
+    "p2p_read_write": "PASS in both directions",
+    "gpu_unlock": "kernel command line targets PCI 0000:01:00.0 and 0000:03:00.0; kernel logs both unlocked",
+    "helper_boot_verifier": "enabled; latest result success",
+    "new_kernel_gpu_or_oom_faults_since_2026_11_02T21:09Z": 0,
+    "peritosoft": "PID 682159 / port 32100 left untouched",
+    "gui": "left untouched"
+  },
+  "prior_test_state": {
+    "Q197_smoke_in_Q198": "PASS, exact PONG, HTTP 200, reasoning_effort=none, no reasoning tokens; process stopped and port/CUDA postflight clean",
+    "Q173_ladder": "pending; max context 261888; 523904 explicitly excluded by user",
+    "Q172_quality": "pending after valid Q173; seeds 42,43,44; 28 scenarios each; fail_on_safety",
+    "Q190_NInfer_all_metrics": "preserve as separate TP2 runtime profile; do not mix with Q193 NInfer-3090 pipeline"
+  },
+  "required_preregistration_gate": "Q193 prereg must be amended before inference: freeze Q173 fixture/tokenization/sampling and verify NInfer-3090 prompt-token endpoint compatibility. Available exact token corpus: 161 segments, 275627 token IDs, SHA-256 cc03d8a7c8c7ed86264f5112fb7f4466b0c954000791db0c3f46d01d70e0064d.",
+  "fp8_engram_staging": {
+    "user_request": "delete the incomplete third model shown in the screenshot",
+    "already_removed_in_Q190": "two remaining staged shards, 203080585216 bytes observed freed",
+    "orphan_manifest_removed_in_Q192": "294 bytes",
+    "Q200_presence_check": "staging directory absent; manifest absent",
+    "live_sheet_search": "0 matching rows in Modelos locales por peso and Resultados",
+    "Q200_deletion": false,
+    "preserved": ["ASTRA DSX T16", "Maya Q189 and its distinct engram.bin"]
+  },
+  "sheet_sync": {
+    "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "tab": "Accionables",
+    "range": "D60:N60",
+    "write_utc": "2026-11-02T23:09:37Z",
+    "readback_utc": "2026-11-02T23:10:32Z",
+    "verified": "pause state, Q197 smoke result, pending gates, receipt paths and preflight reconciliation match; Arial 10 / WRAP / TOP formatting retained"
+  },
+  "resume_from": "artifacts/evaluacion-modelos-llamacode/Q-20261102-VF-RESUME-200/PAUSE-POINT-Q200-20261102.md"
+}
