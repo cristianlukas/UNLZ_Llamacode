@@ -1,0 +1,32 @@
+{
+  "batchId": "VF-20261019-01",
+  "recordedAtUtc": "2026-11-02T21:30:51Z",
+  "status": "paused at explicit user request",
+  "sourceQueueCount": 71,
+  "activeTests": [],
+  "runtimeCheck": {
+    "inferenceServer": "absent",
+    "port18503": "free",
+    "cudaComputeApps": [],
+    "llamaCodeGui": "left running"
+  },
+  "lastTask": "Q-20261102-VF-RESUME-195",
+  "lastGate": "NInfer 0.17.1 dual-device smoke loaded and reached readiness, but returned empty visible content after 128 reasoning tokens; finish_reason=length",
+  "pending": [
+    "Do not run Q173/Q172 for this profile until a new preregistration explains and gates visible output.",
+    "Resume remaining source/actionable queue sequentially from WORK_QUEUE.md and per-iteration RESULTS/receipts.",
+    "Keep historical Q190 values separate from Q195 smoke diagnostics."
+  ],
+  "preserved": [
+    "Model/runtime weights and Q190 metrics were not changed.",
+    "Q195 smoke server was stopped; no model test remains active."
+  ],
+  "resumeDocument": "artifacts/evaluacion-modelos-llamacode/Q-20261102-VF-RESUME-194/PAUSE-POINT-VF-20261019-01-20261102.md",
+  "lastSmokeReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261102-VF-RESUME-194/receipts/smoke-retry-max128-q195-20261102.json",
+  "lastSheetSyncReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261102-VF-RESUME-194/receipts/sheet-sync-smoke-retry-max128-q195-20261102.json",
+  "lock": {
+    "acquiredExclusivelyForPauseDocumentation": true,
+    "releasedAfterDocumentation": true,
+    "activeAtPause": false
+  }
+}
