@@ -1,0 +1,16 @@
+{
+  "preparedAtUtc": "2026-11-02T22:56:29Z",
+  "task": "Q-20261102-VF-RESUME-198",
+  "owner": "Codex",
+  "lockBeforeRelease": "task=Q-20261102-VF-RESUME-198\nowner=Codex\nacquired=2026-11-02T22:49:40Z\n",
+  "releaseRequestedByUser": true,
+  "releasePreconditions": {
+    "testsPaused": true,
+    "ownInferenceServerStopped": true,
+    "port18503Free": true,
+    "sheetPauseReadbackPassed": true,
+    "pauseCheckpointWritten": true
+  },
+  "releaseAction": "Remove WORK_QUEUE.lock only if its contents still exactly match lockBeforeRelease; verify the path is absent afterward. Do not touch any lock with a different task/owner/token.",
+  "resume": "Acquire a fresh exclusive lock; do not reuse Q198."
+}

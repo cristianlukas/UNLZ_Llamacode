@@ -1,0 +1,32 @@
+{
+  "recorded_at_utc": "2026-11-02T22:51:13Z",
+  "continuation_lock": "Q-20261102-VF-RESUME-198",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_title": "Listado",
+  "updates": [
+    {
+      "sheet": "Accionables",
+      "sheet_id": 1393124532,
+      "range": "D60:K60,M60:N60",
+      "status": "Q197 resumed under Q198 after live preflight PASS; single smoke request not sent yet",
+      "readback": "PASS",
+      "format_readback": "Arial 10, WRAP, TOP preserved"
+    },
+    {
+      "sheet": "Modelos locales por peso",
+      "sheet_id": 2026102751,
+      "range": "C33,X33",
+      "status": "Preflight PASS; smoke pending; Q190 retained",
+      "readback": "PASS",
+      "format_readback": "WRAP, TOP preserved"
+    }
+  ],
+  "preservation_checks": {
+    "inventory_row33_D": 5155.87,
+    "inventory_row33_E": 230.02,
+    "inventory_row33_F": 74,
+    "inventory_row33_Z": "15,314 / 5,142 s",
+    "all_unchanged": true
+  },
+  "preflight_receipt": "receipts/resume-preflight-q198-20261102.json"
+}

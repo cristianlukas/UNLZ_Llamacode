@@ -1,6 +1,6 @@
 # Q197 — smoke dual con reasoning desactivado (NInfer-3090 v0.17.1)
 
-**Estado:** pausado a pedido del usuario después de que el engine llegó a `ready`; no se hizo ningún GET ni se envió el request del smoke. Esta iteración habilita un único smoke, no la ladder todavía.
+**Estado actual:** PAUSADO por pedido del usuario después de un smoke único PASS bajo continuación Q198. Q173, cold/hot y Q172 pendientes; no hay prueba activa ni servidor propio. El bloque de pausa histórico y su detalle se conservan abajo.
 
 ## Pregunta
 
@@ -34,6 +34,16 @@ El preflight completo corregido pasó a las 22:43:10Z. Se arrancó el binario fi
 Postflight inmediato: el log dice `server stopped`; `ss` no muestra listener 18503; `nvidia-smi --query-compute-apps` no devolvió procesos de cómputo; `ps` no devolvió `ninfer-serve`. No se hizo una nueva lectura de faults del kernel después de esta carga; no afirmar cero faults nuevos para este intento. GUI y procesos ajenos no fueron tocados. El log original permanece en `.../runtime-ninfer-3090-v0.17.1/q197/server.log`.
 
 Al reanudar: reclamar un lock nuevo, volver a leer AGENTS/README/WORK_QUEUE, repetir el preflight completo y sincronizar/readback del Sheet. Si todo pasa, volver a arrancar exactamente el artefacto y flags de este plan, comprobar readiness y el único model ID, y entonces enviar una sola vez el smoke `reasoning_effort="none"`. No ejecutar retries. Si pasa, registrar/sincronizar antes de considerar la ladder Q173 (hasta 261888) y luego Q172; si falla, parar esa rama y mantener Q190 intacto. Este punto de pausa no autoriza iniciar nada automáticamente.
+
+## Estado posterior de la reanudación Q198
+
+El smoke se ejecutó una vez y pasó; el detalle exacto y los límites están en `RESULTS.md` y `receipts/smoke-result-q197-q198.json`. Próxima etapa: continuar el preregistro Q173 existente en Q193 (8K×3, 32K, 64K, 128K y máximo 261888; sin 523K), serialmente y sincronizando/leyendo el Sheet después de cada tramo. Q172 normal de tres semillas espera a que Q173 cierre. Mantener Q190 y el perfil productivo sin cambios.
+
+## Pausa solicitada — continuación Q198 — 2026-11-02T22:55:16Z
+
+El usuario pidió pausar las pruebas, liberar el lock y registrar el estado para retomarlo después. Q197 smoke permanece **PASS**; no se inició Q173, la medición cold/hot pendiente ni Q172. El servidor del smoke ya está detenido, el puerto 18503 está libre y no queda proceso `ninfer-serve` propio. Se actualizó y leyó de vuelta el Sheet antes de cerrar esta pausa. Se libera únicamente el lock `Q-20261102-VF-RESUME-198`; no tocar locks de otras tareas.
+
+Al reanudar: adquirir un lock exclusivo nuevo; releer AGENTS.md, README.md y WORK_QUEUE.md; repetir todos los gates live (servicios, GPU0/1, cuarentena ASUS, P2P, gpu_unlock/helper, faults, RAM, espacio, hashes y puerto); luego continuar desde Q173 preregistrado, sin copiar ni modificar pesos, usando pipeline `--devices 0,1`, serial, contexto máximo 261888 y sin 523K. Medir cold/hot y Q173 con 8192×3, 32768, 65536, 131072 y 261888; actualizar y leer de vuelta Resultados/Modelos locales por peso tras cada hito. Sólo al cerrar Q173 ejecutar Q172 seeds 42/43/44 en serie, actualizando Accionables/inventario después de cada semilla. Mantener métricas Q190 independientes e intactas. Checkpoint estructurado: `receipts/pause-point-q198-20261102.json`.
 
 ## Límites y secuencia después del smoke
 

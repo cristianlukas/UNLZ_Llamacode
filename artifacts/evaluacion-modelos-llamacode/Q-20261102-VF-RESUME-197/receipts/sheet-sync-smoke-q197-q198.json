@@ -1,0 +1,33 @@
+{
+  "recorded_at_utc": "2026-11-02T22:53:29Z",
+  "continuation_lock": "Q-20261102-VF-RESUME-198",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_title": "Listado",
+  "updates": [
+    {
+      "sheet": "Accionables",
+      "sheet_id": 1393124532,
+      "range": "D60:K60,M60:N60",
+      "status": "Q197 single smoke PASS; no ladder yet",
+      "readback": "PASS",
+      "format_readback": "Arial 10, WRAP, TOP preserved"
+    },
+    {
+      "sheet": "Modelos locales por peso",
+      "sheet_id": 2026102751,
+      "range": "C33,X33",
+      "status": "Q197 smoke PASS; short-request rates explicitly diagnostic; Q173/Q172 pending",
+      "readback": "PASS",
+      "format_readback": "WRAP, TOP preserved"
+    }
+  ],
+  "preservation_checks": {
+    "inventory_row33_D_prefill": 5155.87,
+    "inventory_row33_E_decode": 230.02,
+    "inventory_row33_F_q172": 74,
+    "inventory_row33_Z_init": "15,314 / 5,142 s",
+    "q190_values_unchanged": true
+  },
+  "result_receipt": "receipts/smoke-result-q197-q198.json",
+  "server_log_sha256": "6e1c2a71bfdc7154d83eafb0e7d1e976cc86a290c07fb80e6340108993fb8022"
+}

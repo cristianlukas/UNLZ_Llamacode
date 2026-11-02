@@ -1,0 +1,84 @@
+{
+  "recordedAtUtc": "2026-11-02T22:55:16Z",
+  "originalTask": "Q-20261102-VF-RESUME-197",
+  "continuationLock": "Q-20261102-VF-RESUME-198",
+  "campaign": "VF-20261019-01",
+  "status": "paused_by_user",
+  "activeTests": [],
+  "completedThisContinuation": [
+    {
+      "test": "Q197 dual 8K Chat Completions smoke",
+      "result": "PASS",
+      "requestCount": 1,
+      "retryCount": 0,
+      "devices": ["GPU0 / RTX 3090 / 0000:01:00.0", "GPU1 / RTX 3090 / 0000:03:00.0"],
+      "output": "PONG",
+      "httpStatus": 200,
+      "finishReason": "stop",
+      "reasoningTokens": 0,
+      "promptTokens": 20,
+      "completionTokens": 3,
+      "clientElapsedSeconds": 0.09828593299607746,
+      "ttftMs": 79.0,
+      "totalMs": 88.3,
+      "diagnosticOnlyPrefillTokS": 422.5,
+      "diagnosticOnlyDecodeTokS": 216.6,
+      "engineReadySeconds": 20.5,
+      "mtpAccepted": "3/3",
+      "limitations": [
+        "Very short prompt/output; rates are not ladder means or inventory averages.",
+        "20.5 s engine-ready time is not a comparable cold/hot initialization measurement.",
+        "This smoke does not measure general quality or safety."
+      ],
+      "receipt": "smoke-result-q197-q198.json",
+      "serverLog": "q197-server-q198.log",
+      "serverLogSha256": "6e1c2a71bfdc7154d83eafb0e7d1e976cc86a290c07fb80e6340108993fb8022"
+    }
+  ],
+  "preflight": {
+    "receipt": "resume-preflight-q198-20261102.json",
+    "status": "PASS before smoke",
+    "summary": "No prior inference server/CUDA compute or port 18503 listener; ASUS quarantine 1636/1636; P2P read/write both directions; gpu_unlock and boot verifier on both GPUs; RAM/storage/hash gates passed; no new GPU faults since the recorded Q195 baseline."
+  },
+  "postflight": {
+    "status": "PASS per smoke result receipt",
+    "ninferServerStoppedBySigint": true,
+    "port18503Free": true,
+    "cudaComputeApps": [],
+    "newKernelFaultsSincePreflight": 0,
+    "peritosoftAndGuiTouched": false,
+    "q190MetricsPreserved": true
+  },
+  "pendingInPreregisteredOrder": [
+    {
+      "stage": "Q173 context ladder and cold/hot initialization",
+      "contexts": [8192, 32768, 65536, 131072, 261888],
+      "repeats": {"8192": 3, "32768": 1, "65536": 1, "131072": 1, "261888": 1},
+      "outputTokens": 128,
+      "serial": true,
+      "devices": "--devices 0,1 pipeline across both RTX 3090; not tensor parallel",
+      "maximumContext": 261888,
+      "523K": "excluded",
+      "requiredMetrics": ["TTFT", "prefill_tok_s", "decode_tok_s", "actual_input_tokens", "init_cold_s", "init_hot_s"],
+      "sourcePreregistration": "../../Q-20261102-VF-RESUME-193/profiles/qwen36-ninfer-3090-v0.17.1/receipts/preregistration.json"
+    },
+    {
+      "stage": "Q172 Tool-Eval Hard Mode 2.8.0",
+      "blockedUntil": "Q173 closed and its result synchronized/read back",
+      "seeds": [42, 43, 44],
+      "scenariosPerSeed": 28,
+      "timeoutSeconds": 120,
+      "failOnSafety": true,
+      "serial": true
+    }
+  ],
+  "resumeInstructions": [
+    "Acquire a fresh exclusive WORK_QUEUE.lock; do not reuse Q198.",
+    "Read AGENTS.md, README.md, WORK_QUEUE.md and the lock before any edits/build/benchmark/GPU activity.",
+    "Repeat all live preflight gates, especially inference-server/process state, GPU faults, ASUS quarantine, P2P, gpu_unlock/helper, memory, disk space, exact model/runtime hashes and port 18503.",
+    "Continue with the existing Q173 preregistration, one ladder point at a time; after each valid milestone update and read back Google Sheets Resultados and Modelos locales por peso.",
+    "Run Q172 only after Q173 closes, updating and reading back Accionables/inventory after each seed.",
+    "Keep Q190 metrics/runtime separate and unchanged; do not run 523K or delete/overwrite model weights."
+  ],
+  "sheetSync": "sheet-sync-pause-q198-20261102.json"
+}

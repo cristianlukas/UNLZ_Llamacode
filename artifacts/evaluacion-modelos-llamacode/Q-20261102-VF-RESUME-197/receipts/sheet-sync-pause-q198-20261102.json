@@ -1,0 +1,33 @@
+{
+  "recordedAtUtc": "2026-11-02T22:56:29Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheetTitle": "Listado",
+  "updates": [
+    {
+      "sheet": "Accionables",
+      "sheetId": 1393124532,
+      "ranges": ["D60", "H60", "J60", "N60"],
+      "readback": "PASS",
+      "formatReadback": "Arial 10, WRAP, TOP preserved",
+      "summary": "Marked Q197 smoke PASS and campaign PAUSED by user; Q173/cold-hot/Q172 remain pending; linked pause checkpoint; timestamp updated."
+    },
+    {
+      "sheet": "Modelos locales por peso",
+      "sheetId": 2026102751,
+      "ranges": ["C33", "X33"],
+      "readback": "PASS",
+      "formatReadback": "Arial 10, WRAP, TOP preserved",
+      "summary": "Marked Q198 continuation paused and Q173/Q172 pending."
+    }
+  ],
+  "preservationChecks": {
+    "inventoryRow33PrefillD": 5155.874169492837,
+    "inventoryRow33DecodeE": 230.02217192569668,
+    "inventoryRow33Q172F": 74,
+    "inventoryRow33InitZ": "15,314 / 5,142 s",
+    "q190MetricsUnchanged": true
+  },
+  "formattingWasNotChanged": true,
+  "noTestStartedAfterSmoke": true,
+  "pauseCheckpoint": "receipts/pause-point-q198-20261102.json"
+}
