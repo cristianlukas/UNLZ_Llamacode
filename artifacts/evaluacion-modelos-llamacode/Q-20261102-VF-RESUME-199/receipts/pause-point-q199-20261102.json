@@ -1,0 +1,100 @@
+{
+  "recordedAtUtc": "2026-11-02T23:00:53Z",
+  "campaign": "VF-20261019-01",
+  "continuationLock": "Q-20261102-VF-RESUME-199",
+  "status": "paused_by_user",
+  "testsStarted": [],
+  "preflight": {
+    "status": "PASS_read_only",
+    "inferenceProcesses": [],
+    "cudaComputeApps": [],
+    "port18503Free": true,
+    "peritosoftPreserved": {
+      "pid": 682159,
+      "listener": "0.0.0.0:32100",
+      "touched": false
+    },
+    "guiTouched": false,
+    "otherListener": "42971; not investigated or changed",
+    "gpus": [
+      {
+        "index": 0,
+        "pci": "0000:01:00.0",
+        "model": "RTX 3090",
+        "usedMemoryMiB": 868,
+        "utilizationPercent": 9,
+        "temperatureC": 48
+      },
+      {
+        "index": 1,
+        "pci": "0000:03:00.0",
+        "model": "RTX 3090",
+        "usedMemoryMiB": 108,
+        "utilizationPercent": 26,
+        "temperatureC": 30
+      }
+    ],
+    "asusVramQuarantine": {
+      "service": "vram-quarantine@GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6.service",
+      "status": "active",
+      "reservedFrames": 1636,
+      "totalFrames": 1636,
+      "failedFrames": 0,
+      "frameSizeKiB": 64
+    },
+    "p2p": "read/write OK",
+    "gpuUnlock": "both RTX 3090 PCI devices configured and kernel log reports unlocked",
+    "helperBootVerifier": {
+      "unit": "3090-helper-verify-boot.service",
+      "enabled": true,
+      "lastResult": "success",
+      "exitStatus": 0,
+      "historicalJournalFailures": "older failures exist before the latest PASS; not attributed to this preflight"
+    },
+    "memAvailableBytes": 114651774976,
+    "memAvailableGateBytes": 34359738368,
+    "swapUsedApprox": "7.69 GiB of 8 GiB; not a preregistered gate",
+    "freeBytes": {
+      "root": 2341777408,
+      "rootGate": 2000000000,
+      "discoD": 81195552768,
+      "hddExtra": 262798524416
+    },
+    "modelAndRuntimeHashes": "match pinned Q190/Q193 sizes and SHA-256"
+  },
+  "postflight": {
+    "inferenceProcesses": [],
+    "port18503Free": true,
+    "cudaComputeApps": [],
+    "serverLaunched": false,
+    "requestSent": false,
+    "gpuBenchmarkRun": false,
+    "buildOrDownload": false
+  },
+  "pendingInOrder": [
+    {
+      "stage": "Q173 context ladder and cold/hot initialization",
+      "contexts": [8192, 32768, 65536, 131072, 261888],
+      "repeats": {"8192": 3, "32768": 1, "65536": 1, "131072": 1, "261888": 1},
+      "outputTokens": 128,
+      "maxContext": 261888,
+      "523K": "excluded",
+      "devices": "both RTX 3090, NInfer pipeline, not tensor parallel",
+      "metrics": ["TTFT", "prefill_tok_s", "decode_tok_s", "actual_input_tokens", "init_cold_s", "init_hot_s"],
+      "blockerBeforeStart": "Amend preregistration to pin exact fixtures/prompts, tokenization, and sampling settings; attempt to recover the Q190 corpus first."
+    },
+    {
+      "stage": "Q172 Tool-Eval Hard Mode 2.8.0",
+      "blockedUntil": "Q173 complete and synchronized/read back",
+      "seeds": [42, 43, 44],
+      "scenariosPerSeed": 28,
+      "timeoutSeconds": 120,
+      "failOnSafety": true,
+      "serial": true
+    }
+  ],
+  "sheetUpdatedInQ199": false,
+  "sheetNote": "No test/experiment ran in Q199; Q198 sheet pause remains the last experiment status. Q199 read-only preflight and pause are documented locally.",
+  "lockTimestampAnomaly": "lock file said acquired=2026-11-02T23:02:00Z, later than actual UTC observed (23:00:xxZ); exact acquisition time was not inferable and is not fabricated.",
+  "resumeFrom": "artifacts/evaluacion-modelos-llamacode/Q-20261102-VF-RESUME-199/PAUSE-POINT-Q199-20261102.md"
+}
