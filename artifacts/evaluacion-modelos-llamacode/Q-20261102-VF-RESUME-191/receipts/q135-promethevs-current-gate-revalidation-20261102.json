@@ -1,0 +1,50 @@
+{
+  "task": "Q-20261102-VF-RESUME-191",
+  "event": "PROMETHEVS 0.2 upstream and host gate revalidation",
+  "timestamp_utc": "2026-11-02T01:31:51Z",
+  "source_item_id": "q135-sheet-60-promethevs-deepseek41",
+  "result": {
+    "finding": "La release oficial PROMETHEVS 0.2 incluye engine server instalable, pero el procedimiento usa PowerShell y exige Windows 10/11, 64 GB RAM, una NVIDIA RTX 30/40 de al menos 12 GB y alrededor de 1.1 TB libre en NVMe; baja unos 510 GB y construye stores ~4 h en la PC del autor. El bundle sirve DeepSeek V4.1-Flash-1017 con endpoint OpenAI-compatible. El informe/README reportan resultados en un RTX 3060 y una PC: 5.8 tok/s cold y 7.4 warm en el mejor prompt de código, 4.5–5.4 reasoning/agent y 98.33% de acuerdo palabra-a-palabra en 960 palabras contra su ruta exacta; no es Q172 ni validación externa. df -B1 -P actual: C=10,927,116,288 B + D=87,414,194,176 B = 98,341,310,464 B disponibles, déficit=1,001,658,689,536 B frente al requisito aproximado de 1.1 TB. HDD extra no cuenta como NVMe. Este host usa Ubuntu y no tiene una ruta dual-GPU Promethevs calificada.",
+    "testDecision": "No descargar, compilar ni inferir: fallan plataforma (el bundle se instala con PowerShell en Windows) y espacio NVMe; además el perfil publicado usa una GPU y sus resultados no califican 2×3090. Reabrir sólo ante runtime compatible con Linux y ambas RTX 3090 (o decisión explícita de aceptar una GPU), ≥1.1 TB libre NVMe, y holdout/Q172 comparable; primero smoke de carga/API, luego calidad/ladder si pasa.",
+    "testRun": false,
+    "downloadStarted": false,
+    "buildStarted": false,
+    "inferenceStarted": false,
+    "gpuUsed": false
+  },
+  "sources": [
+    {
+      "url": "https://github.com/Magnvs7/Promethevs/releases/tag/v0.2",
+      "claim": "0.2 installable engine server; Windows, about 1.1 TB NVMe; authors hardware and benchmark claims."
+    },
+    {
+      "url": "https://github.com/Magnvs7/Promethevs",
+      "claim": "Install flow is PowerShell; requirements include Windows 10/11, single GPU, and NVMe."
+    },
+    {
+      "url": "https://github.com/Magnvs7/Promethevs/blob/main/PROMETHEVS_report_0.1.md",
+      "claim": "Author report methodology and measured agreement against its own exact route."
+    }
+  ],
+  "hostPreflight": {
+    "diskCommand": "df -B1 -P",
+    "cNvmeFreeBytes": 10927116288,
+    "dNvmeFreeBytes": 87414194176,
+    "cPlusDBytes": 98341310464,
+    "requiredApproxBytes": 1100000000000,
+    "deficitBytes": 1001658689536,
+    "hddExtraFreeBytes": 264550998016,
+    "hostOs": "Ubuntu",
+    "inferenceServerProcessesFound": []
+  },
+  "sheetSync": {
+    "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "tab": "IA local",
+    "range": "C60:I60; L60",
+    "readback": "PASS",
+    "readbackAtUtc": "2026-11-02T01:31:51Z",
+    "wrapStrategyPreserved": true
+  },
+  "lockOwner": "Q-20261102-VF-RESUME-191",
+  "lockRetained": true
+}
