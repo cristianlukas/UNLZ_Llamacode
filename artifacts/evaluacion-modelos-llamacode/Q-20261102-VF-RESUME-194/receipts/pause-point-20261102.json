@@ -2,7 +2,7 @@
   "task": "VF-20261019-01",
   "worker": "Q-20261102-VF-RESUME-194",
   "timestamp_utc": "2026-11-02T12:18:08Z",
-  "state": "paused_by_user",
+  "state": "paused_by_user_lock_released",
   "profile": "Qwen3.6-35B-A3B · NInfer-3090 v0.17.1 Linux · dual pipeline --devices 0,1",
   "model_artifact": {
     "path": "/media/cristian/Disco local/Modelos-eval/Qwen3.6-35B-A3B-NInfer-all-20261101/qwen3_6_35b_a3b.ninfer",
@@ -55,11 +55,14 @@
     "receipts/sheet-sync-immediate-preflight-20261102.json",
     "receipts/sheet-sync-launch-guard-correction-20261102.json",
     "receipts/sheet-sync-model-inventory-pause-20261102.json",
-    "receipts/sheet-sync-actionable-pause-20261102.json"
+    "receipts/sheet-sync-actionable-pause-20261102.json",
+    "receipts/lock-release-20261102.json"
   ],
   "sheet_sync_actionables": {
     "receipt": "receipts/sheet-sync-actionable-pause-20261102.json",
     "timestamp_utc": "2026-11-02T12:19:21Z",
     "readback": "Accionables!D60,H60:L60,N60 coincide; formato Arial 10/WRAP preservado."
-  }
+  },
+  "lock_release_at_utc": "2026-11-02T12:21:34Z",
+  "lock_token_released": "Q-20261102-VF-RESUME-194-20261102T"
 }

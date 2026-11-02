@@ -2,7 +2,7 @@
 
 ## Estado: pausado por pedido del usuario (2026-11-02T12:18:08Z)
 
-No quedan pruebas ejecutándose. El servidor del smoke Q194 está detenido; puerto 18503 libre; no hay procesos CUDA compute. La GUI de LlamaCode quedó intacta. El lock Q194 se liberará al terminar de escribir este punto de pausa.
+No quedan pruebas ejecutándose. El servidor del smoke Q194 está detenido; puerto 18503 libre; no hay procesos CUDA compute. La GUI de LlamaCode quedó intacta. El lock Q194 fue liberado al cerrar este punto de pausa (2026-11-02T12:21:34Z).
 
 ## Qué se hizo
 
@@ -19,4 +19,4 @@ Q173 y Q172 no empezaron. Sigue preregistrado un único reintento del smoke 8K c
 
 Al reanudar: reclamar lock exclusivo; releer AGENTS/README/WORK_QUEUE; verificar hash de modelo/runtime, servidores, P2P, unlock, helper/quarantine, faults de kernel, memoria y discos (raíz >= 2 GB); mantener temporales y logs en D; actualizar ambas pestañas del Sheet después de cada prueba.
 
-Los archivos de pesos y los resultados históricos Q190/Q193 permanecen intactos. Detalle reproducible: `receipts/pause-point-20261102.json` y `receipts/sheet-sync-actionable-pause-20261102.json`.
+Los archivos de pesos y los resultados históricos Q190/Q193 permanecen intactos. Detalle reproducible: `receipts/pause-point-20261102.json`, `receipts/sheet-sync-actionable-pause-20261102.json` y `receipts/lock-release-20261102.json`.

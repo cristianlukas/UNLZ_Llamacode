@@ -1,0 +1,11 @@
+{
+  "worker": "Q-20261102-VF-RESUME-194",
+  "token": "Q-20261102-VF-RESUME-194-20261102T",
+  "released_at_utc": "2026-11-02T12:21:34Z",
+  "reason": "Explicit user request to pause all tests and release the lock after documenting the checkpoint.",
+  "no_test_running": true,
+  "inference_server": "stopped",
+  "port_18503": "free",
+  "cuda_compute_apps": [],
+  "resume_from": "artifacts/evaluacion-modelos-llamacode/Q-20261102-VF-RESUME-194/receipts/pause-point-20261102.json"
+}
