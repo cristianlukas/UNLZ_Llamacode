@@ -487,6 +487,50 @@ QStringList HardwareDiagnostics::voicePlanServerArgs(const QVariantMap &plan,
     return args;
 }
 
+QVariantMap HardwareDiagnostics::voicePlanBesideExternalModel(const QVariantMap &plan,
+                                                              const QVariantMap &hardware)
+{
+    if (!plan.value(QStringLiteral("enabled")).toBool())
+        return plan;
+    int roomiest = -1;
+    double roomiestFree = -1.0;
+    QString roomiestName;
+    const QVariantList gpus = hardware.value(QStringLiteral("gpus")).toList();
+    for (int position = 0; position < gpus.size(); ++position) {
+        const QVariantMap gpu = gpus.at(position).toMap();
+        const double total = memoryValue(gpu, QStringLiteral("totalMb"));
+        const double free = gpu.contains(QStringLiteral("freeMb"))
+            ? memoryValue(gpu, QStringLiteral("freeMb")) : total;
+        const int index = gpu.value(QStringLiteral("index"), position).toInt();
+        if (free > roomiestFree || (qFuzzyCompare(free + 1.0, roomiestFree + 1.0) && index < roomiest)) {
+            roomiest = index;
+            roomiestFree = free;
+            roomiestName = gpu.value(QStringLiteral("name")).toString();
+        }
+    }
+    if (roomiest < 0)
+        return plan;
+    QVariantMap out = plan;
+    const double reserve = plan.value(QStringLiteral("voiceReserveMb")).toDouble();
+    const bool fits = roomiestFree + 0.001 >= reserve;
+    out[QStringLiteral("mode")] = QStringLiteral("voice-beside-external-model");
+    out[QStringLiteral("voiceGpuIndex")] = roomiest;
+    out[QStringLiteral("auxiliaryGpuIndex")] = roomiest;
+    out[QStringLiteral("voiceGpuMask")] = QString::number(roomiest);
+    out[QStringLiteral("weakGpuName")] = roomiestName;
+    out[QStringLiteral("weakGpuFreeMb")] = roomiestFree;
+    out[QStringLiteral("voiceReserveAvailable")] = fits;
+    out[QStringLiteral("voicePlacementSafe")] = fits;
+    // El reparto del modelo no es nuestro: nada que aplicarle al otro motor.
+    out[QStringLiteral("modelTensorSplit")] = QString();
+    out[QStringLiteral("modelMainGpu")] = -1;
+    out[QStringLiteral("modelPlacementSafe")] = false;
+    out[QStringLiteral("reason")] = QStringLiteral(
+        "El LLM corre en otro motor; STT/TTS van a la GPU %1, la de más VRAM libre (%2 MB).")
+        .arg(roomiest).arg(QString::number(roomiestFree, 'f', 0));
+    return out;
+}
+
 QString HardwareDiagnostics::hardwareFingerprint(const QVariantMap &hardware)
 {
     QStringList parts;

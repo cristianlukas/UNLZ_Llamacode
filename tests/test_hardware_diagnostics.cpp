@@ -22,6 +22,7 @@ private slots:
     void voicePlanSplitsModelTooBigForOneGpu();
     void voicePlanServerArgsAvoidTensorSplitWithMtp();
     void voicePlanSoloPlacementIsStableWithLiveServer();
+    void voicePlanBesideExternalModelUsesRoomiestGpu();
     void weakPciePrefersLayer();
     void fastPcieAllowsTensor();
     void profileAffinityMatchesDualGpuAndExactName();
@@ -426,6 +427,36 @@ void HardwareDiagnosticsTests::voicePlanSoloPlacementIsStableWithLiveServer()
     QCOMPARE(again.value(QStringLiteral("modelMainGpu")).toInt(), 1);
     QCOMPARE(again.value(QStringLiteral("modelTensorSplit")).toString(),
              first.value(QStringLiteral("modelTensorSplit")).toString());
+}
+
+void HardwareDiagnosticsTests::voicePlanBesideExternalModelUsesRoomiestGpu()
+{
+    // Maya-XS (DeepSeek V4.1) ocupa las dos placas; quedan ~2,9 GB libres en cada
+    // una pero la GPU 0 (en cuarentena) es la que tiene menos. El plan normal le
+    // mandaría la voz a esa "débil"; con un motor externo va a la de más libre.
+    const QVariantMap hardware = twoRtx3090(2897, 4936);
+    const QVariantMap plan = HardwareDiagnostics::voiceGpuPlan(hardware, 2048.0, 0.0);
+    QCOMPARE(plan.value(QStringLiteral("voiceGpuIndex")).toInt(), 0);
+    const QVariantMap external = HardwareDiagnostics::voicePlanBesideExternalModel(plan, hardware);
+    QCOMPARE(external.value(QStringLiteral("mode")).toString(),
+             QStringLiteral("voice-beside-external-model"));
+    QCOMPARE(external.value(QStringLiteral("voiceGpuIndex")).toInt(), 1);
+    QCOMPARE(external.value(QStringLiteral("voiceGpuMask")).toString(), QStringLiteral("1"));
+    QVERIFY(external.value(QStringLiteral("voicePlacementSafe")).toBool());
+    QVERIFY(external.value(QStringLiteral("modelTensorSplit")).toString().isEmpty());
+    QVERIFY(HardwareDiagnostics::voicePlanServerArgs(external, {}).isEmpty());
+
+    // Sin lugar para la reserva en ninguna: no promete una GPU para la voz.
+    const QVariantMap full = twoRtx3090(600, 900);
+    const QVariantMap none = HardwareDiagnostics::voicePlanBesideExternalModel(
+        HardwareDiagnostics::voiceGpuPlan(full, 2048.0, 0.0), full);
+    QVERIFY(!none.value(QStringLiteral("voicePlacementSafe")).toBool());
+
+    // Una sola GPU: el plan viene apagado y se devuelve tal cual.
+    const QVariantMap single{{QStringLiteral("gpus"), QVariantList{QVariantMap{
+        {QStringLiteral("index"), 0}, {QStringLiteral("totalMb"), 24576}}}}};
+    const QVariantMap off = HardwareDiagnostics::voiceGpuPlan(single);
+    QCOMPARE(HardwareDiagnostics::voicePlanBesideExternalModel(off, single), off);
 }
 
 QTEST_MAIN(HardwareDiagnosticsTests)

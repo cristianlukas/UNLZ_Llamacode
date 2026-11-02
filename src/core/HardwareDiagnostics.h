@@ -35,6 +35,12 @@ public:
     // con GGML_BACKEND_SPLIT_AXIS_UNKNOWN al crear el contexto del draft.
     static QStringList voicePlanServerArgs(const QVariantMap &plan,
                                            const QStringList &profileArgs);
+    // El LLM lo sirve otro motor (cloud o proceso administrado: Maya, vLLM) y ya
+    // ocupa las GPU a su manera: no hay reparto que cuidar, así que la voz va a
+    // la GPU con más VRAM libre en vez de a la "débil". Medido junto a Maya-XS:
+    // la GPU con menos libre (la ASUS en cuarentena) no podía darle 464 MB a whisper.
+    static QVariantMap voicePlanBesideExternalModel(const QVariantMap &plan,
+                                                    const QVariantMap &hardware);
     static QString hardwareFingerprint(const QVariantMap &hardware);
     static QString recommendedSplitMode(const QVariantMap &hardware);
     // Evalua la afinidad declarativa de un perfil contra el hardware observado.

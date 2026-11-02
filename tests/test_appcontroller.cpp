@@ -305,6 +305,7 @@ private slots:
     void agentLevels_contextBudgetLadder();
     void charlaKeepsAgentThinkingOffWhenProfileReapplies();
     void charlaTuneHoldsForTheWholeSession();
+    void serverVisionFromModelsAndProps();
     void privacyModeHidesAndBlocksNetworkTools();
     void doctorReportsStructureAndIssues();
     void importOllamaModelsIngestsStore();
@@ -3215,6 +3216,9 @@ void AppControllerTests::nativeManagedProcessStartsAndStopsOwnedServer()
         "a = p.parse_args()\n"
         "class H(BaseHTTPRequestHandler):\n"
         "  def do_GET(self):\n"
+        "    if self.path == '/v1/models':\n"
+        "      body = b'{\"data\":[{\"id\":\"native-test\",\"architecture\":{\"input_modalities\":[\"text\",\"image\"]}}]}'\n"
+        "      self.send_response(200); self.end_headers(); self.wfile.write(body); return\n"
         "    self.send_response(200 if self.path == '/health' else 404)\n"
         "    self.end_headers()\n"
         "  def log_message(self, *_): pass\n"
@@ -3259,9 +3263,12 @@ void AppControllerTests::nativeManagedProcessStartsAndStopsOwnedServer()
     app.startServer(launchId);
     QTRY_VERIFY_WITH_TIMEOUT(app.serverRunning(), 5000);
     QTRY_VERIFY_WITH_TIMEOUT(app.serverReady(), 15000);
+    // Sin --mmproj: la visión sale de /v1/models (input_modalities con image).
+    QTRY_VERIFY_WITH_TIMEOUT(app.serverHasVision(), 5000);
     app.stopServer();
     QTRY_VERIFY_WITH_TIMEOUT(!app.serverRunning(), 10000);
     QVERIFY(!app.serverReady());
+    QVERIFY(!app.serverHasVision());
 #endif
 }
 
@@ -3805,6 +3812,35 @@ void AppControllerTests::charlaTuneHoldsForTheWholeSession()
     QVERIFY(!app.charlaTuneAppliesToForTest(QStringLiteral("sys-vram-8-qwen-agent")));
     app.stopCharla();
     QVERIFY(!app.charlaTuneAppliesToForTest(QStringLiteral("sys-qwen38-27b-udq4-131k")));
+}
+
+// Un perfil cloud/remoto no tiene --mmproj que mirar: sin preguntarle al endpoint
+// el agente nunca le mandaba la captura de desktop_observe a un modelo que ve
+// (Project Maya con DeepSeek V4.1, un llama-server remoto con mmproj).
+void AppControllerTests::serverVisionFromModelsAndProps()
+{
+    const QJsonObject maya = QJsonDocument::fromJson(R"({"object":"list","data":[
+        {"id":"deepseek-v4.1-flash","object":"model",
+         "architecture":{"input_modalities":["text","image"],"output_modalities":["text"]}}]})").object();
+    QVERIFY(AppController::serverVisionFromReply(maya, QStringLiteral("deepseek-v4.1-flash")));
+    // El perfil puede nombrar el modelo distinto de como lo sirve el endpoint.
+    QVERIFY(AppController::serverVisionFromReply(maya, QStringLiteral("otro-nombre")));
+    QVERIFY(AppController::serverVisionFromReply(maya));
+
+    const QJsonObject textOnly = QJsonDocument::fromJson(R"({"data":[
+        {"id":"a","architecture":{"input_modalities":["text"]}},
+        {"id":"b","architecture":{"input_modalities":["text","image"]}}]})").object();
+    QVERIFY(!AppController::serverVisionFromReply(textOnly, QStringLiteral("a")));
+    QVERIFY(AppController::serverVisionFromReply(textOnly, QStringLiteral("b")));
+
+    const QJsonObject vllm = QJsonDocument::fromJson(R"({"data":[{"id":"q","object":"model"}]})").object();
+    QVERIFY(!AppController::serverVisionFromReply(vllm, QStringLiteral("q")));
+
+    QVERIFY(AppController::serverVisionFromReply(QJsonDocument::fromJson(
+        R"({"modalities":{"vision":true,"audio":false}})").object()));
+    QVERIFY(!AppController::serverVisionFromReply(QJsonDocument::fromJson(
+        R"({"modalities":{"vision":false}})").object()));
+    QVERIFY(!AppController::serverVisionFromReply(QJsonObject{}));
 }
 
 // Niveles de agente = escalera de presupuesto de contexto. Ejercita los 5 presets

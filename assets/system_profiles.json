@@ -3920,6 +3920,82 @@
     "comment": "Receta medida para Ingi Charla en 2x RTX 3090 (docs/charla-balance-2x3090-20261101.md): el 27B entra entero en una GPU (~18,5-20,5 GB con mmproj y KV q4_0 a 32k) y la otra queda para whisper-small en CUDA (~1 GB, ~35 ms por frase) y auxiliares; piper corre en CPU. Fin de habla → primer audio 0,74-1,08 s en turnos tibios, decode 65-73 tok/s con MTP3. 32k/ubatch 512 ya vienen puestos para que Charla no relance el server por el tune; el agente JARVIS trae tools de PC y web."
   },
   {
+    "id": "sys-charla-jarvis-deepseek-maya-xs",
+    "q172Quality": 85,
+    "tier": "ASTRA-DeepSeek",
+    "order": 498,
+    "extra": true,
+    "benchmark": false,
+    "best": false,
+    "favorite": true,
+    "alias": "CHARLA DS",
+    "displayName": "[Charla JARVIS] DeepSeek V4.1 Flash Maya-XS · visión · voz + PC + web · dual 3090",
+    "contextPresets": [
+      32768
+    ],
+    "minVramGb": 48,
+    "minRamGb": 120,
+    "backend": {
+      "kind": "cloud",
+      "baseUrl": "http://127.0.0.1:18195",
+      "model": "deepseek-v4.1-flash",
+      "ctx": 32768,
+      "port": 18195,
+      "managedServer": {
+        "type": "native-process",
+        "platform": "linux",
+        "host": "127.0.0.1",
+        "port": 18195,
+        "vision": true,
+        "command": "/usr/bin/python3",
+        "args": [
+          "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/tools/linux_eval_scope.py",
+          "--run",
+          "--",
+          "/media/cristian/HDD extra/LlamaCode-evals/Q189-project-maya-v1.1.37/.venv/bin/python",
+          "/media/cristian/HDD extra/LlamaCode-evals/Q189-project-maya-v1.1.37/serve/server.py",
+          "--engine",
+          "strata",
+          "--config",
+          "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261102-CHARLA-VISION-SMARTEST/configs/maya-ds4-charla-32k-vision.json",
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "18195"
+        ],
+        "workingDirectory": "/media/cristian/HDD extra/LlamaCode-evals/Q189-project-maya-v1.1.37",
+        "requiredFiles": [
+          "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/tools/linux_eval_scope.py",
+          "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/tools/linux_eval_scope_exec.py",
+          "/media/cristian/HDD extra/LlamaCode-evals/Q189-project-maya-v1.1.37/.venv/bin/python",
+          "/media/cristian/HDD extra/LlamaCode-evals/Q189-project-maya-v1.1.37/serve/server.py",
+          "/media/cristian/HDD extra/LlamaCode-evals/Q189-project-maya-v1.1.37/build/maya-ds4",
+          "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261102-CHARLA-VISION-SMARTEST/configs/maya-ds4-charla-32k-vision.json",
+          "/media/cristian/7CFE1E0FFE1DC1F6/LlamaCode-evals/Q189/Maya-XS/maya-ds4/ds4.txt",
+          "/media/cristian/7CFE1E0FFE1DC1F6/LlamaCode-evals/Q189/vision/vision.bin"
+        ]
+      }
+    },
+    "agentProfileId": "agent-jarvis",
+    "vision": true,
+    "voice": {
+      "enabled": true,
+      "sttProvider": "local",
+      "sttMode": "http_batch",
+      "sttManagedEngine": "whisper-small",
+      "sttLanguage": "es",
+      "ttsProvider": "local",
+      "ttsMode": "piper",
+      "ttsManagedVoice": "es_ES-davefx-medium",
+      "ttsAutoConfigure": false,
+      "turnMode": "vad",
+      "smartTurn": true,
+      "bargeIn": true,
+      "autoListen": true
+    },
+    "comment": "El modelo más capaz con visión que convive con Ingi Charla en 2x RTX 3090 (docs/charla-balance-2x3090-20261101.md, Q-20261102-CHARLA-VISION-SMARTEST): DeepSeek V4.1 Flash 1017 Maya-XS (Q172 84,67 en Q190) con la torre de visión de DeepSeek, TP2, 32K y --reserve-mib 4096 (deja lugar real a whisper-small en cualquiera de las dos GPU; en la ASUS en cuarentena ~2,4 GB libres son bloques inutilizables). Turnos tibios: fin de habla → primer audio 0,74–1,14 s, LLM al primer texto 0,26–0,40 s; leyó una captura de calculadora (\"444\"). Costo: ~5 min de carga, ~100 GB de RAM en uso y el primer turno ~22 s (prefill del system de ~18K tokens). Corre en el scope de linux_eval_scope.py (systemd-oomd lo elige antes que el escritorio), con los expertos mapeados (--mmap-experts on: page cache recuperable, ~25 GB de RAM en uso) y llamando a serve/server.py directo: maya.py abre el navegador si hay DISPLAY. TC-92 falló en Q190: no usar con datos sensibles. Alternativa liviana de una sola GPU: sys-charla-jarvis-qwen38-27b."
+  },
+  {
     "id": "sys-qwen38-27b-q4km-131k",
     "tier": "24GB-Qwen38-Vision", "order": 164, "extra": true, "best": true, "benchmark": true, "autoCompanion": false,
     "displayName": "[experimental 24GB] Qwen3.8-27B Q4_K_M · MTP · visión · 131k",

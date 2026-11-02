@@ -23,6 +23,10 @@ Se aplica como el perfil de sistema **`sys-charla-jarvis-qwen38-27b`**
 JARVIS, el bloque de voz (whisper-small + piper) y los args ya ajustados para
 voz, así que entrar a Charla no relanza el server por el tune.
 
+**Más inteligente (2026-11-02):** `sys-charla-jarvis-deepseek-maya-xs`, con
+DeepSeek V4.1 Flash Maya-XS y visión nativa en las dos 3090 (Q172 84,67). Ver
+la actualización más abajo.
+
 ## Problemas encontrados y corregidos (los tres pesaban más que el modelo)
 
 1. **KV cache a medias.** El runtime emitía sólo `--cache-type-k`; V quedaba en
@@ -121,10 +125,75 @@ usuario tarda unos segundos en hablar.
 Las fallas de computer use son del backend Linux, no del modelo: ver
 "Pendiente".
 
+## Actualización 2026-11-02: el más inteligente con visión (DeepSeek V4.1 Flash)
+
+Pedido: el modelo más inteligente posible que conviva con Charla casi en tiempo
+real, con computer use, web y **visión nativa o mmproj**. Eso deja afuera a los
+candidatos sólo texto (Bonsai 2 27B NInfer, Q172 83,33) y a Flash-Next (visión
+no validada, Q172 73–80). Del post de r/LocalLLaMA (DeepSeek V4.1 Flash y
+Qwen3.8 Flash-Next en una 3090 Ti con Xolotl): los pesos XQ que usa (~350 GB y
+~90 GB) no están en disco ni entran en el espacio libre (D 80 GB); la misma
+familia DeepSeek ya está instalada como **Maya-XS** (Project Maya, Q172 84,67 en
+Q190) y DSX T16 (86,33, pero 429/25 tok/s y el esfuerzo de razonamiento quedó en
+High, comparación no limpia). `gpu_unlock` ya está activo en las dos placas.
+
+Maya-XS trae la torre de visión de DeepSeek (shard 1 del checkpoint oficial,
+0,97 GB): se bajó con SHA-256 verificado, se empaquetó con
+`tools/ds4/vision_pack.py` (idéntica bit a bit al checkpoint) y se agregó al pack
+con `pack_gguf.py` (backup del pack anterior en `charla-balance/`).
+
+| | Qwen3.8-27B UD-Q4 + mmproj (1 GPU) | Maya-XS DeepSeek V4.1 · expertos copiados a RAM | Maya-XS · expertos mapeados (perfil) |
+|---|---|---|---|
+| Calidad Q172 | 79 (1 semilla) | 84,67 (3 semillas, Q190) | 84,67 |
+| Visión | mmproj BF16 | torre nativa: leyó "444" de una captura de calculadora (1.er token 4,9 s) | ídem (3,1 s) |
+| Probe: 1.er token de un turno corto sobre 18,5K tokens cacheados | 242 ms | 0,32–0,46 s | 0,56–0,71 s |
+| Probe: decode | 40–48 tok/s | 21–30 tok/s | 17–21 tok/s |
+| Charla: fin de habla → primer audio (tibio) | 0,74–1,08 s | 0,74–1,14 s | 1,17–2,44 s |
+| Charla: LLM al primer texto | 0,50–0,55 s | 0,26–0,40 s | 0,41–0,80 s |
+| Primer turno (prefill del system) | 6,5 s | 22 s | 53 s |
+| Web (búsqueda → lectura → respuesta) | 23,5 s, correcta | 37 s, correcta | 103 s, correcta |
+| GPU | GPU1 ~18,5 GB; voz en GPU0 | ~21,7 GB por GPU (TP2) + whisper ~1 GB | ídem |
+| RAM en uso | baja | ~100 GB, swap lleno | ~25 GB (el resto, page cache recuperable) |
+| Carga | ~10 s | ~5 min | 1–5 min |
+
+Computer use con Maya: abrió la Calculadora real (ya con el arreglo de alias de
+e8d90ffe), tipeó, leyó texto, probó controles y pidió capturas; la ventana GTK4
+de GNOME Calculator no expone controles AT-SPI y la captura salió casi toda
+negra, así que no llegó al 9. Es una limitación de captura de esa ventana en este
+escritorio, no del modelo (con el 27B pasó lo mismo con los controles).
+
+**Decisión.** DeepSeek V4.1 Maya-XS es el modelo más inteligente con visión que
+convive con Charla: con los expertos en RAM iguala la latencia del 27B y le gana
+al primer texto. Queda como perfil de sistema
+**`sys-charla-jarvis-deepseek-maya-xs`**, administrado por la app (native-process
+dentro del scope de `tools/linux_eval_scope.py`, como ASTRA), con la voz en la
+otra GPU. El perfil usa `--mmap-experts on`: copiados a RAM (78,4 GB) llenaban el
+swap y systemd-oomd mataba el scope (exit 247), y con el usuario usando la PC no
+conviene. Para la latencia mínima con la PC libre, cambiar a `--mmap-experts auto`
+en `artifacts/evaluacion-modelos-llamacode/Q-20261102-CHARLA-VISION-SMARTEST/configs/maya-ds4-charla-32k-vision.json`.
+El 27B (`sys-charla-jarvis-qwen38-27b`) sigue siendo la opción liviana de una GPU.
+
+Arreglos que salieron de estas pruebas (con tests):
+
+- **Visión en backends cloud/administrados.** Sin `--mmproj` la app nunca le
+  avisaba al agente que el modelo ve, así que `desktop_observe` no mandaba la
+  captura (también afectaba al perfil vLLM "visión"). Ahora un proceso
+  administrado puede declarar `"vision": true`, y si no, la app consulta
+  `/v1/models` (`architecture.input_modalities`) o `/props`
+  (`modalities.vision`) cuando el server queda listo.
+- **Voz junto a un motor externo.** El plan multi-GPU mandaba STT a la GPU con
+  menos VRAM libre; junto a Maya era la ASUS en cuarentena, que no podía darle
+  464 MB a whisper (los ~2,9 GB "libres" eran bloques inutilizables). Con un LLM
+  cloud/administrado la voz va a la GPU con más libre, y Maya reserva 4096 MiB
+  por placa.
+- **Sin pestaña de navegador.** `maya.py` abre su dashboard si hay `DISPLAY`; el
+  perfil llama a `serve/server.py` directo.
+
 ## Qué se descartó
 
-- **Modelos que usan las dos 3090 enteras** (ASTRA DeepSeek DSX, SOL NInfer,
-  Flash-Next): no dejan GPU para la voz y su primer token no es de tiempo real.
+- **Modelos que usan las dos 3090 enteras**: SOL NInfer y Flash-Next no tienen
+  visión validada; DSX T16 es más lento (429/25 tok/s) y no se usó. DeepSeek
+  Maya-XS sí entra con la voz al lado (ver la actualización de arriba).
 - **Qwen3.5-9B**: más rápido (0,57–0,73 s), pero usa tools de más y no cierra
   bien una tarea de escritorio fallida. Sigue siendo la opción para una sola GPU
   de 8–12 GB.
@@ -137,11 +206,11 @@ Las fallas de computer use son del backend Linux, no del modelo: ver
 
 ## Pendiente
 
-- **Linux computer use**: `desktop_launch` resuelve los alias a nombres de
-  Windows (`calc`, `notepad`…) y en Ubuntu no existen (`gnome-calculator`).
-  `desktop_observe` con tres monitores (2560 + 2×1920) supera el timeout de
-  30 s del worker. Las dos cosas hicieron fallar la prueba de la Calculadora con
-  los dos modelos.
+- **Linux computer use**: los alias y el timeout de `desktop_observe` se
+  arreglaron en e8d90ffe. Sigue faltando que la Calculadora GTK4 sea operable:
+  no expone controles AT-SPI y su captura sale negra en este escritorio.
+- **`<think>` después de compactar**: con Maya, el turno que siguió a una
+  compactación de contexto trajo razonamiento visible.
 - **whisper-server con CUDA en Linux**: la descarga gestionada de la app baja el
   binario CPU de whisper.cpp (322 ms por frase). Para esta medición se compiló
   whisper.cpp con CUDA (`-DGGML_CUDA=ON`, arch 86) y se lo dejó en

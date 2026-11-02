@@ -1627,6 +1627,10 @@ public:
     static int benchmarkGeneratedCharsDeltaForTest(int previous, int current);
     static bool serverHealthReplyAcceptedForTest(int httpStatus, bool networkError,
                                                   bool remoteServerActive);
+    // ¿El server acepta imágenes? /v1/models con architecture.input_modalities
+    // (Project Maya, OpenRouter) o /props con modalities.vision (llama-server).
+    // Puro para testearlo sin red; modelId vacío = cualquier modelo listado.
+    static bool serverVisionFromReply(const QJsonObject &root, const QString &modelId = {});
     static bool benchmarkTurnBusyForTest(const QString &message);
     static bool benchmarkRepairStagnationCheckForTest(bool agentBusy,
                                                        bool workspaceChanged);
@@ -2275,6 +2279,8 @@ private:
     int           m_chatStreamingIndex = -1;
     QString       m_chatStreamingText;
     void fetchChatThinkingSupport();
+    // Servers cloud/remotos: no hay --mmproj que mirar, se pregunta al endpoint.
+    void fetchServerVisionSupport();
     QNetworkReply *m_chatReply = nullptr;
     int           m_chatAssistantIdx = -1;
     QString       chatStorageDir() const;

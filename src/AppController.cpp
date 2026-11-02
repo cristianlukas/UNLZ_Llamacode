@@ -254,7 +254,10 @@ static QVariantMap nativeManagedProcessEffectiveProfile(const BackendProfile &ba
             {QStringLiteral("workingDirectory"), workingDirectory},
             {QStringLiteral("warnings"), QStringList{}},
             {QStringLiteral("blockingErrors"), QStringList{}},
-            {QStringLiteral("serverHasVision"), false}};
+            // Sin --mmproj que mirar: el perfil declara si el motor lee imágenes
+            // (Maya con la torre de visión de DeepSeek); si no, se le pregunta al
+            // endpoint cuando queda listo (fetchServerVisionSupport).
+            {QStringLiteral("serverHasVision"), spec.value(QStringLiteral("vision")).toBool()}};
 #endif
 }
 
@@ -3248,6 +3251,10 @@ void AppController::startHealthPolling()
                 emit serverReadyChanged();
                 stopHealthPolling();
                 fetchChatThinkingSupport();
+                if (!m_serverHasVision && (m_remoteServerActive
+                        || (!m_activeLaunchId.isEmpty()
+                            && buildContext(m_activeLaunchId).backend.isCloud())))
+                    fetchServerVisionSupport();
                 maybeStartPendingAgentOnReady();
             }
         });
@@ -3281,7 +3288,10 @@ void AppController::startServerAndAgent(const QString &launchProfileId)
         m_activeLaunchId = launchProfileId;
         emit activeLaunchIdChanged();
         if (agentRunning() || m_agentStarting) stopAgent();
+        // La visión de un modelo local anterior no vale para este endpoint.
+        if (m_serverHasVision) { m_serverHasVision = false; emit serverHasVisionChanged(); }
         startAgent(launchProfileId);
+        fetchServerVisionSupport();
         return;
     }
 
@@ -3561,6 +3571,66 @@ void AppController::fetchChatThinkingSupport()
             m_chatThinkingSupported = supported;
             emit chatThinkingSupportedChanged();
         }
+    });
+}
+
+bool AppController::serverVisionFromReply(const QJsonObject &root, const QString &modelId)
+{
+    if (root.value(QStringLiteral("modalities")).toObject()
+            .value(QStringLiteral("vision")).toBool())
+        return true;
+    const QJsonArray models = root.value(QStringLiteral("data")).toArray();
+    bool matched = false;
+    for (int pass = 0; pass < 2; ++pass) {
+        for (const QJsonValue &value : models) {
+            const QJsonObject model = value.toObject();
+            // Primero el modelo del perfil; si el server lo sirve con otro id,
+            // cualquiera de los que lista.
+            if (pass == 0 && (modelId.isEmpty()
+                              || model.value(QStringLiteral("id")).toString() != modelId))
+                continue;
+            matched = true;
+            const QJsonArray input = model.value(QStringLiteral("architecture")).toObject()
+                                         .value(QStringLiteral("input_modalities")).toArray();
+            if (input.contains(QJsonValue(QStringLiteral("image"))))
+                return true;
+        }
+        if (matched) break;
+    }
+    return false;
+}
+
+void AppController::fetchServerVisionSupport()
+{
+    if (!m_nam) m_nam = new QNetworkAccessManager(this);
+    const QString base = serverBaseUrl();
+    const QString modelId = m_activeLaunchId.isEmpty()
+        ? QString() : buildContext(m_activeLaunchId).backend.cloudModel;
+    auto apply = [this]() {
+        if (m_serverHasVision) return;
+        m_serverHasVision = true;
+        emit serverHasVisionChanged();
+        // Sin esto desktop_observe no le manda la captura al modelo aunque la vea.
+        if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
+            cb->setVisionAvailable(true);
+        appendServerEvent(QStringLiteral("lifecycle"),
+                          QStringLiteral("El servidor acepta imágenes: visión habilitada para el agente."));
+    };
+    auto *models = m_nam->get(QNetworkRequest(QUrl(base + QStringLiteral("/v1/models"))));
+    connect(models, &QNetworkReply::finished, this, [this, models, base, modelId, apply]() {
+        models->deleteLater();
+        if (models->error() == QNetworkReply::NoError
+            && serverVisionFromReply(QJsonDocument::fromJson(models->readAll()).object(), modelId)) {
+            apply();
+            return;
+        }
+        auto *props = m_nam->get(QNetworkRequest(QUrl(base + QStringLiteral("/props"))));
+        connect(props, &QNetworkReply::finished, this, [props, apply]() {
+            props->deleteLater();
+            if (props->error() == QNetworkReply::NoError
+                && serverVisionFromReply(QJsonDocument::fromJson(props->readAll()).object()))
+                apply();
+        });
     });
 }
 
@@ -27040,8 +27110,12 @@ QVariantMap AppController::voiceGpuPlanForLaunch(const QString &launchId,
                 hardware[QStringLiteral("gpus")] = recovered;
         }
     }
-    return HardwareDiagnostics::voiceGpuPlan(
+    const QVariantMap plan = HardwareDiagnostics::voiceGpuPlan(
         hardware, voiceReserveMbForConfig(config), modelRequiredMb);
+    if (!launchId.isEmpty() && m_profiles.resolveBackend(
+            m_profiles.resolveLaunch(launchId).backendProfileId).isCloud())
+        return HardwareDiagnostics::voicePlanBesideExternalModel(plan, hardware);
+    return plan;
 }
 
 QVariantMap AppController::voiceGpuPlanForConfig(const VoiceConfig &config) const

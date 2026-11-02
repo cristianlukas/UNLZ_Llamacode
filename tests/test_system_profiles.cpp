@@ -52,6 +52,7 @@ class SystemProfilesTests : public QObject
     Q_OBJECT
 private slots:
     void bundle_charlaJarvisProfileIsVoiceReady();
+    void bundle_charlaJarvisDeepseekProfileHasVisionAndVoice();
     void initTestCase();
 
     void manager_loadsSystemProfiles();
@@ -2210,6 +2211,42 @@ void SystemProfilesTests::bundle_charlaJarvisProfileIsVoiceReady()
 
     // Los perfiles de sistema sin bloque "voice" siguen con el default.
     QVERIFY(!pm.getLaunchVoice(QStringLiteral("sys-qwen38-27b-udq4-131k")).value("enabled").toBool());
+}
+
+// El modelo más capaz con visión que convive con Charla en 2x RTX 3090: DeepSeek
+// V4.1 Maya-XS administrado por la app (native-process, como ASTRA). Sin
+// "vision": true el agente no le mandaba las capturas de desktop_observe.
+void SystemProfilesTests::bundle_charlaJarvisDeepseekProfileHasVisionAndVoice()
+{
+    ProfileManager pm;
+    const QString id = QStringLiteral("sys-charla-jarvis-deepseek-maya-xs");
+    const QVariantMap lp = pm.getLaunchProfile(id);
+    QVERIFY(!lp.isEmpty());
+    QCOMPARE(lp.value("agentProfileId").toString(), QStringLiteral("agent-jarvis"));
+
+    const QVariantMap voice = pm.getLaunchVoice(id);
+    QVERIFY(voice.value("enabled").toBool());
+    QCOMPARE(voice.value("sttManagedEngine").toString(), QStringLiteral("whisper-small"));
+    QCOMPARE(voice.value("ttsMode").toString(), QStringLiteral("piper"));
+
+    const QVariantMap backend = pm.getBackend(lp.value("backendProfileId").toString());
+    QCOMPARE(backend.value("kind").toString(), QStringLiteral("cloud"));
+    QCOMPARE(backend.value("cloudBaseUrl").toString(), QStringLiteral("http://127.0.0.1:18195"));
+    const QVariantMap managed = backend.value("managedServer").toMap();
+    QCOMPARE(managed.value("type").toString(), QStringLiteral("native-process"));
+    QVERIFY(managed.value("vision").toBool());
+    const QStringList args = managed.value("args").toStringList();
+    QCOMPARE(args.value(args.indexOf("--host") + 1), QStringLiteral("127.0.0.1"));
+    QCOMPARE(args.value(args.indexOf("--port") + 1), QStringLiteral("18195"));
+    // Corre dentro del scope de linux_eval_scope.py: con ~100 GB de RAM en uso,
+    // systemd-oomd tiene que elegirlo antes que el escritorio.
+    QVERIFY(args.value(0).endsWith(QStringLiteral("tools/linux_eval_scope.py")));
+    // serve/server.py directo: maya.py abre el dashboard en el navegador del
+    // usuario cuando hay DISPLAY (pasó al lanzarlo desde la app).
+    QVERIFY(std::any_of(args.cbegin(), args.cend(), [](const QString &a) {
+        return a.endsWith(QStringLiteral("serve/server.py")); }));
+    QVERIFY(!std::any_of(args.cbegin(), args.cend(), [](const QString &a) {
+        return a.endsWith(QStringLiteral("/maya.py")); }));
 }
 
 void SystemProfilesTests::bundle_ultraQAndHybridAreWiredAndOptIn()
