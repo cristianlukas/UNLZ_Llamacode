@@ -52,4 +52,11 @@ QImage opaqueForOcr(const QImage &image);
 // original), así que los llamadores no cambian. Pura.
 int upscaleFactor(int width, int height, int maxDim);
 
+// La captura que se le pasa a Tesseract: opaca, invertida si es oscura (temas
+// oscuros: Tesseract espera texto oscuro sobre fondo claro) y agrandada con
+// upscaleFactor. Medido sobre la Calculadora GTK4 de GNOME con tema oscuro: tal
+// cual leía "€ ( ) mod n / 7 E 9" y perdía el 3; así lee "7 8 9 / 4 5 6 / 1 2 3 / 0".
+// *factor recibe el agrandado para devolver los rects en la escala original. Pura.
+QImage prepareForTesseract(const QImage &image, int *factor);
+
 }   // namespace OcrEngine

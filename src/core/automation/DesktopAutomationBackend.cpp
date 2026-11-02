@@ -601,27 +601,41 @@ QImage DesktopAutomationBackend::capture(const QString &kind, const QString &tar
         if (error) *error = QStringLiteral("No hay una pantalla disponible.");
         return {};
     }
+#ifndef Q_OS_WIN
+    // X11: la imagen propia de la ventana (XGetImage sobre su drawable), no la
+    // región del root. Así no se cuelan las ventanas que la tapan y no depende de
+    // en qué monitor quedó. Una ventana sin mapear devuelve nula o negra: en ese
+    // caso se cae a la región de la pantalla.
+    if (kind == QLatin1String("window")) {
+        bool parsed = false;
+        const WId wid = WId(targetId.toULongLong(&parsed, 16));
+        if (parsed && wid) {
+            const QImage own = screen->grabWindow(wid).toImage()
+                                   .convertToFormat(QImage::Format_RGB32);
+            if (!own.isNull() && !DesktopComputerUse::imageLooksBlank(own))
+                return own;
+        }
+    }
+#endif
     // grabWindow() recibe coords LOGICAS relativas a la pantalla, pero `bounds` es
     // físico: hay que convertir. (Antes se le pasaba el rect físico de
     // GetWindowRect tal cual, así que capturar una ventana en un monitor escalado
     // agarraba la región equivocada.) La captura vuelve en píxeles de dispositivo,
     // o sea del tamaño físico de `bounds` → readText() la mapea 1:1.
-    const QRect sp = screenPhysicalGeometryOf(screen);
     const double dpr = screen->devicePixelRatio() > 0 ? screen->devicePixelRatio() : 1.0;
-#ifdef Q_OS_WIN
-    const int grabX = qRound((bounds.x() - sp.x()) / dpr);
-    const int grabY = qRound((bounds.y() - sp.y()) / dpr);
-#else
-    // X11's root-window grab uses the virtual-desktop coordinate space, even
-    // when the QScreen object represents a monitor whose geometry has a
-    // non-zero origin. Subtracting sp here captures the wrong monitor region.
-    const int grabX = qRound(bounds.x() / dpr);
-    const int grabY = qRound(bounds.y() / dpr);
-#endif
-    const QPixmap pix = screen->grabWindow(0, grabX, grabY,
-        qRound(bounds.width() / dpr), qRound(bounds.height() / dpr));
+    const QRect grab = screenGrabRect(bounds, screenPhysicalGeometryOf(screen), dpr);
+    const QPixmap pix = screen->grabWindow(0, grab.x(), grab.y(), grab.width(), grab.height());
     if (pix.isNull() && error) *error = QStringLiteral("No se pudo capturar el escritorio.");
     return pix.toImage();
+}
+
+QRect DesktopAutomationBackend::screenGrabRect(const QRect &bounds, const QRect &screenPhysical,
+                                               double dpr)
+{
+    if (dpr <= 0.0) dpr = 1.0;
+    return QRect(qRound((bounds.x() - screenPhysical.x()) / dpr),
+                 qRound((bounds.y() - screenPhysical.y()) / dpr),
+                 qRound(bounds.width() / dpr), qRound(bounds.height() / dpr));
 }
 
 QString DesktopAutomationBackend::saveCapture(const QString &kind, const QString &targetId,

@@ -75,8 +75,8 @@ necesitan numpy/matplotlib se saltean solos con `skipUnless`.
 | DownloadHistoryStore (historial de descargas) | `tests/test_download_history.cpp` |
 | FuzzyMatch (matching difuso de nombres de control) | `tests/test_fuzzy_match.cpp` |
 | OcrTextLocator (ubicar texto OCR en pantalla) | `tests/test_ocr_locator.cpp` |
-| OcrEngine::opaqueForOcr (capturas GDI con alfa 0) + OCR real (se saltea en offscreen) | `tests/test_ocr_locator.cpp` |
-| DesktopComputerUse (formato de desktop_read_text, inferencia de scope, guard de tipeo, alias de `desktop_launch` → programa Linux instalado: calc→gnome-calculator/mate-calc, notepad→gedit/pluma, etc.) | `tests/test_automation.cpp` |
+| OcrEngine::opaqueForOcr (capturas GDI con alfa 0) + prepareForTesseract (Linux: tema oscuro invertido, agrandado 2x vecino más cercano) + OCR real (se saltea en offscreen) | `tests/test_ocr_locator.cpp` |
+| DesktopComputerUse (formato de desktop_read_text, inferencia de scope, guard de tipeo, captura vacía `imageLooksBlank`, rect de captura relativo al monitor `screenGrabRect`, alias de `desktop_launch` → programa Linux instalado: calc→gnome-calculator/mate-calc, notepad→gedit/pluma, etc.) | `tests/test_automation.cpp` |
 | Tools de computer use (validación previa al input, portapapeles, rechazo de tipeo sin ventana elegida) | `tests/test_agent_tools.cpp` |
 | Computer use: preguntar modo / Super Agente directo / "segundo plano" sin mouse ni teclado (gate del turno, tools filtradas y rechazadas) + razonamiento oculto con Pensar apagado (contar y cortar una vez) | `tests/test_agent_wire.cpp`, `tests/test_agent_tools.cpp`, `tests/test_automation.cpp`, `tests/test_appcontroller.cpp` |
 | NavBar (fila de Configuración centrada, con y sin botón de update) | `tests/qml/tst_navbar.qml` (ctest `qml_navbar`) |
@@ -210,7 +210,8 @@ reproducible en headless/CI), así que sólo se cubre el path de error en
   FISICA — ver el comentario de `physicalRectForOrigin` en
   `DesktopAutomationBackend.cpp`.
 - **OCR / coordenadas** — hay harness, no hace falta ojo humano:
-  `build_tests\Release\qa_ocr_probe.exe [texto]` (se compila con `tests.bat` pero
+  `build_tests\Release\qa_ocr_probe.exe [texto]` (Linux: `qa_ocr_probe --window <id> [png]`
+  captura y lee una ventana por el mismo camino que desktop_observe/desktop_read_text) (se compila con `tests.bat` pero
   NO está en ctest: necesita escritorio vivo + paquete de idioma OCR). Cruza
   `readText()` contra UIA: si el OCR ubica "Archivo" en (x,y) y
   `controlAtPoint(x,y)` dice "Archivo", dos fuentes independientes coinciden.

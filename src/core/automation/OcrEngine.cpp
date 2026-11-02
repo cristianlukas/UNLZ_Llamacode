@@ -272,7 +272,8 @@ QList<OcrLine> recognize(const QImage &image, QString *error)
     }
     QTemporaryFile input(QDir::tempPath() + QStringLiteral("/llamacode-ocr-XXXXXX.png"));
     input.setAutoRemove(true);
-    if (!input.open() || !opaqueForOcr(image).save(input.fileName(), "PNG")) {
+    int factor = 1;
+    if (!input.open() || !prepareForTesseract(image, &factor).save(input.fileName(), "PNG")) {
         if (error) *error = QStringLiteral("No se pudo preparar la captura para OCR.");
         return {};
     }
@@ -309,7 +310,9 @@ QList<OcrLine> recognize(const QImage &image, QString *error)
             lineIndexes.insert(key, index);
             out.append(OcrLine{});
         }
-        out[index].words.append({word, QRect(left, top, width, height)});
+        // Rects en la escala de la captura original, no de la agrandada.
+        out[index].words.append({word, QRect(left / factor, top / factor,
+                                             qMax(1, width / factor), qMax(1, height / factor))});
         if (!out[index].text.isEmpty()) out[index].text += QLatin1Char(' ');
         out[index].text += word;
     }
@@ -332,6 +335,27 @@ QImage opaqueForOcr(const QImage &image)
     if (image.isNull()) return image;
     // RGB32 descarta el alfa (lo fija en 0xFF) sin tocar los canales de color.
     return image.convertToFormat(QImage::Format_RGB32);
+}
+
+QImage prepareForTesseract(const QImage &image, int *factor)
+{
+    if (factor) *factor = 1;
+    if (image.isNull()) return image;
+    QImage out = opaqueForOcr(image);
+    qint64 luma = 0, samples = 0;
+    const int stepX = qMax(1, out.width() / 64), stepY = qMax(1, out.height() / 64);
+    for (int y = 0; y < out.height(); y += stepY)
+        for (int x = 0; x < out.width(); x += stepX) { luma += qGray(out.pixel(x, y)); ++samples; }
+    if (samples > 0 && luma / samples < 110)
+        out.invertPixels(QImage::InvertRgb);
+    // Vecino más cercano, no suavizado: bilineal/bicúbico emborronan los bordes
+    // de los botones y Tesseract pierde la grilla (medido: "MO + >" en vez de
+    // "7 8 9 + / 4 5 6 / 1 2 3").
+    const int f = upscaleFactor(out.width(), out.height(), 4096);
+    if (f > 1)
+        out = out.scaled(out.size() * f, Qt::IgnoreAspectRatio, Qt::FastTransformation);
+    if (factor) *factor = f;
+    return out;
 }
 
 }   // namespace OcrEngine

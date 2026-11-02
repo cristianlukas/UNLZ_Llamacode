@@ -46,6 +46,7 @@ private slots:
     void find_emptyInputs();
     void opaqueForOcr_fixesZeroAlphaCaptures();
     void upscaleFactor_doublesOnlyWhenItFits();
+    void prepareForTesseract_invertsDarkThemesAndUpscales();
     void ocr_readsZeroAlphaWindowCapture();
     void ocr_blankImageDoesNotCrash();
 };
@@ -215,6 +216,38 @@ void OcrLocatorTests::ocr_blankImageDoesNotCrash()
     QString err;
     const QList<OcrLine> lines = OcrEngine::recognize(img, &err);
     QVERIFY(lines.isEmpty());
+}
+
+// Tesseract espera texto oscuro sobre fondo claro: una UI con tema oscuro se
+// invierte y se agranda (medido: la Calculadora GTK4 oscura pasó de "7 E 9" y
+// sin el 3 a leer todos los dígitos).
+void OcrLocatorTests::prepareForTesseract_invertsDarkThemesAndUpscales()
+{
+    QImage dark(382, 504, QImage::Format_ARGB32);
+    dark.fill(QColor(36, 36, 36, 255));
+    int factor = 0;
+    const QImage darkOut = OcrEngine::prepareForTesseract(dark, &factor);
+    QCOMPARE(factor, 2);
+    QCOMPARE(darkOut.size(), QSize(764, 1008));
+    QVERIFY(!darkOut.hasAlphaChannel());
+    QVERIFY(qGray(darkOut.pixel(10, 10)) > 200);
+
+    QImage light(300, 200, QImage::Format_RGB32);
+    light.fill(QColor(240, 240, 240));
+    const QImage lightOut = OcrEngine::prepareForTesseract(light, &factor);
+    QCOMPARE(factor, 2);
+    QVERIFY(qGray(lightOut.pixel(10, 10)) > 200);
+
+    // Captura grande (pantalla 4K): no se agranda, sólo se invierte si hace falta.
+    QImage big(3840, 2160, QImage::Format_RGB32);
+    big.fill(QColor(20, 20, 20));
+    const QImage bigOut = OcrEngine::prepareForTesseract(big, &factor);
+    QCOMPARE(factor, 1);
+    QCOMPARE(bigOut.size(), big.size());
+    QVERIFY(qGray(bigOut.pixel(5, 5)) > 200);
+
+    QVERIFY(OcrEngine::prepareForTesseract(QImage(), &factor).isNull());
+    QCOMPARE(factor, 1);
 }
 
 QTEST_MAIN(OcrLocatorTests)

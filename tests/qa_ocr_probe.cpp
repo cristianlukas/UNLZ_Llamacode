@@ -45,6 +45,9 @@ int main(int argc, char *argv[])
         if (arg == QLatin1String("--help") || arg == QLatin1String("-h")
             || arg == QLatin1String("-?")) {
             out << "Uso: qa_ocr_probe.exe [--self-contained] [texto-a-buscar]\n"
+                << "     qa_ocr_probe.exe --window <id> [archivo.png]\n"
+                << "  --window <id>     captura y lee esa ventana con el camino real de\n"
+                << "                    desktop_observe/desktop_read_text (guarda la captura)\n"
                 << "  --self-contained  ejecuta la fixture OCR/UIA en cada monitor\n"
                 << "  texto-a-buscar    prueba la pantalla real (default: Archivo)\n"
                 << "  --help            muestra esta ayuda sin tocar el escritorio\n"
@@ -67,6 +70,36 @@ int main(int argc, char *argv[])
     }
 
     QApplication app(argc, argv);
+    // Una ventana concreta, por el mismo camino que usan las tools del agente:
+    // para ver qué recibe el modelo (Linux: la Calculadora GTK4 "salía negra").
+    for (int i = 1; i + 1 < argc; ++i) {
+        if (QString::fromLocal8Bit(argv[i]) != QLatin1String("--window")) continue;
+        const QString id = QString::fromLocal8Bit(argv[i + 1]);
+        const QString path = i + 2 < argc ? QString::fromLocal8Bit(argv[i + 2])
+                                          : QStringLiteral("qa_ocr_window.png");
+        QString err;
+        const QImage image = DesktopAutomationBackend::capture(QStringLiteral("window"), id, &err);
+        out << "captura: " << image.width() << "x" << image.height()
+            << (err.isEmpty() ? QString() : QStringLiteral(" error=") + err) << "\n";
+        if (!image.isNull()) {
+            int dark = 0;
+            const QImage gray = image.convertToFormat(QImage::Format_Grayscale8);
+            for (int y = 0; y < gray.height(); ++y)
+                for (int x = 0; x < gray.width(); ++x)
+                    if (qGray(gray.pixel(x, y)) < 16) ++dark;
+            out << "pixeles casi negros: "
+                << QString::number(100.0 * dark / qMax(1, gray.width() * gray.height()), 'f', 1)
+                << "%  guardada en " << path << "\n";
+            image.save(path);
+        }
+        const QList<OcrLine> lines = DesktopAutomationBackend::readText(QStringLiteral("window"), id, &err);
+        out << "OCR: " << lines.size() << " lineas"
+            << (err.isEmpty() ? QString() : QStringLiteral(" error=") + err) << "\n";
+        for (const OcrLine &line : lines)
+            out << "  " << line.text << "\n";
+        out.flush();
+        return image.isNull() ? 2 : 0;
+    }
     bool selfContained = false;
     QString needle;
     for (int i = 1; i < argc; ++i) {

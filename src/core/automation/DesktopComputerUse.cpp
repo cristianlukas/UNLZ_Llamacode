@@ -955,4 +955,23 @@ bool shouldBlockTypingIntoExistingText(bool textEntryControl, bool hasText)
     return textEntryControl && hasText;
 }
 
+bool imageLooksBlank(const QImage &image)
+{
+    if (image.isNull() || image.width() <= 0 || image.height() <= 0) return true;
+    const int stepX = qMax(1, image.width() / 64);
+    const int stepY = qMax(1, image.height() / 64);
+    int samples = 0, dark = 0;
+    QRgb first = image.pixel(0, 0);
+    bool uniform = true;
+    for (int y = 0; y < image.height(); y += stepY) {
+        for (int x = 0; x < image.width(); x += stepX) {
+            const QRgb px = image.pixel(x, y);
+            ++samples;
+            if (qGray(px) < 16) ++dark;
+            if ((px & 0xFFFFFF) != (first & 0xFFFFFF)) uniform = false;
+        }
+    }
+    return uniform || dark * 100 >= samples * 98;
+}
+
 } // namespace DesktopComputerUse

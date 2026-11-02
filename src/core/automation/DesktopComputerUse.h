@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QImage>
 #include <QJsonObject>
 #include <QList>
 #include <QLockFile>
@@ -277,5 +278,8 @@ bool normalizeKeyChord(QString *key, QStringList *modifiers);
 // Existing-text protection applies to text editors, not to non-text controls
 // such as spreadsheet grids that expose cell contents through UI Automation.
 bool shouldBlockTypingIntoExistingText(bool textEntryControl, bool hasText);
+// Una captura que no muestra nada: casi todo negro (región del escritorio sin
+// monitor, ventana sin mapear) o un solo color. Se muestrea en grilla. Pura.
+bool imageLooksBlank(const QImage &image);
 
 } // namespace DesktopComputerUse

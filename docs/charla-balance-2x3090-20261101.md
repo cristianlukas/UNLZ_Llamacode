@@ -159,8 +159,8 @@ con `pack_gguf.py` (backup del pack anterior en `charla-balance/`).
 Computer use con Maya: abrió la Calculadora real (ya con el arreglo de alias de
 e8d90ffe), tipeó, leyó texto, probó controles y pidió capturas; la ventana GTK4
 de GNOME Calculator no expone controles AT-SPI y la captura salió casi toda
-negra, así que no llegó al 9. Es una limitación de captura de esa ventana en este
-escritorio, no del modelo (con el 27B pasó lo mismo con los controles).
+negra, así que no llegó al 9. La captura negra era un bug de coordenadas de la
+app en monitores que no empiezan en (0,0), ya corregido (ver "Pendiente").
 
 **Decisión.** DeepSeek V4.1 Maya-XS es el modelo más inteligente con visión que
 convive con Charla: con los expertos en RAM iguala la latencia del 27B y le gana
@@ -207,8 +207,16 @@ Arreglos que salieron de estas pruebas (con tests):
 ## Pendiente
 
 - **Linux computer use**: los alias y el timeout de `desktop_observe` se
-  arreglaron en e8d90ffe. Sigue faltando que la Calculadora GTK4 sea operable:
-  no expone controles AT-SPI y su captura sale negra en este escritorio.
+  arreglaron en e8d90ffe. La captura "negra" de la Calculadora (2026-11-02) era
+  un bug de coordenadas: en X11 la captura de región le pasaba a
+  `QScreen::grabWindow(0, …)` coordenadas absolutas del escritorio virtual y Qt
+  las toma relativas al monitor, así que toda ventana fuera del monitor que
+  empieza en (0,0) salía 99,5% negra. Ahora se captura la imagen propia de la
+  ventana (no se cuelan las que la tapan) y la región usa coordenadas relativas.
+  El OCR de Tesseract leía mal el tema oscuro ("€ ( ) mod / 7 E 9", sin el 3): se
+  invierte y se agranda 2x (vecino más cercano) y lee "7 8 9 / 4 5 6 / 1 2 3 / 0".
+  La Calculadora GTK4 sigue sin controles AT-SPI: el agente tiene que operarla
+  por visión/OCR y clic, o por teclado.
 - **`<think>` después de compactar**: con Maya, el turno que siguió a una
   compactación de contexto trajo razonamiento visible.
 - **whisper-server con CUDA en Linux**: la descarga gestionada de la app baja el

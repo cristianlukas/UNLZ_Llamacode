@@ -29,6 +29,12 @@ public:
     static bool validateSnapshot(const QString &kind, const QString &targetId,
                                  const QString &snapshotId, QString *error = nullptr);
     static QImage capture(const QString &kind, const QString &targetId, QString *error = nullptr);
+    // Rect LOGICO relativo a la pantalla que hay que pasarle a
+    // QScreen::grabWindow(0, ...) para capturar `bounds` (FISICO, escritorio
+    // virtual). Qt resta el origen de esa pantalla también en X11: pasarle
+    // coordenadas absolutas capturaba otra zona (negra) en todo monitor que no
+    // empieza en (0,0). Pura.
+    static QRect screenGrabRect(const QRect &bounds, const QRect &screenPhysical, double dpr);
     static QString saveCapture(const QString &kind, const QString &targetId,
                                const QString &path, QString *error = nullptr);
 

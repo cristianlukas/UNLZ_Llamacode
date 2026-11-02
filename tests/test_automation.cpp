@@ -17,6 +17,8 @@ class AutomationTests : public QObject
 {
     Q_OBJECT
 private slots:
+    void screenGrabRectIsRelativeToTheMonitor();
+    void blankCaptureIsDetected();
     void initTestCase();
     void launchedWindowIsTheNewOne();
     void linuxLaunchMapsWindowsAliases();
@@ -1556,6 +1558,44 @@ void AutomationTests::launchWaitReturnsWithoutGuessing()
     QVERIFY(w.isEmpty());
 }
 
+
+// Qt resta el origen de la pantalla en grabWindow(0, ...) también en X11. Con las
+// coordenadas absolutas del escritorio virtual, una ventana en el monitor que
+// empieza en x=1920 salía 99,5% negra (medido con la Calculadora de GNOME).
+void AutomationTests::screenGrabRectIsRelativeToTheMonitor()
+{
+    QCOMPARE(DesktopAutomationBackend::screenGrabRect(QRect(1920, 936, 382, 504),
+                                                      QRect(1920, 0, 2560, 1440), 1.0),
+             QRect(0, 936, 382, 504));
+    QCOMPARE(DesktopAutomationBackend::screenGrabRect(QRect(100, 40, 382, 504),
+                                                      QRect(0, 0, 1920, 1080), 1.0),
+             QRect(100, 40, 382, 504));
+    // Monitor escalado al 150%: el rect lógico es el físico dividido.
+    QCOMPARE(DesktopAutomationBackend::screenGrabRect(QRect(2860, 300, 600, 450),
+                                                      QRect(2560, 0, 3840, 2160), 1.5),
+             QRect(200, 200, 400, 300));
+}
+
+void AutomationTests::blankCaptureIsDetected()
+{
+    QImage black(382, 504, QImage::Format_RGB32);
+    black.fill(Qt::black);
+    QVERIFY(DesktopComputerUse::imageLooksBlank(black));
+    QImage flat(200, 100, QImage::Format_RGB32);
+    flat.fill(QColor(250, 250, 250));
+    QVERIFY(DesktopComputerUse::imageLooksBlank(flat));
+    QVERIFY(DesktopComputerUse::imageLooksBlank(QImage()));
+
+    // Tema oscuro real: fondo gris oscuro con botones más claros. No es "vacía".
+    QImage dark(382, 504, QImage::Format_RGB32);
+    dark.fill(QColor(36, 36, 36));
+    for (int row = 0; row < 5; ++row)
+        for (int col = 0; col < 5; ++col)
+            for (int y = 260 + row * 48; y < 300 + row * 48; ++y)
+                for (int x = 12 + col * 73; x < 80 + col * 73; ++x)
+                    dark.setPixel(x, y, qRgb(80, 80, 80));
+    QVERIFY(!DesktopComputerUse::imageLooksBlank(dark));
+}
 
 QTEST_MAIN(AutomationTests)
 #include "test_automation.moc"
