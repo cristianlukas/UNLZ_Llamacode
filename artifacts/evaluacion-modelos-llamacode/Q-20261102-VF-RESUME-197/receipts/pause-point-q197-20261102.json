@@ -1,0 +1,53 @@
+{
+  "task": "Q-20261102-VF-RESUME-197",
+  "recorded_at_utc": "2026-11-02T22:45:00.232Z",
+  "status": "paused_by_user_before_any_request",
+  "preregistration": "receipts/preregistration-q197.json",
+  "amendments": [
+    "receipts/prereg-amendment-01-model-sha.json"
+  ],
+  "preflight": {
+    "status": "pass",
+    "timestamp_utc": "2026-11-02T22:43:10Z",
+    "receipt": "receipts/preflight-corrected-q197-20261102.json",
+    "sheet_readback": "receipts/sheet-sync-corrected-preflight-q197.json"
+  },
+  "runtime": {
+    "binary": "/media/cristian/Disco local/Modelos-eval/Qwen3.6-35B-A3B-NInfer-all-20261101/runtime-ninfer-3090-v0.17.1/ninfer-serve",
+    "binary_sha256": "ae49d7912564cd1f942fbe6d28b70bdb60dc109a7cbf3d9e61267085f4a4ff9b",
+    "model": "/media/cristian/Disco local/Modelos-eval/Qwen3.6-35B-A3B-NInfer-all-20261101/qwen3_6_35b_a3b.ninfer",
+    "model_sha256": "3e33297645dc33557751be1a3c407a74ed7c00f34909b5d4e8cfdce91b3dbe84",
+    "devices_argument": "0,1",
+    "context_tokens": 8192,
+    "ready_at_utc": "2026-11-02T22:44:15.824Z",
+    "ready_elapsed_seconds": 23.5,
+    "log_said_two_stages_devices": true,
+    "listener": "127.0.0.1:18503",
+    "stopped_at_utc": "2026-11-02T22:45:00.232Z",
+    "stop_signal": "SIGINT"
+  },
+  "request": {
+    "health_get_sent": false,
+    "models_get_sent": false,
+    "chat_completion_sent": false,
+    "model_id_obtained": false,
+    "smoke_result": "not_run",
+    "quality_score": null,
+    "prefill_tps": null,
+    "decode_tps": null,
+    "init_metric": null
+  },
+  "postflight": {
+    "ninfer_serve_process_present": false,
+    "listener_18503_present": false,
+    "cuda_compute_apps": [],
+    "kernel_faults_checked_after_load": false,
+    "peritosoft_or_gui_touched": false
+  },
+  "downstream_tests": {
+    "q173_ladder_to_261888": "not_started",
+    "q172": "not_started",
+    "q190_metrics_overwritten": false
+  },
+  "resume_from": "PAUSE-POINT-Q197-20261102.md"
+}

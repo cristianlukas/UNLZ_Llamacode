@@ -1,0 +1,50 @@
+{
+  "recorded_at_utc": "2026-11-02T22:47:20Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_title": "Listado",
+  "updates": [
+    {
+      "sheet": "Accionables",
+      "sheet_id": 1393124532,
+      "range": "D60:K60",
+      "content": "Q197 paused by user after model reached ready, before /health, /v1/models, or chat request; smoke has no result; Q190 stays intact; server stopped; process, listener 18503, CUDA compute apps absent; post-load kernel faults were not rechecked.",
+      "readback": "PASS",
+      "format_readback": "Arial 10, WRAP, TOP preserved"
+    },
+    {
+      "sheet": "Accionables",
+      "sheet_id": 1393124532,
+      "range": "M60:N60",
+      "content": "Updated 2026-11-02; reconciled at 2026-11-02T22:45:00.232Z",
+      "readback": "PASS",
+      "format_readback": "Arial 10, WRAP, TOP preserved"
+    },
+    {
+      "sheet": "Modelos locales por peso",
+      "sheet_id": 2026102751,
+      "range": "C33",
+      "content": "Q190 metrics unchanged; Q197 model loaded and paused before request; no comparable P/D/Q172/init metrics",
+      "readback": "PASS",
+      "format_readback": "WRAP, TOP preserved"
+    },
+    {
+      "sheet": "Modelos locales por peso",
+      "sheet_id": 2026102751,
+      "range": "X33",
+      "content": "Q190 preserved; Q197 smoke paused; Q173 through 261888 and Q172 not started; no 523K",
+      "readback": "PASS",
+      "format_readback": "WRAP, TOP preserved"
+    }
+  ],
+  "preservation_checks": {
+    "inventory_row33_D": 5155.87,
+    "inventory_row33_E": 230.02,
+    "inventory_row33_F": 74,
+    "inventory_row33_Z": "15,314 / 5,142 s",
+    "all_unchanged": true
+  },
+  "server_log": {
+    "path": "receipts/q197-server-start-stop.log",
+    "sha256": "9ffc7194ff9596c6f78db85cb31c1bc782f0e4a9cd0da39a3be0389330e873eb"
+  }
+}

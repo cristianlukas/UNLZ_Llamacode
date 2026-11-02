@@ -1,0 +1,18 @@
+{
+  "taskId": "Q-20261102-VF-RESUME-197",
+  "atUtc": "2026-11-02T22:40:02Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "title": "Listado",
+  "ranges": {
+    "Accionables!D60": "Q195 retry smoke FAIL; Q196 pausado por pedido del usuario antes de nuevo request. El CLI y docs indican una opción de reasoning para un smoke futuro; causa aún no demostrada. Q173/Q172 siguen pendientes.",
+    "Accionables!H60:K60": [
+      "Q196 sólo hizo inspección read-only: `ninfer-serve --help` ofrece --reasoning-effort/--no-thinking; no se ejecutó request ni GPU. Reanudar sólo con preregistro nuevo.",
+      "Qwen3.6-35B-A3B · NInfer-3090 v0.17.1 · pipeline 2×RTX 3090; mismo peso verificado de Q190.",
+      "Q195 devolvió HTTP 200 pero 128/128 tokens fueron reasoning y `content` quedó vacío. CLI local expone controles de reasoning; la guía upstream fijada documenta `reasoning_effort=\"none\"`. Es una hipótesis, no causa probada.",
+      "Q196 receipt y pause point. Q190 sigue siendo la única fuente de P/D/Q172/init válidos en esta fila."
+    ],
+    "Modelos locales por peso!C33": "NInfer-all v3 Q190 conserva P/D/Q172/init. NInfer-3090 v0.17.1 Q195 smoke falló con salida visible vacía; Q196 sólo halló una posible opción de control de reasoning y quedó pausado; no hay mediciones Q196.",
+    "Modelos locales por peso!X33": "Q190 conserva métricas D:F/Z. Q195 smoke no produjo métricas válidas; Q196 no ejecutó pruebas ni usó GPU. Próximo gate sólo con preregistro nuevo y preflight; Q173/Q172 no iniciados."
+  },
+  "note": "Snapshot live leído antes de actualizar preregistro Q197; D:F/Z de fila 33 son sólo Q190 y no se modificarán."
+}

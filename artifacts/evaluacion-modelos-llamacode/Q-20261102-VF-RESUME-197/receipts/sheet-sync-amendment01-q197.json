@@ -1,0 +1,20 @@
+{
+  "taskId": "Q-20261102-VF-RESUME-197",
+  "recordedAtUtc": "2026-11-02T22:42:39Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "title": "Listado",
+  "status": "PASS; exact values read back, Arial 10/WRAP/TOP preserved.",
+  "ranges": [
+    "Accionables!D60",
+    "Accionables!H60:K60",
+    "Accionables!M60:N60",
+    "'Modelos locales por peso'!C33",
+    "'Modelos locales por peso'!X33"
+  ],
+  "preserved": [
+    "Modelos locales por peso!D33:F33/Z33 (Q190 metrics)",
+    "Accionables!A60:C60,E60:G60,L60"
+  ],
+  "amendment": "Q197 amendment 01: correction of preregistered model SHA typo, no measurement/request changes.",
+  "testStarted": false
+}

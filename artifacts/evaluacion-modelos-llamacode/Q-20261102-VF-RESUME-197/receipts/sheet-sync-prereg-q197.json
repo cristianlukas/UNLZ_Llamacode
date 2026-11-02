@@ -1,0 +1,20 @@
+{
+  "taskId": "Q-20261102-VF-RESUME-197",
+  "recordedAtUtc": "2026-11-02T22:40:02Z",
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "title": "Listado",
+  "status": "PASS: readback de todos los rangos coincide; Arial 10, WRAP y TOP preservados.",
+  "updated": [
+    "Accionables!D60",
+    "Accionables!H60:K60",
+    "Accionables!M60:N60",
+    "'Modelos locales por peso'!C33",
+    "'Modelos locales por peso'!X33"
+  ],
+  "notChanged": [
+    "Modelos locales por peso!D33:F33/Z33 (métricas Q190)",
+    "Accionables!A60:C60,E60:G60,L60"
+  ],
+  "preregistrationReceipt": "artifacts/evaluacion-modelos-llamacode/Q-20261102-VF-RESUME-197/receipts/preregistration-q197.json",
+  "testStarted": false
+}
