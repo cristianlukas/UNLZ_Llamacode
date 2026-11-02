@@ -1,0 +1,26 @@
+{
+  "task_id": "Q-20261102-VF-RESUME-191",
+  "timestamp_utc": "2026-11-02T01:44:26Z",
+  "operation": "Reconcile Q191 S2S completed results into the existing Accionables row with canonical column alignment",
+  "spreadsheet": {
+    "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "sheet": "Accionables",
+    "range": "A57:N57",
+    "readback": "PASS",
+    "format": "WRAP preserved"
+  },
+  "record_id": "Q191-VOICE-WEB-CU-E2E",
+  "evidence": {
+    "screen": "Q-20261030-VOICE-WEB-CU/runs/s2s-realtime-screen-recovery-20261102.json",
+    "screen_sha256": "51f40a7af363d8647722e5dbad81b21048dfde2b213f30981e5c6e487ba149",
+    "onset_diagnostic": "Q-20261030-VOICE-WEB-CU/runs/s2s-barge-onset-trim-sensitivity-20261102.json",
+    "onset_sha256": "8d300c834325844128e36da70e8edb794b82dcb2a9fc7688305757bd082d0777"
+  },
+  "result": "20/20 turns; WER 2.79%, CER 0.97%; original barge-in 2/5; onset-normalized supplemental diagnostic 5/5. Preserve both; no general server improvement inferred.",
+  "postflight": {
+    "checked_utc": "2026-11-02T01:40:39Z",
+    "target_ports_listening": false,
+    "cuda_compute_apps": []
+  },
+  "no_new_inference_or_gpu": true
+}

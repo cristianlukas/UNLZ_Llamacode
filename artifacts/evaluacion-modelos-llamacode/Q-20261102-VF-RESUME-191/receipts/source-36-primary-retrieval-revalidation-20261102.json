@@ -1,0 +1,35 @@
+{
+  "task_id": "Q-20261102-VF-RESUME-191",
+  "source_id": "b0c72cb6-aaf2-4bc4-985f-cabed824456c",
+  "batch_id": "VF-20261019-01",
+  "batch_sequence": 36,
+  "title": "Instagram · DeehKGtuth5",
+  "checked_at_utc": "2026-11-02T01:40:39Z",
+  "status": "blocked_source_unverifiable",
+  "attempts": [
+    {
+      "method": "direct source fetch",
+      "url": "https://www.instagram.com/reel/DeehKGtuth5/",
+      "result": "Online fetch throttled"
+    },
+    {
+      "method": "official Instagram captioned embed fetch",
+      "url": "https://www.instagram.com/reel/DeehKGtuth5/embed/captioned/",
+      "result": "Online fetch throttled"
+    },
+    {
+      "method": "exact shortcode search",
+      "query": "\"DeehKGtuth5\" Instagram reel",
+      "result": "No search results"
+    }
+  ],
+  "finding": "No primary caption, transcript, or attributable mirror was available in this revalidation. The received description of an empanada order ambiguity remains unverified.",
+  "decision": "Do not create the fixture or run model comparisons from an unverified anecdote.",
+  "next_gate": "Resume only when an attributable caption, transcript, legible capture, or accessible primary/mirror source is supplied.",
+  "execution": {
+    "fixture_created": false,
+    "model_test_run": false,
+    "downloaded": false,
+    "gpu_used": false
+  }
+}

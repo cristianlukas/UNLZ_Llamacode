@@ -115,6 +115,26 @@ el comentario de 515 minutos. La ficha Qwen anuncia extensión a 1M con YaRN;
 no hay recuperación a 1M probada en ese equipo. No es un A/B comparable con las
 RTX 3090 locales y no justifica cambiar perfiles.
 
+## Protocolo de rendimiento Prefill/Decode
+
+Antes de publicar Prefill TPS, Decode TPS o sus promedios para un perfil
+generativo, completar primero el ladder Q173 preregistrado para ese perfil y
+guardar cada nivel de contexto junto con sus corridas crudas. La secuencia
+vigente de LlamaCode es 8K (tres repeticiones), 32K, 64K, 128K y 261.888 tokens
+(una repetición por nivel), salvo que la configuración validada o un gate
+documentado requiera otra matriz. No reemplazarla por un smoke corto.
+
+Para cada nivel, promediar primero las repeticiones válidas; luego calcular la
+media aritmética de esos promedios entre niveles válidos. Informar los valores
+por contexto, el promedio resultante, el `n` de cada nivel, la configuración
+efectiva, el runtime, las GPU usadas y cualquier punto excluido con su motivo.
+No mezclar huellas, runtimes, configuraciones, cantidades de GPU ni mediciones
+canceladas/inválidas. Un Q172 pendiente o fallido no invalida Q173 como medición
+de velocidad, pero calidad y velocidad deben permanecer como resultados
+separados.
+
+Después de cada prueba completada o checkpoint de progreso, actualizar la fila correspondiente en la pestaña `Modelos locales por peso` del Google Sheet y verificar la lectura de vuelta. Sincronizar también `Resultados` y `Accionables` cuando el checkpoint añada puntos por contexto, score/seguridad o cambie el estado. Dejar métricas pendientes vacías; conservar los valores históricos con su identificación de prueba y no sobrescribirlos como si fueran vigentes.
+
 ## Inventario de candidatos y controles
 
 | Perfil/modelo | Estado | Uso / evidencia principal |
@@ -387,7 +407,7 @@ tiempo/llamadas del candidato; no demuestra mejora estable.
 
 ## Próximas pruebas
 
-- **HyperQwen · Qwen3.8-27B (P1, dual GPU; canario bloqueado por gate Q101):** Q102 auditó el guard (replay 19/19; smoke CPU 48,013 GiB RSS, 12 s, MemAvailable mín. 61,682 GiB, PSI pico 1,97%, sin stop/OOM); Q103 llegó a 56,013 GiB RSS durante 12 s, con 53,386 GiB disponibles, PSI avg10 pico 0,36%, sin avisos/stop/OOM y recuperación inmediata a 109,65 GiB. Esto muestra que RSS alto por sí solo no dispara el guard bajo PSI baja y con >48 GiB disponibles; no simula la carga/KV de inferencia. ASTRA DEFAULT 1M completó realmente a 51,14 GiB RSS y 55,728 GiB disponibles; SOL Q34 completó TP=2 sin OOM, pero no tiene PSI serie. Q104 probó 11/11 casos sintéticos y confirmó que Q101 llamó con urllib directamente a vLLM (`127.0.0.1:18142`), sin pasar por `LlamaAgentBackend`/dispatcher LlamaCode. El recibo Q101 confirma `path` string no coincidente y ninguna operación de filesystem, pero descartó el valor exacto; logs persistentes no lo recuperan. Por tanto no se demostró defecto en LlamaCode; el origen queda entre salida del modelo y parser/template de vLLM. No reintentar bajo el gate vigente ni alterar el validador por el resultado actual. Próximo sólo con defecto material parser/runtime reproducible y regresión, o revisión explícita del gate; el siguiente canario debe usar el dispatcher nativo y guardar diagnóstico acotado del argumento. Sin score/Tool-Eval/A-B ni adopción; preservar ASTRA/SOL/Flash-Next y PeritoSoft. [Q104 resultados y recibos](../artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-104/RESULTS.md); [Q103 resultados y recibos](../artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-103/RESULTS.md); [Q102 resultados y recibos](../artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-102/RESULTS.md); [Q83 contexto HyperQwen](../artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-83/RESULTS.md), [multi-GPU](https://github.com/syv-ai/HyperQwen/blob/main/docs/multi-gpu.md), [A/B #40](https://github.com/syv-ai/HyperQwen/issues/40).
+- **HyperQwen · Qwen3.8-27B (Q167 cerrado, no-go):** no queda otra semilla justificada para el perfil W4A16+DFlash2 TP=2. En BCB-Hard-8, un seed, completó transporte 8/8 pero entregó 7/8 finales vacíos y 0/8 tareas aprobadas; mediana E2E 155,52 s, proxies cliente P/D 1.273,33/39,55 tok/s. SOL control: 0/8 aprobadas, 0/8 vacías, 11,32 s y proxies 1.316,11/113,50; perfiles/engines no son comparación general y no hay Q172. No adoptar HyperQwen ni repetir este perfil; Q101/Q104 sigue sin defecto parser/runtime LlamaCode demostrado y requiere un cambio material con regresión antes de otro canario por esa ruta. ASTRA/SOL/Flash-Next y PeritoSoft preservados. Revisión upstream Q191: main f382342d (PR #422) agrega staging FA2 acotado para prefill INT8 largo y corrige stream takeover en vLLM 0.32; no es evidencia de que corrija los 7 finales vacíos de Q167. El issue #40 aporta un reporte TP=1/TP=2 anterior a Q167, no un resultado local de calidad; no reabre el perfil. [Q167 resultados](../artifacts/evaluacion-modelos-llamacode/Q-20261027-VF-ITERATION-167/RESULTS.md), [recibo final](../artifacts/evaluacion-modelos-llamacode/Q-20261027-VF-ITERATION-167/receipts/q167-final-decision.json), [Q104](../artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-104/RESULTS.md).
 - **MoMoE/Flash-Next:** no abrir un A/B separado por ahora; su repositorio indica que en PC Flash-Next usa el engine de Strata y no presenta una medida específica de RTX 3090. Reabrir sólo ante un engine o build distinto y un claim que cambie una decisión. [Q83](../artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-83/RESULTS.md), [fuente primaria](https://github.com/aflin/momoe).
 - **Geezuz dual GPU:** las cifras publicadas son de un entorno con driver NVIDIA open y parche P2P. No instalar ni cambiar el driver del host productivo como parte de esta campaña; reabrir sólo con entorno aislado y un plan de rollback verificado. [Q83](../artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-83/RESULTS.md), [fuente primaria](https://github.com/ohgeebtw/geezuz-qwen3.8-27b-dual-gpu).
 - **Q35 · proteger Codex durante el holdout ASTRA/Strata:** systemd-oomd terminó el cgroup compartido de ChatGPT/Codex y el benchmark al llegar a 112,9 GiB, con PSI del scope de 90,01% y el user-manager por encima del umbral durante más de 20 s. Strata aún cargaba, sin request ni score. El fallo era el ciclo de vida/cgroup del proceso, no una limitación de calidad ni del contexto. El supervisor y cada inferencia se separan ahora en unidades transient `background.slice`, con journal/estado persistente y vigilancia PSI del worker independiente; el escritorio ya no comparte el cgroup que se selecciona para terminar. Se conservan modelo, cuantización y ventanas 131K–1M. [Diagnóstico y recibos](../artifacts/evaluacion-modelos-llamacode/Q-20261022-VF-ITERATION-35/receipts/codex-crash-diagnosis.json).

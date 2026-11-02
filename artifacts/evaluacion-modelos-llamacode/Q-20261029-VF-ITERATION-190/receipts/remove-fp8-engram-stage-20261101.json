@@ -20,11 +20,28 @@
   },
   "deleted_path": "/media/cristian/HDD extra/Modelos-eval/Q-20261027-VF-ITERATION-172/FP8-engram-stage",
   "deleted_files": [
-    {"path": "config.json", "bytes": 3311},
-    {"path": "model-00047-of-00048.safetensors", "bytes": 101535150936, "sha256": "76a05106ece259be83d1bfea0dcb54f23377864ee60fd321690f35e6698a2af5"},
-    {"path": "model-00048-of-00048.safetensors", "bytes": 101537926640, "sha256": "9dc51433e195bc78b5ad846b68643cc0351d3b174e5e4309222d3b7402c83afd"},
-    {"path": "model.safetensors.index.json", "bytes": 7470294},
-    {"path": ".cache/huggingface/ (download lock/metadata and revision cache)", "bytes": 20145}
+    {
+      "path": "config.json",
+      "bytes": 3311
+    },
+    {
+      "path": "model-00047-of-00048.safetensors",
+      "bytes": 101535150936,
+      "sha256": "76a05106ece259be83d1bfea0dcb54f23377864ee60fd321690f35e6698a2af5"
+    },
+    {
+      "path": "model-00048-of-00048.safetensors",
+      "bytes": 101537926640,
+      "sha256": "9dc51433e195bc78b5ad846b68643cc0351d3b174e5e4309222d3b7402c83afd"
+    },
+    {
+      "path": "model.safetensors.index.json",
+      "bytes": 7470294
+    },
+    {
+      "path": ".cache/huggingface/ (download lock/metadata and revision cache)",
+      "bytes": 20145
+    }
   ],
   "file_bytes_total": 203080571326,
   "volume": "/media/cristian/HDD extra (NTFS3)",
@@ -35,7 +52,17 @@
     "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
     "sheet": "Modelos locales por peso",
     "operation": "Deleted the exact row 21 from the active local-model inventory.",
-    "verification": "Readback search returned 0 matching rows; grid row count changed from 108 to 107."
+    "verification": "Readback search returned 0 matching rows; grid row count changed from 108 to 107.",
+    "followup_search_utc": "2026-11-02T01:56:27Z",
+    "followup_search": {
+      "query": "DeepSeek V4.1 Flash-1017 FP8 Engram / FP8 Engram",
+      "tabs": [
+        "Resultados",
+        "Modelos locales por peso"
+      ],
+      "result_count": 0,
+      "note": "La fila incompleta del screenshot no aparece en ninguna de las dos pestañas consultadas."
+    }
   },
   "preserved": [
     "ASTRA and SOL model files and profiles",
@@ -46,7 +73,8 @@
   "verification": {
     "staging_directory_absent": true,
     "sheet_row_absent": true,
-    "inference_or_gpu_used": false
+    "inference_or_gpu_used": false,
+    "screenshot_entry_absent_from_results_and_inventory": true
   },
   "resume_note": "The staged shards are no longer available locally; reproducing this Engram extraction would require downloading the two pinned shards again."
 }

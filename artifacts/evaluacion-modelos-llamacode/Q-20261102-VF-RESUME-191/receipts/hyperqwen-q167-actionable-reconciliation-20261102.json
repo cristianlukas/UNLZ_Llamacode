@@ -1,0 +1,39 @@
+{
+  "task_id": "Q-20261102-VF-RESUME-191",
+  "timestamp_utc": "2026-11-02T01:44:26Z",
+  "operation": "Reconcile HyperQwen action status with completed Q167 screen",
+  "evidence": {
+    "results": "artifacts/evaluacion-modelos-llamacode/Q-20261027-VF-ITERATION-167/RESULTS.md",
+    "final_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261027-VF-ITERATION-167/receipts/q167-final-decision.json",
+    "decision": "NO_GO_FOR_TESTED_HYPERQWEN_PROFILE",
+    "candidate": {
+      "transport": "8/8",
+      "passed": "0/8",
+      "empty_final": "7/8",
+      "median_e2e_seconds": 155.52,
+      "prefill_client_proxy_tps": 1273.33,
+      "decode_client_proxy_tps": 39.55
+    },
+    "control_sol": {
+      "transport": "8/8",
+      "passed": "0/8",
+      "empty_final": "0/8",
+      "median_e2e_seconds": 11.32,
+      "prefill_client_proxy_tps": 1316.11,
+      "decode_client_proxy_tps": 113.5
+    }
+  },
+  "limits": "One seed, eight BCB-Hard tasks, no tools, no Q172; client proxies and different engine/quant/speculation do not prove general superiority.",
+  "decision": "Close the stale pending actionable as no-go for this exact profile. Q167 forbids more seeds; reopen only for a distinct materially changed profile with a new preregistration. Preserve ASTRA, SOL, Flash-Next production profile and PeritoSoft.",
+  "no_new_test_run": true,
+  "google_sheets": {
+    "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "sheet": "Accionables",
+    "range": "D14:N14",
+    "write_status": "updated_and_read_back",
+    "readback_pass": true,
+    "format": "WRAP preserved",
+    "updated_utc": "2026-11-02T01:44:26Z"
+  },
+  "source_actionable_id": "vf-hyperqwen-qwen38-27b-dual3090-20261024"
+}

@@ -1,0 +1,43 @@
+{
+  "task_id": "Q-20261102-VF-RESUME-191",
+  "timestamp_utc": "2026-11-02T01:52:57Z",
+  "operation": "Revalidate HyperQwen upstream main against Q167 no-go before considering another candidate test",
+  "lock": {
+    "path": "WORK_QUEUE.lock",
+    "worker": "Q-20261102-VF-RESUME-191",
+    "token": "2c625529-64dd-4b48-a412-b6491459f917"
+  },
+  "local_evaluation": {
+    "tested_commit": "ce9615c4f2309be727407918a6c979bd67968069",
+    "task": "Qwen3.8-27B W4A16 + DFlash2, TP=2, BCB-Hard-8",
+    "result": "0/8 accepted, 7/8 empty finals; Q167 prereg prohibits more seeds for this profile"
+  },
+  "current_upstream": {
+    "main_commit": "f382342d749690e0a83a75348a48f355623e23d2",
+    "change": "PR #422 adds bounded FA2 staging for long-context INT8 prefill and a stream-takeover fix for vLLM 0.32; not an observed fix for the Q167 empty-final behavior."
+  },
+  "upstream_dual_gpu_evidence": {
+    "issue": "#40, opened 2026-08-25, before Q167",
+    "claim": "Controlled 1× vs 2× RTX 3090 TP A/B reports +16–35% decode for specified profiles; user-reported performance and functional tests, not a later local quality result."
+  },
+  "sources": [
+    "https://github.com/syv-ai/HyperQwen/commit/f382342d749690e0a83a75348a48f355623e23d2",
+    "https://github.com/syv-ai/HyperQwen/commit/ce9615c4f2309be727407918a6c979bd67968069",
+    "https://github.com/syv-ai/HyperQwen/issues/40",
+    "https://github.com/syv-ai/HyperQwen/blob/main/docs/multi-gpu.md",
+    "https://github.com/syv-ai/HyperQwen/blob/main/README.md"
+  ],
+  "decision": "Do not reopen Q167 or perform another same-profile run. The current code change targets long-context prefill/stream takeover, while Q167 failed final-answer completion on BCB-Hard-8. No test justified that could change the coding adoption decision.",
+  "execution": {
+    "downloaded": false,
+    "build": false,
+    "inference": false,
+    "gpu": false,
+    "inference_server_found": false
+  },
+  "actionables": {
+    "id": "vf-hyperqwen-qwen38-27b-dual3090-20261024",
+    "backup": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261102-VF-RESUME-191/receipts/actionables-prewrite-hyperqwen-upstream-review-20261102.json",
+    "updated": true
+  }
+}
