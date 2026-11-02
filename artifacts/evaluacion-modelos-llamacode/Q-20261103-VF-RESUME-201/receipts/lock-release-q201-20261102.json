@@ -1,0 +1,8 @@
+{
+  "task_id": "Q-20261103-VF-RESUME-201",
+  "timestamp_utc": "2026-11-02T23:16:27Z",
+  "lock_path": "WORK_QUEUE.lock",
+  "expected_contents": "task=Q-20261103-VF-RESUME-201\nowner=Codex\nacquired=2026-11-02T23:11:58Z\n",
+  "release_rule": "Remove only if the current lock contents exactly match this task token; leave any replacement lock untouched.",
+  "state_at_receipt": "checkpoint complete; guarded release is the final local operation"
+}

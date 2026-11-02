@@ -1,0 +1,44 @@
+{
+  "task_id": "Q-20261103-VF-RESUME-201",
+  "batch_id": "VF-20261019-01",
+  "status": "paused_user_request",
+  "timestamp_utc": "2026-11-02T23:14:49Z",
+  "profile": "Qwen3.6-35B-A3B / NInfer-3090 v0.17.1; Q193/Q197 lineage",
+  "lock": {
+    "acquired_exclusively": true,
+    "released_after_checkpoint": true,
+    "released_by_owner_only": true
+  },
+  "tests_started_this_activation": false,
+  "inference_requests_this_activation": 0,
+  "server_started_this_activation": false,
+  "gpu_used_this_activation": false,
+  "cpu_only_findings": {
+    "q190_fixtures": 22,
+    "deduplicated_segments": 161,
+    "token_ids": 275627,
+    "reproduced_sha256": "cc03d8a7c8c7ed86264f5112fb7f4466b0c954000791db0c3f46d01d70e0064d",
+    "meaning": "Exact historical Q190 tokenizer corpus reproduced; this does not validate chat-template packaging or benchmark performance."
+  },
+  "method_gap": {
+    "finding": "Q190 Q173 runner assumes /v1/completions and prompt-ID flow; NInfer-3090 v0.17.1 documents Chat/Responses and Anthropic endpoints. Do not reuse the runner unchanged.",
+    "next_preregistration": "Amend endpoint, pinned tokenizer/chat template, fixture/token strategy, exact usage.prompt_tokens check, sampling, and completion cap; verify Q197 smoke token count offline first."
+  },
+  "existing_evidence": {
+    "q197_smoke": "PASS once in Q198: dual 3090, exact PONG, reasoning_effort=none, HTTP 200, finish stop, 0 reasoning tokens; short-prompt rates are diagnostic only.",
+    "q173": "Pending: 8K x3, 32K, 64K, 131K, 261888; no 523904.",
+    "q172": "Pending after Q173: Tool-Eval Hard 2.8.0, seeds 42/43/44 serial, 28 scenarios, 120s timeout and safety gates."
+  },
+  "prior_q200_state": "Read-only preflight and pause only; Q200 lock previously released. Q190 metrics remain unchanged.",
+  "initial_preflight_utc": "2026-11-02T23:11:50Z",
+  "initial_preflight": "No inference server/CUDA compute process; port 18503 free.",
+  "sheet": {
+    "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "tab": "Accionables",
+    "range": "D60:N60",
+    "sync_status": "verified_readback",
+    "updated_cells": "D60,H60:K60,M60:N60",
+    "format_readback": "Arial 10, WRAP, TOP preserved"
+  },
+  "resume_from": "artifacts/evaluacion-modelos-llamacode/Q-20261103-VF-RESUME-201/PAUSE-POINT-Q201-20261103.md"
+}

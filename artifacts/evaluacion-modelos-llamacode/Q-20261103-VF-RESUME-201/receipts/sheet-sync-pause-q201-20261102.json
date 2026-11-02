@@ -1,0 +1,13 @@
+{
+  "timestamp_utc": "2026-11-02T23:14:49Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_title": "Listado",
+  "sheet_name": "Accionables",
+  "sheet_id": 1393124532,
+  "row": 60,
+  "updated_ranges": ["D60", "H60", "I60", "J60", "K60", "M60", "N60"],
+  "readback": "PASS",
+  "preserved_format": "Arial 10; WRAP; vertical alignment TOP",
+  "q190_metrics_changed": false,
+  "summary": "Q201 pause recorded; no inference/GPU test started this activation. Method mismatch and CPU-only tokenizer corpus verification documented. Q173/Q172 remain pending."
+}
