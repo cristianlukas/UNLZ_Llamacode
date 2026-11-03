@@ -1,0 +1,19 @@
+{
+  "timestamp_utc": "2026-11-03T20:34:36.267Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "tabs": {
+    "Resultados": {"sheet_id": 1972251122, "rows": [477, 478, 479], "ids": ["Q205.01", "Q205.02", "Q205.03"], "readback_status": "PASS", "cells_per_row": 34, "format_cells_per_row": 34},
+    "Accionables": {"sheet_id": 1393124532, "row": 72, "readback_status": "PASS", "fields_updated": ["D", "H", "I", "J", "K", "M", "N"]},
+    "Modelos locales por peso": {"sheet_id": 2026102751, "rows": [28, 29, 51], "q172_state": "pending / N-D", "readback_status": "PASS", "speed_fields_D_E_preserved": true, "quality_fields_F_blank_until_valid_score": true}
+  },
+  "preregistration_status": "all three profiles registered before inference; no Q205 GPU run had started",
+  "preregistration_hashes": {
+    "Q205.01": "de6b278a4356c728aa13e023d95a8af1cf85cc249ae834dae8607e75166de691",
+    "Q205.02": "7b8eca5dd38f772cd8d07bf7fc78ed69bcf9571c2543b2e5bec20f6b62c49786",
+    "Q205.03": "c5ec04c2eb613f4b49fcd654aa203b87d5801966816b449d7baca0d32017d4fd"
+  },
+  "plan_sha256": "7abd27f2801dc438fa929e829d2e99786ba26ad6c219c22df6d6f278a1e5636b",
+  "runner_sha256": "4673bf7a61665abe317ca125012d2542d3e8598a09e764b3b7d05bcda51e5163",
+  "correction": "Readback caught an incorrect X51 note concatenation caused by selecting row29's note while updating row51. X51 was restored from its immediate pre-write content for Q203.04/Q203.08 and amended with Q205.02 pending status; readback matched the restored text. D/E/F numerical fields were not changed.",
+  "X51_restoration_readback": {"status": "PASS", "characters": 892, "preserved": ["Q203.04 prefill=1307.556471, decode=40.051723", "Q203.08 prefill=1147.038910, decode=37.037936"], "Q205.02_pending_note": true}
+}

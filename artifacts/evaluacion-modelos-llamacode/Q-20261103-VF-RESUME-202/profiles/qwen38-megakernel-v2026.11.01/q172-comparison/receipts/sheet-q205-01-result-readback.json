@@ -1,0 +1,28 @@
+{
+  "task": "Q-20261103-VF-RESUME-202",
+  "id": "Q205.01",
+  "attempt": 2,
+  "readback_utc": "2026-11-03T21:00:00Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "verified_ranges": [
+    "Resultados!E477:E477",
+    "Resultados!T477:W477",
+    "Resultados!AD477:AF477",
+    "Modelos locales por peso!D28:F28",
+    "Modelos locales por peso!J28:J28",
+    "Accionables!D72:K72"
+  ],
+  "checks": {
+    "valid_73_of_100_score_and_41_of_56_points_recorded": true,
+    "28_scenarios_18_pass_5_partial_5_fail_recorded": true,
+    "TC74_and_TC92_safety_failures_recorded": true,
+    "evidence_hashes_and_receipts_present": true,
+    "Q173_prefill_decode_preserved": true,
+    "Q172_numeric_field_set_to_73_for_exact_profile": true,
+    "Accionables_next_step_is_B_after_readback": true,
+    "formatting_preserved_by_userEnteredValue_only_writes": true
+  },
+  "result_receipt_sha256": "2354aa098cc47feb977c0b6bc69f7b918d158a7de898016f2074510bb5a6eccb",
+  "raw_q172_sha256": "07794068cdd27fd79763e3466ed6855f15cf3879bcffa3e8e0e9f12c7e407cf8",
+  "result": "PASS"
+}

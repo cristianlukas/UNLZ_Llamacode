@@ -1,0 +1,19 @@
+{
+  "task": "Q-20261103-VF-RESUME-202",
+  "id": "Q205.01",
+  "attempt": 1,
+  "status": "SETUP_FAILED_BEFORE_INFERENCE",
+  "at_utc": "2026-11-03T20:41:54+00:00",
+  "summary_path": "/media/cristian/Disco local/Modelos-eval/Q205-Qwen38-Q172-single-PNY/A/seed42/summary.json",
+  "summary_sha256": "69006ea68c565a9f0f2f342a596e692c44090e8d4022932a7ea202e758459b7f",
+  "reason": "El supervisor identificó el PID del llama-server hijo propio como proceso ajeno durante startup; lo detuvo únicamente mediante su propio process group.",
+  "preflight": "PASS",
+  "server_pid": 644690,
+  "server_exit_code": -2,
+  "tool_eval_started": false,
+  "q172_json_exists": false,
+  "target_compute_apps_postflight": [],
+  "gpu1_memory_postflight_mib": 108,
+  "score": "N/D",
+  "notes": "No hubo requests ni output Q172; se conserva el summary y logs. No se inició ningún otro proceso ni se cerró GUI/PeritoSoft."
+}

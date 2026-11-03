@@ -1,0 +1,40 @@
+{
+  "task": "Q-20261103-VF-RESUME-202",
+  "id": "Q205.04",
+  "created_utc": "2026-11-03T20:47:24Z",
+  "status": "preregister_amendment_pending_sheet_readback",
+  "reason": "Exclude only the process tree belonging to the server launched by this runner; use the amended preregistered output_root to preserve attempt 1 and avoid overwrite.",
+  "old_runner_sha256": "4673bf7a61665abe317ca125012d2542d3e8598a09e764b3b7d05bcda51e5163",
+  "new_runner_sha256": "dabadf685328830da9d59792f0ac82ef361296cf73c91dfc46ef62a171ae5e9e",
+  "static_validation": "python3 -m py_compile PASS; synthetic process-tree regression smoke PASS; no GPU use in validation.",
+  "profiles": [
+    {
+      "id": "Q205.01",
+      "original_prereg": "artifacts/evaluacion-modelos-llamacode/Q-20261103-VF-RESUME-202/profiles/qwen38-megakernel-v2026.11.01/q172-comparison/receipts/q205-01-prereg.json",
+      "original_sha256": "de6b278a4356c728aa13e023d95a8af1cf85cc249ae834dae8607e75166de691",
+      "amended_prereg": "artifacts/evaluacion-modelos-llamacode/Q-20261103-VF-RESUME-202/profiles/qwen38-megakernel-v2026.11.01/q172-comparison/receipts/q205-01-prereg-amend01.json",
+      "amended_sha256": "59ae8d0424fd6522c2e287449f69599df78b9f5672d192db3a2adb7e23d5bf6d",
+      "attempt": 2,
+      "output_root": "/media/cristian/Disco local/Modelos-eval/Q205-Qwen38-Q172-single-PNY/A/seed42-attempt02"
+    },
+    {
+      "id": "Q205.02",
+      "original_prereg": "artifacts/evaluacion-modelos-llamacode/Q-20261103-VF-RESUME-202/profiles/qwen38-megakernel-v2026.11.01/q172-comparison/receipts/q205-02-prereg.json",
+      "original_sha256": "7b8eca5dd38f772cd8d07bf7fc78ed69bcf9571c2543b2e5bec20f6b62c49786",
+      "amended_prereg": "artifacts/evaluacion-modelos-llamacode/Q-20261103-VF-RESUME-202/profiles/qwen38-megakernel-v2026.11.01/q172-comparison/receipts/q205-02-prereg-amend01.json",
+      "amended_sha256": "4a82cf23b680b0f2ad62fdfb9810bd76c561ee7d182ce4de0cbd9903174cac50",
+      "attempt": 1,
+      "output_root": "/media/cristian/Disco local/Modelos-eval/Q205-Qwen38-Q172-single-PNY/B/seed42"
+    },
+    {
+      "id": "Q205.03",
+      "original_prereg": "artifacts/evaluacion-modelos-llamacode/Q-20261103-VF-RESUME-202/profiles/qwen38-megakernel-v2026.11.01/q172-comparison/receipts/q205-03-prereg.json",
+      "original_sha256": "c5ec04c2eb613f4b49fcd654aa203b87d5801966816b449d7baca0d32017d4fd",
+      "amended_prereg": "artifacts/evaluacion-modelos-llamacode/Q-20261103-VF-RESUME-202/profiles/qwen38-megakernel-v2026.11.01/q172-comparison/receipts/q205-03-prereg-amend01.json",
+      "amended_sha256": "ec7d2d7f3851f24a2f9cff11272929596c0aaf59c0dc446c2580d8568cfcf672",
+      "attempt": 1,
+      "output_root": "/media/cristian/Disco local/Modelos-eval/Q205-Qwen38-Q172-single-PNY/C/seed42"
+    }
+  ],
+  "no_model_inference_started": true
+}

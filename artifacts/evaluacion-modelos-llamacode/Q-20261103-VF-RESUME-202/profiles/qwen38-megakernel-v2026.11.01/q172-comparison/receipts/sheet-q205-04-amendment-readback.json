@@ -1,0 +1,35 @@
+{
+  "task": "Q-20261103-VF-RESUME-202",
+  "id": "Q205.04",
+  "readback_utc": "2026-11-03T20:48:00Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "verified_ranges": [
+    "Resultados!E477:E479",
+    "Resultados!AD477:AF479",
+    "Modelos locales por peso!D28:G29",
+    "Modelos locales por peso!D51:G51",
+    "Modelos locales por peso!J28:J29",
+    "Modelos locales por peso!J51:J51",
+    "Modelos locales por peso!X28:X29",
+    "Modelos locales por peso!X51:X51",
+    "Accionables!D72:K72"
+  ],
+  "checks": {
+    "attempt1_failure_recorded_and_attempt2_pending": true,
+    "B_and_C_remain_preregistered_not_started": true,
+    "new_runner_sha_and_amended_prereg_hashes_present_in_all_result_rows": true,
+    "Q205_01_failure_receipt_reference_present": true,
+    "Q173_prefill_decode_and_quality_cells_preserved_for_A_B_C": true,
+    "Q172_quality_notes_updated_for_A_B_C": true,
+    "Q205_04_notes_present_for_A_B_C_and_Accionables": true,
+    "formatting_preserved_by_userEnteredValue_only_writes": true
+  },
+  "runner_sha256": "dabadf685328830da9d59792f0ac82ef361296cf73c91dfc46ef62a171ae5e9e",
+  "amendment_receipt_sha256": "5780ebf0f2ef3fdfd40f089da2ddc3a4e17d0b1c06fb630bba3bb37178d649c5",
+  "amended_prereg_sha256": {
+    "Q205.01": "59ae8d0424fd6522c2e287449f69599df78b9f5672d192db3a2adb7e23d5bf6d",
+    "Q205.02": "4a82cf23b680b0f2ad62fdfb9810bd76c561ee7d182ce4de0cbd9903174cac50",
+    "Q205.03": "ec7d2d7f3851f24a2f9cff11272929596c0aaf59c0dc446c2580d8568cfcf672"
+  },
+  "result": "PASS"
+}

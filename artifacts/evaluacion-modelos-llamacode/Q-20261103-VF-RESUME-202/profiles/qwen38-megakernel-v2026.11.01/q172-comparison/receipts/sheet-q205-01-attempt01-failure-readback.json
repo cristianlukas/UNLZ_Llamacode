@@ -1,0 +1,28 @@
+{
+  "task": "Q-20261103-VF-RESUME-202",
+  "id": "Q205.01",
+  "attempt": 1,
+  "readback_utc": "2026-11-03T20:43:00Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "verified_ranges": [
+    "Resultados!E477:E477",
+    "Resultados!AD477:AF477",
+    "Modelos locales por peso!D28:F28",
+    "Modelos locales por peso!J28:J28",
+    "Modelos locales por peso!X28:X28",
+    "Accionables!D72:K72"
+  ],
+  "checks": {
+    "status_reports_setup_failure_no_score": true,
+    "error_and_receipt_hash_present": true,
+    "speed_values_preserved": true,
+    "quality_field_remains_blank": true,
+    "quality_note_reports_n_d": true,
+    "action_and_next_step_updated": true,
+    "formatting_preserved_by_userEnteredValue_only_writes": true
+  },
+  "local_attempt_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261103-VF-RESUME-202/profiles/qwen38-megakernel-v2026.11.01/q172-comparison/receipts/q205-01-attempt01-setup-failure.json",
+  "local_attempt_receipt_sha256": "f82b80b79e3ed1364b4748ffd6a54397ff11d2f2168e1f47ff4bb4c2c0790e33",
+  "d_output_summary_sha256": "69006ea68c565a9f0f2f342a596e692c44090e8d4022932a7ea202e758459b7f",
+  "result": "PASS"
+}

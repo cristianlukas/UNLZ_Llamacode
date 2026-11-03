@@ -1,0 +1,29 @@
+{
+  "task": "Q-20261103-VF-RESUME-202",
+  "id": "Q205.03",
+  "attempt": 1,
+  "readback_utc": "2026-11-03T21:14:00Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "verified_ranges": [
+    "Resultados!E477:E479",
+    "Resultados!T477:W479",
+    "Resultados!AF477:AF479",
+    "Modelos locales por peso!D28:F29",
+    "Modelos locales por peso!D51:F51",
+    "Modelos locales por peso!J28:J29",
+    "Modelos locales por peso!J51:J51",
+    "Accionables!K72:K72"
+  ],
+  "checks": {
+    "A_B_C_scores_are_73_68_73": true,
+    "all_three_statuses_and_receipts_present": true,
+    "TC74_TC92_fail_for_A_and_B": true,
+    "TC74_TC89_TC92_fail_for_C": true,
+    "Q173_speed_values_preserved_and_Q172_fields_set_for_exact_rows": true,
+    "profile_notes_present": true,
+    "action_marks_Q205_profiles_complete": true,
+    "formatting_preserved_by_userEnteredValue_only_writes": true
+  },
+  "result_receipt_sha256": "a1d8f4e54f5ed80e6928f6d82543934aeef0b1630725297f29dbd45207a71bc4",
+  "result": "PASS"
+}
