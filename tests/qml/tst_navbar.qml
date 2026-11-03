@@ -56,6 +56,12 @@ Item {
         interval: 50
         running: true
         onTriggered: {
+            // Ingi Charla se abre sin server: la sección recomienda qué modelo
+            // correr y "Iniciar charla" lo levanta.
+            const charla = nav.pages[nav.indexOfKey("nav.charla")] || {}
+            root.check(nav.indexOfKey("nav.charla") >= 0, "existe la sección Charla")
+            root.check(charla.serverOnly === false && !charla.agentOnly,
+                       "Charla no exige server ni agente para entrar")
             root.checkCentered("sin update")
             App.updateAvailable = true
             Qt.callLater(function() {

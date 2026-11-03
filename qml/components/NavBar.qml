@@ -30,7 +30,7 @@ Rectangle {
         { key: "nav.datalab",   label: "Data Lab", icon: "🧾", serverOnly: false },
         { key: "nav.tasks",     icon: "🗒",  serverOnly: true, agentOnly: true,
           keepDuringAgentTransition: true },
-        { key: "nav.charla",    icon: "🎙",  serverOnly: true  },
+        { key: "nav.charla",    icon: "🎙",  serverOnly: false },
         { key: "nav.benchmark", icon: "📊",  serverOnly: false },
         { key: "nav.ranking",   icon: "🏆",  serverOnly: false },
         { key: "tuner", label: "Tuner", icon: "🎛", serverOnly: false },

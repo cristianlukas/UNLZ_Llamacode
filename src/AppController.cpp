@@ -27837,6 +27837,16 @@ void AppController::startCharla()
         return;
     }
 
+    // Sin modo agente nadie más levanta el LLM: entrar a Charla con el server
+    // apagado y tocar "Iniciar charla" arranca el perfil y vuelve acá al estar
+    // listo (el modo agente lo hace abajo con startServerAndAgent).
+    if (!charlaAgentMode() && localLaunch && !serverRunning() && !m_serverStopping
+        && !m_activeLaunchId.isEmpty() && !m_charlaStartAfterRelaunch) {
+        m_charlaStartAfterRelaunch = true;
+        QTimer::singleShot(0, this, [this, id = m_activeLaunchId]() { startServer(id); });
+        return;
+    }
+
     m_charlaStartAfterRelaunch = false;
     ensureChatBackend();   // la voz reusa el backend de chat (sesiones/stream)
     ensureVoice();
@@ -27982,6 +27992,61 @@ QVariantList AppController::charlaTuneRecommendations() const
     if (args.isEmpty()) return {};   // sin perfil lanzado no hay qué tunear
     return CharlaTuning::toVariantList(CharlaTuning::recommend(
         args, m_hardwareSummary.value(QStringLiteral("vramGb")).toDouble()));
+}
+
+QVariantMap AppController::charlaModelRecommendation() const
+{
+    const double vram = qMax(m_hardwareSummary.value(QStringLiteral("vramTotalGb")).toDouble(),
+                             m_hardwareSummary.value(QStringLiteral("vramGb")).toDouble());
+    QHash<QString, double> minV;
+    for (const QJsonValue &v : readSystemProfilesBundle()) {
+        const QJsonObject e = v.toObject();
+        minV.insert(e.value(QStringLiteral("id")).toString(),
+                    e.value(QStringLiteral("minVramGb")).toDouble());
+    }
+    auto *self = const_cast<AppController *>(this);
+    QList<CharlaTuning::ModelCandidate> candidates;
+    for (const QVariant &item : m_profiles.launchProfilesForMenu()) {
+        const QString id = item.toMap().value(QStringLiteral("id")).toString();
+        if (id.isEmpty()) continue;
+        const LaunchProfile lp = m_profiles.resolveLaunch(id);
+        if (lp.benchmark || lp.deprecated) continue;
+        CharlaTuning::ModelCandidate c;
+        c.id = id;
+        c.name = lp.alias.isEmpty() ? lp.name : lp.alias;
+        c.charlaTuned = id.startsWith(QLatin1String("sys-charla-"));
+        c.active = id == m_activeLaunchId;
+        c.minVramGb = minV.value(id);
+        c.ready = EffectiveProfileBuilder::build(self->buildContext(id)).isValid();
+        const BackendProfile backend = m_profiles.resolveBackend(lp.backendProfileId);
+        if (c.ready && !backend.isCloud() && !isRemoteHost(backend.host)) {
+            const VoiceConfig cfg = VoiceConfig::fromJson(
+                QJsonObject::fromVariantMap(m_profiles.getLaunchVoice(id)));
+            const QVariantMap plan = voiceGpuPlanForLaunch(id, cfg);
+            if (plan.value(QStringLiteral("enabled")).toBool()) {
+                c.placementKnown = plan.value(QStringLiteral("modelFitKnown")).toBool();
+                c.placementSafe = plan.value(QStringLiteral("modelPlacementSafe")).toBool();
+            }
+        }
+        candidates.append(c);
+    }
+    return CharlaTuning::toVariantMap(CharlaTuning::pickModel(candidates, vram));
+}
+
+bool AppController::selectCharlaLaunch(const QString &launchId)
+{
+    if (launchId.isEmpty() || serverRunning() || m_serverStopping)
+        return false;
+    if (m_profiles.resolveLaunch(launchId).id.isEmpty())
+        return false;
+    if (launchId == m_activeLaunchId)
+        return true;
+    m_activeLaunchId = launchId;
+    writeSetting(QStringLiteral("lastLaunchId"), launchId);
+    computeEffectiveProfile(launchId);
+    emit launchProfileSelected(launchId);
+    emit activeLaunchIdChanged();
+    return true;
 }
 
 bool AppController::charlaAutoTune() const

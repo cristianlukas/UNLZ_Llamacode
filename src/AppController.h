@@ -1568,6 +1568,12 @@ public:
     // el perfil) y arrancar la charla al quedar listo. charlaAutoTune = aplicar
     // siempre sin preguntar (checkbox del popup).
     Q_INVOKABLE QVariantList charlaTuneRecommendations() const;
+    // Perfil recomendado para Charla en este equipo ({id, name, reason, ready,
+    // active, upgradeId, upgradeName}); se puede pedir sin server corriendo.
+    Q_INVOKABLE QVariantMap charlaModelRecommendation() const;
+    // Con el server apagado, deja launchId como perfil activo para que Charla
+    // lo levante al iniciar. Con el server prendido no cambia nada (false).
+    Q_INVOKABLE bool selectCharlaLaunch(const QString &launchId);
     Q_INVOKABLE void applyCharlaTuneAndStartCharla();
     Q_INVOKABLE bool charlaAutoTune() const;
     Q_INVOKABLE void setCharlaAutoTune(bool on);

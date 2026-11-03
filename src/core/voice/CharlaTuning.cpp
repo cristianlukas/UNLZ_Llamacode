@@ -116,4 +116,67 @@ QVariantList toVariantList(const QList<Change> &changes)
     return out;
 }
 
+namespace {
+bool fits(const ModelCandidate &c, double vramGb)
+{
+    if (c.placementKnown) return c.placementSafe;
+    return vramGb <= 0.0 || c.minVramGb <= vramGb + 0.01;
+}
+
+// a antes que b en la recomendación.
+bool better(const ModelCandidate &a, const ModelCandidate &b)
+{
+    if (a.ready != b.ready) return a.ready;
+    if (a.charlaTuned != b.charlaTuned) return a.charlaTuned;
+    if (!qFuzzyCompare(a.minVramGb + 1.0, b.minVramGb + 1.0)) return a.minVramGb > b.minVramGb;
+    return a.active && !b.active;
+}
+} // namespace
+
+ModelPick pickModel(const QList<ModelCandidate> &candidates, double vramGb)
+{
+    const ModelCandidate *best = nullptr;
+    const ModelCandidate *upgrade = nullptr;
+    for (const ModelCandidate &c : candidates) {
+        if (c.id.isEmpty() || !fits(c, vramGb)) continue;
+        if (!best || better(c, *best)) best = &c;
+        if (c.charlaTuned && !c.ready && (!upgrade || better(c, *upgrade))) upgrade = &c;
+    }
+    ModelPick pick;
+    if (!best) {
+        pick.reason = QStringLiteral(
+            "Ningún perfil entra en la VRAM de este equipo junto a la voz. "
+            "Descargá un modelo más chico desde Modelos.");
+        return pick;
+    }
+    pick.id = best->id;
+    pick.name = best->name;
+    pick.ready = best->ready;
+    pick.active = best->active;
+    if (best->charlaTuned && best->ready)
+        pick.reason = QStringLiteral("Perfil pensado para Charla (voz + PC + web) que entra en tu GPU.");
+    else if (best->charlaTuned)
+        pick.reason = QStringLiteral("Perfil pensado para Charla que entra en tu GPU; falta descargar el modelo.");
+    else if (best->ready)
+        pick.reason = QStringLiteral("El modelo instalado más grande que entra en tu GPU dejando lugar para la voz.");
+    else
+        pick.reason = QStringLiteral("No hay un modelo instalado que entre; este perfil entra pero hay que descargarlo.");
+    if (upgrade && !best->charlaTuned) {
+        pick.upgradeId = upgrade->id;
+        pick.upgradeName = upgrade->name;
+    }
+    return pick;
+}
+
+QVariantMap toVariantMap(const ModelPick &pick)
+{
+    return {{QStringLiteral("id"), pick.id},
+            {QStringLiteral("name"), pick.name},
+            {QStringLiteral("reason"), pick.reason},
+            {QStringLiteral("ready"), pick.ready},
+            {QStringLiteral("active"), pick.active},
+            {QStringLiteral("upgradeId"), pick.upgradeId},
+            {QStringLiteral("upgradeName"), pick.upgradeName}};
+}
+
 } // namespace CharlaTuning

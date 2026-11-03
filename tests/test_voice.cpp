@@ -65,6 +65,7 @@ private slots:
     void assistantToolCues();
     void assistantApprovalQuestion();
     void charlaTuningRecommendations();
+    void charlaModelPick();
     void ttsSentenceSplit();
     void ttsStreamingSentences();
     void ttsSanitizeForSpeech();
@@ -524,6 +525,61 @@ void TestVoice::turnFailedIdleIsNoop()
     vc.notifyTurnFailed(QStringLiteral("server caído"));
     QCOMPARE(vc.state(), VoiceController::Idle);
     QVERIFY(vc.lastError().isEmpty());
+}
+
+void TestVoice::charlaModelPick()
+{
+    using CharlaTuning::ModelCandidate;
+    auto cand = [](const QString &id, bool tuned, bool ready, double minV) {
+        ModelCandidate c;
+        c.id = id; c.name = id.toUpper(); c.charlaTuned = tuned; c.ready = ready; c.minVramGb = minV;
+        return c;
+    };
+
+    // Sin candidatos: id vacío y una razón que explica qué hacer.
+    const auto none = CharlaTuning::pickModel({}, 24.0);
+    QVERIFY(none.id.isEmpty());
+    QVERIFY(!none.reason.isEmpty());
+
+    // 24 GB: el perfil de Charla de 48 GB no entra; el de 24 instalado gana a un
+    // modelo genérico más chico, también instalado.
+    QList<ModelCandidate> list{cand("gen-12", false, true, 12),
+                               cand("sys-charla-24", true, true, 24),
+                               cand("sys-charla-48", true, true, 48)};
+    auto pick = CharlaTuning::pickModel(list, 24.0);
+    QCOMPARE(pick.id, QString("sys-charla-24"));
+    QVERIFY(pick.ready);
+    QVERIFY(pick.upgradeId.isEmpty());
+
+    // Lo que ya arranca le gana a un perfil de Charla sin descargar, que queda
+    // como sugerencia de mejora.
+    list = {cand("gen-12", false, true, 12), cand("gen-8", false, true, 8),
+            cand("sys-charla-24", true, false, 24)};
+    pick = CharlaTuning::pickModel(list, 24.0);
+    QCOMPARE(pick.id, QString("gen-12"));   // el instalado más grande
+    QCOMPARE(pick.upgradeId, QString("sys-charla-24"));
+
+    // El plan de GPU de voz manda sobre minVramGb: si dice que no entra junto a
+    // la voz, se descarta aunque el piso declarado entre.
+    list = {cand("gen-20", false, true, 20), cand("gen-8", false, true, 8)};
+    list[0].placementKnown = true; list[0].placementSafe = false;
+    pick = CharlaTuning::pickModel(list, 24.0);
+    QCOMPARE(pick.id, QString("gen-8"));
+
+    // Empate: el activo primero (no proponer un cambio sin motivo).
+    list = {cand("a", false, true, 8), cand("b", false, true, 8)};
+    list[1].active = true;
+    pick = CharlaTuning::pickModel(list, 24.0);
+    QCOMPARE(pick.id, QString("b"));
+    QVERIFY(pick.active);
+
+    // VRAM desconocida: no descarta por piso.
+    pick = CharlaTuning::pickModel({cand("sys-charla-48", true, true, 48)}, 0.0);
+    QCOMPARE(pick.id, QString("sys-charla-48"));
+
+    const QVariantMap m = CharlaTuning::toVariantMap(pick);
+    QCOMPARE(m.value("id").toString(), QString("sys-charla-48"));
+    QVERIFY(m.contains("reason") && m.contains("ready") && m.contains("upgradeId"));
 }
 
 void TestVoice::charlaTuningRecommendations()

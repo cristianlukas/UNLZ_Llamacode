@@ -3,6 +3,7 @@
 #include <QStringList>
 #include <QList>
 #include <QVariantList>
+#include <QVariantMap>
 
 // Recomendador de ajustes de llama-server para Ingi Charla (voz real-time).
 // Analiza los args EFECTIVOS del perfil activo y propone solo lo que mejora la
@@ -41,5 +42,37 @@ bool requiredForAgent(const QList<Change> &changes);
 
 // Para QML: [{flag, current, recommended, reason}].
 QVariantList toVariantList(const QList<Change> &changes);
+
+// Perfil de lanzamiento candidato para conversar con Charla. AppController lo
+// arma a partir de los perfiles del menú; la elección es pura para testearla.
+struct ModelCandidate {
+    QString id;
+    QString name;
+    bool    charlaTuned = false;    // perfil pensado para Charla (sys-charla-*)
+    bool    ready = false;          // binario + modelo presentes: arranca ya
+    bool    active = false;         // es el perfil activo
+    double  minVramGb = 0.0;        // piso declarado del bundle (0 = desconocido)
+    bool    placementKnown = false; // el plan de GPU de voz pudo estimar el modelo
+    bool    placementSafe = false;  // y entra junto a la voz
+};
+
+struct ModelPick {
+    QString id;            // "" = no hay candidato que entre en este equipo
+    QString name;
+    QString reason;
+    bool    ready = false;
+    bool    active = false;
+    // Perfil pensado para Charla que también entra pero todavía no está
+    // instalado (sólo cuando la elección principal no es uno de esos).
+    QString upgradeId;
+    QString upgradeName;
+};
+
+// Elige el perfil para Charla: descarta lo que no entra (plan de GPU de voz si
+// se conoce; si no, minVramGb contra la VRAM total) y prefiere, en orden, lo
+// que ya arranca, lo pensado para Charla, el modelo más grande y el activo.
+// vramGb <= 0 = desconocida: no descarta por piso de VRAM.
+ModelPick pickModel(const QList<ModelCandidate> &candidates, double vramGb);
+QVariantMap toVariantMap(const ModelPick &pick);
 
 } // namespace CharlaTuning

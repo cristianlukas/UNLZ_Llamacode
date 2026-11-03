@@ -305,6 +305,7 @@ private slots:
     void agentLevels_contextBudgetLadder();
     void charlaKeepsAgentThinkingOffWhenProfileReapplies();
     void charlaTuneHoldsForTheWholeSession();
+    void charlaSelectsLaunchWithServerOff();
     void serverVisionFromModelsAndProps();
     void privacyModeHidesAndBlocksNetworkTools();
     void doctorReportsStructureAndIssues();
@@ -3812,6 +3813,31 @@ void AppControllerTests::charlaTuneHoldsForTheWholeSession()
     QVERIFY(!app.charlaTuneAppliesToForTest(QStringLiteral("sys-vram-8-qwen-agent")));
     app.stopCharla();
     QVERIFY(!app.charlaTuneAppliesToForTest(QStringLiteral("sys-qwen38-27b-udq4-131k")));
+}
+
+// Ingi Charla se abre sin server: la página recomienda un perfil y lo deja
+// como activo para que "Iniciar charla" lo levante.
+void AppControllerTests::charlaSelectsLaunchWithServerOff()
+{
+    AppController app;
+    QVERIFY(!app.serverRunning());
+    const QString id = QStringLiteral("sys-vram-8-qwen-agent");
+    QSignalSpy changed(&app, &AppController::activeLaunchIdChanged);
+    QVERIFY(!app.selectCharlaLaunch(QString()));
+    QVERIFY(!app.selectCharlaLaunch(QStringLiteral("no-existe-este-perfil")));
+    QVERIFY(app.selectCharlaLaunch(id));
+    QCOMPARE(app.activeLaunchId(), id);
+    QCOMPARE(changed.count(), 1);
+    QVERIFY(app.selectCharlaLaunch(id));   // mismo perfil: no re-emite
+    QCOMPARE(changed.count(), 1);
+
+    const QVariantMap rec = app.charlaModelRecommendation();
+    QVERIFY(rec.contains(QStringLiteral("id")));
+    QVERIFY(!rec.value(QStringLiteral("reason")).toString().isEmpty());
+    if (!rec.value(QStringLiteral("id")).toString().isEmpty()) {
+        const QString recId = rec.value(QStringLiteral("id")).toString();
+        QCOMPARE(rec.value(QStringLiteral("active")).toBool(), recId == id);
+    }
 }
 
 // Un perfil cloud/remoto no tiene --mmproj que mirar: sin preguntarle al endpoint

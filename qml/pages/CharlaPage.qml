@@ -10,7 +10,12 @@ Item {
     id: page
 
     // La config de voz vive en el LaunchProfile activo (el que lanzó el server).
-    property string pid: App.activeLaunchId
+    // Sin perfil activo (se entró con el server apagado) se usa el recomendado
+    // para Charla: es el que se va a levantar al tocar "Iniciar charla".
+    property var modelRec: App.charlaModelRecommendation()
+    property string pid: App.activeLaunchId.length > 0 ? App.activeLaunchId
+                                                       : (modelRec.ready ? modelRec.id : "")
+    property string pendingLaunch: ""   // perfil a elegir cuando termine de bajar el server
     property var cfg: ({})
     property bool testing: false
     property int installPct: -1
@@ -74,7 +79,30 @@ Item {
             page.installMsg = msg
             page.cfg = Object.assign({}, page.cfg)
         }
-        function onHardwareSummaryChanged() { page.gpuPlan = App.voiceGpuPlan() }
+        function onHardwareSummaryChanged() {
+            page.gpuPlan = App.voiceGpuPlan()
+            page.modelRec = App.charlaModelRecommendation()
+        }
+        function onServerRunningChanged() {
+            if (App.serverRunning || App.serverStopping) return
+            if (page.pendingLaunch.length > 0) {
+                App.selectCharlaLaunch(page.pendingLaunch)
+                page.pendingLaunch = ""
+            }
+            page.modelRec = App.charlaModelRecommendation()
+        }
+        function onActiveLaunchIdChanged() {
+            page.modelRec = App.charlaModelRecommendation()
+            page.gpuPlan = App.voiceGpuPlan()
+            page.reload()
+        }
+    }
+    // Cambia el perfil que levanta Charla. Con el server prendido lo baja
+    // primero (el cambio se aplica en onServerRunningChanged).
+    function useRecommendedLaunch() {
+        if (!page.modelRec.id) return
+        if (App.serverRunning) { page.pendingLaunch = page.modelRec.id; App.stopServer() }
+        else App.selectCharlaLaunch(page.modelRec.id)
     }
     function reload() {
         cfg = pid.length ? App.voiceConfig(pid) : ({})
@@ -85,6 +113,10 @@ Item {
         if (!cfg.ttsManagedVoice) cfg.ttsManagedVoice = "es_ES-davefx-medium"
     }
     function startOrPromptModelDownload() {
+        // Entrada sin server: fijar el perfil que se va a levantar antes de
+        // pedir el tune (que mira los args efectivos de ese perfil).
+        if (!App.serverRunning && page.pid.length > 0 && page.pid !== App.activeLaunchId)
+            App.selectCharlaLaunch(page.pid)
         const engineId = page.cfg.sttManagedEngine || ""
         const voiceId = page.cfg.ttsManagedVoice || "es_ES-davefx-medium"
         const binaryMissing = page.sttIsNative()
@@ -181,6 +213,66 @@ Item {
                                    + " GB. Elegí un perfil/modelo más chico.")
                                  : "Multi-GPU detectado, pero la GPU reservada no tiene margen "
                                    + "suficiente para la voz; se mantiene el perfil normal.")
+                    }
+                }
+
+                // Qué modelo correr para Charla. Visible también sin server:
+                // la sección se puede abrir antes de lanzar nada.
+                Rectangle {
+                    id: modelRecCard
+                    objectName: "charlaModelRecCard"
+                    readonly property bool differs: !!page.modelRec.id && !page.modelRec.active
+                    visible: !App.voiceActive && (!App.serverRunning || differs || !page.modelRec.id)
+                    Layout.fillWidth: true
+                    implicitHeight: recCol.implicitHeight + 18
+                    radius: 8
+                    color: Theme.inputBg
+                    border.color: Theme.borderColor
+                    ColumnLayout {
+                        id: recCol
+                        anchors { left: parent.left; right: parent.right; top: parent.top; margins: 9 }
+                        spacing: 6
+                        Text {
+                            Layout.fillWidth: true
+                            wrapMode: Text.WordWrap
+                            color: Theme.textPrimary
+                            font.pixelSize: 13
+                            font.bold: true
+                            text: page.modelRec.id ? ("Modelo recomendado: " + page.modelRec.name)
+                                                   : "Sin modelo para Charla"
+                        }
+                        Text {
+                            Layout.fillWidth: true
+                            wrapMode: Text.WordWrap
+                            color: Theme.textSecondary
+                            font.pixelSize: 12
+                            text: page.modelRec.reason || ""
+                        }
+                        Text {
+                            Layout.fillWidth: true
+                            visible: !!page.modelRec.upgradeId
+                            wrapMode: Text.WordWrap
+                            color: Theme.textSecondary
+                            font.pixelSize: 12
+                            text: "Mejor para voz: " + (page.modelRec.upgradeName || "")
+                                  + " (descargalo desde Perfiles)."
+                        }
+                        Text {
+                            Layout.fillWidth: true
+                            visible: !App.serverRunning && page.modelRec.ready === true
+                            wrapMode: Text.WordWrap
+                            color: Theme.textMuted
+                            font.pixelSize: 12
+                            text: modelRecCard.differs
+                                  ? "El servidor está apagado: elegí este perfil y \"Iniciar charla\" lo levanta."
+                                  : "El servidor está apagado: \"Iniciar charla\" lo levanta con este perfil."
+                        }
+                        LcButton {
+                            visible: modelRecCard.differs && page.modelRec.ready === true
+                            text: App.serverRunning ? "Relanzar con este perfil" : "Usar este perfil"
+                            secondary: true
+                            onClicked: page.useRecommendedLaunch()
+                        }
                     }
                 }
 
