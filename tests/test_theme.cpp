@@ -6,6 +6,7 @@
 #include <QColor>
 #include <QFont>
 #include <QFontInfo>
+#include <QFontDatabase>
 #include <cmath>
 #include <QStandardPaths>
 #include <QSettings>
@@ -22,6 +23,13 @@ private slots:
     {
         const QString fam = ThemeProvider::defaultCodeFont();
         QVERIFY(!fam.contains(QLatin1Char(',')));
+        // Consolas/Menlo son fuentes del sistema: el plugin offscreen del CI de
+        // Windows no las registra y QFontInfo cae a una proporcional. Sin la
+        // fuente instalada no hay nada que verificar ("monospace" es un alias
+        // de fontconfig y no figura en families()).
+        if (fam != QLatin1String("monospace")
+            && !QFontDatabase::families().contains(fam, Qt::CaseInsensitive))
+            QSKIP("La fuente de código por defecto no está instalada en este entorno");
         QFont f(fam);
         f.setStyleHint(QFont::TypeWriter);
         QVERIFY2(QFontInfo(f).fixedPitch(), qPrintable(QFontInfo(f).family()));
