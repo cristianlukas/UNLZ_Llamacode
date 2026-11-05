@@ -87,6 +87,8 @@ necesitan numpy/matplotlib se saltean solos con `skipUnless`.
 | Reparto de GPU de Charla (LLM entero en la GPU que no es de voz, sin split tensor con MTP, plan estable con el server vivo), KV cache K+V del runtime, thinking apagado en Charla aunque se re-aplique el perfil, tune de Charla durante toda la sesión, voz en la GPU más libre junto a un LLM externo, visión de backends cloud/administrados (`/v1/models` input_modalities, `/props` modalities, `managedServer.vision`), perfiles `sys-charla-jarvis-qwen38-27b` y `sys-charla-jarvis-deepseek-maya-xs` (medición: `docs/charla-balance-2x3090-20261101.md`) | `tests/test_hardware_diagnostics.cpp`, `tests/test_gguf_profiles.cpp`, `tests/test_appcontroller.cpp`, `tests/test_system_profiles.cpp` |
 | CharlaTuning (contexto mínimo del agente de voz, slots) + AudioCodec::toMonoResampled + recorte de silencio para STT + Piper residente + VadEngine con ruido de fondo continuo (escape del piso congelado) + filtro de anotaciones de no-voz de whisper (`[Música]`) | `tests/test_voice.cpp` |
 | VoiceCursorCommand (parseo de órdenes de cursor por voz) | `tests/test_voice.cpp` |
+| Charla multitarea: CharlaMultitask (capacidad de slots, prompt del agente de fondo, avisos, "¿cómo van las tareas?"), `VoiceController::announce`, CharlaTuning con slots (32k por slot), pedido en paralelo con stub SSE + E2E real con `LC_CHARLA_E2E_SERVER`, perfil `sys-charla-jarvis-qwen38-27b-multi`, `runtime.parallelSlots` de perfiles de sistema, SubAgentRunner sin `desktop_*` (medición: `docs/charla-multitarea-computer-use-20261105.md`) | `tests/test_voice.cpp`, `tests/test_appcontroller.cpp`, `tests/test_system_profiles.cpp`, `tests/test_agent_tools.cpp` |
+| AgentDesktopCli (agent-desktop de Vercel como backend de controles en Linux: sobre JSON, ventana por PID, snapshot → filas, acciones) | `tests/test_automation.cpp` |
 | SpeechTextNormalizer (texto del agente → hablable: markdown, URLs, monedas, unidades, fechas y números en español; medido en `docs/charla-tts-normalizacion-20261105.md`) + troceo que no corta URLs/decimales + TTS recibe el texto normalizado | `tests/test_voice.cpp` |
 | VoiceAssistant (Charla JARVIS: sí/no hablado, avisos de tool, pregunta de aprobación) + turno abierto de VoiceController | `tests/test_voice.cpp` |
 | Charla modo JARVIS en AppController (aprobación por voz, aviso de tool lenta, turno en espera al arrancar el agente, "pará"/cola con el agente trabajando) | `tests/test_appcontroller.cpp` |
@@ -239,7 +241,10 @@ reproducible en headless/CI), así que sólo se cubre el path de error en
   computer use en vivo sobre apps con documentos del usuario** (Notepad restaura
   pestañas sin guardar); la Calculadora es segura.
 - **Computer use en segundo plano contra la Calculadora real** — hay harness:
-  `build_tests\Release\qa_background_calc.exe` (se compila con `tests.bat`; en
+  `build_tests\Release\qa_background_calc.exe` (Linux: `qa_background_calc` contra
+  gnome-calculator; con `LLAMACODE_AGENT_DESKTOP` o `scripts/install-agent-desktop.sh`
+  va por agent-desktop; correrlo en un Xvfb con Openbox + AT-SPI propios para no tocar
+  el escritorio) (se compila con `tests.bat`; en
   ctest sólo `--help` y el guard de offscreen). Abre la Calculadora, hace 3×3= SÓLO
   por UI Automation con el input físico bloqueado, verifica que el visor diga 9 y
   que el puntero no se haya movido, y la cierra. Sale 0 si todo pasó.

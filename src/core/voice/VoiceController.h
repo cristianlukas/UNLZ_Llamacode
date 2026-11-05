@@ -196,6 +196,14 @@ public slots:
     // ya suena y NO cierra el turno, así que al terminar de hablarlo la voz vuelve
     // a "pensando" en vez de abrir el micrófono con el agente todavía trabajando.
     void speakCue(const QString &text);
+    // Aviso que llega de afuera del turno (una tarea en segundo plano terminó).
+    // Escuchando: sólo si el usuario no está a mitad de una frase; corta la
+    // captura para no transcribir el propio aviso y después vuelve a escuchar.
+    // Pensando/hablando: se encola detrás de lo que suena. false = ahora no se
+    // puede (reintentar más tarde).
+    bool announce(const QString &text);
+    // ¿Hay voz del usuario en el turno que se está escuchando?
+    bool userIsSpeaking() const;
     // Pregunta que espera respuesta hablada (aprobación de una tool): cierra el
     // turno y, al terminar de hablarla, abre el micrófono.
     void ask(const QString &text);

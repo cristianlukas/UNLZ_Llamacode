@@ -1,0 +1,97 @@
+{
+ "idle": [
+  {
+   "ttft": 1.619183131000682,
+   "first_sentence": 1.9887793340003554,
+   "total": 1.9888580009992438,
+   "chunks": 16,
+   "text": "Doce por treinta y siete son cuatrocientos cuarenta y cuatro."
+  },
+  {
+   "ttft": 0.20747340699927008,
+   "first_sentence": 0.9337085639999714,
+   "total": 0.9337414450001233,
+   "chunks": 30,
+   "text": "Un agujero negro es una región del espacio con un campo gravitatorio tan intenso que nada, ni siquiera la luz, puede escapar de ella."
+  },
+  {
+   "ttft": 0.20354880499871797,
+   "first_sentence": 0.5626428719988326,
+   "total": 1.0690286589997413,
+   "chunks": 25,
+   "text": "Llevate un buen paraguas y ropa impermeable. También es útil calzado que no se resbale."
+  },
+  {
+   "ttft": 0.21030948299994634,
+   "first_sentence": 0.39671120999992127,
+   "total": 0.7499347350003518,
+   "chunks": 25,
+   "text": "Los pulpos tienen tres corazones y sangre azul. Además, dos de sus corazones se detienen cuando nado."
+  }
+ ],
+ "loaded": [
+  {
+   "ttft": 19.834612909000498,
+   "first_sentence": 20.543821020000905,
+   "total": 20.5438697210011,
+   "chunks": 12,
+   "text": "Doce por treinta y siete son 444."
+  },
+  {
+   "ttft": 0.5258279019999463,
+   "first_sentence": 1.1583125039996958,
+   "total": 1.1583446940003341,
+   "chunks": 19,
+   "text": "Es una región del espacio donde la gravedad es tan fuerte que ni siquiera la luz puede escapar."
+  },
+  {
+   "ttft": 0.3636721940001735,
+   "first_sentence": 0.7807659820009576,
+   "total": 1.5309016900009738,
+   "chunks": 28,
+   "text": "Un buen paraguas compacto o una chaqueta impermeable. También ayuda llevar calzado que no se moje o resbale."
+  },
+  {
+   "ttft": 0.4013942479996331,
+   "first_sentence": 0.653739397001118,
+   "total": 1.7936575990006531,
+   "chunks": 36,
+   "text": "Los pulpos tienen tres corazones y sangre azul. Dos corazones bombean sangre a las branquias y uno al resto del cuerpo. ¡Son criaturas fascinantes!"
+  }
+ ],
+ "workers": [
+  {
+   "wall": 49.18348372199944,
+   "chunks": 1138,
+   "agg_tok_s": 23.13784860040283
+  },
+  {
+   "wall": 5.702098691001083,
+   "chunks": 348,
+   "agg_tok_s": 61.03016079837505
+  },
+  {
+   "wall": 40.17703941800028,
+   "chunks": 2007,
+   "agg_tok_s": 49.95390474443012
+  },
+  {
+   "wall": 40.89285198000107,
+   "chunks": 1906,
+   "agg_tok_s": 46.60961287151462
+  }
+ ],
+ "summary": {
+  "idle": {
+   "ttft": 0.209,
+   "first_sentence": 0.748,
+   "total": 1.001
+  },
+  "loaded": {
+   "ttft": 0.464,
+   "first_sentence": 0.97,
+   "total": 1.662
+  },
+  "workers_agg_tok_s": 48.3
+ }
+}

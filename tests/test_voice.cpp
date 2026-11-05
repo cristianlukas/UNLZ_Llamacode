@@ -19,6 +19,7 @@
 #include <QTcpSocket>
 #include <memory>
 #include "core/voice/CharlaTuning.h"
+#include "core/voice/CharlaMultitask.h"
 #include "core/voice/VoiceCursorCommand.h"
 #include "core/voice/VoiceAssistant.h"
 #include "core/profiles/ProfileTypes.h"
@@ -70,6 +71,9 @@ private slots:
     void assistantApprovalQuestion();
     void charlaTuningRecommendations();
     void charlaModelPick();
+    void charlaMultitaskPolicy();
+    void charlaTuningKeepsMultitaskSlots();
+    void announceWaitsForTheUserToFinish();
     void ttsSentenceSplit();
     void ttsStreamingSentences();
     void ttsSanitizeForSpeech();
@@ -873,6 +877,105 @@ void TestVoice::turnDetectorSilence()
     QVERIFY(requiredSilenceMs(QStringLiteral("listo."), 100) <= 100);
     QVERIFY(requiredSilenceMs(QStringLiteral("y"), 9000) <= EndpointTuning().maxMs);
     QCOMPARE(requiredSilenceMs(QStringLiteral("listo."), 0), 0);
+}
+
+void TestVoice::charlaMultitaskPolicy()
+{
+    using namespace CharlaMultitask;
+    // Un slot queda para la voz/agente principal.
+    QCOMPARE(backgroundCapacity(1, 0), 0);
+    QCOMPARE(backgroundCapacity(4, 0), 3);
+    QCOMPARE(backgroundCapacity(4, 3), 0);
+    QCOMPARE(backgroundCapacity(4, 9), 0);
+
+    QCOMPARE(startCue(1, "es"), QStringLiteral("Dale, lo hago en paralelo."));
+    QVERIFY(startCue(2, "es").contains(QStringLiteral("van 2 tareas")));
+    QCOMPARE(startCue(1, "en"), QStringLiteral("Sure, I'll do that in parallel."));
+
+    QCOMPARE(shortLabel(QStringLiteral("Che, buscame hoteles baratos en Madrid para el finde?")),
+             QStringLiteral("buscame hoteles baratos en Madrid para…"));
+    QCOMPARE(shortLabel(QStringLiteral("Mirá el clima.")), QStringLiteral("mirá el clima"));
+
+    // Resultado → 1-2 frases habladas, sin markdown ni notas entre corchetes.
+    const QString done = completionAnnouncement(
+        QStringLiteral("mirá el clima de mañana"),
+        QStringLiteral("**Mañana** llueve a la tarde. Llevá paraguas. Máxima de 24 grados.\n[corte: límite]"),
+        true, "es");
+    QCOMPARE(done, QStringLiteral("Listo lo de mirá el clima de mañana: Mañana llueve a la tarde. Llevá paraguas."));
+    QCOMPARE(completionAnnouncement(QStringLiteral("abrí el mail"), QString(), false, "es"),
+             QStringLiteral("No pude terminar lo de abrí el mail."));
+    QVERIFY(completionAnnouncement(QStringLiteral("x"), QString(400, QLatin1Char('a')), true, "es").size() < 260);
+
+    QVERIFY(isStatusQuery(QStringLiteral("¿Cómo van las tareas?")));
+    QVERIFY(isStatusQuery(QStringLiteral("che, qué estás haciendo")));
+    QVERIFY(!isStatusQuery(QStringLiteral("buscá cómo van las tareas de la casa en internet")));
+    QCOMPARE(statusReport({}, "es"), QStringLiteral("No tengo tareas en segundo plano."));
+    QCOMPARE(statusReport({QStringLiteral("mirá el clima")}, "es"), QStringLiteral("Estoy con una tarea: mirá el clima."));
+    QVERIFY(statusReport({QStringLiteral("a"), QStringLiteral("b")}, "es").startsWith(QStringLiteral("Estoy con 2 tareas")));
+
+    const QString sys = backgroundSystemPrompt(QStringLiteral("/tmp/t1"), QDate(2026, 11, 5), "es");
+    QVERIFY(sys.contains(QStringLiteral("NO uses las tools desktop_*")));
+    QVERIFY(sys.contains(QStringLiteral("/tmp/t1")));
+    QVERIFY(sys.contains(QStringLiteral("noviembre")));
+}
+
+// El tope de contexto de Charla es por slot: 4×32k sigue siendo multitarea, pero
+// 4 slots de 4k (no entra el agente de voz) bajan a 1.
+void TestVoice::charlaTuningKeepsMultitaskSlots()
+{
+    const QStringList multi{"--ctx-size", "131072", "--batch-size", "2048", "--ubatch-size", "512",
+                            "--cache-reuse", "512", "--predict", "1024", "--parallel", "4"};
+    QVERIFY(CharlaTuning::recommend(multi, 24.0).isEmpty());
+    const QStringList huge{"--ctx-size", "524288", "--batch-size", "2048", "--ubatch-size", "512",
+                           "--cache-reuse", "512", "--predict", "1024", "--parallel", "4"};
+    const QStringList tuned = CharlaTuning::apply(huge, CharlaTuning::recommend(huge, 24.0));
+    QCOMPARE(CharlaTuning::argValue(tuned, "--ctx-size"), QStringLiteral("131072"));
+    QCOMPARE(CharlaTuning::argValue(tuned, "--parallel"), QStringLiteral("4"));
+}
+
+// Un aviso de tarea terminada no pisa al usuario: escuchando con voz en curso,
+// announce() se niega (se reintenta después); en silencio, habla.
+void TestVoice::announceWaitsForTheUserToFinish()
+{
+    VoiceController idle;
+    QVERIFY(!idle.announce(QStringLiteral("Listo lo del clima.")));   // Charla apagada
+
+    VoiceConfig cfg;
+    cfg.ttsMode = QStringLiteral("http");
+    cfg.ttsBaseUrl = QStringLiteral("http://127.0.0.1:1");           // nadie escucha: no importa
+    cfg.ttsFallbackMode = QStringLiteral("none");
+    cfg.autoListen = false;
+    cfg.bargeIn = false;
+    VoiceController vc;
+    vc.setConfig(cfg, QString(), QString());
+    vc.setSyntheticInput(true);
+    vc.start();
+    QCOMPARE(vc.state(), VoiceController::Listening);
+    QVERIFY(!vc.userIsSpeaking());
+
+    // 1 s de ruido de fondo (el VAD adaptativo calibra su piso) y después 1,5 s
+    // de voz fuerte.
+    QByteArray audio;
+    for (int i = 0; i < 16000; ++i) {
+        const int16_t v = (i % 7) * 40 - 120;
+        audio.append(reinterpret_cast<const char *>(&v), 2);
+    }
+    for (int i = 0; i < 24000; ++i) {
+        const int16_t v = (i / 20) % 2 ? 12000 : -12000;
+        audio.append(reinterpret_cast<const char *>(&v), 2);
+    }
+    vc.queueSyntheticAudio(audio);
+    QTRY_VERIFY_WITH_TIMEOUT(vc.userIsSpeaking(), 3000);
+    QVERIFY(!vc.announce(QStringLiteral("Listo lo del clima.")));
+    vc.stop();
+
+    VoiceController quiet;
+    quiet.setConfig(cfg, QString(), QString());
+    quiet.setSyntheticInput(true);
+    quiet.start();
+    QVERIFY(quiet.announce(QStringLiteral("Listo lo del clima.")));
+    QCOMPARE(quiet.state(), VoiceController::Speaking);
+    quiet.stop();
 }
 
 void TestVoice::ttsSentenceSplit()

@@ -1,0 +1,98 @@
+{
+ "idle": [
+  {
+   "ttft": 0.1724575169992022,
+   "first_sentence": 0.5153971750005439,
+   "total": 0.5469905770005425,
+   "chunks": 12,
+   "text": "Doce por treinta y siete es 444."
+  },
+  {
+   "ttft": 0.16630732799967518,
+   "first_sentence": 1.094935721001093,
+   "total": 1.1256969059995754,
+   "chunks": 30,
+   "text": "Un agujero negro es una región del espacio-tiempo con una gravedad tan intensa que nada, ni siquiera la luz, puede escapar de ella."
+  },
+  {
+   "ttft": 0.17289652899853536,
+   "first_sentence": 0.6318824699992547,
+   "total": 0.6626318819999142,
+   "chunks": 16,
+   "text": "Paraguas o impermeable, y calzado que no resbale."
+  },
+  {
+   "ttft": 0.17101685099987662,
+   "first_sentence": 0.48718840699984867,
+   "total": 1.0982580689997121,
+   "chunks": 29,
+   "text": "Los pulpos tienen tres corazones y sangre azul. Dos corazones bombean sangre a las branquias y uno al resto del cuerpo."
+  }
+ ],
+ "loaded": [
+  {
+   "ttft": 0.3142505519990664,
+   "first_sentence": 1.0463910309990752,
+   "total": 1.13270524499967,
+   "chunks": 12,
+   "text": "Doce por treinta y siete son 444."
+  },
+  {
+   "ttft": 0.33662109400029294,
+   "first_sentence": 1.4556290450000233,
+   "total": 1.5161817919997702,
+   "chunks": 19,
+   "text": "Es una región del espacio con una gravedad tan fuerte que ni la luz puede escapar de ella."
+  },
+  {
+   "ttft": 0.32292060000145284,
+   "first_sentence": 1.5068985240013717,
+   "total": 1.5673521570006415,
+   "chunks": 20,
+   "text": "Llevá un impermeable o paraguas y calzado cómodo que no se empape."
+  },
+  {
+   "ttft": 0.3436307010015298,
+   "first_sentence": 0.9489201010001125,
+   "total": 1.8299644100006844,
+   "chunks": 24,
+   "text": "Los pulpos tienen tres corazones y sangre azul. Además, dos de sus corazones se detienen cuando nada."
+  }
+ ],
+ "workers": [
+  {
+   "wall": 59.59813425200082,
+   "chunks": 1872,
+   "agg_tok_s": 31.410379259266048
+  },
+  {
+   "wall": 43.408686589000354,
+   "chunks": 2128,
+   "agg_tok_s": 49.02244613268787
+  },
+  {
+   "wall": 35.12042570000085,
+   "chunks": 1201,
+   "agg_tok_s": 34.19662421688616
+  },
+  {
+   "wall": 50.86007189400152,
+   "chunks": 2700,
+   "agg_tok_s": 53.08683018826877
+  }
+ ],
+ "warmup_s": 22.262136998999267,
+ "summary": {
+  "idle": {
+   "ttft": 0.172,
+   "first_sentence": 0.574,
+   "total": 0.88
+  },
+  "loaded": {
+   "ttft": 0.33,
+   "first_sentence": 1.251,
+   "total": 1.542
+  },
+  "workers_agg_tok_s": 41.6
+ }
+}

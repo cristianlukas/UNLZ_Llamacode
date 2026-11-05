@@ -1,0 +1,97 @@
+{
+ "idle": [
+  {
+   "ttft": 1.623449418000746,
+   "first_sentence": 1.8125543639998796,
+   "total": 1.812592014000984,
+   "chunks": 12,
+   "text": "Doce por treinta y siete es 444."
+  },
+  {
+   "ttft": 0.19785211300040828,
+   "first_sentence": 0.7090364010000485,
+   "total": 0.709079231000942,
+   "chunks": 19,
+   "text": "Es una región del espacio con una gravedad tan intensa que ni la luz puede escapar de ella."
+  },
+  {
+   "ttft": 0.1877031559997704,
+   "first_sentence": 0.30772201499894436,
+   "total": 0.7552985209986218,
+   "chunks": 24,
+   "text": "Paraguas impermeable.\nCalzado que no se moje.\nChaquita ligera por si acaso."
+  },
+  {
+   "ttft": 0.19218992599962803,
+   "first_sentence": 0.36766813099893625,
+   "total": 1.0646145889986656,
+   "chunks": 39,
+   "text": "Los pulpos tienen tres corazones y sangre azul. Además, dos de esos corazones se detienen cuando nadan, por lo que prefieren arrastrarse por el fondo del mar."
+  }
+ ],
+ "loaded": [
+  {
+   "ttft": 32.66131514500012,
+   "first_sentence": 32.959295919001306,
+   "total": 32.95934711500013,
+   "chunks": 12,
+   "text": "Doce por treinta y siete da 444."
+  },
+  {
+   "ttft": 44.739057652001065,
+   "first_sentence": 45.205466983001315,
+   "total": 45.205549147000056,
+   "chunks": 20,
+   "text": "Es una región del espacio con una gravedad tan fuerte que ni siquiera la luz puede escapar de ella."
+  },
+  {
+   "ttft": 49.987504553999315,
+   "first_sentence": 50.34847951200027,
+   "total": 50.861513391999324,
+   "chunks": 30,
+   "text": "Paraguas o impermeable, y calzado que no se moje. Si podés, llevá una capa extra por si se enfría."
+  },
+  {
+   "ttft": 48.394771531000515,
+   "first_sentence": 48.57579245499983,
+   "total": 48.93091113199989,
+   "chunks": 24,
+   "text": "Los pulpos tienen tres corazones y sangre azul.\nAdemás, pueden cambiar de color y textura en segundos."
+  }
+ ],
+ "workers": [
+  {
+   "wall": 36.96012776800126,
+   "chunks": 1148,
+   "agg_tok_s": 31.060498686746882
+  },
+  {
+   "wall": 49.206164743000045,
+   "chunks": 1752,
+   "agg_tok_s": 35.60529476642935
+  },
+  {
+   "wall": 54.86214689500048,
+   "chunks": 1972,
+   "agg_tok_s": 35.94463781692995
+  },
+  {
+   "wall": 52.93149733300015,
+   "chunks": 1905,
+   "agg_tok_s": 35.98991330276099
+  }
+ ],
+ "summary": {
+  "idle": {
+   "ttft": 0.195,
+   "first_sentence": 0.538,
+   "total": 0.91
+  },
+  "loaded": {
+   "ttft": 46.567,
+   "first_sentence": 46.891,
+   "total": 47.068
+  },
+  "workers_agg_tok_s": 35.8
+ }
+}

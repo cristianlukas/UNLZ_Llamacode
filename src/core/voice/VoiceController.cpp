@@ -1089,6 +1089,29 @@ void VoiceController::onClipFinished()
     }
 }
 
+bool VoiceController::userIsSpeaking() const
+{
+    return m_state == Transcribing
+        || (m_state == Listening && (segmentHadVoice() || !m_segQueue.isEmpty() || !m_partial.isEmpty()));
+}
+
+bool VoiceController::announce(const QString &text)
+{
+    const QString t = text.trimmed();
+    if (t.isEmpty() || m_state == Idle || m_state == Error) return false;
+    if (userIsSpeaking()) return false;
+    if (m_state == Listening) {
+        endCapture();
+        m_turnOpen = false;
+        m_ttsQueue << t;
+        setState(Speaking);
+        pumpTts();
+        return true;
+    }
+    speakCue(t);
+    return true;
+}
+
 void VoiceController::speakCue(const QString &text)
 {
     if (m_state == Idle || m_state == Error) return;

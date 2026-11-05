@@ -1,0 +1,98 @@
+{
+ "idle": [
+  {
+   "ttft": 0.1988016269988293,
+   "first_sentence": 0.5637068260002707,
+   "total": 0.5637456889999157,
+   "chunks": 16,
+   "text": "Doce por treinta y siete da cuatrocientos cuarenta y cuatro."
+  },
+  {
+   "ttft": 0.19892524900024,
+   "first_sentence": 0.8573367520002648,
+   "total": 0.8573678000011569,
+   "chunks": 27,
+   "text": "Un agujero negro es una región del espacio con una gravedad tan intensa que nada, ni siquiera la luz, puede escapar de ella."
+  },
+  {
+   "ttft": 0.19158321099894238,
+   "first_sentence": 0.617475110999294,
+   "total": 0.987975269999879,
+   "chunks": 30,
+   "text": "Llevá un paraguas compacto y una chaqueta impermeable. También es buena idea usar calzado que no se resbale."
+  },
+  {
+   "ttft": 0.19692396400023426,
+   "first_sentence": 0.49652804900142655,
+   "total": 0.8497227650004788,
+   "chunks": 29,
+   "text": "Sabías que los pulpos tienen tres corazones y sangre azul. Además, dos de esos corazones se detienen cuando el animal nada."
+  }
+ ],
+ "loaded": [
+  {
+   "ttft": 0.37285978500040073,
+   "first_sentence": 0.8616586129992356,
+   "total": 0.861715278999327,
+   "chunks": 16,
+   "text": "Doce por treinta y siete da cuatrocientos cuarenta y cuatro."
+  },
+  {
+   "ttft": 0.6042284960003599,
+   "first_sentence": 2.3100185169987526,
+   "total": 2.3100627490002807,
+   "chunks": 30,
+   "text": "Un agujero negro es una región del espacio-tiempo con una gravedad tan intensa que nada, ni siquiera la luz, puede escapar de ella."
+  },
+  {
+   "ttft": 0.3930393610007741,
+   "first_sentence": 1.3227852560012252,
+   "total": 2.719054273000438,
+   "chunks": 31,
+   "text": "Llevá un paraguas compacto y calzado impermeable. Si podés, sumá una chaqueta con capucha para mayor protección."
+  },
+  {
+   "ttft": 0.3743974230001186,
+   "first_sentence": 0.6314942500011966,
+   "total": 1.5500753480009735,
+   "chunks": 30,
+   "text": "Los pulpos tienen tres corazones y sangre azul. Dos corazones bombean la sangre a las branquias y uno al resto del cuerpo."
+  }
+ ],
+ "workers": [
+  {
+   "wall": 29.556934905000162,
+   "chunks": 1436,
+   "agg_tok_s": 48.58419875455594
+  },
+  {
+   "wall": 30.483783855999718,
+   "chunks": 1251,
+   "agg_tok_s": 41.03821251028134
+  },
+  {
+   "wall": 29.395625389000998,
+   "chunks": 1129,
+   "agg_tok_s": 38.40707537463855
+  },
+  {
+   "wall": 32.93719695100117,
+   "chunks": 2700,
+   "agg_tok_s": 81.97418875736874
+  }
+ ],
+ "warmup_s": 23.285621465000077,
+ "summary": {
+  "idle": {
+   "ttft": 0.198,
+   "first_sentence": 0.591,
+   "total": 0.854
+  },
+  "loaded": {
+   "ttft": 0.384,
+   "first_sentence": 1.092,
+   "total": 1.93
+  },
+  "workers_agg_tok_s": 44.8
+ }
+}

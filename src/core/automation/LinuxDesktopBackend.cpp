@@ -1,4 +1,5 @@
 #include "LinuxDesktopBackend.h"
+#include "AgentDesktopCli.h"
 
 
 QStringList LinuxDesktopBackend::buildClickArgs(const QPoint &p, const QString &button,
@@ -46,6 +47,7 @@ QStringList LinuxDesktopBackend::buildScrollArgs(int delta, bool horizontal)
 #include "FuzzyMatch.h"
 
 #include <QCoreApplication>
+#include <QDebug>
 #include <QDeadlineTimer>
 #include <QDir>
 #include <QElapsedTimer>
@@ -603,6 +605,14 @@ QVariantList LinuxDesktopBackend::controls(const QString &windowTargetId, const 
     if (max > 400) max = 400;
     const QRect window = targetBounds(QStringLiteral("window"), windowTargetId);
     if (!window.isValid()) { if (error) *error = QStringLiteral("Ventana no encontrada."); return {}; }
+    // agent-desktop primero: ve apps GTK4 (sin coordenadas de pantalla en X11)
+    // y no lanza un gdbus por propiedad. Si no ve la ventana, AT-SPI propio.
+    if (AgentDesktopCli::available()) {
+        QString adError;
+        const QVariantList rows = AgentDesktopCli::controlsForPid(windowPid(windowTargetId), query, max, &adError);
+        if (!rows.isEmpty()) return rows;
+        if (!adError.isEmpty()) qInfo().noquote() << QStringLiteral("[desktop] agent-desktop sin controles (%1); AT-SPI").arg(adError);
+    }
     if (atspiAddress().isEmpty()) { if (error) *error = QStringLiteral("AT-SPI no está disponible; iniciá at-spi2-registryd."); return {}; }
     return atspiControlsFor(window, query, max,
                             budgetMs < 0 ? QDeadlineTimer(QDeadlineTimer::Forever) : QDeadlineTimer(budgetMs),
@@ -622,6 +632,22 @@ QVariantList LinuxDesktopBackend::controlsOnDesktop(const QString &query, int ma
 bool LinuxDesktopBackend::clickElement(const QString &windowTargetId, const QString &controlId,
                                        bool allowFuzzy, QString *error, QVariantMap *trace)
 {
+    if (AgentDesktopCli::isControlId(controlId))
+        return controlAction(windowTargetId, controlId, QStringLiteral("invoke"), {}, error, trace);
+    // Un nombre en vez de un id: resolverlo sobre el árbol de agent-desktop.
+    if (allowFuzzy && AgentDesktopCli::available()) {
+        const QVariantList rows = AgentDesktopCli::controlsForPid(windowPid(windowTargetId), QString(), 400, nullptr);
+        QStringList names;
+        for (const QVariant &v : rows) names << v.toMap().value(QStringLiteral("name")).toString();
+        const FuzzyMatch::Match match = FuzzyMatch::extractOne(controlId, names);
+        if (match.ok() && match.index >= 0 && match.index < rows.size()) {
+            const QString id = rows.at(match.index).toMap().value(QStringLiteral("controlId")).toString();
+            if (controlAction(windowTargetId, id, QStringLiteral("invoke"), {}, error, trace)) {
+                if (trace) (*trace)[QStringLiteral("matchedBy")] = QStringLiteral("fuzzy-name");
+                return true;
+            }
+        }
+    }
     QString resolved;
     const QVariantMap info = findControl(windowTargetId, controlId, allowFuzzy, &resolved);
     if (info.isEmpty()) { if (error) *error = QStringLiteral("No se encontró el control AT-SPI; generá un snapshot nuevo."); return false; }
@@ -657,6 +683,8 @@ bool LinuxDesktopBackend::controlAction(const QString &windowTargetId, const QSt
                                         QString *error, QVariantMap *trace)
 {
     Q_UNUSED(windowTargetId)
+    if (AgentDesktopCli::isControlId(controlId))
+        return AgentDesktopCli::controlAction(controlId, action, value, error, trace);
     AtspiRef ref;
     if (!refFromId(controlId, &ref)) { if (error) *error = QStringLiteral("controlId AT-SPI inválido."); return false; }
     const QString address = atspiAddress();

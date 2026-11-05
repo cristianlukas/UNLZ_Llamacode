@@ -38,6 +38,9 @@ class LlamaAgentBackend : public IAgentBackend
 {
     Q_OBJECT
 public:
+    // Contexto con el que arrancó (server, modelo, slots): Charla lo usa para
+    // lanzar agentes en paralelo contra el mismo llama-server.
+    const AgentContext &context() const { return m_ctx; }
     explicit LlamaAgentBackend(QObject *parent = nullptr);
     ~LlamaAgentBackend() override;
 
