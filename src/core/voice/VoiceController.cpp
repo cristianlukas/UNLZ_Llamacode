@@ -1,5 +1,6 @@
 #include "VoiceController.h"
 #include "AudioCodec.h"
+#include "SpeechTextNormalizer.h"
 #include <QRegularExpression>
 #include <QDebug>
 #include <algorithm>
@@ -774,15 +775,28 @@ void VoiceController::notifyTurnFailed(const QString &err)
 
 // ── TTS → audio → playback ───────────────────────────────────────────────────
 
+bool VoiceController::isSentenceEnd(const QString &text, int i, bool textIsFinal)
+{
+    const QChar c = text.at(i);
+    if (c == QLatin1Char('!') || c == QLatin1Char('?') || c == QChar(0x2026)
+        || c == QLatin1Char('\n'))
+        return true;
+    if (c != QLatin1Char('.')) return false;
+    // Un punto sólo cierra la oración si lo sigue un espacio: "smn.gob.ar",
+    // "$1.245,50" o "3.5" no se cortan a la mitad (el TTS recibía "$1." suelto).
+    // Al final del texto en streaming todavía puede venir "245", así que se
+    // espera al próximo delta o al flush.
+    if (i + 1 < text.size()) return text.at(i + 1).isSpace();
+    return textIsFinal;
+}
+
 QStringList VoiceController::splitSentences(const QString &text, int minLen)
 {
     QStringList out;
     QString cur;
-    for (const QChar c : text) {
-        cur.append(c);
-        const bool end = (c == QLatin1Char('.') || c == QLatin1Char('!')
-                          || c == QLatin1Char('?') || c == QChar(0x2026)
-                          || c == QLatin1Char('\n'));
+    for (int i = 0; i < text.size(); ++i) {
+        cur.append(text.at(i));
+        const bool end = isSentenceEnd(text, i, true);
         if (end && cur.trimmed().size() >= minLen) {
             out << cur.trimmed();
             cur.clear();
@@ -799,11 +813,8 @@ QStringList VoiceController::splitCompleteSentences(const QString &text, int min
     QString cur;
     int consumedLen = 0;
     for (int i = 0; i < text.size(); ++i) {
-        const QChar c = text.at(i);
-        cur.append(c);
-        const bool end = (c == QLatin1Char('.') || c == QLatin1Char('!')
-                          || c == QLatin1Char('?') || c == QChar(0x2026)
-                          || c == QLatin1Char('\n'));
+        cur.append(text.at(i));
+        const bool end = isSentenceEnd(text, i, false);
         if (end && cur.trimmed().size() >= minLen) {
             out << cur.trimmed();
             cur.clear();
@@ -835,6 +846,15 @@ void VoiceController::speak(const QString &text)
     pumpTts();
 }
 
+QString VoiceController::speechLanguage(const VoiceConfig &cfg)
+{
+    const QString stt = cfg.sttLanguage.trimmed().toLower();
+    if (!stt.isEmpty() && stt != QLatin1String("auto")) return stt.left(2);
+    // STT en auto: el idioma de la voz piper ("es_ES-davefx-medium").
+    const QString voice = cfg.ttsManagedVoice.left(2).toLower();
+    return voice.isEmpty() ? QStringLiteral("es") : voice;
+}
+
 QString VoiceController::sanitizeForSpeech(const QString &s)
 {
     QString out = s;
@@ -846,6 +866,11 @@ QString VoiceController::sanitizeForSpeech(const QString &s)
                                     QRegularExpression::CaseInsensitiveOption);
     const QRegularExpressionMatch open = openRe.match(out);
     if (open.hasMatch()) out.truncate(open.capturedStart());
+    // Bloques de código: no se pueden escuchar. El cerrado se quita; uno abierto
+    // (todavía streameando) corta igual que un <think> en vuelo.
+    out.remove(QRegularExpression(QStringLiteral("```[\\s\\S]*?```")));
+    const qsizetype fence = out.indexOf(QLatin1String("```"));
+    if (fence >= 0) out.truncate(fence);
     // Indicador transitorio de preparación de tool: descartar líneas con ⏳.
     if (out.contains(QChar(0x23F3))) {
         QStringList keep;
@@ -863,7 +888,11 @@ void VoiceController::speakStreaming(int bubbleId, const QString &rawText)
     // El usuario está hablando (barge-in / próximo turno): no hablar encima aunque
     // sigan llegando deltas del agente del turno anterior.
     if (m_state == Listening || m_state == Transcribing) return;
-    const QString fullText = sanitizeForSpeech(rawText);
+    QString fullText = sanitizeForSpeech(rawText);
+    // sanitize recorta el final: conservar el espacio que ya cerró la oración
+    // ("lista. ") para que isSentenceEnd no la confunda con un "$1." en vuelo.
+    if (!fullText.isEmpty() && !rawText.isEmpty() && rawText.back().isSpace())
+        fullText += QLatin1Char(' ');
     if (!fullText.isEmpty()) m_latency.markFirstLlmText();
     // Nueva burbuja del agente (narración intermedia o respuesta final): resetear
     // el puntero de consumidos. No tocamos las colas: lo ya encolado sigue sonando.
@@ -938,8 +967,18 @@ void VoiceController::speakFlush(int bubbleId, const QString &rawText)
 
 void VoiceController::pumpTts()
 {
-    if (m_tts.busy() || m_ttsQueue.isEmpty()) return;
-    const QString sent = m_ttsQueue.takeFirst();
+    if (m_tts.busy()) return;
+    // Markdown, URLs, símbolos, monedas y unidades → palabras, por oración y
+    // justo antes del motor (vale igual para piper, qwen3, pocket o HTTP).
+    QString sent;
+    while (sent.isEmpty() && !m_ttsQueue.isEmpty())
+        sent = SpeechTextNormalizer::normalize(m_ttsQueue.takeFirst(), speechLanguage(m_cfg));
+    if (sent.isEmpty()) {
+        // Lo que quedaba era impronunciable ("🚀", "---"): cerrar el turno igual
+        // que al terminar el último clip, o Charla quedaba en Speaking sin audio.
+        if (!m_playing && m_audioQueue.isEmpty()) onClipFinished();
+        return;
+    }
     m_latency.markFirstTtsRequest();
     m_tTts.restart();
     qInfo().noquote() << QStringLiteral("[charla] TTS: sintetizando %1 chars (cola=%2)")

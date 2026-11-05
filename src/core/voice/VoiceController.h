@@ -155,8 +155,14 @@ public:
 
     // Limpia el texto en vivo del agente para TTS: quita bloques <think>…</think>
     // (cerrados y el abierto-sin-cerrar, razonamiento en vuelo) y el indicador
-    // transitorio "⏳ preparando tool…". Devuelve solo lo hablable. Pura.
+    // transitorio "⏳ preparando tool…" y los bloques ``` de código (cerrados o
+    // abiertos). Devuelve solo lo hablable. Pura.
     static QString sanitizeForSpeech(const QString &s);
+    // Idioma para SpeechTextNormalizer: el del STT, o el de la voz si está en auto.
+    static QString speechLanguage(const VoiceConfig &cfg);
+    // ¿El carácter i cierra una oración? Un "." sólo si lo sigue un espacio
+    // (o es el final de un texto ya completo): no parte URLs ni "1.245,50".
+    static bool isSentenceEnd(const QString &text, int i, bool textIsFinal);
 
     // ── Pura (testeable) ── Corte anticipado de la PRIMERA porción hablada: si
     // todavía no cerró ninguna oración pero ya hay una pausa de cláusula

@@ -162,6 +162,7 @@ set(CORE_SOURCES
     src/core/voice/VoiceAssistant.cpp
     src/core/voice/VadEngine.cpp
     src/core/voice/TurnDetector.cpp
+    src/core/voice/SpeechTextNormalizer.cpp
     src/core/voice/VoiceController.cpp
     src/core/voice/VoiceServerManager.cpp
     src/core/voice/VoiceLatencyTracker.cpp
@@ -292,6 +293,7 @@ set(HEADERS
     src/core/voice/VoiceAssistant.h
     src/core/voice/VadEngine.h
     src/core/voice/TurnDetector.h
+    src/core/voice/SpeechTextNormalizer.h
     src/core/voice/VoiceController.h
     src/core/voice/VoiceServerManager.h
     src/core/voice/VoiceLatencyTracker.h
