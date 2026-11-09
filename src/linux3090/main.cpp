@@ -3,6 +3,7 @@
 #include <QAction>
 #include <QApplication>
 #include <QClipboard>
+#include <QCursor>
 #include <QDateTime>
 #include <QDialog>
 #include <QDir>
@@ -15,6 +16,7 @@
 #include <QMenu>
 #include <QMessageBox>
 #include <QPainter>
+#include <QPainterPath>
 #include <QPlainTextEdit>
 #include <QProcess>
 #include <QProcessEnvironment>
@@ -30,6 +32,7 @@
 
 using Gpu3090Helper::Inputs;
 using Gpu3090Helper::Snapshot;
+using Gpu3090Helper::CheckResult;
 
 namespace {
 
@@ -183,6 +186,33 @@ QIcon statusIcon(bool healthy)
     return QIcon(pixmap);
 }
 
+QIcon checkIcon(bool ok)
+{
+    QPixmap pixmap(18, 18);
+    pixmap.fill(Qt::transparent);
+    QPainter painter(&pixmap);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(QColor(ok ? QStringLiteral("#1ca45c") : QStringLiteral("#d53032")));
+    painter.drawEllipse(QRectF(1, 1, 16, 16));
+
+    QPen mark(Qt::white);
+    mark.setWidthF(1.8);
+    mark.setCapStyle(Qt::RoundCap);
+    painter.setPen(mark);
+    if (ok) {
+        QPainterPath path;
+        path.moveTo(4.5, 9.0);
+        path.lineTo(7.5, 12.0);
+        path.lineTo(13.5, 5.8);
+        painter.drawPath(path);
+    } else {
+        painter.drawLine(QPointF(5.5, 5.5), QPointF(12.5, 12.5));
+        painter.drawLine(QPointF(12.5, 5.5), QPointF(5.5, 12.5));
+    }
+    return QIcon(pixmap);
+}
+
 class HelperTray final : public QObject
 {
 public:
@@ -193,6 +223,11 @@ public:
         m_tray->setContextMenu(m_menu);
         m_stateAction = m_menu->addAction(QStringLiteral("3090 HELPER — comprobando…"));
         m_stateAction->setEnabled(false);
+        m_vramAction = m_menu->addAction(checkIcon(false), QStringLiteral("Reserva VRAM ASUS — comprobando…"));
+        m_p2pAction = m_menu->addAction(checkIcon(false), QStringLiteral("NVIDIA P2P — comprobando…"));
+        m_unlockAction = m_menu->addAction(checkIcon(false), QStringLiteral("gpu-unlock — comprobando…"));
+        for (QAction *action : {m_vramAction, m_p2pAction, m_unlockAction})
+            connect(action, &QAction::triggered, this, [this] { showDetails(); });
         m_menu->addSeparator();
         QAction *details = m_menu->addAction(QStringLiteral("Ver estado y log de fallos"));
         QAction *repair = m_menu->addAction(QStringLiteral("Relanzar arreglos"));
@@ -208,10 +243,16 @@ public:
                                 QStringLiteral("Informe copiado al portapapeles."));
         });
         connect(quit, &QAction::triggered, &m_app, &QApplication::quit);
+        connect(m_menu, &QMenu::aboutToShow, this, [this] { refresh(); });
         connect(m_tray, &QSystemTrayIcon::activated, this,
                 [this](QSystemTrayIcon::ActivationReason reason) {
-            if (reason == QSystemTrayIcon::Trigger || reason == QSystemTrayIcon::DoubleClick)
+            if (reason == QSystemTrayIcon::Trigger) {
+                refresh();
+                const QRect iconGeometry = m_tray->geometry();
+                m_menu->popup(iconGeometry.isValid() ? iconGeometry.bottomLeft() : QCursor::pos());
+            } else if (reason == QSystemTrayIcon::DoubleClick) {
                 showDetails();
+            }
         });
         connect(m_watcher, &QFutureWatcher<Snapshot>::finished, this, [this] {
             m_snapshot = m_watcher->result();
@@ -251,12 +292,23 @@ private:
         m_tray->setIcon(statusIcon(ok));
         m_tray->setToolTip(QStringLiteral("3090 HELPER — %1").arg(state));
         m_stateAction->setText(QStringLiteral("3090 HELPER — %1").arg(state));
+        updateCheckAction(m_vramAction, m_snapshot.vramQuarantine);
+        updateCheckAction(m_p2pAction, m_snapshot.p2p);
+        updateCheckAction(m_unlockAction, m_snapshot.gpuUnlock);
         if (m_lastHealthy != ok && m_hasPreviousState) {
             m_tray->showMessage(QStringLiteral("3090 HELPER"), state,
                 ok ? QSystemTrayIcon::Information : QSystemTrayIcon::Warning);
         }
         m_lastHealthy = ok;
         m_hasPreviousState = true;
+    }
+
+    void updateCheckAction(QAction *action, const CheckResult &check)
+    {
+        action->setIcon(checkIcon(check.ok));
+        action->setText(QStringLiteral("%1 — %2")
+            .arg(check.name, check.ok ? QStringLiteral("OK") : QStringLiteral("FALLO")));
+        action->setToolTip(check.detail);
     }
 
     void showDetails()
@@ -357,6 +409,9 @@ private:
     QSystemTrayIcon *m_tray;
     QMenu *m_menu;
     QAction *m_stateAction = nullptr;
+    QAction *m_vramAction = nullptr;
+    QAction *m_p2pAction = nullptr;
+    QAction *m_unlockAction = nullptr;
     QFutureWatcher<Snapshot> *m_watcher;
     QTimer *m_timer;
     QDialog *m_detailsDialog = nullptr;

@@ -25,8 +25,13 @@ NVIDIA publique las GPU y registra el informe completo en el journal y en
 protección no pasa. Así la comprobación ocurre aunque nadie haya iniciado
 sesión gráfica. La bandeja muestra el estado vivo y ofrece el mismo detalle.
 
-El menú contextual permite ver/copiar un informe y **Relanzar arreglos**. La
-interfaz se auto inicia como el usuario de la sesión gráfica; no necesita
+Al hacer clic en el ícono se abre el menú con el estado general y los tres
+checks individuales: reserva VRAM, P2P y `gpu-unlock`. Cada check muestra un
+ícono verde o rojo, el resultado en texto y el detalle como ayuda emergente; el
+menú actualiza el diagnóstico al abrirse. Al seleccionar un check o hacer doble
+clic en el ícono se abre el diagnóstico completo. El menú también permite
+ver/copiar un informe y **Relanzar arreglos**.
+La interfaz se auto inicia como el usuario de la sesión gráfica; no necesita
 privilegios de administrador. Polkit autoriza sin diálogo únicamente el
 ejecutable root-owned `3090-helper-admin repair` dentro de una sesión local
 activa. No autoriza una shell ni otros programas o subcomandos; en sesiones
