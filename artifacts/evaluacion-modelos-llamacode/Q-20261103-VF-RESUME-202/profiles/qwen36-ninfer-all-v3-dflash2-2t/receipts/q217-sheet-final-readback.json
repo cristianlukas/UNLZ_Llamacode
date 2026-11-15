@@ -1,0 +1,24 @@
+{
+  "timestamp_utc": "2026-11-15T22:28:16+00:00",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "Resultados!A501:AH501": {
+    "id": "Q217-NINFER-DFLASH2-2T-Q173-8K-SCREEN",
+    "status": "COMPLETE · valid Q173 screen; speed gate FAILED. Do not continue ladder/Q172 under preregistration.",
+    "prefill_tok_s": 6466.060494248595,
+    "decode_tok_s": 238.61503795523572,
+    "quality": "N/D · Q172 not run; preregistered gate failed",
+    "cold_init_s": 46.533,
+    "hot_init": "N/D"
+  },
+  "Modelos locales por peso!A115:AB115": {
+    "name": "Qwen3.6-35B-A3B · NInfer-all v3 · DFlash2 K=2 · Q217",
+    "gpu": "2 RTX 3090 TP2",
+    "prefill_tok_s": 6466.060494248595,
+    "decode_tok_s": 238.61503795523572,
+    "quality": "N/D",
+    "weight_gb": 22.79048448,
+    "decision": "decode -16.50% vs Q190 8K control; no ladder/Q172"
+  },
+  "readback_verification": "PASS · values and numeric metric types read back after update",
+  "test_receipt_sha256": "4f0b48d3a04c42af6da47c93f694d30701fe491791644d154f807a3537e8f5ec"
+}

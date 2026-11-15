@@ -1,0 +1,281 @@
+{
+  "task_id": "Q217-qwen36-ninfer-all-v3-dflash2-2t-q173-8k-screen",
+  "phase": "q173",
+  "status": "complete",
+  "context_tokens": 8192,
+  "repetitions": 3,
+  "prompt_source": "fixed public local NInfer TTFT text fixtures, lexicographic order; embedded tokenizer token ids; raw completion; no prefix cache",
+  "prefill_effective_mean_tok_s": 6466.060494248595,
+  "decode_server_mean_tok_s": 238.61503795523572,
+  "results": [
+    {
+      "repetition": 1,
+      "prompt_tokens_actual": 8192,
+      "completion_tokens_actual": 128,
+      "ttft_to_first_content_s": 1.279656499,
+      "effective_prefill_tok_s": 6401.717966033634,
+      "decode_server_tok_s": 279.12012150912074,
+      "decode_method": "NInfer predicted_per_second",
+      "server_timings": {
+        "cache_n": 0,
+        "draft_n": 110,
+        "draft_n_accepted": 78,
+        "predicted_ms": 455.001235,
+        "predicted_n": 128,
+        "predicted_per_second": 279.12012150912074,
+        "predicted_per_token_ms": 3.58268688976378,
+        "prompt_ms": 1277.8751180000002,
+        "prompt_n": 8192,
+        "prompt_per_second": 6410.642076528795,
+        "prompt_per_token_ms": 0.1559906149902344
+      },
+      "finish_reasons": [
+        "length"
+      ],
+      "sse_chunks": 52,
+      "request_elapsed_s": 1.734706305,
+      "error": null,
+      "resources_after_request": {
+        "timestamp_utc": "2026-11-15T22:22:26Z",
+        "server_pid": 1270737,
+        "gpu_state": {
+          "gpus": {
+            "0": {
+              "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+              "name": "NVIDIA GeForce RTX 3090",
+              "used_mib": 14099,
+              "total_mib": 24576,
+              "temperature_c": 61
+            },
+            "1": {
+              "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+              "name": "NVIDIA GeForce RTX 3090",
+              "used_mib": 10862,
+              "total_mib": 24576,
+              "temperature_c": 50
+            }
+          },
+          "compute": {
+            "0": [
+              {
+                "pid": 1270737,
+                "used_mib": 13314
+              }
+            ],
+            "1": [
+              {
+                "pid": 1270737,
+                "used_mib": 10746
+              }
+            ]
+          },
+          "mem_available_kib": 114297336
+        },
+        "server_vram_by_gpu_mib": {
+          "0": 13314,
+          "1": 10746
+        },
+        "server_process_memory": {
+          "vmhwm_kib": 5456812,
+          "vmrss_kib": 4062040,
+          "vmswap_kib": 0
+        }
+      },
+      "valid": true
+    },
+    {
+      "repetition": 2,
+      "prompt_tokens_actual": 8192,
+      "completion_tokens_actual": 128,
+      "ttft_to_first_content_s": 1.253387877,
+      "effective_prefill_tok_s": 6535.885778317609,
+      "decode_server_tok_s": 215.34625218673946,
+      "decode_method": "NInfer predicted_per_second",
+      "server_timings": {
+        "cache_n": 0,
+        "draft_n": 127,
+        "draft_n_accepted": 62,
+        "predicted_ms": 589.7479,
+        "predicted_n": 128,
+        "predicted_per_second": 215.34625218673946,
+        "predicted_per_token_ms": 4.643684251968503,
+        "prompt_ms": 1251.464642,
+        "prompt_n": 8192,
+        "prompt_per_second": 6545.930044741927,
+        "prompt_per_token_ms": 0.15276667993164061
+      },
+      "finish_reasons": [
+        "length"
+      ],
+      "sse_chunks": 59,
+      "request_elapsed_s": 1.8431959,
+      "error": null,
+      "resources_after_request": {
+        "timestamp_utc": "2026-11-15T22:22:28Z",
+        "server_pid": 1270737,
+        "gpu_state": {
+          "gpus": {
+            "0": {
+              "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+              "name": "NVIDIA GeForce RTX 3090",
+              "used_mib": 14099,
+              "total_mib": 24576,
+              "temperature_c": 62
+            },
+            "1": {
+              "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+              "name": "NVIDIA GeForce RTX 3090",
+              "used_mib": 10862,
+              "total_mib": 24576,
+              "temperature_c": 51
+            }
+          },
+          "compute": {
+            "0": [
+              {
+                "pid": 1270737,
+                "used_mib": 13314
+              }
+            ],
+            "1": [
+              {
+                "pid": 1270737,
+                "used_mib": 10746
+              }
+            ]
+          },
+          "mem_available_kib": 114254184
+        },
+        "server_vram_by_gpu_mib": {
+          "0": 13314,
+          "1": 10746
+        },
+        "server_process_memory": {
+          "vmhwm_kib": 5456812,
+          "vmrss_kib": 4062940,
+          "vmswap_kib": 0
+        }
+      },
+      "valid": true
+    },
+    {
+      "repetition": 3,
+      "prompt_tokens_actual": 8192,
+      "completion_tokens_actual": 128,
+      "ttft_to_first_content_s": 1.267998054,
+      "effective_prefill_tok_s": 6460.5777383945415,
+      "decode_server_tok_s": 221.378740169847,
+      "decode_method": "NInfer predicted_per_second",
+      "server_timings": {
+        "cache_n": 0,
+        "draft_n": 124,
+        "draft_n_accepted": 64,
+        "predicted_ms": 573.67749,
+        "predicted_n": 128,
+        "predicted_per_second": 221.378740169847,
+        "predicted_per_token_ms": 4.5171455905511815,
+        "prompt_ms": 1266.320848,
+        "prompt_n": 8192,
+        "prompt_per_second": 6469.134590130352,
+        "prompt_per_token_ms": 0.154580181640625
+      },
+      "finish_reasons": [
+        "length"
+      ],
+      "sse_chunks": 65,
+      "request_elapsed_s": 1.841677648,
+      "error": null,
+      "resources_after_request": {
+        "timestamp_utc": "2026-11-15T22:22:30Z",
+        "server_pid": 1270737,
+        "gpu_state": {
+          "gpus": {
+            "0": {
+              "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+              "name": "NVIDIA GeForce RTX 3090",
+              "used_mib": 14099,
+              "total_mib": 24576,
+              "temperature_c": 62
+            },
+            "1": {
+              "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+              "name": "NVIDIA GeForce RTX 3090",
+              "used_mib": 10862,
+              "total_mib": 24576,
+              "temperature_c": 51
+            }
+          },
+          "compute": {
+            "0": [
+              {
+                "pid": 1270737,
+                "used_mib": 13314
+              }
+            ],
+            "1": [
+              {
+                "pid": 1270737,
+                "used_mib": 10746
+              }
+            ]
+          },
+          "mem_available_kib": 114207340
+        },
+        "server_vram_by_gpu_mib": {
+          "0": 13314,
+          "1": 10746
+        },
+        "server_process_memory": {
+          "vmhwm_kib": 5456812,
+          "vmrss_kib": 4063836,
+          "vmswap_kib": 0
+        }
+      },
+      "valid": true
+    }
+  ],
+  "finished_utc": "2026-11-15T22:22:30Z",
+  "preflight": {
+    "timestamp_utc": "2026-11-15T22:22:24Z",
+    "gpu": {
+      "gpus": {
+        "0": {
+          "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+          "name": "NVIDIA GeForce RTX 3090",
+          "used_mib": 14098,
+          "total_mib": 24576,
+          "temperature_c": 57
+        },
+        "1": {
+          "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+          "name": "NVIDIA GeForce RTX 3090",
+          "used_mib": 10862,
+          "total_mib": 24576,
+          "temperature_c": 40
+        }
+      },
+      "compute": {
+        "0": [
+          {
+            "pid": 1270737,
+            "used_mib": 13312
+          }
+        ],
+        "1": [
+          {
+            "pid": 1270737,
+            "used_mib": 10746
+          }
+        ]
+      },
+      "mem_available_kib": 114481388
+    },
+    "p2p": "OK both directions",
+    "gpu_unlock": "0000:01:00.0,0000:03:00.0",
+    "asus_quarantine": "StatusText=0000:01:00.0: 1636/1636 frames held, 0 pending",
+    "boot_helper": "PASS",
+    "foreign_inference_servers": []
+  },
+  "token_corpus_sha256": "cc03d8a7c8c7ed86264f5112fb7f4466b0c954000791db0c3f46d01d70e0064d",
+  "server_model": "qwen3.6-35b-a3b"
+}

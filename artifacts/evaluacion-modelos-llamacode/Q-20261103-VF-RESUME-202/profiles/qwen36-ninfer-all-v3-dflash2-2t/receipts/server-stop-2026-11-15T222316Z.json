@@ -1,0 +1,31 @@
+{
+  "task_id": "Q217-qwen36-ninfer-all-v3-dflash2-2t-q173-8k-screen",
+  "stage": "stop-owned-server",
+  "timestamp_utc": "2026-11-15T22:23:16Z",
+  "pid": 1270737,
+  "port_free": true,
+  "gpu_state": {
+    "gpus": {
+      "0": {
+        "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+        "name": "NVIDIA GeForce RTX 3090",
+        "used_mib": 807,
+        "total_mib": 24576,
+        "temperature_c": 56
+      },
+      "1": {
+        "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+        "name": "NVIDIA GeForce RTX 3090",
+        "used_mib": 108,
+        "total_mib": 24576,
+        "temperature_c": 41
+      }
+    },
+    "compute": {
+      "0": [],
+      "1": []
+    },
+    "mem_available_kib": 118392320
+  },
+  "foreign_inference_servers": []
+}
