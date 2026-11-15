@@ -1,0 +1,16 @@
+{
+  "task": "Q209-MAYA-DS4SPLIT39-Q173",
+  "attempt": 1,
+  "timestamp_utc": "2026-11-15T06:45:00Z",
+  "status": "FAILED_BEFORE_LIVE_GATES",
+  "command": "python3 scripts/run_q173.py preflight",
+  "observed_error": "ERROR: KeyError: 'config_sha256'",
+  "observed_read_bytes_before_exit": 274268528640,
+  "control_flow": "The error occurred while evaluating the pinned config hash in the support-file list, after the full shard loop. No shard mismatch was raised. The runner did not persist per-shard receipts in attempt01; attempt02 repeats all five hashes.",
+  "server_started": false,
+  "inference_started": false,
+  "gpu_compute_started": false,
+  "runner_before_sha256": "c5e60bab3d3876465cb5192b50be745eaedb65ef93f87166c33526396e151c4e",
+  "runner_after_sha256": "8e3d16ad5e07c1a7b7301175bd276dd153dbb1328d6eae5780c71e9c1d6d25d8",
+  "fixes": ["config hash reference now uses runtime.config_sha256", "launcher SHA now includes the missing final b", "per-shard progress and final asset verification receipts are persisted"]
+}

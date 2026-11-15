@@ -1,0 +1,324 @@
+{
+  "schema": "llamacode.q209-preregistration.v1",
+  "task": "Q209-MAYA-DS4SPLIT39-Q173",
+  "parent_task": "Q-20261103-VF-RESUME-202",
+  "lock_token": "d9029f6b-c649-4291-b0be-f14d77dc737e",
+  "status": "Q209_Q173_131K_COMPLETE_261K_PREFLIGHT_PREREGISTERED",
+  "created_utc": "2026-11-15T06:36:07Z",
+  "objective": "Measure the missing Q173 prefill/decode context ladder for the exact Project Maya v1.1.37 Maya-XS IQ1_S PNY-first DS4_SPLIT=39,1 profile whose Q172 and LHA-1 evidence is already registered.",
+  "model": {
+    "name": "DeepSeek V4.1 Flash-1017 Maya-XS IQ1_S",
+    "format": "GGUF split in 5 shards",
+    "total_bytes": 276626308260,
+    "manifest_sha256": "8f097ebbe0c42e5f2edf40ccab3daadfbc04910f2ce9bbfcd170e51c08bc2a45",
+    "external_fingerprint": "6f0833fcf977726db71c537b71a6843d65e8b834e33f0e7fbaac65eff354fadc",
+    "shards": [
+      {
+        "name": "DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00001-of-00005.gguf",
+        "sha256": "a0cb7966afd68bc35c46f78018d1fa1d2e4bcbe3c3baf39f60cd1733ed9ad7e5"
+      },
+      {
+        "name": "DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00002-of-00005.gguf",
+        "sha256": "ba5afb43adfc667436ebcfbd82d25411fa2843ee7e1d877290611cd60f93cca1"
+      },
+      {
+        "name": "DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00003-of-00005.gguf",
+        "sha256": "1482443bb4957c8d2f005ded365445f98558ff05c50674f9ee9a96ddabc122a4"
+      },
+      {
+        "name": "DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00004-of-00005.gguf",
+        "sha256": "0d93315942c523d82f6dbc0a6e0e1751548e309f3963f96b82f92e8f9bc52e36"
+      },
+      {
+        "name": "DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00005-of-00005.gguf",
+        "sha256": "39bbc8cde8b17604fed9a7ba7fc6bc9c5e72e34733657943ac049b4b9ca2d340"
+      }
+    ]
+  },
+  "runtime": {
+    "name": "Project Maya",
+    "version": "v1.1.37 / Q189",
+    "binary": "/media/cristian/HDD extra/LlamaCode-evals/Q189-project-maya-v1.1.37/build/maya-ds4",
+    "binary_sha256": "b4d00bcb0dc1b6680158749941601e79f669af6b1ae5c2d28c5feaa0cc72df17",
+    "launcher": "/media/cristian/HDD extra/LlamaCode-evals/Q189-project-maya-v1.1.37/run-maya-ds4.sh",
+    "launcher_sha256": "95087759f61e581888fadbb3e9f84128197a7d908628658ccb65e3298e82748b",
+    "config": "configs/maya-q173-262k-ds4split39.json",
+    "config_sha256": "213dcf70cfe5242b99add4f116db2c7a5c6f38fd2ed609fdd47b8aa28e80618d",
+    "server_context": 262144,
+    "tensor_parallel": 2,
+    "vision": "off",
+    "reasoning_effort": "medium",
+    "environment": {
+      "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+      "CUDA_VISIBLE_DEVICES": "1,0",
+      "DS4_SPLIT": "39,1"
+    },
+    "config_gpu_order": [
+      1,
+      0
+    ],
+    "physical_gpu_order": [
+      "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049 (PNY GPU1→CUDA0)",
+      "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6 (ASUS GPU0→CUDA1)"
+    ]
+  },
+  "harness": {
+    "name": "llama-benchy",
+    "version": "0.4.0",
+    "binary": "/home/cristian/.cache/q173-llama-benchy-0.4.0/bin/llama-benchy",
+    "sha256": "e8a892fe937d5ae1b6a43c31e8cb286ce4774f70396f62ab71008c9ddb0a01a1",
+    "tokenizer": "/home/cristian/.cache/q173-tokenizers/deepseek-v41-flash-1017/tokenizer.json",
+    "tokenizer_sha256": "c90dfa01249db1be4245780a052ede752e1361c612ac6d08e2bdada7d599476b"
+  },
+  "ladder": [
+    {
+      "prompt_tokens": 8192,
+      "runs": 3
+    },
+    {
+      "prompt_tokens": 32768,
+      "runs": 1
+    },
+    {
+      "prompt_tokens": 65536,
+      "runs": 1
+    },
+    {
+      "prompt_tokens": 131072,
+      "runs": 1
+    },
+    {
+      "prompt_tokens": 261888,
+      "runs": 1
+    }
+  ],
+  "generation_tokens": 128,
+  "concurrency": 1,
+  "sampling": {
+    "temperature": 0.6,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0,
+    "repetition_penalty": 1.0,
+    "presence_penalty": 0.0,
+    "seed": 42
+  },
+  "metrics": {
+    "prefill_primary": "actual prompt_tokens / request-start-to-first-content-token elapsed, calculated from llama-benchy progress events; includes client/network overhead",
+    "prefill_secondary": "raw harness pp_throughput retained as diagnostic only",
+    "decode": "harness tg_throughput mean per prompt context",
+    "validity": "exact requested prompt size and exact 128 generated tokens; all requests complete without error; server allocates compute PIDs on both physical GPU UUIDs; no foreign inference; clean server exit and free port",
+    "report": "per-context rates, repeated 8K sample spread, and equal-weight arithmetic mean across five prompt contexts; no quality claim from Q173"
+  },
+  "safety": {
+    "helper_gate": "3090 HELPER verify-boot pass; ASUS VRAM quarantine active with 1636/1636 held, pending 0; P2P read/write OK; gpu_unlock loaded and both PCI IDs in kernel cmdline",
+    "foreign_inference": "abort before launch if any inference server is active; do not stop foreign processes",
+    "memory_floor_bytes": 17179869184,
+    "response_to_floor": "stop only the Q209 service after two consecutive samples below 16 GiB",
+    "service": "Detached outer user-systemd Q209 controller: RuntimeMaxSec=3900s, MemoryMax=8G, MemorySwapMax=0, OOMPolicy=kill, KillMode=control-group, exact engine cleanup in ExecStopPost. Maya child unit: RuntimeMaxSec=3600s, MemoryMax=96G, MemorySwapMax=0, OOMPolicy=kill, KillMode=control-group; no ManagedOOMPreference=avoid. Worker failure/timeout or controller exit invokes an exact Q209 unit identity checked cleanup hook. Foreground run command refuses to execute without the detached worker identity."
+  },
+  "historical_quality": {
+    "q172_mean": 89.3333333333,
+    "q172_seeds": [
+      88,
+      89,
+      91
+    ],
+    "q172_context_tokens": 131072,
+    "q172_safety": "FAIL TC-92 in all three seeds; seed42 also TC-89",
+    "lha1": 76,
+    "lha1_cohort": "separate five-seed cohort; do not combine with Q172"
+  },
+  "comparison_limit": "Q190 Maya and DSX Q173 numbers are historical and use a different Maya profile/configuration or cohort; they are reference-only, not a matched dominance test. No file deletion decision from this ladder alone.",
+  "runner": "profiles/maya-xs-iq1s-pny-ds4split39-q173/scripts/run_q173.py",
+  "runner_sha256": "a4f54ecec98bfce1f9fd01f2c233f2367e8e904a2a605015e1d49fbe9fd2d411",
+  "amendments": [
+    {
+      "id": "01",
+      "created_utc": "2026-11-15T06:46:00Z",
+      "reason": "Q209 preflight attempt01 ended with KeyError: config_sha256 while constructing the supporting-asset check list; no model server or inference was launched.",
+      "changes": [
+        "Read the pinned config digest from runtime.config_sha256.",
+        "Correct the pinned launcher digest to its full observed SHA-256 ending in 48b.",
+        "Persist per-shard hash verification progress and a completed asset-hash receipt before moving to live gates."
+      ],
+      "rerun_policy": "Repeat the full five-shard SHA verification and all live preflight gates before inference; do not rely on attempt01 as the final asset receipt.",
+      "runner_sha256": "8e3d16ad5e07c1a7b7301175bd276dd153dbb1328d6eae5780c71e9c1d6d25d8"
+    },
+    {
+      "id": "02",
+      "created_utc": "2026-11-15T07:10:38+00:00",
+      "reason": "Correct the pinned launcher digest after attempt02 compared it to the exact on-disk launcher and found the preregistered digest omitted the 658 substring; launcher content is unchanged from historical Q206 receipts.",
+      "changes": [
+        "Set runtime.launcher_sha256 to the observed on-disk SHA-256, which matches the prior Q206 preregistrations.",
+        "Record attempt02: all five model shards matched; preflight stopped at the launcher SHA check before live gates, server launch, inference, or GPU compute."
+      ],
+      "rerun_policy": "Synchronize and read back amendment02 before retry. Repeat complete pinned asset and live gate preflight. If all pass, proceed only with Q173 8192×3 on ASUS+PNY."
+    },
+    {
+      "id": "03",
+      "created_utc": "2026-11-15T14:58:00+00:00",
+      "reason": "The 64K foreground controller disappeared while its separately systemd-run Maya server remained active until a 2-hour timeout. Prevent recurrence and protect the host before retrying.",
+      "changes": [
+        "Q173 run mode now refuses foreground execution and requires a named, token-checked detached systemd controller.",
+        "The outer controller is bounded to 3900 seconds and 8 GiB; the Maya child is bounded to 3600 seconds, 96 GiB, zero swap, OOMPolicy=kill, and KillMode=control-group.",
+        "Added an ExecStopPost hook that validates the exact Q209 service description and allowlisted unit name before stopping it and writing a durable cleanup receipt.",
+        "Added a two-stage CPU-only fake-job test for caller-exit survival, timeout, and child cleanup. It is preregistered and must be read back from Sheets before execution."
+      ],
+      "runner_sha256": "a4f54ecec98bfce1f9fd01f2c233f2367e8e904a2a605015e1d49fbe9fd2d411",
+      "launcher_sha256": "a2a4ff0f19842c3f34fa3d8ce8e5479be894fe74de686aff92dfb192b5f9a010",
+      "cleanup_sha256": "05dd9013063ed2a29d0442e5dd2dd11de1fba08a7b6cb0770a789cc9bdb49853",
+      "cpu_smoke_sha256": "2a5e419ca620e0228d55ee3a95543a3b9c4b82c7012406a12579389be698cfab",
+      "cpu_smoke_preregistration_sha256": "1e4fa706714463eb754981e963c7ca96739b1be982f49888f92c5ff2a68fc873",
+      "rerun_policy": "No GPU use until CPU-only systemd lifecycle smoke is PASS and synchronized/read back in Sheets.",
+      "cpu_smoke_result": "PASS",
+      "cpu_smoke_result_sha256": "2c74f6586821c1bae756577ebeb411944b4c5c8a6b8b82f7ce89e29430fc4cf7"
+    },
+    {
+      "id": "04",
+      "created_utc": "2026-11-15T15:37:08+00:00",
+      "reason": "The 64K completion and CPU-only cleanup/idempotency regression passed. Refresh live boot/GPU/service gates for the remaining registered 131072-token Q173 point without rereading the unchanged 276.6 GB shards.",
+      "changes": [
+        "New refresh_preflight_cached.py reuses previous per-shard full-SHA receipts only after every shard path/resolved path/size/mtime/inode/device matches exactly and pinned shard SHA matches the previous full-hash receipt.",
+        "Rehash each pinned supporting asset; rerun helper/quarantine/P2P/gpu_unlock, both 3090 UUIDs, memory, inference-server, port, compute-app, and output-space gates.",
+        "Do not stop any unrelated process. Abort preflight if a foreign inference server, compute app, port collision, helper gate failure, less than 16 GiB MemAvailable, or insufficient output space is present.",
+        "If preflight passes, run only the existing Q173 ladder point 131072 x 1 using a detached bounded Q209 systemd worker; sync/read back Sheets immediately. 261888 remains later and conditional; 523904 excluded."
+      ],
+      "cached_preflight_script_sha256": "d4a509ccb9d6f88e3e27e6198974f066834bdd0082bc5f3d015f1b5edba08579",
+      "runner_sha256": "a4f54ecec98bfce1f9fd01f2c233f2367e8e904a2a605015e1d49fbe9fd2d411",
+      "detached_launcher_sha256": "a2a4ff0f19842c3f34fa3d8ce8e5479be894fe74de686aff92dfb192b5f9a010",
+      "cleanup_sha256": "abffa62a85b247be623215a8030b3588806603db92252bf122d58b7a87ed6442",
+      "cpu_cleanup_regression_sha256": "f118cf8061cee5a9067363b545820eac1fd9b5911665513cfd0510d82f3b8471",
+      "prerequisite_sheet_readback": "pending",
+      "not_started": true,
+      "gpu_inference_started": false
+    },
+    {
+      "id": "05",
+      "created_utc": "2026-11-15T15:57:11+00:00",
+      "reason": "Q173 131072x1 completed successfully under the detached bounded worker; record the result and gate the final preregistered 261888 context point.",
+      "completed_131072": {
+        "status": "PASS",
+        "result_receipt_sha256": "82a2dbb452ed3cfbb7a5ea7ac0b41507b19953d1b199a0fc0dece79fb2dfddf1",
+        "postflight_receipt_sha256": "33cefab9443bc42a1a69068d867bb6a28223e8c12d4d146572f0062979c6bd93",
+        "sheet_readback_receipt_sha256": "66dba9ab4380c6232edc535d82f1156fd8c54674c1b43f4cacfe16cef1c3a425"
+      },
+      "next_test": {
+        "name": "Q209 Q173 context ladder final point",
+        "context_tokens": 261888,
+        "runs": 1,
+        "generation_tokens": 128,
+        "seed": 42,
+        "gpu_profile": "both ASUS+PNY RTX 3090, PNY first, DS4_SPLIT=39,1",
+        "worker": "detached bounded user-systemd; launcher returns immediately; no foreground inference",
+        "fresh_gate": "require current lock; exact two GPUs; HELPER/quarantine/P2P/gpu_unlock pass; no inference server or other GPU compute app; port free; MemAvailable >=16 GiB; exact model/support assets unchanged; abort without stopping unrelated processes",
+        "stop_context_tokens": 523904,
+        "after_result": "stop both Q209 units, require clean postflight, update/readback Sheet and local receipts before closeout"
+      }
+    },
+    {
+      "id": "06",
+      "created_utc": "2026-11-15T15:59:04+00:00",
+      "reason": "Fresh, context-specific preflight for the final registered Q173 261888-token point; avoid relabeling a 131K gate snapshot.",
+      "preflight_script": "profiles/maya-xs-iq1s-pny-ds4split39-q173/scripts/refresh_preflight_cached_261888.py",
+      "preflight_script_sha256": "d0a923648487b98e5ad83046ad01dabd42b3efd6e6a306b8d1ff35df27178726",
+      "context_tokens": 261888,
+      "uses_prior_verified_full_shard_sha_only_if_identity_is_unchanged": true,
+      "fresh_checks": [
+        "3090 HELPER boot PASS",
+        "ASUS quarantine 1636/1636",
+        "P2P read+write both directions",
+        "gpu_unlock both RTX3090",
+        "both exact physical GPU UUIDs",
+        "no inference server",
+        "no other GPU compute application; GUI allowed",
+        "port free",
+        "MemAvailable >=16 GiB",
+        "output space >=1 GB",
+        "five supporting asset hashes"
+      ],
+      "abort_behavior": "Do not launch or stop unrelated processes if any gate fails.",
+      "if_preflight_passes": "Run only 261888×1, exactly 128 output tokens, seed42, both GPUs PNY-first DS4_SPLIT=39,1, detached bounded Q209 worker. No 523904.",
+      "prerequisite_sheet_readback_sha256": "edbdc6e2e2d149bea733e4737456b4a8c5ed8dc76da9deae6d006eb5f69ad383",
+      "preflight_started": false,
+      "gpu_inference_started": false
+    }
+  ],
+  "preflight_attempts": [
+    {
+      "attempt": 1,
+      "status": "FAILED_BEFORE_LIVE_GATES",
+      "observed_error": "KeyError: config_sha256",
+      "observed_read_bytes_before_exit": 274268528640,
+      "control_flow_note": "The exception happened while building the supporting-file list after the shard loop; no shard SHA mismatch was raised. No per-shard receipt was emitted, so repeat full hashing.",
+      "model_server_started": false,
+      "gpu_inference_started": false
+    },
+    {
+      "attempt": 2,
+      "status": "FAILED_PINNED_LAUNCHER_DIGEST_TYPO",
+      "observed_error": "Launcher digest mismatch: observed 95087759f61e581888fadbb3e9f84128197a7d908628658ccb65e3298e82748b; stale preregistered expected 95087759f61e581888fadbb3e9f84128197a7d908628ccb65e3298e82748b.",
+      "launcher_on_disk_mtime": "2026-10-29T14:15:12.742186200-03:00",
+      "historical_crosscheck": "Observed launcher SHA matches existing Q206 Maya DS4_SPLIT=39,1 preregistration receipts.",
+      "model_shards": {
+        "status": "ALL_FIVE_HASHES_MATCHED",
+        "expected_bytes": 276626308260,
+        "verified_bytes": 276626308260,
+        "receipt": "receipts/shard-hash-progress.json"
+      },
+      "model_server_started": false,
+      "gpu_inference_started": false,
+      "gpu_compute_started": false,
+      "next": "Sync/read back amendment02; full preflight again before Q173."
+    }
+  ],
+  "results_volume": "/media/cristian/Disco local/Modelos-eval/Q209-Maya-DS4SPLIT39-Q173",
+  "sheet_before_gpu": {
+    "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "tab": "Resultados",
+    "append_row": 496,
+    "also_update": "Modelos locales por peso row 6 notes/status before first measurement"
+  },
+  "next_step": "Synchronize/read back amendment06 and its context-specific preflight script hash; run the 261888 live cached preflight. If PASS, sync/readback the gate and launch only 261888×1 via detached Q209 worker; no 523904.",
+  "detached_worker": {
+    "launcher": "scripts/launch_detached_q173.py",
+    "launcher_sha256": "a2a4ff0f19842c3f34fa3d8ce8e5479be894fe74de686aff92dfb192b5f9a010",
+    "cleanup_hook": "scripts/cleanup_detached_worker.py",
+    "cleanup_sha256": "05dd9013063ed2a29d0442e5dd2dd11de1fba08a7b6cb0770a789cc9bdb49853",
+    "outer_unit_runtime_limit_seconds": 3900,
+    "outer_unit_memory_max_bytes": 8589934592,
+    "engine_unit_runtime_limit_seconds": 3600,
+    "engine_unit_memory_max_bytes": 103079215104,
+    "engine_unit_memory_swap_max_bytes": 0,
+    "cpu_lifecycle_smoke_preregistration": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261115-MAYA-DS4SPLIT39-Q173/profiles/maya-xs-iq1s-pny-ds4split39-q173/receipts/detached-worker-cpu-smoke-preregistration.json",
+    "cpu_lifecycle_smoke_preregistration_sha256": "1e4fa706714463eb754981e963c7ca96739b1be982f49888f92c5ff2a68fc873",
+    "cpu_lifecycle_smoke_result": "PASS",
+    "cpu_lifecycle_smoke_result_sha256": "2c74f6586821c1bae756577ebeb411944b4c5c8a6b8b82f7ce89e29430fc4cf7",
+    "cpu_lifecycle_smoke_detail": {
+      "worker_result": "timeout",
+      "worker_runtime_limit_seconds": 8,
+      "cleanup_status": "PASS_STOPPED",
+      "child_final_state": "inactive",
+      "gpu_used": false,
+      "model_used": false
+    }
+  },
+  "execution_state_131072": {
+    "status": "PASS",
+    "finished_utc": "2026-11-15T15:50:15Z",
+    "context_tokens": 131072,
+    "runs": 1,
+    "prefill_effective_e2e_tps": 603.8446308141025,
+    "decode_tps": 18.513216779165358,
+    "ttft_seconds": 217.11213996098377,
+    "server_readiness_seconds": 30.391,
+    "readiness_classified_cold_or_hot": false,
+    "output_tokens": 128,
+    "result_receipt_sha256": "82a2dbb452ed3cfbb7a5ea7ac0b41507b19953d1b199a0fc0dece79fb2dfddf1",
+    "postflight_receipt_sha256": "33cefab9443bc42a1a69068d867bb6a28223e8c12d4d146572f0062979c6bd93",
+    "sheet_readback_receipt_sha256": "66dba9ab4380c6232edc535d82f1156fd8c54674c1b43f4cacfe16cef1c3a425",
+    "detached_worker": "q209-maya-q173-pp131072-worker-a01",
+    "worker_and_engine_exit_status": 0,
+    "postflight": "port free; no inference servers/compute apps; MemAvailable 123142356992 B; OOMKill 0"
+  }
+}

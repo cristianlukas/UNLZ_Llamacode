@@ -1,0 +1,17 @@
+{
+  "timestamp_utc": "2026-11-15T07:11:48+00:00",
+  "operation": "Q209 amendment02 sync and readback",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "ranges": [
+    "Resultados!E496",
+    "Resultados!AD496",
+    "Resultados!AF496",
+    "Modelos locales por peso!J6:K6"
+  ],
+  "readback_match": true,
+  "format_preserved": "Resultados row496 Arial10 TOP WRAP; inventory J6:K6 existing format unchanged",
+  "amendment02_prereg_sha256": "ce14311df7f17c2157b20458cf7d736ac8ee92b2899ff83cc5bedb3dff4b8ea0",
+  "runner_sha256": "9f5dfb07bae15324961b010292b3be718e0e7debcf70224fafb0561bf66a06df",
+  "recorded_attempt02": "all five model shard SHA-256 passed; launcher hash mismatch was stale pin; no server/inference/GPU; corrected pin now agrees with on-disk launcher and historical Q206 receipts",
+  "next": "After fresh gate reads, rerun full pinned asset and live preflight. Q173 only if PASS."
+}

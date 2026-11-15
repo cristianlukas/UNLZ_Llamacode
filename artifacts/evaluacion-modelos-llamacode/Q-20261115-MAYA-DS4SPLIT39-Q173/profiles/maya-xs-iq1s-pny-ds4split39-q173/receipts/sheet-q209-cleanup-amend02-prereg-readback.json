@@ -1,0 +1,12 @@
+{
+  "schema": "llamacode.q209-sheet-prereg-readback.v1",
+  "timestamp_utc": "2026-11-15T15:29:48+00:00",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet": "Resultados",
+  "range": "AF496,AD496",
+  "amendment_sha256": "81cd21858c5fda155914a2643bc73e9b0fbe47bda7ad223e255e237180bbe1d4",
+  "cleanup_script_sha256": "abffa62a85b247be623215a8030b3588806603db92252bf122d58b7a87ed6442",
+  "lifecycle_test_sha256": "9975154c691d5925d129fa68dac96e851b18e011c444e166c95c9b4b3c251b4a",
+  "readback_matches_write": true,
+  "format": "Arial 10 WRAP retained"
+}

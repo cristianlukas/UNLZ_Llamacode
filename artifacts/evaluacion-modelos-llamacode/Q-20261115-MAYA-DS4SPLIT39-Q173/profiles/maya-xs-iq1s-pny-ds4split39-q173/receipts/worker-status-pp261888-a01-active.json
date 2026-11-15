@@ -1,0 +1,38 @@
+{
+  "schema": "llamacode.q209-worker-status.v1",
+  "timestamp_utc": "2026-11-15T16:01:10+00:00",
+  "task": "Q209-MAYA-DS4SPLIT39-Q173",
+  "lock_token": "d9029f6b-c649-4291-b0be-f14d77dc737e",
+  "context_tokens": 261888,
+  "attempt": "a01",
+  "status": "ACTIVE_DETACHED",
+  "launcher_receipt_sha256": "cb158813d5d88746fd005ff94b6f96e9c39690802ceb75c09e0eaa17f61cea67",
+  "sheet_readback_receipt_sha256": "fe3606ae8a54966af57a97bd2c14bcf65bd5bfb47e57428b38c8a85738a58326",
+  "units": [
+    {
+      "unit": "q209-maya-q173-pp261888-worker-a01",
+      "properties": {
+        "MainPID": "567376",
+        "Result": "success",
+        "ExecMainStatus": "0",
+        "MemoryCurrent": "225452032",
+        "MemoryPeak": "250748928",
+        "ActiveState": "active",
+        "SubState": "running"
+      }
+    },
+    {
+      "unit": "q209-maya-q173-pp261888-a01",
+      "properties": {
+        "MainPID": "567398",
+        "Result": "success",
+        "ExecMainStatus": "0",
+        "MemoryCurrent": "12786442240",
+        "MemoryPeak": "15032381440",
+        "ActiveState": "active",
+        "SubState": "running"
+      }
+    }
+  ],
+  "inference_lifetime_bound_to_codex_session": false
+}

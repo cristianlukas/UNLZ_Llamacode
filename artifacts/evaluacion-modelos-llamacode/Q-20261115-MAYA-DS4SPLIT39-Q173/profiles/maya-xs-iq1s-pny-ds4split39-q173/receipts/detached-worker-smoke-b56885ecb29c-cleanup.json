@@ -1,0 +1,23 @@
+{
+  "schema": "llamacode.q209-detached-worker-cleanup.v1",
+  "timestamp_utc": "2026-11-15T15:30:42+00:00",
+  "unit": "q209-lifecycle-smoke-b56885ecb29c-child",
+  "expected_description": "Q209-CPU-SMOKE-CHILD|b56885ecb29c",
+  "actual_description": "Q209-CPU-SMOKE-CHILD|b56885ecb29c",
+  "service_result": "timeout",
+  "exit_code": "killed",
+  "exit_status": "TERM",
+  "before": {
+    "load_state": "loaded",
+    "active_state": "active"
+  },
+  "stop_returncode": 0,
+  "stop_stdout": "",
+  "stop_stderr": "",
+  "after": {
+    "load_state": "not-found",
+    "active_state": "inactive"
+  },
+  "status": "PASS_STOPPED",
+  "stop_attempted": true
+}

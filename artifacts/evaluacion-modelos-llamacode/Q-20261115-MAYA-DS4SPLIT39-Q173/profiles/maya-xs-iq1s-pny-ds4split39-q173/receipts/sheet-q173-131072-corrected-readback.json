@@ -1,0 +1,49 @@
+{
+  "schema": "llamacode.q209-sheet-q173-131072-corrected-readback.v1",
+  "timestamp_utc": "2026-11-15T15:50:16Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "status": "PASS",
+  "ranges": [
+    {
+      "title": "Modelos locales por peso",
+      "data": [
+        {
+          "startRow": 5,
+          "startColumn": 4,
+          "rowData": [
+            [
+              {
+                "value": "495.2869542",
+                "note": "Q209 Q173 effective E2E prefill; equal-weight mean of context-point means 8K/32K/64K/131K = 495.287 tok/s. Per-context: 393.593 (8K n=3), 540.474 (32K n=1), 443.236 (64K n=1), 603.845 (131K n=1). Descriptive/provisional; unequal samples; 261888 pending."
+              },
+              {
+                "value": "20.09870694",
+                "note": "Q209 Q173 llama-benchy tg_throughput; equal-weight mean of context-point means 8K/32K/64K/131K = 20.099 tok/s. Per-context: 31.023, 26.058, 4.801, 18.513. Descriptive/provisional; 8K n=3, all other points n=1; 261888 pending."
+              }
+            ]
+          ]
+        },
+        {
+          "startRow": 5,
+          "startColumn": 9,
+          "rowData": [
+            [
+              {
+                "value": "Q209 Q173 effective E2E. Equal-weight context-point mean through131K; 8K n=3, 32K/64K/131K n=1; provisional.",
+                "note": "Q209 Q173 effective E2E prefill; equal-weight mean of context-point means 8K/32K/64K/131K = 495.287 tok/s. Per-context: 393.593 (8K n=3), 540.474 (32K n=1), 443.236 (64K n=1), 603.845 (131K n=1). Descriptive/provisional; unequal samples; 261888 pending."
+              },
+              {
+                "value": "Q209 Q173 llama-benchy tg_throughput. Equal-weight context-point mean through131K; 8K n=3, 32K/64K/131K n=1; provisional.",
+                "note": "Q209 Q173 llama-benchy tg_throughput; equal-weight mean of context-point means 8K/32K/64K/131K = 20.099 tok/s. Per-context: 31.023 (8K n=3), 26.058 (32K n=1), 4.801 (64K n=1), 18.513 (131K n=1). Descriptive/provisional; 261888 pending."
+              }
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "verified": [
+    "Modelos locales por peso!E6:F6",
+    "Modelos locales por peso!J6:K6"
+  ]
+}

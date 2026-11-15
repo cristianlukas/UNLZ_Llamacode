@@ -1,0 +1,45 @@
+{
+  "schema": "llamacode.q209-detached-worker-cpu-smoke-prereg.v1",
+  "test_id": "Q209-CONTROLLER-DETACHED-CPU-01",
+  "preregistered_utc": "2026-11-15T14:58:00+00:00",
+  "task": "Q209-MAYA-DS4SPLIT39-Q173",
+  "lock_token": "d9029f6b-c649-4291-b0be-f14d77dc737e",
+  "objective": "Verify that a transient user-systemd controller survives return/exit of its launching process, has a hard runtime and memory boundary, and ExecStopPost stops only the exact Q209-owned child service; no model, inference server, or GPU is used.",
+  "method": {
+    "launcher": "Two-phase test_detached_worker_lifecycle.py launch then verify; launch returns after systemd-run --user --no-block, then a separate process verifies durable marker and cleanup.",
+    "fake_child": "/usr/bin/sleep infinity in a generated q209-lifecycle-smoke-<nonce>-child unit; MemoryMax=128M, MemorySwapMax=0, RuntimeMaxSec=300s, KillMode=control-group.",
+    "fake_controller": "python3 writes a started marker then sleeps 30s; generated worker RuntimeMaxSec=8s, MemoryMax=128M, MemorySwapMax=0, OOMPolicy=kill, KillMode=control-group, ExecStopPost=cleanup_detached_worker.py.",
+    "resource_scope": "CPU-only user-systemd test units, unique q209 lifecycle smoke names; no nvidia-smi, model files, network, benchmark harness, or GPU calls.",
+    "cleanup": "Hook requires exact Q209 description and allowlisted generated unit name; verify receipt PASS_STOPPED/PASS_ALREADY_STOPPED, worker result timeout, and fake child inactive. Test finally stops only its generated fake units if any assertion fails.",
+    "syntax_gate": "Before launching fake jobs, run python3 -m py_compile on run_q173.py, launch_detached_q173.py, cleanup_detached_worker.py, and test_detached_worker_lifecycle.py; this executes no code and touches no GPU.",
+    "safety_guards": "The smoke launcher and verifier re-check the exact Q202 lock token before creating units. On assertion failure, the verifier records the failure first and only emergency-stops generated units whose exact Q209 smoke descriptions still match."
+  },
+  "pass_criteria": [
+    "systemd-run returns before fake worker completion",
+    "started marker is created after launcher process returned",
+    "worker terminates with Result=timeout within the preregistered limit",
+    "ExecStopPost writes a PASS receipt and the exact fake child is inactive",
+    "no GPU/model/server used and no non-test unit touched",
+    "all four Python files pass py_compile before systemd jobs start"
+  ],
+  "scripts": {
+    "runner_sha256": "a4f54ecec98bfce1f9fd01f2c233f2367e8e904a2a605015e1d49fbe9fd2d411",
+    "detached_launcher_sha256": "a2a4ff0f19842c3f34fa3d8ce8e5479be894fe74de686aff92dfb192b5f9a010",
+    "cleanup_sha256": "05dd9013063ed2a29d0442e5dd2dd11de1fba08a7b6cb0770a789cc9bdb49853",
+    "cpu_smoke_sha256": "2a5e419ca620e0228d55ee3a95543a3b9c4b82c7012406a12579389be698cfab"
+  },
+  "not_started_before_sheet_preregistration_readback": true,
+  "next_gate": "Synchronize this preregistration in Results row 496, read it back, then run the CPU-only lifecycle test; no GPU benchmark unless it passes.",
+  "amendments": [
+    {
+      "id": "01",
+      "timestamp_utc": "2026-11-15T15:02:05+00:00",
+      "reason": "Strengthen the CPU smoke after reviewing its failure path.",
+      "changes": [
+        "Re-check Q202 lock ownership in both launch and verify phases.",
+        "On failed assertions, write a failure receipt and emergency-stop only generated test units with exact matching descriptions."
+      ],
+      "cpu_smoke_sha256": "2a5e419ca620e0228d55ee3a95543a3b9c4b82c7012406a12579389be698cfab"
+    }
+  ]
+}

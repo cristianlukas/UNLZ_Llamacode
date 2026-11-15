@@ -1,0 +1,53 @@
+{
+  "unit": "q209-maya-q173-pp8192",
+  "stop_started_utc": "2026-11-15T07:33:17+00:00",
+  "finished_utc": "2026-11-15T07:33:25+00:00",
+  "systemctl_rc": 0,
+  "stderr": "",
+  "port_free": true,
+  "remaining_inference_servers": [],
+  "memory": {
+    "mem_available_bytes": 124077543424,
+    "pressure": {
+      "some": {
+        "avg10": 0.0,
+        "avg60": 0.44,
+        "avg300": 9.93,
+        "total": 146185901.0
+      },
+      "full": {
+        "avg10": 0.0,
+        "avg60": 0.44,
+        "avg300": 9.92,
+        "total": 146114412.0
+      }
+    },
+    "oom_kill": 0
+  },
+  "gpus": {
+    "timestamp_utc": "2026-11-15T07:33:25+00:00",
+    "gpus": [
+      {
+        "index": 0,
+        "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+        "name": "NVIDIA GeForce RTX 3090",
+        "pci": "00000000:01:00.0",
+        "memory_used_mib": 774,
+        "memory_total_mib": 24576,
+        "utilization_percent": 8,
+        "temperature_c": 62
+      },
+      {
+        "index": 1,
+        "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+        "name": "NVIDIA GeForce RTX 3090",
+        "pci": "00000000:03:00.0",
+        "memory_used_mib": 108,
+        "memory_total_mib": 24576,
+        "utilization_percent": 17,
+        "temperature_c": 47
+      }
+    ],
+    "compute_apps": []
+  }
+}

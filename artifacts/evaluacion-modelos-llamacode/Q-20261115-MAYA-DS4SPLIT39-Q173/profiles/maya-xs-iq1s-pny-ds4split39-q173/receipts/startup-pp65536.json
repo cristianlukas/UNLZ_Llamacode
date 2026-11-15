@@ -1,0 +1,792 @@
+{
+  "status": "PASS",
+  "unit": "q209-maya-q173-pp65536-a02",
+  "port": 18628,
+  "ready_seconds": 91.047,
+  "api_models": {
+    "object": "list",
+    "data": [
+      {
+        "id": "deepseek-v4.1-flash",
+        "object": "model",
+        "status": {
+          "value": "loaded"
+        },
+        "meta": {
+          "n_ctx": 262144
+        },
+        "architecture": {
+          "input_modalities": [
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ]
+        }
+      }
+    ]
+  },
+  "compute_pid_by_uuid": {
+    "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049": [
+      476376
+    ],
+    "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6": [
+      476376
+    ]
+  },
+  "physical_order": [
+    "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+    "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6"
+  ],
+  "visible_devices": "1,0",
+  "DS4_SPLIT": "39,1",
+  "samples": [
+    {
+      "at_utc": "2026-11-15T15:12:28+00:00",
+      "elapsed_seconds": 0.12,
+      "unit": "active",
+      "pids": [
+        476289
+      ],
+      "own_compute_pids_by_physical_uuid": {
+        "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049": [],
+        "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6": []
+      },
+      "memory": {
+        "mem_available_bytes": 124499316736,
+        "pressure": {
+          "some": {
+            "avg10": 0.0,
+            "avg60": 0.0,
+            "avg300": 0.0,
+            "total": 308549993.0
+          },
+          "full": {
+            "avg10": 0.0,
+            "avg60": 0.0,
+            "avg300": 0.0,
+            "total": 308453833.0
+          }
+        },
+        "oom_kill": 0
+      },
+      "gpus": [
+        {
+          "index": 0,
+          "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:01:00.0",
+          "memory_used_mib": 798,
+          "memory_total_mib": 24576,
+          "utilization_percent": 29,
+          "temperature_c": 48
+        },
+        {
+          "index": 1,
+          "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:03:00.0",
+          "memory_used_mib": 108,
+          "memory_total_mib": 24576,
+          "utilization_percent": 23,
+          "temperature_c": 32
+        }
+      ]
+    },
+    {
+      "at_utc": "2026-11-15T15:12:38+00:00",
+      "elapsed_seconds": 10.21,
+      "unit": "active",
+      "pids": [
+        476289,
+        476359,
+        476376
+      ],
+      "own_compute_pids_by_physical_uuid": {
+        "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049": [
+          476376
+        ],
+        "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6": [
+          476376
+        ]
+      },
+      "memory": {
+        "mem_available_bytes": 123776360448,
+        "pressure": {
+          "some": {
+            "avg10": 0.0,
+            "avg60": 0.0,
+            "avg300": 0.0,
+            "total": 308549993.0
+          },
+          "full": {
+            "avg10": 0.0,
+            "avg60": 0.0,
+            "avg300": 0.0,
+            "total": 308453833.0
+          }
+        },
+        "oom_kill": 0
+      },
+      "gpus": [
+        {
+          "index": 0,
+          "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:01:00.0",
+          "memory_used_mib": 2090,
+          "memory_total_mib": 24576,
+          "utilization_percent": 7,
+          "temperature_c": 53
+        },
+        {
+          "index": 1,
+          "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:03:00.0",
+          "memory_used_mib": 5074,
+          "memory_total_mib": 24576,
+          "utilization_percent": 12,
+          "temperature_c": 37
+        }
+      ]
+    },
+    {
+      "at_utc": "2026-11-15T15:12:49+00:00",
+      "elapsed_seconds": 20.32,
+      "unit": "active",
+      "pids": [
+        476289,
+        476359,
+        476376
+      ],
+      "own_compute_pids_by_physical_uuid": {
+        "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049": [
+          476376
+        ],
+        "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6": [
+          476376
+        ]
+      },
+      "memory": {
+        "mem_available_bytes": 118637993984,
+        "pressure": {
+          "some": {
+            "avg10": 0.0,
+            "avg60": 0.0,
+            "avg300": 0.0,
+            "total": 308549993.0
+          },
+          "full": {
+            "avg10": 0.0,
+            "avg60": 0.0,
+            "avg300": 0.0,
+            "total": 308453833.0
+          }
+        },
+        "oom_kill": 0
+      },
+      "gpus": [
+        {
+          "index": 0,
+          "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:01:00.0",
+          "memory_used_mib": 7210,
+          "memory_total_mib": 24576,
+          "utilization_percent": 10,
+          "temperature_c": 54
+        },
+        {
+          "index": 1,
+          "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:03:00.0",
+          "memory_used_mib": 23618,
+          "memory_total_mib": 24576,
+          "utilization_percent": 14,
+          "temperature_c": 39
+        }
+      ]
+    },
+    {
+      "at_utc": "2026-11-15T15:12:59+00:00",
+      "elapsed_seconds": 30.41,
+      "unit": "active",
+      "pids": [
+        476289,
+        476359,
+        476376
+      ],
+      "own_compute_pids_by_physical_uuid": {
+        "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049": [
+          476376
+        ],
+        "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6": [
+          476376
+        ]
+      },
+      "memory": {
+        "mem_available_bytes": 118540828672,
+        "pressure": {
+          "some": {
+            "avg10": 0.0,
+            "avg60": 0.0,
+            "avg300": 0.0,
+            "total": 308549993.0
+          },
+          "full": {
+            "avg10": 0.0,
+            "avg60": 0.0,
+            "avg300": 0.0,
+            "total": 308453833.0
+          }
+        },
+        "oom_kill": 0
+      },
+      "gpus": [
+        {
+          "index": 0,
+          "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:01:00.0",
+          "memory_used_mib": 7210,
+          "memory_total_mib": 24576,
+          "utilization_percent": 22,
+          "temperature_c": 55
+        },
+        {
+          "index": 1,
+          "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:03:00.0",
+          "memory_used_mib": 23618,
+          "memory_total_mib": 24576,
+          "utilization_percent": 7,
+          "temperature_c": 40
+        }
+      ]
+    },
+    {
+      "at_utc": "2026-11-15T15:13:09+00:00",
+      "elapsed_seconds": 40.5,
+      "unit": "active",
+      "pids": [
+        476289,
+        476359,
+        476376
+      ],
+      "own_compute_pids_by_physical_uuid": {
+        "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049": [
+          476376
+        ],
+        "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6": [
+          476376
+        ]
+      },
+      "memory": {
+        "mem_available_bytes": 118654705664,
+        "pressure": {
+          "some": {
+            "avg10": 0.0,
+            "avg60": 0.0,
+            "avg300": 0.0,
+            "total": 308549993.0
+          },
+          "full": {
+            "avg10": 0.0,
+            "avg60": 0.0,
+            "avg300": 0.0,
+            "total": 308453833.0
+          }
+        },
+        "oom_kill": 0
+      },
+      "gpus": [
+        {
+          "index": 0,
+          "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:01:00.0",
+          "memory_used_mib": 7210,
+          "memory_total_mib": 24576,
+          "utilization_percent": 9,
+          "temperature_c": 56
+        },
+        {
+          "index": 1,
+          "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:03:00.0",
+          "memory_used_mib": 23616,
+          "memory_total_mib": 24576,
+          "utilization_percent": 6,
+          "temperature_c": 41
+        }
+      ]
+    },
+    {
+      "at_utc": "2026-11-15T15:13:19+00:00",
+      "elapsed_seconds": 50.62,
+      "unit": "active",
+      "pids": [
+        476289,
+        476359,
+        476376
+      ],
+      "own_compute_pids_by_physical_uuid": {
+        "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049": [
+          476376
+        ],
+        "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6": [
+          476376
+        ]
+      },
+      "memory": {
+        "mem_available_bytes": 118674448384,
+        "pressure": {
+          "some": {
+            "avg10": 0.0,
+            "avg60": 0.0,
+            "avg300": 0.0,
+            "total": 308549993.0
+          },
+          "full": {
+            "avg10": 0.0,
+            "avg60": 0.0,
+            "avg300": 0.0,
+            "total": 308453833.0
+          }
+        },
+        "oom_kill": 0
+      },
+      "gpus": [
+        {
+          "index": 0,
+          "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:01:00.0",
+          "memory_used_mib": 7210,
+          "memory_total_mib": 24576,
+          "utilization_percent": 31,
+          "temperature_c": 52
+        },
+        {
+          "index": 1,
+          "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:03:00.0",
+          "memory_used_mib": 23616,
+          "memory_total_mib": 24576,
+          "utilization_percent": 33,
+          "temperature_c": 36
+        }
+      ]
+    },
+    {
+      "at_utc": "2026-11-15T15:13:29+00:00",
+      "elapsed_seconds": 60.75,
+      "unit": "active",
+      "pids": [
+        476289,
+        476359,
+        476376
+      ],
+      "own_compute_pids_by_physical_uuid": {
+        "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049": [
+          476376
+        ],
+        "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6": [
+          476376
+        ]
+      },
+      "memory": {
+        "mem_available_bytes": 118687150080,
+        "pressure": {
+          "some": {
+            "avg10": 0.0,
+            "avg60": 0.0,
+            "avg300": 0.0,
+            "total": 308549993.0
+          },
+          "full": {
+            "avg10": 0.0,
+            "avg60": 0.0,
+            "avg300": 0.0,
+            "total": 308453833.0
+          }
+        },
+        "oom_kill": 0
+      },
+      "gpus": [
+        {
+          "index": 0,
+          "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:01:00.0",
+          "memory_used_mib": 7210,
+          "memory_total_mib": 24576,
+          "utilization_percent": 32,
+          "temperature_c": 51
+        },
+        {
+          "index": 1,
+          "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:03:00.0",
+          "memory_used_mib": 23616,
+          "memory_total_mib": 24576,
+          "utilization_percent": 44,
+          "temperature_c": 35
+        }
+      ]
+    },
+    {
+      "at_utc": "2026-11-15T15:13:39+00:00",
+      "elapsed_seconds": 70.87,
+      "unit": "active",
+      "pids": [
+        476289,
+        476359,
+        476376
+      ],
+      "own_compute_pids_by_physical_uuid": {
+        "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049": [
+          476376
+        ],
+        "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6": [
+          476376
+        ]
+      },
+      "memory": {
+        "mem_available_bytes": 118591033344,
+        "pressure": {
+          "some": {
+            "avg10": 0.0,
+            "avg60": 0.0,
+            "avg300": 0.0,
+            "total": 308549993.0
+          },
+          "full": {
+            "avg10": 0.0,
+            "avg60": 0.0,
+            "avg300": 0.0,
+            "total": 308453833.0
+          }
+        },
+        "oom_kill": 0
+      },
+      "gpus": [
+        {
+          "index": 0,
+          "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:01:00.0",
+          "memory_used_mib": 7206,
+          "memory_total_mib": 24576,
+          "utilization_percent": 31,
+          "temperature_c": 51
+        },
+        {
+          "index": 1,
+          "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:03:00.0",
+          "memory_used_mib": 23616,
+          "memory_total_mib": 24576,
+          "utilization_percent": 33,
+          "temperature_c": 35
+        }
+      ]
+    },
+    {
+      "at_utc": "2026-11-15T15:13:49+00:00",
+      "elapsed_seconds": 80.96,
+      "unit": "active",
+      "pids": [
+        476289,
+        476359,
+        476376
+      ],
+      "own_compute_pids_by_physical_uuid": {
+        "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049": [
+          476376
+        ],
+        "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6": [
+          476376
+        ]
+      },
+      "memory": {
+        "mem_available_bytes": 117564579840,
+        "pressure": {
+          "some": {
+            "avg10": 0.0,
+            "avg60": 0.0,
+            "avg300": 0.0,
+            "total": 308549993.0
+          },
+          "full": {
+            "avg10": 0.0,
+            "avg60": 0.0,
+            "avg300": 0.0,
+            "total": 308453833.0
+          }
+        },
+        "oom_kill": 0
+      },
+      "gpus": [
+        {
+          "index": 0,
+          "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:01:00.0",
+          "memory_used_mib": 7210,
+          "memory_total_mib": 24576,
+          "utilization_percent": 10,
+          "temperature_c": 50
+        },
+        {
+          "index": 1,
+          "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:03:00.0",
+          "memory_used_mib": 23620,
+          "memory_total_mib": 24576,
+          "utilization_percent": 22,
+          "temperature_c": 34
+        }
+      ]
+    },
+    {
+      "at_utc": "2026-11-15T15:13:59+00:00",
+      "elapsed_seconds": 91.05,
+      "unit": "active",
+      "pids": [
+        476289,
+        476359,
+        476376,
+        478946
+      ],
+      "own_compute_pids_by_physical_uuid": {
+        "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049": [
+          476376
+        ],
+        "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6": [
+          476376
+        ]
+      },
+      "memory": {
+        "mem_available_bytes": 116796555264,
+        "pressure": {
+          "some": {
+            "avg10": 0.0,
+            "avg60": 0.0,
+            "avg300": 0.0,
+            "total": 308549995.0
+          },
+          "full": {
+            "avg10": 0.0,
+            "avg60": 0.0,
+            "avg300": 0.0,
+            "total": 308453835.0
+          }
+        },
+        "oom_kill": 0
+      },
+      "gpus": [
+        {
+          "index": 0,
+          "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:01:00.0",
+          "memory_used_mib": 7284,
+          "memory_total_mib": 24576,
+          "utilization_percent": 7,
+          "temperature_c": 56
+        },
+        {
+          "index": 1,
+          "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:03:00.0",
+          "memory_used_mib": 23622,
+          "memory_total_mib": 24576,
+          "utilization_percent": 6,
+          "temperature_c": 40
+        }
+      ]
+    }
+  ],
+  "preflight": {
+    "timestamp_utc": "2026-11-15T15:12:28+00:00",
+    "memory": {
+      "mem_available_bytes": 124561252352,
+      "pressure": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0,
+          "total": 308549993.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0,
+          "total": 308453833.0
+        }
+      },
+      "oom_kill": 0
+    },
+    "gpus": {
+      "timestamp_utc": "2026-11-15T15:12:28+00:00",
+      "gpus": [
+        {
+          "index": 0,
+          "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:01:00.0",
+          "memory_used_mib": 798,
+          "memory_total_mib": 24576,
+          "utilization_percent": 29,
+          "temperature_c": 48
+        },
+        {
+          "index": 1,
+          "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:03:00.0",
+          "memory_used_mib": 108,
+          "memory_total_mib": 24576,
+          "utilization_percent": 23,
+          "temperature_c": 32
+        }
+      ],
+      "compute_apps": []
+    },
+    "helper_gate": {
+      "status": "PASS",
+      "checks": {
+        "helper_verify_success": true,
+        "helper_current_boot_pass": true,
+        "asus_quarantine_full": true,
+        "asus_quarantine_service_active": true,
+        "gpu_unlock_loaded": true,
+        "gpu_unlock_both_cards": true,
+        "p2p_read_bidirectional": true,
+        "p2p_write_bidirectional": true
+      },
+      "systemd": "Result=success\nExecMainStatus=0",
+      "vram": "active",
+      "p2p_read": " \t\u001b[4mGPU0\tGPU1\t\u001b[0m\n GPU0\tX\tOK\t\n GPU1\tOK\tX\t\n\nLegend:\n\n  X    = Self\n  OK   = Status Ok\n  CNS  = Chipset not supported\n  GNS  = GPU not supported\n  TNS  = Topology not supported\n  NS   = Not supported\n  U    = Unknown\n",
+      "p2p_write": " \t\u001b[4mGPU0\tGPU1\t\u001b[0m\n GPU0\tX\tOK\t\n GPU1\tOK\tX\t\n\nLegend:\n\n  X    = Self\n  OK   = Status Ok\n  CNS  = Chipset not supported\n  GNS  = GPU not supported\n  TNS  = Topology not supported\n  NS   = Not supported\n  U    = Unknown\n",
+      "boot_receipt": {
+        "task": "Q-20261029-VF-ITERATION-190",
+        "timestampUtc": "2026-10-31T22:55:55Z",
+        "bootKernel": "7.0.0-38-generic",
+        "bootCmdline": "gpu_unlock.targets=0000:01:00.0,0000:03:00.0",
+        "systemdBootVerifier": {
+          "status": "success",
+          "automaticBootRun": "PASS",
+          "manualRecheck": "PASS at 2026-10-31T19:54:35-03:00"
+        },
+        "asusQuarantine": {
+          "service": "vram-quarantine@GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6.service",
+          "active": "running",
+          "pci": "0000:01:00.0",
+          "held": 1636,
+          "total": 1636,
+          "pending": 0
+        },
+        "gpuUnlock": {
+          "module": "loaded",
+          "targets": [
+            "0000:01:00.0",
+            "0000:03:00.0"
+          ],
+          "kernelLog": "both PCI devices report unlocked"
+        },
+        "p2pMatrix": {
+          "read": "OK both directions",
+          "write": "OK both directions",
+          "topology": "PHB"
+        },
+        "p2pSmoke": {
+          "experiment": "Q190-P2P-CUDA-COPY-SMOKE-SYNC-RETRY-20261031",
+          "payloadBytes": 8388608,
+          "copiesPerDirection": 5,
+          "exactValues": true,
+          "direction0to1": {
+            "medianMs": 0.643,
+            "medianGBps": 13.047
+          },
+          "direction1to0": {
+            "medianMs": 0.643,
+            "medianGBps": 13.047
+          },
+          "result": "PASS",
+          "inferenceRun": false,
+          "sourceSha256": "affe19d5946c22272f136e18428f5bd1fdedb1796d8b07afe777c3cf8d16dcf5"
+        },
+        "firstSmokeAttempt": {
+          "correctness": "PASS",
+          "timing": "invalid; omitted because asynchronous copy was not explicitly synchronized"
+        },
+        "inferenceServers": "none detected; nvidia-smi listed only Artcraft desktop (205 MiB)",
+        "kernelLogNote": "gpu_unlock is unsigned and emits the expected module-verification/taint warning; module loaded and unlock passed both devices. No NVRM Xid in this boot.",
+        "next": "Run Ling Q172 seed43 retry2 and then seed44 retry1 serially after separate preflight; sync Modelos locales por peso row 3 after each."
+      },
+      "gpus": {
+        "timestamp_utc": "2026-11-15T15:12:28+00:00",
+        "gpus": [
+          {
+            "index": 0,
+            "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+            "name": "NVIDIA GeForce RTX 3090",
+            "pci": "00000000:01:00.0",
+            "memory_used_mib": 798,
+            "memory_total_mib": 24576,
+            "utilization_percent": 29,
+            "temperature_c": 48
+          },
+          {
+            "index": 1,
+            "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+            "name": "NVIDIA GeForce RTX 3090",
+            "pci": "00000000:03:00.0",
+            "memory_used_mib": 108,
+            "memory_total_mib": 24576,
+            "utilization_percent": 39,
+            "temperature_c": 32
+          }
+        ],
+        "compute_apps": []
+      }
+    },
+    "foreign_inference_servers": [],
+    "own_unit_pids": [],
+    "port_free": true
+  },
+  "launch": [
+    "systemd-run",
+    "--user",
+    "--unit=q209-maya-q173-pp65536-a02",
+    "--description=Q209-MAYA-Q173|d9029f6b-c649-4291-b0be-f14d77dc737e|q209-maya-q173-pp65536-a02",
+    "--property=RuntimeMaxSec=3600s",
+    "--property=MemoryMax=96G",
+    "--property=MemorySwapMax=0",
+    "--property=OOMPolicy=kill",
+    "--property=KillMode=control-group",
+    "--property=WorkingDirectory=/media/cristian/HDD extra/LlamaCode-evals/Q189-project-maya-v1.1.37",
+    "--setenv=CUDA_DEVICE_ORDER=PCI_BUS_ID",
+    "--setenv=CUDA_VISIBLE_DEVICES=1,0",
+    "--setenv=DS4_SPLIT=39,1",
+    "/media/cristian/HDD extra/LlamaCode-evals/Q189-project-maya-v1.1.37/run-maya-ds4.sh",
+    "--config",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261115-MAYA-DS4SPLIT39-Q173/profiles/maya-xs-iq1s-pny-ds4split39-q173/configs/maya-q173-262k-ds4split39.json",
+    "--port",
+    "18628",
+    "--plain"
+  ],
+  "launch_stdout": "",
+  "launch_stderr": "Running as unit: q209-maya-q173-pp65536-a02.service; invocation ID: d1f9eb2f304748abb307009552566411\n"
+}

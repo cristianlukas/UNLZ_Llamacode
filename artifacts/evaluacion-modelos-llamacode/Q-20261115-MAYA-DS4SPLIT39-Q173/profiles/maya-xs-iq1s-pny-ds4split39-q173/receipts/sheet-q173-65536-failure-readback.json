@@ -1,0 +1,115 @@
+{
+  "timestamp_utc": "2026-11-15 14:43:10 UTC",
+  "task": "Q209-MAYA-DS4SPLIT39-Q173",
+  "status": "PASS",
+  "ranges": [
+    "Resultados!E496",
+    "Resultados!AD496",
+    "Resultados!AF496",
+    "Modelos locales por peso!E6:F6",
+    "Modelos locales por peso!J6:K6"
+  ],
+  "update_response": {
+    "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "replies": [
+      {},
+      {},
+      {},
+      {},
+      {}
+    ],
+    "updatedSpreadsheet": null
+  },
+  "readback": {
+    "Resultados!E496": {
+      "formattedValue": "Q209 Q173 PARTIAL PASS · contexts 8K×3 and 32K×1 complete on ASUS+PNY; 64K/128K/261888 pending. · 64K attempt 2026-11-15: NO RESULT. Codex-side controller session disappeared; Maya API became ready but no request/result/events were recorded. The nested server stayed up until RuntimeMaxSec=7200, then systemd reported Result=timeout. Excluded from Q173 means; rerun only after a detached worker and cleanup test.",
+      "effectiveValue": {
+        "stringValue": "Q209 Q173 PARTIAL PASS · contexts 8K×3 and 32K×1 complete on ASUS+PNY; 64K/128K/261888 pending. · 64K attempt 2026-11-15: NO RESULT. Codex-side controller session disappeared; Maya API became ready but no request/result/events were recorded. The nested server stayed up until RuntimeMaxSec=7200, then systemd reported Result=timeout. Excluded from Q173 means; rerun only after a detached worker and cleanup test."
+      },
+      "userEnteredFormat": {
+        "verticalAlignment": "TOP",
+        "wrapStrategy": "WRAP",
+        "textFormat": {
+          "fontFamily": "Arial",
+          "fontSize": 10
+        }
+      }
+    },
+    "Resultados!AD496": {
+      "formattedValue": "Both completed Q173 context points (8K×3 and 32K×1) cleaned up; fresh preflight before 64K at 2026-11-15T07:57:07Z reverified all five model shards and five support assets by full SHA-256 (276,626,308,260 B). 3090 HELPER, ASUS quarantine1636/1636, bidirectional P2P, gpu_unlock on both, no foreign inference servers/compute apps, port free, MemAvailable115.95GiB, OOM0. Output free25.63GiB. No inference launched by preflight. 64K attempt ended by its 2h service cap; postflight confirms no inference server/compute apps, port18628 free, MemAvailable≈116.2GiB. No 64K request was measured.",
+      "effectiveValue": {
+        "stringValue": "Both completed Q173 context points (8K×3 and 32K×1) cleaned up; fresh preflight before 64K at 2026-11-15T07:57:07Z reverified all five model shards and five support assets by full SHA-256 (276,626,308,260 B). 3090 HELPER, ASUS quarantine1636/1636, bidirectional P2P, gpu_unlock on both, no foreign inference servers/compute apps, port free, MemAvailable115.95GiB, OOM0. Output free25.63GiB. No inference launched by preflight. 64K attempt ended by its 2h service cap; postflight confirms no inference server/compute apps, port18628 free, MemAvailable≈116.2GiB. No 64K request was measured."
+      },
+      "userEnteredFormat": {
+        "verticalAlignment": "TOP",
+        "wrapStrategy": "WRAP",
+        "textFormat": {
+          "fontFamily": "Arial",
+          "fontSize": 10
+        }
+      }
+    },
+    "Resultados!AF496": {
+      "formattedValue": "Q209 8K: raw 3207a38b8ca3c15d924a710d50778262a4a1ad36ed93ed0d0b133079919c600f; result c148e67b294c0aa31cf7de106d22c4f357305246350c625c400f366c3b4ae86a. 32K: raw 004a4a61f925f44b62c5f5d9e46fac4baeae44adaf17c6f2888b2e3fb2326b1b; events 81fca6739fb075fca3408160c9423d4ae6f0ae3b87b61d24a936a6dceb76bb58; result 98c2e343542aee5514fb794e78728e2e8a1cad67e7bf31cf56f93c0f9a7c999b. Startup 8944d57c74bcde1a0bcb8ff2ecb13932ad8335bc0b4e8eedb2729be84f726c58; postflight 96be4ca2596ecc8ede5b828bbe963826799a964f0567ae50e21b8f4cf00f2944. Fresh full-hash preflight before 64K PASS 2026-11-15T07:57:07Z; receipt SHA-256 39ac508772a4740a58ce000e2564cf3597aa8dddf6f0adc81f1ac6482f863709. Q209 64K failure receipt SHA-256 325196b1c4da71a1dea797f3b3a5bf93636e6ff23e4717e2c4887f548267e8d3; systemd journal SHA-256 3883bcdd18ad738191a06ad554a5b0c559be87835f1eeed6edeede8bf254ce91; empty controller output SHA-256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.",
+      "effectiveValue": {
+        "stringValue": "Q209 8K: raw 3207a38b8ca3c15d924a710d50778262a4a1ad36ed93ed0d0b133079919c600f; result c148e67b294c0aa31cf7de106d22c4f357305246350c625c400f366c3b4ae86a. 32K: raw 004a4a61f925f44b62c5f5d9e46fac4baeae44adaf17c6f2888b2e3fb2326b1b; events 81fca6739fb075fca3408160c9423d4ae6f0ae3b87b61d24a936a6dceb76bb58; result 98c2e343542aee5514fb794e78728e2e8a1cad67e7bf31cf56f93c0f9a7c999b. Startup 8944d57c74bcde1a0bcb8ff2ecb13932ad8335bc0b4e8eedb2729be84f726c58; postflight 96be4ca2596ecc8ede5b828bbe963826799a964f0567ae50e21b8f4cf00f2944. Fresh full-hash preflight before 64K PASS 2026-11-15T07:57:07Z; receipt SHA-256 39ac508772a4740a58ce000e2564cf3597aa8dddf6f0adc81f1ac6482f863709. Q209 64K failure receipt SHA-256 325196b1c4da71a1dea797f3b3a5bf93636e6ff23e4717e2c4887f548267e8d3; systemd journal SHA-256 3883bcdd18ad738191a06ad554a5b0c559be87835f1eeed6edeede8bf254ce91; empty controller output SHA-256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855."
+      },
+      "userEnteredFormat": {
+        "verticalAlignment": "TOP",
+        "wrapStrategy": "WRAP",
+        "textFormat": {
+          "fontFamily": "Arial",
+          "fontSize": 10
+        }
+      }
+    },
+    "Modelos locales por peso!E6": {
+      "formattedValue": "467.033413",
+      "effectiveValue": {
+        "numberValue": 467.0334130179115
+      },
+      "note": "Q209 Q173 provisional equal-weight mean of the completed context means: 8K n=3 + 32K n=1. Remaining 64K/128K/261888 pending; final profile average not yet available. See Resultados row496. 64K attempt produced no run JSON/events and no P/D metrics; controller session disappeared, nested server later hit its 2h RuntimeMaxSec. Attempt excluded from numeric means; pending detached-worker fix and safe retry.",
+      "userEnteredFormat": {
+        "horizontalAlignment": "LEFT",
+        "verticalAlignment": "MIDDLE",
+        "wrapStrategy": "CLIP"
+      }
+    },
+    "Modelos locales por peso!F6": {
+      "formattedValue": "28.54035524",
+      "effectiveValue": {
+        "numberValue": 28.540355236496566
+      },
+      "note": "Q209 Q173 provisional equal-weight mean of completed context means: 8K n=3 + 32K n=1. Remaining 64K/128K/261888 pending; final profile average not yet available. See Resultados row496. 64K attempt produced no run JSON/events and no P/D metrics; controller session disappeared, nested server later hit its 2h RuntimeMaxSec. Attempt excluded from numeric means; pending detached-worker fix and safe retry.",
+      "userEnteredFormat": {
+        "horizontalAlignment": "LEFT",
+        "verticalAlignment": "MIDDLE",
+        "wrapStrategy": "CLIP"
+      }
+    },
+    "Modelos locales por peso!J6": {
+      "formattedValue": "Q209 Q173 effective E2E P; equal-weight completed contexts 8K×3 + 32K×1; provisional.",
+      "effectiveValue": {
+        "stringValue": "Q209 Q173 effective E2E P; equal-weight completed contexts 8K×3 + 32K×1; provisional."
+      },
+      "note": "Final profile mean pending 64K,128K,261888. 64K attempt produced no run JSON/events and no P/D metrics; controller session disappeared, nested server later hit its 2h RuntimeMaxSec. Attempt excluded from numeric means; pending detached-worker fix and safe retry.",
+      "userEnteredFormat": {
+        "horizontalAlignment": "LEFT",
+        "verticalAlignment": "MIDDLE",
+        "wrapStrategy": "CLIP"
+      }
+    },
+    "Modelos locales por peso!K6": {
+      "formattedValue": "Q209 Q173 llama-benchy tg_throughput; equal-weight completed contexts 8K×3 + 32K×1; provisional.",
+      "effectiveValue": {
+        "stringValue": "Q209 Q173 llama-benchy tg_throughput; equal-weight completed contexts 8K×3 + 32K×1; provisional."
+      },
+      "note": "Final profile mean pending 64K,128K,261888. 64K attempt produced no run JSON/events and no P/D metrics; controller session disappeared, nested server later hit its 2h RuntimeMaxSec. Attempt excluded from numeric means; pending detached-worker fix and safe retry.",
+      "userEnteredFormat": {
+        "horizontalAlignment": "LEFT",
+        "verticalAlignment": "MIDDLE",
+        "wrapStrategy": "CLIP"
+      }
+    }
+  }
+}

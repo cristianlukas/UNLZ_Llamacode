@@ -1,0 +1,142 @@
+{
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "properties": {
+    "title": "Listado",
+    "locale": "en_US",
+    "timeZone": "America/Buenos_Aires"
+  },
+  "sheets": [
+    {
+      "properties": {
+        "sheetId": 1972251122,
+        "title": "Resultados",
+        "index": 17,
+        "sheetType": "GRID",
+        "gridProperties": {
+          "rowCount": 520,
+          "columnCount": 34,
+          "frozenRowCount": 1,
+          "frozenColumnCount": 4
+        }
+      },
+      "data": [
+        {
+          "startRow": 495,
+          "startColumn": 4,
+          "rowData": [
+            {
+              "values": [
+                {
+                  "formattedValue": "Q209 Q173 PARTIAL PASS · 8K×3 and 32K×1 complete on ASUS+PNY; 128K/261888 pending. · Prior 64K attempt NO RESULT and excluded. Q209-CONTROLLER-DETACHED-CPU-01 PASS. Fresh preflight PASS. Detached 64K retry a02 is RUNNING; no metrics yet.",
+                  "userEnteredValue": {
+                    "stringValue": "Q209 Q173 PARTIAL PASS · 8K×3 and 32K×1 complete on ASUS+PNY; 128K/261888 pending. · Prior 64K attempt NO RESULT and excluded. Q209-CONTROLLER-DETACHED-CPU-01 PASS. Fresh preflight PASS. Detached 64K retry a02 is RUNNING; no metrics yet."
+                  },
+                  "userEnteredFormat": {
+                    "wrapStrategy": "WRAP",
+                    "textFormat": {
+                      "fontFamily": "Arial",
+                      "fontSize": 10
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "startRow": 495,
+          "startColumn": 29,
+          "rowData": [
+            {
+              "values": [
+                {
+                  "formattedValue": "Q209 context65536 attempt a02 launched as detached worker `q209-maya-q173-pp65536-worker-a02`; model unit `q209-maya-q173-pp65536-a02` active/loading. Initial controller MemoryCurrent≈14MiB; Maya service≈6.67GiB. No P/D result yet. Worker cap3900s/8GiB; engine cap3600s/96GiB/swap0; exact cleanup on worker exit.",
+                  "userEnteredValue": {
+                    "stringValue": "Q209 context65536 attempt a02 launched as detached worker `q209-maya-q173-pp65536-worker-a02`; model unit `q209-maya-q173-pp65536-a02` active/loading. Initial controller MemoryCurrent≈14MiB; Maya service≈6.67GiB. No P/D result yet. Worker cap3900s/8GiB; engine cap3600s/96GiB/swap0; exact cleanup on worker exit."
+                  },
+                  "userEnteredFormat": {
+                    "wrapStrategy": "WRAP",
+                    "textFormat": {
+                      "fontFamily": "Arial",
+                      "fontSize": 10
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "startRow": 495,
+          "startColumn": 31,
+          "rowData": [
+            {
+              "values": [
+                {
+                  "formattedValue": "Detached launch receipt SHA-256 986a97b294972f2dee5162929f256ac2a4ed6bf01f9007f7cd6b17f4edace974. Fresh cached preflight refresh SHA 4a9c769a8b9c46f5dc66069cb701b584a7f7e878628a7ec3abdd5682196d96f5. CPU lifecycle smoke PASS; test summary SHA 2c74f6586821c1bae756577ebeb411944b4c5c8a6b8b82f7ce89e29430fc4cf7. Attempt a02 is in progress; do not report metrics until run/events receipt passes and system cleanup is verified.",
+                  "userEnteredValue": {
+                    "stringValue": "Detached launch receipt SHA-256 986a97b294972f2dee5162929f256ac2a4ed6bf01f9007f7cd6b17f4edace974. Fresh cached preflight refresh SHA 4a9c769a8b9c46f5dc66069cb701b584a7f7e878628a7ec3abdd5682196d96f5. CPU lifecycle smoke PASS; test summary SHA 2c74f6586821c1bae756577ebeb411944b4c5c8a6b8b82f7ce89e29430fc4cf7. Attempt a02 is in progress; do not report metrics until run/events receipt passes and system cleanup is verified."
+                  },
+                  "userEnteredFormat": {
+                    "wrapStrategy": "WRAP",
+                    "textFormat": {
+                      "fontFamily": "Arial",
+                      "fontSize": 10
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "properties": {
+        "sheetId": 2026102751,
+        "title": "Modelos locales por peso",
+        "index": 18,
+        "sheetType": "GRID",
+        "gridProperties": {
+          "rowCount": 116,
+          "columnCount": 28,
+          "frozenRowCount": 1,
+          "frozenColumnCount": 9
+        }
+      },
+      "data": [
+        {
+          "startRow": 5,
+          "startColumn": 4,
+          "rowData": [
+            {
+              "values": [
+                {
+                  "formattedValue": "467.033413",
+                  "userEnteredValue": {
+                    "numberValue": 467.0334130179115
+                  },
+                  "userEnteredFormat": {
+                    "wrapStrategy": "CLIP"
+                  },
+                  "note": "Q209 Q173 provisional effective E2E prefill mean 467.033 tok/s across completed contexts 8K×3 and 32K×1. Historical 64K failure is excluded. CPU lifecycle smoke PASS; fresh cached preflight PASS. Detached 64K attempt a02 is running; do not interpret or average until valid Q173 output/events and cleanup receipts exist. 128K/261888 remain gated."
+                },
+                {
+                  "formattedValue": "28.54035524",
+                  "userEnteredValue": {
+                    "numberValue": 28.540355236496566
+                  },
+                  "userEnteredFormat": {
+                    "wrapStrategy": "CLIP"
+                  },
+                  "note": "Q209 Q173 provisional llama-benchy decode mean 28.540 tok/s across completed contexts 8K×3 and 32K×1. Historical 64K failure is excluded. CPU lifecycle smoke PASS; fresh cached preflight PASS. Detached 64K attempt a02 is running; do not interpret or average until valid Q173 output/events and cleanup receipts exist. 128K/261888 remain gated."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,138 @@
+{
+  "schema": "llamacode.q173.completion-amendment.v1",
+  "task": "Q209-MAYA-DS4SPLIT39-Q173",
+  "created_utc": "2026-11-15T16:33:02+00:00",
+  "status": "COMPLETE",
+  "preregistration_amendment06_sha256": "760fb20894f1beb7c651e344991cb1b76bdd3f92cca8160c31fbe31b47f86765",
+  "scope": {
+    "contexts": [
+      8192,
+      32768,
+      65536,
+      131072,
+      261888
+    ],
+    "replicates": {
+      "8192": 3,
+      "32768": 1,
+      "65536": 1,
+      "131072": 1,
+      "261888": 1
+    },
+    "excluded_contexts": [
+      523904
+    ]
+  },
+  "profile": "Maya-XS IQ1_S · Project Maya v1.1.37 · PNY-first · DS4_SPLIT=39,1",
+  "hardware": {
+    "gpus": [
+      "ASUS RTX 3090 GPU0",
+      "PNY RTX 3090 GPU1"
+    ],
+    "server_context": 262144
+  },
+  "final_point": {
+    "context_tokens": 261888,
+    "actual_prompt_tokens": 261918,
+    "output_tokens": 128,
+    "prefill_effective_e2e_tps": 593.1714526543808,
+    "decode_tps": 17.470870159573874,
+    "ttft_seconds": 441.55530214399914,
+    "server_ready_seconds": 20.335,
+    "cold_hot_init": "N/D"
+  },
+  "ladder_rows": [
+    {
+      "context_tokens": 8192,
+      "n": 3,
+      "prefill_tps": 393.592816968,
+      "decode_tps": 31.022938016,
+      "ttft_seconds": 20.889680862
+    },
+    {
+      "context_tokens": 32768,
+      "n": 1,
+      "prefill_tps": 540.474009068,
+      "decode_tps": 26.057772457,
+      "ttft_seconds": 60.683769154
+    },
+    {
+      "context_tokens": 65536,
+      "n": 1,
+      "prefill_tps": 443.236359919,
+      "decode_tps": 4.800900517,
+      "ttft_seconds": 147.925589886
+    },
+    {
+      "context_tokens": 131072,
+      "n": 1,
+      "prefill_tps": 603.844630814,
+      "decode_tps": 18.513216779,
+      "ttft_seconds": 217.112139961
+    },
+    {
+      "context_tokens": 261888,
+      "n": 1,
+      "prefill_tps": 593.1714526543808,
+      "decode_tps": 17.470870159573874,
+      "ttft_seconds": 441.55530214399914
+    }
+  ],
+  "equal_context_weight_descriptive_mean": {
+    "prefill_tps": 514.8638538847408,
+    "decode_tps": 19.573139585823203,
+    "limitations": "8K n=3; all other contexts n=1; 64K decode is an outlier-low observation; descriptive, not a stable overall rate."
+  },
+  "quality_separate": {
+    "Q173": "N/D; speed ladder does not score quality",
+    "Q172_prior_cohort_mean": 89.33,
+    "Q172_tc92": "failed in all three seeds; do not infer tenant isolation safety"
+  },
+  "detached_execution": {
+    "worker_unit": "q209-maya-q173-pp261888-worker-a01",
+    "engine_unit": "q209-maya-q173-pp261888-a01",
+    "launcher_process_independent": true,
+    "worker_and_engine_exit": "0",
+    "postflight": "port free; no inference servers or GPU compute applications remained",
+    "oom_kill": 0,
+    "memory_pressure_avg10_peak": 0.09,
+    "mem_available_min_bytes": 116190371840,
+    "mem_available_post_bytes": 123915268096,
+    "asus_peak_mib": 7439,
+    "pny_peak_mib": 23770,
+    "max_temperature_c": 74
+  },
+  "sheet_readback": {
+    "status": "PASS",
+    "receipt": "sheet-q173-261888-complete-readback.json",
+    "sha256": "5939f91eb8a5ea5dc7e0ed670b3d42fbbee22a34b4adf477fbbc62d374070cb2",
+    "tabs": [
+      "Resultados!496",
+      "Modelos locales por peso!6"
+    ],
+    "note": "Values and notes were read back; native cell-format checks passed. Full browser visual inspection remained unavailable due sign-in/viewport."
+  },
+  "evidence": {
+    "raw_result": {
+      "path": "/media/cristian/Disco local/Modelos-eval/Q209-Maya-DS4SPLIT39-Q173/runs/q173-context-261888.json",
+      "sha256": "7b00bc2ca18fe3ddfa8b31c0b8f06bae2475dbec860b03a3523aa9f73e6a29ee"
+    },
+    "raw_events": {
+      "path": "/media/cristian/Disco local/Modelos-eval/Q209-Maya-DS4SPLIT39-Q173/runs/q173-context-261888-events.jsonl",
+      "sha256": "1b5e77727effe659b7fd172dec9894a7176ab0f5f1e2c4bd46a4794ddd554421"
+    },
+    "result_receipt": {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261115-MAYA-DS4SPLIT39-Q173/profiles/maya-xs-iq1s-pny-ds4split39-q173/receipts/q173-context-261888.json",
+      "sha256": "f5b21d5cc463e61443c3606e79747c823895581e8d48e42028506a31bbe890d1"
+    },
+    "postflight_receipt": {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261115-MAYA-DS4SPLIT39-Q173/profiles/maya-xs-iq1s-pny-ds4split39-q173/receipts/postflight-q209-maya-q173-pp261888-a01.json",
+      "sha256": "301c1572646cf5672a4f88628271074008aebf9414925bee99733ab9c09bc9e7"
+    },
+    "cleanup_receipt": {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261115-MAYA-DS4SPLIT39-Q173/profiles/maya-xs-iq1s-pny-ds4split39-q173/receipts/worker-cleanup-pp261888-a01.json",
+      "sha256": "ccf8a55a68077e6632b8744986c51b2706c49b10ec1bf7da392fad826f7d483b"
+    }
+  },
+  "conclusion": "Q173 ladder complete through user-approved 261888 context. Future long inference jobs must run under bounded detached systemd workers; never make inference lifetime depend on ChatGPT/Codex session. This does not establish the root cause of Codex application closures."
+}

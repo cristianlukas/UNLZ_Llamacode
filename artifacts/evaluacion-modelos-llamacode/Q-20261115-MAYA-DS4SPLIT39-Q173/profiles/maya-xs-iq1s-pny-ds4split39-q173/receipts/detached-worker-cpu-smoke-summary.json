@@ -1,0 +1,21 @@
+{
+  "schema": "llamacode.q209-detached-worker-cpu-smoke-summary.v1",
+  "test_id": "Q209-CONTROLLER-DETACHED-CPU-01",
+  "verified_utc": "2026-11-15T15:03:40+00:00",
+  "status": "PASS",
+  "gpu_used": false,
+  "model_used": false,
+  "worker_unit": "q209-lifecycle-smoke-eacb98bf8ec2-worker.service",
+  "worker_result": "timeout at its registered 8s bound",
+  "fake_child_unit": "q209-lifecycle-smoke-eacb98bf8ec2-child.service",
+  "fake_child_after_cleanup": "inactive; no fake child remains",
+  "launcher_returned_before_completion": true,
+  "worker_completed_after_launcher_exit": true,
+  "exec_stop_post": "PASS_STOPPED; exact generated unit description matched",
+  "result_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261115-MAYA-DS4SPLIT39-Q173/profiles/maya-xs-iq1s-pny-ds4split39-q173/receipts/detached-worker-smoke-eacb98bf8ec2.json",
+  "result_receipt_sha256": "00558c6a0d913473e87cfd5ed40e2e1506a5eb2b7c6e7869b99c36c6266edbe7",
+  "cleanup_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261115-MAYA-DS4SPLIT39-Q173/profiles/maya-xs-iq1s-pny-ds4split39-q173/receipts/detached-worker-smoke-eacb98bf8ec2-cleanup.json",
+  "cleanup_receipt_sha256": "fedd48f7e51a51926d9f9b3f9eb4c23c1e404a323039cc4ce3a301737244c2cc",
+  "other_units_touched": false,
+  "next_gate": "Update/read back Sheets; then one Q209 64K retry using detached worker, capped at 3600s/96GiB. 128K and 261888 remain gated on that result."
+}

@@ -1,0 +1,18 @@
+{
+  "schema": "llamacode.q209-detached-worker-syntax-gate.v1",
+  "test_id": "Q209-CONTROLLER-DETACHED-CPU-01-amendment01",
+  "timestamp_utc": "2026-11-15T15:02:58+00:00",
+  "status": "PASS",
+  "command": "PYTHONPYCACHEPREFIX=/tmp/q209-pycache-amended python3 -m py_compile <four current scripts>",
+  "lock_check": "PASS · Q-20261103-VF-RESUME-202",
+  "gpu_used": false,
+  "models_used": false,
+  "files": {
+    "artifacts/evaluacion-modelos-llamacode/Q-20261115-MAYA-DS4SPLIT39-Q173/profiles/maya-xs-iq1s-pny-ds4split39-q173/scripts/run_q173.py": "a4f54ecec98bfce1f9fd01f2c233f2367e8e904a2a605015e1d49fbe9fd2d411",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261115-MAYA-DS4SPLIT39-Q173/profiles/maya-xs-iq1s-pny-ds4split39-q173/scripts/launch_detached_q173.py": "a2a4ff0f19842c3f34fa3d8ce8e5479be894fe74de686aff92dfb192b5f9a010",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261115-MAYA-DS4SPLIT39-Q173/profiles/maya-xs-iq1s-pny-ds4split39-q173/scripts/cleanup_detached_worker.py": "05dd9013063ed2a29d0442e5dd2dd11de1fba08a7b6cb0770a789cc9bdb49853",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261115-MAYA-DS4SPLIT39-Q173/scripts/test_detached_worker_lifecycle.py": "2a5e419ca620e0228d55ee3a95543a3b9c4b82c7012406a12579389be698cfab"
+  },
+  "exit_code": 0,
+  "output": ""
+}

@@ -1,0 +1,61 @@
+{
+  "schema": "llamacode.q209-sheet-261888-launch-readback.v1",
+  "timestamp_utc": "2026-11-15T16:00:20Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "status": "PASS",
+  "launch_receipt_sha256": "cb158813d5d88746fd005ff94b6f96e9c39690802ceb75c09e0eaa17f61cea67",
+  "ranges": [
+    {
+      "title": "Resultados",
+      "data": [
+        {
+          "startRow": 495,
+          "startColumn": 4,
+          "rowData": [
+            [
+              "Q209 Q173 PARTIAL · 8K/32K/64K/131072 complete; 261888×1 worker active, result pending. Amendment06 live preflight PASS; worker is detached and bounded. 523904 excluded."
+            ]
+          ]
+        },
+        {
+          "startRow": 495,
+          "startColumn": 29,
+          "rowData": [
+            [
+              "Q209 261888×1 launched at 2026-11-15T16:00:20Z as independent user-systemd worker q209-maya-q173-pp261888-worker-a01, engine q209-maya-q173-pp261888-a01. Outer 3900s/8G, engine 3600s/96G, swap0, exact cleanup. Launcher returned; result pending. Launch SHA cb158813d5d88746fd005ff94b6f96e9c39690802ceb75c09e0eaa17f61cea67."
+            ]
+          ]
+        },
+        {
+          "startRow": 495,
+          "startColumn": 31,
+          "rowData": [
+            [
+              "131K result SHA 82a2dbb452ed3cfbb7a5ea7ac0b41507b19953d1b199a0fc0dece79fb2dfddf1; 261888 preflight SHA 775e12655202bcc1babebc5af569da4eff2e2ef4d31acde6829f630073ff838f; preflight Sheet readback c33c09b380ba420af39329f18a1eaf540e6977edac10027b703fb1bc6b797423; 261888 launch SHA cb158813d5d88746fd005ff94b6f96e9c39690802ceb75c09e0eaa17f61cea67."
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Modelos locales por peso",
+      "data": [
+        {
+          "startRow": 5,
+          "startColumn": 25,
+          "rowData": [
+            [
+              "Q209 Q173 131K valid; mean through131K P495.287/D20.099. Final context261888 worker active after fresh gates PASS; result pending; no523904. Detached worker launch SHA cb158813d5d88746fd005ff94b6f96e9c39690802ceb75c09e0eaa17f61cea67."
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "verified": [
+    "Resultados!E496",
+    "Resultados!AD496",
+    "Resultados!AF496",
+    "Modelos locales por peso!Z6"
+  ]
+}

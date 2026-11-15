@@ -1,0 +1,14 @@
+{
+  "timestamp_utc": "2026-11-15T06:37:00Z",
+  "operation": "Q209 Q173 preregistration sync and readback",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "ranges": ["Resultados!A496:AH496", "Modelos locales por peso!J6:K6"],
+  "preregistration_sha256": "cd670d60552792305ed3731c4cfbae696abd203678f8eb04cec33144918523c3",
+  "result_row_cells": 34,
+  "readback_match": true,
+  "format_readback": {"Resultados row496": "Arial 10, vertical TOP, WRAP", "Modelos locales por peso row6": "existing format preserved"},
+  "inventory_cells": {"J6": "N/D — Q209 Q173 preregistrado; pendiente ladder DS4_SPLIT=39,1", "K6": "N/D — Q209 Q173 preregistrado; pendiente ladder DS4_SPLIT=39,1"},
+  "before_gpu_use": true,
+  "gpu_inference_started": false,
+  "next": "Full-hash and live preflight; do not run Q173 unless all pinned assets, helper/P2P/unlock and dual-GPU allocation gates pass."
+}

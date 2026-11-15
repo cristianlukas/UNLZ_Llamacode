@@ -1,0 +1,61 @@
+{
+  "schema": "llamacode.q209-sheet-preflight-261888-readback.v1",
+  "timestamp_utc": "2026-11-15T15:59:44Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "status": "PASS",
+  "preflight_receipt_sha256": "775e12655202bcc1babebc5af569da4eff2e2ef4d31acde6829f630073ff838f",
+  "ranges": [
+    {
+      "title": "Resultados",
+      "data": [
+        {
+          "startRow": 495,
+          "startColumn": 4,
+          "rowData": [
+            [
+              "Q209 Q173 PARTIAL · 8K/32K/64K/131072 complete; 261888×1 preflight PASS, detached run pending. 131K P603.845/D18.513; four-point means P495.287/D20.099. 523904 excluded."
+            ]
+          ]
+        },
+        {
+          "startRow": 495,
+          "startColumn": 29,
+          "rowData": [
+            [
+              "Amendment06 fresh cached preflight PASS for 261888 at 2026-11-15T15:59:44Z: 5 shard identities unchanged, supporting hashes rechecked, ASUS+PNY/helper/quarantine1636/1636/P2P/gpu_unlock PASS; no compute apps or foreign servers; port free; MemAvailable124526284800 B; output free27512598528 B. No inference in gate. Receipt SHA 775e12655202bcc1babebc5af569da4eff2e2ef4d31acde6829f630073ff838f."
+            ]
+          ]
+        },
+        {
+          "startRow": 495,
+          "startColumn": 31,
+          "rowData": [
+            [
+              "261888 prereg SHA 760fb20894f1beb7c651e344991cb1b76bdd3f92cca8160c31fbe31b47f86765; preflight script SHA d0a923648487b98e5ad83046ad01dabd42b3efd6e6a306b8d1ff35df27178726; preflight receipt SHA 775e12655202bcc1babebc5af569da4eff2e2ef4d31acde6829f630073ff838f; 131K result SHA 82a2dbb452ed3cfbb7a5ea7ac0b41507b19953d1b199a0fc0dece79fb2dfddf1."
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Modelos locales por peso",
+      "data": [
+        {
+          "startRow": 5,
+          "startColumn": 25,
+          "rowData": [
+            [
+              "Q209 Q173 131K valid; P/D four-point mean 495.287/20.099. Amendment06 fresh preflight PASS for final 261888×1: both GPUs and helper/quarantine/P2P/unlock pass, no compute or foreign inference, memory and output space pass. Next detached run only; no 523904. Gate receipt 775e12655202bcc1babebc5af569da4eff2e2ef4d31acde6829f630073ff838f; prereg 760fb20894f1beb7c651e344991cb1b76bdd3f92cca8160c31fbe31b47f86765."
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "verified": [
+    "Resultados!E496",
+    "Resultados!AD496",
+    "Resultados!AF496",
+    "Modelos locales por peso!Z6"
+  ]
+}

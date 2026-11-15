@@ -1,0 +1,12 @@
+{
+  "schema": "llamacode.q209-detached-worker-cleanup.v1",
+  "timestamp_utc": "2026-11-15T15:19:09+00:00",
+  "unit": "q209-maya-q173-pp65536-a02",
+  "expected_description": "Q209-MAYA-Q173|d9029f6b-c649-4291-b0be-f14d77dc737e|q209-maya-q173-pp65536-a02",
+  "actual_description": "q209-maya-q173-pp65536-a02.service",
+  "service_result": "success",
+  "exit_code": "exited",
+  "exit_status": "0",
+  "status": "REFUSED_IDENTITY_MISMATCH",
+  "stop_attempted": false
+}
